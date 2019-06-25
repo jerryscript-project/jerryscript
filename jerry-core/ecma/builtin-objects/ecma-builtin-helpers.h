@@ -26,6 +26,19 @@
  * @{
  */
 
+/**
+ * Mode of string index routine.
+ */
+typedef enum
+{
+  /** These routines must be in this order */
+  ECMA_STRING_INDEX_OF, /**< String.indexOf: ECMA-262 v5, 15.5.4.7 */
+  ECMA_STRING_LAST_INDEX_OF, /**< String.lastIndexOf: ECMA-262 v5, 15.5.4.8 */
+  ECMA_STRING_STARTS_WITH, /**< String.startsWith: ECMA-262 v6, 21.1.3.18 */
+  ECMA_STRING_INCLUDES, /**< String.includes: ECMA-262 v6, 21.1.3.7 */
+  ECMA_STRING_ENDS_WITH /**< String.includes: ECMA-262 v6, 21.1.3.6 */
+} ecma_string_index_of_mode_t;
+
 ecma_value_t
 ecma_builtin_helper_object_to_string (const ecma_value_t this_arg);
 ecma_value_t
@@ -40,7 +53,7 @@ uint32_t
 ecma_builtin_helper_string_index_normalize (ecma_number_t index, uint32_t length, bool nan_to_zero);
 ecma_value_t
 ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, ecma_value_t arg1,
-                                                      ecma_value_t arg2, bool first_index);
+                                                      ecma_value_t arg2, ecma_string_index_of_mode_t mode);
 bool
 ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, ecma_string_t *search_str_p, bool first_index,
                                        ecma_length_t start_pos, ecma_length_t *ret_index_p);

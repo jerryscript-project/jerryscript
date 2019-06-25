@@ -532,73 +532,167 @@ ecma_builtin_helper_string_index_normalize (ecma_number_t index, /**< index */
 } /* ecma_builtin_helper_string_index_normalize */
 
 /**
- * Helper function for string indexOf and lastIndexOf functions
- *
- * This function implements string indexOf and lastIndexOf with required checks and conversions.
+ * Helper function for string indexOf, lastIndexOf, startsWith, includes, endsWith functions
  *
  * See also:
  *          ECMA-262 v5, 15.5.4.7
  *          ECMA-262 v5, 15.5.4.8
+ *          ECMA-262 v6, 21.1.3.6
+ *          ECMA-262 v6, 21.1.3.7
+ *          ECMA-262 v6, 21.1.3.18
  *
  * Used by:
  *         - The String.prototype.indexOf routine.
  *         - The String.prototype.lastIndexOf routine.
+ *         - The String.prototype.startsWith routine.
+ *         - The String.prototype.includes routine.
+ *         - The String.prototype.endsWith routine.
  *
- * @return ecma_value_t - (last) index of search string as an ecma-value
+ * @return ecma_value_t - Returns index (last index) or a
+ *                        boolean value
  */
 ecma_value_t
 ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, /**< this argument */
                                                       ecma_value_t arg1, /**< routine's first argument */
                                                       ecma_value_t arg2, /**< routine's second argument */
-                                                      bool first_index) /**< routine's third argument */
+                                                      ecma_string_index_of_mode_t mode) /**< routine's mode */
 {
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-
   /* 1 */
-  ECMA_TRY_CATCH (check_coercible_val,
-                  ecma_op_check_object_coercible (this_arg),
-                  ret_value);
+  if (ECMA_IS_VALUE_ERROR (ecma_op_check_object_coercible (this_arg)))
+  {
+    return ECMA_VALUE_ERROR;
+  }
 
   /* 2 */
-  ECMA_TRY_CATCH (to_str_val,
-                  ecma_op_to_string (this_arg),
-                  ret_value);
+  ecma_value_t to_str_val = ecma_op_to_string (this_arg);
 
-  /* 3 */
-  ECMA_TRY_CATCH (search_str_val,
-                  ecma_op_to_string (arg1),
-                  ret_value);
+  if (ECMA_IS_VALUE_ERROR (to_str_val))
+  {
+    return to_str_val;
+  }
 
-  /* 4 */
-  ECMA_OP_TO_NUMBER_TRY_CATCH (pos_num,
-                               arg2,
-                               ret_value);
-
-  /* 5 (indexOf) -- 6 (lastIndexOf) */
+  /* 5 (indexOf), 6 (lastIndexOf), 11 (startsWith, includes) */
   ecma_string_t *original_str_p = ecma_get_string_from_value (to_str_val);
   const ecma_length_t original_len = ecma_string_get_length (original_str_p);
 
-  /* 4b, 6 (indexOf) - 4b, 5, 7 (lastIndexOf) */
-  ecma_length_t start = ecma_builtin_helper_string_index_normalize (pos_num, original_len, first_index);
+#if ENABLED (JERRY_ES2015_BUILTIN)
+  /* 4, 6 (startsWith, includes, endsWith) */
+  if (mode >= ECMA_STRING_STARTS_WITH
+      && (ecma_is_value_object (arg1)
+      && ecma_object_class_is (ecma_get_object_from_value (arg1), LIT_MAGIC_STRING_REGEXP_UL)))
+  {
+    JERRY_ASSERT (ECMA_STRING_LAST_INDEX_OF < mode && mode <= ECMA_STRING_ENDS_WITH);
+    ecma_deref_ecma_string (original_str_p);
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Search string can't be of type: RegExp"));
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
 
-  /* 7 (indexOf) -- 8 (lastIndexOf) */
+  /* 3 */
+  ecma_value_t search_str_val = ecma_op_to_string (arg1);
+
+  if (ECMA_IS_VALUE_ERROR (search_str_val))
+  {
+    ecma_deref_ecma_string (original_str_p);
+    return search_str_val;
+  }
+
+  /* 7, 8 */
   ecma_string_t *search_str_p = ecma_get_string_from_value (search_str_val);
+
+  /* 4 (indexOf, lastIndexOf), 9 (startsWith, includes), 10 (endsWith) */
+  ecma_number_t pos_num;
+  ecma_value_t ret_value  = ecma_get_number (arg2, &pos_num);
+
+  /* 10 (startsWith, includes), 11 (endsWith) */
+  if (ECMA_IS_VALUE_ERROR (ret_value))
+  {
+    ecma_deref_ecma_string (original_str_p);
+    ecma_deref_ecma_string (search_str_p);
+    return ret_value;
+  }
+
+  bool use_first_index = mode != ECMA_STRING_LAST_INDEX_OF;
+
+  /* 4b, 6 (indexOf) - 4b, 5, 7 (lastIndexOf) */
+  ecma_length_t start = ecma_builtin_helper_string_index_normalize (pos_num, original_len, use_first_index);
 
   ecma_number_t ret_num = ECMA_NUMBER_MINUS_ONE;
 
-  /* 8 (indexOf) -- 9 (lastIndexOf) */
   ecma_length_t index_of = 0;
-  if (ecma_builtin_helper_string_find_index (original_str_p, search_str_p, first_index, start, &index_of))
+
+  ret_value = ECMA_VALUE_FALSE;
+
+  switch (mode)
   {
-    ret_num = ((ecma_number_t) index_of);
+#if ENABLED (JERRY_ES2015_BUILTIN)
+    case ECMA_STRING_STARTS_WITH:
+    {
+      if (pos_num + start > original_len)
+      {
+        break;
+      }
+
+      if (ecma_builtin_helper_string_find_index (original_str_p, search_str_p, true, start, &index_of))
+      {
+        /* 15, 16 (startsWith) */
+        ret_value = ecma_make_boolean_value (index_of == start);
+      }
+      break;
+    }
+    case ECMA_STRING_INCLUDES:
+    {
+      if (ecma_builtin_helper_string_find_index (original_str_p, search_str_p, true, start, &index_of))
+      {
+        ret_value = ECMA_VALUE_TRUE;
+      }
+      break;
+    }
+    case ECMA_STRING_ENDS_WITH:
+    {
+      if (start == 0)
+      {
+        start = original_len;
+      }
+
+      ecma_length_t search_str_len = ecma_string_get_length (search_str_p);
+
+      if (search_str_len == 0)
+      {
+        ret_value = ECMA_VALUE_TRUE;
+        break;
+      }
+
+      int32_t start_ends_with = (int32_t) (start - search_str_len);
+
+      if (start_ends_with < 0)
+      {
+        break;
+      }
+      if (ecma_builtin_helper_string_find_index (original_str_p, search_str_p, true,
+                                                 (ecma_length_t) start_ends_with, &index_of))
+      {
+        ret_value = ecma_make_boolean_value (index_of == (ecma_length_t) start_ends_with);
+      }
+      break;
+    }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
+
+    case ECMA_STRING_INDEX_OF:
+    case ECMA_STRING_LAST_INDEX_OF:
+    default:
+    {
+      /* 8 (indexOf) -- 9 (lastIndexOf) */
+      if (ecma_builtin_helper_string_find_index (original_str_p, search_str_p, use_first_index, start, &index_of))
+      {
+        ret_num = ((ecma_number_t) index_of);
+      }
+      ret_value = ecma_make_number_value (ret_num);
+      break;
+    }
   }
 
-  ret_value = ecma_make_number_value (ret_num);
-
-  ECMA_OP_TO_NUMBER_FINALIZE (pos_num);
-  ECMA_FINALIZE (search_str_val);
-  ECMA_FINALIZE (to_str_val);
-  ECMA_FINALIZE (check_coercible_val);
+  ecma_deref_ecma_string (search_str_p);
+  ecma_deref_ecma_string (original_str_p);
 
   return ret_value;
 } /* ecma_builtin_helper_string_prototype_object_index_of */

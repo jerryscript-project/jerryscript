@@ -17,7 +17,7 @@
 #include "jerryscript-ext/debugger.h"
 #include "jext-common.h"
 
-#ifdef JERRY_DEBUGGER
+#if defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1)
 
 #include <errno.h>
 
@@ -371,7 +371,7 @@ jerryx_debugger_tcp_create (uint16_t port) /**< listening port */
   return true;
 } /* jerryx_debugger_tcp_create */
 
-#else /* !JERRY_DEBUGGER */
+#else /* !(defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1)) */
 
 /**
  * Dummy function when debugger is disabled.
@@ -385,4 +385,4 @@ jerryx_debugger_tcp_create (uint16_t port)
   return false;
 } /* jerryx_debugger_tcp_create */
 
-#endif /* JERRY_DEBUGGER */
+#endif /* defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1) */

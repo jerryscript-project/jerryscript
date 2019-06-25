@@ -85,7 +85,7 @@ jerry_port_log (jerry_log_level_t level, /**< message log level */
   {
     va_list args;
     va_start (args, format);
-#ifdef JERRY_DEBUGGER
+#if defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1)
     int length = vsnprintf (NULL, 0, format, args);
     va_end (args);
     va_start (args, format);
@@ -97,18 +97,18 @@ jerry_port_log (jerry_log_level_t level, /**< message log level */
     jerry_debugger_send_log (level, (jerry_char_t *) buffer, (jerry_size_t) length);
 #else /* If jerry-debugger isn't defined, libc is turned on */
     vfprintf (stderr, format, args);
-#endif /* JERRY_DEBUGGER */
+#endif /* defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1) */
     va_end (args);
   }
 } /* jerry_port_log */
 
-#ifdef JERRY_DEBUGGER
+#if defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1)
 
 #define DEBUG_BUFFER_SIZE (256)
 static char debug_buffer[DEBUG_BUFFER_SIZE];
 static int debug_buffer_index = 0;
 
-#endif /* JERRY_DEBUGGER */
+#endif /* defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1) */
 
 /**
  * Default implementation of jerry_port_print_char. Uses 'putchar' to
@@ -119,7 +119,7 @@ jerry_port_print_char (char c) /**< the character to print */
 {
   putchar (c);
 
-#ifdef JERRY_DEBUGGER
+#if defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1)
   debug_buffer[debug_buffer_index++] = c;
 
   if ((debug_buffer_index == DEBUG_BUFFER_SIZE) || (c == '\n'))
@@ -127,7 +127,7 @@ jerry_port_print_char (char c) /**< the character to print */
     jerry_debugger_send_output ((jerry_char_t *) debug_buffer, (jerry_size_t) debug_buffer_index);
     debug_buffer_index = 0;
   }
-#endif /* JERRY_DEBUGGER */
+#endif /* defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1) */
 } /* jerry_port_print_char */
 
 /**

@@ -43,7 +43,7 @@
 #include "debugger-sha1.h"
 #include "jext-common.h"
 
-#ifdef JERRY_DEBUGGER
+#if defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1)
 
 /**
  * SHA-1 context structure.
@@ -366,4 +366,4 @@ jerryx_debugger_compute_sha1 (const uint8_t *source1_p, /**< first part of the i
   jerryx_sha1_finish (&sha1_context, destination_p);
 } /* jerryx_debugger_compute_sha1 */
 
-#endif /* JERRY_DEBUGGER */
+#endif /* defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1) */

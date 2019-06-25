@@ -16,7 +16,7 @@
 #include "jerryscript-ext/debugger.h"
 #include "jext-common.h"
 
-#ifdef JERRY_DEBUGGER
+#if defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1)
 
 /* A simplified transmission layer. */
 
@@ -162,7 +162,7 @@ jerryx_debugger_rp_create (void)
   return true;
 } /* jerryx_debugger_rp_create */
 
-#else /* !JERRY_DEBUGGER */
+#else /* !(defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1)) */
 
 /**
  * Dummy function when debugger is disabled.
@@ -175,4 +175,4 @@ jerryx_debugger_rp_create (void)
   return false;
 } /* jerryx_debugger_rp_create */
 
-#endif /* JERRY_DEBUGGER */
+#endif /* defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1) */

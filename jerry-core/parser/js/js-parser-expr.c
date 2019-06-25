@@ -903,10 +903,10 @@ parser_parse_function_expression (parser_context_t *context_p, /**< context */
 
   if (status_flags & PARSER_IS_FUNC_EXPRESSION)
   {
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
     parser_line_counter_t debugger_line = context_p->token.line;
     parser_line_counter_t debugger_column = context_p->token.column;
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
     if (!lexer_check_next_character (context_p, LIT_CHAR_LEFT_PAREN))
     {
@@ -922,7 +922,7 @@ parser_parse_function_expression (parser_context_t *context_p, /**< context */
 
       lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_STRING_LITERAL);
 
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
       if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       {
         jerry_debugger_send_string (JERRY_DEBUGGER_FUNCTION_NAME,
@@ -934,7 +934,7 @@ parser_parse_function_expression (parser_context_t *context_p, /**< context */
         context_p->token.line = debugger_line;
         context_p->token.column = debugger_column;
       }
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
       if (context_p->token.literal_is_reserved
           || context_p->lit_object.type != LEXER_LITERAL_OBJECT_ANY)

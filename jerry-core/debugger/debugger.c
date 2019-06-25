@@ -24,7 +24,7 @@
 #include "jerryscript-port.h"
 #include "lit-char-helpers.h"
 
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
 
 /**
  * Incoming message: next message of string data.
@@ -1541,4 +1541,4 @@ jerry_debugger_send_exception_string (void)
   return result;
 } /* jerry_debugger_send_exception_string */
 
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */

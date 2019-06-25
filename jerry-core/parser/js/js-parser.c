@@ -1374,7 +1374,7 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
 
 #endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
 
 /**
  * Send current breakpoint list.
@@ -1414,7 +1414,7 @@ parser_append_breakpoint_info (parser_context_t *context_p, /**< context */
   context_p->breakpoint_info_count = (uint16_t) (context_p->breakpoint_info_count + 1);
 } /* parser_append_breakpoint_info */
 
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
 /**
  * Forward iterator: move to the next byte code
@@ -1488,7 +1488,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 
   JERRY_ASSERT (context_p->literal_count <= PARSER_MAXIMUM_NUMBER_OF_LITERALS);
 
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
   if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       && !(context_p->status_flags & PARSER_DEBUGGER_BREAKPOINT_APPENDED))
   {
@@ -1507,7 +1507,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     parser_send_breakpoints (context_p, JERRY_DEBUGGER_BREAKPOINT_LIST);
     JERRY_ASSERT (context_p->breakpoint_info_count == 0);
   }
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
   parser_copy_identifiers (context_p);
 
@@ -1901,13 +1901,13 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     PARSER_NEXT_BYTE_UPDATE (page_p, offset, real_offset);
     flags = cbc_flags[opcode];
 
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
     if (opcode == CBC_BREAKPOINT_DISABLED)
     {
       uint32_t bp_offset = (uint32_t) (((uint8_t *) dst_p) - ((uint8_t *) compiled_code_p) - 1);
       parser_append_breakpoint_info (context_p, JERRY_DEBUGGER_BREAKPOINT_OFFSET_LIST, bp_offset);
     }
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
     if (opcode == CBC_EXT_OPCODE)
     {
@@ -2023,14 +2023,14 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     }
   }
 
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
   if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       && context_p->breakpoint_info_count > 0)
   {
     parser_send_breakpoints (context_p, JERRY_DEBUGGER_BREAKPOINT_OFFSET_LIST);
     JERRY_ASSERT (context_p->breakpoint_info_count == 0);
   }
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
   if (!(context_p->status_flags & PARSER_NO_END_LABEL))
   {
@@ -2148,12 +2148,12 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   }
 #endif /* ENABLED (JERRY_LINE_INFO) */
 
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
     jerry_debugger_send_function_cp (JERRY_DEBUGGER_BYTE_CODE_CP, compiled_code_p);
   }
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
   return compiled_code_p;
 } /* parser_post_processing */
@@ -2378,14 +2378,14 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   else
   {
     context.status_flags = PARSER_IS_FUNCTION;
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
     if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
     {
       /* This option has a high memory and performance costs,
        * but it is necessary for executing eval operations by the debugger. */
       context.status_flags |= PARSER_LEXICAL_ENV_NEEDED | PARSER_NO_REG_STORE;
     }
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
     context.source_p = arg_list_p;
     context.source_end_p = arg_list_p + arg_list_size;
   }
@@ -2437,9 +2437,9 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   }
 #endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
   context.breakpoint_info_count = 0;
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
   PARSER_TRY (context.try_buffer)
   {
@@ -2547,14 +2547,14 @@ parser_save_context (parser_context_t *context_p, /**< context */
 {
   JERRY_ASSERT (context_p->last_cbc_opcode == PARSER_CBC_UNAVAILABLE);
 
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
   if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       && context_p->breakpoint_info_count > 0)
   {
     parser_send_breakpoints (context_p, JERRY_DEBUGGER_BREAKPOINT_LIST);
     context_p->breakpoint_info_count = 0;
   }
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
   /* Save private part of the context. */
 
@@ -2658,7 +2658,7 @@ parser_parse_function (parser_context_t *context_p, /**< context */
   }
 #endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
   if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       && jerry_debugger_send_parse_function (context_p->token.line, context_p->token.column))
   {
@@ -2666,7 +2666,7 @@ parser_parse_function (parser_context_t *context_p, /**< context */
      * but it is necessary for executing eval operations by the debugger. */
     context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED | PARSER_NO_REG_STORE;
   }
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
   lexer_next_token (context_p);
 
@@ -2763,7 +2763,7 @@ parser_parse_arrow_function (parser_context_t *context_p, /**< context */
   }
 #endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
   if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       && jerry_debugger_send_parse_function (context_p->token.line, context_p->token.column))
   {
@@ -2771,7 +2771,7 @@ parser_parse_arrow_function (parser_context_t *context_p, /**< context */
      * but it is necessary for executing eval operations by the debugger. */
     context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED | PARSER_NO_REG_STORE;
   }
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
   if (status_flags & PARSER_ARROW_PARSE_ARGS)
   {
@@ -2912,7 +2912,7 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
 #if ENABLED (JERRY_PARSER)
   parser_error_location_t parser_error;
 
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
     jerry_debugger_send_string (JERRY_DEBUGGER_SOURCE_CODE,
@@ -2920,7 +2920,7 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
                                 source_p,
                                 source_size);
   }
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
   *bytecode_data_p = parser_parse_source (arg_list_p,
                                           arg_list_size,
@@ -2937,12 +2937,12 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
       ecma_module_cleanup ();
     }
 #endif
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
     if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
     {
       jerry_debugger_send_type (JERRY_DEBUGGER_PARSE_ERROR);
     }
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
     if (parser_error.error == PARSER_ERR_OUT_OF_MEMORY)
     {
@@ -2993,7 +2993,7 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
   }
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
   if ((JERRY_CONTEXT (debugger_flags) & (JERRY_DEBUGGER_CONNECTED | JERRY_DEBUGGER_PARSER_WAIT))
       == (JERRY_DEBUGGER_CONNECTED | JERRY_DEBUGGER_PARSER_WAIT))
   {
@@ -3012,7 +3012,7 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
       jerry_debugger_transport_sleep ();
     }
   }
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
   return ECMA_VALUE_TRUE;
 #else /* !ENABLED (JERRY_PARSER) */

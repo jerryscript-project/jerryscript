@@ -173,7 +173,7 @@ struct jerry_context_t *jerry_port_get_current_context (void);
  *
  * Note:
  *      This port function is called by jerry-core when JERRY_DEBUGGER is
- *      defined. Otherwise this function is not used.
+ *      enabled (set to 1). Otherwise this function is not used.
  *
  * @param sleep_time milliseconds to sleep.
  */

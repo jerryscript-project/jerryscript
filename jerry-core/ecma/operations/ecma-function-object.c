@@ -823,9 +823,9 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
         return ECMA_VALUE_ERROR;
       }
 
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
       JERRY_DEBUGGER_CLEAR_FLAGS (JERRY_DEBUGGER_VM_EXCEPTION_THROWN);
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
       return ret_value;
     }
 #if ENABLED (JERRY_ES2015_ARROW_FUNCTION)

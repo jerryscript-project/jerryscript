@@ -232,10 +232,10 @@ typedef enum
   VM_OC_PUSH_CONSTRUCTOR_THIS,   /**< push 'this' inside a class constructor */
   VM_OC_CONSTRUCTOR_RET,         /**< explicit return from a class constructor */
 #endif /* ENABLED (JERRY_ES2015_CLASS) */
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
   VM_OC_BREAKPOINT_ENABLED,      /**< enabled breakpoint for debugger */
   VM_OC_BREAKPOINT_DISABLED,     /**< disabled breakpoint for debugger */
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 #if ENABLED (JERRY_LINE_INFO)
   VM_OC_RESOURCE_NAME,           /**< resource name of the current function */
   VM_OC_LINE,                    /**< line number of the next statement */
@@ -251,10 +251,10 @@ typedef enum
 #if !ENABLED (JERRY_ES2015_OBJECT_INITIALIZER)
   VM_OC_SET_COMPUTED_PROPERTY = VM_OC_NONE,   /**< set computed property is unused */
 #endif /* !ENABLED (JERRY_ES2015_OBJECT_INITIALIZER) */
-#ifndef JERRY_DEBUGGER
+#if !ENABLED (JERRY_DEBUGGER)
   VM_OC_BREAKPOINT_ENABLED = VM_OC_NONE,      /**< enabled breakpoint for debugger is unused */
   VM_OC_BREAKPOINT_DISABLED = VM_OC_NONE,     /**< disabled breakpoint for debugger is unused */
-#endif /* !JERRY_DEBUGGER */
+#endif /* !ENABLED (JERRY_DEBUGGER) */
 #if !ENABLED (JERRY_LINE_INFO)
   VM_OC_RESOURCE_NAME = VM_OC_NONE,           /**< resource name of the current function is unused */
   VM_OC_LINE = VM_OC_NONE,                    /**< line number of the next statement is unused */

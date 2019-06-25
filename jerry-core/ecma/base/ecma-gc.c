@@ -1056,14 +1056,14 @@ ecma_gc_run (jmem_free_unused_memory_severity_t severity) /**< gc severity */
 void
 ecma_free_unused_memory (jmem_free_unused_memory_severity_t severity) /**< severity of the request */
 {
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
   while ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
          && JERRY_CONTEXT (debugger_byte_code_free_tail) != ECMA_NULL_POINTER)
   {
     /* Wait until all byte code is freed or the connection is aborted. */
     jerry_debugger_receive (NULL);
   }
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
   if (severity == JMEM_FREE_UNUSED_MEMORY_SEVERITY_LOW)
   {

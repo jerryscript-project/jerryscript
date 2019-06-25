@@ -296,7 +296,7 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
     this_binding = ecma_copy_value (JERRY_CONTEXT (vm_top_context_p)->this_binding);
     lex_env_p = JERRY_CONTEXT (vm_top_context_p)->lex_env_p;
 
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
     uint32_t chain_index = parse_opts >> ECMA_PARSE_CHAIN_INDEX_SHIFT;
 
     while (chain_index != 0)
@@ -314,7 +314,7 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
         chain_index--;
       }
     }
-#endif
+#endif /* ENABLED (JERRY_DEBUGGER) */
   }
   else
   {
@@ -503,9 +503,9 @@ vm_super_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
   if (JERRY_UNLIKELY (ECMA_IS_VALUE_ERROR (completion_value)))
   {
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
     JERRY_CONTEXT (debugger_exception_byte_code_p) = frame_ctx_p->byte_code_p;
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
     frame_ctx_p->byte_code_p = (uint8_t *) vm_error_byte_code_p;
   }
   else
@@ -591,9 +591,9 @@ opfunc_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
   if (JERRY_UNLIKELY (ECMA_IS_VALUE_ERROR (completion_value)))
   {
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
     JERRY_CONTEXT (debugger_exception_byte_code_p) = frame_ctx_p->byte_code_p;
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
     frame_ctx_p->byte_code_p = (uint8_t *) vm_error_byte_code_p;
   }
   else
@@ -667,9 +667,9 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
   if (JERRY_UNLIKELY (ECMA_IS_VALUE_ERROR (completion_value)))
   {
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
     JERRY_CONTEXT (debugger_exception_byte_code_p) = frame_ctx_p->byte_code_p;
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
     frame_ctx_p->byte_code_p = (uint8_t *) vm_error_byte_code_p;
   }
   else
@@ -1975,9 +1975,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_ERROR:
         {
           JERRY_ASSERT (frame_ctx_p->byte_code_p[1] == CBC_EXT_ERROR);
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
           frame_ctx_p->byte_code_p = JERRY_CONTEXT (debugger_exception_byte_code_p);
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
           result = ECMA_VALUE_ERROR;
           goto error;
@@ -3063,9 +3063,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               stack_top_p -= PARSER_TRY_CONTEXT_STACK_ALLOCATION;
               result = ECMA_VALUE_ERROR;
 
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
               JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_VM_EXCEPTION_THROWN);
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
               goto error;
             }
             case VM_CONTEXT_FINALLY_RETURN:
@@ -3109,7 +3109,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           JERRY_ASSERT (frame_ctx_p->registers_p + register_end + frame_ctx_p->context_depth == stack_top_p);
           continue;
         }
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
         case VM_OC_BREAKPOINT_ENABLED:
         {
           if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_IGNORE)
@@ -3183,7 +3183,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
           continue;
         }
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 #if ENABLED (JERRY_LINE_INFO)
         case VM_OC_RESOURCE_NAME:
         {
@@ -3358,7 +3358,7 @@ error:
       }
 
       stack_top_p = frame_ctx_p->registers_p + register_end + frame_ctx_p->context_depth;
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
       const uint32_t dont_stop = (JERRY_DEBUGGER_VM_IGNORE_EXCEPTION
                                   | JERRY_DEBUGGER_VM_IGNORE
                                   | JERRY_DEBUGGER_VM_EXCEPTION_THROWN);
@@ -3388,7 +3388,7 @@ error:
           JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_VM_EXCEPTION_THROWN);
         }
       }
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
     }
 
     JERRY_ASSERT (frame_ctx_p->registers_p + register_end + frame_ctx_p->context_depth == stack_top_p);
@@ -3426,9 +3426,9 @@ error:
       {
         JERRY_ASSERT (frame_ctx_p->registers_p + register_end + frame_ctx_p->context_depth == stack_top_p);
 
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
         JERRY_DEBUGGER_CLEAR_FLAGS (JERRY_DEBUGGER_VM_EXCEPTION_THROWN);
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
         byte_code_p = frame_ctx_p->byte_code_p;
 
@@ -3446,9 +3446,9 @@ error:
           }
 
           ecma_object_t *catch_env_p = ecma_create_decl_lex_env (frame_ctx_p->lex_env_p);
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
           catch_env_p->type_flags_refs |= (uint16_t) ECMA_OBJECT_FLAG_NON_CLOSURE;
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
           ecma_string_t *catch_name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
           ecma_op_create_mutable_binding (catch_env_p, catch_name_p, false);
@@ -3596,14 +3596,14 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
           ecma_fast_free_value (frame_ctx_p->registers_p[i]);
         }
 
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
         if (JERRY_CONTEXT (debugger_stop_context) == JERRY_CONTEXT (vm_top_context_p))
         {
           /* The engine will stop when the next breakpoint is reached. */
           JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_STOP);
           JERRY_CONTEXT (debugger_stop_context) = NULL;
         }
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
 #if defined (JERRY_VM_RECURSION_LIMIT) && (JERRY_VM_RECURSION_LIMIT != 0)
         JERRY_CONTEXT (vm_recursion_counter)++;

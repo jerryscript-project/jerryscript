@@ -285,7 +285,7 @@ typedef struct parser_branch_node_t
   parser_branch_t branch;                     /**< branch */
 } parser_branch_node_t;
 
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
 /**
  * Extra information for each breakpoint.
  */
@@ -300,7 +300,7 @@ typedef struct
 #define PARSER_MAX_BREAKPOINT_INFO_COUNT \
   (JERRY_DEBUGGER_TRANSPORT_MAX_BUFFER_SIZE / sizeof (parser_breakpoint_info_t))
 
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
 /**
  * Those members of a context which needs
@@ -388,11 +388,11 @@ typedef struct
   uint32_t total_byte_code_size;              /**< total byte code size */
 #endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
   parser_breakpoint_info_t breakpoint_info[PARSER_MAX_BREAKPOINT_INFO_COUNT]; /**< breakpoint info list */
   uint16_t breakpoint_info_count; /**< current breakpoint index */
   parser_line_counter_t last_breakpoint_line; /**< last line where breakpoint has been inserted */
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
 #if ENABLED (JERRY_LINE_INFO)
   parser_line_counter_t last_line_info_line; /**< last line where line info has been inserted */
@@ -605,11 +605,11 @@ void parser_raise_error (parser_context_t *context_p, parser_error_t error);
 
 /* Debug functions. */
 
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
 
 void parser_append_breakpoint_info (parser_context_t *context_p, jerry_debugger_header_type_t type, uint32_t value);
 
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
 #if ENABLED (JERRY_LINE_INFO)
 

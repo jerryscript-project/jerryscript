@@ -17,7 +17,7 @@
 #include "jerryscript-ext/debugger.h"
 #include "jext-common.h"
 
-#ifdef JERRY_DEBUGGER
+#if defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1)
 
 /* JerryScript debugger protocol is a simplified version of RFC-6455 (WebSockets). */
 
@@ -450,7 +450,7 @@ jerryx_debugger_ws_create (void)
   return true;
 } /* jerryx_debugger_ws_create */
 
-#else /* !JERRY_DEBUGGER */
+#else /* !(defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1)) */
 
 /**
  * Dummy function when debugger is disabled.
@@ -463,4 +463,4 @@ jerryx_debugger_ws_create (void)
   return false;
 } /* jerryx_debugger_ws_create */
 
-#endif /* JERRY_DEBUGGER */
+#endif /* defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1) */

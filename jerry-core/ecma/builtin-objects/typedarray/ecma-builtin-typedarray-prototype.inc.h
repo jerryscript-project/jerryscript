@@ -71,6 +71,15 @@ ROUTINE (LIT_MAGIC_STRING_SORT, ecma_builtin_typedarray_prototype_sort, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_FIND, ecma_builtin_typedarray_prototype_find, 2, 1)
 ROUTINE (LIT_MAGIC_STRING_FIND_INDEX, ecma_builtin_typedarray_prototype_find_index, 2, 1)
 
+#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+
+ROUTINE (LIT_MAGIC_STRING_KEYS, ecma_builtin_typedarray_prototype_keys, 0, 0)
+ROUTINE (LIT_MAGIC_STRING_VALUES, ecma_builtin_typedarray_prototype_values, 0, 0)
+ROUTINE (LIT_MAGIC_STRING_ENTRIES, ecma_builtin_typedarray_prototype_entries, 0, 0)
+ROUTINE (LIT_GLOBAL_SYMBOL_ITERATOR, ecma_builtin_typedarray_prototype_values, 0, 0)
+
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
+
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

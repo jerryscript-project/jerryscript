@@ -69,7 +69,7 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
                                                 ECMA_OBJECT_TYPE_CLASS);
 
   ecma_map_object_t *map_obj_p = (ecma_map_object_t *) object_p;
-  map_obj_p->header.u.class_prop.class_id = lit_id;
+  map_obj_p->header.u.class_prop.class_id = (uint16_t) lit_id;
   map_obj_p->header.u.class_prop.u.value = ecma_op_container_create_internal_object ();
   map_obj_p->size = 0;
 
@@ -669,7 +669,7 @@ ecma_op_container_create_iterator (ecma_value_t this_arg, /**< this argument */
 
   return ecma_op_create_iterator_object (this_arg,
                                          ecma_builtin_get (proto_id),
-                                         iterator_type,
+                                         (uint8_t) iterator_type,
                                          type);
 } /* ecma_op_container_create_iterator */
 

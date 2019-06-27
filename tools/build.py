@@ -91,7 +91,7 @@ def get_arguments():
     compgrp.add_argument('--jerry-cmdline-test', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help=devhelp('build test version of the jerry command line tool (%(choices)s)'))
     compgrp.add_argument('--libfuzzer', metavar='X', choices=['ON', 'OFF'], type=str.upper,
-                         help='build jerry with libfuzzer support (%(choices)s)')
+                         help=devhelp('build jerry with libfuzzer support (%(choices)s)'))
     compgrp.add_argument('--jerry-ext', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help='build jerry-ext (%(choices)s)')
     compgrp.add_argument('--jerry-libm', metavar='X', choices=['ON', 'OFF'], type=str.upper,

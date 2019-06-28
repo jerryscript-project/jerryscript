@@ -425,7 +425,7 @@
 #endif /* !defined (JERRY_VM_EXEC_STOP) */
 
 /**
- * Set the VM execution recursion limit.
+ * Set the function call recursion limit.
  *
  * Allowed values:
  *  0: Disable recursion limit check.
@@ -436,9 +436,9 @@
  *
  * Default value: 0
  */
-#ifndef JERRY_VM_RECURSION_LIMIT
-# define JERRY_VM_RECURSION_LIMIT 0
-#endif /* !defined (JERRY_VM_RECURSION_LIMIT) */
+#ifndef JERRY_CALL_STACK_LIMIT
+# define JERRY_CALL_STACK_LIMIT 0
+#endif /* !defined (JERRY_CALL_STACK_LIMIT) */
 
 
 /**

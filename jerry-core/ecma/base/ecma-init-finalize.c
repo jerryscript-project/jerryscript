@@ -44,9 +44,9 @@ ecma_init (void)
   JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_HIGH_SEV_GC;
 #endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
 
-#if defined (JERRY_VM_RECURSION_LIMIT) && (JERRY_VM_RECURSION_LIMIT != 0)
-  JERRY_CONTEXT (vm_recursion_counter) = JERRY_VM_RECURSION_LIMIT;
-#endif /* defined (JERRY_VM_RECURSION_LIMIT) && (JERRY_VM_RECURSION_LIMIT != 0) */
+#if defined (JERRY_CALL_STACK_LIMIT) && (JERRY_CALL_STACK_LIMIT != 0)
+  JERRY_CONTEXT (function_call_counter) = JERRY_CALL_STACK_LIMIT;
+#endif /* defined (JERRY_CALL_STACK_LIMIT) && (JERRY_CALL_STACK_LIMIT != 0) */
 
 #if ENABLED (JERRY_ES2015_BUILTIN_PROMISE)
   ecma_job_queue_init ();

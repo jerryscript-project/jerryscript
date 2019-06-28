@@ -314,7 +314,7 @@ ecma_builtin_helper_object_get_properties (ecma_object_t *obj_p, /**< object */
  * If the index is negative, it is used as the offset from the end of the array,
  * to compute normalized index.
  * If the index is greater than the length of the array, the normalized index will be the length of the array.
- *
+ * If is_last_index_of is true, then we use the method in ECMA-262 v6, 22.2.3.16 to compute the normalized index.
  * See also:
  *          ECMA-262 v5, 15.4.4.10 steps 5-6, 7 (part 2) and 8
  *          ECMA-262 v5, 15.4.4.12 steps 5-6
@@ -326,12 +326,15 @@ ecma_builtin_helper_object_get_properties (ecma_object_t *obj_p, /**< object */
  *         - The Array.prototype.splice routine.
  *         - The Array.prototype.indexOf routine.
  *         - The String.prototype.slice routine.
+ *         - The TypedArray.prototype.indexOf routine.
+ *         - The TypedArray.prototype.lastIndexOf routine
  *
  * @return uint32_t - the normalized value of the index
  */
 uint32_t
 ecma_builtin_helper_array_index_normalize (ecma_number_t index, /**< index */
-                                           uint32_t length) /**< array's length */
+                                           uint32_t length, /**< array's length */
+                                           bool is_last_index_of) /**< true - normalize for lastIndexOf method*/
 {
   uint32_t norm_index;
 
@@ -344,7 +347,14 @@ ecma_builtin_helper_array_index_normalize (ecma_number_t index, /**< index */
     }
     else if (ecma_number_is_infinity (index))
     {
-      norm_index = ecma_number_is_negative (index) ? 0 : length;
+      if (is_last_index_of)
+      {
+        norm_index = ecma_number_is_negative (index) ? (uint32_t) -1 : length - 1;
+      }
+      else
+      {
+        norm_index = ecma_number_is_negative (index) ? 0 : length;
+      }
     }
     else
     {
@@ -352,20 +362,27 @@ ecma_builtin_helper_array_index_normalize (ecma_number_t index, /**< index */
       {
         ecma_number_t index_neg = -index;
 
-        if (index_neg > length)
+        if (is_last_index_of)
         {
-          norm_index = 0;
+          norm_index = length - ecma_number_to_uint32 (index_neg);
         }
         else
         {
-          norm_index = length - ecma_number_to_uint32 (index_neg);
+          if (index_neg > length)
+          {
+            norm_index = 0;
+          }
+          else
+          {
+            norm_index = length - ecma_number_to_uint32 (index_neg);
+          }
         }
       }
       else
       {
         if (index > length)
         {
-          norm_index = length;
+          norm_index = is_last_index_of ? length - 1 : length;
         }
         else
         {

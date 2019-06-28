@@ -16,6 +16,7 @@
 #include "ecma-builtin-helpers.h"
 #include "ecma-builtin-typedarray-helpers.h"
 #include "ecma-builtins.h"
+#include "ecma-comparison.h"
 #include "ecma-exceptions.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
@@ -1249,7 +1250,7 @@ ecma_builtin_typedarray_prototype_subarray (ecma_value_t this_arg, /**< this arg
 
   /* 7. relativeBegin */
   ECMA_OP_TO_NUMBER_TRY_CATCH (relative_begin, begin, ret_value);
-  begin_index_uint32 = ecma_builtin_helper_array_index_normalize (relative_begin, src_length);
+  begin_index_uint32 = ecma_builtin_helper_array_index_normalize (relative_begin, src_length, false);
 
   if (ecma_is_value_undefined (end))
   {
@@ -1260,7 +1261,7 @@ ecma_builtin_typedarray_prototype_subarray (ecma_value_t this_arg, /**< this arg
     /* 10. relativeEnd */
     ECMA_OP_TO_NUMBER_TRY_CATCH (relative_end, end, ret_value);
 
-    end_index_uint32 = ecma_builtin_helper_array_index_normalize (relative_end, src_length);
+    end_index_uint32 = ecma_builtin_helper_array_index_normalize (relative_end, src_length, false);
 
     ECMA_OP_TO_NUMBER_FINALIZE (relative_end);
   }
@@ -1341,7 +1342,7 @@ ecma_builtin_typedarray_prototype_fill (ecma_value_t this_arg, /**< this argumen
   uint32_t begin_index_uint32 = 0, end_index_uint32 = 0;
 
   ECMA_OP_TO_NUMBER_TRY_CATCH (relative_begin, begin, ret_value);
-  begin_index_uint32 = ecma_builtin_helper_array_index_normalize (relative_begin, length);
+  begin_index_uint32 = ecma_builtin_helper_array_index_normalize (relative_begin, length, false);
 
   if (ecma_is_value_undefined (end))
   {
@@ -1351,7 +1352,7 @@ ecma_builtin_typedarray_prototype_fill (ecma_value_t this_arg, /**< this argumen
   {
     ECMA_OP_TO_NUMBER_TRY_CATCH (relative_end, end, ret_value);
 
-    end_index_uint32 = ecma_builtin_helper_array_index_normalize (relative_end, length);
+    end_index_uint32 = ecma_builtin_helper_array_index_normalize (relative_end, length, false);
 
     ECMA_OP_TO_NUMBER_FINALIZE (relative_end);
   }
@@ -1686,6 +1687,115 @@ ecma_builtin_typedarray_prototype_find_index (ecma_value_t this_arg, /**< this a
 {
   return ecma_builtin_typedarray_prototype_find_helper (this_arg, predicate, predicate_this_arg, false);
 } /* ecma_builtin_typedarray_prototype_find_index */
+
+/**
+ * The %TypedArray%.prototype object's 'indexOf' and 'lastIndexOf' routine helper
+ *
+ * See also:
+ *         ECMA-262 v6, 22.2.3.13, 22.2.3.16
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_index_helper (ecma_value_t this_arg, /**< this argument */
+                                                const ecma_value_t args[], /**< arguments list */
+                                                ecma_length_t args_number, /**< number of arguments */
+                                                bool is_last_index_of) /**< true - lastIndexOf routine
+                                                                         false - indexOf routine */
+{
+  if (!ecma_is_typedarray (this_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
+  }
+
+  ecma_object_t *typedarray_p = ecma_get_object_from_value (this_arg);
+  uint32_t length = ecma_typedarray_get_length (typedarray_p);
+  lit_magic_string_id_t class_id = ecma_object_get_class_name (typedarray_p);
+  lit_utf8_byte_t *typedarray_buffer_p = ecma_typedarray_get_buffer (typedarray_p);
+  uint8_t shift = ecma_typedarray_get_element_size_shift (typedarray_p);
+  uint8_t element_size = (uint8_t) (1 << shift);
+  uint32_t limit = length * element_size;
+  uint32_t from_index;
+
+  if (args_number == 0
+      || length == 0)
+  {
+    return ecma_make_integer_value (-1);
+  }
+  if (args_number == 1)
+  {
+    from_index = is_last_index_of ? length - 1 : 0;
+  }
+  else
+  {
+    ecma_number_t num_var;
+
+    if (ECMA_IS_VALUE_ERROR (ecma_get_number (args[1], &num_var)))
+    {
+      return ECMA_VALUE_ERROR;
+    }
+
+    from_index = ecma_builtin_helper_array_index_normalize (num_var, length, is_last_index_of);
+  }
+
+  if (!ecma_is_value_number (args[0]))
+  {
+    return ecma_make_integer_value (-1);
+  }
+
+  ecma_number_t search_num = ecma_get_number_from_value (args[0]);
+
+  int32_t increment = is_last_index_of ? -element_size : element_size;
+
+  for (int32_t position = (int32_t) from_index * element_size;
+       (is_last_index_of ? position >= 0 : (uint32_t) position < limit);
+       position += increment)
+  {
+    ecma_number_t element_num = ecma_get_typedarray_element (typedarray_buffer_p + position, class_id);
+
+    if (search_num == element_num)
+    {
+      return ecma_make_number_value ((ecma_number_t) position / element_size);
+    }
+  }
+
+  return ecma_make_integer_value (-1);
+} /* ecma_builtin_typedarray_prototype_index_helper */
+
+/**
+ * The %TypedArray%.prototype object's 'indexOf' routine
+ *
+ * See also:
+ *         ECMA-262 v6, 22.2.3.13
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_index_of (ecma_value_t this_arg, /**< this argument */
+                                           const ecma_value_t args[], /**< arguments list */
+                                           ecma_length_t args_number) /**< number of arguments */
+{
+  return ecma_builtin_typedarray_prototype_index_helper (this_arg, args, args_number, false);
+} /* ecma_builtin_typedarray_prototype_index_of */
+
+/**
+ * The %TypedArray%.prototype object's 'lastIndexOf' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 22.2.3.16
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_last_index_of (ecma_value_t this_arg, /**< this argument */
+                                                const ecma_value_t args[], /**< arguments list */
+                                                ecma_length_t args_number) /**< number of arguments */
+{
+  return ecma_builtin_typedarray_prototype_index_helper (this_arg, args, args_number, true);
+} /* ecma_builtin_typedarray_prototype_last_index_of */
 
 /**
  * @}

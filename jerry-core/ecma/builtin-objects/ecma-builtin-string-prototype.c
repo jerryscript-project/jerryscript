@@ -1275,7 +1275,7 @@ ecma_builtin_string_prototype_object_slice (ecma_string_t *get_string_val, /**< 
     return ECMA_VALUE_ERROR;
   }
 
-  start = ecma_builtin_helper_array_index_normalize (start_num, len);
+  start = ecma_builtin_helper_array_index_normalize (start_num, len, false);
 
   /* 5. 7. */
   if (ecma_is_value_undefined (arg2))
@@ -1291,9 +1291,8 @@ ecma_builtin_string_prototype_object_slice (ecma_string_t *get_string_val, /**< 
       return ECMA_VALUE_ERROR;
     }
 
-    end = ecma_builtin_helper_array_index_normalize (end_num, len);
+    end = ecma_builtin_helper_array_index_normalize (end_num, len, false);
   }
-
 
   JERRY_ASSERT (start <= len && end <= len);
 

@@ -48,7 +48,7 @@ ecma_builtin_helper_object_get_properties (ecma_object_t *obj_p, uint32_t opts);
 ecma_value_t
 ecma_builtin_helper_array_concat_value (ecma_object_t *obj_p, uint32_t *length_p, ecma_value_t value);
 uint32_t
-ecma_builtin_helper_array_index_normalize (ecma_number_t index, uint32_t length);
+ecma_builtin_helper_array_index_normalize (ecma_number_t index, uint32_t length, bool last_index_of);
 uint32_t
 ecma_builtin_helper_string_index_normalize (ecma_number_t index, uint32_t length, bool nan_to_zero);
 ecma_value_t

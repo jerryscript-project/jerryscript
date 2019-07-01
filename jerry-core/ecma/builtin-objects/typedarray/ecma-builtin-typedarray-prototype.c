@@ -715,7 +715,7 @@ ecma_op_typedarray_set_with_typedarray (ecma_value_t this_arg, /**< this argumen
 
   /* 12. srcBuffer */
   ecma_object_t *src_arraybuffer_p = ecma_typedarray_get_arraybuffer (src_typedarray_p);
-  lit_utf8_byte_t *src_buffer_p = ecma_typedarray_get_buffer (src_typedarray_p);
+  lit_utf8_byte_t *src_buffer_p = ecma_arraybuffer_get_buffer (src_arraybuffer_p);
 
   /* 15. targetType */
   lit_magic_string_id_t target_class_id = ecma_object_get_class_name (target_typedarray_p);
@@ -760,14 +760,6 @@ ecma_op_typedarray_set_with_typedarray (ecma_value_t this_arg, /**< this argumen
     return ECMA_VALUE_UNDEFINED;
   }
 
-  /* 24.d, 25. srcByteIndex */
-  ecma_length_t src_byte_index = 0;
-
-  if (src_arraybuffer_p != target_arraybuffer_p)
-  {
-    src_byte_index = src_byte_offset;
-  }
-
   /* 26. targetByteIndex */
   uint32_t target_byte_index = target_offset_uint32 * target_element_size + target_byte_offset;
 
@@ -776,16 +768,16 @@ ecma_op_typedarray_set_with_typedarray (ecma_value_t this_arg, /**< this argumen
 
   if (src_class_id == target_class_id)
   {
-    memmove (target_buffer_p + target_byte_index, src_buffer_p + src_byte_index,
+    memmove (target_buffer_p + target_byte_index, src_buffer_p + src_byte_offset,
              target_element_size * src_length_uint32);
   }
   else
   {
     while (target_byte_index < limit)
     {
-      ecma_number_t elem_num = ecma_get_typedarray_element (src_buffer_p + src_byte_index, src_class_id);
+      ecma_number_t elem_num = ecma_get_typedarray_element (src_buffer_p + src_byte_offset, src_class_id);
       ecma_set_typedarray_element (target_buffer_p + target_byte_index, elem_num, target_class_id);
-      src_byte_index += src_element_size;
+      src_byte_offset += src_element_size;
       target_byte_index += target_element_size;
     }
   }

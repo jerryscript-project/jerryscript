@@ -160,6 +160,17 @@
 #endif /* !defined (JERRY_CPOINTER_32_BIT) */
 
 /**
+ * Enable/Disable the engine's JavaScript debugger interface
+ *
+ * Allowed values:
+ *  0: Disable the debugger parts.
+ *  1: Enable the debugger.
+ */
+#ifndef JERRY_DEBUGGER
+# define JERRY_DEBUGGER 0
+#endif /* !defined (JERRY_DEBUGGER) */
+
+/**
  * Enable/Disable built-in error messages for error objects.
  *
  * Allowed values:
@@ -604,6 +615,10 @@
 #if !defined (JERRY_CPOINTER_32_BIT) \
 || ((JERRY_CPOINTER_32_BIT != 0) && (JERRY_CPOINTER_32_BIT != 1))
 # error "Invalid value for 'JERRY_CPOINTER_32_BIT' macro."
+#endif
+#if !defined (JERRY_DEBUGGER) \
+|| ((JERRY_DEBUGGER != 0) && (JERRY_DEBUGGER != 1))
+# error "Invalid value for 'JERRY_DEBUGGER' macro."
 #endif
 #if !defined (JERRY_ERROR_MESSAGES) \
 || ((JERRY_ERROR_MESSAGES != 0) && (JERRY_ERROR_MESSAGES != 1))

@@ -81,12 +81,12 @@ typedef enum
   ECMA_TYPE___MAX = ECMA_TYPE_ERROR /** highest value for ecma types */
 } ecma_type_t;
 
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
 /**
  * Shift for scope chain index part in ecma_parse_opts
  */
 #define ECMA_PARSE_CHAIN_INDEX_SHIFT 16
-#endif
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
 /**
  * Option flags for script parsing.
@@ -712,9 +712,9 @@ typedef enum
 /**
  * Non closure flag for debugger.
  */
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
 #define ECMA_OBJECT_FLAG_NON_CLOSURE 0x20
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
 /**
  * Value for increasing or decreasing the object reference counter.

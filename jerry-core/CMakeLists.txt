@@ -256,7 +256,7 @@ endif()
 
 # Enable debugger
 if(FEATURE_DEBUGGER)
-  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_DEBUGGER)
+  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_DEBUGGER=1)
 endif()
 
 # Memory management stress-test mode

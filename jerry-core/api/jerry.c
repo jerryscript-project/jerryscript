@@ -191,14 +191,14 @@ jerry_cleanup (void)
 {
   jerry_assert_api_available ();
 
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
     jerry_debugger_send_type (JERRY_DEBUGGER_CLOSE_CONNECTION);
 
     jerry_debugger_transport_close ();
   }
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
   for (jerry_context_data_header_t *this_p = JERRY_CONTEXT (context_data_p);
        this_p != NULL;
@@ -379,7 +379,7 @@ jerry_parse (const jerry_char_t *resource_name_p, /**< resource name (usually a 
              size_t source_size, /**< script source size */
              uint32_t parse_opts) /**< jerry_parse_opts_t option bits */
 {
-#if defined JERRY_DEBUGGER && ENABLED (JERRY_PARSER)
+#if ENABLED (JERRY_DEBUGGER) && ENABLED (JERRY_PARSER)
   if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       && resource_name_length > 0)
   {
@@ -388,10 +388,10 @@ jerry_parse (const jerry_char_t *resource_name_p, /**< resource name (usually a 
                                 resource_name_p,
                                 resource_name_length);
   }
-#else /* !(JERRY_DEBUGGER && ENABLED (JERRY_PARSER)) */
+#else /* !(ENABLED (JERRY_DEBUGGER) && ENABLED (JERRY_PARSER)) */
   JERRY_UNUSED (resource_name_p);
   JERRY_UNUSED (resource_name_length);
-#endif /* JERRY_DEBUGGER && ENABLED (JERRY_PARSER) */
+#endif /* ENABLED (JERRY_DEBUGGER) && ENABLED (JERRY_PARSER) */
 
 #if ENABLED (JERRY_PARSER)
   jerry_assert_api_available ();
@@ -449,7 +449,7 @@ jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (u
                       size_t source_size, /**< script source size */
                       uint32_t parse_opts) /**< jerry_parse_opts_t option bits */
 {
-#if defined JERRY_DEBUGGER && ENABLED (JERRY_PARSER)
+#if ENABLED (JERRY_DEBUGGER) && ENABLED (JERRY_PARSER)
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
     jerry_debugger_send_string (JERRY_DEBUGGER_SOURCE_CODE_NAME,
@@ -457,10 +457,10 @@ jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (u
                                 resource_name_p,
                                 resource_name_length);
   }
-#else /* !(JERRY_DEBUGGER && ENABLED (JERRY_PARSER)) */
+#else /* !(ENABLED (JERRY_DEBUGGER) && ENABLED (JERRY_PARSER)) */
   JERRY_UNUSED (resource_name_p);
   JERRY_UNUSED (resource_name_length);
-#endif /* JERRY_DEBUGGER && ENABLED (JERRY_PARSER) */
+#endif /* ENABLED (JERRY_DEBUGGER) && ENABLED (JERRY_PARSER) */
 
 #if ENABLED (JERRY_PARSER)
   jerry_assert_api_available ();
@@ -902,9 +902,9 @@ jerry_is_feature_enabled (const jerry_feature_t feature) /**< feature to check *
 #if ENABLED (JERRY_SNAPSHOT_EXEC)
           || feature == JERRY_FEATURE_SNAPSHOT_EXEC
 #endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
           || feature == JERRY_FEATURE_DEBUGGER
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 #if ENABLED (JERRY_VM_EXEC_STOP)
           || feature == JERRY_FEATURE_VM_EXEC_STOP
 #endif /* ENABLED (JERRY_VM_EXEC_STOP) */

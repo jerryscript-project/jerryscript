@@ -19,7 +19,7 @@
 #include "ecma-globals.h"
 #include "jerryscript-debugger-transport.h"
 
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
 
 /* JerryScript debugger protocol is a simplified version of RFC-6455 (WebSockets). */
 
@@ -486,6 +486,6 @@ bool jerry_debugger_send_parse_function (uint32_t line, uint32_t column);
 void jerry_debugger_send_memstats (void);
 bool jerry_debugger_send_exception_string (void);
 
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
 #endif /* !DEBUGGER_H */

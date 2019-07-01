@@ -23,7 +23,7 @@ void
 jerryx_debugger_after_connect (bool success) /**< tells whether the connection
                                               *   has been successfully established */
 {
-#ifdef JERRY_DEBUGGER
+#if defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1)
   if (success)
   {
     jerry_debugger_transport_start ();
@@ -32,7 +32,7 @@ jerryx_debugger_after_connect (bool success) /**< tells whether the connection
   {
     jerry_debugger_transport_close ();
   }
-#else /* !JERRY_DEBUGGER */
+#else /* !(defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1)) */
   JERRYX_UNUSED (success);
-#endif /* JERRY_DEBUGGER */
+#endif /* defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1) */
 } /* jerryx_debugger_after_connect */

@@ -174,7 +174,7 @@ struct jerry_context_t
   uint32_t vm_recursion_counter;  /**< VM recursion counter */
 #endif /* defined (JERRY_VM_RECURSION_LIMIT) && (JERRY_VM_RECURSION_LIMIT != 0) */
 
-#ifdef JERRY_DEBUGGER
+#if ENABLED (JERRY_DEBUGGER)
   uint8_t debugger_send_buffer[JERRY_DEBUGGER_TRANSPORT_MAX_BUFFER_SIZE]; /**< buffer for sending messages */
   uint8_t debugger_receive_buffer[JERRY_DEBUGGER_TRANSPORT_MAX_BUFFER_SIZE]; /**< buffer for receiving messages */
   jerry_debugger_transport_header_t *debugger_transport_header_p; /**< head of transport protocol chain */
@@ -189,7 +189,7 @@ struct jerry_context_t
   uint8_t debugger_message_delay; /**< call receive message when reaches zero */
   uint8_t debugger_max_send_size; /**< maximum amount of data that can be sent */
   uint8_t debugger_max_receive_size; /**< maximum amount of data that can be received */
-#endif /* JERRY_DEBUGGER */
+#endif /* ENABLED (JERRY_DEBUGGER) */
 
 #if ENABLED (JERRY_LINE_INFO)
   ecma_value_t resource_name; /**< resource name (usually a file name) */

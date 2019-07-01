@@ -827,7 +827,49 @@ main (void)
     jerry_release_value (err_str_val);
     jerry_release_value (parsed_code_val);
     TEST_ASSERT (!strcmp ((char *) err_str_buf,
-                          "SyntaxError: Primary expression expected. [line: 2, column: 10]"));
+                          "SyntaxError: Primary expression expected. [<anonymous>:2:10]"));
+
+    const jerry_char_t file_str[] = "filename.js";
+    parsed_code_val = jerry_parse (file_str,
+                                   sizeof (file_str) - 1,
+                                   parser_err_src,
+                                   sizeof (parser_err_src) - 1,
+                                   JERRY_PARSE_NO_OPTS);
+    TEST_ASSERT (jerry_value_is_error (parsed_code_val));
+    parsed_code_val = jerry_get_value_from_error (parsed_code_val, true);
+    err_str_val = jerry_value_to_string (parsed_code_val);
+    err_str_size = jerry_get_string_size (err_str_val);
+
+    sz = jerry_string_to_char_buffer (err_str_val, err_str_buf, err_str_size);
+    err_str_buf[sz] = 0;
+
+    jerry_release_value (err_str_val);
+    jerry_release_value (parsed_code_val);
+    TEST_ASSERT (!strcmp ((char *) err_str_buf,
+                          "SyntaxError: Primary expression expected. [filename.js:2:10]"));
+
+    const jerry_char_t eval_err_src[] = "eval(\"var b;\\nfor (,); \");";
+    parsed_code_val = jerry_parse (file_str,
+                                   sizeof (file_str),
+                                   eval_err_src,
+                                   sizeof (eval_err_src) - 1,
+                                   JERRY_PARSE_NO_OPTS);
+    TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
+
+    res = jerry_run (parsed_code_val);
+    TEST_ASSERT (jerry_value_is_error (res));
+    res = jerry_get_value_from_error (res, true);
+    err_str_val = jerry_value_to_string (res);
+    err_str_size = jerry_get_string_size (err_str_val);
+
+    sz = jerry_string_to_char_buffer (err_str_val, err_str_buf, err_str_size);
+    err_str_buf[sz] = 0;
+
+    jerry_release_value (err_str_val);
+    jerry_release_value (parsed_code_val);
+    jerry_release_value (res);
+    TEST_ASSERT (!strcmp ((char *) err_str_buf,
+                          "SyntaxError: Primary expression expected. [<eval>:2:6]"));
 
     jerry_cleanup ();
   }

@@ -527,6 +527,10 @@ ecma_gc_free_native_pointer (ecma_property_t *property_p) /**< property */
   native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t,
                                                       value_p->value);
 
+#ifndef JERRY_NDEBUG
+  JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_API_AVAILABLE;
+#endif /* !JERRY_NDEBUG */
+
   while (native_pointer_p != NULL)
   {
     if (native_pointer_p->info_p != NULL)
@@ -545,6 +549,10 @@ ecma_gc_free_native_pointer (ecma_property_t *property_p) /**< property */
 
     native_pointer_p = next_p;
   }
+
+#ifndef JERRY_NDEBUG
+  JERRY_CONTEXT (status_flags) |= ECMA_STATUS_API_AVAILABLE;
+#endif /* !JERRY_NDEBUG */
 } /* ecma_gc_free_native_pointer */
 
 /**

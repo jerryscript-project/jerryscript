@@ -164,6 +164,14 @@ parser_emit_unary_lvalue_opcode (parser_context_t *context_p, /**< context */
     JERRY_ASSERT (CBC_SAME_ARGS (CBC_PUSH_PROP, opcode));
     context_p->last_cbc_opcode = (uint16_t) opcode;
   }
+  else if (context_p->last_cbc_opcode == CBC_PUSH_THIS_LITERAL
+           && context_p->last_cbc.literal_type == LEXER_IDENT_LITERAL)
+  {
+    context_p->last_cbc_opcode = CBC_PUSH_THIS;
+    parser_emit_cbc_literal (context_p,
+                             (uint16_t) (opcode + CBC_UNARY_LVALUE_WITH_IDENT),
+                             context_p->lit_object.index);
+  }
   else
   {
     switch (context_p->last_cbc_opcode)

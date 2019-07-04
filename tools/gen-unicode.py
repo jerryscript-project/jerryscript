@@ -57,67 +57,87 @@ class UniCodeSource(object):
             generated_source.write("\n".join(self.__header))
             generated_source.write("\n".join(self.__data))
 
+class UnicodeCategorizer(object):
+    def __init__(self):
+        # unicode categories:      Lu Ll Lt Mn Mc Me Nd Nl No Zs Zl Zp Cc Cf Cs
+        #                          Co Lm Lo Pc Pd Ps Pe Pi Pf Po Sm Sc Sk So
+        # letter:                  Lu Ll Lt Lm Lo Nl
+        # non-letter-indent-part:
+        #   digit:                 Nd
+        #   punctuation mark:      Mn Mc
+        #   connector punctuation: Pc
+        # separators:              Zs
+        self._unicode_categories = {
+            'letters_category' : ["Lu", "Ll", "Lt", "Lm", "Lo", "Nl"],
+            'non_letters_category' : ["Nd", "Mn", "Mc", "Pc"],
+            'separators_category' : ["Zs"]
+        }
 
-# functions for unicode ranges
+        self._categories = {
+            'letters' : [],
+            'non_letters' : [],
+            'separators' : []
+        }
 
+    def _store_by_category(self, unicode_id, category):
+        """
+        Store the given unicode_id by its category
+        """
+        for target_category in self._categories:
+            if category in self._unicode_categories[target_category + '_category']:
+                self._categories[target_category].append(unicode_id)
 
-def read_categories(unicode_data_file):
-    """
-    Read the corresponding unicode values and store them in category lists.
+    def read_categories(self, unicode_data_file):
+        """
+        Read the corresponding unicode values and store them in category lists.
 
-    :return: List of letters, non_letter and separators.
-    """
+        :return: List of letters, non_letter and separators.
+        """
 
-    # unicode categories:      Lu Ll Lt Mn Mc Me Nd Nl No Zs Zl Zp Cc Cf Cs Co Lm Lo Pc Pd Ps Pe Pi Pf Po Sm Sc Sk So
-    # letter:                  Lu Ll Lt Lm Lo Nl
-    # non-letter-indent-part:
-    #   digit:                 Nd
-    #   punctuation mark:      Mn Mc
-    #   connector punctuation: Pc
-    # separators:              Zs
-    letter_category = ["Lu", "Ll", "Lt", "Lm", "Lo", "Nl"]
-    non_letter_category = ["Nd", "Mn", "Mc", "Pc"]
-    separator_category = ["Zs"]
+        range_start_id = 0
 
-    letters = []
-    non_letters = []
-    separators = []
+        with open(unicode_data_file) as unicode_data:
+            for line in csv.reader(unicode_data, delimiter=';'):
+                unicode_id = int(line[0], 16)
 
-    with open(unicode_data_file) as unicode_data:
-        for line in csv.reader(unicode_data, delimiter=';'):
-            unicode_id = int(line[0], 16)
+                # Skip supplementary planes and ascii chars
+                if unicode_id >= 0x10000 or unicode_id < 128:
+                    continue
 
-            # Skip supplementary planes and ascii chars
-            if unicode_id >= 0x10000 or unicode_id < 128:
-                continue
+                category = line[2]
 
-            category = line[2]
+                if range_start_id != 0:
+                    while range_start_id <= unicode_id:
+                        self._store_by_category(range_start_id, category)
+                        range_start_id += 1
+                    range_start_id = 0
+                    continue
 
-            if category in letter_category:
-                letters.append(unicode_id)
-            elif category in non_letter_category:
-                non_letters.append(unicode_id)
-            elif category in separator_category:
-                separators.append(unicode_id)
+                if line[1].startswith('<'):
+                    # Save the start position of the range
+                    range_start_id = unicode_id
 
-    # This separator char is handled separatly
-    non_breaking_space = 0x00A0
-    if non_breaking_space in separators:
-        separators.remove(int(non_breaking_space))
+                self._store_by_category(unicode_id, category)
 
-    # These separator chars are not in the unicode data file or not in Zs category
-    mongolian_vowel_separator = 0x180E
-    medium_mathematical_space = 0x205F
-    zero_width_space = 0x200B
+        # This separator char is handled separatly
+        separators = self._categories['separators']
+        non_breaking_space = 0x00A0
+        if non_breaking_space in separators:
+            separators.remove(int(non_breaking_space))
 
-    if mongolian_vowel_separator not in separators:
-        bisect.insort(separators, int(mongolian_vowel_separator))
-    if medium_mathematical_space not in separators:
-        bisect.insort(separators, int(medium_mathematical_space))
-    if zero_width_space not in separators:
-        bisect.insort(separators, int(zero_width_space))
+        # These separator chars are not in the unicode data file or not in Zs category
+        mongolian_vowel_separator = 0x180E
+        medium_mathematical_space = 0x205F
+        zero_width_space = 0x200B
 
-    return letters, non_letters, separators
+        if mongolian_vowel_separator not in separators:
+            bisect.insort(separators, int(mongolian_vowel_separator))
+        if medium_mathematical_space not in separators:
+            bisect.insort(separators, int(medium_mathematical_space))
+        if zero_width_space not in separators:
+            bisect.insort(separators, int(zero_width_space))
+
+        return self._categories['letters'], self._categories['non_letters'], self._categories['separators']
 
 
 def group_ranges(i):
@@ -159,7 +179,8 @@ def split_list(category_list):
 
 
 def generate_ranges(script_args):
-    letters, non_letters, separators = read_categories(script_args.unicode_data)
+    categorizer = UnicodeCategorizer()
+    letters, non_letters, separators = categorizer.read_categories(script_args.unicode_data)
 
     letter_tables = split_list(list(group_ranges(letters)))
     non_letter_tables = split_list(list(group_ranges(non_letters)))

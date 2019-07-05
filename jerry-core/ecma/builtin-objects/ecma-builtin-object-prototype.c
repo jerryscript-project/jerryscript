@@ -30,6 +30,27 @@
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
+/**
+ * This object has a custom dispatch function.
+ */
+#define BUILTIN_CUSTOM_DISPATCH
+
+/**
+ * List of built-in routine identifiers.
+ */
+enum
+{
+  /* Note: these 6 routines must be in this order */
+  ECMA_OBJECT_PROTOTYPE_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
+  ECMA_OBJECT_PROTOTYPE_TO_STRING,
+  ECMA_OBJECT_PROTOTYPE_VALUE_OF,
+  ECMA_OBJECT_PROTOTYPE_TO_LOCALE_STRING,
+  ECMA_OBJECT_PROTOTYPE_IS_PROTOTYPE_OF,
+  ECMA_OBJECT_PROTOTYPE_HAS_OWN_PROPERTY,
+  ECMA_OBJECT_PROTOTYPE_PROPERTY_IS_ENUMERABLE,
+};
+
+
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-object-prototype.inc.h"
 #define BUILTIN_UNDERSCORED_ID object_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
@@ -84,37 +105,30 @@ ecma_builtin_object_prototype_object_value_of (ecma_value_t this_arg) /**< this 
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_object_prototype_object_to_locale_string (ecma_value_t this_arg) /**< this argument */
+ecma_builtin_object_prototype_object_to_locale_string (ecma_object_t *obj_p) /**< this argument */
 {
-  ecma_value_t return_value = ECMA_VALUE_EMPTY;
-  /* 1. */
-  ECMA_TRY_CATCH (obj_val,
-                  ecma_op_to_object (this_arg),
-                  return_value);
-
-  ecma_object_t *obj_p = ecma_get_object_from_value (obj_val);
-
   /* 2. */
-  ECMA_TRY_CATCH (to_string_val,
-                  ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_TO_STRING_UL),
-                  return_value);
+  ecma_value_t to_string_val = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_TO_STRING_UL);
+
+  if (ECMA_IS_VALUE_ERROR (to_string_val))
+  {
+    return to_string_val;
+  }
 
   /* 3. */
   if (!ecma_op_is_callable (to_string_val))
   {
-    return_value = ecma_raise_type_error (ECMA_ERR_MSG ("'toString is missing or not a function.'"));
-  }
-  else
-  {
-    /* 4. */
-    ecma_object_t *to_string_func_obj_p = ecma_get_object_from_value (to_string_val);
-    return_value = ecma_op_function_call (to_string_func_obj_p, this_arg, NULL, 0);
+    ecma_free_value (to_string_val);
+    return ecma_raise_type_error (ECMA_ERR_MSG ("'toString is missing or not a function.'"));
   }
 
-  ECMA_FINALIZE (to_string_val);
-  ECMA_FINALIZE (obj_val);
+  /* 4. */
+  ecma_object_t *to_string_func_obj_p = ecma_get_object_from_value (to_string_val);
+  ecma_value_t ret_value = ecma_op_function_call (to_string_func_obj_p, ecma_make_object_value (obj_p), NULL, 0);
 
-  return return_value;
+  ecma_deref_object (to_string_func_obj_p);
+
+  return ret_value;
 } /* ecma_builtin_object_prototype_object_to_locale_string */
 
 /**
@@ -127,33 +141,10 @@ ecma_builtin_object_prototype_object_to_locale_string (ecma_value_t this_arg) /*
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_object_prototype_object_has_own_property (ecma_value_t this_arg, /**< this argument */
-                                                       ecma_value_t arg) /**< first argument */
+ecma_builtin_object_prototype_object_has_own_property (ecma_object_t *obj_p, /**< this argument */
+                                                       ecma_string_t *prop_name_p) /**< first argument */
 {
-  ecma_value_t return_value = ECMA_VALUE_EMPTY;
-
-  /* 1. */
-  ECMA_TRY_CATCH (to_string_val,
-                  ecma_op_to_string (arg),
-                  return_value);
-
-  /* 2. */
-  ECMA_TRY_CATCH (obj_val,
-                  ecma_op_to_object (this_arg),
-                  return_value);
-
-  ecma_string_t *property_name_string_p = ecma_get_string_from_value (to_string_val);
-
-  ecma_object_t *obj_p = ecma_get_object_from_value (obj_val);
-
-  /* 3. */
-  return_value = ecma_make_boolean_value (ecma_op_object_has_own_property (obj_p, property_name_string_p));
-
-  ECMA_FINALIZE (obj_val);
-
-  ECMA_FINALIZE (to_string_val);
-
-  return return_value;
+  return ecma_make_boolean_value (ecma_op_object_has_own_property (obj_p, prop_name_p));
 } /* ecma_builtin_object_prototype_object_has_own_property */
 
 /**
@@ -166,38 +157,24 @@ ecma_builtin_object_prototype_object_has_own_property (ecma_value_t this_arg, /*
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_object_prototype_object_is_prototype_of (ecma_value_t this_arg, /**< this argument */
+ecma_builtin_object_prototype_object_is_prototype_of (ecma_object_t *obj_p, /**< this argument */
                                                       ecma_value_t arg) /**< routine's first argument */
 {
-  /* 1. Is the argument an object? */
-  if (!ecma_is_value_object (arg))
-  {
-    return ECMA_VALUE_FALSE;
-  }
-
-  ecma_value_t return_value = ECMA_VALUE_EMPTY;
-
-  /* 2. ToObject(this) */
-  ECMA_TRY_CATCH (obj_value,
-                  ecma_op_to_object (this_arg),
-                  return_value);
-
-  ecma_object_t *obj_p = ecma_get_object_from_value (obj_value);
-
   /* 3. Compare prototype to object */
-  ECMA_TRY_CATCH (v_obj_value,
-                  ecma_op_to_object (arg),
-                  return_value);
+  ecma_value_t v_obj_value = ecma_op_to_object (arg);
+
+  if (ECMA_IS_VALUE_ERROR (v_obj_value))
+  {
+    return v_obj_value;
+  }
 
   ecma_object_t *v_obj_p = ecma_get_object_from_value (v_obj_value);
 
-  bool is_prototype_of = ecma_op_object_is_prototype_of (obj_p, v_obj_p);
-  return_value = ecma_make_boolean_value (is_prototype_of);
-  ECMA_FINALIZE (v_obj_value);
+  ecma_value_t ret_value = ecma_make_boolean_value (ecma_op_object_is_prototype_of (obj_p, v_obj_p));
 
-  ECMA_FINALIZE (obj_value);
+  ecma_deref_object (v_obj_p);
 
-  return return_value;
+  return ret_value;
 } /* ecma_builtin_object_prototype_object_is_prototype_of */
 
 /**
@@ -210,49 +187,124 @@ ecma_builtin_object_prototype_object_is_prototype_of (ecma_value_t this_arg, /**
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_object_prototype_object_property_is_enumerable (ecma_value_t this_arg, /**< this argument */
-                                                             ecma_value_t arg) /**< routine's first argument */
+ecma_builtin_object_prototype_object_property_is_enumerable (ecma_object_t *obj_p, /**< this argument */
+                                                             ecma_string_t *prop_name_p) /**< first argument */
 {
-  ecma_value_t return_value = ECMA_VALUE_EMPTY;
-
-  /* 1. */
-  ECMA_TRY_CATCH (to_string_val,
-                  ecma_op_to_string (arg),
-                  return_value);
-
-  /* 2. */
-  ECMA_TRY_CATCH (obj_val,
-                  ecma_op_to_object (this_arg),
-                  return_value);
-
-  ecma_string_t *property_name_string_p = ecma_get_string_from_value (to_string_val);
-
-  ecma_object_t *obj_p = ecma_get_object_from_value (obj_val);
-
   /* 3. */
   ecma_property_t property = ecma_op_object_get_own_property (obj_p,
-                                                              property_name_string_p,
+                                                              prop_name_p,
                                                               NULL,
                                                               ECMA_PROPERTY_GET_NO_OPTIONS);
 
   /* 4. */
   if (property != ECMA_PROPERTY_TYPE_NOT_FOUND && property != ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP)
   {
-    bool is_enumerable = ecma_is_property_enumerable (property);
+    return ecma_make_boolean_value (ecma_is_property_enumerable (property));
+  }
 
-    return_value = ecma_make_boolean_value (is_enumerable);
+  return ECMA_VALUE_FALSE;
+} /* ecma_builtin_object_prototype_object_property_is_enumerable */
+
+/**
+ * Dispatcher of the built-in's routines
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_builtin_object_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide routine
+                                                                              *   identifier */
+                                                ecma_value_t this_arg, /**< 'this' argument value */
+                                                const ecma_value_t arguments_list_p[], /**< list of arguments
+                                                                                      *   passed to routine */
+                                                ecma_length_t arguments_number) /**< length of arguments' list */
+{
+  JERRY_UNUSED (arguments_number);
+
+  /* no specialization */
+  if (builtin_routine_id <= ECMA_OBJECT_PROTOTYPE_VALUE_OF)
+  {
+    if (builtin_routine_id == ECMA_OBJECT_PROTOTYPE_TO_STRING)
+    {
+      return ecma_builtin_object_prototype_object_to_string (this_arg);
+    }
+
+    JERRY_ASSERT (builtin_routine_id <= ECMA_OBJECT_PROTOTYPE_VALUE_OF);
+
+    return ecma_builtin_object_prototype_object_value_of (this_arg);
+  }
+
+  if (builtin_routine_id <= ECMA_OBJECT_PROTOTYPE_IS_PROTOTYPE_OF)
+  {
+    if (builtin_routine_id == ECMA_OBJECT_PROTOTYPE_IS_PROTOTYPE_OF)
+    {
+      /* 15.2.4.6.1. */
+      if (!ecma_is_value_object (arguments_list_p[0]))
+      {
+        return ECMA_VALUE_FALSE;
+      }
+    }
+
+    ecma_value_t to_object = ecma_op_to_object (this_arg);
+
+    if (ECMA_IS_VALUE_ERROR (to_object))
+    {
+      return to_object;
+    }
+
+    ecma_object_t *obj_p = ecma_get_object_from_value (to_object);
+
+    ecma_value_t ret_value;
+
+    if (builtin_routine_id == ECMA_OBJECT_PROTOTYPE_IS_PROTOTYPE_OF)
+    {
+      ret_value = ecma_builtin_object_prototype_object_is_prototype_of (obj_p, arguments_list_p[0]);
+    }
+    else
+    {
+      ret_value = ecma_builtin_object_prototype_object_to_locale_string (obj_p);
+    }
+
+    ecma_deref_object (obj_p);
+
+    return ret_value;
+  }
+
+  JERRY_ASSERT (builtin_routine_id >= ECMA_OBJECT_PROTOTYPE_HAS_OWN_PROPERTY);
+
+  ecma_string_t *prop_name_p = ecma_op_to_prop_name (arguments_list_p[0]);
+
+  if (prop_name_p == NULL)
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  ecma_value_t to_object = ecma_op_to_object (this_arg);
+
+  if (ECMA_IS_VALUE_ERROR (to_object))
+  {
+    ecma_deref_ecma_string (prop_name_p);
+    return to_object;
+  }
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (to_object);
+
+  ecma_value_t ret_value;
+
+  if (builtin_routine_id == ECMA_OBJECT_PROTOTYPE_HAS_OWN_PROPERTY)
+  {
+    ret_value = ecma_builtin_object_prototype_object_has_own_property (obj_p, prop_name_p);
   }
   else
   {
-    return_value = ECMA_VALUE_FALSE;
+    ret_value = ecma_builtin_object_prototype_object_property_is_enumerable (obj_p, prop_name_p);
   }
 
-  ECMA_FINALIZE (obj_val);
+  ecma_deref_ecma_string (prop_name_p);
+  ecma_deref_object (obj_p);
 
-  ECMA_FINALIZE (to_string_val);
-
-  return return_value;
-} /* ecma_builtin_object_prototype_object_property_is_enumerable */
+  return ret_value;
+} /* ecma_builtin_object_prototype_dispatch_routine */
 
 /**
  * @}

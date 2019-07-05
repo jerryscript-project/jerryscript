@@ -40,7 +40,7 @@ set(FEATURE_VALGRIND                OFF     CACHE BOOL   "Enable Valgrind suppor
 set(FEATURE_VM_EXEC_STOP            OFF     CACHE BOOL   "Enable VM execution stopping?")
 set(JERRY_GLOBAL_HEAP_SIZE          "512"   CACHE STRING "Size of memory heap, in kilobytes")
 set(JERRY_REGEXP_RECURSION_LIMIT    "0"     CACHE STRING "Limit of regexp recursion depth")
-set(JERRY_VM_RECURSION_LIMIT        "0"     CACHE STRING "Limit of VM recursion depth")
+set(JERRY_CALL_STACK_LIMIT          "0"     CACHE STRING "Limit of function call recursion depth")
 
 # Option overrides
 if(USING_MSVC)
@@ -103,7 +103,7 @@ message(STATUS "FEATURE_VALGRIND             " ${FEATURE_VALGRIND})
 message(STATUS "FEATURE_VM_EXEC_STOP         " ${FEATURE_VM_EXEC_STOP})
 message(STATUS "JERRY_GLOBAL_HEAP_SIZE       " ${JERRY_GLOBAL_HEAP_SIZE})
 message(STATUS "JERRY_REGEXP_RECURSION_LIMIT " ${JERRY_REGEXP_RECURSION_LIMIT})
-message(STATUS "JERRY_VM_RECURSION_LIMIT     " ${JERRY_VM_RECURSION_LIMIT})
+message(STATUS "JERRY_CALL_STACK_LIMIT       " ${JERRY_CALL_STACK_LIMIT})
 
 # Include directories
 set(INCLUDE_CORE_PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -293,9 +293,9 @@ if(JERRY_REGEXP_RECURSION_LIMIT)
   set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_REGEXP_RECURSION_LIMIT=${JERRY_REGEXP_RECURSION_LIMIT})
 endif()
 
-# VM recursion depth limit
-if(JERRY_VM_RECURSION_LIMIT)
-  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_VM_RECURSION_LIMIT=${JERRY_VM_RECURSION_LIMIT})
+# Function call recursion depth limit
+if(JERRY_CALL_STACK_LIMIT)
+  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_CALL_STACK_LIMIT=${JERRY_CALL_STACK_LIMIT})
 endif()
 
 # RegExp byte-code dumps

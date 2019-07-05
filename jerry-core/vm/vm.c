@@ -46,9 +46,9 @@
 /*
  * Check VM recursion depth limit
  */
-#if defined (JERRY_VM_RECURSION_LIMIT) && (JERRY_VM_RECURSION_LIMIT != 0)
-JERRY_STATIC_ASSERT (JERRY_VM_RECURSION_LIMIT > 0, vm_recursion_limit_must_be_greater_than_zero);
-#endif /* defined (JERRY_VM_RECURSION_LIMIT) && (JERRY_VM_RECURSION_LIMIT != 0) */
+#if defined (JERRY_CALL_STACK_LIMIT) && (JERRY_CALL_STACK_LIMIT != 0)
+JERRY_STATIC_ASSERT (JERRY_CALL_STACK_LIMIT > 0, function_call_recursion_limit_must_be_greater_than_zero);
+#endif /* defined (JERRY_CALL_STACK_LIMIT) && (JERRY_CALL_STACK_LIMIT != 0) */
 
 /**
  * Get the value of object[property].
@@ -3605,10 +3605,6 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
         }
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
-#if defined (JERRY_VM_RECURSION_LIMIT) && (JERRY_VM_RECURSION_LIMIT != 0)
-        JERRY_CONTEXT (vm_recursion_counter)++;
-#endif /* defined (JERRY_VM_RECURSION_LIMIT) && (JERRY_VM_RECURSION_LIMIT != 0) */
-
         JERRY_CONTEXT (vm_top_context_p) = prev_context_p;
         return completion_value;
       }
@@ -3629,17 +3625,6 @@ vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data heade
         const ecma_value_t *arg_list_p, /**< arguments list */
         ecma_length_t arg_list_len) /**< length of arguments list */
 {
-#if defined (JERRY_VM_RECURSION_LIMIT) && (JERRY_VM_RECURSION_LIMIT != 0)
-  if (JERRY_UNLIKELY (JERRY_CONTEXT (vm_recursion_counter) == 0))
-  {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("VM recursion limit is exceeded."));
-  }
-  else
-  {
-    JERRY_CONTEXT (vm_recursion_counter)--;
-  }
-#endif /* defined (JERRY_VM_RECURSION_LIMIT) && (JERRY_VM_RECURSION_LIMIT != 0) */
-
   ecma_value_t *literal_p;
   vm_frame_ctx_t frame_ctx;
   uint32_t call_stack_size;

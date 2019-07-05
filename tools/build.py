@@ -130,8 +130,8 @@ def get_arguments():
                          help=devhelp('enable regexp strict mode (%(choices)s)'))
     coregrp.add_argument('--regexp-recursion-limit', metavar='N', type=int,
                          help='regexp recursion depth limit')
-    coregrp.add_argument('--vm-recursion-limit', metavar='N', type=int,
-                         help='VM recursion depth limit')
+    coregrp.add_argument('--call-stack-limit', metavar='N', type=int,
+                         help='Function call recursion depth limit')
     coregrp.add_argument('--show-opcodes', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help=devhelp('enable parser byte-code dumps (%(choices)s)'))
     coregrp.add_argument('--show-regexp-opcodes', metavar='X', choices=['ON', 'OFF'], type=str.upper,
@@ -156,9 +156,9 @@ def get_arguments():
         parser.print_help()
         sys.exit(0)
 
-    if arguments.vm_recursion_limit:
-        if arguments.vm_recursion_limit < 0:
-            print ('Configuration error: VM recursion limit must be greater or equal than 0')
+    if arguments.call_stack_limit:
+        if arguments.call_stack_limit < 0:
+            print ('Configuration error: Function call recursion limit must be greater or equal than 0')
             sys.exit(1)
 
     return arguments
@@ -207,7 +207,7 @@ def generate_build_options(arguments):
     build_options_append('FEATURE_PROFILE', arguments.profile)
     build_options_append('FEATURE_REGEXP_STRICT_MODE', arguments.regexp_strict_mode)
     build_options_append('JERRY_REGEXP_RECURSION_LIMIT', arguments.regexp_recursion_limit)
-    build_options_append('JERRY_VM_RECURSION_LIMIT', arguments.vm_recursion_limit)
+    build_options_append('JERRY_CALL_STACK_LIMIT', arguments.call_stack_limit)
     build_options_append('FEATURE_PARSER_DUMP', arguments.show_opcodes)
     build_options_append('FEATURE_REGEXP_DUMP', arguments.show_regexp_opcodes)
     build_options_append('FEATURE_SNAPSHOT_EXEC', arguments.snapshot_exec)

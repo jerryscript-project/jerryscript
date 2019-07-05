@@ -727,7 +727,7 @@ main (void)
   jerry_release_value (global_obj_val);
 
   /* Test: run gc. */
-  jerry_gc (JERRY_GC_SEVERITY_LOW);
+  jerry_gc (JERRY_GC_PRESSURE_LOW);
 
   /* Test: spaces */
   const jerry_char_t eval_code_src2[] = "\x0a \x0b \x0c \xc2\xa0 \xe2\x80\xa8 \xe2\x80\xa9 \xef\xbb\xbf 4321";

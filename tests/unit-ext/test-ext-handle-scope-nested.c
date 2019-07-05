@@ -81,7 +81,7 @@ test_handle_scope_val (void)
 
   TEST_ASSERT (jerryx_handle_scope_get_current () == scope);
 
-  jerry_gc (JERRY_GC_SEVERITY_LOW);
+  jerry_gc (JERRY_GC_PRESSURE_LOW);
   TEST_ASSERT (native_free_cb_call_count == 0);
 
   jerryx_close_handle_scope (scope);
@@ -95,7 +95,7 @@ main (void)
   native_free_cb_call_count = 0;
   test_handle_scope_val ();
 
-  jerry_gc (JERRY_GC_SEVERITY_LOW);
+  jerry_gc (JERRY_GC_PRESSURE_LOW);
   TEST_ASSERT (native_free_cb_call_count == 2);
 
   jerry_cleanup ();

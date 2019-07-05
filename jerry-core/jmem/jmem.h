@@ -70,19 +70,21 @@ typedef uint16_t jmem_cpointer_t;
 #endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
 
 /**
- * Severity of a 'try give memory back' request
+ * Memory usage pressure for reclaiming unused memory.
  *
- * The request are posted sequentially beginning from
- * low to high until enough memory is freed.
+ * Each failed allocation will try to reclaim memory with increasing pressure,
+ * until enough memory is freed to fulfill the allocation request.
  *
- * If not enough memory is freed upon a high request
+ * If not enough memory is freed and JMEM_PRESSURE_FULL is reached,
  * then the engine is shut down with ERR_OUT_OF_MEMORY.
  */
 typedef enum
 {
-  JMEM_FREE_UNUSED_MEMORY_SEVERITY_LOW,  /**< 'low' severity */
-  JMEM_FREE_UNUSED_MEMORY_SEVERITY_HIGH, /**< 'high' severity */
-} jmem_free_unused_memory_severity_t;
+  JMEM_PRESSURE_NONE, /**< no memory pressure */
+  JMEM_PRESSURE_LOW,  /**< low memory pressure */
+  JMEM_PRESSURE_HIGH, /**< high memory pressure */
+  JMEM_PRESSURE_FULL, /**< memory full */
+} jmem_pressure_t;
 
 /**
  * Node for free chunk list
@@ -133,15 +135,6 @@ typedef struct
 
   size_t property_bytes; /**< allocated memory for properties */
   size_t peak_property_bytes; /**< peak allocated memory for properties */
-
-  size_t skip_count; /**< Number of skip-aheads during insertion of free block */
-  size_t nonskip_count; /**< Number of times we could not skip ahead during
-                         *   free block insertion */
-
-  size_t alloc_count; /**< number of memory allocations */
-  size_t free_count; /**< number of memory frees */
-  size_t alloc_iter_count; /**< Number of iterations required for allocations */
-  size_t free_iter_count; /**< Number of iterations required for inserting free blocks */
 } jmem_heap_stats_t;
 
 void jmem_stats_allocate_byte_code_bytes (size_t property_size);
@@ -154,20 +147,12 @@ void jmem_stats_allocate_property_bytes (size_t property_size);
 void jmem_stats_free_property_bytes (size_t property_size);
 
 void jmem_heap_get_stats (jmem_heap_stats_t *);
+void jmem_heap_stats_reset_peak (void);
+void jmem_heap_stats_print (void);
 #endif /* ENABLED (JERRY_MEM_STATS) */
 
 jmem_cpointer_t JERRY_ATTR_PURE jmem_compress_pointer (const void *pointer_p);
 void * JERRY_ATTR_PURE jmem_decompress_pointer (uintptr_t compressed_pointer);
-
-/**
- * A free memory callback routine type.
- */
-typedef void (*jmem_free_unused_memory_callback_t) (jmem_free_unused_memory_severity_t);
-
-void jmem_register_free_unused_memory_callback (jmem_free_unused_memory_callback_t callback);
-void jmem_unregister_free_unused_memory_callback (jmem_free_unused_memory_callback_t callback);
-
-void jmem_run_free_unused_memory_callbacks (jmem_free_unused_memory_severity_t severity);
 
 /**
  * Define a local array variable and allocate memory for the array on the heap.
@@ -245,6 +230,7 @@ void jmem_run_free_unused_memory_callbacks (jmem_free_unused_memory_severity_t s
 
 void *jmem_pools_alloc (size_t size);
 void jmem_pools_free (void *chunk_p, size_t size);
+void jmem_pools_collect_empty (void);
 
 /**
  * @}

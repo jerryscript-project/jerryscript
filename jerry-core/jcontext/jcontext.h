@@ -53,13 +53,13 @@
 #define CONFIG_MEM_HEAP_DESIRED_LIMIT (JERRY_MIN (CONFIG_MEM_HEAP_SIZE / 32, CONFIG_MEM_HEAP_MAX_LIMIT))
 
 /**
- * Share of newly allocated since last GC objects among all currently allocated objects,
- * after achieving which, GC is started upon low severity try-give-memory-back requests.
+ * Amount of newly allocated objects since the last GC run, represented as a fraction of all allocated objects,
+ * which when reached will trigger garbage collection to run with a low pressure setting.
  *
- * Share is calculated as the following:
- *                1.0 / CONFIG_ECMA_GC_NEW_OBJECTS_SHARE_TO_START_GC
+ * The fraction is calculated as:
+ *                1.0 / CONFIG_ECMA_GC_NEW_OBJECTS_FRACTION
  */
-#define CONFIG_ECMA_GC_NEW_OBJECTS_SHARE_TO_START_GC (16)
+#define CONFIG_ECMA_GC_NEW_OBJECTS_FRACTION (16)
 
 #if !ENABLED (JERRY_SYSTEM_ALLOCATOR)
 /**
@@ -121,7 +121,6 @@ struct jerry_context_t
 #if ENABLED (JERRY_CPOINTER_32_BIT)
   jmem_pools_chunk_t *jmem_free_16_byte_chunk_p; /**< list of free sixteen byte pool chunks */
 #endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
-  jmem_free_unused_memory_callback_t jmem_free_unused_memory_callback; /**< Callback for freeing up memory. */
   const lit_utf8_byte_t * const *lit_magic_string_ex_array; /**< array of external magic strings */
   const lit_utf8_size_t *lit_magic_string_ex_sizes; /**< external magic string lengths */
   ecma_lit_storage_item_t *string_list_first_p; /**< first item of the literal string list */

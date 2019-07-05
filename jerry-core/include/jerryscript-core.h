@@ -111,10 +111,10 @@ typedef enum
  */
 typedef enum
 {
-  JERRY_GC_SEVERITY_LOW, /**< free unused objects, but keep memory
+  JERRY_GC_PRESSURE_LOW, /**< free unused objects, but keep memory
                           *   allocated for performance improvements
                           *   such as property hash tables for large objects */
-  JERRY_GC_SEVERITY_HIGH /**< free as much memory as possible */
+  JERRY_GC_PRESSURE_HIGH /**< free as much memory as possible */
 } jerry_gc_mode_t;
 
 /**

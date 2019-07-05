@@ -292,8 +292,14 @@ jerry_gc (jerry_gc_mode_t mode) /**< operational mode */
 {
   jerry_assert_api_available ();
 
-  ecma_gc_run (mode == JERRY_GC_SEVERITY_LOW ? JMEM_FREE_UNUSED_MEMORY_SEVERITY_LOW
-                                             : JMEM_FREE_UNUSED_MEMORY_SEVERITY_HIGH);
+  if (mode == JERRY_GC_PRESSURE_LOW)
+  {
+    /* Call GC directly, because 'ecma_free_unused_memory' might decide it's not yet worth it. */
+    ecma_gc_run ();
+    return;
+  }
+
+  ecma_free_unused_memory (JMEM_PRESSURE_HIGH);
 } /* jerry_gc */
 
 /**

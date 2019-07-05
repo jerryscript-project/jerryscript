@@ -61,15 +61,15 @@ test_handle_scope_val (void)
   jerry_value_t obj = create_object ();
   (void) obj;
 
-  jerry_gc (JERRY_GC_SEVERITY_LOW);
+  jerry_gc (JERRY_GC_PRESSURE_LOW);
   TEST_ASSERT (native_free_cb_call_count == 0);
 
   jerryx_close_handle_scope (scope);
-  jerry_gc (JERRY_GC_SEVERITY_LOW);
+  jerry_gc (JERRY_GC_PRESSURE_LOW);
   TEST_ASSERT (native_free_cb_call_count == 0);
 
   jerry_release_value (obj);
-  jerry_gc (JERRY_GC_SEVERITY_LOW);
+  jerry_gc (JERRY_GC_PRESSURE_LOW);
   TEST_ASSERT (native_free_cb_call_count == 1);
 } /* test_handle_scope_val */
 

@@ -99,7 +99,7 @@ main (void)
   jerry_release_value (object);
 
   /* Collect garbage. */
-  jerry_gc (JERRY_GC_SEVERITY_LOW);
+  jerry_gc (JERRY_GC_PRESSURE_LOW);
 
   /* Attempt to retrieve the object by its native pointer again. */
   TEST_ASSERT (!jerry_objects_foreach_by_native_info (&test_info, find_test_object_by_data, &found_object));
@@ -124,7 +124,7 @@ main (void)
   jerry_release_value (args[1]);
 
   /* Collect garbage. */
-  jerry_gc (JERRY_GC_SEVERITY_LOW);
+  jerry_gc (JERRY_GC_PRESSURE_LOW);
 
   /* Attempt to retrieve the object by the presence of its property again. */
   args[0] = property_name;

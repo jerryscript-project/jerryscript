@@ -54,7 +54,7 @@ test_handle_scope_val (void)
     jerry_value_t obj = jerryx_create_handle (create_object ());
     (void) obj;
     jerryx_close_handle_scope (root);
-    jerry_gc (JERRY_GC_SEVERITY_LOW);
+    jerry_gc (JERRY_GC_PRESSURE_LOW);
     TEST_ASSERT (native_free_cb_call_count == (i + 1));
   }
 } /* test_handle_scope_val */
@@ -67,7 +67,7 @@ main (void)
   native_free_cb_call_count = 0;
   test_handle_scope_val ();
 
-  jerry_gc (JERRY_GC_SEVERITY_LOW);
+  jerry_gc (JERRY_GC_PRESSURE_LOW);
   TEST_ASSERT (native_free_cb_call_count == reusing_times);
 
   jerry_cleanup ();

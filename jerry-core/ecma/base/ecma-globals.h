@@ -59,7 +59,7 @@ typedef enum
   ECMA_STATUS_API_AVAILABLE     = (1u << 0), /**< api available */
   ECMA_STATUS_DIRECT_EVAL       = (1u << 1), /**< eval is called directly */
 #if ENABLED (JERRY_PROPRETY_HASHMAP)
-  ECMA_STATUS_HIGH_SEV_GC       = (1u << 2), /**< last gc run was a high severity run */
+  ECMA_STATUS_HIGH_PRESSURE_GC  = (1u << 2), /**< last gc was under high pressure */
 #endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
   ECMA_STATUS_EXCEPTION         = (1u << 3), /**< last exception is a normal exception */
 } ecma_status_flag_t;

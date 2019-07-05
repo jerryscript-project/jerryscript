@@ -52,7 +52,7 @@ ecma_builtin_helper_array_index_normalize (ecma_number_t index, uint32_t length)
 uint32_t
 ecma_builtin_helper_string_index_normalize (ecma_number_t index, uint32_t length, bool nan_to_zero);
 ecma_value_t
-ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, ecma_value_t arg1,
+ecma_builtin_helper_string_prototype_object_index_of (ecma_string_t *original_str_p, ecma_value_t arg1,
                                                       ecma_value_t arg2, ecma_string_index_of_mode_t mode);
 bool
 ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, ecma_string_t *search_str_p, bool first_index,

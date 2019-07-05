@@ -552,27 +552,12 @@ ecma_builtin_helper_string_index_normalize (ecma_number_t index, /**< index */
  *                        boolean value
  */
 ecma_value_t
-ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, /**< this argument */
+ecma_builtin_helper_string_prototype_object_index_of (ecma_string_t *original_str_p, /**< this argument */
                                                       ecma_value_t arg1, /**< routine's first argument */
                                                       ecma_value_t arg2, /**< routine's second argument */
                                                       ecma_string_index_of_mode_t mode) /**< routine's mode */
 {
-  /* 1 */
-  if (ECMA_IS_VALUE_ERROR (ecma_op_check_object_coercible (this_arg)))
-  {
-    return ECMA_VALUE_ERROR;
-  }
-
-  /* 2 */
-  ecma_value_t to_str_val = ecma_op_to_string (this_arg);
-
-  if (ECMA_IS_VALUE_ERROR (to_str_val))
-  {
-    return to_str_val;
-  }
-
-  /* 5 (indexOf), 6 (lastIndexOf), 11 (startsWith, includes) */
-  ecma_string_t *original_str_p = ecma_get_string_from_value (to_str_val);
+  /* 5 (indexOf) -- 6 (lastIndexOf) */
   const ecma_length_t original_len = ecma_string_get_length (original_str_p);
 
 #if ENABLED (JERRY_ES2015_BUILTIN)
@@ -582,7 +567,6 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, /**
       && ecma_object_class_is (ecma_get_object_from_value (arg1), LIT_MAGIC_STRING_REGEXP_UL)))
   {
     JERRY_ASSERT (ECMA_STRING_LAST_INDEX_OF < mode && mode <= ECMA_STRING_ENDS_WITH);
-    ecma_deref_ecma_string (original_str_p);
     return ecma_raise_type_error (ECMA_ERR_MSG ("Search string can't be of type: RegExp"));
   }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN) */
@@ -592,7 +576,6 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, /**
 
   if (ECMA_IS_VALUE_ERROR (search_str_val))
   {
-    ecma_deref_ecma_string (original_str_p);
     return search_str_val;
   }
 
@@ -606,7 +589,6 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, /**
   /* 10 (startsWith, includes), 11 (endsWith) */
   if (ECMA_IS_VALUE_ERROR (ret_value))
   {
-    ecma_deref_ecma_string (original_str_p);
     ecma_deref_ecma_string (search_str_p);
     return ret_value;
   }
@@ -692,7 +674,6 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_value_t this_arg, /**
   }
 
   ecma_deref_ecma_string (search_str_p);
-  ecma_deref_ecma_string (original_str_p);
 
   return ret_value;
 } /* ecma_builtin_helper_string_prototype_object_index_of */

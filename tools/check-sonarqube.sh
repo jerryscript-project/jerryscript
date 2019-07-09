@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [[ "${TRAVIS_REPO_SLUG}" == "pando-project/jerryscript"
+if [[ "${TRAVIS_REPO_SLUG}" == "jerryscript-project/jerryscript"
   && ${TRAVIS_BRANCH} == "master"
   && ${TRAVIS_EVENT_TYPE} == "push" ]]
 then

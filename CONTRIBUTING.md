@@ -47,7 +47,7 @@ You should use your real name and email address in the format below:
 
 "JerryScript-DCO-1.0-Signed-off-by:" this is a developer's certification that he or she has the right to submit the patch for inclusion into the project. It is an agreement to the JerryScript [Developer's Certificate of Origin](DCO.md). **Code without a proper signoff cannot be merged into the mainline.**
 
-### 4. Open a GitHub [pull request](https://github.com/pando-project/jerryscript/pulls)
+### 4. Open a GitHub [pull request](https://github.com/jerryscript-project/jerryscript/pulls)
 
 You can find instructions about opening a pull request [here](https://help.github.com/articles/creating-a-pull-request).
 

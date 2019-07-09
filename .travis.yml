@@ -111,7 +111,7 @@ matrix:
     - name: "SonarQube"
       addons:
         sonarcloud:
-          organization: "pando-project"
+          organization: "jerryscript-project"
       script: tools/check-sonarqube.sh
       cache:
         directories:

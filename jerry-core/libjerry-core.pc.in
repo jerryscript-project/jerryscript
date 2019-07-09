@@ -4,7 +4,7 @@ includedir=${prefix}/include
 
 Name: libjerry-core
 Description: JerryScript: lightweight JavaScript engine (core engine library)
-URL: https://github.com/pando-project/jerryscript
+URL: https://github.com/jerryscript-project/jerryscript
 Version: 1.0
 Requires.private: @JERRY_CORE_PKGCONFIG_REQUIRES@ # NOTE: libjerry-port-default* is not added as a required package
 Libs: -L${libdir} -ljerry-core

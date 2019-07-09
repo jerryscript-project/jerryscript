@@ -1,16 +1,4 @@
 # Site settings
 title: JerryScript Engine
-#email: your-email@domain.com
-description: > # this means to ignore newlines until "baseurl:"
-  JerryScript is a very lightweight JavaScript engine with capability to run on microcontrollers with less than 8KB of RAM.
+description: JerryScript is a very lightweight JavaScript engine with capability to run on microcontrollers with less than 8KB of RAM.
 # baseurl: "/jerryscript" # the subpath of your site, e.g. /blog/
-# url: "http://samsung.github.io" # the base hostname & protocol for your site
-#twitter_username: jekyllrb
-#github_username:  samsung
-
-# Build settings
-highlighter: rouge
-
-markdown: kramdown
-kramdown:
-  input: GFM

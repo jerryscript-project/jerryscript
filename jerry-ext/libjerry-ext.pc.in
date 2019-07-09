@@ -4,7 +4,7 @@ includedir=${prefix}/include
 
 Name: libjerry-ext
 Description: JerryScript: lightweight JavaScript engine (extensions library)
-URL: https://github.com/pando-project/jerryscript
+URL: https://github.com/jerryscript-project/jerryscript
 Version: 1.0
 Requires.private: libjerry-core
 Libs: -L${libdir} -ljerry-ext

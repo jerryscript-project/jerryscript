@@ -12,7 +12,7 @@ If you are in a hurry, run the following commands:
 $ sudo apt-add-repository -y "ppa:team-gcc-arm-embedded/ppa"
 $ sudo apt-get update
 $ sudo apt-get install gcc-arm-embedded genromfs
-$ git clone https://github.com/pando-project/jerryscript.git
+$ git clone https://github.com/jerryscript-project/jerryscript.git
 $ cd jerryscript
 $ make -f targets/tizenrt-artik053/Makefile.travis install
 $ make -f targets/tizenrt-artik053/Makefile.travis script
@@ -40,7 +40,7 @@ $ export PATH=<Your Toolchain PATH>:$PATH
 ```
 $ mkdir jerry-tizenrt
 $ cd jerry-tizenrt
-$ git clone https://github.com/pando-project/jerryscript.git
+$ git clone https://github.com/jerryscript-project/jerryscript.git
 $ git clone https://github.com/Samsung/TizenRT.git -b 2.0_Public_M2
 ```
 

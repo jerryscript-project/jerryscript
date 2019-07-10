@@ -270,6 +270,59 @@ ecma_builtin_string_prototype_object_concat (ecma_value_t this_arg, /**< this ar
   return ret_value;
 } /* ecma_builtin_string_prototype_object_concat */
 
+#if ENABLED (JERRY_ES2015_BUILTIN)
+/**
+ * The String.prototype object's 'startsWith' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 21.1.3.18
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_string_prototype_object_starts_with (ecma_value_t this_arg, /**< this argument */
+                                                  ecma_value_t arg1, /**< routine's first argument */
+                                                  ecma_value_t arg2) /**< routine's second argument */
+{
+  return ecma_builtin_helper_string_prototype_object_index_of (this_arg, arg1, arg2, ECMA_STRING_STARTS_WITH);
+} /* ecma_builtin_string_prototype_object_starts_with */
+
+/**
+ * The String.prototype object's 'includes' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 21.1.3.7
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_string_prototype_object_includes (ecma_value_t this_arg, /**< this argument */
+                                               ecma_value_t arg1, /**< routine's first argument */
+                                               ecma_value_t arg2) /**< routine's second argument */
+{
+  return ecma_builtin_helper_string_prototype_object_index_of (this_arg, arg1, arg2, ECMA_STRING_INCLUDES);
+} /* ecma_builtin_string_prototype_object_includes */
+
+/**
+ * The String.prototype object's 'endsWith' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 21.1.3.6
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_string_prototype_object_ends_with (ecma_value_t this_arg, /**< this argument */
+                                                ecma_value_t arg1, /**< routine's first argument */
+                                                ecma_value_t arg2) /**< routine's second argument */
+{
+  return ecma_builtin_helper_string_prototype_object_index_of (this_arg, arg1, arg2, ECMA_STRING_ENDS_WITH);
+} /* ecma_builtin_string_prototype_object_ends_with */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
+
 /**
  * The String.prototype object's 'indexOf' routine
  *
@@ -284,7 +337,7 @@ ecma_builtin_string_prototype_object_index_of (ecma_value_t this_arg, /**< this 
                                                ecma_value_t arg1, /**< routine's first argument */
                                                ecma_value_t arg2) /**< routine's second argument */
 {
-  return ecma_builtin_helper_string_prototype_object_index_of (this_arg, arg1, arg2, true);
+  return ecma_builtin_helper_string_prototype_object_index_of (this_arg, arg1, arg2, ECMA_STRING_INDEX_OF);
 } /* ecma_builtin_string_prototype_object_index_of */
 
 /**
@@ -301,7 +354,7 @@ ecma_builtin_string_prototype_object_last_index_of (ecma_value_t this_arg, /**< 
                                                     ecma_value_t arg1, /**< routine's first argument */
                                                     ecma_value_t arg2) /**< routine's second argument */
 {
-  return ecma_builtin_helper_string_prototype_object_index_of (this_arg, arg1, arg2, false);
+  return ecma_builtin_helper_string_prototype_object_index_of (this_arg, arg1, arg2, ECMA_STRING_LAST_INDEX_OF);
 } /* ecma_builtin_string_prototype_object_last_index_of */
 
 /**

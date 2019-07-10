@@ -49,6 +49,12 @@ ROUTINE (LIT_MAGIC_STRING_CHAR_AT_UL, ecma_builtin_string_prototype_object_char_
 ROUTINE (LIT_MAGIC_STRING_CHAR_CODE_AT_UL, ecma_builtin_string_prototype_object_char_code_at, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_LOCALE_COMPARE_UL, ecma_builtin_string_prototype_object_locale_compare, 1, 1)
 
+#if ENABLED (JERRY_ES2015_BUILTIN)
+ROUTINE (LIT_MAGIC_STRING_STARTS_WITH, ecma_builtin_string_prototype_object_starts_with, 2, 1)
+ROUTINE (LIT_MAGIC_STRING_INCLUDES, ecma_builtin_string_prototype_object_includes, 2, 1)
+ROUTINE (LIT_MAGIC_STRING_ENDS_WITH, ecma_builtin_string_prototype_object_ends_with, 2, 1)
+#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
+
 #if ENABLED (JERRY_BUILTIN_REGEXP)
 ROUTINE (LIT_MAGIC_STRING_MATCH, ecma_builtin_string_prototype_object_match, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_REPLACE, ecma_builtin_string_prototype_object_replace, 2, 2)

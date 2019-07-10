@@ -1550,7 +1550,13 @@ ecma_builtin_typedarray_prototype_find_helper (ecma_value_t this_arg, /**< this 
 
     if (call_result)
     {
-      return is_find ? element_value : ecma_make_uint32_value (buffer_index);
+      if (is_find)
+      {
+        return element_value;
+      }
+
+      ecma_free_value (element_value);
+      return ecma_make_uint32_value (buffer_index);
     }
     buffer_index++;
     ecma_free_value (element_value);

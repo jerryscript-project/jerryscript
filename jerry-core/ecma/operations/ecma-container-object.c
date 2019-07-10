@@ -698,8 +698,8 @@ ecma_op_container_iterator_next (ecma_value_t this_val, /**< this argument */
   ecma_object_t *obj_p = ecma_get_object_from_value (this_val);
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
 
-  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_PSEUDO_ARRAY
-      && ext_obj_p->u.pseudo_array.type != iterator_type)
+  if (ecma_get_object_type (obj_p) != ECMA_OBJECT_TYPE_PSEUDO_ARRAY
+      || ext_obj_p->u.pseudo_array.type != iterator_type)
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an iterator."));
   }

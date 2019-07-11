@@ -34,24 +34,6 @@
  */
 
 /**
- * Creates an empty object for the map/set object's internal slot.
- *
- * Note: The created object is not registered to the GC.
- *
- * @return ecma value of the created object
- */
-static ecma_value_t
-ecma_op_container_create_internal_object (void)
-{
-  ecma_object_t *internal_object_p = ecma_alloc_object ();
-  internal_object_p->type_flags_refs = (ECMA_OBJECT_TYPE_GENERAL | ECMA_OBJECT_FLAG_EXTENSIBLE | ECMA_OBJECT_REF_ONE);
-  internal_object_p->property_list_or_bound_object_cp = JMEM_CP_NULL;
-  internal_object_p->prototype_or_outer_reference_cp = JMEM_CP_NULL;
-
-  return ecma_make_object_value (internal_object_p);
-} /* ecma_op_container_create_internal_object */
-
-/**
  * Handle calling [[Construct]] of built-in map/set like objects
  *
  * @return ecma value
@@ -64,14 +46,18 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
+  ecma_object_t *internal_object_p = ecma_create_object (NULL, 0, ECMA_OBJECT_TYPE_GENERAL);
+
   ecma_object_t *object_p = ecma_create_object (ecma_builtin_get (proto_id),
                                                 sizeof (ecma_map_object_t),
                                                 ECMA_OBJECT_TYPE_CLASS);
 
   ecma_map_object_t *map_obj_p = (ecma_map_object_t *) object_p;
   map_obj_p->header.u.class_prop.class_id = (uint16_t) lit_id;
-  map_obj_p->header.u.class_prop.u.value = ecma_op_container_create_internal_object ();
+  map_obj_p->header.u.class_prop.u.value = ecma_make_object_value (internal_object_p);
   map_obj_p->size = 0;
+
+  ecma_deref_object (internal_object_p);
 
   ecma_value_t set_value = ecma_make_object_value (object_p);
 
@@ -434,54 +420,6 @@ ecma_op_container_set (ecma_value_t this_arg, /**< this argument */
 } /* ecma_op_container_set */
 
 /**
- * Low-level function to clear all items from a map/set
- */
-void
-ecma_op_container_clear_map (ecma_map_object_t *map_object_p) /**< map object */
-{
-  ecma_object_t *object_p = ecma_get_object_from_value (map_object_p->header.u.class_prop.u.value);
-
-  JERRY_ASSERT (object_p->type_flags_refs >= ECMA_OBJECT_REF_ONE);
-
-  ecma_property_header_t *prop_iter_p = ecma_get_property_list (object_p);
-
-  if (prop_iter_p != NULL && prop_iter_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP)
-  {
-    ecma_property_hashmap_free (object_p);
-    prop_iter_p = ecma_get_property_list (object_p);
-  }
-
-  while (prop_iter_p != NULL)
-  {
-    JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
-
-    /* Both cannot be deleted. */
-    JERRY_ASSERT (prop_iter_p->types[0] != ECMA_PROPERTY_TYPE_DELETED
-                  || prop_iter_p->types[1] != ECMA_PROPERTY_TYPE_DELETED);
-
-    ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) prop_iter_p;
-
-    for (int i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
-    {
-      ecma_property_t *property_p = (ecma_property_t *) (prop_iter_p->types + i);
-      jmem_cpointer_t name_cp = prop_pair_p->names_cp[i];
-
-      if (prop_iter_p->types[i] != ECMA_PROPERTY_TYPE_DELETED)
-      {
-        ecma_free_property (object_p, name_cp, property_p);
-      }
-    }
-
-    prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
-                                    prop_iter_p->next_property_cp);
-
-    ecma_dealloc_property_pair (prop_pair_p);
-  }
-
-  ecma_dealloc_object (object_p);
-} /* ecma_op_container_clear_map */
-
-/**
  * The generic map/set prototype object's 'forEach' routine
  *
  * @return ecma value
@@ -592,10 +530,11 @@ ecma_op_container_clear (ecma_value_t this_arg, /**< this argument */
     return ECMA_VALUE_ERROR;
   }
 
-  ecma_op_container_clear_map (map_object_p);
-
-  map_object_p->header.u.class_prop.u.value = ecma_op_container_create_internal_object ();
+  ecma_object_t *internal_object_p = ecma_create_object (NULL, 0, ECMA_OBJECT_TYPE_GENERAL);
+  map_object_p->header.u.class_prop.u.value = ecma_make_object_value (internal_object_p);
   map_object_p->size = 0;
+
+  ecma_deref_object (internal_object_p);
 
   return ECMA_VALUE_UNDEFINED;
 } /* ecma_op_container_clear */

@@ -254,6 +254,8 @@ ecma_gc_mark_container_object (ecma_object_t *object_p) /**< object */
   ecma_map_object_t *map_object_p = (ecma_map_object_t *) object_p;
   ecma_object_t *internal_obj_p = ecma_get_object_from_value (map_object_p->header.u.class_prop.u.value);
 
+  ecma_gc_set_object_visited (internal_obj_p);
+
   ecma_property_header_t *prop_iter_p = ecma_get_property_list (internal_obj_p);
 
   if (prop_iter_p != NULL && prop_iter_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP)
@@ -719,7 +721,6 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 #if ENABLED (JERRY_ES2015_BUILTIN_SET)
         case LIT_MAGIC_STRING_SET_UL:
         {
-          ecma_op_container_clear_map ((ecma_map_object_t *) object_p);
           ecma_dealloc_extended_object (object_p, sizeof (ecma_map_object_t));
           return;
         }
@@ -727,7 +728,6 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 #if ENABLED (JERRY_ES2015_BUILTIN_MAP)
         case LIT_MAGIC_STRING_MAP_UL:
         {
-          ecma_op_container_clear_map ((ecma_map_object_t *) object_p);
           ecma_dealloc_extended_object (object_p, sizeof (ecma_map_object_t));
           return;
         }

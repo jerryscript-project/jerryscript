@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-import def, * as mod from "tests/jerry/es2015/module-export-02.js";
-import {b_, c_,} from "tests/jerry/es2015/module-export-02.js";
+import def, * as mod from "module-export-02.js";
+import {b_, c_,} from "module-export-02.js";
 
 assert (def() === "default")
 assert (mod.aa === "a")

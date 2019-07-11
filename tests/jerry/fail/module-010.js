@@ -14,4 +14,4 @@
  */
 
 /* Can't have duplicate local bindings */
-import { c as a, d as a } from "tests/jerry/es2015/module-export-01.js";
+import { c as a, d as a } from "../es2015/module-export-01.js";

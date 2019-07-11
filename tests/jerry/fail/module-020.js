@@ -14,4 +14,4 @@
  */
 
 /* '*' is not valid inside NamedImports. */
-import { *, d } from "tests/jerry/es2015/module-imported-01.js"
+import { *, d } from "../es2015/module-imported-01.js"

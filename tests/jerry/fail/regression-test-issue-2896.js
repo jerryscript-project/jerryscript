@@ -13,4 +13,4 @@
 // limitations under the License.
 
 export {} from "dummy.js";
-export {} from "tests/jerry/es2015/module-export-04.js";
+export {} from "../es2015/module-export-04.js";

@@ -14,4 +14,4 @@
  */
 
 /* Star exports can't have an export name. */
-export * as star from "tests/jerry/es2015/module-export-01.js"
+export * as star from "../es2015/module-export-01.js"

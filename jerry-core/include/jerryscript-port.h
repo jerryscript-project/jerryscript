@@ -225,11 +225,16 @@ void jerry_port_release_source (uint8_t *buffer_p);
  * @param in_path_p Input path as a zero terminated string.
  * @param out_buf_p Pointer to the output buffer where the normalized path should be written.
  * @param out_buf_size Size of the output buffer.
+ * @param base_file_p A file path that 'in_path_p' is relative to, usually the current module file.
+ *                    A NULL value represents that 'in_path_p' is relative to the current working directory.
  *
  * @return length of the string written to the output buffer
  *         zero, if the buffer was not sufficient or an error occured
  */
-size_t jerry_port_normalize_path (const char *in_path_p, char *out_buf_p, size_t out_buf_size);
+size_t jerry_port_normalize_path (const char *in_path_p,
+                                  char *out_buf_p,
+                                  size_t out_buf_size,
+                                  char *base_file_p);
 
 /**
  * @}

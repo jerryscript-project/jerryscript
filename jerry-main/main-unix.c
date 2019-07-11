@@ -151,7 +151,7 @@ print_unhandled_exception (jerry_value_t error_value) /**< error value */
   }
   else
   {
-    jerry_size_t string_end = jerry_string_to_char_buffer (err_str_val, err_str_buf, err_str_size);
+    jerry_size_t string_end = jerry_string_to_utf8_char_buffer (err_str_val, err_str_buf, err_str_size);
     assert (string_end == err_str_size);
     err_str_buf[string_end] = 0;
 

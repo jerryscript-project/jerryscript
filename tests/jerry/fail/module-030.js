@@ -14,4 +14,4 @@
  */
 
 /* No default export found. */
-import def from "tests/jerry/es2015/module-export-06.js"
+import def from "../es2015/module-export-06.js"

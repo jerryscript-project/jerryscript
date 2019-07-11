@@ -14,4 +14,4 @@
  */
 
 /* Indirect exports must be checked if they are resolvable. */
-export { l } from "tests/jerry/es2015/module-export-01.js"
+export { l } from "../es2015/module-export-01.js"

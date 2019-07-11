@@ -571,7 +571,7 @@ extern const lexer_lit_location_t lexer_default_literal;
 void parser_module_add_export_node_to_context (parser_context_t *context_p);
 void parser_module_add_import_node_to_context (parser_context_t *context_p);
 void parser_module_check_request_place (parser_context_t *context_p);
-void parser_module_context_init (parser_context_t *context_p);
+void parser_module_context_init (void);
 void parser_module_handle_module_specifier (parser_context_t *context_p);
 void parser_module_handle_requests (parser_context_t *context_p);
 void parser_module_parse_export_clause (parser_context_t *context_p);

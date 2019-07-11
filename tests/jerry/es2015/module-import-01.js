@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-import "tests/jerry/es2015/module-export-01.js";
-import def from "tests/jerry/es2015/module-export-01.js";
-import {} from "tests/jerry/es2015/module-export-01.js";
-import {aa as a,} from "tests/jerry/es2015/module-export-01.js";
-import {bb as b, cc as c} from "tests/jerry/es2015/module-export-01.js";
-import {x} from "tests/jerry/es2015/module-export-01.js";
-import * as mod from "tests/jerry/es2015/module-export-01.js";
+import "./module-export-01.js";
+import def from "module-export-01.js";
+import {} from "module-export-01.js";
+import {aa as a,} from "module-export-01.js";
+import {bb as b, cc as c} from "module-export-01.js";
+import {x} from "module-export-01.js";
+import * as mod from "module-export-01.js";
 
 assert (def === "default");
 assert (a === "a");

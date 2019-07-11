@@ -55,6 +55,10 @@ enum
   ECMA_MATH_OBJECT_EXP, /* ECMA-262 v5, 15.8.2.8 */
   ECMA_MATH_OBJECT_FLOOR, /* ECMA-262 v5, 15.8.2.9 */
   ECMA_MATH_OBJECT_LOG, /* ECMA-262 v5, 15.8.2.10 */
+#if ENABLED (JERRY_ES2015_BUILTIN)
+  ECMA_MATH_OBJECT_TRUNC, /* ECMA-262 v6, 20.2.2.35  */
+  ECMA_MATH_OBJECT_SIGN, /* ECMA-262 v6, 20.2.2.29 */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
   ECMA_MATH_OBJECT_ROUND, /* ECMA-262 v5, 15.8.2.15 */
   ECMA_MATH_OBJECT_SIN, /* ECMA-262 v5, 15.8.2.16 */
   ECMA_MATH_OBJECT_SQRT, /* ECMA-262 v5, 15.8.2.17 */
@@ -152,6 +156,61 @@ ecma_builtin_math_object_max_min (bool is_max, /**< 'max' or 'min' operation */
 
   return ecma_make_number_value (result_num);
 } /* ecma_builtin_math_object_max_min */
+
+#if ENABLED (JERRY_ES2015_BUILTIN)
+/**
+ * The Math object's 'trunc' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 20.2.2.35
+ *
+ * @return ecma number
+ */
+static ecma_number_t
+ecma_builtin_math_object_trunc (ecma_number_t arg)
+{
+  if (ecma_number_is_nan (arg) || ecma_number_is_infinity (arg) || ecma_number_is_zero (arg))
+  {
+    return arg;
+  }
+
+  if ((arg > 0) && (arg < 1))
+  {
+    return (ecma_number_t) 0;
+  }
+
+  if ((arg < 0) && (arg > -1))
+  {
+    return (ecma_number_t) -0;
+  }
+
+  return (ecma_number_t) arg - fmod (arg, 1);
+} /* ecma_builtin_math_object_trunc */
+
+/**
+ * The Math object's 'sign' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 20.2.2.29
+ *
+ * @return ecma number
+ */
+static ecma_number_t
+ecma_builtin_math_object_sign (ecma_number_t arg)
+{
+  if (ecma_number_is_nan (arg) || ecma_number_is_zero (arg))
+  {
+    return arg;
+  }
+
+  if (ecma_number_is_negative (arg))
+  {
+    return (ecma_number_t) -1.0;
+  }
+
+  return (ecma_number_t) 1.0;
+} /* ecma_builtin_math_object_sign */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
 
 /**
  * The Math object's 'random' routine.
@@ -282,6 +341,18 @@ ecma_builtin_math_dispatch_routine (uint16_t builtin_routine_id, /**< built-in w
         x = DOUBLE_TO_ECMA_NUMBER_T (log (x));
         break;
       }
+#if ENABLED (JERRY_ES2015_BUILTIN)
+      case ECMA_MATH_OBJECT_TRUNC:
+      {
+        x = ecma_builtin_math_object_trunc (x);
+        break;
+      }
+      case ECMA_MATH_OBJECT_SIGN:
+      {
+        x = ecma_builtin_math_object_sign (x);
+        break;
+      }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
       case ECMA_MATH_OBJECT_ROUND:
       {
         if (ecma_number_is_nan (x)

@@ -37,7 +37,7 @@ ecma_value_t ecma_op_container_foreach (ecma_value_t this_arg, ecma_value_t pred
 ecma_value_t ecma_op_container_has (ecma_value_t this_arg, ecma_value_t key_arg, lit_magic_string_id_t lit_id);
 ecma_value_t ecma_op_container_set (ecma_value_t this_arg, ecma_value_t key_arg, ecma_value_t value_arg,
                                     lit_magic_string_id_t lit_id);
-void ecma_op_container_clear_map (ecma_map_object_t *map_object_p);
+
 ecma_value_t ecma_op_container_clear (ecma_value_t this_arg, lit_magic_string_id_t lit_id);
 ecma_value_t ecma_op_container_delete (ecma_value_t this_arg, ecma_value_t key_arg, lit_magic_string_id_t lit_id);
 ecma_value_t ecma_op_container_create_iterator (ecma_value_t this_arg, uint8_t type, lit_magic_string_id_t lit_id,

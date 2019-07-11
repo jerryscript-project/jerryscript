@@ -2198,7 +2198,7 @@ ecma_builtin_string_prototype_object_repeat (ecma_value_t this_arg, /**< this ar
   bool isNan = ecma_number_is_nan (length_number);
 
   /* 6, 7 */
-  if (length < 0 || (!isNan && ecma_number_is_infinity (length_number)))
+  if (length_number < 0 || (!isNan && ecma_number_is_infinity (length_number)))
   {
     ecma_deref_ecma_string (original_string_p);
     return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid count value"));

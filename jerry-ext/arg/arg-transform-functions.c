@@ -34,7 +34,7 @@ jerryx_arg_transform_optional (jerryx_arg_js_iterator_t *js_arg_iter_p, /**< ava
 
   if (jerry_value_is_undefined (js_arg))
   {
-    return js_arg;
+    return jerryx_arg_js_iterator_pop (js_arg_iter_p);
   }
 
   return func (js_arg_iter_p, c_arg_p);

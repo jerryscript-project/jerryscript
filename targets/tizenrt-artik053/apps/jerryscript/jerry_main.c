@@ -126,8 +126,7 @@ read_file (const char *file_name, /**< source code */
  * Print error value
  */
 static void
-print_unhandled_exception (jerry_value_t error_value, /**< error value */
-                           const jerry_char_t *source_p) /**< source_p */
+print_unhandled_exception (jerry_value_t error_value) /**< error value */
 {
   assert (jerry_value_is_error (error_value));
 
@@ -153,46 +152,37 @@ print_unhandled_exception (jerry_value_t error_value, /**< error value */
     if (jerry_is_feature_enabled (JERRY_FEATURE_ERROR_MESSAGES)
         && jerry_get_error_type (error_value) == JERRY_ERROR_SYNTAX)
     {
+      jerry_char_t *string_end_p = err_str_buf + sz;
       unsigned int err_line = 0;
       unsigned int err_col = 0;
+      char *path_str_p = NULL;
+      char *path_str_end_p = NULL;
 
       /* 1. parse column and line information */
-      for (jerry_size_t i = 0; i < sz; i++)
+      for (jerry_char_t *current_p = err_str_buf; current_p < string_end_p; current_p++)
       {
-        if (!strncmp ((char *) (err_str_buf + i), "[line: ", 7))
+        if (*current_p == '[')
         {
-          i += 7;
+          current_p++;
 
-          char num_str[8];
-          unsigned int j = 0;
-
-          while (i < sz && err_str_buf[i] != ',')
+          if (*current_p == '<')
           {
-            num_str[j] = (char) err_str_buf[i];
-            j++;
-            i++;
-          }
-          num_str[j] = '\0';
-
-          err_line = (unsigned int) strtol (num_str, NULL, 10);
-
-          if (strncmp ((char *) (err_str_buf + i), ", column: ", 10))
-          {
-            break; /* wrong position info format */
+            break;
           }
 
-          i += 10;
-          j = 0;
-
-          while (i < sz && err_str_buf[i] != ']')
+          path_str_p = (char *) current_p;
+          while (current_p < string_end_p && *current_p != ':')
           {
-            num_str[j] = (char) err_str_buf[i];
-            j++;
-            i++;
+            current_p++;
           }
-          num_str[j] = '\0';
 
-          err_col = (unsigned int) strtol (num_str, NULL, 10);
+          path_str_end_p = (char *) current_p++;
+
+          err_line = (unsigned int) strtol ((char *) current_p, (char **) &current_p, 10);
+
+          current_p++;
+
+          err_col = (unsigned int) strtol ((char *) current_p, NULL, 10);
           break;
         }
       } /* for */
@@ -203,6 +193,15 @@ print_unhandled_exception (jerry_value_t error_value, /**< error value */
 
         bool is_printing_context = false;
         unsigned int pos = 0;
+
+        /* Temporarily modify the error message, so we can use the path. */
+        *path_str_end_p = '\0';
+
+        size_t source_size;
+        const jerry_char_t *source_p = read_file (path_str_p, &source_size);
+
+        /* Revert the error message. */
+        *path_str_end_p = ':';
 
         /* 2. seek and print */
         while (source_p[pos] != '\0')
@@ -397,6 +396,7 @@ jerry_cmd_main (int argc, char *argv[])
                                source_p,
                                source_size,
                                JERRY_PARSE_NO_OPTS);
+      free ((void*) source_p);
 
       if (!jerry_value_is_error (ret_value))
       {
@@ -407,13 +407,9 @@ jerry_cmd_main (int argc, char *argv[])
 
       if (jerry_value_is_error (ret_value))
       {
-        print_unhandled_exception (ret_value, source_p);
-        free ((void*) source_p);
-
+        print_unhandled_exception (ret_value);
         break;
       }
-
-      free ((void*) source_p);
 
       jerry_release_value (ret_value);
       ret_value = jerry_create_undefined ();

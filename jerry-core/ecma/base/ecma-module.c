@@ -695,6 +695,21 @@ ecma_module_parse (ecma_module_t *module_p) /**< module */
   module_p->context_p->parent_p = JERRY_CONTEXT (module_top_context_p);
   JERRY_CONTEXT (module_top_context_p) = module_p->context_p;
 
+#if ENABLED (JERRY_DEBUGGER) && ENABLED (JERRY_PARSER)
+  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
+  {
+    jerry_debugger_send_string (JERRY_DEBUGGER_SOURCE_CODE_NAME,
+                                JERRY_DEBUGGER_NO_SUBTYPE,
+                                script_path_p,
+                                script_path_size - 1);
+  }
+#endif /* ENABLED (JERRY_DEBUGGER) && ENABLED (JERRY_PARSER) */
+
+#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ERROR_MESSAGES)
+  JERRY_CONTEXT (resource_name) = ecma_make_string_value (ecma_new_ecma_string_from_utf8 (script_path_p,
+                                                                                          script_path_size - 1));
+#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ERROR_MESSAGES) */
+
   ecma_compiled_code_t *bytecode_data_p;
   ecma_value_t ret_value = parser_parse_script (NULL,
                                                 0,

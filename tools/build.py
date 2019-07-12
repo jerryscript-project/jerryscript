@@ -100,6 +100,8 @@ def get_arguments():
                          help='build default jerry port implementation (%(choices)s)')
     compgrp.add_argument('--unittests', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help=devhelp('build unittests (%(choices)s)'))
+    compgrp.add_argument('--let-const-as-var', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                          help='enable parsing let and const as a var')
 
     coregrp = parser.add_argument_group('jerry-core options')
     coregrp.add_argument('--all-in-one', metavar='X', choices=['ON', 'OFF'], type=str.upper,
@@ -184,6 +186,7 @@ def generate_build_options(arguments):
     build_options_append('JERRY_LIBM', arguments.jerry_libm)
     build_options_append('JERRY_PORT_DEFAULT', arguments.jerry_port_default)
     build_options_append('UNITTESTS', arguments.unittests)
+    build_options_append('JERRY_ES2015_LET_CONST_AS_VAR', arguments.let_const_as_var)
 
     # jerry-core options
     build_options_append('ENABLE_ALL_IN_ONE', arguments.all_in_one)

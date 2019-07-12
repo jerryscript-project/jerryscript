@@ -40,6 +40,7 @@ set(JERRY_VALGRIND                  OFF     CACHE BOOL   "Enable Valgrind suppor
 set(JERRY_VM_EXEC_STOP              OFF     CACHE BOOL   "Enable VM execution stopping?")
 set(JERRY_GLOBAL_HEAP_SIZE          "(512)" CACHE STRING "Size of memory heap, in kilobytes")
 set(JERRY_STACK_LIMIT               "(0)"   CACHE STRING "Maximum stack usage size, in kilobytes")
+set(JERRY_ES2015_LET_CONST_AS_VAR   "0"     CACHE BOOL   "Parse keywords let and const as var")
 
 # Option overrides
 if(USING_MSVC)
@@ -102,6 +103,7 @@ message(STATUS "JERRY_VALGRIND                 " ${JERRY_VALGRIND})
 message(STATUS "JERRY_VM_EXEC_STOP             " ${JERRY_VM_EXEC_STOP})
 message(STATUS "JERRY_GLOBAL_HEAP_SIZE         " ${JERRY_GLOBAL_HEAP_SIZE})
 message(STATUS "JERRY_STACK_LIMIT              " ${JERRY_STACK_LIMIT})
+message(STATUS "JERRY_ES2015_LET_CONST_AS_VAR  " ${JERRY_ES2015_LET_CONST_AS_VAR})
 
 # Include directories
 set(INCLUDE_CORE_PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -235,6 +237,9 @@ jerry_add_define01(JERRY_MEM_GC_BEFORE_EACH_ALLOC)
 
 # Parser byte-code dumps
 jerry_add_define01(JERRY_PARSER_DUMP_BYTE_CODE)
+
+# Enable parsing let and const as a var
+jerry_add_define01(JERRY_ES2015_LET_CONST_AS_VAR)
 
 # Profile
 if (NOT IS_ABSOLUTE ${JERRY_PROFILE})

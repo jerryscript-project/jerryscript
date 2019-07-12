@@ -142,6 +142,19 @@
 #endif /* !defined (JERRY_ES2015_TEMPLATE_STRINGS) */
 
 /**
+ * Enable/Disable parsing let and const as var.
+ *
+ * Allowed values:
+ *  0: Disable parsing let and const.
+ *  1: Enable parsing let and const.
+ *
+ * Disabled by default.
+ */
+#ifndef JERRY_ES2015_LET_CONST_AS_VAR
+# define JERRY_ES2015_LET_CONST_AS_VAR 0
+#endif /* !defined (JERRY_ES2015_LET_CONST_AS_VAR) */
+
+/**
  * Engine internal and misc configurations.
  */
 
@@ -575,6 +588,10 @@
 #if !defined (JERRY_ES2015_FUNCTION_REST_PARAMETER) \
 || ((JERRY_ES2015_FUNCTION_REST_PARAMETER != 0) && (JERRY_ES2015_FUNCTION_REST_PARAMETER != 1))
 # error "Invalid value for JERRY_ES2015_FUNCTION_REST_PARAMETER macro."
+#endif
+#if !defined (JERRY_ES2015_LET_CONST_AS_VAR) \
+|| ((JERRY_ES2015_LET_CONST_AS_VAR != 0) && (JERRY_ES2015_LET_CONST_AS_VAR != 1))
+# error "Invalid value for JERRY_ES2015_LET_CONST_AS_VAR macro."
 #endif
 #if !defined (JERRY_ES2015_OBJECT_INITIALIZER) \
 || ((JERRY_ES2015_OBJECT_INITIALIZER != 0) && (JERRY_ES2015_OBJECT_INITIALIZER != 1))

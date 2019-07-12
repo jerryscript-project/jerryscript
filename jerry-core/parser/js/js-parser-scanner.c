@@ -515,13 +515,23 @@ parser_scan_statement (parser_context_t *context_p, /**< context */
       parser_stack_push_uint8 (context_p, SCAN_STACK_PAREN_STATEMENT);
       *mode = SCAN_MODE_PRIMARY_EXPRESSION;
 
-      if (context_p->token.type == LEXER_KEYW_VAR)
+#if ENABLED (JERRY_ES2015_LET_CONST_AS_VAR)
+    if (context_p->token.type == LEXER_KEYW_VAR
+        || context_p->token.type == LEXER_KEYW_LET
+        || context_p->token.type == LEXER_KEYW_CONST)
+#else /* !ENABLED (JERRY_ES2015_LET_CONST_AS_VAR) */
+    if (context_p->token.type == LEXER_KEYW_VAR)
+#endif /* ENABLED (JERRY_ES2015_LET_CONST_AS_VAR) */
       {
         return false;
       }
       return true;
     }
     case LEXER_KEYW_VAR:
+#if ENABLED (JERRY_ES2015_LET_CONST_AS_VAR)
+    case LEXER_KEYW_LET:
+    case LEXER_KEYW_CONST:
+#endif /* ENABLED (JERRY_ES2015_LET_CONST_AS_VAR) */
     case LEXER_KEYW_THROW:
     {
       *mode = SCAN_MODE_PRIMARY_EXPRESSION;
@@ -684,7 +694,9 @@ parser_scan_until (parser_context_t *context_p, /**< context */
     if (end_type == for_in_of_token)
     {
       end_type_b = LEXER_SEMICOLON;
-      if (context_p->token.type == LEXER_KEYW_VAR)
+      if (context_p->token.type == LEXER_KEYW_VAR
+          || context_p->token.type == LEXER_KEYW_LET
+          || context_p->token.type == LEXER_KEYW_CONST)
       {
         lexer_next_token (context_p);
       }

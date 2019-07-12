@@ -12,4 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-RegExp.prototype.compile(RegExp.prototype);
+try {
+  RegExp.prototype.compile(RegExp.prototype);
+  assert(false);
+} catch (e) {
+  assert (e instanceof TypeError);
+}

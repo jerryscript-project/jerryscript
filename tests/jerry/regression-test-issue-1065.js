@@ -12,5 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-new (new (new RegExp().constructor)().constructor)().constructor.prototype.toString()
-RegExp().constructor().constructor.prototype.compile(RegExp.prototype)
+new (new (new RegExp().constructor)().constructor)().constructor.prototype.toString();
+
+try {
+  RegExp().constructor().constructor.prototype.compile(RegExp.prototype);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}

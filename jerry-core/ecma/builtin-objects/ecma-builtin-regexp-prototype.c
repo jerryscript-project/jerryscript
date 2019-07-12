@@ -64,7 +64,9 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
                                        ecma_value_t flags_arg) /**< flags */
 {
   if (!ecma_is_value_object (this_arg)
-      || !ecma_object_class_is (ecma_get_object_from_value (this_arg), LIT_MAGIC_STRING_REGEXP_UL))
+      || !ecma_object_class_is (ecma_get_object_from_value (this_arg), LIT_MAGIC_STRING_REGEXP_UL)
+      /* The builtin RegExp.prototype object does not have [[RegExpMatcher]] internal slot */
+      || ecma_get_object_from_value (this_arg) == ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Incomplete RegExp type"));
   }
@@ -149,7 +151,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
     re_initialize_props (this_obj_p, pattern_string_p, flags);
     ecma_free_value (obj_this);
 
-    return ECMA_VALUE_UNDEFINED;
+    return ecma_copy_value (this_arg);
   }
 
   ecma_string_t *pattern_string_p = NULL;
@@ -213,7 +215,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
   ecma_free_value (obj_this);
   ecma_deref_ecma_string (pattern_string_p);
 
-  return ECMA_VALUE_UNDEFINED;
+  return ecma_copy_value (this_arg);
 } /* ecma_builtin_regexp_prototype_compile */
 
 #endif /* ENABLED (JERRY_BUILTIN_ANNEXB) */

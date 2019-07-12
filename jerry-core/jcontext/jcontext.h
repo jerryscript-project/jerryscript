@@ -43,6 +43,11 @@
 #define CONFIG_MEM_HEAP_SIZE (JERRY_GLOBAL_HEAP_SIZE * 1024)
 
 /**
+ * Maximum stack usage size in bytes
+ */
+#define CONFIG_MEM_STACK_LIMIT (JERRY_STACK_LIMIT * 1024)
+
+/**
  * Max heap usage limit
  */
 #define CONFIG_MEM_HEAP_MAX_LIMIT 8192
@@ -169,9 +174,9 @@ struct jerry_context_t
                                                  *   ECMAScript execution should be stopped */
 #endif /* ENABLED (JERRY_VM_EXEC_STOP) */
 
-#if defined (JERRY_CALL_STACK_LIMIT) && (JERRY_CALL_STACK_LIMIT != 0)
-  uint32_t function_call_counter;  /**< Function call recursion counter */
-#endif /* defined (JERRY_CALL_STACK_LIMIT) && (JERRY_CALL_STACK_LIMIT != 0) */
+#if (JERRY_STACK_LIMIT != 0)
+  uintptr_t stack_base;  /**< stack base marker */
+#endif /* (JERRY_STACK_LIMIT != 0) */
 
 #if ENABLED (JERRY_DEBUGGER)
   uint8_t debugger_send_buffer[JERRY_DEBUGGER_TRANSPORT_MAX_BUFFER_SIZE]; /**< buffer for sending messages */

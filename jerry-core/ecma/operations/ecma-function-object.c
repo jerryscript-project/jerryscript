@@ -705,16 +705,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                 || ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION
                 || !ecma_op_function_has_construct_flag (arguments_list_p));
 
-#if defined (JERRY_CALL_STACK_LIMIT) && (JERRY_CALL_STACK_LIMIT != 0)
-  if (JERRY_UNLIKELY (JERRY_CONTEXT (function_call_counter) == 0))
-  {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Maximum call stack size is exceeded."));
-  }
-  else
-  {
-    JERRY_CONTEXT (function_call_counter)--;
-  }
-#endif /* defined (JERRY_CALL_STACK_LIMIT) && (JERRY_CALL_STACK_LIMIT != 0) */
+  ECMA_CHECK_STACK_USAGE ();
 
   switch (ecma_get_object_type (func_obj_p))
   {
@@ -728,10 +719,6 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                                                              this_arg_value,
                                                              arguments_list_p,
                                                              arguments_list_len);
-
-#if defined (JERRY_CALL_STACK_LIMIT) && (JERRY_CALL_STACK_LIMIT != 0)
-        JERRY_CONTEXT (function_call_counter)++;
-#endif /* defined (JERRY_CALL_STACK_LIMIT) && (JERRY_CALL_STACK_LIMIT != 0) */
 
         return ret_value;
       }
@@ -823,10 +810,6 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
         ecma_free_value (this_binding);
       }
 
-#if defined (JERRY_CALL_STACK_LIMIT) && (JERRY_CALL_STACK_LIMIT != 0)
-      JERRY_CONTEXT (function_call_counter)++;
-#endif /* defined (JERRY_CALL_STACK_LIMIT) && (JERRY_CALL_STACK_LIMIT != 0) */
-
       return ret_value;
     }
     case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
@@ -837,9 +820,6 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                                                                       this_arg_value,
                                                                       arguments_list_p,
                                                                       arguments_list_len);
-#if defined (JERRY_CALL_STACK_LIMIT) && (JERRY_CALL_STACK_LIMIT != 0)
-      JERRY_CONTEXT (function_call_counter)++;
-#endif /* defined (JERRY_CALL_STACK_LIMIT) && (JERRY_CALL_STACK_LIMIT != 0) */
 
       if (JERRY_UNLIKELY (ecma_is_value_error_reference (ret_value)))
       {
@@ -888,10 +868,6 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
         ecma_deref_object (local_env_p);
       }
 
-#if defined (JERRY_CALL_STACK_LIMIT) && (JERRY_CALL_STACK_LIMIT != 0)
-      JERRY_CONTEXT (function_call_counter)++;
-#endif /* defined (JERRY_CALL_STACK_LIMIT) && (JERRY_CALL_STACK_LIMIT != 0) */
-
       return ret_value;
     }
 #endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
@@ -901,10 +877,6 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       break;
     }
   }
-
-#if defined (JERRY_CALL_STACK_LIMIT) && (JERRY_CALL_STACK_LIMIT != 0)
-  JERRY_CONTEXT (function_call_counter)++;
-#endif /* defined (JERRY_CALL_STACK_LIMIT) && (JERRY_CALL_STACK_LIMIT != 0) */
 
   JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_DIRECT_EVAL;
 

@@ -39,8 +39,7 @@ set(JERRY_SYSTEM_ALLOCATOR          OFF     CACHE BOOL   "Enable system allocato
 set(JERRY_VALGRIND                  OFF     CACHE BOOL   "Enable Valgrind support?")
 set(JERRY_VM_EXEC_STOP              OFF     CACHE BOOL   "Enable VM execution stopping?")
 set(JERRY_GLOBAL_HEAP_SIZE          "(512)" CACHE STRING "Size of memory heap, in kilobytes")
-set(JERRY_REGEXP_RECURSION_LIMIT    "0"     CACHE STRING "Limit of regexp recursion depth")
-set(JERRY_CALL_STACK_LIMIT          "0"     CACHE STRING "Limit of function call recursion depth")
+set(JERRY_STACK_LIMIT               "(0)"   CACHE STRING "Maximum stack usage size, in kilobytes")
 
 # Option overrides
 if(USING_MSVC)
@@ -102,8 +101,7 @@ message(STATUS "JERRY_SYSTEM_ALLOCATOR         " ${JERRY_SYSTEM_ALLOCATOR})
 message(STATUS "JERRY_VALGRIND                 " ${JERRY_VALGRIND})
 message(STATUS "JERRY_VM_EXEC_STOP             " ${JERRY_VM_EXEC_STOP})
 message(STATUS "JERRY_GLOBAL_HEAP_SIZE         " ${JERRY_GLOBAL_HEAP_SIZE})
-message(STATUS "JERRY_REGEXP_RECURSION_LIMIT   " ${JERRY_REGEXP_RECURSION_LIMIT})
-message(STATUS "JERRY_CALL_STACK_LIMIT         " ${JERRY_CALL_STACK_LIMIT})
+message(STATUS "JERRY_STACK_LIMIT              " ${JERRY_STACK_LIMIT})
 
 # Include directories
 set(INCLUDE_CORE_PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -275,16 +273,6 @@ endif()
 # RegExp strict mode
 jerry_add_define01(JERRY_REGEXP_STRICT_MODE)
 
-# RegExp recursion depth limit
-if(JERRY_REGEXP_RECURSION_LIMIT)
-  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_REGEXP_RECURSION_LIMIT=${JERRY_REGEXP_RECURSION_LIMIT})
-endif()
-
-# Function call recursion depth limit
-if(JERRY_CALL_STACK_LIMIT)
-  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_CALL_STACK_LIMIT=${JERRY_CALL_STACK_LIMIT})
-endif()
-
 # RegExp byte-code dumps
 jerry_add_define01(JERRY_REGEXP_DUMP_BYTE_CODE)
 
@@ -308,6 +296,9 @@ jerry_add_define01(JERRY_VM_EXEC_STOP)
 
 # Size of heap
 set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_GLOBAL_HEAP_SIZE=${JERRY_GLOBAL_HEAP_SIZE})
+
+# Maximum size of stack memory usage
+set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_STACK_LIMIT=${JERRY_STACK_LIMIT})
 
 add_library(${JERRY_CORE_NAME} ${SOURCE_CORE_FILES})
 

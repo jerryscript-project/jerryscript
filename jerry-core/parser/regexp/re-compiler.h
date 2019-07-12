@@ -41,9 +41,6 @@ typedef struct
   uint32_t num_of_captures;          /**< number of capture groups */
   uint32_t num_of_non_captures;      /**< number of non-capture groups */
   uint32_t highest_backref;          /**< highest backreference */
-#if defined (JERRY_REGEXP_RECURSION_LIMIT) && (JERRY_REGEXP_RECURSION_LIMIT != 0)
-  uint32_t recursion_counter;        /**< RegExp recursion counter */
-#endif /* defined (JERRY_REGEXP_RECURSION_LIMIT) && (JERRY_REGEXP_RECURSION_LIMIT != 0) */
   re_bytecode_ctx_t *bytecode_ctx_p; /**< pointer of RegExp bytecode context */
   re_token_t current_token;          /**< current token */
   re_parser_ctx_t *parser_ctx_p;     /**< pointer of RegExp parser context */

@@ -206,6 +206,19 @@
 #endif /* !defined (JERRY_GLOBAL_HEAP_SIZE) */
 
 /**
+ * Maximum stack usage size in kilobytes
+ *
+ * Note: This feature cannot be used when 'detect_stack_use_after_return=1' ASAN option is enabled.
+ * For more detailed description:
+ *   - https://github.com/google/sanitizers/wiki/AddressSanitizerUseAfterReturn#compatibility
+ *
+ * Default value: 0, unlimited
+ */
+#ifndef JERRY_STACK_LIMIT
+# define JERRY_STACK_LIMIT (0)
+#endif /* !defined (JERRY_STACK_LIMIT) */
+
+/**
  * Enable/Disable property lookup cache.
  *
  * Allowed values:
@@ -353,22 +366,6 @@
 #endif /* !defined (JERRY_REGEXP_STRICT_MODE) */
 
 /**
- * Set the RegExp parser and execution recursion limit.
- *
- * Allowed values:
- *  0: Disable recursion limit check.
- *  1 or greater: Set the recursion limit to the given number.
- *
- * Note:
- *  A negative value will cause a static assert compiler error.
- *
- * Default value: 0
- */
-#ifndef JERRY_REGEXP_RECURSION_LIMIT
-# define JERRY_REGEXP_RECURSION_LIMIT 0
-#endif /* !defined (JERRY_REGEXP_RECURSION_LIMIT) */
-
-/**
  * Enable/Disable the snapshot execution functions.
  *
  * Allowed values:
@@ -434,23 +431,6 @@
 #ifndef JERRY_VM_EXEC_STOP
 # define JERRY_VM_EXEC_STOP 0
 #endif /* !defined (JERRY_VM_EXEC_STOP) */
-
-/**
- * Set the function call recursion limit.
- *
- * Allowed values:
- *  0: Disable recursion limit check.
- *  1 or greater: Set the recursion limit to the given number.
- *
- * Note:
- *  A negative value will cause a static assert compiler error.
- *
- * Default value: 0
- */
-#ifndef JERRY_CALL_STACK_LIMIT
-# define JERRY_CALL_STACK_LIMIT 0
-#endif /* !defined (JERRY_CALL_STACK_LIMIT) */
-
 
 /**
  * Advanced section configurations.
@@ -630,6 +610,9 @@
 #endif
 #if !defined (JERRY_GLOBAL_HEAP_SIZE) || (JERRY_GLOBAL_HEAP_SIZE <= 0)
 # error "Invalid value for 'JERRY_GLOBAL_HEAP_SIZE' macro."
+#endif
+#if !defined (JERRY_STACK_LIMIT) || (JERRY_STACK_LIMIT < 0)
+# error "Invalid value for 'JERRY_STACK_LIMIT' macro."
 #endif
 #if !defined (JERRY_LCACHE) \
 || ((JERRY_LCACHE != 0) && (JERRY_LCACHE != 1))

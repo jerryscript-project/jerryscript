@@ -365,6 +365,22 @@ parser_append_object_literal_item (parser_context_t *context_p, /**< context */
 #endif /* !ENABLED (JERRY_ES2015_OBJECT_INITIALIZER) */
 
 /**
+ * Description of "get" literal string.
+ */
+static const lexer_lit_location_t lexer_get_literal =
+{
+  (const uint8_t *) "get", 3, LEXER_STRING_LITERAL, false
+};
+
+/**
+ * Description of "set" literal string.
+ */
+static const lexer_lit_location_t lexer_set_literal =
+{
+  (const uint8_t *) "set", 3, LEXER_STRING_LITERAL, false
+};
+
+/**
  * Parse class as an object literal.
  */
 static void
@@ -390,18 +406,29 @@ parser_parse_class_literal (parser_context_t *context_p) /**< context */
       break;
     }
 
+    bool is_computed = false;
+
     if (context_p->token.type == LEXER_PROPERTY_GETTER || context_p->token.type == LEXER_PROPERTY_SETTER)
     {
       uint16_t literal_index, function_literal_index;
       bool is_getter = (context_p->token.type == LEXER_PROPERTY_GETTER);
+
+      lexer_skip_empty_statements (context_p);
+
+      if (lexer_check_next_character (context_p, LIT_CHAR_LEFT_PAREN))
+      {
+        lexer_construct_literal_object (context_p,
+                                        (is_getter ? (lexer_lit_location_t *) &lexer_get_literal
+                                                   : (lexer_lit_location_t *) &lexer_set_literal),
+                                        LEXER_STRING_LITERAL);
+        goto parse_class_method;
+      }
 
       uint32_t accessor_status_flags = PARSER_IS_FUNCTION | PARSER_IS_CLOSURE;
       accessor_status_flags |= (is_getter ? PARSER_IS_PROPERTY_GETTER : PARSER_IS_PROPERTY_SETTER);
 
       lexer_expect_object_literal_id (context_p, LEXER_OBJ_IDENT_CLASS_METHOD | LEXER_OBJ_IDENT_ONLY_IDENTIFIERS);
       literal_index = context_p->lit_object.index;
-
-      bool is_computed = false;
 
       if (context_p->token.type == LEXER_RIGHT_SQUARE)
       {
@@ -499,8 +526,6 @@ parser_parse_class_literal (parser_context_t *context_p) /**< context */
       continue;
     }
 
-    bool is_computed = false;
-
     if (context_p->token.type == LEXER_RIGHT_SQUARE)
     {
       is_computed = true;
@@ -511,6 +536,7 @@ parser_parse_class_literal (parser_context_t *context_p) /**< context */
       parser_raise_error (context_p, PARSER_ERR_CLASS_STATIC_PROTOTYPE);
     }
 
+parse_class_method:
     parser_flush_cbc (context_p);
 
     uint16_t literal_index = context_p->lit_object.index;

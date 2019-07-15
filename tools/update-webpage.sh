@@ -22,7 +22,8 @@ fi
 gh_pages_dir=$1
 docs_dir=`dirname $(readlink -f $0)`"/../docs"
 
-GETTING_STARTED_MD="01.GETTING-STARTED.md"
+GETTING_STARTED_MD="00.GETTING-STARTED.md"
+CONFIGURATION_MD="01.CONFIGURATION.md"
 API_REFERENCE_MD="02.API-REFERENCE.md"
 API_EXAMPLES_MD="03.API-EXAMPLE.md"
 INTERNALS_MD="04.INTERNALS.md"
@@ -41,6 +42,7 @@ MODULE_SYSTEM_MD="15.MODULE-SYSTEM.md"
 declare -A titles
 
 titles[$GETTING_STARTED_MD]="Getting Started"
+titles[$CONFIGURATION_MD]="Configuration"
 titles[$API_REFERENCE_MD]="API Reference"
 titles[$API_EXAMPLES_MD]="API Examples"
 titles[$INTERNALS_MD]="Internals"
@@ -63,7 +65,7 @@ for docfile in $docs_dir/*.md; do
   missing_title=`echo $permalink | tr '-' ' '`
 
   # the first three documents belong to the navigation bar
-  category=$([[ $docfile_base =~ ^0[1-3] ]] && echo "navbar" || echo "documents")
+  category=$([[ $docfile_base =~ ^0[0-3] ]] && echo "navbar" || echo "documents")
 
   # generate appropriate header for each *.md
   echo "---"                                             >  $gh_pages_dir/$docfile_base

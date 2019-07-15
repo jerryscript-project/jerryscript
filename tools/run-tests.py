@@ -148,7 +148,7 @@ JERRY_BUILDOPTIONS = [
     Options('buildoption_test-no_jerry_libm',
             ['--jerry-libm=off', '--link-lib=m']),
     Options('buildoption_test-no_lcache_prophashmap',
-            ['--compile-flag=-DCONFIG_ECMA_LCACHE_DISABLE', '--compile-flag=-DCONFIG_ECMA_PROPERTY_HASHMAP_DISABLE']),
+            ['--compile-flag=-DJERRY_LCACHE=0', '--compile-flag=-DJERRY_PROPRETY_HASHMAP=0']),
     Options('buildoption_test-external_context',
             ['--external-context=on']),
     Options('buildoption_test-shared_libs',

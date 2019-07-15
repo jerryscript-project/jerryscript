@@ -64,4 +64,12 @@ OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
 
 #endif /* ENABLED (JERRY_BUILTIN_NUMBER) */
 
+/* Routine properties:
+ *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
+#if ENABLED (JERRY_ES2015_BUILTIN)
+ROUTINE (LIT_MAGIC_STRING_IS_FINITE, ecma_builtin_number_object_is_finite, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_IS_NAN, ecma_builtin_number_object_is_nan, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_IS_INTEGER, ecma_builtin_number_object_is_integer, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_IS_SAFE_INTEGER, ecma_builtin_number_object_is_safe_integer, 1, 1)
+#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

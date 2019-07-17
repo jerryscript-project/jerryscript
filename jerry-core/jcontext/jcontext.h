@@ -190,9 +190,9 @@ struct jerry_context_t
   uint8_t debugger_max_receive_size; /**< maximum amount of data that can be received */
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
-#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ERROR_MESSAGES)
+#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ERROR_MESSAGES) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
   ecma_value_t resource_name; /**< resource name (usually a file name) */
-#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ERROR_MESSAGES) */
+#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ERROR_MESSAGES) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
 #if ENABLED (JERRY_MEM_STATS)
   jmem_heap_stats_t jmem_heap_stats; /**< heap's memory usage statistics */

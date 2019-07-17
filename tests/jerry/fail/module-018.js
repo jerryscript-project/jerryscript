@@ -14,4 +14,4 @@
  */
 
 /* An import statement can have either a NameSpaceImport or NamedIpmorts */
-import * as mod, { b } from "tests/jerry/es2015/module-export-01.js"
+import * as mod, { b } from "../es2015/module-export-01.js"

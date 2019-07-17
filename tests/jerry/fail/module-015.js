@@ -15,5 +15,5 @@
 
 /* Import/export statements must be in the global scope. */
 function someFunction() {
-  import { c } from "tests/jerry/es2015/module-export-01.js";
+  import { c } from "../es2015/module-export-01.js";
 }

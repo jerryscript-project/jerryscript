@@ -14,4 +14,4 @@
  */
 
 // File does not exist.
-import b from "tests/jerry/fail/module-exports.js"
+import b from "module-exports.js"

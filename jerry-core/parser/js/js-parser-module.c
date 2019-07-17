@@ -259,16 +259,45 @@ parser_module_add_names_to_node (parser_context_t *context_p, /**< parser contex
  * Create module context if needed.
  */
 void
-parser_module_context_init (parser_context_t *context_p) /**< parser context */
+parser_module_context_init (void)
 {
   if (JERRY_CONTEXT (module_top_context_p) == NULL)
   {
     ecma_module_context_t *module_context_p;
-    module_context_p = (ecma_module_context_t *) parser_malloc (context_p,
-                                                                sizeof (ecma_module_context_t));
-
+    module_context_p = (ecma_module_context_t *) jmem_heap_alloc_block (sizeof (ecma_module_context_t));
     memset (module_context_p, 0, sizeof (ecma_module_context_t));
     JERRY_CONTEXT (module_top_context_p) = module_context_p;
+
+    ecma_string_t *path_str_p = ecma_get_string_from_value (JERRY_CONTEXT (resource_name));
+
+    lit_utf8_size_t path_str_size;
+    uint8_t flags = ECMA_STRING_FLAG_EMPTY;
+
+    const lit_utf8_byte_t *path_str_chars_p = ecma_string_get_chars (path_str_p,
+                                                                     &path_str_size,
+                                                                     &flags);
+
+    ecma_string_t *path_p = ecma_module_create_normalized_path (path_str_chars_p,
+                                                                (prop_length_t) path_str_size);
+
+    if (path_p == NULL)
+    {
+      path_p = path_str_p;
+    }
+
+    ecma_module_t *module_p = ecma_module_find_or_create_module (path_p);
+
+    if (path_p != path_str_p)
+    {
+      ecma_deref_ecma_string (path_p);
+    }
+
+    module_p->state = ECMA_MODULE_STATE_EVALUATED;
+    module_p->scope_p = ecma_get_global_environment ();
+    ecma_ref_object (module_p->scope_p);
+
+    module_p->context_p = module_context_p;
+    module_context_p->module_p = module_p;
   }
 } /* parser_module_context_init */
 
@@ -517,6 +546,11 @@ parser_module_handle_module_specifier (parser_context_t *context_p) /**< parser 
 
   ecma_string_t *path_p = ecma_module_create_normalized_path (context_p->lit_object.literal_p->u.char_p,
                                                               context_p->lit_object.literal_p->prop.length);
+
+  if (path_p == NULL)
+  {
+    parser_raise_error (context_p, PARSER_ERR_FILE_NOT_FOUND);
+  }
 
   ecma_module_t *module_p = ecma_module_find_or_create_module (path_p);
   ecma_deref_ecma_string (path_p);

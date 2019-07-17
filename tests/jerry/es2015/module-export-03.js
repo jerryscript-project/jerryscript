@@ -23,4 +23,4 @@ export default class {
   }
 }
 
-export * from "tests/jerry/es2015/module-export-02.js"
+export * from "module-export-02.js"

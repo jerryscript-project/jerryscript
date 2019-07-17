@@ -14,4 +14,4 @@
  */
 
 /* Can't have circular imports/exports. */
-export { b } from "tests/jerry/fail/module-026.js"
+export { b } from "./module-026.js"

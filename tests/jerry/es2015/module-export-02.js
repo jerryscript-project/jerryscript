@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-export {} from "tests/jerry/es2015/module-export-01.js";
-export {aa,} from "tests/jerry/es2015/module-export-01.js";
-export {bb as b_, cc as c_} from "tests/jerry/es2015/module-export-01.js";
-export * from "tests/jerry/es2015/module-export-01.js";
+export {} from "module-export-01.js";
+export {aa,} from "module-export-01.js";
+export {bb as b_, cc as c_} from "module-export-01.js";
+export * from "module-export-01.js";
 export default function () {return "default"};

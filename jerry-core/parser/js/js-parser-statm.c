@@ -1843,7 +1843,7 @@ parser_parse_import_statement (parser_context_t *context_p) /**< parser context 
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_IMPORT);
 
   parser_module_check_request_place (context_p);
-  parser_module_context_init (context_p);
+  parser_module_context_init ();
 
   ecma_module_node_t module_node;
   memset (&module_node, 0, sizeof (ecma_module_node_t));
@@ -1964,7 +1964,7 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_EXPORT);
 
   parser_module_check_request_place (context_p);
-  parser_module_context_init (context_p);
+  parser_module_context_init ();
 
   ecma_module_node_t module_node;
   memset (&module_node, 0, sizeof (ecma_module_node_t));

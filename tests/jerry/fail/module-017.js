@@ -14,4 +14,4 @@
  */
 
 /* NamedImports must always be followed by a FromClause. */
-import { b }, from "tests/jerry/es2015/module-export-01.js"
+import { b }, from "../es2015/module-export-01.js"

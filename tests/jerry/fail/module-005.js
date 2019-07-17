@@ -14,4 +14,4 @@
  */
 
 /* Named imports must be in a NamedImports block. */
-import b as , from "tests/jerry/es2015/module-export-01.js";
+import b as , from "../es2015/module-export-01.js";

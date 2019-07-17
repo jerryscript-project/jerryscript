@@ -145,7 +145,7 @@ print_unhandled_exception (jerry_value_t error_value) /**< error value */
   }
   else
   {
-    jerry_size_t sz = jerry_string_to_char_buffer (err_str_val, err_str_buf, err_str_size);
+    jerry_size_t sz = jerry_string_to_utf8_char_buffer (err_str_val, err_str_buf, err_str_size);
     assert (sz == err_str_size);
     err_str_buf[err_str_size] = 0;
 
@@ -575,10 +575,13 @@ jerry_port_release_source (uint8_t *buffer_p) /**< buffer to free */
  * @return length of the path written to the output buffer
  */
 size_t
-jerry_port_normalize_path (const char *in_path_p, /**< input file path */
-                           char *out_buf_p,       /**< output buffer */
-                           size_t out_buf_size)   /**< size of output buffer */
+jerry_port_normalize_path (const char *in_path_p,   /**< input file path */
+                           char *out_buf_p,         /**< output buffer */
+                           size_t out_buf_size,     /**< size of output buffer */
+                           char *base_file_p) /**< base file path */
 {
+  (void) base_file_p;
+
   size_t len = strlen (in_path_p);
   if (len + 1 > out_buf_size)
   {

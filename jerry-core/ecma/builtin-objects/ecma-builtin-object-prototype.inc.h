@@ -29,11 +29,11 @@ OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
-ROUTINE (LIT_MAGIC_STRING_TO_STRING_UL, ecma_builtin_object_prototype_object_to_string, 0, 0)
-ROUTINE (LIT_MAGIC_STRING_VALUE_OF_UL, ecma_builtin_object_prototype_object_value_of, 0, 0)
-ROUTINE (LIT_MAGIC_STRING_TO_LOCALE_STRING_UL, ecma_builtin_object_prototype_object_to_locale_string, 0, 0)
-ROUTINE (LIT_MAGIC_STRING_HAS_OWN_PROPERTY_UL, ecma_builtin_object_prototype_object_has_own_property, 1, 1)
-ROUTINE (LIT_MAGIC_STRING_IS_PROTOTYPE_OF_UL, ecma_builtin_object_prototype_object_is_prototype_of, 1, 1)
-ROUTINE (LIT_MAGIC_STRING_PROPERTY_IS_ENUMERABLE_UL, ecma_builtin_object_prototype_object_property_is_enumerable, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_TO_STRING_UL, ECMA_OBJECT_PROTOTYPE_TO_STRING, 0, 0)
+ROUTINE (LIT_MAGIC_STRING_VALUE_OF_UL, ECMA_OBJECT_PROTOTYPE_VALUE_OF, 0, 0)
+ROUTINE (LIT_MAGIC_STRING_TO_LOCALE_STRING_UL, ECMA_OBJECT_PROTOTYPE_TO_LOCALE_STRING, 0, 0)
+ROUTINE (LIT_MAGIC_STRING_HAS_OWN_PROPERTY_UL, ECMA_OBJECT_PROTOTYPE_HAS_OWN_PROPERTY, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_IS_PROTOTYPE_OF_UL, ECMA_OBJECT_PROTOTYPE_IS_PROTOTYPE_OF, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_PROPERTY_IS_ENUMERABLE_UL, ECMA_OBJECT_PROTOTYPE_PROPERTY_IS_ENUMERABLE, 1, 1)
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

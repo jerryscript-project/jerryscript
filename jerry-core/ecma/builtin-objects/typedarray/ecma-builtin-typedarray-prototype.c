@@ -1798,6 +1798,187 @@ ecma_builtin_typedarray_prototype_last_index_of (ecma_value_t this_arg, /**< thi
 } /* ecma_builtin_typedarray_prototype_last_index_of */
 
 /**
+ * Helper function to get the uint32_t value from an argument.
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_get_uint32_value_from_argument (ecma_value_t arg_value, /**< this argument */
+                                             uint32_t length, /**< length of the TypedArray */
+                                             uint32_t *index, /**< [out] pointer to the given index */
+                                             bool is_end_index) /**< true - normalize the end index */
+{
+  ecma_number_t num_var;
+  ecma_value_t ret_value = ecma_get_number (arg_value, &num_var);
+
+  if (ECMA_IS_VALUE_ERROR (ret_value))
+  {
+    return ret_value;
+  }
+
+  if (is_end_index && ecma_number_is_nan (num_var))
+  {
+    *index = length;
+  }
+  else
+  {
+    *index = ecma_builtin_helper_array_index_normalize (num_var, length, false);
+  }
+
+  return ECMA_VALUE_EMPTY;
+} /* ecma_builtin_get_uint32_value_from_argument */
+
+/**
+ * The %TypedArray%.prototype object's 'copyWithin' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 22.2.3.5
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_copy_within (ecma_value_t this_arg, /**< this argument */
+                                               const ecma_value_t args[], /**< arguments list */
+                                               ecma_length_t args_number) /**< number of arguments */
+{
+  if (!ecma_is_typedarray (this_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
+  }
+
+  ecma_object_t *typedarray_p = ecma_get_object_from_value (this_arg);
+  lit_utf8_byte_t *typedarray_buffer_p = ecma_typedarray_get_buffer (typedarray_p);
+  uint32_t length = ecma_typedarray_get_length (typedarray_p);
+  uint8_t shift = ecma_typedarray_get_element_size_shift (typedarray_p);
+  uint8_t element_size = (uint8_t) (1 << shift);
+  uint32_t target = 0;
+  uint32_t start = 0;
+  uint32_t end = length;
+
+  if (args_number > 0)
+  {
+    ecma_value_t target_value = ecma_builtin_get_uint32_value_from_argument (args[0], length, &target, false);
+
+    if (ECMA_IS_VALUE_ERROR (target_value))
+    {
+      return target_value;
+    }
+
+    if (args_number > 1)
+    {
+      ecma_value_t start_value = ecma_builtin_get_uint32_value_from_argument (args[1], length, &start, false);
+
+      if (ECMA_IS_VALUE_ERROR (start_value))
+      {
+        return start_value;
+      }
+
+      if (args_number > 2)
+      {
+        ecma_value_t end_value = ecma_builtin_get_uint32_value_from_argument (args[2], length, &end, true);
+
+        if (ECMA_IS_VALUE_ERROR (end_value))
+        {
+          return end_value;
+        }
+      }
+    }
+  }
+
+  int32_t distance = (int32_t) (end - start);
+  int32_t offset = (int32_t) (length - target);
+  int32_t count = JERRY_MIN (distance, offset);
+
+  if (target >= length || start >= length || end == 0)
+  {
+    return ecma_copy_value (this_arg);
+  }
+  else
+  {
+    memmove (typedarray_buffer_p + (target * element_size),
+             typedarray_buffer_p + (start * element_size),
+             (size_t) (count * element_size));
+  }
+
+  return ecma_copy_value (this_arg);
+} /* ecma_builtin_typedarray_prototype_copy_within */
+
+/**
+ * The %TypedArray%.prototype object's 'slice' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 22.2.3.23
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_slice (ecma_value_t this_arg, /**< this argument */
+                                         const ecma_value_t args[], /**< arguments list */
+                                         ecma_length_t args_number) /**< number of arguments */
+{
+  if (!ecma_is_typedarray (this_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
+  }
+
+  ecma_object_t *typedarray_p = ecma_get_object_from_value (this_arg);
+  uint32_t length = ecma_typedarray_get_length (typedarray_p);
+  uint32_t start = 0;
+  uint32_t end = length;
+
+  if (args_number > 0)
+  {
+    ecma_value_t start_value = ecma_builtin_get_uint32_value_from_argument (args[0], length, &start, false);
+
+    if (ECMA_IS_VALUE_ERROR (start_value))
+    {
+      return start_value;
+    }
+
+    if (args_number > 1)
+    {
+      ecma_value_t end_value = ecma_builtin_get_uint32_value_from_argument (args[1], length, &end, true);
+
+      if (ECMA_IS_VALUE_ERROR (end_value))
+      {
+        return end_value;
+      }
+    }
+  }
+
+  int32_t distance = (int32_t) (end - start);
+  uint32_t count = distance > 0 ? (uint32_t) distance : 0;
+
+  ecma_value_t new_typedarray = ecma_op_create_typedarray_with_type_and_length (typedarray_p, count);
+
+  if (ECMA_IS_VALUE_ERROR (new_typedarray))
+  {
+    return new_typedarray;
+  }
+
+  if (count > 0)
+  {
+    lit_utf8_byte_t *typedarray_buffer_p = ecma_typedarray_get_buffer (typedarray_p);
+    uint8_t shift = ecma_typedarray_get_element_size_shift (typedarray_p);
+    uint8_t element_size = (uint8_t) (1 << shift);
+
+    ecma_object_t *new_typedarray_p = ecma_get_object_from_value (new_typedarray);
+    lit_utf8_byte_t *new_typedarray_buffer_p = ecma_typedarray_get_buffer (new_typedarray_p);
+    ecma_length_t src_byte_offset = ecma_typedarray_get_offset (typedarray_p);
+    uint32_t src_byte_index = (start * element_size) + src_byte_offset;
+
+    memcpy (new_typedarray_buffer_p,
+            typedarray_buffer_p + src_byte_index,
+            count * element_size);
+  }
+
+  return new_typedarray;
+} /* ecma_builtin_typedarray_prototype_slice */
+
+/**
  * @}
  * @}
  * @}

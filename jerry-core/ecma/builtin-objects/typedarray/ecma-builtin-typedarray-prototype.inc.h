@@ -72,6 +72,8 @@ ROUTINE (LIT_MAGIC_STRING_FIND, ecma_builtin_typedarray_prototype_find, 2, 1)
 ROUTINE (LIT_MAGIC_STRING_FIND_INDEX, ecma_builtin_typedarray_prototype_find_index, 2, 1)
 ROUTINE (LIT_MAGIC_STRING_INDEX_OF_UL, ecma_builtin_typedarray_prototype_index_of, NON_FIXED, 1)
 ROUTINE (LIT_MAGIC_STRING_LAST_INDEX_OF_UL, ecma_builtin_typedarray_prototype_last_index_of, NON_FIXED, 1)
+ROUTINE (LIT_MAGIC_STRING_COPY_WITHIN, ecma_builtin_typedarray_prototype_copy_within, NON_FIXED, 2)
+ROUTINE (LIT_MAGIC_STRING_SLICE, ecma_builtin_typedarray_prototype_slice, NON_FIXED, 2)
 
 #if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
 

@@ -2397,6 +2397,11 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   context.status_flags |= parse_opts & PARSER_STRICT_MODE_MASK;
 
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+  if (parse_opts & ECMA_PARSE_EVAL)
+  {
+    context.status_flags |= PARSER_IS_EVAL;
+  }
+
   context.module_current_node_p = NULL;
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 

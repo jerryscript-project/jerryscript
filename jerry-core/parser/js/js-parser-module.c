@@ -493,8 +493,7 @@ parser_module_check_request_place (parser_context_t *context_p) /**< parser cont
 {
   if (context_p->last_context_p != NULL
       || context_p->stack_top_uint8 != 0
-      || (JERRY_CONTEXT (status_flags) & ECMA_STATUS_DIRECT_EVAL) != 0
-      || (context_p->status_flags & PARSER_IS_FUNCTION) != 0)
+      || (context_p->status_flags & (PARSER_IS_EVAL | PARSER_IS_FUNCTION)) != 0)
   {
     parser_raise_error (context_p, PARSER_ERR_MODULE_UNEXPECTED);
   }

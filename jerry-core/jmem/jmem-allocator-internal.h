@@ -45,16 +45,11 @@
 #endif /* ENABLED (JERRY_VALGRIND) */
 /** @} */
 
-#if ENABLED (JERRY_MEM_STATS)
-void jmem_heap_stats_reset_peak (void);
-void jmem_heap_stats_print (void);
-#endif /* ENABLED (JERRY_MEM_STATS) */
-
 void jmem_heap_init (void);
 void jmem_heap_finalize (void);
 bool jmem_is_heap_pointer (const void *pointer);
-
-void jmem_run_free_unused_memory_callbacks (jmem_free_unused_memory_severity_t severity);
+void *jmem_heap_alloc_block_internal (const size_t size);
+void jmem_heap_free_block_internal (void *ptr, const size_t size);
 
 /**
  * \addtogroup poolman Memory pool manager
@@ -62,11 +57,30 @@ void jmem_run_free_unused_memory_callbacks (jmem_free_unused_memory_severity_t s
  */
 
 void jmem_pools_finalize (void);
-void jmem_pools_collect_empty (void);
 
 /**
  * @}
  * @}
  */
+
+/**
+ * @{
+ * Jerry mem-stat definitions
+ */
+#if ENABLED (JERRY_MEM_STATS)
+void jmem_heap_stat_init (void);
+void jmem_heap_stat_alloc (size_t num);
+void jmem_heap_stat_free (size_t num);
+
+#define JMEM_HEAP_STAT_INIT() jmem_heap_stat_init ()
+#define JMEM_HEAP_STAT_ALLOC(v1) jmem_heap_stat_alloc (v1)
+#define JMEM_HEAP_STAT_FREE(v1) jmem_heap_stat_free (v1)
+#else /* !ENABLED (JERRY_MEM_STATS) */
+#define JMEM_HEAP_STAT_INIT()
+#define JMEM_HEAP_STAT_ALLOC(v1) JERRY_UNUSED (v1)
+#define JMEM_HEAP_STAT_FREE(v1) JERRY_UNUSED (v1)
+#endif /* ENABLED (JERRY_MEM_STATS) */
+
+/** @} */
 
 #endif /* !JMEM_ALLOCATOR_INTERNAL_H */

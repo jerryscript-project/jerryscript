@@ -14,5 +14,12 @@
 
 ((new RegExp("}").constructor)("a", "g").constructor)(undefined).constructor.prototype.toString();
 new Date("2015-07-09T12:13:14.121+01:30").toISOString();
-RegExp(new RegExp("a", "g")).constructor("").constructor.prototype.compile(RegExp.prototype);
+
+try {
+  RegExp(new RegExp("a", "g")).constructor("").constructor.prototype.compile(RegExp.prototype);
+  assert (false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
 new Date("2015-09-17").getUTCFullYear();

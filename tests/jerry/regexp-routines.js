@@ -94,7 +94,7 @@ try {
 }
 
 re2.lastIndex = 2;
-re2.compile("asd", "im");
+assert (re2.compile("asd", "im") === re2);
 
 assert (re2 == "/asd/im");
 assert (re2.global === false);
@@ -103,7 +103,7 @@ assert (re2.multiline === true);
 assert (re2.source === "asd");
 assert (re2.lastIndex === 0);
 
-re2.compile(re1);
+assert (re2.compile(re1) === re2);
 assert (re2.toString() === re1.toString());
 assert (re2.global === re1.global);
 assert (re2.ignoreCase === re1.ignoreCase);

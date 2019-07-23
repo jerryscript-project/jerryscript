@@ -393,6 +393,9 @@ ecma_value_t ecma_clear_error_reference (ecma_value_t value, bool set_abort_flag
 
 void ecma_bytecode_ref (ecma_compiled_code_t *bytecode_p);
 void ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p);
+#if (JERRY_STACK_LIMIT != 0)
+uintptr_t ecma_get_current_stack_usage (void);
+#endif /* (JERRY_STACK_LIMIT != 0) */
 
 /* ecma-helpers-external-pointers.c */
 bool ecma_create_native_pointer_property (ecma_object_t *obj_p, void *native_p, void *info_p);

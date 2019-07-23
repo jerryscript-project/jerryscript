@@ -120,6 +120,8 @@ def get_arguments():
                          help='enable logging (%(choices)s)')
     coregrp.add_argument('--mem-heap', metavar='SIZE', type=int,
                          help='size of memory heap (in kilobytes)')
+    coregrp.add_argument('--stack-limit', metavar='SIZE', type=int,
+                         help='maximum stack usage (in kilobytes)')
     coregrp.add_argument('--mem-stats', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help=devhelp('enable memory statistics (%(choices)s)'))
     coregrp.add_argument('--mem-stress-test', metavar='X', choices=['ON', 'OFF'], type=str.upper,
@@ -128,10 +130,6 @@ def get_arguments():
                          help='specify profile file')
     coregrp.add_argument('--regexp-strict-mode', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help=devhelp('enable regexp strict mode (%(choices)s)'))
-    coregrp.add_argument('--regexp-recursion-limit', metavar='N', type=int,
-                         help='regexp recursion depth limit')
-    coregrp.add_argument('--call-stack-limit', metavar='N', type=int,
-                         help='Function call recursion depth limit')
     coregrp.add_argument('--show-opcodes', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help=devhelp('enable parser byte-code dumps (%(choices)s)'))
     coregrp.add_argument('--show-regexp-opcodes', metavar='X', choices=['ON', 'OFF'], type=str.upper,
@@ -155,11 +153,6 @@ def get_arguments():
     if arguments.devhelp:
         parser.print_help()
         sys.exit(0)
-
-    if arguments.call_stack_limit:
-        if arguments.call_stack_limit < 0:
-            print ('Configuration error: Function call recursion limit must be greater or equal than 0')
-            sys.exit(1)
 
     return arguments
 
@@ -202,12 +195,11 @@ def generate_build_options(arguments):
     build_options_append('JERRY_LINE_INFO', arguments.line_info)
     build_options_append('JERRY_LOGGING', arguments.logging)
     build_options_append('JERRY_GLOBAL_HEAP_SIZE', arguments.mem_heap)
+    build_options_append('JERRY_STACK_LIMIT', arguments.stack_limit)
     build_options_append('JERRY_MEM_STATS', arguments.mem_stats)
     build_options_append('JERRY_MEM_GC_BEFORE_EACH_ALLOC', arguments.mem_stress_test)
     build_options_append('JERRY_PROFILE', arguments.profile)
     build_options_append('JERRY_REGEXP_STRICT_MODE', arguments.regexp_strict_mode)
-    build_options_append('JERRY_REGEXP_RECURSION_LIMIT', arguments.regexp_recursion_limit)
-    build_options_append('JERRY_CALL_STACK_LIMIT', arguments.call_stack_limit)
     build_options_append('JERRY_PARSER_DUMP_BYTE_CODE', arguments.show_opcodes)
     build_options_append('JERRY_REGEXP_DUMP_BYTE_CODE', arguments.show_regexp_opcodes)
     build_options_append('JERRY_SNAPSHOT_EXEC', arguments.snapshot_exec)

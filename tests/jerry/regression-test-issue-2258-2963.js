@@ -12,19 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* Note: if the tests suite vm-recursion-limit changes, this variable must be changed as well */
-var limit = 100;
-var counter = 0;
-
-function f () {
-  counter++;
-  return f ();
-}
-
 try {
-  f ();
-  assert (false);
+  JSON.stringify(10, Array);
+  assert(false);
 } catch (e) {
-  assert (e instanceof RangeError);
-  assert (counter === limit);
+  assert(e instanceof RangeError);
 }

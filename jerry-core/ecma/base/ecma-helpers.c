@@ -1599,6 +1599,21 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
                         ((size_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG);
 } /* ecma_bytecode_deref */
 
+#if (JERRY_STACK_LIMIT != 0)
+/**
+ * Check the current stack usage by calculating the difference from the initial stack base.
+ *
+ * @return current stack usage in bytes
+ */
+uintptr_t JERRY_ATTR_NOINLINE
+ecma_get_current_stack_usage (void)
+{
+  volatile int __sp;
+  return (uintptr_t) (JERRY_CONTEXT (stack_base) - (uintptr_t)&__sp);
+} /* ecma_get_current_stack_usage */
+
+#endif /* (JERRY_STACK_LIMIT != 0) */
+
 /**
  * @}
  * @}

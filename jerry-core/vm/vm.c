@@ -43,13 +43,6 @@
  * @{
  */
 
-/*
- * Check VM recursion depth limit
- */
-#if defined (JERRY_CALL_STACK_LIMIT) && (JERRY_CALL_STACK_LIMIT != 0)
-JERRY_STATIC_ASSERT (JERRY_CALL_STACK_LIMIT > 0, function_call_recursion_limit_must_be_greater_than_zero);
-#endif /* defined (JERRY_CALL_STACK_LIMIT) && (JERRY_CALL_STACK_LIMIT != 0) */
-
 /**
  * Get the value of object[property].
  *

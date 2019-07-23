@@ -1249,7 +1249,7 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
   int32_t index = 0;
   ecma_length_t input_str_len;
 
-  input_str_len = lit_utf8_string_length (input_buffer_p, input_buffer_size);
+  input_str_len = ecma_string_get_length (input_string_p);
 
   if (input_buffer_p && (re_ctx.flags & RE_FLAG_GLOBAL))
   {
@@ -1264,9 +1264,16 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
         && index <= (int32_t) input_str_len
         && index > 0)
     {
-      for (int i = 0; i < index; i++)
+      if (input_str_len == input_buffer_size)
       {
-        lit_utf8_incr (&input_curr_p);
+        input_curr_p += index;
+      }
+      else
+      {
+        for (int i = 0; i < index; i++)
+        {
+          lit_utf8_incr (&input_curr_p);
+        }
       }
     }
 
@@ -1328,8 +1335,15 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
     if (sub_str_p != NULL
         && input_buffer_p != NULL)
     {
-      lastindex_num = (ecma_number_t) lit_utf8_string_length (input_buffer_p,
-                                                              (lit_utf8_size_t) (sub_str_p - input_buffer_p));
+      if (input_str_len == input_buffer_size)
+      {
+        lastindex_num = (ecma_number_t) (sub_str_p - input_buffer_p);
+      }
+      else
+      {
+        lastindex_num = (ecma_number_t) lit_utf8_string_length (input_buffer_p,
+                                                                (lit_utf8_size_t) (sub_str_p - input_buffer_p));
+      }
     }
     else
     {

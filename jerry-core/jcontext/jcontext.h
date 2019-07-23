@@ -111,11 +111,11 @@ struct jerry_context_t
 #endif /* ENABLED (JERRY_EXTERNAL_CONTEXT) */
 
   /* Update JERRY_CONTEXT_FIRST_MEMBER if the first non-external member changes */
-  ecma_object_t *ecma_builtin_objects[ECMA_BUILTIN_ID__COUNT]; /**< pointer to instances of built-in objects */
+  jmem_cpointer_t ecma_builtin_objects[ECMA_BUILTIN_ID__COUNT]; /**< pointer to instances of built-in objects */
 #if ENABLED (JERRY_BUILTIN_REGEXP)
   const re_compiled_code_t *re_cache[RE_CACHE_SIZE]; /**< regex cache */
 #endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
-  ecma_object_t *ecma_gc_objects_p; /**< List of currently alive objects. */
+  jmem_cpointer_t ecma_gc_objects_cp; /**< List of currently alive objects. */
   jmem_heap_free_t *jmem_heap_list_skip_p; /**< This is used to speed up deallocation. */
   jmem_pools_chunk_t *jmem_free_8_byte_chunk_p; /**< list of free eight byte pool chunks */
 #if ENABLED (JERRY_CPOINTER_32_BIT)
@@ -128,7 +128,7 @@ struct jerry_context_t
   ecma_lit_storage_item_t *symbol_list_first_p; /**< first item of the global symbol list */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
   ecma_lit_storage_item_t *number_list_first_p; /**< first item of the literal number list */
-  ecma_object_t *ecma_global_lex_env_p; /**< global lexical environment */
+  jmem_cpointer_t ecma_global_lex_env_cp; /**< global lexical environment */
 
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
   ecma_module_t *ecma_modules_p; /**< list of referenced modules */

@@ -41,9 +41,10 @@ ecma_init_global_lex_env (void)
 {
   ecma_object_t *glob_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
 
-  JERRY_CONTEXT (ecma_global_lex_env_p) = ecma_create_object_lex_env (NULL,
-                                                                      glob_obj_p,
-                                                                      ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+  ecma_object_t *global_lex_env_p = ecma_create_object_lex_env (NULL,
+                                                                glob_obj_p,
+                                                                ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+  ECMA_SET_NON_NULL_POINTER (JERRY_CONTEXT (ecma_global_lex_env_cp), global_lex_env_p);
 } /* ecma_init_global_lex_env */
 
 /**
@@ -52,8 +53,8 @@ ecma_init_global_lex_env (void)
 void
 ecma_finalize_global_lex_env (void)
 {
-  ecma_deref_object (JERRY_CONTEXT (ecma_global_lex_env_p));
-  JERRY_CONTEXT (ecma_global_lex_env_p) = NULL;
+  ecma_deref_object (ECMA_GET_NON_NULL_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_global_lex_env_cp)));
+  JERRY_CONTEXT (ecma_global_lex_env_cp) = JMEM_CP_NULL;
 } /* ecma_finalize_global_lex_env */
 
 /**
@@ -65,7 +66,8 @@ ecma_finalize_global_lex_env (void)
 ecma_object_t *
 ecma_get_global_environment (void)
 {
-  return JERRY_CONTEXT (ecma_global_lex_env_p);
+  JERRY_ASSERT (JERRY_CONTEXT (ecma_global_lex_env_cp) != JMEM_CP_NULL);
+  return ECMA_GET_NON_NULL_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_global_lex_env_cp));
 } /* ecma_get_global_environment */
 
 /**

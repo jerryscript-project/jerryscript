@@ -2575,7 +2575,7 @@ jerry_objects_foreach (jerry_objects_foreach_t foreach_p, /**< function pointer 
 
   JERRY_ASSERT (foreach_p != NULL);
 
-  for (ecma_object_t *iter_p = JERRY_CONTEXT (ecma_gc_objects_p);
+  for (ecma_object_t *iter_p = ECMA_GET_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_gc_objects_cp));
        iter_p != NULL;
        iter_p = ECMA_GET_POINTER (ecma_object_t, iter_p->gc_next_cp))
   {
@@ -2609,7 +2609,7 @@ jerry_objects_foreach_by_native_info (const jerry_object_native_info_t *native_i
 
   ecma_native_pointer_t *native_pointer_p;
 
-  for (ecma_object_t *iter_p = JERRY_CONTEXT (ecma_gc_objects_p);
+  for (ecma_object_t *iter_p = ECMA_GET_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_gc_objects_cp));
        iter_p != NULL;
        iter_p = ECMA_GET_POINTER (ecma_object_t, iter_p->gc_next_cp))
   {

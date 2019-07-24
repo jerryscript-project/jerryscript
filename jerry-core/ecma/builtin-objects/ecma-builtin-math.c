@@ -412,6 +412,11 @@ ecma_builtin_math_dispatch_routine (uint16_t builtin_routine_id, /**< built-in w
           /* Handle differences between ES5.1 and ISO C standards for pow. */
           x = ecma_number_make_nan ();
         }
+        else if (ecma_number_is_zero (y))
+        {
+          /* Handle differences between ES5.1 and ISO C standards for pow. */
+          x = (ecma_number_t) 1.0;
+        }
         else
         {
           x = DOUBLE_TO_ECMA_NUMBER_T (pow (x, y));

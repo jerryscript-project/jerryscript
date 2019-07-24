@@ -30,6 +30,30 @@ set(INCLUDE_LIBM "${CMAKE_CURRENT_SOURCE_DIR}/include")
 # Source directories
 file(GLOB SOURCE_LIBM *.c)
 
+# "Single" JerryScript libm source/header build.
+#  The process will create the following files:
+#   * jerryscript-libm.c
+#   * math.h
+if(ENABLE_ALL_IN_ONE_SOURCE)
+  file(GLOB HEADER_LIBM *.h)
+  set(ALL_IN_FILE "${CMAKE_BINARY_DIR}/src/jerryscript-libm.c")
+  set(ALL_IN_FILE_H "${CMAKE_BINARY_DIR}/src/math.h")
+
+  add_custom_command(OUTPUT ${ALL_IN_FILE} ${ALL_IN_FILE_H} ${JERRYSCRIPT_CONFIG_H}
+                     COMMAND python ${CMAKE_SOURCE_DIR}/tools/srcgenerator.py
+                             --jerry-libm
+                             --output-dir ${CMAKE_BINARY_DIR}/src
+                     DEPENDS ${SOURCE_LIBM}
+                             ${HEADER_LIBM}
+                             ${CMAKE_SOURCE_DIR}/tools/srcgenerator.py
+                             ${CMAKE_SOURCE_DIR}/tools/srcmerger.py
+  )
+  add_custom_target(generate-single-source-libm DEPENDS ${ALL_IN_FILE} ${ALL_IN_FILE_H})
+  add_dependencies(generate-single-source generate-single-source-libm)
+
+  set(SOURCE_LIBM ${ALL_IN_FILE} ${ALL_IN_FILE_H})
+endif()
+
 add_library(${JERRY_LIBM_NAME} ${SOURCE_LIBM})
 set_property(TARGET ${JERRY_LIBM_NAME}
              PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_LIBM}")

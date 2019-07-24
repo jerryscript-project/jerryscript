@@ -28,30 +28,17 @@ file(GLOB SOURCE_PORT_DEFAULT *.c)
 #   * jerryscript-port-default.h
 if(ENABLE_ALL_IN_ONE_SOURCE)
   file(GLOB HEADER_PORT_DEFAULT *.h)
-  set(ALL_IN_FILE "${CMAKE_BINARY_DIR}/jerryscript-port-default.c")
-  set(ALL_IN_FILE_H "${CMAKE_BINARY_DIR}/jerryscript-port-default.h")
-  add_custom_command(OUTPUT ${ALL_IN_FILE}
-                     COMMAND python ${CMAKE_SOURCE_DIR}/tools/srcmerger.py
-                             --base-dir ${CMAKE_CURRENT_SOURCE_DIR}
-                             --output ${ALL_IN_FILE}
-                             --append-c-files
-                             --remove-include jerryscript-port.h
-                             --remove-include jerryscript-port-default.h
-                             --remove-include jerryscript-debugger.h
-                             --push-include jerryscript.h
-                             --push-include jerryscript-port-default.h
-                     DEPENDS ${SOURCE_PORT_DEFAULT} ${ALL_IN_FILE_H}
-  )
+  set(ALL_IN_FILE "${CMAKE_BINARY_DIR}/src/jerryscript-port-default.c")
+  set(ALL_IN_FILE_H "${CMAKE_BINARY_DIR}/src/jerryscript-port-default.h")
 
-  add_custom_command(OUTPUT ${ALL_IN_FILE_H}
-                     COMMAND python ${CMAKE_SOURCE_DIR}/tools/srcmerger.py
-                               --base-dir ${CMAKE_CURRENT_SOURCE_DIR}/
-                               --input ${CMAKE_CURRENT_SOURCE_DIR}/include/jerryscript-port-default.h
-                               --output ${ALL_IN_FILE_H}
-                               --remove-include jerryscript-port.h
-                               --remove-include jerryscript.h
-                               --push-include jerryscript.h
-                    DEPENDS ${HEADER_PORT_DEFAULT}
+  add_custom_command(OUTPUT ${ALL_IN_FILE} ${ALL_IN_FILE_H} ${JERRYSCRIPT_CONFIG_H}
+                     COMMAND python ${CMAKE_SOURCE_DIR}/tools/srcgenerator.py
+                             --jerry-port-default
+                             --output-dir ${CMAKE_BINARY_DIR}/src
+                     DEPENDS ${SOURCE_PORT_DEFAULT}
+                             ${HEADER_PORT_DEFAULT}
+                             ${CMAKE_SOURCE_DIR}/tools/srcgenerator.py
+                             ${CMAKE_SOURCE_DIR}/tools/srcmerger.py
   )
   add_custom_target(generate-single-source-port DEPENDS ${ALL_IN_FILE} ${ALL_IN_FILE_H})
   add_dependencies(generate-single-source generate-single-source-port)

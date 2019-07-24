@@ -29,6 +29,7 @@
 #include "jrt-libc-includes.h"
 #include "ecma-gc.h"
 #include "jmem.h"
+#include "ecma-iterator-object.h"
 
 #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
 
@@ -311,6 +312,91 @@ ecma_builtin_typedarray_prototype_for_each (ecma_value_t this_arg, /**< this arg
                                                          cb_this_arg,
                                                          TYPEDARRAY_ROUTINE_FOREACH);
 } /* ecma_builtin_typedarray_prototype_for_each */
+
+
+#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+/**
+ * Helper function for typedArray.prototype object's {'keys', 'values', 'entries', '@@iterator'}
+ * routines common parts.
+ *
+ * See also:
+ *          ECMA-262 v6, 22.2.3.15
+ *          ECMA-262 v6, 22.2.3.29
+ *          ECMA-262 v6, 22.2.3.6
+ *          ECMA-262 v6, 22.1.3.30
+ *
+ * Note:
+ *      Returned value must be freed with ecma_free_value.
+ *
+ * @return iterator result object, if success
+ *         error - otherwise
+ */
+static ecma_value_t
+ecma_builtin_typedarray_iterators_helper (ecma_value_t this_arg, /**< this argument */
+                                          uint8_t type) /**< any combination of ecma_iterator_type_t bits */
+{
+  if (!ecma_is_typedarray (this_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
+  }
+
+  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY_ITERATOR_PROTOTYPE);
+
+  return ecma_op_create_iterator_object (this_arg,
+                                         prototype_obj_p,
+                                         ECMA_PSEUDO_ARRAY_ITERATOR,
+                                         type);
+} /* ecma_builtin_typedarray_iterators_helper */
+
+/**
+ * The %TypedArray%.prototype object's 'keys' routine
+ *
+ * See also:
+ *          ES2015, 22.2.3.15
+ *          ES2015, 22.1.3.30
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_keys (ecma_value_t this_arg) /**< this argument */
+{
+  return ecma_builtin_typedarray_iterators_helper (this_arg, ECMA_ITERATOR_KEYS);
+} /* ecma_builtin_typedarray_prototype_keys */
+
+/**
+ * The %TypedArray%.prototype object's 'values' and @@iterator routines
+ *
+ * See also:
+ *          ES2015, 22.2.3.29
+ *          ES2015, 22.1.3.30
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_values (ecma_value_t this_arg) /**< this argument */
+{
+  return ecma_builtin_typedarray_iterators_helper (this_arg, ECMA_ITERATOR_VALUES);
+} /* ecma_builtin_typedarray_prototype_values */
+
+/**
+ * The %TypedArray%.prototype object's 'entries' routine
+ *
+ * See also:
+ *          ES2015, 22.2.3.6
+ *          ES2015, 22.1.3.30
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_entries (ecma_value_t this_arg) /**< this argument */
+{
+  return ecma_builtin_typedarray_iterators_helper (this_arg, ECMA_ITERATOR_KEYS_VALUES);
+} /* ecma_builtin_typedarray_prototype_entries */
+
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
 
 /**
  * The %TypedArray%.prototype object's 'map' routine

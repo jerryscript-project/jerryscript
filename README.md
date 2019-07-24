@@ -43,10 +43,10 @@ cd jerryscript
 python tools/build.py
 ```
 
-For additional information see [Getting Started](docs/01.GETTING-STARTED.md).
+For additional information see [Getting Started](docs/00.GETTING-STARTED.md).
 
 ## Documentation
-- [Getting Started](docs/01.GETTING-STARTED.md)
+- [Getting Started](docs/00.GETTING-STARTED.md)
 - [API Reference](docs/02.API-REFERENCE.md)
 - [API Example](docs/03.API-EXAMPLE.md)
 - [Internals](docs/04.INTERNALS.md)

@@ -472,11 +472,6 @@ ecma_builtin_helper_array_concat_value (ecma_object_t *obj_p, /**< array */
     ecma_deref_ecma_string (new_array_index_string_p);
   }
 
-  if (ecma_is_value_empty (ret_value))
-  {
-    ret_value = ECMA_VALUE_TRUE;
-  }
-
   return ret_value;
 } /* ecma_builtin_helper_array_concat_value */
 
@@ -794,6 +789,41 @@ ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, /**< index
 
   return match_found;
 } /* ecma_builtin_helper_string_find_index */
+
+/**
+ * Helper function for using [[DefineOwnProperty]] specialized for indexed property names
+ *
+ * Note: this method falls back to the general ecma_builtin_helper_def_prop
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_builtin_helper_def_prop_by_index (ecma_object_t *obj_p, /**< object */
+                                       uint32_t index, /**< property index */
+                                       ecma_value_t value, /**< value */
+                                       uint32_t opts, /**< any combination of ecma_property_flag_t bits */
+                                       bool is_throw) /**< is_throw */
+{
+  if (JERRY_LIKELY (index <= ECMA_DIRECT_STRING_MAX_IMM))
+  {
+    return ecma_builtin_helper_def_prop (obj_p,
+                                         ECMA_CREATE_DIRECT_UINT32_STRING (index),
+                                         value,
+                                         opts,
+                                         is_throw);
+  }
+
+  ecma_string_t *index_str_p = ecma_new_non_direct_string_from_uint32 (index);
+  ecma_value_t ret_value = ecma_builtin_helper_def_prop (obj_p,
+                                                         index_str_p,
+                                                         value,
+                                                         opts,
+                                                         is_throw);
+  ecma_deref_ecma_string (index_str_p);
+
+  return ret_value;
+} /* ecma_builtin_helper_def_prop_by_index */
 
 /**
  * Helper function for using [[DefineOwnProperty]].

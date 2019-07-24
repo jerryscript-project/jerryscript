@@ -497,6 +497,27 @@ ecma_new_ecma_string_from_code_units (ecma_char_t first_code_unit, /**< code uni
 /**
  * Allocate new ecma-string and fill it with ecma-number
  *
+ * Note: the number cannot be represented as direct string
+ *
+ * @return pointer to ecma-string descriptor
+ */
+ecma_string_t *
+ecma_new_non_direct_string_from_uint32 (uint32_t uint32_number) /**< uint32 value of the string */
+{
+  JERRY_ASSERT (uint32_number > ECMA_DIRECT_STRING_MAX_IMM);
+
+  ecma_string_t *string_p = ecma_alloc_string ();
+
+  string_p->refs_and_container = ECMA_STRING_CONTAINER_UINT32_IN_DESC | ECMA_STRING_REF_ONE;
+  string_p->hash = (lit_string_hash_t) uint32_number;
+  string_p->u.uint32_number = uint32_number;
+
+  return string_p;
+} /* ecma_new_non_direct_string_from_uint32 */
+
+/**
+ * Allocate new ecma-string and fill it with ecma-number
+ *
  * @return pointer to ecma-string descriptor
  */
 ecma_string_t *
@@ -507,13 +528,7 @@ ecma_new_ecma_string_from_uint32 (uint32_t uint32_number) /**< uint32 value of t
     return (ecma_string_t *) ECMA_CREATE_DIRECT_STRING (ECMA_DIRECT_STRING_UINT, (uintptr_t) uint32_number);
   }
 
-  ecma_string_t *string_p = ecma_alloc_string ();
-
-  string_p->refs_and_container = ECMA_STRING_CONTAINER_UINT32_IN_DESC | ECMA_STRING_REF_ONE;
-  string_p->hash = (lit_string_hash_t) uint32_number;
-  string_p->u.uint32_number = uint32_number;
-
-  return string_p;
+  return ecma_new_non_direct_string_from_uint32 (uint32_number);
 } /* ecma_new_ecma_string_from_uint32 */
 
 /**

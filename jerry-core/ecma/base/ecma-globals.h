@@ -1251,6 +1251,14 @@ typedef enum
   ((uintptr_t) (ECMA_TYPE_DIRECT_STRING | ((type) << ECMA_VALUE_SHIFT) | (value) << ECMA_DIRECT_STRING_SHIFT))
 
 /**
+ * Create an ecma direct string from the given number.
+ *
+ * Note: the given number must be less or equal than ECMA_DIRECT_STRING_MAX_IMM
+ */
+#define ECMA_CREATE_DIRECT_UINT32_STRING(uint32_number) \
+  ((ecma_string_t *) ECMA_CREATE_DIRECT_STRING (ECMA_DIRECT_STRING_UINT, (uintptr_t) uint32_number))
+
+/**
  * Checks whether the string is direct.
  */
 #define ECMA_IS_DIRECT_STRING(string_p) \

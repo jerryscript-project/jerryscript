@@ -234,6 +234,7 @@ ecma_string_t *ecma_new_ecma_string_from_code_unit (ecma_char_t code_unit);
 ecma_string_t *ecma_new_ecma_string_from_code_units (ecma_char_t first_code_unit, ecma_char_t second_code_unit);
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
 ecma_string_t *ecma_new_ecma_string_from_uint32 (uint32_t uint32_number);
+ecma_string_t *ecma_new_non_direct_string_from_uint32 (uint32_t uint32_number);
 ecma_string_t *ecma_get_ecma_string_from_uint32 (uint32_t uint32_number);
 ecma_string_t *ecma_new_ecma_string_from_number (ecma_number_t num);
 ecma_string_t *ecma_get_magic_string (lit_magic_string_id_t id);

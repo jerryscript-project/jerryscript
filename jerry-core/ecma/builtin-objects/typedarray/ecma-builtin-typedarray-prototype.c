@@ -1978,6 +1978,135 @@ ecma_builtin_typedarray_prototype_slice (ecma_value_t this_arg, /**< this argume
 } /* ecma_builtin_typedarray_prototype_slice */
 
 /**
+ * The TypedArray.prototype's 'toLocaleString' single element operation routine.
+ *
+ * See also:
+ *          ECMA-262 v6, 22.1.3.26 steps 7-10 and 12.b-e
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+*/
+static ecma_value_t
+ecma_builtin_typedarray_prototype_to_locale_string_helper (ecma_object_t *this_obj, /**< TypedArray object */
+                                                           uint32_t index) /** array index */
+{
+  lit_magic_string_id_t class_id = ecma_object_get_class_name (this_obj);
+  lit_utf8_byte_t *typedarray_buffer_p = ecma_typedarray_get_buffer (this_obj);
+
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+  ecma_number_t element_num = ecma_get_typedarray_element (typedarray_buffer_p + index, class_id);
+  ecma_value_t element_value = ecma_make_number_value (element_num);
+
+  ecma_value_t element_obj = ecma_op_to_object (element_value);
+
+  if (ECMA_IS_VALUE_ERROR (element_obj))
+  {
+    ecma_free_value (element_value);
+    return element_obj;
+  }
+
+  ecma_object_t *element_obj_p = ecma_get_object_from_value (element_obj);
+
+  ecma_value_t func_value = ecma_op_object_get_by_magic_id (element_obj_p,
+                                                            LIT_MAGIC_STRING_TO_LOCALE_STRING_UL);
+
+  if (ECMA_IS_VALUE_ERROR (func_value))
+  {
+    ecma_free_value (element_value);
+    ecma_deref_object (element_obj_p);
+    return func_value;
+  }
+
+  if (ecma_op_is_callable (func_value))
+  {
+    ecma_object_t *func_obj = ecma_get_object_from_value (func_value);
+    ecma_value_t call_value = ecma_op_function_call (func_obj,
+                                                     element_obj,
+                                                     NULL,
+                                                     0);
+
+    ecma_deref_object (func_obj);
+
+    if (ECMA_IS_VALUE_ERROR (call_value))
+    {
+      ecma_free_value (element_value);
+      ecma_deref_object (element_obj_p);
+      return call_value;
+    }
+
+    ret_value = ecma_op_to_string (call_value);
+  }
+  else
+  {
+    ecma_free_value (func_value);
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("'toLocaleString' is missing or not a function."));
+  }
+
+  ecma_deref_object (element_obj_p);
+  ecma_free_value (element_value);
+
+  return ret_value;
+} /* ecma_builtin_typedarray_prototype_to_locale_string_helper */
+
+/**
+ * The %TypedArray%.prototype object's 'toLocaleString' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 22.2.3.27
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_to_locale_string (ecma_value_t this_arg) /**< this argument */
+{
+  if (!ecma_is_typedarray (this_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
+  }
+
+  ecma_object_t *typedarray_p = ecma_get_object_from_value (this_arg);
+  uint32_t length = ecma_typedarray_get_length (typedarray_p);
+  uint8_t shift = ecma_typedarray_get_element_size_shift (typedarray_p);
+  uint8_t element_size = (uint8_t) (1 << shift);
+  uint32_t limit = length * element_size;
+
+  if (length == 0)
+  {
+    return ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
+  }
+
+  ecma_value_t first_element = ecma_builtin_typedarray_prototype_to_locale_string_helper (typedarray_p, 0);
+
+  if (ECMA_IS_VALUE_ERROR (first_element))
+  {
+    return first_element;
+  }
+
+  ecma_string_t *return_string_p = ecma_get_string_from_value (first_element);
+
+  for (uint32_t k = element_size; k < limit; k += element_size)
+  {
+    return_string_p = ecma_append_magic_string_to_string (return_string_p, LIT_MAGIC_STRING_COMMA_CHAR);
+    ecma_value_t next_element = ecma_builtin_typedarray_prototype_to_locale_string_helper (typedarray_p, k);
+
+    if (ECMA_IS_VALUE_ERROR (next_element))
+    {
+      ecma_free_value (first_element);
+      return next_element;
+    }
+
+    ecma_string_t *next_element_p = ecma_get_string_from_value (next_element);
+    return_string_p = ecma_concat_ecma_strings (return_string_p, next_element_p);
+    ecma_deref_ecma_string (next_element_p);
+  }
+
+  ecma_free_value (first_element);
+
+  return ecma_make_string_value (return_string_p);
+} /* ecma_builtin_typedarray_prototype_to_locale_string */
+
+/**
  * @}
  * @}
  * @}

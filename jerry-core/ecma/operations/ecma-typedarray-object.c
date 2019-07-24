@@ -831,25 +831,19 @@ ecma_op_typedarray_define_index_prop (ecma_object_t *obj_p, /**< a TypedArray ob
 
   ecma_length_t array_length = ecma_typedarray_get_length (obj_p);
 
-  if (index >= array_length)
+  if ((index >= array_length)
+      || (property_desc_p->flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED))
+      || ((property_desc_p->flags & (ECMA_PROP_IS_CONFIGURABLE_DEFINED | ECMA_PROP_IS_CONFIGURABLE))
+           == (ECMA_PROP_IS_CONFIGURABLE_DEFINED | ECMA_PROP_IS_CONFIGURABLE))
+      || ((property_desc_p->flags & ECMA_PROP_IS_ENUMERABLE_DEFINED)
+          && !(property_desc_p->flags & ECMA_PROP_IS_ENUMERABLE))
+      || ((property_desc_p->flags & ECMA_PROP_IS_WRITABLE_DEFINED)
+          && !(property_desc_p->flags & ECMA_PROP_IS_WRITABLE)))
   {
     return false;
   }
 
-  if (property_desc_p->is_get_defined
-      || property_desc_p->is_set_defined)
-  {
-    return false;
-  }
-
-  if ((property_desc_p->is_configurable_defined && property_desc_p->is_configurable)
-      || (property_desc_p->is_enumerable_defined && !property_desc_p->is_enumerable)
-      || (property_desc_p->is_writable_defined && !property_desc_p->is_writable))
-  {
-    return false;
-  }
-
-  if (property_desc_p->is_value_defined)
+  if (property_desc_p->flags & ECMA_PROP_IS_VALUE_DEFINED)
   {
     return ecma_op_typedarray_set_index_prop (obj_p, index, property_desc_p->value);
   }

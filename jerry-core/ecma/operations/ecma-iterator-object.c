@@ -64,8 +64,7 @@ ecma_create_array_from_iter_element (ecma_value_t value, /**< value */
     ecma_value_t completion = ecma_builtin_helper_def_prop (new_array_p,
                                                             index_string_p,
                                                             (index == 0) ? index_value : value,
-                                                            ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
-                                                            false); /* Failure handling */
+                                                            ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
 
     /* 4.b */
     JERRY_ASSERT (ecma_is_value_true (completion));

@@ -52,7 +52,7 @@ ecma_value_t ecma_op_object_delete_by_uint32_index (ecma_object_t *obj_p, uint32
 ecma_value_t ecma_op_object_delete_by_number_index (ecma_object_t *obj_p, ecma_number_t index, bool is_throw);
 ecma_value_t ecma_op_object_default_value (ecma_object_t *obj_p, ecma_preferred_type_hint_t hint);
 ecma_value_t ecma_op_object_define_own_property (ecma_object_t *obj_p, ecma_string_t *property_name_p,
-                                                 const ecma_property_descriptor_t *property_desc_p, bool is_throw);
+                                                 const ecma_property_descriptor_t *property_desc_p);
 bool ecma_op_object_get_own_property_descriptor (ecma_object_t *object_p, ecma_string_t *property_name_p,
                                                  ecma_property_descriptor_t *prop_desc_p);
 ecma_value_t ecma_op_object_has_instance (ecma_object_t *obj_p, ecma_value_t value);

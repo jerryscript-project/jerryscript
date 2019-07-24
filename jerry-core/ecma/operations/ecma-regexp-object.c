@@ -1141,27 +1141,24 @@ re_set_result_array_properties (ecma_object_t *array_obj_p, /**< result array */
   ecma_builtin_helper_def_prop (array_obj_p,
                                 ecma_get_magic_string (LIT_MAGIC_STRING_INDEX),
                                 ecma_make_int32_value (index),
-                                ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
-                                true); /* Failure handling */
+                                ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_IS_THROW);
 
   /* Set input property of the result array */
   ecma_builtin_helper_def_prop (array_obj_p,
                                 ecma_get_magic_string (LIT_MAGIC_STRING_INPUT),
                                 ecma_make_string_value (input_str_p),
-                                ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
-                                true); /* Failure handling */
+                                ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_IS_THROW);
 
   /* Set length property of the result array */
   {
     ecma_property_descriptor_t array_item_prop_desc = ecma_make_empty_property_descriptor ();
-    array_item_prop_desc.is_value_defined = true;
+    array_item_prop_desc.flags |= (ECMA_PROP_IS_VALUE_DEFINED | ECMA_PROP_IS_THROW);
 
     array_item_prop_desc.value = ecma_make_uint32_value (num_of_elements);
 
     ecma_op_object_define_own_property (array_obj_p,
                                         ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH),
-                                        &array_item_prop_desc,
-                                        true);
+                                        &array_item_prop_desc);
   }
 } /* re_set_result_array_properties */
 

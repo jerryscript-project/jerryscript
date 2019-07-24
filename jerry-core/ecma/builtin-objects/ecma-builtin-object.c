@@ -339,13 +339,13 @@ ecma_builtin_object_object_seal (ecma_object_t *obj_p) /**< routine's argument *
     }
 
     /* 2.b */
-    prop_desc.is_configurable = false;
+    prop_desc.flags &= (uint16_t) ~ECMA_PROP_IS_CONFIGURABLE;
+    prop_desc.flags |= ECMA_PROP_IS_THROW;
 
     /* 2.c */
     ecma_value_t define_own_prop_ret = ecma_op_object_define_own_property (obj_p,
                                                                            property_name_p,
-                                                                           &prop_desc,
-                                                                           true);
+                                                                           &prop_desc);
 
     ecma_free_property_descriptor (&prop_desc);
 
@@ -398,19 +398,20 @@ ecma_builtin_object_object_freeze (ecma_object_t *obj_p) /**< routine's argument
     }
 
     /* 2.b */
-    if (prop_desc.is_writable_defined && prop_desc.is_writable)
+    if ((prop_desc.flags & (ECMA_PROP_IS_WRITABLE_DEFINED | ECMA_PROP_IS_WRITABLE))
+        == (ECMA_PROP_IS_WRITABLE_DEFINED | ECMA_PROP_IS_WRITABLE))
     {
-      prop_desc.is_writable = false;
+      prop_desc.flags &= (uint16_t) ~ECMA_PROP_IS_WRITABLE;
     }
 
     /* 2.c */
-    prop_desc.is_configurable = false;
+    prop_desc.flags &= (uint16_t) ~ECMA_PROP_IS_CONFIGURABLE;
+    prop_desc.flags |= ECMA_PROP_IS_THROW;
 
     /* 2.d */
     ecma_value_t define_own_prop_ret = ecma_op_object_define_own_property (obj_p,
                                                                            property_name_p,
-                                                                           &prop_desc,
-                                                                           true);
+                                                                           &prop_desc);
 
     ecma_free_property_descriptor (&prop_desc);
 
@@ -620,6 +621,8 @@ ecma_builtin_object_object_define_properties (ecma_object_t *obj_p, /**< routine
     ecma_value_t conv_result = ecma_op_to_property_descriptor (desc_obj,
                                                                &property_descriptors[property_descriptor_number]);
 
+    property_descriptors[property_descriptor_number].flags |= ECMA_PROP_IS_THROW;
+
     ecma_free_value (desc_obj);
 
     if (ECMA_IS_VALUE_ERROR (conv_result))
@@ -641,8 +644,7 @@ ecma_builtin_object_object_define_properties (ecma_object_t *obj_p, /**< routine
   {
     ecma_value_t define_own_prop_ret =  ecma_op_object_define_own_property (obj_p,
                                                                             ecma_get_string_from_value (*ecma_value_p),
-                                                                            &property_descriptors[index],
-                                                                            true);
+                                                                            &property_descriptors[index]);
     if (ECMA_IS_VALUE_ERROR (define_own_prop_ret))
     {
       goto cleanup;
@@ -743,10 +745,11 @@ ecma_builtin_object_object_define_property (ecma_object_t *obj_p, /**< routine's
     return conv_result;
   }
 
+  prop_desc.flags |= ECMA_PROP_IS_THROW;
+
   ecma_value_t define_own_prop_ret = ecma_op_object_define_own_property (obj_p,
                                                                          name_str_p,
-                                                                         &prop_desc,
-                                                                         true);
+                                                                         &prop_desc);
 
   ecma_free_property_descriptor (&prop_desc);
   ecma_free_value (conv_result);
@@ -834,9 +837,9 @@ ecma_builtin_object_object_assign (const ecma_value_t arguments_list_p[], /**< a
       }
 
       /* 5.c.iii */
-      if (prop_desc.is_enumerable
-          && ((prop_desc.is_value_defined && !ecma_is_value_undefined (prop_desc.value))
-              || prop_desc.is_get_defined))
+      if ((prop_desc.flags & ECMA_PROP_IS_ENUMERABLE)
+          && (((prop_desc.flags & ECMA_PROP_IS_VALUE_DEFINED) && !ecma_is_value_undefined (prop_desc.value))
+              || (prop_desc.flags & ECMA_PROP_IS_GET_DEFINED)))
       {
         /* 5.c.iii.1 */
         ecma_value_t prop_value = ecma_op_object_get (from_obj_p, property_name_p);

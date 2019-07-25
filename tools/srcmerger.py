@@ -60,7 +60,8 @@ class SourceMerger(object):
         self._output.append(line)
 
     def _emit_lineinfo(self, line_number, filename):
-        line_info = '#line %d "%s"\n' % (line_number, filename)
+        normalized_path = repr(os.path.normpath(filename))[1:-1]
+        line_info = '#line %d "%s"\n' % (line_number, normalized_path)
 
         if self._output and self._output[-1].startswith('#line'):
             # Avoid emitting multiple line infos in sequence, just overwrite the last one
@@ -72,6 +73,9 @@ class SourceMerger(object):
         if os.path.basename(filename) in self._processed:
             self._log.warning('Tried to to process an already processed file: "%s"', filename)
             return
+
+        if not file_level:
+            self._log.debug('Adding file: "%s"', filename)
 
         file_level += 1
 
@@ -138,7 +142,7 @@ class SourceMerger(object):
 
                 self._log.debug('[%d] Including: "%s"',
                                 file_level, self._h_files[name])
-                self.add_file(self._h_files[name])
+                self.add_file(self._h_files[name], file_level)
 
                 # mark the continuation of the current file in the output
                 self._emit_lineinfo(line_idx + 1, filename)
@@ -207,17 +211,17 @@ def run_merger(args):
         h_files.pop(name, '')
 
     merger = SourceMerger(h_files, args.push_include, args.remove_include)
-    if args.input_file:
-        merger.add_file(args.input_file)
+    for input_file in args.input_files:
+        merger.add_file(input_file)
 
     if args.append_c_files:
         # if the input file is in the C files list it should be removed to avoid
         # double inclusion of the file
-        if args.input_file:
-            input_name = os.path.basename(args.input_file)
+        for input_file in args.input_files:
+            input_name = os.path.basename(input_file)
             c_files.pop(input_name, '')
 
-        # Add the C files in reverse the order to make sure that builtins are
+        # Add the C files in reverse order to make sure that builtins are
         # not at the beginning.
         for fname in sorted(c_files.values(), reverse=True):
             merger.add_file(fname)
@@ -230,12 +234,12 @@ def main():
     parser = argparse.ArgumentParser(description='Merge source/header files.')
     parser.add_argument('--base-dir', metavar='DIR', type=str, dest='base_dir',
                         help='', default=os.path.curdir)
-    parser.add_argument('--input', metavar='FILE', type=str, dest='input_file',
-                        help='Main input source/header file')
+    parser.add_argument('--input', metavar='FILES', type=str, action='append', dest='input_files',
+                        help='Main input source/header files', default=[])
     parser.add_argument('--output', metavar='FILE', type=str, dest='output_file',
                         help='Output source/header file')
     parser.add_argument('--append-c-files', dest='append_c_files', default=False,
-                        action='store_true', help='das')
+                        action='store_true', help='Enable auto inclusion of c files under the base-dir')
     parser.add_argument('--remove-include', action='append', default=[])
     parser.add_argument('--push-include', action='append', default=[])
     parser.add_argument('--verbose', '-v', action='store_true', default=False)

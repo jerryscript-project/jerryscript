@@ -48,6 +48,9 @@ def generate_jerry_core(output_dir, verbose=False):
         '--input={}/api/jerry.c'.format(JERRY_CORE),
         '--output={}/jerryscript.c'.format(output_dir),
         '--append-c-files',
+        # Add the global built-in by default to include some common items
+        # to avoid problems with common built-in headers
+        '--input={}/ecma/builtin-objects/ecma-builtins.c'.format(JERRY_CORE),
         '--remove-include=jerryscript.h',
         '--remove-include=jerryscript-port.h',
         '--remove-include=jerryscript-compiler.h',
@@ -55,7 +58,7 @@ def generate_jerry_core(output_dir, verbose=False):
         '--remove-include=jerryscript-debugger.h',
         '--remove-include=jerryscript-debugger-transport.h',
         '--remove-include=jerryscript-port.h',
-        '--remove-include=jerryscript-snapshot.h'
+        '--remove-include=jerryscript-snapshot.h',
         '--remove-include=config.h',
         '--push-include=jerryscript.h',
     ]

@@ -45,6 +45,56 @@ jerry_value_t jerryx_handler_gc (const jerry_value_t func_obj_val, const jerry_v
 jerry_value_t jerryx_handler_print (const jerry_value_t func_obj_val, const jerry_value_t this_p,
                                     const jerry_value_t args_p[], const jerry_length_t args_cnt);
 
+/**
+ * Struct used by the `jerryx_set_functions` method to
+ * register multiple methods for a given object.
+ */
+typedef struct
+{
+  const char *name; /**< name of the property to add */
+  jerry_value_t value; /**< value of the property */
+} jerryx_property_entry;
+
+#define JERRYX_PROPERTY_NUMBER(NAME, NUMBER) (jerryx_property_entry) { NAME, jerry_create_number (NUMBER) }
+#define JERRYX_PROPERTY_STRING(NAME, STR) \
+  (jerryx_property_entry) { NAME, jerry_create_string_from_utf8 ((const jerry_char_t *) STR) }
+#define JERRYX_PROPERTY_STRING_SZ(NAME, STR, SIZE) \
+  (jerryx_property_entry) { NAME, jerry_create_string_sz_from_utf8 ((const jerry_char_t *) STR, SIZE) }
+#define JERRYX_PROPERTY_BOOLEAN(NAME, VALUE) (jerryx_property_entry) { NAME, jerry_create_boolean (VALUE) }
+#define JERRYX_PROPERTY_FUNCTION(NAME, FUNC) (jerryx_property_entry) { NAME, jerry_create_external_function (FUNC) }
+#define JERRYX_PROPERTY_UNDEFINED(NAME) (jerryx_property_entry) { NAME, jerry_create_undefined() }
+#define JERRYX_PROPERTY_LIST_END() (jerryx_property_entry) { NULL, 0 }
+
+/**
+ * Stores the result of property register operation.
+ */
+typedef struct
+{
+  jerry_value_t result; /**< result of property registraion (undefined or error object) */
+  uint32_t registered; /**< number of successfully registered methods */
+} jerryx_register_result;
+
+jerryx_register_result
+jerryx_set_properties (const jerry_value_t target_object,
+                       const jerryx_property_entry entries[]);
+
+void
+jerryx_release_property_entry (const jerryx_property_entry entries[],
+                               const jerryx_register_result register_result);
+
+jerry_value_t
+jerryx_set_property_str (const jerry_value_t target_object,
+                         const char *name,
+                         const jerry_value_t value);
+
+jerry_value_t
+jerryx_get_property_str (const jerry_value_t target_object,
+                         const char *name);
+
+bool
+jerryx_has_property_str (const jerry_value_t target_object,
+                         const char *name);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -47,6 +47,7 @@ For additional information see [Getting Started](docs/00.GETTING-STARTED.md).
 
 ## Documentation
 - [Getting Started](docs/00.GETTING-STARTED.md)
+- [Configuration](docs/01.CONFIGURATION.md)
 - [API Reference](docs/02.API-REFERENCE.md)
 - [API Example](docs/03.API-EXAMPLE.md)
 - [Internals](docs/04.INTERNALS.md)

@@ -38,6 +38,7 @@ EXT_REFERENCE_MODULE_MD="12.EXT-REFERENCE-MODULE.md"
 DEBUGGER_TRANSPORT_MD="13.DEBUGGER-TRANSPORT.md"
 EXT_REFERENCE_HANDLE_SCOPE_MD="14.EXT-REFERENCE-HANDLE-SCOPE.md"
 MODULE_SYSTEM_MD="15.MODULE-SYSTEM.md"
+MIGRATION_GUIDE_MD="16.MIGRATION-GUIDE.md"
 
 declare -A titles
 
@@ -57,6 +58,7 @@ titles[$EXT_REFERENCE_MODULE_MD]="'Extension API: Module Support'"
 titles[$DEBUGGER_TRANSPORT_MD]="'Debugger Transport'"
 titles[$EXT_REFERENCE_HANDLE_SCOPE_MD]="'Extension API: Handle Scope'"
 titles[$MODULE_SYSTEM_MD]="'Module System (EcmaScript2015)'"
+titles[$MIGRATION_GUIDE_MD]="Migration Guide"
 
 for docfile in $docs_dir/*.md; do
   docfile_base=`basename $docfile`

@@ -231,6 +231,9 @@ if(DEFINED EXTERNAL_LINKER_FLAGS)
   jerry_add_link_flags(${EXTERNAL_LINKER_FLAGS})
 endif()
 
+# Used for placeholder to attach single source build targets
+add_custom_target(generate-single-source)
+
 # Jerry's libm
 if(JERRY_LIBM)
   add_subdirectory(jerry-libm)

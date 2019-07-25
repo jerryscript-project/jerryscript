@@ -160,48 +160,28 @@ endif()
 #   * jerryscript.h
 #   * jerryscript-config.h
 if(ENABLE_ALL_IN_ONE_SOURCE)
-  # Create a default configuration
-  set(JERRYSCRIPT_CONFIG_H "${CMAKE_BINARY_DIR}/jerryscript-config.h")
-  set(JERRYSCRIPT_SOURCE_CONFIG_H "${CMAKE_CURRENT_SOURCE_DIR}/config.h")
-  add_custom_command(OUTPUT ${JERRYSCRIPT_CONFIG_H}
-                     COMMAND ${CMAKE_COMMAND} -E copy ${JERRYSCRIPT_SOURCE_CONFIG_H} ${JERRYSCRIPT_CONFIG_H}
-                     DEPENDS ${JERRYSCRIPT_SOURCE_CONFIG_H})
 
-  # Create single C file
+  # Create single C/H file
   file(GLOB HEADER_CORE_FILES *.h)
-  set(ALL_IN_FILE "${CMAKE_BINARY_DIR}/jerryscript.c")
-  set(ALL_IN_FILE_H "${CMAKE_BINARY_DIR}/jerryscript.h")
-  add_custom_command(OUTPUT ${ALL_IN_FILE}
-                     COMMAND python ${CMAKE_SOURCE_DIR}/tools/srcmerger.py
-                             --base-dir ${CMAKE_CURRENT_SOURCE_DIR}
-                             --input ${CMAKE_CURRENT_SOURCE_DIR}/api/jerry.c
-                             --output ${ALL_IN_FILE}
-                             --append-c-files
-                             --remove-include jerryscript.h
-                             --remove-include jerryscript-port.h
-                             --remove-include jerryscript-compiler.h
-                             --remove-include jerryscript-core.h
-                             --remove-include jerryscript-debugger.h
-                             --remove-include jerryscript-debugger-transport.h
-                             --remove-include jerryscript-port.h
-                             --remove-include jerryscript-snapshot.h
-                             --remove-include config.h
-                             --push-include jerryscript.h
-                    DEPENDS ${SOURCE_CORE_FILES} ${ALL_IN_FILE_H} ${JERRYSCRIPT_CONFIG_H}
-  )
-  add_custom_command(OUTPUT ${ALL_IN_FILE_H}
-                     COMMAND python ${CMAKE_SOURCE_DIR}/tools/srcmerger.py
-                             --base-dir ${CMAKE_CURRENT_SOURCE_DIR}
-                             --input ${CMAKE_CURRENT_SOURCE_DIR}/include/jerryscript.h
-                             --output ${ALL_IN_FILE_H}
-                             --remove-include config.h
-                             --push-include jerryscript-config.h
-                     DEPENDS ${HEADER_CORE_FILES} ${JERRYSCRIPT_CONFIG_H}
+
+  # Generated files
+  set(ALL_IN_FILE "${CMAKE_BINARY_DIR}/src/jerryscript.c")
+  set(ALL_IN_FILE_H "${CMAKE_BINARY_DIR}/src/jerryscript.h")
+  set(JERRYSCRIPT_CONFIG_H "${CMAKE_BINARY_DIR}/src/jerryscript-config.h")
+
+  add_custom_command(OUTPUT ${ALL_IN_FILE} ${ALL_IN_FILE_H} ${JERRYSCRIPT_CONFIG_H}
+                     COMMAND python ${CMAKE_SOURCE_DIR}/tools/srcgenerator.py
+                             --jerry-core
+                             --output-dir ${CMAKE_BINARY_DIR}/src
+                     DEPENDS ${SOURCE_CORE_FILES}
+                             ${HEADER_CORE_FILES}
+                             ${CMAKE_SOURCE_DIR}/tools/srcgenerator.py
+                             ${CMAKE_SOURCE_DIR}/tools/srcmerger.py
   )
   add_custom_target(generate-single-source-jerry DEPENDS ${ALL_IN_FILE} ${ALL_IN_FILE_H})
-  add_custom_target(generate-single-source DEPENDS generate-single-source-jerry)
+  add_dependencies(generate-single-source generate-single-source-jerry)
 
-  set(SOURCE_CORE_FILES ${ALL_IN_FILE} ${ALL_IN_FILE_H})
+  set(SOURCE_CORE_FILES ${ALL_IN_FILE} ${ALL_IN_FILE_H} ${JERRYSCRIPT_CONFIG_H})
 endif()
 
 # Third-party

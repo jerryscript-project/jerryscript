@@ -59,6 +59,15 @@ class SourceMerger(object):
         # the line is not anything special, just push it into the output
         self._output.append(line)
 
+    def _emit_lineinfo(self, line_number, filename):
+        line_info = '#line %d "%s"\n' % (line_number, filename)
+
+        if self._output and self._output[-1].startswith('#line'):
+            # Avoid emitting multiple line infos in sequence, just overwrite the last one
+            self._output[-1] = line_info
+        else:
+            self._output.append(line_info)
+
     def add_file(self, filename, file_level=0):
         if os.path.basename(filename) in self._processed:
             self._log.warning('Tried to to process an already processed file: "%s"', filename)
@@ -67,7 +76,7 @@ class SourceMerger(object):
         file_level += 1
 
         # mark the start of the new file in the output
-        self._output.append('#line 1 "%s"\n' % (filename))
+        self._emit_lineinfo(1, filename)
 
         line_idx = 0
         with open(filename, 'r') as input_file:
@@ -88,6 +97,8 @@ class SourceMerger(object):
                     if line.strip().endswith('*/'):
                         in_copyright = False
                         self._copyright['loaded'] = True
+                        # emit a line info so the line numbering can be tracked correctly
+                        self._emit_lineinfo(line_idx + 1, filename)
 
                     continue
 
@@ -108,6 +119,8 @@ class SourceMerger(object):
                 if name in self._remove_includes:
                     self._log.debug('[%d] Removing include line (%s:%d): %s',
                                     file_level, filename, line_idx, line.strip())
+                    # emit a line info so the line numbering can be tracked correctly
+                    self._emit_lineinfo(line_idx + 1, filename)
                     continue
 
                 if name not in self._h_files:
@@ -119,6 +132,8 @@ class SourceMerger(object):
                 if name in self._processed:
                     self._log.debug('[%d] Already included: "%s"',
                                     file_level, name)
+                    # emit a line info so the line numbering can be tracked correctly
+                    self._emit_lineinfo(line_idx + 1, filename)
                     continue
 
                 self._log.debug('[%d] Including: "%s"',
@@ -126,7 +141,7 @@ class SourceMerger(object):
                 self.add_file(self._h_files[name])
 
                 # mark the continuation of the current file in the output
-                self._output.append('#line %d "%s"\n' % (line_idx + 1, filename))
+                self._emit_lineinfo(line_idx + 1, filename)
 
                 if not name.endswith('.inc.h'):
                     # if the included file is not a "*.inc.h" file mark it as processed

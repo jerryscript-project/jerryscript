@@ -1381,6 +1381,34 @@ typedef struct
 } ecma_long_string_t;
 
 /**
+ * String builder header
+ */
+typedef struct
+{
+  lit_utf8_size_t current_size; /**< size of the data in the buffer */
+} ecma_stringbuilder_header_t;
+
+/**
+ * Get pointer to the beginning of the stored string in the string builder
+ */
+#define ECMA_STRINGBUILDER_STRING_PTR(header_p) \
+  ((lit_utf8_byte_t *) (((ecma_string_t *) header_p) + 1))
+
+/**
+ * Get the size of the stored string in the string builder
+ */
+#define ECMA_STRINGBUILDER_STRING_SIZE(header_p) \
+  ((lit_utf8_size_t) (header_p->current_size - sizeof (ecma_string_t)))
+
+/**
+ * String builder handle
+ */
+typedef struct
+{
+  ecma_stringbuilder_header_t *header_p; /**< pointer to header */
+} ecma_stringbuilder_t;
+
+/**
  * Abort flag for error reference.
  */
 #define ECMA_ERROR_REF_ABORT 0x1

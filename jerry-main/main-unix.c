@@ -118,7 +118,7 @@ print_unhandled_exception (jerry_value_t error_value) /**< error value */
         if (!jerry_value_is_error (item_val)
             && jerry_value_is_string (item_val))
         {
-          jerry_size_t str_size = jerry_get_string_size (item_val);
+          jerry_size_t str_size = jerry_get_utf8_string_size (item_val);
 
           if (str_size >= 256)
           {
@@ -126,7 +126,7 @@ print_unhandled_exception (jerry_value_t error_value) /**< error value */
           }
           else
           {
-            jerry_size_t string_end = jerry_string_to_char_buffer (item_val, err_str_buf, str_size);
+            jerry_size_t string_end = jerry_string_to_utf8_char_buffer (item_val, err_str_buf, str_size);
             assert (string_end == str_size);
             err_str_buf[string_end] = 0;
 
@@ -141,7 +141,7 @@ print_unhandled_exception (jerry_value_t error_value) /**< error value */
   }
 
   jerry_value_t err_str_val = jerry_value_to_string (error_value);
-  jerry_size_t err_str_size = jerry_get_string_size (err_str_val);
+  jerry_size_t err_str_size = jerry_get_utf8_string_size (err_str_val);
 
   if (err_str_size >= 256)
   {

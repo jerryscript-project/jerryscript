@@ -55,7 +55,7 @@ DELCARE_HANDLER(print) {
     {
       if (jerry_value_is_string (args_p[cc]))
       {
-        jerry_size_t size = jerry_get_string_size (args_p[0]);
+        jerry_size_t size = jerry_get_utf8_string_size (args_p[0]);
         char *buffer;
         buffer = (char *) malloc(size + 1);
 
@@ -66,9 +66,9 @@ DELCARE_HANDLER(print) {
             continue;
         }
 
-        jerry_string_to_char_buffer (args_p[cc],
-                                     (jerry_char_t *) buffer,
-                                     size);
+        jerry_string_to_utf8_char_buffer (args_p[cc],
+                                          (jerry_char_t *) buffer,
+                                          size);
         *(buffer + size) = 0;
         printf("%s ", buffer);
         free (buffer);

@@ -133,7 +133,7 @@ matrix:
             - sourceline: ppa:team-gcc-arm-embedded/ppa
           packages: [gcc-arm-embedded]
       language: python # NOTE: only way to ensure python>=2.7.10 on Trusty image
-      python: 2.7
+      python: 3.6
       install: make -f ./targets/mbedos5/Makefile.travis install
       script: make -f ./targets/mbedos5/Makefile.travis script
 

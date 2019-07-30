@@ -48,9 +48,9 @@ void jerry_resolve_error (jerry_value_t ret_value)
   {
     ret_value = jerry_get_value_from_error (ret_value, true);
     jerry_value_t err_str_val = jerry_value_to_string (ret_value);
-    jerry_size_t err_str_size = jerry_get_string_size (err_str_val);
+    jerry_size_t err_str_size = jerry_get_utf8_string_size (err_str_val);
     jerry_char_t *err_str_buf = (jerry_char_t *) balloc (err_str_size, NULL);
-    jerry_size_t sz = jerry_string_to_char_buffer (err_str_val, err_str_buf, err_str_size);
+    jerry_size_t sz = jerry_string_to_utf8_char_buffer (err_str_val, err_str_buf, err_str_size);
     err_str_buf[sz] = 0;
     printk ("Script Error: unhandled exception: %s\n", err_str_buf);
     bfree(err_str_buf);

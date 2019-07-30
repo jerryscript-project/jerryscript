@@ -1566,7 +1566,48 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_SUPER_PROP_REFERENCE:
         {
-          const int index = (byte_code_start_p[1] == CBC_EXT_SUPER_PROP_ASSIGN) ? -1 : -3;
+          /**
+           * In case of this VM_OC_SUPER_PROP_REFERENCE the previously pushed 'super' must be replaced
+           * with the current 'this' value to correctly access the properties.
+           */
+          int index = -1; /* -1 in case of CBC_EXT_SUPER_PROP_ASSIGN */
+
+          if (JERRY_LIKELY (byte_code_start_p[1] == CBC_EXT_SUPER_PROP_CALL))
+          {
+            cbc_opcode_t next_call_opcode = (cbc_opcode_t) byte_code_start_p[2];
+            /* The next opcode must be a call opcode */
+            JERRY_ASSERT (CBC_CALL <= next_call_opcode && next_call_opcode <= CBC_CALL2_PROP_BLOCK);
+
+            int arguments_list_len;
+            if (next_call_opcode >= CBC_CALL0)
+            {
+              /* CBC_CALL{0,1,2}* have their arg count encoded, extract it from there */
+              arguments_list_len = (int) ((next_call_opcode - CBC_CALL0) / 6);
+            }
+            else
+            {
+              /**
+               * In this case the arguments are coded into the byte code stream as a byte argument
+               * following the call opcode.
+               */
+              arguments_list_len = (int) byte_code_start_p[3];
+            }
+            /* The old 'super' value is at least '-3' element away from the current position on the stack. */
+            index = -3 - arguments_list_len;
+          }
+          else
+          {
+            /**
+             * The bytecode order for super assignment should be one of this:
+             *  - CBC_EXT_PUSH_SUPER, CBC_EXT_SUPER_PROP_ASSIGN.
+             *  - CBC_EXT_PUSH_CONSTRUCTOR_SUPER_PROP, CBC_EXT_SUPER_PROP_ASSIGN.
+             * That is one ext opcode back (-1).
+             */
+            JERRY_ASSERT (byte_code_start_p[-1] == CBC_EXT_PUSH_SUPER
+                          || byte_code_start_p[-1] == CBC_EXT_PUSH_CONSTRUCTOR_SUPER_PROP);
+          }
+
+          /* Replace the old 'super' value with the correct 'this' binding */
           ecma_free_value (stack_top_p[index]);
           stack_top_p[index] = ecma_copy_value (frame_ctx_p->this_binding);
           continue;

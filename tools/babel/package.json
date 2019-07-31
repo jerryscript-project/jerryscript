@@ -1,0 +1,30 @@
+{
+  "name": "jerryscript",
+  "description": "Ultra-lightweight JavaScript engine for the Internet of Things.",
+  "scripts": {
+    "transpile": "scripty"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jerryscript-project/jerryscript.git"
+  },
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.5",
+    "@babel/plugin-proposal-object-rest-spread": "^7.5.5",
+    "@babel/plugin-transform-block-scoped-functions": "^7.2.0",
+    "@babel/plugin-transform-block-scoping": "^7.4.4",
+    "@babel/plugin-transform-destructuring": "^7.4.4",
+    "@babel/plugin-transform-function-name": "^7.4.4",
+    "@babel/plugin-transform-instanceof": "^7.2.0",
+    "@babel/plugin-transform-literals": "^7.2.0",
+    "@babel/plugin-transform-new-target": "^7.4.4",
+    "@babel/plugin-transform-object-super": "^7.2.0",
+    "@babel/plugin-transform-parameters": "^7.4.4",
+    "@babel/plugin-transform-spread": "^7.2.2",
+    "@babel/plugin-transform-sticky-regex": "^7.2.0",
+    "@babel/plugin-transform-unicode-regex": "^7.4.4",
+    "scripty": "^1.9.1"
+  }
+}

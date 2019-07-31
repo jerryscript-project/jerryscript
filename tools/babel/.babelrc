@@ -1,0 +1,17 @@
+{
+  "plugins": [
+    "@babel/plugin-transform-function-name",
+    "@babel/plugin-proposal-object-rest-spread",
+    "@babel/plugin-transform-block-scoping",
+    "@babel/plugin-transform-destructuring",
+    "@babel/plugin-transform-block-scoped-functions",
+    "@babel/plugin-transform-unicode-regex",
+    "@babel/plugin-transform-sticky-regex",
+    "@babel/plugin-transform-spread",
+    "@babel/plugin-transform-parameters",
+    "@babel/plugin-transform-object-super",
+    "@babel/plugin-transform-new-target",
+    "@babel/plugin-transform-literals",
+    "@babel/plugin-transform-instanceof"
+  ]
+}

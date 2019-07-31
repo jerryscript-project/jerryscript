@@ -13,8 +13,10 @@
  * limitations under the License.
  */
 
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef JERRYSCRIPT_CONFIG_H
+#define JERRYSCRIPT_CONFIG_H
+
+// @JERRY_BUILD_CFG@
 
 /**
  * Built-in configurations
@@ -698,4 +700,4 @@
 #  error "Date does not support float32"
 #endif
 
-#endif /* !CONFIG_H */
+#endif /* !JERRYSCRIPT_CONFIG_H */

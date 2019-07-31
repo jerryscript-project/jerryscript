@@ -881,7 +881,7 @@ jerry_generate_snapshot (const jerry_char_t *resource_name_p, /**< script resour
   JERRY_UNUSED (buffer_p);
   JERRY_UNUSED (buffer_size);
 
-  return 0;
+  return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) "Snapshot save is not supported.");
 #endif /* ENABLED (JERRY_SNAPSHOT_SAVE) */
 } /* jerry_generate_snapshot */
 
@@ -1032,7 +1032,7 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
   JERRY_UNUSED (func_index);
   JERRY_UNUSED (exec_snapshot_opts);
 
-  return ECMA_VALUE_FALSE;
+  return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) "Snapshot execution is not supported.");
 #endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 } /* jerry_exec_snapshot */
 
@@ -1831,7 +1831,7 @@ jerry_generate_function_snapshot (const jerry_char_t *resource_name_p, /**< scri
   JERRY_UNUSED (buffer_p);
   JERRY_UNUSED (buffer_size);
 
-  return 0;
+  return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) "Snapshot save is not supported.");
 #endif /* ENABLED (JERRY_SNAPSHOT_SAVE) */
 } /* jerry_generate_function_snapshot */
 
@@ -1858,6 +1858,6 @@ jerry_load_function_snapshot (const uint32_t *function_snapshot_p, /**< snapshot
   JERRY_UNUSED (func_index);
   JERRY_UNUSED (exec_snapshot_opts);
 
-  return ECMA_VALUE_FALSE;
+  return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) "Snapshot execution is not supported.");
 #endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 } /* jerry_load_function_snapshot */

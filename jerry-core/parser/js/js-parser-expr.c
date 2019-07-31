@@ -1532,9 +1532,31 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
 static void
 parser_process_unary_expression (parser_context_t *context_p) /**< context */
 {
+#if ENABLED (JERRY_ES2015_CLASS)
+  /* Track to see if a property was accessed or not */
+  bool property_accessed = false;
+#endif /* ENABLED (JERRY_ES2015_CLASS) */
+
   /* Parse postfix part of a primary expression. */
   while (true)
   {
+#if ENABLED (JERRY_ES2015_CLASS)
+    if (context_p->token.type == LEXER_DOT || context_p->token.type == LEXER_LEFT_SQUARE)
+    {
+      if (property_accessed)
+      {
+        /**
+         * In the case of "super.prop1.prop2(...)" the second property access should not
+         * generate a super prop call thus the 'PARSER_CLASS_SUPER_PROP_REFERENCE' flags should be removed.
+         *
+         * Similar case:  "super[propname].prop2(...)"
+         */
+        context_p->status_flags &= (uint32_t) ~PARSER_CLASS_SUPER_PROP_REFERENCE;
+      }
+      property_accessed = true;
+    }
+#endif /* ENABLED (JERRY_ES2015_CLASS) */
+
     /* Since break would only break the switch, we use
      * continue to continue this loop. Without continue,
      * the code abandons the loop. */

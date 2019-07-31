@@ -34,7 +34,7 @@ extern "C"
 /**
  * Major version of JerryScript API.
  */
-#define JERRY_API_MAJOR_VERSION 1
+#define JERRY_API_MAJOR_VERSION 2
 
 /**
  * Minor version of JerryScript API.

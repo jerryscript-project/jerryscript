@@ -50,12 +50,20 @@
 /**
  * Max heap usage limit
  */
-#define CONFIG_MEM_HEAP_MAX_LIMIT 8192
+#define CONFIG_MAX_GC_LIMIT 8192
 
 /**
- * Desired limit of heap usage
+ * Allowed heap usage limit until next garbage collection
+ *
+ * Whenever the total allocated memory size reaches the current heap limit, garbage collection will be triggered
+ * to try and reduce clutter from unreachable objects. If the allocated memory can't be reduced below the limit,
+ * then the current limit will be incremented by CONFIG_MEM_HEAP_LIMIT.
  */
-#define CONFIG_MEM_HEAP_DESIRED_LIMIT (JERRY_MIN (CONFIG_MEM_HEAP_SIZE / 32, CONFIG_MEM_HEAP_MAX_LIMIT))
+#if defined (JERRY_GC_LIMIT) && (JERRY_GC_LIMIT != 0)
+#define CONFIG_GC_LIMIT JERRY_GC_LIMIT
+#else
+#define CONFIG_GC_LIMIT (JERRY_MIN (CONFIG_MEM_HEAP_SIZE / 32, CONFIG_MAX_GC_LIMIT))
+#endif
 
 /**
  * Amount of newly allocated objects since the last GC run, represented as a fraction of all allocated objects,

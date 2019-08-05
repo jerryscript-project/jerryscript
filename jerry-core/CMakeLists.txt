@@ -39,6 +39,7 @@ set(JERRY_SYSTEM_ALLOCATOR          OFF     CACHE BOOL   "Enable system allocato
 set(JERRY_VALGRIND                  OFF     CACHE BOOL   "Enable Valgrind support?")
 set(JERRY_VM_EXEC_STOP              OFF     CACHE BOOL   "Enable VM execution stopping?")
 set(JERRY_GLOBAL_HEAP_SIZE          "(512)" CACHE STRING "Size of memory heap, in kilobytes")
+set(JERRY_GC_LIMIT                  "(0)"   CACHE STRING "Heap usage limit to trigger garbage collection")
 set(JERRY_STACK_LIMIT               "(0)"   CACHE STRING "Maximum stack usage size, in kilobytes")
 
 # Option overrides
@@ -101,6 +102,7 @@ message(STATUS "JERRY_SYSTEM_ALLOCATOR         " ${JERRY_SYSTEM_ALLOCATOR})
 message(STATUS "JERRY_VALGRIND                 " ${JERRY_VALGRIND})
 message(STATUS "JERRY_VM_EXEC_STOP             " ${JERRY_VM_EXEC_STOP})
 message(STATUS "JERRY_GLOBAL_HEAP_SIZE         " ${JERRY_GLOBAL_HEAP_SIZE})
+message(STATUS "JERRY_GC_LIMIT                 " ${JERRY_GC_LIMIT})
 message(STATUS "JERRY_STACK_LIMIT              " ${JERRY_STACK_LIMIT})
 
 # Include directories
@@ -202,6 +204,11 @@ set(DEFINES_JERRY ${DEFINES_JERRY} $<$<NOT:$<CONFIG:Debug>>:JERRY_NDEBUG>)
 # Jerry heap-section
 if(DEFINED JERRY_ATTR_GLOBAL_HEAP)
   set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_ATTR_GLOBAL_HEAP=${JERRY_ATTR_GLOBAL_HEAP})
+endif()
+
+# Memory usage limit for triggering garbage collection
+if(JERRY_GC_LIMIT)
+  set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_GC_LIMIT=${JERRY_GC_LIMIT})
 endif()
 
 # Helper macro to set 0/1 switch as Jerry Defines

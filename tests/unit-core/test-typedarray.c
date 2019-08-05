@@ -69,7 +69,7 @@ assert_handler (const jerry_value_t func_obj_val, /**< function object */
         && jerry_value_is_string (args_p[1]))
     {
       jerry_length_t utf8_sz = jerry_get_string_size (args_p[1]);
-      char string_from_utf8[utf8_sz];
+      JERRY_VLA (char, string_from_utf8, utf8_sz);
       string_from_utf8[utf8_sz] = 0;
 
       jerry_string_to_char_buffer (args_p[1], (jerry_char_t *) string_from_utf8, utf8_sz);
@@ -204,7 +204,7 @@ test_typedarray_complex_creation (test_entry_t test_entries[], /**< test cases *
 {
   const uint32_t arraybuffer_size = 256;
 
-  uint8_t buffer_ext[arraybuffer_size];
+  JERRY_VLA (uint8_t, buffer_ext, arraybuffer_size);
   memset (buffer_ext, 0, arraybuffer_size);
 
   for (uint32_t i = 0; test_entries[i].constructor_name != NULL; i++)
@@ -265,7 +265,7 @@ test_typedarray_complex_creation (test_entry_t test_entries[], /**< test cases *
       TEST_ASSERT (byte_length == element_count * bytes_per_element);
       TEST_ASSERT (byte_offset == offset);
 
-      uint8_t test_buffer[arraybuffer_size];
+      JERRY_VLA (uint8_t, test_buffer, arraybuffer_size);
 
       jerry_typedarray_type_t type = jerry_get_typedarray_type (typedarray);
       jerry_value_t read_count = jerry_arraybuffer_read (buffer, 0, test_buffer, offset + byte_length);
@@ -448,7 +448,7 @@ main (void)
     jerry_value_t array = jerry_create_typedarray (JERRY_TYPEDARRAY_UINT8, element_count);
 
     {
-      uint8_t expected_data[element_count];
+      JERRY_VLA (uint8_t, expected_data, element_count);
       memset (expected_data, expected_value, element_count);
 
       jerry_length_t byte_length;
@@ -493,7 +493,7 @@ main (void)
       jerry_value_t buffer = jerry_get_typedarray_buffer (array, &offset, &byte_length);
       TEST_ASSERT (byte_length == element_count);
 
-      uint8_t result_data[element_count];
+      JERRY_VLA (uint8_t, result_data, element_count);
 
       jerry_length_t read_count = jerry_arraybuffer_read (buffer, offset, result_data, byte_length);
       TEST_ASSERT (read_count == byte_length);

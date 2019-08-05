@@ -26,7 +26,7 @@ static jerry_value_t
 get_canonical_name (const jerry_value_t name)
 {
   jerry_size_t name_size = jerry_get_string_size (name);
-  jerry_char_t name_string[name_size + 1];
+  JERRY_VLA (jerry_char_t, name_string, name_size + 1);
   jerry_string_to_char_buffer (name, name_string, name_size);
   name_string[name_size] = 0;
 
@@ -48,7 +48,7 @@ static bool
 resolve (const jerry_value_t canonical_name, jerry_value_t *result)
 {
   jerry_size_t name_size = jerry_get_string_size (canonical_name);
-  jerry_char_t name_string[name_size + 1];
+  JERRY_VLA (jerry_char_t, name_string, name_size + 1);
   jerry_string_to_char_buffer (canonical_name, name_string, name_size);
   name_string[name_size] = 0;
 

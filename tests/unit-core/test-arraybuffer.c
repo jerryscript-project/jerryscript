@@ -57,7 +57,7 @@ assert_handler (const jerry_value_t func_obj_val, /**< function object */
       && jerry_value_is_string (args_p[1]))
   {
     jerry_length_t utf8_sz = jerry_get_string_size (args_p[1]);
-    char string_from_utf8[utf8_sz];
+    JERRY_VLA (char, string_from_utf8, utf8_sz);
     string_from_utf8[utf8_sz] = 0;
 
     jerry_string_to_char_buffer (args_p[1], (jerry_char_t *) string_from_utf8, utf8_sz);
@@ -255,7 +255,7 @@ main (void)
     const uint32_t buffer_size = 15;
     const uint8_t base_value = 51;
 
-    uint8_t buffer_p[buffer_size];
+    JERRY_VLA (uint8_t, buffer_p, buffer_size);
     memset (buffer_p, base_value, buffer_size);
 
     jerry_value_t arrayb = jerry_create_arraybuffer_external (buffer_size, buffer_p, test_free_cb);
@@ -270,7 +270,7 @@ main (void)
       TEST_ASSERT (buffer_p[i] == base_value);
     }
 
-    uint8_t test_buffer[buffer_size];
+    JERRY_VLA (uint8_t, test_buffer, buffer_size);
     jerry_length_t read = jerry_arraybuffer_read (arrayb, 0, test_buffer, buffer_size);
     TEST_ASSERT (read == buffer_size);
     TEST_ASSERT (test_buffer[0] == new_value);
@@ -287,7 +287,7 @@ main (void)
   /* Test ArrayBuffer external memory map/unmap */
   {
     const uint32_t buffer_size = 20;
-    uint8_t buffer_p[buffer_size];
+    JERRY_VLA (uint8_t, buffer_p, buffer_size);
     {
       jerry_value_t input_buffer = jerry_create_arraybuffer_external (buffer_size, buffer_p, NULL);
       register_js_value ("input_buffer", input_buffer);

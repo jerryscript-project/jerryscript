@@ -171,7 +171,7 @@ main (void)
 
   jerry_size_t bar_symbol_string_size = jerry_get_string_size (bar_symbol_string);
   TEST_ASSERT (bar_symbol_string_size == (sizeof (SYMBOL_DESCIPTIVE_STRING_BAR) - 1));
-  jerry_char_t str_buff[bar_symbol_string_size];
+  JERRY_VLA (jerry_char_t, str_buff, bar_symbol_string_size);
 
   jerry_string_to_char_buffer (bar_symbol_string, str_buff, bar_symbol_string_size);
   TEST_ASSERT (memcmp (str_buff, SYMBOL_DESCIPTIVE_STRING_BAR, sizeof (SYMBOL_DESCIPTIVE_STRING_BAR) - 1) == 0);

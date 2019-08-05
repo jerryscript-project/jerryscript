@@ -240,7 +240,7 @@ ecma_number_get_sign_field (ecma_number_t num) /**< ecma-number */
                   fraction is filled with anything but not all zero bits,
  *         false - otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+extern inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_number_is_nan (ecma_number_t num) /**< ecma-number */
 {
   bool is_nan = (num != num);

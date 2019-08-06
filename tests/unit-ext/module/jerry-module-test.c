@@ -86,7 +86,7 @@ resolve_differently_handled_module (const jerry_value_t name,
                                     jerry_value_t *result)
 {
   jerry_size_t name_size = jerry_get_utf8_string_size (name);
-  jerry_char_t name_string[name_size];
+  JERRY_VLA (jerry_char_t, name_string, name_size);
   jerry_string_to_utf8_char_buffer (name, name_string, name_size);
 
   if (!strncmp ((char *) name_string, "differently-handled-module", name_size))
@@ -113,7 +113,7 @@ cache_check (const jerry_value_t name,
              jerry_value_t *result)
 {
   jerry_size_t name_size = jerry_get_utf8_string_size (name);
-  jerry_char_t name_string[name_size];
+  JERRY_VLA (jerry_char_t, name_string, name_size);
   jerry_string_to_utf8_char_buffer (name, name_string, name_size);
 
   if (!strncmp ((char *) name_string, "cache-check", name_size))

@@ -48,7 +48,7 @@ main (void)
   jerry_value_t is_global = jerry_get_property_by_index (res, 2);
 
   jerry_size_t str_size = jerry_get_string_size (regex_res_str);
-  jerry_char_t res_buff[str_size];
+  JERRY_VLA (jerry_char_t, res_buff, str_size);
   jerry_size_t res_size = jerry_string_to_char_buffer (regex_res_str, res_buff, str_size);
 
   const char expected_result[] = "something";

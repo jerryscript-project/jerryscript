@@ -836,7 +836,7 @@ test_utf8_string (void)
   jerry_value_t str = jerry_create_string ((jerry_char_t *) "\x73\x74\x72\x3a \xed\xa0\x81\xed\xb0\x80");
   char expect_utf8_buf[] = "\x73\x74\x72\x3a \xf0\x90\x90\x80";
   size_t buf_len = sizeof (expect_utf8_buf) - 1;
-  char buf[buf_len+1];
+  JERRY_VLA (char, buf, buf_len + 1);
 
   jerryx_arg_t mapping[] =
   {

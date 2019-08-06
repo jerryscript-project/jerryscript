@@ -902,7 +902,7 @@ main (void)
   cesu8_length = jerry_get_string_length (args[0]);
   cesu8_sz = jerry_get_string_size (args[0]);
 
-  char string_console[cesu8_sz];
+  JERRY_VLA (char, string_console, cesu8_sz);
   jerry_string_to_char_buffer (args[0], (jerry_char_t *) string_console, cesu8_sz);
 
   TEST_ASSERT (!strncmp (string_console, "console", cesu8_sz));
@@ -923,7 +923,7 @@ main (void)
   cesu8_length = jerry_get_string_length (args[1]);
   cesu8_sz = jerry_get_string_size (args[1]);
 
-  char string_greek_zero_sign[cesu8_sz];
+  JERRY_VLA (char, string_greek_zero_sign, cesu8_sz);
   jerry_string_to_char_buffer (args[1], (jerry_char_t *) string_greek_zero_sign, cesu8_sz);
 
   TEST_ASSERT (!strncmp (string_greek_zero_sign, "\xed\xa0\x80\xed\xb6\x8a", cesu8_sz));
@@ -944,7 +944,7 @@ main (void)
     jerry_value_t parsed_data = jerry_get_property (parsed_json, key);
     TEST_ASSERT (jerry_value_is_string (parsed_data)== true);
     jerry_size_t buff_size = (jerry_size_t) jerry_get_string_length (parsed_data);
-    char buff[buff_size + 1];
+    JERRY_VLA (char, buff, buff_size + 1);
     jerry_string_to_char_buffer (parsed_data, (jerry_char_t *) buff, buff_size);
     buff[buff_size] = '\0';
     TEST_ASSERT (strcmp (data_check, buff) == false);
@@ -965,7 +965,7 @@ main (void)
     jerry_release_value (res);
     jerry_value_t stringified = jerry_json_stringify (obj);
     TEST_ASSERT (jerry_value_is_string (stringified));
-    char buff[jerry_get_string_length (stringified)];
+    JERRY_VLA (char, buff, stringified);
     jerry_string_to_char_buffer (stringified, (jerry_char_t *) buff,
                                 (jerry_size_t) jerry_get_string_length (stringified));
     buff[jerry_get_string_length (stringified)] = '\0';

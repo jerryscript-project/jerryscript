@@ -16,7 +16,7 @@
 #ifndef TEST_COMMON_H
 #define TEST_COMMON_H
 
-#include "jrt.h"
+#include "jerryscript-port.h"
 
 #include <math.h>
 #include <setjmp.h>
@@ -24,6 +24,8 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+
+#define JERRY_UNUSED(x) ((void) (x))
 
 #define TEST_ASSERT(x) \
   do \
@@ -36,7 +38,7 @@
                       __FILE__, \
                       __func__, \
                       (unsigned long) __LINE__); \
-      jerry_fatal (ERR_FAILED_INTERNAL_ASSERTION); \
+      jerry_port_fatal (ERR_FAILED_INTERNAL_ASSERTION); \
     } \
   } while (0)
 

@@ -208,6 +208,15 @@
 #endif /* !defined (JERRY_GLOBAL_HEAP_SIZE) */
 
 /**
+ * The allowed heap usage limit until next garbage collection, in bytes.
+ *
+ * If value is 0, the default is 1/32 of JERRY_HEAP_SIZE
+ */
+#ifndef JERRY_GC_LIMIT
+# define JERRY_GC_LIMIT 0
+#endif /* !defined (JERRY_GC_LIMIT) */
+
+/**
  * Maximum stack usage size in kilobytes
  *
  * Note: This feature cannot be used when 'detect_stack_use_after_return=1' ASAN option is enabled.
@@ -612,6 +621,9 @@
 #endif
 #if !defined (JERRY_GLOBAL_HEAP_SIZE) || (JERRY_GLOBAL_HEAP_SIZE <= 0)
 # error "Invalid value for 'JERRY_GLOBAL_HEAP_SIZE' macro."
+#endif
+#if !defined (JERRY_GC_LIMIT) || (JERRY_GC_LIMIT < 0)
+# error "Invalid value for 'JERRY_GC_LIMIT' macro."
 #endif
 #if !defined (JERRY_STACK_LIMIT) || (JERRY_STACK_LIMIT < 0)
 # error "Invalid value for 'JERRY_STACK_LIMIT' macro."

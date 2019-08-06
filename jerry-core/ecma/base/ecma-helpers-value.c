@@ -305,7 +305,7 @@ JERRY_STATIC_ASSERT ((ECMA_TYPE_STRING | 0x4) == ECMA_TYPE_DIRECT_STRING,
  * @return true - if the value contains ecma-string value,
  *         false - otherwise
  */
-inline bool JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
+extern inline bool JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
 ecma_is_value_string (ecma_value_t value) /**< ecma value */
 {
   return ((value & (ECMA_VALUE_TYPE_MASK - 0x4)) == ECMA_TYPE_STRING);

@@ -41,7 +41,7 @@
  *
  * @return time value for day number
  */
-inline ecma_number_t JERRY_ATTR_ALWAYS_INLINE
+extern inline ecma_number_t JERRY_ATTR_ALWAYS_INLINE
 ecma_date_day (ecma_number_t time) /**< time value */
 {
   JERRY_ASSERT (!ecma_number_is_nan (time));

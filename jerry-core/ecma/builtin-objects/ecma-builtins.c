@@ -276,7 +276,7 @@ ecma_builtin_is (ecma_object_t *obj_p, /**< pointer to an object */
 
   /* If a built-in object is not instantiated, its value is NULL,
      hence it cannot be equal to a valid object. */
-  return (obj_p == JERRY_CONTEXT (ecma_builtin_objects)[builtin_id]);
+  return (obj_p == ECMA_GET_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_builtin_objects)[builtin_id]));
 } /* ecma_builtin_is */
 
 /**
@@ -292,12 +292,12 @@ ecma_builtin_get (ecma_builtin_id_t builtin_id) /**< id of built-in to check on 
 {
   JERRY_ASSERT (builtin_id < ECMA_BUILTIN_ID__COUNT);
 
-  if (JERRY_UNLIKELY (JERRY_CONTEXT (ecma_builtin_objects)[builtin_id] == NULL))
+  if (JERRY_UNLIKELY (JERRY_CONTEXT (ecma_builtin_objects)[builtin_id] == JMEM_CP_NULL))
   {
     ecma_instantiate_builtin (builtin_id);
   }
 
-  return JERRY_CONTEXT (ecma_builtin_objects)[builtin_id];
+  return ECMA_GET_NON_NULL_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_builtin_objects)[builtin_id]);
 } /* ecma_builtin_get */
 
 /**
@@ -311,9 +311,9 @@ ecma_builtin_get (ecma_builtin_id_t builtin_id) /**< id of built-in to check on 
 inline ecma_object_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_builtin_get_global (void)
 {
-  JERRY_ASSERT (JERRY_CONTEXT (ecma_builtin_objects)[ECMA_BUILTIN_ID_GLOBAL] != NULL);
+  JERRY_ASSERT (JERRY_CONTEXT (ecma_builtin_objects)[ECMA_BUILTIN_ID_GLOBAL] != JMEM_CP_NULL);
 
-  return JERRY_CONTEXT (ecma_builtin_objects)[ECMA_BUILTIN_ID_GLOBAL];
+  return ECMA_GET_NON_NULL_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_builtin_objects)[ECMA_BUILTIN_ID_GLOBAL]);
 } /* ecma_builtin_get_global */
 
 /**
@@ -339,7 +339,7 @@ static void
 ecma_instantiate_builtin (ecma_builtin_id_t obj_builtin_id) /**< built-in id */
 {
   JERRY_ASSERT (obj_builtin_id < ECMA_BUILTIN_ID__COUNT);
-  JERRY_ASSERT (JERRY_CONTEXT (ecma_builtin_objects)[obj_builtin_id] == NULL);
+  JERRY_ASSERT (JERRY_CONTEXT (ecma_builtin_objects)[obj_builtin_id] == JMEM_CP_NULL);
 
   ecma_builtin_descriptor_t builtin_desc = ecma_builtin_descriptors[obj_builtin_id];
   ecma_builtin_id_t object_prototype_builtin_id = (ecma_builtin_id_t) (builtin_desc >> ECMA_BUILTIN_PROTOTYPE_ID_SHIFT);
@@ -352,11 +352,12 @@ ecma_instantiate_builtin (ecma_builtin_id_t obj_builtin_id) /**< built-in id */
   }
   else
   {
-    if (JERRY_CONTEXT (ecma_builtin_objects)[object_prototype_builtin_id] == NULL)
+    if (JERRY_CONTEXT (ecma_builtin_objects)[object_prototype_builtin_id] == JMEM_CP_NULL)
     {
       ecma_instantiate_builtin (object_prototype_builtin_id);
     }
-    prototype_obj_p = JERRY_CONTEXT (ecma_builtin_objects)[object_prototype_builtin_id];
+    prototype_obj_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
+                                                 JERRY_CONTEXT (ecma_builtin_objects)[object_prototype_builtin_id]);
     JERRY_ASSERT (prototype_obj_p != NULL);
   }
 
@@ -502,7 +503,7 @@ ecma_instantiate_builtin (ecma_builtin_id_t obj_builtin_id) /**< built-in id */
     }
   }
 
-  JERRY_CONTEXT (ecma_builtin_objects)[obj_builtin_id] = obj_p;
+  ECMA_SET_NON_NULL_POINTER (JERRY_CONTEXT (ecma_builtin_objects)[obj_builtin_id], obj_p);
 } /* ecma_instantiate_builtin */
 
 /**
@@ -515,10 +516,10 @@ ecma_finalize_builtins (void)
        id < ECMA_BUILTIN_ID__COUNT;
        id = (ecma_builtin_id_t) (id + 1))
   {
-    if (JERRY_CONTEXT (ecma_builtin_objects)[id] != NULL)
+    if (JERRY_CONTEXT (ecma_builtin_objects)[id] != JMEM_CP_NULL)
     {
-      ecma_deref_object (JERRY_CONTEXT (ecma_builtin_objects)[id]);
-      JERRY_CONTEXT (ecma_builtin_objects)[id] = NULL;
+      ecma_deref_object (ECMA_GET_NON_NULL_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_builtin_objects)[id]));
+      JERRY_CONTEXT (ecma_builtin_objects)[id] = JMEM_CP_NULL;
     }
   }
 } /* ecma_finalize_builtins */

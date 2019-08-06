@@ -68,18 +68,6 @@ ecma_gc_get_object_next (ecma_object_t *object_p) /**< object */
 } /* ecma_gc_get_object_next */
 
 /**
- * Set next object in list of objects with same generation.
- */
-static inline void
-ecma_gc_set_object_next (ecma_object_t *object_p, /**< object */
-                         ecma_object_t *next_object_p) /**< next object */
-{
-  JERRY_ASSERT (object_p != NULL);
-
-  ECMA_SET_POINTER (object_p->gc_next_cp, next_object_p);
-} /* ecma_gc_set_object_next */
-
-/**
  * Get visited flag of the object.
  *
  * @return true  - if visited
@@ -120,8 +108,8 @@ ecma_init_gc_info (ecma_object_t *object_p) /**< object */
   JERRY_ASSERT (object_p->type_flags_refs < ECMA_OBJECT_REF_ONE);
   object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs | ECMA_OBJECT_REF_ONE);
 
-  ecma_gc_set_object_next (object_p, JERRY_CONTEXT (ecma_gc_objects_p));
-  JERRY_CONTEXT (ecma_gc_objects_p) = object_p;
+  object_p->gc_next_cp = JERRY_CONTEXT (ecma_gc_objects_cp);
+  ECMA_SET_NON_NULL_POINTER (JERRY_CONTEXT (ecma_gc_objects_cp), object_p);
 } /* ecma_init_gc_info */
 
 /**
@@ -908,7 +896,7 @@ ecma_gc_run (void)
   JERRY_CONTEXT (ecma_gc_new_objects) = 0;
 
   ecma_object_t white_gray_list_head;
-  ecma_gc_set_object_next (&white_gray_list_head, JERRY_CONTEXT (ecma_gc_objects_p));
+  white_gray_list_head.gc_next_cp = JERRY_CONTEXT (ecma_gc_objects_cp);
   jmem_cpointer_t black_objects_cp = JMEM_CP_NULL;
 
   ecma_object_t *obj_prev_p = &white_gray_list_head;
@@ -1004,7 +992,7 @@ ecma_gc_run (void)
 
   /* Reset the reference counter of non-root black objects. */
   obj_iter_p = JMEM_CP_GET_POINTER (ecma_object_t, black_objects_cp);
-  JERRY_CONTEXT (ecma_gc_objects_p) = obj_iter_p;
+  JERRY_CONTEXT (ecma_gc_objects_cp) = black_objects_cp;
 
   while (obj_iter_p != first_root_object_p)
   {
@@ -1078,7 +1066,7 @@ ecma_free_unused_memory (jmem_pressure_t pressure) /**< current pressure */
     ecma_gc_run ();
 
     /* Free hashmaps of remaining objects. */
-    ecma_object_t *obj_iter_p = JERRY_CONTEXT (ecma_gc_objects_p);
+    ecma_object_t *obj_iter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_gc_objects_cp));
     while (obj_iter_p != NULL)
     {
       if (!ecma_is_lexical_environment (obj_iter_p)

@@ -835,12 +835,12 @@ typedef struct
     {
       uint8_t type; /**< pseudo array type, e.g. Arguments, TypedArray, ArrayIterator */
       uint8_t extra_info; /**< extra information about the object.
-                           *   e.g. element_width_shift for typed arrays,
+                           *   e.g. the specific builtin id for typed arrays,
                            *        [[IterationKind]] property for %Iterator% */
       union
       {
         uint16_t length; /**< for arguments: length of names */
-        uint16_t class_id; /**< for typedarray: the specific class name */
+        uint16_t class_id; /**< for typedarray: the specific class name id */
         uint16_t iterator_index; /**< for %Iterator%: [[%Iterator%NextIndex]] property */
       } u1;
       union
@@ -1602,6 +1602,32 @@ typedef struct
 #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
 
 /**
+ * Function callback descriptor of a %TypedArray% object getter
+ */
+typedef ecma_number_t (*ecma_typedarray_getter_fn_t)(lit_utf8_byte_t *src);
+
+/**
+ * Function callback descriptor of a %TypedArray% object setter
+ */
+typedef void (*ecma_typedarray_setter_fn_t)(lit_utf8_byte_t *src, ecma_number_t value);
+
+/**
+ * Builtin id for the different types of TypedArray's
+ */
+typedef enum
+{
+  ECMA_INT8_ARRAY,          /**< Int8Array */
+  ECMA_UINT8_ARRAY,         /**< Uint8Array */
+  ECMA_UINT8_CLAMPED_ARRAY, /**< Uint8ClampedArray */
+  ECMA_INT16_ARRAY,         /**< Int16Array */
+  ECMA_UINT16_ARRAY,        /**< Uint16Array */
+  ECMA_INT32_ARRAY,         /**< Int32Array */
+  ECMA_UINT32_ARRAY,        /**< Uint32Array */
+  ECMA_FLOAT32_ARRAY,       /**< Float32Array */
+  ECMA_FLOAT64_ARRAY,       /**< Float64Array */
+} ecma_typedarray_type_t;
+
+/**
  * Extra information for ArrayBuffers.
  */
 typedef enum
@@ -1639,6 +1665,20 @@ typedef struct
   ecma_length_t byte_offset; /**< the byteoffset of the above arraybuffer */
   ecma_length_t array_length; /**< the array length */
 } ecma_extended_typedarray_object_t;
+
+/**
+ * General structure for query %TypedArray% object's properties.
+ **/
+typedef struct
+{
+  ecma_object_t *typedarray_buffer_p; /**< pointer to the typedArray's arraybuffer */
+  lit_utf8_byte_t *buffer_p; /**< pointer to the arraybuffer's internal data buffer */
+  ecma_typedarray_type_t typedarray_id; /**< type of the typedArray */
+  uint32_t typedarray_length; /**< length of the typedArray */
+  ecma_length_t offset; /**< offset of the internal array buffer */
+  uint8_t shift; /**< the element size shift in the typedArray */
+  uint8_t element_size; /**< size of each element in the typedArray */
+} ecma_typedarray_info_t;
 
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
 

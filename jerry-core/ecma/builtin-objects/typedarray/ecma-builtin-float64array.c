@@ -67,7 +67,7 @@ ecma_builtin_float64array_dispatch_construct (const ecma_value_t *arguments_list
                                               ecma_length_t arguments_list_len) /**< number of arguments */
 {
   return ecma_typedarray_helper_dispatch_construct (arguments_list_p, arguments_list_len,
-                                                    ECMA_BUILTIN_ID_FLOAT64ARRAY);
+                                                    ECMA_FLOAT64_ARRAY);
 } /* ecma_builtin_float64array_dispatch_construct */
 
 /**

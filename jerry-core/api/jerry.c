@@ -3426,7 +3426,7 @@ typedef struct
 {
   jerry_typedarray_type_t api_type; /**< api type */
   ecma_builtin_id_t prototype_id; /**< prototype ID */
-  lit_magic_string_id_t lit_id; /**< literal ID */
+  ecma_typedarray_type_t id; /**< typedArray ID */
   uint8_t element_size_shift; /**< element size shift */
 } jerry_typedarray_mapping_t;
 
@@ -3437,7 +3437,7 @@ static jerry_typedarray_mapping_t jerry_typedarray_mappings[] =
 {
 #define TYPEDARRAY_ENTRY(NAME, LIT_NAME, SIZE_SHIFT) \
   { JERRY_TYPEDARRAY_ ## NAME, ECMA_BUILTIN_ID_ ## NAME ## ARRAY_PROTOTYPE, \
-    LIT_MAGIC_STRING_ ## LIT_NAME ## _ARRAY_UL, SIZE_SHIFT }
+    ECMA_ ## LIT_NAME ## _ARRAY, SIZE_SHIFT }
 
   TYPEDARRAY_ENTRY (UINT8, UINT8, 0),
   TYPEDARRAY_ENTRY (UINT8CLAMPED, UINT8_CLAMPED, 0),
@@ -3455,7 +3455,7 @@ static jerry_typedarray_mapping_t jerry_typedarray_mappings[] =
 };
 
 /**
- * Helper function to get the TypedArray prototype, literal id, and element size shift
+ * Helper function to get the TypedArray prototype, typedArray id, and element size shift
  * information.
  *
  * @return true - if the TypedArray information was found
@@ -3464,11 +3464,11 @@ static jerry_typedarray_mapping_t jerry_typedarray_mappings[] =
 static bool
 jerry_typedarray_find_by_type (jerry_typedarray_type_t type_name, /**< type of the TypedArray */
                                ecma_builtin_id_t *prototype_id, /**< [out] found prototype object id */
-                               lit_magic_string_id_t *lit_id, /**< [out] found literal id */
+                               ecma_typedarray_type_t *id, /**< [out] found typedArray id */
                                uint8_t *element_size_shift) /**< [out] found element size shift value */
 {
   JERRY_ASSERT (prototype_id != NULL);
-  JERRY_ASSERT (lit_id != NULL);
+  JERRY_ASSERT (id != NULL);
   JERRY_ASSERT (element_size_shift != NULL);
 
   for (uint32_t i = 0; i < sizeof (jerry_typedarray_mappings) / sizeof (jerry_typedarray_mappings[0]); i++)
@@ -3476,7 +3476,7 @@ jerry_typedarray_find_by_type (jerry_typedarray_type_t type_name, /**< type of t
     if (type_name == jerry_typedarray_mappings[i].api_type)
     {
       *prototype_id = jerry_typedarray_mappings[i].prototype_id;
-      *lit_id = jerry_typedarray_mappings[i].lit_id;
+      *id = jerry_typedarray_mappings[i].id;
       *element_size_shift = jerry_typedarray_mappings[i].element_size_shift;
       return true;
     }
@@ -3505,10 +3505,10 @@ jerry_create_typedarray (jerry_typedarray_type_t type_name, /**< type of TypedAr
 
 #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
   ecma_builtin_id_t prototype_id = 0;
-  lit_magic_string_id_t lit_id = 0;
+  ecma_typedarray_type_t id = 0;
   uint8_t element_size_shift = 0;
 
-  if (!jerry_typedarray_find_by_type (type_name, &prototype_id, &lit_id, &element_size_shift))
+  if (!jerry_typedarray_find_by_type (type_name, &prototype_id, &id, &element_size_shift))
   {
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("incorrect type for TypedArray.")));
   }
@@ -3518,7 +3518,7 @@ jerry_create_typedarray (jerry_typedarray_type_t type_name, /**< type of TypedAr
   ecma_value_t array_value = ecma_typedarray_create_object_with_length (length,
                                                                         prototype_obj_p,
                                                                         element_size_shift,
-                                                                        lit_id);
+                                                                        id);
 
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (array_value));
 
@@ -3549,10 +3549,10 @@ jerry_create_typedarray_for_arraybuffer_sz (jerry_typedarray_type_t type_name, /
 
 #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
   ecma_builtin_id_t prototype_id = 0;
-  lit_magic_string_id_t lit_id = 0;
+  ecma_typedarray_type_t id = 0;
   uint8_t element_size_shift = 0;
 
-  if (!jerry_typedarray_find_by_type (type_name, &prototype_id, &lit_id, &element_size_shift))
+  if (!jerry_typedarray_find_by_type (type_name, &prototype_id, &id, &element_size_shift))
   {
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("incorrect type for TypedArray.")));
   }
@@ -3570,7 +3570,7 @@ jerry_create_typedarray_for_arraybuffer_sz (jerry_typedarray_type_t type_name, /
     ecma_make_uint32_value (length)
   };
 
-  ecma_value_t array_value = ecma_op_create_typedarray (arguments_p, 3, prototype_obj_p, element_size_shift, lit_id);
+  ecma_value_t array_value = ecma_op_create_typedarray (arguments_p, 3, prototype_obj_p, element_size_shift, id);
   ecma_free_value (arguments_p[1]);
   ecma_free_value (arguments_p[2]);
 
@@ -3627,11 +3627,11 @@ jerry_get_typedarray_type (jerry_value_t value) /**< object to get the TypedArra
   }
 
   ecma_object_t *array_p = ecma_get_object_from_value (value);
+  ecma_typedarray_type_t class_type = ecma_get_typedarray_id (array_p);
 
-  lit_magic_string_id_t class_name_id = ecma_object_get_class_name (array_p);
   for (uint32_t i = 0; i < sizeof (jerry_typedarray_mappings) / sizeof (jerry_typedarray_mappings[0]); i++)
   {
-    if (class_name_id == jerry_typedarray_mappings[i].lit_id)
+    if (class_type == jerry_typedarray_mappings[i].id)
     {
       return jerry_typedarray_mappings[i].api_type;
     }

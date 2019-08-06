@@ -15,7 +15,6 @@
 
 #include "ecma-arraybuffer-object.h"
 #include "ecma-builtins.h"
-#include "ecma-builtin-typedarray-helpers.h"
 #include "ecma-exceptions.h"
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
@@ -250,7 +249,7 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
                                      ecma_value_t is_little_endian_value, /**< the operation's
                                                                            *   'isLittleEndian' argument */
                                      ecma_value_t value_to_set, /**< the operation's 'value' argument */
-                                     uint8_t type) /**< the operation's 'type' argument */
+                                     ecma_typedarray_type_t id) /**< the operation's 'type' argument */
 {
   /* 1 - 2. */
   ecma_dataview_object_t *view_p = ecma_op_dataview_get_object (view);
@@ -293,7 +292,7 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
   uint32_t view_size = view_p->header.u.class_prop.u.length;
 
   /* 12. */
-  uint8_t element_size = (uint8_t) (1 << (ecma_typedarray_helper_get_shift_size (type)));
+  uint8_t element_size = (uint8_t) (1 << (ecma_typedarray_helper_get_shift_size (id)));
 
   /* 13. */
   if ((uint32_t) get_index + element_size > view_size)
@@ -303,7 +302,6 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
 
   /* 14. */
   uint32_t buffer_index = (uint32_t) get_index + view_offset;
-  lit_magic_string_id_t id = ecma_typedarray_helper_get_magic_string (type);
   lit_utf8_byte_t *block_p = ecma_arraybuffer_get_buffer (buffer_p) + buffer_index;
 
   bool system_is_little_endian = ecma_dataview_check_little_endian ();

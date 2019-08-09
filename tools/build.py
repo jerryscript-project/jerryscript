@@ -25,6 +25,10 @@ import sys
 import settings
 
 def default_toolchain():
+    # We don't have default toolchain on Windows and os.uname() isn't supported.
+    if sys.platform == 'win32':
+        return None
+
     (sysname, _, _, _, machine) = os.uname()
     toolchain = os.path.join(settings.PROJECT_DIR,
                              'cmake',
@@ -60,7 +64,7 @@ def get_arguments():
     buildgrp.add_argument('--compile-flag', metavar='OPT', action='append', default=[],
                           help='add custom compile flag')
     buildgrp.add_argument('--debug', action='store_const', const='Debug', dest='build_type',
-                          help='debug build')
+                          default='MinSizeRel', help='debug build')
     buildgrp.add_argument('--install', metavar='DIR', nargs='?', default=None, const=False,
                           help='install after build (default: don\'t install; '
                                'default directory if install: OS-specific)')
@@ -244,12 +248,19 @@ def configure_jerry(arguments):
 
     return subprocess.call(cmake_cmd)
 
-def make_jerry(arguments, target=None):
-    make_cmd = ['make', '--no-print-directory', '-j', str(arguments.jobs), '-C', arguments.builddir]
+def make_jerry(arguments):
+    make_cmd = ['cmake', '--build', arguments.builddir, '--config', arguments.build_type]
+    env = dict(os.environ)
+    env['CMAKE_BUILD_PARALLEL_LEVEL'] = str(arguments.jobs)
+    env['MAKEFLAGS'] = '-j%d' % (arguments.jobs) # Workaround for CMake < 3.12
+    proc = subprocess.Popen(make_cmd, env=env)
+    proc.wait()
 
-    if target:
-        make_cmd.append(target)
+    return proc.returncode
 
+def install_jerry(arguments):
+    install_target = 'INSTALL' if sys.platform == 'win32' else 'install'
+    make_cmd = ['cmake', '--build', arguments.builddir, '--config', arguments.build_type, '--target', install_target]
     return subprocess.call(make_cmd)
 
 def print_result(ret):
@@ -269,7 +280,7 @@ def main():
         ret = make_jerry(arguments)
 
     if not ret and arguments.install is not None:
-        ret = make_jerry(arguments, 'install')
+        ret = install_jerry(arguments)
 
     print_result(ret)
     sys.exit(ret)

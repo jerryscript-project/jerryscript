@@ -27,7 +27,6 @@ import jerry_client_main
 from jerry_client_websocket import WebSocket
 from jerry_client_rawpacket import RawPacket
 from jerry_client_tcp import Socket
-from jerry_client_serial import Serial
 
 def write(string):
     print(string, end='')
@@ -268,6 +267,7 @@ def main():
 
         protocol = Socket(address)
     elif args.protocol == "serial":
+        from jerry_client_serial import Serial
         protocol = Serial(args.serial_config)
     else:
         print("Unsupported transmission protocol")

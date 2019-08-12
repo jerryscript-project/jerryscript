@@ -476,7 +476,7 @@ ecma_op_container_foreach (ecma_value_t this_arg, /**< this argument */
     }
     else if (ecma_prop_name_is_map_key (prop_name_p))
     {
-      key_arg = prop_name_p->u.value;
+      key_arg = ((ecma_extended_string_t *) prop_name_p)->u.value;
     }
     else
     {
@@ -730,7 +730,7 @@ ecma_op_container_iterator_next (ecma_value_t this_val, /**< this argument */
     }
     else if (ecma_prop_name_is_map_key (prop_name_p))
     {
-      key_arg = prop_name_p->u.value;
+      key_arg = ((ecma_extended_string_t *) prop_name_p)->u.value;
     }
     else
     {

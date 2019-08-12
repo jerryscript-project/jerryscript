@@ -460,6 +460,17 @@ ecma_create_float_number (ecma_number_t ecma_number) /**< value of the float num
 } /* ecma_create_float_number */
 
 /**
+ * Encode float number without checks.
+ *
+ * @return ecma-value
+ */
+ecma_value_t
+ecma_make_float_value (ecma_number_t *ecma_num_p) /**< pointer to the float number */
+{
+  return ecma_pointer_to_ecma_value (ecma_num_p) | ECMA_TYPE_FLOAT;
+} /* ecma_make_float_value */
+
+/**
  * Create a new NaN value.
  *
  * @return ecma-value
@@ -695,6 +706,19 @@ ecma_get_float_from_value (ecma_value_t value) /**< ecma value */
 
   return *(ecma_number_t *) ecma_get_pointer_from_ecma_value (value);
 } /* ecma_get_float_from_value */
+
+/**
+ * Get floating point value pointer from an ecma value
+ *
+ * @return floating point value
+ */
+inline ecma_number_t * JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
+ecma_get_pointer_from_float_value (ecma_value_t value) /**< ecma value */
+{
+  JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_FLOAT);
+
+  return (ecma_number_t *) ecma_get_pointer_from_ecma_value (value);
+} /* ecma_get_pointer_from_float_value */
 
 /**
  * Get floating point value from an ecma value

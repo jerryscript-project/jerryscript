@@ -1330,9 +1330,6 @@ typedef enum
 #define ECMA_GET_DIRECT_STRING_VALUE(string_p) \
   (((uintptr_t) (string_p)) >> ECMA_DIRECT_STRING_SHIFT)
 
-/**
- * Identifier for ecma-string's actual data container
- */
 typedef enum
 {
   ECMA_STRING_CONTAINER_HEAP_UTF8_STRING, /**< actual data is on the heap as an utf-8 (cesu8) string
@@ -1341,17 +1338,15 @@ typedef enum
                                                 *   maximum size is 2^32. */
   ECMA_STRING_CONTAINER_UINT32_IN_DESC, /**< actual data is UInt32-represeneted Number
                                              stored locally in the string's descriptor */
+  ECMA_STRING_CONTAINER_HEAP_ASCII_STRING, /**< actual data is on the heap as an ASCII string
+                                            *   maximum size is 2^16. */
   ECMA_STRING_CONTAINER_MAGIC_STRING_EX, /**< the ecma-string is equal to one of external magic strings */
 
   ECMA_STRING_CONTAINER_SYMBOL, /**< the ecma-string is a symbol */
 
   ECMA_STRING_CONTAINER_MAP_KEY, /**< the ecma-string is a map key string */
 
-  ECMA_STRING_LITERAL_NUMBER, /**< a literal number which is used solely by the literal storage
-                               *   so no string processing function supports this type except
-                               *   the ecma_deref_ecma_string function. */
-
-  ECMA_STRING_CONTAINER__MAX = ECMA_STRING_LITERAL_NUMBER /**< maximum value */
+  ECMA_STRING_CONTAINER__MAX = ECMA_STRING_CONTAINER_MAP_KEY /**< maximum value */
 } ecma_string_container_t;
 
 /**
@@ -1362,12 +1357,29 @@ typedef enum
 /**
  * Value for increasing or decreasing the reference counter.
  */
-#define ECMA_STRING_REF_ONE (1u << 3)
+#define ECMA_STRING_REF_ONE (1u << 4)
 
 /**
- * Maximum value of the reference counter (8191).
+ * Maximum value of the reference counter (4294967280).
  */
-#define ECMA_STRING_MAX_REF (0x1fffu << 3)
+#define ECMA_STRING_MAX_REF (0xFFFFFFF0)
+
+/**
+ * Flag that identifies that the string is static which means it is stored in JERRY_CONTEXT (string_list_cp)
+ */
+#define ECMA_STATIC_STRING_FLAG (1 << 3)
+
+/**
+ * Set an ecma-string as static string
+ */
+#define ECMA_SET_STRING_AS_STATIC(string_p) \
+  (string_p)->refs_and_container |= ECMA_STATIC_STRING_FLAG
+
+/**
+ * Checks whether the ecma-string is static string
+ */
+#define ECMA_STRING_IS_STATIC(string_p) \
+  ((string_p)->refs_and_container & ECMA_STATIC_STRING_FLAG)
 
 /**
  * Returns with the container type of a string.
@@ -1379,7 +1391,7 @@ typedef enum
  * Checks whether the reference counter is 1.
  */
 #define ECMA_STRING_IS_REF_EQUALS_TO_ONE(string_desc_p) \
-  (((string_desc_p)->refs_and_container >> 3) == 1)
+  (((string_desc_p)->refs_and_container >> 4) == 1)
 
 /**
  * ECMA string-value descriptor
@@ -1387,43 +1399,79 @@ typedef enum
 typedef struct
 {
   /** Reference counter for the string */
-  uint16_t refs_and_container;
-
-  /** Hash of the string (calculated from two last characters of the string) */
-  lit_string_hash_t hash;
+  uint32_t refs_and_container;
 
   /**
    * Actual data or identifier of it's place in container (depending on 'container' field)
    */
   union
   {
-    /**
-     * Actual data of an utf-8 string type
-     */
-    struct
-    {
-      uint16_t size; /**< size of this utf-8 string in bytes */
-      uint16_t length; /**< length of this utf-8 string in characters */
-    } utf8_string;
-
-    lit_utf8_size_t long_utf8_string_size; /**< size of this long utf-8 string in bytes */
-    uint32_t uint32_number; /**< uint32-represented number placed locally in the descriptor */
+    lit_string_hash_t hash; /**< hash of the ASCII/UTF8 string */
     uint32_t magic_string_ex_id; /**< identifier of an external magic string (lit_magic_string_ex_id_t) */
-    ecma_value_t lit_number; /**< number (see ECMA_STRING_LITERAL_NUMBER) */
-    uint32_t common_uint32_field; /**< for zeroing and comparison in some cases */
-    ecma_value_t symbol_descriptor; /**< symbol descriptor string-value */
-    ecma_value_t value; /**< original key value corresponds to the map key string */
+    uint32_t uint32_number; /**< uint32-represented number placed locally in the descriptor */
   } u;
 } ecma_string_t;
 
 /**
- * Long ECMA string-value descriptor
+ * ECMA ASCII string-value descriptor
  */
 typedef struct
 {
   ecma_string_t header; /**< string header */
-  lit_utf8_size_t long_utf8_string_length; /**< length of this long utf-8 string in bytes */
-} ecma_long_string_t;
+  uint16_t size; /**< size of this ASCII string in bytes */
+} ecma_ascii_string_t;
+
+/**
+ * ECMA long UTF8 string-value descriptor
+ */
+typedef struct
+{
+  ecma_string_t header; /**< string header */
+  uint16_t size; /**< size of this utf-8 string in bytes */
+  uint16_t length; /**< length of this utf-8 string in bytes */
+} ecma_utf8_string_t;
+
+/**
+ * ECMA UTF8 string-value descriptor
+ */
+typedef struct
+{
+  ecma_string_t header; /**< string header */
+  lit_utf8_size_t size; /**< size of this long utf-8 string in bytes */
+  lit_utf8_size_t length; /**< length of this long utf-8 string in bytes */
+} ecma_long_utf8_string_t;
+
+/**
+ * Get the start position of the string buffer of an ecma ASCII string
+ */
+#define ECMA_ASCII_STRING_GET_BUFFER(string_p) \
+  ((lit_utf8_byte_t *) ((lit_utf8_byte_t *) (string_p) +  sizeof (ecma_ascii_string_t)))
+
+/**
+ * Get the start position of the string buffer of an ecma UTF8 string
+ */
+#define ECMA_UTF8_STRING_GET_BUFFER(string_p) \
+  ((lit_utf8_byte_t *) ((lit_utf8_byte_t *) (string_p) +  sizeof (ecma_utf8_string_t)))
+
+/**
+ * Get the start position of the string buffer of an ecma long UTF8 string
+ */
+#define ECMA_LONG_UTF8_STRING_GET_BUFFER(string_p) \
+  ((lit_utf8_byte_t *) ((lit_utf8_byte_t *) (string_p) +  sizeof (ecma_long_utf8_string_t)))
+
+/**
+ * ECMA extended string-value descriptor
+ */
+typedef struct
+{
+  ecma_string_t header; /**< string header */
+
+  union
+  {
+    ecma_value_t symbol_descriptor; /**< symbol descriptor string-value */
+    ecma_value_t value; /**< original key value corresponds to the map key string */
+  } u;
+} ecma_extended_string_t;
 
 /**
  * String builder header
@@ -1437,13 +1485,13 @@ typedef struct
  * Get pointer to the beginning of the stored string in the string builder
  */
 #define ECMA_STRINGBUILDER_STRING_PTR(header_p) \
-  ((lit_utf8_byte_t *) (((ecma_string_t *) header_p) + 1))
+  ((lit_utf8_byte_t *) (((lit_utf8_byte_t *) header_p) + sizeof (ecma_ascii_string_t)))
 
 /**
  * Get the size of the stored string in the string builder
  */
 #define ECMA_STRINGBUILDER_STRING_SIZE(header_p) \
-  ((lit_utf8_size_t) (header_p->current_size - sizeof (ecma_string_t)))
+  ((lit_utf8_size_t) (header_p->current_size - sizeof (ecma_ascii_string_t)))
 
 /**
  * String builder handle
@@ -1506,6 +1554,15 @@ typedef struct
   jmem_cpointer_t next_cp; /**< cpointer ot next item */
   jmem_cpointer_t values[ECMA_LIT_STORAGE_VALUE_COUNT]; /**< list of values */
 } ecma_lit_storage_item_t;
+
+/**
+ * Number storage item
+ */
+typedef struct
+{
+  jmem_cpointer_t next_cp; /**< cpointer ot next item */
+  jmem_cpointer_t values[ECMA_LIT_STORAGE_VALUE_COUNT]; /**< list of values */
+} ecma_number_storage_item_t;
 
 #if ENABLED (JERRY_LCACHE)
 /**

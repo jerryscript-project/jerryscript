@@ -111,7 +111,7 @@ ecma_get_symbol_description (ecma_string_t *symbol_p) /**< ecma-symbol */
   JERRY_ASSERT (symbol_p != NULL);
   JERRY_ASSERT (ecma_prop_name_is_symbol (symbol_p));
 
-  return ecma_get_string_from_value (symbol_p->u.symbol_descriptor);
+  return ecma_get_string_from_value (((ecma_extended_string_t *) symbol_p)->u.symbol_descriptor);
 } /* ecma_get_symbol_description */
 
 /**

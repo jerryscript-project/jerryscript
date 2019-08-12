@@ -74,6 +74,18 @@ ecma_string_t *ecma_alloc_string (void);
 void ecma_dealloc_string (ecma_string_t *string_p);
 
 /**
+ * Allocate memory for extended ecma-string descriptor
+ *
+ * @return pointer to allocated memory
+ */
+ecma_extended_string_t *ecma_alloc_extended_string (void);
+
+/**
+ * Dealloc memory from extended ecma-string descriptor
+ */
+void ecma_dealloc_extended_string (ecma_extended_string_t *string_p);
+
+/**
  * Allocate memory for string with character data
  *
  * @return pointer to allocated memory

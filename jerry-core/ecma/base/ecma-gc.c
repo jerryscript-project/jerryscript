@@ -266,7 +266,7 @@ ecma_gc_mark_container_object (ecma_object_t *object_p) /**< object */
 
         if (ECMA_STRING_GET_CONTAINER (prop_name_p) == ECMA_STRING_CONTAINER_MAP_KEY)
         {
-          ecma_value_t key_arg = prop_name_p->u.value;
+          ecma_value_t key_arg = ((ecma_extended_string_t *) prop_name_p)->u.value;
 
           if (ecma_is_value_object (key_arg))
           {

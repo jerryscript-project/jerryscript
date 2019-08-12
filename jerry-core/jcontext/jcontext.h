@@ -136,11 +136,11 @@ struct jerry_context_t
 #endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
   const lit_utf8_byte_t * const *lit_magic_string_ex_array; /**< array of external magic strings */
   const lit_utf8_size_t *lit_magic_string_ex_sizes; /**< external magic string lengths */
-  ecma_lit_storage_item_t *string_list_first_p; /**< first item of the literal string list */
+  jmem_cpointer_t string_list_first_cp; /**< first item of the literal string list */
 #if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
-  ecma_lit_storage_item_t *symbol_list_first_p; /**< first item of the global symbol list */
+  jmem_cpointer_t symbol_list_first_cp; /**< first item of the global symbol list */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
-  ecma_lit_storage_item_t *number_list_first_p; /**< first item of the literal number list */
+  jmem_cpointer_t number_list_first_cp; /**< first item of the literal number list */
   jmem_cpointer_t ecma_global_lex_env_cp; /**< global lexical environment */
 
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)

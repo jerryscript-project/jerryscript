@@ -25,14 +25,46 @@
  * @{
  */
 
+#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+/**
+ * Free symbol list
+ */
+static void
+ecma_free_symbol_list (jmem_cpointer_t symbol_list_cp) /**< symbol list */
+{
+  while (symbol_list_cp != JMEM_CP_NULL)
+  {
+    ecma_lit_storage_item_t *symbol_list_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_lit_storage_item_t, symbol_list_cp);
+
+    for (int i = 0; i < ECMA_LIT_STORAGE_VALUE_COUNT; i++)
+    {
+      if (symbol_list_p->values[i] != JMEM_CP_NULL)
+      {
+        ecma_string_t *string_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t,
+                                                                symbol_list_p->values[i]);
+
+        JERRY_ASSERT (ECMA_STRING_IS_REF_EQUALS_TO_ONE (string_p));
+        ecma_deref_ecma_string (string_p);
+      }
+    }
+
+    jmem_cpointer_t next_item_cp = symbol_list_p->next_cp;
+    jmem_pools_free (symbol_list_p, sizeof (ecma_lit_storage_item_t));
+    symbol_list_cp = next_item_cp;
+  }
+} /* ecma_free_symbol_list */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+
 /**
  * Free string list
  */
 static void
-ecma_free_string_list (ecma_lit_storage_item_t *string_list_p) /**< string list */
+ecma_free_string_list (jmem_cpointer_t string_list_cp) /**< string list */
 {
-  while (string_list_p != NULL)
+  while (string_list_cp != JMEM_CP_NULL)
   {
+    ecma_lit_storage_item_t *string_list_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_lit_storage_item_t, string_list_cp);
+
     for (int i = 0; i < ECMA_LIT_STORAGE_VALUE_COUNT; i++)
     {
       if (string_list_p->values[i] != JMEM_CP_NULL)
@@ -41,15 +73,41 @@ ecma_free_string_list (ecma_lit_storage_item_t *string_list_p) /**< string list 
                                                                 string_list_p->values[i]);
 
         JERRY_ASSERT (ECMA_STRING_IS_REF_EQUALS_TO_ONE (string_p));
-        ecma_deref_ecma_string (string_p);
+        ecma_destroy_ecma_string (string_p);
       }
     }
 
-    ecma_lit_storage_item_t *prev_item = string_list_p;
-    string_list_p = JMEM_CP_GET_POINTER (ecma_lit_storage_item_t, string_list_p->next_cp);
-    jmem_pools_free (prev_item, sizeof (ecma_lit_storage_item_t));
+    jmem_cpointer_t next_item_cp = string_list_p->next_cp;
+    jmem_pools_free (string_list_p, sizeof (ecma_lit_storage_item_t));
+    string_list_cp = next_item_cp;
   }
 } /* ecma_free_string_list */
+
+/**
+ * Free number list
+ */
+static void
+ecma_free_number_list (jmem_cpointer_t number_list_cp) /**< string list */
+{
+  while (number_list_cp != JMEM_CP_NULL)
+  {
+    ecma_number_storage_item_t *number_list_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_number_storage_item_t,
+                                                                              number_list_cp);
+
+    for (int i = 0; i < ECMA_LIT_STORAGE_VALUE_COUNT; i++)
+    {
+      if (number_list_p->values[i] != JMEM_CP_NULL)
+      {
+        ecma_number_t *num_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_number_t, number_list_p->values[i]);
+        ecma_dealloc_number (num_p);
+      }
+    }
+
+    jmem_cpointer_t next_item_cp = number_list_p->next_cp;
+    jmem_pools_free (number_list_p, sizeof (ecma_number_storage_item_t));
+    number_list_cp = next_item_cp;
+  }
+} /* ecma_free_number_list */
 
 /**
  * Finalize literal storage
@@ -58,10 +116,10 @@ void
 ecma_finalize_lit_storage (void)
 {
 #if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
-  ecma_free_string_list (JERRY_CONTEXT (symbol_list_first_p));
+  ecma_free_symbol_list (JERRY_CONTEXT (symbol_list_first_cp));
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
-  ecma_free_string_list (JERRY_CONTEXT (string_list_first_p));
-  ecma_free_string_list (JERRY_CONTEXT (number_list_first_p));
+  ecma_free_string_list (JERRY_CONTEXT (string_list_first_cp));
+  ecma_free_number_list (JERRY_CONTEXT (number_list_first_cp));
 } /* ecma_finalize_lit_storage */
 
 /**
@@ -80,11 +138,13 @@ ecma_find_or_create_literal_string (const lit_utf8_byte_t *chars_p, /**< string 
     return ecma_make_string_value (string_p);
   }
 
-  ecma_lit_storage_item_t *string_list_p = JERRY_CONTEXT (string_list_first_p);
+  jmem_cpointer_t string_list_cp = JERRY_CONTEXT (string_list_first_cp);
   jmem_cpointer_t *empty_cpointer_p = NULL;
 
-  while (string_list_p != NULL)
+  while (string_list_cp != JMEM_CP_NULL)
   {
+    ecma_lit_storage_item_t *string_list_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_lit_storage_item_t, string_list_cp);
+
     for (int i = 0; i < ECMA_LIT_STORAGE_VALUE_COUNT; i++)
     {
       if (string_list_p->values[i] == JMEM_CP_NULL)
@@ -108,9 +168,10 @@ ecma_find_or_create_literal_string (const lit_utf8_byte_t *chars_p, /**< string 
       }
     }
 
-    string_list_p = JMEM_CP_GET_POINTER (ecma_lit_storage_item_t, string_list_p->next_cp);
+    string_list_cp = string_list_p->next_cp;
   }
 
+  ECMA_SET_STRING_AS_STATIC (string_p);
   jmem_cpointer_t result;
   JMEM_CP_SET_NON_NULL_POINTER (result, string_p);
 
@@ -129,8 +190,8 @@ ecma_find_or_create_literal_string (const lit_utf8_byte_t *chars_p, /**< string 
     new_item_p->values[i] = JMEM_CP_NULL;
   }
 
-  JMEM_CP_SET_POINTER (new_item_p->next_cp, JERRY_CONTEXT (string_list_first_p));
-  JERRY_CONTEXT (string_list_first_p) = new_item_p;
+  new_item_p->next_cp = JERRY_CONTEXT (string_list_first_cp);
+  JMEM_CP_SET_NON_NULL_POINTER (JERRY_CONTEXT (string_list_first_cp), new_item_p);
 
   return ecma_make_string_value (string_p);
 } /* ecma_find_or_create_literal_string */
@@ -152,11 +213,14 @@ ecma_find_or_create_literal_number (ecma_number_t number_arg) /**< number to be 
 
   JERRY_ASSERT (ecma_is_value_float_number (num));
 
-  ecma_lit_storage_item_t *number_list_p = JERRY_CONTEXT (number_list_first_p);
+  jmem_cpointer_t number_list_cp = JERRY_CONTEXT (number_list_first_cp);
   jmem_cpointer_t *empty_cpointer_p = NULL;
 
-  while (number_list_p != NULL)
+  while (number_list_cp != JMEM_CP_NULL)
   {
+    ecma_number_storage_item_t *number_list_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_number_storage_item_t,
+                                                                              number_list_cp);
+
     for (int i = 0; i < ECMA_LIT_STORAGE_VALUE_COUNT; i++)
     {
       if (number_list_p->values[i] == JMEM_CP_NULL)
@@ -168,29 +232,24 @@ ecma_find_or_create_literal_number (ecma_number_t number_arg) /**< number to be 
       }
       else
       {
-        ecma_string_t *value_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_string_t,
-                                                               number_list_p->values[i]);
+        ecma_number_t *number_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_number_t,
+                                                                number_list_p->values[i]);
 
-        JERRY_ASSERT (ECMA_STRING_GET_CONTAINER (value_p) == ECMA_STRING_LITERAL_NUMBER);
-        JERRY_ASSERT (ecma_is_value_float_number (value_p->u.lit_number));
-
-        if (ecma_get_float_from_value (value_p->u.lit_number) == number_arg)
+        if (*number_p == number_arg)
         {
           ecma_free_value (num);
-          return value_p->u.lit_number;
+          return ecma_make_float_value (number_p);
         }
       }
     }
 
-    number_list_p = JMEM_CP_GET_POINTER (ecma_lit_storage_item_t, number_list_p->next_cp);
+    number_list_cp = number_list_p->next_cp;
   }
 
-  ecma_string_t *string_p = ecma_alloc_string ();
-  string_p->refs_and_container = ECMA_STRING_REF_ONE | ECMA_STRING_LITERAL_NUMBER;
-  string_p->u.lit_number = num;
+  ecma_number_t *num_p = ecma_get_pointer_from_float_value (num);
 
   jmem_cpointer_t result;
-  JMEM_CP_SET_NON_NULL_POINTER (result, string_p);
+  JMEM_CP_SET_NON_NULL_POINTER (result, num_p);
 
   if (empty_cpointer_p != NULL)
   {
@@ -198,8 +257,8 @@ ecma_find_or_create_literal_number (ecma_number_t number_arg) /**< number to be 
     return num;
   }
 
-  ecma_lit_storage_item_t *new_item_p;
-  new_item_p = (ecma_lit_storage_item_t *) jmem_pools_alloc (sizeof (ecma_lit_storage_item_t));
+  ecma_number_storage_item_t *new_item_p;
+  new_item_p = (ecma_number_storage_item_t *) jmem_pools_alloc (sizeof (ecma_number_storage_item_t));
 
   new_item_p->values[0] = result;
   for (int i = 1; i < ECMA_LIT_STORAGE_VALUE_COUNT; i++)
@@ -207,8 +266,8 @@ ecma_find_or_create_literal_number (ecma_number_t number_arg) /**< number to be 
     new_item_p->values[i] = JMEM_CP_NULL;
   }
 
-  JMEM_CP_SET_POINTER (new_item_p->next_cp, JERRY_CONTEXT (number_list_first_p));
-  JERRY_CONTEXT (number_list_first_p) = new_item_p;
+  new_item_p->next_cp = JERRY_CONTEXT (number_list_first_cp);
+  JMEM_CP_SET_NON_NULL_POINTER (JERRY_CONTEXT (number_list_first_cp), new_item_p);
 
   return num;
 } /* ecma_find_or_create_literal_number */

@@ -275,6 +275,8 @@ parser_module_context_init (void)
 
     const lit_utf8_byte_t *path_str_chars_p = ecma_string_get_chars (path_str_p,
                                                                      &path_str_size,
+                                                                     NULL,
+                                                                     NULL,
                                                                      &flags);
 
     ecma_string_t *path_p = ecma_module_create_normalized_path (path_str_chars_p,

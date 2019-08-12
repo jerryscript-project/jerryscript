@@ -2412,6 +2412,57 @@ ecma_string_substr (const ecma_string_t *string_p, /**< pointer to an ecma strin
 } /* ecma_string_substr */
 
 /**
+ * Helper function for trimming.
+ *
+ * Used by:
+ *        - ecma_string_trim
+ *        - ecma_utf8_string_to_number
+ *        - ecma_builtin_global_object_parse_int
+ *        - ecma_builtin_global_object_parse_float
+ */
+void
+ecma_string_trim_helper (const lit_utf8_byte_t **utf8_str_p, /**< [in, out] current string position */
+                         lit_utf8_size_t *utf8_str_size) /**< [in, out] size of the given string */
+{
+  ecma_char_t ch;
+  lit_utf8_size_t read_size;
+  const lit_utf8_byte_t *nonws_start_p = *utf8_str_p + *utf8_str_size;
+  const lit_utf8_byte_t *current_p = *utf8_str_p;
+
+  while (current_p < nonws_start_p)
+  {
+    read_size = lit_read_code_unit_from_utf8 (current_p, &ch);
+
+    if (!lit_char_is_white_space (ch)
+        && !lit_char_is_line_terminator (ch))
+    {
+      nonws_start_p = current_p;
+      break;
+    }
+
+    current_p += read_size;
+  }
+
+  current_p = *utf8_str_p + *utf8_str_size;
+
+  while (current_p > nonws_start_p)
+  {
+    read_size = lit_read_prev_code_unit_from_utf8 (current_p, &ch);
+
+    if (!lit_char_is_white_space (ch)
+        && !lit_char_is_line_terminator (ch))
+    {
+      break;
+    }
+
+    current_p -= read_size;
+  }
+
+  *utf8_str_p = nonws_start_p;
+  *utf8_str_size = (lit_utf8_size_t) (current_p - nonws_start_p);
+} /* ecma_string_trim_helper */
+
+/**
  * Trim leading and trailing whitespace characters from string.
  *
  * @return trimmed ecma string
@@ -2421,63 +2472,24 @@ ecma_string_trim (const ecma_string_t *string_p) /**< pointer to an ecma string 
 {
   ecma_string_t *ret_string_p;
 
-  ECMA_STRING_TO_UTF8_STRING (string_p, utf8_str_p, utf8_str_size);
+  lit_utf8_size_t utf8_str_size;
+  uint8_t flags = ECMA_STRING_FLAG_IS_ASCII;
+  const lit_utf8_byte_t *utf8_str_p = ecma_string_get_chars (string_p, &utf8_str_size, &flags);
 
   if (utf8_str_size > 0)
   {
-    ecma_char_t ch;
-    lit_utf8_size_t read_size;
-    const lit_utf8_byte_t *nonws_start_p = utf8_str_p + utf8_str_size;
-    const lit_utf8_byte_t *current_p = utf8_str_p;
-
-    /* Trim front. */
-    while (current_p < nonws_start_p)
-    {
-      read_size = lit_read_code_unit_from_utf8 (current_p, &ch);
-
-      if (!lit_char_is_white_space (ch)
-          && !lit_char_is_line_terminator (ch))
-      {
-        nonws_start_p = current_p;
-        break;
-      }
-
-      current_p += read_size;
-    }
-
-    current_p = utf8_str_p + utf8_str_size;
-
-    /* Trim back. */
-    while (current_p > utf8_str_p)
-    {
-      read_size = lit_read_prev_code_unit_from_utf8 (current_p, &ch);
-
-      if (!lit_char_is_white_space (ch)
-          && !lit_char_is_line_terminator (ch))
-      {
-        break;
-      }
-
-      current_p -= read_size;
-    }
-
-    /* Construct new string. */
-    if (current_p > nonws_start_p)
-    {
-      ret_string_p = ecma_new_ecma_string_from_utf8 (nonws_start_p,
-                                                     (lit_utf8_size_t) (current_p - nonws_start_p));
-    }
-    else
-    {
-      ret_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
-    }
+    ecma_string_trim_helper (&utf8_str_p, &utf8_str_size);
+    ret_string_p = ecma_new_ecma_string_from_utf8 (utf8_str_p, utf8_str_size);
   }
   else
   {
     ret_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
   }
 
-  ECMA_FINALIZE_UTF8_STRING (utf8_str_p, utf8_str_size);
+  if (flags & ECMA_STRING_FLAG_MUST_BE_FREED)
+  {
+    jmem_heap_free_block ((void *) utf8_str_p, utf8_str_size);
+  }
 
   return ret_string_p;
 } /* ecma_string_trim */

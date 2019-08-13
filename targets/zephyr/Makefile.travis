@@ -32,7 +32,7 @@ install-zephyr-sdk:
 
 # Fetch Zephyr Project repository and install python dependencies.
 install-zephyr:
-	git clone https://github.com/zephyrproject-rtos/zephyr.git ../zephyr -b v1.14.0
+	git clone https://github.com/zephyrproject-rtos/zephyr.git ../zephyr -b backport-18180-to-v1.14-branch
 	pip3 install --user -U pip
 	pip3 install --user -U setuptools
 	pip3 install --user -r ../zephyr/scripts/requirements.txt

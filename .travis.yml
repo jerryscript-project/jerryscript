@@ -87,12 +87,26 @@ matrix:
           sources: ubuntu-toolchain-r-test
           packages: [gcc-5, gcc-5-multilib]
 
-    - name: "ESP8266 Build Test"
-      install: make -f ./targets/esp8266/Makefile.travis install-noapt
-      script: make -f ./targets/esp8266/Makefile.travis script
+    - name: "Coverity Scan & SonarQube"
+      env:
+        # Declaration of the encrypted COVERITY_SCAN_TOKEN, created via the
+        # "travis encrypt" command using the project repo's public key.
+        - secure: "V7BdXv3FCVkFGEfKfWto6I+Sytou1zTCGyn49xurkBfKNsG/3vbkXfsbK1m6lCZxmY7W/1odpfjixpAPZgy2L4FgPZK6/UyVvC8pIFjDOubcEniN48haleSvm/ZFPLDifxDL2+VVFtK1oRYPtDBzzSoUCcfwovgk+Wy+tSBnhnyRLqO/WaI6PqFof7ECYMTRlJVjioZARVP4YmkBruIPmGDdR/3EvwowlxfuiFoPheix61ug4x3tpTBW2qWgvFjDyCZXFz4pJrBQPTAIbyKMxHcBykJjl9eR+dWAOsvE1Uw48tFOJxjKDfUttVQUPsyKFllmcCVS0fDYB5pzZOmRUPxJmox1jt8J1FY85Ri1PGY0THBPM2H7to4Yf2418Y3539epbN8p+79dwaM7e2OiJ2owukbWI7PoNqIz5DV5zxpIKsOQfeWuNLJOgsBePEIU7lz133Si/2d5W/7If46B1d+hZRBJfSYksgDqDU6G/voZkPf0K5bKe2O2BxiIW1DYk4yQ1ecZAkqGjZ8jG3zYGMG3mSF4VyuU4UGFG1Pg8fw7Ap5zuHxSVY1H9dtu4T6JQG3aj/x1omlzfw48DjgkwxVhf7Xvl3yfR7pzydYheLX3MZYtcVo7rWnglZFZoUjWDK1StbmzsvPftvwWtoDTWlzo4xeSXhahSJvJyc4U8Wc="
       addons:
-        apt:
-          packages: [wget]
+        coverity_scan:
+          project:
+            name: "jerryscript-project/jerryscript"
+            description: "Ultra-lightweight JavaScript engine for the Internet of Things."
+          notification_email: rsipka.uszeged@partner.samsung.com
+          build_command: "tools/build.py --clean"
+          branch_pattern: master
+        sonarcloud:
+          organization: "jerryscript-project"
+      # Coverity Scan has already built the project by the time 'script' stage is reached.
+      script: tools/check-sonarqube.sh
+      cache:
+        directories:
+          - '${HOME}/.sonar/cache'
 
     - name: "Mbed OS 5/K64F Build Test"
       addons:
@@ -138,26 +152,12 @@ matrix:
       install: make -f ./targets/tizenrt-artik053/Makefile.travis install
       script: make -f ./targets/tizenrt-artik053/Makefile.travis script
 
-    - name: "Coverity Scan & SonarQube"
-      env:
-        # Declaration of the encrypted COVERITY_SCAN_TOKEN, created via the
-        # "travis encrypt" command using the project repo's public key.
-        - secure: "V7BdXv3FCVkFGEfKfWto6I+Sytou1zTCGyn49xurkBfKNsG/3vbkXfsbK1m6lCZxmY7W/1odpfjixpAPZgy2L4FgPZK6/UyVvC8pIFjDOubcEniN48haleSvm/ZFPLDifxDL2+VVFtK1oRYPtDBzzSoUCcfwovgk+Wy+tSBnhnyRLqO/WaI6PqFof7ECYMTRlJVjioZARVP4YmkBruIPmGDdR/3EvwowlxfuiFoPheix61ug4x3tpTBW2qWgvFjDyCZXFz4pJrBQPTAIbyKMxHcBykJjl9eR+dWAOsvE1Uw48tFOJxjKDfUttVQUPsyKFllmcCVS0fDYB5pzZOmRUPxJmox1jt8J1FY85Ri1PGY0THBPM2H7to4Yf2418Y3539epbN8p+79dwaM7e2OiJ2owukbWI7PoNqIz5DV5zxpIKsOQfeWuNLJOgsBePEIU7lz133Si/2d5W/7If46B1d+hZRBJfSYksgDqDU6G/voZkPf0K5bKe2O2BxiIW1DYk4yQ1ecZAkqGjZ8jG3zYGMG3mSF4VyuU4UGFG1Pg8fw7Ap5zuHxSVY1H9dtu4T6JQG3aj/x1omlzfw48DjgkwxVhf7Xvl3yfR7pzydYheLX3MZYtcVo7rWnglZFZoUjWDK1StbmzsvPftvwWtoDTWlzo4xeSXhahSJvJyc4U8Wc="
+    - name: "ESP8266 Build Test"
+      install: make -f ./targets/esp8266/Makefile.travis install-noapt
+      script: make -f ./targets/esp8266/Makefile.travis script
       addons:
-        coverity_scan:
-          project:
-            name: "jerryscript-project/jerryscript"
-            description: "Ultra-lightweight JavaScript engine for the Internet of Things."
-          notification_email: rsipka.uszeged@partner.samsung.com
-          build_command: "tools/build.py --clean"
-          branch_pattern: master
-        sonarcloud:
-          organization: "jerryscript-project"
-      # Coverity Scan has already built the project by the time 'script' stage is reached.
-      script: tools/check-sonarqube.sh
-      cache:
-        directories:
-          - '${HOME}/.sonar/cache'
+        apt:
+          packages: [wget]
 
   fast_finish: true
 

@@ -143,10 +143,11 @@ ecma_builtin_object_object_get_prototype_of (ecma_value_t arg) /**< routine's ar
   }
   /* 2. */
   ecma_object_t *obj_p = ecma_get_object_from_value (arg);
-  ecma_object_t *prototype_p = ecma_get_object_prototype (obj_p);
+  jmem_cpointer_t prototype_cp = obj_p->u2.prototype_cp;
 
-  if (prototype_p)
+  if (prototype_cp != JMEM_CP_NULL)
   {
+    ecma_object_t *prototype_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, prototype_cp);
     ret_value = ecma_make_object_value (prototype_p);
     ecma_ref_object (prototype_p);
   }
@@ -184,10 +185,21 @@ ecma_set_prototype_of (ecma_value_t o_value, /**< O */
   JERRY_ASSERT (ecma_is_value_object (v_value) || ecma_is_value_null (v_value));
 
   ecma_object_t *o_p = ecma_get_object_from_value (o_value);
-  ecma_object_t *v_p = ecma_is_value_null (v_value) ? NULL : ecma_get_object_from_value (v_value);
+
+  jmem_cpointer_t v_cp;
+
+  if (ecma_is_value_null (v_value))
+  {
+    v_cp = JMEM_CP_NULL;
+  }
+  else
+  {
+    ECMA_SET_NON_NULL_POINTER (v_cp, ecma_get_object_from_value (v_value));
+  }
+
 
   /* 3., 4. */
-  if (v_p == ecma_get_object_prototype (o_p))
+  if (v_cp == o_p->u2.prototype_cp)
   {
     ecma_ref_object (o_p);
     return ecma_make_object_value (o_p);
@@ -200,14 +212,10 @@ ecma_set_prototype_of (ecma_value_t o_value, /**< O */
   }
 
   /* 6., 7., 8. */
-  ecma_object_t *p_p = v_p;
-  while (true)
+  jmem_cpointer_t p_cp = v_cp;
+  while (p_cp != JMEM_CP_NULL)
   {
-    /* a. */
-    if (p_p == NULL)
-    {
-      break;
-    }
+    ecma_object_t *p_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, p_cp);
 
     /* b. */
     if (p_p == o_p)
@@ -219,11 +227,11 @@ ecma_set_prototype_of (ecma_value_t o_value, /**< O */
      * [[GetPrototypeOf]] internal method */
 
     /* c.ii. */
-    p_p = ecma_get_object_prototype (p_p);
+    p_cp = p_p->u2.prototype_cp;
   }
 
   /* 9. */
-  ECMA_SET_POINTER (o_p->prototype_or_outer_reference_cp, v_p);
+  o_p->u2.prototype_cp = v_cp;
 
   /* 10. */
   ecma_ref_object (o_p);

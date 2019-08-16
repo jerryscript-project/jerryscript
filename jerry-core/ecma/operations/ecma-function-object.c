@@ -361,12 +361,14 @@ ecma_op_implicit_class_constructor_has_instance (ecma_object_t *func_obj_p, /**<
 
     while (true)
     {
-      v_obj_p = ecma_get_object_prototype (v_obj_p);
+      jmem_cpointer_t v_obj_cp = v_obj_p->u2.prototype_cp;
 
-      if (v_obj_p == NULL)
+      if (v_obj_cp == JMEM_CP_NULL)
       {
         break;
       }
+
+      v_obj_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, v_obj_cp);
 
       if (v_obj_p == prototype_obj_p)
       {
@@ -451,12 +453,14 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
 
   while (true)
   {
-    v_obj_p = ecma_get_object_prototype (v_obj_p);
+    jmem_cpointer_t v_obj_cp = v_obj_p->u2.prototype_cp;
 
-    if (v_obj_p == NULL)
+    if (v_obj_cp == JMEM_CP_NULL)
     {
       break;
     }
+
+    v_obj_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, v_obj_cp);
 
     if (v_obj_p == prototype_obj_p)
     {
@@ -535,24 +539,30 @@ ecma_op_function_has_construct_flag (const ecma_value_t *arguments_list_p) /**< 
 static ecma_object_t *
 ecma_op_find_super_declerative_lex_env (ecma_object_t *lex_env_p) /**< starting lexical enviroment */
 {
-  JERRY_ASSERT (lex_env_p);
+  JERRY_ASSERT (lex_env_p != NULL);
   JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) != ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND);
 
-  while (lex_env_p != NULL)
+  while (true)
   {
-    ecma_object_t *lex_env_outer_p = ecma_get_lex_env_outer_reference (lex_env_p);
+    jmem_cpointer_t lex_env_outer_cp = lex_env_p->u2.outer_reference_cp;
 
-    if (lex_env_outer_p != NULL &&
-        ecma_get_lex_env_type (lex_env_outer_p) == ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND)
+    if (lex_env_outer_cp != JMEM_CP_NULL)
     {
-      JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
-      return lex_env_p;
+      ecma_object_t *lex_env_outer_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_outer_cp);
+
+      if (ecma_get_lex_env_type (lex_env_outer_p) == ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND)
+      {
+        JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
+        return lex_env_p;
+      }
+
+      lex_env_p = lex_env_outer_p;
     }
-
-    lex_env_p = lex_env_outer_p;
+    else
+    {
+      return NULL;
+    }
   }
-
-  return NULL;
 } /* ecma_op_find_super_declerative_lex_env */
 
 /**
@@ -673,10 +683,11 @@ ecma_op_set_class_prototype (ecma_value_t completion_value, /**< completion_valu
   JERRY_ASSERT (ecma_is_value_object (this_arg));
 
   ecma_object_t *completion_obj_p = ecma_get_object_from_value (completion_value);
-  ecma_object_t *prototype_obj_p = ecma_get_object_prototype (ecma_get_object_from_value (this_arg));
+  jmem_cpointer_t prototype_obj_cp = ecma_get_object_from_value (this_arg)->u2.prototype_cp;
 
-  JERRY_ASSERT (prototype_obj_p);
-  ECMA_SET_POINTER (completion_obj_p->prototype_or_outer_reference_cp, prototype_obj_p);
+  JERRY_ASSERT (prototype_obj_cp != JMEM_CP_NULL);
+
+  completion_obj_p->u2.prototype_cp = prototype_obj_cp;
 } /* ecma_op_set_class_prototype */
 #endif /* ENABLED (JERRY_ES2015_CLASS) */
 
@@ -1143,7 +1154,9 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
       /* Catch the special case when a the class extends value in null
          and the class has no explicit constructor to raise TypeError.*/
       JERRY_ASSERT (!ecma_op_function_has_construct_flag (arguments_list_p));
-      JERRY_ASSERT (ecma_get_object_prototype (func_obj_p) == ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE));
+      JERRY_ASSERT (func_obj_p->u2.prototype_cp != JMEM_CP_NULL);
+      JERRY_ASSERT ((ECMA_GET_NON_NULL_POINTER (ecma_object_t, func_obj_p->u2.prototype_cp) \
+                    == ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE)));
 
       ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Super constructor null is not a constructor."));
       break;

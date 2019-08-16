@@ -335,13 +335,11 @@ bool JERRY_ATTR_PURE ecma_is_lexical_environment (const ecma_object_t *object_p)
 bool JERRY_ATTR_PURE ecma_get_object_extensible (const ecma_object_t *object_p);
 void ecma_set_object_extensible (ecma_object_t *object_p, bool is_extensible);
 ecma_object_type_t JERRY_ATTR_PURE ecma_get_object_type (const ecma_object_t *object_p);
-ecma_object_t JERRY_ATTR_PURE *ecma_get_object_prototype (const ecma_object_t *object_p);
 bool JERRY_ATTR_PURE ecma_get_object_is_builtin (const ecma_object_t *object_p);
 void ecma_set_object_is_builtin (ecma_object_t *object_p);
 uint8_t ecma_get_object_builtin_id (ecma_object_t *object_p);
 ecma_lexical_environment_type_t JERRY_ATTR_PURE ecma_get_lex_env_type (const ecma_object_t *object_p);
 ecma_object_t JERRY_ATTR_PURE *ecma_get_lex_env_outer_reference (const ecma_object_t *object_p);
-ecma_property_header_t JERRY_ATTR_PURE *ecma_get_property_list (const ecma_object_t *object_p);
 ecma_object_t JERRY_ATTR_PURE *ecma_get_lex_env_binding_object (const ecma_object_t *object_p);
 
 ecma_property_value_t *
@@ -363,8 +361,8 @@ uint32_t ecma_delete_array_properties (ecma_object_t *object_p, uint32_t new_len
 void ecma_named_data_property_assign_value (ecma_object_t *obj_p, ecma_property_value_t *prop_value_p,
                                             ecma_value_t value);
 
-ecma_object_t *ecma_get_named_accessor_property_getter (const ecma_property_value_t *prop_value_p);
-ecma_object_t *ecma_get_named_accessor_property_setter (const ecma_property_value_t *prop_value_p);
+ecma_getter_setter_pointers_t *
+ecma_get_named_accessor_property (const ecma_property_value_t *prop_value_p);
 void ecma_set_named_accessor_property_getter (ecma_object_t *object_p, ecma_property_value_t *prop_value_p,
                                               ecma_object_t *getter_p);
 void ecma_set_named_accessor_property_setter (ecma_object_t *object_p, ecma_property_value_t *prop_value_p,

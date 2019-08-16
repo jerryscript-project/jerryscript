@@ -44,27 +44,28 @@ ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, /**< starting lexical 
 {
   JERRY_ASSERT (lex_env_p != NULL);
 
-  ecma_object_t *lex_env_iter_p = lex_env_p;
-
-  while (lex_env_iter_p != NULL)
+  while (true)
   {
 #if ENABLED (JERRY_ES2015_CLASS)
-    if (ecma_get_lex_env_type (lex_env_iter_p) == ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND)
+    if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND)
     {
-      lex_env_iter_p = ecma_get_lex_env_outer_reference (lex_env_iter_p);
-      JERRY_ASSERT (lex_env_iter_p != NULL);
+      JERRY_ASSERT (lex_env_p->u2.outer_reference_cp != JMEM_CP_NULL);
+      lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
     }
 #endif /* ENABLED (JERRY_ES2015_CLASS) */
 
-    if (ecma_op_has_binding (lex_env_iter_p, name_p))
+    if (ecma_op_has_binding (lex_env_p, name_p))
     {
-      return lex_env_iter_p;
+      return lex_env_p;
     }
 
-    lex_env_iter_p = ecma_get_lex_env_outer_reference (lex_env_iter_p);
-  }
+    if (lex_env_p->u2.outer_reference_cp == JMEM_CP_NULL)
+    {
+      return NULL;
+    }
 
-  return NULL;
+    lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
+  }
 } /* ecma_op_resolve_reference_base */
 
 #if ENABLED (JERRY_ES2015_CLASS)
@@ -85,7 +86,9 @@ ecma_op_resolve_super_reference_value (ecma_object_t *lex_env_p) /**< starting l
       return ecma_get_lex_env_binding_object (lex_env_p);
     }
 
-    lex_env_p = ecma_get_lex_env_outer_reference (lex_env_p);
+    JERRY_ASSERT (lex_env_p->u2.outer_reference_cp != JMEM_CP_NULL);
+
+    lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
   }
 } /* ecma_op_resolve_super_reference_value */
 #endif /* ENABLED (JERRY_ES2015_CLASS) */
@@ -101,7 +104,7 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
 {
   JERRY_ASSERT (lex_env_p != NULL);
 
-  while (lex_env_p != NULL)
+  while (true)
   {
     ecma_lexical_environment_type_t lex_env_type = ecma_get_lex_env_type (lex_env_p);
 
@@ -132,12 +135,14 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
 
         JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
 
-        ecma_object_t *getter_p = ecma_get_named_accessor_property_getter (prop_value_p);
+        ecma_getter_setter_pointers_t *get_set_pair_p = ecma_get_named_accessor_property (prop_value_p);
 
-        if (getter_p == NULL)
+        if (get_set_pair_p->getter_cp == JMEM_CP_NULL)
         {
           return ECMA_VALUE_UNDEFINED;
         }
+
+        ecma_object_t *getter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->getter_cp);
 
         ecma_value_t base_value = ecma_make_object_value (binding_obj_p);
         return ecma_op_function_call (getter_p, base_value, NULL, 0);
@@ -160,7 +165,12 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
 #endif /* ENABLED (JERRY_ES2015_CLASS) */
     }
 
-    lex_env_p = ecma_get_lex_env_outer_reference (lex_env_p);
+    if (lex_env_p->u2.outer_reference_cp == JMEM_CP_NULL)
+    {
+      break;
+    }
+
+    lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
   }
 
 #if ENABLED (JERRY_ERROR_MESSAGES)

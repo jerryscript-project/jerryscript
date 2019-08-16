@@ -245,8 +245,8 @@ opfunc_for_in (ecma_value_t left_value, /**< left value */
 
   if (prop_names_coll_p->item_count != 0)
   {
-    prop_names_p = ECMA_GET_POINTER (ecma_collection_chunk_t,
-                                     prop_names_coll_p->first_chunk_cp);
+    prop_names_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_chunk_t,
+                                              prop_names_coll_p->first_chunk_cp);
 
     ecma_ref_object (obj_p);
     *result_obj_p = ecma_make_object_value (obj_p);

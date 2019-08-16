@@ -324,10 +324,7 @@ ecma_op_object_get_property (ecma_object_t *object_p, /**< the object */
                              ecma_property_ref_t *property_ref_p, /**< property reference */
                              uint32_t options) /**< option bits */
 {
-  /* Circular reference is possible in JavaScript and testing it is complicated. */
-  int max_depth = ECMA_PROPERTY_SEARCH_DEPTH_LIMIT;
-
-  do
+  while (true)
   {
     ecma_property_t property = ecma_op_object_get_own_property (object_p,
                                                                 property_name_p,
@@ -339,14 +336,18 @@ ecma_op_object_get_property (ecma_object_t *object_p, /**< the object */
       return property;
     }
 
-    if (--max_depth == 0 || property == ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP)
+    if (property == ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP)
     {
       break;
     }
 
-    object_p = ecma_get_object_prototype (object_p);
+    if (object_p->u2.prototype_cp == JMEM_CP_NULL)
+    {
+      break;
+    }
+
+    object_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, object_p->u2.prototype_cp);
   }
-  while (object_p != NULL);
 
   return ECMA_PROPERTY_TYPE_NOT_FOUND;
 } /* ecma_op_object_get_property */
@@ -592,12 +593,14 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
 
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
 
-  ecma_object_t *getter_p = ecma_get_named_accessor_property_getter (prop_value_p);
+  ecma_getter_setter_pointers_t *get_set_pair_p = ecma_get_named_accessor_property (prop_value_p);
 
-  if (getter_p == NULL)
+  if (get_set_pair_p->getter_cp == JMEM_CP_NULL)
   {
     return ECMA_VALUE_UNDEFINED;
   }
+
+  ecma_object_t *getter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->getter_cp);
 
   return ecma_op_function_call (getter_p, base_value, NULL, 0);
 } /* ecma_op_object_find_own */
@@ -615,11 +618,9 @@ ecma_value_t
 ecma_op_object_find (ecma_object_t *object_p, /**< the object */
                      ecma_string_t *property_name_p) /**< property name */
 {
-  /* Circular reference is possible in JavaScript and testing it is complicated. */
-  int max_depth = ECMA_PROPERTY_SEARCH_DEPTH_LIMIT;
-
   ecma_value_t base_value = ecma_make_object_value (object_p);
-  do
+
+  while (true)
   {
     ecma_value_t value = ecma_op_object_find_own (base_value, object_p, property_name_p);
 
@@ -628,14 +629,13 @@ ecma_op_object_find (ecma_object_t *object_p, /**< the object */
       return value;
     }
 
-    if (--max_depth == 0)
+    if (object_p->u2.prototype_cp == JMEM_CP_NULL)
     {
       break;
     }
 
-    object_p = ecma_get_object_prototype (object_p);
+    object_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, object_p->u2.prototype_cp);
   }
-  while (object_p != NULL);
 
   return ECMA_VALUE_NOT_FOUND;
 } /* ecma_op_object_find */
@@ -688,11 +688,9 @@ ecma_value_t
 ecma_op_object_get (ecma_object_t *object_p, /**< the object */
                     ecma_string_t *property_name_p) /**< property name */
 {
-  /* Circular reference is possible in JavaScript and testing it is complicated. */
-  int max_depth = ECMA_PROPERTY_SEARCH_DEPTH_LIMIT;
-
   ecma_value_t base_value = ecma_make_object_value (object_p);
-  do
+
+  while (true)
   {
     ecma_value_t value = ecma_op_object_find_own (base_value, object_p, property_name_p);
 
@@ -701,14 +699,13 @@ ecma_op_object_get (ecma_object_t *object_p, /**< the object */
       return value;
     }
 
-    if (--max_depth == 0)
+    if (object_p->u2.prototype_cp == JMEM_CP_NULL)
     {
       break;
     }
 
-    object_p = ecma_get_object_prototype (object_p);
+    object_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, object_p->u2.prototype_cp);
   }
-  while (object_p != NULL);
 
   return ECMA_VALUE_UNDEFINED;
 } /* ecma_op_object_get */
@@ -836,7 +833,6 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
                 && !ecma_is_lexical_environment (object_p));
   JERRY_ASSERT (property_name_p != NULL);
 
-  ecma_object_t *setter_p = NULL;
   ecma_object_type_t type = ecma_get_object_type (object_p);
 
   switch (type)
@@ -979,6 +975,8 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
     }
   }
 
+  jmem_cpointer_t setter_cp = JMEM_CP_NULL;
+
   if (property_p != NULL)
   {
     if (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA)
@@ -997,17 +995,19 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
     {
       JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
 
-      setter_p = ecma_get_named_accessor_property_setter (ECMA_PROPERTY_VALUE_PTR (property_p));
+      ecma_getter_setter_pointers_t *get_set_pair_p;
+      get_set_pair_p = ecma_get_named_accessor_property (ECMA_PROPERTY_VALUE_PTR (property_p));
+      setter_cp = get_set_pair_p->setter_cp;
     }
   }
   else
   {
-    ecma_object_t *proto_p = ecma_get_object_prototype (object_p);
     bool create_new_property = true;
 
-    if (proto_p != NULL)
+    if (object_p->u2.prototype_cp != JMEM_CP_NULL)
     {
       ecma_property_ref_t property_ref = { NULL };
+      ecma_object_t *proto_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, object_p->u2.prototype_cp);
 
       ecma_property_t inherited_property = ecma_op_object_get_property (proto_p,
                                                                         property_name_p,
@@ -1018,7 +1018,7 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
       {
         if (ECMA_PROPERTY_GET_TYPE (inherited_property) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR)
         {
-          setter_p = ecma_get_named_accessor_property_setter (property_ref.value_p);
+          setter_cp = ecma_get_named_accessor_property (property_ref.value_p)->setter_cp;
           create_new_property = false;
         }
         else
@@ -1078,12 +1078,12 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
     }
   }
 
-  if (setter_p == NULL)
+  if (setter_cp == JMEM_CP_NULL)
   {
     return ecma_reject (is_throw);
   }
 
-  ecma_value_t ret_value = ecma_op_function_call (setter_p,
+  ecma_value_t ret_value = ecma_op_function_call (ECMA_GET_NON_NULL_POINTER (ecma_object_t, setter_cp),
                                                   ecma_make_object_value (object_p),
                                                   &value,
                                                   1);
@@ -1349,19 +1349,27 @@ ecma_op_object_get_own_property_descriptor (ecma_object_t *object_p, /**< the ob
   }
   else
   {
-    prop_desc_p->get_p = ecma_get_named_accessor_property_getter (property_ref.value_p);
     prop_desc_p->is_get_defined = true;
+    prop_desc_p->is_set_defined = true;
+    ecma_getter_setter_pointers_t *get_set_pair_p = ecma_get_named_accessor_property (property_ref.value_p);
 
-    if (prop_desc_p->get_p != NULL)
+    if (get_set_pair_p->getter_cp == JMEM_CP_NULL)
     {
+      prop_desc_p->get_p = NULL;
+    }
+    else
+    {
+      prop_desc_p->get_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->getter_cp);
       ecma_ref_object (prop_desc_p->get_p);
     }
 
-    prop_desc_p->set_p = ecma_get_named_accessor_property_setter (property_ref.value_p);
-    prop_desc_p->is_set_defined = true;
-
-    if (prop_desc_p->set_p != NULL)
+    if (get_set_pair_p->setter_cp == JMEM_CP_NULL)
     {
+      prop_desc_p->set_p = NULL;
+    }
+    else
+    {
+      prop_desc_p->set_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->setter_cp);
       ecma_ref_object (prop_desc_p->set_p);
     }
   }
@@ -1414,12 +1422,16 @@ ecma_op_object_is_prototype_of (ecma_object_t *base_p, /**< base object */
 {
   do
   {
-    target_p = ecma_get_object_prototype (target_p);
-    if (target_p == NULL)
+    jmem_cpointer_t target_cp = target_p->u2.prototype_cp;
+
+    if (target_cp == JMEM_CP_NULL)
     {
       return false;
     }
-    else if (target_p == base_p)
+
+    target_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, target_cp);
+
+    if (target_p == base_p)
     {
       return true;
     }
@@ -1465,10 +1477,9 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
   memset (names_hashes_bitmap, 0, names_hashes_bitmap_size * sizeof (names_hashes_bitmap[0]));
 
-  for (ecma_object_t *prototype_chain_iter_p = obj_p;
-       prototype_chain_iter_p != NULL;
-       prototype_chain_iter_p = is_with_prototype_chain ? ecma_get_object_prototype (prototype_chain_iter_p)
-                                                        : NULL)
+  ecma_object_t *prototype_chain_iter_p = obj_p;
+
+  while (true)
   {
     ecma_length_t string_named_properties_count = 0;
     ecma_length_t array_index_named_properties_count = 0;
@@ -1587,16 +1598,23 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
       }
     }
 
-    ecma_property_header_t *prop_iter_p = ecma_get_property_list (prototype_chain_iter_p);
+    jmem_cpointer_t prop_iter_cp = prototype_chain_iter_p->u1.property_list_cp;
 
-    if (prop_iter_p != NULL && prop_iter_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP)
+#if ENABLED (JERRY_PROPRETY_HASHMAP)
+    if (prop_iter_cp != JMEM_CP_NULL)
     {
-      prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
-                                      prop_iter_p->next_property_cp);
+      ecma_property_header_t *prop_iter_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t, prop_iter_cp);
+
+      if (prop_iter_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP)
+      {
+        prop_iter_cp = prop_iter_p->next_property_cp;
+      }
     }
+#endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
 
-    while (prop_iter_p != NULL)
+    while (prop_iter_cp != JMEM_CP_NULL)
     {
+      ecma_property_header_t *prop_iter_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t, prop_iter_cp);
       JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
 
       for (int i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
@@ -1679,8 +1697,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
         }
       }
 
-      prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
-                                      prop_iter_p->next_property_cp);
+      prop_iter_cp = prop_iter_p->next_property_cp;
     }
 
     ecma_value_p = ecma_collection_iterator_init (prop_names_p);
@@ -1845,6 +1862,15 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
     }
 
     JMEM_FINALIZE_LOCAL_ARRAY (names_p);
+
+
+    if (!is_with_prototype_chain || prototype_chain_iter_p->u2.prototype_cp == JMEM_CP_NULL)
+    {
+      break;
+    }
+
+    prototype_chain_iter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
+                                                        prototype_chain_iter_p->u2.prototype_cp);
   }
 
   ecma_free_values_collection (skipped_non_enumerable_p, 0);

@@ -56,15 +56,16 @@ void
 ecma_free_values_collection (ecma_collection_header_t *header_p, /**< collection's header */
                              uint32_t flags) /**< combination of ecma_collection_flag_t flags */
 {
-  ecma_collection_chunk_t *chunk_p = ECMA_GET_POINTER (ecma_collection_chunk_t,
-                                                       header_p->first_chunk_cp);
+  jmem_cpointer_t chunk_cp = header_p->first_chunk_cp;
 
   jmem_pools_free (header_p, sizeof (ecma_collection_header_t));
 
-  if (chunk_p == NULL)
+  if (chunk_cp == JMEM_CP_NULL)
   {
     return;
   }
+
+  ecma_collection_chunk_t *chunk_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_chunk_t, chunk_cp);
 
   do
   {
@@ -110,7 +111,7 @@ ecma_append_to_values_collection (ecma_collection_header_t *header_p, /**< colle
     item_index = 0;
     chunk_p = (ecma_collection_chunk_t *) jmem_heap_alloc_block (sizeof (ecma_collection_chunk_t));
 
-    ECMA_SET_POINTER (header_p->first_chunk_cp, chunk_p);
+    ECMA_SET_NON_NULL_POINTER (header_p->first_chunk_cp, chunk_p);
     header_p->last_chunk_cp = header_p->first_chunk_cp;
   }
   else
@@ -129,7 +130,7 @@ ecma_append_to_values_collection (ecma_collection_header_t *header_p, /**< colle
       next_chunk_p = (ecma_collection_chunk_t *) jmem_heap_alloc_block (sizeof (ecma_collection_chunk_t));
 
       chunk_p->items[ECMA_COLLECTION_CHUNK_ITEMS] = ecma_make_pointer_value ((void *) next_chunk_p);
-      ECMA_SET_POINTER (header_p->last_chunk_cp, next_chunk_p);
+      ECMA_SET_NON_NULL_POINTER (header_p->last_chunk_cp, next_chunk_p);
 
       chunk_p = next_chunk_p;
     }

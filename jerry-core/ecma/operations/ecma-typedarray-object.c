@@ -1015,7 +1015,7 @@ ecma_op_create_typedarray_with_type_and_length (ecma_object_t *obj_p, /**< Typed
 #if ENABLED (JERRY_ES2015_CLASS)
   ecma_object_t *constructor_prototype_object_p = ecma_get_object_from_value (constructor_prototype);
   ecma_object_t *new_obj_p = ecma_get_object_from_value (new_obj);
-  ECMA_SET_POINTER (new_obj_p->prototype_or_outer_reference_cp, constructor_prototype_object_p);
+  ECMA_SET_NON_NULL_POINTER (new_obj_p->u2.prototype_cp, constructor_prototype_object_p);
 
   ecma_deref_object (constructor_prototype_object_p);
 #endif /* ENABLED (JERRY_ES2015_CLASS) */

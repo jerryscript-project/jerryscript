@@ -170,17 +170,20 @@ ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error typ
 ecma_standard_error_t
 ecma_get_error_type (ecma_object_t *error_object) /**< possible error object */
 {
-  ecma_object_t *prototype_p = ecma_get_object_prototype (error_object);
-  if (prototype_p != NULL)
+  if (error_object->u2.prototype_cp == JMEM_CP_NULL)
   {
-    uint8_t builtin_id = ecma_get_object_builtin_id (prototype_p);
+    return ECMA_ERROR_NONE;
+  }
 
-    for (uint8_t idx = 0; idx < sizeof (ecma_error_mappings) / sizeof (ecma_error_mappings[0]); idx++)
+  ecma_object_t *prototype_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, error_object->u2.prototype_cp);
+
+  uint8_t builtin_id = ecma_get_object_builtin_id (prototype_p);
+
+  for (uint8_t idx = 0; idx < sizeof (ecma_error_mappings) / sizeof (ecma_error_mappings[0]); idx++)
+  {
+    if (ecma_error_mappings[idx].error_prototype_id == builtin_id)
     {
-      if (ecma_error_mappings[idx].error_prototype_id == builtin_id)
-      {
-        return ecma_error_mappings[idx].error_type;
-      }
+      return ecma_error_mappings[idx].error_type;
     }
   }
 

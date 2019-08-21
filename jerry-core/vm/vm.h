@@ -148,6 +148,7 @@ typedef enum
   VM_OC_PROP_DELETE,             /**< delete property */
   VM_OC_DELETE,                  /**< delete */
 
+  VM_OC_MOV_IDENT,               /**< move identifier register reference */
   VM_OC_ASSIGN,                  /**< assign */
   VM_OC_ASSIGN_PROP,             /**< assign property */
   VM_OC_ASSIGN_PROP_THIS,        /**< assign prop this */

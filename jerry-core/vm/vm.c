@@ -1941,6 +1941,19 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           left_value = ECMA_VALUE_UNDEFINED;
           break;
         }
+        case VM_OC_MOV_IDENT:
+        {
+          uint16_t literal_index;
+
+          READ_LITERAL_INDEX (literal_index);
+
+          JERRY_ASSERT (literal_index < register_end);
+          JERRY_ASSERT (!(opcode_data & (VM_OC_PUT_STACK | VM_OC_PUT_BLOCK)));
+
+          ecma_fast_free_value (frame_ctx_p->registers_p[literal_index]);
+          frame_ctx_p->registers_p[literal_index] = left_value;
+          continue;
+        }
         case VM_OC_ASSIGN_PROP:
         {
           result = stack_top_p[-1];

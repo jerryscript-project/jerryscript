@@ -111,9 +111,9 @@ level | type
 (jerry-debugger) variables 0
 name | type   | value 
 y    | String | abc   
-2    | Number | 3     
-1    | Number | 2     
 0    | Number | 1     
+1    | Number | 2     
+2    | Number | 3     
 (jerry-debugger) variables 1
 name | type      | value     
 h    | undefined | undefined 

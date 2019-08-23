@@ -370,7 +370,6 @@ ecma_get_named_data_property (ecma_object_t *obj_p, ecma_string_t *name_p);
 void ecma_free_property (ecma_object_t *object_p, jmem_cpointer_t name_cp, ecma_property_t *property_p);
 
 void ecma_delete_property (ecma_object_t *object_p, ecma_property_value_t *prop_value_p);
-uint32_t ecma_delete_array_properties (ecma_object_t *object_p, uint32_t new_length, uint32_t old_length);
 
 void ecma_named_data_property_assign_value (ecma_object_t *obj_p, ecma_property_value_t *prop_value_p,
                                             ecma_value_t value);

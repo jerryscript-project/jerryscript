@@ -39,6 +39,28 @@ typedef enum
                                                          *   in the property descriptor */
 } ecma_array_object_set_length_flags_t;
 
+ecma_object_t *
+ecma_op_new_array_object (ecma_length_t length);
+
+ecma_object_t *
+ecma_op_new_fast_array_object (ecma_length_t length);
+
+ecma_value_t *
+ecma_fast_array_extend (ecma_object_t *object_p, uint32_t new_lengt);
+
+bool
+ecma_fast_array_set_property (ecma_object_t *object_p, ecma_string_t *property_name_p, ecma_value_t value);
+
+void
+ecma_array_object_delete_property (ecma_object_t *object_p, ecma_string_t *property_name_p,
+                                   ecma_property_value_t *prop_value_p);
+
+ecma_collection_header_t *
+ecma_fast_array_get_property_names (ecma_object_t *object_p, uint32_t opts);
+
+void
+ecma_fast_array_convert_to_normal (ecma_object_t *object_p);
+
 ecma_value_t
 ecma_op_create_array_object (const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len,
                              bool is_treat_single_arg_as_length);

@@ -321,7 +321,7 @@ ecma_builtin_object_object_get_own_property_symbols (ecma_object_t *obj_p) /**< 
 static ecma_value_t
 ecma_builtin_object_object_seal (ecma_object_t *obj_p) /**< routine's argument */
 {
-  ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_NO_OPTS);
+  ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_CONVERT_FAST_ARRAYS);
 
   ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
 
@@ -380,7 +380,7 @@ ecma_builtin_object_object_seal (ecma_object_t *obj_p) /**< routine's argument *
 static ecma_value_t
 ecma_builtin_object_object_freeze (ecma_object_t *obj_p) /**< routine's argument */
 {
-  ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_NO_OPTS);
+  ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_CONVERT_FAST_ARRAYS);
 
   ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
 
@@ -597,7 +597,8 @@ ecma_builtin_object_object_define_properties (ecma_object_t *obj_p, /**< routine
 
   ecma_object_t *props_p = ecma_get_object_from_value (props);
   /* 3. */
-  ecma_collection_header_t *prop_names_p = ecma_op_object_get_property_names (props_p, ECMA_LIST_ENUMERABLE);
+  ecma_collection_header_t *prop_names_p = ecma_op_object_get_property_names (props_p, ECMA_LIST_CONVERT_FAST_ARRAYS
+                                                                                       | ECMA_LIST_ENUMERABLE);
   uint32_t property_number = prop_names_p->item_count;
   ecma_value_t ret_value = ECMA_VALUE_ERROR;
 
@@ -820,7 +821,8 @@ ecma_builtin_object_object_assign (const ecma_value_t arguments_list_p[], /**< a
 
     /* 5.b.iii */
     /* TODO: extends this collection if symbols will be supported */
-    ecma_collection_header_t *props_p = ecma_op_object_get_property_names (from_obj_p, ECMA_LIST_ENUMERABLE);
+    ecma_collection_header_t *props_p = ecma_op_object_get_property_names (from_obj_p, ECMA_LIST_CONVERT_FAST_ARRAYS
+                                                                                       | ECMA_LIST_ENUMERABLE);
 
     ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
 

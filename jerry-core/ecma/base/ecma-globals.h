@@ -331,6 +331,8 @@ typedef enum
 #if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
   ECMA_LIST_SYMBOLS = (1 << 3), /**< list symbol properties only */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+  ECMA_LIST_CONVERT_FAST_ARRAYS = (1 << 4), /**< after listing the properties convert
+                                             *   the fast access mode array back to normal array */
 } ecma_list_properties_options_t;
 
 /**
@@ -822,6 +824,9 @@ typedef struct
     {
       uint32_t length; /**< length property value */
       ecma_property_t length_prop; /**< length property */
+      bool is_fast_mode; /**< true - if the array is a fast access mode array
+                          *   false - otherwise */
+      uint8_t hole_count; /**< Number of array holes in a fast access mode array */
     } array;
 
     /**
@@ -868,6 +873,19 @@ typedef struct
   ecma_extended_object_t extended_object; /**< extended object part */
   ecma_built_in_props_t built_in; /**< built-in object part */
 } ecma_extended_built_in_object_t;
+
+/**
+ * Alignment for the fast access mode array length.
+ * The real length is aligned up for allocating the underlying buffer.
+ */
+#define ECMA_FAST_ARRAY_ALIGNMENT (8)
+
+/**
+ * Align the length of the fast mode array to get the allocated size of the underlying buffer
+ */
+#define ECMA_FAST_ARRAY_ALIGN_LENGTH(length) \
+  (uint32_t) ((((length)) + ECMA_FAST_ARRAY_ALIGNMENT - 1) / ECMA_FAST_ARRAY_ALIGNMENT * ECMA_FAST_ARRAY_ALIGNMENT)
+
 
 /**
  * Compiled byte code data.

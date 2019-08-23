@@ -54,6 +54,7 @@ vm_op_get_value (ecma_value_t object, /**< base object */
 {
   if (ecma_is_value_object (object))
   {
+    ecma_object_t *object_p = ecma_get_object_from_value (object);
     ecma_string_t *property_name_p = NULL;
 
     if (ecma_is_value_integer_number (property))
@@ -62,6 +63,22 @@ vm_op_get_value (ecma_value_t object, /**< base object */
 
       if (int_value >= 0 && int_value <= ECMA_DIRECT_STRING_MAX_IMM)
       {
+        if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_ARRAY)
+        {
+          ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+
+          if (JERRY_LIKELY (ext_object_p->u.array.is_fast_mode
+                            && (uint32_t) int_value < ext_object_p->u.array.length))
+          {
+            ecma_value_t *values_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, object_p->u1.property_list_cp);
+
+            if (JERRY_LIKELY (!ecma_is_value_array_hole (values_p[int_value])))
+            {
+              return ecma_fast_copy_value (values_p[int_value]);
+            }
+          }
+        }
+
         property_name_p = (ecma_string_t *) ECMA_CREATE_DIRECT_STRING (ECMA_DIRECT_STRING_UINT,
                                                                        (uintptr_t) int_value);
       }
@@ -81,7 +98,6 @@ vm_op_get_value (ecma_value_t object, /**< base object */
     if (property_name_p != NULL)
     {
 #if ENABLED (JERRY_LCACHE)
-      ecma_object_t *object_p = ecma_get_object_from_value (object);
       ecma_property_t *property_p = ecma_lcache_lookup (object_p, property_name_p);
 
       if (property_p != NULL &&
@@ -92,7 +108,7 @@ vm_op_get_value (ecma_value_t object, /**< base object */
 #endif /* ENABLED (JERRY_LCACHE) */
 
       /* There is no need to free the name. */
-      return ecma_op_object_get (ecma_get_object_from_value (object), property_name_p);
+      return ecma_op_object_get (object_p, property_name_p);
     }
   }
 
@@ -1309,14 +1325,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_PUSH_ARRAY:
         {
-          result = ecma_op_create_array_object (NULL, 0, false);
-
-          if (ECMA_IS_VALUE_ERROR (result))
-          {
-            goto error;
-          }
-
-          *stack_top_p++ = result;
+          // Note: this operation cannot throw an exception
+          *stack_top_p++ = ecma_make_object_value (ecma_op_new_fast_array_object (0));
           continue;
         }
 #if ENABLED (JERRY_ES2015_CLASS)
@@ -1646,45 +1656,31 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_APPEND_ARRAY:
         {
           ecma_object_t *array_obj_p;
-          uint32_t length_num;
           uint32_t values_length = *byte_code_p++;
 
           stack_top_p -= values_length;
 
           array_obj_p = ecma_get_object_from_value (stack_top_p[-1]);
           ecma_extended_object_t *ext_array_obj_p = (ecma_extended_object_t *) array_obj_p;
+          uint32_t old_length = ext_array_obj_p->u.array.length;
 
-          length_num = ext_array_obj_p->u.array.length;
+          JERRY_ASSERT (ext_array_obj_p->u.array.is_fast_mode);
+
+          ecma_value_t *values_p = ecma_fast_array_extend (array_obj_p, old_length + values_length);
 
           for (uint32_t i = 0; i < values_length; i++)
           {
-            if (!ecma_is_value_array_hole (stack_top_p[i]))
+            values_p[old_length + i] = stack_top_p[i];
+
+            if (JERRY_UNLIKELY (ecma_is_value_array_hole (stack_top_p[i])))
             {
-              ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (length_num);
-
-              ecma_property_value_t *prop_value_p;
-
-              prop_value_p = ecma_create_named_data_property (array_obj_p,
-                                                              index_str_p,
-                                                              ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
-                                                              NULL);
-
-              JERRY_ASSERT (ecma_is_value_undefined (prop_value_p->value));
-              prop_value_p->value = stack_top_p[i];
-
-              /* The reference is moved so no need to free stack_top_p[i] except for objects. */
-              if (ecma_is_value_object (stack_top_p[i]))
-              {
-                ecma_free_value (stack_top_p[i]);
-              }
-
-              ecma_deref_ecma_string (index_str_p);
+              ext_array_obj_p->u.array.hole_count++;
             }
-
-            length_num++;
+            else if (ecma_is_value_object (stack_top_p[i]))
+            {
+              ecma_deref_object (ecma_get_object_from_value (stack_top_p[i]));
+            }
           }
-
-          ext_array_obj_p->u.array.length = length_num;
           continue;
         }
         case VM_OC_PUSH_UNDEFINED_BASE:

@@ -2569,6 +2569,56 @@ ecma_stringbuilder_grow (ecma_stringbuilder_t *builder_p, /**< string builder */
 } /* ecma_stringbuilder_grow */
 
 /**
+ * Get the current size of the string in a string builder
+ *
+ * @return the size of the string data
+ */
+lit_utf8_size_t
+ecma_stringbuilder_get_size (ecma_stringbuilder_t *builder_p) /**< string builder */
+{
+  ecma_stringbuilder_header_t *header_p = builder_p->header_p;
+  JERRY_ASSERT (header_p != NULL);
+
+  return ECMA_STRINGBUILDER_STRING_SIZE (header_p);
+} /* ecma_stringbuilder_get_size */
+
+/**
+ * Get pointer to the raw string data in a string builder
+ *
+ * @return pointer to the string data
+ */
+lit_utf8_byte_t *
+ecma_stringbuilder_get_data (ecma_stringbuilder_t *builder_p) /**< string builder */
+{
+  ecma_stringbuilder_header_t *header_p = builder_p->header_p;
+  JERRY_ASSERT (header_p != NULL);
+
+  return ECMA_STRINGBUILDER_STRING_PTR (header_p);
+} /* ecma_stringbuilder_get_data */
+
+/**
+ * Revert the string builder to a smaller size
+ */
+void
+ecma_stringbuilder_revert (ecma_stringbuilder_t *builder_p, /**< string builder */
+                           const lit_utf8_size_t size) /**< new size */
+{
+  ecma_stringbuilder_header_t *header_p = builder_p->header_p;
+  JERRY_ASSERT (header_p != NULL);
+
+  const lit_utf8_size_t new_size = size + (lit_utf8_size_t) (sizeof (ecma_ascii_string_t));
+  JERRY_ASSERT (new_size <= header_p->current_size);
+
+#if ENABLED (JERRY_MEM_STATS)
+  jmem_stats_free_string_bytes (header_p->current_size - new_size);
+#endif /* ENABLED (JERRY_MEM_STATS) */
+
+  header_p = jmem_heap_realloc_block (header_p, header_p->current_size, new_size);
+  header_p->current_size = new_size;
+  builder_p->header_p = header_p;
+} /* ecma_stringbuilder_revert */
+
+/**
  * Append an ecma_string_t to a string builder
  */
 void
@@ -2624,6 +2674,17 @@ ecma_stringbuilder_append_char (ecma_stringbuilder_t *builder_p, /**< string bui
 } /* ecma_stringbuilder_append_char */
 
 /**
+ * Append a single byte to a string builder
+ */
+void
+ecma_stringbuilder_append_byte (ecma_stringbuilder_t *builder_p, /**< string builder */
+                                const lit_utf8_byte_t byte) /**< byte */
+{
+  lit_utf8_byte_t *dest_p = ecma_stringbuilder_grow (builder_p, 1);
+  *dest_p = byte;
+} /* ecma_stringbuilder_append_byte */
+
+/**
  * Finalize a string builder, returning the created string, and releasing the underlying buffer.
  *
  * Note:
@@ -2675,7 +2736,9 @@ ecma_stringbuilder_finalize (ecma_stringbuilder_t *builder_p) /**< string builde
 
   const size_t utf8_string_size = string_size + container_size;
   header_p = jmem_heap_realloc_block (header_p, header_p->current_size, utf8_string_size);
-  memmove (((lit_utf8_byte_t *) header_p + container_size), string_begin_p, string_size);
+  memmove (((lit_utf8_byte_t *) header_p + container_size),
+           ECMA_STRINGBUILDER_STRING_PTR (header_p),
+           string_size);
 
 #if ENABLED (JERRY_MEM_STATS)
   jmem_stats_allocate_string_bytes (container_size - sizeof (ecma_ascii_string_t));

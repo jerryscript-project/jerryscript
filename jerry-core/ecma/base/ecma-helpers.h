@@ -297,6 +297,17 @@ lit_string_hash_t ecma_string_hash (const ecma_string_t *string_p);
 ecma_string_t *ecma_string_substr (const ecma_string_t *string_p, ecma_length_t start_pos, ecma_length_t end_pos);
 ecma_string_t *ecma_string_trim (const ecma_string_t *string_p);
 
+ecma_stringbuilder_t ecma_stringbuilder_create (void);
+ecma_stringbuilder_t ecma_stringbuilder_create_from (ecma_string_t *string_p);
+void ecma_stringbuilder_append (ecma_stringbuilder_t *builder_p, const ecma_string_t *string_p);
+void ecma_stringbuilder_append_magic (ecma_stringbuilder_t *builder_p, const lit_magic_string_id_t id);
+void ecma_stringbuilder_append_raw (ecma_stringbuilder_t *builder_p,
+                                    const lit_utf8_byte_t *data_p,
+                                    const lit_utf8_size_t data_size);
+void ecma_stringbuilder_append_char (ecma_stringbuilder_t *builder_p, const ecma_char_t c);
+ecma_string_t *ecma_stringbuilder_finalize (ecma_stringbuilder_t *builder_p);
+void ecma_stringbuilder_destroy (ecma_stringbuilder_t *builder_p);
+
 /* ecma-helpers-number.c */
 ecma_number_t ecma_number_make_nan (void);
 ecma_number_t ecma_number_make_infinity (bool sign);

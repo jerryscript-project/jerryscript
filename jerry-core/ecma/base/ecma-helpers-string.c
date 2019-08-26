@@ -54,6 +54,8 @@ JERRY_STATIC_ASSERT ((int) ECMA_DIRECT_STRING_UINT == (int) ECMA_STRING_CONTAINE
 JERRY_STATIC_ASSERT (ECMA_PROPERTY_NAME_TYPE_SHIFT > ECMA_VALUE_SHIFT,
                      ecma_property_name_type_shift_must_be_greater_than_ecma_value_shift);
 
+JERRY_STATIC_ASSERT (sizeof (ecma_stringbuilder_header_t) <= sizeof (ecma_string_t),
+                     ecma_stringbuilder_header_must_not_be_larger_than_ecma_string);
 
 /**
  * Convert a string to an unsigned 32 bit value if possible
@@ -273,17 +275,18 @@ ecma_prop_name_is_map_key (ecma_string_t *string_p) /**< ecma-string */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) || ENABLED (JERRY_ES2015_BUILTIN_SET) */
 
 /**
- * Allocate new ecma-string and fill it with characters from the utf8 string
+ * Checks whether a string has a special representation, that is, the string is either a magic string,
+ * an external magic string, or an uint32 number, and creates an ecma string using the special representation,
+ * if available.
  *
- * @return pointer to ecma-string descriptor
+ * @return pointer to ecma string with the special representation
+ *         NULL, if there is no special representation for the string
  */
-ecma_string_t *
-ecma_new_ecma_string_from_utf8 (const lit_utf8_byte_t *string_p, /**< utf-8 string */
-                                lit_utf8_size_t string_size) /**< string size */
+static ecma_string_t *
+ecma_find_special_string (const lit_utf8_byte_t *string_p, /**< utf8 string */
+                          lit_utf8_size_t string_size) /**< string size */
 {
   JERRY_ASSERT (string_p != NULL || string_size == 0);
-  JERRY_ASSERT (lit_is_valid_cesu8_string (string_p, string_size));
-
   lit_magic_string_id_t magic_string_id = lit_is_utf8_string_magic (string_p, string_size);
 
   if (magic_string_id != LIT_MAGIC_STRING__COUNT)
@@ -313,7 +316,27 @@ ecma_new_ecma_string_from_utf8 (const lit_utf8_byte_t *string_p, /**< utf-8 stri
     }
   }
 
-  ecma_string_t *string_desc_p;
+  return NULL;
+} /* ecma_find_special_string */
+
+/**
+ * Allocate new ecma-string and fill it with characters from the utf8 string
+ *
+ * @return pointer to ecma-string descriptor
+ */
+ecma_string_t *
+ecma_new_ecma_string_from_utf8 (const lit_utf8_byte_t *string_p, /**< utf-8 string */
+                                lit_utf8_size_t string_size) /**< string size */
+{
+  JERRY_ASSERT (string_p != NULL || string_size == 0);
+  JERRY_ASSERT (lit_is_valid_cesu8_string (string_p, string_size));
+
+  ecma_string_t *string_desc_p = ecma_find_special_string (string_p, string_size);
+  if (string_desc_p != NULL)
+  {
+    return string_desc_p;
+  }
+
   lit_utf8_byte_t *data_p;
 
   if (JERRY_LIKELY (string_size <= UINT16_MAX))
@@ -2481,6 +2504,209 @@ ecma_string_trim (const ecma_string_t *string_p) /**< pointer to an ecma string 
 
   return ret_string_p;
 } /* ecma_string_trim */
+
+/**
+ * Create an empty string builder
+ *
+ * @return new string builder
+ */
+ecma_stringbuilder_t
+ecma_stringbuilder_create (void)
+{
+  const lit_utf8_size_t initial_size = sizeof (ecma_string_t);
+  ecma_stringbuilder_header_t *header_p = (ecma_stringbuilder_header_t *) jmem_heap_alloc_block (initial_size);
+  header_p->current_size = initial_size;
+#if ENABLED (JERRY_MEM_STATS)
+  jmem_stats_allocate_string_bytes (initial_size);
+#endif /* ENABLED (JERRY_MEM_STATS) */
+
+  ecma_stringbuilder_t ret = {.header_p = header_p};
+  return ret;
+} /* ecma_stringbuilder_create */
+
+/**
+ * Create a string builder from an ecma string
+ *
+ * @return new string builder
+ */
+ecma_stringbuilder_t
+ecma_stringbuilder_create_from (ecma_string_t *string_p) /**< ecma string */
+{
+  const lit_utf8_size_t string_size = ecma_string_get_size (string_p);
+  const lit_utf8_size_t initial_size = string_size + (lit_utf8_size_t) sizeof (ecma_string_t);
+
+  ecma_stringbuilder_header_t *header_p = (ecma_stringbuilder_header_t *) jmem_heap_alloc_block (initial_size);
+  header_p->current_size = initial_size;
+#if ENABLED (JERRY_MEM_STATS)
+  jmem_stats_allocate_string_bytes (initial_size);
+#endif /* ENABLED (JERRY_MEM_STATS) */
+
+  size_t copied_size = ecma_string_copy_to_cesu8_buffer (string_p,
+                                                         ECMA_STRINGBUILDER_STRING_PTR (header_p),
+                                                         string_size);
+  JERRY_ASSERT (copied_size == string_size);
+
+  ecma_stringbuilder_t ret = {.header_p = header_p};
+  return ret;
+} /* ecma_stringbuilder_create_from */
+
+/**
+ * Grow the underlying buffer of a string builder
+ *
+ * @return pointer to the end of the data in the underlying buffer
+ */
+static lit_utf8_byte_t *
+ecma_stringbuilder_grow (ecma_stringbuilder_t *builder_p, /**< string builder */
+                         lit_utf8_size_t required_size) /**< required size */
+{
+  ecma_stringbuilder_header_t *header_p = builder_p->header_p;
+  JERRY_ASSERT (header_p != NULL);
+
+  const lit_utf8_size_t new_size = header_p->current_size + required_size;
+  header_p = jmem_heap_realloc_block (header_p, header_p->current_size, new_size);
+  header_p->current_size = new_size;
+  builder_p->header_p = header_p;
+
+#if ENABLED (JERRY_MEM_STATS)
+  jmem_stats_allocate_string_bytes (required_size);
+#endif /* ENABLED (JERRY_MEM_STATS) */
+
+  return ((lit_utf8_byte_t *)  header_p) + header_p->current_size - required_size;
+} /* ecma_stringbuilder_grow */
+
+/**
+ * Append an ecma_string_t to a string builder
+ */
+void
+ecma_stringbuilder_append (ecma_stringbuilder_t *builder_p, /**< string builder */
+                           const ecma_string_t *string_p) /**< ecma string */
+{
+  const lit_utf8_size_t string_size = ecma_string_get_size (string_p);
+  lit_utf8_byte_t *dest_p = ecma_stringbuilder_grow (builder_p, string_size);
+
+  size_t copied_size = ecma_string_copy_to_cesu8_buffer (string_p,
+                                                         dest_p,
+                                                         string_size);
+  JERRY_ASSERT (copied_size == string_size);
+} /* ecma_stringbuilder_append */
+
+/**
+ * Append a magic string to a string builder
+ */
+void
+ecma_stringbuilder_append_magic (ecma_stringbuilder_t *builder_p, /**< string builder */
+                                 const lit_magic_string_id_t id) /**< magic string id */
+{
+  const lit_utf8_size_t string_size = lit_get_magic_string_size (id);
+  lit_utf8_byte_t *dest_p = ecma_stringbuilder_grow (builder_p, string_size);
+
+  const lit_utf8_byte_t *string_data_p = lit_get_magic_string_utf8 (id);
+  memcpy (dest_p, string_data_p, string_size);
+} /* ecma_stringbuilder_append_magic */
+
+/**
+ * Append raw string data to a string builder
+ */
+void
+ecma_stringbuilder_append_raw (ecma_stringbuilder_t *builder_p, /**< string builder */
+                               const lit_utf8_byte_t *data_p, /**< pointer to data */
+                               const lit_utf8_size_t data_size) /**< size of the data */
+{
+  lit_utf8_byte_t *dest_p = ecma_stringbuilder_grow (builder_p, data_size);
+  memcpy (dest_p, data_p, data_size);
+} /* ecma_stringbuilder_append_raw */
+
+/**
+ * Append an ecma_char_t to a string builder
+ */
+void
+ecma_stringbuilder_append_char (ecma_stringbuilder_t *builder_p, /**< string builder */
+                                const ecma_char_t c) /**< ecma char */
+{
+  const lit_utf8_size_t size = (lit_utf8_size_t) lit_char_get_utf8_length (c);
+  lit_utf8_byte_t *dest_p = ecma_stringbuilder_grow (builder_p, size);
+
+  lit_char_to_utf8_bytes (dest_p, c);
+} /* ecma_stringbuilder_append_char */
+
+/**
+ * Finalize a string builder, returning the created string, and releasing the underlying buffer.
+ *
+ * Note:
+ *      The builder should no longer be used.
+ *
+ * @return the created string
+ */
+ecma_string_t *
+ecma_stringbuilder_finalize (ecma_stringbuilder_t *builder_p) /**< string builder */
+{
+  ecma_stringbuilder_header_t *header_p = builder_p->header_p;
+  JERRY_ASSERT (header_p != NULL);
+
+  const lit_utf8_size_t string_size = ECMA_STRINGBUILDER_STRING_SIZE (header_p);
+  lit_utf8_byte_t *string_begin_p = ECMA_STRINGBUILDER_STRING_PTR (header_p);
+
+  ecma_string_t *string_p = ecma_find_special_string (string_begin_p, string_size);
+  if (JERRY_UNLIKELY (string_p != NULL))
+  {
+    ecma_stringbuilder_destroy (builder_p);
+    return string_p;
+  }
+
+#ifndef JERRY_NDEBUG
+  builder_p->header_p = NULL;
+#endif
+
+  string_p = (ecma_string_t *) header_p;
+  const lit_string_hash_t hash = lit_utf8_string_calc_hash (string_begin_p, string_size);
+  const lit_utf8_size_t length = lit_utf8_string_length (string_begin_p, string_size);
+
+  if (JERRY_LIKELY (string_size < UINT16_MAX))
+  {
+    string_p->refs_and_container = ECMA_STRING_CONTAINER_HEAP_UTF8_STRING | ECMA_STRING_REF_ONE;
+    string_p->u.utf8_string.size = (uint16_t) string_size;
+    string_p->u.utf8_string.length = (uint16_t) length;
+    string_p->hash = hash;
+
+    return string_p;
+  }
+
+  const size_t long_string_size = string_size + sizeof (ecma_long_string_t);
+  header_p = jmem_heap_realloc_block (header_p, header_p->current_size, long_string_size);
+  memmove (((ecma_long_string_t *) header_p) + 1, string_begin_p, string_size);
+
+#if ENABLED (JERRY_MEM_STATS)
+  jmem_stats_allocate_string_bytes (sizeof (ecma_long_string_t) - sizeof (ecma_string_t));
+#endif /* ENABLED (JERRY_MEM_STATS) */
+
+  string_p->refs_and_container = ECMA_STRING_CONTAINER_HEAP_LONG_UTF8_STRING | ECMA_STRING_REF_ONE;
+  string_p->u.long_utf8_string_size = string_size;
+  string_p->hash = hash;
+
+  ecma_long_string_t *long_string_p = (ecma_long_string_t *) string_p;
+  long_string_p->long_utf8_string_length = length;
+
+  return string_p;
+} /* ecma_stringbuilder_finalize */
+
+/**
+ * Destroy a string builder that is no longer needed without creating a string from the contents.
+ */
+void
+ecma_stringbuilder_destroy (ecma_stringbuilder_t *builder_p) /**< string builder */
+{
+  JERRY_ASSERT (builder_p->header_p != NULL);
+  const lit_utf8_size_t size = builder_p->header_p->current_size;
+  jmem_heap_free_block (builder_p->header_p, size);
+
+#ifndef JERRY_NDEBUG
+  builder_p->header_p = NULL;
+#endif
+
+#if ENABLED (JERRY_MEM_STATS)
+  jmem_stats_free_string_bytes (size);
+#endif /* ENABLED (JERRY_MEM_STATS) */
+} /* ecma_stringbuilder_destroy */
 
 /**
  * @}

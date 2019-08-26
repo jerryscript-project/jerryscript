@@ -516,8 +516,6 @@ jmem_heap_realloc_block (void *ptr, /**< memory region to reallocate */
     return block_p;
   }
 
-  jmem_heap_free_t *prev_p = jmem_heap_find_prev (block_p);
-
   if (aligned_new_size < aligned_old_size)
   {
     JMEM_VALGRIND_NOACCESS_SPACE (block_p, old_size);
@@ -525,7 +523,7 @@ jmem_heap_realloc_block (void *ptr, /**< memory region to reallocate */
     JMEM_HEAP_STAT_FREE (old_size);
     JMEM_HEAP_STAT_ALLOC (new_size);
     jmem_heap_insert_block ((jmem_heap_free_t *)((uint8_t *) block_p + aligned_new_size),
-                            prev_p,
+                            jmem_heap_find_prev (block_p),
                             aligned_old_size - aligned_new_size);
 
     JERRY_CONTEXT (jmem_heap_allocated_size) -= (aligned_old_size - aligned_new_size);
@@ -547,6 +545,7 @@ jmem_heap_realloc_block (void *ptr, /**< memory region to reallocate */
     ecma_free_unused_memory (JMEM_PRESSURE_LOW);
   }
 
+  jmem_heap_free_t *prev_p = jmem_heap_find_prev (block_p);
   JMEM_VALGRIND_DEFINED_SPACE (prev_p, sizeof (jmem_heap_free_t));
   jmem_heap_free_t * const next_p = JMEM_HEAP_GET_ADDR_FROM_OFFSET (prev_p->next_offset);
   JMEM_VALGRIND_DEFINED_SPACE (next_p, sizeof (jmem_heap_free_t));
@@ -619,8 +618,15 @@ jmem_heap_realloc_block (void *ptr, /**< memory region to reallocate */
     /* jmem_heap_alloc_block_internal will adjust the allocated_size, but insert_block will not,
        so we reduce it here first, so that the limit calculation remains consistent. */
     JERRY_CONTEXT (jmem_heap_allocated_size) -= aligned_old_size;
-
     ret_block_p = jmem_heap_alloc_block_internal (new_size);
+
+    /* jmem_heap_alloc_block_internal may trigger garbage collection, which can create new free blocks
+     * in the heap structure, so we need to look up the previous block again. */
+    if (JERRY_UNLIKELY (JERRY_CONTEXT (ecma_gc_new_objects) == 0))
+    {
+      prev_p = jmem_heap_find_prev (block_p);
+    }
+
     memcpy (ret_block_p, block_p, old_size);
     jmem_heap_insert_block (block_p, prev_p, aligned_old_size);
   }

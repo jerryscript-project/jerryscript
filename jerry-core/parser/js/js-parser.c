@@ -1863,6 +1863,8 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   page_p = context_p->byte_code.first_p;
   offset = 0;
   real_offset = 0;
+  uint8_t last_register_index = (uint8_t) JERRY_MIN (context_p->register_count,
+                                                     (PARSER_MAXIMUM_NUMBER_OF_REGISTERS - 1));
 
   while (page_p != last_page_p || offset < last_position)
   {
@@ -1943,11 +1945,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 #endif /* ENABLED (JERRY_LINE_INFO) */
     }
 
-    if (flags & CBC_HAS_BRANCH_ARG)
-    {
-      *branch_mark_p |= CBC_HIGHEST_BIT_MASK;
-    }
-
     /* Only literal and call arguments can be combined. */
     JERRY_ASSERT (!(flags & CBC_HAS_BRANCH_ARG)
                    || !(flags & (CBC_HAS_BYTE_ARG | CBC_HAS_LITERAL_ARG)));
@@ -1956,6 +1953,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     {
       uint8_t first_byte = page_p->bytes[offset];
 
+      uint8_t *opcode_pos_p = dst_p - 1;
       *dst_p++ = first_byte;
       real_offset++;
       PARSER_NEXT_BYTE_UPDATE (page_p, offset, real_offset);
@@ -1980,6 +1978,11 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       }
       else
       {
+        if (opcode == CBC_ASSIGN_SET_IDENT && JERRY_LIKELY (first_byte < last_register_index))
+        {
+          *opcode_pos_p = CBC_MOV_IDENT;
+        }
+
         break;
       }
     }
@@ -1990,10 +1993,12 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       *dst_p++ = page_p->bytes[offset];
       real_offset++;
       PARSER_NEXT_BYTE_UPDATE (page_p, offset, real_offset);
+      continue;
     }
 
     if (flags & CBC_HAS_BRANCH_ARG)
     {
+      *branch_mark_p |= CBC_HIGHEST_BIT_MASK;
       bool prefix_zero = true;
 
       /* The leading zeroes are dropped from the stream. */
@@ -2020,6 +2025,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       *dst_p++ = page_p->bytes[offset];
       real_offset++;
       PARSER_NEXT_BYTE_UPDATE (page_p, offset, real_offset);
+      continue;
     }
   }
 

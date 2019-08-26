@@ -2519,12 +2519,14 @@ jerry_get_prototype (const jerry_value_t obj_val) /**< object value */
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
   }
 
-  ecma_object_t *proto_obj_p = ecma_get_object_prototype (ecma_get_object_from_value (obj_val));
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_val);
 
-  if (proto_obj_p == NULL)
+  if (obj_p->u2.prototype_cp == JMEM_CP_NULL)
   {
     return ECMA_VALUE_NULL;
   }
+
+  ecma_object_t *proto_obj_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, obj_p->u2.prototype_cp);
 
   return ecma_make_object_value (proto_obj_p);
 } /* jerry_get_prototype */
@@ -2547,15 +2549,15 @@ jerry_set_prototype (const jerry_value_t obj_val, /**< object value */
   {
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
   }
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_val);
 
   if (ecma_is_value_null (proto_obj_val))
   {
-    ECMA_SET_POINTER (ecma_get_object_from_value (obj_val)->prototype_or_outer_reference_cp, NULL);
+    obj_p->u2.prototype_cp = JMEM_CP_NULL;
   }
   else
   {
-    ECMA_SET_POINTER (ecma_get_object_from_value (obj_val)->prototype_or_outer_reference_cp,
-                      ecma_get_object_from_value (proto_obj_val));
+    ECMA_SET_NON_NULL_POINTER (obj_p->u2.prototype_cp, ecma_get_object_from_value (proto_obj_val));
   }
 
   return ECMA_VALUE_TRUE;
@@ -2575,15 +2577,19 @@ jerry_objects_foreach (jerry_objects_foreach_t foreach_p, /**< function pointer 
 
   JERRY_ASSERT (foreach_p != NULL);
 
-  for (ecma_object_t *iter_p = ECMA_GET_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_gc_objects_cp));
-       iter_p != NULL;
-       iter_p = ECMA_GET_POINTER (ecma_object_t, iter_p->gc_next_cp))
+  jmem_cpointer_t iter_cp = JERRY_CONTEXT (ecma_gc_objects_cp);
+
+  while (iter_cp != JMEM_CP_NULL)
   {
+    ecma_object_t *iter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, iter_cp);
+
     if (!ecma_is_lexical_environment (iter_p)
         && !foreach_p (ecma_make_object_value (iter_p), user_data_p))
     {
       return true;
     }
+
+    iter_cp = iter_p->gc_next_cp;
   }
 
   return false;
@@ -2609,10 +2615,13 @@ jerry_objects_foreach_by_native_info (const jerry_object_native_info_t *native_i
 
   ecma_native_pointer_t *native_pointer_p;
 
-  for (ecma_object_t *iter_p = ECMA_GET_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_gc_objects_cp));
-       iter_p != NULL;
-       iter_p = ECMA_GET_POINTER (ecma_object_t, iter_p->gc_next_cp))
+
+  jmem_cpointer_t iter_cp = JERRY_CONTEXT (ecma_gc_objects_cp);
+
+  while (iter_cp != JMEM_CP_NULL)
   {
+    ecma_object_t *iter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, iter_cp);
+
     if (!ecma_is_lexical_environment (iter_p))
     {
       native_pointer_p = ecma_get_native_pointer_value (iter_p, (void *) native_info_p);
@@ -2622,6 +2631,8 @@ jerry_objects_foreach_by_native_info (const jerry_object_native_info_t *native_i
         return true;
       }
     }
+
+    iter_cp = iter_p->gc_next_cp;
   }
 
   return false;

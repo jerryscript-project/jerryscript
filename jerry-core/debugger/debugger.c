@@ -250,7 +250,7 @@ jerry_debugger_send_scope_chain (void)
     }
     else if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND)
     {
-      if (ecma_get_lex_env_outer_reference (lex_env_p) == NULL)
+      if (lex_env_p->u2.outer_reference_cp == JMEM_CP_NULL)
       {
         message_type_p->string[buffer_pos++] = JERRY_DEBUGGER_SCOPE_GLOBAL;
         break;
@@ -261,7 +261,8 @@ jerry_debugger_send_scope_chain (void)
       }
     }
 
-    lex_env_p = ecma_get_lex_env_outer_reference (lex_env_p);
+    JERRY_ASSERT (lex_env_p->u2.outer_reference_cp != JMEM_CP_NULL);
+    lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
   }
 
   message_type_p->type = JERRY_DEBUGGER_SCOPE_CHAIN_END;
@@ -430,13 +431,13 @@ jerry_debugger_send_scope_variables (const uint8_t *recv_buffer_p) /**< pointer 
 
   while (chain_index != 0)
   {
-    lex_env_p = ecma_get_lex_env_outer_reference (lex_env_p);
-
-    if (JERRY_UNLIKELY (lex_env_p == NULL))
+    if (JERRY_UNLIKELY (lex_env_p->u2.outer_reference_cp == JMEM_CP_NULL))
     {
       jerry_debugger_send_type (JERRY_DEBUGGER_SCOPE_VARIABLES_END);
       return;
     }
+
+    lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
 
     if ((ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND)
         || (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE))
@@ -445,17 +446,17 @@ jerry_debugger_send_scope_variables (const uint8_t *recv_buffer_p) /**< pointer 
     }
   }
 
-  ecma_property_header_t *prop_iter_p;
+  jmem_cpointer_t prop_iter_cp;
 
   if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
   {
-    prop_iter_p = ecma_get_property_list (lex_env_p);
+    prop_iter_cp = lex_env_p->u1.property_list_cp;
   }
   else
   {
     JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
     ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
-    prop_iter_p =  ecma_get_property_list (binding_obj_p);
+    prop_iter_cp = binding_obj_p->u1.property_list_cp;
   }
 
   JERRY_DEBUGGER_SEND_BUFFER_AS (jerry_debugger_send_string_t, message_string_p);
@@ -463,8 +464,9 @@ jerry_debugger_send_scope_variables (const uint8_t *recv_buffer_p) /**< pointer 
 
   size_t buffer_pos = 0;
 
-  while (prop_iter_p != NULL)
+  while (prop_iter_cp != JMEM_CP_NULL)
   {
+    ecma_property_header_t *prop_iter_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t, prop_iter_cp);
     JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
 
     ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) prop_iter_p;
@@ -513,8 +515,7 @@ jerry_debugger_send_scope_variables (const uint8_t *recv_buffer_p) /**< pointer 
       }
     }
 
-    prop_iter_p = ECMA_GET_POINTER (ecma_property_header_t,
-                                    prop_iter_p->next_property_cp);
+    prop_iter_cp = prop_iter_p->next_property_cp;
   }
 
   message_string_p->type = JERRY_DEBUGGER_SCOPE_VARIABLES_END;
@@ -1409,10 +1410,16 @@ jerry_debugger_exception_object_to_string (ecma_value_t exception_obj_value) /**
 {
   ecma_object_t *object_p = ecma_get_object_from_value (exception_obj_value);
 
-  ecma_object_t *prototype_p = ecma_get_object_prototype (object_p);
+  jmem_cpointer_t prototype_cp = object_p->u2.prototype_cp;
 
-  if (prototype_p == NULL
-      || ecma_get_object_type (prototype_p) != ECMA_OBJECT_TYPE_GENERAL
+  if (prototype_cp == JMEM_CP_NULL)
+  {
+    return NULL;
+  }
+
+  ecma_object_t *prototype_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, prototype_cp);
+
+  if (ecma_get_object_type (prototype_p) != ECMA_OBJECT_TYPE_GENERAL
       || !ecma_get_object_is_builtin (prototype_p))
   {
     return NULL;

@@ -448,10 +448,15 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
         /* a. */
         ecma_property_value_t *value_p = ext_property_ref.property_ref.value_p;
 
+        ecma_getter_setter_pointers_t *get_set_pair_p = ecma_get_named_accessor_property (value_p);
+        jmem_cpointer_t prop_desc_getter_cp, prop_desc_setter_cp;
+        ECMA_SET_POINTER (prop_desc_getter_cp, property_desc_p->get_p);
+        ECMA_SET_POINTER (prop_desc_setter_cp, property_desc_p->set_p);
+
         if ((property_desc_p->is_get_defined
-             && property_desc_p->get_p != ecma_get_named_accessor_property_getter (value_p))
+             && prop_desc_getter_cp != get_set_pair_p->getter_cp)
             || (property_desc_p->is_set_defined
-                && property_desc_p->set_p != ecma_get_named_accessor_property_setter (value_p)))
+                && prop_desc_setter_cp != get_set_pair_p->setter_cp))
         {
           /* i., ii. */
           return ecma_reject (is_throw);
@@ -478,12 +483,12 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
 #if ENABLED (JERRY_CPOINTER_32_BIT)
       ecma_getter_setter_pointers_t *getter_setter_pair_p;
       getter_setter_pair_p = jmem_pools_alloc (sizeof (ecma_getter_setter_pointers_t));
-      getter_setter_pair_p->getter_p = JMEM_CP_NULL;
-      getter_setter_pair_p->setter_p = JMEM_CP_NULL;
-      ECMA_SET_POINTER (value_p->getter_setter_pair_cp, getter_setter_pair_p);
+      getter_setter_pair_p->getter_cp = JMEM_CP_NULL;
+      getter_setter_pair_p->setter_cp = JMEM_CP_NULL;
+      ECMA_SET_NON_NULL_POINTER (value_p->getter_setter_pair_cp, getter_setter_pair_p);
 #else /* !ENABLED (JERRY_CPOINTER_32_BIT) */
-      value_p->getter_setter_pair.getter_p = JMEM_CP_NULL;
-      value_p->getter_setter_pair.setter_p = JMEM_CP_NULL;
+      value_p->getter_setter_pair.getter_cp = JMEM_CP_NULL;
+      value_p->getter_setter_pair.setter_cp = JMEM_CP_NULL;
 #endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
     }
     else
@@ -491,8 +496,8 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
       JERRY_ASSERT (current_property_type == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
 #if ENABLED (JERRY_CPOINTER_32_BIT)
       ecma_getter_setter_pointers_t *getter_setter_pair_p;
-      getter_setter_pair_p = ECMA_GET_POINTER (ecma_getter_setter_pointers_t,
-                                               value_p->getter_setter_pair_cp);
+      getter_setter_pair_p = ECMA_GET_NON_NULL_POINTER (ecma_getter_setter_pointers_t,
+                                                        value_p->getter_setter_pair_cp);
       jmem_pools_free (getter_setter_pair_p, sizeof (ecma_getter_setter_pointers_t));
 #endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
       value_p->value = ECMA_VALUE_UNDEFINED;

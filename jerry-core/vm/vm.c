@@ -294,12 +294,12 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
 
     while (chain_index != 0)
     {
-      lex_env_p = ecma_get_lex_env_outer_reference (lex_env_p);
-
-      if (JERRY_UNLIKELY (lex_env_p == NULL))
+      if (JERRY_UNLIKELY (lex_env_p->u2.outer_reference_cp == JMEM_CP_NULL))
       {
         return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid scope chain index for eval"));
       }
+
+      lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
 
       if ((ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND)
           || (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE))
@@ -1387,7 +1387,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           ecma_object_t *super_class_p = ecma_get_lex_env_binding_object (frame_ctx_p->lex_env_p);
 
-          if (ecma_get_object_prototype (super_class_p))
+          if (super_class_p->u2.prototype_cp != JMEM_CP_NULL)
           {
             ecma_value_t super_prototype_value = ecma_op_object_get_by_magic_id (super_class_p,
                                                                                  LIT_MAGIC_STRING_PROTOTYPE);
@@ -1403,8 +1403,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             {
               ecma_object_t *super_prototype_class_p = ecma_get_object_from_value (super_prototype_value);
 
-              ECMA_SET_POINTER (child_prototype_class_p->prototype_or_outer_reference_cp, super_prototype_class_p);
-              ECMA_SET_POINTER (child_class_p->prototype_or_outer_reference_cp, super_class_p);
+              ECMA_SET_NON_NULL_POINTER (child_prototype_class_p->u2.prototype_cp, super_prototype_class_p);
+              ECMA_SET_NON_NULL_POINTER (child_class_p->u2.prototype_cp, super_class_p);
 
             }
             ecma_free_value (super_prototype_value);
@@ -3063,7 +3063,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           if (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_CATCH)
           {
             ecma_object_t *lex_env_p = frame_ctx_p->lex_env_p;
-            frame_ctx_p->lex_env_p = ecma_get_lex_env_outer_reference (lex_env_p);
+            JERRY_ASSERT (lex_env_p->u2.outer_reference_cp != JMEM_CP_NULL);
+            frame_ctx_p->lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
             ecma_deref_object (lex_env_p);
           }
 

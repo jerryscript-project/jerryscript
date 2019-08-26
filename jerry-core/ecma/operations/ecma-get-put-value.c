@@ -50,7 +50,7 @@ ecma_op_get_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
   JERRY_ASSERT (lex_env_p != NULL
                 && ecma_is_lexical_environment (lex_env_p));
 
-  while (lex_env_p != NULL)
+  while (true)
   {
     switch (ecma_get_lex_env_type (lex_env_p))
     {
@@ -89,7 +89,12 @@ ecma_op_get_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
       }
     }
 
-    lex_env_p = ecma_get_lex_env_outer_reference (lex_env_p);
+    if (lex_env_p->u2.outer_reference_cp == JMEM_CP_NULL)
+    {
+      break;
+    }
+
+    lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
   }
 
   *ref_base_lex_env_p = NULL;
@@ -147,10 +152,7 @@ ecma_op_get_value_object_base (ecma_value_t base_value, /**< base value */
 
   ecma_value_t ret_value = ECMA_VALUE_UNDEFINED;
 
-  /* Circular reference is possible in JavaScript and testing it is complicated. */
-  int max_depth = ECMA_PROPERTY_SEARCH_DEPTH_LIMIT;
-
-  do
+  while (true)
   {
     ecma_value_t value = ecma_op_object_find_own (base_value, object_p, property_name_p);
 
@@ -160,14 +162,13 @@ ecma_op_get_value_object_base (ecma_value_t base_value, /**< base value */
       break;
     }
 
-    if (--max_depth == 0)
+    if (object_p->u2.prototype_cp == JMEM_CP_NULL)
     {
       break;
     }
 
-    object_p = ecma_get_object_prototype (object_p);
+    object_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, object_p->u2.prototype_cp);
   }
-  while (object_p != NULL);
 
   ecma_free_value (object_base);
 
@@ -191,7 +192,7 @@ ecma_op_put_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
   JERRY_ASSERT (lex_env_p != NULL
                 && ecma_is_lexical_environment (lex_env_p));
 
-  while (lex_env_p != NULL)
+  while (true)
   {
     switch (ecma_get_lex_env_type (lex_env_p))
     {
@@ -245,7 +246,12 @@ ecma_op_put_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
       }
     }
 
-    lex_env_p = ecma_get_lex_env_outer_reference (lex_env_p);
+    if (lex_env_p->u2.outer_reference_cp == JMEM_CP_NULL)
+    {
+      break;
+    }
+
+    lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
   }
 
   if (is_strict)

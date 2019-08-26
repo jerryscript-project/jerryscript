@@ -276,7 +276,9 @@ ecma_builtin_is (ecma_object_t *obj_p, /**< pointer to an object */
 
   /* If a built-in object is not instantiated, its value is NULL,
      hence it cannot be equal to a valid object. */
-  return (obj_p == ECMA_GET_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_builtin_objects)[builtin_id]));
+  jmem_cpointer_t builtin_cp = JERRY_CONTEXT (ecma_builtin_objects)[builtin_id];
+
+  return (builtin_cp != JMEM_CP_NULL && (obj_p == ECMA_GET_NON_NULL_POINTER (ecma_object_t, builtin_cp)));
 } /* ecma_builtin_is */
 
 /**

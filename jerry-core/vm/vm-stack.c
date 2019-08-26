@@ -72,7 +72,8 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 #endif /* ENABLED (JERRY_ES2015_CLASS) */
     {
       ecma_object_t *lex_env_p = frame_ctx_p->lex_env_p;
-      frame_ctx_p->lex_env_p = ecma_get_lex_env_outer_reference (lex_env_p);
+      JERRY_ASSERT (lex_env_p->u2.outer_reference_cp != JMEM_CP_NULL);
+      frame_ctx_p->lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
       ecma_deref_object (lex_env_p);
 
       VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_WITH_CONTEXT_STACK_ALLOCATION);
@@ -244,7 +245,8 @@ vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
       else
       {
         ecma_object_t *lex_env_p = frame_ctx_p->lex_env_p;
-        frame_ctx_p->lex_env_p = ecma_get_lex_env_outer_reference (lex_env_p);
+        JERRY_ASSERT (lex_env_p->u2.outer_reference_cp != JMEM_CP_NULL);
+        frame_ctx_p->lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
         ecma_deref_object (lex_env_p);
 
         if (byte_code_p[0] == CBC_CONTEXT_END)

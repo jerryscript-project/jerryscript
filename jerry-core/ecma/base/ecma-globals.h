@@ -494,8 +494,8 @@ typedef struct
  */
 typedef struct
 {
-  jmem_cpointer_t getter_p; /**< pointer to getter object */
-  jmem_cpointer_t setter_p; /**< pointer to setter object */
+  jmem_cpointer_t getter_cp; /**< compressed pointer to getter object */
+  jmem_cpointer_t setter_cp; /**< compressed pointer to setter object */
 } ecma_getter_setter_pointers_t;
 
 /**
@@ -563,11 +563,6 @@ typedef struct
  */
 #define ECMA_PROPERTY_VALUE_PTR(property_p) \
   ((ecma_property_value_t *) ECMA_PROPERTY_VALUE_DATA_PTR (property_p))
-
-/**
- * Depth limit for property search (maximum prototype chain depth).
- */
-#define ECMA_PROPERTY_SEARCH_DEPTH_LIMIT 128
 
 /**
  * Property reference. It contains the value pointer
@@ -744,10 +739,19 @@ typedef struct
   jmem_cpointer_t gc_next_cp;
 
   /** compressed pointer to property list or bound object */
-  jmem_cpointer_t property_list_or_bound_object_cp;
+  union
+  {
+    jmem_cpointer_t property_list_cp; /**< compressed pointer to object's
+                                       *  or declerative lexical environments's property list */
+    jmem_cpointer_t bound_object_cp;  /**< compressed pointer to lexical environments's the bound object */
+  } u1;
 
   /** object prototype or outer reference */
-  jmem_cpointer_t prototype_or_outer_reference_cp;
+  union
+  {
+    jmem_cpointer_t prototype_cp; /**< compressed pointer to the object's prototype  */
+    jmem_cpointer_t outer_reference_cp; /**< compressed pointer to the lexical environments's outer reference  */
+  } u2;
 } ecma_object_t;
 
 /**

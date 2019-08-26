@@ -96,7 +96,7 @@ class DoctestExtractor(object):
         :param decl: the dictionary of the declaration parameters.
         :param code: the list of lines of the doctest.
         """
-        outname = os.path.join(self._outdir, decl['name'])
+        outname = os.path.join(self._outdir, decl['name']).replace('\\', '/')
         action = decl['test']
         if self._dry:
             print('%s %s' % (action, outname))

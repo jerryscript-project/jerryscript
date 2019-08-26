@@ -14,17 +14,21 @@
 
 cmake_minimum_required (VERSION 2.8.12)
 project (unit-doc C)
+find_package(PythonInterp REQUIRED)
 
 set(GEN_DOCTEST "${CMAKE_SOURCE_DIR}/tools/gen-doctest.py")
 file(GLOB DOC_FILES "${CMAKE_SOURCE_DIR}/docs/*.md")
 
-set(COMPILE_FLAGS_DOCTEST "-Wno-unused-parameter -Wno-unused-function -Wno-unused-variable")
+if(NOT (${CMAKE_C_COMPILER_ID} STREQUAL MSVC))
+  set(COMPILE_FLAGS_DOCTEST "-Wno-unused-parameter -Wno-unused-function -Wno-unused-variable")
+endif()
+
 
 # Dry run of the doctest generator: analyze MarkDown files and get the list of
 # file names that will be generated. This allows the definition of proper
 # dependencies between the MarkDown files and the generated sources.
 execute_process(
-  COMMAND ${GEN_DOCTEST} --dry -d ${CMAKE_CURRENT_BINARY_DIR} ${DOC_FILES}
+  COMMAND ${Python_EXECUTABLE} ${GEN_DOCTEST} --dry -d ${CMAKE_CURRENT_BINARY_DIR} ${DOC_FILES}
   OUTPUT_VARIABLE DOCTEST_OUTPUT
   RESULT_VARIABLE GEN_DOCTEST_RESULT
 )

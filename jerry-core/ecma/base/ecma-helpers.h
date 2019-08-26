@@ -296,6 +296,8 @@ lit_magic_string_id_t ecma_get_string_magic (const ecma_string_t *string_p);
 
 lit_string_hash_t ecma_string_hash (const ecma_string_t *string_p);
 ecma_string_t *ecma_string_substr (const ecma_string_t *string_p, ecma_length_t start_pos, ecma_length_t end_pos);
+void ecma_string_trim_helper (const lit_utf8_byte_t **utf8_str_p,
+                              lit_utf8_size_t *utf8_str_size);
 ecma_string_t *ecma_string_trim (const ecma_string_t *string_p);
 
 ecma_stringbuilder_t ecma_stringbuilder_create (void);

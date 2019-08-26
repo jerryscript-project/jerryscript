@@ -299,57 +299,25 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
     return ECMA_NUMBER_ZERO;
   }
 
-  const lit_utf8_byte_t *str_curr_p = str_p;
-  const lit_utf8_byte_t *str_end_p = str_p + str_size;
-  ecma_char_t code_unit;
+  ecma_string_trim_helper (&str_p, &str_size);
+  const lit_utf8_byte_t *end_p = str_p + (str_size - 1);
 
-  while (str_curr_p < str_end_p)
-  {
-    code_unit = lit_utf8_peek_next (str_curr_p);
-    if (lit_char_is_white_space (code_unit) || lit_char_is_line_terminator (code_unit))
-    {
-      lit_utf8_incr (&str_curr_p);
-    }
-    else
-    {
-      break;
-    }
-  }
-
-  const lit_utf8_byte_t *begin_p = str_curr_p;
-  str_curr_p = (lit_utf8_byte_t *) str_end_p;
-
-  while (str_curr_p > str_p)
-  {
-    code_unit = lit_utf8_peek_prev (str_curr_p);
-    if (lit_char_is_white_space (code_unit) || lit_char_is_line_terminator (code_unit))
-    {
-      lit_utf8_decr (&str_curr_p);
-    }
-    else
-    {
-      break;
-    }
-  }
-
-  const lit_utf8_byte_t *end_p = str_curr_p - 1;
-
-  if (begin_p > end_p)
+  if (str_size < 1)
   {
     return ECMA_NUMBER_ZERO;
   }
 
-  if ((end_p >= begin_p + 2)
-      && begin_p[0] == LIT_CHAR_0
-      && (begin_p[1] == LIT_CHAR_LOWERCASE_X
-          || begin_p[1] == LIT_CHAR_UPPERCASE_X))
+  if ((end_p >= str_p + 2)
+      && str_p[0] == LIT_CHAR_0
+      && (str_p[1] == LIT_CHAR_LOWERCASE_X
+          || str_p[1] == LIT_CHAR_UPPERCASE_X))
   {
     /* Hex literal handling */
-    begin_p += 2;
+    str_p += 2;
 
     ecma_number_t num = ECMA_NUMBER_ZERO;
 
-    for (const lit_utf8_byte_t * iter_p = begin_p;
+    for (const lit_utf8_byte_t * iter_p = str_p;
          iter_p <= end_p;
          iter_p++)
     {
@@ -383,18 +351,18 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
 
   bool sign = false; /* positive */
 
-  if (*begin_p == LIT_CHAR_PLUS)
+  if (*str_p == LIT_CHAR_PLUS)
   {
-    begin_p++;
+    str_p++;
   }
-  else if (*begin_p == LIT_CHAR_MINUS)
+  else if (*str_p == LIT_CHAR_MINUS)
   {
     sign = true; /* negative */
 
-    begin_p++;
+    str_p++;
   }
 
-  if (begin_p > end_p)
+  if (str_p > end_p)
   {
     return ecma_number_make_nan ();
   }
@@ -404,7 +372,7 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
 
   JERRY_ASSERT (strlen ((const char *) infinity_zt_str_p) == 8);
 
-  if ((end_p - begin_p) == (8 - 1) && memcmp (infinity_zt_str_p, begin_p, 8) == 0)
+  if ((end_p - str_p) == (8 - 1) && memcmp (infinity_zt_str_p, str_p, 8) == 0)
   {
     return ecma_number_make_infinity (sign);
   }
@@ -415,15 +383,15 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
   bool digit_seen = false;
 
   /* Parsing digits before dot (or before end of digits part if there is no dot in number) */
-  while (begin_p <= end_p)
+  while (str_p <= end_p)
   {
     int32_t digit_value;
 
-    if (*begin_p >= LIT_CHAR_0
-        && *begin_p <= LIT_CHAR_9)
+    if (*str_p >= LIT_CHAR_0
+        && *str_p <= LIT_CHAR_9)
     {
       digit_seen = true;
-      digit_value = (*begin_p - LIT_CHAR_0);
+      digit_value = (*str_p - LIT_CHAR_0);
     }
     else
     {
@@ -443,29 +411,29 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
       }
     }
 
-    begin_p++;
+    str_p++;
   }
 
-  if (begin_p <= end_p
-      && *begin_p == LIT_CHAR_DOT)
+  if (str_p <= end_p
+      && *str_p == LIT_CHAR_DOT)
   {
-    begin_p++;
+    str_p++;
 
-    if (!digit_seen && begin_p > end_p)
+    if (!digit_seen && str_p > end_p)
     {
       return ecma_number_make_nan ();
     }
 
     /* Parsing number's part that is placed after dot */
-    while (begin_p <= end_p)
+    while (str_p <= end_p)
     {
       int32_t digit_value;
 
-      if (*begin_p >= LIT_CHAR_0
-          && *begin_p <= LIT_CHAR_9)
+      if (*str_p >= LIT_CHAR_0
+          && *str_p <= LIT_CHAR_9)
       {
         digit_seen = true;
-        digit_value = (*begin_p - LIT_CHAR_0);
+        digit_value = (*str_p - LIT_CHAR_0);
       }
       else
       {
@@ -483,7 +451,7 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
         e--;
       }
 
-      begin_p++;
+      str_p++;
     }
   }
 
@@ -491,40 +459,40 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
   int32_t e_in_lit = 0;
   bool e_in_lit_sign = false;
 
-  if (begin_p <= end_p
-      && (*begin_p == LIT_CHAR_LOWERCASE_E
-          || *begin_p == LIT_CHAR_UPPERCASE_E))
+  if (str_p <= end_p
+      && (*str_p == LIT_CHAR_LOWERCASE_E
+          || *str_p == LIT_CHAR_UPPERCASE_E))
   {
-    begin_p++;
+    str_p++;
 
-    if (!digit_seen || begin_p > end_p)
+    if (!digit_seen || str_p > end_p)
     {
       return ecma_number_make_nan ();
     }
 
-    if (*begin_p == LIT_CHAR_PLUS)
+    if (*str_p == LIT_CHAR_PLUS)
     {
-      begin_p++;
+      str_p++;
     }
-    else if (*begin_p == LIT_CHAR_MINUS)
+    else if (*str_p == LIT_CHAR_MINUS)
     {
       e_in_lit_sign = true;
-      begin_p++;
+      str_p++;
     }
 
-    if (begin_p > end_p)
+    if (str_p > end_p)
     {
       return ecma_number_make_nan ();
     }
 
-    while (begin_p <= end_p)
+    while (str_p <= end_p)
     {
       int32_t digit_value;
 
-      if (*begin_p >= LIT_CHAR_0
-          && *begin_p <= LIT_CHAR_9)
+      if (*str_p >= LIT_CHAR_0
+          && *str_p <= LIT_CHAR_9)
       {
-        digit_value = (*begin_p - LIT_CHAR_0);
+        digit_value = (*str_p - LIT_CHAR_0);
       }
       else
       {
@@ -543,7 +511,7 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
         return sign ? -ECMA_NUMBER_ZERO : ECMA_NUMBER_ZERO;
       }
 
-      begin_p++;
+      str_p++;
     }
   }
 
@@ -569,12 +537,12 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
     e_sign = false;
   }
 
-  if (begin_p <= end_p)
+  if (str_p <= end_p)
   {
     return ecma_number_make_nan ();
   }
 
-  JERRY_ASSERT (begin_p == end_p + 1);
+  JERRY_ASSERT (str_p == end_p + 1);
 
   if (fraction_uint64 == 0)
   {

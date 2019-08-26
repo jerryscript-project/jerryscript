@@ -60,6 +60,9 @@ ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, ecma_strin
 ecma_value_t
 ecma_builtin_helper_def_prop (ecma_object_t *obj_p, ecma_string_t *index_p, ecma_value_t value,
                               uint32_t opts, bool is_throw);
+ecma_value_t
+ecma_builtin_helper_def_prop_by_index (ecma_object_t *obj_p, uint32_t index, ecma_value_t value,
+                                       uint32_t opts, bool is_throw);
 
 #if ENABLED (JERRY_BUILTIN_DATE)
 

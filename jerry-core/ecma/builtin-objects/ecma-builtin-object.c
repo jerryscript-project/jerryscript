@@ -24,6 +24,7 @@
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
 #include "jrt.h"
+#include "ecma-builtin-object.h"
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -122,7 +123,7 @@ ecma_builtin_object_dispatch_construct (const ecma_value_t *arguments_list_p, /*
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
-static ecma_value_t
+ecma_value_t
 ecma_builtin_object_object_get_prototype_of (ecma_value_t arg) /**< routine's argument */
 {
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
@@ -239,7 +240,7 @@ ecma_set_prototype_of (ecma_value_t o_value, /**< O */
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
-static ecma_value_t
+ecma_value_t
 ecma_builtin_object_object_set_prototype_of (ecma_value_t arg1, /**< routine's first argument */
                                              ecma_value_t arg2) /**< routine's second argument */
 {
@@ -434,7 +435,7 @@ ecma_builtin_object_object_freeze (ecma_object_t *obj_p) /**< routine's argument
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
-static ecma_value_t
+ecma_value_t
 ecma_builtin_object_object_prevent_extensions (ecma_object_t *obj_p) /**< routine's argument */
 {
   ecma_set_object_extensible (obj_p, false);
@@ -515,7 +516,7 @@ ecma_builtin_object_frozen_or_sealed_helper (ecma_object_t *obj_p, /**< routine'
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
-static ecma_value_t
+ecma_value_t
 ecma_builtin_object_object_is_extensible (ecma_object_t *obj_p) /**< routine's argument */
 {
   return ecma_make_boolean_value (ecma_get_object_extensible (obj_p));
@@ -545,7 +546,7 @@ ecma_builtin_object_object_keys (ecma_object_t *obj_p) /**< routine's argument *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
-static ecma_value_t
+ecma_value_t
 ecma_builtin_object_object_get_own_property_descriptor (ecma_object_t *obj_p, /**< routine's first argument */
                                                         ecma_string_t *name_str_p) /**< routine's second argument */
 {
@@ -721,7 +722,7 @@ ecma_builtin_object_object_create (ecma_value_t arg1, /**< routine's first argum
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
-static ecma_value_t
+ecma_value_t
 ecma_builtin_object_object_define_property (ecma_object_t *obj_p, /**< routine's first argument */
                                             ecma_string_t *name_str_p, /**< routine's second argument */
                                             ecma_value_t arg3) /**< routine's third argument */

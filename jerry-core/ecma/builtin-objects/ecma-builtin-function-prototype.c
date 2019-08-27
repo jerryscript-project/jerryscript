@@ -25,6 +25,7 @@
 #include "ecma-objects.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
+#include "ecma-builtin-function-prototype.h"
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -89,7 +90,7 @@ ecma_builtin_function_prototype_object_to_string (void)
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
-static ecma_value_t
+ecma_value_t
 ecma_builtin_function_prototype_object_apply (ecma_object_t *func_obj_p, /**< this argument object */
                                               ecma_value_t arg1, /**< first argument */
                                               ecma_value_t arg2) /**< second argument */

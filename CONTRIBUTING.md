@@ -92,7 +92,10 @@ commit_msg_filepath = sys.argv[1]
 with open(commit_msg_filepath, "r+") as f:
 	content = f.read()
 	f.seek(0, 0)
-	f.write("%s\n\nJerryScript-DCO-1.0-Signed-off-by: <Your Name> <Your Email>" % content)
+	if "Signed-off-by" not in content:
+		f.write("\n\nJerryScript-DCO-1.0-Signed-off-by: <Your Name> <Your Email>\n%s" % content)
+	else:
+		f.write(content)
 ```
 
 Please refer [Git Hooks](http://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks) for more information.

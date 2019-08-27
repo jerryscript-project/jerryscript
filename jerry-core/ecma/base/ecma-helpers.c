@@ -1275,17 +1275,9 @@ ecma_make_empty_property_descriptor (void)
 {
   ecma_property_descriptor_t prop_desc;
 
-  prop_desc.is_value_defined = false;
+  prop_desc.flags = 0;
   prop_desc.value = ECMA_VALUE_UNDEFINED;
-  prop_desc.is_writable_defined = false;
-  prop_desc.is_writable = false;
-  prop_desc.is_enumerable_defined = false;
-  prop_desc.is_enumerable = false;
-  prop_desc.is_configurable_defined = false;
-  prop_desc.is_configurable = false;
-  prop_desc.is_get_defined = false;
   prop_desc.get_p = NULL;
-  prop_desc.is_set_defined = false;
   prop_desc.set_p = NULL;
 
   return prop_desc;
@@ -1298,18 +1290,18 @@ ecma_make_empty_property_descriptor (void)
 void
 ecma_free_property_descriptor (ecma_property_descriptor_t *prop_desc_p) /**< property descriptor */
 {
-  if (prop_desc_p->is_value_defined)
+  if (prop_desc_p->flags & ECMA_PROP_IS_VALUE_DEFINED)
   {
     ecma_free_value (prop_desc_p->value);
   }
 
-  if (prop_desc_p->is_get_defined
+  if ((prop_desc_p->flags & ECMA_PROP_IS_GET_DEFINED)
       && prop_desc_p->get_p != NULL)
   {
     ecma_deref_object (prop_desc_p->get_p);
   }
 
-  if (prop_desc_p->is_set_defined
+  if ((prop_desc_p->flags & ECMA_PROP_IS_SET_DEFINED)
       && prop_desc_p->set_p != NULL)
   {
     ecma_deref_object (prop_desc_p->set_p);

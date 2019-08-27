@@ -54,7 +54,7 @@ ecma_op_array_object_set_length (ecma_object_t *object_p, ecma_value_t new_value
 
 ecma_value_t
 ecma_op_array_object_define_own_property (ecma_object_t *object_p, ecma_string_t *property_name_p,
-                                          const ecma_property_descriptor_t *property_desc_p, bool is_throw);
+                                          const ecma_property_descriptor_t *property_desc_p);
 
 void
 ecma_op_array_list_lazy_property_names (ecma_object_t *obj_p, bool separate_enumerable,

@@ -804,12 +804,10 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t arg1, /**< start */
     if (ecma_is_value_found (get_value))
     {
       /* 10.c.ii */
-      /* This will always be a simple value since 'is_throw' is false, so no need to free. */
       ecma_value_t put_comp = ecma_builtin_helper_def_prop_by_index (new_array_p,
                                                                      n,
                                                                      get_value,
-                                                                     ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
-                                                                     false); /* Failure handling */
+                                                                     ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
       JERRY_ASSERT (ecma_is_value_true (put_comp));
       ecma_free_value (get_value);
     }
@@ -1187,12 +1185,10 @@ ecma_builtin_array_prototype_object_splice (const ecma_value_t args[], /**< argu
     if (ecma_is_value_found (get_value))
     {
       /* 9.c.ii */
-      /* This will always be a simple value since 'is_throw' is false, so no need to free. */
       ecma_value_t put_comp = ecma_builtin_helper_def_prop_by_index (new_array_p,
                                                                      k,
                                                                      get_value,
-                                                                     ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
-                                                                     false); /* Failure handling */
+                                                                     ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
       JERRY_ASSERT (ecma_is_value_true (put_comp));
 
       ecma_free_value (get_value);
@@ -1748,12 +1744,11 @@ ecma_builtin_array_prototype_object_map (ecma_value_t arg1, /**< callbackfn */
       }
 
       /* 8.c.iii */
-      /* This will always be a simple value since 'is_throw' is false, so no need to free. */
       ecma_value_t put_comp = ecma_builtin_helper_def_prop_by_index (new_array_p,
                                                                      index,
                                                                      mapped_value,
-                                                                     ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
-                                                                     false); /* Failure handling */
+                                                                     ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+
       JERRY_ASSERT (ecma_is_value_true (put_comp));
 
       ecma_free_value (mapped_value);
@@ -1848,12 +1843,10 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t arg1, /**< callbackfn *
       /* 9.c.iii */
       if (ecma_op_to_boolean (call_value))
       {
-        /* This will always be a simple value since 'is_throw' is false, so no need to free. */
         ecma_value_t put_comp = ecma_builtin_helper_def_prop_by_index (new_array_p,
                                                                        new_array_index,
                                                                        get_value,
-                                                                       ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
-                                                                       false); /* Failure handling */
+                                                                       ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
         JERRY_ASSERT (ecma_is_value_true (put_comp));
         new_array_index++;
       }

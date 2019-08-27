@@ -143,18 +143,18 @@ ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environme
 
     ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
-    ecma_value_t completion;
     if (!ecma_get_object_extensible (binding_obj_p))
     {
       return ECMA_VALUE_EMPTY;
     }
 
-    completion = ecma_builtin_helper_def_prop (binding_obj_p,
-                                               name_p,
-                                               ECMA_VALUE_UNDEFINED,
-                                               is_deletable ? ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE
-                                                            : ECMA_PROPERTY_ENUMERABLE_WRITABLE,
-                                               true); /* Failure handling */
+    const uint32_t flags = ECMA_PROPERTY_ENUMERABLE_WRITABLE | ECMA_IS_THROW;
+
+    ecma_value_t completion = ecma_builtin_helper_def_prop (binding_obj_p,
+                                                            name_p,
+                                                            ECMA_VALUE_UNDEFINED,
+                                                            is_deletable ? flags | ECMA_PROPERTY_FLAG_CONFIGURABLE
+                                                                         : flags);
 
     if (ECMA_IS_VALUE_ERROR (completion))
     {

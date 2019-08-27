@@ -543,8 +543,7 @@ ecma_builtin_json_define_value_property (ecma_object_t *obj_p, /**< this object 
   ecma_value_t completion_value = ecma_builtin_helper_def_prop (obj_p,
                                                                 property_name_p,
                                                                 value,
-                                                                ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
-                                                                false); /* Failure handling */
+                                                                ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
 
   JERRY_ASSERT (ecma_is_value_boolean (completion_value));
 } /* ecma_builtin_json_define_value_property */
@@ -683,8 +682,7 @@ ecma_builtin_json_parse_value (ecma_json_token_t *token_p) /**< token argument *
         ecma_value_t completion = ecma_builtin_helper_def_prop (array_p,
                                                                 index_str_p,
                                                                 value,
-                                                                ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
-                                                                false); /* Failure handling */
+                                                                ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
 
         JERRY_ASSERT (ecma_is_value_true (completion));
 
@@ -918,8 +916,7 @@ static ecma_value_t ecma_builtin_json_str_helper (const ecma_value_t arg1, /**< 
   ecma_value_t put_comp_val = ecma_builtin_helper_def_prop (obj_wrapper_p,
                                                             empty_str_p,
                                                             arg1,
-                                                            ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
-                                                            false);
+                                                            ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
 
   JERRY_ASSERT (ecma_is_value_true (put_comp_val));
 

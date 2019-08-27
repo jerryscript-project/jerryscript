@@ -462,8 +462,7 @@ ecma_builtin_string_prototype_object_match (ecma_value_t this_to_string_value, /
       ecma_value_t completion = ecma_builtin_helper_def_prop (new_array_obj_p,
                                                               current_index_str_p,
                                                               match_string_value,
-                                                              ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
-                                                              false); /* Failure handling */
+                                                              ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
 
       JERRY_ASSERT (ecma_is_value_true (completion));
 
@@ -1358,8 +1357,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_to_string_val, /**
     ecma_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,
                                                           zero_str_p,
                                                           this_to_string_val,
-                                                          ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
-                                                          false); /* Failure handling */
+                                                          ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
 
     JERRY_ASSERT (ecma_is_value_true (put_comp));
 
@@ -1435,8 +1433,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_to_string_val, /**
       ecma_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,
                                                             zero_str_p,
                                                             this_to_string_val,
-                                                            ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
-                                                            false); /* Failure handling */
+                                                            ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
 
       JERRY_ASSERT (ecma_is_value_true (put_comp));
       ecma_deref_ecma_string (zero_str_p);
@@ -1520,13 +1517,13 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_to_string_val, /**
         }
         else
         {
+          const uint32_t opts = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_IS_THROW;
           ecma_string_t *separator_str_p = ecma_get_string_from_value (separator);
 
           ecma_value_t put_comp = ecma_builtin_helper_def_prop (match_obj_p,
                                                                 zero_str_p,
                                                                 ecma_make_string_value (separator_str_p),
-                                                                ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
-                                                                true); /* Failure handling */
+                                                                opts);
 
           JERRY_ASSERT (ecma_is_value_true (put_comp));
 
@@ -1571,8 +1568,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_to_string_val, /**
         ecma_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,
                                                               array_length_str_p,
                                                               ecma_make_string_value (substr_str_p),
-                                                              ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
-                                                              false); /* Failure handling */
+                                                              ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
 
         JERRY_ASSERT (ecma_is_value_true (put_comp));
 
@@ -1616,8 +1612,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_to_string_val, /**
           put_comp = ecma_builtin_helper_def_prop (new_array_p,
                                                    new_array_idx_str_p,
                                                    match_comp_value,
-                                                   ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
-                                                   false); /* Failure handling */
+                                                   ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
 
           JERRY_ASSERT (ecma_is_value_true (put_comp));
 
@@ -1662,8 +1657,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_to_string_val, /**
       ecma_value_t put_comp = ecma_builtin_helper_def_prop (new_array_p,
                                                             array_length_string_p,
                                                             ecma_make_string_value (substr_str_p),
-                                                            ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
-                                                            false); /* Failure handling */
+                                                            ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
 
       JERRY_ASSERT (ecma_is_value_true (put_comp));
 

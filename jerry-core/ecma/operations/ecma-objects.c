@@ -1137,8 +1137,7 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
           return ecma_builtin_helper_def_prop (object_p,
                                                property_name_p,
                                                value,
-                                               ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
-                                               true); /* Failure handling */
+                                               ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_IS_THROW);
         }
       }
 
@@ -1329,9 +1328,8 @@ ecma_op_object_default_value (ecma_object_t *obj_p, /**< the object */
 ecma_value_t
 ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
                                     ecma_string_t *property_name_p, /**< property name */
-                                    const ecma_property_descriptor_t *property_desc_p, /**< property
+                                    const ecma_property_descriptor_t *property_desc_p) /**< property
                                                                                         *   descriptor */
-                                    bool is_throw) /**< flag that controls failure handling */
 {
   JERRY_ASSERT (obj_p != NULL
                 && !ecma_is_lexical_environment (obj_p));
@@ -1352,16 +1350,14 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
     {
       return ecma_op_general_object_define_own_property (obj_p,
                                                          property_name_p,
-                                                         property_desc_p,
-                                                         is_throw);
+                                                         property_desc_p);
     }
 
     case ECMA_OBJECT_TYPE_ARRAY:
     {
       return ecma_op_array_object_define_own_property (obj_p,
                                                        property_name_p,
-                                                       property_desc_p,
-                                                       is_throw);
+                                                       property_desc_p);
     }
 
     default:
@@ -1378,8 +1374,7 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
         return ecma_op_arguments_object_define_own_property (obj_p,
                                                              property_name_p,
-                                                             property_desc_p,
-                                                             is_throw);
+                                                             property_desc_p);
 #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
       }
       /* ES2015 9.4.5.3 */
@@ -1390,8 +1385,7 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
         {
           return ecma_op_general_object_define_own_property (obj_p,
                                                              property_name_p,
-                                                             property_desc_p,
-                                                             is_throw);
+                                                             property_desc_p);
         }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
         uint32_t array_index = ecma_string_get_array_index (property_name_p);
@@ -1407,7 +1401,7 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
             return ECMA_VALUE_TRUE;
           }
 
-          return ecma_reject (is_throw);
+          return ecma_reject (property_desc_p->flags & ECMA_PROP_IS_THROW);
         }
 
         ecma_number_t num = ecma_string_to_number (property_name_p);
@@ -1417,7 +1411,7 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
         {
           ecma_deref_ecma_string (num_to_str);
 
-          return ecma_reject (is_throw);
+          return ecma_reject (property_desc_p->flags & ECMA_PROP_IS_THROW);
         }
 
         ecma_deref_ecma_string (num_to_str);
@@ -1425,8 +1419,7 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
 
       return ecma_op_general_object_define_own_property (obj_p,
                                                          property_name_p,
-                                                         property_desc_p,
-                                                         is_throw);
+                                                         property_desc_p);
 #else /* !ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
       break;
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
@@ -1466,10 +1459,10 @@ ecma_op_object_get_own_property_descriptor (ecma_object_t *object_p, /**< the ob
 
   *prop_desc_p = ecma_make_empty_property_descriptor ();
 
-  prop_desc_p->is_enumerable = ECMA_BOOL_TO_BITFIELD (ecma_is_property_enumerable (property));
-  prop_desc_p->is_enumerable_defined = true;
-  prop_desc_p->is_configurable = ECMA_BOOL_TO_BITFIELD (ecma_is_property_configurable (property));
-  prop_desc_p->is_configurable_defined = true;
+  uint32_t flags = ecma_is_property_enumerable (property) ? ECMA_PROP_IS_ENUMERABLE : ECMA_PROP_NO_OPTS;
+  flags |= ecma_is_property_configurable (property) ? ECMA_PROP_IS_CONFIGURABLE: ECMA_PROP_NO_OPTS;
+
+  prop_desc_p->flags = (uint16_t) (ECMA_PROP_IS_ENUMERABLE_DEFINED | ECMA_PROP_IS_CONFIGURABLE_DEFINED | flags);
 
   ecma_property_types_t type = ECMA_PROPERTY_GET_TYPE (property);
 
@@ -1485,15 +1478,15 @@ ecma_op_object_get_own_property_descriptor (ecma_object_t *object_p, /**< the ob
       prop_desc_p->value = property_ref.virtual_value;
     }
 
-    prop_desc_p->is_value_defined = true;
-    prop_desc_p->is_writable = ECMA_BOOL_TO_BITFIELD (ecma_is_property_writable (property));
-    prop_desc_p->is_writable_defined = true;
+    prop_desc_p->flags |= (ECMA_PROP_IS_VALUE_DEFINED | ECMA_PROP_IS_WRITABLE_DEFINED);
+    prop_desc_p->flags = (uint16_t) (prop_desc_p->flags | (ecma_is_property_writable (property) ? ECMA_PROP_IS_WRITABLE
+                                                                                                : ECMA_PROP_NO_OPTS));
   }
   else
   {
-    prop_desc_p->is_get_defined = true;
-    prop_desc_p->is_set_defined = true;
+
     ecma_getter_setter_pointers_t *get_set_pair_p = ecma_get_named_accessor_property (property_ref.value_p);
+    prop_desc_p->flags |= (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED);
 
     if (get_set_pair_p->getter_cp == JMEM_CP_NULL)
     {

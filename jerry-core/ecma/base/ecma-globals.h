@@ -935,6 +935,23 @@ typedef struct
 } ecma_map_object_t;
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) || ENABLED (JERRY_ES2015_BUILTIN_SET) */
 
+typedef enum
+{
+  ECMA_PROP_NO_OPTS = (0), /** empty property descriptor */
+  ECMA_PROP_IS_GET_DEFINED = (1 << 0), /** Is [[Get]] defined? */
+  ECMA_PROP_IS_SET_DEFINED = (1 << 1), /** Is [[Set]] defined? */
+
+  ECMA_PROP_IS_CONFIGURABLE = (1 << 2), /** [[Configurable]] */
+  ECMA_PROP_IS_ENUMERABLE = (1 << 3), /** [[Enumerable]] */
+  ECMA_PROP_IS_WRITABLE = (1 << 4), /** [[Writable]] */
+  ECMA_PROP_IS_THROW = (1 << 5), /** Flag that controls failure handling */
+
+  ECMA_PROP_IS_VALUE_DEFINED = (1 << 6), /** Is [[Value]] defined? */
+  ECMA_PROP_IS_CONFIGURABLE_DEFINED = (1 << 7), /** Is [[Configurable]] defined? */
+  ECMA_PROP_IS_ENUMERABLE_DEFINED = (1 << 8), /** Is [[Enumerable]] defined? */
+  ECMA_PROP_IS_WRITABLE_DEFINED = (1 << 9), /** Is [[Writable]] defined? */
+} ecma_property_descriptor_status_flags_t;
+
 /**
  * Description of ECMA property descriptor
  *
@@ -943,35 +960,13 @@ typedef struct
  * Note:
  *      If a component of descriptor is undefined then corresponding
  *      field should contain it's default value.
+ *      The struct members must be in this order or keep in sync with ecma_property_flags_t and ECMA_IS_THROW flag.
  */
 typedef struct
 {
-  /** Is [[Value]] defined? */
-  unsigned int is_value_defined : 1;
 
-  /** Is [[Get]] defined? */
-  unsigned int is_get_defined : 1;
-
-  /** Is [[Set]] defined? */
-  unsigned int is_set_defined : 1;
-
-  /** Is [[Writable]] defined? */
-  unsigned int is_writable_defined : 1;
-
-  /** [[Writable]] */
-  unsigned int is_writable : 1;
-
-  /** Is [[Enumerable]] defined? */
-  unsigned int is_enumerable_defined : 1;
-
-  /** [[Enumerable]] */
-  unsigned int is_enumerable : 1;
-
-  /** Is [[Configurable]] defined? */
-  unsigned int is_configurable_defined : 1;
-
-  /** [[Configurable]] */
-  unsigned int is_configurable : 1;
+  /** any combination of ecma_property_descriptor_status_flags_t bits */
+  uint16_t flags;
 
   /** [[Value]] */
   ecma_value_t value;
@@ -982,6 +977,29 @@ typedef struct
   /** [[Set]] */
   ecma_object_t *set_p;
 } ecma_property_descriptor_t;
+
+/**
+ * Bitfield which represents a namedata property options in an ecma_property_descriptor_t
+ * Attributes:
+ *  - is_get_defined, is_set_defined : false
+ *  - is_configurable, is_writable, is_enumberable : undefined (false)
+ *  - is_throw : undefined (false)
+ *  - is_value_defined : true
+ *  - is_configurable_defined, is_writable_defined, is_enumberable_defined : true
+ */
+#define ECMA_NAME_DATA_PROPERTY_DESCRIPTOR_BITS 0x3c0
+
+/**
+ * Bitmask to get a the physical property flags from an ecma_property_descriptor
+ */
+#define ECMA_PROPERTY_FLAGS_MASK 0x1c
+
+/**
+ * Flag that controls failure handling during defining property
+ *
+ * Note: This flags represents the [[DefineOwnProperty]] (P, Desc, Throw) 3rd argument
+ */
+#define ECMA_IS_THROW (1 << 5)
 
 #if !ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
 /**

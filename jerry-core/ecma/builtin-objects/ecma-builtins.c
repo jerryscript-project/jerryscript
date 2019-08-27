@@ -741,6 +741,10 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
         {
           ECMA_NUMBER_MAX_VALUE,
           ECMA_NUMBER_MIN_VALUE,
+#if ENABLED (JERRY_ES2015_BUILTIN)
+          ECMA_NUMBER_EPSILON,
+          ECMA_NUMBER_MAX_SAFE_INTEGER,
+#endif /* ENABLED (JERRY_BUILTIN_NUMBER) */
           ECMA_NUMBER_E,
           ECMA_NUMBER_PI,
           ECMA_NUMBER_LN10,
@@ -748,7 +752,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
           ECMA_NUMBER_LOG2E,
           ECMA_NUMBER_LOG10E,
           ECMA_NUMBER_SQRT2,
-          ECMA_NUMBER_SQRT_1_2
+          ECMA_NUMBER_SQRT_1_2,
         };
 
         num = builtin_number_list[curr_property_p->value - ECMA_BUILTIN_NUMBER_MAX];

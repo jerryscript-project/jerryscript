@@ -24,6 +24,7 @@
 #include "ecma-objects.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
+#include "math.h"
 
 #if ENABLED (JERRY_BUILTIN_NUMBER)
 
@@ -90,6 +91,134 @@ ecma_builtin_number_dispatch_construct (const ecma_value_t *arguments_list_p, /*
     return ecma_op_create_number_object (arguments_list_p[0]);
   }
 } /* ecma_builtin_number_dispatch_construct */
+
+#if ENABLED (JERRY_ES2015_BUILTIN)
+/**
+ * The Number object 'isFinite' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 20.1.2.2
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_number_object_is_finite (ecma_value_t this_arg, /**< this argument */
+                                      ecma_value_t arg) /**< routine's argument */
+{
+  JERRY_UNUSED (this_arg);
+
+  if (ecma_is_value_number (arg))
+  {
+    ecma_number_t num = ecma_get_number_from_value (arg);
+    if (!(ecma_number_is_nan (num) || ecma_number_is_infinity (num)))
+    {
+      return ECMA_VALUE_TRUE;
+    }
+  }
+  return ECMA_VALUE_FALSE;
+} /* ecma_builtin_number_object_is_finite */
+
+/**
+ * The Number object 'isNan' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 20.1.2.4
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_number_object_is_nan (ecma_value_t this_arg, /**< this argument */
+                                   ecma_value_t arg) /**< routine's argument */
+{
+  JERRY_UNUSED (this_arg);
+
+  if (ecma_is_value_number (arg))
+  {
+    ecma_number_t num_val = ecma_get_number_from_value (arg);
+
+    if (ecma_number_is_nan (num_val))
+    {
+      return ECMA_VALUE_TRUE;
+    }
+  }
+  return ECMA_VALUE_FALSE;
+} /* ecma_builtin_number_object_is_nan */
+
+/**
+ * The Number object 'isInteger' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 20.1.2.3
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_number_object_is_integer (ecma_value_t this_arg, /**< this argument */
+                                       ecma_value_t arg) /**< routine's argument */
+{
+  JERRY_UNUSED (this_arg);
+  if (!ecma_is_value_number (arg))
+  {
+    return ECMA_VALUE_FALSE;
+  }
+
+  ecma_number_t num = ecma_get_number_from_value (arg);
+
+  if (ecma_number_is_nan (num) || ecma_number_is_infinity (num))
+  {
+    return ECMA_VALUE_FALSE;
+  }
+
+  ecma_number_t int_num = ecma_number_trunc (num);
+
+  if (int_num != num)
+  {
+    return ECMA_VALUE_FALSE;
+  }
+
+  return ECMA_VALUE_TRUE;
+} /* ecma_builtin_number_object_is_integer */
+
+/**
+ * The Number object 'isSafeInteger' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 20.1.2.3
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_number_object_is_safe_integer (ecma_value_t this_arg, /**< this argument */
+                                            ecma_value_t arg) /**< routine's argument */
+{
+  JERRY_UNUSED (this_arg);
+
+  if (!ecma_is_value_number (arg))
+  {
+    return ECMA_VALUE_FALSE;
+  }
+
+  ecma_number_t num = ecma_get_number_from_value (arg);
+
+  if (ecma_number_is_nan (num) || ecma_number_is_infinity (num))
+  {
+    return ECMA_VALUE_FALSE;
+  }
+
+  ecma_number_t int_num = ecma_number_trunc (num);
+
+  if (int_num == num && fabs (int_num) <= ECMA_NUMBER_MAX_SAFE_INTEGER)
+  {
+    return ECMA_VALUE_TRUE;
+  }
+
+  return ECMA_VALUE_FALSE;
+} /* ecma_builtin_number_object_is_safe_integer */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
 
 /**
  * @}

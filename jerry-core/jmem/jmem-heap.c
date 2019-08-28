@@ -299,6 +299,7 @@ jmem_heap_gc_and_alloc_block (const size_t size, /**< required memory size */
     data_space_p = jmem_heap_alloc (size);
   }
 
+  JMEM_VALGRIND_MALLOCLIKE_SPACE (data_space_p, size);
   return data_space_p;
 } /* jmem_heap_gc_and_alloc_block */
 
@@ -509,8 +510,9 @@ jmem_heap_realloc_block (void *ptr, /**< memory region to reallocate */
 
   if (aligned_old_size == aligned_new_size)
   {
-    JMEM_VALGRIND_NOACCESS_SPACE (block_p, old_size);
-    JMEM_VALGRIND_DEFINED_SPACE (block_p, new_size);
+    JMEM_VALGRIND_RESIZE_SPACE (block_p, old_size, new_size);
+    JMEM_VALGRIND_UNDEFINED_SPACE (block_p, new_size);
+    JMEM_VALGRIND_DEFINED_SPACE (block_p, old_size);
     JMEM_HEAP_STAT_FREE (old_size);
     JMEM_HEAP_STAT_ALLOC (new_size);
     return block_p;
@@ -518,6 +520,7 @@ jmem_heap_realloc_block (void *ptr, /**< memory region to reallocate */
 
   if (aligned_new_size < aligned_old_size)
   {
+    JMEM_VALGRIND_RESIZE_SPACE (block_p, old_size, new_size);
     JMEM_VALGRIND_NOACCESS_SPACE (block_p, old_size);
     JMEM_VALGRIND_DEFINED_SPACE (block_p, new_size);
     JMEM_HEAP_STAT_FREE (old_size);
@@ -570,8 +573,7 @@ jmem_heap_realloc_block (void *ptr, /**< memory region to reallocate */
         prev_p->next_offset = JMEM_HEAP_GET_OFFSET_FROM_ADDR (new_next_p);
       }
 
-      JMEM_VALGRIND_NOACCESS_SPACE ((uint8_t *) block_p, old_size);
-      JMEM_VALGRIND_DEFINED_SPACE ((uint8_t *) block_p, new_size);
+      JMEM_VALGRIND_RESIZE_SPACE (block_p, old_size, new_size);
       ret_block_p = block_p;
     }
   }
@@ -585,6 +587,7 @@ jmem_heap_realloc_block (void *ptr, /**< memory region to reallocate */
     {
       if (required_size == prev_p->size)
       {
+        JMEM_VALGRIND_NOACCESS_SPACE (prev_p, sizeof (jmem_heap_free_t));
         prev_p = jmem_heap_find_prev (prev_p);
         JMEM_VALGRIND_DEFINED_SPACE (prev_p, sizeof (jmem_heap_free_t));
         prev_p->next_offset = JMEM_HEAP_GET_OFFSET_FROM_ADDR (next_p);
@@ -595,11 +598,16 @@ jmem_heap_realloc_block (void *ptr, /**< memory region to reallocate */
       }
 
       ret_block_p = (uint8_t *) block_p - required_size;
+      JMEM_VALGRIND_UNDEFINED_SPACE (ret_block_p, new_size);
       memmove (ret_block_p, block_p, old_size);
-      JMEM_VALGRIND_NOACCESS_SPACE ((uint8_t *) block_p, old_size);
-      JMEM_VALGRIND_DEFINED_SPACE ((uint8_t *) ret_block_p, new_size);
+      JMEM_VALGRIND_FREELIKE_SPACE (block_p);
+      JMEM_VALGRIND_NOACCESS_SPACE (block_p, old_size);
+      JMEM_VALGRIND_MALLOCLIKE_SPACE (ret_block_p, new_size);
     }
   }
+
+  JMEM_VALGRIND_NOACCESS_SPACE (prev_p, sizeof (jmem_heap_free_t));
+  JMEM_VALGRIND_NOACCESS_SPACE (next_p, sizeof (jmem_heap_free_t));
 
   if (ret_block_p != NULL)
   {
@@ -611,6 +619,9 @@ jmem_heap_realloc_block (void *ptr, /**< memory region to reallocate */
     {
       JERRY_CONTEXT (jmem_heap_limit) += CONFIG_GC_LIMIT;
     }
+
+    JMEM_VALGRIND_UNDEFINED_SPACE (ret_block_p, new_size);
+    JMEM_VALGRIND_DEFINED_SPACE (ret_block_p, old_size);
   }
   else
   {
@@ -629,10 +640,9 @@ jmem_heap_realloc_block (void *ptr, /**< memory region to reallocate */
 
     memcpy (ret_block_p, block_p, old_size);
     jmem_heap_insert_block (block_p, prev_p, aligned_old_size);
+    /* jmem_heap_alloc_block_internal will call JMEM_VALGRIND_MALLOCLIKE_SPACE */
+    JMEM_VALGRIND_FREELIKE_SPACE (block_p);
   }
-
-  JMEM_VALGRIND_NOACCESS_SPACE (prev_p, sizeof (jmem_heap_free_t));
-  JMEM_VALGRIND_NOACCESS_SPACE (next_p, sizeof (jmem_heap_free_t));
 
   JMEM_HEAP_STAT_FREE (old_size);
   JMEM_HEAP_STAT_ALLOC (new_size);

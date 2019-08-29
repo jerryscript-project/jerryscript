@@ -91,17 +91,16 @@ ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p, /**< a String obj
                                                                     *   false - list all properties into main
                                                                     *           collection.
                                                                     */
-                                         ecma_collection_header_t *main_collection_p, /**< 'main'
-                                                                                       *   collection */
-                                         ecma_collection_header_t *non_enum_collection_p) /**< skipped
-                                                                                           *   'non-enumerable'
-                                                                                           *   collection */
+                                         ecma_collection_t *main_collection_p, /**< 'main' collection */
+                                         ecma_collection_t *non_enum_collection_p) /**< skipped
+                                                                                    *   'non-enumerable'
+                                                                                    *   collection */
 {
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_CLASS);
 
-  ecma_collection_header_t *for_enumerable_p = main_collection_p;
+  ecma_collection_t *for_enumerable_p = main_collection_p;
 
-  ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
+  ecma_collection_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
   JERRY_ASSERT (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_STRING_UL);
@@ -115,14 +114,10 @@ ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p, /**< a String obj
     ecma_string_t *name_p = ecma_new_ecma_string_from_uint32 (i);
 
     /* the properties are enumerable (ECMA-262 v5, 15.5.5.2.9) */
-    ecma_append_to_values_collection (for_enumerable_p, ecma_make_string_value (name_p), 0);
-
-    ecma_deref_ecma_string (name_p);
+    ecma_collection_push_back (for_enumerable_p, ecma_make_string_value (name_p));
   }
 
-  ecma_append_to_values_collection (for_non_enumerable_p,
-                                    ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH),
-                                    0);
+  ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
 } /* ecma_op_string_list_lazy_property_names */
 
 /**

@@ -62,7 +62,7 @@ void
 ecma_array_object_delete_property (ecma_object_t *object_p, ecma_string_t *property_name_p,
                                    ecma_property_value_t *prop_value_p);
 
-ecma_collection_header_t *
+ecma_collection_t *
 ecma_fast_array_get_property_names (ecma_object_t *object_p, uint32_t opts);
 
 void
@@ -87,8 +87,8 @@ ecma_op_array_object_define_own_property (ecma_object_t *object_p, ecma_string_t
 
 void
 ecma_op_array_list_lazy_property_names (ecma_object_t *obj_p, bool separate_enumerable,
-                                        ecma_collection_header_t *main_collection_p,
-                                        ecma_collection_header_t *non_enum_collection_p);
+                                        ecma_collection_t *main_collection_p,
+                                        ecma_collection_t *non_enum_collection_p);
 
 /**
  * @}

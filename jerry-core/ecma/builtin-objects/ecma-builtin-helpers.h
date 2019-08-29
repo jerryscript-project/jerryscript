@@ -153,7 +153,7 @@ typedef struct struct_ecma_json_occurence_stack_item_t
 typedef struct
 {
   /** Collection for property keys. */
-  ecma_collection_header_t *property_list_p;
+  ecma_collection_t *property_list_p;
 
   /** Collection for traversing objects. */
   ecma_json_occurence_stack_item_t *occurence_stack_last_p;
@@ -175,15 +175,11 @@ ecma_value_t ecma_builtin_json_parse_buffer (const lit_utf8_byte_t * str_start_p
                                              lit_utf8_size_t string_size);
 ecma_value_t ecma_builtin_json_string_from_object (const ecma_value_t arg1);
 bool ecma_json_has_object_in_stack (ecma_json_occurence_stack_item_t *stack_p, ecma_object_t *object_p);
-bool ecma_has_string_value_in_collection (ecma_collection_header_t *collection_p, ecma_string_t *string_p);
+bool ecma_has_string_value_in_collection (ecma_collection_t *collection_p, ecma_string_t *string_p);
 
 ecma_value_t
-ecma_builtin_helper_json_create_formatted_json (lit_utf8_byte_t left_bracket, lit_utf8_byte_t right_bracket,
-                                                ecma_string_t *stepback_p, ecma_collection_header_t *partial_p,
-                                                ecma_json_stringify_context_t *context_p);
-ecma_value_t
 ecma_builtin_helper_json_create_non_formatted_json (lit_utf8_byte_t left_bracket, lit_utf8_byte_t right_bracket,
-                                                    ecma_collection_header_t *partial_p);
+                                                    ecma_collection_t *partial_p);
 #endif /* ENABLED (JERRY_BUILTIN_JSON) */
 
 /* ecma-builtin-helper-error.c */

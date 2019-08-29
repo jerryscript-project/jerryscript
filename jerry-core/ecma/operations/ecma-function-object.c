@@ -1416,24 +1416,20 @@ ecma_op_function_list_lazy_property_names (ecma_object_t *object_p, /**< functio
                                                                       *   false - list all properties into main
                                                                       *           collection.
                                                                       */
-                                           ecma_collection_header_t *main_collection_p, /**< 'main' collection */
-                                           ecma_collection_header_t *non_enum_collection_p) /**< skipped
-                                                                                             *   'non-enumerable'
-                                                                                             *   collection */
+                                           ecma_collection_t *main_collection_p, /**< 'main' collection */
+                                           ecma_collection_t *non_enum_collection_p) /**< skipped
+                                                                                      *   'non-enumerable'
+                                                                                      *   collection */
 {
   JERRY_UNUSED (main_collection_p);
 
-  ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
+  ecma_collection_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
 
   /* 'length' property is non-enumerable (ECMA-262 v5, 13.2.5) */
-  ecma_append_to_values_collection (for_non_enumerable_p,
-                                    ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH),
-                                    0);
+  ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
 
   /* 'prototype' property is non-enumerable (ECMA-262 v5, 13.2.18) */
-  ecma_append_to_values_collection (for_non_enumerable_p,
-                                    ecma_make_magic_string_value (LIT_MAGIC_STRING_PROTOTYPE),
-                                    0);
+  ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_PROTOTYPE));
 
   const ecma_compiled_code_t *bytecode_data_p;
 
@@ -1453,14 +1449,10 @@ ecma_op_function_list_lazy_property_names (ecma_object_t *object_p, /**< functio
   if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE)
   {
     /* 'caller' property is non-enumerable (ECMA-262 v5, 13.2.5) */
-    ecma_append_to_values_collection (for_non_enumerable_p,
-                                      ecma_make_magic_string_value (LIT_MAGIC_STRING_CALLER),
-                                      0);
+    ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_CALLER));
 
     /* 'arguments' property is non-enumerable (ECMA-262 v5, 13.2.5) */
-    ecma_append_to_values_collection (for_non_enumerable_p,
-                                      ecma_make_magic_string_value (LIT_MAGIC_STRING_ARGUMENTS),
-                                      0);
+    ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_ARGUMENTS));
   }
 } /* ecma_op_function_list_lazy_property_names */
 
@@ -1480,19 +1472,16 @@ ecma_op_external_function_list_lazy_property_names (bool separate_enumerable, /*
                                                                                *   false - list all properties into
                                                                                *           main collection.
                                                                                */
-                                                   ecma_collection_header_t *main_collection_p, /**< 'main'
-                                                                                                 *    collection */
-                                                   ecma_collection_header_t *non_enum_collection_p) /**< skipped
-                                                                                                     *   collection */
+                                                   ecma_collection_t *main_collection_p, /**< 'main' collection */
+                                                   ecma_collection_t *non_enum_collection_p) /**< skipped
+                                                                                              *   collection */
 {
   JERRY_UNUSED (main_collection_p);
 
-  ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
+  ecma_collection_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
 
   /* 'prototype' property is non-enumerable (ECMA-262 v5, 13.2.18) */
-  ecma_append_to_values_collection (for_non_enumerable_p,
-                                    ecma_make_magic_string_value (LIT_MAGIC_STRING_PROTOTYPE),
-                                    0);
+  ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_PROTOTYPE));
 } /* ecma_op_external_function_list_lazy_property_names */
 
 /**
@@ -1511,30 +1500,23 @@ ecma_op_bound_function_list_lazy_property_names (bool separate_enumerable, /**< 
                                                                             *   false - list all properties into
                                                                             *           main collection.
                                                                             */
-                                                 ecma_collection_header_t *main_collection_p, /**< 'main'
-                                                                                               *    collection */
-                                                 ecma_collection_header_t *non_enum_collection_p) /**< skipped
-                                                                                                   *   'non-enumerable'
-                                                                                                   *   collection */
+                                                 ecma_collection_t *main_collection_p, /**< 'main' collection */
+                                                 ecma_collection_t *non_enum_collection_p) /**< skipped
+                                                                                            *   'non-enumerable'
+                                                                                            *   collection */
 {
   JERRY_UNUSED (main_collection_p);
 
-  ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
+  ecma_collection_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
 
   /* 'length' property is non-enumerable (ECMA-262 v5, 13.2.5) */
-  ecma_append_to_values_collection (for_non_enumerable_p,
-                                    ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH),
-                                    0);
+  ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
 
   /* 'caller' property is non-enumerable (ECMA-262 v5, 13.2.5) */
-  ecma_append_to_values_collection (for_non_enumerable_p,
-                                    ecma_make_magic_string_value (LIT_MAGIC_STRING_CALLER),
-                                    0);
+  ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_CALLER));
 
   /* 'arguments' property is non-enumerable (ECMA-262 v5, 13.2.5) */
-  ecma_append_to_values_collection (for_non_enumerable_p,
-                                    ecma_make_magic_string_value (LIT_MAGIC_STRING_ARGUMENTS),
-                                    0);
+  ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_ARGUMENTS));
 } /* ecma_op_bound_function_list_lazy_property_names */
 
 /**

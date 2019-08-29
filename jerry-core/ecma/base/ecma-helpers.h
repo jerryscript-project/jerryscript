@@ -184,7 +184,6 @@ bool JERRY_ATTR_CONST ecma_is_value_direct_string (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_non_direct_string (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_object (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_error_reference (ecma_value_t value);
-bool JERRY_ATTR_CONST ecma_is_value_pointer (ecma_value_t value);
 
 void ecma_check_value_type_is_spec_defined (ecma_value_t value);
 
@@ -203,7 +202,6 @@ ecma_value_t JERRY_ATTR_PURE ecma_make_prop_name_value (const ecma_string_t *ecm
 ecma_value_t JERRY_ATTR_PURE ecma_make_magic_string_value (lit_magic_string_id_t id);
 ecma_value_t JERRY_ATTR_PURE ecma_make_object_value (const ecma_object_t *object_p);
 ecma_value_t JERRY_ATTR_PURE ecma_make_error_reference_value (const ecma_error_reference_t *error_ref_p);
-ecma_value_t JERRY_ATTR_PURE ecma_make_pointer_value (const void *any_p);
 ecma_integer_value_t JERRY_ATTR_CONST ecma_get_integer_from_value (ecma_value_t value);
 ecma_number_t JERRY_ATTR_PURE ecma_get_float_from_value (ecma_value_t value);
 ecma_number_t * ecma_get_pointer_from_float_value (ecma_value_t value);
@@ -215,7 +213,6 @@ ecma_string_t JERRY_ATTR_PURE *ecma_get_symbol_from_value (ecma_value_t value);
 ecma_string_t JERRY_ATTR_PURE *ecma_get_prop_name_from_value (ecma_value_t value);
 ecma_object_t JERRY_ATTR_PURE *ecma_get_object_from_value (ecma_value_t value);
 ecma_error_reference_t JERRY_ATTR_PURE *ecma_get_error_reference_from_value (ecma_value_t value);
-void * JERRY_ATTR_PURE ecma_get_pointer_from_value (ecma_value_t value);
 ecma_value_t JERRY_ATTR_CONST ecma_invert_boolean_value (ecma_value_t value);
 ecma_value_t ecma_copy_value (ecma_value_t value);
 ecma_value_t ecma_fast_copy_value (ecma_value_t value);
@@ -351,15 +348,13 @@ lit_utf8_size_t ecma_number_to_binary_floating_point_number (ecma_number_t num,
                                                              lit_utf8_byte_t *out_digits_p,
                                                              int32_t *out_decimal_exp_p);
 
-/* ecma-helpers-values-collection.c */
-ecma_collection_header_t *ecma_new_values_collection (void);
-void ecma_free_values_collection (ecma_collection_header_t *header_p, uint32_t flags);
-void ecma_append_to_values_collection (ecma_collection_header_t *header_p, ecma_value_t v, uint32_t flags);
-
-ecma_value_t *
-ecma_collection_iterator_init (ecma_collection_header_t *header_p);
-ecma_value_t *
-ecma_collection_iterator_next (ecma_value_t *iterator_p);
+/* ecma-helpers-collection.c */
+ecma_collection_t *ecma_new_collection (void);
+void ecma_collection_push_back (ecma_collection_t *collection_p, ecma_value_t value);
+void ecma_collection_destroy (ecma_collection_t *collection_p);
+void ecma_collection_free (ecma_collection_t *collection_p);
+void ecma_collection_free_if_not_object (ecma_collection_t *collection_p);
+void ecma_collection_free_objects (ecma_collection_t *collection_p);
 
 /* ecma-helpers.c */
 ecma_object_t *ecma_create_object (ecma_object_t *prototype_object_p, size_t ext_object_size, ecma_object_type_t type);

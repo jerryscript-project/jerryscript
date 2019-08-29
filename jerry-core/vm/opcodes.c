@@ -226,17 +226,15 @@ vm_op_delete_var (ecma_value_t name_literal, /**< name literal */
  *
  * @return chain list of property names
  */
-ecma_collection_chunk_t *
+ecma_collection_t *
 opfunc_for_in (ecma_value_t left_value, /**< left value */
                ecma_value_t *result_obj_p) /**< expression object */
 {
-  ecma_collection_chunk_t *prop_names_p = NULL;
-
   /* 3. */
   if (ecma_is_value_undefined (left_value)
       || ecma_is_value_null (left_value))
   {
-    return prop_names_p;
+    return NULL;
   }
 
   /* 4. */
@@ -244,24 +242,18 @@ opfunc_for_in (ecma_value_t left_value, /**< left value */
   /* ecma_op_to_object will only raise error on null/undefined values but those are handled above. */
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (obj_expr_value));
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_expr_value);
-  ecma_collection_header_t *prop_names_coll_p;
-  prop_names_coll_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_ENUMERABLE_PROTOTYPE);
+  ecma_collection_t *prop_names_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_ENUMERABLE_PROTOTYPE);
 
-  if (prop_names_coll_p->item_count != 0)
+  if (prop_names_p->item_count != 0)
   {
-    prop_names_p = ECMA_GET_NON_NULL_POINTER (ecma_collection_chunk_t,
-                                              prop_names_coll_p->first_chunk_cp);
-
-    ecma_ref_object (obj_p);
     *result_obj_p = ecma_make_object_value (obj_p);
+    return prop_names_p;
   }
 
-  /* Note: We release the collection header here, and return the chunk list of the collection, which will
-   * be handled and released by the vm loop. */
-  jmem_pools_free (prop_names_coll_p, sizeof (ecma_collection_header_t));
-  ecma_free_value (obj_expr_value);
+  ecma_deref_object (obj_p);
+  ecma_collection_destroy (prop_names_p);
 
-  return prop_names_p;
+  return NULL;
 } /* opfunc_for_in */
 
 /**

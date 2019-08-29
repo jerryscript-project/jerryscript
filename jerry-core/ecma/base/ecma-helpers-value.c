@@ -390,18 +390,6 @@ ecma_is_value_error_reference (ecma_value_t value) /**< ecma value */
 } /* ecma_is_value_error_reference */
 
 /**
- * Check if the value is an aligned pointer.
- *
- * @return true - if the value contains an aligned pointer,
- *         false - otherwise
- */
-inline bool JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
-ecma_is_value_pointer (ecma_value_t value) /**< ecma value */
-{
-  return (ecma_get_value_type_field (value) == ECMA_TYPE_POINTER);
-} /* ecma_is_value_pointer */
-
-/**
  * Debug assertion that specified value's type is one of ECMA-defined
  * script-visible types, i.e.: undefined, null, boolean, number, string, object.
  */
@@ -659,29 +647,6 @@ ecma_make_error_reference_value (const ecma_error_reference_t *error_ref_p) /**<
 } /* ecma_make_error_reference_value */
 
 /**
- * Create an ecma value from an aligned pointer
- *
- * @return ecma-value representation of the aligned pointer
- */
-inline ecma_value_t JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
-ecma_make_pointer_value (const void *any_p) /**< any aligned pointer */
-{
-#ifdef ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
-
-  uintptr_t uint_ptr = (uintptr_t) any_p;
-  JERRY_ASSERT ((uint_ptr & ECMA_VALUE_TYPE_MASK) == 0);
-  return ((ecma_value_t) uint_ptr) | ECMA_TYPE_POINTER;
-
-#else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
-
-  jmem_cpointer_t ptr_cp;
-  ECMA_SET_POINTER (ptr_cp, any_p);
-  return (((ecma_value_t) ptr_cp) << ECMA_VALUE_SHIFT) | ECMA_TYPE_POINTER;
-
-#endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
-} /* ecma_make_pointer_value */
-
-/**
  * Get integer value from an integer ecma value
  *
  * @return integer value
@@ -812,23 +777,6 @@ ecma_get_error_reference_from_value (ecma_value_t value) /**< ecma value */
 
   return (ecma_error_reference_t *) ecma_get_pointer_from_ecma_value (value);
 } /* ecma_get_error_reference_from_value */
-
-/**
- * Get an aligned pointer from an ecma value
- *
- * @return pointer value
- */
-inline void * JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
-ecma_get_pointer_from_value (ecma_value_t value) /**< ecma value */
-{
-  JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_POINTER);
-
-#ifdef ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
-  return (void *) (uintptr_t) ((value) & ~ECMA_VALUE_TYPE_MASK);
-#else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
-  return ECMA_GET_POINTER (void, value >> ECMA_VALUE_SHIFT);
-#endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
-} /* ecma_get_pointer_from_value */
 
 /**
  * Invert a boolean value

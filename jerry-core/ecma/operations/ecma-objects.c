@@ -1654,7 +1654,7 @@ ecma_op_object_is_prototype_of (ecma_object_t *base_p, /**< base object */
  *
  * @return collection of strings - property names
  */
-ecma_collection_header_t *
+ecma_collection_t *
 ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
                                    uint32_t opts) /**< any combination of ecma_list_properties_options_t values  */
 {
@@ -1671,8 +1671,8 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
     }
   }
 
-  ecma_collection_header_t *ret_p = ecma_new_values_collection ();
-  ecma_collection_header_t *skipped_non_enumerable_p = ecma_new_values_collection ();
+  ecma_collection_t *ret_p = ecma_new_collection ();
+  ecma_collection_t *skipped_non_enumerable_p = ecma_new_collection ();
 
   const ecma_object_type_t type = ecma_get_object_type (obj_p);
   const bool obj_is_builtin = ecma_get_object_is_builtin (obj_p);
@@ -1696,7 +1696,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
     ecma_length_t string_named_properties_count = 0;
     ecma_length_t array_index_named_properties_count = 0;
 
-    ecma_collection_header_t *prop_names_p = ecma_new_values_collection ();
+    ecma_collection_t *prop_names_p = ecma_new_collection ();
 
 #if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
     if (JERRY_LIKELY (!is_symbols_only))
@@ -1783,22 +1783,20 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
     }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
 
-    ecma_value_t *ecma_value_p = ecma_collection_iterator_init (prop_names_p);
+    ecma_value_t *buffer_p = prop_names_p->buffer_p;
 
     const size_t own_names_hashes_bitmap_size = ECMA_OBJECT_HASH_BITMAP_SIZE / bitmap_row_size;
     JERRY_VLA (uint32_t, own_names_hashes_bitmap, own_names_hashes_bitmap_size);
     memset (own_names_hashes_bitmap, 0, own_names_hashes_bitmap_size * sizeof (own_names_hashes_bitmap[0]));
 
-    while (ecma_value_p != NULL)
+    for (uint32_t i = 0; i < prop_names_p->item_count; i++)
     {
-      ecma_string_t *name_p = ecma_get_string_from_value (*ecma_value_p);
+      ecma_string_t *name_p = ecma_get_string_from_value (buffer_p[i]);
 
 #if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
       /* Symbols are never lazy listed */
       JERRY_ASSERT (!ecma_prop_name_is_symbol (name_p));
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
-
-      ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
 
       uint8_t hash = (uint8_t) ecma_string_hash (name_p);
       uint32_t bitmap_row = (uint32_t) (hash / bitmap_row_size);
@@ -1839,12 +1837,11 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
         if ((own_names_hashes_bitmap[bitmap_row] & (1u << bitmap_column)) != 0)
         {
-          ecma_value_p = ecma_collection_iterator_init (prop_names_p);
+          buffer_p = prop_names_p->buffer_p;
 
-          while (ecma_value_p != NULL)
+          for (uint32_t j = 0; j < prop_names_p->item_count; j++)
           {
-            ecma_string_t *current_name_p = ecma_get_prop_name_from_value (*ecma_value_p);
-            ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+            ecma_string_t *current_name_p = ecma_get_prop_name_from_value (buffer_p[j]);
 
             if (ecma_compare_ecma_strings (index_str_p, current_name_p))
             {
@@ -1858,9 +1855,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
         {
           own_names_hashes_bitmap[bitmap_row] |= (1u << bitmap_column);
 
-          ecma_append_to_values_collection (prop_names_p,
-                                            ecma_make_string_value (index_str_p),
-                                            ECMA_COLLECTION_NO_COPY);
+          ecma_collection_push_back (prop_names_p, ecma_make_string_value (index_str_p));
         }
       }
     }
@@ -1926,12 +1921,11 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
               if ((own_names_hashes_bitmap[bitmap_row] & (1u << bitmap_column)) != 0)
               {
-                ecma_value_p = ecma_collection_iterator_init (prop_names_p);
+                buffer_p = prop_names_p->buffer_p;
 
-                while (ecma_value_p != NULL)
+                for (uint32_t j = 0; j < prop_names_p->item_count; j++)
                 {
-                  ecma_string_t *current_name_p = ecma_get_prop_name_from_value (*ecma_value_p);
-                  ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+                  ecma_string_t *current_name_p = ecma_get_prop_name_from_value (buffer_p[j]);
 
                   if (ecma_compare_ecma_strings (name_p, current_name_p))
                   {
@@ -1945,21 +1939,19 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
               {
                 own_names_hashes_bitmap[bitmap_row] |= (1u << bitmap_column);
 
-                ecma_append_to_values_collection (prop_names_p,
-                                                  ecma_make_prop_name_value (name_p),
-                                                  0);
+                ecma_collection_push_back (prop_names_p, ecma_make_prop_name_value (name_p));
+              }
+              else
+              {
+                ecma_deref_ecma_string (name_p);
               }
             }
             else
             {
               JERRY_ASSERT (is_enumerable_only && !ecma_is_property_enumerable (*property_p));
 
-              ecma_append_to_values_collection (skipped_non_enumerable_p,
-                                                ecma_make_prop_name_value (name_p),
-                                                0);
+              ecma_collection_push_back (skipped_non_enumerable_p, ecma_make_prop_name_value (name_p));
             }
-
-            ecma_deref_ecma_string (name_p);
           }
         }
 
@@ -1967,12 +1959,11 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
       }
     }
 
-    ecma_value_p = ecma_collection_iterator_init (prop_names_p);
+    buffer_p = prop_names_p->buffer_p;
 
-    while (ecma_value_p != NULL)
+    for (uint32_t i = 0; i < prop_names_p->item_count; i++)
     {
-      ecma_string_t *name_p = ecma_get_prop_name_from_value (*ecma_value_p);
-      ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+      ecma_string_t *name_p = ecma_get_prop_name_from_value (buffer_p[i]);
 
       uint32_t index = ecma_string_get_array_index (name_p);
 
@@ -1996,12 +1987,11 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
     uint32_t name_pos = array_index_named_properties_count + string_named_properties_count;
     uint32_t array_index_name_pos = 0;
 
-    ecma_value_p = ecma_collection_iterator_init (prop_names_p);
+    buffer_p = prop_names_p->buffer_p;
 
-    while (ecma_value_p != NULL)
+    for (uint32_t i = 0; i < prop_names_p->item_count; i++)
     {
-      ecma_string_t *name_p = ecma_get_prop_name_from_value (*ecma_value_p);
-      ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+      ecma_string_t *name_p = ecma_get_prop_name_from_value (buffer_p[i]);
 
       uint32_t index = ecma_string_get_array_index (name_p);
 
@@ -2062,7 +2052,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
     JMEM_FINALIZE_LOCAL_ARRAY (array_index_names_p);
 
-    ecma_free_values_collection (prop_names_p, 0);
+    ecma_collection_free (prop_names_p);
 
     /* Third pass:
      *   embedding own property names of current object of prototype chain to aggregate property names collection */
@@ -2086,12 +2076,11 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
       else
       {
         /* Name with same hash has already occured. */
-        ecma_value_p = ecma_collection_iterator_init (ret_p);
+        buffer_p = ret_p->buffer_p;
 
-        while (ecma_value_p != NULL)
+        for (uint32_t j = 0; j < ret_p->item_count; j++)
         {
-          ecma_string_t *current_name_p = ecma_get_prop_name_from_value (*ecma_value_p);
-          ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+          ecma_string_t *current_name_p = ecma_get_prop_name_from_value (buffer_p[j]);
 
           if (ecma_compare_ecma_strings (name_p, current_name_p))
           {
@@ -2103,12 +2092,11 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
       if (is_append)
       {
-        ecma_value_p = ecma_collection_iterator_init (skipped_non_enumerable_p);
+        buffer_p = skipped_non_enumerable_p->buffer_p;
 
-        while (ecma_value_p != NULL)
+        for (uint32_t j = 0; j < skipped_non_enumerable_p->item_count; j++)
         {
-          ecma_string_t *current_name_p = ecma_get_prop_name_from_value (*ecma_value_p);
-          ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+          ecma_string_t *current_name_p = ecma_get_prop_name_from_value (buffer_p[j]);
 
           if (ecma_compare_ecma_strings (name_p, current_name_p))
           {
@@ -2122,10 +2110,13 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
       {
         JERRY_ASSERT ((names_hashes_bitmap[bitmap_row] & (1u << bitmap_column)) != 0);
 
-        ecma_append_to_values_collection (ret_p, ecma_make_prop_name_value (names_p[i]), 0);
+        ecma_collection_push_back (ret_p, ecma_make_prop_name_value (name_p));
+      }
+      else
+      {
+        ecma_deref_ecma_string (name_p);
       }
 
-      ecma_deref_ecma_string (name_p);
     }
 
     JMEM_FINALIZE_LOCAL_ARRAY (names_p);
@@ -2140,7 +2131,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
                                                         prototype_chain_iter_p->u2.prototype_cp);
   }
 
-  ecma_free_values_collection (skipped_non_enumerable_p, 0);
+  ecma_collection_free (skipped_non_enumerable_p);
 
   return ret_p;
 } /* ecma_op_object_get_property_names */

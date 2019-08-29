@@ -145,15 +145,14 @@ ecma_set_already_resolved_value (ecma_value_t already_resolved, /**< the already
  * See also: ES2015 25.4.1.8
  */
 static void
-ecma_promise_trigger_reactions (ecma_collection_header_t *reactions, /**< lists of reactions */
+ecma_promise_trigger_reactions (ecma_collection_t *reactions, /**< lists of reactions */
                                 ecma_value_t value) /**< value for resolve or reject */
 {
-  ecma_value_t *ecma_value_p = ecma_collection_iterator_init (reactions);
+  ecma_value_t *buffer_p = reactions->buffer_p;
 
-  while (ecma_value_p != NULL)
+  for (uint32_t i = 0; i < reactions->item_count; i++)
   {
-    ecma_enqueue_promise_reaction_job (*ecma_value_p, value);
-    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+    ecma_enqueue_promise_reaction_job (buffer_p[i], value);
   }
 } /* ecma_promise_trigger_reactions */
 
@@ -174,19 +173,19 @@ ecma_reject_promise (ecma_value_t promise, /**< promise */
   ecma_promise_set_result (obj_p, ecma_copy_value_if_not_object (reason));
   ecma_promise_object_t *promise_p = (ecma_promise_object_t *) obj_p;
 
-  /* GC can be triggered by ecma_new_values_collection so freeing the collection
+  /* GC can be triggered by ecma_new_collection so freeing the collection
      first and creating a new one might cause a heap after use event. */
-  ecma_collection_header_t *reject_reactions = promise_p->reject_reactions;
-  ecma_collection_header_t *fulfill_reactions = promise_p->fulfill_reactions;
+  ecma_collection_t *reject_reactions = promise_p->reject_reactions;
+  ecma_collection_t *fulfill_reactions = promise_p->fulfill_reactions;
 
   /* Fulfill reactions will never be triggered. */
   ecma_promise_trigger_reactions (reject_reactions, reason);
 
-  promise_p->reject_reactions = ecma_new_values_collection ();
-  promise_p->fulfill_reactions = ecma_new_values_collection ();
+  promise_p->reject_reactions = ecma_new_collection ();
+  promise_p->fulfill_reactions = ecma_new_collection ();
 
-  ecma_free_values_collection (reject_reactions, ECMA_COLLECTION_NO_REF_OBJECTS);
-  ecma_free_values_collection (fulfill_reactions, ECMA_COLLECTION_NO_REF_OBJECTS);
+  ecma_collection_free_if_not_object (reject_reactions);
+  ecma_collection_free_if_not_object (fulfill_reactions);
 } /* ecma_reject_promise */
 
 /**
@@ -206,19 +205,19 @@ ecma_fulfill_promise (ecma_value_t promise, /**< promise */
   ecma_promise_set_result (obj_p, ecma_copy_value_if_not_object (value));
   ecma_promise_object_t *promise_p = (ecma_promise_object_t *) obj_p;
 
-  /* GC can be triggered by ecma_new_values_collection so freeing the collection
+  /* GC can be triggered by ecma_new_collection so freeing the collection
      first and creating a new one might cause a heap after use event. */
-  ecma_collection_header_t *reject_reactions = promise_p->reject_reactions;
-  ecma_collection_header_t *fulfill_reactions = promise_p->fulfill_reactions;
+  ecma_collection_t *reject_reactions = promise_p->reject_reactions;
+  ecma_collection_t *fulfill_reactions = promise_p->fulfill_reactions;
 
   /* Reject reactions will never be triggered. */
   ecma_promise_trigger_reactions (fulfill_reactions, value);
 
-  promise_p->reject_reactions = ecma_new_values_collection ();
-  promise_p->fulfill_reactions = ecma_new_values_collection ();
+  promise_p->reject_reactions = ecma_new_collection ();
+  promise_p->fulfill_reactions = ecma_new_collection ();
 
-  ecma_free_values_collection (reject_reactions, ECMA_COLLECTION_NO_REF_OBJECTS);
-  ecma_free_values_collection (fulfill_reactions, ECMA_COLLECTION_NO_REF_OBJECTS);
+  ecma_collection_free_if_not_object (reject_reactions);
+  ecma_collection_free_if_not_object (fulfill_reactions);
 } /* ecma_fulfill_promise */
 
 /**
@@ -502,8 +501,8 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
   /* 5 */
   ecma_promise_set_state (object_p, ECMA_PROMISE_STATE_PENDING);
   /* 6-7. */
-  promise_object_p->fulfill_reactions = ecma_new_values_collection ();
-  promise_object_p->reject_reactions = ecma_new_values_collection ();
+  promise_object_p->fulfill_reactions = ecma_new_collection ();
+  promise_object_p->reject_reactions = ecma_new_collection ();
   /* 8. */
   ecma_promise_resolving_functions_t *funcs = ecma_promise_create_resolving_functions (object_p);
 
@@ -706,13 +705,8 @@ ecma_promise_do_then (ecma_value_t promise, /**< the promise which call 'then' *
   if (ecma_promise_get_state (obj_p) == ECMA_PROMISE_STATE_PENDING)
   {
     /* 7. */
-    ecma_append_to_values_collection (promise_p->fulfill_reactions,
-                                      ecma_make_object_value (fulfill_reaction_p),
-                                      ECMA_COLLECTION_NO_REF_OBJECTS);
-
-    ecma_append_to_values_collection (promise_p->reject_reactions,
-                                      ecma_make_object_value (reject_reaction_p),
-                                      ECMA_COLLECTION_NO_REF_OBJECTS);
+    ecma_collection_push_back (promise_p->fulfill_reactions, ecma_make_object_value (fulfill_reaction_p));
+    ecma_collection_push_back (promise_p->reject_reactions, ecma_make_object_value (reject_reaction_p));
   }
   else if (ecma_promise_get_state (obj_p) == ECMA_PROMISE_STATE_FULFILLED)
   {

@@ -492,7 +492,7 @@ ecma_fast_array_set_length (ecma_object_t *object_p, /**< fast access mode array
  *
  * @return collection of strings - property names
  */
-ecma_collection_header_t *
+ecma_collection_t *
 ecma_fast_array_get_property_names (ecma_object_t *object_p, /**< fast access mode array object */
                                     uint32_t opts) /**< any combination of ecma_list_properties_options_t values */
 {
@@ -501,7 +501,7 @@ ecma_fast_array_get_property_names (ecma_object_t *object_p, /**< fast access mo
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
   JERRY_ASSERT (ext_obj_p->u.array.is_fast_mode);
 
-  ecma_collection_header_t *ret_p = ecma_new_values_collection ();
+  ecma_collection_t *ret_p = ecma_new_collection ();
 
 #if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
   if (opts & ECMA_LIST_SYMBOLS)
@@ -518,7 +518,7 @@ ecma_fast_array_get_property_names (ecma_object_t *object_p, /**< fast access mo
   {
     if (append_length)
     {
-      ecma_append_to_values_collection (ret_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH), 0);
+      ecma_collection_push_back (ret_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
     }
 
     return ret_p;
@@ -535,12 +535,12 @@ ecma_fast_array_get_property_names (ecma_object_t *object_p, /**< fast access mo
 
     ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (i);
 
-    ecma_append_to_values_collection (ret_p, ecma_make_string_value (index_str_p), ECMA_COLLECTION_NO_COPY);
+    ecma_collection_push_back (ret_p, ecma_make_string_value (index_str_p));
   }
 
   if (append_length)
   {
-    ecma_append_to_values_collection (ret_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH), 0);
+    ecma_collection_push_back (ret_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
   }
 
   if (opts & ECMA_LIST_CONVERT_FAST_ARRAYS)
@@ -1094,19 +1094,16 @@ ecma_op_array_list_lazy_property_names (ecma_object_t *obj_p, /**< a String obje
                                                                    *   false - list all properties into main
                                                                    *           collection.
                                                                    */
-                                        ecma_collection_header_t *main_collection_p, /**< 'main'
-                                                                                      *   collection */
-                                        ecma_collection_header_t *non_enum_collection_p) /**< skipped
-                                                                                          *   'non-enumerable'
-                                                                                          *   collection */
+                                        ecma_collection_t *main_collection_p, /**< 'main'  collection */
+                                        ecma_collection_t *non_enum_collection_p) /**< skipped
+                                                                                   *   'non-enumerable'
+                                                                                   *   collection */
 {
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY);
 
-  ecma_collection_header_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
+  ecma_collection_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
 
-  ecma_append_to_values_collection (for_non_enumerable_p,
-                                    ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH),
-                                    0);
+  ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
 } /* ecma_op_array_list_lazy_property_names */
 
 /**

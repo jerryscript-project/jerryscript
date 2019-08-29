@@ -90,7 +90,7 @@ vm_op_delete_prop (ecma_value_t object, ecma_value_t property, bool is_strict);
 ecma_value_t
 vm_op_delete_var (ecma_value_t name_literal, ecma_object_t *lex_env_p);
 
-ecma_collection_chunk_t *
+ecma_collection_t *
 opfunc_for_in (ecma_value_t left_value, ecma_value_t *result_obj_p);
 
 /**

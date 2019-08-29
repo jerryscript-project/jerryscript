@@ -200,21 +200,29 @@ ecma_gc_mark_promise_object (ecma_extended_object_t *ext_object_p) /**< extended
   }
 
   /* Mark all reactions. */
-  ecma_value_t *ecma_value_p;
-  ecma_value_p = ecma_collection_iterator_init (((ecma_promise_object_t *) ext_object_p)->fulfill_reactions);
+  ecma_promise_object_t *promise_object_p = (ecma_promise_object_t *) ext_object_p;
+  ecma_collection_t *collection_p = promise_object_p->fulfill_reactions;
 
-  while (ecma_value_p != NULL)
+  if (collection_p != NULL)
   {
-    ecma_gc_set_object_visited (ecma_get_object_from_value (*ecma_value_p));
-    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+    ecma_value_t *buffer_p = collection_p->buffer_p;
+
+    for (uint32_t i = 0; i < collection_p->item_count; i++)
+    {
+      ecma_gc_set_object_visited (ecma_get_object_from_value (buffer_p[i]));
+    }
   }
 
-  ecma_value_p = ecma_collection_iterator_init (((ecma_promise_object_t *) ext_object_p)->reject_reactions);
+  collection_p = promise_object_p->reject_reactions;
 
-  while (ecma_value_p != NULL)
+  if (collection_p != NULL)
   {
-    ecma_gc_set_object_visited (ecma_get_object_from_value (*ecma_value_p));
-    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+    ecma_value_t *buffer_p = collection_p->buffer_p;
+
+    for (uint32_t i = 0; i < collection_p->item_count; i++)
+    {
+      ecma_gc_set_object_visited (ecma_get_object_from_value (buffer_p[i]));
+    }
   }
 } /* ecma_gc_mark_promise_object */
 
@@ -768,10 +776,8 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
         case LIT_MAGIC_STRING_PROMISE_UL:
         {
           ecma_free_value_if_not_object (ext_object_p->u.class_prop.u.value);
-          ecma_free_values_collection (((ecma_promise_object_t *) object_p)->fulfill_reactions,
-                                       ECMA_COLLECTION_NO_REF_OBJECTS);
-          ecma_free_values_collection (((ecma_promise_object_t *) object_p)->reject_reactions,
-                                       ECMA_COLLECTION_NO_REF_OBJECTS);
+          ecma_collection_free_if_not_object (((ecma_promise_object_t *) object_p)->fulfill_reactions);
+          ecma_collection_free_if_not_object (((ecma_promise_object_t *) object_p)->reject_reactions);
           ecma_dealloc_extended_object (object_p, sizeof (ecma_promise_object_t));
           return;
         }

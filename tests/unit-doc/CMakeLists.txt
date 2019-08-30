@@ -28,7 +28,7 @@ endif()
 # file names that will be generated. This allows the definition of proper
 # dependencies between the MarkDown files and the generated sources.
 execute_process(
-  COMMAND ${Python_EXECUTABLE} ${GEN_DOCTEST} --dry -d ${CMAKE_CURRENT_BINARY_DIR} ${DOC_FILES}
+  COMMAND ${PYTHON_EXECUTABLE} ${GEN_DOCTEST} --dry -d ${CMAKE_CURRENT_BINARY_DIR} ${DOC_FILES}
   OUTPUT_VARIABLE DOCTEST_OUTPUT
   RESULT_VARIABLE GEN_DOCTEST_RESULT
 )

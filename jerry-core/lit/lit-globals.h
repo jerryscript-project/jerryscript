@@ -123,9 +123,4 @@ typedef uint32_t lit_code_point_t;
  */
 typedef uint32_t lit_string_hash_t;
 
-/**
- * Maximum value of ECMA string hash
- */
-#define LIT_STRING_HASH_LIMIT UINT32_MAX
-
 #endif /* !LIT_GLOBALS_H */

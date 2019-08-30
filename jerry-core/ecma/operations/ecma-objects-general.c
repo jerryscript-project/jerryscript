@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "ecma-array-object.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
@@ -159,8 +160,15 @@ ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
   /* 3. */
   if (ecma_is_property_configurable (property))
   {
-    /* a. */
-    ecma_delete_property (obj_p, property_ref.value_p);
+    if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY)
+    {
+      ecma_array_object_delete_property (obj_p, property_name_p, property_ref.value_p);
+    }
+    else
+    {
+      /* a. */
+      ecma_delete_property (obj_p, property_ref.value_p);
+    }
 
     /* b. */
     return ECMA_VALUE_TRUE;

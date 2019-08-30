@@ -122,10 +122,10 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
     }
     case ECMA_OBJECT_TYPE_ARRAY:
     {
+      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+
       if (ecma_string_is_length (property_name_p))
       {
-        ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-
         if (options & ECMA_PROPERTY_GET_VALUE)
         {
           property_ref_p->virtual_value = ecma_make_uint32_value (ext_object_p->u.array.length);
@@ -133,6 +133,35 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
 
         return ext_object_p->u.array.length_prop;
       }
+
+      if (ext_object_p->u.array.is_fast_mode)
+      {
+        uint32_t index = ecma_string_get_array_index (property_name_p);
+
+        if (index != ECMA_STRING_NOT_ARRAY_INDEX)
+        {
+          if (JERRY_LIKELY (index < ext_object_p->u.array.length))
+          {
+            ecma_value_t *values_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, object_p->u1.property_list_cp);
+
+            if (ecma_is_value_array_hole (values_p[index]))
+            {
+              return ECMA_PROPERTY_TYPE_NOT_FOUND;
+            }
+
+            if (options & ECMA_PROPERTY_GET_VALUE)
+            {
+              property_ref_p->virtual_value = ecma_fast_copy_value (values_p[index]);
+            }
+
+            return (ecma_property_t) (ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_PROPERTY_TYPE_VIRTUAL);
+          }
+        }
+
+        return ECMA_PROPERTY_TYPE_NOT_FOUND;
+      }
+
+
       break;
     }
 #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
@@ -445,12 +474,30 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
     }
     case ECMA_OBJECT_TYPE_ARRAY:
     {
+      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+
       if (ecma_string_is_length (property_name_p))
       {
-        ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-
         return ecma_make_uint32_value (ext_object_p->u.array.length);
       }
+
+      if (JERRY_LIKELY (ext_object_p->u.array.is_fast_mode))
+      {
+        uint32_t index = ecma_string_get_array_index (property_name_p);
+
+        if (JERRY_LIKELY (index != ECMA_STRING_NOT_ARRAY_INDEX))
+        {
+          if (JERRY_LIKELY (index < ext_object_p->u.array.length))
+          {
+            ecma_value_t *values_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, object_p->u1.property_list_cp);
+
+            return (ecma_is_value_array_hole (values_p[index]) ? ECMA_VALUE_NOT_FOUND
+                                                               : ecma_fast_copy_value (values_p[index]));
+          }
+        }
+        return ECMA_VALUE_NOT_FOUND;
+      }
+
       break;
     }
     case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
@@ -934,10 +981,10 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
   {
     case ECMA_OBJECT_TYPE_ARRAY:
     {
+      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+
       if (ecma_string_is_length (property_name_p))
       {
-        ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-
         if (ecma_is_property_writable (ext_object_p->u.array.length_prop))
         {
           return ecma_op_array_object_set_length (object_p, value, 0);
@@ -945,6 +992,22 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
 
         return ecma_reject (is_throw);
       }
+
+      if (JERRY_LIKELY (ext_object_p->u.array.is_fast_mode))
+      {
+        if (JERRY_UNLIKELY (!ecma_get_object_extensible (object_p)))
+        {
+          return ecma_reject (is_throw);
+        }
+
+        if (ecma_fast_array_set_property (object_p, property_name_p, value))
+        {
+          return ECMA_VALUE_TRUE;
+        }
+      }
+
+      JERRY_ASSERT (!(ext_object_p->u.array.is_fast_mode));
+
       break;
     }
     case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
@@ -1593,6 +1656,16 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 {
   JERRY_ASSERT (obj_p != NULL
                 && !ecma_is_lexical_environment (obj_p));
+
+  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY)
+  {
+    ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
+
+    if (ext_object_p->u.array.is_fast_mode)
+    {
+      return ecma_fast_array_get_property_names (obj_p, opts);
+    }
+  }
 
   ecma_collection_header_t *ret_p = ecma_new_values_collection ();
   ecma_collection_header_t *skipped_non_enumerable_p = ecma_new_values_collection ();

@@ -282,24 +282,22 @@ ecma_builtin_helper_object_get_properties (ecma_object_t *obj_p, /**< object */
 
   ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, opts);
 
+  if (props_p->item_count == 0)
+  {
+    ecma_free_values_collection (props_p, 0);
+    return new_array;
+  }
+
+  JERRY_ASSERT (((ecma_extended_object_t *) new_array_p)->u.array.is_fast_mode);
+
+  ecma_value_t *values_p = ecma_fast_array_extend (new_array_p, props_p->item_count);
+
   ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
 
   while (ecma_value_p != NULL)
   {
-    ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
-
-    ecma_value_t completion = ecma_builtin_helper_def_prop (new_array_p,
-                                                            index_string_p,
-                                                            *ecma_value_p,
-                                                            ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
-
-    JERRY_ASSERT (ecma_is_value_true (completion));
-
-    ecma_deref_ecma_string (index_string_p);
-
+    values_p[index++] = ecma_copy_value_if_not_object (*ecma_value_p);
     ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
-
-    index++;
   }
 
   ecma_free_values_collection (props_p, 0);

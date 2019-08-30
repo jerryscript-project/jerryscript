@@ -407,6 +407,31 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 
         break;
       }
+      case ECMA_OBJECT_TYPE_ARRAY:
+      {
+        ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+
+        if (ext_object_p->u.array.is_fast_mode)
+        {
+          if (object_p->u1.property_list_cp == JMEM_CP_NULL)
+          {
+            return;
+          }
+
+          ecma_value_t *values_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, object_p->u1.property_list_cp);
+
+          for (uint32_t i = 0; i < ext_object_p->u.array.length; i++)
+          {
+            if (ecma_is_value_object (values_p[i]))
+            {
+              ecma_gc_set_object_visited (ecma_get_object_from_value (values_p[i]));
+            }
+          }
+
+          return;
+        }
+        break;
+      }
       case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
       {
         ecma_extended_object_t *ext_function_p = (ecma_extended_object_t *) object_p;
@@ -542,6 +567,37 @@ ecma_gc_free_native_pointer (ecma_property_t *property_p) /**< property */
 } /* ecma_gc_free_native_pointer */
 
 /**
+ * Free specified fast access mode array object.
+ */
+static void
+ecma_free_fast_access_array (ecma_object_t *object_p) /**< fast access mode array object to free */
+{
+  JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_ARRAY);
+  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+
+  JERRY_ASSERT (ext_object_p->u.array.is_fast_mode);
+
+  const uint32_t aligned_length = ECMA_FAST_ARRAY_ALIGN_LENGTH (ext_object_p->u.array.length);
+
+  if (object_p->u1.property_list_cp != JMEM_CP_NULL)
+  {
+    ecma_value_t *values_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, object_p->u1.property_list_cp);
+
+    for (uint32_t i = 0; i < aligned_length; i++)
+    {
+      ecma_free_value_if_not_object (values_p[i]);
+    }
+
+    jmem_heap_free_block (values_p, aligned_length * sizeof (ecma_value_t));
+  }
+
+  JERRY_ASSERT (JERRY_CONTEXT (ecma_gc_objects_number) > 0);
+  JERRY_CONTEXT (ecma_gc_objects_number)--;
+
+  ecma_dealloc_extended_object (object_p, sizeof (ecma_extended_object_t));
+} /* ecma_free_fast_access_array */
+
+/**
  * Free specified object.
  */
 static void
@@ -556,6 +612,17 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
   if (obj_is_not_lex_env
       || ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
   {
+    if (obj_is_not_lex_env && ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_ARRAY)
+    {
+      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+
+      if (ext_object_p->u.array.is_fast_mode)
+      {
+        ecma_free_fast_access_array (object_p);
+        return;
+      }
+    }
+
     jmem_cpointer_t prop_iter_cp = object_p->u1.property_list_cp;
 
 #if ENABLED (JERRY_PROPRETY_HASHMAP)

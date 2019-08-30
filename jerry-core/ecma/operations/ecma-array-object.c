@@ -76,6 +76,19 @@ ecma_op_new_array_object (ecma_length_t length) /**< length of the new array */
 ecma_object_t *
 ecma_op_new_fast_array_object (ecma_length_t length) /**< length of the new fast access mode array */
 {
+  const uint32_t aligned_length = ECMA_FAST_ARRAY_ALIGN_LENGTH (length);
+  ecma_value_t *values_p = NULL;
+
+  if (length != 0)
+  {
+    values_p = (ecma_value_t *) jmem_heap_alloc_block_null_on_error (aligned_length * sizeof (ecma_value_t));
+
+    if (JERRY_UNLIKELY (values_p == NULL))
+    {
+      return NULL;
+    }
+  }
+
   ecma_object_t *object_p = ecma_op_new_array_object (length);
 
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
@@ -83,29 +96,12 @@ ecma_op_new_fast_array_object (ecma_length_t length) /**< length of the new fast
 
   JERRY_ASSERT (object_p->u1.property_list_cp == JMEM_CP_NULL);
 
-  if (length == 0)
-  {
-    return object_p;
-  }
-
-  const uint32_t aligned_length = ECMA_FAST_ARRAY_ALIGN_LENGTH (length);
-
-  ecma_value_t *values_p;
-
-  values_p = (ecma_value_t *) jmem_heap_alloc_block_null_on_error (aligned_length * sizeof (ecma_value_t));
-
-  if (JERRY_UNLIKELY (values_p == NULL))
-  {
-    return NULL;
-  }
-
   for (uint32_t i = 0; i < aligned_length; i++)
   {
     values_p[i] = ECMA_VALUE_ARRAY_HOLE;
   }
 
-  ECMA_SET_NON_NULL_POINTER (object_p->u1.property_list_cp, values_p);
-
+  ECMA_SET_POINTER (object_p->u1.property_list_cp, values_p);
   return object_p;
 } /* ecma_op_new_fast_array_object */
 
@@ -203,14 +199,14 @@ ecma_fast_array_convert_to_normal (ecma_object_t *object_p) /**< fast access mod
  * e.g. new Array(5000) is constructed as fast mode access array,
  * but new Array(50000000) is consturcted as normal property list based array
  */
-#define ECMA_FAST_ARRAY_MAX_INITIAL_LENGTH (1 << 13)
+#define ECMA_FAST_ARRAY_MAX_INITIAL_LENGTH (1 << 17)
 #else
 /**
  * Maximum length of the array length to allocate fast mode access for it
  * e.g. new Array(5000) is constructed as fast mode access array,
  * but new Array(50000000) is consturcted as normal property list based array
  */
-#define ECMA_FAST_ARRAY_MAX_INITIAL_LENGTH (1 << 17)
+#define ECMA_FAST_ARRAY_MAX_INITIAL_LENGTH (1 << 13)
 #endif
 
 /**
@@ -229,9 +225,8 @@ ecma_fast_array_set_property (ecma_object_t *object_p, /**< fast access mode arr
   JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_ARRAY);
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
 
-  JERRY_ASSERT (ext_obj_p->u.array.is_fast_mode);
-
   uint32_t index = ecma_string_get_array_index (property_name_p);
+  JERRY_ASSERT (ext_obj_p->u.array.is_fast_mode);
 
   if (JERRY_UNLIKELY (index == ECMA_STRING_NOT_ARRAY_INDEX))
   {
@@ -602,8 +597,10 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
 
     if (object_p == NULL)
     {
-      object_p = ecma_op_new_array_object (length);
+      return ecma_make_object_value (ecma_op_new_array_object (length));
     }
+
+    JERRY_ASSERT (((ecma_extended_object_t *) object_p)->u.array.is_fast_mode);
 
     return ecma_make_object_value (object_p);
   }

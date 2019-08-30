@@ -1154,6 +1154,14 @@ ecma_free_unused_memory (jmem_pressure_t pressure) /**< current pressure */
       if (!ecma_is_lexical_environment (obj_iter_p)
           || ecma_get_lex_env_type (obj_iter_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
       {
+        if (!ecma_is_lexical_environment (obj_iter_p)
+            && ecma_get_object_type (obj_iter_p) == ECMA_OBJECT_TYPE_ARRAY
+            && ((ecma_extended_object_t *) obj_iter_p)->u.array.is_fast_mode)
+        {
+          obj_iter_cp = obj_iter_p->gc_next_cp;
+          continue;
+        }
+
         jmem_cpointer_t prop_iter_cp = obj_iter_p->u1.property_list_cp;
 
         if (prop_iter_cp != JMEM_CP_NULL)

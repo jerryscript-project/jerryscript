@@ -106,7 +106,7 @@ ecma_builtin_arraybuffer_prototype_object_slice (ecma_value_t this_arg, /**< thi
                                arg1,
                                ret_value);
 
-  start = ecma_builtin_helper_array_index_normalize (start_num, len);
+  start = ecma_builtin_helper_array_index_normalize (start_num, len, false);
 
   if (!ecma_is_value_undefined (arg2))
   {
@@ -114,7 +114,7 @@ ecma_builtin_arraybuffer_prototype_object_slice (ecma_value_t this_arg, /**< thi
                                  arg2,
                                  ret_value);
 
-    end = ecma_builtin_helper_array_index_normalize (end_num, len);
+    end = ecma_builtin_helper_array_index_normalize (end_num, len, false);
 
     ECMA_OP_TO_NUMBER_FINALIZE (end_num);
   }

@@ -750,7 +750,7 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t arg1, /**< start */
     return ECMA_VALUE_ERROR;
   }
 
-  start = ecma_builtin_helper_array_index_normalize (start_num, len);
+  start = ecma_builtin_helper_array_index_normalize (start_num, len, false);
 
   /* 7. */
   if (ecma_is_value_undefined (arg2))
@@ -767,7 +767,7 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t arg1, /**< start */
       return ECMA_VALUE_ERROR;
     }
 
-    end = ecma_builtin_helper_array_index_normalize (end_num, len);
+    end = ecma_builtin_helper_array_index_normalize (end_num, len, false);
   }
 
   JERRY_ASSERT (start <= len && end <= len);
@@ -1122,7 +1122,7 @@ ecma_builtin_array_prototype_object_splice (const ecma_value_t args[], /**< argu
       return ECMA_VALUE_ERROR;
     }
 
-    start = ecma_builtin_helper_array_index_normalize (start_num, len);
+    start = ecma_builtin_helper_array_index_normalize (start_num, len, false);
 
     /*
      * If there is only one argument, that will be the start argument,
@@ -1434,7 +1434,7 @@ ecma_builtin_array_prototype_object_index_of (ecma_value_t arg1, /**< searchElem
 
   ecma_number_t found_index = ECMA_NUMBER_MINUS_ONE;
 
-  uint32_t from_idx = ecma_builtin_helper_array_index_normalize (arg_from_idx, len);
+  uint32_t from_idx = ecma_builtin_helper_array_index_normalize (arg_from_idx, len, false);
 
   /* 6. */
   for (; from_idx < len && found_index < 0; from_idx++)
@@ -1483,7 +1483,6 @@ ecma_builtin_array_prototype_object_last_index_of (const ecma_value_t args[], /*
 
   uint32_t from_idx = len - 1;
 
-  /* 5. */
   if (args_number > 1)
   {
     ecma_number_t arg_from_idx;
@@ -1492,54 +1491,7 @@ ecma_builtin_array_prototype_object_last_index_of (const ecma_value_t args[], /*
       return ECMA_VALUE_ERROR;
     }
 
-    if (!ecma_number_is_nan (arg_from_idx))
-    {
-      if (ecma_number_is_infinity (arg_from_idx))
-      {
-        from_idx = ecma_number_is_negative (arg_from_idx) ? (uint32_t) -1 : len - 1;
-      }
-      else
-      {
-        int32_t int_from_idx = ecma_number_to_int32 (arg_from_idx);
-
-        /* 6. */
-        if (int_from_idx >= 0)
-        {
-          /* min(int_from_idx, len - 1) */
-          if ((uint32_t) int_from_idx > len - 1)
-          {
-            from_idx = len - 1;
-          }
-          else
-          {
-            from_idx = (uint32_t) int_from_idx;
-          }
-        }
-        /* 7. */
-        else
-        {
-          int_from_idx = -int_from_idx;
-
-          /* We prevent from_idx from being negative, so that we can use an uint32. */
-          if ((uint32_t) int_from_idx <= len)
-          {
-            from_idx = len - (uint32_t) int_from_idx;
-          }
-          else
-          {
-            /*
-             * If from_idx would be negative, we set it to UINT_MAX. See reasoning for this in the comment
-             * at the for loop below.
-             */
-            from_idx = (uint32_t) -1;
-          }
-        }
-      }
-    }
-    else
-    {
-      from_idx = 0;
-    }
+    from_idx = ecma_builtin_helper_array_index_normalize (arg_from_idx, len, true);
   }
 
   ecma_number_t num = ECMA_NUMBER_MINUS_ONE;

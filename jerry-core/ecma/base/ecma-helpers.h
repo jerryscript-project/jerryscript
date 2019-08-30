@@ -50,11 +50,17 @@
  */
 #define ECMA_SET_POINTER(field, non_compressed_pointer) JMEM_CP_SET_POINTER (field, non_compressed_pointer)
 
+/**
+ * Status flags for ecma_string_get_chars function
+ */
 typedef enum
 {
-  ECMA_STRING_FLAG_EMPTY = 0,
-  ECMA_STRING_FLAG_IS_ASCII,
-  ECMA_STRING_FLAG_MUST_BE_FREED
+  ECMA_STRING_FLAG_EMPTY = 0,                /**< No options are provided. */
+  ECMA_STRING_FLAG_IS_ASCII = (1 << 0),      /**< The string contains only ASCII characters. */
+  ECMA_STRING_FLAG_REHASH_NEEDED = (1 << 1), /**< The hash of the string must be recalculated.
+                                              *   For more details see ecma_append_chars_to_string */
+  ECMA_STRING_FLAG_IS_UINT32 = (1 << 2),     /**< The string repesents an UINT32 number */
+  ECMA_STRING_FLAG_MUST_BE_FREED = (1 << 3), /**< The returned buffer must be freed */
 } ecma_string_flag_t;
 
 /**
@@ -65,7 +71,11 @@ typedef enum
                                    utf8_str_size) /**< [out] output buffer size */ \
   lit_utf8_size_t utf8_str_size; \
   uint8_t utf8_ptr ## flags = ECMA_STRING_FLAG_EMPTY; \
-  const lit_utf8_byte_t *utf8_ptr = ecma_string_get_chars (ecma_str_ptr, &utf8_str_size, &utf8_ptr ## flags);
+  const lit_utf8_byte_t *utf8_ptr = ecma_string_get_chars (ecma_str_ptr, \
+                                                           &utf8_str_size, \
+                                                           NULL, \
+                                                           NULL, \
+                                                           &utf8_ptr ## flags);
 
 /**
  * Free the cesu-8 string buffer allocated by 'ECMA_STRING_TO_UTF8_STRING'
@@ -181,6 +191,7 @@ void ecma_check_value_type_is_spec_defined (ecma_value_t value);
 ecma_value_t JERRY_ATTR_CONST ecma_make_boolean_value (bool boolean_value);
 ecma_value_t JERRY_ATTR_CONST ecma_make_integer_value (ecma_integer_value_t integer_value);
 ecma_value_t ecma_make_nan_value (void);
+ecma_value_t ecma_make_float_value (ecma_number_t *ecma_num_p);
 ecma_value_t ecma_make_number_value (ecma_number_t ecma_number);
 ecma_value_t ecma_make_int32_value (int32_t int32_number);
 ecma_value_t ecma_make_uint32_value (uint32_t uint32_number);
@@ -195,6 +206,7 @@ ecma_value_t JERRY_ATTR_PURE ecma_make_error_reference_value (const ecma_error_r
 ecma_value_t JERRY_ATTR_PURE ecma_make_pointer_value (const void *any_p);
 ecma_integer_value_t JERRY_ATTR_CONST ecma_get_integer_from_value (ecma_value_t value);
 ecma_number_t JERRY_ATTR_PURE ecma_get_float_from_value (ecma_value_t value);
+ecma_number_t * ecma_get_pointer_from_float_value (ecma_value_t value);
 ecma_number_t JERRY_ATTR_PURE ecma_get_number_from_value (ecma_value_t value);
 ecma_string_t JERRY_ATTR_PURE *ecma_get_string_from_value (ecma_value_t value);
 #if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
@@ -246,6 +258,7 @@ ecma_string_t *ecma_concat_ecma_strings (ecma_string_t *string1_p, ecma_string_t
 ecma_string_t *ecma_append_magic_string_to_string (ecma_string_t *string1_p, lit_magic_string_id_t string2_id);
 void ecma_ref_ecma_string (ecma_string_t *string_p);
 void ecma_deref_ecma_string (ecma_string_t *string_p);
+void ecma_destroy_ecma_string (ecma_string_t *string_p);
 ecma_number_t ecma_string_to_number (const ecma_string_t *str_p);
 uint32_t ecma_string_get_array_index (const ecma_string_t *str_p);
 
@@ -271,7 +284,11 @@ ecma_substring_copy_to_utf8_buffer (const ecma_string_t *string_desc_p,
                                     lit_utf8_size_t buffer_size);
 void ecma_string_to_utf8_bytes (const ecma_string_t *string_desc_p, lit_utf8_byte_t *buffer_p,
                                 lit_utf8_size_t buffer_size);
-const lit_utf8_byte_t *ecma_string_get_chars (const ecma_string_t *string_p, lit_utf8_size_t *size_p, uint8_t *flags_p);
+const lit_utf8_byte_t *ecma_string_get_chars (const ecma_string_t *string_p,
+                                              lit_utf8_size_t *size_p,
+                                              lit_utf8_size_t *length_p,
+                                              lit_utf8_byte_t *uint32_buff_p,
+                                              uint8_t *flags_p);
 bool ecma_compare_ecma_string_to_magic_id (const ecma_string_t *string_p, lit_magic_string_id_t id);
 bool ecma_string_is_empty (const ecma_string_t *string_p);
 bool ecma_string_is_length (const ecma_string_t *string_p);

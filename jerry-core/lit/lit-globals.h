@@ -121,16 +121,11 @@ typedef uint32_t lit_code_point_t;
 /**
  * ECMA string hash
  */
-typedef uint16_t lit_string_hash_t;
+typedef uint32_t lit_string_hash_t;
 
 /**
- * Maximum value of ECMA string hash + 1
- *
- * Note:
- *   On ARM, this constant can be encoded as an immediate value
- *   while 0xffffu cannot be. Hence using this constant reduces
- *   binary size and improves performance.
+ * Maximum value of ECMA string hash
  */
-#define LIT_STRING_HASH_LIMIT 0x10000u
+#define LIT_STRING_HASH_LIMIT UINT32_MAX
 
 #endif /* !LIT_GLOBALS_H */

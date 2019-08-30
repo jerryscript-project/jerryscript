@@ -659,9 +659,9 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 #if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
   if (JERRY_UNLIKELY (ecma_prop_name_is_symbol (string_p)))
   {
-    if (string_p->hash & ECMA_GLOBAL_SYMBOL_FLAG)
+    if (string_p->u.hash & ECMA_GLOBAL_SYMBOL_FLAG)
     {
-      magic_string_id = (string_p->hash >> ECMA_GLOBAL_SYMBOL_SHIFT);
+      magic_string_id = (string_p->u.hash >> ECMA_GLOBAL_SYMBOL_SHIFT);
     }
   }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
@@ -802,7 +802,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 
       ecma_string_t *symbol_p = ecma_new_symbol_from_descriptor_string (symbol_desc_value);
       lit_magic_string_id_t symbol_id = (lit_magic_string_id_t) curr_property_p->value;
-      symbol_p->hash = (uint16_t) ((symbol_id << ECMA_GLOBAL_SYMBOL_SHIFT) | ECMA_GLOBAL_SYMBOL_FLAG);
+      symbol_p->u.hash = (uint16_t) ((symbol_id << ECMA_GLOBAL_SYMBOL_SHIFT) | ECMA_GLOBAL_SYMBOL_FLAG);
 
       value = ecma_make_symbol_value (symbol_p);
       break;

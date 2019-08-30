@@ -24,9 +24,6 @@ JERRY_STATIC_ASSERT (sizeof (ecma_property_value_t) == sizeof (ecma_value_t),
 JERRY_STATIC_ASSERT (((sizeof (ecma_property_value_t) - 1) & sizeof (ecma_property_value_t)) == 0,
                      size_of_ecma_property_value_t_must_be_power_of_2);
 
-JERRY_STATIC_ASSERT (sizeof (ecma_string_t) == sizeof (uint64_t),
-                     size_of_ecma_string_t_must_be_less_than_or_equal_to_8_bytes);
-
 JERRY_STATIC_ASSERT (sizeof (ecma_extended_object_t) - sizeof (ecma_object_t) <= sizeof (uint64_t),
                      size_of_ecma_extended_object_part_must_be_less_than_or_equal_to_8_bytes);
 
@@ -155,7 +152,35 @@ ecma_dealloc_string (ecma_string_t *string_p) /**< string to be freed */
 } /* ecma_dealloc_string */
 
 /**
- * Allocate memory for string with character data
+ * Allocate memory for extended ecma-string descriptor
+ *
+ * @return pointer to allocated memory
+ */
+inline ecma_extended_string_t * JERRY_ATTR_ALWAYS_INLINE
+ecma_alloc_extended_string (void)
+{
+#if ENABLED (JERRY_MEM_STATS)
+  jmem_stats_allocate_string_bytes (sizeof (ecma_extended_string_t));
+#endif /* ENABLED (JERRY_MEM_STATS) */
+
+  return (ecma_extended_string_t *) jmem_heap_alloc_block (sizeof (ecma_extended_string_t));
+} /* ecma_alloc_extended_string */
+
+/**
+ * Dealloc memory from extended ecma-string descriptor
+ */
+inline void JERRY_ATTR_ALWAYS_INLINE
+ecma_dealloc_extended_string (ecma_extended_string_t *ext_string_p) /**< extended string to be freed */
+{
+#if ENABLED (JERRY_MEM_STATS)
+  jmem_stats_free_string_bytes (sizeof (ecma_extended_string_t));
+#endif /* ENABLED (JERRY_MEM_STATS) */
+
+  jmem_heap_free_block (ext_string_p, sizeof (ecma_extended_string_t));
+} /* ecma_dealloc_extended_string */
+
+/**
+ * Allocate memory for an string with character data
  *
  * @return pointer to allocated memory
  */

@@ -102,11 +102,14 @@ ecma_builtin_symbol_for_helper (ecma_value_t value_to_find) /**< symbol or ecma-
     string_p = ecma_get_symbol_from_value (value_to_find);
   }
 
-  ecma_lit_storage_item_t *symbol_list_p = JERRY_CONTEXT (symbol_list_first_p);
+  jmem_cpointer_t symbol_list_cp = JERRY_CONTEXT (symbol_list_first_cp);
   jmem_cpointer_t *empty_cpointer_p = NULL;
 
-  while (symbol_list_p != NULL)
+  while (symbol_list_cp != JMEM_CP_NULL)
   {
+    ecma_lit_storage_item_t *symbol_list_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_lit_storage_item_t,
+                                                                           symbol_list_cp);
+
     for (int i = 0; i < ECMA_LIT_STORAGE_VALUE_COUNT; i++)
     {
       if (symbol_list_p->values[i] != JMEM_CP_NULL)
@@ -145,7 +148,7 @@ ecma_builtin_symbol_for_helper (ecma_value_t value_to_find) /**< symbol or ecma-
       }
     }
 
-    symbol_list_p = JMEM_CP_GET_POINTER (ecma_lit_storage_item_t, symbol_list_p->next_cp);
+    symbol_list_cp = symbol_list_p->next_cp;
   }
 
   if (!is_for)
@@ -175,8 +178,8 @@ ecma_builtin_symbol_for_helper (ecma_value_t value_to_find) /**< symbol or ecma-
     new_item_p->values[i] = JMEM_CP_NULL;
   }
 
-  JMEM_CP_SET_POINTER (new_item_p->next_cp, JERRY_CONTEXT (symbol_list_first_p));
-  JERRY_CONTEXT (symbol_list_first_p) = new_item_p;
+  new_item_p->next_cp = JERRY_CONTEXT (symbol_list_first_cp);
+  JMEM_CP_SET_NON_NULL_POINTER (JERRY_CONTEXT (symbol_list_first_cp), new_item_p);
 
   return ecma_copy_value (ecma_make_symbol_value (new_symbol_p));
 } /* ecma_builtin_symbol_for_helper */

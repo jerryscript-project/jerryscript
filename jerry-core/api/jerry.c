@@ -22,6 +22,7 @@
 #include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
 #include "ecma-comparison.h"
+#include "ecma-container-object.h"
 #include "ecma-dataview-object.h"
 #include "ecma-exceptions.h"
 #include "ecma-eval.h"
@@ -1001,6 +1002,18 @@ jerry_is_feature_enabled (const jerry_feature_t feature) /**< feature to check *
 #if ENABLED (JERRY_LOGGING)
           || feature == JERRY_FEATURE_LOGGING
 #endif /* ENABLED (JERRY_LOGGING) */
+#if ENABLED (JERRY_ES2015_BUILTIN_MAP)
+          || feature == JERRY_FEATURE_MAP
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
+#if ENABLED (JERRY_ES2015_BUILTIN_SET)
+          || feature == JERRY_FEATURE_SET
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SET) */
+#if ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP)
+          || feature == JERRY_FEATURE_WEAKMAP
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP) */
+#if ENABLED (JERRY_ES2015_BUILTIN_WEAKSET)
+          || feature == JERRY_FEATURE_WEAKSET
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_WEAKSET) */
           );
 } /* jerry_is_feature_enabled */
 
@@ -4375,6 +4388,141 @@ jerry_json_stringify (const jerry_value_t object_to_stringify) /**< a jerry_obje
   return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("The JSON has been disabled.")));
 #endif /* ENABLED (JERRY_BUILTIN_JSON) */
 } /* jerry_json_stringify */
+
+/**
+ * Create a container type specified in jerry_container_type_t.
+ * The container can be created with a list of arguments, which will be passed to the container constructor to be
+ * inserted to the container.
+ *
+ * Note:
+ *      The returned value must be freed with jerry_release_value
+ * @return jerry_value_t representing a container with the given type.
+ */
+jerry_value_t
+jerry_create_container (jerry_container_type_t container_type, /**< Type of the container */
+                        const jerry_value_t *arguments_list_p, /**< arguments list */
+                        jerry_length_t arguments_list_len) /**< Length of arguments list */
+{
+  jerry_assert_api_available ();
+
+#if ENABLED (JERRY_ES2015_BUILTIN_CONTAINER)
+  for (jerry_length_t i = 0; i < arguments_list_len; i++)
+  {
+    if (ecma_is_value_error_reference (arguments_list_p[i]))
+    {
+      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_value_msg_p)));
+    }
+  }
+
+  switch (container_type)
+  {
+#if ENABLED (JERRY_ES2015_BUILTIN_MAP)
+    case JERRY_CONTAINER_TYPE_MAP:
+    {
+      return ecma_op_container_create (arguments_list_p,
+                                       arguments_list_len,
+                                       LIT_MAGIC_STRING_MAP_UL,
+                                       ECMA_BUILTIN_ID_MAP_PROTOTYPE);
+    }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
+#if ENABLED (JERRY_ES2015_BUILTIN_SET)
+    case JERRY_CONTAINER_TYPE_SET:
+    {
+      return ecma_op_container_create (arguments_list_p,
+                                       arguments_list_len,
+                                       LIT_MAGIC_STRING_SET_UL,
+                                       ECMA_BUILTIN_ID_SET_PROTOTYPE);
+    }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SET) */
+#if ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP)
+    case JERRY_CONTAINER_TYPE_WEAKMAP:
+    {
+      return ecma_op_container_create (arguments_list_p,
+                                       arguments_list_len,
+                                       LIT_MAGIC_STRING_WEAKMAP_UL,
+                                       ECMA_BUILTIN_ID_WEAKMAP_PROTOTYPE);
+    }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP) */
+#if ENABLED (JERRY_ES2015_BUILTIN_WEAKSET)
+    case JERRY_CONTAINER_TYPE_WEAKSET:
+    {
+      return ecma_op_container_create (arguments_list_p,
+                                       arguments_list_len,
+                                       LIT_MAGIC_STRING_WEAKSET_UL,
+                                       ECMA_BUILTIN_ID_WEAKSET_PROTOTYPE);
+    }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_WEAKSET) */
+    default:
+    {
+      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Invalid container type.")));
+    }
+  }
+#else /* !ENABLED (JERRY_ES2015_BUILTIN_CONTAINER) */
+  JERRY_UNUSED (arguments_list_p);
+  JERRY_UNUSED (arguments_list_len);
+  JERRY_UNUSED (container_type);
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Containers are disabled.")));
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_CONTAINER) */
+} /* jerry_create_container */
+
+/**
+ * Get the type of the given container object.
+ *
+ * @return Corresponding type to the given container object.
+ */
+jerry_container_type_t
+jerry_get_container_type (const jerry_value_t value) /**< the container object */
+{
+  jerry_assert_api_available ();
+
+#if ENABLED (JERRY_ES2015_BUILTIN_CONTAINER)
+  if (ecma_is_value_object (value))
+  {
+    ecma_object_t *obj_p = ecma_get_object_from_value (value);
+
+    if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_CLASS)
+    {
+      uint16_t type = ((ecma_extended_object_t *) obj_p)->u.class_prop.class_id;
+
+      switch (type)
+      {
+#if ENABLED (JERRY_ES2015_BUILTIN_MAP)
+        case LIT_MAGIC_STRING_MAP_UL:
+        {
+          return JERRY_CONTAINER_TYPE_MAP;
+        }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
+#if ENABLED (JERRY_ES2015_BUILTIN_SET)
+        case LIT_MAGIC_STRING_SET_UL:
+        {
+          return JERRY_CONTAINER_TYPE_SET;
+        }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SET) */
+#if ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP)
+        case LIT_MAGIC_STRING_WEAKMAP_UL:
+        {
+          return JERRY_CONTAINER_TYPE_WEAKMAP;
+        }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP) */
+#if ENABLED (JERRY_ES2015_BUILTIN_WEAKSET)
+        case LIT_MAGIC_STRING_WEAKSET_UL:
+        {
+          return JERRY_CONTAINER_TYPE_WEAKSET;
+        }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_WEAKSET) */
+        default:
+        {
+          return JERRY_CONTAINER_TYPE_INVALID;
+        }
+      }
+    }
+  }
+
+#else /* !ENABLED (JERRY_ES2015_BUILTIN_CONTAINER) */
+  JERRY_UNUSED (value);
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_CONTAINER) */
+  return JERRY_CONTAINER_TYPE_INVALID;
+} /* jerry_get_container_type */
 
 /**
  * @}

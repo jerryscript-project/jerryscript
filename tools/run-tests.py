@@ -222,6 +222,7 @@ BINARY_CACHE = {}
 TERM_NORMAL = '\033[0m'
 TERM_YELLOW = '\033[1;33m'
 TERM_BLUE = '\033[1;34m'
+TERM_RED = '\033[1;31m'
 
 def report_command(cmd_type, cmd, env=None):
     sys.stderr.write('%s%s%s\n' % (TERM_BLUE, cmd_type, TERM_NORMAL))
@@ -236,6 +237,11 @@ def report_skip(job):
         sys.stderr.write(' (%s)' % job.skip)
     sys.stderr.write('%s\n' % TERM_NORMAL)
 
+def get_platform_cmd_prefix():
+    if sys.platform == 'win32':
+        return ['cmd', '/S', '/C']
+    return []
+
 def create_binary(job, options):
     build_args = job.build_args[:]
     if options.buildoptions:
@@ -243,7 +249,9 @@ def create_binary(job, options):
             if option not in build_args:
                 build_args.append(option)
 
-    build_cmd = [settings.BUILD_SCRIPT] + build_args
+    build_cmd = get_platform_cmd_prefix()
+    build_cmd.append(settings.BUILD_SCRIPT)
+    build_cmd.extend(build_args)
 
     build_dir_path = os.path.join(options.outdir, job.name)
     build_cmd.append('--builddir=%s' % build_dir_path)
@@ -329,6 +337,7 @@ def run_jerry_debugger_tests(options):
     for job in DEBUGGER_TEST_OPTIONS:
         ret_build, build_dir_path = create_binary(job, options)
         if ret_build:
+            print("\n%sBuild failed%s\n" % (TERM_RED, TERM_NORMAL))
             break
 
         for channel in ["websocket", "rawpacket"]:
@@ -413,6 +422,7 @@ def run_test262_test_suite(options):
     for job in TEST262_TEST_SUITE_OPTIONS:
         ret_build, build_dir_path = create_binary(job, options)
         if ret_build:
+            print("\n%sBuild failed%s\n" % (TERM_RED, TERM_NORMAL))
             break
 
         test_cmd = [
@@ -433,11 +443,22 @@ def run_unittests(options):
     for job in JERRY_UNITTESTS_OPTIONS:
         ret_build, build_dir_path = create_binary(job, options)
         if ret_build:
+            print("\n%sBuild failed%s\n" % (TERM_RED, TERM_NORMAL))
             break
 
+        if sys.platform == 'win32':
+            if "--debug" in job.build_args:
+                build_config = "Debug"
+            else:
+                build_config = "MinSizeRel"
+        else:
+            build_config = ""
+
+
         ret_test |= run_check(
+            get_platform_cmd_prefix() +
             [settings.UNITTEST_RUNNER_SCRIPT] +
-            [os.path.join(build_dir_path, 'tests')] +
+            [os.path.join(build_dir_path, 'tests', build_config)] +
             (["-q"] if options.quiet else [])
         )
 
@@ -451,6 +472,7 @@ def run_buildoption_test(options):
 
         ret, _ = create_binary(job, options)
         if ret:
+            print("\n%sBuild failed%s\n" % (TERM_RED, TERM_NORMAL))
             break
 
     return ret

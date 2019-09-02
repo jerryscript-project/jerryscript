@@ -3594,8 +3594,15 @@ jerry_create_typedarray_for_arraybuffer (jerry_typedarray_type_t type_name, /**<
                                          const jerry_value_t arraybuffer) /**< ArrayBuffer to use */
 {
   jerry_assert_api_available ();
+
+#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
   jerry_length_t byteLength = jerry_get_arraybuffer_byte_length (arraybuffer);
   return jerry_create_typedarray_for_arraybuffer_sz (type_name, arraybuffer, 0, byteLength);
+#else /* !ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
+  JERRY_UNUSED (type_name);
+  JERRY_UNUSED (arraybuffer);
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("TypedArray not supported.")));
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
 } /* jerry_create_typedarray_for_arraybuffer */
 
 /**

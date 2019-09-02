@@ -148,6 +148,12 @@ ecma_op_same_value (ecma_value_t x, /**< ecma value */
   {
     return (ecma_is_value_true (x) == ecma_is_value_true (y));
   }
+#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+  else if (ecma_is_value_symbol (x))
+  {
+    return x == y;
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
   else
   {
     JERRY_ASSERT (is_x_object);

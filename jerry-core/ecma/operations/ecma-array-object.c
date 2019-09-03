@@ -436,6 +436,11 @@ ecma_delete_fast_array_properties (ecma_object_t *object_p, /**< fast access mod
                                                            old_aligned_length * sizeof (ecma_value_t),
                                                            new_aligned_length * sizeof (ecma_value_t));
 
+  for (uint32_t i = new_length; i < new_aligned_length; i++)
+  {
+    new_values_p[i] = ECMA_VALUE_ARRAY_HOLE;
+  }
+
   ext_obj_p->u.array.length = new_length;
 
   ECMA_SET_POINTER (object_p->u1.property_list_cp, new_values_p);

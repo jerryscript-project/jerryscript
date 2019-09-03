@@ -29,6 +29,11 @@
 #if ENABLED (JERRY_PROPRETY_HASHMAP)
 
 /**
+ * Maximum number of properties that can be stored in a hashmap directly
+ */
+#define ECMA_PROPERTY_HASHMAP_SHIFT_LIMIT (UINT16_MAX + 1)
+
+/**
  * Compute the total size of the property hashmap.
  */
 #define ECMA_PROPERTY_HASHMAP_GET_TOTAL_SIZE(max_property_count) \
@@ -141,7 +146,7 @@ ecma_property_hashmap_create (ecma_object_t *object_p) /**< object */
 
   uint8_t shift_counter = 0;
 
-  while (max_property_count > LIT_STRING_HASH_LIMIT)
+  while (max_property_count > ECMA_PROPERTY_HASHMAP_SHIFT_LIMIT)
   {
     shift_counter++;
     max_property_count >>= 1;
@@ -170,7 +175,7 @@ ecma_property_hashmap_create (ecma_object_t *object_p) /**< object */
                                                                  property_pair_p->names_cp[i]);
       uint32_t step = ecma_property_hashmap_steps[entry_index & (ECMA_PROPERTY_HASHMAP_NUMBER_OF_STEPS - 1)];
 
-      if (mask < LIT_STRING_HASH_LIMIT)
+      if (mask < ECMA_PROPERTY_HASHMAP_SHIFT_LIMIT)
       {
         entry_index &= mask;
       }
@@ -264,7 +269,7 @@ ecma_property_hashmap_insert (ecma_object_t *object_p, /**< object */
   uint32_t step = ecma_property_hashmap_steps[entry_index & (ECMA_PROPERTY_HASHMAP_NUMBER_OF_STEPS - 1)];
   uint32_t mask = hashmap_p->max_property_count - 1;
 
-  if (mask < LIT_STRING_HASH_LIMIT)
+  if (mask < ECMA_PROPERTY_HASHMAP_SHIFT_LIMIT)
   {
     entry_index &= mask;
   }
@@ -346,7 +351,7 @@ ecma_property_hashmap_delete (ecma_object_t *object_p, /**< object */
   jmem_cpointer_t *pair_list_p = (jmem_cpointer_t *) (hashmap_p + 1);
   uint8_t *bits_p = (uint8_t *) (pair_list_p + hashmap_p->max_property_count);
 
-  if (mask < LIT_STRING_HASH_LIMIT)
+  if (mask < ECMA_PROPERTY_HASHMAP_SHIFT_LIMIT)
   {
     entry_index &= mask;
   }
@@ -449,7 +454,7 @@ ecma_property_hashmap_find (ecma_property_hashmap_t *hashmap_p, /**< hashmap */
   jmem_cpointer_t *pair_list_p = (jmem_cpointer_t *) (hashmap_p + 1);
   uint8_t *bits_p = (uint8_t *) (pair_list_p + hashmap_p->max_property_count);
 
-  if (mask < LIT_STRING_HASH_LIMIT)
+  if (mask < ECMA_PROPERTY_HASHMAP_SHIFT_LIMIT)
   {
     entry_index &= mask;
   }

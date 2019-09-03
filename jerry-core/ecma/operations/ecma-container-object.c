@@ -245,10 +245,16 @@ ecma_op_container_to_key (ecma_value_t key_arg) /**< key argument */
   {
     ecma_object_t *obj_p = ecma_get_object_from_value (key_arg);
     ecma_string_t *key_string_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_MAP_KEY);
-    ecma_property_t *property_p = ecma_find_named_property (obj_p, key_string_p);
+
+    ecma_property_ref_t property_ref;
+    ecma_property_t property = ecma_op_object_get_own_property (obj_p,
+                                                                key_string_p,
+                                                                &property_ref,
+                                                                ECMA_PROPERTY_GET_NO_OPTIONS);
+
     ecma_string_t *object_key_string;
 
-    if (property_p == NULL)
+    if (property == ECMA_PROPERTY_TYPE_NOT_FOUND || property == ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP)
     {
       object_key_string = ecma_new_map_key_string (key_arg);
       ecma_value_t put_comp = ecma_builtin_helper_def_prop (obj_p,
@@ -261,7 +267,7 @@ ecma_op_container_to_key (ecma_value_t key_arg) /**< key argument */
     }
     else
     {
-      object_key_string = ecma_get_string_from_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
+      object_key_string = ecma_get_string_from_value (property_ref.value_p->value);
     }
 
     ecma_ref_ecma_string (object_key_string);
@@ -383,7 +389,7 @@ ecma_value_t
 ecma_op_container_set (ecma_value_t this_arg, /**< this argument */
                        ecma_value_t key_arg, /**< key argument */
                        ecma_value_t value_arg, /**< value argument */
-                      lit_magic_string_id_t lit_id) /**< internal class id */
+                       lit_magic_string_id_t lit_id) /**< internal class id */
 {
   ecma_map_object_t *map_object_p = ecma_op_container_get_object (this_arg, lit_id);
 

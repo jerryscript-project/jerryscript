@@ -1506,13 +1506,17 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_to_string_val, /**
         ecma_object_t *match_obj_p = ecma_get_object_from_value (match_result);
         ecma_string_t *zero_str_p = ecma_get_ecma_string_from_uint32 (0);
         ecma_string_t *magic_index_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_INDEX);
-        ecma_property_value_t *index_prop_value_p;
+        ecma_value_t index_prop_value;
 
         if (separator_is_regexp)
         {
-          index_prop_value_p = ecma_get_named_data_property (match_obj_p, magic_index_str_p);
+          JERRY_ASSERT (ecma_get_object_type (match_obj_p) != ECMA_OBJECT_TYPE_ARRAY
+                        || !((ecma_extended_object_t *) match_obj_p)->u.array.is_fast_mode);
+
+          ecma_property_value_t *index_prop_value_p = ecma_get_named_data_property (match_obj_p, magic_index_str_p);
           ecma_number_t index_num = ecma_get_number_from_value (index_prop_value_p->value);
           ecma_value_assign_number (&index_prop_value_p->value, index_num + (ecma_number_t) curr_pos);
+          index_prop_value = index_prop_value_p->value;
         }
         else
         {
@@ -1526,14 +1530,14 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_to_string_val, /**
 
           JERRY_ASSERT (ecma_is_value_true (put_comp));
 
-          index_prop_value_p = ecma_create_named_data_property (match_obj_p,
-                                                                magic_index_str_p,
-                                                                ECMA_PROPERTY_FLAG_WRITABLE,
-                                                                NULL);
+          index_prop_value = ecma_make_uint32_value (curr_pos);
 
-          ecma_named_data_property_assign_value (match_obj_p,
-                                                 index_prop_value_p,
-                                                 ecma_make_uint32_value (curr_pos));
+          put_comp = ecma_builtin_helper_def_prop (match_obj_p,
+                                                   magic_index_str_p,
+                                                   index_prop_value,
+                                                   ECMA_PROPERTY_FLAG_WRITABLE);
+
+          JERRY_ASSERT (ecma_is_value_true (put_comp));
         }
 
         ecma_value_t match_comp_value = ecma_op_object_get (match_obj_p, zero_str_p);
@@ -1546,7 +1550,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_to_string_val, /**
 
         ecma_free_value (match_comp_value);
 
-        ecma_number_t index_num = ecma_get_number_from_value (index_prop_value_p->value);
+        ecma_number_t index_num = ecma_get_number_from_value (index_prop_value);
         JERRY_ASSERT (index_num >= 0);
 
 

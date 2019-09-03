@@ -14,6 +14,7 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-array-object.h"
 #include "ecma-globals.h"
 #include "ecma-objects.h"
 #include "ecma-helpers.h"
@@ -37,6 +38,13 @@ ecma_create_native_pointer_property (ecma_object_t *obj_p, /**< object to create
                                      void *info_p) /**< native pointer's type info */
 {
   ecma_string_t *name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
+
+  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY
+      && ((ecma_extended_object_t *) obj_p)->u.array.is_fast_mode)
+  {
+    ecma_fast_array_convert_to_normal (obj_p);
+  }
+
   ecma_property_t *property_p = ecma_find_named_property (obj_p, name_p);
 
   bool is_new = (property_p == NULL);
@@ -107,6 +115,13 @@ ecma_native_pointer_t *
 ecma_get_native_pointer_value (ecma_object_t *obj_p, /**< object to get property value from */
                                void *info_p) /**< native pointer's type info */
 {
+  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY
+      && ((ecma_extended_object_t *) obj_p)->u.array.is_fast_mode)
+  {
+    /* Fast access mode array can not have native pointer properties */
+    return NULL;
+  }
+
   ecma_string_t *name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
   ecma_property_t *property_p = ecma_find_named_property (obj_p, name_p);
 
@@ -149,6 +164,13 @@ bool
 ecma_delete_native_pointer_property (ecma_object_t *obj_p, /**< object to delete property from */
                                      void *info_p) /**< native pointer's type info */
 {
+  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY
+      && ((ecma_extended_object_t *) obj_p)->u.array.is_fast_mode)
+  {
+    /* Fast access mode array can not have native pointer properties */
+    return false;
+  }
+
   ecma_string_t *name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
   ecma_property_t *property_p = ecma_find_named_property (obj_p, name_p);
 

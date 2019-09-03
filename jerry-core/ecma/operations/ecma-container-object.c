@@ -15,6 +15,7 @@
 
 #include "ecma-alloc.h"
 #include "ecma-builtins.h"
+#include "ecma-builtin-helpers.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
@@ -250,16 +251,17 @@ ecma_op_container_to_key (ecma_value_t key_arg) /**< key argument */
     if (property_p == NULL)
     {
       object_key_string = ecma_new_map_key_string (key_arg);
-      ecma_property_value_t *value_p = ecma_create_named_data_property (obj_p,
-                                                                        key_string_p,
-                                                                        ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
-                                                                        NULL);
-      value_p->value = ecma_make_string_value (object_key_string);
+      ecma_value_t put_comp = ecma_builtin_helper_def_prop (obj_p,
+                                                            key_string_p,
+                                                            ecma_make_string_value (object_key_string),
+                                                            ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+
+      JERRY_ASSERT (ecma_is_value_true (put_comp));
+      ecma_deref_ecma_string (object_key_string);
     }
     else
     {
       object_key_string = ecma_get_string_from_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
-
     }
 
     ecma_ref_ecma_string (object_key_string);

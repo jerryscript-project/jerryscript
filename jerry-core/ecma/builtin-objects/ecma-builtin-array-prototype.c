@@ -1992,11 +1992,16 @@ ecma_builtin_array_prototype_object_find (ecma_value_t predicate, /**< callback 
         return call_value;
       }
 
-      if (ecma_op_to_boolean (call_value))
+      bool call_value_to_bool = ecma_op_to_boolean (call_value);
+
+      ecma_free_value (call_value);
+
+      if (call_value_to_bool)
       {
         /* 8.f */
         if (is_find)
         {
+          ecma_free_value (current_index);
           return get_value;
         }
 
@@ -2004,7 +2009,6 @@ ecma_builtin_array_prototype_object_find (ecma_value_t predicate, /**< callback 
         return current_index;
       }
 
-      ecma_free_value (call_value);
       ecma_free_value (get_value);
       ecma_free_value (current_index);
     }

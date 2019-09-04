@@ -605,6 +605,26 @@
 #define CBC_LOWER_SEVEN_BIT_MASK 0x7f
 
 /**
+ * Literal encoding limit when full literal encoding mode is enabled
+ */
+#define CBC_FULL_LITERAL_ENCODING_LIMIT 128
+
+/**
+ * Literal encoding delta when full literal encoding mode is enabled
+ */
+#define CBC_FULL_LITERAL_ENCODING_DELTA 0x8000
+
+/**
+ * Literal encoding limit when full literal encoding mode is disabled
+ */
+#define CBC_SMALL_LITERAL_ENCODING_LIMIT 255
+
+/**
+ * Literal encoding delta when full literal encoding mode is disabled
+ */
+#define CBC_SMALL_LITERAL_ENCODING_DELTA 0xfe01
+
+/**
  * Literal indicies belong to one of the following groups:
  *
  * 0 <= index < argument_end                    : arguments

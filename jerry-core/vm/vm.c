@@ -773,13 +773,13 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   /* Prepare. */
   if (!(bytecode_header_p->status_flags & CBC_CODE_FLAGS_FULL_LITERAL_ENCODING))
   {
-    encoding_limit = 255;
-    encoding_delta = 0xfe01;
+    encoding_limit = CBC_SMALL_LITERAL_ENCODING_LIMIT;
+    encoding_delta = CBC_SMALL_LITERAL_ENCODING_DELTA;
   }
   else
   {
-    encoding_limit = 128;
-    encoding_delta = 0x8000;
+    encoding_limit = CBC_FULL_LITERAL_ENCODING_LIMIT;
+    encoding_delta = CBC_FULL_LITERAL_ENCODING_DELTA;
   }
 
   if (frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
@@ -931,13 +931,13 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   /* Prepare for byte code execution. */
   if (!(bytecode_header_p->status_flags & CBC_CODE_FLAGS_FULL_LITERAL_ENCODING))
   {
-    encoding_limit = 255;
-    encoding_delta = 0xfe01;
+    encoding_limit = CBC_SMALL_LITERAL_ENCODING_LIMIT;
+    encoding_delta = CBC_SMALL_LITERAL_ENCODING_DELTA;
   }
   else
   {
-    encoding_limit = 128;
-    encoding_delta = 0x8000;
+    encoding_limit = CBC_FULL_LITERAL_ENCODING_LIMIT;
+    encoding_delta = CBC_FULL_LITERAL_ENCODING_DELTA;
   }
 
   if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)

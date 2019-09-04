@@ -633,10 +633,7 @@ jmem_heap_realloc_block (void *ptr, /**< memory region to reallocate */
 
     /* jmem_heap_alloc_block_internal may trigger garbage collection, which can create new free blocks
      * in the heap structure, so we need to look up the previous block again. */
-    if (JERRY_UNLIKELY (JERRY_CONTEXT (ecma_gc_new_objects) == 0))
-    {
-      prev_p = jmem_heap_find_prev (block_p);
-    }
+    prev_p = jmem_heap_find_prev (block_p);
 
     memcpy (ret_block_p, block_p, old_size);
     jmem_heap_insert_block (block_p, prev_p, aligned_old_size);

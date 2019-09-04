@@ -319,12 +319,16 @@ ecma_string_t *ecma_string_trim (const ecma_string_t *string_p);
 
 ecma_stringbuilder_t ecma_stringbuilder_create (void);
 ecma_stringbuilder_t ecma_stringbuilder_create_from (ecma_string_t *string_p);
+lit_utf8_size_t ecma_stringbuilder_get_size (ecma_stringbuilder_t *builder_p);
+lit_utf8_byte_t *ecma_stringbuilder_get_data (ecma_stringbuilder_t *builder_p);
+void ecma_stringbuilder_revert (ecma_stringbuilder_t *builder_p, const lit_utf8_size_t size);
 void ecma_stringbuilder_append (ecma_stringbuilder_t *builder_p, const ecma_string_t *string_p);
 void ecma_stringbuilder_append_magic (ecma_stringbuilder_t *builder_p, const lit_magic_string_id_t id);
 void ecma_stringbuilder_append_raw (ecma_stringbuilder_t *builder_p,
                                     const lit_utf8_byte_t *data_p,
                                     const lit_utf8_size_t data_size);
 void ecma_stringbuilder_append_char (ecma_stringbuilder_t *builder_p, const ecma_char_t c);
+void ecma_stringbuilder_append_byte (ecma_stringbuilder_t *builder_p, const lit_utf8_byte_t);
 ecma_string_t *ecma_stringbuilder_finalize (ecma_stringbuilder_t *builder_p);
 void ecma_stringbuilder_destroy (ecma_stringbuilder_t *builder_p);
 

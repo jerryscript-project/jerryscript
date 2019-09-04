@@ -283,7 +283,8 @@ def create_binary(job, options):
     return ret, build_dir_path
 
 def get_binary_path(build_dir_path):
-    return os.path.join(build_dir_path, 'local', 'bin', 'jerry')
+    executable_extension = '.exe' if sys.platform == 'win32' else ''
+    return os.path.join(build_dir_path, 'local', 'bin', 'jerry' + executable_extension)
 
 def hash_binary(bin_path):
     blocksize = 65536
@@ -428,7 +429,7 @@ def run_test262_test_suite(options):
             print("\n%sBuild failed%s\n" % (TERM_RED, TERM_NORMAL))
             break
 
-        test_cmd = [
+        test_cmd = get_platform_cmd_prefix() + [
             settings.TEST262_RUNNER_SCRIPT,
             get_binary_path(build_dir_path),
             settings.TEST262_TEST_SUITE_DIR

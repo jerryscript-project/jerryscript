@@ -1812,104 +1812,159 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
     jmem_cpointer_t prop_iter_cp = prototype_chain_iter_p->u1.property_list_cp;
 
-#if ENABLED (JERRY_PROPRETY_HASHMAP)
-    if (prop_iter_cp != JMEM_CP_NULL)
+    if (ecma_get_object_type (prototype_chain_iter_p) == ECMA_OBJECT_TYPE_ARRAY
+        && ((ecma_extended_object_t *) prototype_chain_iter_p)->u.array.is_fast_mode
+        && prop_iter_cp != JMEM_CP_NULL)
     {
-      ecma_property_header_t *prop_iter_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t, prop_iter_cp);
+      ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) prototype_chain_iter_p;
 
-      if (prop_iter_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP)
+      uint32_t length = ext_obj_p->u.array.length;
+
+      ecma_value_t *values_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, prop_iter_cp);
+
+      for (uint32_t i = 0; i < length; i++)
       {
-        prop_iter_cp = prop_iter_p->next_property_cp;
+        if (ecma_is_value_array_hole (values_p[i]))
+        {
+          continue;
+        }
+
+        ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (i);
+
+        uint8_t hash = (uint8_t) ecma_string_hash (index_str_p);
+        uint32_t bitmap_row = (uint32_t) (hash / bitmap_row_size);
+        uint32_t bitmap_column = (uint32_t) (hash % bitmap_row_size);
+
+        bool is_add = true;
+
+        if ((own_names_hashes_bitmap[bitmap_row] & (1u << bitmap_column)) != 0)
+        {
+          ecma_value_p = ecma_collection_iterator_init (prop_names_p);
+
+          while (ecma_value_p != NULL)
+          {
+            ecma_string_t *current_name_p = ecma_get_prop_name_from_value (*ecma_value_p);
+            ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+
+            if (ecma_compare_ecma_strings (index_str_p, current_name_p))
+            {
+              is_add = false;
+              break;
+            }
+          }
+        }
+
+        if (is_add)
+        {
+          own_names_hashes_bitmap[bitmap_row] |= (1u << bitmap_column);
+
+          ecma_append_to_values_collection (prop_names_p,
+                                            ecma_make_string_value (index_str_p),
+                                            ECMA_COLLECTION_NO_COPY);
+        }
       }
     }
-#endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
-
-    while (prop_iter_cp != JMEM_CP_NULL)
+    else
     {
-      ecma_property_header_t *prop_iter_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t, prop_iter_cp);
-      JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
-
-      for (int i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
+#if ENABLED (JERRY_PROPRETY_HASHMAP)
+      if (prop_iter_cp != JMEM_CP_NULL)
       {
-        ecma_property_t *property_p = prop_iter_p->types + i;
+        ecma_property_header_t *prop_iter_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t, prop_iter_cp);
 
-        if (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA
-            || ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR)
+        if (prop_iter_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP)
         {
-          ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) prop_iter_p;
+          prop_iter_cp = prop_iter_p->next_property_cp;
+        }
+      }
+  #endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
 
-          if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_DIRECT_STRING_MAGIC
-              && prop_pair_p->names_cp[i] >= LIT_NON_INTERNAL_MAGIC_STRING__COUNT
-              && prop_pair_p->names_cp[i] < LIT_MAGIC_STRING__COUNT)
+      while (prop_iter_cp != JMEM_CP_NULL)
+      {
+        ecma_property_header_t *prop_iter_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t, prop_iter_cp);
+        JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
+
+        for (int i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
+        {
+          ecma_property_t *property_p = prop_iter_p->types + i;
+
+          if (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA
+              || ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR)
           {
-            /* Internal properties are never enumerated. */
-            continue;
-          }
+            ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) prop_iter_p;
 
-          ecma_string_t *name_p = ecma_string_from_property_name (*property_p,
-                                                                  prop_pair_p->names_cp[i]);
-
-          if (!(is_enumerable_only && !ecma_is_property_enumerable (*property_p)))
-          {
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
-            /* If is_symbols_only is false and prop_name is symbol
-               we should skip the current property e.g. for-in.
-
-               Also if is_symbols_only is true and prop_name is not symbol
-               we should skip the current property e.g. Object.getOwnPropertySymbols. */
-            if (JERRY_UNLIKELY (is_symbols_only != ecma_prop_name_is_symbol (name_p)))
+            if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_DIRECT_STRING_MAGIC
+                && prop_pair_p->names_cp[i] >= LIT_NON_INTERNAL_MAGIC_STRING__COUNT
+                && prop_pair_p->names_cp[i] < LIT_MAGIC_STRING__COUNT)
             {
-              ecma_deref_ecma_string (name_p);
+              /* Internal properties are never enumerated. */
               continue;
             }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
 
-            uint8_t hash = (uint8_t) ecma_string_hash (name_p);
-            uint32_t bitmap_row = (uint32_t) (hash / bitmap_row_size);
-            uint32_t bitmap_column = (uint32_t) (hash % bitmap_row_size);
+            ecma_string_t *name_p = ecma_string_from_property_name (*property_p,
+                                                                    prop_pair_p->names_cp[i]);
 
-            bool is_add = true;
-
-            if ((own_names_hashes_bitmap[bitmap_row] & (1u << bitmap_column)) != 0)
+            if (!(is_enumerable_only && !ecma_is_property_enumerable (*property_p)))
             {
-              ecma_value_p = ecma_collection_iterator_init (prop_names_p);
+  #if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+              /* If is_symbols_only is false and prop_name is symbol
+                 we should skip the current property e.g. for-in.
 
-              while (ecma_value_p != NULL)
+                 Also if is_symbols_only is true and prop_name is not symbol
+                 we should skip the current property e.g. Object.getOwnPropertySymbols. */
+              if (JERRY_UNLIKELY (is_symbols_only != ecma_prop_name_is_symbol (name_p)))
               {
-                ecma_string_t *current_name_p = ecma_get_prop_name_from_value (*ecma_value_p);
-                ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+                ecma_deref_ecma_string (name_p);
+                continue;
+              }
+  #endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
 
-                if (ecma_compare_ecma_strings (name_p, current_name_p))
+              uint8_t hash = (uint8_t) ecma_string_hash (name_p);
+              uint32_t bitmap_row = (uint32_t) (hash / bitmap_row_size);
+              uint32_t bitmap_column = (uint32_t) (hash % bitmap_row_size);
+
+              bool is_add = true;
+
+              if ((own_names_hashes_bitmap[bitmap_row] & (1u << bitmap_column)) != 0)
+              {
+                ecma_value_p = ecma_collection_iterator_init (prop_names_p);
+
+                while (ecma_value_p != NULL)
                 {
-                  is_add = false;
-                  break;
+                  ecma_string_t *current_name_p = ecma_get_prop_name_from_value (*ecma_value_p);
+                  ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+
+                  if (ecma_compare_ecma_strings (name_p, current_name_p))
+                  {
+                    is_add = false;
+                    break;
+                  }
                 }
               }
+
+              if (is_add)
+              {
+                own_names_hashes_bitmap[bitmap_row] |= (1u << bitmap_column);
+
+                ecma_append_to_values_collection (prop_names_p,
+                                                  ecma_make_prop_name_value (name_p),
+                                                  0);
+              }
             }
-
-            if (is_add)
+            else
             {
-              own_names_hashes_bitmap[bitmap_row] |= (1u << bitmap_column);
+              JERRY_ASSERT (is_enumerable_only && !ecma_is_property_enumerable (*property_p));
 
-              ecma_append_to_values_collection (prop_names_p,
+              ecma_append_to_values_collection (skipped_non_enumerable_p,
                                                 ecma_make_prop_name_value (name_p),
                                                 0);
             }
-          }
-          else
-          {
-            JERRY_ASSERT (is_enumerable_only && !ecma_is_property_enumerable (*property_p));
 
-            ecma_append_to_values_collection (skipped_non_enumerable_p,
-                                              ecma_make_prop_name_value (name_p),
-                                              0);
+            ecma_deref_ecma_string (name_p);
           }
-
-          ecma_deref_ecma_string (name_p);
         }
-      }
 
-      prop_iter_cp = prop_iter_p->next_property_cp;
+        prop_iter_cp = prop_iter_p->next_property_cp;
+      }
     }
 
     ecma_value_p = ecma_collection_iterator_init (prop_names_p);

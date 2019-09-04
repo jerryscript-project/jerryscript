@@ -1395,6 +1395,8 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
           capture_value = ecma_make_string_value (capture_str_p);
         }
 
+        JERRY_ASSERT (!((ecma_extended_object_t *) result_array_obj_p)->u.array.is_fast_mode);
+
         ecma_property_value_t *prop_value_p;
         prop_value_p = ecma_create_named_data_property (result_array_obj_p,
                                                         index_str_p,

@@ -744,6 +744,10 @@ inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_op_object_get_own_data_prop (ecma_object_t *object_p, /**< the object */
                                   ecma_string_t *property_name_p) /**< property name */
 {
+  JERRY_ASSERT (ecma_is_lexical_environment (object_p)
+                || ecma_get_object_type (object_p) != ECMA_OBJECT_TYPE_ARRAY
+                || !((ecma_extended_object_t *) object_p)->u.array.is_fast_mode);
+
   ecma_value_t result = ecma_op_object_find_own (ecma_make_object_value (object_p),
                                                  object_p,
                                                  property_name_p);

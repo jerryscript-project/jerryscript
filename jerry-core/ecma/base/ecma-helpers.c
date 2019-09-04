@@ -335,9 +335,6 @@ ecma_create_property (ecma_object_t *object_p, /**< the object */
   JERRY_ASSERT (ECMA_PROPERTY_PAIR_ITEM_COUNT == 2);
   JERRY_ASSERT (name_p != NULL);
   JERRY_ASSERT (object_p != NULL);
-  JERRY_ASSERT (ecma_is_lexical_environment (object_p)
-                || ecma_get_object_type (object_p) != ECMA_OBJECT_TYPE_ARRAY
-                || !((ecma_extended_object_t *) object_p)->u.array.is_fast_mode);
 
   jmem_cpointer_t *property_list_head_p = &object_p->u1.property_list_cp;
 
@@ -475,6 +472,9 @@ ecma_create_named_data_property (ecma_object_t *object_p, /**< object */
                                                                 *         if this field is non-NULL */
 {
   JERRY_ASSERT (object_p != NULL && name_p != NULL);
+  JERRY_ASSERT (ecma_is_lexical_environment (object_p)
+              || ecma_get_object_type (object_p) != ECMA_OBJECT_TYPE_ARRAY
+              || !((ecma_extended_object_t *) object_p)->u.array.is_fast_mode);
   JERRY_ASSERT (ecma_find_named_property (object_p, name_p) == NULL);
   JERRY_ASSERT ((prop_attributes & ~ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE) == 0);
 
@@ -501,6 +501,9 @@ ecma_create_named_accessor_property (ecma_object_t *object_p, /**< object */
                                                                     *         if this field is non-NULL */
 {
   JERRY_ASSERT (object_p != NULL && name_p != NULL);
+  JERRY_ASSERT (ecma_is_lexical_environment (object_p)
+              || ecma_get_object_type (object_p) != ECMA_OBJECT_TYPE_ARRAY
+              || !((ecma_extended_object_t *) object_p)->u.array.is_fast_mode);
   JERRY_ASSERT (ecma_find_named_property (object_p, name_p) == NULL);
   JERRY_ASSERT ((prop_attributes & ~ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE) == 0);
 
@@ -533,6 +536,9 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
 {
   JERRY_ASSERT (obj_p != NULL);
   JERRY_ASSERT (name_p != NULL);
+  JERRY_ASSERT (ecma_is_lexical_environment (obj_p)
+                || ecma_get_object_type (obj_p) != ECMA_OBJECT_TYPE_ARRAY
+                || !((ecma_extended_object_t *) obj_p)->u.array.is_fast_mode);
 
   ecma_property_t *property_p = NULL;
 

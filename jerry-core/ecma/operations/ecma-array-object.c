@@ -944,6 +944,19 @@ ecma_op_array_object_set_length (ecma_object_t *object_p, /**< the array object 
 } /* ecma_op_array_object_set_length */
 
 /**
+ * Property descriptor bitset for fast array data properties.
+ * If the property desciptor fields contains all the flags below
+ * attempt to stay fast access array during [[DefineOwnProperty]] operation.
+ */
+#define ECMA_FAST_ARRAY_DATA_PROP_FLAGS (ECMA_PROP_IS_VALUE_DEFINED \
+                                         | ECMA_PROP_IS_ENUMERABLE_DEFINED \
+                                         | ECMA_PROP_IS_ENUMERABLE \
+                                         | ECMA_PROP_IS_CONFIGURABLE_DEFINED \
+                                         | ECMA_PROP_IS_CONFIGURABLE \
+                                         | ECMA_PROP_IS_WRITABLE_DEFINED \
+                                         | ECMA_PROP_IS_WRITABLE)
+
+/**
  * [[DefineOwnProperty]] ecma array object's operation
  *
  * See also:
@@ -1009,13 +1022,24 @@ ecma_op_array_object_define_own_property (ecma_object_t *object_p, /**< the arra
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-  /* Note for further optimization: for enumerable, configurable, writable data properties
-     it's not necessary to convert it back to normal property list based array */
-  if (JERRY_UNLIKELY (ext_object_p->u.array.is_fast_mode))
+  if (ext_object_p->u.array.is_fast_mode)
   {
-    ecma_fast_array_convert_to_normal (object_p);
+    if ((property_desc_p->flags & ECMA_FAST_ARRAY_DATA_PROP_FLAGS) == ECMA_FAST_ARRAY_DATA_PROP_FLAGS)
+    {
+      if (ecma_fast_array_set_property (object_p, property_name_p, property_desc_p->value))
+      {
+        return ECMA_VALUE_TRUE;
+      }
+
+      JERRY_ASSERT (!ext_object_p->u.array.is_fast_mode);
+    }
+    else
+    {
+      ecma_fast_array_convert_to_normal (object_p);
+    }
   }
 
+  JERRY_ASSERT (!ext_object_p->u.array.is_fast_mode);
   uint32_t index = ecma_string_get_array_index (property_name_p);
 
   if (index == ECMA_STRING_NOT_ARRAY_INDEX)

@@ -1259,6 +1259,10 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 #endif /* ENABLED (JERRY_ES2015_CLASS) */
 
           ecma_object_t *object_p = ecma_get_object_from_value (stack_top_p[index]);
+
+          JERRY_ASSERT (ecma_get_object_type (object_p) != ECMA_OBJECT_TYPE_ARRAY
+                        || !((ecma_extended_object_t *) object_p)->u.array.is_fast_mode);
+
           ecma_property_t *property_p = ecma_find_named_property (object_p, prop_name_p);
 
           if (property_p != NULL

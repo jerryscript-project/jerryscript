@@ -91,6 +91,10 @@ opfunc_set_accessor (bool is_getter, /**< is getter accessor */
                      ecma_value_t accessor) /**< accessor value */
 {
   ecma_object_t *object_p = ecma_get_object_from_value (object);
+
+  JERRY_ASSERT (ecma_get_object_type (object_p) != ECMA_OBJECT_TYPE_ARRAY
+                || !((ecma_extended_object_t *) object_p)->u.array.is_fast_mode);
+
   ecma_property_t *property_p = ecma_find_named_property (object_p, accessor_name_p);
 
   if (property_p != NULL

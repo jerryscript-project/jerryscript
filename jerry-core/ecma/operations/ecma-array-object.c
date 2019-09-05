@@ -420,7 +420,7 @@ ecma_delete_fast_array_properties (ecma_object_t *object_p, /**< fast access mod
     return new_length;
   }
 
-  for (uint32_t i = new_length; i < old_length - 1; i++)
+  for (uint32_t i = new_length; i < old_length; i++)
   {
     if (ecma_is_value_array_hole (values_p[i]))
     {

@@ -2331,12 +2331,12 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
         if (context_p->source_p < context_p->source_end_p
             && context_p->source_p[0] != LIT_CHAR_COLON)
         {
-          if (lexer_compare_raw_identifier_to_current (context_p, "get", 3))
+          if (lexer_compare_literal_to_string (context_p, "get", 3))
           {
             context_p->token.type = LEXER_PROPERTY_GETTER;
             return;
           }
-          else if (lexer_compare_raw_identifier_to_current (context_p, "set", 3))
+          else if (lexer_compare_literal_to_string (context_p, "set", 3))
           {
             context_p->token.type = LEXER_PROPERTY_SETTER;
             return;
@@ -2345,8 +2345,7 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
       }
 
 #if ENABLED (JERRY_ES2015_CLASS)
-      if (is_class_method
-          && lexer_compare_raw_identifier_to_current (context_p, "static", 6))
+      if (is_class_method && lexer_compare_literal_to_string (context_p, "static", 6))
       {
         context_p->token.type = LEXER_KEYW_STATIC;
         return;
@@ -2406,8 +2405,7 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
     if (create_literal_object)
     {
 #if ENABLED (JERRY_ES2015_CLASS)
-      if (is_class_method
-          && lexer_compare_raw_identifier_to_current (context_p, "constructor", 11))
+      if (is_class_method && lexer_compare_literal_to_string (context_p, "constructor", 11))
       {
         context_p->token.type = LEXER_CLASS_CONSTRUCTOR;
         return;
@@ -2447,11 +2445,11 @@ lexer_scan_identifier (parser_context_t *context_p, /**< context */
       if (context_p->source_p < context_p->source_end_p
           && context_p->source_p[0] != LIT_CHAR_COLON)
       {
-        if (lexer_compare_raw_identifier_to_current (context_p, "get", 3))
+        if (lexer_compare_literal_to_string (context_p, "get", 3))
         {
           context_p->token.type = LEXER_PROPERTY_GETTER;
         }
-        else if (lexer_compare_raw_identifier_to_current (context_p, "set", 3))
+        else if (lexer_compare_literal_to_string (context_p, "set", 3))
         {
           context_p->token.type = LEXER_PROPERTY_SETTER;
         }
@@ -2573,27 +2571,46 @@ lexer_compare_identifier_to_current (parser_context_t *context_p, /**< context *
 } /* lexer_compare_identifier_to_current */
 
 /**
- * Compares the current identifier in the context to the parameter identifier
+ * Compares the current identifier to an expected identifier.
  *
  * Note:
  *   Escape sequences are not allowed.
  *
- * @return true if the input identifiers are the same
+ * @return true if they are the same, false otherwise
  */
-bool
-lexer_compare_raw_identifier_to_current (parser_context_t *context_p, /**< context */
-                                         const char *right_ident_p, /**< identifier */
-                                         size_t right_ident_length) /**< identifier length */
+inline bool JERRY_ATTR_ALWAYS_INLINE
+lexer_compare_literal_to_identifier (parser_context_t *context_p, /**< context */
+                                     const char *identifier_p, /**< identifier */
+                                     size_t identifier_length) /**< identifier length */
 {
-  lexer_lit_location_t *left_ident_p = &context_p->token.lit_location;
+  /* Checking has_escape is unnecessary because memcmp will fail if escape sequences are present. */
+  return (context_p->token.type == LEXER_LITERAL
+          && context_p->token.lit_location.type == LEXER_IDENT_LITERAL
+          && context_p->token.lit_location.length == identifier_length
+          && memcmp (context_p->token.lit_location.char_p, identifier_p, identifier_length) == 0);
+} /* lexer_compare_literal_to_identifier */
 
-  if (left_ident_p->length != right_ident_length || left_ident_p->has_escape)
-  {
-    return 0;
-  }
+/**
+ * Compares the current identifier or string to an expected string.
+ *
+ * Note:
+ *   Escape sequences are not allowed.
+ *
+ * @return true if they are the same, false otherwise
+ */
+inline bool JERRY_ATTR_ALWAYS_INLINE
+lexer_compare_literal_to_string (parser_context_t *context_p, /**< context */
+                                 const char *string_p, /**< string */
+                                 size_t string_length) /**< string length */
+{
+  JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
+                && (context_p->token.lit_location.type == LEXER_IDENT_LITERAL
+                    || context_p->token.lit_location.type == LEXER_STRING_LITERAL));
 
-  return memcmp (left_ident_p->char_p, right_ident_p, right_ident_length) == 0;
-} /* lexer_compare_raw_identifier_to_current */
+  /* Checking has_escape is unnecessary because memcmp will fail if escape sequences are present. */
+  return (context_p->token.lit_location.length == string_length
+          && memcmp (context_p->token.lit_location.char_p, string_p, string_length) == 0);
+} /* lexer_compare_literal_to_string */
 
 /**
  * Convert binary lvalue token to binary token

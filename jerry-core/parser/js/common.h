@@ -47,6 +47,7 @@
  */
 typedef enum
 {
+  /* The LEXER_IS_IDENT_OR_STRING macro must be updated if the order is changed. */
   LEXER_IDENT_LITERAL = 0,          /**< identifier literal */
   LEXER_STRING_LITERAL = 1,         /**< string literal */
   LEXER_NUMBER_LITERAL = 2,         /**< number literal */
@@ -55,6 +56,11 @@ typedef enum
   LEXER_UNUSED_LITERAL = 5,         /**< unused literal, can only be
                                          used by the byte code generator. */
 } lexer_literal_type_t;
+
+/**
+ * Checks whether the literal type is identifier or string.
+ */
+#define LEXER_IS_IDENT_OR_STRING(literal_type) ((literal_type) <= LEXER_STRING_LITERAL)
 
 /**
  * Flag bits for status_flags member of lexer_literal_t.

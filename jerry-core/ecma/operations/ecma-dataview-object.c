@@ -118,6 +118,11 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
     }
     else if (ecma_number_is_infinity (byte_length))
     {
+      if (ecma_number_is_negative (byte_length))
+      {
+        return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid DataView length"));
+      }
+
       viewByteLength = UINT32_MAX;
     }
     else if (byte_length_int32 <= 0)

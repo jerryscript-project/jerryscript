@@ -52,6 +52,10 @@ var forOf =
   "   obj[prop] += 4;"
 parse (forOf)
 
+var forOf =
+  "for (var a \"of\" []) {}"
+parse (forOf)
+
 checkError(5)
 
 var obj = {}

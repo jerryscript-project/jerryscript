@@ -720,7 +720,7 @@ parser_scan_until (parser_context_t *context_p, /**< context */
           context_p->token.type = LEXER_KEYW_IN;
           return;
         }
-        else if (type == LEXER_LITERAL && lexer_compare_raw_identifier_to_current (context_p, "of", 2))
+        else if (lexer_compare_literal_to_identifier (context_p, "of", 2))
         {
           parser_stack_pop_uint8 (context_p);
           context_p->token.type = LEXER_LITERAL_OF;
@@ -788,13 +788,13 @@ parser_scan_until (parser_context_t *context_p, /**< context */
           break;
         }
 
-        if (lexer_compare_raw_identifier_to_current (context_p, "static", 6))
+        if (lexer_compare_literal_to_identifier (context_p, "static", 6))
         {
           lexer_next_token (context_p);
         }
 
-        if (lexer_compare_raw_identifier_to_current (context_p, "get", 3)
-            || lexer_compare_raw_identifier_to_current (context_p, "set", 3))
+        if (lexer_compare_literal_to_identifier (context_p, "get", 3)
+            || lexer_compare_literal_to_identifier (context_p, "set", 3))
         {
           lexer_next_token (context_p);
         }

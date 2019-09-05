@@ -521,8 +521,9 @@ void lexer_convert_push_number_to_push_literal (parser_context_t *context_p);
 uint16_t lexer_construct_function_object (parser_context_t *context_p, uint32_t extra_status_flags);
 void lexer_construct_regexp_object (parser_context_t *context_p, bool parse_only);
 bool lexer_compare_identifier_to_current (parser_context_t *context_p, const lexer_lit_location_t *right_ident_p);
-bool lexer_compare_raw_identifier_to_current (parser_context_t *context_p, const char *right_ident_p,
-                                              size_t right_ident_length);
+bool lexer_compare_literal_to_identifier (parser_context_t *context_p, const char *identifier_p,
+                                          size_t identifier_length);
+bool lexer_compare_literal_to_string (parser_context_t *context_p, const char *string_p, size_t string_length);
 uint8_t lexer_convert_binary_lvalue_token_to_binary (uint8_t token);
 
 /**

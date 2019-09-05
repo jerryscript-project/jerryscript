@@ -1884,12 +1884,6 @@ parser_parse_import_statement (parser_context_t *context_p) /**< parser context 
 
       lexer_next_token (context_p);
 
-      if (context_p->token.type != LEXER_COMMA
-          && !lexer_compare_raw_identifier_to_current (context_p, "from", 4))
-      {
-        parser_raise_error (context_p, PARSER_ERR_FROM_COMMA_EXPECTED);
-      }
-
       if (context_p->token.type == LEXER_COMMA)
       {
         lexer_next_token (context_p);
@@ -1899,14 +1893,17 @@ parser_parse_import_statement (parser_context_t *context_p) /**< parser context 
           parser_raise_error (context_p, PARSER_ERR_LEFT_BRACE_MULTIPLY_EXPECTED);
         }
       }
+      else if (!lexer_compare_literal_to_identifier (context_p, "from", 4))
+      {
+        parser_raise_error (context_p, PARSER_ERR_FROM_COMMA_EXPECTED);
+      }
     }
 
     if (context_p->token.type == LEXER_MULTIPLY)
     {
       /* NameSpaceImport*/
       lexer_next_token (context_p);
-      if (context_p->token.type != LEXER_LITERAL
-          || !lexer_compare_raw_identifier_to_current (context_p, "as", 2))
+      if (!lexer_compare_literal_to_identifier (context_p, "as", 2))
       {
         parser_raise_error (context_p, PARSER_ERR_AS_EXPECTED);
       }
@@ -1942,7 +1939,7 @@ parser_parse_import_statement (parser_context_t *context_p) /**< parser context 
       parser_module_parse_import_clause (context_p);
     }
 
-    if (context_p->token.type != LEXER_LITERAL || !lexer_compare_raw_identifier_to_current (context_p, "from", 4))
+    if (!lexer_compare_literal_to_identifier (context_p, "from", 4))
     {
       parser_raise_error (context_p, PARSER_ERR_FROM_EXPECTED);
     }
@@ -2035,8 +2032,7 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
     case LEXER_MULTIPLY:
     {
       lexer_next_token (context_p);
-      if (!(context_p->token.type == LEXER_LITERAL
-            && lexer_compare_raw_identifier_to_current (context_p, "from", 4)))
+      if (!lexer_compare_literal_to_identifier (context_p, "from", 4))
       {
         parser_raise_error (context_p, PARSER_ERR_FROM_EXPECTED);
       }
@@ -2106,8 +2102,7 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
     {
       parser_module_parse_export_clause (context_p);
 
-      if (context_p->token.type == LEXER_LITERAL
-          && lexer_compare_raw_identifier_to_current (context_p, "from", 4))
+      if (lexer_compare_literal_to_identifier (context_p, "from", 4))
       {
         lexer_next_token (context_p);
         parser_module_handle_module_specifier (context_p);

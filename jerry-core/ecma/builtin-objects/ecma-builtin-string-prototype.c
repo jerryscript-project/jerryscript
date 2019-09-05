@@ -1913,6 +1913,12 @@ ecma_builtin_string_prototype_object_repeat (ecma_string_t *original_string_p, /
   }
 
   lit_utf8_size_t size = ecma_string_get_utf8_size (original_string_p);
+
+  if ((uint32_t) length >= (ECMA_STRING_SIZE_LIMIT / size))
+  {
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid string length"));
+  }
+
   lit_utf8_size_t total_size = size * (lit_utf8_size_t) length;
 
   JMEM_DEFINE_LOCAL_ARRAY (str_buffer, total_size, lit_utf8_byte_t);

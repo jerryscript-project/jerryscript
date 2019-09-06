@@ -22,3 +22,6 @@ assert (b_ === 5)
 assert (c_(b_) === 10)
 assert (mod.x === 42)
 assert (Array.isArray(mod.d))
+
+// Pre-scanner regression test
+for (var tmp in {}) ;

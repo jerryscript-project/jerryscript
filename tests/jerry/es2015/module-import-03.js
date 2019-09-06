@@ -22,3 +22,6 @@ assert(i.incr() === 6);
 assert (aa === "a");
 assert (x === 42);
 assert (c_(x) == 84);
+
+// Pre-scanner regression test
+for (var tmp in {}) ;

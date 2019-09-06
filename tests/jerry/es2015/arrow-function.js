@@ -125,6 +125,13 @@ default:
   func = () =>
     ((([0,0,0])))
   assert (func ().length == 3);
+
+  func = (a = 5, b = 7 * 2) => a + b;
+  assert (func() == 19);
+  assert (func(1) == 15);
+
+  func = (a = Math.cos(0)) => a;
+  assert (func() == 1);
 }
 
 must_throw ("var x => x;");
@@ -136,6 +143,7 @@ must_throw ("(x,y,) => 0");
 must_throw ("x\n => 0");
 must_throw ("this => 0");
 must_throw ("(true) => 0");
+must_throw ("()\n=>5");
 must_throw_strict ("(package) => 0");
 must_throw_strict ("(package) => { return 5 }");
 must_throw_strict ("(x,x,x) => 0");

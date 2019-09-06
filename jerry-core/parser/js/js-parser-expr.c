@@ -1041,79 +1041,6 @@ parser_parse_function_expression (parser_context_t *context_p, /**< context */
   context_p->last_cbc.literal_object_type = LEXER_LITERAL_OBJECT_ANY;
 } /* parser_parse_function_expression */
 
-#if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
-
-/**
- * Checks whether the bracketed expression is an argument list of an arrow function.
- *
- * @return true - if an arrow function is found
- *         false - otherwise
- */
-static bool
-parser_check_arrow_function (parser_context_t *context_p) /**< context */
-{
-  lexer_range_t range;
-
-  range.source_p = context_p->token.lit_location.char_p;
-  range.line = context_p->token.line;
-  range.column = context_p->token.column;
-
-  lexer_next_token (context_p);
-
-  bool is_arrow_function = true;
-
-  while (true)
-  {
-    if (context_p->token.type == LEXER_RIGHT_PAREN)
-    {
-      break;
-    }
-
-    if (context_p->token.type == LEXER_COMMA)
-    {
-      lexer_next_token (context_p);
-
-      if (context_p->token.type == LEXER_LITERAL
-          && context_p->token.lit_location.type == LEXER_IDENT_LITERAL)
-      {
-        lexer_next_token (context_p);
-        continue;
-      }
-    }
-
-    is_arrow_function = false;
-    break;
-  }
-
-  if (is_arrow_function)
-  {
-    lexer_next_token (context_p);
-
-    if (context_p->token.type != LEXER_ARROW)
-    {
-      is_arrow_function = false;
-    }
-  }
-
-  context_p->source_p = range.source_p;
-  context_p->line = range.line;
-  context_p->column = range.column;
-
-  /* Re-parse the original identifier. */
-  lexer_next_token (context_p);
-
-  if (is_arrow_function)
-  {
-    parser_parse_function_expression (context_p,
-                                      PARSER_IS_FUNCTION | PARSER_IS_ARROW_FUNCTION | PARSER_ARROW_PARSE_ARGS);
-    return true;
-  }
-
-  return false;
-} /* parser_check_arrow_function */
-
-#endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
-
 #if ENABLED (JERRY_ES2015_TEMPLATE_STRINGS)
 
 /**
@@ -1247,6 +1174,13 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
      * they are processed when their closing paren is reached. */
     if (context_p->token.type == LEXER_LEFT_PAREN)
     {
+#if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
+      if (context_p->next_scanner_info_p->source_p == context_p->source_p)
+      {
+        JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_ARROW);
+        break;
+      }
+#endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
       (*grouping_level_p)++;
       new_was_seen = 0;
     }
@@ -1283,33 +1217,12 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
     case LEXER_LITERAL:
     {
 #if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
-      if (context_p->token.lit_location.type == LEXER_IDENT_LITERAL)
+      if (context_p->token.lit_location.type == LEXER_IDENT_LITERAL
+          && lexer_check_arrow (context_p))
       {
-        switch (lexer_check_arrow (context_p))
-        {
-          case LEXER_COMMA:
-          case LEXER_RIGHT_PAREN:
-          {
-            if (context_p->stack_top_uint8 == LEXER_LEFT_PAREN
-                && parser_check_arrow_function (context_p))
-            {
-              (*grouping_level_p)--;
-              parser_stack_pop_uint8 (context_p);
-              return;
-            }
-            break;
-          }
-          case LEXER_ARROW:
-          {
-            parser_parse_function_expression (context_p,
-                                              PARSER_IS_FUNCTION | PARSER_IS_ARROW_FUNCTION);
-            return;
-          }
-          default:
-          {
-            break;
-          }
-        }
+        parser_parse_function_expression (context_p,
+                                          PARSER_IS_FUNCTION | PARSER_IS_ARROW_FUNCTION);
+        return;
       }
 #endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
 
@@ -1510,19 +1423,16 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
     }
 #endif /* ENABLED (JERRY_ES2015_CLASS) */
 #if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
-    case LEXER_RIGHT_PAREN:
+    case LEXER_LEFT_PAREN:
     {
-      if (context_p->stack_top_uint8 == LEXER_LEFT_PAREN
-          && lexer_check_arrow (context_p) == LEXER_ARROW)
-      {
-        parser_parse_function_expression (context_p,
-                                          PARSER_IS_FUNCTION | PARSER_IS_ARROW_FUNCTION | PARSER_ARROW_PARSE_ARGS);
+      JERRY_ASSERT (context_p->next_scanner_info_p->source_p == context_p->source_p
+                    && context_p->next_scanner_info_p->type == SCANNER_TYPE_ARROW);
+      scanner_release_next (context_p, sizeof (scanner_info_t));
 
-        (*grouping_level_p)--;
-        parser_stack_pop_uint8 (context_p);
-        return;
-      }
-      /* FALLTHRU */
+      lexer_next_token (context_p);
+      parser_parse_function_expression (context_p,
+                                        PARSER_IS_FUNCTION | PARSER_IS_ARROW_FUNCTION | PARSER_ARROW_PARSE_ARGS);
+      return;
     }
 #endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
     default:

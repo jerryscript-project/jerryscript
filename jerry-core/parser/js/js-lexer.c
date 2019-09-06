@@ -1373,45 +1373,19 @@ lexer_check_next_character (parser_context_t *context_p, /**< context */
 /**
  * Checks whether the next token is a type used for detecting arrow functions.
  *
- * @return identified token type
+ * @return true if the next token is an arrow token
  */
-lexer_token_type_t
+bool
 lexer_check_arrow (parser_context_t *context_p) /**< context */
 {
   lexer_skip_spaces (context_p);
 
   context_p->token.flags = (uint8_t) (context_p->token.flags | LEXER_NO_SKIP_SPACES);
 
-  if (context_p->source_p < context_p->source_end_p)
-  {
-    switch (context_p->source_p[0])
-    {
-      case LIT_CHAR_COMMA:
-      {
-        return LEXER_COMMA;
-      }
-      case LIT_CHAR_RIGHT_PAREN:
-      {
-        return LEXER_RIGHT_PAREN;
-      }
-      case LIT_CHAR_EQUALS:
-      {
-        if (!(context_p->token.flags & LEXER_WAS_NEWLINE)
-            && context_p->source_p + 1 < context_p->source_end_p
-            && context_p->source_p[1] == (uint8_t) LIT_CHAR_GREATER_THAN)
-        {
-          return LEXER_ARROW;
-        }
-        break;
-      }
-      default:
-      {
-        break;
-      }
-    }
-  }
-
-  return LEXER_EOS;
+  return (!(context_p->token.flags & LEXER_WAS_NEWLINE)
+          && context_p->source_p + 2 <= context_p->source_end_p
+          && context_p->source_p[0] == (uint8_t) LIT_CHAR_EQUALS
+          && context_p->source_p[1] == (uint8_t) LIT_CHAR_GREATER_THAN);
 } /* lexer_check_arrow */
 
 #endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
@@ -2427,7 +2401,7 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
  */
 void
 lexer_scan_identifier (parser_context_t *context_p, /**< context */
-                       bool property_name) /**< property name */
+                       uint32_t ident_opts) /**< lexer_scan_ident_opts_t option bits */
 {
   lexer_skip_spaces (context_p);
   context_p->token.line = context_p->line;
@@ -2438,7 +2412,9 @@ lexer_scan_identifier (parser_context_t *context_p, /**< context */
   {
     lexer_parse_identifier (context_p, false);
 
-    if (property_name && context_p->token.lit_location.length == 3)
+    if ((ident_opts & LEXER_SCAN_IDENT_PROPERTY)
+        && !(ident_opts & LEXER_SCAN_IDENT_NO_KEYW)
+        && context_p->token.lit_location.length == 3)
     {
       lexer_skip_spaces (context_p);
 
@@ -2458,7 +2434,7 @@ lexer_scan_identifier (parser_context_t *context_p, /**< context */
     return;
   }
 
-  if (property_name)
+  if (ident_opts & LEXER_SCAN_IDENT_PROPERTY)
   {
     lexer_next_token (context_p);
 

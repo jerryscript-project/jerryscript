@@ -39,3 +39,6 @@ assert (x === 42);
 assert (f(1) === 1);
 var dog = new Dog("Pluto")
 assert(dog.speak() === "Pluto barks.")
+
+// Pre-scanner regression test
+for (var tmp in {}) ;

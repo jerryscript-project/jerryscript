@@ -2245,6 +2245,16 @@ parser_parse_expression (parser_context_t *context_p, /**< context */
 
   parser_stack_push_uint8 (context_p, LEXER_EXPRESSION_START);
 
+#if ENABLED (JERRY_ES2015_CLASS)
+  /* Parsing a new expression:
+   *  So save, remove, and at the end restore the super prop reference indicator.
+   *
+   * If this is not done, it is possible to carry the flag over to the next expression.
+   */
+  bool has_super_ref = (context_p->status_flags & PARSER_CLASS_SUPER_PROP_REFERENCE);
+  context_p->status_flags &= (uint32_t) ~PARSER_CLASS_SUPER_PROP_REFERENCE;
+#endif
+
   while (true)
   {
     if (options & PARSE_EXPR_HAS_LITERAL)
@@ -2409,6 +2419,14 @@ parser_parse_expression (parser_context_t *context_p, /**< context */
   {
     parser_push_result (context_p);
   }
+
+#if ENABLED (JERRY_ES2015_CLASS)
+  /* Restore the super prop ref flag. */
+  if (has_super_ref)
+  {
+    context_p->status_flags |= (uint32_t) PARSER_CLASS_SUPER_PROP_REFERENCE;
+  }
+#endif /* ENABLED (JERRY_ES2015_CLASS) */
 } /* parser_parse_expression */
 
 /**

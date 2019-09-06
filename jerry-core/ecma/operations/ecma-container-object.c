@@ -463,6 +463,8 @@ ecma_op_container_foreach (ecma_value_t this_arg, /**< this argument */
 
   ecma_value_t ret_value = ECMA_VALUE_UNDEFINED;
 
+  ecma_ref_object (internal_obj_p);
+
   while (ecma_value_p != NULL)
   {
     ecma_string_t *prop_name_p = ecma_get_prop_name_from_value (*ecma_value_p);
@@ -516,6 +518,7 @@ ecma_op_container_foreach (ecma_value_t this_arg, /**< this argument */
     ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
   }
 
+  ecma_deref_object (internal_obj_p);
   ecma_free_values_collection (props_p, 0);
 
   return ret_value;

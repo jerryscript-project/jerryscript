@@ -1668,23 +1668,58 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           ecma_extended_object_t *ext_array_obj_p = (ecma_extended_object_t *) array_obj_p;
           uint32_t old_length = ext_array_obj_p->u.array.length;
 
-          JERRY_ASSERT (ext_array_obj_p->u.array.is_fast_mode);
-
-          ecma_value_t *values_p = ecma_fast_array_extend (array_obj_p, old_length + values_length);
-
-          for (uint32_t i = 0; i < values_length; i++)
+          if (JERRY_LIKELY (ext_array_obj_p->u.array.is_fast_mode))
           {
-            values_p[old_length + i] = stack_top_p[i];
+            ecma_value_t *values_p = ecma_fast_array_extend (array_obj_p, old_length + values_length);
 
-            if (JERRY_UNLIKELY (ecma_is_value_array_hole (stack_top_p[i])))
+            for (uint32_t i = 0; i < values_length; i++)
             {
-              ext_array_obj_p->u.array.hole_count++;
+              values_p[old_length + i] = stack_top_p[i];
+
+              if (JERRY_UNLIKELY (ecma_is_value_array_hole (stack_top_p[i])))
+              {
+                ext_array_obj_p->u.array.hole_count++;
+              }
+              else if (ecma_is_value_object (stack_top_p[i]))
+              {
+                ecma_deref_object (ecma_get_object_from_value (stack_top_p[i]));
+              }
             }
-            else if (ecma_is_value_object (stack_top_p[i]))
+
+            if (JERRY_UNLIKELY (ext_array_obj_p->u.array.length > ECMA_FAST_ARRAY_MAX_HOLE_COUNT))
             {
-              ecma_deref_object (ecma_get_object_from_value (stack_top_p[i]));
+              ecma_fast_array_convert_to_normal (array_obj_p);
             }
           }
+          else
+          {
+            for (uint32_t i = 0; i < values_length; i++)
+            {
+              if (!ecma_is_value_array_hole (stack_top_p[i]))
+              {
+                ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (old_length + i);
+
+                ecma_property_value_t *prop_value_p;
+
+                prop_value_p = ecma_create_named_data_property (array_obj_p,
+                                                                index_str_p,
+                                                                ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                                NULL);
+
+                ecma_deref_ecma_string (index_str_p);
+                prop_value_p->value = stack_top_p[i];
+
+                if (ecma_is_value_object (stack_top_p[i]))
+                {
+                  ecma_free_value (stack_top_p[i]);
+                }
+
+              }
+            }
+
+            ext_array_obj_p->u.array.length = old_length + values_length;
+          }
+
           continue;
         }
         case VM_OC_PUSH_UNDEFINED_BASE:

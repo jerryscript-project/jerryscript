@@ -26,6 +26,13 @@
  */
 
 /**
+ * Maximum number of array holes in a fast mode access array.
+ * If the number of holes exceeds this limit, the array is converted back
+ * to normal property list based array.
+ */
+#define ECMA_FAST_ARRAY_MAX_HOLE_COUNT 32
+
+/**
  * Flags for ecma_op_array_object_set_length
  */
 typedef enum

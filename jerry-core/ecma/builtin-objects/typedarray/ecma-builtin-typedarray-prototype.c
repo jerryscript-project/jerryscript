@@ -1967,8 +1967,7 @@ ecma_builtin_typedarray_prototype_slice (ecma_value_t this_arg, /**< this argume
 
     ecma_object_t *new_typedarray_p = ecma_get_object_from_value (new_typedarray);
     lit_utf8_byte_t *new_typedarray_buffer_p = ecma_typedarray_get_buffer (new_typedarray_p);
-    ecma_length_t src_byte_offset = ecma_typedarray_get_offset (typedarray_p);
-    uint32_t src_byte_index = (start * element_size) + src_byte_offset;
+    uint32_t src_byte_index = (start * element_size);
 
     memcpy (new_typedarray_buffer_p,
             typedarray_buffer_p + src_byte_index,

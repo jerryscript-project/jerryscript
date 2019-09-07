@@ -950,8 +950,8 @@ ecma_builtin_json_serialize_object (ecma_json_stringify_context_t *context_p, /*
       /* ecma_builtin_json_serialize_property already appended the result. */
       JERRY_ASSERT (ecma_is_value_empty (result));
 
-      last_prop = ecma_stringbuilder_get_size (&context_p->result_builder);
       ecma_stringbuilder_append_byte (&context_p->result_builder, LIT_CHAR_COMMA);
+      last_prop = ecma_stringbuilder_get_size (&context_p->result_builder);
     }
     else
     {
@@ -962,15 +962,18 @@ ecma_builtin_json_serialize_object (ecma_json_stringify_context_t *context_p, /*
     ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
   }
 
-  /* Remove the last comma. */
-  ecma_stringbuilder_revert (&context_p->result_builder, last_prop);
-
-  if (last_prop != left_brace && has_gap)
+  if (last_prop != left_brace)
   {
-    /* We appended at least one element, and have a separator, so must append the stepback. */
-    ecma_stringbuilder_append_raw (&context_p->result_builder,
-                                   ecma_stringbuilder_get_data (&context_p->indent_builder),
-                                   stepback_size);
+    /* Remove the last comma. */
+    ecma_stringbuilder_revert (&context_p->result_builder, last_prop - 1);
+
+    if (has_gap)
+    {
+      /* We appended at least one element, and have a separator, so must append the stepback. */
+      ecma_stringbuilder_append_raw (&context_p->result_builder,
+                                     ecma_stringbuilder_get_data (&context_p->indent_builder),
+                                     stepback_size);
+    }
   }
 
   ecma_stringbuilder_append_byte (&context_p->result_builder, LIT_CHAR_RIGHT_BRACE);

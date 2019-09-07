@@ -1348,6 +1348,11 @@ typedef enum
 #define ECMA_GET_DIRECT_STRING_VALUE(string_p) \
   (((uintptr_t) (string_p)) >> ECMA_DIRECT_STRING_SHIFT)
 
+/**
+ * Maximum number of bytes that a long-utf8-string is able to store
+ */
+#define ECMA_STRING_SIZE_LIMIT UINT32_MAX
+
 typedef enum
 {
   ECMA_STRING_CONTAINER_HEAP_UTF8_STRING, /**< actual data is on the heap as an utf-8 (cesu8) string

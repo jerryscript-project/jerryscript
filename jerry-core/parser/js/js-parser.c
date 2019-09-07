@@ -1182,14 +1182,14 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
   if (!(compiled_code_p->status_flags & CBC_CODE_FLAGS_FULL_LITERAL_ENCODING))
   {
     JERRY_DEBUG_MSG ("small_lit_enc");
-    encoding_limit = 255;
-    encoding_delta = 0xfe01;
+    encoding_limit = CBC_SMALL_LITERAL_ENCODING_LIMIT;
+    encoding_delta = CBC_SMALL_LITERAL_ENCODING_DELTA;
   }
   else
   {
     JERRY_DEBUG_MSG ("full_lit_enc");
-    encoding_limit = 128;
-    encoding_delta = 0x8000;
+    encoding_limit = CBC_FULL_LITERAL_ENCODING_LIMIT;
+    encoding_delta = CBC_FULL_LITERAL_ENCODING_DELTA;
   }
 
   if (compiled_code_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
@@ -1803,9 +1803,19 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     byte_code_p += sizeof (cbc_uint8_arguments_t);
   }
 
+  uint16_t encoding_limit;
+  uint16_t encoding_delta;
+
   if (context_p->literal_count > CBC_MAXIMUM_SMALL_VALUE)
   {
     compiled_code_p->status_flags |= CBC_CODE_FLAGS_FULL_LITERAL_ENCODING;
+    encoding_limit = CBC_FULL_LITERAL_ENCODING_LIMIT;
+    encoding_delta = CBC_FULL_LITERAL_ENCODING_DELTA;
+  }
+  else
+  {
+    encoding_limit = CBC_SMALL_LITERAL_ENCODING_LIMIT;
+    encoding_delta = CBC_SMALL_LITERAL_ENCODING_DELTA;
   }
 
   if (context_p->status_flags & PARSER_IS_STRICT)
@@ -1951,16 +1961,21 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 
     while (flags & (CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2))
     {
-      uint8_t first_byte = page_p->bytes[offset];
+      uint16_t first_byte = page_p->bytes[offset];
 
       uint8_t *opcode_pos_p = dst_p - 1;
-      *dst_p++ = first_byte;
+      *dst_p++ = (uint8_t) first_byte;
       real_offset++;
       PARSER_NEXT_BYTE_UPDATE (page_p, offset, real_offset);
 
       if (first_byte > literal_one_byte_limit)
       {
         *dst_p++ = page_p->bytes[offset];
+
+        if (first_byte > encoding_limit)
+        {
+          first_byte = (uint16_t) (((first_byte << 8) | dst_p[-1]) - encoding_delta);
+        }
         real_offset++;
       }
       PARSER_NEXT_BYTE_UPDATE (page_p, offset, real_offset);

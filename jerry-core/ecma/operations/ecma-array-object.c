@@ -186,13 +186,6 @@ ecma_fast_array_convert_to_normal (ecma_object_t *object_p) /**< fast access mod
   ecma_deref_object (object_p);
 } /* ecma_fast_array_convert_to_normal */
 
-/**
- * Maximum number of array holes in a fast mode access array.
- * If the number of holes exceeds this limit, the array is converted back
- * to normal property list based array.
- */
-#define ECMA_FAST_ARRAY_MAX_HOLE_COUNT 32
-
 #if ENABLED (JERRY_SYSTEM_ALLOCATOR)
 /**
  * Maximum length of the array length to allocate fast mode access for it

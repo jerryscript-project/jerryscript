@@ -15,6 +15,7 @@
 
 #include "ecma-alloc.h"
 #include "ecma-conversion.h"
+#include "ecma-gc.h"
 #include "ecma-helpers.h"
 #include "ecma-number-arithmetic.h"
 #include "ecma-objects.h"
@@ -85,6 +86,126 @@ do_number_arithmetic (number_arithmetic_op op, /**< number arithmetic operation 
 } /* do_number_arithmetic */
 
 /**
+ * Helper function for 'Addition' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.6.1
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
+ */
+static ecma_value_t
+opfunc_addition_primitive_based (ecma_value_t left_value, /**< left value */
+                                 ecma_value_t right_value) /**< right value */
+{
+  JERRY_ASSERT (!ecma_is_value_object (left_value)
+                && !ecma_is_value_object (right_value));
+
+  if (ecma_is_value_string (left_value)
+      || ecma_is_value_string (right_value))
+  {
+    ecma_value_t str_left_value = ecma_op_to_string (left_value);
+
+    if (ECMA_IS_VALUE_ERROR (str_left_value))
+    {
+      return str_left_value;
+    }
+
+    ecma_string_t *string1_p = ecma_get_string_from_value (str_left_value);
+
+    ecma_value_t str_right_value = ecma_op_to_string (right_value);
+
+    if (ECMA_IS_VALUE_ERROR (str_right_value))
+    {
+      ecma_deref_ecma_string (string1_p);
+      return str_right_value;
+    }
+
+    ecma_string_t *string2_p = ecma_get_string_from_value (str_right_value);
+
+    string1_p = ecma_concat_ecma_strings (string1_p, string2_p);
+    ecma_value_t ret_value = ecma_make_string_value (string1_p);
+    ecma_deref_ecma_string (string2_p);
+    return ret_value;
+
+  }
+
+  ecma_number_t num_left;
+  ecma_number_t num_right;
+
+  if (ECMA_IS_VALUE_ERROR (ecma_get_number (left_value, &num_left)))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  if (ECMA_IS_VALUE_ERROR (ecma_get_number (right_value, &num_right)))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  return ecma_make_number_value (num_left + num_right);
+} /* opfunc_addition_primitive_based */
+
+/**
+ * Helper function for 'Addition' opcode handler.
+ *
+ * See also: ECMA-262 v5, 11.6.1
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
+ */
+static ecma_value_t
+opfunc_addition_object_based (ecma_value_t left_value, /**< left value */
+                              ecma_value_t right_value) /**< right value */
+{
+  JERRY_ASSERT (ecma_is_value_object (left_value)
+                || ecma_is_value_object (right_value));
+
+  bool free_left = false;
+  bool free_right = false;
+
+  if (ecma_is_value_object (left_value))
+  {
+    ecma_object_t *obj_p = ecma_get_object_from_value (left_value);
+    left_value = ecma_op_object_default_value (obj_p, ECMA_PREFERRED_TYPE_NO);
+    free_left = true;
+
+    if (ECMA_IS_VALUE_ERROR (left_value))
+    {
+      return left_value;
+    }
+  }
+
+  ecma_value_t ret_value = ECMA_VALUE_ERROR;
+
+  if (ecma_is_value_object (right_value))
+  {
+    ecma_object_t *obj_p = ecma_get_object_from_value (right_value);
+    right_value = ecma_op_object_default_value (obj_p, ECMA_PREFERRED_TYPE_NO);
+    free_right = true;
+
+    if (ECMA_IS_VALUE_ERROR (right_value))
+    {
+      goto cleanup;
+    }
+  }
+
+  ret_value = opfunc_addition_primitive_based (left_value, right_value);
+
+  if (free_right)
+  {
+    ecma_free_value (right_value);
+  }
+
+cleanup:
+  if (free_left)
+  {
+    ecma_free_value (left_value);
+  }
+
+  return ret_value;
+} /* opfunc_addition_object_based */
+
+/**
  * 'Addition' opcode handler.
  *
  * See also: ECMA-262 v5, 11.6.1
@@ -96,104 +217,13 @@ ecma_value_t
 opfunc_addition (ecma_value_t left_value, /**< left value */
                  ecma_value_t right_value) /**< right value */
 {
-  bool free_left_value = false;
-  bool free_right_value = false;
-
-  if (ecma_is_value_object (left_value))
+  if (JERRY_UNLIKELY (ecma_is_value_object (left_value)
+                      || ecma_is_value_object (right_value)))
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (left_value);
-    left_value = ecma_op_object_default_value (obj_p, ECMA_PREFERRED_TYPE_NO);
-    free_left_value = true;
-
-    if (ECMA_IS_VALUE_ERROR (left_value))
-    {
-      return left_value;
-    }
+    return opfunc_addition_object_based (left_value, right_value);
   }
 
-  if (ecma_is_value_object (right_value))
-  {
-    ecma_object_t *obj_p = ecma_get_object_from_value (right_value);
-    right_value = ecma_op_object_default_value (obj_p, ECMA_PREFERRED_TYPE_NO);
-    free_right_value = true;
-
-    if (ECMA_IS_VALUE_ERROR (right_value))
-    {
-      if (free_left_value)
-      {
-        ecma_free_value (left_value);
-      }
-      return right_value;
-    }
-  }
-
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-
-  if (ecma_is_value_string (left_value)
-      || ecma_is_value_string (right_value))
-  {
-    ecma_value_t str_left_value = ecma_op_to_string (left_value);
-
-    if (ECMA_IS_VALUE_ERROR (str_left_value))
-    {
-      if (free_left_value)
-      {
-        ecma_free_value (left_value);
-      }
-      if (free_right_value)
-      {
-        ecma_free_value (right_value);
-      }
-      return str_left_value;
-    }
-
-    ecma_string_t *string1_p = ecma_get_string_from_value (str_left_value);
-
-    ecma_value_t str_right_value = ecma_op_to_string (right_value);
-
-    if (ECMA_IS_VALUE_ERROR (str_right_value))
-    {
-      if (free_right_value)
-      {
-        ecma_free_value (right_value);
-      }
-      if (free_left_value)
-      {
-        ecma_free_value (left_value);
-      }
-      ecma_deref_ecma_string (string1_p);
-      return str_right_value;
-    }
-
-    ecma_string_t *string2_p = ecma_get_string_from_value (str_right_value);
-
-    string1_p = ecma_concat_ecma_strings (string1_p, string2_p);
-    ret_value = ecma_make_string_value (string1_p);
-
-    ecma_deref_ecma_string (string2_p);
-  }
-  else
-  {
-    ECMA_OP_TO_NUMBER_TRY_CATCH (num_left, left_value, ret_value);
-    ECMA_OP_TO_NUMBER_TRY_CATCH (num_right, right_value, ret_value);
-
-    ret_value = ecma_make_number_value (num_left + num_right);
-
-    ECMA_OP_TO_NUMBER_FINALIZE (num_right);
-    ECMA_OP_TO_NUMBER_FINALIZE (num_left);
-  }
-
-  if (free_left_value)
-  {
-    ecma_free_value (left_value);
-  }
-
-  if (free_right_value)
-  {
-    ecma_free_value (right_value);
-  }
-
-  return ret_value;
+  return opfunc_addition_primitive_based (left_value, right_value);
 } /* opfunc_addition */
 
 /**

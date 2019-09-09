@@ -2004,6 +2004,74 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           left_value = ECMA_VALUE_UNDEFINED;
           break;
         }
+        case VM_OC_ASSIGN_ADD_IDENT_LITERAL:
+        {
+          byte_code_start_p += byte_code_start_p[1] > encoding_limit ? 2 : 1;
+          /* FALLTHRU */
+        }
+        case VM_OC_ASSIGN_ADD_IDENT:
+        {
+          byte_code_p = byte_code_start_p + 1;
+
+assign_add:
+          if (ecma_are_values_integer_numbers (left_value, right_value))
+          {
+            ecma_integer_value_t left_integer = ecma_get_integer_from_value (left_value);
+            ecma_integer_value_t right_integer = ecma_get_integer_from_value (right_value);
+            result = ecma_make_int32_value ((int32_t) (left_integer + right_integer));
+            break;
+          }
+
+          if (ecma_is_value_float_number (left_value)
+              && ecma_is_value_number (right_value))
+          {
+            ecma_number_t new_value = (ecma_get_float_from_value (left_value) +
+                                       ecma_get_number_from_value (right_value));
+
+            result = ecma_update_float_number (left_value, new_value);
+            left_value = ECMA_VALUE_UNDEFINED;
+            break;
+          }
+
+          if (ecma_is_value_float_number (right_value)
+              && ecma_is_value_integer_number (left_value))
+          {
+            ecma_number_t new_value = ((ecma_number_t) ecma_get_integer_from_value (left_value) +
+                                       ecma_get_float_from_value (right_value));
+
+            result = ecma_update_float_number (right_value, new_value);
+            right_value = ECMA_VALUE_UNDEFINED;
+            break;
+          }
+
+          result = opfunc_addition (right_value, left_value);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          break;
+        }
+        case VM_OC_ASSIGN_ADD_PROP:
+        {
+          *stack_top_p++ = right_value;
+          /* FALLTHRU */
+        }
+        case VM_OC_ASSIGN_ADD:
+        {
+          result = vm_op_get_value (stack_top_p[-2],  stack_top_p[-1]);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          ecma_fast_free_value (right_value);
+          right_value = result;
+
+          goto assign_add;
+        }
         case VM_OC_RET:
         {
           JERRY_ASSERT (opcode == CBC_RETURN

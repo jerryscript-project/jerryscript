@@ -153,6 +153,11 @@ typedef enum
   VM_OC_ASSIGN_PROP,             /**< assign property */
   VM_OC_ASSIGN_PROP_THIS,        /**< assign prop this */
 
+  VM_OC_ASSIGN_ADD,              /**< assign add */
+  VM_OC_ASSIGN_ADD_IDENT,        /**< assign add identifier*/
+  VM_OC_ASSIGN_ADD_IDENT_LITERAL,/**< assign add identifier + literal */
+  VM_OC_ASSIGN_ADD_PROP,         /**< assign add property */
+
   VM_OC_RET,                     /**< return */
   VM_OC_THROW,                   /**< throw */
   VM_OC_THROW_REFERENCE_ERROR,   /**< throw reference error */

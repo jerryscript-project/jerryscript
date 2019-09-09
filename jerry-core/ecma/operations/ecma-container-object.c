@@ -14,6 +14,7 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-array-object.h"
 #include "ecma-builtins.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-exceptions.h"
@@ -246,28 +247,27 @@ ecma_op_container_to_key (ecma_value_t key_arg) /**< key argument */
     ecma_object_t *obj_p = ecma_get_object_from_value (key_arg);
     ecma_string_t *key_string_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_MAP_KEY);
 
-    ecma_property_ref_t property_ref;
-    ecma_property_t property = ecma_op_object_get_own_property (obj_p,
-                                                                key_string_p,
-                                                                &property_ref,
-                                                                ECMA_PROPERTY_GET_NO_OPTIONS);
+    if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY
+        && ((ecma_extended_object_t *) obj_p)->u.array.is_fast_mode)
+    {
+      ecma_fast_array_convert_to_normal (obj_p);
+    }
 
+    ecma_property_t *property_p = ecma_find_named_property (obj_p, key_string_p);
     ecma_string_t *object_key_string;
 
-    if (property == ECMA_PROPERTY_TYPE_NOT_FOUND || property == ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP)
+    if (property_p == NULL)
     {
       object_key_string = ecma_new_map_key_string (key_arg);
-      ecma_value_t put_comp = ecma_builtin_helper_def_prop (obj_p,
-                                                            key_string_p,
-                                                            ecma_make_string_value (object_key_string),
-                                                            ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
-
-      JERRY_ASSERT (ecma_is_value_true (put_comp));
-      ecma_deref_ecma_string (object_key_string);
+      ecma_property_value_t *value_p = ecma_create_named_data_property (obj_p,
+                                                                        key_string_p,
+                                                                        ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                                        NULL);
+      value_p->value = ecma_make_string_value (object_key_string);
     }
     else
     {
-      object_key_string = ecma_get_string_from_value (property_ref.value_p->value);
+      object_key_string = ecma_get_string_from_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
     }
 
     ecma_ref_ecma_string (object_key_string);

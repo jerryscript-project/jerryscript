@@ -594,6 +594,18 @@ jerry_port_normalize_path (const char *in_path_p,   /**< input file path */
 } /* jerry_port_normalize_path */
 
 /**
+ * Get the module object of a native module.
+ *
+ * @return undefined
+ */
+jerry_value_t
+jerry_port_get_native_module (jerry_value_t name) /**< module specifier */
+{
+  (void) name;
+  return jerry_create_undefined ();
+} /* jerry_port_get_native_module */
+
+/**
 * Main program.
 *
 * @return 0 if success, error code otherwise

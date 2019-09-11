@@ -2447,6 +2447,22 @@ lexer_scan_identifier (parser_context_t *context_p, /**< context */
       return;
     }
   }
+#if ENABLED (JERRY_ES2015_CLASS)
+  if (ident_opts & LEXER_SCAN_CLASS_PROPERTY)
+  {
+    lexer_next_token (context_p);
+
+    if (context_p->token.type == LEXER_LITERAL
+#if ENABLED (JERRY_ES2015_OBJECT_INITIALIZER)
+        || context_p->token.type == LEXER_LEFT_SQUARE
+#endif /* ENABLED (JERRY_ES2015_OBJECT_INITIALIZER) */
+        || context_p->token.type == LEXER_RIGHT_BRACE
+        || context_p->token.type == LEXER_SEMICOLON)
+    {
+      return;
+    }
+  }
+#endif /* ENABLED (JERRY_ES2015_CLASS) */
 
   parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
 } /* lexer_scan_identifier */

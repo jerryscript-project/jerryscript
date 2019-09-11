@@ -262,7 +262,10 @@ typedef enum
 {
   LEXER_SCAN_IDENT_NO_OPTS = (1u << 0),          /**< no options */
   LEXER_SCAN_IDENT_PROPERTY = (1u << 1),         /**< scan valid property names */
-  LEXER_SCAN_IDENT_NO_KEYW = (1u << 2),          /**< don\t scan keywords (e.g. get/set) */
+  LEXER_SCAN_IDENT_NO_KEYW = (1u << 2),          /**< don't scan keywords (e.g. get/set) */
+#if ENABLED (JERRY_ES2015_CLASS)
+  LEXER_SCAN_CLASS_PROPERTY = (1u << 3),         /**< scan valid class property names */
+#endif /* ENABLED (JERRY_ES2015_CLASS) */
 } lexer_scan_ident_opts_t;
 
 /**

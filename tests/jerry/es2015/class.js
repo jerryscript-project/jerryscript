@@ -83,12 +83,21 @@ class C {
   3() {
     return 3;
   }
+
+  super() {
+    return 42;
+  }
+  return() {
+    return 43;
+  }
 }
 
 var c = new C;
 assert (c.c1() === 5);
 assert (c.c2() === undefined);
 assert (c["3"]() === 3);
+assert (c.super() === 42);
+assert (c.return() === 43);
 assert (c.constructor === C);
 
 class D {
@@ -151,6 +160,10 @@ var F = class ClassF {
   static 2 (a) {
     return 2 * a;
   }
+
+  static function(a) {
+    return 3 * a;
+  }
 }
 
 var f = new F(5);
@@ -163,6 +176,7 @@ assert (F.f3(1, 1) === 2);
 assert (F.constructor(5) === 5);
 assert (F.static(5) === 5);
 assert (F["2"](5) === 10);
+assert (F.function(5) === 15);
 assert (f.constructor === F);
 
 var G = class {
@@ -202,3 +216,6 @@ G["1"] = 20;
 assert (G["1"] === 20);
 G.constructor = 30;
 assert (G.constructor === 30);
+
+// Pre-scanner regression test
+for (var tmp in {}) ;

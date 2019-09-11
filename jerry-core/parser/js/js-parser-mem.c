@@ -52,8 +52,9 @@ parser_malloc (parser_context_t *context_p, /**< context */
 /**
  * Free memory allocated by parser_malloc.
  */
-void parser_free (void *ptr, /**< pointer to free */
-                  size_t size) /**< size of the memory block */
+inline void JERRY_ATTR_ALWAYS_INLINE
+parser_free (void *ptr, /**< pointer to free */
+             size_t size) /**< size of the memory block */
 {
   jmem_heap_free_block (ptr, size);
 } /* parser_free */

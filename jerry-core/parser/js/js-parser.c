@@ -2393,8 +2393,6 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   if (arg_list_p == NULL)
   {
     context.status_flags = PARSER_NO_REG_STORE | PARSER_LEXICAL_ENV_NEEDED | PARSER_ARGUMENTS_NOT_NEEDED;
-    context.source_p = source_p;
-    context.source_end_p = source_p + source_size;
   }
   else
   {
@@ -2407,15 +2405,7 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
       context.status_flags |= PARSER_LEXICAL_ENV_NEEDED | PARSER_NO_REG_STORE;
     }
 #endif /* ENABLED (JERRY_DEBUGGER) */
-    context.source_p = arg_list_p;
-    context.source_end_p = arg_list_p + arg_list_size;
   }
-
-  context.stack_depth = 0;
-  context.stack_limit = 0;
-  context.last_context_p = NULL;
-  context.last_statement.current_p = NULL;
-  context.status_flags |= parse_opts & PARSER_STRICT_MODE_MASK;
 
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
   if (parse_opts & ECMA_PARSE_EVAL)
@@ -2430,9 +2420,22 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   context.status_flags |= PARSER_GET_CLASS_PARSER_OPTS (parse_opts);
 #endif /* ENABLED (JERRY_ES2015_CLASS) */
 
+  context.stack_depth = 0;
+  context.stack_limit = 0;
+  context.last_context_p = NULL;
+  context.last_statement.current_p = NULL;
+  context.status_flags |= parse_opts & PARSER_STRICT_MODE_MASK;
+
   context.token.flags = 0;
   context.line = 1;
   context.column = 1;
+
+  scanner_info_t scanner_info_end;
+  scanner_info_end.next_p = NULL;
+  scanner_info_end.source_p = NULL;
+  scanner_info_end.type = SCANNER_TYPE_END;
+  context.next_scanner_info_p = &scanner_info_end;
+  context.active_scanner_info_p = NULL;
 
   context.last_cbc_opcode = PARSER_CBC_UNAVAILABLE;
 
@@ -2445,7 +2448,6 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   parser_list_init (&context.literal_pool,
                     sizeof (lexer_literal_t),
                     (uint32_t) ((128 - sizeof (void *)) / sizeof (lexer_literal_t)));
-  parser_stack_init (&context);
 
 #ifndef JERRY_NDEBUG
   context.context_stack_depth = 0;
@@ -2462,6 +2464,42 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
                                           : "Function");
   }
 #endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
+
+  context.source_p = source_p;
+  context.source_end_p = source_p + source_size;
+  context.line = 1;
+  context.column = 1;
+
+  scanner_scan_all (&context);
+
+  if (JERRY_UNLIKELY (context.error != PARSER_ERR_NO_ERROR))
+  {
+    JERRY_ASSERT (context.error == PARSER_ERR_OUT_OF_MEMORY);
+
+    if (error_location_p != NULL)
+    {
+      error_location_p->error = context.error;
+      error_location_p->line = context.token.line;
+      error_location_p->column = context.token.column;
+    }
+    return NULL;
+  }
+
+  if (arg_list_p == NULL)
+  {
+    context.source_p = source_p;
+    context.source_end_p = source_p + source_size;
+  }
+  else
+  {
+    context.source_p = arg_list_p;
+    context.source_end_p = arg_list_p + arg_list_size;
+  }
+
+  context.line = 1;
+  context.column = 1;
+
+  parser_stack_init (&context);
 
 #if ENABLED (JERRY_DEBUGGER)
   context.breakpoint_info_count = 0;
@@ -2528,6 +2566,8 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
       parser_free_local (context.allocated_buffer_p,
                          context.allocated_buffer_size);
     }
+
+    scanner_cleanup (&context);
 
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
     if (context.module_current_node_p != NULL
@@ -2881,12 +2921,14 @@ parser_parse_arrow_function (parser_context_t *context_p, /**< context */
 #endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
 
 /**
- * Raise a parse error
+ * Raise a parse error.
  */
 void
 parser_raise_error (parser_context_t *context_p, /**< context */
                     parser_error_t error) /**< error code */
 {
+  /* Must be compatible with the scanner because
+   * the lexer might throws errors during prescanning. */
   parser_saved_context_t *saved_context_p = context_p->last_context_p;
 
   while (saved_context_p != NULL)

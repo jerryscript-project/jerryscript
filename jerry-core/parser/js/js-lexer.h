@@ -256,6 +256,16 @@ typedef enum
 } lexer_obj_ident_opts_t;
 
 /**
+ * Lexer scan identifier parse options.
+ */
+typedef enum
+{
+  LEXER_SCAN_IDENT_NO_OPTS = (1u << 0),          /**< no options */
+  LEXER_SCAN_IDENT_PROPERTY = (1u << 1),         /**< scan valid property names */
+  LEXER_SCAN_IDENT_NO_KEYW = (1u << 2),          /**< don\t scan keywords (e.g. get/set) */
+} lexer_scan_ident_opts_t;
+
+/**
  * Lexer literal object types.
  */
 typedef enum

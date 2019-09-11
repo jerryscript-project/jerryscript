@@ -15,3 +15,6 @@
 
 export var x = 41
 export default a = "str"
+
+// Pre-scanner regression test
+for (var tmp in {}) ;

@@ -16,3 +16,6 @@
 export * from "module-export-01.js";
 export * from "module-export-04.js";
 export default a = "str"
+
+// Pre-scanner regression test
+for (var tmp in {}) ;

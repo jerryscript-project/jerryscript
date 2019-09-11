@@ -23,6 +23,7 @@
 #include "js-parser.h"
 #include "js-parser-limits.h"
 #include "js-lexer.h"
+#include "js-scanner.h"
 
 #include "ecma-module.h"
 
@@ -362,6 +363,10 @@ typedef struct
   parser_line_counter_t line;                 /**< current line */
   parser_line_counter_t column;               /**< current column */
 
+  /* Scanner members. */
+  scanner_info_t *next_scanner_info_p;        /**< next scanner info block */
+  scanner_info_t *active_scanner_info_p;      /**< currently active scanner info block */
+
   /* Compact byte code members. */
   cbc_argument_t last_cbc;                    /**< argument of the last cbc */
   uint16_t last_cbc_opcode;                   /**< opcode of the last cbc */
@@ -507,11 +512,11 @@ bool lexer_check_next_character (parser_context_t *context_p, lit_utf8_byte_t ch
 void lexer_skip_empty_statements (parser_context_t *context_p);
 #endif /* ENABLED (JERRY_ES2015_CLASS) */
 #if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
-lexer_token_type_t lexer_check_arrow (parser_context_t *context_p);
+bool lexer_check_arrow (parser_context_t *context_p);
 #endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
 void lexer_parse_string (parser_context_t *context_p);
 void lexer_expect_identifier (parser_context_t *context_p, uint8_t literal_type);
-void lexer_scan_identifier (parser_context_t *context_p, bool property_name);
+void lexer_scan_identifier (parser_context_t *context_p, uint32_t ident_opts);
 ecma_char_t lexer_hex_to_character (parser_context_t *context_p, const uint8_t *source_p, int length);
 void lexer_expect_object_literal_id (parser_context_t *context_p, uint32_t ident_opts);
 void lexer_construct_literal_object (parser_context_t *context_p, lexer_lit_location_t *literal_p,
@@ -549,7 +554,22 @@ void parser_parse_super_class_context_end (parser_context_t *context_p, bool is_
  * @{
  */
 
-void parser_scan_until (parser_context_t *context_p, lexer_range_t *range_p, lexer_token_type_t end_type);
+void scanner_raise_error (parser_context_t *context_p);
+void *scanner_malloc (parser_context_t *context_p, size_t size);
+void scanner_free (void *ptr, size_t size);
+
+scanner_info_t *scanner_insert_info (parser_context_t *context_p, const uint8_t *source_p, size_t size);
+void scanner_release_next (parser_context_t *context_p, size_t size);
+void scanner_set_active (parser_context_t *context_p);
+void scanner_release_active (parser_context_t *context_p, size_t size);
+void scanner_release_switch_cases (scanner_case_info_t *case_p);
+void scanner_reverse_info_list (parser_context_t *context_p);
+void scanner_cleanup (parser_context_t *context_p);
+
+void scanner_get_location (scanner_location_t *location_p, parser_context_t *context_p);
+void scanner_set_location (parser_context_t *context_p, scanner_location_t *location_p);
+
+void scanner_scan_all (parser_context_t *context_p);
 
 /**
  * @}

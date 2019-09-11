@@ -970,9 +970,12 @@ ecma_gc_run (void)
 {
   JERRY_CONTEXT (ecma_gc_new_objects) = 0;
 
+  ecma_object_t black_list_head;
+  black_list_head.gc_next_cp = JMEM_CP_NULL;
+  ecma_object_t *black_end_p = &black_list_head;
+
   ecma_object_t white_gray_list_head;
   white_gray_list_head.gc_next_cp = JERRY_CONTEXT (ecma_gc_objects_cp);
-  jmem_cpointer_t black_objects_cp = JMEM_CP_NULL;
 
   ecma_object_t *obj_prev_p = &white_gray_list_head;
   jmem_cpointer_t obj_iter_cp = obj_prev_p->gc_next_cp;
@@ -992,8 +995,8 @@ ecma_gc_run (void)
       /* Moving the object to list of marked objects. */
       obj_prev_p->gc_next_cp = obj_next_cp;
 
-      obj_iter_p->gc_next_cp = black_objects_cp;
-      black_objects_cp = obj_iter_cp;
+      black_end_p->gc_next_cp = obj_iter_cp;
+      black_end_p = obj_iter_p;
     }
     else
     {
@@ -1003,10 +1006,11 @@ ecma_gc_run (void)
     obj_iter_cp = obj_next_cp;
   }
 
-  jmem_cpointer_t first_root_object_cp = black_objects_cp;
+  black_end_p->gc_next_cp = JMEM_CP_NULL;
+  ecma_object_t *const last_root_object_p = black_end_p;
 
   /* Mark root objects. */
-  obj_iter_cp = first_root_object_cp;
+  obj_iter_cp = black_list_head.gc_next_cp;
   while (obj_iter_cp != JMEM_CP_NULL)
   {
     obj_iter_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_object_t, obj_iter_cp);
@@ -1037,8 +1041,8 @@ ecma_gc_run (void)
         /* Moving the object to list of marked objects */
         obj_prev_p->gc_next_cp = obj_next_cp;
 
-        obj_iter_p->gc_next_cp = black_objects_cp;
-        black_objects_cp = obj_iter_cp;
+        black_end_p->gc_next_cp = obj_iter_cp;
+        black_end_p = obj_iter_p;
 
         ecma_gc_mark (obj_iter_p);
         marked_anything_during_current_iteration = true;
@@ -1053,13 +1057,15 @@ ecma_gc_run (void)
   }
   while (marked_anything_during_current_iteration);
 
+  black_end_p->gc_next_cp = JMEM_CP_NULL;
+
   /* Sweep objects that are currently unmarked. */
   obj_iter_cp = white_gray_list_head.gc_next_cp;
 
   while (obj_iter_cp != JMEM_CP_NULL)
   {
     obj_iter_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_object_t, obj_iter_cp);
-    jmem_cpointer_t obj_next_cp = obj_iter_p->gc_next_cp;
+    const jmem_cpointer_t obj_next_cp = obj_iter_p->gc_next_cp;
 
     JERRY_ASSERT (!ecma_gc_is_object_visited (obj_iter_p));
 
@@ -1068,10 +1074,9 @@ ecma_gc_run (void)
   }
 
   /* Reset the reference counter of non-root black objects. */
-  obj_iter_cp = black_objects_cp;
-  JERRY_CONTEXT (ecma_gc_objects_cp) = black_objects_cp;
+  obj_iter_cp = last_root_object_p->gc_next_cp;
 
-  while (obj_iter_cp != first_root_object_cp)
+  while (obj_iter_cp != JMEM_CP_NULL)
   {
     /* The reference counter must be 1. */
     obj_iter_p = JMEM_CP_GET_NON_NULL_POINTER (ecma_object_t, obj_iter_cp);
@@ -1080,6 +1085,8 @@ ecma_gc_run (void)
 
     obj_iter_cp = obj_iter_p->gc_next_cp;
   }
+
+  JERRY_CONTEXT (ecma_gc_objects_cp) = black_list_head.gc_next_cp;
 
 #if ENABLED (JERRY_BUILTIN_REGEXP)
   /* Free RegExp bytecodes stored in cache */

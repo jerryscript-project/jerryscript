@@ -30,8 +30,18 @@
 
 /**
  * Size of block of RegExp bytecode. Used for allocation
+ *
+ * @return pointer to the RegExp compiled code header
  */
-#define REGEXP_BYTECODE_BLOCK_SIZE 256UL
+#define REGEXP_BYTECODE_BLOCK_SIZE 64UL
+
+void
+re_initialize_regexp_bytecode (re_bytecode_ctx_t *bc_ctx_p) /**< RegExp bytecode context */
+{
+  bc_ctx_p->block_start_p = jmem_heap_alloc_block (REGEXP_BYTECODE_BLOCK_SIZE);
+  bc_ctx_p->block_end_p = bc_ctx_p->block_start_p + REGEXP_BYTECODE_BLOCK_SIZE;
+  bc_ctx_p->current_p = bc_ctx_p->block_start_p + sizeof (re_compiled_code_t);
+} /* re_initialize_regexp_bytecode */
 
 /**
  * Realloc the bytecode container
@@ -42,26 +52,22 @@ static uint8_t *
 re_realloc_regexp_bytecode_block (re_bytecode_ctx_t *bc_ctx_p) /**< RegExp bytecode context */
 {
   JERRY_ASSERT (bc_ctx_p->block_end_p >= bc_ctx_p->block_start_p);
-  size_t old_size = (size_t) (bc_ctx_p->block_end_p - bc_ctx_p->block_start_p);
+  const size_t old_size = (size_t) (bc_ctx_p->block_end_p - bc_ctx_p->block_start_p);
 
   /* If one of the members of RegExp bytecode context is NULL, then all member should be NULL
    * (it means first allocation), otherwise all of the members should be a non NULL pointer. */
   JERRY_ASSERT ((!bc_ctx_p->current_p && !bc_ctx_p->block_end_p && !bc_ctx_p->block_start_p)
                 || (bc_ctx_p->current_p && bc_ctx_p->block_end_p && bc_ctx_p->block_start_p));
 
-  size_t new_block_size = old_size + REGEXP_BYTECODE_BLOCK_SIZE;
+  const size_t new_size = old_size + REGEXP_BYTECODE_BLOCK_SIZE;
   JERRY_ASSERT (bc_ctx_p->current_p >= bc_ctx_p->block_start_p);
-  size_t current_ptr_offset = (size_t) (bc_ctx_p->current_p - bc_ctx_p->block_start_p);
+  const size_t current_ptr_offset = (size_t) (bc_ctx_p->current_p - bc_ctx_p->block_start_p);
 
-  uint8_t *new_block_start_p = (uint8_t *) jmem_heap_alloc_block (new_block_size);
-  if (bc_ctx_p->current_p)
-  {
-    memcpy (new_block_start_p, bc_ctx_p->block_start_p, (size_t) (current_ptr_offset));
-    jmem_heap_free_block (bc_ctx_p->block_start_p, old_size);
-  }
-  bc_ctx_p->block_start_p = new_block_start_p;
-  bc_ctx_p->block_end_p = new_block_start_p + new_block_size;
-  bc_ctx_p->current_p = new_block_start_p + current_ptr_offset;
+  bc_ctx_p->block_start_p = jmem_heap_realloc_block (bc_ctx_p->block_start_p,
+                                                     old_size,
+                                                     new_size);
+  bc_ctx_p->block_end_p = bc_ctx_p->block_start_p + new_size;
+  bc_ctx_p->current_p = bc_ctx_p->block_start_p + current_ptr_offset;
 
   return bc_ctx_p->current_p;
 } /* re_realloc_regexp_bytecode_block */
@@ -69,54 +75,71 @@ re_realloc_regexp_bytecode_block (re_bytecode_ctx_t *bc_ctx_p) /**< RegExp bytec
 /**
  * Append a new bytecode to the and of the bytecode container
  */
-static void
-re_bytecode_list_append (re_bytecode_ctx_t *bc_ctx_p, /**< RegExp bytecode context */
-                         uint8_t *bytecode_p, /**< input bytecode */
-                         size_t length) /**< length of input */
+static uint8_t *
+re_bytecode_reserve (re_bytecode_ctx_t *bc_ctx_p, /**< RegExp bytecode context */
+                     const size_t size) /**< size */
 {
-  JERRY_ASSERT (length <= REGEXP_BYTECODE_BLOCK_SIZE);
+  JERRY_ASSERT (size <= REGEXP_BYTECODE_BLOCK_SIZE);
 
   uint8_t *current_p = bc_ctx_p->current_p;
-  if (current_p + length > bc_ctx_p->block_end_p)
+  if (current_p + size > bc_ctx_p->block_end_p)
   {
     current_p = re_realloc_regexp_bytecode_block (bc_ctx_p);
   }
 
-  memcpy (current_p, bytecode_p, length);
-  bc_ctx_p->current_p += length;
-} /* re_bytecode_list_append */
+  bc_ctx_p->current_p += size;
+  return current_p;
+} /* re_bytecode_reserve */
 
 /**
  * Insert a new bytecode to the bytecode container
  */
-void
-re_bytecode_list_insert (re_bytecode_ctx_t *bc_ctx_p, /**< RegExp bytecode context */
-                         size_t offset, /**< distance from the start of the container */
-                         uint8_t *bytecode_p, /**< input bytecode */
-                         size_t length) /**< length of input */
+static void
+re_bytecode_insert (re_bytecode_ctx_t *bc_ctx_p, /**< RegExp bytecode context */
+                    const size_t offset, /**< distance from the start of the container */
+                    const size_t size) /**< size */
 {
-  JERRY_ASSERT (length <= REGEXP_BYTECODE_BLOCK_SIZE);
+  JERRY_ASSERT (size <= REGEXP_BYTECODE_BLOCK_SIZE);
 
   uint8_t *current_p = bc_ctx_p->current_p;
-  if (current_p + length > bc_ctx_p->block_end_p)
+  if (current_p + size > bc_ctx_p->block_end_p)
   {
     re_realloc_regexp_bytecode_block (bc_ctx_p);
   }
 
-  uint8_t *src_p = bc_ctx_p->block_start_p + offset;
-  if ((re_get_bytecode_length (bc_ctx_p) - offset) > 0)
+  uint8_t *dest_p = bc_ctx_p->block_start_p + offset;
+  const size_t bytecode_length = re_get_bytecode_length (bc_ctx_p);
+  if (bytecode_length - offset > 0)
   {
-    uint8_t *dest_p = src_p + length;
-    uint8_t *tmp_block_start_p;
-    tmp_block_start_p = (uint8_t *) jmem_heap_alloc_block (re_get_bytecode_length (bc_ctx_p) - offset);
-    memcpy (tmp_block_start_p, src_p, (size_t) (re_get_bytecode_length (bc_ctx_p) - offset));
-    memcpy (dest_p, tmp_block_start_p, (size_t) (re_get_bytecode_length (bc_ctx_p) - offset));
-    jmem_heap_free_block (tmp_block_start_p, re_get_bytecode_length (bc_ctx_p) - offset);
+    memmove (dest_p + size, dest_p, bytecode_length - offset);
   }
-  memcpy (src_p, bytecode_p, length);
 
-  bc_ctx_p->current_p += length;
-} /* re_bytecode_list_insert */
+  bc_ctx_p->current_p += size;
+} /* re_bytecode_insert */
+
+/**
+ * Encode ecma_char_t into bytecode
+ */
+static void
+re_encode_char (uint8_t *dest_p, /**< destination */
+                const ecma_char_t c) /**< character */
+{
+  *dest_p++ = (uint8_t) ((c >> 8) & 0xFF);
+  *dest_p = (uint8_t) (c & 0xFF);
+} /* re_encode_char */
+
+/**
+ * Encode uint32_t into bytecode
+ */
+static void
+re_encode_u32 (uint8_t *dest_p, /**< destination */
+               const uint32_t u) /**< uint32 value */
+{
+  *dest_p++ = (uint8_t) ((u >> 24) & 0xFF);
+  *dest_p++ = (uint8_t) ((u >> 16) & 0xFF);
+  *dest_p++ = (uint8_t) ((u >> 8) & 0xFF);
+  *dest_p = (uint8_t) (u & 0xFF);
+} /* re_encode_u32 */
 
 /**
  * Get a character from the RegExp bytecode and increase the bytecode position
@@ -124,10 +147,12 @@ re_bytecode_list_insert (re_bytecode_ctx_t *bc_ctx_p, /**< RegExp bytecode conte
  * @return ecma character
  */
 inline ecma_char_t JERRY_ATTR_ALWAYS_INLINE
-re_get_char (uint8_t **bc_p) /**< pointer to bytecode start */
+re_get_char (const uint8_t **bc_p) /**< pointer to bytecode start */
 {
-  ecma_char_t chr;
-  memcpy (&chr, *bc_p, sizeof (ecma_char_t));
+  const uint8_t *src_p = *bc_p;
+  ecma_char_t chr = (ecma_char_t) *src_p++;
+  chr = (ecma_char_t) (chr << 8);
+  chr = (ecma_char_t) (chr | *src_p);
   (*bc_p) += sizeof (ecma_char_t);
   return chr;
 } /* re_get_char */
@@ -138,11 +163,9 @@ re_get_char (uint8_t **bc_p) /**< pointer to bytecode start */
  * @return current RegExp opcode
  */
 inline re_opcode_t JERRY_ATTR_ALWAYS_INLINE
-re_get_opcode (uint8_t **bc_p) /**< pointer to bytecode start */
+re_get_opcode (const uint8_t **bc_p) /**< pointer to bytecode start */
 {
-  uint8_t bytecode = **bc_p;
-  (*bc_p) += sizeof (uint8_t);
-  return (re_opcode_t) bytecode;
+  return (re_opcode_t) *((*bc_p)++);
 } /* re_get_opcode */
 
 /**
@@ -151,10 +174,17 @@ re_get_opcode (uint8_t **bc_p) /**< pointer to bytecode start */
  * @return opcode parameter
  */
 inline uint32_t JERRY_ATTR_ALWAYS_INLINE
-re_get_value (uint8_t **bc_p) /**< pointer to bytecode start */
+re_get_value (const uint8_t **bc_p) /**< pointer to bytecode start */
 {
-  uint32_t value;
-  memcpy (&value, *bc_p, sizeof (uint32_t));
+  const uint8_t *src_p = *bc_p;
+  uint32_t value = (uint32_t) (*src_p++);
+  value <<= 8;
+  value |= ((uint32_t) (*src_p++));
+  value <<= 8;
+  value |= ((uint32_t) (*src_p++));
+  value <<= 8;
+  value |= ((uint32_t) (*src_p++));
+
   (*bc_p) += sizeof (uint32_t);
   return value;
 } /* re_get_value */
@@ -175,9 +205,10 @@ re_get_bytecode_length (re_bytecode_ctx_t *bc_ctx_p) /**< RegExp bytecode contex
  */
 void
 re_append_opcode (re_bytecode_ctx_t *bc_ctx_p, /**< RegExp bytecode context */
-                  re_opcode_t opcode) /**< input opcode */
+                  const re_opcode_t opcode) /**< input opcode */
 {
-  re_bytecode_list_append (bc_ctx_p, (uint8_t *) &opcode, sizeof (uint8_t));
+  uint8_t *dest_p = re_bytecode_reserve (bc_ctx_p, sizeof (uint8_t));
+  *dest_p = (uint8_t) opcode;
 } /* re_append_opcode */
 
 /**
@@ -185,9 +216,10 @@ re_append_opcode (re_bytecode_ctx_t *bc_ctx_p, /**< RegExp bytecode context */
  */
 void
 re_append_u32 (re_bytecode_ctx_t *bc_ctx_p, /**< RegExp bytecode context */
-               uint32_t value) /**< input value */
+               const uint32_t value) /**< input value */
 {
-  re_bytecode_list_append (bc_ctx_p, (uint8_t *) &value, sizeof (uint32_t));
+  uint8_t *dest_p = re_bytecode_reserve (bc_ctx_p, sizeof (uint32_t));
+  re_encode_u32 (dest_p, value);
 } /* re_append_u32 */
 
 /**
@@ -195,9 +227,10 @@ re_append_u32 (re_bytecode_ctx_t *bc_ctx_p, /**< RegExp bytecode context */
  */
 void
 re_append_char (re_bytecode_ctx_t *bc_ctx_p, /**< RegExp bytecode context */
-                ecma_char_t input_char) /**< input char */
+                const ecma_char_t input_char) /**< input char */
 {
-  re_bytecode_list_append (bc_ctx_p, (uint8_t *) &input_char, sizeof (ecma_char_t));
+  uint8_t *dest_p = re_bytecode_reserve (bc_ctx_p, sizeof (ecma_char_t));
+  re_encode_char (dest_p, input_char);
 } /* re_append_char */
 
 /**
@@ -216,10 +249,11 @@ re_append_jump_offset (re_bytecode_ctx_t *bc_ctx_p, /**< RegExp bytecode context
  */
 void
 re_insert_opcode (re_bytecode_ctx_t *bc_ctx_p, /**< RegExp bytecode context */
-                  uint32_t offset, /**< distance from the start of the container */
-                  re_opcode_t opcode) /**< input opcode */
+                  const uint32_t offset, /**< distance from the start of the container */
+                  const re_opcode_t opcode) /**< input opcode */
 {
-  re_bytecode_list_insert (bc_ctx_p, offset, (uint8_t *) &opcode, sizeof (uint8_t));
+  re_bytecode_insert (bc_ctx_p, offset, sizeof (uint8_t));
+  *(bc_ctx_p->block_start_p + offset) = (uint8_t) opcode;
 } /* re_insert_opcode */
 
 /**
@@ -230,7 +264,8 @@ re_insert_u32 (re_bytecode_ctx_t *bc_ctx_p, /**< RegExp bytecode context */
                uint32_t offset, /**< distance from the start of the container */
                uint32_t value) /**< input value */
 {
-  re_bytecode_list_insert (bc_ctx_p, offset, (uint8_t *) &value, sizeof (uint32_t));
+  re_bytecode_insert (bc_ctx_p, offset, sizeof (uint32_t));
+  re_encode_u32 (bc_ctx_p->block_start_p + offset, value);
 } /* re_insert_u32 */
 
 #if ENABLED (JERRY_REGEXP_DUMP_BYTE_CODE)
@@ -242,10 +277,10 @@ re_dump_bytecode (re_bytecode_ctx_t *bc_ctx_p) /**< RegExp bytecode context */
 {
   re_compiled_code_t *compiled_code_p = (re_compiled_code_t *) bc_ctx_p->block_start_p;
   JERRY_DEBUG_MSG ("%d ", compiled_code_p->header.status_flags);
-  JERRY_DEBUG_MSG ("%d ", compiled_code_p->num_of_captures);
-  JERRY_DEBUG_MSG ("%d | ", compiled_code_p->num_of_non_captures);
+  JERRY_DEBUG_MSG ("%d ", compiled_code_p->captures_count);
+  JERRY_DEBUG_MSG ("%d | ", compiled_code_p->non_captures_count);
 
-  uint8_t *bytecode_p = (uint8_t *) (compiled_code_p + 1);
+  const uint8_t *bytecode_p = (const uint8_t *) (compiled_code_p + 1);
 
   re_opcode_t op;
   while ((op = re_get_opcode (&bytecode_p)))

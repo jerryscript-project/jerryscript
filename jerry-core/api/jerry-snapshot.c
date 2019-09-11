@@ -179,7 +179,7 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
 
     globals_p->snapshot_buffer_write_offset += sizeof (ecma_compiled_code_t);
 
-    ecma_value_t pattern = ((re_compiled_code_t *) compiled_code_p)->pattern;
+    ecma_value_t pattern = ((re_compiled_code_t *) compiled_code_p)->source;
     ecma_string_t *pattern_string_p = ecma_get_string_from_value (pattern);
 
     ecma_length_t pattern_size = 0;

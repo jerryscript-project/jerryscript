@@ -26,6 +26,27 @@ OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
               ECMA_BUILTIN_ID_REGEXP,
               ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
 
+#if ENABLED (JERRY_ES2015)
+ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_FLAGS,
+                    ecma_builtin_regexp_prototype_get_flags,
+                    ECMA_PROPERTY_FIXED)
+
+ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_SOURCE,
+                    ecma_builtin_regexp_prototype_get_source,
+                    ECMA_PROPERTY_FIXED)
+
+ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_GLOBAL,
+                    ecma_builtin_regexp_prototype_get_global,
+                    ECMA_PROPERTY_FIXED)
+
+ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_IGNORECASE_UL,
+                    ecma_builtin_regexp_prototype_get_ignorecase,
+                    ECMA_PROPERTY_FIXED)
+
+ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_MULTILINE,
+                    ecma_builtin_regexp_prototype_get_multiline,
+                    ECMA_PROPERTY_FIXED)
+#else /* !ENABLED (JERRY_ES2015) */
 /* ECMA-262 v5, 15.10.7.1 */
 STRING_VALUE (LIT_MAGIC_STRING_SOURCE,
               LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP,
@@ -45,6 +66,7 @@ SIMPLE_VALUE (LIT_MAGIC_STRING_IGNORECASE_UL,
 SIMPLE_VALUE (LIT_MAGIC_STRING_MULTILINE,
               ECMA_VALUE_FALSE,
               ECMA_PROPERTY_FIXED)
+#endif /* ENABLED (JERRY_ES2015) */
 
 /* ECMA-262 v5, 15.10.7.5 */
 NUMBER_VALUE (LIT_MAGIC_STRING_LASTINDEX_UL,

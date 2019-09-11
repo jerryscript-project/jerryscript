@@ -45,6 +45,185 @@
  * @{
  */
 
+#if ENABLED (JERRY_ES2015)
+/**
+ * Helper function to retrieve the flags associated with a RegExp object
+ *
+ * @return ECMA_VALUE_ERROR - if 'this' is not a RegExp object
+ *         ECMA_VALUE_EMPTY - otherwise
+ */
+static ecma_value_t
+ecma_builtin_regexp_prototype_flags_helper (ecma_value_t this, /**< this value */
+                                            uint16_t *flags_p) /**< [out] flags */
+{
+  if (!ecma_is_value_object (this)
+      || !ecma_object_class_is (ecma_get_object_from_value (this), LIT_MAGIC_STRING_REGEXP_UL))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible type"));
+  }
+
+  ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) ecma_get_object_from_value (this);
+  re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_ANY_POINTER (re_compiled_code_t,
+                                                                  re_obj_p->u.class_prop.u.value);
+
+  if (bc_p != NULL)
+  {
+    *flags_p = bc_p->header.status_flags;
+  }
+
+  return ECMA_VALUE_EMPTY;
+} /* ecma_builtin_regexp_prototype_flags_helper */
+
+/**
+ * The RegExp.prototype object's 'flags' accessor property
+ *
+ * See also:
+ *          ECMA-262 v6, 21.2.5.3
+ *
+ * @return ECMA_VALUE_ERROR - if 'this' is not a RegExp object
+ *         string value     - otherwise
+ *
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_regexp_prototype_get_flags (ecma_value_t this_arg) /**< this argument */
+{
+  uint16_t flags = RE_FLAG_EMPTY;
+  ecma_value_t ret_value = ecma_builtin_regexp_prototype_flags_helper (this_arg, &flags);
+  if (ECMA_IS_VALUE_ERROR (ret_value))
+  {
+    return ret_value;
+  }
+
+  ecma_stringbuilder_t result = ecma_stringbuilder_create ();
+
+  if (flags & RE_FLAG_GLOBAL)
+  {
+    ecma_stringbuilder_append_byte (&result, LIT_CHAR_LOWERCASE_G);
+  }
+
+  if (flags & RE_FLAG_IGNORE_CASE)
+  {
+    ecma_stringbuilder_append_byte (&result, LIT_CHAR_LOWERCASE_I);
+  }
+
+  if (flags & RE_FLAG_MULTILINE)
+  {
+    ecma_stringbuilder_append_byte (&result, LIT_CHAR_LOWERCASE_M);
+  }
+
+  return ecma_make_string_value (ecma_stringbuilder_finalize (&result));
+} /* ecma_builtin_regexp_prototype_get_flags */
+
+/**
+ * The RegExp.prototype object's 'source' accessor property
+ *
+ * See also:
+ *          ECMA-262 v6, 21.2.5.10
+ *
+ * @return ECMA_VALUE_ERROR - if 'this' is not a RegExp object
+ *         string value     - otherwise
+ *
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_regexp_prototype_get_source (ecma_value_t this_arg) /**< this argument */
+{
+  if (!ecma_is_value_object (this_arg)
+      || !ecma_object_class_is (ecma_get_object_from_value (this_arg), LIT_MAGIC_STRING_REGEXP_UL))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible type"));
+  }
+
+  ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) ecma_get_object_from_value (this_arg);
+  re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_ANY_POINTER (re_compiled_code_t,
+                                                                  re_obj_p->u.class_prop.u.value);
+
+  if (bc_p != NULL)
+  {
+    ecma_ref_ecma_string (ecma_get_string_from_value (bc_p->source));
+    return bc_p->source;
+  }
+
+  return ecma_make_string_value (ecma_get_magic_string (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP));
+} /* ecma_builtin_regexp_prototype_get_source */
+
+/**
+ * The RegExp.prototype object's 'global' accessor property
+ *
+ * See also:
+ *          ECMA-262 v6, 21.2.5.4
+ *
+ * @return ECMA_VALUE_ERROR - if 'this' is not a RegExp object
+ *         ECMA_VALUE_TRUE  - if 'global' flag is set
+ *         ECMA_VALUE_FALSE - otherwise
+ *
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_regexp_prototype_get_global (ecma_value_t this_arg) /**< this argument */
+{
+  uint16_t flags = RE_FLAG_EMPTY;
+  ecma_value_t ret_value = ecma_builtin_regexp_prototype_flags_helper (this_arg, &flags);
+  if (ECMA_IS_VALUE_ERROR (ret_value))
+  {
+    return ret_value;
+  }
+
+  return ecma_make_boolean_value (flags & RE_FLAG_GLOBAL);
+} /* ecma_builtin_regexp_prototype_get_global */
+
+/**
+ * The RegExp.prototype object's 'ignoreCase' accessor property
+ *
+ * See also:
+ *          ECMA-262 v6, 21.2.5.5
+ *
+ * @return ECMA_VALUE_ERROR - if 'this' is not a RegExp object
+ *         ECMA_VALUE_TRUE  - if 'ignoreCase' flag is set
+ *         ECMA_VALUE_FALSE - otherwise
+ *
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_regexp_prototype_get_ignorecase (ecma_value_t this_arg) /**< this argument */
+{
+  uint16_t flags = RE_FLAG_EMPTY;
+  ecma_value_t ret_value = ecma_builtin_regexp_prototype_flags_helper (this_arg, &flags);
+  if (ECMA_IS_VALUE_ERROR (ret_value))
+  {
+    return ret_value;
+  }
+
+  return ecma_make_boolean_value (flags & RE_FLAG_IGNORE_CASE);
+} /* ecma_builtin_regexp_prototype_get_ignorecase */
+
+/**
+ * The RegExp.prototype object's 'multiline' accessor property
+ *
+ * See also:
+ *          ECMA-262 v6, 21.2.5.7
+ *
+ * @return ECMA_VALUE_ERROR - if 'this' is not a RegExp object
+ *         ECMA_VALUE_TRUE  - if 'multiline' flag is set
+ *         ECMA_VALUE_FALSE - otherwise
+ *
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_regexp_prototype_get_multiline (ecma_value_t this_arg) /**< this argument */
+{
+  uint16_t flags = RE_FLAG_EMPTY;
+  ecma_value_t ret_value = ecma_builtin_regexp_prototype_flags_helper (this_arg, &flags);
+  if (ECMA_IS_VALUE_ERROR (ret_value))
+  {
+    return ret_value;
+  }
+
+  return ecma_make_boolean_value (flags & RE_FLAG_MULTILINE);
+} /* ecma_builtin_regexp_prototype_get_multiline */
+#endif /* ENABLED (JERRY_ES2015) */
+
 #if ENABLED (JERRY_BUILTIN_ANNEXB)
 
 /**
@@ -68,89 +247,40 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
       /* The builtin RegExp.prototype object does not have [[RegExpMatcher]] internal slot */
       || ecma_get_object_from_value (this_arg) == ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Incomplete RegExp type"));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible type"));
   }
 
   uint16_t flags = 0;
 
   if (ecma_is_value_object (pattern_arg)
-      && ecma_object_class_is (ecma_get_object_from_value (pattern_arg), LIT_MAGIC_STRING_REGEXP_UL))
+      && ecma_object_class_is (ecma_get_object_from_value (pattern_arg), LIT_MAGIC_STRING_REGEXP_UL)
+      && ecma_get_object_from_value (pattern_arg) != ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE))
   {
     if (!ecma_is_value_undefined (flags_arg))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument of RegExp compile."));
-    }
-    /* Compile from existing RegExp pbject. */
-    ecma_object_t *target_p = ecma_get_object_from_value (pattern_arg);
-
-    /* Get source. */
-    ecma_string_t *magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_SOURCE);
-    ecma_value_t source_value = ecma_op_object_get_own_data_prop (target_p, magic_string_p);
-    ecma_string_t *pattern_string_p = ecma_get_string_from_value (source_value);
-
-    /* Get flags. */
-    magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_GLOBAL);
-    ecma_value_t global_value = ecma_op_object_get_own_data_prop (target_p, magic_string_p);
-
-    JERRY_ASSERT (ecma_is_value_boolean (global_value));
-
-    if (ecma_is_value_true (global_value))
-    {
-      flags |= RE_FLAG_GLOBAL;
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument"));
     }
 
-    magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_IGNORECASE_UL);
-    ecma_value_t ignore_case_value = ecma_op_object_get_own_data_prop (target_p, magic_string_p);
+    /* Compile from existing RegExp object. */
+    ecma_extended_object_t *target_p = (ecma_extended_object_t *) ecma_get_object_from_value (pattern_arg);
+    re_compiled_code_t *target_bc_p = ECMA_GET_INTERNAL_VALUE_ANY_POINTER (re_compiled_code_t,
+                                                                           target_p->u.class_prop.u.value);
 
-    JERRY_ASSERT (ecma_is_value_boolean (ignore_case_value));
+    ecma_object_t *this_object_p = ecma_get_object_from_value (this_arg);
+    ecma_extended_object_t *current_p = (ecma_extended_object_t *) this_object_p;
 
-    if (ecma_is_value_true (ignore_case_value))
-    {
-      flags |= RE_FLAG_IGNORE_CASE;
-    }
+    re_compiled_code_t *current_bc_p = ECMA_GET_INTERNAL_VALUE_ANY_POINTER (re_compiled_code_t,
+                                                                            current_p->u.class_prop.u.value);
 
-    magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_MULTILINE);
-    ecma_value_t multiline_value = ecma_op_object_get_own_data_prop (target_p, magic_string_p);
+    JERRY_ASSERT (current_bc_p != NULL);
+    ecma_bytecode_deref ((ecma_compiled_code_t *) current_bc_p);
 
-    JERRY_ASSERT (ecma_is_value_boolean (multiline_value));
-
-    if (ecma_is_value_true (multiline_value))
-    {
-      flags |= RE_FLAG_MULTILINE;
-    }
-
-    ecma_value_t obj_this = ecma_op_to_object (this_arg);
-    if (ECMA_IS_VALUE_ERROR (obj_this))
-    {
-      return obj_this;
-    }
-    ecma_object_t *this_obj_p = ecma_get_object_from_value (obj_this);
-
-    /* Get bytecode property. */
-    ecma_value_t *bc_prop_p = &(((ecma_extended_object_t *) this_obj_p)->u.class_prop.u.value);
-
-    /* TODO: We currently have to re-compile the bytecode, because
-     * we can't copy it without knowing its length. */
-    const re_compiled_code_t *new_bc_p = NULL;
-    ecma_value_t bc_comp = re_compile_bytecode (&new_bc_p, pattern_string_p, flags);
-    /* Should always succeed, since we're compiling from a source that has been compiled previously. */
-    JERRY_ASSERT (ecma_is_value_empty (bc_comp));
-
-    ecma_deref_ecma_string (pattern_string_p);
-
-    re_compiled_code_t *old_bc_p = ECMA_GET_INTERNAL_VALUE_ANY_POINTER (re_compiled_code_t, *bc_prop_p);
-
-    if (old_bc_p != NULL)
-    {
-      /* Free the old bytecode */
-      ecma_bytecode_deref ((ecma_compiled_code_t *) old_bc_p);
-    }
-
-    ECMA_SET_INTERNAL_VALUE_POINTER (*bc_prop_p, new_bc_p);
-
-    re_initialize_props (this_obj_p, pattern_string_p, flags);
-    ecma_free_value (obj_this);
-
+    JERRY_ASSERT (target_bc_p != NULL);
+    ecma_bytecode_ref ((ecma_compiled_code_t *) target_bc_p);
+    ECMA_SET_INTERNAL_VALUE_POINTER (current_p->u.class_prop.u.value, target_bc_p);
+    ecma_regexp_initialize_props (this_object_p,
+                                  ecma_get_string_from_value (target_bc_p->source),
+                                  target_bc_p->header.status_flags);
     return ecma_copy_value (this_arg);
   }
 
@@ -175,7 +305,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
       return flags_str_value;
     }
 
-    ecma_value_t parsed_flags_val = re_parse_regexp_flags (ecma_get_string_from_value (flags_str_value), &flags);
+    ecma_value_t parsed_flags_val = ecma_regexp_parse_flags (ecma_get_string_from_value (flags_str_value), &flags);
     ecma_free_value (flags_str_value);
     if (ECMA_IS_VALUE_ERROR (parsed_flags_val))
     {
@@ -193,26 +323,16 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
     return bc_val;
   }
 
-  ecma_value_t obj_this = ecma_op_to_object (this_arg);
-  if (ECMA_IS_VALUE_ERROR (obj_this))
-  {
-    ecma_deref_ecma_string (pattern_string_p);
-    return obj_this;
-  }
-  ecma_object_t *this_obj_p = ecma_get_object_from_value (obj_this);
+  ecma_object_t *this_obj_p = ecma_get_object_from_value (this_arg);
   ecma_value_t *bc_prop_p = &(((ecma_extended_object_t *) this_obj_p)->u.class_prop.u.value);
 
   re_compiled_code_t *old_bc_p = ECMA_GET_INTERNAL_VALUE_ANY_POINTER (re_compiled_code_t, *bc_prop_p);
 
-  if (old_bc_p != NULL)
-  {
-    /* Free the old bytecode */
-    ecma_bytecode_deref ((ecma_compiled_code_t *) old_bc_p);
-  }
+  JERRY_ASSERT (old_bc_p != NULL);
+  ecma_bytecode_deref ((ecma_compiled_code_t *) old_bc_p);
 
   ECMA_SET_INTERNAL_VALUE_POINTER (*bc_prop_p, new_bc_p);
-  re_initialize_props (this_obj_p, pattern_string_p, flags);
-  ecma_free_value (obj_this);
+  ecma_regexp_initialize_props (this_obj_p, pattern_string_p, flags);
   ecma_deref_ecma_string (pattern_string_p);
 
   return ecma_copy_value (this_arg);
@@ -254,26 +374,7 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
     return input_str_value;
   }
 
-  ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-  ecma_value_t *bytecode_prop_p = &(((ecma_extended_object_t *) obj_p)->u.class_prop.u.value);
-
-  void *bytecode_p = ECMA_GET_INTERNAL_VALUE_ANY_POINTER (void, *bytecode_prop_p);
-
-  ecma_value_t ret_value;
-  if (bytecode_p == NULL)
-  {
-    /* Missing bytecode means empty RegExp: '/(?:)/', so always return empty string. */
-    ecma_value_t empty_str_val = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
-    ret_value = ecma_op_create_array_object (&empty_str_val, 1, false);
-    re_set_result_array_properties (ecma_get_object_from_value (ret_value),
-                                    ecma_get_string_from_value (input_str_value),
-                                    1,
-                                    0);
-  }
-  else
-  {
-    ret_value = ecma_regexp_exec_helper (obj_this, input_str_value, false);
-  }
+  ecma_value_t ret_value = ecma_regexp_exec_helper (obj_this, input_str_value, false);
 
   ecma_free_value (obj_this);
   ecma_free_value (input_str_value);
@@ -296,15 +397,15 @@ static ecma_value_t
 ecma_builtin_regexp_prototype_test (ecma_value_t this_arg, /**< this argument */
                                     ecma_value_t arg) /**< routine's argument */
 {
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+  ecma_value_t result = ecma_builtin_regexp_prototype_exec (this_arg, arg);
 
-  ECMA_TRY_CATCH (match_value,
-                  ecma_builtin_regexp_prototype_exec (this_arg, arg),
-                  ret_value);
+  if (ECMA_IS_VALUE_ERROR (result))
+  {
+    return result;
+  }
 
-  ret_value = ecma_make_boolean_value (!ecma_is_value_null (match_value));
-
-  ECMA_FINALIZE (match_value);
+  ecma_value_t ret_value = ecma_make_boolean_value (!ecma_is_value_null (result));
+  ecma_free_value (result);
 
   return ret_value;
 } /* ecma_builtin_regexp_prototype_test */
@@ -321,77 +422,53 @@ ecma_builtin_regexp_prototype_test (ecma_value_t this_arg, /**< this argument */
 static ecma_value_t
 ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argument */
 {
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-
   if (!ecma_is_value_object (this_arg)
       || !ecma_object_class_is (ecma_get_object_from_value (this_arg), LIT_MAGIC_STRING_REGEXP_UL))
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Incomplete RegExp type"));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible type"));
+  }
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
+  ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) obj_p;
+
+  re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_ANY_POINTER (re_compiled_code_t,
+                                                                  re_obj_p->u.class_prop.u.value);
+
+  ecma_string_t *source_p;
+  uint16_t flags;
+
+  if (bc_p != NULL)
+  {
+    source_p = ecma_get_string_from_value (bc_p->source);
+    flags = bc_p->header.status_flags;
   }
   else
   {
-    ECMA_TRY_CATCH (obj_this,
-                    ecma_op_to_object (this_arg),
-                    ret_value);
-
-    ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
-
-    /* Get RegExp source from the source property */
-    ecma_string_t *magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_SOURCE);
-    ecma_value_t source_value = ecma_op_object_get_own_data_prop (obj_p, magic_string_p);
-
-    ecma_string_t *output_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_SLASH_CHAR);
-    ecma_string_t *source_str_p = ecma_get_string_from_value (source_value);
-    output_str_p = ecma_concat_ecma_strings (output_str_p, source_str_p);
-    ecma_deref_ecma_string (source_str_p);
-
-    lit_utf8_byte_t flags[4];
-    lit_utf8_byte_t *flags_p = flags;
-
-    *flags_p++ = LIT_CHAR_SLASH;
-
-    /* Check the global flag */
-    magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_GLOBAL);
-    ecma_value_t global_value = ecma_op_object_get_own_data_prop (obj_p, magic_string_p);
-
-    JERRY_ASSERT (ecma_is_value_boolean (global_value));
-
-    if (ecma_is_value_true (global_value))
-    {
-      *flags_p++ = LIT_CHAR_LOWERCASE_G;
-    }
-
-    /* Check the ignoreCase flag */
-    magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_IGNORECASE_UL);
-    ecma_value_t ignore_case_value = ecma_op_object_get_own_data_prop (obj_p, magic_string_p);
-
-    JERRY_ASSERT (ecma_is_value_boolean (ignore_case_value));
-
-    if (ecma_is_value_true (ignore_case_value))
-    {
-      *flags_p++ = LIT_CHAR_LOWERCASE_I;
-    }
-
-    /* Check the multiline flag */
-    magic_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_MULTILINE);
-    ecma_value_t multiline_value = ecma_op_object_get_own_data_prop (obj_p, magic_string_p);
-
-    JERRY_ASSERT (ecma_is_value_boolean (multiline_value));
-
-    if (ecma_is_value_true (multiline_value))
-    {
-      *flags_p++ = LIT_CHAR_LOWERCASE_M;
-    }
-
-    lit_utf8_size_t size = (lit_utf8_size_t) (flags_p - flags);
-    output_str_p = ecma_append_chars_to_string (output_str_p, flags, size, size);
-
-    ret_value = ecma_make_string_value (output_str_p);
-
-    ECMA_FINALIZE (obj_this);
+    source_p = ecma_get_magic_string (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP);
+    flags = RE_FLAG_EMPTY;
   }
 
-  return ret_value;
+  ecma_stringbuilder_t result = ecma_stringbuilder_create ();
+  ecma_stringbuilder_append_byte (&result, LIT_CHAR_SLASH);
+  ecma_stringbuilder_append (&result, source_p);
+  ecma_stringbuilder_append_byte (&result, LIT_CHAR_SLASH);
+
+  if (flags & RE_FLAG_GLOBAL)
+  {
+    ecma_stringbuilder_append_byte (&result, LIT_CHAR_LOWERCASE_G);
+  }
+
+  if (flags & RE_FLAG_IGNORE_CASE)
+  {
+    ecma_stringbuilder_append_byte (&result, LIT_CHAR_LOWERCASE_I);
+  }
+
+  if (flags & RE_FLAG_MULTILINE)
+  {
+    ecma_stringbuilder_append_byte (&result, LIT_CHAR_LOWERCASE_M);
+  }
+
+  return ecma_make_string_value (ecma_stringbuilder_finalize (&result));
 } /* ecma_builtin_regexp_prototype_to_string */
 
 /**

@@ -110,7 +110,7 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
 
     ecma_string_t *flags_string_p = ecma_get_string_from_value (flags_str_value);
     JERRY_ASSERT (flags_string_p != NULL);
-    ret_value = re_parse_regexp_flags (flags_string_p, &flags);
+    ret_value = ecma_regexp_parse_flags (flags_string_p, &flags);
     ecma_free_value (flags_str_value); // implicit frees flags_string_p
 
     if (ECMA_IS_VALUE_ERROR (ret_value))

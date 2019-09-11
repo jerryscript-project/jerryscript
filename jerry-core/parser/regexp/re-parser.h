@@ -94,18 +94,14 @@ typedef struct
   const lit_utf8_byte_t *input_start_p; /**< start of input pattern */
   const lit_utf8_byte_t *input_curr_p;  /**< current position in input pattern */
   const lit_utf8_byte_t *input_end_p;   /**< end of input pattern */
-  int num_of_groups;              /**< number of groups */
-  uint32_t num_of_classes;        /**< number of character classes */
+  int groups_count;                     /**< number of groups */
+  uint32_t classes_count;               /**< number of character classes */
 } re_parser_ctx_t;
 
-typedef void (*re_char_class_callback) (void *re_ctx_p, ecma_char_t start, ecma_char_t end);
-
-ecma_value_t
-re_parse_char_class (re_parser_ctx_t *parser_ctx_p, re_char_class_callback append_char_class, void *re_ctx_p,
-                     re_token_t *out_token_p);
-
-ecma_value_t
-re_parse_next_token (re_parser_ctx_t *parser_ctx_p, re_token_t *out_token_p);
+bool re_hex_lookup (re_parser_ctx_t *parser_ctx_p, uint32_t lookup);
+uint32_t re_parse_octal (re_parser_ctx_t *parser_ctx_p);
+ecma_value_t re_parse_iterator (re_parser_ctx_t *parser_ctx_p, re_token_t *re_token_p);
+ecma_value_t re_parse_next_token (re_parser_ctx_t *parser_ctx_p, re_token_t *out_token_p);
 
 /**
  * @}

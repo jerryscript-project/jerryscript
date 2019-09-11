@@ -1403,7 +1403,7 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
 #if ENABLED (JERRY_BUILTIN_REGEXP)
     re_compiled_code_t *re_bytecode_p = (re_compiled_code_t *) bytecode_p;
 
-    ecma_deref_ecma_string (ecma_get_string_from_value (re_bytecode_p->pattern));
+    ecma_deref_ecma_string (ecma_get_string_from_value (re_bytecode_p->source));
 #endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
   }
 

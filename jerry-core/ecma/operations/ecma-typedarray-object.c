@@ -656,27 +656,38 @@ ecma_op_typedarray_from (ecma_value_t items_val, /**< the source array-like obje
   /* 3 */
   JERRY_ASSERT (ecma_op_is_callable (map_fn_val) || ecma_is_value_undefined (map_fn_val));
 
+  /* 10 */
+  ecma_object_t *arraylike_object_p = ecma_op_to_object (items_val);
+
+  if (JERRY_UNLIKELY (arraylike_object_p == NULL))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  /* 12 */
+  ecma_value_t len_value = ecma_op_object_get_by_magic_id (arraylike_object_p, LIT_MAGIC_STRING_LENGTH);
+
+  if (ECMA_IS_VALUE_ERROR (len_value))
+  {
+    ecma_deref_object (arraylike_object_p);
+    return len_value;
+  }
+
+  ecma_number_t len_number;
+  if (ECMA_IS_VALUE_ERROR (ecma_get_number (len_value, &len_number)))
+  {
+    ecma_deref_object (arraylike_object_p);
+    ecma_free_value (len_value);
+    return len_value;
+  }
+
+  uint32_t len = ecma_number_to_uint32 (len_number);
+
   ecma_object_t *func_object_p = NULL;
   if (!ecma_is_value_undefined (map_fn_val))
   {
     func_object_p = ecma_get_object_from_value (map_fn_val);
   }
-
-  /* 10 */
-  ECMA_TRY_CATCH (arraylike_object_val,
-                  ecma_op_to_object (items_val),
-                  ret_value);
-
-  ecma_object_t *arraylike_object_p = ecma_get_object_from_value (arraylike_object_val);
-
-  /* 12 */
-  ECMA_TRY_CATCH (len_value,
-                  ecma_op_object_get_by_magic_id (arraylike_object_p, LIT_MAGIC_STRING_LENGTH),
-                  ret_value);
-
-  ECMA_OP_TO_NUMBER_TRY_CATCH (len_number, len_value, ret_value);
-
-  uint32_t len = ecma_number_to_uint32 (len_number);
 
   /* 14 */
   ecma_value_t new_typedarray = ecma_typedarray_create_object_with_length (len,
@@ -705,7 +716,12 @@ ecma_op_typedarray_from (ecma_value_t items_val, /**< the source array-like obje
       ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (index);
 
       /* 17.b */
-      ECMA_TRY_CATCH (current_value, ecma_op_object_find (arraylike_object_p, index_str_p), ret_value);
+      ecma_value_t current_value = ecma_op_object_find (arraylike_object_p, index_str_p);
+
+      if (ECMA_IS_VALUE_ERROR (current_value))
+      {
+        ret_value = current_value;
+      }
 
       if (ecma_is_value_found (current_value))
       {
@@ -715,7 +731,12 @@ ecma_op_typedarray_from (ecma_value_t items_val, /**< the source array-like obje
           current_index = ecma_make_uint32_value (index);
           ecma_value_t call_args[] = { current_value, current_index};
 
-          ECMA_TRY_CATCH (mapped_value, ecma_op_function_call (func_object_p, this_val, call_args, 2), ret_value);
+          ecma_value_t mapped_value = ecma_op_function_call (func_object_p, this_val, call_args, 2);
+
+          if (ECMA_IS_VALUE_ERROR (mapped_value))
+          {
+            ret_value = mapped_value;
+          }
 
           error = ecma_get_number (mapped_value, &num_var);
 
@@ -733,7 +754,7 @@ ecma_op_typedarray_from (ecma_value_t items_val, /**< the source array-like obje
           lit_utf8_byte_t *src_buffer = ecma_arraybuffer_get_buffer (info.typedarray_buffer_p) + byte_pos;
           setter_cb (src_buffer, num_var);
 
-          ECMA_FINALIZE (mapped_value);
+          ecma_free_value (mapped_value);
         }
         else
         {
@@ -755,8 +776,7 @@ ecma_op_typedarray_from (ecma_value_t items_val, /**< the source array-like obje
         }
       }
 
-      ECMA_FINALIZE (current_value);
-
+      ecma_free_value (current_value);
       ecma_deref_ecma_string (index_str_p);
     }
 
@@ -770,9 +790,8 @@ ecma_op_typedarray_from (ecma_value_t items_val, /**< the source array-like obje
     }
   }
 
-  ECMA_OP_TO_NUMBER_FINALIZE (len_number);
-  ECMA_FINALIZE (len_value);
-  ECMA_FINALIZE (arraylike_object_val);
+  ecma_free_value (len_value);
+  ecma_deref_object (arraylike_object_p);
 
   return ret_value;
 } /* ecma_op_typedarray_from */

@@ -420,7 +420,7 @@ ecma_promise_resolving_functions_t *
 ecma_promise_create_resolving_functions (ecma_object_t *object_p) /**< the promise object */
 {
   /* 1. */
-  ecma_value_t already_resolved = ecma_op_create_boolean_object (ECMA_VALUE_FALSE);
+  ecma_value_t already_resolved = ecma_make_object_value (ecma_op_create_boolean_object (ECMA_VALUE_FALSE));
 
   ecma_string_t *str_promise_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE);
   ecma_string_t *str_already_resolved_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ALREADY_RESOLVED);

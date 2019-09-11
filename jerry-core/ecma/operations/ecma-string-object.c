@@ -35,10 +35,9 @@
  *
  * See also: ECMA-262 v5, 15.5.2.1
  *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
+ * @return ecma_object_t
  */
-ecma_value_t
+ecma_object_t *
 ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of arguments that
                                                                          are passed to String constructor */
                               ecma_length_t arguments_list_len) /**< length of the arguments' list */
@@ -54,7 +53,7 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
 
     if (ECMA_IS_VALUE_ERROR (prim_value))
     {
-      return prim_value;
+      return NULL;
     }
 
     JERRY_ASSERT (ecma_is_value_string (prim_value));
@@ -74,7 +73,7 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
   ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_STRING_UL;
   ext_object_p->u.class_prop.u.value = prim_value;
 
-  return ecma_make_object_value (object_p);
+  return object_p;
 } /* ecma_op_create_string_object */
 
 /**

@@ -92,7 +92,8 @@ ecma_builtin_object_prototype_object_to_string (ecma_value_t this_arg) /**< this
 static ecma_value_t
 ecma_builtin_object_prototype_object_value_of (ecma_value_t this_arg) /**< this argument */
 {
-  return ecma_op_to_object (this_arg);
+  ecma_object_t *obj_p = ecma_op_to_object (this_arg);
+  return obj_p == NULL ? ECMA_VALUE_ERROR : ecma_make_object_value (obj_p);
 } /* ecma_builtin_object_prototype_object_value_of */
 
 /**
@@ -161,14 +162,12 @@ ecma_builtin_object_prototype_object_is_prototype_of (ecma_object_t *obj_p, /**<
                                                       ecma_value_t arg) /**< routine's first argument */
 {
   /* 3. Compare prototype to object */
-  ecma_value_t v_obj_value = ecma_op_to_object (arg);
+  ecma_object_t *v_obj_p = ecma_op_to_object (arg);
 
-  if (ECMA_IS_VALUE_ERROR (v_obj_value))
+  if (JERRY_UNLIKELY (v_obj_p == NULL))
   {
-    return v_obj_value;
+    return ECMA_VALUE_ERROR;
   }
-
-  ecma_object_t *v_obj_p = ecma_get_object_from_value (v_obj_value);
 
   ecma_value_t ret_value = ecma_make_boolean_value (ecma_op_object_is_prototype_of (obj_p, v_obj_p));
 
@@ -245,14 +244,12 @@ ecma_builtin_object_prototype_dispatch_routine (uint16_t builtin_routine_id, /**
       }
     }
 
-    ecma_value_t to_object = ecma_op_to_object (this_arg);
+    ecma_object_t *obj_p = ecma_op_to_object (this_arg);
 
-    if (ECMA_IS_VALUE_ERROR (to_object))
+    if (JERRY_UNLIKELY (obj_p == NULL))
     {
-      return to_object;
+      return ECMA_VALUE_ERROR;
     }
-
-    ecma_object_t *obj_p = ecma_get_object_from_value (to_object);
 
     ecma_value_t ret_value;
 
@@ -279,15 +276,13 @@ ecma_builtin_object_prototype_dispatch_routine (uint16_t builtin_routine_id, /**
     return ECMA_VALUE_ERROR;
   }
 
-  ecma_value_t to_object = ecma_op_to_object (this_arg);
+  ecma_object_t *obj_p = ecma_op_to_object (this_arg);
 
-  if (ECMA_IS_VALUE_ERROR (to_object))
+  if (JERRY_UNLIKELY (obj_p == NULL))
   {
     ecma_deref_ecma_string (prop_name_p);
-    return to_object;
+    return ECMA_VALUE_ERROR;
   }
-
-  ecma_object_t *obj_p = ecma_get_object_from_value (to_object);
 
   ecma_value_t ret_value;
 

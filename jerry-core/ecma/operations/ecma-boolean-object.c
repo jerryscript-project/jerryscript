@@ -32,13 +32,13 @@
 
 /**
  * Boolean object creation operation.
+ * This operation cannot fail.
  *
  * See also: ECMA-262 v5, 15.6.2.1
  *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
+ * @return ecma_object_t
  */
-ecma_value_t
+ecma_object_t *
 ecma_op_create_boolean_object (ecma_value_t arg) /**< argument passed to the Boolean constructor */
 {
   bool boolean_value = ecma_op_to_boolean (arg);
@@ -57,7 +57,7 @@ ecma_op_create_boolean_object (ecma_value_t arg) /**< argument passed to the Boo
   ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_BOOLEAN_UL;
   ext_object_p->u.class_prop.u.value = ecma_make_boolean_value (boolean_value);
 
-  return ecma_make_object_value (object_p);
+  return object_p;
 } /* ecma_op_create_boolean_object */
 
 /**

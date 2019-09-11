@@ -157,13 +157,13 @@ vm_op_set_value (ecma_value_t object, /**< base object */
 
   if (JERRY_UNLIKELY (!ecma_is_value_object (object)))
   {
-    ecma_value_t to_object = ecma_op_to_object (object);
+    object_p = ecma_op_to_object (object);
     ecma_free_value (object);
 
-    if (ECMA_IS_VALUE_ERROR (to_object))
+    if (JERRY_UNLIKELY (object_p == NULL))
     {
 #if ENABLED (JERRY_ERROR_MESSAGES)
-      ecma_free_value (to_object);
+      ecma_deref_object (object_p);
       ecma_free_value (JERRY_CONTEXT (error_value));
 
       ecma_value_t error_value = ecma_raise_standard_error_with_format (ECMA_ERROR_TYPE,
@@ -175,11 +175,9 @@ vm_op_set_value (ecma_value_t object, /**< base object */
       return error_value;
 #else /* !ENABLED (JERRY_ERROR_MESSAGES) */
       ecma_free_value (property);
-      return to_object;
+      return ECMA_VALUE_ERROR;
 #endif /* ENABLED (JERRY_ERROR_MESSAGES) */
     }
-
-    object_p = ecma_get_object_from_value (to_object);
     ecma_set_object_extensible (object_p, false);
   }
   else
@@ -1355,24 +1353,22 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
           else
           {
-            result = ecma_op_to_object (super_value);
+            super_class_p = ecma_op_to_object (super_value);
             ecma_free_value (super_value);
 
-            if (ECMA_IS_VALUE_ERROR (result) || !ecma_is_constructor (result))
+            if (super_class_p == NULL || !ecma_object_is_constructor (super_class_p))
             {
-              if (ECMA_IS_VALUE_ERROR (result))
+              if (super_class_p == NULL)
               {
                 ecma_free_value (JERRY_CONTEXT (error_value));
               }
-
-              ecma_free_value (result);
+              else
+              {
+                ecma_deref_object (super_class_p);
+              }
 
               result = ecma_raise_type_error ("Value provided by class extends is not an object or null.");
               goto error;
-            }
-            else
-            {
-              super_class_p = ecma_get_object_from_value (result);
             }
           }
 
@@ -2842,22 +2838,22 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_WITH:
         {
           ecma_value_t value = *(--stack_top_p);
-          ecma_object_t *object_p;
+
           ecma_object_t *with_env_p;
 
           branch_offset += (int32_t) (byte_code_start_p - frame_ctx_p->byte_code_start_p);
 
           JERRY_ASSERT (frame_ctx_p->registers_p + register_end + frame_ctx_p->context_depth == stack_top_p);
 
-          result = ecma_op_to_object (value);
+          ecma_object_t *object_p = ecma_op_to_object (value);
+
           ecma_free_value (value);
 
-          if (ECMA_IS_VALUE_ERROR (result))
+          if (object_p == NULL)
           {
+            result = ECMA_VALUE_ERROR;
             goto error;
           }
-
-          object_p = ecma_get_object_from_value (result);
 
           with_env_p = ecma_create_object_lex_env (frame_ctx_p->lex_env_p,
                                                    object_p,

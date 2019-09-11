@@ -84,12 +84,21 @@ ecma_builtin_number_dispatch_construct (const ecma_value_t *arguments_list_p, /*
 
   if (arguments_list_len == 0)
   {
-    ecma_value_t completion = ecma_op_create_number_object (ecma_make_integer_value (0));
-    return completion;
+    ecma_object_t *obj_p = ecma_op_create_number_object (ecma_make_integer_value (0));
+
+    JERRY_ASSERT (obj_p != NULL);
+
+    return ecma_make_object_value (obj_p);
   }
   else
   {
-    return ecma_op_create_number_object (arguments_list_p[0]);
+    ecma_object_t *obj_p = ecma_op_create_number_object (arguments_list_p[0]);
+    if (JERRY_UNLIKELY (obj_p == NULL))
+    {
+      return ECMA_VALUE_ERROR;
+    }
+
+    return ecma_make_object_value (obj_p);
   }
 } /* ecma_builtin_number_dispatch_construct */
 

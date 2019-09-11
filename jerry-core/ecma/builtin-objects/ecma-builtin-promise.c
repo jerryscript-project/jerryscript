@@ -436,7 +436,7 @@ ecma_builtin_promise_do_all (ecma_value_t array, /**< the array for all */
   ecma_value_t value_array = ecma_op_create_array_object (&result_array_length_val, 1, true);
   ecma_free_value (result_array_length_val);
   /* 4. */
-  ecma_value_t remaining = ecma_op_create_number_object (ecma_make_integer_value (1));
+  ecma_value_t remaining = ecma_make_object_value (ecma_op_create_number_object (ecma_make_integer_value (1)));
   /* 5. */
   ecma_length_t index = 0;
 

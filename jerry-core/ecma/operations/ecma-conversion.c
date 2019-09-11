@@ -562,46 +562,47 @@ ecma_op_to_prop_name (ecma_value_t value) /**< ecma value */
  * See also:
  *          ECMA-262 v5, 9.9
  *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
+ * @return NULL - if the conversion fails
+ *         ecma_object_t - otherwise
  */
-ecma_value_t
+ecma_object_t *
 ecma_op_to_object (ecma_value_t value) /**< ecma value */
 {
   ecma_check_value_type_is_spec_defined (value);
+
+  if (JERRY_LIKELY (ecma_is_value_object (value)))
+  {
+    ecma_object_t *obj_p = ecma_get_object_from_value (value);
+    ecma_ref_object (obj_p);
+    return obj_p;
+  }
 
   if (ecma_is_value_number (value))
   {
     return ecma_op_create_number_object (value);
   }
-  else if (ecma_is_value_string (value))
+
+  if (ecma_is_value_string (value))
   {
     return ecma_op_create_string_object (&value, 1);
   }
-  else if (ecma_is_value_object (value))
-  {
-    return ecma_copy_value (value);
-  }
+
 #if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
-  else if (ecma_is_value_symbol (value))
+  if (ecma_is_value_symbol (value))
   {
     return ecma_op_create_symbol_object (value);
   }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
-  else
+  if (ecma_is_value_undefined (value)
+      || ecma_is_value_null (value))
   {
-    if (ecma_is_value_undefined (value)
-        || ecma_is_value_null (value))
-    {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Argument cannot be converted to an object."));
-    }
-    else
-    {
-      JERRY_ASSERT (ecma_is_value_boolean (value));
-
-      return ecma_op_create_boolean_object (value);
-    }
+    ecma_raise_type_error (ECMA_ERR_MSG ("Argument cannot be converted to an object."));
+    return NULL;
   }
+
+  JERRY_ASSERT (ecma_is_value_boolean (value));
+
+  return ecma_op_create_boolean_object (value);
 } /* ecma_op_to_object */
 
 /**

@@ -72,13 +72,13 @@ ecma_op_create_symbol (const ecma_value_t *arguments_list_p, /**< list of argume
 
 /**
  * Symbol object creation operation.
+ * This operation cannot fail.
  *
  * See also: ECMA-262 v6, 19.4.1
  *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
+ * @return ecma_object_t
  */
-ecma_value_t
+ecma_object_t *
 ecma_op_create_symbol_object (const ecma_value_t value) /**< symbol value */
 {
   JERRY_ASSERT (ecma_is_value_symbol (value));
@@ -97,7 +97,7 @@ ecma_op_create_symbol_object (const ecma_value_t value) /**< symbol value */
   ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_SYMBOL_UL;
   ext_object_p->u.class_prop.u.value = ecma_copy_value (value);
 
-  return ecma_make_object_value (object_p);
+  return object_p;
 } /* ecma_op_create_symbol_object */
 
 /**

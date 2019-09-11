@@ -97,6 +97,18 @@ ecma_is_constructor (ecma_value_t value) /**< ecma value */
 
   ecma_object_t *obj_p = ecma_get_object_from_value (value);
 
+  return ecma_object_is_constructor (obj_p);
+} /* ecma_is_constructor */
+
+/**
+ * Checks whether the Object that implements [[Construct]].
+ *
+ * @return true - if it is constructor object;
+ *         false - otherwise
+ */
+bool
+ecma_object_is_constructor (ecma_object_t *obj_p) /**< ecma object */
+{
   JERRY_ASSERT (obj_p != NULL);
   JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
 
@@ -108,7 +120,7 @@ ecma_is_constructor (ecma_value_t value) /**< ecma value */
 
   return (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION
           || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
-} /* ecma_is_constructor */
+} /* ecma_object_is_constructor */
 
 /**
  * Function object creation operation.
@@ -770,7 +782,8 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
         else if (!ecma_is_value_object (this_binding))
         {
           /* 3., 4. */
-          this_binding = ecma_op_to_object (this_binding);
+          /* ecma_op_to_object will only raise error on null/undefined values but those are handled above. */
+          this_binding = ecma_make_object_value (ecma_op_to_object (this_binding));
           free_this_binding = true;
 
           JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (this_binding));

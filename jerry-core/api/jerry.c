@@ -1243,7 +1243,9 @@ jerry_value_to_object (const jerry_value_t value) /**< input value */
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_value_msg_p)));
   }
 
-  return jerry_return (ecma_op_to_object (value));
+  ecma_object_t *obj_p = ecma_op_to_object (value);
+
+  return jerry_return (obj_p == NULL ? ECMA_VALUE_ERROR : ecma_make_object_value ((obj_p)));
 } /* jerry_value_to_object */
 
 /**

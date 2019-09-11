@@ -173,12 +173,8 @@ vm_op_delete_prop (ecma_value_t object, /**< base object */
     return ECMA_VALUE_ERROR;
   }
 
-  ecma_value_t obj_value = ecma_op_to_object (object);
-  /* The ecma_op_check_object_coercible call already checked the op_to_object error cases. */
-  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (obj_value));
-  JERRY_ASSERT (ecma_is_value_object (obj_value));
-  ecma_object_t *obj_p = ecma_get_object_from_value (obj_value);
-  JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
+  ecma_object_t *obj_p = ecma_op_to_object (object);
+  JERRY_ASSERT (!ecma_is_lexical_environment (obj_p) && obj_p != NULL);
 
   ecma_value_t delete_op_ret = ecma_op_object_delete (obj_p, name_string_p, is_strict);
   JERRY_ASSERT (ecma_is_value_boolean (delete_op_ret) || (is_strict == true && ECMA_IS_VALUE_ERROR (delete_op_ret)));
@@ -238,10 +234,9 @@ opfunc_for_in (ecma_value_t left_value, /**< left value */
   }
 
   /* 4. */
-  ecma_value_t obj_expr_value = ecma_op_to_object (left_value);
+  ecma_object_t *obj_p = ecma_op_to_object (left_value);
   /* ecma_op_to_object will only raise error on null/undefined values but those are handled above. */
-  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (obj_expr_value));
-  ecma_object_t *obj_p = ecma_get_object_from_value (obj_expr_value);
+  JERRY_ASSERT (obj_p != NULL);
   ecma_collection_t *prop_names_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_ENUMERABLE_PROTOTYPE);
 
   if (prop_names_p->item_count != 0)

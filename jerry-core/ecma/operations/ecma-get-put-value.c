@@ -143,10 +143,10 @@ ecma_op_get_value_object_base (ecma_value_t base_value, /**< base value */
     return ecma_make_uint32_value (ecma_string_get_length (string_p));
   }
 
-  ecma_value_t object_base = ecma_op_to_object (base_value);
-  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (object_base));
+  ecma_object_t *object_base_p = ecma_op_to_object (base_value);
+  JERRY_ASSERT (object_base_p != NULL);
 
-  ecma_object_t *object_p = ecma_get_object_from_value (object_base);
+  ecma_object_t *object_p = object_base_p;
   JERRY_ASSERT (object_p != NULL
                 && !ecma_is_lexical_environment (object_p));
 
@@ -170,7 +170,7 @@ ecma_op_get_value_object_base (ecma_value_t base_value, /**< base value */
     object_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, object_p->u2.prototype_cp);
   }
 
-  ecma_free_value (object_base);
+  ecma_deref_object (object_base_p);
 
   return ret_value;
 } /* ecma_op_get_value_object_base */

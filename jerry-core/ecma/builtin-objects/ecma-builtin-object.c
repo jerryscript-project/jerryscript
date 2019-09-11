@@ -89,7 +89,8 @@ ecma_builtin_object_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
     return ecma_builtin_object_dispatch_construct (arguments_list_p, arguments_list_len);
   }
 
-  return ecma_op_to_object (arguments_list_p[0]);
+  /* ecma_op_to_object will only raise error on null/undefined values but those are handled above. */
+  return ecma_make_object_value (ecma_op_to_object (arguments_list_p[0]));
 } /* ecma_builtin_object_dispatch_call */
 
 /**
@@ -132,11 +133,14 @@ ecma_builtin_object_object_get_prototype_of (ecma_value_t arg) /**< routine's ar
   if (!was_object)
   {
 #if ENABLED (JERRY_ES2015_BUILTIN)
-    arg = ecma_op_to_object (arg);
-    if (ECMA_IS_VALUE_ERROR (arg))
+    ecma_object_t *obj_p = ecma_op_to_object (arg);
+
+    if (obj_p == NULL)
     {
-      return arg;
+      return ECMA_VALUE_ERROR;
     }
+
+    arg = ecma_make_object_value (obj_p);
 #else /* !ENABLED (JERRY_ES2015_BUILTIN) */
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object."));
 #endif /* ENABLED (JERRY_ES2015_BUILTIN) */
@@ -585,14 +589,13 @@ ecma_builtin_object_object_define_properties (ecma_object_t *obj_p, /**< routine
                                               ecma_value_t arg2) /**< routine's second argument */
 {
   /* 2. */
-  ecma_value_t props = ecma_op_to_object (arg2);
+  ecma_object_t *props_p = ecma_op_to_object (arg2);
 
-  if (ECMA_IS_VALUE_ERROR (props))
+  if (JERRY_UNLIKELY (props_p == NULL))
   {
-    return props;
+    return ECMA_VALUE_ERROR;
   }
 
-  ecma_object_t *props_p = ecma_get_object_from_value (props);
   /* 3. */
   ecma_collection_t *prop_names_p = ecma_op_object_get_property_names (props_p, ECMA_LIST_CONVERT_FAST_ARRAYS
                                                                                 | ECMA_LIST_ENUMERABLE);
@@ -776,19 +779,17 @@ ecma_builtin_object_object_assign (const ecma_value_t arguments_list_p[], /**< a
   ecma_value_t target = arguments_list_len > 0 ? arguments_list_p[0] : ECMA_VALUE_UNDEFINED;
 
   /* 1. */
-  ecma_value_t to_value = ecma_op_to_object (target);
+  ecma_object_t *to_obj_p = ecma_op_to_object (target);
 
-  if (ECMA_IS_VALUE_ERROR (to_value))
+  if (JERRY_UNLIKELY (to_obj_p == NULL))
   {
-    return to_value;
+    return ECMA_VALUE_ERROR;
   }
-
-  ecma_object_t *to_obj_p = ecma_get_object_from_value (to_value);
 
   /* 2. */
   if (arguments_list_len == 1)
   {
-    return to_value;
+    return ecma_make_object_value (to_obj_p);
   }
 
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
@@ -805,11 +806,10 @@ ecma_builtin_object_object_assign (const ecma_value_t arguments_list_p[], /**< a
     }
 
     /* 5.b.i */
-    ecma_value_t from_value = ecma_op_to_object (next_source);
-    /* null and undefied cases are handled above, so this must be a valid object */
-    JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (from_value));
+    ecma_object_t *from_obj_p = ecma_op_to_object (next_source);
 
-    ecma_object_t *from_obj_p = ecma_get_object_from_value (from_value);
+    /* null and undefied cases are handled above, so this must be a valid object */
+    JERRY_ASSERT (from_obj_p != NULL);
 
     /* 5.b.iii */
     /* TODO: extends this collection if symbols will be supported */
@@ -867,7 +867,7 @@ ecma_builtin_object_object_assign (const ecma_value_t arguments_list_p[], /**< a
   /* 6. */
   if (ecma_is_value_empty (ret_value))
   {
-    return to_value;
+    return ecma_make_object_value (to_obj_p);
   }
 
   ecma_deref_object (to_obj_p);

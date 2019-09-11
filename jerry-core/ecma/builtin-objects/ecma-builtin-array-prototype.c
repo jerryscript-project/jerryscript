@@ -2046,14 +2046,12 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
                                                                                     *   passed to routine */
                                               ecma_length_t arguments_number) /**< length of arguments' list */
 {
-  ecma_value_t obj_this = ecma_op_to_object (this_arg);
+  ecma_object_t *obj_p = ecma_op_to_object (this_arg);
 
-  if (ECMA_IS_VALUE_ERROR (obj_this))
+  if (JERRY_UNLIKELY (obj_p == NULL))
   {
-    return obj_this;
+    return ECMA_VALUE_ERROR;
   }
-
-  ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
 
   if (JERRY_UNLIKELY (builtin_routine_id <= ECMA_ARRAY_PROTOTYPE_CONCAT))
   {

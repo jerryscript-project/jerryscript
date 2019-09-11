@@ -890,14 +890,13 @@ ecma_op_get_method_by_symbol_id (ecma_value_t value, /**< ecma value */
                                  lit_magic_string_id_t property_id) /**< property symbol id */
 {
   /* 2. */
-  ecma_value_t obj_value = ecma_op_to_object (value);
+  ecma_object_t *obj_p = ecma_op_to_object (value);
 
-  if (ECMA_IS_VALUE_ERROR (obj_value))
+  if (JERRY_UNLIKELY (obj_p == NULL))
   {
-    return obj_value;
+    return ECMA_VALUE_ERROR;
   }
 
-  ecma_object_t *obj_p = ecma_get_object_from_value (obj_value);
   ecma_value_t func = ecma_op_object_get_by_symbol_id (obj_p, property_id);
   ecma_deref_object (obj_p);
 

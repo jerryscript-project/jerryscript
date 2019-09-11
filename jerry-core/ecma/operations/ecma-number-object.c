@@ -35,17 +35,16 @@
  *
  * See also: ECMA-262 v5, 15.7.2.1
  *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
+ * @return ecma_object_t
  */
-ecma_value_t
+ecma_object_t *
 ecma_op_create_number_object (ecma_value_t arg) /**< argument passed to the Number constructor */
 {
   ecma_value_t conv_to_num_completion = ecma_op_to_number (arg);
 
   if (ECMA_IS_VALUE_ERROR (conv_to_num_completion))
   {
-    return conv_to_num_completion;
+    return NULL;
   }
 
 #if ENABLED (JERRY_BUILTIN_NUMBER)
@@ -64,7 +63,7 @@ ecma_op_create_number_object (ecma_value_t arg) /**< argument passed to the Numb
   /* Pass reference (no need to free conv_to_num_completion). */
   ext_object_p->u.class_prop.u.value = conv_to_num_completion;
 
-  return ecma_make_object_value (object_p);
+  return object_p;
 } /* ecma_op_create_number_object */
 
 /**

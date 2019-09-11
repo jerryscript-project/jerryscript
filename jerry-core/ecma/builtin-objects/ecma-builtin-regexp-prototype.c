@@ -23,6 +23,7 @@
 #include "ecma-objects.h"
 #include "ecma-try-catch-macro.h"
 #include "lit-char-helpers.h"
+#include "ecma-gc.h"
 
 #if ENABLED (JERRY_BUILTIN_REGEXP)
 #include "ecma-regexp-object.h"
@@ -361,22 +362,22 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
     return ecma_raise_type_error (ECMA_ERR_MSG ("Incomplete RegExp type"));
   }
 
-  ecma_value_t obj_this = ecma_op_to_object (this_arg);
-  if (ECMA_IS_VALUE_ERROR (obj_this))
+  ecma_object_t *obj_p = ecma_op_to_object (this_arg);
+  if (JERRY_UNLIKELY (obj_p == NULL))
   {
-    return obj_this;
+    return ECMA_VALUE_ERROR;
   }
 
   ecma_value_t input_str_value = ecma_op_to_string (arg);
   if (ECMA_IS_VALUE_ERROR (input_str_value))
   {
-    ecma_free_value (obj_this);
+    ecma_deref_object (obj_p);
     return input_str_value;
   }
 
-  ecma_value_t ret_value = ecma_regexp_exec_helper (obj_this, input_str_value, false);
+  ecma_value_t ret_value = ecma_regexp_exec_helper (ecma_make_object_value (obj_p), input_str_value, false);
 
-  ecma_free_value (obj_this);
+  ecma_deref_object (obj_p);
   ecma_free_value (input_str_value);
 
   return ret_value;

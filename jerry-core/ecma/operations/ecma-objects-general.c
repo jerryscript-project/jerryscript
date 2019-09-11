@@ -84,7 +84,8 @@ ecma_op_create_object_object_arg (ecma_value_t value) /**< argument of construct
       || ecma_is_value_boolean (value))
   {
     /* 1.b, 1.c, 1.d */
-    return ecma_op_to_object (value);
+    ecma_object_t *obj_p = ecma_op_to_object (value);
+    return obj_p == NULL ? ECMA_VALUE_ERROR : ecma_make_object_value (obj_p);
   }
   else
   {

@@ -30,6 +30,7 @@ bool ecma_is_normal_or_arrow_function (ecma_object_type_t type);
 
 bool ecma_op_is_callable (ecma_value_t value);
 bool ecma_is_constructor (ecma_value_t value);
+bool ecma_object_is_constructor (ecma_object_t *obj_p);
 
 ecma_object_t *
 ecma_op_create_function_object (ecma_object_t *scope_p, const ecma_compiled_code_t *bytecode_data_p);

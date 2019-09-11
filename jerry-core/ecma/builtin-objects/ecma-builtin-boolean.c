@@ -82,11 +82,11 @@ ecma_builtin_boolean_dispatch_construct (const ecma_value_t *arguments_list_p, /
 
   if (arguments_list_len == 0)
   {
-    return ecma_op_create_boolean_object (ECMA_VALUE_FALSE);
+    return ecma_make_object_value (ecma_op_create_boolean_object (ECMA_VALUE_FALSE));
   }
   else
   {
-    return ecma_op_create_boolean_object (arguments_list_p[0]);
+    return ecma_make_object_value (ecma_op_create_boolean_object (arguments_list_p[0]));
   }
 } /* ecma_builtin_boolean_dispatch_construct */
 

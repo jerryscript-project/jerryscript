@@ -157,7 +157,8 @@ ecma_builtin_string_dispatch_construct (const ecma_value_t *arguments_list_p, /*
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  return ecma_op_create_string_object (arguments_list_p, arguments_list_len);
+  ecma_object_t *obj_p = ecma_op_create_string_object (arguments_list_p, arguments_list_len);
+  return obj_p == NULL ? ECMA_VALUE_ERROR : ecma_make_object_value (obj_p);
 } /* ecma_builtin_string_dispatch_construct */
 
 /**

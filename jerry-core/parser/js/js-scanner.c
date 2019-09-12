@@ -1390,13 +1390,19 @@ scanner_scan_all (parser_context_t *context_p) /**< context */
             lexer_scan_identifier (context_p, LEXER_SCAN_CLASS_PROPERTY);
           }
 
+          parser_stack_push_uint8 (context_p, SCAN_STACK_CLASS_FUNCTION);
+          scanner_context.mode = SCAN_MODE_FUNCTION_ARGUMENTS;
+
           if (lexer_compare_literal_to_identifier (context_p, "get", 3)
               || lexer_compare_literal_to_identifier (context_p, "set", 3))
           {
-            lexer_scan_identifier (context_p, LEXER_SCAN_CLASS_PROPERTY);
-          }
+            lexer_scan_identifier (context_p, LEXER_SCAN_CLASS_PROPERTY | LEXER_SCAN_CLASS_LEFT_PAREN);
 
-          parser_stack_push_uint8 (context_p, SCAN_STACK_CLASS_FUNCTION);
+            if (context_p->token.type == LEXER_LEFT_PAREN)
+            {
+              continue;
+            }
+          }
 
 #if ENABLED (JERRY_ES2015_OBJECT_INITIALIZER)
           if (context_p->token.type == LEXER_LEFT_SQUARE)
@@ -1408,7 +1414,6 @@ scanner_scan_all (parser_context_t *context_p) /**< context */
 #endif /* ENABLED (JERRY_ES2015_OBJECT_INITIALIZER) */
 
           lexer_next_token (context_p);
-          scanner_context.mode = SCAN_MODE_FUNCTION_ARGUMENTS;
           continue;
         }
 #endif /* ENABLED (JERRY_ES2015_CLASS) */

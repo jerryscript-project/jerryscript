@@ -265,6 +265,7 @@ typedef enum
   LEXER_SCAN_IDENT_NO_KEYW = (1u << 2),          /**< don't scan keywords (e.g. get/set) */
 #if ENABLED (JERRY_ES2015_CLASS)
   LEXER_SCAN_CLASS_PROPERTY = (1u << 3),         /**< scan valid class property names */
+  LEXER_SCAN_CLASS_LEFT_PAREN = (1u << 4),       /**< also parse left parenthesis */
 #endif /* ENABLED (JERRY_ES2015_CLASS) */
 } lexer_scan_ident_opts_t;
 

@@ -125,11 +125,21 @@ class E {
   set e(e) {
     this._e = e;
   }
+
+  get () {
+    return 11;
+  }
+
+  set () {
+    return 12;
+  }
 }
 var e = new E (5);
 assert (e.e === 5);
 e.e = 10;
 assert (e.e === 10);
+assert (e.get() === 11);
+assert (e.set() === 12);
 assert (e.constructor === E);
 
 var F = class ClassF {
@@ -193,6 +203,14 @@ var G = class {
     return this._a;
   }
 
+  static get() {
+    return 11;
+  }
+
+  static set() {
+    return 12;
+  }
+
   static set constructor(a) {
     this._a = a;
   }
@@ -214,6 +232,8 @@ assert (G.a === 10);
 assert (G.g1() === 10);
 G["1"] = 20;
 assert (G["1"] === 20);
+assert (G.get() == 11);
+assert (G.set() == 12);
 G.constructor = 30;
 assert (G.constructor === 30);
 

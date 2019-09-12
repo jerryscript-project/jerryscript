@@ -2457,7 +2457,8 @@ lexer_scan_identifier (parser_context_t *context_p, /**< context */
         || context_p->token.type == LEXER_LEFT_SQUARE
 #endif /* ENABLED (JERRY_ES2015_OBJECT_INITIALIZER) */
         || context_p->token.type == LEXER_RIGHT_BRACE
-        || context_p->token.type == LEXER_SEMICOLON)
+        || context_p->token.type == LEXER_SEMICOLON
+        || ((ident_opts & LEXER_SCAN_CLASS_LEFT_PAREN) && context_p->token.type == LEXER_LEFT_PAREN))
     {
       return;
     }

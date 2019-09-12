@@ -278,29 +278,22 @@ ecma_builtin_helper_object_get_properties (ecma_object_t *obj_p, /**< object */
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
   ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
 
-  uint32_t index = 0;
-
-  ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, opts);
+  ecma_collection_t *props_p = ecma_op_object_get_property_names (obj_p, opts);
 
   if (props_p->item_count == 0)
   {
-    ecma_free_values_collection (props_p, 0);
+    ecma_collection_destroy (props_p);
     return new_array;
   }
 
   JERRY_ASSERT (((ecma_extended_object_t *) new_array_p)->u.array.is_fast_mode);
 
+  ecma_value_t *buffer_p = props_p->buffer_p;
   ecma_value_t *values_p = ecma_fast_array_extend (new_array_p, props_p->item_count);
 
-  ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
+  memcpy (values_p, buffer_p, props_p->item_count * sizeof (ecma_value_t));
 
-  while (ecma_value_p != NULL)
-  {
-    values_p[index++] = ecma_copy_value_if_not_object (*ecma_value_p);
-    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
-  }
-
-  ecma_free_values_collection (props_p, 0);
+  ecma_collection_free_objects (props_p);
 
   return new_array;
 } /* ecma_builtin_helper_object_get_properties */

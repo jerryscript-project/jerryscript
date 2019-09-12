@@ -321,14 +321,13 @@ ecma_builtin_object_object_get_own_property_symbols (ecma_object_t *obj_p) /**< 
 static ecma_value_t
 ecma_builtin_object_object_seal (ecma_object_t *obj_p) /**< routine's argument */
 {
-  ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_CONVERT_FAST_ARRAYS);
+  ecma_collection_t *props_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_CONVERT_FAST_ARRAYS);
 
-  ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
+  ecma_value_t *buffer_p = props_p->buffer_p;
 
-  while (ecma_value_p != NULL)
+  for (uint32_t i = 0; i < props_p->item_count; i++)
   {
-    ecma_string_t *property_name_p = ecma_get_string_from_value (*ecma_value_p);
-    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+    ecma_string_t *property_name_p = ecma_get_string_from_value (buffer_p[i]);
 
     /* 2.a */
     ecma_property_descriptor_t prop_desc;
@@ -351,14 +350,14 @@ ecma_builtin_object_object_seal (ecma_object_t *obj_p) /**< routine's argument *
 
     if (ECMA_IS_VALUE_ERROR (define_own_prop_ret))
     {
-      ecma_free_values_collection (props_p, 0);
+      ecma_collection_free (props_p);
       return define_own_prop_ret;
     }
 
     ecma_free_value (define_own_prop_ret);
   }
 
-  ecma_free_values_collection (props_p, 0);
+  ecma_collection_free (props_p);
 
   /* 3. */
   ecma_set_object_extensible (obj_p, false);
@@ -380,14 +379,13 @@ ecma_builtin_object_object_seal (ecma_object_t *obj_p) /**< routine's argument *
 static ecma_value_t
 ecma_builtin_object_object_freeze (ecma_object_t *obj_p) /**< routine's argument */
 {
-  ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_CONVERT_FAST_ARRAYS);
+  ecma_collection_t *props_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_CONVERT_FAST_ARRAYS);
 
-  ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
+  ecma_value_t *buffer_p = props_p->buffer_p;
 
-  while (ecma_value_p != NULL)
+  for (uint32_t i = 0; i < props_p->item_count; i++)
   {
-    ecma_string_t *property_name_p = ecma_get_string_from_value (*ecma_value_p);
-    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+    ecma_string_t *property_name_p = ecma_get_string_from_value (buffer_p[i]);
 
     /* 2.a */
     ecma_property_descriptor_t prop_desc;
@@ -417,14 +415,14 @@ ecma_builtin_object_object_freeze (ecma_object_t *obj_p) /**< routine's argument
 
     if (ECMA_IS_VALUE_ERROR (define_own_prop_ret))
     {
-      ecma_free_values_collection (props_p, 0);
+      ecma_collection_free (props_p);
       return define_own_prop_ret;
     }
 
     ecma_free_value (define_own_prop_ret);
   }
 
-  ecma_free_values_collection (props_p, 0);
+  ecma_collection_free (props_p);
 
   /* 3. */
   ecma_set_object_extensible (obj_p, false);
@@ -478,14 +476,13 @@ ecma_builtin_object_frozen_or_sealed_helper (ecma_object_t *obj_p, /**< routine'
   ecma_value_t ret_value = ECMA_VALUE_TRUE;
 
   /* 2. */
-  ecma_collection_header_t *props_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_NO_OPTS);
+  ecma_collection_t *props_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_NO_OPTS);
 
-  ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
+  ecma_value_t *buffer_p = props_p->buffer_p;
 
-  while (ecma_value_p != NULL)
+  for (uint32_t i = 0; i < props_p->item_count; i++)
   {
-    ecma_string_t *property_name_p = ecma_get_string_from_value (*ecma_value_p);
-    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+    ecma_string_t *property_name_p = ecma_get_string_from_value (buffer_p[i]);
 
     /* 2.a */
     ecma_property_t property = ecma_op_object_get_own_property (obj_p,
@@ -510,7 +507,7 @@ ecma_builtin_object_frozen_or_sealed_helper (ecma_object_t *obj_p, /**< routine'
     }
   }
 
-  ecma_free_values_collection (props_p, 0);
+  ecma_collection_free (props_p);
 
   return ret_value;
 } /* ecma_builtin_object_frozen_or_sealed_helper */
@@ -597,21 +594,20 @@ ecma_builtin_object_object_define_properties (ecma_object_t *obj_p, /**< routine
 
   ecma_object_t *props_p = ecma_get_object_from_value (props);
   /* 3. */
-  ecma_collection_header_t *prop_names_p = ecma_op_object_get_property_names (props_p, ECMA_LIST_CONVERT_FAST_ARRAYS
-                                                                                       | ECMA_LIST_ENUMERABLE);
-  uint32_t property_number = prop_names_p->item_count;
+  ecma_collection_t *prop_names_p = ecma_op_object_get_property_names (props_p, ECMA_LIST_CONVERT_FAST_ARRAYS
+                                                                                | ECMA_LIST_ENUMERABLE);
   ecma_value_t ret_value = ECMA_VALUE_ERROR;
 
-  ecma_value_t *ecma_value_p = ecma_collection_iterator_init (prop_names_p);
+  ecma_value_t *buffer_p = prop_names_p->buffer_p;
 
   /* 4. */
-  JMEM_DEFINE_LOCAL_ARRAY (property_descriptors, property_number, ecma_property_descriptor_t);
+  JMEM_DEFINE_LOCAL_ARRAY (property_descriptors, prop_names_p->item_count, ecma_property_descriptor_t);
   uint32_t property_descriptor_number = 0;
 
-  while (ecma_value_p != NULL)
+  for (uint32_t i = 0; i < prop_names_p->item_count; i++)
   {
     /* 5.a */
-    ecma_value_t desc_obj = ecma_op_object_get (props_p, ecma_get_string_from_value (*ecma_value_p));
+    ecma_value_t desc_obj = ecma_op_object_get (props_p, ecma_get_string_from_value (buffer_p[i]));
 
     if (ECMA_IS_VALUE_ERROR (desc_obj))
     {
@@ -634,26 +630,22 @@ ecma_builtin_object_object_define_properties (ecma_object_t *obj_p, /**< routine
     property_descriptor_number++;
 
     ecma_free_value (conv_result);
-
-    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
   }
 
   /* 6. */
-  ecma_value_p = ecma_collection_iterator_init (prop_names_p);
+  buffer_p = prop_names_p->buffer_p;
 
-  for (uint32_t index = 0; index < property_number; index++)
+  for (uint32_t i = 0; i < prop_names_p->item_count; i++)
   {
     ecma_value_t define_own_prop_ret =  ecma_op_object_define_own_property (obj_p,
-                                                                            ecma_get_string_from_value (*ecma_value_p),
-                                                                            &property_descriptors[index]);
+                                                                            ecma_get_string_from_value (buffer_p[i]),
+                                                                            &property_descriptors[i]);
     if (ECMA_IS_VALUE_ERROR (define_own_prop_ret))
     {
       goto cleanup;
     }
 
     ecma_free_value (define_own_prop_ret);
-
-    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
   }
 
   ecma_ref_object (obj_p);
@@ -670,7 +662,7 @@ cleanup:
 
   JMEM_FINALIZE_LOCAL_ARRAY (property_descriptors);
 
-  ecma_free_values_collection (prop_names_p, 0);
+  ecma_collection_free (prop_names_p);
 
   ecma_deref_object (props_p);
 
@@ -821,14 +813,14 @@ ecma_builtin_object_object_assign (const ecma_value_t arguments_list_p[], /**< a
 
     /* 5.b.iii */
     /* TODO: extends this collection if symbols will be supported */
-    ecma_collection_header_t *props_p = ecma_op_object_get_property_names (from_obj_p, ECMA_LIST_CONVERT_FAST_ARRAYS
-                                                                                       | ECMA_LIST_ENUMERABLE);
+    ecma_collection_t *props_p = ecma_op_object_get_property_names (from_obj_p, ECMA_LIST_CONVERT_FAST_ARRAYS
+                                                                                | ECMA_LIST_ENUMERABLE);
 
-    ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
+    ecma_value_t *buffer_p = props_p->buffer_p;
 
-    while (ecma_value_p != NULL && ecma_is_value_empty (ret_value))
+    for (uint32_t j = 0; (j < props_p->item_count) && ecma_is_value_empty (ret_value); j++)
     {
-      ecma_string_t *property_name_p = ecma_get_string_from_value (*ecma_value_p);
+      ecma_string_t *property_name_p = ecma_get_string_from_value (buffer_p[j]);
 
       /* 5.c.i-ii */
       ecma_property_descriptor_t prop_desc;
@@ -866,12 +858,10 @@ ecma_builtin_object_object_assign (const ecma_value_t arguments_list_p[], /**< a
         ecma_free_value (prop_value);
         ecma_free_property_descriptor (&prop_desc);
       }
-
-      ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
     }
 
     ecma_deref_object (from_obj_p);
-    ecma_free_values_collection (props_p, 0);
+    ecma_collection_free (props_p);
   }
 
   /* 6. */

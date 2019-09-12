@@ -31,8 +31,8 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, ecma_length_
 void
 ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p,
                                          bool separate_enumerable,
-                                         ecma_collection_header_t *main_collection_p,
-                                         ecma_collection_header_t *non_enum_collection_p);
+                                         ecma_collection_t *main_collection_p,
+                                         ecma_collection_t *non_enum_collection_p);
 
 
 /**

@@ -76,7 +76,6 @@ typedef enum
   ECMA_TYPE_SYMBOL = 4, /**< pointer to description of a symbol */
   ECMA_TYPE_DIRECT_STRING = 5, /**< directly encoded string values */
   ECMA_TYPE_ERROR = 7, /**< pointer to description of an error reference (only supported by C API) */
-  ECMA_TYPE_POINTER = ECMA_TYPE_ERROR, /**< a generic aligned pointer */
   ECMA_TYPE_SNAPSHOT_OFFSET = ECMA_TYPE_ERROR, /**< offset to a snapshot number/string */
   ECMA_TYPE___MAX = ECMA_TYPE_ERROR /** highest value for ecma types */
 } ecma_type_t;
@@ -1216,57 +1215,36 @@ typedef double ecma_number_t;
  */
 #define ECMA_STRING_NOT_ARRAY_INDEX UINT32_MAX
 
-/*
- * Ecma-collection: a growable list of ecma-values. Currently the list is
- * a chain list, where appending new items at the end is cheap operation.
- *
- * Enumerating elements is also cheap, since each page is terminated by a
- * special ecma-value: collection-type. This type has a pointer to the next
- * chunk. The last chunk is terminated by a NULL pointer. There when the
- * next value is requested from the iterator it simply checks the next
- * memory location. If it is not a collection-type value, it returns with
- * the value. Otherwise it gets the start address of the next chunk, and
- * return the value there.
- *
- * The collection-type value is always the last item of a collection chunk,
- * even if the chunk is not completely filled with values (this is only true
- * for the last chunk). Each chunk must have at least one non collection-type
- * value as well.
- */
-
 /**
- * Collection flags.
- */
-typedef enum
-{
-  ECMA_COLLECTION_NO_REF_OBJECTS = (1u << 0), /**< do not increase the refcount of objects */
-  ECMA_COLLECTION_NO_COPY = (1u << 1), /**< do not copy values */
-} ecma_collection_flag_t;
-
-/**
- * Description of a collection's header.
+ * Ecma-collection: a growable list of ecma-values.
  */
 typedef struct
 {
-  jmem_cpointer_t first_chunk_cp; /**< compressed pointer to first chunk with collection's data */
-  jmem_cpointer_t last_chunk_cp; /**< compressed pointer to last chunk with collection's data */
-  ecma_length_t item_count; /**< number of items in the collection */
-} ecma_collection_header_t;
+  uint32_t item_count; /**< number of items in the collection */
+  uint32_t capacity; /**< number of items can be stored in the underlying buffer */
+  ecma_value_t *buffer_p; /**< underlying data buffer */
+} ecma_collection_t;
 
 /**
- * Maximum number of items stored by a collection chunk (excluding the last collection-type value).
+ * Initial capacity of an ecma-collection
  */
-#define ECMA_COLLECTION_CHUNK_ITEMS 5
+#define ECMA_COLLECTION_INITIAL_CAPACITY 4
 
 /**
- * Collection chunk item.
+ * Ecma-collenction grow factor when the collection underlying buffer need to be reallocated
  */
-typedef struct
-{
-  ecma_value_t items[ECMA_COLLECTION_CHUNK_ITEMS + 1]; /**< ecma-value list, where the last value is a special
-                                                        *   collection-type value which points to the next chunk,
-                                                        *   so the chunk area is enlarged by one for this value */
-} ecma_collection_chunk_t;
+#define ECMA_COLLECTION_GROW_FACTOR (ECMA_COLLECTION_INITIAL_CAPACITY * 2)
+
+/**
+ * Compute the total allocated size of the collection based on it's capacity
+ */
+#define ECMA_COLLECTION_ALLOCATED_SIZE(capacity) \
+  (uint32_t) (sizeof (ecma_collection_t) + (capacity * sizeof (ecma_value_t)))
+
+/**
+ * Initial allocated size of an ecma-collection
+ */
+#define ECMA_COLLECTION_INITIAL_SIZE ECMA_COLLECTION_ALLOCATED_SIZE (ECMA_COLLECTION_INITIAL_CAPACITY)
 
 /**
  * Direct string types (2 bit).

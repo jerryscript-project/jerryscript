@@ -2765,16 +2765,16 @@ jerry_foreach_object_property (const jerry_value_t obj_val, /**< object value */
   }
 
   ecma_object_t *object_p = ecma_get_object_from_value (obj_val);
-  ecma_collection_header_t *names_p = ecma_op_object_get_property_names (object_p, ECMA_LIST_ENUMERABLE_PROTOTYPE);
-  ecma_value_t *ecma_value_p = ecma_collection_iterator_init (names_p);
+  ecma_collection_t *names_p = ecma_op_object_get_property_names (object_p, ECMA_LIST_ENUMERABLE_PROTOTYPE);
+  ecma_value_t *buffer_p = names_p->buffer_p;
 
   ecma_value_t property_value = ECMA_VALUE_EMPTY;
 
   bool continuous = true;
 
-  while (continuous && ecma_value_p != NULL)
+  for (uint32_t i = 0; continuous && (i < names_p->item_count); i++)
   {
-    ecma_string_t *property_name_p = ecma_get_string_from_value (*ecma_value_p);
+    ecma_string_t *property_name_p = ecma_get_string_from_value (buffer_p[i]);
 
     property_value = ecma_op_object_get (object_p, property_name_p);
 
@@ -2783,13 +2783,11 @@ jerry_foreach_object_property (const jerry_value_t obj_val, /**< object value */
       break;
     }
 
-    continuous = foreach_p (*ecma_value_p, property_value, user_data_p);
+    continuous = foreach_p (buffer_p[i], property_value, user_data_p);
     ecma_free_value (property_value);
-
-    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
   }
 
-  ecma_free_values_collection (names_p, 0);
+  ecma_collection_free (names_p);
 
   if (!ECMA_IS_VALUE_ERROR (property_value))
   {

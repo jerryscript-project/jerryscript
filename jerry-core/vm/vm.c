@@ -2872,11 +2872,12 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           JERRY_ASSERT (frame_ctx_p->registers_p + register_end + frame_ctx_p->context_depth == stack_top_p);
 
           ecma_value_t expr_obj_value = ECMA_VALUE_UNDEFINED;
-          ecma_collection_chunk_t *prop_names_p = opfunc_for_in (value, &expr_obj_value);
+          ecma_collection_t *prop_names_p = opfunc_for_in (value, &expr_obj_value);
           ecma_free_value (value);
 
           if (prop_names_p == NULL)
           {
+            /* The collection is already released */
             byte_code_p = byte_code_start_p + branch_offset;
             continue;
           }
@@ -2896,56 +2897,34 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           ecma_value_t *context_top_p = frame_ctx_p->registers_p + register_end + frame_ctx_p->context_depth;
 
-          ecma_collection_chunk_t *chunk_p;
-          chunk_p = ECMA_GET_INTERNAL_VALUE_ANY_POINTER (ecma_collection_chunk_t, context_top_p[-2]);
+          ecma_collection_t *collection_p;
+          collection_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, context_top_p[-2]);
 
           JERRY_ASSERT (VM_GET_CONTEXT_TYPE (context_top_p[-1]) == VM_CONTEXT_FOR_IN);
 
           uint32_t index = context_top_p[-3];
+          ecma_value_t *buffer_p = collection_p->buffer_p;
 
-          JERRY_ASSERT (!ecma_is_value_pointer (chunk_p->items[index]));
-
-          /* TODO: use collection iterator instead of directly accessing the collection chunks. */
-          *stack_top_p++ = chunk_p->items[index];
-          index++;
-
-          if (JERRY_LIKELY (!ecma_is_value_pointer (chunk_p->items[index])))
-          {
-            context_top_p[-3] = index;
-            continue;
-          }
-
-          context_top_p[-3] = 0;
-
-          ecma_collection_chunk_t *next_chunk_p;
-          next_chunk_p = (ecma_collection_chunk_t *) ecma_get_pointer_from_value (chunk_p->items[index]);
-          ECMA_SET_INTERNAL_VALUE_ANY_POINTER (context_top_p[-2], next_chunk_p);
-
-          jmem_heap_free_block (chunk_p, sizeof (ecma_collection_chunk_t));
+          *stack_top_p++ = buffer_p[index];
+          context_top_p[-3]++;
           continue;
         }
         case VM_OC_FOR_IN_HAS_NEXT:
         {
           JERRY_ASSERT (frame_ctx_p->registers_p + register_end + frame_ctx_p->context_depth == stack_top_p);
 
-          ecma_collection_chunk_t *chunk_p;
-          chunk_p = ECMA_GET_INTERNAL_VALUE_ANY_POINTER (ecma_collection_chunk_t, stack_top_p[-2]);
+          ecma_collection_t *collection_p;
+          collection_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, stack_top_p[-2]);
 
-          uint32_t index = stack_top_p[-3];
+          JERRY_ASSERT (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_FOR_IN);
+
+          ecma_value_t *buffer_p = collection_p->buffer_p;
           ecma_object_t *object_p = ecma_get_object_from_value (stack_top_p[-4]);
+          uint32_t index = stack_top_p[-3];
 
-          while (true)
+          while (index < collection_p->item_count)
           {
-            if (chunk_p == NULL)
-            {
-              ecma_deref_object (object_p);
-
-              VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION);
-              stack_top_p -= PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION;
-              break;
-            }
-
-            ecma_string_t *prop_name_p = ecma_get_string_from_value (chunk_p->items[index]);
+            ecma_string_t *prop_name_p = ecma_get_prop_name_from_value (buffer_p[index]);
 
             if (JERRY_LIKELY (ecma_op_object_has_property (object_p, prop_name_p)))
             {
@@ -2953,27 +2932,20 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               break;
             }
 
-            index++;
-            ecma_value_t value = chunk_p->items[index];
-
-            if (JERRY_LIKELY (!ecma_is_value_pointer (value)))
-            {
-              stack_top_p[-3] = index;
-            }
-            else
-            {
-              index = 0;
-              stack_top_p[-3] = 0;
-
-              ecma_collection_chunk_t *next_chunk_p;
-              next_chunk_p = (ecma_collection_chunk_t *) ecma_get_pointer_from_value (value);
-              ECMA_SET_INTERNAL_VALUE_ANY_POINTER (stack_top_p[-2], next_chunk_p);
-
-              jmem_heap_free_block (chunk_p, sizeof (ecma_collection_chunk_t));
-              chunk_p = next_chunk_p;
-            }
-
             ecma_deref_ecma_string (prop_name_p);
+            index++;
+          }
+
+          if (index == collection_p->item_count)
+          {
+            ecma_deref_object (object_p);
+            ecma_collection_destroy (collection_p);
+            VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION);
+            stack_top_p -= PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION;
+          }
+          else
+          {
+            stack_top_p[-3] = index;
           }
           continue;
         }

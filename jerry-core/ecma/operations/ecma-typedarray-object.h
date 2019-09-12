@@ -50,7 +50,7 @@ void ecma_set_typedarray_element (lit_utf8_byte_t *dst_p,
 ecma_number_t ecma_get_typedarray_element (lit_utf8_byte_t *src,
                                            lit_magic_string_id_t class_id);
 void ecma_op_typedarray_list_lazy_property_names (ecma_object_t *obj_p,
-                                                  ecma_collection_header_t *main_collection_p);
+                                                  ecma_collection_t *main_collection_p);
 ecma_value_t ecma_op_typedarray_get_index_prop (ecma_object_t *obj_p, uint32_t index);
 bool ecma_op_typedarray_define_index_prop (ecma_object_t *obj_p,
                                            uint32_t index,

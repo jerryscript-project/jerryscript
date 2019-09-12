@@ -795,7 +795,7 @@ jerry_generate_snapshot_with_args (const jerry_char_t *resource_name_p, /**< scr
 
   if (!(generate_snapshot_opts & JERRY_SNAPSHOT_SAVE_STATIC))
   {
-    ecma_collection_header_t *lit_pool_p = ecma_new_values_collection ();
+    ecma_collection_t *lit_pool_p = ecma_new_collection ();
 
     ecma_save_literals_add_compiled_code (bytecode_data_p, lit_pool_p);
 
@@ -1048,7 +1048,7 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
 static void
 scan_snapshot_functions (const uint8_t *buffer_p, /**< snapshot buffer start */
                          const uint8_t *buffer_end_p, /**< snapshot buffer end */
-                         ecma_collection_header_t *lit_pool_p, /**< list of known values */
+                         ecma_collection_t *lit_pool_p, /**< list of known values */
                          const uint8_t *literal_base_p) /**< start of literal data */
 {
   JERRY_ASSERT (buffer_end_p > buffer_p);
@@ -1225,14 +1225,14 @@ jerry_merge_snapshots (const uint32_t **inp_buffers_p, /**< array of (pointers t
     return 0;
   }
 
-  ecma_collection_header_t *lit_pool_p = ecma_new_values_collection ();
+  ecma_collection_t *lit_pool_p = ecma_new_collection ();
 
   for (uint32_t i = 0; i < number_of_snapshots; i++)
   {
     if (inp_buffer_sizes_p[i] < sizeof (jerry_snapshot_header_t))
     {
       *error_p = "invalid snapshot file";
-      ecma_free_values_collection (lit_pool_p, ECMA_COLLECTION_NO_COPY);
+      ecma_collection_destroy (lit_pool_p);
       return 0;
     }
 
@@ -1243,7 +1243,7 @@ jerry_merge_snapshots (const uint32_t **inp_buffers_p, /**< array of (pointers t
         || !snapshot_check_global_flags (header_p->global_flags))
     {
       *error_p = "invalid snapshot version or unsupported features present";
-      ecma_free_values_collection (lit_pool_p, ECMA_COLLECTION_NO_COPY);
+      ecma_collection_destroy (lit_pool_p);
       return 0;
     }
 
@@ -1271,7 +1271,7 @@ jerry_merge_snapshots (const uint32_t **inp_buffers_p, /**< array of (pointers t
   if (functions_size >= out_buffer_size)
   {
     *error_p = "output buffer is too small";
-    ecma_free_values_collection (lit_pool_p, ECMA_COLLECTION_NO_COPY);
+    ecma_collection_destroy (lit_pool_p);
     return 0;
   }
 
@@ -1615,21 +1615,21 @@ jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, /**< input snapsho
   JERRY_ASSERT ((header_p->lit_table_offset % sizeof (uint32_t)) == 0);
   const uint8_t *literal_base_p = snapshot_data_p + header_p->lit_table_offset;
 
-  ecma_collection_header_t *lit_pool_p = ecma_new_values_collection ();
+  ecma_collection_t *lit_pool_p = ecma_new_collection ();
   scan_snapshot_functions (snapshot_data_p + header_p->func_offsets[0],
                            literal_base_p,
                            lit_pool_p,
                            literal_base_p);
 
   lit_utf8_size_t literal_count = 0;
-  ecma_value_t *iterator_p = ecma_collection_iterator_init (lit_pool_p);
+  ecma_value_t *buffer_p = lit_pool_p->buffer_p;
 
   /* Count the valid and non-magic identifiers in the list. */
-  while (iterator_p != NULL)
+  for (uint32_t i = 0; i < lit_pool_p->item_count; i++)
   {
-    if (ecma_is_value_string (*iterator_p))
+    if (ecma_is_value_string (buffer_p[i]))
     {
-      ecma_string_t *literal_p = ecma_get_string_from_value (*iterator_p);
+      ecma_string_t *literal_p = ecma_get_string_from_value (buffer_p[i]);
 
       /* NOTE:
        *      We don't save a literal (in C format) which isn't a valid
@@ -1643,13 +1643,11 @@ jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, /**< input snapsho
         literal_count++;
       }
     }
-
-    iterator_p = ecma_collection_iterator_next (iterator_p);
   }
 
   if (literal_count == 0)
   {
-    ecma_free_values_collection (lit_pool_p, ECMA_COLLECTION_NO_COPY);
+    ecma_collection_destroy (lit_pool_p);
     return 0;
   }
 
@@ -1659,13 +1657,14 @@ jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, /**< input snapsho
   JMEM_DEFINE_LOCAL_ARRAY (literal_array, literal_count, ecma_string_t *);
   lit_utf8_size_t literal_idx = 0;
 
-  iterator_p = ecma_collection_iterator_init (lit_pool_p);
+  buffer_p = lit_pool_p->buffer_p;
 
-  while (iterator_p != NULL)
+  /* Count the valid and non-magic identifiers in the list. */
+  for (uint32_t i = 0; i < lit_pool_p->item_count; i++)
   {
-    if (ecma_is_value_string (*iterator_p))
+    if (ecma_is_value_string (buffer_p[i]))
     {
-      ecma_string_t *literal_p = ecma_get_string_from_value (*iterator_p);
+      ecma_string_t *literal_p = ecma_get_string_from_value (buffer_p[i]);
 
       /* NOTE:
        *      We don't save a literal (in C format) which isn't a valid
@@ -1679,11 +1678,9 @@ jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, /**< input snapsho
         literal_array[literal_idx++] = literal_p;
       }
     }
-
-    iterator_p = ecma_collection_iterator_next (iterator_p);
   }
 
-  ecma_free_values_collection (lit_pool_p, ECMA_COLLECTION_NO_COPY);
+  ecma_collection_destroy (lit_pool_p);
 
   /* Sort the strings by size at first, then lexicographically. */
   jerry_save_literals_sort (literal_array, literal_count);

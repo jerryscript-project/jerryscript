@@ -952,17 +952,16 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
     return ecma_raise_type_error (ECMA_ERR_MSG ("Compare function is not callable."));
   }
 
-  ecma_collection_header_t *array_index_props_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_ARRAY_INDICES);
+  ecma_collection_t *array_index_props_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_ARRAY_INDICES);
 
   uint32_t defined_prop_count = 0;
 
-  ecma_value_t *ecma_value_p = ecma_collection_iterator_init (array_index_props_p);
+  ecma_value_t *buffer_p = array_index_props_p->buffer_p;
 
   /* Count properties with name that is array index less than len */
-  while (ecma_value_p != NULL)
+  for (uint32_t i = 0; i < array_index_props_p->item_count; i++)
   {
-    ecma_string_t *property_name_p = ecma_get_string_from_value (*ecma_value_p);
-    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+    ecma_string_t *property_name_p = ecma_get_string_from_value (buffer_p[i]);
 
     uint32_t index = ecma_string_get_array_index (property_name_p);
     JERRY_ASSERT (index != ECMA_STRING_NOT_ARRAY_INDEX);
@@ -977,13 +976,12 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
   uint32_t copied_num = 0;
   JMEM_DEFINE_LOCAL_ARRAY (values_buffer, defined_prop_count, ecma_value_t);
 
-  ecma_value_p = ecma_collection_iterator_init (array_index_props_p);
+  buffer_p = array_index_props_p->buffer_p;
 
   /* Copy unsorted array into a native c array. */
-  while (ecma_value_p != NULL)
+  for (uint32_t i = 0; i < array_index_props_p->item_count; i++)
   {
-    ecma_string_t *property_name_p = ecma_get_string_from_value (*ecma_value_p);
-    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+    ecma_string_t *property_name_p = ecma_get_string_from_value (buffer_p[i]);
 
     uint32_t index = ecma_string_get_array_index (property_name_p);
     JERRY_ASSERT (index != ECMA_STRING_NOT_ARRAY_INDEX);
@@ -1045,7 +1043,7 @@ clean_up:
 
   if (ECMA_IS_VALUE_ERROR (ret_value))
   {
-    ecma_free_values_collection (array_index_props_p, 0);
+    ecma_collection_free (array_index_props_p);
     return ret_value;
   }
 
@@ -1053,12 +1051,11 @@ clean_up:
 
   /* Undefined properties should be in the back of the array. */
 
-  ecma_value_p = ecma_collection_iterator_init (array_index_props_p);
+  buffer_p = array_index_props_p->buffer_p;
 
-  while (ecma_value_p != NULL)
+  for (uint32_t i = 0; i < array_index_props_p->item_count; i++)
   {
-    ecma_string_t *property_name_p = ecma_get_string_from_value (*ecma_value_p);
-    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
+    ecma_string_t *property_name_p = ecma_get_string_from_value (buffer_p[i]);
 
     uint32_t index = ecma_string_get_array_index (property_name_p);
     JERRY_ASSERT (index != ECMA_STRING_NOT_ARRAY_INDEX);
@@ -1069,13 +1066,13 @@ clean_up:
 
       if (ECMA_IS_VALUE_ERROR (del_value))
       {
-        ecma_free_values_collection (array_index_props_p, 0);
+        ecma_collection_free (array_index_props_p);
         return del_value;
       }
     }
   }
 
-  ecma_free_values_collection (array_index_props_p, 0);
+  ecma_collection_free (array_index_props_p);
 
   return ecma_copy_value (this_arg);
 } /* ecma_builtin_array_prototype_object_sort */

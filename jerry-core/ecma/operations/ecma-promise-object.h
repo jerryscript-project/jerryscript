@@ -64,8 +64,8 @@ typedef struct
 {
   ecma_extended_object_t ecma_extended_object_t; /**< extended object part */
   uint8_t state; /**< promise state, see ecma_promise_state_t */
-  ecma_collection_header_t *fulfill_reactions; /**< list of PromiseFullfillReactions */
-  ecma_collection_header_t *reject_reactions; /**< list of PromiseRejectReactions */
+  ecma_collection_t *fulfill_reactions; /**< list of PromiseFullfillReactions */
+  ecma_collection_t *reject_reactions; /**< list of PromiseRejectReactions */
 } ecma_promise_object_t;
 
 bool ecma_is_promise (ecma_object_t *obj_p);

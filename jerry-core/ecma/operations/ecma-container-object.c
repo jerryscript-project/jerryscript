@@ -457,23 +457,22 @@ ecma_op_container_foreach (ecma_value_t this_arg, /**< this argument */
 
   ecma_object_t *internal_obj_p = ecma_get_object_from_value (map_object_p->header.u.class_prop.u.value);
 
-  ecma_collection_header_t *props_p = ecma_op_object_get_property_names (internal_obj_p, ECMA_LIST_NO_OPTS);
+  ecma_collection_t *props_p = ecma_op_object_get_property_names (internal_obj_p, ECMA_LIST_NO_OPTS);
 
-  ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
+  ecma_value_t *buffer_p = props_p->buffer_p;
 
   ecma_value_t ret_value = ECMA_VALUE_UNDEFINED;
 
   ecma_ref_object (internal_obj_p);
 
-  while (ecma_value_p != NULL)
+  for (uint32_t i = 0; i < props_p->item_count; i++)
   {
-    ecma_string_t *prop_name_p = ecma_get_prop_name_from_value (*ecma_value_p);
+    ecma_string_t *prop_name_p = ecma_get_prop_name_from_value (buffer_p[i]);
     ecma_property_t *property_p = ecma_find_named_property (internal_obj_p, prop_name_p);
     JERRY_ASSERT (property_p != NULL);
 
     if (ecma_is_value_empty (ECMA_PROPERTY_VALUE_PTR (property_p)->value))
     {
-      ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
       continue;
     }
 
@@ -497,7 +496,7 @@ ecma_op_container_foreach (ecma_value_t this_arg, /**< this argument */
       }
       else
       {
-        key_arg = *ecma_value_p;
+        key_arg = buffer_p[i];
       }
     }
 
@@ -514,12 +513,10 @@ ecma_op_container_foreach (ecma_value_t this_arg, /**< this argument */
     }
 
     ecma_free_value (call_value);
-
-    ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
   }
 
   ecma_deref_object (internal_obj_p);
-  ecma_free_values_collection (props_p, 0);
+  ecma_collection_free (props_p);
 
   return ret_value;
 } /* ecma_op_container_foreach */
@@ -664,7 +661,7 @@ ecma_op_container_iterator_next (ecma_value_t this_val, /**< this argument */
   ecma_map_object_t *map_object_p = (ecma_map_object_t *) (ecma_get_object_from_value (iterated_value));
 
   ecma_object_t *internal_obj_p = ecma_get_object_from_value (map_object_p->header.u.class_prop.u.value);
-  ecma_collection_header_t *props_p = ecma_op_object_get_property_names (internal_obj_p, ECMA_LIST_NO_OPTS);
+  ecma_collection_t *props_p = ecma_op_object_get_property_names (internal_obj_p, ECMA_LIST_NO_OPTS);
 
   uint32_t length = props_p->item_count;
   uint32_t index = ext_obj_p->u.pseudo_array.u1.iterator_index;
@@ -698,34 +695,31 @@ ecma_op_container_iterator_next (ecma_value_t this_val, /**< this argument */
   if (index >= length)
   {
     ext_obj_p->u.pseudo_array.u2.iterated_value = ECMA_VALUE_EMPTY;
-    ecma_free_values_collection (props_p, 0);
+    ecma_collection_free (props_p);
     return ecma_create_iter_result_object (ECMA_VALUE_UNDEFINED, ECMA_VALUE_TRUE);
   }
 
   uint8_t iterator_kind = ext_obj_p->u.pseudo_array.extra_info;
 
-  ecma_value_t *ecma_value_p = ecma_collection_iterator_init (props_p);
+  ecma_value_t *buffer_p = props_p->buffer_p;
 
   ecma_value_t ret_value = ECMA_VALUE_UNDEFINED;
 
-  while (ecma_value_p != NULL)
+  for (uint32_t i = 0; i < props_p->item_count; i++)
   {
     if (index > 0)
     {
       index--;
-      ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
       continue;
     }
 
-    ecma_string_t *prop_name_p = ecma_get_prop_name_from_value (*ecma_value_p);
+    ecma_string_t *prop_name_p = ecma_get_prop_name_from_value (buffer_p[i]);
     ecma_property_t *property_p = ecma_find_named_property (internal_obj_p, prop_name_p);
     JERRY_ASSERT (property_p != NULL);
 
     if (ecma_is_value_empty (ECMA_PROPERTY_VALUE_PTR (property_p)->value))
     {
-      ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
-
-      if (ecma_value_p == NULL)
+      if (i == props_p->item_count - 1)
       {
         ret_value = ecma_create_iter_result_object (ECMA_VALUE_UNDEFINED, ECMA_VALUE_TRUE);
       }
@@ -752,7 +746,7 @@ ecma_op_container_iterator_next (ecma_value_t this_val, /**< this argument */
       }
       else
       {
-        key_arg = *ecma_value_p;
+        key_arg = buffer_p[i];
       }
     }
 
@@ -779,7 +773,7 @@ ecma_op_container_iterator_next (ecma_value_t this_val, /**< this argument */
     break;
   }
 
-  ecma_free_values_collection (props_p, 0);
+  ecma_collection_free (props_p);
 
   return ret_value;
 } /* ecma_op_container_iterator_next */

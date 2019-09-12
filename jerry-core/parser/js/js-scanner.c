@@ -42,6 +42,9 @@ typedef enum
   SCAN_MODE_PRIMARY_EXPRESSION_END,        /**< scanning primary expression end */
   SCAN_MODE_STATEMENT,                     /**< scanning statement */
   SCAN_MODE_FUNCTION_ARGUMENTS,            /**< scanning function arguments */
+#if ENABLED (JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER)
+  SCAN_MODE_CONTINUE_FUNCTION_ARGUMENTS,   /**< continue scanning function arguments */
+#endif /* ENABLED (JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER) */
   SCAN_MODE_PROPERTY_NAME,                 /**< scanning property name */
 #if ENABLED (JERRY_ES2015_CLASS)
   SCAN_MODE_CLASS_DECLARATION,             /**< scanning class declaration */
@@ -55,6 +58,11 @@ typedef enum
 typedef enum
 {
   SCAN_STACK_HEAD,                         /**< head */
+  SCAN_STACK_BLOCK_STATEMENT,              /**< block statement group */
+  SCAN_STACK_FUNCTION_STATEMENT,           /**< function statement */
+  SCAN_STACK_FUNCTION_EXPRESSION,          /**< function expression */
+  SCAN_STACK_FUNCTION_PROPERTY,            /**< function expression in an object literal or class */
+  SCAN_STACK_SWITCH_BLOCK,                 /**< block part of "switch" statement */
   SCAN_STACK_PAREN_EXPRESSION,             /**< parent expression group */
   SCAN_STACK_PAREN_STATEMENT,              /**< parent statement group */
   SCAN_STACK_WHILE_START,                  /**< start of "while" iterator */
@@ -62,14 +70,10 @@ typedef enum
   SCAN_STACK_FOR_CONDITION,                /**< condition part of "for" iterator */
   SCAN_STACK_FOR_EXPRESSION,               /**< expression part of "for" iterator */
   SCAN_STACK_SWITCH_EXPRESSION,            /**< expression part of "switch" statement */
-  SCAN_STACK_SWITCH_BLOCK,                 /**< block part of "switch" statement */
   SCAN_STACK_COLON_EXPRESSION,             /**< colon expression group */
   SCAN_STACK_CASE_STATEMENT,               /**< colon statement group */
   SCAN_STACK_SQUARE_BRACKETED_EXPRESSION,  /**< square bracketed expression group */
   SCAN_STACK_OBJECT_LITERAL,               /**< object literal group */
-  SCAN_STACK_BLOCK_STATEMENT,              /**< block statement group */
-  SCAN_STACK_BLOCK_EXPRESSION,             /**< block expression group */
-  SCAN_STACK_BLOCK_PROPERTY,               /**< block property group */
 #if ENABLED (JERRY_ES2015_OBJECT_INITIALIZER)
   SCAN_STACK_COMPUTED_PROPERTY,            /**< computed property name */
 #endif /* ENABLED (JERRY_ES2015_OBJECT_INITIALIZER) */
@@ -80,7 +84,8 @@ typedef enum
   SCAN_STACK_ARROW_EXPRESSION,             /**< (possible) arrow function */
 #endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
 #if ENABLED (JERRY_ES2015_CLASS)
-  SCAN_STACK_CLASS_FUNCTION,               /**< class function expression */
+  SCAN_STACK_CLASS_STATEMENT,              /**< class statement */
+  SCAN_STACK_CLASS_EXPRESSION,             /**< class expression */
   SCAN_STACK_CLASS_EXTENDS,                /**< class extends expression */
 #endif /* ENABLED (JERRY_ES2015_CLASS) */
 #if ENABLED (JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER)
@@ -187,7 +192,7 @@ scanner_scan_primary_expression (parser_context_t *context_p, /**< context */
         lexer_next_token (context_p);
       }
 
-      parser_stack_push_uint8 (context_p, SCAN_STACK_BLOCK_EXPRESSION);
+      parser_stack_push_uint8 (context_p, SCAN_STACK_FUNCTION_EXPRESSION);
       scanner_context_p->mode = SCAN_MODE_FUNCTION_ARGUMENTS;
       return true;
     }
@@ -253,7 +258,7 @@ scanner_scan_primary_expression (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ES2015_CLASS)
     case LEXER_KEYW_CLASS:
     {
-      parser_stack_push_uint8 (context_p, SCAN_STACK_BLOCK_EXPRESSION);
+      parser_stack_push_uint8 (context_p, SCAN_STACK_CLASS_EXPRESSION);
       scanner_context_p->mode = SCAN_MODE_CLASS_DECLARATION;
       break;
     }
@@ -389,10 +394,25 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
     }
     case LEXER_COMMA:
     {
-      if (stack_top == SCAN_STACK_OBJECT_LITERAL)
+      switch (stack_top)
       {
-        scanner_context_p->mode = SCAN_MODE_PROPERTY_NAME;
-        return true;
+        case SCAN_STACK_OBJECT_LITERAL:
+        {
+          scanner_context_p->mode = SCAN_MODE_PROPERTY_NAME;
+          return true;
+        }
+#if ENABLED (JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER)
+        case SCAN_STACK_FUNCTION_PARAMETERS:
+        {
+          scanner_context_p->mode = SCAN_MODE_CONTINUE_FUNCTION_ARGUMENTS;
+          parser_stack_pop_uint8 (context_p);
+          return false;
+        }
+#endif /* ENABLED (JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER) */
+        default:
+        {
+          break;
+        }
       }
       scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
       return false;
@@ -443,13 +463,11 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
   switch (stack_top)
   {
     case SCAN_STACK_HEAD:
-    case SCAN_STACK_SWITCH_BLOCK:
     case SCAN_STACK_BLOCK_STATEMENT:
-    case SCAN_STACK_BLOCK_EXPRESSION:
-    case SCAN_STACK_BLOCK_PROPERTY:
-#if ENABLED (JERRY_ES2015_CLASS)
-    case SCAN_STACK_CLASS_FUNCTION:
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+    case SCAN_STACK_FUNCTION_STATEMENT:
+    case SCAN_STACK_FUNCTION_EXPRESSION:
+    case SCAN_STACK_FUNCTION_PROPERTY:
+    case SCAN_STACK_SWITCH_BLOCK:
     {
       scanner_context_p->mode = SCAN_MODE_STATEMENT;
 
@@ -691,8 +709,7 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
       parser_stack_pop_uint8 (context_p);
       stack_top = (scan_stack_modes_t) context_p->stack_top_uint8;
 
-      if (stack_top == SCAN_STACK_BLOCK_PROPERTY
-          || stack_top == SCAN_STACK_CLASS_FUNCTION)
+      if (stack_top == SCAN_STACK_FUNCTION_PROPERTY)
       {
         scanner_context_p->mode = SCAN_MODE_FUNCTION_ARGUMENTS;
         return true;
@@ -702,7 +719,7 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
 
       if (context_p->token.type == LEXER_LEFT_PAREN)
       {
-        parser_stack_push_uint8 (context_p, SCAN_STACK_BLOCK_PROPERTY);
+        parser_stack_push_uint8 (context_p, SCAN_STACK_FUNCTION_PROPERTY);
         scanner_context_p->mode = SCAN_MODE_FUNCTION_ARGUMENTS;
         return true;
       }
@@ -772,16 +789,9 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
         break;
       }
 
-      lexer_next_token (context_p);
-
-      if (context_p->token.type != LEXER_LEFT_BRACE)
-      {
-        scanner_raise_error (context_p);
-      }
-
-      scanner_context_p->mode = SCAN_MODE_STATEMENT;
+      scanner_context_p->mode = SCAN_MODE_CONTINUE_FUNCTION_ARGUMENTS;
       parser_stack_pop_uint8 (context_p);
-      return false;
+      return true;
     }
 #endif /* ENABLED (JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER) */
     default:
@@ -949,6 +959,48 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
     {
       switch (stack_top)
       {
+        case SCAN_STACK_BLOCK_STATEMENT:
+        case SCAN_STACK_FUNCTION_STATEMENT:
+        {
+          JERRY_ASSERT (scanner_context_p->mode == SCAN_MODE_STATEMENT);
+          break;
+        }
+        case SCAN_STACK_FUNCTION_EXPRESSION:
+        {
+          scanner_context_p->mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
+          break;
+        }
+        case SCAN_STACK_FUNCTION_PROPERTY:
+        {
+          parser_stack_pop_uint8 (context_p);
+
+#if ENABLED (JERRY_ES2015_CLASS)
+          if (context_p->stack_top_uint8 == SCAN_STACK_CLASS_STATEMENT
+              || context_p->stack_top_uint8 == SCAN_STACK_CLASS_EXPRESSION)
+          {
+            scanner_context_p->mode = SCAN_MODE_CLASS_METHOD;
+            return true;
+          }
+#endif /* ENABLED (JERRY_ES2015_CLASS) */
+
+          JERRY_ASSERT (context_p->stack_top_uint8 == SCAN_STACK_OBJECT_LITERAL);
+
+          lexer_next_token (context_p);
+
+          if (context_p->token.type == LEXER_RIGHT_BRACE)
+          {
+            scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION_END;
+            return true;
+          }
+
+          if (context_p->token.type != LEXER_COMMA)
+          {
+            scanner_raise_error (context_p);
+          }
+
+          scanner_context_p->mode = SCAN_MODE_PROPERTY_NAME;
+          return true;
+        }
         case SCAN_STACK_SWITCH_BLOCK:
         {
           scanner_switch_statement_t switch_statement;
@@ -961,40 +1013,22 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
           JERRY_ASSERT (scanner_context_p->mode == SCAN_MODE_STATEMENT);
           return false;
         }
-        case SCAN_STACK_BLOCK_STATEMENT:
+#if ENABLED (JERRY_ES2015_CLASS)
+        case SCAN_STACK_CLASS_STATEMENT:
         {
           JERRY_ASSERT (scanner_context_p->mode == SCAN_MODE_STATEMENT);
           break;
         }
-        case SCAN_STACK_BLOCK_EXPRESSION:
+        case SCAN_STACK_CLASS_EXPRESSION:
         {
           scanner_context_p->mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
           break;
-        }
-        case SCAN_STACK_BLOCK_PROPERTY:
-        {
-          lexer_next_token (context_p);
-          if (context_p->token.type != LEXER_COMMA
-              && context_p->token.type != LEXER_RIGHT_BRACE)
-          {
-            scanner_raise_error (context_p);
-          }
-
-          scanner_context_p->mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
-          parser_stack_pop_uint8 (context_p);
-          return true;
-        }
-#if ENABLED (JERRY_ES2015_CLASS)
-        case SCAN_STACK_CLASS_FUNCTION:
-        {
-          scanner_context_p->mode = SCAN_MODE_CLASS_METHOD;
-          parser_stack_pop_uint8 (context_p);
-          return true;
         }
 #endif /* ENABLED (JERRY_ES2015_CLASS) */
         default:
         {
           scanner_raise_error (context_p);
+          break;
         }
       }
 
@@ -1015,14 +1049,14 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
         scanner_raise_error (context_p);
       }
 
-      parser_stack_push_uint8 (context_p, SCAN_STACK_BLOCK_STATEMENT);
+      parser_stack_push_uint8 (context_p, SCAN_STACK_FUNCTION_STATEMENT);
       scanner_context_p->mode = SCAN_MODE_FUNCTION_ARGUMENTS;
       return false;
     }
 #if ENABLED (JERRY_ES2015_CLASS)
     case LEXER_KEYW_CLASS:
     {
-      parser_stack_push_uint8 (context_p, SCAN_STACK_BLOCK_STATEMENT);
+      parser_stack_push_uint8 (context_p, SCAN_STACK_CLASS_STATEMENT);
       scanner_context_p->mode = SCAN_MODE_CLASS_DECLARATION;
       return false;
     }
@@ -1163,7 +1197,7 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
             lexer_next_token (context_p);
           }
 
-          parser_stack_push_uint8 (context_p, SCAN_STACK_BLOCK_EXPRESSION);
+          parser_stack_push_uint8 (context_p, SCAN_STACK_FUNCTION_STATEMENT);
           scanner_context_p->mode = SCAN_MODE_FUNCTION_ARGUMENTS;
           return true;
         }
@@ -1368,7 +1402,7 @@ scanner_scan_all (parser_context_t *context_p) /**< context */
         }
         case SCAN_MODE_CLASS_METHOD:
         {
-          JERRY_ASSERT (stack_top == SCAN_STACK_BLOCK_STATEMENT || stack_top == SCAN_STACK_BLOCK_EXPRESSION);
+          JERRY_ASSERT (stack_top == SCAN_STACK_CLASS_STATEMENT || stack_top == SCAN_STACK_CLASS_EXPRESSION);
 
           lexer_scan_identifier (context_p, LEXER_SCAN_CLASS_PROPERTY);
 
@@ -1379,7 +1413,7 @@ scanner_scan_all (parser_context_t *context_p) /**< context */
 
           if (context_p->token.type == LEXER_RIGHT_BRACE)
           {
-            scanner_context.mode = (stack_top == SCAN_STACK_BLOCK_EXPRESSION ? SCAN_MODE_PRIMARY_EXPRESSION_END
+            scanner_context.mode = (stack_top == SCAN_STACK_CLASS_EXPRESSION ? SCAN_MODE_PRIMARY_EXPRESSION_END
                                                                              : SCAN_MODE_STATEMENT);
             parser_stack_pop_uint8 (context_p);
             break;
@@ -1390,7 +1424,7 @@ scanner_scan_all (parser_context_t *context_p) /**< context */
             lexer_scan_identifier (context_p, LEXER_SCAN_CLASS_PROPERTY);
           }
 
-          parser_stack_push_uint8 (context_p, SCAN_STACK_CLASS_FUNCTION);
+          parser_stack_push_uint8 (context_p, SCAN_STACK_FUNCTION_PROPERTY);
           scanner_context.mode = SCAN_MODE_FUNCTION_ARGUMENTS;
 
           if (lexer_compare_literal_to_identifier (context_p, "get", 3)
@@ -1426,7 +1460,7 @@ scanner_scan_all (parser_context_t *context_p) /**< context */
 
             if (context_p->token.type == LEXER_LEFT_BRACE)
             {
-              parser_stack_push_uint8 (context_p, SCAN_STACK_BLOCK_EXPRESSION);
+              parser_stack_push_uint8 (context_p, SCAN_STACK_FUNCTION_EXPRESSION);
               scanner_context.mode = SCAN_MODE_STATEMENT;
             }
             else
@@ -1466,22 +1500,22 @@ scanner_scan_all (parser_context_t *context_p) /**< context */
         }
         case SCAN_MODE_FUNCTION_ARGUMENTS:
         {
-#if ENABLED (JERRY_ES2015_CLASS)
-          JERRY_ASSERT (stack_top == SCAN_STACK_BLOCK_STATEMENT
-                        || stack_top == SCAN_STACK_BLOCK_EXPRESSION
-                        || stack_top == SCAN_STACK_CLASS_FUNCTION
-                        || stack_top == SCAN_STACK_BLOCK_PROPERTY);
-#else /* !ENABLED (JERRY_ES2015_CLASS) */
-          JERRY_ASSERT (stack_top == SCAN_STACK_BLOCK_STATEMENT
-                        || stack_top == SCAN_STACK_BLOCK_EXPRESSION
-                        || stack_top == SCAN_STACK_BLOCK_PROPERTY);
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+          JERRY_ASSERT (stack_top == SCAN_STACK_FUNCTION_STATEMENT
+                        || stack_top == SCAN_STACK_FUNCTION_EXPRESSION
+                        || stack_top == SCAN_STACK_FUNCTION_PROPERTY);
 
           if (type != LEXER_LEFT_PAREN)
           {
             scanner_raise_error (context_p);
           }
           lexer_next_token (context_p);
+
+#if ENABLED (JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER)
+          /* FALLTHRU */
+        }
+        case SCAN_MODE_CONTINUE_FUNCTION_ARGUMENTS:
+        {
+#endif /* ENABLED (JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER) */
 
           if (context_p->token.type != LEXER_RIGHT_PAREN)
           {
@@ -1559,7 +1593,7 @@ scanner_scan_all (parser_context_t *context_p) /**< context */
           {
             lexer_scan_identifier (context_p, LEXER_SCAN_IDENT_PROPERTY | LEXER_SCAN_IDENT_NO_KEYW);
 
-            parser_stack_push_uint8 (context_p, SCAN_STACK_BLOCK_PROPERTY);
+            parser_stack_push_uint8 (context_p, SCAN_STACK_FUNCTION_PROPERTY);
 
 #if ENABLED (JERRY_ES2015_OBJECT_INITIALIZER)
             if (context_p->token.type == LEXER_LEFT_SQUARE)
@@ -1584,7 +1618,7 @@ scanner_scan_all (parser_context_t *context_p) /**< context */
 #if ENABLED (JERRY_ES2015_OBJECT_INITIALIZER)
           if (context_p->token.type == LEXER_LEFT_PAREN)
           {
-            parser_stack_push_uint8 (context_p, SCAN_STACK_BLOCK_PROPERTY);
+            parser_stack_push_uint8 (context_p, SCAN_STACK_FUNCTION_PROPERTY);
             scanner_context.mode = SCAN_MODE_FUNCTION_ARGUMENTS;
             continue;
           }

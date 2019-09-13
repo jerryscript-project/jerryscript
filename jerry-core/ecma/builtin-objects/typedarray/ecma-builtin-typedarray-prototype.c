@@ -1891,7 +1891,7 @@ ecma_builtin_typedarray_prototype_copy_within (ecma_value_t this_arg, /**< this 
   int32_t offset = (int32_t) (length - target);
   int32_t count = JERRY_MIN (distance, offset);
 
-  if (target >= length || start >= length || end == 0)
+  if (target >= length || end == 0 || start >= end)
   {
     return ecma_copy_value (this_arg);
   }

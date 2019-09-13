@@ -135,7 +135,7 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
     }
 
     /* 12.c */
-    if ((ecma_length_t) offset + viewByteLength > buffer_byte_length)
+    if ((ecma_number_t) offset + viewByteLength > buffer_byte_length)
     {
       return ecma_raise_range_error (ECMA_ERR_MSG ("Start offset is outside the bounds of the buffer."));
     }

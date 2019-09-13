@@ -572,7 +572,8 @@ void scanner_cleanup (parser_context_t *context_p);
 void scanner_get_location (scanner_location_t *location_p, parser_context_t *context_p);
 void scanner_set_location (parser_context_t *context_p, scanner_location_t *location_p);
 
-void scanner_scan_all (parser_context_t *context_p);
+void scanner_scan_all (parser_context_t *context_p, const uint8_t *arg_list_p, const uint8_t *arg_list_end_p,
+                       const uint8_t *source_p, const uint8_t *source_end_p);
 
 /**
  * @}

@@ -2465,12 +2465,11 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   }
 #endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
-  context.source_p = source_p;
-  context.source_end_p = source_p + source_size;
-  context.line = 1;
-  context.column = 1;
-
-  scanner_scan_all (&context);
+  scanner_scan_all (&context,
+                    arg_list_p,
+                    arg_list_p + arg_list_size,
+                    source_p,
+                    source_p + source_size);
 
   if (JERRY_UNLIKELY (context.error != PARSER_ERR_NO_ERROR))
   {
@@ -2518,6 +2517,9 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
     if (arg_list_p != NULL)
     {
       parser_parse_function_arguments (&context, LEXER_EOS);
+
+      JERRY_ASSERT (context.next_scanner_info_p->type == SCANNER_TYPE_END_ARGUMENTS);
+      scanner_release_next (&context, sizeof (scanner_info_t));
 
       context.source_p = source_p;
       context.source_end_p = source_p + source_size;

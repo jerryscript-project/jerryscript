@@ -242,9 +242,10 @@ scanner_cleanup (parser_context_t *context_p) /**< context */
       default:
       {
 #if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
-        JERRY_ASSERT (scanner_info_p->type == SCANNER_TYPE_ARROW);
+        JERRY_ASSERT (scanner_info_p->type == SCANNER_TYPE_END_ARGUMENTS
+                      || scanner_info_p->type == SCANNER_TYPE_ARROW);
 #else /* !ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
-        JERRY_ASSERT (0);
+        JERRY_ASSERT (scanner_info_p->type == SCANNER_TYPE_END_ARGUMENTS);
 #endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
         break;
       }

@@ -32,6 +32,8 @@
 typedef enum
 {
   SCANNER_TYPE_END, /**< mark the last info block */
+  SCANNER_TYPE_END_ARGUMENTS, /**< mark the end of function arguments
+                               *   (only present if a function script is parsed) */
   SCANNER_TYPE_WHILE, /**< while statement */
   SCANNER_TYPE_FOR, /**< for statement */
   SCANNER_TYPE_FOR_IN, /**< for-in statement */

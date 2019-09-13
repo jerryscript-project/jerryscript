@@ -2544,6 +2544,10 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
     compiled_code_p = parser_post_processing (&context);
     parser_list_free (&context.literal_pool);
 
+#ifndef JERRY_NDEBUG
+    JERRY_ASSERT (context.status_flags & PARSER_SCANNING_SUCCESSFUL);
+#endif /* !JERRY_NDEBUG */
+
 #if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
     if (context.is_show_opcodes)
     {

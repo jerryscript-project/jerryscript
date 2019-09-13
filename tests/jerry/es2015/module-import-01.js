@@ -31,6 +31,3 @@ assert (mod.f("str") === "str")
 
 var dog = new mod.Dog("Oddie")
 assert (dog.speak() === "Oddie barks.")
-
-// Pre-scanner regression test
-for (var tmp in {}) ;

@@ -78,6 +78,3 @@ assert (g2 () === 11);
 assert (g2 (1) === 3);
 assert (g2 (1, 2) === 3);
 assert (g2 (1, 2, 3) === 4);
-
-// Pre-scanner regression test
-for (var tmp in {}) ;

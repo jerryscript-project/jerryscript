@@ -15,6 +15,3 @@
 
 var y, z;
 export default x = y = z = "default";
-
-// Pre-scanner regression test
-for (var tmp in {}) ;

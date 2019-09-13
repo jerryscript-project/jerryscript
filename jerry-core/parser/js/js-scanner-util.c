@@ -14,6 +14,7 @@
  */
 
 #include "js-parser-internal.h"
+#include "js-scanner-internal.h"
 
 #if ENABLED (JERRY_PARSER)
 

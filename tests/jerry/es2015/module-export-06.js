@@ -17,6 +17,3 @@ export {}
 export {} from "module-export-01.js";
 export {};
 export {} from "module-export-04.js"
-
-// Pre-scanner regression test
-for (var tmp in {}) ;

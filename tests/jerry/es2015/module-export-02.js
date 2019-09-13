@@ -18,6 +18,3 @@ export {aa,} from "module-export-01.js";
 export {bb as b_, cc as c_} from "module-export-01.js";
 export * from "module-export-01.js";
 export default function () {return "default"};
-
-// Pre-scanner regression test
-for (var tmp in {}) ;

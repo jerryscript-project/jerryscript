@@ -14,6 +14,7 @@
  */
 
 #include "js-parser-internal.h"
+#include "js-scanner-internal.h"
 #include "lit-char-helpers.h"
 
 #if ENABLED (JERRY_PARSER)
@@ -41,6 +42,7 @@ typedef enum
   SCAN_MODE_POST_PRIMARY_EXPRESSION,       /**< scanning post primary expression */
   SCAN_MODE_PRIMARY_EXPRESSION_END,        /**< scanning primary expression end */
   SCAN_MODE_STATEMENT,                     /**< scanning statement */
+  SCAN_MODE_VAR_STATEMENT,                 /**< scanning var statement */
   SCAN_MODE_FUNCTION_ARGUMENTS,            /**< scanning function arguments */
 #if ENABLED (JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER)
   SCAN_MODE_CONTINUE_FUNCTION_ARGUMENTS,   /**< continue scanning function arguments */
@@ -66,6 +68,9 @@ typedef enum
   SCAN_STACK_PAREN_EXPRESSION,             /**< parent expression group */
   SCAN_STACK_PAREN_STATEMENT,              /**< parent statement group */
   SCAN_STACK_WHILE_START,                  /**< start of "while" iterator */
+  /* The SCANNER_IS_FOR_START macro needs to be updated when the following constants are reordered. */
+  SCAN_STACK_VAR,                          /**< var statement */
+  SCAN_STACK_FOR_VAR_START,                /**< start of "for" iterator with var statement */
   SCAN_STACK_FOR_START,                    /**< start of "for" iterator */
   SCAN_STACK_FOR_CONDITION,                /**< condition part of "for" iterator */
   SCAN_STACK_FOR_EXPRESSION,               /**< expression part of "for" iterator */
@@ -94,41 +99,19 @@ typedef enum
 } scan_stack_modes_t;
 
 /**
- * Generic descriptor which stores only the start position.
+ * Checks whether the stack top is a for statement start.
  */
-typedef struct
-{
-  const uint8_t *source_p; /**< start source byte */
-} scanner_source_start_t;
+#define SCANNER_IS_FOR_START(stack_top) \
+  ((stack_top) >= SCAN_STACK_FOR_VAR_START && (stack_top) <= SCAN_STACK_FOR_START)
 
 /**
- * For statement descriptor.
+ * Checks whether token type is "of".
  */
-typedef struct
-{
-  union
-  {
-    const uint8_t *source_p; /**< start source byte */
-    scanner_for_info_t *for_info_p; /**< for info */
-  } u;
-} scanner_for_statement_t;
-
-/**
- * Switch statement descriptor.
- */
-typedef struct
-{
-  scanner_case_info_t **last_case_p; /**< last case info */
-} scanner_switch_statement_t;
-
-/**
- * Scanner context.
- */
-typedef struct
-{
-  uint8_t mode; /**< scanner mode */
-  scanner_switch_statement_t active_switch_statement; /**< currently active switch statement */
-} scanner_context_t;
+#if ENABLED (JERRY_ES2015_FOR_OF)
+#define SCANNER_IDENTIFIER_IS_OF() (lexer_compare_literal_to_identifier (context_p, "of", 2))
+#else
+#define SCANNER_IDENTIFIER_IS_OF() (false)
+#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
 
 #if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
 
@@ -401,6 +384,12 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
           scanner_context_p->mode = SCAN_MODE_PROPERTY_NAME;
           return true;
         }
+        case SCAN_STACK_VAR:
+        case SCAN_STACK_FOR_VAR_START:
+        {
+          scanner_context_p->mode = SCAN_MODE_VAR_STATEMENT;
+          return false;
+        }
 #if ENABLED (JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER)
         case SCAN_STACK_FUNCTION_PARAMETERS:
         {
@@ -454,7 +443,7 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
   }
 
   if (LEXER_IS_BINARY_OP_TOKEN (type)
-      && (type != LEXER_KEYW_IN || stack_top != SCAN_STACK_FOR_START))
+      && (type != LEXER_KEYW_IN || !SCANNER_IS_FOR_START (stack_top)))
   {
     scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
     return false;
@@ -462,6 +451,16 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
 
   switch (stack_top)
   {
+    case SCAN_STACK_VAR:
+    {
+      parser_stack_pop_uint8 (context_p);
+
+      if (type == LEXER_EOS)
+      {
+        return true;
+      }
+      /* FALLTHRU */
+    }
     case SCAN_STACK_HEAD:
     case SCAN_STACK_BLOCK_STATEMENT:
     case SCAN_STACK_FUNCTION_STATEMENT:
@@ -527,13 +526,10 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
       scanner_context_p->mode = SCAN_MODE_STATEMENT;
       return false;
     }
+    case SCAN_STACK_FOR_VAR_START:
     case SCAN_STACK_FOR_START:
     {
-      if (type == LEXER_KEYW_IN
-#if ENABLED (JERRY_ES2015_FOR_OF)
-          || lexer_compare_literal_to_identifier (context_p, "of", 2)
-#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
-          || false)
+      if (type == LEXER_KEYW_IN || SCANNER_IDENTIFIER_IS_OF ())
       {
         scanner_for_statement_t for_statement;
 
@@ -869,26 +865,36 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
 
       scanner_for_statement_t for_statement;
       for_statement.u.source_p = context_p->source_p;
-
-      parser_stack_push (context_p, &for_statement, sizeof (scanner_for_statement_t));
-      parser_stack_push_uint8 (context_p, SCAN_STACK_FOR_START);
+      uint8_t stack_mode = SCAN_STACK_FOR_START;
 
       lexer_next_token (context_p);
-
-      if (context_p->token.type == LEXER_SEMICOLON)
-      {
-        scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION_END;
-        return true;
-      }
-
       scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
-      if (context_p->token.type == LEXER_KEYW_VAR)
+
+      switch (context_p->token.type)
       {
-        return false;
+        case LEXER_SEMICOLON:
+        {
+          scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION_END;
+          break;
+        }
+        case LEXER_KEYW_VAR:
+        {
+          scanner_context_p->mode = SCAN_MODE_VAR_STATEMENT;
+          stack_mode = SCAN_STACK_FOR_VAR_START;
+          break;
+        }
       }
-      return true;
+
+      parser_stack_push (context_p, &for_statement, sizeof (scanner_for_statement_t));
+      parser_stack_push_uint8 (context_p, stack_mode);
+      return (stack_mode == SCAN_STACK_FOR_START);
     }
     case LEXER_KEYW_VAR:
+    {
+      parser_stack_push_uint8 (context_p, SCAN_STACK_VAR);
+      scanner_context_p->mode = SCAN_MODE_VAR_STATEMENT;
+      return false;
+    }
     case LEXER_KEYW_THROW:
     {
       scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
@@ -1351,6 +1357,10 @@ scanner_scan_all (parser_context_t *context_p) /**< context */
 
       if (type == LEXER_EOS)
       {
+#ifndef JERRY_NDEBUG
+        context_p->status_flags |= PARSER_SCANNING_SUCCESSFUL;
+#endif /* !JERRY_NDEBUG */
+
         if (stack_top == SCAN_STACK_HEAD)
         {
           break;
@@ -1497,6 +1507,59 @@ scanner_scan_all (parser_context_t *context_p) /**< context */
             continue;
           }
           break;
+        }
+        case SCAN_MODE_VAR_STATEMENT:
+        {
+          if (type != LEXER_LITERAL
+              || context_p->token.lit_location.type != LEXER_IDENT_LITERAL)
+          {
+            scanner_raise_error (context_p);
+          }
+
+          lexer_next_token (context_p);
+
+          switch (context_p->token.type)
+          {
+            case LEXER_ASSIGN:
+            {
+              scanner_context.mode = SCAN_MODE_PRIMARY_EXPRESSION;
+              /* FALLTHRU */
+            }
+            case LEXER_COMMA:
+            {
+              lexer_next_token (context_p);
+              continue;
+            }
+            case LEXER_SEMICOLON:
+            case LEXER_RIGHT_BRACE:
+            {
+              scanner_context.mode = SCAN_MODE_PRIMARY_EXPRESSION_END;
+              continue;
+            }
+          }
+
+          if (SCANNER_IS_FOR_START (stack_top))
+          {
+            if (context_p->token.type != LEXER_KEYW_IN && !SCANNER_IDENTIFIER_IS_OF ())
+            {
+              scanner_raise_error (context_p);
+            }
+
+            scanner_context.mode = SCAN_MODE_PRIMARY_EXPRESSION_END;
+            continue;
+          }
+
+          if (context_p->token.type != LEXER_EOS
+              && !(context_p->token.flags & LEXER_WAS_NEWLINE))
+          {
+            scanner_raise_error (context_p);
+          }
+
+          JERRY_ASSERT (stack_top == SCAN_STACK_VAR);
+
+          scanner_context.mode = SCAN_MODE_STATEMENT;
+          parser_stack_pop_uint8 (context_p);
+          continue;
         }
         case SCAN_MODE_FUNCTION_ARGUMENTS:
         {

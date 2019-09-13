@@ -236,6 +236,3 @@ assert (G.get() == 11);
 assert (G.set() == 12);
 G.constructor = 30;
 assert (G.constructor === 30);
-
-// Pre-scanner regression test
-for (var tmp in {}) ;

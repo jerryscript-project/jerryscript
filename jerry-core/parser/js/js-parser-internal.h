@@ -86,6 +86,9 @@ typedef enum
   PARSER_MODULE_STORE_IDENT = (1u << 26),     /**< store identifier of the current export statement */
   PARSER_IS_EVAL = (1u << 27),                /**< eval code */
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#ifndef JERRY_NDEBUG
+  PARSER_SCANNING_SUCCESSFUL = (1u << 30),    /**< scanning process was successful */
+#endif /* !JERRY_NDEBUG */
 } parser_general_flags_t;
 
 /**

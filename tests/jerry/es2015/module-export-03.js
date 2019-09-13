@@ -24,6 +24,3 @@ export default class {
 }
 
 export * from "module-export-02.js"
-
-// Pre-scanner regression test
-for (var tmp in {}) ;

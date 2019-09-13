@@ -17,6 +17,3 @@ import "module-import-01.js";
 import "module-export-05.js";
 import "module-export-06.js";
 import "module-export-07.js";
-
-// Pre-scanner regression test
-for (var tmp in {}) ;

@@ -77,7 +77,8 @@
 double
 asin (double x)
 {
-  double t, w, p, q, c, r, s;
+  double t, p, q, c, r, s;
+  double_accessor w;
   int hx, ix;
 
   hx = __HI (x);
@@ -102,28 +103,28 @@ asin (double x)
     t = x * x;
     p = t * (pS0 + t * (pS1 + t * (pS2 + t * (pS3 + t * (pS4 + t * pS5)))));
     q = one + t * (qS1 + t * (qS2 + t * (qS3 + t * qS4)));
-    w = p / q;
-    return x + x * w;
+    w.dbl = p / q;
+    return x + x * w.dbl;
   }
   /* 1 > |x| >= 0.5 */
-  w = one - fabs (x);
-  t = w * 0.5;
+  w.dbl = one - fabs (x);
+  t = w.dbl * 0.5;
   p = t * (pS0 + t * (pS1 + t * (pS2 + t * (pS3 + t * (pS4 + t * pS5)))));
   q = one + t * (qS1 + t * (qS2 + t * (qS3 + t * qS4)));
   s = sqrt (t);
   if (ix >= 0x3FEF3333) /* if |x| > 0.975 */
   {
-    w = p / q;
-    t = pio2_hi - (2.0 * (s + s * w) - pio2_lo);
+    w.dbl = p / q;
+    t = pio2_hi - (2.0 * (s + s * w.dbl) - pio2_lo);
   }
   else
   {
-    w = s;
-    __LO (w) = 0;
-    c = (t - w * w) / (s + w);
+    w.dbl = s;
+    w.as_int.lo = 0;
+    c = (t - w.dbl * w.dbl) / (s + w.dbl);
     r = p / q;
     p = 2.0 * s * r - (pio2_lo - 2.0 * c);
-    q = pio4_hi - 2.0 * w;
+    q = pio4_hi - 2.0 * w.dbl;
     t = pio4_hi - (p - q);
   }
   if (hx > 0)

@@ -122,9 +122,13 @@ log (double x)
   k += (hx >> 20) - 1023;
   hx &= 0x000fffff;
   i = (hx + 0x95f64) & 0x100000;
-  __HI (x) = hx | (i ^ 0x3ff00000); /* normalize x or x / 2 */
+
+  double_accessor temp;
+  temp.dbl = x;
+  temp.as_int.hi = hx | (i ^ 0x3ff00000); /* normalize x or x / 2 */
   k += (i >> 20);
-  f = x - 1.0;
+  f = temp.dbl - 1.0;
+
   if ((0x000fffff & (2 + hx)) < 3) /* |f| < 2**-20 */
   {
     if (f == zero)

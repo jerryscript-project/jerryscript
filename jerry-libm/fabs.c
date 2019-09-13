@@ -33,6 +33,8 @@
 double
 fabs (double x)
 {
-  __HI (x) &= 0x7fffffff;
-  return x;
+  double_accessor ret;
+  ret.dbl = x;
+  ret.as_int.hi &= 0x7fffffff;
+  return ret.dbl;
 } /* fabs */

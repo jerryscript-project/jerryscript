@@ -475,7 +475,8 @@ static const int npio2_hw[] =
 static int
 __ieee754_rem_pio2 (double x, double *y)
 {
-  double z, w, t, r, fn;
+  double_accessor z;
+  double w, t, r, fn;
   double tx[3];
   int e0, i, j, nx, n, ix, hx;
 
@@ -491,33 +492,33 @@ __ieee754_rem_pio2 (double x, double *y)
   {
     if (hx > 0)
     {
-      z = x - pio2_1;
+      z.dbl = x - pio2_1;
       if (ix != 0x3ff921fb) /* 33 + 53 bit pi is good enough */
       {
-        y[0] = z - pio2_1t;
-        y[1] = (z - y[0]) - pio2_1t;
+        y[0] = z.dbl - pio2_1t;
+        y[1] = (z.dbl - y[0]) - pio2_1t;
       }
       else /* near pi/2, use 33 + 33 + 53 bit pi */
       {
-        z -= pio2_2;
-        y[0] = z - pio2_2t;
-        y[1] = (z - y[0]) - pio2_2t;
+        z.dbl -= pio2_2;
+        y[0] = z.dbl - pio2_2t;
+        y[1] = (z.dbl - y[0]) - pio2_2t;
       }
       return 1;
     }
     else /* negative x */
     {
-      z = x + pio2_1;
+      z.dbl = x + pio2_1;
       if (ix != 0x3ff921fb) /* 33 + 53 bit pi is good enough */
       {
-        y[0] = z + pio2_1t;
-        y[1] = (z - y[0]) + pio2_1t;
+        y[0] = z.dbl + pio2_1t;
+        y[1] = (z.dbl - y[0]) + pio2_1t;
       }
       else /* near pi/2, use 33 + 33 + 53 bit pi */
       {
-        z += pio2_2;
-        y[0] = z + pio2_2t;
-        y[1] = (z - y[0]) + pio2_2t;
+        z.dbl += pio2_2;
+        y[0] = z.dbl + pio2_2t;
+        y[1] = (z.dbl - y[0]) + pio2_2t;
       }
       return -1;
     }
@@ -577,15 +578,15 @@ __ieee754_rem_pio2 (double x, double *y)
     return 0;
   }
   /* set z = scalbn(|x|, ilogb(x) - 23) */
-  __LO (z) = __LO (x);
+  z.as_int.lo = __LO (x);
   e0 = (ix >> 20) - 1046; /* e0 = ilogb(z) - 23; */
-  __HI (z) = ix - (e0 << 20);
+  z.as_int.hi = ix - (e0 << 20);
   for (i = 0; i < 2; i++)
   {
-    tx[i] = (double) ((int) (z));
-    z = (z - tx[i]) * two24;
+    tx[i] = (double) ((int) (z.dbl));
+    z.dbl = (z.dbl - tx[i]) * two24;
   }
-  tx[2] = z;
+  tx[2] = z.dbl;
   nx = 3;
   while (tx[nx - 1] == zero) /* skip zero term */
   {
@@ -708,7 +709,7 @@ __kernel_sin (double x, double y, int iy)
 static double
 __kernel_cos (double x, double y)
 {
-  double a, hz, z, r, qx;
+  double a, hz, z, r;
   int ix;
 
   ix = __HI (x) & 0x7fffffff; /* ix = |x|'s high word */
@@ -727,17 +728,18 @@ __kernel_cos (double x, double y)
   }
   else
   {
+    double_accessor qx;
     if (ix > 0x3fe90000) /* x > 0.78125 */
     {
-      qx = 0.28125;
+      qx.dbl = 0.28125;
     }
     else
     {
-      __HI (qx) = ix - 0x00200000; /* x / 4 */
-      __LO (qx) = 0;
+      qx.as_int.hi = ix - 0x00200000; /* x / 4 */
+      qx.as_int.lo = 0;
     }
-    hz = 0.5 * z - qx;
-    a = one - qx;
+    hz = 0.5 * z - qx.dbl;
+    a = one - qx.dbl;
     return a - (hz - (z * r - x * y));
   }
 } /* __kernel_cos */
@@ -794,7 +796,8 @@ __kernel_cos (double x, double y)
 static double
 __kernel_tan (double x, double y, int iy)
 {
-  double z, r, v, w, s;
+  double_accessor z;
+  double r, v, w, s;
   int ix, hx;
 
   hx = __HI (x); /* high word of x */
@@ -815,15 +818,16 @@ __kernel_tan (double x, double y, int iy)
         }
         else /* compute -1 / (x + y) carefully */
         {
-          double a, t;
+          double a;
+          double_accessor t;
 
-          z = w = x + y;
-          __LO (z) = 0;
-          v = y - (z - x);
-          t = a = -one / w;
-          __LO (t) = 0;
-          s = one + t * z;
-          return t + a * (s + t * v);
+          z.dbl = w = x + y;
+          z.as_int.lo = 0;
+          v = y - (z.dbl - x);
+          t.dbl = a = -one / w;
+          t.as_int.lo = 0;
+          s = one + t.dbl * z.dbl;
+          return t.dbl + a * (s + t.dbl * v);
         }
       }
     }
@@ -835,22 +839,22 @@ __kernel_tan (double x, double y, int iy)
       x = -x;
       y = -y;
     }
-    z = pio4 - x;
+    z.dbl = pio4 - x;
     w = pio4lo - y;
-    x = z + w;
+    x = z.dbl + w;
     y = 0.0;
   }
-  z = x * x;
-  w = z * z;
+  z.dbl = x * x;
+  w = z.dbl * z.dbl;
   /*
    * Break x^5 * (T[1] + x^2 * T[2] + ...) into
    * x^5 (T[1] + x^4 * T[3] + ... + x^20 * T[11]) +
    * x^5 (x^2 * (T[2] + x^4 * T[4] + ... + x^22 * [T12]))
    */
   r = T1 + w * (T3 + w * (T5 + w * (T7 + w * (T9 + w * T11))));
-  v = z * (T2 + w * (T4 + w * (T6 + w * (T8 + w * (T10 + w * T12)))));
-  s = z * x;
-  r = y + z * (s * (r + v) + y);
+  v = z.dbl * (T2 + w * (T4 + w * (T6 + w * (T8 + w * (T10 + w * T12)))));
+  s = z.dbl * x;
+  r = y + z.dbl * (s * (r + v) + y);
   r += T0 * s;
   w = x + r;
   if (ix >= 0x3FE59428)
@@ -869,15 +873,16 @@ __kernel_tan (double x, double y, int iy)
      * -1.0 / (x + r) here
      */
     /* compute -1.0 / (x + r) accurately */
-    double a, t;
+    double a;
+    double_accessor t;
 
-    z = w;
-    __LO (z) = 0;
-    v = r - (z - x); /* z + v = r + x */
-    t = a = -1.0 / w; /* a = -1.0 / w */
-    __LO (t) = 0;
-    s = 1.0 + t * z;
-    return t + a * (s + t * v);
+    z.dbl = w;
+    z.as_int.lo = 0;
+    v = r - (z.dbl - x); /* z + v = r + x */
+    t.dbl = a = -1.0 / w; /* a = -1.0 / w */
+    t.as_int.lo = 0;
+    s = 1.0 + t.dbl * z.dbl;
+    return t.dbl + a * (s + t.dbl * v);
   }
 } /* __kernel_tan */
 

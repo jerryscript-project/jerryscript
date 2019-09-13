@@ -1405,6 +1405,13 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             ecma_value_t super_prototype_value = ecma_op_object_get_by_magic_id (super_class_p,
                                                                                  LIT_MAGIC_STRING_PROTOTYPE);
+
+            if (ECMA_IS_VALUE_ERROR (super_prototype_value))
+            {
+              result = super_prototype_value;
+              goto error;
+            }
+
             if (ecma_get_object_type (super_class_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION
                 && !ecma_is_value_object (super_prototype_value))
             {

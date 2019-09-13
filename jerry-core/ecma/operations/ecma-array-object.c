@@ -368,6 +368,16 @@ ecma_array_object_delete_property (ecma_object_t *object_p, /**< object */
 
   ecma_free_value_if_not_object (values_p[index]);
 
+  if (JERRY_UNLIKELY (ext_obj_p->u.array.length == 1))
+  {
+    const uint32_t old_length_aligned = ECMA_FAST_ARRAY_ALIGN_LENGTH (ext_obj_p->u.array.length);
+    jmem_heap_free_block (values_p, old_length_aligned * sizeof (ecma_value_t));
+    ext_obj_p->u.array.hole_count = 0;
+    ext_obj_p->u.array.length = 0;
+    object_p->u1.property_list_cp = JMEM_CP_NULL;
+    return;
+  }
+
   values_p[index] = ECMA_VALUE_ARRAY_HOLE;
 
   if (++ext_obj_p->u.array.hole_count > ECMA_FAST_ARRAY_MAX_HOLE_COUNT)

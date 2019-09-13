@@ -1414,12 +1414,8 @@ scanner_scan_all (parser_context_t *context_p) /**< context */
         {
           JERRY_ASSERT (stack_top == SCAN_STACK_CLASS_STATEMENT || stack_top == SCAN_STACK_CLASS_EXPRESSION);
 
+          lexer_skip_empty_statements (context_p);
           lexer_scan_identifier (context_p, LEXER_SCAN_CLASS_PROPERTY);
-
-          if (context_p->token.type == LEXER_SEMICOLON)
-          {
-            break;
-          }
 
           if (context_p->token.type == LEXER_RIGHT_BRACE)
           {

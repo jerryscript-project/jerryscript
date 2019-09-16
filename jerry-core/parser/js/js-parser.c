@@ -1617,14 +1617,14 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       {
         if (context_p->literal_count <= CBC_MAXIMUM_SMALL_VALUE)
         {
-          JERRY_ASSERT (literal_index <= CBC_MAXIMUM_SMALL_VALUE);
+          JERRY_ASSERT (literal_p->prop.index <= CBC_MAXIMUM_SMALL_VALUE);
           *first_byte = CBC_MAXIMUM_BYTE_VALUE;
           page_p->bytes[offset] = (uint8_t) (literal_p->prop.index - CBC_MAXIMUM_BYTE_VALUE);
           length++;
         }
         else
         {
-          JERRY_ASSERT (literal_index <= CBC_MAXIMUM_FULL_VALUE);
+          JERRY_ASSERT (literal_p->prop.index <= CBC_MAXIMUM_FULL_VALUE);
           *first_byte = (uint8_t) ((literal_p->prop.index >> 8) | CBC_HIGHEST_BIT_MASK);
           page_p->bytes[offset] = (uint8_t) (literal_p->prop.index & 0xff);
           length++;

@@ -79,3 +79,12 @@ CheckSyntaxError('function x(a =, b) {}');
 CheckSyntaxError('function x(a = (b) {}');
 CheckSyntaxError('function x(a, a = 5) {}');
 CheckSyntaxError('function x(a = 5, a) {}');
+
+// Pre-scanner tests.
+var str = "a = 5, b, c = function() { for (var a = 0; a < 4; a++) ; return a; } ()"
+
+var f = new Function (str, str);
+f();
+
+var f = new Function (str, "return (a + c) * (b == undefined ? 1 : 0)");
+assert (f() == 9);

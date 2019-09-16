@@ -206,7 +206,8 @@ jerry_cleanup (void)
   {
     if (this_p->manager_p->deinit_cb)
     {
-      this_p->manager_p->deinit_cb (JERRY_CONTEXT_DATA_HEADER_USER_DATA (this_p));
+      void *data = (this_p->manager_p->bytes_needed > 0) ? JERRY_CONTEXT_DATA_HEADER_USER_DATA (this_p) : NULL;
+      this_p->manager_p->deinit_cb (data);
     }
   }
 
@@ -223,7 +224,8 @@ jerry_cleanup (void)
     next_p = this_p->next_p;
     if (this_p->manager_p->finalize_cb)
     {
-      this_p->manager_p->finalize_cb (JERRY_CONTEXT_DATA_HEADER_USER_DATA (this_p));
+      void *data = (this_p->manager_p->bytes_needed > 0) ? JERRY_CONTEXT_DATA_HEADER_USER_DATA (this_p) : NULL;
+      this_p->manager_p->finalize_cb (data);
     }
     jmem_heap_free_block (this_p, sizeof (jerry_context_data_header_t) + this_p->manager_p->bytes_needed);
   }
@@ -249,7 +251,7 @@ jerry_get_context_data (const jerry_context_data_manager_t *manager_p)
   {
     if (item_p->manager_p == manager_p)
     {
-      return JERRY_CONTEXT_DATA_HEADER_USER_DATA (item_p);
+      return (manager_p->bytes_needed > 0) ? JERRY_CONTEXT_DATA_HEADER_USER_DATA (item_p) : NULL;
     }
   }
 
@@ -257,9 +259,13 @@ jerry_get_context_data (const jerry_context_data_manager_t *manager_p)
   item_p->manager_p = manager_p;
   item_p->next_p = JERRY_CONTEXT (context_data_p);
   JERRY_CONTEXT (context_data_p) = item_p;
-  ret = JERRY_CONTEXT_DATA_HEADER_USER_DATA (item_p);
 
-  memset (ret, 0, manager_p->bytes_needed);
+  if (manager_p->bytes_needed > 0)
+  {
+    ret = JERRY_CONTEXT_DATA_HEADER_USER_DATA (item_p);
+    memset (ret, 0, manager_p->bytes_needed);
+  }
+
   if (manager_p->init_cb)
   {
     manager_p->init_cb (ret);

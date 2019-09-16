@@ -943,7 +943,7 @@ main (void)
     jerry_release_value (has_prop_js);
     jerry_value_t parsed_data = jerry_get_property (parsed_json, key);
     TEST_ASSERT (jerry_value_is_string (parsed_data)== true);
-    jerry_size_t buff_size = (jerry_size_t) jerry_get_string_length (parsed_data);
+    jerry_size_t buff_size = jerry_get_string_size (parsed_data);
     JERRY_VLA (char, buff, buff_size + 1);
     jerry_string_to_char_buffer (parsed_data, (jerry_char_t *) buff, buff_size);
     buff[buff_size] = '\0';
@@ -965,10 +965,10 @@ main (void)
     jerry_release_value (res);
     jerry_value_t stringified = jerry_json_stringify (obj);
     TEST_ASSERT (jerry_value_is_string (stringified));
-    JERRY_VLA (char, buff, stringified);
-    jerry_string_to_char_buffer (stringified, (jerry_char_t *) buff,
-                                (jerry_size_t) jerry_get_string_length (stringified));
-    buff[jerry_get_string_length (stringified)] = '\0';
+    jerry_size_t buff_size = jerry_get_string_size (stringified);
+    JERRY_VLA (char, buff, buff_size + 1);
+    jerry_string_to_char_buffer (stringified, (jerry_char_t *) buff, buff_size);
+    buff[buff_size] = '\0';
     TEST_ASSERT (strcmp ((const char *) check_value, (const char *) buff)  == 0);
     jerry_release_value (stringified);
     jerry_release_value (obj);

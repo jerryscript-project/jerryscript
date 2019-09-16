@@ -1883,49 +1883,49 @@ ecma_builtin_string_prototype_object_trim (ecma_string_t *original_string_p) /**
  */
 static ecma_value_t
 ecma_builtin_string_prototype_object_repeat (ecma_string_t *original_string_p, /**< this argument */
-                                             ecma_value_t count) /**< times to repeat */
+                                             ecma_value_t repeat) /**< times to repeat */
 {
   ecma_string_t *ret_string_p;
 
   /* 4 */
-  ecma_number_t length_number;
-  ecma_value_t length_value = ecma_get_number (count, &length_number);
+  ecma_number_t count_number;
+  ecma_value_t count_value = ecma_get_number (repeat, &count_number);
 
   /* 5 */
-  if (ECMA_IS_VALUE_ERROR (length_value))
+  if (ECMA_IS_VALUE_ERROR (count_value))
   {
-    return length_value;
+    return count_value;
   }
 
-  int32_t length = ecma_number_to_int32 (length_number);
+  int32_t repeat_count = ecma_number_to_int32 (count_number);
 
-  bool isNan = ecma_number_is_nan (length_number);
+  bool isNan = ecma_number_is_nan (count_number);
 
   /* 6, 7 */
-  if (length_number < 0 || (!isNan && ecma_number_is_infinity (length_number)))
+  if (count_number < 0 || (!isNan && ecma_number_is_infinity (count_number)))
   {
     return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid count value"));
   }
 
-  lit_utf8_size_t size = ecma_string_get_utf8_size (original_string_p);
+  lit_utf8_size_t size = ecma_string_get_size (original_string_p);
 
-  if (length == 0 || size == 0 || isNan)
+  if (repeat_count == 0 || size == 0 || isNan)
   {
     return ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
   }
 
-  if ((uint32_t) length >= (ECMA_STRING_SIZE_LIMIT / size))
+  if ((uint32_t) repeat_count >= (ECMA_STRING_SIZE_LIMIT / size))
   {
     return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid string length"));
   }
 
-  lit_utf8_size_t total_size = size * (lit_utf8_size_t) length;
+  lit_utf8_size_t total_size = size * (lit_utf8_size_t) repeat_count;
 
   JMEM_DEFINE_LOCAL_ARRAY (str_buffer, total_size, lit_utf8_byte_t);
 
   lit_utf8_byte_t *buffer_ptr = str_buffer;
 
-  for (int32_t n = 0; n < length; n++)
+  for (int32_t n = 0; n < repeat_count; n++)
   {
     buffer_ptr += ecma_string_copy_to_cesu8_buffer (original_string_p, buffer_ptr,
                                                     (lit_utf8_size_t) (size));

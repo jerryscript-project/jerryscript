@@ -1435,7 +1435,7 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
 
           if (context_p->token.type == LEXER_RIGHT_BRACE)
           {
-            scanner_context.mode = (stack_top == SCAN_STACK_CLASS_EXPRESSION ? SCAN_MODE_PRIMARY_EXPRESSION_END
+            scanner_context.mode = (stack_top == SCAN_STACK_CLASS_EXPRESSION ? SCAN_MODE_POST_PRIMARY_EXPRESSION
                                                                              : SCAN_MODE_STATEMENT);
             parser_stack_pop_uint8 (context_p);
             break;

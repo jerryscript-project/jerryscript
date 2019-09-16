@@ -2436,6 +2436,8 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   scanner_info_end.type = SCANNER_TYPE_END;
   context.next_scanner_info_p = &scanner_info_end;
   context.active_scanner_info_p = NULL;
+  context.skipped_scanner_info_p = NULL;
+  context.skipped_scanner_info_end_p = NULL;
 
   context.last_cbc_opcode = PARSER_CBC_UNAVAILABLE;
 

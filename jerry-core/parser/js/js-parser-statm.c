@@ -231,33 +231,6 @@ parser_statement_length (uint8_t type) /**< type of statement */
 } /* parser_statement_length */
 
 /**
- * Initialize a range from the current location.
- */
-static inline void
-parser_save_range (parser_context_t *context_p, /**< context */
-                   lexer_range_t *range_p, /**< destination range */
-                   const uint8_t *source_end_p) /**< source end */
-{
-  range_p->source_p = context_p->source_p;
-  range_p->source_end_p = source_end_p;
-  range_p->line = context_p->line;
-  range_p->column = context_p->column;
-} /* parser_save_range */
-
-/**
- * Set the current location on the stack.
- */
-static inline void
-parser_set_range (parser_context_t *context_p, /**< context */
-                  lexer_range_t *range_p) /**< destination range */
-{
-  context_p->source_p = range_p->source_p;
-  context_p->source_end_p = range_p->source_end_p;
-  context_p->line = range_p->line;
-  context_p->column = range_p->column;
-} /* parser_set_range */
-
-/**
  * Initialize stack iterator.
  */
 static inline void
@@ -802,6 +775,7 @@ parser_parse_while_statement_start (parser_context_t *context_p) /**< context */
 
   scanner_set_location (context_p, &((scanner_location_info_t *) context_p->next_scanner_info_p)->location);
   scanner_release_next (context_p, sizeof (scanner_location_info_t));
+  scanner_seek (context_p);
   lexer_next_token (context_p);
 
   loop.branch_list_p = NULL;
@@ -841,6 +815,7 @@ parser_parse_while_statement_end (parser_context_t *context_p) /**< context */
   parser_set_continues_to_current_position (context_p, loop.branch_list_p);
 
   scanner_set_location (context_p, &while_statement.condition_location);
+  scanner_seek (context_p);
   lexer_next_token (context_p);
 
   parser_parse_expression (context_p, PARSE_EXPR);
@@ -868,6 +843,7 @@ parser_parse_while_statement_end (parser_context_t *context_p) /**< context */
   parser_set_breaks_to_current_position (context_p, loop.branch_list_p);
 
   scanner_set_location (context_p, &location);
+  scanner_seek (context_p);
   context_p->token = current_token;
 } /* parser_parse_while_statement_end */
 
@@ -936,8 +912,7 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
   if (context_p->next_scanner_info_p->source_p == context_p->source_p)
   {
     parser_for_in_of_statement_t for_in_of_statement;
-    scanner_location_t start_location;
-    lexer_range_t end_range;
+    scanner_location_t start_location, end_location;
 
 #if ENABLED (JERRY_ES2015_FOR_OF)
     JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_FOR_IN
@@ -956,7 +931,7 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
     const uint8_t *source_end_p = context_p->source_p - 2;
 
     scanner_release_next (context_p, sizeof (scanner_location_info_t));
-
+    scanner_seek (context_p);
     lexer_next_token (context_p);
     parser_parse_expression (context_p, PARSE_EXPR);
 
@@ -980,9 +955,12 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
     for_in_of_statement.start_offset = context_p->byte_code_size;
 
     /* The expression parser must not read the 'in' or 'of' tokens. */
-    parser_save_range (context_p, &end_range, context_p->source_end_p);
+    scanner_get_location (&end_location, context_p);
     scanner_set_location (context_p, &start_location);
+
+    const uint8_t *original_source_end_p = context_p->source_end_p;
     context_p->source_end_p = source_end_p;
+    scanner_seek (context_p);
     lexer_next_token (context_p);
 
     if (context_p->token.type == LEXER_KEYW_VAR)
@@ -1046,7 +1024,8 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
     }
 
     parser_flush_cbc (context_p);
-    parser_set_range (context_p, &end_range);
+    scanner_set_location (context_p, &end_location);
+    context_p->source_end_p = original_source_end_p;
     lexer_next_token (context_p);
 
     loop.branch_list_p = NULL;
@@ -1117,6 +1096,7 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
 
   scanner_set_location (context_p, &for_info_p->end_location);
   scanner_release_next (context_p, sizeof (parser_for_statement_t));
+  scanner_seek (context_p);
   lexer_next_token (context_p);
 
   loop.branch_list_p = NULL;
@@ -1153,6 +1133,7 @@ parser_parse_for_statement_end (parser_context_t *context_p) /**< context */
   current_token = context_p->token;
 
   scanner_set_location (context_p, &for_statement.expression_location);
+  scanner_seek (context_p);
   lexer_next_token (context_p);
 
   parser_set_continues_to_current_position (context_p, loop.branch_list_p);
@@ -1170,6 +1151,7 @@ parser_parse_for_statement_end (parser_context_t *context_p) /**< context */
   parser_set_branch_to_current_position (context_p, &for_statement.branch);
 
   scanner_set_location (context_p, &for_statement.condition_location);
+  scanner_seek (context_p);
   lexer_next_token (context_p);
 
   if (context_p->token.type != LEXER_SEMICOLON)
@@ -1205,6 +1187,7 @@ parser_parse_for_statement_end (parser_context_t *context_p) /**< context */
   parser_set_breaks_to_current_position (context_p, loop.branch_list_p);
 
   scanner_set_location (context_p, &location);
+  scanner_seek (context_p);
   context_p->token = current_token;
 } /* parser_parse_for_statement_end */
 
@@ -1283,8 +1266,8 @@ parser_parse_switch_statement_start (parser_context_t *context_p) /**< context *
   do
   {
     scanner_set_location (context_p, &case_info_p->location);
+    scanner_seek (context_p);
     case_info_p = case_info_p->next_p;
-
 
     /* The last letter of case and default is 'e' and 't' respectively.  */
     JERRY_ASSERT (context_p->source_p[-1] == LIT_CHAR_LOWERCASE_E
@@ -1376,6 +1359,7 @@ parser_parse_switch_statement_start (parser_context_t *context_p) /**< context *
   scanner_release_active (context_p, sizeof (scanner_switch_info_t));
 
   scanner_set_location (context_p, &start_location);
+  scanner_seek (context_p);
   lexer_next_token (context_p);
 } /* parser_parse_switch_statement_start */
 
@@ -1561,6 +1545,7 @@ parser_parse_case_statement (parser_context_t *context_p) /**< context */
 
   scanner_set_location (context_p, &((scanner_location_info_t *) context_p->next_scanner_info_p)->location);
   scanner_release_next (context_p, sizeof (scanner_location_info_t));
+  scanner_seek (context_p);
   lexer_next_token (context_p);
 
   parser_stack_iterator_init (context_p, &iterator);
@@ -1954,8 +1939,8 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
   {
     case LEXER_KEYW_DEFAULT:
     {
-      lexer_range_t range;
-      parser_save_range (context_p, &range, context_p->source_end_p);
+      scanner_location_t location;
+      scanner_get_location (&location, context_p);
 
       context_p->status_flags |= PARSER_MODULE_STORE_IDENT;
 
@@ -1973,7 +1958,7 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
       else
       {
         /* Assignment expression */
-        parser_set_range (context_p, &range);
+        scanner_set_location (context_p, &location);
 
         /* 15.2.3.5 Use the synthetic name '*default*' as the identifier. */
         lexer_construct_literal_object (context_p,

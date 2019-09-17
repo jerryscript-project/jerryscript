@@ -134,7 +134,7 @@ scanner_release_next (parser_context_t *context_p, /**< context */
  * Set the active scanner info to the next scanner info.
  */
 inline void JERRY_ATTR_ALWAYS_INLINE
-scanner_set_active (parser_context_t *context_p)
+scanner_set_active (parser_context_t *context_p) /**< context */
 {
   scanner_info_t *scanner_info_p = context_p->next_scanner_info_p;
 
@@ -156,6 +156,9 @@ scanner_release_active (parser_context_t *context_p, /**< context */
   context_p->active_scanner_info_p = next_p;
 } /* scanner_release_active */
 
+/**
+ * Release switch cases.
+ */
 void
 scanner_release_switch_cases (scanner_case_info_t *case_p) /**< case list */
 {
@@ -167,6 +170,60 @@ scanner_release_switch_cases (scanner_case_info_t *case_p) /**< case list */
     case_p = next_p;
   }
 } /* scanner_release_switch_cases */
+
+/**
+ * Seek to correct position in the scanner info list.
+ */
+void
+scanner_seek (parser_context_t *context_p) /**< context */
+{
+  const uint8_t *source_p = context_p->source_p;
+  scanner_info_t *prev_p;
+
+  if (context_p->skipped_scanner_info_p != NULL)
+  {
+    JERRY_ASSERT (context_p->skipped_scanner_info_p->source_p != NULL);
+
+    context_p->skipped_scanner_info_end_p->next_p = context_p->next_scanner_info_p;
+
+    if (context_p->skipped_scanner_info_end_p->source_p <= source_p)
+    {
+      prev_p = context_p->skipped_scanner_info_end_p;
+    }
+    else
+    {
+      prev_p = context_p->skipped_scanner_info_p;
+
+      if (prev_p->source_p > source_p)
+      {
+        context_p->next_scanner_info_p = prev_p;
+        context_p->skipped_scanner_info_p = NULL;
+        return;
+      }
+
+      context_p->skipped_scanner_info_p = prev_p;
+    }
+  }
+  else
+  {
+    prev_p = context_p->next_scanner_info_p;
+
+    if (prev_p->source_p == NULL || prev_p->source_p > source_p)
+    {
+      return;
+    }
+
+    context_p->skipped_scanner_info_p = prev_p;
+  }
+
+  while (prev_p->next_p->source_p != NULL && prev_p->next_p->source_p <= source_p)
+  {
+    prev_p = prev_p->next_p;
+  }
+
+  context_p->skipped_scanner_info_end_p = prev_p;
+  context_p->next_scanner_info_p = prev_p->next_p;
+} /* scanner_seek */
 
 /**
  * Reverse the scanner info chain after the scanning is completed.
@@ -203,6 +260,13 @@ scanner_reverse_info_list (parser_context_t *context_p) /**< context */
 void
 scanner_cleanup (parser_context_t *context_p) /**< context */
 {
+  if (context_p->skipped_scanner_info_p != NULL)
+  {
+    context_p->skipped_scanner_info_end_p->next_p = context_p->next_scanner_info_p;
+    context_p->next_scanner_info_p = context_p->skipped_scanner_info_p;
+    context_p->skipped_scanner_info_p = NULL;
+  }
+
   scanner_info_t *scanner_info_p = context_p->next_scanner_info_p;
 
   while (scanner_info_p != NULL)

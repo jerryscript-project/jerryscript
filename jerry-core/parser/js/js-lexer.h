@@ -301,17 +301,6 @@ typedef struct
 } lexer_lit_location_t;
 
 /**
- * Range of input string which processing is postponed.
- */
-typedef struct
-{
-  const uint8_t *source_p;                   /**< next source byte */
-  const uint8_t *source_end_p;               /**< last source byte */
-  parser_line_counter_t line;                /**< token start line */
-  parser_line_counter_t column;              /**< token start column */
-} lexer_range_t;
-
-/**
  * Lexer token.
  */
 typedef struct

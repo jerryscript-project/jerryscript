@@ -369,6 +369,8 @@ typedef struct
   /* Scanner members. */
   scanner_info_t *next_scanner_info_p;        /**< next scanner info block */
   scanner_info_t *active_scanner_info_p;      /**< currently active scanner info block */
+  scanner_info_t *skipped_scanner_info_p;     /**< next scanner info block */
+  scanner_info_t *skipped_scanner_info_end_p; /**< currently active scanner info block */
 
   /* Compact byte code members. */
   cbc_argument_t last_cbc;                    /**< argument of the last cbc */
@@ -566,6 +568,7 @@ void scanner_release_next (parser_context_t *context_p, size_t size);
 void scanner_set_active (parser_context_t *context_p);
 void scanner_release_active (parser_context_t *context_p, size_t size);
 void scanner_release_switch_cases (scanner_case_info_t *case_p);
+void scanner_seek (parser_context_t *context_p);
 void scanner_reverse_info_list (parser_context_t *context_p);
 void scanner_cleanup (parser_context_t *context_p);
 

@@ -20,9 +20,12 @@
 static bool test_context_data1_new_called = false;
 static bool test_context_data2_new_called = false;
 static bool test_context_data3_new_called = false;
+static bool test_context_data4_new_called = false;
 static bool test_context_data1_free_called = false;
 static bool test_context_data2_free_called = false;
+static bool test_context_data4_free_called = false;
 static bool test_context_data1_finalize_called = false;
+static bool test_context_data4_finalize_called = false;
 
 /* Context item 1 */
 const char *string1 = "item1";
@@ -84,13 +87,12 @@ static const jerry_context_data_manager_t manager2 =
 };
 
 /* Context item 3 */
-const char *string3 = "item3";
 
 static void
 test_context_data3_new (void *user_data_p)
 {
+  JERRY_UNUSED (user_data_p);
   test_context_data3_new_called = true;
-  *((const char **) user_data_p) = string3;
 } /* test_context_data3_new */
 
 static const jerry_context_data_manager_t manager3 =
@@ -102,6 +104,41 @@ static const jerry_context_data_manager_t manager3 =
   .bytes_needed = 0,
 };
 
+/* Context item 4 */
+
+static void
+test_context_data4_new (void *user_data_p)
+{
+  test_context_data4_new_called = true;
+  TEST_ASSERT (user_data_p == NULL);
+} /* test_context_data4_new */
+
+
+static void
+test_context_data4_free (void *user_data_p)
+{
+  test_context_data4_free_called = true;
+  TEST_ASSERT (user_data_p == NULL);
+  TEST_ASSERT (!test_context_data4_finalize_called);
+} /* test_context_data4_free */
+
+static void
+test_context_data4_finalize (void *user_data_p)
+{
+  TEST_ASSERT (!test_context_data4_finalize_called);
+  test_context_data4_finalize_called = true;
+  TEST_ASSERT (user_data_p == NULL);
+} /* test_context_data4_finalize */
+
+static const jerry_context_data_manager_t manager4 =
+{
+  .init_cb = test_context_data4_new,
+  .deinit_cb = test_context_data4_free,
+  .finalize_cb = test_context_data4_finalize,
+  .bytes_needed = 0
+};
+
+
 int
 main (void)
 {
@@ -111,19 +148,26 @@ main (void)
 
   TEST_ASSERT (!strcmp (*((const char **) jerry_get_context_data (&manager1)), "item1"));
   TEST_ASSERT (!strcmp (*((const char **) jerry_get_context_data (&manager2)), "item2"));
-  TEST_ASSERT (!strcmp (*((const char **) jerry_get_context_data (&manager3)), "item3"));
+  TEST_ASSERT (jerry_get_context_data (&manager3) == NULL);
+  TEST_ASSERT (jerry_get_context_data (&manager4) == NULL);
 
   TEST_ASSERT (test_context_data1_new_called);
   TEST_ASSERT (test_context_data2_new_called);
   TEST_ASSERT (test_context_data3_new_called);
+  TEST_ASSERT (test_context_data4_new_called);
 
   TEST_ASSERT (!test_context_data1_free_called);
   TEST_ASSERT (!test_context_data2_free_called);
+  TEST_ASSERT (!test_context_data4_free_called);
 
   jerry_cleanup ();
 
   TEST_ASSERT (test_context_data1_free_called);
   TEST_ASSERT (test_context_data2_free_called);
+  TEST_ASSERT (test_context_data4_free_called);
+
+  TEST_ASSERT (test_context_data1_finalize_called);
+  TEST_ASSERT (test_context_data4_finalize_called);
 
   return 0;
 } /* main */

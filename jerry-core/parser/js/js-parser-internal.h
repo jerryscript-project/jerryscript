@@ -97,10 +97,9 @@ typedef enum
 typedef enum
 {
   PARSE_EXPR = 0,                             /**< parse an expression without any special flags */
-  PARSE_EXPR_STATEMENT = (1u << 0),           /**< discard the result of the expression */
-  PARSE_EXPR_BLOCK = (1u << 1),               /**< copy the expression result into the block result */
-  PARSE_EXPR_NO_COMMA = (1u << 2),            /**< do not parse comma operator */
-  PARSE_EXPR_HAS_LITERAL = (1u << 3),         /**< a primary literal is provided by a
+  PARSE_EXPR_NO_PUSH_RESULT = (1u << 0),      /**< do not push the result of the expression onto the stack */
+  PARSE_EXPR_NO_COMMA = (1u << 1),            /**< do not parse comma operator */
+  PARSE_EXPR_HAS_LITERAL = (1u << 2),         /**< a primary literal is provided by a
                                                *   CBC_PUSH_LITERAL instruction  */
 } parser_expression_flags_t;
 
@@ -194,6 +193,30 @@ typedef struct
    || (opcode) == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_LITERAL_PUSH_NUMBER_0) \
    || (opcode) == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_LITERAL_PUSH_NUMBER_POS_BYTE) \
    || (opcode) == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_LITERAL_PUSH_NUMBER_NEG_BYTE))
+
+#define PARSER_IS_MUTABLE_PUSH_LITERAL(opcode) \
+  ((opcode) >= CBC_PUSH_LITERAL && (opcode) <= CBC_PUSH_THIS_LITERAL)
+
+#define PARSER_IS_PUSH_LITERALS_WITH_THIS(opcode) \
+  ((opcode) >= CBC_PUSH_LITERAL && (opcode) <= CBC_PUSH_THREE_LITERALS)
+
+#define PARSER_IS_PUSH_PROP(opcode) \
+  ((opcode) >= CBC_PUSH_PROP && (opcode) <= CBC_PUSH_PROP_THIS_LITERAL)
+
+#define PARSER_IS_PUSH_PROP_LITERAL(opcode) \
+  ((opcode) >= CBC_PUSH_PROP_LITERAL && (opcode) <= CBC_PUSH_PROP_THIS_LITERAL)
+
+#define PARSER_PUSH_LITERAL_TO_PUSH_PROP_LITERAL(opcode) \
+  (uint16_t) ((opcode) + (CBC_PUSH_PROP_LITERAL - CBC_PUSH_LITERAL))
+
+#define PARSER_PUSH_PROP_LITERAL_TO_PUSH_LITERAL(opcode) \
+  (uint16_t) ((opcode) - (CBC_PUSH_PROP_LITERAL - CBC_PUSH_LITERAL))
+
+#define PARSER_PUSH_PROP_TO_PUSH_PROP_REFERENCE(opcode) \
+  (uint16_t) ((opcode) + (CBC_PUSH_PROP_REFERENCE - CBC_PUSH_PROP))
+
+#define PARSER_PUSH_PROP_REFERENCE_TO_PUSH_PROP(opcode) \
+  (uint16_t) ((opcode) - (CBC_PUSH_PROP_REFERENCE - CBC_PUSH_PROP))
 
 #define PARSER_GET_LITERAL(literal_index) \
   ((lexer_literal_t *) parser_list_get (&context_p->literal_pool, (literal_index)))
@@ -545,6 +568,8 @@ uint8_t lexer_convert_binary_lvalue_token_to_binary (uint8_t token);
 
 /* Parser functions. */
 
+void parser_parse_block_expression (parser_context_t *context_p, int options);
+void parser_parse_expression_statement (parser_context_t *context_p, int options);
 void parser_parse_expression (parser_context_t *context_p, int options);
 #if ENABLED (JERRY_ES2015_CLASS)
 void parser_parse_class (parser_context_t *context_p, bool is_statement);

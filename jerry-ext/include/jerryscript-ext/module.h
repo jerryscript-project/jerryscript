@@ -44,6 +44,10 @@ typedef struct jerryx_native_module_t
  * library constructor/destructor support.
  */
 #ifdef ENABLE_INIT_FINI
+#ifdef _MSC_VER
+#error "`FEATURE_INIT_FINI` build flag isn't supported on Windows, because Microsoft Visual C/C++ Compiler \
+doesn't support library constructors and destructors."
+#endif
 #define JERRYX_MODULE_CONSTRUCTOR_ATTRIBUTE __attribute__((constructor))
 #define JERRYX_MODULE_DESTRUCTOR_ATTRIBUTE __attribute__((destructor))
 #define JERRYX_MODULE_REGISTRATION_QUALIFIER static

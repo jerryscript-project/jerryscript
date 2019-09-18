@@ -26,6 +26,11 @@ endif()
 # Unit tests main modules
 file(GLOB SOURCE_UNIT_TEST_MAIN_MODULES *.c)
 
+# jerry_heap_stats_t.size == 0 if system allocator is used.
+if(JERRY_SYSTEM_ALLOCATOR)
+  list(REMOVE_ITEM SOURCE_UNIT_TEST_MAIN_MODULES ${CMAKE_CURRENT_SOURCE_DIR}/test-mem-stats.c)
+endif()
+
 # Unit tests declaration
 add_custom_target(unittests-core)
 

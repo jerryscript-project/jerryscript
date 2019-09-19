@@ -20,6 +20,11 @@ set(INCLUDE_UNIT_EXT ${CMAKE_CURRENT_SOURCE_DIR})
 # Unit tests main modules
 file(GLOB SOURCE_UNIT_TEST_EXT_MODULES *.c)
 
+# Disable test-ext-autorelease.c if compiler is MSVC, because MSVC doesn't support cleanup attribute.
+if(USING_MSVC)
+  list(REMOVE_ITEM SOURCE_UNIT_TEST_EXT_MODULES ${CMAKE_CURRENT_SOURCE_DIR}/test-ext-autorelease.c)
+endif()
+
 # Unit tests declaration
 add_custom_target(unittests-ext)
 

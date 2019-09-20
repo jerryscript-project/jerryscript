@@ -697,11 +697,7 @@ parser_parse_do_while_statement_end (parser_context_t *context_p) /**< context *
 
   parser_set_continues_to_current_position (context_p, loop.branch_list_p);
 
-  /* FIXME: These statements should not have scanner info. */
-  if (context_p->next_scanner_info_p->type == SCANNER_TYPE_WHILE)
-  {
-    scanner_release_next (context_p, sizeof (scanner_location_info_t));
-  }
+  JERRY_ASSERT (context_p->next_scanner_info_p->source_p != context_p->source_p);
 
   parser_parse_enclosed_expr (context_p);
 

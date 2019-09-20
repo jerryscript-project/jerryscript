@@ -623,7 +623,7 @@ ecma_new_ecma_string_from_number (ecma_number_t num) /**< ecma-number */
  *
  * @return pointer to ecma-string descriptor
  */
-inline ecma_string_t * JERRY_ATTR_ALWAYS_INLINE
+extern inline ecma_string_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_get_magic_string (lit_magic_string_id_t id) /**< identifier of magic string */
 {
   JERRY_ASSERT (id < LIT_MAGIC_STRING__COUNT);

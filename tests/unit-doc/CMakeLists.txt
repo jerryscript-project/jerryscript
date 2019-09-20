@@ -54,6 +54,16 @@ foreach(DOCTEST_ELEMENT IN LISTS DOCTEST_LIST)
   endif()
 endforeach()
 
+# Disable 02.API-REFERENCE-create-context.c on Windows, because there is no pthread on it.
+if("${PLATFORM}" STREQUAL "WINDOWS")
+  list(REMOVE_ITEM DOCTEST_COMPILE ${CMAKE_CURRENT_BINARY_DIR}/02.API-REFERENCE-create-context.c)
+endif()
+
+# Disable 11.EXT-REFERENCE-AUTORELEASE.c if compiler is MSVC, because MSVC doesn't support cleanup attribute.
+if(USING_MSVC)
+  list(REMOVE_ITEM DOCTEST_COMPILE ${CMAKE_CURRENT_BINARY_DIR}/11.EXT-REFERENCE-AUTORELEASE.c)
+endif()
+
 # Add custom command to run doctest generator if any of the MarkDown sources
 # changes.
 add_custom_command(

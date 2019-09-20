@@ -47,6 +47,7 @@ def run_test262_tests(runtime, engine, path_to_test262):
                              '--command', (runtime + ' ' + engine).strip(),
                              '--tests', path_to_test262,
                              '--summary'],
+                            universal_newlines=True,
                             stdout=subprocess.PIPE)
 
     return_code = 0

@@ -66,7 +66,10 @@ JERRY_UNITTESTS_OPTIONS = [
             OPTIONS_COMMON + OPTIONS_DOCTESTS + OPTIONS_PROFILE_ES51 + OPTIONS_DEBUG),
     Options('unittests-es5.1-debug-init-fini',
             OPTIONS_COMMON + OPTIONS_UNITTESTS + OPTIONS_PROFILE_ES51 + OPTIONS_DEBUG
-            + ['--cmake-param=-DFEATURE_INIT_FINI=ON']),
+            + ['--cmake-param=-DFEATURE_INIT_FINI=ON'],
+            skip=skip_if((sys.platform == 'win32'), 'FEATURE_INIT_FINI build flag isn\'t supported on Windows,' +
+                         ' because Microsoft Visual C/C++ Compiler doesn\'t support' +
+                         ' library constructors and destructors.')),
 ]
 
 # Test options for jerry-tests
@@ -445,6 +448,9 @@ def run_test262_test_suite(options):
 def run_unittests(options):
     ret_build = ret_test = 0
     for job in JERRY_UNITTESTS_OPTIONS:
+        if job.skip:
+            report_skip(job)
+            continue
         ret_build, build_dir_path = create_binary(job, options)
         if ret_build:
             print("\n%sBuild failed%s\n" % (TERM_RED, TERM_NORMAL))

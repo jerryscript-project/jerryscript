@@ -17,7 +17,7 @@ set(JERRY_EXT_NAME jerry-ext)
 project (${JERRY_EXT_NAME} C)
 
 # Optional features
-set(FEATURE_INIT_FINI OFF CACHE BOOL "Enable init/fini arrays?")
+set(FEATURE_INIT_FINI OFF CACHE BOOL "Enable library constructor/destructor support?")
 
 # Status messages
 message(STATUS "FEATURE_INIT_FINI           " ${FEATURE_INIT_FINI})

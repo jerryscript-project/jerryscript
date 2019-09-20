@@ -842,8 +842,9 @@ parser_parse_while_statement_end (parser_context_t *context_p) /**< context */
   parser_emit_cbc_backward_branch (context_p, (uint16_t) opcode, while_statement.start_offset);
   parser_set_breaks_to_current_position (context_p, loop.branch_list_p);
 
+  /* Calling scanner_seek is unnecessary because all
+   * info blocks inside the while statement should be processed. */
   scanner_set_location (context_p, &location);
-  scanner_seek (context_p);
   context_p->token = current_token;
 } /* parser_parse_while_statement_end */
 
@@ -1186,8 +1187,9 @@ parser_parse_for_statement_end (parser_context_t *context_p) /**< context */
   parser_emit_cbc_backward_branch (context_p, (uint16_t) opcode, for_statement.start_offset);
   parser_set_breaks_to_current_position (context_p, loop.branch_list_p);
 
+  /* Calling scanner_seek is unnecessary because all
+   * info blocks inside the for statement should be processed. */
   scanner_set_location (context_p, &location);
-  scanner_seek (context_p);
   context_p->token = current_token;
 } /* parser_parse_for_statement_end */
 

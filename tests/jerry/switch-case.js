@@ -103,3 +103,6 @@ switch ("var") {
 }
 
 assert (flow === '123a4');
+
+switch (0) { case 0: for (;false;); case 1: }
+switch (0) { case 0: while (false); case 1: }

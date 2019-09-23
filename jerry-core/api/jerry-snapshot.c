@@ -292,10 +292,11 @@ static_snapshot_error_unsupported_literal (snapshot_globals_t *globals_p, /**< s
 
   ecma_string_t *error_message_p = ecma_new_ecma_string_from_utf8 (error_prefix, sizeof (error_prefix) - 1);
 
-  literal = ecma_op_to_string (literal);
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (literal));
 
-  ecma_string_t *literal_string_p = ecma_get_string_from_value (literal);
+  ecma_string_t *literal_string_p = ecma_op_to_string (literal);
+  JERRY_ASSERT (literal_string_p != NULL);
+
   error_message_p = ecma_concat_ecma_strings (error_message_p, literal_string_p);
   ecma_deref_ecma_string (literal_string_p);
 

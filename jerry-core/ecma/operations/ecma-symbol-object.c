@@ -55,15 +55,15 @@ ecma_op_create_symbol (const ecma_value_t *arguments_list_p, /**< list of argume
   }
   else
   {
-    string_desc = ecma_op_to_string (arguments_list_p[0]);
+    ecma_string_t *str_p = ecma_op_to_string (arguments_list_p[0]);
 
     /* 4. */
-    if (ECMA_IS_VALUE_ERROR (string_desc))
+    if (JERRY_UNLIKELY (str_p == NULL))
     {
-      return string_desc;
+      return ECMA_VALUE_ERROR;
     }
 
-    JERRY_ASSERT (ecma_is_value_string (string_desc));
+    string_desc = ecma_make_string_value (str_p);
   }
 
   /* 5. */

@@ -47,20 +47,18 @@ ecma_builtin_helper_error_dispatch_call (ecma_standard_error_t error_type, /**< 
   if (arguments_list_len != 0
       && !ecma_is_value_undefined (arguments_list_p[0]))
   {
-    ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+    ecma_string_t *message_string_p = ecma_op_to_string (arguments_list_p[0]);
 
-    ECMA_TRY_CATCH (msg_str_value,
-                    ecma_op_to_string (arguments_list_p[0]),
-                    ret_value);
+    if (JERRY_UNLIKELY (message_string_p == NULL))
+    {
+      return ECMA_VALUE_ERROR;
+    }
 
-    ecma_string_t *message_string_p = ecma_get_string_from_value (msg_str_value);
     ecma_object_t *new_error_object_p = ecma_new_standard_error_with_message (error_type,
                                                                               message_string_p);
-    ret_value = ecma_make_object_value (new_error_object_p);
 
-    ECMA_FINALIZE (msg_str_value);
-
-    return ret_value;
+    ecma_deref_ecma_string (message_string_p);
+    return ecma_make_object_value (new_error_object_p);
   }
   else
   {

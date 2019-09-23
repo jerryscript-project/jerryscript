@@ -36,9 +36,6 @@ typedef enum
 {
   SCAN_MODE_PRIMARY_EXPRESSION,            /**< scanning primary expression */
   SCAN_MODE_PRIMARY_EXPRESSION_AFTER_NEW,  /**< scanning primary expression after new */
-#if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
-  SCAN_MODE_ARROW_FUNCTION,                /**< arrow function might follows */
-#endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
   SCAN_MODE_POST_PRIMARY_EXPRESSION,       /**< scanning post primary expression */
   SCAN_MODE_PRIMARY_EXPRESSION_END,        /**< scanning primary expression end */
   SCAN_MODE_STATEMENT,                     /**< scanning statement */
@@ -94,7 +91,8 @@ typedef enum
   SCAN_STACK_TEMPLATE_STRING,              /**< template string */
 #endif /* ENABLED (JERRY_ES2015_TEMPLATE_STRINGS) */
 #if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
-  SCAN_STACK_ARROW_EXPRESSION,             /**< (possible) arrow function */
+  SCAN_STACK_ARROW_ARGUMENTS,              /**< might be arguments of an arrow function */
+  SCAN_STACK_ARROW_EXPRESSION,             /**< expression body of an arrow function */
 #endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
 #if ENABLED (JERRY_ES2015_CLASS)
   SCAN_STACK_CLASS_STATEMENT,              /**< class statement */
@@ -132,6 +130,30 @@ typedef enum
 
 #if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
 
+/**
+ * Init scanning the body of an arrow function.
+ */
+static void
+scanner_check_arrow_body (parser_context_t *context_p, /**< context */
+                          scanner_context_t *scanner_context_p) /**< scanner context */
+{
+  lexer_next_token (context_p);
+
+  if (context_p->token.type != LEXER_LEFT_BRACE)
+  {
+    scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
+    parser_stack_push_uint8 (context_p, SCAN_STACK_ARROW_EXPRESSION);
+    return;
+  }
+
+  lexer_next_token (context_p);
+  scanner_context_p->mode = SCAN_MODE_STATEMENT_OR_TERMINATOR;
+  parser_stack_push_uint8 (context_p, SCAN_STACK_FUNCTION_EXPRESSION);
+} /* scanner_check_arrow_body */
+
+/**
+ * Process arrow function with argument list.
+ */
 static void
 scanner_process_arrow (parser_context_t *context_p, /**< context */
                        scanner_context_t *scanner_context_p) /**< scanner context */
@@ -153,8 +175,27 @@ scanner_process_arrow (parser_context_t *context_p, /**< context */
   scanner_info_t *info_p = scanner_insert_info (context_p, source_start.source_p, sizeof (scanner_info_t));
   info_p->type = SCANNER_TYPE_ARROW;
 
-  scanner_context_p->mode = SCAN_MODE_ARROW_FUNCTION;
+  scanner_check_arrow_body (context_p, scanner_context_p);
 } /* scanner_process_arrow */
+
+/**
+ * Process arrow function with a single argument.
+ */
+static void
+scanner_process_simple_arrow (parser_context_t *context_p, /**< context */
+                              scanner_context_t *scanner_context_p, /**< scanner context */
+                              const uint8_t *source_p) /**< identifier end position */
+{
+  scanner_info_t *info_p = scanner_insert_info (context_p, source_p, sizeof (scanner_info_t));
+  info_p->type = SCANNER_TYPE_ARROW;
+
+  /* Skip the => token, which size is two. */
+  context_p->source_p += 2;
+  PARSER_PLUS_EQUAL_LC (context_p->column, 2);
+  context_p->token.flags = (uint8_t) (context_p->token.flags & ~LEXER_NO_SKIP_SPACES);
+
+  scanner_check_arrow_body (context_p, scanner_context_p);
+} /* scanner_process_simple_arrow */
 
 #endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
 
@@ -203,7 +244,7 @@ scanner_scan_primary_expression (parser_context_t *context_p, /**< context */
       source_start.source_p = context_p->source_p;
 
       parser_stack_push (context_p, &source_start, sizeof (scanner_source_start_t));
-      parser_stack_push_uint8 (context_p, SCAN_STACK_ARROW_EXPRESSION);
+      parser_stack_push_uint8 (context_p, SCAN_STACK_ARROW_ARGUMENTS);
 #else
       parser_stack_push_uint8 (context_p, SCAN_STACK_PAREN_EXPRESSION);
 #endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
@@ -239,11 +280,15 @@ scanner_scan_primary_expression (parser_context_t *context_p, /**< context */
     case LEXER_LITERAL:
 #if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
     {
-      bool is_ident = (context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
+      const uint8_t *source_p = context_p->source_p;
 
-      scanner_context_p->mode = (is_ident ? SCAN_MODE_ARROW_FUNCTION
-                                          : SCAN_MODE_POST_PRIMARY_EXPRESSION);
-      break;
+      if (context_p->token.lit_location.type == LEXER_IDENT_LITERAL
+          && lexer_check_arrow (context_p))
+      {
+        scanner_process_simple_arrow (context_p, scanner_context_p, source_p);
+        return SCAN_KEEP_TOKEN;
+      }
+      /* FALLTHRU */
     }
 #endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
     case LEXER_KEYW_THIS:
@@ -291,7 +336,7 @@ scanner_scan_primary_expression (parser_context_t *context_p, /**< context */
         break;
       }
 #if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
-      if (stack_top == SCAN_STACK_ARROW_EXPRESSION)
+      if (stack_top == SCAN_STACK_ARROW_ARGUMENTS)
       {
         scanner_process_arrow (context_p, scanner_context_p);
         return SCAN_KEEP_TOKEN;
@@ -737,7 +782,7 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
     }
 #endif /* ENABLED (JERRY_ES2015_TEMPLATE_STRINGS) */
 #if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
-    case SCAN_STACK_ARROW_EXPRESSION:
+    case SCAN_STACK_ARROW_ARGUMENTS:
     {
       if (type != LEXER_RIGHT_PAREN)
       {
@@ -745,6 +790,11 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
       }
 
       scanner_process_arrow (context_p, scanner_context_p);
+      return SCAN_KEEP_TOKEN;
+    }
+    case SCAN_STACK_ARROW_EXPRESSION:
+    {
+      parser_stack_pop_uint8 (context_p);
       return SCAN_KEEP_TOKEN;
     }
 #endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
@@ -1256,17 +1306,28 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
   if (type == LEXER_LITERAL
       && context_p->token.lit_location.type == LEXER_IDENT_LITERAL)
   {
-    lexer_next_token (context_p);
-    if (context_p->token.type == LEXER_COLON)
+    if (JERRY_UNLIKELY (lexer_check_next_character (context_p, LIT_CHAR_COLON)))
     {
+      lexer_next_token (context_p);
+      JERRY_ASSERT (context_p->token.type == LEXER_COLON);
       scanner_context_p->mode = SCAN_MODE_STATEMENT;
       return SCAN_NEXT_TOKEN;
     }
+
+    JERRY_ASSERT (context_p->token.flags & LEXER_NO_SKIP_SPACES);
+
 #if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
-    scanner_context_p->mode = SCAN_MODE_ARROW_FUNCTION;
-#else /* !ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
-    scanner_context_p->mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
+    /* The colon needs to be checked first because the parser also checks
+     * it first, and this check skips the spaces which affects source_p. */
+    if (JERRY_UNLIKELY (lexer_check_arrow (context_p)))
+    {
+      scanner_process_simple_arrow (context_p, scanner_context_p, context_p->source_p);
+      return SCAN_KEEP_TOKEN;
+    }
 #endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
+
+    scanner_context_p->mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
+    return SCAN_NEXT_TOKEN;
   }
 
   return SCAN_KEEP_TOKEN;
@@ -1659,29 +1720,6 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
           continue;
         }
 #endif /* ENABLED (JERRY_ES2015_CLASS) */
-#if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
-        case SCAN_MODE_ARROW_FUNCTION:
-        {
-          if (type == LEXER_ARROW)
-          {
-            lexer_next_token (context_p);
-
-            if (context_p->token.type == LEXER_LEFT_BRACE)
-            {
-              parser_stack_push_uint8 (context_p, SCAN_STACK_FUNCTION_EXPRESSION);
-              scanner_context.mode = SCAN_MODE_STATEMENT_OR_TERMINATOR;
-            }
-            else
-            {
-              scanner_context.mode = SCAN_MODE_PRIMARY_EXPRESSION;
-              continue;
-            }
-            break;
-          }
-          scanner_context.mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
-          /* FALLTHRU */
-        }
-#endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
         case SCAN_MODE_POST_PRIMARY_EXPRESSION:
         {
           if (scanner_scan_post_primary_expression (context_p, &scanner_context, type))

@@ -1464,7 +1464,7 @@ scanner_scan_statement_end (parser_context_t *context_p, /**< context */
         parser_stack_pop_uint8 (context_p);
 
         if (type != LEXER_KEYW_WHILE
-            || (!terminator_found && (context_p->token.flags & LEXER_WAS_NEWLINE)))
+            || (!terminator_found && !(context_p->token.flags & LEXER_WAS_NEWLINE)))
         {
           scanner_raise_error (context_p);
         }

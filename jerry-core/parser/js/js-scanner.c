@@ -81,8 +81,8 @@ typedef enum
   SCAN_STACK_FOR_CONDITION,                /**< condition part of "for" iterator */
   SCAN_STACK_FOR_EXPRESSION,               /**< expression part of "for" iterator */
   SCAN_STACK_SWITCH_EXPRESSION,            /**< expression part of "switch" statement */
-  SCAN_STACK_COLON_EXPRESSION,             /**< colon expression group */
-  SCAN_STACK_CASE_STATEMENT,               /**< colon statement group */
+  SCAN_STACK_CASE_STATEMENT,               /**< case statement inside a switch statement */
+  SCAN_STACK_COLON_EXPRESSION,             /**< expression between a question mark and colon */
   SCAN_STACK_TRY_STATEMENT,                /**< try statement */
   SCAN_STACK_CATCH_STATEMENT,              /**< catch statement */
   SCAN_STACK_SQUARE_BRACKETED_EXPRESSION,  /**< square bracketed expression group */
@@ -405,36 +405,6 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
       scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
       return SCAN_NEXT_TOKEN;
     }
-    case LEXER_COLON:
-    {
-      if (stack_top == SCAN_STACK_COLON_EXPRESSION)
-      {
-        scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
-        parser_stack_pop_uint8 (context_p);
-        return SCAN_NEXT_TOKEN;
-      }
-
-      if (stack_top != SCAN_STACK_CASE_STATEMENT)
-      {
-        break;
-      }
-
-      scanner_source_start_t source_start;
-
-      parser_stack_pop_uint8 (context_p);
-      parser_stack_pop (context_p, &source_start, sizeof (scanner_source_start_t));
-
-      scanner_location_info_t *location_info_p;
-      location_info_p = (scanner_location_info_t *) scanner_insert_info (context_p,
-                                                                         source_start.source_p,
-                                                                         sizeof (scanner_location_info_t));
-      location_info_p->info.type = SCANNER_TYPE_CASE;
-
-      scanner_get_location (&location_info_p->location, context_p);
-
-      scanner_context_p->mode = SCAN_MODE_STATEMENT_OR_TERMINATOR;
-      return SCAN_NEXT_TOKEN;
-    }
     default:
     {
       break;
@@ -654,6 +624,40 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
 
       scanner_context_p->mode = SCAN_MODE_STATEMENT_OR_TERMINATOR;
       return SCAN_KEEP_TOKEN;
+    }
+    case SCAN_STACK_CASE_STATEMENT:
+    {
+      if (type != LEXER_COLON)
+      {
+        break;
+      }
+
+      scanner_source_start_t source_start;
+
+      parser_stack_pop_uint8 (context_p);
+      parser_stack_pop (context_p, &source_start, sizeof (scanner_source_start_t));
+
+      scanner_location_info_t *location_info_p;
+      location_info_p = (scanner_location_info_t *) scanner_insert_info (context_p,
+                                                                         source_start.source_p,
+                                                                         sizeof (scanner_location_info_t));
+      location_info_p->info.type = SCANNER_TYPE_CASE;
+
+      scanner_get_location (&location_info_p->location, context_p);
+
+      scanner_context_p->mode = SCAN_MODE_STATEMENT_OR_TERMINATOR;
+      return SCAN_NEXT_TOKEN;
+    }
+    case SCAN_STACK_COLON_EXPRESSION:
+    {
+      if (type != LEXER_COLON)
+      {
+        break;
+      }
+
+      scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
+      parser_stack_pop_uint8 (context_p);
+      return SCAN_NEXT_TOKEN;
     }
     case SCAN_STACK_SQUARE_BRACKETED_EXPRESSION:
     {

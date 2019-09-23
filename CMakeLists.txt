@@ -100,6 +100,12 @@ if(USING_MSVC)
   set(ENABLE_STRIP_MESSAGE       " (FORCED BY COMPILER)")
 endif()
 
+if(CYGWIN)
+  set(ENABLE_LTO         OFF)
+
+  set(ENABLE_LTO_MESSAGE         " (FORCED BY PLATFORM)")
+endif()
+
 # Status messages
 message(STATUS "CMAKE_BUILD_TYPE            " ${CMAKE_BUILD_TYPE})
 message(STATUS "CMAKE_C_COMPILER_ID         " ${CMAKE_C_COMPILER_ID})
@@ -179,7 +185,7 @@ if("${PLATFORM}" STREQUAL "DARWIN")
   set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> Sqc <TARGET> <LINK_FLAGS> <OBJECTS>")
   set(CMAKE_C_ARCHIVE_FINISH "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
   set(CMAKE_SHARED_LINKER_FLAGS  "-undefined dynamic_lookup")
-elseif(USING_GCC OR USING_CLANG)
+elseif(NOT CYGWIN AND (USING_GCC OR USING_CLANG))
   jerry_add_link_flags(-Wl,-z,noexecstack)
 endif()
 

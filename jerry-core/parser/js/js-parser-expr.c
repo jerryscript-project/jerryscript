@@ -1217,9 +1217,11 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
     case LEXER_LITERAL:
     {
 #if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
-      if (context_p->token.lit_location.type == LEXER_IDENT_LITERAL
-          && lexer_check_arrow (context_p))
+      if (context_p->next_scanner_info_p->source_p == context_p->source_p)
       {
+        JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_ARROW);
+        scanner_release_next (context_p, sizeof (scanner_info_t));
+
         parser_parse_function_expression (context_p,
                                           PARSER_IS_FUNCTION | PARSER_IS_ARROW_FUNCTION);
         return;

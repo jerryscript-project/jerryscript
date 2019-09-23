@@ -1064,6 +1064,13 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
   if (context_p->next_scanner_info_p->source_p != context_p->source_p
       || ((scanner_for_info_t *) context_p->next_scanner_info_p)->end_location.source_p == NULL)
   {
+    if (context_p->next_scanner_info_p->source_p == context_p->source_p)
+    {
+      /* Even though the scanning is failed, there might be valid statements
+       * inside the for statement which depend on scanner info blocks. */
+      scanner_release_next (context_p, sizeof (parser_for_statement_t));
+    }
+
     /* The prescanner couldn't find the second semicolon or the closing paranthesis. */
     lexer_next_token (context_p);
     parser_parse_expression (context_p, PARSE_EXPR);

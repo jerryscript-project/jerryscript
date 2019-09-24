@@ -202,7 +202,7 @@ scanner_process_simple_arrow (parser_context_t *context_p, /**< context */
 /**
  * Scan primary expression.
  *
- * @return true for continue, false for break
+ * @return SCAN_NEXT_TOKEN to read the next token, or SCAN_KEEP_TOKEN to do nothing
  */
 static scan_return_types_t
 scanner_scan_primary_expression (parser_context_t *context_p, /**< context */
@@ -403,7 +403,7 @@ scanner_scan_post_primary_expression (parser_context_t *context_p, /**< context 
 /**
  * Scan the tokens after the primary expression.
  *
- * @return true for continue, false for break
+ * @return SCAN_NEXT_TOKEN to read the next token, or SCAN_KEEP_TOKEN to do nothing
  */
 static scan_return_types_t
 scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context */
@@ -434,6 +434,12 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
           scanner_context_p->mode = SCAN_MODE_VAR_STATEMENT;
           return SCAN_NEXT_TOKEN;
         }
+#if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
+        case SCAN_STACK_ARROW_EXPRESSION:
+        {
+          break;
+        }
+#endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
 #if ENABLED (JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER)
         case SCAN_STACK_FUNCTION_PARAMETERS:
         {
@@ -444,11 +450,11 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
 #endif /* ENABLED (JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER) */
         default:
         {
-          break;
+          scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
+          return SCAN_NEXT_TOKEN;
         }
       }
-      scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
-      return SCAN_NEXT_TOKEN;
+      break;
     }
     case LEXER_COLON:
     {
@@ -839,7 +845,7 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
 /**
  * Scan statements.
  *
- * @return true for continue, false for break
+ * @return SCAN_NEXT_TOKEN to read the next token, or SCAN_KEEP_TOKEN to do nothing
  */
 static scan_return_types_t
 scanner_scan_statement (parser_context_t *context_p, /**< context */
@@ -1336,7 +1342,7 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
 /**
  * Scan statement terminator.
  *
- * @return true for continue, false for break
+ * @return SCAN_NEXT_TOKEN to read the next token, or SCAN_KEEP_TOKEN to do nothing
  */
 static scan_return_types_t
 scanner_scan_statement_end (parser_context_t *context_p, /**< context */

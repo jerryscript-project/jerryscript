@@ -1872,16 +1872,16 @@ ecma_builtin_typedarray_prototype_copy_within (ecma_value_t this_arg, /**< this 
     }
   }
 
-  int32_t distance = (int32_t) (end - start);
-  int32_t offset = (int32_t) (info.typedarray_length - target);
-  int32_t count = JERRY_MIN (distance, offset);
-
   if (target >= info.typedarray_length || start >= end || end == 0)
   {
     return ecma_copy_value (this_arg);
   }
   else
   {
+    uint32_t distance = end - start;
+    uint32_t offset = info.typedarray_length - target;
+    uint32_t count = JERRY_MIN (distance, offset);
+
     memmove (info.buffer_p + (target * info.element_size),
              info.buffer_p + (start * info.element_size),
              (size_t) (count * info.element_size));

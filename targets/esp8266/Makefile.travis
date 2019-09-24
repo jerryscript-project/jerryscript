@@ -27,7 +27,7 @@ install-apt-get-deps:
 
 # Fetch and build crosstool-NG with support for Xtensa.
 install-xtensa-kx106-gcc:
-	wget https://dl.espressif.com/dl/xtensa-lx106-elf-linux64-1.22.0-88-gde0bdc1-4.8.5.tar.gz -O ../xtensa-lx106-elf-linux64-1.22.0-88-gde0bdc1-4.8.5.tar.gz
+	wget https://dl.espressif.com/dl/xtensa-lx106-elf-linux64-1.22.0-88-gde0bdc1-4.8.5.tar.gz -O ../xtensa-lx106-elf-linux64-1.22.0-88-gde0bdc1-4.8.5.tar.gz --no-check-certificate
 	cd .. && tar xvfz xtensa-lx106-elf-linux64-1.22.0-88-gde0bdc1-4.8.5.tar.gz
 
 # Fetch Espressif SDK and Xtensa libraries.

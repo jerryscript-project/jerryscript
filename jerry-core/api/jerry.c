@@ -3272,6 +3272,59 @@ jerry_get_arraybuffer_pointer (const jerry_value_t array_buffer) /**< Array Buff
 } /* jerry_get_arraybuffer_pointer */
 
 /**
+ * Get if the ArrayBuffer is detachable.
+ *
+ * @return boolean value - if success
+ *         value marked with error flag - otherwise
+ */
+jerry_value_t
+jerry_is_arraybuffer_detachable (const jerry_value_t value) /**< ArrayBuffer */
+{
+  jerry_assert_api_available ();
+
+#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
+  if (ecma_is_arraybuffer (value))
+  {
+    ecma_object_t *buffer_p = ecma_get_object_from_value (value);
+    return ecma_arraybuffer_is_detachable (buffer_p) ? ECMA_VALUE_TRUE : ECMA_VALUE_FALSE;
+  }
+#else /* !ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
+  JERRY_UNUSED (value);
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Expects an ArrayBuffer")));
+} /* jerry_is_arraybuffer_detachable */
+
+/**
+ * Detach the underlying data block from ArrayBuffer and set its bytelength to 0.
+ * This operation requires the ArrayBuffer to be external that created by
+ * `jerry_create_arraybuffer_external`.
+ *
+ * @return null value - if success
+ *         value marked with error flag - otherwise
+ */
+jerry_value_t
+jerry_detach_arraybuffer (const jerry_value_t value) /**< ArrayBuffer */
+{
+  jerry_assert_api_available ();
+
+#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
+  if (ecma_is_arraybuffer (value))
+  {
+    ecma_object_t *buffer_p = ecma_get_object_from_value (value);
+    bool detached = ecma_arraybuffer_detach (buffer_p);
+    if (!detached)
+    {
+      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Expects a detachable ArrayBuffer.")));
+    }
+    return ECMA_VALUE_NULL;
+  }
+#else /* !ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
+  JERRY_UNUSED (value);
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Expects an ArrayBuffer")));
+} /* jerry_detach_arraybuffer */
+
+/**
  * DataView related functions
  */
 

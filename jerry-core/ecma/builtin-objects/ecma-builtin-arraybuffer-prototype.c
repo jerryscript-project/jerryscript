@@ -61,6 +61,10 @@ ecma_builtin_arraybuffer_prototype_bytelength_getter (ecma_value_t this_arg) /**
 
     if (ecma_object_class_is (object_p, LIT_MAGIC_STRING_ARRAY_BUFFER_UL))
     {
+      if (ecma_arraybuffer_is_detached (object_p))
+      {
+        return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+      }
       ecma_length_t len = ecma_arraybuffer_get_length (object_p);
 
       return ecma_make_uint32_value (len);
@@ -94,6 +98,11 @@ ecma_builtin_arraybuffer_prototype_object_slice (ecma_value_t this_arg, /**< thi
   if (!ecma_object_class_is (object_p, LIT_MAGIC_STRING_ARRAY_BUFFER_UL))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an ArrayBuffer object."));
+  }
+
+  if (ecma_arraybuffer_is_detached (object_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
   }
 
   ecma_length_t len = ecma_arraybuffer_get_length (object_p);

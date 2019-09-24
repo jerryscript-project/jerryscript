@@ -206,6 +206,11 @@ ecma_builtin_typedarray_prototype_exec_routine (ecma_value_t this_arg, /**< this
 
   ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
   ecma_typedarray_info_t info = ecma_typedarray_get_info (obj_p);
+  ecma_object_t *arraybuffer_p = ecma_typedarray_get_arraybuffer (obj_p);
+  if (ecma_arraybuffer_is_detached (arraybuffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+  }
 
   ecma_typedarray_getter_fn_t typedarray_getter_cb = ecma_get_typedarray_getter_fn (info.id);
 
@@ -435,6 +440,12 @@ ecma_builtin_typedarray_prototype_map (ecma_value_t this_arg, /**< this argument
   }
 
   ecma_object_t *src_obj_p = ecma_get_object_from_value (this_arg);
+  ecma_object_t *arraybuffer_p = ecma_typedarray_get_arraybuffer (src_obj_p);
+  if (ecma_arraybuffer_is_detached (arraybuffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+  }
+
   ecma_typedarray_info_t src_info = ecma_typedarray_get_info (src_obj_p);
 
   ecma_object_t *func_object_p = ecma_get_object_from_value (cb_func_val);
@@ -517,6 +528,12 @@ ecma_builtin_typedarray_prototype_reduce_with_direction (ecma_value_t this_arg, 
   }
 
   ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
+  ecma_object_t *arraybuffer_p = ecma_typedarray_get_arraybuffer (obj_p);
+  if (ecma_arraybuffer_is_detached (arraybuffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+  }
+
   ecma_typedarray_info_t info = ecma_typedarray_get_info (obj_p);
 
   ecma_typedarray_getter_fn_t getter_cb = ecma_get_typedarray_getter_fn (info.id);
@@ -770,6 +787,12 @@ ecma_builtin_typedarray_prototype_reverse (ecma_value_t this_arg) /**< this argu
   }
 
   ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
+  ecma_object_t *arraybuffer_p = ecma_typedarray_get_arraybuffer (obj_p);
+  if (ecma_arraybuffer_is_detached (arraybuffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+  }
+
   ecma_typedarray_info_t info = ecma_typedarray_get_info (obj_p);
 
   uint32_t middle = (info.length / 2) << info.shift;
@@ -822,9 +845,21 @@ ecma_op_typedarray_set_with_typedarray (ecma_value_t this_arg, /**< this argumen
   }
 
   ecma_object_t *target_typedarray_p = ecma_get_object_from_value (this_arg);
+  ecma_object_t *arraybuffer_p = ecma_typedarray_get_arraybuffer (target_typedarray_p);
+  if (ecma_arraybuffer_is_detached (arraybuffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+  }
+
   ecma_typedarray_info_t target_info = ecma_typedarray_get_info (target_typedarray_p);
 
   ecma_object_t *src_typedarray_p = ecma_get_object_from_value (arr_val);
+  ecma_object_t *src_arraybuffer_p = ecma_typedarray_get_arraybuffer (src_typedarray_p);
+  if (ecma_arraybuffer_is_detached (src_arraybuffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+  }
+
   ecma_typedarray_info_t src_info = ecma_typedarray_get_info (src_typedarray_p);
 
   uint32_t target_offset_uint32 = ecma_number_to_uint32 (target_offset_num);
@@ -911,6 +946,12 @@ ecma_builtin_typedarray_prototype_set (ecma_value_t this_arg, /**< this argument
 
   /* 11. ~ 15. */
   ecma_object_t *typedarray_p = ecma_get_object_from_value (this_arg);
+  ecma_object_t *arraybuffer_p = ecma_typedarray_get_arraybuffer (typedarray_p);
+  if (ecma_arraybuffer_is_detached (arraybuffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+  }
+
   ecma_typedarray_info_t target_info = ecma_typedarray_get_info (typedarray_p);
 
   /* 16.~ 17. */
@@ -1476,6 +1517,11 @@ ecma_builtin_typedarray_prototype_sort (ecma_value_t this_arg, /**< this argumen
   }
 
   ecma_object_t *typedarray_p = ecma_get_object_from_value (this_arg);
+  ecma_object_t *arraybuffer_p = ecma_typedarray_get_arraybuffer (typedarray_p);
+  if (ecma_arraybuffer_is_detached (arraybuffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+  }
   ecma_typedarray_info_t info = ecma_typedarray_get_info (typedarray_p);
 
   if (!info.length)
@@ -1577,6 +1623,11 @@ ecma_builtin_typedarray_prototype_find_helper (ecma_value_t this_arg, /**< this 
 
   ecma_object_t *typedarray_p = ecma_get_object_from_value (this_arg);
   ecma_typedarray_info_t info = ecma_typedarray_get_info (typedarray_p);
+  ecma_object_t *arraybuffer_p = ecma_typedarray_get_arraybuffer (typedarray_p);
+  if (ecma_arraybuffer_is_detached (arraybuffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+  }
 
   uint32_t buffer_index = 0;
   uint32_t limit = info.length * info.element_size;
@@ -1678,6 +1729,11 @@ ecma_builtin_typedarray_prototype_index_helper (ecma_value_t this_arg, /**< this
 
   ecma_object_t *typedarray_p = ecma_get_object_from_value (this_arg);
   ecma_typedarray_info_t info = ecma_typedarray_get_info (typedarray_p);
+  if (ecma_arraybuffer_is_detached (info.array_buffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+  }
+
   uint32_t limit = info.length * info.element_size;
   uint32_t from_index;
 
@@ -1901,6 +1957,12 @@ ecma_builtin_typedarray_prototype_slice (ecma_value_t this_arg, /**< this argume
   }
 
   ecma_object_t *typedarray_p = ecma_get_object_from_value (this_arg);
+  ecma_object_t *arraybuffer_p = ecma_typedarray_get_arraybuffer (typedarray_p);
+  if (ecma_arraybuffer_is_detached (arraybuffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+  }
+
   ecma_typedarray_info_t info = ecma_typedarray_get_info (typedarray_p);
   uint32_t start = 0;
   uint32_t end = info.length;
@@ -1944,6 +2006,7 @@ ecma_builtin_typedarray_prototype_slice (ecma_value_t this_arg, /**< this argume
   if (count > 0)
   {
     ecma_object_t *new_typedarray_p = ecma_get_object_from_value (new_typedarray);
+
     lit_utf8_byte_t *new_typedarray_buffer_p = ecma_typedarray_get_buffer (new_typedarray_p);
     uint32_t src_byte_index = (start * info.element_size);
 

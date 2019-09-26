@@ -289,7 +289,7 @@ ecma_is_value_float_number (ecma_value_t value) /**< ecma value */
  * @return true - if the value contains ecma-number value,
  *         false - otherwise
  */
-inline bool JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
+extern inline bool JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
 ecma_is_value_number (ecma_value_t value) /**< ecma value */
 {
   return (ecma_is_value_integer_number (value)

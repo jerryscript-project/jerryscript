@@ -15,15 +15,27 @@
 # limitations under the License.
 
 from __future__ import print_function
-import sys
 import os
-import subprocess
 import shutil
+import signal
+import subprocess
+import sys
+
 
 def get_platform_cmd_prefix():
     if sys.platform == 'win32':
         return ['cmd', '/S', '/C']
     return ['python2']  # The official test262.py isn't python3 compatible, but has python shebang.
+
+
+def set_timezone(timezone):
+    assert sys.platform == 'win32', "set_timezone is Windows only function"
+    subprocess.call(get_platform_cmd_prefix() + ['tzutil', '/s', timezone])
+
+
+def set_timezone_and_exit(timezone):
+    set_timezone(timezone)
+    sys.exit(1)
 
 
 def run_test262_tests(runtime, engine, path_to_test262):
@@ -41,6 +53,11 @@ def run_test262_tests(runtime, engine, path_to_test262):
     path_to_remove = os.path.join(path_to_test262, 'test', 'suite', 'intl402')
     if os.path.isdir(path_to_remove):
         shutil.rmtree(path_to_remove)
+
+    if sys.platform == 'win32':
+        original_timezone = subprocess.check_output(get_platform_cmd_prefix() + ['tzutil', '/g'])
+        set_timezone('Pacific Standard Time')
+        signal.signal(signal.SIGINT, lambda signal, frame: set_timezone_and_exit(original_timezone))
 
     proc = subprocess.Popen(get_platform_cmd_prefix() +
                             [os.path.join(path_to_test262, 'tools/packaging/test262.py'),
@@ -73,6 +90,10 @@ def run_test262_tests(runtime, engine, path_to_test262):
                     return_code = 1
 
     proc.wait()
+
+    if sys.platform == 'win32':
+        set_timezone(original_timezone)
+
     return return_code
 
 

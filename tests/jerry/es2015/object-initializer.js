@@ -62,4 +62,11 @@ default:
   ({ true: true });
   ({ 13: 13 });
   ({ "x": "x" });
+
+  var get = 8;
+  var set = 12;
+  var o = ({ get, set });
+
+  assert(o.get == 8);
+  assert(o.set == 12);
 }

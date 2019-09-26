@@ -1955,6 +1955,14 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
             break;
           }
 
+          JERRY_ASSERT (context_p->token.type == LEXER_LITERAL);
+
+#if ENABLED (JERRY_ES2015_OBJECT_INITIALIZER)
+          parser_line_counter_t start_line = context_p->token.line;
+          parser_line_counter_t start_column = context_p->token.column;
+          bool is_ident = (context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
+#endif /* ENABLED (JERRY_ES2015_OBJECT_INITIALIZER) */
+
           lexer_next_token (context_p);
 
 #if ENABLED (JERRY_ES2015_OBJECT_INITIALIZER)
@@ -1965,13 +1973,32 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
             continue;
           }
 
-          if (context_p->token.type == LEXER_COMMA)
+          if (is_ident
+              && (context_p->token.type == LEXER_COMMA || context_p->token.type == LEXER_RIGHT_BRACE))
           {
-            continue;
-          }
+            context_p->source_p = context_p->token.lit_location.char_p;
+            context_p->line = start_line;
+            context_p->column = start_column;
 
-          if (context_p->token.type == LEXER_RIGHT_BRACE)
-          {
+            lexer_next_token (context_p);
+
+            JERRY_ASSERT (context_p->token.type != LEXER_LITERAL
+                          || context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
+
+            if (context_p->token.type != LEXER_LITERAL)
+            {
+              scanner_raise_error (context_p);
+            }
+
+            lexer_next_token (context_p);
+
+            if (context_p->token.type == LEXER_COMMA)
+            {
+              continue;
+            }
+
+            JERRY_ASSERT (context_p->token.type == LEXER_RIGHT_BRACE);
+
             parser_stack_pop_uint8 (context_p);
             scanner_context.mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
             break;

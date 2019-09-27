@@ -91,6 +91,40 @@ lexer_hex_to_character (parser_context_t *context_p, /**< context */
 } /* lexer_hex_to_character */
 
 /**
+ * Parse hexadecimal character sequence
+ *
+ * @return character value
+ */
+static ecma_char_t
+lexer_unchecked_hex_to_character (const uint8_t *source_p, /**< current source position */
+                                  int length) /**< source length */
+{
+  uint32_t result = 0;
+
+  do
+  {
+    uint32_t byte = *source_p++;
+
+    result <<= 4;
+
+    if (byte >= LIT_CHAR_0 && byte <= LIT_CHAR_9)
+    {
+      result += byte - LIT_CHAR_0;
+    }
+    else
+    {
+      JERRY_ASSERT ((byte >= LIT_CHAR_LOWERCASE_A && byte <= LIT_CHAR_LOWERCASE_F)
+                    || (byte >= LIT_CHAR_UPPERCASE_A && byte <= LIT_CHAR_UPPERCASE_F));
+
+      result += LEXER_TO_ASCII_LOWERCASE (byte) - (LIT_CHAR_LOWERCASE_A - 10);
+    }
+  }
+  while (--length > 0);
+
+  return (ecma_char_t) result;
+} /* lexer_unchecked_hex_to_character */
+
+/**
  * Skip space mode
  */
 typedef enum
@@ -1513,7 +1547,7 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
         if (*source_p == LIT_CHAR_BACKSLASH)
         {
           destination_p += lit_char_to_utf8_bytes (destination_p,
-                                                   lexer_hex_to_character (context_p, source_p + 2, 4));
+                                                   lexer_unchecked_hex_to_character (source_p + 2, 4));
           source_p += 6;
           continue;
         }
@@ -1628,9 +1662,8 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
             JERRY_ASSERT (source_p + 1 + hex_part_length <= context_p->source_end_p);
 
             destination_p += lit_char_to_utf8_bytes (destination_p,
-                                                     lexer_hex_to_character (context_p,
-                                                                             source_p + 1,
-                                                                             hex_part_length));
+                                                     lexer_unchecked_hex_to_character (source_p + 1,
+                                                                                       hex_part_length));
             source_p += hex_part_length + 1;
             continue;
           }
@@ -1731,11 +1764,12 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
                               literal_type,
                               literal_p->has_escape);
 
+  JERRY_ASSERT (literal_type == context_p->lit_object.literal_p->type);
+
   context_p->lit_object.type = LEXER_LITERAL_OBJECT_ANY;
 
   if (literal_type == LEXER_IDENT_LITERAL
-      && (context_p->status_flags & PARSER_INSIDE_WITH)
-      && context_p->lit_object.literal_p->type == LEXER_IDENT_LITERAL)
+      && (context_p->status_flags & PARSER_INSIDE_WITH))
   {
     context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_NO_REG_STORE;
   }
@@ -2535,9 +2569,9 @@ lexer_compare_identifier_to_current (parser_context_t *context_p, /**< context *
 
     if (*left_p == LIT_CHAR_BACKSLASH && *right_p == LIT_CHAR_BACKSLASH)
     {
-      uint16_t left_chr = lexer_hex_to_character (context_p, left_p + 2, 4);
+      uint16_t left_chr = lexer_unchecked_hex_to_character (left_p + 2, 4);
 
-      if (left_chr != lexer_hex_to_character (context_p, right_p + 2, 4))
+      if (left_chr != lexer_unchecked_hex_to_character (right_p + 2, 4))
       {
         return false;
       }
@@ -2557,7 +2591,7 @@ lexer_compare_identifier_to_current (parser_context_t *context_p, /**< context *
       right_p = swap_p;
     }
 
-    utf8_len = lit_char_to_utf8_bytes (utf8_buf, lexer_hex_to_character (context_p, left_p + 2, 4));
+    utf8_len = lit_char_to_utf8_bytes (utf8_buf, lexer_unchecked_hex_to_character (left_p + 2, 4));
     JERRY_ASSERT (utf8_len > 0);
     count -= utf8_len;
     offset = 0;

@@ -292,6 +292,8 @@ lexer_skip_empty_statements (parser_context_t *context_p) /**< context */
     context_p->source_p++;
     lexer_skip_spaces (context_p);
   }
+
+  context_p->token.flags = (uint8_t) (context_p->token.flags | LEXER_NO_SKIP_SPACES);
 } /* lexer_skip_empty_statements */
 #endif /* ENABLED (JERRY_ES2015_CLASS) */
 
@@ -2305,8 +2307,13 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
           && context_p->token.lit_location.length == 3)
       {
         lexer_skip_spaces (context_p);
+        context_p->token.flags = (uint8_t) (context_p->token.flags | LEXER_NO_SKIP_SPACES);
 
         if (context_p->source_p < context_p->source_end_p
+#if ENABLED (JERRY_ES2015_OBJECT_INITIALIZER)
+            && context_p->source_p[0] != LIT_CHAR_COMMA
+            && context_p->source_p[0] != LIT_CHAR_RIGHT_BRACE
+#endif /* ENABLED (JERRY_ES2015_OBJECT_INITIALIZER) */
             && context_p->source_p[0] != LIT_CHAR_COLON)
         {
           if (lexer_compare_literal_to_string (context_p, "get", 3))
@@ -2421,8 +2428,13 @@ lexer_scan_identifier (parser_context_t *context_p, /**< context */
         && context_p->token.lit_location.length == 3)
     {
       lexer_skip_spaces (context_p);
+      context_p->token.flags = (uint8_t) (context_p->token.flags | LEXER_NO_SKIP_SPACES);
 
       if (context_p->source_p < context_p->source_end_p
+#if ENABLED (JERRY_ES2015_OBJECT_INITIALIZER)
+          && context_p->source_p[0] != LIT_CHAR_COMMA
+          && context_p->source_p[0] != LIT_CHAR_RIGHT_BRACE
+#endif /* ENABLED (JERRY_ES2015_OBJECT_INITIALIZER) */
           && context_p->source_p[0] != LIT_CHAR_COLON)
       {
         if (lexer_compare_literal_to_string (context_p, "get", 3))

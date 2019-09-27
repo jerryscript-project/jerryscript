@@ -31,6 +31,7 @@
 #include "ecma-gc.h"
 #include "jmem.h"
 #include "ecma-iterator-object.h"
+#include "math.h"
 
 #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
 
@@ -1719,7 +1720,8 @@ ecma_builtin_typedarray_prototype_index_helper (ecma_value_t this_arg, /**< this
   uint32_t from_index;
 
   if (args_number == 0
-      || length == 0)
+      || length == 0
+      || !ecma_is_value_number (args[0]))
   {
     return ecma_make_integer_value (-1);
   }
@@ -1736,12 +1738,17 @@ ecma_builtin_typedarray_prototype_index_helper (ecma_value_t this_arg, /**< this
       return ECMA_VALUE_ERROR;
     }
 
-    from_index = ecma_builtin_helper_array_index_normalize (num_var, length, is_last_index_of);
-  }
-
-  if (!ecma_is_value_number (args[0]))
-  {
-    return ecma_make_integer_value (-1);
+    if (!ecma_number_is_nan (num_var)
+        && is_last_index_of
+        && num_var < 0
+        && fabs (num_var) > length)
+    {
+      return ecma_make_integer_value (-1);
+    }
+    else
+    {
+      from_index = ecma_builtin_helper_array_index_normalize (num_var, length, is_last_index_of);
+    }
   }
 
   ecma_number_t search_num = ecma_get_number_from_value (args[0]);

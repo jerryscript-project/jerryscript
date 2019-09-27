@@ -434,6 +434,11 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
           scanner_context_p->mode = SCAN_MODE_VAR_STATEMENT;
           return SCAN_NEXT_TOKEN;
         }
+        case SCAN_STACK_COLON_EXPRESSION:
+        {
+          scanner_raise_error (context_p);
+          break;
+        }
 #if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
         case SCAN_STACK_ARROW_EXPRESSION:
         {

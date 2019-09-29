@@ -587,7 +587,7 @@ ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
     "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   };
 
-  const uint32_t date_buffer_length = 34;
+  const uint32_t date_buffer_length = 37;
   JERRY_VLA (lit_utf8_byte_t, date_buffer, date_buffer_length);
 
   lit_utf8_byte_t *dest_p = date_buffer;
@@ -611,7 +611,32 @@ ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
       case LIT_CHAR_UPPERCASE_Y: /* Year. */
       {
         number = (int32_t) ecma_date_year_from_time (datetime_number);
-        number_length = 4;
+
+        if (number >= 100000 || number <= -100000)
+        {
+          number_length = 6;
+        }
+        else if (number >= 10000 || number <= -10000)
+        {
+          number_length = 5;
+        }
+        else
+        {
+          number_length = 4;
+        }
+        break;
+      }
+      case LIT_CHAR_LOWERCASE_Y: /* ISO Year: -000001, 0000, 0001, 9999, +012345 */
+      {
+        number = (int32_t) ecma_date_year_from_time (datetime_number);
+        if (0 <= number && number <= 9999)
+        {
+          number_length = 4;
+        }
+        else
+        {
+          number_length = 6;
+        }
         break;
       }
       case LIT_CHAR_UPPERCASE_M: /* Month. */
@@ -723,6 +748,17 @@ ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
     /* Print right aligned number values. */
     JERRY_ASSERT (number_length > 0);
 
+    if (number < 0)
+    {
+      number = -number;
+      *dest_p++ = '-';
+    }
+    else if (*(format_p - 1) == LIT_CHAR_LOWERCASE_Y && number_length == 6)
+    {
+      /* positive sign is compulsory for extended years */
+      *dest_p++ = '+';
+    }
+
     dest_p += number_length;
     lit_utf8_byte_t *buffer_p = dest_p;
 
@@ -785,7 +821,7 @@ ecma_date_value_to_utc_string (ecma_number_t datetime_number) /**< datetime */
 ecma_value_t
 ecma_date_value_to_iso_string (ecma_number_t datetime_number) /**<datetime */
 {
-  return ecma_date_to_string_format (datetime_number, "$Y-$O-$DT$h:$m:$s.$iZ");
+  return ecma_date_to_string_format (datetime_number, "$y-$O-$DT$h:$m:$s.$iZ");
 } /* ecma_date_value_to_iso_string */
 
 /**

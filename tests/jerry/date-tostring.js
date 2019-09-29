@@ -142,3 +142,29 @@ assert (Date (2015, 1, 1) == (new Date ()).toString ());
 assert (Date (Number.NaN) == Date ());
 
 assert (new Date ("2015-07-08T11:29:05.023Z").toISOString() == "2015-07-08T11:29:05.023Z");
+
+// corner cases
+assert (new Date (-8640000000000001).toString() == "Invalid Date")
+assert (new Date (-8640000000000000).toString() == "Tue Apr 20 -271821 00:00:00 GMT+00:00")
+
+assert (new Date(-62167219200001).toString() == "Fri Dec 31 -0001 23:59:59 GMT+00:00")
+assert (new Date(-62167219200000).toString() == "Sat Jan 01 0000 00:00:00 GMT+00:00")
+
+assert (new Date(-61851600000001).toString() == "Thu Dec 31 0009 23:59:59 GMT+00:00")
+assert (new Date(-61851600000000).toString() == "Fri Jan 01 0010 00:00:00 GMT+00:00")
+
+assert (new Date(-59011459200001).toString() == "Thu Dec 31 0099 23:59:59 GMT+00:00")
+assert (new Date(-59011459200000).toString() == "Fri Jan 01 0100 00:00:00 GMT+00:00")
+
+assert (new Date(-30610224000001).toString() == "Tue Dec 31 0999 23:59:59 GMT+00:00")
+assert (new Date(-30610224000000).toString() == "Wed Jan 01 1000 00:00:00 GMT+00:00")
+
+assert (new Date(-1).toString() == "Wed Dec 31 1969 23:59:59 GMT+00:00")
+assert (new Date(0).toString() == "Thu Jan 01 1970 00:00:00 GMT+00:00")
+assert (new Date(1).toString() == "Thu Jan 01 1970 00:00:00 GMT+00:00")
+
+assert (new Date(253402300799999).toString() == "Fri Dec 31 9999 23:59:59 GMT+00:00")
+assert (new Date(253402300800000).toString() == "Sat Jan 01 10000 00:00:00 GMT+00:00")
+
+assert (new Date (8640000000000000).toString() == "Sat Sep 13 275760 00:00:00 GMT+00:00")
+assert (new Date (8640000000000001).toString() == "Invalid Date")

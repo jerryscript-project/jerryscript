@@ -632,9 +632,9 @@ ecma_builtin_number_prepare_conversion (ecma_number_t *this_num_p, /**< [out] th
   }
 
   if (mode == NUMBER_ROUTINE_TO_PRECISION &&
-      (arg_num < 1 || arg_num >= 22))
+      (ecma_number_is_nan (arg_num) || arg_num < 1 || arg_num >= 22))
   {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Precision digits must be between 0 and 21."));
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Precision digits must be between 1 and 21."));
   }
 
   *arg_1_int32_p = ecma_number_to_int32 (arg_num);

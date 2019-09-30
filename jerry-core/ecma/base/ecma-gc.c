@@ -59,7 +59,7 @@
  * @return true  - if visited
  *         false - otherwise
  */
-static inline bool
+static inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_gc_is_object_visited (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -69,15 +69,25 @@ ecma_gc_is_object_visited (ecma_object_t *object_p) /**< object */
 
 /**
  * Set visited flag of the object.
+ * Note: This macro can be inlined for performance critical code paths
  */
-static inline void
+#define ECMA_GC_SET_OBJECT_VISITED(object_p) \
+  do \
+  { \
+    if ((object_p)->type_flags_refs < ECMA_OBJECT_REF_ONE) \
+    { \
+      (object_p)->type_flags_refs |= ECMA_OBJECT_REF_ONE; \
+    } \
+  } while (0)
+
+/**
+ * Set visited flag of the object.
+ */
+static void JERRY_ATTR_NOINLINE
 ecma_gc_set_object_visited (ecma_object_t *object_p) /**< object */
 {
   /* Set reference counter to one if it is zero. */
-  if (object_p->type_flags_refs < ECMA_OBJECT_REF_ONE)
-  {
-    object_p->type_flags_refs |= ECMA_OBJECT_REF_ONE;
-  }
+  ECMA_GC_SET_OBJECT_VISITED (object_p);
 } /* ecma_gc_set_object_visited */
 
 /**
@@ -144,7 +154,7 @@ ecma_gc_mark_properties (ecma_property_pair_t *property_pair_p) /**< property pa
         {
           ecma_object_t *value_obj_p = ecma_get_object_from_value (value);
 
-          ecma_gc_set_object_visited (value_obj_p);
+          ECMA_GC_SET_OBJECT_VISITED (value_obj_p);
         }
         break;
       }
@@ -305,7 +315,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 
     if (outer_lex_env_cp != JMEM_CP_NULL)
     {
-      ecma_gc_set_object_visited (ECMA_GET_NON_NULL_POINTER (ecma_object_t, outer_lex_env_cp));
+      ECMA_GC_SET_OBJECT_VISITED (ECMA_GET_NON_NULL_POINTER (ecma_object_t, outer_lex_env_cp));
     }
 
     if (ecma_get_lex_env_type (object_p) != ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
@@ -322,7 +332,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 
     if (proto_cp != JMEM_CP_NULL)
     {
-      ecma_gc_set_object_visited (ECMA_GET_NON_NULL_POINTER (ecma_object_t, proto_cp));
+      ECMA_GC_SET_OBJECT_VISITED (ECMA_GET_NON_NULL_POINTER (ecma_object_t, proto_cp));
     }
 
     switch (ecma_get_object_type (object_p))
@@ -432,7 +442,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
           {
             if (ecma_is_value_object (values_p[i]))
             {
-              ecma_gc_set_object_visited (ecma_get_object_from_value (values_p[i]));
+              ECMA_GC_SET_OBJECT_VISITED (ecma_get_object_from_value (values_p[i]));
             }
           }
 
@@ -481,7 +491,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
         {
           ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
 
-          ecma_gc_set_object_visited (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+          ECMA_GC_SET_OBJECT_VISITED (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
                                                                        ext_func_p->u.function.scope_cp));
         }
         break;
@@ -663,8 +673,8 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
         jmem_cpointer_t name_cp = prop_pair_p->names_cp[i];
 
         /* Call the native's free callback. */
-        if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_DIRECT_STRING_MAGIC
-            && (name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER))
+        if (JERRY_UNLIKELY (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_DIRECT_STRING_MAGIC
+                            && (name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER)))
         {
           ecma_gc_free_native_pointer (property_p);
         }

@@ -2338,7 +2338,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
       case LEXER_KEYW_CLASS:
       {
         parser_parse_class (context_p, true);
-        continue;
+        goto consume_last_statement;
       }
 #endif /* ENABLED (JERRY_ES2015_CLASS) */
 
@@ -2359,7 +2359,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
       case LEXER_KEYW_FUNCTION:
       {
         parser_parse_function_statement (context_p);
-        continue;
+        goto consume_last_statement;
       }
 
       case LEXER_KEYW_IF:
@@ -2665,6 +2665,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
       parser_raise_error (context_p, PARSER_ERR_SEMICOLON_EXPECTED);
     }
 
+consume_last_statement:
     while (true)
     {
       switch (context_p->stack_top_uint8)

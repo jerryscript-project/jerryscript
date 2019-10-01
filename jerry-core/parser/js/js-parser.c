@@ -2272,7 +2272,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
       lexer_literal_t *literal_p;
 
 #if ENABLED (JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER)
-      if (initializer_found)
+      if (initializer_found && (context_p->lit_object.literal_p->status_flags & LEXER_FLAG_FUNCTION_ARGUMENT))
       {
         parser_raise_error (context_p, PARSER_ERR_DUPLICATED_ARGUMENT_NAMES);
       }
@@ -2296,6 +2296,9 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
        * since no byte code has been emitted yet. Therefore there is no
        * need to set the index field. */
       context_p->lit_object.literal_p->type = LEXER_UNUSED_LITERAL;
+#if ENABLED (JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER)
+      context_p->lit_object.literal_p->prop.index = context_p->literal_count;
+#endif /* ENABLED (JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER) */
 
       /* Only the LEXER_FLAG_FUNCTION_ARGUMENT flag is kept. */
       context_p->lit_object.literal_p->status_flags &= LEXER_FLAG_FUNCTION_ARGUMENT;

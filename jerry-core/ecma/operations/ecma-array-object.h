@@ -56,11 +56,14 @@ ecma_value_t *
 ecma_fast_array_extend (ecma_object_t *object_p, uint32_t new_lengt);
 
 bool
-ecma_fast_array_set_property (ecma_object_t *object_p, ecma_string_t *property_name_p, ecma_value_t value);
+ecma_fast_array_set_property (ecma_object_t *object_p, uint32_t index, ecma_value_t value);
 
 void
 ecma_array_object_delete_property (ecma_object_t *object_p, ecma_string_t *property_name_p,
                                    ecma_property_value_t *prop_value_p);
+
+uint32_t
+ecma_delete_fast_array_properties (ecma_object_t *object_p, uint32_t new_length);
 
 ecma_collection_t *
 ecma_fast_array_get_property_names (ecma_object_t *object_p, uint32_t opts);

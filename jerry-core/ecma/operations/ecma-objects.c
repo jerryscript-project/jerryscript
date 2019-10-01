@@ -1004,7 +1004,13 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
           return ecma_reject (is_throw);
         }
 
-        if (ecma_fast_array_set_property (object_p, property_name_p, value))
+        uint32_t index = ecma_string_get_array_index (property_name_p);
+
+        if (JERRY_UNLIKELY (index == ECMA_STRING_NOT_ARRAY_INDEX))
+        {
+          ecma_fast_array_convert_to_normal (object_p);
+        }
+        else if (ecma_fast_array_set_property (object_p, index, value))
         {
           return ECMA_VALUE_TRUE;
         }

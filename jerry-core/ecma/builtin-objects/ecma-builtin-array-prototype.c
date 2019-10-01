@@ -453,6 +453,19 @@ ecma_builtin_array_prototype_object_pop (ecma_object_t *obj_p, /**< array object
     return get_value;
   }
 
+  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY
+      && ((ecma_extended_object_t *) obj_p)->u.array.is_fast_mode)
+  {
+    if (!ecma_get_object_extensible (obj_p))
+    {
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type."));
+    }
+
+    ecma_delete_fast_array_properties (obj_p, len);
+
+    return get_value;
+  }
+
   /* 5.c */
   ecma_value_t del_value = ecma_op_object_delete (obj_p, index_str_p, true);
 
@@ -494,6 +507,35 @@ ecma_builtin_array_prototype_object_push (const ecma_value_t *argument_list_p, /
                                           uint32_t length) /**< array object's length */
 {
   ecma_number_t n = (ecma_number_t) length;
+
+  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY
+      && ((ecma_extended_object_t *) obj_p)->u.array.is_fast_mode)
+  {
+    if (!ecma_get_object_extensible (obj_p))
+    {
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type."));
+    }
+
+    if ((ecma_number_t) (length + arguments_number) > UINT32_MAX)
+    {
+      return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid array length"));
+    }
+
+    if (arguments_number == 0)
+    {
+      return ecma_make_uint32_value (length);
+    }
+
+    uint32_t new_length = length + arguments_number;
+    ecma_value_t *buffer_p = ecma_fast_array_extend (obj_p, new_length) + length;
+
+    for (uint32_t index = 0; index < arguments_number; index++)
+    {
+      buffer_p[index] = ecma_copy_value_if_not_object (argument_list_p[index]);
+    }
+
+    return ecma_make_uint32_value (new_length);
+  }
 
   /* 5. */
   for (uint32_t index = 0; index < arguments_number; index++, n++)

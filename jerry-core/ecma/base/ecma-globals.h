@@ -1024,6 +1024,15 @@ typedef struct
  */
 typedef float ecma_number_t;
 
+/**
+ * It makes possible to read/write an ecma_number_t as uint32_t without strict aliasing rule violation.
+ */
+typedef union
+{
+  ecma_number_t as_ecma_number_t;
+  uint32_t as_uint32_t;
+} ecma_number_accessor_t;
+
 #define DOUBLE_TO_ECMA_NUMBER_T(value) (ecma_number_t) (value)
 
 /**
@@ -1059,6 +1068,15 @@ typedef float ecma_number_t;
  * Description of an ecma-number
  */
 typedef double ecma_number_t;
+
+/**
+ * It makes possible to read/write an ecma_number_t as uint64_t without strict aliasing rule violation.
+ */
+typedef union
+{
+  ecma_number_t as_ecma_number_t;
+  uint64_t as_uint64_t;
+} ecma_number_accessor_t;
 
 #define DOUBLE_TO_ECMA_NUMBER_T(value) value
 

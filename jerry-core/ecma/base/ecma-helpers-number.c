@@ -58,15 +58,9 @@ ecma_number_pack (bool sign, /**< sign */
                            (biased_exp << ECMA_NUMBER_FRACTION_WIDTH) |
                            ((uint32_t) fraction));
 
-  union
-  {
-    uint32_t u32_value;
-    ecma_number_t float_value;
-  } u;
-
-  u.u32_value = packed_value;
-
-  return u.float_value;
+  ecma_number_accessor_t u;
+  u.as_uint32_t = packed_value;
+  return u.as_ecma_number_t;
 } /* ecma_number_pack */
 
 /**
@@ -78,15 +72,9 @@ ecma_number_unpack (ecma_number_t num, /**< ecma-number */
                     uint32_t *biased_exp_p, /**< [out] biased exponent (optional) */
                     uint64_t *fraction_p) /**< [out] fraction (optional) */
 {
-  union
-  {
-    uint32_t u32_value;
-    ecma_number_t float_value;
-  } u;
-
-  u.float_value = num;
-
-  uint32_t packed_value = u.u32_value;
+  ecma_number_accessor_t u;
+  u.as_ecma_number_t = num;
+  uint32_t packed_value = u.as_uint32_t;
 
   if (sign_p != NULL)
   {
@@ -133,15 +121,9 @@ ecma_number_pack (bool sign, /**< sign */
   JERRY_ASSERT ((biased_exp & ~((1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1)) == 0);
   JERRY_ASSERT ((fraction & ~((1ull << ECMA_NUMBER_FRACTION_WIDTH) - 1)) == 0);
 
-  union
-  {
-    uint64_t u64_value;
-    ecma_number_t float_value;
-  } u;
-
-  u.u64_value = packed_value;
-
-  return u.float_value;
+  ecma_number_accessor_t u;
+  u.as_uint64_t = packed_value;
+  return u.as_ecma_number_t;
 } /* ecma_number_pack */
 
 /**
@@ -153,14 +135,9 @@ ecma_number_unpack (ecma_number_t num, /**< ecma-number */
                     uint32_t *biased_exp_p, /**< [out] biased exponent (optional) */
                     uint64_t *fraction_p) /**< [out] fraction (optional) */
 {
-  union
-  {
-    uint64_t u64_value;
-    ecma_number_t float_value;
-  } u;
-  u.float_value = num;
-
-  uint64_t packed_value = u.u64_value;
+  ecma_number_accessor_t u;
+  u.as_ecma_number_t = num;
+  uint64_t packed_value = u.as_uint64_t;
 
   if (sign_p != NULL)
   {
@@ -267,9 +244,14 @@ ecma_number_is_nan (ecma_number_t num) /**< ecma-number */
 ecma_number_t
 ecma_number_make_nan (void)
 {
-  return ecma_number_pack (false,
-                           (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1u,
-                           1u);
+  /* IEEE754 QNaN = sign bit: 0, exponent: all 1 bits, fraction: 1....0 */
+  ecma_number_accessor_t f;
+#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+  f.as_uint64_t = 0x7ff8000000000000ull; /* double QNaN, same as the C99 nan("") returns. */
+#else /* !ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+  f.as_uint32_t = 0x7fc00000u;  /* float QNaN, same as the C99 nanf("") returns. */
+#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+  return f.as_ecma_number_t;
 } /* ecma_number_make_nan */
 
 /**
@@ -282,9 +264,14 @@ ecma_number_t
 ecma_number_make_infinity (bool sign) /**< true - for negative Infinity,
                                            false - for positive Infinity */
 {
-  return ecma_number_pack (sign,
-                           (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1u,
-                           0u);
+  /* IEEE754 INF = sign bit: sign, exponent: all 1 bits, fraction: 0....0 */
+  ecma_number_accessor_t f;
+#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+  f.as_uint64_t = sign ? 0xfff0000000000000ull : 0x7ff0000000000000ull;
+#else /* !ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+  f.as_uint32_t = sign ? 0xff800000u : 0x7f800000u;
+#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+  return f.as_ecma_number_t;
 } /* ecma_number_make_infinity */
 
 /**

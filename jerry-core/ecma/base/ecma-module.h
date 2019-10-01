@@ -133,7 +133,7 @@ ecma_value_t ecma_module_connect_imports (void);
 ecma_value_t ecma_module_parse_modules (void);
 ecma_value_t ecma_module_check_indirect_exports (void);
 
-void ecma_module_release_module_names (ecma_module_names_t *module_name_p);
+void ecma_module_release_module_nodes (ecma_module_node_t *module_node_p);
 void ecma_module_cleanup (void);
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 

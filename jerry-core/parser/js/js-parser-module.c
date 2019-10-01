@@ -142,6 +142,7 @@ void
 parser_module_add_export_node_to_context (parser_context_t *context_p) /**< parser context */
 {
   ecma_module_node_t *module_node_p = context_p->module_current_node_p;
+  context_p->module_current_node_p = NULL;
   ecma_module_node_t **export_list_p;
 
   /* Check which list we should add it to. */
@@ -181,16 +182,18 @@ parser_module_add_export_node_to_context (parser_context_t *context_p) /**< pars
 
         module_names_p->next_p = stored_exports_p->module_names_p;
         stored_exports_p->module_names_p = module_node_p->module_names_p;
+        module_node_p->module_names_p = NULL;
       }
+
+      ecma_module_release_module_nodes (module_node_p);
       return;
     }
 
     stored_exports_p = stored_exports_p->next_p;
   }
 
-  ecma_module_node_t *export_node_p = parser_module_create_module_node (context_p, module_node_p);
-  export_node_p->next_p = *export_list_p;
-  *export_list_p = export_node_p;
+  module_node_p->next_p = *export_list_p;
+  *export_list_p = module_node_p;
 } /* parser_module_add_export_node_to_context */
 
 /**
@@ -200,6 +203,7 @@ void
 parser_module_add_import_node_to_context (parser_context_t *context_p) /**< parser context */
 {
   ecma_module_node_t *module_node_p = context_p->module_current_node_p;
+  context_p->module_current_node_p = NULL;
   ecma_module_node_t *stored_imports = JERRY_CONTEXT (module_top_context_p)->imports_p;
 
   /* Check if we have a node with the same module request, append to it if we do. */
@@ -218,16 +222,18 @@ parser_module_add_import_node_to_context (parser_context_t *context_p) /**< pars
 
         module_names_p->next_p = stored_imports->module_names_p;
         stored_imports->module_names_p = module_node_p->module_names_p;
+        module_node_p->module_names_p = NULL;
       }
+
+      ecma_module_release_module_nodes (module_node_p);
       return;
     }
 
     stored_imports = stored_imports->next_p;
   }
 
-  ecma_module_node_t *permanent_node_p = parser_module_create_module_node (context_p, module_node_p);
-  permanent_node_p->next_p = JERRY_CONTEXT (module_top_context_p)->imports_p;
-  JERRY_CONTEXT (module_top_context_p)->imports_p = permanent_node_p;
+  module_node_p->next_p = JERRY_CONTEXT (module_top_context_p)->imports_p;
+  JERRY_CONTEXT (module_top_context_p)->imports_p = module_node_p;
 } /* parser_module_add_import_node_to_context */
 
 /**
@@ -309,21 +315,10 @@ parser_module_context_init (void)
  *         - otherwise: an empty node.
  */
 ecma_module_node_t *
-parser_module_create_module_node (parser_context_t *context_p, /**< parser context */
-                                  ecma_module_node_t *template_node_p) /**< template node for the new node */
+parser_module_create_module_node (parser_context_t *context_p) /**< parser context */
 {
   ecma_module_node_t *node_p = (ecma_module_node_t *) parser_malloc (context_p, sizeof (ecma_module_node_t));
-
-  if (template_node_p != NULL)
-  {
-    node_p->module_names_p = template_node_p->module_names_p;
-    node_p->module_request_p = template_node_p->module_request_p;
-    node_p->next_p = NULL;
-  }
-  else
-  {
-    memset (node_p, 0, sizeof (ecma_module_node_t));
-  }
+  memset (node_p, 0, sizeof (ecma_module_node_t));
 
   return node_p;
 } /* parser_module_create_module_node */

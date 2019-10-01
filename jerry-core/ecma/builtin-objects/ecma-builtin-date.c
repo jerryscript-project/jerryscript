@@ -199,10 +199,27 @@ ecma_builtin_date_parse (ecma_value_t this_arg, /**< this argument */
   const lit_utf8_byte_t *date_str_end_p = date_start_p + date_start_size;
 
   /* 1. read year */
-  ecma_number_t year = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 4);
 
-  if (!ecma_number_is_nan (year)
-      && year >= 0)
+  uint32_t year_digits = 4;
+  bool year_sign = false; /* false: positive, true: negative */
+  if (*date_str_curr_p == '-' || *date_str_curr_p == '+')
+  {
+    year_digits = 6;
+    if (*date_str_curr_p == '-')
+    {
+      year_sign = true;
+    }
+    /* eat up '-' or '+' */
+    date_str_curr_p++;
+  }
+
+  ecma_number_t year = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, year_digits);
+  if (year_sign)
+  {
+    year = -year;
+  }
+
+  if (!ecma_number_is_nan (year))
   {
     ecma_number_t month = ECMA_NUMBER_ONE;
     ecma_number_t day = ECMA_NUMBER_ONE;

@@ -325,7 +325,6 @@ typedef enum
   OPT_EXEC_SNAP,
   OPT_EXEC_SNAP_FUNC,
   OPT_LOG_LEVEL,
-  OPT_ABORT_ON_FAIL,
   OPT_NO_PROMPT
 } main_opt_id_t;
 
@@ -364,8 +363,6 @@ static const cli_opt_t main_opts[] =
                .help = "execute specific function from input snapshot file(s)"),
   CLI_OPT_DEF (.id = OPT_LOG_LEVEL, .longopt = "log-level", .meta = "NUM",
                .help = "set log level (0-3)"),
-  CLI_OPT_DEF (.id = OPT_ABORT_ON_FAIL, .longopt = "abort-on-fail",
-               .help = "segfault on internal failure (instead of non-zero exit code)"),
   CLI_OPT_DEF (.id = OPT_NO_PROMPT, .longopt = "no-prompt",
                .help = "don't print prompt in REPL mode"),
   CLI_OPT_DEF (.id = CLI_OPT_DEFAULT, .meta = "FILE",
@@ -622,11 +619,6 @@ main (int argc,
                      argv[0], "Error: invalid value for --log-level: ", cli_state.arg);
 
         jerry_port_default_set_log_level ((jerry_log_level_t) log_level);
-        break;
-      }
-      case OPT_ABORT_ON_FAIL:
-      {
-        jerry_port_default_set_abort_on_fail (true);
         break;
       }
       case OPT_NO_PROMPT:

@@ -27,6 +27,7 @@
 #include "ecma-iterator-object.h"
 #include "ecma-objects.h"
 #include "ecma-string-object.h"
+#include "lit-char-helpers.h"
 #include "jrt.h"
 
 #if ENABLED (JERRY_BUILTIN_ARRAY)
@@ -182,38 +183,29 @@ ecma_builtin_array_prototype_object_to_locale_string (ecma_object_t *obj_p, /**<
   }
 
   ecma_string_t *first_string_p = ecma_get_string_from_value (first_value);
-  ecma_string_t *return_string_p = first_string_p;
-  ecma_ref_ecma_string (return_string_p);
-
-  ecma_value_t ret_value = ECMA_VALUE_ERROR;
+  ecma_stringbuilder_t builder = ecma_stringbuilder_create_from (first_string_p);
+  ecma_deref_ecma_string (first_string_p);
 
   /* 9-10. */
   for (uint32_t k = 1; k < length; k++)
   {
     /* 4. Implementation-defined: set the separator to a single comma character. */
-    return_string_p = ecma_append_magic_string_to_string (return_string_p,
-                                                          LIT_MAGIC_STRING_COMMA_CHAR);
+    ecma_stringbuilder_append_byte (&builder, LIT_CHAR_COMMA);
 
     ecma_value_t next_string_value = ecma_builtin_helper_get_to_locale_string_at_index (obj_p, k);
 
     if (ECMA_IS_VALUE_ERROR (next_string_value))
     {
-      ecma_deref_ecma_string (return_string_p);
-      goto clean_up;
+      ecma_stringbuilder_destroy (&builder);
+      return next_string_value;
     }
 
     ecma_string_t *next_string_p = ecma_get_string_from_value (next_string_value);
-    return_string_p = ecma_concat_ecma_strings (return_string_p, next_string_p);
-
+    ecma_stringbuilder_append (&builder, next_string_p);
     ecma_deref_ecma_string (next_string_p);
   }
 
-  ret_value = ecma_make_string_value (return_string_p);
-
-clean_up:
-  ecma_deref_ecma_string (first_string_p);
-
-  return ret_value;
+  return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
 } /* ecma_builtin_array_prototype_object_to_locale_string */
 
 /**
@@ -382,40 +374,33 @@ ecma_builtin_array_prototype_join (ecma_value_t separator_arg, /**< separator ar
   }
 
   ecma_string_t *first_string_p = ecma_get_string_from_value (first_value);
-  ecma_string_t *return_string_p = first_string_p;
-  ecma_ref_ecma_string (return_string_p);
+  ecma_stringbuilder_t builder = ecma_stringbuilder_create_from (first_string_p);
+  ecma_deref_ecma_string (first_string_p);
 
-  ecma_value_t ret_value = ECMA_VALUE_ERROR;
   /* 9-10. */
   for (uint32_t k = 1; k < length; k++)
   {
     /* 10.a */
-    return_string_p = ecma_concat_ecma_strings (return_string_p, separator_string_p);
+    ecma_stringbuilder_append (&builder, separator_string_p);
 
     /* 10.b, 10.c */
     ecma_value_t next_string_value = ecma_op_array_get_to_string_at_index (obj_p, k);
 
     if (ECMA_IS_VALUE_ERROR (next_string_value))
     {
-      ecma_deref_ecma_string (return_string_p);
-      goto clean_up;
+      ecma_deref_ecma_string (separator_string_p);
+      ecma_stringbuilder_destroy (&builder);
+      return next_string_value;
     }
 
     /* 10.d */
     ecma_string_t *next_string_p = ecma_get_string_from_value (next_string_value);
-    return_string_p = ecma_concat_ecma_strings (return_string_p, next_string_p);
-
+    ecma_stringbuilder_append (&builder, next_string_p);
     ecma_deref_ecma_string (next_string_p);
   }
 
-  ret_value = ecma_make_string_value (return_string_p);
-
-clean_up:
-  ecma_deref_ecma_string (first_string_p);
-
   ecma_deref_ecma_string (separator_string_p);
-
-  return ret_value;
+  return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
 } /* ecma_builtin_array_prototype_join */
 
 /**

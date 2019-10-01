@@ -104,7 +104,6 @@
 double
 sqrt (double x)
 {
-  double z;
   int sign = (int) 0x80000000;
   unsigned r, t1, s1, ix1, q1;
   int ix0, s0, q, m, t, i;
@@ -201,19 +200,21 @@ sqrt (double x)
     r >>= 1;
   }
 
+  double_accessor ret;
+
   /* use floating add to find out rounding direction */
   if ((ix0 | ix1) != 0)
   {
-    z = one - tiny; /* trigger inexact flag */
-    if (z >= one)
+    ret.dbl = one - tiny; /* trigger inexact flag */
+    if (ret.dbl >= one)
     {
-      z = one + tiny;
+      ret.dbl = one + tiny;
       if (q1 == (unsigned) 0xffffffff)
       {
         q1 = 0;
         q += 1;
       }
-      else if (z > one)
+      else if (ret.dbl > one)
       {
         if (q1 == (unsigned) 0xfffffffe)
         {
@@ -234,9 +235,9 @@ sqrt (double x)
     ix1 |= sign;
   }
   ix0 += (m << 20);
-  __HI (z) = ix0;
-  __LO (z) = ix1;
-  return z;
+  ret.as_int.hi = ix0;
+  ret.as_int.lo = ix1;
+  return ret.dbl;
 } /* sqrt */
 
 #undef one

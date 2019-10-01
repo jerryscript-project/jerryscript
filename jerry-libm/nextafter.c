@@ -33,6 +33,7 @@ nextafter (double x,
 {
   int hx, hy, ix, iy;
   unsigned lx, ly;
+  double_accessor ret;
 
   hx = __HI (x); /* high word of x */
   lx = __LO (x); /* low  word of x */
@@ -54,16 +55,16 @@ nextafter (double x,
 
   if ((ix | lx) == 0)
   { /* x == 0 */
-    __HI (x) = hy & 0x80000000; /* return +-minsubnormal */
-    __LO (x) = 1;
-    y = x * x;
-    if (y == x)
+    ret.as_int.hi = hy & 0x80000000; /* return +-minsubnormal */
+    ret.as_int.lo = 1;
+    y = ret.dbl * ret.dbl;
+    if (y == ret.dbl)
     {
       return y;
     }
     else
     {
-      return x; /* raise underflow flag */
+      return ret.dbl; /* raise underflow flag */
     }
   }
 
@@ -122,13 +123,13 @@ nextafter (double x,
     y = x * x;
     if (y != x)
     { /* raise underflow flag */
-      __HI (y) = hx;
-      __LO (y) = lx;
-      return y;
+      ret.as_int.hi = hx;
+      ret.as_int.lo = lx;
+      return ret.dbl;
     }
   }
 
-  __HI (x) = hx;
-  __LO (x) = lx;
-  return x;
+  ret.as_int.hi = hx;
+  ret.as_int.lo = lx;
+  return ret.dbl;
 } /* nextafter */

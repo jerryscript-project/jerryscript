@@ -35,8 +35,6 @@
 
 static const double Zero[] = { 0.0, -0.0, };
 
-#define one 1.0
-
 double
 fmod (double x, double y)
 {
@@ -201,11 +199,13 @@ fmod (double x, double y)
     lx = lx + lx;
     iy -= 1;
   }
+
+  double_accessor ret;
   if (iy >= -1022) /* normalize output */
   {
     hx = ((hx - 0x00100000) | ((iy + 1023) << 20));
-    __HI (x) = hx | sx;
-    __LO (x) = lx;
+    ret.as_int.hi = hx | sx;
+    ret.as_int.lo = lx;
   }
   else /* subnormal output */
   {
@@ -225,11 +225,8 @@ fmod (double x, double y)
       lx = hx >> (n - 32);
       hx = sx;
     }
-    __HI (x) = hx | sx;
-    __LO (x) = lx;
-    x *= one; /* create necessary signal */
+    ret.as_int.hi = hx | sx;
+    ret.as_int.lo = lx;
   }
-  return x; /* exact output */
+  return ret.dbl; /* exact output */
 } /* fmod */
-
-#undef one

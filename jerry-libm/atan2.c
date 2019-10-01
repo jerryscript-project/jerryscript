@@ -64,7 +64,7 @@
 double
 atan2 (double y, double x)
 {
-  double z;
+  double_accessor z;
   int k, m, hx, hy, ix, iy;
   unsigned lx, ly;
 
@@ -168,35 +168,35 @@ atan2 (double y, double x)
   k = (iy - ix) >> 20;
   if (k > 60) /* |y / x| > 2**60 */
   {
-    z = pi_o_2 + 0.5 * pi_lo;
+    z.dbl = pi_o_2 + 0.5 * pi_lo;
   }
   else if (hx < 0 && k < -60) /* |y| / x < -2**60 */
   {
-    z = 0.0;
+    z.dbl = 0.0;
   }
   else /* safe to do y / x */
   {
-    z = atan (fabs (y / x));
+    z.dbl = atan (fabs (y / x));
   }
   switch (m)
   {
     case 0: /* atan(+,+) */
     {
-      return z;
+      return z.dbl;
     }
     case 1: /* atan(-,+) */
     {
-      __HI (z) ^= 0x80000000;
-      return z;
+      z.as_int.hi ^= 0x80000000;
+      return z.dbl;
     }
     case 2: /* atan(+,-) */
     {
-      return pi - (z - pi_lo);
+      return pi - (z.dbl - pi_lo);
     }
     /* case 3: */
     default: /* atan(-,-) */
     {
-      return (z - pi_lo) - pi;
+      return (z.dbl - pi_lo) - pi;
     }
   }
 } /* atan2 */

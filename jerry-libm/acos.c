@@ -70,7 +70,7 @@
 double
 acos (double x)
 {
-  double z, p, q, r, w, s, c, df;
+  double z, p, q, r, w, s, c;
   int hx, ix;
 
   hx = __HI (x);
@@ -114,16 +114,17 @@ acos (double x)
   }
   else /* x > 0.5 */
   {
+    double_accessor df;
     z = (one - x) * 0.5;
     s = sqrt (z);
-    df = s;
-    __LO (df) = 0;
-    c = (z - df * df) / (s + df);
+    df.dbl = s;
+    df.as_int.lo = 0;
+    c = (z - df.dbl * df.dbl) / (s + df.dbl);
     p = z * (pS0 + z * (pS1 + z * (pS2 + z * (pS3 + z * (pS4 + z * pS5)))));
     q = one + z * (qS1 + z * (qS2 + z * (qS3 + z * qS4)));
     r = p / q;
     w = r * s + c;
-    return 2.0 * (df + w);
+    return 2.0 * (df.dbl + w);
   }
 } /* acos */
 

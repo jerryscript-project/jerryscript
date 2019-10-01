@@ -70,8 +70,10 @@ scalbn (double x, int n)
   }
   if (k > 0) /* normal result */
   {
-    __HI (x) = (hx & 0x800fffff) | (k << 20);
-    return x;
+    double_accessor ret;
+    ret.dbl = x;
+    ret.as_int.hi = (hx & 0x800fffff) | (k << 20);
+    return ret.dbl;
   }
   if (k <= -54)
   {
@@ -85,8 +87,10 @@ scalbn (double x, int n)
     }
   }
   k += 54; /* subnormal result */
-  __HI (x) = (hx & 0x800fffff) | (k << 20);
-  return x * twom54;
+  double_accessor ret;
+  ret.dbl = x;
+  ret.as_int.hi = (hx & 0x800fffff) | (k << 20);
+  return ret.dbl * twom54;
 } /* scalbn */
 
 #undef two54

@@ -122,9 +122,11 @@ floor (double x)
       i1 &= (~i);
     }
   }
-  __HI (x) = i0;
-  __LO (x) = i1;
-  return x;
+
+  double_accessor ret;
+  ret.as_int.hi = i0;
+  ret.as_int.lo = i1;
+  return ret.dbl;
 } /* floor */
 
 #undef huge

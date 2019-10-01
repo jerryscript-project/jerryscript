@@ -120,7 +120,7 @@ static const double ln2LO[2] =
 double
 exp (double x) /* default IEEE double exp */
 {
-  double y, hi, lo, c, t;
+  double hi, lo, c, t;
   int k = 0, xsb;
   unsigned hx;
 
@@ -182,6 +182,8 @@ exp (double x) /* default IEEE double exp */
     k = 0;
   }
 
+  double_accessor ret;
+
   /* x is now in primary range */
   t = x * x;
   c = x - t * (P1 + t * (P2 + t * (P3 + t * (P4 + t * P5))));
@@ -191,17 +193,17 @@ exp (double x) /* default IEEE double exp */
   }
   else
   {
-    y = one - ((lo - (x * c) / (2.0 - c)) - hi);
+    ret.dbl = one - ((lo - (x * c) / (2.0 - c)) - hi);
   }
   if (k >= -1021)
   {
-    __HI (y) += (k << 20); /* add k to y's exponent */
-    return y;
+    ret.as_int.hi += (k << 20); /* add k to y's exponent */
+    return ret.dbl;
   }
   else
   {
-    __HI (y) += ((k + 1000) << 20); /* add k to y's exponent */
-    return y * twom1000;
+    ret.as_int.hi += ((k + 1000) << 20); /* add k to y's exponent */
+    return ret.dbl * twom1000;
   }
 } /* exp */
 

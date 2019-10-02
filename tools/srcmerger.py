@@ -28,7 +28,7 @@ class SourceMerger(object):
 
     _RE_INCLUDE = re.compile(r'\s*#include ("|<)(.*?)("|>)\n$')
 
-    def __init__(self, h_files, extra_includes=None, remove_includes=None):
+    def __init__(self, h_files, extra_includes=None, remove_includes=None, add_lineinfo=False):
         self._log = logging.getLogger('sourcemerger')
         self._last_builtin = None
         self._processed = []
@@ -36,6 +36,7 @@ class SourceMerger(object):
         self._h_files = h_files
         self._extra_includes = extra_includes or []
         self._remove_includes = remove_includes
+        self._add_lineinfo = add_lineinfo
         # The copyright will be loaded from the first input file
         self._copyright = {'lines': [], 'loaded': False}
 
@@ -60,6 +61,9 @@ class SourceMerger(object):
         self._output.append(line)
 
     def _emit_lineinfo(self, line_number, filename):
+        if not self._add_lineinfo:
+            return
+
         normalized_path = repr(os.path.normpath(filename))[1:-1]
         line_info = '#line %d "%s"\n' % (line_number, normalized_path)
 
@@ -210,7 +214,7 @@ def run_merger(args):
         c_files.pop(name, '')
         h_files.pop(name, '')
 
-    merger = SourceMerger(h_files, args.push_include, args.remove_include)
+    merger = SourceMerger(h_files, args.push_include, args.remove_include, args.add_lineinfo)
     for input_file in args.input_files:
         merger.add_file(input_file)
 
@@ -242,6 +246,8 @@ def main():
                         action='store_true', help='Enable auto inclusion of c files under the base-dir')
     parser.add_argument('--remove-include', action='append', default=[])
     parser.add_argument('--push-include', action='append', default=[])
+    parser.add_argument('--add-lineinfo', action='store_true', default=False,
+                        help='Enable #line macro insertion into the generated sources')
     parser.add_argument('--verbose', '-v', action='store_true', default=False)
 
     args = parser.parse_args()

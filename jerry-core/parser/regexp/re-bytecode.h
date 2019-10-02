@@ -85,9 +85,9 @@ typedef enum
 typedef struct
 {
   ecma_compiled_code_t header;       /**< compiled code header */
-  ecma_value_t pattern;              /**< original RegExp pattern */
-  uint32_t num_of_captures;          /**< number of capturing brackets */
-  uint32_t num_of_non_captures;      /**< number of non capturing brackets */
+  ecma_value_t source;               /**< original RegExp pattern */
+  uint32_t captures_count;           /**< number of capturing brackets */
+  uint32_t non_captures_count;       /**< number of non capturing brackets */
 } re_compiled_code_t;
 
 /**
@@ -100,19 +100,24 @@ typedef struct
   uint8_t *current_p;          /**< current position in bytecode */
 } re_bytecode_ctx_t;
 
-re_opcode_t re_get_opcode (uint8_t **bc_p);
-ecma_char_t re_get_char (uint8_t **bc_p);
-uint32_t re_get_value (uint8_t **bc_p);
+re_opcode_t re_get_opcode (const uint8_t **bc_p);
+ecma_char_t re_get_char (const uint8_t **bc_p);
+uint32_t re_get_value (const uint8_t **bc_p);
 uint32_t JERRY_ATTR_PURE re_get_bytecode_length (re_bytecode_ctx_t *bc_ctx_p);
 
-void re_append_opcode (re_bytecode_ctx_t *bc_ctx_p, re_opcode_t opcode);
-void re_append_u32 (re_bytecode_ctx_t *bc_ctx_p, uint32_t value);
-void re_append_char (re_bytecode_ctx_t *bc_ctx_p, ecma_char_t input_char);
+void re_initialize_regexp_bytecode (re_bytecode_ctx_t *bc_ctx_p);
+
+void re_append_opcode (re_bytecode_ctx_t *bc_ctx_p, const re_opcode_t opcode);
+void re_append_u32 (re_bytecode_ctx_t *bc_ctx_p, const uint32_t value);
+void re_append_char (re_bytecode_ctx_t *bc_ctx_p, const ecma_char_t input_char);
 void re_append_jump_offset (re_bytecode_ctx_t *bc_ctx_p, uint32_t value);
 
-void re_insert_opcode (re_bytecode_ctx_t *bc_ctx_p, uint32_t offset, re_opcode_t opcode);
-void re_insert_u32 (re_bytecode_ctx_t *bc_ctx_p, uint32_t offset, uint32_t value);
-void re_bytecode_list_insert (re_bytecode_ctx_t *bc_ctx_p, size_t offset, uint8_t *bytecode_p, size_t length);
+void re_insert_opcode (re_bytecode_ctx_t *bc_ctx_p, const uint32_t offset, const re_opcode_t opcode);
+void re_insert_u32 (re_bytecode_ctx_t *bc_ctx_p, const uint32_t offset, const uint32_t value);
+void re_bytecode_list_insert (re_bytecode_ctx_t *bc_ctx_p,
+                              const size_t offset,
+                              const uint8_t *bytecode_p,
+                              const size_t length);
 
 #if ENABLED (JERRY_REGEXP_DUMP_BYTE_CODE)
 void re_dump_bytecode (re_bytecode_ctx_t *bc_ctx);

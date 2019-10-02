@@ -38,8 +38,8 @@
 typedef struct
 {
   uint16_t flags;                    /**< RegExp flags */
-  uint32_t num_of_captures;          /**< number of capture groups */
-  uint32_t num_of_non_captures;      /**< number of non-capture groups */
+  uint32_t captures_count;           /**< number of capture groups */
+  uint32_t non_captures_count;       /**< number of non-capture groups */
   uint32_t highest_backref;          /**< highest backreference */
   re_bytecode_ctx_t *bytecode_ctx_p; /**< pointer of RegExp bytecode context */
   re_token_t current_token;          /**< current token */

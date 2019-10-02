@@ -999,10 +999,10 @@ typedef struct
  * Bitfield which represents a namedata property options in an ecma_property_descriptor_t
  * Attributes:
  *  - is_get_defined, is_set_defined : false
- *  - is_configurable, is_writable, is_enumberable : undefined (false)
+ *  - is_configurable, is_writable, is_enumerable : undefined (false)
  *  - is_throw : undefined (false)
  *  - is_value_defined : true
- *  - is_configurable_defined, is_writable_defined, is_enumberable_defined : true
+ *  - is_configurable_defined, is_writable_defined, is_enumerable_defined : true
  */
 #define ECMA_NAME_DATA_PROPERTY_DESCRIPTOR_BITS 0x3c0
 

@@ -374,11 +374,11 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
                 || current_property_type == ECMA_PROPERTY_TYPE_VIRTUAL);
 
   /* 7. a., b. */
-  bool is_enumberable = (property_desc_p->flags & ECMA_PROP_IS_ENUMERABLE) != 0;
+  bool is_enumerable = (property_desc_p->flags & ECMA_PROP_IS_ENUMERABLE) != 0;
   if (!is_current_configurable
       && ((property_desc_p->flags & ECMA_PROP_IS_CONFIGURABLE)
           || ((property_desc_p->flags & ECMA_PROP_IS_ENUMERABLE_DEFINED)
-              && (is_enumberable != ecma_is_property_enumerable (current_prop)))))
+              && (is_enumerable != ecma_is_property_enumerable (current_prop)))))
   {
     if (current_property_type == ECMA_PROPERTY_TYPE_VIRTUAL)
     {

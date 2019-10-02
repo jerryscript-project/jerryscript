@@ -497,7 +497,7 @@ ecma_fast_array_set_length (ecma_object_t *object_p, /**< fast access mode array
 /**
  * Get collection of property names of a fast access mode array object
  *
- * Note: Since the fast array object only contains indexed, enumberable, writable, configurable properties
+ * Note: Since the fast array object only contains indexed, enumerable, writable, configurable properties
  *       we can return a collection of non-array hole array indices
  *
  * @return collection of strings - property names

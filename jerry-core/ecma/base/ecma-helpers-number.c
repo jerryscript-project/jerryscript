@@ -325,12 +325,14 @@ ecma_number_is_infinity (ecma_number_t num) /**< ecma-number */
 {
   JERRY_ASSERT (!ecma_number_is_nan (num));
 
-  uint32_t biased_exp = ecma_number_get_biased_exponent_field (num);
-  uint64_t fraction = ecma_number_get_fraction_field (num);
+  ecma_number_accessor_t f;
+  f.as_ecma_number_t = num;
 
-  /* IEEE-754 2008, 3.4, b */
-  return ((biased_exp  == (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1)
-          && (fraction == 0));
+#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+  return (f.as_uint64_t & 0x7fffffffffffffffull) == 0x7ff0000000000000ull;
+#else /* !ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+  return (f.as_uint32_t & 0x7fffffffu) == 0x7f800000u;
+#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
 } /* ecma_number_is_infinity */
 
 /**

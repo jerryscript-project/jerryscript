@@ -49,6 +49,8 @@ ecma_value_t ecma_get_number (ecma_value_t value, ecma_number_t *number_p);
 ecma_value_t ecma_op_to_string (ecma_value_t value);
 ecma_string_t *ecma_op_to_prop_name (ecma_value_t value);
 ecma_value_t ecma_op_to_object (ecma_value_t value);
+ecma_value_t ecma_op_to_integer (ecma_value_t value, ecma_number_t *number_p);
+ecma_value_t ecma_op_to_length (ecma_value_t value, uint32_t *length);
 
 ecma_object_t *ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_desc_p);
 ecma_value_t ecma_op_to_property_descriptor (ecma_value_t obj_value, ecma_property_descriptor_t *out_prop_desc_p);

@@ -452,8 +452,7 @@ re_parse_char_class (re_compiler_ctx_t *re_ctx_p, /**< number of classes */
         re_append_char_class (re_ctx_p, LIT_CHAR_LOWERCASE_Z + 1, LIT_UTF16_CODE_UNIT_MAX);
         ch = LIT_CHAR_UNDEF;
       }
-      else if (lit_char_is_octal_digit ((ecma_char_t) ch)
-               && ch != LIT_CHAR_0)
+      else if (lit_char_is_octal_digit ((ecma_char_t) ch))
       {
         lit_utf8_decr (&parser_ctx_p->input_curr_p);
         ch = (ecma_char_t) re_parse_octal (parser_ctx_p);

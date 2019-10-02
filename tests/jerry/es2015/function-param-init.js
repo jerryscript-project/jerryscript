@@ -88,3 +88,11 @@ f();
 
 var f = new Function (str, "return (a + c) * (b == undefined ? 1 : 0)");
 assert (f() == 9);
+
+function duplicatedArg (a = c, b = d, c) {
+  assert(a === 1);
+  assert(b === 2);
+  assert(c === 3);
+}
+
+duplicatedArg(1, 2, 3);

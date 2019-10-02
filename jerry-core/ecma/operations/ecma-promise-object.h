@@ -71,6 +71,8 @@ typedef struct
 bool ecma_is_promise (ecma_object_t *obj_p);
 ecma_value_t
 ecma_op_create_promise_object (ecma_value_t executor, ecma_promise_executor_type_t type);
+uint8_t ecma_promise_get_state (ecma_object_t *promise_p);
+ecma_value_t ecma_promise_get_result (ecma_object_t *promise_p);
 ecma_value_t ecma_promise_new_capability (void);
 ecma_value_t
 ecma_promise_then (ecma_value_t promise,

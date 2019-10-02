@@ -21,6 +21,7 @@
 #include <stdio.h>
 
 #include "jerryscript-compiler.h"
+#include "jerryscript-core.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -235,6 +236,20 @@ size_t jerry_port_normalize_path (const char *in_path_p,
                                   char *out_buf_p,
                                   size_t out_buf_size,
                                   char *base_file_p);
+
+/**
+ * Get the module object of a native module.
+ *
+ * Note:
+ *      This port function is called by jerry-core when ES2015_MODULE_SYSTEM
+ *      is enabled.
+ *
+ * @param name String value of the module specifier.
+ *
+ * @return Undefined, if 'name' is not a native module
+ *         jerry_value_t containing the module object, otherwise
+ */
+jerry_value_t jerry_port_get_native_module (jerry_value_t name);
 
 /**
  * @}

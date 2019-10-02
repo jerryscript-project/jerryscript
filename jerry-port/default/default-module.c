@@ -13,51 +13,17 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
-#include <string.h>
+#if !defined (WIN32)
+#include <libgen.h>
+#endif /* !defined (WIN32) */
+#include <limits.h>
+#include <stdarg.h>
 #include <stdlib.h>
-#include <unistd.h>
+#include <string.h>
 
-#include "jerryscript.h"
+#include "jerryscript-compiler.h"
 #include "jerryscript-port.h"
-
-/**
- * JerryScript log level
- */
-static jerry_log_level_t jerry_log_level = JERRY_LOG_LEVEL_ERROR;
-
-/**
- * Sets log level.
- */
-void set_log_level (jerry_log_level_t level)
-{
-  jerry_log_level = level;
-} /* set_log_level */
-
-/**
- * Aborts the program.
- */
-void jerry_port_fatal (jerry_fatal_code_t code)
-{
-  exit (1);
-} /* jerry_port_fatal */
-
-/**
- * Provide log message implementation for the engine.
- */
-void
-jerry_port_log (jerry_log_level_t level, /**< log level */
-                const char *format, /**< format string */
-                ...)  /**< parameters */
-{
-  if (level <= jerry_log_level)
-  {
-    va_list args;
-    va_start (args, format);
-    vfprintf (stderr, format, args);
-    va_end (args);
-  }
-} /* jerry_port_log */
+#include "jerryscript-port-default.h"
 
 /**
  * Determines the size of the given file.
@@ -135,25 +101,88 @@ size_t
 jerry_port_normalize_path (const char *in_path_p,   /**< input file path */
                            char *out_buf_p,         /**< output buffer */
                            size_t out_buf_size,     /**< size of output buffer */
-                           char *base_file_p) /**< base file path */
+                           char *base_file_p)       /**< base file path */
 {
-  (void) base_file_p;
+  size_t ret = 0;
 
-  size_t len = strlen (in_path_p);
-  if (len + 1 > out_buf_size)
+#if defined (WIN32)
+  char drive[_MAX_DRIVE];
+  char *dir_p = (char *) malloc (_MAX_DIR);
+
+  char *path_p = (char *) malloc (_MAX_PATH * 2);
+  *path_p = '\0';
+
+  if (base_file_p != NULL)
   {
-    return 0;
+    _splitpath_s (base_file_p,
+                  &drive,
+                  _MAX_DRIVE,
+                  dir_p,
+                  _MAX_DIR,
+                  NULL,
+                  0,
+                  NULL,
+                  0);
+    strncat (path_p, &drive, _MAX_DRIVE);
+    strncat (path_p, dir_p, _MAX_DIR);
   }
 
-  /* Return the original string. */
-  strcpy (out_buf_p, in_path_p);
-  return len;
+  strncat (path_p, in_path_p, _MAX_PATH);
+
+  char *norm_p = _fullpath (out_buf_p, path_p, out_buf_size);
+
+  free (path_p);
+  free (dir_p);
+
+  if (norm_p != NULL)
+  {
+    ret = strnlen (norm_p, out_buf_size);
+  }
+#elif defined (__unix__) || defined (__APPLE__)
+#define MAX_JERRY_PATH_SIZE 256
+  char *buffer_p = (char *) malloc (PATH_MAX);
+  char *path_p = (char *) malloc (PATH_MAX);
+
+  char *base_p = dirname (base_file_p);
+  strncpy (path_p, base_p, MAX_JERRY_PATH_SIZE);
+  strncat (path_p, "/", 1);
+  strncat (path_p, in_path_p, MAX_JERRY_PATH_SIZE);
+
+  char *norm_p = realpath (path_p, buffer_p);
+  free (path_p);
+
+  if (norm_p != NULL)
+  {
+    const size_t len = strnlen (norm_p, out_buf_size);
+    if (len < out_buf_size)
+    {
+      strncpy (out_buf_p, norm_p, out_buf_size);
+      ret = len;
+    }
+  }
+
+  free (buffer_p);
+#undef MAX_JERRY_PATH_SIZE
+#else
+  (void) base_file_p;
+
+  /* Do nothing, just copy the input. */
+  const size_t len = strnlen (in_path_p, out_buf_size);
+  if (len < out_buf_size)
+  {
+    strncpy (out_buf_p, in_path_p, out_buf_size);
+    ret = len;
+  }
+#endif
+
+  return ret;
 } /* jerry_port_normalize_path */
 
 /**
  * Get the module object of a native module.
  *
- * @return undefined
+ * @return Undefined, if 'name' is not a native module
+ *         jerry_value_t containing the module object, otherwise
  */
 jerry_value_t
 jerry_port_get_native_module (jerry_value_t name) /**< module specifier */
@@ -161,69 +190,3 @@ jerry_port_get_native_module (jerry_value_t name) /**< module specifier */
   (void) name;
   return jerry_create_undefined ();
 } /* jerry_port_get_native_module */
-
-/**
- * Dummy function to get the time zone adjustment.
- *
- * @return 0
- */
-double
-jerry_port_get_local_time_zone_adjustment (double unix_ms, bool is_utc)
-{
-  /* We live in UTC. */
-  return 0;
-} /* jerry_port_get_local_time_zone_adjustment */
-
-/**
- * Dummy function to get the current time.
- *
- * @return 0
- */
-double
-jerry_port_get_current_time (void)
-{
-  return 0;
-} /* jerry_port_get_current_time */
-
-/**
- * Provide the implementation of jerry_port_print_char.
- * Uses 'printf' to print a single character to standard output.
- */
-void
-jerry_port_print_char (char c) /**< the character to print */
-{
-  printf ("%c", c);
-} /* jerry_port_print_char */
-
-/**
- * Provide implementation of jerry_port_sleep.
- */
-void jerry_port_sleep (uint32_t sleep_time) /**< milliseconds to sleep */
-{
-  usleep ((useconds_t) sleep_time * 1000);
-} /* jerry_port_sleep */
-
-/**
- * Pointer to the current context.
- */
-static jerry_context_t *current_context_p = NULL;
-
-/**
- * Set the current_context_p as the passed pointer.
- */
-void
-jerry_port_default_set_current_context (jerry_context_t *context_p) /**< points to the created context */
-{
-  current_context_p = context_p;
-} /* jerry_port_default_set_current_context */
-
-/**
- * Get the current context.
- *
- * @return the pointer to the current context
- */
-jerry_context_t *
-jerry_port_get_current_context (void)
-{
-  return current_context_p;
-} /* jerry_port_get_current_context */

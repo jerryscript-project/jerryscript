@@ -284,15 +284,11 @@ parser_module_context_init (void)
 
     if (path_p == NULL)
     {
+      ecma_ref_ecma_string (path_str_p);
       path_p = path_str_p;
     }
 
     ecma_module_t *module_p = ecma_module_find_or_create_module (path_p);
-
-    if (path_p != path_str_p)
-    {
-      ecma_deref_ecma_string (path_p);
-    }
 
     module_p->state = ECMA_MODULE_STATE_EVALUATED;
     module_p->scope_p = ecma_get_global_environment ();
@@ -542,6 +538,28 @@ parser_module_handle_module_specifier (parser_context_t *context_p) /**< parser 
 
   lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_STRING_LITERAL);
 
+  ecma_string_t *name_p = ecma_new_ecma_string_from_utf8 (context_p->lit_object.literal_p->u.char_p,
+                                                          context_p->lit_object.literal_p->prop.length);
+
+  ecma_module_t *module_p = ecma_module_find_module (name_p);
+  if (module_p)
+  {
+    ecma_deref_ecma_string (name_p);
+    goto module_found;
+  }
+
+  ecma_value_t native = jerry_port_get_native_module (ecma_make_string_value (name_p));
+
+  if (!ecma_is_value_undefined (native))
+  {
+    JERRY_ASSERT (ecma_is_value_object (native));
+    ecma_object_t *module_object_p = ecma_get_object_from_value (native);
+
+    module_p = ecma_module_create_native_module (name_p, module_object_p);
+    goto module_found;
+  }
+
+  ecma_deref_ecma_string (name_p);
   ecma_string_t *path_p = ecma_module_create_normalized_path (context_p->lit_object.literal_p->u.char_p,
                                                               context_p->lit_object.literal_p->prop.length);
 
@@ -550,9 +568,9 @@ parser_module_handle_module_specifier (parser_context_t *context_p) /**< parser 
     parser_raise_error (context_p, PARSER_ERR_FILE_NOT_FOUND);
   }
 
-  ecma_module_t *module_p = ecma_module_find_or_create_module (path_p);
-  ecma_deref_ecma_string (path_p);
+  module_p = ecma_module_find_or_create_module (path_p);
 
+module_found:
   module_node_p->module_request_p = module_p;
   lexer_next_token (context_p);
 } /* parser_module_handle_module_specifier */

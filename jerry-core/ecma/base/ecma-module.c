@@ -97,12 +97,13 @@ ecma_module_create_normalized_path (const uint8_t *char_p, /**< module specifier
 } /* ecma_module_create_normalized_path */
 
 /**
- * Checks if we already have a module request in the module list.
+ * Find a module with a specific identifier
  *
- * @return pointer to found or newly created module structure
+ * @return pointer to ecma_module_t, if found
+ *         NULL, otherwise
  */
 ecma_module_t *
-ecma_module_find_or_create_module (ecma_string_t * const path_p) /**< module path */
+ecma_module_find_module (ecma_string_t *const path_p) /**< module identifier */
 {
   ecma_module_t *current_p = JERRY_CONTEXT (ecma_modules_p);
   while (current_p != NULL)
@@ -114,15 +115,58 @@ ecma_module_find_or_create_module (ecma_string_t * const path_p) /**< module pat
     current_p = current_p->next_p;
   }
 
-  current_p = (ecma_module_t *) jmem_heap_alloc_block (sizeof (ecma_module_t));
-  memset (current_p, 0, sizeof (ecma_module_t));
-
-  ecma_ref_ecma_string (path_p);
-  current_p->path_p = path_p;
-  current_p->next_p = JERRY_CONTEXT (ecma_modules_p);
-  JERRY_CONTEXT (ecma_modules_p) = current_p;
   return current_p;
+} /* ecma_module_find_module */
+
+/**
+ * Create a new module
+ *
+ * @return pointer to created module
+ */
+static ecma_module_t *
+ecma_module_create_module (ecma_string_t *const path_p) /**< module identifier */
+{
+  ecma_module_t *module_p = (ecma_module_t *) jmem_heap_alloc_block (sizeof (ecma_module_t));
+  memset (module_p, 0, sizeof (ecma_module_t));
+
+  module_p->path_p = path_p;
+  module_p->next_p = JERRY_CONTEXT (ecma_modules_p);
+  JERRY_CONTEXT (ecma_modules_p) = module_p;
+  return module_p;
+} /* ecma_module_create_module */
+
+/**
+ * Checks if we already have a module request in the module list.
+ *
+ * @return pointer to found or newly created module structure
+ */
+ecma_module_t *
+ecma_module_find_or_create_module (ecma_string_t *const path_p) /**< module path */
+{
+  ecma_module_t *module_p = ecma_module_find_module (path_p);
+  if (module_p)
+  {
+    ecma_deref_ecma_string (path_p);
+    return module_p;
+  }
+
+  return ecma_module_create_module (path_p);
 } /* ecma_module_find_or_create_module */
+
+/**
+ * Create a new native module
+ *
+ * @return pointer to created module
+ */
+ecma_module_t *
+ecma_module_create_native_module (ecma_string_t *const path_p, /**< module identifier */
+                                  ecma_object_t *const namespace_p) /**< module namespace */
+{
+  ecma_module_t *module_p = ecma_module_create_module (path_p);
+  module_p->state = ECMA_MODULE_STATE_NATIVE;
+  module_p->namespace_object_p = namespace_p;
+  return module_p;
+} /* ecma_module_create_native_module */
 
 /**
  * Creates a module context.
@@ -270,6 +314,30 @@ ecma_module_resolve_export (ecma_module_t * const module_p, /**< base module */
       if (!ecma_module_resolve_set_insert (&resolve_set_p, current_module_p, current_export_name_p))
       {
         /* This is a circular import request. */
+        ecma_module_resolve_stack_pop (&stack_p);
+        continue;
+      }
+
+      if (current_module_p->state == ECMA_MODULE_STATE_NATIVE)
+      {
+        ecma_object_t *object_p = current_module_p->namespace_object_p;
+        ecma_value_t prop_value = ecma_op_object_find_own (ecma_make_object_value (object_p),
+                                                           object_p,
+                                                           current_export_name_p);
+        if (ecma_is_value_found (prop_value))
+        {
+          found = true;
+          found_record.module_p = current_module_p;
+          found_record.name_p = current_export_name_p;
+          ecma_free_value (prop_value);
+        }
+
+        if (ecma_compare_ecma_string_to_magic_id (current_export_name_p, LIT_MAGIC_STRING_DEFAULT))
+        {
+          ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("No default export in native module."));
+          break;
+        }
+
         ecma_module_resolve_stack_pop (&stack_p);
         continue;
       }
@@ -645,25 +713,44 @@ ecma_module_connect_imports (void)
           return ecma_raise_syntax_error (ECMA_ERR_MSG ("Ambiguous import request."));
         }
 
-        result = ecma_module_evaluate (record.module_p);
-
-        if (ECMA_IS_VALUE_ERROR (result))
+        if (record.module_p->state == ECMA_MODULE_STATE_NATIVE)
         {
-          return result;
+          ecma_object_t *object_p = record.module_p->namespace_object_p;
+          ecma_value_t prop_value = ecma_op_object_find_own (ecma_make_object_value (object_p),
+                                                             object_p,
+                                                             record.name_p);
+          JERRY_ASSERT (ecma_is_value_found (prop_value));
+
+          ecma_op_create_mutable_binding (local_env_p, import_names_p->local_name_p, true /* is_deletable */);
+          ecma_op_set_mutable_binding (local_env_p,
+                                       import_names_p->local_name_p,
+                                       prop_value,
+                                       false /* is_strict */);
+
+          ecma_free_value (prop_value);
         }
+        else
+        {
+          result = ecma_module_evaluate (record.module_p);
 
-        ecma_object_t *ref_base_lex_env_p;
-        ecma_value_t prop_value = ecma_op_get_value_lex_env_base (record.module_p->scope_p,
-                                                                  &ref_base_lex_env_p,
-                                                                  record.name_p);
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            return result;
+          }
 
-        ecma_op_create_mutable_binding (local_env_p, import_names_p->local_name_p, true /* is_deletable */);
-        ecma_op_set_mutable_binding (local_env_p,
-                                     import_names_p->local_name_p,
-                                     prop_value,
-                                     false /* is_strict */);
+          ecma_object_t *ref_base_lex_env_p;
+          ecma_value_t prop_value = ecma_op_get_value_lex_env_base (record.module_p->scope_p,
+                                                                    &ref_base_lex_env_p,
+                                                                    record.name_p);
 
-        ecma_free_value (prop_value);
+          ecma_op_create_mutable_binding (local_env_p, import_names_p->local_name_p, true /* is_deletable */);
+          ecma_op_set_mutable_binding (local_env_p,
+                                       import_names_p->local_name_p,
+                                       prop_value,
+                                       false /* is_strict */);
+
+          ecma_free_value (prop_value);
+        }
       }
 
       import_names_p = import_names_p->next_p;
@@ -873,6 +960,17 @@ static void
 ecma_module_release_module (ecma_module_t *module_p) /**< module */
 {
   ecma_deref_ecma_string (module_p->path_p);
+
+  if (module_p->namespace_object_p != NULL)
+  {
+    ecma_deref_object (module_p->namespace_object_p);
+  }
+
+  if (module_p->state == ECMA_MODULE_STATE_NATIVE)
+  {
+    goto finished;
+  }
+
   if (module_p->state >= ECMA_MODULE_STATE_PARSING)
   {
     ecma_module_release_module_context (module_p->context_p);
@@ -889,11 +987,7 @@ ecma_module_release_module (ecma_module_t *module_p) /**< module */
     ecma_bytecode_deref (module_p->compiled_code_p);
   }
 
-  if (module_p->namespace_object_p != NULL)
-  {
-    ecma_deref_object (module_p->namespace_object_p);
-  }
-
+finished:
   jmem_heap_free_block (module_p, sizeof (ecma_module_t));
 } /* ecma_module_release_module */
 

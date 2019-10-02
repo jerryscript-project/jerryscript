@@ -66,7 +66,7 @@ ecma_builtin_uint16array_dispatch_construct (const ecma_value_t *arguments_list_
                                              ecma_length_t arguments_list_len) /**< number of arguments */
 {
   return ecma_typedarray_helper_dispatch_construct (arguments_list_p, arguments_list_len,
-                                                    ECMA_BUILTIN_ID_UINT16ARRAY);
+                                                    ECMA_UINT16_ARRAY);
 } /* ecma_builtin_uint16array_dispatch_construct */
 
 /**

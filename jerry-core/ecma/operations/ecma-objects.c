@@ -25,9 +25,12 @@
 #include "ecma-objects-arguments.h"
 #include "ecma-objects-general.h"
 #include "ecma-objects.h"
+#include "jcontext.h"
 
 #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
 #include "ecma-typedarray-object.h"
+#include "ecma-arraybuffer-object.h"
+#include "ecma-try-catch-macro.h"
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
 
 /** \addtogroup ecma ECMA
@@ -181,7 +184,17 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
 
         if (array_index != ECMA_STRING_NOT_ARRAY_INDEX)
         {
-          ecma_value_t value = ecma_op_typedarray_get_index_prop (object_p, array_index);
+          ecma_typedarray_info_t info = ecma_typedarray_get_info (object_p);
+          ecma_typedarray_getter_fn_t getter_cb = ecma_get_typedarray_getter_fn (info.typedarray_id);
+          ecma_value_t value = ECMA_VALUE_UNDEFINED;
+
+          if (array_index < info.typedarray_length)
+          {
+            ecma_length_t byte_pos = (array_index << info.shift) + info.offset;
+            lit_utf8_byte_t *src_buffer = ecma_arraybuffer_get_buffer (info.typedarray_buffer_p) + byte_pos;
+            ecma_number_t num = getter_cb (src_buffer);
+            value = ecma_make_number_value (num);
+          }
 
           if (!ecma_is_value_undefined (value))
           {
@@ -542,7 +555,18 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
 
         if (array_index != ECMA_STRING_NOT_ARRAY_INDEX)
         {
-          return ecma_op_typedarray_get_index_prop (object_p, array_index);
+          ecma_typedarray_info_t info = ecma_typedarray_get_info (object_p);
+          ecma_typedarray_getter_fn_t getter_cb = ecma_get_typedarray_getter_fn (info.typedarray_id);
+
+          if (array_index >= info.typedarray_length)
+          {
+            return ECMA_VALUE_UNDEFINED;
+          }
+
+          ecma_length_t byte_pos = (array_index << info.shift) + info.offset;
+          lit_utf8_byte_t *src_buffer = ecma_arraybuffer_get_buffer (info.typedarray_buffer_p) + byte_pos;
+          ecma_number_t num = getter_cb (src_buffer);
+          return ecma_make_number_value (num);
         }
 
         ecma_number_t num = ecma_string_to_number (property_name_p);
@@ -1057,14 +1081,28 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
 
         if (array_index != ECMA_STRING_NOT_ARRAY_INDEX)
         {
-          bool set_status = ecma_op_typedarray_set_index_prop (object_p, array_index, value);
+          ecma_number_t num_var;
+          ecma_value_t error = ecma_get_number (value, &num_var);
 
-          if (set_status)
+          if (ECMA_IS_VALUE_ERROR (error))
           {
-            return ECMA_VALUE_TRUE;
+            ecma_free_value (JERRY_CONTEXT (error_value));
+            return ecma_reject (is_throw);
           }
 
-          return ecma_reject (is_throw);
+          ecma_typedarray_info_t info = ecma_typedarray_get_info (object_p);
+          ecma_typedarray_setter_fn_t setter_cb = ecma_get_typedarray_setter_fn (info.typedarray_id);
+
+          if (array_index >= info.typedarray_length)
+          {
+            return ecma_reject (is_throw);
+          }
+
+          ecma_length_t byte_pos = (array_index << info.shift) + info.offset;
+          lit_utf8_byte_t *src_buffer = ecma_arraybuffer_get_buffer (info.typedarray_buffer_p) + byte_pos;
+          setter_cb (src_buffer, num_var);
+
+          return ECMA_VALUE_TRUE;
         }
 
         ecma_number_t num = ecma_string_to_number (property_name_p);

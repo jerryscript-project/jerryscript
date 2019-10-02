@@ -277,10 +277,6 @@ ecma_builtin_date_parse (ecma_value_t this_arg, /**< this argument */
         {
           hours = ecma_number_make_nan ();
         }
-        else if (hours == 24)
-        {
-          hours = ECMA_NUMBER_ZERO;
-        }
 
         if (date_str_curr_p < date_str_end_p
             && *date_str_curr_p == ':')
@@ -322,6 +318,11 @@ ecma_builtin_date_parse (ecma_value_t this_arg, /**< this argument */
               }
             }
           }
+        }
+
+        if (hours == 24 && (minutes != 0 || seconds != 0 || milliseconds != 0))
+        {
+          hours = ecma_number_make_nan ();
         }
 
         time = ecma_date_make_time (hours, minutes, seconds, milliseconds);

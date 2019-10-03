@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <math.h>
+
 #include "ecma-alloc.h"
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
@@ -24,7 +26,6 @@
 #include "ecma-objects.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
-#include "math.h"
 
 #if ENABLED (JERRY_BUILTIN_NUMBER)
 

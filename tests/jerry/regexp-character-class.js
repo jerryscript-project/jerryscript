@@ -133,3 +133,10 @@ assert (r == "abcdefghjklmnopqrstuvwxyz");
 r = new RegExp("[\\u0800-\\uffff]", "g");
 assert (r.test ("\uffff"));
 assert (!r.test ("\uffff"));
+
+r = new RegExp("[\0]");
+assert (r.test ("\0"));
+assert (!r.test ("0"));
+
+r = new RegExp("[\0-\1]");
+assert (r.test ("\1"));

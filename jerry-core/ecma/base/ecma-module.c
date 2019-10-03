@@ -907,7 +907,7 @@ ecma_module_check_indirect_exports (void)
 /**
  * Cleans up a list of module names.
  */
-void
+static void
 ecma_module_release_module_names (ecma_module_names_t *module_name_p) /**< first module name */
 {
   while (module_name_p != NULL)
@@ -925,7 +925,7 @@ ecma_module_release_module_names (ecma_module_names_t *module_name_p) /**< first
 /**
  * Cleans up a list of module nodes.
  */
-static void
+void
 ecma_module_release_module_nodes (ecma_module_node_t *module_node_p) /**< first module node */
 {
   while (module_node_p != NULL)

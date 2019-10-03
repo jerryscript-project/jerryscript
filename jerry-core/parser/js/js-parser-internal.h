@@ -631,8 +631,7 @@ void parser_module_handle_requests (parser_context_t *context_p);
 void parser_module_parse_export_clause (parser_context_t *context_p);
 void parser_module_parse_import_clause (parser_context_t *context_p);
 void parser_module_set_default (parser_context_t *context_p);
-ecma_module_node_t *parser_module_create_module_node (parser_context_t *context_p,
-                                                      ecma_module_node_t *template_node_p);
+ecma_module_node_t *parser_module_create_module_node (parser_context_t *context_p);
 bool parser_module_check_duplicate_import (parser_context_t *context_p, ecma_string_t *local_name_p);
 bool parser_module_check_duplicate_export (parser_context_t *context_p, ecma_string_t *export_name_p);
 void parser_module_add_names_to_node (parser_context_t *context_p,

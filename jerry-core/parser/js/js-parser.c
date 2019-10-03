@@ -2581,10 +2581,9 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
     scanner_cleanup (&context);
 
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
-    if (context.module_current_node_p != NULL
-        && context.module_current_node_p->module_names_p != NULL)
+    if (context.module_current_node_p != NULL)
     {
-      ecma_module_release_module_names (context.module_current_node_p->module_names_p);
+      ecma_module_release_module_nodes (context.module_current_node_p);
     }
 #endif
 

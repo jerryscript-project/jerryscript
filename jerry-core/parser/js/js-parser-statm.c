@@ -1815,9 +1815,7 @@ parser_parse_import_statement (parser_context_t *context_p) /**< parser context 
   parser_module_check_request_place (context_p);
   parser_module_context_init ();
 
-  ecma_module_node_t module_node;
-  memset (&module_node, 0, sizeof (ecma_module_node_t));
-  context_p->module_current_node_p = &module_node;
+  context_p->module_current_node_p = parser_module_create_module_node (context_p);
 
   lexer_next_token (context_p);
 
@@ -1933,9 +1931,7 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
   parser_module_check_request_place (context_p);
   parser_module_context_init ();
 
-  ecma_module_node_t module_node;
-  memset (&module_node, 0, sizeof (ecma_module_node_t));
-  context_p->module_current_node_p = &module_node;
+  context_p->module_current_node_p = parser_module_create_module_node (context_p);
 
   lexer_next_token (context_p);
   switch (context_p->token.type)

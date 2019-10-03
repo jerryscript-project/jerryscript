@@ -13,26 +13,27 @@
  * limitations under the License.
  */
 
+#include <math.h>
+
+#include "ecma-arraybuffer-object.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-builtin-typedarray-helpers.h"
 #include "ecma-builtins.h"
 #include "ecma-comparison.h"
+#include "ecma-conversion.h"
 #include "ecma-exceptions.h"
+#include "ecma-function-object.h"
+#include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
-#include "ecma-objects.h"
-#include "ecma-conversion.h"
-#include "ecma-function-object.h"
-#include "ecma-typedarray-object.h"
-#include "ecma-arraybuffer-object.h"
-#include "ecma-try-catch-macro.h"
-#include "jrt.h"
-#include "jrt-libc-includes.h"
-#include "jcontext.h"
-#include "ecma-gc.h"
-#include "jmem.h"
 #include "ecma-iterator-object.h"
-#include "math.h"
+#include "ecma-objects.h"
+#include "ecma-try-catch-macro.h"
+#include "ecma-typedarray-object.h"
+#include "jcontext.h"
+#include "jmem.h"
+#include "jrt-libc-includes.h"
+#include "jrt.h"
 
 #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
 

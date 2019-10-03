@@ -861,7 +861,7 @@ main (int argc,
       /* Read a line */
       while (true)
       {
-        if (fread (source_buffer_tail, 1, 1, stdin) != 1 && len == 0)
+        if (fread (source_buffer_tail, 1, 1, stdin) != 1)
         {
           is_done = true;
           break;

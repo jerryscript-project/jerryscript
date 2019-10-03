@@ -17,6 +17,8 @@
  * Implementation of ECMA-defined conversion routines
  */
 
+#include <math.h>
+
 #include "ecma-alloc.h"
 #include "ecma-boolean-object.h"
 #include "ecma-conversion.h"
@@ -909,6 +911,119 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
 
   return ret_value;
 } /* ecma_op_to_property_descriptor */
+
+/**
+ * ToInteger operation.
+ *
+ * See also:
+ *          ECMA-262 v5, 9.4
+ *          ECMA-262 v6, 7.1.4
+ *
+ * @return ECMA_VALUE_EMPTY if successful
+ *         conversion error otherwise
+ */
+ecma_value_t
+ecma_op_to_integer (ecma_value_t value, /**< ecma value*/
+                    ecma_number_t *number_p) /**< [out] ecma number */
+{
+  if (ECMA_IS_VALUE_ERROR (value))
+  {
+    return value;
+  }
+
+  /* 1 */
+  ecma_value_t to_number = ecma_get_number (value, number_p);
+
+  /* 2 */
+  if (ECMA_IS_VALUE_ERROR (to_number))
+  {
+    return to_number;
+  }
+
+  ecma_number_t number = *number_p;
+
+  /* 3 */
+  if (ecma_number_is_nan (number))
+  {
+    *number_p = ECMA_NUMBER_ZERO;
+    return ECMA_VALUE_EMPTY;
+  }
+
+  /* 4 */
+  if (ecma_number_is_zero (number) || ecma_number_is_infinity (number))
+  {
+    return ECMA_VALUE_EMPTY;
+  }
+
+  ecma_number_t floor_fabs = floor (fabs (number));
+
+  /* 5 */
+  *number_p = ecma_number_is_negative (number) ? -floor_fabs : floor_fabs;
+  return ECMA_VALUE_EMPTY;
+} /* ecma_op_to_integer */
+
+/**
+ * ToLength operation.
+ *
+ * See also:
+ *          ECMA-262 v6, 7.1.15
+ *
+ * @return ECMA_VALUE_EMPTY if successful
+ *         conversion error otherwise
+ */
+ecma_value_t
+ecma_op_to_length (ecma_value_t value, /**< ecma value*/
+                   uint32_t *length) /**< [out] ecma number */
+{
+  /* 1 */
+  if (ECMA_IS_VALUE_ERROR (value))
+  {
+    return value;
+  }
+
+#if ENABLED (JERRY_ES2015)
+  /* 2 */
+  ecma_number_t num;
+  ecma_value_t length_num = ecma_op_to_integer (value, &num);
+
+  /* 3 */
+  if (ECMA_IS_VALUE_ERROR (length_num))
+  {
+    return length_num;
+  }
+
+  /* 4 */
+  if (num <= 0.0f)
+  {
+    *length = 0;
+    return ECMA_VALUE_EMPTY;
+  }
+
+  /* 5 */
+  if (num >= (ecma_number_t) UINT32_MAX)
+  {
+    *length = UINT32_MAX;
+    return ECMA_VALUE_EMPTY;
+  }
+
+  /* 6 */
+  *length = (uint32_t) num;
+  return ECMA_VALUE_EMPTY;
+#else /* !ENABLED (JERRY_ES2015) */
+  /* In the case of ES5, ToLength(ES6) operation is the same as ToUint32(ES5) */
+  ecma_number_t num;
+  ecma_value_t to_number = ecma_get_number (value, &num);
+
+  /* 2 */
+  if (ECMA_IS_VALUE_ERROR (to_number))
+  {
+    return to_number;
+  }
+
+  *length = ecma_number_to_uint32 (num);
+  return ECMA_VALUE_EMPTY;
+#endif /* ENABLED (JERRY_ES2015) */
+} /* ecma_op_to_length */
 
 /**
  * @}

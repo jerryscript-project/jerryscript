@@ -171,7 +171,7 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
     case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
     {
       /* ES2015 9.4.5.1 */
-      if (ecma_is_typedarray (ecma_make_object_value (object_p)))
+      if (ecma_object_is_typedarray (object_p))
       {
 #if ENABLED (JERRY_ES2015)
         if (ecma_prop_name_is_symbol (property_name_p))
@@ -540,7 +540,7 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
       }
 #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
       /* ES2015 9.4.5.4 */
-      if (ecma_is_typedarray (ecma_make_object_value (object_p)))
+      if (ecma_object_is_typedarray (object_p))
       {
 #if ENABLED (JERRY_ES2015)
         if (ecma_prop_name_is_symbol (property_name_p))
@@ -827,6 +827,63 @@ ecma_op_object_get (ecma_object_t *object_p, /**< the object */
 } /* ecma_op_object_get */
 
 /**
+ * [[Get]] operation of ecma object specified for uint32_t property index
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
+ */
+ecma_value_t
+ecma_op_object_get_by_uint32_index (ecma_object_t *object_p, /**< the object */
+                                    uint32_t index) /**< property index */
+{
+  if (JERRY_LIKELY (index <= ECMA_DIRECT_STRING_MAX_IMM))
+  {
+    return ecma_op_object_get (object_p, ECMA_CREATE_DIRECT_UINT32_STRING (index));
+  }
+
+  ecma_string_t *index_str_p = ecma_new_non_direct_string_from_uint32 (index);
+  ecma_value_t ret_value = ecma_op_object_get (object_p, index_str_p);
+  ecma_deref_ecma_string (index_str_p);
+
+  return ret_value;
+} /* ecma_op_object_get_by_uint32_index */
+
+/**
+ * Perform ToLength(O.[[Get]]("length")) operation
+ *
+ * The property is converted to uint32 during the operation
+ *
+ * @return ECMA_VALUE_ERROR - if there was any error during the operation
+ *         ECMA_VALUE_EMPTY - otherwise
+ */
+ecma_value_t
+ecma_op_object_get_length (ecma_object_t *object_p, /**< the object */
+                           uint32_t *length_p) /**< [out] length value converted to uint32 */
+{
+  if (JERRY_LIKELY (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_ARRAY))
+  {
+    *length_p = ecma_array_get_length (object_p);
+    return ECMA_VALUE_EMPTY;
+  }
+
+#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
+  if (ecma_object_is_typedarray (object_p))
+  {
+    *length_p = ecma_typedarray_get_length (object_p);
+    return ECMA_VALUE_EMPTY;
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
+
+  ecma_value_t len_value = ecma_op_object_get_by_magic_id (object_p, LIT_MAGIC_STRING_LENGTH);
+  ecma_value_t len_number = ecma_op_to_length (len_value, length_p);
+  ecma_free_value (len_value);
+
+  JERRY_ASSERT (ECMA_IS_VALUE_ERROR (len_number) || ecma_is_value_empty (len_number));
+
+  return len_number;
+} /* ecma_op_object_get_length */
+
+/**
  * [[Get]] operation of ecma object where the property name is a magic string
  *
  * This function returns the value of a named property, or undefined
@@ -1070,7 +1127,7 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
       }
 #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
       /* ES2015 9.4.5.5 */
-      if (ecma_is_typedarray (ecma_make_object_value (object_p)))
+      if (ecma_object_is_typedarray (object_p))
       {
 #if ENABLED (JERRY_ES2015)
         if (ecma_prop_name_is_symbol (property_name_p))
@@ -1483,7 +1540,7 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
 #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
       }
       /* ES2015 9.4.5.3 */
-      if (ecma_is_typedarray (ecma_make_object_value (obj_p)))
+      if (ecma_object_is_typedarray (obj_p))
       {
 #if ENABLED (JERRY_ES2015)
         if (ecma_prop_name_is_symbol (property_name_p))
@@ -1755,7 +1812,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
           case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
           {
   #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
-            if (ecma_is_typedarray (ecma_make_object_value (obj_p)))
+            if (ecma_object_is_typedarray (obj_p))
             {
               ecma_op_typedarray_list_lazy_property_names (obj_p, prop_names_p);
             }

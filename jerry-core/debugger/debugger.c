@@ -304,7 +304,7 @@ jerry_debugger_get_variable_type (ecma_value_t value) /**< input ecma value */
   {
     JERRY_ASSERT (ecma_is_value_object (value));
 
-    if (ecma_object_get_class_name (ecma_get_object_from_value (value)) == LIT_MAGIC_STRING_ARRAY_UL)
+    if (ecma_get_object_type (ecma_get_object_from_value (value)) == ECMA_OBJECT_TYPE_ARRAY)
     {
       ret_value = JERRY_DEBUGGER_VALUE_ARRAY;
     }

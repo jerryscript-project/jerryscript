@@ -201,80 +201,67 @@ ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this arg
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
-ecma_value_t
+ecma_string_t *
 ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, /**< this object */
                                                    uint32_t index) /**< array index */
 {
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-  ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
-  ecma_value_t index_value = ecma_op_object_get (obj_p, index_string_p);
-  ecma_deref_ecma_string (index_string_p);
+  ecma_value_t index_value = ecma_op_object_get_by_uint32_index (obj_p, index);
 
   if (ECMA_IS_VALUE_ERROR (index_value))
   {
-    return index_value;
+    return NULL;
   }
 
   if (ecma_is_value_undefined (index_value) || ecma_is_value_null (index_value))
   {
-    ecma_free_value (index_value);
-    return ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
+    return ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
   }
 
   ecma_value_t index_obj_value = ecma_op_to_object (index_value);
 
-  ecma_free_value (index_value);
 
   if (ECMA_IS_VALUE_ERROR (index_obj_value))
   {
-    return index_obj_value;
+    ecma_free_value (index_value);
+    return NULL;
   }
 
+  ecma_string_t *ret_string_p = NULL;
   ecma_object_t *index_obj_p = ecma_get_object_from_value (index_obj_value);
   ecma_value_t to_locale_value = ecma_op_object_get_by_magic_id (index_obj_p, LIT_MAGIC_STRING_TO_LOCALE_STRING_UL);
 
   if (ECMA_IS_VALUE_ERROR (to_locale_value))
   {
-    ecma_deref_object (index_obj_p);
-    return to_locale_value;
+    goto cleanup;
   }
 
-  if (ecma_op_is_callable (to_locale_value))
-  {
-    ecma_object_t *locale_func_obj_p = ecma_get_object_from_value (to_locale_value);
-
-    ecma_value_t call_value = ecma_op_function_call (locale_func_obj_p,
-                                                     ecma_make_object_value (index_obj_p),
-                                                     NULL,
-                                                     0);
-
-    ecma_deref_object (locale_func_obj_p);
-    ecma_deref_object (index_obj_p);
-
-    if (ECMA_IS_VALUE_ERROR (call_value))
-    {
-      return call_value;
-    }
-
-    ecma_string_t *call_str_p = ecma_op_to_string (call_value);
-
-    ecma_free_value (call_value);
-
-    if (JERRY_UNLIKELY (call_str_p == NULL))
-    {
-      return ECMA_VALUE_ERROR;
-    }
-
-    ret_value = ecma_make_string_value (call_str_p);
-  }
-  else
+  if (!ecma_op_is_callable (to_locale_value))
   {
     ecma_free_value (to_locale_value);
-    ecma_deref_object (index_obj_p);
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("'toLocaleString' is missing or not a function."));
+    ecma_raise_type_error (ECMA_ERR_MSG ("'toLocaleString' is missing or not a function."));
+    goto cleanup;
   }
 
-  return ret_value;
+  ecma_object_t *locale_func_obj_p = ecma_get_object_from_value (to_locale_value);
+  ecma_value_t call_value = ecma_op_function_call (locale_func_obj_p,
+                                                   index_obj_value,
+                                                   NULL,
+                                                   0);
+  ecma_deref_object (locale_func_obj_p);
+
+  if (ECMA_IS_VALUE_ERROR (call_value))
+  {
+    goto cleanup;
+  }
+
+  ret_string_p = ecma_op_to_string (call_value);
+  ecma_free_value (call_value);
+
+cleanup:
+  ecma_deref_object (index_obj_p);
+  ecma_free_value (index_value);
+
+  return ret_string_p;
 } /* ecma_builtin_helper_get_to_locale_string_at_index */
 
 
@@ -423,80 +410,61 @@ ecma_builtin_helper_array_index_normalize (ecma_number_t index, /**< index */
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_builtin_helper_array_concat_value (ecma_object_t *obj_p, /**< array */
+ecma_builtin_helper_array_concat_value (ecma_object_t *array_obj_p, /**< array */
                                         uint32_t *length_p, /**< [in,out] array's length */
                                         ecma_value_t value) /**< value to concat */
 {
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-
   /* 5.b */
-  if (ecma_is_value_object (value)
-      && (ecma_object_get_class_name (ecma_get_object_from_value (value)) == LIT_MAGIC_STRING_ARRAY_UL))
+  if (ecma_is_value_object (value))
   {
-    /* 5.b.ii */
-    ECMA_TRY_CATCH (arg_len_value,
-                    ecma_op_object_get_by_magic_id (ecma_get_object_from_value (value),
-                                                    LIT_MAGIC_STRING_LENGTH),
-                    ret_value);
-    ECMA_OP_TO_NUMBER_TRY_CATCH (arg_len_number, arg_len_value, ret_value);
+    ecma_object_t *obj_p = ecma_get_object_from_value (value);
 
-    uint32_t arg_len = ecma_number_to_uint32 (arg_len_number);
-
-    /* 5.b.iii */
-    for (uint32_t array_index = 0;
-         array_index < arg_len && ecma_is_value_empty (ret_value);
-         array_index++)
+    if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY)
     {
-      ecma_string_t *array_index_string_p = ecma_new_ecma_string_from_uint32 (array_index);
+      /* 5.b.ii */
+      uint32_t arg_len = ecma_array_get_length (obj_p);
 
-      /* 5.b.iii.2 */
-      ECMA_TRY_CATCH (get_value,
-                      ecma_op_object_find (ecma_get_object_from_value (value),
-                                           array_index_string_p),
-                      ret_value);
-
-      if (ecma_is_value_found (get_value))
+      /* 5.b.iii */
+      for (uint32_t array_index = 0; array_index < arg_len; array_index++)
       {
-        /* 5.b.iii.3.a */
-        ecma_string_t *new_array_index_string_p = ecma_new_ecma_string_from_uint32 (*length_p + array_index);
+        /* 5.b.iii.2 */
+        ecma_value_t get_value = ecma_op_object_find_by_uint32_index (obj_p, array_index);
+
+        if (ECMA_IS_VALUE_ERROR (get_value))
+        {
+          return get_value;
+        }
+
+        if (!ecma_is_value_found (get_value))
+        {
+          continue;
+        }
 
         /* 5.b.iii.3.b */
         /* This will always be a simple value since 'is_throw' is false, so no need to free. */
-        ecma_value_t put_comp = ecma_builtin_helper_def_prop (obj_p,
-                                                              new_array_index_string_p,
-                                                              get_value,
-                                                              ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+        ecma_value_t put_comp = ecma_builtin_helper_def_prop_by_index (array_obj_p,
+                                                                       *length_p + array_index,
+                                                                       get_value,
+                                                                       ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
 
         JERRY_ASSERT (ecma_is_value_true (put_comp));
-        ecma_deref_ecma_string (new_array_index_string_p);
+        ecma_free_value (get_value);
       }
 
-      ECMA_FINALIZE (get_value);
-
-      ecma_deref_ecma_string (array_index_string_p);
+      *length_p += arg_len;
+      return ECMA_VALUE_EMPTY;
     }
-
-    *length_p += arg_len;
-
-    ECMA_OP_TO_NUMBER_FINALIZE (arg_len_number);
-    ECMA_FINALIZE (arg_len_value);
-  }
-  else
-  {
-    ecma_string_t *new_array_index_string_p = ecma_new_ecma_string_from_uint32 ((*length_p)++);
-
-    /* 5.c.i */
-    /* This will always be a simple value since 'is_throw' is false, so no need to free. */
-    ecma_value_t put_comp = ecma_builtin_helper_def_prop (obj_p,
-                                                          new_array_index_string_p,
-                                                          value,
-                                                          ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
-    JERRY_ASSERT (ecma_is_value_true (put_comp));
-
-    ecma_deref_ecma_string (new_array_index_string_p);
   }
 
-  return ret_value;
+  /* 5.c.i */
+  /* This will always be a simple value since 'is_throw' is false, so no need to free. */
+  ecma_value_t put_comp = ecma_builtin_helper_def_prop_by_index (array_obj_p,
+                                                                 (*length_p)++,
+                                                                 value,
+                                                                 ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+  JERRY_ASSERT (ecma_is_value_true (put_comp));
+
+  return ECMA_VALUE_EMPTY;
 } /* ecma_builtin_helper_array_concat_value */
 
 /**

@@ -176,14 +176,13 @@ ecma_builtin_array_prototype_object_to_locale_string (ecma_object_t *obj_p, /**<
   }
 
   /* 7-8. */
-  ecma_value_t first_value = ecma_builtin_helper_get_to_locale_string_at_index (obj_p, 0);
+  ecma_string_t *first_string_p = ecma_builtin_helper_get_to_locale_string_at_index (obj_p, 0);
 
-  if (ECMA_IS_VALUE_ERROR (first_value))
+  if (JERRY_UNLIKELY (first_string_p == NULL))
   {
-    return first_value;
+    return ECMA_VALUE_ERROR;
   }
 
-  ecma_string_t *first_string_p = ecma_get_string_from_value (first_value);
   ecma_stringbuilder_t builder = ecma_stringbuilder_create_from (first_string_p);
   ecma_deref_ecma_string (first_string_p);
 
@@ -193,15 +192,14 @@ ecma_builtin_array_prototype_object_to_locale_string (ecma_object_t *obj_p, /**<
     /* 4. Implementation-defined: set the separator to a single comma character. */
     ecma_stringbuilder_append_byte (&builder, LIT_CHAR_COMMA);
 
-    ecma_value_t next_string_value = ecma_builtin_helper_get_to_locale_string_at_index (obj_p, k);
+    ecma_string_t *next_string_p = ecma_builtin_helper_get_to_locale_string_at_index (obj_p, k);
 
-    if (ECMA_IS_VALUE_ERROR (next_string_value))
+    if (JERRY_UNLIKELY (next_string_p == NULL))
     {
       ecma_stringbuilder_destroy (&builder);
-      return next_string_value;
+      return ECMA_VALUE_ERROR;
     }
 
-    ecma_string_t *next_string_p = ecma_get_string_from_value (next_string_value);
     ecma_stringbuilder_append (&builder, next_string_p);
     ecma_deref_ecma_string (next_string_p);
   }
@@ -310,11 +308,7 @@ static ecma_string_t *
 ecma_op_array_get_to_string_at_index (ecma_object_t *obj_p, /**< this object */
                                       uint32_t index) /**< array index */
 {
-  ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
-
-  ecma_value_t index_value = ecma_op_object_get (obj_p, index_string_p);
-
-  ecma_deref_ecma_string (index_string_p);
+  ecma_value_t index_value = ecma_op_object_get_by_uint32_index (obj_p, index);
 
   if (ECMA_IS_VALUE_ERROR (index_value))
   {
@@ -422,15 +416,12 @@ ecma_builtin_array_prototype_object_pop (ecma_object_t *obj_p, /**< array object
     return ECMA_IS_VALUE_ERROR (set_length_value) ? set_length_value : ECMA_VALUE_UNDEFINED;
   }
 
-  /* 5.a */
-  ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (--len);
-
   /* 5.b */
-  ecma_value_t get_value = ecma_op_object_get (obj_p, index_str_p);
+  len--;
+  ecma_value_t get_value = ecma_op_object_get_by_uint32_index (obj_p, len);
 
   if (ECMA_IS_VALUE_ERROR (get_value))
   {
-    ecma_deref_ecma_string (index_str_p);
     return get_value;
   }
 
@@ -448,9 +439,7 @@ ecma_builtin_array_prototype_object_pop (ecma_object_t *obj_p, /**< array object
   }
 
   /* 5.c */
-  ecma_value_t del_value = ecma_op_object_delete (obj_p, index_str_p, true);
-
-  ecma_deref_ecma_string (index_str_p);
+  ecma_value_t del_value = ecma_op_object_delete_by_uint32_index (obj_p, len, true);
 
   if (ECMA_IS_VALUE_ERROR (del_value))
   {
@@ -684,7 +673,7 @@ ecma_builtin_array_prototype_object_shift (ecma_object_t *obj_p, /**< array obje
   }
 
   /* 5. */
-  ecma_value_t first_value = ecma_op_object_get (obj_p, ecma_get_ecma_string_from_uint32 (0));
+  ecma_value_t first_value = ecma_op_object_get_by_uint32_index (obj_p, 0);
 
   if (ECMA_IS_VALUE_ERROR (first_value))
   {
@@ -2227,7 +2216,8 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
   }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
 
-  ecma_value_t len_value = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_LENGTH);
+  uint32_t length;
+  ecma_value_t len_value = ecma_op_object_get_length (obj_p, &length);
 
   if (ECMA_IS_VALUE_ERROR (len_value))
   {
@@ -2235,16 +2225,7 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
     return len_value;
   }
 
-  uint32_t length = 0;
-  ecma_value_t ret_value = ecma_op_to_length (len_value, &length);
-
-  if (ECMA_IS_VALUE_ERROR (ret_value))
-  {
-    ecma_free_value (len_value);
-    ecma_deref_object (obj_p);
-    return ret_value;
-  }
-
+  ecma_value_t ret_value;
   ecma_value_t routine_arg_1 = arguments_list_p[0];
   ecma_value_t routine_arg_2 = arguments_list_p[1];
 

@@ -55,31 +55,52 @@ ecma_is_normal_or_arrow_function (ecma_object_type_t type) /**< object type */
  *
  * See also: ECMA-262 v5, 9.11
  *
+ * @return true - if the given object is callable;
+ *         false - otherwise
+ */
+inline bool JERRY_ATTR_ALWAYS_INLINE
+ecma_op_object_is_callable (ecma_object_t *obj_p) /**< ecma object */
+{
+  JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
+
+  return ecma_get_object_type (obj_p) >= ECMA_OBJECT_TYPE_FUNCTION;
+} /* ecma_op_object_is_callable */
+
+/**
+ * IsCallable operation.
+ *
+ * See also: ECMA-262 v5, 9.11
+ *
  * @return true - if value is callable object;
  *         false - otherwise
  */
 bool
 ecma_op_is_callable (ecma_value_t value) /**< ecma value */
 {
-  if (!ecma_is_value_object (value))
-  {
-    return false;
-  }
+  return (ecma_is_value_object (value)
+          && ecma_op_object_is_callable (ecma_get_object_from_value (value)));
+} /* ecma_op_is_callable */
 
-  ecma_object_t *obj_p = ecma_get_object_from_value (value);
-
-  JERRY_ASSERT (obj_p != NULL);
+/**
+ * Checks whether the given object implements [[Construct]].
+ *
+ * @return true - if the given object is constructor;
+ *         false - otherwise
+ */
+inline bool JERRY_ATTR_ALWAYS_INLINE
+ecma_object_is_constructor (ecma_object_t *obj_p) /**< ecma object */
+{
   JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
 
   ecma_object_type_t type = ecma_get_object_type (obj_p);
 
-  return (type == ECMA_OBJECT_TYPE_FUNCTION
-#if ENABLED (JERRY_ES2015)
-          || type == ECMA_OBJECT_TYPE_ARROW_FUNCTION
-#endif /* ENABLED (JERRY_ES2015) */
-          || type == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION
-          || type == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
-} /* ecma_op_is_callable */
+  if (type == ECMA_OBJECT_TYPE_FUNCTION)
+  {
+    return (!ecma_get_object_is_builtin (obj_p) || !ecma_builtin_function_is_routine (obj_p));
+  }
+
+  return (type >= ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+} /* ecma_object_is_constructor */
 
 /**
  * Checks whether the value is Object that implements [[Construct]].
@@ -90,24 +111,8 @@ ecma_op_is_callable (ecma_value_t value) /**< ecma value */
 bool
 ecma_is_constructor (ecma_value_t value) /**< ecma value */
 {
-  if (!ecma_is_value_object (value))
-  {
-    return false;
-  }
-
-  ecma_object_t *obj_p = ecma_get_object_from_value (value);
-
-  JERRY_ASSERT (obj_p != NULL);
-  JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
-
-  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
-  {
-    return (!ecma_get_object_is_builtin (obj_p)
-            || !ecma_builtin_function_is_routine (obj_p));
-  }
-
-  return (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION
-          || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+  return (ecma_is_value_object (value)
+          && ecma_object_is_constructor (ecma_get_object_from_value (value)));
 } /* ecma_is_constructor */
 
 /**

@@ -112,26 +112,14 @@ ecma_builtin_function_prototype_object_apply (ecma_object_t *func_obj_p, /**< th
 
   ecma_object_t *obj_p = ecma_get_object_from_value (arg2);
 
-  /* 4. */
-  ecma_value_t length_value = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_LENGTH);
-  if (ECMA_IS_VALUE_ERROR (length_value))
+  /* 4-5. */
+  uint32_t length;
+  ecma_value_t len_value = ecma_op_object_get_length (obj_p, &length);
+
+  if (ECMA_IS_VALUE_ERROR (len_value))
   {
-    return length_value;
+    return len_value;
   }
-
-  ecma_number_t length_number;
-  ecma_value_t get_result = ecma_get_number (length_value, &length_number);
-
-  ecma_free_value (length_value);
-
-  if (ECMA_IS_VALUE_ERROR (get_result))
-  {
-    return get_result;
-  }
-  JERRY_ASSERT (ecma_is_value_empty (get_result));
-
-  /* 5. */
-  const uint32_t length = ecma_number_to_uint32 (length_number);
 
   if (length >= ECMA_FUNCTION_APPLY_ARGUMENT_COUNT_LIMIT)
   {
@@ -146,9 +134,7 @@ ecma_builtin_function_prototype_object_apply (ecma_object_t *func_obj_p, /**< th
   /* 7. */
   for (index = 0; index < length; index++)
   {
-    ecma_string_t *curr_idx_str_p = ecma_new_ecma_string_from_uint32 (index);
-    ecma_value_t get_value = ecma_op_object_get (obj_p, curr_idx_str_p);
-    ecma_deref_ecma_string (curr_idx_str_p);
+    ecma_value_t get_value = ecma_op_object_get_by_uint32_index (obj_p, index);
 
     if (ECMA_IS_VALUE_ERROR (get_value))
     {

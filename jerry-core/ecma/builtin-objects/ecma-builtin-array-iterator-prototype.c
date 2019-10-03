@@ -78,40 +78,14 @@ ecma_builtin_array_iterator_prototype_object_next (ecma_value_t this_val) /**< t
 
   ecma_object_t *array_object_p = ecma_get_object_from_value (iterated_value);
 
-  uint32_t length;
-
   /* 8 - 9. */
-#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
-  if (ecma_is_typedarray (ecma_make_object_value (array_object_p)))
+  uint32_t length;
+  ecma_value_t len_value = ecma_op_object_get_length (array_object_p, &length);
+
+  if (ECMA_IS_VALUE_ERROR (len_value))
   {
-    length = ecma_typedarray_get_length (array_object_p);
+    return len_value;
   }
-  else
-  {
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
-    ecma_value_t len_value = ecma_op_object_get (array_object_p,
-                                                 ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH));
-
-    if (ECMA_IS_VALUE_ERROR (len_value))
-    {
-      return len_value;
-    }
-
-    ecma_number_t length_number;
-    ecma_value_t length_value = ecma_get_number (len_value, &length_number);
-
-    if (ECMA_IS_VALUE_ERROR (length_value))
-    {
-      ecma_free_value (len_value);
-      return length_value;
-    }
-
-    length = ecma_number_to_uint32 (length_number);
-
-    ecma_free_value (len_value);
-#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
-  }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
 
   uint32_t index = ext_obj_p->u.pseudo_array.u1.iterator_index;
 
@@ -157,12 +131,8 @@ ecma_builtin_array_iterator_prototype_object_next (ecma_value_t this_val) /**< t
     return ecma_create_iter_result_object (ecma_make_uint32_value (index), ECMA_VALUE_FALSE);
   }
 
-  /* 13. */
-  ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
-
   /* 14. */
-  ecma_value_t get_value = ecma_op_object_get (array_object_p, index_string_p);
-  ecma_deref_ecma_string (index_string_p);
+  ecma_value_t get_value = ecma_op_object_get_by_uint32_index (array_object_p, index);
 
   /* 15. */
   if (ECMA_IS_VALUE_ERROR (get_value))

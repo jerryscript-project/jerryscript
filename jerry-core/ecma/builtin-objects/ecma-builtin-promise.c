@@ -228,9 +228,7 @@ ecma_builtin_promise_do_race (ecma_value_t array, /**< the array for race */
     }
 
     /* e. */
-    ecma_string_t *index_to_str_p = ecma_new_ecma_string_from_uint32 (index);
-    ecma_value_t array_item = ecma_op_object_get (array_p, index_to_str_p);
-    ecma_deref_ecma_string (index_to_str_p);
+    ecma_value_t array_item = ecma_op_object_get_by_uint32_index (array_p, index);
 
     /* f. */
     if (ECMA_IS_VALUE_ERROR (array_item))
@@ -359,13 +357,11 @@ ecma_builtin_promise_all_handler (const ecma_value_t function, /**< the function
   JERRY_ASSERT (ecma_is_value_integer_number (index_val));
 
   /* 8. */
-  ecma_string_t *index_to_str_p = ecma_new_ecma_string_from_uint32 ((uint32_t) ecma_get_integer_from_value (index_val));
+  ecma_op_object_put_by_uint32_index (ecma_get_object_from_value (value_array),
+                                      (uint32_t) ecma_get_integer_from_value (index_val),
+                                      argv[0],
+                                      false);
 
-  ecma_op_object_put (ecma_get_object_from_value (value_array),
-                      index_to_str_p,
-                      argv[0],
-                      false);
-  ecma_deref_ecma_string (index_to_str_p);
 
   /* 9-10. */
   if (ecma_builtin_promise_remaining_inc_or_dec (remaining, false) == 0)

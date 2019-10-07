@@ -18,6 +18,8 @@
 
 #include "ecma-globals.h"
 #include "ecma-exceptions.h"
+#include "ecma-helpers.h"
+#include "ecma-regexp-object.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -62,6 +64,41 @@ ecma_builtin_helper_def_prop (ecma_object_t *obj_p, ecma_string_t *index_p, ecma
 
 ecma_value_t
 ecma_builtin_helper_def_prop_by_index (ecma_object_t *obj_p, uint32_t index, ecma_value_t value, uint32_t opts);
+
+/**
+ * Context for replace substitutions
+ */
+typedef struct
+{
+  ecma_stringbuilder_t builder;      /**< result string builder */
+  const lit_utf8_byte_t *string_p;   /**< source string */
+  lit_utf8_size_t string_size;       /**< source string size */
+  const lit_utf8_byte_t *matched_p;  /**< matched string */
+  lit_utf8_size_t matched_size;      /**< matcehd string size */
+  lit_utf8_size_t match_byte_pos;    /**< byte position of the match in the source string */
+
+  /**
+   * Capture results
+   */
+  union
+  {
+#if ENABLED (JERRY_BUILTIN_REGEXP)
+    const ecma_regexp_capture_t *captures_p; /**< array of regexp capturing groups */
+#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
+    const ecma_collection_t *collection_p;   /**< collection of captured substrings */
+  } u;
+
+  uint32_t capture_count;            /**< number of captures in the capturing group array */
+  ecma_string_t *replace_str_p;      /**< replacement string */
+} ecma_replace_context_t;
+
+void
+ecma_builtin_replace_substitute (ecma_replace_context_t *ctx_p);
+
+#if ENABLED (JERRY_ES2015)
+bool
+ecma_builtin_is_regexp_exec (ecma_extended_object_t *obj_p);
+#endif /* ENABLED (JERRY_ES2015) */
 
 #if ENABLED (JERRY_BUILTIN_DATE)
 

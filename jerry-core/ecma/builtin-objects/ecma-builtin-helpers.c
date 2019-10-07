@@ -27,6 +27,7 @@
 #include "ecma-objects.h"
 #include "ecma-try-catch-macro.h"
 #include "lit-magic-strings.h"
+#include "lit-char-helpers.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -838,6 +839,185 @@ ecma_builtin_helper_def_prop (ecma_object_t *obj_p, /**< object */
                                              index_p,
                                              &prop_desc);
 } /* ecma_builtin_helper_def_prop */
+
+/**
+ * GetSubstitution abstract operation
+ *
+ * See:
+ *     ECMA-262 v6.0 21.1.3.14.1
+ */
+void
+ecma_builtin_replace_substitute (ecma_replace_context_t *ctx_p) /**< replace context */
+{
+  JERRY_ASSERT (ctx_p->string_p != NULL);
+  JERRY_ASSERT (ctx_p->matched_p == NULL
+                || (ctx_p->matched_p >= ctx_p->string_p
+                    && ctx_p->matched_p <= ctx_p->string_p + ctx_p->string_size));
+
+  lit_utf8_size_t replace_size;
+  uint8_t replace_flags = ECMA_STRING_FLAG_IS_ASCII;
+  const lit_utf8_byte_t *replace_buf_p = ecma_string_get_chars (ctx_p->replace_str_p,
+                                                                &replace_size,
+                                                                NULL,
+                                                                NULL,
+                                                                &replace_flags);
+
+  const lit_utf8_byte_t *const replace_end_p = replace_buf_p + replace_size;
+  const lit_utf8_byte_t *curr_p = replace_buf_p;
+  const lit_utf8_byte_t *last_inserted_end_p = replace_buf_p;
+
+  while (curr_p < replace_end_p)
+  {
+    if (*curr_p++ == LIT_CHAR_DOLLAR_SIGN)
+    {
+      ecma_stringbuilder_append_raw (&(ctx_p->builder),
+                                     last_inserted_end_p,
+                                     (lit_utf8_size_t) (curr_p - last_inserted_end_p - 1));
+      if (curr_p >= replace_end_p)
+      {
+        last_inserted_end_p = curr_p - 1;
+        break;
+      }
+
+      const lit_utf8_byte_t c = *curr_p++;
+
+      switch (c)
+      {
+        case LIT_CHAR_DOLLAR_SIGN:
+        {
+          ecma_stringbuilder_append_byte (&(ctx_p->builder), LIT_CHAR_DOLLAR_SIGN);
+          break;
+        }
+        case LIT_CHAR_AMPERSAND:
+        {
+#if ENABLED (JERRY_ES2015)
+          if (JERRY_UNLIKELY (ctx_p->matched_p == NULL))
+          {
+            JERRY_ASSERT (ctx_p->capture_count == 0);
+            JERRY_ASSERT (ctx_p->u.collection_p != NULL);
+            JERRY_ASSERT (ctx_p->u.collection_p->item_count > 0);
+            const ecma_value_t match_value = ctx_p->u.collection_p->buffer_p[0];
+
+            JERRY_ASSERT (ecma_is_value_string (match_value));
+            ecma_stringbuilder_append (&(ctx_p->builder), ecma_get_string_from_value (match_value));
+            break;
+          }
+#endif /* ENABLED (JERRY_ES2015) */
+
+          JERRY_ASSERT (ctx_p->matched_p != NULL);
+          ecma_stringbuilder_append_raw (&(ctx_p->builder), ctx_p->matched_p, ctx_p->matched_size);
+          break;
+        }
+        case LIT_CHAR_GRAVE_ACCENT:
+        {
+          ecma_stringbuilder_append_raw (&(ctx_p->builder), ctx_p->string_p, ctx_p->match_byte_pos);
+          break;
+        }
+        case LIT_CHAR_SINGLE_QUOTE:
+        {
+#if ENABLED (JERRY_ES2015)
+          if (JERRY_UNLIKELY (ctx_p->matched_p == NULL))
+          {
+            JERRY_ASSERT (ctx_p->capture_count == 0);
+            JERRY_ASSERT (ctx_p->u.collection_p != NULL);
+            JERRY_ASSERT (ctx_p->u.collection_p->item_count > 0);
+            const ecma_value_t match_value = ctx_p->u.collection_p->buffer_p[0];
+
+            JERRY_ASSERT (ecma_is_value_string (match_value));
+            const ecma_string_t *const matched_p = ecma_get_string_from_value (match_value);
+            const lit_utf8_size_t match_size = ecma_string_get_size (matched_p);
+            const lit_utf8_byte_t *const begin_p = ctx_p->string_p + ctx_p->match_byte_pos + match_size;
+
+            ecma_stringbuilder_append_raw (&(ctx_p->builder),
+                                           begin_p,
+                                           (lit_utf8_size_t) (ctx_p->string_p + ctx_p->string_size - begin_p));
+            break;
+          }
+#endif /* ENABLED (JERRY_ES2015) */
+
+          JERRY_ASSERT (ctx_p->matched_p != NULL);
+          ecma_stringbuilder_append_raw (&(ctx_p->builder),
+                                         ctx_p->matched_p + ctx_p->matched_size,
+                                         ctx_p->string_size - ctx_p->match_byte_pos - ctx_p->matched_size);
+          break;
+        }
+        default:
+        {
+          const lit_utf8_byte_t *const number_begin_p = curr_p - 1;
+
+          if (lit_char_is_decimal_digit (c))
+          {
+            uint32_t capture_count = ctx_p->capture_count;
+#if ENABLED (JERRY_ES2015)
+            if (capture_count == 0 && ctx_p->u.collection_p != NULL)
+            {
+              capture_count = ctx_p->u.collection_p->item_count;
+            }
+#endif /* ENABLED (JERRY_ES2015) */
+
+            uint8_t idx = (uint8_t) (c - LIT_CHAR_0);
+            if (curr_p < replace_end_p && lit_char_is_decimal_digit (*(curr_p)))
+            {
+              uint8_t two_digit_index = (uint8_t) (idx * 10 + (uint8_t) (*(curr_p) - LIT_CHAR_0));
+              if (two_digit_index < capture_count)
+              {
+                idx = two_digit_index;
+                curr_p++;
+              }
+            }
+
+            if (idx > 0 && idx < capture_count)
+            {
+              if (ctx_p->capture_count > 0)
+              {
+#if ENABLED (JERRY_BUILTIN_REGEXP)
+                JERRY_ASSERT (ctx_p->u.captures_p != NULL);
+                const ecma_regexp_capture_t *const capture_p = ctx_p->u.captures_p + idx;
+
+                if (ECMA_RE_IS_CAPTURE_DEFINED (capture_p))
+                {
+                  ecma_stringbuilder_append_raw (&(ctx_p->builder),
+                                                 capture_p->begin_p,
+                                                 (lit_utf8_size_t) (capture_p->end_p - capture_p->begin_p));
+                }
+
+                break;
+#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
+              }
+#if ENABLED (JERRY_ES2015)
+              else if (ctx_p->u.collection_p != NULL)
+              {
+                const ecma_value_t capture_value = ctx_p->u.collection_p->buffer_p[idx];
+                if (!ecma_is_value_undefined (capture_value))
+                {
+                  ecma_stringbuilder_append (&(ctx_p->builder), ecma_get_string_from_value (capture_value));
+                }
+
+                break;
+              }
+#endif /* ENABLED (JERRY_ES2015) */
+            }
+          }
+
+          ecma_stringbuilder_append_byte (&(ctx_p->builder), LIT_CHAR_DOLLAR_SIGN);
+          curr_p = number_begin_p;
+          break;
+        }
+      }
+
+      last_inserted_end_p = curr_p;
+    }
+  }
+
+  ecma_stringbuilder_append_raw (&(ctx_p->builder),
+                                 last_inserted_end_p,
+                                 (lit_utf8_size_t) (replace_end_p - last_inserted_end_p));
+
+  if (replace_flags & ECMA_STRING_FLAG_MUST_BE_FREED)
+  {
+    jmem_heap_free_block ((void *) replace_buf_p, replace_size);
+  }
+} /* ecma_builtin_replace_substitute */
 
 /**
  * @}

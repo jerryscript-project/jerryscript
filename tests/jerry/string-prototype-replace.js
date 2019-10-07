@@ -14,6 +14,8 @@
 
 assert ("abcabc".replace("bc", ":") === "a:abc");
 assert ("hello".replace("", ":") === ":hello");
+assert ("hello".replace("h", "") === "ello");
+assert ("".replace("", "h") === "h");
 
 assert ("xabcxabcx".replace (/abc/g, "[$&][$`][$']") === "x[abc][x][xabcx]x[abc][xabcx][x]x");
 assert ("abc".replace (/a(b)c|d()/, "[$1][$01][$2][$02][$99][$123][$012]") === "[b][b][][][$99][b23][b2]");
@@ -110,10 +112,23 @@ try {
   assert (e instanceof TypeError);
 }
 
-// The real "exec" never returns with a number.
-Object.getPrototypeOf(/x/).exec = function () { return 1234; }
+try {
+  "str".replace ({toString: function () {throw "abrupt search toString"}}, "");
+  assert (false);
+} catch (e) {
+  assert (e === "abrupt search toString");
+}
 
-assert (/y/.exec("y") === 1234);
+try {
+  "str".replace ("str", {toString: function () {throw "abrupt search toString"}});
+  assert (false);
+} catch (e) {
+  assert (e === "abrupt search toString");
+}
 
-// Changing exec should not affect replace.
-assert ("y".replace (/y/, "x") === "x");
+try {
+  "str".replace ("str", function () {return {toString: function () {throw "abrupt replacer toString"}}});
+  assert (false);
+} catch (e) {
+  assert (e === "abrupt replacer toString");
+}

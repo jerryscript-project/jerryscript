@@ -33,13 +33,14 @@
  *
  * @return pointer to the RegExp compiled code header
  */
-#define REGEXP_BYTECODE_BLOCK_SIZE 64UL
+#define REGEXP_BYTECODE_BLOCK_SIZE 8UL
 
 void
 re_initialize_regexp_bytecode (re_bytecode_ctx_t *bc_ctx_p) /**< RegExp bytecode context */
 {
-  bc_ctx_p->block_start_p = jmem_heap_alloc_block (REGEXP_BYTECODE_BLOCK_SIZE);
-  bc_ctx_p->block_end_p = bc_ctx_p->block_start_p + REGEXP_BYTECODE_BLOCK_SIZE;
+  const size_t initial_size = JERRY_ALIGNUP (REGEXP_BYTECODE_BLOCK_SIZE + sizeof (re_compiled_code_t), JMEM_ALIGNMENT);
+  bc_ctx_p->block_start_p = jmem_heap_alloc_block (initial_size);
+  bc_ctx_p->block_end_p = bc_ctx_p->block_start_p + initial_size;
   bc_ctx_p->current_p = bc_ctx_p->block_start_p + sizeof (re_compiled_code_t);
 } /* re_initialize_regexp_bytecode */
 

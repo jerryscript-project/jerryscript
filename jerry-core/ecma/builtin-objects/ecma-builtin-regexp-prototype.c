@@ -16,11 +16,15 @@
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
 #include "ecma-builtins.h"
+#include "ecma-builtin-helpers.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
+#include "ecma-function-object.h"
 #include "ecma-globals.h"
+#include "ecma-gc.h"
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
+#include "ecma-regexp-object.h"
 #include "ecma-try-catch-macro.h"
 #include "lit-char-helpers.h"
 
@@ -468,6 +472,38 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
 
   return ecma_make_string_value (ecma_stringbuilder_finalize (&result));
 } /* ecma_builtin_regexp_prototype_to_string */
+
+#if ENABLED (JERRY_ES2015)
+/**
+ * Helper function to determine if method is the builtin exec method
+ *
+ * @return true, if function is the builtin exec method
+ *         false, otherwise
+ */
+inline bool JERRY_ATTR_ALWAYS_INLINE
+ecma_builtin_is_regexp_exec (ecma_extended_object_t *obj_p)
+{
+  return (ecma_get_object_is_builtin ((ecma_object_t *) obj_p)
+          && obj_p->u.built_in.routine_id == ECMA_ROUTINE_LIT_MAGIC_STRING_EXECecma_builtin_regexp_prototype_exec);
+} /* ecma_builtin_is_regexp_exec */
+
+/**
+ * The RegExp.prototype object's '@@replace' routine
+ *
+ * See also:
+ *          ECMA-262 v6.0, 21.2.5.8
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_regexp_prototype_symbol_replace (ecma_value_t this_arg, /**< this argument */
+                                              ecma_value_t string_arg, /**< source string */
+                                              ecma_value_t replace_arg) /**< replace string */
+{
+  return ecma_regexp_replace_helper (this_arg, string_arg, replace_arg);
+} /* ecma_builtin_regexp_prototype_symbol_replace */
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * @}

@@ -87,3 +87,7 @@ assert (set.size === 3);
 
 set.clear();
 assert(set.size === 0);
+
+set.add(3);
+assert(set.delete(3));
+assert(!set.delete(3));

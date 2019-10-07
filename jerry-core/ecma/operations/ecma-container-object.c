@@ -573,7 +573,7 @@ ecma_op_container_delete (ecma_value_t this_arg, /**< this argument */
 
   ecma_deref_ecma_string (prop_name_p);
 
-  if (property_p == NULL)
+  if (property_p == NULL || ecma_is_value_empty (ECMA_PROPERTY_VALUE_PTR (property_p)->value))
   {
     return ECMA_VALUE_FALSE;
   }

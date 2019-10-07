@@ -27,6 +27,7 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-iterator-object.h"
+#include "ecma-number-object.h"
 #include "ecma-objects.h"
 #include "ecma-try-catch-macro.h"
 #include "ecma-typedarray-object.h"
@@ -1985,13 +1986,11 @@ ecma_builtin_typedarray_prototype_to_locale_string_helper (ecma_object_t *this_o
   ecma_number_t element_num = ecma_get_typedarray_element (typedarray_buffer_p + index, class_id);
   ecma_value_t element_value = ecma_make_number_value (element_num);
 
-  ecma_value_t element_obj = ecma_op_to_object (element_value);
+  ecma_value_t element_obj = ecma_op_create_number_object (element_value);
 
-  if (ECMA_IS_VALUE_ERROR (element_obj))
-  {
-    ecma_free_value (element_value);
-    return element_obj;
-  }
+  ecma_free_value (element_value);
+
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (element_obj));
 
   ecma_object_t *element_obj_p = ecma_get_object_from_value (element_obj);
 
@@ -2000,7 +1999,6 @@ ecma_builtin_typedarray_prototype_to_locale_string_helper (ecma_object_t *this_o
 
   if (ECMA_IS_VALUE_ERROR (func_value))
   {
-    ecma_free_value (element_value);
     ecma_deref_object (element_obj_p);
     return func_value;
   }
@@ -2017,12 +2015,12 @@ ecma_builtin_typedarray_prototype_to_locale_string_helper (ecma_object_t *this_o
 
     if (ECMA_IS_VALUE_ERROR (call_value))
     {
-      ecma_free_value (element_value);
       ecma_deref_object (element_obj_p);
       return call_value;
     }
 
     ret_value = ecma_op_to_string (call_value);
+    ecma_free_value (call_value);
   }
   else
   {
@@ -2031,7 +2029,6 @@ ecma_builtin_typedarray_prototype_to_locale_string_helper (ecma_object_t *this_o
   }
 
   ecma_deref_object (element_obj_p);
-  ecma_free_value (element_value);
 
   return ret_value;
 } /* ecma_builtin_typedarray_prototype_to_locale_string_helper */
@@ -2078,7 +2075,7 @@ ecma_builtin_typedarray_prototype_to_locale_string (ecma_value_t this_arg) /**< 
 
     if (ECMA_IS_VALUE_ERROR (next_element))
     {
-      ecma_free_value (first_element);
+      ecma_deref_ecma_string (return_string_p);
       return next_element;
     }
 
@@ -2086,8 +2083,6 @@ ecma_builtin_typedarray_prototype_to_locale_string (ecma_value_t this_arg) /**< 
     return_string_p = ecma_concat_ecma_strings (return_string_p, next_element_p);
     ecma_deref_ecma_string (next_element_p);
   }
-
-  ecma_free_value (first_element);
 
   return ecma_make_string_value (return_string_p);
 } /* ecma_builtin_typedarray_prototype_to_locale_string */

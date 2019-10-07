@@ -116,7 +116,9 @@ opfunc_instanceof (ecma_value_t left_value, /**< left value */
 /**
  * 'in' opcode handler.
  *
- * See also: ECMA-262 v5, 11.8.7
+ * See also:
+ *  * ECMA-262 v5, 11.8.7
+ *  * ECAM-262 v6, 12.9.3
  *
  * @return ecma value
  *         returned value must be freed with ecma_free_value.
@@ -130,28 +132,17 @@ opfunc_in (ecma_value_t left_value, /**< left value */
     return ecma_raise_type_error (ECMA_ERR_MSG ("Expected an object in 'in' check."));
   }
 
-  bool to_string = !ecma_is_value_string (left_value);
+  ecma_string_t *property_name_p = ecma_op_to_prop_name (left_value);
 
-  if (to_string)
+  if (JERRY_UNLIKELY (property_name_p == NULL))
   {
-    left_value = ecma_op_to_string (left_value);
-
-    if (ECMA_IS_VALUE_ERROR (left_value))
-    {
-      return left_value;
-    }
+    return ECMA_VALUE_ERROR;
   }
 
-  ecma_string_t *left_value_prop_name_p = ecma_get_string_from_value (left_value);
   ecma_object_t *right_value_obj_p = ecma_get_object_from_value (right_value);
-
   ecma_value_t result = ecma_make_boolean_value (ecma_op_object_has_property (right_value_obj_p,
-                                                                              left_value_prop_name_p));
-
-  if (to_string)
-  {
-    ecma_free_value (left_value);
-  }
+                                                                              property_name_p));
+  ecma_deref_ecma_string (property_name_p);
   return result;
 } /* opfunc_in */
 

@@ -1689,13 +1689,16 @@ typedef struct
  **/
 typedef struct
 {
-  ecma_object_t *typedarray_buffer_p; /**< pointer to the typedArray's arraybuffer */
-  lit_utf8_byte_t *buffer_p; /**< pointer to the arraybuffer's internal data buffer */
-  ecma_typedarray_type_t typedarray_id; /**< type of the typedArray */
-  uint32_t typedarray_length; /**< length of the typedArray */
-  ecma_length_t offset; /**< offset of the internal array buffer */
+  ecma_object_t *array_buffer_p; /**< pointer to the typedArray's [[ViewedArrayBuffer]] internal slot */
+  lit_utf8_byte_t *buffer_p; /**< pointer to the underlying raw data buffer.
+                              *   Note:
+                              *    - This address is increased by the [ByteOffset]] internal property.
+                              *    - This address must be used during indexed read/write operation. */
+  ecma_typedarray_type_t id; /**< [[TypedArrayName]] internal slot */
+  uint32_t length; /**< [[ByteLength]] internal slot */
+  ecma_length_t offset; /**< [[ByteOffset]] internal slot. */
   uint8_t shift; /**< the element size shift in the typedArray */
-  uint8_t element_size; /**< size of each element in the typedArray */
+  uint8_t element_size; /**< element size based on [[TypedArrayName]] in Table 49 */
 } ecma_typedarray_info_t;
 
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */

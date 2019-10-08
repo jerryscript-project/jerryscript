@@ -58,8 +58,8 @@ create_object_nested (int times)
 
   // If leaves `escaped` uninitialized, there will be a style error on linux thrown by compiler
   jerry_value_t escaped = 0;
-  int status = jerryx_escape_handle (scope, obj, &escaped);
-  TEST_ASSERT (status == 0);
+  jerryx_handle_scope_status status = jerryx_escape_handle (scope, obj, &escaped);
+  TEST_ASSERT (status == jerryx_handle_scope_ok);
   TEST_ASSERT (scope->prelist_handle_count == 0);
   TEST_ASSERT (scope->handle_ptr == NULL);
 

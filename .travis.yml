@@ -143,15 +143,6 @@ matrix:
             - sourceline: ppa:team-gcc-arm-embedded/ppa
           packages: [clang-3.9, gcc-arm-embedded, gcc-multilib]
 
-    - name: "Tizen RT/Artik053 Build Test"
-      addons:
-        apt:
-          sources:
-            - sourceline: ppa:team-gcc-arm-embedded/ppa
-          packages: [gcc-arm-embedded, genromfs]
-      install: make -f ./targets/tizenrt-artik053/Makefile.travis install
-      script: make -f ./targets/tizenrt-artik053/Makefile.travis script
-
     - name: "ESP8266 Build Test"
       install: make -f ./targets/esp8266/Makefile.travis install-noapt
       script: make -f ./targets/esp8266/Makefile.travis script

@@ -53,7 +53,6 @@ try {
 }
 assert(a.length === 4294967295)
 
-
 var o = { length : 4294967294, push : Array.prototype.push };
 assert(o.push("x") === 4294967295);
 assert(o.length === 4294967295);
@@ -66,14 +65,6 @@ try {
 }
 assert(o.length === 4294967296);
 assert(o[4294967295] === "y");
-
-try {
-  assert(o.push("z") === 1);
-} catch (e) {
-  assert(false);
-}
-assert(o.length === 1);
-assert(o[0] === "z");
 
 /* ES v5.1 15.4.4.7.5.
    Checking behavior when array is non-extensible while pushing */

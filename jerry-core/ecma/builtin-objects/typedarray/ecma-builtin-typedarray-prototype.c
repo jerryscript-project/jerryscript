@@ -933,18 +933,10 @@ ecma_builtin_typedarray_prototype_set (ecma_value_t this_arg, /**< this argument
                   ecma_op_object_get_by_magic_id (source_obj_p, LIT_MAGIC_STRING_LENGTH),
                   ret_val);
 
-  ECMA_OP_TO_NUMBER_TRY_CATCH (source_length_num, source_length, ret_val);
-
-  if (ecma_number_is_nan (source_length_num) || source_length_num <= 0)
+  uint32_t source_length_uint32;
+  if (ECMA_IS_VALUE_ERROR (ecma_op_to_length (source_length, &source_length_uint32)))
   {
-    source_length_num = 0;
-  }
-
-  uint32_t source_length_uint32 = ecma_number_to_uint32 (source_length_num);
-
-  if ((ecma_number_t) source_length_uint32 != source_length_num)
-  {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid source length"));
+    return ECMA_VALUE_ERROR;
   }
 
   /* 20. if srcLength + targetOffset > targetLength, throw a RangeError */
@@ -980,7 +972,6 @@ ecma_builtin_typedarray_prototype_set (ecma_value_t this_arg, /**< this argument
     target_byte_index += target_info.element_size;
   }
 
-  ECMA_OP_TO_NUMBER_FINALIZE (source_length_num);
   ECMA_FINALIZE (source_length);
   ECMA_FINALIZE (source_obj);
   ECMA_OP_TO_NUMBER_FINALIZE (target_offset_num);

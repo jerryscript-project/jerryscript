@@ -942,7 +942,6 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
                                                     : ECMA_VALUE_UNDEFINED);
 
       ECMA_OP_TO_NUMBER_TRY_CATCH (num2, arg2, ret);
-
       uint32_t offset = ecma_number_to_uint32 (num2);
 
       if (ecma_number_is_negative (ecma_number_to_int32 (num2)) || (offset % (uint32_t) (1 << element_size_shift) != 0))
@@ -971,9 +970,11 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
         }
         else
         {
-          ECMA_OP_TO_NUMBER_TRY_CATCH (num3, arg3, ret);
-          int32_t new_length = ecma_number_to_int32 (num3);
-          new_length = (new_length > 0) ? new_length : 0;
+          uint32_t new_length;
+          if (ECMA_IS_VALUE_ERROR (ecma_op_to_length (arg3, &new_length)))
+          {
+            return ECMA_VALUE_ERROR;
+          }
 
           if ((uint32_t) new_length > (UINT32_MAX >> element_size_shift))
           {
@@ -988,8 +989,6 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
               ret = ecma_raise_range_error (ECMA_ERR_MSG ("Invalid length."));
             }
           }
-
-          ECMA_OP_TO_NUMBER_FINALIZE (num3);
         }
 
         if (ecma_is_value_empty (ret))

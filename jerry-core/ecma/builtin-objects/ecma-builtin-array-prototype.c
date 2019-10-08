@@ -2110,17 +2110,15 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
     return len_value;
   }
 
-  ecma_number_t length_number;
-  ecma_value_t ret_value = ecma_get_number (len_value, &length_number);
+  uint32_t length = 0;
+  ecma_value_t ret_value = ecma_op_to_length (len_value, &length);
 
-  if (!ecma_is_value_empty (ret_value))
+  if (ECMA_IS_VALUE_ERROR (ret_value))
   {
     ecma_free_value (len_value);
     ecma_deref_object (obj_p);
     return ret_value;
   }
-
-  uint32_t length = ecma_number_to_uint32 (length_number);
 
   ecma_value_t routine_arg_1 = arguments_list_p[0];
   ecma_value_t routine_arg_2 = arguments_list_p[1];

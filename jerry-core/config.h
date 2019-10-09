@@ -234,6 +234,15 @@
 #endif /* !defined (JERRY_STACK_LIMIT) */
 
 /**
+ * Maximum depth of recursion during GC mark phase
+ *
+ * Default value: 8
+ */
+#ifndef JERRY_GC_MARK_LIMIT
+# define JERRY_GC_MARK_LIMIT (8)
+#endif /* !defined (JERRY_GC_MARK_LIMIT) */
+
+/**
  * Enable/Disable property lookup cache.
  *
  * Allowed values:
@@ -635,6 +644,9 @@
 #endif
 #if !defined (JERRY_STACK_LIMIT) || (JERRY_STACK_LIMIT < 0)
 # error "Invalid value for 'JERRY_STACK_LIMIT' macro."
+#endif
+#if !defined (JERRY_GC_MARK_LIMIT) || (JERRY_GC_MARK_LIMIT < 0)
+# error "Invalid value for 'JERRY_GC_MARK_LIMIT' macro."
 #endif
 #if !defined (JERRY_LCACHE) \
 || ((JERRY_LCACHE != 0) && (JERRY_LCACHE != 1))

@@ -41,6 +41,7 @@ set(JERRY_VM_EXEC_STOP              OFF     CACHE BOOL   "Enable VM execution st
 set(JERRY_GLOBAL_HEAP_SIZE          "(512)" CACHE STRING "Size of memory heap, in kilobytes")
 set(JERRY_GC_LIMIT                  "(0)"   CACHE STRING "Heap usage limit to trigger garbage collection")
 set(JERRY_STACK_LIMIT               "(0)"   CACHE STRING "Maximum stack usage size, in kilobytes")
+set(JERRY_GC_MARK_LIMIT             "(8)"   CACHE STRING "Maximum depth of recursion during GC mark phase")
 
 # Option overrides
 if(USING_MSVC)
@@ -104,6 +105,7 @@ message(STATUS "JERRY_VM_EXEC_STOP             " ${JERRY_VM_EXEC_STOP})
 message(STATUS "JERRY_GLOBAL_HEAP_SIZE         " ${JERRY_GLOBAL_HEAP_SIZE})
 message(STATUS "JERRY_GC_LIMIT                 " ${JERRY_GC_LIMIT})
 message(STATUS "JERRY_STACK_LIMIT              " ${JERRY_STACK_LIMIT})
+message(STATUS "JERRY_GC_MARK_LIMIT            " ${JERRY_GC_MARK_LIMIT})
 
 # Include directories
 set(INCLUDE_CORE_PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -304,6 +306,9 @@ set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_GLOBAL_HEAP_SIZE=${JERRY_GLOBAL_HEAP_SI
 
 # Maximum size of stack memory usage
 set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_STACK_LIMIT=${JERRY_STACK_LIMIT})
+
+# Maximum depth of recursion during GC mark phase
+set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_GC_MARK_LIMIT=${JERRY_GC_MARK_LIMIT})
 
 ## This function is to read "config.h" for default values
 function(read_set_defines FILE PREFIX OUTPUTVAR)

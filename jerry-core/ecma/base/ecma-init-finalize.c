@@ -47,6 +47,10 @@ ecma_init (void)
   JERRY_CONTEXT (stack_base) = (uintptr_t)&sp;
 #endif /* (JERRY_STACK_LIMIT != 0) */
 
+#if (JERRY_GC_MARK_LIMIT != 0)
+  JERRY_CONTEXT (ecma_gc_mark_recursion_limit) = JERRY_GC_MARK_LIMIT;
+#endif /* (JERRY_GC_MARK_LIMIT != 0) */
+
 #if ENABLED (JERRY_ES2015_BUILTIN_PROMISE)
   ecma_job_queue_init ();
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */

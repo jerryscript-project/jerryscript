@@ -159,6 +159,9 @@ struct jerry_context_t
   uint32_t lit_magic_string_ex_count; /**< external magic strings count */
   uint32_t jerry_init_flags; /**< run-time configuration flags */
   uint32_t status_flags; /**< run-time flags (the top 8 bits are used for passing class parsing options) */
+#if (JERRY_GC_MARK_LIMIT != 0)
+  uint32_t ecma_gc_mark_recursion_limit; /**< GC mark recursion limit */
+#endif /* (JERRY_GC_MARK_LIMIT != 0) */
 
 #if ENABLED (JERRY_PROPRETY_HASHMAP)
   uint8_t ecma_prop_hashmap_alloc_state; /**< property hashmap allocation state: 0-4,

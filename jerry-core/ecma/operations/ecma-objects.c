@@ -185,14 +185,12 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
         if (array_index != ECMA_STRING_NOT_ARRAY_INDEX)
         {
           ecma_typedarray_info_t info = ecma_typedarray_get_info (object_p);
-          ecma_typedarray_getter_fn_t getter_cb = ecma_get_typedarray_getter_fn (info.typedarray_id);
           ecma_value_t value = ECMA_VALUE_UNDEFINED;
 
-          if (array_index < info.typedarray_length)
+          if (array_index < info.length)
           {
-            ecma_length_t byte_pos = (array_index << info.shift) + info.offset;
-            lit_utf8_byte_t *src_buffer = ecma_arraybuffer_get_buffer (info.typedarray_buffer_p) + byte_pos;
-            ecma_number_t num = getter_cb (src_buffer);
+            ecma_length_t byte_pos = array_index << info.shift;
+            ecma_number_t num = ecma_get_typedarray_element (info.buffer_p + byte_pos, info.id);
             value = ecma_make_number_value (num);
           }
 
@@ -556,16 +554,14 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
         if (array_index != ECMA_STRING_NOT_ARRAY_INDEX)
         {
           ecma_typedarray_info_t info = ecma_typedarray_get_info (object_p);
-          ecma_typedarray_getter_fn_t getter_cb = ecma_get_typedarray_getter_fn (info.typedarray_id);
 
-          if (array_index >= info.typedarray_length)
+          if (array_index >= info.length)
           {
             return ECMA_VALUE_UNDEFINED;
           }
 
-          ecma_length_t byte_pos = (array_index << info.shift) + info.offset;
-          lit_utf8_byte_t *src_buffer = ecma_arraybuffer_get_buffer (info.typedarray_buffer_p) + byte_pos;
-          ecma_number_t num = getter_cb (src_buffer);
+          ecma_length_t byte_pos = array_index << info.shift;
+          ecma_number_t num = ecma_get_typedarray_element (info.buffer_p + byte_pos, info.id);
           return ecma_make_number_value (num);
         }
 
@@ -1091,16 +1087,14 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
           }
 
           ecma_typedarray_info_t info = ecma_typedarray_get_info (object_p);
-          ecma_typedarray_setter_fn_t setter_cb = ecma_get_typedarray_setter_fn (info.typedarray_id);
 
-          if (array_index >= info.typedarray_length)
+          if (array_index >= info.length)
           {
             return ecma_reject (is_throw);
           }
 
-          ecma_length_t byte_pos = (array_index << info.shift) + info.offset;
-          lit_utf8_byte_t *src_buffer = ecma_arraybuffer_get_buffer (info.typedarray_buffer_p) + byte_pos;
-          setter_cb (src_buffer, num_var);
+          ecma_length_t byte_pos = array_index << info.shift;
+          ecma_set_typedarray_element (info.buffer_p + byte_pos, num_var, info.id);
 
           return ECMA_VALUE_TRUE;
         }

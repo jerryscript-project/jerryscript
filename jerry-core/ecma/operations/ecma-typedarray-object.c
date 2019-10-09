@@ -692,7 +692,7 @@ ecma_op_typedarray_from (ecma_value_t items_val, /**< the source array-like obje
   {
     ecma_object_t *new_typedarray_p = ecma_get_object_from_value (new_typedarray);
     ecma_typedarray_info_t info = ecma_typedarray_get_info (new_typedarray_p);
-    ecma_typedarray_setter_fn_t setter_cb = ecma_get_typedarray_setter_fn (info.typedarray_id);
+    ecma_typedarray_setter_fn_t setter_cb = ecma_get_typedarray_setter_fn (info.id);
     ecma_value_t error = ECMA_VALUE_EMPTY;
     ecma_number_t num_var;
 
@@ -724,14 +724,13 @@ ecma_op_typedarray_from (ecma_value_t items_val, /**< the source array-like obje
             ret_value = ECMA_VALUE_ERROR;
           }
 
-          if (index >= info.typedarray_length)
+          if (index >= info.length)
           {
             ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type."));
           }
 
-          ecma_length_t byte_pos = (index << info.shift) + info.offset;
-          lit_utf8_byte_t *src_buffer = ecma_arraybuffer_get_buffer (info.typedarray_buffer_p) + byte_pos;
-          setter_cb (src_buffer, num_var);
+          ecma_length_t byte_pos = index << info.shift;
+          setter_cb (info.buffer_p + byte_pos, num_var);
 
           ECMA_FINALIZE (mapped_value);
         }
@@ -744,14 +743,13 @@ ecma_op_typedarray_from (ecma_value_t items_val, /**< the source array-like obje
             ret_value = ECMA_VALUE_ERROR;
           }
 
-          if (index >= info.typedarray_length)
+          if (index >= info.length)
           {
             ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type."));
           }
 
-          ecma_length_t byte_pos = (index << info.shift) + info.offset;
-          lit_utf8_byte_t *src_buffer = ecma_arraybuffer_get_buffer (info.typedarray_buffer_p) + byte_pos;
-          setter_cb (src_buffer, num_var);
+          ecma_length_t byte_pos = index << info.shift;
+          setter_cb (info.buffer_p + byte_pos, num_var);
         }
       }
 
@@ -1101,9 +1099,6 @@ ecma_op_typedarray_define_index_prop (ecma_object_t *obj_p, /**< a TypedArray ob
 
   if (property_desc_p->flags & ECMA_PROP_IS_VALUE_DEFINED)
   {
-    ecma_typedarray_info_t info = ecma_typedarray_get_info (obj_p);
-    ecma_typedarray_setter_fn_t setter_cb = ecma_get_typedarray_setter_fn (info.typedarray_id);
-
     ecma_number_t num_var;
     ecma_value_t error = ecma_get_number (property_desc_p->value, &num_var);
 
@@ -1112,16 +1107,15 @@ ecma_op_typedarray_define_index_prop (ecma_object_t *obj_p, /**< a TypedArray ob
       ecma_free_value (JERRY_CONTEXT (error_value));
       return false;
     }
+    ecma_typedarray_info_t info = ecma_typedarray_get_info (obj_p);
 
-    if (index >= info.typedarray_length)
+    if (index >= info.length)
     {
       return false;
     }
 
-    ecma_length_t byte_pos = (index << info.shift) + info.offset;
-    lit_utf8_byte_t *src_buffer = ecma_arraybuffer_get_buffer (info.typedarray_buffer_p) + byte_pos;
-    setter_cb (src_buffer, num_var);
-
+    lit_utf8_byte_t *src_buffer = info.buffer_p + (index << info.shift);
+    ecma_set_typedarray_element (src_buffer, num_var, info.id);
   }
 
   return true;
@@ -1191,13 +1185,13 @@ ecma_typedarray_get_info (ecma_object_t *typedarray_p)
 {
   ecma_typedarray_info_t info;
 
-  info.typedarray_buffer_p = ecma_typedarray_get_arraybuffer (typedarray_p);
-  info.buffer_p = ecma_typedarray_get_buffer (typedarray_p);
-  info.typedarray_id = ecma_get_typedarray_id (typedarray_p);
-  info.typedarray_length = ecma_typedarray_get_length (typedarray_p);
-  info.offset = ecma_typedarray_get_offset (typedarray_p);
+  info.id = ecma_get_typedarray_id (typedarray_p);
+  info.length = ecma_typedarray_get_length (typedarray_p);
   info.shift = ecma_typedarray_get_element_size_shift (typedarray_p);
   info.element_size = (uint8_t) (1 << info.shift);
+  info.offset = ecma_typedarray_get_offset (typedarray_p);
+  info.array_buffer_p = ecma_typedarray_get_arraybuffer (typedarray_p);
+  info.buffer_p = ecma_arraybuffer_get_buffer (info.array_buffer_p) + info.offset;
 
   return info;
 } /* ecma_typedarray_get_info */

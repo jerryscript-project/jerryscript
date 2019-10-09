@@ -174,7 +174,8 @@ ecma_builtin_number_object_is_integer (ecma_value_t this_arg, /**< this argument
     return ECMA_VALUE_FALSE;
   }
 
-  ecma_number_t int_num = ecma_number_trunc (num);
+  ecma_number_t int_num;
+  ecma_op_to_integer (arg, &int_num);
 
   if (int_num != num)
   {

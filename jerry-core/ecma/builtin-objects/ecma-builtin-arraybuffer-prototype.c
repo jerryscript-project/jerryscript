@@ -111,24 +111,22 @@ ecma_builtin_arraybuffer_prototype_object_slice (ecma_value_t this_arg, /**< thi
 
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
-  ECMA_OP_TO_NUMBER_TRY_CATCH (start_num,
-                               arg1,
-                               ret_value);
-
-  start = ecma_builtin_helper_array_index_normalize (start_num, len, false);
+  if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_array_index_normalize (arg1,
+                                                                      len,
+                                                                      &start)))
+  {
+    return ECMA_VALUE_ERROR;
+  }
 
   if (!ecma_is_value_undefined (arg2))
   {
-    ECMA_OP_TO_NUMBER_TRY_CATCH (end_num,
-                                 arg2,
-                                 ret_value);
-
-    end = ecma_builtin_helper_array_index_normalize (end_num, len, false);
-
-    ECMA_OP_TO_NUMBER_FINALIZE (end_num);
+    if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_array_index_normalize (arg2,
+                                                                        len,
+                                                                        &end)))
+    {
+      return ECMA_VALUE_ERROR;
+    }
   }
-
-  ECMA_OP_TO_NUMBER_FINALIZE (start_num);
 
   if (ret_value != ECMA_VALUE_EMPTY)
   {

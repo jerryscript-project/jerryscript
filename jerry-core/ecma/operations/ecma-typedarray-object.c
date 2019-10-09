@@ -949,10 +949,13 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
       ecma_value_t arg3 = ((arguments_list_len > 2) ? arguments_list_p[2]
                                                     : ECMA_VALUE_UNDEFINED);
 
-      ECMA_OP_TO_NUMBER_TRY_CATCH (num2, arg2, ret);
-      uint32_t offset = ecma_number_to_uint32 (num2);
+      ecma_number_t offset;
+      if (ECMA_IS_VALUE_ERROR (ecma_op_to_integer (arg2, &offset)))
+      {
+        return ECMA_VALUE_ERROR;
+      }
 
-      if (ecma_number_is_negative (ecma_number_to_int32 (num2)) || (offset % (uint32_t) (1 << element_size_shift) != 0))
+      if (ecma_number_is_negative (offset))
       {
         ret = ecma_raise_range_error (ECMA_ERR_MSG ("Invalid offset."));
       }
@@ -1007,15 +1010,13 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
         {
           ecma_length_t array_length = new_byte_length >> element_size_shift;
           ret = ecma_typedarray_create_object_with_buffer (arraybuffer_p,
-                                                           offset,
+                                                           (ecma_length_t) offset,
                                                            array_length,
                                                            proto_p,
                                                            element_size_shift,
                                                            typedarray_id);
         }
       }
-
-      ECMA_OP_TO_NUMBER_FINALIZE (num2);
     }
     else
     {

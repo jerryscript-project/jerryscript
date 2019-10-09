@@ -63,25 +63,27 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
   }
 
   /* 4 - 6. */
-  int32_t offset = 0;
+  uint32_t offset = 0;
 
   if (arguments_list_len > 1)
   {
-    ecma_number_t number_offset;
-    ecma_value_t number_offset_value = ecma_get_number (arguments_list_p[1], &number_offset);
-
-    if (ECMA_IS_VALUE_ERROR (number_offset_value))
+    ecma_number_t number_offset, offset_num;
+    if (ECMA_IS_VALUE_ERROR (ecma_get_number (arguments_list_p[1], &number_offset)))
     {
-      return number_offset_value;
+      return ECMA_VALUE_ERROR;
+    }
+    if (ECMA_IS_VALUE_ERROR (ecma_op_to_integer (arguments_list_p[1], &offset_num)))
+    {
+      return ECMA_VALUE_ERROR;
     }
 
-    offset = ecma_number_to_int32 (number_offset);
-
     /* 7. */
-    if (number_offset != offset || offset < 0)
+    if (number_offset != offset_num || offset_num < 0)
     {
       return ecma_raise_range_error (ECMA_ERR_MSG ("Start offset is outside the bounds of the buffer."));
     }
+
+    offset = (uint32_t) offset_num;
   }
 
   /* 8. */
@@ -240,7 +242,7 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
 
   /* 3 - 5. */
   ecma_number_t number_index;
-  ecma_value_t number_index_value = ecma_get_number (request_index, &number_index);
+  ecma_value_t number_index_value = ecma_op_to_integer (request_index, &number_index);
 
   if (ECMA_IS_VALUE_ERROR (number_index_value))
   {

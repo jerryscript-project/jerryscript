@@ -168,11 +168,10 @@ gettersSetters.forEach (function (propName) {
   var view = new DataView (buffer)
 
   /* ES2015 24.2.1.{1, 2}.6 (numberIndex != getIndex) */
-  try {
-    view[propName] (1.5);
-    assert (false);
-  } catch (e) {
-    assert (e instanceof RangeError);
+  if (propName.indexOf("get") !== -1) {
+    assert(view[propName] (1.5) === 0);
+  } else {
+    assert(view[propName] (1.5) === undefined);
   }
 
   /* ES2015 24.2.1.{1, 2}.6 (getIndex < 0) */

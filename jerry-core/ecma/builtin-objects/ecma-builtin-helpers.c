@@ -309,93 +309,49 @@ ecma_builtin_helper_object_get_properties (ecma_object_t *obj_p, /**< object */
 /**
  * Helper function to normalizing an array index
  *
- * This function clamps the given index to the [0, length] range.
- * If the index is negative, it is used as the offset from the end of the array,
- * to compute normalized index.
- * If the index is greater than the length of the array, the normalized index will be the length of the array.
- * If is_last_index_of is true, then we use the method in ECMA-262 v6, 22.2.3.16 to compute the normalized index.
  * See also:
- *          ECMA-262 v5, 15.4.4.10 steps 5-6, 7 (part 2) and 8
- *          ECMA-262 v5, 15.4.4.12 steps 5-6
- *          ECMA-262 v5, 15.4.4.14 steps 5
- *          ECMA-262 v5, 15.5.4.13 steps 4, 5 (part 2) and 6-7
+ *          ECMA-262 v5, 15.4.4.10 steps 5, 6, 7 part 2, 8
+ *          ECMA-262 v5, 15.4.4.12 steps 5, 6
+ *          ECMA-262 v5, 15.5.4.13 steps 4 - 7
+ *          ECMA-262 v6, 22.1.3.6 steps 5 - 7, 8 part 2, 9, 10
+ *          ECMA-262 v6, 22.1.3.3 steps 5 - 10, 11 part 2, 12, 13
+ *          ECMA-262 v6, 22.2.3.5 steps 5 - 10, 11 part 2, 12, 13
+ *          ECMA-262 v6, 22.2.3.23 steps 5 - 10
+ *          ECMA-262 v6, 24.1.4.3 steps 6 - 8, 9 part 2, 10, 11
+ *          ECMA-262 v6, 22.2.3.26 steps 7 - 9, 10 part 2, 11, 12
+ *          ECMA-262 v6, 22.2.3.8 steps 5 - 7, 8 part 2, 9, 10
  *
  * Used by:
  *         - The Array.prototype.slice routine.
  *         - The Array.prototype.splice routine.
- *         - The Array.prototype.indexOf routine.
  *         - The String.prototype.slice routine.
- *         - The TypedArray.prototype.indexOf routine.
- *         - The TypedArray.prototype.lastIndexOf routine
+ *         - The Array.prototype.fill routine.
+ *         - The Array.prototype.copyWithin routine.
+ *         - The TypedArray.prototype.copyWithin routine.
+ *         - The TypedArray.prototype.slice routine.
+ *         - The ArrayBuffer.prototype.slice routine.
+ *         - The TypedArray.prototype.subarray routine.
+ *         - The TypedArray.prototype.fill routine.
  *
- * @return uint32_t - the normalized value of the index
+ * @return ECMA_VALUE_EMPTY if successful
+ *         conversion error otherwise
  */
 uint32_t
-ecma_builtin_helper_array_index_normalize (ecma_number_t index, /**< index */
+ecma_builtin_helper_array_index_normalize (ecma_value_t arg, /**< index */
                                            uint32_t length, /**< array's length */
-                                           bool is_last_index_of) /**< true - normalize for lastIndexOf method*/
+                                           uint32_t *number_p) /**< [out] uint32_t */
 {
-  uint32_t norm_index;
+  ecma_number_t to_int;
 
-  if (!ecma_number_is_nan (index))
+  if (ECMA_IS_VALUE_ERROR (ecma_op_to_integer (arg, &to_int)))
   {
-
-    if (ecma_number_is_zero (index))
-    {
-      norm_index = 0;
-    }
-    else if (ecma_number_is_infinity (index))
-    {
-      if (is_last_index_of)
-      {
-        norm_index = ecma_number_is_negative (index) ? (uint32_t) -1 : length - 1;
-      }
-      else
-      {
-        norm_index = ecma_number_is_negative (index) ? 0 : length;
-      }
-    }
-    else
-    {
-      if (ecma_number_is_negative (index))
-      {
-        ecma_number_t index_neg = -index;
-
-        if (is_last_index_of)
-        {
-          norm_index = length - ecma_number_to_uint32 (index_neg);
-        }
-        else
-        {
-          if (index_neg > length)
-          {
-            norm_index = 0;
-          }
-          else
-          {
-            norm_index = length - ecma_number_to_uint32 (index_neg);
-          }
-        }
-      }
-      else
-      {
-        if (index > length)
-        {
-          norm_index = is_last_index_of ? length - 1 : length;
-        }
-        else
-        {
-          norm_index = ecma_number_to_uint32 (index);
-        }
-      }
-    }
-  }
-  else
-  {
-    norm_index = 0;
+    return ECMA_VALUE_ERROR;
   }
 
-  return norm_index;
+  *number_p = ((to_int < 0) ? (uint32_t) JERRY_MAX ((length + to_int), 0)
+                            : (uint32_t) JERRY_MIN (to_int, length));
+
+  return ECMA_VALUE_EMPTY;
 } /* ecma_builtin_helper_array_index_normalize */
 
 /**
@@ -596,7 +552,19 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_string_t *original_st
 
   /* 4 (indexOf, lastIndexOf), 9 (startsWith, includes), 10 (endsWith) */
   ecma_number_t pos_num;
-  ecma_value_t ret_value  = ecma_get_number (arg2, &pos_num);
+  ecma_value_t ret_value;
+#if ENABLED (JERRY_ES2015)
+  if (mode > ECMA_STRING_LAST_INDEX_OF)
+  {
+    ret_value = ecma_op_to_integer (arg2, &pos_num);
+  }
+  else
+  {
+#endif /* ENABLED (JERRY_ES2015) */
+    ret_value = ecma_get_number (arg2, &pos_num);
+#if ENABLED (JERRY_ES2015)
+  }
+#endif /* ENABLED (JERRY_ES2015) */
 
   /* 10 (startsWith, includes), 11 (endsWith) */
   if (ECMA_IS_VALUE_ERROR (ret_value))

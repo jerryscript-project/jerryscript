@@ -463,7 +463,7 @@ ecma_make_float_value (ecma_number_t *ecma_num_p) /**< pointer to the float numb
  *
  * @return ecma-value
  */
-inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
+extern inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_make_nan_value (void)
 {
   return ecma_create_float_number (ecma_number_make_nan ());

@@ -43,15 +43,9 @@
  * Parser statement types.
  *
  * When a new statement is added, the following
- * functions may need to be updated as well:
- *
- *  - parser_statement_length()
- *  - parser_parse_break_statement()
- *  - parser_parse_continue_statement()
- *  - parser_free_jumps()
- *  - 'case LEXER_RIGHT_BRACE:' in parser_parse_statements()
- *  - 'if (context_p->token.type == LEXER_RIGHT_BRACE)' in parser_parse_statements()
- *  - 'switch (context_p->stack_top_uint8)' in parser_parse_statements()
+ * arrays must be updated as well:
+ *  - statement_lengths[]
+ *  - parser_statement_flags[]
  */
 typedef enum
 {
@@ -66,16 +60,11 @@ typedef enum
   PARSER_STATEMENT_LABEL,
   PARSER_STATEMENT_IF,
   PARSER_STATEMENT_ELSE,
-  /* From switch -> for-in : break target statements */
   PARSER_STATEMENT_SWITCH,
   PARSER_STATEMENT_SWITCH_NO_DEFAULT,
-  /* From do-while -> for->in : continue target statements */
   PARSER_STATEMENT_DO_WHILE,
   PARSER_STATEMENT_WHILE,
   PARSER_STATEMENT_FOR,
-  /* From for->in -> try : instructions with context
-   * Break and continue uses another instruction form
-   * when crosses their borders. */
   PARSER_STATEMENT_FOR_IN,
 #if ENABLED (JERRY_ES2015)
   PARSER_STATEMENT_FOR_OF,
@@ -83,6 +72,66 @@ typedef enum
   PARSER_STATEMENT_WITH,
   PARSER_STATEMENT_TRY,
 } parser_statement_type_t;
+
+/**
+ * Parser statement type flags.
+ */
+typedef enum
+{
+  PARSER_STATM_NO_OPTS = 0, /**< no options */
+  PARSER_STATM_SINGLE_STATM = (1 << 0), /**< statment can form single statement context */
+  PARSER_STATM_BREAK_TARGET = (1 << 1), /**< break target statement */
+  PARSER_STATM_CONTINUE_TARGET = (1 << 2), /**< continue target statement */
+  PARSER_STATM_CONTEXT_BREAK = (1 << 3), /**< uses another instruction form when crosses their borders */
+} parser_statement_flags_t;
+
+/**
+ * Parser statement attributes.
+ * Note: the order of the attributes must be keep in sync with parser_statement_type_t
+ */
+static const uint8_t parser_statement_flags[] =
+{
+  /* PARSER_STATEMENT_START */
+  PARSER_STATM_NO_OPTS,
+  /* PARSER_STATEMENT_BLOCK, */
+  PARSER_STATM_NO_OPTS,
+#if ENABLED (JERRY_ES2015)
+  /* PARSER_STATEMENT_BLOCK_SCOPE, */
+  PARSER_STATM_NO_OPTS,
+  /* PARSER_STATEMENT_PRIVATE_SCOPE, */
+  PARSER_STATM_NO_OPTS,
+  /* PARSER_STATEMENT_BLOCK_CONTEXT, */
+  PARSER_STATM_CONTEXT_BREAK,
+  /* PARSER_STATEMENT_PRIVATE_CONTEXT, */
+  PARSER_STATM_NO_OPTS,
+#endif /* ENABLED (JERRY_ES2015) */
+  /* PARSER_STATEMENT_LABEL */
+  PARSER_STATM_SINGLE_STATM,
+  /* PARSER_STATEMENT_IF */
+  PARSER_STATM_SINGLE_STATM,
+  /* PARSER_STATEMENT_ELSE */
+  PARSER_STATM_SINGLE_STATM,
+  /* PARSER_STATEMENT_SWITCH */
+  PARSER_STATM_BREAK_TARGET,
+  /* PARSER_STATEMENT_SWITCH_NO_DEFAULT */
+  PARSER_STATM_BREAK_TARGET,
+  /* PARSER_STATEMENT_DO_WHILE */
+  PARSER_STATM_BREAK_TARGET | PARSER_STATM_CONTINUE_TARGET | PARSER_STATM_SINGLE_STATM,
+  /* PARSER_STATEMENT_WHILE */
+  PARSER_STATM_BREAK_TARGET | PARSER_STATM_CONTINUE_TARGET | PARSER_STATM_SINGLE_STATM,
+  /* PARSER_STATEMENT_FOR */
+  PARSER_STATM_BREAK_TARGET | PARSER_STATM_CONTINUE_TARGET | PARSER_STATM_SINGLE_STATM,
+  /* PARSER_STATEMENT_FOR_IN */
+  PARSER_STATM_BREAK_TARGET | PARSER_STATM_CONTINUE_TARGET | PARSER_STATM_SINGLE_STATM | PARSER_STATM_CONTEXT_BREAK,
+#if ENABLED (JERRY_ES2015)
+  /* PARSER_STATEMENT_FOR_OF */
+  PARSER_STATM_BREAK_TARGET | PARSER_STATM_CONTINUE_TARGET | PARSER_STATM_SINGLE_STATM | PARSER_STATM_CONTEXT_BREAK,
+#endif /* ENABLED (JERRY_ES2015) */
+  /* PARSER_STATEMENT_WITH */
+  PARSER_STATM_CONTEXT_BREAK | PARSER_STATM_SINGLE_STATM,
+  /* PARSER_STATEMENT_TRY */
+  PARSER_STATM_CONTEXT_BREAK
+};
 
 #if !ENABLED (JERRY_ES2015)
 
@@ -1886,15 +1935,7 @@ parser_parse_break_statement (parser_context_t *context_p) /**< context */
         parser_raise_error (context_p, PARSER_ERR_INVALID_BREAK_LABEL);
       }
 
-      if (type == PARSER_STATEMENT_FOR_IN
-#if ENABLED (JERRY_ES2015)
-          || type == PARSER_STATEMENT_FOR_OF
-#endif /* ENABLED (JERRY_ES2015) */
-          || type == PARSER_STATEMENT_WITH
-#if ENABLED (JERRY_ES2015)
-          || type == PARSER_STATEMENT_BLOCK_CONTEXT
-#endif /* ENABLED (JERRY_ES2015) */
-          || type == PARSER_STATEMENT_TRY)
+      if (parser_statement_flags[type] & PARSER_STATM_CONTEXT_BREAK)
       {
         opcode = CBC_JUMP_FORWARD_EXIT_CONTEXT;
       }
@@ -1933,28 +1974,12 @@ parser_parse_break_statement (parser_context_t *context_p) /**< context */
       parser_raise_error (context_p, PARSER_ERR_INVALID_BREAK);
     }
 
-    if (type == PARSER_STATEMENT_FOR_IN
-#if ENABLED (JERRY_ES2015)
-        || type == PARSER_STATEMENT_FOR_OF
-#endif /* ENABLED (JERRY_ES2015) */
-        || type == PARSER_STATEMENT_WITH
-#if ENABLED (JERRY_ES2015)
-        || type == PARSER_STATEMENT_BLOCK_CONTEXT
-#endif /* ENABLED (JERRY_ES2015) */
-        || type == PARSER_STATEMENT_TRY)
+    if (parser_statement_flags[type] & PARSER_STATM_CONTEXT_BREAK)
     {
       opcode = CBC_JUMP_FORWARD_EXIT_CONTEXT;
     }
 
-    if (type == PARSER_STATEMENT_SWITCH
-        || type == PARSER_STATEMENT_SWITCH_NO_DEFAULT
-        || type == PARSER_STATEMENT_DO_WHILE
-        || type == PARSER_STATEMENT_WHILE
-        || type == PARSER_STATEMENT_FOR
-#if ENABLED (JERRY_ES2015)
-        || type == PARSER_STATEMENT_FOR_OF
-#endif /* ENABLED (JERRY_ES2015) */
-        || type == PARSER_STATEMENT_FOR_IN)
+    if (parser_statement_flags[type] & PARSER_STATM_BREAK_TARGET)
     {
       parser_loop_statement_t loop;
 
@@ -1988,7 +2013,6 @@ parser_parse_continue_statement (parser_context_t *context_p) /**< context */
       && context_p->token.lit_location.type == LEXER_IDENT_LITERAL)
   {
     parser_stack_iterator_t loop_iterator;
-    bool for_in_of_was_seen = false;
 
     loop_iterator.current_p = NULL;
 
@@ -2028,33 +2052,12 @@ parser_parse_continue_statement (parser_context_t *context_p) /**< context */
         continue;
       }
 
-#if ENABLED (JERRY_ES2015)
-      bool is_for_in_of_statement = (type == PARSER_STATEMENT_FOR_IN) || (type == PARSER_STATEMENT_FOR_OF);
-#else /* !ENABLED (JERRY_ES2015) */
-      bool is_for_in_of_statement = (type == PARSER_STATEMENT_FOR_IN);
-#endif /* ENABLED (JERRY_ES2015) */
-
-      if (type == PARSER_STATEMENT_WITH
-#if ENABLED (JERRY_ES2015)
-          || type == PARSER_STATEMENT_BLOCK_CONTEXT
-#endif /* ENABLED (JERRY_ES2015) */
-          || type == PARSER_STATEMENT_TRY
-          || for_in_of_was_seen)
+      if (parser_statement_flags[type] & PARSER_STATM_CONTEXT_BREAK)
       {
         opcode = CBC_JUMP_FORWARD_EXIT_CONTEXT;
       }
-      else if (is_for_in_of_statement)
-      {
-        for_in_of_was_seen = true;
-      }
 
-      if (type == PARSER_STATEMENT_DO_WHILE
-          || type == PARSER_STATEMENT_WHILE
-          || type == PARSER_STATEMENT_FOR
-#if ENABLED (JERRY_ES2015)
-          || type == PARSER_STATEMENT_FOR_OF
-#endif /* ENABLED (JERRY_ES2015) */
-          || type == PARSER_STATEMENT_FOR_IN)
+      if (parser_statement_flags[type] & PARSER_STATM_CONTINUE_TARGET)
       {
         loop_iterator = iterator;
       }
@@ -2076,13 +2079,7 @@ parser_parse_continue_statement (parser_context_t *context_p) /**< context */
       parser_raise_error (context_p, PARSER_ERR_INVALID_CONTINUE);
     }
 
-    if (type == PARSER_STATEMENT_DO_WHILE
-        || type == PARSER_STATEMENT_WHILE
-        || type == PARSER_STATEMENT_FOR
-#if ENABLED (JERRY_ES2015)
-        || type == PARSER_STATEMENT_FOR_OF
-#endif /* ENABLED (JERRY_ES2015) */
-        || type == PARSER_STATEMENT_FOR_IN)
+    if (parser_statement_flags[type] & PARSER_STATM_CONTINUE_TARGET)
     {
       parser_loop_statement_t loop;
 
@@ -2096,11 +2093,7 @@ parser_parse_continue_statement (parser_context_t *context_p) /**< context */
       return;
     }
 
-    if (type == PARSER_STATEMENT_WITH
-#if ENABLED (JERRY_ES2015)
-        || type == PARSER_STATEMENT_BLOCK_CONTEXT
-#endif /* ENABLED (JERRY_ES2015) */
-        || type == PARSER_STATEMENT_TRY)
+    if (parser_statement_flags[type] & PARSER_STATM_CONTEXT_BREAK)
     {
       opcode = CBC_JUMP_FORWARD_EXIT_CONTEXT;
     }
@@ -2572,17 +2565,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 
       case LEXER_RIGHT_BRACE:
       {
-        if (context_p->stack_top_uint8 == PARSER_STATEMENT_LABEL
-            || context_p->stack_top_uint8 == PARSER_STATEMENT_IF
-            || context_p->stack_top_uint8 == PARSER_STATEMENT_ELSE
-            || context_p->stack_top_uint8 == PARSER_STATEMENT_DO_WHILE
-            || context_p->stack_top_uint8 == PARSER_STATEMENT_WHILE
-            || context_p->stack_top_uint8 == PARSER_STATEMENT_FOR
-            || context_p->stack_top_uint8 == PARSER_STATEMENT_FOR_IN
-#if ENABLED (JERRY_ES2015)
-            || context_p->stack_top_uint8 == PARSER_STATEMENT_FOR_OF
-#endif /* ENABLED (JERRY_ES2015) */
-            || context_p->stack_top_uint8 == PARSER_STATEMENT_WITH)
+        if (parser_statement_flags[context_p->stack_top_uint8] & PARSER_STATM_SINGLE_STATM)
         {
           parser_raise_error (context_p, PARSER_ERR_STATEMENT_EXPECTED);
         }

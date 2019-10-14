@@ -810,6 +810,7 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
     case SCAN_STACK_ARROW_EXPRESSION:
     {
       parser_stack_pop_uint8 (context_p);
+      scanner_context_p->mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
       return SCAN_KEEP_TOKEN;
     }
 #endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */

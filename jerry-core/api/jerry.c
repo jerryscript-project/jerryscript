@@ -2461,8 +2461,16 @@ jerry_call_function (const jerry_value_t func_obj_val, /**< function object to c
 {
   jerry_assert_api_available ();
 
-  if (jerry_value_is_function (func_obj_val))
+  if (jerry_value_is_function (func_obj_val) && !ecma_is_value_error_reference (this_val))
   {
+    for (jerry_size_t i = 0; i < args_count; i++)
+    {
+      if (ecma_is_value_error_reference (args_p[i]))
+      {
+        return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_value_msg_p)));
+      }
+    }
+
     return jerry_invoke_function (false, func_obj_val, this_val, args_p, args_count);
   }
 
@@ -2488,6 +2496,14 @@ jerry_construct_object (const jerry_value_t func_obj_val, /**< function object t
 
   if (jerry_value_is_constructor (func_obj_val))
   {
+    for (jerry_size_t i = 0; i < args_count; i++)
+    {
+      if (ecma_is_value_error_reference (args_p[i]))
+      {
+        return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_value_msg_p)));
+      }
+    }
+
     ecma_value_t this_val = ECMA_VALUE_UNDEFINED;
     return jerry_invoke_function (true, func_obj_val, this_val, args_p, args_count);
   }
@@ -2821,6 +2837,11 @@ jerry_resolve_or_reject_promise (jerry_value_t promise, /**< the promise value *
   if (!ecma_is_value_object (promise) || !ecma_is_promise (ecma_get_object_from_value (promise)))
   {
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
+  }
+
+  if (ecma_is_value_error_reference (argument))
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_value_msg_p)));
   }
 
   lit_magic_string_id_t prop_name = (is_resolve ? LIT_INTERNAL_MAGIC_STRING_RESOLVE_FUNCTION
@@ -3601,6 +3622,11 @@ jerry_create_typedarray_for_arraybuffer_sz (jerry_typedarray_type_t type_name, /
   jerry_assert_api_available ();
 
 #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
+  if (ecma_is_value_error_reference (arraybuffer))
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_value_msg_p)));
+  }
+
   ecma_builtin_id_t prototype_id = 0;
   ecma_typedarray_type_t id = 0;
   uint8_t element_size_shift = 0;
@@ -3653,6 +3679,11 @@ jerry_create_typedarray_for_arraybuffer (jerry_typedarray_type_t type_name, /**<
   jerry_assert_api_available ();
 
 #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
+  if (ecma_is_value_error_reference (arraybuffer))
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_value_msg_p)));
+  }
+
   jerry_length_t byteLength = jerry_get_arraybuffer_byte_length (arraybuffer);
   return jerry_create_typedarray_for_arraybuffer_sz (type_name, arraybuffer, 0, byteLength);
 #else /* !ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
@@ -3811,6 +3842,11 @@ jerry_json_stringify (const jerry_value_t object_to_stringify) /**< a jerry_obje
   jerry_assert_api_available ();
 #if ENABLED (JERRY_BUILTIN_JSON)
   ecma_value_t ret_value = ecma_builtin_json_string_from_object (object_to_stringify);
+
+  if (ecma_is_value_error_reference (object_to_stringify))
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_value_msg_p)));
+  }
 
   if (ecma_is_value_undefined (ret_value))
   {

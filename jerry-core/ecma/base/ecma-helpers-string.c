@@ -822,10 +822,17 @@ ecma_ref_ecma_string (ecma_string_t *string_p) /**< string descriptor */
 {
   JERRY_ASSERT (string_p != NULL);
 
-  if (ECMA_IS_DIRECT_STRING (string_p) || ECMA_STRING_IS_STATIC (string_p))
+  if (ECMA_IS_DIRECT_STRING (string_p))
   {
     return;
   }
+
+#ifdef JERRY_NDEBUG
+  if (ECMA_STRING_IS_STATIC (string_p))
+  {
+    return;
+  }
+#endif /* JERRY_NDEBUG */
 
   JERRY_ASSERT (string_p->refs_and_container >= ECMA_STRING_REF_ONE);
 
@@ -849,10 +856,17 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
 {
   JERRY_ASSERT (string_p != NULL);
 
-  if (ECMA_IS_DIRECT_STRING (string_p) || ECMA_STRING_IS_STATIC (string_p))
+  if (ECMA_IS_DIRECT_STRING (string_p))
   {
     return;
   }
+
+#ifdef JERRY_NDEBUG
+  if (ECMA_STRING_IS_STATIC (string_p))
+  {
+    return;
+  }
+#endif /* JERRY_NDEBUG */
 
   JERRY_ASSERT (string_p->refs_and_container >= ECMA_STRING_REF_ONE);
 

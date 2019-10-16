@@ -76,6 +76,7 @@ enum
   ECMA_ARRAY_PROTOTYPE_VALUES,
   ECMA_ARRAY_PROTOTYPE_KEYS,
   ECMA_ARRAY_PROTOTYPE_SYMBOL_ITERATOR,
+  ECMA_ARRAY_PROTOTYPE_FILL,
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-array-prototype.inc.h"
@@ -1920,6 +1921,98 @@ ecma_builtin_array_reduce_from (ecma_value_t callbackfn, /**< routine's 1st argu
 
 #if ENABLED (JERRY_ES2015_BUILTIN)
 /**
+ * The Array.prototype object's 'fill' routine
+ *
+ * Note: this method only supports length up to uint32, instead of max_safe_integer
+ *
+ * See also:
+ *          ECMA-262 v6, 22.1.3.6
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_array_prototype_fill (ecma_value_t value, /**< value */
+                                   ecma_value_t start_val, /**< start value */
+                                   ecma_value_t end_val, /**< end value */
+                                   ecma_object_t *obj_p, /**< array object */
+                                   uint32_t len) /**< array object's length */
+{
+  /* 5 */
+  ecma_number_t start;
+  ecma_value_t to_number = ecma_op_to_integer (start_val, &start);
+
+  /* 6 */
+  if (ECMA_IS_VALUE_ERROR (to_number))
+  {
+    return to_number;
+  }
+
+  ecma_number_t k;
+
+  /* 7 */
+  if (ecma_number_is_negative (start))
+  {
+    k = JERRY_MAX (((ecma_number_t) len + start), 0);
+  }
+  else
+  {
+    k = JERRY_MIN (start, (ecma_number_t) len);
+  }
+
+  /* 8 */
+  ecma_number_t relative_end;
+
+  if (ecma_is_value_undefined (end_val))
+  {
+    relative_end = (ecma_number_t) len;
+  }
+  else
+  {
+    to_number = ecma_op_to_integer (end_val, &relative_end);
+
+    if (ECMA_IS_VALUE_ERROR (to_number))
+    {
+      return to_number;
+    }
+  }
+
+  /* 10 */
+  ecma_number_t final;
+  if (relative_end < 0)
+  {
+    final = JERRY_MAX (((ecma_number_t) len + relative_end), 0);
+  }
+  else
+  {
+    final = JERRY_MIN (relative_end, (ecma_number_t) len);
+  }
+
+  /* 11 */
+  while (k < final)
+  {
+    /* 11.a */
+    ecma_string_t *pk = ecma_new_ecma_string_from_number (k);
+
+    /* 11.b */
+    ecma_value_t put_val = ecma_op_object_put (obj_p, pk, value, true);
+    ecma_deref_ecma_string (pk);
+
+    /* 11. c */
+    if (ECMA_IS_VALUE_ERROR (put_val))
+    {
+      return put_val;
+    }
+
+    /* 11.d */
+    k++;
+  }
+
+  ecma_ref_object (obj_p);
+  return ecma_make_object_value (obj_p);
+} /* ecma_builtin_array_prototype_fill */
+
+/**
  * The Array.prototype object's 'find' and 'findIndex' routine
  *
  * See also:
@@ -2247,6 +2340,15 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
                                                             builtin_routine_id == ECMA_ARRAY_PROTOTYPE_FIND,
                                                             obj_p,
                                                             length);
+      break;
+    }
+    case ECMA_ARRAY_PROTOTYPE_FILL:
+    {
+      ret_value = ecma_builtin_array_prototype_fill (routine_arg_1,
+                                                     routine_arg_2,
+                                                     arguments_list_p[2],
+                                                     obj_p,
+                                                     length);
       break;
     }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN) */

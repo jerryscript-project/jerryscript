@@ -29,11 +29,6 @@
 #if ENABLED (JERRY_PROPRETY_HASHMAP)
 
 /**
- * Maximum number of properties that can be stored in a hashmap directly
- */
-#define ECMA_PROPERTY_HASHMAP_SHIFT_LIMIT (UINT16_MAX + 1)
-
-/**
  * Compute the total size of the property hashmap.
  */
 #define ECMA_PROPERTY_HASHMAP_GET_TOTAL_SIZE(max_property_count) \
@@ -134,7 +129,6 @@ ecma_property_hashmap_create (ecma_object_t *object_p) /**< object */
   memset (hashmap_p, 0, total_size);
 
   hashmap_p->header.types[0] = ECMA_PROPERTY_TYPE_HASHMAP;
-  hashmap_p->header.types[1] = 0;
   hashmap_p->header.next_property_cp = object_p->u1.property_list_cp;
   hashmap_p->max_property_count = max_property_count;
   hashmap_p->null_count = max_property_count - named_property_count;
@@ -143,16 +137,6 @@ ecma_property_hashmap_create (ecma_object_t *object_p) /**< object */
   jmem_cpointer_t *pair_list_p = (jmem_cpointer_t *) (hashmap_p + 1);
   uint8_t *bits_p = (uint8_t *) (pair_list_p + max_property_count);
   uint32_t mask = max_property_count - 1;
-
-  uint8_t shift_counter = 0;
-
-  while (max_property_count > ECMA_PROPERTY_HASHMAP_SHIFT_LIMIT)
-  {
-    shift_counter++;
-    max_property_count >>= 1;
-  }
-
-  hashmap_p->header.types[1] = shift_counter;
 
   prop_iter_cp = object_p->u1.property_list_cp;
   ECMA_SET_NON_NULL_POINTER (object_p->u1.property_list_cp, hashmap_p);
@@ -175,16 +159,7 @@ ecma_property_hashmap_create (ecma_object_t *object_p) /**< object */
                                                                  property_pair_p->names_cp[i]);
       uint32_t step = ecma_property_hashmap_steps[entry_index & (ECMA_PROPERTY_HASHMAP_NUMBER_OF_STEPS - 1)];
 
-      if (mask < ECMA_PROPERTY_HASHMAP_SHIFT_LIMIT)
-      {
-        entry_index &= mask;
-      }
-      else
-      {
-        entry_index <<= shift_counter;
-        JERRY_ASSERT (entry_index <= mask);
-      }
-
+      entry_index &= mask;
 #ifndef JERRY_NDEBUG
       /* Because max_property_count (power of 2) and step (a prime
        * number) are relative primes, all entries of the hasmap are
@@ -268,15 +243,8 @@ ecma_property_hashmap_insert (ecma_object_t *object_p, /**< object */
   uint32_t entry_index = ecma_string_hash (name_p);
   uint32_t step = ecma_property_hashmap_steps[entry_index & (ECMA_PROPERTY_HASHMAP_NUMBER_OF_STEPS - 1)];
   uint32_t mask = hashmap_p->max_property_count - 1;
+  entry_index &= mask;
 
-  if (mask < ECMA_PROPERTY_HASHMAP_SHIFT_LIMIT)
-  {
-    entry_index &= mask;
-  }
-  else
-  {
-    entry_index <<= hashmap_p->header.types[1];
-  }
 
 #ifndef JERRY_NDEBUG
   /* See the comment for this variable in ecma_property_hashmap_create. */
@@ -351,15 +319,7 @@ ecma_property_hashmap_delete (ecma_object_t *object_p, /**< object */
   jmem_cpointer_t *pair_list_p = (jmem_cpointer_t *) (hashmap_p + 1);
   uint8_t *bits_p = (uint8_t *) (pair_list_p + hashmap_p->max_property_count);
 
-  if (mask < ECMA_PROPERTY_HASHMAP_SHIFT_LIMIT)
-  {
-    entry_index &= mask;
-  }
-  else
-  {
-    entry_index <<= hashmap_p->header.types[1];
-    JERRY_ASSERT (entry_index <= mask);
-  }
+  entry_index &= mask;
 
 #ifndef JERRY_NDEBUG
   /* See the comment for this variable in ecma_property_hashmap_create. */
@@ -453,16 +413,7 @@ ecma_property_hashmap_find (ecma_property_hashmap_t *hashmap_p, /**< hashmap */
   uint32_t mask = hashmap_p->max_property_count - 1;
   jmem_cpointer_t *pair_list_p = (jmem_cpointer_t *) (hashmap_p + 1);
   uint8_t *bits_p = (uint8_t *) (pair_list_p + hashmap_p->max_property_count);
-
-  if (mask < ECMA_PROPERTY_HASHMAP_SHIFT_LIMIT)
-  {
-    entry_index &= mask;
-  }
-  else
-  {
-    entry_index <<= hashmap_p->header.types[1];
-    JERRY_ASSERT (entry_index <= mask);
-  }
+  entry_index &= mask;
 
 #ifndef JERRY_NDEBUG
   /* See the comment for this variable in ecma_property_hashmap_create. */

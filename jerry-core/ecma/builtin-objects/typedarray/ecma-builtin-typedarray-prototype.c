@@ -35,6 +35,7 @@
 #include "jmem.h"
 #include "jrt-libc-includes.h"
 #include "jrt.h"
+#include "lit-char-helpers.h"
 
 #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
 
@@ -2056,24 +2057,26 @@ ecma_builtin_typedarray_prototype_to_locale_string (ecma_value_t this_arg) /**< 
   }
 
   ecma_string_t *return_string_p = ecma_get_string_from_value (first_element);
+  ecma_stringbuilder_t builder = ecma_stringbuilder_create_from (return_string_p);
+  ecma_deref_ecma_string (return_string_p);
 
   for (uint32_t k = info.element_size; k < limit; k += info.element_size)
   {
-    return_string_p = ecma_append_magic_string_to_string (return_string_p, LIT_MAGIC_STRING_COMMA_CHAR);
+    ecma_stringbuilder_append_byte (&builder, LIT_CHAR_COMMA);
     ecma_value_t next_element = ecma_builtin_typedarray_prototype_to_locale_string_helper (typedarray_p, k);
 
     if (ECMA_IS_VALUE_ERROR (next_element))
     {
-      ecma_deref_ecma_string (return_string_p);
+      ecma_stringbuilder_destroy (&builder);
       return next_element;
     }
 
     ecma_string_t *next_element_p = ecma_get_string_from_value (next_element);
-    return_string_p = ecma_concat_ecma_strings (return_string_p, next_element_p);
+    ecma_stringbuilder_append (&builder, next_element_p);
     ecma_deref_ecma_string (next_element_p);
   }
 
-  return ecma_make_string_value (return_string_p);
+  return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
 } /* ecma_builtin_typedarray_prototype_to_locale_string */
 
 /**

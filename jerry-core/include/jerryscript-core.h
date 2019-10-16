@@ -600,6 +600,8 @@ jerry_length_t jerry_arraybuffer_read (const jerry_value_t value,
                                        jerry_length_t buf_size);
 jerry_length_t jerry_get_arraybuffer_byte_length (const jerry_value_t value);
 uint8_t *jerry_get_arraybuffer_pointer (const jerry_value_t value);
+jerry_value_t jerry_is_arraybuffer_detachable (const jerry_value_t value);
+jerry_value_t jerry_detach_arraybuffer (const jerry_value_t value);
 
 /**
  * DataView functions.

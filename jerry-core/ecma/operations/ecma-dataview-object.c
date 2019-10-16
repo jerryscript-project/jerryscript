@@ -84,7 +84,11 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
     }
   }
 
-  /* 8. TODO: Throw TypeError, when Detached ArrayBuffer will be supported. */
+  /* 8. */
+  if (ecma_arraybuffer_is_detached (buffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+  }
 
   /* 9. */
   ecma_length_t buffer_byte_length = ecma_arraybuffer_get_length (buffer_p);
@@ -284,6 +288,10 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
   /* 9. */
   ecma_object_t *buffer_p = view_p->buffer_p;
   JERRY_ASSERT (ecma_object_class_is (buffer_p, LIT_MAGIC_STRING_ARRAY_BUFFER_UL));
+  if (ecma_arraybuffer_is_detached (buffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+  }
 
   /* 10. */
   uint32_t view_offset = view_p->byte_offset;

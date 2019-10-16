@@ -544,6 +544,10 @@ ecma_typedarray_create_object_with_buffer (ecma_object_t *arraybuffer_p, /**< th
                                            uint8_t element_size_shift, /**< the size shift of the element length */
                                            ecma_typedarray_type_t typedarray_id) /**< id of the typedarray */
 {
+  if (ecma_arraybuffer_is_detached (arraybuffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+  }
   ecma_length_t expected_length = (ecma_arraybuffer_get_length (arraybuffer_p) >> element_size_shift);
 
   bool needs_ext_typedarray_obj = (byte_offset != 0 || array_length != expected_length);
@@ -586,6 +590,11 @@ ecma_typedarray_create_object_with_typedarray (ecma_object_t *typedarray_p, /**<
                                                ecma_typedarray_type_t typedarray_id) /**< id of the typedarray */
 {
   ecma_length_t array_length = ecma_typedarray_get_length (typedarray_p);
+  ecma_object_t *src_arraybuffer_p = ecma_typedarray_get_arraybuffer (typedarray_p);
+  if (ecma_arraybuffer_is_detached (src_arraybuffer_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid detached ArrayBuffer."));
+  }
 
   ecma_value_t new_typedarray = ecma_typedarray_create_object_with_length (array_length,
                                                                            proto_p,
@@ -599,7 +608,6 @@ ecma_typedarray_create_object_with_typedarray (ecma_object_t *typedarray_p, /**<
 
   ecma_object_t *new_typedarray_p = ecma_get_object_from_value (new_typedarray);
 
-  ecma_object_t *src_arraybuffer_p = ecma_typedarray_get_arraybuffer (typedarray_p);
   lit_utf8_byte_t *src_buf_p = ecma_arraybuffer_get_buffer (src_arraybuffer_p);
 
   ecma_object_t *dst_arraybuffer_p = ecma_typedarray_get_arraybuffer (new_typedarray_p);
@@ -825,6 +833,12 @@ ecma_typedarray_get_length (ecma_object_t *typedarray_p) /**< the pointer to the
     return buffer_length >> shift;
   }
 
+  ecma_object_t *arraybuffer_p = ecma_typedarray_get_arraybuffer (typedarray_p);
+  if (ecma_arraybuffer_is_detached (arraybuffer_p))
+  {
+    return 0;
+  }
+
   ecma_extended_typedarray_object_t *info_p = (ecma_extended_typedarray_object_t *) ext_object_p;
 
   return info_p->array_length;
@@ -843,6 +857,12 @@ ecma_typedarray_get_offset (ecma_object_t *typedarray_p) /**< the pointer to the
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) typedarray_p;
 
   if (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_TYPEDARRAY)
+  {
+    return 0;
+  }
+
+  ecma_object_t *arraybuffer_p = ecma_typedarray_get_arraybuffer (typedarray_p);
+  if (ecma_arraybuffer_is_detached (arraybuffer_p))
   {
     return 0;
   }
@@ -946,6 +966,10 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
       if (ecma_number_is_negative (ecma_number_to_int32 (num2)) || (offset % (uint32_t) (1 << element_size_shift) != 0))
       {
         ret = ecma_raise_range_error (ECMA_ERR_MSG ("Invalid offset."));
+      }
+      else if (ecma_arraybuffer_is_detached (arraybuffer_p))
+      {
+        ret = ecma_raise_range_error (ECMA_ERR_MSG ("Invalid detached ArrayBuffer."));
       }
       else
       {

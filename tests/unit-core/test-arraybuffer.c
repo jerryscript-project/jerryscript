@@ -354,6 +354,51 @@ main (void)
     jerry_release_value (input_buffer);
   }
 
+  /* Test ArrayBuffer detach */
+  {
+    const uint32_t length = 1;
+    jerry_value_t arraybuffer = jerry_create_arraybuffer (length);
+    TEST_ASSERT (!jerry_value_is_error (arraybuffer));
+    TEST_ASSERT (jerry_value_is_arraybuffer (arraybuffer));
+    TEST_ASSERT (jerry_get_arraybuffer_byte_length (arraybuffer) == length);
+
+    jerry_value_t is_detachable = jerry_is_arraybuffer_detachable (arraybuffer);
+    TEST_ASSERT (!jerry_value_is_error (is_detachable));
+    TEST_ASSERT (!jerry_get_boolean_value (is_detachable));
+
+    jerry_value_t res = jerry_detach_arraybuffer (arraybuffer);
+    TEST_ASSERT (jerry_value_is_error (res));
+
+    jerry_release_value (res);
+    jerry_release_value (arraybuffer);
+  }
+
+  /* Test external ArrayBuffer detach */
+  {
+    uint8_t buf[1];
+    const uint32_t length = 1;
+    jerry_value_t arraybuffer = jerry_create_arraybuffer_external (length, buf, NULL);
+    TEST_ASSERT (!jerry_value_is_error (arraybuffer));
+    TEST_ASSERT (jerry_value_is_arraybuffer (arraybuffer));
+    TEST_ASSERT (jerry_get_arraybuffer_byte_length (arraybuffer) == length);
+
+    jerry_value_t is_detachable = jerry_is_arraybuffer_detachable (arraybuffer);
+    TEST_ASSERT (!jerry_value_is_error (is_detachable));
+    TEST_ASSERT (jerry_get_boolean_value (is_detachable));
+    jerry_release_value (is_detachable);
+
+    jerry_value_t res = jerry_detach_arraybuffer (arraybuffer);
+    TEST_ASSERT (!jerry_value_is_error (res));
+
+    is_detachable = jerry_is_arraybuffer_detachable (arraybuffer);
+    TEST_ASSERT (!jerry_value_is_error (is_detachable));
+    TEST_ASSERT (!jerry_get_boolean_value (is_detachable));
+    jerry_release_value (is_detachable);
+
+    jerry_release_value (res);
+    jerry_release_value (arraybuffer);
+  }
+
   jerry_cleanup ();
 
   TEST_ASSERT (callback_called == true);

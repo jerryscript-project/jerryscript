@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include "ecma-arraybuffer-object.h"
+#include "ecma-exceptions.h"
 #include "ecma-dataview-object.h"
 #include "ecma-gc.h"
 
@@ -110,11 +112,20 @@ ecma_builtin_dataview_prototype_object_getters (ecma_value_t this_arg, /**< this
     }
     case ECMA_DATAVIEW_PROTOTYPE_BYTE_LENGTH_GETTER:
     {
+      if (ecma_arraybuffer_is_detached (obj_p->buffer_p))
+      {
+        return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+      }
       return ecma_make_uint32_value (obj_p->header.u.class_prop.u.length);
     }
     default:
     {
       JERRY_ASSERT (builtin_routine_id == ECMA_DATAVIEW_PROTOTYPE_BYTE_OFFSET_GETTER);
+
+      if (ecma_arraybuffer_is_detached (obj_p->buffer_p))
+      {
+        return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+      }
       return ecma_make_uint32_value (obj_p->byte_offset);
     }
   }

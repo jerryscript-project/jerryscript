@@ -499,7 +499,11 @@ main (int argc,
       }
       case OPT_VERSION:
       {
-        printf ("Version: %d.%d%s\n", JERRY_API_MAJOR_VERSION, JERRY_API_MINOR_VERSION, JERRY_COMMIT_HASH);
+        printf ("Version: %d.%d.%d%s\n",
+                JERRY_API_MAJOR_VERSION,
+                JERRY_API_MINOR_VERSION,
+                JERRY_API_PATCH_VERSION,
+                JERRY_COMMIT_HASH);
         return JERRY_STANDALONE_EXIT_CODE_OK;
       }
       case OPT_MEM_STATS:

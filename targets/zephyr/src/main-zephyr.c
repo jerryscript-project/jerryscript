@@ -82,7 +82,7 @@ void main (void)
   srand ((unsigned) jerry_port_get_current_time ());
   uint32_t zephyr_ver = sys_kernel_version_get ();
   printf ("JerryScript build: " __DATE__ " " __TIME__ "\n");
-  printf ("JerryScript API %d.%d\n", JERRY_API_MAJOR_VERSION, JERRY_API_MINOR_VERSION);
+  printf ("JerryScript API %d.%d.%d\n", JERRY_API_MAJOR_VERSION, JERRY_API_MINOR_VERSION, JERRY_API_PATCH_VERSION);
   printf ("Zephyr version %d.%d.%d\n", (int)SYS_KERNEL_VER_MAJOR (zephyr_ver),
     (int)SYS_KERNEL_VER_MINOR (zephyr_ver),
     (int)SYS_KERNEL_VER_PATCHLEVEL (zephyr_ver));

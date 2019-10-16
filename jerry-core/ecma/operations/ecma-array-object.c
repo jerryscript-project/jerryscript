@@ -212,20 +212,12 @@ ecma_fast_array_convert_to_normal (ecma_object_t *object_p) /**< fast access mod
  */
 bool
 ecma_fast_array_set_property (ecma_object_t *object_p, /**< fast access mode array object */
-                              ecma_string_t *property_name_p, /**< property name */
+                              uint32_t index, /**< property name index */
                               ecma_value_t value) /**< value to be set */
 {
   JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_ARRAY);
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
-
-  uint32_t index = ecma_string_get_array_index (property_name_p);
   JERRY_ASSERT (ext_obj_p->u.array.is_fast_mode);
-
-  if (JERRY_UNLIKELY (index == ECMA_STRING_NOT_ARRAY_INDEX))
-  {
-    ecma_fast_array_convert_to_normal (object_p);
-    return false;
-  }
 
   ecma_value_t *values_p;
 
@@ -327,7 +319,7 @@ ecma_fast_array_extend (ecma_object_t *object_p, /**< fast access mode array obj
 
   ext_obj_p->u.array.length = new_length;
 
-  ECMA_SET_POINTER (object_p->u1.property_list_cp, new_values_p);
+  ECMA_SET_NON_NULL_POINTER (object_p->u1.property_list_cp, new_values_p);
 
   ecma_deref_object (object_p);
   return new_values_p;
@@ -391,7 +383,7 @@ ecma_array_object_delete_property (ecma_object_t *object_p, /**< object */
  *
  * @return the updated value of new_length
  */
-static uint32_t
+uint32_t
 ecma_delete_fast_array_properties (ecma_object_t *object_p, /**< fast access mode array */
                                    uint32_t new_length) /**< new length of the fast access mode array */
 {
@@ -1039,7 +1031,13 @@ ecma_op_array_object_define_own_property (ecma_object_t *object_p, /**< the arra
   {
     if ((property_desc_p->flags & ECMA_FAST_ARRAY_DATA_PROP_FLAGS) == ECMA_FAST_ARRAY_DATA_PROP_FLAGS)
     {
-      if (ecma_fast_array_set_property (object_p, property_name_p, property_desc_p->value))
+      uint32_t index = ecma_string_get_array_index (property_name_p);
+
+      if (JERRY_UNLIKELY (index == ECMA_STRING_NOT_ARRAY_INDEX))
+      {
+        ecma_fast_array_convert_to_normal (object_p);
+      }
+      else if (ecma_fast_array_set_property (object_p, index, property_desc_p->value))
       {
         return ECMA_VALUE_TRUE;
       }

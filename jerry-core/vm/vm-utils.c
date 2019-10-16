@@ -98,10 +98,8 @@ vm_get_backtrace (uint32_t max_depth) /**< maximum backtrace depth, 0 = unlimite
     str_p = ecma_concat_ecma_strings (str_p, line_str_p);
     ecma_deref_ecma_string (line_str_p);
 
-    ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (index);
-    ecma_fast_array_set_property (array_p, index_str_p, ecma_make_string_value (str_p));
+    ecma_fast_array_set_property (array_p, index, ecma_make_string_value (str_p));
     ecma_deref_ecma_string (str_p);
-    ecma_deref_ecma_string (index_str_p);
 
     context_p = context_p->prev_context_p;
     index++;

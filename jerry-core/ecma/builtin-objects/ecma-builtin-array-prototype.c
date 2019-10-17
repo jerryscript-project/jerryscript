@@ -548,7 +548,27 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg, /**< this ar
   /* 4. */
   uint32_t middle = len / 2;
 
-  /* 5-6. */
+  if (ecma_op_object_is_fast_array (obj_p))
+  {
+    ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
+
+    if (ext_obj_p->u.array.u.hole_count < ECMA_FAST_ARRAY_HOLE_ONE
+        && len != 0
+        && ecma_get_object_extensible (obj_p))
+    {
+      ecma_value_t *buffer_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, obj_p->u1.property_list_cp);
+
+      for (uint32_t i = 0; i < middle; i++)
+      {
+        ecma_value_t tmp = buffer_p[i];
+        buffer_p[i] = buffer_p[len - 1 - i];
+        buffer_p[len - 1 - i] = tmp;
+      }
+
+      return ecma_copy_value (this_arg);
+    }
+  }
+
   for (uint32_t lower = 0; lower < middle; lower++)
   {
     ecma_value_t ret_value = ECMA_VALUE_ERROR;

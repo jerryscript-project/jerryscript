@@ -1997,6 +1997,47 @@ jerry_has_own_property (const jerry_value_t obj_val, /**< object value */
 } /* jerry_has_own_property */
 
 /**
+ * Checks whether the object has the given internal property.
+ *
+ * @return true  - if the internal property exists
+ *         false - otherwise
+ */
+bool
+jerry_has_internal_property (const jerry_value_t obj_val, /**< object value */
+                             const jerry_value_t prop_name_val) /**< property name value */
+{
+  jerry_assert_api_available ();
+
+  if (!ecma_is_value_object (obj_val)
+      || !ecma_is_value_prop_name (prop_name_val))
+  {
+    return false;
+  }
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_val);
+
+  ecma_string_t *internal_string_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_API_INTERNAL);
+
+  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY
+      && ((ecma_extended_object_t *) obj_p)->u.array.is_fast_mode)
+  {
+    return false;
+  }
+
+  ecma_property_t *property_p = ecma_find_named_property (obj_p, internal_string_p);
+
+  if (property_p == NULL)
+  {
+    return false;
+  }
+
+  ecma_object_t *internal_object_p = ecma_get_object_from_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
+  property_p = ecma_find_named_property (internal_object_p, ecma_get_prop_name_from_value (prop_name_val));
+
+  return property_p != NULL;
+} /* jerry_has_internal_property */
+
+/**
  * Delete a property from an object.
  *
  * @return true  - if property was deleted successfully
@@ -2045,6 +2086,54 @@ jerry_delete_property_by_index (const jerry_value_t obj_val, /**< object value *
 
   return ecma_is_value_true (ret_value);
 } /* jerry_delete_property_by_index */
+
+/**
+ * Delete an internal property from an object.
+ *
+ * @return true  - if property was deleted successfully
+ *         false - otherwise
+ */
+bool
+jerry_delete_internal_property (const jerry_value_t obj_val, /**< object value */
+                                const jerry_value_t prop_name_val) /**< property name value */
+{
+  jerry_assert_api_available ();
+
+  if (!ecma_is_value_object (obj_val)
+      || !ecma_is_value_prop_name (prop_name_val))
+  {
+    return false;
+  }
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_val);
+
+  ecma_string_t *internal_string_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_API_INTERNAL);
+
+  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY
+      && ((ecma_extended_object_t *) obj_p)->u.array.is_fast_mode)
+  {
+    return true;
+  }
+
+  ecma_property_t *property_p = ecma_find_named_property (obj_p, internal_string_p);
+
+  if (property_p == NULL)
+  {
+    return true;
+  }
+
+  ecma_object_t *internal_object_p = ecma_get_object_from_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
+  property_p = ecma_find_named_property (internal_object_p, ecma_get_prop_name_from_value (prop_name_val));
+
+  if (property_p == NULL)
+  {
+    return true;
+  }
+
+  ecma_delete_property (internal_object_p, ECMA_PROPERTY_VALUE_PTR (property_p));
+
+  return true;
+} /* jerry_delete_internal_property */
 
 /**
  * Get value of a property to the specified object with the given name.
@@ -2098,6 +2187,56 @@ jerry_get_property_by_index (const jerry_value_t obj_val, /**< object value */
 
   return jerry_return (ret_value);
 } /* jerry_get_property_by_index */
+
+/**
+ * Get value of an internal property to the specified object with the given name.
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return value of the internal property - if the internal property exists
+ *         undefined value - if the internal does not property exists
+ *         value marked with error flag - otherwise
+ */
+jerry_value_t
+jerry_get_internal_property (const jerry_value_t obj_val, /**< object value */
+                             const jerry_value_t prop_name_val) /**< property name value */
+{
+  jerry_assert_api_available ();
+
+  if (!ecma_is_value_object (obj_val)
+      || !ecma_is_value_prop_name (prop_name_val))
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
+  }
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_val);
+
+  ecma_string_t *internal_string_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_API_INTERNAL);
+
+  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY
+      && ((ecma_extended_object_t *) obj_p)->u.array.is_fast_mode)
+  {
+    return jerry_return (ECMA_VALUE_UNDEFINED);
+  }
+
+  ecma_property_t *property_p = ecma_find_named_property (obj_p, internal_string_p);
+
+  if (property_p == NULL)
+  {
+    return jerry_return (ECMA_VALUE_UNDEFINED);
+  }
+
+  ecma_object_t *internal_object_p = ecma_get_object_from_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
+  property_p = ecma_find_named_property (internal_object_p, ecma_get_prop_name_from_value (prop_name_val));
+
+  if (property_p == NULL)
+  {
+    return jerry_return (ECMA_VALUE_UNDEFINED);
+  }
+
+  return jerry_return (ecma_copy_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value));
+} /* jerry_get_internal_property */
 
 /**
  * Set a property to the specified object with the given name.
@@ -2159,6 +2298,79 @@ jerry_set_property_by_index (const jerry_value_t obj_val, /**< object value */
 
   return jerry_return (ret_value);
 } /* jerry_set_property_by_index */
+
+/**
+ * Set an internal property to the specified object with the given name.
+ *
+ * Note:
+ *      - the property cannot be accessed from the JavaScript context, only from the public API
+ *      - returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return true value - if the operation was successful
+ *         value marked with error flag - otherwise
+ */
+bool
+jerry_set_internal_property (const jerry_value_t obj_val, /**< object value */
+                             const jerry_value_t prop_name_val, /**< property name value */
+                             const jerry_value_t value_to_set) /**< value to set */
+{
+  jerry_assert_api_available ();
+
+  if (ecma_is_value_error_reference (value_to_set)
+      || !ecma_is_value_object (obj_val)
+      || !ecma_is_value_prop_name (prop_name_val))
+  {
+    return false;
+  }
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_val);
+
+  ecma_string_t *internal_string_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_API_INTERNAL);
+
+  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY
+      && ((ecma_extended_object_t *) obj_p)->u.array.is_fast_mode)
+  {
+    ecma_fast_array_convert_to_normal (obj_p);
+  }
+
+  ecma_property_t *property_p = ecma_find_named_property (obj_p, internal_string_p);
+  ecma_object_t *internal_object_p;
+
+  if (property_p == NULL)
+  {
+    ecma_property_value_t *value_p = ecma_create_named_data_property (obj_p,
+                                                                      internal_string_p,
+                                                                      ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                                      NULL);
+
+    internal_object_p = ecma_create_object (NULL, 0, ECMA_OBJECT_TYPE_GENERAL);
+    value_p->value = ecma_make_object_value (internal_object_p);
+    ecma_deref_object (internal_object_p);
+  }
+  else
+  {
+    internal_object_p = ecma_get_object_from_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
+  }
+
+  ecma_string_t *prop_name_p = ecma_get_prop_name_from_value (prop_name_val);
+  property_p = ecma_find_named_property (internal_object_p, prop_name_p);
+
+  if (property_p == NULL)
+  {
+    ecma_property_value_t *value_p = ecma_create_named_data_property (internal_object_p,
+                                                                      prop_name_p,
+                                                                      ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                                      NULL);
+
+    value_p->value = ecma_copy_value_if_not_object (value_to_set);
+  }
+  else
+  {
+    ecma_named_data_property_assign_value (internal_object_p, ECMA_PROPERTY_VALUE_PTR (property_p), value_to_set);
+  }
+
+  return true;
+} /* jerry_set_internal_property */
 
 /**
  * Initialize property descriptor.

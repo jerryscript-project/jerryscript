@@ -502,15 +502,20 @@ jerry_value_t jerry_create_undefined (void);
  */
 jerry_value_t jerry_has_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val);
 jerry_value_t jerry_has_own_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val);
+bool jerry_has_internal_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val);
 bool jerry_delete_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val);
 bool jerry_delete_property_by_index (const jerry_value_t obj_val, uint32_t index);
+bool jerry_delete_internal_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val);
 
 jerry_value_t jerry_get_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val);
 jerry_value_t jerry_get_property_by_index (const jerry_value_t obj_val, uint32_t index);
+jerry_value_t jerry_get_internal_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val);
 jerry_value_t jerry_set_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val,
                                   const jerry_value_t value_to_set);
 jerry_value_t jerry_set_property_by_index (const jerry_value_t obj_val, uint32_t index,
                                            const jerry_value_t value_to_set);
+bool jerry_set_internal_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val,
+                                  const jerry_value_t value_to_set);
 
 void jerry_init_property_descriptor_fields (jerry_property_descriptor_t *prop_desc_p);
 jerry_value_t jerry_define_own_property (const jerry_value_t obj_val,

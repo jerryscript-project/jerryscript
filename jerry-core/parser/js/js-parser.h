@@ -37,9 +37,9 @@ typedef enum
 
   PARSER_ERR_OUT_OF_MEMORY,                           /**< out of memory */
   PARSER_ERR_LITERAL_LIMIT_REACHED,                   /**< maximum number of literals reached */
+  PARSER_ERR_SCOPE_STACK_LIMIT_REACHED,               /**< maximum depth of scope stack reached */
   PARSER_ERR_ARGUMENT_LIMIT_REACHED,                  /**< maximum number of function arguments reached */
   PARSER_ERR_STACK_LIMIT_REACHED,                     /**< maximum function stack size reached */
-  PARSER_ERR_REGISTER_LIMIT_REACHED,                  /**< maximum register size reached */
 
   PARSER_ERR_INVALID_CHARACTER,                       /**< unexpected character */
   PARSER_ERR_INVALID_HEX_DIGIT,                       /**< invalid hexadecimal digit */

@@ -56,8 +56,6 @@ typedef enum
   PARSER_ARGUMENTS_NEEDED = (1u << 8),        /**< arguments object must be created */
   PARSER_ARGUMENTS_NOT_NEEDED = (1u << 9),    /**< arguments object must NOT be created */
   PARSER_LEXICAL_ENV_NEEDED = (1u << 10),     /**< lexical environment object must be created */
-  PARSER_NO_REG_STORE = (1u << 11),           /**< all local variables must be stored
-                                               *   in the lexical environment object */
   PARSER_INSIDE_WITH = (1u << 12),            /**< code block is inside a with statement */
   PARSER_RESOLVE_BASE_FOR_CALLS = (1u << 13), /**< the this object must be resolved when
                                                *   a function without a base object is called */
@@ -313,6 +311,29 @@ typedef struct parser_branch_node_t
   parser_branch_t branch;                     /**< branch */
 } parser_branch_node_t;
 
+/**
+ * Items of scope stack.
+ */
+typedef struct
+{
+  uint16_t map_from;                          /**< original literal index */
+  uint16_t map_to;                            /**< register or literal index */
+} parser_scope_stack;
+
+/**
+ * This item represents a function literal in the scope stack.
+ */
+#define PARSER_SCOPE_STACK_FUNC 0xffff
+
+/**
+ * Starting literal index for registers.
+ */
+#define PARSER_REGISTER_START 0x8000
+
+/* Forward definitions for js-scanner-internal.h. */
+struct scanner_context_t;
+typedef struct scanner_context_t scanner_context_t;
+
 #if ENABLED (JERRY_DEBUGGER)
 /**
  * Extra information for each breakpoint.
@@ -352,6 +373,10 @@ typedef struct parser_saved_context_t
   parser_mem_data_t byte_code;                /**< byte code buffer */
   uint32_t byte_code_size;                    /**< byte code size for branches */
   parser_mem_data_t literal_pool_data;        /**< literal list */
+  parser_scope_stack *scope_stack_p;          /**< scope stack */
+  uint16_t scope_stack_size;                  /**< size of scope stack */
+  uint16_t scope_stack_top;                   /**< current top of scope stack */
+  uint16_t scope_stack_reg_top;               /**< current top register of scope stack */
 
 #ifndef JERRY_NDEBUG
   uint16_t context_stack_depth;               /**< current context stack depth */
@@ -365,8 +390,13 @@ typedef struct
 {
   PARSER_TRY_CONTEXT (try_buffer);            /**< try_buffer */
   parser_error_t error;                       /**< error code */
-  void *allocated_buffer_p;                   /**< dinamically allocated buffer
+  /** Union for rarely used members. */
+  union
+  {
+    void *allocated_buffer_p;                 /**< dinamically allocated buffer
                                                *   which needs to be freed on error */
+    scanner_context_t *scanner_context_p;     /**< scanner context for the pre-scanner */
+  } u;
   uint32_t allocated_buffer_size;             /**< size of the dinamically allocated buffer */
 
   /* Parser members. */
@@ -409,7 +439,11 @@ typedef struct
   uint32_t byte_code_size;                    /**< current byte code size for branches */
   parser_list_t literal_pool;                 /**< literal list */
   parser_mem_data_t stack;                    /**< storage space */
+  parser_scope_stack *scope_stack_p;          /**< scope stack */
   parser_mem_page_t *free_page_p;             /**< space for fast allocation */
+  uint16_t scope_stack_size;                  /**< size of scope stack */
+  uint16_t scope_stack_top;                   /**< current top of scope stack */
+  uint16_t scope_stack_reg_top;               /**< current top register of scope stack */
   uint8_t stack_top_uint8;                    /**< top byte stored on the stack */
 
 #ifndef JERRY_NDEBUG
@@ -502,6 +536,8 @@ void parser_stack_iterator_write (parser_stack_iterator_t *iterator, const void 
 void parser_flush_cbc (parser_context_t *context_p);
 void parser_emit_cbc (parser_context_t *context_p, uint16_t opcode);
 void parser_emit_cbc_literal (parser_context_t *context_p, uint16_t opcode, uint16_t literal_index);
+void parser_emit_cbc_literal_value (parser_context_t *context_p, uint16_t opcode, uint16_t literal_index,
+                                    uint16_t value);
 void parser_emit_cbc_literal_from_token (parser_context_t *context_p, uint16_t opcode);
 void parser_emit_cbc_call (parser_context_t *context_p, uint16_t opcode, size_t call_arguments);
 void parser_emit_cbc_push_number (parser_context_t *context_p, bool is_negative_number);
@@ -547,12 +583,13 @@ void lexer_expect_identifier (parser_context_t *context_p, uint8_t literal_type)
 void lexer_scan_identifier (parser_context_t *context_p, uint32_t ident_opts);
 ecma_char_t lexer_hex_to_character (parser_context_t *context_p, const uint8_t *source_p, int length);
 void lexer_expect_object_literal_id (parser_context_t *context_p, uint32_t ident_opts);
-void lexer_construct_literal_object (parser_context_t *context_p, lexer_lit_location_t *literal_p,
+void lexer_construct_literal_object (parser_context_t *context_p, const lexer_lit_location_t *literal_p,
                                      uint8_t literal_type);
 bool lexer_construct_number_object (parser_context_t *context_p, bool is_expr, bool is_negative_number);
 void lexer_convert_push_number_to_push_literal (parser_context_t *context_p);
 uint16_t lexer_construct_function_object (parser_context_t *context_p, uint32_t extra_status_flags);
 void lexer_construct_regexp_object (parser_context_t *context_p, bool parse_only);
+bool lexer_compare_identifiers (const uint8_t *left_p, const uint8_t *right_p, size_t size);
 bool lexer_compare_identifier_to_current (parser_context_t *context_p, const lexer_lit_location_t *right_ident_p);
 bool lexer_compare_literal_to_identifier (parser_context_t *context_p, const char *identifier_p,
                                           size_t identifier_length);
@@ -588,7 +625,6 @@ void scanner_raise_error (parser_context_t *context_p);
 void *scanner_malloc (parser_context_t *context_p, size_t size);
 void scanner_free (void *ptr, size_t size);
 
-scanner_info_t *scanner_insert_info (parser_context_t *context_p, const uint8_t *source_p, size_t size);
 void scanner_release_next (parser_context_t *context_p, size_t size);
 void scanner_set_active (parser_context_t *context_p);
 void scanner_release_active (parser_context_t *context_p, size_t size);
@@ -596,6 +632,8 @@ void scanner_release_switch_cases (scanner_case_info_t *case_p);
 void scanner_seek (parser_context_t *context_p);
 void scanner_reverse_info_list (parser_context_t *context_p);
 void scanner_cleanup (parser_context_t *context_p);
+
+void scanner_create_variables (parser_context_t *context_p, size_t size);
 
 void scanner_get_location (scanner_location_t *location_p, parser_context_t *context_p);
 void scanner_set_location (parser_context_t *context_p, scanner_location_t *location_p);

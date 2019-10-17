@@ -34,8 +34,8 @@ level | type
 2     | global  
 (jerry-debugger) variables 0
 name | type      | value     
-n    | Number    | 9         
 b    | undefined | undefined 
+n    | Number    | 9         
 (jerry-debugger) variables 1
 name | type   | value 
 x    | Number | 3     

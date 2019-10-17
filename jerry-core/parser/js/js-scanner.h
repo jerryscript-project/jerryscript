@@ -34,6 +34,8 @@ typedef enum
   SCANNER_TYPE_END, /**< mark the last info block */
   SCANNER_TYPE_END_ARGUMENTS, /**< mark the end of function arguments
                                *   (only present if a function script is parsed) */
+  SCANNER_TYPE_FUNCTION, /**< declarations in a function */
+  SCANNER_TYPE_BLOCK, /**< declarations in a code block (usually enclosed in {}) */
   SCANNER_TYPE_WHILE, /**< while statement */
   SCANNER_TYPE_FOR, /**< for statement */
   SCANNER_TYPE_FOR_IN, /**< for-in statement */
@@ -42,9 +44,6 @@ typedef enum
 #endif /* ENABLED (JERRY_ES2015_FOR_OF) */
   SCANNER_TYPE_SWITCH, /**< switch statement */
   SCANNER_TYPE_CASE, /**< case statement */
-#if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
-  SCANNER_TYPE_ARROW, /**< arrow function */
-#endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
 } scanner_info_type_t;
 
 /**
@@ -65,6 +64,8 @@ typedef struct scanner_info_t
   struct scanner_info_t *next_p; /**< next info structure */
   const uint8_t *source_p; /**< triggering position of this scanner info */
   uint8_t type; /**< type of the scanner info */
+  uint8_t u8_arg; /**< custom 8-bit value */
+  uint16_t u16_arg; /**< custom 16-bit value */
 } scanner_info_t;
 
 /**
@@ -103,6 +104,64 @@ typedef struct
   scanner_info_t info; /**< header */
   scanner_case_info_t *case_p; /**< list of switch cases */
 } scanner_switch_info_t;
+
+/*
+ * Description of compressed streams.
+ *
+ * The stream is a sequence of commands which encoded as bytes. The first byte
+ * contains the type of the command (see scanner_function_compressed_stream_types_t).
+ *
+ * The variable declaration commands has two arguments:
+ *   - The first represents the length of the declared identifier
+ *   - The second contains the relative distance from the end of the previous declaration
+ *     Usually the distance is between 1 and 255, and represented as a single byte
+ *     Distances between -256 and 65535 are encoded as two bytes
+ *     Larger distances are encoded as pointers
+ */
+
+/**
+ * Constants for compressed streams.
+ */
+typedef enum
+{
+  SCANNER_STREAM_UINT16_DIFF = (1 << 7), /**< relative distance is between -256 and 65535 */
+  SCANNER_STREAM_HAS_ESCAPE = (1 << 6), /**< literal has escape */
+  SCANNER_STREAM_NO_REG = (1 << 5), /**< identifier cannot be stored in register */
+} scanner_compressed_stream_flags_t;
+
+/**
+ * Types for compressed streams.
+ */
+typedef enum
+{
+  SCANNER_STREAM_TYPE_END, /**< end of scanner data */
+  SCANNER_STREAM_TYPE_HOLE, /**< no name is assigned to this argument */
+  SCANNER_STREAM_TYPE_ARG, /**< argument declaration */
+  SCANNER_STREAM_TYPE_ARG_FUNC, /**< argument declaration which is later initialized with a function */
+  SCANNER_STREAM_TYPE_VAR, /**< var declaration */
+  SCANNER_STREAM_TYPE_FUNC, /**< function declaration */
+} scanner_compressed_stream_types_t;
+
+/**
+ * Mask for decoding the type from the compressed stream.
+ */
+#define SCANNER_STREAM_TYPE_MASK 0xf
+
+/**
+ * Constants for u8_arg flags in scanner_function_info_t.
+ */
+typedef enum
+{
+  SCANNER_FUNCTION_ARGUMENTS_NEEDED = (1 << 0), /**< arguments object needs to be created */
+} scanner_function_flags_t;
+
+/**
+ * Scanner info for function statements.
+ */
+typedef struct
+{
+  scanner_info_t info; /**< header */
+} scanner_function_info_t;
 
 /**
  * @}

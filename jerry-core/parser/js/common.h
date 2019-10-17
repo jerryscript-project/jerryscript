@@ -55,6 +55,8 @@ typedef enum
   LEXER_REGEXP_LITERAL = 4,         /**< regexp literal */
   LEXER_UNUSED_LITERAL = 5,         /**< unused literal, can only be
                                          used by the byte code generator. */
+  LEXER_NEW_IDENT_LITERAL = 6,      /**< new local variable, can only be
+                                         used by the byte code generator. */
 } lexer_literal_type_t;
 
 /**
@@ -67,15 +69,11 @@ typedef enum
  */
 typedef enum
 {
-  LEXER_FLAG_VAR = (1 << 0), /**< local identifier (var, function arg) */
-  LEXER_FLAG_NO_REG_STORE = (1 << 1), /**< this local identifier cannot be stored in register */
-  LEXER_FLAG_INITIALIZED = (1 << 2), /**< this local identifier is initialized with a value */
-  LEXER_FLAG_FUNCTION_ARGUMENT = (1 << 3), /**< this local identifier is a function argument */
-  LEXER_FLAG_UNUSED_IDENT = (1 << 4), /**< this identifier is referenced by sub-functions,
-                                       *   but not referenced by the currently parsed function */
-  LEXER_FLAG_SOURCE_PTR = (1 << 5), /**< the literal is directly referenced in the source code
+  LEXER_FLAG_USED = (1 << 0), /**< this local identifier needs to be stored in the constant pool */
+  LEXER_FLAG_FUNCTION_ARGUMENT = (1 << 1), /**< this local identifier is a function argument */
+  LEXER_FLAG_SOURCE_PTR = (1 << 2), /**< the literal is directly referenced in the source code
                                      *   (no need to allocate memory) */
-  LEXER_FLAG_LATE_INIT = (1 << 6), /**< initialize this variable after the byte code is freed */
+  LEXER_FLAG_LATE_INIT = (1 << 3), /**< initialize this variable after the byte code is freed */
 } lexer_literal_status_flags_t;
 
 /**

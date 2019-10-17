@@ -806,9 +806,9 @@ ecma_op_typedarray_set_with_typedarray (ecma_value_t this_arg, /**< this argumen
 {
   /* 6.~ 8. targetOffset */
   ecma_number_t target_offset_num;
-  if (!ecma_is_value_empty (ecma_get_number (offset_val, &target_offset_num)))
+  if (ECMA_IS_VALUE_ERROR (ecma_get_number (offset_val, &target_offset_num)))
   {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid offset"));
+    return ECMA_VALUE_ERROR;
   }
 
   if (ecma_number_is_nan (target_offset_num))

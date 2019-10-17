@@ -85,14 +85,7 @@ util_print_literal (lexer_literal_t *literal_p) /**< literal */
 {
   if (literal_p->type == LEXER_IDENT_LITERAL)
   {
-    if (literal_p->status_flags & LEXER_FLAG_VAR)
-    {
-      JERRY_DEBUG_MSG ("var_ident(");
-    }
-    else
-    {
-      JERRY_DEBUG_MSG ("ident(");
-    }
+    JERRY_DEBUG_MSG ("ident(");
     util_print_chars (literal_p->u.char_p, literal_p->prop.length);
   }
   else if (literal_p->type == LEXER_FUNCTION_LITERAL)

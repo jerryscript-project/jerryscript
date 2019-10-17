@@ -181,6 +181,8 @@ typedef enum
 typedef struct
 {
   parser_try_block_type_t type;           /**< current block type */
+  uint16_t scope_stack_top;               /**< current top of scope stack */
+  uint16_t scope_stack_reg_top;           /**< current top register of scope stack */
   parser_branch_t branch;                 /**< branch to the end of the current block */
 } parser_try_statement_t;
 
@@ -310,8 +312,6 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
     parser_line_counter_t ident_line_counter = context_p->token.line;
 #endif /* ENABLED (JERRY_DEBUGGER) || ENABLED (JERRY_LINE_INFO) */
 
-    context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_VAR;
-
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
     if (context_p->status_flags & PARSER_MODULE_STORE_IDENT)
     {
@@ -362,9 +362,7 @@ static void
 parser_parse_function_statement (parser_context_t *context_p) /**< context */
 {
   uint32_t status_flags;
-  lexer_literal_t *name_p;
   lexer_literal_t *literal_p;
-  uint8_t no_reg_store;
 
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_FUNCTION);
 
@@ -373,7 +371,7 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
   parser_line_counter_t debugger_column = context_p->token.column;
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
-  lexer_expect_identifier (context_p, LEXER_IDENT_LITERAL);
+  lexer_expect_identifier (context_p, LEXER_NEW_IDENT_LITERAL);
   JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
                 && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
 
@@ -381,8 +379,6 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
   {
     context_p->status_flags |= PARSER_ARGUMENTS_NOT_NEEDED;
   }
-
-  name_p = context_p->lit_object.literal_p;
 
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
   if (context_p->status_flags & PARSER_MODULE_STORE_IDENT)
@@ -403,6 +399,7 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
 #if ENABLED (JERRY_DEBUGGER)
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
+    lexer_literal_t *name_p = context_p->lit_object.literal_p;
     jerry_debugger_send_string (JERRY_DEBUGGER_FUNCTION_NAME,
                                 JERRY_DEBUGGER_NO_SUBTYPE,
                                 name_p->u.char_p,
@@ -414,55 +411,35 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
   }
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
-  if (name_p->status_flags & LEXER_FLAG_INITIALIZED)
+  JERRY_ASSERT (context_p->scope_stack_top >= 2);
+  parser_scope_stack *scope_stack_p = context_p->scope_stack_p + context_p->scope_stack_top - 2;
+
+  uint16_t literal_index = context_p->lit_object.index;
+
+  while (literal_index != scope_stack_p->map_from)
   {
-    if (!(name_p->status_flags & LEXER_FLAG_FUNCTION_ARGUMENT))
-    {
-      /* Overwrite the previous initialization. */
-      ecma_compiled_code_t *compiled_code_p;
+    scope_stack_p--;
 
-      literal_p = PARSER_GET_LITERAL ((size_t) (context_p->lit_object.index + 1));
-
-      JERRY_ASSERT (literal_p->type == LEXER_FUNCTION_LITERAL
-                    && literal_p->status_flags == 0);
-
-      compiled_code_p = parser_parse_function (context_p, status_flags);
-      util_free_literal (literal_p);
-
-      literal_p->u.bytecode_p = compiled_code_p;
-      lexer_next_token (context_p);
-      return;
-    }
-  }
-  else if (context_p->lit_object.index + 1 == context_p->literal_count)
-  {
-    /* The most common case: the literal is the last literal. */
-    name_p->status_flags |= LEXER_FLAG_VAR | LEXER_FLAG_INITIALIZED;
-    lexer_construct_function_object (context_p, status_flags);
-    lexer_next_token (context_p);
-    return;
+    JERRY_ASSERT (scope_stack_p >= context_p->scope_stack_p);
   }
 
-  /* Clone the literal at the end. */
-  if (context_p->literal_count >= PARSER_MAXIMUM_NUMBER_OF_LITERALS)
+  JERRY_ASSERT (scope_stack_p[1].map_from == PARSER_SCOPE_STACK_FUNC);
+
+  literal_p = PARSER_GET_LITERAL ((size_t) scope_stack_p[1].map_to);
+
+  JERRY_ASSERT ((literal_p->type == LEXER_UNUSED_LITERAL || literal_p->type == LEXER_FUNCTION_LITERAL)
+                && literal_p->status_flags == 0);
+
+  ecma_compiled_code_t *compiled_code_p = parser_parse_function (context_p, status_flags);
+
+  if (literal_p->type == LEXER_FUNCTION_LITERAL)
   {
-    parser_raise_error (context_p, PARSER_ERR_LITERAL_LIMIT_REACHED);
+    ecma_bytecode_deref (literal_p->u.bytecode_p);
   }
 
-  literal_p = (lexer_literal_t *) parser_list_append (context_p, &context_p->literal_pool);
-  *literal_p = *name_p;
-  no_reg_store = name_p->status_flags & (LEXER_FLAG_NO_REG_STORE | LEXER_FLAG_SOURCE_PTR);
-  literal_p->status_flags = LEXER_FLAG_VAR | LEXER_FLAG_INITIALIZED | no_reg_store;
+  literal_p->u.bytecode_p = compiled_code_p;
+  literal_p->type = LEXER_FUNCTION_LITERAL;
 
-  name_p->type = LEXER_UNUSED_LITERAL;
-  name_p->status_flags &= LEXER_FLAG_FUNCTION_ARGUMENT | LEXER_FLAG_SOURCE_PTR;
-  /* Byte code references to this literal are
-   * redirected to the newly allocated literal. */
-  name_p->prop.index = context_p->literal_count;
-
-  context_p->literal_count++;
-
-  lexer_construct_function_object (context_p, status_flags);
   lexer_next_token (context_p);
 } /* parser_parse_function_statement */
 
@@ -967,8 +944,6 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
       JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
                     && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
 
-      context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_VAR;
-
       literal_index = context_p->lit_object.index;
 
       lexer_next_token (context_p);
@@ -1400,6 +1375,9 @@ parser_parse_try_statement_end (parser_context_t *context_p) /**< context */
 
     if (try_statement.type == parser_catch_block)
     {
+      context_p->scope_stack_top = try_statement.scope_stack_top;
+      context_p->scope_stack_reg_top = try_statement.scope_stack_reg_top;
+
       if (context_p->token.type != LEXER_KEYW_FINALLY)
       {
         parser_flush_cbc (context_p);
@@ -1410,6 +1388,7 @@ parser_parse_try_statement_end (parser_context_t *context_p) /**< context */
 
         parser_emit_cbc (context_p, CBC_CONTEXT_END);
         parser_flush_cbc (context_p);
+
         try_statement.type = parser_finally_block;
       }
     }
@@ -1439,12 +1418,34 @@ parser_parse_try_statement_end (parser_context_t *context_p) /**< context */
       parser_raise_error (context_p, PARSER_ERR_LEFT_PAREN_EXPECTED);
     }
 
+    try_statement.type = parser_catch_block;
+    parser_emit_cbc_ext_forward_branch (context_p,
+                                        CBC_EXT_CATCH,
+                                        &try_statement.branch);
+
+    try_statement.scope_stack_top = context_p->scope_stack_top;
+    try_statement.scope_stack_reg_top = context_p->scope_stack_reg_top;
+
+#ifndef JERRY_NDEBUG
+    bool block_found = false;
+#endif /* !JERRY_NDEBUG */
+
+    if (context_p->next_scanner_info_p->source_p == context_p->source_p
+        && context_p->next_scanner_info_p->type == SCANNER_TYPE_BLOCK)
+    {
+#ifndef JERRY_NDEBUG
+      block_found = true;
+#endif /* !JERRY_NDEBUG */
+      scanner_create_variables (context_p, sizeof (scanner_info_t));
+    }
+
     lexer_expect_identifier (context_p, LEXER_IDENT_LITERAL);
     JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
                   && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
 
-    context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_NO_REG_STORE;
-    context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED;
+#ifndef JERRY_NDEBUG
+    JERRY_ASSERT (block_found);
+#endif /* !JERRY_NDEBUG */
 
     literal_index = context_p->lit_object.index;
 
@@ -1461,11 +1462,6 @@ parser_parse_try_statement_end (parser_context_t *context_p) /**< context */
     {
       parser_raise_error (context_p, PARSER_ERR_LEFT_BRACE_EXPECTED);
     }
-
-    try_statement.type = parser_catch_block;
-    parser_emit_cbc_ext_forward_branch (context_p,
-                                        CBC_EXT_CATCH,
-                                        &try_statement.branch);
 
     parser_emit_cbc_literal (context_p, CBC_ASSIGN_SET_IDENT, literal_index);
     parser_flush_cbc (context_p);
@@ -1960,10 +1956,7 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
         scanner_set_location (context_p, &location);
 
         /* 15.2.3.5 Use the synthetic name '*default*' as the identifier. */
-        lexer_construct_literal_object (context_p,
-                                        (lexer_lit_location_t *) &lexer_default_literal,
-                                        lexer_default_literal.type);
-        context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_VAR;
+        lexer_construct_literal_object (context_p, &lexer_default_literal, lexer_default_literal.type);
 
         context_p->token.lit_location.type = LEXER_IDENT_LITERAL;
         parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);

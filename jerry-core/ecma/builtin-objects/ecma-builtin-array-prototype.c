@@ -802,6 +802,30 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t arg1, /**< start */
   /* 9. */
   uint32_t n = 0;
 
+  if (ecma_op_object_is_fast_array (obj_p))
+  {
+    ecma_extended_object_t *ext_from_obj_p = (ecma_extended_object_t *) obj_p;
+
+    if (ext_from_obj_p->u.array.u.hole_count < ECMA_FAST_ARRAY_HOLE_ONE
+        && len != 0
+        && start < end)
+    {
+      uint32_t length = end - start;
+      ecma_extended_object_t *ext_to_obj_p = (ecma_extended_object_t *) new_array_p;
+      ecma_value_t *to_buffer_p = ecma_fast_array_extend (new_array_p, length);
+      ecma_value_t *from_buffer_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, obj_p->u1.property_list_cp);
+
+      for (uint32_t k = start; k < end; k++, n++)
+      {
+        to_buffer_p[n] = ecma_copy_value_if_not_object (from_buffer_p[k]);
+      }
+
+      ext_to_obj_p->u.array.u.hole_count -= length * ECMA_FAST_ARRAY_HOLE_ONE;
+
+      return new_array;
+    }
+  }
+
   /* 10. */
   for (uint32_t k = start; k < end; k++, n++)
   {

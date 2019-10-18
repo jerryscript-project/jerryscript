@@ -969,7 +969,7 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
       }
       else if (ecma_arraybuffer_is_detached (arraybuffer_p))
       {
-        ret = ecma_raise_range_error (ECMA_ERR_MSG ("Invalid detached ArrayBuffer."));
+        ret = ecma_raise_type_error (ECMA_ERR_MSG ("Invalid detached ArrayBuffer."));
       }
       else
       {

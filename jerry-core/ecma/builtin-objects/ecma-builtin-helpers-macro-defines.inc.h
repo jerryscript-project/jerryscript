@@ -43,6 +43,10 @@
 #define ROUTINE_CONFIGURABLE_ONLY(name, c_function_name, args_number, length_prop_value)
 #endif /* !ROUTINE_CONFIGURABLE_ONLY */
 
+#ifndef ROUTINE_WITH_FLAGS
+#define ROUTINE_WITH_FLAGS(name, c_function_name, args_number, length_prop_value, flags)
+#endif /* !ROUTINE_WITH_FLAGS */
+
 #ifndef ACCESSOR_READ_WRITE
 #define ACCESSOR_READ_WRITE(name, c_getter_func_name, c_setter_func_name, prop_attributes)
 #endif /* !ACCESSOR_READ_WRITE */

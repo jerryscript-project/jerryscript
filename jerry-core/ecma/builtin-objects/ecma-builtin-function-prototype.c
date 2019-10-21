@@ -44,6 +44,9 @@ enum
   ECMA_FUNCTION_PROTOTYPE_CALL,
   ECMA_FUNCTION_PROTOTYPE_APPLY,
   ECMA_FUNCTION_PROTOTYPE_BIND,
+#if ENABLED (JERRY_ES2015_BUILTIN)
+  ECMA_FUNCTION_PROTOTYPE_SYMBOL_HAS_INSTANCE,
+#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-function-prototype.inc.h"
@@ -350,6 +353,12 @@ ecma_builtin_function_prototype_dispatch_routine (uint16_t builtin_routine_id, /
     {
       return ecma_builtin_function_prototype_object_bind (func_obj_p, arguments_list_p, arguments_number);
     }
+#if ENABLED (JERRY_ES2015_BUILTIN)
+    case ECMA_FUNCTION_PROTOTYPE_SYMBOL_HAS_INSTANCE:
+    {
+      return ecma_op_object_has_instance (func_obj_p, arguments_list_p[0]);
+    }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
     default:
     {
       JERRY_UNREACHABLE ();

@@ -605,6 +605,7 @@ jerry_context_t *jerry_create_context (uint32_t heap_size, jerry_context_alloc_t
  */
 void jerry_set_vm_exec_stop_callback (jerry_vm_exec_stop_callback_t stop_cb, void *user_p, uint32_t frequency);
 jerry_value_t jerry_get_backtrace (uint32_t max_depth);
+jerry_value_t jerry_get_resource_name (const jerry_value_t value);
 
 /**
  * Array buffer components.

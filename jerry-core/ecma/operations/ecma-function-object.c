@@ -34,6 +34,45 @@
  * @{
  */
 
+#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+/**
+ * Get the resource name from the compiled code header
+ *
+ * @return resource name as ecma-string
+ */
+ecma_value_t
+ecma_op_resource_name (const ecma_compiled_code_t *bytecode_header_p)
+{
+  JERRY_ASSERT (bytecode_header_p != NULL);
+
+  ecma_length_t formal_params_number = 0;
+
+  if (CBC_NON_STRICT_ARGUMENTS_NEEDED (bytecode_header_p))
+  {
+    if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+    {
+      cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_header_p;
+
+      formal_params_number = args_p->argument_end;
+    }
+    else
+    {
+      cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_header_p;
+
+      formal_params_number = args_p->argument_end;
+    }
+  }
+
+  uint8_t *byte_p = (uint8_t *) bytecode_header_p;
+  byte_p += ((size_t) bytecode_header_p->size) << JMEM_ALIGNMENT_LOG;
+
+  ecma_value_t *resource_name_p = (ecma_value_t *) byte_p;
+  resource_name_p -= formal_params_number;
+
+  return resource_name_p[-1];
+} /* ecma_op_resource_name */
+#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+
 /**
  * Checks whether the type is a normal or arrow function.
  *

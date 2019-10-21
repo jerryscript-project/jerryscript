@@ -3355,6 +3355,49 @@ jerry_get_backtrace (uint32_t max_depth) /**< depth limit of the backtrace */
 } /* jerry_get_backtrace */
 
 /**
+ * Get the resource name (usually a file name) of the currently executed script or the given function object
+ *
+ * Note: returned value must be freed with jerry_release_value, when it is no longer needed
+ *
+ * @return JS string constructed from
+ *         - the currently executed function object's resource name, if the given value is undefined
+ *         - resource name of the function object, if the given value is a function object
+ *         - "<anonymous>", otherwise
+ */
+jerry_value_t
+jerry_get_resource_name (const jerry_value_t value) /**< jerry api value */
+{
+#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+  if (ecma_is_value_undefined (value))
+  {
+    if (JERRY_CONTEXT (vm_top_context_p) != NULL)
+    {
+      return ecma_copy_value (JERRY_CONTEXT (vm_top_context_p)->resource_name);
+    }
+  }
+#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#if ENABLED (JERRY_LINE_INFO)
+  else if (ecma_is_value_object (value))
+  {
+    ecma_object_t *obj_p = ecma_get_object_from_value (value);
+
+    if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION
+        && !ecma_get_object_is_builtin (obj_p))
+    {
+      ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) obj_p;
+
+      const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
+
+      return ecma_copy_value (ecma_op_resource_name (bytecode_data_p));
+    }
+  }
+#endif /* ENABLED (JERRY_LINE_INFO) */
+
+  JERRY_UNUSED (value);
+  return ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
+} /* jerry_get_resource_name */
+
+/**
  * Check if the given value is an ArrayBuffer object.
  *
  * @return true - if it is an ArrayBuffer object

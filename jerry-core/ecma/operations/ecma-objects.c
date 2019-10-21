@@ -2322,6 +2322,12 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
             return LIT_MAGIC_STRING_MATH_UL;
           }
 #endif /* ENABLED (JERRY_BUILTIN_MATH) */
+#if ENABLED (JERRY_ES2015_BUILTIN_REFLECT)
+          case ECMA_BUILTIN_ID_REFLECT:
+          {
+            return LIT_MAGIC_STRING_REFLECT_UL;
+          }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_REFLECT) */
 #if ENABLED (JERRY_BUILTIN_JSON)
           case ECMA_BUILTIN_ID_JSON:
           {

@@ -104,37 +104,12 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
   if (arguments_list_len > 2)
   {
     /* 12.a */
-    ecma_number_t byte_length;
-    ecma_value_t byte_length_value = ecma_get_number (arguments_list_p[2], &byte_length);
+    ecma_value_t byte_length_value = ecma_op_to_length (arguments_list_p[2], &viewByteLength);
 
     /* 12.b */
     if (ECMA_IS_VALUE_ERROR (byte_length_value))
     {
       return byte_length_value;
-    }
-
-    int32_t byte_length_int32 = ecma_number_to_int32 (byte_length);
-
-    if (ecma_number_is_nan (byte_length))
-    {
-      viewByteLength = 0;
-    }
-    else if (ecma_number_is_infinity (byte_length))
-    {
-      if (ecma_number_is_negative (byte_length))
-      {
-        return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid DataView length"));
-      }
-
-      viewByteLength = UINT32_MAX;
-    }
-    else if (byte_length_int32 <= 0)
-    {
-      viewByteLength = 0;
-    }
-    else
-    {
-      viewByteLength = JERRY_MIN ((ecma_length_t) byte_length_int32, UINT32_MAX);
     }
 
     /* 12.c */

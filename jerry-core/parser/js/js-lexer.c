@@ -311,7 +311,7 @@ lexer_skip_spaces (parser_context_t *context_p) /**< context */
   }
 } /* lexer_skip_spaces */
 
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
 /**
  * Skip all the continuous empty statements.
  */
@@ -329,7 +329,7 @@ lexer_skip_empty_statements (parser_context_t *context_p) /**< context */
 
   context_p->token.flags = (uint8_t) (context_p->token.flags | LEXER_NO_SKIP_SPACES);
 } /* lexer_skip_empty_statements */
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * Keyword data.
@@ -661,12 +661,12 @@ lexer_parse_string (parser_context_t *context_p) /**< context */
   size_t length = 0;
   uint8_t has_escape = false;
 
-#if ENABLED (JERRY_ES2015_TEMPLATE_STRINGS)
+#if ENABLED (JERRY_ES2015)
   if (str_end_character == LIT_CHAR_RIGHT_BRACE)
   {
     str_end_character = LIT_CHAR_GRAVE_ACCENT;
   }
-#endif /* ENABLED (JERRY_ES2015_TEMPLATE_STRINGS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   while (true)
   {
@@ -809,7 +809,7 @@ lexer_parse_string (parser_context_t *context_p) /**< context */
         continue;
       }
     }
-#if ENABLED (JERRY_ES2015_TEMPLATE_STRINGS)
+#if ENABLED (JERRY_ES2015)
     else if (str_end_character == LIT_CHAR_GRAVE_ACCENT &&
              source_p[0] == LIT_CHAR_DOLLAR_SIGN &&
              source_p + 1 < source_end_p &&
@@ -818,7 +818,7 @@ lexer_parse_string (parser_context_t *context_p) /**< context */
       source_p++;
       break;
     }
-#endif /* ENABLED (JERRY_ES2015_TEMPLATE_STRINGS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
     if (*source_p >= LEXER_UTF8_4BYTE_START)
     {
@@ -837,7 +837,7 @@ lexer_parse_string (parser_context_t *context_p) /**< context */
       /* Subtract -1 because column is increased below. */
       column--;
     }
-#if ENABLED (JERRY_ES2015_TEMPLATE_STRINGS)
+#if ENABLED (JERRY_ES2015)
     else if (str_end_character == LIT_CHAR_GRAVE_ACCENT)
     {
       /* Newline (without backslash) is part of the string. */
@@ -872,7 +872,7 @@ lexer_parse_string (parser_context_t *context_p) /**< context */
         continue;
       }
     }
-#endif /* ENABLED (JERRY_ES2015_TEMPLATE_STRINGS) */
+#endif /* ENABLED (JERRY_ES2015) */
     else if (*source_p == LIT_CHAR_CR
              || *source_p == LIT_CHAR_LF
              || (*source_p == LEXER_NEWLINE_LS_PS_BYTE_1 && LEXER_NEWLINE_LS_PS_BYTE_23 (source_p)))
@@ -899,12 +899,12 @@ lexer_parse_string (parser_context_t *context_p) /**< context */
     parser_raise_error (context_p, PARSER_ERR_STRING_TOO_LONG);
   }
 
-#if ENABLED (JERRY_ES2015_TEMPLATE_STRINGS)
+#if ENABLED (JERRY_ES2015)
   context_p->token.type = ((str_end_character != LIT_CHAR_GRAVE_ACCENT) ? LEXER_LITERAL
                                                                         : LEXER_TEMPLATE_LITERAL);
-#else /* !ENABLED (JERRY_ES2015_TEMPLATE_STRINGS) */
+#else /* !ENABLED (JERRY_ES2015) */
   context_p->token.type = LEXER_LITERAL;
-#endif /* ENABLED (JERRY_ES2015_TEMPLATE_STRINGS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   /* Fill literal data. */
   context_p->token.lit_location.char_p = string_start_p;
@@ -1188,7 +1188,7 @@ lexer_next_token (parser_context_t *context_p) /**< context */
         return;
       }
 
-#if ENABLED (JERRY_ES2015_FUNCTION_REST_PARAMETER)
+#if ENABLED (JERRY_ES2015)
       if (length >= 3
           && context_p->source_p[1] == LIT_CHAR_DOT
           && context_p->source_p[2] == LIT_CHAR_DOT)
@@ -1197,7 +1197,7 @@ lexer_next_token (parser_context_t *context_p) /**< context */
         length = 3;
         break;
       }
-#endif /* ENABLED (JERRY_ES2015_FUNCTION_REST_PARAMETER) */
+#endif /* ENABLED (JERRY_ES2015) */
 
       context_p->token.type = LEXER_DOT;
       length = 1;
@@ -1301,14 +1301,14 @@ lexer_next_token (parser_context_t *context_p) /**< context */
           break;
         }
 
-#if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
+#if ENABLED (JERRY_ES2015)
         if (context_p->source_p[1] == (uint8_t) LIT_CHAR_GREATER_THAN)
         {
           context_p->token.type = LEXER_ARROW;
           length = 2;
           break;
         }
-#endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
+#endif /* ENABLED (JERRY_ES2015) */
       }
 
       context_p->token.type = LEXER_ASSIGN;
@@ -1363,9 +1363,9 @@ lexer_next_token (parser_context_t *context_p) /**< context */
 
     case LIT_CHAR_SINGLE_QUOTE:
     case LIT_CHAR_DOUBLE_QUOTE:
-#if ENABLED (JERRY_ES2015_TEMPLATE_STRINGS)
+#if ENABLED (JERRY_ES2015)
     case LIT_CHAR_GRAVE_ACCENT:
-#endif /* ENABLED (JERRY_ES2015_TEMPLATE_STRINGS) */
+#endif /* ENABLED (JERRY_ES2015) */
     {
       lexer_parse_string (context_p);
       return;
@@ -1406,7 +1406,7 @@ lexer_check_next_character (parser_context_t *context_p, /**< context */
           && context_p->source_p[0] == (uint8_t) character);
 } /* lexer_check_next_character */
 
-#if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
+#if ENABLED (JERRY_ES2015)
 
 /**
  * Checks whether the next token is a type used for detecting arrow functions.
@@ -1428,7 +1428,7 @@ lexer_check_arrow (parser_context_t *context_p) /**< context */
           && context_p->source_p[1] == (uint8_t) LIT_CHAR_GREATER_THAN);
 } /* lexer_check_arrow */
 
-#endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * Search or append the string to the literal pool.
@@ -1604,12 +1604,12 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
     {
       uint8_t str_end_character = source_p[-1];
 
-#if ENABLED (JERRY_ES2015_TEMPLATE_STRINGS)
+#if ENABLED (JERRY_ES2015)
       if (str_end_character == LIT_CHAR_RIGHT_BRACE)
       {
         str_end_character = LIT_CHAR_GRAVE_ACCENT;
       }
-#endif /* ENABLED (JERRY_ES2015_TEMPLATE_STRINGS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
       while (true)
       {
@@ -1745,7 +1745,7 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
             continue;
           }
         }
-#if ENABLED (JERRY_ES2015_TEMPLATE_STRINGS)
+#if ENABLED (JERRY_ES2015)
         else if (str_end_character == LIT_CHAR_GRAVE_ACCENT
                  && source_p[0] == LIT_CHAR_DOLLAR_SIGN
                  && source_p[1] == LIT_CHAR_LEFT_BRACE)
@@ -1754,7 +1754,7 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
           JERRY_ASSERT (source_p < context_p->source_end_p);
           break;
         }
-#endif /* ENABLED (JERRY_ES2015_TEMPLATE_STRINGS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
         if (*source_p >= LEXER_UTF8_4BYTE_START)
         {
@@ -2033,7 +2033,7 @@ lexer_construct_function_object (parser_context_t *context_p, /**< context */
   result_index = context_p->literal_count;
   context_p->literal_count++;
 
-#if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
+#if ENABLED (JERRY_ES2015)
   if (!(extra_status_flags & PARSER_IS_ARROW_FUNCTION))
   {
     compiled_code_p = parser_parse_function (context_p, extra_status_flags);
@@ -2042,9 +2042,9 @@ lexer_construct_function_object (parser_context_t *context_p, /**< context */
   {
     compiled_code_p = parser_parse_arrow_function (context_p, extra_status_flags);
   }
-#else /* !ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
+#else /* !ENABLED (JERRY_ES2015) */
   compiled_code_p = parser_parse_function (context_p, extra_status_flags);
-#endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   literal_p->u.bytecode_p = compiled_code_p;
   literal_p->type = LEXER_FUNCTION_LITERAL;
@@ -2326,7 +2326,7 @@ lexer_expect_identifier (parser_context_t *context_p, /**< context */
     context_p->status_flags &= (uint32_t) ~(PARSER_MODULE_DEFAULT_CLASS_OR_FUNC);
     return;
   }
-#endif
+#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
   parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
 } /* lexer_expect_identifier */
@@ -2340,11 +2340,11 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
 {
   lexer_skip_spaces (context_p);
 
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
   int is_class_method = ((ident_opts & LEXER_OBJ_IDENT_CLASS_METHOD)
                          && !(ident_opts & LEXER_OBJ_IDENT_ONLY_IDENTIFIERS)
                          && (context_p->token.type != LEXER_KEYW_STATIC));
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   context_p->token.line = context_p->line;
   context_p->token.column = context_p->column;
@@ -2364,10 +2364,10 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
         context_p->token.flags = (uint8_t) (context_p->token.flags | LEXER_NO_SKIP_SPACES);
 
         if (context_p->source_p < context_p->source_end_p
-#if ENABLED (JERRY_ES2015_OBJECT_INITIALIZER)
+#if ENABLED (JERRY_ES2015)
             && context_p->source_p[0] != LIT_CHAR_COMMA
             && context_p->source_p[0] != LIT_CHAR_RIGHT_BRACE
-#endif /* ENABLED (JERRY_ES2015_OBJECT_INITIALIZER) */
+#endif /* ENABLED (JERRY_ES2015) */
             && context_p->source_p[0] != LIT_CHAR_COLON)
         {
           if (lexer_compare_literal_to_string (context_p, "get", 3))
@@ -2383,13 +2383,13 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
         }
       }
 
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
       if (is_class_method && lexer_compare_literal_to_string (context_p, "static", 6))
       {
         context_p->token.type = LEXER_KEYW_STATIC;
         return;
       }
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
       create_literal_object = true;
     }
@@ -2399,7 +2399,7 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
       lexer_parse_string (context_p);
       create_literal_object = true;
     }
-#if ENABLED (JERRY_ES2015_OBJECT_INITIALIZER)
+#if ENABLED (JERRY_ES2015)
     else if (context_p->source_p[0] == LIT_CHAR_LEFT_SQUARE)
     {
       context_p->source_p += 1;
@@ -2414,7 +2414,7 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
       }
       return;
     }
-#endif /* ENABLED (JERRY_ES2015_OBJECT_INITIALIZER) */
+#endif /* ENABLED (JERRY_ES2015) */
     else if (!(ident_opts & LEXER_OBJ_IDENT_ONLY_IDENTIFIERS) && context_p->source_p[0] == LIT_CHAR_RIGHT_BRACE)
     {
       context_p->token.type = LEXER_RIGHT_BRACE;
@@ -2443,13 +2443,13 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
 
     if (create_literal_object)
     {
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
       if (is_class_method && lexer_compare_literal_to_string (context_p, "constructor", 11))
       {
         context_p->token.type = LEXER_CLASS_CONSTRUCTOR;
         return;
       }
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
       lexer_construct_literal_object (context_p,
                                       &context_p->token.lit_location,
@@ -2485,10 +2485,10 @@ lexer_scan_identifier (parser_context_t *context_p, /**< context */
       context_p->token.flags = (uint8_t) (context_p->token.flags | LEXER_NO_SKIP_SPACES);
 
       if (context_p->source_p < context_p->source_end_p
-#if ENABLED (JERRY_ES2015_OBJECT_INITIALIZER)
+#if ENABLED (JERRY_ES2015)
           && context_p->source_p[0] != LIT_CHAR_COMMA
           && context_p->source_p[0] != LIT_CHAR_RIGHT_BRACE
-#endif /* ENABLED (JERRY_ES2015_OBJECT_INITIALIZER) */
+#endif /* ENABLED (JERRY_ES2015) */
           && context_p->source_p[0] != LIT_CHAR_COLON)
       {
         if (lexer_compare_literal_to_string (context_p, "get", 3))
@@ -2509,23 +2509,23 @@ lexer_scan_identifier (parser_context_t *context_p, /**< context */
     lexer_next_token (context_p);
 
     if (context_p->token.type == LEXER_LITERAL
-#if ENABLED (JERRY_ES2015_OBJECT_INITIALIZER)
+#if ENABLED (JERRY_ES2015)
         || context_p->token.type == LEXER_LEFT_SQUARE
-#endif /* ENABLED (JERRY_ES2015_OBJECT_INITIALIZER) */
+#endif /* ENABLED (JERRY_ES2015) */
         || context_p->token.type == LEXER_RIGHT_BRACE)
     {
       return;
     }
   }
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
   if (ident_opts & LEXER_SCAN_CLASS_PROPERTY)
   {
     lexer_next_token (context_p);
 
     if (context_p->token.type == LEXER_LITERAL
-#if ENABLED (JERRY_ES2015_OBJECT_INITIALIZER)
+#if ENABLED (JERRY_ES2015)
         || context_p->token.type == LEXER_LEFT_SQUARE
-#endif /* ENABLED (JERRY_ES2015_OBJECT_INITIALIZER) */
+#endif /* ENABLED (JERRY_ES2015) */
         || context_p->token.type == LEXER_RIGHT_BRACE
         || context_p->token.type == LEXER_SEMICOLON
         || ((ident_opts & LEXER_SCAN_CLASS_LEFT_PAREN) && context_p->token.type == LEXER_LEFT_PAREN))
@@ -2533,7 +2533,7 @@ lexer_scan_identifier (parser_context_t *context_p, /**< context */
       return;
     }
   }
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
 } /* lexer_scan_identifier */

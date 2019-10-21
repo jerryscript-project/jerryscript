@@ -45,9 +45,9 @@ snapshot_get_global_flags (bool has_regex, /**< regex literal is present */
 #if ENABLED (JERRY_BUILTIN_REGEXP)
   flags |= (has_regex ? JERRY_SNAPSHOT_HAS_REGEX_LITERAL : 0);
 #endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
   flags |= (has_class ? JERRY_SNAPSHOT_HAS_CLASS_LITERAL : 0);
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   return flags;
 } /* snapshot_get_global_flags */
@@ -63,9 +63,9 @@ snapshot_check_global_flags (uint32_t global_flags) /**< global flags */
 #if ENABLED (JERRY_BUILTIN_REGEXP)
   global_flags &= (uint32_t) ~JERRY_SNAPSHOT_HAS_REGEX_LITERAL;
 #endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
   global_flags &= (uint32_t) ~JERRY_SNAPSHOT_HAS_CLASS_LITERAL;
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   return global_flags == snapshot_get_global_flags (false, false);
 } /* snapshot_check_global_flags */
@@ -160,12 +160,12 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
   uint8_t *copied_code_start_p = snapshot_buffer_p + globals_p->snapshot_buffer_write_offset;
   ecma_compiled_code_t *copied_code_p = (ecma_compiled_code_t *) copied_code_start_p;
 
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
   if (compiled_code_p->status_flags & CBC_CODE_FLAGS_CONSTRUCTOR)
   {
     globals_p->class_found = true;
   }
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
 #if ENABLED (JERRY_BUILTIN_REGEXP)
   if (!(compiled_code_p->status_flags & CBC_CODE_FLAGS_FUNCTION))

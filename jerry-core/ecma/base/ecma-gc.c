@@ -496,7 +496,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
         }
         break;
       }
-#if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
+#if ENABLED (JERRY_ES2015)
       case ECMA_OBJECT_TYPE_ARROW_FUNCTION:
       {
         ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) object_p;
@@ -510,7 +510,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
         }
         break;
       }
-#endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
+#endif /* ENABLED (JERRY_ES2015) */
       default:
       {
         break;
@@ -724,9 +724,9 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 
       switch (ext_object_p->u.class_prop.class_id)
       {
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
         case LIT_MAGIC_STRING_SYMBOL_UL:
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
         case LIT_MAGIC_STRING_STRING_UL:
         case LIT_MAGIC_STRING_NUMBER_UL:
         {
@@ -860,7 +860,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
       return;
     }
 
-#if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
+#if ENABLED (JERRY_ES2015)
     if (object_type == ECMA_OBJECT_TYPE_ARROW_FUNCTION)
     {
       ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) object_p;
@@ -885,7 +885,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 #endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
       return;
     }
-#endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
+#endif /* ENABLED (JERRY_ES2015) */
 
     if (object_type == ECMA_OBJECT_TYPE_PSEUDO_ARRAY)
     {

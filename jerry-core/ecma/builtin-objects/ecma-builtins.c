@@ -658,7 +658,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 
   lit_magic_string_id_t magic_string_id = ecma_get_string_magic (string_p);
 
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
   if (JERRY_UNLIKELY (ecma_prop_name_is_symbol (string_p)))
   {
     if (string_p->u.hash & ECMA_GLOBAL_SYMBOL_FLAG)
@@ -666,7 +666,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
       magic_string_id = (string_p->u.hash >> ECMA_GLOBAL_SYMBOL_SHIFT);
     }
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   if (magic_string_id == LIT_MAGIC_STRING__COUNT)
   {
@@ -791,7 +791,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
       value = ecma_make_magic_string_value ((lit_magic_string_id_t) curr_property_p->value);
       break;
     }
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
     case ECMA_BUILTIN_PROPERTY_SYMBOL:
     {
       lit_magic_string_id_t symbol_desc_id = (lit_magic_string_id_t) curr_property_p->magic_string_id;
@@ -809,7 +809,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
       value = ecma_make_symbol_value (symbol_p);
       break;
     }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
     case ECMA_BUILTIN_PROPERTY_OBJECT:
     {
       ecma_object_t *builtin_object_p = ecma_builtin_get ((ecma_builtin_id_t) curr_property_p->value);
@@ -950,14 +950,14 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
         index = 0;
       }
 
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
       /* Builtin symbol properties are internal magic strings which must not be listed */
       if (curr_property_p->magic_string_id > LIT_NON_INTERNAL_MAGIC_STRING__COUNT)
       {
         curr_property_p++;
         continue;
       }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
 
       ecma_string_t *name_p = ecma_get_magic_string ((lit_magic_string_id_t) curr_property_p->magic_string_id);
 

@@ -79,28 +79,16 @@ typedef enum
   PARSER_ERR_MULTIPLE_DEFAULTS_NOT_ALLOWED,           /**< multiple default cases are not allowed */
   PARSER_ERR_DEFAULT_NOT_IN_SWITCH,                   /**< default statement is not in switch block */
   PARSER_ERR_CASE_NOT_IN_SWITCH,                      /**< case statement is not in switch block */
-#if ENABLED (JERRY_ES2015_CLASS)
-  PARSER_ERR_MULTIPLE_CLASS_CONSTRUCTORS,             /**< multiple class constructor */
-  PARSER_ERR_CLASS_CONSTRUCTOR_AS_ACCESSOR,           /**< class constructor cannot be an accessor */
-  PARSER_ERR_CLASS_STATIC_PROTOTYPE,                  /**< static method name 'prototype' is not allowed */
-  PARSER_ERR_UNEXPECTED_SUPER_REFERENCE,              /**< unexpected super keyword */
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
 
   PARSER_ERR_LEFT_PAREN_EXPECTED,                     /**< left paren expected */
   PARSER_ERR_LEFT_BRACE_EXPECTED,                     /**< left brace expected */
   PARSER_ERR_RIGHT_PAREN_EXPECTED,                    /**< right paren expected */
   PARSER_ERR_RIGHT_SQUARE_EXPECTED,                   /**< right square expected */
 
-#if ENABLED (JERRY_ES2015_TEMPLATE_STRINGS)
-  PARSER_ERR_RIGHT_BRACE_EXPECTED,                    /**< right brace expected */
-#endif /* ENABLED (JERRY_ES2015_TEMPLATE_STRINGS) */
   PARSER_ERR_COLON_EXPECTED,                          /**< colon expected */
   PARSER_ERR_COLON_FOR_CONDITIONAL_EXPECTED,          /**< colon expected for conditional expression */
   PARSER_ERR_SEMICOLON_EXPECTED,                      /**< semicolon expected */
   PARSER_ERR_IN_EXPECTED,                             /**< in keyword expected */
-#if ENABLED (JERRY_ES2015_FOR_OF)
-  PARSER_ERR_OF_EXPECTED,                             /**< of keyword expected */
-#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
   PARSER_ERR_WHILE_EXPECTED,                          /**< while expected for do-while loop */
   PARSER_ERR_CATCH_FINALLY_EXPECTED,                  /**< catch or finally expected */
   PARSER_ERR_ARRAY_ITEM_SEPARATOR_EXPECTED,           /**< array item separator expected */
@@ -123,15 +111,21 @@ typedef enum
   PARSER_ERR_INVALID_RETURN,                          /**< return must be inside a function */
   PARSER_ERR_INVALID_RIGHT_SQUARE,                    /**< right square must terminate a block */
   PARSER_ERR_DUPLICATED_LABEL,                        /**< duplicated label */
-#if ENABLED (JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER) || ENABLED (JERRY_ES2015_FUNCTION_REST_PARAMETER)
-  PARSER_ERR_DUPLICATED_ARGUMENT_NAMES,               /**< duplicated argument names */
-#endif /* ENABLED (JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER) || ENABLED (JERRY_ES2015_FUNCTION_REST_PARAMETER) */
-#if ENABLED (JERRY_ES2015_FUNCTION_REST_PARAMETER)
-  PARSER_ERR_FORMAL_PARAM_AFTER_REST_PARAMETER,       /**< formal parameter after rest parameter */
-  PARSER_ERR_REST_PARAMETER_DEFAULT_INITIALIZER,      /**< rest parameter default initializer */
-#endif /* ENABLED (JERRY_ES2015_FUNCTION_REST_PARAMETER) */
   PARSER_ERR_OBJECT_PROPERTY_REDEFINED,               /**< property of object literal redefined */
 
+#if ENABLED (JERRY_ES2015)
+  PARSER_ERR_MULTIPLE_CLASS_CONSTRUCTORS,             /**< multiple class constructor */
+  PARSER_ERR_CLASS_CONSTRUCTOR_AS_ACCESSOR,           /**< class constructor cannot be an accessor */
+  PARSER_ERR_CLASS_STATIC_PROTOTYPE,                  /**< static method name 'prototype' is not allowed */
+  PARSER_ERR_UNEXPECTED_SUPER_REFERENCE,              /**< unexpected super keyword */
+
+  PARSER_ERR_RIGHT_BRACE_EXPECTED,                    /**< right brace expected */
+  PARSER_ERR_OF_EXPECTED,                             /**< of keyword expected */
+
+  PARSER_ERR_FORMAL_PARAM_AFTER_REST_PARAMETER,       /**< formal parameter after rest parameter */
+  PARSER_ERR_REST_PARAMETER_DEFAULT_INITIALIZER,      /**< rest parameter default initializer */
+  PARSER_ERR_DUPLICATED_ARGUMENT_NAMES,               /**< duplicated argument names */
+#endif /* ENABLED (JERRY_ES2015) */
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
   PARSER_ERR_FILE_NOT_FOUND,                          /**< file not found*/
   PARSER_ERR_FROM_EXPECTED,                           /**< from expected */

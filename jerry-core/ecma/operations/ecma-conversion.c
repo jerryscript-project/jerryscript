@@ -150,12 +150,12 @@ ecma_op_same_value (ecma_value_t x, /**< ecma value */
   {
     return (ecma_is_value_true (x) == ecma_is_value_true (y));
   }
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
   else if (ecma_is_value_symbol (x))
   {
     return x == y;
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
   else
   {
     JERRY_ASSERT (is_x_object);
@@ -315,12 +315,12 @@ ecma_op_to_number (ecma_value_t value) /**< ecma value */
     ecma_string_t *str_p = ecma_get_string_from_value (value);
     return ecma_make_number_value (ecma_string_to_number (str_p));
   }
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
   if (ecma_is_value_symbol (value))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a Symbol value to a number."));
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   if (ecma_is_value_object (value))
   {
@@ -416,12 +416,12 @@ ecma_get_number (ecma_value_t value, /**< ecma value*/
     return ECMA_VALUE_EMPTY;
   }
 
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
   if (ecma_is_value_symbol (value))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a Symbol value to a number."));
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   JERRY_ASSERT (ecma_is_value_boolean (value));
 
@@ -491,13 +491,13 @@ ecma_to_op_string_helper (ecma_value_t value) /**< ecma value */
   {
     return ecma_get_magic_string (LIT_MAGIC_STRING_NULL);
   }
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
   else if (ecma_is_value_symbol (value))
   {
     ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a Symbol value to a string."));
     return NULL;
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
   JERRY_ASSERT (ecma_is_value_boolean (value));
 
   if (ecma_is_value_true (value))
@@ -544,14 +544,14 @@ ecma_op_to_prop_name (ecma_value_t value) /**< ecma value */
 {
   ecma_check_value_type_is_spec_defined (value);
 
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
   if (ecma_is_value_symbol (value))
   {
     ecma_string_t *symbol_p = ecma_get_symbol_from_value (value);
     ecma_ref_ecma_string (symbol_p);
     return symbol_p;
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   return ecma_to_op_string_helper (value);
 } /* ecma_op_to_prop_name */
@@ -582,12 +582,12 @@ ecma_op_to_object (ecma_value_t value) /**< ecma value */
   {
     return ecma_copy_value (value);
   }
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
   else if (ecma_is_value_symbol (value))
   {
     return ecma_op_create_symbol_object (value);
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
   else
   {
     if (ecma_is_value_undefined (value)

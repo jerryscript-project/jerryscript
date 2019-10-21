@@ -29,22 +29,14 @@ Alternatively, if you want to use a custom profile at
 `/absolute/path/to/my.profile`:
 
 ```
-# Turn off every ES2015 feature EXCEPT the arrow functions
+# Turn off every ES2015 feature EXCEPT the module system
 JERRY_ES2015_BUILTIN=0
 JERRY_ES2015_BUILTIN_DATAVIEW=0
 JERRY_ES2015_BUILTIN_ITERATOR=0
 JERRY_ES2015_BUILTIN_MAP=0
 JERRY_ES2015_BUILTIN_PROMISE=0
 JERRY_ES2015_BUILTIN_SET=0
-JERRY_ES2015_BUILTIN_SYMBOL=0
 JERRY_ES2015_BUILTIN_TYPEDARRAY=0
-JERRY_ES2015_CLASS=0
-JERRY_ES2015_FOR_OF=0
-JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER=0
-JERRY_ES2015_FUNCTION_REST_PARAMETER=0
-JERRY_ES2015_MODULE_SYSTEM=0
-JERRY_ES2015_OBJECT_INITIALIZER=0
-JERRY_ES2015_TEMPLATE_STRINGS=0
 ```
 
 Run the build script as follows (assuming that you are in the project root
@@ -108,8 +100,6 @@ defined to `1`.
 
 #### ES6 (ES 2015) features
 
-* `JERRY_ES2015_ARROW_FUNCTION`:
-  Enables or disables the [arrow functions](http://www.ecma-international.org/ecma-262/6.0/#sec-arrow-function-definitions).
 * `JERRY_ES2015_BUILTIN`:
   Enables or disables the built-in updates of the 5.1 standard. There are some differences in those built-ins which available in both [5.1](http://www.ecma-international.org/ecma-262/5.1/) and [2015](http://www.ecma-international.org/ecma-262/6.0/) versions of the standard. JerryScript uses the latest definition by default.
 * `JERRY_ES2015_BUILTIN_DATAVIEW`:
@@ -120,42 +110,29 @@ defined to `1`.
   Enables or disables the [Map](http://www.ecma-international.org/ecma-262/6.0/#sec-keyed-collection) built-ins.
 * `JERRY_ES2015_BUILTIN_SET`:
   Enables or disables the [SET](https://www.ecma-international.org/ecma-262/6.0/#sec-set-objects) built-in.
-* `JERRY_ES2015_BUILTIN_SYMBOL`:
-  Enables or disables the [Symbol](https://www.ecma-international.org/ecma-262/6.0/#sec-symbol-objects) built-in.
 * `JERRY_ES2015_BUILTIN_PROMISE`:
   Enables or disables the [Promise](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-objects) built-in.
 * `JERRY_ES2015_BUILTIN_TYPEDARRAY`:
   Enables or disables the [ArrayBuffer](http://www.ecma-international.org/ecma-262/6.0/#sec-arraybuffer-objects) and [TypedArray](http://www.ecma-international.org/ecma-262/6.0/#sec-typedarray-objects) built-ins.
-* `JERRY_ES2015_CLASS`:
-  Enables or disables the [class](https://www.ecma-international.org/ecma-262/6.0/#sec-class-definitions) language element.
-* `JERRY_ES2015_FOR_OF`:
-  Enables or disables the [for of](https://www.ecma-international.org/ecma-262/6.0/#sec-for-in-and-for-of-statements) language element.
-* `JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER`:
-  Enables or disables the [default value](http://www.ecma-international.org/ecma-262/6.0/#sec-function-definitions) for formal parameters.
-* `JERRY_ES2015_FUNCTION_REST_PARAMETER`:
-  Enables or disables the [rest parameter](http://www.ecma-international.org/ecma-262/6.0/#sec-function-definitions).
 * `JERRY_ES2015_MODULE_SYSTEM`:
   Enables or disable the [module system](http://www.ecma-international.org/ecma-262/6.0/#sec-modules) language element.
-* `JERRY_ES2015_OBJECT_INITIALIZER`:
-  Enables or disables the [enhanced object initializer](http://www.ecma-international.org/ecma-262/6.0/#sec-object-initializer) language element.
-* `JERRY_ES2015_TEMPLATE_STRINGS`:
-  Enables or disables the [template strings](http://www.ecma-international.org/ecma-262/6.0/#sec-static-semantics-templatestrings).
 * `JERRY_ES2015`: Enables or disable all of the implemented [ECMAScript2015 features](http://www.ecma-international.org/ecma-262/6.0/).
+  * [arrow functions](http://www.ecma-international.org/ecma-262/6.0/#sec-arrow-function-definitions) language element.
+  * [symbol](https://www.ecma-international.org/ecma-262/6.0/#sec-symbol-objects) language element.
+  * [class](https://www.ecma-international.org/ecma-262/6.0/#sec-class-definitions) language element.
+  * [for of](https://www.ecma-international.org/ecma-262/6.0/#sec-for-in-and-for-of-statements) language element.
+  * [default value](http://www.ecma-international.org/ecma-262/6.0/#sec-function-definitions) for formal parameters.
+  * [rest parameter](http://www.ecma-international.org/ecma-262/6.0/#sec-function-definitions) language element.
+  * [enhanced object initializer](http://www.ecma-international.org/ecma-262/6.0/#sec-object-initializer) language element.
+  * [template strings](http://www.ecma-international.org/ecma-262/6.0/#sec-static-semantics-templatestrings) language element.
   This option is evaulated first, any other `JERRY_ES2015_<name>` defines will override that specific entry.
   Equivalent with setting the following defines to the `JERRY_ES2015` value:
-    * `JERRY_ES2015_ARROW_FUNCTION`
     * `JERRY_ES2015_BUILTIN`
     * `JERRY_ES2015_BUILTIN_DATAVIEW`
     * `JERRY_ES2015_BUILTIN_ITERATOR`
     * `JERRY_ES2015_BUILTIN_MAP`
     * `JERRY_ES2015_BUILTIN_SET`
     * `JERRY_ES2015_BUILTIN_PROMISE`
-    * `JERRY_ES2015_BUILTIN_SYMBOL`
     * `JERRY_ES2015_BUILTIN_TYPEDARRAY`
-    * `JERRY_ES2015_CLASS`
-    * `JERRY_ES2015_FOR_OF`
-    * `JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER`
-    * `JERRY_ES2015_FUNCTION_REST_PARAMETER`
     * `JERRY_ES2015_MODULE_SYSTEM`
-    * `JERRY_ES2015_OBJECT_INITIALIZER`
-    * `JERRY_ES2015_TEMPLATE_STRINGS`
+

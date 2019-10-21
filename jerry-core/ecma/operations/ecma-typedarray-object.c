@@ -1157,7 +1157,7 @@ ecma_op_create_typedarray_with_type_and_length (ecma_object_t *obj_p, /**< Typed
 {
   JERRY_ASSERT (ecma_is_typedarray (ecma_make_object_value (obj_p)));
 
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
   ecma_value_t constructor_value = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_CONSTRUCTOR);
 
   if (ECMA_IS_VALUE_ERROR (constructor_value)
@@ -1178,7 +1178,7 @@ ecma_op_create_typedarray_with_type_and_length (ecma_object_t *obj_p, /**< Typed
   {
     return constructor_prototype;
   }
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   ecma_typedarray_type_t typedarray_id = ecma_get_typedarray_id (obj_p);
   ecma_object_t *proto_p = ecma_builtin_get (ecma_typedarray_helper_get_prototype_id (typedarray_id));
@@ -1189,13 +1189,13 @@ ecma_op_create_typedarray_with_type_and_length (ecma_object_t *obj_p, /**< Typed
                                                                     element_size_shift,
                                                                     typedarray_id);
 
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
   ecma_object_t *constructor_prototype_object_p = ecma_get_object_from_value (constructor_prototype);
   ecma_object_t *new_obj_p = ecma_get_object_from_value (new_obj);
   ECMA_SET_NON_NULL_POINTER (new_obj_p->u2.prototype_cp, constructor_prototype_object_p);
 
   ecma_deref_object (constructor_prototype_object_p);
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   return new_obj;
 } /* ecma_op_create_typedarray_with_type_and_length */

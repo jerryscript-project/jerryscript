@@ -31,9 +31,9 @@ typedef enum
   ECMA_BUILTIN_PROPERTY_SIMPLE, /**< simple value property */
   ECMA_BUILTIN_PROPERTY_NUMBER, /**< number value property */
   ECMA_BUILTIN_PROPERTY_STRING, /**< string value property */
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
   ECMA_BUILTIN_PROPERTY_SYMBOL, /**< symbol value property */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
   ECMA_BUILTIN_PROPERTY_OBJECT, /**< builtin object property */
   ECMA_BUILTIN_PROPERTY_ROUTINE, /**< routine property */
   ECMA_BUILTIN_PROPERTY_ACCESSOR_READ_WRITE, /**< full accessor property */

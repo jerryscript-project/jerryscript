@@ -224,17 +224,17 @@ ecma_builtin_array_prototype_object_concat (const ecma_value_t args[], /**< argu
                                             ecma_object_t *obj_p) /**< array object */
 {
   /* 2. */
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
   ecma_value_t new_array = ecma_op_create_array_object_by_constructor (NULL, 0, false, obj_p);
 
   if (ECMA_IS_VALUE_ERROR (new_array))
   {
     return new_array;
   }
-#else /* !ENABLED (JERRY_ES2015_CLASS) */
+#else /* !ENABLED (JERRY_ES2015) */
   ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
   uint32_t new_length = 0;
@@ -800,17 +800,17 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t arg1, /**< start */
 
   JERRY_ASSERT (start <= len && end <= len);
 
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
   ecma_value_t new_array = ecma_op_create_array_object_by_constructor (NULL, 0, false, obj_p);
 
   if (ECMA_IS_VALUE_ERROR (new_array))
   {
     return new_array;
   }
-#else /* !ENABLED (JERRY_ES2015_CLASS) */
+#else /* !ENABLED (JERRY_ES2015) */
   ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
 
@@ -1120,17 +1120,17 @@ ecma_builtin_array_prototype_object_splice (const ecma_value_t args[], /**< argu
                                             ecma_object_t *obj_p, /**< array object */
                                             uint32_t len) /**< array object's length */
 {
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
   ecma_value_t new_array = ecma_op_create_array_object_by_constructor (NULL, 0, false, obj_p);
 
   if (ECMA_IS_VALUE_ERROR (new_array))
   {
     return new_array;
   }
-#else /* !ENABLED (JERRY_ES2015_CLASS) */
+#else /* !ENABLED (JERRY_ES2015) */
   ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
 
@@ -1674,17 +1674,17 @@ ecma_builtin_array_prototype_object_map (ecma_value_t arg1, /**< callbackfn */
   }
 
   /* 6. */
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
   ecma_value_t new_array = ecma_op_create_array_object_by_constructor (NULL, 0, false, obj_p);
 
   if (ECMA_IS_VALUE_ERROR (new_array))
   {
     return new_array;
   }
-#else /* !ENABLED (JERRY_ES2015_CLASS) */
+#else /* !ENABLED (JERRY_ES2015) */
   ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
 
@@ -1767,17 +1767,17 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t arg1, /**< callbackfn *
   }
 
   /* 6. */
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
   ecma_value_t new_array = ecma_op_create_array_object_by_constructor (NULL, 0, false, obj_p);
 
   if (ECMA_IS_VALUE_ERROR (new_array))
   {
     return new_array;
   }
-#else /* !ENABLED (JERRY_ES2015_CLASS) */
+#else /* !ENABLED (JERRY_ES2015) */
   ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
 

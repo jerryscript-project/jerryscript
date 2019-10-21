@@ -19,10 +19,6 @@
 
 #if ENABLED (JERRY_ES2015_BUILTIN_SET)
 
-#if !ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
-#error "Set iterator builtin requires ES2015 iterator builtin"
-#endif /* !ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
-
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 

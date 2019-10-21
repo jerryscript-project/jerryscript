@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
 
 /* Number properties:
  *  (property name, number value, writable, enumerable, configurable) */
@@ -86,6 +86,6 @@ SYMBOL_VALUE (LIT_MAGIC_STRING_UNSCOPABLES,
 ROUTINE (LIT_MAGIC_STRING_FOR, ecma_builtin_symbol_for, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_KEY_FOR, ecma_builtin_symbol_key_for, 1, 1)
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

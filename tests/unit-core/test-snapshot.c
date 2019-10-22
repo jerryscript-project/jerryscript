@@ -234,8 +234,27 @@ main (void)
       0x46, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
       0x14, 0x00, 0x73, 0x74, 0x72, 0x69, 0x6E, 0x67,
       0x20, 0x66, 0x72, 0x6F, 0x6D, 0x20, 0x73, 0x6E,
-      0x61, 0x70, 0x73, 0x68, 0x6F, 0x74
+      0x61, 0x70, 0x73, 0x68, 0x6F, 0x74,
     };
+
+    if (sizeof (expected_data) != snapshot_size || memcmp (expected_data, snapshot_buffer, sizeof (expected_data)))
+    {
+      printf ("Snapshot data has been changed, please update tests/unit-core/test-snapshot.c.\n");
+      printf ("-------------------------------------------------------------------------------\n");
+      printf ("    const uint8_t expected_data[] =\n");
+      printf ("    {");
+      for (unsigned int i = 0; i < snapshot_size; i++)
+      {
+        if ((i % 8) == 0)
+        {
+          printf ("\n     ");
+        }
+        printf (" 0x%02X,", ((uint8_t *) snapshot_buffer)[i]);
+      }
+      printf ("\n    };\n");
+      printf ("-------------------------------------------------------------------------------\n");
+    }
+
     TEST_ASSERT (sizeof (expected_data) == snapshot_size);
     TEST_ASSERT (0 == memcmp (expected_data, snapshot_buffer, sizeof (expected_data)));
 

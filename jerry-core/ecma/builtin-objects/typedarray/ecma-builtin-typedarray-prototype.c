@@ -1766,6 +1766,11 @@ ecma_builtin_typedarray_prototype_index_helper (ecma_value_t this_arg, /**< this
   int32_t increment = is_last_index_of ? -info.element_size : info.element_size;
   ecma_typedarray_getter_fn_t getter_cb = ecma_get_typedarray_getter_fn (info.id);
 
+  if (is_last_index_of && from_index == info.length)
+  {
+    from_index--;
+  }
+
   for (int32_t position = (int32_t) from_index * info.element_size;
        (is_last_index_of ? position >= 0 : (uint32_t) position < limit);
        position += increment)

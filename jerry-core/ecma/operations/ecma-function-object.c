@@ -1205,6 +1205,45 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
 } /* ecma_op_function_construct */
 
 /**
+ * Lazy instantiation of 'prototype' property for non-builtin and external functions
+ *
+ * @return pointer to newly instantiated property
+ */
+static ecma_property_t *
+ecma_op_lazy_instantiate_prototype_object (ecma_object_t *object_p) /**< the function object */
+{
+  JERRY_ASSERT (ecma_get_object_type (object_p)  == ECMA_OBJECT_TYPE_FUNCTION
+                || ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+
+  /* ECMA-262 v5, 13.2, 16-18 */
+  /* 16. */
+  ecma_object_t *proto_object_p = ecma_op_create_object_object_noarg ();
+
+  /* 17. */
+  ecma_property_value_t *constructor_prop_value_p;
+  constructor_prop_value_p = ecma_create_named_data_property (proto_object_p,
+                                                              ecma_get_magic_string (LIT_MAGIC_STRING_CONSTRUCTOR),
+                                                              ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
+                                                              NULL);
+
+  constructor_prop_value_p->value = ecma_make_object_value (object_p);
+
+  /* 18. */
+  ecma_property_t *prototype_prop_p;
+  ecma_property_value_t *prototype_prop_value_p;
+  prototype_prop_value_p = ecma_create_named_data_property (object_p,
+                                                            ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE),
+                                                            ECMA_PROPERTY_FLAG_WRITABLE,
+                                                            &prototype_prop_p);
+
+  prototype_prop_value_p->value = ecma_make_object_value (proto_object_p);
+
+  ecma_deref_object (proto_object_p);
+
+  return prototype_prop_p;
+} /* ecma_op_lazy_instantiate_prototype_object */
+
+/**
  * Lazy instantiation of non-builtin ecma function object's properties
  *
  * Warning:
@@ -1223,35 +1262,7 @@ ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**<
 
   if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_PROTOTYPE))
   {
-    /* ECMA-262 v5, 13.2, 16-18 */
-
-    /* 16. */
-    ecma_object_t *proto_object_p = ecma_op_create_object_object_noarg ();
-
-    /* 17. */
-    ecma_string_t *magic_string_constructor_p = ecma_get_magic_string (LIT_MAGIC_STRING_CONSTRUCTOR);
-
-    ecma_property_value_t *constructor_prop_value_p;
-    constructor_prop_value_p = ecma_create_named_data_property (proto_object_p,
-                                                                magic_string_constructor_p,
-                                                                ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
-                                                                NULL);
-
-    constructor_prop_value_p->value = ecma_make_object_value (object_p);
-
-    /* 18. */
-    ecma_property_t *prototype_prop_p;
-    ecma_property_value_t *prototype_prop_value_p;
-    prototype_prop_value_p = ecma_create_named_data_property (object_p,
-                                                              property_name_p,
-                                                              ECMA_PROPERTY_FLAG_WRITABLE,
-                                                              &prototype_prop_p);
-
-    prototype_prop_value_p->value = ecma_make_object_value (proto_object_p);
-
-    ecma_deref_object (proto_object_p);
-
-    return prototype_prop_p;
+    return ecma_op_lazy_instantiate_prototype_object (object_p);
   }
 
   if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_CALLER)
@@ -1309,15 +1320,7 @@ ecma_op_external_function_try_to_lazy_instantiate_property (ecma_object_t *objec
 
   if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_PROTOTYPE))
   {
-    ecma_property_t *prototype_prop_p;
-    ecma_property_value_t *prototype_prop_value_p;
-    prototype_prop_value_p = ecma_create_named_data_property (object_p,
-                                                              property_name_p,
-                                                              ECMA_PROPERTY_FLAG_WRITABLE,
-                                                              &prototype_prop_p);
-
-    prototype_prop_value_p->value = ECMA_VALUE_UNDEFINED;
-    return prototype_prop_p;
+    return ecma_op_lazy_instantiate_prototype_object (object_p);
   }
 
   return NULL;

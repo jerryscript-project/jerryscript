@@ -1089,9 +1089,15 @@ class JerryDebugger(object):
                     result += self._enable_breakpoint(breakpoint)
 
         else:
+            functions_to_enable = []
             for function in self.function_list.values():
                 if function.name == string:
-                    result += self._enable_breakpoint(function.lines[function.first_breakpoint_line])
+                    functions_to_enable.append(function)
+
+            functions_to_enable.sort(key=lambda x: x.line)
+
+            for function in functions_to_enable:
+                result += self._enable_breakpoint(function.lines[function.first_breakpoint_line])
 
         if not result and not pending:
             print("No breakpoint found, do you want to add a %spending breakpoint%s? (y or [n])" % \

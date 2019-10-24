@@ -714,14 +714,29 @@ typedef enum
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
 /**
- * Value for increasing or decreasing the object reference counter.
+ * Bitshift index for an ecma-object reference count field
  */
-#define ECMA_OBJECT_REF_ONE (1u << 6)
+#define ECMA_OBJECT_REF_SHIFT 6
 
 /**
- * Maximum value of the object reference counter (1023).
+ * Bitmask for an ecma-object reference count field
  */
-#define ECMA_OBJECT_MAX_REF (0x3ffu << 6)
+#define ECMA_OBJECT_REF_MASK (((1u << 10) - 1) << ECMA_OBJECT_REF_SHIFT)
+
+/**
+ * Value for increasing or decreasing the object reference counter.
+ */
+#define ECMA_OBJECT_REF_ONE (1u << ECMA_OBJECT_REF_SHIFT)
+
+/**
+ * Represents non-visited white object
+ */
+#define ECMA_OBJECT_NON_VISITED (0x3ffu << ECMA_OBJECT_REF_SHIFT)
+
+/**
+ * Maximum value of the object reference counter (1022).
+ */
+#define ECMA_OBJECT_MAX_REF (ECMA_OBJECT_NON_VISITED - ECMA_OBJECT_REF_ONE)
 
 /**
  * Description of ECMA-object or lexical environment
@@ -733,7 +748,7 @@ typedef struct
                      depending on ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV
       flags : 2 bit : ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV,
                       ECMA_OBJECT_FLAG_EXTENSIBLE or ECMA_OBJECT_FLAG_NON_CLOSURE
-      refs : 10 bit (max 1023) */
+      refs : 10 bit (max 1022) */
   uint16_t type_flags_refs;
 
   /** next in the object chain maintained by the garbage collector */

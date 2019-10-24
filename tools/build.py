@@ -128,6 +128,8 @@ def get_arguments():
                          help='memory usage limit to trigger garbage collection (in bytes)')
     coregrp.add_argument('--stack-limit', metavar='SIZE', type=int,
                          help='maximum stack usage (in kilobytes)')
+    coregrp.add_argument('--gc-mark-limit', metavar='SIZE', type=int,
+                         help='maximum depth of recursion during GC mark phase')
     coregrp.add_argument('--mem-stats', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help=devhelp('enable memory statistics (%(choices)s)'))
     coregrp.add_argument('--mem-stress-test', metavar='X', choices=['ON', 'OFF'], type=str.upper,
@@ -214,6 +216,9 @@ def generate_build_options(arguments):
     build_options_append('JERRY_SYSTEM_ALLOCATOR', arguments.system_allocator)
     build_options_append('JERRY_VALGRIND', arguments.valgrind)
     build_options_append('JERRY_VM_EXEC_STOP', arguments.vm_exec_stop)
+
+    if arguments.gc_mark_limit is not None:
+        build_options.append('-D%s=%s' % ('JERRY_GC_MARK_LIMIT', arguments.gc_mark_limit))
 
     # jerry-main options
     build_options_append('ENABLE_LINK_MAP', arguments.link_map)

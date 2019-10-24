@@ -39,8 +39,7 @@ ecma_create_native_pointer_property (ecma_object_t *obj_p, /**< object to create
 {
   ecma_string_t *name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
 
-  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY
-      && ((ecma_extended_object_t *) obj_p)->u.array.is_fast_mode)
+  if (ecma_op_object_is_fast_array (obj_p))
   {
     ecma_fast_array_convert_to_normal (obj_p);
   }
@@ -115,8 +114,7 @@ ecma_native_pointer_t *
 ecma_get_native_pointer_value (ecma_object_t *obj_p, /**< object to get property value from */
                                void *info_p) /**< native pointer's type info */
 {
-  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY
-      && ((ecma_extended_object_t *) obj_p)->u.array.is_fast_mode)
+  if (ecma_op_object_is_fast_array (obj_p))
   {
     /* Fast access mode array can not have native pointer properties */
     return NULL;
@@ -164,8 +162,7 @@ bool
 ecma_delete_native_pointer_property (ecma_object_t *obj_p, /**< object to delete property from */
                                      void *info_p) /**< native pointer's type info */
 {
-  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY
-      && ((ecma_extended_object_t *) obj_p)->u.array.is_fast_mode)
+  if (ecma_op_object_is_fast_array (obj_p))
   {
     /* Fast access mode array can not have native pointer properties */
     return false;

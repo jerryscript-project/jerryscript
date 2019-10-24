@@ -458,14 +458,9 @@ jerry_debugger_send_scope_variables (const uint8_t *recv_buffer_p) /**< pointer 
     JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
     ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
-    if (JERRY_UNLIKELY (ecma_get_object_type (binding_obj_p) == ECMA_OBJECT_TYPE_ARRAY))
+    if (JERRY_UNLIKELY (ecma_op_object_is_fast_array (binding_obj_p)))
     {
-      ecma_extended_object_t *ext_binding_obj_p = (ecma_extended_object_t *) binding_obj_p;
-
-      if (ext_binding_obj_p->u.array.is_fast_mode)
-      {
-        ecma_fast_array_convert_to_normal (binding_obj_p);
-      }
+      ecma_fast_array_convert_to_normal (binding_obj_p);
     }
 
     prop_iter_cp = binding_obj_p->u1.property_list_cp;

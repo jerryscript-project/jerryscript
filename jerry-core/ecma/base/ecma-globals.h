@@ -837,10 +837,13 @@ typedef struct
     struct
     {
       uint32_t length; /**< length property value */
-      ecma_property_t length_prop; /**< length property */
-      bool is_fast_mode; /**< true - if the array is a fast access mode array
-                          *   false - otherwise */
-      uint8_t hole_count; /**< Number of array holes in a fast access mode array */
+      union
+      {
+        ecma_property_t length_prop; /**< length property */
+        uint32_t hole_count; /**< number of array holes in a fast access mode array
+                              *   multiplied ECMA_FAST_ACCESS_HOLE_ONE */
+      } u;
+
     } array;
 
     /**
@@ -899,7 +902,6 @@ typedef struct
  */
 #define ECMA_FAST_ARRAY_ALIGN_LENGTH(length) \
   (uint32_t) ((((length)) + ECMA_FAST_ARRAY_ALIGNMENT - 1) / ECMA_FAST_ARRAY_ALIGNMENT * ECMA_FAST_ARRAY_ALIGNMENT)
-
 
 /**
  * Compiled byte code data.

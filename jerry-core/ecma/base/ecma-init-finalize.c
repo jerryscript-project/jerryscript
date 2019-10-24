@@ -35,6 +35,10 @@
 void
 ecma_init (void)
 {
+#if (JERRY_GC_MARK_LIMIT != 0)
+  JERRY_CONTEXT (ecma_gc_mark_recursion_limit) = JERRY_GC_MARK_LIMIT;
+#endif /* (JERRY_GC_MARK_LIMIT != 0) */
+
   ecma_init_global_lex_env ();
 
 #if ENABLED (JERRY_PROPRETY_HASHMAP)
@@ -46,10 +50,6 @@ ecma_init (void)
   volatile int sp;
   JERRY_CONTEXT (stack_base) = (uintptr_t)&sp;
 #endif /* (JERRY_STACK_LIMIT != 0) */
-
-#if (JERRY_GC_MARK_LIMIT != 0)
-  JERRY_CONTEXT (ecma_gc_mark_recursion_limit) = JERRY_GC_MARK_LIMIT;
-#endif /* (JERRY_GC_MARK_LIMIT != 0) */
 
 #if ENABLED (JERRY_ES2015_BUILTIN_PROMISE)
   ecma_job_queue_init ();

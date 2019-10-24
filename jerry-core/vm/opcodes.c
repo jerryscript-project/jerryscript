@@ -14,6 +14,7 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-array-object.h"
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
@@ -92,8 +93,7 @@ opfunc_set_accessor (bool is_getter, /**< is getter accessor */
 {
   ecma_object_t *object_p = ecma_get_object_from_value (object);
 
-  JERRY_ASSERT (ecma_get_object_type (object_p) != ECMA_OBJECT_TYPE_ARRAY
-                || !((ecma_extended_object_t *) object_p)->u.array.is_fast_mode);
+  JERRY_ASSERT (!ecma_op_object_is_fast_array (object_p));
 
   ecma_property_t *property_p = ecma_find_named_property (object_p, accessor_name_p);
 
@@ -255,6 +255,77 @@ opfunc_for_in (ecma_value_t left_value, /**< left value */
 
   return NULL;
 } /* opfunc_for_in */
+
+/**
+ * 'VM_OC_APPEND_ARRAY' opcode handler, for setting array object properties
+ */
+void JERRY_ATTR_NOINLINE
+opfunc_append_array (ecma_value_t *stack_top_p, /**< current stack top */
+                     uint8_t values_length) /**< number of elements to set */
+{
+  ecma_object_t *array_obj_p = ecma_get_object_from_value (stack_top_p[-1]);
+
+  JERRY_ASSERT (ecma_get_object_type (array_obj_p) == ECMA_OBJECT_TYPE_ARRAY);
+
+  ecma_extended_object_t *ext_array_obj_p = (ecma_extended_object_t *) array_obj_p;
+  uint32_t old_length = ext_array_obj_p->u.array.length;
+
+  if (JERRY_LIKELY (ecma_op_array_is_fast_array (ext_array_obj_p)))
+  {
+    uint32_t filled_holes = 0;
+    ecma_value_t *values_p = ecma_fast_array_extend (array_obj_p, old_length + values_length);
+
+    for (uint32_t i = 0; i < values_length; i++)
+    {
+      values_p[old_length + i] = stack_top_p[i];
+
+      if (!ecma_is_value_array_hole (stack_top_p[i]))
+      {
+        filled_holes++;
+
+        if (ecma_is_value_object (stack_top_p[i]))
+        {
+          ecma_deref_object (ecma_get_object_from_value (stack_top_p[i]));
+        }
+      }
+    }
+
+    ext_array_obj_p->u.array.u.hole_count -= filled_holes * ECMA_FAST_ARRAY_HOLE_ONE;
+
+    if (JERRY_UNLIKELY ((values_length - filled_holes) > ECMA_FAST_ARRAY_MAX_NEW_HOLES_COUNT))
+    {
+      ecma_fast_array_convert_to_normal (array_obj_p);
+    }
+  }
+  else
+  {
+    for (uint32_t i = 0; i < values_length; i++)
+    {
+      if (!ecma_is_value_array_hole (stack_top_p[i]))
+      {
+        ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (old_length + i);
+
+        ecma_property_value_t *prop_value_p;
+
+        prop_value_p = ecma_create_named_data_property (array_obj_p,
+                                                        index_str_p,
+                                                        ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                        NULL);
+
+        ecma_deref_ecma_string (index_str_p);
+        prop_value_p->value = stack_top_p[i];
+
+        if (ecma_is_value_object (stack_top_p[i]))
+        {
+          ecma_free_value (stack_top_p[i]);
+        }
+
+      }
+
+      ext_array_obj_p->u.array.length = old_length + values_length;
+    }
+  }
+} /* opfunc_append_array */
 
 /**
  * @}

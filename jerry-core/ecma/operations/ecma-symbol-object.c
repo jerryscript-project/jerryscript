@@ -23,7 +23,7 @@
 #include "ecma-objects-general.h"
 #include "ecma-symbol-object.h"
 
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
 
 /** \addtogroup ecma ECMA
  * @{
@@ -83,12 +83,7 @@ ecma_op_create_symbol_object (const ecma_value_t value) /**< symbol value */
 {
   JERRY_ASSERT (ecma_is_value_symbol (value));
 
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_SYMBOL_PROTOTYPE);
-#else /* !ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
-
   ecma_object_t *object_p = ecma_create_object (prototype_obj_p,
                                                 sizeof (ecma_extended_object_t),
                                                 ECMA_OBJECT_TYPE_CLASS);
@@ -178,7 +173,7 @@ ecma_symbol_to_string_helper (ecma_value_t this_arg, /**< this argument value */
   return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is must be a Symbol."));
 } /* ecma_symbol_to_string_helper */
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * @}

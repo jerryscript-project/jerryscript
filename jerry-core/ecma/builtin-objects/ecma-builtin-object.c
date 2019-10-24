@@ -293,7 +293,7 @@ ecma_builtin_object_object_get_own_property_names (ecma_object_t *obj_p) /**< ro
   return ecma_builtin_helper_object_get_properties (obj_p, ECMA_LIST_NO_OPTS);
 } /* ecma_builtin_object_object_get_own_property_names */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
 /**
  * The Object object's 'getOwnPropertySymbols' routine
  *
@@ -308,7 +308,7 @@ ecma_builtin_object_object_get_own_property_symbols (ecma_object_t *obj_p) /**< 
 {
   return ecma_builtin_helper_object_get_properties (obj_p, ECMA_LIST_SYMBOLS);
 } /* ecma_builtin_object_object_get_own_property_symbols */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * The Object object's 'seal' routine
@@ -984,12 +984,12 @@ ecma_builtin_object_dispatch_routine (uint16_t builtin_routine_id, /**< built-in
     {
       return ecma_builtin_object_object_get_own_property_names (obj_p);
     }
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
     case ECMA_OBJECT_ROUTINE_GET_OWN_PROPERTY_SYMBOLS:
     {
       return ecma_builtin_object_object_get_own_property_symbols (obj_p);
     }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
     case ECMA_OBJECT_ROUTINE_KEYS:
     {
       return ecma_builtin_object_object_keys (obj_p);

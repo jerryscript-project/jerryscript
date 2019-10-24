@@ -21,13 +21,6 @@
 #include "ecma-helpers.h"
 #include "lit-char-helpers.h"
 
-#if ENABLED (JERRY_ES2015_FOR_OF)
-#if !ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
-#error "For of support requires ES2015 iterator support"
-#endif /* !ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
-#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
-
-
 /** \addtogroup parser Parser
  * @{
  *
@@ -78,9 +71,9 @@ typedef enum
    * Break and continue uses another instruction form
    * when crosses their borders. */
   PARSER_STATEMENT_FOR_IN,
-#if ENABLED (JERRY_ES2015_FOR_OF)
+#if ENABLED (JERRY_ES2015)
   PARSER_STATEMENT_FOR_OF,
-#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
+#endif /* ENABLED (JERRY_ES2015) */
   PARSER_STATEMENT_WITH,
   PARSER_STATEMENT_TRY,
 } parser_statement_type_t;
@@ -217,10 +210,10 @@ parser_statement_length (uint8_t type) /**< type of statement */
     (uint8_t) (sizeof (parser_for_statement_t) + sizeof (parser_loop_statement_t) + 1),
     /* PARSER_STATEMENT_FOR_IN */
     (uint8_t) (sizeof (parser_for_in_of_statement_t) + sizeof (parser_loop_statement_t) + 1),
-#if ENABLED (JERRY_ES2015_FOR_OF)
+#if ENABLED (JERRY_ES2015)
     /* PARSER_STATEMENT_FOR_OF */
     (uint8_t) (sizeof (parser_for_in_of_statement_t) + sizeof (parser_loop_statement_t) + 1),
-#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
+#endif /* ENABLED (JERRY_ES2015) */
     /* PARSER_STATEMENT_WITH */
     (uint8_t) (sizeof (parser_with_statement_t) + 1),
     /* PARSER_STATEMENT_TRY */
@@ -579,7 +572,7 @@ parser_parse_with_statement_end (parser_context_t *context_p) /**< context */
   }
 } /* parser_parse_with_statement_end */
 
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
 /**
  * Parse super class context like a with statement (starting part).
  */
@@ -648,7 +641,7 @@ parser_parse_super_class_context_end (parser_context_t *context_p, /**< context 
 
   parser_set_branch_to_current_position (context_p, &with_statement.branch);
 } /* parser_parse_super_class_context_end */
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * Parse do-while statement (ending part).
@@ -887,16 +880,16 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
     parser_for_in_of_statement_t for_in_of_statement;
     scanner_location_t start_location, end_location;
 
-#if ENABLED (JERRY_ES2015_FOR_OF)
+#if ENABLED (JERRY_ES2015)
     JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_FOR_IN
                   || context_p->next_scanner_info_p->type == SCANNER_TYPE_FOR_OF);
 
     bool is_for_in = (context_p->next_scanner_info_p->type == SCANNER_TYPE_FOR_IN);
-#else /* !ENABLED (JERRY_ES2015_FOR_OF) */
+#else /* !ENABLED (JERRY_ES2015) */
     JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_FOR_IN);
 
     bool is_for_in = true;
-#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
+#endif /* ENABLED (JERRY_ES2015) */
 
     scanner_get_location (&start_location, context_p);
     scanner_set_location (context_p, &((scanner_location_info_t *) context_p->next_scanner_info_p)->location);
@@ -986,11 +979,11 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
 
     if (context_p->token.type != LEXER_EOS)
     {
-#if ENABLED (JERRY_ES2015_FOR_OF)
+#if ENABLED (JERRY_ES2015)
       parser_raise_error (context_p, is_for_in ? PARSER_ERR_IN_EXPECTED : PARSER_ERR_OF_EXPECTED);
-#else /* !ENABLED (JERRY_ES2015_FOR_OF) */
+#else /* !ENABLED (JERRY_ES2015) */
       parser_raise_error (context_p, PARSER_ERR_IN_EXPECTED);
-#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
+#endif /* ENABLED (JERRY_ES2015) */
     }
 
     parser_flush_cbc (context_p);
@@ -1002,12 +995,12 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
 
     parser_stack_push (context_p, &for_in_of_statement, sizeof (parser_for_in_of_statement_t));
     parser_stack_push (context_p, &loop, sizeof (parser_loop_statement_t));
-#if ENABLED (JERRY_ES2015_FOR_OF)
+#if ENABLED (JERRY_ES2015)
     parser_stack_push_uint8 (context_p, is_for_in ? PARSER_STATEMENT_FOR_IN
                                                   : PARSER_STATEMENT_FOR_OF);
-#else /* !ENABLED (JERRY_ES2015_FOR_OF) */
+#else /* !ENABLED (JERRY_ES2015) */
     parser_stack_push_uint8 (context_p, PARSER_STATEMENT_FOR_IN);
-#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
+#endif /* ENABLED (JERRY_ES2015) */
     parser_stack_iterator_init (context_p, &context_p->last_statement);
     return;
   }
@@ -1588,9 +1581,9 @@ parser_parse_break_statement (parser_context_t *context_p) /**< context */
       }
 
       if (type == PARSER_STATEMENT_FOR_IN
-#if ENABLED (JERRY_ES2015_FOR_OF)
+#if ENABLED (JERRY_ES2015)
           || type == PARSER_STATEMENT_FOR_OF
-#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
+#endif /* ENABLED (JERRY_ES2015) */
           || type == PARSER_STATEMENT_WITH
           || type == PARSER_STATEMENT_TRY)
       {
@@ -1632,9 +1625,9 @@ parser_parse_break_statement (parser_context_t *context_p) /**< context */
     }
 
     if (type == PARSER_STATEMENT_FOR_IN
-#if ENABLED (JERRY_ES2015_FOR_OF)
+#if ENABLED (JERRY_ES2015)
         || type == PARSER_STATEMENT_FOR_OF
-#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
+#endif /* ENABLED (JERRY_ES2015) */
         || type == PARSER_STATEMENT_WITH
         || type == PARSER_STATEMENT_TRY)
     {
@@ -1646,9 +1639,9 @@ parser_parse_break_statement (parser_context_t *context_p) /**< context */
         || type == PARSER_STATEMENT_DO_WHILE
         || type == PARSER_STATEMENT_WHILE
         || type == PARSER_STATEMENT_FOR
-#if ENABLED (JERRY_ES2015_FOR_OF)
+#if ENABLED (JERRY_ES2015)
         || type == PARSER_STATEMENT_FOR_OF
-#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
+#endif /* ENABLED (JERRY_ES2015) */
         || type == PARSER_STATEMENT_FOR_IN)
     {
       parser_loop_statement_t loop;
@@ -1723,11 +1716,11 @@ parser_parse_continue_statement (parser_context_t *context_p) /**< context */
         continue;
       }
 
-#if ENABLED (JERRY_ES2015_FOR_OF)
+#if ENABLED (JERRY_ES2015)
       bool is_for_in_of_statement = (type == PARSER_STATEMENT_FOR_IN) || (type == PARSER_STATEMENT_FOR_OF);
-#else /* !ENABLED (JERRY_ES2015_FOR_OF) */
+#else /* !ENABLED (JERRY_ES2015) */
       bool is_for_in_of_statement = (type == PARSER_STATEMENT_FOR_IN);
-#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
+#endif /* ENABLED (JERRY_ES2015) */
 
       if (type == PARSER_STATEMENT_WITH
           || type == PARSER_STATEMENT_TRY
@@ -1743,9 +1736,9 @@ parser_parse_continue_statement (parser_context_t *context_p) /**< context */
       if (type == PARSER_STATEMENT_DO_WHILE
           || type == PARSER_STATEMENT_WHILE
           || type == PARSER_STATEMENT_FOR
-#if ENABLED (JERRY_ES2015_FOR_OF)
+#if ENABLED (JERRY_ES2015)
           || type == PARSER_STATEMENT_FOR_OF
-#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
+#endif /* ENABLED (JERRY_ES2015) */
           || type == PARSER_STATEMENT_FOR_IN)
       {
         loop_iterator = iterator;
@@ -1771,9 +1764,9 @@ parser_parse_continue_statement (parser_context_t *context_p) /**< context */
     if (type == PARSER_STATEMENT_DO_WHILE
         || type == PARSER_STATEMENT_WHILE
         || type == PARSER_STATEMENT_FOR
-#if ENABLED (JERRY_ES2015_FOR_OF)
+#if ENABLED (JERRY_ES2015)
         || type == PARSER_STATEMENT_FOR_OF
-#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
+#endif /* ENABLED (JERRY_ES2015) */
         || type == PARSER_STATEMENT_FOR_IN)
     {
       parser_loop_statement_t loop;
@@ -2296,9 +2289,9 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
             || context_p->stack_top_uint8 == PARSER_STATEMENT_WHILE
             || context_p->stack_top_uint8 == PARSER_STATEMENT_FOR
             || context_p->stack_top_uint8 == PARSER_STATEMENT_FOR_IN
-#if ENABLED (JERRY_ES2015_FOR_OF)
+#if ENABLED (JERRY_ES2015)
             || context_p->stack_top_uint8 == PARSER_STATEMENT_FOR_OF
-#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
+#endif /* ENABLED (JERRY_ES2015) */
             || context_p->stack_top_uint8 == PARSER_STATEMENT_WITH)
         {
           parser_raise_error (context_p, PARSER_ERR_STATEMENT_EXPECTED);
@@ -2320,13 +2313,13 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
         break;
       }
 
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
       case LEXER_KEYW_CLASS:
       {
         parser_parse_class (context_p, true);
         goto consume_last_statement;
       }
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
       case LEXER_KEYW_IMPORT:
@@ -2472,7 +2465,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
             || context_p->token.type == LEXER_SEMICOLON
             || context_p->token.type == LEXER_RIGHT_BRACE)
         {
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
           if (JERRY_UNLIKELY (PARSER_IS_CLASS_CONSTRUCTOR_SUPER (context_p->status_flags)))
           {
             if (context_p->status_flags & PARSER_CLASS_IMPLICIT_SUPER)
@@ -2487,20 +2480,20 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
           }
           else
           {
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
             parser_emit_cbc (context_p, CBC_RETURN_WITH_BLOCK);
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
           }
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
           break;
         }
 
         parser_parse_expression (context_p, PARSE_EXPR);
 
         bool return_with_literal = (context_p->last_cbc_opcode == CBC_PUSH_LITERAL);
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
         return_with_literal = return_with_literal && !PARSER_IS_CLASS_CONSTRUCTOR_SUPER (context_p->status_flags);
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
         if (return_with_literal)
         {
@@ -2508,18 +2501,18 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
         }
         else
         {
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
           if (JERRY_UNLIKELY (PARSER_IS_CLASS_CONSTRUCTOR_SUPER (context_p->status_flags)))
           {
             parser_emit_cbc_ext (context_p, CBC_EXT_CONSTRUCTOR_RETURN);
           }
           else
           {
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
             parser_emit_cbc (context_p, CBC_RETURN);
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
           }
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
         }
         break;
       }
@@ -2624,7 +2617,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
           /* There is no lexer_next_token here, since the
            * next token belongs to the parent context. */
 
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
           if (JERRY_UNLIKELY (PARSER_IS_CLASS_CONSTRUCTOR_SUPER (context_p->status_flags)))
           {
             if (context_p->status_flags & PARSER_CLASS_IMPLICIT_SUPER)
@@ -2638,7 +2631,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
             parser_emit_cbc (context_p, CBC_RETURN);
             parser_flush_cbc (context_p);
           }
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
           return;
         }
         parser_raise_error (context_p, PARSER_ERR_INVALID_RIGHT_SQUARE);
@@ -2715,18 +2708,18 @@ consume_last_statement:
         }
 
         case PARSER_STATEMENT_FOR_IN:
-#if ENABLED (JERRY_ES2015_FOR_OF)
+#if ENABLED (JERRY_ES2015)
         case PARSER_STATEMENT_FOR_OF:
-#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
+#endif /* ENABLED (JERRY_ES2015) */
         {
           parser_for_in_of_statement_t for_in_of_statement;
           parser_loop_statement_t loop;
 
-#if ENABLED (JERRY_ES2015_FOR_OF)
+#if ENABLED (JERRY_ES2015)
           bool is_for_in = (context_p->stack_top_uint8 == PARSER_STATEMENT_FOR_IN);
 #else
           bool is_for_in = true;
-#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
+#endif /* ENABLED (JERRY_ES2015) */
 
           parser_stack_pop_uint8 (context_p);
           parser_stack_pop (context_p, &loop, sizeof (parser_loop_statement_t));
@@ -2839,9 +2832,9 @@ parser_free_jumps (parser_stack_iterator_t iterator) /**< iterator position */
       case PARSER_STATEMENT_WHILE:
       case PARSER_STATEMENT_FOR:
       case PARSER_STATEMENT_FOR_IN:
-#if ENABLED (JERRY_ES2015_FOR_OF)
+#if ENABLED (JERRY_ES2015)
       case PARSER_STATEMENT_FOR_OF:
-#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
+#endif /* ENABLED (JERRY_ES2015) */
       {
         parser_loop_statement_t loop;
 

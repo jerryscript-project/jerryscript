@@ -63,7 +63,7 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
 
   ecma_value_t set_value = ecma_make_object_value (object_p);
 
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
   if (arguments_list_len == 0)
   {
     return set_value;
@@ -176,7 +176,7 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
 
   ecma_free_value (iter);
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   return set_value;
 } /* ecma_op_container_create */

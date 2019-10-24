@@ -46,13 +46,13 @@ ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, /**< starting lexical 
 
   while (true)
   {
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
     if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND)
     {
       JERRY_ASSERT (lex_env_p->u2.outer_reference_cp != JMEM_CP_NULL);
       lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
     }
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
     if (ecma_op_has_binding (lex_env_p, name_p))
     {
@@ -68,7 +68,7 @@ ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, /**< starting lexical 
   }
 } /* ecma_op_resolve_reference_base */
 
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
 /**
  * Resolve super reference.
  *
@@ -91,7 +91,7 @@ ecma_op_resolve_super_reference_value (ecma_object_t *lex_env_p) /**< starting l
     lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
   }
 } /* ecma_op_resolve_super_reference_value */
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * Resolve value corresponding to reference.
@@ -158,11 +158,11 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
     }
     else
     {
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
       JERRY_ASSERT (lex_env_type == ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND);
-#else /* !ENABLED (JERRY_ES2015_CLASS) */
+#else /* !ENABLED (JERRY_ES2015) */
       JERRY_UNREACHABLE ();
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
     }
 
     if (lex_env_p->u2.outer_reference_cp == JMEM_CP_NULL)

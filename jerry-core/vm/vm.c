@@ -88,12 +88,12 @@ vm_op_get_value (ecma_value_t object, /**< base object */
       property_name_p = ecma_get_string_from_value (property);
     }
 
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
     if (ecma_is_value_symbol (property))
     {
       property_name_p = ecma_get_symbol_from_value (property);
     }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
 
     if (property_name_p != NULL)
     {
@@ -411,13 +411,13 @@ vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 
   ecma_object_t *func_obj_p;
 
-#if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
+#if ENABLED (JERRY_ES2015)
   if (!(bytecode_p->status_flags & CBC_CODE_FLAGS_ARROW_FUNCTION))
   {
-#endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
+#endif /* ENABLED (JERRY_ES2015) */
     func_obj_p = ecma_op_create_function_object (frame_ctx_p->lex_env_p,
                                                  bytecode_p);
-#if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
+#if ENABLED (JERRY_ES2015)
   }
   else
   {
@@ -425,7 +425,7 @@ vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
                                                        bytecode_p,
                                                        frame_ctx_p->this_binding);
   }
-#endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   return ecma_make_object_value (func_obj_p);
 } /* vm_construct_literal_object */
@@ -465,7 +465,7 @@ static const uint8_t vm_error_byte_code_p[] =
   CBC_EXT_OPCODE, CBC_EXT_ERROR
 };
 
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
 /**
  * 'super(...)' function call handler.
  */
@@ -540,7 +540,7 @@ vm_super_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
   frame_ctx_p->stack_top_p = stack_top_p;
 } /* vm_super_call */
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * 'Function call' opcode handler.
@@ -1199,7 +1199,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           *stack_top_p++ = left_value;
           continue;
         }
-#if ENABLED (JERRY_ES2015_OBJECT_INITIALIZER)
+#if ENABLED (JERRY_ES2015)
         case VM_OC_SET_COMPUTED_PROPERTY:
         {
           /* Swap values. */
@@ -1208,7 +1208,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           left_value ^= right_value;
           /* FALLTHRU */
         }
-#endif /* ENABLED (JERRY_ES2015_OBJECT_INITIALIZER) */
+#endif /* ENABLED (JERRY_ES2015) */
         case VM_OC_SET_PROPERTY:
         {
           JERRY_STATIC_ASSERT (VM_OC_NON_STATIC_FLAG == VM_OC_BACKWARD_BRANCH,
@@ -1224,7 +1224,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             goto error;
           }
 
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
           if (JERRY_UNLIKELY (ecma_compare_ecma_string_to_magic_id (prop_name_p, LIT_MAGIC_STRING_PROTOTYPE))
               && !(opcode_data & VM_OC_NON_STATIC_FLAG))
           {
@@ -1233,9 +1233,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
 
           const int index = (int) (opcode_data >> VM_OC_NON_STATIC_SHIFT) - 2;
-#else /* !ENABLED (JERRY_ES2015_CLASS) */
+#else /* !ENABLED (JERRY_ES2015) */
           const int index = -1;
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
           ecma_object_t *object_p = ecma_get_object_from_value (stack_top_p[index]);
 
@@ -1284,7 +1284,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             goto error;
           }
 
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
           if (JERRY_UNLIKELY (ecma_compare_ecma_string_to_magic_id (prop_name_p, LIT_MAGIC_STRING_PROTOTYPE))
               && !(opcode_data & VM_OC_NON_STATIC_FLAG))
           {
@@ -1293,9 +1293,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
 
           const int index = (int) (opcode_data >> VM_OC_NON_STATIC_SHIFT) - 2;
-#else /* !ENABLED (JERRY_ES2015_CLASS) */
+#else /* !ENABLED (JERRY_ES2015) */
           const int index = -1;
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
           opfunc_set_accessor (VM_OC_GROUP_GET_INDEX (opcode_data) == VM_OC_SET_GETTER,
                                stack_top_p[index],
@@ -1312,7 +1312,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           *stack_top_p++ = ecma_make_object_value (ecma_op_new_fast_array_object (0));
           continue;
         }
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
         case VM_OC_SUPER_CALL:
         {
           frame_ctx_p->call_operation = VM_EXEC_SUPER_CALL;
@@ -1637,7 +1637,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           goto error;
         }
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
         case VM_OC_PUSH_ELISON:
         {
           *stack_top_p++ = ECMA_VALUE_ARRAY_HOLE;
@@ -2935,7 +2935,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
           continue;
         }
-#if ENABLED (JERRY_ES2015_FOR_OF)
+#if ENABLED (JERRY_ES2015)
         case VM_OC_FOR_OF_CREATE_CONTEXT:
         {
           ecma_value_t value = *(--stack_top_p);
@@ -3021,7 +3021,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           continue;
         }
-#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
+#endif /* ENABLED (JERRY_ES2015) */
         case VM_OC_TRY:
         {
           /* Try opcode simply creates the try context. */
@@ -3547,9 +3547,9 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 
   frame_ctx_p->stack_top_p = frame_ctx_p->registers_p + register_end;
 
-#if ENABLED (JERRY_ES2015_FUNCTION_REST_PARAMETER)
+#if ENABLED (JERRY_ES2015)
   uint32_t function_call_argument_count = arg_list_len;
-#endif /* ENABLED (JERRY_ES2015_FUNCTION_REST_PARAMETER) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   if (arg_list_len > argument_end)
   {
@@ -3573,7 +3573,7 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
     }
   }
 
-#if ENABLED (JERRY_ES2015_FUNCTION_REST_PARAMETER)
+#if ENABLED (JERRY_ES2015)
   if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_REST_PARAMETER)
   {
     JERRY_ASSERT (function_call_argument_count >= arg_list_len);
@@ -3584,7 +3584,7 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
     frame_ctx_p->registers_p[argument_end] = new_array;
     arg_list_len++;
   }
-#endif /* ENABLED (JERRY_ES2015_FUNCTION_REST_PARAMETER) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_DIRECT_EVAL;
 
@@ -3604,13 +3604,13 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
         opfunc_call (frame_ctx_p);
         break;
       }
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
       case VM_EXEC_SUPER_CALL:
       {
         vm_super_call (frame_ctx_p);
         break;
       }
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
       case VM_EXEC_CONSTRUCT:
       {
         opfunc_construct (frame_ctx_p);

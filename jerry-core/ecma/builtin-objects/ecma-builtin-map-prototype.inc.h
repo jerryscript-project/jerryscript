@@ -29,12 +29,12 @@ OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
               ECMA_BUILTIN_ID_MAP,
               ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
 
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
 /* ECMA-262 v6, 23.1.3.13 */
 STRING_VALUE (LIT_GLOBAL_SYMBOL_TO_STRING_TAG,
               LIT_MAGIC_STRING_MAP_UL,
               ECMA_PROPERTY_FLAG_CONFIGURABLE)
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */

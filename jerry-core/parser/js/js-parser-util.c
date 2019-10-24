@@ -956,24 +956,6 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Case statement must be in a switch block.";
     }
-#if ENABLED (JERRY_ES2015_CLASS)
-    case PARSER_ERR_MULTIPLE_CLASS_CONSTRUCTORS:
-    {
-      return "Multiple constructors are not allowed.";
-    }
-    case PARSER_ERR_CLASS_CONSTRUCTOR_AS_ACCESSOR:
-    {
-      return "Class constructor may not be an accessor.";
-    }
-    case PARSER_ERR_CLASS_STATIC_PROTOTYPE:
-    {
-      return "Classes may not have a static property called 'prototype'.";
-    }
-    case PARSER_ERR_UNEXPECTED_SUPER_REFERENCE:
-    {
-      return "Super is not allowed to be used here.";
-    }
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
     case PARSER_ERR_LEFT_PAREN_EXPECTED:
     {
       return "Expected '(' token.";
@@ -990,12 +972,6 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Expected ']' token.";
     }
-#if ENABLED (JERRY_ES2015_TEMPLATE_STRINGS)
-    case PARSER_ERR_RIGHT_BRACE_EXPECTED:
-    {
-      return "Expected '}' token.";
-    }
-#endif /* ENABLED (JERRY_ES2015_TEMPLATE_STRINGS) */
     case PARSER_ERR_COLON_EXPECTED:
     {
       return "Expected ':' token.";
@@ -1012,12 +988,6 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Expected 'in' token.";
     }
-#if ENABLED (JERRY_ES2015_FOR_OF)
-    case PARSER_ERR_OF_EXPECTED:
-    {
-      return "Expected 'of' token.";
-    }
-#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
     case PARSER_ERR_WHILE_EXPECTED:
     {
       return "While expected for do-while loop.";
@@ -1102,24 +1072,6 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Duplicated label.";
     }
-#if ((ENABLED (JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER)) \
-     || (ENABLED (JERRY_ES2015_FUNCTION_REST_PARAMETER)))
-    case PARSER_ERR_DUPLICATED_ARGUMENT_NAMES:
-    {
-      return "Duplicated function argument names are not allowed here.";
-    }
-#endif /* ((ENABLED (JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER))
-           || (ENABLED (JERRY_ES2015_FUNCTION_REST_PARAMETER))) */
-#if ENABLED (JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER)
-    case PARSER_ERR_FORMAL_PARAM_AFTER_REST_PARAMETER:
-    {
-      return "Rest parameter must be the last formal parameter.";
-    }
-    case PARSER_ERR_REST_PARAMETER_DEFAULT_INITIALIZER:
-    {
-      return "Rest parameter may not have a default initializer.";
-    }
-#endif /* ENABLED (JERRY_ES2015_FUNCTION_PARAMETER_INITIALIZER) */
     case PARSER_ERR_OBJECT_PROPERTY_REDEFINED:
     {
       return "Property of object literal redefined.";
@@ -1128,7 +1080,44 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Non-strict argument definition.";
     }
-
+#if ENABLED (JERRY_ES2015)
+    case PARSER_ERR_MULTIPLE_CLASS_CONSTRUCTORS:
+    {
+      return "Multiple constructors are not allowed.";
+    }
+    case PARSER_ERR_CLASS_CONSTRUCTOR_AS_ACCESSOR:
+    {
+      return "Class constructor may not be an accessor.";
+    }
+    case PARSER_ERR_CLASS_STATIC_PROTOTYPE:
+    {
+      return "Classes may not have a static property called 'prototype'.";
+    }
+    case PARSER_ERR_UNEXPECTED_SUPER_REFERENCE:
+    {
+      return "Super is not allowed to be used here.";
+    }
+    case PARSER_ERR_RIGHT_BRACE_EXPECTED:
+    {
+      return "Expected '}' token.";
+    }
+    case PARSER_ERR_OF_EXPECTED:
+    {
+      return "Expected 'of' token.";
+    }
+    case PARSER_ERR_DUPLICATED_ARGUMENT_NAMES:
+    {
+      return "Duplicated function argument names are not allowed here.";
+    }
+    case PARSER_ERR_FORMAL_PARAM_AFTER_REST_PARAMETER:
+    {
+      return "Rest parameter must be the last formal parameter.";
+    }
+    case PARSER_ERR_REST_PARAMETER_DEFAULT_INITIALIZER:
+    {
+      return "Rest parameter may not have a default initializer.";
+    }
+#endif /* ENABLED (JERRY_ES2015) */
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
     case PARSER_ERR_FILE_NOT_FOUND:
     {

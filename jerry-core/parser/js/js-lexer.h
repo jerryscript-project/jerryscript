@@ -39,12 +39,10 @@ typedef enum
   LEXER_LIT_TRUE,                /**< true (not a keyword!) */
   LEXER_LIT_FALSE,               /**< false (not a keyword!) */
   LEXER_LIT_NULL,                /**< null (not a keyword!) */
-#if ENABLED (JERRY_ES2015_TEMPLATE_STRINGS)
+#if ENABLED (JERRY_ES2015)
   LEXER_TEMPLATE_LITERAL,        /**< multi segment template literal */
-#endif /* ENABLED (JERRY_ES2015_TEMPLATE_STRINGS) */
-#if ENABLED (JERRY_ES2015_FUNCTION_REST_PARAMETER)
   LEXER_THREE_DOTS,              /**< ... (rest or spread operator) */
-#endif /* ENABLED (JERRY_ES2015_FUNCTION_REST_PARAMETER) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   /* Unary operators
    * IMPORTANT: update CBC_UNARY_OP_TOKEN_TO_OPCODE and
@@ -121,9 +119,9 @@ typedef enum
   LEXER_SEMICOLON,               /**< ";" */
   LEXER_COLON,                   /**< ":" */
   LEXER_COMMA,                   /**< "," */
-#if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
+#if ENABLED (JERRY_ES2015)
   LEXER_ARROW,                   /**< "=>" */
-#endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   LEXER_KEYW_BREAK,              /**< break */
   LEXER_KEYW_DO,                 /**< do */
@@ -153,10 +151,10 @@ typedef enum
   LEXER_COMMA_SEP_LIST,          /**< comma separated bracketed expression list */
   LEXER_SCAN_SWITCH,             /**< special value for switch pre-scan */
   LEXER_CLASS_CONSTRUCTOR,       /**< special value for class constructor method */
-#if ENABLED (JERRY_ES2015_FOR_OF)
+#if ENABLED (JERRY_ES2015)
   LEXER_FOR_IN_OF,               /**< special value during for in/of statmenet scanning */
   LEXER_LITERAL_OF,              /**< 'of' literal */
-#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
+#endif /* ENABLED (JERRY_ES2015) */
 
 #if !ENABLED (JERRY_ES2015)
   /* Future reserved words: these keywords
@@ -263,10 +261,10 @@ typedef enum
   LEXER_SCAN_IDENT_NO_OPTS = (1u << 0),          /**< no options */
   LEXER_SCAN_IDENT_PROPERTY = (1u << 1),         /**< scan valid property names */
   LEXER_SCAN_IDENT_NO_KEYW = (1u << 2),          /**< don't scan keywords (e.g. get/set) */
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
   LEXER_SCAN_CLASS_PROPERTY = (1u << 3),         /**< scan valid class property names */
   LEXER_SCAN_CLASS_LEFT_PAREN = (1u << 4),       /**< also parse left parenthesis */
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 } lexer_scan_ident_opts_t;
 
 /**

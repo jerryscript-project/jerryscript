@@ -64,19 +64,19 @@
 
 #define CBC_HAS_POP_STACK_BYTE_ARG (CBC_HAS_BYTE_ARG | CBC_POP_STACK_BYTE_ARG)
 
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
 /**
  * Checks whether the current opcode is a super constructor call
  */
 #define CBC_SUPER_CALL_OPERATION(opcode) \
   ((opcode) >= PARSER_TO_EXT_OPCODE (CBC_EXT_SUPER_CALL) \
     && (opcode) <= PARSER_TO_EXT_OPCODE (CBC_EXT_SUPER_CALL_BLOCK))
-#else /* !ENABLED (JERRY_ES2015_CLASS) */
+#else /* !ENABLED (JERRY_ES2015) */
 /**
  * Checks whether the current opcode is a super constructor call
  */
 #define CBC_SUPER_CALL_OPERATION(opcode) false
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
 /* Debug macro. */
 #define CBC_ARGS_EQ(op, types) \

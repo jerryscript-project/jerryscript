@@ -327,9 +327,9 @@ typedef enum
                                        *   that are not indices */
   ECMA_LIST_ENUMERABLE = (1 << 1), /**< exclude non-enumerable properties */
   ECMA_LIST_PROTOTYPE = (1 << 2), /**< list properties from prototype chain */
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
   ECMA_LIST_SYMBOLS = (1 << 3), /**< list symbol properties only */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
   ECMA_LIST_CONVERT_FAST_ARRAYS = (1 << 4), /**< after listing the properties convert
                                              *   the fast access mode array back to normal array */
 } ecma_list_properties_options_t;
@@ -607,9 +607,9 @@ typedef enum
   ECMA_OBJECT_TYPE_ARRAY = 4, /**< Array object (15.4) */
   ECMA_OBJECT_TYPE_BOUND_FUNCTION = 5, /**< Function objects (15.3), created through 15.3.4.5 routine */
   ECMA_OBJECT_TYPE_PSEUDO_ARRAY  = 6, /**< Array-like object, such as Arguments object (10.6) */
-#if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
+#if ENABLED (JERRY_ES2015)
   ECMA_OBJECT_TYPE_ARROW_FUNCTION = 7, /**< arrow function objects */
-#endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   /* Types between 13-15 cannot have a built-in flag. See ecma_lexical_environment_type_t. */
 
@@ -913,7 +913,7 @@ typedef struct
 
 #endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 
-#if ENABLED (JERRY_ES2015_ARROW_FUNCTION)
+#if ENABLED (JERRY_ES2015)
 
 /**
  * Description of arrow function objects.
@@ -939,7 +939,7 @@ typedef struct
 
 #endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 
-#endif /* ENABLED (JERRY_ES2015_ARROW_FUNCTION) */
+#endif /* ENABLED (JERRY_ES2015) */
 
 #if ENABLED (JERRY_ES2015_BUILTIN_MAP) || ENABLED (JERRY_ES2015_BUILTIN_SET)
 /**

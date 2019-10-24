@@ -100,12 +100,12 @@ ecma_builtin_global_object_eval (ecma_value_t x) /**< routine's first argument *
     parse_opts |= ECMA_PARSE_STRICT_MODE;
   }
 
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
   if (vm_is_direct_eval_form_call ())
   {
     parse_opts |= ECMA_GET_SUPER_EVAL_PARSER_OPTS ();
   }
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   /* steps 2 to 8 */
   return ecma_op_eval (ecma_get_string_from_value (x), parse_opts);

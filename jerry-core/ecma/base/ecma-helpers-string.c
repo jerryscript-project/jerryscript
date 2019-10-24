@@ -204,7 +204,7 @@ ecma_new_ecma_string_from_magic_string_ex_id (lit_magic_string_ex_id_t id) /**< 
   return string_desc_p;
 } /* ecma_new_ecma_string_from_magic_string_ex_id */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
 /**
  * Allocate new ecma-string and fill it with reference to the symbol descriptor
  *
@@ -238,7 +238,7 @@ ecma_prop_name_is_symbol (ecma_string_t *string_p) /**< ecma-string */
   return (!ECMA_IS_DIRECT_STRING (string_p)
           && ECMA_STRING_GET_CONTAINER (string_p) == ECMA_STRING_CONTAINER_SYMBOL);
 } /* ecma_prop_name_is_symbol */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
 
 #if ENABLED (JERRY_ES2015_BUILTIN_MAP) || ENABLED (JERRY_ES2015_BUILTIN_SET)
 /**
@@ -910,7 +910,7 @@ ecma_destroy_ecma_string (ecma_string_t *string_p) /**< ecma-string */
                                   ((ecma_ascii_string_t *) string_p)->size + sizeof (ecma_ascii_string_t));
       return;
     }
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
     case ECMA_STRING_CONTAINER_SYMBOL:
     {
       ecma_extended_string_t * symbol_p = (ecma_extended_string_t *) string_p;
@@ -918,7 +918,7 @@ ecma_destroy_ecma_string (ecma_string_t *string_p) /**< ecma-string */
       ecma_dealloc_extended_string (symbol_p);
       return;
     }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
 #if ENABLED (JERRY_ES2015_BUILTIN_MAP) || ENABLED (JERRY_ES2015_BUILTIN_SET)
     case ECMA_STRING_CONTAINER_MAP_KEY:
     {
@@ -1809,12 +1809,12 @@ ecma_compare_ecma_strings (const ecma_string_t *string1_p, /**< ecma-string */
     return true;
   }
 
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
   if (string1_container == ECMA_STRING_CONTAINER_SYMBOL)
   {
     return false;
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
 
 #if ENABLED (JERRY_ES2015_BUILTIN_MAP)
   if (string1_container == ECMA_STRING_CONTAINER_MAP_KEY)
@@ -1863,12 +1863,12 @@ ecma_compare_ecma_non_direct_strings (const ecma_string_t *string1_p, /**< ecma-
     return true;
   }
 
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
   if (string1_container == ECMA_STRING_CONTAINER_SYMBOL)
   {
     return false;
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
 
 #if ENABLED (JERRY_ES2015_BUILTIN_MAP)
   if (string1_container == ECMA_STRING_CONTAINER_MAP_KEY)

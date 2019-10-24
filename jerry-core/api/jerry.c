@@ -811,12 +811,12 @@ jerry_value_is_symbol (const jerry_value_t value) /**< api value */
 {
   jerry_assert_api_available ();
 
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
   return ecma_is_value_symbol (value);
-#else /* !ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#else /* !ENABLED (JERRY_ES2015) */
   JERRY_UNUSED (value);
   return false;
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
 } /* jerry_value_is_symbol */
 
 /**
@@ -870,12 +870,12 @@ jerry_value_get_type (const jerry_value_t value) /**< input value to check */
     {
       return JERRY_TYPE_STRING;
     }
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
     case LIT_MAGIC_STRING_SYMBOL:
     {
       return JERRY_TYPE_SYMBOL;
     }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
     case LIT_MAGIC_STRING_FUNCTION:
     {
       return JERRY_TYPE_FUNCTION;
@@ -940,9 +940,9 @@ jerry_is_feature_enabled (const jerry_feature_t feature) /**< feature to check *
 #if ENABLED (JERRY_ES2015_BUILTIN_PROMISE)
           || feature == JERRY_FEATURE_PROMISE
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
           || feature == JERRY_FEATURE_SYMBOL
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
 #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
           || feature == JERRY_FEATURE_TYPEDARRAY
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
@@ -1638,11 +1638,11 @@ jerry_create_symbol (const jerry_value_t value) /**< api value */
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
   }
 
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
   return jerry_return (ecma_op_create_symbol (&value, 1));
-#else /* !ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#else /* !ENABLED (JERRY_ES2015) */
   return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Symbol is not supported.")));
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
 } /* jerry_create_symbol */
 
 /**
@@ -3092,7 +3092,7 @@ jerry_get_symbol_descriptive_string (const jerry_value_t symbol) /**< symbol val
 {
   jerry_assert_api_available ();
 
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
   if (!ecma_is_value_symbol (symbol))
   {
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
@@ -3100,11 +3100,11 @@ jerry_get_symbol_descriptive_string (const jerry_value_t symbol) /**< symbol val
 
   /* Note: This operation cannot throw an error */
   return ecma_get_symbol_descriptive_string (symbol);
-#else /* !ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#else /* !ENABLED (JERRY_ES2015) */
   JERRY_UNUSED (symbol);
 
   return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Symbol is not supported.")));
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
 } /** jerry_get_symbol_descriptive_string */
 
 /**

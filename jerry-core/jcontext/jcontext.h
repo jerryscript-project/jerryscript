@@ -137,9 +137,9 @@ struct jerry_context_t
   const lit_utf8_byte_t * const *lit_magic_string_ex_array; /**< array of external magic strings */
   const lit_utf8_size_t *lit_magic_string_ex_sizes; /**< external magic string lengths */
   jmem_cpointer_t string_list_first_cp; /**< first item of the literal string list */
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
   jmem_cpointer_t symbol_list_first_cp; /**< first item of the global symbol list */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
   jmem_cpointer_t number_list_first_cp; /**< first item of the literal number list */
   jmem_cpointer_t ecma_global_lex_env_cp; /**< global lexical environment */
 

@@ -67,9 +67,9 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
       /* FALLTHRU */
     }
     case VM_CONTEXT_WITH:
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
     case VM_CONTEXT_SUPER_CLASS:
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
     {
       ecma_object_t *lex_env_p = frame_ctx_p->lex_env_p;
       JERRY_ASSERT (lex_env_p->u2.outer_reference_cp != JMEM_CP_NULL);
@@ -80,7 +80,7 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
       vm_stack_top_p -= PARSER_WITH_CONTEXT_STACK_ALLOCATION;
       break;
     }
-#if ENABLED (JERRY_ES2015_FOR_OF)
+#if ENABLED (JERRY_ES2015)
     case VM_CONTEXT_FOR_OF:
     {
       ecma_free_value (vm_stack_top_p[-2]);
@@ -89,7 +89,7 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
       vm_stack_top_p -= PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION;
       break;
     }
-#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
+#endif /* ENABLED (JERRY_ES2015) */
     default:
     {
       JERRY_ASSERT (VM_GET_CONTEXT_TYPE (vm_stack_top_p[-1]) == VM_CONTEXT_FOR_IN);

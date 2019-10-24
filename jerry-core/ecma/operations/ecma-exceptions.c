@@ -293,13 +293,13 @@ ecma_raise_standard_error_with_format (ecma_standard_error_t error_type, /**< er
         lit_magic_string_id_t class_name = ecma_object_get_class_name (arg_object_p);
         arg_string_p = ecma_get_magic_string (class_name);
       }
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
       else if (ecma_is_value_symbol (arg_val))
       {
         ecma_value_t symbol_desc_value = ecma_get_symbol_descriptive_string (arg_val);
         arg_string_p = ecma_get_string_from_value (symbol_desc_value);
       }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
       else
       {
         ecma_value_t str_val = ecma_op_to_string (arg_val);

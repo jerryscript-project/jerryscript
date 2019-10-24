@@ -39,9 +39,9 @@ typedef enum
   SCANNER_TYPE_WHILE, /**< while statement */
   SCANNER_TYPE_FOR, /**< for statement */
   SCANNER_TYPE_FOR_IN, /**< for-in statement */
-#if ENABLED (JERRY_ES2015_FOR_OF)
+#if ENABLED (JERRY_ES2015)
   SCANNER_TYPE_FOR_OF, /**< for-of statement */
-#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
+#endif /* ENABLED (JERRY_ES2015) */
   SCANNER_TYPE_SWITCH, /**< switch statement */
   SCANNER_TYPE_CASE, /**< case statement */
 } scanner_info_type_t;

@@ -505,12 +505,12 @@ ecma_fast_array_get_property_names (ecma_object_t *object_p, /**< fast access mo
 
   ecma_collection_t *ret_p = ecma_new_collection ();
 
-#if ENABLED (JERRY_ES2015_BUILTIN_SYMBOL)
+#if ENABLED (JERRY_ES2015)
   if (opts & ECMA_LIST_SYMBOLS)
   {
     return ret_p;
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SYMBOL) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   uint32_t length = ext_obj_p->u.array.length;
 
@@ -649,7 +649,7 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
   return ecma_make_object_value (object_p);
 } /* ecma_op_create_array_object */
 
-#if ENABLED (JERRY_ES2015_CLASS)
+#if ENABLED (JERRY_ES2015)
 /**
  * Array object creation with custom prototype.
  *
@@ -680,7 +680,7 @@ ecma_op_create_array_object_by_constructor (const ecma_value_t *arguments_list_p
                                       arguments_list_len,
                                       is_treat_single_arg_as_length);
 } /* ecma_op_create_array_object_by_constructor */
-#endif /* ENABLED (JERRY_ES2015_CLASS) */
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * Low level delete of array items from new_length to old_length

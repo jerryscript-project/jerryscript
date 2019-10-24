@@ -952,9 +952,9 @@ scanner_cleanup (parser_context_t *context_p) /**< context */
       }
       case SCANNER_TYPE_WHILE:
       case SCANNER_TYPE_FOR_IN:
-#if ENABLED (JERRY_ES2015_FOR_OF)
+#if ENABLED (JERRY_ES2015)
       case SCANNER_TYPE_FOR_OF:
-#endif /* ENABLED (JERRY_ES2015_FOR_OF) */
+#endif /* ENABLED (JERRY_ES2015) */
       case SCANNER_TYPE_CASE:
       {
         size = sizeof (scanner_location_info_t);

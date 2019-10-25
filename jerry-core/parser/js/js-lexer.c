@@ -1476,7 +1476,14 @@ lexer_process_char_literal (parser_context_t *context_p, /**< context */
         {
           scope_stack_p--;
 
-          if (scope_stack_p->map_from == literal_index)
+#if ENABLED (JERRY_ES2015)
+          bool cond = (scope_stack_p->map_from == literal_index
+                       && scope_stack_p->map_to != PARSER_SCOPE_STACK_FUNC);
+#else /* ENABLED (JERRY_ES2015) */
+          bool cond = (scope_stack_p->map_from == literal_index);
+#endif /* ENABLED (JERRY_ES2015) */
+
+          if (cond)
           {
             JERRY_ASSERT (scope_stack_p->map_to >= PARSER_REGISTER_START
                           || (literal_p->status_flags & LEXER_FLAG_USED));
@@ -2322,7 +2329,7 @@ lexer_expect_identifier (parser_context_t *context_p, /**< context */
     context_p->token.literal_is_reserved = false;
     context_p->token.lit_location.type = LEXER_IDENT_LITERAL;
     context_p->token.lit_location.has_escape = false;
-    lexer_construct_literal_object (context_p, &lexer_default_literal, lexer_default_literal.type);
+    lexer_construct_literal_object (context_p, &lexer_default_literal, literal_type);
     context_p->status_flags &= (uint32_t) ~(PARSER_MODULE_DEFAULT_CLASS_OR_FUNC);
     return;
   }

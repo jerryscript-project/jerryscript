@@ -151,10 +151,6 @@ typedef enum
   LEXER_COMMA_SEP_LIST,          /**< comma separated bracketed expression list */
   LEXER_SCAN_SWITCH,             /**< special value for switch pre-scan */
   LEXER_CLASS_CONSTRUCTOR,       /**< special value for class constructor method */
-#if ENABLED (JERRY_ES2015)
-  LEXER_FOR_IN_OF,               /**< special value during for in/of statmenet scanning */
-  LEXER_LITERAL_OF,              /**< 'of' literal */
-#endif /* ENABLED (JERRY_ES2015) */
 
 #if !ENABLED (JERRY_ES2015)
   /* Future reserved words: these keywords
@@ -164,6 +160,9 @@ typedef enum
   LEXER_KEYW_CLASS,              /**< class */
   LEXER_KEYW_EXTENDS,            /**< extends */
   LEXER_KEYW_SUPER,              /**< super */
+#if ENABLED (JERRY_ES2015)
+  LEXER_KEYW_LET,                /**< let */
+#endif /* ENABLED (JERRY_ES2015) */
   LEXER_KEYW_CONST,              /**< const */
   LEXER_KEYW_EXPORT,             /**< export */
   LEXER_KEYW_IMPORT,             /**< import */
@@ -190,25 +189,13 @@ typedef enum
   LEXER_KEYW_PACKAGE,            /**< package */
   LEXER_KEYW_PROTECTED,          /**< protected */
 
-#if ENABLED (JERRY_ES2015)
-  /* Context dependent strict reserved words:
-   * See also: ECMA-262 v6, 11.6.2.1 */
-#define LEXER_FIRST_CONTEXT_DEPENDENT_RESERVED_WORD LEXER_KEYW_STATIC
-  LEXER_KEYW_STATIC,             /**< static */
-#else /* !ENABLED (JERRY_ES2015) */
-  /* Context dependent strict reserved words:
-   * See also: ECMA-262 v6, 11.6.2.1 */
-#define LEXER_FIRST_CONTEXT_DEPENDENT_RESERVED_WORD
-#endif /* ENABLED (JERRY_ES2015) */
-
   /* Context dependent future strict reserved words:
    * See also: ECMA-262 v6, 11.6.2.1 */
-#define LEXER_FIRST_CONTEXT_DEPENDENT_FUTURE_RESERVED_WORD LEXER_KEYW_LET
-  LEXER_KEYW_LET,                /**< let */
-  LEXER_KEYW_YIELD,              /**< yield */
 #if !ENABLED (JERRY_ES2015)
-  LEXER_KEYW_STATIC,             /**< static */
+  LEXER_KEYW_LET,                /**< let */
 #endif /* !ENABLED (JERRY_ES2015) */
+  LEXER_KEYW_YIELD,              /**< yield */
+  LEXER_KEYW_STATIC,             /**< static */
 } lexer_token_type_t;
 
 #define LEXER_NEWLINE_LS_PS_BYTE_1 0xe2

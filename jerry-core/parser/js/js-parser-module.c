@@ -438,7 +438,7 @@ parser_module_parse_import_clause (parser_context_t *context_p) /**< parser cont
     ecma_string_t *import_name_p = NULL;
     ecma_string_t *local_name_p = NULL;
 
-    lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_IDENT_LITERAL);
+    lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_NEW_IDENT_LITERAL);
 
     uint16_t import_name_index = context_p->lit_object.index;
     uint16_t local_name_index = PARSER_MAXIMUM_NUMBER_OF_LITERALS;
@@ -454,7 +454,7 @@ parser_module_parse_import_clause (parser_context_t *context_p) /**< parser cont
         parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
       }
 
-      lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_IDENT_LITERAL);
+      lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_NEW_IDENT_LITERAL);
 
       local_name_index = context_p->lit_object.index;
 

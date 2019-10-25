@@ -595,6 +595,14 @@ parser_parse_class (parser_context_t *context_p, /**< context */
     JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
                   && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
 
+#if ENABLED (JERRY_ES2015)
+    if (context_p->next_scanner_info_p->source_p == context_p->source_p)
+    {
+      JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_ERR_REDECLARED);
+      parser_raise_error (context_p, PARSER_ERR_VARIABLE_REDECLARED);
+    }
+#endif /* ENABLED (JERRY_ES2015) */
+
     class_ident_index = context_p->lit_object.index;
 
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)

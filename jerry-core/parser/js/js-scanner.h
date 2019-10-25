@@ -44,6 +44,9 @@ typedef enum
 #endif /* ENABLED (JERRY_ES2015) */
   SCANNER_TYPE_SWITCH, /**< switch statement */
   SCANNER_TYPE_CASE, /**< case statement */
+#if ENABLED (JERRY_ES2015)
+  SCANNER_TYPE_ERR_REDECLARED, /**< syntax error: a variable is redeclared */
+#endif /* ENABLED (JERRY_ES2015) */
 } scanner_info_type_t;
 
 /**
@@ -127,6 +130,7 @@ typedef enum
   SCANNER_STREAM_UINT16_DIFF = (1 << 7), /**< relative distance is between -256 and 65535 */
   SCANNER_STREAM_HAS_ESCAPE = (1 << 6), /**< literal has escape */
   SCANNER_STREAM_NO_REG = (1 << 5), /**< identifier cannot be stored in register */
+  /* Update SCANNER_STREAM_TYPE_MASK macro if more bits are added. */
 } scanner_compressed_stream_flags_t;
 
 /**
@@ -136,16 +140,29 @@ typedef enum
 {
   SCANNER_STREAM_TYPE_END, /**< end of scanner data */
   SCANNER_STREAM_TYPE_HOLE, /**< no name is assigned to this argument */
-  SCANNER_STREAM_TYPE_ARG, /**< argument declaration */
-  SCANNER_STREAM_TYPE_ARG_FUNC, /**< argument declaration which is later initialized with a function */
   SCANNER_STREAM_TYPE_VAR, /**< var declaration */
-  SCANNER_STREAM_TYPE_FUNC, /**< function declaration */
+#if ENABLED (JERRY_ES2015)
+  SCANNER_STREAM_TYPE_LET, /**< let declaration */
+  SCANNER_STREAM_TYPE_CONST, /**< const declaration */
+#endif /* ENABLED (JERRY_ES2015) */
+  SCANNER_STREAM_TYPE_ARG, /**< argument declaration */
+  /* Function types should be at the end. See the SCANNER_STREAM_TYPE_IS_FUNCTION macro. */
+  SCANNER_STREAM_TYPE_ARG_FUNC, /**< argument declaration which is later initialized with a function */
+  SCANNER_STREAM_TYPE_FUNC, /**< local function declaration */
+#if ENABLED (JERRY_ES2015)
+  SCANNER_STREAM_TYPE_VAR_FUNC, /**< var function declaration */
+#endif /* ENABLED (JERRY_ES2015) */
 } scanner_compressed_stream_types_t;
 
 /**
  * Mask for decoding the type from the compressed stream.
  */
 #define SCANNER_STREAM_TYPE_MASK 0xf
+
+/**
+ * Mask for decoding the type from the compressed stream.
+ */
+#define SCANNER_STREAM_TYPE_IS_FUNCTION(type) ((type) >= SCANNER_STREAM_TYPE_ARG_FUNC)
 
 /**
  * Constants for u8_arg flags in scanner_function_info_t.

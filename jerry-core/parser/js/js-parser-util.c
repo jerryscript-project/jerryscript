@@ -1117,6 +1117,10 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Rest parameter may not have a default initializer.";
     }
+    case PARSER_ERR_VARIABLE_REDECLARED:
+    {
+      return "Local variable is redeclared.";
+    }
 #endif /* ENABLED (JERRY_ES2015) */
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
     case PARSER_ERR_FILE_NOT_FOUND:

@@ -64,9 +64,10 @@ typedef enum
   PARSER_DEBUGGER_BREAKPOINT_APPENDED = (1u << 15), /**< pending (unsent) breakpoint
                                                      *   info is available */
 #if ENABLED (JERRY_ES2015)
-  PARSER_FUNCTION_HAS_REST_PARAM = (1u << 16), /**< function has rest parameter */
-  PARSER_IS_ARROW_FUNCTION = (1u << 18),      /**< an arrow function is parsed */
-  PARSER_ARROW_PARSE_ARGS = (1u << 19),       /**< parse the argument list of an arrow function */
+  PARSER_INSIDE_BLOCK = (1u << 16),           /**< script has a lexical environment for let and const */
+  PARSER_IS_ARROW_FUNCTION = (1u << 17),      /**< an arrow function is parsed */
+  PARSER_ARROW_PARSE_ARGS = (1u << 18),       /**< parse the argument list of an arrow function */
+  PARSER_FUNCTION_HAS_REST_PARAM = (1u << 19), /**< function has rest parameter */
   /* These four status flags must be in this order. See PARSER_CLASS_PARSE_OPTS_OFFSET. */
   PARSER_CLASS_CONSTRUCTOR = (1u << 20),      /**< a class constructor is parsed (this value must be kept in
                                                *   in sync with ECMA_PARSE_CLASS_CONSTRUCTOR) */
@@ -371,8 +372,11 @@ typedef struct parser_saved_context_t
   parser_mem_data_t literal_pool_data;        /**< literal list */
   parser_scope_stack *scope_stack_p;          /**< scope stack */
   uint16_t scope_stack_size;                  /**< size of scope stack */
-  uint16_t scope_stack_top;                   /**< current top of scope stack */
-  uint16_t scope_stack_reg_top;               /**< current top register of scope stack */
+  uint16_t scope_stack_top;                   /**< preserved top of scope stack */
+  uint16_t scope_stack_reg_top;               /**< preserved top register of scope stack */
+#if ENABLED (JERRY_ES2015)
+  uint16_t scope_stack_global_end;            /**< end of global declarations of a function */
+#endif /* ENABLED (JERRY_ES2015) */
 
 #ifndef JERRY_NDEBUG
   uint16_t context_stack_depth;               /**< current context stack depth */
@@ -440,6 +444,9 @@ typedef struct
   uint16_t scope_stack_size;                  /**< size of scope stack */
   uint16_t scope_stack_top;                   /**< current top of scope stack */
   uint16_t scope_stack_reg_top;               /**< current top register of scope stack */
+#if ENABLED (JERRY_ES2015)
+  uint16_t scope_stack_global_end;            /**< end of global declarations of a function */
+#endif /* ENABLED (JERRY_ES2015) */
   uint8_t stack_top_uint8;                    /**< top byte stored on the stack */
 
 #ifndef JERRY_NDEBUG
@@ -615,10 +622,6 @@ void parser_parse_super_class_context_end (parser_context_t *context_p, bool is_
  * @{
  */
 
-void scanner_raise_error (parser_context_t *context_p);
-void *scanner_malloc (parser_context_t *context_p, size_t size);
-void scanner_free (void *ptr, size_t size);
-
 void scanner_release_next (parser_context_t *context_p, size_t size);
 void scanner_set_active (parser_context_t *context_p);
 void scanner_release_active (parser_context_t *context_p, size_t size);
@@ -627,6 +630,7 @@ void scanner_seek (parser_context_t *context_p);
 void scanner_reverse_info_list (parser_context_t *context_p);
 void scanner_cleanup (parser_context_t *context_p);
 
+bool scanner_is_context_needed (parser_context_t *context_p);
 void scanner_create_variables (parser_context_t *context_p, size_t size);
 
 void scanner_get_location (scanner_location_t *location_p, parser_context_t *context_p);

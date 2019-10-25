@@ -202,6 +202,9 @@ typedef enum
   VM_OC_RIGHT_SHIFT,             /**< right shift */
   VM_OC_UNS_RIGHT_SHIFT,         /**< unsigned right shift */
 
+#if ENABLED (JERRY_ES2015)
+  VM_OC_BLOCK_CREATE_CONTEXT,    /**< create lexical environment for blocks enclosed in braces */
+#endif /* ENABLED (JERRY_ES2015) */
   VM_OC_WITH,                    /**< with */
   VM_OC_FOR_IN_CREATE_CONTEXT,   /**< for in create context */
   VM_OC_FOR_IN_GET_NEXT,         /**< get next */
@@ -260,6 +263,7 @@ typedef enum
 #endif /* !ENABLED (JERRY_LINE_INFO) */
 #if !ENABLED (JERRY_ES2015)
   VM_OC_SET_COMPUTED_PROPERTY = VM_OC_NONE,   /**< set computed property is unused */
+  VM_OC_BLOCK_CREATE_CONTEXT = VM_OC_NONE,    /**< create context for blocks enclosed in braces */
 
   VM_OC_FOR_OF_CREATE_CONTEXT = VM_OC_NONE,   /**< for of create context */
   VM_OC_FOR_OF_GET_NEXT = VM_OC_NONE,         /**< get next */

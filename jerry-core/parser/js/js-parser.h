@@ -112,6 +112,9 @@ typedef enum
   PARSER_ERR_INVALID_RIGHT_SQUARE,                    /**< right square must terminate a block */
   PARSER_ERR_DUPLICATED_LABEL,                        /**< duplicated label */
   PARSER_ERR_OBJECT_PROPERTY_REDEFINED,               /**< property of object literal redefined */
+#if ENABLED (JERRY_ES2015)
+  PARSER_ERR_VARIABLE_REDECLARED,                     /**< a variable redeclared */
+#endif /* ENABLED (JERRY_ES2015) */
 
 #if ENABLED (JERRY_ES2015)
   PARSER_ERR_MULTIPLE_CLASS_CONSTRUCTORS,             /**< multiple class constructor */

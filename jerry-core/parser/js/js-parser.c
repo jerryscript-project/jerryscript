@@ -1813,6 +1813,9 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   context.scope_stack_size = 0;
   context.scope_stack_top = 0;
   context.scope_stack_reg_top = 0;
+#if ENABLED (JERRY_ES2015)
+  context.scope_stack_global_end = 0;
+#endif /* ENABLED (JERRY_ES2015) */
 
 #ifndef JERRY_NDEBUG
   context.context_stack_depth = 0;
@@ -1896,11 +1899,50 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
     }
     else
     {
-      JERRY_ASSERT (context.next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
+      JERRY_ASSERT (context.next_scanner_info_p->source_p == source_p - 1
+                    && context.next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
       scanner_create_variables (&context, sizeof (scanner_function_info_t));
+
+#if ENABLED (JERRY_ES2015)
+      if (context.next_scanner_info_p->source_p == source_p)
+      {
+        JERRY_ASSERT (context.next_scanner_info_p->type == SCANNER_TYPE_BLOCK);
+
+        if (scanner_is_context_needed (&context))
+        {
+          parser_branch_t branch;
+
+#ifndef JERRY_NDEBUG
+          PARSER_PLUS_EQUAL_U16 (context.context_stack_depth, PARSER_BLOCK_CONTEXT_STACK_ALLOCATION);
+#endif /* !JERRY_NDEBUG */
+
+          parser_emit_cbc_forward_branch (&context,
+                                          CBC_BLOCK_CREATE_CONTEXT,
+                                          &branch);
+
+          parser_stack_push (&context, &branch, sizeof (parser_branch_t));
+          context.status_flags |= PARSER_INSIDE_BLOCK;
+        }
+
+        scanner_create_variables (&context, sizeof (scanner_info_t));
+        context.scope_stack_global_end = context.scope_stack_top;
+      }
+#endif /* ENABLED (JERRY_ES2015) */
     }
 
     parser_parse_statements (&context);
+
+#if ENABLED (JERRY_ES2015)
+    if (context.status_flags & PARSER_INSIDE_BLOCK)
+    {
+      parser_branch_t branch;
+      parser_stack_pop (&context, &branch, sizeof (parser_branch_t));
+
+      parser_emit_cbc (&context, CBC_CONTEXT_END);
+      parser_set_branch_to_current_position (&context, &branch);
+      parser_flush_cbc (&context);
+    }
+#endif /* ENABLED (JERRY_ES2015) */
 
     /* When the parsing is successful, only the
      * dummy value can be remained on the stack. */
@@ -2022,6 +2064,9 @@ parser_save_context (parser_context_t *context_p, /**< context */
   saved_context_p->scope_stack_size = context_p->scope_stack_size;
   saved_context_p->scope_stack_top = context_p->scope_stack_top;
   saved_context_p->scope_stack_reg_top = context_p->scope_stack_reg_top;
+#if ENABLED (JERRY_ES2015)
+  saved_context_p->scope_stack_global_end = context_p->scope_stack_global_end;
+#endif /* ENABLED (JERRY_ES2015) */
 
 #ifndef JERRY_NDEBUG
   saved_context_p->context_stack_depth = context_p->context_stack_depth;
@@ -2046,6 +2091,9 @@ parser_save_context (parser_context_t *context_p, /**< context */
   context_p->scope_stack_size = 0;
   context_p->scope_stack_top = 0;
   context_p->scope_stack_reg_top = 0;
+#if ENABLED (JERRY_ES2015)
+  context_p->scope_stack_global_end = 0;
+#endif /* ENABLED (JERRY_ES2015) */
 
 #ifndef JERRY_NDEBUG
   context_p->context_stack_depth = 0;
@@ -2087,6 +2135,9 @@ parser_restore_context (parser_context_t *context_p, /**< context */
   context_p->scope_stack_size = saved_context_p->scope_stack_size;
   context_p->scope_stack_top = saved_context_p->scope_stack_top;
   context_p->scope_stack_reg_top = saved_context_p->scope_stack_reg_top;
+#if ENABLED (JERRY_ES2015)
+  context_p->scope_stack_global_end = saved_context_p->scope_stack_global_end;
+#endif /* ENABLED (JERRY_ES2015) */
 
 #ifndef JERRY_NDEBUG
   context_p->context_stack_depth = saved_context_p->context_stack_depth;

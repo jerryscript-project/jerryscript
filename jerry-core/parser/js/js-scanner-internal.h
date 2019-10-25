@@ -45,7 +45,27 @@ typedef enum
   SCANNER_LITERAL_IS_VAR = (1 << 2), /**< literal is var */
   SCANNER_LITERAL_IS_FUNC = (1 << 3), /**< literal is function */
   SCANNER_LITERAL_NO_REG = (1 << 4), /**< literal cannot be stored in register */
+#if ENABLED (JERRY_ES2015)
+  SCANNER_LITERAL_IS_LET = (1 << 5), /**< literal is let */
+  SCANNER_LITERAL_IS_CONST = (1 << 6), /**< literal is const */
+#endif /* ENABLED (JERRY_ES2015) */
 } scanner_literal_type_flags_t;
+
+#if ENABLED (JERRY_ES2015)
+
+/**
+ * Tells whether the literal is let or const declaration.
+ */
+#define SCANNER_LITERAL_IS_LET_OR_CONST (SCANNER_LITERAL_IS_LET | SCANNER_LITERAL_IS_CONST)
+
+#else /* !ENABLED (JERRY_ES2015) */
+
+/**
+ * No literal is let or const declaration in ECMAScript 5.1.
+ */
+#define SCANNER_LITERAL_IS_LET_OR_CONST 0
+
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * For statement descriptor.
@@ -112,6 +132,14 @@ struct scanner_context_t
   scanner_info_t *end_arguments_p; /**< position of end arguments */
 };
 
+void scanner_raise_error (parser_context_t *context_p);
+#if ENABLED (JERRY_ES2015)
+void scanner_raise_redeclaration_error (parser_context_t *context_p);
+#endif /* ENABLED (JERRY_ES2015) */
+
+void *scanner_malloc (parser_context_t *context_p, size_t size);
+void scanner_free (void *ptr, size_t size);
+
 size_t scanner_get_stream_size (scanner_info_t *info_p, size_t size);
 scanner_info_t *scanner_insert_info (parser_context_t *context_p, const uint8_t *source_p, size_t size);
 scanner_info_t *scanner_insert_info_before (parser_context_t *context_p, const uint8_t *source_p,
@@ -119,13 +147,21 @@ scanner_info_t *scanner_insert_info_before (parser_context_t *context_p, const u
 scanner_literal_pool_t *scanner_push_literal_pool (parser_context_t *context_p, scanner_context_t *scanner_context_p,
                                                    uint16_t status_flags);
 void scanner_pop_literal_pool (parser_context_t *context_p, scanner_context_t *scanner_context_p);
+#if ENABLED (JERRY_ES2015)
+void scanner_construct_global_block (parser_context_t *context_p, scanner_context_t *scanner_context_p);
+#endif /* ENABLED (JERRY_ES2015) */
 void scanner_filter_arguments (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 lexer_lit_location_t *scanner_add_custom_literal (parser_context_t *context_p, scanner_literal_pool_t *literal_pool_p,
                                                   const lexer_lit_location_t *literal_location_p);
 lexer_lit_location_t *scanner_add_literal (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 void scanner_add_reference (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 void scanner_append_argument (parser_context_t *context_p, scanner_context_t *scanner_context_p);
+#if ENABLED (JERRY_ES2015)
+void scanner_detect_invalid_var (parser_context_t *context_p, scanner_context_t *scanner_context_p,
+                                 lexer_lit_location_t *var_literal_p);
+#endif /* ENABLED (JERRY_ES2015) */
 void scanner_detect_eval_call (parser_context_t *context_p, scanner_context_t *scanner_context_p);
+
 
 /**
  * @}

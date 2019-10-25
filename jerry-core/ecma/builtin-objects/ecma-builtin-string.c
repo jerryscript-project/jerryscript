@@ -140,7 +140,13 @@ ecma_builtin_string_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
   /* 2.b */
   else
   {
-    ret_value = ecma_op_to_string (arguments_list_p[0]);
+    ecma_string_t *str_p = ecma_op_to_string (arguments_list_p[0]);
+    if (JERRY_UNLIKELY (str_p == NULL))
+    {
+      return ECMA_VALUE_ERROR;
+    }
+
+    ret_value = ecma_make_string_value (str_p);
   }
 
   return ret_value;

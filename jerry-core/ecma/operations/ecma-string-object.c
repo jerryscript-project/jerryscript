@@ -50,14 +50,14 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
 
   if (arguments_list_len > 0)
   {
-    prim_value = ecma_op_to_string (arguments_list_p[0]);
+    ecma_string_t *str_p = ecma_op_to_string (arguments_list_p[0]);
 
-    if (ECMA_IS_VALUE_ERROR (prim_value))
+    if (JERRY_UNLIKELY (str_p == NULL))
     {
-      return prim_value;
+      return ECMA_VALUE_ERROR;
     }
 
-    JERRY_ASSERT (ecma_is_value_string (prim_value));
+    prim_value = ecma_make_string_value (str_p);
   }
 
 #if ENABLED (JERRY_BUILTIN_STRING)

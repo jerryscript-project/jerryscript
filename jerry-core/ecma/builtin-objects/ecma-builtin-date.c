@@ -187,11 +187,11 @@ ecma_builtin_date_parse (ecma_value_t this_arg, /**< this argument */
   ecma_number_t date_num = ecma_number_make_nan ();
 
   /* Date Time String fromat (ECMA-262 v5, 15.9.1.15) */
-  ECMA_TRY_CATCH (date_str_value,
-                  ecma_op_to_string (arg),
-                  ret_value);
-
-  ecma_string_t *date_str_p = ecma_get_string_from_value (date_str_value);
+  ecma_string_t *date_str_p = ecma_op_to_string (arg);
+  if (JERRY_UNLIKELY (date_str_p == NULL))
+  {
+    return ECMA_VALUE_ERROR;
+  }
 
   ECMA_STRING_TO_UTF8_STRING (date_str_p, date_start_p, date_start_size);
 
@@ -403,7 +403,7 @@ ecma_builtin_date_parse (ecma_value_t this_arg, /**< this argument */
   ret_value = ecma_make_number_value (date_num);
 
   ECMA_FINALIZE_UTF8_STRING (date_start_p, date_start_size);
-  ECMA_FINALIZE (date_str_value);
+  ecma_deref_ecma_string (date_str_p);
 
   return ret_value;
 } /* ecma_builtin_date_parse */

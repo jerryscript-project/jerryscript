@@ -1288,7 +1288,13 @@ jerry_value_to_string (const jerry_value_t value) /**< input value */
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_value_msg_p)));
   }
 
-  return jerry_return (ecma_op_to_string (value));
+  ecma_string_t *str_p = ecma_op_to_string (value);
+  if (JERRY_UNLIKELY (str_p == NULL))
+  {
+    return ecma_create_error_reference_from_context ();
+  }
+
+  return jerry_return (ecma_make_string_value (str_p));
 } /* jerry_value_to_string */
 
 /**

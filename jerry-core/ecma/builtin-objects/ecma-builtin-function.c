@@ -79,38 +79,39 @@ ecma_builtin_function_helper_get_function_arguments (const ecma_value_t *argumen
     return ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
   }
 
-  ecma_value_t final_str = ecma_op_to_string (arguments_list_p[0]);
+  ecma_string_t *final_str_p = ecma_op_to_string (arguments_list_p[0]);
 
-  if (arguments_list_len == 2 || ECMA_IS_VALUE_ERROR (final_str))
+  if (JERRY_UNLIKELY (final_str_p == NULL))
   {
-    return final_str;
+    return ECMA_VALUE_ERROR;
+  }
+
+  if (arguments_list_len == 2)
+  {
+    return ecma_make_string_value (final_str_p);
   }
 
   for (ecma_length_t idx = 1; idx < arguments_list_len - 1; idx++)
   {
-    ecma_value_t new_str = ecma_op_to_string (arguments_list_p[idx]);
+    ecma_string_t *new_str_p = ecma_op_to_string (arguments_list_p[idx]);
 
-    if (ECMA_IS_VALUE_ERROR (new_str))
+    if (JERRY_UNLIKELY (new_str_p == NULL))
     {
-      ecma_free_value (final_str);
+      ecma_deref_ecma_string (final_str_p);
 
       /* Return with the error. */
-      final_str = new_str;
+      final_str_p = new_str_p;
       break;
     }
 
-    ecma_string_t *final_str_p = ecma_get_string_from_value (final_str);
     final_str_p = ecma_append_magic_string_to_string (final_str_p,
                                                       LIT_MAGIC_STRING_COMMA_CHAR);
 
-    ecma_string_t *new_str_p = ecma_get_string_from_value (new_str);
     final_str_p = ecma_concat_ecma_strings (final_str_p, new_str_p);
     ecma_deref_ecma_string (new_str_p);
-
-    final_str = ecma_make_string_value (final_str_p);
   }
 
-  return final_str;
+  return ecma_make_string_value (final_str_p);
 } /* ecma_builtin_function_helper_get_function_arguments */
 
 /**
@@ -135,26 +136,25 @@ ecma_builtin_function_dispatch_construct (const ecma_value_t *arguments_list_p, 
     return arguments_value;
   }
 
-  ecma_value_t function_body_value;
+  ecma_string_t *function_body_str_p;
 
   if (arguments_list_len > 0)
   {
-    function_body_value = ecma_op_to_string (arguments_list_p[arguments_list_len - 1]);
+    function_body_str_p = ecma_op_to_string (arguments_list_p[arguments_list_len - 1]);
 
-    if (ECMA_IS_VALUE_ERROR (function_body_value))
+    if (JERRY_UNLIKELY (function_body_str_p == NULL))
     {
       ecma_free_value (arguments_value);
-      return function_body_value;
+      return ECMA_VALUE_ERROR;
     }
   }
   else
   {
     /* Very unlikely code path, not optimized. */
-    function_body_value = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
+    function_body_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
   }
 
   ecma_string_t *arguments_str_p = ecma_get_string_from_value (arguments_value);
-  ecma_string_t *function_body_str_p = ecma_get_string_from_value (function_body_value);
 
   ECMA_STRING_TO_UTF8_STRING (arguments_str_p, arguments_buffer_p, arguments_buffer_size);
   ECMA_STRING_TO_UTF8_STRING (function_body_str_p, function_body_buffer_p, function_body_buffer_size);

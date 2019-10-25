@@ -430,16 +430,16 @@ ecma_get_number (ecma_value_t value, /**< ecma value*/
 } /* ecma_get_number */
 
 /**
- * ToString operation helper function.
+ * ToString operation.
  *
  * See also:
  *          ECMA-262 v5, 9.8
  *
  * @return NULL - if the conversion fails
- *         ecma-string - otherwise
+ *         pointer to the string descriptor - otherwise
  */
-static ecma_string_t *
-ecma_to_op_string_helper (ecma_value_t value) /**< ecma value */
+ecma_string_t *
+ecma_op_to_string (ecma_value_t value) /**< ecma value */
 {
   ecma_check_value_type_is_spec_defined (value);
 
@@ -452,7 +452,7 @@ ecma_to_op_string_helper (ecma_value_t value) /**< ecma value */
       return NULL;
     }
 
-    ecma_string_t *ret_string_p = ecma_to_op_string_helper (prim_value);
+    ecma_string_t *ret_string_p = ecma_op_to_string (prim_value);
 
     ecma_free_value (prim_value);
 
@@ -506,31 +506,6 @@ ecma_to_op_string_helper (ecma_value_t value) /**< ecma value */
   }
 
   return ecma_get_magic_string (LIT_MAGIC_STRING_FALSE);
-} /* ecma_to_op_string_helper */
-
-/**
- * ToString operation.
- *
- * See also:
- *          ECMA-262 v5, 9.8
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
- */
-ecma_value_t
-ecma_op_to_string (ecma_value_t value) /**< ecma value */
-{
-  ecma_check_value_type_is_spec_defined (value);
-
-  ecma_string_t *string_p = ecma_to_op_string_helper (value);
-
-  if (JERRY_UNLIKELY (string_p == NULL))
-  {
-    /* Note: At this point the error has already been thrown. */
-    return ECMA_VALUE_ERROR;
-  }
-
-  return ecma_make_string_value (string_p);
 } /* ecma_op_to_string */
 
 /**
@@ -553,7 +528,7 @@ ecma_op_to_prop_name (ecma_value_t value) /**< ecma value */
   }
 #endif /* ENABLED (JERRY_ES2015) */
 
-  return ecma_to_op_string_helper (value);
+  return ecma_op_to_string (value);
 } /* ecma_op_to_prop_name */
 
 /**

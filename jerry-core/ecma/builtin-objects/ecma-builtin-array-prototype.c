@@ -282,16 +282,16 @@ ecma_builtin_array_prototype_object_concat (const ecma_value_t args[], /**< argu
  * See also:
  *          ECMA-262 v5.1, 15.4.4.2 4th step
  *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
+ * @return NULL - if the conversion fails
+ *         ecma_string_t * - otherwise
  */
 
-static ecma_value_t
+static ecma_string_t *
 ecma_op_array_get_separator_string (ecma_value_t separator) /**< possible separator */
 {
   if (ecma_is_value_undefined (separator))
   {
-    return ecma_make_magic_string_value (LIT_MAGIC_STRING_COMMA_CHAR);
+    return ecma_get_magic_string (LIT_MAGIC_STRING_COMMA_CHAR);
   }
 
   return ecma_op_to_string (separator);
@@ -303,10 +303,10 @@ ecma_op_array_get_separator_string (ecma_value_t separator) /**< possible separa
  * See also:
  *          ECMA-262 v5.1, 15.4.4.2
  *
- * @return ecma_value_t value
- *         Returned value must be freed with ecma_free_value.
+ * @return NULL - if the conversion fails
+ *         ecma_string_t * - otherwise
  */
-static ecma_value_t
+static ecma_string_t *
 ecma_op_array_get_to_string_at_index (ecma_object_t *obj_p, /**< this object */
                                       uint32_t index) /**< array index */
 {
@@ -318,20 +318,20 @@ ecma_op_array_get_to_string_at_index (ecma_object_t *obj_p, /**< this object */
 
   if (ECMA_IS_VALUE_ERROR (index_value))
   {
-    return index_value;
+    return NULL;
   }
 
   if (ecma_is_value_undefined (index_value)
       || ecma_is_value_null (index_value))
   {
-    return ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
+    return ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
   }
 
-  ecma_value_t ret_value = ecma_op_to_string (index_value);
+  ecma_string_t *ret_str_p = ecma_op_to_string (index_value);
 
   ecma_free_value (index_value);
 
-  return ret_value;
+  return ret_str_p;
 } /* ecma_op_array_get_to_string_at_index */
 
 /**
@@ -349,14 +349,12 @@ ecma_builtin_array_prototype_join (ecma_value_t separator_arg, /**< separator ar
                                    uint32_t length) /**< array object's length */
 {
   /* 4-5. */
-  ecma_value_t separator_value = ecma_op_array_get_separator_string (separator_arg);
+  ecma_string_t *separator_string_p = ecma_op_array_get_separator_string (separator_arg);
 
-  if (ECMA_IS_VALUE_ERROR (separator_value))
+  if (JERRY_UNLIKELY (separator_string_p == NULL))
   {
-    return separator_value;
+    return ECMA_VALUE_ERROR;
   }
-
-  ecma_string_t *separator_string_p = ecma_get_string_from_value (separator_value);
 
   if (length == 0)
   {
@@ -366,15 +364,14 @@ ecma_builtin_array_prototype_join (ecma_value_t separator_arg, /**< separator ar
   }
 
   /* 7-8. */
-  ecma_value_t first_value = ecma_op_array_get_to_string_at_index (obj_p, 0);
+  ecma_string_t *first_string_p = ecma_op_array_get_to_string_at_index (obj_p, 0);
 
-  if (ECMA_IS_VALUE_ERROR (first_value))
+  if (JERRY_UNLIKELY (first_string_p == NULL))
   {
     ecma_deref_ecma_string (separator_string_p);
-    return first_value;
+    return ECMA_VALUE_ERROR;
   }
 
-  ecma_string_t *first_string_p = ecma_get_string_from_value (first_value);
   ecma_stringbuilder_t builder = ecma_stringbuilder_create_from (first_string_p);
   ecma_deref_ecma_string (first_string_p);
 
@@ -384,18 +381,16 @@ ecma_builtin_array_prototype_join (ecma_value_t separator_arg, /**< separator ar
     /* 10.a */
     ecma_stringbuilder_append (&builder, separator_string_p);
 
-    /* 10.b, 10.c */
-    ecma_value_t next_string_value = ecma_op_array_get_to_string_at_index (obj_p, k);
+    /* 10.d */
+    ecma_string_t *next_string_p = ecma_op_array_get_to_string_at_index (obj_p, k);
 
-    if (ECMA_IS_VALUE_ERROR (next_string_value))
+    if (JERRY_UNLIKELY (next_string_p == NULL))
     {
       ecma_deref_ecma_string (separator_string_p);
       ecma_stringbuilder_destroy (&builder);
-      return next_string_value;
+      return ECMA_VALUE_ERROR;
     }
 
-    /* 10.d */
-    ecma_string_t *next_string_p = ecma_get_string_from_value (next_string_value);
     ecma_stringbuilder_append (&builder, next_string_p);
     ecma_deref_ecma_string (next_string_p);
   }
@@ -882,23 +877,18 @@ ecma_builtin_array_prototype_object_sort_compare_helper (ecma_value_t lhs, /**< 
   if (ecma_is_value_undefined (compare_func))
   {
     /* Default comparison when no compare_func is passed. */
-    ecma_value_t lhs_value = ecma_op_to_string (lhs);
-
-    if (ECMA_IS_VALUE_ERROR (lhs_value))
+    ecma_string_t *lhs_str_p = ecma_op_to_string (lhs);
+    if (JERRY_UNLIKELY (lhs_str_p == NULL))
     {
-      return lhs_value;
+      return ECMA_VALUE_ERROR;
     }
-    ecma_string_t *lhs_str_p = ecma_get_string_from_value (lhs_value);
 
-    ecma_value_t rhs_value = ecma_op_to_string (rhs);
-
-    if (ECMA_IS_VALUE_ERROR (rhs_value))
+    ecma_string_t *rhs_str_p = ecma_op_to_string (rhs);
+    if (JERRY_UNLIKELY (rhs_str_p == NULL))
     {
       ecma_deref_ecma_string (lhs_str_p);
-      return rhs_value;
+      return ECMA_VALUE_ERROR;
     }
-
-    ecma_string_t *rhs_str_p = ecma_get_string_from_value (rhs_value);
 
     if (ecma_compare_ecma_strings_relational (lhs_str_p, rhs_str_p))
     {

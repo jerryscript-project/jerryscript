@@ -302,8 +302,8 @@ ecma_raise_standard_error_with_format (ecma_standard_error_t error_type, /**< er
 #endif /* ENABLED (JERRY_ES2015) */
       else
       {
-        ecma_value_t str_val = ecma_op_to_string (arg_val);
-        arg_string_p = ecma_get_string_from_value (str_val);
+        arg_string_p = ecma_op_to_string (arg_val);
+        JERRY_ASSERT (arg_string_p != NULL);
       }
 
       /* Concat argument. */

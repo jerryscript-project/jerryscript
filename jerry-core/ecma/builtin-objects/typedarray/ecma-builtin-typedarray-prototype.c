@@ -1022,35 +1022,34 @@ ecma_builtin_typedarray_prototype_set (ecma_value_t this_arg, /**< this argument
  * See also:
  *          ECMA-262 v5.1, 15.4.4.2
  *
- * @return ecma_value_t value
- *         Returned value must be freed with ecma_free_value.
+ * @return NULL - if the converison fails
+ *         ecma_string_t * - otherwise
  */
-static ecma_value_t
+static ecma_string_t *
 ecma_op_typedarray_get_to_string_at_index (ecma_object_t *obj_p, /**< this object */
                                            uint32_t index) /**< array index */
 {
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
   ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
   ecma_value_t index_value = ecma_op_object_get (obj_p, index_string_p);
   ecma_deref_ecma_string (index_string_p);
 
   if (ECMA_IS_VALUE_ERROR (index_value))
   {
-    return index_value;
+    return NULL;
   }
 
   if (ecma_is_value_undefined (index_value)
       || ecma_is_value_null (index_value))
   {
-    ret_value = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
-  }
-  else
-  {
-    ret_value = ecma_op_to_string (index_value);
+    ecma_free_value (index_value);
+    return ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
   }
 
+  ecma_string_t *ret_str_p = ecma_op_to_string (index_value);
+
   ecma_free_value (index_value);
-  return ret_value;
+
+  return ret_str_p;
 } /* ecma_op_typedarray_get_to_string_at_index */
 
 /**
@@ -1060,15 +1059,15 @@ ecma_op_typedarray_get_to_string_at_index (ecma_object_t *obj_p, /**< this objec
  * See also:
  *          ECMA-262 v5.1, 15.4.4.2 4th step
  *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
+ * @return NULL - if the conversion fails
+ *         ecma_string_t * - otherwise
  */
-static ecma_value_t
+static ecma_string_t *
 ecma_op_typedarray_get_separator_string (ecma_value_t separator) /**< possible separator */
 {
   if (ecma_is_value_undefined (separator))
   {
-    return ecma_make_magic_string_value (LIT_MAGIC_STRING_COMMA_CHAR);
+    return ecma_get_magic_string (LIT_MAGIC_STRING_COMMA_CHAR);
   }
 
   return ecma_op_to_string (separator);
@@ -1106,84 +1105,73 @@ ecma_builtin_typedarray_prototype_join (ecma_value_t this_arg, /**< this argumen
     return length_value;
   }
 
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+  ecma_number_t length_number;
 
-  ECMA_OP_TO_NUMBER_TRY_CATCH (length_number,
-                               length_value,
-                               ret_value);
-
-  /* 3. */
-  uint32_t length = ecma_number_to_uint32 (length_number);
-  /* 4-5. */
-  ecma_value_t separator_value = ecma_op_typedarray_get_separator_string (separator_arg);
-  if (ECMA_IS_VALUE_ERROR (separator_value))
+  if (ECMA_IS_VALUE_ERROR (ecma_get_number (length_value, &length_number)))
   {
     ecma_free_value (length_value);
     ecma_free_value (obj_value);
-    return separator_value;
+    return ECMA_VALUE_ERROR;
   }
+
+  ecma_value_t ret_value = ECMA_VALUE_ERROR;
+
+  /* 3. */
+  uint32_t length = ecma_number_to_uint32 (length_number);
 
   if (length == 0)
   {
     /* 6. */
-    ret_value = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
+    ecma_free_value (length_value);
+    ecma_free_value (obj_value);
+    return ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
   }
   else
   {
-    ecma_string_t *separator_string_p = ecma_get_string_from_value (separator_value);
+    ecma_string_t *separator_string_p = ecma_op_typedarray_get_separator_string (separator_arg);
+
+    if (JERRY_UNLIKELY (separator_string_p == NULL))
+    {
+      goto cleanup;
+    }
 
     /* 7-8. */
-    ecma_value_t first_value = ecma_op_typedarray_get_to_string_at_index (obj_p, 0);
-    if (ECMA_IS_VALUE_ERROR (first_value))
+    ecma_string_t *return_string_p = ecma_op_typedarray_get_to_string_at_index (obj_p, 0);
+
+    if (JERRY_UNLIKELY (return_string_p == NULL))
     {
-      ecma_free_value (separator_value);
-      ecma_free_value (length_value);
-      ecma_free_value (obj_value);
-      return first_value;
+      ecma_deref_ecma_string (separator_string_p);
+      goto cleanup;
     }
 
-    ecma_string_t *return_string_p = ecma_get_string_from_value (first_value);
-    ecma_ref_ecma_string (return_string_p);
-    if (ecma_is_value_empty (ret_value))
+    /* 9-10. */
+    for (uint32_t k = 1; k < length; k++)
     {
-      /* 9-10. */
-      for (uint32_t k = 1; k < length; k++)
+      /* 10.a */
+      return_string_p = ecma_concat_ecma_strings (return_string_p, separator_string_p);
+
+      /* 10.d */
+      ecma_string_t *next_string_p = ecma_op_typedarray_get_to_string_at_index (obj_p, k);
+
+      if (JERRY_UNLIKELY (next_string_p == NULL))
       {
-        /* 10.a */
-        return_string_p = ecma_concat_ecma_strings (return_string_p, separator_string_p);
-
-       /* 10.b, 10.c */
-        ecma_value_t next_string_value = ecma_op_typedarray_get_to_string_at_index (obj_p, k);
-        if (ECMA_IS_VALUE_ERROR (next_string_value))
-        {
-          ecma_deref_ecma_string (return_string_p);
-          ecma_free_value (first_value);
-          ecma_free_value (separator_value);
-          ecma_free_value (length_value);
-          ecma_free_value (obj_value);
-          return next_string_value;
-        }
-
-        /* 10.d */
-        ecma_string_t *next_string_p = ecma_get_string_from_value (next_string_value);
-        return_string_p = ecma_concat_ecma_strings (return_string_p, next_string_p);
-
-        ecma_free_value (next_string_value);
+        ecma_deref_ecma_string (separator_string_p);
+        ecma_deref_ecma_string (return_string_p);
+        goto cleanup;
       }
-      ret_value = ecma_make_string_value (return_string_p);
-    }
-    else
-    {
-      ecma_deref_ecma_string (return_string_p);
+
+      return_string_p = ecma_concat_ecma_strings (return_string_p, next_string_p);
+      ecma_deref_ecma_string (next_string_p);
     }
 
-    ecma_free_value (first_value);
+    ecma_deref_ecma_string (separator_string_p);
+    ret_value = ecma_make_string_value (return_string_p);
   }
-  ecma_free_value (separator_value);
 
-  ECMA_OP_TO_NUMBER_FINALIZE (length_number);
+cleanup:
   ecma_free_value (length_value);
   ecma_free_value (obj_value);
+
   return ret_value;
 } /* ecma_builtin_typedarray_prototype_join */
 
@@ -2063,8 +2051,17 @@ ecma_builtin_typedarray_prototype_to_locale_string_helper (ecma_object_t *this_o
       return call_value;
     }
 
-    ret_value = ecma_op_to_string (call_value);
-    ecma_free_value (call_value);
+    ecma_string_t *str_p = ecma_op_to_string (call_value);
+
+    if (JERRY_UNLIKELY (str_p == NULL))
+    {
+      ecma_free_value (element_value);
+      ecma_deref_object (element_obj_p);
+      return ECMA_VALUE_ERROR;
+    }
+
+    ret_value = ecma_make_string_value (str_p);
+    ecma_deref_ecma_string (str_p);
   }
   else
   {

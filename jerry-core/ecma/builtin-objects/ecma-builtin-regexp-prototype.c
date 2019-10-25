@@ -284,29 +284,27 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
     return ecma_copy_value (this_arg);
   }
 
-  ecma_string_t *pattern_string_p = NULL;
+  ecma_string_t *pattern_string_p = ecma_regexp_read_pattern_str_helper (pattern_arg);
 
   /* Get source string. */
-  ecma_value_t ret_value = ecma_regexp_read_pattern_str_helper (pattern_arg, &pattern_string_p);
-  if (ECMA_IS_VALUE_ERROR (ret_value))
+  if (pattern_string_p == NULL)
   {
-    JERRY_ASSERT (pattern_string_p == NULL);
-    return ret_value;
+    return ECMA_VALUE_ERROR;
   }
-  JERRY_ASSERT (ecma_is_value_empty (ret_value));
 
   /* Parse flags. */
   if (!ecma_is_value_undefined (flags_arg))
   {
-    ecma_value_t flags_str_value = ecma_op_to_string (flags_arg);
-    if (ECMA_IS_VALUE_ERROR (flags_str_value))
+    ecma_string_t *flags_str_p = ecma_op_to_string (flags_arg);
+    if (JERRY_UNLIKELY (flags_str_p == NULL))
     {
       ecma_deref_ecma_string (pattern_string_p);
-      return flags_str_value;
+      return ECMA_VALUE_ERROR;
     }
 
-    ecma_value_t parsed_flags_val = ecma_regexp_parse_flags (ecma_get_string_from_value (flags_str_value), &flags);
-    ecma_free_value (flags_str_value);
+    ecma_value_t parsed_flags_val = ecma_regexp_parse_flags (flags_str_p, &flags);
+    ecma_deref_ecma_string (flags_str_p);
+
     if (ECMA_IS_VALUE_ERROR (parsed_flags_val))
     {
       ecma_deref_ecma_string (pattern_string_p);
@@ -367,17 +365,17 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
     return obj_this;
   }
 
-  ecma_value_t input_str_value = ecma_op_to_string (arg);
-  if (ECMA_IS_VALUE_ERROR (input_str_value))
+  ecma_string_t *input_str_p = ecma_op_to_string (arg);
+  if (JERRY_UNLIKELY (input_str_p == NULL))
   {
     ecma_free_value (obj_this);
-    return input_str_value;
+    return ECMA_VALUE_ERROR;
   }
 
-  ecma_value_t ret_value = ecma_regexp_exec_helper (obj_this, input_str_value, false);
+  ecma_value_t ret_value = ecma_regexp_exec_helper (obj_this, ecma_make_string_value (input_str_p), false);
 
   ecma_free_value (obj_this);
-  ecma_free_value (input_str_value);
+  ecma_deref_ecma_string (input_str_p);
 
   return ret_value;
 } /* ecma_builtin_regexp_prototype_exec */

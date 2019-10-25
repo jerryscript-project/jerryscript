@@ -46,7 +46,7 @@ ecma_value_t ecma_op_to_primitive (ecma_value_t value, ecma_preferred_type_hint_
 bool ecma_op_to_boolean (ecma_value_t value);
 ecma_value_t ecma_op_to_number (ecma_value_t value);
 ecma_value_t ecma_get_number (ecma_value_t value, ecma_number_t *number_p);
-ecma_value_t ecma_op_to_string (ecma_value_t value);
+ecma_string_t *ecma_op_to_string (ecma_value_t value);
 ecma_string_t *ecma_op_to_prop_name (ecma_value_t value);
 ecma_value_t ecma_op_to_object (ecma_value_t value);
 ecma_value_t ecma_op_to_integer (ecma_value_t value, ecma_number_t *number_p);

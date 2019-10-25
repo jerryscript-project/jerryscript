@@ -508,22 +508,22 @@ jerry_debugger_send_scope_variables (const uint8_t *recv_buffer_p) /**< pointer 
         ecma_deref_ecma_string (prop_name);
 
         ecma_property_value_t prop_value_p = prop_pair_p->values[i];
-        ecma_value_t property_value;
 
         uint8_t variable_type = jerry_debugger_get_variable_type (prop_value_p.value);
 
-        property_value = ecma_op_to_string (prop_value_p.value);
+        ecma_string_t *str_p = ecma_op_to_string (prop_value_p.value);
+        JERRY_ASSERT (str_p != NULL);
 
         if (!jerry_debugger_copy_variables_to_string_message (variable_type,
-                                                              ecma_get_string_from_value (property_value),
+                                                              str_p,
                                                               message_string_p,
                                                               &buffer_pos))
         {
-          ecma_free_value (property_value);
+          ecma_deref_ecma_string (str_p);
           return;
         }
 
-        ecma_free_value (property_value);
+        ecma_deref_ecma_string (str_p);
       }
     }
 
@@ -581,7 +581,8 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
 
     if (!ecma_is_value_string (result))
     {
-      ecma_value_t to_string_value = ecma_op_to_string (result);
+      ecma_string_t *str_p = ecma_op_to_string (result);
+      ecma_value_t to_string_value = ecma_make_string_value (str_p);
       ecma_free_value (result);
       result = to_string_value;
     }
@@ -618,8 +619,10 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
     else
     {
       /* Primitive type. */
-      message = ecma_op_to_string (result);
-      JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (message));
+      ecma_string_t *str_p = ecma_op_to_string (result);
+      JERRY_ASSERT (str_p != NULL);
+
+      message = ecma_make_string_value (str_p);
     }
 
     ecma_free_value (result);
@@ -1543,8 +1546,7 @@ jerry_debugger_send_exception_string (void)
   }
   else
   {
-    exception_value = ecma_op_to_string (exception_value);
-    string_p = ecma_get_string_from_value (exception_value);
+    string_p = ecma_op_to_string (exception_value);
   }
 
   ECMA_STRING_TO_UTF8_STRING (string_p, string_data_p, string_size);

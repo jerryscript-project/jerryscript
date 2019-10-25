@@ -207,52 +207,72 @@ ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, /**< th
 {
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
   ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
+  ecma_value_t index_value = ecma_op_object_get (obj_p, index_string_p);
+  ecma_deref_ecma_string (index_string_p);
 
-  ECMA_TRY_CATCH (index_value,
-                  ecma_op_object_get (obj_p, index_string_p),
-                  ret_value);
+  if (ECMA_IS_VALUE_ERROR (index_value))
+  {
+    return index_value;
+  }
 
   if (ecma_is_value_undefined (index_value) || ecma_is_value_null (index_value))
   {
-    ret_value = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
+    ecma_free_value (index_value);
+    return ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
+  }
+
+  ecma_value_t index_obj_value = ecma_op_to_object (index_value);
+
+  ecma_free_value (index_value);
+
+  if (ECMA_IS_VALUE_ERROR (index_obj_value))
+  {
+    return index_obj_value;
+  }
+
+  ecma_object_t *index_obj_p = ecma_get_object_from_value (index_obj_value);
+  ecma_value_t to_locale_value = ecma_op_object_get_by_magic_id (index_obj_p, LIT_MAGIC_STRING_TO_LOCALE_STRING_UL);
+
+  if (ECMA_IS_VALUE_ERROR (to_locale_value))
+  {
+    ecma_deref_object (index_obj_p);
+    return to_locale_value;
+  }
+
+  if (ecma_op_is_callable (to_locale_value))
+  {
+    ecma_object_t *locale_func_obj_p = ecma_get_object_from_value (to_locale_value);
+
+    ecma_value_t call_value = ecma_op_function_call (locale_func_obj_p,
+                                                     ecma_make_object_value (index_obj_p),
+                                                     NULL,
+                                                     0);
+
+    ecma_deref_object (locale_func_obj_p);
+    ecma_deref_object (index_obj_p);
+
+    if (ECMA_IS_VALUE_ERROR (call_value))
+    {
+      return call_value;
+    }
+
+    ecma_string_t *call_str_p = ecma_op_to_string (call_value);
+
+    ecma_free_value (call_value);
+
+    if (JERRY_UNLIKELY (call_str_p == NULL))
+    {
+      return ECMA_VALUE_ERROR;
+    }
+
+    ret_value = ecma_make_string_value (call_str_p);
   }
   else
   {
-    ECMA_TRY_CATCH (index_obj_value,
-                    ecma_op_to_object (index_value),
-                    ret_value);
-
-    ecma_object_t *index_obj_p = ecma_get_object_from_value (index_obj_value);
-
-    ECMA_TRY_CATCH (to_locale_value,
-                    ecma_op_object_get_by_magic_id (index_obj_p, LIT_MAGIC_STRING_TO_LOCALE_STRING_UL),
-                    ret_value);
-
-    if (ecma_op_is_callable (to_locale_value))
-    {
-      ecma_object_t *locale_func_obj_p = ecma_get_object_from_value (to_locale_value);
-      ECMA_TRY_CATCH (call_value,
-                      ecma_op_function_call (locale_func_obj_p,
-                                             ecma_make_object_value (index_obj_p),
-                                             NULL,
-                                             0),
-                      ret_value);
-      ret_value = ecma_op_to_string (call_value);
-      ECMA_FINALIZE (call_value);
-
-    }
-    else
-    {
-      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("'toLocaleString' is missing or not a function."));
-    }
-
-    ECMA_FINALIZE (to_locale_value);
-    ECMA_FINALIZE (index_obj_value);
+    ecma_free_value (to_locale_value);
+    ecma_deref_object (index_obj_p);
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("'toLocaleString' is missing or not a function."));
   }
-
-  ECMA_FINALIZE (index_value);
-
-  ecma_deref_ecma_string (index_string_p);
 
   return ret_value;
 } /* ecma_builtin_helper_get_to_locale_string_at_index */
@@ -570,16 +590,13 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_string_t *original_st
   }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN) */
 
-  /* 3 */
-  ecma_value_t search_str_val = ecma_op_to_string (arg1);
-
-  if (ECMA_IS_VALUE_ERROR (search_str_val))
-  {
-    return search_str_val;
-  }
-
   /* 7, 8 */
-  ecma_string_t *search_str_p = ecma_get_string_from_value (search_str_val);
+  ecma_string_t *search_str_p = ecma_op_to_string (arg1);
+
+  if (JERRY_UNLIKELY (search_str_p == NULL))
+  {
+    return ECMA_VALUE_ERROR;
+  }
 
   /* 4 (indexOf, lastIndexOf), 9 (startsWith, includes), 10 (endsWith) */
   ecma_number_t pos_num;

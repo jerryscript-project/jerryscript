@@ -1185,14 +1185,12 @@ ecma_builtin_global_dispatch_routine (uint16_t builtin_routine_id, /**< built-in
     return ecma_builtin_global_object_is_finite (arg_num);
   }
 
-  ecma_value_t string_value = ecma_op_to_string (routine_arg_1);
+  ecma_string_t *str_p = ecma_op_to_string (routine_arg_1);
 
-  if (ECMA_IS_VALUE_ERROR (string_value))
+  if (JERRY_UNLIKELY (str_p == NULL))
   {
-    return string_value;
+    return ECMA_VALUE_ERROR;
   }
-
-  ecma_string_t *str_p = ecma_get_string_from_value (string_value);
 
   ecma_value_t ret_value;
 

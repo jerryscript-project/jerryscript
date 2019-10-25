@@ -998,7 +998,7 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
             return ECMA_VALUE_ERROR;
           }
 
-          if ((uint32_t) new_length > (UINT32_MAX >> element_size_shift))
+          if (new_length > (UINT32_MAX >> element_size_shift))
           {
             ret = ecma_raise_range_error (ECMA_ERR_MSG ("Maximum typedarray size is reached."));
           }
@@ -1006,7 +1006,7 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
           {
             new_byte_length = (ecma_length_t) new_length << element_size_shift;
 
-            if (new_byte_length + offset > buf_byte_length)
+            if (((ecma_number_t) new_byte_length + offset) > buf_byte_length)
             {
               ret = ecma_raise_range_error (ECMA_ERR_MSG ("Invalid length."));
             }

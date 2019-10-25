@@ -27,13 +27,7 @@ try {
   eval(code);
   assert(false);
 } catch(e) {
-  assert(e instanceof TypeError);
+  assert(e instanceof ReferenceError);
 }
 
-try {
-  eval("var x = {}; x instanceof assert;");
-  assert(false);
-} catch(e) {
-  assert(e instanceof TypeError);
-}
-
+assert (!eval("var x = {}; x instanceof assert;"));

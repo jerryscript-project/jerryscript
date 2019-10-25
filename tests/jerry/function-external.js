@@ -13,15 +13,6 @@
 // limitations under the License.
 
 try {
-  ({} instanceof assert);
-  assert(false);
-} catch(e) {
-  assert(e instanceof TypeError);
-}
-
-assert.prototype = {}
-
-try {
   assert(!({} instanceof assert));
 } catch(e) {
   assert(false);

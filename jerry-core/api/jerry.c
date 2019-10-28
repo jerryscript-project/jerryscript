@@ -71,6 +71,14 @@ JERRY_STATIC_ASSERT ((int) RE_FLAG_GLOBAL == (int) JERRY_REGEXP_FLAG_GLOBAL
                      re_flags_t_must_be_equal_to_jerry_regexp_flags_t);
 #endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
 
+#if ENABLED (JERRY_ES2015_BUILTIN_PROMISE)
+/* The internal ECMA_PROMISE_STATE_* values are "one byte away" from the API values */
+JERRY_STATIC_ASSERT (((ECMA_PROMISE_STATE_PENDING + 1) == JERRY_PROMISE_STATE_PENDING)
+                     && ((ECMA_PROMISE_STATE_FULFILLED + 1) == JERRY_PROMISE_STATE_FULFILLED)
+                     && ((ECMA_PROMISE_STATE_REJECTED + 1) == JERRY_PROMISE_STATE_REJECTED),
+                     promise_internal_state_matches_external);
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
+
 #if !ENABLED (JERRY_PARSER) && !ENABLED (JERRY_SNAPSHOT_EXEC)
 #error "JERRY_SNAPSHOT_EXEC must be enabled if JERRY_PARSER is disabled!"
 #endif /* !ENABLED (JERRY_PARSER) && !ENABLED (JERRY_SNAPSHOT_EXEC) */
@@ -3083,6 +3091,60 @@ jerry_resolve_or_reject_promise (jerry_value_t promise, /**< the promise value *
   return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Promise not supported.")));
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
 } /* jerry_resolve_or_reject_promise */
+
+/**
+ * Get the result of a promise.
+ *
+ * @return - Promise result
+ *         - Type error if the promise support was not enabled or the input was not a promise object
+ */
+jerry_value_t
+jerry_get_promise_result (const jerry_value_t promise) /**< promise object to get the result from */
+{
+  jerry_assert_api_available ();
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROMISE)
+  if (!jerry_value_is_promise (promise))
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
+  }
+
+  return ecma_promise_get_result (ecma_get_object_from_value (promise));
+#else /* !ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
+  JERRY_UNUSED (promise);
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Promise not supported.")));
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
+} /* jerry_get_promise_result */
+
+/**
+ * Get the state of a promise object.
+ *
+ * @return - the state of the promise (one of the jerry_promise_state_t enum values)
+ *         - JERRY_PROMISE_STATE_NONE is only returned if the input is not a promise object
+ *           or the promise support was not enabled.
+ */
+jerry_promise_state_t
+jerry_get_promise_state (const jerry_value_t promise) /**< promise object to get the state from */
+{
+  jerry_assert_api_available ();
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROMISE)
+  if (!jerry_value_is_promise (promise))
+  {
+    return JERRY_PROMISE_STATE_NONE;
+  }
+
+  uint8_t state = ecma_promise_get_state (ecma_get_object_from_value (promise));
+
+  JERRY_ASSERT (state < ECMA_PROMISE_STATE__COUNT);
+
+  /* Static assert above guarantees the mapping from internal type to external type. */
+  return (jerry_promise_state_t) (state + 1);
+#else /* !ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
+  JERRY_UNUSED (promise);
+  return JERRY_PROMISE_STATE_NONE;
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
+} /* jerry_get_promise_state */
 
 /**
  * Call the SymbolDescriptiveString ecma builtin operation on the symbol value.

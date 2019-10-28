@@ -1260,7 +1260,8 @@ ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**<
 {
   JERRY_ASSERT (!ecma_get_object_is_builtin (object_p));
 
-  if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_PROTOTYPE))
+  if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_PROTOTYPE)
+      && ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION)
   {
     return ecma_op_lazy_instantiate_prototype_object (object_p);
   }

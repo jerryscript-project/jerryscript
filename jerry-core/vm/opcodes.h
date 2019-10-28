@@ -31,7 +31,7 @@
  */
 typedef enum
 {
-  NUMBER_ARITHMETIC_SUBSTRACTION, /**< substraction */
+  NUMBER_ARITHMETIC_SUBTRACTION, /**< subtraction */
   NUMBER_ARITHMETIC_MULTIPLICATION, /**< multiplication */
   NUMBER_ARITHMETIC_DIVISION, /**< division */
   NUMBER_ARITHMETIC_REMAINDER, /**< remainder calculation */

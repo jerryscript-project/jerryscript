@@ -79,6 +79,17 @@ JERRY_STATIC_ASSERT (((ECMA_PROMISE_STATE_PENDING + 1) == JERRY_PROMISE_STATE_PE
                      promise_internal_state_matches_external);
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
 
+/**
+ * Offset between internal and external arithmetic operator types
+ */
+#define ECMA_NUMBER_ARITHMETIC_OP_API_OFFSET (JERRY_BIN_OP_SUB - NUMBER_ARITHMETIC_SUBTRACTION)
+
+JERRY_STATIC_ASSERT (((NUMBER_ARITHMETIC_SUBTRACTION + ECMA_NUMBER_ARITHMETIC_OP_API_OFFSET) == JERRY_BIN_OP_SUB)
+                     && ((NUMBER_ARITHMETIC_MULTIPLICATION + ECMA_NUMBER_ARITHMETIC_OP_API_OFFSET) == JERRY_BIN_OP_MUL)
+                     && ((NUMBER_ARITHMETIC_DIVISION + ECMA_NUMBER_ARITHMETIC_OP_API_OFFSET) == JERRY_BIN_OP_DIV)
+                     && ((NUMBER_ARITHMETIC_REMAINDER + ECMA_NUMBER_ARITHMETIC_OP_API_OFFSET) == JERRY_BIN_OP_REM),
+                     number_arithmetics_operation_type_matches_external);
+
 #if !ENABLED (JERRY_PARSER) && !ENABLED (JERRY_SNAPSHOT_EXEC)
 #error "JERRY_SNAPSHOT_EXEC must be enabled if JERRY_PARSER is disabled!"
 #endif /* !ENABLED (JERRY_PARSER) && !ENABLED (JERRY_SNAPSHOT_EXEC) */
@@ -1026,6 +1037,17 @@ jerry_binary_operation (jerry_binary_operation_t op, /**< operation */
 
       ecma_object_t *proto_obj_p = ecma_get_object_from_value (rhs);
       return jerry_return (ecma_op_object_has_instance (proto_obj_p, lhs));
+    }
+    case JERRY_BIN_OP_ADD:
+    {
+      return jerry_return (opfunc_addition (lhs, rhs));
+    }
+    case JERRY_BIN_OP_SUB:
+    case JERRY_BIN_OP_MUL:
+    case JERRY_BIN_OP_DIV:
+    case JERRY_BIN_OP_REM:
+    {
+      return jerry_return (do_number_arithmetic (op - ECMA_NUMBER_ARITHMETIC_OP_API_OFFSET, lhs, rhs));
     }
     default:
     {

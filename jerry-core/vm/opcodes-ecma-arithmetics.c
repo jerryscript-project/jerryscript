@@ -54,7 +54,7 @@ do_number_arithmetic (number_arithmetic_op op, /**< number arithmetic operation 
 
   switch (op)
   {
-    case NUMBER_ARITHMETIC_SUBSTRACTION:
+    case NUMBER_ARITHMETIC_SUBTRACTION:
     {
       result = num_left - num_right;
       break;

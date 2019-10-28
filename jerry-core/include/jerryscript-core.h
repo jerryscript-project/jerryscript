@@ -327,6 +327,11 @@ typedef enum
   JERRY_BIN_OP_GREATER,       /**< greater relation (>) */
   JERRY_BIN_OP_GREATER_EQUAL, /**< greater or equal relation (>=)*/
   JERRY_BIN_OP_INSTANCEOF,    /**< instanceof operation */
+  JERRY_BIN_OP_ADD,           /**< addition operator (+) */
+  JERRY_BIN_OP_SUB,           /**< subtraction operator (-) */
+  JERRY_BIN_OP_MUL,           /**< multiplication operator (*) */
+  JERRY_BIN_OP_DIV,           /**< division operator (/) */
+  JERRY_BIN_OP_REM,           /**< remainder operator (%) */
 } jerry_binary_operation_t;
 
 /**

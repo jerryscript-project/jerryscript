@@ -2393,7 +2393,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             continue;
           }
 
-          result = do_number_arithmetic (NUMBER_ARITHMETIC_SUBSTRACTION,
+          result = do_number_arithmetic (NUMBER_ARITHMETIC_SUBTRACTION,
                                          left_value,
                                          right_value);
 

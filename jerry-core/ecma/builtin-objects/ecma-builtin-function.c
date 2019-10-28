@@ -98,10 +98,7 @@ ecma_builtin_function_helper_get_function_arguments (const ecma_value_t *argumen
     if (JERRY_UNLIKELY (new_str_p == NULL))
     {
       ecma_deref_ecma_string (final_str_p);
-
-      /* Return with the error. */
-      final_str_p = new_str_p;
-      break;
+      return ECMA_VALUE_ERROR;
     }
 
     final_str_p = ecma_append_magic_string_to_string (final_str_p,

@@ -1163,6 +1163,26 @@ typedef union
  * See also: ECMA_262 v5, 15.7.3.2
  */
 # define ECMA_NUMBER_MAX_VALUE (FLT_MAX)
+/**
+ * Number.EPSILON
+ *
+ * See also: ECMA_262 v6, 20.1.2.1
+ */
+# define  ECMA_NUMBER_EPSILON ((ecma_number_t) 1.1920928955078125e-7)
+
+/**
+ * Number.MAX_SAFE_INTEGER
+ *
+ * See also: ECMA_262 v6, 20.1.2.6
+ */
+# define ECMA_NUMBER_MAX_SAFE_INTEGER ((ecma_number_t) 0xFFFFFF)
+
+/**
+ * Number.MIN_SAFE_INTEGER
+ *
+ * See also: ECMA_262 v6, 20.1.2.8
+ */
+# define ECMA_NUMBER_MIN_SAFE_INTEGER ((ecma_number_t) -0xFFFFFF)
 #elif ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
 /**
  * Number.MAX_VALUE (i.e., the maximum value of ecma-number)
@@ -1170,29 +1190,36 @@ typedef union
  * See also: ECMA_262 v5, 15.7.3.2
  */
 # define ECMA_NUMBER_MAX_VALUE ((ecma_number_t) 1.7976931348623157e+308)
+
 /**
  * Number.MIN_VALUE (i.e., the smallest positive value of ecma-number)
  *
  * See also: ECMA_262 v5, 15.7.3.3
  */
 # define ECMA_NUMBER_MIN_VALUE ((ecma_number_t) 5e-324)
-#endif /* !ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
-#if ENABLED (JERRY_ES2015_BUILTIN)
+
 /**
  * Number.EPSILON
  *
  * See also: ECMA_262 v6, 20.1.2.1
  */
 # define  ECMA_NUMBER_EPSILON ((ecma_number_t) 2.2204460492503130808472633361816e-16)
-#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
-#if ENABLED (JERRY_ES2015_BUILTIN)
+
 /**
  * Number.MAX_SAFE_INTEGER
  *
- * See also: ECMA_262 v6, 20.1.2.1
+ * See also: ECMA_262 v6, 20.1.2.6
  */
 # define ECMA_NUMBER_MAX_SAFE_INTEGER ((ecma_number_t) 0x1FFFFFFFFFFFFF)
-#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
+
+/**
+ * Number.MIN_SAFE_INTEGER
+ *
+ * See also: ECMA_262 v6, 20.1.2.8
+ */
+# define ECMA_NUMBER_MIN_SAFE_INTEGER ((ecma_number_t) -0x1FFFFFFFFFFFFF)
+#endif /* !ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+
 /**
  * Euler number
  */

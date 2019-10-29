@@ -148,9 +148,9 @@ typedef enum
   SCANNER_STREAM_TYPE_ARG, /**< argument declaration */
   /* Function types should be at the end. See the SCANNER_STREAM_TYPE_IS_FUNCTION macro. */
   SCANNER_STREAM_TYPE_ARG_FUNC, /**< argument declaration which is later initialized with a function */
-  SCANNER_STREAM_TYPE_FUNC, /**< local function declaration */
+  SCANNER_STREAM_TYPE_FUNC, /**< local or global function declaration */
 #if ENABLED (JERRY_ES2015)
-  SCANNER_STREAM_TYPE_VAR_FUNC, /**< var function declaration */
+  SCANNER_STREAM_TYPE_FUNC_LOCAL, /**< always local function declaration */
 #endif /* ENABLED (JERRY_ES2015) */
 } scanner_compressed_stream_types_t;
 
@@ -179,6 +179,15 @@ typedef struct
 {
   scanner_info_t info; /**< header */
 } scanner_function_info_t;
+
+/**
+ * Option bits for scanner_create_variables function.
+ */
+typedef enum
+{
+  SCANNER_CREATE_VARS_NO_OPTS = 0, /**< no options */
+  SCANNER_CREATE_VARS_IS_EVAL = (1 << 0), /**< create variables for script / direct eval */
+} scanner_create_variables_flags_t;
 
 /**
  * @}

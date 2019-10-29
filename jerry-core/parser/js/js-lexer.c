@@ -1547,6 +1547,36 @@ lexer_process_char_literal (parser_context_t *context_p, /**< context */
 #define LEXER_MAX_LITERAL_LOCAL_BUFFER_SIZE 48
 
 /**
+ * Convert an ident with escapes to a utf8 string.
+ */
+void
+lexer_convert_ident_to_utf8 (const uint8_t *source_p, /**< source string */
+                             uint8_t *destination_p, /**< destination string */
+                             prop_length_t length) /**< length of destination string */
+{
+  const uint8_t *destination_end_p = destination_p + length;
+
+  JERRY_ASSERT (length <= PARSER_MAXIMUM_IDENT_LENGTH);
+
+  do
+  {
+    if (*source_p == LIT_CHAR_BACKSLASH)
+    {
+      destination_p += lit_char_to_utf8_bytes (destination_p,
+                                               lexer_unchecked_hex_to_character (source_p + 2, 4));
+      source_p += 6;
+      continue;
+    }
+
+    JERRY_ASSERT (IS_UTF8_INTERMEDIATE_OCTET (*source_p)
+                  || lit_char_is_identifier_part (source_p));
+
+    *destination_p++ = *source_p++;
+  }
+  while (destination_p < destination_end_p);
+} /* lexer_convert_ident_to_utf8 */
+
+/**
  * Construct a literal object from an identifier.
  */
 void
@@ -1580,32 +1610,7 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
 
     if (literal_p->type == LEXER_IDENT_LITERAL)
     {
-      const uint8_t *source_end_p = context_p->source_end_p;
-
-      JERRY_ASSERT (literal_p->length <= PARSER_MAXIMUM_IDENT_LENGTH);
-
-      do
-      {
-        if (*source_p == LIT_CHAR_BACKSLASH)
-        {
-          destination_p += lit_char_to_utf8_bytes (destination_p,
-                                                   lexer_unchecked_hex_to_character (source_p + 2, 4));
-          source_p += 6;
-          continue;
-        }
-
-        *destination_p++ = *source_p++;
-
-        while (source_p < source_end_p
-               && IS_UTF8_INTERMEDIATE_OCTET (*source_p))
-        {
-          *destination_p++ = *source_p++;
-        }
-      }
-      while (source_p < source_end_p
-             && (lit_char_is_identifier_part (source_p) || *source_p == LIT_CHAR_BACKSLASH));
-
-      JERRY_ASSERT (destination_p == destination_start_p + literal_p->length);
+      lexer_convert_ident_to_utf8 (source_p, destination_start_p, literal_p->length);
     }
     else
     {

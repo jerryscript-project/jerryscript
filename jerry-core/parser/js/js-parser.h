@@ -114,9 +114,8 @@ typedef enum
   PARSER_ERR_OBJECT_PROPERTY_REDEFINED,               /**< property of object literal redefined */
 #if ENABLED (JERRY_ES2015)
   PARSER_ERR_VARIABLE_REDECLARED,                     /**< a variable redeclared */
-#endif /* ENABLED (JERRY_ES2015) */
+  PARSER_ERR_MISSING_ASSIGN_AFTER_CONST,              /**< an assignment is required after a const declaration */
 
-#if ENABLED (JERRY_ES2015)
   PARSER_ERR_MULTIPLE_CLASS_CONSTRUCTORS,             /**< multiple class constructor */
   PARSER_ERR_CLASS_CONSTRUCTOR_AS_ACCESSOR,           /**< class constructor cannot be an accessor */
   PARSER_ERR_CLASS_STATIC_PROTOTYPE,                  /**< static method name 'prototype' is not allowed */

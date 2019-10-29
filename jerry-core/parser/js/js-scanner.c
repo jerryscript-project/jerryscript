@@ -1211,18 +1211,26 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
         scanner_raise_error (context_p);
       }
 
-      lexer_lit_location_t *location_p = scanner_add_literal (context_p, scanner_context_p);
+      lexer_lit_location_t *literal_p = scanner_add_literal (context_p, scanner_context_p);
 
 #if ENABLED (JERRY_ES2015)
-      if (location_p->type & SCANNER_LITERAL_IS_LET_OR_CONST
-          && !(location_p->type & SCANNER_LITERAL_IS_FUNC))
+      if (literal_p->type & SCANNER_LITERAL_IS_LET_OR_CONST
+          && !(literal_p->type & SCANNER_LITERAL_IS_FUNC))
       {
         scanner_raise_redeclaration_error (context_p);
       }
 
-      location_p->type |= SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_LET;
+      if ((context_p->status_flags & PARSER_IS_EVAL)
+          && scanner_scope_find_let_declaration (context_p, literal_p))
+      {
+        literal_p->type |= SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_CONST;
+      }
+      else
+      {
+        literal_p->type |= SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_LET;
+      }
 #else
-      location_p->type |= SCANNER_LITERAL_IS_VAR | SCANNER_LITERAL_IS_FUNC;
+      literal_p->type |= SCANNER_LITERAL_IS_VAR | SCANNER_LITERAL_IS_FUNC;
 #endif /* ENABLED (JERRY_ES2015) */
 
       scanner_push_literal_pool (context_p, scanner_context_p, SCANNER_LITERAL_POOL_FUNCTION);
@@ -1970,13 +1978,13 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
       context_p->source_end_p = source_end_p;
 
 #if ENABLED (JERRY_ES2015)
-      uint16_t status_flags = SCANNER_LITERAL_POOL_FUNCTION_WITHOUT_ARGUMENTS;
+      uint16_t status_flags = SCANNER_LITERAL_POOL_FUNCTION_WITHOUT_ARGUMENTS | SCANNER_LITERAL_POOL_NO_VAR_REG;
 #else /* !ENABLED (JERRY_DEBUGGER) */
       uint16_t status_flags = SCANNER_LITERAL_POOL_FUNCTION_WITHOUT_ARGUMENTS | SCANNER_LITERAL_POOL_NO_REG;
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
       scanner_literal_pool_t *literal_pool_p = scanner_push_literal_pool (context_p, &scanner_context, status_flags);
-      literal_pool_p->source_p = source_p - 1;
+      literal_pool_p->source_p = source_p;
 
       scanner_context.mode = SCAN_MODE_STATEMENT_OR_TERMINATOR;
       parser_stack_push_uint8 (context_p, SCAN_STACK_SCRIPT);
@@ -2447,14 +2455,6 @@ scan_completed:
       scanner_raise_error (context_p);
     }
 
-#if ENABLED (JERRY_ES2015)
-    if (arg_list_p == NULL)
-    {
-      scanner_construct_global_block (context_p, &scanner_context);
-      scanner_context.active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_NO_REG;
-    }
-#endif /* ENABLED (JERRY_ES2015) */
-
     scanner_pop_literal_pool (context_p, &scanner_context);
 
 #ifndef JERRY_NDEBUG
@@ -2577,9 +2577,9 @@ scan_completed:
                 break;
               }
 #if ENABLED (JERRY_ES2015)
-              case SCANNER_STREAM_TYPE_VAR_FUNC:
+              case SCANNER_STREAM_TYPE_FUNC_LOCAL:
               {
-                JERRY_DEBUG_MSG ("    VAR_FUNC ");
+                JERRY_DEBUG_MSG ("    FUNC_LOCAL ");
                 break;
               }
 #endif /* ENABLED (JERRY_ES2015) */

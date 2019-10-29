@@ -25,6 +25,7 @@
 #include "ecma-lex-env.h"
 #include "ecma-objects.h"
 #include "ecma-try-catch-macro.h"
+#include "jcontext.h"
 #include "opcodes.h"
 #include "vm-defines.h"
 
@@ -39,20 +40,15 @@
  * 'Variable declaration' opcode handler.
  *
  * See also: ECMA-262 v5, 10.5 - Declaration binding instantiation (block 8).
- *
- * @return ecma value
- *         Returned value is simple and so need not be freed.
- *         However, ecma_free_value may be called for it, but it is a no-op.
  */
-ecma_value_t
-vm_var_decl (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
-             ecma_string_t *var_name_str_p) /**< variable name */
+inline void JERRY_ATTR_ALWAYS_INLINE
+vm_var_decl (ecma_object_t *lex_env_p, /**< target lexical environment */
+             ecma_string_t *var_name_str_p, /**< variable name */
+             bool is_configurable_bindings) /**< true if the binding can be deleted */
 {
-  if (!ecma_op_has_binding (frame_ctx_p->lex_env_p, var_name_str_p))
+  if (!ecma_op_has_binding (lex_env_p, var_name_str_p))
   {
-    const bool is_configurable_bindings = frame_ctx_p->is_eval_code;
-
-    ecma_value_t completion_value = ecma_op_create_mutable_binding (frame_ctx_p->lex_env_p,
+    ecma_value_t completion_value = ecma_op_create_mutable_binding (lex_env_p,
                                                                     var_name_str_p,
                                                                     is_configurable_bindings);
 
@@ -61,12 +57,35 @@ vm_var_decl (vm_frame_ctx_t *frame_ctx_p, /**< interpreter context */
     /* Skipping SetMutableBinding as we have already checked that there were not
      * any binding with specified name in current lexical environment
      * and CreateMutableBinding sets the created binding's value to undefined */
-    JERRY_ASSERT (ecma_is_value_undefined (ecma_op_get_binding_value (frame_ctx_p->lex_env_p,
+    JERRY_ASSERT (ecma_is_value_undefined (ecma_op_get_binding_value (lex_env_p,
                                                                       var_name_str_p,
                                                                       vm_is_strict_mode ())));
   }
-  return ECMA_VALUE_EMPTY;
 } /* vm_var_decl */
+
+/**
+ * Set var binding to a function literal value.
+ */
+inline void JERRY_ATTR_ALWAYS_INLINE
+vm_set_var (ecma_object_t *lex_env_p, /**< target lexical environment */
+            ecma_string_t *var_name_str_p, /**< variable name */
+            bool is_strict, /**< true, if the engine is in strict mode */
+            ecma_value_t lit_value) /**< function value */
+{
+  ecma_value_t put_value_result;
+  put_value_result = ecma_op_put_value_lex_env_base (lex_env_p, var_name_str_p, is_strict, lit_value);
+
+  JERRY_ASSERT (ecma_is_value_boolean (put_value_result)
+                || ecma_is_value_empty (put_value_result)
+                || ECMA_IS_VALUE_ERROR (put_value_result));
+
+  if (ECMA_IS_VALUE_ERROR (put_value_result))
+  {
+    ecma_free_value (JERRY_CONTEXT (error_value));
+  }
+
+  ecma_free_value (lit_value);
+} /* vm_set_var */
 
 /**
  * 'typeof' opcode handler.

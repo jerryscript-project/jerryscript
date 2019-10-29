@@ -1081,6 +1081,14 @@ parser_error_to_string (parser_error_t error) /**< error code */
       return "Non-strict argument definition.";
     }
 #if ENABLED (JERRY_ES2015)
+    case PARSER_ERR_VARIABLE_REDECLARED:
+    {
+      return "Local variable is redeclared.";
+    }
+    case PARSER_ERR_MISSING_ASSIGN_AFTER_CONST:
+    {
+      return "Value assignment is expected after a const declaration.";
+    }
     case PARSER_ERR_MULTIPLE_CLASS_CONSTRUCTORS:
     {
       return "Multiple constructors are not allowed.";
@@ -1116,10 +1124,6 @@ parser_error_to_string (parser_error_t error) /**< error code */
     case PARSER_ERR_REST_PARAMETER_DEFAULT_INITIALIZER:
     {
       return "Rest parameter may not have a default initializer.";
-    }
-    case PARSER_ERR_VARIABLE_REDECLARED:
-    {
-      return "Local variable is redeclared.";
     }
 #endif /* ENABLED (JERRY_ES2015) */
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)

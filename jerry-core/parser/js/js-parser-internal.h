@@ -75,11 +75,11 @@ typedef enum
   PARSER_CLASS_IMPLICIT_SUPER = (1u << 22),   /**< class has implicit parent class */
   PARSER_CLASS_STATIC_FUNCTION = (1u << 23),  /**< this function is a static class method */
   PARSER_CLASS_SUPER_PROP_REFERENCE = (1u << 24),  /**< super property call or assignment */
+  PARSER_IS_EVAL = (1u << 25),                /**< eval code */
 #endif /* ENABLED (JERRY_ES2015) */
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
-  PARSER_MODULE_DEFAULT_CLASS_OR_FUNC = (1u << 25),  /**< parsing a function or class default export */
-  PARSER_MODULE_STORE_IDENT = (1u << 26),     /**< store identifier of the current export statement */
-  PARSER_IS_EVAL = (1u << 27),                /**< eval code */
+  PARSER_MODULE_DEFAULT_CLASS_OR_FUNC = (1u << 26),  /**< parsing a function or class default export */
+  PARSER_MODULE_STORE_IDENT = (1u << 27),     /**< store identifier of the current export statement */
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 #ifndef JERRY_NDEBUG
   PARSER_SCANNING_SUCCESSFUL = (1u << 30),    /**< scanning process was successful */
@@ -583,6 +583,7 @@ void lexer_parse_string (parser_context_t *context_p);
 void lexer_expect_identifier (parser_context_t *context_p, uint8_t literal_type);
 void lexer_scan_identifier (parser_context_t *context_p, uint32_t ident_opts);
 ecma_char_t lexer_hex_to_character (parser_context_t *context_p, const uint8_t *source_p, int length);
+void lexer_convert_ident_to_utf8 (const uint8_t *source_p, uint8_t *destination_p, prop_length_t length);
 void lexer_expect_object_literal_id (parser_context_t *context_p, uint32_t ident_opts);
 void lexer_construct_literal_object (parser_context_t *context_p, const lexer_lit_location_t *literal_p,
                                      uint8_t literal_type);
@@ -631,7 +632,10 @@ void scanner_reverse_info_list (parser_context_t *context_p);
 void scanner_cleanup (parser_context_t *context_p);
 
 bool scanner_is_context_needed (parser_context_t *context_p);
-void scanner_create_variables (parser_context_t *context_p, size_t size);
+#if ENABLED (JERRY_ES2015)
+bool scanner_is_global_context_needed (parser_context_t *context_p);
+#endif /* ENABLED (JERRY_ES2015) */
+void scanner_create_variables (parser_context_t *context_p, uint32_t option_flags);
 
 void scanner_get_location (scanner_location_t *location_p, parser_context_t *context_p);
 void scanner_set_location (parser_context_t *context_p, scanner_location_t *location_p);

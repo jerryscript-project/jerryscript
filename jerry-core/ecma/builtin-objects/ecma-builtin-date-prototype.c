@@ -22,6 +22,7 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
+#include "ecma-objects-general.h"
 #include "ecma-try-catch-macro.h"
 
 #if ENABLED (JERRY_BUILTIN_DATE)
@@ -98,6 +99,10 @@ enum
   ECMA_DATE_PROTOTYPE_GET_TIME, /* ECMA-262 v5, 15.9.5.9 */
   ECMA_DATE_PROTOTYPE_SET_TIME, /* ECMA-262 v5, 15.9.5.27 */
   ECMA_DATE_PROTOTYPE_TO_JSON, /* ECMA-262 v5, 15.9.5.44 */
+
+#if ENABLED (JERRY_ES2015)
+  ECMA_DATE_PROTOTYPE_TO_PRIMITIVE, /*  ECMA-262 v6 20.3.4.45 */
+#endif /* ENABLED (JERRY_ES2015) */
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-date-prototype.inc.h"
@@ -178,6 +183,46 @@ ecma_builtin_date_prototype_to_json (ecma_value_t this_arg) /**< this argument *
 
   return ret_value;
 } /* ecma_builtin_date_prototype_to_json */
+
+#if ENABLED (JERRY_ES2015)
+/**
+ * The Date.prototype object's toPrimitive routine
+ *
+ * See also:
+ *          ECMA-262 v6, 20.3.4.45
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_date_prototype_to_primitive (ecma_value_t this_arg, /**< this argument */
+                                          ecma_value_t hint_arg) /**< {"default", "number", "string"} */
+{
+  if (ecma_is_value_object (this_arg) && ecma_is_value_string (hint_arg))
+  {
+    ecma_string_t *hint_str_p = ecma_get_string_from_value (hint_arg);
+
+    ecma_preferred_type_hint_t hint = ECMA_PREFERRED_TYPE_NUMBER;
+
+    if (hint_str_p == ecma_get_magic_string (LIT_MAGIC_STRING_STRING)
+        || hint_str_p == ecma_get_magic_string (LIT_MAGIC_STRING_DEFAULT))
+    {
+      hint = ECMA_PREFERRED_TYPE_STRING;
+    }
+    else if (hint_str_p == ecma_get_magic_string (LIT_MAGIC_STRING_NUMBER))
+    {
+      hint = ECMA_PREFERRED_TYPE_NUMBER;
+    }
+
+    if (hint != ECMA_PREFERRED_TYPE_NO)
+    {
+      return ecma_op_general_object_ordinary_value (ecma_get_object_from_value (this_arg), hint);
+    }
+  }
+
+  return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type in toPrimitive."));
+} /* ecma_builtin_date_prototype_to_primitive */
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * Dispatch get date functions
@@ -559,6 +604,14 @@ ecma_builtin_date_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< 
   {
     return ecma_builtin_date_prototype_to_json (this_arg);
   }
+
+#if ENABLED (JERRY_ES2015)
+  if (JERRY_UNLIKELY (builtin_routine_id == ECMA_DATE_PROTOTYPE_TO_PRIMITIVE))
+  {
+    ecma_value_t argument = arguments_number > 0 ? arguments_list[0] : ECMA_VALUE_UNDEFINED;
+    return ecma_builtin_date_prototype_to_primitive (this_arg, argument);
+  }
+#endif /* ENABLED (JERRY_ES2015) */
 
   if (!ecma_is_value_object (this_arg)
       || !ecma_object_class_is (ecma_get_object_from_value (this_arg), LIT_MAGIC_STRING_DATE_UL))

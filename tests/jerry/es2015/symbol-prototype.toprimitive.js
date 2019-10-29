@@ -13,30 +13,18 @@
  * limitations under the License.
  */
 
-try {
-  Symbol.prototype.toString.call ('NonSymbolValue');
-  assert (false);
-} catch (e) {
-  assert (e instanceof TypeError);
-}
-
-try {
-  Symbol.prototype.toString.call ({});
-  assert (false);
-} catch (e) {
-  assert (e instanceof TypeError);
-}
-
-var foo = Symbol ('foo');
-assert (foo.toString () === "Symbol(foo)");
-assert (String (foo) === "Symbol(foo)");
-
-var fooObj = Object (foo);
-assert (fooObj.toString () === "Symbol(foo)");
-
-try {
-  String (fooObj);
-  assert (false);
-} catch (e) {
-  assert (e instanceof TypeError);
-}
+var obj2 = {
+    [Symbol.toPrimitive](hint) {
+      if (hint == 'number') {
+        return 10;
+      }
+      if (hint == 'string') {
+        return 'hello';
+      }
+      return true;
+    }
+  };
+  
+  assert(+obj2 === 10);
+  //assert(`${obj2}` === "hello"); //FIXME: template literals requires String hint during concatenation
+  assert(obj2 + '' === "true");

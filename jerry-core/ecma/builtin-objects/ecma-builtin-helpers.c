@@ -293,7 +293,7 @@ ecma_builtin_helper_object_get_properties (ecma_object_t *obj_p, /**< object */
     return new_array;
   }
 
-  JERRY_ASSERT (((ecma_extended_object_t *) new_array_p)->u.array.is_fast_mode);
+  JERRY_ASSERT (ecma_op_object_is_fast_array (new_array_p));
 
   ecma_value_t *buffer_p = props_p->buffer_p;
   ecma_value_t *values_p = ecma_fast_array_extend (new_array_p, props_p->item_count);

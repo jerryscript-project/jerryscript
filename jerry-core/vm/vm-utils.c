@@ -70,7 +70,7 @@ vm_get_backtrace (uint32_t max_depth) /**< maximum backtrace depth, 0 = unlimite
 
   vm_frame_ctx_t *context_p = JERRY_CONTEXT (vm_top_context_p);
   ecma_object_t *array_p = ecma_get_object_from_value (result_array);
-  JERRY_ASSERT (((ecma_extended_object_t *) array_p)->u.array.is_fast_mode);
+  JERRY_ASSERT (ecma_op_object_is_fast_array (array_p));
   uint32_t index = 0;
 
   while (context_p != NULL)

@@ -14,6 +14,7 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-array-object.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
@@ -473,8 +474,7 @@ ecma_create_named_data_property (ecma_object_t *object_p, /**< object */
 {
   JERRY_ASSERT (object_p != NULL && name_p != NULL);
   JERRY_ASSERT (ecma_is_lexical_environment (object_p)
-              || ecma_get_object_type (object_p) != ECMA_OBJECT_TYPE_ARRAY
-              || !((ecma_extended_object_t *) object_p)->u.array.is_fast_mode);
+                || !ecma_op_object_is_fast_array (object_p));
   JERRY_ASSERT (ecma_find_named_property (object_p, name_p) == NULL);
   JERRY_ASSERT ((prop_attributes & ~ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE) == 0);
 
@@ -502,8 +502,7 @@ ecma_create_named_accessor_property (ecma_object_t *object_p, /**< object */
 {
   JERRY_ASSERT (object_p != NULL && name_p != NULL);
   JERRY_ASSERT (ecma_is_lexical_environment (object_p)
-              || ecma_get_object_type (object_p) != ECMA_OBJECT_TYPE_ARRAY
-              || !((ecma_extended_object_t *) object_p)->u.array.is_fast_mode);
+                || !ecma_op_object_is_fast_array (object_p));
   JERRY_ASSERT (ecma_find_named_property (object_p, name_p) == NULL);
   JERRY_ASSERT ((prop_attributes & ~ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE) == 0);
 
@@ -537,8 +536,7 @@ ecma_find_named_property (ecma_object_t *obj_p, /**< object to find property in 
   JERRY_ASSERT (obj_p != NULL);
   JERRY_ASSERT (name_p != NULL);
   JERRY_ASSERT (ecma_is_lexical_environment (obj_p)
-                || ecma_get_object_type (obj_p) != ECMA_OBJECT_TYPE_ARRAY
-                || !((ecma_extended_object_t *) obj_p)->u.array.is_fast_mode);
+                || !ecma_op_object_is_fast_array (obj_p));
 
   ecma_property_t *property_p = NULL;
 
@@ -696,8 +694,7 @@ ecma_get_named_data_property (ecma_object_t *obj_p, /**< object to find property
   JERRY_ASSERT (obj_p != NULL);
   JERRY_ASSERT (name_p != NULL);
   JERRY_ASSERT (ecma_is_lexical_environment (obj_p)
-                || ecma_get_object_type (obj_p) != ECMA_OBJECT_TYPE_ARRAY
-                || !((ecma_extended_object_t *) obj_p)->u.array.is_fast_mode);
+                || !ecma_op_object_is_fast_array (obj_p));
 
   ecma_property_t *property_p = ecma_find_named_property (obj_p, name_p);
 

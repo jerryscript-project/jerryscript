@@ -431,9 +431,7 @@ ecma_instantiate_builtin (ecma_builtin_id_t obj_builtin_id) /**< built-in id */
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
       ext_object_p->u.array.length = 0;
-      ext_object_p->u.array.length_prop = ECMA_PROPERTY_FLAG_WRITABLE | ECMA_PROPERTY_TYPE_VIRTUAL;
-      ext_object_p->u.array.is_fast_mode = false;
-      ext_object_p->u.array.hole_count = 0;
+      ext_object_p->u.array.u.length_prop = ECMA_PROPERTY_FLAG_WRITABLE | ECMA_PROPERTY_TYPE_VIRTUAL;
       break;
     }
 #endif /* ENABLED (JERRY_BUILTIN_ARRAY) */

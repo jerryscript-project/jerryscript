@@ -1460,8 +1460,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_to_string_val, /**
 
         if (separator_is_regexp)
         {
-          JERRY_ASSERT (ecma_get_object_type (match_obj_p) != ECMA_OBJECT_TYPE_ARRAY
-                        || !((ecma_extended_object_t *) match_obj_p)->u.array.is_fast_mode);
+          JERRY_ASSERT (!ecma_op_object_is_fast_array (match_obj_p));
 
           ecma_property_value_t *index_prop_value_p = ecma_get_named_data_property (match_obj_p, magic_index_str_p);
           ecma_number_t index_num = ecma_get_number_from_value (index_prop_value_p->value);

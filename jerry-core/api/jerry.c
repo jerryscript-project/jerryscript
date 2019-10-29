@@ -2055,8 +2055,7 @@ jerry_has_internal_property (const jerry_value_t obj_val, /**< object value */
 
   ecma_string_t *internal_string_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_API_INTERNAL);
 
-  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY
-      && ((ecma_extended_object_t *) obj_p)->u.array.is_fast_mode)
+  if (ecma_op_object_is_fast_array (obj_p))
   {
     return false;
   }
@@ -2146,8 +2145,7 @@ jerry_delete_internal_property (const jerry_value_t obj_val, /**< object value *
 
   ecma_string_t *internal_string_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_API_INTERNAL);
 
-  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY
-      && ((ecma_extended_object_t *) obj_p)->u.array.is_fast_mode)
+  if (ecma_op_object_is_fast_array (obj_p))
   {
     return true;
   }
@@ -2249,8 +2247,7 @@ jerry_get_internal_property (const jerry_value_t obj_val, /**< object value */
 
   ecma_string_t *internal_string_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_API_INTERNAL);
 
-  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY
-      && ((ecma_extended_object_t *) obj_p)->u.array.is_fast_mode)
+  if (ecma_op_object_is_fast_array (obj_p))
   {
     return jerry_return (ECMA_VALUE_UNDEFINED);
   }
@@ -2360,8 +2357,7 @@ jerry_set_internal_property (const jerry_value_t obj_val, /**< object value */
 
   ecma_string_t *internal_string_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_API_INTERNAL);
 
-  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY
-      && ((ecma_extended_object_t *) obj_p)->u.array.is_fast_mode)
+  if (ecma_op_object_is_fast_array (obj_p))
   {
     ecma_fast_array_convert_to_normal (obj_p);
   }

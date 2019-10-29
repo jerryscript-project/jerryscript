@@ -425,8 +425,7 @@ ecma_builtin_array_prototype_object_pop (ecma_object_t *obj_p, /**< array object
     return get_value;
   }
 
-  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY
-      && ((ecma_extended_object_t *) obj_p)->u.array.is_fast_mode)
+  if (ecma_op_object_is_fast_array (obj_p))
   {
     if (!ecma_get_object_extensible (obj_p))
     {
@@ -478,8 +477,7 @@ ecma_builtin_array_prototype_object_push (const ecma_value_t *argument_list_p, /
 {
   ecma_number_t n = (ecma_number_t) length;
 
-  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY
-      && ((ecma_extended_object_t *) obj_p)->u.array.is_fast_mode)
+  if (ecma_op_object_is_fast_array (obj_p))
   {
     if (!ecma_get_object_extensible (obj_p))
     {
@@ -497,12 +495,15 @@ ecma_builtin_array_prototype_object_push (const ecma_value_t *argument_list_p, /
     }
 
     uint32_t new_length = length + arguments_number;
+    ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
     ecma_value_t *buffer_p = ecma_fast_array_extend (obj_p, new_length) + length;
 
     for (uint32_t index = 0; index < arguments_number; index++)
     {
       buffer_p[index] = ecma_copy_value_if_not_object (argument_list_p[index]);
     }
+
+    ext_obj_p->u.array.u.hole_count -= ECMA_FAST_ARRAY_HOLE_ONE * arguments_number;
 
     return ecma_make_uint32_value (new_length);
   }

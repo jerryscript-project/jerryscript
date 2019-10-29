@@ -284,8 +284,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
 {
   JERRY_ASSERT (object_p != NULL
                 && !ecma_is_lexical_environment (object_p));
-  JERRY_ASSERT (ecma_get_object_type (object_p) != ECMA_OBJECT_TYPE_ARRAY
-                || !((ecma_extended_object_t *) object_p)->u.array.is_fast_mode);
+  JERRY_ASSERT (!ecma_op_object_is_fast_array (object_p));
   JERRY_ASSERT (property_name_p != NULL);
 
   ecma_property_types_t property_desc_type = ECMA_PROPERTY_TYPE_GENERIC;

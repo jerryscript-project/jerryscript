@@ -134,10 +134,10 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
           property_ref_p->virtual_value = ecma_make_uint32_value (ext_object_p->u.array.length);
         }
 
-        return ext_object_p->u.array.length_prop;
+        return ext_object_p->u.array.u.length_prop & (ECMA_PROPERTY_TYPE_VIRTUAL | ECMA_PROPERTY_FLAG_WRITABLE);
       }
 
-      if (ext_object_p->u.array.is_fast_mode)
+      if (ecma_op_array_is_fast_array (ext_object_p))
       {
         uint32_t index = ecma_string_get_array_index (property_name_p);
 
@@ -492,7 +492,7 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
         return ecma_make_uint32_value (ext_object_p->u.array.length);
       }
 
-      if (JERRY_LIKELY (ext_object_p->u.array.is_fast_mode))
+      if (JERRY_LIKELY (ecma_op_array_is_fast_array (ext_object_p)))
       {
         uint32_t index = ecma_string_get_array_index (property_name_p);
 
@@ -765,8 +765,7 @@ ecma_op_object_get_own_data_prop (ecma_object_t *object_p, /**< the object */
                                   ecma_string_t *property_name_p) /**< property name */
 {
   JERRY_ASSERT (ecma_is_lexical_environment (object_p)
-                || ecma_get_object_type (object_p) != ECMA_OBJECT_TYPE_ARRAY
-                || !((ecma_extended_object_t *) object_p)->u.array.is_fast_mode);
+                || !ecma_op_object_is_fast_array (object_p));
 
   ecma_value_t result = ecma_op_object_find_own (ecma_make_object_value (object_p),
                                                  object_p,
@@ -1066,7 +1065,7 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
 
       if (ecma_string_is_length (property_name_p))
       {
-        if (ecma_is_property_writable (ext_object_p->u.array.length_prop))
+        if (ecma_is_property_writable (ext_object_p->u.array.u.length_prop))
         {
           return ecma_op_array_object_set_length (object_p, value, 0);
         }
@@ -1074,7 +1073,7 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
         return ecma_reject (is_throw);
       }
 
-      if (JERRY_LIKELY (ext_object_p->u.array.is_fast_mode))
+      if (JERRY_LIKELY (ecma_op_array_is_fast_array (ext_object_p)))
       {
         if (JERRY_UNLIKELY (!ecma_get_object_extensible (object_p)))
         {
@@ -1093,7 +1092,7 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
         }
       }
 
-      JERRY_ASSERT (!(ext_object_p->u.array.is_fast_mode));
+      JERRY_ASSERT (!ecma_op_object_is_fast_array (object_p));
 
       break;
     }
@@ -1313,7 +1312,7 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
         if (index < UINT32_MAX
             && index >= ext_object_p->u.array.length)
         {
-          if (!ecma_is_property_writable (ext_object_p->u.array.length_prop))
+          if (!ecma_is_property_writable (ext_object_p->u.array.u.length_prop))
           {
             return ecma_reject (is_throw);
           }
@@ -1756,14 +1755,9 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
   JERRY_ASSERT (obj_p != NULL
                 && !ecma_is_lexical_environment (obj_p));
 
-  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY)
+  if (ecma_op_object_is_fast_array (obj_p))
   {
-    ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
-
-    if (ext_object_p->u.array.is_fast_mode)
-    {
-      return ecma_fast_array_get_property_names (obj_p, opts);
-    }
+    return ecma_fast_array_get_property_names (obj_p, opts);
   }
 
   ecma_collection_t *ret_p = ecma_new_collection ();
@@ -1905,9 +1899,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
     jmem_cpointer_t prop_iter_cp = prototype_chain_iter_p->u1.property_list_cp;
 
-    if (ecma_get_object_type (prototype_chain_iter_p) == ECMA_OBJECT_TYPE_ARRAY
-        && ((ecma_extended_object_t *) prototype_chain_iter_p)->u.array.is_fast_mode
-        && prop_iter_cp != JMEM_CP_NULL)
+    if (ecma_op_object_is_fast_array (prototype_chain_iter_p) && prop_iter_cp != JMEM_CP_NULL)
     {
       ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) prototype_chain_iter_p;
 

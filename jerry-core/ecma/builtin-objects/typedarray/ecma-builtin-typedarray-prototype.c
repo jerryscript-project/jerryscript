@@ -237,22 +237,23 @@ ecma_builtin_typedarray_prototype_exec_routine (ecma_value_t this_arg, /**< this
       return call_value;
     }
 
+    bool to_bool_result = ecma_op_to_boolean (call_value);
+    ecma_free_value (call_value);
+
     if (mode == TYPEDARRAY_ROUTINE_EVERY)
     {
-      if (!ecma_op_to_boolean (call_value))
+      if (!to_bool_result)
       {
         return ECMA_VALUE_FALSE;
       }
     }
     else if (mode == TYPEDARRAY_ROUTINE_SOME
-             && ecma_op_to_boolean (call_value))
+             && to_bool_result)
     {
       return ECMA_VALUE_TRUE;
     }
 
     byte_pos += info.element_size;
-
-    ecma_free_value (call_value);
   }
 
   if (mode == TYPEDARRAY_ROUTINE_EVERY)

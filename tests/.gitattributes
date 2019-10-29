@@ -1,0 +1,2 @@
+*.js text eol=lf
+jerry/windows-line-ending.js text eol=crlf

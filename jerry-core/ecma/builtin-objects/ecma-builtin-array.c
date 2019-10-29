@@ -58,19 +58,16 @@ ecma_builtin_array_object_is_array (ecma_value_t this_arg, /**< 'this' argument 
                                     ecma_value_t arg) /**< first argument */
 {
   JERRY_UNUSED (this_arg);
-  ecma_value_t is_array = ECMA_VALUE_FALSE;
 
   if (ecma_is_value_object (arg))
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (arg);
-
-    if (ecma_object_get_class_name (obj_p) == LIT_MAGIC_STRING_ARRAY_UL)
+    if (ecma_get_object_type (ecma_get_object_from_value (arg)) == ECMA_OBJECT_TYPE_ARRAY)
     {
-      is_array = ECMA_VALUE_TRUE;
+      return ECMA_VALUE_TRUE;
     }
   }
 
-  return is_array;
+  return ECMA_VALUE_FALSE;
 } /* ecma_builtin_array_object_is_array */
 
 /**

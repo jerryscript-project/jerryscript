@@ -1089,6 +1089,19 @@ ecma_op_array_object_define_own_property (ecma_object_t *object_p, /**< the arra
 } /* ecma_op_array_object_define_own_property */
 
 /**
+ * Get the length of the an array object
+ *
+ * @return the array length
+ */
+extern inline uint32_t JERRY_ATTR_ALWAYS_INLINE
+ecma_array_get_length (ecma_object_t *array_p) /**< array object */
+{
+  JERRY_ASSERT (ecma_get_object_type (array_p) == ECMA_OBJECT_TYPE_ARRAY);
+
+  return ((ecma_extended_object_t *) array_p)->u.array.length;
+} /* ecma_array_get_length */
+
+/**
  * List names of a String object's lazy instantiated properties
  *
  * @return string values collection

@@ -570,7 +570,8 @@ opfunc_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   ecma_value_t func_value = stack_top_p[-1];
   ecma_value_t completion_value;
 
-  if (!ecma_op_is_callable (func_value))
+  if (!ecma_is_value_object (func_value)
+      || !ecma_op_object_is_callable (ecma_get_object_from_value (func_value)))
   {
     completion_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function."));
   }
@@ -654,7 +655,8 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   ecma_value_t constructor_value = stack_top_p[-1];
   ecma_value_t completion_value;
 
-  if (!ecma_is_constructor (constructor_value))
+  if (!ecma_is_value_object (constructor_value)
+      || !ecma_object_is_constructor (ecma_get_object_from_value (constructor_value)))
   {
     completion_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a constructor."));
   }

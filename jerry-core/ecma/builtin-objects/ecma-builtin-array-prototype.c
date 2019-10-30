@@ -1481,12 +1481,32 @@ ecma_builtin_array_prototype_object_index_of (ecma_value_t arg1, /**< searchElem
     return ECMA_VALUE_ERROR;
   }
 
-  ecma_number_t found_index = ECMA_NUMBER_MINUS_ONE;
-
   uint32_t from_idx = ecma_builtin_helper_array_index_normalize (arg_from_idx, len, false);
 
-  /* 6. */
-  for (; from_idx < len && found_index < 0; from_idx++)
+  if (ecma_op_object_is_fast_array (obj_p))
+  {
+    ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
+
+    if (ext_obj_p->u.array.u.hole_count < ECMA_FAST_ARRAY_HOLE_ONE
+        && len != 0)
+    {
+      ecma_value_t *buffer_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, obj_p->u1.property_list_cp);
+
+      while (from_idx < len)
+      {
+        if (ecma_op_strict_equality_compare (arg1, buffer_p[from_idx]))
+        {
+          return ecma_make_uint32_value (from_idx);
+        }
+
+        from_idx++;
+      }
+
+      return ecma_make_integer_value (-1);
+    }
+  }
+
+  while (from_idx < len)
   {
     /* 9.a */
     ecma_value_t get_value = ecma_op_object_find_by_uint32_index (obj_p, from_idx);
@@ -1500,13 +1520,16 @@ ecma_builtin_array_prototype_object_index_of (ecma_value_t arg1, /**< searchElem
     if (ecma_is_value_found (get_value)
         && ecma_op_strict_equality_compare (arg1, get_value))
     {
-      found_index = ((ecma_number_t) from_idx);
+      ecma_free_value (get_value);
+      return ecma_make_uint32_value (from_idx);
     }
+
+    from_idx++;
 
     ecma_free_value (get_value);
   }
 
-  return ecma_make_number_value (found_index);
+  return ecma_make_integer_value (-1);
 } /* ecma_builtin_array_prototype_object_index_of */
 
 /**
@@ -1543,15 +1566,37 @@ ecma_builtin_array_prototype_object_last_index_of (const ecma_value_t args[], /*
     from_idx = ecma_builtin_helper_array_index_normalize (arg_from_idx, len, true);
   }
 
-  ecma_number_t num = ECMA_NUMBER_MINUS_ONE;
   ecma_value_t search_element = (args_number > 0) ? args[0] : ECMA_VALUE_UNDEFINED;
+
+  if (ecma_op_object_is_fast_array (obj_p))
+  {
+    ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
+
+    if (ext_obj_p->u.array.u.hole_count < ECMA_FAST_ARRAY_HOLE_ONE
+        && len != 0)
+    {
+      ecma_value_t *buffer_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, obj_p->u1.property_list_cp);
+
+      while (from_idx < len)
+      {
+        if (ecma_op_strict_equality_compare (search_element, buffer_p[from_idx]))
+        {
+          return ecma_make_uint32_value (from_idx);
+        }
+
+        from_idx--;
+      }
+
+      return ecma_make_integer_value (-1);
+    }
+  }
 
   /* 8.
    * We should break from the loop when from_idx < 0. We can still use an uint32_t for from_idx, and check
    * for an underflow instead. This is safe, because from_idx will always start in [0, len - 1],
    * and len is in [0, UINT_MAX], so from_idx >= len means we've had an underflow, and should stop.
    */
-  for (; from_idx < len && num < 0; from_idx--)
+  while (from_idx < len)
   {
     /* 8.a */
     ecma_value_t get_value = ecma_op_object_find_by_uint32_index (obj_p, from_idx);
@@ -1565,13 +1610,16 @@ ecma_builtin_array_prototype_object_last_index_of (const ecma_value_t args[], /*
     if (ecma_is_value_found (get_value)
         && ecma_op_strict_equality_compare (search_element, get_value))
     {
-      num = ((ecma_number_t) from_idx);
+      ecma_free_value (get_value);
+      return ecma_make_uint32_value (from_idx);
     }
+
+    from_idx--;
 
     ecma_free_value (get_value);
   }
 
-  return ecma_make_number_value (num);
+  return ecma_make_integer_value (-1);
 } /* ecma_builtin_array_prototype_object_last_index_of */
 
 /**

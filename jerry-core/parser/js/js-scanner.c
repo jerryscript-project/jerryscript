@@ -404,6 +404,9 @@ scanner_scan_primary_expression (parser_context_t *context_p, /**< context */
       scanner_context_p->mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
       break;
     }
+#if ENABLED (JERRY_ES2015)
+    case LEXER_THREE_DOTS:
+#endif /* ENABLED (JERRY_ES2015) */
     case LEXER_COMMA:
     {
       if (stack_top != SCAN_STACK_SQUARE_BRACKETED_EXPRESSION)

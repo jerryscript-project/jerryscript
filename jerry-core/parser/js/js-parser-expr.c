@@ -210,6 +210,7 @@ static void
 parser_parse_array_literal (parser_context_t *context_p) /**< context */
 {
   uint32_t pushed_items = 0;
+  uint16_t opcode = (uint16_t) CBC_ARRAY_APPEND;
 
   JERRY_ASSERT (context_p->token.type == LEXER_LEFT_SQUARE);
 
@@ -222,7 +223,7 @@ parser_parse_array_literal (parser_context_t *context_p) /**< context */
     {
       if (pushed_items > 0)
       {
-        parser_emit_cbc_call (context_p, CBC_ARRAY_APPEND, pushed_items);
+        parser_emit_cbc_call (context_p, opcode, pushed_items);
       }
       return;
     }
@@ -236,7 +237,24 @@ parser_parse_array_literal (parser_context_t *context_p) /**< context */
     }
     else
     {
+#if ENABLED (JERRY_ES2015)
+      bool is_spread = false;
+      if (context_p->token.type == LEXER_THREE_DOTS)
+      {
+        opcode = (uint16_t) (PARSER_TO_EXT_OPCODE (CBC_EXT_SPREAD_ARRAY_APPEND));
+        is_spread = true;
+        lexer_next_token (context_p);
+      }
+#endif /* ENABLED (JERRY_ES2015) */
+
       parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
+
+#if ENABLED (JERRY_ES2015)
+      if (is_spread)
+      {
+        parser_emit_cbc_ext (context_p, CBC_EXT_CREATE_SPREAD_OBJECT);
+      }
+#endif /* ENABLED (JERRY_ES2015) */
 
       if (context_p->token.type == LEXER_COMMA)
       {
@@ -250,7 +268,10 @@ parser_parse_array_literal (parser_context_t *context_p) /**< context */
 
     if (pushed_items >= 64)
     {
-      parser_emit_cbc_call (context_p, CBC_ARRAY_APPEND, pushed_items);
+      parser_emit_cbc_call (context_p, opcode, pushed_items);
+#if ENABLED (JERRY_ES2015)
+      opcode = (uint16_t) CBC_ARRAY_APPEND;
+#endif /* ENABLED (JERRY_ES2015) */
       pushed_items = 0;
     }
   }

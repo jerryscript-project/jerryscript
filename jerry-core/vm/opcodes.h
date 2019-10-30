@@ -51,6 +51,11 @@ typedef enum
   NUMBER_BITWISE_NOT, /**< bitwise NOT calculation */
 } number_bitwise_logic_op;
 
+/**
+ * The stack contains spread object during the upcoming APPEND_ARRAY operation
+ */
+#define OPFUNC_HAS_SPREAD_ELEMENT (1 << 8)
+
 void
 vm_var_decl (ecma_object_t *lex_env_p, ecma_string_t *var_name_str_p, bool is_configurable_bindings);
 
@@ -96,8 +101,8 @@ vm_op_delete_var (ecma_value_t name_literal, ecma_object_t *lex_env_p);
 ecma_collection_t *
 opfunc_for_in (ecma_value_t left_value, ecma_value_t *result_obj_p);
 
-void
-opfunc_append_array (ecma_value_t *stack_top_p, uint8_t values_length);
+ecma_value_t
+opfunc_append_array (ecma_value_t *stack_top_p, uint16_t values_length);
 
 /**
  * @}

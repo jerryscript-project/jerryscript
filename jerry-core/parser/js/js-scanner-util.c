@@ -431,7 +431,7 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
     {
       search_arguments = false;
 
-      if (type & (SCANNER_LITERAL_IS_ARG | SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_LET_OR_CONST))
+      if (type & (SCANNER_LITERAL_IS_ARG | SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_LOCAL))
       {
         arguments_required = false;
       }
@@ -444,8 +444,7 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
     }
 
 #if ENABLED (JERRY_ES2015)
-    if (is_function
-        && (type & (SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_LET_OR_CONST)) == SCANNER_LITERAL_IS_FUNC)
+    if (is_function && (type & (SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_LOCAL)) == SCANNER_LITERAL_IS_FUNC)
     {
       type = (uint8_t) ((type & ~SCANNER_LITERAL_IS_FUNC) | SCANNER_LITERAL_IS_VAR);
       literal_p->type = type;
@@ -453,7 +452,7 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
 #endif /* ENABLED (JERRY_ES2015) */
 
     if ((is_function && (type & (SCANNER_LITERAL_IS_VAR | SCANNER_LITERAL_IS_ARG)))
-        || (type & (SCANNER_LITERAL_IS_LOCAL | SCANNER_LITERAL_IS_LET_OR_CONST)))
+        || (type & SCANNER_LITERAL_IS_LOCAL))
     {
       JERRY_ASSERT (is_function || !(literal_p->type & SCANNER_LITERAL_IS_ARG));
 
@@ -513,16 +512,20 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
       lexer_lit_location_t *literal_location_p = scanner_add_custom_literal (context_p,
                                                                              prev_literal_pool_p,
                                                                              literal_p);
+      uint8_t extended_type = literal_location_p->type;
 
       if (is_function || (type & SCANNER_LITERAL_NO_REG))
       {
-        literal_location_p->type |= SCANNER_LITERAL_NO_REG;
+        extended_type |= SCANNER_LITERAL_NO_REG;
       }
 
 #if ENABLED (JERRY_ES2015)
-      if (literal_location_p->type & SCANNER_LITERAL_IS_LET_OR_CONST)
+      extended_type |= SCANNER_LITERAL_IS_USED;
+
+      if (literal_location_p->type & SCANNER_LITERAL_IS_LOCAL)
       {
         JERRY_ASSERT (!(type & SCANNER_LITERAL_IS_VAR));
+        /* Clears the SCANNER_LITERAL_IS_FUNC flag. */
         type = 0;
       }
 #endif /* ENABLED (JERRY_ES2015) */
@@ -530,7 +533,7 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
       type = (uint8_t) (type & (SCANNER_LITERAL_IS_VAR | SCANNER_LITERAL_IS_FUNC));
       JERRY_ASSERT (type == 0 || !is_function);
 
-      literal_location_p->type = (uint8_t) (literal_location_p->type | type);
+      literal_location_p->type = (uint8_t) (extended_type | type);
     }
   }
 
@@ -594,7 +597,7 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
     {
       if (JERRY_UNLIKELY (no_declarations > PARSER_MAXIMUM_DEPTH_OF_SCOPE_STACK)
           || (!(is_function && (literal_p->type & (SCANNER_LITERAL_IS_VAR | SCANNER_LITERAL_IS_ARG)))
-              && !(literal_p->type & (SCANNER_LITERAL_IS_LOCAL | SCANNER_LITERAL_IS_LET_OR_CONST))))
+              && !(literal_p->type & SCANNER_LITERAL_IS_LOCAL)))
       {
         continue;
       }
@@ -632,7 +635,10 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ES2015)
       else if (literal_p->type & SCANNER_LITERAL_IS_LET)
       {
-        type = SCANNER_STREAM_TYPE_LET;
+        if (!(literal_p->type & SCANNER_LITERAL_IS_CONST))
+        {
+          type = SCANNER_STREAM_TYPE_LET;
+        }
       }
       else if (literal_p->type & SCANNER_LITERAL_IS_CONST)
       {
@@ -873,6 +879,10 @@ scanner_add_reference (parser_context_t *context_p, /**< context */
   lexer_lit_location_t *lit_location_p = scanner_add_custom_literal (context_p,
                                                                      scanner_context_p->active_literal_pool_p,
                                                                      &context_p->token.lit_location);
+#if ENABLED (JERRY_ES2015)
+  lit_location_p->type |= SCANNER_LITERAL_IS_USED;
+#endif /* ENABLED (JERRY_ES2015) */
+
   if (scanner_context_p->active_literal_pool_p->status_flags & SCANNER_LITERAL_POOL_IN_WITH)
   {
     lit_location_p->type |= SCANNER_LITERAL_NO_REG;
@@ -985,7 +995,7 @@ scanner_scope_find_let_declaration (parser_context_t *context_p, /**< context */
     {
       ecma_property_t *property_p = ecma_find_named_property (lex_env_p, name_p);
 
-      if (property_p != NULL && (*property_p & ECMA_PROPERTY_FLAG_ENUMERABLE))
+      if (property_p != NULL && ecma_is_property_enumerable (*property_p))
       {
         ecma_deref_ecma_string (name_p);
         return true;
@@ -1001,7 +1011,7 @@ scanner_scope_find_let_declaration (parser_context_t *context_p, /**< context */
   {
     ecma_property_t *property_p = ecma_find_named_property (lex_env_p, name_p);
 
-    if (property_p != NULL && (*property_p & ECMA_PROPERTY_FLAG_ENUMERABLE))
+    if (property_p != NULL && ecma_is_property_enumerable (*property_p))
     {
       ecma_deref_ecma_string (name_p);
       return true;
@@ -1021,8 +1031,9 @@ scanner_detect_invalid_var (parser_context_t *context_p, /**< context */
                             scanner_context_t *scanner_context_p, /**< scanner context */
                             lexer_lit_location_t *var_literal_p) /**< literal */
 {
-  if (var_literal_p->type & (SCANNER_LITERAL_IS_LET | SCANNER_LITERAL_IS_CONST)
-      && !(var_literal_p->type & SCANNER_LITERAL_IS_FUNC))
+  if (var_literal_p->type & SCANNER_LITERAL_IS_LOCAL
+      && !(var_literal_p->type & SCANNER_LITERAL_IS_FUNC)
+      && (var_literal_p->type & SCANNER_LITERAL_IS_LOCAL) != SCANNER_LITERAL_IS_LOCAL)
   {
     scanner_raise_redeclaration_error (context_p);
   }
@@ -1043,7 +1054,8 @@ scanner_detect_invalid_var (parser_context_t *context_p, /**< context */
     {
       while ((literal_p = (lexer_lit_location_t *) parser_list_iterator_next (&literal_iterator)) != NULL)
       {
-        if (literal_p->type & (SCANNER_LITERAL_IS_LET | SCANNER_LITERAL_IS_CONST)
+        if (literal_p->type & SCANNER_LITERAL_IS_LOCAL
+            && (literal_p->type & SCANNER_LITERAL_IS_LOCAL) != SCANNER_LITERAL_IS_LOCAL
             && literal_p->length == length)
         {
           if (JERRY_LIKELY (!literal_p->has_escape))
@@ -1066,7 +1078,8 @@ scanner_detect_invalid_var (parser_context_t *context_p, /**< context */
     {
       while ((literal_p = (lexer_lit_location_t *) parser_list_iterator_next (&literal_iterator)) != NULL)
       {
-        if (literal_p->type & (SCANNER_LITERAL_IS_LET | SCANNER_LITERAL_IS_CONST)
+        if (literal_p->type & SCANNER_LITERAL_IS_LOCAL
+            && (literal_p->type & SCANNER_LITERAL_IS_LOCAL) != SCANNER_LITERAL_IS_LOCAL
             && literal_p->length == length
             && lexer_compare_identifiers (literal_p->char_p, char_p, length))
         {

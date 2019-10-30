@@ -586,6 +586,11 @@ parser_parse_class (parser_context_t *context_p, /**< context */
 {
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_CLASS);
 
+#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+  /* FIXME: Remove this hack after module classes are supported. */
+  uint16_t assign_opcode = CBC_ASSIGN_LET_CONST;
+#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+
   uint16_t class_ident_index = PARSER_MAXIMUM_NUMBER_OF_LITERALS;
 
   if (is_statement)
@@ -595,19 +600,19 @@ parser_parse_class (parser_context_t *context_p, /**< context */
     JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
                   && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
 
-#if ENABLED (JERRY_ES2015)
     if (context_p->next_scanner_info_p->source_p == context_p->source_p)
     {
       JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_ERR_REDECLARED);
       parser_raise_error (context_p, PARSER_ERR_VARIABLE_REDECLARED);
     }
-#endif /* ENABLED (JERRY_ES2015) */
 
     class_ident_index = context_p->lit_object.index;
 
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
     if (context_p->status_flags & PARSER_MODULE_STORE_IDENT)
     {
+      assign_opcode = CBC_ASSIGN_SET_IDENT;
+
       context_p->module_identifier_lit_p = context_p->lit_object.literal_p;
       context_p->status_flags &= (uint32_t) ~(PARSER_MODULE_STORE_IDENT);
     }
@@ -658,15 +663,17 @@ parser_parse_class (parser_context_t *context_p, /**< context */
 
   parser_emit_cbc_literal (context_p, CBC_SET_PROPERTY, context_p->lit_object.index);
 
-  if (is_statement)
-  {
-    parser_emit_cbc_literal (context_p, CBC_ASSIGN_SET_IDENT, class_ident_index);
-  }
-
   if (create_class_env)
   {
-    parser_parse_super_class_context_end (context_p, is_statement);
+    parser_parse_super_class_context_end (context_p);
     context_p->status_flags &= (uint32_t) ~(PARSER_CLASS_HAS_SUPER | PARSER_CLASS_IMPLICIT_SUPER);
+  }
+
+  if (is_statement)
+  {
+    parser_emit_cbc_literal (context_p,
+                             class_ident_index >= PARSER_REGISTER_START ? CBC_MOV_IDENT : assign_opcode,
+                             class_ident_index);
   }
 
   parser_flush_cbc (context_p);

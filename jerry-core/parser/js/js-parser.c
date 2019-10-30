@@ -1617,7 +1617,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 #endif /* ENABLED (JERRY_ES2015) */
 
   JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
-  scanner_create_variables (context_p, sizeof (scanner_function_info_t));
+  scanner_create_variables (context_p, SCANNER_CREATE_VARS_NO_OPTS);
 
   if (context_p->token.type == end_type)
   {
@@ -1766,14 +1766,6 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
     context.status_flags = PARSER_IS_FUNCTION;
   }
 
-#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
-  if (parse_opts & ECMA_PARSE_EVAL)
-  {
-    context.status_flags |= PARSER_IS_EVAL;
-  }
-
-  context.module_current_node_p = NULL;
-#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
 #if ENABLED (JERRY_ES2015)
   context.status_flags |= PARSER_GET_CLASS_PARSER_OPTS (parse_opts);
@@ -1833,6 +1825,13 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   }
 #endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
+#if ENABLED (JERRY_ES2015)
+  if (parse_opts & ECMA_PARSE_DIRECT_EVAL)
+  {
+    context.status_flags |= PARSER_IS_EVAL;
+  }
+#endif /* ENABLED (JERRY_ES2015) */
+
   scanner_scan_all (&context,
                     arg_list_p,
                     arg_list_p + arg_list_size,
@@ -1873,6 +1872,16 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   context.breakpoint_info_count = 0;
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
+#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+  if (parse_opts & ECMA_PARSE_EVAL)
+  {
+    /* After this point this flag is set for non-direct evals as well. */
+    context.status_flags |= PARSER_IS_EVAL;
+  }
+
+  context.module_current_node_p = NULL;
+#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+
   PARSER_TRY (context.try_buffer)
   {
     /* Pushing a dummy value ensures the stack is never empty.
@@ -1899,35 +1908,28 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
     }
     else
     {
-      JERRY_ASSERT (context.next_scanner_info_p->source_p == source_p - 1
+      JERRY_ASSERT (context.next_scanner_info_p->source_p == source_p
                     && context.next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
-      scanner_create_variables (&context, sizeof (scanner_function_info_t));
 
 #if ENABLED (JERRY_ES2015)
-      if (context.next_scanner_info_p->source_p == source_p)
+      if (scanner_is_global_context_needed (&context))
       {
-        JERRY_ASSERT (context.next_scanner_info_p->type == SCANNER_TYPE_BLOCK);
-
-        if (scanner_is_context_needed (&context))
-        {
-          parser_branch_t branch;
+        parser_branch_t branch;
 
 #ifndef JERRY_NDEBUG
-          PARSER_PLUS_EQUAL_U16 (context.context_stack_depth, PARSER_BLOCK_CONTEXT_STACK_ALLOCATION);
+        PARSER_PLUS_EQUAL_U16 (context.context_stack_depth, PARSER_BLOCK_CONTEXT_STACK_ALLOCATION);
 #endif /* !JERRY_NDEBUG */
 
-          parser_emit_cbc_forward_branch (&context,
-                                          CBC_BLOCK_CREATE_CONTEXT,
-                                          &branch);
+        parser_emit_cbc_forward_branch (&context,
+                                        CBC_BLOCK_CREATE_CONTEXT,
+                                        &branch);
 
-          parser_stack_push (&context, &branch, sizeof (parser_branch_t));
-          context.status_flags |= PARSER_INSIDE_BLOCK;
-        }
-
-        scanner_create_variables (&context, sizeof (scanner_info_t));
-        context.scope_stack_global_end = context.scope_stack_top;
+        parser_stack_push (&context, &branch, sizeof (parser_branch_t));
+        context.status_flags |= PARSER_INSIDE_BLOCK;
       }
 #endif /* ENABLED (JERRY_ES2015) */
+
+      scanner_create_variables (&context, SCANNER_CREATE_VARS_IS_EVAL);
     }
 
     parser_parse_statements (&context);

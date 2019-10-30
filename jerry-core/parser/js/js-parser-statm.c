@@ -352,6 +352,10 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
                 || context_p->token.type == LEXER_KEYW_LET
                 || context_p->token.type == LEXER_KEYW_CONST);
 
+#if ENABLED (JERRY_ES2015)
+  bool is_const = context_p->token.type == LEXER_KEYW_CONST;
+#endif /* ENABLED (JERRY_ES2015) */
+
   while (true)
   {
     lexer_expect_identifier (context_p, LEXER_IDENT_LITERAL);
@@ -405,6 +409,12 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
       parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);
       parser_parse_expression_statement (context_p, PARSE_EXPR_NO_COMMA | PARSE_EXPR_HAS_LITERAL);
     }
+#if ENABLED (JERRY_ES2015)
+    else if (is_const)
+    {
+      parser_raise_error (context_p, PARSER_ERR_MISSING_ASSIGN_AFTER_CONST);
+    }
+#endif /* ENABLED (JERRY_ES2015) */
 
     if (context_p->token.type != LEXER_COMMA)
     {
@@ -1281,7 +1291,7 @@ parser_parse_switch_statement_start (parser_context_t *context_p) /**< context *
       parser_stack_push_uint8 (context_p, PARSER_STATEMENT_SWITCH_BLOCK_CONTEXT);
     }
 
-    scanner_create_variables (context_p, sizeof (scanner_info_t));
+    scanner_create_variables (context_p, SCANNER_CREATE_VARS_NO_OPTS);
   }
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -1550,7 +1560,7 @@ parser_parse_try_statement_end (parser_context_t *context_p) /**< context */
         parser_emit_cbc_ext (context_p, CBC_EXT_TRY_CREATE_ENV);
       }
 
-      scanner_create_variables (context_p, sizeof (scanner_info_t));
+      scanner_create_variables (context_p, SCANNER_CREATE_VARS_NO_OPTS);
     }
 
     lexer_expect_identifier (context_p, LEXER_IDENT_LITERAL);
@@ -1606,7 +1616,7 @@ parser_parse_try_statement_end (parser_context_t *context_p) /**< context */
         parser_emit_cbc_ext (context_p, CBC_EXT_TRY_CREATE_ENV);
       }
 
-      scanner_create_variables (context_p, sizeof (scanner_info_t));
+      scanner_create_variables (context_p, SCANNER_CREATE_VARS_NO_OPTS);
     }
 #endif /* ENABLED (JERRY_ES2015) */
   }
@@ -2485,7 +2495,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
             block_type = PARSER_STATEMENT_BLOCK_CONTEXT;
           }
 
-          scanner_create_variables (context_p, sizeof (scanner_info_t));
+          scanner_create_variables (context_p, SCANNER_CREATE_VARS_NO_OPTS);
         }
 
         parser_stack_push (context_p, &block_statement, sizeof (parser_block_statement_t));
@@ -2616,7 +2626,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
             parser_emit_cbc_ext (context_p, CBC_EXT_TRY_CREATE_ENV);
           }
 
-          scanner_create_variables (context_p, sizeof (scanner_info_t));
+          scanner_create_variables (context_p, SCANNER_CREATE_VARS_NO_OPTS);
         }
 #endif /* ENABLED (JERRY_ES2015) */
 

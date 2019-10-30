@@ -51,8 +51,11 @@ typedef enum
   NUMBER_BITWISE_NOT, /**< bitwise NOT calculation */
 } number_bitwise_logic_op;
 
-ecma_value_t
-vm_var_decl (vm_frame_ctx_t *frame_ctx_p, ecma_string_t *var_name_str_p);
+void
+vm_var_decl (ecma_object_t *lex_env_p, ecma_string_t *var_name_str_p, bool is_configurable_bindings);
+
+void
+vm_set_var (ecma_object_t *lex_env_p, ecma_string_t *var_name_str_p, bool is_strict, ecma_value_t lit_value);
 
 ecma_value_t
 opfunc_equality (ecma_value_t left_value, ecma_value_t right_value);

@@ -96,8 +96,11 @@ typedef enum
   SCANNER_LITERAL_POOL_FUNCTION = (1 << 0), /**< literal pool represents a function */
   SCANNER_LITERAL_POOL_BLOCK = (1 << 1), /**< literal pool represents a code block */
   SCANNER_LITERAL_POOL_NO_REG = (1 << 2), /**< variable declarations cannot be kept in registers */
-  SCANNER_LITERAL_POOL_NO_ARGUMENTS = (1 << 3), /**< arguments object should not be constructed */
-  SCANNER_LITERAL_POOL_IN_WITH = (1 << 4), /**< literal pool is in a with statement */
+#if ENABLED (JERRY_ES2015)
+  SCANNER_LITERAL_POOL_NO_VAR_REG = (1 << 3), /**< non let/const declarations cannot be kept in registers */
+#endif /* ENABLED (JERRY_ES2015) */
+  SCANNER_LITERAL_POOL_NO_ARGUMENTS = (1 << 4), /**< arguments object should not be constructed */
+  SCANNER_LITERAL_POOL_IN_WITH = (1 << 5), /**< literal pool is in a with statement */
 } scanner_literal_pool_flags_t;
 
 /**
@@ -157,6 +160,7 @@ lexer_lit_location_t *scanner_add_literal (parser_context_t *context_p, scanner_
 void scanner_add_reference (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 void scanner_append_argument (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 #if ENABLED (JERRY_ES2015)
+bool scanner_scope_find_let_declaration (parser_context_t *context_p, lexer_lit_location_t *literal_p);
 void scanner_detect_invalid_var (parser_context_t *context_p, scanner_context_t *scanner_context_p,
                                  lexer_lit_location_t *var_literal_p);
 #endif /* ENABLED (JERRY_ES2015) */

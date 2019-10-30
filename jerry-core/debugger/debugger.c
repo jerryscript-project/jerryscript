@@ -235,7 +235,7 @@ jerry_debugger_send_scope_chain (void)
 
     if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
     {
-      if ((lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_NON_CLOSURE) != 0)
+      if ((lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_BLOCK) != 0)
       {
         message_type_p->string[buffer_pos++] = JERRY_DEBUGGER_SCOPE_NON_CLOSURE;
       }

@@ -709,9 +709,7 @@ typedef enum
 /**
  * Non closure flag for debugger.
  */
-#if ENABLED (JERRY_DEBUGGER)
-#define ECMA_OBJECT_FLAG_NON_CLOSURE 0x20
-#endif /* ENABLED (JERRY_DEBUGGER) */
+#define ECMA_OBJECT_FLAG_BLOCK ECMA_OBJECT_FLAG_EXTENSIBLE
 
 /**
  * Bitshift index for an ecma-object reference count field
@@ -747,7 +745,7 @@ typedef struct
   /** type : 4 bit : ecma_object_type_t or ecma_lexical_environment_type_t
                      depending on ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV
       flags : 2 bit : ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV,
-                      ECMA_OBJECT_FLAG_EXTENSIBLE or ECMA_OBJECT_FLAG_NON_CLOSURE
+                      ECMA_OBJECT_FLAG_EXTENSIBLE or ECMA_OBJECT_FLAG_BLOCK
       refs : 10 bit (max 1022) */
   uint16_t type_flags_refs;
 

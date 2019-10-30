@@ -693,6 +693,31 @@ ecma_builtin_array_prototype_object_shift (ecma_object_t *obj_p, /**< array obje
     return ECMA_IS_VALUE_ERROR (set_length_value) ? set_length_value : ECMA_VALUE_UNDEFINED;
   }
 
+  if (ecma_op_object_is_fast_array (obj_p))
+  {
+    ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
+
+    if (ext_obj_p->u.array.u.hole_count < ECMA_FAST_ARRAY_HOLE_ONE
+        && len != 0
+        && ecma_get_object_extensible (obj_p))
+    {
+      ecma_value_t *buffer_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, obj_p->u1.property_list_cp);
+      ecma_value_t ret_value = buffer_p[0];
+
+      if (ecma_is_value_object (ret_value))
+      {
+        ecma_ref_object (ecma_get_object_from_value (ret_value));
+      }
+
+      memmove (buffer_p, buffer_p + 1, sizeof (ecma_value_t) * (len - 1));
+
+      buffer_p[len - 1] = ECMA_VALUE_UNDEFINED;
+      ecma_delete_fast_array_properties (obj_p, len - 1);
+
+      return ret_value;
+    }
+  }
+
   /* 5. */
   ecma_value_t first_value = ecma_op_object_get_by_uint32_index (obj_p, 0);
 
@@ -1396,6 +1421,43 @@ ecma_builtin_array_prototype_object_unshift (const ecma_value_t args[], /**< arg
                                              ecma_object_t *obj_p, /**< array object */
                                              uint32_t len) /**< array object's length */
 {
+
+  if (ecma_op_object_is_fast_array (obj_p))
+  {
+    ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
+
+    if (ext_obj_p->u.array.u.hole_count < ECMA_FAST_ARRAY_HOLE_ONE
+        && len != 0
+        && ecma_get_object_extensible (obj_p))
+    {
+      if ((ecma_number_t) (len + args_number) > UINT32_MAX)
+      {
+        return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid array length"));
+      }
+
+      if (args_number == 0)
+      {
+        return ecma_make_uint32_value (len);
+      }
+
+      uint32_t new_length = len + args_number;
+      ecma_value_t *buffer_p = ecma_fast_array_extend (obj_p, new_length);
+      memmove (buffer_p + args_number, buffer_p, sizeof (ecma_value_t) * len);
+
+      uint32_t index = 0;
+
+      while (index < args_number)
+      {
+        buffer_p[index] = ecma_copy_value_if_not_object (args[index]);
+        index++;
+      }
+
+      ext_obj_p->u.array.u.hole_count -= args_number * ECMA_FAST_ARRAY_HOLE_ONE;
+
+      return ecma_make_uint32_value (new_length);
+    }
+  }
+
   /* 5. and 6. */
   for (uint32_t k = len; k > 0; k--)
   {

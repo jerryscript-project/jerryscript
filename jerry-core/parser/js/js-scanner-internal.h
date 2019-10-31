@@ -63,7 +63,7 @@ typedef enum
  *
  *  SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_LET : function declared in this block, might be let or var
  *  SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_CONST : function declared in this block, must be let
- *  SCANNER_LITERAL_IS_LET | SCANNER_LITERAL_IS_CONST : catch block variable
+ *  SCANNER_LITERAL_IS_LET | SCANNER_LITERAL_IS_CONST : module import on global scope, catch block variable otherwise
  */
 
 /**
@@ -105,6 +105,9 @@ typedef enum
 #endif /* ENABLED (JERRY_ES2015) */
   SCANNER_LITERAL_POOL_NO_ARGUMENTS = (1 << 4), /**< arguments object should not be constructed */
   SCANNER_LITERAL_POOL_IN_WITH = (1 << 5), /**< literal pool is in a with statement */
+#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+  SCANNER_LITERAL_POOL_IN_EXPORT = (1 << 6), /**< the declared variables are exported by the module system */
+#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 } scanner_literal_pool_flags_t;
 
 /**
@@ -167,6 +170,7 @@ void scanner_append_argument (parser_context_t *context_p, scanner_context_t *sc
 bool scanner_scope_find_let_declaration (parser_context_t *context_p, lexer_lit_location_t *literal_p);
 void scanner_detect_invalid_var (parser_context_t *context_p, scanner_context_t *scanner_context_p,
                                  lexer_lit_location_t *var_literal_p);
+void scanner_detect_invalid_let (parser_context_t *context_p, lexer_lit_location_t *let_literal_p);
 #endif /* ENABLED (JERRY_ES2015) */
 void scanner_detect_eval_call (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 

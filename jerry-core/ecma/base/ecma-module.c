@@ -818,7 +818,7 @@ ecma_module_parse (ecma_module_t *module_p) /**< module */
                                                 0,
                                                 (jerry_char_t *) source_p,
                                                 source_size,
-                                                JERRY_PARSE_STRICT_MODE,
+                                                ECMA_PARSE_STRICT_MODE | ECMA_PARSE_MODULE,
                                                 &bytecode_data_p);
 
   JERRY_CONTEXT (module_top_context_p) = module_p->context_p->parent_p;

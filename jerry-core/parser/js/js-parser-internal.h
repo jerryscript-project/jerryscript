@@ -78,8 +78,9 @@ typedef enum
   PARSER_IS_EVAL = (1u << 25),                /**< eval code */
 #endif /* ENABLED (JERRY_ES2015) */
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
-  PARSER_MODULE_DEFAULT_CLASS_OR_FUNC = (1u << 26),  /**< parsing a function or class default export */
-  PARSER_MODULE_STORE_IDENT = (1u << 27),     /**< store identifier of the current export statement */
+  PARSER_IS_MODULE = (1u << 26),              /**< an export / import keyword is encountered */
+  PARSER_MODULE_DEFAULT_CLASS_OR_FUNC = (1u << 27),  /**< parsing a function or class default export */
+  PARSER_MODULE_STORE_IDENT = (1u << 28),     /**< store identifier of the current export statement */
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 #ifndef JERRY_NDEBUG
   PARSER_SCANNING_SUCCESSFUL = (1u << 30),    /**< scanning process was successful */

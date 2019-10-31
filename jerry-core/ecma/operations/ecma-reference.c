@@ -114,7 +114,17 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
 
       if (property_p != NULL)
       {
-        return ecma_fast_copy_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
+        ecma_property_value_t *property_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+
+#if ENABLED (JERRY_ES2015)
+        if (JERRY_UNLIKELY (property_value_p->value == ECMA_VALUE_UNINITIALIZED))
+        {
+          return ecma_raise_reference_error (ECMA_ERR_MSG ("Variables declared by let/const must be"
+                                                           " initialized before reading their value."));
+        }
+#endif /* ENABLED (JERRY_ES2015) */
+
+        return ecma_fast_copy_value (property_value_p->value);
       }
     }
     else if (lex_env_type == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND)

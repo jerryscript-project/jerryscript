@@ -353,7 +353,7 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
                 || context_p->token.type == LEXER_KEYW_CONST);
 
 #if ENABLED (JERRY_ES2015)
-  bool is_const = context_p->token.type == LEXER_KEYW_CONST;
+  uint8_t declaration_type = context_p->token.type;
 #endif /* ENABLED (JERRY_ES2015) */
 
   while (true)
@@ -406,11 +406,36 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
       }
 #endif /* ENABLED (JERRY_LINE_INFO) */
 
-      parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);
-      parser_parse_expression_statement (context_p, PARSE_EXPR_NO_COMMA | PARSE_EXPR_HAS_LITERAL);
+#if ENABLED (JERRY_ES2015)
+      if (declaration_type != LEXER_KEYW_VAR
+          && context_p->lit_object.index < PARSER_REGISTER_START)
+      {
+        uint16_t index = context_p->lit_object.index;
+
+        lexer_next_token (context_p);
+        parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
+        parser_emit_cbc_literal (context_p, CBC_ASSIGN_LET_CONST, index);
+      }
+      else
+      {
+#endif /* ENABLED (JERRY_ES2015) */
+        parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);
+        parser_parse_expression_statement (context_p, PARSE_EXPR_NO_COMMA | PARSE_EXPR_HAS_LITERAL);
+#if ENABLED (JERRY_ES2015)
+      }
+#endif /* ENABLED (JERRY_ES2015) */
     }
 #if ENABLED (JERRY_ES2015)
-    else if (is_const)
+    else if (declaration_type == LEXER_KEYW_LET)
+    {
+      parser_emit_cbc (context_p, CBC_PUSH_UNDEFINED);
+
+      uint16_t index = context_p->lit_object.index;
+      parser_emit_cbc_literal (context_p,
+                               index >= PARSER_REGISTER_START ? CBC_MOV_IDENT : CBC_ASSIGN_LET_CONST,
+                               index);
+    }
+    else if (declaration_type == LEXER_KEYW_CONST)
     {
       parser_raise_error (context_p, PARSER_ERR_MISSING_ASSIGN_AFTER_CONST);
     }
@@ -699,9 +724,7 @@ parser_parse_super_class_context_start (parser_context_t *context_p) /**< contex
  * Parse super class context like a with statement (ending part).
  */
 void
-parser_parse_super_class_context_end (parser_context_t *context_p, /**< context */
-                                      bool is_statement) /**< true - if class is parsed as a statement
-                                                          *   false - otherwise (as an expression) */
+parser_parse_super_class_context_end (parser_context_t *context_p) /**< context */
 {
   parser_with_statement_t with_statement;
   parser_stack_pop_uint8 (context_p);
@@ -713,15 +736,7 @@ parser_parse_super_class_context_end (parser_context_t *context_p, /**< context 
   PARSER_MINUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_SUPER_CLASS_CONTEXT_STACK_ALLOCATION);
 #endif /* !JERRY_NDEBUG */
 
-  if (is_statement)
-  {
-    parser_emit_cbc (context_p, CBC_CONTEXT_END);
-  }
-  else
-  {
-    parser_emit_cbc_ext (context_p, CBC_EXT_CLASS_EXPR_CONTEXT_END);
-  }
-
+  parser_emit_cbc_ext (context_p, CBC_EXT_CLASS_EXPR_CONTEXT_END);
   parser_set_branch_to_current_position (context_p, &with_statement.branch);
 } /* parser_parse_super_class_context_end */
 #endif /* ENABLED (JERRY_ES2015) */

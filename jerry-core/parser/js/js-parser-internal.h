@@ -613,7 +613,7 @@ void parser_parse_expression (parser_context_t *context_p, int options);
 #if ENABLED (JERRY_ES2015)
 void parser_parse_class (parser_context_t *context_p, bool is_statement);
 void parser_parse_super_class_context_start (parser_context_t *context_p);
-void parser_parse_super_class_context_end (parser_context_t *context_p, bool is_statement);
+void parser_parse_super_class_context_end (parser_context_t *context_p);
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**

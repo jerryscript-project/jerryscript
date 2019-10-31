@@ -35,37 +35,41 @@ typedef struct
 } scanner_source_start_t;
 
 /**
+ * Descriptor for storing a let/const literal on stack.
+ */
+typedef struct
+{
+  lexer_lit_location_t *literal_p; /**< let/const literal */
+} scanner_let_const_literal_t;
+
+/**
  * Flags for type member of lexer_lit_location_t structure in the literal pool.
  */
 typedef enum
 {
   SCANNER_LITERAL_IS_ARG = (1 << 0), /**< literal is argument */
-  SCANNER_LITERAL_IS_LOCAL = (1 << 1), /**< literal is local (similar to let,
-                                        *   but var is allowed with the same identifier) */
-  SCANNER_LITERAL_IS_VAR = (1 << 2), /**< literal is var */
-  SCANNER_LITERAL_IS_FUNC = (1 << 3), /**< literal is function */
-  SCANNER_LITERAL_NO_REG = (1 << 4), /**< literal cannot be stored in register */
+  SCANNER_LITERAL_IS_VAR = (1 << 1), /**< literal is var */
+  SCANNER_LITERAL_IS_FUNC = (1 << 2), /**< literal is function */
+  SCANNER_LITERAL_NO_REG = (1 << 3), /**< literal cannot be stored in register */
+  SCANNER_LITERAL_IS_LET = (1 << 4), /**< literal is let */
+  SCANNER_LITERAL_IS_CONST = (1 << 5), /**< literal is const */
 #if ENABLED (JERRY_ES2015)
-  SCANNER_LITERAL_IS_LET = (1 << 5), /**< literal is let */
-  SCANNER_LITERAL_IS_CONST = (1 << 6), /**< literal is const */
+  SCANNER_LITERAL_IS_USED = (1 << 6), /**< literal is used */
 #endif /* ENABLED (JERRY_ES2015) */
 } scanner_literal_type_flags_t;
 
-#if ENABLED (JERRY_ES2015)
+/*
+ * Known combinations:
+ *
+ *  SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_LET : function declared in this block, might be let or var
+ *  SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_CONST : function declared in this block, must be let
+ *  SCANNER_LITERAL_IS_LET | SCANNER_LITERAL_IS_CONST : catch block variable
+ */
 
 /**
- * Tells whether the literal is let or const declaration.
+ * Literal is a local declration (let, const, catch variable, etc.)
  */
-#define SCANNER_LITERAL_IS_LET_OR_CONST (SCANNER_LITERAL_IS_LET | SCANNER_LITERAL_IS_CONST)
-
-#else /* !ENABLED (JERRY_ES2015) */
-
-/**
- * No literal is let or const declaration in ECMAScript 5.1.
- */
-#define SCANNER_LITERAL_IS_LET_OR_CONST 0
-
-#endif /* ENABLED (JERRY_ES2015) */
+#define SCANNER_LITERAL_IS_LOCAL (SCANNER_LITERAL_IS_LET | SCANNER_LITERAL_IS_CONST)
 
 /**
  * For statement descriptor.

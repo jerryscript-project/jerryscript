@@ -94,11 +94,19 @@ ecma_op_same_value (ecma_value_t x, /**< ecma value */
   const bool is_y_string = ecma_is_value_string (y);
   const bool is_y_object = ecma_is_value_object (y);
 
+#if ENABLED (JERRY_ES2015)
+  const bool is_x_symbol = ecma_is_value_symbol (x);
+  const bool is_y_symbol = ecma_is_value_symbol (y);
+#endif /* ENABLED (JERRY_ES2015) */
+
   const bool is_types_equal = ((is_x_undefined && is_y_undefined)
                                || (is_x_null && is_y_null)
                                || (is_x_boolean && is_y_boolean)
                                || (is_x_number && is_y_number)
                                || (is_x_string && is_y_string)
+#if ENABLED (JERRY_ES2015)
+                               || (is_x_symbol && is_y_symbol)
+#endif /* ENABLED (JERRY_ES2015) */
                                || (is_x_object && is_y_object));
 
   if (!is_types_equal)
@@ -151,7 +159,7 @@ ecma_op_same_value (ecma_value_t x, /**< ecma value */
     return (ecma_is_value_true (x) == ecma_is_value_true (y));
   }
 #if ENABLED (JERRY_ES2015)
-  else if (ecma_is_value_symbol (x))
+  else if (is_x_symbol)
   {
     return x == y;
   }

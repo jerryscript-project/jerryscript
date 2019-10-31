@@ -9,4 +9,4 @@ Version: 1.0
 Requires.private: @JERRY_CORE_PKGCONFIG_REQUIRES@ # NOTE: libjerry-port-default* is not added as a required package
 Libs: -L${libdir} -ljerry-core
 Libs.private: @JERRY_CORE_PKGCONFIG_LIBS@
-Cflags: -I${includedir}
+Cflags: -I${includedir} @JERRY_CORE_PKGCONFIG_CFLAGS@

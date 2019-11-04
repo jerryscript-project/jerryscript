@@ -629,7 +629,8 @@ typedef enum
   ECMA_PSEUDO_SET_ITERATOR = 4, /**< Set iterator object (ECMAScript v6, 23.2.5.1) */
   ECMA_PSEUDO_MAP_ITERATOR = 5, /**< Map iterator object (ECMAScript v6, 23.1.5.1) */
   ECMA_PSEUDO_STRING_ITERATOR = 6, /**< String iterator object (ECMAScript v6, 22.1.5.1) */
-  ECMA_PSEUDO_ARRAY__MAX = ECMA_PSEUDO_STRING_ITERATOR /**< maximum value */
+  ECMA_PSEUDO_SPREAD_OBJECT = 7, /**< spread object */
+  ECMA_PSEUDO_ARRAY__MAX = ECMA_PSEUDO_SPREAD_OBJECT /**< maximum value */
 } ecma_pseudo_array_type_t;
 
 /**
@@ -865,6 +866,7 @@ typedef struct
         ecma_value_t lex_env_cp; /**< for arguments: lexical environment */
         ecma_value_t arraybuffer; /**< for typedarray: internal arraybuffer */
         ecma_value_t iterated_value; /**< for %Iterator%: [[IteratedObject]] property */
+        ecma_value_t spread_value; /**< for spread object: spreaded element */
       } u2;
     } pseudo_array;
 

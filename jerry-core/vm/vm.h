@@ -245,6 +245,7 @@ typedef enum
   VM_OC_PUSH_CONSTRUCTOR_SUPER,  /**< push 'super' inside a class constructor */
   VM_OC_PUSH_CONSTRUCTOR_THIS,   /**< push 'this' inside a class constructor */
   VM_OC_CONSTRUCTOR_RET,         /**< explicit return from a class constructor */
+  VM_OC_CREATE_SPREAD_OBJECT,    /**< create spread object */
 #endif /* ENABLED (JERRY_ES2015) */
   VM_OC_NONE,                    /**< a special opcode for unsupported byte codes */
 } vm_oc_types;
@@ -284,6 +285,7 @@ typedef enum
   VM_OC_PUSH_CONSTRUCTOR_SUPER = VM_OC_NONE,  /**< push 'super' inside a class constructor */
   VM_OC_PUSH_CONSTRUCTOR_THIS = VM_OC_NONE,   /**< push 'this' inside a class constructor */
   VM_OC_CONSTRUCTOR_RET = VM_OC_NONE,         /**< explicit return from a class constructor */
+  VM_OC_CREATE_SPREAD_OBJECT = VM_OC_NONE,    /**< create spread object */
 #endif /* !ENABLED (JERRY_ES2015S) */
 
   VM_OC_UNUSED = VM_OC_NONE                   /**< placeholder if the list is empty */

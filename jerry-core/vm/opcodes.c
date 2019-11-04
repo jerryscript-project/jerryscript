@@ -16,14 +16,17 @@
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
 #include "ecma-builtins.h"
+#include "ecma-builtin-helpers.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "ecma-iterator-object.h"
 #include "ecma-lex-env.h"
 #include "ecma-objects.h"
+#include "ecma-spread-object.h"
 #include "ecma-try-catch-macro.h"
 #include "jcontext.h"
 #include "opcodes.h"
@@ -275,15 +278,129 @@ opfunc_for_in (ecma_value_t left_value, /**< left value */
   return NULL;
 } /* opfunc_for_in */
 
+#if ENABLED (JERRY_ES2015)
+/**
+ * 'VM_OC_APPEND_ARRAY' opcode handler specialized for spread objects
+ *
+ * @return ECMA_VALUE_ERROR - if the operation failed
+ *         ECMA_VALUE_EMPTY, otherwise
+ */
+static ecma_value_t JERRY_ATTR_NOINLINE
+opfunc_append_to_spread_array (ecma_value_t *stack_top_p, /**< current stack top */
+                               uint16_t values_length) /**< number of elements to set */
+{
+  JERRY_ASSERT (!(values_length & OPFUNC_HAS_SPREAD_ELEMENT));
+
+  ecma_object_t *array_obj_p = ecma_get_object_from_value (stack_top_p[-1]);
+  JERRY_ASSERT (ecma_get_object_type (array_obj_p) == ECMA_OBJECT_TYPE_ARRAY);
+
+  ecma_extended_object_t *ext_array_obj_p = (ecma_extended_object_t *) array_obj_p;
+  uint32_t old_length = ext_array_obj_p->u.array.length;
+
+  for (uint32_t i = 0, j = old_length; i < values_length; i++)
+  {
+    if (ecma_is_value_array_hole (stack_top_p[i]))
+    {
+      continue;
+    }
+    if (ecma_op_is_spread_object (stack_top_p[i]))
+    {
+      ecma_value_t ret_value = ECMA_VALUE_ERROR;
+      ecma_object_t *spread_object_p = ecma_get_object_from_value (stack_top_p[i]);
+      ecma_value_t spread_value = ecma_op_spread_object_get_spreaded_element (spread_object_p);
+
+      ecma_value_t iterator = ecma_op_get_iterator (spread_value, ECMA_VALUE_EMPTY);
+
+      if (!ECMA_IS_VALUE_ERROR (iterator))
+      {
+        while (true)
+        {
+          ecma_value_t next = ecma_op_iterator_step (iterator);
+
+          if (ECMA_IS_VALUE_ERROR (next))
+          {
+            break;
+          }
+
+          if (ecma_is_value_false (next))
+          {
+            j--;
+            ret_value = ECMA_VALUE_EMPTY;
+            break;
+          }
+
+          ecma_value_t value = ecma_op_iterator_value (next);
+
+          ecma_free_value (next);
+
+          if (ECMA_IS_VALUE_ERROR (value))
+          {
+            break;
+          }
+
+          ecma_value_t put_comp;
+          put_comp = ecma_builtin_helper_def_prop_by_index (array_obj_p,
+                                                            i + j,
+                                                            value,
+                                                            ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+
+          j++;
+          JERRY_ASSERT (ecma_is_value_true (put_comp));
+          ecma_free_value (value);
+        }
+      }
+
+      ecma_free_value (iterator);
+      ecma_free_value (spread_value);
+
+      if (ECMA_IS_VALUE_ERROR (ret_value))
+      {
+        for (uint32_t k = i; k < values_length; k++)
+        {
+          ecma_free_value (stack_top_p[k]);
+        }
+
+        return ret_value;
+      }
+      else
+      {
+        ecma_deref_object (spread_object_p);
+      }
+    }
+    else
+    {
+      ecma_value_t put_comp = ecma_builtin_helper_def_prop_by_index (array_obj_p,
+                                                                     i + j,
+                                                                     stack_top_p[i],
+                                                                     ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+      JERRY_ASSERT (ecma_is_value_true (put_comp));
+      ecma_free_value (stack_top_p[i]);
+    }
+  }
+
+  return ECMA_VALUE_EMPTY;
+} /* opfunc_append_to_spread_array */
+#endif /* ENABLED (JERRY_ES2015) */
+
 /**
  * 'VM_OC_APPEND_ARRAY' opcode handler, for setting array object properties
+ *
+ * @return ECMA_VALUE_ERROR - if the operation failed
+ *         ECMA_VALUE_EMPTY, otherwise
  */
-void JERRY_ATTR_NOINLINE
+ecma_value_t JERRY_ATTR_NOINLINE
 opfunc_append_array (ecma_value_t *stack_top_p, /**< current stack top */
-                     uint8_t values_length) /**< number of elements to set */
+                     uint16_t values_length) /**< number of elements to set
+                                              *   with potential OPFUNC_HAS_SPREAD_ELEMENT flag */
 {
-  ecma_object_t *array_obj_p = ecma_get_object_from_value (stack_top_p[-1]);
+#if ENABLED (JERRY_ES2015)
+  if (values_length >= OPFUNC_HAS_SPREAD_ELEMENT)
+  {
+    return opfunc_append_to_spread_array (stack_top_p, (uint16_t) (values_length & ~OPFUNC_HAS_SPREAD_ELEMENT));
+  }
+#endif /* ENABLED (JERRY_ES2015) */
 
+  ecma_object_t *array_obj_p = ecma_get_object_from_value (stack_top_p[-1]);
   JERRY_ASSERT (ecma_get_object_type (array_obj_p) == ECMA_OBJECT_TYPE_ARRAY);
 
   ecma_extended_object_t *ext_array_obj_p = (ecma_extended_object_t *) array_obj_p;
@@ -344,6 +461,8 @@ opfunc_append_array (ecma_value_t *stack_top_p, /**< current stack top */
       ext_array_obj_p->u.array.length = old_length + values_length;
     }
   }
+
+  return ECMA_VALUE_EMPTY;
 } /* opfunc_append_array */
 
 /**

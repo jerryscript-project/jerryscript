@@ -31,6 +31,7 @@
 #include "ecma-objects-general.h"
 #include "ecma-regexp-object.h"
 #include "ecma-try-catch-macro.h"
+#include "ecma-spread-object.h"
 #include "jcontext.h"
 #include "opcodes.h"
 #include "vm.h"
@@ -1774,6 +1775,11 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           goto error;
         }
+        case VM_OC_CREATE_SPREAD_OBJECT:
+        {
+          *stack_top_p++ = ecma_op_create_spread_object (left_value);
+          goto free_left_value;
+        }
 #endif /* ENABLED (JERRY_ES2015) */
         case VM_OC_PUSH_ELISON:
         {
@@ -1782,9 +1788,25 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_APPEND_ARRAY:
         {
-          uint8_t values_length = *byte_code_p++;
+          uint16_t values_length = *byte_code_p++;
           stack_top_p -= values_length;
-          opfunc_append_array (stack_top_p, values_length);
+
+#if ENABLED (JERRY_ES2015)
+          if (*byte_code_start_p == CBC_EXT_OPCODE)
+          {
+            values_length = (uint16_t) (values_length | OPFUNC_HAS_SPREAD_ELEMENT);
+          }
+#endif /* ENABLED (JERRY_ES2015) */
+          result = opfunc_append_array (stack_top_p, values_length);
+
+#if ENABLED (JERRY_ES2015)
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+#else /* !ENABLED (JERRY_ES2015) */
+          JERRY_ASSERT (ecma_is_value_empty (result));
+#endif /* ENABLED (JERRY_ES2015) */
           continue;
         }
         case VM_OC_PUSH_UNDEFINED_BASE:

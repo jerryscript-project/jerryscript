@@ -607,11 +607,6 @@ parser_parse_class (parser_context_t *context_p, /**< context */
 {
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_CLASS);
 
-#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
-  /* FIXME: Remove this hack after module classes are supported. */
-  uint16_t assign_opcode = CBC_ASSIGN_LET_CONST;
-#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
-
   uint16_t class_ident_index = PARSER_MAXIMUM_NUMBER_OF_LITERALS;
 
   if (is_statement)
@@ -632,8 +627,6 @@ parser_parse_class (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
     if (context_p->status_flags & PARSER_MODULE_STORE_IDENT)
     {
-      assign_opcode = CBC_ASSIGN_SET_IDENT;
-
       context_p->module_identifier_lit_p = context_p->lit_object.literal_p;
       context_p->status_flags &= (uint32_t) ~(PARSER_MODULE_STORE_IDENT);
     }
@@ -693,7 +686,7 @@ parser_parse_class (parser_context_t *context_p, /**< context */
   if (is_statement)
   {
     parser_emit_cbc_literal (context_p,
-                             class_ident_index >= PARSER_REGISTER_START ? CBC_MOV_IDENT : assign_opcode,
+                             class_ident_index >= PARSER_REGISTER_START ? CBC_MOV_IDENT : CBC_ASSIGN_LET_CONST,
                              class_ident_index);
   }
 

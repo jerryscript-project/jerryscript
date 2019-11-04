@@ -120,6 +120,12 @@ scanner_get_stream_size (scanner_info_t *info_p, /**< scanner info block */
       case SCANNER_STREAM_TYPE_ARG:
       case SCANNER_STREAM_TYPE_ARG_FUNC:
       case SCANNER_STREAM_TYPE_FUNC:
+#if ENABLED (JERRY_ES2015)
+      case SCANNER_STREAM_TYPE_FUNC_LOCAL:
+#endif /* ENABLED (JERRY_ES2015) */
+#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+      case SCANNER_STREAM_TYPE_IMPORT:
+#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
       {
         break;
       }
@@ -639,6 +645,12 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
         {
           type = SCANNER_STREAM_TYPE_LET;
         }
+#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+        else if (prev_literal_pool_p == NULL)
+        {
+          type = SCANNER_STREAM_TYPE_IMPORT;
+        }
+#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
       }
       else if (literal_p->type & SCANNER_LITERAL_IS_CONST)
       {
@@ -1029,7 +1041,7 @@ scanner_scope_find_let_declaration (parser_context_t *context_p, /**< context */
 void
 scanner_detect_invalid_var (parser_context_t *context_p, /**< context */
                             scanner_context_t *scanner_context_p, /**< scanner context */
-                            lexer_lit_location_t *var_literal_p) /**< literal */
+                            lexer_lit_location_t *var_literal_p) /**< var literal */
 {
   if (var_literal_p->type & SCANNER_LITERAL_IS_LOCAL
       && !(var_literal_p->type & SCANNER_LITERAL_IS_FUNC)
@@ -1096,6 +1108,26 @@ scanner_detect_invalid_var (parser_context_t *context_p, /**< context */
     scanner_raise_redeclaration_error (context_p);
   }
 } /* scanner_detect_invalid_var */
+
+/**
+ * Throws an error for invalid let statements.
+ */
+void
+scanner_detect_invalid_let (parser_context_t *context_p, /**< context */
+                            lexer_lit_location_t *let_literal_p) /**< let literal */
+{
+  if (let_literal_p->type & (SCANNER_LITERAL_IS_ARG
+                             | SCANNER_LITERAL_IS_VAR
+                             | SCANNER_LITERAL_IS_LOCAL))
+  {
+    scanner_raise_redeclaration_error (context_p);
+  }
+
+  if (let_literal_p->type & SCANNER_LITERAL_IS_FUNC)
+  {
+    let_literal_p->type &= (uint8_t) ~SCANNER_LITERAL_IS_FUNC;
+  }
+} /* scanner_detect_invalid_let */
 
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -1374,11 +1406,14 @@ scanner_is_global_context_needed (parser_context_t *context_p) /**< context */
     uint8_t data = data_p[0];
     uint32_t type = data & SCANNER_STREAM_TYPE_MASK;
 
+    /* FIXME: a private declarative lexical environment should always be present
+     * for modules. Remove SCANNER_STREAM_TYPE_IMPORT after it is implemented. */
     JERRY_ASSERT (type == SCANNER_STREAM_TYPE_VAR
                   || type == SCANNER_STREAM_TYPE_LET
                   || type == SCANNER_STREAM_TYPE_CONST
                   || type == SCANNER_STREAM_TYPE_FUNC
-                  || type == SCANNER_STREAM_TYPE_FUNC_LOCAL);
+                  || type == SCANNER_STREAM_TYPE_FUNC_LOCAL
+                  || type == SCANNER_STREAM_TYPE_IMPORT);
 
     /* Only let/const can be stored in registers */
     JERRY_ASSERT ((data & SCANNER_STREAM_NO_REG)
@@ -1401,7 +1436,9 @@ scanner_is_global_context_needed (parser_context_t *context_p) /**< context */
       data_p += 2 + 2;
     }
 
-    if (type == SCANNER_STREAM_TYPE_VAR || type == SCANNER_STREAM_TYPE_FUNC)
+    if (type == SCANNER_STREAM_TYPE_VAR
+        || type == SCANNER_STREAM_TYPE_FUNC
+        || type == SCANNER_STREAM_TYPE_IMPORT)
     {
       continue;
     }
@@ -1556,10 +1593,17 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
     uint16_t map_to;
     uint16_t func_init_opcode = CBC_INIT_LOCAL;
 
+#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+    JERRY_ASSERT (type != SCANNER_STREAM_TYPE_IMPORT || (data_p[0] & SCANNER_STREAM_NO_REG));
+#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+
 #if ENABLED (JERRY_ES2015)
     if (info_type == SCANNER_TYPE_FUNCTION)
     {
       if (type != SCANNER_STREAM_TYPE_LET
+#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+          && type != SCANNER_STREAM_TYPE_IMPORT
+#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
           && type != SCANNER_STREAM_TYPE_CONST)
       {
         context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_GLOBAL;

@@ -1766,7 +1766,6 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
     context.status_flags = PARSER_IS_FUNCTION;
   }
 
-
 #if ENABLED (JERRY_ES2015)
   context.status_flags |= PARSER_GET_CLASS_PARSER_OPTS (parse_opts);
 #endif /* ENABLED (JERRY_ES2015) */
@@ -1865,6 +1864,7 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   context.u.allocated_buffer_p = NULL;
   context.line = 1;
   context.column = 1;
+  context.token.flags = 0;
 
   parser_stack_init (&context);
 
@@ -1873,6 +1873,11 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+  if (context.status_flags & PARSER_IS_MODULE)
+  {
+    context.status_flags |= PARSER_IS_STRICT;
+  }
+
   if (parse_opts & ECMA_PARSE_EVAL)
   {
     /* After this point this flag is set for non-direct evals as well. */
@@ -1906,6 +1911,12 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
 
       lexer_next_token (&context);
     }
+#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+    else if (parse_opts & ECMA_PARSE_MODULE)
+    {
+      scanner_create_variables (&context, SCANNER_CREATE_VARS_NO_OPTS);
+    }
+#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
     else
     {
       JERRY_ASSERT (context.next_scanner_info_p->source_p == source_p

@@ -145,6 +145,9 @@ typedef enum
   SCANNER_STREAM_TYPE_LET, /**< let declaration */
   SCANNER_STREAM_TYPE_CONST, /**< const declaration */
 #endif /* ENABLED (JERRY_ES2015) */
+#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+  SCANNER_STREAM_TYPE_IMPORT, /**< module import */
+#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
   SCANNER_STREAM_TYPE_ARG, /**< argument declaration */
   /* Function types should be at the end. See the SCANNER_STREAM_TYPE_IS_FUNCTION macro. */
   SCANNER_STREAM_TYPE_ARG_FUNC, /**< argument declaration which is later initialized with a function */

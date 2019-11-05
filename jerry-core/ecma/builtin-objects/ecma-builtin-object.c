@@ -56,6 +56,7 @@ enum
   ECMA_OBJECT_ROUTINE_GET_PROTOTYPE_OF,
   ECMA_OBJECT_ROUTINE_SET_PROTOTYPE_OF,
   ECMA_OBJECT_ROUTINE_ASSIGN,
+  ECMA_OBJECT_ROUTINE_IS,
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-object.inc.h"
@@ -876,6 +877,25 @@ ecma_builtin_object_object_assign (const ecma_value_t arguments_list_p[], /**< a
 } /* ecma_builtin_object_object_assign */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN) */
 
+#if ENABLED (JERRY_ES2015_BUILTIN)
+/**
+ * The Object object's 'is' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 19.1.2.10
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_object_object_is (ecma_value_t arg1, /**< routine's first argument */
+                               ecma_value_t arg2) /**< routine's second argument */
+{
+  return ecma_op_same_value (arg1, arg2) ? ECMA_VALUE_TRUE : ECMA_VALUE_FALSE;
+} /* ecma_builtin_object_object_is */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
+
+
 /**
  * Dispatcher of the built-in's routines
  *
@@ -916,6 +936,10 @@ ecma_builtin_object_dispatch_routine (uint16_t builtin_routine_id, /**< built-in
     case ECMA_OBJECT_ROUTINE_ASSIGN:
     {
       return ecma_builtin_object_object_assign (arguments_list_p, arguments_number);
+    }
+    case ECMA_OBJECT_ROUTINE_IS:
+    {
+      return ecma_builtin_object_object_is (arg1, arg2);
     }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN) */
     default:

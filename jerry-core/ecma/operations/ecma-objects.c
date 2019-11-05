@@ -826,6 +826,45 @@ ecma_op_object_get (ecma_object_t *object_p, /**< the object */
 } /* ecma_op_object_get */
 
 /**
+ * [[Get]] operation of ecma object with the specified receiver
+ *
+ * This function returns the value of a named property, or undefined
+ * if the property is not found in the prototype chain. If the property
+ * is an accessor, it calls the "get" callback function and returns
+ * with its result (including error throws).
+ *
+ * See also:
+ *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
+ */
+ecma_value_t
+ecma_op_object_get_with_receiver (ecma_object_t *object_p, /**< the object */
+                                  ecma_string_t *property_name_p, /**< property name */
+                                  ecma_value_t receiver) /**< receiver to invoke getter function */
+{
+  while (true)
+  {
+    ecma_value_t value = ecma_op_object_find_own (receiver, object_p, property_name_p);
+
+    if (ecma_is_value_found (value))
+    {
+      return value;
+    }
+
+    if (object_p->u2.prototype_cp == JMEM_CP_NULL)
+    {
+      break;
+    }
+
+    object_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, object_p->u2.prototype_cp);
+  }
+
+  return ECMA_VALUE_UNDEFINED;
+} /* ecma_op_object_get_with_receiver */
+
+/**
  * [[Get]] operation of ecma object specified for uint32_t property index
  *
  * @return ecma value

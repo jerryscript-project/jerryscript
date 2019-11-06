@@ -44,12 +44,12 @@
  * If VM_OC_GET_ARGS_INDEX(opcode) == VM_OC_GET_BRANCH,
  * this flag signals that the branch is a backward branch.
  */
-#define VM_OC_BACKWARD_BRANCH 0x4000
+#define VM_OC_BACKWARD_BRANCH (1 << 15)
 
 /**
  * Position of "get arguments" opcode.
  */
-#define VM_OC_GET_ARGS_SHIFT 7
+#define VM_OC_GET_ARGS_SHIFT 8
 
 /**
  * Mask of "get arguments" opcode.
@@ -91,7 +91,7 @@ typedef enum
 /**
  * Mask of "group" opcode.
  */
-#define VM_OC_GROUP_MASK 0x7f
+#define VM_OC_GROUP_MASK 0xff
 
 /**
  * Extract the "group" opcode.
@@ -319,7 +319,7 @@ typedef enum
 /**
  * Bit index shift for non-static property initializers.
  */
-#define VM_OC_NON_STATIC_SHIFT 14
+#define VM_OC_NON_STATIC_SHIFT 15
 
 /**
  * This flag is set for static property initializers.
@@ -329,7 +329,7 @@ typedef enum
 /**
  * Position of "put result" opcode.
  */
-#define VM_OC_PUT_RESULT_SHIFT 10
+#define VM_OC_PUT_RESULT_SHIFT 11
 
 /**
  * Mask of "put result" opcode.

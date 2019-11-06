@@ -1160,12 +1160,12 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     total_size += context_p->argument_count * sizeof (ecma_value_t);
   }
 
-#if ENABLED (JERRY_LINE_INFO)
+#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
   if (JERRY_CONTEXT (resource_name) != ECMA_VALUE_UNDEFINED)
   {
     total_size += sizeof (ecma_value_t);
   }
-#endif /* ENABLED (JERRY_LINE_INFO) */
+#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
 #if ENABLED (JERRY_SNAPSHOT_SAVE)
   total_size_used = total_size;
@@ -1558,7 +1558,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     }
   }
 
-#if ENABLED (JERRY_LINE_INFO)
+#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
   if (JERRY_CONTEXT (resource_name) != ECMA_VALUE_UNDEFINED)
   {
     ecma_value_t *resource_name_p = (ecma_value_t *) (((uint8_t *) compiled_code_p) + total_size);
@@ -1571,7 +1571,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 
     resource_name_p[-1] = JERRY_CONTEXT (resource_name);
   }
-#endif /* ENABLED (JERRY_LINE_INFO) */
+#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
 #if ENABLED (JERRY_DEBUGGER)
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)

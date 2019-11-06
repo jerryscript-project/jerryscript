@@ -2312,12 +2312,14 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
   }
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
-#if ENABLED (JERRY_LINE_INFO)
+#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
   if (JERRY_CONTEXT (resource_name) != ECMA_VALUE_UNDEFINED)
   {
     parser_emit_cbc_ext (context_p, CBC_EXT_RESOURCE_NAME);
     parser_flush_cbc (context_p);
   }
+#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#if ENABLED (JERRY_LINE_INFO)
   context_p->last_line_info_line = 0;
 #endif /* ENABLED (JERRY_LINE_INFO) */
 

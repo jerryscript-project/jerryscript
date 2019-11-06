@@ -3384,36 +3384,14 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           continue;
         }
 #endif /* ENABLED (JERRY_DEBUGGER) */
-#if ENABLED (JERRY_LINE_INFO)
+#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
         case VM_OC_RESOURCE_NAME:
         {
-          ecma_length_t formal_params_number = 0;
-
-          if (CBC_NON_STRICT_ARGUMENTS_NEEDED (bytecode_header_p))
-          {
-            if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
-            {
-              cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_header_p;
-
-              formal_params_number = args_p->argument_end;
-            }
-            else
-            {
-              cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_header_p;
-
-              formal_params_number = args_p->argument_end;
-            }
-          }
-
-          uint8_t *byte_p = (uint8_t *) bytecode_header_p;
-          byte_p += ((size_t) bytecode_header_p->size) << JMEM_ALIGNMENT_LOG;
-
-          ecma_value_t *resource_name_p = (ecma_value_t *) byte_p;
-          resource_name_p -= formal_params_number;
-
-          frame_ctx_p->resource_name = resource_name_p[-1];
+          frame_ctx_p->resource_name = ecma_op_resource_name (bytecode_header_p);
           continue;
         }
+#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#if ENABLED (JERRY_LINE_INFO)
         case VM_OC_LINE:
         {
           uint32_t value = 0;
@@ -3840,8 +3818,10 @@ vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data heade
 #endif /* defined (JERRY_DEBUGGER) || ENABLED (JERRY_LINE_INFO) */
   frame_ctx.this_binding = this_binding_value;
   frame_ctx.block_result = ECMA_VALUE_UNDEFINED;
-#if ENABLED (JERRY_LINE_INFO)
+#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
   frame_ctx.resource_name = ECMA_VALUE_UNDEFINED;
+#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#if ENABLED (JERRY_LINE_INFO)
   frame_ctx.current_line = 0;
 #endif /* ENABLED (JERRY_LINE_INFO) */
   frame_ctx.context_depth = 0;

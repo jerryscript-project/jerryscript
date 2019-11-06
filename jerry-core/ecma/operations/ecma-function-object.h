@@ -28,6 +28,10 @@
 
 bool ecma_is_normal_or_arrow_function (ecma_object_type_t type);
 
+#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+ecma_value_t ecma_op_resource_name (const ecma_compiled_code_t *bytecode_header_p);
+#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+
 bool ecma_op_is_callable (ecma_value_t value);
 bool ecma_op_object_is_callable (ecma_object_t *obj_p);
 bool ecma_is_constructor (ecma_value_t value);

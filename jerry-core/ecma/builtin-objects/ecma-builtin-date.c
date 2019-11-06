@@ -52,7 +52,9 @@
 static ecma_number_t
 ecma_date_parse_date_chars (const lit_utf8_byte_t **str_p, /**< pointer to the cesu8 string */
                             const lit_utf8_byte_t *str_end_p, /**< pointer to the end of the string */
-                            uint32_t num_of_chars) /**< number of characters to read and convert */
+                            uint32_t num_of_chars, /**< number of characters to read and convert */
+                            uint32_t min, /**< minimum valid value */
+                            uint32_t max) /**< maximum valid value */
 {
   JERRY_ASSERT (num_of_chars > 0);
   const lit_utf8_byte_t *str_start_p = *str_p;
@@ -65,8 +67,34 @@ ecma_date_parse_date_chars (const lit_utf8_byte_t **str_p, /**< pointer to the c
     }
   }
 
-  return ecma_utf8_string_to_number (str_start_p, (lit_utf8_size_t) (*str_p - str_start_p));
+  ecma_number_t parsed_number = ecma_utf8_string_to_number (str_start_p, (lit_utf8_size_t) (*str_p - str_start_p));
+
+  if (parsed_number < min || parsed_number > max)
+  {
+    return ecma_number_make_nan ();
+  }
+
+  return parsed_number;
 } /* ecma_date_parse_date_chars */
+
+/**
+ * Helper function to try to parse a special chracter (+,-,T,Z,:,.) in a date string
+ *
+ * @return true if the first character is same as the expected, false otherwise
+ */
+static bool
+ecma_date_parse_special_char (const lit_utf8_byte_t **str_p, /**< pointer to the cesu8 string */
+                              const lit_utf8_byte_t *str_end_p, /**< pointer to the end of the string */
+                              const lit_utf8_byte_t expected_char) /**< expected character */
+{
+  if ((*str_p < str_end_p) && (**str_p == expected_char))
+  {
+    (*str_p)++;
+    return true;
+  }
+
+  return false;
+} /* ecma_date_parse_special_char */
 
 /**
   * Calculate MakeDate(MakeDay(yr, m, dt), MakeTime(h, min, s, milli)) for Date constructor and UTC
@@ -201,20 +229,16 @@ ecma_builtin_date_parse (ecma_value_t this_arg, /**< this argument */
   /* 1. read year */
 
   uint32_t year_digits = 4;
-  bool year_sign = false; /* false: positive, true: negative */
-  if (*date_str_curr_p == '-' || *date_str_curr_p == '+')
+
+  bool is_year_sign_negative = ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, '-');
+  if (is_year_sign_negative || ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, '+'))
   {
     year_digits = 6;
-    if (*date_str_curr_p == '-')
-    {
-      year_sign = true;
-    }
-    /* eat up '-' or '+' */
-    date_str_curr_p++;
   }
 
-  ecma_number_t year = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, year_digits);
-  if (year_sign)
+  ecma_number_t year = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, year_digits,
+                                                   0, (year_digits == 4) ? 9999 : 999999);
+  if (is_year_sign_negative)
   {
     year = -year;
   }
@@ -226,40 +250,20 @@ ecma_builtin_date_parse (ecma_value_t this_arg, /**< this argument */
     ecma_number_t time = ECMA_NUMBER_ZERO;
 
     /* 2. read month if any */
-    if (date_str_curr_p < date_str_end_p
-        && *date_str_curr_p == '-')
+    if (ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, '-'))
     {
-      /* eat up '-' */
-      date_str_curr_p++;
-      month = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2);
-
-      if (month > 12 || month < 1)
-      {
-        month = ecma_number_make_nan ();
-      }
+      month = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2, 1, 12);
     }
 
     /* 3. read day if any */
-    if (date_str_curr_p < date_str_end_p
-        && *date_str_curr_p == '-')
+    if (ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, '-'))
     {
-      /* eat up '-' */
-      date_str_curr_p++;
-      day = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2);
-
-      if (day < 1 || day > 31)
-      {
-        day = ecma_number_make_nan ();
-      }
+      day = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2, 1, 31);
     }
 
     /* 4. read time if any */
-    if (date_str_curr_p < date_str_end_p
-        && *date_str_curr_p == 'T')
+    if (ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, 'T'))
     {
-      /* eat up 'T' */
-      date_str_curr_p++;
-
       ecma_number_t hours = ECMA_NUMBER_ZERO;
       ecma_number_t minutes = ECMA_NUMBER_ZERO;
       ecma_number_t seconds = ECMA_NUMBER_ZERO;
@@ -271,53 +275,27 @@ ecma_builtin_date_parse (ecma_value_t this_arg, /**< this argument */
       if (remaining_length >= 5)
       {
         /* 4.1 read hours and minutes */
-        hours = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2);
+        hours = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2, 0, 24);
 
-        if (hours < 0 || hours > 24)
+        if (ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, ':'))
         {
-          hours = ecma_number_make_nan ();
-        }
-
-        if (date_str_curr_p < date_str_end_p
-            && *date_str_curr_p == ':')
-        {
-          /* eat up ':' */
-          date_str_curr_p++;
-
-          minutes = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2);
-
-          if (minutes < 0 || minutes > 59)
-          {
-            minutes = ecma_number_make_nan ();
-          }
+          minutes = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2, 0, 59);
 
           /* 4.2 read seconds if any */
-          if (date_str_curr_p < date_str_end_p
-              && *date_str_curr_p == ':')
+          if (ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, ':'))
           {
-            /* eat up ':' */
-            date_str_curr_p++;
-            seconds = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2);
-
-            if (seconds < 0 || seconds > 59)
-            {
-              seconds = ecma_number_make_nan ();
-            }
+            seconds = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2, 0, 59);
 
             /* 4.3 read milliseconds if any */
-            if (date_str_curr_p < date_str_end_p
-                && *date_str_curr_p == '.')
+            if (ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, '.'))
             {
-              /* eat up '.' */
-              date_str_curr_p++;
-              milliseconds = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 3);
-
-              if (milliseconds < 0)
-              {
-                milliseconds = ecma_number_make_nan ();
-              }
+              milliseconds = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 3, 0, 999);
             }
           }
+        }
+        else
+        {
+          minutes = ecma_number_make_nan ();
         }
 
         if (hours == 24 && (minutes != 0 || seconds != 0 || milliseconds != 0))
@@ -333,62 +311,29 @@ ecma_builtin_date_parse (ecma_value_t this_arg, /**< this argument */
       }
 
       /* 4.4 read timezone if any */
-      if (date_str_curr_p < date_str_end_p
-          && *date_str_curr_p == 'Z'
-          && !ecma_number_is_nan (time))
+      if (ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, 'Z') && !ecma_number_is_nan (time))
       {
-        date_str_curr_p++;
         time = ecma_date_make_time (hours, minutes, seconds, milliseconds);
       }
-      else if (date_str_curr_p < date_str_end_p
-               && (*date_str_curr_p == '+' || *date_str_curr_p == '-'))
+      else
       {
-        ecma_length_t remaining_date_length;
-        remaining_date_length = lit_utf8_string_length (date_str_curr_p,
-                                                        (lit_utf8_size_t) (date_str_end_p - date_str_curr_p)) - 1;
-
-        if (remaining_date_length == 5)
+        bool is_timezone_sign_negative;
+        if ((lit_utf8_string_length (date_str_curr_p, (lit_utf8_size_t) (date_str_end_p - date_str_curr_p)) == 6)
+            && ((is_timezone_sign_negative = ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, '-'))
+            || ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, '+')))
         {
-          bool is_negative = false;
-
-          if (*date_str_curr_p == '-')
-          {
-            is_negative = true;
-          }
-
-          /* eat up '+/-' */
-          date_str_curr_p++;
-
           /* read hours and minutes */
-          hours = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2);
+          hours = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2, 0, 24);
 
-          if (hours < 0 || hours > 24)
-          {
-            hours = ecma_number_make_nan ();
-          }
-          else if (hours == 24)
+          if (hours == 24)
           {
             hours = ECMA_NUMBER_ZERO;
           }
 
-          /* eat up ':' */
-          date_str_curr_p++;
-
-          minutes = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2);
-
-          if (minutes < 0 || minutes > 59)
-          {
-            minutes = ecma_number_make_nan ();
-          }
-
-          if (is_negative)
-          {
-            time += ecma_date_make_time (hours, minutes, ECMA_NUMBER_ZERO, ECMA_NUMBER_ZERO);
-          }
-          else
-          {
-            time -= ecma_date_make_time (hours, minutes, ECMA_NUMBER_ZERO, ECMA_NUMBER_ZERO);
-          }
+          ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, ':');
+          minutes = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2, 0, 59);
+          ecma_number_t timezone_offset = ecma_date_make_time (hours, minutes, ECMA_NUMBER_ZERO, ECMA_NUMBER_ZERO);
+          time += is_timezone_sign_negative ? timezone_offset : -timezone_offset;
         }
       }
     }

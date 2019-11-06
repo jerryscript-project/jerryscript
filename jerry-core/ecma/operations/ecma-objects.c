@@ -402,9 +402,10 @@ inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_op_object_has_own_property (ecma_object_t *object_p, /**< the object */
                                  ecma_string_t *property_name_p) /**< property name */
 {
+  ecma_property_ref_t property_ref;
   ecma_property_t property = ecma_op_object_get_own_property (object_p,
                                                               property_name_p,
-                                                              NULL,
+                                                              &property_ref,
                                                               ECMA_PROPERTY_GET_NO_OPTIONS);
 
   return property != ECMA_PROPERTY_TYPE_NOT_FOUND && property != ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP;

@@ -244,6 +244,29 @@ convert_code_point_to_high_surrogate (lit_code_point_t code_point) /**< code poi
 } /* convert_code_point_to_high_surrogate */
 
 /**
+ * UTF16 Encoding method for a code point
+ *
+ * See also:
+ *          ECMA-262 v6, 10.1.1
+ *
+ * @return uint8_t, the number of returning code points
+ */
+uint8_t
+lit_utf16_encode_code_point (lit_code_point_t cp, /**< the code point we encode */
+                             ecma_char_t *cu_p) /**< result of the encoding */
+{
+  if (cp <= LIT_UTF16_CODE_UNIT_MAX)
+  {
+    cu_p[0] = (ecma_char_t) cp;
+    return 1;
+  }
+
+  cu_p[0] = convert_code_point_to_high_surrogate (cp);
+  cu_p[1] = convert_code_point_to_low_surrogate (cp);
+  return 2;
+} /* lit_utf16_encode_code_point */
+
+/**
  * Calculate size of a zero-terminated utf-8 string
  *
  * NOTE:

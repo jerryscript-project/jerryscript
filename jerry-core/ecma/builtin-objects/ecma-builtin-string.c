@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "lit-strings.h"
 #include "ecma-alloc.h"
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
@@ -108,6 +109,75 @@ ecma_builtin_string_object_from_char_code (ecma_value_t this_arg, /**< 'this' ar
 
   return ret_value;
 } /* ecma_builtin_string_object_from_char_code */
+
+#if ENABLED (JERRY_ES2015_BUILTIN)
+/**
+ * The String object's 'fromCodePoint' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 21.1.2.2
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_string_object_from_code_point (ecma_value_t this_arg, /**< 'this' argument */
+                                            const ecma_value_t args[], /**< arguments list */
+                                            ecma_length_t args_number) /**< number of arguments */
+{
+  JERRY_UNUSED (this_arg);
+
+  if (args_number == 0)
+  {
+    return ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
+  }
+
+  ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
+
+  for (ecma_length_t index = 0; index < args_number; index++)
+  {
+    ecma_value_t to_number_value = ecma_op_to_number (args[index]);
+
+    if (ECMA_IS_VALUE_ERROR (to_number_value))
+    {
+      ecma_stringbuilder_destroy (&builder);
+      return to_number_value;
+    }
+
+    ecma_number_t to_number_num = ecma_get_number_from_value (to_number_value);
+    ecma_free_value (to_number_value);
+
+    ecma_number_t to_int_num;
+    ecma_value_t to_int_value = ecma_op_to_integer (to_number_value, &to_int_num);
+
+    if (ECMA_IS_VALUE_ERROR (to_int_value))
+    {
+      ecma_stringbuilder_destroy (&builder);
+      return to_int_value;
+    }
+
+    if (to_number_num != to_int_num || to_int_num < 0 || to_int_num > LIT_UNICODE_CODE_POINT_MAX)
+    {
+      ecma_stringbuilder_destroy (&builder);
+      return ecma_raise_range_error (ECMA_ERR_MSG ("Error: Invalid code point"));
+    }
+
+    lit_code_point_t code_point = (uint32_t) to_int_num;
+
+    ecma_char_t converted_cp[2];
+    uint8_t encoded_size = lit_utf16_encode_code_point (code_point, converted_cp);
+
+    for (uint8_t i = 0; i < encoded_size; i++)
+    {
+      ecma_stringbuilder_append_char (&builder, converted_cp[i]);
+    }
+  }
+
+  ecma_string_t *ret_str_p = ecma_stringbuilder_finalize (&builder);
+
+  return ecma_make_string_value (ret_str_p);
+} /* ecma_builtin_string_object_from_code_point */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
 
 /**
  * Handle calling [[Call]] of built-in String object

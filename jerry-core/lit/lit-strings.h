@@ -123,6 +123,8 @@ lit_code_point_t lit_convert_surrogate_pair_to_code_point (ecma_char_t high_surr
 bool lit_compare_utf8_strings_relational (const lit_utf8_byte_t *string1_p, lit_utf8_size_t string1_size,
                                           const lit_utf8_byte_t *string2_p, lit_utf8_size_t string2_size);
 
+uint8_t lit_utf16_encode_code_point (lit_code_point_t cp, ecma_char_t *cu_p);
+
 /* read code point from buffer */
 lit_utf8_size_t lit_read_code_point_from_utf8 (const lit_utf8_byte_t *buf_p, lit_utf8_size_t buf_size,
                                                lit_code_point_t *code_point);

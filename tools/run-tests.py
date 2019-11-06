@@ -327,7 +327,8 @@ def iterate_test_runner_jobs(jobs, options):
         else:
             tested_hashes[bin_hash] = build_dir_path
 
-        test_cmd = [settings.TEST_RUNNER_SCRIPT, bin_path]
+        test_cmd = get_platform_cmd_prefix()
+        test_cmd.extend([settings.TEST_RUNNER_SCRIPT, '--engine', bin_path])
 
         yield job, ret_build, test_cmd
 
@@ -377,6 +378,7 @@ def run_jerry_tests(options):
         if ret_build:
             break
 
+        test_cmd.append('--test-dir')
         test_cmd.append(settings.JERRY_TESTS_DIR)
 
         if options.quiet:
@@ -385,9 +387,9 @@ def run_jerry_tests(options):
         skip_list = []
 
         if '--profile=es2015-subset' in job.build_args:
-            skip_list.append(r"es5.1\/")
+            skip_list.append(os.path.join('es5.1', ''))
         else:
-            skip_list.append(r"es2015\/")
+            skip_list.append(os.path.join('es2015', ''))
 
         if options.skip_list:
             skip_list.append(options.skip_list)
@@ -409,10 +411,13 @@ def run_jerry_test_suite(options):
             break
 
         if '--profile=minimal' in job.build_args:
+            test_cmd.append('--test-list')
             test_cmd.append(settings.JERRY_TEST_SUITE_MINIMAL_LIST)
         elif '--profile=es2015-subset' in job.build_args:
+            test_cmd.append('--test-dir')
             test_cmd.append(settings.JERRY_TEST_SUITE_DIR)
         else:
+            test_cmd.append('--test-list')
             test_cmd.append(settings.JERRY_TEST_SUITE_ES51_LIST)
 
         if options.quiet:

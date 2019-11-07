@@ -599,6 +599,8 @@ void parser_set_continues_to_current_position (parser_context_t *context_p, pars
   parser_emit_cbc_literal ((context_p), PARSER_TO_EXT_OPCODE (opcode), (literal_index))
 #define parser_emit_cbc_ext_call(context_p, opcode, call_arguments) \
   parser_emit_cbc_call ((context_p), PARSER_TO_EXT_OPCODE (opcode), (call_arguments))
+#define parser_emit_cbc_ext_call(context_p, opcode, call_arguments) \
+  parser_emit_cbc_call ((context_p), PARSER_TO_EXT_OPCODE (opcode), (call_arguments))
 #define parser_emit_cbc_ext_forward_branch(context_p, opcode, branch_p) \
   parser_emit_cbc_forward_branch ((context_p), PARSER_TO_EXT_OPCODE (opcode), (branch_p))
 #define parser_emit_cbc_ext_backward_branch(context_p, opcode, offset) \

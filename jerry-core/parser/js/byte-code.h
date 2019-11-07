@@ -66,16 +66,16 @@
 
 #if ENABLED (JERRY_ES2015)
 /**
- * Checks whether the current opcode is a super constructor call
+ * CBC_NO_RESULT_OPERATION for ext opcodes
  */
-#define CBC_SUPER_CALL_OPERATION(opcode) \
+#define CBC_EXT_NO_RESULT_OPERATION(opcode) \
   ((opcode) >= PARSER_TO_EXT_OPCODE (CBC_EXT_SUPER_CALL) \
-    && (opcode) <= PARSER_TO_EXT_OPCODE (CBC_EXT_SUPER_CALL_BLOCK))
+    && (opcode) <= PARSER_TO_EXT_OPCODE (CBC_EXT_SPREAD_CALL_PROP_BLOCK))
 #else /* !ENABLED (JERRY_ES2015) */
 /**
- * Checks whether the current opcode is a super constructor call
+ * CBC_NO_RESULT_OPERATION for ext opcodes
  */
-#define CBC_SUPER_CALL_OPERATION(opcode) false
+#define CBC_EXT_NO_RESULT_OPERATION(opcode) false
 #endif /* ENABLED (JERRY_ES2015) */
 
 /* Debug macro. */
@@ -84,9 +84,9 @@
 
 /* Debug macro. */
 #define CBC_SAME_ARGS(op1, op2) \
-  (CBC_SUPER_CALL_OPERATION (op1) ? ((cbc_ext_flags[PARSER_GET_EXT_OPCODE (op1)] & CBC_ARG_TYPES) \
-                                      == (cbc_ext_flags[PARSER_GET_EXT_OPCODE (op2)] & CBC_ARG_TYPES)) \
-                                  : ((cbc_flags[op1] & CBC_ARG_TYPES) == (cbc_flags[op2] & CBC_ARG_TYPES)))
+  (CBC_EXT_NO_RESULT_OPERATION (op1) ? ((cbc_ext_flags[PARSER_GET_EXT_OPCODE (op1)] & CBC_ARG_TYPES) \
+                                         == (cbc_ext_flags[PARSER_GET_EXT_OPCODE (op2)] & CBC_ARG_TYPES)) \
+                                     : ((cbc_flags[op1] & CBC_ARG_TYPES) == (cbc_flags[op2] & CBC_ARG_TYPES)))
 
 #define CBC_UNARY_OPERATION(name, group) \
   CBC_OPCODE (name, CBC_NO_FLAG, 0, \
@@ -140,7 +140,7 @@
  * cannot be true for an opcode which has a result
  */
 #define CBC_NO_RESULT_OPERATION(opcode) \
-  (((opcode) >= CBC_PRE_INCR && (opcode) < CBC_END) || CBC_SUPER_CALL_OPERATION ((opcode)))
+  (((opcode) >= CBC_PRE_INCR && (opcode) < CBC_END) || CBC_EXT_NO_RESULT_OPERATION ((opcode)))
 
 /**
  * Branch instructions are organized in group of 8 opcodes.
@@ -598,6 +598,24 @@
               VM_OC_SUPER_CALL | VM_OC_PUT_STACK) \
   CBC_OPCODE (CBC_EXT_SUPER_CALL_BLOCK, CBC_HAS_POP_STACK_BYTE_ARG, -1, \
               VM_OC_SUPER_CALL | VM_OC_PUT_BLOCK) \
+  CBC_OPCODE (CBC_EXT_SPREAD_SUPER_CALL, CBC_HAS_POP_STACK_BYTE_ARG, -1, \
+              VM_OC_SUPER_CALL) \
+  CBC_OPCODE (CBC_EXT_SPREAD_SUPER_CALL_PUSH_RESULT, CBC_HAS_POP_STACK_BYTE_ARG, 0, \
+              VM_OC_SUPER_CALL | VM_OC_PUT_STACK) \
+  CBC_OPCODE (CBC_EXT_SPREAD_SUPER_CALL_BLOCK, CBC_HAS_POP_STACK_BYTE_ARG, -1, \
+              VM_OC_SUPER_CALL | VM_OC_PUT_BLOCK) \
+  CBC_OPCODE (CBC_EXT_SPREAD_CALL, CBC_HAS_POP_STACK_BYTE_ARG, -1, \
+              VM_OC_SPREAD_ARGUMENTS) \
+  CBC_OPCODE (CBC_EXT_SPREAD_CALL_PUSH_RESULT, CBC_HAS_POP_STACK_BYTE_ARG, 0, \
+              VM_OC_SPREAD_ARGUMENTS | VM_OC_PUT_STACK) \
+  CBC_OPCODE (CBC_EXT_SPREAD_CALL_BLOCK, CBC_HAS_POP_STACK_BYTE_ARG, -1, \
+              VM_OC_SPREAD_ARGUMENTS | VM_OC_PUT_BLOCK) \
+  CBC_OPCODE (CBC_EXT_SPREAD_CALL_PROP, CBC_HAS_POP_STACK_BYTE_ARG, -3, \
+              VM_OC_SPREAD_ARGUMENTS) \
+  CBC_OPCODE (CBC_EXT_SPREAD_CALL_PROP_PUSH_RESULT, CBC_HAS_POP_STACK_BYTE_ARG, -2, \
+              VM_OC_SPREAD_ARGUMENTS | VM_OC_PUT_STACK) \
+  CBC_OPCODE (CBC_EXT_SPREAD_CALL_PROP_BLOCK, CBC_HAS_POP_STACK_BYTE_ARG, -3, \
+              VM_OC_SPREAD_ARGUMENTS | VM_OC_PUT_BLOCK) \
   CBC_OPCODE (CBC_EXT_PUSH_CONSTRUCTOR_SUPER, CBC_NO_FLAG, 1, \
               VM_OC_PUSH_CONSTRUCTOR_SUPER | VM_OC_PUT_STACK) \
   CBC_OPCODE (CBC_EXT_PUSH_CONSTRUCTOR_SUPER_PROP, CBC_NO_FLAG, 1, \
@@ -632,6 +650,8 @@
               VM_OC_REST_INITIALIZER) \
   CBC_OPCODE (CBC_EXT_INITIALIZER_PUSH_PROP_LITERAL, CBC_HAS_LITERAL_ARG, 1, \
               VM_OC_INITIALIZER_PUSH_PROP | VM_OC_GET_LITERAL) \
+  CBC_OPCODE (CBC_EXT_SPREAD_NEW, CBC_HAS_POP_STACK_BYTE_ARG, 0, \
+              VM_OC_SPREAD_ARGUMENTS | VM_OC_PUT_STACK) \
   \
   /* Last opcode (not a real opcode). */ \
   CBC_OPCODE (CBC_EXT_END, CBC_NO_FLAG, 0, \

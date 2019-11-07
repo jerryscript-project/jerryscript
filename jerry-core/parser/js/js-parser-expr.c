@@ -1639,6 +1639,10 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
 
         lexer_next_token (context_p);
 
+#if ENABLED (JERRY_ES2015)
+        bool spread_arguments = false;
+#endif /* ENABLED (JERRY_ES2015) */
+
         if (context_p->token.type != LEXER_RIGHT_PAREN)
         {
           while (true)
@@ -1648,7 +1652,23 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
               parser_raise_error (context_p, PARSER_ERR_ARGUMENT_LIMIT_REACHED);
             }
 
+#if ENABLED (JERRY_ES2015)
+            bool is_spread = false;
+            if (context_p->token.type == LEXER_THREE_DOTS)
+            {
+              spread_arguments = true;
+              is_spread = true;
+              lexer_next_token (context_p);
+            }
+#endif /* ENABLED (JERRY_ES2015) */
             parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
+
+#if ENABLED (JERRY_ES2015)
+            if (is_spread)
+            {
+              parser_emit_cbc_ext (context_p, CBC_EXT_CREATE_SPREAD_OBJECT);
+            }
+#endif /* ENABLED (JERRY_ES2015) */
 
             if (context_p->token.type != LEXER_COMMA)
             {
@@ -1688,6 +1708,33 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
         {
           parser_emit_cbc_ext (context_p, CBC_EXT_SUPER_PROP_CALL);
           context_p->status_flags &= (uint32_t) ~PARSER_CLASS_SUPER_PROP_REFERENCE;
+        }
+
+        if (spread_arguments)
+        {
+          uint16_t spread_opcode;
+
+          if (opcode == CBC_CALL)
+          {
+            spread_opcode = CBC_EXT_SPREAD_CALL;
+          }
+          else if (opcode == CBC_CALL_PROP)
+          {
+            spread_opcode = CBC_EXT_SPREAD_CALL_PROP;
+          }
+          else if (opcode == CBC_NEW)
+          {
+            spread_opcode = CBC_EXT_SPREAD_NEW;
+          }
+          else
+          {
+            /* opcode is unchanged */
+            JERRY_ASSERT (opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_SUPER_CALL));
+            spread_opcode = CBC_EXT_SPREAD_SUPER_CALL;
+          }
+
+          parser_emit_cbc_ext_call (context_p, spread_opcode, call_arguments);
+          continue;
         }
 #endif /* ENABLED (JERRY_ES2015) */
 

@@ -2135,7 +2135,7 @@ parser_parse_expression (parser_context_t *context_p, /**< context */
    *
    * If this is not done, it is possible to carry the flag over to the next expression.
    */
-  bool has_super_ref = (context_p->status_flags & PARSER_CLASS_SUPER_PROP_REFERENCE);
+  bool has_super_ref = (context_p->status_flags & PARSER_CLASS_SUPER_PROP_REFERENCE) != 0;
   context_p->status_flags &= (uint32_t) ~PARSER_CLASS_SUPER_PROP_REFERENCE;
 #endif
 

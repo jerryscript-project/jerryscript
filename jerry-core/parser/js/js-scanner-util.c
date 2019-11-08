@@ -1789,6 +1789,9 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
     if (type != SCANNER_STREAM_TYPE_ARG_FUNC)
     {
       if (func_init_opcode == CBC_INIT_LOCAL
+#if ENABLED (JERRY_ES2015)
+          && type != SCANNER_STREAM_TYPE_FUNC_LOCAL
+#endif /* ENABLED (JERRY_ES2015) */
           && (option_flags & SCANNER_CREATE_VARS_IS_EVAL))
       {
         func_init_opcode = CBC_CREATE_VAR_FUNC_EVAL;

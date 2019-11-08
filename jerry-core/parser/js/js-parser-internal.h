@@ -93,9 +93,10 @@ typedef enum
 typedef enum
 {
   PARSE_EXPR = 0,                             /**< parse an expression without any special flags */
-  PARSE_EXPR_NO_PUSH_RESULT = (1u << 0),      /**< do not push the result of the expression onto the stack */
-  PARSE_EXPR_NO_COMMA = (1u << 1),            /**< do not parse comma operator */
-  PARSE_EXPR_HAS_LITERAL = (1u << 2),         /**< a primary literal is provided by a
+  PARSE_EXPR_LEFT_HAND_SIDE = (1u << 0),      /**< parse a left-hand-side expression */
+  PARSE_EXPR_NO_PUSH_RESULT = (1u << 1),      /**< do not push the result of the expression onto the stack */
+  PARSE_EXPR_NO_COMMA = (1u << 2),            /**< do not parse comma operator */
+  PARSE_EXPR_HAS_LITERAL = (1u << 3),         /**< a primary literal is provided by a
                                                *   CBC_PUSH_LITERAL instruction  */
 } parser_expression_flags_t;
 

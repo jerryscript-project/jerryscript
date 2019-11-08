@@ -107,6 +107,14 @@ must_throw ("class A extends A { }");
 
 must_throw ("class A extends { constructor () { super () } }");
 
+must_throw ("class A extends a * b {}");
+
+must_throw ("class A extends a = b {}");
+
+must_throw ("class A extends a++ {}");
+
+must_throw ("class A extends -a {}");
+
 class B extends A {
   constructor (a, b) {
     super (a);

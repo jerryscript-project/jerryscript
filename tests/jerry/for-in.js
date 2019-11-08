@@ -281,3 +281,11 @@ assert(count == 1
            || 'base_prop2' in log
            || 'derived_prop1' in log
            || 'derived_prop2' in log));
+
+try {
+  /* This form is a SyntaxError even in ES5.1. */
+  eval("for (a = b in {}) ;");
+  assert(false);
+} catch (e) {
+  assert(e instanceof SyntaxError);
+}

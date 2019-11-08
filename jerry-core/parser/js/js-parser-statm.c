@@ -695,10 +695,7 @@ parser_parse_super_class_context_start (parser_context_t *context_p) /**< contex
   {
     lexer_next_token (context_p);
 
-    /* NOTE: Currently there is no proper way to check whether the currently parsed expression
-       is a valid lefthand-side expression or not, so we do not throw syntax error and parse
-       the class extending value as an expression. */
-    parser_parse_expression (context_p, PARSE_EXPR | PARSE_EXPR_NO_COMMA);
+    parser_parse_expression (context_p, PARSE_EXPR | PARSE_EXPR_LEFT_HAND_SIDE);
   }
   else
   {
@@ -1058,7 +1055,7 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
     {
       uint16_t opcode;
 
-      parser_parse_expression (context_p, PARSE_EXPR);
+      parser_parse_expression (context_p, PARSE_EXPR_LEFT_HAND_SIDE);
 
       opcode = context_p->last_cbc_opcode;
 

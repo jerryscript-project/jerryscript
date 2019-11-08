@@ -30,6 +30,7 @@
 #include "jrt.h"
 #include "jrt-libc-includes.h"
 #include "lit-char-helpers.h"
+#include "lit-strings.h"
 
 #if ENABLED (JERRY_BUILTIN_REGEXP)
 #include "ecma-regexp-object.h"
@@ -77,6 +78,7 @@ enum
   ECMA_STRING_PROTOTYPE_SUBSTR,
 
   ECMA_STRING_PROTOTYPE_REPEAT,
+  ECMA_STRING_PROTOTYPE_CODE_POINT_AT,
   /* Note: These 5 routines MUST be in this order */
   ECMA_STRING_PROTOTYPE_INDEX_OF,
   ECMA_STRING_PROTOTYPE_LAST_INDEX_OF,
@@ -1858,6 +1860,54 @@ ecma_builtin_string_prototype_object_repeat (ecma_string_t *original_string_p, /
   return ecma_make_string_value (ret_string_p);
 } /* ecma_builtin_string_prototype_object_repeat */
 
+/**
+ * The String.prototype object's 'codePointAt' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 21.1.3.3
+ *
+ * @return lit_code_point_t
+ */
+static ecma_value_t
+ecma_builtin_string_prototype_object_code_point_at (ecma_string_t *this_string_p, /**< this argument */
+                                                    ecma_value_t pos) /**< given position */
+{
+  ecma_number_t pos_num;
+  ecma_value_t error = ecma_op_to_integer (pos, &pos_num);
+
+  if (ECMA_IS_VALUE_ERROR (error))
+  {
+    return error;
+  }
+
+  ecma_length_t size = ecma_string_get_length (this_string_p);
+
+  if (pos_num < 0 || pos_num >= size)
+  {
+    return ECMA_VALUE_UNDEFINED;
+  }
+
+  uint32_t index = (uint32_t) pos_num;
+
+  ecma_char_t first = ecma_string_get_char_at_pos (this_string_p, index);
+
+  if (first < LIT_UTF16_HIGH_SURROGATE_MIN
+      || first > LIT_UTF16_HIGH_SURROGATE_MAX
+      || index + 1 == size)
+  {
+    return ecma_make_uint32_value (first);
+  }
+
+  ecma_char_t second = ecma_string_get_char_at_pos (this_string_p, index + 1);
+
+  if (second < LIT_UTF16_LOW_SURROGATE_MARKER
+      || second > LIT_UTF16_LOW_SURROGATE_MAX)
+  {
+    return ecma_make_uint32_value (first);
+  }
+
+  return ecma_make_uint32_value (lit_convert_surrogate_pair_to_code_point (first, second));
+} /* ecma_builtin_string_prototype_object_code_point_at */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN) */
 
 #if ENABLED (JERRY_BUILTIN_ANNEXB)
@@ -2070,6 +2120,11 @@ ecma_builtin_string_prototype_dispatch_routine (uint16_t builtin_routine_id, /**
     case ECMA_STRING_PROTOTYPE_REPEAT:
     {
       ret_value = ecma_builtin_string_prototype_object_repeat (string_p, arg1);
+      break;
+    }
+    case ECMA_STRING_PROTOTYPE_CODE_POINT_AT:
+    {
+      ret_value = ecma_builtin_string_prototype_object_code_point_at (string_p, arg1);
       break;
     }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN) */

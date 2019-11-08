@@ -32,14 +32,19 @@
  */
 
 /**
- * Maximum precedence for right-to-left binary operation evaluation
+ * Maximum precedence for right-to-left binary operation evaluation.
  */
 #define PARSER_RIGHT_TO_LEFT_ORDER_MAX_PRECEDENCE 6
 
 /**
- * Precende for ternary operation
+ * Precende for ternary operation.
  */
 #define PARSER_RIGHT_TO_LEFT_ORDER_TERNARY_PRECEDENCE 4
+
+/**
+ * Value of grouping level increase and decrease.
+ */
+#define PARSER_GROUPING_LEVEL_INCREASE 2
 
 /**
  * Precedence of the binary tokens.
@@ -1167,7 +1172,7 @@ static void
 parser_parse_unary_expression (parser_context_t *context_p, /**< context */
                                size_t *grouping_level_p) /**< grouping level */
 {
-  int new_was_seen = 0;
+  bool new_was_seen = false;
 
   /* Collect unary operators. */
   while (true)
@@ -1194,15 +1199,17 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
         break;
       }
 #endif /* ENABLED (JERRY_ES2015) */
-      (*grouping_level_p)++;
-      new_was_seen = 0;
+      (*grouping_level_p) += PARSER_GROUPING_LEVEL_INCREASE;
+      new_was_seen = false;
     }
     else if (context_p->token.type == LEXER_KEYW_NEW)
     {
       /* After 'new' unary operators are not allowed. */
-      new_was_seen = 1;
+      new_was_seen = true;
     }
-    else if (new_was_seen || !LEXER_IS_UNARY_OP_TOKEN (context_p->token.type))
+    else if (new_was_seen
+             || (*grouping_level_p == PARSE_EXPR_LEFT_HAND_SIDE)
+             || !LEXER_IS_UNARY_OP_TOKEN (context_p->token.type))
     {
       break;
     }
@@ -1449,7 +1456,9 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
 #endif /* ENABLED (JERRY_ES2015) */
     default:
     {
-      parser_raise_error (context_p, PARSER_ERR_PRIMARY_EXP_EXPECTED);
+      bool is_left_hand_side = (*grouping_level_p == PARSE_EXPR_LEFT_HAND_SIDE);
+      parser_raise_error (context_p, (is_left_hand_side ? PARSER_ERR_LEFT_HAND_SIDE_EXP_EXPECTED
+                                                        : PARSER_ERR_PRIMARY_EXP_EXPECTED));
       break;
     }
   }
@@ -1461,7 +1470,8 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
  * generate byte code for the whole expression.
  */
 static void
-parser_process_unary_expression (parser_context_t *context_p) /**< context */
+parser_process_unary_expression (parser_context_t *context_p, /**< context */
+                                 size_t grouping_level) /**< grouping level */
 {
 #if ENABLED (JERRY_ES2015)
   /* Track to see if a property was accessed or not */
@@ -1694,7 +1704,8 @@ parser_process_unary_expression (parser_context_t *context_p) /**< context */
         }
 
         if (!(context_p->token.flags & LEXER_WAS_NEWLINE)
-            && (context_p->token.type == LEXER_INCREASE || context_p->token.type == LEXER_DECREASE))
+            && (context_p->token.type == LEXER_INCREASE || context_p->token.type == LEXER_DECREASE)
+            && grouping_level != PARSE_EXPR_LEFT_HAND_SIDE)
         {
           cbc_opcode_t opcode = (context_p->token.type == LEXER_INCREASE) ? CBC_POST_INCR : CBC_POST_DECR;
           parser_push_result (context_p);
@@ -2088,8 +2099,8 @@ static void
 parser_process_group_expression (parser_context_t *context_p, /**< context */
                                  size_t *grouping_level_p) /**< grouping level */
 {
-  JERRY_ASSERT (*grouping_level_p > 0);
-  (*grouping_level_p)--;
+  JERRY_ASSERT (*grouping_level_p >= PARSER_GROUPING_LEVEL_INCREASE);
+  (*grouping_level_p) -= PARSER_GROUPING_LEVEL_INCREASE;
 
   if (context_p->stack_top_uint8 == LEXER_COMMA_SEP_LIST)
   {
@@ -2137,6 +2148,9 @@ parser_parse_expression_statement (parser_context_t *context_p, /**< context */
   }
 } /* parser_parse_expression_statement */
 
+JERRY_STATIC_ASSERT (PARSE_EXPR_LEFT_HAND_SIDE == 0x1,
+                     value_of_parse_expr_left_hand_side_must_be_1);
+
 /**
  * Parse expression.
  */
@@ -2144,7 +2158,7 @@ void
 parser_parse_expression (parser_context_t *context_p, /**< context */
                          int options) /**< option flags */
 {
-  size_t grouping_level = 0;
+  size_t grouping_level = (options & PARSE_EXPR_LEFT_HAND_SIDE);
 
   parser_stack_push_uint8 (context_p, LEXER_EXPRESSION_START);
 
@@ -2171,24 +2185,27 @@ parser_parse_expression (parser_context_t *context_p, /**< context */
     while (true)
     {
 process_unary_expression:
-      parser_process_unary_expression (context_p);
+      parser_process_unary_expression (context_p, grouping_level);
 
-      uint8_t min_prec_treshold = 0;
-
-      if (LEXER_IS_BINARY_OP_TOKEN (context_p->token.type))
+      if (JERRY_LIKELY (grouping_level != PARSE_EXPR_LEFT_HAND_SIDE))
       {
-        min_prec_treshold = parser_binary_precedence_table[context_p->token.type - LEXER_FIRST_BINARY_OP];
+        uint8_t min_prec_treshold = 0;
 
-        /* Check for BINARY_LVALUE tokens + LEXER_LOGICAL_OR + LEXER_LOGICAL_AND */
-        if (min_prec_treshold <= PARSER_RIGHT_TO_LEFT_ORDER_MAX_PRECEDENCE
-            && min_prec_treshold != PARSER_RIGHT_TO_LEFT_ORDER_TERNARY_PRECEDENCE)
+        if (LEXER_IS_BINARY_OP_TOKEN (context_p->token.type))
         {
-          /* Right-to-left evaluation order. */
-          min_prec_treshold++;
-        }
-      }
+          min_prec_treshold = parser_binary_precedence_table[context_p->token.type - LEXER_FIRST_BINARY_OP];
 
-      parser_process_binary_opcodes (context_p, min_prec_treshold);
+          /* Check for BINARY_LVALUE tokens + LEXER_LOGICAL_OR + LEXER_LOGICAL_AND */
+          if (min_prec_treshold <= PARSER_RIGHT_TO_LEFT_ORDER_MAX_PRECEDENCE
+              && min_prec_treshold != PARSER_RIGHT_TO_LEFT_ORDER_TERNARY_PRECEDENCE)
+          {
+            /* Right-to-left evaluation order. */
+            min_prec_treshold++;
+          }
+        }
+
+        parser_process_binary_opcodes (context_p, min_prec_treshold);
+      }
 
       if (context_p->token.type == LEXER_RIGHT_PAREN
           && (context_p->stack_top_uint8 == LEXER_LEFT_PAREN
@@ -2198,7 +2215,8 @@ process_unary_expression:
         continue;
       }
 
-      if (context_p->token.type == LEXER_QUESTION_MARK)
+      if (JERRY_UNLIKELY (context_p->token.type == LEXER_QUESTION_MARK)
+          && (grouping_level != PARSE_EXPR_LEFT_HAND_SIDE))
       {
         parser_process_ternary_expression (context_p);
         continue;
@@ -2206,8 +2224,13 @@ process_unary_expression:
       break;
     }
 
+    if (grouping_level == PARSE_EXPR_LEFT_HAND_SIDE)
+    {
+      break;
+    }
+
     if (JERRY_UNLIKELY (context_p->token.type == LEXER_COMMA)
-                        && (!(options & PARSE_EXPR_NO_COMMA) || grouping_level > 0))
+        && (!(options & PARSE_EXPR_NO_COMMA) || grouping_level >= PARSER_GROUPING_LEVEL_INCREASE))
     {
       parser_process_expression_sequence (context_p);
       continue;
@@ -2222,7 +2245,7 @@ process_unary_expression:
     break;
   }
 
-  if (grouping_level != 0)
+  if (grouping_level >= PARSER_GROUPING_LEVEL_INCREASE)
   {
     parser_raise_error (context_p, PARSER_ERR_RIGHT_PAREN_EXPECTED);
   }

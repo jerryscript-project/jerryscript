@@ -1016,6 +1016,10 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Primary expression expected.";
     }
+    case PARSER_ERR_LEFT_HAND_SIDE_EXP_EXPECTED:
+    {
+      return "Left-hand-side expression expected.";
+    }
     case PARSER_ERR_STATEMENT_EXPECTED:
     {
       return "Statement expected.";

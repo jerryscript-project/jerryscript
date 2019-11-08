@@ -77,6 +77,7 @@ enum
   ECMA_ARRAY_PROTOTYPE_KEYS,
   ECMA_ARRAY_PROTOTYPE_SYMBOL_ITERATOR,
   ECMA_ARRAY_PROTOTYPE_FILL,
+  ECMA_ARRAY_PROTOTYPE_COPY_WITHIN,
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-array-prototype.inc.h"
@@ -2268,6 +2269,131 @@ ecma_builtin_array_prototype_object_find (ecma_value_t predicate, /**< callback 
   /* 9. */
   return is_find ? ECMA_VALUE_UNDEFINED : ecma_make_integer_value (-1);
 } /* ecma_builtin_array_prototype_object_find */
+
+/**
+ * The Array.prototype object's 'copyWithin' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 22.1.3.3
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_array_prototype_object_copy_within (const ecma_value_t args[], /**< arguments list */
+                                                 ecma_length_t args_number, /**< number of arguments */
+                                                 ecma_object_t *obj_p, /**< array object */
+                                                 uint32_t len) /**< array object's length */
+{
+  if (args_number == 0)
+  {
+    return ecma_copy_value (ecma_make_object_value (obj_p));
+  }
+
+  ecma_number_t target_num;
+  ecma_value_t error = ecma_op_to_integer (args[0], &target_num);
+
+  if (ECMA_IS_VALUE_ERROR (error))
+  {
+    return error;
+  }
+
+  uint32_t target = (uint32_t) (ecma_number_is_negative (target_num) ? JERRY_MAX (len + target_num, 0) :
+                                                                       JERRY_MIN (target_num, len));
+
+  uint32_t start = 0;
+  uint32_t end = len;
+
+  if (args_number > 1)
+  {
+    ecma_number_t start_num;
+    error = ecma_op_to_integer (args[1], &start_num);
+    if (ECMA_IS_VALUE_ERROR (error))
+    {
+      return error;
+    }
+
+    start = (uint32_t) (ecma_number_is_negative (start_num) ? JERRY_MAX (len + start_num, 0) :
+                                                              JERRY_MIN (start_num, len));
+
+    if (args_number > 2)
+    {
+      if (ecma_is_value_undefined (args[2]))
+      {
+        end = len;
+      }
+      else
+      {
+        ecma_number_t end_num;
+        error = ecma_op_to_integer (args[2], &end_num);
+        if (ECMA_IS_VALUE_ERROR (error))
+        {
+          return error;
+        }
+
+        end = (uint32_t) (ecma_number_is_negative (end_num) ? JERRY_MAX (len + end_num, 0) :
+                                                              JERRY_MIN (end_num, len));
+      }
+    }
+  }
+
+  ecma_free_value (error);
+
+  uint32_t count = JERRY_MIN (end - start, len - target);
+  bool forward = true;
+
+  if (start < target && target < start + count)
+  {
+    start = start + count - 1;
+    target = target + count - 1;
+    forward = false;
+  }
+
+  while (count > 0)
+  {
+    ecma_value_t get_value = ecma_op_object_find_by_uint32_index (obj_p, start);
+
+    if (ECMA_IS_VALUE_ERROR (get_value))
+    {
+      return get_value;
+    }
+
+    ecma_value_t op_value;
+
+    if (ecma_is_value_found (get_value))
+    {
+      op_value = ecma_op_object_put_by_uint32_index (obj_p, target, get_value, true);
+    }
+    else
+    {
+      op_value = ecma_op_object_delete_by_uint32_index (obj_p, target, true);
+    }
+
+    ecma_free_value (get_value);
+
+    if (ECMA_IS_VALUE_ERROR (op_value))
+    {
+      return op_value;
+    }
+
+    ecma_free_value (op_value);
+
+    if (forward)
+    {
+      start++;
+      target++;
+    }
+    else
+    {
+      start--;
+      target--;
+    }
+
+    count--;
+  }
+
+  return ecma_copy_value (ecma_make_object_value (obj_p));
+} /* ecma_builtin_array_prototype_object_copy_within */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN) */
 
 #if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
@@ -2498,6 +2624,14 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
       break;
     }
 #if ENABLED (JERRY_ES2015_BUILTIN)
+    case ECMA_ARRAY_PROTOTYPE_COPY_WITHIN:
+    {
+      ret_value = ecma_builtin_array_prototype_object_copy_within (arguments_list_p,
+                                                                   arguments_number,
+                                                                   obj_p,
+                                                                   length);
+      break;
+    }
     case ECMA_ARRAY_PROTOTYPE_FIND:
     case ECMA_ARRAY_PROTOTYPE_FIND_INDEX:
     {

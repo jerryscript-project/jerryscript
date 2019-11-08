@@ -51,6 +51,14 @@ typedef struct
 } ecma_regexp_capture_t;
 
 /**
+ * Check if an ecma_regexp_capture_t contains a defined capture
+ */
+#define ECMA_RE_IS_CAPTURE_DEFINED(c) ((c)->begin_p != NULL && (c)->end_p >= (c)->begin_p)
+
+ecma_value_t
+ecma_regexp_get_capture_value (const ecma_regexp_capture_t *const capture_p);
+
+/**
  * Structure for storing non-capturing group results
  */
 typedef struct
@@ -96,6 +104,10 @@ ecma_char_t ecma_regexp_canonicalize_char (ecma_char_t ch);
 ecma_value_t ecma_regexp_parse_flags (ecma_string_t *flags_str_p, uint16_t *flags_p);
 void ecma_regexp_initialize_props (ecma_object_t *re_obj_p, ecma_string_t *source_p, uint16_t flags);
 
+ecma_value_t
+ecma_regexp_replace_helper (ecma_value_t this_arg,
+                            ecma_value_t string_arg,
+                            ecma_value_t replace_arg);
 /**
  * @}
  * @}

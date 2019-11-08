@@ -320,6 +320,14 @@ typedef struct
 
 /**
  * This item represents a function literal in the scope stack.
+ *
+ * When map_from == PARSER_SCOPE_STACK_FUNC:
+ *   map_to represents the literal reserved for a function literal
+ *   Note: the name of the function is the previous value in the scope stack
+ *
+ * When map_to == PARSER_SCOPE_STACK_FUNC:
+ *   map_from represents the name of the function literal following this literal
+ *   Note: only the name, the real mapping is somewhere else in the scope stack
  */
 #define PARSER_SCOPE_STACK_FUNC 0xffff
 
@@ -626,6 +634,7 @@ void parser_parse_super_class_context_end (parser_context_t *context_p);
 
 void scanner_release_next (parser_context_t *context_p, size_t size);
 void scanner_set_active (parser_context_t *context_p);
+void scanner_revert_active (parser_context_t *context_p);
 void scanner_release_active (parser_context_t *context_p, size_t size);
 void scanner_release_switch_cases (scanner_case_info_t *case_p);
 void scanner_seek (parser_context_t *context_p);

@@ -176,20 +176,14 @@ typedef enum
 } scanner_function_flags_t;
 
 /**
- * Scanner info for function statements.
- */
-typedef struct
-{
-  scanner_info_t info; /**< header */
-} scanner_function_info_t;
-
-/**
  * Option bits for scanner_create_variables function.
  */
 typedef enum
 {
   SCANNER_CREATE_VARS_NO_OPTS = 0, /**< no options */
   SCANNER_CREATE_VARS_IS_EVAL = (1 << 0), /**< create variables for script / direct eval */
+  SCANNER_CREATE_VARS_IS_FUNCTION_ARGS = (1 << 1), /**< create variables for function arguments */
+  SCANNER_CREATE_VARS_IS_FUNCTION_BODY = (1 << 2), /**< create variables for function body */
 } scanner_create_variables_flags_t;
 
 /**

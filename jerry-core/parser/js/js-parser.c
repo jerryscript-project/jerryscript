@@ -1617,12 +1617,15 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 #endif /* ENABLED (JERRY_ES2015) */
 
   JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
-  scanner_create_variables (context_p, SCANNER_CREATE_VARS_NO_OPTS);
 
   if (context_p->token.type == end_type)
   {
+    scanner_create_variables (context_p, SCANNER_CREATE_VARS_NO_OPTS);
     return;
   }
+
+  scanner_create_variables (context_p, SCANNER_CREATE_VARS_IS_FUNCTION_ARGS);
+  scanner_set_active (context_p);
 
   while (true)
   {
@@ -1730,6 +1733,9 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 
     parser_raise_error (context_p, error);
   }
+
+  scanner_revert_active (context_p);
+  scanner_create_variables (context_p, SCANNER_CREATE_VARS_IS_FUNCTION_BODY);
 } /* parser_parse_function_arguments */
 
 /**

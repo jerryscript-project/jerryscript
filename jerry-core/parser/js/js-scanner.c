@@ -2632,12 +2632,11 @@ scan_completed:
 
           if (info_p->type == SCANNER_TYPE_FUNCTION)
           {
-            scanner_function_info_t *function_info_p = (scanner_function_info_t *) info_p;
-            data_p = (const uint8_t *) (function_info_p + 1);
+            data_p = (const uint8_t *) (info_p + 1);
 
             JERRY_DEBUG_MSG ("  FUNCTION: flags: 0x%x declarations: %d",
-                             (int) function_info_p->info.u8_arg,
-                             (int) function_info_p->info.u16_arg);
+                             (int) info_p->u8_arg,
+                             (int) info_p->u16_arg);
           }
           else
           {

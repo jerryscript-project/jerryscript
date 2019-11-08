@@ -949,7 +949,6 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         break;
       }
 
-#if ENABLED (JERRY_ES2015)
       case CBC_SET_VAR_FUNC:
       {
         uint32_t literal_index, value_index;
@@ -966,8 +965,6 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
         if (literal_index < register_end)
         {
-          JERRY_ASSERT (type == CBC_SET_VAR_FUNC);
-
           ecma_fast_free_value (frame_ctx_p->registers_p[literal_index]);
           frame_ctx_p->registers_p[literal_index] = lit_value;
           break;
@@ -978,7 +975,6 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         vm_set_var (frame_ctx_p->lex_env_p, name_p, is_strict, lit_value);
         break;
       }
-#endif /* ENABLED (JERRY_ES2015) */
 
 #if ENABLED (JERRY_SNAPSHOT_EXEC)
       case CBC_SET_BYTECODE_PTR:

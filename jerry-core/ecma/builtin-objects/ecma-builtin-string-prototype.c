@@ -623,7 +623,7 @@ ecma_builtin_string_prototype_object_replace (ecma_value_t this_value, /**< this
           if (ECMA_IS_VALUE_ERROR (result))
           {
             ecma_stringbuilder_destroy (&replace_ctx.builder);
-            goto cleanup_search;
+            goto cleanup_replace;
           }
 
           ecma_string_t *const result_str_p = ecma_op_to_string (result);

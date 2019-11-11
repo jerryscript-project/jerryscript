@@ -1335,6 +1335,14 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
           continue;
         }
+        case VM_OC_CLONE_CONTEXT:
+        {
+          JERRY_ASSERT (byte_code_start_p[0] == CBC_EXT_OPCODE);
+
+          bool copy_values = (byte_code_start_p[1] == CBC_EXT_CLONE_FULL_CONTEXT);
+          frame_ctx_p->lex_env_p = ecma_clone_decl_lexical_environment (frame_ctx_p->lex_env_p, copy_values);
+          continue;
+        }
         case VM_OC_SET_COMPUTED_PROPERTY:
         {
           /* Swap values. */
@@ -3025,6 +3033,13 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           stack_top_p[-3] = 0;
           stack_top_p[-4] = expr_obj_value;
 
+#if ENABLED (JERRY_ES2015)
+          if (byte_code_p[0] == CBC_EXT_OPCODE && byte_code_p[1] == CBC_EXT_CLONE_CONTEXT)
+          {
+            /* No need to duplicate the first context. */
+            byte_code_p += 2;
+          }
+#endif /* ENABLED (JERRY_ES2015) */
           continue;
         }
         case VM_OC_FOR_IN_GET_NEXT:
@@ -3124,6 +3139,11 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           stack_top_p[-2] = iterator_step;
           stack_top_p[-3] = iterator;
 
+          if (byte_code_p[0] == CBC_EXT_OPCODE && byte_code_p[1] == CBC_EXT_CLONE_CONTEXT)
+          {
+            /* No need to duplicate the first context. */
+            byte_code_p += 2;
+          }
           continue;
         }
         case VM_OC_FOR_OF_GET_NEXT:

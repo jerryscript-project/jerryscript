@@ -371,6 +371,7 @@ uint8_t ecma_get_object_builtin_id (ecma_object_t *object_p);
 ecma_lexical_environment_type_t JERRY_ATTR_PURE ecma_get_lex_env_type (const ecma_object_t *object_p);
 ecma_object_t JERRY_ATTR_PURE *ecma_get_lex_env_outer_reference (const ecma_object_t *object_p);
 ecma_object_t JERRY_ATTR_PURE *ecma_get_lex_env_binding_object (const ecma_object_t *object_p);
+ecma_object_t *ecma_clone_decl_lexical_environment (ecma_object_t *lex_env_p, bool copy_values);
 
 ecma_property_value_t *
 ecma_create_named_data_property (ecma_object_t *object_p, ecma_string_t *name_p, uint8_t prop_attributes,

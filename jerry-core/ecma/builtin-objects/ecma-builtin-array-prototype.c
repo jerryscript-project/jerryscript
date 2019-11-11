@@ -2338,9 +2338,8 @@ ecma_builtin_array_prototype_object_copy_within (const ecma_value_t args[], /**<
     }
   }
 
-  ecma_free_value (error);
-
   uint32_t count = JERRY_MIN (end - start, len - target);
+
   bool forward = true;
 
   if (start < target && target < start + count)
@@ -2348,6 +2347,39 @@ ecma_builtin_array_prototype_object_copy_within (const ecma_value_t args[], /**<
     start = start + count - 1;
     target = target + count - 1;
     forward = false;
+  }
+
+  if (ecma_op_object_is_fast_array (obj_p))
+  {
+    ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
+
+    if (ext_obj_p->u.array.u.hole_count < ECMA_FAST_ARRAY_HOLE_ONE)
+    {
+      if (obj_p->u1.property_list_cp != JMEM_CP_NULL)
+      {
+        ecma_value_t *buffer_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, obj_p->u1.property_list_cp);
+
+        for (; count > 0; count--)
+        {
+          ecma_free_value_if_not_object (buffer_p[target]);
+          buffer_p[target] = ecma_copy_value_if_not_object (buffer_p[start]);
+
+          if (forward)
+          {
+            start++;
+            target++;
+          }
+          else
+          {
+            start--;
+            target--;
+          }
+        }
+      }
+
+      ecma_ref_object (obj_p);
+      return ecma_make_object_value (obj_p);
+    }
   }
 
   while (count > 0)

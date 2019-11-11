@@ -226,6 +226,7 @@ typedef enum
 #endif /* ENABLED (JERRY_LINE_INFO) */
 #if ENABLED (JERRY_ES2015)
   VM_OC_ASSIGN_LET_CONST,        /**< assign values to let/const declarations */
+  VM_OC_CLONE_CONTEXT,           /**< clone lexical environment with let/const declarations */
   VM_OC_SET_COMPUTED_PROPERTY,   /**< set computed property */
 
   VM_OC_FOR_OF_CREATE_CONTEXT,   /**< for of create context */
@@ -265,6 +266,7 @@ typedef enum
 #endif /* !ENABLED (JERRY_LINE_INFO) */
 #if !ENABLED (JERRY_ES2015)
   VM_OC_ASSIGN_LET_CONST = VM_OC_NONE,        /**< assign values to let/const declarations */
+  VM_OC_CLONE_CONTEXT = VM_OC_NONE,           /**< clone lexical environment with let/const declarations */
   VM_OC_SET_COMPUTED_PROPERTY = VM_OC_NONE,   /**< set computed property is unused */
   VM_OC_BLOCK_CREATE_CONTEXT = VM_OC_NONE,    /**< create context for blocks enclosed in braces */
 

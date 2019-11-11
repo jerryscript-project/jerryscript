@@ -320,6 +320,76 @@ ecma_get_lex_env_binding_object (const ecma_object_t *object_p) /**< object-boun
 } /* ecma_get_lex_env_binding_object */
 
 /**
+ * Create a new lexical environment with the same property list as the passed lexical environment
+ *
+ * @return pointer to the newly created lexical environment
+ */
+ecma_object_t *
+ecma_clone_decl_lexical_environment (ecma_object_t *lex_env_p, /**< declarative lexical environment */
+                                     bool copy_values) /**< copy property values as well */
+{
+  JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
+  JERRY_ASSERT (lex_env_p->u2.outer_reference_cp != JMEM_CP_NULL);
+
+  ecma_object_t *outer_lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
+  ecma_object_t *new_lex_env_p = ecma_create_decl_lex_env (outer_lex_env_p);
+
+  jmem_cpointer_t prop_iter_cp = lex_env_p->u1.property_list_cp;
+  JERRY_ASSERT (prop_iter_cp != JMEM_CP_NULL);
+
+  ecma_property_header_t *prop_iter_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t,
+                                                                   prop_iter_cp);
+  if (prop_iter_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP)
+  {
+    prop_iter_cp = prop_iter_p->next_property_cp;
+  }
+
+  JERRY_ASSERT (prop_iter_cp != JMEM_CP_NULL);
+
+  do
+  {
+    prop_iter_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t, prop_iter_cp);
+
+    JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
+
+    ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) prop_iter_p;
+
+    for (int i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
+    {
+      if (prop_iter_p->types[i] != ECMA_PROPERTY_TYPE_DELETED)
+      {
+        JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (prop_iter_p->types[i]) == ECMA_PROPERTY_TYPE_NAMEDDATA);
+
+        uint8_t prop_attributes = (uint8_t) (prop_iter_p->types[i] & ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+        ecma_string_t *name_p = ecma_string_from_property_name (prop_iter_p->types[i], prop_pair_p->names_cp[i]);
+
+        ecma_property_value_t *property_value_p;
+        property_value_p = ecma_create_named_data_property (new_lex_env_p, name_p, prop_attributes, NULL);
+
+        ecma_deref_ecma_string (name_p);
+
+        JERRY_ASSERT (property_value_p->value == ECMA_VALUE_UNDEFINED);
+
+        if (copy_values)
+        {
+          property_value_p->value = ecma_copy_value_if_not_object (prop_pair_p->values[i].value);
+        }
+        else
+        {
+          property_value_p->value = ECMA_VALUE_UNINITIALIZED;
+        }
+      }
+    }
+
+    prop_iter_cp = prop_iter_p->next_property_cp;
+  }
+  while (prop_iter_cp != JMEM_CP_NULL);
+
+  ecma_deref_object (lex_env_p);
+  return new_lex_env_p;
+} /* ecma_clone_decl_lexical_environment */
+
+/**
  * Create a property in an object and link it into
  * the object's properties' linked-list (at start of the list).
  *

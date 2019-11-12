@@ -248,6 +248,11 @@ typedef enum
   VM_OC_PUSH_CONSTRUCTOR_THIS,   /**< push 'this' inside a class constructor */
   VM_OC_CONSTRUCTOR_RET,         /**< explicit return from a class constructor */
   VM_OC_CREATE_SPREAD_OBJECT,    /**< create spread object */
+  VM_OC_GET_ITERATOR,            /**< GetIterator abstract operation */
+  VM_OC_ITERATOR_STEP,           /**< IteratorStep abstract operation */
+  VM_OC_DEFAULT_INITIALIZER,     /**< default initializer inside a pattern */
+  VM_OC_REST_INITIALIZER,        /**< create rest object inside an array pattern */
+  VM_OC_INITIALIZER_PUSH_PROP,   /**< push property for object initializer */
 #endif /* ENABLED (JERRY_ES2015) */
   VM_OC_NONE,                    /**< a special opcode for unsupported byte codes */
 } vm_oc_types;
@@ -291,8 +296,12 @@ typedef enum
   VM_OC_PUSH_CONSTRUCTOR_THIS = VM_OC_NONE,   /**< push 'this' inside a class constructor */
   VM_OC_CONSTRUCTOR_RET = VM_OC_NONE,         /**< explicit return from a class constructor */
   VM_OC_CREATE_SPREAD_OBJECT = VM_OC_NONE,    /**< create spread object */
-#endif /* !ENABLED (JERRY_ES2015S) */
-
+  VM_OC_GET_ITERATOR = VM_OC_NONE,            /**< GetIterator abstract operation */
+  VM_OC_ITERATOR_STEP = VM_OC_NONE,           /**< IteratorStep abstract operation */
+  VM_OC_DEFAULT_INITIALIZER = VM_OC_NONE,     /**< default initializer inside a pattern */
+  VM_OC_REST_INITIALIZER = VM_OC_NONE,        /**< create rest object inside an array pattern */
+  VM_OC_INITIALIZER_PUSH_PROP = VM_OC_NONE,   /**< push property for object initializer */
+#endif /* !ENABLED (JERRY_ES2015) */
   VM_OC_UNUSED = VM_OC_NONE                   /**< placeholder if the list is empty */
 } vm_oc_unused_types;
 

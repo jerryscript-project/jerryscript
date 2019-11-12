@@ -2369,7 +2369,7 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
     {
       lexer_parse_identifier (context_p, false);
 
-      if (!(ident_opts & LEXER_OBJ_IDENT_ONLY_IDENTIFIERS)
+      if (!(ident_opts & (LEXER_OBJ_IDENT_ONLY_IDENTIFIERS | LEXER_OBJ_IDENT_OBJECT_PATTERN))
           && context_p->token.lit_location.length == 3)
       {
         lexer_skip_spaces (context_p);

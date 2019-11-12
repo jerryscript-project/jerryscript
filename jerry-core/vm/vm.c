@@ -1791,7 +1791,104 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           *stack_top_p++ = ecma_op_create_spread_object (left_value);
           goto free_left_value;
         }
-#endif /* ENABLED (JERRY_ES2015) */
+        case VM_OC_GET_ITERATOR:
+        {
+          result = ecma_op_get_iterator (stack_top_p[-1], ECMA_VALUE_EMPTY);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          *stack_top_p++ = result;
+          continue;
+        }
+        case VM_OC_ITERATOR_STEP:
+        {
+          const int8_t index = (opcode == CBC_EXT_ITERATOR_STEP) ? -1 : -3;
+          result = ecma_op_iterator_step (stack_top_p[index]);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          ecma_value_t value = ECMA_VALUE_UNDEFINED;
+
+          if (!ecma_is_value_false (result))
+          {
+            value = ecma_op_iterator_value (result);
+            ecma_free_value (result);
+
+            if (ECMA_IS_VALUE_ERROR (value))
+            {
+              result = value;
+              goto error;
+            }
+          }
+
+          *stack_top_p++ = value;
+          continue;
+        }
+        case VM_OC_DEFAULT_INITIALIZER:
+        {
+          if (stack_top_p[-1] != ECMA_VALUE_UNDEFINED)
+          {
+            byte_code_p = byte_code_start_p + branch_offset;
+          }
+          continue;
+        }
+        case VM_OC_REST_INITIALIZER:
+        {
+          const int8_t iterator_index = (opcode == CBC_EXT_REST_INITIALIZER) ? -1 : -3;
+          ecma_object_t *array_p = ecma_op_new_fast_array_object (0);
+          ecma_value_t iterator = stack_top_p[iterator_index];
+          uint32_t index = 0;
+
+          while (true)
+          {
+            result = ecma_op_iterator_step (iterator);
+
+            if (ECMA_IS_VALUE_ERROR (result))
+            {
+              goto error;
+            }
+
+            if (ecma_is_value_false (result))
+            {
+              break;
+            }
+
+            ecma_value_t value = ecma_op_iterator_value (result);
+            ecma_free_value (result);
+
+            if (ECMA_IS_VALUE_ERROR (value))
+            {
+              result = value;
+              goto error;
+            }
+
+            bool set_result = ecma_fast_array_set_property (array_p, index++, value);
+            JERRY_ASSERT (set_result);
+            ecma_free_value (value);
+          }
+
+          *stack_top_p++ = ecma_make_object_value (array_p);
+          continue;
+        }
+        case VM_OC_INITIALIZER_PUSH_PROP:
+        {
+          result = vm_op_get_value (stack_top_p[-1], left_value);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          *stack_top_p++ = result;
+          goto free_left_value;
+        }
+ #endif /* ENABLED (JERRY_ES2015) */
         case VM_OC_PUSH_ELISON:
         {
           *stack_top_p++ = ECMA_VALUE_ARRAY_HOLE;

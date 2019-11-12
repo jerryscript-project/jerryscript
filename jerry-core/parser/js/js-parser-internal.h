@@ -101,6 +101,18 @@ typedef enum
 } parser_expression_flags_t;
 
 /**
+ * Pattern parsing flags.
+ */
+typedef enum
+{
+  PARSER_PATTERN_NO_OPTS = 0,                 /**< parse the expression after '=' */
+  PARSER_PATTERN_BINDING = (1u << 0),         /**< parse BindingPattern */
+  PARSER_PATTERN_TARGET_ON_STACK = (1u << 1), /**< assignment target is the topmost element on the stack */
+  PARSER_PATTERN_TARGET_DEFAULT = (1u << 2),  /**< perform default value comparison for assignment target */
+  PARSER_PATTERN_INNER_PATTERN = (1u << 3),   /**< parse patter inside a pattern */
+} parser_pattern_flags_t;
+
+/**
  * Mask for strict mode code
  */
 #define PARSER_STRICT_MODE_MASK 0x1
@@ -624,6 +636,7 @@ void parser_parse_expression (parser_context_t *context_p, int options);
 void parser_parse_class (parser_context_t *context_p, bool is_statement);
 void parser_parse_super_class_context_start (parser_context_t *context_p);
 void parser_parse_super_class_context_end (parser_context_t *context_p);
+void parser_parse_initializer (parser_context_t *context_p, parser_pattern_flags_t flags);
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**
@@ -685,6 +698,7 @@ void parser_module_set_default (parser_context_t *context_p);
 ecma_module_node_t *parser_module_create_module_node (parser_context_t *context_p);
 bool parser_module_check_duplicate_import (parser_context_t *context_p, ecma_string_t *local_name_p);
 bool parser_module_check_duplicate_export (parser_context_t *context_p, ecma_string_t *export_name_p);
+void parser_module_append_export_name (parser_context_t *context_p);
 void parser_module_add_names_to_node (parser_context_t *context_p,
                                       ecma_string_t *imex_name_p,
                                       ecma_string_t *local_name_p);

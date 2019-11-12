@@ -416,45 +416,64 @@ ecma_builtin_helper_array_concat_value (ecma_object_t *array_obj_p, /**< array *
                                         ecma_value_t value) /**< value to concat */
 {
   /* 5.b */
-  if (ecma_is_value_object (value))
+#if ENABLED (JERRY_ES2015)
+  ecma_value_t is_spreadable = ecma_op_is_concat_spreadable (value);
+
+  if (ECMA_IS_VALUE_ERROR (is_spreadable))
+  {
+    return is_spreadable;
+  }
+
+  bool spread_object = is_spreadable == ECMA_VALUE_TRUE;
+#else /* !ENABLED (JERRY_ES2015) */
+  bool spread_object = ecma_is_value_array (value);
+#endif /* ENABLED (JERRY_ES2015) */
+
+  if (spread_object)
   {
     ecma_object_t *obj_p = ecma_get_object_from_value (value);
 
-    if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY)
+#if ENABLED (JERRY_ES2015)
+    uint32_t arg_len;
+    ecma_value_t error = ecma_op_object_get_length (obj_p, &arg_len);
+
+    if (ECMA_IS_VALUE_ERROR (error))
     {
-      /* 5.b.ii */
-      uint32_t arg_len = ecma_array_get_length (obj_p);
+      return error;
+    }
+#else /* !ENABLED (JERRY_ES2015) */
+    /* 5.b.ii */
+    uint32_t arg_len = ecma_array_get_length (obj_p);
+#endif /* ENABLED (JERRY_ES2015) */
+    /* 5.b.iii */
+    for (uint32_t array_index = 0; array_index < arg_len; array_index++)
+    {
+      /* 5.b.iii.2 */
+      ecma_value_t get_value = ecma_op_object_find_by_uint32_index (obj_p, array_index);
 
-      /* 5.b.iii */
-      for (uint32_t array_index = 0; array_index < arg_len; array_index++)
+      if (ECMA_IS_VALUE_ERROR (get_value))
       {
-        /* 5.b.iii.2 */
-        ecma_value_t get_value = ecma_op_object_find_by_uint32_index (obj_p, array_index);
-
-        if (ECMA_IS_VALUE_ERROR (get_value))
-        {
-          return get_value;
-        }
-
-        if (!ecma_is_value_found (get_value))
-        {
-          continue;
-        }
-
-        /* 5.b.iii.3.b */
-        /* This will always be a simple value since 'is_throw' is false, so no need to free. */
-        ecma_value_t put_comp = ecma_builtin_helper_def_prop_by_index (array_obj_p,
-                                                                       *length_p + array_index,
-                                                                       get_value,
-                                                                       ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
-
-        JERRY_ASSERT (ecma_is_value_true (put_comp));
-        ecma_free_value (get_value);
+        return get_value;
       }
 
-      *length_p += arg_len;
-      return ECMA_VALUE_EMPTY;
+      if (!ecma_is_value_found (get_value))
+      {
+        continue;
+      }
+
+      /* 5.b.iii.3.b */
+      /* This will always be a simple value since 'is_throw' is false, so no need to free. */
+      ecma_value_t put_comp = ecma_builtin_helper_def_prop_by_index (array_obj_p,
+                                                                     *length_p + array_index,
+                                                                     get_value,
+                                                                     ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+
+      JERRY_ASSERT (ecma_is_value_true (put_comp));
+      ecma_free_value (get_value);
     }
+
+    *length_p += arg_len;
+    return ECMA_VALUE_EMPTY;
   }
 
   /* 5.c.i */

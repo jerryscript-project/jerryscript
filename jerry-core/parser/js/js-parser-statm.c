@@ -564,11 +564,6 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
   }
 #endif /* ENABLED (JERRY_ES2015) */
 
-  if (context_p->lit_object.type == LEXER_LITERAL_OBJECT_ARGUMENTS)
-  {
-    context_p->status_flags |= PARSER_ARGUMENTS_NOT_NEEDED;
-  }
-
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
   if (context_p->status_flags & PARSER_MODULE_STORE_IDENT)
   {

@@ -1312,6 +1312,13 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           continue;
         }
 #if ENABLED (JERRY_ES2015)
+        case VM_OC_INIT_LOCALS:
+        {
+          frame_ctx_p->byte_code_p = byte_code_start_p;
+          vm_init_loop (frame_ctx_p);
+          byte_code_p = frame_ctx_p->byte_code_p;
+          continue;
+        }
         case VM_OC_ASSIGN_LET_CONST:
         {
           uint32_t literal_index;
@@ -3424,6 +3431,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           continue;
         }
 #endif /* ENABLED (JERRY_LINE_INFO) */
+        case VM_OC_NONE:
         default:
         {
           JERRY_ASSERT (VM_OC_GROUP_GET_INDEX (opcode_data) == VM_OC_NONE);

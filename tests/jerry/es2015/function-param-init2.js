@@ -63,3 +63,19 @@ function j(a = arguments[1])
   assert(a === 2);
 }
 j(undefined,2);
+
+function k(a = 2)
+{
+  let d = 5;
+  assert(d === 5);
+  eval("assert(a === 2)");
+}
+k();
+
+function i(a = 3)
+{
+  const d = 6;
+  assert(d === 6);
+  eval("assert(a === 3)");
+}
+i();

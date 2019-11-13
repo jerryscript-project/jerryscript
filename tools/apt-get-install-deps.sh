@@ -14,8 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-sudo apt-get update -q
-sudo apt-get install -q -y \
+if [ "$(whoami)" != "root" ]; then
+    SUDO=sudo
+fi
+
+${SUDO} apt-get update -q
+${SUDO} apt-get install -q -y \
     make cmake \
     gcc gcc-multilib \
     doxygen \

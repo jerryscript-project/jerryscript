@@ -371,6 +371,7 @@ scanner_push_literal_pool (parser_context_t *context_p, /**< context */
   if (!(status_flags & SCANNER_LITERAL_POOL_FUNCTION))
   {
     JERRY_ASSERT (prev_literal_pool_p != NULL);
+    status_flags |= SCANNER_LITERAL_POOL_NO_ARGUMENTS;
 
     if (prev_literal_pool_p->status_flags & SCANNER_LITERAL_POOL_IN_WITH)
     {

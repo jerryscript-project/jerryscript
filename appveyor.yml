@@ -30,7 +30,3 @@ build:
   project: build\Jerry.sln
   parallel: true
   verbosity: minimal
-
-artifacts:
-  - path: build\bin\$(configuration)\
-    name: JerryScriptBinary

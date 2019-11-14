@@ -696,7 +696,7 @@ ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
         number_length = 3;
         break;
       }
-      case LIT_CHAR_LOWERCASE_Z: /* Time zone minutes part. */
+      case LIT_CHAR_LOWERCASE_Z: /* Time zone hours part. */
       {
         int32_t time_zone = (int32_t) ecma_date_local_time_zone_adjustment (datetime_number);
 
@@ -716,7 +716,7 @@ ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
       }
       default:
       {
-        JERRY_ASSERT (*format_p == LIT_CHAR_UPPERCASE_Z); /* Time zone seconds part. */
+        JERRY_ASSERT (*format_p == LIT_CHAR_UPPERCASE_Z); /* Time zone minutes part. */
 
         int32_t time_zone = (int32_t) ecma_date_local_time_zone_adjustment (datetime_number);
 
@@ -725,7 +725,7 @@ ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
           time_zone = -time_zone;
         }
 
-        number = time_zone % (int32_t) ECMA_DATE_MS_PER_HOUR;
+        number = time_zone % (int32_t) ECMA_DATE_MS_PER_HOUR / (int32_t) ECMA_DATE_MS_PER_MINUTE;
         number_length = 2;
         break;
       }

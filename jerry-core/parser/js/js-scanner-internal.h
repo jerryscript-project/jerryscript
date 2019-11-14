@@ -35,12 +35,12 @@ typedef struct
 } scanner_source_start_t;
 
 /**
- * Descriptor for storing a let/const literal on stack.
+ * Descriptor for storing a binding literal on stack.
  */
 typedef struct
 {
-  lexer_lit_location_t *literal_p; /**< let/const literal */
-} scanner_let_const_literal_t;
+  lexer_lit_location_t *literal_p; /**< binding literal */
+} scanner_binding_literal_t;
 
 /**
  * Flags for type member of lexer_lit_location_t structure in the literal pool.
@@ -92,6 +92,46 @@ typedef struct
   scanner_case_info_t **last_case_p; /**< last case info */
 } scanner_switch_statement_t;
 
+#if ENABLED (JERRY_ES2015)
+
+/**
+ * Types of scanner destructuring bindings.
+ */
+typedef enum
+{
+  /* Update SCANNER_NEEDS_BINDING_LIST after changing these values. */
+  SCANNER_BINDING_NONE, /**< not a destructuring binding expression */
+  SCANNER_BINDING_VAR, /**< destructuring var binding */
+  SCANNER_BINDING_LET, /**< destructuring let binding */
+  SCANNER_BINDING_CONST, /**< destructuring const binding */
+} scanner_binding_type_t;
+
+/**
+ * Check whether a binding list is needed for the binding pattern.
+ */
+#define SCANNER_NEEDS_BINDING_LIST(type) ((type) >= SCANNER_BINDING_LET)
+
+/**
+ * Scanner binding items for destructuring binding patterns.
+ */
+typedef struct scanner_binding_item_t
+{
+  struct scanner_binding_item_t *next_p; /**< next binding in the list */
+  lexer_lit_location_t *literal_p; /**< binding literal */
+} scanner_binding_item_t;
+
+/**
+ * Scanner binding lists for destructuring binding patterns.
+ */
+typedef struct scanner_binding_list_t
+{
+  struct scanner_binding_list_t *prev_p; /**< prev list */
+  scanner_binding_item_t *items_p; /**< list of bindings */
+  bool is_nested; /**< is nested binding declaration */
+} scanner_binding_list_t;
+
+#endif /* ENABLED (JERRY_ES2015) */
+
 /**
  * Flags for scanner_literal_pool_t structure.
  */
@@ -137,6 +177,10 @@ struct scanner_context_t
 #if ENABLED (JERRY_DEBUGGER)
   uint8_t debugger_enabled; /**< debugger is enabled */
 #endif /* ENABLED (JERRY_DEBUGGER) */
+#if ENABLED (JERRY_ES2015)
+  uint8_t binding_type; /**< current destructuring binding type */
+  scanner_binding_list_t *active_binding_list_p; /**< currently active binding list */
+#endif /* ENABLED (JERRY_ES2015) */
   scanner_literal_pool_t *active_literal_pool_p; /**< currently active literal pool */
   scanner_switch_statement_t active_switch_statement; /**< currently active switch statement */
   scanner_info_t *end_arguments_p; /**< position of end arguments */
@@ -174,6 +218,11 @@ void scanner_detect_invalid_let (parser_context_t *context_p, lexer_lit_location
 #endif /* ENABLED (JERRY_ES2015) */
 void scanner_detect_eval_call (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 
+#if ENABLED (JERRY_ES2015)
+void scanner_push_destructuring_pattern (parser_context_t *context_p, scanner_context_t *scanner_context_p,
+                                         uint8_t binding_type, bool is_nested);
+void scanner_pop_binding_list (scanner_context_t *scanner_context_p);
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * @}

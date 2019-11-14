@@ -151,6 +151,7 @@ typedef enum
   LEXER_COMMA_SEP_LIST,          /**< comma separated bracketed expression list */
   LEXER_SCAN_SWITCH,             /**< special value for switch pre-scan */
   LEXER_CLASS_CONSTRUCTOR,       /**< special value for class constructor method */
+  LEXER_INVALID_PATTERN,         /**< special value for invalid destructuring pattern */
 
 #if !ENABLED (JERRY_ES2015)
   /* Future reserved words: these keywords
@@ -238,6 +239,7 @@ typedef enum
   LEXER_OBJ_IDENT_NO_OPTS = (1u << 0),          /**< no options */
   LEXER_OBJ_IDENT_ONLY_IDENTIFIERS = (1u << 1), /**< only identifiers are accepted */
   LEXER_OBJ_IDENT_CLASS_METHOD = (1u << 2),     /**< expect identifier inside a class body */
+  LEXER_OBJ_IDENT_OBJECT_PATTERN = (1u << 3),   /**< parse "get"/"set" as string literal in object pattern */
 } lexer_obj_ident_opts_t;
 
 /**

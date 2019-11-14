@@ -1033,7 +1033,6 @@ scanner_scope_find_let_declaration (parser_context_t *context_p, /**< context */
     lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
   }
 
-#if ENABLED (JERRY_ES2015)
   if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
   {
     ecma_property_t *property_p = ecma_find_named_property (lex_env_p, name_p);
@@ -1044,7 +1043,6 @@ scanner_scope_find_let_declaration (parser_context_t *context_p, /**< context */
       return true;
     }
   }
-#endif /* ENABLED (JERRY_ES2015) */
 
   ecma_deref_ecma_string (name_p);
   return false;
@@ -1144,6 +1142,80 @@ scanner_detect_invalid_let (parser_context_t *context_p, /**< context */
   }
 } /* scanner_detect_invalid_let */
 
+/**
+ * Push the values required for destructuring assignment or binding parsing.
+ */
+void
+scanner_push_destructuring_pattern (parser_context_t *context_p, /**< context */
+                                    scanner_context_t *scanner_context_p, /**< scanner context */
+                                    uint8_t binding_type, /**< type of destructuring binding pattern */
+                                    bool is_nested) /**< nested declaration */
+{
+  JERRY_ASSERT (binding_type != SCANNER_BINDING_NONE || !is_nested);
+
+  scanner_source_start_t source_start;
+  source_start.source_p = context_p->source_p;
+
+  parser_stack_push (context_p, &source_start, sizeof (scanner_source_start_t));
+  parser_stack_push_uint8 (context_p, scanner_context_p->binding_type);
+  scanner_context_p->binding_type = binding_type;
+
+  if (SCANNER_NEEDS_BINDING_LIST (binding_type))
+  {
+    scanner_binding_list_t *binding_list_p;
+    binding_list_p = (scanner_binding_list_t *) scanner_malloc (context_p, sizeof (scanner_binding_list_t));
+
+    binding_list_p->prev_p = scanner_context_p->active_binding_list_p;
+    binding_list_p->items_p = NULL;
+    binding_list_p->is_nested = is_nested;
+
+    scanner_context_p->active_binding_list_p = binding_list_p;
+  }
+} /* scanner_push_destructuring_pattern */
+
+/**
+ * Pop binding list.
+ */
+void
+scanner_pop_binding_list (scanner_context_t *scanner_context_p) /**< scanner context */
+{
+  scanner_binding_list_t *binding_list_p = scanner_context_p->active_binding_list_p;
+  scanner_binding_item_t *item_p = binding_list_p->items_p;
+  scanner_binding_list_t *prev_binding_list_p = binding_list_p->prev_p;
+  bool is_nested = binding_list_p->is_nested;
+
+  scanner_free (binding_list_p, sizeof (scanner_binding_list_t));
+  scanner_context_p->active_binding_list_p = prev_binding_list_p;
+
+  JERRY_ASSERT (binding_list_p != NULL);
+
+  if (!is_nested)
+  {
+    while (item_p != NULL)
+    {
+      scanner_binding_item_t *next_p = item_p->next_p;
+
+      JERRY_ASSERT (item_p->literal_p->type & SCANNER_LITERAL_IS_LOCAL);
+
+      scanner_free (item_p, sizeof (scanner_binding_item_t));
+      item_p = next_p;
+    }
+    return;
+  }
+
+  JERRY_ASSERT (prev_binding_list_p != NULL);
+
+  while (item_p != NULL)
+  {
+    scanner_binding_item_t *next_p = item_p->next_p;
+
+    item_p->next_p = prev_binding_list_p->items_p;
+    prev_binding_list_p->items_p = item_p;
+
+    item_p = next_p;
+  }
+} /* scanner_pop_binding_list */
+
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**
@@ -1215,6 +1287,9 @@ scanner_cleanup (parser_context_t *context_p) /**< context */
       case SCANNER_TYPE_FOR_OF:
 #endif /* ENABLED (JERRY_ES2015) */
       case SCANNER_TYPE_CASE:
+#if ENABLED (JERRY_ES2015)
+      case SCANNER_TYPE_INITIALIZER:
+#endif /* ENABLED (JERRY_ES2015) */
       {
         size = sizeof (scanner_location_info_t);
         break;

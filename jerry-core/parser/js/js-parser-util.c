@@ -1121,6 +1121,10 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Duplicated function argument names are not allowed here.";
     }
+    case PARSER_ERR_INVALID_DESTRUCTURING_PATTERN:
+    {
+      return "Invalid destructuring assignment target.";
+    }
     case PARSER_ERR_FORMAL_PARAM_AFTER_REST_PARAMETER:
     {
       return "Rest parameter must be the last formal parameter.";

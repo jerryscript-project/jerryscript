@@ -60,8 +60,7 @@ static ecma_value_t
 ecma_builtin_regexp_prototype_flags_helper (ecma_value_t this, /**< this value */
                                             uint16_t *flags_p) /**< [out] flags */
 {
-  if (!ecma_is_value_object (this)
-      || !ecma_object_class_is (ecma_get_object_from_value (this), LIT_MAGIC_STRING_REGEXP_UL))
+  if (!ecma_object_is_regexp_object (this))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible type"));
   }
@@ -133,8 +132,7 @@ ecma_builtin_regexp_prototype_get_flags (ecma_value_t this_arg) /**< this argume
 static ecma_value_t
 ecma_builtin_regexp_prototype_get_source (ecma_value_t this_arg) /**< this argument */
 {
-  if (!ecma_is_value_object (this_arg)
-      || !ecma_object_class_is (ecma_get_object_from_value (this_arg), LIT_MAGIC_STRING_REGEXP_UL))
+  if (!ecma_object_is_regexp_object (this_arg))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible type"));
   }
@@ -246,8 +244,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
                                        ecma_value_t pattern_arg, /**< pattern or RegExp object */
                                        ecma_value_t flags_arg) /**< flags */
 {
-  if (!ecma_is_value_object (this_arg)
-      || !ecma_object_class_is (ecma_get_object_from_value (this_arg), LIT_MAGIC_STRING_REGEXP_UL)
+  if (!ecma_object_is_regexp_object (this_arg)
       /* The builtin RegExp.prototype object does not have [[RegExpMatcher]] internal slot */
       || ecma_get_object_from_value (this_arg) == ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE))
   {
@@ -256,8 +253,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
 
   uint16_t flags = 0;
 
-  if (ecma_is_value_object (pattern_arg)
-      && ecma_object_class_is (ecma_get_object_from_value (pattern_arg), LIT_MAGIC_STRING_REGEXP_UL)
+  if (ecma_object_is_regexp_object (pattern_arg)
       && ecma_get_object_from_value (pattern_arg) != ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE))
   {
     if (!ecma_is_value_undefined (flags_arg))
@@ -357,8 +353,7 @@ static ecma_value_t
 ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
                                     ecma_value_t arg) /**< routine's argument */
 {
-  if (!ecma_is_value_object (this_arg)
-      || !ecma_object_class_is (ecma_get_object_from_value (this_arg), LIT_MAGIC_STRING_REGEXP_UL))
+  if (!ecma_object_is_regexp_object (this_arg))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Incomplete RegExp type"));
   }
@@ -424,8 +419,7 @@ ecma_builtin_regexp_prototype_test (ecma_value_t this_arg, /**< this argument */
 static ecma_value_t
 ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argument */
 {
-  if (!ecma_is_value_object (this_arg)
-      || !ecma_object_class_is (ecma_get_object_from_value (this_arg), LIT_MAGIC_STRING_REGEXP_UL))
+  if (!ecma_object_is_regexp_object (this_arg))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible type"));
   }

@@ -286,8 +286,7 @@ ecma_builtin_string_prepare_search (ecma_value_t regexp_arg, /**< regex argument
                                     ecma_value_t *regexp_value) /**< [out] ptr to store the regexp object */
 {
   /* 3. */
-  if (ecma_is_value_object (regexp_arg)
-      && ecma_object_class_is (ecma_get_object_from_value (regexp_arg), LIT_MAGIC_STRING_REGEXP_UL))
+  if (ecma_object_is_regexp_object (regexp_arg))
   {
     *regexp_value = ecma_copy_value (regexp_arg);
     return ECMA_VALUE_EMPTY;
@@ -539,8 +538,7 @@ ecma_builtin_string_prototype_object_replace (ecma_value_t this_value, /**< this
     }
   }
 #else /* !ENABLED (JERRY_ES2015) */
-  if (ecma_is_value_object (search_value)
-      && ecma_object_class_is (ecma_get_object_from_value (search_value), LIT_MAGIC_STRING_REGEXP_UL))
+  if (ecma_object_is_regexp_object (search_value))
   {
     return ecma_regexp_replace_helper (search_value, this_value, replace_value);
   }
@@ -866,8 +864,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_to_string_val, /**
 
   bool separator_is_regexp = false;
 
-  if (ecma_is_value_object (arg1)
-      && ecma_object_class_is (ecma_get_object_from_value (arg1), LIT_MAGIC_STRING_REGEXP_UL))
+  if (ecma_object_is_regexp_object (arg1))
   {
     separator_is_regexp = true;
     separator = ecma_copy_value (arg1);

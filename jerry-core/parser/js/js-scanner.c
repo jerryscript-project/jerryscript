@@ -432,6 +432,13 @@ scanner_scan_primary_expression (parser_context_t *context_p, /**< context */
         scanner_raise_error (context_p);
       }
       scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
+
+#if ENABLED (JERRY_ES2015)
+      if (scanner_context_p->binding_type != SCANNER_BINDING_NONE)
+      {
+        scanner_context_p->mode = SCAN_MODE_BINDING;
+      }
+#endif /* ENABLED (JERRY_ES2015) */
       break;
     }
     case LEXER_RIGHT_PAREN:

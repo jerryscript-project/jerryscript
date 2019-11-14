@@ -48,6 +48,9 @@ checkSyntax ("let {a : b, b} = []");
 checkSyntax ("const {a,a} = []");
 checkSyntax ("const {a : b, b} = []");
 checkSyntax ("try { let {$} = $;");
+checkSyntax ("let a, { 'x': a } = {x : 4};");
+checkSyntax ("let a, { x: b.c } = {x : 6};");
+checkSyntax ("let {a:(a)} = {a:1}");
 
 mustThrow ("var {a} = null");
 mustThrow ("var {a} = undefined");
@@ -196,4 +199,27 @@ mustThrow ("var {a} = undefined");
 
   assert (a === 1);
   assert (b === 2);
+}) ();
+
+// Force the creation of lexical environment I.
+(function () {
+  const {a} = {a : 1};
+  eval();
+
+  assert (a === 1);
+}) ();
+
+// Force the creation of lexical environment II.
+(function () {
+  let {a} = {a : 1};
+  eval();
+
+  assert (a === 1);
+}) ();
+
+// Check the parsing of AssignmentElement
+(function () {
+  var a = 6;
+  ({"a": ((a)) } = {a : 7});
+  assert (a === 7);
 }) ();

@@ -58,6 +58,8 @@ checkSyntax ("[super] = []");
 checkSyntax ("[this] = []");
 checkSyntax ("[()] = []");
 checkSyntax ("try { let [$] = $;");
+checkSyntax ("let a, [ b.c ] = [6];");
+checkSyntax ("let [(a)] = [1]");
 
 mustThrow ("var [a] = 4");
 mustThrow ("var [a] = 5");
@@ -221,4 +223,27 @@ mustThrow ("var [a] = { [Symbol.iterator] () { return { next () { return { get d
 
   assert (a === 1);
   assert (b === 2);
+}) ();
+
+// Force the creation of lexical environment I.
+(function () {
+  const [a] = [1];
+  eval();
+
+  assert (a === 1);
+}) ();
+
+// Force the creation of lexical environment II.
+(function () {
+  let [a] = [1];
+  eval();
+
+  assert (a === 1);
+}) ();
+
+// Check the parsing of AssignmentElement
+(function () {
+  var a = 6;
+  [((a))] = [7];
+  assert (a === 7);
 }) ();

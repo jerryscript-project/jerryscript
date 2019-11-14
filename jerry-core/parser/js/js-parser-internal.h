@@ -104,11 +104,13 @@ typedef enum
  */
 typedef enum
 {
-  PARSER_PATTERN_NO_OPTS = 0,                 /**< parse the expression after '=' */
-  PARSER_PATTERN_BINDING = (1u << 0),         /**< parse BindingPattern */
-  PARSER_PATTERN_TARGET_ON_STACK = (1u << 1), /**< assignment target is the topmost element on the stack */
-  PARSER_PATTERN_TARGET_DEFAULT = (1u << 2),  /**< perform default value comparison for assignment target */
-  PARSER_PATTERN_INNER_PATTERN = (1u << 3),   /**< parse patter inside a pattern */
+  PARSER_PATTERN_NO_OPTS = 0,                  /**< parse the expression after '=' */
+  PARSER_PATTERN_BINDING = (1u << 0),          /**< parse BindingPattern */
+  PARSER_PATTERN_TARGET_ON_STACK = (1u << 1),  /**< assignment target is the topmost element on the stack */
+  PARSER_PATTERN_TARGET_DEFAULT = (1u << 3),   /**< perform default value comparison for assignment target */
+  PARSER_PATTERN_NESTED_PATTERN = (1u << 4),   /**< parse patter inside a pattern */
+  PARSER_PATTERN_LEXICAL = (1u << 5),          /**< pattern is a lexical (let/const) declaration */
+  PARSER_PATTERN_REST_ELEMENT = (1u << 6),     /**< parse rest array initializer */
 } parser_pattern_flags_t;
 
 /**

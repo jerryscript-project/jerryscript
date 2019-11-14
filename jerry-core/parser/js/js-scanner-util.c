@@ -1009,6 +1009,8 @@ scanner_scope_find_let_declaration (parser_context_t *context_p, /**< context */
   {
     uint8_t *destination_p = (uint8_t *) scanner_malloc (context_p, literal_p->length);
 
+    lexer_convert_ident_to_utf8 (literal_p->char_p, destination_p, literal_p->length);
+
     name_p = ecma_new_ecma_string_from_utf8 (destination_p, literal_p->length);
     scanner_free (destination_p, literal_p->length);
   }

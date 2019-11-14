@@ -129,3 +129,17 @@ fn_expr (1);
 (function () {
  var a = [arguments];
 })();
+
+function nested_args()
+{
+  var a;
+  for (var i = 0; i < 1; i++)
+  {
+    if (i == 0)
+    {
+      a = arguments[i];
+    }
+  }
+  assert(a === 3);
+}
+nested_args(3);

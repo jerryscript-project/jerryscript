@@ -176,10 +176,12 @@ vm_op_delete_prop (ecma_value_t object, /**< base object */
                    ecma_value_t property, /**< property name */
                    bool is_strict) /**< strict mode */
 {
+#if !ENABLED (JERRY_ES2015)
   if (ecma_is_value_undefined (object))
   {
     return ECMA_VALUE_TRUE;
   }
+#endif /* !ENABLED (JERRY_ES2015) */
 
   ecma_value_t check_coercible = ecma_op_check_object_coercible (object);
   if (ECMA_IS_VALUE_ERROR (check_coercible))

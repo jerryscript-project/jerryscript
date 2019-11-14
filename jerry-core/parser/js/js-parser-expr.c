@@ -201,8 +201,14 @@ parser_emit_unary_lvalue_opcode (parser_context_t *context_p, /**< context */
   else
   {
     /* Invalid LeftHandSide expression. */
-    parser_emit_cbc_ext (context_p, (opcode == CBC_DELETE_PUSH_RESULT) ? CBC_EXT_PUSH_UNDEFINED_BASE
-                                                                       : CBC_EXT_THROW_REFERENCE_ERROR);
+    if (opcode == CBC_DELETE_PUSH_RESULT)
+    {
+      parser_emit_cbc (context_p, CBC_POP);
+      parser_emit_cbc (context_p, CBC_PUSH_TRUE);
+      return;
+    }
+
+    parser_emit_cbc_ext (context_p, CBC_EXT_THROW_REFERENCE_ERROR);
   }
 
   parser_emit_cbc (context_p, (uint16_t) opcode);

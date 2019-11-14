@@ -1917,13 +1917,6 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 #endif /* ENABLED (JERRY_ES2015) */
           continue;
         }
-        case VM_OC_PUSH_UNDEFINED_BASE:
-        {
-          stack_top_p[0] = stack_top_p[-1];
-          stack_top_p[-1] = ECMA_VALUE_UNDEFINED;
-          stack_top_p++;
-          continue;
-        }
         case VM_OC_IDENT_REFERENCE:
         {
           uint16_t literal_index;

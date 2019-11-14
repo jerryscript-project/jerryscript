@@ -125,7 +125,6 @@ typedef enum
 
   VM_OC_SET_GETTER,              /**< set getter */
   VM_OC_SET_SETTER,              /**< set setter */
-  VM_OC_PUSH_UNDEFINED_BASE,     /**< push undefined base */
   VM_OC_PUSH_ARRAY,              /**< push array */
   VM_OC_PUSH_ELISON,             /**< push elison */
   VM_OC_APPEND_ARRAY,            /**< append array */

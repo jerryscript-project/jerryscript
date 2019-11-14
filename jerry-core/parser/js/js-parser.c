@@ -53,7 +53,6 @@ parser_compute_indicies (parser_context_t *context_p, /**< context */
 {
   parser_list_iterator_t literal_iterator;
   lexer_literal_t *literal_p;
-  uint32_t status_flags = context_p->status_flags;
 
   uint16_t ident_count = 0;
   uint16_t const_literal_count = 0;
@@ -61,12 +60,6 @@ parser_compute_indicies (parser_context_t *context_p, /**< context */
   uint16_t ident_index;
   uint16_t const_literal_index;
   uint16_t literal_index;
-
-  if (status_flags & PARSER_ARGUMENTS_NOT_NEEDED)
-  {
-    status_flags &= (uint32_t) ~PARSER_ARGUMENTS_NEEDED;
-    context_p->status_flags = status_flags;
-  }
 
   /* First phase: count the number of items in each group. */
   parser_list_iterator_init (&context_p->literal_pool, &literal_iterator);
@@ -115,6 +108,7 @@ parser_compute_indicies (parser_context_t *context_p, /**< context */
 
 #if !ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
     const uint8_t *char_p = literal_p->u.char_p;
+    uint32_t status_flags = context_p->status_flags;
 
     if ((literal_p->status_flags & LEXER_FLAG_SOURCE_PTR)
         && literal_p->prop.length < 0xfff)
@@ -1763,14 +1757,7 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
     error_location_p->error = PARSER_ERR_NO_ERROR;
   }
 
-  if (arg_list_p == NULL)
-  {
-    context.status_flags = PARSER_ARGUMENTS_NOT_NEEDED;
-  }
-  else
-  {
-    context.status_flags = PARSER_IS_FUNCTION;
-  }
+  context.status_flags = (arg_list_p == NULL) ? 0 : PARSER_IS_FUNCTION;
 
 #if ENABLED (JERRY_ES2015)
   context.status_flags |= PARSER_GET_CLASS_PARSER_OPTS (parse_opts);
@@ -1981,6 +1968,8 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
 #ifndef JERRY_NDEBUG
     JERRY_ASSERT (context.status_flags & PARSER_SCANNING_SUCCESSFUL);
 #endif /* !JERRY_NDEBUG */
+
+    JERRY_ASSERT (arg_list_p != NULL || !(context.status_flags & PARSER_ARGUMENTS_NEEDED));
 
 #if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
     if (context.is_show_opcodes)

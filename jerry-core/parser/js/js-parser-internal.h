@@ -51,8 +51,7 @@ typedef enum
   PARSER_HAS_NON_STRICT_ARG = (1u << 6),      /**< the function has arguments which
                                                *   are not supported in strict mode */
   PARSER_ARGUMENTS_NEEDED = (1u << 7),        /**< arguments object must be created */
-  PARSER_ARGUMENTS_NOT_NEEDED = (1u << 8),    /**< arguments object must NOT be created */
-  PARSER_LEXICAL_ENV_NEEDED = (1u << 9),     /**< lexical environment object must be created */
+  PARSER_LEXICAL_ENV_NEEDED = (1u << 9),      /**< lexical environment object must be created */
   PARSER_INSIDE_WITH = (1u << 10),            /**< code block is inside a with statement */
   PARSER_RESOLVE_BASE_FOR_CALLS = (1u << 11), /**< the this object must be resolved when
                                                *   a function without a base object is called */

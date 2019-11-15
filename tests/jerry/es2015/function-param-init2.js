@@ -61,6 +61,8 @@ var arguments = 10;
 function j(a = arguments[1])
 {
   assert(a === 2);
+  a = 3;
+  assert(arguments[0] === undefined)
 }
 j(undefined,2);
 
@@ -72,10 +74,27 @@ function k(a = 2)
 }
 k();
 
-function i(a = 3)
+function l(a = 3)
 {
   const d = 6;
   assert(d === 6);
   eval("assert(a === 3)");
 }
-i();
+l();
+
+function m(a, b = 2)
+{
+  assert(a === 1);
+  assert(arguments[0] === 1);
+  assert(b === 2);
+  assert(arguments[1] === undefined);
+
+  a = 8;
+  b = 9;
+
+  assert(a === 8);
+  assert(arguments[0] === 1);
+  assert(b === 9);
+  assert(arguments[1] === undefined);
+}
+m(1);

@@ -806,6 +806,7 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 #if ENABLED (JERRY_ES2015)
       case CBC_CREATE_LET:
       case CBC_CREATE_CONST:
+      case CBC_CREATE_DESTRUCTURED_ARG:
 #endif /* ENABLED (JERRY_ES2015) */
       {
         uint32_t literal_index;
@@ -1832,10 +1833,15 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_DEFAULT_INITIALIZER:
         {
+          JERRY_ASSERT (stack_top_p > frame_ctx_p->registers_p + register_end);
+
           if (stack_top_p[-1] != ECMA_VALUE_UNDEFINED)
           {
             byte_code_p = byte_code_start_p + branch_offset;
+            continue;
           }
+
+          stack_top_p--;
           continue;
         }
         case VM_OC_REST_INITIALIZER:

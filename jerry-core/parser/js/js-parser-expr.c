@@ -388,17 +388,13 @@ parser_append_object_literal_item (parser_context_t *context_p, /**< context */
 #endif /* !ENABLED (JERRY_ES2015) */
 
 #if ENABLED (JERRY_ES2015)
-/**
- * Definition of parse object initializer.
- */
-static void
-parser_parse_object_initializer (parser_context_t *context_p, parser_pattern_flags_t flags);
-
-/**
- * Definition of parse array initializer.
- */
+/** Forward definition of parse array initializer. */
 static void
 parser_parse_array_initializer (parser_context_t *context_p, parser_pattern_flags_t flags);
+
+/** Forward definition of parse object initializer. */
+static void
+parser_parse_object_initializer (parser_context_t *context_p, parser_pattern_flags_t flags);
 
 /**
  * Description of "get" literal string.
@@ -2111,7 +2107,6 @@ parser_pattern_get_target (parser_context_t *context_p, /**< context */
     JERRY_ASSERT (flags & PARSER_PATTERN_TARGET_ON_STACK);
 
     parser_emit_cbc_forward_branch (context_p, PARSER_TO_EXT_OPCODE (CBC_EXT_DEFAULT_INITIALIZER), &skip_init);
-    parser_emit_cbc (context_p, CBC_POP);
   }
 
   if ((flags & (PARSER_PATTERN_TARGET_ON_STACK | PARSER_PATTERN_TARGET_DEFAULT)) != PARSER_PATTERN_TARGET_ON_STACK)
@@ -2177,8 +2172,7 @@ parser_pattern_finalize (parser_context_t *context_p, /**< context */
     lexer_next_token (context_p);
   }
 
-  if ((flags & PARSER_PATTERN_BINDING)
-      && !(flags & PARSER_PATTERN_NESTED_PATTERN))
+  if ((flags & (PARSER_PATTERN_BINDING | PARSER_PATTERN_NESTED_PATTERN)) == PARSER_PATTERN_BINDING)
   {
     /* Pop the result of the expression. */
     parser_emit_cbc (context_p, CBC_POP);
@@ -2235,9 +2229,8 @@ parser_pattern_form_assignment (parser_context_t *context_p, /**< context */
     parser_branch_t skip_init;
     lexer_next_token (context_p);
     parser_emit_cbc_forward_branch (context_p, PARSER_TO_EXT_OPCODE (CBC_EXT_DEFAULT_INITIALIZER), &skip_init);
-    parser_emit_cbc (context_p, CBC_POP);
 
-    parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA | PARSE_EXPR_LEFT_HAND_SIDE);
+    parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
     parser_set_branch_to_current_position (context_p, &skip_init);
   }
 
@@ -2334,6 +2327,15 @@ parser_pattern_process_assignment (parser_context_t *context_p, /**< context */
     {
       JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_ERR_REDECLARED);
       parser_raise_error (context_p, PARSER_ERR_VARIABLE_REDECLARED);
+    }
+
+    if (flags & PARSER_PATTERN_ARGUMENTS)
+    {
+      if (context_p->lit_object.literal_p->status_flags & LEXER_FLAG_FUNCTION_ARGUMENT)
+      {
+        parser_raise_error (context_p, PARSER_ERR_VARIABLE_REDECLARED);
+      }
+      context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_FUNCTION_ARGUMENT;
     }
 
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
@@ -2461,15 +2463,6 @@ parser_parse_object_initializer (parser_context_t *context_p, /**< context */
 
     lexer_next_token (context_p);
 
-    if (push_prop_opcode != CBC_EXT_INITIALIZER_PUSH_PROP
-        && (context_p->token.type == LEXER_RIGHT_BRACE
-            || context_p->token.type == LEXER_ASSIGN
-            || context_p->token.type == LEXER_COMMA))
-    {
-      parser_reparse_as_common_identifier (context_p, start_line, start_column);
-      lexer_next_token (context_p);
-    }
-
     if (context_p->token.type == LEXER_COLON)
     {
       lexer_next_token (context_p);
@@ -2477,6 +2470,24 @@ parser_parse_object_initializer (parser_context_t *context_p, /**< context */
     }
     else
     {
+      if (push_prop_opcode != CBC_EXT_INITIALIZER_PUSH_PROP
+          && (context_p->token.type == LEXER_RIGHT_BRACE
+              || context_p->token.type == LEXER_ASSIGN
+              || context_p->token.type == LEXER_COMMA))
+      {
+        parser_reparse_as_common_identifier (context_p, start_line, start_column);
+        lexer_next_token (context_p);
+      }
+
+      if (flags & PARSER_PATTERN_ARGUMENTS)
+      {
+        if (context_p->lit_object.literal_p->status_flags & LEXER_FLAG_FUNCTION_ARGUMENT)
+        {
+          parser_raise_error (context_p, PARSER_ERR_VARIABLE_REDECLARED);
+        }
+        context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_FUNCTION_ARGUMENT;
+      }
+
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
       parser_module_append_export_name (context_p);
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */

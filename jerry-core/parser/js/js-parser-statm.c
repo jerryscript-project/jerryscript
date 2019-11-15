@@ -451,7 +451,13 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
         || lexer_check_next_character (context_p, LIT_CHAR_LEFT_SQUARE))
     {
       lexer_next_token (context_p);
-      parser_parse_initializer (context_p, PARSER_PATTERN_BINDING);
+      parser_pattern_flags_t options = PARSER_PATTERN_BINDING;
+
+      if (declaration_type != LEXER_KEYW_VAR)
+      {
+        options |= PARSER_PATTERN_LEXICAL;
+      }
+      parser_parse_initializer (context_p, options);
     }
     else
     {

@@ -70,7 +70,7 @@ def get_tests(test_dir, test_list, skip_list):
                 return False
         return True
 
-    return filter(filter_tests, tests)
+    return [test for test in tests if filter_tests(test)]
 
 
 def get_platform_cmd_prefix():
@@ -80,7 +80,11 @@ def get_platform_cmd_prefix():
 
 
 def execute_test_command(test_cmd):
-    process = subprocess.Popen(test_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+    kwargs = {}
+    if sys.version_info.major >= 3:
+        kwargs['encoding'] = 'unicode_escape'
+        kwargs['text'] = True
+    process = subprocess.Popen(test_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, **kwargs)
     stdout = process.communicate()[0]
     return (process.returncode, stdout)
 

@@ -59,3 +59,12 @@ function k([a = function() { return a; }])
   assert(a() === a);
 }
 k([]);
+
+function l(a = 0, ...[b, c = 1, d = 4])
+{
+  assert(a === 1);
+  assert(b === 2);
+  assert(c === 3);
+  assert(d === 4);
+}
+l(1,2,3);

@@ -615,6 +615,8 @@ void parser_set_continues_to_current_position (parser_context_t *context_p, pars
 
 void lexer_next_token (parser_context_t *context_p);
 bool lexer_check_next_character (parser_context_t *context_p, lit_utf8_byte_t character);
+bool lexer_check_next_characters (parser_context_t *context_p, lit_utf8_byte_t character1,
+                                  lit_utf8_byte_t character2);
 #if ENABLED (JERRY_ES2015)
 void lexer_skip_empty_statements (parser_context_t *context_p);
 bool lexer_check_arrow (parser_context_t *context_p);

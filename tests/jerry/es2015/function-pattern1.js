@@ -30,6 +30,7 @@ must_throw ("function f([a], a) {}");
 must_throw ("function f(a = b, [b]) {}; f()", ReferenceError);
 must_throw ("function f([a+b]) {}");
 must_throw ("function f([a().b]) {}");
+must_throw ("function f(...[a] = [1]) {}");
 
 function a1([a,b]) {
   var a, b;

@@ -1638,7 +1638,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
     }
     else if (context_p->token.type == LEXER_THREE_DOTS)
     {
-      lexer_expect_identifier (context_p, LEXER_IDENT_LITERAL);
+      lexer_next_token (context_p);
 
       if (duplicated_argument_names)
       {
@@ -1647,7 +1647,8 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 
       context_p->status_flags |= PARSER_FUNCTION_HAS_REST_PARAM | PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM;
     }
-    else if (context_p->token.type == LEXER_LEFT_SQUARE || context_p->token.type == LEXER_LEFT_BRACE)
+
+    if (context_p->token.type == LEXER_LEFT_SQUARE || context_p->token.type == LEXER_LEFT_BRACE)
     {
       if (duplicated_argument_names)
       {
@@ -1668,6 +1669,12 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
       if (context_p->next_scanner_info_p->source_p == context_p->source_p)
       {
         JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_INITIALIZER);
+
+        if (context_p->status_flags & PARSER_FUNCTION_HAS_REST_PARAM)
+        {
+          parser_raise_error (context_p, PARSER_ERR_REST_PARAMETER_DEFAULT_INITIALIZER);
+        }
+
         flags |= PARSER_PATTERN_TARGET_DEFAULT;
       }
 

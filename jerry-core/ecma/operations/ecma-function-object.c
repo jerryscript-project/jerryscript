@@ -47,7 +47,7 @@ ecma_op_resource_name (const ecma_compiled_code_t *bytecode_header_p)
 
   ecma_length_t formal_params_number = 0;
 
-  if (CBC_NON_STRICT_ARGUMENTS_NEEDED (bytecode_header_p))
+  if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED)
   {
     if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
     {
@@ -832,7 +832,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       else
       {
         local_env_p = ecma_create_decl_lex_env (scope_p);
-        if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_ARGUMENTS_NEEDED)
+        if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_IS_ARGUMENTS_NEEDED)
         {
           ecma_op_create_arguments_object (func_obj_p,
                                            local_env_p,
@@ -908,7 +908,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       {
         local_env_p = ecma_create_decl_lex_env (scope_p);
 
-        JERRY_ASSERT (!(bytecode_data_p->status_flags & CBC_CODE_FLAGS_ARGUMENTS_NEEDED));
+        JERRY_ASSERT (!(bytecode_data_p->status_flags & CBC_CODE_FLAGS_IS_ARGUMENTS_NEEDED));
       }
 
       ecma_value_t ret_value = vm_run (bytecode_data_p,

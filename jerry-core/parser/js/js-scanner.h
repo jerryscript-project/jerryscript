@@ -145,13 +145,19 @@ typedef enum
 #if ENABLED (JERRY_ES2015)
   SCANNER_STREAM_TYPE_LET, /**< let declaration */
   SCANNER_STREAM_TYPE_CONST, /**< const declaration */
+  SCANNER_STREAM_TYPE_DESTRUCTURED_ARG, /**< destructuring argument declaration */
 #endif /* ENABLED (JERRY_ES2015) */
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
   SCANNER_STREAM_TYPE_IMPORT, /**< module import */
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
   SCANNER_STREAM_TYPE_ARG, /**< argument declaration */
   /* Function types should be at the end. See the SCANNER_STREAM_TYPE_IS_FUNCTION macro. */
-  SCANNER_STREAM_TYPE_ARG_FUNC, /**< argument declaration which is later initialized with a function */
+  SCANNER_STREAM_TYPE_ARG_FUNC, /**< argument declaration which
+                                 *   is later initialized with a function */
+#if ENABLED (JERRY_ES2015)
+  SCANNER_STREAM_TYPE_DESTRUCTURED_ARG_FUNC, /**< destructuring argument declaration which
+                                              *   is later initialized with a function */
+#endif /* ENABLED (JERRY_ES2015) */
   SCANNER_STREAM_TYPE_FUNC, /**< local or global function declaration */
 #if ENABLED (JERRY_ES2015)
   SCANNER_STREAM_TYPE_FUNC_LOCAL, /**< always local function declaration */
@@ -164,9 +170,37 @@ typedef enum
 #define SCANNER_STREAM_TYPE_MASK 0xf
 
 /**
- * Mask for decoding the type from the compressed stream.
+ * Checks whether the decoded type represents a function declaration.
  */
 #define SCANNER_STREAM_TYPE_IS_FUNCTION(type) ((type) >= SCANNER_STREAM_TYPE_ARG_FUNC)
+
+#if ENABLED (JERRY_ES2015)
+
+/**
+ * Checks whether the decoded type represents a function argument.
+ */
+#define SCANNER_STREAM_TYPE_IS_ARG(type) \
+  ((type) == SCANNER_STREAM_TYPE_ARG || (type) == SCANNER_STREAM_TYPE_DESTRUCTURED_ARG)
+
+/**
+ * Checks whether the decoded type represents both a function argument and a function declaration.
+ */
+#define SCANNER_STREAM_TYPE_IS_ARG_FUNC(type) \
+  ((type) == SCANNER_STREAM_TYPE_ARG_FUNC || (type) == SCANNER_STREAM_TYPE_DESTRUCTURED_ARG_FUNC)
+
+#else /* !ENABLED (JERRY_ES2015) */
+
+/**
+ * Checks whether the decoded type represents a function argument.
+ */
+#define SCANNER_STREAM_TYPE_IS_ARG(type) ((type) == SCANNER_STREAM_TYPE_ARG)
+
+/**
+ * Checks whether the decoded type represents both a function argument and a function declaration.
+ */
+#define SCANNER_STREAM_TYPE_IS_ARG_FUNC(type) ((type) == SCANNER_STREAM_TYPE_ARG_FUNC)
+
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * Constants for u8_arg flags in scanner_function_info_t.

@@ -654,9 +654,14 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
     JERRY_DEBUG_MSG (",strict_mode");
   }
 
-  if (compiled_code_p->status_flags & CBC_CODE_FLAGS_ARGUMENTS_NEEDED)
+  if (compiled_code_p->status_flags & CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED)
   {
-    JERRY_DEBUG_MSG (",arguments_needed");
+    JERRY_DEBUG_MSG (",mapped_arguments_needed");
+  }
+
+  if (compiled_code_p->status_flags & CBC_CODE_FLAGS_UNMAPPED_ARGUMENTS_NEEDED)
+  {
+    JERRY_DEBUG_MSG (",unmapped_arguments_needed");
   }
 
   if (compiled_code_p->status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED)
@@ -1148,8 +1153,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 
   total_size += literal_length + length;
 
-  if ((context_p->status_flags & PARSER_ARGUMENTS_NEEDED)
-      && !(context_p->status_flags & PARSER_IS_STRICT))
+  if (PARSER_NEEDS_MAPPED_ARGUMENTS (context_p->status_flags))
   {
     total_size += context_p->argument_count * sizeof (ecma_value_t);
   }
@@ -1243,7 +1247,14 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 
   if (context_p->status_flags & PARSER_ARGUMENTS_NEEDED)
   {
-    compiled_code_p->status_flags |= CBC_CODE_FLAGS_ARGUMENTS_NEEDED;
+    if (PARSER_NEEDS_MAPPED_ARGUMENTS (context_p->status_flags))
+    {
+      compiled_code_p->status_flags |= CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED;
+    }
+    else
+    {
+      compiled_code_p->status_flags |= CBC_CODE_FLAGS_UNMAPPED_ARGUMENTS_NEEDED;
+    }
 
     /* Arguments is stored in the lexical environment. */
     context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED;
@@ -1513,8 +1524,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   }
 #endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
-  if ((context_p->status_flags & PARSER_ARGUMENTS_NEEDED)
-      && !(context_p->status_flags & PARSER_IS_STRICT))
+  if (PARSER_NEEDS_MAPPED_ARGUMENTS (context_p->status_flags))
   {
     parser_list_iterator_t literal_iterator;
     uint16_t argument_count = 0;
@@ -1557,8 +1567,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   {
     ecma_value_t *resource_name_p = (ecma_value_t *) (((uint8_t *) compiled_code_p) + total_size);
 
-    if ((context_p->status_flags & PARSER_ARGUMENTS_NEEDED)
-        && !(context_p->status_flags & PARSER_IS_STRICT))
+    if (PARSER_NEEDS_MAPPED_ARGUMENTS (context_p->status_flags))
     {
       resource_name_p -= context_p->argument_count;
     }
@@ -1607,7 +1616,6 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 {
 #if ENABLED (JERRY_ES2015)
   bool duplicated_argument_names = false;
-  bool initializer_found = false;
 #endif /* ENABLED (JERRY_ES2015) */
 
   JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
@@ -1637,7 +1645,47 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
         parser_raise_error (context_p, PARSER_ERR_DUPLICATED_ARGUMENT_NAMES);
       }
 
-      context_p->status_flags |= PARSER_FUNCTION_HAS_REST_PARAM;
+      context_p->status_flags |= PARSER_FUNCTION_HAS_REST_PARAM | PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM;
+    }
+    else if (context_p->token.type == LEXER_LEFT_SQUARE || context_p->token.type == LEXER_LEFT_BRACE)
+    {
+      if (duplicated_argument_names)
+      {
+        parser_raise_error (context_p, PARSER_ERR_DUPLICATED_ARGUMENT_NAMES);
+      }
+
+      context_p->status_flags |= PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM;
+
+      parser_emit_cbc_literal (context_p,
+                               CBC_PUSH_LITERAL,
+                               (uint16_t) (PARSER_REGISTER_START + context_p->argument_count));
+
+      uint32_t flags = (PARSER_PATTERN_BINDING
+                        | PARSER_PATTERN_TARGET_ON_STACK
+                        | PARSER_PATTERN_LEXICAL
+                        | PARSER_PATTERN_ARGUMENTS);
+
+      if (context_p->next_scanner_info_p->source_p == context_p->source_p)
+      {
+        JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_INITIALIZER);
+        flags |= PARSER_PATTERN_TARGET_DEFAULT;
+      }
+
+      parser_parse_initializer (context_p, (parser_pattern_flags_t) flags);
+
+      context_p->argument_count++;
+      if (context_p->argument_count >= PARSER_MAXIMUM_NUMBER_OF_REGISTERS)
+      {
+        parser_raise_error (context_p, PARSER_ERR_ARGUMENT_LIMIT_REACHED);
+      }
+
+      if (context_p->token.type != LEXER_COMMA)
+      {
+        break;
+      }
+
+      lexer_next_token (context_p);
+      continue;
     }
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -1660,12 +1708,10 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
     if (JERRY_UNLIKELY (context_p->lit_object.literal_p->status_flags & LEXER_FLAG_FUNCTION_ARGUMENT))
     {
 #if ENABLED (JERRY_ES2015)
-      if (initializer_found)
+      if (context_p->status_flags & PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM)
       {
         parser_raise_error (context_p, PARSER_ERR_DUPLICATED_ARGUMENT_NAMES);
       }
-#endif /* ENABLED (JERRY_ES2015) */
-#if ENABLED (JERRY_ES2015)
       duplicated_argument_names = true;
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -1698,7 +1744,8 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
       {
         parser_raise_error (context_p, PARSER_ERR_DUPLICATED_ARGUMENT_NAMES);
       }
-      initializer_found = true;
+
+      context_p->status_flags |= PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM;
 
       /* LEXER_ASSIGN does not overwrite lit_object. */
       parser_emit_cbc (context_p, CBC_PUSH_UNDEFINED);

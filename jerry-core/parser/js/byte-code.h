@@ -308,6 +308,8 @@
               VM_OC_INIT_LOCALS) \
   CBC_OPCODE (CBC_CREATE_CONST, CBC_HAS_LITERAL_ARG, 0, \
               VM_OC_INIT_LOCALS) \
+  CBC_OPCODE (CBC_CREATE_DESTRUCTURED_ARG, CBC_HAS_LITERAL_ARG, 0, \
+              VM_OC_NONE) \
   CBC_OPCODE (CBC_INIT_LOCAL, CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2, 0, \
               VM_OC_INIT_LOCALS) \
   CBC_OPCODE (CBC_CREATE_VAR_EVAL, CBC_HAS_LITERAL_ARG, 0, \
@@ -538,7 +540,7 @@
                       -1 + PARSER_SUPER_CLASS_CONTEXT_STACK_ALLOCATION, VM_OC_CLASS_HERITAGE) \
   CBC_OPCODE (CBC_EXT_INITIALIZER_PUSH_PROP, CBC_NO_FLAG, 0, \
               VM_OC_INITIALIZER_PUSH_PROP | VM_OC_GET_STACK) \
-  CBC_FORWARD_BRANCH (CBC_EXT_DEFAULT_INITIALIZER, 0, \
+  CBC_FORWARD_BRANCH (CBC_EXT_DEFAULT_INITIALIZER, -1, \
                       VM_OC_DEFAULT_INITIALIZER) \
   \
   /* Basic opcodes. */ \
@@ -712,21 +714,21 @@ typedef enum
   CBC_CODE_FLAGS_FULL_LITERAL_ENCODING = (1u << 1), /**< full literal encoding mode is enabled */
   CBC_CODE_FLAGS_UINT16_ARGUMENTS = (1u << 2), /**< compiled code data is cbc_uint16_arguments_t */
   CBC_CODE_FLAGS_STRICT_MODE = (1u << 3), /**< strict mode is enabled */
-  CBC_CODE_FLAGS_ARGUMENTS_NEEDED = (1u << 4), /**< arguments object must be constructed */
-  CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED = (1u << 5), /**< no need to create a lexical environment */
-  CBC_CODE_FLAGS_ARROW_FUNCTION = (1u << 6), /**< this function is an arrow function */
-  CBC_CODE_FLAGS_STATIC_FUNCTION = (1u << 7), /**< this function is a static snapshot function */
-  CBC_CODE_FLAGS_DEBUGGER_IGNORE = (1u << 8), /**< this function should be ignored by debugger */
-  CBC_CODE_FLAGS_CONSTRUCTOR = (1u << 9), /**< this function is a constructor */
-  CBC_CODE_FLAGS_REST_PARAMETER = (1u << 10), /**< this function has rest parameter */
+  CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED = (1u << 4), /**< mapped arguments object must be constructed */
+  CBC_CODE_FLAGS_UNMAPPED_ARGUMENTS_NEEDED = (1u << 5), /**< mapped arguments object must be constructed */
+  CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED = (1u << 6), /**< no need to create a lexical environment */
+  CBC_CODE_FLAGS_ARROW_FUNCTION = (1u << 7), /**< this function is an arrow function */
+  CBC_CODE_FLAGS_STATIC_FUNCTION = (1u << 8), /**< this function is a static snapshot function */
+  CBC_CODE_FLAGS_DEBUGGER_IGNORE = (1u << 9), /**< this function should be ignored by debugger */
+  CBC_CODE_FLAGS_CONSTRUCTOR = (1u << 10), /**< this function is a constructor */
+  CBC_CODE_FLAGS_REST_PARAMETER = (1u << 11), /**< this function has rest parameter */
 } cbc_code_flags;
 
 /**
- * Non-strict arguments object must be constructed
+ * Any arguments object is needed
  */
-#define CBC_NON_STRICT_ARGUMENTS_NEEDED(compiled_code_p) \
-  (((compiled_code_p)->status_flags & CBC_CODE_FLAGS_ARGUMENTS_NEEDED) \
-    && !((compiled_code_p)->status_flags & CBC_CODE_FLAGS_STRICT_MODE))
+#define CBC_CODE_FLAGS_IS_ARGUMENTS_NEEDED \
+  (CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED | CBC_CODE_FLAGS_UNMAPPED_ARGUMENTS_NEEDED)
 
 #define CBC_OPCODE(arg1, arg2, arg3, arg4) arg1,
 

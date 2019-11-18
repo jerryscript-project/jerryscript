@@ -49,11 +49,27 @@ typedef enum
 {
   SCANNER_LITERAL_IS_ARG = (1 << 0), /**< literal is argument */
   SCANNER_LITERAL_IS_VAR = (1 << 1), /**< literal is var */
+#if ENABLED (JERRY_ES2015)
+  /** literal is a destructured argument binding of a possible arrow function */
+  SCANNER_LITERAL_IS_ARROW_DESTRUCTURED_ARG = SCANNER_LITERAL_IS_VAR,
+#endif /* ENABLED (JERRY_ES2015) */
   SCANNER_LITERAL_IS_FUNC = (1 << 2), /**< literal is function */
-  SCANNER_LITERAL_NO_REG = (1 << 3), /**< literal cannot be stored in register */
+#if ENABLED (JERRY_ES2015)
+  /** a destructured argument binding of a possible arrow function cannot be stored in a register */
+  SCANNER_LITERAL_ARROW_DESTRUCTURED_ARG_NO_REG = SCANNER_LITERAL_IS_FUNC,
+#endif /* ENABLED (JERRY_ES2015) */
+  SCANNER_LITERAL_NO_REG = (1 << 3), /**< literal cannot be stored in a register */
   SCANNER_LITERAL_IS_LET = (1 << 4), /**< literal is let */
+#if ENABLED (JERRY_ES2015)
+  /** literal is a function declared in this block (prevents declaring let/const with the same name) */
+  SCANNER_LITERAL_IS_FUNC_DECLARATION = SCANNER_LITERAL_IS_LET,
+#endif /* ENABLED (JERRY_ES2015) */
   SCANNER_LITERAL_IS_CONST = (1 << 5), /**< literal is const */
 #if ENABLED (JERRY_ES2015)
+  /** literal is a destructured argument binding */
+  SCANNER_LITERAL_IS_DESTRUCTURED_ARG = SCANNER_LITERAL_IS_CONST,
+  /** literal is a local function */
+  SCANNER_LITERAL_IS_FUNC_LOCAL = SCANNER_LITERAL_IS_CONST,
   SCANNER_LITERAL_IS_USED = (1 << 6), /**< literal is used */
 #endif /* ENABLED (JERRY_ES2015) */
 } scanner_literal_type_flags_t;
@@ -61,9 +77,18 @@ typedef enum
 /*
  * Known combinations:
  *
- *  SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_LET : function declared in this block, might be let or var
- *  SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_CONST : function declared in this block, must be let
- *  SCANNER_LITERAL_IS_LET | SCANNER_LITERAL_IS_CONST : module import on global scope, catch block variable otherwise
+ *  SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_FUNC_DECLARATION :
+ *         function declared in this block, might be let or var
+ *  SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_FUNC_LOCAL :
+ *         function is visible only in this block
+ *  SCANNER_LITERAL_IS_LOCAL :
+ *         module import on global scope, catch block variable otherwise
+ * SCANNER_LITERAL_IS_ARG | SCANNER_LITERAL_IS_FUNC :
+ *         a function argument which is reassigned to a function later
+ *  SCANNER_LITERAL_IS_ARG | SCANNER_LITERAL_IS_DESTRUCTURED_ARG :
+ *         destructured binding argument
+ *  SCANNER_LITERAL_IS_ARG | SCANNER_LITERAL_IS_DESTRUCTURED_ARG | SCANNER_LITERAL_IS_FUNC :
+ *         destructured binding argument which is reassigned to a function later
  */
 
 /**
@@ -104,6 +129,8 @@ typedef enum
   SCANNER_BINDING_VAR, /**< destructuring var binding */
   SCANNER_BINDING_LET, /**< destructuring let binding */
   SCANNER_BINDING_CONST, /**< destructuring const binding */
+  SCANNER_BINDING_ARG, /**< destructuring arg binding */
+  SCANNER_BINDING_ARROW_ARG, /**< possible destructuring arg binding of an arrow function */
 } scanner_binding_type_t;
 
 /**
@@ -222,6 +249,7 @@ void scanner_detect_eval_call (parser_context_t *context_p, scanner_context_t *s
 void scanner_push_destructuring_pattern (parser_context_t *context_p, scanner_context_t *scanner_context_p,
                                          uint8_t binding_type, bool is_nested);
 void scanner_pop_binding_list (scanner_context_t *scanner_context_p);
+void scanner_append_hole (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**

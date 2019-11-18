@@ -68,7 +68,9 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
 
   ecma_object_t *obj_p;
 
-  if (!is_strict && arguments_number > 0 && formal_params_number > 0)
+  if ((bytecode_data_p->status_flags & CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED)
+      && arguments_number > 0
+      && formal_params_number > 0)
   {
     size_t formal_params_size = formal_params_number * sizeof (ecma_value_t);
 

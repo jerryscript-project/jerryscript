@@ -78,3 +78,18 @@ assert (g2 () === 11);
 assert (g2 (1) === 3);
 assert (g2 (1, 2) === 3);
 assert (g2 (1, 2, 3) === 4);
+
+function args(a, ...b)
+{
+  assert(a === 1);
+  assert(arguments[0] === 1);
+
+  a = 5;
+
+  assert(a === 5);
+  assert(arguments[0] === 1);
+
+  assert(arguments[1] === 2);
+  assert(b[0] === 2)
+}
+args(1, 2);

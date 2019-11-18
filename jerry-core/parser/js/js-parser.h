@@ -115,6 +115,7 @@ typedef enum
   PARSER_ERR_OBJECT_PROPERTY_REDEFINED,               /**< property of object literal redefined */
 #if ENABLED (JERRY_ES2015)
   PARSER_ERR_VARIABLE_REDECLARED,                     /**< a variable redeclared */
+  PARSER_ERR_LEXICAL_SINGLE_STATEMENT,                /**< lexical variable in single statement context */
   PARSER_ERR_MISSING_ASSIGN_AFTER_CONST,              /**< an assignment is required after a const declaration */
 
   PARSER_ERR_MULTIPLE_CLASS_CONSTRUCTORS,             /**< multiple class constructor */

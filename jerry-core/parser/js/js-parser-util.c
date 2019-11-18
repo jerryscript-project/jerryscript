@@ -1089,6 +1089,10 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Local variable is redeclared.";
     }
+    case PARSER_ERR_LEXICAL_SINGLE_STATEMENT:
+    {
+      return "Lexical declaration cannot appear in a single-statement context.";
+    }
     case PARSER_ERR_MISSING_ASSIGN_AFTER_CONST:
     {
       return "Value assignment is expected after a const declaration.";

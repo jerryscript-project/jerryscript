@@ -26,7 +26,6 @@
 #include "ecma-iterator-object.h"
 #include "ecma-lex-env.h"
 #include "ecma-objects.h"
-#include "ecma-spread-object.h"
 #include "ecma-try-catch-macro.h"
 #include "jcontext.h"
 #include "opcodes.h"
@@ -299,17 +298,18 @@ opfunc_append_to_spread_array (ecma_value_t *stack_top_p, /**< current stack top
   ecma_extended_object_t *ext_array_obj_p = (ecma_extended_object_t *) array_obj_p;
   uint32_t old_length = ext_array_obj_p->u.array.length;
 
-  for (uint32_t i = 0, j = old_length; i < values_length; i++)
+  for (uint32_t i = 0, idx = old_length; i < values_length; i++, idx++)
   {
     if (ecma_is_value_array_hole (stack_top_p[i]))
     {
       continue;
     }
-    if (ecma_op_is_spread_object (stack_top_p[i]))
+
+    if (stack_top_p[i] == ECMA_VALUE_SPREAD_ELEMENT)
     {
+      i++;
       ecma_value_t ret_value = ECMA_VALUE_ERROR;
-      ecma_object_t *spread_object_p = ecma_get_object_from_value (stack_top_p[i]);
-      ecma_value_t spread_value = ecma_op_spread_object_get_spreaded_element (spread_object_p);
+      ecma_value_t spread_value = stack_top_p[i];
 
       ecma_value_t iterator = ecma_op_get_iterator (spread_value, ECMA_VALUE_EMPTY);
 
@@ -326,7 +326,7 @@ opfunc_append_to_spread_array (ecma_value_t *stack_top_p, /**< current stack top
 
           if (ecma_is_value_false (next))
           {
-            j--;
+            idx--;
             ret_value = ECMA_VALUE_EMPTY;
             break;
           }
@@ -342,11 +342,10 @@ opfunc_append_to_spread_array (ecma_value_t *stack_top_p, /**< current stack top
 
           ecma_value_t put_comp;
           put_comp = ecma_builtin_helper_def_prop_by_index (array_obj_p,
-                                                            i + j,
+                                                            idx++,
                                                             value,
                                                             ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
 
-          j++;
           JERRY_ASSERT (ecma_is_value_true (put_comp));
           ecma_free_value (value);
         }
@@ -357,22 +356,18 @@ opfunc_append_to_spread_array (ecma_value_t *stack_top_p, /**< current stack top
 
       if (ECMA_IS_VALUE_ERROR (ret_value))
       {
-        for (uint32_t k = i; k < values_length; k++)
+        for (uint32_t k = i + 1; k < values_length; k++)
         {
           ecma_free_value (stack_top_p[k]);
         }
 
         return ret_value;
       }
-      else
-      {
-        ecma_deref_object (spread_object_p);
-      }
     }
     else
     {
       ecma_value_t put_comp = ecma_builtin_helper_def_prop_by_index (array_obj_p,
-                                                                     i + j,
+                                                                     idx,
                                                                      stack_top_p[i],
                                                                      ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
       JERRY_ASSERT (ecma_is_value_true (put_comp));
@@ -390,24 +385,24 @@ opfunc_append_to_spread_array (ecma_value_t *stack_top_p, /**< current stack top
  *         pointer to the ecma-collection with the spreaded arguments, otherwise
  */
 ecma_collection_t * JERRY_ATTR_NOINLINE
-opfunc_spread_arguments (ecma_value_t *arguments_list_p, /**< arguments list */
+opfunc_spread_arguments (ecma_value_t **stack_top_p, /**< [out] pointer to the current stack top */
                          uint8_t arguments_list_len) /**< number of arguments */
 {
+  ecma_value_t *curr_stack_top_p = *stack_top_p;
   ecma_collection_t *buff_p = ecma_new_collection ();
 
-  for (uint8_t i = 0; i < arguments_list_len; i++)
+  for (uint32_t i = 0; i < arguments_list_len; i++)
   {
-    ecma_value_t arg = arguments_list_p[i];
+    ecma_value_t arg = *(--curr_stack_top_p);
 
-    if (!ecma_op_is_spread_object (arg))
+    if (arg != ECMA_VALUE_SPREAD_ELEMENT)
     {
       ecma_collection_push_back (buff_p, arg);
       continue;
     }
 
     ecma_value_t ret_value = ECMA_VALUE_ERROR;
-    ecma_object_t *spread_object_p = ecma_get_object_from_value (arguments_list_p[i]);
-    ecma_value_t spread_value = ecma_op_spread_object_get_spreaded_element (spread_object_p);
+    ecma_value_t spread_value = *(--curr_stack_top_p);
 
     ecma_value_t iterator = ecma_op_get_iterator (spread_value, ECMA_VALUE_EMPTY);
 
@@ -446,18 +441,18 @@ opfunc_spread_arguments (ecma_value_t *arguments_list_p, /**< arguments list */
 
     if (ECMA_IS_VALUE_ERROR (ret_value))
     {
-      for (uint32_t k = i; k < arguments_list_len; k++)
+      for (uint32_t k = i + 1; k < arguments_list_len; k++)
       {
-        ecma_free_value (arguments_list_p[k]);
+        ecma_free_value (*(--curr_stack_top_p));
       }
 
       ecma_collection_free (buff_p);
-      return NULL;
+      buff_p = NULL;
+      break;
     }
-
-    ecma_deref_object (spread_object_p);
   }
 
+  *stack_top_p = curr_stack_top_p;
   return buff_p;
 } /* opfunc_spread_arguments */
 #endif /* ENABLED (JERRY_ES2015) */

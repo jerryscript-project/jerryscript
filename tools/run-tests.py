@@ -124,6 +124,18 @@ TEST262_TEST_SUITE_OPTIONS = [
     Options('test262_tests-debug', OPTIONS_DEBUG)
 ]
 
+# Test options for kangax-tests
+KANGAX_TESTS_OPTIONS = [
+    Options('kangax_tests-es2015_subset',
+            OPTIONS_COMMON + OPTIONS_PROFILE_ES2015),
+    Options('kangax_tests-es2015_subset-snapshot',
+            OPTIONS_COMMON + OPTIONS_PROFILE_ES2015 + OPTIONS_SNAPSHOT, ['--snapshot']),
+    Options('kangax_tests-es5.1',
+            OPTIONS_COMMON + OPTIONS_PROFILE_ES51),
+    Options('kangax_tests-es5.1-snapshot',
+            OPTIONS_COMMON + OPTIONS_PROFILE_ES51 + OPTIONS_SNAPSHOT, ['--snapshot']),
+]
+
 # Test options for jerry-debugger
 DEBUGGER_TEST_OPTIONS = [
     Options('jerry_debugger_tests',
@@ -212,6 +224,8 @@ def get_arguments():
                         help='Run jerry-test-suite')
     parser.add_argument('--test262', action='store_true',
                         help='Run test262')
+    parser.add_argument('--kangax-tests', action='store_true',
+                        help='Run Kangax ES5/ES6 tests')
     parser.add_argument('--unittests', action='store_true',
                         help='Run unittests (including doctests)')
     parser.add_argument('--buildoption-test', action='store_true',
@@ -454,6 +468,31 @@ def run_test262_test_suite(options):
 
     return ret_build | ret_test
 
+def run_kangax_tests(options):
+    ret_build = ret_test = 0
+    for job, ret_build, test_cmd in iterate_test_runner_jobs(KANGAX_TESTS_OPTIONS, options):
+        if ret_build:
+            break
+
+        if options.quiet:
+            test_cmd.append("-q")
+
+        test_cmd.append('--test-dir')
+        if '--profile=es2015-subset' in job.build_args:
+            test_cmd.append(os.path.join(settings.KANGAX_TESTS_DIR, 'es6'))
+        else:
+            test_cmd.append(os.path.join(settings.KANGAX_TESTS_DIR, 'es5'))
+
+        if options.skip_list:
+            test_cmd.append("--skip-list=" + ",".join(options.skip_list))
+
+        if job.test_args:
+            test_cmd.extend(job.test_args)
+
+        ret_test |= run_check(test_cmd)
+
+    return ret_build | ret_test
+
 def run_unittests(options):
     ret_build = ret_test = 0
     for job in JERRY_UNITTESTS_OPTIONS:
@@ -512,6 +551,7 @@ def main(options):
         Check(options.jerry_tests, run_jerry_tests, options),
         Check(options.jerry_test_suite, run_jerry_test_suite, options),
         Check(options.test262, run_test262_test_suite, options),
+        Check(options.kangax_tests, run_kangax_tests, options),
         Check(options.unittests, run_unittests, options),
         Check(options.buildoption_test, run_buildoption_test, options),
     ]

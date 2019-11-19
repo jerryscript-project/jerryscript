@@ -104,6 +104,11 @@ opfunc_for_in (ecma_value_t left_value, ecma_value_t *result_obj_p);
 ecma_value_t
 opfunc_append_array (ecma_value_t *stack_top_p, uint16_t values_length);
 
+#if ENABLED (JERRY_ES2015)
+ecma_collection_t *
+opfunc_spread_arguments (ecma_value_t *arguments_list_p, uint8_t argument_list_len);
+#endif /* ENABLED (JERRY_ES2015) */
+
 /**
  * @}
  * @}

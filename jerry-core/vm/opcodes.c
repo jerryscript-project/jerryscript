@@ -382,6 +382,84 @@ opfunc_append_to_spread_array (ecma_value_t *stack_top_p, /**< current stack top
 
   return ECMA_VALUE_EMPTY;
 } /* opfunc_append_to_spread_array */
+
+/**
+ * Spread function call/construct arguments into an ecma-collection
+ *
+ * @return NULL - if the operation failed
+ *         pointer to the ecma-collection with the spreaded arguments, otherwise
+ */
+ecma_collection_t * JERRY_ATTR_NOINLINE
+opfunc_spread_arguments (ecma_value_t *arguments_list_p, /**< arguments list */
+                         uint8_t arguments_list_len) /**< number of arguments */
+{
+  ecma_collection_t *buff_p = ecma_new_collection ();
+
+  for (uint8_t i = 0; i < arguments_list_len; i++)
+  {
+    ecma_value_t arg = arguments_list_p[i];
+
+    if (!ecma_op_is_spread_object (arg))
+    {
+      ecma_collection_push_back (buff_p, arg);
+      continue;
+    }
+
+    ecma_value_t ret_value = ECMA_VALUE_ERROR;
+    ecma_object_t *spread_object_p = ecma_get_object_from_value (arguments_list_p[i]);
+    ecma_value_t spread_value = ecma_op_spread_object_get_spreaded_element (spread_object_p);
+
+    ecma_value_t iterator = ecma_op_get_iterator (spread_value, ECMA_VALUE_EMPTY);
+
+    if (!ECMA_IS_VALUE_ERROR (iterator))
+    {
+      while (true)
+      {
+        ecma_value_t next = ecma_op_iterator_step (iterator);
+
+        if (ECMA_IS_VALUE_ERROR (next))
+        {
+          break;
+        }
+
+        if (ecma_is_value_false (next))
+        {
+          ret_value = ECMA_VALUE_EMPTY;
+          break;
+        }
+
+        ecma_value_t value = ecma_op_iterator_value (next);
+
+        ecma_free_value (next);
+
+        if (ECMA_IS_VALUE_ERROR (value))
+        {
+          break;
+        }
+
+        ecma_collection_push_back (buff_p, value);
+      }
+    }
+
+    ecma_free_value (iterator);
+    ecma_free_value (spread_value);
+
+    if (ECMA_IS_VALUE_ERROR (ret_value))
+    {
+      for (uint32_t k = i; k < arguments_list_len; k++)
+      {
+        ecma_free_value (arguments_list_p[k]);
+      }
+
+      ecma_collection_free (buff_p);
+      return NULL;
+    }
+
+    ecma_deref_object (spread_object_p);
+  }
+
+  return buff_p;
+} /* opfunc_spread_arguments */
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**

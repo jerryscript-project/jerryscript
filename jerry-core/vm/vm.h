@@ -1,3 +1,4 @@
+
 /* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -252,6 +253,7 @@ typedef enum
   VM_OC_DEFAULT_INITIALIZER,     /**< default initializer inside a pattern */
   VM_OC_REST_INITIALIZER,        /**< create rest object inside an array pattern */
   VM_OC_INITIALIZER_PUSH_PROP,   /**< push property for object initializer */
+  VM_OC_SPREAD_ARGUMENTS,        /**< perform function call/construct with spreaded arguments */
 #endif /* ENABLED (JERRY_ES2015) */
   VM_OC_NONE,                    /**< a special opcode for unsupported byte codes */
 } vm_oc_types;
@@ -300,7 +302,9 @@ typedef enum
   VM_OC_DEFAULT_INITIALIZER = VM_OC_NONE,     /**< default initializer inside a pattern */
   VM_OC_REST_INITIALIZER = VM_OC_NONE,        /**< create rest object inside an array pattern */
   VM_OC_INITIALIZER_PUSH_PROP = VM_OC_NONE,   /**< push property for object initializer */
+  VM_OC_SPREAD_ARGUMENTS = VM_OC_NONE,        /**< perform function call/construct with spreaded arguments */
 #endif /* !ENABLED (JERRY_ES2015) */
+
   VM_OC_UNUSED = VM_OC_NONE                   /**< placeholder if the list is empty */
 } vm_oc_unused_types;
 
@@ -381,6 +385,7 @@ typedef enum
   VM_NO_EXEC_OP,                 /**< do nothing */
   VM_EXEC_CALL,                  /**< invoke a function */
   VM_EXEC_SUPER_CALL,            /**< invoke a function through 'super' keyword */
+  VM_EXEC_SPREAD_OP,             /**< call/construct operation with spreaded argument list */
   VM_EXEC_CONSTRUCT,             /**< construct a new object */
 } vm_call_operation;
 

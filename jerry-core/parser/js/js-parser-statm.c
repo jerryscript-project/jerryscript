@@ -477,6 +477,21 @@ parser_pop_block_context (parser_context_t *context_p) /**< context */
   parser_stack_iterator_init (context_p, &context_p->last_statement);
 } /* parser_pop_block_context */
 
+/**
+ * Validate lexical context for a declaration.
+ */
+static void
+parser_validate_lexical_context (parser_context_t *context_p) /**< context */
+{
+  JERRY_ASSERT (context_p->token.type == LEXER_KEYW_LET
+                || context_p->token.type == LEXER_KEYW_CONST
+                || context_p->token.type == LEXER_KEYW_CLASS);
+
+  if (parser_statement_flags[context_p->stack_top_uint8] & PARSER_STATM_SINGLE_STATM)
+  {
+    parser_raise_error (context_p, PARSER_ERR_LEXICAL_SINGLE_STATEMENT);
+  }
+} /* parser_validate_lexical_context */
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**
@@ -491,6 +506,11 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
 
 #if ENABLED (JERRY_ES2015)
   uint8_t declaration_type = context_p->token.type;
+
+  if (declaration_type != LEXER_KEYW_VAR)
+  {
+    parser_validate_lexical_context (context_p);
+  }
 #endif /* ENABLED (JERRY_ES2015) */
 
   while (true)
@@ -611,6 +631,15 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
   lexer_literal_t *literal_p;
 
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_FUNCTION);
+
+#if ENABLED (JERRY_ES2015)
+  if ((parser_statement_flags[context_p->stack_top_uint8] & PARSER_STATM_SINGLE_STATM)
+      && !(context_p->stack_top_uint8 == PARSER_STATEMENT_IF
+           || context_p->stack_top_uint8 == PARSER_STATEMENT_ELSE))
+  {
+    parser_raise_error (context_p, PARSER_ERR_LEXICAL_SINGLE_STATEMENT);
+  }
+#endif /* ENABLED (JERRY_ES2015) */
 
 #if ENABLED (JERRY_DEBUGGER)
   parser_line_counter_t debugger_line = context_p->token.line;
@@ -2636,6 +2665,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 #if ENABLED (JERRY_ES2015)
       case LEXER_KEYW_CLASS:
       {
+        parser_validate_lexical_context (context_p);
         parser_parse_class (context_p, true);
         goto consume_last_statement;
       }

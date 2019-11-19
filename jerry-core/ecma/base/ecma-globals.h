@@ -961,16 +961,16 @@ typedef struct
 
 #endif /* ENABLED (JERRY_ES2015) */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_MAP) || ENABLED (JERRY_ES2015_BUILTIN_SET)
+#if ENABLED (JERRY_ES2015_BUILTIN_CONTAINER)
 /**
- * Description of Map/Set objects.
+ * Flags for container objects
  */
-typedef struct
+typedef enum
 {
-  ecma_extended_object_t header; /**< header part */
-  uint32_t size; /**< size of the map object */
-} ecma_map_object_t;
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) || ENABLED (JERRY_ES2015_BUILTIN_SET) */
+  ECMA_CONTAINER_FLAGS_EMPTY = (0), /** empty flags */
+  ECMA_CONTAINER_FLAGS_WEAK = (1 << 0) /** container object is weak */
+} ecma_container_flags_t;
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_CONTAINER) */
 
 typedef enum
 {

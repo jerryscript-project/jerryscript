@@ -96,7 +96,7 @@ static ecma_value_t
 ecma_builtin_map_prototype_object_get (ecma_value_t this_arg, /**< this argument */
                                        ecma_value_t key_arg) /**< key argument */
 {
-  return ecma_op_container_get (this_arg, key_arg);
+  return ecma_op_container_get (this_arg, key_arg, LIT_MAGIC_STRING_MAP_UL);
 } /* ecma_builtin_map_prototype_object_get */
 
 /**

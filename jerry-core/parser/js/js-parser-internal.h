@@ -619,9 +619,11 @@ void lexer_next_token (parser_context_t *context_p);
 bool lexer_check_next_character (parser_context_t *context_p, lit_utf8_byte_t character);
 bool lexer_check_next_characters (parser_context_t *context_p, lit_utf8_byte_t character1,
                                   lit_utf8_byte_t character2);
+uint8_t lexer_consume_next_character (parser_context_t *context_p);
 #if ENABLED (JERRY_ES2015)
 void lexer_skip_empty_statements (parser_context_t *context_p);
 bool lexer_check_arrow (parser_context_t *context_p);
+bool lexer_check_arrow_param (parser_context_t *context_p);
 #endif /* ENABLED (JERRY_ES2015) */
 void lexer_parse_string (parser_context_t *context_p);
 void lexer_expect_identifier (parser_context_t *context_p, uint8_t literal_type);

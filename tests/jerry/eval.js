@@ -122,3 +122,33 @@ catch(e)
 code = 'eval("(function (){})")';
 code = "eval ('" + code + "')";
 eval (code);
+
+// Eval enclosed in brackets is still an eval.
+var p1 = 0;
+
+function f3() {
+  var p1 = 5;
+  (eval)("assert(p1 === 5)");
+}
+f3();
+
+function f4() {
+  var p1 = 6;
+  ((eval))("assert(p1 === 6)");
+}
+f4();
+
+function f5() {
+  var p1 = 7;
+  (((((eval)))("assert(p1 === 7)")));
+}
+f5();
+
+function f6() {
+  var p1 = 8;
+  var e = eval;
+
+  e("assert(p1 === 0)");
+  (((((e)))("assert(p1 === 0)")));
+}
+f6();

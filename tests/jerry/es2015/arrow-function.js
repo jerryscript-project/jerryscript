@@ -137,7 +137,9 @@ default:
 must_throw ("var x => x;");
 must_throw ("(()) => 0");
 must_throw ("((x)) => 0");
+must_throw ("(((x))) => 0");
 must_throw ("(x,) => 0");
+must_throw ("(x==6) => 0");
 must_throw ("(x y) => 0");
 must_throw ("(x,y,) => 0");
 must_throw ("x\n => 0");
@@ -148,3 +150,27 @@ must_throw_strict ("(package) => 0");
 must_throw_strict ("(package) => { return 5 }");
 must_throw_strict ("(x,x,x) => 0");
 must_throw_strict ("(x,x,x) => { }");
+
+var f = (a) => 1;
+assert(f() === 1);
+
+var f = (a => 2);
+assert(f() === 2);
+
+var f = ((((a => ((3))))));
+assert(f() === 3);
+
+var f = (((a) => 4));
+assert(f() === 4);
+
+var f = (a,b) => 5;
+assert(f() === 5);
+
+var f = (((a,b) => 6));
+assert(f() === 6);
+
+var f = ((a,b) => x => (a) => 7);
+assert(f()()() === 7);
+
+var f = (((a=1,b=2) => ((x => (((a) => 8))))));
+assert(f()()() === 8);

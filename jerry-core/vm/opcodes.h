@@ -106,7 +106,7 @@ opfunc_append_array (ecma_value_t *stack_top_p, uint16_t values_length);
 
 #if ENABLED (JERRY_ES2015)
 ecma_collection_t *
-opfunc_spread_arguments (ecma_value_t *arguments_list_p, uint8_t argument_list_len);
+opfunc_spread_arguments (ecma_value_t **stack_top_p, uint8_t argument_list_len);
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**

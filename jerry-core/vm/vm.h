@@ -247,7 +247,7 @@ typedef enum
   VM_OC_PUSH_CONSTRUCTOR_SUPER,  /**< push 'super' inside a class constructor */
   VM_OC_PUSH_CONSTRUCTOR_THIS,   /**< push 'this' inside a class constructor */
   VM_OC_CONSTRUCTOR_RET,         /**< explicit return from a class constructor */
-  VM_OC_CREATE_SPREAD_OBJECT,    /**< create spread object */
+  VM_OC_PUSH_SPREAD_ELEMENT,     /**< push spread element */
   VM_OC_GET_ITERATOR,            /**< GetIterator abstract operation */
   VM_OC_ITERATOR_STEP,           /**< IteratorStep abstract operation */
   VM_OC_DEFAULT_INITIALIZER,     /**< default initializer inside a pattern */
@@ -296,7 +296,7 @@ typedef enum
   VM_OC_PUSH_CONSTRUCTOR_SUPER = VM_OC_NONE,  /**< push 'super' inside a class constructor */
   VM_OC_PUSH_CONSTRUCTOR_THIS = VM_OC_NONE,   /**< push 'this' inside a class constructor */
   VM_OC_CONSTRUCTOR_RET = VM_OC_NONE,         /**< explicit return from a class constructor */
-  VM_OC_CREATE_SPREAD_OBJECT = VM_OC_NONE,    /**< create spread object */
+  VM_OC_PUSH_SPREAD_ELEMENT = VM_OC_NONE,     /**< push spread element */
   VM_OC_GET_ITERATOR = VM_OC_NONE,            /**< GetIterator abstract operation */
   VM_OC_ITERATOR_STEP = VM_OC_NONE,           /**< IteratorStep abstract operation */
   VM_OC_DEFAULT_INITIALIZER = VM_OC_NONE,     /**< default initializer inside a pattern */

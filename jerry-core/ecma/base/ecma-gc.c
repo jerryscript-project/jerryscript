@@ -465,17 +465,6 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             break;
           }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
-#if ENABLED (JERRY_ES2015)
-          case ECMA_PSEUDO_SPREAD_OBJECT:
-          {
-            ecma_value_t spread_value = ext_object_p->u.pseudo_array.u2.spread_value;
-            if (ecma_is_value_object (spread_value))
-            {
-              ecma_gc_set_object_visited (ecma_get_object_from_value (spread_value));
-            }
-            break;
-          }
-#endif /* ENABLED (JERRY_ES2015) */
           default:
           {
             JERRY_ASSERT (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS);
@@ -967,15 +956,6 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           break;
         }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
-#if ENABLED (JERRY_ES2015)
-        case ECMA_PSEUDO_SPREAD_OBJECT:
-        {
-          ecma_value_t spread_value = ext_object_p->u.pseudo_array.u2.spread_value;
-          ecma_free_value_if_not_object (spread_value);
-
-          break;
-        }
-#endif /* ENABLED (JERRY_ES2015) */
         default:
         {
           JERRY_ASSERT (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_TYPEDARRAY

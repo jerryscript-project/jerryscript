@@ -31,7 +31,6 @@
 #include "ecma-objects-general.h"
 #include "ecma-regexp-object.h"
 #include "ecma-try-catch-macro.h"
-#include "ecma-spread-object.h"
 #include "jcontext.h"
 #include "opcodes.h"
 #include "vm.h"
@@ -1581,11 +1580,10 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_SUPER_CALL:
         {
           uint8_t arguments_list_len = *byte_code_p++;
-          stack_top_p -= arguments_list_len;
 
           if (opcode >= CBC_EXT_SPREAD_SUPER_CALL)
           {
-            ecma_collection_t *arguments_p = opfunc_spread_arguments (stack_top_p, arguments_list_len);
+            ecma_collection_t *arguments_p = opfunc_spread_arguments (&stack_top_p, arguments_list_len);
 
             if (JERRY_UNLIKELY (arguments_p == NULL))
             {
@@ -1595,6 +1593,10 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
             stack_top_p++;
             ECMA_SET_INTERNAL_VALUE_POINTER (stack_top_p[-1], arguments_p);
+          }
+          else
+          {
+            stack_top_p -= arguments_list_len;
           }
 
           frame_ctx_p->call_operation = VM_EXEC_SUPER_CALL;
@@ -1919,10 +1921,10 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           goto error;
         }
-        case VM_OC_CREATE_SPREAD_OBJECT:
+        case VM_OC_PUSH_SPREAD_ELEMENT:
         {
-          *stack_top_p++ = ecma_op_create_spread_object (left_value);
-          goto free_left_value;
+          *stack_top_p++ = ECMA_VALUE_SPREAD_ELEMENT;
+          continue;
         }
         case VM_OC_GET_ITERATOR:
         {
@@ -2029,9 +2031,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_SPREAD_ARGUMENTS:
         {
           uint8_t arguments_list_len = *byte_code_p++;
-          stack_top_p -= arguments_list_len;
 
-          ecma_collection_t *arguments_p = opfunc_spread_arguments (stack_top_p, arguments_list_len);
+          ecma_collection_t *arguments_p = opfunc_spread_arguments (&stack_top_p, arguments_list_len);
 
           if (JERRY_UNLIKELY (arguments_p == NULL))
           {

@@ -249,23 +249,16 @@ parser_parse_array_literal (parser_context_t *context_p) /**< context */
     else
     {
 #if ENABLED (JERRY_ES2015)
-      bool is_spread = false;
       if (context_p->token.type == LEXER_THREE_DOTS)
       {
         opcode = (uint16_t) (PARSER_TO_EXT_OPCODE (CBC_EXT_SPREAD_ARRAY_APPEND));
-        is_spread = true;
+        pushed_items++;
         lexer_next_token (context_p);
+        parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_SPREAD_ELEMENT);
       }
 #endif /* ENABLED (JERRY_ES2015) */
 
       parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
-
-#if ENABLED (JERRY_ES2015)
-      if (is_spread)
-      {
-        parser_emit_cbc_ext (context_p, CBC_EXT_CREATE_SPREAD_OBJECT);
-      }
-#endif /* ENABLED (JERRY_ES2015) */
 
       if (context_p->token.type == LEXER_COMMA)
       {
@@ -1639,7 +1632,7 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
         lexer_next_token (context_p);
 
 #if ENABLED (JERRY_ES2015)
-        bool spread_arguments = false;
+        uint32_t spread_arguments = 0;
 #endif /* ENABLED (JERRY_ES2015) */
 
         if (context_p->token.type != LEXER_RIGHT_PAREN)
@@ -1652,20 +1645,20 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
             }
 
 #if ENABLED (JERRY_ES2015)
-            bool is_spread = false;
-            if (context_p->token.type == LEXER_THREE_DOTS)
+            lexer_token_type_t type = context_p->token.type;
+            if (type == LEXER_THREE_DOTS)
             {
-              spread_arguments = true;
-              is_spread = true;
+              spread_arguments++;
               lexer_next_token (context_p);
             }
 #endif /* ENABLED (JERRY_ES2015) */
+
             parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
 
 #if ENABLED (JERRY_ES2015)
-            if (is_spread)
+            if (type == LEXER_THREE_DOTS)
             {
-              parser_emit_cbc_ext (context_p, CBC_EXT_CREATE_SPREAD_OBJECT);
+              parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_SPREAD_ELEMENT);
             }
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -1709,7 +1702,7 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
           context_p->status_flags &= (uint32_t) ~PARSER_CLASS_SUPER_PROP_REFERENCE;
         }
 
-        if (spread_arguments)
+        if (spread_arguments != 0)
         {
           uint16_t spread_opcode;
 
@@ -1732,6 +1725,8 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
             spread_opcode = CBC_EXT_SPREAD_SUPER_CALL;
           }
 
+          /* Manually adjust stack usage */
+          PARSER_MINUS_EQUAL_U16 (context_p->stack_depth, spread_arguments);
           parser_emit_cbc_ext_call (context_p, spread_opcode, call_arguments);
           continue;
         }

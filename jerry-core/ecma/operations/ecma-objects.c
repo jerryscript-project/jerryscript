@@ -19,6 +19,7 @@
 #include "ecma-exceptions.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
+#include "ecma-helpers.h"
 #include "ecma-function-object.h"
 #include "ecma-lex-env.h"
 #include "ecma-string-object.h"
@@ -2473,6 +2474,43 @@ ecma_object_class_is (ecma_object_t *object_p, /**< object */
 
   return false;
 } /* ecma_object_class_is */
+
+#if ENABLED (JERRY_ES2015)
+/**
+ * Object's IsConcatSpreadable operation, used for Array.prototype.concat
+ * It checks the argument's [Symbol.isConcatSpreadable] property value
+ *
+ * See also:
+ *          ECMA-262 v6, 22.1.3.1.1;
+ *
+ * @return ECMA_VALUE_ERROR - if the operation fails
+ *         ECMA_VALUE_TRUE - if the argument is concatSpreadable
+ *         ECMA_VALUE_FALSE - otherwise
+ */
+ecma_value_t
+ecma_op_is_concat_spreadable (ecma_value_t arg) /**< argument */
+{
+  if (!ecma_is_value_object (arg))
+  {
+    return ECMA_VALUE_FALSE;
+  }
+
+  ecma_value_t spreadable = ecma_op_object_get_by_symbol_id (ecma_get_object_from_value (arg),
+                                                             LIT_MAGIC_STRING_IS_CONCAT_SPREADABLE);
+
+  if (ECMA_IS_VALUE_ERROR (spreadable))
+  {
+    return spreadable;
+  }
+
+  if (!ecma_is_value_undefined (spreadable))
+  {
+    return ecma_make_boolean_value (ecma_op_to_boolean (spreadable));
+  }
+
+  return (ecma_make_boolean_value (ecma_is_value_array (arg)));
+} /* ecma_op_is_concat_spreadable */
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * @}

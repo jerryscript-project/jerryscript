@@ -59,15 +59,7 @@ ecma_builtin_array_object_is_array (ecma_value_t this_arg, /**< 'this' argument 
 {
   JERRY_UNUSED (this_arg);
 
-  if (ecma_is_value_object (arg))
-  {
-    if (ecma_get_object_type (ecma_get_object_from_value (arg)) == ECMA_OBJECT_TYPE_ARRAY)
-    {
-      return ECMA_VALUE_TRUE;
-    }
-  }
-
-  return ECMA_VALUE_FALSE;
+  return ecma_make_boolean_value (ecma_is_value_array (arg));
 } /* ecma_builtin_array_object_is_array */
 
 /**

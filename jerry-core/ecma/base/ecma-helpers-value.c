@@ -406,6 +406,19 @@ ecma_check_value_type_is_spec_defined (ecma_value_t value) /**< ecma value */
 } /* ecma_check_value_type_is_spec_defined */
 
 /**
+ * Checks if the given argument is an array or not.
+ *
+ * @return true - if the given argument is an array object
+ *         false - otherwise
+ */
+inline bool JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
+ecma_is_value_array (ecma_value_t arg) /**< argument */
+{
+  return (ecma_is_value_object (arg)
+          && ecma_get_object_type (ecma_get_object_from_value (arg)) == ECMA_OBJECT_TYPE_ARRAY);
+} /* ecma_is_value_array */
+
+/**
  * Creates an ecma value from the given raw boolean.
  *
  * @return boolean ecma_value

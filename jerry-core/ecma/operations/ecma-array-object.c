@@ -86,6 +86,7 @@ ecma_op_new_array_object (ecma_length_t length) /**< length of the new array */
 
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
   ext_obj_p->u.array.length = length;
+  ext_obj_p->u.array.u.hole_count = 0;
   ext_obj_p->u.array.u.length_prop = ECMA_PROPERTY_FLAG_WRITABLE | ECMA_PROPERTY_TYPE_VIRTUAL;
 
   return object_p;

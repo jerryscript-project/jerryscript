@@ -739,9 +739,9 @@ jerry_generate_snapshot_with_args (const jerry_char_t *resource_name_p, /**< scr
   JERRY_UNUSED (resource_name_p);
   JERRY_UNUSED (resource_name_length);
 
-#if ENABLED (JERRY_LINE_INFO)
+#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
   JERRY_CONTEXT (resource_name) = ECMA_VALUE_UNDEFINED;
-#endif /* ENABLED (JERRY_LINE_INFO) */
+#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
   snapshot_globals_t globals;
   ecma_value_t parse_status;

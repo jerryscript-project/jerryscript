@@ -284,7 +284,172 @@ scanner_process_arrow_arg (parser_context_t *context_p, /**< context */
   }
 } /* scanner_process_arrow_arg */
 
+/**
+ * Arrow types for scanner_handle_bracket() function.
+ */
+typedef enum
+{
+  SCANNER_HANDLE_BRACKET_NO_ARROW, /**< not an arrow function */
+  SCANNER_HANDLE_BRACKET_SIMPLE_ARROW, /**< simple arrow function */
+  SCANNER_HANDLE_BRACKET_ARROW_WITH_ONE_ARG, /**< arrow function with one argument */
+} scanner_handle_bracket_arrow_type_t;
+
 #endif /* ENABLED (JERRY_ES2015) */
+
+/**
+ * Detect special cases in bracketed expressions.
+ */
+static void
+scanner_handle_bracket (parser_context_t *context_p, /**< context */
+                        scanner_context_t *scanner_context_p) /**< scanner context */
+{
+  size_t depth = 0;
+#if ENABLED (JERRY_ES2015)
+  const uint8_t *arrow_source_p;
+  scanner_handle_bracket_arrow_type_t arrow_type = SCANNER_HANDLE_BRACKET_NO_ARROW;
+#endif /* ENABLED (JERRY_ES2015) */
+
+  JERRY_ASSERT (context_p->token.type == LEXER_LEFT_PAREN);
+
+  do
+  {
+#if ENABLED (JERRY_ES2015)
+    arrow_source_p = context_p->source_p;
+#endif /* ENABLED (JERRY_ES2015) */
+    depth++;
+    lexer_next_token (context_p);
+  }
+  while (context_p->token.type == LEXER_LEFT_PAREN);
+
+  scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
+
+  switch (context_p->token.type)
+  {
+    case LEXER_LITERAL:
+    {
+      if (context_p->token.lit_location.type != LEXER_IDENT_LITERAL)
+      {
+#if ENABLED (JERRY_ES2015)
+        arrow_source_p = NULL;
+#endif /* ENABLED (JERRY_ES2015) */
+        break;
+      }
+
+#if ENABLED (JERRY_ES2015)
+      const uint8_t *source_p = context_p->source_p;
+
+      if (lexer_check_arrow (context_p))
+      {
+        arrow_source_p = source_p;
+        arrow_type = SCANNER_HANDLE_BRACKET_SIMPLE_ARROW;
+        break;
+      }
+
+      size_t total_depth = depth;
+#endif /* ENABLED (JERRY_ES2015) */
+
+      while (depth > 0 && lexer_check_next_character (context_p, LIT_CHAR_RIGHT_PAREN))
+      {
+        lexer_consume_next_character (context_p);
+        depth--;
+      }
+
+      if (lexer_check_next_character (context_p, LIT_CHAR_LEFT_PAREN))
+      {
+#if ENABLED (JERRY_ES2015)
+        /* A function call cannot be an eval function. */
+        arrow_source_p = NULL;
+#endif /* ENABLED (JERRY_ES2015) */
+
+        if (context_p->token.lit_location.length == 4
+            && lexer_compare_identifiers (context_p->token.lit_location.char_p, (const uint8_t *) "eval", 4))
+        {
+          scanner_context_p->active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_NO_REG;
+        }
+        break;
+      }
+
+#if ENABLED (JERRY_ES2015)
+      if (total_depth == depth)
+      {
+        if (lexer_check_arrow_param (context_p))
+        {
+          JERRY_ASSERT (depth > 0);
+          depth--;
+          break;
+        }
+      }
+      else if (depth == total_depth - 1
+               && lexer_check_arrow (context_p))
+      {
+        arrow_type = SCANNER_HANDLE_BRACKET_ARROW_WITH_ONE_ARG;
+        break;
+      }
+
+      arrow_source_p = NULL;
+#endif /* ENABLED (JERRY_ES2015) */
+      break;
+    }
+#if ENABLED (JERRY_ES2015)
+    case LEXER_THREE_DOTS:
+    case LEXER_LEFT_SQUARE:
+    case LEXER_LEFT_BRACE:
+    case LEXER_RIGHT_PAREN:
+    {
+      JERRY_ASSERT (depth > 0);
+      depth--;
+      break;
+    }
+#endif /* ENABLED (JERRY_ES2015) */
+    default:
+    {
+#if ENABLED (JERRY_ES2015)
+      arrow_source_p = NULL;
+#endif /* ENABLED (JERRY_ES2015) */
+      break;
+    }
+  }
+
+  while (depth > 0)
+  {
+    parser_stack_push_uint8 (context_p, SCAN_STACK_PAREN_EXPRESSION);
+    depth--;
+  }
+
+#if ENABLED (JERRY_ES2015)
+  if (arrow_source_p != NULL)
+  {
+    if (arrow_type == SCANNER_HANDLE_BRACKET_SIMPLE_ARROW)
+    {
+      scanner_process_simple_arrow (context_p, scanner_context_p, arrow_source_p);
+      return;
+    }
+
+    parser_stack_push_uint8 (context_p, SCAN_STACK_ARROW_ARGUMENTS);
+
+    scanner_literal_pool_t *literal_pool_p;
+    literal_pool_p = scanner_push_literal_pool (context_p, scanner_context_p, 0);
+    literal_pool_p->source_p = arrow_source_p;
+
+    if (arrow_type == SCANNER_HANDLE_BRACKET_ARROW_WITH_ONE_ARG)
+    {
+      scanner_append_argument (context_p, scanner_context_p);
+      scanner_detect_eval_call (context_p, scanner_context_p);
+
+      context_p->token.type = LEXER_RIGHT_PAREN;
+      scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION_END;
+    }
+    else if (context_p->token.type == LEXER_RIGHT_PAREN)
+    {
+      scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION_END;
+    }
+    else
+    {
+      scanner_process_arrow_arg (context_p, scanner_context_p);
+    }
+  }
+#endif /* ENABLED (JERRY_ES2015) */
+} /* scanner_handle_bracket */
 
 /**
  * Scan primary expression.
@@ -328,28 +493,8 @@ scanner_scan_primary_expression (parser_context_t *context_p, /**< context */
     }
     case LEXER_LEFT_PAREN:
     {
-#if ENABLED (JERRY_ES2015)
-      parser_stack_push_uint8 (context_p, SCAN_STACK_ARROW_ARGUMENTS);
-
-      scanner_literal_pool_t *literal_pool_p;
-      literal_pool_p = scanner_push_literal_pool (context_p, scanner_context_p, 0);
-      literal_pool_p->source_p = context_p->source_p;
-
-      lexer_next_token (context_p);
-
-      if (context_p->token.type == LEXER_RIGHT_PAREN)
-      {
-        scanner_context_p->mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
-        return SCAN_KEEP_TOKEN;
-      }
-
-      scanner_process_arrow_arg (context_p, scanner_context_p);
+      scanner_handle_bracket (context_p, scanner_context_p);
       return SCAN_KEEP_TOKEN;
-#else /* ENABLED (JERRY_ES2015) */
-      parser_stack_push_uint8 (context_p, SCAN_STACK_PAREN_EXPRESSION);
-      scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
-#endif /* ENABLED (JERRY_ES2015) */
-      break;
     }
     case LEXER_LEFT_SQUARE:
     {

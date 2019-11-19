@@ -2439,11 +2439,11 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
           {
             uint8_t binding_type = SCANNER_BINDING_VAR;
 
-            if (stack_top == SCAN_STACK_LET)
+            if (stack_top == SCAN_STACK_LET || stack_top == SCAN_STACK_FOR_LET_START)
             {
               binding_type = SCANNER_BINDING_LET;
             }
-            else if (stack_top == SCAN_STACK_CONST)
+            else if (stack_top == SCAN_STACK_CONST || stack_top == SCAN_STACK_FOR_CONST_START)
             {
               binding_type = SCANNER_BINDING_CONST;
             }

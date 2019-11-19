@@ -1446,8 +1446,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
     }
     case LEXER_KEYW_SUPER:
     {
-      if ((lexer_check_next_character (context_p, LIT_CHAR_DOT)
-            || lexer_check_next_character (context_p, LIT_CHAR_LEFT_SQUARE))
+      if (lexer_check_next_characters (context_p, LIT_CHAR_DOT, LIT_CHAR_LEFT_SQUARE)
           && context_p->status_flags & (PARSER_CLASS_HAS_SUPER))
       {
         if (!LEXER_IS_BINARY_LVALUE_TOKEN (context_p->stack_top_uint8))

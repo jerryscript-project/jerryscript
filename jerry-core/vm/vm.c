@@ -1965,6 +1965,17 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           *stack_top_p++ = value;
           continue;
         }
+        case VM_OC_ITERATOR_CLOSE:
+        {
+          result = ecma_op_iterator_close (left_value);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          goto free_left_value;
+        }
         case VM_OC_DEFAULT_INITIALIZER:
         {
           JERRY_ASSERT (stack_top_p > frame_ctx_p->registers_p + register_end);
@@ -3882,6 +3893,8 @@ error:
 #if ENABLED (JERRY_DEBUGGER)
         JERRY_DEBUGGER_CLEAR_FLAGS (JERRY_DEBUGGER_VM_EXCEPTION_THROWN);
 #endif /* ENABLED (JERRY_DEBUGGER) */
+
+        JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_EXCEPTION;
 
         byte_code_p = frame_ctx_p->byte_code_p;
 

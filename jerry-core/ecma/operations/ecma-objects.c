@@ -968,19 +968,21 @@ ecma_op_object_get_by_symbol_id (ecma_object_t *object_p, /**< the object */
 } /* ecma_op_object_get_by_symbol_id */
 
 /**
- * GetMethod operation the property is a well-known symbol
+ * GetMethod operation
  *
  * See also: ECMA-262 v6, 7.3.9
  *
  * Note:
  *      Returned value must be freed with ecma_free_value.
  *
- * @return iterator fucntion object - if success
+ * @return iterator function object - if success
  *         raised error - otherwise
  */
-ecma_value_t
-ecma_op_get_method_by_symbol_id (ecma_value_t value, /**< ecma value */
-                                 lit_magic_string_id_t property_id) /**< property symbol id */
+static ecma_value_t
+ecma_op_get_method_by_id (ecma_value_t value, /**< ecma value */
+                          lit_magic_string_id_t id, /**< property magic id */
+                          bool is_symbol_id) /**< true - if id represents a symbol id
+                                              *   false - otherwise */
 {
   /* 2. */
   ecma_value_t obj_value = ecma_op_to_object (value);
@@ -991,7 +993,16 @@ ecma_op_get_method_by_symbol_id (ecma_value_t value, /**< ecma value */
   }
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_value);
-  ecma_value_t func = ecma_op_object_get_by_symbol_id (obj_p, property_id);
+  ecma_value_t func;
+
+  if (is_symbol_id)
+  {
+    func = ecma_op_object_get_by_symbol_id (obj_p, id);
+  }
+  else
+  {
+    func = ecma_op_object_get_by_magic_id (obj_p, id);
+  }
   ecma_deref_object (obj_p);
 
   /* 3. */
@@ -1015,7 +1026,43 @@ ecma_op_get_method_by_symbol_id (ecma_value_t value, /**< ecma value */
 
   /* 6. */
   return func;
+} /* ecma_op_get_method_by_id */
+
+/**
+ * GetMethod operation when the property is a well-known symbol
+ *
+ * See also: ECMA-262 v6, 7.3.9
+ *
+ * Note:
+ *      Returned value must be freed with ecma_free_value.
+ *
+ * @return iterator function object - if success
+ *         raised error - otherwise
+ */
+ecma_value_t
+ecma_op_get_method_by_symbol_id (ecma_value_t value, /**< ecma value */
+                                 lit_magic_string_id_t symbol_id) /**< property symbol id */
+{
+  return ecma_op_get_method_by_id (value, symbol_id, true);
 } /* ecma_op_get_method_by_symbol_id */
+
+/**
+ * GetMethod operation when the property is a magic string
+ *
+ * See also: ECMA-262 v6, 7.3.9
+ *
+ * Note:
+ *      Returned value must be freed with ecma_free_value.
+ *
+ * @return iterator function object - if success
+ *         raised error - otherwise
+ */
+ecma_value_t
+ecma_op_get_method_by_magic_id (ecma_value_t value, /**< ecma value */
+                                lit_magic_string_id_t magic_id) /**< property magic id */
+{
+  return ecma_op_get_method_by_id (value, magic_id, false);
+} /* ecma_op_get_method_by_magic_id */
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**

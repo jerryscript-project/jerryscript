@@ -2461,8 +2461,8 @@ parser_parse_array_initializer (parser_context_t *context_p, /**< context */
     }
   }
 
-  /* pop the iterator */
-  parser_emit_cbc (context_p, CBC_POP);
+  /* close the iterator */
+  parser_emit_cbc_ext (context_p, CBC_EXT_ITERATOR_CLOSE);
 
   parser_pattern_finalize (context_p, flags, &end_pos);
 } /* parser_parse_array_initializer */

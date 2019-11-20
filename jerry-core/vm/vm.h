@@ -250,6 +250,7 @@ typedef enum
   VM_OC_PUSH_SPREAD_ELEMENT,     /**< push spread element */
   VM_OC_GET_ITERATOR,            /**< GetIterator abstract operation */
   VM_OC_ITERATOR_STEP,           /**< IteratorStep abstract operation */
+  VM_OC_ITERATOR_CLOSE,          /**< IteratorClose abstract operation */
   VM_OC_DEFAULT_INITIALIZER,     /**< default initializer inside a pattern */
   VM_OC_REST_INITIALIZER,        /**< create rest object inside an array pattern */
   VM_OC_INITIALIZER_PUSH_PROP,   /**< push property for object initializer */
@@ -299,6 +300,7 @@ typedef enum
   VM_OC_PUSH_SPREAD_ELEMENT = VM_OC_NONE,     /**< push spread element */
   VM_OC_GET_ITERATOR = VM_OC_NONE,            /**< GetIterator abstract operation */
   VM_OC_ITERATOR_STEP = VM_OC_NONE,           /**< IteratorStep abstract operation */
+  VM_OC_ITERATOR_CLOSE = VM_OC_NONE,          /**< IteratorClose abstract operation */
   VM_OC_DEFAULT_INITIALIZER = VM_OC_NONE,     /**< default initializer inside a pattern */
   VM_OC_REST_INITIALIZER = VM_OC_NONE,        /**< create rest object inside an array pattern */
   VM_OC_INITIALIZER_PUSH_PROP = VM_OC_NONE,   /**< push property for object initializer */

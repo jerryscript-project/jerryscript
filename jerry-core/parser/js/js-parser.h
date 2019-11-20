@@ -127,6 +127,7 @@ typedef enum
   PARSER_ERR_OF_EXPECTED,                             /**< of keyword expected */
 
   PARSER_ERR_FORMAL_PARAM_AFTER_REST_PARAMETER,       /**< formal parameter after rest parameter */
+  PARSER_ERR_SETTER_REST_PARAMETER,                   /**< setter rest parameter */
   PARSER_ERR_REST_PARAMETER_DEFAULT_INITIALIZER,      /**< rest parameter default initializer */
   PARSER_ERR_DUPLICATED_ARGUMENT_NAMES,               /**< duplicated argument names */
   PARSER_ERR_INVALID_DESTRUCTURING_PATTERN,           /**< invalid destructuring pattern */

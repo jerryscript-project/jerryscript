@@ -1137,6 +1137,10 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Rest parameter must be the last formal parameter.";
     }
+    case PARSER_ERR_SETTER_REST_PARAMETER:
+    {
+      return "Setter function argument must not be a rest parameter.";
+    }
     case PARSER_ERR_REST_PARAMETER_DEFAULT_INITIALIZER:
     {
       return "Rest parameter may not have a default initializer.";

@@ -35,6 +35,7 @@ CheckSyntaxError ('function x (... c = 5) {}');
 CheckSyntaxError ('function x (...) {}');
 CheckSyntaxError ('function x (a, a, ...a) {}');
 CheckSyntaxError ('"use strict" function x (...arguments) {}');
+CheckSyntaxError ('var o = { set e (...args) { } }');
 
 rest_params = ['hello', true, 7, {}, [], function () {}];
 

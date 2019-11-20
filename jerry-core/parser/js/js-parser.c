@@ -1638,6 +1638,10 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
     }
     else if (context_p->token.type == LEXER_THREE_DOTS)
     {
+      if (context_p->status_flags & PARSER_IS_PROPERTY_SETTER)
+      {
+        parser_raise_error (context_p, PARSER_ERR_SETTER_REST_PARAMETER);
+      }
       lexer_next_token (context_p);
 
       if (duplicated_argument_names)

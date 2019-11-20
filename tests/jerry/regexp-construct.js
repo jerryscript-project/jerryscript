@@ -45,14 +45,6 @@ assert (r.ignoreCase == true);
 assert (r.multiline == true);
 
 var r2;
-try {
-  r2 = RegExp (r,"gim");
-  assert(false);
-}
-catch ( e )
-{
-  assert (e instanceof TypeError);
-}
 
 r2 = RegExp (r);
 assert (r2.source == "a");

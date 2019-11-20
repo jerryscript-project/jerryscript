@@ -2475,6 +2475,19 @@ ecma_object_class_is (ecma_object_t *object_p, /**< object */
   return false;
 } /* ecma_object_class_is */
 
+/**
+ * Checks if the given argument has [[RegExpMatcher]] internal slot
+ *
+ * @return true - if the given argument is a regexp
+ *         false - otherwise
+ */
+inline bool JERRY_ATTR_ALWAYS_INLINE
+ecma_object_is_regexp_object (ecma_value_t arg) /**< argument */
+{
+  return (ecma_is_value_object (arg)
+          && ecma_object_class_is (ecma_get_object_from_value (arg), LIT_MAGIC_STRING_REGEXP_UL));
+} /* ecma_object_is_regexp_object */
+
 #if ENABLED (JERRY_ES2015)
 /**
  * Object's IsConcatSpreadable operation, used for Array.prototype.concat
@@ -2510,6 +2523,40 @@ ecma_op_is_concat_spreadable (ecma_value_t arg) /**< argument */
 
   return (ecma_make_boolean_value (ecma_is_value_array (arg)));
 } /* ecma_op_is_concat_spreadable */
+
+/**
+ * IsRegExp operation
+ *
+ * See also:
+ *          ECMA-262 v6, 22.1.3.1.1;
+ *
+ * @return ECMA_VALUE_ERROR - if the operation fails
+ *         ECMA_VALUE_TRUE - if the argument is regexp
+ *         ECMA_VALUE_FALSE - otherwise
+ */
+ecma_value_t
+ecma_op_is_regexp (ecma_value_t arg) /**< argument */
+{
+  if (!ecma_is_value_object (arg))
+  {
+    return ECMA_VALUE_FALSE;
+  }
+
+  ecma_value_t is_regexp = ecma_op_object_get_by_symbol_id (ecma_get_object_from_value (arg),
+                                                            LIT_MAGIC_STRING_MATCH);
+
+  if (ECMA_IS_VALUE_ERROR (is_regexp))
+  {
+    return is_regexp;
+  }
+
+  if (!ecma_is_value_undefined (is_regexp))
+  {
+    return ecma_make_boolean_value (ecma_op_to_boolean (is_regexp));
+  }
+
+  return ecma_make_boolean_value (ecma_object_is_regexp_object (arg));
+} /* ecma_op_is_regexp */
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**

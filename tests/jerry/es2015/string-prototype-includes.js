@@ -60,3 +60,20 @@ try {
 } catch (e) {
   assert (e instanceof TypeError);
 }
+
+z[Symbol.match] = false;
+assert(y.includes(z) === false);
+
+try {
+  "foo".includes({[Symbol.match] : true});
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+try {
+  "foo".includes({get [Symbol.match] () { throw 5}});
+  assert(false);
+} catch (e) {
+  assert(e === 5);
+}

@@ -61,3 +61,20 @@ try {
 } catch (e) {
   assert (e instanceof TypeError);
 }
+
+z[Symbol.match] = false;
+assert(y.endsWith(z) === false);
+
+try {
+  "foo".endsWith({[Symbol.match] : true});
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+try {
+  "foo".endsWith({get [Symbol.match] () { throw 5}});
+  assert(false);
+} catch (e) {
+  assert(e === 5);
+}

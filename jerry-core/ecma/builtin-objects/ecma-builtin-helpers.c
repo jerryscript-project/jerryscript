@@ -569,12 +569,20 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_string_t *original_st
 
 #if ENABLED (JERRY_ES2015_BUILTIN)
   /* 4, 6 (startsWith, includes, endsWith) */
-  if (mode >= ECMA_STRING_STARTS_WITH
-      && (ecma_is_value_object (arg1)
-      && ecma_object_class_is (ecma_get_object_from_value (arg1), LIT_MAGIC_STRING_REGEXP_UL)))
+  if (mode >= ECMA_STRING_STARTS_WITH)
   {
-    JERRY_ASSERT (ECMA_STRING_LAST_INDEX_OF < mode && mode <= ECMA_STRING_ENDS_WITH);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Search string can't be of type: RegExp"));
+    ecma_value_t regexp = ecma_op_is_regexp (arg1);
+
+    if (ECMA_IS_VALUE_ERROR (regexp))
+    {
+      return regexp;
+    }
+
+    if (regexp == ECMA_VALUE_TRUE)
+    {
+      JERRY_ASSERT (ECMA_STRING_LAST_INDEX_OF < mode && mode <= ECMA_STRING_ENDS_WITH);
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Search string can't be of type: RegExp"));
+    }
   }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN) */
 

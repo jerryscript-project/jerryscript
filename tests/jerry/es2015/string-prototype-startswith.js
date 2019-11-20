@@ -51,3 +51,20 @@ try {
 } catch (e) {
   assert (e instanceof TypeError);
 }
+
+y[Symbol.match] = false;
+assert(x.startsWith(y) === false);
+
+try {
+  "foo".startsWith({[Symbol.match] : true});
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+try {
+  "foo".startsWith({get [Symbol.match] () { throw 5}});
+  assert(false);
+} catch (e) {
+  assert(e === 5);
+}

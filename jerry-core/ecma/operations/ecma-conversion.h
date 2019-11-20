@@ -32,7 +32,7 @@
  */
 typedef enum
 {
-  ECMA_PREFERRED_TYPE_NO, /**< no preferred type is specified */
+  ECMA_PREFERRED_TYPE_NO = 0, /**< no preferred type is specified */
   ECMA_PREFERRED_TYPE_NUMBER, /**< Number */
   ECMA_PREFERRED_TYPE_STRING /**< String */
 } ecma_preferred_type_hint_t;

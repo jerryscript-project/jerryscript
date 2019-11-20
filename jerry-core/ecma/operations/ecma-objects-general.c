@@ -185,6 +185,36 @@ ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
 } /* ecma_op_general_object_delete */
 
 /**
+ * Property invocation order during [[DefaultValue]] operation with string hint
+ */
+static const lit_magic_string_id_t to_primitive_string_hint_method_names[2] =
+{
+  LIT_MAGIC_STRING_TO_STRING_UL, /**< toString operation */
+  LIT_MAGIC_STRING_VALUE_OF_UL, /**< valueOf operation */
+};
+
+/**
+ * Property invocation order during [[DefaultValue]] operation with non string hint
+ */
+static const lit_magic_string_id_t to_primitive_non_string_hint_method_names[2] =
+{
+  LIT_MAGIC_STRING_VALUE_OF_UL, /**< valueOf operation */
+  LIT_MAGIC_STRING_TO_STRING_UL, /**< toString operation */
+};
+
+#if ENABLED (JERRY_ES2015)
+/**
+ * Hints for the ecma general object's toPrimitve operation
+ */
+static const lit_magic_string_id_t hints[3] =
+{
+  LIT_MAGIC_STRING_DEFAULT, /**< "default" hint */
+  LIT_MAGIC_STRING_NUMBER, /**< "number" hint */
+  LIT_MAGIC_STRING_STRING, /**< "string" hint */
+};
+#endif /* ENABLED (JERRY_ES2015) */
+
+/**
  * [[DefaultValue]] ecma general object's operation
  *
  * See also:
@@ -201,6 +231,47 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
   JERRY_ASSERT (obj_p != NULL
                 && !ecma_is_lexical_environment (obj_p));
 
+#if ENABLED (JERRY_ES2015)
+  ecma_value_t obj_value = ecma_make_object_value (obj_p);
+
+  ecma_value_t exotic_to_prim = ecma_op_get_method_by_symbol_id (obj_value,
+                                                                 LIT_MAGIC_STRING_TO_PRIMITIVE);
+
+  if (ECMA_IS_VALUE_ERROR (exotic_to_prim))
+  {
+    return exotic_to_prim;
+  }
+
+  if (!ecma_is_value_undefined (exotic_to_prim))
+  {
+    ecma_object_t *call_func_p = ecma_get_object_from_value (exotic_to_prim);
+    ecma_value_t argument = ecma_make_magic_string_value (hints[hint]);
+
+    ecma_value_t result = ecma_op_function_call (call_func_p,
+                                                 obj_value,
+                                                 &argument,
+                                                 1);
+
+    ecma_free_value (exotic_to_prim);
+
+    if (ECMA_IS_VALUE_ERROR (result)
+        || !ecma_is_value_object (result))
+    {
+      return result;
+    }
+
+    ecma_free_value (result);
+
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type in [[DefaultValue]]."));
+  }
+
+  ecma_free_value (exotic_to_prim);
+
+  if (hint == ECMA_PREFERRED_TYPE_NO)
+  {
+    hint = ECMA_PREFERRED_TYPE_NUMBER;
+  }
+#else /* !ENABLED (JERRY_ES2015) */
   if (hint == ECMA_PREFERRED_TYPE_NO)
   {
     if (ecma_object_class_is (obj_p, LIT_MAGIC_STRING_DATE_UL))
@@ -212,22 +283,31 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
       hint = ECMA_PREFERRED_TYPE_NUMBER;
     }
   }
+#endif /* ENABLED (JERRY_ES2015) */
 
-  for (uint32_t i = 1; i <= 2; i++)
+  return ecma_op_general_object_ordinary_value (obj_p, hint);
+} /* ecma_op_general_object_default_value */
+
+/**
+ * Ecma general object's OrdinaryToPrimitive operation
+ *
+ * See also:
+ *          ECMA-262 v6 7.1.1
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
+ */
+ecma_value_t
+ecma_op_general_object_ordinary_value (ecma_object_t *obj_p, /**< the object */
+                                       ecma_preferred_type_hint_t hint) /**< hint on preferred result type */
+{
+  const lit_magic_string_id_t *function_name_ids_p = (hint == ECMA_PREFERRED_TYPE_STRING
+                                                      ? to_primitive_string_hint_method_names
+                                                      : to_primitive_non_string_hint_method_names);
+
+  for (uint32_t i = 0; i < 2; i++)
   {
-    lit_magic_string_id_t function_name_id;
-
-    if ((i == 1 && hint == ECMA_PREFERRED_TYPE_STRING)
-        || (i == 2 && hint == ECMA_PREFERRED_TYPE_NUMBER))
-    {
-      function_name_id = LIT_MAGIC_STRING_TO_STRING_UL;
-    }
-    else
-    {
-      function_name_id = LIT_MAGIC_STRING_VALUE_OF_UL;
-    }
-
-    ecma_value_t function_value = ecma_op_object_get_by_magic_id (obj_p, function_name_id);
+    ecma_value_t function_value = ecma_op_object_get_by_magic_id (obj_p, function_name_ids_p[i]);
 
     if (ECMA_IS_VALUE_ERROR (function_value))
     {
@@ -259,7 +339,7 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
   }
 
   return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type in [[DefaultValue]]."));
-} /* ecma_op_general_object_default_value */
+} /* ecma_op_general_object_ordinary_value */
 
 /**
  * Special type for ecma_op_general_object_define_own_property.

@@ -126,6 +126,7 @@ typedef enum
   PARSER_ERR_RIGHT_BRACE_EXPECTED,                    /**< right brace expected */
   PARSER_ERR_OF_EXPECTED,                             /**< of keyword expected */
 
+  PARSER_ERR_ASSIGNMENT_EXPECTED,                     /**< assignment expression expected */
   PARSER_ERR_FORMAL_PARAM_AFTER_REST_PARAMETER,       /**< formal parameter after rest parameter */
   PARSER_ERR_SETTER_REST_PARAMETER,                   /**< setter rest parameter */
   PARSER_ERR_REST_PARAMETER_DEFAULT_INITIALIZER,      /**< rest parameter default initializer */

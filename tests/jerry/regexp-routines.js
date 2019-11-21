@@ -39,15 +39,6 @@ catch (e)
 
 r = new RegExp ("a", "mig");
 assert (r.toString () == "/a/gim");
-try {
-  r.toString.call({}, "a");
-  assert (false)
-}
-catch (e)
-{
-  assert (e instanceof TypeError);
-}
-
 
 /* Test continous calls to the exec method to see how does the match
  * updates the lastIndex propertyand see if the match restarts.

@@ -100,13 +100,13 @@ default:
 
   var global_var = 7;
 
-  assert (
+  assert ((
     (
     static
     ,
     package
     ) => { global_var = 5; return static + package }
-  (4, 5) == 9);
+  )(4, 5) == 9);
 
   assert (global_var == 5);
 
@@ -146,6 +146,13 @@ must_throw ("x\n => 0");
 must_throw ("this => 0");
 must_throw ("(true) => 0");
 must_throw ("()\n=>5");
+must_throw ("3 + x => 3");
+must_throw ("3 || x => 3");
+must_throw ("a = 3 || (x,y) => 3");
+must_throw ("x => {} (4)");
+must_throw ("!x => 4");
+must_throw ("x => {} = 1");
+must_throw ("x => {} a = 1");
 must_throw_strict ("(package) => 0");
 must_throw_strict ("(package) => { return 5 }");
 must_throw_strict ("(x,x,x) => 0");
@@ -174,3 +181,21 @@ assert(f()()() === 7);
 
 var f = (((a=1,b=2) => ((x => (((a) => 8))))));
 assert(f()()() === 8);
+
+var s;
+// This is not a function call
+assert(eval("s = x => { return 1 }\n(3)") === 3);
+assert(typeof s === "function")
+
+// This is a function call
+assert(eval("s = function () { return 1 }\n(3)") === 1);
+assert(s === 1)
+
+var f = 5 ? x => 1 : x => 2
+assert(f() === 1)
+
+var f = [x => 2][0]
+assert(f() === 2)
+
+var f = 123; f += x => y;
+assert(typeof f === "string");

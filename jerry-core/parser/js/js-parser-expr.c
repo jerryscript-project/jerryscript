@@ -1177,12 +1177,39 @@ parser_parse_template_literal (parser_context_t *context_p) /**< context */
   return;
 } /* parser_parse_template_literal */
 
+/**
+ * Throws an error if the current expression is not an assignment expression.
+ */
+static inline void JERRY_ATTR_ALWAYS_INLINE
+parser_check_assignment_expr (parser_context_t *context_p)
+{
+  if (context_p->stack_top_uint8 != LEXER_EXPRESSION_START
+      && context_p->stack_top_uint8 != LEXER_LEFT_PAREN
+      && context_p->stack_top_uint8 != LEXER_COMMA_SEP_LIST
+      && !LEXER_IS_BINARY_LVALUE_TOKEN (context_p->stack_top_uint8))
+  {
+    parser_raise_error (context_p, PARSER_ERR_ASSIGNMENT_EXPECTED);
+  }
+} /* parser_check_assignment_expr */
+
+/**
+ * Checks whether the next token is a valid continuation token after an arrow function.
+ */
+static inline bool JERRY_ATTR_ALWAYS_INLINE
+parser_abort_parsing_after_arrow (parser_context_t *context_p)
+{
+  return (context_p->token.type != LEXER_RIGHT_PAREN
+          && context_p->token.type != LEXER_COMMA);
+} /* parser_abort_parsing_after_arrow */
+
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * Parse and record unary operators, and parse the primary literal.
+ *
+ * @return true if parsing should be aborted, true otherwise
  */
-static void
+static bool
 parser_parse_unary_expression (parser_context_t *context_p, /**< context */
                                size_t *grouping_level_p) /**< grouping level */
 {
@@ -1255,9 +1282,10 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
       {
         JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
 
+        parser_check_assignment_expr (context_p);
         parser_parse_function_expression (context_p,
                                           PARSER_IS_FUNCTION | PARSER_IS_ARROW_FUNCTION);
-        return;
+        return parser_abort_parsing_after_arrow (context_p);
       }
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -1346,7 +1374,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
       {
         JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_INITIALIZER);
         parser_parse_object_initializer (context_p, PARSER_PATTERN_NO_OPTS);
-        return;
+        return false;
       }
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -1360,7 +1388,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
       {
         JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_INITIALIZER);
         parser_parse_array_initializer (context_p, PARSER_PATTERN_NO_OPTS);
-        return;
+        return false;
       }
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -1435,7 +1463,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
     case LEXER_KEYW_CLASS:
     {
       parser_parse_class (context_p, false);
-      return;
+      return false;
     }
     case LEXER_KEYW_SUPER:
     {
@@ -1479,10 +1507,11 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
       JERRY_ASSERT (context_p->next_scanner_info_p->source_p == context_p->source_p
                     && context_p->next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
 
+      parser_check_assignment_expr (context_p);
       lexer_next_token (context_p);
       parser_parse_function_expression (context_p,
                                         PARSER_IS_FUNCTION | PARSER_IS_ARROW_FUNCTION | PARSER_ARROW_PARSE_ARGS);
-      return;
+      return parser_abort_parsing_after_arrow (context_p);
     }
 #endif /* ENABLED (JERRY_ES2015) */
     default:
@@ -1494,6 +1523,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
     }
   }
   lexer_next_token (context_p);
+  return false;
 } /* parser_parse_unary_expression */
 
 /**
@@ -2730,7 +2760,11 @@ parser_parse_expression (parser_context_t *context_p, /**< context */
 
   while (true)
   {
-    parser_parse_unary_expression (context_p, &grouping_level);
+    if (parser_parse_unary_expression (context_p, &grouping_level))
+    {
+      parser_process_binary_opcodes (context_p, 0);
+      break;
+    }
 
     while (true)
     {

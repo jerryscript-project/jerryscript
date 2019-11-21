@@ -1121,6 +1121,10 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Expected 'of' token.";
     }
+    case PARSER_ERR_ASSIGNMENT_EXPECTED:
+    {
+      return "Unexpected arrow function or yield expression (parentheses around the expression may help).";
+    }
     case PARSER_ERR_DUPLICATED_ARGUMENT_NAMES:
     {
       return "Duplicated function argument names are not allowed here.";

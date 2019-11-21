@@ -25,9 +25,9 @@ var B = class extends f {
 }
 C = class extends B {
     g() {
-        () => {
+        (() => {
           called = true;
-        }()
+        })()
     }
 }
 D = class extends C {

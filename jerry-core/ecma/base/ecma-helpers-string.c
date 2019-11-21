@@ -2799,6 +2799,55 @@ ecma_stringbuilder_destroy (ecma_stringbuilder_t *builder_p) /**< string builder
 #endif /* ENABLED (JERRY_MEM_STATS) */
 } /* ecma_stringbuilder_destroy */
 
+#if ENABLED (JERRY_ES2015)
+/**
+ * AdvanceStringIndex operation
+ *
+ * See also:
+ *          ECMA-262 v6.0, 21.2.5.2.3
+ *
+ * @return uint32_t - the proper character index based on the operation
+ */
+uint32_t
+ecma_op_advance_string_index (ecma_string_t *str_p, /**< input string */
+                              uint32_t index, /**< given character index */
+                              bool is_unicode) /**< true - if regexp object's "unicode" flag is set
+                                                    false - otherwise */
+{
+  JERRY_ASSERT (index < UINT32_MAX - 1);
+
+  uint32_t next_index = index + 1;
+
+  if (!is_unicode)
+  {
+    return next_index;
+  }
+
+  ecma_length_t str_len = ecma_string_get_length (str_p);
+
+  if (next_index >= str_len)
+  {
+    return next_index;
+  }
+
+  ecma_char_t first = ecma_string_get_char_at_pos (str_p, index);
+
+  if (first < LIT_UTF16_HIGH_SURROGATE_MIN || first > LIT_UTF16_HIGH_SURROGATE_MAX)
+  {
+    return next_index;
+  }
+
+  ecma_char_t second = ecma_string_get_char_at_pos (str_p, next_index);
+
+  if (second < LIT_UTF16_LOW_SURROGATE_MIN || second > LIT_UTF16_LOW_SURROGATE_MAX)
+  {
+    return next_index;
+  }
+
+  return next_index + 1;
+} /* ecma_op_advance_string_index */
+#endif /* ENABLED (JERRY_ES2015) */
+
 /**
  * @}
  * @}

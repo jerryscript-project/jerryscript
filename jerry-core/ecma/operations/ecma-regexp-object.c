@@ -2012,6 +2012,65 @@ cleanup_string:
 } /* ecma_regexp_replace_helper */
 
 /**
+ * RegExpExec operation
+ *
+ * See also:
+ *          ECMA-262 v6.0, 21.2.5.2.1
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_op_regexp_exec (ecma_value_t this_arg, /**< this argument */
+                     ecma_string_t *str_p) /**< input string */
+{
+#if ENABLED (JERRY_ES2015)
+  ecma_object_t *arg_obj_p = ecma_get_object_from_value (this_arg);
+
+  ecma_value_t exec = ecma_op_object_get_by_magic_id (arg_obj_p, LIT_MAGIC_STRING_EXEC);
+
+  if (ECMA_IS_VALUE_ERROR (exec))
+  {
+    return exec;
+  }
+
+  if (ecma_op_is_callable (exec))
+  {
+    ecma_object_t *function_p = ecma_get_object_from_value (exec);
+    ecma_value_t arguments[] = { ecma_make_string_value (str_p) };
+
+    ecma_value_t result = ecma_op_function_call (function_p, this_arg, arguments, 1);
+
+    ecma_deref_object (function_p);
+
+    if (ECMA_IS_VALUE_ERROR (result))
+    {
+      return result;
+    }
+
+    if (!ecma_is_value_object (result) && !ecma_is_value_null (result))
+    {
+      ecma_free_value (result);
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Return value of 'exec' must be an Object or Null"));
+    }
+
+    return result;
+  }
+  else
+  {
+    ecma_free_value (exec);
+  }
+#endif /* ENABLED (JERRY_ES2015) */
+
+  if (!ecma_object_is_regexp_object (this_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not a valid RegExp object"));
+  }
+
+  return ecma_regexp_exec_helper (this_arg, ecma_make_string_value (str_p), false);
+} /* ecma_op_regexp_exec */
+
+/**
  * @}
  * @}
  */

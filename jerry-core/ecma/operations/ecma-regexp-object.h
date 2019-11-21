@@ -110,6 +110,8 @@ ecma_value_t
 ecma_regexp_replace_helper (ecma_value_t this_arg,
                             ecma_value_t string_arg,
                             ecma_value_t replace_arg);
+
+ecma_value_t ecma_op_regexp_exec (ecma_value_t this_arg, ecma_string_t *str_p);
 /**
  * @}
  * @}

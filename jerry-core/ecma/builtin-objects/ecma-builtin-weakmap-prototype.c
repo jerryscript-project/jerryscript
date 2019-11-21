@@ -96,7 +96,7 @@ ecma_builtin_weakmap_prototype_object_set (ecma_value_t this_arg, /**< this argu
                                            ecma_value_t key_arg, /**< key argument */
                                            ecma_value_t value_arg) /**< value argument */
 {
-  return ecma_op_container_set_weak (this_arg, key_arg, value_arg, LIT_MAGIC_STRING_WEAKMAP_UL);
+  return ecma_op_container_set (this_arg, key_arg, value_arg, LIT_MAGIC_STRING_WEAKMAP_UL);
 } /* ecma_builtin_weakmap_prototype_object_set */
 
 /**

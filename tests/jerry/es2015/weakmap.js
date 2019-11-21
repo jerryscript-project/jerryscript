@@ -110,6 +110,24 @@ gc();
 m1 = undefined;
 gc();
 
+m1 = new WeakMap();
+m1.set(k1, "str");
+m1.set(k1, "4");
+m1.set(k1, null);
+m1.set(k1, 42);
+print (m1.has (k1));
+k1 = {};
+gc();
+
+m1 = new WeakMap();
+m1.set(k1, "str");
+m1.set(k1, "4");
+m1.set(k1, 42);
+m1.set(k1, null);
+assert (m1.has (k1));
+m1 = new WeakMap();
+gc();
+
 try {
   new WeakMap([[1,2],[3,4]]);
   assert (false);

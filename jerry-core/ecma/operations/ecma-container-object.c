@@ -378,16 +378,16 @@ ecma_op_container_has (ecma_value_t this_arg, /**< this argument */
     return ECMA_VALUE_ERROR;
   }
 
+  ecma_extended_object_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_extended_object_t,
+                                                                         map_object_p->u.class_prop.u.value);
+
 #if ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP) || ENABLED (JERRY_ES2015_BUILTIN_WEAKSET)
-  if ((lit_id == LIT_MAGIC_STRING_WEAKMAP_UL || lit_id == LIT_MAGIC_STRING_WEAKSET_UL)
+  if ((container_p->u.class_prop.extra_info & ECMA_CONTAINER_FLAGS_WEAK) != 0
       && !ecma_is_value_object (key_arg))
   {
     return ECMA_VALUE_FALSE;
   }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP) ||  ENABLED (JERRY_ES2015_BUILTIN_WEAKSET) */
-
-  ecma_extended_object_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_extended_object_t,
-                                                                         map_object_p->u.class_prop.u.value);
 
   if (container_p->u.class_prop.u.length == 0)
   {
@@ -403,6 +403,45 @@ ecma_op_container_has (ecma_value_t this_arg, /**< this argument */
   return ecma_make_boolean_value (property_p != NULL
                                   && !ecma_is_value_empty (ECMA_PROPERTY_VALUE_PTR (property_p)->value));
 } /* ecma_op_container_has */
+
+/**
+ * Set a weak reference from a container to a key object
+ */
+static void
+ecma_op_container_set_weak (ecma_object_t *const key_p, /**< key object */
+                            ecma_extended_object_t *const container_p) /**< container */
+{
+  ecma_string_t *weak_refs_string_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_WEAK_REFS);
+  ecma_property_t *property_p = ecma_find_named_property (key_p, weak_refs_string_p);
+  ecma_collection_t *refs_p;
+
+  if (property_p == NULL)
+  {
+    ecma_property_value_t *value_p = ecma_create_named_data_property (key_p,
+                                                                      weak_refs_string_p,
+                                                                      ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
+                                                                      &property_p);
+    ECMA_CONVERT_DATA_PROPERTY_TO_INTERNAL_PROPERTY (property_p);
+    refs_p = ecma_new_collection ();
+    ECMA_SET_INTERNAL_VALUE_POINTER (value_p->value, refs_p);
+  }
+  else
+  {
+    refs_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, (ECMA_PROPERTY_VALUE_PTR (property_p)->value));
+  }
+
+  const ecma_value_t container_value = ecma_make_object_value ((ecma_object_t *) container_p);
+  for (uint32_t i = 0; i < refs_p->item_count; i++)
+  {
+    if (ecma_is_value_empty (refs_p->buffer_p[i]))
+    {
+      refs_p->buffer_p[i] = container_value;
+      return;
+    }
+  }
+
+  ecma_collection_push_back (refs_p, container_value);
+} /* ecma_op_container_set_weak */
 
 /**
  * The generic Map prototype object's 'set' and Set prototype object's 'add' routine
@@ -426,6 +465,14 @@ ecma_op_container_set (ecma_value_t this_arg, /**< this argument */
   ecma_extended_object_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_extended_object_t,
                                                                          map_object_p->u.class_prop.u.value);
 
+#if ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP) ||  ENABLED (JERRY_ES2015_BUILTIN_WEAKSET)
+  if ((container_p->u.class_prop.extra_info & ECMA_CONTAINER_FLAGS_WEAK) != 0
+      && !ecma_is_value_object (key_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Key must be an object"));
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP) ||  ENABLED (JERRY_ES2015_BUILTIN_WEAKSET) */
+
   ecma_string_t *prop_name_p = ecma_op_container_to_key (key_arg);
 
   ecma_property_t *property_p = ecma_find_named_property ((ecma_object_t *) container_p, prop_name_p);
@@ -438,6 +485,15 @@ ecma_op_container_set (ecma_value_t this_arg, /**< this argument */
                                                                       NULL);
     value_p->value = ecma_copy_value_if_not_object (value_arg);
     container_p->u.class_prop.u.length++;
+
+#if ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP) ||  ENABLED (JERRY_ES2015_BUILTIN_WEAKSET)
+    if ((container_p->u.class_prop.extra_info & ECMA_CONTAINER_FLAGS_WEAK) != 0)
+    {
+      ecma_object_t *key_p = ecma_get_object_from_value (key_arg);
+      ecma_op_container_set_weak (key_p, container_p);
+    }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP) ||  ENABLED (JERRY_ES2015_BUILTIN_WEAKSET) */
+
   }
   else
   {
@@ -455,72 +511,6 @@ ecma_op_container_set (ecma_value_t this_arg, /**< this argument */
   ecma_ref_object ((ecma_object_t *) map_object_p);
   return this_arg;
 } /* ecma_op_container_set */
-
-/**
- * The generic WeakMap prototype object's 'set' and WeakSet prototype object's 'add' routine
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-ecma_value_t
-ecma_op_container_set_weak (ecma_value_t this_arg, /**< this argument */
-                            ecma_value_t key_arg, /**< key argument */
-                            ecma_value_t value_arg, /**< value argument */
-                            lit_magic_string_id_t lit_id) /**< internal class id */
-{
-  ecma_extended_object_t *map_object_p = ecma_op_container_get_object (this_arg, lit_id);
-
-  if (map_object_p == NULL)
-  {
-    return ECMA_VALUE_ERROR;
-  }
-
-  if (!ecma_is_value_object (key_arg))
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Key must be an object"));
-  }
-
-  /* This will increment the refcount on map_object_p */
-  ecma_op_container_set (this_arg, key_arg, value_arg, lit_id);
-
-  ecma_object_t *obj_p = ecma_get_object_from_value (key_arg);
-  ecma_string_t *weak_refs_string_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_WEAK_REFS);
-
-  ecma_property_t *property_p = ecma_find_named_property (obj_p, weak_refs_string_p);
-  ecma_collection_t *refs_p;
-
-  if (property_p == NULL)
-  {
-    ecma_property_value_t *value_p = ecma_create_named_data_property (obj_p,
-                                                                      weak_refs_string_p,
-                                                                      ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
-                                                                      &property_p);
-    ECMA_CONVERT_DATA_PROPERTY_TO_INTERNAL_PROPERTY (property_p);
-    refs_p = ecma_new_collection ();
-    ECMA_SET_INTERNAL_VALUE_POINTER (value_p->value, refs_p);
-  }
-  else
-  {
-    refs_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, (ECMA_PROPERTY_VALUE_PTR (property_p)->value));
-  }
-
-  ecma_object_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                                map_object_p->u.class_prop.u.value);
-
-  const ecma_value_t container_value = ecma_make_object_value (container_p);
-
-  for (uint32_t i = 0; i < refs_p->item_count; i++)
-  {
-    if (ecma_is_value_empty (refs_p->buffer_p[i]))
-    {
-      refs_p->buffer_p[i] = container_value;
-      return this_arg;
-    }
-  }
-
-  ecma_collection_push_back (refs_p, container_value);
-  return this_arg;
-} /* ecma_op_container_set_weak */
 
 /**
  * The generic Map/Set prototype object's 'forEach' routine
@@ -735,6 +725,7 @@ ecma_op_container_delete_weak (ecma_value_t this_arg, /**< this argument */
   ecma_object_t *key_object_p = ecma_get_object_from_value (key_arg);
   ecma_op_container_unref_weak (key_object_p, ecma_make_object_value (internal_obj_p));
 
+  container_p->u.class_prop.u.length--;
   return ECMA_VALUE_TRUE;
 } /* ecma_op_container_delete_weak */
 

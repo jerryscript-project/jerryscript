@@ -95,6 +95,23 @@ gc();
 m1 = undefined;
 gc();
 
+m1 = new WeakSet();
+k1 = {};
+m1.add (k1);
+m1.add (k1);
+m1.add (k1);
+assert (m1.has (k1));
+k1 = {};
+gc();
+
+m1 = new WeakSet();
+m1.add (k1);
+m1.add (k1);
+m1.add (k1);
+assert (m1.has (k1));
+m1 = new WeakSet();
+gc();
+
 try {
   new WeakSet([1,2,3,4]);
   assert (false);

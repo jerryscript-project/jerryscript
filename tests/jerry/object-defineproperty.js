@@ -68,3 +68,12 @@ try {
 } catch (err) {
   assert (err === 234);
 }
+
+try {
+  Object.defineProperty(42, "prop", {
+      set: undefined
+  });
+  assert (false);
+} catch (e) {
+  assert (e instanceof TypeError);
+}

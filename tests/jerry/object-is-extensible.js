@@ -20,23 +20,6 @@ assert (Object.isExtensible(empty) === true);
 Object.preventExtensions(empty);
 assert(Object.isExtensible(empty) === false);
 
-// Call on undefined should throw TypeError.
-try
-{
-    Object.isExtensible(undefined);
-    assert (false);
-} catch (e) {
-    assert (e instanceof TypeError);
-}
-
-try
-{
-    Object.preventExtensions(undefined);
-    assert (false);
-} catch (e) {
-    assert (e instanceof TypeError);
-}
-
 // Sealed objects are by definition non-extensible.
 var sealed = Object.seal({});
 assert (Object.isExtensible(sealed) === false);

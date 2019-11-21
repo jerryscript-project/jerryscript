@@ -52,6 +52,9 @@ ecma_op_iterator_value (ecma_value_t iter_result);
 ecma_value_t
 ecma_op_iterator_step (ecma_value_t iterator);
 
+ecma_value_t
+ecma_op_iterator_close (ecma_value_t iterator);
+
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
 
 /**

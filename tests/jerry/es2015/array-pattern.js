@@ -247,3 +247,60 @@ mustThrow ("var [a] = { [Symbol.iterator] () { return { next () { return { get d
   [((a))] = [7];
   assert (a === 7);
 }) ();
+
+// Test iterator closing
+function __createIterableObject (arr, methods) {
+  methods = methods || {};
+  if (typeof Symbol !== 'function' || !Symbol.iterator) {
+    return {};
+  }
+  arr.length++;
+  var iterator = {
+    next: function() {
+      return { value: arr.shift(), done: arr.length <= 0 };
+    },
+    'return': methods['return'],
+    'throw': methods['throw']
+  };
+  var iterable = {};
+  iterable[Symbol.iterator] = function () { return iterator; };
+  return iterable;
+};
+
+(function () {
+  var closed = false;
+  var iter = __createIterableObject([1, 2, 3], {
+    'return': function() { closed = true; return {}; }
+  });
+  var [a, b] = iter;
+  assert (closed === true);
+  assert (a === 1);
+  assert (b === 2);
+}) ();
+
+mustThrow ("var iter = __createIterableObject([], "
+           + "{ get 'return'() { throw new TypeError() }});"
+           + "var [a] = iter");
+
+mustThrow ("var iter = __createIterableObject([], "
+           + "{ 'return': 5 });"
+           + "var [a] = iter");
+
+mustThrow ("var iter = __createIterableObject([], "
+           + "{ 'return': function() { return 5; }});"
+           + "var [a] = iter");
+
+mustThrow ("try { throw 5 } catch (e) {"
+           + "var iter = __createIterableObject([], "
+           + "{ get 'return'() { throw new TypeError() }});"
+           + "var [a] = iter }");
+
+mustThrow ("try { throw 5 } catch (e) {"
+           + "var iter = __createIterableObject([], "
+           + "{ 'return': 5 });"
+           + "var [a] = iter }");
+
+mustThrow ("try { throw 5 } catch (e) {"
+           + "var iter = __createIterableObject([], "
+           + "{ 'return': function() { return 5; }});"
+           + "var [a] = iter }");

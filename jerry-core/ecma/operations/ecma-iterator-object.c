@@ -26,6 +26,7 @@
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
 #include "ecma-function-object.h"
+#include "jcontext.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -393,6 +394,97 @@ ecma_op_iterator_step (ecma_value_t iterator) /**< iterator value */
   return result;
 } /* ecma_op_iterator_step */
 
+/**
+ * IteratorClose operation
+ *
+ * See also: ECMA-262 v6, 7.4.6
+ *
+ * @return ECMA_VALUE_EMPTY - if "return" is succesfully invoked,
+ *                            and the operation is called with normal completion
+ *         ECMA_VALUE_ERROR - otherwise
+ */
+ecma_value_t
+ecma_op_iterator_close (ecma_value_t iterator) /**< iterator value */
+{
+  /* 1. */
+  JERRY_ASSERT (ecma_is_value_object (iterator));
+
+  /* 2. */
+  ecma_value_t completion = ECMA_VALUE_EMPTY;
+
+  if (JERRY_CONTEXT (status_flags) & ECMA_STATUS_EXCEPTION)
+  {
+    completion = JERRY_CONTEXT (error_value);
+    JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_EXCEPTION;
+  }
+
+  /* 3. */
+  ecma_value_t return_method = ecma_op_get_method_by_magic_id (iterator, LIT_MAGIC_STRING_RETURN);
+
+  /* 4. */
+  if (ECMA_IS_VALUE_ERROR (return_method))
+  {
+    ecma_free_value (completion);
+    return return_method;
+  }
+
+  /* 5. */
+  if (ecma_is_value_undefined (return_method))
+  {
+    if (ecma_is_value_empty (completion))
+    {
+      return ECMA_VALUE_UNDEFINED;
+    }
+
+    JERRY_CONTEXT (status_flags) |= ECMA_STATUS_EXCEPTION;
+    return ECMA_VALUE_ERROR;
+  }
+
+  /* 6. */
+  ecma_object_t *return_obj_p = ecma_get_object_from_value (return_method);
+  ecma_value_t inner_result = ecma_op_function_call (return_obj_p, iterator, NULL, 0);
+  ecma_deref_object (return_obj_p);
+
+  /* 7. */
+  if (!ecma_is_value_empty (completion))
+  {
+    if (ECMA_IS_VALUE_ERROR (inner_result))
+    {
+      ecma_free_value (JERRY_CONTEXT (error_value));
+      JERRY_CONTEXT (error_value) = completion;
+    }
+
+    ecma_free_value (inner_result);
+    JERRY_CONTEXT (status_flags) |= ECMA_STATUS_EXCEPTION;
+    return ECMA_VALUE_ERROR;
+  }
+
+  /* 8. */
+  if (ECMA_IS_VALUE_ERROR (inner_result))
+  {
+    ecma_free_value (completion);
+    return inner_result;
+  }
+
+  /* 9. */
+  bool is_object = ecma_is_value_object (inner_result);
+  ecma_free_value (inner_result);
+
+  if (!is_object)
+  {
+    ecma_free_value (completion);
+    return ecma_raise_type_error (ECMA_ERR_MSG ("method 'return' is not callable."));
+  }
+
+  /* 10. */
+  if (ecma_is_value_empty (completion))
+  {
+    return ECMA_VALUE_UNDEFINED;
+  }
+
+  JERRY_CONTEXT (status_flags) |= ECMA_STATUS_EXCEPTION;
+  return ECMA_VALUE_ERROR;
+} /* ecma_op_iterator_close */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
 /**
  * @}

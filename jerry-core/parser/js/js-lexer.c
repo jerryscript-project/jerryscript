@@ -918,6 +918,28 @@ lexer_parse_string (parser_context_t *context_p) /**< context */
 } /* lexer_parse_string */
 
 /**
+ * Parse octal number.
+ */
+static inline void
+lexer_parse_octal_number (parser_context_t *context_p, /** context */
+                          const uint8_t **source_p) /**< current source position */
+{
+  do
+  {
+    (*source_p)++;
+  }
+  while (*source_p < context_p->source_end_p
+         && *source_p[0] >= LIT_CHAR_0
+         && *source_p[0] <= LIT_CHAR_7);
+
+  if (*source_p < context_p->source_end_p
+      && (*source_p[0] == LIT_CHAR_8 || *source_p[0] == LIT_CHAR_9))
+  {
+    parser_raise_error (context_p, PARSER_ERR_INVALID_OCTAL_DIGIT);
+  }
+} /* lexer_parse_octal_number */
+
+/**
  * Parse number.
  */
 static void
@@ -956,6 +978,23 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
       while (source_p < source_end_p
              && lit_char_is_hex_digit (source_p[0]));
     }
+#if ENABLED (JERRY_ES2015)
+    else if (LEXER_TO_ASCII_LOWERCASE (source_p[1]) == LIT_CHAR_LOWERCASE_O)
+    {
+      context_p->token.extra_value = LEXER_NUMBER_OCTAL;
+      context_p->token.lit_location.char_p++;
+      context_p->source_p++;
+      source_p += 2;
+
+      if (source_p >= source_end_p
+          || !lit_char_is_octal_digit (source_p[0]))
+      {
+        parser_raise_error (context_p, PARSER_ERR_INVALID_OCTAL_DIGIT);
+      }
+
+      lexer_parse_octal_number (context_p, &source_p);
+    }
+#endif /* ENABLED (JERRY_ES2015) */
     else if (source_p[1] >= LIT_CHAR_0
              && source_p[1] <= LIT_CHAR_7)
     {
@@ -966,20 +1005,7 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
         parser_raise_error (context_p, PARSER_ERR_OCTAL_NUMBER_NOT_ALLOWED);
       }
 
-      do
-      {
-        source_p++;
-      }
-      while (source_p < source_end_p
-             && source_p[0] >= LIT_CHAR_0
-             && source_p[0] <= LIT_CHAR_7);
-
-      if (source_p < source_end_p
-          && source_p[0] >= LIT_CHAR_8
-          && source_p[0] <= LIT_CHAR_9)
-      {
-        parser_raise_error (context_p, PARSER_ERR_INVALID_NUMBER);
-      }
+      lexer_parse_octal_number (context_p, &source_p);
     }
     else if (source_p[1] >= LIT_CHAR_8
              && source_p[1] <= LIT_CHAR_9)

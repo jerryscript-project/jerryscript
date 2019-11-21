@@ -42,6 +42,7 @@ typedef enum
   PARSER_ERR_STACK_LIMIT_REACHED,                     /**< maximum function stack size reached */
 
   PARSER_ERR_INVALID_CHARACTER,                       /**< unexpected character */
+  PARSER_ERR_INVALID_OCTAL_DIGIT,                     /**< invalid octal digit */
   PARSER_ERR_INVALID_HEX_DIGIT,                       /**< invalid hexadecimal digit */
   PARSER_ERR_INVALID_ESCAPE_SEQUENCE,                 /**< invalid escape sequence */
   PARSER_ERR_INVALID_UNICODE_ESCAPE_SEQUENCE,         /**< invalid unicode escape sequence */

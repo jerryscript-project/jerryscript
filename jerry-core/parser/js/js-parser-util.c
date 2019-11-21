@@ -828,6 +828,10 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Invalid (unexpected) character.";
     }
+    case PARSER_ERR_INVALID_OCTAL_DIGIT:
+    {
+      return "Invalid octal digit.";
+    }
     case PARSER_ERR_INVALID_HEX_DIGIT:
     {
       return "Invalid hexadecimal digit.";

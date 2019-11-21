@@ -2472,6 +2472,7 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ES2015)
             && context_p->source_p[0] != LIT_CHAR_COMMA
             && context_p->source_p[0] != LIT_CHAR_RIGHT_BRACE
+            && context_p->source_p[0] != LIT_CHAR_LEFT_PAREN
 #endif /* ENABLED (JERRY_ES2015) */
             && context_p->source_p[0] != LIT_CHAR_COLON)
         {
@@ -2593,6 +2594,7 @@ lexer_scan_identifier (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ES2015)
           && context_p->source_p[0] != LIT_CHAR_COMMA
           && context_p->source_p[0] != LIT_CHAR_RIGHT_BRACE
+          && context_p->source_p[0] != LIT_CHAR_LEFT_PAREN
 #endif /* ENABLED (JERRY_ES2015) */
           && context_p->source_p[0] != LIT_CHAR_COLON)
       {

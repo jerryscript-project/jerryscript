@@ -70,3 +70,8 @@ default:
   assert(o.get == 8);
   assert(o.set == 12);
 }
+
+var obj = { get() { return 5; }, set() { return 6; } };
+
+assert (obj.get() === 5);
+assert (obj.set() === 6);

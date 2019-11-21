@@ -41,9 +41,9 @@ switch (1)
 {
 default:
 
-  ``
-  `abc`
-  `ab${a+b}${ `x` }c`
+  ``;
+  `abc`;
+  `ab${a+b}${ `x` }c`;
 
   assert (`` === '');
   assert (`abc` === 'abc');
@@ -90,3 +90,15 @@ must_throw ("`${}`");
 must_throw ("`${1}");
 must_throw ("`${1}.${");
 must_throw ("`${1}.${2}");
+
+// line break normalization
+var cr = eval("`a" + String.fromCharCode(13) + "b`");
+var lf = eval("`a" + String.fromCharCode(10) + "b`");
+var crlf = eval("`a" + String.fromCharCode(13,10) + "b`");
+
+assert(cr.length === 3);
+assert(lf.length === 3);
+assert(crlf.length === 3);
+assert(cr[1] === lf[1]);
+assert(lf[1] === crlf[1]);
+assert(crlf[1] === '\n');

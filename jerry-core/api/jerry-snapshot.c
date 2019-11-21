@@ -161,6 +161,13 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
   ecma_compiled_code_t *copied_code_p = (ecma_compiled_code_t *) copied_code_start_p;
 
 #if ENABLED (JERRY_ES2015)
+  if (compiled_code_p->status_flags & CBC_CODE_FLAG_HAS_TAGGED_LITERALS)
+  {
+    const char * const error_message_p = "Unsupported feature: tagged template literals.";
+    globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
+    return 0;
+  }
+
   if (compiled_code_p->status_flags & CBC_CODE_FLAGS_CONSTRUCTOR)
   {
     globals_p->class_found = true;

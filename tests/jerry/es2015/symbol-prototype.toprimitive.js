@@ -24,7 +24,7 @@ var obj2 = {
       return true;
     }
   };
-  
+
   assert(+obj2 === 10);
-  //assert(`${obj2}` === "hello"); //FIXME: template literals requires String hint during concatenation
+  assert(`${obj2}` === "hello");
   assert(obj2 + '' === "true");

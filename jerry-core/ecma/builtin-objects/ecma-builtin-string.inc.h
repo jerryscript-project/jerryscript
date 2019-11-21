@@ -43,6 +43,7 @@ ROUTINE (LIT_MAGIC_STRING_FROM_CHAR_CODE_UL, ecma_builtin_string_object_from_cha
 
 #if ENABLED (JERRY_ES2015)
 ROUTINE (LIT_MAGIC_STRING_FROM_CODE_POINT_UL, ecma_builtin_string_object_from_code_point, NON_FIXED, 1)
+ROUTINE (LIT_MAGIC_STRING_RAW, ecma_builtin_string_object_raw, NON_FIXED, 1)
 #endif /* ENABLED (JERRY_ES2015) */
 
 #endif /* ENABLED (JERRY_BUILTIN_STRING) */

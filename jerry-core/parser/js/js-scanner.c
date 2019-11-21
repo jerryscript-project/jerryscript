@@ -613,6 +613,17 @@ scanner_scan_post_primary_expression (parser_context_t *context_p, /**< context 
       scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
       return true;
     }
+#if ENABLED (JERRY_ES2015)
+    case LEXER_TEMPLATE_LITERAL:
+    {
+      if (JERRY_UNLIKELY (context_p->source_p[-1] != LIT_CHAR_GRAVE_ACCENT))
+      {
+        scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
+        parser_stack_push_uint8 (context_p, SCAN_STACK_TAGGED_TEMPLATE_LITERAL);
+      }
+      return true;
+    }
+#endif /* ENABLED (JERRY_ES2015) */
     case LEXER_LEFT_SQUARE:
     {
       parser_stack_push_uint8 (context_p, SCAN_STACK_PROPERTY_ACCESSOR);
@@ -1268,6 +1279,7 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
       return SCAN_KEEP_TOKEN;
     }
     case SCAN_STACK_TEMPLATE_STRING:
+    case SCAN_STACK_TAGGED_TEMPLATE_LITERAL:
     {
       if (type != LEXER_RIGHT_BRACE)
       {
@@ -1276,7 +1288,7 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
 
       context_p->source_p--;
       context_p->column--;
-      lexer_parse_string (context_p);
+      lexer_parse_string (context_p, LEXER_STRING_NO_OPTS);
 
       if (context_p->source_p[-1] != LIT_CHAR_GRAVE_ACCENT)
       {

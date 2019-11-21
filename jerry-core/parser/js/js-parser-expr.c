@@ -20,6 +20,7 @@
 
 #include "ecma-helpers.h"
 #include "lit-char-helpers.h"
+#include "js-parser-tagged-template-literal.h"
 
 /** \addtogroup parser Parser
  * @{
@@ -1142,21 +1143,21 @@ parser_parse_template_literal (parser_context_t *context_p) /**< context */
   {
     if (context_p->last_cbc_opcode == CBC_PUSH_TWO_LITERALS)
     {
-      context_p->last_cbc_opcode = CBC_ADD_TWO_LITERALS;
+      context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_STRING_CONCAT_TWO_LITERALS);
     }
     else if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
     {
-      context_p->last_cbc_opcode = CBC_ADD_RIGHT_LITERAL;
+      context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_STRING_CONCAT_RIGHT_LITERAL);
     }
     else
     {
-      parser_emit_cbc (context_p, CBC_ADD);
+      parser_emit_cbc_ext (context_p, CBC_EXT_STRING_CONCAT);
     }
   }
 
   context_p->source_p--;
   context_p->column--;
-  lexer_parse_string (context_p);
+  lexer_parse_string (context_p, LEXER_STRING_NO_OPTS);
 
   if (is_empty_head || context_p->token.lit_location.length > 0)
   {
@@ -1166,20 +1167,21 @@ parser_parse_template_literal (parser_context_t *context_p) /**< context */
 
     if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
     {
-      context_p->last_cbc_opcode = CBC_ADD_TWO_LITERALS;
+      context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_STRING_CONCAT_TWO_LITERALS);
       context_p->last_cbc.value = context_p->lit_object.index;
       context_p->last_cbc.literal_type = context_p->token.lit_location.type;
       context_p->last_cbc.literal_keyword_type = context_p->token.keyword_type;
     }
     else
     {
-      parser_emit_cbc_literal_from_token (context_p, CBC_ADD_RIGHT_LITERAL);
+      parser_emit_cbc_ext_literal_from_token (context_p, CBC_EXT_STRING_CONCAT_RIGHT_LITERAL);
     }
   }
 
   while (context_p->source_p[-1] != LIT_CHAR_GRAVE_ACCENT)
   {
     lexer_next_token (context_p);
+
     parser_parse_expression (context_p, PARSE_EXPR);
 
     if (context_p->token.type != LEXER_RIGHT_BRACE)
@@ -1189,16 +1191,16 @@ parser_parse_template_literal (parser_context_t *context_p) /**< context */
 
     if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
     {
-      context_p->last_cbc_opcode = CBC_ADD_RIGHT_LITERAL;
+      context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_STRING_CONCAT_RIGHT_LITERAL);
     }
     else
     {
-      parser_emit_cbc (context_p, CBC_ADD);
+      parser_emit_cbc_ext (context_p, CBC_EXT_STRING_CONCAT);
     }
 
     context_p->source_p--;
     context_p->column--;
-    lexer_parse_string (context_p);
+    lexer_parse_string (context_p, LEXER_STRING_NO_OPTS);
 
     if (context_p->token.lit_location.length > 0)
     {
@@ -1206,12 +1208,75 @@ parser_parse_template_literal (parser_context_t *context_p) /**< context */
                                       &context_p->token.lit_location,
                                       context_p->token.lit_location.type);
 
-      parser_emit_cbc_literal_from_token (context_p, CBC_ADD_RIGHT_LITERAL);
+      parser_emit_cbc_ext_literal_from_token (context_p, CBC_EXT_STRING_CONCAT_RIGHT_LITERAL);
+    }
+  }
+} /* parser_parse_template_literal */
+
+/**
+ * Parse tagged template literal.
+ */
+static size_t
+parser_parse_tagged_template_literal (parser_context_t *context_p) /**< context */
+{
+  JERRY_ASSERT (context_p->token.type == LEXER_TEMPLATE_LITERAL);
+
+  uint32_t call_arguments = 0;
+  ecma_collection_t *collection_p;
+
+  if (context_p->tagged_template_literal_cp == JMEM_CP_NULL)
+  {
+    collection_p = ecma_new_collection ();
+    ECMA_SET_INTERNAL_VALUE_POINTER (context_p->tagged_template_literal_cp, collection_p);
+  }
+  else
+  {
+    collection_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, context_p->tagged_template_literal_cp);
+    if (collection_p->item_count > CBC_MAXIMUM_BYTE_VALUE)
+    {
+      parser_raise_error (context_p, PARSER_ERR_ARGUMENT_LIMIT_REACHED);
     }
   }
 
-  return;
-} /* parser_parse_template_literal */
+  const uint32_t tagged_id = collection_p->item_count;
+  uint32_t prop_idx = 0;
+  ecma_object_t *raw_strings_p;
+  ecma_object_t *template_obj_p = parser_new_tagged_template_literal (&raw_strings_p);
+  ecma_collection_push_back (collection_p, ecma_make_object_value (template_obj_p));
+
+  parser_tagged_template_literal_append_strings (context_p, template_obj_p, raw_strings_p, prop_idx++);
+
+  call_arguments++;
+  parser_emit_cbc_ext_call (context_p, CBC_EXT_GET_TAGGED_TEMPLATE_LITERAL, tagged_id);
+
+  while (context_p->source_p[-1] != LIT_CHAR_GRAVE_ACCENT)
+  {
+    JERRY_ASSERT (context_p->source_p[-1] == LIT_CHAR_LEFT_BRACE);
+    lexer_next_token (context_p);
+
+    if (++call_arguments > CBC_MAXIMUM_BYTE_VALUE)
+    {
+      parser_raise_error (context_p, PARSER_ERR_ARGUMENT_LIMIT_REACHED);
+    }
+
+    parser_parse_expression (context_p, PARSE_EXPR);
+
+    if (context_p->token.type != LEXER_RIGHT_BRACE)
+    {
+      parser_raise_error (context_p, PARSER_ERR_RIGHT_BRACE_EXPECTED);
+    }
+
+    context_p->source_p--;
+    context_p->column--;
+    lexer_parse_string (context_p, LEXER_STRING_NO_OPTS);
+
+    parser_tagged_template_literal_append_strings (context_p, template_obj_p, raw_strings_p, prop_idx++);
+  }
+
+  parser_tagged_template_literal_finalize (template_obj_p, raw_strings_p);
+
+  return call_arguments;
+} /* parser_parse_tagged_template_literal */
 
 /**
  * Throws an error if the current expression is not an assignment expression.
@@ -1681,6 +1746,9 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
         continue;
       }
 
+#if ENABLED (JERRY_ES2015)
+      case LEXER_TEMPLATE_LITERAL:
+#endif /* ENABLED (JERRY_ES2015) */
       case LEXER_LEFT_PAREN:
       {
         size_t call_arguments = 0;
@@ -1724,45 +1792,54 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
           }
         }
 
-        lexer_next_token (context_p);
-
 #if ENABLED (JERRY_ES2015)
         bool has_spread_element = false;
-#endif /* ENABLED (JERRY_ES2015) */
 
-        if (context_p->token.type != LEXER_RIGHT_PAREN)
+        if (context_p->token.type == LEXER_TEMPLATE_LITERAL)
         {
-          while (true)
-          {
-            if (++call_arguments > CBC_MAXIMUM_BYTE_VALUE)
-            {
-              parser_raise_error (context_p, PARSER_ERR_ARGUMENT_LIMIT_REACHED);
-            }
-
-#if ENABLED (JERRY_ES2015)
-            if (context_p->token.type == LEXER_THREE_DOTS)
-            {
-              has_spread_element = true;
-              call_arguments++;
-              parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_SPREAD_ELEMENT);
-              lexer_next_token (context_p);
-            }
+          call_arguments = parser_parse_tagged_template_literal (context_p);
+        }
+        else
+        {
 #endif /* ENABLED (JERRY_ES2015) */
-
-            parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
-
-            if (context_p->token.type != LEXER_COMMA)
-            {
-              break;
-            }
-            lexer_next_token (context_p);
-          }
+          lexer_next_token (context_p);
 
           if (context_p->token.type != LEXER_RIGHT_PAREN)
           {
-            parser_raise_error (context_p, PARSER_ERR_RIGHT_PAREN_EXPECTED);
+            while (true)
+            {
+              if (++call_arguments > CBC_MAXIMUM_BYTE_VALUE)
+              {
+                parser_raise_error (context_p, PARSER_ERR_ARGUMENT_LIMIT_REACHED);
+              }
+
+#if ENABLED (JERRY_ES2015)
+              if (context_p->token.type == LEXER_THREE_DOTS)
+              {
+                has_spread_element = true;
+                call_arguments++;
+                parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_SPREAD_ELEMENT);
+                lexer_next_token (context_p);
+              }
+#endif /* ENABLED (JERRY_ES2015) */
+
+              parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
+
+              if (context_p->token.type != LEXER_COMMA)
+              {
+                break;
+              }
+              lexer_next_token (context_p);
+            }
+
+            if (context_p->token.type != LEXER_RIGHT_PAREN)
+            {
+              parser_raise_error (context_p, PARSER_ERR_RIGHT_PAREN_EXPECTED);
+            }
           }
+#if ENABLED (JERRY_ES2015)
         }
+#endif /* ENABLED (JERRY_ES2015) */
 
         lexer_next_token (context_p);
 

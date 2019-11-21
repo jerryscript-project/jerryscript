@@ -1461,6 +1461,23 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
     }
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
+#if ENABLED (JERRY_ES2015)
+    if (bytecode_p->status_flags & CBC_CODE_FLAG_HAS_TAGGED_LITERALS)
+    {
+      ecma_length_t formal_params_number = ecma_compiled_code_get_formal_params (bytecode_p);
+
+      uint8_t *byte_p = (uint8_t *) bytecode_p;
+      byte_p += ((size_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
+
+      ecma_value_t *tagged_base_p = (ecma_value_t *) byte_p;
+      tagged_base_p -= formal_params_number;
+
+      ecma_collection_t *coll_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, tagged_base_p[-1]);
+
+      ecma_collection_destroy (coll_p);
+    }
+#endif /* ENABLED (JERRY_ES2015) */
+
 #if ENABLED (JERRY_MEM_STATS)
     jmem_stats_free_byte_code_bytes (((size_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG);
 #endif /* ENABLED (JERRY_MEM_STATS) */
@@ -1477,6 +1494,51 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
   jmem_heap_free_block (bytecode_p,
                         ((size_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG);
 } /* ecma_bytecode_deref */
+
+#if ENABLED (JERRY_ES2015)
+/**
+ * Get the tagged template collection of the compiled code
+ *
+ * @return pointer to the tagged template collection
+ */
+ecma_collection_t *
+ecma_compiled_code_get_tagged_template_collection (const ecma_compiled_code_t *bytecode_header_p) /**< compiled code */
+{
+  JERRY_ASSERT (bytecode_header_p != NULL);
+  JERRY_ASSERT (bytecode_header_p->status_flags & CBC_CODE_FLAG_HAS_TAGGED_LITERALS);
+
+  uint8_t *byte_p = (uint8_t *) bytecode_header_p;
+  byte_p += ((size_t) bytecode_header_p->size) << JMEM_ALIGNMENT_LOG;
+
+  ecma_value_t *tagged_base_p = (ecma_value_t *) byte_p;
+  tagged_base_p -= ecma_compiled_code_get_formal_params (bytecode_header_p);
+
+  return ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, tagged_base_p[-1]);
+} /* ecma_compiled_code_get_tagged_template_collection */
+#endif /* ENABLED (JERRY_ES2015) */
+
+#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) || ENABLED (JERRY_ES2015)
+/**
+ * Get the number of formal parameters of the compiled code
+ *
+ * @return number of formal parameters
+ */
+ecma_length_t
+ecma_compiled_code_get_formal_params (const ecma_compiled_code_t *bytecode_header_p) /**< compiled code */
+{
+  if (!(bytecode_header_p->status_flags & CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED))
+  {
+    return 0;
+  }
+
+  if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+  {
+    return ((cbc_uint16_arguments_t *) bytecode_header_p)->argument_end;
+  }
+
+  return ((cbc_uint8_arguments_t *) bytecode_header_p)->argument_end;
+} /* ecma_compiled_code_get_formal_params */
+#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) || ENABLED (JERRY_ES2015) */
 
 #if (JERRY_STACK_LIMIT != 0)
 /**

@@ -100,6 +100,7 @@ typedef enum
   SCAN_STACK_COMPUTED_PROPERTY,            /**< computed property name */
   SCAN_STACK_COMPUTED_GENERATOR_FUNCTION,  /**< computed property name */
   SCAN_STACK_TEMPLATE_STRING,              /**< template string */
+  SCAN_STACK_TAGGED_TEMPLATE_LITERAL,      /**< tagged template literal */
   SCAN_STACK_FOR_BLOCK_END,                /**< end of "for" statement with let/const declaration */
   SCAN_STACK_ARROW_ARGUMENTS,              /**< might be arguments of an arrow function */
   SCAN_STACK_ARROW_EXPRESSION,             /**< expression body of an arrow function */

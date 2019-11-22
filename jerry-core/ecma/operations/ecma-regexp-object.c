@@ -66,54 +66,62 @@ ecma_regexp_parse_flags (ecma_string_t *flags_str_p, /**< Input string with flag
                          uint16_t *flags_p) /**< [out] parsed flag bits */
 {
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+  uint16_t result_flags = RE_FLAG_EMPTY;
 
   ECMA_STRING_TO_UTF8_STRING (flags_str_p, flags_start_p, flags_start_size);
 
   const lit_utf8_byte_t *flags_str_curr_p = flags_start_p;
   const lit_utf8_byte_t *flags_str_end_p = flags_start_p + flags_start_size;
 
-  while (flags_str_curr_p < flags_str_end_p
-         && ecma_is_value_empty (ret_value))
+  while (flags_str_curr_p < flags_str_end_p)
   {
+    ecma_regexp_flags_t flag;
     switch (*flags_str_curr_p++)
     {
       case 'g':
       {
-        if (*flags_p & RE_FLAG_GLOBAL)
-        {
-          ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid RegExp flags."));
-        }
-        *flags_p |= RE_FLAG_GLOBAL;
+        flag = RE_FLAG_GLOBAL;
         break;
       }
       case 'i':
       {
-        if (*flags_p & RE_FLAG_IGNORE_CASE)
-        {
-          ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid RegExp flags."));
-        }
-        *flags_p |= RE_FLAG_IGNORE_CASE;
+        flag = RE_FLAG_IGNORE_CASE;
         break;
       }
       case 'm':
       {
-        if (*flags_p & RE_FLAG_MULTILINE)
-        {
-          ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid RegExp flags."));
-        }
-        *flags_p |= RE_FLAG_MULTILINE;
+        flag = RE_FLAG_MULTILINE;
+        break;
+      }
+      case 'y':
+      {
+        flag = RE_FLAG_STICKY;
+        break;
+      }
+      case 'u':
+      {
+        flag = RE_FLAG_UNICODE;
         break;
       }
       default:
       {
-        ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid RegExp flags."));
+        flag = RE_FLAG_EMPTY;
         break;
       }
     }
+
+    if (flag == RE_FLAG_EMPTY || (result_flags & flag) != 0)
+    {
+      ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid RegExp flags."));
+      break;
+    }
+
+    result_flags = (uint16_t) (result_flags | flag);
   }
 
   ECMA_FINALIZE_UTF8_STRING (flags_start_p, flags_start_size);
 
+  *flags_p = result_flags;
   return ret_value;
 } /* ecma_regexp_parse_flags */
 

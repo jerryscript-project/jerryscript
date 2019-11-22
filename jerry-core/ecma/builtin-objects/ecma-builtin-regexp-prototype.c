@@ -91,31 +91,50 @@ ecma_builtin_regexp_prototype_flags_helper (ecma_value_t this, /**< this value *
 static ecma_value_t
 ecma_builtin_regexp_prototype_get_flags (ecma_value_t this_arg) /**< this argument */
 {
-  uint16_t flags = RE_FLAG_EMPTY;
-  ecma_value_t ret_value = ecma_builtin_regexp_prototype_flags_helper (this_arg, &flags);
-  if (ECMA_IS_VALUE_ERROR (ret_value))
+  static const lit_magic_string_id_t flag_lit_ids[] =
   {
-    return ret_value;
+    LIT_MAGIC_STRING_GLOBAL,
+    LIT_MAGIC_STRING_IGNORECASE_UL,
+    LIT_MAGIC_STRING_MULTILINE,
+    LIT_MAGIC_STRING_UNICODE,
+    LIT_MAGIC_STRING_STICKY
+  };
+
+  static const lit_utf8_byte_t flag_chars[] =
+  {
+    LIT_CHAR_LOWERCASE_G,
+    LIT_CHAR_LOWERCASE_I,
+    LIT_CHAR_LOWERCASE_M,
+    LIT_CHAR_LOWERCASE_U,
+    LIT_CHAR_LOWERCASE_Y
+  };
+
+  if (!ecma_is_value_object (this_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' value is not an object."));
   }
 
-  ecma_stringbuilder_t result = ecma_stringbuilder_create ();
+  ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
 
-  if (flags & RE_FLAG_GLOBAL)
+  ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
+  for (uint32_t i = 0; i < sizeof (flag_lit_ids) / sizeof (lit_magic_string_id_t); i++)
   {
-    ecma_stringbuilder_append_byte (&result, LIT_CHAR_LOWERCASE_G);
+    ecma_value_t result = ecma_op_object_get_by_magic_id (object_p, flag_lit_ids[i]);
+    if (ECMA_IS_VALUE_ERROR (result))
+    {
+      ecma_stringbuilder_destroy (&builder);
+      return result;
+    }
+
+    if (ecma_op_to_boolean (result))
+    {
+      ecma_stringbuilder_append_byte (&builder, flag_chars[i]);
+    }
+
+    ecma_free_value (result);
   }
 
-  if (flags & RE_FLAG_IGNORE_CASE)
-  {
-    ecma_stringbuilder_append_byte (&result, LIT_CHAR_LOWERCASE_I);
-  }
-
-  if (flags & RE_FLAG_MULTILINE)
-  {
-    ecma_stringbuilder_append_byte (&result, LIT_CHAR_LOWERCASE_M);
-  }
-
-  return ecma_make_string_value (ecma_stringbuilder_finalize (&result));
+  return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
 } /* ecma_builtin_regexp_prototype_get_flags */
 
 /**
@@ -224,6 +243,56 @@ ecma_builtin_regexp_prototype_get_multiline (ecma_value_t this_arg) /**< this ar
 
   return ecma_make_boolean_value (flags & RE_FLAG_MULTILINE);
 } /* ecma_builtin_regexp_prototype_get_multiline */
+
+/**
+ * The RegExp.prototype object's 'sticky' accessor property
+ *
+ * See also:
+ *          ECMA-262 v6, 21.2.5.12
+ *
+ * @return ECMA_VALUE_ERROR - if 'this' is not a RegExp object
+ *         ECMA_VALUE_TRUE  - if 'sticky' flag is set
+ *         ECMA_VALUE_FALSE - otherwise
+ *
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_regexp_prototype_get_sticky (ecma_value_t this_arg) /**< this argument */
+{
+  uint16_t flags = RE_FLAG_EMPTY;
+  ecma_value_t ret_value = ecma_builtin_regexp_prototype_flags_helper (this_arg, &flags);
+  if (ECMA_IS_VALUE_ERROR (ret_value))
+  {
+    return ret_value;
+  }
+
+  return ecma_make_boolean_value (flags & RE_FLAG_STICKY);
+} /* ecma_builtin_regexp_prototype_get_sticky */
+
+/**
+ * The RegExp.prototype object's 'unicode' accessor property
+ *
+ * See also:
+ *          ECMA-262 v6, 21.2.5.15
+ *
+ * @return ECMA_VALUE_ERROR - if 'this' is not a RegExp object
+ *         ECMA_VALUE_TRUE  - if 'unicode' flag is set
+ *         ECMA_VALUE_FALSE - otherwise
+ *
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_regexp_prototype_get_unicode (ecma_value_t this_arg) /**< this argument */
+{
+  uint16_t flags = RE_FLAG_EMPTY;
+  ecma_value_t ret_value = ecma_builtin_regexp_prototype_flags_helper (this_arg, &flags);
+  if (ECMA_IS_VALUE_ERROR (ret_value))
+  {
+    return ret_value;
+  }
+
+  return ecma_make_boolean_value (flags & RE_FLAG_UNICODE);
+} /* ecma_builtin_regexp_prototype_get_unicode */
 #endif /* ENABLED (JERRY_ES2015) */
 
 #if ENABLED (JERRY_BUILTIN_ANNEXB)
@@ -419,9 +488,58 @@ ecma_builtin_regexp_prototype_test (ecma_value_t this_arg, /**< this argument */
 static ecma_value_t
 ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argument */
 {
+#if ENABLED (JERRY_ES2015)
+  if (!ecma_is_value_object (this_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' value is not an object."));
+  }
+
+  ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
+
+  ecma_value_t result = ecma_op_object_get_by_magic_id (object_p, LIT_MAGIC_STRING_SOURCE);
+  if (ECMA_IS_VALUE_ERROR (result))
+  {
+    return result;
+  }
+
+  ecma_string_t *source_p = ecma_op_to_string (result);
+  ecma_free_value (result);
+
+  if (source_p == NULL)
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  result = ecma_op_object_get_by_magic_id (object_p, LIT_MAGIC_STRING_FLAGS);
+  if (ECMA_IS_VALUE_ERROR (result))
+  {
+    ecma_deref_ecma_string (source_p);
+    return result;
+  }
+
+  ecma_string_t *flags_p = ecma_op_to_string (result);
+  ecma_free_value (result);
+
+  if (flags_p == NULL)
+  {
+    ecma_deref_ecma_string (source_p);
+    return ECMA_VALUE_ERROR;
+  }
+
+  ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
+  ecma_stringbuilder_append_byte (&builder, LIT_CHAR_SLASH);
+  ecma_stringbuilder_append (&builder, source_p);
+  ecma_stringbuilder_append_byte (&builder, LIT_CHAR_SLASH);
+  ecma_stringbuilder_append (&builder, flags_p);
+
+  ecma_deref_ecma_string (source_p);
+  ecma_deref_ecma_string (flags_p);
+
+  return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
+#else /* !ENABLED (JERRY_ES2015) */
   if (!ecma_object_is_regexp_object (this_arg))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible type"));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' value is not a RegExp object."));
   }
 
   ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
@@ -465,6 +583,7 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
   }
 
   return ecma_make_string_value (ecma_stringbuilder_finalize (&result));
+#endif /* ENABLED (JERRY_ES2015) */
 } /* ecma_builtin_regexp_prototype_to_string */
 
 #if ENABLED (JERRY_ES2015)

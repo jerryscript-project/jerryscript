@@ -12,40 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var r = RegExp ("a","gim");
-var r2 = RegExp (r,"gim");
-
-assert(r2.source === 'a');
-assert(r2.global === true);
-assert(r2.ignoreCase === true);
-assert(r2.multiline === true);
-
-var obj = { get source() { throw 5 }, [Symbol.match] : true }
-
 try {
-  new RegExp (obj);
-  assert(false)
-} catch (e) {
-  assert(e === 5);
-}
-
-r = new RegExp ("a","gimuy");
-assert (r.global === true);
-assert (r.ignoreCase === true);
-assert (r.multiline === true);
-assert (r.unicode === true);
-assert (r.sticky === true);
-
-try {
-  new RegExp ("a", "uu");
+  RegExp.prototype.toString.call ({});
   assert (false);
 } catch (e) {
-  assert (e instanceof SyntaxError);
-}
-
-try {
-  new RegExp ("a", "yy");
-  assert (false);
-} catch (e) {
-  assert (e instanceof SyntaxError);
+  assert (e instanceof TypeError);
 }

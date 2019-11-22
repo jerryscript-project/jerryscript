@@ -47,7 +47,7 @@ static ecma_value_t
 ecma_builtin_weakset_prototype_object_add (ecma_value_t this_arg, /**< this argument */
                                            ecma_value_t value_arg) /**< value argument */
 {
-  return ecma_op_container_set_weak (this_arg, value_arg, ECMA_VALUE_UNDEFINED, LIT_MAGIC_STRING_WEAKSET_UL);
+  return ecma_op_container_set (this_arg, value_arg, ECMA_VALUE_UNDEFINED, LIT_MAGIC_STRING_WEAKSET_UL);
 } /* ecma_builtin_weakset_prototype_object_add */
 
 /**

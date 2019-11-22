@@ -15,6 +15,7 @@
 
 #include "ecma-globals.h"
 #include "re-bytecode.h"
+#include "ecma-regexp-object.h"
 
 #if ENABLED (JERRY_BUILTIN_REGEXP)
 
@@ -455,8 +456,16 @@ re_dump_bytecode (re_bytecode_ctx_t *bc_ctx_p) /**< RegExp bytecode context */
         JERRY_DEBUG_MSG ("%d", num_of_class);
         while (num_of_class)
         {
-          JERRY_DEBUG_MSG (" %d", re_get_char (&bytecode_p));
-          JERRY_DEBUG_MSG ("-%d", re_get_char (&bytecode_p));
+          if ((compiled_code_p->header.status_flags & RE_FLAG_UNICODE) != 0)
+          {
+            JERRY_DEBUG_MSG (" %u", re_get_value (&bytecode_p));
+            JERRY_DEBUG_MSG ("-%u", re_get_value (&bytecode_p));
+          }
+          else
+          {
+            JERRY_DEBUG_MSG (" %u", re_get_char (&bytecode_p));
+            JERRY_DEBUG_MSG ("-%u", re_get_char (&bytecode_p));
+          }
           num_of_class--;
         }
         JERRY_DEBUG_MSG (", ");

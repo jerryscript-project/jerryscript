@@ -76,6 +76,7 @@ typedef struct
   const lit_utf8_byte_t *matched_p;  /**< matched string */
   lit_utf8_size_t matched_size;      /**< matcehd string size */
   lit_utf8_size_t match_byte_pos;    /**< byte position of the match in the source string */
+  ecma_length_t index;               /**< current match index */
 
   /**
    * Capture results

@@ -226,12 +226,29 @@ re_insert_into_group_with_jump (re_compiler_ctx_t *re_ctx_p, /**< RegExp compile
  */
 static void
 re_append_char_class (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
-                      ecma_char_t start, /**< character class range from */
-                      ecma_char_t end) /**< character class range to */
+                      lit_code_point_t start, /**< character class range from */
+                      lit_code_point_t end) /**< character class range to */
 {
-  re_append_char (re_ctx_p->bytecode_ctx_p, ecma_regexp_canonicalize (start, re_ctx_p->flags & RE_FLAG_IGNORE_CASE));
-  re_append_char (re_ctx_p->bytecode_ctx_p, ecma_regexp_canonicalize (end, re_ctx_p->flags & RE_FLAG_IGNORE_CASE));
   re_ctx_p->parser_ctx_p->classes_count++;
+
+#if ENABLED (JERRY_ES2015)
+  if (re_ctx_p->flags & RE_FLAG_UNICODE)
+  {
+    re_append_u32 (re_ctx_p->bytecode_ctx_p, ecma_regexp_canonicalize (start, re_ctx_p->flags & RE_FLAG_IGNORE_CASE));
+    re_append_u32 (re_ctx_p->bytecode_ctx_p, ecma_regexp_canonicalize (end, re_ctx_p->flags & RE_FLAG_IGNORE_CASE));
+    return;
+  }
+#endif /* ENABLED (JERRY_ES2015) */
+
+  JERRY_ASSERT (start <= LIT_UTF16_CODE_UNIT_MAX);
+  JERRY_ASSERT (end <= LIT_UTF16_CODE_UNIT_MAX);
+
+  re_append_char (re_ctx_p->bytecode_ctx_p,
+                  (ecma_char_t) ecma_regexp_canonicalize (start,
+                                                          re_ctx_p->flags & RE_FLAG_IGNORE_CASE));
+  re_append_char (re_ctx_p->bytecode_ctx_p,
+                  (ecma_char_t) ecma_regexp_canonicalize (end,
+                                                          re_ctx_p->flags & RE_FLAG_IGNORE_CASE));
 } /* re_append_char_class */
 
 /**
@@ -250,7 +267,7 @@ re_parse_char_class (re_compiler_ctx_t *re_ctx_p, /**< number of classes */
   out_token_p->qmax = out_token_p->qmin = 1;
   parser_ctx_p->classes_count = 0;
 
-  ecma_char_t start = LIT_CHAR_UNDEF;
+  lit_code_point_t start = LIT_CHAR_UNDEF;
   bool is_range = false;
   const bool is_char_class = (re_ctx_p->current_token.type == RE_TOK_START_CHAR_CLASS
                               || re_ctx_p->current_token.type == RE_TOK_START_INV_CHAR_CLASS);
@@ -269,7 +286,7 @@ re_parse_char_class (re_compiler_ctx_t *re_ctx_p, /**< number of classes */
       return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid character class, end of string"));
     }
 
-    ecma_char_t ch = lit_utf8_read_next (&parser_ctx_p->input_curr_p);
+    lit_code_point_t ch = lit_utf8_read_next (&parser_ctx_p->input_curr_p);
 
     if (ch == LIT_CHAR_RIGHT_SQUARE)
     {
@@ -459,6 +476,20 @@ re_parse_char_class (re_compiler_ctx_t *re_ctx_p, /**< number of classes */
       }
     } /* ch == LIT_CHAR_BACKSLASH */
 
+#if ENABLED (JERRY_ES2015)
+    if (re_ctx_p->flags & RE_FLAG_UNICODE
+        && lit_is_code_point_utf16_high_surrogate (ch)
+        && parser_ctx_p->input_curr_p < parser_ctx_p->input_end_p)
+    {
+      const ecma_char_t next_ch = lit_utf8_peek_next (parser_ctx_p->input_curr_p);
+      if (lit_is_code_point_utf16_low_surrogate (next_ch))
+      {
+        ch = lit_convert_surrogate_pair_to_code_point ((ecma_char_t) ch, next_ch);
+        lit_utf8_incr (&parser_ctx_p->input_curr_p);
+      }
+    }
+#endif /* ENABLED (JERRY_ES2015) */
+
     if (start != LIT_CHAR_UNDEF)
     {
       if (is_range)
@@ -559,8 +590,8 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
                          (unsigned int) re_ctx_p->current_token.qmax);
 
         re_append_opcode (bc_ctx_p, RE_OP_CHAR);
-        re_append_char (bc_ctx_p, ecma_regexp_canonicalize ((ecma_char_t) re_ctx_p->current_token.value,
-                                                            re_ctx_p->flags & RE_FLAG_IGNORE_CASE));
+        re_append_char (bc_ctx_p, (ecma_char_t) ecma_regexp_canonicalize ((ecma_char_t) re_ctx_p->current_token.value,
+                                                                          re_ctx_p->flags & RE_FLAG_IGNORE_CASE));
 
         ret_value = re_insert_simple_iterator (re_ctx_p, new_atom_start_offset);
         break;

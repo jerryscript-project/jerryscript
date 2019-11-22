@@ -84,3 +84,63 @@ try {
 } catch (e) {
   assert (e === "abrupt flags toString");
 }
+
+var o = {
+  global: true,
+  source: "str"
+}
+
+Object.defineProperty(o, 'unicode', { 'get': function () {throw "abrupt unicode get"; }});
+try {
+  RegExp.prototype[Symbol.match].call(o, "str");
+  assert (false);
+} catch (e) {
+  assert (e === "abrupt unicode get");
+}
+
+assert ("str𐲡fgh".replace(/(?:)/gu, "x") === 'xsxtxrx𐲡xfxgxhx');
+assert ("str𐲡fgh".replace(/(?:)/g, "x") === 'xsxtxrx\ud803x\udca1xfxgxhx');
+
+r = /(?:)/gu;
+/* Disable fast path. */
+r.exec = function (s) { return RegExp.prototype.exec.call(this, s); };
+
+assert ("str𐲡fgh".replace(r, "x") === 'xsxtxrx𐲡xfxgxhx');
+Object.defineProperty(r, 'unicode', {value: false});
+assert ("str𐲡fgh".replace(r, "x") === 'xsxtxrx\ud803x\udca1xfxgxhx');
+
+r = /(?:)/gu;
+assert (RegExp.prototype[Symbol.match].call(r, "str𐲡fgh").length === 8);
+Object.defineProperty(r, 'unicode', {value: false});
+assert (RegExp.prototype[Symbol.match].call(r, "str𐲡fgh").length === 9);
+
+r = /(?:)/gy;
+r.lastIndex = 2;
+assert ("asd".replace(r, "x") === "xaxsxdx");
+assert (r.lastIndex === 0);
+
+r.lastIndex = 5;
+assert ("asd".replace(r, "x") === "xaxsxdx");
+assert (r.lastIndex === 0);
+
+r = /(?:)/y;
+r.lastIndex = 2;
+assert ("asd".replace(r, "x") === "asxd");
+assert (r.lastIndex === 2);
+
+r.lastIndex = 5;
+assert ("asd".replace(r, "x") === "asd");
+assert (r.lastIndex === 0);
+
+r.lastIndex = 2;
+/* Disable fast path. */
+r.exec = function (s) { return RegExp.prototype.exec.call(this, s); };
+assert ("asd".replace(r, "x") === "asxd");
+assert (r.lastIndex === 2);
+
+r.lastIndex = 5;
+assert ("asd".replace(r, "x") === "asd");
+assert (r.lastIndex === 0);
+
+assert (RegExp.prototype[Symbol.match].call(/a/y, "aaa").length === 1);
+assert (RegExp.prototype[Symbol.match].call(/a/gy, "aaa").length === 3);

@@ -851,7 +851,6 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       ecma_value_t ret_value = vm_run (bytecode_data_p,
                                        this_binding,
                                        local_env_p,
-                                       ECMA_PARSE_NO_OPTS,
                                        arguments_list_p,
                                        arguments_list_len);
 
@@ -914,7 +913,6 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       ecma_value_t ret_value = vm_run (bytecode_data_p,
                                        arrow_func_p->this_binding,
                                        local_env_p,
-                                       ECMA_PARSE_NO_OPTS,
                                        arguments_list_p,
                                        arguments_list_len);
 

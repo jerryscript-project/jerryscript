@@ -2565,7 +2565,9 @@ ecma_op_is_concat_spreadable (ecma_value_t arg) /**< argument */
 
   if (!ecma_is_value_undefined (spreadable))
   {
-    return ecma_make_boolean_value (ecma_op_to_boolean (spreadable));
+    const bool to_bool = ecma_op_to_boolean (spreadable);
+    ecma_free_value (spreadable);
+    return ecma_make_boolean_value (to_bool);
   }
 
   return (ecma_make_boolean_value (ecma_is_value_array (arg)));

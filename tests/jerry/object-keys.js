@@ -61,14 +61,6 @@ assert (props.indexOf("prop") !== -1);
 assert (props.indexOf("method") !== -1);
 assert (props.length === 2);
 
-// Test non-object argument
-try {
-  Object.keys("hello");
-  assert (false);
-} catch (e) {
-  assert (e instanceof TypeError);
-}
-
 var o = {};
 
 Object.defineProperty(o, 'a', {

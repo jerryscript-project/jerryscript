@@ -62,11 +62,3 @@ assert (props.indexOf("prop") !== -1);
 assert (props.indexOf("method") !== -1);
 
 assert (props.length === 2);
-
-// Test non-object argument
-try {
-  Object.getOwnPropertyNames("hello");
-  assert (false);
-} catch (e) {
-  assert (e instanceof TypeError);
-}

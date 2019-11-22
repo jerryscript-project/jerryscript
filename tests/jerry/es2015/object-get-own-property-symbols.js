@@ -109,11 +109,3 @@ assert (props.indexOf(foo2) !== -1);
 assert (props.length === 2);
 assert (Object.getOwnPropertyDescriptor (object, foo).enumerable === true);
 assert (Object.getOwnPropertyDescriptor (object, foo2).enumerable === false);
-
-// Test non-object argument
-try {
-  Object.getOwnPropertySymbols ('hello');
-  assert (false);
-} catch (e) {
-  assert (e instanceof TypeError);
-}

@@ -2357,6 +2357,12 @@ ecma_object_check_class_name_is_object (ecma_object_t *obj_p) /**< object */
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_SET_ITERATOR_PROTOTYPE)
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_SET) */
+#if ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_WEAKMAP_PROTOTYPE)
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP) */
+#if ENABLED (JERRY_ES2015_BUILTIN_WEAKSET)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_WEAKSET_PROTOTYPE)
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_WEAKSET) */
 #if ENABLED (JERRY_ES2015)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_SYMBOL_PROTOTYPE)
 #endif /* ENABLED (JERRY_ES2015) */

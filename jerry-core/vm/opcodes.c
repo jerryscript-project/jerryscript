@@ -384,7 +384,7 @@ opfunc_append_to_spread_array (ecma_value_t *stack_top_p, /**< current stack top
  * @return NULL - if the operation failed
  *         pointer to the ecma-collection with the spreaded arguments, otherwise
  */
-ecma_collection_t * JERRY_ATTR_NOINLINE
+JERRY_ATTR_NOINLINE ecma_collection_t *
 opfunc_spread_arguments (ecma_value_t **stack_top_p, /**< [out] pointer to the current stack top */
                          uint8_t arguments_list_len) /**< number of arguments */
 {

@@ -2397,7 +2397,10 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_EVAL:
         {
           JERRY_CONTEXT (status_flags) |= ECMA_STATUS_DIRECT_EVAL;
-          JERRY_ASSERT (*byte_code_p >= CBC_CALL && *byte_code_p <= CBC_CALL2_PROP_BLOCK);
+          JERRY_ASSERT ((*byte_code_p >= CBC_CALL && *byte_code_p <= CBC_CALL2_PROP_BLOCK)
+                        || (*byte_code_p == CBC_EXT_OPCODE
+                            && byte_code_p[1] >= CBC_EXT_SPREAD_CALL
+                            && byte_code_p[1] <= CBC_EXT_SPREAD_CALL_PROP_BLOCK));
           continue;
         }
         case VM_OC_CALL:

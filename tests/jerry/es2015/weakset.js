@@ -119,6 +119,8 @@ try {
   assert (e instanceof TypeError);
 }
 
+assert (WeakSet.prototype.toString() === "[object WeakSet]");
+
 WeakSet.prototype.add = function () { throw "abrupt add" };
 
 try {

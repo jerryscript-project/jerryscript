@@ -2435,6 +2435,14 @@ parser_pattern_process_assignment (parser_context_t *context_p, /**< context */
         parser_raise_error (context_p, PARSER_ERR_INVALID_DESTRUCTURING_PATTERN);
       }
 
+      if (context_p->last_cbc_opcode == CBC_PUSH_PROP_THIS_LITERAL)
+      {
+        context_p->last_cbc_opcode = PARSER_CBC_UNAVAILABLE;
+        uint16_t lit_index = context_p->last_cbc.literal_index;
+        parser_emit_cbc (context_p, CBC_PUSH_THIS);
+        parser_emit_cbc_literal (context_p, CBC_PUSH_PROP_LITERAL, lit_index);
+      }
+
       if (end_type == LEXER_RIGHT_SQUARE)
       {
         PARSER_PLUS_EQUAL_U16 (rhs_opcode, 1);

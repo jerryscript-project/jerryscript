@@ -510,6 +510,13 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_WEAKSET,
 
 #if ENABLED (JERRY_ES2015)
 
+/* The Array.prototype[@@unscopables] object */
+BUILTIN (ECMA_BUILTIN_ID_ARRAY_PROTOTYPE_UNSCOPABLES,
+         ECMA_OBJECT_TYPE_GENERAL,
+         ECMA_BUILTIN_ID__COUNT,
+         true,
+         array_prototype_unscopables)
+
 /* The Symbol prototype object (ECMA-262 v6, 19.4.2.7) */
 BUILTIN (ECMA_BUILTIN_ID_SYMBOL_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,

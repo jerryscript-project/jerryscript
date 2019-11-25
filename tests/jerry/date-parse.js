@@ -61,7 +61,16 @@ var wrongFormats = ["",
                     "+0002015-01-01",
                     "-0002015-01-01",
                     "2015-01T00:00:00.000-03X00",
-                    "2015-01-01T00-03:00"];
+                    "2015-01-01T00-03:00",
+                    "Fri Jan 01 1 00:00:00 GMT+0000",
+                    "Fri Jan 01 11 00:00:00 GMT+0000",
+                    "Fri Jan 01 111 00:00:00 GMT+0000",
+                    "Fri Jan 01 1234567 00:00:00 GMT+0000",
+                    "Fri Jan 01 +1000 00:00:00 GMT+0000",
+                    "Fri Jan 01 -1 00:00:00 GMT+0000",
+                    "Fri Jan 01 -11 00:00:00 GMT+0000",
+                    "Fri Jan 01 -111 00:00:00 GMT+0000",
+                    "Fri Jan 01 -1234567 00:00:00 GMT+0000"];
 
 for (i in wrongFormats) {
   var d = Date.parse(wrongFormats[i]);
@@ -125,3 +134,37 @@ assert (Date.parse("9999-12-31T23:59:59.999Z") == 253402300799999)
 assert (Date.parse("+010000-01-01T00:00:00.000Z") == 253402300800000)
 assert (Date.parse("+275760-09-13T00:00:00.000Z") == 8640000000000000)
 assert (Date.parse("+275760-09-13T00:00:00.001Z") == 8640000000000001)
+
+// Date.toString() format
+assert (Date.parse("Tue Apr 20 -271821 00:00:00 GMT+0000") == -8640000000000000)
+assert (Date.parse("Fri Dec 31 -0001 23:59:59 GMT+0000") == -62167219201000)
+assert (Date.parse("Sat Jan 01 0000 00:00:00 GMT+0000") == -62167219200000)
+assert (Date.parse("Thu Dec 31 0009 23:59:59 GMT+0000") == -61851600001000)
+assert (Date.parse("Fri Jan 01 0010 00:00:00 GMT+0000") == -61851600000000)
+assert (Date.parse("Thu Dec 31 0099 23:59:59 GMT+0000") == -59011459201000)
+assert (Date.parse("Fri Jan 01 0100 00:00:00 GMT+0000") == -59011459200000)
+assert (Date.parse("Tue Dec 31 0999 23:59:59 GMT+0000") == -30610224001000)
+assert (Date.parse("Wed Jan 01 1000 00:00:00 GMT+0000") == -30610224000000)
+assert (Date.parse("Wed Dec 31 1969 23:59:59 GMT+0000") == -1000)
+assert (Date.parse("Thu Jan 01 1970 00:00:00 GMT+0000") == 0)
+assert (Date.parse("Thu Jan 01 1970 00:00:01 GMT+0000") == 1000)
+assert (Date.parse("Fri Dec 31 9999 23:59:59 GMT+0000") == 253402300799000)
+assert (Date.parse("Sat Jan 01 10000 00:00:00 GMT+0000") == 253402300800000)
+assert (Date.parse("Sat Sep 13 275760 00:00:00 GMT+0000") == 8640000000000000)
+
+// Date.toUTCString() format
+assert (Date.parse("Tue, 20 Apr -271821 00:00:00 GMT") == -8640000000000000)
+assert (Date.parse("Fri, 31 Dec -0001 23:59:59 GMT") == -62167219201000)
+assert (Date.parse("Sat, 01 Jan 0000 00:00:00 GMT") == -62167219200000)
+assert (Date.parse("Thu, 31 Dec 0009 23:59:59 GMT") == -61851600001000)
+assert (Date.parse("Fri, 01 Jan 0010 00:00:00 GMT") == -61851600000000)
+assert (Date.parse("Thu, 31 Dec 0099 23:59:59 GMT") == -59011459201000)
+assert (Date.parse("Fri, 01 Jan 0100 00:00:00 GMT") == -59011459200000)
+assert (Date.parse("Tue, 31 Dec 0999 23:59:59 GMT") == -30610224001000)
+assert (Date.parse("Wed, 01 Jan 1000 00:00:00 GMT") == -30610224000000)
+assert (Date.parse("Wed, 31 Dec 1969 23:59:59 GMT") == -1000)
+assert (Date.parse("Thu, 01 Jan 1970 00:00:00 GMT") == 0)
+assert (Date.parse("Thu, 01 Jan 1970 00:00:01 GMT") == 1000)
+assert (Date.parse("Fri, 31 Dec 9999 23:59:59 GMT") == 253402300799000)
+assert (Date.parse("Sat, 01 Jan 10000 00:00:00 GMT") == 253402300800000)
+assert (Date.parse("Sat, 13 Sep 275760 00:00:00 GMT") == 8640000000000000)

@@ -33,6 +33,16 @@
  * @{
  */
 
+const char day_names_p[7][3] =
+{
+  "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+};
+
+const char month_names_p[12][3] =
+{
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+};
+
 /**
  * Helper function to get day number from time value.
  *
@@ -577,16 +587,6 @@ static ecma_value_t
 ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
                             const char *format_p) /**< format buffer */
 {
-  static const char * const day_names_p[8] =
-  {
-    "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
-  };
-
-  static const char * const month_names_p[13] =
-  {
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-  };
-
   const uint32_t date_buffer_length = 37;
   JERRY_VLA (lit_utf8_byte_t, date_buffer, date_buffer_length);
 
@@ -735,13 +735,9 @@ ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
 
     if (str_p != NULL)
     {
-      /* Print string values. */
-      do
-      {
-        *dest_p++ = (lit_utf8_byte_t) *str_p++;
-      }
-      while (*str_p != LIT_CHAR_NULL);
-
+      /* Print string values: month or day name which is always 3 characters */
+      memcpy (dest_p, str_p, 3);
+      dest_p += 3;
       continue;
     }
 
@@ -791,7 +787,7 @@ ecma_value_t
 ecma_date_value_to_string (ecma_number_t datetime_number) /**< datetime */
 {
   datetime_number += ecma_date_local_time_zone_adjustment (datetime_number);
-  return ecma_date_to_string_format (datetime_number, "$W $M $D $Y $h:$m:$s GMT$z:$Z");
+  return ecma_date_to_string_format (datetime_number, "$W $M $D $Y $h:$m:$s GMT$z$Z");
 } /* ecma_date_value_to_string */
 
 /**

@@ -135,6 +135,8 @@ try {
   assert (e instanceof TypeError);
 }
 
+m1.set([], []);
+
 assert (WeakMap.prototype.toString() === "[object WeakMap]");
 
 WeakMap.prototype.set = function () { throw "abrupt set" };

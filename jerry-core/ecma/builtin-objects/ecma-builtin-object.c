@@ -1014,7 +1014,7 @@ ecma_builtin_object_dispatch_routine (uint16_t builtin_routine_id, /**< built-in
 #if ENABLED (JERRY_ES2015)
     if (!ecma_is_value_object (arg1))
     {
-      return arg1;
+      return ecma_copy_value (arg1);
     }
 #endif /* ENABLED (JERRY_ES2015) */
 

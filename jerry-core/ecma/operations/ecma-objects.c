@@ -2605,7 +2605,9 @@ ecma_op_is_regexp (ecma_value_t arg) /**< argument */
 
   if (!ecma_is_value_undefined (is_regexp))
   {
-    return ecma_make_boolean_value (ecma_op_to_boolean (is_regexp));
+    const bool to_bool = ecma_op_to_boolean (is_regexp);
+    ecma_free_value (is_regexp);
+    return ecma_make_boolean_value (to_bool);
   }
 
   return ecma_make_boolean_value (ecma_object_is_regexp_object (arg));

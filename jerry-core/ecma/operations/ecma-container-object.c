@@ -411,6 +411,11 @@ static void
 ecma_op_container_set_weak (ecma_object_t *const key_p, /**< key object */
                             ecma_extended_object_t *const container_p) /**< container */
 {
+  if (JERRY_UNLIKELY (ecma_op_object_is_fast_array (key_p)))
+  {
+    ecma_fast_array_convert_to_normal (key_p);
+  }
+
   ecma_string_t *weak_refs_string_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_WEAK_REFS);
   ecma_property_t *property_p = ecma_find_named_property (key_p, weak_refs_string_p);
   ecma_collection_t *refs_p;

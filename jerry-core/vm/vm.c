@@ -2102,7 +2102,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           if (literal_index < register_end)
           {
             *stack_top_p++ = ECMA_VALUE_REGISTER_REF;
-            *stack_top_p++ = literal_index;
+            *stack_top_p++ = ecma_make_integer_value (literal_index);
             *stack_top_p++ = ecma_fast_copy_value (VM_GET_REGISTER (frame_ctx_p, literal_index));
           }
           else
@@ -3756,6 +3756,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
         if (object == ECMA_VALUE_REGISTER_REF)
         {
+          property = (ecma_value_t) ecma_get_integer_from_value (property);
           ecma_fast_free_value (VM_GET_REGISTER (frame_ctx_p, property));
           VM_GET_REGISTER (frame_ctx_p, property) = result;
 
@@ -3809,24 +3810,13 @@ error:
 
     if (ECMA_IS_VALUE_ERROR (result))
     {
-      ecma_value_t *vm_stack_p = stack_top_p;
+      ecma_value_t *stack_bottom_p = VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth;
 
-      for (vm_stack_p = VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth;
-           vm_stack_p < stack_top_p;
-           vm_stack_p++)
+      while (stack_top_p > stack_bottom_p)
       {
-        if (*vm_stack_p == ECMA_VALUE_REGISTER_REF)
-        {
-          JERRY_ASSERT (vm_stack_p < stack_top_p);
-          vm_stack_p++;
-        }
-        else
-        {
-          ecma_free_value (*vm_stack_p);
-        }
+        ecma_fast_free_value (*(--stack_top_p));
       }
 
-      stack_top_p = VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth;
 #if ENABLED (JERRY_DEBUGGER)
       const uint32_t dont_stop = (JERRY_DEBUGGER_VM_IGNORE_EXCEPTION
                                   | JERRY_DEBUGGER_VM_IGNORE

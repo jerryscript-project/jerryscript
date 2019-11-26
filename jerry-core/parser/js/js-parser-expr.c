@@ -983,6 +983,22 @@ parser_parse_function_expression (parser_context_t *context_p, /**< context */
     parser_line_counter_t debugger_column = context_p->token.column;
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
+#if ENABLED (JERRY_ES2015)
+    uint32_t parent_status_flags = context_p->status_flags;
+
+    if (lexer_check_next_character (context_p, LIT_CHAR_ASTERISK))
+    {
+      /* The name of the function cannot be yield. */
+      context_p->status_flags |= PARSER_IS_GENERATOR_FUNCTION | PARSER_DISALLOW_YIELD;
+      status_flags |= PARSER_IS_GENERATOR_FUNCTION | PARSER_DISALLOW_YIELD;
+      lexer_consume_next_character (context_p);
+    }
+    else
+    {
+      context_p->status_flags &= (uint32_t) ~(PARSER_IS_GENERATOR_FUNCTION | PARSER_DISALLOW_YIELD);
+    }
+#endif /* ENABLED (JERRY_ES2015) */
+
     if (!lexer_check_next_character (context_p, LIT_CHAR_LEFT_PAREN))
     {
       lexer_next_token (context_p);
@@ -1019,6 +1035,10 @@ parser_parse_function_expression (parser_context_t *context_p, /**< context */
 
       function_name_index = context_p->lit_object.index;
     }
+
+#if ENABLED (JERRY_ES2015)
+    context_p->status_flags = parent_status_flags;
+#endif /* ENABLED (JERRY_ES2015) */
   }
 
   if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
@@ -1512,6 +1532,29 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
       parser_parse_function_expression (context_p,
                                         PARSER_IS_FUNCTION | PARSER_IS_ARROW_FUNCTION | PARSER_ARROW_PARSE_ARGS);
       return parser_abort_parsing_after_arrow (context_p);
+    }
+    case LEXER_KEYW_YIELD:
+    {
+      JERRY_ASSERT ((context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION)
+                    && !(context_p->status_flags & PARSER_DISALLOW_YIELD));
+
+      parser_check_assignment_expr (context_p);
+      lexer_next_token (context_p);
+
+      if (!lexer_check_yield_no_arg (context_p))
+      {
+        parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
+      }
+      else
+      {
+        parser_emit_cbc (context_p, CBC_PUSH_UNDEFINED);
+      }
+
+      parser_emit_cbc_ext (context_p, CBC_EXT_YIELD);
+      parser_emit_cbc_ext (context_p, CBC_EXT_CONTINUE_EXEC);
+
+      return (context_p->token.type != LEXER_RIGHT_PAREN
+              && context_p->token.type != LEXER_COMMA);
     }
 #endif /* ENABLED (JERRY_ES2015) */
     default:

@@ -604,6 +604,19 @@ lexer_parse_identifier (parser_context_t *context_p, /**< context */
         {
           if (JERRY_UNLIKELY (keyword_p->type >= LEXER_FIRST_FUTURE_STRICT_RESERVED_WORD))
           {
+#if ENABLED (JERRY_ES2015)
+            if (keyword_p->type == LEXER_KEYW_YIELD && (context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION))
+            {
+              if (context_p->status_flags & PARSER_DISALLOW_YIELD)
+              {
+                parser_raise_error (context_p, PARSER_ERR_YIELD_NOT_ALLOWED);
+              }
+
+              context_p->token.type = (uint8_t) LEXER_KEYW_YIELD;
+              break;
+            }
+#endif /* ENABLED (JERRY_ES2015) */
+
             if (context_p->status_flags & PARSER_IS_STRICT)
             {
               parser_raise_error (context_p, PARSER_ERR_STRICT_IDENT_NOT_ALLOWED);
@@ -1520,6 +1533,38 @@ lexer_check_arrow_param (parser_context_t *context_p) /**< context */
   return (context_p->source_p + 1 >= context_p->source_end_p
           || context_p->source_p[1] != LIT_CHAR_EQUALS);
 } /* lexer_check_arrow_param */
+
+/**
+ * Checks whether the yield expression has no argument.
+ *
+ * @return true if it has no argument
+ */
+bool
+lexer_check_yield_no_arg (parser_context_t *context_p) /**< context */
+{
+  if (context_p->token.flags & LEXER_WAS_NEWLINE)
+  {
+    return true;
+  }
+
+  switch (context_p->token.type)
+  {
+    case LEXER_RIGHT_BRACE:
+    case LEXER_RIGHT_PAREN:
+    case LEXER_RIGHT_SQUARE:
+    case LEXER_COMMA:
+    case LEXER_COLON:
+    case LEXER_SEMICOLON:
+    case LEXER_EOS:
+    {
+      return true;
+    }
+    default:
+    {
+      return false;
+    }
+  }
+} /* lexer_check_yield_no_arg */
 
 #endif /* ENABLED (JERRY_ES2015) */
 

@@ -118,12 +118,15 @@ defined to `1`.
   Enables or disable the [module system](http://www.ecma-international.org/ecma-262/6.0/#sec-modules) language element.
 * `JERRY_ES2015`: Enables or disable all of the implemented [ECMAScript2015 features](http://www.ecma-international.org/ecma-262/6.0/).
   * [arrow functions](http://www.ecma-international.org/ecma-262/6.0/#sec-arrow-function-definitions) language element.
-  * [symbol](https://www.ecma-international.org/ecma-262/6.0/#sec-symbol-objects) language element.
   * [class](https://www.ecma-international.org/ecma-262/6.0/#sec-class-definitions) language element.
-  * [for of](https://www.ecma-international.org/ecma-262/6.0/#sec-for-in-and-for-of-statements) language element.
   * [default value](http://www.ecma-international.org/ecma-262/6.0/#sec-function-definitions) for formal parameters.
-  * [rest parameter](http://www.ecma-international.org/ecma-262/6.0/#sec-function-definitions) language element.
+  * [destructuring assignment](http://www.ecma-international.org/ecma-262/6.0/#sec-destructuring-assignment) language element.
+  * [destructuring binding pattern](http://www.ecma-international.org/ecma-262/6.0/#sec-destructuring-binding-patterns) declarations.
   * [enhanced object initializer](http://www.ecma-international.org/ecma-262/6.0/#sec-object-initializer) language element.
+  * [for-of](https://www.ecma-international.org/ecma-262/6.0/#sec-for-in-and-for-of-statements) language element.
+  * [generator functions](http://www.ecma-international.org/ecma-262/6.0/#sec-generator-function-definitions) language element.
+  * [rest parameter](http://www.ecma-international.org/ecma-262/6.0/#sec-function-definitions) language element.
+  * [symbol](https://www.ecma-international.org/ecma-262/6.0/#sec-symbol-objects) language element.
   * [template strings](http://www.ecma-international.org/ecma-262/6.0/#sec-static-semantics-templatestrings) language element.
   This option is evaulated first, any other `JERRY_ES2015_<name>` defines will override that specific entry.
   Equivalent with setting the following defines to the `JERRY_ES2015` value:

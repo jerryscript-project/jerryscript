@@ -789,21 +789,24 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       bool free_this_binding = false;
 
       const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
+      uint16_t status_flags = bytecode_data_p->status_flags;
 
 #if ENABLED (JERRY_ES2015)
-      bool is_class_constructor = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_CONSTRUCTOR) != 0;
-
-      if (is_class_constructor && !ecma_op_function_has_construct_flag (arguments_list_p))
+      if (JERRY_UNLIKELY (status_flags & (CBC_CODE_FLAGS_CONSTRUCTOR | CBC_CODE_FLAGS_GENERATOR)))
       {
-        return ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor cannot be invoked without 'new'."));
+        if ((status_flags & CBC_CODE_FLAGS_CONSTRUCTOR) && !ecma_op_function_has_construct_flag (arguments_list_p))
+        {
+          return ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor cannot be invoked without 'new'."));
+        }
+        if ((status_flags & CBC_CODE_FLAGS_GENERATOR) && ecma_op_function_has_construct_flag (arguments_list_p))
+        {
+          return ecma_raise_type_error (ECMA_ERR_MSG ("Generator functions cannot be invoked with 'new'."));
+        }
       }
 #endif /* ENABLED (JERRY_ES2015) */
 
-      bool is_strict = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0;
-      bool is_no_lex_env = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED) != 0;
-
       /* 1. */
-      if (!is_strict)
+      if (!(status_flags & CBC_CODE_FLAGS_STRICT_MODE))
       {
         if (ecma_is_value_undefined (this_binding)
             || ecma_is_value_null (this_binding))
@@ -825,7 +828,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
 
       /* 5. */
       ecma_object_t *local_env_p;
-      if (is_no_lex_env)
+      if (status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED)
       {
         local_env_p = scope_p;
       }
@@ -841,7 +844,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                                            bytecode_data_p);
         }
 #if ENABLED (JERRY_ES2015)
-        if (JERRY_UNLIKELY (is_class_constructor))
+        if (JERRY_UNLIKELY (status_flags & CBC_CODE_FLAGS_CONSTRUCTOR))
         {
           ecma_op_set_class_this_binding (local_env_p, this_binding);
         }
@@ -854,7 +857,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                                        arguments_list_p,
                                        arguments_list_len);
 
-      if (!is_no_lex_env)
+      if (!(status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED))
       {
         ecma_deref_object (local_env_p);
       }

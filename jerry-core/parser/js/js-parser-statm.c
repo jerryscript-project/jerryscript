@@ -627,9 +627,6 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
 static void
 parser_parse_function_statement (parser_context_t *context_p) /**< context */
 {
-  uint32_t status_flags;
-  lexer_literal_t *literal_p;
-
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_FUNCTION);
 
 #if ENABLED (JERRY_ES2015)
@@ -645,6 +642,16 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
   parser_line_counter_t debugger_line = context_p->token.line;
   parser_line_counter_t debugger_column = context_p->token.column;
 #endif /* ENABLED (JERRY_DEBUGGER) */
+
+#if ENABLED (JERRY_ES2015)
+  bool is_generator_function = false;
+
+  if (lexer_check_next_character (context_p, LIT_CHAR_ASTERISK))
+  {
+    is_generator_function = true;
+    lexer_consume_next_character (context_p);
+  }
+#endif /* ENABLED (JERRY_ES2015) */
 
   lexer_expect_identifier (context_p, LEXER_NEW_IDENT_LITERAL);
   JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
@@ -663,13 +670,19 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
   context_p->status_flags &= (uint32_t) ~(PARSER_MODULE_STORE_IDENT);
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
-  status_flags = PARSER_IS_FUNCTION | PARSER_IS_CLOSURE;
+  uint32_t status_flags = PARSER_IS_FUNCTION | PARSER_IS_CLOSURE;
   if (context_p->lit_object.type != LEXER_LITERAL_OBJECT_ANY)
   {
     JERRY_ASSERT (context_p->lit_object.type == LEXER_LITERAL_OBJECT_EVAL
                   || context_p->lit_object.type == LEXER_LITERAL_OBJECT_ARGUMENTS);
     status_flags |= PARSER_HAS_NON_STRICT_ARG;
   }
+#if ENABLED (JERRY_ES2015)
+  if (is_generator_function)
+  {
+    status_flags |= PARSER_IS_GENERATOR_FUNCTION | PARSER_DISALLOW_YIELD;
+  }
+#endif /* ENABLED (JERRY_ES2015) */
 
 #if ENABLED (JERRY_DEBUGGER)
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
@@ -700,7 +713,7 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
 
   JERRY_ASSERT (scope_stack_p[1].map_from == PARSER_SCOPE_STACK_FUNC);
 
-  literal_p = PARSER_GET_LITERAL ((size_t) scope_stack_p[1].map_to);
+  lexer_literal_t *literal_p = PARSER_GET_LITERAL ((size_t) scope_stack_p[1].map_to);
 
   JERRY_ASSERT ((literal_p->type == LEXER_UNUSED_LITERAL || literal_p->type == LEXER_FUNCTION_LITERAL)
                 && literal_p->status_flags == 0);

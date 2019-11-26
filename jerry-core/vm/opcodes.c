@@ -30,6 +30,7 @@
 #include "jcontext.h"
 #include "opcodes.h"
 #include "vm-defines.h"
+#include "vm-stack.h"
 
 /** \addtogroup vm Virtual machine
  * @{
@@ -280,6 +281,7 @@ opfunc_for_in (ecma_value_t left_value, /**< left value */
 } /* opfunc_for_in */
 
 #if ENABLED (JERRY_ES2015)
+
 /**
  * 'VM_OC_APPEND_ARRAY' opcode handler specialized for spread objects
  *
@@ -454,6 +456,7 @@ opfunc_spread_arguments (ecma_value_t *stack_top_p, /**< pointer to the current 
 
   return buff_p;
 } /* opfunc_spread_arguments */
+
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**
@@ -538,6 +541,176 @@ opfunc_append_array (ecma_value_t *stack_top_p, /**< current stack top */
 
   return ECMA_VALUE_EMPTY;
 } /* opfunc_append_array */
+
+#if ENABLED (JERRY_ES2015)
+
+/**
+ * Create an executable object using the current frame context
+ *
+ * @return executable object
+ */
+ecma_value_t
+opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
+{
+  const ecma_compiled_code_t *bytecode_header_p = frame_ctx_p->bytecode_header_p;
+  size_t size;
+
+  ecma_bytecode_ref ((ecma_compiled_code_t *) bytecode_header_p);
+
+  if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+  {
+    cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_header_p;
+    size = ((size_t) args_p->register_end + (size_t) args_p->stack_limit) * sizeof (ecma_value_t);
+  }
+  else
+  {
+    cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_header_p;
+    size = ((size_t) args_p->register_end + (size_t) args_p->stack_limit) * sizeof (ecma_value_t);
+  }
+
+  size_t total_size = JERRY_ALIGNUP (sizeof (vm_executable_object_t) + size, sizeof (uintptr_t));
+
+  ecma_object_t *object_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_GENERATOR_PROTOTYPE),
+                                                total_size,
+                                                ECMA_OBJECT_TYPE_CLASS);
+
+  vm_executable_object_t *executable_object_p = (vm_executable_object_t *) object_p;
+
+  executable_object_p->extended_object.u.class_prop.class_id = LIT_MAGIC_STRING_GENERATOR_UL;
+  executable_object_p->extended_object.u.class_prop.extra_info = 0;
+
+  JERRY_ASSERT (!frame_ctx_p->is_eval_code);
+  JERRY_ASSERT (frame_ctx_p->context_depth == 0);
+
+  vm_frame_ctx_t *new_frame_ctx_p = &(executable_object_p->frame_ctx);
+  *new_frame_ctx_p = *frame_ctx_p;
+
+  /* The old register values are discarded. */
+  ecma_value_t *new_registers_p = VM_GET_REGISTERS (new_frame_ctx_p);
+  memcpy (new_registers_p, VM_GET_REGISTERS (frame_ctx_p), size);
+
+  size_t stack_top = (size_t) (frame_ctx_p->stack_top_p - VM_GET_REGISTERS (frame_ctx_p));
+  ecma_value_t *new_stack_top_p = new_registers_p + stack_top;
+
+  new_frame_ctx_p->stack_top_p = new_stack_top_p;
+
+  /* Initial state is "not running", so all object references are released. */
+
+  while (new_registers_p < new_stack_top_p)
+  {
+    ecma_deref_if_object (*new_registers_p++);
+  }
+
+  new_frame_ctx_p->this_binding = ecma_copy_value_if_not_object (new_frame_ctx_p->this_binding);
+
+  JERRY_CONTEXT (vm_top_context_p) = new_frame_ctx_p->prev_context_p;
+
+  return ecma_make_object_value (object_p);
+} /* opfunc_create_executable_object */
+
+/**
+ * Resume the execution of an inactive executable object
+ *
+ * @return value provided by the execution
+ */
+ecma_value_t
+opfunc_resume_executable_object (vm_executable_object_t *executable_object_p, /**< executable object */
+                                 ecma_value_t value) /**< value pushed onto the stack */
+{
+  const ecma_compiled_code_t *bytecode_header_p = executable_object_p->frame_ctx.bytecode_header_p;
+  ecma_value_t *register_p = VM_GET_REGISTERS (&executable_object_p->frame_ctx);
+  ecma_value_t *register_end_p;
+
+  if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+  {
+    cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_header_p;
+    register_end_p = register_p + args_p->register_end;
+  }
+  else
+  {
+    cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_header_p;
+    register_end_p = register_p + args_p->register_end;
+  }
+
+  while (register_p < register_end_p)
+  {
+    ecma_ref_if_object (*register_p++);
+  }
+
+  if (executable_object_p->frame_ctx.context_depth > 0)
+  {
+    vm_ref_lex_env_chain (executable_object_p->frame_ctx.lex_env_p,
+                          executable_object_p->frame_ctx.context_depth,
+                          register_p,
+                          true);
+
+    register_p += executable_object_p->frame_ctx.context_depth;
+  }
+
+  ecma_value_t *stack_top_p = executable_object_p->frame_ctx.stack_top_p;
+
+  while (register_p < stack_top_p)
+  {
+    ecma_ref_if_object (*register_p++);
+  }
+
+  uint8_t *byte_code_p = executable_object_p->frame_ctx.byte_code_p;
+
+  JERRY_ASSERT (byte_code_p[0] == CBC_EXT_OPCODE && byte_code_p[1] == CBC_EXT_CONTINUE_EXEC);
+
+  *register_p++ = ecma_copy_value (value);
+  executable_object_p->frame_ctx.stack_top_p = register_p;
+
+  JERRY_ASSERT (ECMA_EXECUTABLE_OBJECT_IS_SUSPENDED (executable_object_p->extended_object.u.class_prop.extra_info));
+
+  executable_object_p->extended_object.u.class_prop.extra_info |= ECMA_EXECUTABLE_OBJECT_RUNNING;
+
+  executable_object_p->frame_ctx.prev_context_p = JERRY_CONTEXT (vm_top_context_p);
+  JERRY_CONTEXT (vm_top_context_p) = &executable_object_p->frame_ctx;
+
+  ecma_value_t result = vm_execute (&executable_object_p->frame_ctx);
+
+  executable_object_p->extended_object.u.class_prop.extra_info &= (uint16_t) ~ECMA_EXECUTABLE_OBJECT_RUNNING;
+
+  if (executable_object_p->frame_ctx.call_operation != VM_EXEC_RETURN)
+  {
+    JERRY_ASSERT (executable_object_p->frame_ctx.call_operation == VM_NO_EXEC_OP);
+
+    /* All resources are released. */
+    executable_object_p->extended_object.u.class_prop.extra_info |= ECMA_EXECUTABLE_OBJECT_COMPLETED;
+    return result;
+  }
+
+  JERRY_CONTEXT (vm_top_context_p) = executable_object_p->frame_ctx.prev_context_p;
+
+  register_p = VM_GET_REGISTERS (&executable_object_p->frame_ctx);
+
+  while (register_p < register_end_p)
+  {
+    ecma_deref_if_object (*register_p++);
+  }
+
+  if (executable_object_p->frame_ctx.context_depth > 0)
+  {
+    vm_ref_lex_env_chain (executable_object_p->frame_ctx.lex_env_p,
+                          executable_object_p->frame_ctx.context_depth,
+                          register_p,
+                          false);
+
+    register_p += executable_object_p->frame_ctx.context_depth;
+  }
+
+  stack_top_p = executable_object_p->frame_ctx.stack_top_p;
+
+  while (register_p < stack_top_p)
+  {
+    ecma_deref_if_object (*register_p++);
+  }
+
+  return result;
+} /* opfunc_resume_executable_object */
+
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * @}

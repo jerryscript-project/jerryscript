@@ -402,10 +402,13 @@ scanner_push_literal_pool (parser_context_t *context_p, /**< context */
     JERRY_ASSERT (prev_literal_pool_p != NULL);
     status_flags |= SCANNER_LITERAL_POOL_NO_ARGUMENTS;
 
-    if (prev_literal_pool_p->status_flags & SCANNER_LITERAL_POOL_IN_WITH)
-    {
-      status_flags |= SCANNER_LITERAL_POOL_IN_WITH;
-    }
+#if ENABLED (JERRY_ES2015)
+    const uint16_t copied_flags = SCANNER_LITERAL_POOL_IN_WITH | SCANNER_LITERAL_POOL_GENERATOR;
+#else /* !ENABLED (JERRY_ES2015) */
+    const uint16_t copied_flags = SCANNER_LITERAL_POOL_IN_WITH;
+#endif /* ENABLED (JERRY_ES2015) */
+
+    status_flags |= (uint16_t) (prev_literal_pool_p->status_flags & copied_flags);
   }
 
   parser_list_init (&literal_pool_p->literal_pool,
@@ -774,6 +777,20 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
   {
     prev_literal_pool_p->no_declarations = (uint16_t) no_declarations;
   }
+
+#if ENABLED (JERRY_ES2015)
+  if (is_function && prev_literal_pool_p != NULL)
+  {
+    if (prev_literal_pool_p->status_flags & SCANNER_LITERAL_POOL_GENERATOR)
+    {
+      context_p->status_flags |= PARSER_IS_GENERATOR_FUNCTION;
+    }
+    else
+    {
+      context_p->status_flags &= (uint32_t) ~PARSER_IS_GENERATOR_FUNCTION;
+    }
+  }
+#endif /* ENABLED (JERRY_ES2015) */
 
   scanner_context_p->active_literal_pool_p = literal_pool_p->prev_p;
 

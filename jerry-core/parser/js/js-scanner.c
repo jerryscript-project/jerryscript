@@ -1163,11 +1163,6 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
         }
 
         scanner_context_p->mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
-
-        if (context_p->stack_top_uint8 == SCAN_STACK_FUNCTION_PARAMETERS)
-        {
-          scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION_END;
-        }
         return SCAN_KEEP_TOKEN;
       }
 

@@ -1585,7 +1585,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           if (opcode >= CBC_EXT_SPREAD_SUPER_CALL)
           {
-            ecma_collection_t *arguments_p = opfunc_spread_arguments (&stack_top_p, arguments_list_len);
+            stack_top_p -= arguments_list_len;
+            ecma_collection_t *arguments_p = opfunc_spread_arguments (stack_top_p, arguments_list_len);
 
             if (JERRY_UNLIKELY (arguments_p == NULL))
             {
@@ -2043,8 +2044,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_SPREAD_ARGUMENTS:
         {
           uint8_t arguments_list_len = *byte_code_p++;
+          stack_top_p -= arguments_list_len;
 
-          ecma_collection_t *arguments_p = opfunc_spread_arguments (&stack_top_p, arguments_list_len);
+          ecma_collection_t *arguments_p = opfunc_spread_arguments (stack_top_p, arguments_list_len);
 
           if (JERRY_UNLIKELY (arguments_p == NULL))
           {

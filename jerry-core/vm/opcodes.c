@@ -385,15 +385,14 @@ opfunc_append_to_spread_array (ecma_value_t *stack_top_p, /**< current stack top
  *         pointer to the ecma-collection with the spreaded arguments, otherwise
  */
 JERRY_ATTR_NOINLINE ecma_collection_t *
-opfunc_spread_arguments (ecma_value_t **stack_top_p, /**< [out] pointer to the current stack top */
+opfunc_spread_arguments (ecma_value_t *stack_top_p, /**< pointer to the current stack top */
                          uint8_t arguments_list_len) /**< number of arguments */
 {
-  ecma_value_t *curr_stack_top_p = *stack_top_p;
   ecma_collection_t *buff_p = ecma_new_collection ();
 
   for (uint32_t i = 0; i < arguments_list_len; i++)
   {
-    ecma_value_t arg = *(--curr_stack_top_p);
+    ecma_value_t arg = *stack_top_p++;
 
     if (arg != ECMA_VALUE_SPREAD_ELEMENT)
     {
@@ -402,7 +401,8 @@ opfunc_spread_arguments (ecma_value_t **stack_top_p, /**< [out] pointer to the c
     }
 
     ecma_value_t ret_value = ECMA_VALUE_ERROR;
-    ecma_value_t spread_value = *(--curr_stack_top_p);
+    ecma_value_t spread_value = *stack_top_p++;
+    i++;
 
     ecma_value_t iterator = ecma_op_get_iterator (spread_value, ECMA_VALUE_EMPTY);
 
@@ -443,7 +443,7 @@ opfunc_spread_arguments (ecma_value_t **stack_top_p, /**< [out] pointer to the c
     {
       for (uint32_t k = i + 1; k < arguments_list_len; k++)
       {
-        ecma_free_value (*(--curr_stack_top_p));
+        ecma_free_value (*(++stack_top_p));
       }
 
       ecma_collection_free (buff_p);
@@ -452,7 +452,6 @@ opfunc_spread_arguments (ecma_value_t **stack_top_p, /**< [out] pointer to the c
     }
   }
 
-  *stack_top_p = curr_stack_top_p;
   return buff_p;
 } /* opfunc_spread_arguments */
 #endif /* ENABLED (JERRY_ES2015) */

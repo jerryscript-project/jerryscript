@@ -98,3 +98,14 @@ var array = new MyArray(1, 2, 3);
 assertArrayEqual(array, [1,2,3]);
 assert(array instanceof MyArray);
 assert(array instanceof Array);
+
+function argumentOrderTest() {
+  var result = []
+  for (i = 0; i < arguments.length; i++) {
+      result.push(arguments[i]);
+  }
+
+  return result;
+}
+
+assertArrayEqual(argumentOrderTest(1, 2, ...[3, 4]), [1, 2, 3, 4]);

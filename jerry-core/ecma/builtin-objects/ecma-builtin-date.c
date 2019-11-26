@@ -97,6 +97,103 @@ ecma_date_parse_special_char (const lit_utf8_byte_t **str_p, /**< pointer to the
 } /* ecma_date_parse_special_char */
 
 /**
+ * Helper function to try to parse a 4-5-6 digit year with optional negative sign in a date string
+ *
+ * Date.prototype.toString() and Date.prototype.toUTCString() emits year
+ * in this format and Date.parse() should parse this format too.
+ *
+ * @return the parsed year or NaN.
+ */
+static ecma_number_t
+ecma_date_parse_year (const lit_utf8_byte_t **str_p, /**< pointer to the cesu8 string */
+                      const lit_utf8_byte_t *str_end_p) /**< pointer to the end of the string */
+{
+  bool is_year_sign_negative = ecma_date_parse_special_char (str_p, str_end_p, '-');
+  const lit_utf8_byte_t *str_start_p = *str_p;
+  int32_t parsed_year = 0;
+
+  while (str_start_p - *str_p <= 6)
+  {
+    if (*str_p >= str_end_p || !lit_char_is_decimal_digit (*str_start_p))
+    {
+      break;
+    }
+
+    parsed_year = 10 * parsed_year + *str_start_p - LIT_CHAR_0;
+    str_start_p++;
+  }
+
+  if (str_start_p - *str_p >=4)
+  {
+    *str_p = str_start_p;
+    if (is_year_sign_negative)
+    {
+      return -parsed_year;
+    }
+    return parsed_year;
+  }
+
+  if (is_year_sign_negative)
+  {
+    str_p--; /* Parse failed, revert already parsed '-' sign. */
+  }
+  return ecma_number_make_nan ();
+} /* ecma_date_parse_year */
+
+/**
+ * Helper function to try to parse a day name in a date string
+ * Valid day names: Sun, Mon, Tue, Wed, Thu, Fri, Sat
+ * See also:
+ *          ECMA-262 v9, 20.3.4.41.2 Table 46
+ *
+ * @return true if the string starts with a valid day name, false otherwise
+ */
+static bool
+ecma_date_parse_day_name (const lit_utf8_byte_t **str_p, /**< pointer to the cesu8 string */
+                          const lit_utf8_byte_t *str_end_p) /**< pointer to the end of the string */
+{
+  if (*str_p + 3 < str_end_p)
+  {
+    for (uint32_t i = 0; i < 7; i++)
+    {
+      if (!memcmp (day_names_p[i], *str_p, 3))
+      {
+        (*str_p) += 3;
+        return true;
+      }
+    }
+  }
+  return false;
+} /* ecma_date_parse_day_name */
+
+/**
+ * Helper function to try to parse a month name in a date string
+ * Valid month names: Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec
+ * See also:
+ *          ECMA-262 v9, 20.3.4.41.2 Table 47
+ *
+ * @return number of the month if the string starts with a valid month name, 0 otherwise
+ */
+static uint32_t
+ecma_date_parse_month_name (const lit_utf8_byte_t **str_p, /**< pointer to the cesu8 string */
+                            const lit_utf8_byte_t *str_end_p) /**< pointer to the end of the string */
+{
+  if (*str_p + 3 < str_end_p)
+  {
+    for (uint32_t i = 0; i < 12; i++)
+    {
+      if (!memcmp (month_names_p[i], *str_p, 3))
+      {
+        (*str_p) += 3;
+        return (i+1);
+      }
+    }
+  }
+  return 0;
+} /* ecma_date_parse_month_name */
+
+
+/**
   * Calculate MakeDate(MakeDay(yr, m, dt), MakeTime(h, min, s, milli)) for Date constructor and UTC
   *
   * See also:
@@ -197,35 +294,18 @@ ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to t
 } /* ecma_date_construct_helper */
 
 /**
- * The Date object's 'parse' routine
+ * Helper function used by ecma_builtin_date_parse
  *
  * See also:
- *          ECMA-262 v5, 15.9.4.2
- *          ECMA-262 v5, 15.9.1.15
+ *          ECMA-262 v5, 15.9.4.2  Date.parse (string)
+ *          ECMA-262 v5, 15.9.1.15 Date Time String Format
  *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
+ * @return the parsed date as ecma_number_t or NaN otherwise
  */
-static ecma_value_t
-ecma_builtin_date_parse (ecma_value_t this_arg, /**< this argument */
-                         ecma_value_t arg) /**< string */
+static ecma_number_t
+ecma_builtin_date_parse_ISO_string_format (const lit_utf8_byte_t *date_str_curr_p,
+                                           const lit_utf8_byte_t *date_str_end_p)
 {
-  JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-  ecma_number_t date_num = ecma_number_make_nan ();
-
-  /* Date Time String fromat (ECMA-262 v5, 15.9.1.15) */
-  ecma_string_t *date_str_p = ecma_op_to_string (arg);
-  if (JERRY_UNLIKELY (date_str_p == NULL))
-  {
-    return ECMA_VALUE_ERROR;
-  }
-
-  ECMA_STRING_TO_UTF8_STRING (date_str_p, date_start_p, date_start_size);
-
-  const lit_utf8_byte_t *date_str_curr_p = date_start_p;
-  const lit_utf8_byte_t *date_str_end_p = date_start_p + date_start_size;
-
   /* 1. read year */
 
   uint32_t year_digits = 4;
@@ -341,16 +421,232 @@ ecma_builtin_date_parse (ecma_value_t this_arg, /**< this argument */
     if (date_str_curr_p >= date_str_end_p)
     {
       ecma_number_t date = ecma_date_make_day (year, month - 1, day);
-      date_num = ecma_date_make_date (date, time);
+      return ecma_date_make_date (date, time);
+    }
+  }
+  return ecma_number_make_nan ();
+} /* ecma_builtin_date_parse_ISO_string_format */
+
+/**
+ * Helper function used by ecma_builtin_date_parse
+ *
+ * See also:
+ *          ECMA-262 v5, 15.9.4.2  Date.parse (string)
+ *          ECMA-262 v9, 20.3.4.41 Date.prototype.toString ()
+ *          ECMA-262 v9, 20.3.4.43 Date.prototype.toUTCString ()
+ *
+ * Used by: ecma_builtin_date_parse
+ *
+ * @return the parsed date as ecma_number_t or NaN otherwise
+ */
+static ecma_number_t
+ecma_builtin_date_parse_toString_formats (const lit_utf8_byte_t *date_str_curr_p,
+                                          const lit_utf8_byte_t *date_str_end_p)
+{
+  const ecma_number_t nan = ecma_number_make_nan ();
+
+  if (!ecma_date_parse_day_name (&date_str_curr_p, date_str_end_p))
+  {
+    return nan;
+  }
+
+  const bool is_toUTCString_format = ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, ',');
+
+  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, ' '))
+  {
+    return nan;
+  }
+
+  ecma_number_t month = 0;
+  ecma_number_t day = 0;
+  if (is_toUTCString_format)
+  {
+    day = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2, 0, 31);
+    if (ecma_number_is_nan (day))
+    {
+      return nan;
+    }
+
+    if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, ' '))
+    {
+      return nan;
+    }
+
+    month = ecma_date_parse_month_name (&date_str_curr_p, date_str_end_p);
+    if (!(int) month)
+    {
+      return nan;
+    }
+  }
+  else
+  {
+    month = ecma_date_parse_month_name (&date_str_curr_p, date_str_end_p);
+    if (!(int) month)
+    {
+      return nan;
+    }
+
+    if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, ' '))
+    {
+      return nan;
+    }
+
+    day = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2, 0, 31);
+    if (ecma_number_is_nan (day))
+    {
+      return nan;
     }
   }
 
-  ret_value = ecma_make_number_value (date_num);
+  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, ' '))
+  {
+    return nan;
+  }
+
+  ecma_number_t year = ecma_date_parse_year (&date_str_curr_p, date_str_end_p);
+  if (ecma_number_is_nan (year))
+  {
+    return nan;
+  }
+
+  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, ' '))
+  {
+    return nan;
+  }
+
+  ecma_number_t hours = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2, 0, 24);
+  if (ecma_number_is_nan (hours))
+  {
+    return nan;
+  }
+
+  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, ':'))
+  {
+    return nan;
+  }
+
+  ecma_number_t minutes = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2, 0, 59);
+  if (ecma_number_is_nan (minutes))
+  {
+    return nan;
+  }
+
+  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, ':'))
+  {
+    return nan;
+  }
+
+  ecma_number_t seconds = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2, 0, 59);
+  if (ecma_number_is_nan (seconds))
+  {
+    return nan;
+  }
+
+  if (hours == 24 && (minutes != 0 || seconds != 0))
+  {
+    return nan;
+  }
+
+  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, ' '))
+  {
+    return nan;
+  }
+
+  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, 'G'))
+  {
+    return nan;
+  }
+
+  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, 'M'))
+  {
+    return nan;
+  }
+
+  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, 'T'))
+  {
+    return nan;
+  }
+
+  ecma_number_t time = ecma_date_make_time (hours, minutes, seconds, 0);
+
+  if (!is_toUTCString_format)
+  {
+    bool is_timezone_sign_negative = ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, '-');
+    if (!is_timezone_sign_negative && !ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, '+'))
+    {
+      return nan;
+    }
+
+    hours = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2, 0, 24);
+    if (ecma_number_is_nan (hours))
+    {
+      return nan;
+    }
+    if (hours == 24)
+    {
+      hours = ECMA_NUMBER_ZERO;
+    }
+
+    minutes = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2, 0, 59);
+    if (ecma_number_is_nan (minutes))
+    {
+      return nan;
+    }
+
+    ecma_number_t timezone_offset = ecma_date_make_time (hours, minutes, ECMA_NUMBER_ZERO, ECMA_NUMBER_ZERO);
+    time += is_timezone_sign_negative ? timezone_offset : -timezone_offset;
+  }
+
+  if (date_str_curr_p >= date_str_end_p)
+  {
+    ecma_number_t date = ecma_date_make_day (year, month - 1, day);
+    return ecma_date_make_date (date, time);
+  }
+
+  return nan;
+} /* ecma_builtin_date_parse_toString_formats */
+
+/**
+ * The Date object's 'parse' routine
+ *
+ * See also:
+ *          ECMA-262 v5, 15.9.4.2  Date.parse (string)
+ *          ECMA-262 v5, 15.9.1.15 Date Time String Format
+ *          ECMA-262 v9, 20.3.4.41 Date.prototype.toString ()
+ *          ECMA-262 v9, 20.3.4.43 Date.prototype.toUTCString ()
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_date_parse (ecma_value_t this_arg, /**< this argument */
+                         ecma_value_t arg) /**< string */
+{
+  JERRY_UNUSED (this_arg);
+
+  /* Date Time String fromat (ECMA-262 v5, 15.9.1.15) */
+  ecma_string_t *date_str_p = ecma_op_to_string (arg);
+  if (JERRY_UNLIKELY (date_str_p == NULL))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  ECMA_STRING_TO_UTF8_STRING (date_str_p, date_start_p, date_start_size);
+  const lit_utf8_byte_t *date_str_curr_p = date_start_p;
+  const lit_utf8_byte_t *date_str_end_p = date_start_p + date_start_size;
+
+  // try to parse date string as ISO string - ECMA-262 v5, 15.9.1.15
+  ecma_number_t ret_value = ecma_builtin_date_parse_ISO_string_format (date_str_curr_p, date_str_end_p);
+
+  if (ecma_number_is_nan (ret_value))
+  {
+    // try to parse date string in Date.prototype.toString() or toUTCString() format
+    ret_value = ecma_builtin_date_parse_toString_formats (date_str_curr_p, date_str_end_p);
+  }
 
   ECMA_FINALIZE_UTF8_STRING (date_start_p, date_start_size);
   ecma_deref_ecma_string (date_str_p);
-
-  return ret_value;
+  return ecma_make_number_value (ret_value);
 } /* ecma_builtin_date_parse */
 
 /**
@@ -533,5 +829,8 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
  * @}
  * @}
  */
+
+#undef BREAK_IF_FALSE
+#undef BREAK_IF_NAN
 
 #endif /* ENABLED (JERRY_BUILTIN_DATE) */

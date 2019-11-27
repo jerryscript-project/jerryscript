@@ -2606,6 +2606,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             if (ref_base_lex_env_p == NULL)
             {
               ecma_free_value (JERRY_CONTEXT (error_value));
+              JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_EXCEPTION;
               result = ECMA_VALUE_UNDEFINED;
             }
             else if (ECMA_IS_VALUE_ERROR (result))

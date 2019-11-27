@@ -8,25 +8,26 @@ skip_tags: true
 # Build matrix setup.
 image:
   - Visual Studio 2017
-configuration:
-  - Debug
-  - Release
 platform:
-  - x64
   - Win32
-
+  - x64
 environment:
   matrix:
-    - FEATURE_DEBUGGER: ON
-    - FEATURE_DEBUGGER: OFF
+    - JOB_NAME: Build Tests
+      OPTS: --buildoption-test
+    - JOB_NAME: Unit Tests
+      OPTS: --unittests
+    - JOB_NAME: Jerry Tests
+      OPTS: --jerry-tests
+    - JOB_NAME: Jerry Test-suite
+      OPTS: --jerry-test-suite
+    - JOB_NAME: Kangax Tests
+      OPTS: --kangax-tests
+    - JOB_NAME: Conformance Tests
+      OPTS: --test262
 
 # Steps of a job.
-init:
-  - cmake -version
-before_build:
-  - if "%PLATFORM%"=="Win32" cmake -G"Visual Studio 15 2017" -Bbuild -H. -DFEATURE_DEBUGGER=%FEATURE_DEBUGGER%
-  - if "%PLATFORM%"=="x64" cmake -G"Visual Studio 15 2017 Win64" -Bbuild -H. -DFEATURE_DEBUGGER=%FEATURE_DEBUGGER%
-build:
-  project: build\Jerry.sln
-  parallel: true
-  verbosity: minimal
+build_script:
+  - if "%PLATFORM%"=="Win32" set CMAKE_GENERATOR="Visual Studio 15 2017"
+  - if "%PLATFORM%"=="x64" set CMAKE_GENERATOR="Visual Studio 15 2017 Win64"
+  - python tools\run-tests.py --buildoptions=--cmake-param=-G%CMAKE_GENERATOR% %OPTS%

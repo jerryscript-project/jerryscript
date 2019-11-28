@@ -932,6 +932,12 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Arguments is not allowed to be used here in strict mode.";
     }
+#if ENABLED (JERRY_ES2015)
+    case PARSER_ERR_YIELD_NOT_ALLOWED:
+    {
+      return "Incorrect use of yield keyword.";
+    }
+#endif /* ENABLED (JERRY_ES2015) */
     case PARSER_ERR_DELETE_IDENT_NOT_ALLOWED:
     {
       return "Deleting identifier is not allowed in strict mode.";

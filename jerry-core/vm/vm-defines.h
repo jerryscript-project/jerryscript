@@ -64,12 +64,21 @@ typedef struct vm_frame_ctx_t
 /**
  * Get register list corresponding to the frame context.
  */
-#define VM_GET_REGISTERS(frame_ctx_p) ((ecma_value_t *) (frame_ctx_p + 1))
+#define VM_GET_REGISTERS(frame_ctx_p) ((ecma_value_t *) ((frame_ctx_p) + 1))
 
 /**
  * Read or write a specific register.
  */
-#define VM_GET_REGISTER(frame_ctx_p, i) (((ecma_value_t *) (frame_ctx_p + 1))[i])
+#define VM_GET_REGISTER(frame_ctx_p, i) (((ecma_value_t *) ((frame_ctx_p) + 1))[i])
+
+/**
+ * Generator frame context.
+ */
+typedef struct
+{
+  ecma_extended_object_t extended_object; /**< extended object part */
+  vm_frame_ctx_t frame_ctx; /**< frame context part */
+} vm_executable_object_t;
 
 /**
  * @}

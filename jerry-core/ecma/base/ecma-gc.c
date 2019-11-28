@@ -293,6 +293,7 @@ ecma_gc_mark_promise_object (ecma_extended_object_t *ext_object_p) /**< extended
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
 
 #if ENABLED (JERRY_ES2015_BUILTIN_CONTAINER)
+
 /**
  * Mark objects referenced by Map/Set built-in.
  */
@@ -358,6 +359,73 @@ ecma_gc_mark_container_object (ecma_object_t *object_p) /**< object */
 } /* ecma_gc_mark_container_object */
 
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_CONTAINER) */
+
+#if ENABLED (JERRY_ES2015)
+
+/**
+ * Mark objects referenced by inactive generator functions, async functions, etc.
+ */
+static void
+ecma_gc_mark_executable_object (ecma_object_t *object_p) /**< object */
+{
+  vm_executable_object_t *executable_object_p = (vm_executable_object_t *) object_p;
+
+  if (!ECMA_EXECUTABLE_OBJECT_IS_SUSPENDED (executable_object_p->extended_object.u.class_prop.extra_info))
+  {
+    /* All objects referenced by running executable objects are strong roots,
+     * and a finished executable object cannot refer to other values. */
+    return;
+  }
+
+  ecma_gc_set_object_visited (executable_object_p->frame_ctx.lex_env_p);
+
+  if (ecma_is_value_object (executable_object_p->frame_ctx.this_binding))
+  {
+    ecma_gc_set_object_visited (ecma_get_object_from_value (executable_object_p->frame_ctx.this_binding));
+  }
+
+  const ecma_compiled_code_t *bytecode_header_p = executable_object_p->frame_ctx.bytecode_header_p;
+  size_t register_end;
+
+  if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+  {
+    cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_header_p;
+    register_end = args_p->register_end;
+  }
+  else
+  {
+    cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_header_p;
+    register_end = args_p->register_end;
+  }
+
+  ecma_value_t *register_p = VM_GET_REGISTERS (&executable_object_p->frame_ctx);
+  ecma_value_t *register_end_p = register_p + register_end;
+
+  while (register_p < register_end_p)
+  {
+    if (ecma_is_value_object (*register_p))
+    {
+      ecma_gc_set_object_visited (ecma_get_object_from_value (*register_p));
+    }
+
+    register_p++;
+  }
+
+  register_p += executable_object_p->frame_ctx.context_depth;
+  register_end_p = executable_object_p->frame_ctx.stack_top_p;
+
+  while (register_p < register_end_p)
+  {
+    if (ecma_is_value_object (*register_p))
+    {
+      ecma_gc_set_object_visited (ecma_get_object_from_value (*register_p));
+    }
+
+    register_p++;
+  }
+} /* ecma_gc_mark_executable_object */
+
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * Mark objects as visited starting from specified object as root
@@ -435,6 +503,13 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             break;
           }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_CONTAINER) */
+#if ENABLED (JERRY_ES2015)
+          case LIT_MAGIC_STRING_GENERATOR_UL:
+          {
+            ecma_gc_mark_executable_object (object_p);
+            break;
+          }
+#endif /* ENABLED (JERRY_ES2015) */
           default:
           {
             break;
@@ -640,6 +715,100 @@ ecma_free_fast_access_array (ecma_object_t *object_p) /**< fast access mode arra
 
   ecma_dealloc_extended_object (object_p, sizeof (ecma_extended_object_t));
 } /* ecma_free_fast_access_array */
+
+#if ENABLED (JERRY_ES2015)
+
+/**
+ * Free non-objects referenced by inactive generator functions, async functions, etc.
+ *
+ * @return total object size
+ */
+static size_t
+ecma_gc_free_executable_object (ecma_object_t *object_p) /**< object */
+{
+  vm_executable_object_t *executable_object_p = (vm_executable_object_t *) object_p;
+
+  const ecma_compiled_code_t *bytecode_header_p = executable_object_p->frame_ctx.bytecode_header_p;
+  size_t size, register_end;
+
+  if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+  {
+    cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_header_p;
+
+    register_end = args_p->register_end;
+    size = (register_end + (size_t) args_p->stack_limit) * sizeof (ecma_value_t);
+  }
+  else
+  {
+    cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_header_p;
+
+    register_end = args_p->register_end;
+    size = (register_end + (size_t) args_p->stack_limit) * sizeof (ecma_value_t);
+  }
+
+  size = JERRY_ALIGNUP (sizeof (vm_executable_object_t) + size, sizeof (uintptr_t));
+
+  JERRY_ASSERT (!(executable_object_p->extended_object.u.class_prop.extra_info & ECMA_EXECUTABLE_OBJECT_RUNNING));
+
+  ecma_bytecode_deref ((ecma_compiled_code_t *) bytecode_header_p);
+
+  if (executable_object_p->extended_object.u.class_prop.extra_info & ECMA_EXECUTABLE_OBJECT_COMPLETED)
+  {
+    return size;
+  }
+
+  ecma_free_value_if_not_object (executable_object_p->frame_ctx.this_binding);
+
+  ecma_value_t *register_p = VM_GET_REGISTERS (&executable_object_p->frame_ctx);
+  ecma_value_t *register_end_p = register_p + register_end;
+
+  while (register_p < register_end_p)
+  {
+    ecma_free_value_if_not_object (*register_p++);
+  }
+
+  if (executable_object_p->frame_ctx.context_depth > 0)
+  {
+    ecma_value_t *context_end_p = register_p;
+
+    register_p += executable_object_p->frame_ctx.context_depth;
+
+    ecma_value_t *context_top_p = register_p;
+
+    do
+    {
+      context_top_p[-1] &= (uint32_t) ~VM_CONTEXT_HAS_LEX_ENV;
+
+      uint32_t offsets = vm_get_context_value_offsets (context_top_p);
+
+      while (VM_CONTEXT_HAS_NEXT_OFFSET (offsets))
+      {
+        int32_t offset = VM_CONTEXT_GET_NEXT_OFFSET (offsets);
+
+        if (ecma_is_value_object (context_top_p[offset]))
+        {
+          context_top_p[offset] = ECMA_VALUE_UNDEFINED;
+        }
+
+        offsets >>= VM_CONTEXT_OFFSET_SHIFT;
+      }
+
+      context_top_p = vm_stack_context_abort (&executable_object_p->frame_ctx, context_top_p);
+    }
+    while (context_top_p > context_end_p);
+  }
+
+  register_end_p = executable_object_p->frame_ctx.stack_top_p;
+
+  while (register_p < register_end_p)
+  {
+    ecma_free_value_if_not_object (*register_p++);
+  }
+
+  return size;
+} /* ecma_gc_free_executable_object */
+
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * Free properties of an object
@@ -930,6 +1099,13 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           break;
         }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW) */
+#if ENABLED (JERRY_ES2015)
+        case LIT_MAGIC_STRING_GENERATOR_UL:
+        {
+          ext_object_size = ecma_gc_free_executable_object (object_p);
+          break;
+        }
+#endif /* ENABLED (JERRY_ES2015) */
         default:
         {
           /* The undefined id represents an uninitialized class. */

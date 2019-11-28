@@ -855,16 +855,40 @@ ecma_fast_copy_value (ecma_value_t value)  /**< value description */
  *
  * @return copy of the given value
  */
-ecma_value_t
+inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_copy_value_if_not_object (ecma_value_t value) /**< value description */
 {
-  if (ecma_get_value_type_field (value) != ECMA_TYPE_OBJECT)
+  if (!ecma_is_value_object (value))
   {
     return ecma_copy_value (value);
   }
 
   return value;
 } /* ecma_copy_value_if_not_object */
+
+/**
+ * Increase reference counter of a value if it is an object.
+ */
+inline void JERRY_ATTR_ALWAYS_INLINE
+ecma_ref_if_object (ecma_value_t value) /**< value description */
+{
+  if (ecma_is_value_object (value))
+  {
+    ecma_ref_object (ecma_get_object_from_value (value));
+  }
+} /* ecma_ref_if_object */
+
+/**
+ * Decrease reference counter of a value if it is an object.
+ */
+inline void JERRY_ATTR_ALWAYS_INLINE
+ecma_deref_if_object (ecma_value_t value) /**< value description */
+{
+  if (ecma_is_value_object (value))
+  {
+    ecma_deref_object (ecma_get_object_from_value (value));
+  }
+} /* ecma_deref_if_object */
 
 /**
  * Assign a new value to an ecma-value

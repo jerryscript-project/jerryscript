@@ -101,12 +101,20 @@ vm_op_delete_var (ecma_value_t name_literal, ecma_object_t *lex_env_p);
 ecma_collection_t *
 opfunc_for_in (ecma_value_t left_value, ecma_value_t *result_obj_p);
 
+#if ENABLED (JERRY_ES2015)
+ecma_collection_t *
+opfunc_spread_arguments (ecma_value_t *stack_top_p, uint8_t argument_list_len);
+#endif /* ENABLED (JERRY_ES2015) */
+
 ecma_value_t
 opfunc_append_array (ecma_value_t *stack_top_p, uint16_t values_length);
 
 #if ENABLED (JERRY_ES2015)
-ecma_collection_t *
-opfunc_spread_arguments (ecma_value_t *stack_top_p, uint8_t argument_list_len);
+ecma_value_t
+opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p);
+
+ecma_value_t
+opfunc_resume_executable_object (vm_executable_object_t *executable_object_p, ecma_value_t value);
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**

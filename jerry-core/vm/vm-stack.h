@@ -79,9 +79,27 @@ typedef enum
 #define VM_CONTEXT_IS_FINALLY(context_type) \
   ((context_type) <= VM_CONTEXT_FINALLY_RETURN)
 
+/**
+ * Shift needs to be applied to get the next item of the offset array.
+ */
+#define VM_CONTEXT_OFFSET_SHIFT 4
+
+/**
+ * Checks whether an offset is available.
+ */
+#define VM_CONTEXT_HAS_NEXT_OFFSET(offsets) ((offsets) >= (1 << VM_CONTEXT_OFFSET_SHIFT))
+
+/**
+ * Gets the next offset from the offset array.
+ */
+#define VM_CONTEXT_GET_NEXT_OFFSET(offsets) (-((int32_t) ((offsets) & ((1 << VM_CONTEXT_OFFSET_SHIFT) - 1))))
+
 ecma_value_t *vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, ecma_value_t *vm_stack_top_p);
 bool vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, ecma_value_t **vm_stack_top_ref_p,
                             vm_stack_context_type_t finally_type, uint32_t search_limit);
+uint32_t vm_get_context_value_offsets (ecma_value_t *context_item_p);
+void vm_ref_lex_env_chain (ecma_object_t *lex_env_p, uint16_t context_depth,
+                           ecma_value_t *context_end_p, bool do_ref);
 
 /**
  * @}

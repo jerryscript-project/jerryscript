@@ -2062,7 +2062,47 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           frame_ctx_p->stack_top_p = stack_top_p;
           return ECMA_VALUE_UNDEFINED;
         }
- #endif /* ENABLED (JERRY_ES2015) */
+        case VM_OC_CREATE_GENERATOR:
+        {
+          frame_ctx_p->call_operation = VM_EXEC_RETURN;
+          frame_ctx_p->byte_code_p = byte_code_p;
+          frame_ctx_p->stack_top_p = stack_top_p;
+          return opfunc_create_executable_object (frame_ctx_p);
+        }
+        case VM_OC_YIELD:
+        {
+          frame_ctx_p->call_operation = VM_EXEC_RETURN;
+          frame_ctx_p->byte_code_p = byte_code_p;
+          frame_ctx_p->stack_top_p = stack_top_p;
+          return left_value;
+        }
+        case VM_OC_CONTINUE_EXEC:
+        {
+          if (JERRY_UNLIKELY (frame_ctx_p->call_operation == ECMA_GENERATOR_RETURN))
+          {
+            ecma_value_t *stack_bottom_p = VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth;
+
+            result = *(--stack_top_p);
+
+            while (stack_top_p > stack_bottom_p)
+            {
+              ecma_fast_free_value (*(--stack_top_p));
+            }
+
+            goto error;
+          }
+
+          if (JERRY_UNLIKELY (frame_ctx_p->call_operation == ECMA_GENERATOR_THROW))
+          {
+            JERRY_CONTEXT (error_value) = *(--stack_top_p);
+            JERRY_CONTEXT (status_flags) |= ECMA_STATUS_EXCEPTION;
+
+            result = ECMA_VALUE_ERROR;
+            goto error;
+          }
+          continue;
+        }
+#endif /* ENABLED (JERRY_ES2015) */
         case VM_OC_PUSH_ELISON:
         {
           *stack_top_p++ = ECMA_VALUE_ARRAY_HOLE;
@@ -3804,8 +3844,8 @@ free_both_values:
 free_left_value:
       ecma_fast_free_value (left_value);
     }
-error:
 
+error:
     ecma_fast_free_value (left_value);
     ecma_fast_free_value (right_value);
 
@@ -4031,7 +4071,7 @@ vm_init_exec (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
  *
  * @return ecma value
  */
-static ecma_value_t JERRY_ATTR_NOINLINE
+ecma_value_t JERRY_ATTR_NOINLINE
 vm_execute (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 {
   while (true)
@@ -4055,6 +4095,10 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
       {
         vm_spread_operation (frame_ctx_p);
         break;
+      }
+      case VM_EXEC_RETURN:
+      {
+        return completion_value;
       }
 #endif /* ENABLED (JERRY_ES2015) */
       case VM_EXEC_CONSTRUCT:

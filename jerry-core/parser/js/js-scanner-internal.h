@@ -175,6 +175,9 @@ typedef enum
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
   SCANNER_LITERAL_POOL_IN_EXPORT = (1 << 6), /**< the declared variables are exported by the module system */
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#if ENABLED (JERRY_ES2015)
+  SCANNER_LITERAL_POOL_GENERATOR = (1 << 7), /**< generator function */
+#endif /* ENABLED (JERRY_ES2015) */
 } scanner_literal_pool_flags_t;
 
 /**

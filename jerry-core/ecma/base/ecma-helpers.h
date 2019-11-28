@@ -218,6 +218,8 @@ ecma_value_t JERRY_ATTR_CONST ecma_invert_boolean_value (ecma_value_t value);
 ecma_value_t ecma_copy_value (ecma_value_t value);
 ecma_value_t ecma_fast_copy_value (ecma_value_t value);
 ecma_value_t ecma_copy_value_if_not_object (ecma_value_t value);
+void ecma_ref_if_object (ecma_value_t value);
+void ecma_deref_if_object (ecma_value_t value);
 ecma_value_t ecma_update_float_number (ecma_value_t float_value, ecma_number_t new_number);
 void ecma_value_assign_value (ecma_value_t *value_p, ecma_value_t ecma_value);
 void ecma_value_assign_number (ecma_value_t *value_p, ecma_number_t ecma_number);

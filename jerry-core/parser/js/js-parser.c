@@ -679,6 +679,11 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
   {
     JERRY_DEBUG_MSG (",constructor");
   }
+
+  if (compiled_code_p->status_flags & CBC_CODE_FLAGS_GENERATOR)
+  {
+    JERRY_DEBUG_MSG (",generator");
+  }
 #endif /* ENABLED (JERRY_ES2015) */
 
   JERRY_DEBUG_MSG ("]\n");
@@ -1276,6 +1281,11 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     compiled_code_p->status_flags |= CBC_CODE_FLAGS_CONSTRUCTOR;
   }
 
+  if (context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION)
+  {
+    compiled_code_p->status_flags |= CBC_CODE_FLAGS_GENERATOR;
+  }
+
   if (context_p->status_flags & PARSER_FUNCTION_HAS_REST_PARAM)
   {
     compiled_code_p->status_flags |= CBC_CODE_FLAGS_REST_PARAMETER;
@@ -1622,6 +1632,16 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 
   if (context_p->token.type == end_type)
   {
+#if ENABLED (JERRY_ES2015)
+    if (context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION)
+    {
+      parser_emit_cbc_ext (context_p, CBC_EXT_CREATE_GENERATOR);
+      parser_emit_cbc_ext (context_p, CBC_EXT_CONTINUE_EXEC);
+      parser_emit_cbc (context_p, CBC_POP);
+    }
+
+    context_p->status_flags &= (uint32_t) ~PARSER_DISALLOW_YIELD;
+#endif /* ENABLED (JERRY_ES2015) */
     scanner_create_variables (context_p, SCANNER_CREATE_VARS_NO_OPTS);
     return;
   }
@@ -1785,6 +1805,17 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 
     parser_raise_error (context_p, error);
   }
+
+#if ENABLED (JERRY_ES2015)
+  if (context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION)
+  {
+    parser_emit_cbc_ext (context_p, CBC_EXT_CREATE_GENERATOR);
+    parser_emit_cbc_ext (context_p, CBC_EXT_CONTINUE_EXEC);
+    parser_emit_cbc (context_p, CBC_POP);
+  }
+
+  context_p->status_flags &= (uint32_t) ~PARSER_DISALLOW_YIELD;
+#endif /* ENABLED (JERRY_ES2015) */
 
   scanner_revert_active (context_p);
   scanner_create_variables (context_p, SCANNER_CREATE_VARS_IS_FUNCTION_BODY);

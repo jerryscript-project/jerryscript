@@ -255,6 +255,9 @@ typedef enum
   VM_OC_REST_INITIALIZER,        /**< create rest object inside an array pattern */
   VM_OC_INITIALIZER_PUSH_PROP,   /**< push property for object initializer */
   VM_OC_SPREAD_ARGUMENTS,        /**< perform function call/construct with spreaded arguments */
+  VM_OC_CREATE_GENERATOR,        /**< create a generator object */
+  VM_OC_YIELD,                   /**< yield operation */
+  VM_OC_CONTINUE_EXEC,           /**< first byte code after a function is resumed */
 #endif /* ENABLED (JERRY_ES2015) */
   VM_OC_NONE,                    /**< a special opcode for unsupported byte codes */
 } vm_oc_types;
@@ -305,6 +308,9 @@ typedef enum
   VM_OC_REST_INITIALIZER = VM_OC_NONE,        /**< create rest object inside an array pattern */
   VM_OC_INITIALIZER_PUSH_PROP = VM_OC_NONE,   /**< push property for object initializer */
   VM_OC_SPREAD_ARGUMENTS = VM_OC_NONE,        /**< perform function call/construct with spreaded arguments */
+  VM_OC_CREATE_GENERATOR = VM_OC_NONE,        /**< create a generator object */
+  VM_OC_YIELD = VM_OC_NONE,                   /**< yield operation */
+  VM_OC_CONTINUE_EXEC = VM_OC_NONE,           /**< first byte code after a function is resumed */
 #endif /* !ENABLED (JERRY_ES2015) */
 
   VM_OC_UNUSED = VM_OC_NONE                   /**< placeholder if the list is empty */
@@ -388,6 +394,7 @@ typedef enum
   VM_EXEC_CALL,                  /**< invoke a function */
   VM_EXEC_SUPER_CALL,            /**< invoke a function through 'super' keyword */
   VM_EXEC_SPREAD_OP,             /**< call/construct operation with spreaded argument list */
+  VM_EXEC_RETURN,                /**< return with the completion value without freeing registers */
   VM_EXEC_CONSTRUCT,             /**< construct a new object */
 } vm_call_operation;
 
@@ -400,6 +407,7 @@ ecma_value_t vm_run_module (const ecma_compiled_code_t *bytecode_p, ecma_object_
 
 ecma_value_t vm_run (const ecma_compiled_code_t *bytecode_header_p, ecma_value_t this_binding_value,
                      ecma_object_t *lex_env_p, const ecma_value_t *arg_list_p, ecma_length_t arg_list_len);
+ecma_value_t vm_execute (vm_frame_ctx_t *frame_ctx_p);
 
 bool vm_is_strict_mode (void);
 bool vm_is_direct_eval_form_call (void);

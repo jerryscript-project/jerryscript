@@ -670,13 +670,15 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
   context_p->status_flags &= (uint32_t) ~(PARSER_MODULE_STORE_IDENT);
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
-  uint32_t status_flags = PARSER_IS_FUNCTION | PARSER_IS_CLOSURE;
+  uint32_t status_flags = PARSER_FUNCTION_CLOSURE;
+
   if (context_p->lit_object.type != LEXER_LITERAL_OBJECT_ANY)
   {
     JERRY_ASSERT (context_p->lit_object.type == LEXER_LITERAL_OBJECT_EVAL
                   || context_p->lit_object.type == LEXER_LITERAL_OBJECT_ARGUMENTS);
     status_flags |= PARSER_HAS_NON_STRICT_ARG;
   }
+
 #if ENABLED (JERRY_ES2015)
   if (is_generator_function)
   {

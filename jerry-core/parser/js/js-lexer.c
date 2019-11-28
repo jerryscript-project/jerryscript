@@ -323,7 +323,7 @@ lexer_skip_empty_statements (parser_context_t *context_p) /**< context */
   while (context_p->source_p < context_p->source_end_p
          && *context_p->source_p == LIT_CHAR_SEMICOLON)
   {
-    context_p->source_p++;
+    lexer_consume_next_character (context_p);
     lexer_skip_spaces (context_p);
   }
 
@@ -1472,7 +1472,7 @@ lexer_check_next_characters (parser_context_t *context_p, /**< context */
  *
  * @return consumed character
  */
-uint8_t
+inline uint8_t JERRY_ATTR_ALWAYS_INLINE
 lexer_consume_next_character (parser_context_t *context_p)
 {
   JERRY_ASSERT (context_p->source_p < context_p->source_end_p);
@@ -2171,6 +2171,8 @@ lexer_construct_function_object (parser_context_t *context_p, /**< context */
     parser_raise_error (context_p, PARSER_ERR_LITERAL_LIMIT_REACHED);
   }
 
+  parser_flush_cbc (context_p);
+
   if (context_p->status_flags & (PARSER_RESOLVE_BASE_FOR_CALLS | PARSER_INSIDE_WITH))
   {
     extra_status_flags |= PARSER_RESOLVE_BASE_FOR_CALLS;
@@ -2490,6 +2492,11 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
 {
   lexer_skip_spaces (context_p);
 
+  if (context_p->source_p >= context_p->source_end_p)
+  {
+    parser_raise_error (context_p, PARSER_ERR_PROPERTY_IDENTIFIER_EXPECTED);
+  }
+
 #if ENABLED (JERRY_ES2015)
   int is_class_method = ((ident_opts & LEXER_OBJ_IDENT_CLASS_METHOD)
                          && !(ident_opts & LEXER_OBJ_IDENT_ONLY_IDENTIFIERS)
@@ -2498,115 +2505,130 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
 
   context_p->token.line = context_p->line;
   context_p->token.column = context_p->column;
+  bool create_literal_object = false;
 
-  if (context_p->source_p < context_p->source_end_p)
+  if (lit_char_is_identifier_start (context_p->source_p) || context_p->source_p[0] == LIT_CHAR_BACKSLASH)
   {
-    bool create_literal_object = false;
+    lexer_parse_identifier (context_p, false);
 
-    if (lit_char_is_identifier_start (context_p->source_p) || context_p->source_p[0] == LIT_CHAR_BACKSLASH)
+    if (!(ident_opts & (LEXER_OBJ_IDENT_ONLY_IDENTIFIERS | LEXER_OBJ_IDENT_OBJECT_PATTERN))
+        && context_p->token.lit_location.length == 3)
     {
-      lexer_parse_identifier (context_p, false);
+      lexer_skip_spaces (context_p);
+      context_p->token.flags = (uint8_t) (context_p->token.flags | LEXER_NO_SKIP_SPACES);
 
-      if (!(ident_opts & (LEXER_OBJ_IDENT_ONLY_IDENTIFIERS | LEXER_OBJ_IDENT_OBJECT_PATTERN))
-          && context_p->token.lit_location.length == 3)
-      {
-        lexer_skip_spaces (context_p);
-        context_p->token.flags = (uint8_t) (context_p->token.flags | LEXER_NO_SKIP_SPACES);
-
-        if (context_p->source_p < context_p->source_end_p
+      if (context_p->source_p < context_p->source_end_p
 #if ENABLED (JERRY_ES2015)
-            && context_p->source_p[0] != LIT_CHAR_COMMA
-            && context_p->source_p[0] != LIT_CHAR_RIGHT_BRACE
-            && context_p->source_p[0] != LIT_CHAR_LEFT_PAREN
+          && context_p->source_p[0] != LIT_CHAR_COMMA
+          && context_p->source_p[0] != LIT_CHAR_RIGHT_BRACE
+          && context_p->source_p[0] != LIT_CHAR_LEFT_PAREN
 #endif /* ENABLED (JERRY_ES2015) */
-            && context_p->source_p[0] != LIT_CHAR_COLON)
+          && context_p->source_p[0] != LIT_CHAR_COLON)
+      {
+        if (lexer_compare_literal_to_string (context_p, "get", 3))
         {
-          if (lexer_compare_literal_to_string (context_p, "get", 3))
-          {
-            context_p->token.type = LEXER_PROPERTY_GETTER;
-            return;
-          }
-          else if (lexer_compare_literal_to_string (context_p, "set", 3))
-          {
-            context_p->token.type = LEXER_PROPERTY_SETTER;
-            return;
-          }
+          context_p->token.type = LEXER_PROPERTY_GETTER;
+          return;
+        }
+        else if (lexer_compare_literal_to_string (context_p, "set", 3))
+        {
+          context_p->token.type = LEXER_PROPERTY_SETTER;
+          return;
         }
       }
+    }
 
 #if ENABLED (JERRY_ES2015)
-      if (is_class_method && lexer_compare_literal_to_string (context_p, "static", 6))
-      {
-        context_p->token.type = LEXER_KEYW_STATIC;
-        return;
-      }
-#endif /* ENABLED (JERRY_ES2015) */
-
-      create_literal_object = true;
-    }
-    else if (context_p->source_p[0] == LIT_CHAR_DOUBLE_QUOTE
-             || context_p->source_p[0] == LIT_CHAR_SINGLE_QUOTE)
+    if (is_class_method && lexer_compare_literal_to_string (context_p, "static", 6))
     {
-      lexer_parse_string (context_p);
-      create_literal_object = true;
-    }
-#if ENABLED (JERRY_ES2015)
-    else if (context_p->source_p[0] == LIT_CHAR_LEFT_SQUARE)
-    {
-      context_p->source_p += 1;
-      context_p->column++;
-
-      lexer_next_token (context_p);
-      parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
-
-      if (context_p->token.type != LEXER_RIGHT_SQUARE)
-      {
-        parser_raise_error (context_p, PARSER_ERR_RIGHT_SQUARE_EXPECTED);
-      }
+      context_p->token.type = LEXER_KEYW_STATIC;
       return;
     }
 #endif /* ENABLED (JERRY_ES2015) */
-    else if (!(ident_opts & LEXER_OBJ_IDENT_ONLY_IDENTIFIERS) && context_p->source_p[0] == LIT_CHAR_RIGHT_BRACE)
-    {
-      context_p->token.type = LEXER_RIGHT_BRACE;
-      context_p->source_p += 1;
-      context_p->column++;
-      return;
-    }
-    else
-    {
-      const uint8_t *char_p = context_p->source_p;
 
-      if (char_p[0] == LIT_CHAR_DOT)
+    create_literal_object = true;
+  }
+  else
+  {
+    switch (context_p->source_p[0])
+    {
+      case LIT_CHAR_DOUBLE_QUOTE:
+      case LIT_CHAR_SINGLE_QUOTE:
       {
-        char_p++;
+        lexer_parse_string (context_p);
+        create_literal_object = true;
+        break;
       }
-
-      if (char_p < context_p->source_end_p
-          && char_p[0] >= LIT_CHAR_0
-          && char_p[0] <= LIT_CHAR_9)
-      {
-        lexer_parse_number (context_p);
-        lexer_construct_number_object (context_p, false, false);
-        return;
-      }
-    }
-
-    if (create_literal_object)
-    {
 #if ENABLED (JERRY_ES2015)
-      if (is_class_method && lexer_compare_literal_to_string (context_p, "constructor", 11))
+      case LIT_CHAR_LEFT_SQUARE:
       {
-        context_p->token.type = LEXER_CLASS_CONSTRUCTOR;
+        lexer_consume_next_character (context_p);
+
+        lexer_next_token (context_p);
+        parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
+
+        if (context_p->token.type != LEXER_RIGHT_SQUARE)
+        {
+          parser_raise_error (context_p, PARSER_ERR_RIGHT_SQUARE_EXPECTED);
+        }
         return;
       }
+      case LIT_CHAR_ASTERISK:
+#endif /* ENABLED (JERRY_ES2015) */
+      case LIT_CHAR_RIGHT_BRACE:
+      {
+        if (ident_opts & LEXER_OBJ_IDENT_ONLY_IDENTIFIERS)
+        {
+          break;
+        }
+
+        context_p->token.type = LEXER_RIGHT_BRACE;
+#if ENABLED (JERRY_ES2015)
+        if (context_p->source_p[0] == LIT_CHAR_ASTERISK)
+        {
+          context_p->token.type = LEXER_MULTIPLY;
+        }
 #endif /* ENABLED (JERRY_ES2015) */
 
-      lexer_construct_literal_object (context_p,
-                                      &context_p->token.lit_location,
-                                      LEXER_STRING_LITERAL);
+        lexer_consume_next_character (context_p);
+        return;
+      }
+      default:
+      {
+        const uint8_t *char_p = context_p->source_p;
+
+        if (char_p[0] == LIT_CHAR_DOT)
+        {
+          char_p++;
+        }
+
+        if (char_p < context_p->source_end_p
+            && char_p[0] >= LIT_CHAR_0
+            && char_p[0] <= LIT_CHAR_9)
+        {
+          lexer_parse_number (context_p);
+          lexer_construct_number_object (context_p, false, false);
+          return;
+        }
+        break;
+      }
+    }
+  }
+
+  if (create_literal_object)
+  {
+#if ENABLED (JERRY_ES2015)
+    if (is_class_method && lexer_compare_literal_to_string (context_p, "constructor", 11))
+    {
+      context_p->token.type = LEXER_CLASS_CONSTRUCTOR;
       return;
     }
+#endif /* ENABLED (JERRY_ES2015) */
+
+    lexer_construct_literal_object (context_p,
+                                    &context_p->token.lit_location,
+                                    LEXER_STRING_LITERAL);
+    return;
   }
 
   parser_raise_error (context_p, PARSER_ERR_PROPERTY_IDENTIFIER_EXPECTED);
@@ -2629,7 +2651,6 @@ lexer_scan_identifier (parser_context_t *context_p, /**< context */
     lexer_parse_identifier (context_p, false);
 
     if ((ident_opts & LEXER_SCAN_IDENT_PROPERTY)
-        && !(ident_opts & LEXER_SCAN_IDENT_NO_KEYW)
         && context_p->token.lit_location.length == 3)
     {
       lexer_skip_spaces (context_p);
@@ -2653,41 +2674,11 @@ lexer_scan_identifier (parser_context_t *context_p, /**< context */
         }
       }
     }
+
     return;
   }
 
-  if (ident_opts & LEXER_SCAN_IDENT_PROPERTY)
-  {
-    lexer_next_token (context_p);
-
-    if (context_p->token.type == LEXER_LITERAL
-#if ENABLED (JERRY_ES2015)
-        || context_p->token.type == LEXER_LEFT_SQUARE
-#endif /* ENABLED (JERRY_ES2015) */
-        || context_p->token.type == LEXER_RIGHT_BRACE)
-    {
-      return;
-    }
-  }
-#if ENABLED (JERRY_ES2015)
-  if (ident_opts & LEXER_SCAN_CLASS_PROPERTY)
-  {
-    lexer_next_token (context_p);
-
-    if (context_p->token.type == LEXER_LITERAL
-#if ENABLED (JERRY_ES2015)
-        || context_p->token.type == LEXER_LEFT_SQUARE
-#endif /* ENABLED (JERRY_ES2015) */
-        || context_p->token.type == LEXER_RIGHT_BRACE
-        || context_p->token.type == LEXER_SEMICOLON
-        || ((ident_opts & LEXER_SCAN_CLASS_LEFT_PAREN) && context_p->token.type == LEXER_LEFT_PAREN))
-    {
-      return;
-    }
-  }
-#endif /* ENABLED (JERRY_ES2015) */
-
-  parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
+  lexer_next_token (context_p);
 } /* lexer_scan_identifier */
 
 /**

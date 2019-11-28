@@ -130,7 +130,8 @@ ecma_builtin_set_prototype_object_size_getter (ecma_value_t this_arg) /**< this 
   return ecma_op_container_size (this_arg, LIT_MAGIC_STRING_SET_UL);
 } /* ecma_builtin_set_prototype_object_size_getter */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+#if ENABLED (JERRY_ES2015)
+
 /**
  * The Set.prototype object's 'entries' routine
  *
@@ -188,7 +189,7 @@ ecma_builtin_set_prototype_object_values (ecma_value_t this_arg) /**< this argum
                                             ECMA_PSEUDO_SET_ITERATOR);
 } /* ecma_builtin_set_prototype_object_values */
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * @}

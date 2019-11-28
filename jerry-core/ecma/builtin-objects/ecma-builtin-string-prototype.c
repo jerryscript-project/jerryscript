@@ -1512,7 +1512,8 @@ ecma_builtin_string_prototype_object_substr (ecma_string_t *this_string_p, /**< 
 
 #endif /* ENABLED (JERRY_BUILTIN_ANNEXB) */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+#if ENABLED (JERRY_ES2015)
+
 /**
  * The String.prototype object's @@iterator routine
  *
@@ -1530,7 +1531,8 @@ ecma_builtin_string_prototype_object_iterator (ecma_value_t to_string) /**< this
                                          ECMA_PSEUDO_STRING_ITERATOR,
                                          0);
 } /* ecma_builtin_string_prototype_object_iterator */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
+
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * Dispatcher of the built-in's routines
@@ -1668,13 +1670,13 @@ ecma_builtin_string_prototype_dispatch_routine (uint16_t builtin_routine_id, /**
       break;
     }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN) */
-#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+#if ENABLED (JERRY_ES2015)
     case ECMA_STRING_PROTOTYPE_ITERATOR:
     {
       ret_value = ecma_builtin_string_prototype_object_iterator (to_string_val);
       break;
     }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
+#endif /* ENABLED (JERRY_ES2015) */
     default:
     {
       JERRY_UNREACHABLE ();

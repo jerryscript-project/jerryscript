@@ -524,15 +524,6 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_SYMBOL,
                  true,
                  symbol)
 
-BUILTIN (ECMA_BUILTIN_ID_GENERATOR_PROTOTYPE,
-         ECMA_OBJECT_TYPE_GENERAL,
-         ECMA_BUILTIN_ID_ITERATOR_PROTOTYPE,
-         true,
-         generator_prototype)
-
-#endif /* ENABLED (JERRY_ES2015) */
-
-#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
 /* The %IteratorPrototype% object (ECMA-262 v6, 25.1.2) */
 BUILTIN (ECMA_BUILTIN_ID_ITERATOR_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
@@ -554,6 +545,12 @@ BUILTIN (ECMA_BUILTIN_ID_STRING_ITERATOR_PROTOTYPE,
          true,
          string_iterator_prototype)
 
+BUILTIN (ECMA_BUILTIN_ID_GENERATOR_PROTOTYPE,
+         ECMA_OBJECT_TYPE_GENERAL,
+         ECMA_BUILTIN_ID_ITERATOR_PROTOTYPE,
+         true,
+         generator_prototype)
+
 #if ENABLED (JERRY_ES2015_BUILTIN_SET)
 /* The %SetIteratorPrototype% object (ECMA-262 v6, 23.2.5.2) */
 BUILTIN (ECMA_BUILTIN_ID_SET_ITERATOR_PROTOTYPE,
@@ -571,7 +568,7 @@ BUILTIN (ECMA_BUILTIN_ID_MAP_ITERATOR_PROTOTYPE,
          true,
          map_iterator_prototype)
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_SET) */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
+#endif /* ENABLED (JERRY_ES2015) */
 
 #if ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW)
 /* The DataView prototype object (ECMA-262 v6, 24.2.3.1) */

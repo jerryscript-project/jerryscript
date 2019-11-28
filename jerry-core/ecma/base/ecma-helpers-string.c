@@ -499,7 +499,8 @@ ecma_new_ecma_string_from_code_unit (ecma_char_t code_unit) /**< code unit */
   return ecma_new_ecma_string_from_utf8 (lit_utf8_bytes, bytes_size);
 } /* ecma_new_ecma_string_from_code_unit */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+#if ENABLED (JERRY_ES2015)
+
 /**
  * Allocate new ecma-string and fill it with cesu-8 character which represents specified code units
  *
@@ -515,7 +516,8 @@ ecma_new_ecma_string_from_code_units (ecma_char_t first_code_unit, /**< code uni
 
   return ecma_new_ecma_string_from_utf8 (lit_utf8_bytes, bytes_size);
 } /* ecma_new_ecma_string_from_code_units */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
+
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * Allocate new ecma-string and fill it with ecma-number

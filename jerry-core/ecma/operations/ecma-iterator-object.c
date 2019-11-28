@@ -35,7 +35,8 @@
  * @{
  */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+#if ENABLED (JERRY_ES2015)
+
 /**
  * Implementation of 'CreateArrayFromList' specialized for iterators
  *
@@ -485,7 +486,9 @@ ecma_op_iterator_close (ecma_value_t iterator) /**< iterator value */
   JERRY_CONTEXT (status_flags) |= ECMA_STATUS_EXCEPTION;
   return ECMA_VALUE_ERROR;
 } /* ecma_op_iterator_close */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
+
+#endif /* ENABLED (JERRY_ES2015) */
+
 /**
  * @}
  * @}

@@ -2396,7 +2396,8 @@ ecma_builtin_array_prototype_object_copy_within (const ecma_value_t args[], /**<
 } /* ecma_builtin_array_prototype_object_copy_within */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN) */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+#if ENABLED (JERRY_ES2015)
+
 /**
  * Helper function for Array.prototype object's {'keys', 'values', 'entries', '@@iterator'}
  * routines common parts.
@@ -2425,7 +2426,8 @@ ecma_builtin_array_iterators_helper (ecma_object_t *obj_p, /**< array object */
                                          ECMA_PSEUDO_ARRAY_ITERATOR,
                                          type);
 } /* ecma_builtin_array_iterators_helper */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
+
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * Dispatcher of the built-in's routines
@@ -2470,7 +2472,7 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
     return ret_value;
   }
 
-#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+#if ENABLED (JERRY_ES2015)
   if (JERRY_UNLIKELY (builtin_routine_id >= ECMA_ARRAY_PROTOTYPE_ENTRIES
                       && builtin_routine_id <= ECMA_ARRAY_PROTOTYPE_SYMBOL_ITERATOR))
   {
@@ -2495,7 +2497,7 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
     ecma_deref_object (obj_p);
     return ret_value;
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   uint32_t length;
   ecma_value_t len_value = ecma_op_object_get_length (obj_p, &length);

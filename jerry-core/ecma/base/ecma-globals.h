@@ -653,7 +653,8 @@ typedef enum
   ECMA_LEXICAL_ENVIRONMENT_TYPE__MAX = ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND /**< maximum value */
 } ecma_lexical_environment_type_t;
 
-#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+#if ENABLED (JERRY_ES2015)
+
 /**
  * Types of array iterators.
  */
@@ -663,7 +664,8 @@ typedef enum
   ECMA_ITERATOR_VALUES, /**< List only key values */
   ECMA_ITERATOR_KEYS_VALUES, /**< List key indices and values */
 } ecma_iterator_type_t;
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
+
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * Offset for JERRY_CONTEXT (status_flags) top 8 bits.

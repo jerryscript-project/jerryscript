@@ -32,7 +32,6 @@ Alternatively, if you want to use a custom profile at
 # Turn off every ES2015 feature EXCEPT the module system
 JERRY_ES2015_BUILTIN=0
 JERRY_ES2015_BUILTIN_DATAVIEW=0
-JERRY_ES2015_BUILTIN_ITERATOR=0
 JERRY_ES2015_BUILTIN_MAP=0
 JERRY_ES2015_BUILTIN_PROMISE=0
 JERRY_ES2015_BUILTIN_SET=0
@@ -104,8 +103,6 @@ defined to `1`.
   Enables or disables the built-in updates of the 5.1 standard. There are some differences in those built-ins which available in both [5.1](http://www.ecma-international.org/ecma-262/5.1/) and [2015](http://www.ecma-international.org/ecma-262/6.0/) versions of the standard. JerryScript uses the latest definition by default.
 * `JERRY_ES2015_BUILTIN_DATAVIEW`:
   Enables or disables the [DataView](https://www.ecma-international.org/ecma-262/6.0/#sec-dataview-objects) built-in.
-* `JERRY_ES2015_BUILTIN_ITERATOR`:
-  Enables or disables the [Iterator](https://www.ecma-international.org/ecma-262/6.0/#sec-iterator-interface) built-in.
 * `JERRY_ES2015_BUILTIN_MAP`:
   Enables or disables the [Map](http://www.ecma-international.org/ecma-262/6.0/#sec-keyed-collection) built-ins.
 * `JERRY_ES2015_BUILTIN_SET`:
@@ -125,6 +122,7 @@ defined to `1`.
   * [enhanced object initializer](http://www.ecma-international.org/ecma-262/6.0/#sec-object-initializer) language element.
   * [for-of](https://www.ecma-international.org/ecma-262/6.0/#sec-for-in-and-for-of-statements) language element.
   * [generator functions](http://www.ecma-international.org/ecma-262/6.0/#sec-generator-function-definitions) language element.
+  * [iterator](https://www.ecma-international.org/ecma-262/6.0/#sec-iterator-interface) built-in.
   * [rest parameter](http://www.ecma-international.org/ecma-262/6.0/#sec-function-definitions) language element.
   * [symbol](https://www.ecma-international.org/ecma-262/6.0/#sec-symbol-objects) language element.
   * [template strings](http://www.ecma-international.org/ecma-262/6.0/#sec-static-semantics-templatestrings) language element.
@@ -132,7 +130,6 @@ defined to `1`.
   Equivalent with setting the following defines to the `JERRY_ES2015` value:
     * `JERRY_ES2015_BUILTIN`
     * `JERRY_ES2015_BUILTIN_DATAVIEW`
-    * `JERRY_ES2015_BUILTIN_ITERATOR`
     * `JERRY_ES2015_BUILTIN_MAP`
     * `JERRY_ES2015_BUILTIN_SET`
     * `JERRY_ES2015_BUILTIN_PROMISE`

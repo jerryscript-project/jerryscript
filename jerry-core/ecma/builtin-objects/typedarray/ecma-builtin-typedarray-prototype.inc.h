@@ -76,14 +76,14 @@ ROUTINE (LIT_MAGIC_STRING_COPY_WITHIN, ecma_builtin_typedarray_prototype_copy_wi
 ROUTINE (LIT_MAGIC_STRING_SLICE, ecma_builtin_typedarray_prototype_slice, NON_FIXED, 2)
 ROUTINE (LIT_MAGIC_STRING_TO_LOCALE_STRING_UL, ecma_builtin_typedarray_prototype_to_locale_string, 0, 0)
 
-#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+#if ENABLED (JERRY_ES2015)
 
 ROUTINE (LIT_MAGIC_STRING_KEYS, ecma_builtin_typedarray_prototype_keys, 0, 0)
 ROUTINE (LIT_MAGIC_STRING_VALUES, ecma_builtin_typedarray_prototype_values, 0, 0)
 ROUTINE (LIT_MAGIC_STRING_ENTRIES, ecma_builtin_typedarray_prototype_entries, 0, 0)
 ROUTINE (LIT_GLOBAL_SYMBOL_ITERATOR, ecma_builtin_typedarray_prototype_values, 0, 0)
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
+#endif /* ENABLED (JERRY_ES2015) */
 
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
 

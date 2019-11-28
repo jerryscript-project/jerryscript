@@ -2096,7 +2096,8 @@ ecma_builtin_array_reduce_from (ecma_value_t callbackfn, /**< routine's 1st argu
   return accumulator;
 } /* ecma_builtin_array_reduce_from */
 
-#if ENABLED (JERRY_ES2015_BUILTIN)
+#if ENABLED (JERRY_ES2015)
+
 /**
  * The Array.prototype object's 'fill' routine
  *
@@ -2394,9 +2395,6 @@ ecma_builtin_array_prototype_object_copy_within (const ecma_value_t args[], /**<
 
   return ecma_copy_value (ecma_make_object_value (obj_p));
 } /* ecma_builtin_array_prototype_object_copy_within */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
-
-#if ENABLED (JERRY_ES2015)
 
 /**
  * Helper function for Array.prototype object's {'keys', 'values', 'entries', '@@iterator'}
@@ -2625,7 +2623,7 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
                                                   length);
       break;
     }
-#if ENABLED (JERRY_ES2015_BUILTIN)
+#if ENABLED (JERRY_ES2015)
     case ECMA_ARRAY_PROTOTYPE_COPY_WITHIN:
     {
       ret_value = ecma_builtin_array_prototype_object_copy_within (arguments_list_p,
@@ -2653,7 +2651,7 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
                                                      length);
       break;
     }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
+#endif /* ENABLED (JERRY_ES2015) */
     default:
     {
       JERRY_ASSERT (builtin_routine_id == ECMA_ARRAY_PROTOTYPE_FILTER);

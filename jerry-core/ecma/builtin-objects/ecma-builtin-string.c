@@ -110,7 +110,8 @@ ecma_builtin_string_object_from_char_code (ecma_value_t this_arg, /**< 'this' ar
   return ret_value;
 } /* ecma_builtin_string_object_from_char_code */
 
-#if ENABLED (JERRY_ES2015_BUILTIN)
+#if ENABLED (JERRY_ES2015)
+
 /**
  * The String object's 'fromCodePoint' routine
  *
@@ -177,7 +178,8 @@ ecma_builtin_string_object_from_code_point (ecma_value_t this_arg, /**< 'this' a
 
   return ecma_make_string_value (ret_str_p);
 } /* ecma_builtin_string_object_from_code_point */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
+
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * Handle calling [[Call]] of built-in String object

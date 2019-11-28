@@ -741,11 +741,11 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
         {
           ECMA_NUMBER_MAX_VALUE,
           ECMA_NUMBER_MIN_VALUE,
-#if ENABLED (JERRY_ES2015_BUILTIN)
+#if ENABLED (JERRY_ES2015)
           ECMA_NUMBER_EPSILON,
           ECMA_NUMBER_MAX_SAFE_INTEGER,
           ECMA_NUMBER_MIN_SAFE_INTEGER,
-#endif /* ENABLED (JERRY_BUILTIN_NUMBER) */
+#endif /* ENABLED (JERRY_ES2015) */
           ECMA_NUMBER_E,
           ECMA_NUMBER_PI,
           ECMA_NUMBER_LN10,

@@ -3446,7 +3446,7 @@ jerry_create_arraybuffer (const jerry_length_t size) /**< size of the ArrayBuffe
  *     * the size is specified in bytes.
  *     * the buffer passed should be at least the specified bytes big.
  *     * if the typed arrays are disabled this will return a TypeError.
- *     * if the size is zero or the buffer_p is a null pointer this will return a RangeError.
+ *     * if the size is zero or buffer_p is a null pointer this will return an empty ArrayBuffer.
  *
  * @return value of the construced ArrayBuffer object
  */
@@ -3458,14 +3458,19 @@ jerry_create_arraybuffer_external (const jerry_length_t size, /**< size of the b
   jerry_assert_api_available ();
 
 #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
-  if (size == 0 || buffer_p == NULL)
+  ecma_object_t *arraybuffer;
+
+  if (JERRY_UNLIKELY (size == 0 || buffer_p == NULL))
   {
-    return jerry_throw (ecma_raise_range_error (ECMA_ERR_MSG ("invalid buffer size or storage reference")));
+    arraybuffer = ecma_arraybuffer_new_object_external (0, NULL, (ecma_object_native_free_callback_t) free_cb);
+  }
+  else
+  {
+    arraybuffer = ecma_arraybuffer_new_object_external (size,
+                                                        buffer_p,
+                                                        (ecma_object_native_free_callback_t) free_cb);
   }
 
-  ecma_object_t *arraybuffer = ecma_arraybuffer_new_object_external (size,
-                                                                     buffer_p,
-                                                                     (ecma_object_native_free_callback_t) free_cb);
   return jerry_return (ecma_make_object_value (arraybuffer));
 #else /* !ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
   JERRY_UNUSED (size);

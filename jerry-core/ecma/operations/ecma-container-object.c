@@ -779,7 +779,7 @@ ecma_op_container_remove_weak_entry (ecma_object_t *container_p, /**< internal c
   ((ecma_extended_object_t *) container_p)->u.class_prop.u.length--;
 } /* ecma_op_container_remove_weak_entry */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+#if ENABLED (JERRY_ES2015)
 
 /**
  * The Create{Set, Map}Iterator Abstract operation
@@ -974,7 +974,8 @@ ecma_op_container_iterator_next (ecma_value_t this_val, /**< this argument */
   return ret_value;
 } /* ecma_op_container_iterator_next */
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
+#endif /* ENABLED (JERRY_ES2015) */
+
 /**
  * @}
  * @}

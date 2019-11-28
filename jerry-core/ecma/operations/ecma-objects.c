@@ -2340,22 +2340,22 @@ ecma_object_check_class_name_is_object (ecma_object_t *obj_p) /**< object */
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_FLOAT64ARRAY_PROTOTYPE)
 #endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
-#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+#if ENABLED (JERRY_ES2015)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_ARRAY_ITERATOR_PROTOTYPE)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_ITERATOR_PROTOTYPE)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_STRING_ITERATOR_PROTOTYPE)
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
+#endif /* ENABLED (JERRY_ES2015) */
 #if ENABLED (JERRY_ES2015_BUILTIN_MAP)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_MAP_PROTOTYPE)
-#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+#if ENABLED (JERRY_ES2015)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_MAP_ITERATOR_PROTOTYPE)
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
+#endif /* ENABLED (JERRY_ES2015) */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
 #if ENABLED (JERRY_ES2015_BUILTIN_SET)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_SET_PROTOTYPE)
-#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+#if ENABLED (JERRY_ES2015)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_SET_ITERATOR_PROTOTYPE)
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
+#endif /* ENABLED (JERRY_ES2015) */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_SET) */
 #if ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_WEAKMAP_PROTOTYPE)
@@ -2410,7 +2410,7 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
           return (lit_magic_string_id_t) ext_obj_p->u.pseudo_array.u1.class_id;
         }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
-#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+#if ENABLED (JERRY_ES2015)
         case ECMA_PSEUDO_ARRAY_ITERATOR:
         {
           return LIT_MAGIC_STRING_ARRAY_ITERATOR_UL;
@@ -2423,13 +2423,13 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
         {
           return LIT_MAGIC_STRING_MAP_ITERATOR_UL;
         }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
-#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+#endif /* ENABLED (JERRY_ES2015) */
+#if ENABLED (JERRY_ES2015)
         case ECMA_PSEUDO_STRING_ITERATOR:
         {
           return LIT_MAGIC_STRING_STRING_ITERATOR_UL;
         }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
+#endif /* ENABLED (JERRY_ES2015) */
         default:
         {
           JERRY_ASSERT (ext_obj_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS);

@@ -333,7 +333,8 @@ ecma_builtin_typedarray_prototype_for_each (ecma_value_t this_arg, /**< this arg
 } /* ecma_builtin_typedarray_prototype_for_each */
 
 
-#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+#if ENABLED (JERRY_ES2015)
+
 /**
  * Helper function for typedArray.prototype object's {'keys', 'values', 'entries', '@@iterator'}
  * routines common parts.
@@ -415,7 +416,7 @@ ecma_builtin_typedarray_prototype_entries (ecma_value_t this_arg) /**< this argu
   return ecma_builtin_typedarray_iterators_helper (this_arg, ECMA_ITERATOR_KEYS_VALUES);
 } /* ecma_builtin_typedarray_prototype_entries */
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * The %TypedArray%.prototype object's 'map' routine

@@ -532,7 +532,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             break;
           }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
-#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+#if ENABLED (JERRY_ES2015)
           case ECMA_PSEUDO_ARRAY_ITERATOR:
           case ECMA_PSEUDO_SET_ITERATOR:
           case ECMA_PSEUDO_MAP_ITERATOR:
@@ -548,7 +548,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
           {
             break;
           }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
+#endif /* ENABLED (JERRY_ES2015) */
           default:
           {
             JERRY_ASSERT (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS);
@@ -1199,7 +1199,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           break;
         }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
-#if ENABLED (JERRY_ES2015_BUILTIN_ITERATOR)
+#if ENABLED (JERRY_ES2015)
         case ECMA_PSEUDO_STRING_ITERATOR:
         {
           ecma_value_t iterated_value = ext_object_p->u.pseudo_array.u2.iterated_value;
@@ -1211,7 +1211,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 
           break;
         }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_ITERATOR) */
+#endif /* ENABLED (JERRY_ES2015) */
         default:
         {
           JERRY_ASSERT (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_TYPEDARRAY

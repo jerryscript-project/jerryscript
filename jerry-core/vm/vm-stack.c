@@ -119,7 +119,7 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
  * @return branch offset
  */
 static uint32_t
-vm_decode_branch_offset (uint8_t *branch_offset_p, /**< start offset of byte code */
+vm_decode_branch_offset (const uint8_t *branch_offset_p, /**< start offset of byte code */
                          uint32_t length) /**< length of the branch */
 {
   uint32_t branch_offset = *branch_offset_p;
@@ -180,7 +180,7 @@ vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
     context_type = VM_GET_CONTEXT_TYPE (vm_stack_top_p[-1]);
     if (context_type == VM_CONTEXT_TRY || context_type == VM_CONTEXT_CATCH)
     {
-      uint8_t *byte_code_p;
+      const uint8_t *byte_code_p;
       uint32_t branch_offset_length;
       uint32_t branch_offset;
 

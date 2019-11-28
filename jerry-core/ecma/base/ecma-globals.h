@@ -1769,16 +1769,6 @@ typedef enum
 #define ECMA_EXECUTABLE_OBJECT_IS_SUSPENDED(extra_info) \
   (!((extra_info) & (ECMA_EXECUTABLE_OBJECT_COMPLETED | ECMA_EXECUTABLE_OBJECT_RUNNING)))
 
-/**
- * Executable (e.g. generator, async) object flags.
- */
-typedef enum
-{
-  ECMA_GENERATOR_NEXT, /**< generator should continue its execution */
-  ECMA_GENERATOR_RETURN, /**< generator should perform a return operation */
-  ECMA_GENERATOR_THROW, /**< generator should perform a throw operation */
-} ecma_generator_yield_mode_t;
-
 #endif /* ENABLED (JERRY_ES2015) */
 
 #if ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW)

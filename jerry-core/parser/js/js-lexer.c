@@ -2317,6 +2317,14 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
     {
       flag = RE_FLAG_MULTILINE;
     }
+    else if (source_p[0] == LIT_CHAR_LOWERCASE_U)
+    {
+      flag = RE_FLAG_UNICODE;
+    }
+    else if (source_p[0] == LIT_CHAR_LOWERCASE_Y)
+    {
+      flag = RE_FLAG_STICKY;
+    }
 
     if (flag == 0)
     {

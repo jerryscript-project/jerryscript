@@ -101,8 +101,8 @@ ecma_value_t ecma_op_create_regexp_object_from_bytecode (re_compiled_code_t *byt
 ecma_value_t ecma_op_create_regexp_object (ecma_string_t *pattern_p, uint16_t flags);
 ecma_value_t ecma_regexp_exec_helper (ecma_value_t regexp_value, ecma_value_t input_string, bool ignore_global);
 ecma_string_t *ecma_regexp_read_pattern_str_helper (ecma_value_t pattern_arg);
-ecma_char_t ecma_regexp_canonicalize (ecma_char_t ch, bool is_ignorecase);
-ecma_char_t ecma_regexp_canonicalize_char (ecma_char_t ch);
+lit_code_point_t ecma_regexp_canonicalize (lit_code_point_t ch, bool is_ignorecase);
+lit_code_point_t ecma_regexp_canonicalize_char (lit_code_point_t ch);
 ecma_value_t ecma_regexp_parse_flags (ecma_string_t *flags_str_p, uint16_t *flags_p);
 void ecma_regexp_initialize_props (ecma_object_t *re_obj_p, ecma_string_t *source_p, uint16_t flags);
 

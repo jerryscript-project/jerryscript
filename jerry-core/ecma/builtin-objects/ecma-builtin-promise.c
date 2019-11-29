@@ -128,6 +128,7 @@ ecma_builtin_promise_reject_abrupt (ecma_value_t capability) /**< reject descrip
 {
   ecma_raise_type_error (ECMA_ERR_MSG ("Second argument is not an array."));
   ecma_value_t reason = JERRY_CONTEXT (error_value);
+  JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_EXCEPTION;
   ecma_string_t *reject_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REJECT);
   ecma_value_t reject = ecma_op_object_get (ecma_get_object_from_value (capability), reject_str_p);
 

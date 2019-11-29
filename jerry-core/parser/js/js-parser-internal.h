@@ -121,6 +121,11 @@ typedef enum
  */
 #define PARSER_STRICT_MODE_MASK 0x1
 
+/**
+ * Shorthand for function closure definition
+ */
+#define PARSER_FUNCTION_CLOSURE (PARSER_IS_FUNCTION | PARSER_IS_CLOSURE)
+
 #if ENABLED (JERRY_ES2015)
 /**
  * Offset between PARSER_CLASS_CONSTRUCTOR and ECMA_PARSE_CLASS_CONSTRUCTOR
@@ -183,6 +188,7 @@ typedef enum
 #define PARSER_CBC_STREAM_PAGE_SIZE \
   ((uint32_t) (64 - sizeof (void *)))
 
+/* Defines the size of the max page. */
 #define PARSER_STACK_PAGE_SIZE \
   ((uint32_t) (((sizeof (void *) > 4) ? 128 : 64) - sizeof (void *)))
 

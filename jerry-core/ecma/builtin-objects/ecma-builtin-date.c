@@ -133,10 +133,6 @@ ecma_date_parse_year (const lit_utf8_byte_t **str_p, /**< pointer to the cesu8 s
     return parsed_year;
   }
 
-  if (is_year_sign_negative)
-  {
-    str_p--; /* Parse failed, revert already parsed '-' sign. */
-  }
   return ecma_number_make_nan ();
 } /* ecma_date_parse_year */
 

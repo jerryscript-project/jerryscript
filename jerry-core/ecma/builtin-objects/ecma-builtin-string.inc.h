@@ -41,9 +41,9 @@ OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_MAGIC_STRING_FROM_CHAR_CODE_UL, ecma_builtin_string_object_from_char_code, NON_FIXED, 1)
 
-#if ENABLED (JERRY_ES2015_BUILTIN)
+#if ENABLED (JERRY_ES2015)
 ROUTINE (LIT_MAGIC_STRING_FROM_CODE_POINT_UL, ecma_builtin_string_object_from_code_point, NON_FIXED, 1)
-#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
+#endif /* ENABLED (JERRY_ES2015) */
 
 #endif /* ENABLED (JERRY_BUILTIN_STRING) */
 

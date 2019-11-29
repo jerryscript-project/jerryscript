@@ -148,7 +148,8 @@ ecma_builtin_object_object_get_prototype_of (ecma_object_t *obj_p) /**< routine'
   return ECMA_VALUE_NULL;
 } /* ecma_builtin_object_object_get_prototype_of */
 
-#if ENABLED (JERRY_ES2015_BUILTIN)
+#if ENABLED (JERRY_ES2015)
+
 /**
  * [[SetPrototypeOf]]
  *
@@ -257,7 +258,8 @@ ecma_builtin_object_object_set_prototype_of (ecma_value_t arg1, /**< routine's f
   /* 5-8. */
   return ecma_set_prototype_of (arg1, arg2);
 } /* ecma_builtin_object_object_set_prototype_of */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
+
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * The Object object's 'getOwnPropertyNames' routine
@@ -275,6 +277,7 @@ ecma_builtin_object_object_get_own_property_names (ecma_object_t *obj_p) /**< ro
 } /* ecma_builtin_object_object_get_own_property_names */
 
 #if ENABLED (JERRY_ES2015)
+
 /**
  * The Object object's 'getOwnPropertySymbols' routine
  *
@@ -289,6 +292,7 @@ ecma_builtin_object_object_get_own_property_symbols (ecma_object_t *obj_p) /**< 
 {
   return ecma_builtin_helper_object_get_properties (obj_p, ECMA_LIST_SYMBOLS);
 } /* ecma_builtin_object_object_get_own_property_symbols */
+
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**
@@ -740,8 +744,8 @@ ecma_builtin_object_object_define_property (ecma_object_t *obj_p, /**< routine's
   return ecma_make_object_value (obj_p);
 } /* ecma_builtin_object_object_define_property */
 
+#if ENABLED (JERRY_ES2015)
 
-#if ENABLED (JERRY_ES2015_BUILTIN)
 /**
  * The Object object's 'assign' routine
  *
@@ -838,9 +842,7 @@ ecma_builtin_object_object_assign (ecma_object_t *target_p, /**< target object *
 
   return ret_value;
 } /* ecma_builtin_object_object_assign */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
 
-#if ENABLED (JERRY_ES2015_BUILTIN)
 /**
  * The Object object's 'is' routine
  *
@@ -856,8 +858,8 @@ ecma_builtin_object_object_is (ecma_value_t arg1, /**< routine's first argument 
 {
   return ecma_op_same_value (arg1, arg2) ? ECMA_VALUE_TRUE : ECMA_VALUE_FALSE;
 } /* ecma_builtin_object_object_is */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
 
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * Dispatcher of the built-in's routines
@@ -887,7 +889,7 @@ ecma_builtin_object_dispatch_routine (uint16_t builtin_routine_id, /**< built-in
     {
       return ecma_builtin_object_object_create (arg1, arg2);
     }
-#if ENABLED (JERRY_ES2015_BUILTIN)
+#if ENABLED (JERRY_ES2015)
     case ECMA_OBJECT_ROUTINE_SET_PROTOTYPE_OF:
     {
       return ecma_builtin_object_object_set_prototype_of (arg1, arg2);
@@ -896,7 +898,7 @@ ecma_builtin_object_dispatch_routine (uint16_t builtin_routine_id, /**< built-in
     {
       return ecma_builtin_object_object_is (arg1, arg2);
     }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
+#endif /* ENABLED (JERRY_ES2015) */
     default:
     {
       break;

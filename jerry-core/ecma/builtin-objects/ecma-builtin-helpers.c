@@ -567,7 +567,7 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_string_t *original_st
   /* 5 (indexOf) -- 6 (lastIndexOf) */
   const ecma_length_t original_len = ecma_string_get_length (original_str_p);
 
-#if ENABLED (JERRY_ES2015_BUILTIN)
+#if ENABLED (JERRY_ES2015)
   /* 4, 6 (startsWith, includes, endsWith) */
   if (mode >= ECMA_STRING_STARTS_WITH)
   {
@@ -584,7 +584,7 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_string_t *original_st
       return ecma_raise_type_error (ECMA_ERR_MSG ("Search string can't be of type: RegExp"));
     }
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   /* 7, 8 */
   ecma_string_t *search_str_p = ecma_op_to_string (arg1);
@@ -618,7 +618,7 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_string_t *original_st
 
   switch (mode)
   {
-#if ENABLED (JERRY_ES2015_BUILTIN)
+#if ENABLED (JERRY_ES2015)
     case ECMA_STRING_STARTS_WITH:
     {
       if (pos_num + start > original_len)
@@ -669,7 +669,7 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_string_t *original_st
       }
       break;
     }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
+#endif /* ENABLED (JERRY_ES2015) */
 
     case ECMA_STRING_INDEX_OF:
     case ECMA_STRING_LAST_INDEX_OF:

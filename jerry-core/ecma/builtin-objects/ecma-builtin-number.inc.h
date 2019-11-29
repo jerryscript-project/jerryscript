@@ -54,7 +54,8 @@ NUMBER_VALUE (LIT_MAGIC_STRING_NEGATIVE_INFINITY_U,
               ECMA_BUILTIN_NUMBER_NEGATIVE_INFINITY,
               ECMA_PROPERTY_FIXED)
 
-#if ENABLED (JERRY_ES2015_BUILTIN)
+#if ENABLED (JERRY_ES2015)
+
 /* ECMA-262 v6, 20.1.2.1 */
 NUMBER_VALUE (LIT_MAGIC_STRING_EPSILON_U,
               ECMA_BUILTIN_NUMBER_EPSILON,
@@ -69,7 +70,8 @@ NUMBER_VALUE (LIT_MAGIC_STRING_MAX_SAFE_INTEGER_U,
 NUMBER_VALUE (LIT_MAGIC_STRING_MIN_SAFE_INTEGER_U,
               ECMA_BUILTIN_NUMBER_MIN_SAFE_INTEGER,
               ECMA_PROPERTY_FIXED)
-#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
+
+#endif /* ENABLED (JERRY_ES2015) */
 
 /* Object properties:
  *  (property name, object pointer getter) */
@@ -83,10 +85,10 @@ OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
-#if ENABLED (JERRY_ES2015_BUILTIN)
+#if ENABLED (JERRY_ES2015)
 ROUTINE (LIT_MAGIC_STRING_IS_FINITE, ecma_builtin_number_object_is_finite, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_IS_NAN, ecma_builtin_number_object_is_nan, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_IS_INTEGER, ecma_builtin_number_object_is_integer, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_IS_SAFE_INTEGER, ecma_builtin_number_object_is_safe_integer, 1, 1)
-#endif /* ENABLED (JERRY_ES2015_BUILTIN) */
+#endif /* ENABLED (JERRY_ES2015) */
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

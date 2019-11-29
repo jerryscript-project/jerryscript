@@ -79,10 +79,6 @@
 # define JERRY_ES2015 1
 #endif /* !defined (JERRY_ES2015) */
 
-#ifndef JERRY_ES2015_BUILTIN
-# define JERRY_ES2015_BUILTIN JERRY_ES2015
-#endif /* !defined (JERRY_ES2015_BUILTIN) */
-
 #ifndef JERRY_ES2015_BUILTIN_DATAVIEW
 # define JERRY_ES2015_BUILTIN_DATAVIEW JERRY_ES2015
 #endif /* !defined (JERRY_ES2015_BUILTIN_DATAVIEW) */
@@ -519,10 +515,6 @@
 #if !defined (JERRY_ES2015) \
 || ((JERRY_ES2015 != 0) && (JERRY_ES2015 != 1))
 # error "Invalid value for JERRY_ES2015 macro."
-#endif
-#if !defined (JERRY_ES2015_BUILTIN) \
-|| ((JERRY_ES2015_BUILTIN != 0) && (JERRY_ES2015_BUILTIN != 1))
-# error "Invalid value for JERRY_ES2015_BUILTIN macro."
 #endif
 #if !defined (JERRY_ES2015_BUILTIN_DATAVIEW) \
 || ((JERRY_ES2015_BUILTIN_DATAVIEW != 0) && (JERRY_ES2015_BUILTIN_DATAVIEW != 1))

@@ -551,6 +551,7 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
   {
     /* 10.a. */
     completion = JERRY_CONTEXT (error_value);
+    JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_EXCEPTION;
     status = ecma_op_function_call (ecma_get_object_from_value (funcs->reject),
                                     ECMA_VALUE_UNDEFINED,
                                     &completion,

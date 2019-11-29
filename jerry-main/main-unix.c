@@ -366,7 +366,7 @@ static const cli_opt_t main_opts[] =
   CLI_OPT_DEF (.id = OPT_NO_PROMPT, .longopt = "no-prompt",
                .help = "don't print prompt in REPL mode"),
   CLI_OPT_DEF (.id = CLI_OPT_DEFAULT, .meta = "FILE",
-               .help = "input JS file(s)")
+               .help = "input JS file(s) (If file is -, read standard input.)")
 };
 
 /**

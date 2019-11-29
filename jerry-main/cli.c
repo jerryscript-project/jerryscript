@@ -112,7 +112,7 @@ cli_consume_option (cli_state_t *state_p) /**< state of the command line option 
 
   state_p->arg = arg;
 
-  if (arg[0] != '-')
+  if (arg[0] != '-' || (arg[0] == '-' && arg[1] == '\0'))
   {
     return CLI_OPT_DEFAULT;
   }

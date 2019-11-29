@@ -632,7 +632,8 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
 #if ENABLED (JERRY_ES2015)
   if ((parser_statement_flags[context_p->stack_top_uint8] & PARSER_STATM_SINGLE_STATM)
       && !(context_p->stack_top_uint8 == PARSER_STATEMENT_IF
-           || context_p->stack_top_uint8 == PARSER_STATEMENT_ELSE))
+           || context_p->stack_top_uint8 == PARSER_STATEMENT_ELSE
+           || context_p->stack_top_uint8 == PARSER_STATEMENT_LABEL))
   {
     parser_raise_error (context_p, PARSER_ERR_LEXICAL_SINGLE_STATEMENT);
   }

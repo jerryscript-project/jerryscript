@@ -3485,7 +3485,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           VM_PLUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION);
           stack_top_p += PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION;
-          stack_top_p[-1] = VM_CREATE_CONTEXT (VM_CONTEXT_FOR_OF, branch_offset);
+          stack_top_p[-1] = VM_CREATE_CONTEXT (VM_CONTEXT_FOR_OF, branch_offset) | VM_CONTEXT_CLOSE_ITERATOR;
           stack_top_p[-2] = next_value;
           stack_top_p[-3] = iterator;
 
@@ -3587,6 +3587,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_CONTEXT_END:
         {
           JERRY_ASSERT (VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth == stack_top_p);
+          JERRY_ASSERT (!(stack_top_p[-1] & VM_CONTEXT_CLOSE_ITERATOR));
 
           ecma_value_t context_type = VM_GET_CONTEXT_TYPE (stack_top_p[-1]);
 
@@ -3653,6 +3654,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_JUMP_AND_EXIT_CONTEXT:
         {
           JERRY_ASSERT (VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth == stack_top_p);
+          JERRY_ASSERT (!jcontext_has_pending_exception ());
 
           branch_offset += (int32_t) (byte_code_start_p - frame_ctx_p->byte_code_start_p);
 
@@ -3669,6 +3671,14 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             byte_code_p = frame_ctx_p->byte_code_start_p + branch_offset;
           }
+
+#if ENABLED (JERRY_ES2015)
+          if (jcontext_has_pending_exception ())
+          {
+            result = ECMA_VALUE_ERROR;
+            goto error;
+          }
+#endif /* ENABLED (JERRY_ES2015) */
 
           JERRY_ASSERT (VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth == stack_top_p);
           continue;
@@ -3944,10 +3954,27 @@ error:
         JERRY_ASSERT (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_FINALLY_RETURN);
         JERRY_ASSERT (VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth == stack_top_p);
 
+#if ENABLED (JERRY_ES2015)
+        if (jcontext_has_pending_exception ())
+        {
+          stack_top_p[-1] = (ecma_value_t) (stack_top_p[-1] - VM_CONTEXT_FINALLY_RETURN + VM_CONTEXT_FINALLY_THROW);
+          ecma_free_value (result);
+          result = jcontext_take_exception ();
+        }
+#endif /* ENABLED (JERRY_ES2015) */
+
         byte_code_p = frame_ctx_p->byte_code_p;
         stack_top_p[-2] = result;
         continue;
       }
+
+#if ENABLED (JERRY_ES2015)
+      if (jcontext_has_pending_exception ())
+      {
+        ecma_free_value (result);
+        result = ECMA_VALUE_ERROR;
+      }
+#endif /* ENABLED (JERRY_ES2015) */
     }
     else if (jcontext_has_pending_exception () && !jcontext_has_pending_abort ())
     {

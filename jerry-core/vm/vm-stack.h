@@ -28,13 +28,13 @@
 /**
  * Create context on the vm stack.
  */
-#define VM_CREATE_CONTEXT(type, end_offset) ((ecma_value_t) ((type) | ((end_offset) << 6)))
+#define VM_CREATE_CONTEXT(type, end_offset) ((ecma_value_t) ((type) | ((end_offset) << 7)))
 
 /**
  * Create context on the vm stack with environment.
  */
 #define VM_CREATE_CONTEXT_WITH_ENV(type, end_offset) \
-  ((ecma_value_t) ((type) | ((end_offset) << 6) | VM_CONTEXT_HAS_LEX_ENV))
+  (VM_CREATE_CONTEXT ((type),(end_offset)) | VM_CONTEXT_HAS_LEX_ENV)
 
 /**
  * Get type of a vm context.
@@ -44,12 +44,17 @@
 /**
  * Get the end position of a vm context.
  */
-#define VM_GET_CONTEXT_END(value) ((value) >> 6)
+#define VM_GET_CONTEXT_END(value) ((value) >> 7)
 
 /**
  * This flag is set if the context has a lexical environment.
  */
 #define VM_CONTEXT_HAS_LEX_ENV 0x20
+
+/**
+ * This flag is set if the iterator close operation should be invoked during a for-of context break.
+ */
+#define VM_CONTEXT_CLOSE_ITERATOR 0x40
 
 /**
  * Context types for the vm stack.

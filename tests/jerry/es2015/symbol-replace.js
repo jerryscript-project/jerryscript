@@ -660,3 +660,11 @@ try {
 } catch (e) {
   assert (e === "abrupt @@replace")
 }
+
+class Regexplike2 {
+    exec() {
+        return {}
+    }
+}
+re = new Regexplike2();
+assert (replace.call (re, "1") === "undefined");

@@ -1702,7 +1702,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
         flags |= PARSER_PATTERN_TARGET_DEFAULT;
       }
 
-      parser_parse_initializer (context_p, (parser_pattern_flags_t) flags);
+      parser_parse_initializer (context_p, flags);
 
       context_p->argument_count++;
       if (context_p->argument_count >= PARSER_MAXIMUM_NUMBER_OF_REGISTERS)

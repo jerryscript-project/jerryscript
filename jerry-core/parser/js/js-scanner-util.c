@@ -141,6 +141,7 @@ scanner_get_stream_size (scanner_info_t *info_p, /**< scanner info block */
 #if ENABLED (JERRY_ES2015)
       case SCANNER_STREAM_TYPE_LET:
       case SCANNER_STREAM_TYPE_CONST:
+      case SCANNER_STREAM_TYPE_LOCAL:
       case SCANNER_STREAM_TYPE_DESTRUCTURED_ARG:
 #endif /* ENABLED (JERRY_ES2015) */
       case SCANNER_STREAM_TYPE_ARG:
@@ -718,6 +719,10 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
           type = SCANNER_STREAM_TYPE_IMPORT;
         }
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+        else
+        {
+          type = SCANNER_STREAM_TYPE_LOCAL;
+        }
       }
       else if (literal_p->type & SCANNER_LITERAL_IS_CONST)
       {
@@ -1546,6 +1551,7 @@ scanner_is_context_needed (parser_context_t *context_p) /**< context */
     JERRY_ASSERT (type == SCANNER_STREAM_TYPE_VAR
                   || type == SCANNER_STREAM_TYPE_LET
                   || type == SCANNER_STREAM_TYPE_CONST
+                  || type == SCANNER_STREAM_TYPE_LOCAL
                   || type == SCANNER_STREAM_TYPE_FUNC
                   || type == SCANNER_STREAM_TYPE_FUNC_LOCAL);
 #else /* !ENABLED (JERRY_ES2015) */
@@ -1950,6 +1956,7 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ES2015)
           case SCANNER_STREAM_TYPE_LET:
           case SCANNER_STREAM_TYPE_CONST:
+          case SCANNER_STREAM_TYPE_LOCAL:
           case SCANNER_STREAM_TYPE_DESTRUCTURED_ARG:
           case SCANNER_STREAM_TYPE_DESTRUCTURED_ARG_FUNC:
 #endif /* ENABLED (JERRY_ES2015) */
@@ -1958,7 +1965,7 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
             context_p->scope_stack_top = (uint16_t) (scope_stack_p - context_p->scope_stack_p);
 #endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
-            uint16_t opcode = CBC_CREATE_LOCAL;
+            uint16_t opcode = CBC_CREATE_VAR;
 
             if (option_flags & SCANNER_CREATE_VARS_IS_EVAL)
             {
@@ -1978,10 +1985,11 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
                 opcode = CBC_CREATE_CONST;
                 break;
               }
+              case SCANNER_STREAM_TYPE_LOCAL:
               case SCANNER_STREAM_TYPE_DESTRUCTURED_ARG:
               case SCANNER_STREAM_TYPE_DESTRUCTURED_ARG_FUNC:
               {
-                opcode = CBC_CREATE_DESTRUCTURED_ARG;
+                opcode = CBC_CREATE_LOCAL;
                 break;
               }
             }

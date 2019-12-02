@@ -518,14 +518,13 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
 #if ENABLED (JERRY_ES2015)
     if (lexer_check_next_characters (context_p, LIT_CHAR_LEFT_SQUARE, LIT_CHAR_LEFT_BRACE))
     {
-      lexer_next_token (context_p);
-      parser_pattern_flags_t options = PARSER_PATTERN_BINDING;
+      parser_pattern_flags_t flags = PARSER_PATTERN_BINDING;
 
       if (declaration_type != LEXER_KEYW_VAR)
       {
-        options |= PARSER_PATTERN_LEXICAL;
+        flags |= PARSER_PATTERN_LEXICAL;
       }
-      parser_parse_initializer (context_p, options);
+      parser_parse_initializer_by_next_char (context_p, flags);
     }
     else
     {
@@ -1248,8 +1247,6 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
         {
           bool is_lexical = (context_p->token.type != LEXER_KEYW_VAR);
 
-          lexer_next_token (context_p);
-
           parser_emit_cbc_ext (context_p, is_for_in ? CBC_EXT_FOR_IN_GET_NEXT
                                                     : CBC_EXT_FOR_OF_GET_NEXT);
 
@@ -1260,14 +1257,14 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
             scanner_release_next (context_p, sizeof (scanner_location_info_t));
           }
 
-          uint32_t flags = (PARSER_PATTERN_BINDING | PARSER_PATTERN_TARGET_ON_STACK);
+          parser_pattern_flags_t flags = (PARSER_PATTERN_BINDING | PARSER_PATTERN_TARGET_ON_STACK);
 
           if (is_lexical)
           {
             flags |= PARSER_PATTERN_LEXICAL;
           }
 
-          parser_parse_initializer (context_p, (parser_pattern_flags_t) flags);
+          parser_parse_initializer_by_next_char (context_p, flags);
           break;
         }
 #endif /* ENABLED (JERRY_ES2015) */
@@ -1813,8 +1810,6 @@ parser_parse_try_statement_end (parser_context_t *context_p) /**< context */
 
   if (context_p->token.type == LEXER_KEYW_CATCH)
   {
-    uint16_t literal_index;
-
     lexer_next_token (context_p);
 
     if (context_p->token.type != LEXER_LEFT_PAREN)
@@ -1849,17 +1844,39 @@ parser_parse_try_statement_end (parser_context_t *context_p) /**< context */
       scanner_create_variables (context_p, SCANNER_CREATE_VARS_NO_OPTS);
     }
 
-    lexer_expect_identifier (context_p, LEXER_IDENT_LITERAL);
-    JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
-                  && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
+#if ENABLED (JERRY_ES2015)
+    if (lexer_check_next_characters (context_p, LIT_CHAR_LEFT_SQUARE, LIT_CHAR_LEFT_BRACE))
+    {
+      parser_pattern_flags_t flags = (PARSER_PATTERN_BINDING
+                                      | PARSER_PATTERN_TARGET_ON_STACK
+                                      | PARSER_PATTERN_LEXICAL);
+
+      parser_parse_initializer_by_next_char (context_p, flags);
+    }
+    else
+    {
+#endif /* ENABLED (JERRY_ES2015) */
+      lexer_expect_identifier (context_p, LEXER_IDENT_LITERAL);
+      JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
+                    && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
+
+#if ENABLED (JERRY_ES2015)
+      uint16_t literal_index = context_p->lit_object.index;
+      parser_emit_cbc_literal (context_p,
+                               (literal_index >= PARSER_REGISTER_START) ? CBC_ASSIGN_SET_IDENT : CBC_ASSIGN_LET_CONST,
+                               literal_index);
+#else /* !ENABLED (JERRY_ES2015) */
+      parser_emit_cbc_literal (context_p, CBC_ASSIGN_SET_IDENT, context_p->lit_object.index);
+#endif /* ENABLED (JERRY_ES2015) */
+
+      lexer_next_token (context_p);
+#if ENABLED (JERRY_ES2015)
+    }
+#endif /* ENABLED (JERRY_ES2015) */
 
 #ifndef JERRY_NDEBUG
     JERRY_ASSERT (block_found);
 #endif /* !JERRY_NDEBUG */
-
-    literal_index = context_p->lit_object.index;
-
-    lexer_next_token (context_p);
 
     if (context_p->token.type != LEXER_RIGHT_PAREN)
     {
@@ -1873,7 +1890,6 @@ parser_parse_try_statement_end (parser_context_t *context_p) /**< context */
       parser_raise_error (context_p, PARSER_ERR_LEFT_BRACE_EXPECTED);
     }
 
-    parser_emit_cbc_literal (context_p, CBC_ASSIGN_SET_IDENT, literal_index);
     parser_flush_cbc (context_p);
   }
   else

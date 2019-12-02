@@ -669,6 +669,7 @@ void parser_parse_class (parser_context_t *context_p, bool is_statement);
 void parser_parse_super_class_context_start (parser_context_t *context_p);
 void parser_parse_super_class_context_end (parser_context_t *context_p);
 void parser_parse_initializer (parser_context_t *context_p, parser_pattern_flags_t flags);
+void parser_parse_initializer_by_next_char (parser_context_t *context_p, parser_pattern_flags_t flags);
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**

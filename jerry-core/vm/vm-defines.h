@@ -41,8 +41,8 @@
 typedef struct vm_frame_ctx_t
 {
   const ecma_compiled_code_t *bytecode_header_p;      /**< currently executed byte-code data */
-  uint8_t *byte_code_p;                               /**< current byte code pointer */
-  uint8_t *byte_code_start_p;                         /**< byte code start pointer */
+  const uint8_t *byte_code_p;                         /**< current byte code pointer */
+  const uint8_t *byte_code_start_p;                   /**< byte code start pointer */
   ecma_value_t *stack_top_p;                          /**< stack top pointer */
   ecma_value_t *literal_start_p;                      /**< literal list start pointer */
   ecma_object_t *lex_env_p;                           /**< current lexical environment */

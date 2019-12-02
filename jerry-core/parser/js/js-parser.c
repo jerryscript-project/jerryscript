@@ -1636,7 +1636,6 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
     if (context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION)
     {
       parser_emit_cbc_ext (context_p, CBC_EXT_CREATE_GENERATOR);
-      parser_emit_cbc_ext (context_p, CBC_EXT_CONTINUE_EXEC);
       parser_emit_cbc (context_p, CBC_POP);
     }
 
@@ -1810,7 +1809,6 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
   if (context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION)
   {
     parser_emit_cbc_ext (context_p, CBC_EXT_CREATE_GENERATOR);
-    parser_emit_cbc_ext (context_p, CBC_EXT_CONTINUE_EXEC);
     parser_emit_cbc (context_p, CBC_POP);
   }
 

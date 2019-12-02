@@ -151,7 +151,7 @@ typedef enum
   VM_OC_ASSIGN_PROP,             /**< assign property */
   VM_OC_ASSIGN_PROP_THIS,        /**< assign prop this */
 
-  VM_OC_RET,                     /**< return */
+  VM_OC_RETURN,                  /**< return */
   VM_OC_THROW,                   /**< throw */
   VM_OC_THROW_REFERENCE_ERROR,   /**< throw reference error */
 
@@ -257,7 +257,7 @@ typedef enum
   VM_OC_SPREAD_ARGUMENTS,        /**< perform function call/construct with spreaded arguments */
   VM_OC_CREATE_GENERATOR,        /**< create a generator object */
   VM_OC_YIELD,                   /**< yield operation */
-  VM_OC_CONTINUE_EXEC,           /**< first byte code after a function is resumed */
+  VM_OC_EXT_RETURN,              /**< return which also clears the stack */
 #endif /* ENABLED (JERRY_ES2015) */
   VM_OC_NONE,                    /**< a special opcode for unsupported byte codes */
 } vm_oc_types;
@@ -310,7 +310,7 @@ typedef enum
   VM_OC_SPREAD_ARGUMENTS = VM_OC_NONE,        /**< perform function call/construct with spreaded arguments */
   VM_OC_CREATE_GENERATOR = VM_OC_NONE,        /**< create a generator object */
   VM_OC_YIELD = VM_OC_NONE,                   /**< yield operation */
-  VM_OC_CONTINUE_EXEC = VM_OC_NONE,           /**< first byte code after a function is resumed */
+  VM_OC_EXT_RETURN = VM_OC_NONE,              /**< return which also clears the stack */
 #endif /* !ENABLED (JERRY_ES2015) */
 
   VM_OC_UNUSED = VM_OC_NONE                   /**< placeholder if the list is empty */

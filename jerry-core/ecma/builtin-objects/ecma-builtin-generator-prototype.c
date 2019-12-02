@@ -41,6 +41,32 @@
  */
 
 /**
+ * Generator resume execution flags.
+ */
+typedef enum
+{
+  ECMA_GENERATOR_NEXT, /**< generator should continue its execution */
+  ECMA_GENERATOR_RETURN, /**< generator should perform a return operation */
+  ECMA_GENERATOR_THROW, /**< generator should perform a throw operation */
+} ecma_generator_resume_mode_t;
+
+/**
+ * Byte code sequence which returns from the generator.
+ */
+static const uint8_t ecma_builtin_generator_prototype_return[2] =
+{
+  CBC_EXT_OPCODE, CBC_EXT_RETURN
+};
+
+/**
+ * Byte code sequence which throws an exception.
+ */
+static const uint8_t ecma_builtin_generator_prototype_throw[1] =
+{
+  CBC_THROW
+};
+
+/**
  * Helper function for next / return / throw
  *
  * @return ecma value
@@ -49,7 +75,7 @@
 static ecma_value_t
 ecma_builtin_generator_prototype_object_do (ecma_value_t this_arg, /**< this argument */
                                             ecma_value_t arg, /**< argument */
-                                            uint8_t yield_mode) /**< yield mode */
+                                            ecma_generator_resume_mode_t resume_mode) /**< resume mode */
 {
   vm_executable_object_t *executable_object_p = NULL;
 
@@ -83,7 +109,14 @@ ecma_builtin_generator_prototype_object_do (ecma_value_t this_arg, /**< this arg
     return ecma_create_iter_result_object (ECMA_VALUE_UNDEFINED, ECMA_VALUE_TRUE);
   }
 
-  executable_object_p->frame_ctx.call_operation = yield_mode;
+  if (resume_mode == ECMA_GENERATOR_RETURN)
+  {
+    executable_object_p->frame_ctx.byte_code_p = ecma_builtin_generator_prototype_return;
+  }
+  else if (resume_mode == ECMA_GENERATOR_THROW)
+  {
+    executable_object_p->frame_ctx.byte_code_p = ecma_builtin_generator_prototype_throw;
+  }
 
   ecma_value_t value = opfunc_resume_executable_object (executable_object_p, arg);
 

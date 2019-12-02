@@ -1573,7 +1573,6 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
       }
 
       parser_emit_cbc_ext (context_p, CBC_EXT_YIELD);
-      parser_emit_cbc_ext (context_p, CBC_EXT_CONTINUE_EXEC);
 
       return (context_p->token.type != LEXER_RIGHT_PAREN
               && context_p->token.type != LEXER_COMMA);

@@ -477,7 +477,7 @@ vm_super_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   JERRY_ASSERT (frame_ctx_p->call_operation == VM_EXEC_SUPER_CALL);
   JERRY_ASSERT (frame_ctx_p->byte_code_p[0] == CBC_EXT_OPCODE);
 
-  uint8_t *byte_code_p = frame_ctx_p->byte_code_p + 3;
+  const uint8_t *byte_code_p = frame_ctx_p->byte_code_p + 3;
   uint8_t opcode = byte_code_p[-2];
   uint32_t arguments_list_len;
 
@@ -667,7 +667,7 @@ vm_spread_operation (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 static void
 opfunc_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 {
-  uint8_t *byte_code_p = frame_ctx_p->byte_code_p + 1;
+  const uint8_t *byte_code_p = frame_ctx_p->byte_code_p + 1;
   uint8_t opcode = byte_code_p[-1];
   uint32_t arguments_list_len;
 
@@ -755,7 +755,7 @@ opfunc_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 static void
 opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 {
-  uint8_t *byte_code_p = frame_ctx_p->byte_code_p + 1;
+  const uint8_t *byte_code_p = frame_ctx_p->byte_code_p + 1;
   uint8_t opcode = byte_code_p[-1];
   unsigned int arguments_list_len;
 
@@ -882,7 +882,7 @@ static void
 vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 {
   const ecma_compiled_code_t *bytecode_header_p = frame_ctx_p->bytecode_header_p;
-  uint8_t *byte_code_p = frame_ctx_p->byte_code_p;
+  const uint8_t *byte_code_p = frame_ctx_p->byte_code_p;
   uint16_t encoding_limit;
   uint16_t encoding_delta;
   uint16_t register_end;
@@ -1120,7 +1120,7 @@ static ecma_value_t JERRY_ATTR_NOINLINE
 vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 {
   const ecma_compiled_code_t *bytecode_header_p = frame_ctx_p->bytecode_header_p;
-  uint8_t *byte_code_p = frame_ctx_p->byte_code_p;
+  const uint8_t *byte_code_p = frame_ctx_p->byte_code_p;
   ecma_value_t *literal_start_p = frame_ctx_p->literal_start_p;
 
   ecma_value_t *stack_top_p;
@@ -1171,7 +1171,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
     /* Internal loop for byte code execution. */
     while (true)
     {
-      uint8_t *byte_code_start_p = byte_code_p;
+      const uint8_t *byte_code_start_p = byte_code_p;
       uint8_t opcode = *byte_code_p++;
       uint32_t opcode_data = opcode;
 
@@ -2076,31 +2076,19 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           frame_ctx_p->stack_top_p = stack_top_p;
           return left_value;
         }
-        case VM_OC_CONTINUE_EXEC:
+        case VM_OC_EXT_RETURN:
         {
-          if (JERRY_UNLIKELY (frame_ctx_p->call_operation == ECMA_GENERATOR_RETURN))
+          result = left_value;
+          left_value = ECMA_VALUE_UNDEFINED;
+
+          ecma_value_t *stack_bottom_p = VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth;
+
+          while (stack_top_p > stack_bottom_p)
           {
-            ecma_value_t *stack_bottom_p = VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth;
-
-            result = *(--stack_top_p);
-
-            while (stack_top_p > stack_bottom_p)
-            {
-              ecma_fast_free_value (*(--stack_top_p));
-            }
-
-            goto error;
+            ecma_fast_free_value (*(--stack_top_p));
           }
 
-          if (JERRY_UNLIKELY (frame_ctx_p->call_operation == ECMA_GENERATOR_THROW))
-          {
-            JERRY_CONTEXT (error_value) = *(--stack_top_p);
-            JERRY_CONTEXT (status_flags) |= ECMA_STATUS_EXCEPTION;
-
-            result = ECMA_VALUE_ERROR;
-            goto error;
-          }
-          continue;
+          goto error;
         }
 #endif /* ENABLED (JERRY_ES2015) */
         case VM_OC_PUSH_ELISON:
@@ -2406,7 +2394,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           left_value = ECMA_VALUE_UNDEFINED;
           break;
         }
-        case VM_OC_RET:
+        case VM_OC_RETURN:
         {
           JERRY_ASSERT (opcode == CBC_RETURN
                         || opcode == CBC_RETURN_WITH_BLOCK

@@ -654,10 +654,6 @@ opfunc_resume_executable_object (vm_executable_object_t *executable_object_p, /*
     ecma_ref_if_object (*register_p++);
   }
 
-  uint8_t *byte_code_p = executable_object_p->frame_ctx.byte_code_p;
-
-  JERRY_ASSERT (byte_code_p[0] == CBC_EXT_OPCODE && byte_code_p[1] == CBC_EXT_CONTINUE_EXEC);
-
   *register_p++ = ecma_copy_value (value);
   executable_object_p->frame_ctx.stack_top_p = register_p;
 

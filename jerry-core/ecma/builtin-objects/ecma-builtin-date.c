@@ -112,13 +112,8 @@ ecma_date_parse_year (const lit_utf8_byte_t **str_p, /**< pointer to the cesu8 s
   const lit_utf8_byte_t *str_start_p = *str_p;
   int32_t parsed_year = 0;
 
-  while (str_start_p - *str_p <= 6)
+  while ((str_start_p - *str_p < 6) && (str_start_p < str_end_p) && lit_char_is_decimal_digit (*str_start_p))
   {
-    if (*str_p >= str_end_p || !lit_char_is_decimal_digit (*str_start_p))
-    {
-      break;
-    }
-
     parsed_year = 10 * parsed_year + *str_start_p - LIT_CHAR_0;
     str_start_p++;
   }

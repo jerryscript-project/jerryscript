@@ -70,7 +70,8 @@ var wrongFormats = ["",
                     "Fri Jan 01 -1 00:00:00 GMT+0000",
                     "Fri Jan 01 -11 00:00:00 GMT+0000",
                     "Fri Jan 01 -111 00:00:00 GMT+0000",
-                    "Fri Jan 01 -1234567 00:00:00 GMT+0000"];
+                    "Fri Jan 01 -1234567 00:00:00 GMT+0000",
+                    "Thu Apr 10 1997"];
 
 for (i in wrongFormats) {
   var d = Date.parse(wrongFormats[i]);

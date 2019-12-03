@@ -19,7 +19,9 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-arraybuffer-object.h"
+#include "ecma-dataview-object.h"
 #include "ecma-try-catch-macro.h"
+#include "ecma-typedarray-object.h"
 #include "jrt.h"
 
 #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
@@ -55,11 +57,8 @@ ecma_builtin_arraybuffer_object_is_view (ecma_value_t this_arg, /**< 'this' argu
                                          ecma_value_t arg) /**< argument 1 */
 {
   JERRY_UNUSED (this_arg);
-  JERRY_UNUSED (arg);
 
-  /* TODO: if arg has [[ViewArrayBuffer]], return true */
-
-  return ECMA_VALUE_FALSE;
+  return ecma_make_boolean_value (ecma_is_typedarray (arg) || ecma_is_dataview (arg));
 } /* ecma_builtin_arraybuffer_object_is_view */
 
 /**

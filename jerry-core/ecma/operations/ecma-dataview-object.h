@@ -32,6 +32,7 @@ ecma_dataview_object_t *ecma_op_dataview_get_object (ecma_value_t this_arg);
 ecma_value_t ecma_op_dataview_get_set_view_value (ecma_value_t view, ecma_value_t request_index,
                                                   ecma_value_t little_endian, ecma_value_t value_to_set,
                                                   ecma_typedarray_type_t id);
+bool ecma_is_dataview (ecma_value_t value);
 
 /**
  * @}

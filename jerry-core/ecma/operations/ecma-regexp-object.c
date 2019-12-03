@@ -1525,6 +1525,88 @@ ecma_regexp_read_pattern_str_helper (ecma_value_t pattern_arg) /**< the RegExp p
 } /* ecma_regexp_read_pattern_str_helper */
 
 /**
+ * Helper function for RegExp based string searches
+ *
+ * See also:
+ *          ECMA-262 v6, 21.2.5.9
+ *
+ * @return index of the match
+ */
+ecma_value_t
+ecma_regexp_search_helper (ecma_value_t regexp_arg, /**< regexp argument */
+                           ecma_value_t string_arg) /**< string argument */
+{
+  /* 2. */
+  if (!ecma_is_value_object (regexp_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not an object."));
+  }
+
+  ecma_value_t result = ECMA_VALUE_ERROR;
+
+  /* 3-4. */
+  ecma_string_t *const string_p = ecma_op_to_string (string_arg);
+  if (string_p == NULL)
+  {
+    return result;
+  }
+
+  ecma_object_t *const regexp_object_p = ecma_get_object_from_value (regexp_arg);
+
+  /* 5-6. */
+  ecma_string_t *const last_index_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL);
+  const ecma_value_t prev_last_index = ecma_op_object_get (regexp_object_p, last_index_str_p);
+  if (ECMA_IS_VALUE_ERROR (prev_last_index))
+  {
+    goto cleanup_string;
+  }
+
+  /* 7-8. */
+  const ecma_value_t status = ecma_op_object_put (regexp_object_p, last_index_str_p, ecma_make_uint32_value (0), true);
+  if (ECMA_IS_VALUE_ERROR (status))
+  {
+    ecma_free_value (prev_last_index);
+    goto cleanup_string;
+  }
+
+  JERRY_ASSERT (ecma_is_value_boolean (status));
+
+  /* 9-10. */
+  const ecma_value_t match = ecma_op_regexp_exec (regexp_arg, string_p);
+  if (ECMA_IS_VALUE_ERROR (match))
+  {
+    ecma_free_value (prev_last_index);
+    goto cleanup_string;
+  }
+
+  /* 11-12. */
+  result = ecma_op_object_put (regexp_object_p, last_index_str_p, prev_last_index, true);
+  ecma_free_value (prev_last_index);
+
+  if (ECMA_IS_VALUE_ERROR (result))
+  {
+    ecma_free_value (match);
+    goto cleanup_string;
+  }
+
+  /* 13-14. */
+  if (ecma_is_value_null (match))
+  {
+    result = ecma_make_int32_value (-1);
+  }
+  else
+  {
+    ecma_object_t *const match_p = ecma_get_object_from_value (match);
+    result = ecma_op_object_get_by_magic_id (match_p, LIT_MAGIC_STRING_INDEX);
+    ecma_deref_object (match_p);
+  }
+
+cleanup_string:
+  ecma_deref_ecma_string (string_p);
+  return result;
+} /* ecma_regexp_search_helper */
+
+/**
  * Fast path for RegExp based replace operation
  *
  * This method assumes the following:

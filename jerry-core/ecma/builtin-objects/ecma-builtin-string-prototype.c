@@ -274,37 +274,6 @@ ecma_builtin_string_prototype_object_locale_compare (ecma_string_t *this_string_
 } /* ecma_builtin_string_prototype_object_locale_compare */
 
 #if ENABLED (JERRY_BUILTIN_REGEXP)
-
-/**
- * The common preparation code for 'search' and 'match' functions
- * of the String prototype.
- *
- * @return empty value on success, error value otherwise
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_string_prepare_search (ecma_value_t regexp_arg, /**< regex argument */
-                                    ecma_value_t *regexp_value) /**< [out] ptr to store the regexp object */
-{
-  /* 3. */
-  if (ecma_object_is_regexp_object (regexp_arg))
-  {
-    *regexp_value = ecma_copy_value (regexp_arg);
-    return ECMA_VALUE_EMPTY;
-  }
-
-  /* 4. */
-  ecma_value_t regexp_arguments[1] = { regexp_arg };
-  ecma_value_t new_regexp_value = ecma_builtin_regexp_dispatch_construct (regexp_arguments, 1);
-
-  if (!ECMA_IS_VALUE_ERROR (new_regexp_value))
-  {
-    *regexp_value = new_regexp_value;
-  }
-
-  return new_regexp_value;
-} /* ecma_builtin_string_prepare_search */
-
 /**
  * The String.prototype object's 'match' routine
  *
@@ -600,62 +569,99 @@ cleanup_search:
  *
  * See also:
  *          ECMA-262 v5, 15.5.4.12
+ *          ECMA-262 v6, 21.1.3.15
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_string_prototype_object_search (ecma_value_t to_string_value, /**< this argument */
-                                             ecma_value_t regexp_arg) /**< routine's argument */
+ecma_builtin_string_prototype_object_search (ecma_value_t this_value, /**< this argument */
+                                             ecma_value_t regexp_value) /**< routine's argument */
 {
-
-  ecma_value_t regexp_value = ECMA_VALUE_EMPTY;
-
-  if (ECMA_IS_VALUE_ERROR (ecma_builtin_string_prepare_search (regexp_arg, &regexp_value)))
+#if ENABLED (JERRY_ES2015)
+  if (!(ecma_is_value_undefined (regexp_value) || ecma_is_value_null (regexp_value)))
   {
-    return ECMA_VALUE_ERROR;
+    ecma_object_t *obj_p = ecma_get_object_from_value (ecma_op_to_object (regexp_value));
+    ecma_value_t search_symbol = ecma_op_object_get_by_symbol_id (obj_p, LIT_MAGIC_STRING_SEARCH);
+    ecma_deref_object (obj_p);
+
+    if (ECMA_IS_VALUE_ERROR (search_symbol))
+    {
+      return search_symbol;
+    }
+
+    if (!ecma_is_value_undefined (search_symbol) && !ecma_is_value_null (search_symbol))
+    {
+      if (!ecma_op_is_callable (search_symbol))
+      {
+        ecma_free_value (search_symbol);
+        return ecma_raise_type_error (ECMA_ERR_MSG ("@@search is not callable"));
+      }
+
+      ecma_object_t *search_method = ecma_get_object_from_value (search_symbol);
+      ecma_value_t search_result = ecma_op_function_call (search_method, regexp_value, &this_value, 1);
+
+      ecma_deref_object (search_method);
+      return search_result;
+    }
+  }
+#else /* !ENABLED (JERRY_ES2015) */
+  if (ecma_object_is_regexp_object (regexp_value))
+  {
+    return ecma_regexp_search_helper (regexp_value, this_value);
+  }
+#endif /* ENABLED (JERRY_ES2015) */
+
+  ecma_value_t result = ECMA_VALUE_ERROR;
+
+  ecma_string_t *string_p = ecma_op_to_string (this_value);
+  if (string_p == NULL)
+  {
+    return result;
   }
 
-  /* 5. */
-  ecma_string_t *this_string_p = ecma_get_string_from_value (to_string_value);
-  ecma_ref_ecma_string (this_string_p);
-
-  ecma_value_t match_result = ecma_regexp_exec_helper (regexp_value, to_string_value, true);
-
-  ecma_value_t ret_value = ECMA_VALUE_ERROR;
-
-  if (ECMA_IS_VALUE_ERROR (match_result))
+  ecma_string_t *pattern_p = ecma_regexp_read_pattern_str_helper (regexp_value);
+  if (pattern_p == NULL)
   {
-    goto cleanup;
+    goto cleanup_string;
   }
 
-  ecma_number_t offset = -1;
-
-  if (!ecma_is_value_null (match_result))
+  ecma_value_t new_regexp = ecma_op_create_regexp_object (pattern_p, 0);
+  ecma_deref_ecma_string (pattern_p);
+  if (ECMA_IS_VALUE_ERROR (new_regexp))
   {
-    JERRY_ASSERT (ecma_is_value_object (match_result));
-
-    ecma_object_t *match_object_p = ecma_get_object_from_value (match_result);
-
-    ecma_value_t index_value = ecma_op_object_get_by_magic_id (match_object_p, LIT_MAGIC_STRING_INDEX);
-
-    JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (index_value) && ecma_is_value_number (index_value));
-
-    offset = ecma_get_number_from_value (index_value);
-
-    ecma_free_number (index_value);
-    ecma_free_value (match_result);
+    goto cleanup_string;
   }
 
-  ret_value = ecma_make_number_value (offset);
+#if !ENABLED (JERRY_ES2015)
+  result = ecma_regexp_search_helper (new_regexp, ecma_make_string_value (string_p));
+  ecma_deref_object (ecma_get_object_from_value (new_regexp));
+#else /* ENABLED (JERRY_ES2015) */
+  ecma_object_t *regexp_obj_p = ecma_get_object_from_value (new_regexp);
+  ecma_value_t search_symbol = ecma_op_object_get_by_symbol_id (regexp_obj_p, LIT_MAGIC_STRING_SEARCH);
+  if (ECMA_IS_VALUE_ERROR (search_symbol))
+  {
+    goto cleanup_regexp;
+  }
 
+  if (!ecma_op_is_callable (search_symbol))
+  {
+    result = ecma_raise_type_error (ECMA_ERR_MSG ("@@search is not callable"));
+    goto cleanup_regexp;
+  }
 
-cleanup:
-  ecma_free_value (regexp_value);
-  ecma_deref_ecma_string (this_string_p);
+  ecma_object_t *search_method_p = ecma_get_object_from_value (search_symbol);
+  ecma_value_t arguments[] = { ecma_make_string_value (string_p) };
+  result = ecma_op_function_call (search_method_p, new_regexp, arguments, 1);
+  ecma_deref_object (search_method_p);
 
-  /* 6. */
-  return ret_value;
+cleanup_regexp:
+  ecma_deref_object (regexp_obj_p);
+#endif /* !ENABLED (JERRY_ES2015) */
+
+cleanup_string:
+  ecma_deref_ecma_string (string_p);
+  return result;
 } /* ecma_builtin_string_prototype_object_search */
 
 #endif /* ENABLED (JERRY_BUILTIN_REGEXP) */

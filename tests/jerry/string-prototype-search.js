@@ -36,24 +36,5 @@ assert ("aaxbb".search (regexp) === 2);
 assert ("aabb".search (regexp) === -1);
 assert (regexp.lastIndex === "index");
 
-Object.defineProperty(regexp, "lastIndex", {
-  configurable : false,
-  enumerable : false,
-  value : "index2",
-  writable : false
-});
-
-assert ("axb".search (regexp) === 1);
-assert ("aabb".search (regexp) === -1);
-assert (regexp.lastIndex === "index2");
-
 assert ("##\ud801\udc00".search ("\ud801") === 2);
 assert ("##\ud801\udc00".search ("\udc00") === 3);
-
-// The real "exec" never returns with a number.
-Object.getPrototypeOf(/x/).exec = function () { return "???"; }
-
-assert (/y/.exec("y") === "???");
-
-// Changing exec should not affect search.
-assert ("ay".search (/y/) === 1);

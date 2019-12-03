@@ -145,6 +145,7 @@ typedef enum
 #if ENABLED (JERRY_ES2015)
   SCANNER_STREAM_TYPE_LET, /**< let declaration */
   SCANNER_STREAM_TYPE_CONST, /**< const declaration */
+  SCANNER_STREAM_TYPE_LOCAL, /**< local declaration (e.g. catch block) */
   SCANNER_STREAM_TYPE_DESTRUCTURED_ARG, /**< destructuring argument declaration */
 #endif /* ENABLED (JERRY_ES2015) */
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)

@@ -2516,7 +2516,6 @@ static void
 parser_parse_array_initializer (parser_context_t *context_p, /**< context */
                                 parser_pattern_flags_t flags) /**< flags */
 {
-  JERRY_ASSERT (context_p->token.type == LEXER_LEFT_SQUARE);
   parser_pattern_end_marker_t end_pos = parser_pattern_get_target (context_p, flags);
 
   lexer_next_token (context_p);
@@ -2568,7 +2567,6 @@ static void
 parser_parse_object_initializer (parser_context_t *context_p, /**< context */
                                  parser_pattern_flags_t flags) /**< flags */
 {
-  JERRY_ASSERT (context_p->token.type == LEXER_LEFT_BRACE);
   parser_pattern_end_marker_t end_pos = parser_pattern_get_target (context_p, flags);
 
   while (true)
@@ -2646,7 +2644,6 @@ parser_parse_object_initializer (parser_context_t *context_p, /**< context */
 
 /**
  * Parse an initializer.
- *
  */
 void
 parser_parse_initializer (parser_context_t *context_p, /**< context */
@@ -2662,6 +2659,26 @@ parser_parse_initializer (parser_context_t *context_p, /**< context */
     parser_parse_array_initializer (context_p, flags);
   }
 } /* parser_parse_initializer */
+
+/**
+ * Parse an initializer using the next character.
+ */
+void
+parser_parse_initializer_by_next_char (parser_context_t *context_p, /**< context */
+                                       parser_pattern_flags_t flags) /**< flags */
+{
+  JERRY_ASSERT (lexer_check_next_characters (context_p, LIT_CHAR_LEFT_SQUARE, LIT_CHAR_LEFT_BRACE));
+
+  if (lexer_consume_next_character (context_p) == LIT_CHAR_LEFT_BRACE)
+  {
+    parser_parse_object_initializer (context_p, flags);
+  }
+  else
+  {
+    parser_parse_array_initializer (context_p, flags);
+  }
+} /* parser_parse_initializer_by_next_char */
+
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**

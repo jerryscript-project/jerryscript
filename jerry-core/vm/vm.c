@@ -918,11 +918,11 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
     switch (type)
     {
-      case CBC_CREATE_LOCAL:
+      case CBC_CREATE_VAR:
 #if ENABLED (JERRY_ES2015)
       case CBC_CREATE_LET:
       case CBC_CREATE_CONST:
-      case CBC_CREATE_DESTRUCTURED_ARG:
+      case CBC_CREATE_LOCAL:
 #endif /* ENABLED (JERRY_ES2015) */
       {
         uint32_t literal_index;
@@ -950,7 +950,7 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         ecma_property_value_t *property_value_p;
         property_value_p = ecma_create_named_data_property (frame_ctx_p->lex_env_p, name_p, prop_attributes, NULL);
 
-        if (type != CBC_CREATE_LOCAL)
+        if (type != CBC_CREATE_VAR)
         {
           property_value_p->value = ECMA_VALUE_UNINITIALIZED;
         }

@@ -1192,6 +1192,28 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
 
       lexer_next_token (context_p);
 
+      if (binding_type == SCANNER_BINDING_CATCH)
+      {
+        JERRY_ASSERT (context_p->stack_top_uint8 == SCAN_STACK_CATCH_STATEMENT);
+
+        scanner_pop_binding_list (scanner_context_p);
+
+        if (context_p->token.type != LEXER_RIGHT_PAREN)
+        {
+          scanner_raise_error (context_p);
+        }
+
+        lexer_next_token (context_p);
+
+        if (context_p->token.type != LEXER_LEFT_BRACE)
+        {
+          scanner_raise_error (context_p);
+        }
+
+        scanner_context_p->mode = SCAN_MODE_STATEMENT_OR_TERMINATOR;
+        return SCAN_NEXT_TOKEN;
+      }
+
       if (context_p->token.type != LEXER_ASSIGN)
       {
         if (SCANNER_NEEDS_BINDING_LIST (binding_type))
@@ -2401,19 +2423,36 @@ scanner_scan_statement_end (parser_context_t *context_p, /**< context */
           scanner_raise_error (context_p);
         }
 
-        const uint8_t *source_p = context_p->source_p;
+        scanner_literal_pool_t *literal_pool_p;
+        literal_pool_p = scanner_push_literal_pool (context_p, scanner_context_p, SCANNER_LITERAL_POOL_BLOCK);
+        literal_pool_p->source_p = context_p->source_p;
 
         lexer_next_token (context_p);
+        parser_stack_push_uint8 (context_p, SCAN_STACK_CATCH_STATEMENT);
+
+#if ENABLED (JERRY_ES2015)
+        if (context_p->token.type == LEXER_LEFT_SQUARE || context_p->token.type == LEXER_LEFT_BRACE)
+        {
+          scanner_push_destructuring_pattern (context_p, scanner_context_p, SCANNER_BINDING_CATCH, false);
+
+          if (context_p->token.type == LEXER_LEFT_SQUARE)
+          {
+            parser_stack_push_uint8 (context_p, SCAN_STACK_ARRAY_LITERAL);
+            scanner_context_p->mode = SCAN_MODE_BINDING;
+            return SCAN_NEXT_TOKEN;
+          }
+
+          parser_stack_push_uint8 (context_p, SCAN_STACK_OBJECT_LITERAL);
+          scanner_context_p->mode = SCAN_MODE_PROPERTY_NAME;
+          return SCAN_KEEP_TOKEN;
+        }
+#endif /* ENABLED (JERRY_ES2015) */
 
         if (context_p->token.type != LEXER_LITERAL
             || context_p->token.lit_location.type != LEXER_IDENT_LITERAL)
         {
           scanner_raise_error (context_p);
         }
-
-        scanner_literal_pool_t *literal_pool_p;
-        literal_pool_p = scanner_push_literal_pool (context_p, scanner_context_p, SCANNER_LITERAL_POOL_BLOCK);
-        literal_pool_p->source_p = source_p;
 
         lexer_lit_location_t *lit_location_p = scanner_add_literal (context_p, scanner_context_p);
         lit_location_p->type |= SCANNER_LITERAL_IS_LOCAL;
@@ -2432,7 +2471,6 @@ scanner_scan_statement_end (parser_context_t *context_p, /**< context */
           scanner_raise_error (context_p);
         }
 
-        parser_stack_push_uint8 (context_p, SCAN_STACK_CATCH_STATEMENT);
         scanner_context_p->mode = SCAN_MODE_STATEMENT_OR_TERMINATOR;
         return SCAN_NEXT_TOKEN;
       }
@@ -3099,7 +3137,8 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
                         || scanner_context.binding_type == SCANNER_BINDING_LET
                         || scanner_context.binding_type == SCANNER_BINDING_CONST
                         || scanner_context.binding_type == SCANNER_BINDING_ARG
-                        || scanner_context.binding_type == SCANNER_BINDING_ARROW_ARG);
+                        || scanner_context.binding_type == SCANNER_BINDING_ARROW_ARG
+                        || scanner_context.binding_type == SCANNER_BINDING_CATCH);
 
           if (type == LEXER_THREE_DOTS)
           {
@@ -3164,6 +3203,10 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
             if (scanner_context.binding_type == SCANNER_BINDING_LET)
             {
               literal_p->type |= SCANNER_LITERAL_IS_LET;
+            }
+            else if (scanner_context.binding_type == SCANNER_BINDING_CATCH)
+            {
+              literal_p->type |= SCANNER_LITERAL_IS_LOCAL;
             }
             else
             {
@@ -3337,6 +3380,11 @@ scan_completed:
               case SCANNER_STREAM_TYPE_CONST:
               {
                 JERRY_DEBUG_MSG ("    CONST ");
+                break;
+              }
+              case SCANNER_STREAM_TYPE_LOCAL:
+              {
+                JERRY_DEBUG_MSG ("    LOCAL ");
                 break;
               }
               case SCANNER_STREAM_TYPE_DESTRUCTURED_ARG:

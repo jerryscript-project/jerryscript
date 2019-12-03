@@ -131,6 +131,7 @@ typedef enum
   SCANNER_BINDING_CONST, /**< destructuring const binding */
   SCANNER_BINDING_ARG, /**< destructuring arg binding */
   SCANNER_BINDING_ARROW_ARG, /**< possible destructuring arg binding of an arrow function */
+  SCANNER_BINDING_CATCH, /**< destructuring catch binding */
 } scanner_binding_type_t;
 
 /**

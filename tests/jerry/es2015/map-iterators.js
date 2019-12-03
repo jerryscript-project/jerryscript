@@ -62,62 +62,62 @@ methods.forEach(function (method) {
   }
 });
 
-var valueIterators = [m.values(), m[Symbol.iterator]()];
+var entryIterators = [m.entries(), m[Symbol.iterator]()];
 var keyIterator = m.keys();
-var entryIterator = m.entries();
+var valueIterator = m.values();
 var elementCount = m.size;
 
 for (var i = 0; i < elementCount; i++) {
-  valueIterators.forEach(function(element) {
+  entryIterators.forEach(function(element) {
     var next = element.next();
     assert(next.done === false);
-    assert(next.value === i);
+    assert(next.value[0] === '' + i);
+    assert(next.value[1] === i);
   });
 
   var next = keyIterator.next();
   assert(next.done === false);
   assert(next.value === '' + i);
 
-  var next = entryIterator.next();
+  var next = valueIterator.next();
   assert(next.done === false);
-  assert(next.value[0] === '' + i);
-  assert(next.value[1] === i);
+  assert(next.value === i);
 }
 
-valueIterators.forEach(function(element) {
-    var next = element.next();
-    assert(next.done === true);
-    assert(next.value === undefined);
-  });
+entryIterators.forEach(function(element) {
+  var next = element.next();
+  assert(next.done === true);
+  assert(next.value === undefined);
+});
 
 var next = keyIterator.next();
 assert(next.done === true);
 assert(next.value === undefined);
 
-next = entryIterator.next();
+next = valueIterator.next();
 assert(next.done === true);
 assert(next.value === undefined);
 
-var valueIterators = [m.values(), m[Symbol.iterator]()];
+var entryIterators = [m.entries(), m[Symbol.iterator]()];
 var keyIterator = m.keys();
-var entryIterator = m.entries();
+var valueIterator = m.values();
 var elementCount = m.size;
 
 for (var i = 0; i < elementCount; i++) {
-  valueIterators.forEach(function(element) {
+  entryIterators.forEach(function(element) {
     var next = element.next();
     assert(next.done === false);
-    assert(next.value === i);
+    assert(next.value[0] === '' + i);
+    assert(next.value[1] === i);
   });
 
   var next = keyIterator.next();
   assert(next.done === false);
   assert(next.value === '' + i);
 
-  var next = entryIterator.next();
+  var next = valueIterator.next();
   assert(next.done === false);
-  assert(next.value[0] === '' + i);
-  assert(next.value[1] === i);
+  assert(next.value === i);
   m.delete('' + i);
 }
 

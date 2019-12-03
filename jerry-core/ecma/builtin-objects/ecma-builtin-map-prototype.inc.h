@@ -48,7 +48,7 @@ ROUTINE (LIT_MAGIC_STRING_SET, ecma_builtin_map_prototype_object_set, 2, 2)
 ROUTINE (LIT_MAGIC_STRING_ENTRIES, ecma_builtin_map_prototype_object_entries, 0, 0)
 ROUTINE (LIT_MAGIC_STRING_VALUES, ecma_builtin_map_prototype_object_values, 0, 0)
 ROUTINE (LIT_MAGIC_STRING_KEYS, ecma_builtin_map_prototype_object_keys, 0, 0)
-ROUTINE (LIT_GLOBAL_SYMBOL_ITERATOR, ecma_builtin_map_prototype_object_values, 0, 0)
+ROUTINE (LIT_GLOBAL_SYMBOL_ITERATOR, ecma_builtin_map_prototype_object_entries, 0, 0)
 #endif /* ENABLED (JERRY_ES2015) */
 
 /* ECMA-262 v6, 23.1.3.10 */

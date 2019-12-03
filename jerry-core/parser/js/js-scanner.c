@@ -648,6 +648,10 @@ scanner_scan_primary_expression (parser_context_t *context_p, /**< context */
         scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION_END;
       }
 
+      if (context_p->token.type == LEXER_MULTIPLY)
+      {
+        return SCAN_NEXT_TOKEN;
+      }
       return SCAN_KEEP_TOKEN;
     }
 #endif /* ENABLED (JERRY_ES2015) */

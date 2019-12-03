@@ -319,23 +319,23 @@ opfunc_append_to_spread_array (ecma_value_t *stack_top_p, /**< current stack top
       {
         while (true)
         {
-          ecma_value_t next = ecma_op_iterator_step (iterator);
+          ecma_value_t next_value = ecma_op_iterator_step (iterator);
 
-          if (ECMA_IS_VALUE_ERROR (next))
+          if (ECMA_IS_VALUE_ERROR (next_value))
           {
             break;
           }
 
-          if (ecma_is_value_false (next))
+          if (ecma_is_value_false (next_value))
           {
             idx--;
             ret_value = ECMA_VALUE_EMPTY;
             break;
           }
 
-          ecma_value_t value = ecma_op_iterator_value (next);
+          ecma_value_t value = ecma_op_iterator_value (next_value);
 
-          ecma_free_value (next);
+          ecma_free_value (next_value);
 
           if (ECMA_IS_VALUE_ERROR (value))
           {
@@ -412,22 +412,22 @@ opfunc_spread_arguments (ecma_value_t *stack_top_p, /**< pointer to the current 
     {
       while (true)
       {
-        ecma_value_t next = ecma_op_iterator_step (iterator);
+        ecma_value_t next_value = ecma_op_iterator_step (iterator);
 
-        if (ECMA_IS_VALUE_ERROR (next))
+        if (ECMA_IS_VALUE_ERROR (next_value))
         {
           break;
         }
 
-        if (ecma_is_value_false (next))
+        if (ecma_is_value_false (next_value))
         {
           ret_value = ECMA_VALUE_EMPTY;
           break;
         }
 
-        ecma_value_t value = ecma_op_iterator_value (next);
+        ecma_value_t value = ecma_op_iterator_value (next_value);
 
-        ecma_free_value (next);
+        ecma_free_value (next_value);
 
         if (ECMA_IS_VALUE_ERROR (value))
         {
@@ -615,7 +615,7 @@ opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p) /**< frame context
  */
 ecma_value_t
 opfunc_resume_executable_object (vm_executable_object_t *executable_object_p, /**< executable object */
-                                 ecma_value_t value) /**< value pushed onto the stack */
+                                 ecma_value_t value) /**< value pushed onto the stack (takes the reference) */
 {
   const ecma_compiled_code_t *bytecode_header_p = executable_object_p->frame_ctx.bytecode_header_p;
   ecma_value_t *register_p = VM_GET_REGISTERS (&executable_object_p->frame_ctx);
@@ -654,7 +654,7 @@ opfunc_resume_executable_object (vm_executable_object_t *executable_object_p, /*
     ecma_ref_if_object (*register_p++);
   }
 
-  *register_p++ = ecma_copy_value (value);
+  *register_p++ = value;
   executable_object_p->frame_ctx.stack_top_p = register_p;
 
   JERRY_ASSERT (ECMA_EXECUTABLE_OBJECT_IS_SUSPENDED (executable_object_p->extended_object.u.class_prop.extra_info));

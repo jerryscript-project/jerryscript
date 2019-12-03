@@ -1761,6 +1761,8 @@ typedef enum
 {
   ECMA_EXECUTABLE_OBJECT_COMPLETED = (1u << 0), /**< executable object is completed and cannot be resumed */
   ECMA_EXECUTABLE_OBJECT_RUNNING = (1u << 1), /**< executable object is currently running */
+  /* Generator specific flags. */
+  ECMA_GENERATOR_ITERATE_AND_YIELD = (1u << 2), /**< the generator performs a yield* operation */
 } ecma_executable_object_flags_t;
 
 /**

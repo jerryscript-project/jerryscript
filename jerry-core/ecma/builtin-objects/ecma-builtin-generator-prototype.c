@@ -15,9 +15,11 @@
 
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
+#include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-iterator-object.h"
+#include "jcontext.h"
 #include "opcodes.h"
 #include "vm-defines.h"
 
@@ -39,16 +41,6 @@
  * \addtogroup generator ECMA Generator object built-in
  * @{
  */
-
-/**
- * Generator resume execution flags.
- */
-typedef enum
-{
-  ECMA_GENERATOR_NEXT, /**< generator should continue its execution */
-  ECMA_GENERATOR_RETURN, /**< generator should perform a return operation */
-  ECMA_GENERATOR_THROW, /**< generator should perform a throw operation */
-} ecma_generator_resume_mode_t;
 
 /**
  * Byte code sequence which returns from the generator.
@@ -75,7 +67,7 @@ static const uint8_t ecma_builtin_generator_prototype_throw[1] =
 static ecma_value_t
 ecma_builtin_generator_prototype_object_do (ecma_value_t this_arg, /**< this argument */
                                             ecma_value_t arg, /**< argument */
-                                            ecma_generator_resume_mode_t resume_mode) /**< resume mode */
+                                            ecma_iterator_command_type_t resume_mode) /**< resume mode */
 {
   vm_executable_object_t *executable_object_p = NULL;
 
@@ -109,27 +101,98 @@ ecma_builtin_generator_prototype_object_do (ecma_value_t this_arg, /**< this arg
     return ecma_create_iter_result_object (ECMA_VALUE_UNDEFINED, ECMA_VALUE_TRUE);
   }
 
-  if (resume_mode == ECMA_GENERATOR_RETURN)
+  arg = ecma_copy_value (arg);
+
+  while (true)
   {
-    executable_object_p->frame_ctx.byte_code_p = ecma_builtin_generator_prototype_return;
+    if (executable_object_p->extended_object.u.class_prop.extra_info & ECMA_GENERATOR_ITERATE_AND_YIELD)
+    {
+      ecma_value_t iterator = executable_object_p->extended_object.u.class_prop.u.value;
+
+      bool done = false;
+      ecma_value_t result = ecma_op_iterator_do (resume_mode, iterator, arg, &done);
+      ecma_free_value (arg);
+
+      if (ECMA_IS_VALUE_ERROR (result))
+      {
+        arg = result;
+      }
+      else if (done)
+      {
+        arg = ecma_op_iterator_value (result);
+        ecma_free_value (result);
+        if (resume_mode == ECMA_ITERATOR_THROW)
+        {
+          /* This part is changed in the newest ECMAScript standard.
+           * It was ECMA_ITERATOR_RETURN in ES2015, but I think it was a typo. */
+          resume_mode = ECMA_ITERATOR_NEXT;
+        }
+      }
+      else
+      {
+        return result;
+      }
+
+      executable_object_p->extended_object.u.class_prop.extra_info &= (uint16_t) ~ECMA_GENERATOR_ITERATE_AND_YIELD;
+
+      if (ECMA_IS_VALUE_ERROR (arg))
+      {
+        arg = JERRY_CONTEXT (error_value);
+        JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_EXCEPTION;
+        resume_mode = ECMA_ITERATOR_THROW;
+      }
+    }
+
+    if (resume_mode == ECMA_ITERATOR_RETURN)
+    {
+      executable_object_p->frame_ctx.byte_code_p = ecma_builtin_generator_prototype_return;
+    }
+    else if (resume_mode == ECMA_ITERATOR_THROW)
+    {
+      executable_object_p->frame_ctx.byte_code_p = ecma_builtin_generator_prototype_throw;
+    }
+
+    ecma_value_t value = opfunc_resume_executable_object (executable_object_p, arg);
+
+    if (ECMA_IS_VALUE_ERROR (value))
+    {
+      return value;
+    }
+
+    bool done = (executable_object_p->extended_object.u.class_prop.extra_info & ECMA_EXECUTABLE_OBJECT_COMPLETED);
+
+    if (!done)
+    {
+      const uint8_t *byte_code_p = executable_object_p->frame_ctx.byte_code_p;
+
+      JERRY_ASSERT (byte_code_p[-2] == CBC_EXT_OPCODE
+                    && (byte_code_p[-1] == CBC_EXT_YIELD || byte_code_p[-1] == CBC_EXT_YIELD_ITERATOR));
+
+      if (byte_code_p[-1] == CBC_EXT_YIELD_ITERATOR)
+      {
+        ecma_value_t iterator = ecma_op_get_iterator (value, ECMA_VALUE_EMPTY);
+        ecma_free_value (value);
+
+        if (ECMA_IS_VALUE_ERROR (iterator))
+        {
+          resume_mode = ECMA_ITERATOR_THROW;
+          arg = JERRY_CONTEXT (error_value);
+          JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_EXCEPTION;
+          continue;
+        }
+
+        ecma_deref_object (ecma_get_object_from_value (iterator));
+        executable_object_p->extended_object.u.class_prop.extra_info |= ECMA_GENERATOR_ITERATE_AND_YIELD;
+        executable_object_p->extended_object.u.class_prop.u.value = iterator;
+        arg = ECMA_VALUE_UNDEFINED;
+        continue;
+      }
+    }
+
+    ecma_value_t result = ecma_create_iter_result_object (value, ecma_make_boolean_value (done));
+    ecma_fast_free_value (value);
+    return result;
   }
-  else if (resume_mode == ECMA_GENERATOR_THROW)
-  {
-    executable_object_p->frame_ctx.byte_code_p = ecma_builtin_generator_prototype_throw;
-  }
-
-  ecma_value_t value = opfunc_resume_executable_object (executable_object_p, arg);
-
-  if (JERRY_UNLIKELY (ECMA_IS_VALUE_ERROR (value)))
-  {
-    return value;
-  }
-
-  bool done = (executable_object_p->extended_object.u.class_prop.extra_info & ECMA_EXECUTABLE_OBJECT_COMPLETED);
-  ecma_value_t result = ecma_create_iter_result_object (value, ecma_make_boolean_value (done));
-
-  ecma_fast_free_value (value);
-  return result;
 } /* ecma_builtin_generator_prototype_object_do */
 
 /**
@@ -145,7 +208,7 @@ static ecma_value_t
 ecma_builtin_generator_prototype_object_next (ecma_value_t this_arg, /**< this argument */
                                               ecma_value_t next_arg) /**< next argument */
 {
-  return ecma_builtin_generator_prototype_object_do (this_arg, next_arg, ECMA_GENERATOR_NEXT);
+  return ecma_builtin_generator_prototype_object_do (this_arg, next_arg, ECMA_ITERATOR_NEXT);
 } /* ecma_builtin_generator_prototype_object_next */
 
 /**
@@ -161,7 +224,7 @@ static ecma_value_t
 ecma_builtin_generator_prototype_object_return (ecma_value_t this_arg, /**< this argument */
                                                 ecma_value_t return_arg) /**< return argument */
 {
-  return ecma_builtin_generator_prototype_object_do (this_arg, return_arg, ECMA_GENERATOR_RETURN);
+  return ecma_builtin_generator_prototype_object_do (this_arg, return_arg, ECMA_ITERATOR_RETURN);
 } /* ecma_builtin_generator_prototype_object_return */
 
 /**
@@ -177,7 +240,7 @@ static ecma_value_t
 ecma_builtin_generator_prototype_object_throw (ecma_value_t this_arg, /**< this argument */
                                                 ecma_value_t throw_arg) /**< throw argument */
 {
-  return ecma_builtin_generator_prototype_object_do (this_arg, throw_arg, ECMA_GENERATOR_THROW);
+  return ecma_builtin_generator_prototype_object_do (this_arg, throw_arg, ECMA_ITERATOR_THROW);
 } /* ecma_builtin_generator_prototype_object_throw */
 
 /**

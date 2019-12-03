@@ -1563,8 +1563,16 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
       parser_check_assignment_expr (context_p);
       lexer_next_token (context_p);
 
+      cbc_ext_opcode_t opcode = CBC_EXT_YIELD;
+
       if (!lexer_check_yield_no_arg (context_p))
       {
+        if (context_p->token.type == LEXER_MULTIPLY)
+        {
+          lexer_next_token (context_p);
+          opcode = CBC_EXT_YIELD_ITERATOR;
+        }
+
         parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
       }
       else
@@ -1572,7 +1580,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
         parser_emit_cbc (context_p, CBC_PUSH_UNDEFINED);
       }
 
-      parser_emit_cbc_ext (context_p, CBC_EXT_YIELD);
+      parser_emit_cbc_ext (context_p, opcode);
 
       return (context_p->token.type != LEXER_RIGHT_PAREN
               && context_p->token.type != LEXER_COMMA);

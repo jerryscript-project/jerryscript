@@ -3420,16 +3420,16 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             goto error;
           }
 
-          ecma_value_t iterator_step = ecma_op_iterator_step (iterator);
+          ecma_value_t next_value = ecma_op_iterator_step (iterator);
 
-          if (ECMA_IS_VALUE_ERROR (iterator_step))
+          if (ECMA_IS_VALUE_ERROR (next_value))
           {
             ecma_free_value (iterator);
-            result = iterator_step;
+            result = next_value;
             goto error;
           }
 
-          if (ecma_is_value_false (iterator_step))
+          if (ecma_is_value_false (next_value))
           {
             ecma_free_value (iterator);
             byte_code_p = byte_code_start_p + branch_offset;
@@ -3441,7 +3441,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           VM_PLUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION);
           stack_top_p += PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION;
           stack_top_p[-1] = VM_CREATE_CONTEXT (VM_CONTEXT_FOR_OF, branch_offset);
-          stack_top_p[-2] = iterator_step;
+          stack_top_p[-2] = next_value;
           stack_top_p[-3] = iterator;
 
           if (byte_code_p[0] == CBC_EXT_OPCODE && byte_code_p[1] == CBC_EXT_CLONE_CONTEXT)
@@ -3471,18 +3471,18 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           JERRY_ASSERT (VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth == stack_top_p);
 
-          ecma_value_t iterator_step = ecma_op_iterator_step (stack_top_p[-3]);
+          ecma_value_t next_value = ecma_op_iterator_step (stack_top_p[-3]);
 
-          if (ECMA_IS_VALUE_ERROR (iterator_step))
+          if (ECMA_IS_VALUE_ERROR (next_value))
           {
-            result = iterator_step;
+            result = next_value;
             goto error;
           }
 
-          if (!ecma_is_value_false (iterator_step))
+          if (!ecma_is_value_false (next_value))
           {
             ecma_free_value (stack_top_p[-2]);
-            stack_top_p[-2] = iterator_step;
+            stack_top_p[-2] = next_value;
             byte_code_p = byte_code_start_p + branch_offset;
             continue;
           }
@@ -3491,7 +3491,6 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           ecma_free_value (stack_top_p[-3]);
           VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION);
           stack_top_p -= PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION;
-
           continue;
         }
 #endif /* ENABLED (JERRY_ES2015) */

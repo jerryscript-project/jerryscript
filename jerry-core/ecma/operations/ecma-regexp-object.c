@@ -2220,11 +2220,12 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
                                  (lit_utf8_size_t) (string_end_p - source_position_p));
 
   result = ecma_make_string_value (ecma_stringbuilder_finalize (&replace_ctx.builder));
-  goto cleanup_results;
+  goto cleanup_chars;
 
 cleanup_builder:
   ecma_stringbuilder_destroy (&replace_ctx.builder);
 
+cleanup_chars:
   if (string_flags & ECMA_STRING_FLAG_MUST_BE_FREED)
   {
     jmem_heap_free_block ((void *) replace_ctx.string_p, replace_ctx.string_size);

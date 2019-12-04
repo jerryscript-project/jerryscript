@@ -902,6 +902,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_to_string_val, /**
       if (ECMA_IS_VALUE_ERROR (match_result))
       {
         match_result = JERRY_CONTEXT (error_value);
+        JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_EXCEPTION;
       }
 
       ecma_free_value (match_result);
@@ -991,6 +992,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_to_string_val, /**
         if (ECMA_IS_VALUE_ERROR (match_result))
         {
           ecma_free_value (JERRY_CONTEXT (error_value));
+          JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_EXCEPTION;
         }
       }
       else

@@ -1256,6 +1256,7 @@ ecma_create_error_reference (ecma_value_t value, /**< referenced value */
 {
   ecma_error_reference_t *error_ref_p = (ecma_error_reference_t *) jmem_pools_alloc (sizeof (ecma_error_reference_t));
 
+  JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_EXCEPTION;
   error_ref_p->refs_and_flags = ECMA_ERROR_REF_ONE | (is_exception ? 0 : ECMA_ERROR_REF_ABORT);
   error_ref_p->value = value;
   return ecma_make_error_reference_value (error_ref_p);

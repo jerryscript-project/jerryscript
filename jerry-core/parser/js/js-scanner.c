@@ -604,7 +604,7 @@ scanner_scan_primary_expression (parser_context_t *context_p, /**< context */
 #endif /* ENABLED (JERRY_ES2015) */
     case LEXER_RIGHT_SQUARE:
     {
-      if (stack_top != SCAN_STACK_ARRAY_LITERAL)
+      if (stack_top != SCAN_STACK_ARRAY_LITERAL && stack_top != SCAN_STACK_PROPERTY_ACCESSOR)
       {
         scanner_raise_error (context_p);
       }

@@ -1774,7 +1774,7 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
   }
   else
   {
-    JERRY_ASSERT (context_p->scope_stack_p != NULL);
+    JERRY_ASSERT (context_p->scope_stack_p != NULL || context_p->scope_stack_size == 0);
 
     scope_stack_p = context_p->scope_stack_p;
     scope_stack_end_p = scope_stack_p + context_p->scope_stack_size;

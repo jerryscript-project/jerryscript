@@ -1862,7 +1862,10 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             cbc_opcode_t next_call_opcode = (cbc_opcode_t) byte_code_start_p[2];
             /* The next opcode must be a call opcode */
-            JERRY_ASSERT (CBC_CALL <= next_call_opcode && next_call_opcode <= CBC_CALL2_PROP_BLOCK);
+            JERRY_ASSERT ((next_call_opcode >= CBC_CALL && next_call_opcode <= CBC_CALL2_PROP_BLOCK)
+                          || (next_call_opcode == CBC_EXT_OPCODE
+                              && byte_code_start_p[3] >= CBC_EXT_SPREAD_CALL
+                              && byte_code_start_p[3] <= CBC_EXT_SPREAD_CALL_PROP_BLOCK));
 
             int arguments_list_len;
             if (next_call_opcode >= CBC_CALL0)
@@ -1876,7 +1879,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                * In this case the arguments are coded into the byte code stream as a byte argument
                * following the call opcode.
                */
-              arguments_list_len = (int) byte_code_start_p[3];
+              arguments_list_len = (int) byte_code_start_p[next_call_opcode == CBC_EXT_OPCODE ? 4 : 3];
             }
             /* The old 'super' value is at least '-3' element away from the current position on the stack. */
             index = -3 - arguments_list_len;

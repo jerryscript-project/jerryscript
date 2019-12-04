@@ -307,6 +307,26 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
 } /* ecma_op_dataview_get_set_view_value */
 
 /**
+ * Check if the value is dataview
+ *
+ * @return true - if value is a DataView object
+ *         false - otherwise
+ */
+bool
+ecma_is_dataview (ecma_value_t value) /**< the target need to be checked */
+{
+  if (!ecma_is_value_object (value))
+  {
+    return false;
+  }
+
+  ecma_dataview_object_t *dataview_object_p = (ecma_dataview_object_t *) ecma_get_object_from_value (value);
+
+  return (ecma_get_object_type (&dataview_object_p->header.object) == ECMA_OBJECT_TYPE_CLASS
+          && dataview_object_p->header.u.class_prop.class_id == LIT_MAGIC_STRING_DATAVIEW_UL);
+} /* ecma_is_dataview */
+
+/**
  * @}
  * @}
  */

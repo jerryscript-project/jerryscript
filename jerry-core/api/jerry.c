@@ -3743,15 +3743,7 @@ jerry_value_is_dataview (const jerry_value_t value) /**< value to check if it is
   jerry_assert_api_available ();
 
 #if ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW)
-  if (!ecma_is_value_object (value))
-  {
-    return false;
-  }
-
-  ecma_dataview_object_t *dataview_object_p = (ecma_dataview_object_t *) ecma_get_object_from_value (value);
-
-  return (ecma_get_object_type (&dataview_object_p->header.object) == ECMA_OBJECT_TYPE_CLASS
-          && dataview_object_p->header.u.class_prop.class_id == LIT_MAGIC_STRING_DATAVIEW_UL);
+  return ecma_is_dataview (value);
 #else /* !ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW) */
   JERRY_UNUSED (value);
   return false;

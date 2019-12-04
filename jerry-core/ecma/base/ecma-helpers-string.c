@@ -2816,7 +2816,10 @@ ecma_op_advance_string_index (ecma_string_t *str_p, /**< input string */
                               bool is_unicode) /**< true - if regexp object's "unicode" flag is set
                                                     false - otherwise */
 {
-  JERRY_ASSERT (index < UINT32_MAX - 1);
+  if (index >= UINT32_MAX - 1)
+  {
+    return UINT32_MAX;
+  }
 
   uint32_t next_index = index + 1;
 

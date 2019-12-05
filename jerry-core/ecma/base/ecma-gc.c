@@ -377,6 +377,12 @@ ecma_gc_mark_executable_object (ecma_object_t *object_p) /**< object */
     return;
   }
 
+  if (executable_object_p->extended_object.u.class_prop.extra_info & ECMA_GENERATOR_ITERATE_AND_YIELD)
+  {
+    ecma_value_t iterator = executable_object_p->extended_object.u.class_prop.u.value;
+    ecma_gc_set_object_visited (ecma_get_object_from_value (iterator));
+  }
+
   ecma_gc_set_object_visited (executable_object_p->frame_ctx.lex_env_p);
 
   if (ecma_is_value_object (executable_object_p->frame_ctx.this_binding))

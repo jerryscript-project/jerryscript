@@ -28,6 +28,16 @@
  */
 
 /**
+ * Generator resume execution flags.
+ */
+typedef enum
+{
+  ECMA_ITERATOR_NEXT, /**< generator should continue its execution */
+  ECMA_ITERATOR_RETURN, /**< generator should perform a return operation */
+  ECMA_ITERATOR_THROW, /**< generator should perform a throw operation */
+} ecma_iterator_command_type_t;
+
+/**
  * Maximum value of [[%Iterator%NextIndex]] until it can be stored
  * in an ecma pseudo array object structure element.
  */
@@ -50,10 +60,14 @@ ecma_value_t
 ecma_op_iterator_value (ecma_value_t iter_result);
 
 ecma_value_t
+ecma_op_iterator_close (ecma_value_t iterator);
+
+ecma_value_t
 ecma_op_iterator_step (ecma_value_t iterator);
 
 ecma_value_t
-ecma_op_iterator_close (ecma_value_t iterator);
+ecma_op_iterator_do (ecma_iterator_command_type_t command, ecma_value_t iterator,
+                     ecma_value_t value, bool *done_p);
 
 #endif /* ENABLED (JERRY_ES2015) */
 

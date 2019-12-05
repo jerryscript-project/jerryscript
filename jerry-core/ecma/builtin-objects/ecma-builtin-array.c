@@ -321,14 +321,12 @@ iterator_cleanup:
   while (k < len)
   {
     /* 16.b */
-    ecma_string_t *pk = ecma_new_ecma_string_from_uint32 (k);
-    ecma_value_t k_value = ecma_op_object_get (array_like_obj_p, pk);
-    ecma_deref_ecma_string (pk);
+    ecma_value_t k_value = ecma_op_object_get_by_uint32_index (array_like_obj_p, k);
 
     /* 16.c */
     if (ECMA_IS_VALUE_ERROR (k_value))
     {
-      goto cleanup;
+      goto construct_cleanup;
     }
 
     ecma_value_t mapped_value;
@@ -344,7 +342,7 @@ iterator_cleanup:
       /* 16.d.ii */
       if (ECMA_IS_VALUE_ERROR (mapped_value))
       {
-        goto cleanup;
+        goto construct_cleanup;
       }
     }
     else
@@ -362,7 +360,7 @@ iterator_cleanup:
     /* 16.g */
     if (ECMA_IS_VALUE_ERROR (set_status))
     {
-      goto cleanup;
+      goto construct_cleanup;
     }
 
     /* 16.h */
@@ -380,12 +378,15 @@ iterator_cleanup:
   /* 18. */
   if (ECMA_IS_VALUE_ERROR (set_status))
   {
-    goto cleanup;
+    goto construct_cleanup;
   }
 
   /* 19. */
-  ret_value = ecma_make_object_value (array_obj_p);
+  ecma_deref_object (array_like_obj_p);
+  return ecma_make_object_value (array_obj_p);
 
+construct_cleanup:
+  ecma_deref_object (array_obj_p);
 cleanup:
   ecma_deref_object (array_like_obj_p);
   return ret_value;

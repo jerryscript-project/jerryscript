@@ -1686,7 +1686,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 
       uint32_t flags = (PARSER_PATTERN_BINDING
                         | PARSER_PATTERN_TARGET_ON_STACK
-                        | PARSER_PATTERN_LEXICAL
+                        | PARSER_PATTERN_LOCAL
                         | PARSER_PATTERN_ARGUMENTS);
 
       if (context_p->next_scanner_info_p->source_p == context_p->source_p)

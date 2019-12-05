@@ -381,7 +381,7 @@ parser_module_parse_export_clause (parser_context_t *context_p) /**< parser cont
     uint16_t export_name_index = PARSER_MAXIMUM_NUMBER_OF_LITERALS;
 
     lexer_next_token (context_p);
-    if (lexer_compare_literal_to_identifier (context_p, "as", 2))
+    if (lexer_token_is_identifier (context_p, "as", 2))
     {
       lexer_next_token (context_p);
 
@@ -433,7 +433,7 @@ parser_module_parse_export_clause (parser_context_t *context_p) /**< parser cont
       lexer_next_token (context_p);
     }
 
-    if (lexer_compare_literal_to_identifier (context_p, "from", 4))
+    if (lexer_token_is_identifier (context_p, "from", 4))
     {
       parser_raise_error (context_p, PARSER_ERR_RIGHT_BRACE_EXPECTED);
     }
@@ -480,7 +480,7 @@ parser_module_parse_import_clause (parser_context_t *context_p) /**< parser cont
     uint16_t local_name_index = PARSER_MAXIMUM_NUMBER_OF_LITERALS;
 
     lexer_next_token (context_p);
-    if (lexer_compare_literal_to_identifier (context_p, "as", 2))
+    if (lexer_token_is_identifier (context_p, "as", 2))
     {
       lexer_next_token (context_p);
 
@@ -540,7 +540,7 @@ parser_module_parse_import_clause (parser_context_t *context_p) /**< parser cont
       lexer_next_token (context_p);
     }
 
-    if (lexer_compare_literal_to_identifier (context_p, "from", 4))
+    if (lexer_token_is_identifier (context_p, "from", 4))
     {
       parser_raise_error (context_p, PARSER_ERR_RIGHT_BRACE_EXPECTED);
     }

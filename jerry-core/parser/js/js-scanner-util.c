@@ -1467,6 +1467,7 @@ scanner_cleanup (parser_context_t *context_p) /**< context */
       {
 #if ENABLED (JERRY_ES2015)
         JERRY_ASSERT (scanner_info_p->type == SCANNER_TYPE_END_ARGUMENTS
+                      || scanner_info_p->type == SCANNER_TYPE_LET_EXPRESSION
                       || scanner_info_p->type == SCANNER_TYPE_ERR_REDECLARED);
 #else /* !ENABLED (JERRY_ES2015) */
         JERRY_ASSERT (scanner_info_p->type == SCANNER_TYPE_END_ARGUMENTS);

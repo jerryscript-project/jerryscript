@@ -2424,15 +2424,13 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
                                           current_flags);
   ecma_deref_ecma_string (pattern_str_p);
 
-  bool is_throw = ECMA_IS_VALUE_ERROR (completion_value) != 0;
-
-  ecma_free_value (completion_value);
-
-  if (is_throw)
+  if (ECMA_IS_VALUE_ERROR (completion_value))
   {
-    ecma_free_value (JERRY_CONTEXT (error_value));
+    jcontext_release_exception ();
     parser_raise_error (context_p, PARSER_ERR_INVALID_REGEXP);
   }
+
+  ecma_free_value (completion_value);
 
   literal_p->type = LEXER_REGEXP_LITERAL;
   literal_p->u.bytecode_p = (ecma_compiled_code_t *) re_bytecode_p;

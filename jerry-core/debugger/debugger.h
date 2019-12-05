@@ -484,7 +484,7 @@ bool jerry_debugger_send_string (uint8_t message_type, uint8_t sub_type, const u
 bool jerry_debugger_send_function_cp (jerry_debugger_header_type_t type, ecma_compiled_code_t *compiled_code_p);
 bool jerry_debugger_send_parse_function (uint32_t line, uint32_t column);
 void jerry_debugger_send_memstats (void);
-bool jerry_debugger_send_exception_string (void);
+bool jerry_debugger_send_exception_string (ecma_value_t exception_value);
 
 #endif /* ENABLED (JERRY_DEBUGGER) */
 

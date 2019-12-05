@@ -84,7 +84,7 @@ vm_set_var (ecma_object_t *lex_env_p, /**< target lexical environment */
 
   if (ECMA_IS_VALUE_ERROR (put_value_result))
   {
-    ecma_free_value (JERRY_CONTEXT (error_value));
+    jcontext_release_exception ();
   }
 
   ecma_free_value (lit_value);

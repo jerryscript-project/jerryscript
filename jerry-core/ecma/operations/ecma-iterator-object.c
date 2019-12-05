@@ -416,10 +416,9 @@ ecma_op_iterator_close (ecma_value_t iterator) /**< iterator value */
   /* 2. */
   ecma_value_t completion = ECMA_VALUE_EMPTY;
 
-  if (JERRY_CONTEXT (status_flags) & ECMA_STATUS_EXCEPTION)
+  if (jcontext_has_pending_exception ())
   {
-    completion = JERRY_CONTEXT (error_value);
-    JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_EXCEPTION;
+    completion = jcontext_take_exception ();
   }
 
   /* 3. */
@@ -440,7 +439,7 @@ ecma_op_iterator_close (ecma_value_t iterator) /**< iterator value */
       return ECMA_VALUE_UNDEFINED;
     }
 
-    JERRY_CONTEXT (status_flags) |= ECMA_STATUS_EXCEPTION;
+    jcontext_raise_exception (completion);
     return ECMA_VALUE_ERROR;
   }
 
@@ -454,12 +453,14 @@ ecma_op_iterator_close (ecma_value_t iterator) /**< iterator value */
   {
     if (ECMA_IS_VALUE_ERROR (inner_result))
     {
-      ecma_free_value (JERRY_CONTEXT (error_value));
-      JERRY_CONTEXT (error_value) = completion;
+      jcontext_release_exception ();
+    }
+    else
+    {
+      ecma_free_value (inner_result);
     }
 
-    ecma_free_value (inner_result);
-    JERRY_CONTEXT (status_flags) |= ECMA_STATUS_EXCEPTION;
+    jcontext_raise_exception (completion);
     return ECMA_VALUE_ERROR;
   }
 
@@ -486,7 +487,7 @@ ecma_op_iterator_close (ecma_value_t iterator) /**< iterator value */
     return ECMA_VALUE_UNDEFINED;
   }
 
-  JERRY_CONTEXT (status_flags) |= ECMA_STATUS_EXCEPTION;
+  jcontext_raise_exception (completion);
   return ECMA_VALUE_ERROR;
 } /* ecma_op_iterator_close */
 

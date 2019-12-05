@@ -421,7 +421,7 @@ ecma_value_t ecma_create_error_reference_from_context (void);
 ecma_value_t ecma_create_error_object_reference (ecma_object_t *object_p);
 void ecma_ref_error_reference (ecma_error_reference_t *error_ref_p);
 void ecma_deref_error_reference (ecma_error_reference_t *error_ref_p);
-ecma_value_t ecma_clear_error_reference (ecma_value_t value, bool set_abort_flag);
+void ecma_raise_error_from_error_reference (ecma_value_t value);
 
 void ecma_bytecode_ref (ecma_compiled_code_t *bytecode_p);
 void ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p);

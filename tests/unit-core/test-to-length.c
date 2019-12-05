@@ -51,7 +51,7 @@ main (void)
 
   result = ecma_op_to_length (error_throw, &num);
 
-  ecma_free_value (JERRY_CONTEXT (error_value));
+  jcontext_release_exception ();
 
   TEST_ASSERT (ECMA_IS_VALUE_ERROR (result));
 

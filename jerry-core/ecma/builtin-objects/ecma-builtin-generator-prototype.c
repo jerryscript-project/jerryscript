@@ -137,8 +137,7 @@ ecma_builtin_generator_prototype_object_do (ecma_value_t this_arg, /**< this arg
 
       if (ECMA_IS_VALUE_ERROR (arg))
       {
-        arg = JERRY_CONTEXT (error_value);
-        JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_EXCEPTION;
+        arg = jcontext_take_exception ();
         resume_mode = ECMA_ITERATOR_THROW;
       }
     }
@@ -176,8 +175,7 @@ ecma_builtin_generator_prototype_object_do (ecma_value_t this_arg, /**< this arg
         if (ECMA_IS_VALUE_ERROR (iterator))
         {
           resume_mode = ECMA_ITERATOR_THROW;
-          arg = JERRY_CONTEXT (error_value);
-          JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_EXCEPTION;
+          arg = jcontext_take_exception ();
           continue;
         }
 

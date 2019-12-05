@@ -3057,7 +3057,7 @@ jerry_foreach_object_property (const jerry_value_t obj_val, /**< object value */
     return true;
   }
 
-  ecma_free_value (JERRY_CONTEXT (error_value));
+  jcontext_release_exception ();
   return false;
 } /* jerry_foreach_object_property */
 

@@ -1130,7 +1130,7 @@ ecma_op_typedarray_define_index_prop (ecma_object_t *obj_p, /**< a TypedArray ob
 
     if (ECMA_IS_VALUE_ERROR (error))
     {
-      ecma_free_value (JERRY_CONTEXT (error_value));
+      jcontext_release_exception ();
       return false;
     }
     ecma_typedarray_info_t info = ecma_typedarray_get_info (obj_p);

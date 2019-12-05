@@ -555,21 +555,15 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
   {
     if (eval_string_p[4] != JERRY_DEBUGGER_EVAL_EVAL)
     {
+      JERRY_ASSERT (eval_string_p[4] == JERRY_DEBUGGER_EVAL_THROW || eval_string_p[4] == JERRY_DEBUGGER_EVAL_ABORT);
       JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_VM_EXCEPTION_THROWN);
-      JERRY_CONTEXT (error_value) = result;
 
       /* Stop where the error is caught. */
       JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_VM_STOP);
       JERRY_CONTEXT (debugger_stop_context) = NULL;
 
-      if (eval_string_p[4] == JERRY_DEBUGGER_EVAL_THROW)
-      {
-        JERRY_CONTEXT (status_flags) |= ECMA_STATUS_EXCEPTION;
-      }
-      else
-      {
-        JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_EXCEPTION;
-      }
+      jcontext_raise_exception (result);
+      jcontext_set_abort_flag (eval_string_p[4] == JERRY_DEBUGGER_EVAL_ABORT);
 
       return true;
     }
@@ -1519,11 +1513,10 @@ jerry_debugger_exception_object_to_string (ecma_value_t exception_obj_value) /**
  *         false - otherwise
  */
 bool
-jerry_debugger_send_exception_string (void)
+jerry_debugger_send_exception_string (ecma_value_t exception_value)
 {
+  JERRY_ASSERT (jcontext_has_pending_exception ());
   ecma_string_t *string_p = NULL;
-
-  ecma_value_t exception_value = JERRY_CONTEXT (error_value);
 
   if (ecma_is_value_object (exception_value))
   {

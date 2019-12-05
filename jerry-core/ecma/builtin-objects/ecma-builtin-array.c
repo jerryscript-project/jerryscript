@@ -390,6 +390,75 @@ cleanup:
   ecma_deref_object (array_like_obj_p);
   return ret_value;
 } /* ecma_builtin_array_object_from */
+
+/**
+ * The Array object's 'of' routine
+ *
+ * See also:
+ *          ECMA-262 v6, 22.1.2.3
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_array_object_of (ecma_value_t this_arg, /**< 'this' argument */
+                              const ecma_value_t *arguments_list_p, /**< arguments list */
+                              ecma_length_t arguments_list_len) /**< number of arguments */
+{
+  if (!ecma_is_constructor (this_arg))
+  {
+    return ecma_op_create_array_object (arguments_list_p, arguments_list_len, false);
+  }
+
+  ecma_value_t len = ecma_make_uint32_value (arguments_list_len);
+
+  ecma_value_t ret_val = ecma_op_function_construct (ecma_get_object_from_value (this_arg),
+                                                     ECMA_VALUE_UNDEFINED,
+                                                     &len,
+                                                     1);
+
+  if (ECMA_IS_VALUE_ERROR (ret_val))
+  {
+    ecma_free_value (len);
+    return ret_val;
+  }
+
+  uint32_t k = 0;
+  ecma_object_t *obj_p = ecma_get_object_from_value (ret_val);
+  const uint32_t prop_status_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_IS_THROW;
+
+  while (k < arguments_list_len)
+  {
+    ecma_value_t define_status = ecma_builtin_helper_def_prop_by_index (obj_p,
+                                                                        k,
+                                                                        arguments_list_p[k],
+                                                                        prop_status_flags);
+
+    if (ECMA_IS_VALUE_ERROR (define_status))
+    {
+      ecma_free_value (len);
+      ecma_deref_object (obj_p);
+      return define_status;
+    }
+
+    k++;
+  }
+
+  ret_val = ecma_op_object_put (obj_p,
+                                ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH),
+                                len,
+                                true);
+
+  ecma_free_value (len);
+
+  if (ECMA_IS_VALUE_ERROR (ret_val))
+  {
+    ecma_deref_object (obj_p);
+    return ret_val;
+  }
+
+  return ecma_make_object_value (obj_p);
+} /* ecma_builtin_array_object_of */
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**

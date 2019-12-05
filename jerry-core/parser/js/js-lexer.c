@@ -2626,8 +2626,14 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
   if (create_literal_object)
   {
 #if ENABLED (JERRY_ES2015)
-    if (is_class_method && lexer_compare_literal_to_string (context_p, "constructor", 11))
+    if ((is_class_method || (ident_opts & LEXER_OBJ_IDENT_CLASS_GENERATOR))
+        && lexer_compare_literal_to_string (context_p, "constructor", 11))
     {
+      if (ident_opts & LEXER_OBJ_IDENT_CLASS_GENERATOR)
+      {
+        parser_raise_error (context_p, PARSER_ERR_CLASS_CONSTRUCTOR_AS_GENERATOR);
+      }
+
       context_p->token.type = LEXER_CLASS_CONSTRUCTOR;
       return;
     }

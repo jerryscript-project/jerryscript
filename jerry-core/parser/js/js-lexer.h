@@ -240,6 +240,7 @@ typedef enum
   LEXER_OBJ_IDENT_ONLY_IDENTIFIERS = (1u << 1), /**< only identifiers are accepted */
   LEXER_OBJ_IDENT_CLASS_METHOD = (1u << 2),     /**< expect identifier inside a class body */
   LEXER_OBJ_IDENT_OBJECT_PATTERN = (1u << 3),   /**< parse "get"/"set" as string literal in object pattern */
+  LEXER_OBJ_IDENT_CLASS_GENERATOR = (1u << 4),  /**< parse generator function inside class body */
 } lexer_obj_ident_opts_t;
 
 /**

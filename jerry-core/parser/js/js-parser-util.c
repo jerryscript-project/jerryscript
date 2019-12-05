@@ -1123,6 +1123,10 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Super is not allowed to be used here.";
     }
+    case PARSER_ERR_CLASS_CONSTRUCTOR_AS_GENERATOR:
+    {
+      return "Class constructor may not be a generator.";
+    }
     case PARSER_ERR_RIGHT_BRACE_EXPECTED:
     {
       return "Expected '}' token.";

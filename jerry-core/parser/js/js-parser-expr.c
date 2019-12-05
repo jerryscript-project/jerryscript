@@ -554,7 +554,7 @@ parser_parse_class_literal (parser_context_t *context_p) /**< context */
 
     if (context_p->token.type == LEXER_MULTIPLY)
     {
-      lexer_expect_object_literal_id (context_p, LEXER_OBJ_IDENT_ONLY_IDENTIFIERS);
+      lexer_expect_object_literal_id (context_p, LEXER_OBJ_IDENT_ONLY_IDENTIFIERS | LEXER_OBJ_IDENT_CLASS_GENERATOR);
       status_flags |= PARSER_IS_GENERATOR_FUNCTION | PARSER_DISALLOW_YIELD;
     }
 

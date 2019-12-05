@@ -2338,6 +2338,12 @@ ecma_builtin_array_prototype_object_copy_within (const ecma_value_t args[], /**<
     }
   }
 
+  if (target >= len || start >= end || end == 0)
+  {
+    ecma_ref_object (obj_p);
+    return ecma_make_object_value (obj_p);
+  }
+
   uint32_t count = JERRY_MIN (end - start, len - target);
 
   bool forward = true;

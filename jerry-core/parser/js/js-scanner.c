@@ -713,7 +713,21 @@ scanner_scan_post_primary_expression (parser_context_t *context_p, /**< context 
     case LEXER_INCREASE:
     case LEXER_DECREASE:
     {
-      return !(context_p->token.flags & LEXER_WAS_NEWLINE);
+      scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION_END;
+
+      if (context_p->token.flags & LEXER_WAS_NEWLINE)
+      {
+        return false;
+      }
+
+      lexer_next_token (context_p);
+      type = (lexer_token_type_t) context_p->token.type;
+
+      if (type != LEXER_QUESTION_MARK)
+      {
+        break;
+      }
+      /* FALLTHRU */
     }
     case LEXER_QUESTION_MARK:
     {
@@ -2680,6 +2694,7 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
           {
             break;
           }
+          type = (lexer_token_type_t) context_p->token.type;
           /* FALLTHRU */
         }
         case SCAN_MODE_PRIMARY_EXPRESSION_END:

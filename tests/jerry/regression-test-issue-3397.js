@@ -12,35 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function parse (txt) {
-  try {
-    eval (txt)
-    assert (false)
-  } catch (e) {
-    assert (e instanceof SyntaxError)
-  }
-}
+var $
 
-var a = 21;
-var b = 10;
-var c;
-
-parse ("c =  a++b");
-parse ("c =  a--b");
-
-parse ("c = a +* b");
-parse ("c = a -* b");
-parse ("c = a +/ b");
-parse ("c = a -/ b");
-parse ("c = a +% b");
-parse ("c = a -% b");
-
-parse ("a =* b");
-parse ("a =/ b");
-parse ("a =% b");
-
-parse ("c = a+");
-parse ("c = a-");
-
-parse("a++\n()")
-parse("a--\n.b")
+$++
+[ ]

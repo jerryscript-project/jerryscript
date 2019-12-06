@@ -349,6 +349,16 @@ typedef struct
 /** @} */
 
 /**
+ * Length of the shortest keyword.
+ */
+#define LEXER_KEYWORD_MIN_LENGTH 2
+
+/**
+ * Length of the longest keyword.
+ */
+#define LEXER_KEYWORD_MAX_LENGTH 10
+
+/**
  * Keywords with 2 characters.
  */
 static const keyword_string_t keywords_with_length_2[] =
@@ -475,6 +485,10 @@ static const keyword_string_t * const keyword_strings_list[] =
   keywords_with_length_10
 };
 
+JERRY_STATIC_ASSERT (sizeof (keyword_strings_list) / sizeof (const keyword_string_t *)
+                     == (LEXER_KEYWORD_MAX_LENGTH - LEXER_KEYWORD_MIN_LENGTH) + 1,
+                     keyword_strings_list_size_must_equal_to_keyword_max_length_difference);
+
 /**
  * List of the keyword groups length.
  */
@@ -510,7 +524,7 @@ lexer_parse_identifier (parser_context_t *context_p, /**< context */
   size_t length = 0;
 
   context_p->token.type = LEXER_LITERAL;
-  context_p->token.literal_is_reserved = false;
+  context_p->token.ident_is_strict_keyword = false;
   context_p->token.lit_location.type = LEXER_IDENT_LITERAL;
   context_p->token.lit_location.has_escape = false;
 
@@ -574,21 +588,30 @@ lexer_parse_identifier (parser_context_t *context_p, /**< context */
 
   context_p->source_p = ident_start_p;
   context_p->token.column = context_p->column;
+  context_p->token.lit_location.char_p = ident_start_p;
+  context_p->token.lit_location.length = (prop_length_t) length;
 
   if (length > PARSER_MAXIMUM_IDENT_LENGTH)
   {
     parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_TOO_LONG);
   }
 
-  /* Check keywords (Only if there is no \u escape sequence in the pattern). */
+  /* Check keywords. */
   if (check_keywords
-      && !context_p->token.lit_location.has_escape
-      && (length >= 2 && length <= 10))
+      && (length >= LEXER_KEYWORD_MIN_LENGTH && length <= LEXER_KEYWORD_MAX_LENGTH))
   {
-    const keyword_string_t *keyword_list_p = keyword_strings_list[length - 2];
+    uint8_t buffer_p[LEXER_KEYWORD_MAX_LENGTH];
+
+    if (JERRY_UNLIKELY (context_p->token.lit_location.has_escape))
+    {
+      lexer_convert_ident_to_cesu8 (ident_start_p, buffer_p, (prop_length_t) length);
+      ident_start_p = buffer_p;
+    }
+
+    const keyword_string_t *keyword_list_p = keyword_strings_list[length - LEXER_KEYWORD_MIN_LENGTH];
 
     int start = 0;
-    int end = keyword_lengths_list[length - 2];
+    int end = keyword_lengths_list[length - LEXER_KEYWORD_MIN_LENGTH];
     int middle = end / 2;
 
     do
@@ -607,6 +630,11 @@ lexer_parse_identifier (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ES2015)
             if (keyword_p->type == LEXER_KEYW_YIELD && (context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION))
             {
+              if (ident_start_p == buffer_p)
+              {
+                parser_raise_error (context_p, PARSER_ERR_INVALID_KEYWORD);
+              }
+
               if (context_p->status_flags & PARSER_DISALLOW_YIELD)
               {
                 parser_raise_error (context_p, PARSER_ERR_YIELD_NOT_ALLOWED);
@@ -622,8 +650,13 @@ lexer_parse_identifier (parser_context_t *context_p, /**< context */
               parser_raise_error (context_p, PARSER_ERR_STRICT_IDENT_NOT_ALLOWED);
             }
 
-            context_p->token.literal_is_reserved = true;
+            context_p->token.ident_is_strict_keyword = true;
             break;
+          }
+
+          if (ident_start_p == buffer_p)
+          {
+            parser_raise_error (context_p, PARSER_ERR_INVALID_KEYWORD);
           }
 
           context_p->token.type = (uint8_t) keyword_p->type;
@@ -644,13 +677,6 @@ lexer_parse_identifier (parser_context_t *context_p, /**< context */
       middle = (start + end) / 2;
     }
     while (start < end);
-  }
-
-  if (context_p->token.type == LEXER_LITERAL)
-  {
-    /* Fill literal data. */
-    context_p->token.lit_location.char_p = ident_start_p;
-    context_p->token.lit_location.length = (prop_length_t) length;
   }
 
   context_p->source_p = source_p;
@@ -964,7 +990,7 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
   size_t length;
 
   context_p->token.type = LEXER_LITERAL;
-  context_p->token.literal_is_reserved = false;
+  context_p->token.ident_is_strict_keyword = false;
   context_p->token.extra_value = LEXER_NUMBER_DECIMAL;
   context_p->token.lit_location.char_p = source_p;
   context_p->token.lit_location.type = LEXER_NUMBER_LITERAL;
@@ -1688,9 +1714,9 @@ lexer_process_char_literal (parser_context_t *context_p, /**< context */
  * Convert an ident with escapes to a utf8 string.
  */
 void
-lexer_convert_ident_to_utf8 (const uint8_t *source_p, /**< source string */
-                             uint8_t *destination_p, /**< destination string */
-                             prop_length_t length) /**< length of destination string */
+lexer_convert_ident_to_cesu8 (const uint8_t *source_p, /**< source string */
+                              uint8_t *destination_p, /**< destination string */
+                              prop_length_t length) /**< length of destination string */
 {
   const uint8_t *destination_end_p = destination_p + length;
 
@@ -1712,7 +1738,7 @@ lexer_convert_ident_to_utf8 (const uint8_t *source_p, /**< source string */
     *destination_p++ = *source_p++;
   }
   while (destination_p < destination_end_p);
-} /* lexer_convert_ident_to_utf8 */
+} /* lexer_convert_ident_to_cesu8 */
 
 /**
  * Construct a literal object from an identifier.
@@ -1748,7 +1774,7 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
 
     if (literal_p->type == LEXER_IDENT_LITERAL)
     {
-      lexer_convert_ident_to_utf8 (source_p, destination_start_p, literal_p->length);
+      lexer_convert_ident_to_cesu8 (source_p, destination_start_p, literal_p->length);
     }
     else
     {
@@ -2412,7 +2438,7 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
   literal_p->u.bytecode_p = (ecma_compiled_code_t *) re_bytecode_p;
 
   context_p->token.type = LEXER_LITERAL;
-  context_p->token.literal_is_reserved = false;
+  context_p->token.ident_is_strict_keyword = false;
   context_p->token.lit_location.type = LEXER_REGEXP_LITERAL;
 
   context_p->lit_object.literal_p = literal_p;
@@ -2479,7 +2505,7 @@ lexer_expect_identifier (parser_context_t *context_p, /**< context */
     /* When parsing default exports for modules, it is not required by functions or classes to have identifiers.
      * In this case we use a synthetic name for them. */
     context_p->token.type = LEXER_LITERAL;
-    context_p->token.literal_is_reserved = false;
+    context_p->token.ident_is_strict_keyword = false;
     context_p->token.lit_location.type = LEXER_IDENT_LITERAL;
     context_p->token.lit_location.has_escape = false;
     lexer_construct_literal_object (context_p, &lexer_default_literal, literal_type);

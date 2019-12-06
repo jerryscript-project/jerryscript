@@ -1729,7 +1729,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
                                     &context_p->token.lit_location,
                                     LEXER_IDENT_LITERAL);
 
-    if (context_p->token.literal_is_reserved
+    if (context_p->token.ident_is_strict_keyword
         || context_p->lit_object.type != LEXER_LITERAL_OBJECT_ANY)
     {
       context_p->status_flags |= PARSER_HAS_NON_STRICT_ARG;

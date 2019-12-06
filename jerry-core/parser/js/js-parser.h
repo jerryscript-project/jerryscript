@@ -48,6 +48,7 @@ typedef enum
   PARSER_ERR_INVALID_UNICODE_ESCAPE_SEQUENCE,         /**< invalid unicode escape sequence */
   PARSER_ERR_INVALID_IDENTIFIER_START,                /**< character cannot be start of an identifier */
   PARSER_ERR_INVALID_IDENTIFIER_PART,                 /**< character cannot be part of an identifier */
+  PARSER_ERR_INVALID_KEYWORD,                         /**< escape sequences are not allowed in keywords */
 
   PARSER_ERR_INVALID_NUMBER,                          /**< invalid number literal */
   PARSER_ERR_MISSING_EXPONENT,                        /**< missing exponent */

@@ -288,8 +288,7 @@ typedef struct
 typedef struct
 {
   uint8_t type;                              /**< token type */
-  uint8_t literal_is_reserved;               /**< future reserved keyword
-                                              *   (when char_literal.type is LEXER_IDENT_LITERAL) */
+  uint8_t ident_is_strict_keyword;           /**< identifier is strict reserved keyword */
   uint8_t extra_value;                       /**< helper value for different purposes */
   uint8_t flags;                             /**< flag bits for the current token */
   parser_line_counter_t line;                /**< token start line */

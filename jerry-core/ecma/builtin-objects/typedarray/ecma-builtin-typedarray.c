@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "ecma-typedarray-object.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
 #include "ecma-gc.h"
@@ -127,13 +128,57 @@ ecma_builtin_typedarray_of (ecma_value_t this_arg, /**< 'this' argument */
                             const ecma_value_t *arguments_list_p, /**< arguments list */
                             ecma_length_t arguments_list_len) /**< number of arguments */
 {
-  JERRY_UNUSED (this_arg);
-  JERRY_UNUSED (arguments_list_p);
-  JERRY_UNUSED (arguments_list_len);
+  if (!ecma_is_constructor (this_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not a constructor."));
+  }
 
-  /* TODO: implement 'of' */
+  ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
+  const uint8_t builtin_id = ecma_get_object_builtin_id (obj_p);
 
-  return ECMA_VALUE_UNDEFINED;
+  if (!ecma_typedarray_helper_is_typedarray (builtin_id))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not a typedarray constructor"));
+  }
+
+  ecma_typedarray_type_t typedarray_id = ecma_typedarray_helper_builtin_to_typedarray_id (builtin_id);
+
+  ecma_object_t *proto_p = ecma_builtin_get (ecma_typedarray_helper_get_prototype_id (typedarray_id));
+  const uint8_t element_size_shift = ecma_typedarray_helper_get_shift_size (typedarray_id);
+
+  ecma_value_t ret_val = ecma_typedarray_create_object_with_length (arguments_list_len,
+                                                                    proto_p,
+                                                                    element_size_shift,
+                                                                    typedarray_id);
+
+  if (ECMA_IS_VALUE_ERROR (ret_val))
+  {
+    return ret_val;
+  }
+
+  uint32_t k = 0;
+  ecma_object_t *ret_obj_p = ecma_get_object_from_value (ret_val);
+  ecma_typedarray_info_t info = ecma_typedarray_get_info (ret_obj_p);
+  ecma_typedarray_setter_fn_t setter_cb = ecma_get_typedarray_setter_fn (info.id);
+
+  while (k < arguments_list_len)
+  {
+    ecma_number_t num;
+    ecma_value_t next_val = ecma_get_number (arguments_list_p[k], &num);
+
+    if (ECMA_IS_VALUE_ERROR (next_val))
+    {
+      ecma_deref_object (ret_obj_p);
+      return next_val;
+    }
+
+    setter_cb (info.buffer_p, num);
+
+    k++;
+    info.buffer_p += info.element_size;
+  }
+
+  return ret_val;
 } /* ecma_builtin_typedarray_of */
 
 /**

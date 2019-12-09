@@ -1308,7 +1308,8 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
     ecma_value_t lastindex_value = ecma_op_object_get_own_data_prop (regexp_object_p, lastindex_str_p);
 
     ecma_number_t lastindex_num;
-    ret_value = ecma_get_number (lastindex_value, &lastindex_num);
+    ret_value = ecma_op_to_integer (lastindex_value, &lastindex_num);
+
     ecma_free_value (lastindex_value);
 
     if (ECMA_IS_VALUE_ERROR (ret_value))

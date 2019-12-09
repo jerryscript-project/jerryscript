@@ -80,8 +80,8 @@ enum
   ECMA_STRING_PROTOTYPE_REPEAT,
   ECMA_STRING_PROTOTYPE_CODE_POINT_AT,
   /* Note: These 5 routines MUST be in this order */
-  ECMA_STRING_PROTOTYPE_INDEX_OF,
   ECMA_STRING_PROTOTYPE_LAST_INDEX_OF,
+  ECMA_STRING_PROTOTYPE_INDEX_OF,
   ECMA_STRING_PROTOTYPE_STARTS_WITH,
   ECMA_STRING_PROTOTYPE_INCLUDES,
   ECMA_STRING_PROTOTYPE_ENDS_WITH,
@@ -151,7 +151,7 @@ ecma_builtin_string_prototype_char_at_helper (ecma_value_t this_arg, /**< this a
 {
   /* 3 */
   ecma_number_t index_num;
-  ecma_value_t to_num_result = ecma_get_number (arg, &index_num);
+  ecma_value_t to_num_result = ecma_op_to_integer (arg, &index_num);
 
   if (JERRY_UNLIKELY (!ecma_is_value_empty (to_num_result)))
   {
@@ -765,17 +765,15 @@ ecma_builtin_string_prototype_object_slice (ecma_string_t *get_string_val, /**< 
 {
   const ecma_length_t len = ecma_string_get_length (get_string_val);
 
-  /* 4. */
+  /* 4. 6. */
   ecma_length_t start = 0, end = len;
 
-  ecma_number_t start_num;
-
-  if (ECMA_IS_VALUE_ERROR (ecma_get_number (arg1, &start_num)))
+  if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_array_index_normalize (arg1,
+                                                                      len,
+                                                                      &start)))
   {
     return ECMA_VALUE_ERROR;
   }
-
-  start = ecma_builtin_helper_array_index_normalize (start_num, len, false);
 
   /* 5. 7. */
   if (ecma_is_value_undefined (arg2))
@@ -784,14 +782,12 @@ ecma_builtin_string_prototype_object_slice (ecma_string_t *get_string_val, /**< 
   }
   else
   {
-    ecma_number_t end_num;
-
-    if (ECMA_IS_VALUE_ERROR (ecma_get_number (arg2, &end_num)))
+    if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_array_index_normalize (arg2,
+                                                                        len,
+                                                                        &end)))
     {
       return ECMA_VALUE_ERROR;
     }
-
-    end = ecma_builtin_helper_array_index_normalize (end_num, len, false);
   }
 
   JERRY_ASSERT (start <= len && end <= len);
@@ -1162,35 +1158,37 @@ ecma_builtin_string_prototype_object_substring (ecma_string_t *original_string_p
                                                 ecma_value_t arg1, /**< routine's first argument */
                                                 ecma_value_t arg2) /**< routine's second argument */
 {
+  /* 3 */
   const ecma_length_t len = ecma_string_get_length (original_string_p);
+  ecma_length_t start = 0, end = len;
 
-  /* 4, 6 */
+  /* 4 */
   ecma_number_t start_num;
 
-  if (ECMA_IS_VALUE_ERROR (ecma_get_number (arg1, &start_num)))
+  if (ECMA_IS_VALUE_ERROR (ecma_op_to_integer (arg1, &start_num)))
   {
     return ECMA_VALUE_ERROR;
   }
 
-  ecma_length_t start = 0, end = len;
+  /* 6 */
+  start = (uint32_t) JERRY_MIN (JERRY_MAX (start_num, 0), len);
 
-  start = ecma_builtin_helper_string_index_normalize (start_num, len, true);
-
-  /* 5, 7 */
+  /* 5 */
   if (ecma_is_value_undefined (arg2))
   {
     end = len;
   }
   else
   {
+    /* 5 part 2 */
     ecma_number_t end_num;
 
-    if (ECMA_IS_VALUE_ERROR (ecma_get_number (arg2, &end_num)))
+    if (ECMA_IS_VALUE_ERROR (ecma_op_to_integer (arg2, &end_num)))
     {
       return ECMA_VALUE_ERROR;
     }
-
-    end = ecma_builtin_helper_string_index_normalize (end_num, len, true);
+    /* 7 */
+    end = (uint32_t) JERRY_MIN (JERRY_MAX (end_num, 0), len);
   }
 
   JERRY_ASSERT (start <= len && end <= len);
@@ -1354,7 +1352,7 @@ ecma_builtin_string_prototype_object_repeat (ecma_string_t *original_string_p, /
 
   /* 4 */
   ecma_number_t count_number;
-  ecma_value_t count_value = ecma_get_number (repeat, &count_number);
+  ecma_value_t count_value = ecma_op_to_integer (repeat, &count_number);
 
   /* 5 */
   if (ECMA_IS_VALUE_ERROR (count_value))
@@ -1472,14 +1470,9 @@ ecma_builtin_string_prototype_object_substr (ecma_string_t *this_string_p, /**< 
   /* 2. */
   ecma_number_t start_num;
 
-  if (ECMA_IS_VALUE_ERROR (ecma_get_number (start, &start_num)))
+  if (ECMA_IS_VALUE_ERROR (ecma_op_to_integer (start, &start_num)))
   {
     return ECMA_VALUE_ERROR;
-  }
-
-  if (ecma_number_is_nan (start_num))
-  {
-    start_num = 0;
   }
 
   /* 3. */
@@ -1489,7 +1482,7 @@ ecma_builtin_string_prototype_object_substr (ecma_string_t *this_string_p, /**< 
   {
     ecma_number_t len;
 
-    if (ECMA_IS_VALUE_ERROR (ecma_get_number (length, &len)))
+    if (ECMA_IS_VALUE_ERROR (ecma_op_to_integer (length, &len)))
     {
       return ECMA_VALUE_ERROR;
     }
@@ -1498,15 +1491,21 @@ ecma_builtin_string_prototype_object_substr (ecma_string_t *this_string_p, /**< 
   }
 
   /* 4. */
-  ecma_number_t this_len = (ecma_number_t) ecma_string_get_length (this_string_p);
+  ecma_length_t this_len = ecma_string_get_length (this_string_p);
 
   /* 5. */
-  ecma_number_t from_num = (start_num < 0) ? JERRY_MAX (this_len + start_num, 0) : start_num;
-  uint32_t from = ecma_builtin_helper_string_index_normalize (from_num, ecma_number_to_uint32 (this_len), true);
+  uint32_t from = (uint32_t) ((start_num < 0) ? JERRY_MAX (this_len + start_num, 0) : start_num);
 
-  /* 6-7. */
-  ecma_number_t to_num = JERRY_MAX (JERRY_MIN (JERRY_MAX (length_num, 0), this_len - from_num), 0);
-  uint32_t to = from + ecma_builtin_helper_string_index_normalize (to_num, ecma_number_to_uint32 (this_len), true);
+  if (from > this_len)
+  {
+    from = this_len;
+  }
+
+  /* 6. */
+  ecma_number_t to_num = JERRY_MIN (JERRY_MAX (length_num, 0), this_len - from);
+
+  /* 7. */
+  uint32_t to = from + (uint32_t) to_num;
 
   /* 8. */
   ecma_string_t *new_str_p = ecma_string_substr (this_string_p, from, to);
@@ -1595,8 +1594,8 @@ ecma_builtin_string_prototype_dispatch_routine (uint16_t builtin_routine_id, /**
       ret_value = ecma_builtin_string_prototype_object_slice (string_p, arg1, arg2);
       break;
     }
-    case ECMA_STRING_PROTOTYPE_INDEX_OF:
     case ECMA_STRING_PROTOTYPE_LAST_INDEX_OF:
+    case ECMA_STRING_PROTOTYPE_INDEX_OF:
 #if ENABLED (JERRY_ES2015)
     case ECMA_STRING_PROTOTYPE_STARTS_WITH:
     case ECMA_STRING_PROTOTYPE_INCLUDES:
@@ -1604,7 +1603,7 @@ ecma_builtin_string_prototype_dispatch_routine (uint16_t builtin_routine_id, /**
 #endif /* ENABLED (JERRY_ES2015) */
     {
       ecma_string_index_of_mode_t mode;
-      mode = (ecma_string_index_of_mode_t) (builtin_routine_id - ECMA_STRING_PROTOTYPE_INDEX_OF);
+      mode = (ecma_string_index_of_mode_t) (builtin_routine_id - ECMA_STRING_PROTOTYPE_LAST_INDEX_OF);
       ret_value = ecma_builtin_helper_string_prototype_object_index_of (string_p, arg1, arg2, mode);
       break;
     }

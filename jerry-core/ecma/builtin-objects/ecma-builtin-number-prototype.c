@@ -262,7 +262,7 @@ ecma_builtin_number_prototype_object_to_string (ecma_number_t this_arg_number, /
   {
     ecma_number_t arg_num;
 
-    if (ECMA_IS_VALUE_ERROR (ecma_get_number (arguments_list_p[0], &arg_num)))
+    if (ECMA_IS_VALUE_ERROR (ecma_op_to_integer (arguments_list_p[0], &arg_num)))
     {
       return ECMA_VALUE_ERROR;
     }
@@ -369,14 +369,14 @@ ecma_builtin_number_prototype_object_to_string (ecma_number_t this_arg_number, /
   {
     for (int i = 0; i < magnitude; i++)
     {
-      this_arg_number /= (ecma_number_t) radix;
+      this_arg_number /= radix;
     }
   }
   else if (exponent < 0)
   {
     for (int i = 0; i < magnitude; i++)
     {
-      this_arg_number *= (ecma_number_t) radix;
+      this_arg_number *= radix;
     }
   }
 
@@ -439,7 +439,7 @@ ecma_builtin_number_prototype_object_to_string (ecma_number_t this_arg_number, /
   /* Calculate digits for fractional part. */
   while (buff_index < required_digits)
   {
-    fraction *= (ecma_number_t) radix;
+    fraction *= radix;
     lit_utf8_byte_t digit = (lit_utf8_byte_t) floor (fraction);
 
     buff[buff_index++] = digit;
@@ -592,9 +592,9 @@ ecma_builtin_number_prepare_conversion (ecma_number_t *this_num_p, /**< [out] th
   JERRY_ASSERT (mode < NUMBER_ROUTINE__COUNT);
 
   ecma_number_t arg_num;
-  arg_1 = ecma_get_number (arg_1, &arg_num);
+  arg_1 = ecma_op_to_integer (arg_1, &arg_num);
 
-  if (!ecma_is_value_empty (arg_1))
+  if (ECMA_IS_VALUE_ERROR (arg_1))
   {
     return arg_1;
   }

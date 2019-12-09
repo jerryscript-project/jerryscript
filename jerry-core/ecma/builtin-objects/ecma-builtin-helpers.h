@@ -34,8 +34,8 @@
 typedef enum
 {
   /** These routines must be in this order */
-  ECMA_STRING_INDEX_OF, /**< String.indexOf: ECMA-262 v5, 15.5.4.7 */
   ECMA_STRING_LAST_INDEX_OF, /**< String.lastIndexOf: ECMA-262 v5, 15.5.4.8 */
+  ECMA_STRING_INDEX_OF, /**< String.indexOf: ECMA-262 v5, 15.5.4.7 */
   ECMA_STRING_STARTS_WITH, /**< String.startsWith: ECMA-262 v6, 21.1.3.18 */
   ECMA_STRING_INCLUDES, /**< String.includes: ECMA-262 v6, 21.1.3.7 */
   ECMA_STRING_ENDS_WITH /**< String.includes: ECMA-262 v6, 21.1.3.6 */
@@ -50,7 +50,7 @@ ecma_builtin_helper_object_get_properties (ecma_object_t *obj_p, uint32_t opts);
 ecma_value_t
 ecma_builtin_helper_array_concat_value (ecma_object_t *obj_p, uint32_t *length_p, ecma_value_t value);
 uint32_t
-ecma_builtin_helper_array_index_normalize (ecma_number_t index, uint32_t length, bool last_index_of);
+ecma_builtin_helper_array_index_normalize (ecma_value_t arg, uint32_t length, uint32_t *number_p);
 uint32_t
 ecma_builtin_helper_string_index_normalize (ecma_number_t index, uint32_t length, bool nan_to_zero);
 ecma_value_t

@@ -1495,9 +1495,10 @@ ecma_builtin_json_stringify (ecma_value_t this_arg, /**< 'this' argument */
   /* 6. */
   if (ecma_is_value_number (space))
   {
-    ecma_number_t number = ecma_get_number_from_value (space);
     /* 6.a */
-    int32_t num_of_spaces = ecma_number_to_int32 (number);
+    ecma_number_t num_of_spaces;
+    ecma_op_to_integer (space, &num_of_spaces);
+
     num_of_spaces = JERRY_MIN (10, num_of_spaces);
 
     /* 6.b */

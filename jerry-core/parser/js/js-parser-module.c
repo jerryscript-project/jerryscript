@@ -367,7 +367,7 @@ parser_module_parse_export_clause (parser_context_t *context_p) /**< parser cont
     /* 15.2.3.1 The referenced binding cannot be a reserved word. */
     if (context_p->token.type != LEXER_LITERAL
         || context_p->token.lit_location.type != LEXER_IDENT_LITERAL
-        || context_p->token.literal_is_reserved)
+        || context_p->token.ident_is_strict_keyword)
     {
       parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
     }

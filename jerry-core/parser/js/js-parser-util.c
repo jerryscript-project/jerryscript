@@ -852,6 +852,10 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Character cannot be part of an identifier.";
     }
+    case PARSER_ERR_INVALID_KEYWORD:
+    {
+      return "Escape sequences are not allowed in keywords.";
+    }
     case PARSER_ERR_INVALID_NUMBER:
     {
       return "Invalid number.";

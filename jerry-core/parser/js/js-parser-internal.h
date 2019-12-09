@@ -637,7 +637,7 @@ void lexer_parse_string (parser_context_t *context_p);
 void lexer_expect_identifier (parser_context_t *context_p, uint8_t literal_type);
 void lexer_scan_identifier (parser_context_t *context_p, uint32_t ident_opts);
 ecma_char_t lexer_hex_to_character (parser_context_t *context_p, const uint8_t *source_p, int length);
-void lexer_convert_ident_to_utf8 (const uint8_t *source_p, uint8_t *destination_p, prop_length_t length);
+void lexer_convert_ident_to_cesu8 (const uint8_t *source_p, uint8_t *destination_p, prop_length_t length);
 void lexer_expect_object_literal_id (parser_context_t *context_p, uint32_t ident_opts);
 void lexer_construct_literal_object (parser_context_t *context_p, const lexer_lit_location_t *literal_p,
                                      uint8_t literal_type);

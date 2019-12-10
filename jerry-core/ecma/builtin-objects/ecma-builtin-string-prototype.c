@@ -17,6 +17,7 @@
 #include "ecma-array-object.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
+#include "ecma-builtin-regexp.inc.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
@@ -317,180 +318,90 @@ static ecma_value_t
 ecma_builtin_string_prototype_object_match (ecma_value_t this_to_string_value, /**< this argument */
                                             ecma_value_t regexp_arg) /**< routine's argument */
 {
-  ecma_value_t regexp_value = ECMA_VALUE_EMPTY;
-
-  ecma_value_t ret_value = ecma_builtin_string_prepare_search (regexp_arg, &regexp_value);
-
-  if (ECMA_IS_VALUE_ERROR (ret_value))
+#if ENABLED (JERRY_ES2015)
+  if (!(ecma_is_value_undefined (regexp_arg) || ecma_is_value_null (regexp_arg)))
   {
-    return ret_value;
-  }
+    ecma_value_t matcher = ecma_op_get_method_by_symbol_id (regexp_arg, LIT_MAGIC_STRING_MATCH);
 
-  JERRY_ASSERT (!ecma_is_value_empty (regexp_value));
-  ecma_object_t *regexp_obj_p = ecma_get_object_from_value (regexp_value);
-
-  /* 5. */
-  ecma_value_t global_value = ecma_op_object_get_by_magic_id (regexp_obj_p, LIT_MAGIC_STRING_GLOBAL);
-
-  if (ECMA_IS_VALUE_ERROR (global_value))
-  {
-    ecma_deref_object (regexp_obj_p);
-    return global_value;
-  }
-
-  ecma_string_t *this_string_p = ecma_get_string_from_value (this_to_string_value);
-  ecma_ref_ecma_string (this_string_p);
-
-  JERRY_ASSERT (ecma_is_value_boolean (global_value));
-
-  if (ecma_is_value_false (global_value))
-  {
-    /* 7. */
-    ret_value = ecma_regexp_exec_helper (regexp_value, this_to_string_value, false);
-    ecma_deref_ecma_string (this_string_p);
-    ecma_deref_object (regexp_obj_p);
-    return ret_value;
-  }
-
-  /* 8.a. */
-  ecma_string_t *index_zero_string_p = ecma_get_ecma_string_from_uint32 (0);
-
-  ecma_value_t put_value = ecma_op_object_put (regexp_obj_p,
-                                               ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                                               ecma_make_integer_value (0),
-                                               true);
-
-  JERRY_ASSERT (ecma_is_value_boolean (put_value)
-                || ecma_is_value_empty (put_value)
-                || ECMA_IS_VALUE_ERROR (put_value));
-
-
-  if (ECMA_IS_VALUE_ERROR (put_value))
-  {
-    ecma_deref_ecma_string (this_string_p);
-    ecma_deref_object (regexp_obj_p);
-    return put_value;
-  }
-
-  /* 8.b. */
-  ecma_value_t new_array_value = ecma_op_create_array_object (NULL, 0, false);
-
-  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array_value));
-
-  ecma_object_t *new_array_obj_p = ecma_get_object_from_value (new_array_value);
-
-  /* 8.c. */
-  ecma_number_t previous_last_index = 0;
-  /* 8.d. */
-  uint32_t n = 0;
-  /* 8.e. */
-  bool last_match = true;
-
-  ret_value = ECMA_VALUE_ERROR;
-
-  /* 8.f. */
-  while (last_match)
-  {
-    /* 8.f.i. */
-    ecma_value_t exec_value = ecma_regexp_exec_helper (regexp_value, this_to_string_value, false);
-
-    if (ECMA_IS_VALUE_ERROR (exec_value))
+    if (ECMA_IS_VALUE_ERROR (matcher))
     {
-      break;
+      return matcher;
     }
 
-    if (ecma_is_value_null (exec_value))
+    if (!ecma_is_value_undefined (matcher))
     {
-      /* 8.f.ii. */
-      break;
+      ecma_object_t *matcher_method = ecma_get_object_from_value (matcher);
+      ecma_value_t result = ecma_op_function_call (matcher_method, regexp_arg, &this_to_string_value, 1);
+      ecma_deref_object (matcher_method);
+      return result;
     }
-
-    /* 8.f.iii. */
-    ecma_value_t this_index_value = ecma_op_object_get_by_magic_id (regexp_obj_p, LIT_MAGIC_STRING_LASTINDEX_UL);
-
-    if (ECMA_IS_VALUE_ERROR (this_index_value))
-    {
-      goto cleanup;
-    }
-
-    ecma_value_t this_index_number = ecma_op_to_number (this_index_value);
-
-    if (ECMA_IS_VALUE_ERROR (this_index_value))
-    {
-      ecma_free_value (this_index_value);
-      goto cleanup;
-    }
-
-    ecma_number_t this_index = ecma_get_number_from_value (this_index_number);
-
-    /* 8.f.iii.2. */
-    if (this_index == previous_last_index)
-    {
-      /* 8.f.iii.2.a. */
-      ecma_value_t index_put_value = ecma_op_object_put (regexp_obj_p,
-                                                         ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                                                         ecma_make_number_value (this_index + 1),
-                                                         true);
-      if (ECMA_IS_VALUE_ERROR (index_put_value))
-      {
-        ecma_free_value (this_index_value);
-        ecma_free_number (this_index_number);
-        goto cleanup;
-      }
-
-      /* 8.f.iii.2.b. */
-      previous_last_index = this_index + 1;
-    }
-    else
-    {
-      /* 8.f.iii.3. */
-      previous_last_index = this_index;
-    }
-
-    /* 8.f.iii.4. */
-    JERRY_ASSERT (ecma_is_value_object (exec_value));
-    ecma_object_t *exec_obj_p = ecma_get_object_from_value (exec_value);
-
-    ecma_value_t match_string_value = ecma_op_object_get (exec_obj_p, index_zero_string_p);
-    JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (match_string_value));
-
-    /* 8.f.iii.5. */
-    ecma_value_t completion;
-    completion = ecma_builtin_helper_def_prop_by_index (new_array_obj_p,
-                                                        n,
-                                                        match_string_value,
-                                                        ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
-
-    JERRY_ASSERT (ecma_is_value_true (completion));
-    /* 8.f.iii.6. */
-    n++;
-
-    ecma_free_value (match_string_value);
-    ecma_free_value (this_index_value);
-    ecma_free_number (this_index_number);
-
-    ecma_deref_object (exec_obj_p);
   }
-
-  if (n == 0)
+#else /* !ENABLED (JERRY_ES2015) */
+  if (ecma_object_is_regexp_object (regexp_arg))
   {
-    /* 8.g. */
-    ret_value = ECMA_VALUE_NULL;
+    return ecma_regexp_match_helper (regexp_arg, this_to_string_value);
   }
-  else
+#endif /* ENABLED (JERRY_ES2015) */
+
+  ecma_string_t *pattern_p = ecma_regexp_read_pattern_str_helper (regexp_arg);
+
+  if (JERRY_UNLIKELY (pattern_p == NULL))
   {
-    /* 8.h. */
-    ecma_ref_object (new_array_obj_p);
-    ret_value = new_array_value;
+    return ECMA_VALUE_ERROR;
   }
 
-cleanup:
-  ecma_deref_object (new_array_obj_p);
+  ecma_value_t new_regexp = ecma_op_create_regexp_object (pattern_p, 0);
 
-  ecma_deref_object (regexp_obj_p);
-  ecma_deref_ecma_string (this_string_p);
+  ecma_deref_ecma_string (pattern_p);
 
-  return ret_value;
+  if (ECMA_IS_VALUE_ERROR (new_regexp))
+  {
+    return new_regexp;
+  }
+
+#if ENABLED (JERRY_ES2015)
+  ecma_object_t *new_regexp_obj = ecma_get_object_from_value (new_regexp);
+
+  ecma_value_t func_value = ecma_op_object_get_by_symbol_id (new_regexp_obj, LIT_MAGIC_STRING_MATCH);
+
+  if (ECMA_IS_VALUE_ERROR (func_value) || !ecma_op_is_callable (func_value))
+  {
+    ecma_deref_object (new_regexp_obj);
+
+    if (!ECMA_IS_VALUE_ERROR (func_value))
+    {
+      ecma_free_value (func_value);
+      ecma_raise_type_error (ECMA_ERR_MSG ("@@match is not callable."));
+    }
+
+    return ECMA_VALUE_ERROR;
+  }
+
+  ecma_object_t *func_obj = ecma_get_object_from_value (func_value);
+
+  ecma_string_t *str_p = ecma_op_to_string (this_to_string_value);
+
+  if (JERRY_UNLIKELY (str_p == NULL))
+  {
+    ecma_deref_object (new_regexp_obj);
+    ecma_deref_object (func_obj);
+    return ECMA_VALUE_ERROR;
+  }
+
+  ecma_value_t str_value = ecma_make_string_value (str_p);
+
+  ecma_value_t result = ecma_op_function_call (func_obj, new_regexp, &str_value, 1);
+
+  ecma_deref_ecma_string (str_p);
+  ecma_deref_object (new_regexp_obj);
+  ecma_deref_object (func_obj);
+#else /* !ENABLED (JERRY_ES2015) */
+  ecma_value_t result = ecma_regexp_match_helper (new_regexp, this_to_string_value);
+
+  ecma_free_value (new_regexp);
+#endif /* ENABLED (JERRY_ES2015) */
+
+  return result;
 } /* ecma_builtin_string_prototype_object_match */
 
 /**

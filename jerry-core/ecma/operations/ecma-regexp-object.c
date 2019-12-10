@@ -2249,6 +2249,192 @@ cleanup_string:
 } /* ecma_regexp_replace_helper */
 
 /**
+ * Helper function for RegExp based matching
+ *
+ * See also:
+ *          String.prototype.match
+ *          RegExp.prototype[@@match]
+ *
+ * @return ecma_value_t
+ */
+ecma_value_t
+ecma_regexp_match_helper (ecma_value_t this_arg, /**< this argument */
+                          ecma_value_t string_arg) /**< source string */
+{
+  if (!ecma_is_value_object (this_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not an object."));
+  }
+
+  ecma_string_t *str_p = ecma_op_to_string (string_arg);
+
+  if (JERRY_UNLIKELY (str_p == NULL))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
+
+  ecma_value_t global_value = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_GLOBAL);
+
+  if (ECMA_IS_VALUE_ERROR (global_value))
+  {
+    ecma_deref_ecma_string (str_p);
+    return global_value;
+  }
+
+  bool global = ecma_op_to_boolean (global_value);
+
+  ecma_free_value (global_value);
+
+  if (!global)
+  {
+    ecma_value_t result = ecma_op_regexp_exec (this_arg, str_p);
+    ecma_deref_ecma_string (str_p);
+    return result;
+  }
+
+#if ENABLED (JERRY_ES2015)
+  ecma_value_t full_unicode_value = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_UNICODE);
+
+  if (ECMA_IS_VALUE_ERROR (full_unicode_value))
+  {
+    ecma_deref_ecma_string (str_p);
+    return full_unicode_value;
+  }
+
+  bool full_unicode = ecma_op_to_boolean (full_unicode_value);
+
+  ecma_free_value (full_unicode_value);
+#endif /* ENABLED (JERRY_ES2015) */
+
+  ecma_value_t set_status = ecma_op_object_put (obj_p,
+                                                ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
+                                                ecma_make_uint32_value (0),
+                                                true);
+
+  if (ECMA_IS_VALUE_ERROR (set_status))
+  {
+    ecma_deref_ecma_string (str_p);
+    return set_status;
+  }
+
+  ecma_value_t ret_value = ECMA_VALUE_ERROR;
+  ecma_value_t result_array = ecma_op_create_array_object (0, 0, false);
+  ecma_object_t *result_array_p = ecma_get_object_from_value (result_array);
+  uint32_t n = 0;
+
+  while (true)
+  {
+    ecma_value_t result_value = ecma_op_regexp_exec (this_arg, str_p);
+
+    if (ECMA_IS_VALUE_ERROR (result_value))
+    {
+      goto result_cleanup;
+    }
+
+    if (ecma_is_value_null (result_value))
+    {
+      if (n == 0)
+      {
+        ret_value = ECMA_VALUE_NULL;
+        goto result_cleanup;
+      }
+
+      ecma_deref_ecma_string (str_p);
+      return result_array;
+    }
+
+    ecma_object_t *result_value_p = ecma_get_object_from_value (result_value);
+    ecma_value_t match_str_value = ecma_op_object_get_by_uint32_index (result_value_p, 0);
+
+    ecma_deref_object (result_value_p);
+
+    if (ECMA_IS_VALUE_ERROR (match_str_value))
+    {
+      goto result_cleanup;
+    }
+
+    ecma_string_t *match_str_p = ecma_op_to_string (match_str_value);
+
+    if (JERRY_UNLIKELY (match_str_p == NULL))
+    {
+      ecma_free_value (match_str_value);
+      goto result_cleanup;
+    }
+
+    ecma_value_t new_prop = ecma_builtin_helper_def_prop_by_index (result_array_p,
+                                                                   n,
+                                                                   match_str_value,
+                                                                   ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+
+    JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_prop));
+
+    ecma_value_t match_result = ECMA_VALUE_ERROR;
+    if (ecma_string_is_empty (match_str_p))
+    {
+      ecma_value_t this_index = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_LASTINDEX_UL);
+
+      if (ECMA_IS_VALUE_ERROR (this_index))
+      {
+        goto match_cleanup;
+      }
+
+#if ENABLED (JERRY_ES2015)
+      uint32_t index;
+      ecma_value_t length_value = ecma_op_to_length (this_index, &index);
+
+      ecma_free_value (this_index);
+
+      if (ECMA_IS_VALUE_ERROR (length_value))
+      {
+        goto match_cleanup;
+      }
+
+      uint32_t next_index = ecma_op_advance_string_index (str_p, index, full_unicode);
+
+      ecma_value_t next_set_status = ecma_op_object_put (obj_p,
+                                                         ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
+                                                         ecma_make_uint32_value (next_index),
+                                                         true);
+#else /* !ENABLED (JERRY_ES2015) */
+      ecma_number_t next_index = ecma_get_number_from_value (this_index);
+
+      ecma_value_t next_set_status = ecma_op_object_put (obj_p,
+                                                         ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
+                                                         ecma_make_number_value (next_index + 1),
+                                                         true);
+
+      ecma_free_value (this_index);
+#endif /* ENABLED (JERRY_ES2015) */
+
+      if (ECMA_IS_VALUE_ERROR (next_set_status))
+      {
+        goto match_cleanup;
+      }
+    }
+
+    match_result = ECMA_VALUE_EMPTY;
+
+match_cleanup:
+    ecma_deref_ecma_string (match_str_p);
+    ecma_free_value (match_str_value);
+
+    if (ECMA_IS_VALUE_ERROR (match_result))
+    {
+      goto result_cleanup;
+    }
+
+    n++;
+  }
+
+result_cleanup:
+  ecma_deref_ecma_string (str_p);
+  ecma_deref_object (result_array_p);
+  return ret_value;
+} /* ecma_regexp_match_helper */
+
+/**
  * RegExpExec operation
  *
  * See also:

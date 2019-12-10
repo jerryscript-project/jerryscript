@@ -2614,6 +2614,62 @@ ecma_op_is_regexp (ecma_value_t arg) /**< argument */
 
   return ecma_make_boolean_value (ecma_object_is_regexp_object (arg));
 } /* ecma_op_is_regexp */
+
+/**
+ * SpeciesConstructor operation
+ * See also:
+ *          ECMA-262 v6, 7.3.20;
+ *
+ * @return ecma_value
+ *         returned value must be freed with ecma_free_value
+ */
+ecma_value_t
+ecma_op_species_constructor (ecma_object_t *this_value, /**< This Value */
+                             ecma_builtin_id_t default_constructor_id) /**< Builtin ID of default constructor */
+{
+  ecma_object_t *default_constructor_p = ecma_builtin_get (default_constructor_id);
+  ecma_value_t constructor = ecma_op_object_get_by_magic_id (this_value, LIT_MAGIC_STRING_CONSTRUCTOR);
+  if (ECMA_IS_VALUE_ERROR (constructor))
+  {
+    return constructor;
+  }
+
+  if (ecma_is_value_undefined (constructor))
+  {
+    ecma_ref_object (default_constructor_p);
+    return ecma_make_object_value (default_constructor_p);
+  }
+
+  if (!ecma_is_value_object (constructor))
+  {
+    ecma_free_value (constructor);
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Constructor must be an Object"));
+  }
+
+  ecma_object_t *ctor_object_p = ecma_get_object_from_value (constructor);
+  ecma_value_t species = ecma_op_object_get_by_symbol_id (ctor_object_p, LIT_MAGIC_STRING_SPECIES);
+  ecma_deref_object (ctor_object_p);
+
+  if (ECMA_IS_VALUE_ERROR (species))
+  {
+    return species;
+  }
+
+  if (ecma_is_value_undefined (species) || ecma_is_value_null (species))
+  {
+    ecma_ref_object (default_constructor_p);
+    return ecma_make_object_value (default_constructor_p);
+  }
+
+  if (!ecma_is_constructor (species))
+  {
+    ecma_free_value (species);
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Species must be a Constructor"));
+  }
+
+  return species;
+} /* ecma_op_species_constructor */
+
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**

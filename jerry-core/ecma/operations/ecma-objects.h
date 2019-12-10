@@ -16,6 +16,7 @@
 #ifndef ECMA_OBJECTS_H
 #define ECMA_OBJECTS_H
 
+#include "ecma-builtins.h"
 #include "ecma-conversion.h"
 #include "ecma-globals.h"
 
@@ -70,7 +71,8 @@ bool ecma_object_is_regexp_object (ecma_value_t arg);
 #if ENABLED (JERRY_ES2015)
 ecma_value_t ecma_op_is_concat_spreadable (ecma_value_t arg);
 ecma_value_t ecma_op_is_regexp (ecma_value_t arg);
-#endif /* !ENABLED (JERRY_ES2015) */
+ecma_value_t ecma_op_species_constructor (ecma_object_t *this_value, ecma_builtin_id_t default_constructor_id);
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * @}

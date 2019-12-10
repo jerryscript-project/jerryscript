@@ -99,8 +99,8 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, ecma_length_t
 
 #if ENABLED (JERRY_ES2015)
 ecma_value_t
-ecma_op_create_array_object_by_constructor (const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len,
-                                            bool is_treat_single_arg_as_length, ecma_object_t *object_p);
+ecma_op_array_species_create (ecma_object_t *original_array_p,
+                              ecma_length_t length);
 #endif /* ENABLED (JERRY_ES2015) */
 
 ecma_value_t

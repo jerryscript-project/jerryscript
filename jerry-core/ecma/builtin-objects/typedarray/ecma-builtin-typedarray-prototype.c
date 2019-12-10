@@ -453,7 +453,8 @@ ecma_builtin_typedarray_prototype_map (ecma_value_t this_arg, /**< this argument
 
   ecma_object_t *func_object_p = ecma_get_object_from_value (cb_func_val);
 
-  ecma_value_t new_typedarray = ecma_op_create_typedarray_with_type_and_length (src_obj_p, src_info.length);
+  // TODO: 22.2.3.18, 7-8.
+  ecma_value_t new_typedarray = ecma_op_create_typedarray_with_type_and_length (src_info.id, src_info.length);
 
   if (ECMA_IS_VALUE_ERROR (new_typedarray))
   {
@@ -713,9 +714,10 @@ ecma_builtin_typedarray_prototype_filter (ecma_value_t this_arg, /**< this argum
   ecma_object_t *func_object_p = ecma_get_object_from_value (cb_func_val);
   ecma_value_t ret_value = ECMA_VALUE_ERROR;
 
+  // TODO: 22.2.3.9, 7-8.
   if (info.length == 0)
   {
-    return ecma_op_create_typedarray_with_type_and_length (obj_p, 0);
+    return ecma_op_create_typedarray_with_type_and_length (info.id, 0);
   }
 
   JMEM_DEFINE_LOCAL_ARRAY (pass_value_list_p, info.length * info.element_size, lit_utf8_byte_t);
@@ -756,7 +758,7 @@ ecma_builtin_typedarray_prototype_filter (ecma_value_t this_arg, /**< this argum
 
   uint32_t pass_num = (uint32_t) ((pass_value_p - pass_value_list_p) >> info.shift);
 
-  ret_value = ecma_op_create_typedarray_with_type_and_length (obj_p, pass_num);
+  ret_value = ecma_op_create_typedarray_with_type_and_length (info.id, pass_num);
 
   if (!ECMA_IS_VALUE_ERROR (ret_value))
   {
@@ -1967,7 +1969,8 @@ ecma_builtin_typedarray_prototype_slice (ecma_value_t this_arg, /**< this argume
   int32_t distance = (int32_t) (relative_end - relative_start);
   uint32_t count = distance > 0 ? (uint32_t) distance : 0;
 
-  ecma_value_t new_typedarray = ecma_op_create_typedarray_with_type_and_length (typedarray_p, count);
+  // TODO: 22.2.3.23, 12-13.
+  ecma_value_t new_typedarray = ecma_op_create_typedarray_with_type_and_length (info.id, count);
 
   if (ECMA_IS_VALUE_ERROR (new_typedarray))
   {

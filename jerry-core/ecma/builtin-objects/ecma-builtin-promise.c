@@ -58,22 +58,27 @@ ecma_builtin_promise_reject_or_resolve (ecma_value_t this_arg, /**< "this" argum
     return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not an object."));
   }
 
-  uint8_t builtin_id = ecma_get_object_builtin_id (ecma_get_object_from_value (this_arg));
-
-  if (builtin_id != ECMA_BUILTIN_ID_PROMISE)
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not the Promise constructor."));
-  }
-
   if (is_resolve
       && ecma_is_value_object (argument)
       && ecma_is_promise (ecma_get_object_from_value (argument)))
   {
-    return ecma_copy_value (argument);
+    ecma_object_t *ctor_obj_p = ecma_get_object_from_value (argument);
+    ecma_value_t x_ctor = ecma_op_object_get_by_magic_id (ctor_obj_p, LIT_MAGIC_STRING_CONSTRUCTOR);
+    if (ECMA_IS_VALUE_ERROR (x_ctor))
+    {
+      return x_ctor;
+    }
+
+    bool is_same_value = ecma_op_same_value (x_ctor, this_arg);
+    ecma_free_value (x_ctor);
+    if (is_same_value)
+    {
+      return ecma_copy_value (argument);
+    }
   }
 
 
-  ecma_value_t capability = ecma_promise_new_capability ();
+  ecma_value_t capability = ecma_promise_new_capability (this_arg);
 
   if (ECMA_IS_VALUE_ERROR (capability))
   {
@@ -574,17 +579,32 @@ ecma_builtin_promise_race_or_all (ecma_value_t this_arg, /**< 'this' argument */
     return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not an object."));
   }
 
-  uint8_t builtin_id = ecma_get_object_builtin_id (ecma_get_object_from_value (this_arg));
+  ecma_object_t *this_obj_p = ecma_get_object_from_value (this_arg);
+  ecma_value_t species_symbol = ecma_op_object_get_by_magic_id (this_obj_p,
+                                                                LIT_MAGIC_STRING_SYMBOL);
 
-  if (builtin_id != ECMA_BUILTIN_ID_PROMISE)
+  if (ECMA_IS_VALUE_ERROR (species_symbol))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not the Promise constructor."));
+    return species_symbol;
   }
 
-  ecma_value_t capability = ecma_promise_new_capability ();
+  ecma_value_t constructor_value = this_arg;
+
+  if (!ecma_is_value_null (species_symbol) && !ecma_is_value_undefined (species_symbol))
+  {
+    ecma_free_value (constructor_value);
+    constructor_value = species_symbol;
+  }
+  else
+  {
+    ecma_ref_object (this_obj_p);
+  }
+
+  ecma_value_t capability = ecma_promise_new_capability (constructor_value);
 
   if (ECMA_IS_VALUE_ERROR (capability))
   {
+    ecma_free_value (constructor_value);
     return capability;
   }
 
@@ -594,18 +614,21 @@ ecma_builtin_promise_race_or_all (ecma_value_t this_arg, /**< 'this' argument */
       || ecma_get_object_type (ecma_get_object_from_value (array)) != ECMA_OBJECT_TYPE_ARRAY)
   {
     ret = ecma_builtin_promise_reject_abrupt (capability);
+    ecma_free_value (constructor_value);
     ecma_free_value (capability);
     return ret;
   }
 
   if (is_race)
   {
-    ret = ecma_builtin_promise_do_race (array, capability, this_arg);
+    ret = ecma_builtin_promise_do_race (array, capability, constructor_value);
   }
   else
   {
-    ret = ecma_builtin_promise_do_all (array, capability, this_arg);
+    ret = ecma_builtin_promise_do_all (array, capability, constructor_value);
   }
+
+  ecma_free_value (constructor_value);
 
   if (ECMA_IS_VALUE_ERROR (ret))
   {
@@ -685,6 +708,18 @@ ecma_builtin_promise_dispatch_construct (const ecma_value_t *arguments_list_p, /
 
   return ecma_op_create_promise_object (arguments_list_p[0], ECMA_PROMISE_EXECUTOR_FUNCTION);
 } /* ecma_builtin_promise_dispatch_construct */
+
+/**
+ * 25.4.4.6 get Promise [ @@species ] accessor
+ *
+ * @return ecma_value
+ *         returned value must be freed with ecma_free_value
+ */
+ecma_value_t
+ecma_builtin_promise_species_get (ecma_value_t this_value) /**< This Value */
+{
+  return ecma_copy_value (this_value);
+} /* ecma_builtin_promise_species_get */
 
 /**
  * @}

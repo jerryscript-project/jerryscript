@@ -147,6 +147,7 @@ ecma_builtin_typedarray_of (ecma_value_t this_arg, /**< 'this' argument */
   const uint8_t element_size_shift = ecma_typedarray_helper_get_shift_size (typedarray_id);
 
   ecma_value_t ret_val = ecma_typedarray_create_object_with_length (arguments_list_len,
+                                                                    NULL,
                                                                     proto_p,
                                                                     element_size_shift,
                                                                     typedarray_id);
@@ -214,6 +215,18 @@ ecma_builtin_typedarray_dispatch_construct (const ecma_value_t *arguments_list_p
 
   return ecma_raise_type_error (ECMA_ERR_MSG ("TypedArray intrinstic cannot be called by a 'new' expression"));
 } /* ecma_builtin_typedarray_dispatch_construct */
+
+/**
+ * 22.2.2.4 get %TypedArray% [ @@species ] accessor
+ *
+ * @return ecma_value
+ *         returned value must be freed with ecma_free_value
+ */
+ecma_value_t
+ecma_builtin_typedarray_species_get (ecma_value_t this_value) /**< This Value */
+{
+  return ecma_copy_value (this_value);
+} /* ecma_builtin_typedarray_species_get */
 
 /**
  * @}

@@ -3925,6 +3925,7 @@ jerry_create_typedarray (jerry_typedarray_type_t type_name, /**< type of TypedAr
   ecma_object_t *prototype_obj_p = ecma_builtin_get (prototype_id);
 
   ecma_value_t array_value = ecma_typedarray_create_object_with_length (length,
+                                                                        NULL,
                                                                         prototype_obj_p,
                                                                         element_size_shift,
                                                                         id);

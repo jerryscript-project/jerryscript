@@ -2348,7 +2348,7 @@ parser_pattern_form_assignment (parser_context_t *context_p, /**< context */
 
   uint8_t assign_opcode = CBC_ASSIGN_SET_IDENT;
 
-  if (flags & PARSER_PATTERN_LEXICAL
+  if (flags & (PARSER_PATTERN_LEXICAL | PARSER_PATTERN_LOCAL)
       && context_p->lit_object.index < PARSER_REGISTER_START)
   {
     assign_opcode = CBC_ASSIGN_LET_CONST;
@@ -2410,6 +2410,7 @@ parser_pattern_process_nested_pattern (parser_context_t *context_p, /**< context
                                     | PARSER_PATTERN_TARGET_ON_STACK
                                     | (flags & (PARSER_PATTERN_BINDING
                                                 | PARSER_PATTERN_LEXICAL
+                                                | PARSER_PATTERN_LOCAL
                                                 | PARSER_PATTERN_REST_ELEMENT)));
 
   if (context_p->next_scanner_info_p->source_p == context_p->source_p)
@@ -2458,6 +2459,13 @@ parser_pattern_process_assignment (parser_context_t *context_p, /**< context */
 
     lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_IDENT_LITERAL);
 
+    if (flags & PARSER_PATTERN_LEXICAL
+        && !(context_p->status_flags & PARSER_IS_STRICT)
+        && lexer_literal_object_is_identifier (context_p, "let", 3))
+    {
+      parser_raise_error (context_p, PARSER_ERR_LEXICAL_LET_BINDING);
+    }
+
     if (context_p->next_scanner_info_p->source_p == context_p->source_p)
     {
       JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_ERR_REDECLARED);
@@ -2472,7 +2480,6 @@ parser_pattern_process_assignment (parser_context_t *context_p, /**< context */
       }
       context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_FUNCTION_ARGUMENT;
     }
-
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
     parser_module_append_export_name (context_p);
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */

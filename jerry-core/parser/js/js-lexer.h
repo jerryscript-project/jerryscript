@@ -161,9 +161,6 @@ typedef enum
   LEXER_KEYW_CLASS,              /**< class */
   LEXER_KEYW_EXTENDS,            /**< extends */
   LEXER_KEYW_SUPER,              /**< super */
-#if ENABLED (JERRY_ES2015)
-  LEXER_KEYW_LET,                /**< let */
-#endif /* ENABLED (JERRY_ES2015) */
   LEXER_KEYW_CONST,              /**< const */
   LEXER_KEYW_EXPORT,             /**< export */
   LEXER_KEYW_IMPORT,             /**< import */
@@ -192,9 +189,7 @@ typedef enum
 
   /* Context dependent future strict reserved words:
    * See also: ECMA-262 v6, 11.6.2.1 */
-#if !ENABLED (JERRY_ES2015)
   LEXER_KEYW_LET,                /**< let */
-#endif /* !ENABLED (JERRY_ES2015) */
   LEXER_KEYW_YIELD,              /**< yield */
   LEXER_KEYW_STATIC,             /**< static */
 } lexer_token_type_t;

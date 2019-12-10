@@ -46,6 +46,7 @@ typedef enum
   SCANNER_TYPE_CASE, /**< case statement */
 #if ENABLED (JERRY_ES2015)
   SCANNER_TYPE_INITIALIZER, /**< destructuring binding or assignment pattern with initializer */
+  SCANNER_TYPE_LET_EXPRESSION, /**< let expression */
   SCANNER_TYPE_ERR_REDECLARED, /**< syntax error: a variable is redeclared */
 #endif /* ENABLED (JERRY_ES2015) */
 } scanner_info_type_t;

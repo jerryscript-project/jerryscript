@@ -112,8 +112,9 @@ typedef enum
   PARSER_PATTERN_TARGET_DEFAULT = (1u << 2),   /**< perform default value comparison for assignment target */
   PARSER_PATTERN_NESTED_PATTERN = (1u << 3),   /**< parse patter inside a pattern */
   PARSER_PATTERN_LEXICAL = (1u << 4),          /**< pattern is a lexical (let/const) declaration */
-  PARSER_PATTERN_REST_ELEMENT = (1u << 5),     /**< parse rest array initializer */
-  PARSER_PATTERN_ARGUMENTS = (1u << 6),        /**< parse arguments binding */
+  PARSER_PATTERN_LOCAL = (1u << 5),            /**< pattern is a local (catch parameter) declaration */
+  PARSER_PATTERN_REST_ELEMENT = (1u << 6),     /**< parse rest array initializer */
+  PARSER_PATTERN_ARGUMENTS = (1u << 7),        /**< parse arguments binding */
 } parser_pattern_flags_t;
 
 /**
@@ -646,9 +647,14 @@ void lexer_convert_push_number_to_push_literal (parser_context_t *context_p);
 uint16_t lexer_construct_function_object (parser_context_t *context_p, uint32_t extra_status_flags);
 void lexer_construct_regexp_object (parser_context_t *context_p, bool parse_only);
 bool lexer_compare_identifiers (const uint8_t *left_p, const uint8_t *right_p, size_t size);
-bool lexer_compare_identifier_to_current (parser_context_t *context_p, const lexer_lit_location_t *right_ident_p);
-bool lexer_compare_literal_to_identifier (parser_context_t *context_p, const char *identifier_p,
-                                          size_t identifier_length);
+bool lexer_current_is_literal (parser_context_t *context_p, const lexer_lit_location_t *right_ident_p);
+#if ENABLED (JERRY_ES2015)
+bool lexer_token_is_identifier (parser_context_t *context_p, const char *identifier_p,
+                                size_t identifier_length);
+bool lexer_token_is_let (parser_context_t *context_p);
+bool lexer_literal_object_is_identifier (parser_context_t *context_p, const char *identifier_p,
+                                         size_t identifier_length);
+#endif /* ENABLED (JERRY_ES2015) */
 bool lexer_compare_literal_to_string (parser_context_t *context_p, const char *string_p, size_t string_length);
 uint8_t lexer_convert_binary_lvalue_token_to_binary (uint8_t token);
 

@@ -643,6 +643,15 @@ lexer_parse_identifier (parser_context_t *context_p, /**< context */
               context_p->token.type = (uint8_t) LEXER_KEYW_YIELD;
               break;
             }
+
+            if (keyword_p->type == LEXER_KEYW_LET && !context_p->token.lit_location.has_escape)
+            {
+              if (context_p->status_flags & PARSER_IS_STRICT)
+              {
+                context_p->token.type = (uint8_t) LEXER_KEYW_LET;
+              }
+              break;
+            }
 #endif /* ENABLED (JERRY_ES2015) */
 
             if (context_p->status_flags & PARSER_IS_STRICT)
@@ -2799,9 +2808,12 @@ lexer_compare_identifiers (const uint8_t *left_p, /**< left identifier */
  * @return true if the input identifiers are the same
  */
 bool
-lexer_compare_identifier_to_current (parser_context_t *context_p, /**< context */
-                                     const lexer_lit_location_t *right_ident_p) /**< identifier */
+lexer_current_is_literal (parser_context_t *context_p, /**< context */
+                          const lexer_lit_location_t *right_ident_p) /**< identifier */
 {
+  JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
+                && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
+
   lexer_lit_location_t *left_ident_p = &context_p->token.lit_location;
 
   JERRY_ASSERT (left_ident_p->length > 0 && right_ident_p->length > 0);
@@ -2817,10 +2829,12 @@ lexer_compare_identifier_to_current (parser_context_t *context_p, /**< context *
   }
 
   return lexer_compare_identifiers (left_ident_p->char_p, right_ident_p->char_p, left_ident_p->length);
-} /* lexer_compare_identifier_to_current */
+} /* lexer_current_is_literal */
+
+#if ENABLED (JERRY_ES2015)
 
 /**
- * Compares the current identifier to an expected identifier.
+ * Compares the current token to an expected identifier.
  *
  * Note:
  *   Escape sequences are not allowed.
@@ -2828,16 +2842,63 @@ lexer_compare_identifier_to_current (parser_context_t *context_p, /**< context *
  * @return true if they are the same, false otherwise
  */
 inline bool JERRY_ATTR_ALWAYS_INLINE
-lexer_compare_literal_to_identifier (parser_context_t *context_p, /**< context */
-                                     const char *identifier_p, /**< identifier */
-                                     size_t identifier_length) /**< identifier length */
+lexer_token_is_identifier (parser_context_t *context_p, /**< context */
+                           const char *identifier_p, /**< identifier */
+                           size_t identifier_length) /**< identifier length */
 {
   /* Checking has_escape is unnecessary because memcmp will fail if escape sequences are present. */
   return (context_p->token.type == LEXER_LITERAL
           && context_p->token.lit_location.type == LEXER_IDENT_LITERAL
           && context_p->token.lit_location.length == identifier_length
           && memcmp (context_p->token.lit_location.char_p, identifier_p, identifier_length) == 0);
-} /* lexer_compare_literal_to_identifier */
+} /* lexer_token_is_identifier */
+
+/**
+ * Compares the current identifier token to "let".
+ *
+ * Note:
+ *   Escape sequences are not allowed.
+ *
+ * @return true if "let" is found, false otherwise
+ */
+inline bool JERRY_ATTR_ALWAYS_INLINE
+lexer_token_is_let (parser_context_t *context_p) /**< context */
+{
+  JERRY_ASSERT (context_p->token.type == LEXER_LITERAL);
+
+  const uint8_t *char_p = context_p->token.lit_location.char_p;
+
+  return (!(context_p->status_flags & PARSER_IS_STRICT)
+          && context_p->token.lit_location.type == LEXER_IDENT_LITERAL
+          && context_p->token.lit_location.length == 3
+          && char_p[0] == LIT_CHAR_LOWERCASE_L
+          && char_p[1] == LIT_CHAR_LOWERCASE_E
+          && char_p[2] == LIT_CHAR_LOWERCASE_T);
+} /* lexer_token_is_let */
+
+/**
+ * Compares the current literal object to an expected identifier
+ *
+ * Note:
+ *   Escape sequences are allowed.
+ *
+ * @return true if the input identifiers are the same
+ */
+bool
+lexer_literal_object_is_identifier (parser_context_t *context_p, /**< context */
+                                    const char *identifier_p, /**< identifier */
+                                    size_t identifier_length) /**< identifier length */
+{
+  JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
+                && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
+
+  lexer_literal_t *literal_p = context_p->lit_object.literal_p;
+
+  return (literal_p->prop.length == identifier_length
+          && memcmp (literal_p->u.char_p, identifier_p, identifier_length) == 0);
+} /* lexer_literal_object_is_identifier */
+
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * Compares the current identifier or string to an expected string.

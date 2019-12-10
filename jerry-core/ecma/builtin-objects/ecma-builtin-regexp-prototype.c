@@ -634,6 +634,23 @@ ecma_builtin_regexp_prototype_symbol_search (ecma_value_t this_arg, /**< this ar
 } /* ecma_builtin_regexp_prototype_symbol_search */
 
 /**
+ * The RegExp.prototype object's '@@split' routine
+ *
+ * See also:
+ *          ECMA-262 v6.0, 21.2.5.11
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_regexp_prototype_symbol_split (ecma_value_t this_arg, /**< this argument */
+                                            ecma_value_t string_arg, /**< source string */
+                                            ecma_value_t limit_arg) /**< limit */
+{
+  return ecma_regexp_split_helper (this_arg, string_arg, limit_arg);
+} /* ecma_builtin_regexp_prototype_symbol_split */
+
+/**
  * The RegExp.prototype object's '@@match' routine
  *
  * See also:

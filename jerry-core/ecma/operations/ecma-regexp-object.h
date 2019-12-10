@@ -106,15 +106,10 @@ lit_code_point_t ecma_regexp_canonicalize_char (lit_code_point_t ch);
 ecma_value_t ecma_regexp_parse_flags (ecma_string_t *flags_str_p, uint16_t *flags_p);
 void ecma_regexp_initialize_props (ecma_object_t *re_obj_p, ecma_string_t *source_p, uint16_t flags);
 
+ecma_value_t ecma_regexp_replace_helper (ecma_value_t this_arg, ecma_value_t string_arg, ecma_value_t replace_arg);
 ecma_value_t ecma_regexp_search_helper (ecma_value_t regexp_arg, ecma_value_t string_arg);
-ecma_value_t
-ecma_regexp_replace_helper (ecma_value_t this_arg,
-                            ecma_value_t string_arg,
-                            ecma_value_t replace_arg);
-
-ecma_value_t
-ecma_regexp_match_helper (ecma_value_t this_arg,
-                          ecma_value_t string_arg);
+ecma_value_t ecma_regexp_split_helper (ecma_value_t this_arg, ecma_value_t string_arg, ecma_value_t limit_arg);
+ecma_value_t ecma_regexp_match_helper (ecma_value_t this_arg, ecma_value_t string_arg);
 
 ecma_value_t ecma_op_regexp_exec (ecma_value_t this_arg, ecma_string_t *str_p);
 /**

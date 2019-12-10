@@ -788,7 +788,7 @@ def main():
                                         The input files (UnicodeData.txt, SpecialCasing.txt)
                                         must be retrieved from
                                         http://www.unicode.org/Public/<VERSION>/ucd/.
-                                        The last known good version is 9.0.0.
+                                        The last known good version is 13.0.0.
                                         ''')
 
     parser.add_argument('--unicode-data', metavar='FILE', action='store', required=True,

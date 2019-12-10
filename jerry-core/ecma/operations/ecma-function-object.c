@@ -880,7 +880,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
 
       if (JERRY_UNLIKELY (ecma_is_value_error_reference (ret_value)))
       {
-        JERRY_CONTEXT (error_value) = ecma_clear_error_reference (ret_value, true);
+        ecma_raise_error_from_error_reference (ret_value);
         return ECMA_VALUE_ERROR;
       }
 

@@ -93,7 +93,14 @@ ecma_builtin_reflect_dispatch_routine (uint16_t builtin_routine_id, /**< built-i
       ecma_value_t result = ecma_builtin_object_object_set_prototype_of (arguments_list[0], arguments_list[1]);
       bool is_error = ECMA_IS_VALUE_ERROR (result);
 
-      ecma_free_value (is_error ? JERRY_CONTEXT (error_value) : result);
+      if (is_error)
+      {
+        jcontext_release_exception ();
+      }
+      else
+      {
+        ecma_free_value (result);
+      }
 
       return ecma_make_boolean_value (!is_error);
     }
@@ -121,7 +128,14 @@ ecma_builtin_reflect_dispatch_routine (uint16_t builtin_routine_id, /**< built-i
       ecma_deref_ecma_string (name_str_p);
       bool is_error = ECMA_IS_VALUE_ERROR (result);
 
-      ecma_free_value (is_error ? JERRY_CONTEXT (error_value) : result);
+      if (is_error)
+      {
+        jcontext_release_exception ();
+      }
+      else
+      {
+        ecma_free_value (result);
+      }
 
       return ecma_make_boolean_value (!is_error);
     }

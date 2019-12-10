@@ -21,6 +21,7 @@
 
 #include "debugger.h"
 #include "ecma-builtins.h"
+#include "ecma-helpers.h"
 #include "ecma-jobqueue.h"
 #include "jerryscript-port.h"
 #include "jmem.h"
@@ -293,6 +294,27 @@ extern jmem_heap_t jerry_global_heap;
 #endif /* !ENABLED (JERRY_SYSTEM_ALLOCATOR) */
 
 #endif /* ENABLED (JERRY_EXTERNAL_CONTEXT) */
+
+void
+jcontext_set_exception_flag (bool is_exception);
+
+void
+jcontext_set_abort_flag (bool is_abort);
+
+bool
+jcontext_has_pending_exception (void);
+
+bool
+jcontext_has_pending_abort (void);
+
+void
+jcontext_raise_exception (ecma_value_t error);
+
+void
+jcontext_release_exception (void);
+
+ecma_value_t
+jcontext_take_exception (void);
 
 /**
  * @}

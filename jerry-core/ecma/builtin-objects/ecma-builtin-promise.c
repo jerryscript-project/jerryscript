@@ -127,8 +127,7 @@ inline static ecma_value_t
 ecma_builtin_promise_reject_abrupt (ecma_value_t capability) /**< reject description */
 {
   ecma_raise_type_error (ECMA_ERR_MSG ("Second argument is not an array."));
-  ecma_value_t reason = JERRY_CONTEXT (error_value);
-  JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_EXCEPTION;
+  ecma_value_t reason = jcontext_take_exception ();
   ecma_string_t *reject_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REJECT);
   ecma_value_t reject = ecma_op_object_get (ecma_get_object_from_value (capability), reject_str_p);
 
@@ -610,7 +609,7 @@ ecma_builtin_promise_race_or_all (ecma_value_t this_arg, /**< 'this' argument */
 
   if (ECMA_IS_VALUE_ERROR (ret))
   {
-    ret = JERRY_CONTEXT (error_value);
+    ret = jcontext_take_exception ();
   }
 
   ecma_free_value (capability);

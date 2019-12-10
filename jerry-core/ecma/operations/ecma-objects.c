@@ -1232,7 +1232,7 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
 
           if (ECMA_IS_VALUE_ERROR (error))
           {
-            ecma_free_value (JERRY_CONTEXT (error_value));
+            jcontext_release_exception ();
             return ecma_reject (is_throw);
           }
 

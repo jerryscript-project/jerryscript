@@ -1256,7 +1256,6 @@ ecma_create_error_reference (ecma_value_t value, /**< referenced value */
 {
   ecma_error_reference_t *error_ref_p = (ecma_error_reference_t *) jmem_pools_alloc (sizeof (ecma_error_reference_t));
 
-  JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_EXCEPTION;
   error_ref_p->refs_and_flags = ECMA_ERROR_REF_ONE | (is_exception ? 0 : ECMA_ERROR_REF_ABORT);
   error_ref_p->value = value;
   return ecma_make_error_reference_value (error_ref_p);
@@ -1270,8 +1269,13 @@ ecma_create_error_reference (ecma_value_t value, /**< referenced value */
 ecma_value_t
 ecma_create_error_reference_from_context (void)
 {
-  return ecma_create_error_reference (JERRY_CONTEXT (error_value),
-                                      (JERRY_CONTEXT (status_flags) & ECMA_STATUS_EXCEPTION) != 0);
+  bool is_abort = jcontext_has_pending_abort ();
+
+  if (is_abort)
+  {
+    jcontext_set_abort_flag (false);
+  }
+  return ecma_create_error_reference (jcontext_take_exception (), !is_abort);
 } /* ecma_create_error_reference_from_context */
 
 /**
@@ -1322,40 +1326,35 @@ ecma_deref_error_reference (ecma_error_reference_t *error_ref_p) /**< error refe
 } /* ecma_deref_error_reference */
 
 /**
- * Clears error reference, and returns with the value.
+ * Raise error from the given error reference.
  *
- * @return value referenced by the error
+ * Note: the error reference's ref count is also decreased
  */
-ecma_value_t
-ecma_clear_error_reference (ecma_value_t value, /**< error reference */
-                            bool set_abort_flag) /**< set abort flag */
+void
+ecma_raise_error_from_error_reference (ecma_value_t value) /**< error reference */
 {
+  JERRY_ASSERT (!jcontext_has_pending_exception () && !jcontext_has_pending_abort ());
   ecma_error_reference_t *error_ref_p = ecma_get_error_reference_from_value (value);
 
-  if (set_abort_flag)
-  {
-    if (error_ref_p->refs_and_flags & ECMA_ERROR_REF_ABORT)
-    {
-      JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_EXCEPTION;
-    }
-    else
-    {
-      JERRY_CONTEXT (status_flags) |= ECMA_STATUS_EXCEPTION;
-    }
-  }
-
   JERRY_ASSERT (error_ref_p->refs_and_flags >= ECMA_ERROR_REF_ONE);
+
+  ecma_value_t referenced_value = error_ref_p->value;
+
+  jcontext_set_exception_flag (true);
+  jcontext_set_abort_flag (error_ref_p->refs_and_flags & ECMA_ERROR_REF_ABORT);
 
   if (error_ref_p->refs_and_flags >= 2 * ECMA_ERROR_REF_ONE)
   {
     error_ref_p->refs_and_flags -= ECMA_ERROR_REF_ONE;
-    return ecma_copy_value (error_ref_p->value);
+    referenced_value = ecma_copy_value (referenced_value);
+  }
+  else
+  {
+    jmem_pools_free (error_ref_p, sizeof (ecma_error_reference_t));
   }
 
-  ecma_value_t referenced_value = error_ref_p->value;
-  jmem_pools_free (error_ref_p, sizeof (ecma_error_reference_t));
-  return referenced_value;
-} /* ecma_clear_error_reference */
+  JERRY_CONTEXT (error_value) = referenced_value;
+} /* ecma_raise_error_from_error_reference */
 
 /**
  * Increase reference counter of Compact

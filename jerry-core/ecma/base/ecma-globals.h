@@ -62,6 +62,7 @@ typedef enum
   ECMA_STATUS_HIGH_PRESSURE_GC  = (1u << 2), /**< last gc was under high pressure */
 #endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
   ECMA_STATUS_EXCEPTION         = (1u << 3), /**< last exception is a normal exception */
+  ECMA_STATUS_ABORT             = (1u << 4), /**< last exception is an abort */
 } ecma_status_flag_t;
 
 /**

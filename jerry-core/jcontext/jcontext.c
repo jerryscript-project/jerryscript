@@ -19,6 +19,105 @@
  * @{
  */
 
+/**
+ * Check the existence of the ECMA_STATUS_EXCEPTION flag.
+ *
+ * @return true - if the flag is set
+ *         false - otherwise
+ */
+extern inline bool JERRY_ATTR_ALWAYS_INLINE
+jcontext_has_pending_exception (void)
+{
+  return JERRY_CONTEXT (status_flags) & ECMA_STATUS_EXCEPTION;
+} /* jcontext_has_pending_exception */
+
+/**
+ * Check the existence of the ECMA_STATUS_ABORT flag.
+ *
+ * @return true - if the flag is set
+ *         false - otherwise
+ */
+extern inline bool JERRY_ATTR_ALWAYS_INLINE
+jcontext_has_pending_abort (void)
+{
+  return JERRY_CONTEXT (status_flags) & ECMA_STATUS_ABORT;
+} /* jcontext_has_pending_abort */
+
+/**
+ * Set the abort flag for the context.
+ */
+extern inline void JERRY_ATTR_ALWAYS_INLINE
+jcontext_set_abort_flag (bool is_abort) /**< true - if the abort flag should be set
+                                         *   false - if the abort flag should be removed */
+{
+  JERRY_ASSERT (jcontext_has_pending_exception ());
+
+  if (is_abort)
+  {
+    JERRY_CONTEXT (status_flags) |= ECMA_STATUS_ABORT;
+  }
+  else
+  {
+    JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_ABORT;
+  }
+} /* jcontext_set_abort_flag */
+
+/**
+ * Set the exception flag for the context.
+ */
+extern inline void JERRY_ATTR_ALWAYS_INLINE
+jcontext_set_exception_flag (bool is_exception) /**< true - if the exception flag should be set
+                                                 *   false - if the exception flag should be removed */
+{
+  if (is_exception)
+  {
+    JERRY_CONTEXT (status_flags) |= ECMA_STATUS_EXCEPTION;
+  }
+  else
+  {
+    JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_EXCEPTION;
+  }
+} /* jcontext_set_exception_flag */
+
+/**
+ * Raise exception from the given error value.
+ */
+extern inline void JERRY_ATTR_ALWAYS_INLINE
+jcontext_raise_exception (ecma_value_t error) /**< error to raise */
+{
+  JERRY_ASSERT (!jcontext_has_pending_exception ());
+  JERRY_ASSERT (!jcontext_has_pending_abort ());
+
+  JERRY_CONTEXT (error_value) = error;
+  jcontext_set_exception_flag (true);
+} /* jcontext_raise_exception */
+
+/**
+ * Release the current exception/abort of the context.
+ */
+void
+jcontext_release_exception (void)
+{
+  JERRY_ASSERT (jcontext_has_pending_exception ());
+
+  ecma_free_value (jcontext_take_exception ());
+} /* jcontext_release_exception */
+
+/**
+ * Take the current exception/abort of context.
+ *
+ * @return current exception as an ecma-value
+ */
+ecma_value_t
+jcontext_take_exception (void)
+{
+  JERRY_ASSERT (jcontext_has_pending_exception ());
+
+  jcontext_set_abort_flag (false);
+  jcontext_set_exception_flag (false);
+  return JERRY_CONTEXT (error_value);
+} /* jcontext_take_exception */
+
 #if !ENABLED (JERRY_EXTERNAL_CONTEXT)
 
 /**

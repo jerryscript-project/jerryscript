@@ -656,7 +656,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
       }
 
       JERRY_ASSERT (ECMA_IS_VALUE_ERROR (ret_value));
-      ecma_free_value (JERRY_CONTEXT (error_value));
+      jcontext_release_exception ();
 
       parser_ctx_p->input_curr_p = input_curr_p;
       /* It was not an iterator, continue the parsing. */
@@ -682,7 +682,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
 
       if (!ecma_is_value_empty (ret_value))
       {
-        ecma_free_value (JERRY_CONTEXT (error_value));
+        jcontext_release_exception ();
         parser_ctx_p->input_curr_p = input_curr_p;
         ret_value = ECMA_VALUE_EMPTY;
       }

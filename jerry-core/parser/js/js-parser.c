@@ -2542,8 +2542,7 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
     {
       /* It is unlikely that memory can be allocated in an out-of-memory
        * situation. However, a simple value can still be thrown. */
-      JERRY_CONTEXT (error_value) = ECMA_VALUE_NULL;
-      JERRY_CONTEXT (status_flags) |= ECMA_STATUS_EXCEPTION;
+      jcontext_raise_exception (ECMA_VALUE_NULL);
       return ECMA_VALUE_ERROR;
     }
 #if ENABLED (JERRY_ERROR_MESSAGES)

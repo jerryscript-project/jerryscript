@@ -763,7 +763,7 @@ jerry_generate_snapshot_with_args (const jerry_char_t *resource_name_p, /**< scr
 
   if (ECMA_IS_VALUE_ERROR (parse_status))
   {
-    return ecma_create_error_reference (JERRY_CONTEXT (error_value), true);
+    return ecma_create_error_reference_from_context ();
   }
 
   JERRY_ASSERT (bytecode_data_p != NULL);

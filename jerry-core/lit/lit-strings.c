@@ -481,7 +481,7 @@ lit_read_prev_code_unit_from_utf8 (const lit_utf8_byte_t *buf_p, /**< buffer wit
  * @return next code unit
  */
 ecma_char_t
-lit_utf8_read_next (const lit_utf8_byte_t **buf_p) /**< [in,out] buffer with characters */
+lit_cesu8_read_next (const lit_utf8_byte_t **buf_p) /**< [in,out] buffer with characters */
 {
   JERRY_ASSERT (*buf_p);
   ecma_char_t ch;
@@ -489,7 +489,7 @@ lit_utf8_read_next (const lit_utf8_byte_t **buf_p) /**< [in,out] buffer with cha
   *buf_p += lit_read_code_unit_from_utf8 (*buf_p, &ch);
 
   return ch;
-} /* lit_utf8_read_next */
+} /* lit_cesu8_read_next */
 
 /**
  * Decodes a unicode code unit from non-empty cesu-8-encoded buffer
@@ -497,7 +497,7 @@ lit_utf8_read_next (const lit_utf8_byte_t **buf_p) /**< [in,out] buffer with cha
  * @return previous code unit
  */
 ecma_char_t
-lit_utf8_read_prev (const lit_utf8_byte_t **buf_p) /**< [in,out] buffer with characters */
+lit_cesu8_read_prev (const lit_utf8_byte_t **buf_p) /**< [in,out] buffer with characters */
 {
   JERRY_ASSERT (*buf_p);
   ecma_char_t ch;
@@ -506,7 +506,7 @@ lit_utf8_read_prev (const lit_utf8_byte_t **buf_p) /**< [in,out] buffer with cha
   lit_read_code_unit_from_utf8 (*buf_p, &ch);
 
   return ch;
-} /* lit_utf8_read_prev */
+} /* lit_cesu8_read_prev */
 
 /**
  * Decodes a unicode code unit from non-empty cesu-8-encoded buffer
@@ -514,15 +514,15 @@ lit_utf8_read_prev (const lit_utf8_byte_t **buf_p) /**< [in,out] buffer with cha
  * @return next code unit
  */
 ecma_char_t
-lit_utf8_peek_next (const lit_utf8_byte_t *buf_p) /**< [in,out] buffer with characters */
+lit_cesu8_peek_next (const lit_utf8_byte_t *buf_p) /**< [in,out] buffer with characters */
 {
-  JERRY_ASSERT (buf_p);
+  JERRY_ASSERT (buf_p != NULL);
   ecma_char_t ch;
 
   lit_read_code_unit_from_utf8 (buf_p, &ch);
 
   return ch;
-} /* lit_utf8_peek_next */
+} /* lit_cesu8_peek_next */
 
 /**
  * Decodes a unicode code unit from non-empty cesu-8-encoded buffer
@@ -530,15 +530,15 @@ lit_utf8_peek_next (const lit_utf8_byte_t *buf_p) /**< [in,out] buffer with char
  * @return previous code unit
  */
 ecma_char_t
-lit_utf8_peek_prev (const lit_utf8_byte_t *buf_p) /**< [in,out] buffer with characters */
+lit_cesu8_peek_prev (const lit_utf8_byte_t *buf_p) /**< [in,out] buffer with characters */
 {
-  JERRY_ASSERT (buf_p);
+  JERRY_ASSERT (buf_p != NULL);
   ecma_char_t ch;
 
   lit_read_prev_code_unit_from_utf8 (buf_p, &ch);
 
   return ch;
-} /* lit_utf8_peek_prev */
+} /* lit_cesu8_peek_prev */
 
 /**
  * Increase cesu-8 encoded string pointer by one code unit.

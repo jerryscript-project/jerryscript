@@ -1155,7 +1155,7 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_string_t *input_str
 
   while (input_str_curr_p < input_str_end_p)
   {
-    ecma_char_t character = lit_utf8_read_next (&input_str_curr_p);
+    ecma_char_t character = lit_cesu8_read_next (&input_str_curr_p);
     ecma_char_t character_buffer[LIT_MAXIMUM_OTHER_CASE_LENGTH];
     ecma_length_t character_length;
     lit_utf8_byte_t utf8_byte_buffer[LIT_CESU8_MAX_BYTES_IN_CODE_POINT];
@@ -1194,7 +1194,7 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_string_t *input_str
 
   while (input_str_curr_p < input_str_end_p)
   {
-    ecma_char_t character = lit_utf8_read_next (&input_str_curr_p);
+    ecma_char_t character = lit_cesu8_read_next (&input_str_curr_p);
     ecma_char_t character_buffer[LIT_MAXIMUM_OTHER_CASE_LENGTH];
     ecma_length_t character_length;
 

@@ -434,8 +434,7 @@ JERRY_STATIC_ASSERT (PARSER_MAXIMUM_IDENT_LENGTH <= UINT8_MAX,
 static inline bool JERRY_ATTR_ALWAYS_INLINE
 scanner_literal_is_arguments (lexer_lit_location_t *literal_p) /**< literal */
 {
-  return (literal_p->length == 9
-          && lexer_compare_identifiers (literal_p->char_p, (const uint8_t *) "arguments", 9));
+  return lexer_compare_identifier_to_string (literal_p, (const uint8_t *) "arguments", 9);
 } /* scanner_literal_is_arguments */
 
 /**
@@ -986,7 +985,7 @@ scanner_add_custom_literal (parser_context_t *context_p, /**< context */
             return literal_p;
           }
         }
-        else if (lexer_compare_identifiers (literal_p->char_p, char_p, length))
+        else if (lexer_compare_identifier_to_string (literal_p, char_p, length))
         {
           /* The non-escaped version is preferred. */
           literal_p->char_p = char_p;
@@ -1000,8 +999,7 @@ scanner_add_custom_literal (parser_context_t *context_p, /**< context */
   {
     while ((literal_p = (lexer_lit_location_t *) parser_list_iterator_next (&literal_iterator)) != NULL)
     {
-      if (literal_p->length == length
-          && lexer_compare_identifiers (literal_p->char_p, char_p, length))
+      if (lexer_compare_identifiers (context_p, literal_p, literal_location_p))
       {
         return literal_p;
       }
@@ -1065,10 +1063,11 @@ scanner_append_argument (parser_context_t *context_p, /**< context */
   scanner_literal_pool_t *literal_pool_p = scanner_context_p->active_literal_pool_p;
   parser_list_iterator_t literal_iterator;
   parser_list_iterator_init (&literal_pool_p->literal_pool, &literal_iterator);
+  lexer_lit_location_t *literal_location_p = &context_p->token.lit_location;
   lexer_lit_location_t *literal_p;
 
-  const uint8_t *char_p = context_p->token.lit_location.char_p;
-  prop_length_t length = context_p->token.lit_location.length;
+  const uint8_t *char_p = literal_location_p->char_p;
+  prop_length_t length = literal_location_p->length;
 
   if (JERRY_LIKELY (!context_p->token.lit_location.has_escape))
   {
@@ -1084,7 +1083,7 @@ scanner_append_argument (parser_context_t *context_p, /**< context */
             break;
           }
         }
-        else if (lexer_compare_identifiers (literal_p->char_p, char_p, length))
+        else if (lexer_compare_identifier_to_string (literal_p, char_p, length))
         {
           literal_p->length = 0;
           break;
@@ -1096,8 +1095,7 @@ scanner_append_argument (parser_context_t *context_p, /**< context */
   {
     while ((literal_p = (lexer_lit_location_t *) parser_list_iterator_next (&literal_iterator)) != NULL)
     {
-      if (literal_p->length == length
-          && lexer_compare_identifiers (literal_p->char_p, char_p, length))
+      if (lexer_compare_identifiers (context_p, literal_p, literal_location_p))
       {
         literal_p->length = 0;
         break;
@@ -1118,8 +1116,7 @@ void
 scanner_detect_eval_call (parser_context_t *context_p, /**< context */
                           scanner_context_t *scanner_context_p) /**< scanner context */
 {
-  if (context_p->token.lit_location.length == 4
-      && lexer_compare_identifiers (context_p->token.lit_location.char_p, (const uint8_t *) "eval", 4)
+  if (lexer_compare_identifier_to_string (&context_p->token.lit_location, (const uint8_t *) "eval", 4)
       && lexer_check_next_character (context_p, LIT_CHAR_LEFT_PAREN))
   {
     scanner_context_p->active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_NO_REG;
@@ -1147,7 +1144,7 @@ scanner_scope_find_let_declaration (parser_context_t *context_p, /**< context */
   {
     uint8_t *destination_p = (uint8_t *) scanner_malloc (context_p, literal_p->length);
 
-    lexer_convert_ident_to_cesu8 (literal_p->char_p, destination_p, literal_p->length);
+    lexer_convert_ident_to_cesu8 (destination_p, literal_p->char_p, literal_p->length);
 
     name_p = ecma_new_ecma_string_from_utf8 (destination_p, literal_p->length);
     scanner_free (destination_p, literal_p->length);
@@ -1231,7 +1228,7 @@ scanner_detect_invalid_var (parser_context_t *context_p, /**< context */
               return;
             }
           }
-          else if (lexer_compare_identifiers (literal_p->char_p, char_p, length))
+          else if (lexer_compare_identifier_to_string (literal_p, char_p, length))
           {
             scanner_raise_redeclaration_error (context_p);
             return;
@@ -1246,8 +1243,7 @@ scanner_detect_invalid_var (parser_context_t *context_p, /**< context */
         if (literal_p->type & SCANNER_LITERAL_IS_LOCAL
             && !(literal_p->type & SCANNER_LITERAL_IS_ARG)
             && (literal_p->type & SCANNER_LITERAL_IS_LOCAL) != SCANNER_LITERAL_IS_LOCAL
-            && literal_p->length == length
-            && lexer_compare_identifiers (literal_p->char_p, char_p, length))
+            && lexer_compare_identifiers (context_p, literal_p, var_literal_p))
         {
           scanner_raise_redeclaration_error (context_p);
           return;

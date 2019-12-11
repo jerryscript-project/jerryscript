@@ -220,11 +220,11 @@ ecma_regexp_unicode_advance (const lit_utf8_byte_t **str_p, /**< reference to st
   JERRY_ASSERT (str_p != NULL);
   const lit_utf8_byte_t *current_p = *str_p;
 
-  lit_code_point_t ch = lit_utf8_read_next (&current_p);
+  lit_code_point_t ch = lit_cesu8_read_next (&current_p);
   if (lit_is_code_point_utf16_high_surrogate ((ecma_char_t) ch)
       && current_p < end_p)
   {
-    const ecma_char_t next_ch = lit_utf8_peek_next (current_p);
+    const ecma_char_t next_ch = lit_cesu8_peek_next (current_p);
     if (lit_is_code_point_utf16_low_surrogate (next_ch))
     {
       lit_utf8_incr (&current_p);
@@ -425,14 +425,14 @@ ecma_regexp_match (ecma_regexp_ctx_t *re_ctx_p, /**< RegExp matcher context */
 
         const bool is_ignorecase = re_ctx_p->flags & RE_FLAG_IGNORE_CASE;
         lit_code_point_t ch1 = re_get_char (&bc_p); /* Already canonicalized. */
-        lit_code_point_t ch2 = lit_utf8_read_next (&str_curr_p);
+        lit_code_point_t ch2 = lit_cesu8_read_next (&str_curr_p);
 
 #if ENABLED (JERRY_ES2015)
         if (re_ctx_p->flags & RE_FLAG_UNICODE
             && lit_is_code_point_utf16_high_surrogate (ch2)
             && str_curr_p < re_ctx_p->input_end_p)
         {
-          const ecma_char_t next_ch = lit_utf8_peek_next (str_curr_p);
+          const ecma_char_t next_ch = lit_cesu8_peek_next (str_curr_p);
           if (lit_is_code_point_utf16_low_surrogate (next_ch))
           {
             lit_utf8_incr (&str_curr_p);
@@ -460,7 +460,7 @@ ecma_regexp_match (ecma_regexp_ctx_t *re_ctx_p, /**< RegExp matcher context */
           return NULL; /* fail */
         }
 
-        const ecma_char_t ch = lit_utf8_read_next (&str_curr_p);
+        const ecma_char_t ch = lit_cesu8_read_next (&str_curr_p);
         JERRY_TRACE_MSG ("Period matching '.' to %u: ", (unsigned int) ch);
 
         if (lit_char_is_line_terminator (ch))
@@ -474,7 +474,7 @@ ecma_regexp_match (ecma_regexp_ctx_t *re_ctx_p, /**< RegExp matcher context */
             && lit_is_code_point_utf16_high_surrogate (ch)
             && str_curr_p < re_ctx_p->input_end_p)
         {
-          const ecma_char_t next_ch = lit_utf8_peek_next (str_curr_p);
+          const ecma_char_t next_ch = lit_cesu8_peek_next (str_curr_p);
           if (lit_is_code_point_utf16_low_surrogate (next_ch))
           {
             lit_utf8_incr (&str_curr_p);
@@ -501,7 +501,7 @@ ecma_regexp_match (ecma_regexp_ctx_t *re_ctx_p, /**< RegExp matcher context */
           return NULL; /* fail */
         }
 
-        if (lit_char_is_line_terminator (lit_utf8_peek_prev (str_curr_p)))
+        if (lit_char_is_line_terminator (lit_cesu8_peek_prev (str_curr_p)))
         {
           JERRY_TRACE_MSG ("match\n");
           break; /* tail merge */
@@ -526,7 +526,7 @@ ecma_regexp_match (ecma_regexp_ctx_t *re_ctx_p, /**< RegExp matcher context */
           return NULL; /* fail */
         }
 
-        if (lit_char_is_line_terminator (lit_utf8_peek_next (str_curr_p)))
+        if (lit_char_is_line_terminator (lit_cesu8_peek_next (str_curr_p)))
         {
           JERRY_TRACE_MSG ("match\n");
           break; /* tail merge */
@@ -539,10 +539,10 @@ ecma_regexp_match (ecma_regexp_ctx_t *re_ctx_p, /**< RegExp matcher context */
       case RE_OP_ASSERT_NOT_WORD_BOUNDARY:
       {
         const bool is_wordchar_left = ((str_curr_p > re_ctx_p->input_start_p)
-                                       && lit_char_is_word_char (lit_utf8_peek_prev (str_curr_p)));
+                                       && lit_char_is_word_char (lit_cesu8_peek_prev (str_curr_p)));
 
         const bool is_wordchar_right = ((str_curr_p < re_ctx_p->input_end_p)
-                                        && lit_char_is_word_char (lit_utf8_peek_next (str_curr_p)));
+                                        && lit_char_is_word_char (lit_cesu8_peek_next (str_curr_p)));
 
         if (op == RE_OP_ASSERT_WORD_BOUNDARY)
         {
@@ -659,7 +659,7 @@ ecma_regexp_match (ecma_regexp_ctx_t *re_ctx_p, /**< RegExp matcher context */
         else
         {
 #endif /* ENABLED (JERRY_ES2015) */
-          const ecma_char_t curr_ch = (ecma_char_t) ecma_regexp_canonicalize (lit_utf8_read_next (&str_curr_p),
+          const ecma_char_t curr_ch = (ecma_char_t) ecma_regexp_canonicalize (lit_cesu8_read_next (&str_curr_p),
                                                                               is_ignorecase);
 
           while (range_count-- > 0)
@@ -1115,7 +1115,7 @@ ecma_regexp_match (ecma_regexp_ctx_t *re_ctx_p, /**< RegExp matcher context */
               break;
             }
 
-            lit_utf8_read_prev (&str_curr_p);
+            lit_cesu8_read_prev (&str_curr_p);
             iter_count--;
           }
         }

@@ -637,8 +637,7 @@ bool lexer_check_yield_no_arg (parser_context_t *context_p);
 void lexer_parse_string (parser_context_t *context_p);
 void lexer_expect_identifier (parser_context_t *context_p, uint8_t literal_type);
 void lexer_scan_identifier (parser_context_t *context_p, uint32_t ident_opts);
-ecma_char_t lexer_hex_to_character (parser_context_t *context_p, const uint8_t *source_p, int length);
-void lexer_convert_ident_to_cesu8 (const uint8_t *source_p, uint8_t *destination_p, prop_length_t length);
+void lexer_convert_ident_to_cesu8 (uint8_t *destination_p, const uint8_t *source_p, prop_length_t length);
 void lexer_expect_object_literal_id (parser_context_t *context_p, uint32_t ident_opts);
 void lexer_construct_literal_object (parser_context_t *context_p, const lexer_lit_location_t *literal_p,
                                      uint8_t literal_type);
@@ -646,7 +645,9 @@ bool lexer_construct_number_object (parser_context_t *context_p, bool is_expr, b
 void lexer_convert_push_number_to_push_literal (parser_context_t *context_p);
 uint16_t lexer_construct_function_object (parser_context_t *context_p, uint32_t extra_status_flags);
 void lexer_construct_regexp_object (parser_context_t *context_p, bool parse_only);
-bool lexer_compare_identifiers (const uint8_t *left_p, const uint8_t *right_p, size_t size);
+bool lexer_compare_identifier_to_string (const lexer_lit_location_t *left_p, const uint8_t *right_p, size_t size);
+bool lexer_compare_identifiers (parser_context_t *context_p, const lexer_lit_location_t *left_p,
+                                const lexer_lit_location_t *right_p);
 bool lexer_current_is_literal (parser_context_t *context_p, const lexer_lit_location_t *right_ident_p);
 #if ENABLED (JERRY_ES2015)
 bool lexer_token_is_identifier (parser_context_t *context_p, const char *identifier_p,

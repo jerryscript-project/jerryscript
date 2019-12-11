@@ -177,12 +177,12 @@ ecma_builtin_math_object_trunc (ecma_number_t arg)
 
   if ((arg > 0) && (arg < 1))
   {
-    return (ecma_number_t) 0;
+    return (ecma_number_t) 0.0;
   }
 
   if ((arg < 0) && (arg > -1))
   {
-    return (ecma_number_t) -0;
+    return (ecma_number_t) -0.0;
   }
 
   return (ecma_number_t) arg - fmod (arg, 1);

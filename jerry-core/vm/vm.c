@@ -2008,6 +2008,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
             if (ECMA_IS_VALUE_ERROR (result))
             {
+              ecma_deref_object (array_p);
               goto error;
             }
 
@@ -2021,6 +2022,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
             if (ECMA_IS_VALUE_ERROR (value))
             {
+              ecma_deref_object (array_p);
               result = value;
               goto error;
             }

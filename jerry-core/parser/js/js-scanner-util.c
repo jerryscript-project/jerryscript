@@ -1760,16 +1760,13 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
     size_t stack_size = info_p->u16_arg * sizeof (parser_scope_stack);
     context_p->scope_stack_size = info_p->u16_arg;
 
-    if (stack_size == 0)
+    scope_stack_p = NULL;
+
+    if (stack_size > 0)
     {
-      if (!(option_flags & SCANNER_CREATE_VARS_IS_FUNCTION_ARGS))
-      {
-        scanner_release_next (context_p, sizeof (scanner_info_t) + 1);
-      }
-      return;
+      scope_stack_p = (parser_scope_stack *) parser_malloc (context_p, stack_size);
     }
 
-    scope_stack_p = (parser_scope_stack *) parser_malloc (context_p, stack_size);
     context_p->scope_stack_p = scope_stack_p;
     scope_stack_end_p = scope_stack_p + context_p->scope_stack_size;
   }
@@ -1820,6 +1817,8 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
       }
       continue;
     }
+
+    JERRY_ASSERT (context_p->scope_stack_size != 0);
 
     if (!(data_p[0] & SCANNER_STREAM_UINT16_DIFF))
     {

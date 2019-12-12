@@ -680,6 +680,8 @@
               VM_OC_EXT_RETURN | VM_OC_GET_STACK) \
   CBC_OPCODE (CBC_EXT_RETURN_PROMISE, CBC_NO_FLAG, -1, \
               VM_OC_RETURN_PROMISE | VM_OC_GET_STACK) \
+  CBC_OPCODE (CBC_EXT_PUSH_NEW_TARGET, CBC_NO_FLAG, 1, \
+              VM_OC_PUSH_NEW_TARGET | VM_OC_PUT_STACK) \
   \
   /* Last opcode (not a real opcode). */ \
   CBC_OPCODE (CBC_EXT_END, CBC_NO_FLAG, 0, \

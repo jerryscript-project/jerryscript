@@ -2137,6 +2137,21 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           *stack_top_p++ = ecma_copy_value (collection_p->buffer_p[tagged_idx]);
           continue;
         }
+        case VM_OC_PUSH_NEW_TARGET:
+        {
+          ecma_object_t *new_target_object = JERRY_CONTEXT (current_new_target);
+          if (new_target_object == NULL)
+          {
+            *stack_top_p++ = ECMA_VALUE_UNDEFINED;
+          }
+          else
+          {
+            JERRY_ASSERT (new_target_object != JERRY_CONTEXT_INVALID_NEW_TARGET);
+            ecma_ref_object (new_target_object);
+            *stack_top_p++ = ecma_make_object_value (new_target_object);
+          }
+          continue;
+        }
 #endif /* ENABLED (JERRY_ES2015) */
         case VM_OC_PUSH_ELISON:
         {

@@ -707,6 +707,7 @@ void scanner_cleanup (parser_context_t *context_p);
 bool scanner_is_context_needed (parser_context_t *context_p);
 #if ENABLED (JERRY_ES2015)
 bool scanner_is_global_context_needed (parser_context_t *context_p);
+bool scanner_try_scan_new_target (parser_context_t *context_p);
 #endif /* ENABLED (JERRY_ES2015) */
 void scanner_create_variables (parser_context_t *context_p, uint32_t option_flags);
 

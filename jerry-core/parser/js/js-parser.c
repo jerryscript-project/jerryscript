@@ -1982,6 +1982,10 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   {
     context.status_flags |= PARSER_IS_EVAL;
   }
+  if (parse_opts & ECMA_PARSE_FUNCTION)
+  {
+    context.status_flags |= PARSER_IS_FUNCTION;
+  }
 #endif /* ENABLED (JERRY_ES2015) */
 
   scanner_scan_all (&context,

@@ -220,8 +220,22 @@ struct jerry_context_t
   /** hash table for caching the last access of properties */
   ecma_lcache_hash_entry_t lcache[ECMA_LCACHE_HASH_ROWS_COUNT][ECMA_LCACHE_HASH_ROW_LENGTH];
 #endif /* ENABLED (JERRY_LCACHE) */
+
+#if ENABLED (JERRY_ES2015)
+  /**
+   * Allowed values and it's meaning:
+   * * NULL (0x0): the current "new.target" is undefined, that is the execution is inside a normal method.
+   * * JERRY_CONTEXT_INVALID_NEW_TARGET (0x1): the current "new.target" is invalid, that is outside of a method.
+   * * Any other valid function object pointer: the current "new.target" is valid and it is constructor call.
+   */
+  ecma_object_t *current_new_target;
+#endif /* ENABLED (JERRY_ES2015) */
 };
 
+/**
+ * Magic constant used to indicate that the current "new.target" is not inside a function.
+ */
+#define JERRY_CONTEXT_INVALID_NEW_TARGET ((ecma_object_t *) 0x1)
 
 #if ENABLED (JERRY_EXTERNAL_CONTEXT)
 

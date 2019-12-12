@@ -618,6 +618,22 @@ ecma_builtin_regexp_prototype_symbol_replace (ecma_value_t this_arg, /**< this a
 } /* ecma_builtin_regexp_prototype_symbol_replace */
 
 /**
+ * The RegExp.prototype object's '@@search' routine
+ *
+ * See also:
+ *          ECMA-262 v6.0, 21.2.5.9
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_regexp_prototype_symbol_search (ecma_value_t this_arg, /**< this argument */
+                                             ecma_value_t string_arg) /**< string argument */
+{
+  return ecma_regexp_search_helper (this_arg, string_arg);
+} /* ecma_builtin_regexp_prototype_symbol_search */
+
+/**
  * The RegExp.prototype object's '@@match' routine
  *
  * See also:

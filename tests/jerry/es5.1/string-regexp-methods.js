@@ -15,4 +15,6 @@
 // Changing exec should not affect replace.
 Object.getPrototypeOf(/x/).exec = function () { return 1234; }
 assert (/y/.exec("y") === 1234);
+
 assert ("y".replace (/y/, "x") === "x");
+assert ("ay".search (/y/) === 1);

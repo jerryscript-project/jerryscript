@@ -469,6 +469,7 @@ static const keyword_string_t keywords_with_length_4[] =
   LEXER_KEYWORD ("case", LEXER_KEYW_CASE),
   LEXER_KEYWORD ("else", LEXER_KEYW_ELSE),
   LEXER_KEYWORD ("enum", LEXER_KEYW_ENUM),
+  LEXER_KEYWORD ("eval", LEXER_KEYW_EVAL),
   LEXER_KEYWORD ("null", LEXER_LIT_NULL),
   LEXER_KEYWORD ("this", LEXER_KEYW_THIS),
   LEXER_KEYWORD ("true", LEXER_LIT_TRUE),
@@ -537,6 +538,7 @@ static const keyword_string_t keywords_with_length_8[] =
  */
 static const keyword_string_t keywords_with_length_9[] =
 {
+  LEXER_KEYWORD ("arguments", LEXER_KEYW_ARGUMENTS),
   LEXER_KEYWORD ("interface", LEXER_KEYW_INTERFACE),
   LEXER_KEYWORD ("protected", LEXER_KEYW_PROTECTED),
 };
@@ -599,6 +601,9 @@ typedef enum
   LEXER_PARSE_CHECK_START_AND_RETURN = (1 << 1), /**< check identifier start and return */
   LEXER_PARSE_CHECK_PART_AND_RETURN = (1 << 2), /**< check identifier part and return */
 } lexer_parse_options_t;
+
+JERRY_STATIC_ASSERT (LEXER_FIRST_NON_RESERVED_KEYWORD < LEXER_FIRST_FUTURE_STRICT_RESERVED_WORD,
+                     lexer_first_non_reserved_keyword_must_be_before_lexer_first_future_strict_reserved_word);
 
 /**
  * Parse identifier.
@@ -749,7 +754,7 @@ lexer_parse_identifier (parser_context_t *context_p, /**< context */
   JERRY_ASSERT (length > 0);
 
   context_p->token.type = LEXER_LITERAL;
-  context_p->token.ident_is_strict_keyword = false;
+  context_p->token.keyword_type = LEXER_EOS;
   context_p->token.lit_location.type = LEXER_IDENT_LITERAL;
   context_p->token.lit_location.has_escape = has_escape;
 
@@ -792,50 +797,52 @@ lexer_parse_identifier (parser_context_t *context_p, /**< context */
 
         if (compare_result == 0)
         {
-          if (JERRY_UNLIKELY (keyword_p->type >= LEXER_FIRST_FUTURE_STRICT_RESERVED_WORD))
+          context_p->token.keyword_type = (uint8_t) keyword_p->type;
+
+          if (JERRY_LIKELY (keyword_p->type < LEXER_FIRST_NON_RESERVED_KEYWORD))
           {
-#if ENABLED (JERRY_ES2015)
-            if (keyword_p->type == LEXER_KEYW_YIELD && (context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION))
+            if (ident_start_p == buffer_p)
             {
-              if (ident_start_p == buffer_p)
-              {
-                parser_raise_error (context_p, PARSER_ERR_INVALID_KEYWORD);
-              }
-
-              if (context_p->status_flags & PARSER_DISALLOW_YIELD)
-              {
-                parser_raise_error (context_p, PARSER_ERR_YIELD_NOT_ALLOWED);
-              }
-
-              context_p->token.type = (uint8_t) LEXER_KEYW_YIELD;
-              break;
+              /* Escape sequences are not allowed in a keyword. */
+              parser_raise_error (context_p, PARSER_ERR_INVALID_KEYWORD);
             }
 
-            if (keyword_p->type == LEXER_KEYW_LET && !context_p->token.lit_location.has_escape)
-            {
-              if (context_p->status_flags & PARSER_IS_STRICT)
-              {
-                context_p->token.type = (uint8_t) LEXER_KEYW_LET;
-              }
-              break;
-            }
-#endif /* ENABLED (JERRY_ES2015) */
-
-            if (context_p->status_flags & PARSER_IS_STRICT)
-            {
-              parser_raise_error (context_p, PARSER_ERR_STRICT_IDENT_NOT_ALLOWED);
-            }
-
-            context_p->token.ident_is_strict_keyword = true;
+            context_p->token.type = (uint8_t) keyword_p->type;
             break;
           }
 
-          if (ident_start_p == buffer_p)
+#if ENABLED (JERRY_ES2015)
+          if (keyword_p->type == LEXER_KEYW_YIELD && (context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION))
           {
-            parser_raise_error (context_p, PARSER_ERR_INVALID_KEYWORD);
+            if (ident_start_p == buffer_p)
+            {
+              parser_raise_error (context_p, PARSER_ERR_INVALID_KEYWORD);
+            }
+
+            if (context_p->status_flags & PARSER_DISALLOW_YIELD)
+            {
+              parser_raise_error (context_p, PARSER_ERR_YIELD_NOT_ALLOWED);
+            }
+
+            context_p->token.type = (uint8_t) LEXER_KEYW_YIELD;
+            break;
           }
 
-          context_p->token.type = (uint8_t) keyword_p->type;
+          if (keyword_p->type == LEXER_KEYW_LET && ident_start_p != buffer_p)
+          {
+            if (context_p->status_flags & PARSER_IS_STRICT)
+            {
+              context_p->token.type = (uint8_t) LEXER_KEYW_LET;
+            }
+            break;
+          }
+#endif /* ENABLED (JERRY_ES2015) */
+
+          if (keyword_p->type >= LEXER_FIRST_FUTURE_STRICT_RESERVED_WORD
+              && (context_p->status_flags & PARSER_IS_STRICT))
+          {
+            parser_raise_error (context_p, PARSER_ERR_STRICT_IDENT_NOT_ALLOWED);
+          }
           break;
         }
       }
@@ -1187,7 +1194,7 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
   size_t length;
 
   context_p->token.type = LEXER_LITERAL;
-  context_p->token.ident_is_strict_keyword = false;
+  context_p->token.keyword_type = LEXER_EOS;
   context_p->token.extra_value = LEXER_NUMBER_DECIMAL;
   context_p->token.lit_location.char_p = source_p;
   context_p->token.lit_location.type = LEXER_NUMBER_LITERAL;
@@ -2164,25 +2171,6 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
                               literal_type,
                               literal_p->has_escape);
 
-  context_p->lit_object.type = LEXER_LITERAL_OBJECT_ANY;
-
-  if (literal_p->length == 4
-      && source_p[0] == LIT_CHAR_LOWERCASE_E
-      && source_p[3] == LIT_CHAR_LOWERCASE_L
-      && source_p[1] == LIT_CHAR_LOWERCASE_V
-      && source_p[2] == LIT_CHAR_LOWERCASE_A)
-  {
-    context_p->lit_object.type = LEXER_LITERAL_OBJECT_EVAL;
-  }
-
-  if (literal_p->length == 9
-      && source_p[0] == LIT_CHAR_LOWERCASE_A
-      && source_p[8] == LIT_CHAR_LOWERCASE_S
-      && memcmp (source_p + 1, "rgument", 7) == 0)
-  {
-    context_p->lit_object.type = LEXER_LITERAL_OBJECT_ARGUMENTS;
-  }
-
   if (destination_start_p != local_byte_array)
   {
     JERRY_ASSERT (context_p->u.allocated_buffer_p == destination_start_p);
@@ -2260,7 +2248,6 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
     {
       context_p->lit_object.literal_p = literal_p;
       context_p->lit_object.index = (uint16_t) literal_index;
-      context_p->lit_object.type = LEXER_LITERAL_OBJECT_ANY;
       return false;
     }
 
@@ -2282,7 +2269,6 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
 
   context_p->lit_object.literal_p = literal_p;
   context_p->lit_object.index = (uint16_t) literal_index;
-  context_p->lit_object.type = LEXER_LITERAL_OBJECT_ANY;
 
   context_p->literal_count++;
   return false;
@@ -2624,12 +2610,11 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
   literal_p->u.bytecode_p = (ecma_compiled_code_t *) re_bytecode_p;
 
   context_p->token.type = LEXER_LITERAL;
-  context_p->token.ident_is_strict_keyword = false;
+  context_p->token.keyword_type = LEXER_EOS;
   context_p->token.lit_location.type = LEXER_REGEXP_LITERAL;
 
   context_p->lit_object.literal_p = literal_p;
   context_p->lit_object.index = (uint16_t) (context_p->literal_count - 1);
-  context_p->lit_object.type = LEXER_LITERAL_OBJECT_ANY;
 #else /* !ENABLED (JERRY_BUILTIN_REGEXP) */
   JERRY_UNUSED (parse_only);
   parser_raise_error (context_p, PARSER_ERR_UNSUPPORTED_REGEXP);
@@ -2664,22 +2649,16 @@ lexer_expect_identifier (parser_context_t *context_p, /**< context */
                                       literal_type);
 
       if (literal_type != LEXER_STRING_LITERAL
-          && (context_p->status_flags & PARSER_IS_STRICT)
-          && context_p->lit_object.type != LEXER_LITERAL_OBJECT_ANY)
+          && (context_p->status_flags & PARSER_IS_STRICT))
       {
-        parser_error_t error;
-
-        if (context_p->lit_object.type == LEXER_LITERAL_OBJECT_EVAL)
+        if (context_p->token.keyword_type == LEXER_KEYW_EVAL)
         {
-          error = PARSER_ERR_EVAL_NOT_ALLOWED;
+          parser_raise_error (context_p, PARSER_ERR_EVAL_NOT_ALLOWED);
         }
-        else
+        else if (context_p->token.keyword_type == LEXER_KEYW_ARGUMENTS)
         {
-          JERRY_ASSERT (context_p->lit_object.type == LEXER_LITERAL_OBJECT_ARGUMENTS);
-          error = PARSER_ERR_ARGUMENTS_NOT_ALLOWED;
+          parser_raise_error (context_p, PARSER_ERR_ARGUMENTS_NOT_ALLOWED);
         }
-
-        parser_raise_error (context_p, error);
       }
       return;
     }
@@ -2690,7 +2669,7 @@ lexer_expect_identifier (parser_context_t *context_p, /**< context */
     /* When parsing default exports for modules, it is not required by functions or classes to have identifiers.
      * In this case we use a synthetic name for them. */
     context_p->token.type = LEXER_LITERAL;
-    context_p->token.ident_is_strict_keyword = false;
+    context_p->token.keyword_type = LEXER_EOS;
     context_p->token.lit_location.type = LEXER_IDENT_LITERAL;
     context_p->token.lit_location.has_escape = false;
     lexer_construct_literal_object (context_p, &lexer_default_literal, literal_type);
@@ -3098,37 +3077,9 @@ lexer_token_is_let (parser_context_t *context_p) /**< context */
 {
   JERRY_ASSERT (context_p->token.type == LEXER_LITERAL);
 
-  const uint8_t *char_p = context_p->token.lit_location.char_p;
-
-  return (!(context_p->status_flags & PARSER_IS_STRICT)
-          && context_p->token.lit_location.type == LEXER_IDENT_LITERAL
-          && context_p->token.lit_location.length == 3
-          && char_p[0] == LIT_CHAR_LOWERCASE_L
-          && char_p[1] == LIT_CHAR_LOWERCASE_E
-          && char_p[2] == LIT_CHAR_LOWERCASE_T);
+  return (context_p->token.keyword_type == LEXER_KEYW_LET
+          && !context_p->token.lit_location.has_escape);
 } /* lexer_token_is_let */
-
-/**
- * Compares the current literal object to an expected identifier
- *
- * Note:
- *   Escape sequences are allowed.
- *
- * @return true if the input identifiers are the same
- */
-bool
-lexer_literal_object_is_identifier (parser_context_t *context_p, /**< context */
-                                    const char *identifier_p, /**< identifier */
-                                    size_t identifier_length) /**< identifier length */
-{
-  JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
-                && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
-
-  lexer_literal_t *literal_p = context_p->lit_object.literal_p;
-
-  return (literal_p->prop.length == identifier_length
-          && memcmp (literal_p->u.char_p, identifier_p, identifier_length) == 0);
-} /* lexer_literal_object_is_identifier */
 
 #endif /* ENABLED (JERRY_ES2015) */
 

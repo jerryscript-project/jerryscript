@@ -308,7 +308,7 @@ parser_emit_cbc_literal (parser_context_t *context_p, /**< context */
   context_p->last_cbc_opcode = opcode;
   context_p->last_cbc.literal_index = literal_index;
   context_p->last_cbc.literal_type = LEXER_UNUSED_LITERAL;
-  context_p->last_cbc.literal_object_type = LEXER_LITERAL_OBJECT_ANY;
+  context_p->last_cbc.literal_keyword_type = LEXER_EOS;
 } /* parser_emit_cbc_literal */
 
 /**
@@ -330,7 +330,7 @@ parser_emit_cbc_literal_value (parser_context_t *context_p, /**< context */
   context_p->last_cbc_opcode = opcode;
   context_p->last_cbc.literal_index = literal_index;
   context_p->last_cbc.literal_type = LEXER_UNUSED_LITERAL;
-  context_p->last_cbc.literal_object_type = LEXER_LITERAL_OBJECT_ANY;
+  context_p->last_cbc.literal_keyword_type = LEXER_EOS;
   context_p->last_cbc.value = value;
 } /* parser_emit_cbc_literal_value */
 
@@ -351,7 +351,7 @@ parser_emit_cbc_literal_from_token (parser_context_t *context_p, /**< context */
   context_p->last_cbc_opcode = opcode;
   context_p->last_cbc.literal_index = context_p->lit_object.index;
   context_p->last_cbc.literal_type = context_p->token.lit_location.type;
-  context_p->last_cbc.literal_object_type = context_p->lit_object.type;
+  context_p->last_cbc.literal_keyword_type = context_p->token.keyword_type;
 } /* parser_emit_cbc_literal_from_token */
 
 /**

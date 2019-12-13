@@ -376,7 +376,7 @@ scanner_handle_bracket (parser_context_t *context_p, /**< context */
         arrow_source_p = NULL;
 #endif /* ENABLED (JERRY_ES2015) */
 
-        if (lexer_compare_identifier_to_string (&context_p->token.lit_location, (const uint8_t *) "eval", 4))
+        if (context_p->token.keyword_type == LEXER_KEYW_EVAL)
         {
           scanner_context_p->active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_NO_REG;
         }

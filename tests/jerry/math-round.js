@@ -35,3 +35,17 @@ assert (Math['round'](-0.7) === -1.0);
 assert (Math['round'](-1.2) === -1.0);
 assert (Math['round'](-1.7) === -2.0);
 assert (Math['round'](-1.5) === -1.0);
+
+assert (Math['round'](1) === 1);
+assert (Math['round'](-1) === -1);
+
+for (var n = 1; n <= 53; n++)
+{
+  var x = Math.pow(2, n)
+  assert (Math['round'](x - 1) === x - 1);
+  assert (Math['round'](x) === x);
+  assert (Math['round'](x + 1) === x + 1);
+  assert (Math['round'](-x - 1) === -x - 1);
+  assert (Math['round'](-x) === -x);
+  assert (Math['round'](-x + 1) === -x + 1);
+}

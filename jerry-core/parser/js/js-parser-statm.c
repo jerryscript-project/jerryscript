@@ -543,8 +543,7 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
 
 #if ENABLED (JERRY_ES2015)
       if (declaration_type != LEXER_KEYW_VAR
-          && !(context_p->status_flags & PARSER_IS_STRICT)
-          && lexer_literal_object_is_identifier (context_p, "let", 3))
+          && context_p->token.keyword_type == LEXER_KEYW_LET)
       {
         parser_raise_error (context_p, PARSER_ERR_LEXICAL_LET_BINDING);
       }
@@ -679,10 +678,8 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
 
   uint32_t status_flags = PARSER_FUNCTION_CLOSURE;
 
-  if (context_p->lit_object.type != LEXER_LITERAL_OBJECT_ANY)
+  if (context_p->token.keyword_type >= LEXER_FIRST_NON_STRICT_ARGUMENTS)
   {
-    JERRY_ASSERT (context_p->lit_object.type == LEXER_LITERAL_OBJECT_EVAL
-                  || context_p->lit_object.type == LEXER_LITERAL_OBJECT_ARGUMENTS);
     status_flags |= PARSER_HAS_NON_STRICT_ARG;
   }
 

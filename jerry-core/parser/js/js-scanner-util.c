@@ -1116,7 +1116,7 @@ void
 scanner_detect_eval_call (parser_context_t *context_p, /**< context */
                           scanner_context_t *scanner_context_p) /**< scanner context */
 {
-  if (lexer_compare_identifier_to_string (&context_p->token.lit_location, (const uint8_t *) "eval", 4)
+  if (context_p->token.keyword_type == LEXER_KEYW_EVAL
       && lexer_check_next_character (context_p, LIT_CHAR_LEFT_PAREN))
   {
     scanner_context_p->active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_NO_REG;

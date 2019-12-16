@@ -144,6 +144,17 @@ typedef enum
   LEXER_KEYW_THROW,              /**< throw */
   LEXER_KEYW_TRY,                /**< try */
 
+  LEXER_KEYW_CLASS,              /**< class */
+  LEXER_KEYW_EXTENDS,            /**< extends */
+  LEXER_KEYW_SUPER,              /**< super */
+  LEXER_KEYW_CONST,              /**< const */
+  LEXER_KEYW_EXPORT,             /**< export */
+  LEXER_KEYW_IMPORT,             /**< import */
+  LEXER_KEYW_ENUM,               /**< enum */
+#if ENABLED (JERRY_ES2015)
+  LEXER_KEYW_AWAIT,              /**< await */
+#endif /* ENABLED (JERRY_ES2015) */
+
   /* These are virtual tokens. */
   LEXER_EXPRESSION_START,        /**< expression start */
   LEXER_PROPERTY_GETTER,         /**< property getter function */
@@ -153,32 +164,15 @@ typedef enum
   LEXER_CLASS_CONSTRUCTOR,       /**< special value for class constructor method */
   LEXER_INVALID_PATTERN,         /**< special value for invalid destructuring pattern */
 
-#if !ENABLED (JERRY_ES2015)
-  /* Future reserved words: these keywords
-   * must form a group after all other keywords. */
-#define LEXER_FIRST_FUTURE_RESERVED_WORD LEXER_KEYW_CLASS
-#endif /* !ENABLED (JERRY_ES2015) */
-  LEXER_KEYW_CLASS,              /**< class */
-  LEXER_KEYW_EXTENDS,            /**< extends */
-  LEXER_KEYW_SUPER,              /**< super */
-  LEXER_KEYW_CONST,              /**< const */
-  LEXER_KEYW_EXPORT,             /**< export */
-  LEXER_KEYW_IMPORT,             /**< import */
-#if ENABLED (JERRY_ES2015)
-  /* Future reserved words: these keywords
-   * must form a group after all other keywords.
-   * Note:
-   *      Tokens from LEXER_KEYW_CLASS to LEXER_KEYW_IMPORT
-   *      are no longer future reserved words in ES2015. */
-#define LEXER_FIRST_FUTURE_RESERVED_WORD LEXER_KEYW_ENUM
-#endif /* ENABLED (JERRY_ES2015) */
-  LEXER_KEYW_ENUM,               /**< enum */
-#if ENABLED (JERRY_ES2015)
-  LEXER_KEYW_AWAIT,              /**< await */
-#endif /* ENABLED (JERRY_ES2015) */
+  /* Keywords which are not keyword tokens. */
+#define LEXER_FIRST_NON_RESERVED_KEYWORD LEXER_KEYW_EVAL
+  /* Keywords which cannot be assigned in strict mode. */
+#define LEXER_FIRST_NON_STRICT_ARGUMENTS LEXER_KEYW_EVAL
+  LEXER_KEYW_EVAL,               /**< eval */
+  LEXER_KEYW_ARGUMENTS,          /**< arguments */
 
   /* Future strict reserved words: these keywords
-   * must form a group after future reserved words. */
+   * must form a group after non-reserved keywords. */
 #define LEXER_FIRST_FUTURE_STRICT_RESERVED_WORD LEXER_KEYW_IMPLEMENTS
   LEXER_KEYW_IMPLEMENTS,         /**< implements */
   LEXER_KEYW_PRIVATE,            /**< private */
@@ -247,16 +241,6 @@ typedef enum
 } lexer_scan_ident_opts_t;
 
 /**
- * Lexer literal object types.
- */
-typedef enum
-{
-  LEXER_LITERAL_OBJECT_ANY,                 /**< unspecified object type */
-  LEXER_LITERAL_OBJECT_EVAL,                /**< reference is equal to eval */
-  LEXER_LITERAL_OBJECT_ARGUMENTS,           /**< reference is equal to arguments */
-} lexer_literal_object_type_t;
-
-/**
  * Lexer number types.
  */
 typedef enum
@@ -283,7 +267,7 @@ typedef struct
 typedef struct
 {
   uint8_t type;                              /**< token type */
-  uint8_t ident_is_strict_keyword;           /**< identifier is strict reserved keyword */
+  uint8_t keyword_type;                      /**< keyword type for identifiers */
   uint8_t extra_value;                       /**< helper value for different purposes */
   uint8_t flags;                             /**< flag bits for the current token */
   parser_line_counter_t line;                /**< token start line */
@@ -298,7 +282,6 @@ typedef struct
 {
   lexer_literal_t *literal_p;                /**< pointer to the literal object */
   uint16_t index;                            /**< literal index */
-  uint8_t type;                              /**< literal object type */
 } lexer_lit_object_t;
 
 /**

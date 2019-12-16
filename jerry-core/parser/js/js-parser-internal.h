@@ -207,7 +207,7 @@ typedef struct
   uint16_t value;                             /**< other argument (second literal or byte). */
   uint16_t third_literal_index;               /**< literal index argument */
   uint8_t literal_type;                       /**< last literal type */
-  uint8_t literal_object_type;                /**< last literal object type */
+  uint8_t literal_keyword_type;               /**< last literal keyword type */
 } cbc_argument_t;
 
 /* Useful parser macros. */
@@ -653,8 +653,6 @@ bool lexer_current_is_literal (parser_context_t *context_p, const lexer_lit_loca
 bool lexer_token_is_identifier (parser_context_t *context_p, const char *identifier_p,
                                 size_t identifier_length);
 bool lexer_token_is_let (parser_context_t *context_p);
-bool lexer_literal_object_is_identifier (parser_context_t *context_p, const char *identifier_p,
-                                         size_t identifier_length);
 #endif /* ENABLED (JERRY_ES2015) */
 bool lexer_compare_literal_to_string (parser_context_t *context_p, const char *string_p, size_t string_length);
 uint8_t lexer_convert_binary_lvalue_token_to_binary (uint8_t token);

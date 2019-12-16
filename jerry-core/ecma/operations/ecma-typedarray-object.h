@@ -39,6 +39,7 @@ void ecma_set_typedarray_element (lit_utf8_byte_t *dst_p,
 bool ecma_typedarray_helper_is_typedarray (ecma_builtin_id_t builtin_id);
 ecma_typedarray_type_t ecma_get_typedarray_id (ecma_object_t *obj_p);
 ecma_builtin_id_t ecma_typedarray_helper_get_prototype_id (ecma_typedarray_type_t typedarray_id);
+ecma_builtin_id_t ecma_typedarray_helper_get_constructor_id (ecma_typedarray_type_t typedarray_id);
 ecma_typedarray_type_t ecma_typedarray_helper_builtin_to_typedarray_id (ecma_builtin_id_t builtin_id);
 
 ecma_value_t ecma_op_typedarray_from (ecma_value_t items_val,
@@ -64,10 +65,11 @@ void ecma_op_typedarray_list_lazy_property_names (ecma_object_t *obj_p,
 bool ecma_op_typedarray_define_index_prop (ecma_object_t *obj_p,
                                            uint32_t index,
                                            const ecma_property_descriptor_t *property_desc_p);
-ecma_value_t ecma_op_create_typedarray_with_type_and_length (ecma_object_t *obj_p,
+ecma_value_t ecma_op_create_typedarray_with_type_and_length (ecma_typedarray_type_t typedarray_id,
                                                              ecma_length_t array_length);
 ecma_typedarray_info_t ecma_typedarray_get_info (ecma_object_t *typedarray_p);
 ecma_value_t ecma_typedarray_create_object_with_length (ecma_length_t array_length,
+                                                        ecma_object_t *src_arraybuffer_p,
                                                         ecma_object_t *proto_p,
                                                         uint8_t element_size_shift,
                                                         ecma_typedarray_type_t typedarray_id);

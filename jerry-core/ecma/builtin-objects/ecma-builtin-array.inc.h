@@ -43,6 +43,11 @@ ROUTINE (LIT_MAGIC_STRING_IS_ARRAY_UL, ecma_builtin_array_object_is_array, 1, 1)
 #if ENABLED (JERRY_ES2015)
 ROUTINE (LIT_MAGIC_STRING_FROM, ecma_builtin_array_object_from, NON_FIXED, 1)
 ROUTINE (LIT_MAGIC_STRING_OF, ecma_builtin_array_object_of, NON_FIXED, 0)
+
+/* ECMA-262 v6, 22.1.2.5 */
+ACCESSOR_READ_ONLY (LIT_GLOBAL_SYMBOL_SPECIES,
+                    ecma_builtin_array_species_get,
+                    ECMA_PROPERTY_FLAG_CONFIGURABLE)
 #endif /* ENABLED (JERRY_ES2015) */
 
 #endif /* !(ENABLED (JERRY_BUILTIN_ARRAY)) */

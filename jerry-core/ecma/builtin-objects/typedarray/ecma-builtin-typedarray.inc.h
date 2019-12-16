@@ -45,6 +45,11 @@ ROUTINE (LIT_MAGIC_STRING_FROM, ecma_builtin_typedarray_from, NON_FIXED, 1)
 /* ES2015 22.2.2.2 */
 ROUTINE (LIT_MAGIC_STRING_OF, ecma_builtin_typedarray_of, NON_FIXED, 0)
 
+/* ES2015 22.2.2.4 */
+ACCESSOR_READ_ONLY (LIT_GLOBAL_SYMBOL_SPECIES,
+                    ecma_builtin_typedarray_species_get,
+                    ECMA_PROPERTY_FLAG_CONFIGURABLE)
+
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

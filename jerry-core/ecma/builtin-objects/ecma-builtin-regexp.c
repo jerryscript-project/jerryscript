@@ -174,6 +174,20 @@ cleanup:
   return ret_value;
 } /* ecma_builtin_regexp_dispatch_construct */
 
+#if ENABLED (JERRY_ES2015)
+/**
+ * 21.2.4.2 get RegExp [ @@species ] accessor
+ *
+ * @return ecma_value
+ *         returned value must be freed with ecma_free_value
+ */
+ecma_value_t
+ecma_builtin_regexp_species_get (ecma_value_t this_value) /**< This Value */
+{
+  return ecma_copy_value (this_value);
+} /* ecma_builtin_regexp_species_get */
+#endif /* ENABLED (JERRY_ES2015) */
+
 /**
  * @}
  * @}

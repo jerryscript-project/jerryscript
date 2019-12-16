@@ -460,6 +460,18 @@ ecma_builtin_array_object_of (ecma_value_t this_arg, /**< 'this' argument */
 
   return ecma_make_object_value (obj_p);
 } /* ecma_builtin_array_object_of */
+
+/**
+ * 22.1.2.5 get Array [ @@species ] accessor
+ *
+ * @return ecma_value
+ *         returned value must be freed with ecma_free_value
+ */
+ecma_value_t
+ecma_builtin_array_species_get (ecma_value_t this_value) /**< This Value */
+{
+  return ecma_copy_value (this_value);
+} /* ecma_builtin_array_species_get */
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**

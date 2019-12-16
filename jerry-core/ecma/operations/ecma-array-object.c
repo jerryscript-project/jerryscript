@@ -663,27 +663,68 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-ecma_op_create_array_object_by_constructor (const ecma_value_t *arguments_list_p, /**< list of arguments that
-                                                                                   *   are passed to
-                                                                                   *   Array constructor */
-                                            ecma_length_t arguments_list_len, /**< length of the arguments' list */
-                                            bool is_treat_single_arg_as_length, /**< if the value is true,
-                                                                                 *   arguments_list_len is 1
-                                                                                 *   and single argument is Number,
-                                                                                 *   then treat the single argument
-                                                                                 *   as new Array's length rather
-                                                                                 *   than as single item of the
-                                                                                 *   Array */
-                                            ecma_object_t *object_p) /**< The object from whom the new array object
-                                                                      *   is being created */
+ecma_op_array_species_create (ecma_object_t *original_array_p, /**< The object from whom the new array object
+                                                                *   is being created */
+                              ecma_length_t length) /**< length of the array */
 {
-  /* TODO: Use @@species after Symbol has been implemented */
-  JERRY_UNUSED (object_p);
+  ecma_value_t constructor = ECMA_VALUE_UNDEFINED;
+  ecma_value_t original_array = ecma_make_object_value (original_array_p);
 
-  return ecma_op_create_array_object (arguments_list_p,
-                                      arguments_list_len,
-                                      is_treat_single_arg_as_length);
-} /* ecma_op_create_array_object_by_constructor */
+  if (ecma_is_value_array (original_array))
+  {
+    constructor = ecma_op_object_get_by_magic_id (original_array_p, LIT_MAGIC_STRING_CONSTRUCTOR);
+    if (ECMA_IS_VALUE_ERROR (constructor))
+    {
+      return constructor;
+    }
+
+    if (ecma_is_constructor (constructor)
+        && ecma_get_object_from_value (constructor) == ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY))
+    {
+      ecma_free_value (constructor);
+      constructor = ECMA_VALUE_UNDEFINED;
+    }
+    else if (ecma_is_value_object (constructor))
+    {
+      ecma_object_t *ctor_object_p = ecma_get_object_from_value (constructor);
+      constructor = ecma_op_object_get_by_symbol_id (ctor_object_p, LIT_MAGIC_STRING_SPECIES);
+      ecma_deref_object (ctor_object_p);
+
+      if (ECMA_IS_VALUE_ERROR (constructor))
+      {
+        return constructor;
+      }
+
+      if (ecma_is_value_null (constructor))
+      {
+        constructor = ECMA_VALUE_UNDEFINED;
+      }
+    }
+  }
+
+  if (ecma_is_value_undefined (constructor))
+  {
+    return ecma_make_object_value (ecma_op_new_fast_array_object (length));
+  }
+
+  if (!ecma_is_constructor (constructor))
+  {
+    ecma_free_value (constructor);
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid species constructor"));
+  }
+
+  ecma_value_t len_val = ecma_make_uint32_value (length);
+  ecma_object_t *ctor_object_p = ecma_get_object_from_value (constructor);
+  ecma_value_t ret_val = ecma_op_function_construct (ctor_object_p,
+                                                     ECMA_VALUE_UNDEFINED,
+                                                     &len_val,
+                                                     1);
+
+
+  ecma_deref_object (ctor_object_p);
+  ecma_free_value (len_val);
+  return ret_val;
+} /* ecma_op_array_species_create */
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**

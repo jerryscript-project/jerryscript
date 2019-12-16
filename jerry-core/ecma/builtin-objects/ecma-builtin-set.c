@@ -66,6 +66,18 @@ ecma_builtin_set_dispatch_construct (const ecma_value_t *arguments_list_p, /**< 
 } /* ecma_builtin_set_dispatch_construct */
 
 /**
+ * 23.2.2.2 get Set [ @@species ] accessor
+ *
+ * @return ecma_value
+ *         returned value must be freed with ecma_free_value
+ */
+ecma_value_t
+ecma_builtin_set_species_get (ecma_value_t this_value) /**< This Value */
+{
+  return ecma_copy_value (this_value);
+} /* ecma_builtin_set_species_get */
+
+/**
  * @}
  * @}
  * @}

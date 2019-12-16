@@ -31,6 +31,13 @@ OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
               ECMA_BUILTIN_ID_REGEXP_PROTOTYPE,
               ECMA_PROPERTY_FIXED)
 
+#if ENABLED (JERRY_ES2015)
+/* ECMA-262 v6, 21.2.4.2 */
+ACCESSOR_READ_ONLY (LIT_GLOBAL_SYMBOL_SPECIES,
+                    ecma_builtin_regexp_species_get,
+                    ECMA_PROPERTY_FLAG_CONFIGURABLE)
+#endif /* ENABLED (JERRY_ES2015) */
+
 #endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

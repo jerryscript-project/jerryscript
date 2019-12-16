@@ -42,6 +42,11 @@ OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
               ECMA_BUILTIN_ID_SET_PROTOTYPE,
               ECMA_PROPERTY_FIXED)
 
+/* ECMA-262 v6, 23.2.2.2 */
+ACCESSOR_READ_ONLY (LIT_GLOBAL_SYMBOL_SPECIES,
+                    ecma_builtin_set_species_get,
+                    ECMA_PROPERTY_FLAG_CONFIGURABLE)
+
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_SET) */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

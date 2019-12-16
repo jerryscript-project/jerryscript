@@ -94,6 +94,18 @@ ecma_builtin_arraybuffer_dispatch_construct (const ecma_value_t *arguments_list_
 } /* ecma_builtin_arraybuffer_dispatch_construct */
 
 /**
+ * 24.1.3.3 get ArrayBuffer [ @@species ] accessor
+ *
+ * @return ecma_value
+ *         returned value must be freed with ecma_free_value
+ */
+ecma_value_t
+ecma_builtin_arraybuffer_species_get (ecma_value_t this_value) /**< This Value */
+{
+  return ecma_copy_value (this_value);
+} /* ecma_builtin_arraybuffer_species_get */
+
+/**
  * @}
  * @}
  * @}

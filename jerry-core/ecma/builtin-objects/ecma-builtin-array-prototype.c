@@ -224,7 +224,7 @@ ecma_builtin_array_prototype_object_concat (const ecma_value_t args[], /**< argu
 {
   /* 2. */
 #if ENABLED (JERRY_ES2015)
-  ecma_value_t new_array = ecma_op_create_array_object_by_constructor (NULL, 0, false, obj_p);
+  ecma_value_t new_array = ecma_op_array_species_create (obj_p, 0);
 
   if (ECMA_IS_VALUE_ERROR (new_array))
   {
@@ -828,7 +828,7 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t arg1, /**< start */
   JERRY_ASSERT (start <= len && end <= len);
 
 #if ENABLED (JERRY_ES2015)
-  ecma_value_t new_array = ecma_op_create_array_object_by_constructor (NULL, 0, false, obj_p);
+  ecma_value_t new_array = ecma_op_array_species_create (obj_p, 0);
 
   if (ECMA_IS_VALUE_ERROR (new_array))
   {
@@ -887,10 +887,29 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t arg1, /**< start */
                                                                      n,
                                                                      get_value,
                                                                      ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
-      JERRY_ASSERT (ecma_is_value_true (put_comp));
       ecma_free_value (get_value);
+
+#if ENABLED (JERRY_ES2015)
+      if (ECMA_IS_VALUE_ERROR (put_comp))
+      {
+        ecma_deref_object (new_array_p);
+        return put_comp;
+      }
+#else /* !ENABLED (JERRY_ES2015) */
+      JERRY_ASSERT (ecma_is_value_true (put_comp));
+#endif /* ENABLED (JERRY_ES2015) */
     }
   }
+
+#if ENABLED (JERRY_ES2015)
+  ecma_value_t set_length_value = ecma_builtin_array_prototype_helper_set_length (new_array_p, ((ecma_number_t) n));
+
+  if (ECMA_IS_VALUE_ERROR (set_length_value))
+  {
+    ecma_deref_object (new_array_p);
+    return set_length_value;
+  }
+#endif /* ENABLED (JERRY_ES2015) */
 
   return new_array;
 } /* ecma_builtin_array_prototype_object_slice */
@@ -1167,7 +1186,7 @@ ecma_builtin_array_prototype_object_splice (const ecma_value_t args[], /**< argu
                                             uint32_t len) /**< array object's length */
 {
 #if ENABLED (JERRY_ES2015)
-  ecma_value_t new_array = ecma_op_create_array_object_by_constructor (NULL, 0, false, obj_p);
+  ecma_value_t new_array = ecma_op_array_species_create (obj_p, 0);
 
   if (ECMA_IS_VALUE_ERROR (new_array))
   {
@@ -1259,11 +1278,29 @@ ecma_builtin_array_prototype_object_splice (const ecma_value_t args[], /**< argu
                                                                      k,
                                                                      get_value,
                                                                      ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
-      JERRY_ASSERT (ecma_is_value_true (put_comp));
-
       ecma_free_value (get_value);
+#if ENABLED (JERRY_ES2015)
+      if (ECMA_IS_VALUE_ERROR (put_comp))
+      {
+        ecma_deref_object (new_array_p);
+        return put_comp;
+      }
+#else /* !ENABLED (JERRY_ES2015) */
+      JERRY_ASSERT (ecma_is_value_true (put_comp));
+#endif /* ENABLED (JERRY_ES2015) */
     }
   }
+
+#if ENABLED (JERRY_ES2015)
+  ecma_value_t new_set_length_value = ecma_builtin_array_prototype_helper_set_length (new_array_p,
+                                                                                      ((ecma_number_t) delete_count));
+
+  if (ECMA_IS_VALUE_ERROR (new_set_length_value))
+  {
+    ecma_deref_object (new_array_p);
+    return new_set_length_value;
+  }
+#endif /* ENABLED (JERRY_ES2015) */
 
   /* 11. */
   ecma_length_t item_count;
@@ -1832,14 +1869,16 @@ ecma_builtin_array_prototype_object_map (ecma_value_t arg1, /**< callbackfn */
 
   /* 6. */
 #if ENABLED (JERRY_ES2015)
-  ecma_value_t new_array = ecma_op_create_array_object_by_constructor (NULL, 0, false, obj_p);
+  ecma_value_t new_array = ecma_op_array_species_create (obj_p, len);
 
   if (ECMA_IS_VALUE_ERROR (new_array))
   {
     return new_array;
   }
 #else /* !ENABLED (JERRY_ES2015) */
-  ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
+  ecma_value_t length_value = ecma_make_number_value (len);
+  ecma_value_t new_array = ecma_op_create_array_object (&length_value, 1, true);
+  ecma_free_value (length_value);
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -1883,23 +1922,22 @@ ecma_builtin_array_prototype_object_map (ecma_value_t arg1, /**< callbackfn */
                                                                      mapped_value,
                                                                      ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
 
-      JERRY_ASSERT (ecma_is_value_true (put_comp));
 
       ecma_free_value (mapped_value);
       ecma_free_value (current_value);
+#if ENABLED (JERRY_ES2015)
+      if (ECMA_IS_VALUE_ERROR (put_comp))
+      {
+        ecma_deref_object (new_array_p);
+        return put_comp;
+      }
+#else /* !ENABLED (JERRY_ES2015) */
+      JERRY_ASSERT (ecma_is_value_true (put_comp));
+#endif /* ENABLED (JERRY_ES2015) */
     }
   }
 
-
-  ecma_value_t set_length_value = ecma_builtin_array_prototype_helper_set_length (new_array_p, ((ecma_number_t) len));
-
-  if (ECMA_IS_VALUE_ERROR (set_length_value))
-  {
-    ecma_deref_object (new_array_p);
-    return set_length_value;
-  }
-
-  return new_array;
+  return ecma_make_object_value (new_array_p);
 } /* ecma_builtin_array_prototype_object_map */
 
 /**
@@ -1925,7 +1963,7 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t arg1, /**< callbackfn *
 
   /* 6. */
 #if ENABLED (JERRY_ES2015)
-  ecma_value_t new_array = ecma_op_create_array_object_by_constructor (NULL, 0, false, obj_p);
+  ecma_value_t new_array = ecma_op_array_species_create (obj_p, 0);
 
   if (ECMA_IS_VALUE_ERROR (new_array))
   {
@@ -1981,7 +2019,18 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t arg1, /**< callbackfn *
                                                                        new_array_index,
                                                                        get_value,
                                                                        ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+#if ENABLED (JERRY_ES2015)
+        if (ECMA_IS_VALUE_ERROR (put_comp))
+        {
+          ecma_free_value (call_value);
+          ecma_free_value (get_value);
+          ecma_deref_object (new_array_p);
+
+          return put_comp;
+        }
+#else /* !ENABLED (JERRY_ES2015) */
         JERRY_ASSERT (ecma_is_value_true (put_comp));
+#endif /* ENABLED (JERRY_ES2015) */
         new_array_index++;
       }
 

@@ -42,6 +42,11 @@ ROUTINE (LIT_MAGIC_STRING_RESOLVE, ecma_builtin_promise_resolve, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_RACE, ecma_builtin_promise_race, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_ALL, ecma_builtin_promise_all, 1, 1)
 
+/* ES2015 25.4.4.6 */
+ACCESSOR_READ_ONLY (LIT_GLOBAL_SYMBOL_SPECIES,
+                    ecma_builtin_promise_species_get,
+                    ECMA_PROPERTY_FLAG_CONFIGURABLE)
+
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

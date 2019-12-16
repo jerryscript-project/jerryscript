@@ -359,7 +359,8 @@ ecma_builtin_math_dispatch_routine (uint16_t builtin_routine_id, /**< built-in w
       {
         if (ecma_number_is_nan (x)
             || ecma_number_is_zero (x)
-            || ecma_number_is_infinity (x))
+            || ecma_number_is_infinity (x)
+            || fmod (x, 1.0) == 0)
         {
           /* Do nothing. */
         }

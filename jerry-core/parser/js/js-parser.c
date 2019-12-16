@@ -1818,6 +1818,11 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
   scanner_create_variables (context_p, SCANNER_CREATE_VARS_IS_FUNCTION_BODY);
 } /* parser_parse_function_arguments */
 
+#ifndef JERRY_NDEBUG
+JERRY_STATIC_ASSERT (PARSER_SCANNING_SUCCESSFUL == PARSER_HAS_LATE_LIT_INIT,
+                     parser_scanning_successful_should_share_the_bit_position_with_parser_has_late_lit_init);
+#endif /* !JERRY_NDEBUG */
+
 /**
  * Parse and compile EcmaScript source code
  *
@@ -2048,12 +2053,15 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
     JERRY_ASSERT (context.last_cbc_opcode == PARSER_CBC_UNAVAILABLE);
     JERRY_ASSERT (context.u.allocated_buffer_p == NULL);
 
-    compiled_code_p = parser_post_processing (&context);
-    parser_list_free (&context.literal_pool);
-
 #ifndef JERRY_NDEBUG
     JERRY_ASSERT (context.status_flags & PARSER_SCANNING_SUCCESSFUL);
+    context.status_flags &= (uint32_t) ~PARSER_SCANNING_SUCCESSFUL;
 #endif /* !JERRY_NDEBUG */
+
+    JERRY_ASSERT (!(context.status_flags & PARSER_HAS_LATE_LIT_INIT));
+
+    compiled_code_p = parser_post_processing (&context);
+    parser_list_free (&context.literal_pool);
 
     JERRY_ASSERT (arg_list_p != NULL || !(context.status_flags & PARSER_ARGUMENTS_NEEDED));
 
@@ -2376,8 +2384,9 @@ parser_parse_arrow_function (parser_context_t *context_p, /**< context */
   }
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
-  if (status_flags & PARSER_ARROW_PARSE_ARGS)
+  if (context_p->token.type == LEXER_ARROW_LEFT_PAREN)
   {
+    lexer_next_token (context_p);
     parser_parse_function_arguments (context_p, LEXER_RIGHT_PAREN);
     lexer_next_token (context_p);
   }

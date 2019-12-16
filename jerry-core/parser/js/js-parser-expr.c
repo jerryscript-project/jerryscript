@@ -1543,9 +1543,9 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
                     && context_p->next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
 
       parser_check_assignment_expr (context_p);
-      lexer_next_token (context_p);
-      parser_parse_function_expression (context_p,
-                                        PARSER_IS_FUNCTION | PARSER_IS_ARROW_FUNCTION | PARSER_ARROW_PARSE_ARGS);
+
+      context_p->token.type = LEXER_ARROW_LEFT_PAREN;
+      parser_parse_function_expression (context_p, PARSER_IS_FUNCTION | PARSER_IS_ARROW_FUNCTION);
       return parser_abort_parsing_after_arrow (context_p);
     }
     case LEXER_KEYW_YIELD:
@@ -1714,9 +1714,9 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
             opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_SUPER_CALL);
           }
 #endif /* ENABLED (JERRY_ES2015) */
-          else if (JERRY_UNLIKELY ((context_p->status_flags & (PARSER_INSIDE_WITH | PARSER_RESOLVE_BASE_FOR_CALLS))
-                                   && PARSER_IS_PUSH_LITERAL (context_p->last_cbc_opcode)
-                                   && context_p->last_cbc.literal_type == LEXER_IDENT_LITERAL))
+          else if (JERRY_UNLIKELY (context_p->status_flags & PARSER_INSIDE_WITH)
+                   && PARSER_IS_PUSH_LITERAL (context_p->last_cbc_opcode)
+                   && context_p->last_cbc.literal_type == LEXER_IDENT_LITERAL)
           {
             opcode = CBC_CALL_PROP;
             parser_emit_ident_reference (context_p, CBC_PUSH_IDENT_REFERENCE);

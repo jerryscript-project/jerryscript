@@ -649,6 +649,8 @@ bool lexer_compare_identifier_to_string (const lexer_lit_location_t *left_p, con
 bool lexer_compare_identifiers (parser_context_t *context_p, const lexer_lit_location_t *left_p,
                                 const lexer_lit_location_t *right_p);
 bool lexer_current_is_literal (parser_context_t *context_p, const lexer_lit_location_t *right_ident_p);
+bool lexer_string_is_use_strict (parser_context_t *context_p);
+bool lexer_string_is_directive (parser_context_t *context_p);
 #if ENABLED (JERRY_ES2015)
 bool lexer_token_is_identifier (parser_context_t *context_p, const char *identifier_p,
                                 size_t identifier_length);

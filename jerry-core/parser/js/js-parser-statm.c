@@ -32,14 +32,6 @@
  */
 
 /**
- * @{
- * Strict mode string literal in directive prologues
- */
-#define PARSER_USE_STRICT_LITERAL  "use strict"
-#define PARSER_USE_STRICT_LENGTH   10
-/** @} */
-
-/**
  * Parser statement types.
  *
  * When a new statement is added, the following
@@ -2588,35 +2580,24 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
          && context_p->token.lit_location.type == LEXER_STRING_LITERAL)
   {
     lexer_lit_location_t lit_location;
-    uint32_t status_flags = context_p->status_flags;
+    bool is_use_strict = false;
 
     JERRY_ASSERT (context_p->stack_depth == JERRY_GET_EXPECTED_DEPTH (context_p));
 #ifndef JERRY_NDEBUG
     JERRY_ASSERT (context_p->context_stack_depth == context_p->stack_depth);
 #endif /* !JERRY_NDEBUG */
 
-    lit_location = context_p->token.lit_location;
-
-    if (lit_location.length == PARSER_USE_STRICT_LENGTH
-        && !lit_location.has_escape
-        && memcmp (PARSER_USE_STRICT_LITERAL, lit_location.char_p, PARSER_USE_STRICT_LENGTH) == 0)
+    if (lexer_string_is_use_strict (context_p))
     {
-      context_p->status_flags |= PARSER_IS_STRICT;
+      is_use_strict = true;
     }
 
+    lit_location = context_p->token.lit_location;
     lexer_next_token (context_p);
 
-    if (context_p->token.type != LEXER_SEMICOLON
-        && context_p->token.type != LEXER_RIGHT_BRACE
-        && (!(context_p->token.flags & LEXER_WAS_NEWLINE)
-            || LEXER_IS_BINARY_OP_TOKEN (context_p->token.type)
-            || context_p->token.type == LEXER_LEFT_PAREN
-            || context_p->token.type == LEXER_LEFT_SQUARE
-            || context_p->token.type == LEXER_DOT))
+    if (!lexer_string_is_directive (context_p))
     {
       /* The string is part of an expression statement. */
-      context_p->status_flags = status_flags;
-
 #if ENABLED (JERRY_DEBUGGER)
       if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       {
@@ -2642,14 +2623,24 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
       break;
     }
 
-#if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
-    if (context_p->is_show_opcodes
-        && !(status_flags & PARSER_IS_STRICT)
-        && (context_p->status_flags & PARSER_IS_STRICT))
+    if (is_use_strict)
     {
-      JERRY_DEBUG_MSG ("  Note: switch to strict mode\n\n");
-    }
+#if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
+      if (context_p->is_show_opcodes
+          && !(context_p->status_flags & PARSER_IS_STRICT))
+      {
+        JERRY_DEBUG_MSG ("  Note: switch to strict mode\n\n");
+      }
 #endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
+#if ENABLED (JERRY_ES2015)
+      if (context_p->status_flags & PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM)
+      {
+        parser_raise_error (context_p, PARSER_ERR_USE_STRICT_NOT_ALLOWED);
+      }
+#endif /* ENABLED (JERRY_ES2015) */
+
+      context_p->status_flags |= PARSER_IS_STRICT;
+    }
 
     if (context_p->token.type == LEXER_SEMICOLON)
     {
@@ -2665,6 +2656,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
       parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);
       parser_emit_cbc (context_p, CBC_POP_BLOCK);
       parser_flush_cbc (context_p);
+      break;
     }
   }
 

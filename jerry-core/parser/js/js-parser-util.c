@@ -937,6 +937,10 @@ parser_error_to_string (parser_error_t error) /**< error code */
       return "Arguments is not allowed to be used here in strict mode.";
     }
 #if ENABLED (JERRY_ES2015)
+    case PARSER_ERR_USE_STRICT_NOT_ALLOWED:
+    {
+      return "The 'use strict' directive is not allowed for functions with non-simple arguments.";
+    }
     case PARSER_ERR_YIELD_NOT_ALLOWED:
     {
       return "Incorrect use of yield keyword.";

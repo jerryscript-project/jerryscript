@@ -35,96 +35,6 @@
  */
 typedef enum
 {
-  SCAN_MODE_PRIMARY_EXPRESSION,            /**< scanning primary expression */
-  SCAN_MODE_PRIMARY_EXPRESSION_AFTER_NEW,  /**< scanning primary expression after new */
-  SCAN_MODE_POST_PRIMARY_EXPRESSION,       /**< scanning post primary expression */
-  SCAN_MODE_PRIMARY_EXPRESSION_END,        /**< scanning primary expression end */
-  SCAN_MODE_STATEMENT,                     /**< scanning statement */
-  SCAN_MODE_STATEMENT_OR_TERMINATOR,       /**< scanning statement or statement end */
-  SCAN_MODE_STATEMENT_END,                 /**< scanning statement end */
-  SCAN_MODE_VAR_STATEMENT,                 /**< scanning var statement */
-  SCAN_MODE_PROPERTY_NAME,                 /**< scanning property name */
-  SCAN_MODE_FUNCTION_ARGUMENTS,            /**< scanning function arguments */
-#if ENABLED (JERRY_ES2015)
-  SCAN_MODE_CONTINUE_FUNCTION_ARGUMENTS,   /**< continue scanning function arguments */
-  SCAN_MODE_BINDING,                       /**< array or object binding */
-  SCAN_MODE_CLASS_DECLARATION,             /**< scanning class declaration */
-  SCAN_MODE_CLASS_METHOD,                  /**< scanning class method */
-#endif /* ENABLED (JERRY_ES2015) */
-} scan_modes_t;
-
-/**
- * Scan stack mode types types.
- */
-typedef enum
-{
-  SCAN_STACK_SCRIPT,                       /**< script */
-  SCAN_STACK_SCRIPT_FUNCTION,              /**< script is a function body */
-  SCAN_STACK_BLOCK_STATEMENT,              /**< block statement group */
-  SCAN_STACK_FUNCTION_STATEMENT,           /**< function statement */
-  SCAN_STACK_FUNCTION_EXPRESSION,          /**< function expression */
-  SCAN_STACK_FUNCTION_PROPERTY,            /**< function expression in an object literal or class */
-#if ENABLED (JERRY_ES2015)
-  SCAN_STACK_FUNCTION_ARROW,               /**< arrow function expression */
-#endif /* ENABLED (JERRY_ES2015) */
-  SCAN_STACK_SWITCH_BLOCK,                 /**< block part of "switch" statement */
-  SCAN_STACK_IF_STATEMENT,                 /**< statement part of "if" statements */
-  SCAN_STACK_WITH_STATEMENT,               /**< statement part of "with" statements */
-  SCAN_STACK_WITH_EXPRESSION,              /**< expression part of "with" statements */
-  SCAN_STACK_DO_STATEMENT,                 /**< statement part of "do" statements */
-  SCAN_STACK_DO_EXPRESSION,                /**< expression part of "do" statements */
-  SCAN_STACK_WHILE_EXPRESSION,             /**< expression part of "while" iterator */
-  SCAN_STACK_PAREN_EXPRESSION,             /**< expression in brackets */
-  SCAN_STACK_STATEMENT_WITH_EXPR,          /**< statement which starts with expression enclosed in brackets */
-#if ENABLED (JERRY_ES2015)
-  SCAN_STACK_BINDING_INIT,                 /**< post processing after a single initializer */
-  SCAN_STACK_BINDING_LIST_INIT,            /**< post processing after an initializer list */
-  SCAN_STACK_LET,                          /**< let statement */
-  SCAN_STACK_CONST,                        /**< const statement */
-#endif /* ENABLED (JERRY_ES2015) */
-  /* The SCANNER_IS_FOR_START macro needs to be updated when the following constants are reordered. */
-  SCAN_STACK_VAR,                          /**< var statement */
-  SCAN_STACK_FOR_VAR_START,                /**< start of "for" iterator with var statement */
-#if ENABLED (JERRY_ES2015)
-  SCAN_STACK_FOR_LET_START,                /**< start of "for" iterator with let statement */
-  SCAN_STACK_FOR_CONST_START,              /**< start of "for" iterator with const statement */
-#endif /* ENABLED (JERRY_ES2015) */
-  SCAN_STACK_FOR_START,                    /**< start of "for" iterator */
-  SCAN_STACK_FOR_CONDITION,                /**< condition part of "for" iterator */
-  SCAN_STACK_FOR_EXPRESSION,               /**< expression part of "for" iterator */
-  SCAN_STACK_SWITCH_EXPRESSION,            /**< expression part of "switch" statement */
-  SCAN_STACK_CASE_STATEMENT,               /**< case statement inside a switch statement */
-  SCAN_STACK_COLON_EXPRESSION,             /**< expression between a question mark and colon */
-  SCAN_STACK_TRY_STATEMENT,                /**< try statement */
-  SCAN_STACK_CATCH_STATEMENT,              /**< catch statement */
-  SCAN_STACK_ARRAY_LITERAL,                /**< array literal or destructuring assignment or binding */
-  SCAN_STACK_OBJECT_LITERAL,               /**< object literal group */
-  SCAN_STACK_PROPERTY_ACCESSOR,            /**< property accessor in squarey brackets */
-#if ENABLED (JERRY_ES2015)
-  SCAN_STACK_COMPUTED_PROPERTY,            /**< computed property name */
-  SCAN_STACK_COMPUTED_GENERATOR_FUNCTION,  /**< computed property name */
-  SCAN_STACK_TEMPLATE_STRING,              /**< template string */
-  SCAN_STACK_FOR_BLOCK_END,                /**< end of "for" statement with let/const declaration */
-  SCAN_STACK_ARROW_ARGUMENTS,              /**< might be arguments of an arrow function */
-  SCAN_STACK_ARROW_EXPRESSION,             /**< expression body of an arrow function */
-  SCAN_STACK_CLASS_STATEMENT,              /**< class statement */
-  SCAN_STACK_CLASS_EXPRESSION,             /**< class expression */
-  SCAN_STACK_CLASS_EXTENDS,                /**< class extends expression */
-  SCAN_STACK_FUNCTION_PARAMETERS,          /**< function parameter initializer */
-#endif /* ENABLED (JERRY_ES2015) */
-} scan_stack_modes_t;
-
-/**
- * Checks whether the stack top is a for statement start.
- */
-#define SCANNER_IS_FOR_START(stack_top) \
-  ((stack_top) >= SCAN_STACK_FOR_VAR_START && (stack_top) <= SCAN_STACK_FOR_START)
-
-/**
- * Scan mode types types.
- */
-typedef enum
-{
   SCAN_NEXT_TOKEN, /**< get next token after return */
   SCAN_KEEP_TOKEN, /**< keep the current token after return */
 } scan_return_types_t;
@@ -164,8 +74,8 @@ scanner_check_arrow_body (parser_context_t *context_p, /**< context */
   }
 
   lexer_next_token (context_p);
-  scanner_context_p->mode = SCAN_MODE_STATEMENT_OR_TERMINATOR;
   parser_stack_push_uint8 (context_p, SCAN_STACK_FUNCTION_ARROW);
+  scanner_check_directives (context_p, scanner_context_p);
 } /* scanner_check_arrow_body */
 
 /**
@@ -1821,7 +1731,7 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
         scanner_raise_error (context_p);
       }
 
-      context_p->status_flags |= PARSER_IS_MODULE;
+      scanner_context_p->context_status_flags |= PARSER_IS_MODULE;
 
       scanner_context_p->mode = SCAN_MODE_STATEMENT_END;
       lexer_next_token (context_p);
@@ -1989,7 +1899,7 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
         scanner_raise_error (context_p);
       }
 
-      context_p->status_flags |= PARSER_IS_MODULE;
+      scanner_context_p->context_status_flags |= PARSER_IS_MODULE;
 
       lexer_next_token (context_p);
 
@@ -2587,7 +2497,7 @@ scanner_scan_statement_end (parser_context_t *context_p, /**< context */
 /**
  * Scan the whole source code.
  */
-void
+void JERRY_ATTR_NOINLINE
 scanner_scan_all (parser_context_t *context_p, /**< context */
                   const uint8_t *arg_list_p, /**< function argument list */
                   const uint8_t *arg_list_end_p, /**< end of argument list */
@@ -2603,6 +2513,7 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
   }
 #endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
+  scanner_context.context_status_flags = context_p->status_flags;
 #if ENABLED (JERRY_DEBUGGER)
   scanner_context.debugger_enabled = (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED) ? 1 : 0;
 #endif /* ENABLED (JERRY_DEBUGGER) */
@@ -2635,20 +2546,32 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
       uint16_t status_flags = SCANNER_LITERAL_POOL_FUNCTION_WITHOUT_ARGUMENTS | SCANNER_LITERAL_POOL_NO_REG;
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
+      if (context_p->status_flags & PARSER_IS_STRICT)
+      {
+        status_flags |= SCANNER_LITERAL_POOL_IS_STRICT;
+      }
+
       scanner_literal_pool_t *literal_pool_p = scanner_push_literal_pool (context_p, &scanner_context, status_flags);
       literal_pool_p->source_p = source_p;
 
-      scanner_context.mode = SCAN_MODE_STATEMENT_OR_TERMINATOR;
       parser_stack_push_uint8 (context_p, SCAN_STACK_SCRIPT);
 
       lexer_next_token (context_p);
+      scanner_check_directives (context_p, &scanner_context);
     }
     else
     {
       context_p->source_p = arg_list_p;
       context_p->source_end_p = arg_list_end_p;
 
-      scanner_push_literal_pool (context_p, &scanner_context, SCANNER_LITERAL_POOL_FUNCTION);
+      uint16_t status_flags = SCANNER_LITERAL_POOL_FUNCTION;
+
+      if (context_p->status_flags & PARSER_IS_STRICT)
+      {
+        status_flags |= SCANNER_LITERAL_POOL_IS_STRICT;
+      }
+
+      scanner_push_literal_pool (context_p, &scanner_context, status_flags);
       scanner_context.mode = SCAN_MODE_FUNCTION_ARGUMENTS;
       parser_stack_push_uint8 (context_p, SCAN_STACK_SCRIPT_FUNCTION);
 
@@ -2997,6 +2920,8 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ES2015)
               if (context_p->token.type == LEXER_THREE_DOTS)
               {
+                scanner_context.active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_ARGUMENTS_UNMAPPED;
+
                 lexer_next_token (context_p);
               }
 
@@ -3028,6 +2953,8 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ES2015)
           if (is_destructuring_binding)
           {
+            scanner_context.active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_ARGUMENTS_UNMAPPED;
+
             parser_stack_push_uint8 (context_p, SCAN_STACK_FUNCTION_PARAMETERS);
             scanner_append_hole (context_p, &scanner_context);
             scanner_push_destructuring_pattern (context_p, &scanner_context, SCANNER_BINDING_ARG, false);
@@ -3046,6 +2973,8 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
 
           if (context_p->token.type == LEXER_ASSIGN)
           {
+            scanner_context.active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_ARGUMENTS_UNMAPPED;
+
             parser_stack_push_uint8 (context_p, SCAN_STACK_FUNCTION_PARAMETERS);
             scanner_context.mode = SCAN_MODE_PRIMARY_EXPRESSION;
             break;
@@ -3067,8 +2996,8 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
             context_p->line = 1;
             context_p->column = 1;
 
-            scanner_context.mode = SCAN_MODE_STATEMENT_OR_TERMINATOR;
             lexer_next_token (context_p);
+            scanner_check_directives (context_p, &scanner_context);
             continue;
           }
 
@@ -3085,8 +3014,9 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
           }
 
           scanner_filter_arguments (context_p, &scanner_context);
-          scanner_context.mode = SCAN_MODE_STATEMENT_OR_TERMINATOR;
-          break;
+          lexer_next_token (context_p);
+          scanner_check_directives (context_p, &scanner_context);
+          continue;
         }
         case SCAN_MODE_PROPERTY_NAME:
         {
@@ -3369,7 +3299,7 @@ scan_completed:
     JERRY_ASSERT (scanner_context.active_literal_pool_p == NULL);
 
 #ifndef JERRY_NDEBUG
-    context_p->status_flags |= PARSER_SCANNING_SUCCESSFUL;
+    scanner_context.context_status_flags |= PARSER_SCANNING_SUCCESSFUL;
 #endif /* !JERRY_NDEBUG */
   }
   PARSER_CATCH
@@ -3417,6 +3347,7 @@ scan_completed:
   }
   PARSER_TRY_END
 
+  context_p->status_flags = scanner_context.context_status_flags;
   scanner_reverse_info_list (context_p);
 
 #if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)

@@ -21,6 +21,39 @@
 
 #include "test-common.h"
 
+static lit_code_point_t
+lexer_hex_to_character (const uint8_t *source_p) /**< current source position */
+{
+  lit_code_point_t result = 0;
+
+  do
+  {
+    uint32_t byte = *source_p++;
+
+    result <<= 4;
+
+    if (byte >= LIT_CHAR_0 && byte <= LIT_CHAR_9)
+    {
+      result += byte - LIT_CHAR_0;
+    }
+    else
+    {
+      byte = LEXER_TO_ASCII_LOWERCASE (byte);
+      if (byte >= LIT_CHAR_LOWERCASE_A && byte <= LIT_CHAR_LOWERCASE_F)
+      {
+        result += byte - (LIT_CHAR_LOWERCASE_A - 10);
+      }
+      else
+      {
+        return UINT32_MAX;
+      }
+    }
+  }
+  while (*source_p);
+
+  return result;
+} /* lexer_hex_to_character */
+
 int
 main (void)
 {
@@ -29,49 +62,58 @@ main (void)
   jmem_init ();
   ecma_init ();
 
-  const uint8_t _1_byte_long1[] = "\\u007F";
-  const uint8_t _1_byte_long2[] = "\\u0000";
-  const uint8_t _1_byte_long3[] = "\\u0065";
+  const uint8_t _1_byte_long1[] = "007F";
+  const uint8_t _1_byte_long2[] = "0000";
+  const uint8_t _1_byte_long3[] = "0065";
 
-  const uint8_t _2_byte_long1[] = "\\u008F";
-  const uint8_t _2_byte_long2[] = "\\u00FF";
-  const uint8_t _2_byte_long3[] = "\\u07FF";
+  const uint8_t _2_byte_long1[] = "008F";
+  const uint8_t _2_byte_long2[] = "00FF";
+  const uint8_t _2_byte_long3[] = "07FF";
 
-  const uint8_t _3_byte_long1[] = "\\u08FF";
-  const uint8_t _3_byte_long2[] = "\\u0FFF";
-  const uint8_t _3_byte_long3[] = "\\uFFFF";
+  const uint8_t _3_byte_long1[] = "08FF";
+  const uint8_t _3_byte_long2[] = "0FFF";
+  const uint8_t _3_byte_long3[] = "FFFF";
+
+  const uint8_t _6_byte_long1[] = "10000";
+  const uint8_t _6_byte_long2[] = "10FFFF";
 
   size_t length;
 
   /* Test 1-byte-long unicode sequences. */
-  length = lit_char_get_utf8_length (lexer_hex_to_character (0, _1_byte_long1 + 2, 4));
+  length = lit_code_point_get_cesu8_length (lexer_hex_to_character (_1_byte_long1));
   TEST_ASSERT (length == 1);
 
-  length = lit_char_get_utf8_length (lexer_hex_to_character (0, _1_byte_long2 + 2, 4));
+  length = lit_code_point_get_cesu8_length (lexer_hex_to_character (_1_byte_long2));
   TEST_ASSERT (length == 1);
 
-  length = lit_char_get_utf8_length (lexer_hex_to_character (0, _1_byte_long3 + 2, 4));
+  length = lit_code_point_get_cesu8_length (lexer_hex_to_character (_1_byte_long3));
   TEST_ASSERT (length == 1);
 
   /* Test 2-byte-long unicode sequences. */
-  length = lit_char_get_utf8_length (lexer_hex_to_character (0, _2_byte_long1 + 2, 4));
+  length = lit_code_point_get_cesu8_length (lexer_hex_to_character (_2_byte_long1));
   TEST_ASSERT (length == 2);
 
-  length = lit_char_get_utf8_length (lexer_hex_to_character (0, _2_byte_long2 + 2, 4));
+  length = lit_code_point_get_cesu8_length (lexer_hex_to_character (_2_byte_long2));
   TEST_ASSERT (length == 2);
 
-  length = lit_char_get_utf8_length (lexer_hex_to_character (0, _2_byte_long3 + 2, 4));
+  length = lit_code_point_get_cesu8_length (lexer_hex_to_character (_2_byte_long3));
   TEST_ASSERT (length == 2);
 
   /* Test 3-byte-long unicode sequences. */
-  length = lit_char_get_utf8_length (lexer_hex_to_character (0, _3_byte_long1 + 2, 4));
-  TEST_ASSERT (length != 2);
-
-  length = lit_char_get_utf8_length (lexer_hex_to_character (0, _3_byte_long2 + 2, 4));
+  length = lit_code_point_get_cesu8_length (lexer_hex_to_character (_3_byte_long1));
   TEST_ASSERT (length == 3);
 
-  length = lit_char_get_utf8_length (lexer_hex_to_character (0, _3_byte_long3 + 2, 4));
+  length = lit_code_point_get_cesu8_length (lexer_hex_to_character (_3_byte_long2));
   TEST_ASSERT (length == 3);
+
+  length = lit_code_point_get_cesu8_length (lexer_hex_to_character (_3_byte_long3));
+  TEST_ASSERT (length == 3);
+
+  length = lit_code_point_get_cesu8_length (lexer_hex_to_character (_6_byte_long1));
+  TEST_ASSERT (length == 6);
+
+  length = lit_code_point_get_cesu8_length (lexer_hex_to_character (_6_byte_long2));
+  TEST_ASSERT (length == 6);
 
   ecma_finalize ();
   jmem_finalize ();

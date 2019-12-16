@@ -272,7 +272,7 @@ re_parse_char_class (re_compiler_ctx_t *re_ctx_p, /**< number of classes */
   const bool is_char_class = (re_ctx_p->current_token.type == RE_TOK_START_CHAR_CLASS
                               || re_ctx_p->current_token.type == RE_TOK_START_INV_CHAR_CLASS);
 
-  const ecma_char_t prev_char = lit_utf8_peek_prev (parser_ctx_p->input_curr_p);
+  const ecma_char_t prev_char = lit_cesu8_peek_prev (parser_ctx_p->input_curr_p);
   if (prev_char != LIT_CHAR_LEFT_SQUARE && prev_char != LIT_CHAR_CIRCUMFLEX)
   {
     lit_utf8_decr (&parser_ctx_p->input_curr_p);
@@ -286,7 +286,7 @@ re_parse_char_class (re_compiler_ctx_t *re_ctx_p, /**< number of classes */
       return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid character class, end of string"));
     }
 
-    lit_code_point_t ch = lit_utf8_read_next (&parser_ctx_p->input_curr_p);
+    lit_code_point_t ch = lit_cesu8_read_next (&parser_ctx_p->input_curr_p);
 
     if (ch == LIT_CHAR_RIGHT_SQUARE)
     {
@@ -318,7 +318,7 @@ re_parse_char_class (re_compiler_ctx_t *re_ctx_p, /**< number of classes */
         return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid character class, end of string after '\\'"));
       }
 
-      ch = lit_utf8_read_next (&parser_ctx_p->input_curr_p);
+      ch = lit_cesu8_read_next (&parser_ctx_p->input_curr_p);
 
       if (ch == LIT_CHAR_LOWERCASE_B)
       {
@@ -376,7 +376,7 @@ re_parse_char_class (re_compiler_ctx_t *re_ctx_p, /**< number of classes */
         parser_ctx_p->input_curr_p += 2;
         if (parser_ctx_p->input_curr_p < parser_ctx_p->input_end_p
             && is_range == false
-            && lit_utf8_peek_next (parser_ctx_p->input_curr_p) == LIT_CHAR_MINUS)
+            && lit_cesu8_peek_next (parser_ctx_p->input_curr_p) == LIT_CHAR_MINUS)
         {
           start = code_unit;
           continue;
@@ -396,7 +396,7 @@ re_parse_char_class (re_compiler_ctx_t *re_ctx_p, /**< number of classes */
         parser_ctx_p->input_curr_p += 4;
         if (parser_ctx_p->input_curr_p < parser_ctx_p->input_end_p
             && is_range == false
-            && lit_utf8_peek_next (parser_ctx_p->input_curr_p) == LIT_CHAR_MINUS)
+            && lit_cesu8_peek_next (parser_ctx_p->input_curr_p) == LIT_CHAR_MINUS)
         {
           start = code_unit;
           continue;
@@ -481,7 +481,7 @@ re_parse_char_class (re_compiler_ctx_t *re_ctx_p, /**< number of classes */
         && lit_is_code_point_utf16_high_surrogate (ch)
         && parser_ctx_p->input_curr_p < parser_ctx_p->input_end_p)
     {
-      const ecma_char_t next_ch = lit_utf8_peek_next (parser_ctx_p->input_curr_p);
+      const ecma_char_t next_ch = lit_cesu8_peek_next (parser_ctx_p->input_curr_p);
       if (lit_is_code_point_utf16_low_surrogate (next_ch))
       {
         ch = lit_convert_surrogate_pair_to_code_point ((ecma_char_t) ch, next_ch);

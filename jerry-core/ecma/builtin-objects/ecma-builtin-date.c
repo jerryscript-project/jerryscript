@@ -61,7 +61,7 @@ ecma_date_parse_date_chars (const lit_utf8_byte_t **str_p, /**< pointer to the c
 
   while (num_of_chars--)
   {
-    if (*str_p >= str_end_p || !lit_char_is_decimal_digit (lit_utf8_read_next (str_p)))
+    if (*str_p >= str_end_p || !lit_char_is_decimal_digit (lit_cesu8_read_next (str_p)))
     {
       return ecma_number_make_nan ();
     }

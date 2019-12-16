@@ -713,7 +713,7 @@ ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, /**< index
 
       /* iterate original string and try to match at each position */
       bool searching = true;
-      ecma_char_t first_char = lit_utf8_read_next (&search_str_curr_p);
+      ecma_char_t first_char = lit_cesu8_read_next (&search_str_curr_p);
       while (searching)
       {
         /* match as long as possible */
@@ -722,14 +722,14 @@ ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, /**< index
 
         if (match_len < search_len &&
             index + match_len < original_len &&
-            lit_utf8_read_next (&original_str_curr_p) == first_char)
+            lit_cesu8_read_next (&original_str_curr_p) == first_char)
         {
           const lit_utf8_byte_t *nested_search_str_curr_p = search_str_curr_p;
           match_len++;
 
           while (match_len < search_len &&
                  index + match_len < original_len &&
-                 lit_utf8_read_next (&original_str_curr_p) == lit_utf8_read_next (&nested_search_str_curr_p))
+                 lit_cesu8_read_next (&original_str_curr_p) == lit_cesu8_read_next (&nested_search_str_curr_p))
           {
             match_len++;
           }

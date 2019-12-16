@@ -46,7 +46,6 @@
 #define LIT_UTF8_2_BYTE_MARKER (0xC0)
 #define LIT_UTF8_3_BYTE_MARKER (0xE0)
 #define LIT_UTF8_4_BYTE_MARKER (0xF0)
-#define LIT_UTF8_5_BYTE_MARKER (0xF8)
 #define LIT_UTF8_EXTRA_BYTE_MARKER (0x80)
 
 #define LIT_UTF8_1_BYTE_MASK (0x80)
@@ -82,7 +81,7 @@
 /**
  * Byte values >= LIT_UTF8_FIRST_BYTE_MAX are not allowed in internal strings
  */
-#define LIT_UTF8_FIRST_BYTE_MAX LIT_UTF8_5_BYTE_MARKER
+#define LIT_UTF8_FIRST_BYTE_MAX (0xF8)
 
 /* validation */
 bool lit_is_valid_utf8_string (const lit_utf8_byte_t *utf8_buf_p, lit_utf8_size_t buf_size);
@@ -135,10 +134,10 @@ lit_utf8_size_t lit_read_code_unit_from_utf8 (const lit_utf8_byte_t *buf_p,
 lit_utf8_size_t lit_read_prev_code_unit_from_utf8 (const lit_utf8_byte_t *buf_p,
                                                    ecma_char_t *code_point);
 
-ecma_char_t lit_utf8_read_next (const lit_utf8_byte_t **buf_p);
-ecma_char_t lit_utf8_read_prev (const lit_utf8_byte_t **buf_p);
-ecma_char_t lit_utf8_peek_next (const lit_utf8_byte_t *buf_p);
-ecma_char_t lit_utf8_peek_prev (const lit_utf8_byte_t *buf_p);
+ecma_char_t lit_cesu8_read_next (const lit_utf8_byte_t **buf_p);
+ecma_char_t lit_cesu8_read_prev (const lit_utf8_byte_t **buf_p);
+ecma_char_t lit_cesu8_peek_next (const lit_utf8_byte_t *buf_p);
+ecma_char_t lit_cesu8_peek_prev (const lit_utf8_byte_t *buf_p);
 void lit_utf8_incr (const lit_utf8_byte_t **buf_p);
 void lit_utf8_decr (const lit_utf8_byte_t **buf_p);
 

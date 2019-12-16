@@ -315,7 +315,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
     return ret_value;
   }
 
-  ecma_char_t ch = lit_utf8_read_next (&parser_ctx_p->input_curr_p);
+  ecma_char_t ch = lit_cesu8_read_next (&parser_ctx_p->input_curr_p);
 
   switch (ch)
   {
@@ -348,7 +348,7 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
       }
 
       out_token_p->type = RE_TOK_CHAR;
-      ch = lit_utf8_read_next (&parser_ctx_p->input_curr_p);
+      ch = lit_cesu8_read_next (&parser_ctx_p->input_curr_p);
 
       if (ch == LIT_CHAR_LOWERCASE_B)
       {

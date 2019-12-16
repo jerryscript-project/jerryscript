@@ -461,16 +461,9 @@ ecma_new_ecma_string_from_utf8_converted_to_cesu8 (const lit_utf8_byte_t *string
     if ((string_p[pos] & LIT_UTF8_4_BYTE_MASK) == LIT_UTF8_4_BYTE_MARKER)
     {
       /* Processing 4 byte unicode sequence. Always converted to two 3 byte long sequence. */
-      uint32_t character = ((((uint32_t) string_p[pos++]) & 0x7) << 18);
-      character |= ((((uint32_t) string_p[pos++]) & LIT_UTF8_LAST_6_BITS_MASK) << 12);
-      character |= ((((uint32_t) string_p[pos++]) & LIT_UTF8_LAST_6_BITS_MASK) << 6);
-      character |= (((uint32_t) string_p[pos++]) & LIT_UTF8_LAST_6_BITS_MASK);
-
-      JERRY_ASSERT (character >= 0x10000);
-      character -= 0x10000;
-
-      data_p += lit_char_to_utf8_bytes (data_p, (ecma_char_t) (0xd800 | (character >> 10)));
-      data_p += lit_char_to_utf8_bytes (data_p, (ecma_char_t) (0xdc00 | (character & LIT_UTF16_LAST_10_BITS_MASK)));
+      lit_four_byte_utf8_char_to_cesu8 (data_p, string_p + pos);
+      data_p += 3 * 2;
+      pos += 4;
     }
     else
     {
@@ -2683,10 +2676,10 @@ void
 ecma_stringbuilder_append_char (ecma_stringbuilder_t *builder_p, /**< string builder */
                                 const ecma_char_t c) /**< ecma char */
 {
-  const lit_utf8_size_t size = (lit_utf8_size_t) lit_char_get_utf8_length (c);
+  const lit_utf8_size_t size = (lit_utf8_size_t) lit_code_point_get_cesu8_length (c);
   lit_utf8_byte_t *dest_p = ecma_stringbuilder_grow (builder_p, size);
 
-  lit_char_to_utf8_bytes (dest_p, c);
+  lit_code_point_to_cesu8_bytes (dest_p, c);
 } /* ecma_stringbuilder_append_char */
 
 /**

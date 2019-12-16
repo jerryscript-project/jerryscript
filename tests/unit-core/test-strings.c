@@ -131,7 +131,7 @@ main (void)
 
     while (curr_p < end_p)
     {
-      code_units[code_units_count] = lit_utf8_peek_next (curr_p);
+      code_units[code_units_count] = lit_cesu8_peek_next (curr_p);
       saved_positions[code_units_count] = curr_p;
       code_units_count++;
       calculated_length++;
@@ -147,7 +147,7 @@ main (void)
       {
         ecma_length_t index = (ecma_length_t) rand () % code_units_count;
         curr_p = saved_positions[index];
-        TEST_ASSERT (lit_utf8_peek_next (curr_p) == code_units[index]);
+        TEST_ASSERT (lit_cesu8_peek_next (curr_p) == code_units[index]);
       }
     }
 
@@ -156,7 +156,7 @@ main (void)
     {
       TEST_ASSERT (code_units_count > 0);
       calculated_length--;
-      TEST_ASSERT (code_units[calculated_length] == lit_utf8_peek_prev (curr_p));
+      TEST_ASSERT (code_units[calculated_length] == lit_cesu8_peek_prev (curr_p));
       lit_utf8_decr (&curr_p);
     }
 
@@ -164,7 +164,7 @@ main (void)
 
     while (curr_p < end_p)
     {
-      ecma_char_t code_unit = lit_utf8_read_next (&curr_p);
+      ecma_char_t code_unit = lit_cesu8_read_next (&curr_p);
       TEST_ASSERT (code_unit == code_units[calculated_length]);
       calculated_length++;
     }
@@ -175,7 +175,7 @@ main (void)
     {
       TEST_ASSERT (code_units_count > 0);
       calculated_length--;
-      TEST_ASSERT (code_units[calculated_length] == lit_utf8_read_prev (&curr_p));
+      TEST_ASSERT (code_units[calculated_length] == lit_cesu8_read_prev (&curr_p));
     }
 
     TEST_ASSERT (calculated_length == 0);

@@ -13,4 +13,8 @@
 // limitations under the License.
 
 Object.defineProperty(Array.prototype, 0, { get : function () { throw $; } });
-Promise.race([ , this]).then(Error);
+var asyncPassed = false;
+Promise.race([ , this]).then(Error).catch(function(err) { asyncPassed = (err instanceof ReferenceError); });
+new Promise(function() {
+  throw 5;
+}).then(Error).catch(function() { assert(asyncPassed); });

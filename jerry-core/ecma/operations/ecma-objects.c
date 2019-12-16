@@ -2673,6 +2673,65 @@ ecma_op_species_constructor (ecma_object_t *this_value, /**< This Value */
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**
+ * 7.3.18 Abstract operation Invoke when property name is a magic string
+ *
+ * @return ecma_value result of the invoked function or raised error
+ *         note: returned value must be freed with ecma_free_value
+ */
+inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
+ecma_op_invoke_by_magic_id (ecma_value_t object, /**< Object value */
+                            lit_magic_string_id_t magic_string_id, /**< Magic string ID */
+                            ecma_value_t *args_p, /**< Argument list */
+                            ecma_length_t args_len) /**< Argument list length */
+{
+  return ecma_op_invoke (object, ecma_get_magic_string (magic_string_id), args_p, args_len);
+} /* ecma_op_invoke_by_magic_id */
+
+/**
+ * 7.3.18 Abstract operation Invoke
+ *
+ * @return ecma_value result of the invoked function or raised error
+ *         note: returned value must be freed with ecma_free_value
+ */
+ecma_value_t
+ecma_op_invoke (ecma_value_t object, /**< Object value */
+                ecma_string_t *property_name_p, /**< Property name */
+                ecma_value_t *args_p, /**< Argument list */
+                ecma_length_t args_len) /**< Argument list length */
+{
+  /* 3. */
+  ecma_value_t object_value = ecma_op_to_object (object);
+  if (ECMA_IS_VALUE_ERROR (object_value))
+  {
+    return object_value;
+  }
+
+  ecma_object_t *object_p = ecma_get_object_from_value (object_value);
+  ecma_value_t func = ecma_op_object_get (object_p, property_name_p);
+
+  if (ECMA_IS_VALUE_ERROR (func))
+  {
+    ecma_deref_object (object_p);
+    return func;
+  }
+
+  /* 4. */
+  if (!ecma_op_is_callable (func))
+  {
+    ecma_free_value (func);
+    ecma_deref_object (object_p);
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not callable"));
+  }
+
+  ecma_object_t *func_obj_p = ecma_get_object_from_value (func);
+  ecma_value_t call_result = ecma_op_function_call (func_obj_p, object, args_p, args_len);
+  ecma_deref_object (object_p);
+  ecma_deref_object (func_obj_p);
+
+  return call_result;
+} /* ecma_op_invoke */
+
+/**
  * @}
  * @}
  */

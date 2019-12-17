@@ -412,6 +412,15 @@ scanner_push_literal_pool (parser_context_t *context_p, /**< context */
     status_flags |= (uint16_t) (prev_literal_pool_p->status_flags & copied_flags);
   }
 
+  if (prev_literal_pool_p != NULL)
+  {
+    const uint16_t copied_flags = SCANNER_LITERAL_POOL_IS_STRICT;
+    status_flags |= (uint16_t) (prev_literal_pool_p->status_flags & copied_flags);
+
+    /* The logical value of these flags must be the same. */
+    JERRY_ASSERT (!(status_flags & SCANNER_LITERAL_POOL_IS_STRICT) == !(context_p->status_flags & PARSER_IS_STRICT));
+  }
+
   parser_list_init (&literal_pool_p->literal_pool,
                     sizeof (lexer_lit_location_t),
                     (uint32_t) ((128 - sizeof (void *)) / sizeof (lexer_lit_location_t)));
@@ -636,6 +645,17 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
         {
           no_declarations++;
         }
+
+#if ENABLED (JERRY_ES2015)
+        const uint16_t is_unmapped = SCANNER_LITERAL_POOL_IS_STRICT | SCANNER_LITERAL_POOL_ARGUMENTS_UNMAPPED;
+#else /* !ENABLED (JERRY_ES2015) */
+        const uint16_t is_unmapped = SCANNER_LITERAL_POOL_IS_STRICT;
+#endif /* ENABLED (JERRY_ES2015) */
+
+        if (literal_pool_p->status_flags & is_unmapped)
+        {
+          arguments_required = false;
+        }
       }
 
       info_p->u8_arg = status_flags;
@@ -782,9 +802,18 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
     prev_literal_pool_p->no_declarations = (uint16_t) no_declarations;
   }
 
-#if ENABLED (JERRY_ES2015)
   if (is_function && prev_literal_pool_p != NULL)
   {
+    if (prev_literal_pool_p->status_flags & SCANNER_LITERAL_POOL_IS_STRICT)
+    {
+      context_p->status_flags |= PARSER_IS_STRICT;
+    }
+    else
+    {
+      context_p->status_flags &= (uint32_t) ~PARSER_IS_STRICT;
+    }
+
+#if ENABLED (JERRY_ES2015)
     if (prev_literal_pool_p->status_flags & SCANNER_LITERAL_POOL_GENERATOR)
     {
       context_p->status_flags |= PARSER_IS_GENERATOR_FUNCTION;
@@ -793,8 +822,8 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
     {
       context_p->status_flags &= (uint32_t) ~PARSER_IS_GENERATOR_FUNCTION;
     }
-  }
 #endif /* ENABLED (JERRY_ES2015) */
+  }
 
   scanner_context_p->active_literal_pool_p = literal_pool_p->prev_p;
 
@@ -954,6 +983,47 @@ scanner_filter_arguments (parser_context_t *context_p, /**< context */
   parser_list_free (&literal_pool_p->literal_pool);
   scanner_free (literal_pool_p, sizeof (scanner_literal_pool_t));
 } /* scanner_filter_arguments */
+
+/**
+ * Check directives before a source block.
+ */
+void
+scanner_check_directives (parser_context_t *context_p, /**< context */
+                          scanner_context_t *scanner_context_p) /**< scanner context */
+{
+  scanner_context_p->mode = SCAN_MODE_STATEMENT_OR_TERMINATOR;
+
+  while (context_p->token.type == LEXER_LITERAL
+         && context_p->token.lit_location.type == LEXER_STRING_LITERAL)
+  {
+    bool is_use_strict = false;
+
+    if (lexer_string_is_use_strict (context_p))
+    {
+      is_use_strict = true;
+    }
+
+    lexer_next_token (context_p);
+
+    if (!lexer_string_is_directive (context_p))
+    {
+      /* The string is part of an expression statement. */
+      scanner_context_p->mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
+      break;
+    }
+
+    if (is_use_strict)
+    {
+      context_p->status_flags |= PARSER_IS_STRICT;
+      scanner_context_p->active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_IS_STRICT;
+    }
+
+    if (context_p->token.type == LEXER_SEMICOLON)
+    {
+      lexer_next_token (context_p);
+    }
+  }
+} /* scanner_check_directives */
 
 /**
  * Add any literal to the specified literal pool.

@@ -3042,6 +3042,42 @@ lexer_current_is_literal (parser_context_t *context_p, /**< context */
   return lexer_compare_identifiers (context_p, left_ident_p, right_ident_p);
 } /* lexer_current_is_literal */
 
+/**
+ * Compares the current string token to "use strict".
+ *
+ * Note:
+ *   Escape sequences are not allowed.
+ *
+ * @return true if "use strict" is found, false otherwise
+ */
+inline bool JERRY_ATTR_ALWAYS_INLINE
+lexer_string_is_use_strict (parser_context_t *context_p) /**< context */
+{
+  JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
+                && context_p->token.lit_location.type == LEXER_STRING_LITERAL);
+
+  return (context_p->token.lit_location.length == 10
+          && !context_p->token.lit_location.has_escape
+          && memcmp (context_p->token.lit_location.char_p, "use strict", 10) == 0);
+} /* lexer_string_is_use_strict */
+
+/**
+ * Checks whether the string before the current token is a directive or a string literal.
+ *
+ * @return true if the string is a directive, false otherwise
+ */
+inline bool JERRY_ATTR_ALWAYS_INLINE
+lexer_string_is_directive (parser_context_t *context_p) /**< context */
+{
+  return (context_p->token.type == LEXER_SEMICOLON
+          || context_p->token.type == LEXER_RIGHT_BRACE
+          || ((context_p->token.flags & LEXER_WAS_NEWLINE)
+              && !LEXER_IS_BINARY_OP_TOKEN (context_p->token.type)
+              && context_p->token.type != LEXER_LEFT_PAREN
+              && context_p->token.type != LEXER_LEFT_SQUARE
+              && context_p->token.type != LEXER_DOT));
+} /* lexer_string_is_directive */
+
 #if ENABLED (JERRY_ES2015)
 
 /**

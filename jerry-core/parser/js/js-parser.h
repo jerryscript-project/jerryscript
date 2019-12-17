@@ -75,6 +75,7 @@ typedef enum
   PARSER_ERR_EVAL_NOT_ALLOWED,                        /**< eval is not allowed here in strict mode */
   PARSER_ERR_ARGUMENTS_NOT_ALLOWED,                   /**< arguments is not allowed here in strict mode */
 #if ENABLED (JERRY_ES2015)
+  PARSER_ERR_USE_STRICT_NOT_ALLOWED,                  /**< use strict directive is not allowed */
   PARSER_ERR_YIELD_NOT_ALLOWED,                       /**< yield keyword is not allowed */
 #endif /* ENABLED (JERRY_ES2015) */
   PARSER_ERR_DELETE_IDENT_NOT_ALLOWED,                /**< identifier delete is not allowed in strict mode */

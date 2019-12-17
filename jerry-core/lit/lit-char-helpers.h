@@ -212,6 +212,9 @@ bool lit_code_point_is_identifier_part (lit_code_point_t code_point);
 bool lit_char_is_octal_digit (ecma_char_t c);
 bool lit_char_is_decimal_digit (ecma_char_t c);
 bool lit_char_is_hex_digit (ecma_char_t c);
+#if ENABLED (JERRY_ES2015)
+bool lit_char_is_binary_digit (ecma_char_t c);
+#endif /* ENABLED (JERRY_ES2015) */
 uint32_t lit_char_hex_to_int (ecma_char_t c);
 size_t lit_code_point_to_cesu8_bytes (uint8_t *dst_p, lit_code_point_t code_point);
 size_t lit_code_point_get_cesu8_length (lit_code_point_t code_point);

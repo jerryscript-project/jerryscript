@@ -33,6 +33,9 @@
  * @{
  */
 
+JERRY_STATIC_ASSERT (LEXER_NUMBER_BINARY > LEXER_NUMBER_OCTAL,
+                     lexer_number_binary_must_be_greater_than_lexer_number_octal);
+
 /**
  * Check whether the UTF-8 intermediate is an octet or not
  */
@@ -1255,6 +1258,28 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
     {
       parser_raise_error (context_p, PARSER_ERR_INVALID_NUMBER);
     }
+#if ENABLED (JERRY_ES2015)
+    else if (LEXER_TO_ASCII_LOWERCASE (source_p[1]) == LIT_CHAR_LOWERCASE_B)
+    {
+      context_p->token.extra_value = LEXER_NUMBER_BINARY;
+      context_p->token.lit_location.char_p++;
+      context_p->source_p++;
+      source_p += 2;
+
+      if (source_p >= source_end_p
+          || !lit_char_is_binary_digit (source_p[0]))
+      {
+        parser_raise_error (context_p, PARSER_ERR_INVALID_BIN_DIGIT);
+      }
+
+      do
+      {
+        source_p++;
+      }
+      while (source_p < source_end_p
+               && lit_char_is_binary_digit (source_p[0]));
+    }
+#endif /* ENABLED (JERRY_ES2015) */
     else
     {
       can_be_float = true;
@@ -2201,7 +2226,7 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
   uint32_t literal_index = 0;
   prop_length_t length = context_p->token.lit_location.length;
 
-  if (context_p->token.extra_value != LEXER_NUMBER_OCTAL)
+  if (context_p->token.extra_value < LEXER_NUMBER_OCTAL)
   {
     num = ecma_utf8_string_to_number (context_p->token.lit_location.char_p,
                                       length);
@@ -2210,12 +2235,20 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
   {
     const uint8_t *src_p = context_p->token.lit_location.char_p;
     const uint8_t *src_end_p = src_p + length - 1;
+    ecma_number_t multiplier = 8.0;
+
+#if ENABLED (JERRY_ES2015)
+    if (context_p->token.extra_value == LEXER_NUMBER_BINARY)
+    {
+      multiplier = 2.0;
+    }
+#endif /* ENABLED (JERRY_ES2015) */
 
     num = 0;
     do
     {
       src_p++;
-      num = num * 8 + (ecma_number_t) (*src_p - LIT_CHAR_0);
+      num = num * multiplier + (ecma_number_t) (*src_p - LIT_CHAR_0);
     }
     while (src_p < src_end_p);
   }

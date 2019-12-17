@@ -293,6 +293,19 @@ lit_char_is_hex_digit (ecma_char_t c) /**< code unit */
               && LEXER_TO_ASCII_LOWERCASE (c) <= LIT_CHAR_ASCII_LOWERCASE_LETTERS_HEX_END));
 } /* lit_char_is_hex_digit */
 
+#if ENABLED (JERRY_ES2015)
+/**
+ * Check if specified character is one of BinaryDigits characters (ECMA-262 v6, 11.8.3)
+ *
+ * @return true / false
+ */
+bool
+lit_char_is_binary_digit (ecma_char_t c) /** code unit */
+{
+  return (c == LIT_CHAR_0 || c == LIT_CHAR_1);
+} /* lit_char_is_binary_digit */
+#endif /* ENABLED (JERRY_ES2015) */
+
 /**
  * Convert a HexDigit character to its numeric value, as defined in ECMA-262 v5, 7.8.3
  *

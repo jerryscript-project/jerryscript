@@ -836,6 +836,12 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Invalid hexadecimal digit.";
     }
+#if ENABLED (JERRY_ES2015)
+    case PARSER_ERR_INVALID_BIN_DIGIT:
+    {
+      return "Invalid binary digit.";
+    }
+#endif /* ENABLED (JERRY_ES2015) */
     case PARSER_ERR_INVALID_ESCAPE_SEQUENCE:
     {
       return "Invalid escape sequence.";

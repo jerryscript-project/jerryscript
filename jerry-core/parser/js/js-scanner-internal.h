@@ -27,7 +27,7 @@
  */
 
 /**
- * Scan mode types types.
+ * Scan mode types.
  */
 typedef enum
 {
@@ -50,7 +50,7 @@ typedef enum
 } scan_modes_t;
 
 /**
- * Scan stack mode types types.
+ * Scan stack mode types.
  */
 typedef enum
 {
@@ -108,6 +108,7 @@ typedef enum
   SCAN_STACK_CLASS_EXPRESSION,             /**< class expression */
   SCAN_STACK_CLASS_EXTENDS,                /**< class extends expression */
   SCAN_STACK_FUNCTION_PARAMETERS,          /**< function parameter initializer */
+  SCAN_STACK_USE_ASYNC,                    /**< an "async" identifier is used */
 #endif /* ENABLED (JERRY_ES2015) */
 } scan_stack_modes_t;
 
@@ -272,7 +273,9 @@ typedef enum
   SCANNER_LITERAL_POOL_IN_EXPORT = (1 << 8), /**< the declared variables are exported by the module system */
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 #if ENABLED (JERRY_ES2015)
-  SCANNER_LITERAL_POOL_GENERATOR = (1 << 9), /**< generator function */
+  SCANNER_LITERAL_POOL_FUNCTION_STATEMENT = (1 << 9), /**< function statement (only if async is set) */
+  SCANNER_LITERAL_POOL_GENERATOR = (1 << 10), /**< generator function */
+  SCANNER_LITERAL_POOL_ASYNC = (1 << 11), /**< async function */
 #endif /* ENABLED (JERRY_ES2015) */
 } scanner_literal_pool_flags_t;
 
@@ -311,6 +314,9 @@ struct scanner_context_t
   scanner_literal_pool_t *active_literal_pool_p; /**< currently active literal pool */
   scanner_switch_statement_t active_switch_statement; /**< currently active switch statement */
   scanner_info_t *end_arguments_p; /**< position of end arguments */
+#if ENABLED (JERRY_ES2015)
+  const uint8_t *async_source_p; /**< source position for async functions */
+#endif /* ENABLED (JERRY_ES2015) */
 };
 
 void scanner_raise_error (parser_context_t *context_p);

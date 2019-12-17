@@ -167,8 +167,15 @@ typedef enum
   LEXER_ARROW_LEFT_PAREN,        /**< start of arrow function argument list */
 #endif /* ENABLED (JERRY_ES2015) */
 
+#if ENABLED (JERRY_ES2015)
+  /* Keywords which are not keyword tokens. */
+#define LEXER_FIRST_NON_RESERVED_KEYWORD LEXER_KEYW_ASYNC
+  LEXER_KEYW_ASYNC,              /**< async */
+#else /* !ENABLED (JERRY_ES2015) */
   /* Keywords which are not keyword tokens. */
 #define LEXER_FIRST_NON_RESERVED_KEYWORD LEXER_KEYW_EVAL
+#endif /* ENABLED (JERRY_ES2015) */
+
   /* Keywords which cannot be assigned in strict mode. */
 #define LEXER_FIRST_NON_STRICT_ARGUMENTS LEXER_KEYW_EVAL
   LEXER_KEYW_EVAL,               /**< eval */
@@ -247,15 +254,6 @@ typedef enum
   LEXER_STRING_NO_OPTS = (1u << 0),       /**< no options */
   LEXER_STRING_RAW = (1u << 1),           /**< raw string ECMAScript v6, 11.8.6.1: TVR */
 } lexer_string_options_t;
-
-/**
- * Lexer scan identifier parse options.
- */
-typedef enum
-{
-  LEXER_SCAN_IDENT_NO_OPTS = (1u << 0),          /**< no options */
-  LEXER_SCAN_IDENT_PROPERTY = (1u << 1),         /**< scan valid property names */
-} lexer_scan_ident_opts_t;
 
 /**
  * Lexer number types.

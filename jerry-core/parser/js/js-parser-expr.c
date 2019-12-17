@@ -547,10 +547,22 @@ parser_parse_class_literal (parser_context_t *context_p) /**< context */
       }
     }
 
+    if (context_p->token.type == LEXER_KEYW_ASYNC)
+    {
+      if (!lexer_consume_generator (context_p))
+      {
+        lexer_expect_object_literal_id (context_p, LEXER_OBJ_IDENT_ONLY_IDENTIFIERS);
+      }
+    }
+
     if (context_p->token.type == LEXER_MULTIPLY)
     {
       lexer_expect_object_literal_id (context_p, LEXER_OBJ_IDENT_ONLY_IDENTIFIERS);
       status_flags |= PARSER_IS_GENERATOR_FUNCTION | PARSER_DISALLOW_YIELD;
+    }
+    else
+    {
+      status_flags &= (uint32_t) ~(PARSER_IS_GENERATOR_FUNCTION | PARSER_DISALLOW_YIELD);
     }
 
     if (context_p->token.type == LEXER_RIGHT_SQUARE)
@@ -875,8 +887,20 @@ parser_parse_object_literal (parser_context_t *context_p) /**< context */
         }
         break;
       }
+      case LEXER_KEYW_ASYNC:
+      {
+        lexer_consume_generator (context_p);
+        /* FALLTHRU */
+      }
       case LEXER_MULTIPLY:
       {
+        uint32_t status_flags = PARSER_FUNCTION_CLOSURE;
+
+        if (context_p->token.type == LEXER_MULTIPLY)
+        {
+          status_flags |= PARSER_IS_GENERATOR_FUNCTION | PARSER_DISALLOW_YIELD;
+        }
+
         lexer_expect_object_literal_id (context_p, LEXER_OBJ_IDENT_ONLY_IDENTIFIERS);
 
         uint16_t opcode = CBC_SET_LITERAL_PROPERTY;
@@ -888,7 +912,6 @@ parser_parse_object_literal (parser_context_t *context_p) /**< context */
           opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_SET_COMPUTED_PROPERTY_LITERAL);
         }
 
-        uint32_t status_flags = PARSER_FUNCTION_CLOSURE | PARSER_IS_GENERATOR_FUNCTION | PARSER_DISALLOW_YIELD;
         uint16_t function_literal_index = lexer_construct_function_object (context_p, status_flags);
 
         parser_emit_cbc_literal (context_p,
@@ -1382,6 +1405,24 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
       if (context_p->next_scanner_info_p->source_p == context_p->source_p)
       {
         JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
+
+        if (context_p->next_scanner_info_p->u8_arg & SCANNER_FUNCTION_ASYNC)
+        {
+          JERRY_ASSERT (lexer_token_is_async (context_p));
+          JERRY_ASSERT (!(context_p->next_scanner_info_p->u8_arg & SCANNER_FUNCTION_STATEMENT));
+
+          lexer_next_token (context_p);
+
+          if (context_p->token.type == LEXER_KEYW_FUNCTION)
+          {
+            parser_parse_function_expression (context_p, PARSER_FUNCTION_CLOSURE | PARSER_IS_FUNC_EXPRESSION);
+            break;
+          }
+          if (context_p->token.type == LEXER_LEFT_PAREN)
+          {
+            context_p->token.type = LEXER_ARROW_LEFT_PAREN;
+          }
+        }
 
         parser_check_assignment_expr (context_p);
         parser_parse_function_expression (context_p,

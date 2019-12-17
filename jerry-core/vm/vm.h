@@ -258,6 +258,7 @@ typedef enum
   VM_OC_CREATE_GENERATOR,        /**< create a generator object */
   VM_OC_YIELD,                   /**< yield operation */
   VM_OC_EXT_RETURN,              /**< return which also clears the stack */
+  VM_OC_RETURN_PROMISE,          /**< return from an async function */
   VM_OC_STRING_CONCAT,           /**< string concatenation */
   VM_OC_GET_TEMPLATE_OBJECT,     /**< GetTemplateObject operation */
 #endif /* ENABLED (JERRY_ES2015) */
@@ -313,6 +314,7 @@ typedef enum
   VM_OC_CREATE_GENERATOR = VM_OC_NONE,        /**< create a generator object */
   VM_OC_YIELD = VM_OC_NONE,                   /**< yield operation */
   VM_OC_EXT_RETURN = VM_OC_NONE,              /**< return which also clears the stack */
+  VM_OC_RETURN_PROMISE = VM_OC_NONE,          /**< return from an async function */
   VM_OC_STRING_CONCAT = VM_OC_NONE,           /**< string concatenation */
   VM_OC_GET_TEMPLATE_OBJECT = VM_OC_NONE,     /**< GetTemplateObject operation */
 #endif /* !ENABLED (JERRY_ES2015) */

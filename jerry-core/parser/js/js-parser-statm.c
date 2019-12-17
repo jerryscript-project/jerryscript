@@ -306,7 +306,7 @@ parser_statement_length (uint8_t type) /**< type of statement */
     (uint8_t) (sizeof (parser_for_in_of_statement_t) + sizeof (parser_loop_statement_t) + 1),
 #endif /* ENABLED (JERRY_ES2015) */
     /* PARSER_STATEMENT_WITH */
-    (uint8_t) (sizeof (parser_with_statement_t) + 1),
+    (uint8_t) (sizeof (parser_with_statement_t) + 1 + 1),
     /* PARSER_STATEMENT_TRY */
     (uint8_t) (sizeof (parser_try_statement_t) + 1),
   };
@@ -810,12 +810,15 @@ parser_parse_with_statement_start (parser_context_t *context_p) /**< context */
   PARSER_PLUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_WITH_CONTEXT_STACK_ALLOCATION);
 #endif /* !JERRY_NDEBUG */
 
+  uint8_t inside_with = (context_p->status_flags & PARSER_INSIDE_WITH) != 0;
+
   context_p->status_flags |= PARSER_INSIDE_WITH | PARSER_LEXICAL_ENV_NEEDED;
   parser_emit_cbc_ext_forward_branch (context_p,
                                       CBC_EXT_WITH_CREATE_CONTEXT,
                                       &with_statement.branch);
 
   parser_stack_push (context_p, &with_statement, sizeof (parser_with_statement_t));
+  parser_stack_push_uint8 (context_p, inside_with);
   parser_stack_push_uint8 (context_p, PARSER_STATEMENT_WITH);
   parser_stack_iterator_init (context_p, &context_p->last_statement);
 } /* parser_parse_with_statement_start */
@@ -827,9 +830,15 @@ static void
 parser_parse_with_statement_end (parser_context_t *context_p) /**< context */
 {
   parser_with_statement_t with_statement;
-  parser_stack_iterator_t iterator;
 
   JERRY_ASSERT (context_p->status_flags & PARSER_INSIDE_WITH);
+
+  parser_stack_pop_uint8 (context_p);
+
+  if (!context_p->stack_top_uint8)
+  {
+    context_p->status_flags &= (uint32_t) ~PARSER_INSIDE_WITH;
+  }
 
   parser_stack_pop_uint8 (context_p);
   parser_stack_pop (context_p, &with_statement, sizeof (parser_with_statement_t));
@@ -843,26 +852,6 @@ parser_parse_with_statement_end (parser_context_t *context_p) /**< context */
 
   parser_emit_cbc (context_p, CBC_CONTEXT_END);
   parser_set_branch_to_current_position (context_p, &with_statement.branch);
-
-  parser_stack_iterator_init (context_p, &iterator);
-
-  while (true)
-  {
-    uint8_t type = parser_stack_iterator_read_uint8 (&iterator);
-
-    if (type == PARSER_STATEMENT_START)
-    {
-      context_p->status_flags &= (uint32_t) ~PARSER_INSIDE_WITH;
-      return;
-    }
-
-    if (type == PARSER_STATEMENT_WITH)
-    {
-      return;
-    }
-
-    parser_stack_iterator_skip (&iterator, parser_statement_length (type));
-  }
 } /* parser_parse_with_statement_end */
 
 #if ENABLED (JERRY_ES2015)

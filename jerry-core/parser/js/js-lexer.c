@@ -2407,9 +2407,9 @@ lexer_construct_function_object (parser_context_t *context_p, /**< context */
 
   parser_flush_cbc (context_p);
 
-  if (context_p->status_flags & (PARSER_RESOLVE_BASE_FOR_CALLS | PARSER_INSIDE_WITH))
+  if (context_p->status_flags & PARSER_INSIDE_WITH)
   {
-    extra_status_flags |= PARSER_RESOLVE_BASE_FOR_CALLS;
+    extra_status_flags |= PARSER_INSIDE_WITH;
   }
 
   literal_p = (lexer_literal_t *) parser_list_append (context_p, &context_p->literal_pool);

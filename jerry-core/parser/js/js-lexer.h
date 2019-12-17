@@ -163,6 +163,9 @@ typedef enum
   LEXER_SCAN_SWITCH,             /**< special value for switch pre-scan */
   LEXER_CLASS_CONSTRUCTOR,       /**< special value for class constructor method */
   LEXER_INVALID_PATTERN,         /**< special value for invalid destructuring pattern */
+#if ENABLED (JERRY_ES2015)
+  LEXER_ARROW_LEFT_PAREN,        /**< start of arrow function argument list */
+#endif /* ENABLED (JERRY_ES2015) */
 
   /* Keywords which are not keyword tokens. */
 #define LEXER_FIRST_NON_RESERVED_KEYWORD LEXER_KEYW_EVAL

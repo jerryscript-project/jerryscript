@@ -22,11 +22,11 @@ matrix:
 
     - name: "Linux/x86-64 Build, Correctness & Debugger Tests"
       env:
-        - OPTS="--quiet --jerry-tests --jerry-test-suite --jerry-debugger"
+        - OPTS="--quiet --jerry-tests --jerry-test-suite --kangax-tests --jerry-debugger"
 
     - name: "Linux/x86 (cpointer-32bit) Build & Correctness Tests"
       env:
-        - OPTS="--quiet --jerry-tests --jerry-test-suite --buildoptions=--compile-flag=-m32,--cpointer-32bit=on"
+        - OPTS="--quiet --jerry-tests --jerry-test-suite --kangax-tests --buildoptions=--compile-flag=-m32,--cpointer-32bit=on"
       addons:
         apt:
           packages: [gcc-multilib]

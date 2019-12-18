@@ -24,6 +24,7 @@ JERRY_TEST_SUITE_DIR = path.join(PROJECT_DIR, 'tests/jerry-test-suite')
 JERRY_TEST_SUITE_MINIMAL_LIST = path.join(PROJECT_DIR, 'tests/jerry-test-suite/minimal-profile-list')
 JERRY_TEST_SUITE_ES51_LIST = path.join(PROJECT_DIR, 'tests/jerry-test-suite/es51-profile-list')
 TEST262_TEST_SUITE_DIR = path.join(PROJECT_DIR, 'tests/test262')
+KANGAX_TESTS_DIR = path.join(PROJECT_DIR, 'tests/kangax')
 
 BUILD_SCRIPT = path.join(TOOLS_DIR, 'build.py')
 CPPCHECK_SCRIPT = path.join(TOOLS_DIR, 'check-cppcheck.sh')

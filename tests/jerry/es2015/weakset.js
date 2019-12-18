@@ -119,6 +119,30 @@ try {
   assert (e instanceof TypeError);
 }
 
+function createIterable(arr, methods = {}) {
+  let iterable = function *() {
+    let idx = 0;
+    while (idx < arr.length) {
+      yield arr[idx];
+      idx++;
+    }
+  }();
+  iterable['return'] = methods['return'];
+  iterable['throw'] = methods['throw'];
+
+  return iterable;
+};
+
+var closed = false;
+var iter = createIterable([1, 2, 3], {
+  'return': function(){ closed = true; return {}; }
+});
+try {
+  new WeakMap(iter);
+} catch(e){}
+
+assert(closed === true);
+
 m1.add([]);
 
 assert (WeakSet.prototype.toString() === "[object WeakSet]");

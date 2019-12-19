@@ -2914,6 +2914,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 
         if ((context_p->token.flags & LEXER_WAS_NEWLINE)
             || context_p->token.type == LEXER_SEMICOLON
+            || context_p->token.type == LEXER_EOS
             || context_p->token.type == LEXER_RIGHT_BRACE)
         {
 #if ENABLED (JERRY_ES2015)

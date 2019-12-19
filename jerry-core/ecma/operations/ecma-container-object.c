@@ -162,9 +162,10 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
     {
       if (!ecma_is_value_object (result))
       {
-        // TODO close the iterator when generator function will be supported
         ecma_free_value (result);
-        result = ecma_raise_type_error (ECMA_ERR_MSG ("Iterator value is not an object."));
+        ecma_raise_type_error (ECMA_ERR_MSG ("Iterator value is not an object."));
+        result = ecma_op_iterator_close (iter);
+        JERRY_ASSERT (ECMA_IS_VALUE_ERROR (result));
         goto cleanup_iter;
       }
 
@@ -174,8 +175,8 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
 
       if (ECMA_IS_VALUE_ERROR (result))
       {
-        // TODO close the iterator when generator function will be supported
         ecma_deref_object (next_object_p);
+        ecma_op_iterator_close (iter);
         goto cleanup_iter;
       }
 
@@ -185,9 +186,9 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
 
       if (ECMA_IS_VALUE_ERROR (result))
       {
-        // TODO close the iterator when generator function will be supported
         ecma_deref_object (next_object_p);
         ecma_free_value (key);
+        ecma_op_iterator_close (iter);
         goto cleanup_iter;
       }
 
@@ -203,7 +204,7 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
 
     if (ECMA_IS_VALUE_ERROR (result))
     {
-      // TODO close the iterator when generator function will be supported
+      ecma_op_iterator_close (iter);
       goto cleanup_iter;
     }
 

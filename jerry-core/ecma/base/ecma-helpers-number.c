@@ -334,6 +334,24 @@ ecma_number_is_infinity (ecma_number_t num) /**< ecma-number */
 } /* ecma_number_is_infinity */
 
 /**
+ * Check if number is finite
+ *
+ * @return true  - if number is finite
+ *         false - if number is NaN or infinity
+ */
+extern inline bool JERRY_ATTR_ALWAYS_INLINE
+ecma_number_is_finite (ecma_number_t num) /**< ecma-number */
+{
+#if defined (__GNUC__) || defined (__clang__)
+  return __builtin_isfinite (num);
+#elif defined (WIN32)
+  return isfinite (num);
+#else
+  return !ecma_number_is_nan (num) && !ecma_number_is_infinity (num);
+#endif /* defined (__GNUC__) || defined (__clang__) */
+} /* ecma_number_is_finite */
+
+/**
  * Get fraction and exponent of the number
  *
  * @return shift of dot in the fraction

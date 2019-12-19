@@ -455,6 +455,18 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
 {
   scanner_literal_pool_t *literal_pool_p = scanner_context_p->active_literal_pool_p;
   scanner_literal_pool_t *prev_literal_pool_p = literal_pool_p->prev_p;
+
+  if (literal_pool_p->source_p == NULL)
+  {
+    JERRY_ASSERT (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_FUNCTION);
+    JERRY_ASSERT (literal_pool_p->literal_pool.data.first_p == NULL
+                  && literal_pool_p->literal_pool.data.last_p == NULL);
+
+    scanner_context_p->active_literal_pool_p = literal_pool_p->prev_p;
+    scanner_free (literal_pool_p, sizeof (scanner_literal_pool_t));
+    return;
+  }
+
   parser_list_iterator_t literal_iterator;
   lexer_lit_location_t *literal_p;
   bool is_function = (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_FUNCTION) != 0;

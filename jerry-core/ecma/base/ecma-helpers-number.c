@@ -298,8 +298,6 @@ ecma_number_is_negative (ecma_number_t num) /**< ecma-number */
 bool
 ecma_number_is_zero (ecma_number_t num) /**< ecma-number */
 {
-  JERRY_ASSERT (!ecma_number_is_nan (num));
-
   bool is_zero = (num == ECMA_NUMBER_ZERO);
 
 #ifndef JERRY_NDEBUG
@@ -323,8 +321,6 @@ ecma_number_is_zero (ecma_number_t num) /**< ecma-number */
 bool
 ecma_number_is_infinity (ecma_number_t num) /**< ecma-number */
 {
-  JERRY_ASSERT (!ecma_number_is_nan (num));
-
   uint32_t biased_exp = ecma_number_get_biased_exponent_field (num);
   uint64_t fraction = ecma_number_get_fraction_field (num);
 

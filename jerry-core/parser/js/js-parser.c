@@ -1915,7 +1915,20 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
     error_location_p->error = PARSER_ERR_NO_ERROR;
   }
 
-  context.status_flags = (arg_list_p == NULL) ? 0 : PARSER_IS_FUNCTION;
+  if (arg_list_p == NULL)
+  {
+    context.status_flags = 0;
+  }
+  else
+  {
+    context.status_flags = PARSER_IS_FUNCTION;
+#if ENABLED (JERRY_ES2015)
+    if (parse_opts & ECMA_PARSE_GENERATOR_FUNCTION)
+    {
+      context.status_flags |= PARSER_IS_GENERATOR_FUNCTION;
+    }
+#endif /* ENABLED (JERRY_ES2015) */
+  }
 
 #if ENABLED (JERRY_ES2015)
   context.status_flags |= PARSER_GET_CLASS_PARSER_OPTS (parse_opts);

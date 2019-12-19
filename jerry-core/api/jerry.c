@@ -457,8 +457,7 @@ jerry_parse (const jerry_char_t *resource_name_p, /**< resource name (usually a 
   ecma_free_value (parse_status);
 
   ecma_object_t *lex_env_p = ecma_get_global_environment ();
-  ecma_object_t *func_obj_p = ecma_op_create_function_object (lex_env_p,
-                                                              bytecode_data_p);
+  ecma_object_t *func_obj_p = ecma_op_create_simple_function_object (lex_env_p, bytecode_data_p);
   ecma_bytecode_deref (bytecode_data_p);
 
   return ecma_make_object_value (func_obj_p);
@@ -539,8 +538,7 @@ jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (u
   ecma_free_value (parse_status);
 
   ecma_object_t *lex_env_p = ecma_get_global_environment ();
-  ecma_object_t *func_obj_p = ecma_op_create_function_object (lex_env_p,
-                                                              bytecode_data_p);
+  ecma_object_t *func_obj_p = ecma_op_create_simple_function_object (lex_env_p, bytecode_data_p);
   ecma_bytecode_deref (bytecode_data_p);
 
   return ecma_make_object_value (func_obj_p);

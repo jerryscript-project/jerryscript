@@ -14,31 +14,27 @@
  */
 
 /*
- * Generator.prototype built-in description
+ * %Generator% built-in description (GeneratorFunction.prototype)
  */
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
 #if ENABLED (JERRY_ES2015)
 
-/* Object properties:
- *  (property name, object pointer getter) */
-
-/* ECMA-262 v6, 25.3.1.5 */
-STRING_VALUE (LIT_GLOBAL_SYMBOL_TO_STRING_TAG,
-              LIT_MAGIC_STRING_GENERATOR_UL,
-              ECMA_PROPERTY_FLAG_CONFIGURABLE)
-
-/* ECMA-262 v6, 25.2.3.1 */
+/* ECMA-262 v6, 25.3.2.3.1 */
 OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
-              ECMA_BUILTIN_ID_GENERATOR,
+              ECMA_BUILTIN_ID_GENERATOR_FUNCTION,
               ECMA_PROPERTY_FLAG_CONFIGURABLE)
 
-/* Routine properties:
- *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
-ROUTINE (LIT_MAGIC_STRING_NEXT, ecma_builtin_generator_prototype_object_next, 1, 1)
-ROUTINE (LIT_MAGIC_STRING_RETURN, ecma_builtin_generator_prototype_object_return, 1, 1)
-ROUTINE (LIT_MAGIC_STRING_THROW, ecma_builtin_generator_prototype_object_throw, 1, 1)
+/* ECMA-262 v6, 25.3.2.3.2 */
+OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
+              ECMA_BUILTIN_ID_GENERATOR_PROTOTYPE,
+              ECMA_PROPERTY_FLAG_CONFIGURABLE)
+
+/* ECMA-262 v6, 25.3.2.3.3 */
+STRING_VALUE (LIT_GLOBAL_SYMBOL_TO_STRING_TAG,
+              LIT_MAGIC_STRING_GENERATOR_FUNCTION_UL,
+              ECMA_PROPERTY_FLAG_CONFIGURABLE)
 
 #endif /* ENABLED (JERRY_ES2015) */
 

@@ -990,8 +990,7 @@ jerry_snapshot_result (const uint32_t *snapshot_p, /**< snapshot */
   if (as_function)
   {
     ecma_object_t *lex_env_p = ecma_get_global_environment ();
-    ecma_object_t *func_obj_p = ecma_op_create_function_object (lex_env_p,
-                                                                bytecode_p);
+    ecma_object_t *func_obj_p = ecma_op_create_simple_function_object (lex_env_p, bytecode_p);
 
     if (!(bytecode_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))
     {

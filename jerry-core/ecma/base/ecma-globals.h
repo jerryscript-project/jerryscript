@@ -108,6 +108,7 @@ typedef enum
   ECMA_PARSE_EVAL = (1u << 6), /**< eval is called */
   ECMA_PARSE_MODULE = (1u << 7), /**< module is parsed */
   ECMA_PARSE_FUNCTION = (1u << 8), /**< a function body is parsed or the code is inside a function */
+  ECMA_PARSE_GENERATOR_FUNCTION = (1u << 9), /**< generator function is parsed */
 } ecma_parse_opts_t;
 
 /**

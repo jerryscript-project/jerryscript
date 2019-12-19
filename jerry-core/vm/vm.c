@@ -1890,10 +1890,12 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             /**
              * The bytecode order for super assignment should be one of this:
              *  - CBC_EXT_PUSH_SUPER, CBC_EXT_SUPER_PROP_ASSIGN.
+             *  - CBC_EXT_PUSH_STATIC_SUPER, CBC_EXT_SUPER_PROP_ASSIGN.
              *  - CBC_EXT_PUSH_CONSTRUCTOR_SUPER_PROP, CBC_EXT_SUPER_PROP_ASSIGN.
              * That is one ext opcode back (-1).
              */
             JERRY_ASSERT (byte_code_start_p[-1] == CBC_EXT_PUSH_SUPER
+                          || byte_code_start_p[-1] == CBC_EXT_PUSH_STATIC_SUPER
                           || byte_code_start_p[-1] == CBC_EXT_PUSH_CONSTRUCTOR_SUPER_PROP);
           }
 

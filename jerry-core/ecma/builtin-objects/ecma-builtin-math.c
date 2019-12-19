@@ -103,6 +103,7 @@ ecma_builtin_math_object_max_min (bool is_max, /**< 'max' or 'min' operation */
                                   ecma_length_t args_number) /**< number of arguments */
 {
   ecma_number_t result_num = ecma_number_make_infinity (is_max);
+  bool nan_found = false;
 
   while (args_number > 0)
   {
@@ -126,10 +127,13 @@ ecma_builtin_math_object_max_min (bool is_max, /**< 'max' or 'min' operation */
       ecma_fast_free_value (value);
     }
 
-    if (JERRY_UNLIKELY (ecma_number_is_nan (arg_num)))
+    arg++;
+    args_number--;
+
+    if (JERRY_UNLIKELY (nan_found || ecma_number_is_nan (arg_num)))
     {
-      result_num = arg_num;
-      break;
+      nan_found = true;
+      continue;
     }
 
     if (ecma_number_is_zero (arg_num)
@@ -149,9 +153,11 @@ ecma_builtin_math_object_max_min (bool is_max, /**< 'max' or 'min' operation */
         result_num = arg_num;
       }
     }
+  }
 
-    arg++;
-    args_number--;
+  if (JERRY_UNLIKELY (nan_found))
+  {
+    result_num = ecma_number_make_nan ();
   }
 
   return ecma_make_number_value (result_num);

@@ -215,6 +215,11 @@ typedef enum
    ((cbc_opcode_t) ((((token_type) - LEXER_ASSIGN_ADD) * 2) + CBC_ASSIGN_ADD))
 
 /**
+ * Maximum local buffer size for identifiers which contains escape sequences.
+ */
+#define LEXER_MAX_LITERAL_LOCAL_BUFFER_SIZE 48
+
+/**
  * Lexer newline flags.
  */
 typedef enum
@@ -233,6 +238,15 @@ typedef enum
   LEXER_OBJ_IDENT_CLASS_METHOD = (1u << 2),     /**< expect identifier inside a class body */
   LEXER_OBJ_IDENT_OBJECT_PATTERN = (1u << 3),   /**< parse "get"/"set" as string literal in object pattern */
 } lexer_obj_ident_opts_t;
+
+/**
+ * Lexer string options.
+ */
+typedef enum
+{
+  LEXER_STRING_NO_OPTS = (1u << 0),       /**< no options */
+  LEXER_STRING_RAW = (1u << 1),           /**< raw string ECMAScript v6, 11.8.6.1: TVR */
+} lexer_string_options_t;
 
 /**
  * Lexer scan identifier parse options.

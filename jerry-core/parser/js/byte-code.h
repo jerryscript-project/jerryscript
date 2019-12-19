@@ -662,6 +662,14 @@
               VM_OC_YIELD | VM_OC_GET_STACK) \
   CBC_OPCODE (CBC_EXT_RETURN, CBC_NO_FLAG, -1, \
               VM_OC_EXT_RETURN | VM_OC_GET_STACK) \
+  CBC_OPCODE (CBC_EXT_STRING_CONCAT, CBC_NO_FLAG, -1, \
+              VM_OC_STRING_CONCAT | VM_OC_GET_STACK_STACK | VM_OC_PUT_STACK) \
+  CBC_OPCODE (CBC_EXT_STRING_CONCAT_RIGHT_LITERAL, CBC_HAS_LITERAL_ARG, 0, \
+              VM_OC_STRING_CONCAT | VM_OC_GET_STACK_LITERAL | VM_OC_PUT_STACK) \
+  CBC_OPCODE (CBC_EXT_STRING_CONCAT_TWO_LITERALS, CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2, 1, \
+              VM_OC_STRING_CONCAT | VM_OC_GET_LITERAL_LITERAL | VM_OC_PUT_STACK) \
+  CBC_OPCODE (CBC_EXT_GET_TAGGED_TEMPLATE_LITERAL, CBC_HAS_BYTE_ARG, 1, \
+              VM_OC_GET_TEMPLATE_OBJECT | VM_OC_PUT_STACK) \
   \
   /* Last opcode (not a real opcode). */ \
   CBC_OPCODE (CBC_EXT_END, CBC_NO_FLAG, 0, \
@@ -753,6 +761,7 @@ typedef enum
   CBC_CODE_FLAGS_CONSTRUCTOR = (1u << 10), /**< this function is a constructor */
   CBC_CODE_FLAGS_GENERATOR = (1u << 11), /**< this function is a generator */
   CBC_CODE_FLAGS_REST_PARAMETER = (1u << 12), /**< this function has rest parameter */
+  CBC_CODE_FLAG_HAS_TAGGED_LITERALS = (1u << 13), /**< this function has tagged template literal list */
 } cbc_code_flags;
 
 /**

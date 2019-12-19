@@ -2098,7 +2098,40 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           goto error;
         }
-#endif /* ENABLED (JERRY_ES2015) */
+        case VM_OC_STRING_CONCAT:
+        {
+          ecma_string_t *left_str_p = ecma_op_to_string (left_value);
+
+          if (JERRY_UNLIKELY (left_str_p == NULL))
+          {
+            result = ECMA_VALUE_ERROR;
+            goto error;
+          }
+          ecma_string_t *right_str_p = ecma_op_to_string (right_value);
+
+          if (JERRY_UNLIKELY (right_str_p == NULL))
+          {
+            ecma_deref_ecma_string (left_str_p);
+            result = ECMA_VALUE_ERROR;
+            goto error;
+          }
+
+          ecma_string_t *result_str_p = ecma_concat_ecma_strings (left_str_p, right_str_p);
+          ecma_deref_ecma_string (right_str_p);
+
+          *stack_top_p++ = ecma_make_string_value (result_str_p);
+          goto free_both_values;
+        }
+        case VM_OC_GET_TEMPLATE_OBJECT:
+        {
+          uint8_t tagged_idx = *byte_code_p++;
+          ecma_collection_t *collection_p = ecma_compiled_code_get_tagged_template_collection (bytecode_header_p);
+          JERRY_ASSERT (tagged_idx < collection_p->item_count);
+
+          *stack_top_p++ = ecma_copy_value (collection_p->buffer_p[tagged_idx]);
+          continue;
+        }
+ #endif /* ENABLED (JERRY_ES2015) */
         case VM_OC_PUSH_ELISON:
         {
           *stack_top_p++ = ECMA_VALUE_ARRAY_HOLE;

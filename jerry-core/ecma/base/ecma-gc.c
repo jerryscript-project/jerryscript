@@ -20,6 +20,7 @@
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
 #include "ecma-container-object.h"
+#include "ecma-function-object.h"
 #include "ecma-globals.h"
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
@@ -363,6 +364,22 @@ ecma_gc_mark_container_object (ecma_object_t *object_p) /**< object */
 #if ENABLED (JERRY_ES2015)
 
 /**
+ * Mark tagged template literals of the compiled code.
+ */
+static void
+ecma_gc_mark_tagged_template_literals (const ecma_compiled_code_t *byte_code_p)
+{
+  JERRY_ASSERT (byte_code_p->status_flags & CBC_CODE_FLAG_HAS_TAGGED_LITERALS);
+
+  ecma_collection_t *collection_p = ecma_compiled_code_get_tagged_template_collection (byte_code_p);
+
+  for (uint32_t i = 0; i < collection_p->item_count; i++)
+  {
+    ecma_gc_set_object_visited (ecma_get_object_from_value (collection_p->buffer_p[i]));
+  }
+} /* ecma_gc_mark_tagged_template_literals */
+
+/**
  * Mark objects referenced by inactive generator functions, async functions, etc.
  */
 static void
@@ -602,9 +619,17 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
         if (!ecma_get_object_is_builtin (object_p))
         {
           ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
-
           ecma_gc_set_object_visited (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
                                                                        ext_func_p->u.function.scope_cp));
+
+#if ENABLED (JERRY_ES2015)
+          const ecma_compiled_code_t *byte_code_p = ecma_op_function_get_compiled_code (ext_func_p);
+
+          if (byte_code_p->status_flags & CBC_CODE_FLAG_HAS_TAGGED_LITERALS)
+          {
+            ecma_gc_mark_tagged_template_literals (byte_code_p);
+          }
+#endif /* ENABLED (JERRY_ES2015) */
         }
         break;
       }
@@ -619,6 +644,13 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
         if (ecma_is_value_object (arrow_func_p->this_binding))
         {
           ecma_gc_set_object_visited (ecma_get_object_from_value (arrow_func_p->this_binding));
+        }
+
+        const ecma_compiled_code_t *byte_code_p = ecma_op_arrow_function_get_compiled_code (arrow_func_p);
+
+        if (byte_code_p->status_flags & CBC_CODE_FLAG_HAS_TAGGED_LITERALS)
+        {
+          ecma_gc_mark_tagged_template_literals (byte_code_p);
         }
         break;
       }
@@ -1133,16 +1165,15 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 #if ENABLED (JERRY_SNAPSHOT_EXEC)
       if (ext_func_p->u.function.bytecode_cp != ECMA_NULL_POINTER)
       {
+#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
         ecma_bytecode_deref (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
                                                               ext_func_p->u.function.bytecode_cp));
+#if ENABLED (JERRY_SNAPSHOT_EXEC)
       }
       else
       {
         ext_object_size = sizeof (ecma_static_function_t);
       }
-#else /* !ENABLED (JERRY_SNAPSHOT_EXEC) */
-      ecma_bytecode_deref (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
-                                                            ext_func_p->u.function.bytecode_cp));
 #endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
       break;
     }
@@ -1156,18 +1187,15 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 #if ENABLED (JERRY_SNAPSHOT_EXEC)
       if (arrow_func_p->bytecode_cp != ECMA_NULL_POINTER)
       {
-        ecma_bytecode_deref (ECMA_GET_NON_NULL_POINTER (ecma_compiled_code_t,
-                                                        arrow_func_p->bytecode_cp));
+#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
+        ecma_bytecode_deref (ECMA_GET_NON_NULL_POINTER (ecma_compiled_code_t, arrow_func_p->bytecode_cp));
         ext_object_size = sizeof (ecma_arrow_function_t);
+#if ENABLED (JERRY_SNAPSHOT_EXEC)
       }
       else
       {
         ext_object_size = sizeof (ecma_static_arrow_function_t);
       }
-#else /* !ENABLED (JERRY_SNAPSHOT_EXEC) */
-      ecma_bytecode_deref (ECMA_GET_NON_NULL_POINTER (ecma_compiled_code_t,
-                                                      arrow_func_p->bytecode_cp));
-      ext_object_size = sizeof (ecma_arrow_function_t);
 #endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
       break;
     }

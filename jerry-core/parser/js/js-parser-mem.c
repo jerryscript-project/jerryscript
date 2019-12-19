@@ -82,11 +82,26 @@ parser_malloc_local (parser_context_t *context_p, /**< context */
 /**
  * Free memory allocated by parser_malloc_local.
  */
-void parser_free_local (void *ptr, /**< pointer to free */
-                        size_t size) /**< size of the memory */
+void
+parser_free_local (void *ptr, /**< pointer to free */
+                   size_t size) /**< size of the memory */
 {
   jmem_heap_free_block (ptr, size);
 } /* parser_free_local */
+
+/**
+ * Free the dynamically allocated buffer stored in the context
+ */
+void
+parser_free_allocated_buffer (parser_context_t *context_p) /**< context */
+{
+  if (context_p->u.allocated_buffer_p != NULL)
+  {
+    parser_free_local (context_p->u.allocated_buffer_p,
+                       context_p->allocated_buffer_size);
+    context_p->u.allocated_buffer_p = NULL;
+  }
+} /* parser_free_allocated_buffer */
 
 /**********************************************************************/
 /* Parser data management functions                                   */

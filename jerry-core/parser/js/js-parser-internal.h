@@ -421,6 +421,7 @@ typedef struct parser_saved_context_t
   uint16_t scope_stack_reg_top;               /**< preserved top register of scope stack */
 #if ENABLED (JERRY_ES2015)
   uint16_t scope_stack_global_end;            /**< end of global declarations of a function */
+  ecma_value_t tagged_template_literal_cp;    /**< compessed pointer to the tagged template literal collection */
 #endif /* ENABLED (JERRY_ES2015) */
 
 #ifndef JERRY_NDEBUG
@@ -491,6 +492,7 @@ typedef struct
   uint16_t scope_stack_reg_top;               /**< current top register of scope stack */
 #if ENABLED (JERRY_ES2015)
   uint16_t scope_stack_global_end;            /**< end of global declarations of a function */
+  ecma_value_t tagged_template_literal_cp;    /**< compessed pointer to the tagged template literal collection */
 #endif /* ENABLED (JERRY_ES2015) */
   uint8_t stack_top_uint8;                    /**< top byte stored on the stack */
 
@@ -533,6 +535,7 @@ void *parser_malloc (parser_context_t *context_p, size_t size);
 void parser_free (void *ptr, size_t size);
 void *parser_malloc_local (parser_context_t *context_p, size_t size);
 void parser_free_local (void *ptr, size_t size);
+void parser_free_allocated_buffer (parser_context_t *context_p);
 
 /* Parser byte stream. */
 
@@ -602,6 +605,8 @@ void parser_set_continues_to_current_position (parser_context_t *context_p, pars
   parser_emit_cbc ((context_p), PARSER_TO_EXT_OPCODE (opcode))
 #define parser_emit_cbc_ext_literal(context_p, opcode, literal_index) \
   parser_emit_cbc_literal ((context_p), PARSER_TO_EXT_OPCODE (opcode), (literal_index))
+#define parser_emit_cbc_ext_literal_from_token(context_p, opcode) \
+  parser_emit_cbc_literal_from_token ((context_p), PARSER_TO_EXT_OPCODE (opcode))
 #define parser_emit_cbc_ext_call(context_p, opcode, call_arguments) \
   parser_emit_cbc_call ((context_p), PARSER_TO_EXT_OPCODE (opcode), (call_arguments))
 #define parser_emit_cbc_ext_call(context_p, opcode, call_arguments) \
@@ -631,10 +636,13 @@ bool lexer_check_arrow (parser_context_t *context_p);
 bool lexer_check_arrow_param (parser_context_t *context_p);
 bool lexer_check_yield_no_arg (parser_context_t *context_p);
 #endif /* ENABLED (JERRY_ES2015) */
-void lexer_parse_string (parser_context_t *context_p);
+void lexer_parse_string (parser_context_t *context_p, lexer_string_options_t opts);
 void lexer_expect_identifier (parser_context_t *context_p, uint8_t literal_type);
 void lexer_scan_identifier (parser_context_t *context_p, uint32_t ident_opts);
 void lexer_convert_ident_to_cesu8 (uint8_t *destination_p, const uint8_t *source_p, prop_length_t length);
+
+const uint8_t *lexer_convert_literal_to_chars (parser_context_t *context_p,  const lexer_lit_location_t *literal_p,
+                                               uint8_t *local_byte_array_p, lexer_string_options_t opts);
 void lexer_expect_object_literal_id (parser_context_t *context_p, uint32_t ident_opts);
 void lexer_construct_literal_object (parser_context_t *context_p, const lexer_lit_location_t *literal_p,
                                      uint8_t literal_type);

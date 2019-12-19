@@ -45,29 +45,18 @@ ecma_op_resource_name (const ecma_compiled_code_t *bytecode_header_p)
 {
   JERRY_ASSERT (bytecode_header_p != NULL);
 
-  ecma_length_t formal_params_number = 0;
-
-  if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED)
-  {
-    if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
-    {
-      cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_header_p;
-
-      formal_params_number = args_p->argument_end;
-    }
-    else
-    {
-      cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_header_p;
-
-      formal_params_number = args_p->argument_end;
-    }
-  }
-
   uint8_t *byte_p = (uint8_t *) bytecode_header_p;
   byte_p += ((size_t) bytecode_header_p->size) << JMEM_ALIGNMENT_LOG;
 
   ecma_value_t *resource_name_p = (ecma_value_t *) byte_p;
-  resource_name_p -= formal_params_number;
+  resource_name_p -= ecma_compiled_code_get_formal_params (bytecode_header_p);
+
+#if ENABLED (JERRY_ES2015)
+  if (bytecode_header_p->status_flags & CBC_CODE_FLAG_HAS_TAGGED_LITERALS)
+  {
+    resource_name_p--;
+  }
+#endif /* ENABLED (JERRY_ES2015) */
 
   return resource_name_p[-1];
 } /* ecma_op_resource_name */

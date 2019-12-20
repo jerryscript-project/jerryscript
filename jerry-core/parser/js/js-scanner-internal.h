@@ -319,6 +319,8 @@ struct scanner_context_t
 #endif /* ENABLED (JERRY_ES2015) */
 };
 
+/* Scanner utils. */
+
 void scanner_raise_error (parser_context_t *context_p);
 #if ENABLED (JERRY_ES2015)
 void scanner_raise_redeclaration_error (parser_context_t *context_p);
@@ -338,7 +340,6 @@ void scanner_pop_literal_pool (parser_context_t *context_p, scanner_context_t *s
 void scanner_construct_global_block (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 #endif /* ENABLED (JERRY_ES2015) */
 void scanner_filter_arguments (parser_context_t *context_p, scanner_context_t *scanner_context_p);
-void scanner_check_directives (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 lexer_lit_location_t *scanner_add_custom_literal (parser_context_t *context_p, scanner_literal_pool_t *literal_pool_p,
                                                   const lexer_lit_location_t *literal_location_p);
 lexer_lit_location_t *scanner_add_literal (parser_context_t *context_p, scanner_context_t *scanner_context_p);
@@ -358,6 +359,19 @@ void scanner_push_destructuring_pattern (parser_context_t *context_p, scanner_co
 void scanner_pop_binding_list (scanner_context_t *scanner_context_p);
 void scanner_append_hole (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 #endif /* ENABLED (JERRY_ES2015) */
+
+/* Scanner operations. */
+
+#if ENABLED (JERRY_ES2015)
+void scanner_add_async_literal (parser_context_t *context_p, scanner_context_t *scanner_context_p);
+void scanner_check_arrow (parser_context_t *context_p, scanner_context_t *scanner_context_p);
+void scanner_scan_simple_arrow (parser_context_t *context_p, scanner_context_t *scanner_context_p,
+                                const uint8_t *source_p);
+void scanner_check_arrow_arg (parser_context_t *context_p, scanner_context_t *scanner_context_p);
+bool scanner_check_async_function (parser_context_t *context_p, scanner_context_t *scanner_context_p);
+#endif /* ENABLED (JERRY_ES2015) */
+void scanner_scan_bracket (parser_context_t *context_p, scanner_context_t *scanner_context_p);
+void scanner_check_directives (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 
 /**
  * @}

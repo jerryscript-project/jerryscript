@@ -57,447 +57,7 @@ typedef enum
   (((literal_pool_flags) & SCANNER_LITERAL_POOL_GENERATOR) ? SCAN_STACK_COMPUTED_GENERATOR_FUNCTION \
                                                            : SCAN_STACK_COMPUTED_PROPERTY)
 
-/**
- * Add the "async" literal to the literal pool.
- */
-static void
-scanner_add_async_literal (parser_context_t *context_p, /**< context */
-                           scanner_context_t *scanner_context_p) /**< scanner context */
-{
-  lexer_lit_location_t async_literal;
-
-  JERRY_ASSERT (context_p->stack_top_uint8 == SCAN_STACK_USE_ASYNC);
-
-  parser_stack_pop_uint8 (context_p);
-  parser_stack_pop (context_p, &async_literal, sizeof (lexer_lit_location_t));
-
-  lexer_lit_location_t *lit_location_p = scanner_add_custom_literal (context_p,
-                                                                     scanner_context_p->active_literal_pool_p,
-                                                                     &async_literal);
-
-  lit_location_p->type |= SCANNER_LITERAL_IS_USED;
-
-  if (scanner_context_p->active_literal_pool_p->status_flags & SCANNER_LITERAL_POOL_IN_WITH)
-  {
-    lit_location_p->type |= SCANNER_LITERAL_NO_REG;
-  }
-} /* scanner_add_async_literal */
-
-/**
- * Init scanning the body of an arrow function.
- */
-static void
-scanner_check_arrow_body (parser_context_t *context_p, /**< context */
-                          scanner_context_t *scanner_context_p) /**< scanner context */
-{
-  lexer_next_token (context_p);
-
-  if (context_p->token.type != LEXER_LEFT_BRACE)
-  {
-    scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
-    parser_stack_push_uint8 (context_p, SCAN_STACK_ARROW_EXPRESSION);
-    return;
-  }
-
-  lexer_next_token (context_p);
-  parser_stack_push_uint8 (context_p, SCAN_STACK_FUNCTION_ARROW);
-  scanner_check_directives (context_p, scanner_context_p);
-} /* scanner_check_arrow_body */
-
-/**
- * Process arrow function with argument list.
- */
-static void
-scanner_process_arrow (parser_context_t *context_p, /**< context */
-                       scanner_context_t *scanner_context_p) /**< scanner context */
-{
-  parser_stack_pop_uint8 (context_p);
-
-  lexer_next_token (context_p);
-
-  if (context_p->token.type != LEXER_ARROW
-      || (context_p->token.flags & LEXER_WAS_NEWLINE))
-  {
-    if (context_p->stack_top_uint8 == SCAN_STACK_USE_ASYNC)
-    {
-      scanner_add_async_literal (context_p, scanner_context_p);
-    }
-
-    scanner_context_p->mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
-    scanner_pop_literal_pool (context_p, scanner_context_p);
-    return;
-  }
-
-  if (context_p->stack_top_uint8 == SCAN_STACK_USE_ASYNC)
-  {
-    parser_stack_pop (context_p, NULL, sizeof (lexer_lit_location_t) + 1);
-  }
-
-  scanner_literal_pool_t *literal_pool_p = scanner_context_p->active_literal_pool_p;
-
-  literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_FUNCTION_WITHOUT_ARGUMENTS;
-  literal_pool_p->status_flags &= (uint16_t) ~(SCANNER_LITERAL_POOL_IN_WITH | SCANNER_LITERAL_POOL_GENERATOR);
-
-  context_p->status_flags &= (uint32_t) ~PARSER_IS_GENERATOR_FUNCTION;
-
-  scanner_filter_arguments (context_p, scanner_context_p);
-
-  scanner_check_arrow_body (context_p, scanner_context_p);
-} /* scanner_process_arrow */
-
-/**
- * Process arrow function with a single argument.
- */
-static void
-scanner_process_simple_arrow (parser_context_t *context_p, /**< context */
-                              scanner_context_t *scanner_context_p, /**< scanner context */
-                              const uint8_t *source_p) /**< identifier end position */
-{
-  scanner_literal_pool_t *literal_pool_p;
-  literal_pool_p = scanner_push_literal_pool (context_p,
-                                              scanner_context_p,
-                                              SCANNER_LITERAL_POOL_FUNCTION_WITHOUT_ARGUMENTS);
-  literal_pool_p->source_p = source_p;
-
-  lexer_lit_location_t *location_p = scanner_add_literal (context_p, scanner_context_p);
-  location_p->type |= SCANNER_LITERAL_IS_ARG;
-
-  /* Skip the => token, which size is two. */
-  context_p->source_p += 2;
-  PARSER_PLUS_EQUAL_LC (context_p->column, 2);
-  context_p->token.flags = (uint8_t) (context_p->token.flags & ~LEXER_NO_SKIP_SPACES);
-
-  context_p->status_flags &= (uint32_t) ~PARSER_IS_GENERATOR_FUNCTION;
-
-  scanner_check_arrow_body (context_p, scanner_context_p);
-} /* scanner_process_simple_arrow */
-
-/**
- * Process the next argument of a might-be arrow function.
- */
-static void
-scanner_process_arrow_arg (parser_context_t *context_p, /**< context */
-                           scanner_context_t *scanner_context_p) /**< scanner context */
-{
-  JERRY_ASSERT (context_p->stack_top_uint8 == SCAN_STACK_ARROW_ARGUMENTS);
-
-  const uint8_t *source_p = context_p->source_p;
-  bool process_arrow = false;
-
-  scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
-
-  if (context_p->token.type == LEXER_THREE_DOTS)
-  {
-    lexer_next_token (context_p);
-  }
-
-  if (context_p->token.type == LEXER_LITERAL
-      && context_p->token.lit_location.type == LEXER_IDENT_LITERAL)
-  {
-    scanner_context_p->mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
-
-    if (lexer_check_arrow (context_p))
-    {
-      process_arrow = true;
-    }
-    else
-    {
-      scanner_append_argument (context_p, scanner_context_p);
-
-      scanner_detect_eval_call (context_p, scanner_context_p);
-
-      lexer_next_token (context_p);
-
-      if (context_p->token.type == LEXER_ASSIGN
-          || context_p->token.type == LEXER_COMMA
-          || context_p->token.type == LEXER_RIGHT_PAREN)
-      {
-        return;
-      }
-    }
-  }
-  else if (context_p->token.type == LEXER_LEFT_SQUARE || context_p->token.type == LEXER_LEFT_BRACE)
-  {
-    scanner_append_hole (context_p, scanner_context_p);
-    scanner_push_destructuring_pattern (context_p, scanner_context_p, SCANNER_BINDING_ARROW_ARG, false);
-
-    if (context_p->token.type == LEXER_LEFT_BRACE)
-    {
-      parser_stack_push_uint8 (context_p, SCAN_STACK_OBJECT_LITERAL);
-      scanner_context_p->mode = SCAN_MODE_PROPERTY_NAME;
-      return;
-    }
-
-    parser_stack_push_uint8 (context_p, SCAN_STACK_ARRAY_LITERAL);
-    scanner_context_p->mode = SCAN_MODE_BINDING;
-    lexer_next_token (context_p);
-    return;
-  }
-
-  scanner_pop_literal_pool (context_p, scanner_context_p);
-
-  parser_stack_pop_uint8 (context_p);
-  parser_stack_push_uint8 (context_p, SCAN_STACK_PAREN_EXPRESSION);
-
-  if (process_arrow)
-  {
-    scanner_process_simple_arrow (context_p, scanner_context_p, source_p);
-  }
-} /* scanner_process_arrow_arg */
-
-/**
- * Detect async functions.
- *
- * @return true, if async is followed by a function keyword, false otherwise
- */
-static bool
-scanner_scan_async (parser_context_t *context_p, /**< context */
-                    scanner_context_t *scanner_context_p) /**< scanner context */
-{
-  JERRY_ASSERT (lexer_token_is_async (context_p));
-  JERRY_ASSERT (scanner_context_p->mode == SCAN_MODE_PRIMARY_EXPRESSION);
-  JERRY_ASSERT (scanner_context_p->async_source_p != NULL);
-
-  lexer_lit_location_t async_literal = context_p->token.lit_location;
-
-  lexer_next_token (context_p);
-
-  if (!(context_p->token.flags & LEXER_WAS_NEWLINE))
-  {
-    if (context_p->token.type == LEXER_KEYW_FUNCTION)
-    {
-      return true;
-    }
-
-    if (context_p->token.type == LEXER_LITERAL
-        && context_p->token.lit_location.type == LEXER_IDENT_LITERAL)
-    {
-      if (!lexer_check_arrow (context_p))
-      {
-        scanner_raise_error (context_p);
-      }
-
-      scanner_process_simple_arrow (context_p, scanner_context_p, scanner_context_p->async_source_p);
-      scanner_context_p->active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_ASYNC;
-      scanner_context_p->async_source_p = NULL;
-      return false;
-    }
-
-    if (context_p->token.type == LEXER_LEFT_PAREN)
-    {
-      parser_stack_push (context_p, &async_literal, sizeof (lexer_lit_location_t));
-      parser_stack_push_uint8 (context_p, SCAN_STACK_USE_ASYNC);
-      return false;
-    }
-  }
-
-  lexer_lit_location_t *lit_location_p = scanner_add_custom_literal (context_p,
-                                                                     scanner_context_p->active_literal_pool_p,
-                                                                     &async_literal);
-  lit_location_p->type |= SCANNER_LITERAL_IS_USED;
-
-  if (scanner_context_p->active_literal_pool_p->status_flags & SCANNER_LITERAL_POOL_IN_WITH)
-  {
-    lit_location_p->type |= SCANNER_LITERAL_NO_REG;
-  }
-
-  scanner_context_p->async_source_p = NULL;
-  scanner_context_p->mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
-  return false;
-} /* scanner_scan_async */
-
-/**
- * Arrow types for scanner_scan_bracket() function.
- */
-typedef enum
-{
-  SCANNER_SCAN_BRACKET_NO_ARROW, /**< not an arrow function */
-  SCANNER_SCAN_BRACKET_SIMPLE_ARROW, /**< simple arrow function */
-  SCANNER_SCAN_BRACKET_ARROW_WITH_ONE_ARG, /**< arrow function with one argument */
-} scanner_scan_bracket_arrow_type_t;
-
 #endif /* ENABLED (JERRY_ES2015) */
-
-/**
- * Detect special cases in bracketed expressions.
- */
-static void
-scanner_scan_bracket (parser_context_t *context_p, /**< context */
-                      scanner_context_t *scanner_context_p) /**< scanner context */
-{
-  size_t depth = 0;
-#if ENABLED (JERRY_ES2015)
-  const uint8_t *arrow_source_p;
-  const uint8_t *async_source_p = NULL;
-  scanner_scan_bracket_arrow_type_t arrow_type = SCANNER_SCAN_BRACKET_NO_ARROW;
-#endif /* ENABLED (JERRY_ES2015) */
-
-  JERRY_ASSERT (context_p->token.type == LEXER_LEFT_PAREN);
-
-  do
-  {
-#if ENABLED (JERRY_ES2015)
-    arrow_source_p = context_p->source_p;
-#endif /* ENABLED (JERRY_ES2015) */
-    depth++;
-    lexer_next_token (context_p);
-  }
-  while (context_p->token.type == LEXER_LEFT_PAREN);
-
-  scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
-
-  switch (context_p->token.type)
-  {
-    case LEXER_LITERAL:
-    {
-      if (context_p->token.lit_location.type != LEXER_IDENT_LITERAL)
-      {
-#if ENABLED (JERRY_ES2015)
-        arrow_source_p = NULL;
-#endif /* ENABLED (JERRY_ES2015) */
-        break;
-      }
-
-#if ENABLED (JERRY_ES2015)
-      const uint8_t *source_p = context_p->source_p;
-
-      if (lexer_check_arrow (context_p))
-      {
-        arrow_source_p = source_p;
-        arrow_type = SCANNER_SCAN_BRACKET_SIMPLE_ARROW;
-        break;
-      }
-
-      size_t total_depth = depth;
-#endif /* ENABLED (JERRY_ES2015) */
-
-      while (depth > 0 && lexer_check_next_character (context_p, LIT_CHAR_RIGHT_PAREN))
-      {
-        lexer_consume_next_character (context_p);
-        depth--;
-      }
-
-      if (context_p->token.keyword_type == LEXER_KEYW_EVAL
-          && lexer_check_next_character (context_p, LIT_CHAR_LEFT_PAREN))
-      {
-#if ENABLED (JERRY_ES2015)
-        /* A function call cannot be an eval function. */
-        arrow_source_p = NULL;
-#endif /* ENABLED (JERRY_ES2015) */
-
-        scanner_context_p->active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_NO_REG;
-        break;
-      }
-
-#if ENABLED (JERRY_ES2015)
-      if (total_depth == depth)
-      {
-        if (lexer_check_arrow_param (context_p))
-        {
-          JERRY_ASSERT (depth > 0);
-          depth--;
-          break;
-        }
-
-        if (JERRY_UNLIKELY (lexer_token_is_async (context_p)))
-        {
-          async_source_p = source_p;
-        }
-      }
-      else if (depth == total_depth - 1 && lexer_check_arrow (context_p))
-      {
-        arrow_type = SCANNER_SCAN_BRACKET_ARROW_WITH_ONE_ARG;
-        break;
-      }
-
-      arrow_source_p = NULL;
-#endif /* ENABLED (JERRY_ES2015) */
-      break;
-    }
-#if ENABLED (JERRY_ES2015)
-    case LEXER_THREE_DOTS:
-    case LEXER_LEFT_SQUARE:
-    case LEXER_LEFT_BRACE:
-    case LEXER_RIGHT_PAREN:
-    {
-      JERRY_ASSERT (depth > 0);
-      depth--;
-      break;
-    }
-#endif /* ENABLED (JERRY_ES2015) */
-    default:
-    {
-#if ENABLED (JERRY_ES2015)
-      arrow_source_p = NULL;
-#endif /* ENABLED (JERRY_ES2015) */
-      break;
-    }
-  }
-
-#if ENABLED (JERRY_ES2015)
-  if (JERRY_UNLIKELY (scanner_context_p->async_source_p != NULL)
-      && (arrow_source_p == NULL || depth > 0))
-  {
-    scanner_context_p->async_source_p = NULL;
-  }
-#endif /* ENABLED (JERRY_ES2015) */
-
-  while (depth > 0)
-  {
-    parser_stack_push_uint8 (context_p, SCAN_STACK_PAREN_EXPRESSION);
-    depth--;
-  }
-
-#if ENABLED (JERRY_ES2015)
-  if (arrow_source_p != NULL)
-  {
-    JERRY_ASSERT (async_source_p == NULL);
-
-    if (arrow_type == SCANNER_SCAN_BRACKET_SIMPLE_ARROW)
-    {
-      scanner_process_simple_arrow (context_p, scanner_context_p, arrow_source_p);
-      return;
-    }
-
-    parser_stack_push_uint8 (context_p, SCAN_STACK_ARROW_ARGUMENTS);
-
-    uint16_t status_flags = 0;
-
-    if (JERRY_UNLIKELY (scanner_context_p->async_source_p != NULL))
-    {
-      status_flags |= SCANNER_LITERAL_POOL_ASYNC;
-      arrow_source_p = scanner_context_p->async_source_p;
-      scanner_context_p->async_source_p = NULL;
-    }
-
-    scanner_literal_pool_t *literal_pool_p;
-    literal_pool_p = scanner_push_literal_pool (context_p, scanner_context_p, status_flags);
-    literal_pool_p->source_p = arrow_source_p;
-
-    if (arrow_type == SCANNER_SCAN_BRACKET_ARROW_WITH_ONE_ARG)
-    {
-      scanner_append_argument (context_p, scanner_context_p);
-      scanner_detect_eval_call (context_p, scanner_context_p);
-
-      context_p->token.type = LEXER_RIGHT_PAREN;
-      scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION_END;
-    }
-    else if (context_p->token.type == LEXER_RIGHT_PAREN)
-    {
-      scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION_END;
-    }
-    else
-    {
-      scanner_process_arrow_arg (context_p, scanner_context_p);
-    }
-  }
-  else if (JERRY_UNLIKELY (async_source_p != NULL))
-  {
-    scanner_context_p->async_source_p = async_source_p;
-    scanner_scan_async (context_p, scanner_context_p);
-  }
-#endif /* ENABLED (JERRY_ES2015) */
-} /* scanner_scan_bracket */
 
 /**
  * Scan primary expression.
@@ -600,13 +160,13 @@ scanner_scan_primary_expression (parser_context_t *context_p, /**< context */
       if (context_p->token.lit_location.type == LEXER_IDENT_LITERAL
           && lexer_check_arrow (context_p))
       {
-        scanner_process_simple_arrow (context_p, scanner_context_p, source_p);
+        scanner_scan_simple_arrow (context_p, scanner_context_p, source_p);
         return SCAN_KEEP_TOKEN;
       }
       else if (JERRY_UNLIKELY (lexer_token_is_async (context_p)))
       {
         scanner_context_p->async_source_p = source_p;
-        scanner_scan_async (context_p, scanner_context_p);
+        scanner_check_async_function (context_p, scanner_context_p);
         return SCAN_KEEP_TOKEN;
       }
 #endif /* ENABLED (JERRY_ES2015) */
@@ -844,7 +404,7 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
       case SCAN_STACK_ARROW_ARGUMENTS:
       {
         lexer_next_token (context_p);
-        scanner_process_arrow_arg (context_p, scanner_context_p);
+        scanner_check_arrow_arg (context_p, scanner_context_p);
         return SCAN_KEEP_TOKEN;
       }
       case SCAN_STACK_ARROW_EXPRESSION:
@@ -1447,7 +1007,7 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
         break;
       }
 
-      scanner_process_arrow (context_p, scanner_context_p);
+      scanner_check_arrow (context_p, scanner_context_p);
       return SCAN_KEEP_TOKEN;
     }
     case SCAN_STACK_ARROW_EXPRESSION:
@@ -2265,7 +1825,7 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
      * it first, and this check skips the spaces which affects source_p. */
     if (JERRY_UNLIKELY (lexer_check_arrow (context_p)))
     {
-      scanner_process_simple_arrow (context_p, scanner_context_p, context_p->source_p);
+      scanner_scan_simple_arrow (context_p, scanner_context_p, context_p->source_p);
       return SCAN_KEEP_TOKEN;
     }
 
@@ -2308,7 +1868,7 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
     {
       scanner_context_p->async_source_p = context_p->source_p;
 
-      if (scanner_scan_async (context_p, scanner_context_p))
+      if (scanner_check_async_function (context_p, scanner_context_p))
       {
         scanner_context_p->mode = SCAN_MODE_STATEMENT;
       }

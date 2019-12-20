@@ -486,6 +486,7 @@ static const keyword_string_t keywords_with_length_4[] =
 static const keyword_string_t keywords_with_length_5[] =
 {
 #if ENABLED (JERRY_ES2015)
+  LEXER_KEYWORD ("async", LEXER_KEYW_ASYNC),
   LEXER_KEYWORD ("await", LEXER_KEYW_AWAIT),
 #endif /* ENABLED (JERRY_ES2015) */
   LEXER_KEYWORD ("break", LEXER_KEYW_BREAK),
@@ -1843,6 +1844,30 @@ lexer_check_yield_no_arg (parser_context_t *context_p) /**< context */
   }
 } /* lexer_check_yield_no_arg */
 
+/**
+ * Checks whether the next token is a multiply and consumes it.
+ *
+ * @return true if the next token is a multiply
+ */
+bool
+lexer_consume_generator (parser_context_t *context_p) /**< context */
+{
+  JERRY_ASSERT (context_p->token.flags & LEXER_NO_SKIP_SPACES);
+  JERRY_ASSERT (context_p->token.type == LEXER_KEYW_ASYNC);
+
+  if (context_p->source_p >= context_p->source_end_p
+      || context_p->source_p[0] != LIT_CHAR_ASTERISK
+      || (context_p->source_p + 1 < context_p->source_end_p
+          && (context_p->source_p[1] == LIT_CHAR_EQUALS || context_p->source_p[1] == LIT_CHAR_ASTERISK)))
+  {
+    return false;
+  }
+
+  lexer_consume_next_character (context_p);
+  context_p->token.type = LEXER_MULTIPLY;
+  return true;
+} /* lexer_consume_generator */
+
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**
@@ -2780,8 +2805,7 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
 
   if (lexer_parse_identifier (context_p, LEXER_PARSE_NO_OPTS))
   {
-    if (!(ident_opts & (LEXER_OBJ_IDENT_ONLY_IDENTIFIERS | LEXER_OBJ_IDENT_OBJECT_PATTERN))
-        && context_p->token.lit_location.length == 3)
+    if (!(ident_opts & (LEXER_OBJ_IDENT_ONLY_IDENTIFIERS | LEXER_OBJ_IDENT_OBJECT_PATTERN)))
     {
       lexer_skip_spaces (context_p);
       context_p->token.flags = (uint8_t) (context_p->token.flags | LEXER_NO_SKIP_SPACES);
@@ -2799,11 +2823,20 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
           context_p->token.type = LEXER_PROPERTY_GETTER;
           return;
         }
-        else if (lexer_compare_literal_to_string (context_p, "set", 3))
+
+        if (lexer_compare_literal_to_string (context_p, "set", 3))
         {
           context_p->token.type = LEXER_PROPERTY_SETTER;
           return;
         }
+
+#if ENABLED (JERRY_ES2015)
+        if (lexer_compare_literal_to_string (context_p, "async", 5))
+        {
+          context_p->token.type = LEXER_KEYW_ASYNC;
+          return;
+        }
+#endif /* ENABLED (JERRY_ES2015) */
       }
     }
 
@@ -2904,11 +2937,12 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
 } /* lexer_expect_object_literal_id */
 
 /**
- * Next token must be an identifier.
+ * Read next token without checking keywords
+ *
+ * @return true if the next literal is identifier, false otherwise
  */
-void
-lexer_scan_identifier (parser_context_t *context_p, /**< context */
-                       uint32_t ident_opts) /**< lexer_scan_ident_opts_t option bits */
+bool
+lexer_scan_identifier (parser_context_t *context_p) /**< context */
 {
   lexer_skip_spaces (context_p);
   context_p->token.line = context_p->line;
@@ -2917,36 +2951,57 @@ lexer_scan_identifier (parser_context_t *context_p, /**< context */
   if (context_p->source_p < context_p->source_end_p
       && lexer_parse_identifier (context_p, LEXER_PARSE_NO_OPTS))
   {
-    if ((ident_opts & LEXER_SCAN_IDENT_PROPERTY)
-        && context_p->token.lit_location.length == 3)
-    {
-      lexer_skip_spaces (context_p);
-      context_p->token.flags = (uint8_t) (context_p->token.flags | LEXER_NO_SKIP_SPACES);
-
-      if (context_p->source_p < context_p->source_end_p
-#if ENABLED (JERRY_ES2015)
-          && context_p->source_p[0] != LIT_CHAR_COMMA
-          && context_p->source_p[0] != LIT_CHAR_RIGHT_BRACE
-          && context_p->source_p[0] != LIT_CHAR_LEFT_PAREN
-#endif /* ENABLED (JERRY_ES2015) */
-          && context_p->source_p[0] != LIT_CHAR_COLON)
-      {
-        if (lexer_compare_literal_to_string (context_p, "get", 3))
-        {
-          context_p->token.type = LEXER_PROPERTY_GETTER;
-        }
-        else if (lexer_compare_literal_to_string (context_p, "set", 3))
-        {
-          context_p->token.type = LEXER_PROPERTY_SETTER;
-        }
-      }
-    }
-
-    return;
+    return true;
   }
 
   lexer_next_token (context_p);
+  return false;
 } /* lexer_scan_identifier */
+
+/**
+ * Check whether the identifier is a modifier in a property definition.
+ */
+void
+lexer_check_property_modifier (parser_context_t *context_p) /**< context */
+{
+  JERRY_ASSERT (!(context_p->token.flags & LEXER_NO_SKIP_SPACES));
+  JERRY_ASSERT (context_p->token.type = LEXER_LITERAL
+                && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
+
+  lexer_skip_spaces (context_p);
+  context_p->token.flags = (uint8_t) (context_p->token.flags | LEXER_NO_SKIP_SPACES);
+
+  if (context_p->source_p >= context_p->source_end_p
+#if ENABLED (JERRY_ES2015)
+      || context_p->source_p[0] == LIT_CHAR_COMMA
+      || context_p->source_p[0] == LIT_CHAR_RIGHT_BRACE
+      || context_p->source_p[0] == LIT_CHAR_LEFT_PAREN
+#endif /* ENABLED (JERRY_ES2015) */
+      || context_p->source_p[0] == LIT_CHAR_COLON)
+  {
+    return;
+  }
+
+  if (lexer_compare_literal_to_string (context_p, "get", 3))
+  {
+    context_p->token.type = LEXER_PROPERTY_GETTER;
+    return;
+  }
+
+  if (lexer_compare_literal_to_string (context_p, "set", 3))
+  {
+    context_p->token.type = LEXER_PROPERTY_SETTER;
+    return;
+  }
+
+#if ENABLED (JERRY_ES2015)
+  if (lexer_compare_literal_to_string (context_p, "async", 5))
+  {
+    context_p->token.type = LEXER_KEYW_ASYNC;
+    return;
+  }
+#endif /* ENABLED (JERRY_ES2015) */
+} /* lexer_check_property_modifier */
 
 /**
  * Compares two identifiers.
@@ -3189,6 +3244,24 @@ lexer_token_is_let (parser_context_t *context_p) /**< context */
   return (context_p->token.keyword_type == LEXER_KEYW_LET
           && !context_p->token.lit_location.has_escape);
 } /* lexer_token_is_let */
+
+/**
+ * Compares the current identifier token to "async".
+ *
+ * Note:
+ *   Escape sequences are not allowed.
+ *
+ * @return true if "async" is found, false otherwise
+ */
+inline bool JERRY_ATTR_ALWAYS_INLINE
+lexer_token_is_async (parser_context_t *context_p) /**< context */
+{
+  JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
+                || context_p->token.type == LEXER_TEMPLATE_LITERAL);
+
+  return (context_p->token.keyword_type == LEXER_KEYW_ASYNC
+          && !context_p->token.lit_location.has_escape);
+} /* lexer_token_is_async */
 
 #endif /* ENABLED (JERRY_ES2015) */
 

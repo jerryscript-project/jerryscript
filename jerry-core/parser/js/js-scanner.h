@@ -210,6 +210,10 @@ typedef enum
 typedef enum
 {
   SCANNER_FUNCTION_ARGUMENTS_NEEDED = (1 << 0), /**< arguments object needs to be created */
+#if ENABLED (JERRY_ES2015)
+  SCANNER_FUNCTION_STATEMENT = (1 << 1), /**< function is (async) function statement */
+  SCANNER_FUNCTION_ASYNC = (1 << 2), /**< function is async function expression */
+#endif /* ENABLED (JERRY_ES2015) */
 } scanner_function_flags_t;
 
 /**

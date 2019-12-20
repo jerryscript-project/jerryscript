@@ -721,6 +721,85 @@ ecma_promise_new_capability (ecma_value_t constructor)
 } /* ecma_promise_new_capability */
 
 /**
+ * The common function for 'reject' and 'resolve'.
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_promise_reject_or_resolve (ecma_value_t this_arg, /**< "this" argument */
+                                ecma_value_t value, /**< rejected or resolved value */
+                                bool is_resolve) /**< the operation is resolve */
+{
+  if (!ecma_is_value_object (this_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not an object."));
+  }
+
+  if (is_resolve
+      && ecma_is_value_object (value)
+      && ecma_is_promise (ecma_get_object_from_value (value)))
+  {
+    ecma_object_t *object_p = ecma_get_object_from_value (value);
+    ecma_value_t constructor = ecma_op_object_get_by_magic_id (object_p, LIT_MAGIC_STRING_CONSTRUCTOR);
+
+    if (ECMA_IS_VALUE_ERROR (constructor))
+    {
+      return constructor;
+    }
+
+    /* The this_arg must be an object. */
+    bool is_same_value = (constructor == this_arg);
+    ecma_free_value (constructor);
+
+    if (is_same_value)
+    {
+      return ecma_copy_value (value);
+    }
+  }
+
+  ecma_value_t capability = ecma_promise_new_capability (this_arg);
+
+  if (ECMA_IS_VALUE_ERROR (capability))
+  {
+    return capability;
+  }
+
+  ecma_string_t *property_str_p;
+
+  if (is_resolve)
+  {
+    property_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_RESOLVE);
+  }
+  else
+  {
+    property_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REJECT);
+  }
+
+  ecma_value_t func = ecma_op_object_get (ecma_get_object_from_value (capability), property_str_p);
+
+  ecma_value_t call_ret = ecma_op_function_call (ecma_get_object_from_value (func),
+                                                 ECMA_VALUE_UNDEFINED,
+                                                 &value,
+                                                 1);
+
+  ecma_free_value (func);
+
+  if (ECMA_IS_VALUE_ERROR (call_ret))
+  {
+    return call_ret;
+  }
+
+  ecma_free_value (call_ret);
+
+  ecma_string_t *promise_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_PROMISE);
+  ecma_value_t promise = ecma_op_object_get (ecma_get_object_from_value (capability), promise_str_p);
+  ecma_free_value (capability);
+
+  return promise;
+} /* ecma_promise_reject_or_resolve */
+
+/**
  * It performs the "then" operation on promiFulfilled
  * and onRejected as its settlement actions.
  *

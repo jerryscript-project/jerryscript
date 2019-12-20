@@ -670,6 +670,18 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
         }
       }
 
+#if ENABLED (JERRY_ES2015)
+      if (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_ASYNC)
+      {
+        status_flags |= SCANNER_FUNCTION_ASYNC;
+
+        if (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_FUNCTION_STATEMENT)
+        {
+          status_flags |= SCANNER_FUNCTION_STATEMENT;
+        }
+      }
+#endif /* ENABLED (JERRY_ES2015) */
+
       info_p->u8_arg = status_flags;
       info_p->u16_arg = (uint16_t) no_declarations;
     }

@@ -115,6 +115,9 @@ opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p);
 
 ecma_value_t
 opfunc_resume_executable_object (vm_executable_object_t *executable_object_p, ecma_value_t value);
+
+ecma_value_t
+opfunc_return_promise (ecma_value_t value);
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**

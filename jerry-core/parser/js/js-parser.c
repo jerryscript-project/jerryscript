@@ -994,7 +994,8 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       length++;
 
 #if ENABLED (JERRY_ES2015)
-      if (ext_opcode == CBC_EXT_CONSTRUCTOR_RETURN)
+      if (ext_opcode == CBC_EXT_CONSTRUCTOR_RETURN
+          || ext_opcode == CBC_EXT_RETURN_PROMISE)
       {
         last_opcode = CBC_RETURN;
       }
@@ -1140,6 +1141,14 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       || !(PARSER_OPCODE_IS_RETURN (last_opcode)))
   {
     context_p->status_flags &= (uint32_t) ~PARSER_NO_END_LABEL;
+
+#if ENABLED (JERRY_ES2015)
+    if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
+    {
+      length += 2;
+    }
+#endif /* ENABLED (JERRY_ES2015) */
+
     length++;
   }
 
@@ -1496,6 +1505,16 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   if (!(context_p->status_flags & PARSER_NO_END_LABEL))
   {
     *dst_p++ = CBC_RETURN_WITH_BLOCK;
+
+#if ENABLED (JERRY_ES2015)
+    if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
+    {
+      dst_p[-1] = CBC_PUSH_UNDEFINED;
+      dst_p[0] = CBC_EXT_OPCODE;
+      dst_p[1] = CBC_EXT_RETURN_PROMISE;
+      dst_p += 2;
+    }
+#endif /* ENABLED (JERRY_ES2015) */
   }
   JERRY_ASSERT (dst_p == byte_code_p + length);
 
@@ -1657,11 +1676,18 @@ static void
 parser_parse_function_arguments (parser_context_t *context_p, /**< context */
                                  lexer_token_type_t end_type) /**< expected end type */
 {
+  JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
+
 #if ENABLED (JERRY_ES2015)
   bool duplicated_argument_names = false;
-#endif /* ENABLED (JERRY_ES2015) */
 
-  JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
+  /* TODO: Currently async iterators are not supported, so generators ignore the async modifier. */
+  if ((context_p->next_scanner_info_p->u8_arg & SCANNER_FUNCTION_ASYNC)
+      && !(context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION))
+  {
+    context_p->status_flags |= PARSER_IS_ASYNC_FUNCTION;
+  }
+#endif /* ENABLED (JERRY_ES2015) */
 
   if (context_p->token.type == end_type)
   {
@@ -2454,14 +2480,25 @@ parser_parse_arrow_function (parser_context_t *context_p, /**< context */
 
     parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
 
-    if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
+#if ENABLED (JERRY_ES2015)
+    if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
     {
-      context_p->last_cbc_opcode = CBC_RETURN_WITH_LITERAL;
+      parser_emit_cbc_ext (context_p, CBC_EXT_RETURN_PROMISE);
     }
     else
     {
-      parser_emit_cbc (context_p, CBC_RETURN);
+#endif /* ENABLED (JERRY_ES2015) */
+      if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
+      {
+        context_p->last_cbc_opcode = CBC_RETURN_WITH_LITERAL;
+      }
+      else
+      {
+        parser_emit_cbc (context_p, CBC_RETURN);
+      }
+#if ENABLED (JERRY_ES2015)
     }
+#endif /* ENABLED (JERRY_ES2015) */
     parser_flush_cbc (context_p);
   }
 

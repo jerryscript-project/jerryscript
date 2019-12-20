@@ -61,22 +61,23 @@ typedef enum
   PARSER_INSIDE_BLOCK = (1u << 12),           /**< script has a lexical environment for let and const */
   PARSER_IS_ARROW_FUNCTION = (1u << 13),      /**< an arrow function is parsed */
   PARSER_IS_GENERATOR_FUNCTION = (1u << 14),  /**< a generator function is parsed */
-  PARSER_DISALLOW_YIELD = (1u << 15),         /**< throw SyntaxError for yield expression */
-  PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM = (1u << 16), /**< function has a non simple parameter */
-  PARSER_FUNCTION_HAS_REST_PARAM = (1u << 17), /**< function has rest parameter */
+  PARSER_IS_ASYNC_FUNCTION = (1u << 15),      /**< an async function is parsed */
+  PARSER_DISALLOW_YIELD = (1u << 16),         /**< throw SyntaxError for yield expression */
+  PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM = (1u << 17), /**< function has a non simple parameter */
+  PARSER_FUNCTION_HAS_REST_PARAM = (1u << 18), /**< function has rest parameter */
   /* These four status flags must be in this order. See PARSER_CLASS_PARSE_OPTS_OFFSET. */
-  PARSER_CLASS_CONSTRUCTOR = (1u << 18),      /**< a class constructor is parsed (this value must be kept in
+  PARSER_CLASS_CONSTRUCTOR = (1u << 19),      /**< a class constructor is parsed (this value must be kept in
                                                *   in sync with ECMA_PARSE_CLASS_CONSTRUCTOR) */
-  PARSER_CLASS_HAS_SUPER = (1u << 19),        /**< class has super reference */
-  PARSER_CLASS_IMPLICIT_SUPER = (1u << 20),   /**< class has implicit parent class */
-  PARSER_CLASS_STATIC_FUNCTION = (1u << 21),  /**< this function is a static class method */
-  PARSER_CLASS_SUPER_PROP_REFERENCE = (1u << 22),  /**< super property call or assignment */
-  PARSER_IS_EVAL = (1u << 23),                /**< eval code */
+  PARSER_CLASS_HAS_SUPER = (1u << 20),        /**< class has super reference */
+  PARSER_CLASS_IMPLICIT_SUPER = (1u << 21),   /**< class has implicit parent class */
+  PARSER_CLASS_STATIC_FUNCTION = (1u << 22),  /**< this function is a static class method */
+  PARSER_CLASS_SUPER_PROP_REFERENCE = (1u << 23),  /**< super property call or assignment */
+  PARSER_IS_EVAL = (1u << 24),                /**< eval code */
 #endif /* ENABLED (JERRY_ES2015) */
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
-  PARSER_IS_MODULE = (1u << 24),              /**< an export / import keyword is encountered */
-  PARSER_MODULE_DEFAULT_CLASS_OR_FUNC = (1u << 25),  /**< parsing a function or class default export */
-  PARSER_MODULE_STORE_IDENT = (1u << 26),     /**< store identifier of the current export statement */
+  PARSER_IS_MODULE = (1u << 25),              /**< an export / import keyword is encountered */
+  PARSER_MODULE_DEFAULT_CLASS_OR_FUNC = (1u << 26),  /**< parsing a function or class default export */
+  PARSER_MODULE_STORE_IDENT = (1u << 27),     /**< store identifier of the current export statement */
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
   PARSER_HAS_LATE_LIT_INIT = (1u << 30),      /**< there are identifier or string literals which construction
                                                *   is postponed after the local parser data is freed */
@@ -635,10 +636,12 @@ void lexer_skip_empty_statements (parser_context_t *context_p);
 bool lexer_check_arrow (parser_context_t *context_p);
 bool lexer_check_arrow_param (parser_context_t *context_p);
 bool lexer_check_yield_no_arg (parser_context_t *context_p);
+bool lexer_consume_generator (parser_context_t *context_p);
 #endif /* ENABLED (JERRY_ES2015) */
 void lexer_parse_string (parser_context_t *context_p, lexer_string_options_t opts);
 void lexer_expect_identifier (parser_context_t *context_p, uint8_t literal_type);
-void lexer_scan_identifier (parser_context_t *context_p, uint32_t ident_opts);
+bool lexer_scan_identifier (parser_context_t *context_p);
+void lexer_check_property_modifier (parser_context_t *context_p);
 void lexer_convert_ident_to_cesu8 (uint8_t *destination_p, const uint8_t *source_p, prop_length_t length);
 
 const uint8_t *lexer_convert_literal_to_chars (parser_context_t *context_p,  const lexer_lit_location_t *literal_p,
@@ -660,6 +663,7 @@ bool lexer_string_is_directive (parser_context_t *context_p);
 bool lexer_token_is_identifier (parser_context_t *context_p, const char *identifier_p,
                                 size_t identifier_length);
 bool lexer_token_is_let (parser_context_t *context_p);
+bool lexer_token_is_async (parser_context_t *context_p);
 #endif /* ENABLED (JERRY_ES2015) */
 bool lexer_compare_literal_to_string (parser_context_t *context_p, const char *string_p, size_t string_length);
 uint8_t lexer_convert_binary_lvalue_token_to_binary (uint8_t token);

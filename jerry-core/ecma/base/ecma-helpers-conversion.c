@@ -703,9 +703,7 @@ ecma_uint32_to_utf8_string (uint32_t value, /**< value to convert */
 uint32_t
 ecma_number_to_uint32 (ecma_number_t num) /**< ecma-number */
 {
-  if (ecma_number_is_nan (num)
-      || ecma_number_is_zero (num)
-      || ecma_number_is_infinity (num))
+  if (JERRY_UNLIKELY (ecma_number_is_zero (num) || !ecma_number_is_finite (num)))
   {
     return 0;
   }

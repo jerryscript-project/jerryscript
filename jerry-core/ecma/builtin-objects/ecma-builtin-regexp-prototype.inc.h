@@ -57,6 +57,7 @@ ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_STICKY,
 
 ROUTINE (LIT_GLOBAL_SYMBOL_REPLACE, ecma_builtin_regexp_prototype_symbol_replace, 2, 2)
 ROUTINE (LIT_GLOBAL_SYMBOL_SEARCH, ecma_builtin_regexp_prototype_symbol_search, 1, 1)
+ROUTINE (LIT_GLOBAL_SYMBOL_SPLIT, ecma_builtin_regexp_prototype_symbol_split, 2, 2)
 ROUTINE (LIT_GLOBAL_SYMBOL_MATCH, ecma_builtin_regexp_prototype_symbol_match, 1, 1)
 #else /* !ENABLED (JERRY_ES2015) */
 /* ECMA-262 v5, 15.10.7.1 */

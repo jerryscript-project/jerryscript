@@ -51,9 +51,6 @@ assert (res[0] === "foo//b");
 res = str.split("a", NaN);
 assert (res.length === 0);
 
-res = str.split("a", Infinity);
-assert (res.length === 0);
-
 res = str.split(["o"])
 assert (res.length === 5);
 assert (res[0] === "f");
@@ -95,12 +92,6 @@ assert (res[2] === "foo");
 res = str.split(/\/\//, 1);
 assert (res.length === 1);
 assert (res[0] === "foo");
-
-res = str.split(/\/\//, -1);
-assert (res.length === 3);
-assert (res[0] === "foo");
-assert (res[1] === "bar/baz");
-assert (res[2] === "foo");
 
 str = "fo123o12bar";
 res = str.split(12, undefined);

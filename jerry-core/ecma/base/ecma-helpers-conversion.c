@@ -281,12 +281,86 @@ static const uint8_t ecma_uint4_clz[] = { 4, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0,
 #define EPSILON 0.0000001
 
 /**
+ * ECMA-defined conversion from string to number for different radixes (2, 8, 16).
+ *
+ * See also:
+ *          ECMA-262 v5 9.3.1
+ *          ECMA-262 v6 7.1.3.1
+ *
+ * @return NaN - if the conversion fails
+ *         converted number - otherwise
+ */
+static ecma_number_t
+ecma_utf8_string_to_number_by_radix (const lit_utf8_byte_t *str_p, /**< utf-8 string */
+                                     const lit_utf8_byte_t *end_p, /**< end of utf-8 string  */
+                                     uint32_t radix) /**< radix */
+{
+  JERRY_ASSERT (radix == 2 || radix == 8 || radix == 16);
+  ecma_number_t num = ECMA_NUMBER_ZERO;
+
+#if ENABLED (JERRY_ES2015)
+  if (radix <= 8)
+  {
+    lit_code_point_t upper_limit = LIT_CHAR_0 + radix;
+
+    for (const lit_utf8_byte_t * iter_p = str_p;  iter_p <= end_p; iter_p++)
+    {
+      int32_t digit_value;
+
+      if (*iter_p >= LIT_CHAR_0 && *iter_p < upper_limit)
+      {
+        digit_value = (*iter_p - LIT_CHAR_0);
+      }
+      else
+      {
+        return ecma_number_make_nan ();
+      }
+
+      num = num * radix + (ecma_number_t) digit_value;
+    }
+
+    return num;
+  }
+#endif /* ENABLED (JERRY_ES2015) */
+
+  for (const lit_utf8_byte_t * iter_p = str_p; iter_p <= end_p; iter_p++)
+  {
+    int32_t digit_value;
+
+    if (*iter_p >= LIT_CHAR_0
+        && *iter_p <= LIT_CHAR_9)
+    {
+      digit_value = (*iter_p - LIT_CHAR_0);
+    }
+    else if (*iter_p >= LIT_CHAR_LOWERCASE_A
+            && *iter_p <= LIT_CHAR_LOWERCASE_F)
+    {
+      digit_value = 10 + (*iter_p - LIT_CHAR_LOWERCASE_A);
+    }
+    else if (*iter_p >= LIT_CHAR_UPPERCASE_A
+            && *iter_p <= LIT_CHAR_UPPERCASE_F)
+    {
+      digit_value = 10 + (*iter_p - LIT_CHAR_UPPERCASE_A);
+    }
+    else
+    {
+      return ecma_number_make_nan ();
+    }
+
+    num = num * radix + (ecma_number_t) digit_value;
+  }
+
+  return num;
+} /* ecma_utf8_string_to_number_by_radix */
+
+/**
  * ECMA-defined conversion of string to Number.
  *
  * See also:
  *          ECMA-262 v5, 9.3.1
  *
- * @return ecma-number
+ * @return NaN - if the conversion fails
+ *         converted number - otherwise
  */
 ecma_number_t
 ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
@@ -307,46 +381,28 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
     return ECMA_NUMBER_ZERO;
   }
 
-  if ((end_p >= str_p + 2)
-      && str_p[0] == LIT_CHAR_0
-      && (str_p[1] == LIT_CHAR_LOWERCASE_X
-          || str_p[1] == LIT_CHAR_UPPERCASE_X))
+  if (end_p >= str_p + 2
+      && str_p[0] == LIT_CHAR_0)
   {
-    /* Hex literal handling */
-    str_p += 2;
-
-    ecma_number_t num = ECMA_NUMBER_ZERO;
-
-    for (const lit_utf8_byte_t * iter_p = str_p;
-         iter_p <= end_p;
-         iter_p++)
+    switch (LEXER_TO_ASCII_LOWERCASE (str_p[1]))
     {
-      int32_t digit_value;
-
-      if (*iter_p >= LIT_CHAR_0
-          && *iter_p <= LIT_CHAR_9)
+      case LIT_CHAR_LOWERCASE_X :
       {
-        digit_value = (*iter_p - LIT_CHAR_0);
+        return ecma_utf8_string_to_number_by_radix (str_p + 2, end_p, 16);
       }
-      else if (*iter_p >= LIT_CHAR_LOWERCASE_A
-               && *iter_p <= LIT_CHAR_LOWERCASE_F)
+      case LIT_CHAR_LOWERCASE_O :
       {
-        digit_value = 10 + (*iter_p - LIT_CHAR_LOWERCASE_A);
+        return ecma_utf8_string_to_number_by_radix (str_p + 2, end_p, 8);
       }
-      else if (*iter_p >= LIT_CHAR_UPPERCASE_A
-               && *iter_p <= LIT_CHAR_UPPERCASE_F)
+      case LIT_CHAR_LOWERCASE_B :
       {
-        digit_value = 10 + (*iter_p - LIT_CHAR_UPPERCASE_A);
+        return ecma_utf8_string_to_number_by_radix (str_p + 2, end_p, 2);
       }
-      else
+      default:
       {
-        return ecma_number_make_nan ();
+        break;
       }
-
-      num = num * 16 + (ecma_number_t) digit_value;
     }
-
-    return num;
   }
 
   bool sign = false; /* positive */

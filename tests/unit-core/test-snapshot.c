@@ -400,7 +400,7 @@ main (void)
 
     static jerry_char_t literal_buffer_c[LITERAL_BUFFER_SIZE];
     static uint32_t literal_snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
-    static const jerry_char_t code_for_c_format[] = "var object = { aa:'fo o', Bb:'max', aaa:'xzy0' };";
+    static const jerry_char_t code_for_c_format[] = "var object = { aa:'fo\" o\\n \\\\', Bb:'max', aaa:'xzy0' };";
 
     jerry_value_t generate_result;
     generate_result = jerry_generate_snapshot (NULL,
@@ -411,35 +411,37 @@ main (void)
                                                literal_snapshot_buffer,
                                                SNAPSHOT_BUFFER_SIZE);
 
-    TEST_ASSERT (!jerry_value_is_error (generate_result)
-                 && jerry_value_is_number (generate_result));
+    TEST_ASSERT (!jerry_value_is_error (generate_result));
+    TEST_ASSERT (jerry_value_is_number (generate_result));
 
     size_t snapshot_size = (size_t) jerry_get_number_value (generate_result);
     jerry_release_value (generate_result);
-    TEST_ASSERT (snapshot_size == 120);
+    TEST_ASSERT (snapshot_size == 124);
 
     const size_t lit_c_buf_sz = jerry_get_literals_from_snapshot (literal_snapshot_buffer,
                                                                   snapshot_size,
                                                                   literal_buffer_c,
                                                                   LITERAL_BUFFER_SIZE,
                                                                   true);
-    TEST_ASSERT (lit_c_buf_sz == 200);
+    TEST_ASSERT (lit_c_buf_sz == 239);
 
     static const char *expected_c_format = (
-                                            "jerry_length_t literal_count = 4;\n\n"
-                                            "jerry_char_t *literals[4] =\n"
+                                            "jerry_length_t literal_count = 5;\n\n"
+                                            "jerry_char_t *literals[5] =\n"
                                             "{\n"
                                             "  \"Bb\",\n"
                                             "  \"aa\",\n"
                                             "  \"aaa\",\n"
-                                            "  \"xzy0\"\n"
+                                            "  \"xzy0\",\n"
+                                            "  \"fo\\\" o\\x0A \\\\\"\n"
                                             "};\n\n"
-                                            "jerry_length_t literal_sizes[4] =\n"
+                                            "jerry_length_t literal_sizes[5] =\n"
                                             "{\n"
                                             "  2 /* Bb */,\n"
                                             "  2 /* aa */,\n"
                                             "  3 /* aaa */,\n"
-                                            "  4 /* xzy0 */\n"
+                                            "  4 /* xzy0 */,\n"
+                                            "  8 /* fo\" o\n \\ */\n"
                                             "};\n"
                                             );
 
@@ -452,9 +454,10 @@ main (void)
                                                                      literal_buffer_list,
                                                                      LITERAL_BUFFER_SIZE,
                                                                      false);
-
-    TEST_ASSERT (lit_list_buf_sz == 30);
-    TEST_ASSERT (!strncmp ((char *) literal_buffer_list, "2 Bb\n2 aa\n3 aaa\n4 fo o\n4 xzy0\n", lit_list_buf_sz));
+    TEST_ASSERT (lit_list_buf_sz == 34);
+    TEST_ASSERT (!strncmp ((char *) literal_buffer_list,
+                           "2 Bb\n2 aa\n3 aaa\n4 xzy0\n8 fo\" o\n \\\n",
+                           lit_list_buf_sz));
 
     jerry_cleanup ();
   }

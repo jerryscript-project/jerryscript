@@ -70,6 +70,17 @@ with (obj2) {
   }
 }
 
+var obj3 = { foo: 12 };
+Object.defineProperty(obj3, Symbol.unscopables, { get: function () { throw 42; } });
+
+with (obj3) {
+  try {
+    typeof foo;
+  } catch (e) {
+    assert(e === 42);
+  }
+}
+
 var symbol_obj = Array.prototype[Symbol.unscopables];
 assert(symbol_obj.copyWithin === true);
 assert(symbol_obj.entries === true);
@@ -86,3 +97,10 @@ assert(obj3.value === true);
 assert(obj3.writable === true);
 assert(obj3.enumerable == true);
 assert(obj3.configurable == true);
+
+var a = { foo: 1, bar: 2 };
+a[Symbol.unscopables] = { bar: true };
+with (a) {
+  assert(foo === 1);
+  assert(typeof bar === "undefined");
+}

@@ -1137,11 +1137,43 @@ ecma_op_object_put_by_number_index (ecma_object_t *object_p, /**< the object */
  *         Note: even if is_throw is false, the setter can throw an
  *         error, and this function returns with that error.
  */
-ecma_value_t
+inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_op_object_put (ecma_object_t *object_p, /**< the object */
                     ecma_string_t *property_name_p, /**< property name */
                     ecma_value_t value, /**< ecma value */
                     bool is_throw) /**< flag that controls failure handling */
+{
+  return ecma_op_object_put_with_receiver (object_p,
+                                           property_name_p,
+                                           value,
+                                           ecma_make_object_value (object_p),
+                                           is_throw);
+} /* ecma_op_object_put */
+
+/**
+ * [[Put]] ecma general object's operation with given receiver
+ *
+ * See also:
+ *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
+ *          ECMA-262 v5, 8.12.5
+ *          Also incorporates [[CanPut]] ECMA-262 v5, 8.12.4
+ *
+ * @return ecma value
+ *         The returned value must be freed with ecma_free_value.
+ *
+ *         Returns with ECMA_VALUE_TRUE if the operation is
+ *         successful. Otherwise it returns with an error object
+ *         or ECMA_VALUE_FALSE.
+ *
+ *         Note: even if is_throw is false, the setter can throw an
+ *         error, and this function returns with that error.
+ */
+ecma_value_t
+ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
+                                  ecma_string_t *property_name_p, /**< property name */
+                                  ecma_value_t value, /**< ecma value */
+                                  ecma_value_t receiver, /**< receiver */
+                                  bool is_throw) /**< flag that controls failure handling */
 {
   JERRY_ASSERT (object_p != NULL
                 && !ecma_is_lexical_environment (object_p));
@@ -1431,7 +1463,7 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
   }
 
   ecma_value_t ret_value = ecma_op_function_call (ECMA_GET_NON_NULL_POINTER (ecma_object_t, setter_cp),
-                                                  ecma_make_object_value (object_p),
+                                                  receiver,
                                                   &value,
                                                   1);
 
@@ -1442,7 +1474,7 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
   }
 
   return ret_value;
-} /* ecma_op_object_put */
+} /* ecma_op_object_put_with_receiver */
 
 /**
  * [[Delete]] ecma object's operation specialized for uint32_t property index

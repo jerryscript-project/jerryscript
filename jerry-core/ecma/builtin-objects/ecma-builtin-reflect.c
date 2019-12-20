@@ -13,8 +13,11 @@
  * limitations under the License.
  */
 
+#include "ecma-array-object.h"
 #include "ecma-builtins.h"
 #include "ecma-builtin-function-prototype.h"
+#include "ecma-iterator-object.h"
+#include "ecma-builtin-helpers.h"
 #include "ecma-builtin-object.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
@@ -37,13 +40,19 @@
 enum
 {
   ECMA_REFLECT_OBJECT_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
-  ECMA_REFLECT_OBJECT_GET_PROTOTYPE_OF_UL, /* ECMA-262 v6, 26.1.8 */
-  ECMA_REFLECT_OBJECT_SET_PROTOTYPE_OF_UL, /* ECMA-262 v6, 26.1.14 */
+  ECMA_REFLECT_OBJECT_GET, /* ECMA-262 v6, 26.1.6 */
+  ECMA_REFLECT_OBJECT_SET, /* ECMA-262 v6, 26.1.13 */
+  ECMA_REFLECT_OBJECT_HAS, /* ECMA-262 v6, 26.1.9 */
+  ECMA_REFLECT_OBJECT_DELETE_PROPERTY, /* ECMA-262 v6, 26.1.4 */
+  ECMA_REFLECT_OBJECT_CONSTRUCT, /* ECMA-262, 26.1.2 */
+  ECMA_REFLECT_OBJECT_OWN_KEYS, /* ECMA-262 v6, 26.1.11 */
+  ECMA_REFLECT_OBJECT_GET_PROTOTYPE_OF, /* ECMA-262 v6, 26.1.8 */
+  ECMA_REFLECT_OBJECT_SET_PROTOTYPE_OF, /* ECMA-262 v6, 26.1.14 */
   ECMA_REFLECT_OBJECT_APPLY, /* ECMA-262 v6, 26.1.1 */
   ECMA_REFLECT_OBJECT_DEFINE_PROPERTY, /* ECMA-262 v6, 26.1.3 */
-  ECMA_REFLECT_OBJECT_GET_OWN_PROPERTY_DESCRIPTOR_UL, /* ECMA-262 v5, 26.1.7 */
+  ECMA_REFLECT_OBJECT_GET_OWN_PROPERTY_DESCRIPTOR, /* ECMA-262 v6, 26.1.7 */
   ECMA_REFLECT_OBJECT_IS_EXTENSIBLE, /* ECMA-262 v6, 26.1.10 */
-  ECMA_REFLECT_OBJECT_PREVENT_EXTENSIONS_UL, /* ECMA-262 v6, 26.1.12 */
+  ECMA_REFLECT_OBJECT_PREVENT_EXTENSIONS, /* ECMA-262 v6, 26.1.12 */
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-reflect.inc.h"
@@ -77,6 +86,136 @@ ecma_builtin_reflect_dispatch_routine (uint16_t builtin_routine_id, /**< built-i
   JERRY_UNUSED (this_arg);
   JERRY_UNUSED (arguments_number);
 
+  if (builtin_routine_id < ECMA_REFLECT_OBJECT_CONSTRUCT)
+  {
+    /* 1. */
+    if (arguments_number == 0 || !ecma_is_value_object (arguments_list[0]))
+    {
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an Object."));
+    }
+
+    /* 2. */
+    ecma_string_t *name_str_p = ecma_op_to_prop_name (((arguments_number > 1) ? arguments_list[1]
+                                                                              : ECMA_VALUE_UNDEFINED));
+
+    /* 3. */
+    if (name_str_p == NULL)
+    {
+      return ECMA_VALUE_ERROR;
+    }
+
+    ecma_value_t ret_value;
+    ecma_object_t *target_p = ecma_get_object_from_value (arguments_list[0]);
+    switch (builtin_routine_id)
+    {
+      case ECMA_REFLECT_OBJECT_GET:
+      {
+        ecma_value_t receiver = arguments_list[0];
+
+        /* 4. */
+        if (arguments_number > 2)
+        {
+          receiver = arguments_list[2];
+        }
+
+        ret_value = ecma_op_object_get_with_receiver (target_p, name_str_p, receiver);
+        break;
+      }
+
+      case ECMA_REFLECT_OBJECT_HAS:
+      {
+        ret_value = ecma_make_boolean_value (ecma_op_object_has_property (target_p, name_str_p));
+        break;
+      }
+
+      case ECMA_REFLECT_OBJECT_DELETE_PROPERTY:
+      {
+        ret_value = ecma_op_object_delete (target_p, name_str_p, false);
+        break;
+      }
+
+      default:
+      {
+        JERRY_ASSERT (builtin_routine_id == ECMA_REFLECT_OBJECT_SET);
+
+        ecma_value_t receiver = arguments_list[0];
+
+        if (arguments_number > 3)
+        {
+          receiver = arguments_list[3];
+        }
+
+        ret_value = ecma_op_object_put_with_receiver (target_p, name_str_p, arguments_list[2], receiver, false);
+        break;
+      }
+    }
+
+    ecma_deref_ecma_string (name_str_p);
+    return ret_value;
+  }
+
+  if (builtin_routine_id == ECMA_REFLECT_OBJECT_OWN_KEYS)
+  {
+    /* 1. */
+    if (arguments_number == 0 || !ecma_is_value_object (arguments_list[0]))
+    {
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an Object."));
+    }
+
+    ecma_object_t *target_p = ecma_get_object_from_value (arguments_list[0]);
+
+    /* 2. 3. */
+    return ecma_builtin_helper_object_get_properties (target_p, ECMA_LIST_SYMBOLS);
+  }
+
+  if (builtin_routine_id == ECMA_REFLECT_OBJECT_CONSTRUCT)
+  {
+    /* 1. */
+    if (arguments_number < 1 || !ecma_is_constructor (arguments_list[0]))
+    {
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Target is not a constructor"));
+    }
+
+    ecma_object_t *target_p = ecma_get_object_from_value (arguments_list[0]);
+
+    /* 2. new_target_p is not supported for now*/
+    ecma_object_t *new_target_p = target_p;
+
+    if (arguments_number > 2)
+    {
+      /* 3. */
+      if (!ecma_is_constructor (arguments_list[2]))
+      {
+        return ecma_raise_type_error (ECMA_ERR_MSG ("Target is not a constructor"));
+      }
+
+      new_target_p = ecma_get_object_from_value (arguments_list[2]);
+    }
+
+    /* 4. */
+    if (arguments_number < 2)
+    {
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Reflect.construct requires the second argument be an object"));
+    }
+
+    ecma_collection_t *coll_p = ecma_op_create_list_from_array_like (arguments_list[1]);
+
+    if (coll_p == NULL)
+    {
+      return ECMA_VALUE_ERROR;
+    }
+
+    // TODO: add new_target_p to construct when it'll be supported
+    JERRY_UNUSED (new_target_p);
+    ecma_value_t ret_value = ecma_op_function_construct (target_p,
+                                                         ECMA_VALUE_UNDEFINED,
+                                                         coll_p->buffer_p,
+                                                         coll_p->item_count);
+
+    ecma_collection_free (coll_p);
+    return ret_value;
+  }
+
   if (!ecma_is_value_object (arguments_list[0]))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an Object."));
@@ -84,11 +223,11 @@ ecma_builtin_reflect_dispatch_routine (uint16_t builtin_routine_id, /**< built-i
 
   switch (builtin_routine_id)
   {
-    case ECMA_REFLECT_OBJECT_GET_PROTOTYPE_OF_UL:
+    case ECMA_REFLECT_OBJECT_GET_PROTOTYPE_OF:
     {
       return ecma_builtin_object_object_get_prototype_of (ecma_get_object_from_value (arguments_list[0]));
     }
-    case ECMA_REFLECT_OBJECT_SET_PROTOTYPE_OF_UL:
+    case ECMA_REFLECT_OBJECT_SET_PROTOTYPE_OF:
     {
       ecma_value_t result = ecma_builtin_object_object_set_prototype_of (arguments_list[0], arguments_list[1]);
       bool is_error = ECMA_IS_VALUE_ERROR (result);
@@ -139,7 +278,7 @@ ecma_builtin_reflect_dispatch_routine (uint16_t builtin_routine_id, /**< built-i
 
       return ecma_make_boolean_value (!is_error);
     }
-    case ECMA_REFLECT_OBJECT_GET_OWN_PROPERTY_DESCRIPTOR_UL:
+    case ECMA_REFLECT_OBJECT_GET_OWN_PROPERTY_DESCRIPTOR:
     {
       ecma_object_t *obj_p = ecma_get_object_from_value (arguments_list[0]);
       ecma_string_t *name_str_p = ecma_op_to_prop_name (arguments_list[1]);
@@ -160,7 +299,7 @@ ecma_builtin_reflect_dispatch_routine (uint16_t builtin_routine_id, /**< built-i
     }
     default:
     {
-      JERRY_ASSERT (builtin_routine_id == ECMA_REFLECT_OBJECT_PREVENT_EXTENSIONS_UL);
+      JERRY_ASSERT (builtin_routine_id == ECMA_REFLECT_OBJECT_PREVENT_EXTENSIONS);
       ecma_object_t *obj_p = ecma_get_object_from_value (arguments_list[0]);
       return ecma_builtin_object_object_prevent_extensions (obj_p);
     }

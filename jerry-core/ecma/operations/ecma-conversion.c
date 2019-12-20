@@ -860,7 +860,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
  *         conversion error otherwise
  */
 ecma_value_t
-ecma_op_to_integer (ecma_value_t value, /**< ecma value*/
+ecma_op_to_integer (ecma_value_t value, /**< ecma value */
                     ecma_number_t *number_p) /**< [out] ecma number */
 {
   if (ECMA_IS_VALUE_ERROR (value))
@@ -909,7 +909,7 @@ ecma_op_to_integer (ecma_value_t value, /**< ecma value*/
  *         conversion error otherwise
  */
 ecma_value_t
-ecma_op_to_length (ecma_value_t value, /**< ecma value*/
+ecma_op_to_length (ecma_value_t value, /**< ecma value */
                    uint32_t *length) /**< [out] ecma number */
 {
   /* 1 */
@@ -961,6 +961,59 @@ ecma_op_to_length (ecma_value_t value, /**< ecma value*/
   return ECMA_VALUE_EMPTY;
 #endif /* ENABLED (JERRY_ES2015) */
 } /* ecma_op_to_length */
+
+#if ENABLED (JERRY_ES2015)
+/**
+ * CreateListFromArrayLike operation.
+ * Different types are not handled yet.
+ *
+ * See also:
+ *          ECMA-262 v6, 7.3.17
+ *
+ * @return ecma_collection_t if successful
+ *         NULL otherwise
+ */
+ecma_collection_t *
+ecma_op_create_list_from_array_like (ecma_value_t arr) /**< array value */
+{
+  /* 1. */
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (arr));
+
+  /* 3. */
+  if (!ecma_is_value_object (arr))
+  {
+    ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an Object."));
+    return NULL;
+  }
+  ecma_object_t *obj_p = ecma_get_object_from_value (arr);
+
+  /* 4. 5. */
+  ecma_length_t len;
+  if (ECMA_IS_VALUE_ERROR (ecma_op_object_get_length (obj_p, &len)))
+  {
+    return NULL;
+  }
+
+  /* 6. */
+  ecma_collection_t *list_ptr = ecma_new_collection ();
+
+  /* 7. 8. */
+  for (uint32_t idx = 0; idx < len; idx++)
+  {
+    ecma_value_t next = ecma_op_object_get_by_uint32_index (obj_p, idx);
+    if (ECMA_IS_VALUE_ERROR (next))
+    {
+      ecma_collection_free (list_ptr);
+      return NULL;
+    }
+
+    ecma_collection_push_back (list_ptr, next);
+  }
+
+  /* 9. */
+  return list_ptr;
+} /* ecma_op_create_list_from_array_like */
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * @}

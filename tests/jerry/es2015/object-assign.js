@@ -156,3 +156,12 @@ try {
 } catch (e) {
   assert (e instanceof TypeError)
 }
+
+var asd = Symbol ("asd");
+var foo = Symbol ("foo");
+var bar = Symbol ("bar");
+var obj = {1: 5, "a": 6, [foo]: 7, [asd]: 8, [bar]: 9};
+var result = Object.assign ({}, obj);
+assert (result[foo] == 7);
+assert (result[asd] == 8);
+assert (result[bar] == 9);

@@ -334,9 +334,10 @@ typedef enum
   ECMA_LIST_ENUMERABLE = (1 << 1), /**< exclude non-enumerable properties */
   ECMA_LIST_PROTOTYPE = (1 << 2), /**< list properties from prototype chain */
 #if ENABLED (JERRY_ES2015)
-  ECMA_LIST_SYMBOLS = (1 << 3), /**< list symbol properties only */
+  ECMA_LIST_SYMBOLS = (1 << 3), /**< list symbol properties */
+  ECMA_LIST_SYMBOLS_ONLY = (1 << 4), /**< list symbol properties only */
 #endif /* ENABLED (JERRY_ES2015) */
-  ECMA_LIST_CONVERT_FAST_ARRAYS = (1 << 4), /**< after listing the properties convert
+  ECMA_LIST_CONVERT_FAST_ARRAYS = (1 << 5), /**< after listing the properties convert
                                              *   the fast access mode array back to normal array */
 } ecma_list_properties_options_t;
 

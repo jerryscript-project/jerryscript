@@ -1857,7 +1857,8 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
   const bool is_array_indices_only = (opts & ECMA_LIST_ARRAY_INDICES) != 0;
   const bool is_with_prototype_chain = (opts & ECMA_LIST_PROTOTYPE) != 0;
 #if ENABLED (JERRY_ES2015)
-  const bool is_symbols_only = (opts & ECMA_LIST_SYMBOLS) != 0;
+  const bool is_symbols = (opts & ECMA_LIST_SYMBOLS) != 0;
+  const bool is_symbols_only = (opts & ECMA_LIST_SYMBOLS_ONLY) != 0;
 #endif /* ENABLED (JERRY_ES2015) */
 
   const size_t bitmap_row_size = sizeof (uint32_t) * JERRY_BITSINBYTE;
@@ -1872,7 +1873,9 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
   {
     ecma_length_t string_named_properties_count = 0;
     ecma_length_t array_index_named_properties_count = 0;
-
+#if ENABLED (JERRY_ES2015)
+    ecma_length_t symbol_named_properties_count = 0;
+#endif /* ENABLED (JERRY_ES2015) */
     ecma_collection_t *prop_names_p = ecma_new_collection ();
 
 #if ENABLED (JERRY_ES2015)
@@ -1883,7 +1886,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
       if (obj_is_builtin)
       {
         ecma_builtin_list_lazy_property_names (obj_p,
-                                               is_enumerable_only,
+                                               opts,
                                                prop_names_p,
                                                skipped_non_enumerable_p);
       }
@@ -1907,21 +1910,21 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
   #endif /* ENABLED (JERRY_ES2015) */
           {
             ecma_op_function_list_lazy_property_names (obj_p,
-                                                       is_enumerable_only,
+                                                       opts,
                                                        prop_names_p,
                                                        skipped_non_enumerable_p);
             break;
           }
           case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
           {
-            ecma_op_external_function_list_lazy_property_names (is_enumerable_only,
+            ecma_op_external_function_list_lazy_property_names (opts,
                                                                 prop_names_p,
                                                                 skipped_non_enumerable_p);
             break;
           }
           case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
           {
-            ecma_op_bound_function_list_lazy_property_names (is_enumerable_only,
+            ecma_op_bound_function_list_lazy_property_names (opts,
                                                              prop_names_p,
                                                              skipped_non_enumerable_p);
             break;
@@ -1933,7 +1936,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
             if (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_STRING_UL)
             {
               ecma_op_string_list_lazy_property_names (obj_p,
-                                                       is_enumerable_only,
+                                                       opts,
                                                        prop_names_p,
                                                        skipped_non_enumerable_p);
             }
@@ -1943,7 +1946,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
           case ECMA_OBJECT_TYPE_ARRAY:
           {
             ecma_op_array_list_lazy_property_names (obj_p,
-                                                    is_enumerable_only,
+                                                    opts,
                                                     prop_names_p,
                                                     skipped_non_enumerable_p);
             break;
@@ -1970,6 +1973,21 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
     {
       ecma_string_t *name_p = ecma_get_string_from_value (buffer_p[i]);
 
+      if (ecma_string_get_array_index (name_p) != ECMA_STRING_NOT_ARRAY_INDEX)
+      {
+        array_index_named_properties_count++;
+      }
+#if ENABLED (JERRY_ES2015)
+      else if (ecma_prop_name_is_symbol (name_p))
+      {
+        symbol_named_properties_count++;
+      }
+#endif /* ENABLED (JERRY_ES2015) */
+      else
+      {
+        string_named_properties_count++;
+      }
+
 #if ENABLED (JERRY_ES2015)
       /* Symbols are never lazy listed */
       JERRY_ASSERT (!ecma_prop_name_is_symbol (name_p));
@@ -1992,6 +2010,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
       ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) prototype_chain_iter_p;
 
       uint32_t length = ext_obj_p->u.array.length;
+      array_index_named_properties_count = length;
 
       ecma_value_t *values_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, prop_iter_cp);
 
@@ -2076,12 +2095,13 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
             if (!(is_enumerable_only && !ecma_is_property_enumerable (*property_p)))
             {
   #if ENABLED (JERRY_ES2015)
-              /* If is_symbols_only is false and prop_name is symbol
-                 we should skip the current property e.g. for-in.
-
-                 Also if is_symbols_only is true and prop_name is not symbol
-                 we should skip the current property e.g. Object.getOwnPropertySymbols. */
-              if (JERRY_UNLIKELY (is_symbols_only != ecma_prop_name_is_symbol (name_p)))
+              /* We skip the current property in the following cases:
+                 1. We don't want to list symbols (is_symbols and is_symbols_only are false)
+                    and the current property is a symbol.
+                 2. We only want to list symbols (is_symbols_only is true) and the current
+                    property is NOT a symbol. */
+              bool is_symbol = ecma_prop_name_is_symbol (name_p);
+              if ((!(is_symbols || is_symbols_only) && is_symbol) || (is_symbols_only && !is_symbol))
               {
                 ecma_deref_ecma_string (name_p);
                 continue;
@@ -2112,6 +2132,31 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
               if (is_add)
               {
+                if (ecma_string_get_array_index (name_p) != ECMA_STRING_NOT_ARRAY_INDEX)
+                {
+                  /* The name is a valid array index. */
+                  array_index_named_properties_count++;
+                }
+                else if (!is_array_indices_only)
+                {
+  #if ENABLED (JERRY_ES2015)
+                  if (ecma_prop_name_is_symbol (name_p))
+                  {
+                    symbol_named_properties_count++;
+                  }
+                  else
+                  {
+  #endif /* ENABLED (JERRY_ES2015) */
+                    string_named_properties_count++;
+  #if ENABLED (JERRY_ES2015)
+                  }
+  #endif /* ENABLED (JERRY_ES2015) */
+                }
+                else
+                {
+                  continue;
+                }
+
                 own_names_hashes_bitmap[bitmap_row] |= (1u << bitmap_column);
 
                 ecma_collection_push_back (prop_names_p, ecma_make_prop_name_value (name_p));
@@ -2134,39 +2179,32 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
       }
     }
 
-    buffer_p = prop_names_p->buffer_p;
+    ecma_length_t all_properties_count = array_index_named_properties_count + string_named_properties_count;
 
-    for (uint32_t i = 0; i < prop_names_p->item_count; i++)
-    {
-      ecma_string_t *name_p = ecma_get_prop_name_from_value (buffer_p[i]);
+#if ENABLED (JERRY_ES2015)
+    all_properties_count += symbol_named_properties_count;
+#endif /* ENABLED (JERRY_ES2015) */
 
-      uint32_t index = ecma_string_get_array_index (name_p);
+    /* Second pass: collecting property names into an array. */
+    JMEM_DEFINE_LOCAL_ARRAY (names_p, all_properties_count, ecma_string_t *);
 
-      if (index != ECMA_STRING_NOT_ARRAY_INDEX)
-      {
-        /* The name is a valid array index. */
-        array_index_named_properties_count++;
-      }
-      else if (!is_array_indices_only)
-      {
-        string_named_properties_count++;
-      }
-    }
+    ecma_string_t **string_names_p = names_p + array_index_named_properties_count;
+#if ENABLED (JERRY_ES2015)
+    ecma_string_t **symbol_names_p = string_names_p + string_named_properties_count;
+#endif /* ENABLED (JERRY_ES2015) */
 
-    /* Second pass: collecting property names into arrays. */
-    JMEM_DEFINE_LOCAL_ARRAY (names_p,
-                             array_index_named_properties_count + string_named_properties_count,
-                             ecma_string_t *);
-    JMEM_DEFINE_LOCAL_ARRAY (array_index_names_p, array_index_named_properties_count, uint32_t);
-
-    uint32_t name_pos = array_index_named_properties_count + string_named_properties_count;
     uint32_t array_index_name_pos = 0;
+    uint32_t string_name_pos = string_named_properties_count;
+#if ENABLED (JERRY_ES2015)
+    uint32_t symbol_name_pos = symbol_named_properties_count;
+#endif /* ENABLED (JERRY_ES2015) */
 
     buffer_p = prop_names_p->buffer_p;
 
     for (uint32_t i = 0; i < prop_names_p->item_count; i++)
     {
       ecma_string_t *name_p = ecma_get_prop_name_from_value (buffer_p[i]);
+      ecma_ref_ecma_string (name_p);
 
       uint32_t index = ecma_string_get_array_index (name_p);
 
@@ -2176,64 +2214,63 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
         uint32_t insertion_pos = 0;
         while (insertion_pos < array_index_name_pos
-               && index < array_index_names_p[insertion_pos])
+               && index > ecma_string_get_array_index (names_p[insertion_pos]))
         {
           insertion_pos++;
         }
 
         if (insertion_pos == array_index_name_pos)
         {
-          array_index_names_p[array_index_name_pos++] = index;
+          names_p[array_index_name_pos++] = name_p;
         }
         else
         {
           JERRY_ASSERT (insertion_pos < array_index_name_pos);
-          JERRY_ASSERT (index >= array_index_names_p[insertion_pos]);
+          JERRY_ASSERT (index <= ecma_string_get_array_index (names_p[insertion_pos]));
 
           uint32_t move_pos = array_index_name_pos++;
 
           while (move_pos > insertion_pos)
           {
-            array_index_names_p[move_pos] = array_index_names_p[move_pos - 1u];
+            names_p[move_pos] = names_p[move_pos - 1u];
 
             move_pos--;
           }
 
-          array_index_names_p[insertion_pos] = index;
+          names_p[insertion_pos] = name_p;
         }
       }
-      else if (!is_array_indices_only)
+#if ENABLED (JERRY_ES2015)
+      else if (ecma_prop_name_is_symbol (name_p))
       {
-        /*
-         * Filling from end to begin, as list of object's properties is sorted
-         * in order that is reverse to properties creation order
-         */
+        // Put in the symbols in reverse order.
+        JERRY_ASSERT (symbol_name_pos > 0);
+        JERRY_ASSERT (symbol_name_pos <= symbol_named_properties_count);
 
-        JERRY_ASSERT (name_pos > 0
-                      && name_pos <= array_index_named_properties_count + string_named_properties_count);
-        ecma_ref_ecma_string (name_p);
-        names_p[--name_pos] = name_p;
+        symbol_names_p[--symbol_name_pos] = name_p;
+      }
+#endif /* ENABLED (JERRY_ES2015) */
+      else
+      {
+        // Put in the strings in reverse order.
+        JERRY_ASSERT (string_name_pos > 0);
+        JERRY_ASSERT (string_name_pos <= string_named_properties_count);
+
+        string_names_p[--string_name_pos] = name_p;
       }
     }
 
-    for (uint32_t i = 0; i < array_index_named_properties_count; i++)
-    {
-      JERRY_ASSERT (name_pos > 0
-                    && name_pos <= array_index_named_properties_count + string_named_properties_count);
-      names_p[--name_pos] = ecma_new_ecma_string_from_uint32 (array_index_names_p[i]);
-    }
-
-    JERRY_ASSERT (name_pos == 0);
-
-    JMEM_FINALIZE_LOCAL_ARRAY (array_index_names_p);
+    JERRY_ASSERT (array_index_name_pos == array_index_named_properties_count);
+    JERRY_ASSERT (string_name_pos == 0);
+#if ENABLED (JERRY_ES2015)
+    JERRY_ASSERT (symbol_name_pos == 0);
+#endif /* ENABLED (JERRY_ES2015) */
 
     ecma_collection_free (prop_names_p);
 
     /* Third pass:
      *   embedding own property names of current object of prototype chain to aggregate property names collection */
-    for (uint32_t i = 0;
-         i < array_index_named_properties_count + string_named_properties_count;
-         i++)
+    for (uint32_t i = 0; i < all_properties_count; i++)
     {
       bool is_append = true;
 

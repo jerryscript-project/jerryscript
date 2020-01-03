@@ -515,7 +515,6 @@ ecma_builtin_promise_race_or_all (ecma_value_t this_arg, /**< 'this' argument */
 
   if (!ecma_is_value_null (species_symbol) && !ecma_is_value_undefined (species_symbol))
   {
-    ecma_free_value (constructor_value);
     constructor_value = species_symbol;
   }
   else

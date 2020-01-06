@@ -1133,6 +1133,10 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Class constructor may not be an accessor.";
     }
+    case PARSER_ERR_CLASS_CONSTRUCTOR_AS_GENERATOR:
+    {
+      return "Class constructor may not be a generator.";
+    }
     case PARSER_ERR_CLASS_STATIC_PROTOTYPE:
     {
       return "Classes may not have a static property called 'prototype'.";

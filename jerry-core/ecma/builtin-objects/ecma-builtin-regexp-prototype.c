@@ -440,7 +440,7 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
     return ECMA_VALUE_ERROR;
   }
 
-  ecma_value_t ret_value = ecma_regexp_exec_helper (obj_this, ecma_make_string_value (input_str_p), false);
+  ecma_value_t ret_value = ecma_regexp_exec_helper (ecma_get_object_from_value (obj_this), input_str_p);
 
   ecma_free_value (obj_this);
   ecma_deref_ecma_string (input_str_p);

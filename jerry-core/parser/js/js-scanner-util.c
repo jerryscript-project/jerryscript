@@ -1009,47 +1009,6 @@ scanner_filter_arguments (parser_context_t *context_p, /**< context */
 } /* scanner_filter_arguments */
 
 /**
- * Check directives before a source block.
- */
-void
-scanner_check_directives (parser_context_t *context_p, /**< context */
-                          scanner_context_t *scanner_context_p) /**< scanner context */
-{
-  scanner_context_p->mode = SCAN_MODE_STATEMENT_OR_TERMINATOR;
-
-  while (context_p->token.type == LEXER_LITERAL
-         && context_p->token.lit_location.type == LEXER_STRING_LITERAL)
-  {
-    bool is_use_strict = false;
-
-    if (lexer_string_is_use_strict (context_p))
-    {
-      is_use_strict = true;
-    }
-
-    lexer_next_token (context_p);
-
-    if (!lexer_string_is_directive (context_p))
-    {
-      /* The string is part of an expression statement. */
-      scanner_context_p->mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
-      break;
-    }
-
-    if (is_use_strict)
-    {
-      context_p->status_flags |= PARSER_IS_STRICT;
-      scanner_context_p->active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_IS_STRICT;
-    }
-
-    if (context_p->token.type == LEXER_SEMICOLON)
-    {
-      lexer_next_token (context_p);
-    }
-  }
-} /* scanner_check_directives */
-
-/**
  * Add any literal to the specified literal pool.
  *
  * @return pointer to the literal

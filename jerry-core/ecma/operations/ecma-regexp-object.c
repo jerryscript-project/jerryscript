@@ -1244,16 +1244,10 @@ ecma_regexp_cleanup_context (ecma_regexp_ctx_t *ctx_p) /**< regexp context */
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
-                         ecma_value_t input_string, /**< input string */
-                         bool ignore_global) /**< ignore global flag */
+ecma_regexp_exec_helper (ecma_object_t *regexp_object_p, /**< RegExp object */
+                         ecma_string_t *input_string_p) /**< input string */
 {
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-
-  JERRY_ASSERT (ecma_is_value_object (regexp_value));
-  JERRY_ASSERT (ecma_is_value_string (input_string));
-
-  ecma_object_t *regexp_object_p = ecma_get_object_from_value (regexp_value);
 
   JERRY_ASSERT (ecma_object_class_is (regexp_object_p, LIT_MAGIC_STRING_REGEXP_UL));
 
@@ -1262,7 +1256,6 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
                                                                   ext_object_p->u.class_prop.u.value);
 
   ecma_regexp_ctx_t re_ctx;
-  ecma_string_t *input_string_p = ecma_get_string_from_value (input_string);
 
   if (bc_p == NULL)
   {
@@ -1285,12 +1278,6 @@ ecma_regexp_exec_helper (ecma_value_t regexp_value, /**< RegExp object */
   }
 
   re_ctx.flags = bc_p->header.status_flags;
-
-  if (ignore_global)
-  {
-    re_ctx.flags &= (uint16_t) ~RE_FLAG_GLOBAL;
-  }
-
   lit_utf8_size_t input_size;
   lit_utf8_size_t input_length;
   uint8_t input_flags = ECMA_STRING_FLAG_IS_ASCII;
@@ -2543,7 +2530,7 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
         goto cleanup_results;
       }
 
-      result = ecma_regexp_exec_helper (this_arg, ecma_make_string_value (string_p), false);
+      result = ecma_regexp_exec_helper (this_obj_p, string_p);
     }
 
     /* 13.c */
@@ -3050,9 +3037,9 @@ ecma_value_t
 ecma_op_regexp_exec (ecma_value_t this_arg, /**< this argument */
                      ecma_string_t *str_p) /**< input string */
 {
-#if ENABLED (JERRY_ES2015)
   ecma_object_t *arg_obj_p = ecma_get_object_from_value (this_arg);
 
+#if ENABLED (JERRY_ES2015)
   ecma_value_t exec = ecma_op_object_get_by_magic_id (arg_obj_p, LIT_MAGIC_STRING_EXEC);
 
   if (ECMA_IS_VALUE_ERROR (exec))
@@ -3093,7 +3080,7 @@ ecma_op_regexp_exec (ecma_value_t this_arg, /**< this argument */
     return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not a valid RegExp object"));
   }
 
-  return ecma_regexp_exec_helper (this_arg, ecma_make_string_value (str_p), false);
+  return ecma_regexp_exec_helper (arg_obj_p, str_p);
 } /* ecma_op_regexp_exec */
 
 /**

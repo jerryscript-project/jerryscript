@@ -99,7 +99,8 @@ typedef struct
 
 ecma_value_t ecma_op_create_regexp_object_from_bytecode (re_compiled_code_t *bytecode_p);
 ecma_value_t ecma_op_create_regexp_object (ecma_string_t *pattern_p, uint16_t flags);
-ecma_value_t ecma_regexp_exec_helper (ecma_value_t regexp_value, ecma_value_t input_string, bool ignore_global);
+ecma_value_t ecma_regexp_exec_helper (ecma_object_t *regexp_object_p,
+                                      ecma_string_t *input_string_p);
 ecma_string_t *ecma_regexp_read_pattern_str_helper (ecma_value_t pattern_arg);
 lit_code_point_t ecma_regexp_canonicalize (lit_code_point_t ch, bool is_ignorecase);
 lit_code_point_t ecma_regexp_canonicalize_char (lit_code_point_t ch);

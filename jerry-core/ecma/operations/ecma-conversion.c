@@ -80,96 +80,50 @@ bool
 ecma_op_same_value (ecma_value_t x, /**< ecma value */
                     ecma_value_t y) /**< ecma value */
 {
-  const bool is_x_undefined = ecma_is_value_undefined (x);
-  const bool is_x_null = ecma_is_value_null (x);
-  const bool is_x_boolean = ecma_is_value_boolean (x);
-  const bool is_x_number = ecma_is_value_number (x);
-  const bool is_x_string = ecma_is_value_string (x);
-  const bool is_x_object = ecma_is_value_object (x);
-
-  const bool is_y_undefined = ecma_is_value_undefined (y);
-  const bool is_y_null = ecma_is_value_null (y);
-  const bool is_y_boolean = ecma_is_value_boolean (y);
-  const bool is_y_number = ecma_is_value_number (y);
-  const bool is_y_string = ecma_is_value_string (y);
-  const bool is_y_object = ecma_is_value_object (y);
-
-#if ENABLED (JERRY_ES2015)
-  const bool is_x_symbol = ecma_is_value_symbol (x);
-  const bool is_y_symbol = ecma_is_value_symbol (y);
-#endif /* ENABLED (JERRY_ES2015) */
-
-  const bool is_types_equal = ((is_x_undefined && is_y_undefined)
-                               || (is_x_null && is_y_null)
-                               || (is_x_boolean && is_y_boolean)
-                               || (is_x_number && is_y_number)
-                               || (is_x_string && is_y_string)
-#if ENABLED (JERRY_ES2015)
-                               || (is_x_symbol && is_y_symbol)
-#endif /* ENABLED (JERRY_ES2015) */
-                               || (is_x_object && is_y_object));
-
-  if (!is_types_equal)
-  {
-    return false;
-  }
-  else if (is_x_undefined || is_x_null)
+  if (x == y)
   {
     return true;
   }
-  else if (is_x_number)
+
+  ecma_type_t type_of_x = ecma_get_value_type_field (x);
+
+  if (type_of_x != ecma_get_value_type_field (y)
+      || type_of_x == ECMA_TYPE_DIRECT)
+  {
+    return false;
+  }
+
+  if (ecma_is_value_number (x))
   {
     ecma_number_t x_num = ecma_get_number_from_value (x);
     ecma_number_t y_num = ecma_get_number_from_value (y);
 
-    bool is_x_nan = ecma_number_is_nan (x_num);
-    bool is_y_nan = ecma_number_is_nan (y_num);
-
-    if (is_x_nan || is_y_nan)
+    if (ecma_number_is_nan (x_num) == ecma_number_is_nan (y_num))
     {
-      /*
-       * If both are NaN
-       *   return true;
-       * else
-       *   one of the numbers is NaN, and another - is not
-       *   return false;
-       */
-      return (is_x_nan && is_y_nan);
+      return true;
     }
-    else if (ecma_number_is_zero (x_num)
-             && ecma_number_is_zero (y_num)
-             && ecma_number_is_negative (x_num) != ecma_number_is_negative (y_num))
+
+    if (ecma_number_is_zero (x_num)
+        && ecma_number_is_zero (y_num)
+        && ecma_number_is_negative (x_num) != ecma_number_is_negative (y_num))
     {
       return false;
     }
-    else
-    {
-      return (x_num == y_num);
-    }
+
+    return (x_num == y_num);
   }
-  else if (is_x_string)
+
+  if (ecma_is_value_string (x))
   {
     ecma_string_t *x_str_p = ecma_get_string_from_value (x);
     ecma_string_t *y_str_p = ecma_get_string_from_value (y);
 
     return ecma_compare_ecma_strings (x_str_p, y_str_p);
   }
-  else if (is_x_boolean)
-  {
-    return (ecma_is_value_true (x) == ecma_is_value_true (y));
-  }
-#if ENABLED (JERRY_ES2015)
-  else if (is_x_symbol)
-  {
-    return x == y;
-  }
-#endif /* ENABLED (JERRY_ES2015) */
-  else
-  {
-    JERRY_ASSERT (is_x_object);
 
-    return (ecma_get_object_from_value (x) == ecma_get_object_from_value (y));
-  }
+  JERRY_ASSERT (ecma_is_value_object (x) || ECMA_ASSERT_VALUE_IS_SYMBOL (x));
+
+  return false;
 } /* ecma_op_same_value */
 
 #if ENABLED (JERRY_ES2015_BUILTIN_MAP)

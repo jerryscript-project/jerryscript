@@ -2069,9 +2069,9 @@ ecma_builtin_array_reduce_from (ecma_value_t callbackfn, /**< routine's 1st argu
   }
 
   /* 5. */
-  if (len == 0 && ecma_is_value_undefined (initial_value))
+  if (len == 0 && args_number == 1)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Initial value cannot be undefined."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Reduce of empty array with no initial value."));
   }
 
   JERRY_ASSERT (ecma_is_value_object (callbackfn));

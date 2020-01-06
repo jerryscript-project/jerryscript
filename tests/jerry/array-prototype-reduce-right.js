@@ -35,14 +35,6 @@ try {
 }
 
 try {
-  var arg2;
-  [].reduceRight(func, arg2);
-  assert(false);
-} catch(e) {
-  assert(e instanceof TypeError);
-}
-
-try {
   var a = new Array();
   a.length = 10;
   a.reduceRight(func);
@@ -53,6 +45,8 @@ try {
 
 // various checks
 assert([].reduceRight(func, 1) === 1);
+
+assert([].reduceRight(func, undefined) === undefined);
 
 assert([0].reduceRight(func) === 0);
 

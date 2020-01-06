@@ -39,6 +39,8 @@ catch(e) {
 // various checks
 assert ([].reduce(func, 1) === 1);
 
+assert ([].reduce(func, undefined) === undefined);
+
 assert ([0].reduce(func) === 0);
 
 assert ([0, 1].reduce(func) === 1);

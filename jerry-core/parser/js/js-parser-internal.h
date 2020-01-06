@@ -647,7 +647,7 @@ void lexer_convert_ident_to_cesu8 (uint8_t *destination_p, const uint8_t *source
 const uint8_t *lexer_convert_literal_to_chars (parser_context_t *context_p,  const lexer_lit_location_t *literal_p,
                                                uint8_t *local_byte_array_p, lexer_string_options_t opts);
 void lexer_expect_object_literal_id (parser_context_t *context_p, uint32_t ident_opts);
-void lexer_construct_literal_object (parser_context_t *context_p, const lexer_lit_location_t *literal_p,
+void lexer_construct_literal_object (parser_context_t *context_p, const lexer_lit_location_t *lit_location_p,
                                      uint8_t literal_type);
 bool lexer_construct_number_object (parser_context_t *context_p, bool is_expr, bool is_negative_number);
 void lexer_convert_push_number_to_push_literal (parser_context_t *context_p);

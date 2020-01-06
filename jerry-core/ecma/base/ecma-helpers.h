@@ -160,6 +160,7 @@ typedef enum
 #endif /* ENABLED (JERRY_ES2015) */
 
 /* ecma-helpers-value.c */
+ecma_type_t JERRY_ATTR_CONST ecma_get_value_type_field (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_direct (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_simple (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_empty (ecma_value_t value);

@@ -63,7 +63,7 @@ JERRY_STATIC_ASSERT ((ECMA_VALUE_FALSE | (1 << ECMA_DIRECT_SHIFT)) == ECMA_VALUE
  *
  * @return type field
  */
-static inline ecma_type_t JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
+extern inline ecma_type_t JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
 ecma_get_value_type_field (ecma_value_t value) /**< ecma value */
 {
   return value & ECMA_VALUE_TYPE_MASK;

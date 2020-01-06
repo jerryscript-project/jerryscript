@@ -827,6 +827,7 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t arg1, /**< start */
 
   JERRY_ASSERT (start <= len && end <= len);
 
+  bool use_fast_path = ecma_op_object_is_fast_array (obj_p);
 #if ENABLED (JERRY_ES2015)
   ecma_value_t new_array = ecma_op_array_species_create (obj_p, 0);
 
@@ -834,6 +835,7 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t arg1, /**< start */
   {
     return new_array;
   }
+  use_fast_path &= ecma_op_object_is_fast_array (ecma_get_object_from_value (new_array));
 #else /* !ENABLED (JERRY_ES2015) */
   ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
@@ -844,7 +846,7 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t arg1, /**< start */
   /* 9. */
   uint32_t n = 0;
 
-  if (ecma_op_object_is_fast_array (obj_p))
+  if (use_fast_path)
   {
     ecma_extended_object_t *ext_from_obj_p = (ecma_extended_object_t *) obj_p;
 

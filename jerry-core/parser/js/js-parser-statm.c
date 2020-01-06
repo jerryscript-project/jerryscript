@@ -1922,13 +1922,13 @@ parser_parse_try_statement_end (parser_context_t *context_p) /**< context */
 #endif /* ENABLED (JERRY_ES2015) */
 
       lexer_next_token (context_p);
+
+#ifndef JERRY_NDEBUG
+      JERRY_ASSERT (block_found);
+#endif /* !JERRY_NDEBUG */
 #if ENABLED (JERRY_ES2015)
     }
 #endif /* ENABLED (JERRY_ES2015) */
-
-#ifndef JERRY_NDEBUG
-    JERRY_ASSERT (block_found);
-#endif /* !JERRY_NDEBUG */
 
     if (context_p->token.type != LEXER_RIGHT_PAREN)
     {

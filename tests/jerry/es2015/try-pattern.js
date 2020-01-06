@@ -71,3 +71,19 @@ try {
 } catch (e) {
   assert(e instanceof ReferenceError)
 }
+
+try {
+  throw [{a : 5}];
+} catch([{a}]) {
+  assert(a === 5);
+}
+
+var catchReached = false;
+try {
+  throw [{}];
+  assert(false);
+} catch([{}]) {
+  catchReached = true;
+}
+
+assert(catchReached);

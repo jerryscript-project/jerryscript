@@ -30,6 +30,7 @@ ecma_object_t *ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, ecma_st
 ecma_value_t ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, ecma_string_t *name_p);
 #if ENABLED (JERRY_ES2015)
 ecma_object_t *ecma_op_resolve_super_reference_value (ecma_object_t *lex_env_p);
+ecma_value_t ecma_op_is_prop_unscopable (ecma_object_t *lex_env_p, ecma_string_t *prop_name_p);
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**

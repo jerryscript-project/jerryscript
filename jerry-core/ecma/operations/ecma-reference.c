@@ -102,7 +102,7 @@ ecma_op_resolve_super_reference_value (ecma_object_t *lex_env_p) /**< starting l
  *         ECMA_VALUE_FALSE - if a the property is not unscopable
  *         ECMA_VALUE_ERROR - otherwise
  */
-static ecma_value_t
+ecma_value_t
 ecma_op_is_prop_unscopable (ecma_object_t *lex_env_p, /**< lexical environment */
                             ecma_string_t *prop_name_p) /**< property's name */
 {

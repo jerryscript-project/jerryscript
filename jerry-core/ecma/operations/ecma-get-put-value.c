@@ -26,6 +26,7 @@
 #include "ecma-function-object.h"
 #include "ecma-objects-general.h"
 #include "ecma-try-catch-macro.h"
+#include "ecma-reference.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -92,7 +93,29 @@ ecma_op_get_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
         if (ecma_is_value_found (result))
         {
           *ref_base_lex_env_p = lex_env_p;
+
+#if ENABLED (JERRY_ES2015)
+          ecma_value_t blocked = ecma_op_is_prop_unscopable (lex_env_p, name_p);
+
+          if (ECMA_IS_VALUE_ERROR (blocked))
+          {
+            ecma_free_value (result);
+            return blocked;
+          }
+
+          if (ecma_is_value_true (blocked))
+          {
+            *ref_base_lex_env_p = NULL;
+            ecma_free_value (result);
+          }
+          else
+          {
+            return result;
+          }
+#else /* !ENABLED (JERRY_ES2015) */
           return result;
+#endif /* ENABLED (JERRY_ES2015) */
+
         }
 
         break;

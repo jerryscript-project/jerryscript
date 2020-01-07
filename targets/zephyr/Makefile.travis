@@ -23,7 +23,7 @@ all:
 
 # Install tools via apt.
 install-apt-get-deps:
-	sudo apt-get install -q -y gperf dfu-util device-tree-compiler python3-ply python3-pip
+	sudo apt-get install -q -y gperf dfu-util device-tree-compiler
 
 # Install Zephyr SDK.
 install-zephyr-sdk:
@@ -33,13 +33,13 @@ install-zephyr-sdk:
 # Fetch Zephyr Project repository and install python dependencies.
 install-zephyr:
 	git clone https://github.com/zephyrproject-rtos/zephyr.git ../zephyr -b v1.14-branch
-	pip3 install --user -U pip
-	pip3 install --user -U setuptools
-	pip3 install --user -r ../zephyr/scripts/requirements.txt
+	pip3 install -U pip
+	pip3 install -U setuptools
+	pip3 install -r ../zephyr/scripts/requirements.txt
 
 # Install recent CMake
 install-cmake:
-	pip install --user cmake
+	pip install cmake
 	cmake --version
 
 # Perform all the necessary (JerryScript-independent) installation steps.

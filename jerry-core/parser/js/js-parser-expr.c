@@ -569,11 +569,20 @@ parser_parse_class_literal (parser_context_t *context_p) /**< context */
     {
       is_computed = true;
     }
-    else if ((status_flags & PARSER_CLASS_STATIC_FUNCTION)
-             && LEXER_IS_IDENT_OR_STRING (context_p->token.lit_location.type)
-             && lexer_compare_literal_to_string (context_p, "prototype", 9))
+    else if (LEXER_IS_IDENT_OR_STRING (context_p->token.lit_location.type))
     {
-      parser_raise_error (context_p, PARSER_ERR_CLASS_STATIC_PROTOTYPE);
+      if (status_flags & PARSER_CLASS_STATIC_FUNCTION)
+      {
+        if (lexer_compare_literal_to_string (context_p, "prototype", 9))
+        {
+          parser_raise_error (context_p, PARSER_ERR_CLASS_STATIC_PROTOTYPE);
+        }
+      }
+      else if ((status_flags & PARSER_IS_GENERATOR_FUNCTION)
+               && lexer_compare_literal_to_string (context_p, "constructor", 11))
+      {
+        parser_raise_error (context_p, PARSER_ERR_CLASS_CONSTRUCTOR_AS_GENERATOR);
+      }
     }
 
 parse_class_method:

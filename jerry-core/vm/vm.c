@@ -993,15 +993,25 @@ vm_init_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         ecma_string_t *name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
 
         JERRY_ASSERT (ecma_get_lex_env_type (frame_ctx_p->lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
-        JERRY_ASSERT (ecma_find_named_property (frame_ctx_p->lex_env_p, name_p) == NULL);
 
+        ecma_property_t *prop_p = ecma_find_named_property (frame_ctx_p->lex_env_p, name_p);
         ecma_property_value_t *property_value_p;
-        property_value_p = ecma_create_named_data_property (frame_ctx_p->lex_env_p,
-                                                            name_p,
-                                                            ECMA_PROPERTY_FLAG_WRITABLE,
-                                                            NULL);
 
-        JERRY_ASSERT (property_value_p->value == ECMA_VALUE_UNDEFINED);
+        if (prop_p == NULL)
+        {
+          property_value_p = ecma_create_named_data_property (frame_ctx_p->lex_env_p,
+                                                              name_p,
+                                                              ECMA_PROPERTY_FLAG_WRITABLE,
+                                                              NULL);
+
+          JERRY_ASSERT (property_value_p->value == ECMA_VALUE_UNDEFINED);
+        }
+        else
+        {
+          property_value_p = ECMA_PROPERTY_VALUE_PTR (prop_p);
+          ecma_free_value_if_not_object (property_value_p->value);
+        }
+
         property_value_p->value = lit_value;
 
         if (value_index >= register_end)

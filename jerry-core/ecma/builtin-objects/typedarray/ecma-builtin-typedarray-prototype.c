@@ -481,6 +481,7 @@ ecma_builtin_typedarray_prototype_map (ecma_value_t this_arg, /**< this argument
     {
       ecma_free_value (current_index);
       ecma_free_value (get_value);
+      ecma_free_value (new_typedarray);
       return mapped_value;
     }
 
@@ -490,6 +491,7 @@ ecma_builtin_typedarray_prototype_map (ecma_value_t this_arg, /**< this argument
       ecma_free_value (mapped_value);
       ecma_free_value (current_index);
       ecma_free_value (get_value);
+      ecma_free_value (new_typedarray);
       return ECMA_VALUE_ERROR;
     }
     else

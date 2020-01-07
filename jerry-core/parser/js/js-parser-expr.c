@@ -2606,6 +2606,8 @@ parser_pattern_process_assignment (parser_context_t *context_p, /**< context */
   }
   else
   {
+    parser_flush_cbc (context_p);
+    uint16_t stack_depth_before = context_p->stack_depth;
     parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA | PARSE_EXPR_LEFT_HAND_SIDE);
 
     if (!PARSER_IS_PUSH_LITERAL (context_p->last_cbc_opcode))
@@ -2616,17 +2618,23 @@ parser_pattern_process_assignment (parser_context_t *context_p, /**< context */
         parser_raise_error (context_p, PARSER_ERR_INVALID_DESTRUCTURING_PATTERN);
       }
 
-      if (context_p->last_cbc_opcode == CBC_PUSH_PROP_THIS_LITERAL)
-      {
-        context_p->last_cbc_opcode = PARSER_CBC_UNAVAILABLE;
-        uint16_t lit_index = context_p->last_cbc.literal_index;
-        parser_emit_cbc (context_p, CBC_PUSH_THIS);
-        parser_emit_cbc_literal (context_p, CBC_PUSH_PROP_LITERAL, lit_index);
-      }
-
       if (end_type == LEXER_RIGHT_SQUARE)
       {
-        PARSER_PLUS_EQUAL_U16 (rhs_opcode, 1);
+        /* LHS expression parsing may increases the stack depth, therefore rhs opcode may transforms:
+           Example: [a.b.c]
+           CBC_EXT_ITERATOR_STEP -> CBC_EXT_ITERATOR_STEP_2
+           CBC_EXT_REST_INITIALIZER -> CBC_EXT_ITERATOR_STEP_2 */
+        uint16_t stack_difference = (uint16_t) (context_p->stack_depth - stack_depth_before);
+
+        if (context_p->last_cbc_opcode == CBC_PUSH_PROP_LITERAL_LITERAL)
+        {
+          /* Example: [a.b]
+           CBC_EXT_ITERATOR_STEP -> CBC_EXT_ITERATOR_STEP_3
+           CBC_EXT_REST_INITIALIZER -> CBC_EXT_ITERATOR_STEP_3 */
+          PARSER_PLUS_EQUAL_U16 (stack_difference, 2);
+        }
+
+        PARSER_PLUS_EQUAL_U16 (rhs_opcode, stack_difference);
       }
     }
   }

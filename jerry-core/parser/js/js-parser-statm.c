@@ -1189,12 +1189,12 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
       else
       {
         token_type = LEXER_KEYW_LET;
-        has_context = true;
+        has_context = (context_p->next_scanner_info_p->source_p == context_p->source_p);
         scanner_get_location (&start_location, context_p);
       }
     }
 
-    if (has_context && (context_p->next_scanner_info_p->source_p == context_p->source_p))
+    if (has_context)
     {
       has_context = parser_push_block_context (context_p, true);
     }

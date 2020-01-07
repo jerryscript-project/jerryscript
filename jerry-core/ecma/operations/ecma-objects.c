@@ -946,6 +946,21 @@ ecma_op_object_get_by_magic_id (ecma_object_t *object_p, /**< the object */
 
 #if ENABLED (JERRY_ES2015)
 /**
+ * [[Get]] a well-known symbol by the given property id
+ *
+ * @return pointer to the requested well-known symbol
+ */
+ecma_string_t *
+ecma_op_get_global_symbol (lit_magic_string_id_t property_id) /**< property symbol id */
+{
+  ecma_value_t symbol_value = ecma_op_object_get_by_magic_id (ecma_builtin_get (ECMA_BUILTIN_ID_INTRINSIC_OBJECT),
+                                                              property_id);
+  JERRY_ASSERT (ecma_is_value_symbol (symbol_value));
+
+  return ecma_get_symbol_from_value (symbol_value);
+} /* ecma_op_get_global_symbol */
+
+/**
  * [[Get]] operation of ecma object where the property is a well-known symbol
  *
  * @return ecma value
@@ -955,13 +970,8 @@ ecma_value_t
 ecma_op_object_get_by_symbol_id (ecma_object_t *object_p, /**< the object */
                                  lit_magic_string_id_t property_id) /**< property symbol id */
 {
-  ecma_value_t symbol_value = ecma_op_object_get_by_magic_id (ecma_builtin_get (ECMA_BUILTIN_ID_SYMBOL),
-                                                              property_id);
-  JERRY_ASSERT (ecma_is_value_symbol (symbol_value));
-
-  ecma_string_t *symbol_p = ecma_get_symbol_from_value (symbol_value);
+  ecma_string_t *symbol_p = ecma_op_get_global_symbol (property_id);
   ecma_value_t ret_value = ecma_op_object_get (object_p, symbol_p);
-
   ecma_deref_ecma_string (symbol_p);
 
   return ret_value;
@@ -979,10 +989,8 @@ ecma_op_object_get_by_symbol_id (ecma_object_t *object_p, /**< the object */
  *         raised error - otherwise
  */
 static ecma_value_t
-ecma_op_get_method_by_id (ecma_value_t value, /**< ecma value */
-                          lit_magic_string_id_t id, /**< property magic id */
-                          bool is_symbol_id) /**< true - if id represents a symbol id
-                                              *   false - otherwise */
+ecma_op_get_method (ecma_value_t value, /**< ecma value */
+                    ecma_string_t *prop_name_p) /** property name */
 {
   /* 2. */
   ecma_value_t obj_value = ecma_op_to_object (value);
@@ -995,14 +1003,7 @@ ecma_op_get_method_by_id (ecma_value_t value, /**< ecma value */
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_value);
   ecma_value_t func;
 
-  if (is_symbol_id)
-  {
-    func = ecma_op_object_get_by_symbol_id (obj_p, id);
-  }
-  else
-  {
-    func = ecma_op_object_get_by_magic_id (obj_p, id);
-  }
+  func = ecma_op_object_get (obj_p, prop_name_p);
   ecma_deref_object (obj_p);
 
   /* 3. */
@@ -1026,7 +1027,7 @@ ecma_op_get_method_by_id (ecma_value_t value, /**< ecma value */
 
   /* 6. */
   return func;
-} /* ecma_op_get_method_by_id */
+} /* ecma_op_get_method */
 
 /**
  * GetMethod operation when the property is a well-known symbol
@@ -1043,7 +1044,11 @@ ecma_value_t
 ecma_op_get_method_by_symbol_id (ecma_value_t value, /**< ecma value */
                                  lit_magic_string_id_t symbol_id) /**< property symbol id */
 {
-  return ecma_op_get_method_by_id (value, symbol_id, true);
+  ecma_string_t *prop_name_p = ecma_op_get_global_symbol (symbol_id);
+  ecma_value_t ret_value = ecma_op_get_method (value, prop_name_p);
+  ecma_deref_ecma_string (prop_name_p);
+
+  return ret_value;
 } /* ecma_op_get_method_by_symbol_id */
 
 /**
@@ -1061,7 +1066,7 @@ ecma_value_t
 ecma_op_get_method_by_magic_id (ecma_value_t value, /**< ecma value */
                                 lit_magic_string_id_t magic_id) /**< property magic id */
 {
-  return ecma_op_get_method_by_id (value, magic_id, false);
+  return ecma_op_get_method (value, ecma_get_magic_string (magic_id));
 } /* ecma_op_get_method_by_magic_id */
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -2562,7 +2567,7 @@ ecma_op_is_concat_spreadable (ecma_value_t arg) /**< argument */
   }
 
   ecma_value_t spreadable = ecma_op_object_get_by_symbol_id (ecma_get_object_from_value (arg),
-                                                             LIT_MAGIC_STRING_IS_CONCAT_SPREADABLE);
+                                                             LIT_GLOBAL_SYMBOL_IS_CONCAT_SPREADABLE);
 
   if (ECMA_IS_VALUE_ERROR (spreadable))
   {
@@ -2598,7 +2603,7 @@ ecma_op_is_regexp (ecma_value_t arg) /**< argument */
   }
 
   ecma_value_t is_regexp = ecma_op_object_get_by_symbol_id (ecma_get_object_from_value (arg),
-                                                            LIT_MAGIC_STRING_MATCH);
+                                                            LIT_GLOBAL_SYMBOL_MATCH);
 
   if (ECMA_IS_VALUE_ERROR (is_regexp))
   {
@@ -2647,7 +2652,7 @@ ecma_op_species_constructor (ecma_object_t *this_value, /**< This Value */
   }
 
   ecma_object_t *ctor_object_p = ecma_get_object_from_value (constructor);
-  ecma_value_t species = ecma_op_object_get_by_symbol_id (ctor_object_p, LIT_MAGIC_STRING_SPECIES);
+  ecma_value_t species = ecma_op_object_get_by_symbol_id (ctor_object_p, LIT_GLOBAL_SYMBOL_SPECIES);
   ecma_deref_object (ctor_object_p);
 
   if (ECMA_IS_VALUE_ERROR (species))

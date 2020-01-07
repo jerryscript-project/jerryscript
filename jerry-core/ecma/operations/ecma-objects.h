@@ -43,6 +43,7 @@ ecma_value_t ecma_op_object_get_length (ecma_object_t *object_p, uint32_t *lengt
 ecma_value_t ecma_op_object_get_by_uint32_index (ecma_object_t *object_p, uint32_t index);
 ecma_value_t ecma_op_object_get_by_magic_id (ecma_object_t *object_p, lit_magic_string_id_t property_id);
 #if ENABLED (JERRY_ES2015)
+ecma_string_t *ecma_op_get_global_symbol (lit_magic_string_id_t property_id);
 ecma_value_t ecma_op_object_get_by_symbol_id (ecma_object_t *object_p, lit_magic_string_id_t property_id);
 ecma_value_t ecma_op_get_method_by_symbol_id (ecma_value_t value, lit_magic_string_id_t symbol_id);
 ecma_value_t ecma_op_get_method_by_magic_id (ecma_value_t value, lit_magic_string_id_t magic_id);

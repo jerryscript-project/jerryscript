@@ -793,7 +793,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 #if ENABLED (JERRY_ES2015)
     case ECMA_BUILTIN_PROPERTY_SYMBOL:
     {
-      lit_magic_string_id_t symbol_desc_id = (lit_magic_string_id_t) curr_property_p->magic_string_id;
+      lit_magic_string_id_t symbol_desc_id = (lit_magic_string_id_t) curr_property_p->value;
 
       ecma_string_t *symbol_desc_p;
       symbol_desc_p = ecma_append_magic_string_to_string (ecma_get_magic_string (LIT_MAGIC_STRING_SYMBOL_DOT_UL),
@@ -802,10 +802,16 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
       ecma_value_t symbol_desc_value = ecma_make_string_value (symbol_desc_p);
 
       ecma_string_t *symbol_p = ecma_new_symbol_from_descriptor_string (symbol_desc_value);
-      lit_magic_string_id_t symbol_id = (lit_magic_string_id_t) curr_property_p->value;
+      lit_magic_string_id_t symbol_id = (lit_magic_string_id_t) curr_property_p->magic_string_id;
       symbol_p->u.hash = (uint16_t) ((symbol_id << ECMA_GLOBAL_SYMBOL_SHIFT) | ECMA_GLOBAL_SYMBOL_FLAG);
 
       value = ecma_make_symbol_value (symbol_p);
+      break;
+    }
+    case ECMA_BUILTIN_PROPERTY_INTRINSIC_PROPERTY:
+    {
+      value = ecma_op_object_get_by_magic_id (ecma_builtin_get (ECMA_BUILTIN_ID_INTRINSIC_OBJECT),
+                                              (lit_magic_string_id_t) curr_property_p->value);
       break;
     }
 #endif /* ENABLED (JERRY_ES2015) */

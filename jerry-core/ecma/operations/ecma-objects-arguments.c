@@ -140,6 +140,22 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
 
   ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
 
+#if ENABLED (JERRY_ES2015)
+  /* ECMAScript v6, 9.4.4.6.7, 9.4.4.7.22 */
+  ecma_string_t *symbol_p = ecma_op_get_global_symbol (LIT_GLOBAL_SYMBOL_ITERATOR);
+
+  prop_value_p = ecma_create_named_data_property (obj_p,
+                                                  symbol_p,
+                                                  ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
+                                                  NULL);
+  ecma_deref_ecma_string (symbol_p);
+  prop_value_p->value = ecma_op_object_get_by_magic_id (ecma_builtin_get (ECMA_BUILTIN_ID_INTRINSIC_OBJECT),
+                                                        LIT_INTERNAL_MAGIC_STRING_ARRAY_PROTOTYPE_VALUES);
+
+  JERRY_ASSERT (ecma_is_value_object (prop_value_p->value));
+  ecma_deref_object (ecma_get_object_from_value (prop_value_p->value));
+#endif /* ENABLED (JERRY_ES2015) */
+
   /* 13. */
   if (!is_strict)
   {

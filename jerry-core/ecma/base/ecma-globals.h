@@ -665,7 +665,7 @@ typedef enum
   ECMA_ITERATOR_KEYS, /**< List only key indices */
   ECMA_ITERATOR_VALUES, /**< List only key values */
   ECMA_ITERATOR_KEYS_VALUES, /**< List key indices and values */
-} ecma_iterator_type_t;
+} ecma_array_iterator_type_t;
 
 #endif /* ENABLED (JERRY_ES2015) */
 

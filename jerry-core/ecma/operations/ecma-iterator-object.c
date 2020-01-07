@@ -187,7 +187,7 @@ ecma_op_get_iterator (ecma_value_t value, /**< value to get iterator from */
   if (!has_method)
   {
     /* 2.a */
-    method = ecma_op_get_method_by_symbol_id (value, LIT_MAGIC_STRING_ITERATOR);
+    method = ecma_op_get_method_by_symbol_id (value, LIT_GLOBAL_SYMBOL_ITERATOR);
 
     /* 2.b */
     if (ECMA_IS_VALUE_ERROR (method))

@@ -27,8 +27,12 @@
 
 #if ENABLED (JERRY_ES2015)
 #ifndef SYMBOL_VALUE
-#define SYMBOL_VALUE(name, desc_string_id)
+#define SYMBOL_VALUE(symbol, desc_magic_string_id)
 #endif /* !SYMBOL_VALUE */
+
+#ifndef INTRINSIC_PROPERTY
+#define INTRINSIC_PROPERTY(name, magic_string_id)
+#endif /* !INTRINSIC_PROPERTY */
 #endif /* ENABLED (JERRY_ES2015) */
 
 #ifndef OBJECT_VALUE

@@ -15,6 +15,7 @@
 
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
+#include "ecma-iterator-object.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
@@ -687,7 +688,7 @@ ecma_op_array_species_create (ecma_object_t *original_array_p, /**< The object f
     else if (ecma_is_value_object (constructor))
     {
       ecma_object_t *ctor_object_p = ecma_get_object_from_value (constructor);
-      constructor = ecma_op_object_get_by_symbol_id (ctor_object_p, LIT_MAGIC_STRING_SPECIES);
+      constructor = ecma_op_object_get_by_symbol_id (ctor_object_p, LIT_GLOBAL_SYMBOL_SPECIES);
       ecma_deref_object (ctor_object_p);
 
       if (ECMA_IS_VALUE_ERROR (constructor))
@@ -729,6 +730,35 @@ ecma_op_array_species_create (ecma_object_t *original_array_p, /**< The object f
   ecma_free_value (len_val);
   return ret_val;
 } /* ecma_op_array_species_create */
+
+/**
+ * CreateArrayIterator Abstract Operation
+ *
+ * See also:
+ *          ECMA-262 v6, 22.1.5.1
+ *
+ * Referenced by:
+ *          ECMA-262 v6, 22.1.3.4
+ *          ECMA-262 v6, 22.1.3.13
+ *          ECMA-262 v6, 22.1.3.29
+ *          ECMA-262 v6, 22.1.3.30
+ *
+ * Note:
+ *      Returned value must be freed with ecma_free_value.
+ *
+ * @return array iterator object
+ */
+ecma_value_t
+ecma_op_create_array_iterator (ecma_object_t *obj_p, /**< array object */
+                               ecma_array_iterator_type_t type) /**< array iterator type */
+{
+  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY_ITERATOR_PROTOTYPE);
+
+  return ecma_op_create_iterator_object (ecma_make_object_value (obj_p),
+                                         prototype_obj_p,
+                                         ECMA_PSEUDO_ARRAY_ITERATOR,
+                                         (uint8_t) type);
+} /* ecma_op_create_array_iterator */
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**

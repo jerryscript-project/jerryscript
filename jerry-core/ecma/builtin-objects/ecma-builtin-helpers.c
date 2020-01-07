@@ -142,7 +142,7 @@ ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this arg
     type_string = ecma_object_get_class_name (obj_p);
 
 #if ENABLED (JERRY_ES2015)
-    ecma_value_t tag_value = ecma_op_object_get_by_symbol_id (obj_p, LIT_MAGIC_STRING_TO_STRING_TAG);
+    ecma_value_t tag_value = ecma_op_object_get_by_symbol_id (obj_p, LIT_GLOBAL_SYMBOL_TO_STRING_TAG);
 
     if (ECMA_IS_VALUE_ERROR (tag_value))
     {

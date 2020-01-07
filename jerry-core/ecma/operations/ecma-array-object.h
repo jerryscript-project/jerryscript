@@ -101,6 +101,10 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, ecma_length_t
 ecma_value_t
 ecma_op_array_species_create (ecma_object_t *original_array_p,
                               ecma_length_t length);
+
+ecma_value_t
+ecma_op_create_array_iterator (ecma_object_t *obj_p,
+                               ecma_array_iterator_type_t type);
 #endif /* ENABLED (JERRY_ES2015) */
 
 ecma_value_t

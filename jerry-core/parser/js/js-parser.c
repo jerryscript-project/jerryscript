@@ -1614,6 +1614,14 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     }
 
     tagged_base_p[-1] = (ecma_value_t) context_p->tagged_template_literal_cp;
+
+    ecma_collection_t *collection_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t,
+                                                                       context_p->tagged_template_literal_cp);
+
+    for (uint32_t i = 0; i < collection_p->item_count; i++)
+    {
+      ecma_free_value (collection_p->buffer_p[i]);
+    }
   }
 #endif /* ENABLED (JERRY_ES2015) */
 

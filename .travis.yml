@@ -120,11 +120,13 @@ matrix:
       script: make -f ./targets/mbedos5/Makefile.travis script
 
     - name: "Zephyr/Arduino 101 Build Test"
+      language: python # NOTE: only way to ensure python>=2.7.10 on Trusty image
+      python: 3.6
       install: make -f ./targets/zephyr/Makefile.travis install-noapt
       script: make -f ./targets/zephyr/Makefile.travis script
       addons:
         apt:
-          packages: [gperf, dfu-util, device-tree-compiler, python3-ply, python3-pip]
+          packages: [gperf, dfu-util, device-tree-compiler]
 
     - name: "NuttX/STM32F4 Build Test"
       install: make -f targets/nuttx-stm32f4/Makefile.travis install-noapt

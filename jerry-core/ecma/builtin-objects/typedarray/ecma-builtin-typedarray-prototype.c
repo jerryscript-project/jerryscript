@@ -737,10 +737,10 @@ ecma_builtin_typedarray_prototype_filter (ecma_value_t this_arg, /**< this argum
 
     ecma_value_t call_args[] = { get_value, current_index, this_arg };
 
+    ecma_value_t call_value = ecma_op_function_call (func_object_p, cb_this_arg, call_args, 3);
+
     ecma_fast_free_value (current_index);
     ecma_fast_free_value (get_value);
-
-    ecma_value_t call_value = ecma_op_function_call (func_object_p, cb_this_arg, call_args, 3);
 
     if (ECMA_IS_VALUE_ERROR (call_value))
     {

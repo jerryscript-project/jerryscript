@@ -20,6 +20,7 @@
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "lit-char-helpers.h"
 #include "ecma-objects.h"
 #include "ecma-string-object.h"
 #include "ecma-try-catch-macro.h"
@@ -44,6 +45,34 @@
  */
 
 /**
+ * Helper method to get a property value from an error object
+ *
+ * @return ecma_string_t
+ */
+static ecma_string_t *
+ecma_builtin_error_prototype_object_to_string_helper (ecma_object_t *obj_p, /**< error object */
+                                                      lit_magic_string_id_t property_id, /**< property id */
+                                                      lit_magic_string_id_t default_value) /**< default prop value */
+{
+  ecma_value_t prop_value = ecma_op_object_get_by_magic_id (obj_p, property_id);
+
+  if (ECMA_IS_VALUE_ERROR (prop_value))
+  {
+    return NULL;
+  }
+
+  if (ecma_is_value_undefined (prop_value))
+  {
+    return ecma_get_magic_string (default_value);
+  }
+
+  ecma_string_t *ret_str_p = ecma_op_to_string (prop_value);
+  ecma_free_value (prop_value);
+
+  return ret_str_p;
+} /* ecma_builtin_error_prototype_object_to_string_helper */
+
+/**
  * The Error.prototype object's 'toString' routine
  *
  * See also:
@@ -55,128 +84,52 @@
 static ecma_value_t
 ecma_builtin_error_prototype_object_to_string (ecma_value_t this_arg) /**< this argument */
 {
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-
   /* 2. */
   if (!ecma_is_value_object (this_arg))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an object."));
   }
-  else
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
+
+  ecma_string_t *name_string_p = ecma_builtin_error_prototype_object_to_string_helper (obj_p,
+                                                                                       LIT_MAGIC_STRING_NAME,
+                                                                                       LIT_MAGIC_STRING_ERROR_UL);
+
+  if (JERRY_UNLIKELY (name_string_p == NULL))
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
-
-    ecma_value_t name_get_ret_value = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_NAME);
-    if (ECMA_IS_VALUE_ERROR (name_get_ret_value))
-    {
-      return name_get_ret_value;
-    }
-
-    ecma_string_t *name_string_p;
-
-    if (ecma_is_value_undefined (name_get_ret_value))
-    {
-      name_string_p = ecma_get_magic_string (LIT_MAGIC_STRING_ERROR_UL);
-    }
-    else
-    {
-      name_string_p = ecma_op_to_string (name_get_ret_value);
-    }
-
-    ecma_free_value (name_get_ret_value);
-
-    if (JERRY_UNLIKELY (name_string_p == NULL))
-    {
-      return ECMA_VALUE_ERROR;
-    }
-    else
-    {
-      ecma_value_t msg_get_ret_value = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_MESSAGE);
-      if (ECMA_IS_VALUE_ERROR (msg_get_ret_value))
-      {
-        ecma_deref_ecma_string (name_string_p);
-        return msg_get_ret_value;
-      }
-
-      ecma_string_t *msg_string_p;
-
-      if (ecma_is_value_undefined (msg_get_ret_value))
-      {
-        msg_string_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
-      }
-      else
-      {
-        msg_string_p = ecma_op_to_string (msg_get_ret_value);
-      }
-
-      ecma_free_value (msg_get_ret_value);
-
-      if (JERRY_UNLIKELY (msg_string_p == NULL))
-      {
-        ecma_deref_ecma_string (name_string_p);
-        return ECMA_VALUE_ERROR;
-      }
-      else
-      {
-        ecma_string_t *ret_str_p;
-
-        if (ecma_string_is_empty (name_string_p))
-        {
-          ret_str_p = msg_string_p;
-          ecma_ref_ecma_string (ret_str_p);
-        }
-        else if (ecma_string_is_empty (msg_string_p))
-        {
-          ret_str_p = name_string_p;
-          ecma_ref_ecma_string (ret_str_p);
-        }
-        else
-        {
-          const lit_utf8_size_t name_size = ecma_string_get_size (name_string_p);
-          const lit_utf8_size_t msg_size = ecma_string_get_size (msg_string_p);
-          const lit_utf8_size_t colon_size = lit_get_magic_string_size (LIT_MAGIC_STRING_COLON_CHAR);
-          const lit_utf8_size_t space_size = lit_get_magic_string_size (LIT_MAGIC_STRING_SPACE_CHAR);
-          const lit_utf8_size_t size = name_size + msg_size + colon_size + space_size;
-
-          JMEM_DEFINE_LOCAL_ARRAY (ret_str_buffer, size, lit_utf8_byte_t);
-          lit_utf8_byte_t *ret_str_buffer_p = ret_str_buffer;
-
-          lit_utf8_size_t bytes = ecma_string_copy_to_cesu8_buffer (name_string_p, ret_str_buffer_p, name_size);
-          JERRY_ASSERT (bytes == name_size);
-          ret_str_buffer_p = ret_str_buffer_p + bytes;
-          JERRY_ASSERT (ret_str_buffer_p <= ret_str_buffer + size);
-
-          ret_str_buffer_p = lit_copy_magic_string_to_buffer (LIT_MAGIC_STRING_COLON_CHAR,
-                                                              ret_str_buffer_p,
-                                                              colon_size);
-          JERRY_ASSERT (ret_str_buffer_p <= ret_str_buffer + size);
-
-          ret_str_buffer_p = lit_copy_magic_string_to_buffer (LIT_MAGIC_STRING_SPACE_CHAR,
-                                                              ret_str_buffer_p,
-                                                              space_size);
-          JERRY_ASSERT (ret_str_buffer_p <= ret_str_buffer + size);
-
-          bytes = ecma_string_copy_to_cesu8_buffer (msg_string_p, ret_str_buffer_p, msg_size);
-          JERRY_ASSERT (bytes == msg_size);
-          ret_str_buffer_p = ret_str_buffer_p + bytes;
-          JERRY_ASSERT (ret_str_buffer_p == ret_str_buffer + size);
-
-          ret_str_p = ecma_new_ecma_string_from_utf8 (ret_str_buffer,
-                                                      size);
-
-          JMEM_FINALIZE_LOCAL_ARRAY (ret_str_buffer);
-        }
-
-        ret_value = ecma_make_string_value (ret_str_p);
-      }
-
-      ecma_deref_ecma_string (msg_string_p);
-    }
-
-    ecma_deref_ecma_string (name_string_p);
+    return ECMA_VALUE_ERROR;
   }
 
-  return ret_value;
+  ecma_string_t *msg_string_p = ecma_builtin_error_prototype_object_to_string_helper (obj_p,
+                                                                                      LIT_MAGIC_STRING_MESSAGE,
+                                                                                      LIT_MAGIC_STRING__EMPTY);
+
+  if (JERRY_UNLIKELY (msg_string_p == NULL))
+  {
+    ecma_deref_ecma_string (name_string_p);
+    return ECMA_VALUE_ERROR;
+  }
+
+  if (ecma_string_is_empty (name_string_p))
+  {
+    return ecma_make_string_value (msg_string_p);
+  }
+
+  if (ecma_string_is_empty (msg_string_p))
+  {
+    return ecma_make_string_value (name_string_p);
+  }
+
+  ecma_stringbuilder_t builder = ecma_stringbuilder_create_from (name_string_p);
+
+  ecma_stringbuilder_append_raw (&builder, (const lit_utf8_byte_t *)": ", 2);
+  ecma_stringbuilder_append (&builder, msg_string_p);
+
+  ecma_deref_ecma_string (name_string_p);
+  ecma_deref_ecma_string (msg_string_p);
+
+  return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
 } /* ecma_builtin_error_prototype_object_to_string */
 
 /**

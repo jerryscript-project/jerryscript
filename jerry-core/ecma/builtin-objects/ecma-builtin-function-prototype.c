@@ -208,7 +208,13 @@ ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p , /**
                                              ecma_length_t arguments_number) /**< number of arguments */
 {
   /* 4. 11. 18. */
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
+  ecma_object_t *prototype_obj_p;
+
+#if ENABLED (JERRY_ES2015)
+  prototype_obj_p = ECMA_GET_POINTER (ecma_object_t, this_arg_obj_p->u2.prototype_cp);
+#else /* !ENABLED (JERRY_ES2015) */
+  prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
+#endif /* ENABLED (JERRY_ES2015) */
 
   ecma_object_t *function_p;
   ecma_extended_object_t *ext_function_p;

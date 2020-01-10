@@ -249,8 +249,8 @@ ecma_promise_reject_handler (const ecma_value_t function, /**< the function itse
   /* 4. */
   if (ecma_get_already_resolved_bool_value (already_resolved))
   {
-    ecma_free_value (promise);
     ecma_free_value (already_resolved);
+    ecma_free_value (promise);
     return ECMA_VALUE_UNDEFINED;
   }
 
@@ -325,7 +325,7 @@ ecma_promise_resolve_handler (const ecma_value_t function, /**< the function its
 
   /* 8. */
   ecma_value_t then = ecma_op_object_get_by_magic_id (ecma_get_object_from_value (argv[0]),
-                                                                                  LIT_MAGIC_STRING_THEN);
+                                                      LIT_MAGIC_STRING_THEN);
 
   if (ECMA_IS_VALUE_ERROR (then))
   {
@@ -410,6 +410,35 @@ ecma_call_builtin_executor (ecma_object_t *executor_p, /**< the executor object 
 } /* ecma_call_builtin_executor */
 
 /**
+ * Helper function for PromiseCreateResovingFucntions.
+ *
+ * See also: ES2015 25.4.1.3 2. - 7.
+ *
+ * @return pointer to the resolving function
+ */
+static ecma_object_t *
+ecma_promise_create_resolving_functions_helper (ecma_object_t *obj_p, /**< Promise Object */
+                                                ecma_value_t already_resolved, /**< AlreadyResolved property */
+                                                ecma_external_handler_t handler_cb) /**< Callback handler */
+{
+  ecma_string_t *str_promise_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE);
+  ecma_string_t *str_already_resolved_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ALREADY_RESOLVED);
+  ecma_object_t *func_obj_p = ecma_op_create_external_function_object (handler_cb);
+
+  ecma_op_object_put (func_obj_p,
+                      str_promise_p,
+                      ecma_make_object_value (obj_p),
+                      false);
+
+  ecma_op_object_put (func_obj_p,
+                      str_already_resolved_p,
+                      already_resolved,
+                      false);
+
+  return func_obj_p;
+} /* ecma_promise_create_resolving_functions_helper */
+
+/**
  * Create a PromiseCreateResovingFucntions.
  *
  * See also: ES2015 25.4.1.3
@@ -422,36 +451,15 @@ ecma_promise_create_resolving_functions (ecma_object_t *object_p) /**< the promi
   /* 1. */
   ecma_value_t already_resolved = ecma_op_create_boolean_object (ECMA_VALUE_FALSE);
 
-  ecma_string_t *str_promise_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE);
-  ecma_string_t *str_already_resolved_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ALREADY_RESOLVED);
+  /* 2. - 4. */
+  ecma_object_t *resolve_p = ecma_promise_create_resolving_functions_helper (object_p,
+                                                                             already_resolved,
+                                                                             ecma_promise_resolve_handler);
 
-  /* 2. */
-  ecma_object_t *resolve_p;
-  resolve_p = ecma_op_create_external_function_object (ecma_promise_resolve_handler);
-
-  /* 3. */
-  ecma_op_object_put (resolve_p,
-                      str_promise_p,
-                      ecma_make_object_value (object_p),
-                      false);
-  /* 4. */
-  ecma_op_object_put (resolve_p,
-                      str_already_resolved_p,
-                      already_resolved,
-                      false);
-  /* 5. */
-  ecma_object_t *reject_p;
-  reject_p = ecma_op_create_external_function_object (ecma_promise_reject_handler);
-  /* 6. */
-  ecma_op_object_put (reject_p,
-                      str_promise_p,
-                      ecma_make_object_value (object_p),
-                      false);
-  /* 7. */
-  ecma_op_object_put (reject_p,
-                      str_already_resolved_p,
-                      already_resolved,
-                      false);
+  /* 5. - 7. */
+  ecma_object_t *reject_p = ecma_promise_create_resolving_functions_helper (object_p,
+                                                                            already_resolved,
+                                                                            ecma_promise_reject_handler);
 
   /* 8. */
   ecma_promise_resolving_functions_t *funcs = jmem_heap_alloc_block (sizeof (ecma_promise_resolving_functions_t));
@@ -459,7 +467,6 @@ ecma_promise_create_resolving_functions (ecma_object_t *object_p) /**< the promi
   funcs->reject = ecma_make_object_value (reject_p);
 
   ecma_free_value (already_resolved);
-
   return funcs;
 } /* ecma_promise_create_resolving_functions */
 

@@ -828,8 +828,9 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t arg1, /**< start */
   JERRY_ASSERT (start <= len && end <= len);
 
   bool use_fast_path = ecma_op_object_is_fast_array (obj_p);
+  uint32_t copied_length = (end > start) ? end - start : 0;
 #if ENABLED (JERRY_ES2015)
-  ecma_value_t new_array = ecma_op_array_species_create (obj_p, 0);
+  ecma_value_t new_array = ecma_op_array_species_create (obj_p, copied_length);
 
   if (ECMA_IS_VALUE_ERROR (new_array))
   {
@@ -846,25 +847,45 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t arg1, /**< start */
   /* 9. */
   uint32_t n = 0;
 
-  if (use_fast_path)
+  if (use_fast_path && copied_length > 0)
   {
     ecma_extended_object_t *ext_from_obj_p = (ecma_extended_object_t *) obj_p;
 
-    if (ext_from_obj_p->u.array.u.hole_count < ECMA_FAST_ARRAY_HOLE_ONE
-        && len != 0
-        && start < end)
+    if (ext_from_obj_p->u.array.u.hole_count < ECMA_FAST_ARRAY_HOLE_ONE)
     {
-      uint32_t length = end - start;
       ecma_extended_object_t *ext_to_obj_p = (ecma_extended_object_t *) new_array_p;
-      ecma_value_t *to_buffer_p = ecma_fast_array_extend (new_array_p, length);
+
+#if ENABLED (JERRY_ES2015)
+      uint32_t target_length = ext_to_obj_p->u.array.length;
+      ecma_value_t *to_buffer_p;
+      if (copied_length == target_length)
+      {
+        to_buffer_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, new_array_p->u1.property_list_cp);
+      }
+      else if (copied_length > target_length)
+      {
+        to_buffer_p = ecma_fast_array_extend (new_array_p, copied_length);
+      }
+      else
+      {
+        ecma_delete_fast_array_properties (new_array_p, copied_length);
+        to_buffer_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, new_array_p->u1.property_list_cp);
+      }
+#else /* !ENABLED (JERRY_ES2015) */
+      ecma_value_t *to_buffer_p = ecma_fast_array_extend (new_array_p, copied_length);
+#endif /* ENABLED (JERRY_ES2015) */
+
       ecma_value_t *from_buffer_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, obj_p->u1.property_list_cp);
 
       for (uint32_t k = start; k < end; k++, n++)
       {
+#if ENABLED (JERRY_ES2015)
+        ecma_free_value_if_not_object (to_buffer_p[n]);
+#endif /* ENABLED (JERRY_ES2015) */
         to_buffer_p[n] = ecma_copy_value_if_not_object (from_buffer_p[k]);
       }
 
-      ext_to_obj_p->u.array.u.hole_count -= length * ECMA_FAST_ARRAY_HOLE_ONE;
+      ext_to_obj_p->u.array.u.hole_count &= ECMA_FAST_ARRAY_HOLE_ONE - 1;
 
       return new_array;
     }

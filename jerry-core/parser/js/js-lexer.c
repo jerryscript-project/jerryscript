@@ -722,6 +722,8 @@ lexer_parse_identifier (parser_context_t *context_p, /**< context */
         decoded_length = 2 * 3;
         has_escape = true;
       }
+#else /* !ENABLED (JERRY_ES2015) */
+      parser_raise_error (context_p, PARSER_ERR_INVALID_IDENTIFIER_PART);
 #endif /* ENABLED (JERRY_ES2015) */
     }
 

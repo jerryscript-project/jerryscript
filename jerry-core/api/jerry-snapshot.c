@@ -1551,70 +1551,6 @@ jerry_append_number_to_buffer (uint8_t *buffer_p, /**< buffer */
                                        utf8_str_size);
 } /* jerry_append_number_to_buffer */
 
-/**
- * Check whether the passed ecma-string is a valid identifier.
- *
- * @return true - if the ecma-string is a valid identifier,
- *         false - otherwise
- */
-static bool
-ecma_string_is_valid_identifier (const ecma_string_t *string_p)
-{
-  ECMA_STRING_TO_UTF8_STRING (string_p, str_buffer_p, str_buffer_size);
-
-  const uint8_t *str_p = str_buffer_p;
-  const uint8_t *str_end_p = str_buffer_p + str_buffer_size;
-
-  while (str_p < str_end_p)
-  {
-    lit_code_point_t code_point = *str_p;
-    lit_utf8_size_t utf8_length = 1;
-
-    if (JERRY_UNLIKELY (code_point >= LIT_UTF8_2_BYTE_MARKER))
-    {
-      utf8_length = lit_read_code_point_from_utf8 (str_p,
-                                                   (lit_utf8_size_t) (str_end_p - str_p),
-                                                   &code_point);
-
-#if ENABLED (JERRY_ES2015)
-      if ((code_point >= LIT_UTF16_HIGH_SURROGATE_MIN && code_point <= LIT_UTF16_HIGH_SURROGATE_MAX)
-          && str_p + 3 < str_end_p)
-      {
-        lit_code_point_t low_surrogate;
-        lit_read_code_point_from_utf8 (str_p + 3,
-                                       (lit_utf8_size_t) (str_end_p - (str_p + 3)),
-                                       &low_surrogate);
-
-        if (low_surrogate >= LIT_UTF16_LOW_SURROGATE_MIN && low_surrogate <= LIT_UTF16_LOW_SURROGATE_MAX)
-        {
-          code_point = lit_convert_surrogate_pair_to_code_point ((ecma_char_t) code_point,
-                                                                 (ecma_char_t) low_surrogate);
-          utf8_length = 2 * 3;
-        }
-      }
-#endif /* ENABLED (JERRY_ES2015) */
-    }
-
-    if (str_p == str_buffer_p)
-    {
-      if (!lit_code_point_is_identifier_start (code_point))
-      {
-        break;
-      }
-    }
-    else if (!lit_code_point_is_identifier_part (code_point))
-    {
-      break;
-    }
-
-    str_p += utf8_length;
-  }
-
-  ECMA_FINALIZE_UTF8_STRING (str_buffer_p, str_buffer_size);
-
-  return str_p == str_end_p;
-} /* ecma_string_is_valid_identifier */
-
 #endif /* ENABLED (JERRY_SNAPSHOT_SAVE) */
 
 /**
@@ -1667,14 +1603,7 @@ jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, /**< input snapsho
     {
       ecma_string_t *literal_p = ecma_get_string_from_value (buffer_p[i]);
 
-      /* NOTE:
-       *      We don't save a literal (in C format) which isn't a valid
-       *      identifier or it's a magic string.
-       * TODO:
-       *      Save all of the literals in C format as well.
-       */
-      if (ecma_get_string_magic (literal_p) == LIT_MAGIC_STRING__COUNT
-          && (!is_c_format || ecma_string_is_valid_identifier (literal_p)))
+      if (ecma_get_string_magic (literal_p) == LIT_MAGIC_STRING__COUNT)
       {
         literal_count++;
       }
@@ -1702,14 +1631,7 @@ jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, /**< input snapsho
     {
       ecma_string_t *literal_p = ecma_get_string_from_value (buffer_p[i]);
 
-      /* NOTE:
-       *      We don't save a literal (in C format) which isn't a valid
-       *      identifier or it's a magic string.
-       * TODO:
-       *      Save all of the literals in C format as well.
-       */
-      if (ecma_get_string_magic (literal_p) == LIT_MAGIC_STRING__COUNT
-          && (!is_c_format || ecma_string_is_valid_identifier (literal_p)))
+      if (ecma_get_string_magic (literal_p) == LIT_MAGIC_STRING__COUNT)
       {
         literal_array[literal_idx++] = literal_p;
       }
@@ -1743,7 +1665,29 @@ jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, /**< input snapsho
     for (lit_utf8_size_t i = 0; i < literal_count; i++)
     {
       lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "  \"", 0);
-      lit_buf_p = jerry_append_ecma_string_to_buffer (lit_buf_p, buffer_end_p, literal_array[i]);
+      ECMA_STRING_TO_UTF8_STRING (literal_array[i], str_buffer_p, str_buffer_size);
+      for (lit_utf8_size_t j = 0; j < str_buffer_size; j++)
+      {
+        uint8_t byte = str_buffer_p[j];
+        if (byte < 32 || byte > 127)
+        {
+          lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "\\x", 0);
+          ecma_char_t hex_digit = (ecma_char_t) (byte >> 4);
+          *lit_buf_p++ = (lit_utf8_byte_t) ((hex_digit > 9) ? (hex_digit + ('A' - 10)) : (hex_digit + '0'));
+          hex_digit = (lit_utf8_byte_t) (byte & 0xf);
+          *lit_buf_p++ = (lit_utf8_byte_t) ((hex_digit > 9) ? (hex_digit + ('A' - 10)) : (hex_digit + '0'));
+        }
+        else
+        {
+          if (byte == '\\' || byte == '"')
+          {
+            *lit_buf_p++ = '\\';
+          }
+          *lit_buf_p++ = byte;
+        }
+      }
+
+      ECMA_FINALIZE_UTF8_STRING (str_buffer_p, str_buffer_size);
       lit_buf_p = jerry_append_chars_to_buffer (lit_buf_p, buffer_end_p, "\"", 0);
 
       if (i < literal_count - 1)

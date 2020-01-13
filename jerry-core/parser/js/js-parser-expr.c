@@ -2531,7 +2531,8 @@ parser_pattern_process_nested_pattern (parser_context_t *context_p, /**< context
                                     | (flags & (PARSER_PATTERN_BINDING
                                                 | PARSER_PATTERN_LEXICAL
                                                 | PARSER_PATTERN_LOCAL
-                                                | PARSER_PATTERN_REST_ELEMENT)));
+                                                | PARSER_PATTERN_REST_ELEMENT
+                                                | PARSER_PATTERN_ARGUMENTS)));
 
   if (context_p->next_scanner_info_p->source_p == context_p->source_p)
   {

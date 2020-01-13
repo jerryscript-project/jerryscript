@@ -2966,6 +2966,7 @@ lexer_check_property_modifier (parser_context_t *context_p) /**< context */
       || context_p->source_p[0] == LIT_CHAR_COMMA
       || context_p->source_p[0] == LIT_CHAR_RIGHT_BRACE
       || context_p->source_p[0] == LIT_CHAR_LEFT_PAREN
+      || context_p->source_p[0] == LIT_CHAR_EQUALS
 #endif /* ENABLED (JERRY_ES2015) */
       || context_p->source_p[0] == LIT_CHAR_COLON)
   {

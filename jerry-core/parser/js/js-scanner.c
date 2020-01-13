@@ -829,10 +829,8 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
 
       lexer_next_token (context_p);
 
-      if (binding_type == SCANNER_BINDING_CATCH)
+      if (binding_type == SCANNER_BINDING_CATCH && context_p->stack_top_uint8 == SCAN_STACK_CATCH_STATEMENT)
       {
-        JERRY_ASSERT (context_p->stack_top_uint8 == SCAN_STACK_CATCH_STATEMENT);
-
         scanner_pop_binding_list (scanner_context_p);
 
         if (context_p->token.type != LEXER_RIGHT_PAREN)

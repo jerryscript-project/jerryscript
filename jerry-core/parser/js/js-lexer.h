@@ -201,7 +201,6 @@ typedef enum
 #define LEXER_NEWLINE_LS_PS_BYTE_1 0xe2
 #define LEXER_NEWLINE_LS_PS_BYTE_23(source) \
   ((source)[1] == LIT_UTF8_2_BYTE_CODE_POINT_MIN && ((source)[2] | 0x1) == 0xa9)
-#define LEXER_UTF8_4BYTE_START 0xf0
 
 #define LEXER_IS_LEFT_BRACKET(type) \
   ((type) == LEXER_LEFT_BRACE || (type) == LEXER_LEFT_PAREN || (type) == LEXER_LEFT_SQUARE)

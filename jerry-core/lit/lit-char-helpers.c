@@ -223,6 +223,8 @@ lit_code_point_is_identifier_start (lit_code_point_t code_point) /**< code point
     /* TODO: detect these ranges correctly. */
     return (code_point >= 0x10C80 && code_point <= 0x10CF2);
   }
+#else /* !ENABLED (JERRY_ES2015) */
+  JERRY_ASSERT (code_point <= LIT_UTF8_4_BYTE_CODE_POINT_MIN);
 #endif /* ENABLED (JERRY_ES2015) */
 
   return lit_char_is_unicode_letter ((ecma_char_t) code_point);
@@ -252,6 +254,8 @@ lit_code_point_is_identifier_part (lit_code_point_t code_point) /**< code point 
     /* TODO: detect these ranges correctly. */
     return (code_point >= 0x10C80 && code_point <= 0x10CF2);
   }
+#else /* !ENABLED (JERRY_ES2015) */
+  JERRY_ASSERT (code_point <= LIT_UTF8_4_BYTE_CODE_POINT_MIN);
 #endif /* ENABLED (JERRY_ES2015) */
 
   return (lit_char_is_unicode_letter ((ecma_char_t) code_point)

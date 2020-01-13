@@ -693,12 +693,12 @@ lexer_parse_identifier (parser_context_t *context_p, /**< context */
 
     if (JERRY_UNLIKELY (code_point >= LIT_UTF8_2_BYTE_MARKER))
     {
+#if ENABLED (JERRY_ES2015)
       utf8_length = lit_read_code_point_from_utf8 (source_p,
                                                    (lit_utf8_size_t) (source_end_p - source_p),
                                                    &code_point);
       decoded_length = utf8_length;
 
-#if ENABLED (JERRY_ES2015)
       /* Only ES2015 supports code points outside of the basic plane which can be part of an identifier. */
       if ((code_point >= LIT_UTF16_HIGH_SURROGATE_MIN && code_point <= LIT_UTF16_HIGH_SURROGATE_MAX)
           && source_p + 3 < source_end_p)
@@ -717,10 +717,22 @@ lexer_parse_identifier (parser_context_t *context_p, /**< context */
           char_count = 2;
         }
       }
-      else if (source_p[0] >= LEXER_UTF8_4BYTE_START)
+      else if (source_p[0] >= LIT_UTF8_4_BYTE_MARKER)
       {
         decoded_length = 2 * 3;
         has_escape = true;
+      }
+#else /* !ENABLED (JERRY_ES2015) */
+      if (code_point < LIT_UTF8_4_BYTE_MARKER)
+      {
+        utf8_length = lit_read_code_point_from_utf8 (source_p,
+                                                     (lit_utf8_size_t) (source_end_p - source_p),
+                                                     &code_point);
+        decoded_length = utf8_length;
+      }
+      else
+      {
+        code_point = 0;
       }
 #endif /* ENABLED (JERRY_ES2015) */
     }
@@ -1091,7 +1103,7 @@ lexer_parse_string (parser_context_t *context_p, /**< context */
     }
 #endif /* ENABLED (JERRY_ES2015) */
 
-    if (*source_p >= LEXER_UTF8_4BYTE_START)
+    if (*source_p >= LIT_UTF8_4_BYTE_MARKER)
     {
       /* Processing 4 byte unicode sequence (even if it is
        * after a backslash). Always converted to two 3 byte
@@ -1893,7 +1905,7 @@ lexer_convert_ident_to_cesu8 (uint8_t *destination_p, /**< destination string */
     }
 
 #if ENABLED (JERRY_ES2015)
-    if (*source_p >= LEXER_UTF8_4BYTE_START)
+    if (*source_p >= LIT_UTF8_4_BYTE_MARKER)
     {
       lit_four_byte_utf8_char_to_cesu8 (destination_p, source_p);
 
@@ -2113,7 +2125,7 @@ lexer_convert_literal_to_chars (parser_context_t *context_p, /**< context */
     }
 #endif /* ENABLED (JERRY_ES2015) */
 
-    if (*source_p >= LEXER_UTF8_4BYTE_START)
+    if (*source_p >= LIT_UTF8_4_BYTE_MARKER)
     {
       /* Processing 4 byte unicode sequence (even if it is
         * after a backslash). Always converted to two 3 byte
@@ -3028,7 +3040,7 @@ lexer_compare_identifier_to_chars (const uint8_t *left_p, /**< left identifier *
 
       escape_size = lit_code_point_to_cesu8_bytes (utf8_buf, code_point);
     }
-    else if (*left_p >= LEXER_UTF8_4BYTE_START)
+    else if (*left_p >= LIT_UTF8_4_BYTE_MARKER)
     {
       lit_four_byte_utf8_char_to_cesu8 (utf8_buf, left_p);
       escape_size = 3 * 2;

@@ -1948,8 +1948,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_ITERATOR_STEP:
         {
-          const int8_t index = (opcode == CBC_EXT_ITERATOR_STEP) ? -1 : -3;
-          result = ecma_op_iterator_step (stack_top_p[index]);
+          JERRY_ASSERT (opcode >= CBC_EXT_ITERATOR_STEP && opcode <= CBC_EXT_ITERATOR_STEP_3);
+          const uint8_t index = (uint8_t) (1 + (opcode - CBC_EXT_ITERATOR_STEP));
+          result = ecma_op_iterator_step (stack_top_p[-index]);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {
@@ -1999,9 +2000,10 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_REST_INITIALIZER:
         {
-          const int8_t iterator_index = (opcode == CBC_EXT_REST_INITIALIZER) ? -1 : -3;
+          JERRY_ASSERT (opcode >= CBC_EXT_REST_INITIALIZER && opcode <= CBC_EXT_REST_INITIALIZER_3);
+          const uint8_t iterator_index = (uint8_t) (1 + (opcode - CBC_EXT_REST_INITIALIZER));
           ecma_object_t *array_p = ecma_op_new_fast_array_object (0);
-          ecma_value_t iterator = stack_top_p[iterator_index];
+          ecma_value_t iterator = stack_top_p[-iterator_index];
           uint32_t index = 0;
 
           while (true)

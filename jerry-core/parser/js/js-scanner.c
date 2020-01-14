@@ -75,6 +75,13 @@ scanner_scan_primary_expression (parser_context_t *context_p, /**< context */
     case LEXER_KEYW_NEW:
     {
       scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION_AFTER_NEW;
+
+#if ENABLED (JERRY_ES2015)
+      if (scanner_try_scan_new_target (context_p))
+      {
+        scanner_context_p->mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
+      }
+#endif /* ENABLED (JERRY_ES2015) */
       break;
     }
     case LEXER_DIVIDE:

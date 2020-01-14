@@ -1752,6 +1752,42 @@ scanner_is_global_context_needed (parser_context_t *context_p) /**< context */
   return false;
 } /* scanner_is_global_context_needed */
 
+/**
+ * Try to scan/parse the ".target" part in the "new.target" expression.
+ *
+ * Upon exiting with "true" the current token will point to the "target"
+ * literal.
+ *
+ * If the "target" literal is not after the "new." then a scanner/parser
+ * error will be raised.
+ *
+ * @returns true if the ".target" part was found
+ *          false if there is no "." after the new.
+ */
+bool
+scanner_try_scan_new_target (parser_context_t *context_p) /**< parser/scanner context */
+{
+  JERRY_ASSERT (context_p->token.type == LEXER_KEYW_NEW);
+
+  if (lexer_check_next_character (context_p, LIT_CHAR_DOT))
+  {
+    lexer_next_token (context_p);
+    if (context_p->token.type != LEXER_DOT)
+    {
+      parser_raise_error (context_p, PARSER_ERR_INVALID_CHARACTER);
+    }
+
+    lexer_next_token (context_p);
+    if (!lexer_token_is_identifier (context_p, "target", 6))
+    {
+      parser_raise_error (context_p, PARSER_ERR_NEW_TARGET_EXPECTED);
+    }
+
+    return true;
+  }
+  return false;
+} /* scanner_try_scan_new_target */
+
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**

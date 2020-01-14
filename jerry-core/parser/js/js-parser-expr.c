@@ -113,6 +113,27 @@ parser_check_invalid_assign (parser_context_t *context_p) /**< context */
   }
 } /* parser_check_invalid_assign */
 
+#if ENABLED (JERRY_ES2015)
+/**
+ * Check and throw an error if the "new.target" is invalid as a left-hand side expression.
+ */
+static void
+parser_check_invalid_new_target (parser_context_t *context_p, /**< parser context */
+                                     cbc_opcode_t opcode) /**< current opcode under parsing */
+{
+  JERRY_ASSERT ((opcode >= CBC_PRE_INCR && opcode <= CBC_POST_DECR)
+                || (opcode == CBC_ASSIGN
+                    && (context_p->token.type == LEXER_ASSIGN
+                        || LEXER_IS_BINARY_LVALUE_TOKEN (context_p->token.type))));
+
+  /* new.target is an invalid left-hand side target */
+  if (context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_NEW_TARGET))
+  {
+    parser_raise_error (context_p, PARSER_ERR_NEW_TARGET_NOT_ALLOWED);
+  }
+} /* parser_check_invalid_new_target */
+#endif /* ENABLED (JERRY_ES2015) */
+
 /**
  * Emit identifier reference
  */
@@ -202,6 +223,10 @@ parser_emit_unary_lvalue_opcode (parser_context_t *context_p, /**< context */
       parser_emit_cbc (context_p, CBC_PUSH_TRUE);
       return;
     }
+
+#if ENABLED (JERRY_ES2015)
+    parser_check_invalid_new_target (context_p, opcode);
+#endif /* ENABLED (JERRY_ES2015) */
 
     parser_emit_cbc_ext (context_p, CBC_EXT_THROW_REFERENCE_ERROR);
   }
@@ -1380,6 +1405,22 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
     {
       /* After 'new' unary operators are not allowed. */
       new_was_seen = true;
+
+#if ENABLED (JERRY_ES2015)
+      /* Check if "new.target" is written here. */
+      if (scanner_try_scan_new_target (context_p))
+      {
+        if (!(context_p->status_flags & PARSER_IS_FUNCTION))
+        {
+          parser_raise_error (context_p, PARSER_ERR_NEW_TARGET_NOT_ALLOWED);
+        }
+
+        parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_NEW_TARGET);
+        lexer_next_token (context_p);
+        /* Found "new.target" return here */
+        return false;
+      }
+#endif /* ENABLED (JERRY_ES2015) */
     }
     else if (new_was_seen
              || (*grouping_level_p == PARSE_EXPR_LEFT_HAND_SIDE)
@@ -2166,6 +2207,10 @@ parser_append_binary_single_assignment_token (parser_context_t *context_p, /**< 
   else
   {
     /* Invalid LeftHandSide expression. */
+#if ENABLED (JERRY_ES2015)
+    parser_check_invalid_new_target (context_p, CBC_ASSIGN);
+#endif /* ENABLED (JERRY_ES2015) */
+
     parser_emit_cbc_ext (context_p, CBC_EXT_THROW_REFERENCE_ERROR);
     parser_stack_push_uint8 (context_p, CBC_ASSIGN);
   }
@@ -2205,6 +2250,10 @@ parser_append_binary_token (parser_context_t *context_p) /**< context */
     else
     {
       /* Invalid LeftHandSide expression. */
+#if ENABLED (JERRY_ES2015)
+      parser_check_invalid_new_target (context_p, CBC_ASSIGN);
+#endif /* ENABLED (JERRY_ES2015) */
+
       parser_emit_cbc_ext (context_p, CBC_EXT_THROW_REFERENCE_ERROR);
       parser_emit_cbc (context_p, CBC_PUSH_PROP_REFERENCE);
     }

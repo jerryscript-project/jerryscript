@@ -54,6 +54,10 @@ ecma_init (void)
 #if ENABLED (JERRY_ES2015_BUILTIN_PROMISE)
   ecma_job_queue_init ();
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
+
+#if ENABLED (JERRY_ES2015)
+  JERRY_CONTEXT (current_new_target) = JERRY_CONTEXT_INVALID_NEW_TARGET;
+#endif /* ENABLED (JERRY_ES2015) */
 } /* ecma_init */
 
 /**
@@ -62,6 +66,10 @@ ecma_init (void)
 void
 ecma_finalize (void)
 {
+#if ENABLED (JERRY_ES2015)
+  JERRY_ASSERT (JERRY_CONTEXT (current_new_target) == JERRY_CONTEXT_INVALID_NEW_TARGET);
+#endif /* ENABLED (JERRY_ES2015) */
+
   ecma_finalize_global_lex_env ();
   ecma_finalize_builtins ();
   ecma_gc_run ();

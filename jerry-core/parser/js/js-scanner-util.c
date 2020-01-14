@@ -964,7 +964,7 @@ scanner_filter_arguments (parser_context_t *context_p, /**< context */
       new_literal_p = (lexer_lit_location_t *) parser_list_append (context_p, &new_literal_pool_p->literal_pool);
       *new_literal_p = *literal_p;
     }
-    else
+    else if (prev_literal_pool_p != NULL)
     {
       /* Propagate literal to upper level. */
       lexer_lit_location_t *literal_location_p = scanner_add_custom_literal (context_p,

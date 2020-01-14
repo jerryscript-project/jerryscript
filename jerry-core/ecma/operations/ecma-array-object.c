@@ -704,7 +704,11 @@ ecma_op_array_species_create (ecma_object_t *original_array_p, /**< The object f
 
   if (ecma_is_value_undefined (constructor))
   {
-    return ecma_make_object_value (ecma_op_new_fast_array_object (length));
+    ecma_value_t length_val = ecma_make_uint32_value (length);
+    ecma_value_t new_array = ecma_op_create_array_object (&length_val, 1, true);
+    ecma_free_value (length_val);
+
+    return new_array;
   }
 
   if (!ecma_is_constructor (constructor))

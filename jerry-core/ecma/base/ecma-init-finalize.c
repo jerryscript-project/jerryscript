@@ -30,6 +30,11 @@
  */
 
 /**
+ * Maximum number of GC loops on cleanup.
+ */
+#define JERRY_GC_LOOP_LIMIT 100
+
+/**
  * Initialize ECMA components
  */
 void
@@ -63,8 +68,17 @@ void
 ecma_finalize (void)
 {
   ecma_finalize_global_lex_env ();
-  ecma_finalize_builtins ();
-  ecma_gc_run ();
+  uint8_t runs = 0;
+  do
+  {
+    ecma_finalize_builtins ();
+    ecma_gc_run ();
+    if (++runs >= JERRY_GC_LOOP_LIMIT)
+    {
+      jerry_fatal (ERR_UNTERMINATED_GC_LOOPS);
+    }
+  }
+  while (JERRY_CONTEXT (ecma_gc_new_objects) != 0);
   ecma_finalize_lit_storage ();
 } /* ecma_finalize */
 

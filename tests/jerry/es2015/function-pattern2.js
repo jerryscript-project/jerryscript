@@ -68,3 +68,11 @@ function l(a = 0, ...[b, c = 1, d = 4])
   assert(d === 4);
 }
 l(1,2,3);
+
+Function("{a, x:b}","[c]", "{ 'dd':d, e = Math.cos(0)}",
+  "assert(a === 1);" +
+  "assert(b === undefined);" +
+  "assert(c === 3);" +
+  "assert(d === 4);" +
+  "assert(e === 1);"
+)({a:1, b:3}, [3], {a:1, b:2, dd:4});

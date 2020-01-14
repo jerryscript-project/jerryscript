@@ -2752,6 +2752,7 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
             context_p->line = 1;
             context_p->column = 1;
 
+            scanner_filter_arguments (context_p, &scanner_context);
             lexer_next_token (context_p);
             scanner_check_directives (context_p, &scanner_context);
             continue;

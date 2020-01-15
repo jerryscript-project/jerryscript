@@ -1892,43 +1892,64 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
         }
         else
         {
-#endif /* ENABLED (JERRY_ES2015) */
           lexer_next_token (context_p);
 
-          if (context_p->token.type != LEXER_RIGHT_PAREN)
+          while (context_p->token.type != LEXER_RIGHT_PAREN)
           {
-            while (true)
+            if (++call_arguments > CBC_MAXIMUM_BYTE_VALUE)
             {
-              if (++call_arguments > CBC_MAXIMUM_BYTE_VALUE)
-              {
-                parser_raise_error (context_p, PARSER_ERR_ARGUMENT_LIMIT_REACHED);
-              }
+              parser_raise_error (context_p, PARSER_ERR_ARGUMENT_LIMIT_REACHED);
+            }
 
-#if ENABLED (JERRY_ES2015)
-              if (context_p->token.type == LEXER_THREE_DOTS)
-              {
-                has_spread_element = true;
-                call_arguments++;
-                parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_SPREAD_ELEMENT);
-                lexer_next_token (context_p);
-              }
-#endif /* ENABLED (JERRY_ES2015) */
-
-              parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
-
-              if (context_p->token.type != LEXER_COMMA)
-              {
-                break;
-              }
+            if (context_p->token.type == LEXER_THREE_DOTS)
+            {
+              has_spread_element = true;
+              call_arguments++;
+              parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_SPREAD_ELEMENT);
               lexer_next_token (context_p);
+            }
+
+            parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
+
+            if (context_p->token.type == LEXER_COMMA)
+            {
+              lexer_next_token (context_p);
+              continue;
             }
 
             if (context_p->token.type != LEXER_RIGHT_PAREN)
             {
               parser_raise_error (context_p, PARSER_ERR_RIGHT_PAREN_EXPECTED);
             }
+
+            break;
           }
-#if ENABLED (JERRY_ES2015)
+        }
+#else /* !ENABLED (JERRY_ES2015) */
+        lexer_next_token (context_p);
+
+        if (context_p->token.type != LEXER_RIGHT_PAREN)
+        {
+          while (true)
+          {
+            if (++call_arguments > CBC_MAXIMUM_BYTE_VALUE)
+            {
+              parser_raise_error (context_p, PARSER_ERR_ARGUMENT_LIMIT_REACHED);
+            }
+
+            parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
+
+            if (context_p->token.type != LEXER_COMMA)
+            {
+              break;
+            }
+            lexer_next_token (context_p);
+          }
+
+          if (context_p->token.type != LEXER_RIGHT_PAREN)
+          {
+            parser_raise_error (context_p, PARSER_ERR_RIGHT_PAREN_EXPECTED);
+          }
         }
 #endif /* ENABLED (JERRY_ES2015) */
 

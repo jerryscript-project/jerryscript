@@ -138,13 +138,13 @@ def run_normal_tests(args, tests):
         is_expected_to_fail = os.path.join(os.path.sep, 'fail', '') in test
         (returncode, stdout) = execute_test_command(test_cmd + [test])
 
-        if bool(returncode) == is_expected_to_fail:
+        if (returncode == 0 and not is_expected_to_fail) or (returncode == 1 and is_expected_to_fail):
             passed += 1
             if not args.quiet:
                 passed_string = 'PASS' + (' (XFAIL)' if is_expected_to_fail else '')
                 util.print_test_result(tested, total, True, passed_string, test_path)
         else:
-            passed_string = 'FAIL%s (%d)' % (' (XPASS)' if is_expected_to_fail else '', returncode)
+            passed_string = 'FAIL%s (%d)' % (' (XPASS)' if returncode == 0 and is_expected_to_fail else '', returncode)
             util.print_test_result(tested, total, False, passed_string, test_path)
             print("================================================")
             print(stdout)
@@ -176,7 +176,7 @@ def run_snapshot_tests(args, tests):
         is_expected_to_fail = os.path.join(os.path.sep, 'fail', '') in test
         (returncode, stdout) = execute_test_command(generate_snapshot_cmd + [test])
 
-        if is_expected_to_fail or not returncode:
+        if (returncode == 0) or (returncode == 1 and is_expected_to_fail):
             if not args.quiet:
                 passed_string = 'PASS' + (' (XFAIL)' if returncode else '')
                 util.print_test_result(tested, total, True, passed_string, test_path, True)
@@ -194,13 +194,13 @@ def run_snapshot_tests(args, tests):
         (returncode, stdout) = execute_test_command(execute_snapshot_cmd)
         os.remove('js.snapshot')
 
-        if bool(returncode) == is_expected_to_fail:
+        if (returncode == 0 and not is_expected_to_fail) or (returncode == 1 and is_expected_to_fail):
             passed += 1
             if not args.quiet:
                 passed_string = 'PASS' + (' (XFAIL)' if is_expected_to_fail else '')
                 util.print_test_result(tested, total, True, passed_string, test_path, False)
         else:
-            passed_string = 'FAIL%s (%d)' % (' (XPASS)' if is_expected_to_fail else '', returncode)
+            passed_string = 'FAIL%s (%d)' % (' (XPASS)' if returncode == 0 and is_expected_to_fail else '', returncode)
             util.print_test_result(tested, total, False, passed_string, test_path, False)
             print("================================================")
             print(stdout)

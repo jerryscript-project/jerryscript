@@ -119,16 +119,18 @@ parser_check_invalid_assign (parser_context_t *context_p) /**< context */
  */
 static void
 parser_check_invalid_new_target (parser_context_t *context_p, /**< parser context */
-                                     cbc_opcode_t opcode) /**< current opcode under parsing */
+                                 cbc_opcode_t opcode) /**< current opcode under parsing */
 {
-  JERRY_ASSERT ((opcode >= CBC_PRE_INCR && opcode <= CBC_POST_DECR)
-                || (opcode == CBC_ASSIGN
-                    && (context_p->token.type == LEXER_ASSIGN
-                        || LEXER_IS_BINARY_LVALUE_TOKEN (context_p->token.type))));
-
   /* new.target is an invalid left-hand side target */
   if (context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_NEW_TARGET))
   {
+    /* Make sure that the call side is a post/pre increment or an assignment expression.
+     * There should be no other ways the "new.target" expression should be here. */
+    JERRY_ASSERT ((opcode >= CBC_PRE_INCR && opcode <= CBC_POST_DECR)
+                  || (opcode == CBC_ASSIGN
+                      && (context_p->token.type == LEXER_ASSIGN
+                          || LEXER_IS_BINARY_LVALUE_TOKEN (context_p->token.type))));
+
     parser_raise_error (context_p, PARSER_ERR_NEW_TARGET_NOT_ALLOWED);
   }
 } /* parser_check_invalid_new_target */

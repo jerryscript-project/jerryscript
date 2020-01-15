@@ -283,93 +283,98 @@ ecma_builtin_string_prototype_object_locale_compare (ecma_string_t *this_string_
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_string_prototype_object_match (ecma_value_t this_to_string_value, /**< this argument */
+ecma_builtin_string_prototype_object_match (ecma_value_t this_argument, /**< this argument */
                                             ecma_value_t regexp_arg) /**< routine's argument */
 {
 #if ENABLED (JERRY_ES2015)
+  /* 3. */
   if (!(ecma_is_value_undefined (regexp_arg) || ecma_is_value_null (regexp_arg)))
   {
+    /* 3.a */
     ecma_value_t matcher = ecma_op_get_method_by_symbol_id (regexp_arg, LIT_GLOBAL_SYMBOL_MATCH);
 
+    /* 3.b */
     if (ECMA_IS_VALUE_ERROR (matcher))
     {
       return matcher;
     }
 
+    /* 3.c */
     if (!ecma_is_value_undefined (matcher))
     {
+      /* 3.c.i */
       ecma_object_t *matcher_method = ecma_get_object_from_value (matcher);
-      ecma_value_t result = ecma_op_function_call (matcher_method, regexp_arg, &this_to_string_value, 1);
+      ecma_value_t result = ecma_op_function_call (matcher_method, regexp_arg, &this_argument, 1);
       ecma_deref_object (matcher_method);
       return result;
     }
   }
+
+  /* 4. */
+  ecma_string_t *this_str_p = ecma_op_to_string (this_argument);
+
+  /* 5. */
+  if (JERRY_UNLIKELY (this_str_p == NULL))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  /* 6. */
+  ecma_object_t *regexp_obj_p = ecma_op_regexp_alloc (NULL);
+
+  if (JERRY_UNLIKELY (regexp_obj_p == NULL))
+  {
+    ecma_deref_ecma_string (this_str_p);
+    return ECMA_VALUE_ERROR;
+  }
+
+  ecma_value_t new_regexp = ecma_op_create_regexp_from_pattern (regexp_obj_p, regexp_arg, ECMA_VALUE_UNDEFINED);
+
+  /* 7. */
+  if (ECMA_IS_VALUE_ERROR (new_regexp))
+  {
+
+    ecma_deref_object (regexp_obj_p);
+    ecma_deref_ecma_string (this_str_p);
+    return new_regexp;
+  }
+  ecma_value_t this_str_value = ecma_make_string_value (this_str_p);
+
+  /* 8. */
+  ecma_value_t ret_value = ecma_op_invoke_by_symbol_id (new_regexp, LIT_GLOBAL_SYMBOL_MATCH, &this_str_value, 1);
+
+  ecma_deref_ecma_string (this_str_p);
+  ecma_free_value (new_regexp);
+
+  return ret_value;
+
 #else /* !ENABLED (JERRY_ES2015) */
   if (ecma_object_is_regexp_object (regexp_arg))
   {
-    return ecma_regexp_match_helper (regexp_arg, this_to_string_value);
+    return ecma_regexp_match_helper (regexp_arg, this_argument);
   }
-#endif /* ENABLED (JERRY_ES2015) */
 
-  ecma_string_t *pattern_p = ecma_regexp_read_pattern_str_helper (regexp_arg);
+  ecma_object_t *regexp_obj_p = ecma_op_regexp_alloc (NULL);
 
-  if (JERRY_UNLIKELY (pattern_p == NULL))
+  if (JERRY_UNLIKELY (regexp_obj_p == NULL))
   {
     return ECMA_VALUE_ERROR;
   }
 
-  ecma_value_t new_regexp = ecma_op_create_regexp_object (pattern_p, 0);
-
-  ecma_deref_ecma_string (pattern_p);
+  ecma_value_t new_regexp = ecma_op_create_regexp_from_pattern (regexp_obj_p, regexp_arg, ECMA_VALUE_UNDEFINED);
 
   if (ECMA_IS_VALUE_ERROR (new_regexp))
   {
+    ecma_deref_object (regexp_obj_p);
     return new_regexp;
   }
 
-#if ENABLED (JERRY_ES2015)
-  ecma_object_t *new_regexp_obj = ecma_get_object_from_value (new_regexp);
-
-  ecma_value_t func_value = ecma_op_object_get_by_symbol_id (new_regexp_obj, LIT_GLOBAL_SYMBOL_MATCH);
-
-  if (ECMA_IS_VALUE_ERROR (func_value) || !ecma_op_is_callable (func_value))
-  {
-    ecma_deref_object (new_regexp_obj);
-
-    if (!ECMA_IS_VALUE_ERROR (func_value))
-    {
-      ecma_free_value (func_value);
-      ecma_raise_type_error (ECMA_ERR_MSG ("@@match is not callable."));
-    }
-
-    return ECMA_VALUE_ERROR;
-  }
-
-  ecma_object_t *func_obj = ecma_get_object_from_value (func_value);
-
-  ecma_string_t *str_p = ecma_op_to_string (this_to_string_value);
-
-  if (JERRY_UNLIKELY (str_p == NULL))
-  {
-    ecma_deref_object (new_regexp_obj);
-    ecma_deref_object (func_obj);
-    return ECMA_VALUE_ERROR;
-  }
-
-  ecma_value_t str_value = ecma_make_string_value (str_p);
-
-  ecma_value_t result = ecma_op_function_call (func_obj, new_regexp, &str_value, 1);
-
-  ecma_deref_ecma_string (str_p);
-  ecma_deref_object (new_regexp_obj);
-  ecma_deref_object (func_obj);
-#else /* !ENABLED (JERRY_ES2015) */
-  ecma_value_t result = ecma_regexp_match_helper (new_regexp, this_to_string_value);
+  ecma_value_t result = ecma_regexp_match_helper (new_regexp, this_argument);
 
   ecma_free_value (new_regexp);
-#endif /* ENABLED (JERRY_ES2015) */
 
   return result;
+#endif /* ENABLED (JERRY_ES2015) */
 } /* ecma_builtin_string_prototype_object_match */
 
 /**
@@ -624,10 +629,24 @@ ecma_builtin_string_prototype_object_search (ecma_value_t this_value, /**< this 
     goto cleanup_string;
   }
 
-  ecma_value_t new_regexp = ecma_op_create_regexp_object (pattern_p, 0);
+  ecma_object_t *new_regexp_obj_p = ecma_op_regexp_alloc (NULL);
+
+  if (JERRY_UNLIKELY (new_regexp_obj_p == NULL))
+  {
+    ecma_deref_ecma_string (string_p);
+    ecma_deref_ecma_string (pattern_p);
+    return ECMA_VALUE_ERROR;
+  }
+
+  ecma_value_t new_regexp = ecma_op_create_regexp_from_pattern (new_regexp_obj_p,
+                                                                ecma_make_string_value (pattern_p),
+                                                                ECMA_VALUE_UNDEFINED);
+
   ecma_deref_ecma_string (pattern_p);
+
   if (ECMA_IS_VALUE_ERROR (new_regexp))
   {
+    ecma_deref_object (new_regexp_obj_p);
     goto cleanup_string;
   }
 
@@ -1323,6 +1342,13 @@ ecma_builtin_string_prototype_dispatch_routine (uint16_t builtin_routine_id, /**
   ecma_value_t arg1 = arguments_list_p[0];
   ecma_value_t arg2 = arguments_list_p[1];
 
+#if ENABLED (JERRY_BUILTIN_REGEXP)
+  if (builtin_routine_id == ECMA_STRING_PROTOTYPE_MATCH)
+  {
+    return ecma_builtin_string_prototype_object_match (this_arg, arg1);
+  }
+#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
+
   if (builtin_routine_id <= ECMA_STRING_PROTOTYPE_CHAR_CODE_AT)
   {
     return ecma_builtin_string_prototype_char_at_helper (this_arg,
@@ -1371,11 +1397,6 @@ ecma_builtin_string_prototype_dispatch_routine (uint16_t builtin_routine_id, /**
       break;
     }
 #if ENABLED (JERRY_BUILTIN_REGEXP)
-    case ECMA_STRING_PROTOTYPE_MATCH:
-    {
-      ret_value = ecma_builtin_string_prototype_object_match (to_string_val, arg1);
-      break;
-    }
     case ECMA_STRING_PROTOTYPE_REPLACE:
     {
       ret_value = ecma_builtin_string_prototype_object_replace (to_string_val, arg1, arg2);

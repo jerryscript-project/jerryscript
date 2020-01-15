@@ -31,6 +31,7 @@
 #include "ecma-helpers.h"
 #include "ecma-init-finalize.h"
 #include "ecma-lex-env.h"
+#include "lit-char-helpers.h"
 #include "ecma-literal-storage.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
@@ -1773,11 +1774,20 @@ jerry_create_regexp_sz (const jerry_char_t *pattern_p, /**< zero-terminated UTF-
     return jerry_throw (ecma_raise_common_error (ECMA_ERR_MSG ("Input must be a valid utf8 string")));
   }
 
+  ecma_object_t *regexp_obj_p = ecma_op_regexp_alloc (NULL);
+
+  if (JERRY_UNLIKELY (regexp_obj_p == NULL))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
   ecma_string_t *ecma_pattern = ecma_new_ecma_string_from_utf8 (pattern_p, pattern_size);
 
-  jerry_value_t ret_val = ecma_op_create_regexp_object (ecma_pattern, flags);
-
+  jerry_value_t ret_val = ecma_op_create_regexp_with_flags (regexp_obj_p,
+                                                            ecma_make_string_value (ecma_pattern),
+                                                            flags);
   ecma_deref_ecma_string (ecma_pattern);
+
   return ret_val;
 
 #else /* !ENABLED (JERRY_BUILTIN_REGEXP) */

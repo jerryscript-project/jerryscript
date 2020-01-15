@@ -17,7 +17,9 @@
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
+#include "ecma-gc.h"
 #include "ecma-helpers.h"
+#include "jcontext.h"
 #include "ecma-objects.h"
 #include "ecma-regexp-object.h"
 #include "ecma-try-catch-macro.h"
@@ -41,34 +43,15 @@
  * @{
  */
 
-/**
- * Handle calling [[Call]] of built-in RegExp object
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-ecma_value_t
-ecma_builtin_regexp_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
-                                   ecma_length_t arguments_list_len) /**< number of arguments */
-{
-  return ecma_builtin_regexp_dispatch_construct (arguments_list_p, arguments_list_len);
-} /* ecma_builtin_regexp_dispatch_call */
-
-/**
- * Handle calling [[Construct]] of built-in RegExp object
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-ecma_value_t
-ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
-                                        ecma_length_t arguments_list_len) /**< number of arguments */
+static ecma_value_t
+ecma_builtin_regexp_dispatch_helper (const ecma_value_t *arguments_list_p, /**< arguments list */
+                                     ecma_length_t arguments_list_len, /**< number of arguments */
+                                     ecma_object_t *new_target_p) /**< pointer to the new target object */
 {
   ecma_value_t pattern_value = ECMA_VALUE_UNDEFINED;
   ecma_value_t flags_value = ECMA_VALUE_UNDEFINED;
 #if ENABLED (JERRY_ES2015)
-  ecma_value_t new_pattern = ECMA_VALUE_EMPTY;
-  ecma_value_t new_flags = ECMA_VALUE_EMPTY;
+  bool create_regexp_from_bc = false;
 #endif /* ENABLED (JERRY_ES2015) */
 
   if (arguments_list_len > 0)
@@ -90,88 +73,140 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
     return regexp_value;
   }
 
-  bool is_regexp = regexp_value == ECMA_VALUE_TRUE;
-#else /* !ENABLED (JERRY_ES2015) */
-  bool is_regexp = ecma_object_is_regexp_object (pattern_value);
-#endif /* ENABLED (JERRY_ES2015) */
+  bool pattern_is_regexp = regexp_value == ECMA_VALUE_TRUE;
+  re_compiled_code_t *bc_p = NULL;
 
-  if (is_regexp)
+  if (new_target_p == NULL)
   {
-#if ENABLED (JERRY_ES2015)
+    new_target_p = ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP);
+
+    if (pattern_is_regexp && ecma_is_value_undefined (flags_value))
+    {
+      ecma_object_t *pattern_obj_p = ecma_get_object_from_value (pattern_value);
+
+      ecma_value_t pattern_constructor = ecma_op_object_get_by_magic_id (pattern_obj_p, LIT_MAGIC_STRING_CONSTRUCTOR);
+
+      if (ECMA_IS_VALUE_ERROR (pattern_constructor))
+      {
+        return pattern_constructor;
+      }
+
+      bool is_same = ecma_op_same_value (ecma_make_object_value (new_target_p), pattern_constructor);
+      ecma_free_value (pattern_constructor);
+
+      if (is_same)
+      {
+        return ecma_copy_value (pattern_value);
+      }
+    }
+  }
+
+  if (ecma_object_is_regexp_object (pattern_value))
+  {
+    ecma_extended_object_t *pattern_obj_p = (ecma_extended_object_t *) ecma_get_object_from_value (pattern_value);
+    bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t,
+                                            pattern_obj_p->u.class_prop.u.value);
+
+    create_regexp_from_bc = ecma_is_value_undefined (flags_value);
+
+    if (!create_regexp_from_bc)
+    {
+      pattern_value = bc_p->source;
+    }
+  }
+  else if (pattern_is_regexp)
+  {
     ecma_object_t *pattern_obj_p = ecma_get_object_from_value (pattern_value);
 
-    new_pattern = ecma_op_object_get_by_magic_id (pattern_obj_p, LIT_MAGIC_STRING_SOURCE);
+    pattern_value = ecma_op_object_get_by_magic_id (pattern_obj_p, LIT_MAGIC_STRING_SOURCE);
 
-    if (ECMA_IS_VALUE_ERROR (new_pattern))
+    if (ECMA_IS_VALUE_ERROR (pattern_value))
     {
-      return new_pattern;
+      return pattern_value;
     }
-
-    pattern_value = new_pattern;
 
     if (ecma_is_value_undefined (flags_value))
     {
-      new_flags = ecma_op_object_get_by_magic_id (pattern_obj_p, LIT_MAGIC_STRING_FLAGS);
+      flags_value = ecma_op_object_get_by_magic_id (pattern_obj_p, LIT_MAGIC_STRING_FLAGS);
 
-      if (ECMA_IS_VALUE_ERROR (new_flags))
+      if (ECMA_IS_VALUE_ERROR (flags_value))
       {
-        ecma_free_value (new_pattern);
-        return new_flags;
+        return flags_value;
       }
-
-      flags_value = new_flags;
     }
+  }
 #else /* !ENABLED (JERRY_ES2015) */
+  if (ecma_object_is_regexp_object (pattern_value))
+  {
     if (ecma_is_value_undefined (flags_value))
     {
       return ecma_copy_value (pattern_value);
     }
 
     return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument of RegExp call."));
+  }
 #endif /* ENABLED (JERRY_ES2015) */
-  }
 
-  ecma_string_t *pattern_string_p = ecma_regexp_read_pattern_str_helper (pattern_value);
-  ecma_value_t ret_value = ECMA_VALUE_ERROR;
+  ecma_object_t *new_target_obj_p = ecma_op_regexp_alloc (new_target_p);
 
-  if (pattern_string_p == NULL)
+  if (JERRY_UNLIKELY (new_target_obj_p == NULL))
   {
-    goto cleanup;
+    return ECMA_VALUE_ERROR;
   }
 
-  uint16_t flags = 0;
+  ecma_value_t ret_value;
 
-  if (!ecma_is_value_undefined (flags_value))
-  {
-    ecma_string_t *flags_string_p = ecma_op_to_string (flags_value);
-
-    if (JERRY_UNLIKELY (flags_string_p == NULL))
-    {
-      ecma_deref_ecma_string (pattern_string_p);
-      goto cleanup;
-    }
-
-    ret_value = ecma_regexp_parse_flags (flags_string_p, &flags);
-    ecma_deref_ecma_string (flags_string_p);
-
-    if (ECMA_IS_VALUE_ERROR (ret_value))
-    {
-      ecma_deref_ecma_string (pattern_string_p);
-      goto cleanup;
-    }
-    JERRY_ASSERT (ecma_is_value_empty (ret_value));
-  }
-
-  ret_value = ecma_op_create_regexp_object (pattern_string_p, flags);
-  ecma_deref_ecma_string (pattern_string_p);
-
-cleanup:
 #if ENABLED (JERRY_ES2015)
-  ecma_free_value (new_pattern);
-  ecma_free_value (new_flags);
+  if (create_regexp_from_bc)
+  {
+    ret_value = ecma_op_create_regexp_from_bytecode (new_target_obj_p, bc_p);
+  }
+  else
+  {
 #endif /* ENABLED (JERRY_ES2015) */
+
+    ret_value = ecma_op_create_regexp_from_pattern (new_target_obj_p, pattern_value, flags_value);
+
+#if  ENABLED (JERRY_ES2015)
+  }
+#endif /* ENABLED (JERRY_ES2015) */
+
+  if (ECMA_IS_VALUE_ERROR (ret_value))
+  {
+    ecma_deref_object (new_target_obj_p);
+  }
 
   return ret_value;
+} /* ecma_builtin_regexp_dispatch_helper */
+
+/**
+ * Handle calling [[Call]] of built-in RegExp object
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_builtin_regexp_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
+                                   ecma_length_t arguments_list_len) /**< number of arguments */
+{
+  return ecma_builtin_regexp_dispatch_helper (arguments_list_p,
+                                              arguments_list_len,
+                                              NULL);
+} /* ecma_builtin_regexp_dispatch_call */
+
+/**
+ * Handle calling [[Construct]] of built-in RegExp object
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
+                                        ecma_length_t arguments_list_len) /**< number of arguments */
+{
+  return ecma_builtin_regexp_dispatch_helper (arguments_list_p,
+                                              arguments_list_len,
+                                              ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP));
 } /* ecma_builtin_regexp_dispatch_construct */
 
 #if ENABLED (JERRY_ES2015)

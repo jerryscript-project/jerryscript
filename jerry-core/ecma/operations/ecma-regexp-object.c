@@ -125,87 +125,80 @@ ecma_regexp_parse_flags (ecma_string_t *flags_str_p, /**< Input string with flag
   return ret_value;
 } /* ecma_regexp_parse_flags */
 
+#if !ENABLED (JERRY_ES2015)
 /*
  * Create the properties of a RegExp instance.
  */
 static void
-ecma_regexp_create_props (ecma_object_t *re_object_p) /**< RegExp object */
+ecma_regexp_create_props (ecma_object_t *re_object_p, /**< RegExp object */
+                          ecma_string_t *source_p, /**< source string */
+                          uint16_t flags) /**< flags */
 {
-#if !ENABLED (JERRY_ES2015)
-  ecma_create_named_data_property (re_object_p,
-                                   ecma_get_magic_string (LIT_MAGIC_STRING_SOURCE),
-                                   ECMA_PROPERTY_FIXED,
-                                   NULL);
-  ecma_create_named_data_property (re_object_p,
-                                   ecma_get_magic_string (LIT_MAGIC_STRING_GLOBAL),
-                                   ECMA_PROPERTY_FIXED,
-                                   NULL);
-  ecma_create_named_data_property (re_object_p,
-                                   ecma_get_magic_string (LIT_MAGIC_STRING_IGNORECASE_UL),
-                                   ECMA_PROPERTY_FIXED,
-                                   NULL);
-  ecma_create_named_data_property (re_object_p,
-                                   ecma_get_magic_string (LIT_MAGIC_STRING_MULTILINE),
-                                   ECMA_PROPERTY_FIXED,
-                                   NULL);
-#endif /* !ENABLED (JERRY_ES2015) */
-  ecma_create_named_data_property (re_object_p,
-                                   ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                                   ECMA_PROPERTY_FLAG_WRITABLE,
-                                   NULL);
+  ecma_property_value_t *prop_value_p;
+
+  prop_value_p = ecma_create_named_data_property (re_object_p,
+                                                  ecma_get_magic_string (LIT_MAGIC_STRING_SOURCE),
+                                                  ECMA_PROPERTY_FIXED,
+                                                  NULL);
+
+  ecma_ref_ecma_string (source_p);
+  prop_value_p->value = ecma_make_string_value (source_p);
+
+  prop_value_p = ecma_create_named_data_property (re_object_p,
+                                                  ecma_get_magic_string (LIT_MAGIC_STRING_GLOBAL),
+                                                  ECMA_PROPERTY_FIXED,
+                                                  NULL);
+
+  prop_value_p->value = ecma_make_boolean_value (flags & RE_FLAG_GLOBAL);
+
+  prop_value_p = ecma_create_named_data_property (re_object_p,
+                                                  ecma_get_magic_string (LIT_MAGIC_STRING_IGNORECASE_UL),
+                                                  ECMA_PROPERTY_FIXED,
+                                                  NULL);
+
+  prop_value_p->value = ecma_make_boolean_value (flags & RE_FLAG_IGNORE_CASE);
+
+  prop_value_p = ecma_create_named_data_property (re_object_p,
+                                                  ecma_get_magic_string (LIT_MAGIC_STRING_MULTILINE),
+                                                  ECMA_PROPERTY_FIXED,
+                                                  NULL);
+
+  prop_value_p->value = ecma_make_boolean_value (flags & RE_FLAG_MULTILINE);
 } /* ecma_regexp_create_props */
 
 /*
- * Helper function to assign a value to a property
+ * Update the properties of a RegExp instance.
  */
 static void
-ecma_regexp_helper_assign_prop (ecma_object_t *re_object_p, /**< RegExp object */
-                                lit_magic_string_id_t prop_id, /**< property name ide */
-                                ecma_value_t value) /**< value */
+ecma_regexp_update_props (ecma_object_t *re_object_p, /**< RegExp object */
+                          ecma_string_t *source_p, /**< source string */
+                          uint16_t flags) /**< flags */
 {
-  ecma_property_ref_t property_ref;
-  ecma_op_object_get_own_property (re_object_p,
-                                   ecma_get_magic_string (prop_id),
-                                   &property_ref,
-                                   ECMA_PROPERTY_GET_VALUE);
-  ecma_named_data_property_assign_value (re_object_p,
-                                         property_ref.value_p,
-                                         value);
-} /* ecma_regexp_helper_assign_prop */
+  ecma_property_t *prop_p;
 
-/**
- * Initializes the properties of a RegExp instance.
- */
-void
-ecma_regexp_initialize_props (ecma_object_t *re_object_p, /**< RegExp object */
-                              ecma_string_t *source_p, /**< source string */
-                              uint16_t flags) /**< flags */
-{
-#if !ENABLED (JERRY_ES2015)
-  ecma_regexp_helper_assign_prop (re_object_p,
-                                  LIT_MAGIC_STRING_SOURCE,
-                                  ecma_make_string_value (source_p));
+  prop_p = ecma_find_named_property (re_object_p, ecma_get_magic_string (LIT_MAGIC_STRING_SOURCE));
+  JERRY_ASSERT (prop_p != NULL);
+  ecma_property_value_t *prop_value_p = ECMA_PROPERTY_VALUE_PTR (prop_p);
+  ecma_free_value (prop_value_p->value);
+  ecma_ref_ecma_string (source_p);
+  prop_value_p->value = ecma_make_string_value (source_p);
 
-  ecma_regexp_helper_assign_prop (re_object_p,
-                                  LIT_MAGIC_STRING_GLOBAL,
-                                  ecma_make_boolean_value (flags & RE_FLAG_GLOBAL));
+  prop_p = ecma_find_named_property (re_object_p, ecma_get_magic_string (LIT_MAGIC_STRING_GLOBAL));
+  JERRY_ASSERT (prop_p != NULL);
+  prop_value_p = ECMA_PROPERTY_VALUE_PTR (prop_p);
+  prop_value_p->value = ecma_make_boolean_value (flags & RE_FLAG_GLOBAL);
 
-  ecma_regexp_helper_assign_prop (re_object_p,
-                                  LIT_MAGIC_STRING_IGNORECASE_UL,
-                                  ecma_make_boolean_value (flags & RE_FLAG_IGNORE_CASE));
+  prop_p = ecma_find_named_property (re_object_p, ecma_get_magic_string (LIT_MAGIC_STRING_IGNORECASE_UL));
+  JERRY_ASSERT (prop_p != NULL);
+  prop_value_p = ECMA_PROPERTY_VALUE_PTR (prop_p);
+  prop_value_p->value = ecma_make_boolean_value (flags & RE_FLAG_IGNORE_CASE);
 
-  ecma_regexp_helper_assign_prop (re_object_p,
-                                  LIT_MAGIC_STRING_MULTILINE,
-                                  ecma_make_boolean_value (flags & RE_FLAG_MULTILINE));
-#else /* ENABLED (JERRY_ES2015) */
-  JERRY_UNUSED (source_p);
-  JERRY_UNUSED (flags);
+  prop_p = ecma_find_named_property (re_object_p, ecma_get_magic_string (LIT_MAGIC_STRING_MULTILINE));
+  JERRY_ASSERT (prop_p != NULL);
+  prop_value_p = ECMA_PROPERTY_VALUE_PTR (prop_p);
+  prop_value_p->value = ecma_make_boolean_value (flags & RE_FLAG_MULTILINE);
+} /* ecma_regexp_update_props */
 #endif /* !ENABLED (JERRY_ES2015) */
-
-  ecma_regexp_helper_assign_prop (re_object_p,
-                                  LIT_MAGIC_STRING_LASTINDEX_UL,
-                                  ecma_make_uint32_value (0));
-} /* ecma_regexp_initialize_props */
 
 #if ENABLED (JERRY_ES2015)
 /**
@@ -238,86 +231,232 @@ ecma_regexp_unicode_advance (const lit_utf8_byte_t **str_p, /**< reference to st
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**
- * RegExp object creation operation.
+ * RegExpAlloc method
  *
  * See also: ECMA-262 v5, 15.10.4.1
+ *           ECMA-262 v6, 21.2.3.2.1
  *
- * @return constructed RegExp object
- *         Returned value must be freed with ecma_free_value
+ * Note:
+ *      Returned value must be freed with ecma_free_value.
+ *
+ * @return ecma_object_t
  */
-ecma_value_t
-ecma_op_create_regexp_object_from_bytecode (re_compiled_code_t *bytecode_p) /**< RegExp bytecode */
+ecma_object_t *
+ecma_op_regexp_alloc (ecma_object_t *ctr_obj_p) /**< constructor object pointer */
 {
-  JERRY_ASSERT (bytecode_p != NULL);
+#if ENABLED (JERRY_ES2015)
+  bool default_alloc = false;
 
-  ecma_object_t *re_prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE);
+  if (ctr_obj_p == NULL)
+  {
+    ecma_object_t *re_prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE);
 
-  ecma_object_t *object_p = ecma_create_object (re_prototype_obj_p,
-                                                sizeof (ecma_extended_object_t),
-                                                ECMA_OBJECT_TYPE_CLASS);
+    ecma_value_t ctr_value = ecma_op_object_get_by_magic_id (re_prototype_obj_p, LIT_MAGIC_STRING_CONSTRUCTOR);
 
-  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+    if (ECMA_IS_VALUE_ERROR (ctr_value))
+    {
+      return NULL;
+    }
 
-  /* Set the internal [[Class]] property */
-  ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_REGEXP_UL;
+    ctr_obj_p = ecma_get_object_from_value (ctr_value);
 
-  /* Set bytecode internal property. */
-  ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.class_prop.u.value, bytecode_p);
-  ecma_bytecode_ref ((ecma_compiled_code_t *) bytecode_p);
+    default_alloc = true;
+  }
 
-  /* Create and initialize RegExp object properties */
-  ecma_regexp_create_props (object_p);
-  ecma_regexp_initialize_props (object_p,
-                                ecma_get_string_from_value (bytecode_p->source),
-                                bytecode_p->header.status_flags);
+  ecma_object_t *proto_obj_p = ecma_op_get_prototype_from_constructor (ctr_obj_p,
+                                                                       ECMA_BUILTIN_ID_REGEXP_PROTOTYPE);
 
-  return ecma_make_object_value (object_p);
-} /* ecma_op_create_regexp_object_from_bytecode */
+  if (default_alloc)
+  {
+    ecma_deref_object (ctr_obj_p);
+  }
+
+  if (JERRY_UNLIKELY (proto_obj_p == NULL))
+  {
+    return proto_obj_p;
+  }
+
+#else /* !ENABLED (JERRY_ES2015) */
+  JERRY_UNUSED (ctr_obj_p);
+  ecma_object_t *proto_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE);
+#endif /* ENABLED (JERRY_ES2015) */
+
+  ecma_object_t *new_object_p = ecma_create_object (proto_obj_p,
+                                                    sizeof (ecma_extended_object_t),
+                                                    ECMA_OBJECT_TYPE_CLASS);
+
+#if ENABLED (JERRY_ES2015)
+  ecma_deref_object (proto_obj_p);
+#endif /* ENABLED (JERRY_ES2015) */
+
+  ecma_extended_object_t *regexp_obj_p = (ecma_extended_object_t *) new_object_p;
+  regexp_obj_p->u.class_prop.u.value = JMEM_CP_NULL;
+  regexp_obj_p->u.class_prop.class_id = LIT_MAGIC_STRING_REGEXP_UL;
+
+  ecma_value_t status = ecma_builtin_helper_def_prop (new_object_p,
+                                                      ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
+                                                      ecma_make_uint32_value (0),
+                                                      ECMA_PROPERTY_FLAG_WRITABLE | ECMA_PROP_IS_THROW);
+
+  JERRY_ASSERT (ecma_is_value_true (status));
+
+  return new_object_p;
+} /* ecma_op_regexp_alloc */
 
 /**
- * RegExp object creation operation.
+ * Helper method for initializing an aready existing RegExp object.
+ */
+static void
+ecma_op_regexp_initialize (ecma_object_t *regexp_obj_p, /**< RegExp object */
+                           const re_compiled_code_t *bc_p, /**< bytecode */
+                           ecma_string_t *pattern_str_p, /**< pattern */
+                           uint16_t flags) /**< flags */
+{
+  ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) regexp_obj_p;
+
+  if (JERRY_UNLIKELY (ext_obj_p->u.class_prop.u.value != JMEM_CP_NULL))
+  {
+    re_compiled_code_t *old_bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t,
+                                                                    ext_obj_p->u.class_prop.u.value);
+
+    ecma_bytecode_deref ((ecma_compiled_code_t *) old_bc_p);
+
+#if !ENABLED (JERRY_ES2015)
+    ecma_regexp_update_props (regexp_obj_p, pattern_str_p, flags);
+#endif /* !ENABLED (JERRY_ES2015) */
+  }
+#if !ENABLED (JERRY_ES2015)
+  else
+  {
+    ecma_regexp_create_props (regexp_obj_p, pattern_str_p, flags);
+  }
+#endif /* !ENABLED (JERRY_ES2015) */
+
+#if ENABLED (JERRY_ES2015)
+  JERRY_UNUSED (pattern_str_p);
+  JERRY_UNUSED (flags);
+#endif /* ENABLED (JERRY_ES2015) */
+
+  ECMA_SET_INTERNAL_VALUE_POINTER (ext_obj_p->u.class_prop.u.value, bc_p);
+} /* ecma_op_regexp_initialize */
+
+/**
+ * Method for creating a RegExp object from pattern.
  *
- * See also: ECMA-262 v5, 15.10.4.1
+ * Note:
+ *      Allocation have to happen before invoking this function using ecma_op_regexp_alloc.
  *
- * @return constructed RegExp object - if pattern and flags were parsed successfully
- *         error ecma value          - otherwise
- *
- *         Returned value must be freed with ecma_free_value
+ * @return ecma_value_t
  */
 ecma_value_t
-ecma_op_create_regexp_object (ecma_string_t *pattern_p, /**< input pattern */
-                              uint16_t flags) /**< flags */
+ecma_op_create_regexp_from_pattern (ecma_object_t *regexp_obj_p, /**< RegExp object */
+                                    ecma_value_t pattern_value, /**< pattern */
+                                    ecma_value_t flags_value) /**< flags */
 {
-  JERRY_ASSERT (pattern_p != NULL);
+  ecma_string_t *pattern_str_p = ecma_regexp_read_pattern_str_helper (pattern_value);
+  uint16_t flags = 0;
 
-  ecma_object_t *re_prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE);
+  if (JERRY_UNLIKELY (pattern_str_p == NULL))
+  {
+    return ECMA_VALUE_ERROR;
+  }
 
-  ecma_object_t *object_p = ecma_create_object (re_prototype_obj_p,
-                                                sizeof (ecma_extended_object_t),
-                                                ECMA_OBJECT_TYPE_CLASS);
-  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-  ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_UNDEFINED;
+  if (!ecma_is_value_undefined (flags_value))
+  {
+    ecma_string_t *flags_str_p = ecma_op_to_string (flags_value);
 
-  ecma_regexp_create_props (object_p);
-  ecma_regexp_initialize_props (object_p, pattern_p, flags);
+    if (JERRY_UNLIKELY (flags_str_p == NULL))
+    {
+      ecma_deref_ecma_string (pattern_str_p);
+      return ECMA_VALUE_ERROR;
+    }
 
-  /* Compile bytecode. */
+    ecma_value_t parse_flags_value = ecma_regexp_parse_flags (flags_str_p, &flags);
+    ecma_deref_ecma_string (flags_str_p);
+
+    if (ECMA_IS_VALUE_ERROR (parse_flags_value))
+    {
+      ecma_deref_ecma_string (pattern_str_p);
+      return parse_flags_value;
+    }
+
+    JERRY_ASSERT (ecma_is_value_empty (parse_flags_value));
+  }
+
   const re_compiled_code_t *bc_p = NULL;
-  ecma_value_t ret_value = re_compile_bytecode (&bc_p, pattern_p, flags);
+  ecma_value_t ret_value = re_compile_bytecode (&bc_p, pattern_str_p, flags);
+  ecma_deref_ecma_string (pattern_str_p);
+
   if (ECMA_IS_VALUE_ERROR (ret_value))
   {
-    ecma_deref_object (object_p);
     return ret_value;
   }
 
   JERRY_ASSERT (ecma_is_value_empty (ret_value));
 
-  /* Set [[Class]] and bytecode internal properties. */
-  ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_REGEXP_UL;
-  ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.class_prop.u.value, bc_p);
+  ecma_op_regexp_initialize (regexp_obj_p, bc_p, pattern_str_p, flags);
 
-  return ecma_make_object_value (object_p);
-} /* ecma_op_create_regexp_object */
+  return ecma_make_object_value (regexp_obj_p);
+} /* ecma_op_create_regexp_from_pattern */
+
+/**
+ * Method for creating a RegExp object from bytecode.
+ *
+ * Note:
+ *      Allocation have to happen before invoking this function using ecma_op_regexp_alloc.
+ *
+ * @return ecma_value_t
+ */
+ecma_value_t
+ecma_op_create_regexp_from_bytecode (ecma_object_t *regexp_obj_p, /**< RegExp object */
+                                     re_compiled_code_t *bc_p) /**< bytecode */
+{
+  ecma_bytecode_ref ((ecma_compiled_code_t *) bc_p);
+  ecma_string_t *pattern_str_p = ecma_get_string_from_value (bc_p->source);
+  uint16_t flags = bc_p->header.status_flags;
+
+  ecma_op_regexp_initialize (regexp_obj_p, bc_p, pattern_str_p, flags);
+
+  return ecma_make_object_value (regexp_obj_p);
+} /* ecma_op_create_regexp_from_bytecode */
+
+/**
+ * Method for creating a RegExp object from pattern with already parsed flags.
+ *
+ * Note:
+ *      Allocation have to happen before invoking this function using ecma_op_regexp_alloc.
+ *
+ * @return ecma_value_t
+ */
+ecma_value_t
+ecma_op_create_regexp_with_flags (ecma_object_t *regexp_obj_p, /**< RegExp object */
+                                  ecma_value_t pattern_value, /**< pattern */
+                                  uint16_t flags) /**< flags */
+{
+  ecma_string_t *pattern_str_p = ecma_regexp_read_pattern_str_helper (pattern_value);
+
+  if (JERRY_UNLIKELY (pattern_str_p == NULL))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  const re_compiled_code_t *bc_p = NULL;
+
+  ecma_value_t ret_value = re_compile_bytecode (&bc_p, pattern_str_p, flags);
+
+  ecma_deref_ecma_string (pattern_str_p);
+
+  if (ECMA_IS_VALUE_ERROR (ret_value))
+  {
+    return ret_value;
+  }
+
+  JERRY_ASSERT (ecma_is_value_empty (ret_value));
+
+  ecma_op_regexp_initialize (regexp_obj_p, bc_p, pattern_str_p, flags);
+
+  return ecma_make_object_value (regexp_obj_p);
+} /* ecma_op_create_regexp_with_flags */
 
 /**
  * Canonicalize a character
@@ -1249,7 +1388,7 @@ ecma_regexp_exec_helper (ecma_object_t *regexp_object_p, /**< RegExp object */
 {
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
-  JERRY_ASSERT (ecma_object_class_is (regexp_object_p, LIT_MAGIC_STRING_REGEXP_UL));
+  JERRY_ASSERT (ecma_object_is_regexp_object (ecma_make_object_value (regexp_object_p)));
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) regexp_object_p;
   re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_ANY_POINTER (re_compiled_code_t,
@@ -2439,7 +2578,6 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
   {
     ecma_extended_object_t *function_p = (ecma_extended_object_t *) ecma_get_object_from_value (result);
     if (ecma_object_class_is (this_obj_p, LIT_MAGIC_STRING_REGEXP_UL)
-        && !ecma_builtin_is (this_obj_p, ECMA_BUILTIN_ID_REGEXP_PROTOTYPE)
         && ecma_builtin_is_regexp_exec (function_p))
     {
       result = ecma_op_object_get_by_magic_id (this_obj_p, LIT_MAGIC_STRING_STICKY);

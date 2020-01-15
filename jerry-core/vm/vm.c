@@ -440,16 +440,14 @@ vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 #if ENABLED (JERRY_BUILTIN_REGEXP)
   if (!(bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION))
   {
-    ecma_value_t ret_value;
-    ret_value = ecma_op_create_regexp_object_from_bytecode ((re_compiled_code_t *) bytecode_p);
+    ecma_object_t *regexp_obj_p = ecma_op_regexp_alloc (NULL);
 
-    if (ECMA_IS_VALUE_ERROR (ret_value))
+    if (JERRY_UNLIKELY (regexp_obj_p == NULL))
     {
-      /* TODO: throw exception instead of define an 'undefined' value. */
-      return ECMA_VALUE_UNDEFINED;
+      return ECMA_VALUE_ERROR;
     }
 
-    return ret_value;
+    return ecma_op_create_regexp_from_bytecode (regexp_obj_p, (re_compiled_code_t *) bytecode_p);;
   }
 #endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
 

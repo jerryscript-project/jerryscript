@@ -1062,17 +1062,24 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           ecma_dealloc_number (num_p);
           break;
         }
-
+#if ENABLED (JERRY_ES2015)
+        case LIT_INTERNAL_MAGIC_STRING_REGEXP_PROTO:
+        {
+          jmem_heap_free_block (ECMA_GET_INTERNAL_VALUE_POINTER (void, ext_object_p->u.class_prop.u.value),
+                                ECMA_REGEXP_PROTO_COMPILED_CODE_SIZE);
+          break;
+        }
+#endif /* ENABLED (JERRY_ES2015) */
         case LIT_MAGIC_STRING_REGEXP_UL:
         {
-          ecma_compiled_code_t *bytecode_p;
-          bytecode_p = ECMA_GET_INTERNAL_VALUE_ANY_POINTER (ecma_compiled_code_t,
-                                                            ext_object_p->u.class_prop.u.value);
+          ecma_compiled_code_t *bytecode_p = ECMA_GET_INTERNAL_VALUE_ANY_POINTER (ecma_compiled_code_t,
+                                                                                  ext_object_p->u.class_prop.u.value);
 
           if (bytecode_p != NULL)
           {
             ecma_bytecode_deref (bytecode_p);
           }
+
           break;
         }
 #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)

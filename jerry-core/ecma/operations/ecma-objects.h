@@ -77,6 +77,8 @@ bool ecma_object_is_regexp_object (ecma_value_t arg);
 ecma_value_t ecma_op_is_concat_spreadable (ecma_value_t arg);
 ecma_value_t ecma_op_is_regexp (ecma_value_t arg);
 ecma_value_t ecma_op_species_constructor (ecma_object_t *this_value, ecma_builtin_id_t default_constructor_id);
+ecma_value_t ecma_op_invoke_by_symbol_id (ecma_value_t object, lit_magic_string_id_t magic_string_id,
+                                          ecma_value_t *args_p, ecma_length_t args_len);
 #endif /* ENABLED (JERRY_ES2015) */
 ecma_value_t ecma_op_invoke (ecma_value_t object, ecma_string_t *property_name_p, ecma_value_t *args_p,
                              ecma_length_t args_len);

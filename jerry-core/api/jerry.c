@@ -3396,6 +3396,34 @@ jerry_get_resource_name (const jerry_value_t value) /**< jerry api value */
 } /* jerry_get_resource_name */
 
 /**
+ * Access the "new.target" value.
+ *
+ * The "new.target" value depends on the current call site. That is
+ * this method will only have a function object result if, at the call site
+ * it was called inside a constructor method invoked with "new".
+ *
+ * @return "undefined" - if at the call site it was not a constructor call.
+ *         function object - if the current call site is in a constructor call.
+ */
+jerry_value_t
+jerry_get_new_target (void)
+{
+#if ENABLED (JERRY_ES2015)
+  ecma_object_t *current_new_target = JERRY_CONTEXT (current_new_target);
+
+  if (current_new_target == NULL || current_new_target == JERRY_CONTEXT_INVALID_NEW_TARGET)
+  {
+    return jerry_create_undefined ();
+  }
+
+  ecma_ref_object (current_new_target);
+  return ecma_make_object_value (current_new_target);
+#else /* !ENABLED (JERRY_ES2015) */
+  return jerry_create_undefined ();
+#endif /* ENABLED (JERRY_ES2015) */
+} /* jerry_get_new_target */
+
+/**
  * Check if the given value is an ArrayBuffer object.
  *
  * @return true - if it is an ArrayBuffer object

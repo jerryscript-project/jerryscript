@@ -127,7 +127,7 @@ def run_normal_tests(args, tests):
     test_cmd = get_platform_cmd_prefix()
     if args.runtime:
         test_cmd.append(args.runtime)
-    test_cmd.append(args.engine)
+    test_cmd.extend([args.engine, '--call-on-exit', '__checkAsync'])
 
     total = len(tests)
     tested = 0
@@ -161,6 +161,7 @@ def run_snapshot_tests(args, tests):
         generate_snapshot_cmd.append(args.runtime)
 
     execute_snapshot_cmd.extend([args.engine, '--exec-snapshot', 'js.snapshot'])
+    execute_snapshot_cmd.extend(['--call-on-exit', '__checkAsync'])
 
     # engine: jerry[.exe] -> snapshot generator: jerry-snapshot[.exe]
     engine = os.path.splitext(args.engine)

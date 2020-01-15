@@ -571,9 +571,14 @@ opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p) /**< frame context
 
   size_t total_size = JERRY_ALIGNUP (sizeof (vm_executable_object_t) + size, sizeof (uintptr_t));
 
-  ecma_object_t *object_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_GENERATOR_PROTOTYPE),
+  ecma_object_t *proto_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_function_obj_p),
+                                                                   ECMA_BUILTIN_ID_GENERATOR_PROTOTYPE);
+
+  ecma_object_t *object_p = ecma_create_object (proto_p,
                                                 total_size,
                                                 ECMA_OBJECT_TYPE_CLASS);
+
+  ecma_deref_object (proto_p);
 
   vm_executable_object_t *executable_object_p = (vm_executable_object_t *) object_p;
 

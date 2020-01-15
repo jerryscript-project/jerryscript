@@ -3071,7 +3071,6 @@ scan_completed:
 
 #if ENABLED (JERRY_ES2015)
     JERRY_ASSERT (scanner_context.active_binding_list_p == NULL);
-    JERRY_ASSERT (!(context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION));
 #endif /* ENABLED (JERRY_ES2015) */
     JERRY_ASSERT (scanner_context.active_literal_pool_p == NULL);
 

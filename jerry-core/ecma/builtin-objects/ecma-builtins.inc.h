@@ -552,6 +552,21 @@ BUILTIN (ECMA_BUILTIN_ID_STRING_ITERATOR_PROTOTYPE,
          true,
          string_iterator_prototype)
 
+/* The %(GeneratorFunction)% object */
+BUILTIN_ROUTINE (ECMA_BUILTIN_ID_GENERATOR_FUNCTION,
+                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_BUILTIN_ID_FUNCTION,
+                 true,
+                 generator_function)
+
+/* The %(Generator)% object */
+BUILTIN (ECMA_BUILTIN_ID_GENERATOR,
+         ECMA_OBJECT_TYPE_GENERAL,
+         ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
+         true,
+         generator)
+
+/* The %(Generator).prototype% object */
 BUILTIN (ECMA_BUILTIN_ID_GENERATOR_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID_ITERATOR_PROTOTYPE,

@@ -57,6 +57,7 @@ ecma_init (void)
 
 #if ENABLED (JERRY_ES2015)
   JERRY_CONTEXT (current_new_target) = JERRY_CONTEXT_INVALID_NEW_TARGET;
+  JERRY_CONTEXT (current_function_obj_p) = NULL;
 #endif /* ENABLED (JERRY_ES2015) */
 } /* ecma_init */
 
@@ -68,6 +69,7 @@ ecma_finalize (void)
 {
 #if ENABLED (JERRY_ES2015)
   JERRY_ASSERT (JERRY_CONTEXT (current_new_target) == JERRY_CONTEXT_INVALID_NEW_TARGET);
+  JERRY_ASSERT (JERRY_CONTEXT (current_function_obj_p) == NULL);
 #endif /* ENABLED (JERRY_ES2015) */
 
   ecma_finalize_global_lex_env ();

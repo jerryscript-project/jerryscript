@@ -15,11 +15,11 @@
 
 #include "ecma-alloc.h"
 #include "ecma-builtin-helpers.h"
-#include "ecma-builtins.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
+#include "lit-char-helpers.h"
 #include "ecma-lex-env.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
@@ -144,20 +144,167 @@ ecma_is_constructor (ecma_value_t value) /**< ecma value */
 } /* ecma_is_constructor */
 
 /**
+ * Helper method to count and convert the arguments for the Function/GeneratorFunction constructor call.
+ *
+ * See also:
+ *          ECMA 262 v5.1 15.3.2.1 steps 5.a-d
+ *          ECMA 262 v6 19.2.1.1.1 steps 8
+ *
+ * @return ecma value - concatenated arguments as a string.
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_string_t *
+ecma_op_create_dynamic_function_arguments_helper (const ecma_value_t *arguments_list_p, /**< arguments list */
+                                                  ecma_length_t arguments_list_len) /**< number of arguments */
+{
+  JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
+
+  if (arguments_list_len <= 1)
+  {
+    return ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
+  }
+
+  ecma_string_t *str_p = ecma_op_to_string (arguments_list_p[0]);
+
+  if (JERRY_UNLIKELY (str_p == NULL))
+  {
+    return str_p;
+  }
+
+  if (arguments_list_len == 2)
+  {
+    return str_p;
+  }
+
+  ecma_stringbuilder_t builder = ecma_stringbuilder_create_from (str_p);
+  ecma_deref_ecma_string (str_p);
+
+  for (ecma_length_t idx = 1; idx < arguments_list_len - 1; idx++)
+  {
+    str_p = ecma_op_to_string (arguments_list_p[idx]);
+
+    if (JERRY_UNLIKELY (str_p == NULL))
+    {
+      ecma_stringbuilder_destroy (&builder);
+      return str_p;
+    }
+
+    ecma_stringbuilder_append_char (&builder, LIT_CHAR_COMMA);
+    ecma_stringbuilder_append (&builder, str_p);
+    ecma_deref_ecma_string (str_p);
+  }
+
+  return ecma_stringbuilder_finalize (&builder);
+} /* ecma_op_create_dynamic_function_arguments_helper */
+
+/**
+ * CreateDynamicFunction operation
+ *
+ * See also:
+ *          ECMA-262 v5, 15.3.
+ *          ECMA-262 v6, 19.2.1.1
+ *
+ * @return ECMA_VALUE_ERROR - if the operation fails
+ *         constructed function object - otherwise
+ */
+ecma_value_t
+ecma_op_create_dynamic_function (const ecma_value_t *arguments_list_p, /**< arguments list */
+                                 ecma_length_t arguments_list_len, /**< number of arguments */
+                                 ecma_parse_opts_t parse_opts) /**< parse options */
+{
+  JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
+
+  ecma_string_t *arguments_str_p = ecma_op_create_dynamic_function_arguments_helper (arguments_list_p,
+                                                                                     arguments_list_len);
+
+  if (JERRY_UNLIKELY (arguments_str_p == NULL))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  ecma_string_t *function_body_str_p;
+
+  if (arguments_list_len > 0)
+  {
+    function_body_str_p = ecma_op_to_string (arguments_list_p[arguments_list_len - 1]);
+
+    if (JERRY_UNLIKELY (function_body_str_p == NULL))
+    {
+      ecma_deref_ecma_string (arguments_str_p);
+      return ECMA_VALUE_ERROR;
+    }
+  }
+  else
+  {
+    /* Very unlikely code path, not optimized. */
+    function_body_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
+  }
+
+  ECMA_STRING_TO_UTF8_STRING (arguments_str_p, arguments_buffer_p, arguments_buffer_size);
+  ECMA_STRING_TO_UTF8_STRING (function_body_str_p, function_body_buffer_p, function_body_buffer_size);
+
+#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ERROR_MESSAGES) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+  JERRY_CONTEXT (resource_name) = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
+#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ERROR_MESSAGES) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+
+  ecma_compiled_code_t *bytecode_data_p = NULL;
+
+  ecma_value_t ret_value = parser_parse_script (arguments_buffer_p,
+                                                arguments_buffer_size,
+                                                function_body_buffer_p,
+                                                function_body_buffer_size,
+                                                parse_opts,
+                                                &bytecode_data_p);
+
+  if (!ECMA_IS_VALUE_ERROR (ret_value))
+  {
+    JERRY_ASSERT (ecma_is_value_true (ret_value));
+
+    ecma_object_t *func_obj_p;
+    ecma_object_t *global_env_p = ecma_get_global_environment ();
+
+#if ENABLED (JERRY_ES2015)
+    if (parse_opts & ECMA_PARSE_GENERATOR_FUNCTION)
+    {
+      func_obj_p = ecma_op_create_generator_function_object (global_env_p, bytecode_data_p);
+    }
+    else
+    {
+#endif /* ENABLED (JERRY_ES2015) */
+      func_obj_p = ecma_op_create_simple_function_object (global_env_p, bytecode_data_p);
+#if ENABLED (JERRY_ES2015)
+    }
+#endif /* ENABLED (JERRY_ES2015) */
+
+    ecma_bytecode_deref (bytecode_data_p);
+    ret_value = ecma_make_object_value (func_obj_p);
+  }
+
+  ECMA_FINALIZE_UTF8_STRING (function_body_buffer_p, function_body_buffer_size);
+  ECMA_FINALIZE_UTF8_STRING (arguments_buffer_p, arguments_buffer_size);
+
+  ecma_deref_ecma_string (arguments_str_p);
+  ecma_deref_ecma_string (function_body_str_p);
+
+  return ret_value;
+} /* ecma_op_create_dynamic_function */
+
+/**
  * Function object creation operation.
  *
  * See also: ECMA-262 v5, 13.2
  *
  * @return pointer to newly created Function object
  */
-ecma_object_t *
+static ecma_object_t *
 ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
-                                const ecma_compiled_code_t *bytecode_data_p) /**< byte-code array */
+                                const ecma_compiled_code_t *bytecode_data_p, /**< byte-code array */
+                                ecma_builtin_id_t proto_id) /**< builtin id of the prototype object */
 {
   JERRY_ASSERT (ecma_is_lexical_environment (scope_p));
 
   /* 1., 4., 13. */
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
+  ecma_object_t *prototype_obj_p = ecma_builtin_get (proto_id);
 
   size_t function_object_size = sizeof (ecma_extended_object_t);
 
@@ -219,7 +366,35 @@ ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
   return func_p;
 } /* ecma_op_create_function_object */
 
+/**
+ * Function object creation operation.
+ *
+ * See also: ECMA-262 v5, 13.2
+ *
+ * @return pointer to newly created Function object
+ */
+ecma_object_t *
+ecma_op_create_simple_function_object (ecma_object_t *scope_p, /**< function's scope */
+                                       const ecma_compiled_code_t *bytecode_data_p) /**< byte-code array */
+{
+  return ecma_op_create_function_object (scope_p, bytecode_data_p, ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
+} /* ecma_op_create_simple_function_object */
+
 #if ENABLED (JERRY_ES2015)
+
+/**
+ * GeneratorFunction object creation operation.
+ *
+ * See also: ECMA-262 v5, 13.2
+ *
+ * @return pointer to newly created Function object
+ */
+ecma_object_t *
+ecma_op_create_generator_function_object (ecma_object_t *scope_p, /**< function's scope */
+                                          const ecma_compiled_code_t *bytecode_data_p) /**< byte-code array */
+{
+  return ecma_op_create_function_object (scope_p, bytecode_data_p, ECMA_BUILTIN_ID_GENERATOR);
+} /* ecma_op_create_generator_function_object */
 
 /**
  * Arrow function object creation operation.
@@ -722,6 +897,43 @@ ecma_op_set_class_prototype (ecma_value_t completion_value, /**< completion_valu
 
   completion_obj_p->u2.prototype_cp = prototype_obj_cp;
 } /* ecma_op_set_class_prototype */
+
+/**
+ * Ordinary internal method: GetPrototypeFromConstructor (constructor, intrinsicDefaultProto)
+ *
+ * See also: ECMAScript v6, 9.1.15
+ *
+ * @return NULL - if the operation fail (exception on the global context is raised)
+ *         pointer to the prototype object - otherwise
+ */
+ecma_object_t *
+ecma_op_get_prototype_from_constructor (ecma_object_t *ctor_obj_p, /**< constructor to get prototype from  */
+                                        ecma_builtin_id_t default_proto_id) /**< intrinsicDefaultProto */
+{
+  JERRY_ASSERT (ecma_object_is_constructor (ctor_obj_p));
+  JERRY_ASSERT (default_proto_id < ECMA_BUILTIN_ID__COUNT);
+
+  ecma_value_t proto = ecma_op_object_get_by_magic_id (ctor_obj_p, LIT_MAGIC_STRING_PROTOTYPE);
+
+  if (ECMA_IS_VALUE_ERROR (proto))
+  {
+    return NULL;
+  }
+
+  ecma_object_t *proto_obj_p;
+
+  if (!ecma_is_value_object (proto))
+  {
+    proto_obj_p = ecma_builtin_get (default_proto_id);
+    ecma_ref_object (proto_obj_p);
+  }
+  else
+  {
+    proto_obj_p = ecma_get_object_from_value (proto);
+  }
+
+  return proto_obj_p;
+} /* ecma_op_get_prototype_from_constructor */
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**
@@ -776,9 +988,15 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
     {
       return ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor cannot be invoked without 'new'."));
     }
-    if (is_construct_call && (status_flags & CBC_CODE_FLAGS_GENERATOR))
+
+    if (status_flags & CBC_CODE_FLAGS_GENERATOR)
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Generator functions cannot be invoked with 'new'."));
+      if (is_construct_call)
+      {
+        return ecma_raise_type_error (ECMA_ERR_MSG ("Generator functions cannot be invoked with 'new'."));
+      }
+
+      JERRY_CONTEXT (current_function_obj_p) = func_obj_p;
     }
   }
 #endif /* ENABLED (JERRY_ES2015) */
@@ -834,6 +1052,13 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
                                    local_env_p,
                                    arguments_list_p,
                                    arguments_list_len);
+
+#if ENABLED (JERRY_ES2015)
+  if (JERRY_UNLIKELY (status_flags & CBC_CODE_FLAGS_GENERATOR))
+  {
+    JERRY_CONTEXT (current_function_obj_p) = NULL;
+  }
+#endif /* ENABLED (JERRY_ES2015) */
 
   if (!(status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED))
   {
@@ -1320,21 +1545,45 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
 static ecma_property_t *
 ecma_op_lazy_instantiate_prototype_object (ecma_object_t *object_p) /**< the function object */
 {
-  JERRY_ASSERT (ecma_get_object_type (object_p)  == ECMA_OBJECT_TYPE_FUNCTION
+  JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION
                 || ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
 
   /* ECMA-262 v5, 13.2, 16-18 */
-  /* 16. */
-  ecma_object_t *proto_object_p = ecma_op_create_object_object_noarg ();
+
+  ecma_object_t *proto_object_p = NULL;
+  bool init_constructor = true;
+
+#if ENABLED (JERRY_ES2015)
+  if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION)
+  {
+    const ecma_compiled_code_t *byte_code_p = ecma_op_function_get_compiled_code ((ecma_extended_object_t *) object_p);
+
+    if (byte_code_p->status_flags & CBC_CODE_FLAGS_GENERATOR)
+    {
+      proto_object_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_GENERATOR_PROTOTYPE),
+                                           0,
+                                           ECMA_OBJECT_TYPE_GENERAL);
+      init_constructor = false;
+    }
+  }
+#endif /* ENABLED (JERRY_ES2015) */
+
+  if (proto_object_p == NULL)
+  {
+    proto_object_p = ecma_op_create_object_object_noarg ();
+  }
 
   /* 17. */
-  ecma_property_value_t *constructor_prop_value_p;
-  constructor_prop_value_p = ecma_create_named_data_property (proto_object_p,
-                                                              ecma_get_magic_string (LIT_MAGIC_STRING_CONSTRUCTOR),
-                                                              ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
-                                                              NULL);
+  if (init_constructor)
+  {
+    ecma_property_value_t *constructor_prop_value_p;
+    constructor_prop_value_p = ecma_create_named_data_property (proto_object_p,
+                                                                ecma_get_magic_string (LIT_MAGIC_STRING_CONSTRUCTOR),
+                                                                ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
+                                                                NULL);
 
-  constructor_prop_value_p->value = ecma_make_object_value (object_p);
+    constructor_prop_value_p->value = ecma_make_object_value (object_p);
+  }
 
   /* 18. */
   ecma_property_t *prototype_prop_p;

@@ -38,7 +38,7 @@
  * \addtogroup ecmabuiltins
  * @{
  *
- * \addtogroup generator ECMA Generator object built-in
+ * \addtogroup generator ECMA Generator.prototype object built-in
  * @{
  */
 

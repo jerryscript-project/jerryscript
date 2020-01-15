@@ -414,18 +414,21 @@ vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
   ecma_object_t *func_obj_p;
 
 #if ENABLED (JERRY_ES2015)
-  if (!(bytecode_p->status_flags & CBC_CODE_FLAGS_ARROW_FUNCTION))
-  {
-#endif /* ENABLED (JERRY_ES2015) */
-    func_obj_p = ecma_op_create_function_object (frame_ctx_p->lex_env_p,
-                                                 bytecode_p);
-#if ENABLED (JERRY_ES2015)
-  }
-  else
+  if (bytecode_p->status_flags & CBC_CODE_FLAGS_ARROW_FUNCTION)
   {
     func_obj_p = ecma_op_create_arrow_function_object (frame_ctx_p->lex_env_p,
                                                        bytecode_p,
                                                        frame_ctx_p->this_binding);
+  }
+  else if (bytecode_p->status_flags & CBC_CODE_FLAGS_GENERATOR)
+  {
+    func_obj_p = ecma_op_create_generator_function_object (frame_ctx_p->lex_env_p, bytecode_p);
+  }
+  else
+  {
+#endif /* ENABLED (JERRY_ES2015) */
+    func_obj_p = ecma_op_create_simple_function_object (frame_ctx_p->lex_env_p, bytecode_p);
+#if ENABLED (JERRY_ES2015)
   }
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -2077,7 +2080,14 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           frame_ctx_p->call_operation = VM_EXEC_RETURN;
           frame_ctx_p->byte_code_p = byte_code_p;
           frame_ctx_p->stack_top_p = stack_top_p;
-          return opfunc_create_executable_object (frame_ctx_p);
+          result = opfunc_create_executable_object (frame_ctx_p);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          return result;
         }
         case VM_OC_YIELD:
         {

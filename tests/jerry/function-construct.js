@@ -29,6 +29,10 @@ catch (e)
   assert (e instanceof ReferenceError);
 }
 
+var singleArgFunction = new Function ('arg', 'return arg');
+
+assert (singleArgFunction (5) === 5);
+
 for (i = 1; i < 10; i ++)
 {
   var f = new Function ('a', 'b', 'var q = a; b++; function f (k) {return q + k + b++;}; return f;');

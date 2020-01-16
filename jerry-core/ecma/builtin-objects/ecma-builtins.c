@@ -897,17 +897,16 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
  */
 void
 ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in object */
-                                       bool separate_enumerable, /**< true -  list enumerable properties into
-                                                                  *           main collection, and non-enumerable
-                                                                  *           to collection of 'skipped non-enumerable'
-                                                                  *           properties,
-                                                                  *   false - list all properties into main collection.
-                                                                  */
+                                       uint32_t opts, /**< listing options using flags
+                                                       *   from ecma_list_properties_options_t */
                                        ecma_collection_t *main_collection_p, /**< 'main' collection */
                                        ecma_collection_t *non_enum_collection_p) /**< skipped 'non-enumerable'
                                                                                   *   collection */
 {
   JERRY_ASSERT (ecma_get_object_is_builtin (object_p));
+
+  const bool separate_enumerable = (opts & ECMA_LIST_ENUMERABLE) != 0;
+  const bool is_array_indices_only = (opts & ECMA_LIST_ARRAY_INDICES) != 0;
 
   if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION
       && ecma_builtin_function_is_routine (object_p))
@@ -965,6 +964,12 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
 #endif /* ENABLED (JERRY_ES2015) */
 
       ecma_string_t *name_p = ecma_get_magic_string ((lit_magic_string_id_t) curr_property_p->magic_string_id);
+
+      if (is_array_indices_only && ecma_string_get_array_index (name_p) == ECMA_STRING_NOT_ARRAY_INDEX)
+      {
+        curr_property_p++;
+        continue;
+      }
 
       uint32_t bit_for_index = (uint32_t) 1u << index;
 

@@ -290,7 +290,7 @@ ecma_builtin_object_object_get_own_property_names (ecma_object_t *obj_p) /**< ro
 static ecma_value_t
 ecma_builtin_object_object_get_own_property_symbols (ecma_object_t *obj_p) /**< routine's argument */
 {
-  return ecma_builtin_helper_object_get_properties (obj_p, ECMA_LIST_SYMBOLS);
+  return ecma_builtin_helper_object_get_properties (obj_p, ECMA_LIST_SYMBOLS_ONLY);
 } /* ecma_builtin_object_object_get_own_property_symbols */
 
 #endif /* ENABLED (JERRY_ES2015) */
@@ -781,15 +781,15 @@ ecma_builtin_object_object_assign (ecma_object_t *target_p, /**< target object *
     ecma_object_t *from_obj_p = ecma_get_object_from_value (from_value);
 
     /* 5.b.iii */
-    /* TODO: extends this collection if symbols will be supported */
     ecma_collection_t *props_p = ecma_op_object_get_property_names (from_obj_p, ECMA_LIST_CONVERT_FAST_ARRAYS
-                                                                                | ECMA_LIST_ENUMERABLE);
+                                                                                | ECMA_LIST_ENUMERABLE
+                                                                                | ECMA_LIST_SYMBOLS);
 
     ecma_value_t *buffer_p = props_p->buffer_p;
 
     for (uint32_t j = 0; (j < props_p->item_count) && ecma_is_value_empty (ret_value); j++)
     {
-      ecma_string_t *property_name_p = ecma_get_string_from_value (buffer_p[j]);
+      ecma_string_t *property_name_p = ecma_get_prop_name_from_value (buffer_p[j]);
 
       /* 5.c.i-ii */
       ecma_property_descriptor_t prop_desc;

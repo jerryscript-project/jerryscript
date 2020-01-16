@@ -508,7 +508,7 @@ ecma_fast_array_get_property_names (ecma_object_t *object_p, /**< fast access mo
   ecma_collection_t *ret_p = ecma_new_collection ();
 
 #if ENABLED (JERRY_ES2015)
-  if (opts & ECMA_LIST_SYMBOLS)
+  if (opts & ECMA_LIST_SYMBOLS_ONLY)
   {
     return ret_p;
   }
@@ -1185,13 +1185,8 @@ ecma_array_get_length (ecma_object_t *array_p) /**< array object */
  */
 void
 ecma_op_array_list_lazy_property_names (ecma_object_t *obj_p, /**< a String object */
-                                        bool separate_enumerable, /**< true -  list enumerable properties
-                                                                   *           into main collection,
-                                                                   *           and non-enumerable to collection of
-                                                                   *           'skipped non-enumerable' properties,
-                                                                   *   false - list all properties into main
-                                                                   *           collection.
-                                                                   */
+                                        uint32_t opts, /**< listing options using flags
+                                                        *   from ecma_list_properties_options_t */
                                         ecma_collection_t *main_collection_p, /**< 'main'  collection */
                                         ecma_collection_t *non_enum_collection_p) /**< skipped
                                                                                    *   'non-enumerable'
@@ -1199,9 +1194,12 @@ ecma_op_array_list_lazy_property_names (ecma_object_t *obj_p, /**< a String obje
 {
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY);
 
-  ecma_collection_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
+  ecma_collection_t *for_non_enumerable_p = (opts & ECMA_LIST_ENUMERABLE) ? non_enum_collection_p : main_collection_p;
 
-  ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
+  if ((opts & ECMA_LIST_ARRAY_INDICES) == 0)
+  {
+    ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
+  }
 } /* ecma_op_array_list_lazy_property_names */
 
 /**

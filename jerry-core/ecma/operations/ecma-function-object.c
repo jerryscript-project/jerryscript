@@ -1770,13 +1770,8 @@ ecma_op_bound_function_try_to_lazy_instantiate_property (ecma_object_t *object_p
  */
 void
 ecma_op_function_list_lazy_property_names (ecma_object_t *object_p, /**< functionobject */
-                                           bool separate_enumerable, /**< true - list enumerable properties into
-                                                                      *          main collection and non-enumerable
-                                                                      *          to collection of 'skipped
-                                                                      *          non-enumerable' properties,
-                                                                      *   false - list all properties into main
-                                                                      *           collection.
-                                                                      */
+                                           uint32_t opts, /**< listing options using flags
+                                                           *   from ecma_list_properties_options_t */
                                            ecma_collection_t *main_collection_p, /**< 'main' collection */
                                            ecma_collection_t *non_enum_collection_p) /**< skipped
                                                                                       *   'non-enumerable'
@@ -1784,7 +1779,7 @@ ecma_op_function_list_lazy_property_names (ecma_object_t *object_p, /**< functio
 {
   JERRY_UNUSED (main_collection_p);
 
-  ecma_collection_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
+  ecma_collection_t *for_non_enumerable_p = (opts & ECMA_LIST_ENUMERABLE) ? non_enum_collection_p : main_collection_p;
 
   /* 'length' property is non-enumerable (ECMA-262 v5, 13.2.5) */
   ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
@@ -1825,21 +1820,15 @@ ecma_op_function_list_lazy_property_names (ecma_object_t *object_p, /**< functio
  *          ecma_op_external_function_try_to_lazy_instantiate_property
  */
 void
-ecma_op_external_function_list_lazy_property_names (bool separate_enumerable, /**< true - list enumerable properties
-                                                                               *          into main collection and
-                                                                               *          non-enumerable to collection
-                                                                               *          of 'skipped non-enumerable'
-                                                                               *          properties,
-                                                                               *   false - list all properties into
-                                                                               *           main collection.
-                                                                               */
-                                                   ecma_collection_t *main_collection_p, /**< 'main' collection */
-                                                   ecma_collection_t *non_enum_collection_p) /**< skipped
-                                                                                              *   collection */
+ecma_op_external_function_list_lazy_property_names (uint32_t opts, /**< listing options using flags
+                                                                    *   from ecma_list_properties_options_t */
+                                                    ecma_collection_t *main_collection_p, /**< 'main' collection */
+                                                    ecma_collection_t *non_enum_collection_p) /**< skipped
+                                                                                               *   collection */
 {
   JERRY_UNUSED (main_collection_p);
 
-  ecma_collection_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
+  ecma_collection_t *for_non_enumerable_p = (opts & ECMA_LIST_ENUMERABLE) ? non_enum_collection_p : main_collection_p;
 
   /* 'prototype' property is non-enumerable (ECMA-262 v5, 13.2.18) */
   ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_PROTOTYPE));
@@ -1853,14 +1842,8 @@ ecma_op_external_function_list_lazy_property_names (bool separate_enumerable, /*
  *          ecma_op_bound_function_try_to_lazy_instantiate_property
  */
 void
-ecma_op_bound_function_list_lazy_property_names (bool separate_enumerable, /**< true - list enumerable properties
-                                                                            *          into main collection and
-                                                                            *          non-enumerable to collection
-                                                                            *          of 'skipped non-enumerable'
-                                                                            *          properties,
-                                                                            *   false - list all properties into
-                                                                            *           main collection.
-                                                                            */
+ecma_op_bound_function_list_lazy_property_names (uint32_t opts, /**< listing options using flags
+                                                                 *   from ecma_list_properties_options_t */
                                                  ecma_collection_t *main_collection_p, /**< 'main' collection */
                                                  ecma_collection_t *non_enum_collection_p) /**< skipped
                                                                                             *   'non-enumerable'
@@ -1868,7 +1851,7 @@ ecma_op_bound_function_list_lazy_property_names (bool separate_enumerable, /**< 
 {
   JERRY_UNUSED (main_collection_p);
 
-  ecma_collection_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
+  ecma_collection_t *for_non_enumerable_p = (opts & ECMA_LIST_ENUMERABLE) ? non_enum_collection_p : main_collection_p;
 
   /* 'length' property is non-enumerable (ECMA-262 v5, 13.2.5) */
   ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));

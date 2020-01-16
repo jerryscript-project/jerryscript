@@ -510,6 +510,13 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_WEAKSET,
 
 #if ENABLED (JERRY_ES2015)
 
+/* Intrinsic hidden builtin object  */
+BUILTIN (ECMA_BUILTIN_ID_INTRINSIC_OBJECT,
+         ECMA_OBJECT_TYPE_GENERAL,
+         ECMA_BUILTIN_ID__COUNT,
+         true,
+         intrinsic)
+
 /* The Array.prototype[@@unscopables] object */
 BUILTIN (ECMA_BUILTIN_ID_ARRAY_PROTOTYPE_UNSCOPABLES,
          ECMA_OBJECT_TYPE_GENERAL,

@@ -33,6 +33,7 @@ typedef enum
   ECMA_BUILTIN_PROPERTY_STRING, /**< string value property */
 #if ENABLED (JERRY_ES2015)
   ECMA_BUILTIN_PROPERTY_SYMBOL, /**< symbol value property */
+  ECMA_BUILTIN_PROPERTY_INTRINSIC_PROPERTY, /**< intrinsic routine property */
 #endif /* ENABLED (JERRY_ES2015) */
   ECMA_BUILTIN_PROPERTY_OBJECT, /**< builtin object property */
   ECMA_BUILTIN_PROPERTY_ROUTINE, /**< routine property */

@@ -235,7 +235,7 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
   ecma_value_t obj_value = ecma_make_object_value (obj_p);
 
   ecma_value_t exotic_to_prim = ecma_op_get_method_by_symbol_id (obj_value,
-                                                                 LIT_MAGIC_STRING_TO_PRIMITIVE);
+                                                                 LIT_GLOBAL_SYMBOL_TO_PRIMITIVE);
 
   if (ECMA_IS_VALUE_ERROR (exotic_to_prim))
   {

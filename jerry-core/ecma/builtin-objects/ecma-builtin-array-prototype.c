@@ -24,7 +24,6 @@
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
-#include "ecma-iterator-object.h"
 #include "ecma-objects.h"
 #include "ecma-string-object.h"
 #include "lit-char-helpers.h"
@@ -73,7 +72,6 @@ enum
   ECMA_ARRAY_PROTOTYPE_FIND,
   ECMA_ARRAY_PROTOTYPE_FIND_INDEX,
   ECMA_ARRAY_PROTOTYPE_ENTRIES,
-  ECMA_ARRAY_PROTOTYPE_VALUES,
   ECMA_ARRAY_PROTOTYPE_KEYS,
   ECMA_ARRAY_PROTOTYPE_SYMBOL_ITERATOR,
   ECMA_ARRAY_PROTOTYPE_FILL,
@@ -2493,36 +2491,6 @@ ecma_builtin_array_prototype_object_copy_within (const ecma_value_t args[], /**<
 
   return ecma_copy_value (ecma_make_object_value (obj_p));
 } /* ecma_builtin_array_prototype_object_copy_within */
-
-/**
- * Helper function for Array.prototype object's {'keys', 'values', 'entries', '@@iterator'}
- * routines common parts.
- *
- * See also:
- *          ECMA-262 v6, 22.1.3.4
- *          ECMA-262 v6, 22.1.3.13
- *          ECMA-262 v6, 22.1.3.29
- *          ECMA-262 v6, 22.1.3.30
- *
- * Note:
- *      Returned value must be freed with ecma_free_value.
- *
- * @return iterator result object, if success
- *         error - otherwise
- */
-static ecma_value_t
-ecma_builtin_array_iterators_helper (ecma_object_t *obj_p, /**< array object */
-                                     uint8_t type) /**< any combination of
-                                                    *   ecma_iterator_type_t bits */
-{
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY_ITERATOR_PROTOTYPE);
-
-  return ecma_op_create_iterator_object (ecma_make_object_value (obj_p),
-                                         prototype_obj_p,
-                                         ECMA_PSEUDO_ARRAY_ITERATOR,
-                                         type);
-} /* ecma_builtin_array_iterators_helper */
-
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**
@@ -2570,24 +2538,18 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
 
 #if ENABLED (JERRY_ES2015)
   if (JERRY_UNLIKELY (builtin_routine_id >= ECMA_ARRAY_PROTOTYPE_ENTRIES
-                      && builtin_routine_id <= ECMA_ARRAY_PROTOTYPE_SYMBOL_ITERATOR))
+                      && builtin_routine_id <= ECMA_ARRAY_PROTOTYPE_KEYS))
   {
     ecma_value_t ret_value;
 
     if (builtin_routine_id == ECMA_ARRAY_PROTOTYPE_ENTRIES)
     {
-      ret_value = ecma_builtin_array_iterators_helper (obj_p, ECMA_ITERATOR_KEYS_VALUES);
-    }
-    else if (builtin_routine_id == ECMA_ARRAY_PROTOTYPE_KEYS)
-    {
-      ret_value = ecma_builtin_array_iterators_helper (obj_p, ECMA_ITERATOR_KEYS);
+      ret_value = ecma_op_create_array_iterator (obj_p, ECMA_ITERATOR_KEYS_VALUES);
     }
     else
     {
-      JERRY_ASSERT (builtin_routine_id == ECMA_ARRAY_PROTOTYPE_VALUES
-                    || builtin_routine_id == ECMA_ARRAY_PROTOTYPE_SYMBOL_ITERATOR);
-
-      ret_value = ecma_builtin_array_iterators_helper (obj_p, ECMA_ITERATOR_VALUES);
+      JERRY_ASSERT (builtin_routine_id == ECMA_ARRAY_PROTOTYPE_KEYS);
+      ret_value = ecma_op_create_array_iterator (obj_p, ECMA_ITERATOR_KEYS);
     }
 
     ecma_deref_object (obj_p);

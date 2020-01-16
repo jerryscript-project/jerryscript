@@ -175,12 +175,19 @@ const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] =
     magic_string_id \
   },
 #if ENABLED (JERRY_ES2015)
-#define SYMBOL_VALUE(name, desc_string_id) \
+#define SYMBOL_VALUE(symbol, desc_magic_string_id) \
   { \
-    name, \
+    symbol, \
     ECMA_BUILTIN_PROPERTY_SYMBOL, \
     ECMA_PROPERTY_FIXED, \
-    desc_string_id \
+    desc_magic_string_id \
+  },
+#define INTRINSIC_PROPERTY(name, magic_string_id) \
+  { \
+    name, \
+    ECMA_BUILTIN_PROPERTY_INTRINSIC_PROPERTY, \
+    ECMA_PROPERTY_CONFIGURABLE_WRITABLE, \
+    magic_string_id \
   },
 #endif /* ENABLED (JERRY_ES2015) */
 #define ACCESSOR_READ_WRITE(name, c_getter_name, c_setter_name, prop_attributes) \

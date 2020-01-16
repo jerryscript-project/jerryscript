@@ -108,7 +108,7 @@ ecma_builtin_array_object_from (ecma_value_t this_arg, /**< 'this' argument */
   }
 
   /* 4. */
-  ecma_value_t using_iterator = ecma_op_get_method_by_symbol_id (items, LIT_MAGIC_STRING_ITERATOR);
+  ecma_value_t using_iterator = ecma_op_get_method_by_symbol_id (items, LIT_GLOBAL_SYMBOL_ITERATOR);
 
   /* 5. */
   if (ECMA_IS_VALUE_ERROR (using_iterator))

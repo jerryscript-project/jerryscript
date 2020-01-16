@@ -111,7 +111,7 @@ opfunc_instanceof (ecma_value_t left_value, /**< left value */
   }
 
 #if ENABLED (JERRY_ES2015)
-  ecma_value_t has_instance_method = ecma_op_get_method_by_symbol_id (right_value, LIT_MAGIC_STRING_HAS_INSTANCE);
+  ecma_value_t has_instance_method = ecma_op_get_method_by_symbol_id (right_value, LIT_GLOBAL_SYMBOL_HAS_INSTANCE);
   if (ECMA_IS_VALUE_ERROR (has_instance_method))
   {
     return has_instance_method;

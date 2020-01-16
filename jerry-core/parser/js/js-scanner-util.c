@@ -970,10 +970,7 @@ scanner_filter_arguments (parser_context_t *context_p, /**< context */
       lexer_lit_location_t *literal_location_p = scanner_add_custom_literal (context_p,
                                                                              prev_literal_pool_p,
                                                                              literal_p);
-      if (type & SCANNER_LITERAL_NO_REG)
-      {
-        type |= SCANNER_LITERAL_NO_REG;
-      }
+      type |= SCANNER_LITERAL_NO_REG;
 
 #if ENABLED (JERRY_ES2015)
       type |= SCANNER_LITERAL_IS_USED;

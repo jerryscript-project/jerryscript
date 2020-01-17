@@ -2177,6 +2177,13 @@ parser_append_binary_single_assignment_token (parser_context_t *context_p, /**< 
     parser_stack_push_uint16 (context_p, literal_index);
     parser_stack_push_uint8 (context_p, assign_ident_opcode);
   }
+  else if (context_p->last_cbc_opcode == CBC_PUSH_THIS_LITERAL)
+  {
+    context_p->last_cbc_opcode = CBC_PUSH_THIS;
+    parser_flush_cbc (context_p);
+    parser_stack_push_uint16 (context_p, context_p->last_cbc.literal_index);
+    parser_stack_push_uint8 (context_p, assign_ident_opcode);
+  }
   else if (context_p->last_cbc_opcode == CBC_PUSH_PROP)
   {
     JERRY_ASSERT (CBC_SAME_ARGS (CBC_PUSH_PROP, CBC_ASSIGN));
@@ -2269,6 +2276,12 @@ parser_append_binary_token (parser_context_t *context_p) /**< context */
     else if (PARSER_IS_PUSH_PROP (context_p->last_cbc_opcode))
     {
       context_p->last_cbc_opcode = PARSER_PUSH_PROP_TO_PUSH_PROP_REFERENCE (context_p->last_cbc_opcode);
+    }
+    else if (context_p->last_cbc_opcode == CBC_PUSH_THIS_LITERAL)
+    {
+      context_p->last_cbc_opcode = CBC_PUSH_THIS;
+      parser_flush_cbc (context_p);
+      context_p->last_cbc_opcode = CBC_PUSH_IDENT_REFERENCE;
     }
     else
     {

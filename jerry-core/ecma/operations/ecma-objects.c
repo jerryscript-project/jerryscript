@@ -2159,6 +2159,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
                 }
                 else
                 {
+                  ecma_deref_ecma_string (name_p);
                   continue;
                 }
 

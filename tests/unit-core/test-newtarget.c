@@ -46,16 +46,6 @@ enum
   TEST_ID_CONSTRUCT_AND_CALL_SUB = 3,
 };
 
-/**
- * Helper method to access the "new.target" via an eval call.
- */
-static jerry_value_t
-get_new_target (void)
-{
-  const char *src = "new.target";
-  return jerry_eval ((const jerry_char_t *) src, strlen (src), 0);
-} /* get_new_target */
-
 static jerry_value_t
 construct_handler (const jerry_value_t func_obj_val, /**< function object */
                    const jerry_value_t this_val, /**< this arg */
@@ -78,7 +68,7 @@ construct_handler (const jerry_value_t func_obj_val, /**< function object */
     case TEST_ID_SIMPLE_CONSTRUCT:
     {
       /* Method was called with "new": new.target should be equal to the function object. */
-      jerry_value_t target = get_new_target ();
+      jerry_value_t target = jerry_get_new_target ();
       TEST_ASSERT (!jerry_value_is_undefined (target));
       TEST_ASSERT (target == func_obj_val);
       jerry_release_value (target);
@@ -87,7 +77,7 @@ construct_handler (const jerry_value_t func_obj_val, /**< function object */
     case TEST_ID_SIMPLE_CALL:
     {
       /* Method was called directly without "new": new.target should be equal undefined. */
-      jerry_value_t target = get_new_target ();
+      jerry_value_t target = jerry_get_new_target ();
       TEST_ASSERT (jerry_value_is_undefined (target));
       TEST_ASSERT (target != func_obj_val);
       jerry_release_value (target);
@@ -96,7 +86,7 @@ construct_handler (const jerry_value_t func_obj_val, /**< function object */
     case TEST_ID_CONSTRUCT_AND_CALL_SUB:
     {
       /* Method was called with "new": new.target should be equal to the function object. */
-      jerry_value_t target = get_new_target ();
+      jerry_value_t target = jerry_get_new_target ();
       TEST_ASSERT (!jerry_value_is_undefined (target));
       TEST_ASSERT (target == func_obj_val);
       jerry_release_value (target);

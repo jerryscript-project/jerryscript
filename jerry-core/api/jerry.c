@@ -2956,7 +2956,7 @@ jerry_get_object_native_pointer (const jerry_value_t obj_val, /**< object to get
  * Note:
  *      If a non-NULL free callback is specified in the native type info,
  *      it will be called by the garbage collector when the object is freed.
- *      This callback **must not** invoke API functions.
+ *      Referred values by this method must have at least 1 reference. (Correct API usage satisfies this condition)
  *      The type info always overwrites the previous value, so passing
  *      a NULL value deletes the current type info.
  */

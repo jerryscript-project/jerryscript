@@ -42,6 +42,11 @@ jerry_fatal (jerry_fatal_code_t code) /**< status code */
       JERRY_ERROR_MSG ("Error: ERR_REF_COUNT_LIMIT\n");
       break;
     }
+    case ERR_UNTERMINATED_GC_LOOPS:
+    {
+      JERRY_ERROR_MSG ("Error: ERR_UNTERMINATED_GC_LOOPS\n");
+      break;
+    }
     case ERR_DISABLED_BYTE_CODE:
     {
       JERRY_ERROR_MSG ("Error: ERR_DISABLED_BYTE_CODE\n");

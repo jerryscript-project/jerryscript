@@ -2831,10 +2831,14 @@ parser_parse_object_initializer (parser_context_t *context_p, /**< context */
     }
     else
     {
-      if (push_prop_opcode != CBC_EXT_INITIALIZER_PUSH_PROP
-          && (context_p->token.type == LEXER_RIGHT_BRACE
-              || context_p->token.type == LEXER_ASSIGN
-              || context_p->token.type == LEXER_COMMA))
+      if (push_prop_opcode == CBC_EXT_INITIALIZER_PUSH_PROP)
+      {
+        parser_raise_error (context_p, PARSER_ERR_COLON_EXPECTED);
+      }
+
+      if (context_p->token.type == LEXER_RIGHT_BRACE
+          || context_p->token.type == LEXER_ASSIGN
+          || context_p->token.type == LEXER_COMMA)
       {
         parser_reparse_as_common_identifier (context_p, start_line, start_column);
         lexer_next_token (context_p);

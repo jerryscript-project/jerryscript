@@ -1138,7 +1138,8 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
     {
 #if ENABLED (JERRY_ES2015)
       ecma_object_t *old_new_target = JERRY_CONTEXT (current_new_target);
-      if (JERRY_LIKELY (!ecma_get_object_is_builtin (func_obj_p)))
+      /* If the current function is not a direct eval call the "new.target" must be updated. */
+      if ((JERRY_CONTEXT (status_flags) & ECMA_STATUS_DIRECT_EVAL) == 0)
       {
         JERRY_CONTEXT (current_new_target) = NULL;
       }

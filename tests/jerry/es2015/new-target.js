@@ -91,6 +91,30 @@ function eval_eval_test () {
 
 new eval_eval_test ();
 
+/* new.target is only valid in direct eval */
+function eval_test_2 () {
+  var ev = eval;
+  try {
+    ev ("new.target");
+    assert (false);
+  } catch (ex) {
+    assert (ex instanceof SyntaxError);
+  }
+}
+
+new eval_test_2 ();
+
+function eval_test_3 () {
+  var ev = eval;
+  try {
+    eval ("ev ('new.target')");
+    assert (false);
+  } catch (ex) {
+    assert (ex instanceof SyntaxError);
+  }
+}
+
+new eval_test_3 ();
 
 /* test assignment of the "new.target" */
 function expect_syntax_error (src)

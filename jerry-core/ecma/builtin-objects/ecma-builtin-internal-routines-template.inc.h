@@ -189,6 +189,13 @@ const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] =
     ECMA_PROPERTY_CONFIGURABLE_WRITABLE, \
     magic_string_id \
   },
+#define ACCESSOR_BUILTIN_FUNCTION(name, getter_builtin_id, setter_builtin_id, prop_attributes) \
+  { \
+    name, \
+    ECMA_BUILTIN_PROPERTY_ACCESSOR_BUILTIN_FUNCTION, \
+    prop_attributes, \
+    ECMA_ACCESSOR_READ_WRITE (getter_builtin_id, setter_builtin_id) \
+  },
 #endif /* ENABLED (JERRY_ES2015) */
 #define ACCESSOR_READ_WRITE(name, c_getter_name, c_setter_name, prop_attributes) \
   { \

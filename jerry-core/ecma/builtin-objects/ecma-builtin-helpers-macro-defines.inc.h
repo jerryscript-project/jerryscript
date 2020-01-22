@@ -33,6 +33,10 @@
 #ifndef INTRINSIC_PROPERTY
 #define INTRINSIC_PROPERTY(name, magic_string_id)
 #endif /* !INTRINSIC_PROPERTY */
+
+#ifndef ACCESSOR_BUILTIN_FUNCTION_OBJECT
+#define ACCESSOR_BUILTIN_FUNCTION_OBJECT(name, getter_builtin_id, setter_builtin_id, prop_attributes)
+#endif /* !ACCESSOR_BUILTIN_FUNCTION_OBJECT */
 #endif /* ENABLED (JERRY_ES2015) */
 
 #ifndef OBJECT_VALUE

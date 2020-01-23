@@ -74,6 +74,9 @@ ecma_op_object_is_fast_array (ecma_object_t *object_p);
 bool
 ecma_op_array_is_fast_array (ecma_extended_object_t *array_p);
 
+uint32_t
+ecma_fast_array_get_hole_count (ecma_object_t *obj_p);
+
 ecma_value_t *
 ecma_fast_array_extend (ecma_object_t *object_p, uint32_t new_lengt);
 

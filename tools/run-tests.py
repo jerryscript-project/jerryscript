@@ -175,6 +175,8 @@ JERRY_BUILDOPTIONS = [
             OPTIONS_GC_MARK_LIMIT),
     Options('buildoption_test-single-source',
             ['--cmake-param=-DENABLE_ALL_IN_ONE_SOURCE=ON']),
+    Options('buildoption_test-jerry-debugger',
+            ['--jerry-debugger=on']),
 ]
 
 def get_arguments():

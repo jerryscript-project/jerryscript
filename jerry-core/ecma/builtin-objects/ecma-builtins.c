@@ -814,6 +814,17 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
                                               (lit_magic_string_id_t) curr_property_p->value);
       break;
     }
+    case ECMA_BUILTIN_PROPERTY_ACCESSOR_BUILTIN_FUNCTION:
+    {
+      is_accessor = true;
+      uint16_t getter_id = ECMA_ACCESSOR_READ_WRITE_GET_GETTER_ID (curr_property_p->value);
+      uint16_t setter_id = ECMA_ACCESSOR_READ_WRITE_GET_SETTER_ID (curr_property_p->value);
+      getter_p = ecma_builtin_get (getter_id);
+      setter_p = ecma_builtin_get (setter_id);
+      ecma_ref_object (getter_p);
+      ecma_ref_object (setter_p);
+      break;
+    }
 #endif /* ENABLED (JERRY_ES2015) */
     case ECMA_BUILTIN_PROPERTY_OBJECT:
     {

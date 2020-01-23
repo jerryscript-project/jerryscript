@@ -48,6 +48,14 @@ ROUTINE (LIT_MAGIC_STRING_BIND, ECMA_FUNCTION_PROTOTYPE_BIND, NON_FIXED, 1)
  *  the property attributes are: { [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: false }.
  */
 ROUTINE_WITH_FLAGS (LIT_GLOBAL_SYMBOL_HAS_INSTANCE, ECMA_FUNCTION_PROTOTYPE_SYMBOL_HAS_INSTANCE, 1, 1, 0 /* flags */)
+ACCESSOR_BUILTIN_FUNCTION (LIT_MAGIC_STRING_ARGUMENTS,
+                           ECMA_BUILTIN_ID_TYPE_ERROR_THROWER,
+                           ECMA_BUILTIN_ID_TYPE_ERROR_THROWER,
+                           ECMA_PROPERTY_FLAG_CONFIGURABLE)
+ACCESSOR_BUILTIN_FUNCTION (LIT_MAGIC_STRING_CALLER,
+                           ECMA_BUILTIN_ID_TYPE_ERROR_THROWER,
+                           ECMA_BUILTIN_ID_TYPE_ERROR_THROWER,
+                           ECMA_PROPERTY_FLAG_CONFIGURABLE)
 #endif /* ENABLED (JERRY_ES2015) */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

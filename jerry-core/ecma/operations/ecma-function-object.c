@@ -1643,6 +1643,19 @@ ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**<
     }
 #endif /* ENABLED (JERRY_ES2015) */
 
+#if ENABLED (JERRY_ES2015)
+    if (!(bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE))
+    {
+      ecma_property_t *value_prop_p;
+      /* The property_name_p argument contans the name. */
+      ecma_property_value_t *value_p = ecma_create_named_data_property (object_p,
+                                                                        property_name_p,
+                                                                        ECMA_PROPERTY_FIXED,
+                                                                        &value_prop_p);
+      value_p->value = ECMA_VALUE_NULL;
+      return value_prop_p;
+    }
+#else /* !ENABLED (JERRY_ES2015) */
     if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE)
     {
       ecma_object_t *thrower_p = ecma_builtin_get (ECMA_BUILTIN_ID_TYPE_ERROR_THROWER);
@@ -1657,6 +1670,8 @@ ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**<
                                            &caller_prop_p);
       return caller_prop_p;
     }
+#endif /* ENABLED (JERRY_ES2015) */
+
   }
 
   return NULL;

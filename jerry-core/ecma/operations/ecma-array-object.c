@@ -301,6 +301,18 @@ ecma_fast_array_set_property (ecma_object_t *object_p, /**< fast access mode arr
   return true;
 } /* ecma_fast_array_set_property */
 
+/**
+ * Get the number of array holes in a fast access array object
+ *
+ * @return number of array holes in a fast access array object
+ */
+inline uint32_t JERRY_ATTR_ALWAYS_INLINE
+ecma_fast_array_get_hole_count (ecma_object_t *obj_p) /**< fast access mode array object */
+{
+  JERRY_ASSERT (ecma_op_object_is_fast_array (obj_p));
+
+  return ((ecma_extended_object_t *) obj_p)->u.array.u.hole_count >> ECMA_FAST_ARRAY_HOLE_SHIFT;
+} /* ecma_fast_array_get_hole_count */
 
 /**
  * Extend the underlying buffer of a fast mode access array for the given new length

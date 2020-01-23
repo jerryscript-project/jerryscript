@@ -2015,7 +2015,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
       ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) prototype_chain_iter_p;
 
       uint32_t length = ext_obj_p->u.array.length;
-      array_index_named_properties_count = length;
+      array_index_named_properties_count = length - ecma_fast_array_get_hole_count (prototype_chain_iter_p);
 
       ecma_value_t *values_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, prop_iter_cp);
 

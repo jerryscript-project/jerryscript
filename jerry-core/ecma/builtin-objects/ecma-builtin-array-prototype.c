@@ -428,6 +428,7 @@ ecma_builtin_array_prototype_object_pop (ecma_object_t *obj_p, /**< array object
   {
     if (!ecma_get_object_extensible (obj_p))
     {
+      ecma_free_value (get_value);
       return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type."));
     }
 

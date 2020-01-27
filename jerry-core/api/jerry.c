@@ -2370,7 +2370,16 @@ jerry_set_internal_property (const jerry_value_t obj_val, /**< object value */
                                                                       ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
                                                                       NULL);
 
-    internal_object_p = ecma_create_object (NULL, 0, ECMA_OBJECT_TYPE_GENERAL);
+    internal_object_p = ecma_create_object (NULL,
+                                            sizeof (ecma_extended_object_t),
+                                            ECMA_OBJECT_TYPE_CLASS);
+    {
+      ecma_extended_object_t *container_p = (ecma_extended_object_t *) internal_object_p;
+      container_p->u.class_prop.class_id = LIT_INTERNAL_MAGIC_STRING_INTERNAL_OBJECT;
+      container_p->u.class_prop.extra_info = 0;
+      container_p->u.class_prop.u.length = 0;
+    }
+
     value_p->value = ecma_make_object_value (internal_object_p);
     ecma_deref_object (internal_object_p);
   }
@@ -2834,6 +2843,40 @@ jerry_set_prototype (const jerry_value_t obj_val, /**< object value */
 } /* jerry_set_prototype */
 
 /**
+ * Utility to check if a given object can be used for the foreach api calls.
+ *
+ * Some objects/classes uses extra internal objects to correctly store data.
+ * These extre object should never be exposed externally to the API user.
+ *
+ * @returns true - if the user can access the object in the callback.
+ *          false - if the object is an internal object which should no be accessed by the user.
+ */
+static
+bool jerry_object_is_valid_foreach (ecma_object_t *object_p) /**< object to test */
+{
+  if (ecma_is_lexical_environment (object_p))
+  {
+    return false;
+  }
+
+  ecma_object_type_t object_type = ecma_get_object_type (object_p);
+
+  if (object_type == ECMA_OBJECT_TYPE_CLASS)
+  {
+    ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+    switch (ext_object_p->u.class_prop.class_id)
+    {
+      /* An object's internal property object should not be iterable by foreach. */
+      case LIT_INTERNAL_MAGIC_STRING_INTERNAL_OBJECT:
+      /* Containers are internal data, do not iterate on them. */
+      case LIT_INTERNAL_MAGIC_STRING_CONTAINER: return false;
+    }
+  }
+
+  return true;
+} /* jerry_object_is_valid_foreach */
+
+/**
  * Traverse objects.
  *
  * @return true - traversal was interrupted by the callback.
@@ -2853,7 +2896,7 @@ jerry_objects_foreach (jerry_objects_foreach_t foreach_p, /**< function pointer 
   {
     ecma_object_t *iter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, iter_cp);
 
-    if (!ecma_is_lexical_environment (iter_p)
+    if (jerry_object_is_valid_foreach (iter_p)
         && !foreach_p (ecma_make_object_value (iter_p), user_data_p))
     {
       return true;
@@ -2891,7 +2934,7 @@ jerry_objects_foreach_by_native_info (const jerry_object_native_info_t *native_i
   {
     ecma_object_t *iter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, iter_cp);
 
-    if (!ecma_is_lexical_environment (iter_p))
+    if (jerry_object_is_valid_foreach (iter_p))
     {
       native_pointer_p = ecma_get_native_pointer_value (iter_p, (void *) native_info_p);
       if (native_pointer_p

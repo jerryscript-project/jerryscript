@@ -951,6 +951,10 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Incorrect use of yield keyword.";
     }
+    case PARSER_ERR_FOR_IN_OF_DECLARATION:
+    {
+      return "for in-of loop variable declaration may not have an initializer.";
+    }
 #endif /* ENABLED (JERRY_ES2015) */
     case PARSER_ERR_DELETE_IDENT_NOT_ALLOWED:
     {

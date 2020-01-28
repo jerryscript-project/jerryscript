@@ -289,7 +289,6 @@ ecma_op_delete_binding (ecma_object_t *lex_env_p, /**< lexical environment */
                 && ecma_is_lexical_environment (lex_env_p));
   JERRY_ASSERT (name_p != NULL);
 
-
   if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
   {
     ecma_property_t *prop_p = ecma_find_named_property (lex_env_p, name_p);

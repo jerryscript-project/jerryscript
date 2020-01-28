@@ -1758,7 +1758,6 @@ jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, /**< input snapsho
 #endif /* ENABLED (JERRY_SNAPSHOT_SAVE) */
 } /* jerry_get_literals_from_snapshot */
 
-
 /**
  * Generate snapshot function from specified source and arguments
  *

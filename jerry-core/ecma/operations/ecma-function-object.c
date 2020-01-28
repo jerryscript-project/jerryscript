@@ -681,7 +681,6 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
   return result;
 } /* ecma_op_function_has_instance */
 
-
 #if ENABLED (JERRY_ES2015)
 /**
  * Indicates whether the class has been invoked with 'new'.

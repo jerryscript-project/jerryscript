@@ -119,7 +119,6 @@ handler_construct_2_freecb (void *native_p)
   test_api_is_free_callback_was_called = true;
 } /* handler_construct_2_freecb */
 
-
 /**
  * The name of the jerry_object_native_info_t struct.
  */
@@ -271,8 +270,6 @@ foreach (const jerry_value_t name, /**< field name */
 
   TEST_ASSERT (false);
   return false;
-
-
 } /* foreach */
 
 static bool

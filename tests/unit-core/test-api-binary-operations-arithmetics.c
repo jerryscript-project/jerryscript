@@ -40,7 +40,6 @@ typedef struct
   jerry_value_t expected;
 } test_entry_t;
 
-
 typedef struct
 {
   jerry_binary_operation_t op;
@@ -190,7 +189,6 @@ main (void)
     T (JERRY_BIN_OP_SUB, jerry_create_boolean (false), jerry_create_boolean (true), jerry_create_number (-1.0)),
     T (JERRY_BIN_OP_SUB, jerry_create_boolean (false), jerry_create_boolean (false), jerry_create_number (0.0)),
     T (JERRY_BIN_OP_SUB, jerry_create_null (), jerry_create_null (), jerry_create_number (-0.0)),
-
 
     /* Testing multiplication (*) */
     T (JERRY_BIN_OP_MUL, jerry_create_number (5.0), jerry_create_number (5.0), jerry_create_number (25.0)),

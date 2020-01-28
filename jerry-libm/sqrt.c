@@ -275,7 +275,6 @@ A.  sqrt(x) by Newton Iteration
            ------------------------------------------------------
               msb    lsb  msb                                 lsb ...order
 
-
              ------------------------        ------------------------
         x0:  |s|   e    |    f1     |    x1: |          f2           |
              ------------------------        ------------------------
@@ -307,7 +306,6 @@ A.  sqrt(x) by Newton Iteration
                 y := (y+x/y)/2          ... almost 35 sig. bits
                 y := y-(y-x/y)/2        ... within 1 ulp
 
-
         Remark 1.
             Another way to improve y to within 1 ulp is:
 
@@ -319,7 +317,6 @@ A.  sqrt(x) by Newton Iteration
                 y := y + 2* ----------  ...within 1 ulp
                                2
                              3y  + x
-
 
         This formula has one division fewer than the one above; however,
         it requires more multiplications and additions. Also x must be
@@ -366,7 +363,6 @@ A.  sqrt(x) by Newton Iteration
 
         Square root of +inf, +-0, or NaN is itself;
         Square root of a negative number is NaN with invalid signal.
-
 
 B.  sqrt(x) by Reciproot Iteration
 

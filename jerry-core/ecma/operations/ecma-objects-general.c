@@ -418,7 +418,6 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
       JERRY_ASSERT (property_desc_type == ECMA_PROPERTY_TYPE_GENERIC
                     || property_desc_type == ECMA_PROPERTY_TYPE_NAMEDDATA);
 
-
       ecma_property_value_t *new_prop_value_p = ecma_create_named_data_property (object_p,
                                                                                  property_name_p,
                                                                                  prop_attributes,

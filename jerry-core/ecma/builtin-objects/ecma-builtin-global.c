@@ -387,7 +387,6 @@ ecma_builtin_global_object_parse_float (const lit_utf8_byte_t *string_buff, /**<
     }
   }
 
-
   /* Set end position to the end of whole part. */
   end_p = str_curr_p;
   if (str_curr_p < str_end_p)
@@ -424,7 +423,6 @@ ecma_builtin_global_object_parse_float (const lit_utf8_byte_t *string_buff, /**<
       }
     }
   }
-
 
   if (str_curr_p < str_end_p)
   {

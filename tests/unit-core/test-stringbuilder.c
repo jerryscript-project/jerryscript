@@ -155,7 +155,6 @@ main (void)
     }
     ecma_string_t *result_p = ecma_stringbuilder_finalize (&builder);
 
-
     ecma_string_t *expected_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
     for (size_t i = 0; i < count; i++)
     {

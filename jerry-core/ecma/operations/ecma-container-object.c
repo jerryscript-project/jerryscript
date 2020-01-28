@@ -201,7 +201,6 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
       ecma_deref_object (next_object_p);
     }
 
-
     if (ECMA_IS_VALUE_ERROR (result))
     {
       ecma_op_iterator_close (iter);
@@ -677,7 +676,6 @@ ecma_op_container_delete (ecma_value_t this_arg, /**< this argument */
   {
     return ECMA_VALUE_FALSE;
   }
-
 
   ecma_named_data_property_assign_value ((ecma_object_t *) container_p,
                                          ECMA_PROPERTY_VALUE_PTR (property_p),

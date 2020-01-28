@@ -165,7 +165,6 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
         return ECMA_PROPERTY_TYPE_NOT_FOUND;
       }
 
-
       break;
     }
 #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
@@ -2338,7 +2337,6 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
     }
 
     JMEM_FINALIZE_LOCAL_ARRAY (names_p);
-
 
     if (!is_with_prototype_chain || prototype_chain_iter_p->u2.prototype_cp == JMEM_CP_NULL)
     {

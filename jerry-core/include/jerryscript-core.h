@@ -666,7 +666,6 @@ typedef enum
   JERRY_TYPEDARRAY_FLOAT64,
 } jerry_typedarray_type_t;
 
-
 bool jerry_value_is_typedarray (jerry_value_t value);
 jerry_value_t jerry_create_typedarray (jerry_typedarray_type_t type_name, jerry_length_t length);
 jerry_value_t jerry_create_typedarray_for_arraybuffer_sz (jerry_typedarray_type_t type_name,

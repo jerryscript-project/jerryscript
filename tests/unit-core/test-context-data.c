@@ -113,7 +113,6 @@ test_context_data4_new (void *user_data_p)
   TEST_ASSERT (user_data_p == NULL);
 } /* test_context_data4_new */
 
-
 static void
 test_context_data4_free (void *user_data_p)
 {
@@ -137,7 +136,6 @@ static const jerry_context_data_manager_t manager4 =
   .finalize_cb = test_context_data4_finalize,
   .bytes_needed = 0
 };
-
 
 int
 main (void)

@@ -67,7 +67,6 @@ struct jerryx_handle_scope_s
   JERRYX_HANDLE_SCOPE_FIELDS; /**< common handle scope fields */
 };
 
-
 typedef struct jerryx_handle_scope_dynamic_s jerryx_handle_scope_dynamic_t;
 /**
  * Dynamically allocated handle scope type.

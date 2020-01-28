@@ -17,7 +17,6 @@
 #include "jerryscript-ext/arg.h"
 #include "jerryscript.h"
 
-
 #define JERRYX_STATIC_ASSERT(x, msg) \
   enum { static_assertion_failed_ ## msg = 1 / (!!(x)) }
 

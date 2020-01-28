@@ -1292,7 +1292,6 @@ ecma_builtin_array_prototype_object_splice (const ecma_value_t args[], /**< argu
       return get_value;
     }
 
-
     if (ecma_is_value_found (get_value))
     {
       /* 9.c.ii */
@@ -1943,7 +1942,6 @@ ecma_builtin_array_prototype_object_map (ecma_value_t arg1, /**< callbackfn */
                                                                      index,
                                                                      mapped_value,
                                                                      ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
-
 
       ecma_free_value (mapped_value);
       ecma_free_value (current_value);

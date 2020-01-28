@@ -16,7 +16,6 @@
 #include "jerryscript.h"
 #include "test-common.h"
 
-
 int main (void)
 {
   if (!jerry_is_feature_enabled (JERRY_FEATURE_MEM_STATS))

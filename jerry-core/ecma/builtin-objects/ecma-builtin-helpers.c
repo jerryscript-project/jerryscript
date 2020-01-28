@@ -220,7 +220,6 @@ ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, /**< th
 
   ecma_value_t index_obj_value = ecma_op_to_object (index_value);
 
-
   if (ECMA_IS_VALUE_ERROR (index_obj_value))
   {
     ecma_free_value (index_value);
@@ -264,7 +263,6 @@ cleanup:
 
   return ret_string_p;
 } /* ecma_builtin_helper_get_to_locale_string_at_index */
-
 
 /**
  * The Object.keys and Object.getOwnPropertyNames routine's common part.

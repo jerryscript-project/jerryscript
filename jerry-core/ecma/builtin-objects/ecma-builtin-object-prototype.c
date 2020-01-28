@@ -50,7 +50,6 @@ enum
   ECMA_OBJECT_PROTOTYPE_PROPERTY_IS_ENUMERABLE,
 };
 
-
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-object-prototype.inc.h"
 #define BUILTIN_UNDERSCORED_ID object_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"

@@ -18,7 +18,6 @@
 #include "jerryscript-port-default.h"
 #include "test-common.h"
 
-
 static const jerry_char_t test_source[] = TEST_STRING_LITERAL (
   "var p1 = create_promise1();"
   "var p2 = create_promise2();"

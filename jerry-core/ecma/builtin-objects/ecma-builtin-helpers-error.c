@@ -72,4 +72,3 @@ ecma_builtin_helper_error_dispatch_call (ecma_standard_error_t error_type, /**< 
  * @}
  * @}
  */
-

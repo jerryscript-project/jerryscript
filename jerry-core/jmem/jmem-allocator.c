@@ -231,4 +231,3 @@ jmem_decompress_pointer (uintptr_t compressed_pointer) /**< pointer to decompres
 
   return (void *) uint_ptr;
 } /* jmem_decompress_pointer */
-

@@ -50,7 +50,6 @@ int gettimeofday (struct timeval *tv,
 } /* gettimeofday */
 #endif /* __GNUC__ */
 
-
 int rand (void);
 
 /**

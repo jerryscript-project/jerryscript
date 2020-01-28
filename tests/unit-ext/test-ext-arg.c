@@ -401,7 +401,6 @@ test_validator_prop2_handler (const jerry_value_t func_obj_val, /**< function ob
 
   jerry_value_t is_ok = jerryx_arg_transform_args (args_p, args_cnt, mapping, ARRAY_SIZE (mapping));
 
-
   TEST_ASSERT (!jerry_value_is_error (is_ok));
 
   if (validator_prop_count == 1)
@@ -621,7 +620,6 @@ test_validator_array1_handler (const jerry_value_t func_obj_val, /**< function o
   };
 
   jerry_value_t is_ok = jerryx_arg_transform_args (args_p, args_cnt, mapping, ARRAY_SIZE (mapping));
-
 
   TEST_ASSERT (!jerry_value_is_error (is_ok));
 

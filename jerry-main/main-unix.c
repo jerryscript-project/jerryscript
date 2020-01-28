@@ -274,7 +274,6 @@ register_js_function (const char *name_p, /**< name of the function */
   jerry_release_value (result_val);
 } /* register_js_function */
 
-
 /**
  * Runs the source code received by jerry_debugger_wait_for_client_source.
  *
@@ -303,7 +302,6 @@ wait_for_source_callback (const jerry_char_t *resource_name_p, /**< resource nam
 
   return ret_val;
 } /* wait_for_source_callback */
-
 
 /**
  * Command line option IDs

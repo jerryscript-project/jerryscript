@@ -737,7 +737,6 @@ ecma_op_array_species_create (ecma_object_t *original_array_p, /**< The object f
                                                      &len_val,
                                                      1);
 
-
   ecma_deref_object (ctor_object_p);
   ecma_free_value (len_val);
   return ret_val;

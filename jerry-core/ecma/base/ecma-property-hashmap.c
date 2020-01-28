@@ -245,7 +245,6 @@ ecma_property_hashmap_insert (ecma_object_t *object_p, /**< object */
   uint32_t mask = hashmap_p->max_property_count - 1;
   entry_index &= mask;
 
-
 #ifndef JERRY_NDEBUG
   /* See the comment for this variable in ecma_property_hashmap_create. */
   uint32_t start_entry_index = entry_index;

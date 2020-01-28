@@ -11,6 +11,8 @@ set rules {
     jerry_no_space_before_closing_parentheses
     jerry_no_tabs
     jerry_no_trailing_spaces
+    jerry_no_leading_or_trailing_empty_line
+    jerry_no_consecutive_empty_lines
     jerry_pointer_declarator_space
     jerry_switch_case
     jerry_typecast_space_parentheses

@@ -409,7 +409,6 @@ jmem_heap_insert_block (jmem_heap_free_t *block_p, /**< block to insert */
   JMEM_VALGRIND_DEFINED_SPACE (block_p, sizeof (jmem_heap_free_t));
   JMEM_VALGRIND_DEFINED_SPACE (next_p, sizeof (jmem_heap_free_t));
 
-
   const uint32_t block_offset = JMEM_HEAP_GET_OFFSET_FROM_ADDR (block_p);
 
   /* Update prev. */

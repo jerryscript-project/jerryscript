@@ -185,7 +185,6 @@ test_error_setvalue (void)
   jerry_cleanup ();
 } /* test_error_setvalue */
 
-
 /**
  * Test registration error with jerryx_set_properties.
  *

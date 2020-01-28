@@ -221,8 +221,6 @@ def generate_header(gen_file):
 
 
 def generate_magic_string_defs(gen_file, defs):
-    print(file=gen_file) # empty line separator
-
     last_guards = set([()])
     for str_ref, str_value, guards in defs:
         if last_guards != guards:

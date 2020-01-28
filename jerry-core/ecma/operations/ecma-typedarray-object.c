@@ -123,7 +123,6 @@ ecma_typedarray_get_double_element (lit_utf8_byte_t *src) /**< the location in t
   return (ecma_number_t) num;
 } /* ecma_typedarray_get_double_element */
 
-
 /**
  * Normalize the given ecma_number_t to an uint32_t value
  */
@@ -168,7 +167,6 @@ ecma_typedarray_set_int8_element (lit_utf8_byte_t *dst_p, /**< the location in t
   int8_t num = (int8_t) ecma_typedarray_setter_number_to_uint32 (value);
   *dst_p = (lit_utf8_byte_t) num;
 } /* ecma_typedarray_set_int8_element */
-
 
 /**
  * Write an uint8_t value into the given arraybuffer
@@ -223,7 +221,6 @@ ecma_typedarray_set_int16_element (lit_utf8_byte_t *dst_p, /**< the location in 
   memcpy (dst_p, &num, sizeof (int16_t));
 } /* ecma_typedarray_set_int16_element */
 
-
 /**
  * Write an uint8_t value into the given arraybuffer
  */
@@ -246,7 +243,6 @@ ecma_typedarray_set_int32_element (lit_utf8_byte_t *dst_p, /**< the location in 
   memcpy (dst_p, &num, sizeof (int32_t));
 } /* ecma_typedarray_set_int32_element */
 
-
 /**
  * Write an uint32_t value into the given arraybuffer
  */
@@ -257,7 +253,6 @@ ecma_typedarray_set_uint32_element (lit_utf8_byte_t *dst_p, /**< the location in
   uint32_t num = (uint32_t) ecma_typedarray_setter_number_to_uint32 (value);
   memcpy (dst_p, &num, sizeof (uint32_t));
 } /* ecma_typedarray_set_uint32_element */
-
 
 /**
  * Write a float value into the given arraybuffer
@@ -282,7 +277,6 @@ ecma_typedarray_set_double_element (lit_utf8_byte_t *dst_p, /**< the location in
   memcpy (dst_p, &num, sizeof (double));
 } /* ecma_typedarray_set_double_element */
 #endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
-
 
 /**
  * Builtin id of the first %TypedArray% builtin routine intrinsic object
@@ -666,7 +660,6 @@ ecma_typedarray_create_object_with_typedarray (ecma_object_t *typedarray_p, /**<
     ecma_typedarray_getter_fn_t src_typedarray_getter_cb = ecma_get_typedarray_getter_fn (src_id);
     ecma_typedarray_setter_fn_t target_typedarray_setter_cb = ecma_get_typedarray_setter_fn (typedarray_id);
 
-
     for (uint32_t i = 0; i < array_length; i++)
     {
       /* Convert values from source to destination format. */
@@ -838,7 +831,6 @@ ecma_typedarray_get_element_size_shift (ecma_object_t *typedarray_p) /**< the po
 
   return ecma_typedarray_helper_get_shift_size (ecma_get_typedarray_id (typedarray_p));
 } /* ecma_typedarray_get_element_size_shift */
-
 
 /**
  * Get the array length of the typedarray object

@@ -35,7 +35,7 @@ var prototype_obj = { dummy:1, length:1, caller:null,
 var func = function() {};
 
 Object.setPrototypeOf(func, prototype_obj);
-assert(getProperties(func) == "dummy caller arguments");
+assert(getProperties(func) == "dummy");
 
 var bound_func = (function() {}).bind(null);
 Object.setPrototypeOf(bound_func, prototype_obj);

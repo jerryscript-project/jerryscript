@@ -23,6 +23,7 @@
 #include "ecma-helpers.h"
 #include "ecma-function-object.h"
 #include "ecma-objects.h"
+#include "ecma-proxy-object.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
 #include "ecma-builtin-function-prototype.h"
@@ -210,11 +211,37 @@ ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p , /**
   /* 4. 11. 18. */
   ecma_object_t *prototype_obj_p;
 
-#if ENABLED (JERRY_ES2015)
-  prototype_obj_p = ECMA_GET_POINTER (ecma_object_t, this_arg_obj_p->u2.prototype_cp);
-#else /* !ENABLED (JERRY_ES2015) */
+#if !ENABLED (JERRY_ES2015)
   prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
-#endif /* ENABLED (JERRY_ES2015) */
+#else /* ENABLED (JERRY_ES2015) */
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (ECMA_OBJECT_IS_PROXY (this_arg_obj_p))
+  {
+    ecma_value_t proto = ecma_proxy_object_get_prototype_of (this_arg_obj_p);
+
+    if (ECMA_IS_VALUE_ERROR (proto))
+    {
+      return proto;
+    }
+    prototype_obj_p = ecma_is_value_null (proto) ? NULL : ecma_get_object_from_value (proto);
+  }
+  else
+  {
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+    jmem_cpointer_t proto_cp = ecma_op_ordinary_object_get_prototype_of (this_arg_obj_p);
+    if (proto_cp != JMEM_CP_NULL)
+    {
+      prototype_obj_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, proto_cp);
+      ecma_ref_object (prototype_obj_p);
+    }
+    else
+    {
+      prototype_obj_p = NULL;
+    }
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* !ENABLED (JERRY_ES2015) */
 
   ecma_object_t *function_p;
   ecma_extended_object_t *ext_function_p;
@@ -266,6 +293,13 @@ ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p , /**
     ecma_value_t args_len_or_this = ecma_make_integer_value ((ecma_integer_value_t) arguments_number);
     ext_function_p->u.bound_function.args_len_or_this = args_len_or_this;
   }
+
+#if ENABLED (JERRY_ES2015)
+  if (prototype_obj_p != NULL)
+  {
+    ecma_deref_object (prototype_obj_p);
+  }
+#endif /* ENABLED (JERRY_ES2015) */
 
   /*
    * [[Class]] property is not stored explicitly for objects of ECMA_OBJECT_TYPE_FUNCTION type.

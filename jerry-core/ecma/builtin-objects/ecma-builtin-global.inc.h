@@ -246,6 +246,13 @@ OBJECT_VALUE (LIT_MAGIC_STRING_DATAVIEW_UL,
               ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW */
 
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+/* ECMA-262 v6, 26.2.1 */
+OBJECT_VALUE (LIT_MAGIC_STRING_PROXY_UL,
+              ECMA_BUILTIN_ID_PROXY,
+              ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 

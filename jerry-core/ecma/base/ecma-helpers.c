@@ -180,39 +180,16 @@ ecma_is_lexical_environment (const ecma_object_t *object_p) /**< object or lexic
 } /* ecma_is_lexical_environment */
 
 /**
- * Get value of [[Extensible]] object's internal property.
- *
- * @return true  - if object is extensible
- *         false - otherwise
- */
-inline bool JERRY_ATTR_PURE
-ecma_get_object_extensible (const ecma_object_t *object_p) /**< object */
-{
-  JERRY_ASSERT (object_p != NULL);
-  JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
-
-  return (object_p->type_flags_refs & ECMA_OBJECT_FLAG_EXTENSIBLE) != 0;
-} /* ecma_get_object_extensible */
-
-/**
  * Set value of [[Extensible]] object's internal property.
  */
 inline void
-ecma_set_object_extensible (ecma_object_t *object_p, /**< object */
-                            bool is_extensible) /**< value of [[Extensible]] */
+ecma_op_ordinary_object_set_extensible (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
 
-  if (is_extensible)
-  {
-    object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs | ECMA_OBJECT_FLAG_EXTENSIBLE);
-  }
-  else
-  {
-    object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs & ~ECMA_OBJECT_FLAG_EXTENSIBLE);
-  }
-} /* ecma_set_object_extensible */
+  object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs | ECMA_OBJECT_FLAG_EXTENSIBLE);
+} /* ecma_op_ordinary_object_set_extensible */
 
 /**
  * Get object's internal implementation-defined type.

@@ -124,7 +124,7 @@ ecma_builtin_reflect_dispatch_routine (uint16_t builtin_routine_id, /**< built-i
 
       case ECMA_REFLECT_OBJECT_HAS:
       {
-        ret_value = ecma_make_boolean_value (ecma_op_object_has_property (target_p, name_str_p));
+        ret_value = ecma_op_object_has_property (target_p, name_str_p);
         break;
       }
 

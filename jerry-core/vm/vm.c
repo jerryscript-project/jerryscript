@@ -185,7 +185,7 @@ vm_op_set_value (ecma_value_t object, /**< base object */
     }
 
     object_p = ecma_get_object_from_value (to_object);
-    ecma_set_object_extensible (object_p, false);
+    ecma_op_ordinary_object_prevent_extensions (object_p);
   }
   else
   {
@@ -1321,11 +1321,21 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
   #endif /* ENABLED (JERRY_ES2015) && !JERRY_NDEBUG */
 
-          vm_var_decl (lex_env_p, name_p, frame_ctx_p->is_eval_code);
+          result = vm_var_decl (lex_env_p, name_p, frame_ctx_p->is_eval_code);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
 
           if (lit_value != ECMA_VALUE_UNDEFINED)
           {
-            vm_set_var (lex_env_p, name_p, is_strict, lit_value);
+            result = vm_set_var (lex_env_p, name_p, is_strict, lit_value);
+
+            if (ECMA_IS_VALUE_ERROR (result))
+            {
+              goto error;
+            }
           }
 
           continue;
@@ -1423,7 +1433,22 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
           }
 
-          if (binding_p != NULL || ecma_op_has_binding (lex_env_p, literal_name_p))
+          if (binding_p != NULL)
+          {
+            result = ecma_raise_syntax_error (ECMA_ERR_MSG ("Local variable is redeclared."));
+            goto error;
+          }
+
+          result = ecma_op_has_binding (lex_env_p, literal_name_p);
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
+          if (ecma_is_value_true (result))
           {
             result = ecma_raise_syntax_error (ECMA_ERR_MSG ("Local variable is redeclared."));
             goto error;
@@ -1486,7 +1511,13 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
 #endif /* ENABLED (JERRY_ES2015) && !JERRY_NDEBUG */
 
-          vm_set_var (lex_env_p, name_p, is_strict, left_value);
+          result = vm_set_var (lex_env_p, name_p, is_strict, left_value);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
           continue;
         }
         case VM_OC_CLONE_CONTEXT:
@@ -3421,6 +3452,20 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           JERRY_ASSERT (VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth == stack_top_p);
 
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+          if (ecma_is_value_object (value)
+              && ECMA_OBJECT_IS_PROXY (ecma_get_object_from_value (value)))
+          {
+            /* Note: - For proxy objects we should create a new object which implements the iterable protocol,
+                       and iterates through the enumerated collection below.
+                     - This inkoves that the VM context type should be adjusted and checked in all FOR-IN related
+                       instruction.
+                     - For other objects we should keep the current implementation due to performance reasons.*/
+            result = ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Proxy support in for-in."));
+            goto error;
+          }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
           ecma_value_t expr_obj_value = ECMA_VALUE_UNDEFINED;
           ecma_collection_t *prop_names_p = opfunc_for_in (value, &expr_obj_value);
           ecma_free_value (value);
@@ -3478,12 +3523,17 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           ecma_value_t *buffer_p = collection_p->buffer_p;
           ecma_object_t *object_p = ecma_get_object_from_value (stack_top_p[-4]);
           uint32_t index = stack_top_p[-3];
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+          JERRY_ASSERT (!ECMA_OBJECT_IS_PROXY (object_p));
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
 
           while (index < collection_p->item_count)
           {
             ecma_string_t *prop_name_p = ecma_get_prop_name_from_value (buffer_p[index]);
 
-            if (JERRY_LIKELY (ecma_op_object_has_property (object_p, prop_name_p)))
+            result = ecma_op_object_has_property (object_p, prop_name_p);
+
+            if (JERRY_LIKELY (ecma_is_value_true (result)))
             {
               byte_code_p = byte_code_start_p + branch_offset;
               break;
@@ -4088,7 +4138,8 @@ error:
 /**
  * Initialize code block execution
  *
- * @return ecma value
+ * @return ECMA_VALUE_ERROR - if the initialization fails
+ *         ECMA_VALUE_EMPTY - otherwise
  */
 static void JERRY_ATTR_NOINLINE
 vm_init_exec (vm_frame_ctx_t *frame_ctx_p, /**< frame context */

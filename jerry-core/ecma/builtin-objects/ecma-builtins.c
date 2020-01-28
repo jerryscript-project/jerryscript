@@ -384,7 +384,14 @@ ecma_instantiate_builtin (ecma_builtin_id_t obj_builtin_id) /**< built-in id */
 
   ecma_object_t *obj_p = ecma_create_object (prototype_obj_p, ext_object_size, obj_type);
 
-  ecma_set_object_extensible (obj_p, (obj_builtin_id != ECMA_BUILTIN_ID_TYPE_ERROR_THROWER));
+  if (JERRY_UNLIKELY (obj_builtin_id == ECMA_BUILTIN_ID_TYPE_ERROR_THROWER))
+  {
+    ecma_op_ordinary_object_prevent_extensions (obj_p);
+  }
+  else
+  {
+    ecma_op_ordinary_object_set_extensible (obj_p);
+  }
 
   /*
    * [[Class]] property of built-in object is not stored explicitly.
@@ -986,7 +993,7 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
 
       uint32_t bit_for_index = (uint32_t) 1u << index;
 
-      if (!(*bitset_p & bit_for_index) || ecma_op_object_has_own_property (object_p, name_p))
+      if (!(*bitset_p & bit_for_index) || ecma_op_ordinary_object_has_own_property (object_p, name_p))
       {
         ecma_value_t name = ecma_make_magic_string_value ((lit_magic_string_id_t) curr_property_p->magic_string_id);
 

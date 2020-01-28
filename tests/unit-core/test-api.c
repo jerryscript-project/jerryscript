@@ -695,6 +695,23 @@ main (void)
   jerry_release_value (proto_val);
   jerry_release_value (obj_val);
 
+  if (jerry_is_feature_enabled (JERRY_FEATURE_PROXY))
+  {
+    /* Note: update this test when the internal method is implemented */
+    jerry_value_t target = jerry_create_object ();
+    jerry_value_t handler = jerry_create_object ();
+    jerry_value_t proxy = jerry_create_proxy (target, handler);
+
+    jerry_release_value (target);
+    jerry_release_value (handler);
+    proto_val = jerry_get_prototype (proxy);
+    TEST_ASSERT (jerry_value_is_error (proto_val));
+    error = jerry_get_value_from_error (proto_val, true);
+    TEST_ASSERT (jerry_get_error_type (error) == JERRY_ERROR_TYPE);
+    jerry_release_value (error);
+    jerry_release_value (proxy);
+  }
+
   /* Test: jerry_set_prototype */
   obj_val = jerry_create_object ();
   res = jerry_set_prototype (obj_val, jerry_create_null ());
@@ -713,6 +730,25 @@ main (void)
   TEST_ASSERT (jerry_value_is_object (proto_val));
   jerry_release_value (proto_val);
   jerry_release_value (obj_val);
+
+  if (jerry_is_feature_enabled (JERRY_FEATURE_PROXY))
+  {
+    /* Note: update this test when the internal method is implemented */
+    jerry_value_t target = jerry_create_object ();
+    jerry_value_t handler = jerry_create_object ();
+    jerry_value_t proxy = jerry_create_proxy (target, handler);
+
+    jerry_release_value (target);
+    jerry_release_value (handler);
+    new_proto = jerry_create_object ();
+    res = jerry_set_prototype (proxy, new_proto);
+    jerry_release_value (new_proto);
+    TEST_ASSERT (jerry_value_is_error (res));
+    error = jerry_get_value_from_error (res, true);
+    TEST_ASSERT (jerry_get_error_type (error) == JERRY_ERROR_TYPE);
+    jerry_release_value (error);
+    jerry_release_value (proxy);
+  }
 
   /* Test: eval */
   const jerry_char_t eval_code_src1[] = "(function () { return 123; })";

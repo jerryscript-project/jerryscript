@@ -90,6 +90,11 @@ ecma_op_get_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
 
         ecma_value_t result = ecma_op_object_find (binding_obj_p, name_p);
 
+        if (ECMA_IS_VALUE_ERROR (result))
+        {
+          return result;
+        }
+
         if (ecma_is_value_found (result))
         {
           *ref_base_lex_env_p = lex_env_p;
@@ -272,7 +277,16 @@ ecma_op_put_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
 
         ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
-        if (ecma_op_object_has_property (binding_obj_p, name_p))
+        ecma_value_t has_property = ecma_op_object_has_property (binding_obj_p, name_p);
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+        if (ECMA_IS_VALUE_ERROR (has_property))
+        {
+          return has_property;
+        }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
+        if (ecma_is_value_true (has_property))
         {
           ecma_value_t completion = ecma_op_object_put (binding_obj_p,
                                                         name_p,

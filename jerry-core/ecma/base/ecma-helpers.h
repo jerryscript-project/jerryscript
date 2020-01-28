@@ -159,6 +159,17 @@ typedef enum
 #define ECMA_ASSERT_VALUE_IS_SYMBOL(value) (false)
 #endif /* ENABLED (JERRY_ES2015) */
 
+/**
+ * Check whether the given object has [[ProxyHandler]] and [[ProxyTarger]] internal slots
+ *
+ * @param obj_p ecma-object
+ */
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#define ECMA_OBJECT_IS_PROXY(obj_p) (JERRY_UNLIKELY (ecma_get_object_type ((obj_p)) == ECMA_OBJECT_TYPE_PROXY))
+#else /* !ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#define ECMA_OBJECT_IS_PROXY(obj_p) (false)
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
 /* ecma-helpers-value.c */
 ecma_type_t JERRY_ATTR_CONST ecma_get_value_type_field (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_direct (ecma_value_t value);
@@ -367,8 +378,7 @@ ecma_object_t *ecma_create_decl_lex_env (ecma_object_t *outer_lexical_environmen
 ecma_object_t *ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, ecma_object_t *binding_obj_p,
                                            ecma_lexical_environment_type_t type);
 bool JERRY_ATTR_PURE ecma_is_lexical_environment (const ecma_object_t *object_p);
-bool JERRY_ATTR_PURE ecma_get_object_extensible (const ecma_object_t *object_p);
-void ecma_set_object_extensible (ecma_object_t *object_p, bool is_extensible);
+void ecma_op_ordinary_object_set_extensible (ecma_object_t *object_p);
 ecma_object_type_t JERRY_ATTR_PURE ecma_get_object_type (const ecma_object_t *object_p);
 bool JERRY_ATTR_PURE ecma_get_object_is_builtin (const ecma_object_t *object_p);
 void ecma_set_object_is_builtin (ecma_object_t *object_p);

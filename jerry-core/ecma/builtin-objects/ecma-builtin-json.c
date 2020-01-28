@@ -904,6 +904,13 @@ ecma_builtin_json_serialize_object (ecma_json_stringify_context_t *context_p, /*
   else
   {
     property_keys_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_ENUMERABLE);
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+    if (property_keys_p == NULL)
+    {
+      return ECMA_VALUE_ERROR;
+    }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
   }
 
   /* 8. */

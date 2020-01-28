@@ -167,8 +167,7 @@ opfunc_in (ecma_value_t left_value, /**< left value */
   }
 
   ecma_object_t *right_value_obj_p = ecma_get_object_from_value (right_value);
-  ecma_value_t result = ecma_make_boolean_value (ecma_op_object_has_property (right_value_obj_p,
-                                                                              property_name_p));
+  ecma_value_t result = ecma_op_object_has_property (right_value_obj_p, property_name_p);
   ecma_deref_ecma_string (property_name_p);
   return result;
 } /* opfunc_in */

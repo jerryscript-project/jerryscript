@@ -22,6 +22,7 @@
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
+#include "ecma-proxy-object.h"
 #include "ecma-try-catch-macro.h"
 
 /** \addtogroup ecma ECMA
@@ -362,6 +363,13 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
                                             const ecma_property_descriptor_t *property_desc_p) /**< property
                                                                                                 *   descriptor */
 {
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (ECMA_OBJECT_IS_PROXY (object_p))
+  {
+    return ecma_proxy_object_define_own_property (object_p, property_name_p, property_desc_p);
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
   JERRY_ASSERT (object_p != NULL
                 && !ecma_is_lexical_environment (object_p));
   JERRY_ASSERT (!ecma_op_object_is_fast_array (object_p));
@@ -403,7 +411,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
   if (current_prop == ECMA_PROPERTY_TYPE_NOT_FOUND || current_prop == ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP)
   {
     /* 3. */
-    if (!ecma_get_object_extensible (object_p))
+    if (!ecma_op_ordinary_object_is_extensible (object_p))
     {
       /* 2. */
       return ecma_reject (property_desc_p->flags & ECMA_PROP_IS_THROW);

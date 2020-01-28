@@ -64,10 +64,25 @@ main (void)
   TEST_ASSERT (jerry_value_is_undefined (prop_desc.getter));
   TEST_ASSERT (prop_desc.is_set_defined == false);
   TEST_ASSERT (jerry_value_is_undefined (prop_desc.setter));
-  jerry_release_value (prop_name);
+  jerry_release_value (global_obj_val);
   jerry_free_property_descriptor_fields (&prop_desc);
 
-  jerry_release_value (global_obj_val);
+  if (jerry_is_feature_enabled (JERRY_FEATURE_PROXY))
+  {
+    /* Note: update this test when the internal method is implemented */
+    jerry_value_t target = jerry_create_object ();
+    jerry_value_t handler = jerry_create_object ();
+    jerry_value_t proxy = jerry_create_proxy (target, handler);
+
+    jerry_release_value (target);
+    jerry_release_value (handler);
+    is_ok = jerry_get_own_property_descriptor (proxy, prop_name, &prop_desc);
+    TEST_ASSERT (!is_ok);
+    jerry_release_value (proxy);
+  }
+
+  jerry_release_value (prop_name);
+
   jerry_cleanup ();
 
   return 0;

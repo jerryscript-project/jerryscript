@@ -24,6 +24,7 @@
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
 #include "ecma-objects-arguments.h"
+#include "ecma-proxy-object.h"
 #include "ecma-try-catch-macro.h"
 #include "jcontext.h"
 
@@ -75,6 +76,13 @@ ecma_op_object_is_callable (ecma_object_t *obj_p) /**< ecma object */
 {
   JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
 
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (ECMA_OBJECT_IS_PROXY (obj_p))
+  {
+    return ecma_op_is_callable (((ecma_proxy_object_t *) obj_p)->target);
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
   return ecma_get_object_type (obj_p) >= ECMA_OBJECT_TYPE_FUNCTION;
 } /* ecma_op_object_is_callable */
 
@@ -103,6 +111,13 @@ inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_object_is_constructor (ecma_object_t *obj_p) /**< ecma object */
 {
   JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (ECMA_OBJECT_IS_PROXY (obj_p))
+  {
+    return ecma_is_constructor (((ecma_proxy_object_t *) obj_p)->target);
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
 
   ecma_object_type_t type = ecma_get_object_type (obj_p);
 
@@ -523,7 +538,27 @@ ecma_op_implicit_class_constructor_has_instance (ecma_object_t *func_obj_p, /**<
 
     while (true)
     {
-      jmem_cpointer_t v_obj_cp = v_obj_p->u2.prototype_cp;
+      jmem_cpointer_t v_obj_cp;
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+      if (ECMA_OBJECT_IS_PROXY (v_obj_p))
+      {
+        ecma_value_t parent = ecma_proxy_object_get_prototype_of (v_obj_p);
+
+        if (ECMA_IS_VALUE_ERROR (parent))
+        {
+          ecma_deref_object (prototype_obj_p);
+          return parent;
+        }
+
+        v_obj_cp = ecma_proxy_object_prototype_to_cp (parent);
+      }
+      else
+      {
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+        v_obj_cp = ecma_op_ordinary_object_get_prototype_of (v_obj_p);
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+      }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
 
       if (v_obj_cp == JMEM_CP_NULL)
       {
@@ -611,14 +646,40 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
   ecma_object_t *prototype_obj_p = ecma_get_object_from_value (prototype_obj_value);
   JERRY_ASSERT (prototype_obj_p != NULL);
 
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  ecma_value_t result = ECMA_VALUE_ERROR;
+#else /* !ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
   ecma_value_t result = ECMA_VALUE_FALSE;
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
 
   while (true)
   {
-    jmem_cpointer_t v_obj_cp = v_obj_p->u2.prototype_cp;
+    jmem_cpointer_t v_obj_cp;
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+    if (ECMA_OBJECT_IS_PROXY (v_obj_p))
+    {
+      ecma_value_t parent = ecma_proxy_object_get_prototype_of (v_obj_p);
+
+      if (ECMA_IS_VALUE_ERROR (parent))
+      {
+        break;
+      }
+
+      v_obj_cp = ecma_proxy_object_prototype_to_cp (parent);
+    }
+    else
+    {
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+      v_obj_cp = ecma_op_ordinary_object_get_prototype_of (v_obj_p);
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+    }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
 
     if (v_obj_cp == JMEM_CP_NULL)
     {
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+      result = ECMA_VALUE_FALSE;
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
       break;
     }
 
@@ -1119,7 +1180,17 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
 {
   JERRY_ASSERT (func_obj_p != NULL
                 && !ecma_is_lexical_environment (func_obj_p));
-  JERRY_ASSERT (ecma_op_is_callable (ecma_make_object_value (func_obj_p)));
+  JERRY_ASSERT (ecma_op_object_is_callable (func_obj_p));
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (ECMA_OBJECT_IS_PROXY (func_obj_p))
+  {
+    return ecma_proxy_object_call (func_obj_p,
+                                   this_arg_value,
+                                   arguments_list_p,
+                                   arguments_list_len);
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
 
   JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION
                 || ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION
@@ -1274,6 +1345,16 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
 
   JERRY_ASSERT (ecma_is_value_object (this_arg_value)
                 || this_arg_value == ECMA_VALUE_UNDEFINED);
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (ECMA_OBJECT_IS_PROXY (func_obj_p))
+  {
+    return ecma_proxy_object_construct (func_obj_p,
+                                        arguments_list_p,
+                                        arguments_list_len,
+                                        ecma_make_object_value (func_obj_p));
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
 
   ecma_object_t *target_func_obj_p = NULL;
 

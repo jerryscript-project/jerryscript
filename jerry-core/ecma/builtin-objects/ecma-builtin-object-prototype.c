@@ -23,6 +23,7 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
+#include "ecma-proxy-object.h"
 #include "ecma-string-object.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
@@ -143,7 +144,23 @@ static ecma_value_t
 ecma_builtin_object_prototype_object_has_own_property (ecma_object_t *obj_p, /**< this argument */
                                                        ecma_string_t *prop_name_p) /**< first argument */
 {
-  return ecma_make_boolean_value (ecma_op_object_has_own_property (obj_p, prop_name_p));
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (ECMA_OBJECT_IS_PROXY (obj_p))
+  {
+    ecma_property_descriptor_t prop_desc;
+
+    ecma_value_t status = ecma_proxy_object_get_own_property_descriptor (obj_p, prop_name_p, &prop_desc);
+
+    if (ecma_is_value_true (status))
+    {
+      ecma_free_property_descriptor (&prop_desc);
+    }
+
+    return status;
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
+  return ecma_make_boolean_value (ecma_op_ordinary_object_has_own_property (obj_p, prop_name_p));
 } /* ecma_builtin_object_prototype_object_has_own_property */
 
 /**
@@ -169,7 +186,7 @@ ecma_builtin_object_prototype_object_is_prototype_of (ecma_object_t *obj_p, /**<
 
   ecma_object_t *v_obj_p = ecma_get_object_from_value (v_obj_value);
 
-  ecma_value_t ret_value = ecma_make_boolean_value (ecma_op_object_is_prototype_of (obj_p, v_obj_p));
+  ecma_value_t ret_value = ecma_op_object_is_prototype_of (obj_p, v_obj_p);
 
   ecma_deref_object (v_obj_p);
 
@@ -189,19 +206,19 @@ static ecma_value_t
 ecma_builtin_object_prototype_object_property_is_enumerable (ecma_object_t *obj_p, /**< this argument */
                                                              ecma_string_t *prop_name_p) /**< first argument */
 {
-  /* 3. */
-  ecma_property_t property = ecma_op_object_get_own_property (obj_p,
-                                                              prop_name_p,
-                                                              NULL,
-                                                              ECMA_PROPERTY_GET_NO_OPTIONS);
+  ecma_property_descriptor_t prop_desc;
+  ecma_value_t status = ecma_op_object_get_own_property_descriptor (obj_p, prop_name_p, &prop_desc);
 
-  /* 4. */
-  if (property != ECMA_PROPERTY_TYPE_NOT_FOUND && property != ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP)
+  if (!ecma_is_value_true (status))
   {
-    return ecma_make_boolean_value (ecma_is_property_enumerable (property));
+    return status;
   }
 
-  return ECMA_VALUE_FALSE;
+  bool is_enumerable = (prop_desc.flags & ECMA_PROP_IS_ENUMERABLE);
+
+  ecma_free_property_descriptor (&prop_desc);
+
+  return ecma_make_boolean_value (is_enumerable);
 } /* ecma_builtin_object_prototype_object_property_is_enumerable */
 
 /**

@@ -34,9 +34,9 @@
 /**
  * Resolve syntactic reference.
  *
- * @return if reference was resolved successfully,
- *          pointer to lexical environment - reference's base,
- *         else - NULL.
+ * @return ECMA_OBJECT_POINTER_ERROR - if the operation fails
+ *         pointer to lexical environment - if the reference's base is resolved sucessfully,
+ *         NULL - otherwise.
  */
 ecma_object_t *
 ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, /**< starting lexical environment */
@@ -54,7 +54,16 @@ ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, /**< starting lexical 
     }
 #endif /* ENABLED (JERRY_ES2015) */
 
-    if (ecma_op_has_binding (lex_env_p, name_p))
+    ecma_value_t has_binding = ecma_op_has_binding (lex_env_p, name_p);
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+    if (ECMA_IS_VALUE_ERROR (has_binding))
+    {
+      return ECMA_OBJECT_POINTER_ERROR;
+    }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
+    if (ecma_is_value_true (has_binding))
     {
       return lex_env_p;
     }
@@ -220,6 +229,11 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
       }
 
       ecma_value_t prop_value = ecma_op_object_find (binding_obj_p, name_p);
+
+      if (ECMA_IS_VALUE_ERROR (prop_value))
+      {
+        return prop_value;
+      }
 
       if (ecma_is_value_found (prop_value))
       {

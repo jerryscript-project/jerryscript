@@ -55,7 +55,7 @@ ecma_value_t ecma_op_put_value_lex_env_base (ecma_object_t *lex_env_p, ecma_stri
                                              bool is_strict, ecma_value_t value);
 
 /* ECMA-262 v5, Table 17. Abstract methods of Environment Records */
-bool ecma_op_has_binding (ecma_object_t *lex_env_p, ecma_string_t *name_p);
+ecma_value_t ecma_op_has_binding (ecma_object_t *lex_env_p, ecma_string_t *name_p);
 ecma_value_t ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, ecma_string_t *name_p, bool is_deletable);
 ecma_value_t ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, ecma_string_t *name_p, ecma_value_t value,
                                           bool is_strict);

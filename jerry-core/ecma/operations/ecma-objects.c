@@ -26,6 +26,7 @@
 #include "ecma-objects-arguments.h"
 #include "ecma-objects-general.h"
 #include "ecma-objects.h"
+#include "ecma-proxy-object.h"
 #include "jcontext.h"
 
 #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
@@ -75,8 +76,13 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
 {
   JERRY_ASSERT (object_p != NULL
                 && !ecma_is_lexical_environment (object_p));
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  JERRY_ASSERT (!ECMA_OBJECT_IS_PROXY (object_p));
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
   JERRY_ASSERT (property_name_p != NULL);
-  JERRY_ASSERT (options == ECMA_PROPERTY_GET_NO_OPTIONS || property_ref_p != NULL);
+  JERRY_ASSERT (options == ECMA_PROPERTY_GET_NO_OPTIONS
+                || options == ECMA_PROPERTY_GET_HAS_OWN_PROP
+                || property_ref_p != NULL);
 
   ecma_object_type_t type = ecma_get_object_type (object_p);
 
@@ -287,7 +293,7 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
     }
   }
   else if (type == ECMA_OBJECT_TYPE_PSEUDO_ARRAY
-           && property_ref_p != NULL)
+           && (options & ECMA_PROPERTY_GET_HAS_OWN_PROP))
   {
     ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
@@ -378,39 +384,43 @@ ecma_op_object_get_property (ecma_object_t *object_p, /**< the object */
 } /* ecma_op_object_get_property */
 
 /**
- * Checks whether an object (excluding prototypes) has a named property
+ * Generic [[HasProperty]] operation
  *
- * @return true - if property is found
- *         false - otherwise
- */
-inline bool JERRY_ATTR_ALWAYS_INLINE
-ecma_op_object_has_own_property (ecma_object_t *object_p, /**< the object */
-                                 ecma_string_t *property_name_p) /**< property name */
-{
-  ecma_property_ref_t property_ref;
-  ecma_property_t property = ecma_op_object_get_own_property (object_p,
-                                                              property_name_p,
-                                                              &property_ref,
-                                                              ECMA_PROPERTY_GET_NO_OPTIONS);
-
-  return property != ECMA_PROPERTY_TYPE_NOT_FOUND && property != ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP;
-} /* ecma_op_object_has_own_property */
-
-/**
- * Checks whether an object (including prototypes) has a named property
+ * See also:
+ *          ECMAScript v6, 9.1.7.1
  *
- * @return true - if property is found
- *         false - otherwise
+ * @return ECMA_VALUE_ERROR - if the operation fails
+ *         ECMA_VALUE_{TRUE_FALSE} - whether the property is found
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_op_object_has_property (ecma_object_t *object_p, /**< the object */
                              ecma_string_t *property_name_p) /**< property name */
 {
-  ecma_property_t property = ecma_op_object_get_property (object_p,
-                                                          property_name_p,
-                                                          NULL,
-                                                          ECMA_PROPERTY_GET_NO_OPTIONS);
-  return property != ECMA_PROPERTY_TYPE_NOT_FOUND;
+  while (true)
+  {
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+    if (ECMA_OBJECT_IS_PROXY (object_p))
+    {
+      return ecma_proxy_object_has (object_p, property_name_p);
+    }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
+    /* 2 - 3. */
+    if (ecma_op_ordinary_object_has_own_property (object_p, property_name_p))
+    {
+      return ECMA_VALUE_TRUE;
+    }
+
+    jmem_cpointer_t proto_cp = ecma_op_ordinary_object_get_prototype_of (object_p);
+
+    /* 7. */
+    if (proto_cp == JMEM_CP_NULL)
+    {
+      return ECMA_VALUE_FALSE;
+    }
+
+    object_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, proto_cp);
+  }
 } /* ecma_op_object_has_property */
 
 /**
@@ -430,6 +440,7 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
   JERRY_ASSERT (object_p != NULL
                 && !ecma_is_lexical_environment (object_p));
   JERRY_ASSERT (property_name_p != NULL);
+  JERRY_ASSERT (!ECMA_OBJECT_IS_PROXY (object_p));
 
   ecma_object_type_t type = ecma_get_object_type (object_p);
 
@@ -705,6 +716,13 @@ ecma_op_object_find (ecma_object_t *object_p, /**< the object */
 
   while (true)
   {
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+    if (ECMA_OBJECT_IS_PROXY (object_p))
+    {
+      return ecma_proxy_object_find (object_p, property_name_p);
+    }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
     ecma_value_t value = ecma_op_object_find_own (base_value, object_p, property_name_p);
 
     if (ecma_is_value_found (value))
@@ -770,30 +788,11 @@ ecma_op_object_get_own_data_prop (ecma_object_t *object_p, /**< the object */
  * @return ecma value
  *         Returned value must be freed with ecma_free_value
  */
-ecma_value_t
+inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_op_object_get (ecma_object_t *object_p, /**< the object */
                     ecma_string_t *property_name_p) /**< property name */
 {
-  ecma_value_t base_value = ecma_make_object_value (object_p);
-
-  while (true)
-  {
-    ecma_value_t value = ecma_op_object_find_own (base_value, object_p, property_name_p);
-
-    if (ecma_is_value_found (value))
-    {
-      return value;
-    }
-
-    if (object_p->u2.prototype_cp == JMEM_CP_NULL)
-    {
-      break;
-    }
-
-    object_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, object_p->u2.prototype_cp);
-  }
-
-  return ECMA_VALUE_UNDEFINED;
+  return ecma_op_object_get_with_receiver (object_p, property_name_p, ecma_make_object_value (object_p));
 } /* ecma_op_object_get */
 
 /**
@@ -817,6 +816,13 @@ ecma_op_object_get_with_receiver (ecma_object_t *object_p, /**< the object */
 {
   while (true)
   {
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+    if (ECMA_OBJECT_IS_PROXY (object_p))
+    {
+      return ecma_proxy_object_get (object_p, property_name_p, receiver);
+    }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
     ecma_value_t value = ecma_op_object_find_own (receiver, object_p, property_name_p);
 
     if (ecma_is_value_found (value))
@@ -824,12 +830,14 @@ ecma_op_object_get_with_receiver (ecma_object_t *object_p, /**< the object */
       return value;
     }
 
-    if (object_p->u2.prototype_cp == JMEM_CP_NULL)
+    jmem_cpointer_t proto_cp = ecma_op_ordinary_object_get_prototype_of (object_p);
+
+    if (proto_cp == JMEM_CP_NULL)
     {
       break;
     }
 
-    object_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, object_p->u2.prototype_cp);
+    object_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, proto_cp);
   }
 
   return ECMA_VALUE_UNDEFINED;
@@ -1149,6 +1157,13 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
                 && !ecma_is_lexical_environment (object_p));
   JERRY_ASSERT (property_name_p != NULL);
 
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (ECMA_OBJECT_IS_PROXY (object_p))
+  {
+    return ecma_proxy_object_set (object_p, property_name_p, value, receiver);
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
   ecma_object_type_t type = ecma_get_object_type (object_p);
 
   switch (type)
@@ -1169,7 +1184,7 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
 
       if (JERRY_LIKELY (ecma_op_array_is_fast_array (ext_object_p)))
       {
-        if (JERRY_UNLIKELY (!ecma_get_object_extensible (object_p)))
+        if (JERRY_UNLIKELY (!ecma_op_ordinary_object_is_extensible (object_p)))
         {
           return ecma_reject (is_throw);
         }
@@ -1354,10 +1369,12 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
   {
     bool create_new_property = true;
 
-    if (object_p->u2.prototype_cp != JMEM_CP_NULL)
+    jmem_cpointer_t proto_cp = ecma_op_ordinary_object_get_prototype_of (object_p);
+
+    if (proto_cp != JMEM_CP_NULL)
     {
       ecma_property_ref_t property_ref = { NULL };
-      ecma_object_t *proto_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, object_p->u2.prototype_cp);
+      ecma_object_t *proto_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, proto_cp);
 
       ecma_property_t inherited_property = ecma_op_object_get_property (proto_p,
                                                                         property_name_p,
@@ -1379,7 +1396,7 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
     }
 
     if (create_new_property
-        && ecma_get_object_extensible (object_p))
+        && ecma_op_ordinary_object_is_extensible (object_p))
     {
       const ecma_object_type_t obj_type = ecma_get_object_type (object_p);
 
@@ -1526,6 +1543,13 @@ ecma_op_object_delete (ecma_object_t *obj_p, /**< the object */
     }
   }
 
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (ECMA_OBJECT_IS_PROXY (obj_p))
+  {
+    return ecma_proxy_object_delete_property (obj_p, property_name_p);
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
   JERRY_ASSERT_OBJECT_TYPE_IS_VALID (ecma_get_object_type (obj_p));
 
   return ecma_op_general_object_delete (obj_p,
@@ -1590,6 +1614,13 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
   JERRY_ASSERT (property_name_p != NULL);
 
   const ecma_object_type_t type = ecma_get_object_type (obj_p);
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (ECMA_OBJECT_IS_PROXY (obj_p))
+  {
+    return ecma_proxy_object_define_own_property (obj_p, property_name_p, property_desc_p);
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
 
   switch (type)
   {
@@ -1691,11 +1722,18 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
  * @return true - if property found
  *         false - otherwise
  */
-bool
+ecma_value_t
 ecma_op_object_get_own_property_descriptor (ecma_object_t *object_p, /**< the object */
                                             ecma_string_t *property_name_p, /**< property name */
                                             ecma_property_descriptor_t *prop_desc_p) /**< property descriptor */
 {
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (ECMA_OBJECT_IS_PROXY (object_p))
+  {
+    return ecma_proxy_object_get_own_property_descriptor (object_p, property_name_p, prop_desc_p);
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
   ecma_property_ref_t property_ref;
 
   ecma_property_t property = ecma_op_object_get_own_property (object_p,
@@ -1705,7 +1743,7 @@ ecma_op_object_get_own_property_descriptor (ecma_object_t *object_p, /**< the ob
 
   if (property == ECMA_PROPERTY_TYPE_NOT_FOUND || property == ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP)
   {
-    return false;
+    return ECMA_VALUE_FALSE;
   }
 
   *prop_desc_p = ecma_make_empty_property_descriptor ();
@@ -1760,7 +1798,7 @@ ecma_op_object_get_own_property_descriptor (ecma_object_t *object_p, /**< the ob
     }
   }
 
-  return true;
+  return ECMA_VALUE_TRUE;
 } /* ecma_op_object_get_own_property_descriptor */
 
 /**
@@ -1795,27 +1833,46 @@ ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
  * See also:
  *          ECMA-262 v5, 15.2.4.6; 3
  *
- * @return true - if the target object is prototype of the base object
- *         false - if the target object is not prototype of the base object
+ * @return ECMA_VALUE_ERROR - if the operation fails
+ *         ECMA_VALUE_TRUE - if the target object is prototype of the base object
+ *         ECMA_VALUE_FALSE - if the target object is not prototype of the base object
  */
-bool
+ecma_value_t
 ecma_op_object_is_prototype_of (ecma_object_t *base_p, /**< base object */
                                 ecma_object_t *target_p) /**< target object */
 {
   do
   {
-    jmem_cpointer_t target_cp = target_p->u2.prototype_cp;
+    jmem_cpointer_t target_cp;
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+    if (ECMA_OBJECT_IS_PROXY (target_p))
+    {
+      ecma_value_t target_proto = ecma_proxy_object_get_prototype_of (target_p);
+
+      if (ECMA_IS_VALUE_ERROR (target_proto))
+      {
+        return target_proto;
+      }
+      target_cp = ecma_proxy_object_prototype_to_cp (target_proto);
+    }
+    else
+    {
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+      target_cp = ecma_op_ordinary_object_get_prototype_of (target_p);
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+    }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
 
     if (target_cp == JMEM_CP_NULL)
     {
-      return false;
+      return ECMA_VALUE_FALSE;
     }
 
     target_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, target_cp);
 
     if (target_p == base_p)
     {
-      return true;
+      return ECMA_VALUE_TRUE;
     }
   } while (true);
 } /* ecma_op_object_is_prototype_of */
@@ -1832,7 +1889,8 @@ ecma_op_object_is_prototype_of (ecma_object_t *base_p, /**< base object */
  *      property list, and the list is not reordered (in other words, properties are stored in order that is reversed
  *      to the properties' addition order).
  *
- * @return collection of strings - property names
+ * @return NULL - if the Proxy.[[OwnPropertyKeys]] operation raises error
+ *         collection of property names - otherwise
  */
 ecma_collection_t *
 ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
@@ -1840,6 +1898,13 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 {
   JERRY_ASSERT (obj_p != NULL
                 && !ecma_is_lexical_environment (obj_p));
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (ECMA_OBJECT_IS_PROXY (obj_p))
+  {
+    return ecma_proxy_object_own_property_keys (obj_p);
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
 
   if (ecma_op_object_is_fast_array (obj_p))
   {
@@ -2480,7 +2545,7 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
     }
     default:
     {
-      JERRY_ASSERT (type == ECMA_OBJECT_TYPE_GENERAL);
+      JERRY_ASSERT (type == ECMA_OBJECT_TYPE_GENERAL || type == ECMA_OBJECT_TYPE_PROXY);
 
       if (ecma_get_object_is_builtin (obj_p))
       {
@@ -2524,6 +2589,12 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
           {
             return LIT_MAGIC_STRING_ERROR_UL;
           }
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+          case ECMA_BUILTIN_ID_PROXY:
+          {
+            return LIT_MAGIC_STRING_FUNCTION_UL;
+          }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
           default:
           {
             JERRY_ASSERT (ecma_object_check_class_name_is_object (obj_p));
@@ -2765,6 +2836,142 @@ ecma_op_invoke (ecma_value_t object, /**< Object value */
 
   return call_result;
 } /* ecma_op_invoke */
+
+/**
+ * Ordinary object [[GetPrototypeOf]] operation
+ *
+ * See also:
+ *          ECMAScript v6, 9.1.1
+ *
+ * @return the value of the [[Prototype]] internal slot of the given object.
+ */
+inline jmem_cpointer_t JERRY_ATTR_ALWAYS_INLINE
+ecma_op_ordinary_object_get_prototype_of (ecma_object_t *obj_p) /**< object */
+{
+  JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
+  JERRY_ASSERT (!ECMA_OBJECT_IS_PROXY (obj_p));
+
+  return obj_p->u2.prototype_cp;
+} /* ecma_op_ordinary_object_get_prototype_of */
+
+/**
+ * Ordinary object [[SetPrototypeOf]] operation
+ *
+ * See also:
+ *          ECMAScript v6, 9.1.2
+ *
+ * @return ECMA_VALUE_FALSE - if the operation fails
+ *         ECMA_VALUE_TRUE - otherwise
+ */
+inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
+ecma_op_ordinary_object_set_prototype_of (ecma_object_t *obj_p, /**< base object */
+                                          ecma_value_t proto) /**< prototype object */
+{
+  JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
+  JERRY_ASSERT (!ECMA_OBJECT_IS_PROXY (obj_p));
+
+  /* 1. */
+  JERRY_ASSERT (ecma_is_value_object (proto) || ecma_is_value_null (proto));
+
+  /* 3. */
+  ecma_object_t *current_proto_p = ECMA_GET_POINTER (ecma_object_t, ecma_op_ordinary_object_get_prototype_of (obj_p));
+  ecma_object_t *new_proto_p = ecma_is_value_null (proto) ? NULL : ecma_get_object_from_value (proto);
+
+  /* 4. */
+  if (new_proto_p == current_proto_p)
+  {
+    return ECMA_VALUE_TRUE;
+  }
+
+  /* 2 - 5. */
+  if (!ecma_op_ordinary_object_is_extensible (obj_p))
+  {
+    return ECMA_VALUE_FALSE;
+  }
+
+  /* 6. */
+  ecma_object_t *iter_p = new_proto_p;
+
+  /* 7 - 8. */
+  while (true)
+  {
+    /* 8.a */
+    if (iter_p == NULL)
+    {
+      break;
+    }
+
+    /* 8.b */
+    if (obj_p == iter_p)
+    {
+      return ECMA_VALUE_FALSE;
+    }
+
+    /* 8.c.i */
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+    if (ECMA_OBJECT_IS_PROXY (iter_p))
+    {
+      break;
+    }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
+    /* 8.c.ii */
+    iter_p = ECMA_GET_POINTER (ecma_object_t, ecma_op_ordinary_object_get_prototype_of (iter_p));
+  }
+
+  /* 9. */
+  ECMA_SET_POINTER (obj_p->u2.prototype_cp, new_proto_p);
+
+  /* 10. */
+  return ECMA_VALUE_TRUE;
+} /* ecma_op_ordinary_object_set_prototype_of */
+
+/**
+ * [[IsExtensible]] operation for Ordinary object.
+ *
+ * See also:
+ *          ECMAScript v6, 9.1.2
+ *
+ * @return true  - if object is extensible
+ *         false - otherwise
+ */
+inline bool JERRY_ATTR_PURE
+ecma_op_ordinary_object_is_extensible (ecma_object_t *object_p) /**< object */
+{
+  JERRY_ASSERT (!ECMA_OBJECT_IS_PROXY (object_p));
+
+  return (object_p->type_flags_refs & ECMA_OBJECT_FLAG_EXTENSIBLE) != 0;
+} /* ecma_op_ordinary_object_is_extensible */
+
+/**
+ * Set value of [[Extensible]] object's internal property.
+ */
+void JERRY_ATTR_NOINLINE
+ecma_op_ordinary_object_prevent_extensions (ecma_object_t *object_p) /**< object */
+{
+  JERRY_ASSERT (!ECMA_OBJECT_IS_PROXY (object_p));
+  object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs & ~ECMA_OBJECT_FLAG_EXTENSIBLE);
+} /* ecma_op_ordinary_object_prevent_extensions */
+
+/**
+ * Checks whether an object (excluding prototypes) has a named property
+ *
+ * @return true - if property is found
+ *         false - otherwise
+ */
+inline bool JERRY_ATTR_ALWAYS_INLINE
+ecma_op_ordinary_object_has_own_property (ecma_object_t *object_p, /**< the object */
+                                          ecma_string_t *property_name_p) /**< property name */
+{
+  JERRY_ASSERT (!ECMA_OBJECT_IS_PROXY (object_p));
+
+  ecma_property_t property = ecma_op_object_get_own_property (object_p,
+                                                              property_name_p,
+                                                              NULL,
+                                                              ECMA_PROPERTY_GET_HAS_OWN_PROP);
+
+  return property != ECMA_PROPERTY_TYPE_NOT_FOUND && property != ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP;
+} /* ecma_op_ordinary_object_has_own_property */
 
 /**
  * @}

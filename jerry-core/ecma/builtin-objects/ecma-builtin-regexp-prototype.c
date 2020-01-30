@@ -138,6 +138,75 @@ ecma_builtin_regexp_prototype_get_flags (ecma_value_t this_arg) /**< this argume
 } /* ecma_builtin_regexp_prototype_get_flags */
 
 /**
+ * The EscapeRegExpPattern method.
+ *
+ * See also:
+ *          ECMA-262 v6, 21.2.3.2.4
+ *
+ * @return ecma_value_t
+ */
+static ecma_value_t
+ecma_op_escape_regexp_pattern (ecma_string_t *pattern_str_p) /**< RegExp pattern */
+{
+  ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
+
+  ECMA_STRING_TO_UTF8_STRING (pattern_str_p, pattern_start_p, pattern_start_size);
+
+  const lit_utf8_byte_t *pattern_str_curr_p = pattern_start_p;
+  const lit_utf8_byte_t *pattern_str_end_p = pattern_start_p + pattern_start_size;
+
+  while (pattern_str_curr_p < pattern_str_end_p)
+  {
+    ecma_char_t c = lit_cesu8_read_next (&pattern_str_curr_p);
+
+    switch (c)
+    {
+      case LIT_CHAR_SLASH:
+      {
+        ecma_stringbuilder_append_raw (&builder, (const lit_utf8_byte_t *) "\\/", 2);
+        break;
+      }
+      case LIT_CHAR_LF:
+      {
+        ecma_stringbuilder_append_raw (&builder, (const lit_utf8_byte_t *) "\\n", 2);
+        break;
+      }
+      case LIT_CHAR_CR:
+      {
+        ecma_stringbuilder_append_raw (&builder, (const lit_utf8_byte_t *) "\\r", 2);
+        break;
+      }
+      case LIT_CHAR_LS:
+      {
+        ecma_stringbuilder_append_raw (&builder, (const lit_utf8_byte_t *) "\\u2028", 6);
+        break;
+      }
+      case LIT_CHAR_PS:
+      {
+        ecma_stringbuilder_append_raw (&builder, (const lit_utf8_byte_t *) "\\u2029", 6);
+        break;
+      }
+      case LIT_CHAR_BACKSLASH:
+      {
+        JERRY_ASSERT (pattern_str_curr_p < pattern_str_end_p);
+        ecma_stringbuilder_append_char (&builder, LIT_CHAR_BACKSLASH);
+        ecma_stringbuilder_append_char (&builder, lit_cesu8_read_next (&pattern_str_curr_p));
+        break;
+      }
+      default:
+      {
+        ecma_stringbuilder_append_char (&builder, c);
+        break;
+      }
+    }
+  }
+
+  ECMA_FINALIZE_UTF8_STRING (pattern_start_p, pattern_start_size);
+
+  return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
+} /* ecma_op_escape_regexp_pattern */
+
+/**
  * The RegExp.prototype object's 'source' accessor property
  *
  * See also:
@@ -162,8 +231,7 @@ ecma_builtin_regexp_prototype_get_source (ecma_value_t this_arg) /**< this argum
 
   if (bc_p != NULL)
   {
-    ecma_ref_ecma_string (ecma_get_string_from_value (bc_p->source));
-    return bc_p->source;
+    return ecma_op_escape_regexp_pattern (ecma_get_string_from_value (bc_p->source));
   }
 
   return ecma_make_string_value (ecma_get_magic_string (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP));

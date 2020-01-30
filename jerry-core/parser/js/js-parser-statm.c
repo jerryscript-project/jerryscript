@@ -1168,11 +1168,6 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
         || context_p->token.type == LEXER_KEYW_LET
         || context_p->token.type == LEXER_KEYW_CONST)
     {
-      if (context_p->status_flags & PARSER_IS_STRICT)
-      {
-        parser_raise_error (context_p, PARSER_ERR_FOR_IN_OF_DECLARATION);
-      }
-
       token_type = context_p->token.type;
       has_context = (context_p->token.type != LEXER_KEYW_VAR);
       scanner_get_location (&start_location, context_p);
@@ -1311,6 +1306,12 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
 
         if (context_p->token.type == LEXER_ASSIGN)
         {
+#if ENABLED (JERRY_ES2015)
+          if (context_p->status_flags & PARSER_IS_STRICT)
+          {
+            parser_raise_error (context_p, PARSER_ERR_FOR_IN_OF_DECLARATION);
+          }
+#endif /* ENABLED (JERRY_ES2015) */
           parser_branch_t branch;
 
           /* Initialiser is never executed. */

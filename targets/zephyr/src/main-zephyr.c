@@ -18,7 +18,7 @@
 #include <stdlib.h>
 
 #include <zephyr.h>
-#include <misc/printk.h>
+#include <sys/printk.h>
 #include "getline-zephyr.h"
 
 #include "jerryscript.h"

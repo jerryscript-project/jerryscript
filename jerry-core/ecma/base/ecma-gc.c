@@ -1142,7 +1142,8 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           JERRY_ASSERT (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_UNDEFINED
                         || ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_ARGUMENTS_UL
                         || ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_BOOLEAN_UL
-                        || ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_ERROR_UL);
+                        || ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_ERROR_UL
+                        || ext_object_p->u.class_prop.class_id == LIT_INTERNAL_MAGIC_STRING_INTERNAL_OBJECT);
           break;
         }
       }

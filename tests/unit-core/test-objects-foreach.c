@@ -16,6 +16,105 @@
 #include "jerryscript.h"
 #include "test-common.h"
 
+static bool
+count_objects (jerry_value_t object, void *user_arg)
+{
+  (void) object;
+  TEST_ASSERT (user_arg != NULL);
+
+  int *counter = (int *) user_arg;
+
+  (*counter)++;
+  return true;
+} /* count_objects */
+
+static void
+test_container (void)
+{
+  jerry_value_t global = jerry_get_global_object ();
+  jerry_value_t map_str = jerry_create_string ((const jerry_char_t *) "Map");
+  jerry_value_t map_result = jerry_get_property (global, map_str);
+  jerry_type_t type = jerry_value_get_type (map_result);
+
+  jerry_release_value (map_result);
+  jerry_release_value (map_str);
+  jerry_release_value (global);
+
+  /* If there is no Map function this is not an es2015 profile build, skip this test case. */
+  if (type != JERRY_TYPE_FUNCTION)
+  {
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Container based test is disabled!\n");
+    return;
+  }
+
+  const char *eval_str = "new Map ([[1, 2], [3, 4]])";
+  {
+    /* Make sure that the Map and it's prototype object/function is initialized. */
+    jerry_value_t result = jerry_eval ((const jerry_char_t *) eval_str, sizeof (eval_str) - 1, 0);
+    jerry_release_value (result);
+  }
+
+  /* Get the number of iterable objects. */
+  int start_count = 0;
+  jerry_objects_foreach (count_objects, &start_count);
+
+  /* Create another map. */
+  jerry_value_t result = jerry_eval ((const jerry_char_t *) eval_str, sizeof (eval_str) - 1, 0);
+
+  /* Get the current number of objects. */
+  int end_count = 0;
+  jerry_objects_foreach (count_objects, &end_count);
+
+  /* As only one Map was created the number of iterable objects should be incremented only by one. */
+  TEST_ASSERT (end_count > start_count);
+  TEST_ASSERT ((end_count - start_count) == 1);
+
+  jerry_release_value (result);
+} /* test_container */
+
+static void
+test_internal_prop (void)
+{
+  /* Make sure that the object is initialized in the engine. */
+  {
+    jerry_value_t object = jerry_create_object ();
+    jerry_release_value (object);
+  }
+
+  /* Get the number of iterable objects. */
+  int before_object_count = 0;
+  jerry_objects_foreach (count_objects, &before_object_count);
+
+  jerry_value_t object = jerry_create_object ();
+
+  /* After creating the object, the number of objects is incremented by one. */
+  int after_object_count = 0;
+  {
+    jerry_objects_foreach (count_objects, &after_object_count);
+
+    TEST_ASSERT (after_object_count > before_object_count);
+    TEST_ASSERT ((after_object_count - before_object_count) == 1);
+  }
+
+  jerry_value_t internal_prop_name = jerry_create_string ((const jerry_char_t *) "hidden_foo");
+  jerry_value_t internal_prop_object = jerry_create_object ();
+  bool internal_result = jerry_set_internal_property (object, internal_prop_name, internal_prop_object);
+  TEST_ASSERT (internal_result == true);
+  jerry_release_value (internal_prop_name);
+  jerry_release_value (internal_prop_object);
+
+  /* After adding an internal property object, the number of object is incremented by one. */
+  {
+    int after_internal_count = 0;
+    jerry_objects_foreach (count_objects, &after_internal_count);
+
+    TEST_ASSERT (after_internal_count > after_object_count);
+    TEST_ASSERT ((after_internal_count - after_object_count) == 1);
+  }
+
+  jerry_release_value (object);
+} /* test_internal_prop */
+
 static int test_data = 1;
 
 static void free_test_data (void *data_p)
@@ -133,5 +232,11 @@ main (void)
   jerry_release_value (property_name);
   jerry_release_value (undefined);
   jerry_release_value (strict_equal);
+
+  test_container ();
+  test_internal_prop ();
+
   jerry_cleanup ();
+
+  return 0;
 } /* main */

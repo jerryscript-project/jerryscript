@@ -16,6 +16,7 @@
 #include "ecma-alloc.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
+#include "ecma-builtin-object.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
@@ -46,9 +47,11 @@ enum
   ECMA_OBJECT_PROTOTYPE_TO_STRING,
   ECMA_OBJECT_PROTOTYPE_VALUE_OF,
   ECMA_OBJECT_PROTOTYPE_TO_LOCALE_STRING,
+  ECMA_OBJECT_PROTOTYPE_GET_PROTO,
   ECMA_OBJECT_PROTOTYPE_IS_PROTOTYPE_OF,
   ECMA_OBJECT_PROTOTYPE_HAS_OWN_PROPERTY,
   ECMA_OBJECT_PROTOTYPE_PROPERTY_IS_ENUMERABLE,
+  ECMA_OBJECT_PROTOTYPE_SET_PROTO
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-object-prototype.inc.h"
@@ -276,6 +279,14 @@ ecma_builtin_object_prototype_dispatch_routine (uint16_t builtin_routine_id, /**
     {
       ret_value = ecma_builtin_object_prototype_object_is_prototype_of (obj_p, arguments_list_p[0]);
     }
+
+#if ENABLED (JERRY_ES2015)
+    else if (builtin_routine_id == ECMA_OBJECT_PROTOTYPE_GET_PROTO)
+    {
+      ret_value = ecma_builtin_object_object_get_prototype_of (obj_p);
+    }
+#endif /* ENABLED (JERRY_ES2015)*/
+
     else
     {
       ret_value = ecma_builtin_object_prototype_object_to_locale_string (obj_p);
@@ -287,6 +298,13 @@ ecma_builtin_object_prototype_dispatch_routine (uint16_t builtin_routine_id, /**
   }
 
   JERRY_ASSERT (builtin_routine_id >= ECMA_OBJECT_PROTOTYPE_HAS_OWN_PROPERTY);
+
+#if ENABLED (JERRY_ES2015)
+  if (builtin_routine_id == ECMA_OBJECT_PROTOTYPE_SET_PROTO)
+  {
+    return ecma_builtin_object_object_set_proto (this_arg, arguments_list_p[0]);
+  }
+#endif /* ENABLED (JERRY_ES2015)*/
 
   ecma_string_t *prop_name_p = ecma_op_to_prop_name (arguments_list_p[0]);
 

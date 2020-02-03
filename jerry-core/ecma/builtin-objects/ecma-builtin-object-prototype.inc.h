@@ -27,6 +27,11 @@ OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
               ECMA_BUILTIN_ID_OBJECT,
               ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
 
+ACCESSOR_READ_WRITE (LIT_MAGIC_STRING__PROTO__,
+                     ECMA_OBJECT_PROTOTYPE_GET_PROTO,
+                     ECMA_OBJECT_PROTOTYPE_SET_PROTO,
+                     ECMA_PROPERTY_FLAG_CONFIGURABLE)
+
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_MAGIC_STRING_TO_STRING_UL, ECMA_OBJECT_PROTOTYPE_TO_STRING, 0, 0)

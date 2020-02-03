@@ -18,6 +18,7 @@
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
 #include "ecma-builtins.h"
+#include "ecma-builtin-object.h"
 #include "ecma-comparison.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
@@ -91,6 +92,15 @@ vm_op_get_value (ecma_value_t object, /**< base object */
     else if (ecma_is_value_string (property))
     {
       property_name_p = ecma_get_string_from_value (property);
+
+#if ENABLED (JERRY_ES2015)
+      if (JERRY_UNLIKELY (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING__PROTO__)))
+      {
+        ecma_object_t *obj_p = ecma_get_object_from_value (object);
+
+        return ecma_builtin_object_object_get_prototype_of (obj_p);
+      }
+#endif /* ENABLED (JERRY_ES2015) */
     }
 
 #if ENABLED (JERRY_ES2015)
@@ -1569,6 +1579,13 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
 
           const int index = (int) (opcode_data >> VM_OC_NON_STATIC_SHIFT) - 2;
+
+          if (JERRY_UNLIKELY (ecma_compare_ecma_string_to_magic_id (prop_name_p, LIT_MAGIC_STRING__PROTO__)))
+          {
+            result = ecma_builtin_object_object_set_proto (stack_top_p[index], left_value);
+            ecma_deref_ecma_string (prop_name_p);
+            goto free_both_values;
+          }
 #else /* !ENABLED (JERRY_ES2015) */
           const int index = -1;
 #endif /* ENABLED (JERRY_ES2015) */

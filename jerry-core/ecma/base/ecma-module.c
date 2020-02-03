@@ -79,7 +79,6 @@ ecma_module_create_normalized_path (const uint8_t *char_p, /**< module specifier
                                                       ECMA_MODULE_MAX_PATH,
                                                       (char *) module_path_p);
 
-
   if (normalized_size > 0)
   {
     /* Convert the normalized path to cesu8. */

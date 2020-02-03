@@ -2885,7 +2885,6 @@ jerry_objects_foreach_by_native_info (const jerry_object_native_info_t *native_i
 
   ecma_native_pointer_t *native_pointer_p;
 
-
   jmem_cpointer_t iter_cp = JERRY_CONTEXT (ecma_gc_objects_cp);
 
   while (iter_cp != JMEM_CP_NULL)

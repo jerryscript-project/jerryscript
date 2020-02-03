@@ -30,7 +30,6 @@
 /* Sometimes it's necessary to define __LITTLE_ENDIAN explicitly
    but these catch some common cases. */
 
-
 #ifndef __LITTLE_ENDIAN
 /* Check if compiler has byte order macro. Some older versions do not.
  * If byte order is supported and set to little or target is among common

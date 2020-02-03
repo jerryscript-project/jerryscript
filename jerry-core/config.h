@@ -455,7 +455,6 @@
 # define JERRY_ATTR_GLOBAL_HEAP
 #endif /* !defined (JERRY_ATTR_GLOBAL_HEAP) */
 
-
 /**
  * Sanity check for macros to see if the values are 0 or 1
  *
@@ -652,7 +651,6 @@
 || ((JERRY_VM_EXEC_STOP != 0) && (JERRY_VM_EXEC_STOP != 1))
 # error "Invalid value for 'JERRY_VM_EXEC_STOP' macro."
 #endif
-
 
 #define ENABLED(FEATURE) ((FEATURE) == 1)
 #define DISABLED(FEATURE) ((FEATURE) != 1)

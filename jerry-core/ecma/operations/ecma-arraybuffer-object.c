@@ -92,7 +92,6 @@ ecma_arraybuffer_new_object_external (ecma_length_t length, /**< length of the b
   return object_p;
 } /* ecma_arraybuffer_new_object_external */
 
-
 /**
  * ArrayBuffer object creation operation.
  *

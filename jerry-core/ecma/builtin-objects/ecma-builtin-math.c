@@ -444,7 +444,6 @@ ecma_builtin_math_dispatch_routine (uint16_t builtin_routine_id, /**< built-in w
                                              arguments_number);
   }
 
-
   JERRY_ASSERT (builtin_routine_id == ECMA_MATH_OBJECT_RANDOM);
 
   return ecma_builtin_math_object_random ();

@@ -180,7 +180,6 @@ ecma_set_prototype_of (ecma_value_t o_value, /**< O */
     ECMA_SET_NON_NULL_POINTER (v_cp, ecma_get_object_from_value (v_value));
   }
 
-
   /* 3., 4. */
   if (v_cp == o_p->u2.prototype_cp)
   {

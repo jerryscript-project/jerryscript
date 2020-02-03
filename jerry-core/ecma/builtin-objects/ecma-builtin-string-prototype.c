@@ -715,7 +715,6 @@ ecma_builtin_string_prototype_object_slice (ecma_string_t *get_string_val, /**< 
   return ecma_make_string_value (new_str_p);
 } /* ecma_builtin_string_prototype_object_slice */
 
-
 /**
  * The String.prototype object's 'split' routine
  *

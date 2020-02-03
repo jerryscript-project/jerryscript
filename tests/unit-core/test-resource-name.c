@@ -100,7 +100,6 @@ main (void)
                           "f2(); \n");
   const char *resource_2 = "demo2.js";
 
-
   program = jerry_parse ((const jerry_char_t *) resource_2,
                          strlen (resource_2),
                          (const jerry_char_t *) source_2,

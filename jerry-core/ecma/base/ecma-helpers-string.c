@@ -676,7 +676,6 @@ ecma_append_chars_to_string (ecma_string_t *string1_p, /**< base ecma-string */
                                                    cesu8_string2_p,
                                                    cesu8_string2_size);
 
-
   if (magic_string_id != LIT_MAGIC_STRING__COUNT)
   {
     ecma_deref_ecma_string (string1_p);

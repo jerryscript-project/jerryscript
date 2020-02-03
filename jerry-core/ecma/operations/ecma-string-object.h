@@ -34,7 +34,6 @@ ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p,
                                          ecma_collection_t *main_collection_p,
                                          ecma_collection_t *non_enum_collection_p);
 
-
 /**
  * @}
  * @}

@@ -208,7 +208,6 @@ jerryx_module_resolver_t jerryx_module_native_resolver =
   .resolve_p = jerryx_resolve_native_module
 };
 
-
 static void
 jerryx_module_resolve_local (const jerry_value_t name, /**< name of the module to load */
                              const jerryx_module_resolver_t **resolvers_p, /**< list of resolvers */

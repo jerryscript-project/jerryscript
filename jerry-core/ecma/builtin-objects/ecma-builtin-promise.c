@@ -133,7 +133,6 @@ ecma_builtin_promise_perform_race (ecma_value_t iterator, /**< the iterator for 
   JERRY_ASSERT (ecma_is_value_object (iterator)
                 && ecma_is_value_object (capability));
 
-
   ecma_object_t *capability_obj_p = ecma_get_object_from_value (capability);
   /* 1. */
   while (true)
@@ -289,7 +288,6 @@ ecma_builtin_promise_all_handler (const ecma_value_t function, /**< the function
                                       (uint32_t) ecma_get_integer_from_value (index_val),
                                       argv[0],
                                       false);
-
 
   /* 9-10. */
   ecma_value_t ret = ECMA_VALUE_UNDEFINED;

@@ -332,7 +332,6 @@ ecma_builtin_typedarray_prototype_for_each (ecma_value_t this_arg, /**< this arg
                                                          TYPEDARRAY_ROUTINE_FOREACH);
 } /* ecma_builtin_typedarray_prototype_for_each */
 
-
 #if ENABLED (JERRY_ES2015)
 
 /**
@@ -1742,7 +1741,6 @@ ecma_builtin_typedarray_prototype_index_of (ecma_value_t this_arg, /**< this arg
     from_index = ((num_var >= 0) ? (uint32_t) num_var
                                  : (uint32_t) (info.length + num_var));
   }
-
 
   ecma_number_t search_num = ecma_get_number_from_value (args[0]);
 

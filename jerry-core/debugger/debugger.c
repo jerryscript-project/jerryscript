@@ -1150,7 +1150,6 @@ jerry_debugger_receive (jerry_debugger_uint8_data_t **message_data_p) /**< [out]
   }
 } /* jerry_debugger_receive */
 
-
 #undef JERRY_DEBUGGER_CHECK_PACKET_SIZE
 
 /**
@@ -1213,7 +1212,6 @@ jerry_debugger_send_type (jerry_debugger_header_type_t type) /**< message type *
 
   jerry_debugger_send (sizeof (jerry_debugger_send_type_t));
 } /* jerry_debugger_send_type */
-
 
 /**
  * Send the type signal to the client.

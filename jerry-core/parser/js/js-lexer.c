@@ -2692,7 +2692,6 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
     pattern_str_p = ecma_new_ecma_string_from_utf8_converted_to_cesu8 (regex_start_p, length);
   }
 
-
   completion_value = re_compile_bytecode (&re_bytecode_p,
                                           pattern_str_p,
                                           current_flags);

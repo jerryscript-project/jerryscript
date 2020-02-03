@@ -19,7 +19,6 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-
 #if ENABLED (JERRY_ES2015)
 
 SIMPLE_VALUE (LIT_MAGIC_STRING_COPY_WITHIN,

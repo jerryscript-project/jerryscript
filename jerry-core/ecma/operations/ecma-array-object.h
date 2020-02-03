@@ -25,7 +25,6 @@
  * @{
  */
 
-
 /**
  * Maximum number of new array holes in a fast mode access array.
  * If the number of new holes exceeds this limit, the array is converted back

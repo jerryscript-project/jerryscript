@@ -183,7 +183,6 @@ ecma_date_parse_month_name (const lit_utf8_byte_t **str_p, /**< pointer to the c
   return 0;
 } /* ecma_date_parse_month_name */
 
-
 /**
   * Calculate MakeDate(MakeDay(yr, m, dt), MakeTime(h, min, s, milli)) for Date constructor and UTC
   *

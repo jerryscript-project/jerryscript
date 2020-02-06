@@ -245,6 +245,7 @@ struct jerry_context_t
  * This part is for JerryScript which uses external context.
  */
 
+#define JERRY_CONTEXT_STRUCT (*jerry_port_get_current_context ())
 #define JERRY_CONTEXT(field) (jerry_port_get_current_context ()->field)
 
 #if !ENABLED (JERRY_SYSTEM_ALLOCATOR)
@@ -273,6 +274,11 @@ struct jmem_heap_t
  * Global context.
  */
 extern jerry_context_t jerry_global_context;
+
+/**
+ * Config-independent name for context.
+ */
+#define JERRY_CONTEXT_STRUCT (jerry_global_context)
 
 /**
  * Provides a reference to a field in the current context.

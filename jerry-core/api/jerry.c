@@ -191,7 +191,7 @@ jerry_init (jerry_init_flag_t flags) /**< combination of Jerry flags */
   JERRY_ASSERT (!(JERRY_CONTEXT (status_flags) & ECMA_STATUS_API_AVAILABLE));
 
   /* Zero out all non-external members. */
-  memset (&JERRY_CONTEXT (JERRY_CONTEXT_FIRST_MEMBER), 0,
+  memset ((char *) &JERRY_CONTEXT_STRUCT + offsetof (jerry_context_t, JERRY_CONTEXT_FIRST_MEMBER), 0,
           sizeof (jerry_context_t) - offsetof (jerry_context_t, JERRY_CONTEXT_FIRST_MEMBER));
 
   JERRY_CONTEXT (jerry_init_flags) = flags;

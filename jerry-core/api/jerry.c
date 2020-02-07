@@ -2785,6 +2785,9 @@ jerry_get_object_keys (const jerry_value_t obj_val) /**< object value */
 /**
  * Get the prototype of the specified object
  *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
  * @return prototype object or null value - if success
  *         value marked with error flag - otherwise
  */
@@ -2806,6 +2809,7 @@ jerry_get_prototype (const jerry_value_t obj_val) /**< object value */
   }
 
   ecma_object_t *proto_obj_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, obj_p->u2.prototype_cp);
+  ecma_ref_object (proto_obj_p);
 
   return ecma_make_object_value (proto_obj_p);
 } /* jerry_get_prototype */

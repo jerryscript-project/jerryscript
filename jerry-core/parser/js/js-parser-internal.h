@@ -352,8 +352,8 @@ typedef struct parser_branch_node_t
 typedef struct
 {
   uint16_t map_from;                          /**< original literal index */
-  uint16_t map_to;                            /**< register or literal index */
-} parser_scope_stack;
+  uint16_t map_to;                            /**< encoded register or literal index and flags */
+} parser_scope_stack_t;
 
 /**
  * This item represents a function literal in the scope stack.
@@ -367,6 +367,25 @@ typedef struct
  *   Note: only the name, the real mapping is somewhere else in the scope stack
  */
 #define PARSER_SCOPE_STACK_FUNC 0xffff
+
+#if ENABLED (JERRY_ES2015)
+
+/**
+ * Mask for decoding the register index of map_to
+ */
+#define PARSER_SCOPE_STACK_REGISTER_MASK 0x3fff
+
+/**
+ * The scope stack item represents a lexical declaration (let/const)
+ */
+#define PARSER_SCOPE_STACK_IS_LEXICAL 0x4000
+
+/**
+ * The scope stack item represents a const declaration
+ */
+#define PARSER_SCOPE_STACK_IS_CONST 0x8000
+
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * Starting literal index for registers.
@@ -416,7 +435,7 @@ typedef struct parser_saved_context_t
   parser_mem_data_t byte_code;                /**< byte code buffer */
   uint32_t byte_code_size;                    /**< byte code size for branches */
   parser_mem_data_t literal_pool_data;        /**< literal list */
-  parser_scope_stack *scope_stack_p;          /**< scope stack */
+  parser_scope_stack_t *scope_stack_p;        /**< scope stack */
   uint16_t scope_stack_size;                  /**< size of scope stack */
   uint16_t scope_stack_top;                   /**< preserved top of scope stack */
   uint16_t scope_stack_reg_top;               /**< preserved top register of scope stack */
@@ -486,7 +505,7 @@ typedef struct
   uint32_t byte_code_size;                    /**< current byte code size for branches */
   parser_list_t literal_pool;                 /**< literal list */
   parser_mem_data_t stack;                    /**< storage space */
-  parser_scope_stack *scope_stack_p;          /**< scope stack */
+  parser_scope_stack_t *scope_stack_p;        /**< scope stack */
   parser_mem_page_t *free_page_p;             /**< space for fast allocation */
   uint16_t scope_stack_size;                  /**< size of scope stack */
   uint16_t scope_stack_top;                   /**< current top of scope stack */
@@ -713,6 +732,7 @@ void scanner_create_variables (parser_context_t *context_p, uint32_t option_flag
 
 void scanner_get_location (scanner_location_t *location_p, parser_context_t *context_p);
 void scanner_set_location (parser_context_t *context_p, scanner_location_t *location_p);
+uint16_t scanner_decode_map_to (parser_scope_stack_t *stack_item_p);
 
 void scanner_scan_all (parser_context_t *context_p, const uint8_t *arg_list_p, const uint8_t *arg_list_end_p,
                        const uint8_t *source_p, const uint8_t *source_end_p);

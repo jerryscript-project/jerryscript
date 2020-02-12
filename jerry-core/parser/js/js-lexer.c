@@ -2199,8 +2199,8 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
 
       if (search_scope_stack)
       {
-        parser_scope_stack *scope_stack_start_p = context_p->scope_stack_p;
-        parser_scope_stack *scope_stack_p = scope_stack_start_p + context_p->scope_stack_top;
+        parser_scope_stack_t *scope_stack_start_p = context_p->scope_stack_p;
+        parser_scope_stack_t *scope_stack_p = scope_stack_start_p + context_p->scope_stack_top;
 
         while (scope_stack_p > scope_stack_start_p)
         {
@@ -2215,9 +2215,9 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
 
           if (cond)
           {
-            JERRY_ASSERT (scope_stack_p->map_to >= PARSER_REGISTER_START
+            JERRY_ASSERT (scanner_decode_map_to (scope_stack_p) >= PARSER_REGISTER_START
                           || (literal_p->status_flags & LEXER_FLAG_USED));
-            context_p->lit_object.index = scope_stack_p->map_to;
+            context_p->lit_object.index = scanner_decode_map_to (scope_stack_p);
             return;
           }
         }

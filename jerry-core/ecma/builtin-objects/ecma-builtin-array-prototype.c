@@ -2290,48 +2290,45 @@ ecma_builtin_array_prototype_object_find (ecma_value_t predicate, /**< callback 
   for (uint32_t index = 0; index < len; index++)
   {
     /* 8.a - 8.c */
-    ecma_value_t get_value = ecma_op_object_find_by_uint32_index (obj_p, index);
+    ecma_value_t get_value = ecma_op_object_get_by_uint32_index (obj_p, index);
 
     if (ECMA_IS_VALUE_ERROR (get_value))
     {
       return get_value;
     }
 
-    if (ecma_is_value_found (get_value))
+    /* 8.d - 8.e */
+    ecma_value_t current_index = ecma_make_uint32_value (index);
+
+    ecma_value_t call_args[] = { get_value, current_index, ecma_make_object_value (obj_p) };
+
+    ecma_value_t call_value = ecma_op_function_call (func_object_p, predicate_this_arg, call_args, 3);
+
+    if (ECMA_IS_VALUE_ERROR (call_value))
     {
-      /* 8.d - 8.e */
-      ecma_value_t current_index = ecma_make_uint32_value (index);
+      ecma_free_value (get_value);
+      return call_value;
+    }
 
-      ecma_value_t call_args[] = { get_value, current_index, ecma_make_object_value (obj_p) };
+    bool call_value_to_bool = ecma_op_to_boolean (call_value);
 
-      ecma_value_t call_value = ecma_op_function_call (func_object_p, predicate_this_arg, call_args, 3);
+    ecma_free_value (call_value);
 
-      if (ECMA_IS_VALUE_ERROR (call_value))
+    if (call_value_to_bool)
+    {
+      /* 8.f */
+      if (is_find)
       {
-        ecma_free_value (get_value);
-        return call_value;
-      }
-
-      bool call_value_to_bool = ecma_op_to_boolean (call_value);
-
-      ecma_free_value (call_value);
-
-      if (call_value_to_bool)
-      {
-        /* 8.f */
-        if (is_find)
-        {
-          ecma_free_value (current_index);
-          return get_value;
-        }
-
-        ecma_free_value (get_value);
-        return current_index;
+        ecma_free_value (current_index);
+        return get_value;
       }
 
       ecma_free_value (get_value);
-      ecma_free_value (current_index);
+      return current_index;
     }
+
+    ecma_free_value (get_value);
+    ecma_free_value (current_index);
   }
 
   /* 9. */

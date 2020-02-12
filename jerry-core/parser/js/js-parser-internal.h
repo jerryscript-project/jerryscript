@@ -73,11 +73,12 @@ typedef enum
   PARSER_CLASS_STATIC_FUNCTION = (1u << 22),  /**< this function is a static class method */
   PARSER_CLASS_SUPER_PROP_REFERENCE = (1u << 23),  /**< super property call or assignment */
   PARSER_IS_EVAL = (1u << 24),                /**< eval code */
+  PARSER_IS_DIRECT_EVAL = (1u << 25),         /**< direct eval code */
 #endif /* ENABLED (JERRY_ES2015) */
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
-  PARSER_IS_MODULE = (1u << 25),              /**< an export / import keyword is encountered */
-  PARSER_MODULE_DEFAULT_CLASS_OR_FUNC = (1u << 26),  /**< parsing a function or class default export */
-  PARSER_MODULE_STORE_IDENT = (1u << 27),     /**< store identifier of the current export statement */
+  PARSER_IS_MODULE = (1u << 26),              /**< an export / import keyword is encountered */
+  PARSER_MODULE_DEFAULT_CLASS_OR_FUNC = (1u << 27),  /**< parsing a function or class default export */
+  PARSER_MODULE_STORE_IDENT = (1u << 28),     /**< store identifier of the current export statement */
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
   PARSER_HAS_LATE_LIT_INIT = (1u << 30),      /**< there are identifier or string literals which construction
                                                *   is postponed after the local parser data is freed */
@@ -361,10 +362,7 @@ typedef struct
  * When map_from == PARSER_SCOPE_STACK_FUNC:
  *   map_to represents the literal reserved for a function literal
  *   Note: the name of the function is the previous value in the scope stack
- *
- * When map_to == PARSER_SCOPE_STACK_FUNC:
- *   map_from represents the name of the function literal following this literal
- *   Note: only the name, the real mapping is somewhere else in the scope stack
+ *   Note: map_to is not encoded in this case
  */
 #define PARSER_SCOPE_STACK_FUNC 0xffff
 
@@ -726,6 +724,7 @@ void scanner_cleanup (parser_context_t *context_p);
 bool scanner_is_context_needed (parser_context_t *context_p);
 #if ENABLED (JERRY_ES2015)
 bool scanner_is_global_context_needed (parser_context_t *context_p);
+bool scanner_scope_find_let_declaration (parser_context_t *context_p, lexer_lit_location_t *literal_p);
 bool scanner_try_scan_new_target (parser_context_t *context_p);
 #endif /* ENABLED (JERRY_ES2015) */
 void scanner_create_variables (parser_context_t *context_p, uint32_t option_flags);

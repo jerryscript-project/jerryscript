@@ -16,21 +16,19 @@
 var g = -1;
 
 function f1() {
-  /* Function hoisted as var. */
+  /* Function copied to var. */
   assert (g === undefined);
 
   {
     assert (g() === 1);
+    function g() { return 1 };
 
     {
       assert (g() === 2);
-
       function g() { return 2 };
     }
 
-    function g() { return 1 };
-
-    assert (g() === 2);
+    assert (g() === 1);
   }
 
   assert (g() === 2);
@@ -38,6 +36,27 @@ function f1() {
 f1();
 
 function f2() {
+  /* Function is not copied to var. */
+  'use strict'
+  assert (g === -1);
+
+  {
+    assert (g() === 1);
+    function g() { return 1 };
+
+    {
+      assert (g() === 2);
+      function g() { return 2 };
+    }
+
+    assert (g() === 1);
+  }
+
+  assert (g === -1);
+}
+f2();
+
+function f3() {
   /* Function hoisted as let. */
   assert (g === -1);
 
@@ -65,4 +84,4 @@ function f2() {
 
   assert (g === -1);
 }
-f2();
+f3();

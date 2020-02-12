@@ -51,11 +51,27 @@ default:
 assert (f() === 8);
 
 switch (g()) {
-case g() * 2:
-
+case g() + 5:
   {
     let g = 4;
     assert (g == 4);
+  }
+  break;
+
+default:
+  /* If the declaration is not "executed", it has no effect */
+  function g() { return 1; }
+  assert (false);
+}
+
+assert (g() === 6);
+
+switch (g()) {
+case g() * 2:
+  {
+    let g = 4;
+    assert (g == 4);
+    eval();
   }
 
   function g() { return 3; }

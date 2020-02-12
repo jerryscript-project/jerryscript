@@ -2206,14 +2206,7 @@ lexer_construct_literal_object (parser_context_t *context_p, /**< context */
         {
           scope_stack_p--;
 
-#if ENABLED (JERRY_ES2015)
-          bool cond = (scope_stack_p->map_from == literal_index
-                       && scope_stack_p->map_to != PARSER_SCOPE_STACK_FUNC);
-#else /* ENABLED (JERRY_ES2015) */
-          bool cond = (scope_stack_p->map_from == literal_index);
-#endif /* ENABLED (JERRY_ES2015) */
-
-          if (cond)
+          if (scope_stack_p->map_from == literal_index)
           {
             JERRY_ASSERT (scanner_decode_map_to (scope_stack_p) >= PARSER_REGISTER_START
                           || (literal_p->status_flags & LEXER_FLAG_USED));

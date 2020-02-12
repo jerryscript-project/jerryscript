@@ -110,8 +110,7 @@ parser_print_literal (parser_context_t *context_p, /**< context */
         break;
       }
     }
-    else if (scope_stack_end_p->map_to != PARSER_SCOPE_STACK_FUNC
-             && literal_index == scanner_decode_map_to (scope_stack_end_p))
+    else if (literal_index == scanner_decode_map_to (scope_stack_end_p))
     {
       in_scope_literal = true;
       break;

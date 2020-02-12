@@ -711,6 +711,66 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
 
   JERRY_ASSERT (scope_stack_p[1].map_from == PARSER_SCOPE_STACK_FUNC);
 
+#if ENABLED (JERRY_ES2015)
+  if (!(context_p->status_flags & PARSER_IS_STRICT))
+  {
+    bool copy_value = true;
+
+    parser_scope_stack_t *stack_p = context_p->scope_stack_p;
+
+    while (stack_p < scope_stack_p)
+    {
+      if (literal_index == stack_p->map_from
+          && (stack_p->map_to & PARSER_SCOPE_STACK_IS_LEXICAL))
+      {
+        copy_value = false;
+        break;
+      }
+      stack_p++;
+    }
+
+    if (copy_value)
+    {
+      if (context_p->status_flags & PARSER_IS_DIRECT_EVAL)
+      {
+        if (!scanner_scope_find_let_declaration (context_p, &context_p->token.lit_location))
+        {
+          context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_USED;
+          parser_emit_cbc_literal_value (context_p,
+                                         CBC_COPY_TO_GLOBAL,
+                                         scanner_decode_map_to (scope_stack_p),
+                                         literal_index);
+        }
+      }
+      else
+      {
+        stack_p = context_p->scope_stack_p;
+
+        while (stack_p < scope_stack_p)
+        {
+          if (literal_index == stack_p->map_from)
+          {
+            JERRY_ASSERT (!(stack_p->map_to & PARSER_SCOPE_STACK_IS_LEXICAL));
+
+            uint16_t map_to = scanner_decode_map_to (stack_p);
+            uint16_t opcode = ((map_to >= PARSER_REGISTER_START) ? CBC_ASSIGN_LITERAL_SET_IDENT
+                                                                 : CBC_COPY_TO_GLOBAL);
+
+            parser_emit_cbc_literal_value (context_p,
+                                           opcode,
+                                           scanner_decode_map_to (scope_stack_p),
+                                           map_to);
+            break;
+          }
+          stack_p++;
+        }
+      }
+
+      parser_flush_cbc (context_p);
+    }
+  }
+#endif /* ENABLED (JERRY_ES2015) */
+
   lexer_literal_t *literal_p = PARSER_GET_LITERAL ((size_t) scope_stack_p[1].map_to);
 
   JERRY_ASSERT ((literal_p->type == LEXER_UNUSED_LITERAL || literal_p->type == LEXER_FUNCTION_LITERAL)

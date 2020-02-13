@@ -208,9 +208,8 @@ ecma_builtin_string_prototype_object_concat (ecma_string_t *this_string_p, /**< 
                                              const ecma_value_t *argument_list_p, /**< arguments list */
                                              ecma_length_t arguments_number) /**< number of arguments */
 {
-  ecma_ref_ecma_string (this_string_p);
+  ecma_stringbuilder_t builder = ecma_stringbuilder_create_from (this_string_p);
 
-  ecma_string_t *string_to_return = this_string_p;
   /* 5 */
   for (uint32_t arg_index = 0; arg_index < arguments_number; ++arg_index)
   {
@@ -219,17 +218,17 @@ ecma_builtin_string_prototype_object_concat (ecma_string_t *this_string_p, /**< 
 
     if (JERRY_UNLIKELY (get_arg_string_p == NULL))
     {
-      ecma_deref_ecma_string (string_to_return);
+      ecma_stringbuilder_destroy (&builder);
       return ECMA_VALUE_ERROR;
     }
 
-    string_to_return = ecma_concat_ecma_strings (string_to_return, get_arg_string_p);
+    ecma_stringbuilder_append (&builder, get_arg_string_p);
 
     ecma_deref_ecma_string (get_arg_string_p);
   }
 
   /* 6 */
-  return ecma_make_string_value (string_to_return);
+  return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
 } /* ecma_builtin_string_prototype_object_concat */
 
 /**

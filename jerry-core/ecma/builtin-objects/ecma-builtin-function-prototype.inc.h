@@ -30,10 +30,9 @@ OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
 /* Number properties:
  *  (property name, object pointer getter) */
 
-/* ECMA-262 v5, 15.3.4 */
 NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               0,
-              ECMA_PROPERTY_FIXED)
+              ECMA_PROPERTY_FLAG_DEFAULT_LENGTH)
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */

@@ -24,10 +24,9 @@
 /* Number properties:
  *  (property name, number value, writable, enumerable, configurable) */
 
-/* ECMA-262 v5, 15.5.3 */
 NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               1,
-              ECMA_PROPERTY_FIXED)
+              ECMA_PROPERTY_FLAG_DEFAULT_LENGTH)
 
 /* Object properties:
  *  (property name, object pointer getter) */

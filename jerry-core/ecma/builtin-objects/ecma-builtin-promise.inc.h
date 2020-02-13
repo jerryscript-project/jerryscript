@@ -26,7 +26,7 @@
 
 NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               1,
-              ECMA_PROPERTY_FIXED)
+              ECMA_PROPERTY_FLAG_CONFIGURABLE)
 
 /* Object properties:
  *  (property name, object pointer getter) */

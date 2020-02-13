@@ -13,4 +13,4 @@
  * limitations under the License.
  */
 
-assert (Promise.prototype.length === 1);
+assert (Promise.length === 1);

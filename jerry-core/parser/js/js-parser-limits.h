@@ -54,7 +54,7 @@
 
 /**
  * Maximum number of registers.
- * Limit: min: 256, max: PARSER_MAXIMUM_NUMBER_OF_LITERALS / 2
+ * Limit: min: 256, max: min(PARSER_MAXIMUM_NUMBER_OF_LITERALS / 2, 16383)
  */
 #ifndef PARSER_MAXIMUM_NUMBER_OF_REGISTERS
 #define PARSER_MAXIMUM_NUMBER_OF_REGISTERS 256

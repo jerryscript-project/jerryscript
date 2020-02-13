@@ -94,29 +94,39 @@ static void
 parser_print_literal (parser_context_t *context_p, /**< context */
                       uint16_t literal_index) /**< index of literal */
 {
-  parser_scope_stack *scope_stack_p = context_p->scope_stack_p;
-  parser_scope_stack *scope_stack_end_p = scope_stack_p + context_p->scope_stack_top;
-  int32_t scope_literal_index = -1;
+  parser_scope_stack_t *scope_stack_p = context_p->scope_stack_p;
+  parser_scope_stack_t *scope_stack_end_p = scope_stack_p + context_p->scope_stack_top;
+  bool in_scope_literal = false;
 
   while (scope_stack_p < scope_stack_end_p)
   {
     scope_stack_end_p--;
 
-    if (literal_index == scope_stack_end_p->map_to)
+    if (scope_stack_end_p->map_from == PARSER_SCOPE_STACK_FUNC)
     {
-      scope_literal_index = scope_stack_end_p->map_from;
+      if (literal_index == scope_stack_end_p->map_to)
+      {
+        in_scope_literal = true;
+        break;
+      }
+    }
+    else if (scope_stack_end_p->map_to != PARSER_SCOPE_STACK_FUNC
+             && literal_index == scanner_decode_map_to (scope_stack_end_p))
+    {
+      in_scope_literal = true;
+      break;
     }
   }
 
   if (literal_index < PARSER_REGISTER_START)
   {
-    JERRY_DEBUG_MSG (scope_literal_index != -1 ? " IDX:%d->" : " idx:%d->", literal_index);
+    JERRY_DEBUG_MSG (in_scope_literal ? " IDX:%d->" : " idx:%d->", literal_index);
     lexer_literal_t *literal_p = PARSER_GET_LITERAL (literal_index);
     util_print_literal (literal_p);
     return;
   }
 
-  if (scope_literal_index == -1)
+  if (!in_scope_literal)
   {
     JERRY_DEBUG_MSG (" reg:%d", (int) (literal_index - PARSER_REGISTER_START));
     return;

@@ -698,7 +698,7 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
   JERRY_ASSERT (context_p->scope_stack_top >= 2);
-  parser_scope_stack *scope_stack_p = context_p->scope_stack_p + context_p->scope_stack_top - 2;
+  parser_scope_stack_t *scope_stack_p = context_p->scope_stack_p + context_p->scope_stack_top - 2;
 
   uint16_t literal_index = context_p->lit_object.index;
 

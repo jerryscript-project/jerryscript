@@ -2194,7 +2194,7 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
 
   if (context.scope_stack_p != NULL)
   {
-    parser_free (context.scope_stack_p, context.scope_stack_size * sizeof (parser_scope_stack));
+    parser_free (context.scope_stack_p, context.scope_stack_size * sizeof (parser_scope_stack_t));
   }
 
 #if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
@@ -2297,7 +2297,7 @@ parser_restore_context (parser_context_t *context_p, /**< context */
 
   if (context_p->scope_stack_p != NULL)
   {
-    parser_free (context_p->scope_stack_p, context_p->scope_stack_size * sizeof (parser_scope_stack));
+    parser_free (context_p->scope_stack_p, context_p->scope_stack_size * sizeof (parser_scope_stack_t));
   }
 
   /* Restore private part of the context. */
@@ -2568,7 +2568,7 @@ parser_raise_error (parser_context_t *context_p, /**< context */
 
     if (context_p->scope_stack_p != NULL)
     {
-      parser_free (context_p->scope_stack_p, context_p->scope_stack_size * sizeof (parser_scope_stack));
+      parser_free (context_p->scope_stack_p, context_p->scope_stack_size * sizeof (parser_scope_stack_t));
     }
     context_p->scope_stack_p = saved_context_p->scope_stack_p;
     context_p->scope_stack_size = saved_context_p->scope_stack_size;

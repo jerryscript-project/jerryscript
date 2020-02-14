@@ -399,6 +399,15 @@ typedef enum
 #define ECMA_PROPERTY_FIXED 0
 
 /**
+ * Default flag of length property.
+ */
+#if ENABLED (JERRY_ES2015)
+#define ECMA_PROPERTY_FLAG_DEFAULT_LENGTH ECMA_PROPERTY_FLAG_CONFIGURABLE
+#else /* !ENABLED (JERRY_ES2015) */
+#define ECMA_PROPERTY_FLAG_DEFAULT_LENGTH ECMA_PROPERTY_FIXED
+#endif /* ENABLED (JERRY_ES2015) */
+
+/**
  * Shift for property name part.
  */
 #define ECMA_PROPERTY_NAME_TYPE_SHIFT (ECMA_PROPERTY_FLAG_SHIFT + 4)

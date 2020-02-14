@@ -30,9 +30,8 @@ OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
 /* Number properties:
  *  (property name, object pointer getter) */
 
-/* ECMA-262 v5, 15.3.3.2 */
 NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               1,
-              ECMA_PROPERTY_FIXED)
+              ECMA_PROPERTY_FLAG_DEFAULT_LENGTH)
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

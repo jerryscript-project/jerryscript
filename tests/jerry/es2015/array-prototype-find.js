@@ -146,3 +146,10 @@ function f() { delete arr[1]; };
 var arr = [0, 1, 2, 3];
 Object.defineProperty(arr, '0', { 'get' : f });
 Array.prototype.find.call(arr, func);
+
+/* ES v6.0 22.1.3.8.8
+   Checking whether predicate is called also for empty elements */
+var count = 0;
+
+[,,,].find(function() { count++; return false; });
+assert (count == 3);

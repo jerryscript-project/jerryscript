@@ -347,6 +347,11 @@ ecma_number_t ecma_number_get_prev (ecma_number_t num);
 ecma_number_t ecma_number_get_next (ecma_number_t num);
 ecma_number_t ecma_number_trunc (ecma_number_t num);
 ecma_number_t ecma_number_calc_remainder (ecma_number_t left_num, ecma_number_t right_num);
+ecma_value_t ecma_number_parse_int (const lit_utf8_byte_t *string_buff,
+                                    lit_utf8_size_t string_buff_size,
+                                    ecma_value_t radix);
+ecma_value_t ecma_number_parse_float (const lit_utf8_byte_t *string_buff,
+                                      lit_utf8_size_t string_buff_size);
 ecma_value_t ecma_integer_multiply (ecma_integer_value_t left_integer, ecma_integer_value_t right_integer);
 lit_utf8_size_t ecma_number_to_decimal (ecma_number_t num, lit_utf8_byte_t *out_digits_p, int32_t *out_decimal_exp_p);
 lit_utf8_size_t ecma_number_to_binary_floating_point_number (ecma_number_t num,

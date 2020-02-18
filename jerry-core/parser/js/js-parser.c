@@ -1991,9 +1991,13 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
 #endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
 #if ENABLED (JERRY_ES2015)
-  if (parse_opts & ECMA_PARSE_DIRECT_EVAL)
+  if (parse_opts & ECMA_PARSE_EVAL)
   {
     context.status_flags |= PARSER_IS_EVAL;
+  }
+  if (parse_opts & ECMA_PARSE_DIRECT_EVAL)
+  {
+    context.status_flags |= PARSER_IS_DIRECT_EVAL;
   }
   if (parse_opts & ECMA_PARSE_FUNCTION)
   {
@@ -2046,12 +2050,6 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   if (context.status_flags & PARSER_IS_MODULE)
   {
     context.status_flags |= PARSER_IS_STRICT;
-  }
-
-  if (parse_opts & ECMA_PARSE_EVAL)
-  {
-    /* After this point this flag is set for non-direct evals as well. */
-    context.status_flags |= PARSER_IS_EVAL;
   }
 
   context.module_current_node_p = NULL;
@@ -2110,7 +2108,7 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
       }
 #endif /* ENABLED (JERRY_ES2015) */
 
-      scanner_create_variables (&context, SCANNER_CREATE_VARS_IS_EVAL);
+      scanner_create_variables (&context, SCANNER_CREATE_VARS_IS_SCRIPT);
     }
 
     parser_parse_statements (&context);

@@ -150,9 +150,6 @@ scanner_get_stream_size (scanner_info_t *info_p, /**< scanner info block */
       case SCANNER_STREAM_TYPE_DESTRUCTURED_ARG_FUNC:
 #endif /* ENABLED (JERRY_ES2015) */
       case SCANNER_STREAM_TYPE_FUNC:
-#if ENABLED (JERRY_ES2015)
-      case SCANNER_STREAM_TYPE_FUNC_LOCAL:
-#endif /* ENABLED (JERRY_ES2015) */
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
       case SCANNER_STREAM_TYPE_IMPORT:
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
@@ -474,9 +471,19 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
   bool search_arguments = (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_NO_ARGUMENTS) == 0;
   bool arguments_required = (no_reg && search_arguments);
 #if ENABLED (JERRY_ES2015)
-  bool no_var_reg = (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_NO_VAR_REG) != 0;
+  uint8_t no_var_flags = 0;
+
+  if (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_NO_VAR_REG)
+  {
+    no_var_flags = SCANNER_LITERAL_IS_VAR;
+
+    if (!(context_p->status_flags & PARSER_IS_DIRECT_EVAL))
+    {
+      no_var_flags |= SCANNER_LITERAL_IS_FUNC;
+    }
+  }
 #else /* !ENABLED (JERRY_ES2015) */
-  bool no_var_reg = false;
+  uint8_t no_var_flags = 0;
 #endif /* ENABLED (JERRY_ES2015) */
 
   if (no_reg && prev_literal_pool_p != NULL)
@@ -527,6 +534,14 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ES2015)
     if (is_function && (type & (SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_LOCAL)) == SCANNER_LITERAL_IS_FUNC)
     {
+      if (prev_literal_pool_p == NULL
+          && (context_p->status_flags & PARSER_IS_DIRECT_EVAL)
+          && scanner_scope_find_let_declaration (context_p, literal_p))
+      {
+        literal_p->type = 0;
+        continue;
+      }
+
       type = (uint8_t) ((type & ~SCANNER_LITERAL_IS_FUNC) | SCANNER_LITERAL_IS_VAR);
       literal_p->type = type;
     }
@@ -550,7 +565,7 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
         no_declarations++;
       }
 
-      if (no_reg || (no_var_reg && (type & (SCANNER_LITERAL_IS_VAR | SCANNER_LITERAL_IS_FUNC))))
+      if (no_reg || (type & no_var_flags))
       {
         type |= SCANNER_LITERAL_NO_REG;
         literal_p->type = type;
@@ -573,13 +588,9 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
 
       prev_source_p = literal_p->char_p + literal_p->length;
 
-#if ENABLED (JERRY_ES2015)
-      const uint8_t local_function_flags = SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_CONST;
-#endif /* ENABLED (JERRY_ES2015) */
-
       if (is_function
 #if ENABLED (JERRY_ES2015)
-          || (type & local_function_flags) == local_function_flags
+          || ((type & SCANNER_LITERAL_IS_FUNC) && (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_IS_STRICT))
 #endif /* ENABLED (JERRY_ES2015) */
           || !(type & (SCANNER_LITERAL_IS_VAR | SCANNER_LITERAL_IS_FUNC)))
       {
@@ -731,12 +742,6 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
           }
 #endif /* ENABLED (JERRY_ES2015) */
         }
-#if ENABLED (JERRY_ES2015)
-        else if (literal_p->type & SCANNER_LITERAL_IS_FUNC_LOCAL)
-        {
-          type = SCANNER_STREAM_TYPE_FUNC_LOCAL;
-        }
-#endif /* ENABLED (JERRY_ES2015) */
       }
       else if (literal_p->type & SCANNER_LITERAL_IS_ARG)
       {
@@ -1302,7 +1307,7 @@ scanner_detect_invalid_var (parser_context_t *context_p, /**< context */
     }
   }
 
-  if ((context_p->status_flags & PARSER_IS_EVAL)
+  if ((context_p->status_flags & PARSER_IS_DIRECT_EVAL)
       && scanner_scope_find_let_declaration (context_p, var_literal_p))
   {
     scanner_raise_redeclaration_error (context_p);
@@ -1530,43 +1535,6 @@ scanner_cleanup (parser_context_t *context_p) /**< context */
   context_p->active_scanner_info_p = NULL;
 } /* scanner_cleanup */
 
-#if ENABLED (JERRY_ES2015)
-
-/**
- * Finds the literal id of a function if its target is a var declaration
- *
- * @return function id - if the target of a function is a var declaration,
- *         negative value - otherwise
- */
-static int32_t
-scanner_get_function_target (parser_context_t *context_p) /**< context */
-{
-  uint16_t literal_index = context_p->lit_object.index;
-  parser_scope_stack_t *scope_stack_start_p = context_p->scope_stack_p;
-  parser_scope_stack_t *scope_stack_p = scope_stack_start_p + context_p->scope_stack_top;
-
-  while (scope_stack_p > scope_stack_start_p)
-  {
-    scope_stack_p--;
-
-    if (scope_stack_p->map_from == literal_index
-        && scope_stack_p->map_to != PARSER_SCOPE_STACK_FUNC)
-    {
-      if ((scope_stack_p - scope_stack_start_p) >= context_p->scope_stack_global_end
-          || !(context_p->lit_object.literal_p->status_flags & LEXER_FLAG_GLOBAL))
-      {
-        return -1;
-      }
-
-      return scanner_decode_map_to (scope_stack_p);
-    }
-  }
-
-  return -1;
-} /* scanner_get_function_target */
-
-#endif /* ENABLED (JERRY_ES2015) */
-
 /**
  * Checks whether a context needs to be created for a block.
  *
@@ -1578,17 +1546,10 @@ scanner_is_context_needed (parser_context_t *context_p) /**< context */
 {
   scanner_info_t *info_p = context_p->next_scanner_info_p;
   const uint8_t *data_p = ((const uint8_t *) info_p) + sizeof (scanner_info_t);
-#if ENABLED (JERRY_ES2015)
-  lexer_lit_location_t literal;
-#endif /* ENABLED (JERRY_ES2015) */
 
   JERRY_ASSERT (info_p->type == SCANNER_TYPE_BLOCK);
 
   uint32_t scope_stack_reg_top = context_p->scope_stack_reg_top;
-
-#if ENABLED (JERRY_ES2015)
-  literal.char_p = info_p->source_p - 1;
-#endif /* ENABLED (JERRY_ES2015) */
 
   while (data_p[0] != SCANNER_STREAM_TYPE_END)
   {
@@ -1599,8 +1560,7 @@ scanner_is_context_needed (parser_context_t *context_p) /**< context */
                   || type == SCANNER_STREAM_TYPE_LET
                   || type == SCANNER_STREAM_TYPE_CONST
                   || type == SCANNER_STREAM_TYPE_LOCAL
-                  || type == SCANNER_STREAM_TYPE_FUNC
-                  || type == SCANNER_STREAM_TYPE_FUNC_LOCAL);
+                  || type == SCANNER_STREAM_TYPE_FUNC);
 #else /* !ENABLED (JERRY_ES2015) */
     JERRY_ASSERT (type == SCANNER_STREAM_TYPE_VAR);
 #endif /* ENABLED (JERRY_ES2015) */
@@ -1611,51 +1571,17 @@ scanner_is_context_needed (parser_context_t *context_p) /**< context */
     {
       if (data_p[2] != 0)
       {
-#if ENABLED (JERRY_ES2015)
-        literal.char_p += data_p[2];
-#endif /* ENABLED (JERRY_ES2015) */
         length = 2 + 1;
       }
       else
       {
-#if ENABLED (JERRY_ES2015)
-        memcpy (&literal.char_p, data_p + 2 + 1, sizeof (const uint8_t *));
-#endif /* ENABLED (JERRY_ES2015) */
         length = 2 + 1 + sizeof (const uint8_t *);
       }
     }
     else
     {
-#if ENABLED (JERRY_ES2015)
-      int32_t diff = ((int32_t) data_p[2]) | ((int32_t) data_p[3]) << 8;
-
-      if (diff <= UINT8_MAX)
-      {
-        diff = -diff;
-      }
-
-      literal.char_p += diff;
-#endif /* ENABLED (JERRY_ES2015) */
       length = 2 + 2;
     }
-
-#if ENABLED (JERRY_ES2015)
-    if (type == SCANNER_STREAM_TYPE_FUNC)
-    {
-      literal.length = data_p[1];
-      literal.type = LEXER_IDENT_LITERAL;
-      literal.has_escape = (data_p[0] & SCANNER_STREAM_HAS_ESCAPE) ? 1 : 0;
-
-      lexer_construct_literal_object (context_p, &literal, LEXER_NEW_IDENT_LITERAL);
-
-      if (scanner_get_function_target (context_p) >= 0)
-      {
-        literal.char_p += data_p[1];
-        data_p += length;
-        continue;
-      }
-    }
-#endif /* ENABLED (JERRY_ES2015) */
 
     if (!(data_p[0] & SCANNER_STREAM_NO_REG)
         && scope_stack_reg_top < PARSER_MAXIMUM_NUMBER_OF_REGISTERS)
@@ -1667,9 +1593,6 @@ scanner_is_context_needed (parser_context_t *context_p) /**< context */
       return true;
     }
 
-#if ENABLED (JERRY_ES2015)
-    literal.char_p += data_p[1];
-#endif /* ENABLED (JERRY_ES2015) */
     data_p += length;
   }
 
@@ -1704,11 +1627,11 @@ scanner_is_global_context_needed (parser_context_t *context_p) /**< context */
                   || type == SCANNER_STREAM_TYPE_LET
                   || type == SCANNER_STREAM_TYPE_CONST
                   || type == SCANNER_STREAM_TYPE_FUNC
-                  || type == SCANNER_STREAM_TYPE_FUNC_LOCAL
                   || type == SCANNER_STREAM_TYPE_IMPORT);
 
     /* Only let/const can be stored in registers */
     JERRY_ASSERT ((data & SCANNER_STREAM_NO_REG)
+                  || (type == SCANNER_STREAM_TYPE_FUNC && (context_p->status_flags & PARSER_IS_DIRECT_EVAL))
                   || type == SCANNER_STREAM_TYPE_LET
                   || type == SCANNER_STREAM_TYPE_CONST);
 
@@ -1729,7 +1652,7 @@ scanner_is_global_context_needed (parser_context_t *context_p) /**< context */
     }
 
     if (type == SCANNER_STREAM_TYPE_VAR
-        || type == SCANNER_STREAM_TYPE_FUNC
+        || (type == SCANNER_STREAM_TYPE_FUNC && !(context_p->status_flags & PARSER_IS_DIRECT_EVAL))
         || type == SCANNER_STREAM_TYPE_IMPORT)
     {
       continue;
@@ -1981,9 +1904,6 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
 
     scope_stack_p->map_from = context_p->lit_object.index;
 
-    uint16_t map_to;
-    uint16_t func_init_opcode = CBC_INIT_LOCAL;
-
 #if ENABLED (JERRY_ES2015)
     if (info_type == SCANNER_TYPE_FUNCTION)
     {
@@ -1996,142 +1916,125 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
         context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_GLOBAL;
       }
     }
-    else if (type == SCANNER_STREAM_TYPE_FUNC)
+#endif /* ENABLED (JERRY_ES2015) */
+
+    uint16_t map_to;
+    uint16_t func_init_opcode = CBC_INIT_LOCAL;
+
+    if (!(data_p[0] & SCANNER_STREAM_NO_REG)
+        && scope_stack_reg_top < PARSER_MAXIMUM_NUMBER_OF_REGISTERS)
     {
-      int32_t target_id = scanner_get_function_target (context_p);
+      map_to = (uint16_t) (PARSER_REGISTER_START + scope_stack_reg_top);
 
-      if (target_id >= 0)
+#if ENABLED (JERRY_ES2015)
+      scope_stack_p->map_to = (uint16_t) (scope_stack_reg_top + 1);
+#else /* !ENABLED (JERRY_ES2015) */
+      scope_stack_p->map_to = map_to;
+#endif /* ENABLED (JERRY_ES2015) */
+
+      scope_stack_reg_top++;
+#if ENABLED (JERRY_ES2015)
+      switch (type)
       {
-        map_to = (uint16_t) target_id;
-
-        scope_stack_p->map_to = PARSER_SCOPE_STACK_FUNC;
-        func_init_opcode = CBC_SET_VAR_FUNC;
+        case SCANNER_STREAM_TYPE_CONST:
+        {
+          scope_stack_p->map_to |= PARSER_SCOPE_STACK_IS_CONST;
+          /* FALLTHRU */
+        }
+        case SCANNER_STREAM_TYPE_LET:
+        {
+          scope_stack_p->map_to |= PARSER_SCOPE_STACK_IS_LEXICAL;
+          break;
+        }
       }
+
+      func_init_opcode = CBC_SET_VAR_FUNC;
+#endif /* ENABLED (JERRY_ES2015) */
     }
-#endif /* ENABLED (JERRY_ES2015) */
-
-    if (func_init_opcode == CBC_INIT_LOCAL)
+    else
     {
-      if (!(data_p[0] & SCANNER_STREAM_NO_REG)
-          && scope_stack_reg_top < PARSER_MAXIMUM_NUMBER_OF_REGISTERS)
-      {
-        map_to = (uint16_t) (PARSER_REGISTER_START + scope_stack_reg_top);
+      context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_USED;
+      map_to = context_p->lit_object.index;
 
 #if ENABLED (JERRY_ES2015)
-        scope_stack_p->map_to = (uint16_t) (scope_stack_reg_top + 1);
+      scope_stack_p->map_to = 0;
 #else /* !ENABLED (JERRY_ES2015) */
-        scope_stack_p->map_to = map_to;
+      scope_stack_p->map_to = map_to;
 #endif /* ENABLED (JERRY_ES2015) */
 
-        scope_stack_reg_top++;
-#if ENABLED (JERRY_ES2015)
-        switch (type)
-        {
-          case SCANNER_STREAM_TYPE_CONST:
-          {
-            scope_stack_p->map_to |= PARSER_SCOPE_STACK_IS_CONST;
-            /* FALLTHRU */
-          }
-          case SCANNER_STREAM_TYPE_LET:
-          {
-            scope_stack_p->map_to |= PARSER_SCOPE_STACK_IS_LEXICAL;
-            break;
-          }
-        }
-
-        func_init_opcode = CBC_SET_VAR_FUNC;
-#endif /* ENABLED (JERRY_ES2015) */
+      if (info_type == SCANNER_TYPE_FUNCTION)
+      {
+        context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED;
       }
-      else
+
+      switch (type)
       {
-        context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_USED;
-        map_to = context_p->lit_object.index;
-
 #if ENABLED (JERRY_ES2015)
-        scope_stack_p->map_to = 0;
-#else /* !ENABLED (JERRY_ES2015) */
-        scope_stack_p->map_to = map_to;
-#endif /* ENABLED (JERRY_ES2015) */
-
-        if (info_type == SCANNER_TYPE_FUNCTION)
+        case SCANNER_STREAM_TYPE_CONST:
         {
-          context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED;
+          scope_stack_p->map_to |= PARSER_SCOPE_STACK_IS_CONST;
+          /* FALLTHRU */
         }
-
-        switch (type)
+        case SCANNER_STREAM_TYPE_LET:
         {
-#if ENABLED (JERRY_ES2015)
-          case SCANNER_STREAM_TYPE_CONST:
-          {
-            scope_stack_p->map_to |= PARSER_SCOPE_STACK_IS_CONST;
-            /* FALLTHRU */
-          }
-          case SCANNER_STREAM_TYPE_LET:
-          {
-            scope_stack_p->map_to |= PARSER_SCOPE_STACK_IS_LEXICAL;
-            /* FALLTHRU */
-          }
-          case SCANNER_STREAM_TYPE_LOCAL:
-          case SCANNER_STREAM_TYPE_DESTRUCTURED_ARG:
-          case SCANNER_STREAM_TYPE_DESTRUCTURED_ARG_FUNC:
+          scope_stack_p->map_to |= PARSER_SCOPE_STACK_IS_LEXICAL;
+          /* FALLTHRU */
+        }
+        case SCANNER_STREAM_TYPE_LOCAL:
+        case SCANNER_STREAM_TYPE_DESTRUCTURED_ARG:
+        case SCANNER_STREAM_TYPE_DESTRUCTURED_ARG_FUNC:
 #endif /* ENABLED (JERRY_ES2015) */
-          case SCANNER_STREAM_TYPE_VAR:
-          {
+        case SCANNER_STREAM_TYPE_VAR:
+        {
 #if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
-            context_p->scope_stack_top = (uint16_t) (scope_stack_p - context_p->scope_stack_p);
+          context_p->scope_stack_top = (uint16_t) (scope_stack_p - context_p->scope_stack_p);
 #endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
-            uint16_t opcode = CBC_CREATE_VAR;
-
-            if (option_flags & SCANNER_CREATE_VARS_IS_EVAL)
-            {
-              opcode = CBC_CREATE_VAR_EVAL;
-            }
-
+          uint16_t opcode = ((option_flags & SCANNER_CREATE_VARS_IS_SCRIPT) ? CBC_CREATE_VAR_EVAL
+                                                                            : CBC_CREATE_VAR);
 #if ENABLED (JERRY_ES2015)
-            switch (type)
+          switch (type)
+          {
+            case SCANNER_STREAM_TYPE_LET:
             {
-              case SCANNER_STREAM_TYPE_LET:
-              {
-                opcode = CBC_CREATE_LET;
-                break;
-              }
-              case SCANNER_STREAM_TYPE_CONST:
-              {
-                opcode = CBC_CREATE_CONST;
-                break;
-              }
-              case SCANNER_STREAM_TYPE_LOCAL:
-              case SCANNER_STREAM_TYPE_DESTRUCTURED_ARG:
-              case SCANNER_STREAM_TYPE_DESTRUCTURED_ARG_FUNC:
-              {
-                opcode = CBC_CREATE_LOCAL;
-                break;
-              }
+              opcode = CBC_CREATE_LET;
+              break;
             }
+            case SCANNER_STREAM_TYPE_CONST:
+            {
+              opcode = CBC_CREATE_CONST;
+              break;
+            }
+            case SCANNER_STREAM_TYPE_LOCAL:
+            case SCANNER_STREAM_TYPE_DESTRUCTURED_ARG:
+            case SCANNER_STREAM_TYPE_DESTRUCTURED_ARG_FUNC:
+            {
+              opcode = CBC_CREATE_LOCAL;
+              break;
+            }
+          }
 #endif /* ENABLED (JERRY_ES2015) */
 
-            parser_emit_cbc_literal (context_p, opcode, map_to);
-            break;
-          }
-          case SCANNER_STREAM_TYPE_ARG:
-          case SCANNER_STREAM_TYPE_ARG_FUNC:
-          {
+          parser_emit_cbc_literal (context_p, opcode, map_to);
+          break;
+        }
+        case SCANNER_STREAM_TYPE_ARG:
+        case SCANNER_STREAM_TYPE_ARG_FUNC:
+        {
 #if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
-            context_p->scope_stack_top = (uint16_t) (scope_stack_p - context_p->scope_stack_p);
+          context_p->scope_stack_top = (uint16_t) (scope_stack_p - context_p->scope_stack_p);
 #endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
-            parser_emit_cbc_literal_value (context_p,
-                                           CBC_INIT_LOCAL,
-                                           (uint16_t) (PARSER_REGISTER_START + scope_stack_reg_top),
-                                           map_to);
+          parser_emit_cbc_literal_value (context_p,
+                                         CBC_INIT_LOCAL,
+                                         (uint16_t) (PARSER_REGISTER_START + scope_stack_reg_top),
+                                         map_to);
 
-            if (scope_stack_reg_top < PARSER_MAXIMUM_NUMBER_OF_REGISTERS)
-            {
-              scope_stack_reg_top++;
-            }
-            break;
+          if (scope_stack_reg_top < PARSER_MAXIMUM_NUMBER_OF_REGISTERS)
+          {
+            scope_stack_reg_top++;
           }
+          break;
         }
       }
     }
@@ -2155,13 +2058,16 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
 
     if (!SCANNER_STREAM_TYPE_IS_ARG_FUNC (type))
     {
-      if (func_init_opcode == CBC_INIT_LOCAL
-#if ENABLED (JERRY_ES2015)
-          && type != SCANNER_STREAM_TYPE_FUNC_LOCAL
-#endif /* ENABLED (JERRY_ES2015) */
-          && (option_flags & SCANNER_CREATE_VARS_IS_EVAL))
+      if (func_init_opcode == CBC_INIT_LOCAL && (option_flags & SCANNER_CREATE_VARS_IS_SCRIPT))
       {
+#if ENABLED (JERRY_ES2015)
+        if (!(context_p->status_flags & PARSER_IS_DIRECT_EVAL))
+        {
+          func_init_opcode = CBC_CREATE_VAR_FUNC_EVAL;
+        }
+#else /* !ENABLED (JERRY_ES2015) */
         func_init_opcode = CBC_CREATE_VAR_FUNC_EVAL;
+#endif /* ENABLED (JERRY_ES2015) */
       }
 
       parser_emit_cbc_literal_value (context_p, func_init_opcode, context_p->literal_count, map_to);
@@ -2251,8 +2157,7 @@ scanner_set_location (parser_context_t *context_p, /**< context */
 inline uint16_t JERRY_ATTR_ALWAYS_INLINE
 scanner_decode_map_to (parser_scope_stack_t *stack_item_p) /**< scope stack item */
 {
-  JERRY_ASSERT (stack_item_p->map_from != PARSER_SCOPE_STACK_FUNC
-                && stack_item_p->map_to != PARSER_SCOPE_STACK_FUNC);
+  JERRY_ASSERT (stack_item_p->map_from != PARSER_SCOPE_STACK_FUNC);
 
 #if ENABLED (JERRY_ES2015)
   uint16_t value = (stack_item_p->map_to & PARSER_SCOPE_STACK_REGISTER_MASK);

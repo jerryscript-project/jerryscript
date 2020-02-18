@@ -226,6 +226,7 @@ typedef enum
 #if ENABLED (JERRY_ES2015)
   VM_OC_INIT_LOCALS,             /**< call vm_init_loop() */
   VM_OC_ASSIGN_LET_CONST,        /**< assign values to let/const declarations */
+  VM_OC_COPY_TO_GLOBAL,          /**< copy value to global lex env */
   VM_OC_CLONE_CONTEXT,           /**< clone lexical environment with let/const declarations */
   VM_OC_SET_COMPUTED_PROPERTY,   /**< set computed property */
 
@@ -283,6 +284,7 @@ typedef enum
 #if !ENABLED (JERRY_ES2015)
   VM_OC_INIT_LOCALS = VM_OC_NONE,             /**< call vm_init_loop() */
   VM_OC_ASSIGN_LET_CONST = VM_OC_NONE,        /**< assign values to let/const declarations */
+  VM_OC_COPY_TO_GLOBAL = VM_OC_NONE,          /**< copy value to global lex env */
   VM_OC_CLONE_CONTEXT = VM_OC_NONE,           /**< clone lexical environment with let/const declarations */
   VM_OC_SET_COMPUTED_PROPERTY = VM_OC_NONE,   /**< set computed property is unused */
 

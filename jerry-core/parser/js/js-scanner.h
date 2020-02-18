@@ -160,10 +160,7 @@ typedef enum
   SCANNER_STREAM_TYPE_DESTRUCTURED_ARG_FUNC, /**< destructuring argument declaration which
                                               *   is later initialized with a function */
 #endif /* ENABLED (JERRY_ES2015) */
-  SCANNER_STREAM_TYPE_FUNC, /**< local or global function declaration */
-#if ENABLED (JERRY_ES2015)
-  SCANNER_STREAM_TYPE_FUNC_LOCAL, /**< always local function declaration */
-#endif /* ENABLED (JERRY_ES2015) */
+  SCANNER_STREAM_TYPE_FUNC, /**< function declaration */
 } scanner_compressed_stream_types_t;
 
 /**
@@ -222,7 +219,7 @@ typedef enum
 typedef enum
 {
   SCANNER_CREATE_VARS_NO_OPTS = 0, /**< no options */
-  SCANNER_CREATE_VARS_IS_EVAL = (1 << 0), /**< create variables for script / direct eval */
+  SCANNER_CREATE_VARS_IS_SCRIPT = (1 << 0), /**< create variables for script or direct eval */
   SCANNER_CREATE_VARS_IS_FUNCTION_ARGS = (1 << 1), /**< create variables for function arguments */
   SCANNER_CREATE_VARS_IS_FUNCTION_BODY = (1 << 2), /**< create variables for function body */
 } scanner_create_variables_flags_t;

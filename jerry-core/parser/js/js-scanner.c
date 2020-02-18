@@ -1393,15 +1393,7 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
         scanner_raise_redeclaration_error (context_p);
       }
 
-      if ((context_p->status_flags & PARSER_IS_EVAL)
-          && scanner_scope_find_let_declaration (context_p, literal_p))
-      {
-        literal_p->type |= SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_FUNC_LOCAL;
-      }
-      else
-      {
-        literal_p->type |= SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_FUNC_DECLARATION;
-      }
+      literal_p->type |= SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_FUNC_DECLARATION;
 #else
       literal_p->type |= SCANNER_LITERAL_IS_VAR | SCANNER_LITERAL_IS_FUNC;
 #endif /* ENABLED (JERRY_ES2015) */
@@ -3228,13 +3220,6 @@ scan_completed:
                 JERRY_DEBUG_MSG ("    FUNC ");
                 break;
               }
-#if ENABLED (JERRY_ES2015)
-              case SCANNER_STREAM_TYPE_FUNC_LOCAL:
-              {
-                JERRY_DEBUG_MSG ("    FUNC_LOCAL ");
-                break;
-              }
-#endif /* ENABLED (JERRY_ES2015) */
               default:
               {
                 JERRY_ASSERT ((data_p[0] & SCANNER_STREAM_TYPE_MASK) == SCANNER_STREAM_TYPE_HOLE);

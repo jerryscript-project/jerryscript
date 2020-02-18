@@ -160,8 +160,6 @@ typedef enum
 #if ENABLED (JERRY_ES2015)
   /** literal is a destructured argument binding */
   SCANNER_LITERAL_IS_DESTRUCTURED_ARG = SCANNER_LITERAL_IS_CONST,
-  /** literal is a local function */
-  SCANNER_LITERAL_IS_FUNC_LOCAL = SCANNER_LITERAL_IS_CONST,
   SCANNER_LITERAL_IS_USED = (1 << 6), /**< literal is used */
 #endif /* ENABLED (JERRY_ES2015) */
 } scanner_literal_type_flags_t;
@@ -170,12 +168,10 @@ typedef enum
  * Known combinations:
  *
  *  SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_FUNC_DECLARATION :
- *         function declared in this block, might be let or var
- *  SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_FUNC_LOCAL :
- *         function is visible only in this block
+ *         function declared in this block
  *  SCANNER_LITERAL_IS_LOCAL :
  *         module import on global scope, catch block variable otherwise
- * SCANNER_LITERAL_IS_ARG | SCANNER_LITERAL_IS_FUNC :
+ *  SCANNER_LITERAL_IS_ARG | SCANNER_LITERAL_IS_FUNC :
  *         a function argument which is reassigned to a function later
  *  SCANNER_LITERAL_IS_ARG | SCANNER_LITERAL_IS_DESTRUCTURED_ARG :
  *         destructured binding argument
@@ -346,7 +342,6 @@ lexer_lit_location_t *scanner_add_literal (parser_context_t *context_p, scanner_
 void scanner_add_reference (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 void scanner_append_argument (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 #if ENABLED (JERRY_ES2015)
-bool scanner_scope_find_let_declaration (parser_context_t *context_p, lexer_lit_location_t *literal_p);
 void scanner_detect_invalid_var (parser_context_t *context_p, scanner_context_t *scanner_context_p,
                                  lexer_lit_location_t *var_literal_p);
 void scanner_detect_invalid_let (parser_context_t *context_p, lexer_lit_location_t *let_literal_p);

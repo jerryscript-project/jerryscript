@@ -591,9 +591,9 @@ ecma_op_container_foreach (ecma_value_t this_arg, /**< this argument */
       }
     }
 
-    ecma_value_t call_args[] = { value, key_arg };
+    ecma_value_t call_args[] = { value, key_arg, this_arg };
 
-    ecma_value_t call_value = ecma_op_function_call (func_object_p, predicate_this_arg, call_args, 2);
+    ecma_value_t call_value = ecma_op_function_call (func_object_p, predicate_this_arg, call_args, 3);
 
     ecma_free_value (value);
 

@@ -106,3 +106,13 @@ var object = {
 map.forEach (function (value, key) {
   assert (this._secret === 42);
 }, object);
+
+/* Test third argument of callback */
+map = new Map();
+map.set('foo', 42);
+map.set('bar', 84);
+
+map.forEach(function(value, key, thisArg) {
+  assert (typeof thisArg === "object");
+  assert (thisArg === map);
+});

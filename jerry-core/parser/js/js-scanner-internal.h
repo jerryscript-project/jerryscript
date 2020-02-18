@@ -257,9 +257,6 @@ typedef enum
   SCANNER_LITERAL_POOL_BLOCK = (1 << 1), /**< literal pool represents a code block */
   SCANNER_LITERAL_POOL_IS_STRICT = (1 << 2), /**< literal pool represents a strict mode code block */
   SCANNER_LITERAL_POOL_NO_REG = (1 << 3), /**< variable declarations cannot be kept in registers */
-#if ENABLED (JERRY_ES2015)
-  SCANNER_LITERAL_POOL_NO_VAR_REG = (1 << 4), /**< non let/const declarations cannot be kept in registers */
-#endif /* ENABLED (JERRY_ES2015) */
   SCANNER_LITERAL_POOL_NO_ARGUMENTS = (1 << 5), /**< arguments object must not be constructed */
 #if ENABLED (JERRY_ES2015)
   SCANNER_LITERAL_POOL_ARGUMENTS_UNMAPPED = (1 << 6), /**< arguments object should be unmapped */

@@ -125,21 +125,7 @@ static const uint8_t parser_statement_flags[] =
   PARSER_STATM_CONTEXT_BREAK
 };
 
-#if !ENABLED (JERRY_ES2015)
-
-/**
- * Get the expected depth of a function call.
- */
-#define JERRY_GET_EXPECTED_DEPTH(context_p) 0
-
-#else /* ENABLED (JERRY_ES2015) */
-
-/**
- * Get the expected depth of a function call.
- */
-#define JERRY_GET_EXPECTED_DEPTH(context_p) \
-  (((context_p)->status_flags & PARSER_INSIDE_BLOCK) ? PARSER_BLOCK_CONTEXT_STACK_ALLOCATION : 0)
-
+#if ENABLED (JERRY_ES2015)
 /**
  * Block statement.
  */
@@ -2637,7 +2623,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
     lexer_lit_location_t lit_location;
     bool is_use_strict = false;
 
-    JERRY_ASSERT (context_p->stack_depth == JERRY_GET_EXPECTED_DEPTH (context_p));
+    JERRY_ASSERT (context_p->stack_depth == 0);
 #ifndef JERRY_NDEBUG
     JERRY_ASSERT (context_p->context_stack_depth == context_p->stack_depth);
 #endif /* !JERRY_NDEBUG */
@@ -3348,7 +3334,7 @@ consume_last_statement:
     }
   }
 
-  JERRY_ASSERT (context_p->stack_depth == JERRY_GET_EXPECTED_DEPTH (context_p));
+  JERRY_ASSERT (context_p->stack_depth == 0);
 #ifndef JERRY_NDEBUG
   JERRY_ASSERT (context_p->context_stack_depth == context_p->stack_depth);
 #endif /* !JERRY_NDEBUG */

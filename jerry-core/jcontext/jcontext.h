@@ -142,7 +142,10 @@ struct jerry_context_t
   jmem_cpointer_t symbol_list_first_cp; /**< first item of the global symbol list */
 #endif /* ENABLED (JERRY_ES2015) */
   jmem_cpointer_t number_list_first_cp; /**< first item of the literal number list */
-  jmem_cpointer_t ecma_global_lex_env_cp; /**< global lexical environment */
+  jmem_cpointer_t ecma_global_env_cp; /**< global lexical environment */
+#if ENABLED (JERRY_ES2015)
+  jmem_cpointer_t ecma_global_scope_cp; /**< global lexical scope */
+#endif /* ENABLED (JERRY_ES2015) */
 
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
   ecma_module_t *ecma_modules_p; /**< list of referenced modules */

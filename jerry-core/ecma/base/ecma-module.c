@@ -660,7 +660,7 @@ ecma_module_evaluate (ecma_module_t *module_p) /**< module */
  * @return ECMA_VALUE_ERROR - if an error occured
  *         ECMA_VALUE_EMPTY - otherwise
  */
-ecma_value_t
+static ecma_value_t
 ecma_module_connect_imports (void)
 {
   ecma_module_context_t *current_context_p = JERRY_CONTEXT (module_top_context_p);
@@ -669,6 +669,39 @@ ecma_module_connect_imports (void)
   JERRY_ASSERT (ecma_is_lexical_environment (local_env_p));
 
   ecma_module_node_t *import_node_p = current_context_p->imports_p;
+
+  /* Check that the imported bindings don't exist yet. */
+  while (import_node_p != NULL)
+  {
+    ecma_module_names_t *import_names_p = import_node_p->module_names_p;
+
+    while (import_names_p != NULL)
+    {
+      ecma_object_t *lex_env_p = local_env_p;
+      ecma_property_t *binding_p = NULL;
+
+      if (lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_BLOCK)
+      {
+        binding_p = ecma_find_named_property (lex_env_p, import_names_p->local_name_p);
+
+        JERRY_ASSERT (lex_env_p->u2.outer_reference_cp != JMEM_CP_NULL);
+        lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
+      }
+
+      if (binding_p != NULL || ecma_op_has_binding (lex_env_p, import_names_p->local_name_p))
+      {
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Imported binding shadows local variable."));
+      }
+
+      import_names_p = import_names_p->next_p;
+    }
+
+    import_node_p = import_node_p->next_p;
+  }
+
+  import_node_p = current_context_p->imports_p;
+
+  /* Resolve imports and create local bindings. */
   while (import_node_p != NULL)
   {
     ecma_value_t result = ecma_module_evaluate (import_node_p->module_request_p);
@@ -760,6 +793,26 @@ ecma_module_connect_imports (void)
 
   return ECMA_VALUE_EMPTY;
 } /* ecma_module_connect_imports */
+
+/**
+ * Initialize the current module by creating the local binding for the imported variables
+ * and verifying indirect exports.
+ *
+ * @return ECMA_VALUE_ERROR - if an error occured
+ *         ECMA_VALUE_EMPTY - otherwise
+ */
+ecma_value_t
+ecma_module_initialize_current (void)
+{
+  ecma_value_t ret_value = ecma_module_connect_imports ();
+
+  if (ecma_is_value_empty (ret_value))
+  {
+    ret_value = ecma_module_check_indirect_exports ();
+  }
+
+  return ret_value;
+} /* ecma_module_initialize_current */
 
 /**
  * Parses an EcmaScript module.
@@ -975,7 +1028,8 @@ ecma_module_release_module (ecma_module_t *module_p) /**< module */
     ecma_module_release_module_context (module_p->context_p);
   }
 
-  if (module_p->state >= ECMA_MODULE_STATE_EVALUATING)
+  if (module_p->state >= ECMA_MODULE_STATE_EVALUATING
+      && module_p->scope_p != NULL)
   {
     ecma_deref_object (module_p->scope_p);
   }
@@ -996,11 +1050,6 @@ finished:
 void
 ecma_module_cleanup (void)
 {
-  if (JERRY_CONTEXT (module_top_context_p)->parent_p != NULL)
-  {
-    return;
-  }
-
   ecma_module_t *current_p = JERRY_CONTEXT (ecma_modules_p);
   while (current_p != NULL)
   {
@@ -1009,6 +1058,7 @@ ecma_module_cleanup (void)
     current_p = next_p;
   }
 
+  JERRY_CONTEXT (ecma_modules_p) = NULL;
   JERRY_CONTEXT (module_top_context_p) = NULL;
 } /* ecma_module_cleanup */
 

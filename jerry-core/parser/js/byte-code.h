@@ -302,6 +302,10 @@
               VM_OC_NEW | VM_OC_PUT_STACK) \
   CBC_OPCODE (CBC_EVAL, CBC_NO_FLAG, 0, \
               VM_OC_EVAL) \
+  CBC_OPCODE (CBC_CHECK_VAR, CBC_HAS_LITERAL_ARG, 0, \
+              VM_OC_CHECK_VAR) \
+  CBC_OPCODE (CBC_CHECK_LET, CBC_HAS_LITERAL_ARG, 0, \
+              VM_OC_CHECK_LET) \
   CBC_OPCODE (CBC_CREATE_VAR, CBC_HAS_LITERAL_ARG, 0, \
               VM_OC_CREATE_BINDING) \
   CBC_OPCODE (CBC_CREATE_LET, CBC_HAS_LITERAL_ARG, 0, \
@@ -780,6 +784,7 @@ typedef enum
   CBC_CODE_FLAGS_GENERATOR = (1u << 11), /**< this function is a generator */
   CBC_CODE_FLAGS_REST_PARAMETER = (1u << 12), /**< this function has rest parameter */
   CBC_CODE_FLAG_HAS_TAGGED_LITERALS = (1u << 13), /**< this function has tagged template literal list */
+  CBC_CODE_FLAGS_LEXICAL_BLOCK_NEEDED = (1u << 14), /**< compiled code needs a lexical block */
 } cbc_code_flags;
 
 /**

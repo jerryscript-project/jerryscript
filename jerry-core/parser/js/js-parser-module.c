@@ -325,8 +325,8 @@ parser_module_context_init (void)
     ecma_module_t *module_p = ecma_module_find_or_create_module (path_p);
 
     module_p->state = ECMA_MODULE_STATE_EVALUATED;
-    module_p->scope_p = ecma_get_global_environment ();
-    ecma_ref_object (module_p->scope_p);
+    /* The lexical scope of the root module does not exist yet. */
+    module_p->scope_p = NULL;
 
     module_p->context_p = module_context_p;
     module_context_p->module_p = module_p;

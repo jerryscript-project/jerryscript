@@ -811,6 +811,47 @@ main (void)
     jerry_cleanup ();
   }
 
+  /* Test parsing/executing scripts with lexically scoped global variables multiple times. */
+  if (jerry_is_feature_enabled (JERRY_FEATURE_SYMBOL))
+  {
+    jerry_init (JERRY_INIT_EMPTY);
+    const jerry_char_t scoped_src_p[] = "let a;";
+    jerry_value_t parse_result = jerry_parse (NULL,
+                                              0,
+                                              scoped_src_p,
+                                              sizeof (scoped_src_p) - 1,
+                                              JERRY_PARSE_NO_OPTS);
+    TEST_ASSERT (!jerry_value_is_error (parse_result));
+    jerry_release_value (parse_result);
+
+    parse_result = jerry_parse (NULL,
+                                0,
+                                scoped_src_p,
+                                sizeof (scoped_src_p) - 1,
+                                JERRY_PARSE_NO_OPTS);
+    TEST_ASSERT (!jerry_value_is_error (parse_result));
+
+    jerry_value_t run_result = jerry_run (parse_result);
+    TEST_ASSERT (!jerry_value_is_error (run_result));
+    jerry_release_value (run_result);
+
+    /* Should be a syntax error due to redeclaration. */
+    run_result = jerry_run (parse_result);
+    TEST_ASSERT (jerry_value_is_error (run_result));
+    jerry_release_value (run_result);
+    jerry_release_value (parse_result);
+
+    /* The variable should have no effect on parsing. */
+    parse_result = jerry_parse (NULL,
+                                0,
+                                scoped_src_p,
+                                sizeof (scoped_src_p) - 1,
+                                JERRY_PARSE_NO_OPTS);
+    TEST_ASSERT (!jerry_value_is_error (parse_result));
+    jerry_release_value (parse_result);
+    jerry_cleanup ();
+  }
+
   /* Test: parser error location */
   if (jerry_is_feature_enabled (JERRY_FEATURE_ERROR_MESSAGES))
   {

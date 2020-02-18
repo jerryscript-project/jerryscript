@@ -989,7 +989,14 @@ jerry_snapshot_result (const uint32_t *snapshot_p, /**< snapshot */
 
   if (as_function)
   {
-    ecma_object_t *lex_env_p = ecma_get_global_environment ();
+#if ENABLED (JERRY_ES2015)
+    if (bytecode_p->status_flags & CBC_CODE_FLAGS_LEXICAL_BLOCK_NEEDED)
+    {
+      ecma_create_global_lexical_block ();
+    }
+#endif /* ENABLED (JERRY_ES2015) */
+
+    ecma_object_t *lex_env_p = ecma_get_global_scope ();
     ecma_object_t *func_obj_p = ecma_op_create_simple_function_object (lex_env_p, bytecode_p);
 
     if (!(bytecode_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))

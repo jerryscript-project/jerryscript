@@ -260,10 +260,14 @@ ecma_value_t
 vm_run_module (const ecma_compiled_code_t *bytecode_p, /**< pointer to bytecode to run */
                ecma_object_t *lex_env_p) /**< pointer to the specified lexenv to run in */
 {
-  ecma_object_t *glob_obj_p = ecma_builtin_get_global ();
+  const ecma_value_t module_init_result = ecma_module_initialize_current ();
+  if (ECMA_IS_VALUE_ERROR (module_init_result))
+  {
+    return module_init_result;
+  }
 
   return vm_run (bytecode_p,
-                 ecma_make_object_value (glob_obj_p),
+                 ECMA_VALUE_UNDEFINED,
                  lex_env_p,
                  NULL,
                  0);
@@ -283,9 +287,39 @@ vm_run_global (const ecma_compiled_code_t *bytecode_p) /**< pointer to bytecode 
 {
   ecma_object_t *glob_obj_p = ecma_builtin_get_global ();
 
+#if ENABLED (JERRY_ES2015)
+  if (bytecode_p->status_flags & CBC_CODE_FLAGS_LEXICAL_BLOCK_NEEDED)
+  {
+    ecma_create_global_lexical_block ();
+  }
+#endif /* ENABLED (JERRY_ES2015) */
+
+  ecma_object_t *const global_scope_p = ecma_get_global_scope ();
+
+#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+  if (JERRY_CONTEXT (module_top_context_p) != NULL)
+  {
+    JERRY_ASSERT (JERRY_CONTEXT (module_top_context_p)->parent_p == NULL);
+    ecma_module_t *module_p = JERRY_CONTEXT (module_top_context_p)->module_p;
+
+    JERRY_ASSERT (module_p->scope_p == NULL);
+    ecma_ref_object (global_scope_p);
+    module_p->scope_p = global_scope_p;
+
+    const ecma_value_t module_init_result = ecma_module_initialize_current ();
+    ecma_module_cleanup ();
+    JERRY_CONTEXT (module_top_context_p) = NULL;
+
+    if (ECMA_IS_VALUE_ERROR (module_init_result))
+    {
+      return module_init_result;
+    }
+  }
+#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+
   return vm_run (bytecode_p,
                  ecma_make_object_value (glob_obj_p),
-                 ecma_get_global_environment (),
+                 global_scope_p,
                  NULL,
                  0);
 } /* vm_run_global */
@@ -333,7 +367,7 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
     ecma_object_t *global_obj_p = ecma_builtin_get_global ();
     ecma_ref_object (global_obj_p);
     this_binding = ecma_make_object_value (global_obj_p);
-    lex_env_p = ecma_get_global_environment ();
+    lex_env_p = ecma_get_global_scope ();
   }
 
   ecma_ref_object (lex_env_p);
@@ -341,9 +375,18 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
   if ((bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0)
   {
     ecma_object_t *strict_lex_env_p = ecma_create_decl_lex_env (lex_env_p);
-    ecma_deref_object (lex_env_p);
 
+    ecma_deref_object (lex_env_p);
     lex_env_p = strict_lex_env_p;
+  }
+
+  if ((bytecode_data_p->status_flags & CBC_CODE_FLAGS_LEXICAL_BLOCK_NEEDED) != 0)
+  {
+    ecma_object_t *lex_block_p = ecma_create_decl_lex_env (lex_env_p);
+    lex_block_p->type_flags_refs |= (uint16_t) ECMA_OBJECT_FLAG_BLOCK;
+
+    ecma_deref_object (lex_env_p);
+    lex_env_p = lex_block_p;
   }
 
   ecma_value_t completion_value = vm_run (bytecode_data_p,
@@ -1337,6 +1380,56 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           continue;
         }
 #if ENABLED (JERRY_ES2015)
+        case VM_OC_CHECK_VAR:
+        {
+          JERRY_ASSERT (ecma_get_global_scope () == frame_ctx_p->lex_env_p);
+
+          uint32_t literal_index;
+          READ_LITERAL_INDEX (literal_index);
+
+          if ((frame_ctx_p->lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_BLOCK) == 0)
+          {
+            continue;
+          }
+
+          ecma_string_t *const literal_name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
+          ecma_property_t *const binding_p = ecma_find_named_property (frame_ctx_p->lex_env_p, literal_name_p);
+
+          if (binding_p != NULL)
+          {
+            result = ecma_raise_syntax_error (ECMA_ERR_MSG ("Local variable is redeclared."));
+            goto error;
+          }
+
+          continue;
+        }
+        case VM_OC_CHECK_LET:
+        {
+          JERRY_ASSERT (ecma_get_global_scope () == frame_ctx_p->lex_env_p);
+
+          uint32_t literal_index;
+          READ_LITERAL_INDEX (literal_index);
+
+          ecma_string_t *literal_name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
+          ecma_object_t *lex_env_p = frame_ctx_p->lex_env_p;
+          ecma_property_t *binding_p = NULL;
+
+          if (lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_BLOCK)
+          {
+            binding_p = ecma_find_named_property (lex_env_p, literal_name_p);
+
+            JERRY_ASSERT (lex_env_p->u2.outer_reference_cp != JMEM_CP_NULL);
+            lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
+          }
+
+          if (binding_p != NULL || ecma_op_has_binding (lex_env_p, literal_name_p))
+          {
+            result = ecma_raise_syntax_error (ECMA_ERR_MSG ("Local variable is redeclared."));
+            goto error;
+          }
+
+          continue;
+        }
         case VM_OC_ASSIGN_LET_CONST:
         {
           uint32_t literal_index;
@@ -4180,27 +4273,6 @@ vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data heade
 {
   vm_frame_ctx_t *frame_ctx_p;
   size_t frame_size;
-
-#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
-  if (JERRY_CONTEXT (module_top_context_p) != NULL)
-  {
-    ecma_value_t ret_value = ecma_module_connect_imports ();
-
-    if (ecma_is_value_empty (ret_value))
-    {
-      ret_value = ecma_module_check_indirect_exports ();
-    }
-
-    ecma_module_cleanup ();
-
-    if (!ecma_is_value_empty (ret_value))
-    {
-      return ret_value;
-    }
-
-    JERRY_CONTEXT (module_top_context_p) = NULL;
-  }
-#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
   if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
   {

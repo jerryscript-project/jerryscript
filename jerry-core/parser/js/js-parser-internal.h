@@ -58,7 +58,7 @@ typedef enum
   PARSER_DEBUGGER_BREAKPOINT_APPENDED = (1u << 11), /**< pending (unsent) breakpoint
                                                      *   info is available */
 #if ENABLED (JERRY_ES2015)
-  PARSER_INSIDE_BLOCK = (1u << 12),           /**< script has a lexical environment for let and const */
+  PARSER_LEXICAL_BLOCK_NEEDED = (1u << 12),   /**< script needs a lexical environment for let and const */
   PARSER_IS_ARROW_FUNCTION = (1u << 13),      /**< an arrow function is parsed */
   PARSER_IS_GENERATOR_FUNCTION = (1u << 14),  /**< a generator function is parsed */
   PARSER_IS_ASYNC_FUNCTION = (1u << 15),      /**< an async function is parsed */
@@ -726,6 +726,7 @@ bool scanner_is_context_needed (parser_context_t *context_p);
 bool scanner_is_global_context_needed (parser_context_t *context_p);
 bool scanner_scope_find_let_declaration (parser_context_t *context_p, lexer_lit_location_t *literal_p);
 bool scanner_try_scan_new_target (parser_context_t *context_p);
+void scanner_check_variables (parser_context_t *context_p);
 #endif /* ENABLED (JERRY_ES2015) */
 void scanner_create_variables (parser_context_t *context_p, uint32_t option_flags);
 

@@ -118,3 +118,11 @@ try {
 Set.prototype.add = add;
 
 assert(closed === true);
+
+/* Test third argument of callback */
+var s = new Set([1, 2, 3]);
+
+s.forEach(function(value, key, thisArg) {
+  assert (typeof thisArg === "object");
+  assert(thisArg === s);
+});

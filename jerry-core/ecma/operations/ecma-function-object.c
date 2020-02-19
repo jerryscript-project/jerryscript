@@ -1658,6 +1658,41 @@ ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**<
 {
   JERRY_ASSERT (!ecma_get_object_is_builtin (object_p));
 
+#if ENABLED (JERRY_ES2015)
+  if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_LENGTH))
+  {
+    ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
+    if (!ECMA_GET_FIRST_BIT_FROM_POINTER_TAG (ext_func_p->u.function.scope_cp))
+    {
+      /* Initialize 'length' property */
+      const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
+      uint32_t len;
+      if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+      {
+        cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_data_p;
+        len = args_p->argument_end;
+      }
+      else
+      {
+        cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_data_p;
+        len = args_p->argument_end;
+      }
+
+      /* Set tag bit to represent initialized 'length' property */
+      ECMA_SET_FIRST_BIT_TO_POINTER_TAG (ext_func_p->u.function.scope_cp);
+      ecma_property_t *value_prop_p;
+      ecma_property_value_t *value_p = ecma_create_named_data_property (object_p,
+                                                                        property_name_p,
+                                                                        ECMA_PROPERTY_FLAG_CONFIGURABLE,
+                                                                        &value_prop_p);
+      value_p->value = ecma_make_uint32_value (len);
+      return value_prop_p;
+    }
+
+    return NULL;
+  }
+#endif /* ENABLED (JERRY_ES2015) */
+
   if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_PROTOTYPE)
       && ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION)
   {
@@ -1824,8 +1859,17 @@ ecma_op_function_list_lazy_property_names (ecma_object_t *object_p, /**< functio
 
   ecma_collection_t *for_non_enumerable_p = (opts & ECMA_LIST_ENUMERABLE) ? non_enum_collection_p : main_collection_p;
 
+#if ENABLED (JERRY_ES2015)
+  ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
+  if (!ECMA_GET_FIRST_BIT_FROM_POINTER_TAG (ext_func_p->u.function.scope_cp))
+  {
+    /* Unintialized 'length' property is non-enumerable (ECMA-262 v6, 19.2.4.1) */
+    ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
+  }
+#else /* !ENABLED (JERRY_ES2015) */
   /* 'length' property is non-enumerable (ECMA-262 v5, 13.2.5) */
   ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
+#endif /* ENABLED (JERRY_ES2015) */
 
   const ecma_compiled_code_t *bytecode_data_p;
   bytecode_data_p = ecma_op_function_get_compiled_code ((ecma_extended_object_t *) object_p);

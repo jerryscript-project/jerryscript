@@ -16,7 +16,7 @@ class A {
   constructor() {
     var hasProp = $ => {}
     Object.preventExtensions(hasProp);
-    assert(Object.isSealed(hasProp) === true);
+    assert(Object.isSealed(hasProp) === false);
   }
   super() {
     $: $

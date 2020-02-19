@@ -100,3 +100,24 @@ var builtin_typedArrays = [
     assert(ta.hasOwnProperty('length') === false);
   }
 })();
+
+(function () {
+  /* test length property of function objects */
+  var normal_func = function () {};
+  var arrow_func = () => {};
+
+  var functions = [normal_func, arrow_func];
+
+  for (func of functions) {
+    var desc = Object.getOwnPropertyDescriptor(func, 'length');
+    assert(desc.writable === false);
+    assert(desc.enumerable === false);
+    assert(desc.configurable === true);
+  }
+
+  for (func of functions) {
+    assert(func.hasOwnProperty('length') === true);
+    assert(delete func.length);
+    assert(func.hasOwnProperty('length') === false);
+  }
+})();

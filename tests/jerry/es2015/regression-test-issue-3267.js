@@ -14,7 +14,7 @@
 
 var hasProp = $ => { }
 Object.preventExtensions(hasProp);
-assert (Object.isSealed(hasProp));
+assert (Object.isSealed(hasProp) === false);
 
 var keys = Object.getOwnPropertyNames(hasProp);
 assert (keys.length === 1);

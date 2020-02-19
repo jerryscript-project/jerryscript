@@ -249,6 +249,7 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
     }
     else if (type == ECMA_OBJECT_TYPE_FUNCTION)
     {
+#if !ENABLED (JERRY_ES2015)
       if (ecma_string_is_length (property_name_p))
       {
         if (options & ECMA_PROPERTY_GET_VALUE)
@@ -274,6 +275,7 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
 
         return ECMA_PROPERTY_TYPE_VIRTUAL;
       }
+#endif /* !ENABLED (JERRY_ES2015) */
 
       /* Get prototype physical property. */
       property_p = ecma_op_function_try_to_lazy_instantiate_property (object_p, property_name_p);
@@ -594,6 +596,7 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
     }
     else if (type == ECMA_OBJECT_TYPE_FUNCTION)
     {
+#if !ENABLED (JERRY_ES2015)
       if (ecma_string_is_length (property_name_p))
       {
         /* Get length virtual property. */
@@ -614,6 +617,7 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
 
         return ecma_make_uint32_value (len);
       }
+#endif /* !ENABLED (JERRY_ES2015) */
 
       /* Get prototype physical property. */
       property_p = ecma_op_function_try_to_lazy_instantiate_property (object_p, property_name_p);
@@ -1322,10 +1326,19 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
     }
     else if (type == ECMA_OBJECT_TYPE_FUNCTION)
     {
+#if ENABLED (JERRY_ES2015)
+      /* Uninitialized 'length' property is non-writable (ECMA-262 v6, 19.2.4.1) */
+      if ((ecma_string_is_length (property_name_p))
+          && (!ECMA_GET_FIRST_BIT_FROM_POINTER_TAG (((ecma_extended_object_t *) object_p)->u.function.scope_cp)))
+      {
+        return ecma_reject (is_throw);
+      }
+#else /* !ENABLED (JERRY_ES2015) */
       if (ecma_string_is_length (property_name_p))
       {
         return ecma_reject (is_throw);
       }
+#endif /* ENABLED (JERRY_ES2015) */
 
       /* Get prototype physical property. */
       property_p = ecma_op_function_try_to_lazy_instantiate_property (object_p, property_name_p);

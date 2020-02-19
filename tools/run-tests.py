@@ -413,21 +413,27 @@ def run_jerry_test_suite(options):
         if ret_build:
             break
 
+        skip_list = []
+
         if '--profile=minimal' in job.build_args:
             test_cmd.append('--test-list')
             test_cmd.append(settings.JERRY_TEST_SUITE_MINIMAL_LIST)
-        elif '--profile=es2015-subset' in job.build_args:
+        else:
             test_cmd.append('--test-dir')
             test_cmd.append(settings.JERRY_TEST_SUITE_DIR)
-        else:
-            test_cmd.append('--test-list')
-            test_cmd.append(settings.JERRY_TEST_SUITE_ES51_LIST)
+            if '--profile=es2015-subset' in job.build_args:
+                skip_list.append(os.path.join('es5.1', ''))
+            else:
+                skip_list.append(os.path.join('es2015', ''))
 
         if options.quiet:
             test_cmd.append("-q")
 
         if options.skip_list:
-            test_cmd.append("--skip-list=" + options.skip_list)
+            skip_list.append(options.skip_list)
+
+        if skip_list:
+            test_cmd.append("--skip-list=" + ",".join(skip_list))
 
         if job.test_args:
             test_cmd.extend(job.test_args)

@@ -213,6 +213,11 @@ typedef enum
   VM_OC_CONTEXT_END,             /**< context end */
   VM_OC_JUMP_AND_EXIT_CONTEXT,   /**< jump and exit context */
 
+  VM_OC_CREATE_BINDING,          /**< create variables */
+  VM_OC_SET_BYTECODE_PTR,        /**< setting bytecode pointer */
+  VM_OC_VAR_EVAL,                /**< variable and function evaluation */
+  VM_OC_INIT_LOCAL,              /**< initialize local variable */
+
 #if ENABLED (JERRY_DEBUGGER)
   VM_OC_BREAKPOINT_ENABLED,      /**< enabled breakpoint for debugger */
   VM_OC_BREAKPOINT_DISABLED,     /**< disabled breakpoint for debugger */
@@ -224,7 +229,6 @@ typedef enum
   VM_OC_LINE,                    /**< line number of the next statement */
 #endif /* ENABLED (JERRY_LINE_INFO) */
 #if ENABLED (JERRY_ES2015)
-  VM_OC_INIT_LOCALS,             /**< call vm_init_loop() */
   VM_OC_ASSIGN_LET_CONST,        /**< assign values to let/const declarations */
   VM_OC_COPY_TO_GLOBAL,          /**< copy value to global lex env */
   VM_OC_CLONE_CONTEXT,           /**< clone lexical environment with let/const declarations */
@@ -282,7 +286,6 @@ typedef enum
   VM_OC_LINE = VM_OC_NONE,                    /**< line number of the next statement is unused */
 #endif /* !ENABLED (JERRY_LINE_INFO) */
 #if !ENABLED (JERRY_ES2015)
-  VM_OC_INIT_LOCALS = VM_OC_NONE,             /**< call vm_init_loop() */
   VM_OC_ASSIGN_LET_CONST = VM_OC_NONE,        /**< assign values to let/const declarations */
   VM_OC_COPY_TO_GLOBAL = VM_OC_NONE,          /**< copy value to global lex env */
   VM_OC_CLONE_CONTEXT = VM_OC_NONE,           /**< clone lexical environment with let/const declarations */

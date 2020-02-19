@@ -2257,6 +2257,28 @@ ecma_builtin_array_prototype_fill (ecma_value_t value, /**< value */
     }
   }
 
+  if (ecma_op_object_is_fast_array (obj_p))
+  {
+    ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
+
+    if (ext_obj_p->u.array.u.hole_count < ECMA_FAST_ARRAY_HOLE_ONE
+        && len != 0
+        && ecma_op_ordinary_object_is_extensible (obj_p))
+    {
+      ecma_value_t *buffer_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, obj_p->u1.property_list_cp);
+
+      while (k < final)
+      {
+        ecma_free_value_if_not_object (buffer_p[k]);
+        buffer_p[k] = ecma_copy_value_if_not_object (value);
+        k++;
+      }
+
+      ecma_ref_object (obj_p);
+      return ecma_make_object_value (obj_p);
+    }
+  }
+
   /* 11. */
   while (k < final)
   {

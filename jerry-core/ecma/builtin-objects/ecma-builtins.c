@@ -15,6 +15,7 @@
 
 #include "ecma-alloc.h"
 #include "ecma-builtins.h"
+#include "ecma-exceptions.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
@@ -1020,15 +1021,12 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-in object' identifier */
-                               uint16_t builtin_routine_id, /**< builtin-wide identifier
-                                                             *   of the built-in object's
-                                                             *   routine property */
+ecma_builtin_dispatch_routine (ecma_extended_object_t *func_obj_p, /**< builtin object */
                                ecma_value_t this_arg_value, /**< 'this' argument value */
                                const ecma_value_t *arguments_list_p, /**< list of arguments passed to routine */
                                ecma_length_t arguments_list_len) /**< length of arguments' list */
 {
-  JERRY_ASSERT (builtin_object_id < ECMA_BUILTIN_ID__COUNT);
+  JERRY_ASSERT (ecma_builtin_function_is_routine ((ecma_object_t *) func_obj_p));
 
   ecma_value_t padded_arguments_list_p[3] = { ECMA_VALUE_UNDEFINED, ECMA_VALUE_UNDEFINED, ECMA_VALUE_UNDEFINED };
 
@@ -1055,10 +1053,10 @@ ecma_builtin_dispatch_routine (ecma_builtin_id_t builtin_object_id, /**< built-i
     arguments_list_p = padded_arguments_list_p;
   }
 
-  return ecma_builtin_routines[builtin_object_id] (builtin_routine_id,
-                                                   this_arg_value,
-                                                   arguments_list_p,
-                                                   arguments_list_len);
+  return ecma_builtin_routines[func_obj_p->u.built_in.id] (func_obj_p->u.built_in.routine_id,
+                                                           this_arg_value,
+                                                           arguments_list_p,
+                                                           arguments_list_len);
 } /* ecma_builtin_dispatch_routine */
 
 /**
@@ -1075,27 +1073,19 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION);
   JERRY_ASSERT (ecma_get_object_is_builtin (obj_p));
 
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
 
   if (ecma_builtin_function_is_routine (obj_p))
   {
-    ret_value = ecma_builtin_dispatch_routine (ext_obj_p->u.built_in.id,
-                                               ext_obj_p->u.built_in.routine_id,
-                                               this_arg_value,
-                                               arguments_list_p,
-                                               arguments_list_len);
-  }
-  else
-  {
-    ecma_builtin_id_t builtin_object_id = ext_obj_p->u.built_in.id;
-    JERRY_ASSERT (builtin_object_id < sizeof (ecma_builtin_call_functions) / sizeof (ecma_builtin_dispatch_call_t));
-    return ecma_builtin_call_functions[builtin_object_id] (arguments_list_p, arguments_list_len);
+    return ecma_builtin_dispatch_routine (ext_obj_p,
+                                          this_arg_value,
+                                          arguments_list_p,
+                                          arguments_list_len);
   }
 
-  JERRY_ASSERT (!ecma_is_value_empty (ret_value));
-
-  return ret_value;
+  ecma_builtin_id_t builtin_object_id = ext_obj_p->u.built_in.id;
+  JERRY_ASSERT (builtin_object_id < sizeof (ecma_builtin_call_functions) / sizeof (ecma_builtin_dispatch_call_t));
+  return ecma_builtin_call_functions[builtin_object_id] (arguments_list_p, arguments_list_len);
 } /* ecma_builtin_dispatch_call */
 
 /**
@@ -1105,16 +1095,36 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
  */
 ecma_value_t
 ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
+                                 ecma_object_t *new_target_p, /**< new target */
                                  const ecma_value_t *arguments_list_p, /**< arguments list */
                                  ecma_length_t arguments_list_len) /**< arguments list length */
 {
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION);
   JERRY_ASSERT (ecma_get_object_is_builtin (obj_p));
 
+  if (ecma_builtin_function_is_routine (obj_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Built-in routines have no constructor."));
+  }
+
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
   ecma_builtin_id_t builtin_object_id = ext_obj_p->u.built_in.id;
   JERRY_ASSERT (builtin_object_id < sizeof (ecma_builtin_construct_functions) / sizeof (ecma_builtin_dispatch_call_t));
-  return ecma_builtin_construct_functions[builtin_object_id] (arguments_list_p, arguments_list_len);
+
+#if ENABLED (JERRY_ES2015)
+  ecma_object_t *old_new_target = JERRY_CONTEXT (current_new_target);
+  JERRY_CONTEXT (current_new_target) = new_target_p;
+#else /* !ENABLED (JERRY_ES2015) */
+  JERRY_UNUSED (new_target_p);
+#endif /* ENABLED (JERRY_ES2015) */
+
+  ecma_value_t ret_value = ecma_builtin_construct_functions[builtin_object_id] (arguments_list_p, arguments_list_len);
+
+#if ENABLED (JERRY_ES2015)
+  JERRY_CONTEXT (current_new_target) = old_new_target;
+#endif /* ENABLED (JERRY_ES2015) */
+
+  return ret_value;
 } /* ecma_builtin_dispatch_construct */
 
 /**

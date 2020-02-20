@@ -1696,7 +1696,7 @@ ecma_regexp_split_helper (ecma_value_t this_arg, /**< this value */
 
   /* 13-14. */
   ecma_value_t arguments[] = { this_arg, ecma_make_string_value (flags_str_p) };
-  ecma_value_t splitter = ecma_op_function_construct (constructor_obj_p, ECMA_VALUE_UNDEFINED, arguments, 2);
+  ecma_value_t splitter = ecma_op_function_construct (constructor_obj_p, constructor_obj_p, arguments, 2);
 
   ecma_deref_ecma_string (flags_str_p);
   ecma_deref_object (constructor_obj_p);

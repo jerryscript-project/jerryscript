@@ -901,64 +901,6 @@ parser_parse_with_statement_end (parser_context_t *context_p) /**< context */
   parser_set_branch_to_current_position (context_p, &with_statement.branch);
 } /* parser_parse_with_statement_end */
 
-#if ENABLED (JERRY_ES2015)
-/**
- * Parse super class context like a with statement (starting part).
- */
-void
-parser_parse_super_class_context_start (parser_context_t *context_p) /**< context */
-{
-  JERRY_ASSERT (context_p->token.type == LEXER_KEYW_EXTENDS
-                || (context_p->status_flags & PARSER_CLASS_HAS_SUPER));
-  parser_with_statement_t with_statement;
-
-  if (context_p->token.type == LEXER_KEYW_EXTENDS)
-  {
-    lexer_next_token (context_p);
-
-    parser_parse_expression (context_p, PARSE_EXPR | PARSE_EXPR_LEFT_HAND_SIDE);
-  }
-  else
-  {
-    JERRY_ASSERT (context_p->status_flags & PARSER_CLASS_HAS_SUPER);
-    parser_emit_cbc (context_p, CBC_PUSH_NULL);
-    context_p->status_flags |= PARSER_CLASS_IMPLICIT_SUPER;
-  }
-
-#ifndef JERRY_NDEBUG
-  PARSER_PLUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_SUPER_CLASS_CONTEXT_STACK_ALLOCATION);
-#endif /* !JERRY_NDEBUG */
-
-  context_p->status_flags |= PARSER_CLASS_HAS_SUPER;
-  parser_emit_cbc_ext_forward_branch (context_p,
-                                      CBC_EXT_SUPER_CLASS_CREATE_CONTEXT,
-                                      &with_statement.branch);
-
-  parser_stack_push (context_p, &with_statement, sizeof (parser_with_statement_t));
-  parser_stack_push_uint8 (context_p, PARSER_STATEMENT_WITH);
-} /* parser_parse_super_class_context_start */
-
-/**
- * Parse super class context like a with statement (ending part).
- */
-void
-parser_parse_super_class_context_end (parser_context_t *context_p) /**< context */
-{
-  parser_with_statement_t with_statement;
-  parser_stack_pop_uint8 (context_p);
-  parser_stack_pop (context_p, &with_statement, sizeof (parser_with_statement_t));
-
-  parser_flush_cbc (context_p);
-  PARSER_MINUS_EQUAL_U16 (context_p->stack_depth, PARSER_SUPER_CLASS_CONTEXT_STACK_ALLOCATION);
-#ifndef JERRY_NDEBUG
-  PARSER_MINUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_SUPER_CLASS_CONTEXT_STACK_ALLOCATION);
-#endif /* !JERRY_NDEBUG */
-
-  parser_emit_cbc_ext (context_p, CBC_EXT_CLASS_EXPR_CONTEXT_END);
-  parser_set_branch_to_current_position (context_p, &with_statement.branch);
-} /* parser_parse_super_class_context_end */
-#endif /* ENABLED (JERRY_ES2015) */
-
 /**
  * Parse do-while statement (ending part).
  */
@@ -2958,7 +2900,12 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 
       case LEXER_KEYW_RETURN:
       {
-        if (!(context_p->status_flags & PARSER_IS_FUNCTION))
+        uint32_t status_flag = PARSER_IS_FUNCTION;
+#if ENABLED (JERRY_ES2015)
+        status_flag |= PARSER_IS_ARROW_FUNCTION;
+#endif /* ENABLED (JERRY_ES2015) */
+
+        if (!(context_p->status_flags & status_flag))
         {
           parser_raise_error (context_p, PARSER_ERR_INVALID_RETURN);
         }
@@ -2971,20 +2918,6 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
             || context_p->token.type == LEXER_RIGHT_BRACE)
         {
 #if ENABLED (JERRY_ES2015)
-          if (JERRY_UNLIKELY (PARSER_IS_CLASS_CONSTRUCTOR_SUPER (context_p->status_flags)))
-          {
-            if (context_p->status_flags & PARSER_CLASS_IMPLICIT_SUPER)
-            {
-              parser_emit_cbc (context_p, CBC_PUSH_THIS);
-            }
-            else
-            {
-              parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_CONSTRUCTOR_THIS);
-            }
-            parser_emit_cbc (context_p, CBC_RETURN);
-            break;
-          }
-
           if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
           {
             parser_emit_cbc (context_p, CBC_PUSH_UNDEFINED);
@@ -3000,12 +2933,6 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
         parser_parse_expression (context_p, PARSE_EXPR);
 
 #if ENABLED (JERRY_ES2015)
-        if (JERRY_UNLIKELY (PARSER_IS_CLASS_CONSTRUCTOR_SUPER (context_p->status_flags)))
-        {
-          parser_emit_cbc_ext (context_p, CBC_EXT_CONSTRUCTOR_RETURN);
-          break;
-        }
-
         if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
         {
           parser_emit_cbc_ext (context_p, CBC_EXT_RETURN_PROMISE);
@@ -3174,22 +3101,6 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 #endif /* !JERRY_NDEBUG */
           /* There is no lexer_next_token here, since the
            * next token belongs to the parent context. */
-
-#if ENABLED (JERRY_ES2015)
-          if (JERRY_UNLIKELY (PARSER_IS_CLASS_CONSTRUCTOR_SUPER (context_p->status_flags)))
-          {
-            if (context_p->status_flags & PARSER_CLASS_IMPLICIT_SUPER)
-            {
-              parser_emit_cbc (context_p, CBC_PUSH_THIS);
-            }
-            else
-            {
-              parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_CONSTRUCTOR_THIS);
-            }
-            parser_emit_cbc (context_p, CBC_RETURN);
-            parser_flush_cbc (context_p);
-          }
-#endif /* ENABLED (JERRY_ES2015) */
           return;
         }
         parser_raise_error (context_p, PARSER_ERR_INVALID_RIGHT_SQUARE);

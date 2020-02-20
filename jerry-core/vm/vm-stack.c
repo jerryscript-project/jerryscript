@@ -29,8 +29,6 @@
 
 JERRY_STATIC_ASSERT (PARSER_WITH_CONTEXT_STACK_ALLOCATION == PARSER_BLOCK_CONTEXT_STACK_ALLOCATION,
                      parser_with_context_stack_allocation_must_be_equal_to_parser_block_context_stack_allocation);
-JERRY_STATIC_ASSERT (PARSER_WITH_CONTEXT_STACK_ALLOCATION == PARSER_SUPER_CLASS_CONTEXT_STACK_ALLOCATION,
-                     parser_with_context_stack_allocation_must_be_equal_to_parser_super_class_context_stack_allocation);
 
 /**
  * Abort (finalize) the current stack context, and remove it.
@@ -69,7 +67,6 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
     }
 #if ENABLED (JERRY_ES2015)
     case VM_CONTEXT_BLOCK:
-    case VM_CONTEXT_SUPER_CLASS:
 #endif /* ENABLED (JERRY_ES2015) */
     case VM_CONTEXT_WITH:
     {
@@ -315,7 +312,6 @@ vm_get_context_value_offsets (ecma_value_t *context_item_p) /**< any item of a c
     }
 #if ENABLED (JERRY_ES2015)
     case VM_CONTEXT_BLOCK:
-    case VM_CONTEXT_SUPER_CLASS:
 #endif /* ENABLED (JERRY_ES2015) */
     case VM_CONTEXT_WITH:
     {

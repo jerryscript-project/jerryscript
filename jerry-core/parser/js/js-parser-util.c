@@ -153,6 +153,8 @@ parser_flush_cbc (parser_context_t *context_p) /**< context */
     return;
   }
 
+  JERRY_ASSERT (last_opcode != PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_SUPER));
+
   context_p->status_flags |= PARSER_NO_END_LABEL;
 
   if (PARSER_IS_BASIC_OPCODE (last_opcode))
@@ -1154,7 +1156,7 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Classes may not have a static property called 'prototype'.";
     }
-    case PARSER_ERR_UNEXPECTED_SUPER_REFERENCE:
+    case PARSER_ERR_UNEXPECTED_SUPER_KEYWORD:
     {
       return "Super is not allowed to be used here.";
     }

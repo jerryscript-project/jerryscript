@@ -536,7 +536,7 @@ ecma_typedarray_create_object_with_length (ecma_length_t array_length, /**< leng
 
     ecma_value_t byte_length_val = ecma_make_uint32_value (byte_length);
     ecma_value_t new_arraybuffer = ecma_op_function_construct (ctor_proto_p,
-                                                               ECMA_VALUE_UNDEFINED,
+                                                               ctor_proto_p,
                                                                &byte_length_val,
                                                                1);
     ecma_deref_object (ctor_proto_p);

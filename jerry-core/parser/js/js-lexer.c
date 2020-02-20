@@ -2762,9 +2762,8 @@ lexer_expect_identifier (parser_context_t *context_p, /**< context */
      * In this case we use a synthetic name for them. */
     context_p->token.type = LEXER_LITERAL;
     context_p->token.keyword_type = LEXER_EOS;
-    context_p->token.lit_location.type = LEXER_IDENT_LITERAL;
-    context_p->token.lit_location.has_escape = false;
-    lexer_construct_literal_object (context_p, &lexer_default_literal, literal_type);
+    context_p->token.lit_location = lexer_default_literal;
+    lexer_construct_literal_object (context_p, &context_p->token.lit_location, literal_type);
     context_p->status_flags &= (uint32_t) ~(PARSER_MODULE_DEFAULT_CLASS_OR_FUNC);
     return;
   }
@@ -2917,6 +2916,7 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
     if (is_class_method && lexer_compare_literal_to_string (context_p, "constructor", 11))
     {
       context_p->token.type = LEXER_CLASS_CONSTRUCTOR;
+      context_p->token.flags &= (uint8_t) ~LEXER_NO_SKIP_SPACES;
       return;
     }
 #endif /* ENABLED (JERRY_ES2015) */

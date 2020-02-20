@@ -427,6 +427,144 @@ ecma_op_create_immutable_binding (ecma_object_t *lex_env_p, /**< lexical environ
   prop_value_p->value = ecma_copy_value_if_not_object (value);
 } /* ecma_op_create_immutable_binding */
 
+#if ENABLED (JERRY_ES2015)
+/**
+ * InitializeBinding operation.
+ *
+ * See also: ECMA-262 v6, 8.1.1.1.4
+ */
+void
+ecma_op_initialize_binding (ecma_object_t *lex_env_p, /**< lexical environment */
+                            ecma_string_t *name_p, /**< argument N */
+                            ecma_value_t value) /**< argument V */
+{
+  JERRY_ASSERT (lex_env_p != NULL
+                && ecma_is_lexical_environment (lex_env_p));
+  JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
+
+  ecma_property_t *prop_p = ecma_find_named_property (lex_env_p, name_p);
+  JERRY_ASSERT (prop_p != NULL);
+  JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA);
+
+  ecma_property_value_t *prop_value_p = ECMA_PROPERTY_VALUE_PTR (prop_p);
+  JERRY_ASSERT (prop_value_p->value == ECMA_VALUE_UNINITIALIZED);
+
+  prop_value_p->value = ecma_copy_value_if_not_object (value);
+} /* ecma_op_initialize_binding */
+
+/**
+ * BindThisValue operation for an empty lexical environment
+ *
+ * See also: ECMA-262 v6, 8.1.1.3.1
+ */
+void
+ecma_op_init_this_binding (ecma_object_t *lex_env_p, /**< lexical environment */
+                           ecma_value_t this_binding) /**< this binding value */
+{
+  JERRY_ASSERT (lex_env_p != NULL);
+  JERRY_ASSERT (ecma_is_value_object (this_binding) || this_binding == ECMA_VALUE_UNINITIALIZED);
+  ecma_string_t *prop_name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_THIS_BINDING_VALUE);
+
+  ecma_property_value_t *prop_value_p = ecma_create_named_data_property (lex_env_p,
+                                                                         prop_name_p,
+                                                                         ECMA_PROPERTY_FIXED,
+                                                                         NULL);
+  prop_value_p->value = this_binding;
+} /* ecma_op_init_this_binding */
+
+/**
+ * GetThisEnvironment operation.
+ *
+ * See also: ECMA-262 v6, 8.3.2
+ *
+ * @return property pointer for the internal [[ThisBindingValue]] property
+ */
+ecma_property_t *
+ecma_op_get_this_property (ecma_object_t *lex_env_p) /**< lexical environment */
+{
+  JERRY_ASSERT (lex_env_p != NULL);
+
+  ecma_string_t *prop_name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_THIS_BINDING_VALUE);
+  while (true)
+  {
+    if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
+    {
+      ecma_property_t *prop_p = ecma_find_named_property (lex_env_p, prop_name_p);
+
+      if (prop_p != NULL)
+      {
+        return prop_p;
+      }
+    }
+
+    JERRY_ASSERT (lex_env_p->u2.outer_reference_cp != JMEM_CP_NULL);
+    lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
+  }
+} /* ecma_op_get_this_property */
+
+/**
+ * GetThisBinding operation.
+ *
+ * See also: ECMA-262 v6, 8.1.1.3.4
+ *
+ * @return ECMA_VALUE_ERROR - if the operation fails
+ *         ecma-object - otherwise
+ */
+ecma_value_t
+ecma_op_get_this_binding (ecma_object_t *lex_env_p) /**< lexical environment */
+{
+  JERRY_ASSERT (lex_env_p != NULL);
+
+  ecma_property_t *prop_p = ecma_op_get_this_property (lex_env_p);
+  JERRY_ASSERT (prop_p != NULL);
+
+  ecma_value_t this_value = ECMA_PROPERTY_VALUE_PTR (prop_p)->value;
+
+  if (this_value == ECMA_VALUE_UNINITIALIZED)
+  {
+    return ecma_raise_reference_error (ECMA_ERR_MSG ("Must call super constructor in derived class before "
+                                                     "accessing 'this' or returning from it."));
+  }
+
+  ecma_ref_object (ecma_get_object_from_value (this_value));
+
+  return this_value;
+} /* ecma_op_get_this_binding */
+
+/**
+ * BindThisValue operation.
+ *
+ * See also: ECMA-262 v6, 8.1.1.3.1
+ */
+void
+ecma_op_bind_this_value (ecma_property_t *prop_p, /**< [[ThisBindingValue]] internal property */
+                         ecma_value_t this_binding) /**< this binding value */
+{
+  JERRY_ASSERT (prop_p != NULL);
+  JERRY_ASSERT (ecma_is_value_object (this_binding));
+  JERRY_ASSERT (!ecma_op_this_binding_is_initialized (prop_p));
+
+  ECMA_PROPERTY_VALUE_PTR (prop_p)->value = this_binding;
+} /* ecma_op_bind_this_value */
+
+/**
+ * Get the environment record [[ThisBindingStatus]] internal property.
+ *
+ * See also: ECMA-262 v6, 8.1.1.3
+ *
+ * @return true - if the status is "initialzed"
+ *         false - otherwise
+ */
+bool
+ecma_op_this_binding_is_initialized (ecma_property_t *prop_p) /**< [[ThisBindingValue]] internal property */
+{
+  JERRY_ASSERT (prop_p != NULL);
+
+  return ECMA_PROPERTY_VALUE_PTR (prop_p)->value != ECMA_VALUE_UNINITIALIZED;
+} /* ecma_op_this_binding_is_initialized */
+
+#endif /* ENABLED (JERRY_ES2015) */
+
 /**
  * @}
  * @}

@@ -145,6 +145,45 @@ ecma_collection_push_back (ecma_collection_t *collection_p, /**< value collectio
 } /* ecma_collection_push_back */
 
 /**
+ * Reserve space for the given amount of ecma_values in the collection
+ */
+void
+ecma_collection_reserve (ecma_collection_t *collection_p, /**< value collection */
+                         uint32_t count) /**< number of ecma values to reserve */
+{
+  JERRY_ASSERT (collection_p != NULL);
+  JERRY_ASSERT (UINT32_MAX - count > collection_p->capacity);
+
+  const uint32_t new_capacity = collection_p->capacity + count;
+  const uint32_t old_size = ECMA_COLLECTION_ALLOCATED_SIZE (collection_p->capacity);
+  const uint32_t new_size = ECMA_COLLECTION_ALLOCATED_SIZE (new_capacity);
+
+  ecma_value_t *buffer_p = collection_p->buffer_p;
+  buffer_p = jmem_heap_realloc_block (buffer_p, old_size, new_size);
+
+  collection_p->capacity = new_capacity;
+  collection_p->buffer_p = buffer_p;
+} /* ecma_collection_reserve */
+
+/**
+ * Append a list of values to the end of the collection
+ */
+void
+ecma_collection_append (ecma_collection_t *collection_p, /**< value collection */
+                        const ecma_value_t *buffer_p, /**< values to append */
+                        uint32_t count) /**< number of ecma values to append */
+{
+  JERRY_ASSERT (collection_p != NULL);
+  if (collection_p->capacity - collection_p->item_count > count)
+  {
+    ecma_collection_reserve (collection_p, count);
+  }
+
+  memcpy (collection_p->buffer_p + collection_p->item_count, buffer_p, count * sizeof (ecma_value_t));
+  collection_p->item_count += count;
+} /* ecma_collection_append */
+
+/**
  * @}
  * @}
  */

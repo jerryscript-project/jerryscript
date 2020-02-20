@@ -106,9 +106,9 @@ ecma_proxy_object_call (ecma_object_t *obj_p,
 
 ecma_value_t
 ecma_proxy_object_construct (ecma_object_t *obj_p,
+                             ecma_object_t *new_target_p,
                              const ecma_value_t *args_p,
-                             ecma_length_t argc,
-                             ecma_value_t new_target);
+                             ecma_length_t argc);
 
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
 

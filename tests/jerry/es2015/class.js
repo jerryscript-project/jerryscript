@@ -258,3 +258,77 @@ assert (G.get() == 11);
 assert (G.set() == 12);
 G.constructor = 30;
 assert (G.constructor === 30);
+
+class H {
+  method() { assert (typeof H === 'function'); return H; }
+}
+
+let H_original = H;
+var H_method = H.prototype.method;
+C = undefined;
+assert(C === undefined);
+C = H_method();
+assert(C === H_original);
+
+var I = class C {
+  method() { assert(typeof C === 'function'); return C; }
+}
+
+let I_original = I;
+var I_method = I.prototype.method;
+I = undefined;
+assert(I === undefined);
+I = I_method();
+assert(I == I_original);
+
+var J_method;
+class J {
+  static [(J_method = eval('(function() { return J; })'), "X")]() {}
+}
+var J_original = J;
+J = 6;
+assert (J_method() == J_original);
+
+var K_method;
+class K {
+  constructor () {
+    K_method = function() { return K; }
+  }
+}
+var K_original = K;
+new K;
+K = 6;
+assert (K_method() == K_original);
+
+var L_method;
+class L extends (L_method = function() { return L; }) {
+}
+var L_original = L;
+L = 6;
+assert (L_method() == L_original);
+
+/* Test cleanup class environment */
+try {
+  class A {
+    [d]() {}
+  }
+  let d;
+  assert(false);
+} catch (e) {
+  assert(e instanceof ReferenceError);
+}
+
+try {
+  class A extends d {}
+  let d;
+  assert(false);
+} catch (e) {
+  assert(e instanceof ReferenceError);
+}
+try {
+  var a = 1 + 2 * 3 >> class A extends d {};
+  let d;
+  assert(false);
+} catch (e) {
+  assert(e instanceof ReferenceError);
+}

@@ -35,7 +35,7 @@ assert (secretArray instanceof Array);
 assert (!([] instanceof mySecretArray));
 
 /* Add a new element to the bound function chain */
-class myEpicSecretArray extends myArray { };
+class myEpicSecretArray extends mySecretArray { };
 
 var epicSecretArray = new myEpicSecretArray (1, 2, 3);
 epicSecretArray.push (4);

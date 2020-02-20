@@ -111,15 +111,14 @@ typedef enum
   ECMA_PARSE_EVAL = (1u << 2), /**< eval is called */
   ECMA_PARSE_DIRECT_EVAL = (1u << 3), /**< eval is called directly (ECMA-262 v5, 15.1.2.1.1) */
 
-  /* These four status flags must be in this order. See PARSER_CLASS_PARSE_OPTS_OFFSET. */
+  /* These three status flags must be in this order. See PARSER_SAVED_FLAGS_OFFSET. */
   ECMA_PARSE_CLASS_CONSTRUCTOR = (1u << 4), /**< a class constructor is being parsed (this value must be kept in
                                              *   in sync with PARSER_CLASS_CONSTRUCTOR) */
-  ECMA_PARSE_HAS_SUPER = (1u << 5), /**< the current context has super reference */
-  ECMA_PARSE_HAS_IMPL_SUPER = (1u << 6), /**< the current context has implicit parent class */
-  ECMA_PARSE_HAS_STATIC_SUPER = (1u << 7), /**< the current context is a static class method */
+  ECMA_PARSE_ALLOW_SUPER = (1u << 5), /**< allow super property access */
+  ECMA_PARSE_ALLOW_SUPER_CALL = (1u << 6), /**< allow super constructor call */
 
-  ECMA_PARSE_CALLED_FROM_FUNCTION = (1u << 8), /**< a function body is parsed or the code is inside a function */
-  ECMA_PARSE_GENERATOR_FUNCTION = (1u << 9), /**< generator function is parsed */
+  ECMA_PARSE_CALLED_FROM_FUNCTION = (1u << 7), /**< a function body is parsed or the code is inside a function */
+  ECMA_PARSE_GENERATOR_FUNCTION = (1u << 8), /**< generator function is parsed */
 
   /* These flags are internally used by the parser. */
 } ecma_parse_opts_t;
@@ -195,7 +194,8 @@ enum
                                                *   ecma_op_object_find */
   ECMA_VALUE_REGISTER_REF = ECMA_MAKE_VALUE (8), /**< register reference,
                                                   *   a special "base" value for vm */
-  ECMA_VALUE_IMPLICIT_CONSTRUCTOR = ECMA_MAKE_VALUE (9), /**< special value for bound class constructors */
+  ECMA_VALUE_RELEASE_LEX_ENV = ECMA_MAKE_VALUE (9), /**< if this error remains on the stack when an exception occours
+                                                         the top lexical environment of the VM frame should be popped */
   ECMA_VALUE_UNINITIALIZED = ECMA_MAKE_VALUE (10), /**< a special value for uninitialized let/const declarations */
   ECMA_VALUE_SPREAD_ELEMENT = ECMA_MAKE_VALUE (11), /**< a special value for spread elements in array initialization
                                                      *   or function call argument list */
@@ -661,12 +661,12 @@ typedef enum
   ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE = 13, /**< declarative lexical environment */
   ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND = 14, /**< object-bound lexical environment
                                                     *   with provideThis flag */
-  ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND = 15, /**< object-bound lexical environment
-                                                     *   with provided super reference */
+  ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND = 15, /**< object-bound lexical environment
+                                                     *  with provided home object reference */
 
   ECMA_LEXICAL_ENVIRONMENT_TYPE_START = ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE, /**< first lexical
                                                                                *   environment type */
-  ECMA_LEXICAL_ENVIRONMENT_TYPE__MAX = ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND /**< maximum value */
+  ECMA_LEXICAL_ENVIRONMENT_TYPE__MAX = ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND /**< maximum value */
 } ecma_lexical_environment_type_t;
 
 #if ENABLED (JERRY_ES2015)
@@ -686,29 +686,29 @@ typedef enum
 /**
  * Offset for JERRY_CONTEXT (status_flags) top 8 bits.
  */
-#define ECMA_SUPER_EVAL_OPTS_OFFSET (32 - 8)
+#define ECMA_LOCAL_PARSE_OPTS_OFFSET ((sizeof (uint32_t) - sizeof (uint8_t)) * JERRY_BITSINBYTE)
 
 /**
  * Set JERRY_CONTEXT (status_flags) top 8 bits to the specified 'opts'.
  */
-#define ECMA_SET_SUPER_EVAL_PARSER_OPTS(opts) \
+#define ECMA_SET_LOCAL_PARSE_OPTS(opts) \
   do \
   { \
-    JERRY_CONTEXT (status_flags) |= ((uint32_t) opts << ECMA_SUPER_EVAL_OPTS_OFFSET) | ECMA_STATUS_DIRECT_EVAL; \
+    JERRY_CONTEXT (status_flags) |= ((uint32_t) opts << ECMA_LOCAL_PARSE_OPTS_OFFSET) | ECMA_STATUS_DIRECT_EVAL; \
   } while (0)
 
 /**
  * Get JERRY_CONTEXT (status_flags) top 8 bits.
  */
-#define ECMA_GET_SUPER_EVAL_PARSER_OPTS() (JERRY_CONTEXT (status_flags) >> ECMA_SUPER_EVAL_OPTS_OFFSET)
+#define ECMA_GET_LOCAL_PARSE_OPTS() (JERRY_CONTEXT (status_flags) >> ECMA_LOCAL_PARSE_OPTS_OFFSET)
 
 /**
  * Clear JERRY_CONTEXT (status_flags) top 8 bits.
  */
-#define ECMA_CLEAR_SUPER_EVAL_PARSER_OPTS() \
+#define ECMA_CLEAR_LOCAL_PARSE_OPTS() \
   do \
   { \
-    JERRY_CONTEXT (status_flags) &= ((1 << ECMA_SUPER_EVAL_OPTS_OFFSET) - 1); \
+    JERRY_CONTEXT (status_flags) &= ((1 << ECMA_LOCAL_PARSE_OPTS_OFFSET) - 1); \
   } while (0)
 
 /**
@@ -778,8 +778,9 @@ typedef struct
   union
   {
     jmem_cpointer_t property_list_cp; /**< compressed pointer to object's
-                                       *  or declerative lexical environments's property list */
+                                       *   or declerative lexical environments's property list */
     jmem_cpointer_t bound_object_cp;  /**< compressed pointer to lexical environments's the bound object */
+    jmem_cpointer_t home_object_cp;   /**< compressed pointer to lexical environments's the home object */
   } u1;
 
   /** object prototype or outer reference */
@@ -961,6 +962,7 @@ typedef struct
 {
   ecma_extended_object_t header; /**< extended object header */
   ecma_value_t this_binding; /**< value of 'this' binding */
+  ecma_value_t new_target; /**< value of new.target */
 } ecma_arrow_function_t;
 
 #if ENABLED (JERRY_SNAPSHOT_EXEC)

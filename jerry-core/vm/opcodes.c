@@ -27,6 +27,7 @@
 #include "ecma-lex-env.h"
 #include "ecma-objects.h"
 #include "ecma-promise-object.h"
+#include "ecma-proxy-object.h"
 #include "ecma-try-catch-macro.h"
 #include "jcontext.h"
 #include "opcodes.h"
@@ -756,6 +757,466 @@ opfunc_return_promise (ecma_value_t value) /**< value */
   return result;
 } /* opfunc_return_promise */
 
+/**
+ * Implicit class constructor handler when the classHeritage is not present.
+ *
+ * See also: ECMAScript v6, 14.5.14.10.b.i
+ *
+ * @return ECMA_VALUE_ERROR - if the function was invoked without 'new'
+ *         ECMA_VALUE_UNDEFINED - otherwise
+ */
+static ecma_value_t
+ecma_op_implicit_constructor_handler_cb (const ecma_value_t function_obj, /**< the function itself */
+                                         const ecma_value_t this_val, /**< this_arg of the function */
+                                         const ecma_value_t args_p[], /**< argument list */
+                                         const ecma_length_t args_count) /**< argument number */
+{
+  JERRY_UNUSED_4 (function_obj, this_val, args_p, args_count);
+
+  if (JERRY_CONTEXT (current_new_target) == NULL)
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor cannot be invoked without 'new'."));
+  }
+
+  JERRY_ASSERT (JERRY_CONTEXT (current_new_target) != JERRY_CONTEXT_INVALID_NEW_TARGET);
+  return ECMA_VALUE_UNDEFINED;
+} /* ecma_op_implicit_constructor_handler_cb */
+
+/**
+ * Implicit class constructor handler when the classHeritage is present.
+ *
+ * See also: ECMAScript v6, 14.5.14.10.a.i
+ *
+ * @return ECMA_VALUE_ERROR - if the operation fails
+ *         result of the super call - otherwise
+ */
+static ecma_value_t
+ecma_op_implicit_constructor_handler_heritage_cb (const ecma_value_t function_obj, /**< the function itself */
+                                                  const ecma_value_t this_val, /**< this_arg of the function */
+                                                  const ecma_value_t args_p[], /**< argument list */
+                                                  const ecma_length_t args_count) /**< argument number */
+{
+  JERRY_UNUSED_4 (function_obj, this_val, args_p, args_count);
+
+  if (JERRY_CONTEXT (current_new_target) == NULL)
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor cannot be invoked without 'new'."));
+  }
+
+  JERRY_ASSERT (JERRY_CONTEXT (current_new_target) != JERRY_CONTEXT_INVALID_NEW_TARGET);
+
+  ecma_object_t *func_obj_p = ecma_get_object_from_value (function_obj);
+  ecma_value_t super_ctor = ecma_op_function_get_super_constructor (func_obj_p);
+
+  if (ECMA_IS_VALUE_ERROR (super_ctor))
+  {
+    return super_ctor;
+  }
+
+  ecma_object_t *super_ctor_p = ecma_get_object_from_value (super_ctor);
+
+  ecma_value_t result = ecma_op_function_construct (super_ctor_p,
+                                                    JERRY_CONTEXT (current_new_target),
+                                                    args_p,
+                                                    args_count);
+
+  if (ecma_is_value_object (result))
+  {
+    ecma_value_t proto_value = ecma_op_object_get_by_magic_id (JERRY_CONTEXT (current_new_target),
+                                                               LIT_MAGIC_STRING_PROTOTYPE);
+    if (ECMA_IS_VALUE_ERROR (proto_value))
+    {
+      ecma_free_value (result);
+      result = ECMA_VALUE_ERROR;
+    }
+    else if (ecma_is_value_object (proto_value))
+    {
+      ECMA_SET_POINTER (ecma_get_object_from_value (result)->u2.prototype_cp,
+                        ecma_get_object_from_value (proto_value));
+    }
+    ecma_free_value (proto_value);
+  }
+
+  ecma_deref_object (super_ctor_p);
+
+  return result;
+} /* ecma_op_implicit_constructor_handler_heritage_cb */
+
+/**
+ * Create implicit class constructor
+ *
+ * See also: ECMAScript v6, 14.5.14
+ *
+ * @return - new external function ecma-object
+ */
+ecma_value_t
+opfunc_create_implicit_class_constructor (uint8_t opcode) /**< current cbc opcode */
+{
+  /* 8. */
+  ecma_object_t *func_obj_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE),
+                                                  sizeof (ecma_extended_object_t),
+                                                  ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+
+  ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) func_obj_p;
+
+  /* 10.a.i */
+  if (opcode == CBC_EXT_PUSH_IMPLICIT_CONSTRUCTOR_HERITAGE)
+  {
+    ext_func_obj_p->u.external_handler_cb = ecma_op_implicit_constructor_handler_heritage_cb;
+  }
+  /* 10.b.i */
+  else
+  {
+    ext_func_obj_p->u.external_handler_cb = ecma_op_implicit_constructor_handler_cb;
+  }
+
+  return ecma_make_object_value (func_obj_p);
+} /* opfunc_create_implicit_class_constructor */
+
+/**
+ * Set the [[HomeObject]] attribute of the given functon object
+ */
+static inline void JERRY_ATTR_ALWAYS_INLINE
+opfunc_set_home_object (ecma_object_t *func_p, /**< function object */
+                        ecma_object_t *parent_env_p) /**< parent environment */
+{
+  if (ecma_get_object_type (func_p) == ECMA_OBJECT_TYPE_FUNCTION)
+  {
+    JERRY_ASSERT (!ecma_get_object_is_builtin (func_p));
+
+    ECMA_SET_NON_NULL_POINTER_TAG (((ecma_extended_object_t *) func_p)->u.function.scope_cp, parent_env_p, 0);
+  }
+} /* opfunc_set_home_object */
+
+/**
+ * ClassDefinitionEvaluation environment initialization part
+ *
+ * See also: ECMAScript v6, 14.5.14
+ *
+ * @return - ECMA_VALUE_ERROR - if the operation fails
+ *           ECMA_VALUE_EMPTY - otherwise
+ */
+void
+opfunc_push_class_environment (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
+                               ecma_value_t **vm_stack_top, /**< VM stack top */
+                               ecma_value_t class_name) /**< class name */
+{
+  JERRY_ASSERT (ecma_is_value_undefined (class_name) || ecma_is_value_string (class_name));
+  ecma_object_t *class_env_p = ecma_create_decl_lex_env (frame_ctx_p->lex_env_p);
+
+  /* 4.a */
+  if (!ecma_is_value_undefined (class_name))
+  {
+    ecma_op_create_immutable_binding (class_env_p,
+                                      ecma_get_string_from_value (class_name),
+                                      ECMA_VALUE_UNINITIALIZED);
+  }
+  frame_ctx_p->lex_env_p = class_env_p;
+
+  *(*vm_stack_top)++ = ECMA_VALUE_RELEASE_LEX_ENV;
+} /* opfunc_push_class_environment */
+
+/**
+ * ClassDefinitionEvaluation object initialization part
+ *
+ * See also: ECMAScript v6, 14.5.14
+ *
+ * @return - ECMA_VALUE_ERROR - if the operation fails
+ *           ECMA_VALUE_EMPTY - otherwise
+ */
+ecma_value_t
+opfunc_init_class (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
+                   ecma_value_t *stack_top_p) /**< stack top */
+{
+  /* 5.b, 6.e.ii */
+  ecma_object_t *ctor_parent_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
+  ecma_object_t *proto_parent_p = NULL;
+  bool free_proto_parent = false;
+
+  ecma_value_t super_class = stack_top_p[-2];
+  ecma_object_t *ctor_p = ecma_get_object_from_value (stack_top_p[-1]);
+
+  bool heritage_present = !ecma_is_value_array_hole (super_class);
+
+  /* 5. ClassHeritage opt is not present */
+  if (!heritage_present)
+  {
+    /* 5.a */
+    proto_parent_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
+  }
+  else if (!ecma_is_value_null (super_class))
+  {
+    /* 6.f, 6.g.i */
+    if (!ecma_is_constructor (super_class)
+        || ecma_op_function_is_generator (ecma_get_object_from_value (super_class)))
+    {
+      return ecma_raise_type_error ("Class extends value is not a constructor or null");
+    }
+
+    ecma_object_t *parent_p = ecma_get_object_from_value (super_class);
+
+    /* 6.g.ii */
+    ecma_value_t proto_parent = ecma_op_object_get_by_magic_id (parent_p, LIT_MAGIC_STRING_PROTOTYPE);
+
+    /* 6.g.iii */
+    if (ECMA_IS_VALUE_ERROR (proto_parent))
+    {
+      return proto_parent;
+    }
+
+    /* 6.g.iv */
+    if (ecma_is_value_object (proto_parent))
+    {
+      proto_parent_p = ecma_get_object_from_value (proto_parent);
+      free_proto_parent = true;
+    }
+    else if (ecma_is_value_null (proto_parent))
+    {
+      proto_parent_p = NULL;
+    }
+    else
+    {
+      return ecma_raise_type_error ("Property 'prototype' is not an object or null");
+    }
+
+    /* 6.g.v */
+    ctor_parent_p = parent_p;
+  }
+
+  /* 7. */
+  ecma_object_t *proto_p = ecma_create_object (proto_parent_p, 0, ECMA_OBJECT_TYPE_GENERAL);
+  ecma_value_t proto = ecma_make_object_value (proto_p);
+
+  ECMA_SET_POINTER (ctor_p->u2.prototype_cp, ctor_parent_p);
+
+  if (free_proto_parent)
+  {
+    ecma_deref_object (proto_parent_p);
+  }
+  ecma_free_value (super_class);
+
+  /* 16. */
+  ecma_property_value_t *property_value_p;
+  property_value_p = ecma_create_named_data_property (ctor_p,
+                                                      ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE),
+                                                      ECMA_PROPERTY_FIXED,
+                                                      NULL);
+  property_value_p->value = proto;
+
+  /* 18. */
+  property_value_p = ecma_create_named_data_property (proto_p,
+                                                      ecma_get_magic_string (LIT_MAGIC_STRING_CONSTRUCTOR),
+                                                      ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
+                                                      NULL);
+  property_value_p->value = ecma_make_object_value (ctor_p);
+
+  if (ecma_get_object_type (ctor_p) == ECMA_OBJECT_TYPE_FUNCTION)
+  {
+    ecma_object_t *proto_env_p = ecma_create_object_lex_env (frame_ctx_p->lex_env_p,
+                                                             proto_p,
+                                                             ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND);
+
+    ECMA_SET_NON_NULL_POINTER_TAG (((ecma_extended_object_t *) ctor_p)->u.function.scope_cp, proto_env_p, 0);
+
+    /* 15. set F’s [[ConstructorKind]] internal slot to "derived". */
+    if (heritage_present)
+    {
+      ECMA_SET_THIRD_BIT_TO_POINTER_TAG (((ecma_extended_object_t *) ctor_p)->u.function.scope_cp);
+    }
+
+    ecma_deref_object (proto_env_p);
+  }
+
+  stack_top_p[-2] = stack_top_p[-1];
+  stack_top_p[-1] = proto;
+
+  return ECMA_VALUE_EMPTY;
+} /* opfunc_init_class */
+
+/**
+ * Set [[Enumerable]] and [[HomeObject]] attributes for all class method
+ */
+static void
+opfunc_set_class_attributes (ecma_object_t *obj_p, /**< object */
+                             ecma_object_t *parent_env_p) /**< parent environment */
+{
+  jmem_cpointer_t prop_iter_cp = obj_p->u1.property_list_cp;
+
+#if ENABLED (JERRY_PROPRETY_HASHMAP)
+  if (prop_iter_cp != JMEM_CP_NULL)
+  {
+    ecma_property_header_t *prop_iter_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t, prop_iter_cp);
+    if (prop_iter_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP)
+    {
+      prop_iter_cp = prop_iter_p->next_property_cp;
+    }
+  }
+#endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
+
+  while (prop_iter_cp != JMEM_CP_NULL)
+  {
+    ecma_property_header_t *prop_iter_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t, prop_iter_cp);
+    JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
+
+    ecma_property_pair_t *property_pair_p = (ecma_property_pair_t *) prop_iter_p;
+
+    for (uint32_t index = 0; index < ECMA_PROPERTY_PAIR_ITEM_COUNT; index++)
+    {
+      uint8_t property = property_pair_p->header.types[index];
+
+      if (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_NAMEDDATA)
+      {
+        JERRY_ASSERT (ecma_is_value_object (property_pair_p->values[index].value));
+        if (ecma_is_property_enumerable (property))
+        {
+          property_pair_p->header.types[index] = (uint8_t) (property & ~ECMA_PROPERTY_FLAG_ENUMERABLE);
+          opfunc_set_home_object (ecma_get_object_from_value (property_pair_p->values[index].value), parent_env_p);
+        }
+      }
+      else if (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR)
+      {
+        ecma_property_value_t *accessor_objs_p = property_pair_p->values + index;
+
+        ecma_getter_setter_pointers_t *get_set_pair_p = ecma_get_named_accessor_property (accessor_objs_p);
+
+        if (get_set_pair_p->getter_cp != JMEM_CP_NULL)
+        {
+          opfunc_set_home_object (ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->getter_cp), parent_env_p);
+        }
+
+        if (get_set_pair_p->setter_cp != JMEM_CP_NULL)
+        {
+          opfunc_set_home_object (ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->setter_cp), parent_env_p);
+        }
+      }
+      else
+      {
+        JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_SPECIAL);
+
+        JERRY_ASSERT (property == ECMA_PROPERTY_TYPE_HASHMAP
+                      || property == ECMA_PROPERTY_TYPE_DELETED);
+      }
+    }
+
+    prop_iter_cp = prop_iter_p->next_property_cp;
+  }
+} /* opfunc_set_class_attributes */
+
+/**
+ * Pop the current lexical environment referenced by the frame context
+ */
+void
+opfunc_pop_lexical_environment (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
+{
+  ecma_object_t *outer_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, frame_ctx_p->lex_env_p->u2.outer_reference_cp);
+  ecma_deref_object (frame_ctx_p->lex_env_p);
+  frame_ctx_p->lex_env_p = outer_env_p;
+} /* opfunc_pop_lexical_environment */
+
+/**
+ * ClassDefinitionEvaluation finalization part
+ *
+ * See also: ECMAScript v6, 14.5.14
+ */
+void
+opfunc_finalize_class (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
+                       ecma_value_t **vm_stack_top_p, /**< current vm stack top */
+                       ecma_value_t class_name) /**< class name */
+{
+  JERRY_ASSERT (ecma_is_value_undefined (class_name) || ecma_is_value_string (class_name));
+  ecma_value_t *stack_top_p = *vm_stack_top_p;
+
+  ecma_object_t *ctor_p = ecma_get_object_from_value (stack_top_p[-2]);
+  ecma_object_t *proto_p = ecma_get_object_from_value (stack_top_p[-1]);
+
+  ecma_object_t *class_env_p = frame_ctx_p->lex_env_p;
+
+  /* 23.a */
+  if (!ecma_is_value_undefined (class_name))
+  {
+    ecma_op_initialize_binding (class_env_p, ecma_get_string_from_value (class_name), stack_top_p[-2]);
+  }
+
+  ecma_object_t *ctor_env_p = ecma_create_object_lex_env (class_env_p,
+                                                          ctor_p,
+                                                          ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND);
+  ecma_object_t *proto_env_p = ecma_create_object_lex_env (class_env_p,
+                                                           proto_p,
+                                                           ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND);
+
+  opfunc_set_class_attributes (ctor_p, ctor_env_p);
+  opfunc_set_class_attributes (proto_p, proto_env_p);
+
+  ecma_deref_object (proto_env_p);
+  ecma_deref_object (ctor_env_p);
+
+  opfunc_pop_lexical_environment (frame_ctx_p);
+
+  ecma_deref_object (proto_p);
+
+  /* only the current class remains on the stack */
+  JERRY_ASSERT (stack_top_p[-3] == ECMA_VALUE_RELEASE_LEX_ENV);
+  stack_top_p[-3] = stack_top_p[-2];
+  *vm_stack_top_p -= 2;
+} /* opfunc_finalize_class */
+
+/**
+ * MakeSuperPropertyReference operation
+ *
+ * See also: ECMAScript v6, 12.3.5.3
+ *
+ * @return ECMA_VALUE_ERROR - if the operation fails
+ *         ECMA_VALUE_EMPTY - otherwise
+ */
+ecma_value_t
+opfunc_form_super_reference (ecma_value_t **vm_stack_top_p, /**< current vm stack top */
+                             vm_frame_ctx_t *frame_ctx_p, /**< frame context */
+                             ecma_value_t prop_name, /**< property name to resolve */
+                             uint8_t opcode) /**< current cbc opcode */
+{
+  ecma_value_t parent = ecma_op_resolve_super_base (frame_ctx_p->lex_env_p);
+
+  if (ECMA_IS_VALUE_ERROR (parent))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot invoke nullable super method."));
+  }
+
+  if (ECMA_IS_VALUE_ERROR (ecma_op_check_object_coercible (parent)))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  ecma_object_t *parent_p = ecma_get_object_from_value (parent);
+  ecma_string_t *prop_name_p = ecma_op_to_prop_name (prop_name);
+
+  if (prop_name_p == NULL)
+  {
+    ecma_deref_object (parent_p);
+    return ECMA_VALUE_ERROR;
+  }
+
+  ecma_value_t result = ecma_op_object_get_with_receiver (parent_p, prop_name_p, frame_ctx_p->this_binding);
+  ecma_deref_ecma_string (prop_name_p);
+  ecma_deref_object (parent_p);
+
+  if (ECMA_IS_VALUE_ERROR (result))
+  {
+    return result;
+  }
+
+  ecma_value_t *stack_top_p = *vm_stack_top_p;
+
+  if (opcode == CBC_EXT_SUPER_PROP_LITERAL_CALL_REFERENCE || opcode == CBC_EXT_SUPER_PROP_CALL_REFERENCE)
+  {
+    *stack_top_p++ = ecma_copy_value (frame_ctx_p->this_binding);
+    *stack_top_p++ = ECMA_VALUE_UNDEFINED;
+  }
+
+  *stack_top_p++ = result;
+  *vm_stack_top_p = stack_top_p;
+
+  return ECMA_VALUE_EMPTY;
+} /* opfunc_form_super_reference */
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**

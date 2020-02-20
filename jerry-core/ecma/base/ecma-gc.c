@@ -670,6 +670,11 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             {
               ecma_gc_set_object_visited (ecma_get_object_from_value (arrow_func_p->this_binding));
             }
+
+            if (ecma_is_value_object (arrow_func_p->new_target))
+            {
+              ecma_gc_set_object_visited (ecma_get_object_from_value (arrow_func_p->new_target));
+            }
           }
 #endif /* ENABLED (JERRY_ES2015) */
         }
@@ -1218,6 +1223,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
         if (byte_code_p->status_flags & CBC_CODE_FLAGS_ARROW_FUNCTION)
         {
           ecma_free_value_if_not_object (((ecma_arrow_function_t *) object_p)->this_binding);
+          ecma_free_value_if_not_object (((ecma_arrow_function_t *) object_p)->new_target);
           ext_object_size = sizeof (ecma_arrow_function_t);
         }
 #endif /* ENABLED (JERRY_ES2015) */

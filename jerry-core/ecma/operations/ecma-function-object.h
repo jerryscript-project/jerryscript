@@ -51,29 +51,8 @@ ecma_op_create_dynamic_function (const ecma_value_t *arguments_list_p,
                                  ecma_parse_opts_t opts);
 
 #if ENABLED (JERRY_ES2015)
-void
-ecma_op_set_super_called (ecma_object_t *lex_env_p);
-
-bool
-ecma_op_is_super_called (ecma_object_t *lex_env_p);
-
-void
-ecma_op_set_class_this_binding (ecma_object_t *lex_env_p, ecma_value_t this_binding);
-
 ecma_value_t
-ecma_op_get_class_this_binding (ecma_object_t *lex_env_p);
-
-ecma_value_t
-ecma_op_function_implicit_constructor_handler_cb (const ecma_value_t function_obj,
-                                                  const ecma_value_t this_val,
-                                                  const ecma_value_t args_p[],
-                                                  const ecma_length_t args_count);
-
-void
-ecma_op_set_class_prototype (ecma_value_t completion_value, ecma_value_t this_arg);
-
-ecma_object_t *
-ecma_op_get_prototype_from_constructor (ecma_object_t *ctor_obj_p, ecma_builtin_id_t default_proto_id);
+ecma_op_function_get_super_constructor (ecma_object_t *func_obj_p);
 
 ecma_object_t *
 ecma_op_create_generator_function_object (ecma_object_t *scope_p, const ecma_compiled_code_t *bytecode_data_p);
@@ -81,8 +60,12 @@ ecma_op_create_generator_function_object (ecma_object_t *scope_p, const ecma_com
 ecma_object_t *
 ecma_op_create_arrow_function_object (ecma_object_t *scope_p, const ecma_compiled_code_t *bytecode_data_p,
                                       ecma_value_t this_binding);
-
+bool
+ecma_op_function_is_generator (ecma_object_t *func_obj_p);
 #endif /* ENABLED (JERRY_ES2015) */
+
+ecma_object_t *
+ecma_op_get_prototype_from_constructor (ecma_object_t *ctor_obj_p, ecma_builtin_id_t default_proto_id);
 
 ecma_value_t
 ecma_op_function_has_instance (ecma_object_t *func_obj_p, ecma_value_t value);
@@ -92,7 +75,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, ecma_value_t this_arg_value,
                        const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len);
 
 ecma_value_t
-ecma_op_function_construct (ecma_object_t *func_obj_p, ecma_value_t this_arg_value,
+ecma_op_function_construct (ecma_object_t *func_obj_p, ecma_object_t *new_target_p,
                             const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len);
 
 ecma_property_t *

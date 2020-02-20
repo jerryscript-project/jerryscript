@@ -77,7 +77,7 @@ ecma_op_get_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
         break;
       }
 #if ENABLED (JERRY_ES2015)
-      case ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND:
+      case ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND:
       {
         break;
       }
@@ -266,7 +266,7 @@ ecma_op_put_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
         break;
       }
 #if ENABLED (JERRY_ES2015)
-      case ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND:
+      case ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND:
       {
         break;
       }

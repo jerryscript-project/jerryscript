@@ -118,6 +118,25 @@ opfunc_resume_executable_object (vm_executable_object_t *executable_object_p, ec
 
 ecma_value_t
 opfunc_return_promise (ecma_value_t value);
+
+ecma_value_t
+opfunc_create_implicit_class_constructor (uint8_t opcode);
+
+void
+opfunc_push_class_environment (vm_frame_ctx_t *frame_ctx_p,  ecma_value_t **vm_stack_top, ecma_value_t class_name);
+
+ecma_value_t
+opfunc_init_class (vm_frame_ctx_t *frame_context_p, ecma_value_t *stack_top_p);
+
+void
+opfunc_pop_lexical_environment (vm_frame_ctx_t *frame_ctx_p);
+
+void
+opfunc_finalize_class (vm_frame_ctx_t *frame_ctx_p, ecma_value_t **vm_stack_top_p, ecma_value_t class_name);
+
+ecma_value_t
+opfunc_form_super_reference (ecma_value_t **vm_stack_top_p, vm_frame_ctx_t *frame_ctx_p, ecma_value_t prop_name,
+                             uint8_t opcode);
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**

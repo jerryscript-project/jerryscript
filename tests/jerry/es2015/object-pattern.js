@@ -54,6 +54,8 @@ checkSyntax ("let {a:(a)} = {a:1}");
 
 mustThrow ("var {a} = null");
 mustThrow ("var {a} = undefined");
+mustThrow ("function f ({a : {}}) {}; f({});");
+mustThrow ("function f ({}) {}; f();");
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment
 

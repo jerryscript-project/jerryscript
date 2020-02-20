@@ -2798,6 +2798,15 @@ parser_parse_object_initializer (parser_context_t *context_p, /**< context */
 {
   parser_pattern_end_marker_t end_pos = parser_pattern_get_target (context_p, flags);
 
+  /* 12.14.5.2:  ObjectAssignmentPattern : { } */
+  if (lexer_check_next_character (context_p, LIT_CHAR_RIGHT_BRACE))
+  {
+    parser_emit_cbc_ext (context_p, CBC_EXT_REQUIRE_OBJECT_COERCIBLE);
+    lexer_consume_next_character (context_p);
+    parser_pattern_finalize (context_p, flags, &end_pos);
+    return;
+  }
+
   while (true)
   {
     lexer_expect_object_literal_id (context_p, LEXER_OBJ_IDENT_OBJECT_PATTERN);

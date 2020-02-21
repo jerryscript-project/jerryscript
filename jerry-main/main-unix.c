@@ -889,33 +889,44 @@ main (int argc,
         }
 
         /* Evaluate the line */
-        jerry_value_t ret_val_eval = jerry_eval (buffer, len, JERRY_PARSE_NO_OPTS);
+        jerry_value_t ret_val = jerry_parse (NULL,
+                                             0,
+                                             buffer,
+                                             len,
+                                             JERRY_PARSE_NO_OPTS);
 
-        if (!jerry_value_is_error (ret_val_eval))
+        if (!jerry_value_is_error (ret_val))
+        {
+          jerry_value_t func_val = ret_val;
+          ret_val = jerry_run (func_val);
+          jerry_release_value (func_val);
+        }
+
+        if (!jerry_value_is_error (ret_val))
         {
           /* Print return value */
-          const jerry_value_t args[] = { ret_val_eval };
+          const jerry_value_t args[] = { ret_val };
           jerry_value_t ret_val_print = jerryx_handler_print (jerry_create_undefined (),
                                                               jerry_create_undefined (),
                                                               args,
                                                               1);
           jerry_release_value (ret_val_print);
-          jerry_release_value (ret_val_eval);
-          ret_val_eval = jerry_run_all_enqueued_jobs ();
+          jerry_release_value (ret_val);
+          ret_val = jerry_run_all_enqueued_jobs ();
 
-          if (jerry_value_is_error (ret_val_eval))
+          if (jerry_value_is_error (ret_val))
           {
-            ret_val_eval = jerry_get_value_from_error (ret_val_eval, true);
-            print_unhandled_exception (ret_val_eval);
+            ret_val = jerry_get_value_from_error (ret_val, true);
+            print_unhandled_exception (ret_val);
           }
         }
         else
         {
-          ret_val_eval = jerry_get_value_from_error (ret_val_eval, true);
-          print_unhandled_exception (ret_val_eval);
+          ret_val = jerry_get_value_from_error (ret_val, true);
+          print_unhandled_exception (ret_val);
         }
 
-        jerry_release_value (ret_val_eval);
+        jerry_release_value (ret_val);
       }
     }
   }

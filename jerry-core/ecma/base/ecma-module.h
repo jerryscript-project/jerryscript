@@ -133,7 +133,7 @@ ecma_module_t *ecma_module_create_native_module (ecma_string_t *const path_p,
                                                  ecma_object_t *const namespace_p);
 ecma_module_t *ecma_module_find_or_create_module (ecma_string_t *const path_p);
 
-ecma_value_t ecma_module_connect_imports (void);
+ecma_value_t ecma_module_initialize_current (void);
 ecma_value_t ecma_module_parse_modules (void);
 ecma_value_t ecma_module_check_indirect_exports (void);
 

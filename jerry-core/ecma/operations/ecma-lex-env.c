@@ -37,25 +37,35 @@
  * Initialize Global environment
  */
 void
-ecma_init_global_lex_env (void)
+ecma_init_global_environment (void)
 {
   ecma_object_t *glob_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
 
   ecma_object_t *global_lex_env_p = ecma_create_object_lex_env (NULL,
                                                                 glob_obj_p,
                                                                 ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
-  ECMA_SET_NON_NULL_POINTER (JERRY_CONTEXT (ecma_global_lex_env_cp), global_lex_env_p);
-} /* ecma_init_global_lex_env */
+  ECMA_SET_NON_NULL_POINTER (JERRY_CONTEXT (ecma_global_env_cp), global_lex_env_p);
+#if ENABLED (JERRY_ES2015)
+  ECMA_SET_NON_NULL_POINTER (JERRY_CONTEXT (ecma_global_scope_cp), global_lex_env_p);
+#endif /* ENABLED (JERRY_ES2015) */
+} /* ecma_init_global_environment */
 
 /**
  * Finalize Global environment
  */
 void
-ecma_finalize_global_lex_env (void)
+ecma_finalize_global_environment (void)
 {
-  ecma_deref_object (ECMA_GET_NON_NULL_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_global_lex_env_cp)));
-  JERRY_CONTEXT (ecma_global_lex_env_cp) = JMEM_CP_NULL;
-} /* ecma_finalize_global_lex_env */
+#if ENABLED (JERRY_ES2015)
+  if (JERRY_CONTEXT (ecma_global_scope_cp) != JERRY_CONTEXT (ecma_global_env_cp))
+  {
+    ecma_deref_object (ECMA_GET_NON_NULL_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_global_scope_cp)));
+  }
+  JERRY_CONTEXT (ecma_global_scope_cp) = JMEM_CP_NULL;
+#endif /* ENABLED (JERRY_ES2015) */
+  ecma_deref_object (ECMA_GET_NON_NULL_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_global_env_cp)));
+  JERRY_CONTEXT (ecma_global_env_cp) = JMEM_CP_NULL;
+} /* ecma_finalize_global_environment */
 
 /**
  * Get reference to Global lexical environment
@@ -66,9 +76,42 @@ ecma_finalize_global_lex_env (void)
 ecma_object_t *
 ecma_get_global_environment (void)
 {
-  JERRY_ASSERT (JERRY_CONTEXT (ecma_global_lex_env_cp) != JMEM_CP_NULL);
-  return ECMA_GET_NON_NULL_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_global_lex_env_cp));
+  JERRY_ASSERT (JERRY_CONTEXT (ecma_global_env_cp) != JMEM_CP_NULL);
+  return ECMA_GET_NON_NULL_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_global_env_cp));
 } /* ecma_get_global_environment */
+
+#if ENABLED (JERRY_ES2015)
+/**
+ * Create the global lexical block on top of the global environment.
+ */
+void
+ecma_create_global_lexical_block (void)
+{
+  if (JERRY_CONTEXT (ecma_global_scope_cp) == JERRY_CONTEXT (ecma_global_env_cp))
+  {
+    ecma_object_t *global_scope_p = ecma_create_decl_lex_env (ecma_get_global_environment ());
+    global_scope_p->type_flags_refs |= (uint16_t) ECMA_OBJECT_FLAG_BLOCK;
+    ECMA_SET_NON_NULL_POINTER (JERRY_CONTEXT (ecma_global_scope_cp), global_scope_p);
+  }
+} /* ecma_create_global_lexical_block */
+#endif /* ENABLED (JERRY_ES2015) */
+
+/**
+ * Get reference to Global lexical scope
+ * without increasing its reference count.
+ *
+ * @return pointer to the object's instance
+ */
+ecma_object_t *
+ecma_get_global_scope (void)
+{
+#if ENABLED (JERRY_ES2015)
+  JERRY_ASSERT (JERRY_CONTEXT (ecma_global_scope_cp) != JMEM_CP_NULL);
+  return ECMA_GET_NON_NULL_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_global_scope_cp));
+#else /* !ENABLED (JERRY_ES2015) */
+  return ecma_get_global_environment ();
+#endif /* !ENABLED (JERRY_ES2015) */
+} /* ecma_get_global_scope */
 
 /**
  * @}

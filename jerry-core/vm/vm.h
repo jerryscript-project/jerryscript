@@ -229,6 +229,8 @@ typedef enum
   VM_OC_LINE,                    /**< line number of the next statement */
 #endif /* ENABLED (JERRY_LINE_INFO) */
 #if ENABLED (JERRY_ES2015)
+  VM_OC_CHECK_VAR,               /**< check redeclared vars in the global scope */
+  VM_OC_CHECK_LET,               /**< check redeclared lets in the global scope */
   VM_OC_ASSIGN_LET_CONST,        /**< assign values to let/const declarations */
   VM_OC_COPY_TO_GLOBAL,          /**< copy value to global lex env */
   VM_OC_CLONE_CONTEXT,           /**< clone lexical environment with let/const declarations */
@@ -286,6 +288,8 @@ typedef enum
   VM_OC_LINE = VM_OC_NONE,                    /**< line number of the next statement is unused */
 #endif /* !ENABLED (JERRY_LINE_INFO) */
 #if !ENABLED (JERRY_ES2015)
+  VM_OC_CHECK_VAR = VM_OC_NONE,               /**< check redeclared vars in the global scope */
+  VM_OC_CHECK_LET = VM_OC_NONE,               /**< check redeclared lets in the global scope */
   VM_OC_ASSIGN_LET_CONST = VM_OC_NONE,        /**< assign values to let/const declarations */
   VM_OC_COPY_TO_GLOBAL = VM_OC_NONE,          /**< copy value to global lex env */
   VM_OC_CLONE_CONTEXT = VM_OC_NONE,           /**< clone lexical environment with let/const declarations */

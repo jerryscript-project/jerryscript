@@ -44,7 +44,7 @@ ecma_init (void)
   JERRY_CONTEXT (ecma_gc_mark_recursion_limit) = JERRY_GC_MARK_LIMIT;
 #endif /* (JERRY_GC_MARK_LIMIT != 0) */
 
-  ecma_init_global_lex_env ();
+  ecma_init_global_environment ();
 
 #if ENABLED (JERRY_PROPRETY_HASHMAP)
   JERRY_CONTEXT (ecma_prop_hashmap_alloc_state) = ECMA_PROP_HASHMAP_ALLOC_ON;
@@ -77,7 +77,7 @@ ecma_finalize (void)
   JERRY_ASSERT (JERRY_CONTEXT (current_function_obj_p) == NULL);
 #endif /* ENABLED (JERRY_ES2015) */
 
-  ecma_finalize_global_lex_env ();
+  ecma_finalize_global_environment ();
   uint8_t runs = 0;
   do
   {

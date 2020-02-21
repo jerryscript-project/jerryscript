@@ -1311,6 +1311,11 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   {
     compiled_code_p->status_flags |= CBC_CODE_FLAG_HAS_TAGGED_LITERALS;
   }
+
+  if (context_p->status_flags & PARSER_LEXICAL_BLOCK_NEEDED)
+  {
+    compiled_code_p->status_flags |= CBC_CODE_FLAGS_LEXICAL_BLOCK_NEEDED;
+  }
 #endif /* ENABLED (JERRY_ES2015) */
 
   literal_pool_p = ((ecma_value_t *) byte_code_p) - context_p->register_count;
@@ -2093,18 +2098,12 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
 #if ENABLED (JERRY_ES2015)
       if (scanner_is_global_context_needed (&context))
       {
-        parser_branch_t branch;
+        context.status_flags |= PARSER_LEXICAL_BLOCK_NEEDED;
+      }
 
-#ifndef JERRY_NDEBUG
-        PARSER_PLUS_EQUAL_U16 (context.context_stack_depth, PARSER_BLOCK_CONTEXT_STACK_ALLOCATION);
-#endif /* !JERRY_NDEBUG */
-
-        parser_emit_cbc_forward_branch (&context,
-                                        CBC_BLOCK_CREATE_CONTEXT,
-                                        &branch);
-
-        parser_stack_push (&context, &branch, sizeof (parser_branch_t));
-        context.status_flags |= PARSER_INSIDE_BLOCK;
+      if ((parse_opts & ECMA_PARSE_EVAL) == 0)
+      {
+        scanner_check_variables (&context);
       }
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -2112,18 +2111,6 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
     }
 
     parser_parse_statements (&context);
-
-#if ENABLED (JERRY_ES2015)
-    if (context.status_flags & PARSER_INSIDE_BLOCK)
-    {
-      parser_branch_t branch;
-      parser_stack_pop (&context, &branch, sizeof (parser_branch_t));
-
-      parser_emit_cbc (&context, CBC_CONTEXT_END);
-      parser_set_branch_to_current_position (&context, &branch);
-      parser_flush_cbc (&context);
-    }
-#endif /* ENABLED (JERRY_ES2015) */
 
     /* When the parsing is successful, only the
      * dummy value can be remained on the stack. */

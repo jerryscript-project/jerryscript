@@ -2263,11 +2263,7 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
       context_p->source_p = source_p;
       context_p->source_end_p = source_end_p;
 
-#if ENABLED (JERRY_ES2015)
-      uint16_t status_flags = SCANNER_LITERAL_POOL_FUNCTION_WITHOUT_ARGUMENTS | SCANNER_LITERAL_POOL_NO_VAR_REG;
-#else /* !ENABLED (JERRY_DEBUGGER) */
       uint16_t status_flags = SCANNER_LITERAL_POOL_FUNCTION_WITHOUT_ARGUMENTS | SCANNER_LITERAL_POOL_NO_REG;
-#endif /* ENABLED (JERRY_DEBUGGER) */
 
       if (context_p->status_flags & PARSER_IS_STRICT)
       {

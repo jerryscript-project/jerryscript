@@ -295,20 +295,21 @@ static void
 static_snapshot_error_unsupported_literal (snapshot_globals_t *globals_p, /**< snapshot globals */
                                            ecma_value_t literal) /**< literal form the literal pool */
 {
-  const lit_utf8_byte_t error_prefix[] = "Unsupported static snapshot literal: ";
+  ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
 
-  ecma_string_t *error_message_p = ecma_new_ecma_string_from_utf8 (error_prefix, sizeof (error_prefix) - 1);
+  ecma_stringbuilder_append_raw (&builder, (lit_utf8_byte_t *) "Unsupported static snapshot literal: ", 37);
 
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (literal));
 
   ecma_string_t *literal_string_p = ecma_op_to_string (literal);
   JERRY_ASSERT (literal_string_p != NULL);
 
-  error_message_p = ecma_concat_ecma_strings (error_message_p, literal_string_p);
+  ecma_stringbuilder_append (&builder, literal_string_p);
+
   ecma_deref_ecma_string (literal_string_p);
 
-  ecma_object_t *error_object_p = ecma_new_standard_error_with_message (ECMA_ERROR_RANGE, error_message_p);
-  ecma_deref_ecma_string (error_message_p);
+  ecma_object_t *error_object_p = ecma_new_standard_error_with_message (ECMA_ERROR_RANGE,
+                                                                        ecma_stringbuilder_finalize (&builder));
 
   globals_p->snapshot_error = ecma_create_error_object_reference (error_object_p);
 } /* static_snapshot_error_unsupported_literal */

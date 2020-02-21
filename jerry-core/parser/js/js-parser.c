@@ -1920,13 +1920,12 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
     error_location_p->error = PARSER_ERR_NO_ERROR;
   }
 
-  if (arg_list_p == NULL)
+  context.status_flags = parse_opts & PARSER_STRICT_MODE_MASK;
+  context.global_status_flags = parse_opts;
+
+  if (arg_list_p != NULL)
   {
-    context.status_flags = 0;
-  }
-  else
-  {
-    context.status_flags = PARSER_IS_FUNCTION;
+    context.status_flags |= PARSER_IS_FUNCTION;
 #if ENABLED (JERRY_ES2015)
     if (parse_opts & ECMA_PARSE_GENERATOR_FUNCTION)
     {
@@ -1944,7 +1943,6 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   context.stack_limit = 0;
   context.last_context_p = NULL;
   context.last_statement.current_p = NULL;
-  context.status_flags |= parse_opts & PARSER_STRICT_MODE_MASK;
 
   context.token.flags = 0;
   context.line = 1;
@@ -1995,21 +1993,6 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   }
 #endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
-#if ENABLED (JERRY_ES2015)
-  if (parse_opts & ECMA_PARSE_EVAL)
-  {
-    context.status_flags |= PARSER_IS_EVAL;
-  }
-  if (parse_opts & ECMA_PARSE_DIRECT_EVAL)
-  {
-    context.status_flags |= PARSER_IS_DIRECT_EVAL;
-  }
-  if (parse_opts & ECMA_PARSE_FUNCTION)
-  {
-    context.status_flags |= PARSER_IS_FUNCTION;
-  }
-#endif /* ENABLED (JERRY_ES2015) */
-
   scanner_scan_all (&context,
                     arg_list_p,
                     arg_list_p + arg_list_size,
@@ -2052,7 +2035,7 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
-  if (context.status_flags & PARSER_IS_MODULE)
+  if (context.global_status_flags & ECMA_PARSE_MODULE)
   {
     context.status_flags |= PARSER_IS_STRICT;
   }

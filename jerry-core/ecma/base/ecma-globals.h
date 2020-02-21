@@ -89,26 +89,30 @@ typedef enum
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
 /**
- * Option flags for script parsing.
+ * Option flags for parser_parse_script and internal flags for global_status_flags in parser context.
  * Note:
- *      The enum members must be kept in sync with parser_general_flags_t
- *      The last 16 bits are reserved for scope chain index
+ *      the last 16 bits is reserved for internal parser flags, because the debugger uses these
+ *      16 bits to encode the scope chain skip index as well (see ECMA_PARSE_CHAIN_INDEX_SHIFT)
  */
 typedef enum
 {
   ECMA_PARSE_NO_OPTS = 0, /**< no options passed */
-  ECMA_PARSE_STRICT_MODE = (1u << 0), /**< enable strict mode */
-  ECMA_PARSE_DIRECT_EVAL = (1u << 1), /**< eval is called directly (ECMA-262 v5, 15.1.2.1.1) */
+  ECMA_PARSE_STRICT_MODE = (1u << 0), /**< enable strict mode, must be same as PARSER_IS_STRICT */
+  ECMA_PARSE_MODULE = (1u << 1), /**< module is parsed */
+  ECMA_PARSE_EVAL = (1u << 2), /**< eval is called */
+  ECMA_PARSE_DIRECT_EVAL = (1u << 3), /**< eval is called directly (ECMA-262 v5, 15.1.2.1.1) */
+
   /* These four status flags must be in this order. See PARSER_CLASS_PARSE_OPTS_OFFSET. */
-  ECMA_PARSE_CLASS_CONSTRUCTOR = (1u << 2), /**< a class constructor is being parsed (this value must be kept in
+  ECMA_PARSE_CLASS_CONSTRUCTOR = (1u << 4), /**< a class constructor is being parsed (this value must be kept in
                                              *   in sync with PARSER_CLASS_CONSTRUCTOR) */
-  ECMA_PARSE_HAS_SUPER = (1u << 3), /**< the current context has super reference */
-  ECMA_PARSE_HAS_IMPL_SUPER = (1u << 4), /**< the current context has implicit parent class */
-  ECMA_PARSE_HAS_STATIC_SUPER = (1u << 5), /**< the current context is a static class method */
-  ECMA_PARSE_EVAL = (1u << 6), /**< eval is called */
-  ECMA_PARSE_MODULE = (1u << 7), /**< module is parsed */
-  ECMA_PARSE_FUNCTION = (1u << 8), /**< a function body is parsed or the code is inside a function */
+  ECMA_PARSE_HAS_SUPER = (1u << 5), /**< the current context has super reference */
+  ECMA_PARSE_HAS_IMPL_SUPER = (1u << 6), /**< the current context has implicit parent class */
+  ECMA_PARSE_HAS_STATIC_SUPER = (1u << 7), /**< the current context is a static class method */
+
+  ECMA_PARSE_CALLED_FROM_FUNCTION = (1u << 8), /**< a function body is parsed or the code is inside a function */
   ECMA_PARSE_GENERATOR_FUNCTION = (1u << 9), /**< generator function is parsed */
+
+  /* These flags are internally used by the parser. */
 } ecma_parse_opts_t;
 
 /**

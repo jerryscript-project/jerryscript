@@ -72,13 +72,10 @@ typedef enum
   PARSER_CLASS_IMPLICIT_SUPER = (1u << 21),   /**< class has implicit parent class */
   PARSER_CLASS_STATIC_FUNCTION = (1u << 22),  /**< this function is a static class method */
   PARSER_CLASS_SUPER_PROP_REFERENCE = (1u << 23),  /**< super property call or assignment */
-  PARSER_IS_EVAL = (1u << 24),                /**< eval code */
-  PARSER_IS_DIRECT_EVAL = (1u << 25),         /**< direct eval code */
 #endif /* ENABLED (JERRY_ES2015) */
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
-  PARSER_IS_MODULE = (1u << 26),              /**< an export / import keyword is encountered */
-  PARSER_MODULE_DEFAULT_CLASS_OR_FUNC = (1u << 27),  /**< parsing a function or class default export */
-  PARSER_MODULE_STORE_IDENT = (1u << 28),     /**< store identifier of the current export statement */
+  PARSER_MODULE_DEFAULT_CLASS_OR_FUNC = (1u << 24),  /**< parsing a function or class default export */
+  PARSER_MODULE_STORE_IDENT = (1u << 25),     /**< store identifier of the current export statement */
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
   PARSER_HAS_LATE_LIT_INIT = (1u << 30),      /**< there are identifier or string literals which construction
                                                *   is postponed after the local parser data is freed */
@@ -465,6 +462,7 @@ typedef struct
 
   /* Parser members. */
   uint32_t status_flags;                      /**< status flags */
+  uint32_t global_status_flags;               /**< global status flags */
   uint16_t stack_depth;                       /**< current stack depth */
   uint16_t stack_limit;                       /**< maximum stack depth */
   parser_saved_context_t *last_context_p;     /**< last saved context */

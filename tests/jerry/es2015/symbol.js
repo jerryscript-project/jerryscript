@@ -85,6 +85,11 @@ var a = ['hasInstance',
 a.forEach (function (e) {
   assert (Symbol[e].toString() === ('Symbol(Symbol.' + e +')'));
   assert (typeof Symbol[e] === 'symbol');
+  /* Check for property descriptor ES 6 19.4.2.2 - 19.4.2.14 */
+  var desc = Object.getOwnPropertyDescriptor(Symbol, e)
+  assert (desc.writable === false);
+  assert (desc.enumerable === false);
+  assert (desc.configurable === false);
 });
 
 var obj = {};

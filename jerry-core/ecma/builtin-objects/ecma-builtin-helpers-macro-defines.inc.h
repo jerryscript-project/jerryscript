@@ -31,7 +31,7 @@
 #endif /* !SYMBOL_VALUE */
 
 #ifndef INTRINSIC_PROPERTY
-#define INTRINSIC_PROPERTY(name, magic_string_id)
+#define INTRINSIC_PROPERTY(name, magic_string_id, prop_attributes)
 #endif /* !INTRINSIC_PROPERTY */
 
 #ifndef ACCESSOR_BUILTIN_FUNCTION_OBJECT

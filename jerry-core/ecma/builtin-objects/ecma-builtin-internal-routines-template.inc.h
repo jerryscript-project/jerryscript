@@ -182,11 +182,11 @@ const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] =
     ECMA_PROPERTY_FIXED, \
     desc_magic_string_id \
   },
-#define INTRINSIC_PROPERTY(name, magic_string_id) \
+#define INTRINSIC_PROPERTY(name, magic_string_id, prop_attributes) \
   { \
     name, \
     ECMA_BUILTIN_PROPERTY_INTRINSIC_PROPERTY, \
-    ECMA_PROPERTY_CONFIGURABLE_WRITABLE, \
+    prop_attributes, \
     magic_string_id \
   },
 #define ACCESSOR_BUILTIN_FUNCTION(name, getter_builtin_id, setter_builtin_id, prop_attributes) \

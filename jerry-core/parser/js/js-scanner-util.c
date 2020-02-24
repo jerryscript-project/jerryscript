@@ -473,7 +473,7 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
 
   uint8_t no_reg_types = 0;
 #if ENABLED (JERRY_ES2015)
-  if (!(context_p->status_flags & PARSER_IS_DIRECT_EVAL))
+  if (prev_literal_pool_p == NULL && !(context_p->global_status_flags & ECMA_PARSE_DIRECT_EVAL))
   {
     no_reg_types |= SCANNER_LITERAL_IS_FUNC;
   }
@@ -528,7 +528,7 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
     if (is_function && (type & (SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_LOCAL)) == SCANNER_LITERAL_IS_FUNC)
     {
       if (prev_literal_pool_p == NULL
-          && (context_p->status_flags & PARSER_IS_DIRECT_EVAL)
+          && (context_p->global_status_flags & ECMA_PARSE_DIRECT_EVAL)
           && scanner_scope_find_let_declaration (context_p, literal_p))
       {
         literal_p->type = 0;
@@ -1300,7 +1300,7 @@ scanner_detect_invalid_var (parser_context_t *context_p, /**< context */
     }
   }
 
-  if ((context_p->status_flags & PARSER_IS_DIRECT_EVAL)
+  if ((context_p->global_status_flags & ECMA_PARSE_DIRECT_EVAL)
       && scanner_scope_find_let_declaration (context_p, var_literal_p))
   {
     scanner_raise_redeclaration_error (context_p);
@@ -1624,7 +1624,7 @@ scanner_is_global_context_needed (parser_context_t *context_p) /**< context */
 
     /* Only let/const can be stored in registers */
     JERRY_ASSERT ((data & SCANNER_STREAM_NO_REG)
-                  || (type == SCANNER_STREAM_TYPE_FUNC && (context_p->status_flags & PARSER_IS_DIRECT_EVAL))
+                  || (type == SCANNER_STREAM_TYPE_FUNC && (context_p->global_status_flags & ECMA_PARSE_DIRECT_EVAL))
                   || type == SCANNER_STREAM_TYPE_LET
                   || type == SCANNER_STREAM_TYPE_CONST);
 
@@ -1645,7 +1645,7 @@ scanner_is_global_context_needed (parser_context_t *context_p) /**< context */
     }
 
     if (type == SCANNER_STREAM_TYPE_VAR
-        || (type == SCANNER_STREAM_TYPE_FUNC && !(context_p->status_flags & PARSER_IS_DIRECT_EVAL))
+        || (type == SCANNER_STREAM_TYPE_FUNC && !(context_p->global_status_flags & ECMA_PARSE_DIRECT_EVAL))
         || type == SCANNER_STREAM_TYPE_IMPORT)
     {
       continue;
@@ -2138,7 +2138,7 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
       if (func_init_opcode == CBC_INIT_LOCAL && (option_flags & SCANNER_CREATE_VARS_IS_SCRIPT))
       {
 #if ENABLED (JERRY_ES2015)
-        if (!(context_p->status_flags & PARSER_IS_DIRECT_EVAL))
+        if (!(context_p->global_status_flags & ECMA_PARSE_DIRECT_EVAL))
         {
           func_init_opcode = CBC_CREATE_VAR_FUNC_EVAL;
         }

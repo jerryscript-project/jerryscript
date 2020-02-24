@@ -717,7 +717,8 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
 
     if (copy_value)
     {
-      if (context_p->status_flags & PARSER_IS_DIRECT_EVAL)
+      if (!(context_p->status_flags & PARSER_IS_FUNCTION)
+          && (context_p->global_status_flags & ECMA_PARSE_DIRECT_EVAL))
       {
         if (!scanner_scope_find_let_declaration (context_p, &context_p->token.lit_location))
         {
@@ -3096,14 +3097,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
           options |= PARSE_EXPR_HAS_LITERAL;
         }
 
-#if ENABLED (JERRY_ES2015)
-        bool is_eval = (context_p->status_flags & PARSER_IS_EVAL) != 0;
-#else /* !ENABLED (JERRY_ES2015) */
-        /* In case of ES5.1 it does not matter that this is an eval parsing or not. */
-        bool is_eval = false;
-#endif /* ENABLED (JERRY_ES2015) */
-
-        if ((context_p->status_flags & PARSER_IS_FUNCTION) && !is_eval)
+        if (context_p->status_flags & PARSER_IS_FUNCTION)
         {
           parser_parse_expression_statement (context_p, options);
         }

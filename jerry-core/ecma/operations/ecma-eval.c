@@ -104,7 +104,7 @@ ecma_op_eval_chars_buffer (const lit_utf8_byte_t *code_p, /**< code characters b
   if (JERRY_CONTEXT (current_new_target) != JERRY_CONTEXT_INVALID_NEW_TARGET
       && (JERRY_CONTEXT (status_flags) & ECMA_STATUS_DIRECT_EVAL))
   {
-    parse_opts |= ECMA_PARSE_FUNCTION;
+    parse_opts |= ECMA_PARSE_CALLED_FROM_FUNCTION;
   }
 #endif /* ENABLED (JERRY_ES2015) */
 

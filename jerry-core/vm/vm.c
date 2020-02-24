@@ -344,6 +344,7 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
 
 #if ENABLED (JERRY_DEBUGGER)
     uint32_t chain_index = parse_opts >> ECMA_PARSE_CHAIN_INDEX_SHIFT;
+    parse_opts &= (1 << ECMA_PARSE_CHAIN_INDEX_SHIFT) - 1;
 
     while (chain_index != 0)
     {

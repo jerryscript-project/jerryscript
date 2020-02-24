@@ -1412,7 +1412,8 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
       /* Check if "new.target" is written here. */
       if (scanner_try_scan_new_target (context_p))
       {
-        if (!(context_p->status_flags & PARSER_IS_FUNCTION))
+        if (!(context_p->status_flags & PARSER_IS_FUNCTION)
+            && !(context_p->global_status_flags & ECMA_PARSE_CALLED_FROM_FUNCTION))
         {
           parser_raise_error (context_p, PARSER_ERR_NEW_TARGET_NOT_ALLOWED);
         }

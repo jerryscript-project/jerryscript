@@ -627,9 +627,6 @@ typedef enum
   ECMA_OBJECT_TYPE_PSEUDO_ARRAY  = 3, /**< Array-like object, such as Arguments object (10.6) */
   /* Note: these 4 types must be in this order. See IsCallable operation.  */
   ECMA_OBJECT_TYPE_FUNCTION = 4, /**< Function objects (15.3), created through 13.2 routine */
-#if ENABLED (JERRY_ES2015)
-  ECMA_OBJECT_TYPE_ARROW_FUNCTION = 5, /**< arrow function objects */
-#endif /* ENABLED (JERRY_ES2015) */
   ECMA_OBJECT_TYPE_BOUND_FUNCTION = 6, /**< Function objects (15.3), created through 15.3.4.5 routine */
   ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION = 7, /**< External (host) function object */
   /* Types between 13-15 cannot have a built-in flag. See ecma_lexical_environment_type_t. */
@@ -959,10 +956,8 @@ typedef struct
  */
 typedef struct
 {
-  ecma_object_t object; /**< object header */
+  ecma_extended_object_t header; /**< extended object header */
   ecma_value_t this_binding; /**< value of 'this' binding */
-  jmem_cpointer_t scope_cp; /**< function scope */
-  jmem_cpointer_t bytecode_cp; /**< function byte code */
 } ecma_arrow_function_t;
 
 #if ENABLED (JERRY_SNAPSHOT_EXEC)

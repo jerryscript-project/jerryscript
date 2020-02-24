@@ -785,30 +785,6 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
 } /* ecma_concat_ecma_strings */
 
 /**
- * Append a magic string after an ecma-string
- *
- * Note:
- *   The string1_p argument is freed. If it needs to be preserved,
- *   call ecma_ref_ecma_string with string1_p before the call.
- *
- * @return concatenation of an ecma-string and a magic string
- */
-ecma_string_t *
-ecma_append_magic_string_to_string (ecma_string_t *string1_p, /**< string descriptor */
-                                    lit_magic_string_id_t string2_id) /**< magic string ID */
-{
-  if (JERRY_UNLIKELY (ecma_string_is_empty (string1_p)))
-  {
-    return ecma_get_magic_string (string2_id);
-  }
-
-  const lit_utf8_byte_t *cesu8_string2_p = lit_get_magic_string_utf8 (string2_id);
-  lit_utf8_size_t cesu8_string2_size = lit_get_magic_string_size (string2_id);
-
-  return ecma_append_chars_to_string (string1_p, cesu8_string2_p, cesu8_string2_size, cesu8_string2_size);
-} /* ecma_append_magic_string_to_string */
-
-/**
  * Increase reference counter of ecma-string.
  */
 void

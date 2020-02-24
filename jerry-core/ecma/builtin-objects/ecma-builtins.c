@@ -793,13 +793,15 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 #if ENABLED (JERRY_ES2015)
     case ECMA_BUILTIN_PROPERTY_SYMBOL:
     {
+      ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
+
+      ecma_stringbuilder_append_raw (&builder, (lit_utf8_byte_t *) "Symbol.", 7);
+
       lit_magic_string_id_t symbol_desc_id = (lit_magic_string_id_t) curr_property_p->value;
 
-      ecma_string_t *symbol_desc_p;
-      symbol_desc_p = ecma_append_magic_string_to_string (ecma_get_magic_string (LIT_MAGIC_STRING_SYMBOL_DOT_UL),
-                                                          symbol_desc_id);
+      ecma_stringbuilder_append_magic (&builder, symbol_desc_id);
 
-      ecma_value_t symbol_desc_value = ecma_make_string_value (symbol_desc_p);
+      ecma_value_t symbol_desc_value = ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
 
       ecma_string_t *symbol_p = ecma_new_symbol_from_descriptor_string (symbol_desc_value);
       lit_magic_string_id_t symbol_id = (lit_magic_string_id_t) curr_property_p->magic_string_id;

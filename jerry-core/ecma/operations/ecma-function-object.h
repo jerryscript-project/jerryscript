@@ -27,8 +27,6 @@
  * @{
  */
 
-bool ecma_is_normal_or_arrow_function (ecma_object_type_t type);
-
 #if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
 ecma_value_t ecma_op_resource_name (const ecma_compiled_code_t *bytecode_header_p);
 #endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
@@ -84,8 +82,6 @@ ecma_object_t *
 ecma_op_create_arrow_function_object (ecma_object_t *scope_p, const ecma_compiled_code_t *bytecode_data_p,
                                       ecma_value_t this_binding);
 
-const ecma_compiled_code_t *
-ecma_op_arrow_function_get_compiled_code (ecma_arrow_function_t *arrow_function_p);
 #endif /* ENABLED (JERRY_ES2015) */
 
 ecma_value_t

@@ -629,32 +629,20 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
           {
             ecma_gc_mark_tagged_template_literals (byte_code_p);
           }
+
+          if (byte_code_p->status_flags & CBC_CODE_FLAGS_ARROW_FUNCTION)
+          {
+            ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) object_p;
+
+            if (ecma_is_value_object (arrow_func_p->this_binding))
+            {
+              ecma_gc_set_object_visited (ecma_get_object_from_value (arrow_func_p->this_binding));
+            }
+          }
 #endif /* ENABLED (JERRY_ES2015) */
         }
         break;
       }
-#if ENABLED (JERRY_ES2015)
-      case ECMA_OBJECT_TYPE_ARROW_FUNCTION:
-      {
-        ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) object_p;
-
-        ecma_gc_set_object_visited (ECMA_GET_NON_NULL_POINTER (ecma_object_t,
-                                                               arrow_func_p->scope_cp));
-
-        if (ecma_is_value_object (arrow_func_p->this_binding))
-        {
-          ecma_gc_set_object_visited (ecma_get_object_from_value (arrow_func_p->this_binding));
-        }
-
-        const ecma_compiled_code_t *byte_code_p = ecma_op_arrow_function_get_compiled_code (arrow_func_p);
-
-        if (byte_code_p->status_flags & CBC_CODE_FLAG_HAS_TAGGED_LITERALS)
-        {
-          ecma_gc_mark_tagged_template_literals (byte_code_p);
-        }
-        break;
-      }
-#endif /* ENABLED (JERRY_ES2015) */
       default:
       {
         break;
@@ -1159,8 +1147,18 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
       if (ext_func_p->u.function.bytecode_cp != ECMA_NULL_POINTER)
       {
 #endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
-        ecma_bytecode_deref (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
-                                                              ext_func_p->u.function.bytecode_cp));
+        ecma_compiled_code_t *byte_code_p = (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
+                                                                              ext_func_p->u.function.bytecode_cp));
+
+#if ENABLED (JERRY_ES2015)
+        if (byte_code_p->status_flags & CBC_CODE_FLAGS_ARROW_FUNCTION)
+        {
+          ecma_free_value_if_not_object (((ecma_arrow_function_t *) object_p)->this_binding);
+          ext_object_size = sizeof (ecma_arrow_function_t);
+        }
+#endif /* ENABLED (JERRY_ES2015) */
+
+        ecma_bytecode_deref (byte_code_p);
 #if ENABLED (JERRY_SNAPSHOT_EXEC)
       }
       else
@@ -1170,29 +1168,6 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 #endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
       break;
     }
-#if ENABLED (JERRY_ES2015)
-    case ECMA_OBJECT_TYPE_ARROW_FUNCTION:
-    {
-      ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) object_p;
-
-      ecma_free_value_if_not_object (arrow_func_p->this_binding);
-
-#if ENABLED (JERRY_SNAPSHOT_EXEC)
-      if (arrow_func_p->bytecode_cp != ECMA_NULL_POINTER)
-      {
-#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
-        ecma_bytecode_deref (ECMA_GET_NON_NULL_POINTER (ecma_compiled_code_t, arrow_func_p->bytecode_cp));
-        ext_object_size = sizeof (ecma_arrow_function_t);
-#if ENABLED (JERRY_SNAPSHOT_EXEC)
-      }
-      else
-      {
-        ext_object_size = sizeof (ecma_static_arrow_function_t);
-      }
-#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
-      break;
-    }
-#endif /* ENABLED (JERRY_ES2015) */
     case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;

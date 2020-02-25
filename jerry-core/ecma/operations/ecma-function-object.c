@@ -1400,13 +1400,6 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     this_arg_value = ecma_make_object_value (new_this_obj_p);
   }
 
-#if ENABLED (JERRY_ES2015)
-  if (JERRY_LIKELY (new_this_obj_p == NULL))
-  {
-    arguments_list_p = ecma_op_function_args_set_flag (arguments_list_p, ECMA_FUNC_ARG_FLAG_SUPER);
-  }
-#endif /* ENABLED (JERRY_ES2015) */
-
   /* 8. */
   ecma_value_t ret_value;
 
@@ -1414,7 +1407,15 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
   {
     case ECMA_OBJECT_TYPE_FUNCTION:
     {
-      arguments_list_p = ecma_op_function_args_set_flag (arguments_list_p, ECMA_FUNC_ARG_FLAG_CONSTRUCT);
+      uintptr_t flag = ECMA_FUNC_ARG_FLAG_CONSTRUCT;
+#if ENABLED (JERRY_ES2015)
+      if (JERRY_LIKELY (new_this_obj_p == NULL))
+      {
+        flag |= ECMA_FUNC_ARG_FLAG_SUPER;
+      }
+#endif /* ENABLED (JERRY_ES2015) */
+
+      arguments_list_p = ecma_op_function_args_set_flag (arguments_list_p, flag);
       ret_value = ecma_op_function_call_simple (func_obj_p, this_arg_value, arguments_list_p, arguments_list_len);
       break;
     }

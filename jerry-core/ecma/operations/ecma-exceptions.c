@@ -257,7 +257,7 @@ ecma_raise_standard_error_with_format (ecma_standard_error_t error_type, /**< er
 {
   JERRY_ASSERT (format != NULL);
 
-  ecma_string_t *error_msg_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
+  ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
 
   const char *start_p = format;
   const char *end_p = format;
@@ -273,13 +273,7 @@ ecma_raise_standard_error_with_format (ecma_standard_error_t error_type, /**< er
       /* Concat template string. */
       if (end_p > start_p)
       {
-        const lit_utf8_byte_t *chars_p = (const lit_utf8_byte_t *) start_p;
-        lit_utf8_size_t chars_size = (lit_utf8_size_t) (end_p - start_p);
-
-        error_msg_p = ecma_append_chars_to_string (error_msg_p,
-                                                   chars_p,
-                                                   chars_size,
-                                                   lit_utf8_string_length (chars_p, chars_size));
+        ecma_stringbuilder_append_raw (&builder, (lit_utf8_byte_t *) start_p, (lit_utf8_size_t) (end_p - start_p));
       }
 
       /* Convert an argument to string without side effects. */
@@ -306,7 +300,8 @@ ecma_raise_standard_error_with_format (ecma_standard_error_t error_type, /**< er
       }
 
       /* Concat argument. */
-      error_msg_p = ecma_concat_ecma_strings (error_msg_p, arg_string_p);
+      ecma_stringbuilder_append (&builder, arg_string_p);
+
       ecma_deref_ecma_string (arg_string_p);
 
       start_p = end_p + 1;
@@ -320,17 +315,14 @@ ecma_raise_standard_error_with_format (ecma_standard_error_t error_type, /**< er
   /* Concat reset of template string. */
   if (start_p < end_p)
   {
-    const lit_utf8_byte_t *chars_p = (const lit_utf8_byte_t *) start_p;
-    lit_utf8_size_t chars_size = (lit_utf8_size_t) (end_p - start_p);
-
-    error_msg_p = ecma_append_chars_to_string (error_msg_p,
-                                               chars_p,
-                                               chars_size,
-                                               lit_utf8_string_length (chars_p, chars_size));
+    ecma_stringbuilder_append_raw (&builder, (lit_utf8_byte_t *) start_p, (lit_utf8_size_t) (end_p - start_p));
   }
 
-  ecma_object_t *error_obj_p = ecma_new_standard_error_with_message (error_type, error_msg_p);
-  ecma_deref_ecma_string (error_msg_p);
+  ecma_string_t *builder_str_p = ecma_stringbuilder_finalize (&builder);
+
+  ecma_object_t *error_obj_p = ecma_new_standard_error_with_message (error_type, builder_str_p);
+
+  ecma_deref_ecma_string (builder_str_p);
 
   jcontext_raise_exception (ecma_make_object_value (error_obj_p));
   return ECMA_VALUE_ERROR;

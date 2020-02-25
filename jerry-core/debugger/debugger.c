@@ -1474,11 +1474,9 @@ jerry_debugger_exception_object_to_string (ecma_value_t exception_obj_value) /**
     }
   }
 
-  lit_utf8_size_t size = lit_get_magic_string_size (string_id);
-  JERRY_ASSERT (size <= 14);
+  ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
 
-  lit_utf8_byte_t data[16];
-  memcpy (data, lit_get_magic_string_utf8 (string_id), size);
+  ecma_stringbuilder_append_magic (&builder, string_id);
 
   ecma_property_t *property_p;
   property_p = ecma_find_named_property (ecma_get_object_from_value (exception_obj_value),
@@ -1487,21 +1485,21 @@ jerry_debugger_exception_object_to_string (ecma_value_t exception_obj_value) /**
   if (property_p == NULL
       || ECMA_PROPERTY_GET_TYPE (*property_p) != ECMA_PROPERTY_TYPE_NAMEDDATA)
   {
-    return ecma_new_ecma_string_from_utf8 (data, size);
+    return ecma_stringbuilder_finalize (&builder);
   }
 
   ecma_property_value_t *prop_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
 
   if (!ecma_is_value_string (prop_value_p->value))
   {
-    return ecma_new_ecma_string_from_utf8 (data, size);
+    return ecma_stringbuilder_finalize (&builder);
   }
 
-  data[size] = LIT_CHAR_COLON;
-  data[size + 1] = LIT_CHAR_SP;
+  ecma_stringbuilder_append_byte (&builder, LIT_CHAR_COLON);
+  ecma_stringbuilder_append_byte (&builder, LIT_CHAR_SP);
+  ecma_stringbuilder_append (&builder, ecma_get_string_from_value (prop_value_p->value));
 
-  return ecma_concat_ecma_strings (ecma_new_ecma_string_from_utf8 (data, size + 2),
-                                   ecma_get_string_from_value (prop_value_p->value));
+  return ecma_stringbuilder_finalize (&builder);
 } /* jerry_debugger_exception_object_to_string */
 
 /**

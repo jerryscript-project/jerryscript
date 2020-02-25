@@ -320,6 +320,8 @@ ecma_string_t *ecma_string_trim (const ecma_string_t *string_p);
 
 ecma_stringbuilder_t ecma_stringbuilder_create (void);
 ecma_stringbuilder_t ecma_stringbuilder_create_from (ecma_string_t *string_p);
+ecma_stringbuilder_t ecma_stringbuilder_create_raw (const lit_utf8_byte_t *data_p,
+                                                    const lit_utf8_size_t data_size);
 lit_utf8_size_t ecma_stringbuilder_get_size (ecma_stringbuilder_t *builder_p);
 lit_utf8_byte_t *ecma_stringbuilder_get_data (ecma_stringbuilder_t *builder_p);
 void ecma_stringbuilder_revert (ecma_stringbuilder_t *builder_p, const lit_utf8_size_t size);

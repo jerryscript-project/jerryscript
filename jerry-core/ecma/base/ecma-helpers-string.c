@@ -2529,6 +2529,29 @@ ecma_stringbuilder_create_from (ecma_string_t *string_p) /**< ecma string */
 } /* ecma_stringbuilder_create_from */
 
 /**
+ * Create a string builder from a raw string
+ *
+ * @return new string builder
+ */
+ecma_stringbuilder_t
+ecma_stringbuilder_create_raw (const lit_utf8_byte_t *data_p, /**< pointer to data */
+                               const lit_utf8_size_t data_size) /**< size of the data */
+{
+  const lit_utf8_size_t initial_size = data_size + (lit_utf8_size_t) sizeof (ecma_ascii_string_t);
+
+  ecma_stringbuilder_header_t *header_p = (ecma_stringbuilder_header_t *) jmem_heap_alloc_block (initial_size);
+  header_p->current_size = initial_size;
+#if ENABLED (JERRY_MEM_STATS)
+  jmem_stats_allocate_string_bytes (initial_size);
+#endif /* ENABLED (JERRY_MEM_STATS) */
+
+  memcpy (ECMA_STRINGBUILDER_STRING_PTR (header_p), data_p, data_size);
+
+  ecma_stringbuilder_t ret = {.header_p = header_p};
+  return ret;
+} /* ecma_stringbuilder_create_raw */
+
+/**
  * Grow the underlying buffer of a string builder
  *
  * @return pointer to the end of the data in the underlying buffer

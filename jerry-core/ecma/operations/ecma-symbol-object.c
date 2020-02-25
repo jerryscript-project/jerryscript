@@ -128,10 +128,8 @@ ecma_get_symbol_descriptive_string (ecma_value_t symbol_value) /**< symbol to st
   ecma_string_t *symbol_p = ecma_get_symbol_from_value (symbol_value);
   ecma_string_t *string_desc_p = ecma_get_symbol_description (symbol_p);
 
-  ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
-
   /* 5. */
-  ecma_stringbuilder_append_raw (&builder, (lit_utf8_byte_t *) ("Symbol("), 7);
+  ecma_stringbuilder_t builder = ecma_stringbuilder_create_raw ((lit_utf8_byte_t *) ("Symbol("), 7);
   ecma_stringbuilder_append (&builder, string_desc_p);
   ecma_stringbuilder_append_byte (&builder, LIT_CHAR_RIGHT_PAREN);
 

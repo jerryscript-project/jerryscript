@@ -793,9 +793,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 #if ENABLED (JERRY_ES2015)
     case ECMA_BUILTIN_PROPERTY_SYMBOL:
     {
-      ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
-
-      ecma_stringbuilder_append_raw (&builder, (lit_utf8_byte_t *) "Symbol.", 7);
+      ecma_stringbuilder_t builder = ecma_stringbuilder_create_raw ((lit_utf8_byte_t *) "Symbol.", 7);
 
       lit_magic_string_id_t symbol_desc_id = (lit_magic_string_id_t) curr_property_p->value;
 

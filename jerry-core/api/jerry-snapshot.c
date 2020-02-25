@@ -295,9 +295,8 @@ static void
 static_snapshot_error_unsupported_literal (snapshot_globals_t *globals_p, /**< snapshot globals */
                                            ecma_value_t literal) /**< literal form the literal pool */
 {
-  ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
-
-  ecma_stringbuilder_append_raw (&builder, (lit_utf8_byte_t *) "Unsupported static snapshot literal: ", 37);
+  lit_utf8_byte_t *str_p = (lit_utf8_byte_t *) "Unsupported static snapshot literal: ";
+  ecma_stringbuilder_t builder = ecma_stringbuilder_create_raw (str_p, 37);
 
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (literal));
 

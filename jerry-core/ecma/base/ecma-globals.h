@@ -989,6 +989,50 @@ typedef enum
   ECMA_CONTAINER_FLAGS_EMPTY = (0), /** empty flags */
   ECMA_CONTAINER_FLAGS_WEAK = (1 << 0) /** container object is weak */
 } ecma_container_flags_t;
+
+/**
+ * Description of map collection.
+ */
+typedef struct
+{
+  ecma_value_t key; /**< key value */
+  ecma_value_t value; /**< value of the key */
+} ecma_container_pair_t;
+
+/**
+ * Size of a single element (in ecma_value_t unit).
+ */
+#define ECMA_CONTAINER_VALUE_SIZE 1
+
+/**
+ * Size of a key - value pair (in ecma_value_t unit).
+ */
+#define ECMA_CONTAINER_PAIR_SIZE 2
+
+/**
+ * Size of the internal buffer.
+ */
+#define ECMA_CONTAINER_GET_SIZE(container_p) \
+  (container_p->buffer_p[0])
+
+/**
+ * Remove the size field of the internal buffer.
+ */
+#define ECMA_CONTAINER_SET_SIZE(container_p, size) \
+  (container_p->buffer_p[0] = (ecma_value_t) (size))
+
+/**
+ * Number of entries of the internal buffer.
+ */
+#define ECMA_CONTAINER_ENTRY_COUNT(collection_p) \
+  (collection_p->item_count - 1)
+
+/**
+ * Pointer to the first entry of the internal buffer.
+ */
+#define ECMA_CONTAINER_START(collection_p) \
+  (collection_p->buffer_p + 1)
+
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_CONTAINER) */
 
 typedef enum
@@ -1429,9 +1473,7 @@ typedef enum
 
   ECMA_STRING_CONTAINER_SYMBOL, /**< the ecma-string is a symbol */
 
-  ECMA_STRING_CONTAINER_MAP_KEY, /**< the ecma-string is a map key string */
-
-  ECMA_STRING_CONTAINER__MAX = ECMA_STRING_CONTAINER_MAP_KEY /**< maximum value */
+  ECMA_STRING_CONTAINER__MAX = ECMA_STRING_CONTAINER_SYMBOL /**< maximum value */
 } ecma_string_container_t;
 
 /**

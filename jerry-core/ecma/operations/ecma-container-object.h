@@ -28,6 +28,7 @@
  * @{
  */
 
+uint8_t ecma_op_container_entry_size (lit_magic_string_id_t lit_id);
 ecma_value_t ecma_op_container_create (const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len,
                                        lit_magic_string_id_t lit_id, ecma_builtin_id_t proto_id);
 ecma_value_t ecma_op_container_size (ecma_value_t this_arg, lit_magic_string_id_t lit_id);
@@ -42,6 +43,7 @@ ecma_value_t ecma_op_container_delete (ecma_value_t this_arg, ecma_value_t key_a
 ecma_value_t ecma_op_container_delete_weak (ecma_value_t this_arg, ecma_value_t key_arg, lit_magic_string_id_t lit_id);
 void ecma_op_container_unref_weak (ecma_object_t *object_p, ecma_value_t ref_holder);
 void ecma_op_container_remove_weak_entry (ecma_object_t *container_p, ecma_value_t key_arg);
+void ecma_op_container_free_entries (ecma_object_t *object_p);
 ecma_value_t ecma_op_container_create_iterator (ecma_value_t this_arg, uint8_t type, lit_magic_string_id_t lit_id,
                                                 ecma_builtin_id_t proto_id, ecma_pseudo_array_type_t iterator_type);
 ecma_value_t ecma_op_container_iterator_next (ecma_value_t this_val, ecma_pseudo_array_type_t iterator_type);

@@ -32,13 +32,15 @@ methods.forEach(function (method) {
   }
 });
 
-var m = new Map([{0: '0', 1: 0},
+var testArray = [{0: '0', 1: 0},
                  {0: '1', 1: 1},
                  {0: '2', 1: 2},
                  {0: '3', 1: 3},
                  {0: '4', 1: 4},
                  {0: '5', 1: 5},
-                 {0: '6', 1: 6}]);
+                 {0: '6', 1: 6}];
+
+var m = new Map(testArray);
 
 methods.forEach(function(method) {
   assert(m[method]().toString() === '[object Map Iterator]');
@@ -122,3 +124,61 @@ for (var i = 0; i < elementCount; i++) {
 }
 
 assert(m.size === 0);
+
+m = new Map(testArray);
+var loopCount = 0;
+var expected = [{0: '0', 1: 0},
+                {0: '2', 1: 2},
+                {0: '4', 1: 4},
+                {0: '6', 1: 6},
+                {0: '1', 1: 1},
+                {0: '3', 1: 3},
+                {0: '5', 1: 5}]
+
+m.forEach(function(value, key) {
+  if (loopCount === 0) {
+    for (i = 0; i < testArray.length; i++) {
+      if (i % 2) {
+        m.delete(testArray[i][0]);
+        m.set(testArray[i][0], testArray[i][1]);
+      }
+    }
+  }
+
+  assert (key === expected[loopCount][0]);
+  assert (value === expected[loopCount][1]);
+
+  loopCount++;
+});
+
+assert(loopCount === expected.length);
+
+loopCount = 0;
+expected = [{0: '0', 1: 0},
+            {0: '1', 1: 1}];
+
+for (var [key, value] of m) {
+  if (loopCount === 0) {
+    m.clear();
+    m.set('1', 1);
+  }
+
+  assert(key === expected[loopCount][0]);
+  assert(value === expected[loopCount][1]);
+
+  loopCount++;
+}
+
+m = new Map(testArray);
+loopCount = 0;
+
+for (var [key, value] of m) {
+  if (loopCount === 0) {
+    m.delete('' + testArray.length - 1);
+  }
+
+  assert(key === '' + loopCount);
+  assert(value === loopCount);
+
+  loopCount++;
+}

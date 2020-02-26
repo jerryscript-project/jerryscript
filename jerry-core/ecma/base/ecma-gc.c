@@ -619,8 +619,8 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
         if (!ecma_get_object_is_builtin (object_p))
         {
           ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
-          ecma_gc_set_object_visited (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                                       ext_func_p->u.function.scope_cp));
+          ecma_gc_set_object_visited (ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
+                                                                                  ext_func_p->u.function.scope_cp));
 
 #if ENABLED (JERRY_ES2015)
           const ecma_compiled_code_t *byte_code_p = ecma_op_function_get_compiled_code (ext_func_p);

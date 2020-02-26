@@ -320,7 +320,7 @@ ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
   ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) func_p;
 
   /* 9. */
-  ECMA_SET_INTERNAL_VALUE_POINTER (ext_func_p->u.function.scope_cp, scope_p);
+  ECMA_SET_NON_NULL_POINTER_TAG (ext_func_p->u.function.scope_cp, scope_p, 0);
 
   /* 10., 11., 12. */
 
@@ -408,7 +408,7 @@ ecma_op_create_arrow_function_object (ecma_object_t *scope_p, /**< function's sc
 
   ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) func_p;
 
-  ECMA_SET_INTERNAL_VALUE_POINTER (arrow_func_p->header.u.function.scope_cp, scope_p);
+  ECMA_SET_NON_NULL_POINTER_TAG (arrow_func_p->header.u.function.scope_cp, scope_p, 0);
 
 #if ENABLED (JERRY_SNAPSHOT_EXEC)
   if ((bytecode_data_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))
@@ -932,8 +932,8 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
   /* Entering Function Code (ECMA-262 v5, 10.4.3) */
   ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) func_obj_p;
 
-  ecma_object_t *scope_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                            ext_func_p->u.function.scope_cp);
+  ecma_object_t *scope_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
+                                                                       ext_func_p->u.function.scope_cp);
 
   /* 8. */
   ecma_value_t this_binding = this_arg_value;

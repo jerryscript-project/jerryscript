@@ -33,6 +33,12 @@
 #define ECMA_GET_NON_NULL_POINTER(type, field) JMEM_CP_GET_NON_NULL_POINTER (type, field)
 
 /**
+ * Extract value of pointer from specified pointer-tag value
+ */
+#define ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG(type, field) \
+  JMEM_CP_GET_NON_NULL_POINTER_FROM_POINTER_TAG (type, field)
+
+/**
  * Get value of pointer from specified compressed pointer.
  */
 #define ECMA_GET_POINTER(type, field) JMEM_CP_GET_POINTER (type, field)
@@ -45,10 +51,37 @@
                                                                                                non_compressed_pointer)
 
 /**
+ * Set value of pointer-tag value so that it will correspond
+ * to specified non_compressed_pointer along with tag
+ */
+#define ECMA_SET_NON_NULL_POINTER_TAG(field, non_compressed_pointer, tag) \
+  JMEM_CP_SET_NON_NULL_POINTER_TAG (field, non_compressed_pointer, tag)
+
+/**
  * Set value of compressed pointer so that it will correspond
  * to specified non_compressed_pointer.
  */
 #define ECMA_SET_POINTER(field, non_compressed_pointer) JMEM_CP_SET_POINTER (field, non_compressed_pointer)
+
+/**
+ * Get value of each tag bit from specified pointer-tag value
+ */
+#define ECMA_GET_FIRST_BIT_FROM_POINTER_TAG(field) \
+  JMEM_CP_GET_FIRST_BIT_FROM_POINTER_TAG (field) /**< get first tag bit from jmem_cpointer_tag_t **/
+#define ECMA_GET_SECOND_BIT_FROM_POINTER_TAG(field) \
+  JMEM_CP_GET_SECOND_BIT_FROM_POINTER_TAG (field) /**< get second tag bit from jmem_cpointer_tag_t **/
+#define ECMA_GET_THIRD_BIT_FROM_POINTER_TAG(field) \
+  JMEM_CP_GET_THIRD_BIT_FROM_POINTER_TAG (field) /**< get third tag bit from jmem_cpointer_tag_t **/
+
+/**
+ * Set value of each tag bit to specified pointer-tag value
+ */
+#define ECMA_SET_FIRST_BIT_TO_POINTER_TAG(field) \
+  JMEM_CP_SET_FIRST_BIT_TO_POINTER_TAG (field) /**< set first tag bit to jmem_cpointer_tag_t **/
+#define ECMA_SET_SECOND_BIT_TO_POINTER_TAG(field) \
+  JMEM_CP_SET_SECOND_BIT_TO_POINTER_TAG (field) /**< set second tag bit to jmem_cpointer_tag_t **/
+#define ECMA_SET_THIRD_BIT_TO_POINTER_TAG(field) \
+  JMEM_CP_SET_THIRD_BIT_TO_POINTER_TAG (field) /**< set third tag bit to jmem_cpointer_tag_t **/
 
 /**
  * Status flags for ecma_string_get_chars function

@@ -35,6 +35,7 @@
 #include "ecma-objects-general.h"
 #include "ecma-regexp-object.h"
 #include "ecma-promise-object.h"
+#include "ecma-proxy-object.h"
 #include "ecma-symbol-object.h"
 #include "ecma-typedarray-object.h"
 #include "opcodes.h"
@@ -804,6 +805,25 @@ jerry_value_is_promise (const jerry_value_t value) /**< api value */
 } /* jerry_value_is_promise */
 
 /**
+ * Check if the specified value is a proxy object.
+ *
+ * @return true  - if the specified value is a proxy object,
+ *         false - otherwise
+ */
+bool
+jerry_value_is_proxy (const jerry_value_t value) /**< api value */
+{
+  jerry_assert_api_available ();
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  return (ecma_is_value_object (value)
+          && ECMA_OBJECT_IS_PROXY (ecma_get_object_from_value (value)));
+#else /* !ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+  JERRY_UNUSED (value);
+  return false;
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+} /* jerry_value_is_proxy */
+
+/**
  * Check if the specified value is string.
  *
  * @return true  - if the specified value is string,
@@ -966,6 +986,9 @@ jerry_is_feature_enabled (const jerry_feature_t feature) /**< feature to check *
 #if ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW)
           || feature == JERRY_FEATURE_DATAVIEW
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW) */
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+          || feature == JERRY_FEATURE_PROXY
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
 #if ENABLED (JERRY_BUILTIN_DATE)
           || feature == JERRY_FEATURE_DATE
 #endif /* ENABLED (JERRY_BUILTIN_DATE) */
@@ -1586,6 +1609,34 @@ jerry_create_promise (void)
 } /* jerry_create_promise */
 
 /**
+ * Create a new Proxy object with the given target and handler
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return value of the created Proxy object
+ */
+jerry_value_t
+jerry_create_proxy (const jerry_value_t target, /**< target argument */
+                    const jerry_value_t handler) /**< handler argument */
+{
+  jerry_assert_api_available ();
+
+  if (ecma_is_value_error_reference (target)
+      || ecma_is_value_error_reference (handler))
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
+  }
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  ecma_object_t *proxy_p = ecma_proxy_create (target, handler);
+  return jerry_return (proxy_p == NULL ? ECMA_VALUE_ERROR : ecma_make_object_value (proxy_p));
+#else /* !ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Proxy is not supported.")));
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+} /* jerry_create_proxy */
+
+/**
  * Create string from a valid UTF-8 string
  *
  * Note:
@@ -1986,8 +2037,8 @@ jerry_substring_to_utf8_char_buffer (const jerry_value_t value, /**< input strin
 /**
  * Checks whether the object or it's prototype objects have the given property.
  *
- * @return true  - if the property exists
- *         false - otherwise
+ * @return raised error - if the operation fail
+ *         true/false API value  - depend on whether the property exists
  */
 jerry_value_t
 jerry_has_property (const jerry_value_t obj_val, /**< object value */
@@ -2001,17 +2052,15 @@ jerry_has_property (const jerry_value_t obj_val, /**< object value */
     return ECMA_VALUE_FALSE;
   }
 
-  bool has_property = ecma_op_object_has_property (ecma_get_object_from_value (obj_val),
-                                                   ecma_get_prop_name_from_value (prop_name_val));
-
-  return ecma_make_boolean_value (has_property);
+  return ecma_op_object_has_property (ecma_get_object_from_value (obj_val),
+                                      ecma_get_prop_name_from_value (prop_name_val));
 } /* jerry_has_property */
 
 /**
  * Checks whether the object has the given property.
  *
- * @return true  - if the property exists
- *         false - otherwise
+ * @return ECMA_VALUE_ERROR - if the operation raises error
+ *         ECMA_VALUE_{TRUE, FALSE} - based on whether the property exists
  */
 jerry_value_t
 jerry_has_own_property (const jerry_value_t obj_val, /**< object value */
@@ -2025,10 +2074,26 @@ jerry_has_own_property (const jerry_value_t obj_val, /**< object value */
     return ECMA_VALUE_FALSE;
   }
 
-  bool has_property = ecma_op_object_has_own_property (ecma_get_object_from_value (obj_val),
-                                                       ecma_get_prop_name_from_value (prop_name_val));
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_val);
+  ecma_string_t *prop_name_p = ecma_get_prop_name_from_value (prop_name_val);
 
-  return ecma_make_boolean_value (has_property);
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (ECMA_OBJECT_IS_PROXY (obj_p))
+  {
+    ecma_property_descriptor_t prop_desc;
+
+    ecma_value_t status = ecma_proxy_object_get_own_property_descriptor (obj_p, prop_name_p, &prop_desc);
+
+    if (ecma_is_value_true (status))
+    {
+      ecma_free_property_descriptor (&prop_desc);
+    }
+
+    return jerry_return (status);
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
+  return ecma_make_boolean_value (ecma_op_ordinary_object_has_own_property (obj_p, prop_name_p));
 } /* jerry_has_own_property */
 
 /**
@@ -2092,6 +2157,15 @@ jerry_delete_property (const jerry_value_t obj_val, /**< object value */
   ecma_value_t ret_value = ecma_op_object_delete (ecma_get_object_from_value (obj_val),
                                                   ecma_get_prop_name_from_value (prop_name_val),
                                                   false);
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (ECMA_IS_VALUE_ERROR (ret_value))
+  {
+    // TODO: Due to Proxies the return value must be changed to jerry_value_t on next release
+    jcontext_release_exception ();
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
   return ecma_is_value_true (ret_value);
 } /* jerry_delete_property */
 
@@ -2117,6 +2191,14 @@ jerry_delete_property_by_index (const jerry_value_t obj_val, /**< object value *
                                                   str_idx_p,
                                                   false);
   ecma_deref_ecma_string (str_idx_p);
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (ECMA_IS_VALUE_ERROR (ret_value))
+  {
+    // TODO: Due to Proxies the return value must be changed to jerry_value_t on next release
+    jcontext_release_exception ();
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
 
   return ecma_is_value_true (ret_value);
 } /* jerry_delete_property_by_index */
@@ -2560,9 +2642,19 @@ jerry_get_own_property_descriptor (const jerry_value_t  obj_val, /**< object val
 
   ecma_property_descriptor_t prop_desc;
 
-  if (!ecma_op_object_get_own_property_descriptor (ecma_get_object_from_value (obj_val),
-                                                   ecma_get_prop_name_from_value (prop_name_val),
-                                                   &prop_desc))
+  ecma_value_t status = ecma_op_object_get_own_property_descriptor (ecma_get_object_from_value (obj_val),
+                                                                    ecma_get_prop_name_from_value (prop_name_val),
+                                                                    &prop_desc);
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (ECMA_IS_VALUE_ERROR (status))
+  {
+    // TODO: Due to Proxies the return value must be changed to jerry_value_t on next release
+    jcontext_release_exception ();
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
+  if (!ecma_is_value_true (status))
   {
     return false;
   }
@@ -2803,6 +2895,13 @@ jerry_get_prototype (const jerry_value_t obj_val) /**< object value */
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_val);
 
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (ECMA_OBJECT_IS_PROXY (obj_p))
+  {
+    return jerry_return (ecma_proxy_object_get_prototype_of (obj_p));
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
   if (obj_p->u2.prototype_cp == JMEM_CP_NULL)
   {
     return ECMA_VALUE_NULL;
@@ -2834,16 +2933,14 @@ jerry_set_prototype (const jerry_value_t obj_val, /**< object value */
   }
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_val);
 
-  if (ecma_is_value_null (proto_obj_val))
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (ECMA_OBJECT_IS_PROXY (obj_p))
   {
-    obj_p->u2.prototype_cp = JMEM_CP_NULL;
+    return jerry_return (ecma_proxy_object_set_prototype_of (obj_p, proto_obj_val));
   }
-  else
-  {
-    ECMA_SET_NON_NULL_POINTER (obj_p->u2.prototype_cp, ecma_get_object_from_value (proto_obj_val));
-  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
 
-  return ECMA_VALUE_TRUE;
+  return ecma_op_ordinary_object_set_prototype_of (obj_p, proto_obj_val);
 } /* jerry_set_prototype */
 
 /**
@@ -3073,6 +3170,16 @@ jerry_foreach_object_property (const jerry_value_t obj_val, /**< object value */
 
   ecma_object_t *object_p = ecma_get_object_from_value (obj_val);
   ecma_collection_t *names_p = ecma_op_object_get_property_names (object_p, ECMA_LIST_ENUMERABLE_PROTOTYPE);
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (names_p == NULL)
+  {
+    // TODO: Due to Proxies the return value must be changed to jerry_value_t on next release
+    jcontext_release_exception ();
+    return false;
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
   ecma_value_t *buffer_p = names_p->buffer_p;
 
   ecma_value_t property_value = ECMA_VALUE_EMPTY;

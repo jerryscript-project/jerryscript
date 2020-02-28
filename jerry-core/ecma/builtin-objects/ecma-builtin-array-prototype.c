@@ -426,7 +426,7 @@ ecma_builtin_array_prototype_object_pop (ecma_object_t *obj_p, /**< array object
 
   if (ecma_op_object_is_fast_array (obj_p))
   {
-    if (!ecma_get_object_extensible (obj_p))
+    if (!ecma_op_ordinary_object_is_extensible (obj_p))
     {
       ecma_free_value (get_value);
       return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type."));
@@ -479,7 +479,7 @@ ecma_builtin_array_prototype_object_push (const ecma_value_t *argument_list_p, /
 
   if (ecma_op_object_is_fast_array (obj_p))
   {
-    if (!ecma_get_object_extensible (obj_p))
+    if (!ecma_op_ordinary_object_is_extensible (obj_p))
     {
       return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type."));
     }
@@ -554,7 +554,7 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg, /**< this ar
 
     if (ext_obj_p->u.array.u.hole_count < ECMA_FAST_ARRAY_HOLE_ONE
         && len != 0
-        && ecma_get_object_extensible (obj_p))
+        && ecma_op_ordinary_object_is_extensible (obj_p))
     {
       ecma_value_t *buffer_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, obj_p->u1.property_list_cp);
 
@@ -592,13 +592,30 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg, /**< this ar
 
     if (ECMA_IS_VALUE_ERROR (upper_value))
     {
-      upper_value = ECMA_VALUE_EMPTY;
       goto clean_up;
     }
 
     /* 6.f and 6.g */
-    bool lower_exist = ecma_op_object_has_property (obj_p, lower_str_p);
-    bool upper_exist = ecma_op_object_has_property (obj_p, upper_str_p);
+    ecma_value_t has_lower = ecma_op_object_has_property (obj_p, lower_str_p);
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+    if (ECMA_IS_VALUE_ERROR (has_lower))
+    {
+      goto clean_up;
+    }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
+    ecma_value_t has_upper = ecma_op_object_has_property (obj_p, upper_str_p);
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+    if (ECMA_IS_VALUE_ERROR (has_upper))
+    {
+      goto clean_up;
+    }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
+    bool lower_exist = ecma_is_value_true (has_lower);
+    bool upper_exist = ecma_is_value_true (has_upper);
 
     /* 6.h */
     if (lower_exist && upper_exist)
@@ -699,7 +716,7 @@ ecma_builtin_array_prototype_object_shift (ecma_object_t *obj_p, /**< array obje
 
     if (ext_obj_p->u.array.u.hole_count < ECMA_FAST_ARRAY_HOLE_ONE
         && len != 0
-        && ecma_get_object_extensible (obj_p))
+        && ecma_op_ordinary_object_is_extensible (obj_p))
     {
       ecma_value_t *buffer_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, obj_p->u1.property_list_cp);
       ecma_value_t ret_value = buffer_p[0];
@@ -1068,6 +1085,13 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
   }
 
   ecma_collection_t *array_index_props_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_ARRAY_INDICES);
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (array_index_props_p == NULL)
+  {
+    return ECMA_VALUE_ERROR;
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
 
   uint32_t defined_prop_count = 0;
 
@@ -1482,7 +1506,7 @@ ecma_builtin_array_prototype_object_unshift (const ecma_value_t args[], /**< arg
 
     if (ext_obj_p->u.array.u.hole_count < ECMA_FAST_ARRAY_HOLE_ONE
         && len != 0
-        && ecma_get_object_extensible (obj_p))
+        && ecma_op_ordinary_object_is_extensible (obj_p))
     {
       if ((ecma_number_t) (len + args_number) > UINT32_MAX)
       {
@@ -2236,12 +2260,8 @@ ecma_builtin_array_prototype_fill (ecma_value_t value, /**< value */
   /* 11. */
   while (k < final)
   {
-    /* 11.a */
-    ecma_string_t *pk = ecma_new_ecma_string_from_number (k);
-
-    /* 11.b */
-    ecma_value_t put_val = ecma_op_object_put (obj_p, pk, value, true);
-    ecma_deref_ecma_string (pk);
+    /* 11.a - 11.b */
+    ecma_value_t put_val = ecma_op_object_put_by_number_index (obj_p, k, value, true);
 
     /* 11. c */
     if (ECMA_IS_VALUE_ERROR (put_val))

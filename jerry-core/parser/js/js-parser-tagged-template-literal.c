@@ -19,6 +19,7 @@
 #include "ecma-builtin-helpers.h"
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
+#include "ecma-objects.h"
 
 /* \addtogroup parser Parser
  * @{
@@ -126,7 +127,7 @@ parser_tagged_template_literal_freeze_array (ecma_object_t *obj_p)
 {
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY);
 
-  ecma_set_object_extensible (obj_p, false);
+  ecma_op_ordinary_object_prevent_extensions (obj_p);
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
   uint8_t new_prop_value = (uint8_t) (ext_obj_p->u.array.u.length_prop & ~ECMA_PROPERTY_FLAG_WRITABLE);
   ext_obj_p->u.array.u.length_prop = new_prop_value;

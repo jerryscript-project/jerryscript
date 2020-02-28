@@ -688,7 +688,21 @@ ecma_module_connect_imports (void)
         lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
       }
 
-      if (binding_p != NULL || ecma_op_has_binding (lex_env_p, import_names_p->local_name_p))
+      if (binding_p != NULL)
+      {
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Imported binding shadows local variable."));
+      }
+
+      ecma_value_t status = ecma_op_has_binding (lex_env_p, import_names_p->local_name_p);
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+      if (ECMA_IS_VALUE_ERROR (status))
+      {
+        return status;
+      }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
+      if (ecma_is_value_true (status))
       {
         return ecma_raise_syntax_error (ECMA_ERR_MSG ("Imported binding shadows local variable."));
       }

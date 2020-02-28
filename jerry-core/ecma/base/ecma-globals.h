@@ -614,6 +614,7 @@ typedef enum
   ECMA_PROPERTY_GET_NO_OPTIONS = 0, /**< no option flags for ecma_op_object_get_property */
   ECMA_PROPERTY_GET_VALUE = 1u << 0, /**< fill virtual_value field for virtual properties */
   ECMA_PROPERTY_GET_EXT_REFERENCE = 1u << 1, /**< get extended reference to the property */
+  ECMA_PROPERTY_GET_HAS_OWN_PROP = 1u << 2, /**< internal [[HasOwnProperty]] method */
 } ecma_property_get_option_bits_t;
 
 /**
@@ -625,8 +626,9 @@ typedef enum
   ECMA_OBJECT_TYPE_CLASS = 1, /**< Objects with class property */
   ECMA_OBJECT_TYPE_ARRAY = 2, /**< Array object (15.4) */
   ECMA_OBJECT_TYPE_PSEUDO_ARRAY  = 3, /**< Array-like object, such as Arguments object (10.6) */
+  ECMA_OBJECT_TYPE_PROXY  = 4, /**< Proxy object ECMAScript v6 26.2 */
   /* Note: these 4 types must be in this order. See IsCallable operation.  */
-  ECMA_OBJECT_TYPE_FUNCTION = 4, /**< Function objects (15.3), created through 13.2 routine */
+  ECMA_OBJECT_TYPE_FUNCTION = 5, /**< Function objects (15.3), created through 13.2 routine */
   ECMA_OBJECT_TYPE_BOUND_FUNCTION = 6, /**< Function objects (15.3), created through 15.3.4.5 routine */
   ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION = 7, /**< External (host) function object */
   /* Types between 13-15 cannot have a built-in flag. See ecma_lexical_environment_type_t. */
@@ -837,6 +839,7 @@ typedef struct
       {
         ecma_value_t value; /**< value of the object (e.g. boolean, number, string, etc.) */
         uint32_t length; /**< length related property (e.g. length of ArrayBuffer) */
+        ecma_value_t target; /**< [[ProxyTarget]] internal property */
       } u;
     } class_prop;
 
@@ -1834,6 +1837,32 @@ do \
  */
 #define ECMA_CHECK_STACK_USAGE()
 #endif /* (JERRY_STACK_LIMIT != 0) */
+
+/**
+ * Invalid object pointer which represents abrupt completion
+ */
+#define ECMA_OBJECT_POINTER_ERROR ((ecma_object_t *) 0x01)
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+/**
+ * Description of Proxy objects.
+ */
+typedef struct
+{
+  ecma_object_t header; /**< header part */
+  ecma_value_t target; /**< [[ProxyTarget]] internal slot */
+  ecma_value_t handler; /**< [[ProxyHandler]] internal slot */
+} ecma_proxy_object_t;
+
+/**
+ * Description of Proxy objects.
+ */
+typedef struct
+{
+  ecma_extended_object_t header; /**< header part */
+  ecma_value_t proxy; /**< [[RevocableProxy]] internal slot */
+} ecma_revocable_proxy_object_t;
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
 
 /**
  * @}

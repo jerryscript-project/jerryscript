@@ -507,6 +507,15 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_WEAKSET,
 
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_WEAKSET) */
 
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+/* The Proxy routine (ECMA-262 v6, 26.2.1) */
+BUILTIN_ROUTINE (ECMA_BUILTIN_ID_PROXY,
+                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
+                 true,
+                 proxy)
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
 #if ENABLED (JERRY_ES2015)
 
 /* Intrinsic hidden builtin object  */

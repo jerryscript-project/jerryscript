@@ -17,6 +17,7 @@
 #include "ecma-array-object.h"
 #include "ecma-globals.h"
 #include "ecma-objects.h"
+#include "ecma-objects-general.h"
 #include "ecma-helpers.h"
 
 /** \addtogroup ecma ECMA
@@ -193,7 +194,8 @@ ecma_delete_native_pointer_property (ecma_object_t *obj_p, /**< object to delete
         if (native_pointer_p->next_p == NULL)
         {
           /* Only one native pointer property exists, so the property can be deleted as well. */
-          ecma_op_object_delete (obj_p, name_p, false);
+          ecma_op_general_object_delete (obj_p, name_p, false);
+
           jmem_heap_free_block (native_pointer_p, sizeof (ecma_native_pointer_t));
           return true;
         }

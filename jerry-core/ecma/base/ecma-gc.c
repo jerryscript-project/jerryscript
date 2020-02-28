@@ -24,7 +24,9 @@
 #include "ecma-globals.h"
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
+#include "ecma-objects.h"
 #include "ecma-property-hashmap.h"
+#include "ecma-proxy-object.h"
 #include "jcontext.h"
 #include "jrt.h"
 #include "jrt-libc-includes.h"
@@ -450,6 +452,29 @@ ecma_gc_mark_executable_object (ecma_object_t *object_p) /**< object */
 
 #endif /* ENABLED (JERRY_ES2015) */
 
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+/**
+ * Mark the objects referenced by a proxy object
+ */
+static void
+ecma_gc_mark_proxy_object (ecma_object_t *object_p) /**< proxy object */
+{
+  JERRY_ASSERT (ECMA_OBJECT_IS_PROXY (object_p));
+
+  ecma_proxy_object_t *proxy_p = (ecma_proxy_object_t *) object_p;
+
+  if (!ecma_is_value_null (proxy_p->target))
+  {
+    ecma_gc_set_object_visited (ecma_get_object_from_value (proxy_p->target));
+  }
+
+  if (!ecma_is_value_null (proxy_p->handler))
+  {
+    ecma_gc_set_object_visited (ecma_get_object_from_value (proxy_p->handler));
+  }
+} /* ecma_gc_mark_proxy_object */
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
 /**
  * Mark objects as visited starting from specified object as root
  */
@@ -609,6 +634,13 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
         }
         break;
       }
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+      case ECMA_OBJECT_TYPE_PROXY:
+      {
+        ecma_gc_mark_proxy_object (object_p);
+        break;
+      }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
       case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
       {
         ecma_gc_mark_bound_function_object (object_p);
@@ -643,6 +675,23 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
         }
         break;
       }
+#if ENABLED (JERRY_ES2015)
+      case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
+      {
+        ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
+
+        if (ext_func_p->u.external_handler_cb == ecma_proxy_revoke_cb)
+        {
+          ecma_revocable_proxy_object_t *rev_proxy_p = (ecma_revocable_proxy_object_t *) object_p;
+
+          if (!ecma_is_value_null (rev_proxy_p->proxy))
+          {
+            ecma_gc_set_object_visited (ecma_get_object_from_value (rev_proxy_p->proxy));
+          }
+        }
+        break;
+      }
+#endif /* ENABLED (JERRY_ES2015) */
       default:
       {
         break;
@@ -975,6 +1024,14 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
     }
     case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
     {
+#if ENABLED (JERRY_ES2015)
+      ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
+
+      if (ext_func_p->u.external_handler_cb == ecma_proxy_revoke_cb)
+      {
+        ext_object_size = sizeof (ecma_revocable_proxy_object_t);
+      }
+#endif /* ENABLED (JERRY_ES2015) */
       break;
     }
     case ECMA_OBJECT_TYPE_CLASS:
@@ -1138,6 +1195,13 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 
       break;
     }
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+    case ECMA_OBJECT_TYPE_PROXY:
+    {
+      ext_object_size = sizeof (ecma_proxy_object_t);
+      break;
+    }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
     case ECMA_OBJECT_TYPE_FUNCTION:
     {
       /* Function with byte-code (not a built-in function). */

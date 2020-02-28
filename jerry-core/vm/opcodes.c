@@ -44,13 +44,25 @@
  * 'Variable declaration' opcode handler.
  *
  * See also: ECMA-262 v5, 10.5 - Declaration binding instantiation (block 8).
+ *
+ * @return ECMA_VALUE_ERROR - if no the operation fails
+ *         ECMA_VALUE_EMPTY - otherwise
  */
-inline void JERRY_ATTR_ALWAYS_INLINE
+inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 vm_var_decl (ecma_object_t *lex_env_p, /**< target lexical environment */
              ecma_string_t *var_name_str_p, /**< variable name */
              bool is_configurable_bindings) /**< true if the binding can be deleted */
 {
-  if (!ecma_op_has_binding (lex_env_p, var_name_str_p))
+  ecma_value_t has_binding = ecma_op_has_binding (lex_env_p, var_name_str_p);
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (ECMA_IS_VALUE_ERROR (has_binding))
+  {
+    return has_binding;
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
+  if (ecma_is_value_false (has_binding))
   {
     ecma_value_t completion_value = ecma_op_create_mutable_binding (lex_env_p,
                                                                     var_name_str_p,
@@ -65,12 +77,17 @@ vm_var_decl (ecma_object_t *lex_env_p, /**< target lexical environment */
                                                                       var_name_str_p,
                                                                       vm_is_strict_mode ())));
   }
+
+  return ECMA_VALUE_EMPTY;
 } /* vm_var_decl */
 
 /**
  * Set var binding to a function literal value.
+ *
+ * @return ECMA_VALUE_ERROR - if no the operation fails
+ *         ECMA_VALUE_EMPTY - otherwise
  */
-inline void JERRY_ATTR_ALWAYS_INLINE
+inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 vm_set_var (ecma_object_t *lex_env_p, /**< target lexical environment */
             ecma_string_t *var_name_str_p, /**< variable name */
             bool is_strict, /**< true, if the engine is in strict mode */
@@ -83,12 +100,9 @@ vm_set_var (ecma_object_t *lex_env_p, /**< target lexical environment */
                 || ecma_is_value_empty (put_value_result)
                 || ECMA_IS_VALUE_ERROR (put_value_result));
 
-  if (ECMA_IS_VALUE_ERROR (put_value_result))
-  {
-    jcontext_release_exception ();
-  }
-
   ecma_free_value (lit_value);
+
+  return put_value_result;
 } /* vm_set_var */
 
 /**
@@ -206,7 +220,7 @@ vm_op_delete_prop (ecma_value_t object, /**< base object */
   JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
 
   ecma_value_t delete_op_ret = ecma_op_object_delete (obj_p, name_string_p, is_strict);
-  JERRY_ASSERT (ecma_is_value_boolean (delete_op_ret) || (is_strict == true && ECMA_IS_VALUE_ERROR (delete_op_ret)));
+  JERRY_ASSERT (ecma_is_value_boolean (delete_op_ret) || ECMA_IS_VALUE_ERROR (delete_op_ret));
   ecma_deref_object (obj_p);
   ecma_deref_ecma_string (name_string_p);
 
@@ -228,6 +242,13 @@ vm_op_delete_var (ecma_value_t name_literal, /**< name literal */
   ecma_string_t *var_name_str_p = ecma_get_string_from_value (name_literal);
 
   ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (lex_env_p, var_name_str_p);
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (JERRY_UNLIKELY (ref_base_lex_env_p == ECMA_OBJECT_POINTER_ERROR))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
 
   if (ref_base_lex_env_p == NULL)
   {
@@ -267,6 +288,9 @@ opfunc_for_in (ecma_value_t left_value, /**< left value */
   /* ecma_op_to_object will only raise error on null/undefined values but those are handled above. */
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (obj_expr_value));
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_expr_value);
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  JERRY_ASSERT (!ECMA_OBJECT_IS_PROXY (obj_p));
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
   ecma_collection_t *prop_names_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_ENUMERABLE_PROTOTYPE);
 
   if (prop_names_p->item_count != 0)

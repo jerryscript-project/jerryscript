@@ -124,7 +124,7 @@ ecma_get_global_scope (void)
  *
  * @return true / false
  */
-bool
+ecma_value_t
 ecma_op_has_binding (ecma_object_t *lex_env_p, /**< lexical environment */
                      ecma_string_t *name_p) /**< argument N */
 {
@@ -137,16 +137,14 @@ ecma_op_has_binding (ecma_object_t *lex_env_p, /**< lexical environment */
   {
     ecma_property_t *property_p = ecma_find_named_property (lex_env_p, name_p);
 
-    return (property_p != NULL);
+    return ecma_make_boolean_value (property_p != NULL);
   }
-  else
-  {
-    JERRY_ASSERT (lex_env_type == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
 
-    ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
+  JERRY_ASSERT (lex_env_type == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
 
-    return ecma_op_object_has_property (binding_obj_p, name_p);
-  }
+  ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
+
+  return ecma_op_object_has_property (binding_obj_p, name_p);
 } /* ecma_op_has_binding */
 
 /**
@@ -186,7 +184,7 @@ ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environme
 
     ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
-    if (!ecma_get_object_extensible (binding_obj_p))
+    if (!ecma_op_ordinary_object_is_extensible (binding_obj_p))
     {
       return ECMA_VALUE_EMPTY;
     }
@@ -299,6 +297,11 @@ ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
 
     ecma_value_t result = ecma_op_object_find (binding_obj_p, name_p);
 
+    if (ECMA_IS_VALUE_ERROR (result))
+    {
+      return result;
+    }
+
     if (!ecma_is_value_found (result))
     {
       if (is_strict)
@@ -321,8 +324,8 @@ ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
  * See also: ECMA-262 v5, 10.2.1
  *
  * @return ecma value
- *         Return value is simple and so need not be freed.
- *         However, ecma_free_value may be called for it, but it is a no-op.
+ *         Return ECMA_VALUE_ERROR - if the operation fails
+ *         ECMA_VALUE_{TRUE/FALSE} - depends on whether the binding can be deleted
  */
 ecma_value_t
 ecma_op_delete_binding (ecma_object_t *lex_env_p, /**< lexical environment */

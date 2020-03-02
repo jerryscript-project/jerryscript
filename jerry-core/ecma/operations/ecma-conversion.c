@@ -98,9 +98,12 @@ ecma_op_same_value (ecma_value_t x, /**< ecma value */
     ecma_number_t x_num = ecma_get_number_from_value (x);
     ecma_number_t y_num = ecma_get_number_from_value (y);
 
-    if (ecma_number_is_nan (x_num) == ecma_number_is_nan (y_num))
+    bool is_x_nan = ecma_number_is_nan (x_num);
+    bool is_y_nan = ecma_number_is_nan (y_num);
+
+    if (is_x_nan || is_y_nan)
     {
-      return true;
+      return is_x_nan && is_y_nan;
     }
 
     if (ecma_number_is_zero (x_num)

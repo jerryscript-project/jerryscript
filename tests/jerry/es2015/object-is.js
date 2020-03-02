@@ -23,6 +23,9 @@ assert(Object.is(null, null) === true);
 assert(Object.is(2, 8) === false);
 assert(Object.is(8, 8) === true);
 
+assert(Object.is(3.14, 6.28) === false);
+assert(Object.is(3.14, 3.14) === true);
+
 assert(Object.is('foo', 'foo') === true);
 assert(Object.is('foo', 'bar') === false);
 assert(Object.is(new String('foo'), 'foo') === false);

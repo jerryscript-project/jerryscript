@@ -2441,8 +2441,11 @@ ecma_builtin_array_prototype_object_copy_within (const ecma_value_t args[], /**<
 
         for (; count > 0; count--)
         {
+          ecma_value_t copy_value = ecma_copy_value_if_not_object (buffer_p[start]);
+
           ecma_free_value_if_not_object (buffer_p[target]);
-          buffer_p[target] = ecma_copy_value_if_not_object (buffer_p[start]);
+
+          buffer_p[target] = copy_value;
 
           if (forward)
           {

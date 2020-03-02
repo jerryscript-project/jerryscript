@@ -477,9 +477,8 @@ ecma_builtin_string_prototype_object_replace (ecma_value_t this_value, /**< this
     {
       if (!memcmp (curr_p, search_buf_p, search_size))
       {
-        replace_ctx.builder = ecma_stringbuilder_create ();
         const lit_utf8_size_t byte_offset = (lit_utf8_size_t) (curr_p - replace_ctx.string_p);
-        ecma_stringbuilder_append_raw (&replace_ctx.builder, replace_ctx.string_p, byte_offset);
+        replace_ctx.builder = ecma_stringbuilder_create_raw (replace_ctx.string_p, byte_offset);
 
         if (replace_ctx.replace_str_p == NULL)
         {

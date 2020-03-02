@@ -2229,6 +2229,16 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
           continue;
         }
+        case VM_OC_REQUIRE_OBJECT_COERCIBLE:
+        {
+          result = ecma_op_check_object_coercible (stack_top_p[-1]);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+          continue;
+        }
 #endif /* ENABLED (JERRY_ES2015) */
         case VM_OC_PUSH_ELISON:
         {

@@ -268,6 +268,7 @@ typedef enum
   VM_OC_STRING_CONCAT,           /**< string concatenation */
   VM_OC_GET_TEMPLATE_OBJECT,     /**< GetTemplateObject operation */
   VM_OC_PUSH_NEW_TARGET,         /**< push new.target onto the stack */
+  VM_OC_REQUIRE_OBJECT_COERCIBLE,/**< RequireObjectCoercible opretaion */
 #endif /* ENABLED (JERRY_ES2015) */
   VM_OC_NONE,                    /**< a special opcode for unsupported byte codes */
 } vm_oc_types;
@@ -327,6 +328,7 @@ typedef enum
   VM_OC_STRING_CONCAT = VM_OC_NONE,           /**< string concatenation */
   VM_OC_GET_TEMPLATE_OBJECT = VM_OC_NONE,     /**< GetTemplateObject operation */
   VM_OC_PUSH_NEW_TARGET = VM_OC_NONE,         /**< push new.target onto the stack */
+  VM_OC_REQUIRE_OBJECT_COERCIBLE = VM_OC_NONE,/**< RequireObjectCoercible opretaion */
 #endif /* !ENABLED (JERRY_ES2015) */
 
   VM_OC_UNUSED = VM_OC_NONE                   /**< placeholder if the list is empty */

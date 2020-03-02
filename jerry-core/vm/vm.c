@@ -1224,14 +1224,14 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) func_p;
 
-          JERRY_ASSERT (frame_ctx_p->lex_env_p == ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                                                   ext_func_p->u.function.scope_cp));
+          JERRY_ASSERT (frame_ctx_p->lex_env_p ==
+                        ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t, ext_func_p->u.function.scope_cp));
 
           ecma_object_t *name_lex_env = ecma_create_decl_lex_env (frame_ctx_p->lex_env_p);
 
           ecma_op_create_immutable_binding (name_lex_env, ecma_get_string_from_value (right_value), left_value);
 
-          ECMA_SET_INTERNAL_VALUE_POINTER (ext_func_p->u.function.scope_cp, name_lex_env);
+          ECMA_SET_NON_NULL_POINTER_TAG (ext_func_p->u.function.scope_cp, name_lex_env, 0);
 
           ecma_free_value (right_value);
           ecma_deref_object (name_lex_env);
@@ -1814,9 +1814,10 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           ecma_bytecode_ref ((ecma_compiled_code_t *) bytecode_p);
           ECMA_SET_INTERNAL_VALUE_POINTER (current_ext_func_obj_p->u.function.bytecode_cp,
                                            bytecode_p);
-          ECMA_SET_INTERNAL_VALUE_POINTER (current_ext_func_obj_p->u.function.scope_cp,
-                                           ECMA_GET_INTERNAL_VALUE_POINTER (const ecma_object_t,
-                                                                            new_ext_func_obj_p->u.function.scope_cp));
+
+          ecma_object_t *scope_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
+                                                                               new_ext_func_obj_p->u.function.scope_cp);
+          ECMA_SET_NON_NULL_POINTER_TAG (current_ext_func_obj_p->u.function.scope_cp, scope_p, 0);
           ecma_deref_object (new_constructor_obj_p);
           continue;
         }

@@ -41,6 +41,37 @@
 #define JMEM_ALIGNMENT (1u << JMEM_ALIGNMENT_LOG)
 
 /**
+ * Pointer value can be directly stored without compression
+ */
+#if UINTPTR_MAX <= UINT32_MAX
+#define JMEM_CAN_STORE_POINTER_VALUE_DIRECTLY
+#endif /* UINTPTR_MAX <= UINT32_MAX */
+
+/**
+ * Mask for tag part in jmem_cpointer_tag_t
+ */
+#define JMEM_TAG_MASK 0x7u
+
+/**
+ * Shift for tag part in jmem_cpointer_tag_t
+ */
+#if defined (JMEM_CAN_STORE_POINTER_VALUE_DIRECTLY) && ENABLED (JERRY_CPOINTER_32_BIT)
+#define JMEM_TAG_SHIFT 0
+#else /* !JMEM_CAN_STORE_POINTER_VALUE_DIRECTLY || !ENABLED (JERRY_CPOINTER_32_BIT) */
+#define JMEM_TAG_SHIFT 3
+#endif /* JMEM_CAN_STORE_POINTER_VALUE_DIRECTLY && ENABLED (JERRY_CPOINTER_32_BIT) */
+
+/**
+ * Bit mask for tag part in jmem_cpointer_tag_t
+ */
+enum
+{
+  JMEM_FIRST_TAG_BIT_MASK   = (1u << 0), /**< first tag bit mask **/
+  JMEM_SECOND_TAG_BIT_MASK  = (1u << 1), /**< second tag bit mask **/
+  JMEM_THIRD_TAG_BIT_MASK   = (1u << 2), /**< third tag bit mask **/
+};
+
+/**
  * Compressed pointer representations
  *
  * 16 bit representation:
@@ -68,6 +99,11 @@ typedef uint32_t jmem_cpointer_t;
 #else /* !ENABLED (JERRY_CPOINTER_32_BIT) */
 typedef uint16_t jmem_cpointer_t;
 #endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
+
+/**
+ * Compressed pointer with tag value
+ */
+typedef uint32_t jmem_cpointer_tag_t;
 
 /**
  * Memory usage pressure for reclaiming unused memory.
@@ -222,6 +258,44 @@ void * JERRY_ATTR_PURE jmem_decompress_pointer (uintptr_t compressed_pointer);
       JMEM_CP_SET_NON_NULL_POINTER (cp_value, ptr_value); \
     } \
   } while (false);
+
+/**
+ * Set value of pointer-tag value so that it will correspond
+ * to specified non_compressed_pointer along with tag
+ */
+#define JMEM_CP_SET_NON_NULL_POINTER_TAG(cp_value, pointer, tag) \
+  do \
+  { \
+    JERRY_ASSERT ((uintptr_t) tag < (uintptr_t) (JMEM_ALIGNMENT)); \
+    jmem_cpointer_tag_t compressed_ptr = jmem_compress_pointer (pointer); \
+    (cp_value) = (jmem_cpointer_tag_t) ((compressed_ptr << JMEM_TAG_SHIFT) | tag); \
+  } while (false);
+
+/**
+ * Extract value of pointer from specified pointer-tag value
+ */
+#define JMEM_CP_GET_NON_NULL_POINTER_FROM_POINTER_TAG(type, cp_value) \
+  ((type *) (jmem_decompress_pointer ((cp_value & ~JMEM_TAG_MASK) >> JMEM_TAG_SHIFT)))
+
+/**
+ * Get value of each tag from specified pointer-tag value
+ */
+#define JMEM_CP_GET_FIRST_BIT_FROM_POINTER_TAG(cp_value) \
+  (cp_value & JMEM_FIRST_TAG_BIT_MASK) /**< get first tag bit **/
+#define JMEM_CP_GET_SECOND_BIT_FROM_POINTER_TAG(cp_value) \
+  (cp_value & JMEM_SECOND_TAG_BIT_MASK) /**< get second tag bit **/
+#define JMEM_CP_GET_THIRD_BIT_FROM_POINTER_TAG(cp_value) \
+  (cp_value & JMEM_THIRD_TAG_BIT_MASK) /**< get third tag bit **/
+
+/**
+ * Set value of each tag to specified pointer-tag value
+ */
+#define JMEM_CP_SET_FIRST_BIT_TO_POINTER_TAG(cp_value) \
+  (cp_value) = (cp_value | JMEM_FIRST_TAG_BIT_MASK) /**< set first tag bit **/
+#define JMEM_CP_SET_SECOND_BIT_TO_POINTER_TAG(cp_value) \
+  (cp_value) = (cp_value | JMEM_SECOND_TAG_BIT_MASK) /**< set second tag bit **/
+#define JMEM_CP_SET_THIRD_BIT_TO_POINTER_TAG(cp_value) \
+  (cp_value) = (cp_value | JMEM_THIRD_TAG_BIT_MASK) /**< set third tag bit **/
 
 /**
  * @}

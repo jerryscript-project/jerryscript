@@ -36,6 +36,15 @@
  */
 #define ECMA_NULL_POINTER JMEM_CP_NULL
 
+#if defined (JMEM_CAN_STORE_POINTER_VALUE_DIRECTLY)
+
+/**
+ * JMEM_ALIGNMENT_LOG aligned pointers can be stored directly in ecma_value_t
+ */
+#define ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
+
+#endif /* JMEM_CAN_STORE_POINTER_VALUE_DIRECTLY */
+
 /**
  * @}
  */
@@ -126,15 +135,6 @@ typedef uint32_t ecma_value_t;
  * Type for directly encoded integer numbers in JerryScript.
  */
 typedef int32_t ecma_integer_value_t;
-
-#if UINTPTR_MAX <= UINT32_MAX
-
-/**
- * JMEM_ALIGNMENT_LOG aligned pointers can be stored directly in ecma_value_t
- */
-#define ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
-
-#endif /* UINTPTR_MAX <= UINT32_MAX */
 
 /**
  * Mask for ecma types in ecma_value_t
@@ -848,7 +848,7 @@ typedef struct
      */
     struct
     {
-      ecma_value_t scope_cp; /**< function scope */
+      jmem_cpointer_tag_t scope_cp; /**< function scope */
       ecma_value_t bytecode_cp; /**< function byte code */
     } function;
 

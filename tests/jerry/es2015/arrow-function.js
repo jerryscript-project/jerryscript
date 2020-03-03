@@ -154,6 +154,8 @@ must_throw ("!x => 4");
 must_throw ("x => {} = 1");
 must_throw ("x => {} a = 1");
 must_throw ("x => {} ? 1 : 0");
+must_throw ("(x,x,x) => 0");
+must_throw ("(x,x,x) => { }");
 must_throw_strict ("(package) => 0");
 must_throw_strict ("(package) => { return 5 }");
 must_throw_strict ("(x,x,x) => 0");

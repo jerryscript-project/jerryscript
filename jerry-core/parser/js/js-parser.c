@@ -1809,7 +1809,8 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
     if (JERRY_UNLIKELY (context_p->lit_object.literal_p->status_flags & LEXER_FLAG_FUNCTION_ARGUMENT))
     {
 #if ENABLED (JERRY_ES2015)
-      if (context_p->status_flags & PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM)
+      if ((context_p->status_flags & PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM)
+          || (context_p->status_flags & PARSER_IS_ARROW_FUNCTION))
       {
         parser_raise_error (context_p, PARSER_ERR_DUPLICATED_ARGUMENT_NAMES);
       }

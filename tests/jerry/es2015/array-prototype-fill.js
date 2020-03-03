@@ -47,6 +47,8 @@ assert (assertArrayEquals ([0, 0, 0, 0, 0].fill (8, -2, -1), [0, 0, 0, 8, 0]));
 assert (assertArrayEquals ([0, 0, 0, 0, 0].fill (8, -1, -3), [0, 0, 0, 0, 0]));
 assert (assertArrayEquals ([0, 0, 0, 0, 0].fill (8, undefined, 4), [8, 8, 8, 8, 0]));
 assert (assertArrayEquals ([ ,  ,  ,  , 0].fill (8, 1, 3), [, 8, 8, , 0]));
+assert (assertArrayEquals ([0, 0, 0, 0, 0].fill (7.8), [7.8, 7.8, 7.8, 7.8, 7.8]));
+assert (assertArrayEquals (["foo", "bar", "baz"].fill (1), [1, 1, 1]));
 
 
 // If the range is empty, the array is not actually modified and

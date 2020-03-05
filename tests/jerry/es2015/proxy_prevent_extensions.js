@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// TODO: Update these tests when the internal routine has been implemented
+// Copyright 2015 the V8 project authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 var target = {};
 var handler = { preventExtensions (target) {
@@ -26,7 +28,7 @@ try {
   Object.freeze(proxy)
   assert(false);
 } catch (e) {
-  assert(e instanceof TypeError);
+  assert(e === 42);
 }
 
 try {
@@ -34,6 +36,112 @@ try {
   Object.seal(proxy)
   assert(false);
 } catch (e) {
+  assert(e === 42);
+}
+
+// test with no trap
+var target = {};
+var handler = {};
+var proxy = new Proxy(target, handler);
+
+assert(Object.isExtensible(target) === true);
+assert(Object.isExtensible(proxy) === true);
+Object.preventExtensions(proxy);
+assert(Object.isExtensible(target) === false);
+assert(Object.isExtensible(proxy) === false);
+
+// test with "undefined" trap
+var target = {};
+var handler = { preventExtensions: null };
+var proxy = new Proxy(target, handler);
+
+assert(Object.isExtensible(target) === true);
+assert(Object.isExtensible(proxy) === true);
+Object.preventExtensions(proxy);
+assert(Object.isExtensible(target) === false);
+assert(Object.isExtensible(proxy) === false);
+
+// test with invalid trap
+var target = {};
+var handler = { preventExtensions: 42 };
+var proxy = new Proxy(target, handler);
+
+try {
+  Object.preventExtensions(proxy);
+  assert(false);
+} catch (e) {
   assert(e instanceof TypeError);
 }
 
+// test with valid trap
+var target = { foo: "bar" };
+var handler = {
+  preventExtensions(target) {
+    target.foo = "foo"
+    Object.preventExtensions(target);
+    return true;
+  }
+}
+
+var proxy = new Proxy(target, handler);
+assert(Object.isExtensible(target) === true);
+assert(Object.isExtensible(proxy) === true);
+assert(target.foo === "bar");
+Object.preventExtensions(proxy);
+assert(Object.isExtensible(target) === false);
+assert(Object.isExtensible(proxy) === false);
+assert(target.foo === "foo");
+
+// test when invariants gets violated
+var target = {};
+var handler = {
+  preventExtensions(target) {
+    return true;
+  }
+}
+
+var proxy = new Proxy(target, handler);
+
+try {
+  Object.preventExtensions(proxy);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+// test when target is proxy
+var target = {};
+var handler = {
+  preventExtensions(target) {
+    Object.preventExtensions(target);
+    return true;
+  }
+}
+
+var proxy1 = new Proxy(target, handler);
+var proxy2 = new Proxy(proxy1, handler);
+
+assert(Object.isExtensible(target) === true);
+assert(Object.isExtensible(proxy1) === true);
+assert(Object.isExtensible(proxy2) === true);
+Object.preventExtensions(proxy2);
+assert(Object.isExtensible(target) === false);
+assert(Object.isExtensible(proxy1) === false);
+assert(Object.isExtensible(proxy2) === false);
+
+var target = {};
+var handler = {
+  preventExtensions(target) {
+    return true;
+  }
+}
+
+var proxy1 = new Proxy(target, handler);
+var proxy2 = new Proxy(proxy1, handler);
+
+try {
+  Object.preventExtensions(proxy2);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}

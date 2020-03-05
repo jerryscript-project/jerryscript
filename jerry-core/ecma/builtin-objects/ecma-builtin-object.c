@@ -291,7 +291,12 @@ ecma_builtin_object_set_integrity_level (ecma_object_t *obj_p, /**< object */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
 
   /* 6. */
-  ecma_collection_t *props_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_CONVERT_FAST_ARRAYS);
+  uint32_t opts = ECMA_LIST_CONVERT_FAST_ARRAYS;
+#if ENABLED (JERRY_ES2015)
+  opts |= ECMA_LIST_SYMBOLS;
+#endif /* ENABLED (JERRY_ES2015) */
+
+  ecma_collection_t *props_p = ecma_op_object_get_property_names (obj_p, opts);
 
 #if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
   if (props_p == NULL)
@@ -307,7 +312,7 @@ ecma_builtin_object_set_integrity_level (ecma_object_t *obj_p, /**< object */
     /* 8.a */
     for (uint32_t i = 0; i < props_p->item_count; i++)
     {
-      ecma_string_t *property_name_p = ecma_get_string_from_value (buffer_p[i]);
+      ecma_string_t *property_name_p = ecma_get_prop_name_from_value (buffer_p[i]);
 
       ecma_property_descriptor_t prop_desc;
       ecma_value_t status = ecma_op_object_get_own_property_descriptor (obj_p, property_name_p, &prop_desc);
@@ -349,7 +354,7 @@ ecma_builtin_object_set_integrity_level (ecma_object_t *obj_p, /**< object */
     /* 9.a */
     for (uint32_t i = 0; i < props_p->item_count; i++)
     {
-      ecma_string_t *property_name_p = ecma_get_string_from_value (buffer_p[i]);
+      ecma_string_t *property_name_p = ecma_get_prop_name_from_value (buffer_p[i]);
 
       /* 9.1 */
       ecma_property_descriptor_t prop_desc;

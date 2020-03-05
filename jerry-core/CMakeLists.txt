@@ -16,6 +16,13 @@ cmake_minimum_required (VERSION 2.8.12)
 set(JERRY_CORE_NAME jerry-core)
 project (${JERRY_CORE_NAME} C)
 
+# Find all existing profiles for a selection from a drop down list
+file(GLOB PROFILE_LIST RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/profiles" "${CMAKE_CURRENT_SOURCE_DIR}/profiles/*.profile")
+# Remove '.profile' extension from all profiles to use their filenames as selection
+list(TRANSFORM PROFILE_LIST REPLACE ".profile" "")
+# Change this variable to the project's default profile
+set(DEFAULT_PROFILE "es5.1")
+
 # Optional build settings
 set(ENABLE_ALL_IN_ONE               OFF     CACHE BOOL   "Enable all-in-one build?")
 
@@ -30,7 +37,6 @@ set(JERRY_LOGGING                   OFF     CACHE BOOL   "Enable logging?")
 set(JERRY_MEM_STATS                 OFF     CACHE BOOL   "Enable memory statistics?")
 set(JERRY_MEM_GC_BEFORE_EACH_ALLOC  OFF     CACHE BOOL   "Enable mem-stress test?")
 set(JERRY_PARSER_DUMP_BYTE_CODE     OFF     CACHE BOOL   "Enable parser byte-code dumps?")
-set(JERRY_PROFILE                   "es5.1" CACHE STRING "Use default or other profile?")
 set(JERRY_REGEXP_STRICT_MODE        OFF     CACHE BOOL   "Enable regexp strict mode?")
 set(JERRY_REGEXP_DUMP_BYTE_CODE     OFF     CACHE BOOL   "Enable regexp byte-code dumps?")
 set(JERRY_SNAPSHOT_EXEC             OFF     CACHE BOOL   "Enable executing snapshot files?")
@@ -42,6 +48,8 @@ set(JERRY_GLOBAL_HEAP_SIZE          "(512)" CACHE STRING "Size of memory heap, i
 set(JERRY_GC_LIMIT                  "(0)"   CACHE STRING "Heap usage limit to trigger garbage collection")
 set(JERRY_STACK_LIMIT               "(0)"   CACHE STRING "Maximum stack usage size, in kilobytes")
 set(JERRY_GC_MARK_LIMIT             "(8)"   CACHE STRING "Maximum depth of recursion during GC mark phase")
+set(JERRY_PROFILE                   "${DEFAULT_PROFILE}" CACHE STRING "Use default or other profile?")
+set_property(CACHE JERRY_PROFILE PROPERTY STRINGS ${PROFILE_LIST})
 
 # Option overrides
 if(USING_MSVC)

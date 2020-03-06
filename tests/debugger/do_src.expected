@@ -17,5 +17,7 @@ Stopped at tests/debugger/do_src.js:21
 (jerry-debugger) step
 Stopped at <unknown>:2 (in f() at line:1, col:5)
 (jerry-debugger) src
+   1   f = function f() {
+   2 > print('F2') }
 (jerry-debugger) c
 out: F2

@@ -852,11 +852,16 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
 #endif /* ENABLED (JERRY_ES2015) */
   }
 
-  ecma_value_t ret_value = vm_run (bytecode_data_p,
-                                   this_binding,
-                                   local_env_p,
-                                   arguments_list_p,
-                                   arguments_list_len);
+  ecma_value_t ret_value;
+  {
+    size_t frame_size = vm_calculate_frame_size (bytecode_data_p);
+    JERRY_VLA (uintptr_t, stack, frame_size);
+
+    vm_frame_ctx_t *frame_ctx_p = (vm_frame_ctx_t *) stack;
+    vm_init_frame (frame_ctx_p, bytecode_data_p, local_env_p, this_binding);
+    vm_init_exec (frame_ctx_p, arguments_list_p, arguments_list_len);
+    ret_value = vm_execute (frame_ctx_p);
+  }
 
 #if ENABLED (JERRY_ES2015)
   JERRY_CONTEXT (current_function_obj_p) = old_function_object_p;

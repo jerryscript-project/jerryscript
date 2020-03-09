@@ -417,8 +417,19 @@ ecma_value_t vm_run_eval (ecma_compiled_code_t *bytecode_data_p, uint32_t parse_
 ecma_value_t vm_run_module (const ecma_compiled_code_t *bytecode_p, ecma_object_t *lex_env_p);
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
-ecma_value_t vm_run (const ecma_compiled_code_t *bytecode_header_p, ecma_value_t this_binding_value,
-                     ecma_object_t *lex_env_p, const ecma_value_t *arg_list_p, ecma_length_t arg_list_len);
+/**
+ * Usage of vm_execute:
+ *
+ * 1) Calculate the required vm frame context size via vm_calculate_frame_size.
+ * 2) Allocate the required vm frame context size (with eg.: JERRY_VLA).
+ * 3) Initialize the allocated vm frame context via vm_init_frame.
+ * 4) Initialize the vm frame context for execution via vm_init_exec.
+ * 5) Execute the vm frame context via vm_execute.
+ */
+size_t vm_calculate_frame_size (const ecma_compiled_code_t *bytecode_header_p);
+void vm_init_frame (vm_frame_ctx_t *frame_ctx_p, const ecma_compiled_code_t *bytecode_header_p,
+                    ecma_object_t *lex_env_p, ecma_value_t this_binding_value);
+void vm_init_exec (vm_frame_ctx_t *frame_ctx_p, const ecma_value_t *arg_p, ecma_length_t arg_list_len);
 ecma_value_t vm_execute (vm_frame_ctx_t *frame_ctx_p);
 
 bool vm_is_strict_mode (void);

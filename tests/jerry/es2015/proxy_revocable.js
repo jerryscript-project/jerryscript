@@ -23,12 +23,7 @@ var revocable = Proxy.revocable(target, handler);
 
 var proxy = revocable.proxy;
 
-try {
-  proxy.a; // FIXME: this should return 5 when proxy.[[Get]] has been implemted
-  assert(false);
-} catch (e) {
-  assert(e instanceof TypeError);
-}
+assert(proxy.a === 5);
 
 revocable.revoke();
 

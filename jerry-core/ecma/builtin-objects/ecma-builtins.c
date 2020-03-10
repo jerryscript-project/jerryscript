@@ -962,7 +962,7 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
     uint32_t *bitset_p = built_in_props_p->instantiated_bitset;
 
     ecma_collection_t *for_non_enumerable_p = (separate_enumerable ? non_enum_collection_p
-                                                                          : main_collection_p);
+                                                                   : main_collection_p);
 
     while (curr_property_p->magic_string_id != LIT_MAGIC_STRING__COUNT)
     {
@@ -995,7 +995,16 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
       {
         ecma_value_t name = ecma_make_magic_string_value ((lit_magic_string_id_t) curr_property_p->magic_string_id);
 
-        ecma_collection_push_back (for_non_enumerable_p, name);
+#if ENABLED (JERRY_ES2015)
+        if (curr_property_p->attributes & ECMA_PROPERTY_FLAG_ENUMERABLE)
+        {
+          ecma_collection_push_back (main_collection_p, name);
+        }
+        else
+#endif /* ENABLED (JERRY_ES2015) */
+        {
+          ecma_collection_push_back (for_non_enumerable_p, name);
+        }
       }
 
       curr_property_p++;

@@ -530,8 +530,109 @@ ecma_proxy_object_set (ecma_object_t *obj_p, /**< proxy object */
                        ecma_value_t receiver) /**< receiver to invoke setter function */
 {
   JERRY_ASSERT (ECMA_OBJECT_IS_PROXY (obj_p));
-  JERRY_UNUSED_4 (obj_p, prop_name_p, value, receiver);
-  return ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Proxy.[[Set]]"));
+
+  ecma_proxy_object_t *proxy_obj_p = (ecma_proxy_object_t *) obj_p;
+
+  /* 2. */
+  ecma_value_t handler = proxy_obj_p->handler;
+
+  /* 3. */
+  if (ecma_is_value_null (handler))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Handler can not be null"));
+  }
+
+  /* 4. */
+  JERRY_ASSERT (ecma_is_value_object (handler));
+
+  /* 5. */
+  ecma_value_t target = proxy_obj_p->target;
+
+  /* 6. */
+  ecma_value_t trap = ecma_op_get_method_by_magic_id (handler, LIT_MAGIC_STRING_SET);
+
+  /* 7. */
+  if (ECMA_IS_VALUE_ERROR (trap))
+  {
+    return trap;
+  }
+
+  ecma_object_t *target_obj_p = ecma_get_object_from_value (target);
+
+  /* 8. */
+  if (ecma_is_value_undefined (trap))
+  {
+    return ecma_op_object_put_with_receiver (target_obj_p, prop_name_p, value, receiver, false);
+  }
+
+  ecma_object_t *func_obj_p = ecma_get_object_from_value (trap);
+  ecma_value_t prop_name_value = ecma_make_prop_name_value (prop_name_p);
+  ecma_value_t args[] = { target, prop_name_value, value, receiver };
+
+  /* 9. */
+  ecma_value_t trap_result = ecma_op_function_call (func_obj_p, handler, args, 4);
+
+  ecma_deref_object (func_obj_p);
+
+  /* 10. */
+  if (ECMA_IS_VALUE_ERROR (trap_result))
+  {
+    return trap_result;
+  }
+
+  bool boolean_trap_result = ecma_op_to_boolean (trap_result);
+
+  ecma_free_value (trap_result);
+
+  /* 11. */
+  if (!boolean_trap_result)
+  {
+    return ECMA_VALUE_FALSE;
+  }
+
+  /* 12. */
+  ecma_property_descriptor_t target_desc;
+
+  ecma_value_t status = ecma_op_object_get_own_property_descriptor (target_obj_p, prop_name_p, &target_desc);
+
+  /* 13. */
+  if (ECMA_IS_VALUE_ERROR (status))
+  {
+    return status;
+  }
+
+  /* 14. */
+  if (ecma_is_value_true (status))
+  {
+    ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+
+    if ((target_desc.flags & ECMA_PROP_IS_VALUE_DEFINED)
+        && !(target_desc.flags & ECMA_PROP_IS_CONFIGURABLE)
+        && !(target_desc.flags & ECMA_PROP_IS_WRITABLE)
+        && !ecma_op_same_value (value, target_desc.value))
+    {
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("The property exists in the proxy target as a"
+                                                       " non-configurable and non-writable data property"
+                                                       " with a different value."));
+    }
+    else if (!(target_desc.flags & ECMA_PROP_IS_CONFIGURABLE)
+            && (target_desc.flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED))
+            && target_desc.set_p == NULL)
+    {
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("The property exists in the proxy target as a"
+                                                       " non-configurable accessor property whitout a setter."));
+    }
+
+    ecma_free_property_descriptor (&target_desc);
+
+    if (ECMA_IS_VALUE_ERROR (ret_value))
+    {
+      return ret_value;
+    }
+  }
+
+  /* 15. */
+  return ECMA_VALUE_TRUE;
 } /* ecma_proxy_object_set */
 
 /**

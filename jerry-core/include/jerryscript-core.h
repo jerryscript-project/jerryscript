@@ -100,6 +100,10 @@ typedef enum
   JERRY_FEATURE_SYMBOL, /**< symbol support */
   JERRY_FEATURE_DATAVIEW, /**< DataView support */
   JERRY_FEATURE_PROXY, /**< Proxy support */
+  JERRY_FEATURE_MAP, /**< Map support */
+  JERRY_FEATURE_SET, /**< Set support */
+  JERRY_FEATURE_WEAKMAP, /**< WeakMap support */
+  JERRY_FEATURE_WEAKSET, /**< WeakSet support */
   JERRY_FEATURE__COUNT /**< number of features. NOTE: must be at the end of the list */
 } jerry_feature_t;
 
@@ -669,6 +673,18 @@ typedef enum
   JERRY_TYPEDARRAY_FLOAT64,
 } jerry_typedarray_type_t;
 
+/**
+ * Container types.
+ */
+typedef enum
+{
+  JERRY_CONTAINER_TYPE_INVALID = 0, /**< Invalid container */
+  JERRY_CONTAINER_TYPE_MAP, /**< Map type */
+  JERRY_CONTAINER_TYPE_SET, /**< Set type */
+  JERRY_CONTAINER_TYPE_WEAKMAP, /**< WeakMap type */
+  JERRY_CONTAINER_TYPE_WEAKSET, /**< WeakSet type */
+} jerry_container_type_t;
+
 bool jerry_value_is_typedarray (jerry_value_t value);
 jerry_value_t jerry_create_typedarray (jerry_typedarray_type_t type_name, jerry_length_t length);
 jerry_value_t jerry_create_typedarray_for_arraybuffer_sz (jerry_typedarray_type_t type_name,
@@ -684,6 +700,10 @@ jerry_value_t jerry_get_typedarray_buffer (jerry_value_t value,
                                            jerry_length_t *byte_length);
 jerry_value_t jerry_json_parse (const jerry_char_t *string_p, jerry_size_t string_size);
 jerry_value_t jerry_json_stringify (const jerry_value_t object_to_stringify);
+jerry_value_t jerry_create_container (jerry_container_type_t container_type,
+                                      const jerry_value_t *arguments_list_p,
+                                      jerry_length_t arguments_list_len);
+jerry_container_type_t jerry_get_container_type (const jerry_value_t value);
 
 /**
  * @}

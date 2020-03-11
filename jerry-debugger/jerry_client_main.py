@@ -340,16 +340,19 @@ class JerryDebugger(object):
             self.channel.close()
 
     def _exec_command(self, command_id):
-        self.send_command(command_id)
+        message = struct.pack(self.byte_order + "BB",
+                              1,
+                              command_id)
+        self.channel.send_message(self.byte_order, message)
 
     def quit(self):
         self.prompt = False
         self._exec_command(JERRY_DEBUGGER_CONTINUE)
 
     def stop(self):
-        self.send_command(JERRY_DEBUGGER_STOP)
+        self._exec_command(JERRY_DEBUGGER_STOP)
 
-    def get_continue(self):
+    def do_continue(self):
         self.prompt = False
         self._exec_command(JERRY_DEBUGGER_CONTINUE)
 
@@ -628,12 +631,6 @@ class JerryDebugger(object):
                               byte_code_cp)
         self.channel.send_message(self.byte_order, message)
 
-    def send_command(self, command):
-        message = struct.pack(self.byte_order + "BB",
-                              1,
-                              command)
-        self.channel.send_message(self.byte_order, message)
-
     def send_exception_config(self, enable):
         message = struct.pack(self.byte_order + "BBB",
                               1 + 1,
@@ -715,7 +712,7 @@ class JerryDebugger(object):
                     return DebuggerAction(DebuggerAction.TEXT, result)
 
             elif buffer_type == JERRY_DEBUGGER_WAITING_AFTER_PARSE:
-                self.send_command(JERRY_DEBUGGER_PARSER_RESUME)
+                self._exec_command(JERRY_DEBUGGER_PARSER_RESUME)
 
             elif buffer_type == JERRY_DEBUGGER_RELEASE_BYTE_CODE_CP:
                 self._release_function(data)
@@ -811,7 +808,7 @@ class JerryDebugger(object):
                 self.scopes = data[1:]
 
                 if buffer_type == JERRY_DEBUGGER_SCOPE_CHAIN_END:
-                    result = self.process_scopes()
+                    result = self._process_scopes()
                     self.scopes = ""
 
                     self.prompt = True
@@ -822,7 +819,7 @@ class JerryDebugger(object):
                 self.scope_vars += "".join(data[1:])
 
                 if buffer_type == JERRY_DEBUGGER_SCOPE_VARIABLES_END:
-                    result = self.process_scope_variables()
+                    result = self._process_scope_variables()
                     self.scope_vars = ""
 
                     self.prompt = True
@@ -1194,7 +1191,7 @@ class JerryDebugger(object):
             return "Uncaught exception: %s" % (message)
         return message
 
-    def process_scope_variables(self):
+    def _process_scope_variables(self):
         buff_size = len(self.scope_vars)
         buff_pos = 0
 
@@ -1234,11 +1231,11 @@ class JerryDebugger(object):
             elif value_type == JERRY_DEBUGGER_VALUE_OBJECT:
                 table.append([name, 'Object', value])
 
-        result = self.form_table(table)
+        result = self._form_table(table)
 
         return result
 
-    def process_scopes(self):
+    def _process_scopes(self):
         result = ""
         table = [['level', 'type']]
 
@@ -1257,11 +1254,11 @@ class JerryDebugger(object):
             else:
                 raise Exception("Unexpected scope chain element")
 
-        result = self.form_table(table)
+        result = self._form_table(table)
 
         return result
 
-    def form_table(self, table):
+    def _form_table(self, table):
         result = ""
         col_width = [max(len(x) for x in col) for col in zip(*table)]
         for line in table:

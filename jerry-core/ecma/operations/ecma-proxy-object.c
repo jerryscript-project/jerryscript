@@ -14,6 +14,7 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-array-object.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
@@ -518,8 +519,50 @@ ecma_proxy_object_call (ecma_object_t *obj_p, /**< proxy object */
                         ecma_length_t argc) /**< number of arguments */
 {
   JERRY_ASSERT (ECMA_OBJECT_IS_PROXY (obj_p));
-  JERRY_UNUSED_4 (obj_p, this_argument, args_p, argc);
-  return ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Proxy.[[Call]]"));
+
+  ecma_proxy_object_t *proxy_obj_p = (ecma_proxy_object_t *) obj_p;
+
+  /* 1. */
+  ecma_value_t handler = proxy_obj_p->handler;
+
+  /* 2. */
+  if (ecma_is_value_null (handler))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Handler can not be null."));
+  }
+
+  /* 3. */
+  JERRY_ASSERT (ecma_is_value_object (handler));
+
+  /* 4. */
+  ecma_value_t target = proxy_obj_p->target;
+
+  /* 5. */
+  ecma_value_t trap = ecma_op_get_method_by_magic_id (handler, LIT_MAGIC_STRING_APPLY);
+
+  /* 6. */
+  if (ECMA_IS_VALUE_ERROR (trap))
+  {
+    return trap;
+  }
+
+  /* 7. */
+  if (ecma_is_value_undefined (trap))
+  {
+    ecma_object_t *target_obj_p = ecma_get_object_from_value (target);
+    return ecma_op_function_call (target_obj_p, this_argument, args_p, argc);
+  }
+
+  /* 8. */
+  ecma_value_t args_array = ecma_op_create_array_object (args_p, argc, false);
+  ecma_value_t value_array[] = {target, this_argument, args_array};
+  ecma_object_t *func_obj_p = ecma_get_object_from_value (trap);
+  /* 9. */
+  ecma_value_t ret_value = ecma_op_function_call (func_obj_p, handler, value_array, 3);
+  ecma_deref_object (func_obj_p);
+  ecma_deref_object (ecma_get_object_from_value (args_array));
+
+  return ret_value;
 } /* ecma_proxy_object_call */
 
 /**

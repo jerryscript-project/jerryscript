@@ -30,13 +30,6 @@ try {
 }
 
 try {
-  proxy.a;
-  assert(false);
-} catch (e) {
-  assert(e instanceof TypeError);
-}
-
-try {
   new Proxy(undefined, undefined);
   assert(false);
 } catch (e) {

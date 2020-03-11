@@ -29,10 +29,3 @@ try {
   assert(e instanceof TypeError);
 }
 
-try {
-  // 22.1.3.6.11.b
-  Array.prototype.fill.call(proxy, 'foo', 0, 5);
-  assert(false);
-} catch (e) {
-  assert(e instanceof TypeError);
-}

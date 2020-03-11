@@ -257,6 +257,26 @@ ecma_proxy_object_prototype_to_cp (ecma_value_t proto) /**< ECMA_VALUE_NULL or o
   return proto_cp;
 } /* ecma_proxy_object_prototype_to_cp */
 
+/**
+ * Helper method for validate the proxy object
+ *
+ * @return proxy trap - if the validation is successful
+ *         ECMA_VALUE_ERROR - otherwise
+ */
+static ecma_value_t
+ecma_validate_proxy_object (ecma_value_t handler, /**< proxy handler */
+                            lit_magic_string_id_t magic_id) /**< routine magic id */
+{
+  if (ecma_is_value_null (handler))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Handler can not be null"));
+  }
+
+  JERRY_ASSERT (ecma_is_value_object (handler));
+
+  return ecma_op_get_method_by_magic_id (handler, magic_id);
+} /* ecma_validate_proxy_object */
+
 /* Interal operations */
 
 /**
@@ -318,20 +338,8 @@ ecma_proxy_object_is_extensible (ecma_object_t *obj_p) /**< proxy object */
   /* 1. */
   ecma_value_t handler = proxy_obj_p->handler;
 
-  /* 2. */
-  if (ecma_is_value_null (handler))
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Handler can not be null."));
-  }
-
-  /* 3. */
-  JERRY_ASSERT (ecma_is_value_object (handler));
-
-  /* 4. */
-  ecma_value_t target = proxy_obj_p->target;
-
-  /* 5. */
-  ecma_value_t trap = ecma_op_get_method_by_magic_id (handler, LIT_MAGIC_STRING_IS_EXTENSIBLE);
+  /* 2-5. */
+  ecma_value_t trap = ecma_validate_proxy_object (handler, LIT_MAGIC_STRING_IS_EXTENSIBLE);
 
   /* 6. */
   if (ECMA_IS_VALUE_ERROR (trap))
@@ -339,6 +347,7 @@ ecma_proxy_object_is_extensible (ecma_object_t *obj_p) /**< proxy object */
     return trap;
   }
 
+  ecma_value_t target = proxy_obj_p->target;
   ecma_object_t *target_obj_p = ecma_get_object_from_value (target);
 
   /* 7. */
@@ -498,20 +507,8 @@ ecma_proxy_object_get (ecma_object_t *obj_p, /**< proxy object */
   /* 2. */
   ecma_value_t handler = proxy_obj_p->handler;
 
-  /* 3. */
-  if (ecma_is_value_null (handler))
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Handler can not be null."));
-  }
-
-  /* 4. */
-  JERRY_ASSERT (ecma_is_value_object (handler));
-
-  /* 5. */
-  ecma_value_t target = proxy_obj_p->target;
-
-  /* 6. */
-  ecma_value_t trap = ecma_op_get_method_by_magic_id (handler, LIT_MAGIC_STRING_GET);
+  /* 3-6. */
+  ecma_value_t trap = ecma_validate_proxy_object (handler, LIT_MAGIC_STRING_GET);
 
   /* 7. */
   if (ECMA_IS_VALUE_ERROR (trap))
@@ -519,6 +516,7 @@ ecma_proxy_object_get (ecma_object_t *obj_p, /**< proxy object */
     return trap;
   }
 
+  ecma_value_t target = proxy_obj_p->target;
   ecma_object_t *target_obj_p = ecma_get_object_from_value (target);
 
   /* 8. */
@@ -613,20 +611,8 @@ ecma_proxy_object_set (ecma_object_t *obj_p, /**< proxy object */
   /* 2. */
   ecma_value_t handler = proxy_obj_p->handler;
 
-  /* 3. */
-  if (ecma_is_value_null (handler))
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Handler can not be null"));
-  }
-
-  /* 4. */
-  JERRY_ASSERT (ecma_is_value_object (handler));
-
-  /* 5. */
-  ecma_value_t target = proxy_obj_p->target;
-
-  /* 6. */
-  ecma_value_t trap = ecma_op_get_method_by_magic_id (handler, LIT_MAGIC_STRING_SET);
+  /* 3-6. */
+  ecma_value_t trap = ecma_validate_proxy_object (handler, LIT_MAGIC_STRING_SET);
 
   /* 7. */
   if (ECMA_IS_VALUE_ERROR (trap))
@@ -634,6 +620,7 @@ ecma_proxy_object_set (ecma_object_t *obj_p, /**< proxy object */
     return trap;
   }
 
+  ecma_value_t target = proxy_obj_p->target;
   ecma_object_t *target_obj_p = ecma_get_object_from_value (target);
 
   /* 8. */
@@ -796,26 +783,16 @@ ecma_proxy_object_call (ecma_object_t *obj_p, /**< proxy object */
   /* 1. */
   ecma_value_t handler = proxy_obj_p->handler;
 
-  /* 2. */
-  if (ecma_is_value_null (handler))
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Handler can not be null."));
-  }
-
-  /* 3. */
-  JERRY_ASSERT (ecma_is_value_object (handler));
-
-  /* 4. */
-  ecma_value_t target = proxy_obj_p->target;
-
-  /* 5. */
-  ecma_value_t trap = ecma_op_get_method_by_magic_id (handler, LIT_MAGIC_STRING_APPLY);
+  /* 2-5.*/
+  ecma_value_t trap = ecma_validate_proxy_object (handler, LIT_MAGIC_STRING_APPLY);
 
   /* 6. */
   if (ECMA_IS_VALUE_ERROR (trap))
   {
     return trap;
   }
+
+  ecma_value_t target = proxy_obj_p->target;
 
   /* 7. */
   if (ecma_is_value_undefined (trap))

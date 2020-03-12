@@ -309,6 +309,35 @@ main (int argc, char **args)
   GEN_DBL_TEST (exp (0.7));
   GEN_DBL_TEST (exp (38.0));
 
+  /* expm1 tests */
+  GEN_DBL_TEST (expm1 (0.0));
+  GEN_DBL_TEST (expm1 (-0.0));
+  GEN_DBL_TEST (expm1 (1.0));
+  GEN_DBL_TEST (expm1 (-1.0));
+  GEN_DBL_TEST (expm1 (INFINITY));
+  GEN_DBL_TEST (expm1 (-INFINITY));
+  GEN_DBL_TEST (expm1 (NAN));
+  GEN_DBL_TEST (expm1 (7.08e+02));
+  GEN_DBL_TEST (expm1 (7.10e+02));
+  GEN_DBL_TEST (expm1 (-7.40e+02));
+  GEN_DBL_TEST (expm1 (-7.50e+02));
+  GEN_DBL_TEST (expm1 (0.34));
+  GEN_DBL_TEST (expm1 (-0.34));
+  GEN_DBL_TEST (expm1 (0.35));
+  GEN_DBL_TEST (expm1 (-0.35));
+  GEN_DBL_TEST (expm1 (1.03));
+  GEN_DBL_TEST (expm1 (-1.03));
+  GEN_DBL_TEST (expm1 (1.04));
+  GEN_DBL_TEST (expm1 (-1.04));
+  GEN_DBL_TEST (expm1 (3.72e-09));
+  GEN_DBL_TEST (expm1 (-3.72e-09));
+  GEN_DBL_TEST (expm1 (3.73e-09));
+  GEN_DBL_TEST (expm1 (-3.73e-09));
+  GEN_DBL_TEST (expm1 (2.0));
+  GEN_DBL_TEST (expm1 (3.0));
+  GEN_DBL_TEST (expm1 (0.7));
+  GEN_DBL_TEST (expm1 (38.0));
+
   /* fabs tests */
   GEN_DBL_TEST (fabs (0.0));
   GEN_DBL_TEST (fabs (-0.0));
@@ -454,6 +483,69 @@ main (int argc, char **args)
   GEN_DBL_TEST (log (1999.0));
   GEN_DBL_TEST (log (2000.0));
   GEN_DBL_TEST (log (2001.0));
+
+  /* log1p tests */
+  GEN_DBL_TEST (log1p (0.0));
+  GEN_DBL_TEST (log1p (-0.0));
+  GEN_DBL_TEST (log1p (1.0));
+  GEN_DBL_TEST (log1p (-1.0));
+  GEN_DBL_TEST (log1p (INFINITY));
+  GEN_DBL_TEST (log1p (-INFINITY));
+  GEN_DBL_TEST (log1p (NAN));
+  GEN_DBL_TEST (log1p (M_E));
+  GEN_DBL_TEST (log1p (1.0 / M_E));
+  GEN_DBL_TEST (log1p (2));
+  GEN_DBL_TEST (log1p (10));
+  GEN_DBL_TEST (log1p (0.7));
+  GEN_DBL_TEST (log1p (2.22e-308));
+  GEN_DBL_TEST (log1p (2.23e-308));
+  GEN_DBL_TEST (log1p (0.17));
+  GEN_DBL_TEST (log1p (0.18));
+  GEN_DBL_TEST (log1p (1999.0));
+  GEN_DBL_TEST (log1p (2000.0));
+  GEN_DBL_TEST (log1p (2001.0));
+
+  /* log2 tests */
+  GEN_DBL_TEST (log2 (0.0));
+  GEN_DBL_TEST (log2 (-0.0));
+  GEN_DBL_TEST (log2 (1.0));
+  GEN_DBL_TEST (log2 (-1.0));
+  GEN_DBL_TEST (log2 (INFINITY));
+  GEN_DBL_TEST (log2 (-INFINITY));
+  GEN_DBL_TEST (log2 (NAN));
+  GEN_DBL_TEST (log2 (M_E));
+  GEN_DBL_TEST (log2 (1.0 / M_E));
+  GEN_DBL_TEST (log2 (2));
+  GEN_DBL_TEST (log2 (10));
+  GEN_DBL_TEST (log2 (0.7));
+  GEN_DBL_TEST (log2 (2.22e-308));
+  GEN_DBL_TEST (log2 (2.23e-308));
+  GEN_DBL_TEST (log2 (0.17));
+  GEN_DBL_TEST (log2 (0.18));
+  GEN_DBL_TEST (log2 (1999.0));
+  GEN_DBL_TEST (log2 (2000.0));
+  GEN_DBL_TEST (log2 (2001.0));
+
+  /* log10 tests */
+  GEN_DBL_TEST (log10 (0.0));
+  GEN_DBL_TEST (log10 (-0.0));
+  GEN_DBL_TEST (log10 (1.0));
+  GEN_DBL_TEST (log10 (-1.0));
+  GEN_DBL_TEST (log10 (INFINITY));
+  GEN_DBL_TEST (log10 (-INFINITY));
+  GEN_DBL_TEST (log10 (NAN));
+  GEN_DBL_TEST (log10 (M_E));
+  GEN_DBL_TEST (log10 (1.0 / M_E));
+  GEN_DBL_TEST (log10 (2));
+  GEN_DBL_TEST (log10 (10));
+  GEN_DBL_TEST (log10 (0.7));
+  GEN_DBL_TEST (log10 (2.22e-308));
+  GEN_DBL_TEST (log10 (2.23e-308));
+  GEN_DBL_TEST (log10 (0.17));
+  GEN_DBL_TEST (log10 (0.18));
+  GEN_DBL_TEST (log10 (1999.0));
+  GEN_DBL_TEST (log10 (2000.0));
+  GEN_DBL_TEST (log10 (2001.0));
 
   /* pow tests */
   GEN_DBL_TEST (pow (0.0, 0.0));

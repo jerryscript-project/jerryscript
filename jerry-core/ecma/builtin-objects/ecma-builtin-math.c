@@ -570,38 +570,22 @@ ecma_builtin_math_dispatch_routine (uint16_t builtin_routine_id, /**< built-in w
       }
       case ECMA_MATH_OBJECT_EXPM1:
       {
-#ifdef JERRY_LIBM_MATH_H
-        return ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Math.expm1"));
-#else /* !JERRY_LIBM_MATH_H */
         x = DOUBLE_TO_ECMA_NUMBER_T (expm1 (x));
-#endif /* JERRY_LIBM_MATH_H */
         break;
       }
       case ECMA_MATH_OBJECT_LOG1P:
       {
-#ifdef JERRY_LIBM_MATH_H
-        return ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Math.log1p"));
-#else /* !JERRY_LIBM_MATH_H */
         x = DOUBLE_TO_ECMA_NUMBER_T (log1p (x));
-#endif /* JERRY_LIBM_MATH_H */
         break;
       }
       case ECMA_MATH_OBJECT_LOG10:
       {
-#ifdef JERRY_LIBM_MATH_H
-        return ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Math.log10"));
-#else /* !JERRY_LIBM_MATH_H */
         x = DOUBLE_TO_ECMA_NUMBER_T (log10 (x));
-#endif /* JERRY_LIBM_MATH_H */
         break;
       }
       case ECMA_MATH_OBJECT_LOG2:
       {
-#ifdef JERRY_LIBM_MATH_H
-        return ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Math.log2"));
-#else /* !JERRY_LIBM_MATH_H */
         x = DOUBLE_TO_ECMA_NUMBER_T (log2 (x));
-#endif /* JERRY_LIBM_MATH_H */
         break;
       }
       case ECMA_MATH_OBJECT_SINH:

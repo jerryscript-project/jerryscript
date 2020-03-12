@@ -58,7 +58,11 @@ double atan2 (double, double);
 
 /* Exponential and logarithmic functions. */
 double exp (double);
+double expm1 (double);
 double log (double);
+double log1p (double);
+double log2 (double);
+double log10 (double);
 
 /* Power functions. */
 double pow (double, double);

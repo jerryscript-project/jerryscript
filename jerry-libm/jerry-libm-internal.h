@@ -89,7 +89,11 @@ double sin (double x);
 double tan (double x);
 
 double exp (double x);
+double expm1 (double x);
 double log (double x);
+double log1p (double x);
+double log2 (double x);
+double log10 (double);
 
 double pow (double x, double y);
 double sqrt (double x);

@@ -2925,9 +2925,13 @@ parser_parse_initializer_by_next_char (parser_context_t *context_p, /**< context
 
 /**
  * Process ternary expression.
+ *
+ * @return true - continue with primary expression parsing
+ *         false - otherwise
  */
-static void
-parser_process_ternary_expression (parser_context_t *context_p) /**< context */
+static bool
+parser_process_ternary_expression (parser_context_t *context_p, /**< context */
+                                   size_t grouping_level) /**< grouping level */
 {
   JERRY_ASSERT (context_p->token.type == LEXER_QUESTION_MARK);
 
@@ -2969,6 +2973,9 @@ parser_process_ternary_expression (parser_context_t *context_p) /**< context */
   /* Last opcode rewrite is not allowed because
    * the result may come from the first branch. */
   parser_flush_cbc (context_p);
+
+  parser_process_binary_opcodes (context_p, 0);
+  return grouping_level >= PARSER_GROUPING_LEVEL_INCREASE;
 } /* parser_process_ternary_expression */
 
 /**
@@ -3123,9 +3130,9 @@ process_unary_expression:
       }
 
       if (JERRY_UNLIKELY (context_p->token.type == LEXER_QUESTION_MARK)
-          && (grouping_level != PARSE_EXPR_LEFT_HAND_SIDE))
+          && (grouping_level != PARSE_EXPR_LEFT_HAND_SIDE)
+          && parser_process_ternary_expression (context_p, grouping_level))
       {
-        parser_process_ternary_expression (context_p);
         continue;
       }
       break;

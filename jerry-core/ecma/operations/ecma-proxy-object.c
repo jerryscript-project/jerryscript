@@ -16,6 +16,7 @@
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
 #include "ecma-builtins.h"
+#include "ecma-builtin-object.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
@@ -311,8 +312,84 @@ ecma_value_t
 ecma_proxy_object_is_extensible (ecma_object_t *obj_p) /**< proxy object */
 {
   JERRY_ASSERT (ECMA_OBJECT_IS_PROXY (obj_p));
-  JERRY_UNUSED (obj_p);
-  return ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Proxy.[[IsExtensible]]"));
+
+  ecma_proxy_object_t *proxy_obj_p = (ecma_proxy_object_t *) obj_p;
+
+  /* 1. */
+  ecma_value_t handler = proxy_obj_p->handler;
+
+  /* 2. */
+  if (ecma_is_value_null (handler))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Handler can not be null."));
+  }
+
+  /* 3. */
+  JERRY_ASSERT (ecma_is_value_object (handler));
+
+  /* 4. */
+  ecma_value_t target = proxy_obj_p->target;
+
+  /* 5. */
+  ecma_value_t trap = ecma_op_get_method_by_magic_id (handler, LIT_MAGIC_STRING_IS_EXTENSIBLE);
+
+  /* 6. */
+  if (ECMA_IS_VALUE_ERROR (trap))
+  {
+    return trap;
+  }
+
+  ecma_object_t *target_obj_p = ecma_get_object_from_value (target);
+
+  /* 7. */
+  if (ecma_is_value_undefined (trap))
+  {
+    return ecma_builtin_object_object_is_extensible (target_obj_p);
+  }
+
+  ecma_object_t *func_obj_p = ecma_get_object_from_value (trap);
+
+  /* 8. */
+  ecma_value_t trap_result = ecma_op_function_call (func_obj_p, handler, &target, 1);
+
+  ecma_deref_object (func_obj_p);
+
+  /* 9. */
+  if (ECMA_IS_VALUE_ERROR (trap_result))
+  {
+    return trap_result;
+  }
+
+  bool boolean_trap_result = ecma_op_to_boolean (trap_result);
+
+  ecma_free_value (trap_result);
+
+  bool target_result;
+
+  /* 10. */
+  if (ECMA_OBJECT_IS_PROXY (target_obj_p))
+  {
+    ecma_value_t proxy_is_ext = ecma_proxy_object_is_extensible (target_obj_p);
+
+    if (ECMA_IS_VALUE_ERROR (proxy_is_ext))
+    {
+      return proxy_is_ext;
+    }
+
+    target_result = ecma_is_value_true (proxy_is_ext);
+  }
+  else
+  {
+    target_result = ecma_op_ordinary_object_is_extensible (target_obj_p);
+  }
+
+  /* 12. */
+  if (boolean_trap_result != target_result)
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Trap result does not reflect extensibility of proxy target"));
+  }
+
+  return ecma_make_boolean_value (boolean_trap_result);
 } /* ecma_proxy_object_is_extensible */
 
 /**

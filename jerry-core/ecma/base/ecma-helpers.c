@@ -141,7 +141,7 @@ ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< out
 {
 #if ENABLED (JERRY_ES2015)
   JERRY_ASSERT (type == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND
-                || type == ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND);
+                || type == ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND);
 #else /* !ENABLED (JERRY_ES2015) */
   JERRY_ASSERT (type == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
 #endif /* ENABLED (JERRY_ES2015) */
@@ -288,7 +288,7 @@ ecma_get_lex_env_binding_object (const ecma_object_t *object_p) /**< object-boun
   JERRY_ASSERT (ecma_is_lexical_environment (object_p));
 #if ENABLED (JERRY_ES2015)
   JERRY_ASSERT (ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND
-                || ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND);
+                || ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND);
 #else /* !ENABLED (JERRY_ES2015) */
   JERRY_ASSERT (ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
 #endif /* ENABLED (JERRY_ES2015) */

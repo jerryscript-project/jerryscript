@@ -168,7 +168,7 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
     return 0;
   }
 
-  if (compiled_code_p->status_flags & CBC_CODE_FLAGS_CONSTRUCTOR)
+  if (compiled_code_p->status_flags & CBC_CODE_FLAGS_CLASS_CONSTRUCTOR)
   {
     globals_p->class_found = true;
   }

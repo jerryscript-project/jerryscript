@@ -849,12 +849,12 @@ ecma_proxy_object_call (ecma_object_t *obj_p, /**< proxy object */
  */
 ecma_value_t
 ecma_proxy_object_construct (ecma_object_t *obj_p, /**< proxy object */
+                             ecma_object_t *new_target_p, /**< new target */
                              const ecma_value_t *args_p, /**< argument list */
-                             ecma_length_t argc, /**< number of arguments */
-                             ecma_value_t new_target) /**< this argument to invoke the function */
+                             ecma_length_t argc) /**< number of arguments */
 {
   JERRY_ASSERT (ECMA_OBJECT_IS_PROXY (obj_p));
-  JERRY_UNUSED_4 (obj_p, args_p, argc, new_target);
+  JERRY_UNUSED_4 (obj_p, new_target_p, args_p, argc);
   return ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Proxy.[[Construct]]"));
 } /* ecma_proxy_object_construct */
 

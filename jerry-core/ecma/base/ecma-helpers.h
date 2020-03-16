@@ -193,12 +193,19 @@ typedef enum
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**
+ * Check whether the given type is ECMA_OBJECT_TYPE_PROXY
+ *
+ * @param type object type
+ */
+#define ECMA_OBJECT_TYPE_IS_PROXY(type) (JERRY_UNLIKELY ((type) == ECMA_OBJECT_TYPE_PROXY))
+
+/**
  * Check whether the given object has [[ProxyHandler]] and [[ProxyTarger]] internal slots
  *
  * @param obj_p ecma-object
  */
 #if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
-#define ECMA_OBJECT_IS_PROXY(obj_p) (JERRY_UNLIKELY (ecma_get_object_type ((obj_p)) == ECMA_OBJECT_TYPE_PROXY))
+#define ECMA_OBJECT_IS_PROXY(obj_p) (ECMA_OBJECT_TYPE_IS_PROXY (ecma_get_object_type ((obj_p))))
 #else /* !ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
 #define ECMA_OBJECT_IS_PROXY(obj_p) (false)
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
@@ -402,6 +409,8 @@ lit_utf8_size_t ecma_number_to_binary_floating_point_number (ecma_number_t num,
 /* ecma-helpers-collection.c */
 ecma_collection_t *ecma_new_collection (void);
 void ecma_collection_push_back (ecma_collection_t *collection_p, ecma_value_t value);
+void ecma_collection_reserve (ecma_collection_t *collection_p, uint32_t count);
+void ecma_collection_append (ecma_collection_t *collection_p, const ecma_value_t *buffer_p, uint32_t count);
 void ecma_collection_destroy (ecma_collection_t *collection_p);
 void ecma_collection_free (ecma_collection_t *collection_p);
 void ecma_collection_free_if_not_object (ecma_collection_t *collection_p);
@@ -419,7 +428,6 @@ bool JERRY_ATTR_PURE ecma_get_object_is_builtin (const ecma_object_t *object_p);
 void ecma_set_object_is_builtin (ecma_object_t *object_p);
 uint8_t ecma_get_object_builtin_id (ecma_object_t *object_p);
 ecma_lexical_environment_type_t JERRY_ATTR_PURE ecma_get_lex_env_type (const ecma_object_t *object_p);
-ecma_object_t JERRY_ATTR_PURE *ecma_get_lex_env_outer_reference (const ecma_object_t *object_p);
 ecma_object_t JERRY_ATTR_PURE *ecma_get_lex_env_binding_object (const ecma_object_t *object_p);
 ecma_object_t *ecma_clone_decl_lexical_environment (ecma_object_t *lex_env_p, bool copy_values);
 

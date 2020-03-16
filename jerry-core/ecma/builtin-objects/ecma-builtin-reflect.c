@@ -205,10 +205,8 @@ ecma_builtin_reflect_dispatch_routine (uint16_t builtin_routine_id, /**< built-i
       return ECMA_VALUE_ERROR;
     }
 
-    // TODO: add new_target_p to construct when it'll be supported
-    JERRY_UNUSED (new_target_p);
     ecma_value_t ret_value = ecma_op_function_construct (target_p,
-                                                         ECMA_VALUE_UNDEFINED,
+                                                         new_target_p,
                                                          coll_p->buffer_p,
                                                          coll_p->item_count);
 

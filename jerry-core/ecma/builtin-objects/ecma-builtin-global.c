@@ -103,7 +103,7 @@ ecma_builtin_global_object_eval (ecma_value_t x) /**< routine's first argument *
 #if ENABLED (JERRY_ES2015)
   if (vm_is_direct_eval_form_call ())
   {
-    parse_opts |= ECMA_GET_SUPER_EVAL_PARSER_OPTS ();
+    parse_opts |= ECMA_GET_LOCAL_PARSE_OPTS ();
   }
 #endif /* ENABLED (JERRY_ES2015) */
 

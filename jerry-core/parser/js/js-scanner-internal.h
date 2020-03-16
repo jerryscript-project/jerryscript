@@ -104,6 +104,8 @@ typedef enum
   SCAN_STACK_FOR_BLOCK_END,                /**< end of "for" statement with let/const declaration */
   SCAN_STACK_ARROW_ARGUMENTS,              /**< might be arguments of an arrow function */
   SCAN_STACK_ARROW_EXPRESSION,             /**< expression body of an arrow function */
+  SCAN_STACK_EXPLICIT_CLASS_CONSTRUCTOR,   /**< explicit class constructor */
+  SCAN_STACK_IMPLICIT_CLASS_CONSTRUCTOR,   /**< implicit class constructor */
   SCAN_STACK_CLASS_STATEMENT,              /**< class statement */
   SCAN_STACK_CLASS_EXPRESSION,             /**< class expression */
   SCAN_STACK_CLASS_EXTENDS,                /**< class extends expression */
@@ -346,6 +348,8 @@ void scanner_detect_invalid_let (parser_context_t *context_p, lexer_lit_location
 void scanner_detect_eval_call (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 
 #if ENABLED (JERRY_ES2015)
+void scanner_push_class_declaration (parser_context_t *context_p, scanner_context_t *scanner_context_p,
+                                     uint8_t stack_mode);
 void scanner_push_destructuring_pattern (parser_context_t *context_p, scanner_context_t *scanner_context_p,
                                          uint8_t binding_type, bool is_nested);
 void scanner_pop_binding_list (scanner_context_t *scanner_context_p);

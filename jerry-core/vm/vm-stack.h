@@ -74,7 +74,6 @@ typedef enum
   VM_CONTEXT_FOR_IN,                          /**< for-in context */
 #if ENABLED (JERRY_ES2015)
   VM_CONTEXT_FOR_OF,                          /**< for-of context */
-  VM_CONTEXT_SUPER_CLASS,                     /**< super class context */
 #endif /* ENABLED (JERRY_ES2015) */
 } vm_stack_context_type_t;
 

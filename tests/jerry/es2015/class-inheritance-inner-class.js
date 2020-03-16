@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+// TODO: enable this test when super keyword is supported for normal functions
+/*
 var console = { assert : assert };
 
 class C1 {
@@ -57,3 +59,4 @@ class C2 extends C1 {
 }
 
 (new C2).f ();
+*/

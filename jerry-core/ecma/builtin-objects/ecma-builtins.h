@@ -85,7 +85,7 @@ ecma_value_t
 ecma_builtin_dispatch_call (ecma_object_t *obj_p, ecma_value_t this_arg_value,
                             const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len);
 ecma_value_t
-ecma_builtin_dispatch_construct (ecma_object_t *obj_p,
+ecma_builtin_dispatch_construct (ecma_object_t *obj_p, ecma_object_t *new_target_p,
                                  const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len);
 ecma_property_t *
 ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, ecma_string_t *string_p);

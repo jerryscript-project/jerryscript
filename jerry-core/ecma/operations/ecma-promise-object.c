@@ -679,7 +679,7 @@ ecma_promise_new_capability (ecma_value_t constructor)
 
   /* 6. */
   ecma_value_t promise = ecma_op_function_construct (constructor_obj_p,
-                                                     ECMA_VALUE_UNDEFINED,
+                                                     constructor_obj_p,
                                                      &executor,
                                                      1);
   ecma_deref_object (executor_p);

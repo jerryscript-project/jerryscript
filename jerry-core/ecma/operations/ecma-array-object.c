@@ -73,7 +73,7 @@ ecma_op_new_array_object (ecma_length_t length) /**< length of the new array */
   ecma_object_t *array_prototype_object_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY_PROTOTYPE);
 #else /* !ENABLED (JERRY_BUILTIN_ARRAY) */
   ecma_object_t *array_prototype_object_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
-#endif /* (ENABLED (JERRY_BUILTIN_ARRAY)) */
+#endif /* ENABLED (JERRY_BUILTIN_ARRAY) */
 
   ecma_object_t *object_p = ecma_create_object (array_prototype_object_p,
                                                 sizeof (ecma_extended_object_t),
@@ -733,7 +733,7 @@ ecma_op_array_species_create (ecma_object_t *original_array_p, /**< The object f
   ecma_value_t len_val = ecma_make_uint32_value (length);
   ecma_object_t *ctor_object_p = ecma_get_object_from_value (constructor);
   ecma_value_t ret_val = ecma_op_function_construct (ctor_object_p,
-                                                     ECMA_VALUE_UNDEFINED,
+                                                     ctor_object_p,
                                                      &len_val,
                                                      1);
 

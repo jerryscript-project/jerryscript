@@ -1328,6 +1328,27 @@ scanner_detect_invalid_let (parser_context_t *context_p, /**< context */
 } /* scanner_detect_invalid_let */
 
 /**
+ * Push the values required for class declaration parsing.
+ */
+void
+scanner_push_class_declaration (parser_context_t *context_p, /**< context */
+                                scanner_context_t *scanner_context_p, /* scanner context */
+                                uint8_t stack_mode) /**< stack mode */
+{
+  JERRY_ASSERT (context_p->token.type == LEXER_KEYW_CLASS);
+
+  parser_stack_push_uint8 (context_p, stack_mode);
+  scanner_source_start_t source_start;
+  source_start.source_p = context_p->source_p;
+
+  parser_stack_push (context_p, &source_start, sizeof (scanner_source_start_t));
+  parser_stack_push_uint8 (context_p, SCAN_STACK_IMPLICIT_CLASS_CONSTRUCTOR);
+  scanner_context_p->mode = SCAN_MODE_CLASS_DECLARATION;
+
+  lexer_next_token (context_p);
+} /* scanner_push_class_declaration */
+
+/**
  * Push the values required for destructuring assignment or binding parsing.
  */
 void
@@ -1512,6 +1533,7 @@ scanner_cleanup (parser_context_t *context_p) /**< context */
 #if ENABLED (JERRY_ES2015)
         JERRY_ASSERT (scanner_info_p->type == SCANNER_TYPE_END_ARGUMENTS
                       || scanner_info_p->type == SCANNER_TYPE_LET_EXPRESSION
+                      || scanner_info_p->type == SCANNER_TYPE_CLASS_CONSTRUCTOR
                       || scanner_info_p->type == SCANNER_TYPE_ERR_REDECLARED);
 #else /* !ENABLED (JERRY_ES2015) */
         JERRY_ASSERT (scanner_info_p->type == SCANNER_TYPE_END_ARGUMENTS);

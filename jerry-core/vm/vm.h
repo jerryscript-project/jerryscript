@@ -240,19 +240,16 @@ typedef enum
   VM_OC_FOR_OF_GET_NEXT,         /**< get next */
   VM_OC_FOR_OF_HAS_NEXT,         /**< has next */
 
-  VM_OC_CLASS_HERITAGE,          /**< create a super class context */
-  VM_OC_CLASS_INHERITANCE,       /**< inherit properties from the 'super' class */
-  VM_OC_PUSH_CLASS_CONSTRUCTOR_AND_PROTOTYPE,  /**< push class constructor */
-  VM_OC_SET_CLASS_CONSTRUCTOR,   /**< set class constructor to the given function literal */
-  VM_OC_PUSH_IMPL_CONSTRUCTOR,   /**< create implicit class constructor */
-  VM_OC_CLASS_EXPR_CONTEXT_END,  /**< class expression heritage context end */
-  VM_OC_CLASS_EVAL,              /**< eval inside a class */
+  VM_OC_LOCAL_EVAL,              /**< eval in local context */
   VM_OC_SUPER_CALL,              /**< call the 'super' constructor */
-  VM_OC_SUPER_PROP_REFERENCE,    /**< resolve super property reference */
-  VM_OC_PUSH_SUPER,              /**< push resolvable super reference */
-  VM_OC_PUSH_CONSTRUCTOR_SUPER,  /**< push 'super' inside a class constructor */
-  VM_OC_PUSH_CONSTRUCTOR_THIS,   /**< push 'this' inside a class constructor */
-  VM_OC_CONSTRUCTOR_RET,         /**< explicit return from a class constructor */
+  VM_OC_PUSH_CLASS_ENVIRONMENT,  /**< push class environment */
+  VM_OC_PUSH_IMPLICIT_CTOR,      /**< create implicit class constructor */
+  VM_OC_INIT_CLASS,              /**< initialize class */
+  VM_OC_FINALIZE_CLASS,          /**< finalize class */
+  VM_OC_PUSH_SUPER_CONSTRUCTOR,  /**< getSuperConstructor operation */
+  VM_OC_RESOLVE_LEXICAL_THIS,    /**< resolve this_binding from from the lexical environment */
+  VM_OC_SUPER_REFERENCE,         /**< push super reference */
+
   VM_OC_PUSH_SPREAD_ELEMENT,     /**< push spread element */
   VM_OC_GET_ITERATOR,            /**< GetIterator abstract operation */
   VM_OC_ITERATOR_STEP,           /**< IteratorStep abstract operation */
@@ -300,19 +297,16 @@ typedef enum
   VM_OC_FOR_OF_GET_NEXT = VM_OC_NONE,         /**< get next */
   VM_OC_FOR_OF_HAS_NEXT = VM_OC_NONE,         /**< has next */
 
-  VM_OC_CLASS_HERITAGE = VM_OC_NONE,          /**< create a super class context */
-  VM_OC_CLASS_INHERITANCE = VM_OC_NONE,       /**< inherit properties from the 'super' class */
-  VM_OC_PUSH_CLASS_CONSTRUCTOR_AND_PROTOTYPE = VM_OC_NONE,  /**< push class constructor */
-  VM_OC_SET_CLASS_CONSTRUCTOR = VM_OC_NONE,   /**< set class constructor to the given function literal */
-  VM_OC_PUSH_IMPL_CONSTRUCTOR = VM_OC_NONE,   /**< create implicit class constructor */
-  VM_OC_CLASS_EXPR_CONTEXT_END = VM_OC_NONE,  /**< class expression heritage context end */
-  VM_OC_CLASS_EVAL = VM_OC_NONE,              /**< eval inside a class */
+  VM_OC_LOCAL_EVAL = VM_OC_NONE,              /**< eval in local context */
   VM_OC_SUPER_CALL = VM_OC_NONE,              /**< call the 'super' constructor */
-  VM_OC_SUPER_PROP_REFERENCE = VM_OC_NONE,    /**< resolve super property reference */
-  VM_OC_PUSH_SUPER = VM_OC_NONE,              /**< push resolvable super reference */
-  VM_OC_PUSH_CONSTRUCTOR_SUPER = VM_OC_NONE,  /**< push 'super' inside a class constructor */
-  VM_OC_PUSH_CONSTRUCTOR_THIS = VM_OC_NONE,   /**< push 'this' inside a class constructor */
-  VM_OC_CONSTRUCTOR_RET = VM_OC_NONE,         /**< explicit return from a class constructor */
+  VM_OC_PUSH_CLASS_ENVIRONMENT = VM_OC_NONE,  /**< push class environment */
+  VM_OC_PUSH_IMPLICIT_CTOR = VM_OC_NONE,      /**< create implicit class constructor */
+  VM_OC_INIT_CLASS = VM_OC_NONE,              /**< initialize class */
+  VM_OC_FINALIZE_CLASS = VM_OC_NONE,          /**< finalize class */
+  VM_OC_PUSH_SUPER_CONSTRUCTOR = VM_OC_NONE,  /**< getSuperConstructor operation */
+  VM_OC_RESOLVE_LEXICAL_THIS = VM_OC_NONE,    /**< resolve this_binding from from the lexical environment */
+  VM_OC_SUPER_REFERENCE = VM_OC_NONE,         /**< push super reference */
+
   VM_OC_PUSH_SPREAD_ELEMENT = VM_OC_NONE,     /**< push spread element */
   VM_OC_GET_ITERATOR = VM_OC_NONE,            /**< GetIterator abstract operation */
   VM_OC_ITERATOR_STEP = VM_OC_NONE,           /**< IteratorStep abstract operation */

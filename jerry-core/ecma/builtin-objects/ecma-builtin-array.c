@@ -128,7 +128,7 @@ ecma_builtin_array_object_from (ecma_value_t this_arg, /**< 'this' argument */
     {
       ecma_object_t *constructor_obj_p = ecma_get_object_from_value (constructor);
 
-      array = ecma_op_function_construct (constructor_obj_p, ECMA_VALUE_UNDEFINED, NULL, 0);
+      array = ecma_op_function_construct (constructor_obj_p, constructor_obj_p, NULL, 0);
 
       if (ecma_is_value_undefined (array) || ecma_is_value_null (array))
       {
@@ -289,7 +289,7 @@ iterator_cleanup:
   {
     ecma_object_t *constructor_obj_p = ecma_get_object_from_value (constructor);
 
-    array = ecma_op_function_construct (constructor_obj_p, ECMA_VALUE_UNDEFINED, &len_value, 1);
+    array = ecma_op_function_construct (constructor_obj_p, constructor_obj_p, &len_value, 1);
 
     if (ecma_is_value_undefined (array) || ecma_is_value_null (array))
     {
@@ -414,7 +414,7 @@ ecma_builtin_array_object_of (ecma_value_t this_arg, /**< 'this' argument */
   ecma_value_t len = ecma_make_uint32_value (arguments_list_len);
 
   ecma_value_t ret_val = ecma_op_function_construct (ecma_get_object_from_value (this_arg),
-                                                     ECMA_VALUE_UNDEFINED,
+                                                     ecma_get_object_from_value (this_arg),
                                                      &len,
                                                      1);
 

@@ -21,6 +21,7 @@
 #include "ecma-lcache.h"
 #include "ecma-lex-env.h"
 #include "ecma-objects.h"
+#include "ecma-proxy-object.h"
 #include "ecma-reference.h"
 #include "jrt.h"
 
@@ -47,7 +48,7 @@ ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, /**< starting lexical 
   while (true)
   {
 #if ENABLED (JERRY_ES2015)
-    if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND)
+    if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND)
     {
       JERRY_ASSERT (lex_env_p->u2.outer_reference_cp != JMEM_CP_NULL);
       lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
@@ -79,27 +80,55 @@ ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, /**< starting lexical 
 
 #if ENABLED (JERRY_ES2015)
 /**
- * Resolve super reference.
+ * Perform GetThisEnvironment and GetSuperBase operations
  *
- * @return value of the reference
+ * See also: ECMAScript v6, 8.1.1.3.5
+ *
+ * @return ECMA_VALUE_ERROR - if the operation fails
+ *         ECMA_VALUE_UNDEFINED - if the home object is null
+ *         value of the [[HomeObject]].[[Prototype]] internal slot - otherwise
  */
-ecma_object_t *
-ecma_op_resolve_super_reference_value (ecma_object_t *lex_env_p) /**< starting lexical environment */
+ecma_value_t
+ecma_op_resolve_super_base (ecma_object_t *lex_env_p) /**< starting lexical environment */
 {
+  JERRY_ASSERT (lex_env_p != NULL);
+
   while (true)
   {
-    JERRY_ASSERT (lex_env_p != NULL);
-
-    if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND)
+    if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND)
     {
-      return ecma_get_lex_env_binding_object (lex_env_p);
+      ecma_object_t *home_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u1.home_object_cp);
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+      if (ECMA_OBJECT_IS_PROXY (home_p))
+      {
+        return ecma_proxy_object_get_prototype_of (home_p);
+      }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
+      jmem_cpointer_t proto_cp = ecma_op_ordinary_object_get_prototype_of (home_p);
+
+      if (proto_cp == JMEM_CP_NULL)
+      {
+        return ECMA_VALUE_NULL;
+      }
+
+      ecma_object_t *proto_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, proto_cp);
+      ecma_ref_object (proto_p);
+
+      return ecma_make_object_value (proto_p);
     }
 
-    JERRY_ASSERT (lex_env_p->u2.outer_reference_cp != JMEM_CP_NULL);
+    if (lex_env_p->u2.outer_reference_cp == JMEM_CP_NULL)
+    {
+      break;
+    }
 
     lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
   }
-} /* ecma_op_resolve_super_reference_value */
+
+  return ECMA_VALUE_UNDEFINED;
+} /* ecma_op_resolve_super_base */
 
 /**
  * Helper method for HasBindig operation
@@ -262,7 +291,7 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
     else
     {
 #if ENABLED (JERRY_ES2015)
-      JERRY_ASSERT (lex_env_type == ECMA_LEXICAL_ENVIRONMENT_SUPER_OBJECT_BOUND);
+      JERRY_ASSERT (lex_env_type == ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND);
 #else /* !ENABLED (JERRY_ES2015) */
       JERRY_UNREACHABLE ();
 #endif /* ENABLED (JERRY_ES2015) */

@@ -220,17 +220,19 @@ scanner_scan_primary_expression (parser_context_t *context_p, /**< context */
     }
 #if ENABLED (JERRY_ES2015)
     case LEXER_THREE_DOTS:
+    {
+      /* Elision or spread arguments */
+      if (stack_top != SCAN_STACK_PAREN_EXPRESSION && stack_top != SCAN_STACK_ARRAY_LITERAL)
+      {
+        scanner_raise_error (context_p);
+      }
+      scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
+      break;
+    }
 #endif /* ENABLED (JERRY_ES2015) */
     case LEXER_COMMA:
     {
-      /* Elision or spread arguments */
-#if ENABLED (JERRY_ES2015)
-      bool raise_error = (stack_top != SCAN_STACK_PAREN_EXPRESSION && stack_top != SCAN_STACK_ARRAY_LITERAL);
-#else /* !ENABLED (JERRY_ES2015) */
-      bool raise_error = stack_top != SCAN_STACK_ARRAY_LITERAL;
-#endif /* ENABLED (JERRY_ES2015) */
-
-      if (raise_error)
+      if (stack_top != SCAN_STACK_ARRAY_LITERAL)
       {
         scanner_raise_error (context_p);
       }

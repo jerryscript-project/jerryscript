@@ -98,9 +98,8 @@ parser_push_result (parser_context_t *context_p) /**< context */
 static void
 parser_check_invalid_assign (parser_context_t *context_p) /**< context */
 {
-  JERRY_ASSERT (context_p->last_cbc.literal_type == LEXER_IDENT_LITERAL);
-
-  if (JERRY_UNLIKELY (context_p->status_flags & PARSER_IS_STRICT))
+  if (context_p->last_cbc.literal_type == LEXER_IDENT_LITERAL
+      && JERRY_UNLIKELY (context_p->status_flags & PARSER_IS_STRICT))
   {
     if (context_p->last_cbc.literal_keyword_type == LEXER_KEYW_EVAL)
     {
@@ -2198,10 +2197,19 @@ parser_append_binary_single_assignment_token (parser_context_t *context_p, /**< 
   }
   else if (context_p->last_cbc_opcode == CBC_PUSH_THIS_LITERAL)
   {
-    context_p->last_cbc_opcode = CBC_PUSH_THIS;
-    parser_flush_cbc (context_p);
-    parser_stack_push_uint16 (context_p, context_p->last_cbc.literal_index);
-    parser_stack_push_uint8 (context_p, assign_ident_opcode);
+    if (context_p->last_cbc.literal_type != LEXER_IDENT_LITERAL)
+    {
+      parser_emit_cbc_ext (context_p, CBC_EXT_THROW_REFERENCE_ERROR);
+      parser_stack_push_uint8 (context_p, CBC_ASSIGN);
+    }
+    else
+    {
+      parser_check_invalid_assign (context_p);
+      context_p->last_cbc_opcode = CBC_PUSH_THIS;
+      parser_flush_cbc (context_p);
+      parser_stack_push_uint16 (context_p, context_p->last_cbc.literal_index);
+      parser_stack_push_uint8 (context_p, assign_ident_opcode);
+    }
   }
   else if (context_p->last_cbc_opcode == CBC_PUSH_PROP)
   {
@@ -2290,9 +2298,18 @@ parser_append_binary_token (parser_context_t *context_p) /**< context */
     }
     else if (context_p->last_cbc_opcode == CBC_PUSH_THIS_LITERAL)
     {
-      context_p->last_cbc_opcode = CBC_PUSH_THIS;
-      parser_flush_cbc (context_p);
-      context_p->last_cbc_opcode = CBC_PUSH_IDENT_REFERENCE;
+      if (context_p->last_cbc.literal_type != LEXER_IDENT_LITERAL)
+      {
+        parser_emit_cbc_ext (context_p, CBC_EXT_THROW_REFERENCE_ERROR);
+        parser_emit_cbc (context_p, CBC_PUSH_PROP_REFERENCE);
+      }
+      else
+      {
+        parser_check_invalid_assign (context_p);
+        context_p->last_cbc_opcode = CBC_PUSH_THIS;
+        parser_flush_cbc (context_p);
+        context_p->last_cbc_opcode = CBC_PUSH_IDENT_REFERENCE;
+      }
     }
     else
     {

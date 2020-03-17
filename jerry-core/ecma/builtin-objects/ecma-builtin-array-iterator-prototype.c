@@ -59,16 +59,15 @@ ecma_builtin_array_iterator_prototype_object_next (ecma_value_t this_val) /**< t
   }
 
   ecma_object_t *obj_p = ecma_get_object_from_value (this_val);
-  ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
+  ecma_iterator_object_t *iterator_obj_p = (ecma_iterator_object_t *) obj_p;
 
   /* 3. */
-  if (ecma_get_object_type (obj_p) != ECMA_OBJECT_TYPE_PSEUDO_ARRAY
-      || ext_obj_p->u.pseudo_array.type != ECMA_PSEUDO_ARRAY_ITERATOR)
+  if (!ecma_object_class_is (obj_p, LIT_MAGIC_STRING_ARRAY_ITERATOR_UL))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an iterator."));
   }
 
-  ecma_value_t iterated_value = ext_obj_p->u.pseudo_array.u2.iterated_value;
+  ecma_value_t iterated_value = iterator_obj_p->header.u.class_prop.u.iterated_value;
 
   /* 4 - 5 */
   if (ecma_is_value_empty (iterated_value))
@@ -87,43 +86,20 @@ ecma_builtin_array_iterator_prototype_object_next (ecma_value_t this_val) /**< t
     return len_value;
   }
 
-  uint32_t index = ext_obj_p->u.pseudo_array.u1.iterator_index;
+  uint32_t index = iterator_obj_p->index;
 
-  if (JERRY_UNLIKELY (index == ECMA_ITERATOR_INDEX_LIMIT))
-  {
-    /* After the ECMA_ITERATOR_INDEX_LIMIT limit is reached the [[%Iterator%NextIndex]]
-       property is stored as an internal property */
-    ecma_string_t *prop_name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ITERATOR_NEXT_INDEX);
-    ecma_value_t index_value = ecma_op_object_get (obj_p, prop_name_p);
-
-    if (!ecma_is_value_undefined (index_value))
-    {
-      index = (uint32_t) (ecma_get_number_from_value (index_value) + 1);
-    }
-
-    ecma_value_t put_result = ecma_op_object_put (obj_p,
-                                                  prop_name_p,
-                                                  ecma_make_uint32_value (index),
-                                                  true);
-
-    JERRY_ASSERT (ecma_is_value_true (put_result));
-
-    ecma_free_value (index_value);
-  }
-  else
-  {
-    /* 11. */
-    ext_obj_p->u.pseudo_array.u1.iterator_index++;
-  }
+  /* 11. */
+  iterator_obj_p->index++;
 
   if (index >= length)
   {
-    ext_obj_p->u.pseudo_array.u2.iterated_value = ECMA_VALUE_EMPTY;
+    iterator_obj_p->header.u.class_prop.u.iterated_value = ECMA_VALUE_EMPTY;
     return ecma_create_iter_result_object (ECMA_VALUE_UNDEFINED, ECMA_VALUE_TRUE);
   }
 
   /* 7. */
-  uint8_t iterator_type = ext_obj_p->u.pseudo_array.extra_info;
+  ecma_array_iterator_type_t iterator_type;
+  iterator_type = (ecma_array_iterator_type_t) iterator_obj_p->header.u.class_prop.extra_info;
 
   if (iterator_type == ECMA_ITERATOR_KEYS)
   {

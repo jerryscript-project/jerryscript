@@ -37,15 +37,9 @@ typedef enum
   ECMA_ITERATOR_THROW, /**< generator should perform a throw operation */
 } ecma_iterator_command_type_t;
 
-/**
- * Maximum value of [[%Iterator%NextIndex]] until it can be stored
- * in an ecma pseudo array object structure element.
- */
-#define ECMA_ITERATOR_INDEX_LIMIT UINT16_MAX
-
 ecma_value_t
 ecma_op_create_iterator_object (ecma_value_t iterated_value, ecma_object_t *prototype_obj_p,
-                                uint8_t iterator_type, uint8_t extra_info);
+                                lit_magic_string_id_t iterator_id, uint8_t extra_info);
 
 ecma_value_t
 ecma_create_iter_result_object (ecma_value_t value, ecma_value_t done);

@@ -45,8 +45,8 @@ void ecma_op_container_unref_weak (ecma_object_t *object_p, ecma_value_t ref_hol
 void ecma_op_container_remove_weak_entry (ecma_object_t *container_p, ecma_value_t key_arg);
 void ecma_op_container_free_entries (ecma_object_t *object_p);
 ecma_value_t ecma_op_container_create_iterator (ecma_value_t this_arg, uint8_t type, lit_magic_string_id_t lit_id,
-                                                ecma_builtin_id_t proto_id, ecma_pseudo_array_type_t iterator_type);
-ecma_value_t ecma_op_container_iterator_next (ecma_value_t this_val, ecma_pseudo_array_type_t iterator_type);
+                                                ecma_builtin_id_t proto_id, lit_magic_string_id_t iterator_type);
+ecma_value_t ecma_op_container_iterator_next (ecma_value_t this_val, lit_magic_string_id_t iterator_type);
 
 /**
  * @}

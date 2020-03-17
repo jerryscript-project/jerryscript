@@ -135,26 +135,23 @@ ecma_create_iter_result_object (ecma_value_t value, /**< value */
 ecma_value_t
 ecma_op_create_iterator_object (ecma_value_t iterated_value, /**< value from create iterator */
                                 ecma_object_t *prototype_obj_p, /**< prototype object */
-                                uint8_t iterator_type, /**< iterator type, see ecma_pseudo_array_type_t */
+                                lit_magic_string_id_t iterator_id, /**< iterator type */
                                 uint8_t extra_info) /**< extra information */
 {
-  /* 1. */
-  JERRY_ASSERT (iterator_type >= ECMA_PSEUDO_ARRAY_ITERATOR && iterator_type <= ECMA_PSEUDO_ARRAY__MAX);
-
   /* 2. */
   ecma_object_t *object_p = ecma_create_object (prototype_obj_p,
-                                                sizeof (ecma_extended_object_t),
-                                                ECMA_OBJECT_TYPE_PSEUDO_ARRAY);
+                                                sizeof (ecma_iterator_object_t),
+                                                ECMA_OBJECT_TYPE_CLASS);
 
-  ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
-  ext_obj_p->u.pseudo_array.type = iterator_type;
+  ecma_iterator_object_t *iterator_obj_p = (ecma_iterator_object_t *) object_p;
+  iterator_obj_p->header.u.class_prop.class_id = iterator_id;
 
   /* 3. */
-  ext_obj_p->u.pseudo_array.u2.iterated_value = iterated_value;
+  iterator_obj_p->header.u.class_prop.u.iterated_value = iterated_value;
   /* 4. */
-  ext_obj_p->u.pseudo_array.u1.iterator_index = 0;
+  iterator_obj_p->index = 0;
   /* 5. */
-  ext_obj_p->u.pseudo_array.extra_info = extra_info;
+  iterator_obj_p->header.u.class_prop.extra_info = extra_info;
 
   /* 6. */
   return ecma_make_object_value (object_p);

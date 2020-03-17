@@ -72,33 +72,32 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
       && arguments_number > 0
       && formal_params_number > 0)
   {
+    JERRY_ASSERT (formal_params_number <= CBC_MAXIMUM_BYTE_VALUE);
     size_t formal_params_size = formal_params_number * sizeof (ecma_value_t);
 
     obj_p = ecma_create_object (prototype_p,
                                 sizeof (ecma_extended_object_t) + formal_params_size,
-                                ECMA_OBJECT_TYPE_PSEUDO_ARRAY);
+                                ECMA_OBJECT_TYPE_CLASS);
 
     ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
-    ext_object_p->u.pseudo_array.type = ECMA_PSEUDO_ARRAY_ARGUMENTS;
+    ext_object_p->u.class_prop.class_id = LIT_INTERNAL_MAGIC_STRING_MAPPED_ARGUMENTS;
+    ext_object_p->u.class_prop.extra_info = (uint8_t) formal_params_number;
+    ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.class_prop.u.lex_env, lex_env_p);
 
-    ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.pseudo_array.u2.lex_env_cp, lex_env_p);
-
-    ext_object_p->u.pseudo_array.u1.length = (uint16_t) formal_params_number;
-
-    ecma_value_t *arg_Literal_p = (ecma_value_t *) (ext_object_p + 1);
+    ecma_value_t *arg_literal_p = (ecma_value_t *) (ext_object_p + 1);
 
     uint8_t *byte_p = (uint8_t *) bytecode_data_p;
     byte_p += ((size_t) bytecode_data_p->size) << JMEM_ALIGNMENT_LOG;
     byte_p -= formal_params_size;
 
-    memcpy (arg_Literal_p, byte_p, formal_params_size);
+    memcpy (arg_literal_p, byte_p, formal_params_size);
 
     for (ecma_length_t i = 0; i < formal_params_number; i++)
     {
-      if (arg_Literal_p[i] != ECMA_VALUE_EMPTY)
+      if (arg_literal_p[i] != ECMA_VALUE_EMPTY)
       {
-        ecma_string_t *name_p = ecma_get_string_from_value (arg_Literal_p[i]);
+        ecma_string_t *name_p = ecma_get_string_from_value (arg_literal_p[i]);
         ecma_ref_ecma_string (name_p);
       }
     }
@@ -247,31 +246,26 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *object_p, /**< the 
 
   uint32_t index = ecma_string_get_array_index (property_name_p);
 
-  if (index == ECMA_STRING_NOT_ARRAY_INDEX)
-  {
-    return ret_value;
-  }
-
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-  if (index >= ext_object_p->u.pseudo_array.u1.length)
+  if (index >= ext_object_p->u.class_prop.extra_info)
   {
     return ret_value;
   }
 
-  ecma_value_t *arg_Literal_p = (ecma_value_t *) (ext_object_p + 1);
+  ecma_value_t *arg_literal_p = (ecma_value_t *) (ext_object_p + 1);
 
-  if (arg_Literal_p[index] == ECMA_VALUE_EMPTY)
+  if (arg_literal_p[index] == ECMA_VALUE_EMPTY)
   {
     return ret_value;
   }
 
-  ecma_string_t *name_p = ecma_get_string_from_value (arg_Literal_p[index]);
+  ecma_string_t *name_p = ecma_get_string_from_value (arg_literal_p[index]);
 
   if (property_desc_p->flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED))
   {
     ecma_deref_ecma_string (name_p);
-    arg_Literal_p[index] = ECMA_VALUE_EMPTY;
+    arg_literal_p[index] = ECMA_VALUE_EMPTY;
   }
   else
   {
@@ -279,7 +273,7 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *object_p, /**< the 
     {
       /* emulating execution of function described by MakeArgSetter */
       ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                                  ext_object_p->u.pseudo_array.u2.lex_env_cp);
+                                                                  ext_object_p->u.class_prop.u.lex_env);
 
       ecma_value_t completion = ecma_op_set_mutable_binding (lex_env_p,
                                                              name_p,
@@ -293,7 +287,7 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *object_p, /**< the 
         && !(property_desc_p->flags & ECMA_PROP_IS_WRITABLE))
     {
       ecma_deref_ecma_string (name_p);
-      arg_Literal_p[index] = ECMA_VALUE_EMPTY;
+      arg_literal_p[index] = ECMA_VALUE_EMPTY;
     }
   }
 
@@ -329,20 +323,17 @@ ecma_op_arguments_object_delete (ecma_object_t *object_p, /**< the object */
   {
     uint32_t index = ecma_string_get_array_index (property_name_p);
 
-    if (index != ECMA_STRING_NOT_ARRAY_INDEX)
+    ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+
+    if (index < ext_object_p->u.class_prop.extra_info)
     {
-      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+      ecma_value_t *arg_literal_p = (ecma_value_t *) (ext_object_p + 1);
 
-      if (index < ext_object_p->u.pseudo_array.u1.length)
+      if (arg_literal_p[index] != ECMA_VALUE_EMPTY)
       {
-        ecma_value_t *arg_Literal_p = (ecma_value_t *) (ext_object_p + 1);
-
-        if (arg_Literal_p[index] != ECMA_VALUE_EMPTY)
-        {
-          ecma_string_t *name_p = ecma_get_string_from_value (arg_Literal_p[index]);
-          ecma_deref_ecma_string (name_p);
-          arg_Literal_p[index] = ECMA_VALUE_EMPTY;
-        }
+        ecma_string_t *name_p = ecma_get_string_from_value (arg_literal_p[index]);
+        ecma_deref_ecma_string (name_p);
+        arg_literal_p[index] = ECMA_VALUE_EMPTY;
       }
     }
 

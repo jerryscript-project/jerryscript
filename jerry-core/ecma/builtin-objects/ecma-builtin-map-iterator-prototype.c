@@ -51,7 +51,7 @@
 static ecma_value_t
 ecma_builtin_map_iterator_prototype_object_next (ecma_value_t this_val) /**< this argument */
 {
-  return ecma_op_container_iterator_next (this_val, ECMA_PSEUDO_MAP_ITERATOR);
+  return ecma_op_container_iterator_next (this_val, LIT_MAGIC_STRING_MAP_ITERATOR_UL);
 } /* ecma_builtin_map_iterator_prototype_object_next */
 
 /**

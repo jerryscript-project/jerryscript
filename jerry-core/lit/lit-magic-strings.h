@@ -46,11 +46,13 @@ typedef enum
   LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_INDEX, /**< [[Index]] property */
   LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_VALUE, /**< [[Values]] property */
   LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REMAINING_ELEMENT, /**< [[RemainingElement]] property */
-  LIT_INTERNAL_MAGIC_STRING_ITERATOR_NEXT_INDEX, /**< [[%Iterator%NextIndex]] property */
   LIT_INTERNAL_MAGIC_STRING_MAP_KEY, /**< Property key used when an object is a key in a map object */
   LIT_INTERNAL_MAGIC_API_INTERNAL, /**< Property key used to add non-visible JS properties from the public API  */
   LIT_INTERNAL_MAGIC_STRING_ARRAY_PROTOTYPE_VALUES, /**< %ArrayProto_values% intrinsic routine */
   LIT_INTERNAL_MAGIC_THIS_BINDING_VALUE, /**< FunctionEnvironmentRecord [[ThisBindingValue]] internal slot */
+  LIT_INTERNAL_MAGIC_STRING_TYPEDARRAY, /**< TypedArray which does NOT need extra space to store length and offset */
+  LIT_INTERNAL_MAGIC_STRING_TYPEDARRAY_WITH_INFO, /**< TypedArray which NEEDS extra space to store length and offset */
+  LIT_INTERNAL_MAGIC_STRING_MAPPED_ARGUMENTS, /**< Arguments object (10.6) */
   /* List of well known symbols */
   LIT_GLOBAL_SYMBOL_HAS_INSTANCE, /**< @@hasInstance well known symbol */
   LIT_GLOBAL_SYMBOL_IS_CONCAT_SPREADABLE, /**< @@isConcatSpreadable well known symbol */

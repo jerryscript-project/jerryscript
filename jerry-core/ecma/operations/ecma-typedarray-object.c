@@ -374,6 +374,17 @@ static const uint16_t ecma_typedarray_magic_string_list[] =
 };
 
 /**
+ * Get typedarray's internal [[Class]] property
+ *
+ * @return lit_magic_string_id_t: [[Class]] property of the typedArray
+ */
+lit_magic_string_id_t
+ecma_get_typedarray_class_id (ecma_typedarray_type_t typedarray_id)
+{
+  return (lit_magic_string_id_t) ecma_typedarray_magic_string_list[typedarray_id];
+} /* ecma_get_typedarray_class_id */
+
+/**
  * Get typedarray's getter function callback
  *
  * @return ecma_typedarray_getter_fn_t: the getter function for the given builtin TypedArray id
@@ -476,7 +487,7 @@ ecma_get_typedarray_id (ecma_object_t *obj_p) /**< typedarray object **/
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
-  return (ecma_typedarray_type_t) ext_object_p->u.pseudo_array.extra_info;
+  return (ecma_typedarray_type_t) ext_object_p->u.class_prop.extra_info;
 } /* ecma_get_typedarray_id */
 
 /**
@@ -547,13 +558,12 @@ ecma_typedarray_create_object_with_length (ecma_length_t array_length, /**< leng
 
   ecma_object_t *object_p = ecma_create_object (proto_p,
                                                 sizeof (ecma_extended_object_t),
-                                                ECMA_OBJECT_TYPE_PSEUDO_ARRAY);
+                                                ECMA_OBJECT_TYPE_CLASS);
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-  ext_object_p->u.pseudo_array.u1.class_id = ecma_typedarray_magic_string_list[typedarray_id];
-  ext_object_p->u.pseudo_array.type = ECMA_PSEUDO_ARRAY_TYPEDARRAY;
-  ext_object_p->u.pseudo_array.extra_info = (uint8_t) typedarray_id;
-  ext_object_p->u.pseudo_array.u2.arraybuffer = ecma_make_object_value (new_arraybuffer_p);
+  ext_object_p->u.class_prop.class_id = LIT_INTERNAL_MAGIC_STRING_TYPEDARRAY;
+  ext_object_p->u.class_prop.extra_info = (uint16_t) typedarray_id;
+  ext_object_p->u.class_prop.u.arraybuffer = ecma_make_object_value (new_arraybuffer_p);
 
   ecma_deref_object (new_arraybuffer_p);
 
@@ -587,17 +597,16 @@ ecma_typedarray_create_object_with_buffer (ecma_object_t *arraybuffer_p, /**< th
   size_t object_size = (needs_ext_typedarray_obj ? sizeof (ecma_extended_typedarray_object_t)
                                                  : sizeof (ecma_extended_object_t));
 
-  ecma_object_t *object_p = ecma_create_object (proto_p, object_size, ECMA_OBJECT_TYPE_PSEUDO_ARRAY);
+  ecma_object_t *object_p = ecma_create_object (proto_p, object_size, ECMA_OBJECT_TYPE_CLASS);
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-  ext_object_p->u.pseudo_array.u1.class_id = ecma_typedarray_magic_string_list[typedarray_id];
-  ext_object_p->u.pseudo_array.type = ECMA_PSEUDO_ARRAY_TYPEDARRAY;
-  ext_object_p->u.pseudo_array.extra_info = (uint8_t) typedarray_id;
-  ext_object_p->u.pseudo_array.u2.arraybuffer = ecma_make_object_value (arraybuffer_p);
+  ext_object_p->u.class_prop.class_id = LIT_INTERNAL_MAGIC_STRING_TYPEDARRAY;
+  ext_object_p->u.class_prop.extra_info = (uint16_t) typedarray_id;
+  ext_object_p->u.class_prop.u.arraybuffer = ecma_make_object_value (arraybuffer_p);
 
   if (needs_ext_typedarray_obj)
   {
-    ext_object_p->u.pseudo_array.type = ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO;
+    ext_object_p->u.class_prop.class_id = LIT_INTERNAL_MAGIC_STRING_TYPEDARRAY_WITH_INFO;
 
     ecma_extended_typedarray_object_t *typedarray_info_p = (ecma_extended_typedarray_object_t *) object_p;
     typedarray_info_p->array_length = array_length;
@@ -963,7 +972,7 @@ ecma_typedarray_get_arraybuffer (ecma_object_t *typedarray_p) /**< the pointer t
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) typedarray_p;
 
-  return ecma_get_object_from_value (ext_object_p->u.pseudo_array.u2.arraybuffer);
+  return ecma_get_object_from_value (ext_object_p->u.class_prop.u.arraybuffer);
 } /* ecma_typedarray_get_arraybuffer */
 
 /**
@@ -991,9 +1000,9 @@ ecma_typedarray_get_length (ecma_object_t *typedarray_p) /**< the pointer to the
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) typedarray_p;
 
-  if (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_TYPEDARRAY)
+  if (ext_object_p->u.class_prop.class_id == LIT_INTERNAL_MAGIC_STRING_TYPEDARRAY)
   {
-    ecma_object_t *arraybuffer_p = ecma_get_object_from_value (ext_object_p->u.pseudo_array.u2.arraybuffer);
+    ecma_object_t *arraybuffer_p = ecma_get_object_from_value (ext_object_p->u.class_prop.u.arraybuffer);
     ecma_length_t buffer_length = ecma_arraybuffer_get_length (arraybuffer_p);
     uint8_t shift = ecma_typedarray_get_element_size_shift (typedarray_p);
 
@@ -1023,7 +1032,7 @@ ecma_typedarray_get_offset (ecma_object_t *typedarray_p) /**< the pointer to the
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) typedarray_p;
 
-  if (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_TYPEDARRAY)
+  if (ext_object_p->u.class_prop.class_id == LIT_INTERNAL_MAGIC_STRING_TYPEDARRAY)
   {
     return 0;
   }
@@ -1224,15 +1233,8 @@ ecma_object_is_typedarray (ecma_object_t *obj_p) /**< the target object need to 
 {
   JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
 
-  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_PSEUDO_ARRAY)
-  {
-    ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
-
-    return ((ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_TYPEDARRAY)
-            || (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO));
-  }
-
-  return false;
+  return (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_CLASS
+          && ECMA_OBJECT_TYPE_IS_TYPEDARRAY (((ecma_extended_object_t *) obj_p)->u.class_prop.class_id));
 } /* ecma_object_is_typedarray */
 
 /**
@@ -1244,12 +1246,8 @@ ecma_object_is_typedarray (ecma_object_t *obj_p) /**< the target object need to 
 bool
 ecma_is_typedarray (ecma_value_t value) /**< the target need to be checked */
 {
-  if (!ecma_is_value_object (value))
-  {
-    return false;
-  }
-
-  return ecma_object_is_typedarray (ecma_get_object_from_value (value));
+  return (ecma_is_value_object (value)
+           && ecma_object_is_typedarray (ecma_get_object_from_value (value)));
 } /* ecma_is_typedarray */
 
 /**

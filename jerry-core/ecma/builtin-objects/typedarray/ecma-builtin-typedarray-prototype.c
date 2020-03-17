@@ -359,11 +359,9 @@ ecma_builtin_typedarray_iterators_helper (ecma_value_t this_arg, /**< this argum
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
   }
 
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY_ITERATOR_PROTOTYPE);
-
   return ecma_op_create_iterator_object (this_arg,
-                                         prototype_obj_p,
-                                         ECMA_PSEUDO_ARRAY_ITERATOR,
+                                         ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY_ITERATOR_PROTOTYPE),
+                                         LIT_MAGIC_STRING_ARRAY_ITERATOR_UL,
                                          type);
 } /* ecma_builtin_typedarray_iterators_helper */
 

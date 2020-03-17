@@ -997,7 +997,7 @@ ecma_op_container_create_iterator (ecma_value_t this_arg, /**< this argument */
                                                   *   ecma_iterator_type_t bits */
                                    lit_magic_string_id_t lit_id, /**< internal class id */
                                    ecma_builtin_id_t proto_id, /**< prototype builtin id */
-                                   ecma_pseudo_array_type_t iterator_type) /**< type of the iterator */
+                                   lit_magic_string_id_t iterator_type) /**< type of the iterator */
 {
   ecma_extended_object_t *map_object_p = ecma_op_container_get_object (this_arg, lit_id);
 
@@ -1008,63 +1008,9 @@ ecma_op_container_create_iterator (ecma_value_t this_arg, /**< this argument */
 
   return ecma_op_create_iterator_object (this_arg,
                                          ecma_builtin_get (proto_id),
-                                         (uint8_t) iterator_type,
+                                         iterator_type,
                                          type);
 } /* ecma_op_container_create_iterator */
-
-/**
- * Get the index of the iterator object.
- *
- * @return index of the iterator.
- */
-static uint32_t
-ecma_op_iterator_get_index (ecma_object_t *iter_obj_p)  /**< iterator object pointer */
-{
-  uint32_t index = ((ecma_extended_object_t *) iter_obj_p)->u.pseudo_array.u1.iterator_index;
-
-  if (JERRY_UNLIKELY (index == ECMA_ITERATOR_INDEX_LIMIT))
-  {
-    ecma_string_t *prop_name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ITERATOR_NEXT_INDEX);
-    ecma_property_t *property_p = ecma_find_named_property (iter_obj_p, prop_name_p);
-    ecma_property_value_t *value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
-
-    return (uint32_t) (ecma_get_number_from_value (value_p->value));
-  }
-
-  return index;
-} /* ecma_op_iterator_get_index */
-
-/**
- * Set the index of the iterator object.
- */
-static void
-ecma_op_iterator_set_index (ecma_object_t *iter_obj_p, /**< iterator object pointer */
-                            uint32_t index) /* iterator index to set */
-{
-  if (JERRY_UNLIKELY (index >= ECMA_ITERATOR_INDEX_LIMIT))
-  {
-    /* After the ECMA_ITERATOR_INDEX_LIMIT limit is reached the [[%Iterator%NextIndex]]
-       property is stored as an internal property */
-    ecma_string_t *prop_name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ITERATOR_NEXT_INDEX);
-    ecma_property_t *property_p = ecma_find_named_property (iter_obj_p, prop_name_p);
-    ecma_property_value_t *value_p;
-
-    if (property_p == NULL)
-    {
-      value_p = ecma_create_named_data_property (iter_obj_p, prop_name_p, ECMA_PROPERTY_FLAG_WRITABLE, &property_p);
-      value_p->value = ecma_make_uint32_value (index);
-    }
-    else
-    {
-      value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
-      value_p->value = ecma_make_uint32_value (index);
-    }
-  }
-  else
-  {
-    ((ecma_extended_object_t *) iter_obj_p)->u.pseudo_array.u1.iterator_index = (uint16_t) index;
-  }
-} /* ecma_op_iterator_set_index */
 
 /**
  * The %{Set, Map}IteratorPrototype% object's 'next' routine
@@ -1081,7 +1027,7 @@ ecma_op_iterator_set_index (ecma_object_t *iter_obj_p, /**< iterator object poin
  */
 ecma_value_t
 ecma_op_container_iterator_next (ecma_value_t this_val, /**< this argument */
-                                 ecma_pseudo_array_type_t iterator_type) /**< type of the iterator */
+                                 lit_magic_string_id_t iterator_type) /**< type of the iterator */
 {
   if (!ecma_is_value_object (this_val))
   {
@@ -1089,15 +1035,14 @@ ecma_op_container_iterator_next (ecma_value_t this_val, /**< this argument */
   }
 
   ecma_object_t *obj_p = ecma_get_object_from_value (this_val);
-  ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
+  ecma_iterator_object_t *iterator_obj_p = (ecma_iterator_object_t *) obj_p;
 
-  if (ecma_get_object_type (obj_p) != ECMA_OBJECT_TYPE_PSEUDO_ARRAY
-      || ext_obj_p->u.pseudo_array.type != iterator_type)
+  if (!ecma_object_class_is (obj_p, iterator_type))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an iterator."));
   }
 
-  ecma_value_t iterated_value = ext_obj_p->u.pseudo_array.u2.iterated_value;
+  ecma_value_t iterated_value = iterator_obj_p->header.u.class_prop.u.iterated_value;
 
   if (ecma_is_value_empty (iterated_value))
   {
@@ -1110,17 +1055,17 @@ ecma_op_container_iterator_next (ecma_value_t this_val, /**< this argument */
   ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t,
                                                                     map_object_p->u.class_prop.u.value);
   uint32_t entry_count = ECMA_CONTAINER_ENTRY_COUNT (container_p);
-  uint32_t index = ecma_op_iterator_get_index (obj_p);
+  uint32_t index = iterator_obj_p->index;
 
   if (index == entry_count)
   {
-    ext_obj_p->u.pseudo_array.u2.iterated_value = ECMA_VALUE_EMPTY;
+    iterator_obj_p->header.u.class_prop.u.iterated_value = ECMA_VALUE_EMPTY;
 
     return ecma_create_iter_result_object (ECMA_VALUE_UNDEFINED, ECMA_VALUE_TRUE);
   }
 
   uint8_t entry_size = ecma_op_container_entry_size (lit_id);
-  uint8_t iterator_kind = ext_obj_p->u.pseudo_array.extra_info;
+  uint16_t iterator_kind = iterator_obj_p->header.u.class_prop.extra_info;
   ecma_value_t *start_p = ECMA_CONTAINER_START (container_p);
   ecma_value_t ret_value = ECMA_VALUE_UNDEFINED;
 
@@ -1139,7 +1084,7 @@ ecma_op_container_iterator_next (ecma_value_t this_val, /**< this argument */
       continue;
     }
 
-    ecma_op_iterator_set_index (obj_p, i + entry_size);
+    iterator_obj_p->index = i + entry_size;
 
     ecma_value_t key_arg = *entry_p;
     ecma_value_t value_arg = ecma_op_container_get_value (entry_p, lit_id);

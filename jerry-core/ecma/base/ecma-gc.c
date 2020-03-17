@@ -551,6 +551,12 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 
         switch (ext_object_p->u.class_prop.class_id)
         {
+          case LIT_INTERNAL_MAGIC_STRING_MAPPED_ARGUMENTS:
+          {
+            ecma_gc_set_object_visited (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                                         ext_object_p->u.class_prop.u.lex_env));
+            break;
+          }
 #if ENABLED (JERRY_ES2015_BUILTIN_PROMISE)
           case LIT_MAGIC_STRING_PROMISE_UL:
           {
@@ -595,60 +601,36 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
           }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_CONTAINER) */
-#if ENABLED (JERRY_ES2015)
-          case LIT_MAGIC_STRING_GENERATOR_UL:
-          {
-            ecma_gc_mark_executable_object (object_p);
-            break;
-          }
-#endif /* ENABLED (JERRY_ES2015) */
-          default:
-          {
-            break;
-          }
-        }
-
-        break;
-      }
-      case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
-      {
-        ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-
-        switch (ext_object_p->u.pseudo_array.type)
-        {
 #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
-          case ECMA_PSEUDO_ARRAY_TYPEDARRAY:
-          case ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO:
+          case LIT_INTERNAL_MAGIC_STRING_TYPEDARRAY:
+          case LIT_INTERNAL_MAGIC_STRING_TYPEDARRAY_WITH_INFO:
           {
             ecma_gc_set_object_visited (ecma_typedarray_get_arraybuffer (object_p));
             break;
           }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
 #if ENABLED (JERRY_ES2015)
-          case ECMA_PSEUDO_ARRAY_ITERATOR:
-          case ECMA_PSEUDO_SET_ITERATOR:
-          case ECMA_PSEUDO_MAP_ITERATOR:
+          case LIT_MAGIC_STRING_GENERATOR_UL:
           {
-            ecma_value_t iterated_value = ext_object_p->u.pseudo_array.u2.iterated_value;
+            ecma_gc_mark_executable_object (object_p);
+            break;
+          }
+          case LIT_MAGIC_STRING_ARRAY_ITERATOR_UL:
+          case LIT_MAGIC_STRING_SET_ITERATOR_UL:
+          case LIT_MAGIC_STRING_MAP_ITERATOR_UL:
+          {
+            ecma_iterator_object_t *iterator_obj_p = (ecma_iterator_object_t *) object_p;
+            ecma_value_t iterated_value = iterator_obj_p->header.u.class_prop.u.iterated_value;
+
             if (!ecma_is_value_empty (iterated_value))
             {
               ecma_gc_set_object_visited (ecma_get_object_from_value (iterated_value));
             }
             break;
           }
-          case ECMA_PSEUDO_STRING_ITERATOR:
-          {
-            break;
-          }
 #endif /* ENABLED (JERRY_ES2015) */
           default:
           {
-            JERRY_ASSERT (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS);
-
-            ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                                        ext_object_p->u.pseudo_array.u2.lex_env_cp);
-
-            ecma_gc_set_object_visited (lex_env_p);
             break;
           }
         }
@@ -1089,6 +1071,24 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 
       switch (ext_object_p->u.class_prop.class_id)
       {
+        case LIT_INTERNAL_MAGIC_STRING_MAPPED_ARGUMENTS:
+        {
+          ecma_length_t formal_params_number = ext_object_p->u.class_prop.extra_info;
+          ecma_value_t *arg_literal_p = (ecma_value_t *) (ext_object_p + 1);
+
+          for (ecma_length_t i = 0; i < formal_params_number; i++)
+          {
+            if (arg_literal_p[i] != ECMA_VALUE_EMPTY)
+            {
+              ecma_string_t *name_p = ecma_get_string_from_value (arg_literal_p[i]);
+              ecma_deref_ecma_string (name_p);
+            }
+          }
+
+          size_t formal_params_size = formal_params_number * sizeof (ecma_value_t);
+          ext_object_size += formal_params_size;
+          break;
+        }
 #if ENABLED (JERRY_ES2015)
         case LIT_MAGIC_STRING_SYMBOL_UL:
 #endif /* ENABLED (JERRY_ES2015) */
@@ -1185,21 +1185,52 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           break;
         }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW) */
+#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
+        case LIT_INTERNAL_MAGIC_STRING_TYPEDARRAY_WITH_INFO:
+        {
+          ext_object_size = sizeof (ecma_extended_typedarray_object_t);
+          break;
+        }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
 #if ENABLED (JERRY_ES2015)
         case LIT_MAGIC_STRING_GENERATOR_UL:
         {
           ext_object_size = ecma_gc_free_executable_object (object_p);
           break;
         }
+        case LIT_MAGIC_STRING_STRING_ITERATOR_UL:
+        {
+          ecma_iterator_object_t *iterator_obj_p = (ecma_iterator_object_t *) object_p;
+          ecma_value_t iterated_value = iterator_obj_p->header.u.class_prop.u.iterated_value;
+
+          if (!ecma_is_value_empty (iterated_value))
+          {
+            ecma_deref_ecma_string (ecma_get_string_from_value (iterated_value));
+          }
+
+          /* FALLTHRU */
+        }
+        case LIT_MAGIC_STRING_ARRAY_ITERATOR_UL:
+        case LIT_MAGIC_STRING_SET_ITERATOR_UL:
+        case LIT_MAGIC_STRING_MAP_ITERATOR_UL:
+        {
+          ext_object_size = sizeof (ecma_iterator_object_t);
+          break;
+        }
 #endif /* ENABLED (JERRY_ES2015) */
         default:
         {
           /* The undefined id represents an uninitialized class. */
-          JERRY_ASSERT (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_UNDEFINED
-                        || ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_ARGUMENTS_UL
-                        || ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_BOOLEAN_UL
-                        || ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_ERROR_UL
-                        || ext_object_p->u.class_prop.class_id == LIT_INTERNAL_MAGIC_STRING_INTERNAL_OBJECT);
+#ifndef JERRY_NDEBUG
+          lit_magic_string_id_t id = ext_object_p->u.class_prop.class_id;
+          bool is_uninitialized = (id == LIT_MAGIC_STRING_UNDEFINED
+                                   || id == LIT_MAGIC_STRING_ARGUMENTS_UL
+                                   || id == LIT_MAGIC_STRING_BOOLEAN_UL
+                                   || id == LIT_MAGIC_STRING_ERROR_UL
+                                   || id == LIT_INTERNAL_MAGIC_STRING_TYPEDARRAY
+                                   || id == LIT_INTERNAL_MAGIC_STRING_INTERNAL_OBJECT);
+          JERRY_ASSERT (is_uninitialized);
+#endif /* !JERRY_NDEBUG */
           break;
         }
       }
@@ -1242,64 +1273,6 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
         ext_object_size = sizeof (ecma_static_function_t);
       }
 #endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
-      break;
-    }
-    case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
-    {
-      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-
-      switch (ext_object_p->u.pseudo_array.type)
-      {
-        case ECMA_PSEUDO_ARRAY_ARGUMENTS:
-        {
-          JERRY_ASSERT (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS);
-
-          ecma_length_t formal_params_number = ext_object_p->u.pseudo_array.u1.length;
-          ecma_value_t *arg_Literal_p = (ecma_value_t *) (ext_object_p + 1);
-
-          for (ecma_length_t i = 0; i < formal_params_number; i++)
-          {
-            if (arg_Literal_p[i] != ECMA_VALUE_EMPTY)
-            {
-              ecma_string_t *name_p = ecma_get_string_from_value (arg_Literal_p[i]);
-              ecma_deref_ecma_string (name_p);
-            }
-          }
-
-          size_t formal_params_size = formal_params_number * sizeof (ecma_value_t);
-          ext_object_size += formal_params_size;
-          break;
-        }
-#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
-        case ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO:
-        {
-          ext_object_size = sizeof (ecma_extended_typedarray_object_t);
-          break;
-        }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
-#if ENABLED (JERRY_ES2015)
-        case ECMA_PSEUDO_STRING_ITERATOR:
-        {
-          ecma_value_t iterated_value = ext_object_p->u.pseudo_array.u2.iterated_value;
-
-          if (!ecma_is_value_empty (iterated_value))
-          {
-            ecma_deref_ecma_string (ecma_get_string_from_value (iterated_value));
-          }
-
-          break;
-        }
-#endif /* ENABLED (JERRY_ES2015) */
-        default:
-        {
-          JERRY_ASSERT (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_TYPEDARRAY
-                        || ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ITERATOR
-                        || ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_SET_ITERATOR
-                        || ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_MAP_ITERATOR);
-          break;
-        }
-      }
-
       break;
     }
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:

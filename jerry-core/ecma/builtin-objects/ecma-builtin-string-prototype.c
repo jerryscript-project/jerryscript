@@ -1288,7 +1288,7 @@ ecma_builtin_string_prototype_object_iterator (ecma_value_t to_string) /**< this
 {
   return ecma_op_create_iterator_object (ecma_copy_value (to_string),
                                          ecma_builtin_get (ECMA_BUILTIN_ID_STRING_ITERATOR_PROTOTYPE),
-                                         ECMA_PSEUDO_STRING_ITERATOR,
+                                         LIT_MAGIC_STRING_STRING_ITERATOR_UL,
                                          0);
 } /* ecma_builtin_string_prototype_object_iterator */
 

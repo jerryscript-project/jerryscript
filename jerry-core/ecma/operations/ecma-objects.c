@@ -128,6 +128,54 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
           }
         }
       }
+#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
+      /* ES2015 9.4.5.1 */
+      else if (ECMA_OBJECT_TYPE_IS_TYPEDARRAY (ext_object_p->u.class_prop.class_id)
+               && !ecma_prop_name_is_symbol (property_name_p))
+      {
+        uint32_t array_index = ecma_string_get_array_index (property_name_p);
+
+        if (array_index != ECMA_STRING_NOT_ARRAY_INDEX)
+        {
+          ecma_typedarray_info_t info = ecma_typedarray_get_info (object_p);
+          ecma_value_t value = ECMA_VALUE_UNDEFINED;
+
+          if (array_index < info.length)
+          {
+            ecma_length_t byte_pos = array_index << info.shift;
+            ecma_number_t num = ecma_get_typedarray_element (info.buffer_p + byte_pos, info.id);
+            value = ecma_make_number_value (num);
+          }
+
+          if (!ecma_is_value_undefined (value))
+          {
+            if (options & ECMA_PROPERTY_GET_VALUE)
+            {
+              property_ref_p->virtual_value = value;
+            }
+            else
+            {
+              ecma_fast_free_value (value);
+            }
+
+            return ECMA_PROPERTY_ENUMERABLE_WRITABLE | ECMA_PROPERTY_TYPE_VIRTUAL;
+          }
+
+          return ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP;
+        }
+
+        ecma_number_t num = ecma_string_to_number (property_name_p);
+        ecma_string_t *num_to_str = ecma_new_ecma_string_from_number (num);
+
+        bool is_equal = ecma_compare_ecma_strings (property_name_p, num_to_str);
+        ecma_deref_ecma_string (num_to_str);
+
+        if (is_equal)
+        {
+          return ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP;
+        }
+      }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
       break;
     }
     case ECMA_OBJECT_TYPE_ARRAY:
@@ -173,66 +221,6 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
 
       break;
     }
-#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
-    case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
-    {
-      /* ES2015 9.4.5.1 */
-      if (ecma_object_is_typedarray (object_p))
-      {
-#if ENABLED (JERRY_ES2015)
-        if (ecma_prop_name_is_symbol (property_name_p))
-        {
-          break;
-        }
-#endif /* ENABLED (JERRY_ES2015) */
-
-        uint32_t array_index = ecma_string_get_array_index (property_name_p);
-
-        if (array_index != ECMA_STRING_NOT_ARRAY_INDEX)
-        {
-          ecma_typedarray_info_t info = ecma_typedarray_get_info (object_p);
-          ecma_value_t value = ECMA_VALUE_UNDEFINED;
-
-          if (array_index < info.length)
-          {
-            ecma_length_t byte_pos = array_index << info.shift;
-            ecma_number_t num = ecma_get_typedarray_element (info.buffer_p + byte_pos, info.id);
-            value = ecma_make_number_value (num);
-          }
-
-          if (!ecma_is_value_undefined (value))
-          {
-            if (options & ECMA_PROPERTY_GET_VALUE)
-            {
-              property_ref_p->virtual_value = value;
-            }
-            else
-            {
-              ecma_fast_free_value (value);
-            }
-
-            return ECMA_PROPERTY_ENUMERABLE_WRITABLE | ECMA_PROPERTY_TYPE_VIRTUAL;
-          }
-
-          return ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP;
-        }
-
-        ecma_number_t num = ecma_string_to_number (property_name_p);
-        ecma_string_t *num_to_str = ecma_new_ecma_string_from_number (num);
-
-        if (ecma_compare_ecma_strings (property_name_p, num_to_str))
-        {
-          ecma_deref_ecma_string (num_to_str);
-
-          return ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP;
-        }
-
-        ecma_deref_ecma_string (num_to_str);
-      }
-
-      break;
-    }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
     default:
     {
       break;
@@ -294,26 +282,26 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
       return ECMA_PROPERTY_TYPE_NOT_FOUND;
     }
   }
-  else if (type == ECMA_OBJECT_TYPE_PSEUDO_ARRAY
-           && (options & ECMA_PROPERTY_GET_HAS_OWN_PROP))
+  else if (options & ECMA_PROPERTY_GET_HAS_OWN_PROP)
   {
     ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-    if (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS)
+    if (type == ECMA_OBJECT_TYPE_CLASS
+        && ext_object_p->u.class_prop.class_id == LIT_INTERNAL_MAGIC_STRING_MAPPED_ARGUMENTS)
     {
       uint32_t index = ecma_string_get_array_index (property_name_p);
 
       if (index != ECMA_STRING_NOT_ARRAY_INDEX
-          && index < ext_object_p->u.pseudo_array.u1.length)
+          && index < ext_object_p->u.class_prop.extra_info)
       {
-        ecma_value_t *arg_Literal_p = (ecma_value_t *) (ext_object_p + 1);
+        ecma_value_t *arg_literal_p = (ecma_value_t *) (ext_object_p + 1);
 
-        if (arg_Literal_p[index] != ECMA_VALUE_EMPTY)
+        if (arg_literal_p[index] != ECMA_VALUE_EMPTY)
         {
-          ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_Literal_p[index]);
+          ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_literal_p[index]);
 
           ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                                      ext_object_p->u.pseudo_array.u2.lex_env_cp);
+                                                                      ext_object_p->u.class_prop.u.lex_env);
 
           JERRY_ASSERT (lex_env_p != NULL
                         && ecma_is_lexical_environment (lex_env_p));
@@ -451,6 +439,7 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
     case ECMA_OBJECT_TYPE_CLASS:
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+      uint32_t index = ecma_string_get_array_index (property_name_p);
 
       if (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_STRING_UL)
       {
@@ -463,8 +452,6 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
 
           return ecma_make_uint32_value (length);
         }
-
-        uint32_t index = ecma_string_get_array_index (property_name_p);
 
         if (index != ECMA_STRING_NOT_ARRAY_INDEX)
         {
@@ -479,6 +466,54 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
           }
         }
       }
+      if (ext_object_p->u.class_prop.class_id == LIT_INTERNAL_MAGIC_STRING_MAPPED_ARGUMENTS
+          && index < ext_object_p->u.class_prop.extra_info)
+      {
+        ecma_value_t *arg_literal_p = (ecma_value_t *) (ext_object_p + 1);
+
+        if (arg_literal_p[index] != ECMA_VALUE_EMPTY)
+        {
+          ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_literal_p[index]);
+
+          ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                                      ext_object_p->u.class_prop.u.lex_env);
+
+          JERRY_ASSERT (lex_env_p != NULL
+                        && ecma_is_lexical_environment (lex_env_p));
+
+          return ecma_op_get_binding_value (lex_env_p, arg_name_p, true);
+        }
+      }
+#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
+      /* ES2015 9.4.5.4 */
+      else if (ECMA_OBJECT_TYPE_IS_TYPEDARRAY (ext_object_p->u.class_prop.class_id)
+               && !ecma_prop_name_is_symbol (property_name_p))
+      {
+        if (index != ECMA_STRING_NOT_ARRAY_INDEX)
+        {
+          ecma_typedarray_info_t info = ecma_typedarray_get_info (object_p);
+
+          if (index >= info.length)
+          {
+            return ECMA_VALUE_UNDEFINED;
+          }
+
+          ecma_length_t byte_pos = index << info.shift;
+          ecma_number_t num = ecma_get_typedarray_element (info.buffer_p + byte_pos, info.id);
+          return ecma_make_number_value (num);
+        }
+
+        ecma_number_t num = ecma_string_to_number (property_name_p);
+        ecma_string_t *num_to_str = ecma_new_ecma_string_from_number (num);
+        bool is_equal = ecma_compare_ecma_strings (property_name_p, num_to_str);
+        ecma_deref_ecma_string (num_to_str);
+
+        if (is_equal)
+        {
+          return ECMA_VALUE_UNDEFINED;
+        }
+      }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
 
       break;
     }
@@ -507,76 +542,6 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
         }
         return ECMA_VALUE_NOT_FOUND;
       }
-
-      break;
-    }
-    case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
-    {
-      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-
-      if (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS)
-      {
-        uint32_t index = ecma_string_get_array_index (property_name_p);
-
-        if (index != ECMA_STRING_NOT_ARRAY_INDEX
-            && index < ext_object_p->u.pseudo_array.u1.length)
-        {
-          ecma_value_t *arg_Literal_p = (ecma_value_t *) (ext_object_p + 1);
-
-          if (arg_Literal_p[index] != ECMA_VALUE_EMPTY)
-          {
-            ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_Literal_p[index]);
-
-            ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                                        ext_object_p->u.pseudo_array.u2.lex_env_cp);
-
-            JERRY_ASSERT (lex_env_p != NULL
-                          && ecma_is_lexical_environment (lex_env_p));
-
-            return ecma_op_get_binding_value (lex_env_p, arg_name_p, true);
-          }
-        }
-      }
-#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
-      /* ES2015 9.4.5.4 */
-      if (ecma_object_is_typedarray (object_p))
-      {
-#if ENABLED (JERRY_ES2015)
-        if (ecma_prop_name_is_symbol (property_name_p))
-        {
-          break;
-        }
-#endif /* ENABLED (JERRY_ES2015) */
-
-        uint32_t array_index = ecma_string_get_array_index (property_name_p);
-
-        if (array_index != ECMA_STRING_NOT_ARRAY_INDEX)
-        {
-          ecma_typedarray_info_t info = ecma_typedarray_get_info (object_p);
-
-          if (array_index >= info.length)
-          {
-            return ECMA_VALUE_UNDEFINED;
-          }
-
-          ecma_length_t byte_pos = array_index << info.shift;
-          ecma_number_t num = ecma_get_typedarray_element (info.buffer_p + byte_pos, info.id);
-          return ecma_make_number_value (num);
-        }
-
-        ecma_number_t num = ecma_string_to_number (property_name_p);
-        ecma_string_t *num_to_str = ecma_new_ecma_string_from_number (num);
-
-        if (ecma_compare_ecma_strings (property_name_p, num_to_str))
-        {
-          ecma_deref_ecma_string (num_to_str);
-
-          return ECMA_VALUE_UNDEFINED;
-        }
-
-        ecma_deref_ecma_string (num_to_str);
-      }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
 
       break;
     }
@@ -1172,6 +1137,72 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
 
   switch (type)
   {
+    case ECMA_OBJECT_TYPE_CLASS:
+    {
+      ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
+      uint32_t index = ecma_string_get_array_index (property_name_p);
+
+      if (ext_obj_p->u.class_prop.class_id == LIT_INTERNAL_MAGIC_STRING_MAPPED_ARGUMENTS
+          && index < ext_obj_p->u.class_prop.extra_info)
+      {
+        ecma_value_t *arg_literal_p = (ecma_value_t *) (ext_obj_p + 1);
+
+        if (arg_literal_p[index] != ECMA_VALUE_EMPTY)
+        {
+          ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_literal_p[index]);
+
+          ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                                      ext_obj_p->u.class_prop.u.lex_env);
+
+          JERRY_ASSERT (lex_env_p != NULL
+                        && ecma_is_lexical_environment (lex_env_p));
+
+          ecma_op_set_mutable_binding (lex_env_p, arg_name_p, value, true);
+          return ECMA_VALUE_TRUE;
+        }
+      }
+#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
+      /* ES2015 9.4.5.5 */
+      else if (ECMA_OBJECT_TYPE_IS_TYPEDARRAY (ext_obj_p->u.class_prop.class_id)
+               && !ecma_prop_name_is_symbol (property_name_p))
+      {
+        if (index != ECMA_STRING_NOT_ARRAY_INDEX)
+        {
+          ecma_number_t num_var;
+          ecma_value_t error = ecma_get_number (value, &num_var);
+
+          if (ECMA_IS_VALUE_ERROR (error))
+          {
+            jcontext_release_exception ();
+            return ecma_reject (is_throw);
+          }
+
+          ecma_typedarray_info_t info = ecma_typedarray_get_info (object_p);
+
+          if (index >= info.length)
+          {
+            return ecma_reject (is_throw);
+          }
+
+          ecma_length_t byte_pos = index << info.shift;
+          ecma_set_typedarray_element (info.buffer_p + byte_pos, num_var, info.id);
+
+          return ECMA_VALUE_TRUE;
+        }
+
+        ecma_number_t num = ecma_string_to_number (property_name_p);
+        ecma_string_t *num_to_str = ecma_new_ecma_string_from_number (num);
+        bool is_equal = ecma_compare_ecma_strings (property_name_p, num_to_str);
+        ecma_deref_ecma_string (num_to_str);
+
+        if (is_equal)
+        {
+          return ecma_reject (is_throw);
+        }
+      }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
+      break;
+    }
     case ECMA_OBJECT_TYPE_ARRAY:
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
@@ -1207,86 +1238,6 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
 
       JERRY_ASSERT (!ecma_op_object_is_fast_array (object_p));
 
-      break;
-    }
-    case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
-    {
-      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-
-      if (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS)
-      {
-        uint32_t index = ecma_string_get_array_index (property_name_p);
-
-        if (index != ECMA_STRING_NOT_ARRAY_INDEX
-            && index < ext_object_p->u.pseudo_array.u1.length)
-        {
-          ecma_value_t *arg_Literal_p = (ecma_value_t *) (ext_object_p + 1);
-
-          if (arg_Literal_p[index] != ECMA_VALUE_EMPTY)
-          {
-            ecma_string_t *arg_name_p = ecma_get_string_from_value (arg_Literal_p[index]);
-
-            ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                                        ext_object_p->u.pseudo_array.u2.lex_env_cp);
-
-            JERRY_ASSERT (lex_env_p != NULL
-                          && ecma_is_lexical_environment (lex_env_p));
-
-            ecma_op_set_mutable_binding (lex_env_p, arg_name_p, value, true);
-            return ECMA_VALUE_TRUE;
-          }
-        }
-      }
-#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
-      /* ES2015 9.4.5.5 */
-      if (ecma_object_is_typedarray (object_p))
-      {
-#if ENABLED (JERRY_ES2015)
-        if (ecma_prop_name_is_symbol (property_name_p))
-        {
-          break;
-        }
-#endif /* ENABLED (JERRY_ES2015) */
-
-        uint32_t array_index = ecma_string_get_array_index (property_name_p);
-
-        if (array_index != ECMA_STRING_NOT_ARRAY_INDEX)
-        {
-          ecma_number_t num_var;
-          ecma_value_t error = ecma_get_number (value, &num_var);
-
-          if (ECMA_IS_VALUE_ERROR (error))
-          {
-            jcontext_release_exception ();
-            return ecma_reject (is_throw);
-          }
-
-          ecma_typedarray_info_t info = ecma_typedarray_get_info (object_p);
-
-          if (array_index >= info.length)
-          {
-            return ecma_reject (is_throw);
-          }
-
-          ecma_length_t byte_pos = array_index << info.shift;
-          ecma_set_typedarray_element (info.buffer_p + byte_pos, num_var, info.id);
-
-          return ECMA_VALUE_TRUE;
-        }
-
-        ecma_number_t num = ecma_string_to_number (property_name_p);
-        ecma_string_t *num_to_str = ecma_new_ecma_string_from_number (num);
-
-        if (ecma_compare_ecma_strings (property_name_p, num_to_str))
-        {
-          ecma_deref_ecma_string (num_to_str);
-
-          return ecma_reject (is_throw);
-        }
-
-        ecma_deref_ecma_string (num_to_str);
-      }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
       break;
     }
     default:
@@ -1411,24 +1362,17 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
     if (create_new_property
         && ecma_op_ordinary_object_is_extensible (object_p))
     {
-      const ecma_object_type_t obj_type = ecma_get_object_type (object_p);
-
-      if (obj_type == ECMA_OBJECT_TYPE_PSEUDO_ARRAY)
+      if (ecma_object_class_is (object_p, LIT_INTERNAL_MAGIC_STRING_MAPPED_ARGUMENTS))
       {
-        ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-
-        if (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS)
-        {
-          return ecma_builtin_helper_def_prop (object_p,
-                                               property_name_p,
-                                               value,
-                                               ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_IS_THROW);
-        }
+        return ecma_builtin_helper_def_prop (object_p,
+                                              property_name_p,
+                                              value,
+                                              ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_IS_THROW);
       }
 
       uint32_t index = ecma_string_get_array_index (property_name_p);
 
-      if (obj_type == ECMA_OBJECT_TYPE_ARRAY
+      if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_ARRAY
           && index != ECMA_STRING_NOT_ARRAY_INDEX)
       {
         ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
@@ -1544,16 +1488,11 @@ ecma_op_object_delete (ecma_object_t *obj_p, /**< the object */
                 && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT (property_name_p != NULL);
 
-  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_PSEUDO_ARRAY)
+  if (ecma_object_class_is (obj_p, LIT_INTERNAL_MAGIC_STRING_MAPPED_ARGUMENTS))
   {
-    ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
-
-    if (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS)
-    {
-      return ecma_op_arguments_object_delete (obj_p,
-                                              property_name_p,
-                                              is_throw);
-    }
+    return ecma_op_arguments_object_delete (obj_p,
+                                            property_name_p,
+                                            is_throw);
   }
 
 #if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
@@ -1598,7 +1537,6 @@ ecma_op_object_default_value (ecma_object_t *obj_p, /**< the object */
    *   [ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION] = &ecma_op_general_object_default_value,
    *   [ECMA_OBJECT_TYPE_ARRAY]             = &ecma_op_general_object_default_value,
    *   [ECMA_OBJECT_TYPE_BOUND_FUNCTION]    = &ecma_op_general_object_default_value,
-   *   [ECMA_OBJECT_TYPE_PSEUDO_ARRAY]      = &ecma_op_general_object_default_value
    * };
    *
    * return default_value[type] (obj_p, property_name_p);
@@ -1637,59 +1575,29 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
 
   switch (type)
   {
-    case ECMA_OBJECT_TYPE_GENERAL:
     case ECMA_OBJECT_TYPE_CLASS:
-    case ECMA_OBJECT_TYPE_FUNCTION:
-    case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
-    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     {
-      return ecma_op_general_object_define_own_property (obj_p,
-                                                         property_name_p,
-                                                         property_desc_p);
-    }
+      ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
 
-    case ECMA_OBJECT_TYPE_ARRAY:
-    {
-      return ecma_op_array_object_define_own_property (obj_p,
-                                                       property_name_p,
-                                                       property_desc_p);
-    }
-
-    default:
-    {
-      JERRY_ASSERT (type == ECMA_OBJECT_TYPE_PSEUDO_ARRAY);
-
-      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
-
-#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
-      if (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS)
+      if (ext_obj_p->u.class_prop.class_id == LIT_INTERNAL_MAGIC_STRING_MAPPED_ARGUMENTS)
       {
-#else /* !ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
-        JERRY_ASSERT (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS);
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
         return ecma_op_arguments_object_define_own_property (obj_p,
                                                              property_name_p,
                                                              property_desc_p);
-#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
       }
+#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
+
       /* ES2015 9.4.5.3 */
-      if (ecma_object_is_typedarray (obj_p))
+      if (ECMA_OBJECT_TYPE_IS_TYPEDARRAY (ext_obj_p->u.class_prop.class_id)
+          && !ecma_prop_name_is_symbol (property_name_p))
       {
-#if ENABLED (JERRY_ES2015)
-        if (ecma_prop_name_is_symbol (property_name_p))
-        {
-          return ecma_op_general_object_define_own_property (obj_p,
-                                                             property_name_p,
-                                                             property_desc_p);
-        }
-#endif /* ENABLED (JERRY_ES2015) */
         uint32_t array_index = ecma_string_get_array_index (property_name_p);
 
         if (array_index != ECMA_STRING_NOT_ARRAY_INDEX)
         {
           bool define_status = ecma_op_typedarray_define_index_prop (obj_p,
-                                                                     array_index,
-                                                                     property_desc_p);
+                                                                    array_index,
+                                                                    property_desc_p);
 
           if (define_status)
           {
@@ -1701,23 +1609,32 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
 
         ecma_number_t num = ecma_string_to_number (property_name_p);
         ecma_string_t *num_to_str = ecma_new_ecma_string_from_number (num);
+        bool is_equal = ecma_compare_ecma_strings (property_name_p, num_to_str);
+        ecma_deref_ecma_string (num_to_str);
 
-        if (ecma_compare_ecma_strings (property_name_p, num_to_str))
+        if (is_equal)
         {
-          ecma_deref_ecma_string (num_to_str);
-
           return ecma_reject (property_desc_p->flags & ECMA_PROP_IS_THROW);
         }
-
-        ecma_deref_ecma_string (num_to_str);
       }
-
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
+      /* FALLTHRU */
+    }
+    case ECMA_OBJECT_TYPE_GENERAL:
+    case ECMA_OBJECT_TYPE_FUNCTION:
+    case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
+    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+    {
       return ecma_op_general_object_define_own_property (obj_p,
                                                          property_name_p,
                                                          property_desc_p);
-#else /* !ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
-      break;
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
+    }
+    default:
+    {
+      JERRY_ASSERT (type == ECMA_OBJECT_TYPE_ARRAY);
+      return ecma_op_array_object_define_own_property (obj_p,
+                                                       property_name_p,
+                                                       property_desc_p);
     }
   }
 } /* ecma_op_object_define_own_property */
@@ -1970,16 +1887,6 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
       {
         switch (type)
         {
-          case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
-          {
-  #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
-            if (ecma_object_is_typedarray (obj_p))
-            {
-              ecma_op_typedarray_list_lazy_property_names (obj_p, prop_names_p);
-            }
-  #endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
-            break;
-          }
           case ECMA_OBJECT_TYPE_FUNCTION:
           {
             ecma_op_function_list_lazy_property_names (obj_p,
@@ -2013,6 +1920,12 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
                                                        prop_names_p,
                                                        skipped_non_enumerable_p);
             }
+  #if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
+            else if (ECMA_OBJECT_TYPE_IS_TYPEDARRAY (ext_object_p->u.class_prop.class_id))
+            {
+              ecma_op_typedarray_list_lazy_property_names (obj_p, prop_names_p);
+            }
+  #endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
 
             break;
           }
@@ -2506,50 +2419,21 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
     case ECMA_OBJECT_TYPE_CLASS:
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
-      return (lit_magic_string_id_t) ext_object_p->u.class_prop.class_id;
-    }
-    case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
-    {
-      ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
+      lit_magic_string_id_t id = (lit_magic_string_id_t) ext_object_p->u.class_prop.class_id;
 
-      switch (ext_obj_p->u.pseudo_array.type)
+      if (id == LIT_INTERNAL_MAGIC_STRING_MAPPED_ARGUMENTS)
       {
-#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
-        case ECMA_PSEUDO_ARRAY_TYPEDARRAY:
-        case ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO:
-        {
-          return (lit_magic_string_id_t) ext_obj_p->u.pseudo_array.u1.class_id;
-        }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
-#if ENABLED (JERRY_ES2015)
-        case ECMA_PSEUDO_ARRAY_ITERATOR:
-        {
-          return LIT_MAGIC_STRING_ARRAY_ITERATOR_UL;
-        }
-        case ECMA_PSEUDO_SET_ITERATOR:
-        {
-          return LIT_MAGIC_STRING_SET_ITERATOR_UL;
-        }
-        case ECMA_PSEUDO_MAP_ITERATOR:
-        {
-          return LIT_MAGIC_STRING_MAP_ITERATOR_UL;
-        }
-#endif /* ENABLED (JERRY_ES2015) */
-#if ENABLED (JERRY_ES2015)
-        case ECMA_PSEUDO_STRING_ITERATOR:
-        {
-          return LIT_MAGIC_STRING_STRING_ITERATOR_UL;
-        }
-#endif /* ENABLED (JERRY_ES2015) */
-        default:
-        {
-          JERRY_ASSERT (ext_obj_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS);
-
-          return LIT_MAGIC_STRING_ARGUMENTS_UL;
-        }
+        id = LIT_MAGIC_STRING_ARGUMENTS_UL;
       }
+#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
+      else if (id == LIT_INTERNAL_MAGIC_STRING_TYPEDARRAY
+               || id == LIT_INTERNAL_MAGIC_STRING_TYPEDARRAY_WITH_INFO)
+      {
+        id = ecma_get_typedarray_class_id (ext_object_p->u.class_prop.extra_info);
+      }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
 
-      break;
+      return id;
     }
     case ECMA_OBJECT_TYPE_FUNCTION:
     case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:

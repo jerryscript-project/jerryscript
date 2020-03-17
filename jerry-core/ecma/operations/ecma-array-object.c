@@ -767,7 +767,7 @@ ecma_op_create_array_iterator (ecma_object_t *obj_p, /**< array object */
 
   return ecma_op_create_iterator_object (ecma_make_object_value (obj_p),
                                          prototype_obj_p,
-                                         ECMA_PSEUDO_ARRAY_ITERATOR,
+                                         LIT_MAGIC_STRING_ARRAY_ITERATOR_UL,
                                          (uint8_t) type);
 } /* ecma_op_create_array_iterator */
 #endif /* ENABLED (JERRY_ES2015) */

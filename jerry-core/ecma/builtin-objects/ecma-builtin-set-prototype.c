@@ -148,7 +148,7 @@ ecma_builtin_set_prototype_object_entries (ecma_value_t this_arg) /**< this argu
                                             ECMA_ITERATOR_KEYS_VALUES,
                                             LIT_MAGIC_STRING_SET_UL,
                                             ECMA_BUILTIN_ID_SET_ITERATOR_PROTOTYPE,
-                                            ECMA_PSEUDO_SET_ITERATOR);
+                                            LIT_MAGIC_STRING_SET_ITERATOR_UL);
 } /* ecma_builtin_set_prototype_object_entries */
 
 /**
@@ -167,7 +167,7 @@ ecma_builtin_set_prototype_object_keys (ecma_value_t this_arg) /**< this argumen
                                             ECMA_ITERATOR_KEYS,
                                             LIT_MAGIC_STRING_SET_UL,
                                             ECMA_BUILTIN_ID_SET_ITERATOR_PROTOTYPE,
-                                            ECMA_PSEUDO_SET_ITERATOR);
+                                            LIT_MAGIC_STRING_SET_ITERATOR_UL);
 } /* ecma_builtin_set_prototype_object_keys */
 
 /**
@@ -186,7 +186,7 @@ ecma_builtin_set_prototype_object_values (ecma_value_t this_arg) /**< this argum
                                             ECMA_ITERATOR_VALUES,
                                             LIT_MAGIC_STRING_SET_UL,
                                             ECMA_BUILTIN_ID_SET_ITERATOR_PROTOTYPE,
-                                            ECMA_PSEUDO_SET_ITERATOR);
+                                            LIT_MAGIC_STRING_SET_ITERATOR_UL);
 } /* ecma_builtin_set_prototype_object_values */
 
 #endif /* ENABLED (JERRY_ES2015) */

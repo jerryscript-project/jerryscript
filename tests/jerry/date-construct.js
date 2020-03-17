@@ -13,7 +13,6 @@
 // limitations under the License.
 
 assert (Date.length == 7);
-assert (Object.prototype.toString.call (Date.prototype) === '[object Date]');
 
 var d;
 
@@ -27,8 +26,6 @@ catch (e)
   assert (e instanceof Error);
   assert (e.message === "foo");
 }
-
-assert (isNaN(Date.prototype.valueOf.call(Date.prototype)));
 
 d = new Date("abcd");
 assert (isNaN(d.valueOf()));

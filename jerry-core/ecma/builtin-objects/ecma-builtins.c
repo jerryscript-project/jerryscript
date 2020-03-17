@@ -445,6 +445,7 @@ ecma_instantiate_builtin (ecma_builtin_id_t obj_builtin_id) /**< built-in id */
     }
 #endif /* ENABLED (JERRY_BUILTIN_ARRAY) */
 
+#if !ENABLED (JERRY_ES2015)
 #if ENABLED (JERRY_BUILTIN_STRING)
     case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
     {
@@ -502,35 +503,21 @@ ecma_instantiate_builtin (ecma_builtin_id_t obj_builtin_id) /**< built-in id */
       JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_CLASS);
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
-#if ENABLED (JERRY_ES2015)
-      ext_object_p->u.class_prop.class_id = LIT_INTERNAL_MAGIC_STRING_REGEXP_PROTO;
-#else /* !ENABLED (JERRY_ES2015) */
       ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_REGEXP_UL;
-#endif /* ENABLED (JERRY_ES2015) */
 
-/* In the ECMA v6 version, we create a dummy bytecode for the RegExp prototype object for backwards compatibility,
- * so we can use the existing methods to get the source and flags from the [[OriginalSource]] and [[OriginalFlags]]
- * internal properties.
- */
-#if ENABLED (JERRY_ES2015)
-      re_compiled_code_t *bc_p = (re_compiled_code_t *) jmem_heap_alloc_block (ECMA_REGEXP_PROTO_COMPILED_CODE_SIZE);
-
-      bc_p->header.status_flags = RE_FLAG_EMPTY;
-      bc_p->source = ecma_make_magic_string_value (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP);
-#else /* !ENABLED (JERRY_ES2015) */
       const re_compiled_code_t *bc_p = NULL;
       ecma_value_t ret_value = re_compile_bytecode (&bc_p,
                                                     ecma_get_magic_string (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP),
                                                     RE_FLAG_EMPTY);
 
       JERRY_ASSERT (ecma_is_value_empty (ret_value));
-#endif /* ENABLED (JERRY_ES2015) */
 
       ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.class_prop.u.value, bc_p);
 
       break;
     }
 #endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
+#endif /* !ENABLED (JERRY_ES2015) */
     default:
     {
       JERRY_ASSERT (obj_type != ECMA_OBJECT_TYPE_CLASS);

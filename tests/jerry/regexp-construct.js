@@ -76,8 +76,6 @@ assert (r.global == true);
 assert (r.ignoreCase == true);
 assert (r.multiline == true);
 
-assert(Object.prototype.toString.call(RegExp.prototype) === '[object RegExp]');
-
 /* The 'undefined' argument for the RegExp constructor should not be converted to string,
  * and it should behave just like when there is no argument.
  */
@@ -130,25 +128,3 @@ assert (r.multiline == false);
 
 /* RegExp properties */
 assert (RegExp.length === 2);
-assert (RegExp.prototype.source === "(?:)");
-assert (RegExp.prototype.global === false);
-assert (RegExp.prototype.ignoreCase === false);
-assert (RegExp.prototype.multiline === false);
-
-RegExp.prototype.source = "a";
-RegExp.prototype.global = true;
-RegExp.prototype.ignoreCase = true;
-RegExp.prototype.multiline = true;
-assert (RegExp.prototype.source === "(?:)");
-assert (RegExp.prototype.global === false);
-assert (RegExp.prototype.ignoreCase === false);
-assert (RegExp.prototype.multiline === false);
-
-delete RegExp.prototype.source;
-delete RegExp.prototype.global;
-delete RegExp.prototype.ignoreCase;
-delete RegExp.prototype.multiline;
-assert (RegExp.prototype.source === "(?:)");
-assert (RegExp.prototype.global === false);
-assert (RegExp.prototype.ignoreCase === false);
-assert (RegExp.prototype.multiline === false);

@@ -13,4 +13,4 @@
 // limitations under the License.
 
 for (var [] of [[], []])
-    String.prototype.split(RegExp.prototype)
+    "".split(new RegExp())

@@ -553,15 +553,24 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
 
       no_declarations++;
 
-      if (type & SCANNER_LITERAL_IS_FUNC)
-      {
-        no_declarations++;
-      }
-
       if (no_reg || (type & no_reg_types))
       {
         type |= SCANNER_LITERAL_NO_REG;
         literal_p->type = type;
+      }
+
+      if (type & SCANNER_LITERAL_IS_FUNC)
+      {
+        no_declarations++;
+
+#if !ENABLED (JERRY_ES2015)
+        if (type & SCANNER_LITERAL_IS_LOCAL)
+        {
+          /* Catch parameters cannot be functions. */
+          literal_p->type = (uint8_t) (type & ~SCANNER_LITERAL_IS_FUNC);
+          no_declarations--;
+        }
+#endif /* !ENABLED (JERRY_ES2015) */
       }
 
       intptr_t diff = (intptr_t) (literal_p->char_p - prev_source_p);

@@ -2004,6 +2004,21 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
           continue;
         }
+        case VM_OC_SET_HOME_OBJECT:
+        {
+          opfunc_object_literal_set_home_object (frame_ctx_p, stack_top_p[-1]);
+          continue;
+        }
+        case VM_OC_ASSIGN_SUPER:
+        {
+          result = opfunc_assign_super_reference (&stack_top_p, frame_ctx_p, opcode_data);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+          continue;
+        }
 #endif /* ENABLED (JERRY_ES2015) */
         case VM_OC_PUSH_ELISON:
         {

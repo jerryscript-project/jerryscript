@@ -129,6 +129,9 @@ ecma_value_t
 opfunc_init_class (vm_frame_ctx_t *frame_context_p, ecma_value_t *stack_top_p);
 
 void
+opfunc_object_literal_set_home_object (vm_frame_ctx_t *frame_context_p, ecma_value_t home_object);
+
+void
 opfunc_pop_lexical_environment (vm_frame_ctx_t *frame_ctx_p);
 
 void
@@ -137,6 +140,9 @@ opfunc_finalize_class (vm_frame_ctx_t *frame_ctx_p, ecma_value_t **vm_stack_top_
 ecma_value_t
 opfunc_form_super_reference (ecma_value_t **vm_stack_top_p, vm_frame_ctx_t *frame_ctx_p, ecma_value_t prop_name,
                              uint8_t opcode);
+
+ecma_value_t
+opfunc_assign_super_reference (ecma_value_t **vm_stack_top_p, vm_frame_ctx_t *frame_ctx_p, uint32_t opcode_data);
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**

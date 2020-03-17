@@ -266,6 +266,8 @@ typedef enum
   VM_OC_GET_TEMPLATE_OBJECT,     /**< GetTemplateObject operation */
   VM_OC_PUSH_NEW_TARGET,         /**< push new.target onto the stack */
   VM_OC_REQUIRE_OBJECT_COERCIBLE,/**< RequireObjectCoercible opretaion */
+  VM_OC_SET_HOME_OBJECT,         /**< set [[HomeObject]] internal slot */
+  VM_OC_ASSIGN_SUPER,            /**< assign super reference */
 #endif /* ENABLED (JERRY_ES2015) */
   VM_OC_NONE,                    /**< a special opcode for unsupported byte codes */
 } vm_oc_types;
@@ -323,6 +325,8 @@ typedef enum
   VM_OC_GET_TEMPLATE_OBJECT = VM_OC_NONE,     /**< GetTemplateObject operation */
   VM_OC_PUSH_NEW_TARGET = VM_OC_NONE,         /**< push new.target onto the stack */
   VM_OC_REQUIRE_OBJECT_COERCIBLE = VM_OC_NONE,/**< RequireObjectCoercible opretaion */
+  VM_OC_SET_HOME_OBJECT = VM_OC_NONE,         /**< set [[HomeObject]] internal slot */
+  VM_OC_ASSIGN_SUPER = VM_OC_NONE,            /**< assign super reference */
 #endif /* !ENABLED (JERRY_ES2015) */
 
   VM_OC_UNUSED = VM_OC_NONE                   /**< placeholder if the list is empty */

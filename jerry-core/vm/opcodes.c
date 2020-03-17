@@ -877,8 +877,8 @@ opfunc_create_implicit_class_constructor (uint8_t opcode) /**< current cbc opcod
  * Set the [[HomeObject]] attribute of the given functon object
  */
 static inline void JERRY_ATTR_ALWAYS_INLINE
-opfunc_set_home_object (ecma_object_t *func_p, /**< function object */
-                        ecma_object_t *parent_env_p) /**< parent environment */
+opfunc_set_home_object_environment (ecma_object_t *func_p, /**< function object */
+                                    ecma_object_t *parent_env_p) /**< parent environment */
 {
   if (ecma_get_object_type (func_p) == ECMA_OBJECT_TYPE_FUNCTION)
   {
@@ -886,7 +886,7 @@ opfunc_set_home_object (ecma_object_t *func_p, /**< function object */
 
     ECMA_SET_NON_NULL_POINTER_TAG (((ecma_extended_object_t *) func_p)->u.function.scope_cp, parent_env_p, 0);
   }
-} /* opfunc_set_home_object */
+} /* opfunc_set_home_object_environment */
 
 /**
  * ClassDefinitionEvaluation environment initialization part
@@ -1034,11 +1034,12 @@ opfunc_init_class (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 } /* opfunc_init_class */
 
 /**
- * Set [[Enumerable]] and [[HomeObject]] attributes for all class method
+ * Set [[Enumerable]] and [[HomeObject]] attributes for function properties
  */
 static void
-opfunc_set_class_attributes (ecma_object_t *obj_p, /**< object */
-                             ecma_object_t *parent_env_p) /**< parent environment */
+opfunc_set_home_object (ecma_object_t *obj_p, /**< object */
+                        ecma_object_t *parent_env_p, /**< parent environment */
+                        bool is_enumerable) /**< [[Enumerable]] property attribute */
 {
   jmem_cpointer_t prop_iter_cp = obj_p->u1.property_list_cp;
 
@@ -1066,11 +1067,17 @@ opfunc_set_class_attributes (ecma_object_t *obj_p, /**< object */
 
       if (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_NAMEDDATA)
       {
-        JERRY_ASSERT (ecma_is_value_object (property_pair_p->values[index].value));
         if (ecma_is_property_enumerable (property))
         {
-          property_pair_p->header.types[index] = (uint8_t) (property & ~ECMA_PROPERTY_FLAG_ENUMERABLE);
-          opfunc_set_home_object (ecma_get_object_from_value (property_pair_p->values[index].value), parent_env_p);
+          if (!is_enumerable)
+          {
+            property_pair_p->header.types[index] = (uint8_t) (property & ~ECMA_PROPERTY_FLAG_ENUMERABLE);
+          }
+          if (ecma_is_value_object (property_pair_p->values[index].value))
+          {
+            opfunc_set_home_object_environment (ecma_get_object_from_value (property_pair_p->values[index].value),
+                                                parent_env_p);
+          }
         }
       }
       else if (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR)
@@ -1081,12 +1088,14 @@ opfunc_set_class_attributes (ecma_object_t *obj_p, /**< object */
 
         if (get_set_pair_p->getter_cp != JMEM_CP_NULL)
         {
-          opfunc_set_home_object (ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->getter_cp), parent_env_p);
+          opfunc_set_home_object_environment (ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->getter_cp),
+                                              parent_env_p);
         }
 
         if (get_set_pair_p->setter_cp != JMEM_CP_NULL)
         {
-          opfunc_set_home_object (ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->setter_cp), parent_env_p);
+          opfunc_set_home_object_environment (ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->setter_cp),
+                                              parent_env_p);
         }
       }
       else
@@ -1100,7 +1109,26 @@ opfunc_set_class_attributes (ecma_object_t *obj_p, /**< object */
 
     prop_iter_cp = prop_iter_p->next_property_cp;
   }
-} /* opfunc_set_class_attributes */
+} /* opfunc_set_home_object */
+
+/**
+ * Set the [[HomeObject]] internal property for the properties of the given object
+ */
+void
+opfunc_object_literal_set_home_object (vm_frame_ctx_t *frame_context_p, /**< frame context */
+                                       ecma_value_t home_object) /**< home object */
+{
+  JERRY_ASSERT (ecma_is_value_object (home_object));
+
+  ecma_object_t *home_object_p = ecma_get_object_from_value (home_object);
+
+  ecma_object_t *home_env_p = ecma_create_object_lex_env (frame_context_p->lex_env_p,
+                                                          home_object_p,
+                                                          ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND);
+
+  opfunc_set_home_object (home_object_p, home_env_p, true);
+  ecma_deref_object (home_env_p);
+} /* opfunc_object_literal_set_home_object */
 
 /**
  * Pop the current lexical environment referenced by the frame context
@@ -1144,8 +1172,8 @@ opfunc_finalize_class (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
                                                            proto_p,
                                                            ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND);
 
-  opfunc_set_class_attributes (ctor_p, ctor_env_p);
-  opfunc_set_class_attributes (proto_p, proto_env_p);
+  opfunc_set_home_object (ctor_p, ctor_env_p, false);
+  opfunc_set_home_object (proto_p, proto_env_p, false);
 
   ecma_deref_object (proto_env_p);
   ecma_deref_object (ctor_env_p);
@@ -1186,6 +1214,19 @@ opfunc_form_super_reference (ecma_value_t **vm_stack_top_p, /**< current vm stac
     return ECMA_VALUE_ERROR;
   }
 
+  ecma_value_t *stack_top_p = *vm_stack_top_p;
+
+  if (opcode >= CBC_EXT_SUPER_PROP_ASSIGNMENT_REFERENCE)
+  {
+    JERRY_ASSERT (opcode == CBC_EXT_SUPER_PROP_ASSIGNMENT_REFERENCE
+                  || opcode == CBC_EXT_SUPER_PROP_LITERAL_ASSIGNMENT_REFERENCE);
+    *stack_top_p++ = parent;
+    *stack_top_p++ = ecma_copy_value (prop_name);
+    *vm_stack_top_p = stack_top_p;
+
+    return ECMA_VALUE_EMPTY;
+  }
+
   ecma_object_t *parent_p = ecma_get_object_from_value (parent);
   ecma_string_t *prop_name_p = ecma_op_to_prop_name (prop_name);
 
@@ -1204,9 +1245,7 @@ opfunc_form_super_reference (ecma_value_t **vm_stack_top_p, /**< current vm stac
     return result;
   }
 
-  ecma_value_t *stack_top_p = *vm_stack_top_p;
-
-  if (opcode == CBC_EXT_SUPER_PROP_LITERAL_CALL_REFERENCE || opcode == CBC_EXT_SUPER_PROP_CALL_REFERENCE)
+  if (opcode == CBC_EXT_SUPER_PROP_LITERAL_REFERENCE || opcode == CBC_EXT_SUPER_PROP_REFERENCE)
   {
     *stack_top_p++ = ecma_copy_value (frame_ctx_p->this_binding);
     *stack_top_p++ = ECMA_VALUE_UNDEFINED;
@@ -1217,6 +1256,73 @@ opfunc_form_super_reference (ecma_value_t **vm_stack_top_p, /**< current vm stac
 
   return ECMA_VALUE_EMPTY;
 } /* opfunc_form_super_reference */
+
+/**
+ * Assignment operation for SuperRefence base
+ *
+ * @return ECMA_VALUE_ERROR - if the operation fails
+ *         ECMA_VALUE_EMPTY - otherwise
+ */
+ecma_value_t
+opfunc_assign_super_reference (ecma_value_t **vm_stack_top_p, /**< vm stack top */
+                               vm_frame_ctx_t *frame_ctx_p, /**< frame context */
+                               uint32_t opcode_data) /**< opcode data to store the result */
+{
+  ecma_value_t *stack_top_p = *vm_stack_top_p;
+
+  ecma_value_t base_obj = ecma_op_to_object (stack_top_p[-3]);
+
+  if (ECMA_IS_VALUE_ERROR (base_obj))
+  {
+    return base_obj;
+  }
+
+  ecma_object_t *base_obj_p = ecma_get_object_from_value (base_obj);
+  ecma_string_t *prop_name_p = ecma_op_to_prop_name (stack_top_p[-2]);
+
+  if (prop_name_p == NULL)
+  {
+    ecma_deref_object (base_obj_p);
+    return ECMA_VALUE_ERROR;
+  }
+
+  bool is_strict = (frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0;
+
+  ecma_value_t result = ecma_op_object_put_with_receiver (base_obj_p,
+                                                          prop_name_p,
+                                                          stack_top_p[-1],
+                                                          frame_ctx_p->this_binding,
+                                                          is_strict);
+
+  ecma_deref_ecma_string (prop_name_p);
+  ecma_deref_object (base_obj_p);
+
+  if (ECMA_IS_VALUE_ERROR (result))
+  {
+    return result;
+  }
+
+  for (int32_t i = 1; i <= 3; i++)
+  {
+    ecma_free_value (stack_top_p[-i]);
+  }
+
+  stack_top_p -= 3;
+
+  if (opcode_data & VM_OC_PUT_STACK)
+  {
+    *stack_top_p++ = result;
+  }
+  else if (opcode_data & VM_OC_PUT_BLOCK)
+  {
+    ecma_fast_free_value (frame_ctx_p->block_result);
+    frame_ctx_p->block_result = result;
+  }
+
+  *vm_stack_top_p = stack_top_p;
+
+  return result;
+} /* opfunc_assign_super_reference */
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**

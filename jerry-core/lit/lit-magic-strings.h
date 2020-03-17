@@ -72,7 +72,6 @@ typedef enum
   LIT_FIRST_INTERNAL_MAGIC_STRING = LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER,  /**< first index of internal
                                                                                 *   magic strings */
   LIT_INTERNAL_MAGIC_STRING_WEAK_REFS, /**< Weak references to the current object */
-  LIT_INTERNAL_MAGIC_STRING_CONTAINER, /**< Literal ID for internal container objects */
   LIT_INTERNAL_MAGIC_STRING_INTERNAL_OBJECT, /**< Internal object ID for internal properties */
   LIT_MAGIC_STRING__COUNT /**< number of magic strings */
 } lit_magic_string_id_t;

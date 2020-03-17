@@ -2981,9 +2981,7 @@ bool jerry_object_is_valid_foreach (ecma_object_t *object_p) /**< object to test
     switch (ext_object_p->u.class_prop.class_id)
     {
       /* An object's internal property object should not be iterable by foreach. */
-      case LIT_INTERNAL_MAGIC_STRING_INTERNAL_OBJECT:
-      /* Containers are internal data, do not iterate on them. */
-      case LIT_INTERNAL_MAGIC_STRING_CONTAINER: return false;
+      case LIT_INTERNAL_MAGIC_STRING_INTERNAL_OBJECT: return false;
     }
   }
 

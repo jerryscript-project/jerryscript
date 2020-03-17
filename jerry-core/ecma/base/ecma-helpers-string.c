@@ -240,41 +240,6 @@ ecma_prop_name_is_symbol (ecma_string_t *string_p) /**< ecma-string */
 } /* ecma_prop_name_is_symbol */
 #endif /* ENABLED (JERRY_ES2015) */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_MAP) || ENABLED (JERRY_ES2015_BUILTIN_SET)
-/**
- * Allocate new ecma-string and fill it with reference to the map key descriptor
- *
- * @return pointer to ecma-string descriptor
- */
-ecma_string_t *
-ecma_new_map_key_string (ecma_value_t value) /**< non prop-name ecma-value */
-{
-  JERRY_ASSERT (!ecma_is_value_prop_name (value));
-
-  ecma_extended_string_t *string_p = ecma_alloc_extended_string ();
-  string_p->header.refs_and_container = ECMA_STRING_REF_ONE | ECMA_STRING_CONTAINER_MAP_KEY;
-  string_p->u.value = ecma_copy_value_if_not_object (value);
-  string_p->header.u.hash = (lit_string_hash_t) (ecma_is_value_simple (value) ? value : 0);
-
-  return (ecma_string_t *) string_p;
-} /* ecma_new_map_key_string */
-
-/**
- * Check whether an ecma-string contains a map key string
- *
- * @return true - if the ecma-string contains a map key string
- *         false - otherwise
- */
-bool
-ecma_prop_name_is_map_key (ecma_string_t *string_p) /**< ecma-string */
-{
-  JERRY_ASSERT (string_p != NULL);
-
-  return (!ECMA_IS_DIRECT_STRING (string_p)
-          && ECMA_STRING_GET_CONTAINER (string_p) == ECMA_STRING_CONTAINER_MAP_KEY);
-} /* ecma_prop_name_is_map_key */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) || ENABLED (JERRY_ES2015_BUILTIN_SET) */
-
 /**
  * Allocate new UTF8 ecma-string and fill it with characters from the given utf8 buffer
  *
@@ -889,15 +854,6 @@ ecma_destroy_ecma_string (ecma_string_t *string_p) /**< ecma-string */
       return;
     }
 #endif /* ENABLED (JERRY_ES2015) */
-#if ENABLED (JERRY_ES2015_BUILTIN_MAP) || ENABLED (JERRY_ES2015_BUILTIN_SET)
-    case ECMA_STRING_CONTAINER_MAP_KEY:
-    {
-      ecma_extended_string_t *key_p = (ecma_extended_string_t *) string_p;
-      ecma_free_value_if_not_object (key_p->u.value);
-      ecma_dealloc_extended_string (key_p);
-      return;
-    }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) || ENABLED (JERRY_ES2015_BUILTIN_SET) */
     default:
     {
       JERRY_ASSERT (ECMA_STRING_GET_CONTAINER (string_p) == ECMA_STRING_CONTAINER_UINT32_IN_DESC
@@ -1786,14 +1742,6 @@ ecma_compare_ecma_strings (const ecma_string_t *string1_p, /**< ecma-string */
   }
 #endif /* ENABLED (JERRY_ES2015) */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_MAP)
-  if (string1_container == ECMA_STRING_CONTAINER_MAP_KEY)
-  {
-    return ecma_op_same_value_zero (((ecma_extended_string_t *) string1_p)->u.value,
-                                    ((ecma_extended_string_t *) string2_p)->u.value);
-  }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
-
   return ecma_compare_ecma_strings_longpath (string1_p, string2_p);
 } /* ecma_compare_ecma_strings */
 
@@ -1839,14 +1787,6 @@ ecma_compare_ecma_non_direct_strings (const ecma_string_t *string1_p, /**< ecma-
     return false;
   }
 #endif /* ENABLED (JERRY_ES2015) */
-
-#if ENABLED (JERRY_ES2015_BUILTIN_MAP)
-  if (string1_container == ECMA_STRING_CONTAINER_MAP_KEY)
-  {
-    return ecma_op_same_value_zero (((ecma_extended_string_t *) string1_p)->u.value,
-                                    ((ecma_extended_string_t *) string2_p)->u.value);
-  }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
 
   return ecma_compare_ecma_strings_longpath (string1_p, string2_p);
 } /* ecma_compare_ecma_non_direct_strings */

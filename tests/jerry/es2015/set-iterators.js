@@ -106,3 +106,49 @@ for (var i = 0; i < elementCount; i++) {
 }
 
 assert(s.size === 0);
+
+s = new Set ([0, 1]);
+var expected = [0, 1, 2, 4, 5, 6, 3];
+var loopCount = 0;
+
+s.forEach(function(element) {
+  if (loopCount === 0) {
+    for (var i = 0; i < expected.length ; i++) {
+      s.add(i);
+    }
+    s.delete(3);
+    s.add(3);
+  }
+  assert(element === expected[loopCount++]);
+});
+
+assert(loopCount === expected.length);
+
+s = new Set([0, 1, 2, 3, 4, 5, 6]);
+expected = [0, 1];
+loopCount = 0;
+
+for (var value of s) {
+  if (loopCount === 0) {
+    s.clear();
+    s.add(1);
+  }
+
+  assert(value === expected[loopCount++]);
+}
+
+s = new Set([0])
+expected = [0, 1];
+loopCount = 0;
+
+for (var value of s) {
+  if (loopCount === 0) {
+    s.add(2);
+    s.delete(2);
+    s.add(3);
+    s.delete(3);
+    s.add(1);
+  }
+
+  assert(value === expected[loopCount++]);
+}

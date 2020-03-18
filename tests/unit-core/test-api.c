@@ -697,18 +697,18 @@ main (void)
 
   if (jerry_is_feature_enabled (JERRY_FEATURE_PROXY))
   {
-    /* Note: update this test when the internal method is implemented */
     jerry_value_t target = jerry_create_object ();
     jerry_value_t handler = jerry_create_object ();
     jerry_value_t proxy = jerry_create_proxy (target, handler);
+    jerry_value_t obj_proto = jerry_eval ((jerry_char_t *) "Object.prototype", 16, JERRY_PARSE_NO_OPTS);
 
     jerry_release_value (target);
     jerry_release_value (handler);
     proto_val = jerry_get_prototype (proxy);
-    TEST_ASSERT (jerry_value_is_error (proto_val));
-    error = jerry_get_value_from_error (proto_val, true);
-    TEST_ASSERT (jerry_get_error_type (error) == JERRY_ERROR_TYPE);
-    jerry_release_value (error);
+    TEST_ASSERT (!jerry_value_is_error (proto_val));
+    TEST_ASSERT (proto_val == obj_proto);
+    jerry_release_value (proto_val);
+    jerry_release_value (obj_proto);
     jerry_release_value (proxy);
   }
 

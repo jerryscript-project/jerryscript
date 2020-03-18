@@ -416,8 +416,74 @@ ecma_value_t
 ecma_proxy_object_prevent_extensions (ecma_object_t *obj_p) /**< proxy object */
 {
   JERRY_ASSERT (ECMA_OBJECT_IS_PROXY (obj_p));
-  JERRY_UNUSED (obj_p);
-  return ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Proxy.[[PreventExtensions]]"));
+
+  ecma_proxy_object_t *proxy_obj_p = (ecma_proxy_object_t *) obj_p;
+
+  /* 1. */
+  ecma_value_t handler = proxy_obj_p->handler;
+
+  /* 2-5. */
+  ecma_value_t trap = ecma_validate_proxy_object (handler, LIT_MAGIC_STRING_PREVENT_EXTENSIONS_UL);
+
+  /* 6. */
+  if (ECMA_IS_VALUE_ERROR (trap))
+  {
+    return trap;
+  }
+
+  ecma_value_t target = proxy_obj_p->target;
+  ecma_object_t *target_obj_p = ecma_get_object_from_value (target);
+
+  /* 7. */
+  if (ecma_is_value_undefined (trap))
+  {
+    ecma_value_t ret_value = ecma_builtin_object_object_prevent_extensions (target_obj_p);
+
+    if (ECMA_IS_VALUE_ERROR (ret_value))
+    {
+      return ret_value;
+    }
+
+    ecma_deref_object (target_obj_p);
+
+    return ECMA_VALUE_TRUE;
+  }
+
+  ecma_object_t *func_obj_p = ecma_get_object_from_value (trap);
+
+  /* 8. */
+  ecma_value_t trap_result = ecma_op_function_call (func_obj_p, handler, &target, 1);
+
+  ecma_deref_object (func_obj_p);
+
+  /* 9. */
+  if (ECMA_IS_VALUE_ERROR (trap_result))
+  {
+    return trap_result;
+  }
+
+  bool boolean_trap_result = ecma_op_to_boolean (trap_result);
+
+  ecma_free_value (trap_result);
+
+  /* 10. */
+  if (boolean_trap_result)
+  {
+    ecma_value_t target_is_ext = ecma_builtin_object_object_is_extensible (target_obj_p);
+
+    if (ECMA_IS_VALUE_ERROR (target_is_ext))
+    {
+      return target_is_ext;
+    }
+
+    if (ecma_is_value_true (target_is_ext))
+    {
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Trap result does not reflect inextensibility of proxy target"));
+    }
+  }
+
+  /* 11. */
+  return ecma_make_boolean_value (boolean_trap_result);
 } /* ecma_proxy_object_prevent_extensions */
 
 /**

@@ -26,7 +26,8 @@ static const char* fn_sys_loop_name = "sysloop";
 
 void js_entry ()
 {
-  srand ((unsigned) jerry_port_get_current_time ());
+  union { double d; unsigned u; } now = { .d = jerry_port_get_current_time () };
+  srand (now.u);
 
   jerry_init (JERRY_INIT_EMPTY);
   js_register_functions ();

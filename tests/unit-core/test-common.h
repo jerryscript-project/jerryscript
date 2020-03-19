@@ -49,7 +49,8 @@
 #define TEST_INIT() \
 do \
 { \
-  srand ((unsigned) jerry_port_get_current_time ()); \
+  union { double d; unsigned u; } now = { .d = jerry_port_get_current_time () }; \
+  srand (now.u); \
 } while (0)
 
 /**

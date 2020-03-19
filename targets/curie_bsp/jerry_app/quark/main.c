@@ -136,7 +136,8 @@ void eval_jerry_script (int argc, char *argv[], struct tcmd_handler_ctx *ctx)
 
 void jerry_start ()
 {
-  srand ((unsigned) jerry_port_get_current_time ());
+  union { double d; unsigned u; } now = { .d = jerry_port_get_current_time () };
+  srand (now.u);
   jerry_init (JERRY_INIT_EMPTY);
   jerry_value_t global_obj_val = jerry_get_global_object ();
   jerry_value_t print_func_name_val = jerry_create_string ((jerry_char_t *) "print");

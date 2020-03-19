@@ -976,6 +976,7 @@ opfunc_init_class (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
     }
     else
     {
+      ecma_free_value (proto_parent);
       return ecma_raise_type_error ("Property 'prototype' is not an object or null");
     }
 

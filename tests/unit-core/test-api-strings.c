@@ -83,7 +83,7 @@ main (void)
   utf8_sz = jerry_get_utf8_string_size (args[0]);
   cesu8_sz = jerry_get_utf8_string_size (args[1]);
 
-  TEST_ASSERT (utf8_sz == cesu8_sz);
+  TEST_ASSERT (utf8_sz == cesu8_sz && utf8_sz > 0);
 
   JERRY_VLA (char, string_from_utf8_string, utf8_sz);
   JERRY_VLA (char, string_from_cesu8_string, cesu8_sz);

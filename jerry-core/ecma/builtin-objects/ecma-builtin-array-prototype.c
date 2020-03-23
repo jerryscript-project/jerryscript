@@ -2097,15 +2097,14 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t arg1, /**< callbackfn *
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_array_reduce_from (ecma_value_t callbackfn, /**< routine's 1st argument */
-                                ecma_value_t initial_value, /**< routine's 2nd argument */
+ecma_builtin_array_reduce_from (const ecma_value_t args_p[], /**< routine's arguments */
                                 ecma_length_t args_number, /**< arguments list length */
                                 bool start_from_left, /**< whether the reduce starts from left or right */
                                 ecma_object_t *obj_p, /**< array object */
                                 uint32_t len) /**< array object's length */
 {
   /* 4. */
-  if (!ecma_op_is_callable (callbackfn))
+  if (!ecma_op_is_callable (args_p[0]))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable."));
   }
@@ -2116,8 +2115,8 @@ ecma_builtin_array_reduce_from (ecma_value_t callbackfn, /**< routine's 1st argu
     return ecma_raise_type_error (ECMA_ERR_MSG ("Reduce of empty array with no initial value."));
   }
 
-  JERRY_ASSERT (ecma_is_value_object (callbackfn));
-  ecma_object_t *func_object_p = ecma_get_object_from_value (callbackfn);
+  JERRY_ASSERT (ecma_is_value_object (args_p[0]));
+  ecma_object_t *func_object_p = ecma_get_object_from_value (args_p[0]);
 
   ecma_value_t accumulator = ECMA_VALUE_UNDEFINED;
 
@@ -2128,7 +2127,7 @@ ecma_builtin_array_reduce_from (ecma_value_t callbackfn, /**< routine's 1st argu
   /* 7.a */
   if (args_number > 1)
   {
-    accumulator = ecma_copy_value (initial_value);
+    accumulator = ecma_copy_value (args_p[1]);
   }
   else
   {
@@ -2716,8 +2715,7 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
     case ECMA_ARRAY_PROTOTYPE_REDUCE:
     case ECMA_ARRAY_PROTOTYPE_REDUCE_RIGHT:
     {
-      ret_value = ecma_builtin_array_reduce_from (routine_arg_1,
-                                                  routine_arg_2,
+      ret_value = ecma_builtin_array_reduce_from (arguments_list_p,
                                                   arguments_number,
                                                   builtin_routine_id == ECMA_ARRAY_PROTOTYPE_REDUCE,
                                                   obj_p,

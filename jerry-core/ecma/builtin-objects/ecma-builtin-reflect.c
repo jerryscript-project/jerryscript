@@ -198,7 +198,7 @@ ecma_builtin_reflect_dispatch_routine (uint16_t builtin_routine_id, /**< built-i
       return ecma_raise_type_error (ECMA_ERR_MSG ("Reflect.construct requires the second argument be an object"));
     }
 
-    ecma_collection_t *coll_p = ecma_op_create_list_from_array_like (arguments_list[1]);
+    ecma_collection_t *coll_p = ecma_op_create_list_from_array_like (arguments_list[1], false);
 
     if (coll_p == NULL)
     {

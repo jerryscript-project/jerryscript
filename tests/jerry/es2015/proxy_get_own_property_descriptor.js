@@ -38,14 +38,6 @@ try {
 }
 
 try {
-  // 19.1.2.1.5.b.iii
-  Object.assign({}, proxy)
-  assert(false);
-} catch (e) {
-  assert(e instanceof TypeError);
-}
-
-try {
   // 19.1.2.6.5
   Object.getOwnPropertyDescriptor(proxy)
   assert(false);

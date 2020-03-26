@@ -445,11 +445,7 @@ ecma_op_create_arrow_function_object (ecma_object_t *scope_p, /**< function's sc
   arrow_func_p->this_binding = ecma_copy_value_if_not_object (this_binding);
   arrow_func_p->new_target = ECMA_VALUE_UNDEFINED;
 
-  if (JERRY_CONTEXT (current_new_target) == JERRY_CONTEXT_INVALID_NEW_TARGET)
-  {
-    arrow_func_p->new_target = ECMA_VALUE_EMPTY;
-  }
-  else if (JERRY_CONTEXT (current_new_target) != NULL)
+  if (JERRY_CONTEXT (current_new_target) != NULL)
   {
     arrow_func_p->new_target = ecma_make_object_value (JERRY_CONTEXT (current_new_target));
   }
@@ -792,7 +788,7 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
     {
       JERRY_CONTEXT (current_new_target) = NULL;
     }
-    else if (ecma_is_value_object (arrow_func_p->new_target))
+    else
     {
       JERRY_CONTEXT (current_new_target) = ecma_get_object_from_value (arrow_func_p->new_target);
     }

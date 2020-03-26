@@ -1988,7 +1988,6 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
           else
           {
-            JERRY_ASSERT (new_target_object != JERRY_CONTEXT_INVALID_NEW_TARGET);
             ecma_ref_object (new_target_object);
             *stack_top_p++ = ecma_make_object_value (new_target_object);
           }

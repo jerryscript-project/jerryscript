@@ -778,7 +778,6 @@ ecma_op_implicit_constructor_handler_cb (const ecma_value_t function_obj, /**< t
     return ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor cannot be invoked without 'new'."));
   }
 
-  JERRY_ASSERT (JERRY_CONTEXT (current_new_target) != JERRY_CONTEXT_INVALID_NEW_TARGET);
   return ECMA_VALUE_UNDEFINED;
 } /* ecma_op_implicit_constructor_handler_cb */
 
@@ -802,8 +801,6 @@ ecma_op_implicit_constructor_handler_heritage_cb (const ecma_value_t function_ob
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor cannot be invoked without 'new'."));
   }
-
-  JERRY_ASSERT (JERRY_CONTEXT (current_new_target) != JERRY_CONTEXT_INVALID_NEW_TARGET);
 
   ecma_object_t *func_obj_p = ecma_get_object_from_value (function_obj);
   ecma_value_t super_ctor = ecma_op_function_get_super_constructor (func_obj_p);

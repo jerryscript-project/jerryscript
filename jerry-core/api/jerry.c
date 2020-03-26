@@ -3575,7 +3575,7 @@ jerry_get_new_target (void)
 #if ENABLED (JERRY_ES2015)
   ecma_object_t *current_new_target = JERRY_CONTEXT (current_new_target);
 
-  if (current_new_target == NULL || current_new_target == JERRY_CONTEXT_INVALID_NEW_TARGET)
+  if (current_new_target == NULL)
   {
     return jerry_create_undefined ();
   }

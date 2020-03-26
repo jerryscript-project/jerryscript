@@ -65,26 +65,24 @@ typedef enum
   PARSER_DISALLOW_YIELD = (1u << 16),         /**< throw SyntaxError for yield expression */
   PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM = (1u << 17), /**< function has a non simple parameter */
   PARSER_FUNCTION_HAS_REST_PARAM = (1u << 18), /**< function has rest parameter */
-  /* These three status flags must be in this order. See PARSER_SAVED_FLAGS_OFFSET. */
+  /* These 4 status flags must be in this order. See PARSER_SAVED_FLAGS_OFFSET. */
   PARSER_CLASS_CONSTRUCTOR = (1u << 19),      /**< a class constructor is parsed
                                                *   Note: PARSER_ALLOW_SUPER must be present */
   PARSER_ALLOW_SUPER = (1u << 20),            /**< allow super property access */
   PARSER_ALLOW_SUPER_CALL = (1u << 21),       /**< allow super constructor call
                                                *   Note: PARSER_CLASS_CONSTRUCTOR must be present */
+  PARSER_ALLOW_NEW_TARGET = (1u << 22),       /**< allow new.target parsing in the current context */
 
 #endif /* ENABLED (JERRY_ES2015) */
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
-  PARSER_MODULE_DEFAULT_CLASS_OR_FUNC = (1u << 22),  /**< parsing a function or class default export */
-  PARSER_MODULE_STORE_IDENT = (1u << 23),     /**< store identifier of the current export statement */
+  PARSER_MODULE_DEFAULT_CLASS_OR_FUNC = (1u << 23),  /**< parsing a function or class default export */
+  PARSER_MODULE_STORE_IDENT = (1u << 24),     /**< store identifier of the current export statement */
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
   PARSER_HAS_LATE_LIT_INIT = (1u << 30),      /**< there are identifier or string literals which construction
                                                *   is postponed after the local parser data is freed */
 #ifndef JERRY_NDEBUG
   PARSER_SCANNING_SUCCESSFUL = PARSER_HAS_LATE_LIT_INIT, /**< scanning process was successful */
 #endif /* !JERRY_NDEBUG */
-#if ENABLED (JERRY_ES2015)
-  PARSER_ALLOW_NEW_TARGET = PARSER_IS_FUNCTION, /**< allow new.target parsing in the current context */
-#endif /* ENABLED (JERRY_ES2015) */
 } parser_general_flags_t;
 
 /**
@@ -137,7 +135,7 @@ typedef enum
  * Count of ecma_parse_opts_t class parsing options related bits
  */
 #define PARSER_SAVED_FLAGS_COUNT \
-  (JERRY_LOG2 (ECMA_PARSE_ALLOW_SUPER_CALL) - JERRY_LOG2 (ECMA_PARSE_CLASS_CONSTRUCTOR) + 1)
+  (JERRY_LOG2 (ECMA_PARSE_ALLOW_NEW_TARGET) - JERRY_LOG2 (ECMA_PARSE_CLASS_CONSTRUCTOR) + 1)
 
 /**
  * Mask for get class option bits from ecma_parse_opts_t

@@ -29,14 +29,9 @@ var proxy = new Proxy(target, handler);
 
 var a = 5;
 
-try {
-  // ecma_op_delete_binding
-  with (proxy) {
-    delete a
-  }
-  assert(false);
-} catch (e) {
-  assert(e instanceof TypeError);
+// ecma_op_delete_binding
+with (proxy) {
+  delete a
 }
 
 try {

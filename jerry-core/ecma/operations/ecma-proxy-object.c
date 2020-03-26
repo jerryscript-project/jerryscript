@@ -714,8 +714,90 @@ ecma_proxy_object_has (ecma_object_t *obj_p, /**< proxy object */
                        ecma_string_t *prop_name_p) /**< property name */
 {
   JERRY_ASSERT (ECMA_OBJECT_IS_PROXY (obj_p));
-  JERRY_UNUSED_2 (obj_p, prop_name_p);
-  return ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Proxy.[[HasProperty]]"));
+
+  ecma_proxy_object_t *proxy_obj_p = (ecma_proxy_object_t *) obj_p;
+
+  /* 2. */
+  ecma_value_t handler = proxy_obj_p->handler;
+
+  /* 3-6. */
+  ecma_value_t trap = ecma_validate_proxy_object (handler, LIT_MAGIC_STRING_HAS);
+
+  /* 7. */
+  if (ECMA_IS_VALUE_ERROR (trap))
+  {
+    return trap;
+  }
+
+  ecma_value_t target = proxy_obj_p->target;
+  ecma_object_t *target_obj_p = ecma_get_object_from_value (target);
+
+  /* 8. */
+  if (ecma_is_value_undefined (trap))
+  {
+    return ecma_op_object_has_property (target_obj_p, prop_name_p);
+  }
+
+  ecma_object_t *func_obj_p = ecma_get_object_from_value (trap);
+  ecma_value_t prop_value = ecma_make_prop_name_value (prop_name_p);
+  ecma_value_t args[] = {target, prop_value};
+
+  /* 9. */
+  ecma_value_t trap_result = ecma_op_function_call (func_obj_p, handler, args, 2);
+
+  ecma_deref_object (func_obj_p);
+
+  /* 10. */
+  if (ECMA_IS_VALUE_ERROR (trap_result))
+  {
+    return trap_result;
+  }
+
+  bool boolean_trap_result = ecma_op_to_boolean (trap_result);
+
+  ecma_free_value (trap_result);
+
+  /* 11. */
+  if (!boolean_trap_result)
+  {
+    ecma_property_descriptor_t target_desc;
+
+    ecma_value_t status = ecma_op_object_get_own_property_descriptor (target_obj_p, prop_name_p, &target_desc);
+
+    if (ECMA_IS_VALUE_ERROR (status))
+    {
+      return status;
+    }
+
+    if (ecma_is_value_true (status))
+    {
+      bool prop_is_configurable = target_desc.flags & ECMA_PROP_IS_CONFIGURABLE;
+
+      ecma_free_property_descriptor (&target_desc);
+
+      if (!prop_is_configurable)
+      {
+        return ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned falsish for property which exists "
+                                                    "in the proxy target as non-configurable"));
+      }
+
+      ecma_value_t extensible_target = ecma_builtin_object_object_is_extensible (target_obj_p);
+
+      if (ECMA_IS_VALUE_ERROR (extensible_target))
+      {
+        return extensible_target;
+      }
+
+      if (ecma_is_value_false (extensible_target))
+      {
+        return ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned falsish for property but "
+                                                    "the proxy target is not extensible"));
+      }
+    }
+  }
+
+  /* 12. */
+  return ecma_make_boolean_value (boolean_trap_result);
 } /* ecma_proxy_object_has */
 
 /**

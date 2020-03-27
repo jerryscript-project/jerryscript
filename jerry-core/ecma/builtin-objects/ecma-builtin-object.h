@@ -19,6 +19,10 @@ ecma_value_t ecma_builtin_object_object_get_prototype_of (ecma_object_t *obj_p);
 
 ecma_value_t ecma_builtin_object_object_set_prototype_of (ecma_value_t arg1,
                                                           ecma_value_t arg2);
+
+ecma_value_t ecma_builtin_object_object_set_proto (ecma_value_t arg1,
+                                                   ecma_value_t arg2);
+
 ecma_value_t ecma_builtin_object_object_prevent_extensions (ecma_object_t *obj_p);
 
 ecma_value_t ecma_builtin_object_object_is_extensible (ecma_object_t *obj_p);

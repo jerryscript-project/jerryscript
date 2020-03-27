@@ -18,6 +18,7 @@
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
 #include "ecma-builtins.h"
+#include "ecma-builtin-object.h"
 #include "ecma-conversion.h"
 #include "ecma-function-object.h"
 #include "ecma-exceptions.h"

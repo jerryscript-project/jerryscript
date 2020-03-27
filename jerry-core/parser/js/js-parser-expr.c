@@ -847,6 +847,10 @@ parser_parse_object_literal (parser_context_t *context_p) /**< context */
   parser_stack_push_uint8 (context_p, PARSER_OBJECT_PROPERTY_START);
 #endif /* !ENABLED (JERRY_ES2015) */
 
+#if ENABLED (JERRY_ES2015)
+  bool proto_seen = false;
+#endif /* ENABLED (JERRY_ES2015) */
+
   while (true)
   {
     lexer_expect_object_literal_id (context_p, LEXER_OBJ_IDENT_NO_OPTS);
@@ -991,6 +995,20 @@ parser_parse_object_literal (parser_context_t *context_p) /**< context */
 #endif /* ENABLED (JERRY_ES2015) */
       default:
       {
+#if ENABLED (JERRY_ES2015)
+        if ((context_p->token.lit_location.type == LEXER_IDENT_LITERAL
+            || context_p->token.lit_location.type == LEXER_STRING_LITERAL)
+            && lexer_compare_literal_to_string (context_p, "__proto__", 9))
+        {
+          if (proto_seen)
+          {
+            parser_raise_error (context_p, PARSER_ERR_DUPLICATED_PROTO);
+          }
+
+          proto_seen = true;
+        }
+#endif /* ENABLED (JERRY_ES2015) */
+
         uint16_t literal_index = context_p->lit_object.index;
 
 #if ENABLED (JERRY_ES2015)

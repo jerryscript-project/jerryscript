@@ -966,6 +966,10 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "for in-of loop variable declaration may not have an initializer.";
     }
+    case PARSER_ERR_DUPLICATED_PROTO:
+    {
+      return "Duplicate __proto__ fields are not allowed in object literals.";
+    }
 #endif /* ENABLED (JERRY_ES2015) */
     case PARSER_ERR_DELETE_IDENT_NOT_ALLOWED:
     {

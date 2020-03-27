@@ -221,6 +221,68 @@ ecma_builtin_object_object_set_prototype_of (ecma_value_t arg1, /**< routine's f
   return arg1;
 } /* ecma_builtin_object_object_set_prototype_of */
 
+/**
+ * The Object object's set __proto__ routine
+ *
+ * See also:
+ *          ECMA-262 v6, B.2.2.1.2
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_builtin_object_object_set_proto (ecma_value_t arg1, /**< routine's first argument */
+                                      ecma_value_t arg2) /**< routine's second argument */
+{
+  /* 1., 2. */
+  if (ECMA_IS_VALUE_ERROR (ecma_op_check_object_coercible (arg1)))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  /* 3. */
+  if (!ecma_is_value_object (arg2) && !ecma_is_value_null (arg2))
+  {
+    return ECMA_VALUE_UNDEFINED;
+  }
+
+  /* 4. */
+  if (!ecma_is_value_object (arg1))
+  {
+    return ECMA_VALUE_UNDEFINED;
+  }
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (arg1);
+  ecma_value_t status;
+
+  /* 5. */
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (ECMA_OBJECT_IS_PROXY (obj_p))
+  {
+    status = ecma_proxy_object_set_prototype_of (obj_p, arg2);
+
+    if (ECMA_IS_VALUE_ERROR (status))
+    {
+      return status;
+    }
+  }
+  else
+  {
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+    status = ecma_op_ordinary_object_set_prototype_of (obj_p, arg2);
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
+  if (ecma_is_value_false (status))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot set [[Prototype]]."));
+  }
+
+  JERRY_ASSERT (ecma_is_value_true (status));
+
+  return ECMA_VALUE_UNDEFINED;
+} /* ecma_builtin_object_object_set_proto */
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**

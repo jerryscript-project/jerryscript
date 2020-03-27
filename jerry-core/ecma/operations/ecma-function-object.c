@@ -681,7 +681,10 @@ ecma_op_function_get_super_constructor (ecma_object_t *func_obj_p) /**< function
 
   if (super_ctor_p == NULL || !ecma_object_is_constructor (super_ctor_p))
   {
-    ecma_deref_object (super_ctor_p);
+    if (super_ctor_p != NULL)
+    {
+      ecma_deref_object (super_ctor_p);
+    }
     return ecma_raise_type_error (ECMA_ERR_MSG ("Super binding must be a constructor."));
   }
 

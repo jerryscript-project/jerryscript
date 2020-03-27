@@ -16,11 +16,28 @@
 #include "ecma-builtins.h"
 #include "ecma-array-object.h"
 #include "ecma-gc.h"
+#include "lit-char-helpers.h"
 
 #if ENABLED (JERRY_ES2015)
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
+
+/**
+ * This object has a custom dispatch function.
+ */
+#define BUILTIN_CUSTOM_DISPATCH
+
+/**
+ * List of built-in routine identifiers.
+ */
+enum
+{
+  ECMA_INTRINSIC_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
+  ECMA_INTRINSIC_PARSE_FLOAT,
+  ECMA_INTRINSIC_PARSE_INT,
+  ECMA_INTRINSIC_ARRAY_PROTOTYPE_VALUES
+};
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-intrinsic.inc.h"
 #define BUILTIN_UNDERSCORED_ID intrinsic
@@ -63,6 +80,59 @@ ecma_builtin_intrinsic_array_prototype_values (ecma_value_t this_value) /**< thi
 
   return ret_value;
 } /* ecma_builtin_intrinsic_array_prototype_values */
+
+/**
+ * Dispatcher of the built-in's routines
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_builtin_intrinsic_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide routine identifier */
+                                         ecma_value_t this_arg, /**< 'this' argument value */
+                                         const ecma_value_t arguments_list_p[], /**< list of arguments
+                                                                                 *   passed to routine */
+                                         ecma_length_t arguments_number) /**< length of arguments' list */
+{
+  JERRY_UNUSED (arguments_number);
+
+  ecma_value_t routine_arg_1 = arguments_list_p[0];
+  ecma_value_t routine_arg_2 = arguments_list_p[1];
+
+  if (builtin_routine_id == ECMA_INTRINSIC_ARRAY_PROTOTYPE_VALUES)
+  {
+    return ecma_builtin_intrinsic_array_prototype_values (this_arg);
+  }
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+  if (builtin_routine_id <= ECMA_INTRINSIC_PARSE_INT)
+  {
+    ecma_string_t *str_p = ecma_op_to_string (routine_arg_1);
+
+    if (JERRY_UNLIKELY (str_p == NULL))
+    {
+      return ECMA_VALUE_ERROR;
+    }
+
+    ECMA_STRING_TO_UTF8_STRING (str_p, string_buff, string_buff_size);
+
+    if (builtin_routine_id == ECMA_INTRINSIC_PARSE_INT)
+    {
+      ret_value = ecma_number_parse_int (string_buff,
+                                         string_buff_size,
+                                         routine_arg_2);
+    }
+    else
+    {
+      JERRY_ASSERT (builtin_routine_id == ECMA_INTRINSIC_PARSE_FLOAT);
+      ret_value = ecma_number_parse_float (string_buff,
+                                           string_buff_size);
+    }
+    ECMA_FINALIZE_UTF8_STRING (string_buff, string_buff_size);
+    ecma_deref_ecma_string (str_p);
+  }
+
+  return ret_value;
+} /* ecma_builtin_intrinsic_dispatch_routine */
 
 /**
  * @}

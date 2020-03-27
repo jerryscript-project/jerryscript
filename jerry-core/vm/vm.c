@@ -1516,36 +1516,52 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           while (lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_BLOCK)
           {
-#if ENABLED (JERRY_ES2015) && !(defined JERRY_NDEBUG)
+#ifndef JERRY_NDEBUG
             if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
             {
               ecma_property_t *property_p = ecma_find_named_property (lex_env_p, name_p);
 
               JERRY_ASSERT (property_p == NULL || !(*property_p & ECMA_PROPERTY_FLAG_ENUMERABLE));
             }
-#endif /* ENABLED (JERRY_ES2015) && !JERRY_NDEBUG */
+#endif /* !JERRY_NDEBUG */
 
             JERRY_ASSERT (lex_env_p->u2.outer_reference_cp != JMEM_CP_NULL);
             lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
           }
 
-#if ENABLED (JERRY_ES2015) && !(defined JERRY_NDEBUG)
           if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
           {
             ecma_property_t *property_p = ecma_find_named_property (lex_env_p, name_p);
+            ecma_property_value_t *prop_value_p;
 
-            JERRY_ASSERT (property_p == NULL || !(*property_p & ECMA_PROPERTY_FLAG_ENUMERABLE));
+            if (property_p == NULL)
+            {
+              prop_value_p = ecma_create_named_data_property (lex_env_p,
+                                                              name_p,
+                                                              ECMA_PROPERTY_FLAG_WRITABLE,
+                                                              NULL);
+            }
+            else
+            {
+#ifndef JERRY_NDEBUG
+              JERRY_ASSERT (!(*property_p & ECMA_PROPERTY_FLAG_ENUMERABLE));
+#endif /* !JERRY_NDEBUG */
+              prop_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+            }
+
+            ecma_named_data_property_assign_value (lex_env_p, prop_value_p, left_value);
           }
-#endif /* ENABLED (JERRY_ES2015) && !JERRY_NDEBUG */
-
-          result = vm_set_var (lex_env_p, name_p, is_strict, left_value);
-
-          if (ECMA_IS_VALUE_ERROR (result))
+          else
           {
-            goto error;
+            result = ecma_op_set_mutable_binding (lex_env_p, name_p, left_value, is_strict);
+
+            if (ECMA_IS_VALUE_ERROR (result))
+            {
+              goto error;
+            }
           }
 
-          continue;
+          goto free_left_value;
         }
         case VM_OC_CLONE_CONTEXT:
         {

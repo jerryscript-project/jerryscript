@@ -814,7 +814,7 @@ ecma_builtin_helper_def_prop_by_index (ecma_object_t *obj_p, /**< object */
  */
 ecma_value_t
 ecma_builtin_helper_def_prop (ecma_object_t *obj_p, /**< object */
-                              ecma_string_t *index_p, /**< index string */
+                              ecma_string_t *name_p, /**< name string */
                               ecma_value_t value, /**< value */
                               uint32_t opts) /**< any combination of ecma_property_flag_t bits
                                               *   with the optional ECMA_IS_THROW flag */
@@ -826,7 +826,7 @@ ecma_builtin_helper_def_prop (ecma_object_t *obj_p, /**< object */
   prop_desc.value = value;
 
   return ecma_op_object_define_own_property (obj_p,
-                                             index_p,
+                                             name_p,
                                              &prop_desc);
 } /* ecma_builtin_helper_def_prop */
 

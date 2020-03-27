@@ -14,11 +14,17 @@
 
 var r = RegExp ("a","gim");
 var r2 = RegExp (r,"gim");
+var r3 = RegExp (r);
 
 assert(r2.source === 'a');
 assert(r2.global === true);
 assert(r2.ignoreCase === true);
 assert(r2.multiline === true);
+
+assert(r3.source === 'a');
+assert(r3.global === true);
+assert(r3.ignoreCase === true);
+assert(r3.multiline === true);
 
 var obj = { get source() { throw 5 }, [Symbol.match] : true }
 

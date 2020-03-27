@@ -174,7 +174,7 @@ ecma_collection_append (ecma_collection_t *collection_p, /**< value collection *
                         uint32_t count) /**< number of ecma values to append */
 {
   JERRY_ASSERT (collection_p != NULL);
-  if (collection_p->capacity - collection_p->item_count > count)
+  if (collection_p->capacity - collection_p->item_count >= count)
   {
     ecma_collection_reserve (collection_p, count);
   }

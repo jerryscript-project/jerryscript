@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// TODO: Update these tests when the internal routine has been implemented
+// Copyright 2015 the V8 project authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 var target = {};
 var handler = { has (target) {
@@ -26,7 +28,7 @@ try {
   "foo" in proxy;
   assert(false);
 } catch (e) {
-  assert(e instanceof TypeError);
+  assert(e === 42);
 }
 
 try {
@@ -37,7 +39,7 @@ try {
   }
   assert(false);
 } catch (e) {
-  assert(e instanceof TypeError);
+  assert(e === 42);
 }
 
 try {
@@ -46,6 +48,124 @@ try {
     function a (){}
     assert(false);
   }
+  assert(false);
+} catch (e) {
+  assert(e === 42);
+}
+
+// test basic functionality
+var target = {
+  "target_one": 1
+};
+
+var handler = {
+  has: function(target, prop) {
+    return prop == "present";
+  }
+}
+
+var proxy = new Proxy(target, handler);
+
+assert("present" in proxy === true);
+assert("non_present" in proxy === false);
+
+var target = {
+  foo: 5,
+  bar: 10
+};
+
+var handler = {
+  has: function(target, prop) {
+    if (prop[0] === 'f') {
+      return false;
+    }
+    return prop in target;
+  }
+};
+
+var proxy = new Proxy(target, handler);
+
+assert("foo" in proxy === false);
+assert("bar" in proxy === true);
+
+// test with no trap
+var target = {
+  foo: "foo"
+};
+var handler = {};
+var proxy = new Proxy(target, handler);
+
+assert("foo" in proxy === true);
+
+// test with "undefined" trap
+var target = {
+  foo: "foo"
+};
+var handler = {has: null};
+var proxy = new Proxy(target, handler);
+
+assert("foo" in proxy === true);
+
+// test with invalid trap
+var target = {
+  foo: "foo"
+};
+var handler = {has: 42};
+var proxy = new Proxy(target, handler);
+
+try {
+  "foo" in proxy;
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+// test when target is proxy
+var target = {
+  foo: "foo"
+};
+
+var handler = {
+  has: function(target, prop) {
+    return prop in target;
+  }
+}
+
+var proxy1 = new Proxy(target, handler);
+var proxy2 = new Proxy(proxy1, handler);
+
+assert("foo" in proxy2 === true);
+
+// test when invariants gets violated
+var target = {};
+
+Object.defineProperty(target, "prop", {
+  configurable: false,
+  value: 10
+})
+
+var handler = {
+  has: function(target, prop) {
+    return false;
+  }
+}
+
+var proxy = new Proxy(target, handler);
+
+try {
+  'prop' in proxy;
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+var target = { a: 10 };
+Object.preventExtensions(target);
+
+var proxy = new Proxy(target, handler);
+
+try {
+  'a' in proxy;
   assert(false);
 } catch (e) {
   assert(e instanceof TypeError);

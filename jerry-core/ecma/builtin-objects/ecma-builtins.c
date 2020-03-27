@@ -947,8 +947,11 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
 
     ecma_collection_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
 
-    /* 'length' property is non-enumerable (ECMA-262 v5, 15) */
-    ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
+    if (!is_array_indices_only)
+    {
+      /* 'length' property is non-enumerable (ECMA-262 v5, 15) */
+      ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
+    }
   }
   else
   {

@@ -2314,6 +2314,9 @@ parser_parse_function (parser_context_t *context_p, /**< context */
   JERRY_ASSERT (status_flags & PARSER_IS_FUNCTION);
   parser_save_context (context_p, &saved_context);
   context_p->status_flags |= status_flags;
+#if ENABLED (JERRY_ES2015)
+  context_p->status_flags |= PARSER_ALLOW_NEW_TARGET;
+#endif /* ENABLED (JERRY_ES2015) */
 
 #if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
   if (context_p->is_show_opcodes)
@@ -2408,12 +2411,12 @@ parser_parse_arrow_function (parser_context_t *context_p, /**< context */
   parser_saved_context_t saved_context;
   ecma_compiled_code_t *compiled_code_p;
 
-  JERRY_ASSERT (!(status_flags & PARSER_IS_FUNCTION)
-                 && (status_flags & PARSER_IS_ARROW_FUNCTION));
+  JERRY_ASSERT (status_flags & PARSER_IS_FUNCTION);
+  JERRY_ASSERT (status_flags & PARSER_IS_ARROW_FUNCTION);
   parser_save_context (context_p, &saved_context);
   context_p->status_flags |= status_flags;
 #if ENABLED (JERRY_ES2015)
-  context_p->status_flags |= saved_context.status_flags & (PARSER_IS_FUNCTION
+  context_p->status_flags |= saved_context.status_flags & (PARSER_ALLOW_NEW_TARGET
                                                            | PARSER_ALLOW_SUPER
                                                            | PARSER_ALLOW_SUPER_CALL);
 #endif /* ENABLED (JERRY_ES2015) */

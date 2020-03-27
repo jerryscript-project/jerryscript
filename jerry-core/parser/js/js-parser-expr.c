@@ -1439,8 +1439,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
       /* Check if "new.target" is written here. */
       if (scanner_try_scan_new_target (context_p))
       {
-        if (!(context_p->status_flags & PARSER_ALLOW_NEW_TARGET)
-            && !(context_p->global_status_flags & ECMA_PARSE_CALLED_FROM_FUNCTION))
+        if (!(context_p->status_flags & PARSER_ALLOW_NEW_TARGET))
         {
           parser_raise_error (context_p, PARSER_ERR_NEW_TARGET_NOT_ALLOWED);
         }
@@ -1505,7 +1504,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
         }
 
         parser_check_assignment_expr (context_p);
-        parser_parse_function_expression (context_p, PARSER_IS_ARROW_FUNCTION);
+        parser_parse_function_expression (context_p, PARSER_IS_FUNCTION | PARSER_IS_ARROW_FUNCTION);
         return parser_abort_parsing_after_arrow (context_p);
       }
 #endif /* ENABLED (JERRY_ES2015) */
@@ -1682,9 +1681,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
     {
       if (context_p->status_flags & PARSER_ALLOW_SUPER)
       {
-        if (lexer_check_next_characters (context_p, LIT_CHAR_DOT, LIT_CHAR_LEFT_SQUARE)
-            && ((context_p->status_flags & PARSER_ALLOW_NEW_TARGET)
-                || (context_p->global_status_flags & ECMA_PARSE_CALLED_FROM_FUNCTION)))
+        if (lexer_check_next_characters (context_p, LIT_CHAR_DOT, LIT_CHAR_LEFT_SQUARE))
         {
           parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_SUPER);
           break;
@@ -1708,7 +1705,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
       parser_check_assignment_expr (context_p);
 
       context_p->token.type = LEXER_ARROW_LEFT_PAREN;
-      parser_parse_function_expression (context_p, PARSER_IS_ARROW_FUNCTION);
+      parser_parse_function_expression (context_p, PARSER_IS_FUNCTION | PARSER_IS_ARROW_FUNCTION);
       return parser_abort_parsing_after_arrow (context_p);
     }
     case LEXER_KEYW_YIELD:
@@ -1977,7 +1974,7 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
         if (is_eval)
         {
 #if ENABLED (JERRY_ES2015)
-          if (context_p->status_flags & (PARSER_ALLOW_SUPER_CALL | PARSER_ALLOW_SUPER))
+          if (context_p->status_flags & (PARSER_ALLOW_SUPER_CALL | PARSER_ALLOW_SUPER | PARSER_ALLOW_NEW_TARGET))
           {
             parser_emit_cbc_ext_call (context_p,
                                       CBC_EXT_LOCAL_EVAL,

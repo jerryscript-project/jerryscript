@@ -2901,12 +2901,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 
       case LEXER_KEYW_RETURN:
       {
-        uint32_t status_flag = PARSER_IS_FUNCTION;
-#if ENABLED (JERRY_ES2015)
-        status_flag |= PARSER_IS_ARROW_FUNCTION;
-#endif /* ENABLED (JERRY_ES2015) */
-
-        if (!(context_p->status_flags & status_flag))
+        if (!(context_p->status_flags & PARSER_IS_FUNCTION))
         {
           parser_raise_error (context_p, PARSER_ERR_INVALID_RETURN);
         }

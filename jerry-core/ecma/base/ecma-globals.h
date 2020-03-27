@@ -111,13 +111,13 @@ typedef enum
   ECMA_PARSE_EVAL = (1u << 2), /**< eval is called */
   ECMA_PARSE_DIRECT_EVAL = (1u << 3), /**< eval is called directly (ECMA-262 v5, 15.1.2.1.1) */
 
-  /* These three status flags must be in this order. See PARSER_SAVED_FLAGS_OFFSET. */
+  /* These 4 status flags must be in this order. See PARSER_SAVED_FLAGS_OFFSET. */
   ECMA_PARSE_CLASS_CONSTRUCTOR = (1u << 4), /**< a class constructor is being parsed (this value must be kept in
                                              *   in sync with PARSER_CLASS_CONSTRUCTOR) */
   ECMA_PARSE_ALLOW_SUPER = (1u << 5), /**< allow super property access */
   ECMA_PARSE_ALLOW_SUPER_CALL = (1u << 6), /**< allow super constructor call */
+  ECMA_PARSE_ALLOW_NEW_TARGET = (1u << 7), /**< allow new.target access */
 
-  ECMA_PARSE_CALLED_FROM_FUNCTION = (1u << 7), /**< a function body is parsed or the code is inside a function */
   ECMA_PARSE_GENERATOR_FUNCTION = (1u << 8), /**< generator function is parsed */
 
   /* These flags are internally used by the parser. */

@@ -72,7 +72,12 @@ int
 main (int argc,
       char **argv)
 {
-  srand ((unsigned) jerry_port_get_current_time ());
+  union
+  {
+    double d;
+    unsigned u;
+  } now = { .d = jerry_port_get_current_time () };
+  srand (now.u);
   if (argc <= 1 || (argc == 2 && (!strcmp ("-h", argv[1]) || !strcmp ("--help", argv[1]))))
   {
     print_help (argv[0]);

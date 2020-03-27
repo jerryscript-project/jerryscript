@@ -68,7 +68,8 @@ static int load_javascript() {
 }
 
 int jsmbed_js_init() {
-    srand ((unsigned) jerry_port_get_current_time());
+    union { double d; unsigned u; } now = { .d = jerry_port_get_current_time () };
+    srand (now.u);
     jerry_init_flag_t flags = JERRY_INIT_EMPTY;
     jerry_init(flags);
 

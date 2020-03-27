@@ -98,7 +98,8 @@ const shell_command_t shell_commands[] = {
 
 int main (void)
 {
-  srand ((unsigned) jerry_port_get_current_time ());
+  union { double d; unsigned u; } now = { .d = jerry_port_get_current_time () };
+  srand (now.u);
   printf ("You are running RIOT on a(n) %s board.\n", RIOT_BOARD);
   printf ("This board features a(n) %s MCU.\n", RIOT_MCU);
 

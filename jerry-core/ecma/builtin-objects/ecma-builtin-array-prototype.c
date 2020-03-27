@@ -869,6 +869,15 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t arg1, /**< start */
 
     if (ext_from_obj_p->u.array.u.hole_count < ECMA_FAST_ARRAY_HOLE_ONE)
     {
+      if (JERRY_UNLIKELY (obj_p->u1.property_list_cp == JMEM_CP_NULL))
+      {
+        /**
+         * Very unlikely case: the buffer copied from is a fast buffer and the property list was deleted.
+         * There is no need to do any copy.
+         */
+        return new_array;
+      }
+
       ecma_extended_object_t *ext_to_obj_p = (ecma_extended_object_t *) new_array_p;
 
 #if ENABLED (JERRY_ES2015)

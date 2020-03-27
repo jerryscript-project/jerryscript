@@ -396,9 +396,93 @@ ecma_proxy_object_set_prototype_of (ecma_object_t *obj_p, /**< proxy object */
                                     ecma_value_t proto) /**< new prototype object */
 {
   JERRY_ASSERT (ECMA_OBJECT_IS_PROXY (obj_p));
+
+  /* 1. */
   JERRY_ASSERT (ecma_is_value_object (proto) || ecma_is_value_null (proto));
-  JERRY_UNUSED_2 (obj_p, proto);
-  return ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Proxy.[[SetPrototypeOf]]"));
+
+  ecma_proxy_object_t *proxy_obj_p = (ecma_proxy_object_t *) obj_p;
+
+  /* 2. */
+  ecma_value_t handler = proxy_obj_p->handler;
+
+  /* 3-6. */
+  ecma_value_t trap = ecma_validate_proxy_object (handler, LIT_MAGIC_STRING_SET_PROTOTYPE_OF_UL);
+
+  /* 7.*/
+  if (ECMA_IS_VALUE_ERROR (trap))
+  {
+    return trap;
+  }
+
+  ecma_value_t target = proxy_obj_p->target;
+  ecma_object_t *target_obj_p = ecma_get_object_from_value (target);
+
+  /* 8. */
+  if (ecma_is_value_undefined (trap))
+  {
+    if (ECMA_OBJECT_IS_PROXY (target_obj_p))
+    {
+      return ecma_proxy_object_set_prototype_of (target_obj_p, proto);
+    }
+
+    return ecma_op_ordinary_object_set_prototype_of (target_obj_p, proto);
+  }
+
+  ecma_object_t *func_obj_p = ecma_get_object_from_value (trap);
+  ecma_value_t args[] = { target, proto };
+
+  /* 9. */
+  ecma_value_t trap_result = ecma_op_function_call (func_obj_p, handler, args, 2);
+
+  ecma_deref_object (func_obj_p);
+
+  /* 10. */
+  if (ECMA_IS_VALUE_ERROR (trap_result))
+  {
+    return trap_result;
+  }
+
+  bool boolean_trap_result = ecma_op_to_boolean (trap_result);
+
+  ecma_free_value (trap_result);
+
+  /* 11. */
+  ecma_value_t extensible_target = ecma_builtin_object_object_is_extensible (target_obj_p);
+
+  /* 12. */
+  if (ECMA_IS_VALUE_ERROR (extensible_target))
+  {
+    return extensible_target;
+  }
+
+  /* 13. */
+  if (ecma_is_value_true (extensible_target))
+  {
+    return ecma_make_boolean_value (boolean_trap_result);
+  }
+
+  /* 14. */
+  ecma_value_t target_proto = ecma_builtin_object_object_get_prototype_of (target_obj_p);
+
+  /* 15. */
+  if (ECMA_IS_VALUE_ERROR (target_proto))
+  {
+    return target_proto;
+  }
+
+  ecma_value_t ret_value = ecma_make_boolean_value (boolean_trap_result);
+
+  /* 16. */
+  if (boolean_trap_result && (target_proto != proto))
+  {
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Target object is non-extensible and trap "
+                                                     "returned different prototype."));
+  }
+
+  ecma_free_value (target_proto);
+
+  /* 17. */
+  return ret_value;
 } /* ecma_proxy_object_set_prototype_of */
 
 /**

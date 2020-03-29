@@ -23,10 +23,5 @@ var handler = { defineProperty (target) {
 
 var proxy = new Proxy(target, handler);
 
-try {
-  // 22.1.2.3.8.c
-  Array.of.call(proxy, 5)
-  assert(false);
-} catch (e) {
-  assert(e instanceof TypeError);
-}
+// 22.1.2.3.8.c
+Array.of.call(proxy, 5)

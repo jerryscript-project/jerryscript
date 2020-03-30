@@ -254,12 +254,12 @@ pow (double x, double y)
     }
   }
 
-  n = (hx >> 31) + 1;
+  n = (hx < 0) ? 0 : 1;
 
   /* (x<0)**(non-int) is NaN */
   if ((n | yisint) == 0)
   {
-    return (x - x) / (x - x);
+    return NAN;
   }
 
   s = one; /* s (sign of result -ve**odd) = -1 else = 1 */

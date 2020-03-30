@@ -267,7 +267,7 @@ class DebuggerAction(object):
 
 
 class JerryDebugger(object):
-    # pylint: disable=too-many-instance-attributes,too-many-statements,too-many-public-methods,no-self-use,redefined-variable-type
+    # pylint: disable=too-many-instance-attributes,too-many-statements,too-many-public-methods,no-self-use
     def __init__(self, channel):
         self.prompt = False
         self.function_list = {}
@@ -490,7 +490,7 @@ class JerryDebugger(object):
                 index = int(args)
                 if index < 0:
                     print ("Error: A non negative integer number expected")
-                    return
+                    return ""
 
             except ValueError as val_errno:
                 return "Error: Non negative integer number expected, %s\n" % (val_errno)

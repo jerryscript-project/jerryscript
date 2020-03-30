@@ -301,7 +301,7 @@ def hash_binary(bin_path):
     hasher = hashlib.sha1()
     with open(bin_path, 'rb') as bin_file:
         buf = bin_file.read(blocksize)
-        while len(buf) > 0:
+        while buf:
             hasher.update(buf)
             buf = bin_file.read(blocksize)
     return hasher.hexdigest()

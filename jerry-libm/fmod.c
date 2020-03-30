@@ -53,7 +53,7 @@ fmod (double x, double y)
   if ((hy | ly) == 0 || (hx >= 0x7ff00000) || /* y = 0, or x not finite */
       ((hy | ((ly | -ly) >> 31)) > 0x7ff00000)) /* or y is NaN */
   {
-    return (x * y) / (x * y);
+    return NAN;
   }
   if (hx <= hy)
   {
@@ -123,7 +123,7 @@ fmod (double x, double y)
     n = -1022 - ix;
     if (n <= 31)
     {
-      hx = (hx << n) | (lx >> (32 - n));
+      hx = (((unsigned int) hx) << n) | (lx >> (32 - n));
       lx <<= n;
     }
     else
@@ -141,7 +141,7 @@ fmod (double x, double y)
     n = -1022 - iy;
     if (n <= 31)
     {
-      hy = (hy << n) | (ly >> (32 - n));
+      hy = (((unsigned int) hy) << n) | (ly >> (32 - n));
       ly <<= n;
     }
     else

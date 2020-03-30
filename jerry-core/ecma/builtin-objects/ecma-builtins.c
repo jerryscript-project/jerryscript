@@ -349,6 +349,7 @@ ecma_instantiate_builtin (ecma_builtin_id_t obj_builtin_id) /**< built-in id */
 
   ecma_object_t *prototype_obj_p;
 
+  /* cppcheck-suppress arrayIndexOutOfBoundsCond */
   if (JERRY_UNLIKELY (object_prototype_builtin_id == ECMA_BUILTIN_ID__COUNT))
   {
     prototype_obj_p = NULL;

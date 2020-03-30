@@ -1296,7 +1296,9 @@ ecma_op_lazy_instantiate_prototype_object (ecma_object_t *object_p) /**< the fun
   }
 #endif /* ENABLED (JERRY_ES2015) */
 
+#if ENABLED (JERRY_ES2015)
   if (proto_object_p == NULL)
+#endif /* ENABLED (JERRY_ES2015) */
   {
     proto_object_p = ecma_op_create_object_object_noarg ();
   }

@@ -1,4 +1,9 @@
 wrongmathcall:tests/unit-libm/test-libm.inc.h
 variableScope:jerry-libm/*.c
 invalidPointerCast:jerry-libm/*.c
-commaSeparatedReturn:*
+
+ConfigurationNotChecked:jerry-core/ecma/builtin-objects/ecma-builtin-global.inc.h
+ConfigurationNotChecked:jerry-core/ecma/builtin-objects/ecma-builtin-helpers-macro-defines.inc.h
+ConfigurationNotChecked:jerry-core/ecma/builtin-objects/ecma-builtin-function-prototype.inc.h
+ConfigurationNotChecked:jerry-core/ecma/builtin-objects/ecma-builtin-object.inc.h
+ConfigurationNotChecked:jerry-core/ecma/builtin-objects/ecma-builtin-helpers-macro-undefs.inc.h

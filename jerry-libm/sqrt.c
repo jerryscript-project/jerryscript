@@ -125,7 +125,7 @@ sqrt (double x)
     }
     else if (ix0 < 0) /* sqrt(-ve) = sNaN */
     {
-      return (x - x) / (x - x);
+      return NAN;
     }
   }
   /* normalize x */

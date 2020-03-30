@@ -697,7 +697,7 @@ ecma_number_parse_int (const lit_utf8_byte_t *string_buff, /**< routine's first 
                                                            *   string buffer's size */
                         ecma_value_t radix) /**< routine's second argument */
 {
-  if (string_buff_size <= 0)
+  if (string_buff_size == 0)
   {
     return ecma_make_nan_value ();
   }
@@ -874,7 +874,7 @@ ecma_number_parse_float (const lit_utf8_byte_t *string_buff, /**< routine's firs
                           lit_utf8_size_t string_buff_size) /**< routine's first argument's
                                                              *   string buffer's size */
 {
-  if (string_buff_size <= 0)
+  if (string_buff_size == 0)
   {
     return ecma_make_nan_value ();
   }

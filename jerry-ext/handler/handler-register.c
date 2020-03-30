@@ -63,7 +63,13 @@ jerryx_set_properties (const jerry_value_t target_object, /**< target object */
 {
 #define JERRYX_SET_PROPERTIES_RESULT(VALUE, IDX) ((jerryx_register_result) { VALUE, IDX })
   uint32_t idx = 0;
-  for (; ((entries + idx) != NULL) && (entries[idx].name != NULL); idx++)
+
+  if (entries == NULL)
+  {
+    return JERRYX_SET_PROPERTIES_RESULT (jerry_create_undefined (), 0);
+  }
+
+  for (; (entries[idx].name != NULL); idx++)
   {
     const jerryx_property_entry *entry = &entries[idx];
 
@@ -99,9 +105,12 @@ void
 jerryx_release_property_entry (const jerryx_property_entry entries[], /**< list of property entries */
                                const jerryx_register_result register_result) /**< previous result of registration */
 {
-  for (uint32_t idx = register_result.registered;
-       ((entries + idx) != NULL) && (entries[idx].name != NULL);
-       idx++)
+  if (entries == NULL)
+  {
+    return;
+  }
+
+  for (uint32_t idx = register_result.registered; entries[idx].name != NULL; idx++)
   {
     jerry_release_value (entries[idx].value);
   }

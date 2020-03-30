@@ -40,6 +40,7 @@ cppcheck -j$CPPCHECK_JOBS --force \
   --enable=warning,style,performance,portability,information \
   --template="{file}:{line}: {severity}({id}): {message}" \
   --error-exitcode=1 \
+  --inline-suppr \
   --exitcode-suppressions=tools/cppcheck/suppressions-list \
   --suppressions-list=tools/cppcheck/suppressions-list \
   "${INCLUDE_DIRS[@]}" \

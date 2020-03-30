@@ -155,7 +155,7 @@ test_typedarray_queries (test_entry_t test_entries[]) /**< test cases */
  */
 static
 void test_buffer_value (uint64_t value, /**< value to test for */
-                        const uint8_t *buffer, /**< buffer to read value from */
+                        const void *buffer, /**< buffer to read value from */
                         uint32_t start_offset, /**< start offset of the value */
                         jerry_typedarray_type_t typedarray_type, /**< type of TypedArray */
                         uint32_t bytes_per_element) /**< bytes per element for the given type */
@@ -518,11 +518,11 @@ main (void)
   /* Test TypedArray operations in js */
   {
     const uint32_t element_count = 14;
-    uint8_t expected_value = 42;
 
     jerry_value_t array = jerry_create_typedarray (JERRY_TYPEDARRAY_UINT8, element_count);
 
     {
+      uint8_t expected_value = 42;
       JERRY_VLA (uint8_t, expected_data, element_count);
       memset (expected_data, expected_value, element_count);
 

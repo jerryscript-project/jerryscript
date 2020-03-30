@@ -252,7 +252,7 @@ def src_check_args(args):
         print("Error: Non-negative integer number expected: %s" % (val_errno))
         return -1
 
-# pylint: disable=too-many-branches,too-many-locals,too-many-statements,redefined-variable-type
+# pylint: disable=too-many-branches,too-many-locals,too-many-statements
 def main():
     args = jerry_client_main.arguments_parse()
 

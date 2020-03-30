@@ -82,7 +82,7 @@ atan2 (double y, double x)
   {
     return atan (y);
   }
-  m = ((hy >> 31) & 1) | ((hx >> 30) & 2); /* 2 * sign(x) + sign(y) */
+  m = ((hy < 0) ? 1 : 0) + ((hx < 0) ? 2 : 0); /* 2 * sign(x) + sign(y) */
 
   /* when y = 0 */
   if ((iy | ly) == 0)

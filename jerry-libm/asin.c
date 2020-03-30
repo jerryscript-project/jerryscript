@@ -89,7 +89,7 @@ asin (double x)
     {
       return x * pio2_hi + x * pio2_lo;
     }
-    return (x - x) / (x - x); /* asin(|x|>1) is NaN */
+    return NAN; /* asin(|x|>1) is NaN */
   }
   else if (ix < 0x3fe00000) /* |x| < 0.5 */
   {

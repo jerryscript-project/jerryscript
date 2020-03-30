@@ -288,6 +288,7 @@ jmem_heap_gc_and_alloc_block (const size_t size, /**< required memory size */
 
   void *data_space_p = jmem_heap_alloc (size);
 
+  /* cppcheck-suppress memleak */
   while (JERRY_UNLIKELY (data_space_p == NULL) && JERRY_LIKELY (pressure < max_pressure))
   {
     pressure++;

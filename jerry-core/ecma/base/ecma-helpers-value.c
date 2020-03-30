@@ -40,6 +40,7 @@ JERRY_STATIC_ASSERT (sizeof (jmem_cpointer_t) <= sizeof (jmem_cpointer_tag_t),
 
 #ifdef ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
 
+/* cppcheck-suppress zerodiv */
 JERRY_STATIC_ASSERT (sizeof (uintptr_t) <= sizeof (ecma_value_t),
                      uintptr_t_must_fit_in_ecma_value_t);
 

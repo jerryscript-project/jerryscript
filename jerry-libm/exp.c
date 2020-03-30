@@ -197,7 +197,7 @@ exp (double x) /* default IEEE double exp */
   }
   if (k >= -1021)
   {
-    ret.as_int.hi += (k << 20); /* add k to y's exponent */
+    ret.as_int.hi += (((unsigned int) k) << 20); /* add k to y's exponent */
     return ret.dbl;
   }
   else

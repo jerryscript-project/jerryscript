@@ -53,6 +53,12 @@ static const uint32_t *
 read_file (const char *file_name,
            size_t *out_size_p)
 {
+  if (file_name == NULL)
+  {
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: failed to open file, missing filename\n");
+    return NULL;
+  }
+
   FILE *file;
   if (!strcmp ("-", file_name))
   {

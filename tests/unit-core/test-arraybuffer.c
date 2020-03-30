@@ -304,6 +304,7 @@ main (void)
   /* Test ArrayBuffer external memory map/unmap */
   {
     const uint32_t buffer_size = 20;
+    /* cppcheck-suppress variableScope */
     JERRY_VLA (uint8_t, buffer_p, buffer_size);
     {
       jerry_value_t input_buffer = jerry_create_arraybuffer_external (buffer_size, buffer_p, NULL);

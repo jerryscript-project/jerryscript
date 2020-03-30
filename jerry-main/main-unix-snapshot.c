@@ -150,7 +150,7 @@ read_file (uint8_t *input_pos_p, /**< next position in the input buffer */
     return 0;
   }
 
-  printf ("Input file '%s' (%lu bytes) loaded.\n", file_name, bytes_read);
+  printf ("Input file '%s' (%zu bytes) loaded.\n", file_name, bytes_read);
   return bytes_read;
 } /* read_file */
 
@@ -426,7 +426,7 @@ process_generate (cli_state_t *cli_state_p, /**< cli state */
   fwrite (output_buffer, sizeof (uint8_t), snapshot_size, snapshot_file_p);
   fclose (snapshot_file_p);
 
-  printf ("Created snapshot file: '%s' (%lu bytes)\n", output_file_name_p, (unsigned long) snapshot_size);
+  printf ("Created snapshot file: '%s' (%zu bytes)\n", output_file_name_p, snapshot_size);
 
   jerry_cleanup ();
   return JERRY_STANDALONE_EXIT_CODE_OK;
@@ -584,7 +584,7 @@ process_literal_dump (cli_state_t *cli_state_p, /**< cli state */
       return JERRY_STANDALONE_EXIT_CODE_FAIL;
     }
 
-    printf ("Successfully merged the input snapshots (%lu bytes).\n", merged_snapshot_size);
+    printf ("Successfully merged the input snapshots (%zu bytes).\n", merged_snapshot_size);
 
     lit_buf_sz = jerry_get_literals_from_snapshot (output_buffer,
                                                    merged_snapshot_size,
@@ -618,7 +618,7 @@ process_literal_dump (cli_state_t *cli_state_p, /**< cli state */
   fwrite (literal_buffer, sizeof (uint8_t), lit_buf_sz, file_p);
   fclose (file_p);
 
-  printf ("Literals are saved into '%s' (%lu bytes).\n", literals_file_name_p, lit_buf_sz);
+  printf ("Literals are saved into '%s' (%zu bytes).\n", literals_file_name_p, lit_buf_sz);
 
   jerry_cleanup ();
   return JERRY_STANDALONE_EXIT_CODE_OK;
@@ -752,7 +752,7 @@ process_merge (cli_state_t *cli_state_p, /**< cli state */
   fwrite (output_buffer, 1u, merged_snapshot_size, file_p);
   fclose (file_p);
 
-  printf ("Merge is completed. Merged snapshot is saved into '%s' (%lu bytes).\n",
+  printf ("Merge is completed. Merged snapshot is saved into '%s' (%zu bytes).\n",
           output_file_name_p,
           merged_snapshot_size);
 

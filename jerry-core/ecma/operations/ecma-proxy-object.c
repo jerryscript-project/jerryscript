@@ -694,8 +694,133 @@ ecma_proxy_object_define_own_property (ecma_object_t *obj_p, /**< proxy object *
                                        const ecma_property_descriptor_t *prop_desc_p) /**< property descriptor */
 {
   JERRY_ASSERT (ECMA_OBJECT_IS_PROXY (obj_p));
-  JERRY_UNUSED_3 (obj_p, prop_name_p, prop_desc_p);
-  return ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Proxy.[[DefineOwnProperty]]"));
+
+  ecma_proxy_object_t *proxy_obj_p = (ecma_proxy_object_t *) obj_p;
+
+  /* 2. */
+  ecma_value_t handler = proxy_obj_p->handler;
+
+  /* 3-6. */
+  ecma_value_t trap = ecma_validate_proxy_object (handler, LIT_MAGIC_STRING_DEFINE_PROPERTY_UL);
+
+  /* 7. */
+  if (ECMA_IS_VALUE_ERROR (trap))
+  {
+    return trap;
+  }
+
+  ecma_value_t target = proxy_obj_p->target;
+  ecma_object_t *target_obj_p = ecma_get_object_from_value (target);
+
+  /* 8. */
+  if (ecma_is_value_undefined (trap))
+  {
+    return ecma_op_object_define_own_property (target_obj_p, prop_name_p, prop_desc_p);
+  }
+
+  /* 9. */
+  ecma_object_t *desc_obj = ecma_op_from_property_descriptor (prop_desc_p);
+
+  ecma_object_t *func_obj_p = ecma_get_object_from_value (trap);
+  ecma_value_t prop_value = ecma_make_prop_name_value (prop_name_p);
+  ecma_value_t desc_obj_value = ecma_make_object_value (desc_obj);
+  ecma_value_t args[] = {target, prop_value, desc_obj_value};
+
+  /* 10. */
+  ecma_value_t trap_result = ecma_op_function_call (func_obj_p, handler, args, 3);
+
+  ecma_deref_object (func_obj_p);
+  ecma_deref_object (desc_obj);
+
+  /* 11. */
+  if (ECMA_IS_VALUE_ERROR (trap_result))
+  {
+    return trap_result;
+  }
+
+  bool boolean_trap_result = ecma_op_to_boolean (trap_result);
+
+  ecma_free_value (trap_result);
+
+  /* 12. */
+  if (!boolean_trap_result)
+  {
+    return ECMA_VALUE_FALSE;
+  }
+
+  /* 13. */
+  ecma_property_descriptor_t target_desc;
+
+  ecma_value_t status = ecma_op_object_get_own_property_descriptor (target_obj_p, prop_name_p, &target_desc);
+
+  /* 14. */
+  if (ECMA_IS_VALUE_ERROR (status))
+  {
+    return status;
+  }
+
+  bool target_prop_found = ecma_is_value_true (status);
+
+  /* 15. */
+  ecma_value_t extensible_target = ecma_builtin_object_object_is_extensible (target_obj_p);
+
+  bool is_target_ext = ecma_is_value_true (extensible_target);
+
+  /* 16. */
+  if (ECMA_IS_VALUE_ERROR (extensible_target))
+  {
+    if (target_prop_found)
+    {
+      ecma_free_property_descriptor (&target_desc);
+    }
+
+    return extensible_target;
+  }
+
+  /* 17. */
+  bool setting_config_false = ((prop_desc_p->flags & ECMA_PROP_IS_CONFIGURABLE_DEFINED)
+                                && !(prop_desc_p->flags & ECMA_PROP_IS_CONFIGURABLE));
+
+  /* 19. */
+  if (!target_prop_found)
+  {
+    if (!is_target_ext)
+    {
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned truish for adding property "
+                                                  "to the non-extensible target"));
+    }
+
+    if (setting_config_false)
+    {
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned truish for defining non-configurable property "
+                                                  "which is non-existent in the target"));
+    }
+  }
+  /* 20. */
+  else
+  {
+    ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+
+    if (!ecma_op_is_compatible_property_descriptor (prop_desc_p, &target_desc, is_target_ext))
+    {
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned truish for adding property that is "
+                                                       "incompatible with the existing property in the target"));
+    }
+    else if (setting_config_false && (target_desc.flags & ECMA_PROP_IS_CONFIGURABLE))
+    {
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned truish for defining non-configurable property "
+                                                       "which is configurable in the target"));
+    }
+
+    ecma_free_property_descriptor (&target_desc);
+
+    if (ECMA_IS_VALUE_ERROR (ret_value))
+    {
+      return ret_value;
+    }
+  }
+
+  return ECMA_VALUE_TRUE;
 } /* ecma_proxy_object_define_own_property */
 
 /**

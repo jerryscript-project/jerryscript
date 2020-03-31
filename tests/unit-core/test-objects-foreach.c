@@ -47,12 +47,26 @@ test_container (void)
     return;
   }
 
-  const char *eval_str = "new Map ([[1, 2], [3, 4]])";
+  {
+    /* Create a "DEMO" array which will be used for the Map below. */
+    const char array_str[] = "var DEMO = [[1, 2], [3, 4]]; DEMO";
+    jerry_value_t array = jerry_eval ((const jerry_char_t *) array_str, sizeof (array_str) - 1, 0);
+    TEST_ASSERT (jerry_value_is_object (array));
+    TEST_ASSERT (!jerry_value_is_error (array));
+    jerry_release_value (array);
+  }
+
+  const char eval_str[] = "new Map (DEMO)";
   {
     /* Make sure that the Map and it's prototype object/function is initialized. */
     jerry_value_t result = jerry_eval ((const jerry_char_t *) eval_str, sizeof (eval_str) - 1, 0);
+    TEST_ASSERT (jerry_value_is_object (result));
+    TEST_ASSERT (!jerry_value_is_error (result));
     jerry_release_value (result);
   }
+
+  /* Do a bit of cleaning to clear up old objects. */
+  jerry_gc (JERRY_GC_PRESSURE_LOW);
 
   /* Get the number of iterable objects. */
   int start_count = 0;
@@ -61,11 +75,14 @@ test_container (void)
   /* Create another map. */
   jerry_value_t result = jerry_eval ((const jerry_char_t *) eval_str, sizeof (eval_str) - 1, 0);
 
+  /* Remove any old/unused objects. */
+  jerry_gc (JERRY_GC_PRESSURE_LOW);
+
   /* Get the current number of objects. */
   int end_count = 0;
   jerry_objects_foreach (count_objects, &end_count);
 
-  /* As only one Map was created the number of iterable objects should be incremented only by one. */
+  /* As only one Map was created the number of available iterable objects should be incremented only by one. */
   TEST_ASSERT (end_count > start_count);
   TEST_ASSERT ((end_count - start_count) == 1);
 

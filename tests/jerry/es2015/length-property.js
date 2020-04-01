@@ -105,8 +105,10 @@ var builtin_typedArrays = [
   /* test length property of function objects */
   var normal_func = function () {};
   var arrow_func = () => {};
+  var bound_func = normal_func.bind({});
+  var nested_bound_func = arrow_func.bind().bind(1);
 
-  var functions = [normal_func, arrow_func];
+  var functions = [normal_func, arrow_func, bound_func, nested_bound_func];
 
   for (func of functions) {
     var desc = Object.getOwnPropertyDescriptor(func, 'length');
@@ -120,4 +122,20 @@ var builtin_typedArrays = [
     assert(delete func.length);
     assert(func.hasOwnProperty('length') === false);
   }
+})();
+
+(function() {
+  /* changing the length of f affects the bound function */
+  function f(a,b,c) {}
+  Object.defineProperty(f, "length", { value: 30 });
+  var g = f.bind(1,2)
+  assert(g.length === 29);
+})();
+
+(function() {
+  /* changing the length of f does not affect the bound function */
+  function f(a,b,c) {}
+  var g = f.bind(1,2)
+  Object.defineProperty(f, "length", { value: 30 });
+  assert(g.length === 2);
 })();

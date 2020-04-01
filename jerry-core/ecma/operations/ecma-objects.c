@@ -1997,7 +1997,8 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
           }
           case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
           {
-            ecma_op_bound_function_list_lazy_property_names (opts,
+            ecma_op_bound_function_list_lazy_property_names (obj_p,
+                                                             opts,
                                                              prop_names_p,
                                                              skipped_non_enumerable_p);
             break;

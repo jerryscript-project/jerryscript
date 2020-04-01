@@ -897,7 +897,7 @@ typedef struct
      */
     struct
     {
-      ecma_value_t target_function; /**< target function */
+      jmem_cpointer_tag_t target_function; /**< target function */
       ecma_value_t args_len_or_this; /**< length of arguments or this value */
     } bound_function;
 
@@ -946,6 +946,17 @@ typedef struct
  */
 #define ECMA_REGEXP_PROTO_COMPILED_CODE_SIZE \
   (JERRY_ALIGNUP (sizeof (ecma_compiled_code_t), JMEM_ALIGNMENT) + sizeof (ecma_value_t))
+
+/**
+ * Description of bound function objects.
+ */
+typedef struct
+{
+  ecma_extended_object_t header; /**< extended object header */
+#if ENABLED (JERRY_ES2015)
+  ecma_integer_value_t target_length; /**< length of target function */
+#endif /* ENABLED (JERRY_ES2015) */
+} ecma_bound_function_t;
 
 #if ENABLED (JERRY_SNAPSHOT_EXEC)
 

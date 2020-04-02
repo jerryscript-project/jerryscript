@@ -1,6 +1,6 @@
 Connecting to: localhost:5001
 Stopped at tests/debugger/do_variables.js:15
-(jerry-debugger) scopes
+(jerry-debugger) scope
 level | type   
 0     | global 
 (jerry-debugger) variables
@@ -29,7 +29,7 @@ assert       | Function  |
 Breakpoint 1 at tests/debugger/do_variables.js:20 (in function() at line:19, col:10)
 (jerry-debugger) c
 Stopped at breakpoint:1 tests/debugger/do_variables.js:20 (in function() at line:19, col:10)
-(jerry-debugger) scopes
+(jerry-debugger) scope
 level | type    
 0     | local   
 1     | closure 
@@ -56,7 +56,7 @@ assert       | Function |
 Breakpoint 2 at tests/debugger/do_variables.js:30 (in f() at line:28, col:1)
 (jerry-debugger) c
 Stopped at breakpoint:2 tests/debugger/do_variables.js:30 (in f() at line:28, col:1)
-(jerry-debugger) scopes
+(jerry-debugger) scope
 level | type   
 0     | local  
 1     | global 
@@ -87,7 +87,7 @@ Exception hint: error
 Stopped at breakpoint:2 tests/debugger/do_variables.js:30 (in f() at line:28, col:1)
 (jerry-debugger) c
 Stopped at breakpoint:3 tests/debugger/do_variables.js:33 (in f() at line:28, col:1)
-(jerry-debugger) scopes
+(jerry-debugger) scope
 level | type   
 0     | catch  
 1     | local  
@@ -106,7 +106,7 @@ c    | undefined | undefined
 Breakpoint 4 at tests/debugger/do_variables.js:50 (in function() at line:46, col:4)
 (jerry-debugger) c
 Stopped at breakpoint:4 tests/debugger/do_variables.js:50 (in function() at line:46, col:4)
-(jerry-debugger) scopes
+(jerry-debugger) scope
 level | type    
 0     | with    
 1     | local   

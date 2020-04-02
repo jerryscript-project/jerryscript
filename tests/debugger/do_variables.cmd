@@ -1,27 +1,27 @@
-scopes
+scope
 variables
 variables 1
 variables 0
 b tests/debugger/do_variables.js:20
 c
-scopes
+scope
 variables 0
 variables 1
 variables 2
 b tests/debugger/do_variables.js:30
 c
-scopes
+scope
 variables 1
 variables 0
 b tests/debugger/do_variables.js:33
 c
 c
-scopes
+scope
 variables 0
 variables 1
 b tests/debugger/do_variables.js:50
 c
-scopes
+scope
 variables 0
 variables 1
 variables 2

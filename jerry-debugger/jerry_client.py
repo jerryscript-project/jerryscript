@@ -76,8 +76,12 @@ class DebuggerPrompt(Cmd):
         """ Delete the given breakpoint, use 'delete all|active|pending' to clear all the given breakpoints """
         write(self.debugger.delete(args))
 
+    def do_exception(self, args):
+        """ Config the exception handler module """
+        write(self.debugger.exception(args))
+
     def do_next(self, args):
-        """ Next breakpoint in the same context """
+        """ Next breakpoint in the same code block """
         self.stop = True
         if not args:
             args = 0
@@ -116,16 +120,25 @@ class DebuggerPrompt(Cmd):
         self.stop = True
     do_s = do_step
 
+    def do_continue(self, _):
+        """ Continue execution """
+        self.debugger.do_continue()
+        self.stop = True
+        if not self.debugger.non_interactive:
+            print("Press enter to stop JavaScript execution.")
+    do_c = do_continue
+
+    def do_finish(self, _):
+        """ Continue running until the current function returns """
+        self.debugger.finish()
+        self.stop = True
+    do_f = do_finish
+
     def do_backtrace(self, args):
         """ Get backtrace data from debugger """
         write(self.debugger.backtrace(args))
         self.stop = True
     do_bt = do_backtrace
-
-    def do_variables(self, args):
-        """ Get scope variables from debugger """
-        write(self.debugger.scope_variables(args))
-        self.stop = True
 
     def do_src(self, args):
         """ Get current source code """
@@ -149,27 +162,6 @@ class DebuggerPrompt(Cmd):
                 break
             else:
                 print("Invalid key")
-
-    def do_continue(self, _):
-        """ Continue execution """
-        self.debugger.do_continue()
-        self.stop = True
-        if not self.debugger.non_interactive:
-            print("Press enter to stop JavaScript execution.")
-    do_c = do_continue
-
-    def do_finish(self, _):
-        """ Continue running until the current function returns """
-        self.debugger.finish()
-        self.stop = True
-    do_f = do_finish
-
-    def do_dump(self, args):
-        """ Dump all of the debugger data """
-        if args:
-            print("Error: No argument expected")
-        else:
-            pprint(self.debugger.function_list)
 
     def do_eval(self, args):
         """ Evaluate JavaScript source code """
@@ -200,19 +192,13 @@ class DebuggerPrompt(Cmd):
         self.debugger.eval_at(code, index)
         self.stop = True
 
-    def do_memstats(self, _):
-        """ Memory statistics """
-        self.debugger.memstats()
-        self.stop = True
-    do_ms = do_memstats
-
-    def do_scopes(self, _):
-        """ Memory statistics """
-        self.debugger.scope_chain()
+    def do_throw(self, args):
+        """ Throw an exception """
+        self.debugger.throw(args)
         self.stop = True
 
     def do_abort(self, args):
-        """ Throw an exception """
+        """ Throw an exception which cannot be caught """
         self.debugger.abort(args)
         self.stop = True
 
@@ -222,14 +208,36 @@ class DebuggerPrompt(Cmd):
         self.stop = True
     do_res = do_restart
 
-    def do_throw(self, args):
-        """ Throw an exception """
-        self.debugger.throw(args)
+    def do_scope(self, _):
+        """ Get lexical environment chain """
+        self.debugger.scope_chain()
         self.stop = True
 
-    def do_exception(self, args):
-        """ Config the exception handler module """
-        write(self.debugger.exception(args))
+    def do_variables(self, args):
+        """ Get scope variables from debugger """
+        write(self.debugger.scope_variables(args))
+        self.stop = True
+
+    def do_memstats(self, _):
+        """ Memory statistics """
+        self.debugger.memstats()
+        self.stop = True
+    do_ms = do_memstats
+
+    def do_dump(self, args):
+        """ Dump all of the debugger data """
+        if args:
+            print("Error: No argument expected")
+        else:
+            pprint(self.debugger.function_list)
+
+    # pylint: disable=invalid-name
+    def do_EOF(self, _):
+        """ Exit JerryScript debugger """
+        print("Unexpected end of input. Connection closed.")
+        self.debugger.quit()
+        self.quit = True
+        self.stop = True
 
 def _scroll_direction(debugger, direction):
     """ Helper function for do_scroll """

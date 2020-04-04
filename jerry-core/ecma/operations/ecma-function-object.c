@@ -557,10 +557,10 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
     JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
 
     /* 1. 3. */
-    ecma_extended_object_t *ext_function_p = (ecma_extended_object_t *) func_obj_p;
+    ecma_bound_function_t *bound_func_p = (ecma_bound_function_t *) func_obj_p;
 
-    func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                  ext_function_p->u.bound_function.target_function);
+    func_obj_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
+                                                             bound_func_p->header.u.bound_function.target_function);
   }
 
   JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION
@@ -939,12 +939,12 @@ ecma_op_bound_function_get_argument_list (ecma_object_t *func_obj_p, /**< bound 
 {
   JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
 
-  ecma_extended_object_t *ext_function_p = (ecma_extended_object_t *) func_obj_p;
+  ecma_bound_function_t *bound_func_p = (ecma_bound_function_t *) func_obj_p;
 
-  func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                ext_function_p->u.bound_function.target_function);
+  func_obj_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
+                                                           bound_func_p->header.u.bound_function.target_function);
 
-  ecma_value_t args_len_or_this = ext_function_p->u.bound_function.args_len_or_this;
+  ecma_value_t args_len_or_this = bound_func_p->header.u.bound_function.args_len_or_this;
 
   ecma_length_t args_length = 1;
 
@@ -956,7 +956,7 @@ ecma_op_bound_function_get_argument_list (ecma_object_t *func_obj_p, /**< bound 
   /* 5. */
   if (args_length != 1)
   {
-    const ecma_value_t *args_p = (const ecma_value_t *) (ext_function_p + 1);
+    const ecma_value_t *args_p = (const ecma_value_t *) (bound_func_p + 1);
     list_p->buffer_p[0] = *args_p;
 
     if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION)
@@ -1468,41 +1468,56 @@ ecma_op_bound_function_try_to_lazy_instantiate_property (ecma_object_t *object_p
 
   if (ecma_string_is_length (property_name_p))
   {
-    ecma_extended_object_t *ext_function_p = (ecma_extended_object_t *) object_p;
-    ecma_object_t *target_func_obj_p;
-    target_func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                         ext_function_p->u.bound_function.target_function);
-
+    ecma_bound_function_t *bound_func_p = (ecma_bound_function_t *) object_p;
+    ecma_value_t args_len_or_this = bound_func_p->header.u.bound_function.args_len_or_this;
     ecma_integer_value_t length = 0;
+    ecma_integer_value_t args_length = 1;
+    uint8_t length_attributes;
 
-    if (ecma_object_get_class_name (target_func_obj_p) == LIT_MAGIC_STRING_FUNCTION_UL)
+    if (ecma_is_value_integer_number (args_len_or_this))
     {
-      /* The property_name_p argument contans the 'length' string. */
-      ecma_value_t get_len_value = ecma_op_object_get (target_func_obj_p, property_name_p);
+      args_length = ecma_get_integer_from_value (args_len_or_this);
+    }
+
+#if ENABLED (JERRY_ES2015)
+    if (ECMA_GET_FIRST_BIT_FROM_POINTER_TAG (bound_func_p->header.u.bound_function.target_function))
+    {
+      return NULL;
+    }
+
+    length_attributes = ECMA_PROPERTY_FLAG_CONFIGURABLE;
+    length = bound_func_p->target_length - (args_length - 1);
+
+    /* Set tag bit to represent initialized 'length' property */
+    ECMA_SET_FIRST_BIT_TO_POINTER_TAG (bound_func_p->header.u.bound_function.target_function);
+#else /* !ENABLED (JERRY_ES2015) */
+    length_attributes = ECMA_PROPERTY_FIXED;
+
+    ecma_object_t *target_func_p;
+    target_func_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
+                                                                bound_func_p->header.u.bound_function.target_function);
+
+    if (ecma_object_get_class_name (target_func_p) == LIT_MAGIC_STRING_FUNCTION_UL)
+    {
+      /* The property_name_p argument contains the 'length' string. */
+      ecma_value_t get_len_value = ecma_op_object_get (target_func_p, property_name_p);
 
       JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (get_len_value));
       JERRY_ASSERT (ecma_is_value_integer_number (get_len_value));
 
-      ecma_value_t args_len_or_this = ext_function_p->u.bound_function.args_len_or_this;
-      ecma_integer_value_t args_length = 1;
-
-      if (ecma_is_value_integer_number (args_len_or_this))
-      {
-        args_length = ecma_get_integer_from_value (args_len_or_this);
-      }
-
       length = ecma_get_integer_from_value (get_len_value) - (args_length - 1);
+    }
+#endif /* ENABLED (JERRY_ES2015) */
 
-      if (length < 0)
-      {
-        length = 0;
-      }
+    if (length < 0)
+    {
+      length = 0;
     }
 
     ecma_property_t *len_prop_p;
     ecma_property_value_t *len_prop_value_p = ecma_create_named_data_property (object_p,
                                                                                property_name_p,
-                                                                               ECMA_PROPERTY_FIXED,
+                                                                               length_attributes,
                                                                                &len_prop_p);
 
     len_prop_value_p->value = ecma_make_integer_value (length);
@@ -1619,7 +1634,8 @@ ecma_op_external_function_list_lazy_property_names (uint32_t opts, /**< listing 
  *          ecma_op_bound_function_try_to_lazy_instantiate_property
  */
 void
-ecma_op_bound_function_list_lazy_property_names (uint32_t opts, /**< listing options using flags
+ecma_op_bound_function_list_lazy_property_names (ecma_object_t *object_p, /**< bound function object*/
+                                                 uint32_t opts, /**< listing options using flags
                                                                  *   from ecma_list_properties_options_t */
                                                  ecma_collection_t *main_collection_p, /**< 'main' collection */
                                                  ecma_collection_t *non_enum_collection_p) /**< skipped
@@ -1630,8 +1646,18 @@ ecma_op_bound_function_list_lazy_property_names (uint32_t opts, /**< listing opt
 
   ecma_collection_t *for_non_enumerable_p = (opts & ECMA_LIST_ENUMERABLE) ? non_enum_collection_p : main_collection_p;
 
+#if ENABLED (JERRY_ES2015)
+  /* Unintialized 'length' property is non-enumerable (ECMA-262 v6, 19.2.4.1) */
+  ecma_bound_function_t *bound_func_p = (ecma_bound_function_t *) object_p;
+  if (!ECMA_GET_FIRST_BIT_FROM_POINTER_TAG (bound_func_p->header.u.bound_function.target_function))
+  {
+    ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
+  }
+#else /* !ENABLED (JERRY_ES2015) */
+  JERRY_UNUSED (object_p);
   /* 'length' property is non-enumerable (ECMA-262 v5, 13.2.5) */
   ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
+#endif /* ENABLED (JERRY_ES2015) */
 
   /* 'caller' property is non-enumerable (ECMA-262 v5, 13.2.5) */
   ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_CALLER));

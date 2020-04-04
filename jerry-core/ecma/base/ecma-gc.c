@@ -217,15 +217,15 @@ ecma_gc_mark_bound_function_object (ecma_object_t *object_p) /**< bound function
 {
   JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
 
-  ecma_extended_object_t *ext_function_p = (ecma_extended_object_t *) object_p;
+  ecma_bound_function_t *bound_func_p = (ecma_bound_function_t *) object_p;
 
-  ecma_object_t *target_func_obj_p;
-  target_func_obj_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                       ext_function_p->u.bound_function.target_function);
+  ecma_object_t *target_func_p;
+  target_func_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
+                                                              bound_func_p->header.u.bound_function.target_function);
 
-  ecma_gc_set_object_visited (target_func_obj_p);
+  ecma_gc_set_object_visited (target_func_p);
 
-  ecma_value_t args_len_or_this = ext_function_p->u.bound_function.args_len_or_this;
+  ecma_value_t args_len_or_this = bound_func_p->header.u.bound_function.args_len_or_this;
 
   if (!ecma_is_value_integer_number (args_len_or_this))
   {
@@ -238,7 +238,7 @@ ecma_gc_mark_bound_function_object (ecma_object_t *object_p) /**< bound function
   }
 
   ecma_integer_value_t args_length = ecma_get_integer_from_value (args_len_or_this);
-  ecma_value_t *args_p = (ecma_value_t *) (ext_function_p + 1);
+  ecma_value_t *args_p = (ecma_value_t *) (bound_func_p + 1);
 
   JERRY_ASSERT (args_length > 0);
 
@@ -1311,9 +1311,10 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
     }
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     {
-      ecma_extended_object_t *ext_function_p = (ecma_extended_object_t *) object_p;
+      ext_object_size = sizeof (ecma_bound_function_t);
+      ecma_bound_function_t *bound_func_p = (ecma_bound_function_t *) object_p;
 
-      ecma_value_t args_len_or_this = ext_function_p->u.bound_function.args_len_or_this;
+      ecma_value_t args_len_or_this = bound_func_p->header.u.bound_function.args_len_or_this;
 
       if (!ecma_is_value_integer_number (args_len_or_this))
       {
@@ -1322,7 +1323,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
       }
 
       ecma_integer_value_t args_length = ecma_get_integer_from_value (args_len_or_this);
-      ecma_value_t *args_p = (ecma_value_t *) (ext_function_p + 1);
+      ecma_value_t *args_p = (ecma_value_t *) (bound_func_p + 1);
 
       for (ecma_integer_value_t i = 0; i < args_length; i++)
       {

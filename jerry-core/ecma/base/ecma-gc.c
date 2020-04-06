@@ -1467,7 +1467,7 @@ ecma_gc_run (void)
 
 #if ENABLED (JERRY_BUILTIN_REGEXP)
   /* Free RegExp bytecodes stored in cache */
-  re_cache_gc_run ();
+  re_cache_gc ();
 #endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
 } /* ecma_gc_run */
 

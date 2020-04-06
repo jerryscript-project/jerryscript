@@ -2847,9 +2847,6 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
   context_p->literal_count++;
 
   /* Compile the RegExp literal and store the RegExp bytecode pointer */
-  const re_compiled_code_t *re_bytecode_p = NULL;
-  ecma_value_t completion_value;
-
   ecma_string_t *pattern_str_p = NULL;
 
   if (lit_is_valid_cesu8_string (regex_start_p, length))
@@ -2862,18 +2859,13 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
     pattern_str_p = ecma_new_ecma_string_from_utf8_converted_to_cesu8 (regex_start_p, length);
   }
 
-  completion_value = re_compile_bytecode (&re_bytecode_p,
-                                          pattern_str_p,
-                                          current_flags);
+  re_compiled_code_t *re_bytecode_p = re_compile_bytecode (pattern_str_p, current_flags);
   ecma_deref_ecma_string (pattern_str_p);
 
-  if (ECMA_IS_VALUE_ERROR (completion_value))
+  if (JERRY_UNLIKELY (re_bytecode_p == NULL))
   {
-    jcontext_release_exception ();
     parser_raise_error (context_p, PARSER_ERR_INVALID_REGEXP);
   }
-
-  ecma_free_value (completion_value);
 
   literal_p->type = LEXER_REGEXP_LITERAL;
   literal_p->u.bytecode_p = (ecma_compiled_code_t *) re_bytecode_p;

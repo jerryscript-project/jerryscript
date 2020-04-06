@@ -2723,6 +2723,14 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
       jcontext_raise_exception (ECMA_VALUE_NULL);
       return ECMA_VALUE_ERROR;
     }
+
+    if (parser_error.error == PARSER_ERR_INVALID_REGEXP)
+    {
+      /* The RegExp compiler has already raised an exception. */
+      JERRY_ASSERT (jcontext_has_pending_exception ());
+      return ECMA_VALUE_ERROR;
+    }
+
 #if ENABLED (JERRY_ERROR_MESSAGES)
     const lit_utf8_byte_t *err_bytes_p = (const lit_utf8_byte_t *) parser_error_to_string (parser_error.error);
     lit_utf8_size_t err_bytes_size = lit_zt_utf8_string_size (err_bytes_p);

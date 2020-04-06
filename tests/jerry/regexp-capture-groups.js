@@ -196,3 +196,12 @@ assert (r.exec("aa") == "aa,a");
 
 r = new RegExp ("(a{0,1}?){0,1}a");
 assert (r.exec("aa") == "aa,a");
+
+r = new RegExp ("(|.)+");
+assert (JSON.stringify (r.exec("asdfgh")) === '["asdfgh","h"]');
+
+assert (JSON.stringify (/([^\W](){8,}?){5}/.exec("asdfghijk")) === '["asdfg","g",""]');
+assert (JSON.stringify (/(()+?(.+)|){3,}./u.exec("asdfghi")) === '["asdfghi","",null,null]')
+assert (JSON.stringify (/(()+?(.+)|){3,}?./u.exec("asdfghi")) === '["asdfghi","",null,null]')
+assert (JSON.stringify (/(?:()+?(.+)|){3,}./u.exec("asdfghi")) === '["asdfghi",null,null]')
+assert (JSON.stringify (/(?:()+?(.+)|){3,}?./u.exec("asdfghi")) === '["asdfghi",null,null]')

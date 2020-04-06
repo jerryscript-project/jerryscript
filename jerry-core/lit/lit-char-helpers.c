@@ -103,31 +103,32 @@ search_char_in_interval_array (ecma_char_t c,               /**< code unit */
 } /* search_char_in_interval_array */
 
 /**
- * Check if specified character is one of the Whitespace characters including those
- * that fall into "Space, Separator" ("Zs") Unicode character category.
+ * Check if specified character is one of the Whitespace characters including those that fall into
+ * "Space, Separator" ("Zs") Unicode character category or one of the Line Terminator characters.
  *
  * @return true - if the character is one of characters, listed in ECMA-262 v5, Table 2,
  *         false - otherwise
  */
 bool
-lit_char_is_white_space (ecma_char_t c) /**< code unit */
+lit_char_is_white_space (lit_code_point_t c) /**< code point */
 {
   if (c <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
   {
-    return (c == LIT_CHAR_TAB
-            || c == LIT_CHAR_VTAB
-            || c == LIT_CHAR_FF
-            || c == LIT_CHAR_SP);
+    return (c == LIT_CHAR_SP || (c >= LIT_CHAR_TAB && c <= LIT_CHAR_CR));
   }
   else
   {
-    return (c == LIT_CHAR_NBSP
-            || c == LIT_CHAR_BOM
-            || (c >= lit_unicode_separator_char_interval_sps[0]
-                && c <= lit_unicode_separator_char_interval_sps[0] + lit_unicode_separator_char_interval_lengths[0])
-            || search_char_in_char_array (c,
-                                          lit_unicode_separator_chars,
-                                          NUM_OF_ELEMENTS (lit_unicode_separator_chars)));
+    if (c == LIT_CHAR_NBSP || c == LIT_CHAR_BOM || c == LIT_CHAR_LS || c == LIT_CHAR_PS)
+    {
+      return true;
+    }
+
+    return (c <= LIT_UTF16_CODE_UNIT_MAX
+            && ((c >= lit_unicode_separator_char_interval_sps[0]
+                 && c < lit_unicode_separator_char_interval_sps[0] + lit_unicode_separator_char_interval_lengths[0])
+                || search_char_in_char_array ((ecma_char_t) c,
+                                              lit_unicode_separator_chars,
+                                              NUM_OF_ELEMENTS (lit_unicode_separator_chars))));
   }
 } /* lit_char_is_white_space */
 
@@ -429,51 +430,72 @@ lit_four_byte_utf8_char_to_cesu8 (uint8_t *dst_p, /**< destination buffer */
 } /* lit_four_byte_utf8_char_to_cesu8 */
 
 /**
- * Parse the next number_of_characters hexadecimal character,
- * and construct a code unit from them. The buffer must
- * be zero terminated.
+ * Lookup hex digits in a buffer
  *
- * @return true if decoding was successful, false otherwise
+ * @return UINT32_MAX - if next 'lookup' number of characters do not form a valid hex number
+ *         value of hex number, otherwise
  */
-bool
-lit_read_code_unit_from_hex (const lit_utf8_byte_t *buf_p, /**< buffer with characters */
-                             lit_utf8_size_t number_of_characters, /**< number of characters to be read */
-                             ecma_char_t *out_code_unit_p) /**< [out] decoded result */
+uint32_t
+lit_char_hex_lookup (const lit_utf8_byte_t *buf_p, /**< buffer */
+                     const lit_utf8_byte_t *const buf_end_p, /**< buffer end */
+                     uint32_t lookup) /**< size of lookup */
 {
-  ecma_char_t code_unit = LIT_CHAR_NULL;
+  JERRY_ASSERT (lookup <= 4);
 
-  JERRY_ASSERT (number_of_characters >= 2 && number_of_characters <= 4);
-
-  for (lit_utf8_size_t i = 0; i < number_of_characters; i++)
+  if (JERRY_UNLIKELY (buf_p + lookup > buf_end_p))
   {
-    code_unit = (ecma_char_t) (code_unit << 4u);
-
-    if (*buf_p >= LIT_CHAR_ASCII_DIGITS_BEGIN
-        && *buf_p <= LIT_CHAR_ASCII_DIGITS_END)
-    {
-      code_unit |= (ecma_char_t) (*buf_p - LIT_CHAR_ASCII_DIGITS_BEGIN);
-    }
-    else if (*buf_p >= LIT_CHAR_ASCII_LOWERCASE_LETTERS_HEX_BEGIN
-             && *buf_p <= LIT_CHAR_ASCII_LOWERCASE_LETTERS_HEX_END)
-    {
-      code_unit |= (ecma_char_t) (*buf_p - (LIT_CHAR_ASCII_LOWERCASE_LETTERS_HEX_BEGIN - 10));
-    }
-    else if (*buf_p >= LIT_CHAR_ASCII_UPPERCASE_LETTERS_HEX_BEGIN
-             && *buf_p <= LIT_CHAR_ASCII_UPPERCASE_LETTERS_HEX_END)
-    {
-      code_unit |= (ecma_char_t) (*buf_p - (LIT_CHAR_ASCII_UPPERCASE_LETTERS_HEX_BEGIN - 10));
-    }
-    else
-    {
-      return false;
-    }
-
-    buf_p++;
+    return UINT32_MAX;
   }
 
-  *out_code_unit_p = code_unit;
-  return true;
-} /* lit_read_code_unit_from_hex */
+  uint32_t value = 0;
+
+  while (lookup--)
+  {
+    lit_utf8_byte_t ch = *buf_p++;
+    if (!lit_char_is_hex_digit (ch))
+    {
+      return UINT32_MAX;
+    }
+
+    value <<= 4;
+    value += lit_char_hex_to_int (ch);
+  }
+
+  JERRY_ASSERT (value <= LIT_UTF16_CODE_UNIT_MAX);
+  return value;
+} /* lit_char_hex_lookup */
+
+/**
+ * Parse a decimal number with the value clamped to UINT32_MAX.
+ *
+ * @returns uint32_t number
+ */
+uint32_t
+lit_parse_decimal (const lit_utf8_byte_t **buffer_p, /**< [in/out] character buffer */
+                   const lit_utf8_byte_t *buffer_end_p) /**< buffer end */
+{
+  const lit_utf8_byte_t *current_p = *buffer_p;
+  JERRY_ASSERT (lit_char_is_decimal_digit (*current_p));
+
+  uint32_t value = (uint32_t) (*current_p++ - LIT_CHAR_0);
+
+  while (current_p < buffer_end_p && lit_char_is_decimal_digit (*current_p))
+  {
+    const uint32_t digit = (uint32_t) (*current_p++ - LIT_CHAR_0);
+    uint32_t new_value = value * 10 + digit;
+
+    if (JERRY_UNLIKELY (value > UINT32_MAX / 10) || JERRY_UNLIKELY (new_value < value))
+    {
+      value = UINT32_MAX;
+      continue;
+    }
+
+    value = new_value;
+  }
+
+  *buffer_p = current_p;
+  return value;
+} /* lit_parse_decimal */
 
 /**
  * Check if specified character is a word character (part of IsWordChar abstract operation)
@@ -484,7 +506,7 @@ lit_read_code_unit_from_hex (const lit_utf8_byte_t *buf_p, /**< buffer with char
  *         false - otherwise
  */
 bool
-lit_char_is_word_char (ecma_char_t c) /**< code unit */
+lit_char_is_word_char (lit_code_point_t c) /**< code point */
 {
   return ((c >= LIT_CHAR_ASCII_LOWERCASE_LETTERS_BEGIN && c <= LIT_CHAR_ASCII_LOWERCASE_LETTERS_END)
           || (c >= LIT_CHAR_ASCII_UPPERCASE_LETTERS_BEGIN && c <= LIT_CHAR_ASCII_UPPERCASE_LETTERS_END)

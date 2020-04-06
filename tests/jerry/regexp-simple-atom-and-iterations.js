@@ -88,3 +88,6 @@ assert (r.exec ("\\c3") == "\\c3");
 
 r = /\cIasd/;
 assert (r.exec ("\tasd") == "\tasd");
+
+r = /.??$/;
+assert (JSON.stringify (r.exec("asd")) === '["d"]');

@@ -14,6 +14,7 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-exceptions.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
@@ -412,14 +413,40 @@ ecma_check_value_type_is_spec_defined (ecma_value_t value) /**< ecma value */
 /**
  * Checks if the given argument is an array or not.
  *
- * @return true - if the given argument is an array object
- *         false - otherwise
+ * @return ECMA_VALUE_ERROR- if the operation fails
+ *         ECMA_VALUE_{TRUE/FALSE} - depends on whether 'arg' is an array object
  */
-inline bool JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
+ecma_value_t
 ecma_is_value_array (ecma_value_t arg) /**< argument */
 {
-  return (ecma_is_value_object (arg)
-          && ecma_get_object_type (ecma_get_object_from_value (arg)) == ECMA_OBJECT_TYPE_ARRAY);
+  if (!ecma_is_value_object (arg))
+  {
+    return ECMA_VALUE_FALSE;
+  }
+
+  ecma_object_t *arg_obj_p = ecma_get_object_from_value (arg);
+
+  if (ecma_get_object_type (arg_obj_p) == ECMA_OBJECT_TYPE_ARRAY)
+  {
+    return ECMA_VALUE_TRUE;
+  }
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (ECMA_OBJECT_IS_PROXY (arg_obj_p))
+  {
+    ecma_proxy_object_t *proxy_obj_p = (ecma_proxy_object_t *) arg_obj_p;
+
+    if (proxy_obj_p->handler == ECMA_VALUE_NULL)
+    {
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot perform 'IsArray' on the given proxy "
+                                                  "because handler is null"));
+    }
+
+    return ecma_is_value_array (proxy_obj_p->target);
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
+  return ECMA_VALUE_FALSE;
 } /* ecma_is_value_array */
 
 /**

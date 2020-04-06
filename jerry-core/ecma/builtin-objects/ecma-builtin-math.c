@@ -545,11 +545,7 @@ ecma_builtin_math_dispatch_routine (uint16_t builtin_routine_id, /**< built-in w
       }
       case ECMA_MATH_OBJECT_COSH:
       {
-#ifdef JERRY_LIBM_MATH_H
-        return ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Math.cosh"));
-#else /* !JERRY_LIBM_MATH_H */
         x = DOUBLE_TO_ECMA_NUMBER_T (cosh (x));
-#endif /* JERRY_LIBM_MATH_H */
         break;
       }
       case ECMA_MATH_OBJECT_EXPM1:
@@ -574,20 +570,12 @@ ecma_builtin_math_dispatch_routine (uint16_t builtin_routine_id, /**< built-in w
       }
       case ECMA_MATH_OBJECT_SINH:
       {
-#ifdef JERRY_LIBM_MATH_H
-        return ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Math.sinh"));
-#else /* !JERRY_LIBM_MATH_H */
         x = DOUBLE_TO_ECMA_NUMBER_T (sinh (x));
-#endif /* JERRY_LIBM_MATH_H */
         break;
       }
       case ECMA_MATH_OBJECT_TANH:
       {
-#ifdef JERRY_LIBM_MATH_H
-        return ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Math.tanh"));
-#else /* !JERRY_LIBM_MATH_H */
         x = DOUBLE_TO_ECMA_NUMBER_T (tanh (x));
-#endif /* JERRY_LIBM_MATH_H */
         break;
       }
       case ECMA_MATH_OBJECT_CLZ32:

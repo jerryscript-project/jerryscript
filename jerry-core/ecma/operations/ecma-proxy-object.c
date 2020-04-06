@@ -1224,8 +1224,61 @@ ecma_proxy_object_construct (ecma_object_t *obj_p, /**< proxy object */
                              ecma_length_t argc) /**< number of arguments */
 {
   JERRY_ASSERT (ECMA_OBJECT_IS_PROXY (obj_p));
-  JERRY_UNUSED_4 (obj_p, new_target_p, args_p, argc);
-  return ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Proxy.[[Construct]]"));
+
+  ecma_proxy_object_t * proxy_obj_p = (ecma_proxy_object_t *) obj_p;
+
+  /* 1. */
+  ecma_value_t handler = proxy_obj_p->handler;
+
+  /* 2-5. */
+  ecma_value_t trap = ecma_validate_proxy_object (handler, LIT_MAGIC_STRING_CONSTRUCT);
+
+  /* 6. */
+  if (ECMA_IS_VALUE_ERROR (trap))
+  {
+    return trap;
+  }
+
+  ecma_value_t target = proxy_obj_p->target;
+  ecma_object_t *target_obj_p = ecma_get_object_from_value (target);
+
+  /* 7. */
+  if (ecma_is_value_undefined (trap))
+  {
+    JERRY_ASSERT (ecma_object_is_constructor (target_obj_p));
+
+    return ecma_op_function_construct (target_obj_p, new_target_p, args_p, argc);
+  }
+
+  /* 8. */
+  ecma_value_t arg_array = ecma_op_create_array_object (args_p, argc, false);
+
+  ecma_object_t *func_obj_p = ecma_get_object_from_value (trap);
+  ecma_value_t new_target_value = ecma_make_object_value (new_target_p);
+  ecma_value_t function_call_args[] = {target, arg_array, new_target_value};
+
+  /* 9. */
+  ecma_value_t new_obj = ecma_op_function_call (func_obj_p, handler, function_call_args, 3);
+
+  ecma_free_value (arg_array);
+  ecma_deref_object (func_obj_p);
+
+  /* 10 .*/
+  if (ECMA_IS_VALUE_ERROR (new_obj))
+  {
+    return new_obj;
+  }
+
+  /* 11. */
+  if (!ecma_is_value_object (new_obj))
+  {
+    ecma_free_value (new_obj);
+
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned non-object"));
+  }
+
+  /* 12. */
+  return new_obj;
 } /* ecma_proxy_object_construct */
 
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */

@@ -2456,6 +2456,19 @@ ecma_object_check_class_name_is_object (ecma_object_t *obj_p) /**< object */
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_ARRAY_ITERATOR_PROTOTYPE)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_ITERATOR_PROTOTYPE)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_STRING_ITERATOR_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_EVAL_ERROR_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_RANGE_ERROR_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_REFERENCE_ERROR_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_SYNTAX_ERROR_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_TYPE_ERROR_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_ERROR_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_STRING_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_NUMBER_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_DATE_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_REGEXP_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_SYMBOL_PROTOTYPE)
 #endif /* ENABLED (JERRY_ES2015) */
 #if ENABLED (JERRY_ES2015_BUILTIN_MAP)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_MAP_PROTOTYPE)
@@ -2475,9 +2488,6 @@ ecma_object_check_class_name_is_object (ecma_object_t *obj_p) /**< object */
 #if ENABLED (JERRY_ES2015_BUILTIN_WEAKSET)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_WEAKSET_PROTOTYPE)
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_WEAKSET) */
-#if ENABLED (JERRY_ES2015)
-          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_SYMBOL_PROTOTYPE)
-#endif /* ENABLED (JERRY_ES2015) */
 #if ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_DATAVIEW_PROTOTYPE)
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW) */
@@ -2507,13 +2517,6 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
     case ECMA_OBJECT_TYPE_CLASS:
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
-
-#if ENABLED (JERRY_ES2015)
-      if (ext_object_p->u.class_prop.class_id == LIT_INTERNAL_MAGIC_STRING_REGEXP_PROTO)
-      {
-        return LIT_MAGIC_STRING_REGEXP_UL;
-      }
-#endif /* ENABLED (JERRY_ES2015) */
 
       return (lit_magic_string_id_t) ext_object_p->u.class_prop.class_id;
     }
@@ -2600,6 +2603,7 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
             return LIT_MAGIC_STRING_JSON_U;
           }
 #endif /* ENABLED (JERRY_BUILTIN_JSON) */
+#if !ENABLED (JERRY_ES2015)
 #if ENABLED (JERRY_BUILTIN_ERRORS)
           case ECMA_BUILTIN_ID_EVAL_ERROR_PROTOTYPE:
           case ECMA_BUILTIN_ID_RANGE_ERROR_PROTOTYPE:
@@ -2612,6 +2616,7 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
           {
             return LIT_MAGIC_STRING_ERROR_UL;
           }
+#endif /* !ENABLED (JERRY_ES2015) */
 #if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
           case ECMA_BUILTIN_ID_PROXY:
           {

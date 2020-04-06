@@ -290,8 +290,9 @@ ecma_op_regexp_alloc (ecma_object_t *ctr_obj_p) /**< constructor object pointer 
 #endif /* ENABLED (JERRY_ES2015) */
 
   ecma_extended_object_t *regexp_obj_p = (ecma_extended_object_t *) new_object_p;
-  regexp_obj_p->u.class_prop.u.value = JMEM_CP_NULL;
-  regexp_obj_p->u.class_prop.class_id = LIT_MAGIC_STRING_REGEXP_UL;
+
+  /* Class id will be initialized after the bytecode is compiled. */
+  regexp_obj_p->u.class_prop.class_id = LIT_MAGIC_STRING_UNDEFINED;
 
   ecma_value_t status = ecma_builtin_helper_def_prop (new_object_p,
                                                       ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
@@ -314,21 +315,15 @@ ecma_op_regexp_initialize (ecma_object_t *regexp_obj_p, /**< RegExp object */
 {
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) regexp_obj_p;
 
-  if (JERRY_UNLIKELY (ext_obj_p->u.class_prop.u.value != JMEM_CP_NULL))
+#if !ENABLED (JERRY_ES2015)
+  if (ext_obj_p->u.class_prop.class_id == LIT_MAGIC_STRING_UNDEFINED)
   {
-    re_compiled_code_t *old_bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t,
-                                                                    ext_obj_p->u.class_prop.u.value);
-
-    ecma_bytecode_deref ((ecma_compiled_code_t *) old_bc_p);
-
-#if !ENABLED (JERRY_ES2015)
-    ecma_regexp_update_props (regexp_obj_p, pattern_str_p, flags);
-#endif /* !ENABLED (JERRY_ES2015) */
+    /* This instance has not been initialized before. */
+    ecma_regexp_create_props (regexp_obj_p, pattern_str_p, flags);
   }
-#if !ENABLED (JERRY_ES2015)
   else
   {
-    ecma_regexp_create_props (regexp_obj_p, pattern_str_p, flags);
+    ecma_regexp_update_props (regexp_obj_p, pattern_str_p, flags);
   }
 #endif /* !ENABLED (JERRY_ES2015) */
 
@@ -337,6 +332,7 @@ ecma_op_regexp_initialize (ecma_object_t *regexp_obj_p, /**< RegExp object */
   JERRY_UNUSED (flags);
 #endif /* ENABLED (JERRY_ES2015) */
 
+  ext_obj_p->u.class_prop.class_id = LIT_MAGIC_STRING_REGEXP_UL;
   ECMA_SET_INTERNAL_VALUE_POINTER (ext_obj_p->u.class_prop.u.value, bc_p);
 } /* ecma_op_regexp_initialize */
 
@@ -1395,27 +1391,6 @@ ecma_regexp_exec_helper (ecma_object_t *regexp_object_p, /**< RegExp object */
                                                                   ext_object_p->u.class_prop.u.value);
 
   ecma_regexp_ctx_t re_ctx;
-
-  if (bc_p == NULL)
-  {
-#if ENABLED (JERRY_ES2015)
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible type"));
-#else /* !ENABLED (JERRY_ES2015) */
-    /* Missing bytecode means the RegExp object is the RegExp.prototype,
-     * which will always result in an empty string match. */
-    re_ctx.captures_count = 1;
-
-    re_ctx.captures_p = jmem_heap_alloc_block (sizeof (ecma_regexp_capture_t));
-    re_ctx.captures_p->begin_p = lit_get_magic_string_utf8 (LIT_MAGIC_STRING__EMPTY);
-    re_ctx.captures_p->end_p = lit_get_magic_string_utf8 (LIT_MAGIC_STRING__EMPTY);
-
-    ret_value = ecma_regexp_create_result_object (&re_ctx, input_string_p, 0);
-
-    jmem_heap_free_block (re_ctx.captures_p, sizeof (ecma_regexp_capture_t));
-    return ret_value;
-#endif /* ENABLED (JERRY_ES2015) */
-  }
-
   re_ctx.flags = bc_p->header.status_flags;
   lit_utf8_size_t input_size;
   lit_utf8_size_t input_length;
@@ -2100,35 +2075,6 @@ cleanup_string:
   const lit_utf8_byte_t *previous_str_p = string_buffer_p;
   const lit_utf8_byte_t *const string_end_p = string_buffer_p + string_size;
 
-  /* Handle RegExp.prototype separately. */
-  if (JERRY_UNLIKELY (bc_p == NULL))
-  {
-    while (current_str_p < string_end_p)
-    {
-      lit_utf8_incr (&current_str_p);
-      ecma_string_t *str_p = ecma_new_ecma_string_from_utf8 (previous_str_p,
-                                                             (lit_utf8_size_t) (current_str_p - previous_str_p));
-
-      result = ecma_builtin_helper_def_prop_by_index (array_p,
-                                                      array_length++,
-                                                      ecma_make_string_value (str_p),
-                                                      ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
-      JERRY_ASSERT (ecma_is_value_true (result));
-      ecma_deref_ecma_string (str_p);
-
-      if (array_length == limit)
-      {
-        result = array;
-        goto cleanup_buffer;
-      }
-
-      previous_str_p = current_str_p;
-    }
-
-    result = array;
-    goto cleanup_buffer;
-  }
-
   ecma_regexp_ctx_t re_ctx;
   re_ctx.flags = bc_p->header.status_flags;
   ecma_regexp_initialize_context (&re_ctx,
@@ -2241,7 +2187,6 @@ cleanup_array:
   ecma_deref_object (array_p);
 cleanup_context:
   ecma_regexp_cleanup_context (&re_ctx);
-cleanup_buffer:
   if (string_flags & ECMA_STRING_FLAG_MUST_BE_FREED)
   {
     jmem_heap_free_block ((void *) string_buffer_p, string_size);
@@ -2541,28 +2486,13 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
 
 #if !ENABLED (JERRY_ES2015)
   ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) this_obj_p;
-  const re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_ANY_POINTER (re_compiled_code_t,
-                                                                        re_obj_p->u.class_prop.u.value);
-  /* In ES5.1 the RegExp prototype object is a valid regexp, but we don't store bytecode for it to save memory.
-   * Handling this would be very awkward, so we temporarily compile bytecode for it. */
-  if (ecma_builtin_is (this_obj_p, ECMA_BUILTIN_ID_REGEXP_PROTOTYPE))
-  {
-    JERRY_ASSERT (bc_p == NULL);
-    ecma_value_t compile = re_compile_bytecode (&bc_p,
-                                                ecma_get_magic_string (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP),
-                                                RE_FLAG_EMPTY);
-    JERRY_ASSERT (ecma_is_value_empty (compile));
-  }
+  const re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t,
+                                                                    re_obj_p->u.class_prop.u.value);
 
   result = ecma_regexp_replace_helper_fast (&replace_ctx,
                                             bc_p,
                                             string_p,
                                             replace_arg);
-
-  if (ecma_builtin_is (this_obj_p, ECMA_BUILTIN_ID_REGEXP_PROTOTYPE))
-  {
-    ecma_bytecode_deref ((ecma_compiled_code_t *) bc_p);
-  }
 
   goto cleanup_replace;
 #else /* ENABLED (JERRY_ES2015) */

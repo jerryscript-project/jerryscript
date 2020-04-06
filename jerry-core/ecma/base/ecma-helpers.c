@@ -1494,28 +1494,6 @@ ecma_compiled_code_get_tagged_template_collection (const ecma_compiled_code_t *b
 } /* ecma_compiled_code_get_tagged_template_collection */
 #endif /* ENABLED (JERRY_ES2015) */
 
-/**
- * Helper function to check if the given value is a class
- *
- * @return pointer to the extended object - if 'this' is a class
- *         NULL- otherwise
- */
-ecma_extended_object_t *
-ecma_op_check_object_type_is_class (ecma_value_t this)  /**< this value */
-{
-  if (ecma_is_value_object (this))
-  {
-    ecma_object_t *obj_p = ecma_get_object_from_value (this);
-
-    if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_CLASS)
-    {
-      return (ecma_extended_object_t *) obj_p;
-    }
-  }
-
-  return NULL;
-} /* ecma_op_check_object_type_is_class */
-
 #if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) || ENABLED (JERRY_ES2015)
 /**
  * Get the number of formal parameters of the compiled code

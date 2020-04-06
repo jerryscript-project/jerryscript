@@ -941,13 +941,6 @@ typedef struct
 } ecma_compiled_code_t;
 
 /**
- * The proper memory size for the RegExp.prototype. We have to align the header's size manually, because
- * in the struct, it is aligned to 8 bytes during the compilation.
- */
-#define ECMA_REGEXP_PROTO_COMPILED_CODE_SIZE \
-  (JERRY_ALIGNUP (sizeof (ecma_compiled_code_t), JMEM_ALIGNMENT) + sizeof (ecma_value_t))
-
-/**
  * Description of bound function objects.
  */
 typedef struct

@@ -616,12 +616,10 @@ ecma_builtin_date_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< 
   if (!ecma_is_value_object (this_arg)
       || !ecma_object_class_is (ecma_get_object_from_value (this_arg), LIT_MAGIC_STRING_DATE_UL))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Date object expected"));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not a Date object"));
   }
 
-  ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
-
-  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) ecma_get_object_from_value (this_arg);
   ecma_number_t *prim_value_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
                                                                  ext_object_p->u.class_prop.u.value);
 

@@ -672,9 +672,164 @@ ecma_proxy_object_get_own_property_descriptor (ecma_object_t *obj_p, /**< proxy 
                                                ecma_property_descriptor_t *prop_desc_p) /**< [out] property
                                                                                          *   descriptor */
 {
-  JERRY_ASSERT (ECMA_OBJECT_IS_PROXY (obj_p));
-  JERRY_UNUSED_3 (obj_p, prop_name_p, prop_desc_p);
-  return ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Proxy.[[GetOwnProperty]]"));
+  ecma_proxy_object_t *proxy_obj_p = (ecma_proxy_object_t *) obj_p;
+
+  /* 2. */
+  ecma_value_t handler = proxy_obj_p->handler;
+
+  /* 3-6. */
+  ecma_value_t trap = ecma_validate_proxy_object (handler, LIT_MAGIC_STRING_GET_OWN_PROPERTY_DESCRIPTOR_UL);
+
+  ecma_value_t target = proxy_obj_p->target;
+
+  /* 7. */
+  if (ECMA_IS_VALUE_ERROR (trap))
+  {
+    return trap;
+  }
+
+  ecma_object_t *target_obj_p = ecma_get_object_from_value (target);
+
+  /* 8. */
+  if (ecma_is_value_undefined (trap))
+  {
+    return ecma_op_object_get_own_property_descriptor (target_obj_p, prop_name_p, prop_desc_p);
+  }
+
+  ecma_object_t *func_obj_p = ecma_get_object_from_value (trap);
+  ecma_value_t prop_value = ecma_make_prop_name_value (prop_name_p);
+  ecma_value_t args[] = { target, prop_value };
+
+  /* 9. */
+  ecma_value_t trap_result = ecma_op_function_call (func_obj_p, handler, args, 2);
+  ecma_deref_object (func_obj_p);
+
+  /* 10. */
+  if (ECMA_IS_VALUE_ERROR (trap_result))
+  {
+    return trap_result;
+  }
+
+  /* 11. */
+  if (!ecma_is_value_object (trap_result) && !ecma_is_value_undefined (trap_result))
+  {
+    ecma_free_value (trap_result);
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Trap is not object nor undefined."));
+  }
+
+  /* 12. */
+  ecma_property_descriptor_t target_desc;
+  ecma_value_t target_status = ecma_op_object_get_own_property_descriptor (target_obj_p, prop_name_p, &target_desc);
+
+  /* 13. */
+  if (ECMA_IS_VALUE_ERROR (target_status))
+  {
+    ecma_free_value (trap_result);
+    return target_status;
+  }
+
+  /* 14. */
+  if (ecma_is_value_undefined (trap_result))
+  {
+    /* .a */
+    if (ecma_is_value_false (target_status))
+    {
+      return ECMA_VALUE_UNDEFINED;
+    }
+    /* .b */
+    if (!(target_desc.flags & ECMA_PROP_IS_CONFIGURABLE))
+    {
+      ecma_free_property_descriptor (&target_desc);
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Given property is a non-configurable"
+                                                  " data property on the proxy target"));
+    }
+
+    /* .c */
+    ecma_free_property_descriptor (&target_desc);
+    ecma_value_t extensible_target = ecma_builtin_object_object_is_extensible (target_obj_p);
+
+    /* .d */
+    if (ECMA_IS_VALUE_ERROR (extensible_target))
+    {
+      return extensible_target;
+    }
+
+    /* .e */
+    JERRY_ASSERT (ecma_is_value_boolean (extensible_target));
+
+    /* .f */
+    if (ecma_is_value_false (extensible_target))
+    {
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Target not extensible."));
+    }
+
+    /* .g */
+    return ECMA_VALUE_FALSE;
+  }
+
+  /* 15. */
+  ecma_value_t extensible_target = ecma_builtin_object_object_is_extensible (target_obj_p);
+
+  /* 16. */
+  if (ECMA_IS_VALUE_ERROR (extensible_target))
+  {
+    if (ecma_is_value_true (target_status))
+    {
+      ecma_free_property_descriptor (&target_desc);
+    }
+    ecma_free_value (trap_result);
+    return extensible_target;
+  }
+
+  /* 17, 19 */
+  ecma_value_t result_val = ecma_op_to_property_descriptor (trap_result, prop_desc_p);
+
+  ecma_op_to_complete_property_descriptor (prop_desc_p);
+  ecma_free_value (trap_result);
+
+  /* 18. */
+  if (ECMA_IS_VALUE_ERROR (result_val))
+  {
+    if (ecma_is_value_true (target_status))
+    {
+      ecma_free_property_descriptor (&target_desc);
+    }
+    return result_val;
+  }
+
+  /* 20. */
+  bool is_extensible = ecma_is_value_true (extensible_target);
+
+  bool is_valid = ecma_op_is_compatible_property_descriptor (prop_desc_p,
+                                                             (ecma_is_value_true (target_status) ? &target_desc : NULL),
+                                                             is_extensible);
+
+  bool target_has_desc = ecma_is_value_true (target_status);
+  bool target_is_configurable = false;
+
+  if (target_has_desc)
+  {
+    target_is_configurable = ((target_desc.flags & ECMA_PROP_IS_CONFIGURABLE) != 0);
+    ecma_free_property_descriptor (&target_desc);
+  }
+
+  /* 21. */
+  if (!is_valid)
+  {
+    ecma_free_property_descriptor (prop_desc_p);
+    return ecma_raise_type_error (ECMA_ERR_MSG ("The two descriptors are not compatible."));
+  }
+
+  /* 22. */
+  else if (!(prop_desc_p->flags & ECMA_PROP_IS_CONFIGURABLE))
+  {
+    if (!target_has_desc || target_is_configurable)
+    {
+      ecma_free_property_descriptor (prop_desc_p);
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Not compatible."));
+    }
+  }
+  return ECMA_VALUE_TRUE;
 } /* ecma_proxy_object_get_own_property_descriptor */
 
 /**

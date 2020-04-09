@@ -63,12 +63,3 @@ Place the files/directories you want transpiled to the babel folder and run
 `$ npm run transpile [name of input file/directory] [(OPTIONAL)name of output file/directory]`
 
 If you want to use the same name, then only give the name once.
-
-#### Missing features/Polyfill [](#missing-features)
-Some features aren't implemented yet and found no babel plug-in for them.
-
-* [Array.from](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from)
-* [Array.prototype.fill](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/fill)
-* [String.prototype.codePointAt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/codePointAt)
-
-In the case you encounter those, use the polyfill found on the linked sites. Also, **be aware** there could be more.

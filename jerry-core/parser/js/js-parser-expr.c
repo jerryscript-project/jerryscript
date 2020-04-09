@@ -221,6 +221,15 @@ parser_emit_unary_lvalue_opcode (parser_context_t *context_p, /**< context */
     /* Invalid LeftHandSide expression. */
     if (opcode == CBC_DELETE_PUSH_RESULT)
     {
+#if ENABLED (JERRY_ES2015)
+      if (context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_SUPER_PROP_LITERAL)
+          || context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_SUPER_PROP))
+      {
+        parser_emit_cbc_ext (context_p, CBC_EXT_THROW_REFERENCE_ERROR);
+        parser_emit_cbc (context_p, CBC_POP);
+        return;
+      }
+#endif /* ENABLED (JERRY_ES2015) */
       parser_emit_cbc (context_p, CBC_POP);
       parser_emit_cbc (context_p, CBC_PUSH_TRUE);
       return;
@@ -1904,12 +1913,12 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
           }
           else if (context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_SUPER_PROP_LITERAL))
           {
-            context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_SUPER_PROP_LITERAL_CALL_REFERENCE);
+            context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_SUPER_PROP_LITERAL_REFERENCE);
             opcode = CBC_CALL_PROP;
           }
           else if (context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_SUPER_PROP))
           {
-            context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_SUPER_PROP_CALL_REFERENCE);
+            context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_SUPER_PROP_REFERENCE);
             opcode = CBC_CALL_PROP;
           }
 #endif /* ENABLED (JERRY_ES2015) */
@@ -2180,13 +2189,6 @@ parser_append_binary_single_assignment_token (parser_context_t *context_p, /**< 
    * assignment, since it has multiple forms depending on the
    * previous instruction. */
 
-#if ENABLED (JERRY_ES2015)
-  if (context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_SUPER_PROP_LITERAL))
-  {
-    context_p->last_cbc_opcode = CBC_PUSH_PROP_THIS_LITERAL;
-  }
-#endif /* ENABLED (JERRY_ES2015) */
-
   if (PARSER_IS_PUSH_LITERAL (context_p->last_cbc_opcode)
       && context_p->last_cbc.literal_type == LEXER_IDENT_LITERAL)
   {
@@ -2265,6 +2267,18 @@ parser_append_binary_single_assignment_token (parser_context_t *context_p, /**< 
       parser_stack_push_uint8 (context_p, CBC_ASSIGN);
     }
   }
+#if ENABLED (JERRY_ES2015)
+  else if (context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_SUPER_PROP_LITERAL))
+  {
+    context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_SUPER_PROP_LITERAL_ASSIGNMENT_REFERENCE);
+    parser_stack_push_uint8 (context_p, CBC_ASSIGN_SUPER);
+  }
+  else if (context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_SUPER_PROP))
+  {
+    context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_SUPER_PROP_ASSIGNMENT_REFERENCE);
+    parser_stack_push_uint8 (context_p, CBC_ASSIGN_SUPER);
+  }
+#endif /* ENABLED (JERRY_ES2015) */
   else
   {
     /* Invalid LeftHandSide expression. */

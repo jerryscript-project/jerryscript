@@ -1184,6 +1184,19 @@ opfunc_form_super_reference (ecma_value_t **vm_stack_top_p, /**< current vm stac
     return ECMA_VALUE_ERROR;
   }
 
+  ecma_value_t *stack_top_p = *vm_stack_top_p;
+
+  if (opcode >= CBC_EXT_SUPER_PROP_ASSIGNMENT_REFERENCE)
+  {
+    JERRY_ASSERT (opcode == CBC_EXT_SUPER_PROP_ASSIGNMENT_REFERENCE
+                  || opcode == CBC_EXT_SUPER_PROP_LITERAL_ASSIGNMENT_REFERENCE);
+    *stack_top_p++ = parent;
+    *stack_top_p++ = ecma_copy_value (prop_name);
+    *vm_stack_top_p = stack_top_p;
+
+    return ECMA_VALUE_EMPTY;
+  }
+
   ecma_object_t *parent_p = ecma_get_object_from_value (parent);
   ecma_string_t *prop_name_p = ecma_op_to_prop_name (prop_name);
 
@@ -1202,9 +1215,7 @@ opfunc_form_super_reference (ecma_value_t **vm_stack_top_p, /**< current vm stac
     return result;
   }
 
-  ecma_value_t *stack_top_p = *vm_stack_top_p;
-
-  if (opcode == CBC_EXT_SUPER_PROP_LITERAL_CALL_REFERENCE || opcode == CBC_EXT_SUPER_PROP_CALL_REFERENCE)
+  if (opcode == CBC_EXT_SUPER_PROP_LITERAL_REFERENCE || opcode == CBC_EXT_SUPER_PROP_REFERENCE)
   {
     *stack_top_p++ = ecma_copy_value (frame_ctx_p->this_binding);
     *stack_top_p++ = ECMA_VALUE_UNDEFINED;
@@ -1215,6 +1226,73 @@ opfunc_form_super_reference (ecma_value_t **vm_stack_top_p, /**< current vm stac
 
   return ECMA_VALUE_EMPTY;
 } /* opfunc_form_super_reference */
+
+/**
+ * Assignment operation for SuperRefence base
+ *
+ * @return ECMA_VALUE_ERROR - if the operation fails
+ *         ECMA_VALUE_EMPTY - otherwise
+ */
+ecma_value_t
+opfunc_assign_super_reference (ecma_value_t **vm_stack_top_p, /**< vm stack top */
+                               vm_frame_ctx_t *frame_ctx_p, /**< frame context */
+                               uint32_t opcode_data) /**< opcode data to store the result */
+{
+  ecma_value_t *stack_top_p = *vm_stack_top_p;
+
+  ecma_value_t base_obj = ecma_op_to_object (stack_top_p[-3]);
+
+  if (ECMA_IS_VALUE_ERROR (base_obj))
+  {
+    return base_obj;
+  }
+
+  ecma_object_t *base_obj_p = ecma_get_object_from_value (base_obj);
+  ecma_string_t *prop_name_p = ecma_op_to_prop_name (stack_top_p[-2]);
+
+  if (prop_name_p == NULL)
+  {
+    ecma_deref_object (base_obj_p);
+    return ECMA_VALUE_ERROR;
+  }
+
+  bool is_strict = (frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0;
+
+  ecma_value_t result = ecma_op_object_put_with_receiver (base_obj_p,
+                                                          prop_name_p,
+                                                          stack_top_p[-1],
+                                                          frame_ctx_p->this_binding,
+                                                          is_strict);
+
+  ecma_deref_ecma_string (prop_name_p);
+  ecma_deref_object (base_obj_p);
+
+  if (ECMA_IS_VALUE_ERROR (result))
+  {
+    return result;
+  }
+
+  for (int32_t i = 1; i <= 3; i++)
+  {
+    ecma_free_value (stack_top_p[-i]);
+  }
+
+  stack_top_p -= 3;
+
+  if (opcode_data & VM_OC_PUT_STACK)
+  {
+    *stack_top_p++ = result;
+  }
+  else if (opcode_data & VM_OC_PUT_BLOCK)
+  {
+    ecma_fast_free_value (frame_ctx_p->block_result);
+    frame_ctx_p->block_result = result;
+  }
+
+  *vm_stack_top_p = stack_top_p;
+
+  return result;
+} /* opfunc_assign_super_reference */
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**

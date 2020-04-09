@@ -1132,12 +1132,87 @@ ecma_op_object_put (ecma_object_t *object_p, /**< the object */
                                            is_throw);
 } /* ecma_op_object_put */
 
+#if ENABLED (JERRY_ES2015)
+/**
+ * [[Set]] ( P, V, Receiver) operation part for ordinary objects
+ *
+ * See also: ECMAScript v6, 9.19.9
+ *
+ * @return ecma value
+ *         The returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_op_object_put_apply_receiver (ecma_value_t receiver, /**< receiver */
+                                   ecma_string_t *property_name_p, /**< property name */
+                                   ecma_value_t value, /**< value to set */
+                                   bool is_throw) /**< flag that controls failure handling */
+{
+  /* 5.b */
+  if (!ecma_is_value_object (receiver))
+  {
+    return ecma_reject (is_throw);
+  }
+
+  ecma_object_t *receiver_obj_p = ecma_get_object_from_value (receiver);
+
+  ecma_property_descriptor_t prop_desc;
+  /* 5.c */
+  ecma_value_t status = ecma_op_object_get_own_property_descriptor (receiver_obj_p,
+                                                                    property_name_p,
+                                                                    &prop_desc);
+
+  /* 5.d */
+  if (ECMA_IS_VALUE_ERROR (status))
+  {
+    return status;
+  }
+
+  /* 5.e */
+  if (ecma_is_value_true (status))
+  {
+    ecma_value_t result;
+
+    /* 5.e.i - 5.e.ii */
+    if (prop_desc.flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED)
+        || !(prop_desc.flags & ECMA_PROP_IS_WRITABLE))
+    {
+      result = ecma_reject (is_throw);
+    }
+    else
+    {
+      /* 5.e.iii */
+      JERRY_ASSERT (prop_desc.flags & ECMA_PROP_IS_VALUE_DEFINED);
+      ecma_free_value (prop_desc.value);
+      prop_desc.value = ecma_copy_value (value);
+
+      /* 5.e.iv */
+      result = ecma_op_object_define_own_property (receiver_obj_p, property_name_p, &prop_desc);
+    }
+
+    ecma_free_property_descriptor (&prop_desc);
+
+    return result;
+  }
+  /* 5.f.i */
+  ecma_property_value_t *new_prop_value_p;
+  new_prop_value_p = ecma_create_named_data_property (receiver_obj_p,
+                                                      property_name_p,
+                                                      ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                      NULL);
+  JERRY_ASSERT (ecma_is_value_undefined (new_prop_value_p->value));
+  new_prop_value_p->value = ecma_copy_value_if_not_object (value);
+
+  return ECMA_VALUE_TRUE;
+} /* ecma_op_object_put_apply_receiver */
+#endif /* ENABLED (JERRY_ES2015) */
+
 /**
  * [[Put]] ecma general object's operation with given receiver
  *
  * See also:
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
  *          ECMA-262 v5, 8.12.5
+ *          ECMA-262 v6, 9.1.9
  *          Also incorporates [[CanPut]] ECMA-262 v5, 8.12.4
  *
  * @return ecma value
@@ -1361,6 +1436,13 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
     {
       if (ecma_is_property_writable (*property_p))
       {
+#if ENABLED (JERRY_ES2015)
+        if (ecma_make_object_value (object_p) != receiver)
+        {
+          return ecma_op_object_put_apply_receiver (receiver, property_name_p, value, is_throw);
+        }
+#endif /* ENABLED (JERRY_ES2015) */
+
         /* There is no need for special casing arrays here because changing the
          * value of an existing property never changes the length of an array. */
         ecma_named_data_property_assign_value (object_p,
@@ -1388,6 +1470,17 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
     {
       ecma_property_ref_t property_ref = { NULL };
       ecma_object_t *proto_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, proto_cp);
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+      if (ECMA_OBJECT_IS_PROXY (proto_p))
+      {
+        return ecma_op_object_put_with_receiver (proto_p,
+                                                 property_name_p,
+                                                 value,
+                                                 receiver,
+                                                 is_throw);
+      }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
 
       ecma_property_t inherited_property = ecma_op_object_get_property (proto_p,
                                                                         property_name_p,
@@ -1444,6 +1537,10 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
           ext_object_p->u.array.length = index + 1;
         }
       }
+
+#if ENABLED (JERRY_ES2015)
+      return ecma_op_object_put_apply_receiver (receiver, property_name_p, value, is_throw);
+#endif /* ENABLED (JERRY_ES2015) */
 
       ecma_property_value_t *new_prop_value_p;
       new_prop_value_p = ecma_create_named_data_property (object_p,

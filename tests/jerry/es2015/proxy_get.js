@@ -73,6 +73,12 @@ assert(proxy2.prop === "value 3");
 assert(proxy2.nothing === "value 3");
 assert(proxy2.handler === "value 3");
 
+var get = [];
+var p = new Proxy([0,,2,,4,,], { get: function(o, k) { get.push(k); return o[k]; }});
+Array.prototype.reverse.call(p);
+
+assert(get + '' === "length,0,4,2");
+
 // test when get throws an error
 var handler = new Proxy({}, {get: function() {throw 42;}});
 var proxy = new Proxy ({}, handler);

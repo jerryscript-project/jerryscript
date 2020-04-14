@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// TODO: Update these tests when the internal routine has been implemented
+// Copyright 2015 the V8 project authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 var target = {};
 var handler = { ownKeys (target) {
@@ -26,7 +28,7 @@ try {
   Array.prototype.sort.call(proxy);
   assert(false);
 } catch (e) {
-  assert(e instanceof TypeError);
+  assert(e === 42);
 }
 
 try {
@@ -34,7 +36,7 @@ try {
   Object.keys(proxy);
   assert(false);
 } catch (e) {
-  assert(e instanceof TypeError);
+  assert(e === 42);
 }
 
 try {
@@ -42,12 +44,155 @@ try {
   Object.getOwnPropertyNames(proxy);
   assert(false);
 } catch (e) {
-  assert(e instanceof TypeError);
+  assert(e === 42);
 }
 
 try {
   // 19.1.2.8.1
   Object.getOwnPropertySymbols(proxy);
+  assert(false);
+} catch (e) {
+  assert(e === 42);
+}
+
+// test basic functionality
+var target = { prop1: "prop1", prop2: "prop2"};
+var handler = {
+  ownKeys: function(target) {
+    return ["foo", "bar"];
+  }
+}
+
+var proxy = new Proxy(target, handler);
+
+assert(JSON.stringify(Reflect.ownKeys(proxy)) === '["foo","bar"]');
+assert(JSON.stringify(Object.getOwnPropertyNames(proxy)) === '["foo","bar"]');
+assert(JSON.stringify(Object.keys(proxy)) === '["foo","bar"]');
+assert(JSON.stringify(Object.getOwnPropertySymbols(proxy)) === '["foo","bar"]');
+
+handler.ownKeys = function(target) {return Object.getOwnPropertyNames(target);};
+
+assert(JSON.stringify(Reflect.ownKeys(proxy)) === '["prop1","prop2"]');
+assert(JSON.stringify(Object.getOwnPropertyNames(proxy)) === '["prop1","prop2"]');
+assert(JSON.stringify(Object.keys(proxy)) === '["prop1","prop2"]');
+assert(JSON.stringify(Object.getOwnPropertySymbols(proxy)) === '["prop1","prop2"]');
+
+// test with no trap
+var target = { prop1: "prop1", prop2: "prop2"};
+var handler = {};
+var proxy = new Proxy(target, handler);
+
+assert(JSON.stringify(Object.getOwnPropertyNames(proxy)) === '["prop1","prop2"]');
+
+// test wtih "undefined" trap
+var target = { prop1: "prop1", prop2: "prop2"};
+var handler = {ownKeys: null};
+var proxy = new Proxy(target, handler);
+
+assert(JSON.stringify(Object.getOwnPropertyNames(proxy)) === '["prop1","prop2"]');
+
+// test with invalid trap
+var target = { prop1: "prop1", prop2: "prop2"};
+var handler = {ownKeys: 42};
+var proxy = new Proxy(target, handler);
+
+try {
+  Object.getOwnPropertyNames(proxy);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+// test when CreateListFromArrayLike called on non-object
+var target = { prop1: "prop1", prop2: "prop2"};
+var handler = {
+	ownKeys: function(target) {
+      return "foo";
+    }
+};
+
+var proxy = new Proxy(target, handler);
+
+try {
+  Object.getOwnPropertyNames(proxy);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+// test with invalid property key
+var target = {};
+var handler = {
+	ownKeys: function(target) {
+      return [5];
+    }
+};
+
+var proxy = new Proxy(target, handler);
+
+try {
+  Object.getOwnPropertyNames(proxy);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+// test with duplicated keys
+var target = { prop1: "prop1", prop2: "prop2"};
+var handler = {
+	ownKeys: function(target) {
+      return ["a", "a", "a"];
+    }
+};
+
+var proxy = new Proxy(target, handler);
+
+assert(JSON.stringify(Object.getOwnPropertyNames(proxy)) === '["a","a","a"]');
+
+// test when invariants gets violated
+var target = {
+  "target_one": 1
+};
+Object.defineProperty(target, "nonconf", {value: 1, configurable: false});
+
+var keys = ["foo"];
+
+var handler = {
+	ownKeys: function(target) {
+      return keys;
+    }
+};
+
+var proxy = new Proxy(target, handler);
+
+try {
+  Object.getOwnPropertyNames(proxy);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+keys = ["nonconf"];
+assert(JSON.stringify(Object.getOwnPropertyNames(proxy)) === '["nonconf"]');
+
+Object.preventExtensions(target);
+keys = ["foo", "nonconf"];
+
+try {
+  Object.getOwnPropertyNames(proxy);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+keys = ["target_one", "nonconf"];
+
+assert(JSON.stringify(Object.getOwnPropertyNames(proxy)) === '["target_one","nonconf"]');
+
+keys = ["target_one", "nonconf", "foo"];
+
+try {
+  Object.getOwnPropertyNames(proxy);
   assert(false);
 } catch (e) {
   assert(e instanceof TypeError);

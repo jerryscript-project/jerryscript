@@ -1132,6 +1132,119 @@ ecma_proxy_object_enumerate (ecma_object_t *obj_p) /**< proxy object */
 } /* ecma_proxy_object_enumerate */
 
 /**
+ * Helper method for the Proxy object [[OwnPropertyKeys]] operation
+ *
+ * See also:
+ *          ECMAScript v6, 9.5.12 steps 21. 23.
+ *
+ * @return ECMA_VALUE_ERROR - if a target key is not in the unchecked_result_keys collection
+ *         ECMA_VALUE_EMPTY - otherwise
+ */
+static ecma_value_t
+ecma_proxy_object_own_property_keys_helper (ecma_collection_t *target_collection, /**< target keys */
+                                            ecma_collection_t *unchecked_result_keys, /**< unchecked keys */
+                                            uint32_t *counter) /**< unchecked property counter */
+{
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+
+  for (uint32_t i = 0; i < target_collection->item_count; i++)
+  {
+    ecma_string_t *current_prop_name = ecma_get_prop_name_from_value (target_collection->buffer_p[i]);
+
+    ret_value = ECMA_VALUE_ERROR;
+
+    for (uint32_t j = 0; j < unchecked_result_keys->item_count; j++)
+    {
+      if (ecma_is_value_empty (unchecked_result_keys->buffer_p[j]))
+      {
+        continue;
+      }
+
+      ecma_string_t *unchecked_prop_name = ecma_get_prop_name_from_value (unchecked_result_keys->buffer_p[j]);
+
+      if (ecma_compare_ecma_strings (current_prop_name, unchecked_prop_name))
+      {
+        ecma_deref_ecma_string (unchecked_prop_name);
+        ret_value = ECMA_VALUE_EMPTY;
+        unchecked_result_keys->buffer_p[j] = ECMA_VALUE_EMPTY;
+        (*counter)++;
+      }
+    }
+
+    if (ECMA_IS_VALUE_ERROR (ret_value))
+    {
+      break;
+    }
+  }
+
+  return ret_value;
+} /* ecma_proxy_object_own_property_keys_helper */
+
+/**
+ * Helper method for checking the invariants in the Proxy object [[OwnPropertyKeys]] operation
+ *
+ * See also:
+ *          ECMAScript v6, 9.5.12 steps 20-25.
+ *
+ * @return true - if none of the invariants got violated
+ *         false - otherwise
+ */
+static bool
+ecma_proxy_check_invariants_for_own_prop_keys (ecma_collection_t *trap_result,
+                                               ecma_collection_t *target_non_configurable_keys,
+                                               ecma_collection_t *target_configurable_keys,
+                                               ecma_value_t extensible_target)
+{
+  /* 20. */
+  ecma_collection_t *unchecked_result_keys = ecma_new_collection ();
+
+  ecma_collection_append (unchecked_result_keys, trap_result->buffer_p, trap_result->item_count);
+
+  for (uint32_t i = 0; i < unchecked_result_keys->item_count; i++)
+  {
+    ecma_string_t *unchecked_prop_name = ecma_get_prop_name_from_value (unchecked_result_keys->buffer_p[i]);
+    ecma_ref_ecma_string (unchecked_prop_name);
+  }
+
+  bool check_ok = false;
+  uint32_t unchecked_prop_name_counter = 0;
+
+  /* 21. */
+  if (ECMA_IS_VALUE_ERROR (ecma_proxy_object_own_property_keys_helper (target_non_configurable_keys,
+                                                                       unchecked_result_keys,
+                                                                       &unchecked_prop_name_counter)))
+  {
+    ecma_raise_type_error (ECMA_ERR_MSG ("Trap result did not include all non-configurable keys."));
+  }
+  /* 22. */
+  else if (ecma_is_value_true (extensible_target))
+  {
+    check_ok = true;
+  }
+  /* 23. */
+  else if (ECMA_IS_VALUE_ERROR (ecma_proxy_object_own_property_keys_helper (target_configurable_keys,
+                                                                            unchecked_result_keys,
+                                                                            &unchecked_prop_name_counter)))
+  {
+    ecma_raise_type_error (ECMA_ERR_MSG ("Trap result did not include all configurable keys."));
+  }
+  /* 24. */
+  else if (unchecked_result_keys->item_count != unchecked_prop_name_counter)
+  {
+    ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned extra keys but proxy target is non-extensible"));
+  }
+  /* 25. */
+  else
+  {
+    check_ok = true;
+  }
+
+  ecma_collection_free (unchecked_result_keys);
+
+  return check_ok;
+} /* ecma_proxy_check_invariants_for_own_prop_keys */
+
+/**
  * The Proxy object [[OwnPropertyKeys]] internal routine
  *
  * See also:
@@ -1147,9 +1260,141 @@ ecma_collection_t *
 ecma_proxy_object_own_property_keys (ecma_object_t *obj_p) /**< proxy object */
 {
   JERRY_ASSERT (ECMA_OBJECT_IS_PROXY (obj_p));
-  JERRY_UNUSED (obj_p);
-  ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Proxy.[[OwnPropertyKeys]]"));
-  return NULL;
+
+  ecma_proxy_object_t *proxy_obj_p = (ecma_proxy_object_t *) obj_p;
+
+  /* 1. */
+  ecma_value_t handler = proxy_obj_p->handler;
+
+  /* 2-5. */
+  ecma_value_t trap = ecma_validate_proxy_object (handler, LIT_MAGIC_STRING_OWN_KEYS_UL);
+
+  /* 6. */
+  if (ECMA_IS_VALUE_ERROR (trap))
+  {
+    return NULL;
+  }
+
+  ecma_value_t target = proxy_obj_p->target;
+  ecma_object_t *target_obj_p = ecma_get_object_from_value (target);
+
+  /* 7. */
+  if (ecma_is_value_undefined (trap))
+  {
+    return ecma_op_object_get_property_names (target_obj_p, ECMA_LIST_SYMBOLS);
+  }
+
+  ecma_object_t *func_obj_p = ecma_get_object_from_value (trap);
+
+  /* 8. */
+  ecma_value_t trap_result_array = ecma_op_function_call (func_obj_p, handler, &target, 1);
+
+  ecma_deref_object (func_obj_p);
+
+  if (ECMA_IS_VALUE_ERROR (trap_result_array))
+  {
+    return NULL;
+  }
+
+  /* 9. */
+  ecma_collection_t *trap_result = ecma_op_create_list_from_array_like (trap_result_array, true);
+
+  ecma_free_value (trap_result_array);
+
+  /* 10. */
+  if (trap_result == NULL)
+  {
+    return trap_result;
+  }
+
+  /* 11. */
+  ecma_value_t extensible_target = ecma_builtin_object_object_is_extensible (target_obj_p);
+
+  /* 12. */
+  if (ECMA_IS_VALUE_ERROR (extensible_target))
+  {
+    ecma_collection_free (trap_result);
+    return NULL;
+  }
+
+  /* 13. */
+  ecma_collection_t *target_keys = ecma_op_object_get_property_names (target_obj_p, ECMA_LIST_SYMBOLS);
+
+  /* 14. */
+  if (target_keys == NULL)
+  {
+    ecma_collection_free (trap_result);
+    return target_keys;
+  }
+
+  /* 16. */
+  ecma_collection_t *target_configurable_keys = ecma_new_collection ();
+
+  /* 17. */
+  ecma_collection_t *target_non_configurable_keys = ecma_new_collection ();
+
+  ecma_collection_t *ret_value = NULL;
+
+  /* 18. */
+  for (uint32_t i = 0; i < target_keys->item_count; i++)
+  {
+    ecma_property_descriptor_t target_desc;
+
+    ecma_string_t *prop_name_p = ecma_get_prop_name_from_value (target_keys->buffer_p[i]);
+
+    ecma_value_t status = ecma_op_object_get_own_property_descriptor (target_obj_p,
+                                                                      prop_name_p,
+                                                                      &target_desc);
+
+    if (ECMA_IS_VALUE_ERROR (status))
+    {
+      ecma_collection_free (trap_result);
+      goto free_target_collections;
+    }
+
+    ecma_value_t prop_value = ecma_make_prop_name_value (prop_name_p);
+
+    if (ecma_is_value_true (status)
+        && !(target_desc.flags & ECMA_PROP_IS_CONFIGURABLE))
+    {
+      ecma_collection_push_back (target_non_configurable_keys, prop_value);
+    }
+    else
+    {
+      ecma_collection_push_back (target_configurable_keys, prop_value);
+    }
+
+    if (ecma_is_value_true (status))
+    {
+      ecma_free_property_descriptor (&target_desc);
+    }
+  }
+
+  /* 19. */
+  if (ecma_is_value_true (extensible_target) && target_non_configurable_keys->item_count == 0)
+  {
+    ret_value = trap_result;
+  }
+  /* 20-25. */
+  else if (ecma_proxy_check_invariants_for_own_prop_keys (trap_result,
+                                                          target_non_configurable_keys,
+                                                          target_configurable_keys,
+                                                          extensible_target))
+  {
+    ret_value = trap_result;
+  }
+  else
+  {
+    JERRY_ASSERT (ret_value == NULL);
+    ecma_collection_free (trap_result);
+  }
+
+free_target_collections:
+  ecma_collection_destroy (target_keys);
+  ecma_collection_free (target_configurable_keys);
+  ecma_collection_free (target_non_configurable_keys);
+
+  return ret_value;
 } /* ecma_proxy_object_own_property_keys */
 
 /**

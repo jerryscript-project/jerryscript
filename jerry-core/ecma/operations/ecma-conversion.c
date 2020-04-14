@@ -977,7 +977,9 @@ ecma_op_to_length (ecma_value_t value, /**< ecma value */
  *         NULL otherwise
  */
 ecma_collection_t *
-ecma_op_create_list_from_array_like (ecma_value_t arr) /**< array value */
+ecma_op_create_list_from_array_like (ecma_value_t arr,  /**< array value */
+                                     bool prop_names_only) /**< true - accept only property names
+                                                                false - otherwise */
 {
   /* 1. */
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (arr));
@@ -1007,6 +1009,15 @@ ecma_op_create_list_from_array_like (ecma_value_t arr) /**< array value */
     if (ECMA_IS_VALUE_ERROR (next))
     {
       ecma_collection_free (list_ptr);
+      return NULL;
+    }
+
+    if (prop_names_only
+        && !ecma_is_value_prop_name (next))
+    {
+      ecma_free_value (next);
+      ecma_collection_free (list_ptr);
+      ecma_raise_type_error (ECMA_ERR_MSG ("Property name is neither Symbol nor String."));
       return NULL;
     }
 

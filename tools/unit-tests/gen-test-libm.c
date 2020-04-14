@@ -210,6 +210,93 @@ main (int argc, char **args)
   GEN_DBL_TEST (atan2 (0.4, 0.0003));
   GEN_DBL_TEST (atan2 (1.4, -0.93));
 
+  /* acosh tests */
+  GEN_DBL_TEST (acosh (0.0));
+  GEN_DBL_TEST (acosh (-0.0));
+  GEN_DBL_TEST (acosh (1.0));
+  GEN_DBL_TEST (acosh (-1.0));
+  GEN_DBL_TEST (acosh (INFINITY));
+  GEN_DBL_TEST (acosh (-INFINITY));
+  GEN_DBL_TEST (acosh (NAN));
+  GEN_DBL_TEST (acosh (7.08e+02));
+  GEN_DBL_TEST (acosh (7.10e+02));
+  GEN_DBL_TEST (acosh (-7.40e+02));
+  GEN_DBL_TEST (acosh (-7.50e+02));
+  GEN_DBL_TEST (acosh (0.34));
+  GEN_DBL_TEST (acosh (-0.34));
+  GEN_DBL_TEST (acosh (0.35));
+  GEN_DBL_TEST (acosh (-0.35));
+  GEN_DBL_TEST (acosh (1.03));
+  GEN_DBL_TEST (acosh (-1.03));
+  GEN_DBL_TEST (acosh (1.04));
+  GEN_DBL_TEST (acosh (-1.04));
+  GEN_DBL_TEST (acosh (3.72e-09));
+  GEN_DBL_TEST (acosh (-3.72e-09));
+  GEN_DBL_TEST (acosh (3.73e-09));
+  GEN_DBL_TEST (acosh (-3.73e-09));
+  GEN_DBL_TEST (acosh (2.0));
+  GEN_DBL_TEST (acosh (3.0));
+  GEN_DBL_TEST (acosh (0.7));
+  GEN_DBL_TEST (acosh (38.0));
+
+  /* asinh tests */
+  GEN_DBL_TEST (asinh (0.0));
+  GEN_DBL_TEST (asinh (-0.0));
+  GEN_DBL_TEST (asinh (1.0));
+  GEN_DBL_TEST (asinh (-1.0));
+  GEN_DBL_TEST (asinh (INFINITY));
+  GEN_DBL_TEST (asinh (-INFINITY));
+  GEN_DBL_TEST (asinh (NAN));
+  GEN_DBL_TEST (asinh (7.08e+02));
+  GEN_DBL_TEST (asinh (7.10e+02));
+  GEN_DBL_TEST (asinh (-7.40e+02));
+  GEN_DBL_TEST (asinh (-7.50e+02));
+  GEN_DBL_TEST (asinh (0.34));
+  GEN_DBL_TEST (asinh (-0.34));
+  GEN_DBL_TEST (asinh (0.35));
+  GEN_DBL_TEST (asinh (-0.35));
+  GEN_DBL_TEST (asinh (1.03));
+  GEN_DBL_TEST (asinh (-1.03));
+  GEN_DBL_TEST (asinh (1.04));
+  GEN_DBL_TEST (asinh (-1.04));
+  GEN_DBL_TEST (asinh (3.72e-09));
+  GEN_DBL_TEST (asinh (-3.72e-09));
+  GEN_DBL_TEST (asinh (3.73e-09));
+  GEN_DBL_TEST (asinh (-3.73e-09));
+  GEN_DBL_TEST (asinh (2.0));
+  GEN_DBL_TEST (asinh (3.0));
+  GEN_DBL_TEST (asinh (0.7));
+  GEN_DBL_TEST (asinh (38.0));
+
+  /* atanh tests */
+  GEN_DBL_TEST (atanh (0.0));
+  GEN_DBL_TEST (atanh (-0.0));
+  GEN_DBL_TEST (atanh (1.0));
+  GEN_DBL_TEST (atanh (-1.0));
+  GEN_DBL_TEST (atanh (INFINITY));
+  GEN_DBL_TEST (atanh (-INFINITY));
+  GEN_DBL_TEST (atanh (NAN));
+  GEN_DBL_TEST (atanh (7.08e+02));
+  GEN_DBL_TEST (atanh (7.10e+02));
+  GEN_DBL_TEST (atanh (-7.40e+02));
+  GEN_DBL_TEST (atanh (-7.50e+02));
+  GEN_DBL_TEST (atanh (0.34));
+  GEN_DBL_TEST (atanh (-0.34));
+  GEN_DBL_TEST (atanh (0.35));
+  GEN_DBL_TEST (atanh (-0.35));
+  GEN_DBL_TEST (atanh (1.03));
+  GEN_DBL_TEST (atanh (-1.03));
+  GEN_DBL_TEST (atanh (1.04));
+  GEN_DBL_TEST (atanh (-1.04));
+  GEN_DBL_TEST (atanh (3.72e-09));
+  GEN_DBL_TEST (atanh (-3.72e-09));
+  GEN_DBL_TEST (atanh (3.73e-09));
+  GEN_DBL_TEST (atanh (-3.73e-09));
+  GEN_DBL_TEST (atanh (2.0));
+  GEN_DBL_TEST (atanh (3.0));
+  GEN_DBL_TEST (atanh (0.7));
+  GEN_DBL_TEST (atanh (38.0));
+
   /* ceil tests */
   GEN_DBL_TEST (ceil (0.0));
   GEN_DBL_TEST (ceil (-0.0));

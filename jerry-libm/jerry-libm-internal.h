@@ -97,6 +97,7 @@ double log10 (double);
 
 double pow (double x, double y);
 double sqrt (double x);
+double cbrt (double);
 
 double ceil (double x);
 double fabs (double x);

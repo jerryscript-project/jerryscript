@@ -552,11 +552,7 @@ ecma_builtin_math_dispatch_routine (uint16_t builtin_routine_id, /**< built-in w
       }
       case ECMA_MATH_OBJECT_CBRT:
       {
-#ifdef JERRY_LIBM_MATH_H
-        return ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Math.cbrt"));
-#else /* !JERRY_LIBM_MATH_H */
         x = DOUBLE_TO_ECMA_NUMBER_T (cbrt (x));
-#endif /* JERRY_LIBM_MATH_H */
         break;
       }
       case ECMA_MATH_OBJECT_COSH:

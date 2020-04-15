@@ -67,6 +67,7 @@ double log10 (double);
 /* Power functions. */
 double pow (double, double);
 double sqrt (double);
+double cbrt (double);
 
 /* Rounding and remainder functions. */
 double ceil (double);

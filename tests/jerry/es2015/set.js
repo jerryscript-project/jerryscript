@@ -126,3 +126,13 @@ s.forEach(function(value, key, thisArg) {
   assert (typeof thisArg === "object");
   assert(thisArg === s);
 });
+
+var set = new Set();
+set.add(-0);
+var k;
+set.forEach(function (value) {
+  k = 1 / value;
+});
+
+assert(k === Infinity);
+assert(set.has(+0) === true);

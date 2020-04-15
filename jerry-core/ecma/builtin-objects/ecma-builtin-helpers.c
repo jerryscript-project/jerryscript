@@ -378,7 +378,7 @@ ecma_builtin_helper_array_concat_value (ecma_object_t *array_obj_p, /**< array *
 
   bool spread_object = is_spreadable == ECMA_VALUE_TRUE;
 #else /* !ENABLED (JERRY_ES2015) */
-  bool spread_object = ecma_is_value_array (value);
+  bool spread_object = ecma_is_value_true (ecma_is_value_array (value));
 #endif /* ENABLED (JERRY_ES2015) */
 
   if (spread_object)

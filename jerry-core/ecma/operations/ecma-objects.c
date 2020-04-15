@@ -2807,7 +2807,7 @@ ecma_op_is_concat_spreadable (ecma_value_t arg) /**< argument */
     return ecma_make_boolean_value (to_bool);
   }
 
-  return (ecma_make_boolean_value (ecma_is_value_array (arg)));
+  return ecma_is_value_array (arg);
 } /* ecma_op_is_concat_spreadable */
 
 /**

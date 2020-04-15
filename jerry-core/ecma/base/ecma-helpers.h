@@ -236,7 +236,7 @@ bool JERRY_ATTR_CONST ecma_is_value_direct_string (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_non_direct_string (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_object (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_error_reference (ecma_value_t value);
-bool JERRY_ATTR_CONST ecma_is_value_array (ecma_value_t arg);
+ecma_value_t ecma_is_value_array (ecma_value_t arg);
 
 void ecma_check_value_type_is_spec_defined (ecma_value_t value);
 

@@ -61,7 +61,7 @@ ecma_builtin_array_object_is_array (ecma_value_t this_arg, /**< 'this' argument 
 {
   JERRY_UNUSED (this_arg);
 
-  return ecma_make_boolean_value (ecma_is_value_array (arg));
+  return ecma_is_value_array (arg);
 } /* ecma_builtin_array_object_is_array */
 
 #if ENABLED (JERRY_ES2015)

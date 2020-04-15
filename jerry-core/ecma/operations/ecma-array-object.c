@@ -683,7 +683,14 @@ ecma_op_array_species_create (ecma_object_t *original_array_p, /**< The object f
   ecma_value_t constructor = ECMA_VALUE_UNDEFINED;
   ecma_value_t original_array = ecma_make_object_value (original_array_p);
 
-  if (ecma_is_value_array (original_array))
+  ecma_value_t is_array = ecma_is_value_array (original_array);
+
+  if (ECMA_IS_VALUE_ERROR (is_array))
+  {
+    return is_array;
+  }
+
+  if (ecma_is_value_true (is_array))
   {
     constructor = ecma_op_object_get_by_magic_id (original_array_p, LIT_MAGIC_STRING_CONSTRUCTOR);
     if (ECMA_IS_VALUE_ERROR (constructor))

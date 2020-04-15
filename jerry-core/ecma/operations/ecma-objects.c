@@ -2079,25 +2079,34 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
           }
           case ECMA_OBJECT_TYPE_FUNCTION:
           {
-            ecma_op_function_list_lazy_property_names (obj_p,
-                                                       opts,
-                                                       prop_names_p,
-                                                       skipped_non_enumerable_p);
+            if (!is_array_indices_only)
+            {
+              ecma_op_function_list_lazy_property_names (obj_p,
+                                                         opts,
+                                                         prop_names_p,
+                                                         skipped_non_enumerable_p);
+            }
             break;
           }
           case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
           {
-            ecma_op_external_function_list_lazy_property_names (opts,
-                                                                prop_names_p,
-                                                                skipped_non_enumerable_p);
+            if (!is_array_indices_only)
+            {
+              ecma_op_external_function_list_lazy_property_names (opts,
+                                                                  prop_names_p,
+                                                                  skipped_non_enumerable_p);
+            }
             break;
           }
           case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
           {
-            ecma_op_bound_function_list_lazy_property_names (obj_p,
-                                                             opts,
-                                                             prop_names_p,
-                                                             skipped_non_enumerable_p);
+            if (!is_array_indices_only)
+            {
+              ecma_op_bound_function_list_lazy_property_names (obj_p,
+                                                               opts,
+                                                               prop_names_p,
+                                                               skipped_non_enumerable_p);
+            }
             break;
           }
           case ECMA_OBJECT_TYPE_CLASS:

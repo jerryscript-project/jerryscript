@@ -112,6 +112,7 @@ typedef enum
   PARSER_PATTERN_LOCAL = (1u << 5),            /**< pattern is a local (catch parameter) declaration */
   PARSER_PATTERN_REST_ELEMENT = (1u << 6),     /**< parse rest array initializer */
   PARSER_PATTERN_ARGUMENTS = (1u << 7),        /**< parse arguments binding */
+  PARSER_PATTERN_ARRAY = (1u << 8),            /**< array pattern is being parsed */
 } parser_pattern_flags_t;
 
 /**

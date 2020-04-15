@@ -2178,8 +2178,10 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
 
 /**
  * Append a binary '=' token.
+ *
+ * @return - pushed assignment opcode onto the parser stack
  */
-static void
+static uint8_t
 parser_append_binary_single_assignment_token (parser_context_t *context_p, /**< context */
                                               uint8_t assign_ident_opcode) /**< assign ident opcode */
 {
@@ -2189,6 +2191,8 @@ parser_append_binary_single_assignment_token (parser_context_t *context_p, /**< 
   /* Unlike other tokens, the whole byte code is saved for binary
    * assignment, since it has multiple forms depending on the
    * previous instruction. */
+
+  uint8_t assign_opcode = CBC_ASSIGN;
 
   if (PARSER_IS_PUSH_LITERAL (context_p->last_cbc_opcode)
       && context_p->last_cbc.literal_type == LEXER_IDENT_LITERAL)
@@ -2217,19 +2221,18 @@ parser_append_binary_single_assignment_token (parser_context_t *context_p, /**< 
     }
 
     parser_stack_push_uint16 (context_p, literal_index);
-    parser_stack_push_uint8 (context_p, assign_ident_opcode);
+    assign_opcode = assign_ident_opcode;
   }
   else if (context_p->last_cbc_opcode == CBC_PUSH_THIS_LITERAL)
   {
     context_p->last_cbc_opcode = CBC_PUSH_THIS;
     parser_flush_cbc (context_p);
     parser_stack_push_uint16 (context_p, context_p->last_cbc.literal_index);
-    parser_stack_push_uint8 (context_p, assign_ident_opcode);
+    assign_opcode = assign_ident_opcode;
   }
   else if (context_p->last_cbc_opcode == CBC_PUSH_PROP)
   {
     JERRY_ASSERT (CBC_SAME_ARGS (CBC_PUSH_PROP, CBC_ASSIGN));
-    parser_stack_push_uint8 (context_p, CBC_ASSIGN);
     context_p->last_cbc_opcode = PARSER_CBC_UNAVAILABLE;
   }
   else if (context_p->last_cbc_opcode == CBC_PUSH_PROP_LITERAL)
@@ -2238,20 +2241,18 @@ parser_append_binary_single_assignment_token (parser_context_t *context_p, /**< 
     {
       JERRY_ASSERT (CBC_SAME_ARGS (CBC_PUSH_PROP_LITERAL, CBC_ASSIGN_PROP_LITERAL));
       parser_stack_push_uint16 (context_p, context_p->last_cbc.literal_index);
-      parser_stack_push_uint8 (context_p, CBC_ASSIGN_PROP_LITERAL);
+      assign_opcode = CBC_ASSIGN_PROP_LITERAL;
       context_p->last_cbc_opcode = PARSER_CBC_UNAVAILABLE;
     }
     else
     {
       context_p->last_cbc_opcode = CBC_PUSH_LITERAL;
-      parser_stack_push_uint8 (context_p, CBC_ASSIGN);
     }
   }
   else if (context_p->last_cbc_opcode == CBC_PUSH_PROP_LITERAL_LITERAL)
   {
     JERRY_ASSERT (CBC_SAME_ARGS (CBC_PUSH_PROP_LITERAL_LITERAL, CBC_PUSH_TWO_LITERALS));
     context_p->last_cbc_opcode = CBC_PUSH_TWO_LITERALS;
-    parser_stack_push_uint8 (context_p, CBC_ASSIGN);
   }
   else if (context_p->last_cbc_opcode == CBC_PUSH_PROP_THIS_LITERAL)
   {
@@ -2259,25 +2260,24 @@ parser_append_binary_single_assignment_token (parser_context_t *context_p, /**< 
     {
       JERRY_ASSERT (CBC_SAME_ARGS (CBC_PUSH_PROP_THIS_LITERAL, CBC_ASSIGN_PROP_THIS_LITERAL));
       parser_stack_push_uint16 (context_p, context_p->last_cbc.literal_index);
-      parser_stack_push_uint8 (context_p, CBC_ASSIGN_PROP_THIS_LITERAL);
+      assign_opcode = CBC_ASSIGN_PROP_THIS_LITERAL;
       context_p->last_cbc_opcode = PARSER_CBC_UNAVAILABLE;
     }
     else
     {
       context_p->last_cbc_opcode = CBC_PUSH_THIS_LITERAL;
-      parser_stack_push_uint8 (context_p, CBC_ASSIGN);
     }
   }
 #if ENABLED (JERRY_ES2015)
   else if (context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_SUPER_PROP_LITERAL))
   {
     context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_SUPER_PROP_LITERAL_ASSIGNMENT_REFERENCE);
-    parser_stack_push_uint8 (context_p, CBC_ASSIGN_SUPER);
+    assign_opcode = CBC_ASSIGN_SUPER;
   }
   else if (context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_SUPER_PROP))
   {
     context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_SUPER_PROP_ASSIGNMENT_REFERENCE);
-    parser_stack_push_uint8 (context_p, CBC_ASSIGN_SUPER);
+    assign_opcode = CBC_ASSIGN_SUPER;
   }
 #endif /* ENABLED (JERRY_ES2015) */
   else
@@ -2288,10 +2288,12 @@ parser_append_binary_single_assignment_token (parser_context_t *context_p, /**< 
 #endif /* ENABLED (JERRY_ES2015) */
 
     parser_emit_cbc_ext (context_p, CBC_EXT_THROW_REFERENCE_ERROR);
-    parser_stack_push_uint8 (context_p, CBC_ASSIGN);
   }
 
+  parser_stack_push_uint8 (context_p, assign_opcode);
   parser_stack_push_uint8 (context_p, LEXER_ASSIGN);
+
+  return assign_opcode;
 } /* parser_append_binary_single_assignment_token */
 
 /**
@@ -2606,7 +2608,15 @@ parser_pattern_form_assignment (parser_context_t *context_p, /**< context */
   }
 
   parser_stack_push_uint8 (context_p, LEXER_EXPRESSION_START);
-  parser_append_binary_single_assignment_token (context_p, assign_opcode);
+  assign_opcode = parser_append_binary_single_assignment_token (context_p, assign_opcode);
+
+  if (flags & PARSER_PATTERN_ARRAY)
+  {
+    int32_t stack_adjustment = (CBC_STACK_ADJUST_BASE - (cbc_flags[assign_opcode] >> CBC_STACK_ADJUST_SHIFT));
+    JERRY_ASSERT (stack_adjustment >= 1 && stack_adjustment <= 3);
+
+    rhs_opcode = (uint16_t) (rhs_opcode + stack_adjustment - 1);
+  }
 
   parser_pattern_emit_rhs (context_p, rhs_opcode, literal_index);
 
@@ -2748,34 +2758,11 @@ parser_pattern_process_assignment (parser_context_t *context_p, /**< context */
   else
   {
     parser_flush_cbc (context_p);
-    uint16_t stack_depth_before = context_p->stack_depth;
     parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA | PARSE_EXPR_LEFT_HAND_SIDE);
 
-    if (!PARSER_IS_PUSH_LITERAL (context_p->last_cbc_opcode))
+    if (!PARSER_IS_PUSH_LITERAL (context_p->last_cbc_opcode) && !PARSER_IS_PUSH_PROP (context_p->last_cbc_opcode))
     {
-      if (!PARSER_IS_PUSH_PROP (context_p->last_cbc_opcode))
-      {
-        parser_raise_error (context_p, PARSER_ERR_INVALID_DESTRUCTURING_PATTERN);
-      }
-
-      if (end_type == LEXER_RIGHT_SQUARE)
-      {
-        /* LHS expression parsing may increases the stack depth, therefore rhs opcode may transforms:
-           Example: [a.b.c]
-           CBC_EXT_ITERATOR_STEP -> CBC_EXT_ITERATOR_STEP_2
-           CBC_EXT_REST_INITIALIZER -> CBC_EXT_ITERATOR_STEP_2 */
-        uint16_t stack_difference = (uint16_t) (context_p->stack_depth - stack_depth_before);
-
-        if (context_p->last_cbc_opcode == CBC_PUSH_PROP_LITERAL_LITERAL)
-        {
-          /* Example: [a.b]
-           CBC_EXT_ITERATOR_STEP -> CBC_EXT_ITERATOR_STEP_3
-           CBC_EXT_REST_INITIALIZER -> CBC_EXT_ITERATOR_STEP_3 */
-          PARSER_PLUS_EQUAL_U16 (stack_difference, 2);
-        }
-
-        PARSER_PLUS_EQUAL_U16 (rhs_opcode, stack_difference);
-      }
+      parser_raise_error (context_p, PARSER_ERR_INVALID_DESTRUCTURING_PATTERN);
     }
   }
 
@@ -2790,6 +2777,7 @@ parser_parse_array_initializer (parser_context_t *context_p, /**< context */
                                 parser_pattern_flags_t flags) /**< flags */
 {
   parser_pattern_end_marker_t end_pos = parser_pattern_get_target (context_p, flags);
+  flags |= PARSER_PATTERN_ARRAY;
 
   lexer_next_token (context_p);
   parser_emit_cbc_ext (context_p, CBC_EXT_GET_ITERATOR);

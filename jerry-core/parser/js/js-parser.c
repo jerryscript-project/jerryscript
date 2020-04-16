@@ -1087,11 +1087,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     if (flags & CBC_HAS_BRANCH_ARG)
     {
       bool prefix_zero = true;
-#if PARSER_MAXIMUM_CODE_SIZE <= 65535
-      cbc_opcode_t jump_forward = CBC_JUMP_FORWARD_2;
-#else /* PARSER_MAXIMUM_CODE_SIZE > 65535 */
-      cbc_opcode_t jump_forward = CBC_JUMP_FORWARD_3;
-#endif /* PARSER_MAXIMUM_CODE_SIZE <= 65535 */
 
       /* The leading zeroes are dropped from the stream.
        * Although dropping these zeroes for backward
@@ -1114,9 +1109,9 @@ parser_post_processing (parser_context_t *context_p) /**< context */
         PARSER_NEXT_BYTE (page_p, offset);
       }
 
-      if (last_opcode == jump_forward
+      if (last_opcode == (cbc_opcode_t) (CBC_JUMP_FORWARD + PARSER_MAX_BRANCH_LENGTH - 1)
           && prefix_zero
-          && page_p->bytes[offset] == CBC_BRANCH_OFFSET_LENGTH (jump_forward) + 1)
+          && page_p->bytes[offset] == PARSER_MAX_BRANCH_LENGTH + 1)
       {
         /* Uncoditional jumps which jump right after the instruction
          * are effectively NOPs. These jumps are removed from the
@@ -1345,11 +1340,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     if (opcode == CBC_JUMP_FORWARD)
     {
       /* These opcodes are deleted from the stream. */
-#if PARSER_MAXIMUM_CODE_SIZE <= 65535
-      size_t counter = 3;
-#else /* PARSER_MAXIMUM_CODE_SIZE > 65535 */
-      size_t counter = 4;
-#endif /* PARSER_MAXIMUM_CODE_SIZE <= 65535 */
+      size_t counter = PARSER_MAX_BRANCH_LENGTH + 1;
 
       do
       {

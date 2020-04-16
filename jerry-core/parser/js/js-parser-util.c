@@ -566,11 +566,7 @@ parser_emit_cbc_forward_branch (parser_context_t *context_p, /**< context */
   }
 #endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
-#if PARSER_MAXIMUM_CODE_SIZE <= 65535
-  opcode++;
-#else /* PARSER_MAXIMUM_CODE_SIZE > 65535 */
-  PARSER_PLUS_EQUAL_U16 (opcode, 2);
-#endif /* PARSER_MAXIMUM_CODE_SIZE <= 65535 */
+  PARSER_PLUS_EQUAL_U16 (opcode, PARSER_MAX_BRANCH_LENGTH - 1);
 
   parser_emit_two_bytes (context_p, (uint8_t) opcode, 0);
   branch_p->page_p = context_p->byte_code.last_p;
@@ -578,13 +574,13 @@ parser_emit_cbc_forward_branch (parser_context_t *context_p, /**< context */
 
   context_p->byte_code_size += extra_byte_code_increase;
 
-#if PARSER_MAXIMUM_CODE_SIZE <= 65535
+#if PARSER_MAXIMUM_CODE_SIZE <= UINT16_MAX
   PARSER_APPEND_TO_BYTE_CODE (context_p, 0);
-  context_p->byte_code_size += 3;
-#else /* PARSER_MAXIMUM_CODE_SIZE > 65535 */
+#else /* PARSER_MAXIMUM_CODE_SIZE > UINT16_MAX */
   parser_emit_two_bytes (context_p, 0, 0);
-  context_p->byte_code_size += 4;
-#endif /* PARSER_MAXIMUM_CODE_SIZE <= 65535 */
+#endif /* PARSER_MAXIMUM_CODE_SIZE <= UINT16_MAX */
+
+  context_p->byte_code_size += PARSER_MAX_BRANCH_LENGTH + 1;
 
   if (context_p->stack_depth > context_p->stack_limit)
   {
@@ -681,35 +677,30 @@ parser_emit_cbc_backward_branch (parser_context_t *context_p, /**< context */
 #endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
   context_p->byte_code_size += 2;
-#if PARSER_MAXIMUM_CODE_SIZE <= 65535
-  if (offset > 255)
+#if PARSER_MAXIMUM_CODE_SIZE > UINT16_MAX
+  if (offset > UINT16_MAX)
   {
     opcode++;
     context_p->byte_code_size++;
   }
-#else /* PARSER_MAXIMUM_CODE_SIZE > 65535 */
-  if (offset > 65535)
-  {
-    PARSER_PLUS_EQUAL_U16 (opcode, 2);
-    context_p->byte_code_size += 2;
-  }
-  else if (offset > 255)
+#endif /* PARSER_MAXIMUM_CODE_SIZE > UINT16_MAX */
+
+  if (offset > UINT8_MAX)
   {
     opcode++;
     context_p->byte_code_size++;
   }
-#endif /* PARSER_MAXIMUM_CODE_SIZE <= 65535 */
 
   PARSER_APPEND_TO_BYTE_CODE (context_p, (uint8_t) opcode);
 
-#if PARSER_MAXIMUM_CODE_SIZE > 65535
-  if (offset > 65535)
+#if PARSER_MAXIMUM_CODE_SIZE > UINT16_MAX
+  if (offset > UINT16_MAX)
   {
     PARSER_APPEND_TO_BYTE_CODE (context_p, offset >> 16);
   }
-#endif /* PARSER_MAXIMUM_CODE_SIZE > 65535 */
+#endif /* PARSER_MAXIMUM_CODE_SIZE > UINT16_MAX */
 
-  if (offset > 255)
+  if (offset > UINT8_MAX)
   {
     PARSER_APPEND_TO_BYTE_CODE (context_p, (offset >> 8) & 0xff);
   }
@@ -745,14 +736,14 @@ parser_set_branch_to_current_position (parser_context_t *context_p, /**< context
 
   JERRY_ASSERT (delta <= PARSER_MAXIMUM_CODE_SIZE);
 
-#if PARSER_MAXIMUM_CODE_SIZE <= 65535
+#if PARSER_MAXIMUM_CODE_SIZE <= UINT16_MAX
   page_p->bytes[offset++] = (uint8_t) (delta >> 8);
   if (offset >= PARSER_CBC_STREAM_PAGE_SIZE)
   {
     page_p = page_p->next_p;
     offset = 0;
   }
-#else /* PARSER_MAXIMUM_CODE_SIZE > 65535 */
+#else /* PARSER_MAXIMUM_CODE_SIZE > UINT16_MAX */
   page_p->bytes[offset++] = (uint8_t) (delta >> 16);
   if (offset >= PARSER_CBC_STREAM_PAGE_SIZE)
   {
@@ -765,8 +756,8 @@ parser_set_branch_to_current_position (parser_context_t *context_p, /**< context
     page_p = page_p->next_p;
     offset = 0;
   }
-#endif /* PARSER_MAXIMUM_CODE_SIZE <= 65535 */
-  page_p->bytes[offset++] = delta & 0xff;
+#endif /* PARSER_MAXIMUM_CODE_SIZE <= UINT16_MAX */
+  page_p->bytes[offset] = delta & 0xff;
 } /* parser_set_branch_to_current_position */
 
 /**

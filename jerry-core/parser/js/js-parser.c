@@ -918,6 +918,30 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   ecma_value_t *literal_pool_p;
   uint8_t *dst_p;
 
+#if ENABLED (JERRY_ES2015)
+  if ((context_p->status_flags & (PARSER_IS_FUNCTION | PARSER_LEXICAL_BLOCK_NEEDED))
+      == (PARSER_IS_FUNCTION | PARSER_LEXICAL_BLOCK_NEEDED))
+  {
+    PARSER_MINUS_EQUAL_U16 (context_p->stack_depth, PARSER_BLOCK_CONTEXT_STACK_ALLOCATION);
+#ifndef JERRY_NDEBUG
+    PARSER_MINUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_BLOCK_CONTEXT_STACK_ALLOCATION);
+#endif /* !JERRY_NDEBUG */
+
+    context_p->status_flags &= (uint32_t) ~PARSER_LEXICAL_BLOCK_NEEDED;
+
+    parser_emit_cbc (context_p, CBC_CONTEXT_END);
+
+    parser_branch_t branch;
+    parser_stack_pop (context_p, &branch, sizeof (parser_branch_t));
+    parser_set_branch_to_current_position (context_p, &branch);
+  }
+#endif /* ENABLED (JERRY_ES2015) */
+
+  JERRY_ASSERT (context_p->stack_depth == 0);
+#ifndef JERRY_NDEBUG
+  JERRY_ASSERT (context_p->context_stack_depth == 0);
+#endif /* !JERRY_NDEBUG */
+
   if ((size_t) context_p->stack_limit + (size_t) context_p->register_count > PARSER_MAXIMUM_STACK_LIMIT)
   {
     parser_raise_error (context_p, PARSER_ERR_STACK_LIMIT_REACHED);
@@ -1308,6 +1332,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 
   if (context_p->status_flags & PARSER_LEXICAL_BLOCK_NEEDED)
   {
+    JERRY_ASSERT (!(context_p->status_flags & PARSER_IS_FUNCTION));
     compiled_code_p->status_flags |= CBC_CODE_FLAGS_LEXICAL_BLOCK_NEEDED;
   }
 #endif /* ENABLED (JERRY_ES2015) */
@@ -1682,6 +1707,9 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
   JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
 
 #if ENABLED (JERRY_ES2015)
+  JERRY_ASSERT (context_p->status_flags & PARSER_IS_FUNCTION);
+  JERRY_ASSERT (!(context_p->status_flags & PARSER_LEXICAL_BLOCK_NEEDED));
+
   bool duplicated_argument_names = false;
 
   /* TODO: Currently async iterators are not supported, so generators ignore the async modifier. */
@@ -1709,6 +1737,10 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 
   scanner_create_variables (context_p, SCANNER_CREATE_VARS_IS_FUNCTION_ARGS);
   scanner_set_active (context_p);
+
+#if ENABLED (JERRY_ES2015)
+  context_p->status_flags |= PARSER_FUNCTION_IS_PARSING_ARGS;
+#endif /* ENABLED (JERRY_ES2015) */
 
   while (true)
   {
@@ -1867,6 +1899,8 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
     parser_raise_error (context_p, error);
   }
 
+  scanner_revert_active (context_p);
+
 #if ENABLED (JERRY_ES2015)
   if (context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION)
   {
@@ -1874,10 +1908,30 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
     parser_emit_cbc (context_p, CBC_POP);
   }
 
-  context_p->status_flags &= (uint32_t) ~PARSER_DISALLOW_YIELD;
+  if (context_p->status_flags & PARSER_LEXICAL_BLOCK_NEEDED)
+  {
+    if ((context_p->next_scanner_info_p->u8_arg & SCANNER_FUNCTION_LEXICAL_ENV_NEEDED)
+        || scanner_is_context_needed (context_p, PARSER_CHECK_FUNCTION_CONTEXT))
+    {
+      context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED;
+
+      parser_branch_t branch;
+      parser_emit_cbc_forward_branch (context_p, CBC_BLOCK_CREATE_CONTEXT, &branch);
+      parser_stack_push (context_p, &branch, sizeof (parser_branch_t));
+
+#ifndef JERRY_NDEBUG
+      context_p->context_stack_depth = PARSER_BLOCK_CONTEXT_STACK_ALLOCATION;
+#endif /* !JERRY_NDEBUG */
+    }
+    else
+    {
+      context_p->status_flags &= (uint32_t) ~PARSER_LEXICAL_BLOCK_NEEDED;
+    }
+  }
+
+  context_p->status_flags &= (uint32_t) ~(PARSER_DISALLOW_YIELD | PARSER_FUNCTION_IS_PARSING_ARGS);
 #endif /* ENABLED (JERRY_ES2015) */
 
-  scanner_revert_active (context_p);
   scanner_create_variables (context_p, SCANNER_CREATE_VARS_IS_FUNCTION_BODY);
 } /* parser_parse_function_arguments */
 
@@ -2070,7 +2124,7 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
                     && context.next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
 
 #if ENABLED (JERRY_ES2015)
-      if (scanner_is_global_context_needed (&context))
+      if (scanner_is_context_needed (&context, PARSER_CHECK_GLOBAL_CONTEXT))
       {
         context.status_flags |= PARSER_LEXICAL_BLOCK_NEEDED;
       }
@@ -2188,6 +2242,13 @@ parser_save_context (parser_context_t *context_p, /**< context */
     context_p->breakpoint_info_count = 0;
   }
 #endif /* ENABLED (JERRY_DEBUGGER) */
+
+#if ENABLED (JERRY_ES2015)
+  if (context_p->status_flags & PARSER_FUNCTION_IS_PARSING_ARGS)
+  {
+    context_p->status_flags |= PARSER_LEXICAL_BLOCK_NEEDED;
+  }
+#endif /* ENABLED (JERRY_ES2015) */
 
   /* Save private part of the context. */
 

@@ -2008,6 +2008,11 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
           context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED;
 
 #if ENABLED (JERRY_ES2015)
+          if (context_p->status_flags & PARSER_FUNCTION_IS_PARSING_ARGS)
+          {
+            context_p->status_flags |= PARSER_LEXICAL_BLOCK_NEEDED;
+          }
+
           if (context_p->status_flags & (PARSER_ALLOW_SUPER_CALL | PARSER_ALLOW_SUPER | PARSER_ALLOW_NEW_TARGET))
           {
             parser_emit_cbc_ext_call (context_p,

@@ -259,18 +259,18 @@ typedef enum
   SCANNER_LITERAL_POOL_BLOCK = (1 << 1), /**< literal pool represents a code block */
   SCANNER_LITERAL_POOL_IS_STRICT = (1 << 2), /**< literal pool represents a strict mode code block */
   SCANNER_LITERAL_POOL_NO_REG = (1 << 3), /**< variable declarations cannot be kept in registers */
-  SCANNER_LITERAL_POOL_NO_ARGUMENTS = (1 << 5), /**< arguments object must not be constructed */
+  SCANNER_LITERAL_POOL_NO_ARGUMENTS = (1 << 4), /**< arguments object must not be constructed */
 #if ENABLED (JERRY_ES2015)
-  SCANNER_LITERAL_POOL_ARGUMENTS_UNMAPPED = (1 << 6), /**< arguments object should be unmapped */
+  SCANNER_LITERAL_POOL_ARGUMENTS_UNMAPPED = (1 << 5), /**< arguments object should be unmapped */
 #endif /* ENABLED (JERRY_ES2015) */
-  SCANNER_LITERAL_POOL_IN_WITH = (1 << 7), /**< literal pool is in a with statement */
+  SCANNER_LITERAL_POOL_IN_WITH = (1 << 6), /**< literal pool is in a with statement */
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
-  SCANNER_LITERAL_POOL_IN_EXPORT = (1 << 8), /**< the declared variables are exported by the module system */
+  SCANNER_LITERAL_POOL_IN_EXPORT = (1 << 7), /**< the declared variables are exported by the module system */
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 #if ENABLED (JERRY_ES2015)
-  SCANNER_LITERAL_POOL_FUNCTION_STATEMENT = (1 << 9), /**< function statement (only if async is set) */
-  SCANNER_LITERAL_POOL_GENERATOR = (1 << 10), /**< generator function */
-  SCANNER_LITERAL_POOL_ASYNC = (1 << 11), /**< async function */
+  SCANNER_LITERAL_POOL_FUNCTION_STATEMENT = (1 << 8), /**< function statement (only when async is set) */
+  SCANNER_LITERAL_POOL_GENERATOR = (1 << 9), /**< generator function */
+  SCANNER_LITERAL_POOL_ASYNC = (1 << 10), /**< async function */
 #endif /* ENABLED (JERRY_ES2015) */
 } scanner_literal_pool_flags_t;
 

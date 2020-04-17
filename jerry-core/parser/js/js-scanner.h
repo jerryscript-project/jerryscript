@@ -209,8 +209,10 @@ typedef enum
 {
   SCANNER_FUNCTION_ARGUMENTS_NEEDED = (1 << 0), /**< arguments object needs to be created */
 #if ENABLED (JERRY_ES2015)
-  SCANNER_FUNCTION_STATEMENT = (1 << 1), /**< function is (async) function statement */
-  SCANNER_FUNCTION_ASYNC = (1 << 2), /**< function is async function expression */
+  SCANNER_FUNCTION_LEXICAL_ENV_NEEDED = (1 << 1), /**< lexical environment is needed for the function body */
+  SCANNER_FUNCTION_STATEMENT = (1 << 2), /**< function is function statement (not arrow expression)
+                                          *   this flag must be combined with the type of function (e.g. async) */
+  SCANNER_FUNCTION_ASYNC = (1 << 3), /**< function is async function */
 #endif /* ENABLED (JERRY_ES2015) */
 } scanner_function_flags_t;
 

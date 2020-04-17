@@ -58,25 +58,27 @@ typedef enum
   PARSER_DEBUGGER_BREAKPOINT_APPENDED = (1u << 11), /**< pending (unsent) breakpoint
                                                      *   info is available */
 #if ENABLED (JERRY_ES2015)
-  PARSER_LEXICAL_BLOCK_NEEDED = (1u << 12),   /**< script needs a lexical environment for let and const */
+  PARSER_LEXICAL_BLOCK_NEEDED = (1u << 12),   /**< global script: needs a lexical environment for let and const
+                                               *   function: needs a lexical environment for arguments */
   PARSER_IS_ARROW_FUNCTION = (1u << 13),      /**< an arrow function is parsed */
   PARSER_IS_GENERATOR_FUNCTION = (1u << 14),  /**< a generator function is parsed */
   PARSER_IS_ASYNC_FUNCTION = (1u << 15),      /**< an async function is parsed */
   PARSER_DISALLOW_YIELD = (1u << 16),         /**< throw SyntaxError for yield expression */
-  PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM = (1u << 17), /**< function has a non simple parameter */
-  PARSER_FUNCTION_HAS_REST_PARAM = (1u << 18), /**< function has rest parameter */
+  PARSER_FUNCTION_IS_PARSING_ARGS = (1u << 17), /**< set when parsing function arguments */
+  PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM = (1u << 18), /**< function has a non simple parameter */
+  PARSER_FUNCTION_HAS_REST_PARAM = (1u << 19), /**< function has rest parameter */
   /* These 4 status flags must be in this order. See PARSER_SAVED_FLAGS_OFFSET. */
-  PARSER_CLASS_CONSTRUCTOR = (1u << 19),      /**< a class constructor is parsed
+  PARSER_CLASS_CONSTRUCTOR = (1u << 20),      /**< a class constructor is parsed
                                                *   Note: PARSER_ALLOW_SUPER must be present */
-  PARSER_ALLOW_SUPER = (1u << 20),            /**< allow super property access */
-  PARSER_ALLOW_SUPER_CALL = (1u << 21),       /**< allow super constructor call
+  PARSER_ALLOW_SUPER = (1u << 21),            /**< allow super property access */
+  PARSER_ALLOW_SUPER_CALL = (1u << 22),       /**< allow super constructor call
                                                *   Note: PARSER_CLASS_CONSTRUCTOR must be present */
-  PARSER_ALLOW_NEW_TARGET = (1u << 22),       /**< allow new.target parsing in the current context */
+  PARSER_ALLOW_NEW_TARGET = (1u << 23),       /**< allow new.target parsing in the current context */
 
 #endif /* ENABLED (JERRY_ES2015) */
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
-  PARSER_MODULE_DEFAULT_CLASS_OR_FUNC = (1u << 23),  /**< parsing a function or class default export */
-  PARSER_MODULE_STORE_IDENT = (1u << 24),     /**< store identifier of the current export statement */
+  PARSER_MODULE_DEFAULT_CLASS_OR_FUNC = (1u << 24),  /**< parsing a function or class default export */
+  PARSER_MODULE_STORE_IDENT = (1u << 25),     /**< store identifier of the current export statement */
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
   PARSER_HAS_LATE_LIT_INIT = (1u << 30),      /**< there are identifier or string literals which construction
                                                *   is postponed after the local parser data is freed */
@@ -114,6 +116,18 @@ typedef enum
   PARSER_PATTERN_ARGUMENTS = (1u << 7),        /**< parse arguments binding */
   PARSER_PATTERN_ARRAY = (1u << 8),            /**< array pattern is being parsed */
 } parser_pattern_flags_t;
+
+/**
+ * Check type for scanner_is_context_needed function.
+ */
+typedef enum
+{
+  PARSER_CHECK_BLOCK_CONTEXT,                  /**< check block context */
+#if ENABLED (JERRY_ES2015)
+  PARSER_CHECK_GLOBAL_CONTEXT,                 /**< check global context */
+  PARSER_CHECK_FUNCTION_CONTEXT,               /**< check function context */
+#endif /* ENABLED (JERRY_ES2015) */
+} parser_check_context_type_t;
 
 /**
  * Mask for strict mode code
@@ -168,13 +182,17 @@ typedef enum
 #define PARSER_SAVE_STATUS_FLAGS(opts) \
   ((uint16_t) (((opts) >> PARSER_SAVED_FLAGS_OFFSET) & PARSER_CLASS_ECMA_PARSE_OPTS_TO_PARSER_OPTS_MASK))
 
-/* All flags that affect exotic arguments object creation. */
+/**
+ * All flags that affect exotic arguments object creation.
+ */
 #define PARSER_ARGUMENTS_RELATED_FLAGS \
   (PARSER_ARGUMENTS_NEEDED | PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM | PARSER_IS_STRICT)
 
 #else /* !ENABLED (JERRY_ES2015) */
 
-/* All flags that affect exotic arguments object creation. */
+/**
+ * All flags that affect exotic arguments object creation.
+ */
 #define PARSER_ARGUMENTS_RELATED_FLAGS \
   (PARSER_ARGUMENTS_NEEDED | PARSER_IS_STRICT)
 
@@ -720,9 +738,8 @@ void scanner_seek (parser_context_t *context_p);
 void scanner_reverse_info_list (parser_context_t *context_p);
 void scanner_cleanup (parser_context_t *context_p);
 
-bool scanner_is_context_needed (parser_context_t *context_p);
+bool scanner_is_context_needed (parser_context_t *context_p, parser_check_context_type_t check_type);
 #if ENABLED (JERRY_ES2015)
-bool scanner_is_global_context_needed (parser_context_t *context_p);
 bool scanner_scope_find_let_declaration (parser_context_t *context_p, lexer_lit_location_t *literal_p);
 bool scanner_try_scan_new_target (parser_context_t *context_p);
 void scanner_check_variables (parser_context_t *context_p);

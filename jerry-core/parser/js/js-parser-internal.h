@@ -124,6 +124,18 @@ typedef enum
  */
 #define PARSER_FUNCTION_CLOSURE (PARSER_IS_FUNCTION | PARSER_IS_CLOSURE)
 
+#if PARSER_MAXIMUM_CODE_SIZE <= UINT16_MAX
+/**
+ * Maximum number of bytes for branch target.
+ */
+#define PARSER_MAX_BRANCH_LENGTH 2
+#else /* PARSER_MAXIMUM_CODE_SIZE > UINT16_MAX */
+/**
+ * Maximum number of bytes for branch target.
+ */
+#define PARSER_MAX_BRANCH_LENGTH 3
+#endif /* PARSER_MAXIMUM_CODE_SIZE <= UINT16_MAX */
+
 #if ENABLED (JERRY_ES2015)
 /**
  * Offset between PARSER_CLASS_CONSTRUCTOR and ECMA_PARSE_CLASS_CONSTRUCTOR

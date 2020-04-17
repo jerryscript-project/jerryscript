@@ -859,7 +859,7 @@ parser_parse_with_statement_start (parser_context_t *context_p) /**< context */
 
   uint8_t inside_with = (context_p->status_flags & PARSER_INSIDE_WITH) != 0;
 
-  context_p->status_flags |= PARSER_INSIDE_WITH | PARSER_LEXICAL_ENV_NEEDED;
+  context_p->status_flags |= PARSER_INSIDE_WITH;
   parser_emit_cbc_ext_forward_branch (context_p,
                                       CBC_EXT_WITH_CREATE_CONTEXT,
                                       &with_statement.branch);

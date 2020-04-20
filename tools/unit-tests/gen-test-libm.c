@@ -717,6 +717,31 @@ main (int argc, char **args)
   GEN_DBL_TEST (sqrt (6642.25));
   GEN_DBL_TEST (sqrt (15239.9025));
 
+  /* cbrt tests */
+  GEN_DBL_TEST (cbrt (0.0));
+  GEN_DBL_TEST (cbrt (-0.0));
+  GEN_DBL_TEST (cbrt (1.0));
+  GEN_DBL_TEST (cbrt (-1.0));
+  GEN_DBL_TEST (cbrt (INFINITY));
+  GEN_DBL_TEST (cbrt (-INFINITY));
+  GEN_DBL_TEST (cbrt (NAN));
+  GEN_DBL_TEST (cbrt (0.7));
+  GEN_DBL_TEST (cbrt (2));
+  GEN_DBL_TEST (cbrt (10));
+  GEN_DBL_TEST (cbrt (2.22e-308));
+  GEN_DBL_TEST (cbrt (2.23e-308));
+  GEN_DBL_TEST (cbrt (3.72e-09));
+  GEN_DBL_TEST (cbrt (7.37e+19));
+  GEN_DBL_TEST (cbrt (2209));
+  GEN_DBL_TEST (cbrt (4));
+  GEN_DBL_TEST (cbrt (0.25));
+  GEN_DBL_TEST (cbrt (6642.25));
+  GEN_DBL_TEST (cbrt (15239.9025));
+  GEN_DBL_TEST (cbrt (3));
+  GEN_DBL_TEST (cbrt (9));
+  GEN_DBL_TEST (cbrt (-17.87));
+  GEN_DBL_TEST (cbrt (-8941));
+
   /* sin tests */
   GEN_DBL_TEST (sin (0.0));
   GEN_DBL_TEST (sin (-0.0));

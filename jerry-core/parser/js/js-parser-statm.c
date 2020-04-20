@@ -1314,7 +1314,12 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
         parser_emit_cbc_ext (context_p, is_for_in ? CBC_EXT_FOR_IN_GET_NEXT
                                                   : CBC_EXT_FOR_OF_GET_NEXT);
 #if ENABLED (JERRY_ES2015)
-        JERRY_ASSERT (literal_index < PARSER_REGISTER_START || !has_context);
+#ifndef JERRY_NDEBUG
+        if (literal_index >= PARSER_REGISTER_START && has_context)
+        {
+          context_p->global_status_flags |= ECMA_PARSE_INTERNAL_FOR_IN_OFF_CONTEXT_ERROR;
+        }
+#endif /* !JERRY_NDEBUG */
 
         parser_emit_cbc_literal (context_p,
                                  has_context ? CBC_ASSIGN_LET_CONST : CBC_ASSIGN_SET_IDENT,

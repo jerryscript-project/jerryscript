@@ -192,7 +192,6 @@ parser_emit_unary_lvalue_opcode (parser_context_t *context_p, /**< context */
         parser_raise_error (context_p, PARSER_ERR_DELETE_IDENT_NOT_ALLOWED);
       }
 
-      context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED;
       unary_opcode = CBC_DELETE_IDENT_PUSH_RESULT;
     }
     else
@@ -2006,6 +2005,8 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
 
         if (is_eval)
         {
+          context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED;
+
 #if ENABLED (JERRY_ES2015)
           if (context_p->status_flags & (PARSER_ALLOW_SUPER_CALL | PARSER_ALLOW_SUPER | PARSER_ALLOW_NEW_TARGET))
           {

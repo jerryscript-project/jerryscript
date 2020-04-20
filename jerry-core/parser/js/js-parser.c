@@ -1272,7 +1272,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     }
 
     /* Arguments is stored in the lexical environment. */
-    context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED;
+    JERRY_ASSERT (context_p->status_flags & PARSER_LEXICAL_ENV_NEEDED);
   }
 
   if (!(context_p->status_flags & PARSER_LEXICAL_ENV_NEEDED))

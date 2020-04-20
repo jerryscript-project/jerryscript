@@ -88,6 +88,10 @@ double cos (double x);
 double sin (double x);
 double tan (double x);
 
+double acosh (double x);
+double asinh (double x);
+double atanh (double x);
+
 double exp (double x);
 double expm1 (double x);
 double log (double x);

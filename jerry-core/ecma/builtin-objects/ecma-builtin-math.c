@@ -525,29 +525,17 @@ ecma_builtin_math_dispatch_routine (uint16_t builtin_routine_id, /**< built-in w
 #if ENABLED (JERRY_ES2015)
       case ECMA_MATH_OBJECT_ACOSH:
       {
-#ifdef JERRY_LIBM_MATH_H
-        return ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Math.acosh"));
-#else /* !JERRY_LIBM_MATH_H */
         x = DOUBLE_TO_ECMA_NUMBER_T (acosh (x));
-#endif /* JERRY_LIBM_MATH_H */
         break;
       }
       case ECMA_MATH_OBJECT_ASINH:
       {
-#ifdef JERRY_LIBM_MATH_H
-        return ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Math.asinh"));
-#else /* !JERRY_LIBM_MATH_H */
         x = DOUBLE_TO_ECMA_NUMBER_T (asinh (x));
-#endif /* JERRY_LIBM_MATH_H */
         break;
       }
       case ECMA_MATH_OBJECT_ATANH:
       {
-#ifdef JERRY_LIBM_MATH_H
-        return ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Math.atanh"));
-#else /* !JERRY_LIBM_MATH_H */
         x = DOUBLE_TO_ECMA_NUMBER_T (atanh (x));
-#endif /* JERRY_LIBM_MATH_H */
         break;
       }
       case ECMA_MATH_OBJECT_CBRT:

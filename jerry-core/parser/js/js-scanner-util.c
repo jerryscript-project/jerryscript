@@ -525,7 +525,8 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
     }
 
 #if ENABLED (JERRY_ES2015)
-    if (is_function && (type & (SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_LOCAL)) == SCANNER_LITERAL_IS_FUNC)
+    if (is_function
+        && (type & (SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_FUNC_DECLARATION)) == SCANNER_LITERAL_IS_FUNC)
     {
       if (prev_literal_pool_p == NULL
           && (context_p->global_status_flags & ECMA_PARSE_DIRECT_EVAL)

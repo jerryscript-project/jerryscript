@@ -39,8 +39,6 @@ var builtin_objects = [
   WeakSet,
 ];
 
-var builtin_prototypes = [Function.prototype]
-
 var builtin_typedArrays = [
   Float32Array,
   Float64Array,
@@ -65,13 +63,6 @@ var builtin_typedArrays = [
     assert(desc.configurable === true);
   }
   
-  for (proto of builtin_prototypes) {
-    desc = Object.getOwnPropertyDescriptor(proto, 'length');                                                                                                                    
-    assert(desc.writable === false);
-    assert(desc.enumerable === false);
-    assert(desc.configurable === true);
-  }
-  
   for (ta of builtin_typedArrays) {
     desc = Object.getOwnPropertyDescriptor(ta, 'length');                                                                                                                    
     assert(desc.writable === false);
@@ -88,16 +79,30 @@ var builtin_typedArrays = [
     assert(obj.hasOwnProperty('length') === false);
   }
 
-  for (proto of builtin_prototypes) {
-    assert(proto.hasOwnProperty('length') === true);
-    assert(delete proto.length);
-    assert(proto.hasOwnProperty('length') === false);
-  }
-
   for (ta of builtin_typedArrays) {
     assert(ta.hasOwnProperty('length') === true);
     assert(delete ta.length);
     assert(ta.hasOwnProperty('length') === false);
+  }
+})();
+
+(function () {
+  /* test length property of builtin function */
+  for (obj of builtin_objects) {
+    var property_names = Object.getOwnPropertyNames(obj);
+    for (var name of property_names) {
+      if (typeof obj[name] == 'function') {
+        var func = obj[name];
+        var desc = Object.getOwnPropertyDescriptor(func, 'length');
+        assert(desc.writable === false);
+        assert(desc.enumerable === false);
+        assert(desc.configurable === true);
+
+        assert(func.hasOwnProperty('length') === true);
+        assert(delete func.length);
+        assert(func.hasOwnProperty('length') === false);
+      }
+    }
   }
 })();
 

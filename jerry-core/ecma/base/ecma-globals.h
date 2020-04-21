@@ -121,6 +121,13 @@ typedef enum
   ECMA_PARSE_GENERATOR_FUNCTION = (1u << 8), /**< generator function is parsed */
 
   /* These flags are internally used by the parser. */
+#ifndef JERRY_NDEBUG
+  /**
+   * This flag represents an error in for in/of statements, which cannot be set
+   * if the parsing is completed successfully.
+   */
+  ECMA_PARSE_INTERNAL_FOR_IN_OFF_CONTEXT_ERROR = (1u << 9),
+#endif /* !JERRY_NDEBUG */
 } ecma_parse_opts_t;
 
 /**

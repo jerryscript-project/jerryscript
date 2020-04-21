@@ -2100,6 +2100,7 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
 
 #ifndef JERRY_NDEBUG
     JERRY_ASSERT (context.status_flags & PARSER_SCANNING_SUCCESSFUL);
+    JERRY_ASSERT (!(context.global_status_flags & ECMA_PARSE_INTERNAL_FOR_IN_OFF_CONTEXT_ERROR));
     context.status_flags &= (uint32_t) ~PARSER_SCANNING_SUCCESSFUL;
 #endif /* !JERRY_NDEBUG */
 

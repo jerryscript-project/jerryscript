@@ -64,6 +64,12 @@ assert(hits === 1);
 assert(array6.length === 2);
 assert(array6[1] === 2);
 
+// Test with bounded builtin function
+var boundedBuiltinFn = Array.of.bind(Array);
+var array7 = Array.of.call(boundedBuiltinFn, boundedBuiltinFn);
+assert(array7.length === 1);
+assert(array7[0] === boundedBuiltinFn);
+
 // Test superficial features
 var desc = Object.getOwnPropertyDescriptor(Array, "of");
 assert(desc.configurable === true);

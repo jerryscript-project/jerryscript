@@ -114,7 +114,17 @@ ecma_object_is_constructor (ecma_object_t *obj_p) /**< ecma object */
 {
   JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
 
-  const ecma_object_type_t type = ecma_get_object_type (obj_p);
+  ecma_object_type_t type = ecma_get_object_type (obj_p);
+
+  while (type == ECMA_OBJECT_TYPE_BOUND_FUNCTION)
+  {
+    ecma_bound_function_t *bound_func_p = (ecma_bound_function_t *) obj_p;
+
+    obj_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
+                                                        bound_func_p->header.u.bound_function.target_function);
+
+    type = ecma_get_object_type (obj_p);
+  }
 
 #if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
   if (ECMA_OBJECT_TYPE_IS_PROXY (type))
@@ -128,7 +138,7 @@ ecma_object_is_constructor (ecma_object_t *obj_p) /**< ecma object */
     return (!ecma_get_object_is_builtin (obj_p) || !ecma_builtin_function_is_routine (obj_p));
   }
 
-  return (type >= ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+  return (type >= ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
 } /* ecma_object_is_constructor */
 
 /**

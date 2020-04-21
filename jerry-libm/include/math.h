@@ -56,6 +56,11 @@ double asin (double);
 double atan (double);
 double atan2 (double, double);
 
+/* Hyperbolic functions. */
+double cosh (double x);
+double sinh (double x);
+double tanh (double x);
+
 /* Inverse hyperbolic functions */
 double acosh (double);
 double asinh (double);

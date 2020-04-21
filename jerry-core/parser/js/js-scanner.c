@@ -1018,7 +1018,7 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
     {
       scanner_pop_literal_pool (context_p, scanner_context_p);
       parser_stack_pop_uint8 (context_p);
-      scanner_context_p->mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
+      scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION_END;
       return SCAN_KEEP_TOKEN;
     }
     case SCAN_STACK_CLASS_EXTENDS:

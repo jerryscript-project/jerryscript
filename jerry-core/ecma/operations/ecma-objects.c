@@ -245,7 +245,14 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
   {
     if (ecma_get_object_is_builtin (object_p))
     {
-      property_p = ecma_builtin_try_to_instantiate_property (object_p, property_name_p);
+      if (type == ECMA_OBJECT_TYPE_FUNCTION && ecma_builtin_function_is_routine (object_p))
+      {
+        property_p = ecma_builtin_routine_try_to_instantiate_property (object_p, property_name_p);
+      }
+      else
+      {
+        property_p = ecma_builtin_try_to_instantiate_property (object_p, property_name_p);
+      }
     }
     else if (type == ECMA_OBJECT_TYPE_FUNCTION)
     {
@@ -592,7 +599,14 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
   {
     if (ecma_get_object_is_builtin (object_p))
     {
-      property_p = ecma_builtin_try_to_instantiate_property (object_p, property_name_p);
+      if (type == ECMA_OBJECT_TYPE_FUNCTION && ecma_builtin_function_is_routine (object_p))
+      {
+        property_p = ecma_builtin_routine_try_to_instantiate_property (object_p, property_name_p);
+      }
+      else
+      {
+        property_p = ecma_builtin_try_to_instantiate_property (object_p, property_name_p);
+      }
     }
     else if (type == ECMA_OBJECT_TYPE_FUNCTION)
     {
@@ -1413,7 +1427,14 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
 
     if (ecma_get_object_is_builtin (object_p))
     {
-      property_p = ecma_builtin_try_to_instantiate_property (object_p, property_name_p);
+      if (type == ECMA_OBJECT_TYPE_FUNCTION && ecma_builtin_function_is_routine (object_p))
+      {
+        property_p = ecma_builtin_routine_try_to_instantiate_property (object_p, property_name_p);
+      }
+      else
+      {
+        property_p = ecma_builtin_try_to_instantiate_property (object_p, property_name_p);
+      }
     }
     else if (type == ECMA_OBJECT_TYPE_FUNCTION)
     {
@@ -2074,10 +2095,20 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
       if (obj_is_builtin)
       {
-        ecma_builtin_list_lazy_property_names (obj_p,
-                                               opts,
-                                               prop_names_p,
-                                               skipped_non_enumerable_p);
+        if (type == ECMA_OBJECT_TYPE_FUNCTION && ecma_builtin_function_is_routine (obj_p))
+        {
+          ecma_builtin_routine_list_lazy_property_names (obj_p,
+                                                          opts,
+                                                          prop_names_p,
+                                                          skipped_non_enumerable_p);
+        }
+        else
+        {
+          ecma_builtin_list_lazy_property_names (obj_p,
+                                                 opts,
+                                                 prop_names_p,
+                                                 skipped_non_enumerable_p);
+        }
       }
       else
       {

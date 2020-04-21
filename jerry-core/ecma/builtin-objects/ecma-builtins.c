@@ -415,13 +415,13 @@ ecma_instantiate_builtin (ecma_builtin_id_t obj_builtin_id) /**< built-in id */
 
   built_in_props_p->id = (uint8_t) obj_builtin_id;
   built_in_props_p->routine_id = (uint16_t) obj_builtin_id;
-  built_in_props_p->instantiated_bitset[0] = 0;
+  built_in_props_p->u.instantiated_bitset[0] = 0;
 
   if (property_count > 32)
   {
     built_in_props_p->length_and_bitset_size = 1 << ECMA_BUILT_IN_BITSET_SHIFT;
 
-    uint32_t *instantiated_bitset_p = built_in_props_p->instantiated_bitset;
+    uint32_t *instantiated_bitset_p = built_in_props_p->u.instantiated_bitset;
     instantiated_bitset_p[1] = 0;
     instantiated_bitset_p[2] = 0;
   }
@@ -557,6 +557,7 @@ static ecma_object_t *
 ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**< identifier of built-in object */
                                                uint16_t routine_id, /**< builtin-wide identifier of the built-in
                                                                      *   object's routine property */
+                                               uint16_t name_id, /**< magic string id of 'name' property */
                                                uint8_t length_prop_value) /**< value of 'length' property */
 {
   JERRY_ASSERT (length_prop_value < (1 << ECMA_BUILT_IN_BITSET_SHIFT));
@@ -564,17 +565,6 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
 
   size_t ext_object_size = sizeof (ecma_extended_object_t);
-
-  size_t property_count = ecma_builtin_get_property_count (builtin_id);
-
-  if (property_count > 32)
-  {
-    /* Only 64 extra properties supported at the moment.
-     * This can be extended to 256 later. */
-    JERRY_ASSERT (property_count <= (32 + 64));
-
-    ext_object_size += sizeof (uint32_t) * 2;
-  }
 
   ecma_object_t *func_obj_p = ecma_create_object (prototype_obj_p,
                                                   ext_object_size,
@@ -587,16 +577,8 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**
   ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) func_obj_p;
   ext_func_obj_p->u.built_in.id = (uint8_t) builtin_id;
   ext_func_obj_p->u.built_in.routine_id = routine_id;
-  ext_func_obj_p->u.built_in.instantiated_bitset[0] = 0;
-
-  if (property_count > 32)
-  {
-    length_prop_value = (uint8_t) (length_prop_value | (1 << ECMA_BUILT_IN_BITSET_SHIFT));
-
-    uint32_t *instantiated_bitset_p = ext_func_obj_p->u.built_in.instantiated_bitset;
-    instantiated_bitset_p[1] = 0;
-    instantiated_bitset_p[2] = 0;
-  }
+  ext_func_obj_p->u.built_in.u.builtin_routine.name = name_id;
+  ext_func_obj_p->u.built_in.u.builtin_routine.bitset = 0;
 
   ext_func_obj_p->u.built_in.length_and_bitset_size = length_prop_value;
 
@@ -610,10 +592,11 @@ ecma_builtin_make_function_object_for_routine (ecma_builtin_id_t builtin_id, /**
  */
 static ecma_object_t *
 ecma_builtin_make_function_object_for_getter_accessor (ecma_builtin_id_t builtin_id, /**< id of built-in object */
-                                                       uint16_t routine_id) /**< builtin-wide id of the built-in
+                                                       uint16_t routine_id, /**< builtin-wide id of the built-in
                                                                             *   object's routine property */
+                                                       uint16_t name_id) /**< magic string id of 'name' property */
 {
-  return ecma_builtin_make_function_object_for_routine (builtin_id, routine_id, 0);
+  return ecma_builtin_make_function_object_for_routine (builtin_id, routine_id, name_id, 0);
 } /* ecma_builtin_make_function_object_for_getter_accessor */
 
 /**
@@ -623,11 +606,71 @@ ecma_builtin_make_function_object_for_getter_accessor (ecma_builtin_id_t builtin
  */
 static ecma_object_t *
 ecma_builtin_make_function_object_for_setter_accessor (ecma_builtin_id_t builtin_id, /**< id of built-in object */
-                                                       uint16_t routine_id) /**< builtin-wide id of the built-in
+                                                       uint16_t routine_id, /**< builtin-wide id of the built-in
                                                                             *   object's routine property */
+                                                       uint16_t name_id) /**< magic string id of 'name' property */
 {
-  return ecma_builtin_make_function_object_for_routine (builtin_id, routine_id, 1);
+  return ecma_builtin_make_function_object_for_routine (builtin_id, routine_id, name_id, 1);
 } /* ecma_builtin_make_function_object_for_setter_accessor */
+
+/**
+ * Lazy instantiation of builtin routine property of builtin object
+ *
+ * If the property is not instantiated yet, instantiate the property and
+ * return pointer to the instantiated property.
+ *
+ * @return pointer property, if one was instantiated,
+ *         NULL - otherwise.
+ */
+ecma_property_t *
+ecma_builtin_routine_try_to_instantiate_property (ecma_object_t *object_p, /**< object */
+                                                  ecma_string_t *string_p) /**< property's name */
+{
+  JERRY_ASSERT (ecma_get_object_is_builtin (object_p));
+  JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION);
+  JERRY_ASSERT (ecma_builtin_function_is_routine (object_p));
+
+  if (ecma_string_is_length (string_p))
+  {
+    /*
+     * Lazy instantiation of 'length' property
+     */
+
+    ecma_property_t *len_prop_p;
+    ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
+#if ENABLED (JERRY_ES2015)
+    uint16_t *bitset_p = &ext_func_p->u.built_in.u.builtin_routine.bitset;
+    if (*bitset_p & (1u << 0))
+    {
+      /* length property was already instantiated */
+      return NULL;
+    }
+    /* We mark that the property was lazily instantiated,
+     * as it is configurable and so can be deleted (ECMA-262 v6, 19.2.4.1) */
+    *bitset_p |= (1u << 0);
+    ecma_property_value_t *len_prop_value_p = ecma_create_named_data_property (object_p,
+                                                                               string_p,
+                                                                               ECMA_PROPERTY_FLAG_CONFIGURABLE,
+                                                                               &len_prop_p);
+#else /* !ENABLED (JERRY_ES2015) */
+    /* We don't need to mark that the property was already lazy instantiated,
+     * as it is non-configurable and so can't be deleted (ECMA-262 v5, 13.2.5) */
+    ecma_property_value_t *len_prop_value_p = ecma_create_named_data_property (object_p,
+                                                                               string_p,
+                                                                               ECMA_PROPERTY_FIXED,
+                                                                               &len_prop_p);
+#endif /* ENABLED (JERRY_ES2015) */
+
+    uint8_t length = ext_func_p->u.built_in.length_and_bitset_size;
+    JERRY_ASSERT (length < (1 << ECMA_BUILT_IN_BITSET_SHIFT));
+
+    len_prop_value_p->value = ecma_make_integer_value (length);
+
+    return len_prop_p;
+  }
+
+  return NULL;
+} /* ecma_builtin_routine_try_to_instantiate_property */
 
 /**
  * If the property's name is one of built-in properties of the object
@@ -642,52 +685,6 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
                                           ecma_string_t *string_p) /**< property's name */
 {
   JERRY_ASSERT (ecma_get_object_is_builtin (object_p));
-
-  if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION
-      && ecma_builtin_function_is_routine (object_p))
-  {
-    if (ecma_string_is_length (string_p))
-    {
-      /*
-       * Lazy instantiation of 'length' property
-       */
-
-      ecma_property_t *len_prop_p;
-#if ENABLED (JERRY_ES2015)
-      ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
-      uint32_t *bitset_p = ext_func_p->u.built_in.instantiated_bitset;
-      if (*bitset_p & (1u << 0))
-      {
-        /* length property was already instantiated */
-        return NULL;
-      }
-      /* We mark that the property was lazily instantiated,
-       * as it is configurable and so can be deleted (ECMA-262 v6, 19.2.4.1) */
-      *bitset_p |= (1u << 0);
-      ecma_property_value_t *len_prop_value_p = ecma_create_named_data_property (object_p,
-                                                                                 string_p,
-                                                                                 ECMA_PROPERTY_FLAG_CONFIGURABLE,
-                                                                                 &len_prop_p);
-#else /* !ENABLED (JERRY_ES2015) */
-      /* We don't need to mark that the property was already lazy instantiated,
-       * as it is non-configurable and so can't be deleted (ECMA-262 v5, 13.2.5) */
-      ecma_property_value_t *len_prop_value_p = ecma_create_named_data_property (object_p,
-                                                                                 string_p,
-                                                                                 ECMA_PROPERTY_FIXED,
-                                                                                 &len_prop_p);
-#endif /* ENABLED (JERRY_ES2015) */
-
-      ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
-
-      uint8_t length = ext_obj_p->u.built_in.length_and_bitset_size & ((1 << ECMA_BUILT_IN_BITSET_SHIFT) - 1);
-
-      len_prop_value_p->value = ecma_make_integer_value (length);
-
-      return len_prop_p;
-    }
-
-    return NULL;
-  }
 
   lit_magic_string_id_t magic_string_id = ecma_get_string_magic (string_p);
 
@@ -708,6 +705,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 
   ecma_built_in_props_t *built_in_props_p;
   ecma_object_type_t object_type = ecma_get_object_type (object_p);
+  JERRY_ASSERT (object_type != ECMA_OBJECT_TYPE_FUNCTION || !ecma_builtin_function_is_routine (object_p));
 
   if (object_type == ECMA_OBJECT_TYPE_CLASS || object_type == ECMA_OBJECT_TYPE_ARRAY)
   {
@@ -738,7 +736,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 
   uint32_t index = (uint32_t) (curr_property_p - property_list_p);
 
-  uint32_t *bitset_p = built_in_props_p->instantiated_bitset + (index >> 5);
+  uint32_t *bitset_p = built_in_props_p->u.instantiated_bitset + (index >> 5);
 
   uint32_t bit_for_index = (uint32_t) (1u << (index & 0x1f));
 
@@ -873,6 +871,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
       ecma_object_t *func_obj_p;
       func_obj_p = ecma_builtin_make_function_object_for_routine (builtin_id,
                                                                   ECMA_GET_ROUTINE_ID (curr_property_p->value),
+                                                                  curr_property_p->magic_string_id,
                                                                   ECMA_GET_ROUTINE_LENGTH (curr_property_p->value));
       value = ecma_make_object_value (func_obj_p);
       break;
@@ -882,8 +881,12 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
       is_accessor = true;
       uint16_t getter_id = ECMA_ACCESSOR_READ_WRITE_GET_GETTER_ID (curr_property_p->value);
       uint16_t setter_id = ECMA_ACCESSOR_READ_WRITE_GET_SETTER_ID (curr_property_p->value);
-      getter_p = ecma_builtin_make_function_object_for_getter_accessor (builtin_id, getter_id);
-      setter_p = ecma_builtin_make_function_object_for_setter_accessor (builtin_id, setter_id);
+      getter_p = ecma_builtin_make_function_object_for_getter_accessor (builtin_id,
+                                                                        getter_id,
+                                                                        curr_property_p->magic_string_id);
+      setter_p = ecma_builtin_make_function_object_for_setter_accessor (builtin_id,
+                                                                        setter_id,
+                                                                        curr_property_p->magic_string_id);
       break;
     }
     default:
@@ -892,7 +895,8 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 
       is_accessor = true;
       getter_p = ecma_builtin_make_function_object_for_getter_accessor (builtin_id,
-                                                                        curr_property_p->value);
+                                                                        curr_property_p->value,
+                                                                        curr_property_p->magic_string_id);
       break;
     }
   }
@@ -936,6 +940,48 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 } /* ecma_builtin_try_to_instantiate_property */
 
 /**
+ * List names of a built-in function's lazy instantiated properties
+ *
+ * See also:
+ *          ecma_builtin_routine_try_to_instantiate_property
+ */
+void
+ecma_builtin_routine_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in object */
+                                               uint32_t opts, /**< listing options using flags
+                                                               *   from ecma_list_properties_options_t */
+                                               ecma_collection_t *main_collection_p, /**< 'main' collection */
+                                               ecma_collection_t *non_enum_collection_p) /**< skipped 'non-enumerable'
+                                                                                          *   collection */
+{
+  JERRY_ASSERT (ecma_get_object_is_builtin (object_p));
+  JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION);
+  JERRY_ASSERT (ecma_builtin_function_is_routine (object_p));
+
+  const bool separate_enumerable = (opts & ECMA_LIST_ENUMERABLE) != 0;
+  const bool is_array_indices_only = (opts & ECMA_LIST_ARRAY_INDICES) != 0;
+
+  ecma_collection_t *for_enumerable_p = main_collection_p;
+  JERRY_UNUSED (for_enumerable_p);
+
+  ecma_collection_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
+
+  if (!is_array_indices_only)
+  {
+#if ENABLED (JERRY_ES2015)
+    ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
+    if (!(ext_func_p->u.built_in.u.builtin_routine.bitset & (1u << 0)))
+    {
+      /* Unintialized 'length' property is non-enumerable (ECMA-262 v6, 19.2.4.1) */
+      ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
+    }
+#else /* !ENABLED (JERRY_ES2015) */
+    /* 'length' property is non-enumerable (ECMA-262 v5, 15) */
+    ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
+#endif /* ENABLED (JERRY_ES2015) */
+  }
+} /* ecma_builtin_routine_list_lazy_property_names */
+
+/**
  * List names of a built-in object's lazy instantiated properties
  *
  * See also:
@@ -950,106 +996,82 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
                                                                                   *   collection */
 {
   JERRY_ASSERT (ecma_get_object_is_builtin (object_p));
+  JERRY_ASSERT (ecma_get_object_type (object_p) != ECMA_OBJECT_TYPE_FUNCTION
+                || !ecma_builtin_function_is_routine (object_p));
 
   const bool separate_enumerable = (opts & ECMA_LIST_ENUMERABLE) != 0;
   const bool is_array_indices_only = (opts & ECMA_LIST_ARRAY_INDICES) != 0;
 
-  if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION
-      && ecma_builtin_function_is_routine (object_p))
+  ecma_built_in_props_t *built_in_props_p;
+  ecma_object_type_t object_type = ecma_get_object_type (object_p);
+
+  if (object_type == ECMA_OBJECT_TYPE_CLASS || object_type == ECMA_OBJECT_TYPE_ARRAY)
   {
-    ecma_collection_t *for_enumerable_p = main_collection_p;
-    JERRY_UNUSED (for_enumerable_p);
-
-    ecma_collection_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
-
-    if (!is_array_indices_only)
-    {
-#if ENABLED (JERRY_ES2015)
-      ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
-      if (!(ext_func_p->u.built_in.instantiated_bitset[0] & (1u << 0)))
-      {
-        /* Unintialized 'length' property is non-enumerable (ECMA-262 v6, 19.2.4.1) */
-        ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
-      }
-#else /* !ENABLED (JERRY_ES2015) */
-      /* 'length' property is non-enumerable (ECMA-262 v5, 15) */
-      ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
-#endif /* ENABLED (JERRY_ES2015) */
-    }
+    built_in_props_p = &((ecma_extended_built_in_object_t *) object_p)->built_in;
   }
   else
   {
-    ecma_built_in_props_t *built_in_props_p;
-    ecma_object_type_t object_type = ecma_get_object_type (object_p);
+    built_in_props_p = &((ecma_extended_object_t *) object_p)->u.built_in;
+  }
 
-    if (object_type == ECMA_OBJECT_TYPE_CLASS || object_type == ECMA_OBJECT_TYPE_ARRAY)
+  ecma_builtin_id_t builtin_id = (ecma_builtin_id_t) built_in_props_p->id;
+
+  JERRY_ASSERT (builtin_id < ECMA_BUILTIN_ID__COUNT);
+  JERRY_ASSERT (ecma_builtin_is (object_p, builtin_id));
+
+  const ecma_builtin_property_descriptor_t *curr_property_p = ecma_builtin_property_list_references[builtin_id];
+
+  ecma_length_t index = 0;
+  uint32_t *bitset_p = built_in_props_p->u.instantiated_bitset;
+
+  ecma_collection_t *for_non_enumerable_p = (separate_enumerable ? non_enum_collection_p
+                                                                 : main_collection_p);
+
+  while (curr_property_p->magic_string_id != LIT_MAGIC_STRING__COUNT)
+  {
+    if (index == 32)
     {
-      built_in_props_p = &((ecma_extended_built_in_object_t *) object_p)->built_in;
+      bitset_p++;
+      index = 0;
     }
-    else
-    {
-      built_in_props_p = &((ecma_extended_object_t *) object_p)->u.built_in;
-    }
-
-    ecma_builtin_id_t builtin_id = (ecma_builtin_id_t) built_in_props_p->id;
-
-    JERRY_ASSERT (builtin_id < ECMA_BUILTIN_ID__COUNT);
-    JERRY_ASSERT (ecma_builtin_is (object_p, builtin_id));
-
-    const ecma_builtin_property_descriptor_t *curr_property_p = ecma_builtin_property_list_references[builtin_id];
-
-    ecma_length_t index = 0;
-    uint32_t *bitset_p = built_in_props_p->instantiated_bitset;
-
-    ecma_collection_t *for_non_enumerable_p = (separate_enumerable ? non_enum_collection_p
-                                                                   : main_collection_p);
-
-    while (curr_property_p->magic_string_id != LIT_MAGIC_STRING__COUNT)
-    {
-      if (index == 32)
-      {
-        bitset_p++;
-        index = 0;
-      }
 
 #if ENABLED (JERRY_ES2015)
-      /* Builtin symbol properties are internal magic strings which must not be listed */
-      if (curr_property_p->magic_string_id > LIT_NON_INTERNAL_MAGIC_STRING__COUNT)
-      {
-        curr_property_p++;
-        continue;
-      }
-#endif /* ENABLED (JERRY_ES2015) */
-
-      ecma_string_t *name_p = ecma_get_magic_string ((lit_magic_string_id_t) curr_property_p->magic_string_id);
-
-      if (is_array_indices_only && ecma_string_get_array_index (name_p) == ECMA_STRING_NOT_ARRAY_INDEX)
-      {
-        curr_property_p++;
-        continue;
-      }
-
-      uint32_t bit_for_index = (uint32_t) 1u << index;
-
-      if (!(*bitset_p & bit_for_index) || ecma_op_ordinary_object_has_own_property (object_p, name_p))
-      {
-        ecma_value_t name = ecma_make_magic_string_value ((lit_magic_string_id_t) curr_property_p->magic_string_id);
-
-#if ENABLED (JERRY_ES2015)
-        if (curr_property_p->attributes & ECMA_PROPERTY_FLAG_ENUMERABLE)
-        {
-          ecma_collection_push_back (main_collection_p, name);
-        }
-        else
-#endif /* ENABLED (JERRY_ES2015) */
-        {
-          ecma_collection_push_back (for_non_enumerable_p, name);
-        }
-      }
-
+    /* Builtin symbol properties are internal magic strings which must not be listed */
+    if (curr_property_p->magic_string_id > LIT_NON_INTERNAL_MAGIC_STRING__COUNT)
+    {
       curr_property_p++;
-      index++;
+      continue;
     }
+#endif /* ENABLED (JERRY_ES2015) */
+
+    ecma_string_t *name_p = ecma_get_magic_string ((lit_magic_string_id_t) curr_property_p->magic_string_id);
+
+    if (is_array_indices_only && ecma_string_get_array_index (name_p) == ECMA_STRING_NOT_ARRAY_INDEX)
+    {
+      curr_property_p++;
+      continue;
+    }
+
+    uint32_t bit_for_index = (uint32_t) 1u << index;
+
+    if (!(*bitset_p & bit_for_index) || ecma_op_ordinary_object_has_own_property (object_p, name_p))
+    {
+      ecma_value_t name = ecma_make_magic_string_value ((lit_magic_string_id_t) curr_property_p->magic_string_id);
+
+#if ENABLED (JERRY_ES2015)
+      if (curr_property_p->attributes & ECMA_PROPERTY_FLAG_ENUMERABLE)
+      {
+        ecma_collection_push_back (main_collection_p, name);
+      }
+      else
+#endif /* ENABLED (JERRY_ES2015) */
+      {
+        ecma_collection_push_back (for_non_enumerable_p, name);
+      }
+    }
+
+    curr_property_p++;
+    index++;
   }
 } /* ecma_builtin_list_lazy_property_names */
 

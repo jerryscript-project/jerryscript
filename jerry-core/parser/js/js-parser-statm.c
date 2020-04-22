@@ -698,7 +698,8 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
   JERRY_ASSERT (scope_stack_p[1].map_from == PARSER_SCOPE_STACK_FUNC);
 
 #if ENABLED (JERRY_ES2015)
-  if (!(context_p->status_flags & PARSER_IS_STRICT))
+  if (!(context_p->status_flags & PARSER_IS_STRICT)
+      && (scope_stack_p >= context_p->scope_stack_p + context_p->scope_stack_global_end))
   {
     bool copy_value = true;
 
@@ -717,40 +718,25 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
 
     if (copy_value)
     {
-      if (!(context_p->status_flags & PARSER_IS_FUNCTION)
-          && (context_p->global_status_flags & ECMA_PARSE_DIRECT_EVAL))
+      stack_p = context_p->scope_stack_p;
+
+      while (stack_p < scope_stack_p)
       {
-        if (!scanner_scope_find_let_declaration (context_p, &context_p->token.lit_location))
+        if (literal_index == stack_p->map_from)
         {
-          context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_USED;
+          JERRY_ASSERT (!(stack_p->map_to & PARSER_SCOPE_STACK_IS_LEXICAL));
+
+          uint16_t map_to = scanner_decode_map_to (stack_p);
+          uint16_t opcode = ((map_to >= PARSER_REGISTER_START) ? CBC_ASSIGN_LITERAL_SET_IDENT
+                                                               : CBC_COPY_TO_GLOBAL);
+
           parser_emit_cbc_literal_value (context_p,
-                                         CBC_COPY_TO_GLOBAL,
+                                         opcode,
                                          scanner_decode_map_to (scope_stack_p),
-                                         literal_index);
+                                         map_to);
+          break;
         }
-      }
-      else
-      {
-        stack_p = context_p->scope_stack_p;
-
-        while (stack_p < scope_stack_p)
-        {
-          if (literal_index == stack_p->map_from)
-          {
-            JERRY_ASSERT (!(stack_p->map_to & PARSER_SCOPE_STACK_IS_LEXICAL));
-
-            uint16_t map_to = scanner_decode_map_to (stack_p);
-            uint16_t opcode = ((map_to >= PARSER_REGISTER_START) ? CBC_ASSIGN_LITERAL_SET_IDENT
-                                                                 : CBC_COPY_TO_GLOBAL);
-
-            parser_emit_cbc_literal_value (context_p,
-                                           opcode,
-                                           scanner_decode_map_to (scope_stack_p),
-                                           map_to);
-            break;
-          }
-          stack_p++;
-        }
+        stack_p++;
       }
 
       parser_flush_cbc (context_p);

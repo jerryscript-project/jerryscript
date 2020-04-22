@@ -2170,10 +2170,13 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
       if (func_init_opcode == CBC_INIT_LOCAL && (option_flags & SCANNER_CREATE_VARS_IS_SCRIPT))
       {
 #if ENABLED (JERRY_ES2015)
-        if (!(context_p->global_status_flags & ECMA_PARSE_DIRECT_EVAL))
+        literal.char_p -= data_p[1];
+        if (!(context_p->global_status_flags & ECMA_PARSE_DIRECT_EVAL)
+            || !scanner_scope_find_let_declaration (context_p, &literal))
         {
           func_init_opcode = CBC_CREATE_VAR_FUNC_EVAL;
         }
+        literal.char_p += data_p[1];
 #else /* !ENABLED (JERRY_ES2015) */
         func_init_opcode = CBC_CREATE_VAR_FUNC_EVAL;
 #endif /* ENABLED (JERRY_ES2015) */

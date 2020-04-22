@@ -66,10 +66,17 @@ typedef enum
    * IMPORTANT: update CBC_BINARY_OP_TOKEN_TO_OPCODE,
    *            CBC_BINARY_LVALUE_OP_TOKEN_TO_OPCODE and
    *            parser_binary_precedence_table after changes. */
+#if ENABLED (JERRY_ES2015)
+#define LEXER_IS_BINARY_OP_TOKEN(token_type) \
+  ((token_type) >= LEXER_ASSIGN && (token_type) <= LEXER_EXPONENTIATION)
+#else /* !ENABLED (JERRY_ES2015) */
 #define LEXER_IS_BINARY_OP_TOKEN(token_type) \
   ((token_type) >= LEXER_ASSIGN && (token_type) <= LEXER_MODULO)
+#endif /* ENABLED (JERRY_ES2015) */
+
 #define LEXER_IS_BINARY_LVALUE_TOKEN(token_type) \
   ((token_type) >= LEXER_ASSIGN && (token_type) <= LEXER_ASSIGN_BIT_XOR)
+
 #define LEXER_FIRST_BINARY_OP LEXER_ASSIGN
 
   LEXER_ASSIGN,                  /**< "=" (prec: 3) */
@@ -78,6 +85,9 @@ typedef enum
   LEXER_ASSIGN_MULTIPLY,         /**< "*=" (prec: 3) */
   LEXER_ASSIGN_DIVIDE,           /**< "/=" (prec: 3) */
   LEXER_ASSIGN_MODULO,           /**< "%=" (prec: 3) */
+#if ENABLED (JERRY_ES2015)
+  LEXER_ASSIGN_EXPONENTIATION,   /**< "**=" (prec: 3) */
+#endif /* ENABLED (JERRY_ES2015) */
   LEXER_ASSIGN_LEFT_SHIFT,       /**< "<<=" (prec: 3) */
   LEXER_ASSIGN_RIGHT_SHIFT,      /**< ">>=" (prec: 3) */
   LEXER_ASSIGN_UNS_RIGHT_SHIFT,  /**< ">>>=" (prec: 3) */
@@ -108,6 +118,9 @@ typedef enum
   LEXER_MULTIPLY,                /**< "*" (prec: 14) */
   LEXER_DIVIDE,                  /**< "/" (prec: 14) */
   LEXER_MODULO,                  /**< "%" (prec: 14) */
+#if ENABLED (JERRY_ES2015)
+  LEXER_EXPONENTIATION,          /**< "**" (prec: 15) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   LEXER_LEFT_BRACE,              /**< "{" */
   LEXER_LEFT_PAREN,              /**< "(" */

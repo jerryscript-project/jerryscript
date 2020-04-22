@@ -38,9 +38,14 @@
 #define PARSER_RIGHT_TO_LEFT_ORDER_MAX_PRECEDENCE 6
 
 /**
- * Precende for ternary operation.
+ * Precedence for ternary operation.
  */
 #define PARSER_RIGHT_TO_LEFT_ORDER_TERNARY_PRECEDENCE 4
+
+/**
+ * Precedence for exponentiation operation.
+ */
+#define PARSER_RIGHT_TO_LEFT_ORDER_EXPONENTIATION 15
 
 /**
  * Value of grouping level increase and decrease.
@@ -53,13 +58,27 @@
  * See also:
  *    lexer_token_type_t
  */
-static const uint8_t parser_binary_precedence_table[36] =
+static const uint8_t parser_binary_precedence_table[] =
 {
   3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+#if ENABLED (JERRY_ES2015)
+  3,
+#endif /* ENABLED (JERRY_ES2015) */
   4, 5, 6, 7, 8, 9, 10, 10, 10, 10,
   11, 11, 11, 11, 11, 11, 12, 12, 12,
-  13, 13, 14, 14, 14
+  13, 13, 14, 14, 14,
+#if ENABLED (JERRY_ES2015)
+  15,
+#endif /* ENABLED (JERRY_ES2015) */
 };
+
+#if ENABLED (JERRY_ES2015)
+JERRY_STATIC_ASSERT (sizeof (parser_binary_precedence_table) == 38,
+                     parser_binary_precedence_table_should_have_38_values_in_es2015);
+#else /* !ENABLED (JERRY_ES2015) */
+JERRY_STATIC_ASSERT (sizeof (parser_binary_precedence_table) == 36,
+                     parser_binary_precedence_table_should_have_36_values_in_es51);
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * Generate byte code for operators with lvalue.
@@ -1562,14 +1581,19 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
       {
         bool is_negative_number = false;
 
-        while (context_p->stack_top_uint8 == LEXER_PLUS
-               || context_p->stack_top_uint8 == LEXER_NEGATE)
+        if ((context_p->stack_top_uint8 == LEXER_PLUS || context_p->stack_top_uint8 == LEXER_NEGATE)
+            && !lexer_check_post_primary_exp (context_p))
         {
-          if (context_p->stack_top_uint8 == LEXER_NEGATE)
+          do
           {
-            is_negative_number = !is_negative_number;
+            if (context_p->stack_top_uint8 == LEXER_NEGATE)
+            {
+              is_negative_number = !is_negative_number;
+            }
+            parser_stack_pop_uint8 (context_p);
           }
-          parser_stack_pop_uint8 (context_p);
+          while (context_p->stack_top_uint8 == LEXER_PLUS
+                 || context_p->stack_top_uint8 == LEXER_NEGATE);
         }
 
         if (lexer_construct_number_object (context_p, true, is_negative_number))
@@ -2123,14 +2147,30 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
     break;
   }
 
+#if ENABLED (JERRY_ES2015)
+  uint8_t last_unary_token = LEXER_INCREASE;
+#endif /* ENABLED (JERRY_ES2015) */
+
   /* Generate byte code for the unary operators. */
   while (true)
   {
     uint8_t token = context_p->stack_top_uint8;
     if (!LEXER_IS_UNARY_OP_TOKEN (token))
     {
+#if ENABLED (JERRY_ES2015)
+      if (context_p->token.type == LEXER_EXPONENTIATION
+          && last_unary_token != LEXER_INCREASE
+          && last_unary_token != LEXER_DECREASE)
+      {
+        parser_raise_error (context_p, PARSER_ERR_INVALID_EXPONENTIATION);
+      }
+#endif /* ENABLED (JERRY_ES2015) */
       break;
     }
+
+#if ENABLED (JERRY_ES2015)
+    last_unary_token = token;
+#endif /* ENABLED (JERRY_ES2015) */
 
     parser_push_result (context_p);
     parser_stack_pop_uint8 (context_p);
@@ -3142,6 +3182,16 @@ process_unary_expression:
         {
           min_prec_treshold = parser_binary_precedence_table[context_p->token.type - LEXER_FIRST_BINARY_OP];
 
+#if ENABLED (JERRY_ES2015)
+          /* Check for BINARY_LVALUE tokens + LEXER_LOGICAL_OR + LEXER_LOGICAL_AND + LEXER_EXPONENTIATION */
+          if ((min_prec_treshold == PARSER_RIGHT_TO_LEFT_ORDER_EXPONENTIATION)
+              || (min_prec_treshold <= PARSER_RIGHT_TO_LEFT_ORDER_MAX_PRECEDENCE
+                  && min_prec_treshold != PARSER_RIGHT_TO_LEFT_ORDER_TERNARY_PRECEDENCE))
+          {
+            /* Right-to-left evaluation order. */
+            min_prec_treshold++;
+          }
+#else /* !ENABLED (JERRY_ES2015) */
           /* Check for BINARY_LVALUE tokens + LEXER_LOGICAL_OR + LEXER_LOGICAL_AND */
           if (min_prec_treshold <= PARSER_RIGHT_TO_LEFT_ORDER_MAX_PRECEDENCE
               && min_prec_treshold != PARSER_RIGHT_TO_LEFT_ORDER_TERNARY_PRECEDENCE)
@@ -3149,6 +3199,7 @@ process_unary_expression:
             /* Right-to-left evaluation order. */
             min_prec_treshold++;
           }
+#endif /* ENABLED (JERRY_ES2015) */
         }
 
         parser_process_binary_opcodes (context_p, min_prec_treshold);

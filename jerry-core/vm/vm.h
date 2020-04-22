@@ -182,6 +182,9 @@ typedef enum
   VM_OC_MUL,                     /**< mul */
   VM_OC_DIV,                     /**< div */
   VM_OC_MOD,                     /**< mod */
+#if ENABLED (JERRY_ES2015)
+  VM_OC_EXP,                     /**< exponentiation */
+#endif /* ENABLED (JERRY_ES2015) */
 
   VM_OC_EQUAL,                   /**< equal */
   VM_OC_NOT_EQUAL,               /**< not equal */
@@ -276,6 +279,9 @@ typedef enum
  */
 typedef enum
 {
+#if !ENABLED (JERRY_ES2015)
+  VM_OC_EXP = VM_OC_NONE,                     /**< exponentiation */
+#endif /* !ENABLED (JERRY_ES2015) */
 #if !ENABLED (JERRY_DEBUGGER)
   VM_OC_BREAKPOINT_ENABLED = VM_OC_NONE,      /**< enabled breakpoint for debugger is unused */
   VM_OC_BREAKPOINT_DISABLED = VM_OC_NONE,     /**< disabled breakpoint for debugger is unused */

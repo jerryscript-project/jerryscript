@@ -505,21 +505,7 @@ ecma_builtin_math_dispatch_routine (uint16_t builtin_routine_id, /**< built-in w
       }
       case ECMA_MATH_OBJECT_POW:
       {
-        if (ecma_number_is_nan (y) ||
-            (ecma_number_is_infinity (y) && (x == 1.0 || x == -1.0)))
-        {
-          /* Handle differences between ES5.1 and ISO C standards for pow. */
-          x = ecma_number_make_nan ();
-        }
-        else if (ecma_number_is_zero (y))
-        {
-          /* Handle differences between ES5.1 and ISO C standards for pow. */
-          x = (ecma_number_t) 1.0;
-        }
-        else
-        {
-          x = DOUBLE_TO_ECMA_NUMBER_T (pow (x, y));
-        }
+        x = ecma_number_pow (x, y);
         break;
       }
 #if ENABLED (JERRY_ES2015)

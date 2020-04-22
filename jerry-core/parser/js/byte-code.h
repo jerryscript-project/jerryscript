@@ -396,6 +396,8 @@
                         DIV) \
   CBC_BINARY_OPERATION (CBC_MODULO, \
                         MOD) \
+  CBC_BINARY_OPERATION (CBC_EXPONENTIATION, \
+                        EXP) \
   \
   /* Unary lvalue opcodes. */ \
   CBC_OPCODE (CBC_DELETE_PUSH_RESULT, CBC_NO_FLAG, -1, \

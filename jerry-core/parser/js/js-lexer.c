@@ -1401,7 +1401,7 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
  * @param type1 type
  */
 #define LEXER_TYPE_A_TOKEN(char1, type1) \
-  case (uint8_t) (char1) : \
+  case (uint8_t) (char1): \
   { \
     context_p->token.type = (type1); \
     length = 1; \
@@ -1417,7 +1417,7 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
  * @param type2 type of the second character
  */
 #define LEXER_TYPE_B_TOKEN(char1, type1, char2, type2) \
-  case (uint8_t) (char1) : \
+  case (uint8_t) (char1): \
   { \
     if (length >= 2 && context_p->source_p[1] == (uint8_t) (char2)) \
     { \
@@ -1442,7 +1442,7 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
  * @param type3 type of the third character
  */
 #define LEXER_TYPE_C_TOKEN(char1, type1, char2, type2, char3, type3) \
-  case (uint8_t) (char1) : \
+  case (uint8_t) (char1): \
   { \
     if (length >= 2) \
     { \
@@ -1671,8 +1671,39 @@ lexer_next_token (parser_context_t *context_p) /**< context */
     LEXER_TYPE_C_TOKEN (LIT_CHAR_MINUS, LEXER_SUBTRACT, LIT_CHAR_EQUALS,
                         LEXER_ASSIGN_SUBTRACT, LIT_CHAR_MINUS, LEXER_DECREASE)
 
-    LEXER_TYPE_B_TOKEN (LIT_CHAR_ASTERISK, LEXER_MULTIPLY, LIT_CHAR_EQUALS,
-                        LEXER_ASSIGN_MULTIPLY)
+    case (uint8_t) LIT_CHAR_ASTERISK:
+    {
+      if (length >= 2)
+      {
+        if (context_p->source_p[1] == (uint8_t) LIT_CHAR_EQUALS)
+        {
+          context_p->token.type = LEXER_ASSIGN_MULTIPLY;
+          length = 2;
+          break;
+        }
+
+#if ENABLED (JERRY_ES2015)
+        if (context_p->source_p[1] == (uint8_t) LIT_CHAR_ASTERISK)
+        {
+          if (length >= 3 && context_p->source_p[2] == (uint8_t) LIT_CHAR_EQUALS)
+          {
+            context_p->token.type = LEXER_ASSIGN_EXPONENTIATION;
+            length = 3;
+            break;
+          }
+
+          context_p->token.type = LEXER_EXPONENTIATION;
+          length = 2;
+          break;
+        }
+#endif /* ENABLED (JERRY_ES2015) */
+      }
+
+      context_p->token.type = LEXER_MULTIPLY;
+      length = 1;
+      break;
+    }
+
     LEXER_TYPE_B_TOKEN (LIT_CHAR_SLASH, LEXER_DIVIDE, LIT_CHAR_EQUALS,
                         LEXER_ASSIGN_DIVIDE)
     LEXER_TYPE_B_TOKEN (LIT_CHAR_PERCENT, LEXER_MODULO, LIT_CHAR_EQUALS,
@@ -1763,7 +1794,7 @@ lexer_check_next_characters (parser_context_t *context_p, /**< context */
  * @return consumed character
  */
 inline uint8_t JERRY_ATTR_ALWAYS_INLINE
-lexer_consume_next_character (parser_context_t *context_p)
+lexer_consume_next_character (parser_context_t *context_p) /**< context */
 {
   JERRY_ASSERT (context_p->source_p < context_p->source_end_p);
 
@@ -1772,6 +1803,59 @@ lexer_consume_next_character (parser_context_t *context_p)
   PARSER_PLUS_EQUAL_LC (context_p->column, 1);
   return *context_p->source_p++;
 } /* lexer_consume_next_character */
+
+/**
+ * Checks whether the next character can be the start of a post primary expression
+ *
+ * Note:
+ *     the result is not precise, but this inprecise result
+ *     has no side effects for negating number literals
+ *
+ * @return true if the next character can be the start of a post primary expression
+ */
+bool
+lexer_check_post_primary_exp (parser_context_t *context_p) /**< context */
+{
+  if (!(context_p->token.flags & LEXER_NO_SKIP_SPACES))
+  {
+    lexer_skip_spaces (context_p);
+    context_p->token.flags = (uint8_t) (context_p->token.flags | LEXER_NO_SKIP_SPACES);
+  }
+
+  if (context_p->source_p >= context_p->source_end_p)
+  {
+    return false;
+  }
+
+  switch (context_p->source_p[0])
+  {
+    case LIT_CHAR_DOT:
+    case LIT_CHAR_LEFT_PAREN:
+    case LIT_CHAR_LEFT_SQUARE:
+#if ENABLED (JERRY_ES2015)
+    case LIT_CHAR_GRAVE_ACCENT:
+#endif /* ENABLED (JERRY_ES2015) */
+    {
+      return true;
+    }
+    case LIT_CHAR_PLUS:
+    case LIT_CHAR_MINUS:
+    {
+      return (!(context_p->token.flags & LEXER_WAS_NEWLINE)
+              && context_p->source_p + 1 < context_p->source_end_p
+              && context_p->source_p[1] == context_p->source_p[0]);
+    }
+#if ENABLED (JERRY_ES2015)
+    case LIT_CHAR_ASTERISK:
+    {
+      return (context_p->source_p + 1 < context_p->source_end_p
+              && context_p->source_p[1] == (uint8_t) LIT_CHAR_ASTERISK);
+    }
+#endif /* ENABLED (JERRY_ES2015) */
+  }
+
+  return false;
+} /* lexer_check_post_primary_exp */
 
 #if ENABLED (JERRY_ES2015)
 
@@ -3295,10 +3379,17 @@ lexer_convert_binary_lvalue_token_to_binary (uint8_t token) /**< binary lvalue t
   JERRY_ASSERT (LEXER_IS_BINARY_LVALUE_TOKEN (token));
   JERRY_ASSERT (token != LEXER_ASSIGN);
 
+#if ENABLED (JERRY_ES2015)
+  if (token <= LEXER_ASSIGN_EXPONENTIATION)
+  {
+    return (uint8_t) (LEXER_ADD + (token - LEXER_ASSIGN_ADD));
+  }
+#else /* !ENABLED (JERRY_ES2015) */
   if (token <= LEXER_ASSIGN_MODULO)
   {
     return (uint8_t) (LEXER_ADD + (token - LEXER_ASSIGN_ADD));
   }
+#endif /* ENABLED (JERRY_ES2015) */
 
   if (token <= LEXER_ASSIGN_UNS_RIGHT_SHIFT)
   {

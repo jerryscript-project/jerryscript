@@ -45,6 +45,11 @@ parse ("c = a-");
 parse("a++\n()");
 parse("a--\n.b");
 
+assert((-2 .toString()) === -2);
+
+Number.prototype[0] = 123;
+assert(-2[0] === -123);
+
 function f() {
   var a = 0;
   function g() {}

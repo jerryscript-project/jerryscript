@@ -74,6 +74,13 @@ do_number_arithmetic (number_arithmetic_op op, /**< number arithmetic operation 
       result = ecma_op_number_remainder (num_left, num_right);
       break;
     }
+#if ENABLED (JERRY_ES2015)
+    case NUMBER_ARITHMETIC_EXPONENTIATION:
+    {
+      result = ecma_number_pow (num_left, num_right);
+      break;
+    }
+#endif /* ENABLED (JERRY_ES2015) */
   }
 
   ret_value = ecma_make_number_value (result);

@@ -2815,6 +2815,22 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           *stack_top_p++ = result;
           goto free_both_values;
         }
+#if ENABLED (JERRY_ES2015)
+        case VM_OC_EXP:
+        {
+          result = do_number_arithmetic (NUMBER_ARITHMETIC_EXPONENTIATION,
+                                         left_value,
+                                         right_value);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          *stack_top_p++ = result;
+          goto free_both_values;
+        }
+#endif /* ENABLED (JERRY_ES2015) */
         case VM_OC_EQUAL:
         {
           result = opfunc_equality (left_value, right_value);

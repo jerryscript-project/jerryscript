@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <math.h>
+
 #include "ecma-conversion.h"
 #include "lit-char-helpers.h"
 
@@ -655,6 +657,31 @@ ecma_number_calc_remainder (ecma_number_t left_num, /**< left operand */
 
   return r;
 } /* ecma_number_calc_remainder */
+
+/**
+ * Compute power operation according to the ES standard.
+ *
+ * @return x ** y
+ */
+ecma_number_t
+ecma_number_pow (ecma_number_t x, /**< left operand */
+                 ecma_number_t y) /**< right operand */
+{
+  if (ecma_number_is_nan (y) ||
+      (ecma_number_is_infinity (y) && (x == 1.0 || x == -1.0)))
+  {
+    /* Handle differences between ES5.1 and ISO C standards for pow. */
+    return ecma_number_make_nan ();
+  }
+
+  if (ecma_number_is_zero (y))
+  {
+    /* Handle differences between ES5.1 and ISO C standards for pow. */
+    return (ecma_number_t) 1.0;
+  }
+
+  return DOUBLE_TO_ECMA_NUMBER_T (pow (x, y));
+} /* ecma_number_pow */
 
 /**
  * ECMA-integer number multiplication.

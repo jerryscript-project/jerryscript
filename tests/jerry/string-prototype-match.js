@@ -13,7 +13,17 @@
 // limitations under the License.
 
 // check properties
-assert(Object.getOwnPropertyDescriptor(String.prototype.match, 'length').configurable === false);
+
+function length_configurable()
+{
+  function is_es51() {
+    return (typeof g === "function");
+    { function g() {} }
+  }
+  return is_es51() ? false : true;
+}
+
+assert(Object.getOwnPropertyDescriptor(String.prototype.match, 'length').configurable === length_configurable());
 assert(Object.getOwnPropertyDescriptor(String.prototype.match, 'length').enumerable === false);
 assert(Object.getOwnPropertyDescriptor(String.prototype.match, 'length').writable === false);
 

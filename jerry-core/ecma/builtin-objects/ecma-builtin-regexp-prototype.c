@@ -470,6 +470,7 @@ ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
  *
  * See also:
  *          ECMA-262 v5, 15.10.6.3
+ *          ECMA-262 v6, 21.2.5.13
  *
  * @return true  - if match is not null
  *         false - otherwise
@@ -480,12 +481,35 @@ static ecma_value_t
 ecma_builtin_regexp_prototype_test (ecma_value_t this_arg, /**< this argument */
                                     ecma_value_t arg) /**< routine's argument */
 {
+#if ENABLED (JERRY_ES2015)
+  if (!ecma_is_value_object (this_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' value is not an object"));
+  }
+
+  ecma_string_t *arg_str_p = ecma_op_to_string (arg);
+
+  if (JERRY_UNLIKELY (arg_str_p == NULL))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  ecma_value_t result = ecma_op_regexp_exec (this_arg, arg_str_p);
+
+  ecma_deref_ecma_string (arg_str_p);
+
+  if (ECMA_IS_VALUE_ERROR (result))
+  {
+    return result;
+  }
+#else /* !ENABLED (JERRY_ES2015) */
   ecma_value_t result = ecma_builtin_regexp_prototype_exec (this_arg, arg);
 
   if (ECMA_IS_VALUE_ERROR (result))
   {
     return result;
   }
+#endif /* ENABLED (JERRY_ES2015) */
 
   ecma_value_t ret_value = ecma_make_boolean_value (!ecma_is_value_null (result));
   ecma_free_value (result);

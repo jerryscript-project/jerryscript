@@ -152,3 +152,10 @@ function f6() {
   (((((e)))("assert(p1 === 0)")));
 }
 f6();
+
+y = 1;
+function f7() {
+  function x() { return y; }
+  eval("assert(x()() === 5); function y() { return 5 } assert(x()() === 5)");
+}
+f7()

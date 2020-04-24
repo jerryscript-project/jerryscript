@@ -42,5 +42,19 @@ parse ("a =% b");
 parse ("c = a+");
 parse ("c = a-");
 
-parse("a++\n()")
-parse("a--\n.b")
+parse("a++\n()");
+parse("a--\n.b");
+
+function f() {
+  var a = 0;
+  function g() {}
+
+  try {
+    eval ("g(this, 'a' = 1)");
+    assert (false)
+  } catch (e) {
+    assert (e instanceof ReferenceError);
+  }
+  assert (a === 0);
+}
+f();

@@ -477,7 +477,7 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
   {
     no_reg_types |= SCANNER_LITERAL_IS_FUNC;
   }
-#endif /* !ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ES2015) */
 
   if (no_reg && prev_literal_pool_p != NULL)
   {
@@ -693,6 +693,11 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
         {
           status_flags |= SCANNER_FUNCTION_STATEMENT;
         }
+      }
+
+      if (no_reg)
+      {
+        status_flags |= SCANNER_FUNCTION_LEXICAL_ENV_NEEDED;
       }
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -1567,98 +1572,85 @@ scanner_cleanup (parser_context_t *context_p) /**< context */
  *         false - otherwise
  */
 bool
-scanner_is_context_needed (parser_context_t *context_p) /**< context */
-{
-  scanner_info_t *info_p = context_p->next_scanner_info_p;
-  const uint8_t *data_p = ((const uint8_t *) info_p) + sizeof (scanner_info_t);
-
-  JERRY_ASSERT (info_p->type == SCANNER_TYPE_BLOCK);
-
-  uint32_t scope_stack_reg_top = context_p->scope_stack_reg_top;
-
-  while (data_p[0] != SCANNER_STREAM_TYPE_END)
-  {
-    uint32_t type = data_p[0] & SCANNER_STREAM_TYPE_MASK;
-
-#if ENABLED (JERRY_ES2015)
-    JERRY_ASSERT (type == SCANNER_STREAM_TYPE_VAR
-                  || type == SCANNER_STREAM_TYPE_LET
-                  || type == SCANNER_STREAM_TYPE_CONST
-                  || type == SCANNER_STREAM_TYPE_LOCAL
-                  || type == SCANNER_STREAM_TYPE_FUNC);
-#else /* !ENABLED (JERRY_ES2015) */
-    JERRY_ASSERT (type == SCANNER_STREAM_TYPE_VAR);
-#endif /* ENABLED (JERRY_ES2015) */
-
-    size_t length;
-
-    if (!(data_p[0] & SCANNER_STREAM_UINT16_DIFF))
-    {
-      if (data_p[2] != 0)
-      {
-        length = 2 + 1;
-      }
-      else
-      {
-        length = 2 + 1 + sizeof (const uint8_t *);
-      }
-    }
-    else
-    {
-      length = 2 + 2;
-    }
-
-    if (!(data_p[0] & SCANNER_STREAM_NO_REG)
-        && scope_stack_reg_top < PARSER_MAXIMUM_NUMBER_OF_REGISTERS)
-    {
-      scope_stack_reg_top++;
-    }
-    else
-    {
-      return true;
-    }
-
-    data_p += length;
-  }
-
-  return false;
-} /* scanner_is_context_needed */
-
-#if ENABLED (JERRY_ES2015)
-
-/**
- * Checks whether a global context needs to be created for a script.
- *
- * @return true - if context is needed,
- *         false - otherwise
- */
-bool
-scanner_is_global_context_needed (parser_context_t *context_p) /**< context */
+scanner_is_context_needed (parser_context_t *context_p, /**< context */
+                           parser_check_context_type_t check_type) /**< context type */
 {
   scanner_info_t *info_p = context_p->next_scanner_info_p;
   const uint8_t *data_p = (const uint8_t *) (info_p + 1);
-  uint32_t scope_stack_reg_top = 0;
 
-  JERRY_ASSERT (info_p->type == SCANNER_TYPE_FUNCTION);
+  JERRY_UNUSED (check_type);
+
+#if ENABLED (JERRY_ES2015)
+  JERRY_ASSERT ((check_type == PARSER_CHECK_BLOCK_CONTEXT ? info_p->type == SCANNER_TYPE_BLOCK
+                                                          : info_p->type == SCANNER_TYPE_FUNCTION));
+
+  uint32_t scope_stack_reg_top = (check_type != PARSER_CHECK_GLOBAL_CONTEXT ? context_p->scope_stack_reg_top
+                                                                            : 0);
+#else /* !ENABLED (JERRY_ES2015) */
+  JERRY_ASSERT (check_type == PARSER_CHECK_BLOCK_CONTEXT);
+  JERRY_ASSERT (info_p->type == SCANNER_TYPE_BLOCK);
+
+  uint32_t scope_stack_reg_top = context_p->scope_stack_reg_top;
+#endif /* !JERRY_NDEBUG */
 
   while (data_p[0] != SCANNER_STREAM_TYPE_END)
   {
     uint8_t data = data_p[0];
+
+#if ENABLED (JERRY_ES2015)
     uint32_t type = data & SCANNER_STREAM_TYPE_MASK;
 
-    /* FIXME: a private declarative lexical environment should always be present
-     * for modules. Remove SCANNER_STREAM_TYPE_IMPORT after it is implemented. */
-    JERRY_ASSERT (type == SCANNER_STREAM_TYPE_VAR
-                  || type == SCANNER_STREAM_TYPE_LET
-                  || type == SCANNER_STREAM_TYPE_CONST
-                  || type == SCANNER_STREAM_TYPE_FUNC
-                  || type == SCANNER_STREAM_TYPE_IMPORT);
+    if (JERRY_UNLIKELY (type == SCANNER_STREAM_TYPE_HOLE))
+    {
+      JERRY_ASSERT (check_type == PARSER_CHECK_FUNCTION_CONTEXT);
+      data_p++;
+      continue;
+    }
 
-    /* Only let/const can be stored in registers */
-    JERRY_ASSERT ((data & SCANNER_STREAM_NO_REG)
-                  || (type == SCANNER_STREAM_TYPE_FUNC && (context_p->global_status_flags & ECMA_PARSE_DIRECT_EVAL))
-                  || type == SCANNER_STREAM_TYPE_LET
-                  || type == SCANNER_STREAM_TYPE_CONST);
+#ifndef JERRY_NDEBUG
+    if (check_type == PARSER_CHECK_BLOCK_CONTEXT)
+    {
+      JERRY_ASSERT (type == SCANNER_STREAM_TYPE_VAR
+                    || type == SCANNER_STREAM_TYPE_LET
+                    || type == SCANNER_STREAM_TYPE_CONST
+                    || type == SCANNER_STREAM_TYPE_LOCAL
+                    || type == SCANNER_STREAM_TYPE_FUNC);
+    }
+    else if (check_type == PARSER_CHECK_GLOBAL_CONTEXT)
+    {
+      /* FIXME: a private declarative lexical environment should always be present
+       * for modules. Remove SCANNER_STREAM_TYPE_IMPORT after it is implemented. */
+      JERRY_ASSERT (type == SCANNER_STREAM_TYPE_VAR
+                    || type == SCANNER_STREAM_TYPE_LET
+                    || type == SCANNER_STREAM_TYPE_CONST
+                    || type == SCANNER_STREAM_TYPE_FUNC
+                    || type == SCANNER_STREAM_TYPE_IMPORT);
+
+      /* Only let/const can be stored in registers */
+      JERRY_ASSERT ((data & SCANNER_STREAM_NO_REG)
+                    || (type == SCANNER_STREAM_TYPE_FUNC && (context_p->global_status_flags & ECMA_PARSE_DIRECT_EVAL))
+                    || type == SCANNER_STREAM_TYPE_LET
+                    || type == SCANNER_STREAM_TYPE_CONST);
+    }
+    else
+    {
+      JERRY_ASSERT (check_type == PARSER_CHECK_FUNCTION_CONTEXT);
+
+      JERRY_ASSERT (type == SCANNER_STREAM_TYPE_VAR
+                    || type == SCANNER_STREAM_TYPE_LET
+                    || type == SCANNER_STREAM_TYPE_CONST
+                    || type == SCANNER_STREAM_TYPE_LOCAL
+                    || type == SCANNER_STREAM_TYPE_DESTRUCTURED_ARG
+                    || type == SCANNER_STREAM_TYPE_ARG
+                    || type == SCANNER_STREAM_TYPE_ARG_FUNC
+                    || type == SCANNER_STREAM_TYPE_DESTRUCTURED_ARG_FUNC
+                    || type == SCANNER_STREAM_TYPE_FUNC);
+    }
+#endif /* !JERRY_NDEBUG */
+
+#else /* !ENABLED (JERRY_ES2015) */
+    JERRY_ASSERT ((data & SCANNER_STREAM_TYPE_MASK) == SCANNER_STREAM_TYPE_VAR);
+#endif /* ENABLED (JERRY_ES2015) */
 
     if (!(data & SCANNER_STREAM_UINT16_DIFF))
     {
@@ -1676,26 +1668,35 @@ scanner_is_global_context_needed (parser_context_t *context_p) /**< context */
       data_p += 2 + 2;
     }
 
-    if (type == SCANNER_STREAM_TYPE_VAR
-        || (type == SCANNER_STREAM_TYPE_FUNC && !(context_p->global_status_flags & ECMA_PARSE_DIRECT_EVAL))
-        || type == SCANNER_STREAM_TYPE_IMPORT)
+#if ENABLED (JERRY_ES2015)
+    if (JERRY_UNLIKELY (check_type == PARSER_CHECK_GLOBAL_CONTEXT)
+        && (type == SCANNER_STREAM_TYPE_VAR
+            || (type == SCANNER_STREAM_TYPE_FUNC && !(context_p->global_status_flags & ECMA_PARSE_DIRECT_EVAL))
+            || type == SCANNER_STREAM_TYPE_IMPORT))
     {
       continue;
     }
 
-    if (!(data & SCANNER_STREAM_NO_REG)
-        && scope_stack_reg_top < PARSER_MAXIMUM_NUMBER_OF_REGISTERS)
+    if (JERRY_UNLIKELY (check_type == PARSER_CHECK_FUNCTION_CONTEXT)
+        && (SCANNER_STREAM_TYPE_IS_ARG (type) || SCANNER_STREAM_TYPE_IS_ARG_FUNC (type)))
     {
-      scope_stack_reg_top++;
+      continue;
     }
-    else
+#endif /* ENABLED (JERRY_ES2015) */
+
+    if ((data & SCANNER_STREAM_NO_REG)
+        || scope_stack_reg_top >= PARSER_MAXIMUM_NUMBER_OF_REGISTERS)
     {
       return true;
     }
+
+    scope_stack_reg_top++;
   }
 
   return false;
-} /* scanner_is_global_context_needed */
+} /* scanner_is_context_needed */
+
+#if ENABLED (JERRY_ES2015)
 
 /**
  * Try to scan/parse the ".target" part in the "new.target" expression.

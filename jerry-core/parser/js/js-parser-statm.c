@@ -383,7 +383,7 @@ parser_push_block_context (parser_context_t *context_p, /**< context */
 
   bool is_context_needed = false;
 
-  if (scanner_is_context_needed (context_p))
+  if (scanner_is_context_needed (context_p, PARSER_CHECK_BLOCK_CONTEXT))
   {
     parser_block_context_t block_context;
 
@@ -1875,7 +1875,7 @@ parser_parse_try_statement_end (parser_context_t *context_p) /**< context */
       block_found = true;
 #endif /* !JERRY_NDEBUG */
 
-      if (scanner_is_context_needed (context_p))
+      if (scanner_is_context_needed (context_p, PARSER_CHECK_BLOCK_CONTEXT))
       {
         parser_emit_cbc_ext (context_p, CBC_EXT_TRY_CREATE_ENV);
       }
@@ -1952,7 +1952,7 @@ parser_parse_try_statement_end (parser_context_t *context_p) /**< context */
     {
       JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_BLOCK);
 
-      if (scanner_is_context_needed (context_p))
+      if (scanner_is_context_needed (context_p, PARSER_CHECK_BLOCK_CONTEXT))
       {
         parser_emit_cbc_ext (context_p, CBC_EXT_TRY_CREATE_ENV);
       }
@@ -2838,7 +2838,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
         {
           JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_BLOCK);
 
-          if (scanner_is_context_needed (context_p))
+          if (scanner_is_context_needed (context_p, PARSER_CHECK_BLOCK_CONTEXT))
           {
             parser_emit_cbc_ext (context_p, CBC_EXT_TRY_CREATE_ENV);
           }
@@ -3082,10 +3082,6 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
         {
           parser_stack_pop_uint8 (context_p);
           context_p->last_statement.current_p = NULL;
-          JERRY_ASSERT (context_p->stack_depth == 0);
-#ifndef JERRY_NDEBUG
-          JERRY_ASSERT (context_p->context_stack_depth == 0);
-#endif /* !JERRY_NDEBUG */
           /* There is no lexer_next_token here, since the
            * next token belongs to the parent context. */
           return;
@@ -3225,11 +3221,6 @@ consume_last_statement:
       break;
     }
   }
-
-  JERRY_ASSERT (context_p->stack_depth == 0);
-#ifndef JERRY_NDEBUG
-  JERRY_ASSERT (context_p->context_stack_depth == context_p->stack_depth);
-#endif /* !JERRY_NDEBUG */
 
   parser_stack_pop_uint8 (context_p);
   context_p->last_statement.current_p = NULL;

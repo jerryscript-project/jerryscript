@@ -2291,6 +2291,40 @@ scanner_decode_map_to (parser_scope_stack_t *stack_item_p) /**< scope stack item
 #endif /* ENABLED (JERRY_ES2015) */
 } /* scanner_decode_map_to */
 
+#if ENABLED (JERRY_ES2015)
+
+/**
+ * Checks whether the literal is a const in the current scope.
+ *
+ * @return true if the literal is a const
+ */
+bool
+scanner_literal_is_const_reg (parser_context_t *context_p, /**< context */
+                              uint16_t literal_index) /**< literal index */
+{
+  if (literal_index < PARSER_REGISTER_START)
+  {
+    /* Re-assignment of non-register const bindings are detected elsewhere. */
+    return false;
+  }
+
+  parser_scope_stack_t *scope_stack_p = context_p->scope_stack_p + context_p->scope_stack_top;
+
+  literal_index = (uint16_t) (literal_index - (PARSER_REGISTER_START - 1));
+
+  do
+  {
+    /* Registers must be found in the scope stack. */
+    JERRY_ASSERT (scope_stack_p > context_p->scope_stack_p);
+    scope_stack_p--;
+  }
+  while (literal_index != (scope_stack_p->map_to & PARSER_SCOPE_STACK_REGISTER_MASK));
+
+  return (scope_stack_p->map_to & PARSER_SCOPE_STACK_IS_CONST) != 0;
+} /* scanner_literal_is_const_reg */
+
+#endif /* ENABLED (JERRY_ES2015) */
+
 /**
  * @}
  * @}

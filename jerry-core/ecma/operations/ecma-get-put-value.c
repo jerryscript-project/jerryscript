@@ -257,6 +257,12 @@ ecma_op_put_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
 
             ecma_named_data_property_assign_value (lex_env_p, property_value_p, value);
           }
+#if ENABLED (JERRY_ES2015)
+          else if (ecma_is_property_enumerable (*property_p))
+          {
+            return ecma_raise_type_error (ECMA_ERR_MSG ("Constant bindings cannot be reassigned."));
+          }
+#endif /* ENABLED (JERRY_ES2015) */
           else if (is_strict)
           {
             return ecma_raise_type_error (ECMA_ERR_MSG ("Binding cannot be set."));

@@ -558,24 +558,22 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
         }
 #endif /* ENABLED (JERRY_LINE_INFO) */
 
+        uint16_t index = context_p->lit_object.index;
+
+        lexer_next_token (context_p);
+        parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
+
+        cbc_opcode_t opcode = CBC_ASSIGN_SET_IDENT;
+
 #if ENABLED (JERRY_ES2015)
         if (declaration_type != LEXER_KEYW_VAR
-            && context_p->lit_object.index < PARSER_REGISTER_START)
+            && (index < PARSER_REGISTER_START))
         {
-          uint16_t index = context_p->lit_object.index;
+          opcode = CBC_ASSIGN_LET_CONST;
+        }
+#endif /* ENABLED (JERRY_ES2015) */
 
-          lexer_next_token (context_p);
-          parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
-          parser_emit_cbc_literal (context_p, CBC_ASSIGN_LET_CONST, index);
-        }
-        else
-        {
-#endif /* ENABLED (JERRY_ES2015) */
-          parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);
-          parser_parse_expression_statement (context_p, PARSE_EXPR_NO_COMMA | PARSE_EXPR_HAS_LITERAL);
-#if ENABLED (JERRY_ES2015)
-        }
-#endif /* ENABLED (JERRY_ES2015) */
+        parser_emit_cbc_literal (context_p, opcode, index);
       }
 #if ENABLED (JERRY_ES2015)
       else if (declaration_type == LEXER_KEYW_LET)

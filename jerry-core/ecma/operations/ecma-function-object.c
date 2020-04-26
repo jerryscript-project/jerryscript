@@ -1212,9 +1212,14 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
   ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) func_obj_p;
   const ecma_compiled_code_t *byte_code_p = ecma_op_function_get_compiled_code (ext_func_obj_p);
 
-  if (byte_code_p->status_flags & CBC_CODE_FLAGS_ARROW_FUNCTION)
+  if (byte_code_p->status_flags & (CBC_CODE_FLAGS_ARROW_FUNCTION | CBC_CODE_FLAGS_ACCESSOR))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Arrow functions have no constructor."));
+    if (byte_code_p->status_flags & CBC_CODE_FLAGS_ARROW_FUNCTION)
+    {
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Arrow functions have no constructor."));
+    }
+
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Expected a constructor."));
   }
 
 #if ENABLED (JERRY_ES2015)

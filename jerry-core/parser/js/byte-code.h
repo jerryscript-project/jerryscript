@@ -795,6 +795,7 @@ typedef enum
   CBC_CODE_FLAGS_REST_PARAMETER = (1u << 12), /**< this function has rest parameter */
   CBC_CODE_FLAG_HAS_TAGGED_LITERALS = (1u << 13), /**< this function has tagged template literal list */
   CBC_CODE_FLAGS_LEXICAL_BLOCK_NEEDED = (1u << 14), /**< compiled code needs a lexical block */
+  CBC_CODE_FLAGS_ACCESSOR = (1u << 15) /**< accessor propety 'get' and 'set' functions */
 } cbc_code_flags;
 
 /**

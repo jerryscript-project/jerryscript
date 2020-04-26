@@ -1305,6 +1305,11 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   }
 
 #if ENABLED (JERRY_ES2015)
+  if (context_p->status_flags & (PARSER_IS_PROPERTY_GETTER | PARSER_IS_PROPERTY_SETTER))
+  {
+    compiled_code_p->status_flags |= CBC_CODE_FLAGS_ACCESSOR;
+  }
+
   if (context_p->status_flags & PARSER_IS_ARROW_FUNCTION)
   {
     compiled_code_p->status_flags |= CBC_CODE_FLAGS_ARROW_FUNCTION;

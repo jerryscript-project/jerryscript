@@ -56,10 +56,37 @@ function f() {
 
   try {
     eval ("g(this, 'a' = 1)");
-    assert (false)
+    assert (false);
   } catch (e) {
     assert (e instanceof ReferenceError);
   }
+
+  try {
+    eval ("g(this, 'a' += 1)");
+    assert (false);
+  } catch (e) {
+    assert (e instanceof ReferenceError);
+  }
+
   assert (a === 0);
 }
 f();
+
+function g(a, b)
+{
+  assert(b === "undefined");
+}
+g(this, typeof undeclared_var)
+
+function h()
+{
+  var done = false;
+  var o = { a: function () { done = (this === o) } }
+  function f() {}
+
+  with (o) {
+    f(this, a());
+  }
+  assert(done);
+}
+h();

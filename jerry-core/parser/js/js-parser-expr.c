@@ -178,7 +178,7 @@ parser_emit_ident_reference (parser_context_t *context_p, /**< context */
   else if (context_p->last_cbc_opcode == CBC_PUSH_THIS_LITERAL)
   {
     context_p->last_cbc_opcode = CBC_PUSH_THIS;
-    literal_index = context_p->lit_object.index;
+    literal_index = context_p->last_cbc.literal_index;
   }
   else
   {
@@ -1946,7 +1946,7 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
           }
 #endif /* ENABLED (JERRY_ES2015) */
           else if (JERRY_UNLIKELY (context_p->status_flags & PARSER_INSIDE_WITH)
-                   && PARSER_IS_PUSH_LITERAL (context_p->last_cbc_opcode)
+                   && PARSER_IS_PUSH_LITERALS_WITH_THIS (context_p->last_cbc_opcode)
                    && context_p->last_cbc.literal_type == LEXER_IDENT_LITERAL)
           {
             opcode = CBC_CALL_PROP;
@@ -2193,7 +2193,7 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
 
       if (token == CBC_TYPEOF)
       {
-        if (PARSER_IS_PUSH_LITERAL (context_p->last_cbc_opcode)
+        if (PARSER_IS_PUSH_LITERALS_WITH_THIS (context_p->last_cbc_opcode)
             && context_p->last_cbc.literal_type == LEXER_IDENT_LITERAL)
         {
           parser_emit_ident_reference (context_p, CBC_TYPEOF_IDENT);
@@ -2365,7 +2365,7 @@ parser_append_binary_token (parser_context_t *context_p) /**< context */
 
   if (LEXER_IS_BINARY_LVALUE_TOKEN (context_p->token.type))
   {
-    if (PARSER_IS_PUSH_LITERAL (context_p->last_cbc_opcode)
+    if (PARSER_IS_PUSH_LITERALS_WITH_THIS (context_p->last_cbc_opcode)
         && context_p->last_cbc.literal_type == LEXER_IDENT_LITERAL)
     {
       parser_check_invalid_assign (context_p);
@@ -2375,12 +2375,6 @@ parser_append_binary_token (parser_context_t *context_p) /**< context */
     else if (PARSER_IS_PUSH_PROP (context_p->last_cbc_opcode))
     {
       context_p->last_cbc_opcode = PARSER_PUSH_PROP_TO_PUSH_PROP_REFERENCE (context_p->last_cbc_opcode);
-    }
-    else if (context_p->last_cbc_opcode == CBC_PUSH_THIS_LITERAL)
-    {
-      context_p->last_cbc_opcode = CBC_PUSH_THIS;
-      parser_flush_cbc (context_p);
-      context_p->last_cbc_opcode = CBC_PUSH_IDENT_REFERENCE;
     }
     else
     {

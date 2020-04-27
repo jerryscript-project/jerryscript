@@ -146,6 +146,7 @@ typedef enum
   PARSER_ERR_DUPLICATED_ARGUMENT_NAMES,               /**< duplicated argument names */
   PARSER_ERR_INVALID_DESTRUCTURING_PATTERN,           /**< invalid destructuring pattern */
   PARSER_ERR_ILLEGAL_PROPERTY_IN_DECLARATION,         /**< illegal property in declaration context */
+  PARSER_ERR_INVALID_EXPONENTIATION,                  /**< left operand of ** operator cannot be unary expression */
   PARSER_ERR_NEW_TARGET_EXPECTED,                     /**< expected new.target expression */
   PARSER_ERR_NEW_TARGET_NOT_ALLOWED,                  /**< new.target is not allowed in the given context */
 #endif /* ENABLED (JERRY_ES2015) */

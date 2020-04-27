@@ -400,6 +400,7 @@ ecma_number_t ecma_number_get_prev (ecma_number_t num);
 ecma_number_t ecma_number_get_next (ecma_number_t num);
 ecma_number_t ecma_number_trunc (ecma_number_t num);
 ecma_number_t ecma_number_calc_remainder (ecma_number_t left_num, ecma_number_t right_num);
+ecma_number_t ecma_number_pow (ecma_number_t x, ecma_number_t y);
 ecma_value_t ecma_number_parse_int (const lit_utf8_byte_t *string_buff,
                                     lit_utf8_size_t string_buff_size,
                                     ecma_value_t radix);

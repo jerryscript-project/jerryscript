@@ -667,6 +667,7 @@ bool lexer_check_next_character (parser_context_t *context_p, lit_utf8_byte_t ch
 bool lexer_check_next_characters (parser_context_t *context_p, lit_utf8_byte_t character1,
                                   lit_utf8_byte_t character2);
 uint8_t lexer_consume_next_character (parser_context_t *context_p);
+bool lexer_check_post_primary_exp (parser_context_t *context_p);
 #if ENABLED (JERRY_ES2015)
 void lexer_skip_empty_statements (parser_context_t *context_p);
 bool lexer_check_arrow (parser_context_t *context_p);

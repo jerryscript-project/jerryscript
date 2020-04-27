@@ -35,6 +35,9 @@ typedef enum
   NUMBER_ARITHMETIC_MULTIPLICATION, /**< multiplication */
   NUMBER_ARITHMETIC_DIVISION, /**< division */
   NUMBER_ARITHMETIC_REMAINDER, /**< remainder calculation */
+#if ENABLED (JERRY_ES2015)
+  NUMBER_ARITHMETIC_EXPONENTIATION, /**< exponentiation */
+#endif /* ENABLED (JERRY_ES2015) */
 } number_arithmetic_op;
 
 /**

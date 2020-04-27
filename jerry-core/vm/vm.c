@@ -1322,39 +1322,41 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             uint32_t value_index;
             READ_LITERAL_INDEX (value_index);
+            JERRY_ASSERT (value_index >= const_literal_end);
 
             lit_value = vm_construct_literal_object (frame_ctx_p,
                                                      literal_start_p[value_index]);
           }
 
           READ_LITERAL_INDEX (literal_index);
+          JERRY_ASSERT (literal_index >= register_end);
 
           ecma_string_t *name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
           ecma_object_t *lex_env_p = frame_ctx_p->lex_env_p;
 
           while (lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_BLOCK)
           {
-  #if ENABLED (JERRY_ES2015) && !(defined JERRY_NDEBUG)
+#if ENABLED (JERRY_ES2015) && !(defined JERRY_NDEBUG)
             if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
             {
               ecma_property_t *property_p = ecma_find_named_property (lex_env_p, name_p);
 
               JERRY_ASSERT (property_p == NULL || !(*property_p & ECMA_PROPERTY_FLAG_ENUMERABLE));
             }
-  #endif /* ENABLED (JERRY_ES2015) && !JERRY_NDEBUG */
+#endif /* ENABLED (JERRY_ES2015) && !JERRY_NDEBUG */
 
             JERRY_ASSERT (lex_env_p->u2.outer_reference_cp != JMEM_CP_NULL);
             lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
           }
 
-  #if ENABLED (JERRY_ES2015) && !(defined JERRY_NDEBUG)
+#if ENABLED (JERRY_ES2015) && !(defined JERRY_NDEBUG)
           if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
           {
             ecma_property_t *property_p = ecma_find_named_property (lex_env_p, name_p);
 
             JERRY_ASSERT (property_p == NULL || !(*property_p & ECMA_PROPERTY_FLAG_ENUMERABLE));
           }
-  #endif /* ENABLED (JERRY_ES2015) && !JERRY_NDEBUG */
+#endif /* ENABLED (JERRY_ES2015) && !JERRY_NDEBUG */
 
           result = vm_var_decl (lex_env_p, name_p, frame_ctx_p->is_eval_code);
 
@@ -1375,6 +1377,68 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           continue;
         }
+#if ENABLED (JERRY_ES2015)
+        case VM_OC_EXT_VAR_EVAL:
+        {
+          uint32_t literal_index;
+          ecma_value_t lit_value = ECMA_VALUE_UNDEFINED;
+
+          JERRY_ASSERT (byte_code_start_p[0] == CBC_EXT_OPCODE);
+
+          if (opcode == CBC_EXT_CREATE_VAR_FUNC_EVAL)
+          {
+            uint32_t value_index;
+            READ_LITERAL_INDEX (value_index);
+            JERRY_ASSERT (value_index >= const_literal_end);
+
+            lit_value = vm_construct_literal_object (frame_ctx_p,
+                                                     literal_start_p[value_index]);
+          }
+
+          READ_LITERAL_INDEX (literal_index);
+          JERRY_ASSERT (literal_index >= register_end);
+
+          ecma_string_t *name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
+          ecma_object_t *lex_env_p = frame_ctx_p->lex_env_p;
+          ecma_object_t *prev_lex_env_p = NULL;
+
+          while (lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_BLOCK)
+          {
+#if !(defined JERRY_NDEBUG)
+            if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
+            {
+              ecma_property_t *property_p = ecma_find_named_property (lex_env_p, name_p);
+
+              JERRY_ASSERT (property_p == NULL || !(*property_p & ECMA_PROPERTY_FLAG_ENUMERABLE));
+            }
+#endif /* !JERRY_NDEBUG */
+
+            JERRY_ASSERT (lex_env_p->u2.outer_reference_cp != JMEM_CP_NULL);
+            prev_lex_env_p = lex_env_p;
+            lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
+          }
+
+          JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
+          JERRY_ASSERT (prev_lex_env_p != NULL
+                        && ecma_get_lex_env_type (prev_lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
+          JERRY_ASSERT (ecma_find_named_property (prev_lex_env_p, name_p) == NULL);
+
+          ecma_property_value_t *property_value_p;
+          property_value_p = ecma_create_named_data_property (prev_lex_env_p,
+                                                              name_p,
+                                                              ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
+                                                              NULL);
+
+          if (lit_value == ECMA_VALUE_UNDEFINED)
+          {
+            continue;
+          }
+
+          property_value_p->value = lit_value;
+          ecma_deref_object (ecma_get_object_from_value (lit_value));
+          continue;
+        }
+#endif /* ENABLED (JERRY_ES2015) */
 #if ENABLED (JERRY_SNAPSHOT_EXEC)
         case VM_OC_SET_BYTECODE_PTR:
         {

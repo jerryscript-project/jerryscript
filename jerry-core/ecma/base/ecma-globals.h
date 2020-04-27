@@ -110,15 +110,16 @@ typedef enum
   ECMA_PARSE_MODULE = (1u << 1), /**< module is parsed */
   ECMA_PARSE_EVAL = (1u << 2), /**< eval is called */
   ECMA_PARSE_DIRECT_EVAL = (1u << 3), /**< eval is called directly (ECMA-262 v5, 15.1.2.1.1) */
+  ECMA_PARSE_CLASS_CONSTRUCTOR = (1u << 4), /**< a class constructor is being parsed */
 
-  /* These 4 status flags must be in this order. See PARSER_SAVED_FLAGS_OFFSET. */
-  ECMA_PARSE_CLASS_CONSTRUCTOR = (1u << 4), /**< a class constructor is being parsed (this value must be kept in
-                                             *   in sync with PARSER_CLASS_CONSTRUCTOR) */
+  /* These four status flags must be in this order. The first three are also parser status flags.
+   * See PARSER_SAVE_STATUS_FLAGS / PARSER_RESTORE_STATUS_FLAGS. */
   ECMA_PARSE_ALLOW_SUPER = (1u << 5), /**< allow super property access */
   ECMA_PARSE_ALLOW_SUPER_CALL = (1u << 6), /**< allow super constructor call */
   ECMA_PARSE_ALLOW_NEW_TARGET = (1u << 7), /**< allow new.target access */
+  ECMA_PARSE_FUNCTION_CONTEXT = (1u << 8), /**< function context is present (ECMA_PARSE_DIRECT_EVAL must be set) */
 
-  ECMA_PARSE_GENERATOR_FUNCTION = (1u << 8), /**< generator function is parsed */
+  ECMA_PARSE_GENERATOR_FUNCTION = (1u << 9), /**< generator function is parsed */
 
   /* These flags are internally used by the parser. */
 #ifndef JERRY_NDEBUG
@@ -126,7 +127,7 @@ typedef enum
    * This flag represents an error in for in/of statements, which cannot be set
    * if the parsing is completed successfully.
    */
-  ECMA_PARSE_INTERNAL_FOR_IN_OFF_CONTEXT_ERROR = (1u << 9),
+  ECMA_PARSE_INTERNAL_FOR_IN_OFF_CONTEXT_ERROR = (1u << 30),
 #endif /* !JERRY_NDEBUG */
 } ecma_parse_opts_t;
 
@@ -707,7 +708,8 @@ typedef enum
 /**
  * Get JERRY_CONTEXT (status_flags) top 8 bits.
  */
-#define ECMA_GET_LOCAL_PARSE_OPTS() (JERRY_CONTEXT (status_flags) >> ECMA_LOCAL_PARSE_OPTS_OFFSET)
+#define ECMA_GET_LOCAL_PARSE_OPTS() \
+  (JERRY_CONTEXT (status_flags) >> (ECMA_LOCAL_PARSE_OPTS_OFFSET - JERRY_LOG2 (ECMA_PARSE_ALLOW_SUPER)))
 
 /**
  * Clear JERRY_CONTEXT (status_flags) top 8 bits.

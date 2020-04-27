@@ -219,6 +219,10 @@ typedef enum
   VM_OC_CREATE_BINDING,          /**< create variables */
   VM_OC_SET_BYTECODE_PTR,        /**< setting bytecode pointer */
   VM_OC_VAR_EVAL,                /**< variable and function evaluation */
+#if ENABLED (JERRY_ES2015)
+  VM_OC_EXT_VAR_EVAL,            /**< variable and function evaluation for
+                                  *   functions with separate argument context */
+#endif /* ENABLED (JERRY_ES2015) */
   VM_OC_INIT_ARG_OR_FUNC,        /**< create and init a function or argument binding */
 
 #if ENABLED (JERRY_DEBUGGER)
@@ -298,6 +302,8 @@ typedef enum
   VM_OC_LINE = VM_OC_NONE,                    /**< line number of the next statement is unused */
 #endif /* !ENABLED (JERRY_LINE_INFO) */
 #if !ENABLED (JERRY_ES2015)
+  VM_OC_EXT_VAR_EVAL = VM_OC_NONE,            /**< variable and function evaluation for
+                                               *   functions with separate argument context */
   VM_OC_CHECK_VAR = VM_OC_NONE,               /**< check redeclared vars in the global scope */
   VM_OC_CHECK_LET = VM_OC_NONE,               /**< check redeclared lets in the global scope */
   VM_OC_ASSIGN_LET_CONST = VM_OC_NONE,        /**< assign values to let/const declarations */

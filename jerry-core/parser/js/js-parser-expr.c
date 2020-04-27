@@ -2199,7 +2199,7 @@ parser_append_binary_single_assignment_token (parser_context_t *context_p, /**< 
 
   uint8_t assign_opcode = CBC_ASSIGN;
 
-  if (PARSER_IS_PUSH_LITERAL (context_p->last_cbc_opcode)
+  if (PARSER_IS_PUSH_LITERALS_WITH_THIS (context_p->last_cbc_opcode)
       && context_p->last_cbc.literal_type == LEXER_IDENT_LITERAL)
   {
     JERRY_ASSERT (CBC_SAME_ARGS (CBC_PUSH_LITERAL, assign_ident_opcode));
@@ -2208,31 +2208,37 @@ parser_append_binary_single_assignment_token (parser_context_t *context_p, /**< 
 
     uint16_t literal_index;
 
-    if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
+    switch (context_p->last_cbc_opcode)
     {
-      literal_index = context_p->last_cbc.literal_index;
-      context_p->last_cbc_opcode = PARSER_CBC_UNAVAILABLE;
-    }
-    else if (context_p->last_cbc_opcode == CBC_PUSH_TWO_LITERALS)
-    {
-      literal_index = context_p->last_cbc.value;
-      context_p->last_cbc_opcode = CBC_PUSH_LITERAL;
-    }
-    else
-    {
-      JERRY_ASSERT (context_p->last_cbc_opcode == CBC_PUSH_THREE_LITERALS);
-      literal_index = context_p->last_cbc.third_literal_index;
-      context_p->last_cbc_opcode = CBC_PUSH_TWO_LITERALS;
+      case CBC_PUSH_LITERAL:
+      {
+        literal_index = context_p->last_cbc.literal_index;
+        context_p->last_cbc_opcode = PARSER_CBC_UNAVAILABLE;
+        break;
+      }
+      case CBC_PUSH_TWO_LITERALS:
+      {
+        literal_index = context_p->last_cbc.value;
+        context_p->last_cbc_opcode = CBC_PUSH_LITERAL;
+        break;
+      }
+      case CBC_PUSH_THIS_LITERAL:
+      {
+        literal_index = context_p->last_cbc.literal_index;
+        context_p->last_cbc_opcode = CBC_PUSH_THIS;
+        parser_flush_cbc (context_p);
+        break;
+      }
+      default:
+      {
+        JERRY_ASSERT (context_p->last_cbc_opcode == CBC_PUSH_THREE_LITERALS);
+        literal_index = context_p->last_cbc.third_literal_index;
+        context_p->last_cbc_opcode = CBC_PUSH_TWO_LITERALS;
+        break;
+      }
     }
 
     parser_stack_push_uint16 (context_p, literal_index);
-    assign_opcode = assign_ident_opcode;
-  }
-  else if (context_p->last_cbc_opcode == CBC_PUSH_THIS_LITERAL)
-  {
-    context_p->last_cbc_opcode = CBC_PUSH_THIS;
-    parser_flush_cbc (context_p);
-    parser_stack_push_uint16 (context_p, context_p->last_cbc.literal_index);
     assign_opcode = assign_ident_opcode;
   }
   else if (context_p->last_cbc_opcode == CBC_PUSH_PROP)

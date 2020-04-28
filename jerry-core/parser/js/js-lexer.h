@@ -174,6 +174,7 @@ typedef enum
   LEXER_PROPERTY_SETTER,         /**< property setter function */
   LEXER_COMMA_SEP_LIST,          /**< comma separated bracketed expression list */
 #if ENABLED (JERRY_ES2015)
+  LEXER_ASSIGN_GROUP_EXPR,       /**< indetifier for the assignment is located in a group expression */
   LEXER_ASSIGN_CONST,            /**< a const binding is reassigned */
   LEXER_CLASS_CONSTRUCTOR,       /**< special value for class constructor method */
   LEXER_INVALID_PATTERN,         /**< special value for invalid destructuring pattern */

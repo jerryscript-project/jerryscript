@@ -195,79 +195,13 @@ static void test_exec_snapshot (uint32_t *snapshot_p, size_t snapshot_size, uint
 int
 main (void)
 {
-  static uint32_t snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
-
   TEST_INIT ();
-
-  /* Dump / execute snapshot */
-  if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE)
-      && jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
-  {
-    const jerry_char_t code_to_snapshot[] = "(function () { return 'string from snapshot'; }) ();";
-
-    jerry_init (JERRY_INIT_EMPTY);
-    jerry_value_t generate_result;
-    generate_result = jerry_generate_snapshot (NULL,
-                                               0,
-                                               code_to_snapshot,
-                                               sizeof (code_to_snapshot) - 1,
-                                               0,
-                                               snapshot_buffer,
-                                               SNAPSHOT_BUFFER_SIZE);
-    TEST_ASSERT (!jerry_value_is_error (generate_result)
-                 && jerry_value_is_number (generate_result));
-
-    size_t snapshot_size = (size_t) jerry_get_number_value (generate_result);
-    jerry_release_value (generate_result);
-
-    /* Check the snapshot data. Unused bytes should be filled with zeroes */
-    const uint8_t expected_data[] =
-    {
-      0x4A, 0x52, 0x52, 0x59, 0x2C, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x48, 0x00, 0x00, 0x00,
-      0x01, 0x00, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00,
-      0x03, 0x00, 0x01, 0x00, 0x41, 0x00, 0x01, 0x00,
-      0x00, 0x00, 0x00, 0x01, 0x18, 0x00, 0x00, 0x00,
-      0x2C, 0x00, 0xC9, 0x53, 0x00, 0x00, 0x00, 0x00,
-      0x03, 0x00, 0x01, 0x00, 0x41, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x01, 0x01, 0x07, 0x00, 0x00, 0x00,
-      0x54, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x14, 0x00, 0x73, 0x74, 0x72, 0x69, 0x6E, 0x67,
-      0x20, 0x66, 0x72, 0x6F, 0x6D, 0x20, 0x73, 0x6E,
-      0x61, 0x70, 0x73, 0x68, 0x6F, 0x74,
-    };
-
-    if (sizeof (expected_data) != snapshot_size || memcmp (expected_data, snapshot_buffer, sizeof (expected_data)))
-    {
-      printf ("Snapshot data has been changed, please update tests/unit-core/test-snapshot.c.\n");
-      printf ("-------------------------------------------------------------------------------\n");
-      printf ("    const uint8_t expected_data[] =\n");
-      printf ("    {");
-      for (unsigned int i = 0; i < snapshot_size; i++)
-      {
-        if ((i % 8) == 0)
-        {
-          printf ("\n     ");
-        }
-        printf (" 0x%02X,", ((uint8_t *) snapshot_buffer)[i]);
-      }
-      printf ("\n    };\n");
-      printf ("-------------------------------------------------------------------------------\n");
-    }
-
-    TEST_ASSERT (sizeof (expected_data) == snapshot_size);
-    TEST_ASSERT (0 == memcmp (expected_data, snapshot_buffer, sizeof (expected_data)));
-
-    jerry_cleanup ();
-
-    test_exec_snapshot (snapshot_buffer, snapshot_size, 0);
-    test_exec_snapshot (snapshot_buffer, snapshot_size, JERRY_SNAPSHOT_EXEC_COPY_DATA);
-  }
 
   /* Static snapshot */
   if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE)
       && jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
   {
+    static uint32_t snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
     const jerry_char_t code_to_snapshot[] = TEST_STRING_LITERAL (
       "function func(a, b, c) {"
       "  c = 'snapshot';"
@@ -416,10 +350,6 @@ main (void)
 
     size_t snapshot_size = (size_t) jerry_get_number_value (generate_result);
     jerry_release_value (generate_result);
-
-    /* In ES2015 we emit extra bytecode instructions to check global variable redeclaration. */
-    const size_t expected_size = (jerry_is_feature_enabled (JERRY_FEATURE_SYMBOL)) ? 132 : 124;
-    TEST_ASSERT (snapshot_size == expected_size);
 
     const size_t lit_c_buf_sz = jerry_get_literals_from_snapshot (literal_snapshot_buffer,
                                                                   snapshot_size,

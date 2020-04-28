@@ -1829,6 +1829,64 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           goto free_left_value;
         }
+        case VM_OC_SET_FUNCTION_NAME:
+        {
+          char *prefix_p = NULL;
+          lit_utf8_size_t prefix_size = 0;
+
+          if (opcode == CBC_EXT_SET_CLASS_NAME)
+          {
+            uint16_t literal_index;
+            READ_LITERAL_INDEX (literal_index);
+            left_value = ecma_copy_value (literal_start_p[literal_index]);
+          }
+          else if (opcode != CBC_EXT_SET_FUNCTION_NAME)
+          {
+            ecma_string_t *prop_name_p = ecma_op_to_prop_name (stack_top_p[-2]);
+
+            if (JERRY_UNLIKELY (prop_name_p == NULL))
+            {
+              result = ECMA_VALUE_ERROR;
+              goto error;
+            }
+
+            ecma_free_value (stack_top_p[-2]);
+            ecma_ref_ecma_string (prop_name_p);
+            left_value = ecma_make_prop_name_value (prop_name_p);
+            stack_top_p[-2] = left_value;
+
+            if (opcode != CBC_EXT_SET_COMPUTED_FUNCTION_NAME)
+            {
+              JERRY_ASSERT (opcode == CBC_EXT_SET_COMPUTED_GETTER_NAME
+                            || opcode == CBC_EXT_SET_COMPUTED_SETTER_NAME);
+              prefix_p = (opcode == CBC_EXT_SET_COMPUTED_GETTER_NAME) ? "get " : "set ";
+              prefix_size = 4;
+            }
+          }
+
+          ecma_object_t *func_obj_p = ecma_get_object_from_value (stack_top_p[-1]);
+
+          if (ecma_find_named_property (func_obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_NAME)) != NULL)
+          {
+            ecma_free_value (left_value);
+            continue;
+          }
+
+          ecma_property_value_t *value_p;
+          value_p = ecma_create_named_data_property (func_obj_p,
+                                                     ecma_get_magic_string (LIT_MAGIC_STRING_NAME),
+                                                     ECMA_PROPERTY_FLAG_CONFIGURABLE,
+                                                     NULL);
+
+          if (ecma_get_object_type (func_obj_p) != ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
+          {
+            ECMA_SET_SECOND_BIT_TO_POINTER_TAG (((ecma_extended_object_t *) func_obj_p)->u.function.scope_cp);
+          }
+
+          value_p->value = ecma_op_function_form_name (left_value, prefix_p, prefix_size);
+          ecma_free_value (left_value);
+          continue;
+        }
         case VM_OC_PUSH_SPREAD_ELEMENT:
         {
           *stack_top_p++ = ECMA_VALUE_SPREAD_ELEMENT;
@@ -3737,13 +3795,13 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           continue;
         }
 #endif /* ENABLED (JERRY_DEBUGGER) */
-#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+#if ENABLED (JERRY_RESOURCE_NAME)
         case VM_OC_RESOURCE_NAME:
         {
           frame_ctx_p->resource_name = ecma_op_resource_name (bytecode_header_p);
           continue;
         }
-#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#endif /* ENABLED (JERRY_RESOURCE_NAME) */
 #if ENABLED (JERRY_LINE_INFO)
         case VM_OC_LINE:
         {
@@ -4027,9 +4085,9 @@ vm_init_exec (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 {
   frame_ctx_p->prev_context_p = JERRY_CONTEXT (vm_top_context_p);
   frame_ctx_p->block_result = ECMA_VALUE_UNDEFINED;
-#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+#if ENABLED (JERRY_RESOURCE_NAME)
   frame_ctx_p->resource_name = ECMA_VALUE_UNDEFINED;
-#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#endif /* ENABLED (JERRY_RESOURCE_NAME) */
 #if ENABLED (JERRY_LINE_INFO)
   frame_ctx_p->current_line = 0;
 #endif /* ENABLED (JERRY_LINE_INFO) */

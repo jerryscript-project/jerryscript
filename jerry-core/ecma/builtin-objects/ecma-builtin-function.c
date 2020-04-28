@@ -24,9 +24,9 @@
 #include "js-parser.h"
 #include "lit-magic-strings.h"
 
-#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ERROR_MESSAGES) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+#if ENABLED (JERRY_RESOURCE_NAME)
 #include "jcontext.h"
-#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ERROR_MESSAGES) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#endif /* ENABLED (JERRY_RESOURCE_NAME) */
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"

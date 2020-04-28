@@ -297,6 +297,11 @@ ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p , /**
   }
 
 #if ENABLED (JERRY_ES2015)
+  if (prototype_obj_p != NULL)
+  {
+    ecma_deref_object (prototype_obj_p);
+  }
+
   ecma_integer_value_t len = 0;
   ecma_string_t *len_string = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
   ecma_property_descriptor_t prop_desc;
@@ -307,6 +312,7 @@ ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p , /**
 #if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
   if (ECMA_IS_VALUE_ERROR (status))
   {
+    ecma_deref_object (function_p);
     return status;
   }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
@@ -319,6 +325,7 @@ ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p , /**
 
     if (ECMA_IS_VALUE_ERROR (len_value))
     {
+      ecma_deref_object (function_p);
       return len_value;
     }
 
@@ -328,14 +335,36 @@ ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p , /**
       ecma_op_to_integer (len_value, &len_num);
       len = (ecma_integer_value_t) len_num;
     }
+    ecma_free_value (len_value);
   }
 
   bound_func_p->target_length = len;
 
-  if (prototype_obj_p != NULL)
+  /* 12. */
+  ecma_value_t name_value = ecma_op_object_get_by_magic_id (this_arg_obj_p, LIT_MAGIC_STRING_NAME);
+  if (ECMA_IS_VALUE_ERROR (name_value))
   {
-    ecma_deref_object (prototype_obj_p);
+    ecma_deref_object (function_p);
+    return name_value;
   }
+
+  if (!ecma_is_value_string (name_value))
+  {
+    ecma_free_value (name_value);
+    name_value = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
+  }
+
+  ecma_value_t bound_function_name = ecma_op_function_form_name (name_value, "bound ", 6);
+
+  ecma_free_value (name_value);
+
+  ecma_property_value_t *name_prop_value_p;
+  name_prop_value_p = ecma_create_named_data_property (function_p,
+                                                       ecma_get_magic_string (LIT_MAGIC_STRING_NAME),
+                                                       ECMA_PROPERTY_FLAG_CONFIGURABLE,
+                                                       NULL);
+
+  name_prop_value_p->value = bound_function_name;
 #endif /* ENABLED (JERRY_ES2015) */
 
   /*

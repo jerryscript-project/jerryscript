@@ -1441,17 +1441,7 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
 #if ENABLED (JERRY_ES2015)
     if (bytecode_p->status_flags & CBC_CODE_FLAG_HAS_TAGGED_LITERALS)
     {
-      ecma_length_t formal_params_number = ecma_compiled_code_get_formal_params (bytecode_p);
-
-      uint8_t *byte_p = (uint8_t *) bytecode_p;
-      byte_p += ((size_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
-
-      ecma_value_t *tagged_base_p = (ecma_value_t *) byte_p;
-      tagged_base_p -= formal_params_number;
-
-      ecma_collection_t *coll_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, tagged_base_p[-1]);
-
-      ecma_collection_destroy (coll_p);
+      ecma_collection_destroy (ecma_compiled_code_get_tagged_template_collection (bytecode_p));
     }
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -1484,17 +1474,17 @@ ecma_compiled_code_get_tagged_template_collection (const ecma_compiled_code_t *b
   JERRY_ASSERT (bytecode_header_p != NULL);
   JERRY_ASSERT (bytecode_header_p->status_flags & CBC_CODE_FLAG_HAS_TAGGED_LITERALS);
 
-  uint8_t *byte_p = (uint8_t *) bytecode_header_p;
-  byte_p += ((size_t) bytecode_header_p->size) << JMEM_ALIGNMENT_LOG;
+  ecma_value_t *base_p = ecma_compiled_code_resolve_function_name (bytecode_header_p);
 
-  ecma_value_t *tagged_base_p = (ecma_value_t *) byte_p;
-  tagged_base_p -= ecma_compiled_code_get_formal_params (bytecode_header_p);
+#if ENABLED (JERRY_RESOURCE_NAME)
+  base_p--;
+#endif /* ENABLED (JERRY_RESOURCE_NAME) */
 
-  return ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, tagged_base_p[-1]);
+  return ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, base_p[-1]);
 } /* ecma_compiled_code_get_tagged_template_collection */
 #endif /* ENABLED (JERRY_ES2015) */
 
-#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) || ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_RESOURCE_NAME) || ENABLED (JERRY_ES2015)
 /**
  * Get the number of formal parameters of the compiled code
  *
@@ -1515,7 +1505,44 @@ ecma_compiled_code_get_formal_params (const ecma_compiled_code_t *bytecode_heade
 
   return ((cbc_uint8_arguments_t *) bytecode_header_p)->argument_end;
 } /* ecma_compiled_code_get_formal_params */
-#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) || ENABLED (JERRY_ES2015) */
+
+/**
+ * Resolve the position of the arguments list start of the compiled code
+ *
+ * @return start position of the arguments list start of the compiled code
+ */
+ecma_value_t *
+ecma_compiled_code_resolve_arguments_start (const ecma_compiled_code_t *bytecode_header_p)
+{
+  JERRY_ASSERT (bytecode_header_p != NULL);
+
+  uint8_t *byte_p = (uint8_t *) bytecode_header_p;
+  byte_p += ((size_t) bytecode_header_p->size) << JMEM_ALIGNMENT_LOG;
+
+  return ((ecma_value_t *) byte_p) - ecma_compiled_code_get_formal_params (bytecode_header_p);
+} /* ecma_compiled_code_resolve_arguments_start */
+
+/**
+ * Resolve the position of the function name of the compiled code
+ *
+ * @return position of the function name of the compiled code
+ */
+inline ecma_value_t * JERRY_ATTR_ALWAYS_INLINE
+ecma_compiled_code_resolve_function_name (const ecma_compiled_code_t *bytecode_header_p)
+{
+  JERRY_ASSERT (bytecode_header_p != NULL);
+  ecma_value_t *base_p = ecma_compiled_code_resolve_arguments_start (bytecode_header_p);
+
+#if ENABLED (JERRY_ES2015)
+  if (!(bytecode_header_p->status_flags & CBC_CODE_FLAGS_CLASS_CONSTRUCTOR))
+  {
+    base_p--;
+  }
+#endif /* ENABLED (JERRY_ES2015) */
+
+  return base_p;
+} /* ecma_compiled_code_resolve_function_name */
+#endif /* ENABLED (JERRY_RESOURCE_NAME) || ENABLED (JERRY_ES2015) */
 
 #if (JERRY_STACK_LIMIT != 0)
 /**

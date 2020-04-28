@@ -101,7 +101,7 @@ typedef enum
   SCAN_STACK_COMPUTED_GENERATOR_FUNCTION,  /**< computed property name */
   SCAN_STACK_TEMPLATE_STRING,              /**< template string */
   SCAN_STACK_TAGGED_TEMPLATE_LITERAL,      /**< tagged template literal */
-  SCAN_STACK_FOR_BLOCK_END,                /**< end of "for" statement with let/const declaration */
+  SCAN_STACK_PRIVATE_BLOCK,                /**< private block for single statements */
   SCAN_STACK_ARROW_ARGUMENTS,              /**< might be arguments of an arrow function */
   SCAN_STACK_ARROW_EXPRESSION,             /**< expression body of an arrow function */
   SCAN_STACK_EXPLICIT_CLASS_CONSTRUCTOR,   /**< explicit class constructor */
@@ -365,6 +365,7 @@ void scanner_scan_simple_arrow (parser_context_t *context_p, scanner_context_t *
                                 const uint8_t *source_p);
 void scanner_check_arrow_arg (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 bool scanner_check_async_function (parser_context_t *context_p, scanner_context_t *scanner_context_p);
+void scanner_check_function_after_if (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 #endif /* ENABLED (JERRY_ES2015) */
 void scanner_scan_bracket (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 void scanner_check_directives (parser_context_t *context_p, scanner_context_t *scanner_context_p);

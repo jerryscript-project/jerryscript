@@ -527,8 +527,17 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
         break;
       }
 
-      scanner_context_p->mode = SCAN_MODE_STATEMENT;
       parser_stack_pop_uint8 (context_p);
+
+#if ENABLED (JERRY_ES2015)
+      if (context_p->stack_top_uint8 == SCAN_STACK_IF_STATEMENT)
+      {
+        scanner_check_function_after_if (context_p, scanner_context_p);
+        return SCAN_KEEP_TOKEN;
+      }
+#endif /* ENABLED (JERRY_ES2015) */
+
+      scanner_context_p->mode = SCAN_MODE_STATEMENT;
       return SCAN_NEXT_TOKEN;
     }
 #if ENABLED (JERRY_ES2015)
@@ -636,7 +645,7 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
 
         if (stack_top == SCAN_STACK_FOR_LET_START || stack_top == SCAN_STACK_FOR_CONST_START)
         {
-          parser_stack_push_uint8 (context_p, SCAN_STACK_FOR_BLOCK_END);
+          parser_stack_push_uint8 (context_p, SCAN_STACK_PRIVATE_BLOCK);
         }
 #else /* !ENABLED (JERRY_ES2015) */
         location_info->info.type = SCANNER_TYPE_FOR_IN;
@@ -662,7 +671,7 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
 #if ENABLED (JERRY_ES2015)
       if (stack_top == SCAN_STACK_FOR_LET_START || stack_top == SCAN_STACK_FOR_CONST_START)
       {
-        parser_stack_push_uint8 (context_p, SCAN_STACK_FOR_BLOCK_END);
+        parser_stack_push_uint8 (context_p, SCAN_STACK_PRIVATE_BLOCK);
       }
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -2027,8 +2036,13 @@ scanner_scan_statement_end (parser_context_t *context_p, /**< context */
         if (type == LEXER_KEYW_ELSE
             && (terminator_found || (context_p->token.flags & LEXER_WAS_NEWLINE)))
         {
+#if ENABLED (JERRY_ES2015)
+          scanner_check_function_after_if (context_p, scanner_context_p);
+          return SCAN_KEEP_TOKEN;
+#else /* !ENABLED (JERRY_ES2015) */
           scanner_context_p->mode = SCAN_MODE_STATEMENT;
           return SCAN_NEXT_TOKEN;
+#endif /* ENABLED (JERRY_ES2015) */
         }
         continue;
       }
@@ -2075,7 +2089,7 @@ scanner_scan_statement_end (parser_context_t *context_p, /**< context */
         continue;
       }
 #if ENABLED (JERRY_ES2015)
-      case SCAN_STACK_FOR_BLOCK_END:
+      case SCAN_STACK_PRIVATE_BLOCK:
       {
         parser_stack_pop_uint8 (context_p);
         scanner_pop_literal_pool (context_p, scanner_context_p);

@@ -127,6 +127,7 @@ typedef enum
 #if ENABLED (JERRY_ES2015)
   PARSER_ERR_VARIABLE_REDECLARED,                     /**< a variable redeclared */
   PARSER_ERR_LEXICAL_SINGLE_STATEMENT,                /**< lexical declaration in single statement context */
+  PARSER_ERR_LABELLED_FUNC_NOT_IN_BLOCK,              /**< labelled functions are only allowed inside blocks */
   PARSER_ERR_LEXICAL_LET_BINDING,                     /**< let binding cannot be declared in let/const */
   PARSER_ERR_MISSING_ASSIGN_AFTER_CONST,              /**< an assignment is required after a const declaration */
 

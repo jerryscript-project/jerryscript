@@ -281,6 +281,28 @@ scanner_check_async_function (parser_context_t *context_p, /**< context */
 } /* scanner_check_async_function */
 
 /**
+ * Check whether the statement of an if/else construct is a function statement.
+ */
+void
+scanner_check_function_after_if (parser_context_t *context_p, /**< context */
+                                 scanner_context_t *scanner_context_p) /**< scanner context */
+{
+  lexer_next_token (context_p);
+  scanner_context_p->mode = SCAN_MODE_STATEMENT;
+
+  if (JERRY_UNLIKELY (context_p->token.type == LEXER_KEYW_FUNCTION))
+  {
+    scanner_literal_pool_t *literal_pool_p;
+    literal_pool_p = scanner_push_literal_pool (context_p,
+                                                scanner_context_p,
+                                                SCANNER_LITERAL_POOL_BLOCK);
+
+    literal_pool_p->source_p = context_p->source_p;
+    parser_stack_push_uint8 (context_p, SCAN_STACK_PRIVATE_BLOCK);
+  }
+} /* scanner_check_function_after_if */
+
+/**
  * Arrow types for scanner_scan_bracket() function.
  */
 typedef enum

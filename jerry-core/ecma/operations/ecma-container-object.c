@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include "jcontext.h"
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
 #include "ecma-builtins.h"
@@ -370,13 +370,20 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
                 || lit_id == LIT_MAGIC_STRING_SET_UL
                 || lit_id == LIT_MAGIC_STRING_WEAKMAP_UL
                 || lit_id == LIT_MAGIC_STRING_WEAKSET_UL);
+  JERRY_ASSERT (JERRY_CONTEXT (current_new_target) != NULL);
+
+  ecma_object_t *proto_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_new_target), proto_id);
+
+  if (JERRY_UNLIKELY (proto_p == NULL))
+  {
+    return ECMA_VALUE_ERROR;
+  }
 
   ecma_collection_t *container_p = ecma_op_create_internal_buffer ();
-
-  ecma_object_t *object_p = ecma_create_object (ecma_builtin_get (proto_id),
-                                                sizeof (ecma_extended_object_t),
-                                                ECMA_OBJECT_TYPE_CLASS);
-
+  ecma_object_t *object_p  = ecma_create_object (proto_p,
+                                                 sizeof (ecma_extended_object_t),
+                                                 ECMA_OBJECT_TYPE_CLASS);
+  ecma_deref_object (proto_p);
   ecma_extended_object_t *map_obj_p = (ecma_extended_object_t *) object_p;
   map_obj_p->u.class_prop.extra_info = ECMA_CONTAINER_FLAGS_EMPTY;
   map_obj_p->u.class_prop.class_id = (uint16_t) lit_id;

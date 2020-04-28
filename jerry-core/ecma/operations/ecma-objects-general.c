@@ -636,6 +636,130 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
 
 #undef ECMA_PROPERTY_TYPE_GENERIC
 
+#if ENABLED (JERRY_ES2015)
+/**
+ * The IsCompatiblePropertyDescriptor method for Proxy object internal methods
+ *
+ * See also:
+ *          ECMAScript v6, 9.1.6.2
+ *
+ * @return bool
+ */
+bool
+ecma_op_is_compatible_property_descriptor (const ecma_property_descriptor_t *desc_p, /**< target descriptor */
+                                           const ecma_property_descriptor_t *current_p, /**< current descriptor */
+                                           bool is_extensible) /**< true - if target object is extensible
+                                                                    false - otherwise */
+{
+  JERRY_ASSERT (desc_p != NULL);
+
+  /* 2. */
+  if (current_p == NULL)
+  {
+    return is_extensible;
+  }
+
+  /* 3. */
+  if (desc_p->flags == 0)
+  {
+    return true;
+  }
+
+  /* 4. */
+  if ((current_p->flags & desc_p->flags) == desc_p->flags)
+  {
+    if ((current_p->flags & ECMA_PROP_IS_VALUE_DEFINED)
+         && ecma_op_same_value (current_p->value, desc_p->value))
+    {
+      return true;
+    }
+
+    if ((current_p->flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED)
+         && current_p->get_p == desc_p->get_p
+         && current_p->set_p == desc_p->set_p))
+    {
+      return true;
+    }
+  }
+
+  /* 5. */
+  if (!(current_p->flags & ECMA_PROP_IS_CONFIGURABLE))
+  {
+    if (desc_p->flags & ECMA_PROP_IS_CONFIGURABLE)
+    {
+      return false;
+    }
+    if ((desc_p->flags & ECMA_PROP_IS_ENUMERABLE_DEFINED)
+        && ((current_p->flags & ECMA_PROP_IS_ENUMERABLE) != (desc_p->flags & ECMA_PROP_IS_ENUMERABLE)))
+    {
+      return false;
+    }
+  }
+
+  const uint32_t accessor_desc_flags = (ECMA_PROP_IS_SET_DEFINED | ECMA_PROP_IS_GET_DEFINED);
+  const uint32_t data_desc_flags = (ECMA_PROP_IS_VALUE_DEFINED | ECMA_PROP_IS_WRITABLE_DEFINED);
+
+  bool desc_is_accessor = (desc_p->flags & accessor_desc_flags) != 0;
+  bool desc_is_data = (desc_p->flags & data_desc_flags) != 0;
+  bool current_is_data = (current_p->flags & data_desc_flags) != 0;
+
+  /* 6. */
+  if (!desc_is_accessor && !desc_is_data)
+  {
+    return true;
+  }
+
+  /* 7. */
+  if (current_is_data != desc_is_data)
+  {
+    return (current_p->flags & ECMA_PROP_IS_CONFIGURABLE) != 0;
+  }
+
+  /* 8. */
+  if (current_is_data)
+  {
+    if (!(current_p->flags & ECMA_PROP_IS_CONFIGURABLE))
+    {
+      if (!(current_p->flags & ECMA_PROP_IS_WRITABLE)
+           && (desc_p->flags & ECMA_PROP_IS_WRITABLE))
+      {
+        return false;
+      }
+
+      if (!(current_p->flags & ECMA_PROP_IS_WRITABLE)
+           && (desc_p->flags & ECMA_PROP_IS_VALUE_DEFINED)
+           && !ecma_op_same_value (desc_p->value, current_p->value))
+      {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  JERRY_ASSERT ((current_p->flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED)) != 0);
+  JERRY_ASSERT ((desc_p->flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED)) != 0);
+
+  /* 9. */
+  if (!(current_p->flags & ECMA_PROP_IS_CONFIGURABLE))
+  {
+    if ((desc_p->flags & ECMA_PROP_IS_SET_DEFINED)
+         && desc_p->set_p != current_p->set_p)
+    {
+      return false;
+    }
+
+    if ((desc_p->flags & ECMA_PROP_IS_GET_DEFINED)
+         && desc_p->get_p != current_p->get_p)
+    {
+      return false;
+    }
+  }
+
+  return true;
+} /* ecma_op_is_compatible_property_descriptor */
+#endif /* ENABLED (JERRY_ES2015) */
+
 /**
  * @}
  * @}

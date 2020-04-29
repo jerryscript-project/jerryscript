@@ -271,6 +271,7 @@ typedef enum
   VM_OC_PUSH_NEW_TARGET,         /**< push new.target onto the stack */
   VM_OC_REQUIRE_OBJECT_COERCIBLE,/**< RequireObjectCoercible opretaion */
   VM_OC_ASSIGN_SUPER,            /**< assign super reference */
+  VM_OC_SET__PROTO__,            /**< set prototpe when __proto__: form is used */
 #endif /* ENABLED (JERRY_ES2015) */
   VM_OC_NONE,                    /**< a special opcode for unsupported byte codes */
 } vm_oc_types;
@@ -333,6 +334,7 @@ typedef enum
   VM_OC_PUSH_NEW_TARGET = VM_OC_NONE,         /**< push new.target onto the stack */
   VM_OC_REQUIRE_OBJECT_COERCIBLE = VM_OC_NONE,/**< RequireObjectCoercible opretaion */
   VM_OC_ASSIGN_SUPER = VM_OC_NONE,            /**< assign super reference */
+  VM_OC_SET__PROTO__ = VM_OC_NONE,            /**< set prototpe when __proto__: form is used */
 #endif /* !ENABLED (JERRY_ES2015) */
 
   VM_OC_UNUSED = VM_OC_NONE                   /**< placeholder if the list is empty */

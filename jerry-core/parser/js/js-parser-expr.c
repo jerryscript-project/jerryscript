@@ -1041,9 +1041,12 @@ parser_parse_object_literal (parser_context_t *context_p) /**< context */
       default:
       {
 #if ENABLED (JERRY_ES2015)
-        if ((context_p->token.lit_location.type == LEXER_IDENT_LITERAL
-            || context_p->token.lit_location.type == LEXER_STRING_LITERAL)
-            && lexer_compare_literal_to_string (context_p, "__proto__", 9))
+        const lexer_lit_location_t *literal_p = (const lexer_lit_location_t *) context_p->lit_object.literal_p;
+        bool is_proto = ((context_p->token.lit_location.type == LEXER_IDENT_LITERAL
+                          || context_p->token.lit_location.type == LEXER_STRING_LITERAL)
+                         && lexer_compare_identifier_to_string (literal_p, (uint8_t *) "__proto__", 9)
+                         && lexer_check_next_character (context_p, LIT_CHAR_COLON));
+        if (is_proto)
         {
           if (proto_seen)
           {
@@ -1068,7 +1071,7 @@ parser_parse_object_literal (parser_context_t *context_p) /**< context */
         lexer_next_token (context_p);
 
 #if ENABLED (JERRY_ES2015)
-        if (context_p->token.type == LEXER_LEFT_PAREN)
+        if (context_p->token.type == LEXER_LEFT_PAREN && !is_proto)
         {
           parser_parse_object_method (context_p);
 
@@ -1078,8 +1081,8 @@ parser_parse_object_literal (parser_context_t *context_p) /**< context */
           break;
         }
 
-        if (context_p->token.type == LEXER_RIGHT_BRACE
-            || context_p->token.type == LEXER_COMMA)
+        if ((context_p->token.type == LEXER_RIGHT_BRACE || context_p->token.type == LEXER_COMMA)
+            && !is_proto)
         {
           parser_reparse_as_common_identifier (context_p, start_line, start_column);
           parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);
@@ -1099,6 +1102,14 @@ parser_parse_object_literal (parser_context_t *context_p) /**< context */
 
         lexer_next_token (context_p);
         parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
+
+#if ENABLED (JERRY_ES2015)
+        if (is_proto)
+        {
+          parser_emit_cbc_ext (context_p, CBC_EXT_SET__PROTO__);
+          break;
+        }
+#endif /* ENABLED (JERRY_ES2015) */
 
         if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
         {

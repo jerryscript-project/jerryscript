@@ -1616,7 +1616,17 @@ jerry_create_promise (void)
   jerry_assert_api_available ();
 
 #if ENABLED (JERRY_ES2015_BUILTIN_PROMISE)
-  return ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_PROMISE_EXECUTOR_EMPTY);
+  ecma_object_t * old_new_target_p = JERRY_CONTEXT (current_new_target);
+
+  if (old_new_target_p == NULL)
+  {
+    JERRY_CONTEXT (current_new_target) = ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE);
+  }
+
+  ecma_value_t promise_value =  ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_PROMISE_EXECUTOR_EMPTY);
+
+  JERRY_CONTEXT (current_new_target) = old_new_target_p;
+  return promise_value;
 #else /* !ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
   return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Promise not supported.")));
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */

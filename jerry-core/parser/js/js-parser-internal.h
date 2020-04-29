@@ -750,6 +750,9 @@ void scanner_create_variables (parser_context_t *context_p, uint32_t option_flag
 void scanner_get_location (scanner_location_t *location_p, parser_context_t *context_p);
 void scanner_set_location (parser_context_t *context_p, scanner_location_t *location_p);
 uint16_t scanner_decode_map_to (parser_scope_stack_t *stack_item_p);
+#if ENABLED (JERRY_ES2015)
+bool scanner_literal_is_const_reg (parser_context_t *context_p, uint16_t literal_index);
+#endif /* ENABLED (JERRY_ES2015) */
 
 void scanner_scan_all (parser_context_t *context_p, const uint8_t *arg_list_p, const uint8_t *arg_list_end_p,
                        const uint8_t *source_p, const uint8_t *source_end_p);

@@ -2473,11 +2473,9 @@ parser_parse_arrow_function (parser_context_t *context_p, /**< context */
   JERRY_ASSERT (status_flags & PARSER_IS_ARROW_FUNCTION);
   parser_save_context (context_p, &saved_context);
   context_p->status_flags |= status_flags;
-#if ENABLED (JERRY_ES2015)
   context_p->status_flags |= saved_context.status_flags & (PARSER_ALLOW_NEW_TARGET
                                                            | PARSER_ALLOW_SUPER
                                                            | PARSER_ALLOW_SUPER_CALL);
-#endif /* ENABLED (JERRY_ES2015) */
 
 #if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
   if (context_p->is_show_opcodes)
@@ -2529,14 +2527,12 @@ parser_parse_arrow_function (parser_context_t *context_p, /**< context */
 
     parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
 
-#if ENABLED (JERRY_ES2015)
     if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
     {
       parser_emit_cbc_ext (context_p, CBC_EXT_RETURN_PROMISE);
     }
     else
     {
-#endif /* ENABLED (JERRY_ES2015) */
       if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
       {
         context_p->last_cbc_opcode = CBC_RETURN_WITH_LITERAL;
@@ -2545,9 +2541,7 @@ parser_parse_arrow_function (parser_context_t *context_p, /**< context */
       {
         parser_emit_cbc (context_p, CBC_RETURN);
       }
-#if ENABLED (JERRY_ES2015)
     }
-#endif /* ENABLED (JERRY_ES2015) */
     parser_flush_cbc (context_p);
   }
 

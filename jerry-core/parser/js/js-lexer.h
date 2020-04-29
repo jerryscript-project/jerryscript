@@ -173,10 +173,10 @@ typedef enum
   LEXER_PROPERTY_GETTER,         /**< property getter function */
   LEXER_PROPERTY_SETTER,         /**< property setter function */
   LEXER_COMMA_SEP_LIST,          /**< comma separated bracketed expression list */
-  LEXER_SCAN_SWITCH,             /**< special value for switch pre-scan */
+#if ENABLED (JERRY_ES2015)
+  LEXER_ASSIGN_CONST,            /**< a const binding is reassigned */
   LEXER_CLASS_CONSTRUCTOR,       /**< special value for class constructor method */
   LEXER_INVALID_PATTERN,         /**< special value for invalid destructuring pattern */
-#if ENABLED (JERRY_ES2015)
   LEXER_ARROW_LEFT_PAREN,        /**< start of arrow function argument list */
 #endif /* ENABLED (JERRY_ES2015) */
 

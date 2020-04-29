@@ -98,7 +98,11 @@ vm_op_get_value (ecma_value_t object, /**< base object */
       {
         ecma_object_t *obj_p = ecma_get_object_from_value (object);
 
-        return ecma_builtin_object_object_get_prototype_of (obj_p);
+        ecma_value_t has_property = ecma_op_object_has_property (obj_p, property_name_p);
+        if (ecma_is_value_false (has_property))
+        {
+          return ecma_builtin_object_object_get_prototype_of (obj_p);
+        }
       }
 #endif /* ENABLED (JERRY_ES2015) */
     }

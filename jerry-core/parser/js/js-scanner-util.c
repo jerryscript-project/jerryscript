@@ -564,14 +564,23 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
       {
         no_declarations++;
 
-#if !ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ES2015)
+        if ((type & (SCANNER_LITERAL_IS_CONST | SCANNER_LITERAL_IS_ARG)) == SCANNER_LITERAL_IS_CONST)
+        {
+          JERRY_ASSERT (type & SCANNER_LITERAL_IS_LET);
+
+          /* Catch parameters cannot be functions. */
+          literal_p->type = (uint8_t) (type & ~SCANNER_LITERAL_IS_FUNC);
+          no_declarations--;
+        }
+#else /* !ENABLED (JERRY_ES2015) */
         if (type & SCANNER_LITERAL_IS_LOCAL)
         {
           /* Catch parameters cannot be functions. */
           literal_p->type = (uint8_t) (type & ~SCANNER_LITERAL_IS_FUNC);
           no_declarations--;
         }
-#endif /* !ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ES2015) */
       }
 
       intptr_t diff = (intptr_t) (literal_p->char_p - prev_source_p);
@@ -617,12 +626,14 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ES2015)
       extended_type |= SCANNER_LITERAL_IS_USED;
 
+      const uint8_t mask = (SCANNER_LITERAL_IS_ARG | SCANNER_LITERAL_IS_LOCAL);
+
       if ((type & SCANNER_LITERAL_IS_ARG)
-          || (!(literal_location_p->type & SCANNER_LITERAL_IS_ARG)
-              && (literal_location_p->type & SCANNER_LITERAL_IS_LOCAL)))
+          || (literal_location_p->type & mask) == SCANNER_LITERAL_IS_LET
+          || (literal_location_p->type & mask) == SCANNER_LITERAL_IS_CONST)
       {
         /* Clears the SCANNER_LITERAL_IS_VAR and SCANNER_LITERAL_IS_FUNC flags
-         * for speculative arrow paramters and local (non-var) functions. */
+         * for speculative arrow parameters and local (non-var) functions. */
         type = 0;
       }
 #endif /* ENABLED (JERRY_ES2015) */

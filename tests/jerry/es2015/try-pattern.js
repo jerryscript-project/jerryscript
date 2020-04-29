@@ -28,6 +28,11 @@ check_syntax_error("try {} catch([a] {}");
 check_syntax_error("try {} catch([a] = [1]) {}");
 check_syntax_error("try {} catch({a} = {a:1}) {}");
 check_syntax_error("try {} catch(a,) {}");
+check_syntax_error("try {} catch(a) { function a() {} }");
+check_syntax_error("try {} catch(a) { { function a() {} } function a() {} }");
+check_syntax_error("try {} catch([a]) { var a }");
+check_syntax_error("try {} catch([a]) { { var a } }");
+check_syntax_error("try {} catch([a]) { function a() {} }");
 
 try {
   throw [1,2]

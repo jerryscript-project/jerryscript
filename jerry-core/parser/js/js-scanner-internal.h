@@ -218,10 +218,10 @@ typedef enum
   SCANNER_BINDING_NONE, /**< not a destructuring binding expression */
   SCANNER_BINDING_VAR, /**< destructuring var binding */
   SCANNER_BINDING_LET, /**< destructuring let binding */
+  SCANNER_BINDING_CATCH, /**< destructuring catch binding */
   SCANNER_BINDING_CONST, /**< destructuring const binding */
   SCANNER_BINDING_ARG, /**< destructuring arg binding */
   SCANNER_BINDING_ARROW_ARG, /**< possible destructuring arg binding of an arrow function */
-  SCANNER_BINDING_CATCH, /**< destructuring catch binding */
 } scanner_binding_type_t;
 
 /**

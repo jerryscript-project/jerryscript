@@ -1397,8 +1397,11 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
       lexer_lit_location_t *literal_p = scanner_add_literal (context_p, scanner_context_p);
 
 #if ENABLED (JERRY_ES2015)
-      if (literal_p->type & SCANNER_LITERAL_IS_LOCAL
-          && !(literal_p->type & (SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_ARG)))
+      const uint8_t mask = (SCANNER_LITERAL_IS_ARG | SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_LOCAL);
+
+      if ((literal_p->type & SCANNER_LITERAL_IS_LOCAL)
+          && (literal_p->type & mask) != (SCANNER_LITERAL_IS_ARG | SCANNER_LITERAL_IS_DESTRUCTURED_ARG)
+          && (literal_p->type & mask) != (SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_FUNC_DECLARATION))
       {
         scanner_raise_redeclaration_error (context_p);
       }
@@ -2970,10 +2973,10 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
         {
           JERRY_ASSERT (scanner_context.binding_type == SCANNER_BINDING_VAR
                         || scanner_context.binding_type == SCANNER_BINDING_LET
+                        || scanner_context.binding_type == SCANNER_BINDING_CATCH
                         || scanner_context.binding_type == SCANNER_BINDING_CONST
                         || scanner_context.binding_type == SCANNER_BINDING_ARG
-                        || scanner_context.binding_type == SCANNER_BINDING_ARROW_ARG
-                        || scanner_context.binding_type == SCANNER_BINDING_CATCH);
+                        || scanner_context.binding_type == SCANNER_BINDING_ARROW_ARG);
 
           if (type == LEXER_THREE_DOTS)
           {
@@ -3035,13 +3038,12 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
           {
             scanner_detect_invalid_let (context_p, literal_p);
 
-            if (scanner_context.binding_type == SCANNER_BINDING_LET)
+            if (scanner_context.binding_type <= SCANNER_BINDING_CATCH)
             {
+              JERRY_ASSERT ((scanner_context.binding_type == SCANNER_BINDING_LET)
+                            || (scanner_context.binding_type == SCANNER_BINDING_CATCH));
+
               literal_p->type |= SCANNER_LITERAL_IS_LET;
-            }
-            else if (scanner_context.binding_type == SCANNER_BINDING_CATCH)
-            {
-              literal_p->type |= SCANNER_LITERAL_IS_LOCAL;
             }
             else
             {

@@ -72,9 +72,10 @@ typedef enum
 {
   PARSER_STATM_NO_OPTS = 0, /**< no options */
   PARSER_STATM_SINGLE_STATM = (1 << 0), /**< statment can form single statement context */
-  PARSER_STATM_BREAK_TARGET = (1 << 1), /**< break target statement */
-  PARSER_STATM_CONTINUE_TARGET = (1 << 2), /**< continue target statement */
-  PARSER_STATM_CONTEXT_BREAK = (1 << 3), /**< uses another instruction form when crosses their borders */
+  PARSER_STATM_HAS_BLOCK = (1 << 1), /**< statement always has a code block */
+  PARSER_STATM_BREAK_TARGET = (1 << 2), /**< break target statement */
+  PARSER_STATM_CONTINUE_TARGET = (1 << 3), /**< continue target statement */
+  PARSER_STATM_CONTEXT_BREAK = (1 << 4), /**< uses another instruction form when crosses their borders */
 } parser_statement_flags_t;
 
 /**
@@ -84,16 +85,16 @@ typedef enum
 static const uint8_t parser_statement_flags[] =
 {
   /* PARSER_STATEMENT_START */
-  PARSER_STATM_NO_OPTS,
+  PARSER_STATM_HAS_BLOCK,
   /* PARSER_STATEMENT_BLOCK, */
-  PARSER_STATM_NO_OPTS,
+  PARSER_STATM_HAS_BLOCK,
 #if ENABLED (JERRY_ES2015)
   /* PARSER_STATEMENT_BLOCK_SCOPE, */
-  PARSER_STATM_NO_OPTS,
+  PARSER_STATM_HAS_BLOCK,
   /* PARSER_STATEMENT_PRIVATE_SCOPE, */
   PARSER_STATM_NO_OPTS,
   /* PARSER_STATEMENT_BLOCK_CONTEXT, */
-  PARSER_STATM_CONTEXT_BREAK,
+  PARSER_STATM_HAS_BLOCK | PARSER_STATM_CONTEXT_BREAK,
   /* PARSER_STATEMENT_PRIVATE_CONTEXT, */
   PARSER_STATM_NO_OPTS,
 #endif /* ENABLED (JERRY_ES2015) */
@@ -104,9 +105,9 @@ static const uint8_t parser_statement_flags[] =
   /* PARSER_STATEMENT_ELSE */
   PARSER_STATM_SINGLE_STATM,
   /* PARSER_STATEMENT_SWITCH */
-  PARSER_STATM_BREAK_TARGET,
+  PARSER_STATM_HAS_BLOCK | PARSER_STATM_BREAK_TARGET,
   /* PARSER_STATEMENT_SWITCH_NO_DEFAULT */
-  PARSER_STATM_BREAK_TARGET,
+  PARSER_STATM_HAS_BLOCK | PARSER_STATM_BREAK_TARGET,
   /* PARSER_STATEMENT_DO_WHILE */
   PARSER_STATM_BREAK_TARGET | PARSER_STATM_CONTINUE_TARGET | PARSER_STATM_SINGLE_STATM,
   /* PARSER_STATEMENT_WHILE */
@@ -122,7 +123,7 @@ static const uint8_t parser_statement_flags[] =
   /* PARSER_STATEMENT_WITH */
   PARSER_STATM_CONTEXT_BREAK | PARSER_STATM_SINGLE_STATM,
   /* PARSER_STATEMENT_TRY */
-  PARSER_STATM_CONTEXT_BREAK
+  PARSER_STATM_HAS_BLOCK | PARSER_STATM_CONTEXT_BREAK
 };
 
 #if ENABLED (JERRY_ES2015)
@@ -613,12 +614,47 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_FUNCTION);
 
 #if ENABLED (JERRY_ES2015)
-  if ((parser_statement_flags[context_p->stack_top_uint8] & PARSER_STATM_SINGLE_STATM)
-      && !(context_p->stack_top_uint8 == PARSER_STATEMENT_IF
-           || context_p->stack_top_uint8 == PARSER_STATEMENT_ELSE
-           || context_p->stack_top_uint8 == PARSER_STATEMENT_LABEL))
+  if (JERRY_UNLIKELY (parser_statement_flags[context_p->stack_top_uint8] & PARSER_STATM_SINGLE_STATM))
   {
-    parser_raise_error (context_p, PARSER_ERR_LEXICAL_SINGLE_STATEMENT);
+    if (context_p->status_flags & PARSER_IS_STRICT)
+    {
+      parser_raise_error (context_p, PARSER_ERR_LEXICAL_SINGLE_STATEMENT);
+    }
+
+    if (context_p->stack_top_uint8 == PARSER_STATEMENT_IF
+        || context_p->stack_top_uint8 == PARSER_STATEMENT_ELSE)
+    {
+      JERRY_ASSERT (context_p->next_scanner_info_p->source_p == context_p->source_p);
+      parser_push_block_context (context_p, true);
+    }
+    else if (context_p->stack_top_uint8 == PARSER_STATEMENT_LABEL)
+    {
+      parser_stack_iterator_t iterator;
+      parser_stack_iterator_init (context_p, &iterator);
+      parser_stack_iterator_skip (&iterator, sizeof (parser_label_statement_t) + 1);
+
+      while (true)
+      {
+        uint8_t type = parser_stack_iterator_read_uint8 (&iterator);
+
+        if (type == PARSER_STATEMENT_LABEL)
+        {
+          parser_stack_iterator_skip (&iterator, sizeof (parser_label_statement_t) + 1);
+          continue;
+        }
+
+        if (parser_statement_flags[type] & PARSER_STATM_HAS_BLOCK)
+        {
+          break;
+        }
+
+        parser_raise_error (context_p, PARSER_ERR_LABELLED_FUNC_NOT_IN_BLOCK);
+      }
+    }
+    else
+    {
+      parser_raise_error (context_p, PARSER_ERR_LEXICAL_SINGLE_STATEMENT);
+    }
   }
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -740,6 +776,12 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
       }
 
       parser_flush_cbc (context_p);
+    }
+
+    if (JERRY_UNLIKELY (context_p->stack_top_uint8 == PARSER_STATEMENT_PRIVATE_SCOPE
+                        || context_p->stack_top_uint8 == PARSER_STATEMENT_PRIVATE_CONTEXT))
+    {
+      parser_pop_block_context (context_p);
     }
   }
 #endif /* ENABLED (JERRY_ES2015) */
@@ -2649,6 +2691,11 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
     JERRY_ASSERT (context_p->stack_depth == context_p->context_stack_depth);
 #endif /* !JERRY_NDEBUG */
 
+#if ENABLED (JERRY_ES2015)
+    JERRY_ASSERT (context_p->stack_top_uint8 != PARSER_STATEMENT_PRIVATE_SCOPE
+                  && context_p->stack_top_uint8 != PARSER_STATEMENT_PRIVATE_CONTEXT);
+#endif /* ENABLED (JERRY_ES2015) */
+
 #if ENABLED (JERRY_DEBUGGER)
     if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED
         && context_p->token.line != context_p->last_breakpoint_line
@@ -2989,6 +3036,11 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
             if (context_p->next_scanner_info_p->u8_arg & SCANNER_FUNCTION_STATEMENT)
             {
               JERRY_ASSERT (context_p->next_scanner_info_p->u8_arg & SCANNER_FUNCTION_ASYNC);
+
+              if (parser_statement_flags[context_p->stack_top_uint8] & PARSER_STATM_SINGLE_STATM)
+              {
+                parser_raise_error (context_p, PARSER_ERR_LEXICAL_SINGLE_STATEMENT);
+              }
 
               lexer_next_token (context_p);
               JERRY_ASSERT (context_p->token.type == LEXER_KEYW_FUNCTION);

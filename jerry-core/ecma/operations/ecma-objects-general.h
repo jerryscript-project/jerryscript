@@ -38,6 +38,8 @@ ecma_value_t ecma_op_general_object_define_own_property (ecma_object_t *object_p
                                                          const ecma_property_descriptor_t *property_desc_p);
 
 #if ENABLED (JERRY_ES2015)
+void ecma_op_to_complete_property_descriptor (ecma_property_descriptor_t *desc_p);
+
 bool ecma_op_is_compatible_property_descriptor (const ecma_property_descriptor_t *desc_p,
                                                 const ecma_property_descriptor_t *current_p,
                                                 bool is_extensible);

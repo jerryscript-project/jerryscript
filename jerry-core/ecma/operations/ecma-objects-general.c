@@ -758,6 +758,28 @@ ecma_op_is_compatible_property_descriptor (const ecma_property_descriptor_t *des
 
   return true;
 } /* ecma_op_is_compatible_property_descriptor */
+
+/**
+ * CompletePropertyDescriptor method for proxy internal method
+ *
+ * See also:
+ *          ECMA-262 v6, 6.2.4.5
+ */
+void
+ecma_op_to_complete_property_descriptor (ecma_property_descriptor_t *desc_p) /**< target descriptor */
+{
+  /* 4. */
+  if (!(desc_p->flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED)))
+  {
+    /* a. */
+    desc_p->flags |= ECMA_PROP_IS_VALUE_DEFINED;
+  }
+  /* 5. */
+  else
+  {
+    desc_p->flags |= (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED);
+  }
+} /* ecma_op_to_complete_property_descriptor */
 #endif /* ENABLED (JERRY_ES2015) */
 
 /**

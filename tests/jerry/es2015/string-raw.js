@@ -56,3 +56,9 @@ let str = String.raw({
 assert(str === "foo5barJavaScriptbaz");
 
 assert(String.raw({ raw: 'test' }, 0, 1, 2) === "t0e1s2t");
+
+var get = [];
+var raw = new Proxy({length: 2, 0: '', 1: ''}, { get: function(o, k) { get.push(k); return o[k]; }});
+var p = new Proxy({raw: raw}, { get: function(o, k) { get.push(k); return o[k]; }});
+String.raw(p);
+assert(get + '' === "raw,length,0,1");

@@ -235,6 +235,7 @@ ecma_builtin_string_object_raw (ecma_value_t this_arg, /**< 'this' argument */
     /* 12.f-g */
     if (next_index >= number_of_substitutions)
     {
+      next_index++;
       continue;
     }
 

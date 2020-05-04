@@ -209,6 +209,80 @@ ecma_op_create_dynamic_function_arguments_helper (const ecma_value_t *arguments_
 } /* ecma_op_create_dynamic_function_arguments_helper */
 
 /**
+ * Function object creation operation.
+ *
+ * See also: ECMA-262 v5, 13.2
+ *
+ * @return pointer to newly created Function object
+ */
+static ecma_object_t *
+ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
+                                const ecma_compiled_code_t *bytecode_data_p, /**< byte-code array */
+                                ecma_builtin_id_t proto_id) /**< builtin id of the prototype object */
+{
+  JERRY_ASSERT (ecma_is_lexical_environment (scope_p));
+
+  /* 1., 4., 13. */
+  ecma_object_t *prototype_obj_p = ecma_builtin_get (proto_id);
+
+  size_t function_object_size = sizeof (ecma_extended_object_t);
+
+#if ENABLED (JERRY_SNAPSHOT_EXEC)
+  if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION)
+  {
+    function_object_size = sizeof (ecma_static_function_t);
+  }
+#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
+
+  ecma_object_t *func_p = ecma_create_object (prototype_obj_p,
+                                              function_object_size,
+                                              ECMA_OBJECT_TYPE_FUNCTION);
+
+  /* 2., 6., 7., 8. */
+  /*
+   * We don't setup [[Get]], [[Call]], [[Construct]], [[HasInstance]] for each function object.
+   * Instead we set the object's type to ECMA_OBJECT_TYPE_FUNCTION
+   * that defines which version of the routine should be used on demand.
+   */
+
+  /* 3. */
+  /*
+   * [[Class]] property is not stored explicitly for objects of ECMA_OBJECT_TYPE_FUNCTION type.
+   *
+   * See also: ecma_object_get_class_name
+   */
+
+  ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) func_p;
+
+  /* 9. */
+  ECMA_SET_NON_NULL_POINTER_TAG (ext_func_p->u.function.scope_cp, scope_p, 0);
+
+  /* 10., 11., 12. */
+
+#if ENABLED (JERRY_SNAPSHOT_EXEC)
+  if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION)
+  {
+    ext_func_p->u.function.bytecode_cp = ECMA_NULL_POINTER;
+    ((ecma_static_function_t *) func_p)->bytecode_p = bytecode_data_p;
+  }
+  else
+#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
+  {
+    ECMA_SET_INTERNAL_VALUE_POINTER (ext_func_p->u.function.bytecode_cp, bytecode_data_p);
+    ecma_bytecode_ref ((ecma_compiled_code_t *) bytecode_data_p);
+  }
+
+  /* 14., 15., 16., 17., 18. */
+  /*
+   * 'length' and 'prototype' properties are instantiated lazily
+   *
+   * See also: ecma_op_function_try_to_lazy_instantiate_property
+   */
+
+  return func_p;
+} /* ecma_op_create_function_object */
+
+/**
  * CreateDynamicFunction operation
  *
  * See also:
@@ -271,20 +345,44 @@ ecma_op_create_dynamic_function (const ecma_value_t *arguments_list_p, /**< argu
   {
     JERRY_ASSERT (ecma_is_value_true (ret_value));
 
-    ecma_object_t *func_obj_p;
     ecma_object_t *global_env_p = ecma_get_global_environment ();
+    ecma_builtin_id_t fallback_proto = ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE;
 
 #if ENABLED (JERRY_ES2015)
-    if (parse_opts & ECMA_PARSE_GENERATOR_FUNCTION)
+    ecma_object_t *new_target_p = JERRY_CONTEXT (current_new_target);
+    bool is_generator_func = parse_opts & ECMA_PARSE_GENERATOR_FUNCTION;
+
+    if (is_generator_func)
     {
-      func_obj_p = ecma_op_create_generator_function_object (global_env_p, bytecode_data_p);
+      fallback_proto = ECMA_BUILTIN_ID_GENERATOR;
     }
-    else
+
+    if (new_target_p == NULL)
     {
+      if (is_generator_func)
+      {
+        new_target_p = ecma_builtin_get (ECMA_BUILTIN_ID_GENERATOR_FUNCTION);
+      }
+      else
+      {
+        new_target_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION);
+      }
+    }
+
+    ecma_object_t *proto = ecma_op_get_prototype_from_constructor (new_target_p, fallback_proto);
+
+    if (JERRY_UNLIKELY (proto == NULL))
+    {
+      ecma_bytecode_deref (bytecode_data_p);
+      return ECMA_VALUE_ERROR;
+    }
 #endif /* ENABLED (JERRY_ES2015) */
-      func_obj_p = ecma_op_create_simple_function_object (global_env_p, bytecode_data_p);
+
+    ecma_object_t *func_obj_p = ecma_op_create_function_object (global_env_p, bytecode_data_p, fallback_proto);
+
 #if ENABLED (JERRY_ES2015)
-    }
+    ECMA_SET_NON_NULL_POINTER (func_obj_p->u2.prototype_cp, proto);
+    ecma_deref_object (proto);
 #endif /* ENABLED (JERRY_ES2015) */
 
     ecma_bytecode_deref (bytecode_data_p);
@@ -299,82 +397,6 @@ ecma_op_create_dynamic_function (const ecma_value_t *arguments_list_p, /**< argu
 
   return ret_value;
 } /* ecma_op_create_dynamic_function */
-
-/**
- * Function object creation operation.
- *
- * See also: ECMA-262 v5, 13.2
- *
- * @return pointer to newly created Function object
- */
-static ecma_object_t *
-ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
-                                const ecma_compiled_code_t *bytecode_data_p, /**< byte-code array */
-                                ecma_builtin_id_t proto_id) /**< builtin id of the prototype object */
-{
-  JERRY_ASSERT (ecma_is_lexical_environment (scope_p));
-
-  /* 1., 4., 13. */
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (proto_id);
-
-  size_t function_object_size = sizeof (ecma_extended_object_t);
-
-#if ENABLED (JERRY_SNAPSHOT_EXEC)
-  if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION)
-  {
-    function_object_size = sizeof (ecma_static_function_t);
-  }
-#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
-
-  ecma_object_t *func_p = ecma_create_object (prototype_obj_p,
-                                              function_object_size,
-                                              ECMA_OBJECT_TYPE_FUNCTION);
-
-  /* 2., 6., 7., 8. */
-  /*
-   * We don't setup [[Get]], [[Call]], [[Construct]], [[HasInstance]] for each function object.
-   * Instead we set the object's type to ECMA_OBJECT_TYPE_FUNCTION
-   * that defines which version of the routine should be used on demand.
-   */
-
-  /* 3. */
-  /*
-   * [[Class]] property is not stored explicitly for objects of ECMA_OBJECT_TYPE_FUNCTION type.
-   *
-   * See also: ecma_object_get_class_name
-   */
-
-  ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) func_p;
-
-  /* 9. */
-  ECMA_SET_NON_NULL_POINTER_TAG (ext_func_p->u.function.scope_cp, scope_p, 0);
-
-  /* 10., 11., 12. */
-
-#if ENABLED (JERRY_SNAPSHOT_EXEC)
-  if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION)
-  {
-    ext_func_p->u.function.bytecode_cp = ECMA_NULL_POINTER;
-    ((ecma_static_function_t *) func_p)->bytecode_p = bytecode_data_p;
-  }
-  else
-  {
-#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
-    ECMA_SET_INTERNAL_VALUE_POINTER (ext_func_p->u.function.bytecode_cp, bytecode_data_p);
-    ecma_bytecode_ref ((ecma_compiled_code_t *) bytecode_data_p);
-#if ENABLED (JERRY_SNAPSHOT_EXEC)
-  }
-#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
-
-  /* 14., 15., 16., 17., 18. */
-  /*
-   * 'length' and 'prototype' properties are instantiated lazily
-   *
-   * See also: ecma_op_function_try_to_lazy_instantiate_property
-   */
-
-  return func_p;
-} /* ecma_op_create_function_object */
 
 /**
  * Function object creation operation.

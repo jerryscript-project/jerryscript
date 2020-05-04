@@ -4422,42 +4422,46 @@ jerry_create_container (jerry_container_type_t container_type, /**< Type of the 
     }
   }
 
+  lit_magic_string_id_t lit_id;
+  ecma_builtin_id_t proto_id;
+  ecma_builtin_id_t ctor_id;
+
   switch (container_type)
   {
 #if ENABLED (JERRY_ES2015_BUILTIN_MAP)
     case JERRY_CONTAINER_TYPE_MAP:
     {
-      return ecma_op_container_create (arguments_list_p,
-                                       arguments_list_len,
-                                       LIT_MAGIC_STRING_MAP_UL,
-                                       ECMA_BUILTIN_ID_MAP_PROTOTYPE);
+      lit_id = LIT_MAGIC_STRING_MAP_UL;
+      proto_id = ECMA_BUILTIN_ID_MAP_PROTOTYPE;
+      ctor_id = ECMA_BUILTIN_ID_MAP;
+      break;
     }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
 #if ENABLED (JERRY_ES2015_BUILTIN_SET)
     case JERRY_CONTAINER_TYPE_SET:
     {
-      return ecma_op_container_create (arguments_list_p,
-                                       arguments_list_len,
-                                       LIT_MAGIC_STRING_SET_UL,
-                                       ECMA_BUILTIN_ID_SET_PROTOTYPE);
+      lit_id = LIT_MAGIC_STRING_SET_UL;
+      proto_id = ECMA_BUILTIN_ID_SET_PROTOTYPE;
+      ctor_id = ECMA_BUILTIN_ID_SET;
+      break;
     }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_SET) */
 #if ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP)
     case JERRY_CONTAINER_TYPE_WEAKMAP:
     {
-      return ecma_op_container_create (arguments_list_p,
-                                       arguments_list_len,
-                                       LIT_MAGIC_STRING_WEAKMAP_UL,
-                                       ECMA_BUILTIN_ID_WEAKMAP_PROTOTYPE);
+      lit_id = LIT_MAGIC_STRING_WEAKMAP_UL;
+      proto_id = ECMA_BUILTIN_ID_WEAKMAP_PROTOTYPE;
+      ctor_id = ECMA_BUILTIN_ID_WEAKMAP;
+      break;
     }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP) */
 #if ENABLED (JERRY_ES2015_BUILTIN_WEAKSET)
     case JERRY_CONTAINER_TYPE_WEAKSET:
     {
-      return ecma_op_container_create (arguments_list_p,
-                                       arguments_list_len,
-                                       LIT_MAGIC_STRING_WEAKSET_UL,
-                                       ECMA_BUILTIN_ID_WEAKSET_PROTOTYPE);
+      lit_id = LIT_MAGIC_STRING_WEAKSET_UL;
+      proto_id = ECMA_BUILTIN_ID_WEAKSET_PROTOTYPE;
+      ctor_id = ECMA_BUILTIN_ID_WEAKSET;
+      break;
     }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_WEAKSET) */
     default:
@@ -4465,6 +4469,20 @@ jerry_create_container (jerry_container_type_t container_type, /**< Type of the 
       return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Invalid container type.")));
     }
   }
+  ecma_object_t * old_new_target_p = JERRY_CONTEXT (current_new_target);
+
+  if (old_new_target_p == NULL)
+  {
+    JERRY_CONTEXT (current_new_target) = ecma_builtin_get (ctor_id);
+  }
+
+  ecma_value_t container_value = ecma_op_container_create (arguments_list_p,
+                                                           arguments_list_len,
+                                                           lit_id,
+                                                           proto_id);
+
+  JERRY_CONTEXT (current_new_target) = old_new_target_p;
+  return container_value;
 #else /* !ENABLED (JERRY_ES2015_BUILTIN_CONTAINER) */
   JERRY_UNUSED (arguments_list_p);
   JERRY_UNUSED (arguments_list_len);

@@ -722,6 +722,31 @@ ecma_op_container_set_weak (ecma_object_t *const key_p, /**< key object */
 } /* ecma_op_container_set_weak */
 
 /**
+ * Helper method for the Map.prototype.set and Set.prototype.add methods to swap the sign of the given value if needed
+ *
+ * See also:
+ *          ECMA-262 v6, 23.2.3.1 step 6
+ *          ECMA-262 v6, 23.1.3.9 step 6
+ *
+ * @return ecma value
+ */
+static ecma_value_t
+ecma_op_container_set_noramlize_zero (ecma_value_t this_arg) /*< this arg */
+{
+  if (ecma_is_value_number (this_arg))
+  {
+    ecma_number_t number_value = ecma_get_number_from_value (this_arg);
+
+    if (JERRY_UNLIKELY (ecma_number_is_zero (number_value) && ecma_number_is_negative (number_value)))
+    {
+      return ecma_make_integer_value (0);
+    }
+  }
+
+  return this_arg;
+} /* ecma_op_container_set_noramlize_zero */
+
+/**
  * The generic Map prototype object's 'set' and Set prototype object's 'add' routine
  *
  * @return ecma value
@@ -755,7 +780,10 @@ ecma_op_container_set (ecma_value_t this_arg, /**< this argument */
 
   if (entry_p == NULL)
   {
-    ecma_op_internal_buffer_append (container_p, key_arg, value_arg, lit_id);
+    ecma_op_internal_buffer_append (container_p,
+                                    ecma_op_container_set_noramlize_zero (key_arg),
+                                    value_arg,
+                                    lit_id);
 
 #if ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP) ||  ENABLED (JERRY_ES2015_BUILTIN_WEAKSET)
     if ((map_object_p->u.class_prop.extra_info & ECMA_CONTAINER_FLAGS_WEAK) != 0)
@@ -767,7 +795,7 @@ ecma_op_container_set (ecma_value_t this_arg, /**< this argument */
   }
   else
   {
-    ecma_op_internal_buffer_update (entry_p, value_arg, lit_id);
+    ecma_op_internal_buffer_update (entry_p, ecma_op_container_set_noramlize_zero (value_arg), lit_id);
   }
 
   ecma_ref_object ((ecma_object_t *) map_object_p);

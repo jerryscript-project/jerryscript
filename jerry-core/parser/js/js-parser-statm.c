@@ -573,7 +573,7 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
         }
 #endif /* ENABLED (JERRY_ES2015) */
 
-        parser_emit_cbc_literal (context_p, opcode, index);
+        parser_emit_cbc_literal (context_p, (uint16_t) opcode, index);
       }
 #if ENABLED (JERRY_ES2015)
       else if (declaration_type == LEXER_KEYW_LET)

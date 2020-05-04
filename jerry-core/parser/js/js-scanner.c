@@ -3224,11 +3224,6 @@ scan_completed:
                 JERRY_DEBUG_MSG ("    LOCAL ");
                 break;
               }
-              case SCANNER_STREAM_TYPE_DESTRUCTURED_ARG:
-              {
-                JERRY_DEBUG_MSG ("    DESTRUCTURED_ARG ");
-                break;
-              }
 #endif /* ENABLED (JERRY_ES2015) */
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
               case SCANNER_STREAM_TYPE_IMPORT:
@@ -3242,6 +3237,13 @@ scan_completed:
                 JERRY_DEBUG_MSG ("    ARG ");
                 break;
               }
+#if ENABLED (JERRY_ES2015)
+              case SCANNER_STREAM_TYPE_DESTRUCTURED_ARG:
+              {
+                JERRY_DEBUG_MSG ("    DESTRUCTURED_ARG ");
+                break;
+              }
+#endif /* ENABLED (JERRY_ES2015) */
               case SCANNER_STREAM_TYPE_ARG_FUNC:
               {
                 JERRY_DEBUG_MSG ("    ARG_FUNC ");

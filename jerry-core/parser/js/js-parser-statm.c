@@ -742,7 +742,7 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
     while (stack_p < scope_stack_p)
     {
       if (literal_index == stack_p->map_from
-          && (stack_p->map_to & PARSER_SCOPE_STACK_IS_LEXICAL))
+          && (stack_p->map_to & PARSER_SCOPE_STACK_NO_FUNCTION_COPY))
       {
         copy_value = false;
         break;
@@ -758,7 +758,7 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
       {
         if (literal_index == stack_p->map_from)
         {
-          JERRY_ASSERT (!(stack_p->map_to & PARSER_SCOPE_STACK_IS_LEXICAL));
+          JERRY_ASSERT (!(stack_p->map_to & PARSER_SCOPE_STACK_NO_FUNCTION_COPY));
 
           uint16_t map_to = scanner_decode_map_to (stack_p);
           uint16_t opcode = ((map_to >= PARSER_REGISTER_START) ? CBC_ASSIGN_LITERAL_SET_IDENT

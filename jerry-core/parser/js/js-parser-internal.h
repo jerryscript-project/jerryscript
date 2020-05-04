@@ -392,9 +392,10 @@ typedef struct
 #define PARSER_SCOPE_STACK_REGISTER_MASK 0x3fff
 
 /**
- * The scope stack item represents a lexical declaration (let/const)
+ * Function statements with the name specified
+ * in map_from should not be copied to global scope.
  */
-#define PARSER_SCOPE_STACK_IS_LEXICAL 0x4000
+#define PARSER_SCOPE_STACK_NO_FUNCTION_COPY 0x4000
 
 /**
  * The scope stack item represents a const declaration

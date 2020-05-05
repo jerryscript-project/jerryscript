@@ -798,7 +798,6 @@ RECURSIVE              = YES
 # who are familiar with the undocumented parts.
 EXCLUDE                = \
         jerry-core/ecma/base/ecma-globals.h \
-        jerry-core/ecma/base/ecma-helpers.h \
         jerry-core/ecma/operations/ecma-exceptions.h \
         jerry-core/include/jerryscript-debugger-transport.h \
         jerry-core/jcontext/jcontext.h \

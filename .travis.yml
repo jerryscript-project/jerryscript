@@ -43,6 +43,7 @@ matrix:
       env:
         - OPTS="--quiet --jerry-tests --jerry-test-suite --unittests"
       os: osx
+      osx_image: xcode11.4
       addons:
         homebrew:
           packages: [cmake, cppcheck, vera++]

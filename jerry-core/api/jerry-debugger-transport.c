@@ -17,8 +17,6 @@
 #include "jcontext.h"
 #include "jerryscript.h"
 
-#if ENABLED (JERRY_DEBUGGER)
-
 /**
  * Minimum number of bytes transmitted or received.
  */
@@ -39,6 +37,7 @@ jerry_debugger_transport_add (jerry_debugger_transport_header_t *header_p, /**< 
                               size_t receive_message_header_size, /**< header bytes reserved for incoming messages */
                               size_t max_receive_message_size) /**< maximum number of bytes received in a message */
 {
+#if ENABLED (JERRY_DEBUGGER)
   JERRY_ASSERT (max_send_message_size > JERRY_DEBUGGER_TRANSPORT_MIN_BUFFER_SIZE
                 && max_receive_message_size > JERRY_DEBUGGER_TRANSPORT_MIN_BUFFER_SIZE);
 
@@ -83,6 +82,13 @@ jerry_debugger_transport_add (jerry_debugger_transport_header_t *header_p, /**< 
 
   JERRY_CONTEXT (debugger_max_send_size) = (uint8_t) max_send_size;
   JERRY_CONTEXT (debugger_max_receive_size) = (uint8_t) max_receive_size;
+#else /* !ENABLED (JERRY_DEBUGGER) */
+  JERRY_UNUSED (header_p);
+  JERRY_UNUSED (send_message_header_size);
+  JERRY_UNUSED (max_send_message_size);
+  JERRY_UNUSED (receive_message_header_size);
+  JERRY_UNUSED (max_receive_message_size);
+#endif /* ENABLED (JERRY_DEBUGGER) */
 } /* jerry_debugger_transport_add */
 
 /**
@@ -92,6 +98,7 @@ jerry_debugger_transport_add (jerry_debugger_transport_header_t *header_p, /**< 
 void
 jerry_debugger_transport_start (void)
 {
+#if ENABLED (JERRY_DEBUGGER)
   JERRY_ASSERT (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED);
 
   if (jerry_debugger_send_configuration (JERRY_CONTEXT (debugger_max_receive_size)))
@@ -99,6 +106,7 @@ jerry_debugger_transport_start (void)
     JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_VM_STOP);
     JERRY_CONTEXT (debugger_stop_context) = NULL;
   }
+#endif /* ENABLED (JERRY_DEBUGGER) */
 } /* jerry_debugger_transport_start */
 
 /**
@@ -110,7 +118,11 @@ jerry_debugger_transport_start (void)
 bool
 jerry_debugger_transport_is_connected (void)
 {
+#if ENABLED (JERRY_DEBUGGER)
   return (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED) != 0;
+#else /* !ENABLED (JERRY_DEBUGGER) */
+  return false;
+#endif /* ENABLED (JERRY_DEBUGGER) */
 } /* jerry_debugger_transport_is_connected */
 
 /**
@@ -119,6 +131,7 @@ jerry_debugger_transport_is_connected (void)
 void
 jerry_debugger_transport_close (void)
 {
+#if ENABLED (JERRY_DEBUGGER)
   if (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED))
   {
     return;
@@ -143,6 +156,7 @@ jerry_debugger_transport_close (void)
   jerry_port_log (JERRY_LOG_LEVEL_DEBUG, "Debugger client connection closed.\n");
 
   jerry_debugger_free_unreferenced_byte_code ();
+#endif /* ENABLED (JERRY_DEBUGGER) */
 } /* jerry_debugger_transport_close */
 
 /**
@@ -155,6 +169,7 @@ bool
 jerry_debugger_transport_send (const uint8_t *message_p, /**< message to be sent */
                                size_t message_length) /**< message length in bytes */
 {
+#if ENABLED (JERRY_DEBUGGER)
   JERRY_ASSERT (jerry_debugger_transport_is_connected ());
   JERRY_ASSERT (message_length > 0);
 
@@ -180,6 +195,12 @@ jerry_debugger_transport_send (const uint8_t *message_p, /**< message to be sent
   while (message_length > 0);
 
   return true;
+#else /* !ENABLED (JERRY_DEBUGGER) */
+  JERRY_UNUSED (message_p);
+  JERRY_UNUSED (message_length);
+
+  return false;
+#endif /* ENABLED (JERRY_DEBUGGER) */
 } /* jerry_debugger_transport_send */
 
 /**
@@ -195,6 +216,7 @@ bool
 jerry_debugger_transport_receive (jerry_debugger_transport_receive_context_t *context_p) /**< [out] receive
                                                                                           *   context */
 {
+#if ENABLED (JERRY_DEBUGGER)
   JERRY_ASSERT (jerry_debugger_transport_is_connected ());
 
   context_p->buffer_p = JERRY_CONTEXT (debugger_receive_buffer);
@@ -206,6 +228,11 @@ jerry_debugger_transport_receive (jerry_debugger_transport_receive_context_t *co
   jerry_debugger_transport_header_t *header_p = JERRY_CONTEXT (debugger_transport_header_p);
 
   return header_p->receive (header_p, context_p);
+#else /* !ENABLED (JERRY_DEBUGGER) */
+  JERRY_UNUSED (context_p);
+
+  return false;
+#endif /* ENABLED (JERRY_DEBUGGER) */
 } /* jerry_debugger_transport_receive */
 
 /**
@@ -215,6 +242,7 @@ void
 jerry_debugger_transport_receive_completed (jerry_debugger_transport_receive_context_t *context_p) /**< receive
                                                                                                     *   context */
 {
+#if ENABLED (JERRY_DEBUGGER)
   JERRY_ASSERT (context_p->message_p != NULL);
   JERRY_ASSERT (context_p->buffer_p == JERRY_CONTEXT (debugger_receive_buffer));
 
@@ -236,6 +264,9 @@ jerry_debugger_transport_receive_completed (jerry_debugger_transport_receive_con
   memmove (buffer_p, buffer_p + message_total_length, received_length);
 
   JERRY_CONTEXT (debugger_received_length) = (uint16_t) received_length;
+#else /* !ENABLED (JERRY_DEBUGGER) */
+  JERRY_UNUSED (context_p);
+#endif /* ENABLED (JERRY_DEBUGGER) */
 } /* jerry_debugger_transport_receive_completed */
 
 /**
@@ -244,7 +275,7 @@ jerry_debugger_transport_receive_completed (jerry_debugger_transport_receive_con
 void
 jerry_debugger_transport_sleep (void)
 {
+#if ENABLED (JERRY_DEBUGGER)
   jerry_port_sleep (JERRY_DEBUGGER_TRANSPORT_TIMEOUT);
-} /* jerry_debugger_transport_sleep */
-
 #endif /* ENABLED (JERRY_DEBUGGER) */
+} /* jerry_debugger_transport_sleep */

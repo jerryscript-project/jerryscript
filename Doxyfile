@@ -800,7 +800,6 @@ EXCLUDE                = \
         jerry-core/ecma/base/ecma-globals.h \
         jerry-core/ecma/base/ecma-helpers.h \
         jerry-core/ecma/operations/ecma-exceptions.h \
-        jerry-core/include/jerryscript-debugger-transport.h \
         jerry-core/jcontext/jcontext.h \
         jerry-core/parser/js/byte-code.h \
         jerry-core/parser/js/common.h \

@@ -1193,6 +1193,12 @@ ecma_op_object_put_apply_receiver (ecma_value_t receiver, /**< receiver */
 
     return result;
   }
+
+  if (JERRY_UNLIKELY (ecma_op_object_is_fast_array (receiver_obj_p)))
+  {
+    ecma_fast_array_convert_to_normal (receiver_obj_p);
+  }
+
   /* 5.f.i */
   ecma_property_value_t *new_prop_value_p;
   new_prop_value_p = ecma_create_named_data_property (receiver_obj_p,

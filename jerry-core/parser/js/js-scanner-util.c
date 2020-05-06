@@ -2043,7 +2043,7 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
 #endif /* ENABLED (JERRY_ES2015) */
 
       parser_emit_cbc_literal_value (context_p,
-                                     opcode,
+                                     (uint16_t) opcode,
                                      function_map_p[1].map_to,
                                      scanner_decode_map_to (function_map_p));
       continue;

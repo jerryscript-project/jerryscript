@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var t = new RegExp ("abc","g");
-t.lastIndex = -12;
-result = t.exec("abc   abc");
-assert(result[0] === "abc");
-assert(result.index === 0);
-assert(t.lastIndex === 3);
+var accessors = [ 'flags', 'global', 'ignoreCase', 'multiline', 'source', 'sticky', 'unicode' ]
 
-assert(RegExp.prototype.lastIndex === undefined)
+accessors.forEach(function(attr) {
+    var desc = Object.getOwnPropertyDescriptor(RegExp.prototype, attr);
+    assert(typeof desc.get === 'function')
+    assert(desc.set === undefined)
+    assert(desc.enumerable === false)
+    assert(desc.configurable === true)
+});

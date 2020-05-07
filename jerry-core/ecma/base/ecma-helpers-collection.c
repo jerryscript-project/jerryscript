@@ -174,9 +174,13 @@ ecma_collection_append (ecma_collection_t *collection_p, /**< value collection *
                         uint32_t count) /**< number of ecma values to append */
 {
   JERRY_ASSERT (collection_p != NULL);
-  if (collection_p->capacity - collection_p->item_count >= count)
+  JERRY_ASSERT (collection_p->capacity >= collection_p->item_count);
+
+  uint32_t free_count = collection_p->capacity - collection_p->item_count;
+
+  if (free_count < count)
   {
-    ecma_collection_reserve (collection_p, count);
+    ecma_collection_reserve (collection_p, count - free_count);
   }
 
   memcpy (collection_p->buffer_p + collection_p->item_count, buffer_p, count * sizeof (ecma_value_t));

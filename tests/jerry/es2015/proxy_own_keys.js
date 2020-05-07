@@ -149,6 +149,21 @@ var proxy = new Proxy(target, handler);
 
 assert(JSON.stringify(Object.getOwnPropertyNames(proxy)) === '["a","a","a"]');
 
+// test with lots of keys
+var keyslist = [];
+
+var handler = {
+	ownKeys: function(target) {
+      for (var idx = 0; idx < 30; idx++) {
+        keyslist.push("K" + idx);
+      }
+      return keyslist;
+    }
+};
+
+var proxy = new Proxy(target, handler);
+assert(JSON.stringify(Object.getOwnPropertyNames(proxy)) === JSON.stringify(keyslist));
+
 // test when invariants gets violated
 var target = {
   "target_one": 1

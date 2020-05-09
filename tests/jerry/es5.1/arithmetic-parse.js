@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function parse (txt) {
+function check_syntax_error (txt) {
   try {
     eval (txt)
     assert (false)
@@ -25,25 +25,25 @@ var a = 21;
 var b = 10;
 var c;
 
-parse ("c =  a++b");
-parse ("c =  a--b");
+check_syntax_error ("c =  a++b");
+check_syntax_error ("c =  a--b");
 
-parse ("c = a +* b");
-parse ("c = a -* b");
-parse ("c = a +/ b");
-parse ("c = a -/ b");
-parse ("c = a +% b");
-parse ("c = a -% b");
+check_syntax_error ("c = a +* b");
+check_syntax_error ("c = a -* b");
+check_syntax_error ("c = a +/ b");
+check_syntax_error ("c = a -/ b");
+check_syntax_error ("c = a +% b");
+check_syntax_error ("c = a -% b");
 
-parse ("a =* b");
-parse ("a =/ b");
-parse ("a =% b");
+check_syntax_error ("a =* b");
+check_syntax_error ("a =/ b");
+check_syntax_error ("a =% b");
 
-parse ("c = a+");
-parse ("c = a-");
+check_syntax_error ("c = a+");
+check_syntax_error ("c = a-");
 
-parse("a++\n()");
-parse("a--\n.b");
+check_syntax_error("a++\n()");
+check_syntax_error("a--\n.b");
 
 assert((-2 .toString()) === -2);
 
@@ -90,3 +90,4 @@ function h()
   assert(done);
 }
 h();
+  

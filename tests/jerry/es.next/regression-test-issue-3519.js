@@ -12,8 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function method () {
-    [""] = $
+try {
+  eval('function method () { [""] = $ }');
+  assert(false);
+} catch (e) {
+  assert(e instanceof SyntaxError);  
 }
 
 try {

@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+function a() {}
+
 try {
-  eval('typeof (global.v2) = 123');
+  eval('(a()) = a');
   assert (false);
 } catch (e) {
   assert (e instanceof SyntaxError);

@@ -12,4 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-for (/a/ in a => { }, a => { }, a => { }) throw 1
+try {
+  eval('for (/a/ in a => { }, a => { }, a => { }) throw 1');
+  assert(false);
+} catch (e) {
+  assert(e instanceof SyntaxError);
+}
+

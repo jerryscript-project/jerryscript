@@ -13,15 +13,15 @@
 // limitations under the License.
 
 try {
-  [this,000000000,this,99999999=9999999];
+  eval('[this,000000000,this,99999999=9999999]');
   assert(false);
 } catch (e) {
-  assert(e instanceof ReferenceError);
+  assert(e instanceof SyntaxError);
 }
 
 try {
-  [this,999+=8];
+  eval('[this,999+=8]');
   assert(false);
 } catch (e) {
-  assert(e instanceof ReferenceError);
+  assert(e instanceof SyntaxError);
 }

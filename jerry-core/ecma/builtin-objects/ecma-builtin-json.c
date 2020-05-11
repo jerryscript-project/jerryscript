@@ -1005,7 +1005,12 @@ static ecma_value_t
 ecma_builtin_json_serialize_array (ecma_json_stringify_context_t *context_p, /**< context*/
                                    ecma_object_t *obj_p) /**< the array object*/
 {
-  JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY);
+#ifndef JERRY_NDEBUG
+  ecma_value_t obj_value = ecma_make_object_value (obj_p);
+  ecma_value_t is_array = ecma_is_value_array (obj_value);
+
+  JERRY_ASSERT (ecma_is_value_true (is_array));
+#endif /* !JERRY_NDEBUG */
 
   /* 1. */
   if (ecma_json_has_object_in_stack (context_p->occurence_stack_last_p, obj_p))
@@ -1027,7 +1032,23 @@ ecma_builtin_json_serialize_array (ecma_json_stringify_context_t *context_p, /**
   const bool has_gap = !ecma_compare_ecma_string_to_magic_id (context_p->gap_str_p, LIT_MAGIC_STRING__EMPTY);
 
   /* 6. */
-  uint32_t array_length = ((ecma_extended_object_t *) obj_p)->u.array.length;
+  uint32_t array_length;
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (ECMA_OBJECT_IS_PROXY (obj_p))
+  {
+    ecma_value_t length_value = ecma_op_object_get_length (obj_p, &array_length);
+
+    if (ECMA_IS_VALUE_ERROR (length_value))
+    {
+      return length_value;
+    }
+  }
+  else
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+  {
+    array_length = ((ecma_extended_object_t *) obj_p)->u.array.length;
+  }
 
   ecma_stringbuilder_append_byte (&context_p->result_builder, LIT_CHAR_LEFT_SQUARE);
 
@@ -1260,11 +1281,21 @@ ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p, 
   /* 11. */
   if (ecma_is_value_object (value) && !ecma_op_is_callable (value))
   {
+    ecma_value_t is_array = ecma_is_value_array (value);
+
+#if ENABLED (JERRY_ES2015)
+    if (ECMA_IS_VALUE_ERROR (is_array))
+    {
+      ecma_free_value (value);
+      return is_array;
+    }
+#endif /* ENABLED (JERRY_ES2015) */
+
     ecma_object_t *obj_p = ecma_get_object_from_value (value);
 
     ecma_value_t ret_value;
     /* 10.a */
-    if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY)
+    if (ecma_is_value_true (is_array))
     {
       ret_value = ecma_builtin_json_serialize_array (context_p, obj_p);
     }

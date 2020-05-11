@@ -104,3 +104,24 @@ with (a) {
   assert(foo === 1);
   assert(typeof bar === "undefined");
 }
+
+let track = [];
+let proxy = new Proxy({ a : 4, [Symbol.unscopables] : [] }, {
+  has (t, p) {
+    track.push(p);
+    return Reflect.has(...arguments);
+  },
+  get (t, p, r) {
+    track.push(p);
+    return Reflect.get(...arguments);
+  }
+});
+
+with (proxy){
+  a;
+}
+
+assert(track.length == 3);
+assert(track[0] === 'a');
+assert(track[1] === Symbol.unscopables);
+assert(track[2] === 'a');

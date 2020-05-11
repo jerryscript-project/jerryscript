@@ -86,41 +86,13 @@ ecma_op_get_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
       {
         JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
 
-        ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
-
-        ecma_value_t result = ecma_op_object_find (binding_obj_p, name_p);
-
-        if (ECMA_IS_VALUE_ERROR (result))
-        {
-          return result;
-        }
+        ecma_value_t result = ecma_op_object_bound_environment_resolve_reference_value (lex_env_p, name_p);
 
         if (ecma_is_value_found (result))
         {
+          /* Note: the result may contains ECMA_VALUE_ERROR */
           *ref_base_lex_env_p = lex_env_p;
-
-#if ENABLED (JERRY_ES2015)
-          ecma_value_t blocked = ecma_op_is_prop_unscopable (lex_env_p, name_p);
-
-          if (ECMA_IS_VALUE_ERROR (blocked))
-          {
-            ecma_free_value (result);
-            return blocked;
-          }
-
-          if (ecma_is_value_true (blocked))
-          {
-            *ref_base_lex_env_p = NULL;
-            ecma_free_value (result);
-          }
-          else
-          {
-            return result;
-          }
-#else /* !ENABLED (JERRY_ES2015) */
           return result;
-#endif /* ENABLED (JERRY_ES2015) */
-
         }
 
         break;

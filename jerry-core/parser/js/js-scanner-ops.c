@@ -176,15 +176,29 @@ scanner_check_arrow_arg (parser_context_t *context_p, /**< context */
     }
     else
     {
-      scanner_append_argument (context_p, scanner_context_p);
+      lexer_lit_location_t *argument_literal_p = scanner_append_argument (context_p, scanner_context_p);
 
       scanner_detect_eval_call (context_p, scanner_context_p);
 
       lexer_next_token (context_p);
 
-      if (context_p->token.type == LEXER_ASSIGN
-          || context_p->token.type == LEXER_COMMA
-          || context_p->token.type == LEXER_RIGHT_PAREN)
+      if (context_p->token.type == LEXER_ASSIGN)
+      {
+        if (argument_literal_p->type & SCANNER_LITERAL_IS_USED)
+        {
+          JERRY_ASSERT (argument_literal_p->type & SCANNER_LITERAL_EARLY_CREATE);
+          return;
+        }
+
+        scanner_binding_literal_t binding_literal;
+        binding_literal.literal_p = argument_literal_p;
+
+        parser_stack_push (context_p, &binding_literal, sizeof (scanner_binding_literal_t));
+        parser_stack_push_uint8 (context_p, SCAN_STACK_BINDING_INIT);
+        return;
+      }
+
+      if (context_p->token.type == LEXER_COMMA || context_p->token.type == LEXER_RIGHT_PAREN)
       {
         return;
       }
@@ -381,7 +395,7 @@ scanner_scan_bracket (parser_context_t *context_p, /**< context */
         arrow_source_p = NULL;
 #endif /* ENABLED (JERRY_ES2015) */
 
-        scanner_context_p->active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_NO_REG;
+        scanner_context_p->active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_CAN_EVAL;
         break;
       }
 

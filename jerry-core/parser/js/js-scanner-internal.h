@@ -101,6 +101,7 @@ typedef enum
   SCAN_STACK_COMPUTED_GENERATOR_FUNCTION,  /**< computed property name */
   SCAN_STACK_TEMPLATE_STRING,              /**< template string */
   SCAN_STACK_TAGGED_TEMPLATE_LITERAL,      /**< tagged template literal */
+  SCAN_STACK_PRIVATE_BLOCK_EARLY,          /**< private block for single statements (force early declarations) */
   SCAN_STACK_PRIVATE_BLOCK,                /**< private block for single statements */
   SCAN_STACK_ARROW_ARGUMENTS,              /**< might be arguments of an arrow function */
   SCAN_STACK_ARROW_EXPRESSION,             /**< expression body of an arrow function */
@@ -148,10 +149,6 @@ typedef enum
   SCANNER_LITERAL_IS_ARROW_DESTRUCTURED_ARG = SCANNER_LITERAL_IS_VAR,
 #endif /* ENABLED (JERRY_ES2015) */
   SCANNER_LITERAL_IS_FUNC = (1 << 2), /**< literal is function */
-#if ENABLED (JERRY_ES2015)
-  /** a destructured argument binding of a possible arrow function cannot be stored in a register */
-  SCANNER_LITERAL_ARROW_DESTRUCTURED_ARG_NO_REG = SCANNER_LITERAL_IS_FUNC,
-#endif /* ENABLED (JERRY_ES2015) */
   SCANNER_LITERAL_NO_REG = (1 << 3), /**< literal cannot be stored in a register */
   SCANNER_LITERAL_IS_LET = (1 << 4), /**< literal is let */
 #if ENABLED (JERRY_ES2015)
@@ -163,6 +160,7 @@ typedef enum
   /** literal is a destructured argument binding */
   SCANNER_LITERAL_IS_DESTRUCTURED_ARG = SCANNER_LITERAL_IS_CONST,
   SCANNER_LITERAL_IS_USED = (1 << 6), /**< literal is used */
+  SCANNER_LITERAL_EARLY_CREATE = (1 << 7), /**< binding should be created early with ECMA_VALUE_UNINITIALIZED */
 #endif /* ENABLED (JERRY_ES2015) */
 } scanner_literal_type_flags_t;
 
@@ -258,7 +256,7 @@ typedef enum
   SCANNER_LITERAL_POOL_FUNCTION = (1 << 0), /**< literal pool represents a function */
   SCANNER_LITERAL_POOL_BLOCK = (1 << 1), /**< literal pool represents a code block */
   SCANNER_LITERAL_POOL_IS_STRICT = (1 << 2), /**< literal pool represents a strict mode code block */
-  SCANNER_LITERAL_POOL_NO_REG = (1 << 3), /**< variable declarations cannot be kept in registers */
+  SCANNER_LITERAL_POOL_CAN_EVAL = (1 << 3), /**< prepare for executing eval in this block */
   SCANNER_LITERAL_POOL_NO_ARGUMENTS = (1 << 4), /**< arguments object must not be constructed */
 #if ENABLED (JERRY_ES2015)
   SCANNER_LITERAL_POOL_ARGUMENTS_UNMAPPED = (1 << 5), /**< arguments object should be unmapped */
@@ -268,7 +266,7 @@ typedef enum
   SCANNER_LITERAL_POOL_IN_EXPORT = (1 << 7), /**< the declared variables are exported by the module system */
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 #if ENABLED (JERRY_ES2015)
-  SCANNER_LITERAL_POOL_FUNCTION_STATEMENT = (1 << 8), /**< function statement (only when async is set) */
+  SCANNER_LITERAL_POOL_FUNCTION_STATEMENT = (1 << 8), /**< function statement */
   SCANNER_LITERAL_POOL_GENERATOR = (1 << 9), /**< generator function */
   SCANNER_LITERAL_POOL_ASYNC = (1 << 10), /**< async function */
 #endif /* ENABLED (JERRY_ES2015) */
@@ -339,7 +337,7 @@ lexer_lit_location_t *scanner_add_custom_literal (parser_context_t *context_p, s
                                                   const lexer_lit_location_t *literal_location_p);
 lexer_lit_location_t *scanner_add_literal (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 void scanner_add_reference (parser_context_t *context_p, scanner_context_t *scanner_context_p);
-void scanner_append_argument (parser_context_t *context_p, scanner_context_t *scanner_context_p);
+lexer_lit_location_t *scanner_append_argument (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 #if ENABLED (JERRY_ES2015)
 void scanner_detect_invalid_var (parser_context_t *context_p, scanner_context_t *scanner_context_p,
                                  lexer_lit_location_t *var_literal_p);

@@ -1366,7 +1366,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           continue;
         }
 #endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
-        case VM_OC_INIT_LOCAL:
+        case VM_OC_INIT_ARG_OR_FUNC:
         {
           uint32_t literal_index, value_index;
           ecma_value_t lit_value;
@@ -1503,6 +1503,44 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             ecma_deref_object (ecma_get_object_from_value (left_value));
           }
+          continue;
+        }
+        case VM_OC_INIT_BINDING:
+        {
+          uint32_t literal_index;
+
+          READ_LITERAL_INDEX (literal_index);
+
+          JERRY_ASSERT (literal_index >= register_end);
+
+          ecma_string_t *name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
+
+          JERRY_ASSERT (ecma_get_lex_env_type (frame_ctx_p->lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
+          JERRY_ASSERT (ecma_find_named_property (frame_ctx_p->lex_env_p, name_p) == NULL);
+
+          uint8_t prop_attributes = ECMA_PROPERTY_FLAG_WRITABLE;
+
+          if (opcode == CBC_INIT_LET)
+          {
+            prop_attributes = ECMA_PROPERTY_ENUMERABLE_WRITABLE;
+          }
+          else if (opcode == CBC_INIT_CONST)
+          {
+            prop_attributes = ECMA_PROPERTY_FLAG_ENUMERABLE;
+          }
+
+          ecma_property_value_t *property_value_p;
+          property_value_p = ecma_create_named_data_property (frame_ctx_p->lex_env_p,
+                                                              name_p,
+                                                              prop_attributes,
+                                                              NULL);
+
+          JERRY_ASSERT (property_value_p->value == ECMA_VALUE_UNDEFINED);
+
+          ecma_value_t value = *(--stack_top_p);
+
+          property_value_p->value = value;
+          ecma_deref_if_object (value);
           continue;
         }
         case VM_OC_THROW_CONST_ERROR:

@@ -39,9 +39,6 @@ JERRY_STATIC_ASSERT (PARSER_MAXIMUM_NUMBER_OF_LITERALS + PARSER_MAXIMUM_NUMBER_O
 JERRY_STATIC_ASSERT ((SCANNER_LITERAL_IS_ARROW_DESTRUCTURED_ARG & SCANNER_LITERAL_IS_LOCAL) == 0,
                      is_arrow_arg_binding_flag_must_not_use_local_flags);
 
-JERRY_STATIC_ASSERT ((SCANNER_LITERAL_ARROW_DESTRUCTURED_ARG_NO_REG & SCANNER_LITERAL_IS_LOCAL) == 0,
-                     arrow_arg_binding_no_reg_flag_must_not_use_local_flags);
-
 JERRY_STATIC_ASSERT ((SCANNER_LITERAL_IS_LET & SCANNER_LITERAL_IS_LOCAL) != 0,
                      is_let_flag_must_use_local_flags);
 
@@ -56,6 +53,9 @@ JERRY_STATIC_ASSERT ((SCANNER_LITERAL_IS_DESTRUCTURED_ARG & SCANNER_LITERAL_IS_L
 
 JERRY_STATIC_ASSERT (SCANNER_LITERAL_IS_FUNC_DECLARATION != SCANNER_LITERAL_IS_DESTRUCTURED_ARG,
                      is_func_declaration_must_be_different_from_is_arg_binding);
+
+JERRY_STATIC_ASSERT (PARSER_SCOPE_STACK_IS_CONST_REG == PARSER_SCOPE_STACK_IS_LOCAL_CREATED,
+                     scope_stack_is_const_reg_and_scope_stack_is_local_created_must_be_the_same);
 
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -468,22 +468,21 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
 
   parser_list_iterator_t literal_iterator;
   lexer_lit_location_t *literal_p;
-  bool is_function = (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_FUNCTION) != 0;
-  bool no_reg = (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_NO_REG) != 0;
-  bool search_arguments = (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_NO_ARGUMENTS) == 0;
-  bool arguments_required = (no_reg && search_arguments);
+  uint16_t status_flags = literal_pool_p->status_flags;
+  bool arguments_required = ((status_flags & (SCANNER_LITERAL_POOL_CAN_EVAL | SCANNER_LITERAL_POOL_NO_ARGUMENTS))
+                             == SCANNER_LITERAL_POOL_CAN_EVAL);
 
-  uint8_t no_reg_types = 0;
+  uint8_t can_eval_types = 0;
 #if ENABLED (JERRY_ES2015)
   if (prev_literal_pool_p == NULL && !(context_p->global_status_flags & ECMA_PARSE_DIRECT_EVAL))
   {
-    no_reg_types |= SCANNER_LITERAL_IS_FUNC;
+    can_eval_types |= SCANNER_LITERAL_IS_FUNC;
   }
 #endif /* ENABLED (JERRY_ES2015) */
 
-  if (no_reg && prev_literal_pool_p != NULL)
+  if ((status_flags & SCANNER_LITERAL_POOL_CAN_EVAL) && prev_literal_pool_p != NULL)
   {
-    prev_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_NO_REG;
+    prev_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_CAN_EVAL;
   }
 
 #if ENABLED (JERRY_DEBUGGER)
@@ -491,7 +490,7 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
   {
     /* When debugger is enabled, identifiers are not stored in registers. However,
      * this does not affect 'eval' detection, so 'arguments' object is not created. */
-    no_reg = true;
+    status_flags |= SCANNER_LITERAL_POOL_CAN_EVAL;
   }
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
@@ -510,9 +509,9 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
       continue;
     }
 
-    if (search_arguments && scanner_literal_is_arguments (literal_p))
+    if (!(status_flags & SCANNER_LITERAL_POOL_NO_ARGUMENTS) && scanner_literal_is_arguments (literal_p))
     {
-      search_arguments = false;
+      status_flags |= SCANNER_LITERAL_POOL_NO_ARGUMENTS;
 
       if (type & (SCANNER_LITERAL_IS_ARG | SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_LOCAL))
       {
@@ -527,7 +526,7 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
     }
 
 #if ENABLED (JERRY_ES2015)
-    if (is_function
+    if ((status_flags & SCANNER_LITERAL_POOL_FUNCTION)
         && (type & (SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_FUNC_DECLARATION)) == SCANNER_LITERAL_IS_FUNC)
     {
       if (prev_literal_pool_p == NULL
@@ -543,10 +542,12 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
     }
 #endif /* ENABLED (JERRY_ES2015) */
 
-    if ((is_function && (type & (SCANNER_LITERAL_IS_VAR | SCANNER_LITERAL_IS_ARG)))
-        || (type & SCANNER_LITERAL_IS_LOCAL))
+    if ((type & SCANNER_LITERAL_IS_LOCAL)
+        || ((type & (SCANNER_LITERAL_IS_VAR | SCANNER_LITERAL_IS_ARG))
+            && (status_flags & SCANNER_LITERAL_POOL_FUNCTION)))
     {
-      JERRY_ASSERT (is_function || !(literal_p->type & SCANNER_LITERAL_IS_ARG));
+      JERRY_ASSERT ((status_flags & SCANNER_LITERAL_POOL_FUNCTION)
+                    || !(literal_p->type & SCANNER_LITERAL_IS_ARG));
 
       if (literal_p->length == 0)
       {
@@ -556,7 +557,7 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
 
       no_declarations++;
 
-      if (no_reg || (type & no_reg_types))
+      if ((status_flags & SCANNER_LITERAL_POOL_CAN_EVAL) || (type & can_eval_types))
       {
         type |= SCANNER_LITERAL_NO_REG;
         literal_p->type = type;
@@ -602,9 +603,9 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
 
       prev_source_p = literal_p->char_p + literal_p->length;
 
-      if (is_function
+      if ((status_flags & SCANNER_LITERAL_POOL_FUNCTION)
 #if ENABLED (JERRY_ES2015)
-          || ((type & SCANNER_LITERAL_IS_FUNC) && (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_IS_STRICT))
+          || ((type & SCANNER_LITERAL_IS_FUNC) && (status_flags & SCANNER_LITERAL_POOL_IS_STRICT))
 #endif /* ENABLED (JERRY_ES2015) */
           || !(type & (SCANNER_LITERAL_IS_VAR | SCANNER_LITERAL_IS_FUNC)))
       {
@@ -620,13 +621,18 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
                                                                              literal_p);
       uint8_t extended_type = literal_location_p->type;
 
-      if (is_function || (type & SCANNER_LITERAL_NO_REG))
+      if ((status_flags & SCANNER_LITERAL_POOL_FUNCTION) || (type & SCANNER_LITERAL_NO_REG))
       {
         extended_type |= SCANNER_LITERAL_NO_REG;
       }
 
 #if ENABLED (JERRY_ES2015)
       extended_type |= SCANNER_LITERAL_IS_USED;
+
+      if (status_flags & SCANNER_LITERAL_POOL_FUNCTION_STATEMENT)
+      {
+        extended_type |= SCANNER_LITERAL_EARLY_CREATE;
+      }
 
       const uint8_t mask = (SCANNER_LITERAL_IS_ARG | SCANNER_LITERAL_IS_LOCAL);
 
@@ -641,13 +647,13 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
 #endif /* ENABLED (JERRY_ES2015) */
 
       type = (uint8_t) (type & (SCANNER_LITERAL_IS_VAR | SCANNER_LITERAL_IS_FUNC));
-      JERRY_ASSERT (type == 0 || !is_function);
+      JERRY_ASSERT (type == 0 || !(status_flags & SCANNER_LITERAL_POOL_FUNCTION));
 
       literal_location_p->type = (uint8_t) (extended_type | type);
     }
   }
 
-  if (is_function || (compressed_size > 1))
+  if ((status_flags & SCANNER_LITERAL_POOL_FUNCTION) || (compressed_size > 1))
   {
     compressed_size += sizeof (scanner_info_t);
 
@@ -670,15 +676,15 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
 
     uint8_t *data_p = (uint8_t *) (info_p + 1);
 
-    if (is_function)
+    if (status_flags & SCANNER_LITERAL_POOL_FUNCTION)
     {
       info_p->type = SCANNER_TYPE_FUNCTION;
 
-      uint8_t status_flags = 0;
+      uint8_t u8_arg = 0;
 
       if (arguments_required)
       {
-        status_flags |= SCANNER_FUNCTION_ARGUMENTS_NEEDED;
+        u8_arg |= SCANNER_FUNCTION_ARGUMENTS_NEEDED;
 
         if (no_declarations < PARSER_MAXIMUM_DEPTH_OF_SCOPE_STACK)
         {
@@ -691,30 +697,34 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
         const uint16_t is_unmapped = SCANNER_LITERAL_POOL_IS_STRICT;
 #endif /* ENABLED (JERRY_ES2015) */
 
-        if (literal_pool_p->status_flags & is_unmapped)
+        if (status_flags & is_unmapped)
         {
           arguments_required = false;
+        }
+        else
+        {
+          u8_arg |= SCANNER_FUNCTION_MAPPED_ARGUMENTS;
         }
       }
 
 #if ENABLED (JERRY_ES2015)
-      if (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_ASYNC)
+      if (status_flags & SCANNER_LITERAL_POOL_ASYNC)
       {
-        status_flags |= SCANNER_FUNCTION_ASYNC;
+        u8_arg |= SCANNER_FUNCTION_ASYNC;
 
-        if (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_FUNCTION_STATEMENT)
+        if (status_flags & SCANNER_LITERAL_POOL_FUNCTION_STATEMENT)
         {
-          status_flags |= SCANNER_FUNCTION_STATEMENT;
+          u8_arg |= SCANNER_FUNCTION_STATEMENT;
         }
       }
 
-      if (no_reg)
+      if (status_flags & SCANNER_LITERAL_POOL_CAN_EVAL)
       {
-        status_flags |= SCANNER_FUNCTION_LEXICAL_ENV_NEEDED;
+        u8_arg |= SCANNER_FUNCTION_LEXICAL_ENV_NEEDED;
       }
 #endif /* ENABLED (JERRY_ES2015) */
 
-      info_p->u8_arg = status_flags;
+      info_p->u8_arg = u8_arg;
       info_p->u16_arg = (uint16_t) no_declarations;
     }
     else
@@ -731,8 +741,9 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
     while ((literal_p = (lexer_lit_location_t *) parser_list_iterator_next (&literal_iterator)) != NULL)
     {
       if (JERRY_UNLIKELY (no_declarations > PARSER_MAXIMUM_DEPTH_OF_SCOPE_STACK)
-          || (!(is_function && (literal_p->type & (SCANNER_LITERAL_IS_VAR | SCANNER_LITERAL_IS_ARG)))
-              && !(literal_p->type & SCANNER_LITERAL_IS_LOCAL)))
+          || (!(literal_p->type & SCANNER_LITERAL_IS_LOCAL)
+              && (!(literal_p->type & (SCANNER_LITERAL_IS_VAR | SCANNER_LITERAL_IS_ARG))
+                  || !(status_flags & SCANNER_LITERAL_POOL_FUNCTION))))
       {
         continue;
       }
@@ -781,6 +792,11 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
         if (!(literal_p->type & SCANNER_LITERAL_IS_CONST))
         {
           type = SCANNER_STREAM_TYPE_LET;
+
+          if ((status_flags & SCANNER_LITERAL_POOL_CAN_EVAL) && (literal_p->type & SCANNER_LITERAL_NO_REG))
+          {
+            literal_p->type |= SCANNER_LITERAL_EARLY_CREATE;
+          }
         }
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
         else if (prev_literal_pool_p == NULL)
@@ -796,6 +812,16 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
       else if (literal_p->type & SCANNER_LITERAL_IS_CONST)
       {
         type = SCANNER_STREAM_TYPE_CONST;
+
+        if ((status_flags & SCANNER_LITERAL_POOL_CAN_EVAL) && (literal_p->type & SCANNER_LITERAL_NO_REG))
+        {
+          literal_p->type |= SCANNER_LITERAL_EARLY_CREATE;
+        }
+      }
+
+      if (literal_p->type & SCANNER_LITERAL_EARLY_CREATE)
+      {
+        type |= SCANNER_STREAM_NO_REG | SCANNER_STREAM_EARLY_CREATE;
       }
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -847,12 +873,13 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
     JERRY_ASSERT (((uint8_t *) info_p) + compressed_size == data_p + 1);
   }
 
-  if (!is_function && prev_literal_pool_p->no_declarations < no_declarations)
+  if (!(status_flags & SCANNER_LITERAL_POOL_FUNCTION)
+      && prev_literal_pool_p->no_declarations < no_declarations)
   {
     prev_literal_pool_p->no_declarations = (uint16_t) no_declarations;
   }
 
-  if (is_function && prev_literal_pool_p != NULL)
+  if ((status_flags & SCANNER_LITERAL_POOL_FUNCTION) && prev_literal_pool_p != NULL)
   {
     if (prev_literal_pool_p->status_flags & SCANNER_LITERAL_POOL_IS_STRICT)
     {
@@ -893,24 +920,31 @@ scanner_filter_arguments (parser_context_t *context_p, /**< context */
   scanner_literal_pool_t *prev_literal_pool_p = literal_pool_p->prev_p;
   parser_list_iterator_t literal_iterator;
   lexer_lit_location_t *literal_p;
-  bool no_reg = (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_NO_REG) != 0;
+  bool can_eval = (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_CAN_EVAL) != 0;
   bool has_arguments = (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_NO_ARGUMENTS) == 0;
 
-  if (no_reg && prev_literal_pool_p != NULL)
+  if (can_eval && prev_literal_pool_p != NULL)
   {
-    prev_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_NO_REG;
+    prev_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_CAN_EVAL;
   }
 
-  literal_pool_p->status_flags &= (uint16_t) ~SCANNER_LITERAL_POOL_NO_REG;
+  literal_pool_p->status_flags &= (uint16_t) ~SCANNER_LITERAL_POOL_CAN_EVAL;
 
   parser_list_iterator_init (&literal_pool_p->literal_pool, &literal_iterator);
 
   while ((literal_p = (lexer_lit_location_t *) parser_list_iterator_next (&literal_iterator)) != NULL)
   {
-    if (no_reg)
+#if ENABLED (JERRY_ES2015)
+    if (can_eval || (literal_p->type & SCANNER_LITERAL_EARLY_CREATE))
+    {
+      literal_p->type |= SCANNER_LITERAL_NO_REG | SCANNER_LITERAL_EARLY_CREATE;
+    }
+#else /* !ENABLED (JERRY_ES2015) */
+    if (can_eval)
     {
       literal_p->type |= SCANNER_LITERAL_NO_REG;
     }
+#endif /* ENABLED (JERRY_ES2015) */
 
     uint8_t type = literal_p->type;
 
@@ -957,12 +991,13 @@ scanner_filter_arguments (parser_context_t *context_p, /**< context */
 
     if ((type & SCANNER_LITERAL_IS_ARG) || (has_arguments && scanner_literal_is_arguments (literal_p)))
     {
-      if (no_reg)
+#if ENABLED (JERRY_ES2015)
+      if (can_eval || (literal_p->type & SCANNER_LITERAL_EARLY_CREATE))
       {
-        literal_p->type |= SCANNER_LITERAL_NO_REG;
+        type |= SCANNER_LITERAL_NO_REG | SCANNER_LITERAL_EARLY_CREATE;
+        literal_p->type = type;
       }
 
-#if ENABLED (JERRY_ES2015)
       if (type & (SCANNER_LITERAL_IS_DESTRUCTURED_ARG | SCANNER_LITERAL_IS_ARROW_DESTRUCTURED_ARG))
       {
         has_destructured_arg = true;
@@ -975,14 +1010,13 @@ scanner_filter_arguments (parser_context_t *context_p, /**< context */
         type &= (uint8_t) ~SCANNER_LITERAL_IS_ARROW_DESTRUCTURED_ARG;
         type |= SCANNER_LITERAL_IS_DESTRUCTURED_ARG;
 
-        if (type & SCANNER_LITERAL_ARROW_DESTRUCTURED_ARG_NO_REG)
-        {
-          type &= (uint8_t) ~SCANNER_LITERAL_ARROW_DESTRUCTURED_ARG_NO_REG;
-          type |= SCANNER_LITERAL_NO_REG;
-        }
-
         literal_p->type = type;
         continue;
+      }
+#else /* !ENABLED (JERRY_ES2015) */
+      if (can_eval)
+      {
+        literal_p->type |= SCANNER_LITERAL_NO_REG;
       }
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -1131,8 +1165,10 @@ scanner_add_reference (parser_context_t *context_p, /**< context */
 
 /**
  * Append an argument to the literal pool. If the argument is already present, make it a "hole".
+ *
+ * @return newly created literal
  */
-void
+lexer_lit_location_t *
 scanner_append_argument (parser_context_t *context_p, /**< context */
                          scanner_context_t *scanner_context_p) /**< scanner context */
 {
@@ -1155,13 +1191,11 @@ scanner_append_argument (parser_context_t *context_p, /**< context */
         {
           if (memcmp (literal_p->char_p, char_p, length) == 0)
           {
-            literal_p->length = 0;
             break;
           }
         }
         else if (lexer_compare_identifier_to_string (literal_p, char_p, length))
         {
-          literal_p->length = 0;
           break;
         }
       }
@@ -1173,16 +1207,31 @@ scanner_append_argument (parser_context_t *context_p, /**< context */
     {
       if (lexer_compare_identifiers (context_p, literal_p, literal_location_p))
       {
-        literal_p->length = 0;
         break;
       }
     }
   }
 
-  literal_p = (lexer_lit_location_t *) parser_list_append (context_p, &literal_pool_p->literal_pool);
-  *literal_p = context_p->token.lit_location;
+  uint8_t literal_type = SCANNER_LITERAL_IS_ARG;
 
-  literal_p->type = SCANNER_LITERAL_IS_ARG;
+  if (literal_p != NULL)
+  {
+    literal_p->length = 0;
+
+#if ENABLED (JERRY_ES2015)
+    if (literal_p->type & SCANNER_LITERAL_IS_USED)
+    {
+      literal_type = SCANNER_LITERAL_IS_ARG | SCANNER_LITERAL_EARLY_CREATE;
+    }
+#endif /* ENABLED (JERRY_ES2015) */
+  }
+
+  literal_p = (lexer_lit_location_t *) parser_list_append (context_p, &literal_pool_p->literal_pool);
+
+  *literal_p = context_p->token.lit_location;
+  literal_p->type = literal_type;
+
+  return literal_p;
 } /* scanner_append_argument */
 
 /**
@@ -1195,7 +1244,7 @@ scanner_detect_eval_call (parser_context_t *context_p, /**< context */
   if (context_p->token.keyword_type == LEXER_KEYW_EVAL
       && lexer_check_next_character (context_p, LIT_CHAR_LEFT_PAREN))
   {
-    scanner_context_p->active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_NO_REG;
+    scanner_context_p->active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_CAN_EVAL;
   }
 } /* scanner_detect_eval_call */
 
@@ -1887,6 +1936,7 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
   scanner_info_t *info_p = context_p->next_scanner_info_p;
   const uint8_t *next_data_p = (const uint8_t *) (info_p + 1);
   uint8_t info_type = info_p->type;
+  uint8_t info_u8_arg = info_p->u8_arg;
   lexer_lit_location_t literal;
   parser_scope_stack_t *scope_stack_p;
   parser_scope_stack_t *scope_stack_end_p;
@@ -1950,7 +2000,7 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
         continue;
       }
 
-      if (info_p->u8_arg & SCANNER_FUNCTION_ARGUMENTS_NEEDED)
+      if (info_u8_arg & SCANNER_FUNCTION_MAPPED_ARGUMENTS)
       {
         scanner_create_unused_literal (context_p, LEXER_FLAG_FUNCTION_ARGUMENT);
       }
@@ -2038,7 +2088,7 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
       if (JERRY_UNLIKELY (context_p->status_flags & PARSER_LEXICAL_BLOCK_NEEDED)
           && (function_map_p[0].map_to & PARSER_SCOPE_STACK_REGISTER_MASK) == 0)
       {
-        opcode = CBC_INIT_LOCAL;
+        opcode = CBC_INIT_ARG_OR_FUNC;
       }
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -2072,7 +2122,7 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
 #endif /* ENABLED (JERRY_ES2015) */
 
     uint16_t map_to;
-    uint16_t func_init_opcode = CBC_INIT_LOCAL;
+    uint16_t func_init_opcode = CBC_INIT_ARG_OR_FUNC;
 
     if (!(data_p[0] & SCANNER_STREAM_NO_REG)
         && scope_stack_reg_top < PARSER_MAXIMUM_NUMBER_OF_REGISTERS)
@@ -2091,7 +2141,7 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
       {
         case SCANNER_STREAM_TYPE_CONST:
         {
-          scope_stack_p->map_to |= PARSER_SCOPE_STACK_IS_CONST;
+          scope_stack_p->map_to |= PARSER_SCOPE_STACK_IS_CONST_REG;
           /* FALLTHRU */
         }
         case SCANNER_STREAM_TYPE_LET:
@@ -2114,7 +2164,7 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
       map_to = context_p->lit_object.index;
 
 #if ENABLED (JERRY_ES2015)
-      scope_stack_p->map_to = 0;
+      uint16_t scope_stack_map_to = 0;
 #else /* !ENABLED (JERRY_ES2015) */
       scope_stack_p->map_to = map_to;
 #endif /* ENABLED (JERRY_ES2015) */
@@ -2127,16 +2177,18 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
       switch (type)
       {
 #if ENABLED (JERRY_ES2015)
-        case SCANNER_STREAM_TYPE_CONST:
-        {
-          scope_stack_p->map_to |= PARSER_SCOPE_STACK_IS_CONST;
-          /* FALLTHRU */
-        }
         case SCANNER_STREAM_TYPE_LET:
+        case SCANNER_STREAM_TYPE_CONST:
         case SCANNER_STREAM_TYPE_DESTRUCTURED_ARG:
         case SCANNER_STREAM_TYPE_DESTRUCTURED_ARG_FUNC:
         {
-          scope_stack_p->map_to |= PARSER_SCOPE_STACK_NO_FUNCTION_COPY;
+          scope_stack_map_to |= PARSER_SCOPE_STACK_NO_FUNCTION_COPY;
+
+          if (!(data_p[0] & SCANNER_STREAM_EARLY_CREATE))
+          {
+            break;
+          }
+          scope_stack_map_to |= PARSER_SCOPE_STACK_IS_LOCAL_CREATED;
           /* FALLTHRU */
         }
         case SCANNER_STREAM_TYPE_LOCAL:
@@ -2183,13 +2235,25 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
 #endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
 #if ENABLED (JERRY_ES2015)
-          scope_stack_p->map_to |= PARSER_SCOPE_STACK_NO_FUNCTION_COPY;
-#endif /* ENABLED (JERRY_ES2015) */
+          scope_stack_map_to |= PARSER_SCOPE_STACK_NO_FUNCTION_COPY;
 
-          parser_emit_cbc_literal_value (context_p,
-                                         CBC_INIT_LOCAL,
-                                         (uint16_t) (PARSER_REGISTER_START + scope_stack_reg_top),
-                                         map_to);
+          /* Argument initializers of functions with mapped arguments (e.g. function f(a,b,a) {}) are
+           * generated here. The other initializers are handled by parser_parse_function_arguments(). */
+          if (info_u8_arg & SCANNER_FUNCTION_MAPPED_ARGUMENTS)
+          {
+#endif /* ENABLED (JERRY_ES2015) */
+            parser_emit_cbc_literal_value (context_p,
+                                           CBC_INIT_ARG_OR_FUNC,
+                                           (uint16_t) (PARSER_REGISTER_START + scope_stack_reg_top),
+                                           map_to);
+#if ENABLED (JERRY_ES2015)
+          }
+          else if (data_p[0] & SCANNER_STREAM_EARLY_CREATE)
+          {
+            parser_emit_cbc_literal (context_p, CBC_CREATE_LOCAL, map_to);
+            scope_stack_map_to |= PARSER_SCOPE_STACK_IS_LOCAL_CREATED;
+          }
+#endif /* ENABLED (JERRY_ES2015) */
 
           if (scope_stack_reg_top < PARSER_MAXIMUM_NUMBER_OF_REGISTERS)
           {
@@ -2198,6 +2262,10 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
           break;
         }
       }
+
+#if ENABLED (JERRY_ES2015)
+      scope_stack_p->map_to = scope_stack_map_to;
+#endif /* ENABLED (JERRY_ES2015) */
     }
 
     scope_stack_p++;
@@ -2219,7 +2287,7 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
 
     if (!SCANNER_STREAM_TYPE_IS_ARG_FUNC (type))
     {
-      if (func_init_opcode == CBC_INIT_LOCAL && (option_flags & SCANNER_CREATE_VARS_IS_SCRIPT))
+      if (func_init_opcode == CBC_INIT_ARG_OR_FUNC && (option_flags & SCANNER_CREATE_VARS_IS_SCRIPT))
       {
 #if ENABLED (JERRY_ES2015)
         literal.char_p -= data_p[1];
@@ -2246,7 +2314,7 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
 
   if (info_type == SCANNER_TYPE_FUNCTION
       && !(option_flags & SCANNER_CREATE_VARS_IS_FUNCTION_BODY)
-      && (info_p->u8_arg & SCANNER_FUNCTION_ARGUMENTS_NEEDED))
+      && (info_u8_arg & SCANNER_FUNCTION_ARGUMENTS_NEEDED))
   {
     JERRY_ASSERT (info_type == SCANNER_TYPE_FUNCTION);
 
@@ -2336,7 +2404,7 @@ scanner_decode_map_to (parser_scope_stack_t *stack_item_p) /**< scope stack item
 /**
  * Checks whether the literal is a const in the current scope.
  *
- * @return true if the literal is a const
+ * @return true if the literal is a const, false otherwise
  */
 bool
 scanner_literal_is_const_reg (parser_context_t *context_p, /**< context */
@@ -2360,8 +2428,34 @@ scanner_literal_is_const_reg (parser_context_t *context_p, /**< context */
   }
   while (literal_index != (scope_stack_p->map_to & PARSER_SCOPE_STACK_REGISTER_MASK));
 
-  return (scope_stack_p->map_to & PARSER_SCOPE_STACK_IS_CONST) != 0;
+  return (scope_stack_p->map_to & PARSER_SCOPE_STACK_IS_CONST_REG) != 0;
 } /* scanner_literal_is_const_reg */
+
+/**
+ * Checks whether the literal is created before.
+ *
+ * @return true if the literal is created before, false otherwise
+ */
+bool
+scanner_literal_is_created (parser_context_t *context_p, /**< context */
+                            uint16_t literal_index) /**< literal index */
+{
+  JERRY_ASSERT (literal_index < PARSER_REGISTER_START);
+
+  parser_scope_stack_t *scope_stack_p = context_p->scope_stack_p + context_p->scope_stack_top;
+
+  do
+  {
+    /* These literals must be found in the scope stack. */
+    JERRY_ASSERT (scope_stack_p > context_p->scope_stack_p);
+    scope_stack_p--;
+  }
+  while (literal_index != scope_stack_p->map_from);
+
+  JERRY_ASSERT ((scope_stack_p->map_to & PARSER_SCOPE_STACK_REGISTER_MASK) == 0);
+
+  return (scope_stack_p->map_to & PARSER_SCOPE_STACK_IS_LOCAL_CREATED) != 0;
+} /* scanner_literal_is_created */
 
 #endif /* ENABLED (JERRY_ES2015) */
 

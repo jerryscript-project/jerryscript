@@ -110,11 +110,12 @@ typedef enum
   PARSER_PATTERN_TARGET_ON_STACK = (1u << 1),  /**< assignment target is the topmost element on the stack */
   PARSER_PATTERN_TARGET_DEFAULT = (1u << 2),   /**< perform default value comparison for assignment target */
   PARSER_PATTERN_NESTED_PATTERN = (1u << 3),   /**< parse patter inside a pattern */
-  PARSER_PATTERN_LEXICAL = (1u << 4),          /**< pattern is a lexical (let/const) declaration */
-  PARSER_PATTERN_LOCAL = (1u << 5),            /**< pattern is a local (catch parameter) declaration */
-  PARSER_PATTERN_REST_ELEMENT = (1u << 6),     /**< parse rest array initializer */
-  PARSER_PATTERN_ARGUMENTS = (1u << 7),        /**< parse arguments binding */
-  PARSER_PATTERN_ARRAY = (1u << 8),            /**< array pattern is being parsed */
+  PARSER_PATTERN_LET = (1u << 4),              /**< pattern is a let declaration */
+  PARSER_PATTERN_CONST = (1u << 5),            /**< pattern is a const declaration */
+  PARSER_PATTERN_LOCAL = (1u << 6),            /**< pattern is a local (catch parameter) declaration */
+  PARSER_PATTERN_REST_ELEMENT = (1u << 7),     /**< parse rest array initializer */
+  PARSER_PATTERN_ARGUMENTS = (1u << 8),        /**< parse arguments binding */
+  PARSER_PATTERN_ARRAY = (1u << 9),            /**< array pattern is being parsed */
 } parser_pattern_flags_t;
 
 /**
@@ -395,12 +396,17 @@ typedef struct
  * Function statements with the name specified
  * in map_from should not be copied to global scope.
  */
-#define PARSER_SCOPE_STACK_NO_FUNCTION_COPY 0x4000
+#define PARSER_SCOPE_STACK_NO_FUNCTION_COPY 0x8000
 
 /**
- * The scope stack item represents a const declaration
+ * The scope stack item represents a const binding stored in register
  */
-#define PARSER_SCOPE_STACK_IS_CONST 0x8000
+#define PARSER_SCOPE_STACK_IS_CONST_REG 0x4000
+
+/**
+ * The scope stack item represents a binding which has already created with ECMA_VALUE_UNINITIALIZED
+ */
+#define PARSER_SCOPE_STACK_IS_LOCAL_CREATED (PARSER_SCOPE_STACK_IS_CONST_REG)
 
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -753,6 +759,7 @@ void scanner_set_location (parser_context_t *context_p, scanner_location_t *loca
 uint16_t scanner_decode_map_to (parser_scope_stack_t *stack_item_p);
 #if ENABLED (JERRY_ES2015)
 bool scanner_literal_is_const_reg (parser_context_t *context_p, uint16_t literal_index);
+bool scanner_literal_is_created (parser_context_t *context_p, uint16_t literal_index);
 #endif /* ENABLED (JERRY_ES2015) */
 
 void scanner_scan_all (parser_context_t *context_p, const uint8_t *arg_list_p, const uint8_t *arg_list_end_p,

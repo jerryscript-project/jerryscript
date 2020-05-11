@@ -545,7 +545,6 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg, /**< this ar
                                              ecma_object_t *obj_p, /**< array object */
                                              uint32_t len) /**< array object's length */
 {
-  /* 4. */
   uint32_t middle = len / 2;
 
   if (ecma_op_object_is_fast_array (obj_p))
@@ -571,31 +570,16 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg, /**< this ar
 
   for (uint32_t lower = 0; lower < middle; lower++)
   {
-    ecma_value_t ret_value = ECMA_VALUE_ERROR;
-    ecma_string_t *lower_str_p = ecma_new_ecma_string_from_uint32 (lower);
-
-    /* 6.d and 6.e */
-    ecma_value_t lower_value = ecma_op_object_get (obj_p, lower_str_p);
-
-    if (ECMA_IS_VALUE_ERROR (lower_value))
-    {
-      ecma_deref_ecma_string (lower_str_p);
-      return lower_value;
-    }
-
-    /* 6.a */
     uint32_t upper = len - lower - 1;
-    /* 6.b and 6.c */
+    ecma_value_t ret_value = ECMA_VALUE_ERROR;
+
+    ecma_string_t *lower_str_p = ecma_new_ecma_string_from_uint32 (lower);
     ecma_string_t *upper_str_p = ecma_new_ecma_string_from_uint32 (upper);
 
-    ecma_value_t upper_value = ecma_op_object_get (obj_p, upper_str_p);
+#if ENABLED (JERRY_ES2015)
+    ecma_value_t lower_value = ECMA_VALUE_EMPTY;
+    ecma_value_t upper_value = ECMA_VALUE_EMPTY;
 
-    if (ECMA_IS_VALUE_ERROR (upper_value))
-    {
-      goto clean_up;
-    }
-
-    /* 6.f and 6.g */
     ecma_value_t has_lower = ecma_op_object_has_property (obj_p, lower_str_p);
 
 #if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
@@ -604,6 +588,18 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg, /**< this ar
       goto clean_up;
     }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
+    bool lower_exist = ecma_is_value_true (has_lower);
+
+    if (lower_exist)
+    {
+      lower_value = ecma_op_object_get (obj_p, lower_str_p);
+
+      if (ECMA_IS_VALUE_ERROR (lower_value))
+      {
+        goto clean_up;
+      }
+    }
 
     ecma_value_t has_upper = ecma_op_object_has_property (obj_p, upper_str_p);
 
@@ -614,10 +610,41 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg, /**< this ar
     }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
 
-    bool lower_exist = ecma_is_value_true (has_lower);
     bool upper_exist = ecma_is_value_true (has_upper);
 
-    /* 6.h */
+    if (upper_exist)
+    {
+      upper_value = ecma_op_object_get (obj_p, upper_str_p);
+
+      if (ECMA_IS_VALUE_ERROR (upper_value))
+      {
+        goto clean_up;
+      }
+    }
+#else /* !ENABLED (JERRY_ES2015) */
+    ecma_value_t lower_value = ecma_op_object_get (obj_p, lower_str_p);
+
+    if (ECMA_IS_VALUE_ERROR (lower_value))
+    {
+      ecma_deref_ecma_string (lower_str_p);
+      ecma_deref_ecma_string (upper_str_p);
+      return ret_value;
+    }
+
+    ecma_value_t upper_value = ecma_op_object_get (obj_p, upper_str_p);
+
+    if (ECMA_IS_VALUE_ERROR (upper_value))
+    {
+      goto clean_up;
+    }
+
+    ecma_value_t has_lower = ecma_op_object_has_property (obj_p, lower_str_p);
+    ecma_value_t has_upper = ecma_op_object_has_property (obj_p, upper_str_p);
+
+    bool lower_exist = ecma_is_value_true (has_lower);
+    bool upper_exist = ecma_is_value_true (has_upper);
+#endif /* ENABLED (JERRY_ES2015) */
+
     if (lower_exist && upper_exist)
     {
       ecma_value_t outer_put_value = ecma_op_object_put (obj_p, lower_str_p, upper_value, true);
@@ -634,7 +661,6 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg, /**< this ar
         goto clean_up;
       }
     }
-    /* 6.i */
     else if (!lower_exist && upper_exist)
     {
       ecma_value_t put_value = ecma_op_object_put (obj_p, lower_str_p, upper_value, true);
@@ -646,14 +672,11 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg, /**< this ar
 
       ecma_value_t del_value = ecma_op_object_delete (obj_p, upper_str_p, true);
 
-      JERRY_ASSERT (ECMA_IS_VALUE_ERROR (del_value) || ecma_is_value_boolean (del_value));
-
       if (ECMA_IS_VALUE_ERROR (del_value))
       {
         goto clean_up;
       }
     }
-    /* 6.j */
     else if (lower_exist)
     {
       ecma_value_t del_value = ecma_op_object_delete (obj_p, lower_str_p, true);
@@ -685,7 +708,6 @@ clean_up:
     }
   }
 
-  /* 7. */
   return ecma_copy_value (this_arg);
 } /* ecma_builtin_array_prototype_object_reverse */
 

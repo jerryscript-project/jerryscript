@@ -1718,10 +1718,10 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
   bool has_duplicated_arg_names = false;
 
   /* TODO: Currently async iterators are not supported, so generators ignore the async modifier. */
-  if ((context_p->next_scanner_info_p->u8_arg & SCANNER_FUNCTION_ASYNC)
-      && !(context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION))
+  uint32_t mask = (PARSER_IS_GENERATOR_FUNCTION | PARSER_IS_ASYNC_FUNCTION);
+  if ((context_p->status_flags & mask) == mask)
   {
-    context_p->status_flags |= PARSER_IS_ASYNC_FUNCTION;
+    context_p->status_flags &= (uint32_t) ~PARSER_IS_ASYNC_FUNCTION;
   }
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -1734,7 +1734,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
       parser_emit_cbc (context_p, CBC_POP);
     }
 
-    context_p->status_flags &= (uint32_t) ~PARSER_DISALLOW_YIELD;
+    context_p->status_flags &= (uint32_t) ~PARSER_DISALLOW_AWAIT_YIELD;
 #endif /* ENABLED (JERRY_ES2015) */
     scanner_create_variables (context_p, SCANNER_CREATE_VARS_NO_OPTS);
     return;
@@ -1972,7 +1972,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
     }
   }
 
-  context_p->status_flags &= (uint32_t) ~(PARSER_DISALLOW_YIELD | PARSER_FUNCTION_IS_PARSING_ARGS);
+  context_p->status_flags &= (uint32_t) ~(PARSER_DISALLOW_AWAIT_YIELD | PARSER_FUNCTION_IS_PARSING_ARGS);
 #endif /* ENABLED (JERRY_ES2015) */
 
   scanner_create_variables (context_p, SCANNER_CREATE_VARS_IS_FUNCTION_BODY);
@@ -2529,7 +2529,7 @@ parser_parse_arrow_function (parser_context_t *context_p, /**< context */
   }
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
-  if (context_p->token.type == LEXER_ARROW_LEFT_PAREN)
+  if (context_p->token.type == LEXER_LEFT_PAREN)
   {
     lexer_next_token (context_p);
     parser_parse_function_arguments (context_p, LEXER_RIGHT_PAREN);
@@ -2581,6 +2581,8 @@ parser_parse_arrow_function (parser_context_t *context_p, /**< context */
       }
     }
     parser_flush_cbc (context_p);
+
+    lexer_update_await_yield (context_p, saved_context.status_flags);
   }
 
   compiled_code_p = parser_post_processing (context_p);

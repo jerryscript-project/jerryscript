@@ -817,6 +817,29 @@ lexer_parse_identifier (parser_context_t *context_p, /**< context */
 
           if (JERRY_LIKELY (keyword_p->type < LEXER_FIRST_NON_RESERVED_KEYWORD))
           {
+#if ENABLED (JERRY_ES2015)
+            if (JERRY_UNLIKELY (keyword_p->type == LEXER_KEYW_AWAIT))
+            {
+              if (!(context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
+                  && !(context_p->global_status_flags & ECMA_PARSE_MODULE))
+              {
+                break;
+              }
+
+              if (context_p->status_flags & PARSER_DISALLOW_AWAIT_YIELD)
+              {
+                if (ident_start_p == buffer_p)
+                {
+                  parser_raise_error (context_p, PARSER_ERR_INVALID_KEYWORD);
+                }
+                parser_raise_error (context_p, PARSER_ERR_AWAIT_NOT_ALLOWED);
+              }
+
+              context_p->token.type = (uint8_t) LEXER_KEYW_AWAIT;
+              break;
+            }
+#endif /* ENABLED (JERRY_ES2015) */
+
             if (ident_start_p == buffer_p)
             {
               /* Escape sequences are not allowed in a keyword. */
@@ -828,28 +851,29 @@ lexer_parse_identifier (parser_context_t *context_p, /**< context */
           }
 
 #if ENABLED (JERRY_ES2015)
-          if (keyword_p->type == LEXER_KEYW_YIELD && (context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION))
+          if (keyword_p->type == LEXER_KEYW_LET && (context_p->status_flags & PARSER_IS_STRICT))
           {
             if (ident_start_p == buffer_p)
             {
               parser_raise_error (context_p, PARSER_ERR_INVALID_KEYWORD);
             }
 
-            if (context_p->status_flags & PARSER_DISALLOW_YIELD)
+            context_p->token.type = (uint8_t) LEXER_KEYW_LET;
+            break;
+          }
+
+          if (keyword_p->type == LEXER_KEYW_YIELD && (context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION))
+          {
+            if (context_p->status_flags & PARSER_DISALLOW_AWAIT_YIELD)
             {
+              if (ident_start_p == buffer_p)
+              {
+                parser_raise_error (context_p, PARSER_ERR_INVALID_KEYWORD);
+              }
               parser_raise_error (context_p, PARSER_ERR_YIELD_NOT_ALLOWED);
             }
 
             context_p->token.type = (uint8_t) LEXER_KEYW_YIELD;
-            break;
-          }
-
-          if (keyword_p->type == LEXER_KEYW_LET && ident_start_p != buffer_p)
-          {
-            if (context_p->status_flags & PARSER_IS_STRICT)
-            {
-              context_p->token.type = (uint8_t) LEXER_KEYW_LET;
-            }
             break;
           }
 #endif /* ENABLED (JERRY_ES2015) */
@@ -1948,8 +1972,11 @@ lexer_check_yield_no_arg (parser_context_t *context_p) /**< context */
 bool
 lexer_consume_generator (parser_context_t *context_p) /**< context */
 {
-  JERRY_ASSERT (context_p->token.flags & LEXER_NO_SKIP_SPACES);
-  JERRY_ASSERT (context_p->token.type == LEXER_KEYW_ASYNC);
+  if (!(context_p->token.flags & LEXER_NO_SKIP_SPACES))
+  {
+    lexer_skip_spaces (context_p);
+    context_p->token.flags = (uint8_t) (context_p->token.flags | LEXER_NO_SKIP_SPACES);
+  }
 
   if (context_p->source_p >= context_p->source_end_p
       || context_p->source_p[0] != LIT_CHAR_ASTERISK
@@ -1963,6 +1990,54 @@ lexer_consume_generator (parser_context_t *context_p) /**< context */
   context_p->token.type = LEXER_MULTIPLY;
   return true;
 } /* lexer_consume_generator */
+
+/**
+ * Update await / yield keywords after an arrow function with expression.
+ */
+void
+lexer_update_await_yield (parser_context_t *context_p, /**< context */
+                          uint32_t status_flags) /**< parser status flags after restore */
+{
+  if (!(status_flags & PARSER_IS_STRICT))
+  {
+    if (status_flags & PARSER_IS_GENERATOR_FUNCTION)
+    {
+      if (context_p->token.type == LEXER_LITERAL
+          && context_p->token.keyword_type == LEXER_KEYW_YIELD)
+      {
+        context_p->token.type = LEXER_KEYW_YIELD;
+      }
+    }
+    else
+    {
+      if (context_p->token.type == LEXER_KEYW_YIELD)
+      {
+        JERRY_ASSERT (context_p->token.keyword_type == LEXER_KEYW_YIELD);
+        context_p->token.type = LEXER_LITERAL;
+      }
+    }
+  }
+
+  if (!(context_p->global_status_flags & ECMA_PARSE_MODULE))
+  {
+    if (status_flags & PARSER_IS_ASYNC_FUNCTION)
+    {
+      if (context_p->token.type == LEXER_LITERAL
+          && context_p->token.keyword_type == LEXER_KEYW_AWAIT)
+      {
+        context_p->token.type = LEXER_KEYW_AWAIT;
+      }
+    }
+    else
+    {
+      if (context_p->token.type == LEXER_KEYW_AWAIT)
+      {
+        JERRY_ASSERT (context_p->token.keyword_type == LEXER_KEYW_AWAIT);
+        context_p->token.type = LEXER_LITERAL;
+      }
+    }
+  }
+} /* lexer_update_await_yield */
 
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -2853,6 +2928,16 @@ lexer_expect_identifier (parser_context_t *context_p, /**< context */
   }
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
+#if ENABLED (JERRY_ES2015)
+  if (context_p->token.type == LEXER_KEYW_YIELD)
+  {
+    parser_raise_error (context_p, PARSER_ERR_YIELD_NOT_ALLOWED);
+  }
+  if (context_p->token.type == LEXER_KEYW_AWAIT)
+  {
+    parser_raise_error (context_p, PARSER_ERR_AWAIT_NOT_ALLOWED);
+  }
+#endif /* ENABLED (JERRY_ES2015) */
   parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
 } /* lexer_expect_identifier */
 

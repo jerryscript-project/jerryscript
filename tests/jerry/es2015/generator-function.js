@@ -43,7 +43,7 @@
 // Test %GeneratorPrototype% prototype chain
 (function () {
   function* g(){}
-  var iterator = new g.constructor("a","b","c","yield a; yield b; yield c;")(1,2,3);
+  var iterator = new g.constructor("a","b","c","() => yield\n yield a; yield b; yield c;")(1,2,3);
 
   var item = iterator.next();
   assert(item.value === 1);

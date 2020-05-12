@@ -79,7 +79,8 @@ typedef enum
   PARSER_ERR_ARGUMENTS_NOT_ALLOWED,                   /**< arguments is not allowed here in strict mode */
 #if ENABLED (JERRY_ES2015)
   PARSER_ERR_USE_STRICT_NOT_ALLOWED,                  /**< use strict directive is not allowed */
-  PARSER_ERR_YIELD_NOT_ALLOWED,                       /**< yield keyword is not allowed */
+  PARSER_ERR_YIELD_NOT_ALLOWED,                       /**< yield expression is not allowed */
+  PARSER_ERR_AWAIT_NOT_ALLOWED,                       /**< await expression is not allowed */
   PARSER_ERR_FOR_IN_OF_DECLARATION,                   /**< variable declaration in for-in or for-of loop */
   PARSER_ERR_DUPLICATED_PROTO,                        /**< duplicated __proto__ fields are not allowed */
 #endif /* ENABLED (JERRY_ES2015) */

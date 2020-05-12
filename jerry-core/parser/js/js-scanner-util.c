@@ -76,7 +76,7 @@ scanner_raise_error (parser_context_t *context_p) /**< context */
  * Raise a variable redeclaration error.
  */
 void
-scanner_raise_redeclaration_error (parser_context_t *context_p)
+scanner_raise_redeclaration_error (parser_context_t *context_p) /**< context */
 {
   scanner_info_t *info_p = scanner_insert_info (context_p, context_p->source_p, sizeof (scanner_info_t));
   info_p->type = SCANNER_TYPE_ERR_REDECLARED;
@@ -403,13 +403,31 @@ scanner_push_literal_pool (parser_context_t *context_p, /**< context */
     status_flags |= SCANNER_LITERAL_POOL_NO_ARGUMENTS;
 
 #if ENABLED (JERRY_ES2015)
-    const uint16_t copied_flags = SCANNER_LITERAL_POOL_IN_WITH | SCANNER_LITERAL_POOL_GENERATOR;
+    const uint16_t copied_flags = (SCANNER_LITERAL_POOL_IN_WITH
+                                   | SCANNER_LITERAL_POOL_GENERATOR
+                                   | SCANNER_LITERAL_POOL_ASYNC);
 #else /* !ENABLED (JERRY_ES2015) */
     const uint16_t copied_flags = SCANNER_LITERAL_POOL_IN_WITH;
 #endif /* ENABLED (JERRY_ES2015) */
 
     status_flags |= (uint16_t) (prev_literal_pool_p->status_flags & copied_flags);
   }
+#if ENABLED (JERRY_ES2015)
+  else
+  {
+    context_p->status_flags &= (uint32_t) ~(PARSER_IS_GENERATOR_FUNCTION | PARSER_IS_ASYNC_FUNCTION);
+
+    if (status_flags & SCANNER_LITERAL_POOL_GENERATOR)
+    {
+      context_p->status_flags |= PARSER_IS_GENERATOR_FUNCTION;
+    }
+
+    if (status_flags & SCANNER_LITERAL_POOL_ASYNC)
+    {
+      context_p->status_flags |= PARSER_IS_ASYNC_FUNCTION;
+    }
+  }
+#endif /* ENABLED (JERRY_ES2015) */
 
   if (prev_literal_pool_p != NULL)
   {
@@ -486,7 +504,7 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
   }
 
 #if ENABLED (JERRY_DEBUGGER)
-  if (scanner_context_p->debugger_enabled)
+  if (scanner_context_p->status_flags & SCANNER_CONTEXT_DEBUGGER_ENABLED)
   {
     /* When debugger is enabled, identifiers are not stored in registers. However,
      * this does not affect 'eval' detection, so 'arguments' object is not created. */
@@ -898,6 +916,15 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
     else
     {
       context_p->status_flags &= (uint32_t) ~PARSER_IS_GENERATOR_FUNCTION;
+    }
+
+    if (prev_literal_pool_p->status_flags & SCANNER_LITERAL_POOL_ASYNC)
+    {
+      context_p->status_flags |= PARSER_IS_ASYNC_FUNCTION;
+    }
+    else
+    {
+      context_p->status_flags &= (uint32_t) ~PARSER_IS_ASYNC_FUNCTION;
     }
 #endif /* ENABLED (JERRY_ES2015) */
   }
@@ -1611,7 +1638,8 @@ scanner_cleanup (parser_context_t *context_p) /**< context */
         JERRY_ASSERT (scanner_info_p->type == SCANNER_TYPE_END_ARGUMENTS
                       || scanner_info_p->type == SCANNER_TYPE_LET_EXPRESSION
                       || scanner_info_p->type == SCANNER_TYPE_CLASS_CONSTRUCTOR
-                      || scanner_info_p->type == SCANNER_TYPE_ERR_REDECLARED);
+                      || scanner_info_p->type == SCANNER_TYPE_ERR_REDECLARED
+                      || scanner_info_p->type == SCANNER_TYPE_ERR_ASYNC_FUNCTION);
 #else /* !ENABLED (JERRY_ES2015) */
         JERRY_ASSERT (scanner_info_p->type == SCANNER_TYPE_END_ARGUMENTS);
 #endif /* ENABLED (JERRY_ES2015) */

@@ -63,7 +63,7 @@ typedef enum
   PARSER_IS_ARROW_FUNCTION = (1u << 13),      /**< an arrow function is parsed */
   PARSER_IS_GENERATOR_FUNCTION = (1u << 14),  /**< a generator function is parsed */
   PARSER_IS_ASYNC_FUNCTION = (1u << 15),      /**< an async function is parsed */
-  PARSER_DISALLOW_YIELD = (1u << 16),         /**< throw SyntaxError for yield expression */
+  PARSER_DISALLOW_AWAIT_YIELD = (1u << 16),   /**< throw SyntaxError for await / yield keywords */
   PARSER_FUNCTION_IS_PARSING_ARGS = (1u << 17), /**< set when parsing function arguments */
   PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM = (1u << 18), /**< function has a non simple parameter */
   PARSER_FUNCTION_HAS_REST_PARAM = (1u << 19), /**< function has rest parameter */
@@ -681,6 +681,7 @@ bool lexer_check_arrow (parser_context_t *context_p);
 bool lexer_check_arrow_param (parser_context_t *context_p);
 bool lexer_check_yield_no_arg (parser_context_t *context_p);
 bool lexer_consume_generator (parser_context_t *context_p);
+void lexer_update_await_yield (parser_context_t *context_p, uint32_t status_flags);
 #endif /* ENABLED (JERRY_ES2015) */
 void lexer_parse_string (parser_context_t *context_p, lexer_string_options_t opts);
 void lexer_expect_identifier (parser_context_t *context_p, uint8_t literal_type);

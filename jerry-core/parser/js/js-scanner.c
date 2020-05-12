@@ -50,12 +50,19 @@ typedef enum
 
 #if ENABLED (JERRY_ES2015)
 
-/**
- * Returns the correct computed property mode based on the literal_pool_flags.
- */
-#define GET_COMPUTED_PROPERTY_MODE(literal_pool_flags) \
-  (((literal_pool_flags) & SCANNER_LITERAL_POOL_GENERATOR) ? SCAN_STACK_COMPUTED_GENERATOR_FUNCTION \
-                                                           : SCAN_STACK_COMPUTED_PROPERTY)
+JERRY_STATIC_ASSERT (SCANNER_FROM_LITERAL_POOL_TO_COMPUTED (SCANNER_LITERAL_POOL_GENERATOR)
+                     == SCAN_STACK_COMPUTED_GENERATOR,
+                     scanner_invalid_conversion_from_literal_pool_generator_to_computed_generator);
+JERRY_STATIC_ASSERT (SCANNER_FROM_LITERAL_POOL_TO_COMPUTED (SCANNER_LITERAL_POOL_ASYNC)
+                     == SCAN_STACK_COMPUTED_ASYNC,
+                     scanner_invalid_conversion_from_literal_pool_async_to_computed_async);
+
+JERRY_STATIC_ASSERT (SCANNER_FROM_COMPUTED_TO_LITERAL_POOL (SCAN_STACK_COMPUTED_GENERATOR)
+                     == SCANNER_LITERAL_POOL_GENERATOR,
+                     scanner_invalid_conversion_from_computed_generator_to_literal_pool_generator);
+JERRY_STATIC_ASSERT (SCANNER_FROM_COMPUTED_TO_LITERAL_POOL (SCAN_STACK_COMPUTED_ASYNC)
+                     == SCANNER_LITERAL_POOL_ASYNC,
+                     scanner_invalid_conversion_from_computed_async_to_literal_pool_async);
 
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -93,22 +100,23 @@ scanner_scan_primary_expression (parser_context_t *context_p, /**< context */
     }
     case LEXER_KEYW_FUNCTION:
     {
-      scanner_push_literal_pool (context_p, scanner_context_p, SCANNER_LITERAL_POOL_FUNCTION);
+      uint16_t status_flags = SCANNER_LITERAL_POOL_FUNCTION;
 
 #if ENABLED (JERRY_ES2015)
-      context_p->status_flags &= (uint32_t) ~PARSER_IS_GENERATOR_FUNCTION;
-#endif /* ENABLED (JERRY_ES2015) */
-
-      lexer_next_token (context_p);
-
-#if ENABLED (JERRY_ES2015)
-      if (context_p->token.type == LEXER_MULTIPLY)
+      if (scanner_context_p->async_source_p != NULL)
       {
-        scanner_context_p->active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_GENERATOR;
-        context_p->status_flags |= PARSER_IS_GENERATOR_FUNCTION;
-        lexer_next_token (context_p);
+        status_flags |= SCANNER_LITERAL_POOL_ASYNC;
+      }
+
+      if (lexer_consume_generator (context_p))
+      {
+        status_flags |= SCANNER_LITERAL_POOL_GENERATOR;
       }
 #endif /* ENABLED (JERRY_ES2015) */
+
+      scanner_push_literal_pool (context_p, scanner_context_p, status_flags);
+
+      lexer_next_token (context_p);
 
       if (context_p->token.type == LEXER_LITERAL
           && context_p->token.lit_location.type == LEXER_IDENT_LITERAL)
@@ -957,7 +965,9 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
       }
       return SCAN_NEXT_TOKEN;
     }
-    case SCAN_STACK_COMPUTED_GENERATOR_FUNCTION:
+    case SCAN_STACK_COMPUTED_GENERATOR:
+    case SCAN_STACK_COMPUTED_ASYNC:
+    case SCAN_STACK_COMPUTED_ASYNC_GENERATOR:
     {
       if (type != LEXER_RIGHT_SQUARE)
       {
@@ -970,10 +980,11 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
       JERRY_ASSERT (context_p->stack_top_uint8 == SCAN_STACK_OBJECT_LITERAL
                     || context_p->stack_top_uint8 == SCAN_STACK_FUNCTION_PROPERTY);
 
-      scanner_push_literal_pool (context_p,
-                                 scanner_context_p,
-                                 SCANNER_LITERAL_POOL_FUNCTION | SCANNER_LITERAL_POOL_GENERATOR);
-      context_p->status_flags |= PARSER_IS_GENERATOR_FUNCTION;
+      uint16_t status_flags = (uint16_t) (SCANNER_LITERAL_POOL_FUNCTION
+                                          | SCANNER_LITERAL_POOL_GENERATOR
+                                          | SCANNER_FROM_COMPUTED_TO_LITERAL_POOL (stack_top));
+
+      scanner_push_literal_pool (context_p, scanner_context_p, status_flags);
 
       scanner_context_p->mode = SCAN_MODE_FUNCTION_ARGUMENTS;
       return SCAN_KEEP_TOKEN;
@@ -1015,6 +1026,7 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
     {
       scanner_pop_literal_pool (context_p, scanner_context_p);
       parser_stack_pop_uint8 (context_p);
+      lexer_update_await_yield (context_p, context_p->status_flags);
       scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION_END;
       return SCAN_KEEP_TOKEN;
     }
@@ -1358,24 +1370,24 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
     }
     case LEXER_KEYW_FUNCTION:
     {
-      lexer_next_token (context_p);
-
 #if ENABLED (JERRY_ES2015)
       uint16_t status_flags = SCANNER_LITERAL_POOL_FUNCTION | SCANNER_LITERAL_POOL_FUNCTION_STATEMENT;
 
+      if (scanner_context_p->async_source_p != NULL)
+      {
+        scanner_context_p->status_flags |= SCANNER_CONTEXT_THROW_ERR_ASYNC_FUNCTION;
+        status_flags |= SCANNER_LITERAL_POOL_ASYNC;
+      }
+#endif /* ENABLED (JERRY_ES2015) */
+
+      lexer_next_token (context_p);
+
+#if ENABLED (JERRY_ES2015)
       if (context_p->token.type == LEXER_MULTIPLY)
       {
         status_flags |= SCANNER_LITERAL_POOL_GENERATOR;
         lexer_next_token (context_p);
-        /* This flag should be set after the function name is read. */
-        context_p->status_flags |= PARSER_IS_GENERATOR_FUNCTION;
       }
-      else
-      {
-        context_p->status_flags &= (uint32_t) ~PARSER_IS_GENERATOR_FUNCTION;
-      }
-#else /* !ENABLED (JERRY_ES2015) */
-      uint16_t status_flags = SCANNER_LITERAL_POOL_FUNCTION;
 #endif /* ENABLED (JERRY_ES2015) */
 
       if (context_p->token.type != LEXER_LITERAL
@@ -1397,8 +1409,12 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
       }
 
       literal_p->type |= SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_FUNC_DECLARATION;
+
+      scanner_context_p->status_flags &= (uint16_t) ~SCANNER_CONTEXT_THROW_ERR_ASYNC_FUNCTION;
 #else
       literal_p->type |= SCANNER_LITERAL_IS_VAR | SCANNER_LITERAL_IS_FUNC;
+
+      uint16_t status_flags = SCANNER_LITERAL_POOL_FUNCTION;
 #endif /* ENABLED (JERRY_ES2015) */
 
       scanner_push_literal_pool (context_p, scanner_context_p, status_flags);
@@ -2254,8 +2270,12 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
 #endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
   scanner_context.context_status_flags = context_p->status_flags;
+  scanner_context.status_flags = SCANNER_CONTEXT_NO_FLAGS;
 #if ENABLED (JERRY_DEBUGGER)
-  scanner_context.debugger_enabled = (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED) ? 1 : 0;
+  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
+  {
+    scanner_context.status_flags |= SCANNER_CONTEXT_DEBUGGER_ENABLED;
+  }
 #endif /* ENABLED (JERRY_DEBUGGER) */
 #if ENABLED (JERRY_ES2015)
   scanner_context.binding_type = SCANNER_BINDING_NONE;
@@ -2309,6 +2329,13 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
       {
         status_flags |= SCANNER_LITERAL_POOL_IS_STRICT;
       }
+
+#if ENABLED (JERRY_ES2015)
+      if (context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION)
+      {
+        status_flags |= SCANNER_LITERAL_POOL_GENERATOR;
+      }
+#endif /* ENABLED (JERRY_ES2015) */
 
       scanner_push_literal_pool (context_p, &scanner_context, status_flags);
       scanner_context.mode = SCAN_MODE_FUNCTION_ARGUMENTS;
@@ -2459,7 +2486,7 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
 
           if (context_p->token.type == LEXER_LEFT_SQUARE)
           {
-            parser_stack_push_uint8 (context_p, GET_COMPUTED_PROPERTY_MODE (literal_pool_flags));
+            parser_stack_push_uint8 (context_p, SCANNER_FROM_LITERAL_POOL_TO_COMPUTED (literal_pool_flags));
             scanner_context.mode = SCAN_MODE_PRIMARY_EXPRESSION;
             break;
           }
@@ -2889,14 +2916,9 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ES2015)
             if (context_p->token.type == LEXER_LEFT_SQUARE)
             {
-              parser_stack_push_uint8 (context_p, GET_COMPUTED_PROPERTY_MODE (literal_pool_flags));
+              parser_stack_push_uint8 (context_p, SCANNER_FROM_LITERAL_POOL_TO_COMPUTED (literal_pool_flags));
               scanner_context.mode = SCAN_MODE_PRIMARY_EXPRESSION;
               break;
-            }
-
-            if (literal_pool_flags & SCANNER_LITERAL_POOL_GENERATOR)
-            {
-              context_p->status_flags |= PARSER_IS_GENERATOR_FUNCTION;
             }
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -3150,9 +3172,20 @@ scan_completed:
     }
 #endif /* ENABLED (JERRY_ES2015) */
 
-    /* The following loop may allocate memory, so it is enclosed in a try/catch. */
+    /* The following code may allocate memory, so it is enclosed in a try/catch. */
     PARSER_TRY (context_p->try_buffer)
     {
+#if ENABLED (JERRY_ES2015)
+      if (scanner_context.status_flags & SCANNER_CONTEXT_THROW_ERR_ASYNC_FUNCTION)
+      {
+        JERRY_ASSERT (scanner_context.async_source_p != NULL);
+
+        scanner_info_t *info_p;
+        info_p = scanner_insert_info (context_p, scanner_context.async_source_p, sizeof (scanner_info_t));
+        info_p->type = SCANNER_TYPE_ERR_ASYNC_FUNCTION;
+      }
+#endif /* ENABLED (JERRY_ES2015) */
+
       while (scanner_context.active_literal_pool_p != NULL)
       {
         scanner_pop_literal_pool (context_p, &scanner_context);
@@ -3423,6 +3456,12 @@ scan_completed:
         case SCANNER_TYPE_ERR_REDECLARED:
         {
           JERRY_DEBUG_MSG ("  ERR_REDECLARED: source:%d\n",
+                           (int) (info_p->source_p - source_start_p));
+          break;
+        }
+        case SCANNER_TYPE_ERR_ASYNC_FUNCTION:
+        {
+          JERRY_DEBUG_MSG ("  ERR_ASYNC_FUNCTION: source:%d\n",
                            (int) (info_p->source_p - source_start_p));
           break;
         }

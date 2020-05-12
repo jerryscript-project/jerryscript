@@ -684,10 +684,9 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
 #if ENABLED (JERRY_ES2015)
   bool is_generator_function = false;
 
-  if (lexer_check_next_character (context_p, LIT_CHAR_ASTERISK))
+  if (lexer_consume_generator (context_p))
   {
     is_generator_function = true;
-    lexer_consume_next_character (context_p);
   }
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -715,10 +714,17 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
     status_flags |= PARSER_HAS_NON_STRICT_ARG;
   }
 
+  JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
+
 #if ENABLED (JERRY_ES2015)
   if (is_generator_function)
   {
-    status_flags |= PARSER_IS_GENERATOR_FUNCTION | PARSER_DISALLOW_YIELD;
+    status_flags |= PARSER_IS_GENERATOR_FUNCTION | PARSER_DISALLOW_AWAIT_YIELD;
+  }
+
+  if (context_p->next_scanner_info_p->u8_arg & SCANNER_FUNCTION_ASYNC)
+  {
+    status_flags |= PARSER_IS_ASYNC_FUNCTION | PARSER_DISALLOW_AWAIT_YIELD;
   }
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -3054,12 +3060,23 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
           if (JERRY_UNLIKELY (lexer_token_is_async (context_p))
               && context_p->next_scanner_info_p->source_p == context_p->source_p)
           {
-            JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
+            bool is_statement = true;
 
-            if (context_p->next_scanner_info_p->u8_arg & SCANNER_FUNCTION_STATEMENT)
+            if (context_p->next_scanner_info_p->type == SCANNER_TYPE_FUNCTION)
             {
-              JERRY_ASSERT (context_p->next_scanner_info_p->u8_arg & SCANNER_FUNCTION_ASYNC);
+              is_statement = (context_p->next_scanner_info_p->u8_arg & SCANNER_FUNCTION_STATEMENT) != 0;
 
+              JERRY_ASSERT (!is_statement || (context_p->next_scanner_info_p->u8_arg & SCANNER_FUNCTION_ASYNC));
+            }
+            else
+            {
+              JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_ERR_ASYNC_FUNCTION);
+
+              scanner_release_next (context_p, sizeof (scanner_info_t));
+            }
+
+            if (is_statement)
+            {
               if (parser_statement_flags[context_p->stack_top_uint8] & PARSER_STATM_SINGLE_STATM)
               {
                 parser_raise_error (context_p, PARSER_ERR_LEXICAL_SINGLE_STATEMENT);

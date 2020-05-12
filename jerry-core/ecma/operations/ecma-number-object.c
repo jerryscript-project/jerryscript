@@ -22,6 +22,8 @@
 #include "ecma-number-object.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
+#include "ecma-function-object.h"
+#include "jcontext.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -50,12 +52,24 @@ ecma_op_create_number_object (ecma_value_t arg) /**< argument passed to the Numb
   }
 
   conv_to_num_completion = ecma_make_number_value (num);
+  ecma_builtin_id_t proto_id;
 #if ENABLED (JERRY_BUILTIN_NUMBER)
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_NUMBER_PROTOTYPE);
+  proto_id = ECMA_BUILTIN_ID_NUMBER_PROTOTYPE;
 #else /* ENABLED (JERRY_BUILTIN_NUMBER) */
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
+  proto_id = ECMA_BUILTIN_ID_OBJECT_PROTOTYPE;
 #endif /* ENABLED (JERRY_BUILTIN_NUMBER) */
-
+  ecma_object_t *prototype_obj_p = ecma_builtin_get (proto_id);
+#if ENABLED (JERRY_ESNEXT)
+  ecma_object_t *new_target = JERRY_CONTEXT (current_new_target);
+  if (new_target)
+  {
+    prototype_obj_p = ecma_op_get_prototype_from_constructor (new_target, proto_id);
+    if (JERRY_UNLIKELY (prototype_obj_p == NULL))
+    {
+      return ECMA_VALUE_ERROR;
+    }
+  }
+#endif /* ENABLED (JERRY_ESNEXT) */
   ecma_object_t *object_p = ecma_create_object (prototype_obj_p,
                                                 sizeof (ecma_extended_object_t),
                                                 ECMA_OBJECT_TYPE_CLASS);
@@ -65,7 +79,12 @@ ecma_op_create_number_object (ecma_value_t arg) /**< argument passed to the Numb
 
   /* Pass reference (no need to free conv_to_num_completion). */
   ext_object_p->u.class_prop.u.value = conv_to_num_completion;
-
+#if ENABLED (JERRY_ESNEXT)
+  if (new_target)
+  {
+    ecma_deref_object (prototype_obj_p);
+  }
+#endif /* ENABLED (JERRY_ESNEXT) */
   return ecma_make_object_value (object_p);
 } /* ecma_op_create_number_object */
 

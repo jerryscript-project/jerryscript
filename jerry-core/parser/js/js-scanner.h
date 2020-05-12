@@ -131,8 +131,9 @@ typedef struct
 typedef enum
 {
   SCANNER_STREAM_UINT16_DIFF = (1 << 7), /**< relative distance is between -256 and 65535 */
-  SCANNER_STREAM_HAS_ESCAPE = (1 << 6), /**< literal has escape */
-  SCANNER_STREAM_NO_REG = (1 << 5), /**< identifier cannot be stored in register */
+  SCANNER_STREAM_HAS_ESCAPE = (1 << 6), /**< binding has escape */
+  SCANNER_STREAM_NO_REG = (1 << 5), /**< binding cannot be stored in register */
+  SCANNER_STREAM_EARLY_CREATE = (1 << 4), /**< binding must be created with ECMA_VALUE_UNINITIALIZED */
   /* Update SCANNER_STREAM_TYPE_MASK macro if more bits are added. */
 } scanner_compressed_stream_flags_t;
 
@@ -210,11 +211,12 @@ typedef enum
 typedef enum
 {
   SCANNER_FUNCTION_ARGUMENTS_NEEDED = (1 << 0), /**< arguments object needs to be created */
+  SCANNER_FUNCTION_MAPPED_ARGUMENTS = (1 << 1), /**< arguments object should be mapped */
 #if ENABLED (JERRY_ES2015)
-  SCANNER_FUNCTION_LEXICAL_ENV_NEEDED = (1 << 1), /**< lexical environment is needed for the function body */
-  SCANNER_FUNCTION_STATEMENT = (1 << 2), /**< function is function statement (not arrow expression)
+  SCANNER_FUNCTION_LEXICAL_ENV_NEEDED = (1 << 2), /**< lexical environment is needed for the function body */
+  SCANNER_FUNCTION_STATEMENT = (1 << 3), /**< function is function statement (not arrow expression)
                                           *   this flag must be combined with the type of function (e.g. async) */
-  SCANNER_FUNCTION_ASYNC = (1 << 3), /**< function is async function */
+  SCANNER_FUNCTION_ASYNC = (1 << 4), /**< function is async function */
 #endif /* ENABLED (JERRY_ES2015) */
 } scanner_function_flags_t;
 

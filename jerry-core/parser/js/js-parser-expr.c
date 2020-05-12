@@ -813,9 +813,15 @@ parser_parse_class (parser_context_t *context_p, /**< context */
 
   if (is_statement)
   {
-    parser_emit_cbc_literal (context_p,
-                             class_ident_index >= PARSER_REGISTER_START ? CBC_MOV_IDENT : CBC_ASSIGN_LET_CONST,
-                             class_ident_index);
+    cbc_opcode_t opcode = CBC_MOV_IDENT;
+
+    if (class_ident_index < PARSER_REGISTER_START)
+    {
+      opcode = (scanner_literal_is_created (context_p, class_ident_index) ? CBC_ASSIGN_LET_CONST
+                                                                          : CBC_INIT_LET);
+    }
+
+    parser_emit_cbc_literal (context_p, (uint16_t) opcode, class_ident_index);
   }
 
   parser_flush_cbc (context_p);
@@ -2251,9 +2257,9 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
  */
 static uint8_t
 parser_append_binary_single_assignment_token (parser_context_t *context_p, /**< context */
-                                              bool is_lexical) /**< assign lexical declaration */
+                                              uint32_t pattern_flags) /**< pattern flags */
 {
-  JERRY_UNUSED (is_lexical);
+  JERRY_UNUSED (pattern_flags);
 
   /* Unlike other tokens, the whole byte code is saved for binary
    * assignment, since it has multiple forms depending on the
@@ -2301,7 +2307,7 @@ parser_append_binary_single_assignment_token (parser_context_t *context_p, /**< 
     assign_opcode = CBC_ASSIGN_SET_IDENT;
 
 #if ENABLED (JERRY_ES2015)
-    if (!is_lexical)
+    if (!(pattern_flags & (PARSER_PATTERN_LET | PARSER_PATTERN_CONST | PARSER_PATTERN_LOCAL)))
     {
       if (scanner_literal_is_const_reg (context_p, literal_index))
       {
@@ -2310,7 +2316,20 @@ parser_append_binary_single_assignment_token (parser_context_t *context_p, /**< 
     }
     else if (literal_index < PARSER_REGISTER_START)
     {
-      assign_opcode = CBC_ASSIGN_LET_CONST;
+      assign_opcode = CBC_INIT_LET;
+
+      if (scanner_literal_is_created (context_p, literal_index))
+      {
+        assign_opcode = CBC_ASSIGN_LET_CONST;
+      }
+      else if (pattern_flags & PARSER_PATTERN_CONST)
+      {
+        assign_opcode = CBC_INIT_CONST;
+      }
+      else if (pattern_flags & PARSER_PATTERN_LOCAL)
+      {
+        assign_opcode = CBC_INIT_ARG_OR_CATCH;
+      }
     }
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -2395,7 +2414,7 @@ parser_append_binary_token (parser_context_t *context_p) /**< context */
 
   if (context_p->token.type == LEXER_ASSIGN)
   {
-    parser_append_binary_single_assignment_token (context_p, false);
+    parser_append_binary_single_assignment_token (context_p, 0);
     return;
   }
 
@@ -2486,7 +2505,10 @@ parser_process_binary_opcodes (parser_context_t *context_p, /**< context */
         JERRY_ASSERT (opcode == CBC_ASSIGN_SET_IDENT
                       || opcode == CBC_ASSIGN_PROP_LITERAL
                       || opcode == CBC_ASSIGN_PROP_THIS_LITERAL
-                      || opcode == CBC_ASSIGN_LET_CONST);
+                      || opcode == CBC_ASSIGN_LET_CONST
+                      || opcode == CBC_INIT_ARG_OR_CATCH
+                      || opcode == CBC_INIT_LET
+                      || opcode == CBC_INIT_CONST);
 
         index = parser_stack_pop_uint16 (context_p);
       }
@@ -2601,7 +2623,7 @@ parser_pattern_get_target (parser_context_t *context_p, /**< context */
   {
     JERRY_ASSERT (flags & PARSER_PATTERN_TARGET_ON_STACK);
 
-    parser_emit_cbc_forward_branch (context_p, PARSER_TO_EXT_OPCODE (CBC_EXT_DEFAULT_INITIALIZER), &skip_init);
+    parser_emit_cbc_ext_forward_branch (context_p, CBC_EXT_DEFAULT_INITIALIZER, &skip_init);
   }
 
   if ((flags & (PARSER_PATTERN_TARGET_ON_STACK | PARSER_PATTERN_TARGET_DEFAULT)) != PARSER_PATTERN_TARGET_ON_STACK)
@@ -2707,8 +2729,7 @@ parser_pattern_form_assignment (parser_context_t *context_p, /**< context */
   JERRY_UNUSED (ident_line_counter);
 
   parser_stack_push_uint8 (context_p, LEXER_EXPRESSION_START);
-  bool is_lexical = (flags & (PARSER_PATTERN_LEXICAL | PARSER_PATTERN_LOCAL)) != 0;
-  uint8_t assign_opcode = parser_append_binary_single_assignment_token (context_p, is_lexical);
+  uint8_t assign_opcode = parser_append_binary_single_assignment_token (context_p, flags);
 
   if (flags & PARSER_PATTERN_ARRAY)
   {
@@ -2724,7 +2745,7 @@ parser_pattern_form_assignment (parser_context_t *context_p, /**< context */
   {
     parser_branch_t skip_init;
     lexer_next_token (context_p);
-    parser_emit_cbc_forward_branch (context_p, PARSER_TO_EXT_OPCODE (CBC_EXT_DEFAULT_INITIALIZER), &skip_init);
+    parser_emit_cbc_ext_forward_branch (context_p, CBC_EXT_DEFAULT_INITIALIZER, &skip_init);
 
     parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
     parser_set_branch_to_current_position (context_p, &skip_init);
@@ -2770,7 +2791,8 @@ parser_pattern_process_nested_pattern (parser_context_t *context_p, /**< context
   parser_pattern_flags_t options = (PARSER_PATTERN_NESTED_PATTERN
                                     | PARSER_PATTERN_TARGET_ON_STACK
                                     | (flags & (PARSER_PATTERN_BINDING
-                                                | PARSER_PATTERN_LEXICAL
+                                                | PARSER_PATTERN_LET
+                                                | PARSER_PATTERN_CONST
                                                 | PARSER_PATTERN_LOCAL
                                                 | PARSER_PATTERN_REST_ELEMENT
                                                 | PARSER_PATTERN_ARGUMENTS)));
@@ -2821,7 +2843,7 @@ parser_pattern_process_assignment (parser_context_t *context_p, /**< context */
 
     lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_IDENT_LITERAL);
 
-    if (flags & PARSER_PATTERN_LEXICAL
+    if (flags & (PARSER_PATTERN_LET | PARSER_PATTERN_CONST)
         && context_p->token.keyword_type == LEXER_KEYW_LET)
     {
       parser_raise_error (context_p, PARSER_ERR_LEXICAL_LET_BINDING);

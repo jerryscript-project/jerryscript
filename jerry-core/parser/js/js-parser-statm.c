@@ -499,10 +499,15 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
     {
       parser_pattern_flags_t flags = PARSER_PATTERN_BINDING;
 
-      if (declaration_type != LEXER_KEYW_VAR)
+      if (declaration_type == LEXER_KEYW_LET)
       {
-        flags |= PARSER_PATTERN_LEXICAL;
+        flags |= PARSER_PATTERN_LET;
       }
+      else if (declaration_type == LEXER_KEYW_CONST)
+      {
+        flags |= PARSER_PATTERN_CONST;
+      }
+
       parser_parse_initializer_by_next_char (context_p, flags);
     }
     else
@@ -569,7 +574,16 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
         if (declaration_type != LEXER_KEYW_VAR
             && (index < PARSER_REGISTER_START))
         {
-          opcode = CBC_ASSIGN_LET_CONST;
+          opcode = CBC_INIT_LET;
+
+          if (scanner_literal_is_created (context_p, index))
+          {
+            opcode = CBC_ASSIGN_LET_CONST;
+          }
+          else if (declaration_type == LEXER_KEYW_CONST)
+          {
+            opcode = CBC_INIT_CONST;
+          }
         }
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -581,9 +595,15 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
         parser_emit_cbc (context_p, CBC_PUSH_UNDEFINED);
 
         uint16_t index = context_p->lit_object.index;
-        parser_emit_cbc_literal (context_p,
-                                 index >= PARSER_REGISTER_START ? CBC_MOV_IDENT : CBC_ASSIGN_LET_CONST,
-                                 index);
+        cbc_opcode_t opcode = CBC_MOV_IDENT;
+
+        if (index < PARSER_REGISTER_START)
+        {
+          opcode = (scanner_literal_is_created (context_p, index) ? CBC_ASSIGN_LET_CONST
+                                                                  : CBC_INIT_LET);
+        }
+
+        parser_emit_cbc_literal (context_p, (uint16_t) opcode, index);
       }
       else if (declaration_type == LEXER_KEYW_CONST)
       {
@@ -1289,8 +1309,6 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
 #if ENABLED (JERRY_ES2015)
         if (lexer_check_next_characters (context_p, LIT_CHAR_LEFT_SQUARE, LIT_CHAR_LEFT_BRACE))
         {
-          bool is_var = (token_type == LEXER_KEYW_VAR);
-
           parser_emit_cbc_ext (context_p, is_for_in ? CBC_EXT_FOR_IN_GET_NEXT
                                                     : CBC_EXT_FOR_OF_GET_NEXT);
 
@@ -1303,9 +1321,13 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
 
           parser_pattern_flags_t flags = (PARSER_PATTERN_BINDING | PARSER_PATTERN_TARGET_ON_STACK);
 
-          if (!is_var)
+          if (token_type == LEXER_KEYW_LET)
           {
-            flags |= PARSER_PATTERN_LEXICAL;
+            flags |= PARSER_PATTERN_LET;
+          }
+          else if (token_type == LEXER_KEYW_CONST)
+          {
+            flags |= PARSER_PATTERN_CONST;
           }
 
           parser_parse_initializer_by_next_char (context_p, flags);
@@ -1347,9 +1369,12 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
         }
 #endif /* !JERRY_NDEBUG */
 
-        parser_emit_cbc_literal (context_p,
-                                 has_context ? CBC_ASSIGN_LET_CONST : CBC_ASSIGN_SET_IDENT,
-                                 literal_index);
+        JERRY_ASSERT (literal_index >= PARSER_REGISTER_START
+                      || !has_context
+                      || scanner_literal_is_created (context_p, literal_index));
+
+        uint16_t opcode = (has_context ? CBC_ASSIGN_LET_CONST : CBC_ASSIGN_SET_IDENT);
+        parser_emit_cbc_literal (context_p, opcode, literal_index);
 #else /* !ENABLED (JERRY_ES2015) */
         parser_emit_cbc_literal (context_p, CBC_ASSIGN_SET_IDENT, literal_index);
 #endif /* ENABLED (JERRY_ES2015) */
@@ -1928,7 +1953,7 @@ parser_parse_try_statement_end (parser_context_t *context_p) /**< context */
     {
       parser_pattern_flags_t flags = (PARSER_PATTERN_BINDING
                                       | PARSER_PATTERN_TARGET_ON_STACK
-                                      | PARSER_PATTERN_LOCAL);
+                                      | PARSER_PATTERN_LET);
 
       parser_parse_initializer_by_next_char (context_p, flags);
     }

@@ -161,7 +161,7 @@ typedef enum
   VM_OC_ERROR,                   /**< error while the vm_loop is suspended */
 
   VM_OC_JUMP,                    /**< jump */
-  VM_OC_BRANCH_IF_STRICT_EQUAL,  /**< branch if stric equal */
+  VM_OC_BRANCH_IF_STRICT_EQUAL,  /**< branch if strict equal */
 
   /* These four opcodes must be in this order. */
   VM_OC_BRANCH_IF_TRUE,          /**< branch if true */
@@ -219,7 +219,7 @@ typedef enum
   VM_OC_CREATE_BINDING,          /**< create variables */
   VM_OC_SET_BYTECODE_PTR,        /**< setting bytecode pointer */
   VM_OC_VAR_EVAL,                /**< variable and function evaluation */
-  VM_OC_INIT_LOCAL,              /**< initialize local variable */
+  VM_OC_INIT_ARG_OR_FUNC,        /**< create and init a function or argument binding */
 
 #if ENABLED (JERRY_DEBUGGER)
   VM_OC_BREAKPOINT_ENABLED,      /**< enabled breakpoint for debugger */
@@ -235,6 +235,7 @@ typedef enum
   VM_OC_CHECK_VAR,               /**< check redeclared vars in the global scope */
   VM_OC_CHECK_LET,               /**< check redeclared lets in the global scope */
   VM_OC_ASSIGN_LET_CONST,        /**< assign values to let/const declarations */
+  VM_OC_INIT_BINDING,            /**< create and intialize a binding */
   VM_OC_THROW_CONST_ERROR,       /**< throw invalid assignment to const variable error */
   VM_OC_COPY_TO_GLOBAL,          /**< copy value to global lex env */
   VM_OC_CLONE_CONTEXT,           /**< clone lexical environment with let/const declarations */
@@ -298,6 +299,7 @@ typedef enum
   VM_OC_CHECK_VAR = VM_OC_NONE,               /**< check redeclared vars in the global scope */
   VM_OC_CHECK_LET = VM_OC_NONE,               /**< check redeclared lets in the global scope */
   VM_OC_ASSIGN_LET_CONST = VM_OC_NONE,        /**< assign values to let/const declarations */
+  VM_OC_INIT_BINDING = VM_OC_NONE,            /**< create and intialize a binding */
   VM_OC_THROW_CONST_ERROR = VM_OC_NONE,       /**< throw invalid assignment to const variable error */
   VM_OC_COPY_TO_GLOBAL = VM_OC_NONE,          /**< copy value to global lex env */
   VM_OC_CLONE_CONTEXT = VM_OC_NONE,           /**< clone lexical environment with let/const declarations */

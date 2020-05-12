@@ -1715,7 +1715,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
   JERRY_ASSERT (context_p->status_flags & PARSER_IS_FUNCTION);
   JERRY_ASSERT (!(context_p->status_flags & PARSER_LEXICAL_BLOCK_NEEDED));
 
-  bool duplicated_argument_names = false;
+  bool has_duplicated_arg_names = false;
 
   /* TODO: Currently async iterators are not supported, so generators ignore the async modifier. */
   if ((context_p->next_scanner_info_p->u8_arg & SCANNER_FUNCTION_ASYNC)
@@ -1740,6 +1740,10 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
     return;
   }
 
+#if ENABLED (JERRY_ES2015)
+  bool has_mapped_arguments = (context_p->next_scanner_info_p->u8_arg & SCANNER_FUNCTION_MAPPED_ARGUMENTS) != 0;
+#endif /* ENABLED (JERRY_ES2015) */
+
   scanner_create_variables (context_p, SCANNER_CREATE_VARS_IS_FUNCTION_ARGS);
   scanner_set_active (context_p);
 
@@ -1762,7 +1766,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
       }
       lexer_next_token (context_p);
 
-      if (duplicated_argument_names)
+      if (has_duplicated_arg_names)
       {
         parser_raise_error (context_p, PARSER_ERR_DUPLICATED_ARGUMENT_NAMES);
       }
@@ -1772,7 +1776,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 
     if (context_p->token.type == LEXER_LEFT_SQUARE || context_p->token.type == LEXER_LEFT_BRACE)
     {
-      if (duplicated_argument_names)
+      if (has_duplicated_arg_names)
       {
         parser_raise_error (context_p, PARSER_ERR_DUPLICATED_ARGUMENT_NAMES);
       }
@@ -1841,7 +1845,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
       {
         parser_raise_error (context_p, PARSER_ERR_DUPLICATED_ARGUMENT_NAMES);
       }
-      duplicated_argument_names = true;
+      has_duplicated_arg_names = true;
 #endif /* ENABLED (JERRY_ES2015) */
 
       context_p->status_flags |= PARSER_HAS_NON_STRICT_ARG;
@@ -1851,17 +1855,15 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
       context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_FUNCTION_ARGUMENT;
     }
 
-    context_p->argument_count++;
-    if (context_p->argument_count >= PARSER_MAXIMUM_NUMBER_OF_REGISTERS)
-    {
-      parser_raise_error (context_p, PARSER_ERR_ARGUMENT_LIMIT_REACHED);
-    }
-
     lexer_next_token (context_p);
 
 #if ENABLED (JERRY_ES2015)
+    uint16_t literal_index = context_p->lit_object.index;
+
     if (context_p->token.type == LEXER_ASSIGN)
     {
+      JERRY_ASSERT (!has_mapped_arguments);
+
       if (context_p->status_flags & PARSER_FUNCTION_HAS_REST_PARAM)
       {
         parser_raise_error (context_p, PARSER_ERR_REST_PARAMETER_DEFAULT_INITIALIZER);
@@ -1869,7 +1871,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 
       parser_branch_t skip_init;
 
-      if (duplicated_argument_names)
+      if (has_duplicated_arg_names)
       {
         parser_raise_error (context_p, PARSER_ERR_DUPLICATED_ARGUMENT_NAMES);
       }
@@ -1877,16 +1879,50 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
       context_p->status_flags |= PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM;
 
       /* LEXER_ASSIGN does not overwrite lit_object. */
-      parser_emit_cbc (context_p, CBC_PUSH_UNDEFINED);
-      parser_emit_cbc_literal (context_p, CBC_STRICT_EQUAL_RIGHT_LITERAL, context_p->lit_object.index);
-      parser_emit_cbc_forward_branch (context_p, CBC_BRANCH_IF_FALSE_FORWARD, &skip_init);
+      parser_emit_cbc_literal (context_p,
+                               CBC_PUSH_LITERAL,
+                               (uint16_t) (PARSER_REGISTER_START + context_p->argument_count));
+      parser_emit_cbc_ext_forward_branch (context_p, CBC_EXT_DEFAULT_INITIALIZER, &skip_init);
 
-      parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);
-      parser_parse_expression_statement (context_p, PARSE_EXPR_NO_COMMA | PARSE_EXPR_HAS_LITERAL);
+      lexer_next_token (context_p);
+      parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
 
       parser_set_branch_to_current_position (context_p, &skip_init);
+
+      uint16_t opcode = CBC_ASSIGN_LET_CONST;
+
+      if (literal_index >= PARSER_REGISTER_START)
+      {
+        opcode = CBC_ASSIGN_SET_IDENT;
+      }
+      else if (!scanner_literal_is_created (context_p, literal_index))
+      {
+        opcode = CBC_INIT_ARG_OR_CATCH;
+      }
+
+      parser_emit_cbc_literal (context_p, opcode, literal_index);
+    }
+    else if (!has_mapped_arguments && literal_index < PARSER_REGISTER_START)
+    {
+      uint16_t opcode = CBC_INIT_ARG_OR_FUNC;
+
+      if (scanner_literal_is_created (context_p, literal_index))
+      {
+        opcode = CBC_ASSIGN_LET_CONST_LITERAL;
+      }
+
+      parser_emit_cbc_literal_value (context_p,
+                                     opcode,
+                                     (uint16_t) (PARSER_REGISTER_START + context_p->argument_count),
+                                     literal_index);
     }
 #endif /* ENABLED (JERRY_ES2015) */
+
+    context_p->argument_count++;
+    if (context_p->argument_count >= PARSER_MAXIMUM_NUMBER_OF_REGISTERS)
+    {
+      parser_raise_error (context_p, PARSER_ERR_ARGUMENT_LIMIT_REACHED);
+    }
 
     if (context_p->token.type != LEXER_COMMA)
     {
@@ -1907,6 +1943,8 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
   scanner_revert_active (context_p);
 
 #if ENABLED (JERRY_ES2015)
+  JERRY_ASSERT (!has_mapped_arguments || !(context_p->status_flags & PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM));
+
   if (context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION)
   {
     parser_emit_cbc_ext (context_p, CBC_EXT_CREATE_GENERATOR);

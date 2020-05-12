@@ -22,6 +22,8 @@
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
 #include "ecma-string-object.h"
+#include "ecma-function-object.h"
+#include "jcontext.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -47,6 +49,8 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
                 || arguments_list_p != NULL);
 
   ecma_value_t prim_value = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
+  ecma_builtin_id_t proto_id;
+  ecma_object_t *prototype_obj_p;
 
   if (arguments_list_len > 0)
   {
@@ -61,11 +65,21 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
   }
 
 #if ENABLED (JERRY_BUILTIN_STRING)
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_STRING_PROTOTYPE);
+  proto_id = ECMA_BUILTIN_ID_STRING_PROTOTYPE;
 #else /* !ENABLED (JERRY_BUILTIN_STRING) */
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
+  proto_id = ECMA_BUILTIN_ID_OBJECT_PROTOTYPE;
 #endif /* ENABLED (JERRY_BUILTIN_STRING) */
-
+  prototype_obj_p = ecma_builtin_get (proto_id);
+#if ENABLED (JERRY_ESNEXT)
+  if (JERRY_CONTEXT (current_new_target))
+  {
+    prototype_obj_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_new_target), proto_id);
+    if (JERRY_UNLIKELY (prototype_obj_p == NULL))
+    {
+      return ECMA_VALUE_ERROR;
+    }
+  }
+#endif /* ENABLED (JERRY_ESNEXT) */
   ecma_object_t *object_p = ecma_create_object (prototype_obj_p,
                                                 sizeof (ecma_extended_object_t),
                                                 ECMA_OBJECT_TYPE_CLASS);
@@ -73,7 +87,12 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
   ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_STRING_UL;
   ext_object_p->u.class_prop.u.value = prim_value;
-
+#if ENABLED (JERRY_ESNEXT)
+  if (JERRY_CONTEXT (current_new_target))
+  {
+    ecma_deref_object (prototype_obj_p);
+  }
+#endif /* ENABLED (JERRY_ESNEXT) */
   return ecma_make_object_value (object_p);
 } /* ecma_op_create_string_object */
 

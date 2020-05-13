@@ -140,17 +140,10 @@ ecma_op_resolve_super_base (ecma_object_t *lex_env_p) /**< starting lexical envi
  *         ECMA_VALUE_FALSE - if a the property is not unscopable
  *         ECMA_VALUE_ERROR - otherwise
  */
-ecma_value_t
-ecma_op_is_prop_unscopable (ecma_object_t *lex_env_p, /**< lexical environment */
+static ecma_value_t
+ecma_op_is_prop_unscopable (ecma_object_t *binding_obj_p, /**< binding object */
                             ecma_string_t *prop_name_p) /**< property's name */
 {
-  if (lex_env_p == ecma_get_global_scope ())
-  {
-    return ECMA_VALUE_FALSE;
-  }
-
-  ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
-
   ecma_value_t unscopables = ecma_op_object_get_by_symbol_id (binding_obj_p, LIT_GLOBAL_SYMBOL_UNSCOPABLES);
 
   if (ECMA_IS_VALUE_ERROR (unscopables))
@@ -181,6 +174,91 @@ ecma_op_is_prop_unscopable (ecma_object_t *lex_env_p, /**< lexical environment *
   return ECMA_VALUE_FALSE;
 } /* ecma_op_is_prop_unscopable */
 #endif /* ENABLED (JERRY_ES2015) */
+
+/**
+ * Helper method for HasBindig operation
+ *
+ * See also:
+ *         ECMA-262 v6, 8.1.1.2.1 steps 7-9;
+ *
+ * @return ECMA_VALUE_TRUE - if the property is unscopable
+ *         ECMA_VALUE_FALSE - if a the property is not unscopable
+ *         ECMA_VALUE_ERROR - otherwise
+ */
+
+/**
+ * Resolve value corresponding to the given object environment reference.
+ *
+ * Note: the steps are already include the HasBindig operation steps
+ *
+ *  See also:
+ *         ECMA-262 v6, 8.1.1.2.1
+ *
+ * @return ECMA_VALUE_ERROR - if the operation fails
+ *         ECMA_VALUE_NOT_FOUND - if the binding not exists or blocked via @@unscopables
+ *         result of the binding - otherwise
+ */
+ecma_value_t
+ecma_op_object_bound_environment_resolve_reference_value (ecma_object_t *lex_env_p, /**< lexical environment */
+                                                          ecma_string_t *name_p) /**< variable name */
+{
+  ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
+  ecma_value_t found_binding;
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (ECMA_OBJECT_IS_PROXY (binding_obj_p))
+  {
+    found_binding = ecma_proxy_object_has (binding_obj_p, name_p);
+
+    if (!ecma_is_value_true (found_binding))
+    {
+      return ECMA_IS_VALUE_ERROR (found_binding) ? found_binding : ECMA_VALUE_NOT_FOUND;
+    }
+  }
+  else
+  {
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+    found_binding = ecma_op_object_find (binding_obj_p, name_p);
+
+    if (ECMA_IS_VALUE_ERROR (found_binding) || !ecma_is_value_found (found_binding))
+    {
+      return found_binding;
+    }
+
+#if ENABLED (JERRY_ES2015)
+    if (JERRY_LIKELY (lex_env_p == ecma_get_global_scope ()))
+#endif /* ENABLED (JERRY_ES2015) */
+    {
+      return found_binding;
+    }
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
+#if ENABLED (JERRY_ES2015)
+  ecma_value_t blocked = ecma_op_is_prop_unscopable (binding_obj_p, name_p);
+
+  if (ecma_is_value_false (blocked))
+  {
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+    if (ECMA_OBJECT_IS_PROXY (binding_obj_p))
+    {
+      return ecma_proxy_object_get (binding_obj_p, name_p, ecma_make_object_value (binding_obj_p));
+    }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+    return found_binding;
+  }
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+  if (!ECMA_OBJECT_IS_PROXY (binding_obj_p))
+  {
+    ecma_free_value (found_binding);
+  }
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
+  return ECMA_IS_VALUE_ERROR (blocked) ? blocked : ECMA_VALUE_NOT_FOUND;
+#endif /* ENABLED (JERRY_ES2015) */
+} /* ecma_op_object_bound_environment_resolve_reference_value */
 
 /**
  * Resolve value corresponding to reference.
@@ -218,8 +296,6 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
     }
     else if (lex_env_type == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND)
     {
-      ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
-
 #if ENABLED (JERRY_ES2015)
       bool lcache_lookup_allowed = (lex_env_p == ecma_get_global_environment ());
 #else /* !ENABLED (JERRY_ES2015)*/
@@ -229,6 +305,7 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
       if (lcache_lookup_allowed)
       {
 #if ENABLED (JERRY_LCACHE)
+        ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
         ecma_property_t *property_p = ecma_lcache_lookup (binding_obj_p, name_p);
 
         if (property_p != NULL)
@@ -257,35 +334,12 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
 #endif /* ENABLED (JERRY_LCACHE) */
       }
 
-      ecma_value_t prop_value = ecma_op_object_find (binding_obj_p, name_p);
+      ecma_value_t result = ecma_op_object_bound_environment_resolve_reference_value (lex_env_p, name_p);
 
-      if (ECMA_IS_VALUE_ERROR (prop_value))
+      if (ecma_is_value_found (result))
       {
-        return prop_value;
-      }
-
-      if (ecma_is_value_found (prop_value))
-      {
-#if ENABLED (JERRY_ES2015)
-        ecma_value_t blocked = ecma_op_is_prop_unscopable (lex_env_p, name_p);
-
-        if (ECMA_IS_VALUE_ERROR (blocked))
-        {
-          ecma_free_value (prop_value);
-          return blocked;
-        }
-
-        if (ecma_is_value_true (blocked))
-        {
-          ecma_free_value (prop_value);
-        }
-        else
-        {
-          return prop_value;
-        }
-#else /* !ENABLED (JERRY_ES2015) */
-        return prop_value;
-#endif /* ENABLED (JERRY_ES2015) */
+        /* Note: the result may contains ECMA_VALUE_ERROR */
+        return result;
       }
     }
     else

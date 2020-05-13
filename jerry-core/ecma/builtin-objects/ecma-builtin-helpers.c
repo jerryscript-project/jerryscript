@@ -585,7 +585,9 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_string_t *original_st
 #if ENABLED (JERRY_ES2015)
     case ECMA_STRING_STARTS_WITH:
     {
-      if (pos_num + start > original_len)
+      const ecma_length_t search_len = ecma_string_get_length (search_str_p);
+
+      if (search_len + start > original_len)
       {
         break;
       }
@@ -687,7 +689,7 @@ ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, /**< index
     if (!search_len)
     {
       match_found = true;
-      *ret_index_p = first_index ? 0 : original_len;
+      *ret_index_p = first_index ? start_pos : original_len;
     }
     else
     {

@@ -974,6 +974,9 @@ lexer_parse_string (parser_context_t *context_p, /**< context */
       else if (*source_p == LEXER_NEWLINE_LS_PS_BYTE_1 && LEXER_NEWLINE_LS_PS_BYTE_23 (source_p))
       {
         source_p += 3;
+#if ENABLED (JERRY_ES2015)
+        length += 3 * raw_length_inc;
+#endif /* ENABLED (JERRY_ES2015) */
         line++;
         column = 1;
         continue;
@@ -982,6 +985,12 @@ lexer_parse_string (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ES2015)
       if (opts & LEXER_STRING_RAW)
       {
+        if ((*source_p == LIT_CHAR_GRAVE_ACCENT) || (*source_p == LIT_CHAR_BACKSLASH))
+        {
+          source_p++;
+          column++;
+          length++;
+        }
         continue;
       }
 #endif /* ENABLED (JERRY_ES2015) */
@@ -2205,6 +2214,16 @@ lexer_convert_literal_to_chars (parser_context_t *context_p, /**< context */
           source_p++;
         }
         continue;
+      }
+      if ((*source_p == LIT_CHAR_BACKSLASH) && is_raw)
+      {
+        JERRY_ASSERT (source_p + 1 < context_p->source_end_p);
+        if ((*(source_p + 1) == LIT_CHAR_GRAVE_ACCENT) || (*(source_p + 1) == LIT_CHAR_BACKSLASH))
+        {
+          *destination_p++ = *source_p++;
+          *destination_p++ = *source_p++;
+          continue;
+        }
       }
     }
 #endif /* ENABLED (JERRY_ES2015) */

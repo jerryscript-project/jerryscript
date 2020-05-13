@@ -62,3 +62,10 @@ var raw = new Proxy({length: 2, 0: '', 1: ''}, { get: function(o, k) { get.push(
 var p = new Proxy({raw: raw}, { get: function(o, k) { get.push(k); return o[k]; }});
 String.raw(p);
 assert(get + '' === "raw,length,0,1");
+
+assert(String.raw`\\` == "\\\\")
+assert(String.raw`\`` == "\\`")
+assert(String.raw`\
+\
+` == "\\\n\\\n")
+assert(String.raw`\ ` == "\\\u2029")

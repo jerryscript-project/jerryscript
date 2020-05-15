@@ -539,15 +539,22 @@ scanner_check_directives (parser_context_t *context_p, /**< context */
   {
     bool is_use_strict = false;
 
-    if (lexer_string_is_use_strict (context_p))
+    if (lexer_string_is_use_strict (context_p)
+        && !(context_p->status_flags & PARSER_IS_STRICT))
     {
       is_use_strict = true;
+      context_p->status_flags |= PARSER_IS_STRICT;
     }
 
     lexer_next_token (context_p);
 
     if (!lexer_string_is_directive (context_p))
     {
+      if (is_use_strict)
+      {
+        context_p->status_flags &= (uint32_t) ~PARSER_IS_STRICT;
+      }
+
       /* The string is part of an expression statement. */
       scanner_context_p->mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
       break;
@@ -555,7 +562,6 @@ scanner_check_directives (parser_context_t *context_p, /**< context */
 
     if (is_use_strict)
     {
-      context_p->status_flags |= PARSER_IS_STRICT;
       scanner_context_p->active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_IS_STRICT;
     }
 

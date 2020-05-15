@@ -2593,6 +2593,16 @@ parser_parse_label (parser_context_t *context_p) /**< context */
 } /* parser_parse_label */
 
 /**
+ * Strict mode types for statement parsing.
+ */
+typedef enum
+{
+  PARSER_USE_STRICT_NOT_FOUND = 0, /**< 'use strict' directive is not found */
+  PARSER_USE_STRICT_FOUND = 1, /**< 'use strict' directive is found but strict mode has already been enabled */
+  PARSER_USE_STRICT_SET = 2, /**< strict mode is enabled after 'use strict' directive is found */
+} parser_strict_mode_type_t;
+
+/**
  * Parse statements.
  */
 void
@@ -2627,7 +2637,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
          && context_p->token.lit_location.type == LEXER_STRING_LITERAL)
   {
     lexer_lit_location_t lit_location;
-    bool is_use_strict = false;
+    parser_strict_mode_type_t strict_mode = PARSER_USE_STRICT_NOT_FOUND;
 
     JERRY_ASSERT (context_p->stack_depth == 0);
 #ifndef JERRY_NDEBUG
@@ -2636,7 +2646,14 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 
     if (lexer_string_is_use_strict (context_p))
     {
-      is_use_strict = true;
+      strict_mode = PARSER_USE_STRICT_FOUND;
+
+      if (!(context_p->status_flags & PARSER_IS_STRICT))
+      {
+        /* The next token should be parsed in strict mode. */
+        context_p->status_flags |= PARSER_IS_STRICT;
+        strict_mode = PARSER_USE_STRICT_SET;
+      }
     }
 
     lit_location = context_p->token.lit_location;
@@ -2645,6 +2662,11 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
     if (!lexer_string_is_directive (context_p))
     {
       /* The string is part of an expression statement. */
+      if (strict_mode == PARSER_USE_STRICT_SET)
+      {
+        context_p->status_flags &= (uint32_t) ~PARSER_IS_STRICT;
+      }
+
 #if ENABLED (JERRY_DEBUGGER)
       if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       {
@@ -2670,24 +2692,20 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
       break;
     }
 
-    if (is_use_strict)
-    {
 #if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
-      if (context_p->is_show_opcodes
-          && !(context_p->status_flags & PARSER_IS_STRICT))
-      {
-        JERRY_DEBUG_MSG ("  Note: switch to strict mode\n\n");
-      }
-#endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
-#if ENABLED (JERRY_ES2015)
-      if (context_p->status_flags & PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM)
-      {
-        parser_raise_error (context_p, PARSER_ERR_USE_STRICT_NOT_ALLOWED);
-      }
-#endif /* ENABLED (JERRY_ES2015) */
-
-      context_p->status_flags |= PARSER_IS_STRICT;
+    if (strict_mode == PARSER_USE_STRICT_SET && context_p->is_show_opcodes)
+    {
+      JERRY_DEBUG_MSG ("  Note: switch to strict mode\n\n");
     }
+#endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
+
+#if ENABLED (JERRY_ES2015)
+    if (strict_mode != PARSER_USE_STRICT_NOT_FOUND
+        && (context_p->status_flags & PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM))
+    {
+      parser_raise_error (context_p, PARSER_ERR_USE_STRICT_NOT_ALLOWED);
+    }
+#endif /* ENABLED (JERRY_ES2015) */
 
     if (context_p->token.type == LEXER_SEMICOLON)
     {
@@ -3048,7 +3066,13 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
                 scanner_release_next (context_p, sizeof (scanner_info_t));
               }
 
-              parser_parse_expression_statement (context_p, PARSE_EXPR);
+              if (context_p->status_flags & PARSER_IS_FUNCTION)
+              {
+                parser_parse_expression_statement (context_p, PARSE_EXPR);
+                break;
+              }
+
+              parser_parse_block_expression (context_p, PARSE_EXPR);
               break;
             }
 

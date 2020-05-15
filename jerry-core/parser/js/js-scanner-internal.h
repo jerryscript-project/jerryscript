@@ -95,10 +95,13 @@ typedef enum
   SCAN_STACK_CATCH_STATEMENT,              /**< catch statement */
   SCAN_STACK_ARRAY_LITERAL,                /**< array literal or destructuring assignment or binding */
   SCAN_STACK_OBJECT_LITERAL,               /**< object literal group */
-  SCAN_STACK_PROPERTY_ACCESSOR,            /**< property accessor in squarey brackets */
+  SCAN_STACK_PROPERTY_ACCESSOR,            /**< property accessor in square brackets */
 #if ENABLED (JERRY_ES2015)
+  /* These four must be in this order. */
   SCAN_STACK_COMPUTED_PROPERTY,            /**< computed property name */
-  SCAN_STACK_COMPUTED_GENERATOR_FUNCTION,  /**< computed property name */
+  SCAN_STACK_COMPUTED_GENERATOR,           /**< computed generator function */
+  SCAN_STACK_COMPUTED_ASYNC,               /**< computed async function */
+  SCAN_STACK_COMPUTED_ASYNC_GENERATOR,     /**< computed async function */
   SCAN_STACK_TEMPLATE_STRING,              /**< template string */
   SCAN_STACK_TAGGED_TEMPLATE_LITERAL,      /**< tagged template literal */
   SCAN_STACK_PRIVATE_BLOCK_EARLY,          /**< private block for single statements (force early declarations) */
@@ -114,6 +117,20 @@ typedef enum
   SCAN_STACK_USE_ASYNC,                    /**< an "async" identifier is used */
 #endif /* ENABLED (JERRY_ES2015) */
 } scan_stack_modes_t;
+
+/**
+ * Scanner context flag types.
+ */
+typedef enum
+{
+  SCANNER_CONTEXT_NO_FLAGS = 0, /**< no flags are set */
+#if ENABLED (JERRY_ES2015)
+  SCANNER_CONTEXT_THROW_ERR_ASYNC_FUNCTION = (1 << 0), /**< throw async function error */
+#endif /* ENABLED (JERRY_ES2015) */
+#if ENABLED (JERRY_DEBUGGER)
+  SCANNER_CONTEXT_DEBUGGER_ENABLED = (1 << 1), /**< debugger is enabled */
+#endif /* ENABLED (JERRY_DEBUGGER) */
+} scanner_context_flags_t;
 
 /**
  * Checks whether the stack top is a for statement start.
@@ -269,6 +286,7 @@ typedef enum
   SCANNER_LITERAL_POOL_FUNCTION_STATEMENT = (1 << 8), /**< function statement */
   SCANNER_LITERAL_POOL_GENERATOR = (1 << 9), /**< generator function */
   SCANNER_LITERAL_POOL_ASYNC = (1 << 10), /**< async function */
+  SCANNER_LITERAL_POOL_ASYNC_ARROW = (1 << 11), /**< can be an async arrow function */
 #endif /* ENABLED (JERRY_ES2015) */
 } scanner_literal_pool_flags_t;
 
@@ -277,6 +295,18 @@ typedef enum
  */
 #define SCANNER_LITERAL_POOL_FUNCTION_WITHOUT_ARGUMENTS \
   (SCANNER_LITERAL_POOL_FUNCTION | SCANNER_LITERAL_POOL_NO_ARGUMENTS)
+
+/**
+ * Getting the generator and async properties of literal pool status flags.
+ */
+#define SCANNER_FROM_LITERAL_POOL_TO_COMPUTED(status_flags) \
+  ((uint8_t) ((((status_flags) >> 9) & 0x3) + SCAN_STACK_COMPUTED_PROPERTY))
+
+/**
+ * Setting the generator and async properties of literal pool status flags.
+ */
+#define SCANNER_FROM_COMPUTED_TO_LITERAL_POOL(mode) \
+  (((mode) - SCAN_STACK_COMPUTED_PROPERTY) << 9)
 
 /**
  * Local literal pool.
@@ -297,11 +327,11 @@ struct scanner_context_t
 {
   uint32_t context_status_flags; /**< original status flags of the context */
   uint8_t mode; /**< scanner mode */
-#if ENABLED (JERRY_DEBUGGER)
-  uint8_t debugger_enabled; /**< debugger is enabled */
-#endif /* ENABLED (JERRY_DEBUGGER) */
 #if ENABLED (JERRY_ES2015)
   uint8_t binding_type; /**< current destructuring binding type */
+#endif /* ENABLED (JERRY_ES2015) */
+  uint16_t status_flags; /**< scanner status flags */
+#if ENABLED (JERRY_ES2015)
   scanner_binding_list_t *active_binding_list_p; /**< currently active binding list */
 #endif /* ENABLED (JERRY_ES2015) */
   scanner_literal_pool_t *active_literal_pool_p; /**< currently active literal pool */

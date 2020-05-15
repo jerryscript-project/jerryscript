@@ -108,14 +108,24 @@ scanner_check_arrow (parser_context_t *context_p, /**< context */
   }
 
   scanner_literal_pool_t *literal_pool_p = scanner_context_p->active_literal_pool_p;
+  uint16_t status_flags = literal_pool_p->status_flags;
 
-  literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_FUNCTION_WITHOUT_ARGUMENTS;
-  literal_pool_p->status_flags &= (uint16_t) ~(SCANNER_LITERAL_POOL_IN_WITH | SCANNER_LITERAL_POOL_GENERATOR);
+  status_flags |= SCANNER_LITERAL_POOL_FUNCTION_WITHOUT_ARGUMENTS;
+  status_flags &= (uint16_t) ~(SCANNER_LITERAL_POOL_IN_WITH
+                               | SCANNER_LITERAL_POOL_GENERATOR
+                               | SCANNER_LITERAL_POOL_ASYNC);
 
-  context_p->status_flags &= (uint32_t) ~PARSER_IS_GENERATOR_FUNCTION;
+  context_p->status_flags &= (uint32_t) ~(PARSER_IS_GENERATOR_FUNCTION | PARSER_IS_ASYNC_FUNCTION);
+
+  if (status_flags & SCANNER_LITERAL_POOL_ASYNC_ARROW)
+  {
+    status_flags |= SCANNER_LITERAL_POOL_ASYNC;
+    context_p->status_flags |= PARSER_IS_ASYNC_FUNCTION;
+  }
+
+  literal_pool_p->status_flags = status_flags;
 
   scanner_filter_arguments (context_p, scanner_context_p);
-
   scanner_check_arrow_body (context_p, scanner_context_p);
 } /* scanner_check_arrow */
 
@@ -127,10 +137,19 @@ scanner_scan_simple_arrow (parser_context_t *context_p, /**< context */
                            scanner_context_t *scanner_context_p, /**< scanner context */
                            const uint8_t *source_p) /**< identifier end position */
 {
-  scanner_literal_pool_t *literal_pool_p;
-  literal_pool_p = scanner_push_literal_pool (context_p,
-                                              scanner_context_p,
-                                              SCANNER_LITERAL_POOL_FUNCTION_WITHOUT_ARGUMENTS);
+  uint16_t status_flags = SCANNER_LITERAL_POOL_FUNCTION_WITHOUT_ARGUMENTS;
+
+  context_p->status_flags &= (uint32_t) ~(PARSER_IS_GENERATOR_FUNCTION | PARSER_IS_ASYNC_FUNCTION);
+
+  if (scanner_context_p->async_source_p != NULL)
+  {
+    JERRY_ASSERT (scanner_context_p->async_source_p == source_p);
+
+    status_flags |= SCANNER_LITERAL_POOL_ASYNC;
+    context_p->status_flags |= PARSER_IS_ASYNC_FUNCTION;
+  }
+
+  scanner_literal_pool_t *literal_pool_p = scanner_push_literal_pool (context_p, scanner_context_p, status_flags);
   literal_pool_p->source_p = source_p;
 
   lexer_lit_location_t *location_p = scanner_add_literal (context_p, scanner_context_p);
@@ -140,8 +159,6 @@ scanner_scan_simple_arrow (parser_context_t *context_p, /**< context */
   context_p->source_p += 2;
   PARSER_PLUS_EQUAL_LC (context_p->column, 2);
   context_p->token.flags = (uint8_t) (context_p->token.flags & ~LEXER_NO_SKIP_SPACES);
-
-  context_p->status_flags &= (uint32_t) ~PARSER_IS_GENERATOR_FUNCTION;
 
   scanner_check_arrow_body (context_p, scanner_context_p);
 } /* scanner_scan_simple_arrow */
@@ -266,7 +283,6 @@ scanner_check_async_function (parser_context_t *context_p, /**< context */
       }
 
       scanner_scan_simple_arrow (context_p, scanner_context_p, scanner_context_p->async_source_p);
-      scanner_context_p->active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_ASYNC;
       scanner_context_p->async_source_p = NULL;
       return false;
     }
@@ -475,7 +491,7 @@ scanner_scan_bracket (parser_context_t *context_p, /**< context */
 
     if (JERRY_UNLIKELY (scanner_context_p->async_source_p != NULL))
     {
-      status_flags |= SCANNER_LITERAL_POOL_ASYNC;
+      status_flags |= SCANNER_LITERAL_POOL_ASYNC_ARROW;
       arrow_source_p = scanner_context_p->async_source_p;
       scanner_context_p->async_source_p = NULL;
     }

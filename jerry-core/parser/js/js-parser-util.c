@@ -951,7 +951,11 @@ parser_error_to_string (parser_error_t error) /**< error code */
     }
     case PARSER_ERR_YIELD_NOT_ALLOWED:
     {
-      return "Incorrect use of yield keyword.";
+      return "Yield expression is not allowed here.";
+    }
+    case PARSER_ERR_AWAIT_NOT_ALLOWED:
+    {
+      return "Await expression is not allowed here.";
     }
     case PARSER_ERR_FOR_IN_OF_DECLARATION:
     {

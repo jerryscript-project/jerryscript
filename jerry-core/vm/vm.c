@@ -1990,8 +1990,12 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           frame_ctx_p->call_operation = VM_EXEC_RETURN;
           frame_ctx_p->byte_code_p = byte_code_p;
-          frame_ctx_p->stack_top_p = stack_top_p;
-          return left_value;
+          frame_ctx_p->stack_top_p = --stack_top_p;
+          return *stack_top_p;
+        }
+        case VM_OC_AWAIT:
+        {
+          continue;
         }
         case VM_OC_EXT_RETURN:
         {

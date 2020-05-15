@@ -644,8 +644,14 @@ parser_parse_class_literal (parser_context_t *context_p, /**< context */
       }
     }
 
+    status_flags &= (uint32_t) ~(PARSER_IS_GENERATOR_FUNCTION
+                                 | PARSER_IS_ASYNC_FUNCTION
+                                 | PARSER_DISALLOW_AWAIT_YIELD);
+
     if (context_p->token.type == LEXER_KEYW_ASYNC)
     {
+      status_flags |= PARSER_IS_ASYNC_FUNCTION | PARSER_DISALLOW_AWAIT_YIELD;
+
       if (!lexer_consume_generator (context_p))
       {
         lexer_expect_object_literal_id (context_p, LEXER_OBJ_IDENT_ONLY_IDENTIFIERS);
@@ -655,11 +661,7 @@ parser_parse_class_literal (parser_context_t *context_p, /**< context */
     if (context_p->token.type == LEXER_MULTIPLY)
     {
       lexer_expect_object_literal_id (context_p, LEXER_OBJ_IDENT_ONLY_IDENTIFIERS);
-      status_flags |= PARSER_IS_GENERATOR_FUNCTION | PARSER_DISALLOW_YIELD;
-    }
-    else
-    {
-      status_flags &= (uint32_t) ~(PARSER_IS_GENERATOR_FUNCTION | PARSER_DISALLOW_YIELD);
+      status_flags |= PARSER_IS_GENERATOR_FUNCTION | PARSER_DISALLOW_AWAIT_YIELD;
     }
 
     if (context_p->token.type == LEXER_RIGHT_SQUARE)
@@ -1006,17 +1008,19 @@ parser_parse_object_literal (parser_context_t *context_p) /**< context */
         break;
       }
       case LEXER_KEYW_ASYNC:
-      {
-        lexer_consume_generator (context_p);
-        /* FALLTHRU */
-      }
       case LEXER_MULTIPLY:
       {
         uint32_t status_flags = PARSER_FUNCTION_CLOSURE;
 
+        if (context_p->token.type == LEXER_KEYW_ASYNC)
+        {
+          status_flags |= PARSER_IS_ASYNC_FUNCTION | PARSER_DISALLOW_AWAIT_YIELD;
+          lexer_consume_generator (context_p);
+        }
+
         if (context_p->token.type == LEXER_MULTIPLY)
         {
-          status_flags |= PARSER_IS_GENERATOR_FUNCTION | PARSER_DISALLOW_YIELD;
+          status_flags |= PARSER_IS_GENERATOR_FUNCTION | PARSER_DISALLOW_AWAIT_YIELD;
         }
 
         lexer_expect_object_literal_id (context_p, LEXER_OBJ_IDENT_ONLY_IDENTIFIERS);
@@ -1164,8 +1168,15 @@ parser_parse_function_expression (parser_context_t *context_p, /**< context */
   uint16_t function_literal_index;
   int32_t function_name_index = -1;
 
+#if !ENABLED (JERRY_ES2015)
+  JERRY_ASSERT (status_flags & PARSER_IS_FUNC_EXPRESSION);
+#endif /* !ENABLED (JERRY_ES2015) */
+
+#if ENABLED (JERRY_ES2015)
   if (status_flags & PARSER_IS_FUNC_EXPRESSION)
   {
+#endif /* !ENABLED (JERRY_ES2015) */
+
 #if ENABLED (JERRY_DEBUGGER)
     parser_line_counter_t debugger_line = context_p->token.line;
     parser_line_counter_t debugger_column = context_p->token.column;
@@ -1174,16 +1185,21 @@ parser_parse_function_expression (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ES2015)
     uint32_t parent_status_flags = context_p->status_flags;
 
-    if (lexer_check_next_character (context_p, LIT_CHAR_ASTERISK))
+    context_p->status_flags &= (uint32_t) ~(PARSER_IS_ASYNC_FUNCTION
+                                            | PARSER_IS_GENERATOR_FUNCTION
+                                            | PARSER_DISALLOW_AWAIT_YIELD);
+
+    if (status_flags & PARSER_IS_ASYNC_FUNCTION)
+    {
+      /* The name of the function cannot be await. */
+      context_p->status_flags |= PARSER_IS_ASYNC_FUNCTION | PARSER_DISALLOW_AWAIT_YIELD;
+    }
+
+    if (lexer_consume_generator (context_p))
     {
       /* The name of the function cannot be yield. */
-      context_p->status_flags |= PARSER_IS_GENERATOR_FUNCTION | PARSER_DISALLOW_YIELD;
-      status_flags |= PARSER_IS_GENERATOR_FUNCTION | PARSER_DISALLOW_YIELD;
-      lexer_consume_next_character (context_p);
-    }
-    else
-    {
-      context_p->status_flags &= (uint32_t) ~(PARSER_IS_GENERATOR_FUNCTION | PARSER_DISALLOW_YIELD);
+      context_p->status_flags |= PARSER_IS_GENERATOR_FUNCTION | PARSER_DISALLOW_AWAIT_YIELD;
+      status_flags |= PARSER_IS_GENERATOR_FUNCTION | PARSER_DISALLOW_AWAIT_YIELD;
     }
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -1225,8 +1241,8 @@ parser_parse_function_expression (parser_context_t *context_p, /**< context */
 
 #if ENABLED (JERRY_ES2015)
     context_p->status_flags = parent_status_flags;
-#endif /* ENABLED (JERRY_ES2015) */
   }
+#endif /* ENABLED (JERRY_ES2015) */
 
   if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
   {
@@ -1486,13 +1502,28 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
   while (true)
   {
     /* Convert plus and minus binary operators to unary operators. */
-    if (context_p->token.type == LEXER_ADD)
+    switch (context_p->token.type)
     {
-      context_p->token.type = LEXER_PLUS;
-    }
-    else if (context_p->token.type == LEXER_SUBTRACT)
-    {
-      context_p->token.type = LEXER_NEGATE;
+      case LEXER_ADD:
+      {
+        context_p->token.type = LEXER_PLUS;
+        break;
+      }
+      case LEXER_SUBTRACT:
+      {
+        context_p->token.type = LEXER_NEGATE;
+        break;
+      }
+#if ENABLED (JERRY_ES2015)
+      case LEXER_KEYW_AWAIT:
+      {
+        if (JERRY_UNLIKELY (context_p->token.lit_location.has_escape))
+        {
+          parser_raise_error (context_p, PARSER_ERR_INVALID_KEYWORD);
+        }
+        break;
+      }
+#endif /* ENABLED (JERRY_ES2015) */
     }
 
     /* Bracketed expressions are primary expressions. At this
@@ -1561,30 +1592,41 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
     case LEXER_LITERAL:
     {
 #if ENABLED (JERRY_ES2015)
-      if (context_p->next_scanner_info_p->source_p == context_p->source_p)
+      if (JERRY_UNLIKELY (context_p->next_scanner_info_p->source_p == context_p->source_p))
       {
         JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
+
+        uint32_t arrow_status_flags = (PARSER_IS_FUNCTION | PARSER_IS_ARROW_FUNCTION);
 
         if (context_p->next_scanner_info_p->u8_arg & SCANNER_FUNCTION_ASYNC)
         {
           JERRY_ASSERT (lexer_token_is_async (context_p));
           JERRY_ASSERT (!(context_p->next_scanner_info_p->u8_arg & SCANNER_FUNCTION_STATEMENT));
 
+          uint32_t saved_status_flags = context_p->status_flags;
+
+          context_p->status_flags |= PARSER_IS_ASYNC_FUNCTION | PARSER_DISALLOW_AWAIT_YIELD;
           lexer_next_token (context_p);
+          context_p->status_flags = saved_status_flags;
 
           if (context_p->token.type == LEXER_KEYW_FUNCTION)
           {
-            parser_parse_function_expression (context_p, PARSER_FUNCTION_CLOSURE | PARSER_IS_FUNC_EXPRESSION);
+            uint32_t status_flags = (PARSER_FUNCTION_CLOSURE
+                                     | PARSER_IS_FUNC_EXPRESSION
+                                     | PARSER_IS_ASYNC_FUNCTION
+                                     | PARSER_DISALLOW_AWAIT_YIELD);
+            parser_parse_function_expression (context_p, status_flags);
             break;
           }
-          if (context_p->token.type == LEXER_LEFT_PAREN)
-          {
-            context_p->token.type = LEXER_ARROW_LEFT_PAREN;
-          }
+
+          arrow_status_flags = (PARSER_IS_FUNCTION
+                                | PARSER_IS_ARROW_FUNCTION
+                                | PARSER_IS_ASYNC_FUNCTION
+                                | PARSER_DISALLOW_AWAIT_YIELD);
         }
 
         parser_check_assignment_expr (context_p);
-        parser_parse_function_expression (context_p, PARSER_IS_FUNCTION | PARSER_IS_ARROW_FUNCTION);
+        parser_parse_function_expression (context_p, arrow_status_flags);
         return parser_abort_parsing_after_arrow (context_p);
       }
 #endif /* ENABLED (JERRY_ES2015) */
@@ -1789,14 +1831,18 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
 
       parser_check_assignment_expr (context_p);
 
-      context_p->token.type = LEXER_ARROW_LEFT_PAREN;
       parser_parse_function_expression (context_p, PARSER_IS_FUNCTION | PARSER_IS_ARROW_FUNCTION);
       return parser_abort_parsing_after_arrow (context_p);
     }
     case LEXER_KEYW_YIELD:
     {
       JERRY_ASSERT ((context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION)
-                    && !(context_p->status_flags & PARSER_DISALLOW_YIELD));
+                    && !(context_p->status_flags & PARSER_DISALLOW_AWAIT_YIELD));
+
+      if (context_p->token.lit_location.has_escape)
+      {
+        parser_raise_error (context_p, PARSER_ERR_INVALID_KEYWORD);
+      }
 
       parser_check_assignment_expr (context_p);
       lexer_next_token (context_p);
@@ -2216,6 +2262,12 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
       }
       parser_emit_unary_lvalue_opcode (context_p, (cbc_opcode_t) token);
     }
+#if ENABLED (JERRY_ES2015)
+    else if (JERRY_UNLIKELY (token == LEXER_KEYW_AWAIT))
+    {
+      parser_emit_cbc_ext (context_p, CBC_EXT_AWAIT);
+    }
+#endif /* ENABLED (JERRY_ES2015) */
     else
     {
       token = (uint8_t) (LEXER_UNARY_OP_TOKEN_TO_OPCODE (token));

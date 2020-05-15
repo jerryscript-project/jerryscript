@@ -58,6 +58,9 @@ typedef enum
   LEXER_BIT_NOT,                 /**< "~" */
   LEXER_KEYW_VOID,               /**< void */
   LEXER_KEYW_TYPEOF,             /**< typeof */
+#if ENABLED (JERRY_ES2015)
+  LEXER_KEYW_AWAIT,              /**< await */
+#endif /* ENABLED (JERRY_ES2015) */
   LEXER_KEYW_DELETE,             /**< delete */
   LEXER_INCREASE,                /**< "++" */
   LEXER_DECREASE,                /**< "--" */
@@ -164,9 +167,6 @@ typedef enum
   LEXER_KEYW_EXPORT,             /**< export */
   LEXER_KEYW_IMPORT,             /**< import */
   LEXER_KEYW_ENUM,               /**< enum */
-#if ENABLED (JERRY_ES2015)
-  LEXER_KEYW_AWAIT,              /**< await */
-#endif /* ENABLED (JERRY_ES2015) */
 
   /* These are virtual tokens. */
   LEXER_EXPRESSION_START,        /**< expression start */
@@ -177,7 +177,6 @@ typedef enum
   LEXER_ASSIGN_CONST,            /**< a const binding is reassigned */
   LEXER_CLASS_CONSTRUCTOR,       /**< special value for class constructor method */
   LEXER_INVALID_PATTERN,         /**< special value for invalid destructuring pattern */
-  LEXER_ARROW_LEFT_PAREN,        /**< start of arrow function argument list */
 #endif /* ENABLED (JERRY_ES2015) */
 
 #if ENABLED (JERRY_ES2015)

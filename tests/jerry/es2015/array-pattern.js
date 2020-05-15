@@ -304,3 +304,10 @@ mustThrow ("try { throw 5 } catch (e) {"
            + "var iter = __createIterableObject([], "
            + "{ 'return': function() { return 5; }});"
            + "var [a] = iter }");
+
+try {
+  eval ("var a = 0; 1 + [a] = [1]");
+  assert (false);
+} catch (e) {
+  assert (e instanceof ReferenceError);
+}

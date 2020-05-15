@@ -20,6 +20,10 @@
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
+/**
+ * This object has a custom dispatch function.
+ */
+#define BUILTIN_CUSTOM_DISPATCH
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-weakmap-prototype.inc.h"
 #define BUILTIN_UNDERSCORED_ID weakmap_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
@@ -33,72 +37,26 @@
  * \addtogroup weakmap ECMA WeakMap object built-in
  * @{
  */
-
 /**
- * The WeakMap.prototype object's 'delete' routine
- *
- * See also:
- *          ECMA-262 v6, 23.3.3.2
+ * Dispatcher of the built-in's routines
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
-static ecma_value_t
-ecma_builtin_weakmap_prototype_object_delete (ecma_value_t this_arg, /**< this argument */
-                                              ecma_value_t key_arg) /**< key argument */
+ecma_value_t
+ecma_builtin_weakmap_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide routine
+                                                                               *   identifier */
+                                                 ecma_value_t this_arg, /**< 'this' argument value */
+                                                 const ecma_value_t arguments_list_p[], /**< list of arguments
+                                                                                         *   passed to routine */
+                                                 ecma_length_t arguments_number) /**< length of arguments' list */
 {
-  return ecma_op_container_delete_weak (this_arg, key_arg, LIT_MAGIC_STRING_WEAKMAP_UL);
-} /* ecma_builtin_weakmap_prototype_object_delete */
-
-/**
- * The WeakMap.prototype object's 'get' routine
- *
- * See also:
- *          ECMA-262 v6, 23.3.3.3
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_weakmap_prototype_object_get (ecma_value_t this_arg, /**< this argument */
-                                           ecma_value_t key_arg) /**< key argument */
-{
-  return ecma_op_container_get (this_arg, key_arg, LIT_MAGIC_STRING_WEAKMAP_UL);
-} /* ecma_builtin_weakmap_prototype_object_get */
-
-/**
- * The WeakMap.prototype object's 'has' routine
- *
- * See also:
- *          ECMA-262 v6, 23.3.3.4
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_weakmap_prototype_object_has (ecma_value_t this_arg, /**< this argument */
-                                           ecma_value_t key_arg) /**< key argument */
-{
-  return ecma_op_container_has (this_arg, key_arg, LIT_MAGIC_STRING_WEAKMAP_UL);
-} /* ecma_builtin_weakmap_prototype_object_has */
-
-/**
- * The WeakMap.prototype object's 'set' routine
- *
- * See also:
- *          ECMA-262 v6, 23.3.3.5
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_weakmap_prototype_object_set (ecma_value_t this_arg, /**< this argument */
-                                           ecma_value_t key_arg, /**< key argument */
-                                           ecma_value_t value_arg) /**< value argument */
-{
-  return ecma_op_container_set (this_arg, key_arg, value_arg, LIT_MAGIC_STRING_WEAKMAP_UL);
-} /* ecma_builtin_weakmap_prototype_object_set */
-
+  JERRY_UNUSED (arguments_number);
+  return ecma_builtin_container_dispatch_routine (builtin_routine_id,
+                                                  this_arg,
+                                                  arguments_list_p,
+                                                  LIT_MAGIC_STRING_WEAKMAP_UL);
+} /* ecma_builtin_weakmap_prototype_dispatch_routine */
 /**
  * @}
  * @}

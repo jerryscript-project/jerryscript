@@ -557,7 +557,7 @@ cleanup_object:
  * @return pointer to the Map/Set if this_arg is a valid Map/Set object
  *         NULL otherwise
  */
-static ecma_extended_object_t *
+ecma_extended_object_t *
 ecma_op_container_get_object (ecma_value_t this_arg, /**< this argument */
                               lit_magic_string_id_t lit_id) /**< internal class id */
 {
@@ -589,16 +589,8 @@ ecma_op_container_get_object (ecma_value_t this_arg, /**< this argument */
  * @return size of the Map/Set object as ecma-value.
  */
 ecma_value_t
-ecma_op_container_size (ecma_value_t this_arg, /**< this argument */
-                        lit_magic_string_id_t lit_id) /**< internal class id */
+ecma_op_container_size (ecma_extended_object_t *map_object_p) /**< internal class id */
 {
-  ecma_extended_object_t *map_object_p = ecma_op_container_get_object (this_arg, lit_id);
-
-  if (map_object_p == NULL)
-  {
-    return ECMA_VALUE_ERROR;
-  }
-
   ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t,
                                                                     map_object_p->u.class_prop.u.value);
 
@@ -612,17 +604,10 @@ ecma_op_container_size (ecma_value_t this_arg, /**< this argument */
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_op_container_get (ecma_value_t this_arg, /**< this argument */
+ecma_op_container_get (ecma_extended_object_t *map_object_p, /**< map object */
                        ecma_value_t key_arg, /**< key argument */
                        lit_magic_string_id_t lit_id) /**< internal class id */
 {
-  ecma_extended_object_t *map_object_p = ecma_op_container_get_object (this_arg, lit_id);
-
-  if (map_object_p == NULL)
-  {
-    return ECMA_VALUE_ERROR;
-  }
-
 #if ENABLED (JERRY_BUILTIN_WEAKMAP)
   if (lit_id == LIT_MAGIC_STRING_WEAKMAP_UL && !ecma_is_value_object (key_arg))
   {
@@ -655,17 +640,10 @@ ecma_op_container_get (ecma_value_t this_arg, /**< this argument */
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_op_container_has (ecma_value_t this_arg, /**< this argument */
+ecma_op_container_has (ecma_extended_object_t *map_object_p, /**< map object */
                        ecma_value_t key_arg, /**< key argument */
                        lit_magic_string_id_t lit_id) /**< internal class id */
 {
-  ecma_extended_object_t *map_object_p = ecma_op_container_get_object (this_arg, lit_id);
-
-  if (map_object_p == NULL)
-  {
-    return ECMA_VALUE_ERROR;
-  }
-
   ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t,
                                                                     map_object_p->u.class_prop.u.value);
 
@@ -763,18 +741,11 @@ ecma_op_container_set_noramlize_zero (ecma_value_t this_arg) /*< this arg */
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_op_container_set (ecma_value_t this_arg, /**< this argument */
+ecma_op_container_set (ecma_extended_object_t *map_object_p, /**< map object */
                        ecma_value_t key_arg, /**< key argument */
                        ecma_value_t value_arg, /**< value argument */
                        lit_magic_string_id_t lit_id) /**< internal class id */
 {
-  ecma_extended_object_t *map_object_p = ecma_op_container_get_object (this_arg, lit_id);
-
-  if (map_object_p == NULL)
-  {
-    return ECMA_VALUE_ERROR;
-  }
-
   ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t,
                                                                     map_object_p->u.class_prop.u.value);
 
@@ -809,7 +780,7 @@ ecma_op_container_set (ecma_value_t this_arg, /**< this argument */
   }
 
   ecma_ref_object ((ecma_object_t *) map_object_p);
-  return this_arg;
+  return ecma_make_object_value ((ecma_object_t *) map_object_p);
 } /* ecma_op_container_set */
 
 /**
@@ -819,19 +790,12 @@ ecma_op_container_set (ecma_value_t this_arg, /**< this argument */
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_op_container_foreach (ecma_value_t this_arg, /**< this argument */
+ecma_op_container_foreach (ecma_extended_object_t *map_object_p, /**< map object */
                            ecma_value_t predicate, /**< callback function */
                            ecma_value_t predicate_this_arg, /**< this argument for
                                                              *   invoke predicate */
                            lit_magic_string_id_t lit_id) /**< internal class id */
 {
-  ecma_extended_object_t *map_object_p = ecma_op_container_get_object (this_arg, lit_id);
-
-  if (map_object_p == NULL)
-  {
-    return ECMA_VALUE_ERROR;
-  }
-
   if (!ecma_op_is_callable (predicate))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable."));
@@ -858,6 +822,7 @@ ecma_op_container_foreach (ecma_value_t this_arg, /**< this argument */
     ecma_value_t key_arg = *entry_p;
     ecma_value_t value_arg = ecma_op_container_get_value (entry_p, lit_id);
 
+    ecma_value_t this_arg = ecma_make_object_value ((ecma_object_t *) map_object_p);
     ecma_value_t call_args[] = { value_arg, key_arg, this_arg };
     ecma_value_t call_value = ecma_op_function_call (func_object_p, predicate_this_arg, call_args, 3);
 
@@ -880,15 +845,8 @@ ecma_op_container_foreach (ecma_value_t this_arg, /**< this argument */
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_op_container_clear (ecma_value_t this_arg, /**< this argument */
-                         lit_magic_string_id_t lit_id) /**< internal class id */
+ecma_op_container_clear (ecma_extended_object_t *map_object_p) /**< this argument */
 {
-  ecma_extended_object_t *map_object_p = ecma_op_container_get_object (this_arg, lit_id);
-
-  if (map_object_p == NULL)
-  {
-    return ECMA_VALUE_ERROR;
-  }
 
   ecma_op_container_free_entries ((ecma_object_t *) map_object_p);
 
@@ -902,17 +860,10 @@ ecma_op_container_clear (ecma_value_t this_arg, /**< this argument */
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_op_container_delete (ecma_value_t this_arg, /**< this argument */
+ecma_op_container_delete (ecma_extended_object_t *map_object_p, /**< map object */
                           ecma_value_t key_arg, /**< key argument */
                           lit_magic_string_id_t lit_id) /**< internal class id */
 {
-  ecma_extended_object_t *map_object_p = ecma_op_container_get_object (this_arg, lit_id);
-
-  if (map_object_p == NULL)
-  {
-    return ECMA_VALUE_ERROR;
-  }
-
   ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t,
                                                                     map_object_p->u.class_prop.u.value);
 
@@ -934,17 +885,10 @@ ecma_op_container_delete (ecma_value_t this_arg, /**< this argument */
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_op_container_delete_weak (ecma_value_t this_arg, /**< this argument */
+ecma_op_container_delete_weak (ecma_extended_object_t *map_object_p, /**< map object */
                                ecma_value_t key_arg, /**< key argument */
                                lit_magic_string_id_t lit_id) /**< internal class id */
 {
-  ecma_extended_object_t *map_object_p = ecma_op_container_get_object (this_arg, lit_id);
-
-  if (map_object_p == NULL)
-  {
-    return ECMA_VALUE_ERROR;
-  }
-
   if (!ecma_is_value_object (key_arg))
   {
     return ECMA_VALUE_FALSE;
@@ -1033,17 +977,9 @@ ecma_value_t
 ecma_op_container_create_iterator (ecma_value_t this_arg, /**< this argument */
                                    uint8_t type, /**< any combination of
                                                   *   ecma_iterator_type_t bits */
-                                   lit_magic_string_id_t lit_id, /**< internal class id */
                                    ecma_builtin_id_t proto_id, /**< prototype builtin id */
                                    ecma_pseudo_array_type_t iterator_type) /**< type of the iterator */
 {
-  ecma_extended_object_t *map_object_p = ecma_op_container_get_object (this_arg, lit_id);
-
-  if (map_object_p == NULL)
-  {
-    return ECMA_VALUE_ERROR;
-  }
-
   return ecma_op_create_iterator_object (this_arg,
                                          ecma_builtin_get (proto_id),
                                          (uint8_t) iterator_type,
@@ -1206,6 +1142,92 @@ ecma_op_container_iterator_next (ecma_value_t this_val, /**< this argument */
 
   return ret_value;
 } /* ecma_op_container_iterator_next */
+
+/**
+ * Dispatcher of builtin container routines.
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_builtin_container_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide routine
+                                                                       *   identifier */
+                                         ecma_value_t this_arg, /**< 'this' argument value */
+                                         const ecma_value_t arguments_list_p[], /**< list of arguments
+                                                                                 *   passed to routine */
+                                         lit_magic_string_id_t lit_id) /**< internal class id */
+{
+  ecma_extended_object_t *map_object_p = ecma_op_container_get_object (this_arg, lit_id);
+
+  if (map_object_p == NULL)
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  switch (builtin_routine_id)
+  {
+    case ECMA_CONTAINER_ROUTINE_DELETE:
+    {
+      return ecma_op_container_delete (map_object_p, arguments_list_p[0], lit_id);
+    }
+    case ECMA_CONTAINER_ROUTINE_DELETE_WEAK:
+    {
+      return ecma_op_container_delete_weak (map_object_p, arguments_list_p[0], lit_id);
+    }
+    case ECMA_CONTAINER_ROUTINE_GET:
+    {
+      return ecma_op_container_get (map_object_p, arguments_list_p[0], lit_id);
+    }
+    case ECMA_CONTAINER_ROUTINE_SET:
+    {
+      return ecma_op_container_set (map_object_p, arguments_list_p[0], arguments_list_p[1], lit_id);
+    }
+    case ECMA_CONTAINER_ROUTINE_HAS:
+    {
+      return ecma_op_container_has (map_object_p, arguments_list_p[0], lit_id);
+    }
+    case ECMA_CONTAINER_ROUTINE_FOREACH:
+    {
+      return ecma_op_container_foreach (map_object_p, arguments_list_p[0], arguments_list_p[1], lit_id);
+    }
+    case ECMA_CONTAINER_ROUTINE_SIZE_GETTER:
+    {
+      return ecma_op_container_size (map_object_p);
+    }
+    case ECMA_CONTAINER_ROUTINE_ADD:
+    {
+      return ecma_op_container_set (map_object_p, arguments_list_p[0], arguments_list_p[0], lit_id);
+    }
+    case ECMA_CONTAINER_ROUTINE_CLEAR:
+    {
+      return ecma_op_container_clear (map_object_p);
+    }
+    case ECMA_CONTAINER_ROUTINE_KEYS:
+    case ECMA_CONTAINER_ROUTINE_VALUES:
+    case ECMA_CONTAINER_ROUTINE_ENTRIES:
+    {
+      ecma_builtin_id_t builtin_iterator_prototype = ECMA_BUILTIN_ID_MAP_ITERATOR_PROTOTYPE;
+      ecma_pseudo_array_type_t iterator_type = ECMA_PSEUDO_MAP_ITERATOR;
+
+      if (lit_id != LIT_MAGIC_STRING_MAP_UL)
+      {
+        builtin_iterator_prototype = ECMA_BUILTIN_ID_SET_ITERATOR_PROTOTYPE;
+        iterator_type = ECMA_PSEUDO_SET_ITERATOR;
+      }
+
+      uint8_t mode = (uint8_t) (builtin_routine_id - ECMA_CONTAINER_ROUTINE_KEYS);
+
+      return ecma_op_container_create_iterator (this_arg,
+                                                mode,
+                                                builtin_iterator_prototype,
+                                                iterator_type);
+    }
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+} /* ecma_builtin_container_dispatch_routine */
 
 #endif /* ENABLED (JERRY_ESNEXT) */
 

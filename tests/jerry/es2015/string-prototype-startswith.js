@@ -15,7 +15,10 @@
 var x = "My cat is awesome";
 assert (x.startsWith ("My"));
 assert (x.startsWith ("cat", 3));
+assert (x.startsWith ("awesome", 10));
 assert (x.startsWith (""));
+assert (x.startsWith ("", 1));
+assert (x.startsWith ("", 17));
 assert (x.startsWith ([]));
 
 assert (x.startsWith ("doggo") === false);

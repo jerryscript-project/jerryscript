@@ -15,6 +15,8 @@
 
 #include <math.h>
 
+#include "jcontext.h"
+#include "ecma-function-object.h"
 #include "ecma-alloc.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-conversion.h"
@@ -734,6 +736,17 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
   ecma_number_t prim_value_num = ECMA_NUMBER_ZERO;
 
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_DATE_PROTOTYPE);
+#if ENABLED (JERRY_ES2015)
+  if (JERRY_CONTEXT (current_new_target))
+  {
+    prototype_obj_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_new_target),
+                                                              ECMA_BUILTIN_ID_DATE_PROTOTYPE);
+    if (JERRY_UNLIKELY (prototype_obj_p == NULL))
+    {
+      return ECMA_VALUE_ERROR;
+    }
+  }
+#endif /* !(ENABLED (JERRY_ES2015) */
   ecma_object_t *obj_p = ecma_create_object (prototype_obj_p,
                                              sizeof (ecma_extended_object_t),
                                              ECMA_OBJECT_TYPE_CLASS);
@@ -810,7 +823,12 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
     JERRY_ASSERT (ECMA_IS_VALUE_ERROR (ret_value));
     ecma_deref_object (obj_p);
   }
-
+#if ENABLED (JERRY_ES2015)
+  if (JERRY_CONTEXT (current_new_target))
+  {
+    ecma_deref_object (prototype_obj_p);
+  }
+#endif /* !(ENABLED (JERRY_ES2015) */
   return ret_value;
 } /* ecma_builtin_date_dispatch_construct */
 

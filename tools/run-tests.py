@@ -124,6 +124,11 @@ TEST262_TEST_SUITE_OPTIONS = [
     Options('test262_tests-debug', OPTIONS_DEBUG)
 ]
 
+# Test options for test262-es2015
+TEST262_ES2015_TEST_SUITE_OPTIONS = [
+    Options('test262_tests_es2015', OPTIONS_PROFILE_ES2015 + ['--line-info=on', '--error-messages=on']),
+]
+
 # Test options for jerry-debugger
 DEBUGGER_TEST_OPTIONS = [
     Options('jerry_debugger_tests',
@@ -213,7 +218,9 @@ def get_arguments():
     parser.add_argument('--jerry-test-suite', action='store_true',
                         help='Run jerry-test-suite')
     parser.add_argument('--test262', action='store_true',
-                        help='Run test262')
+                        help='Run test262 - ES5.1')
+    parser.add_argument('--test262-es2015', action='store_true',
+                        help='Run test262 - ES2015')
     parser.add_argument('--unittests', action='store_true',
                         help='Run unittests (including doctests)')
     parser.add_argument('--buildoption-test', action='store_true',
@@ -444,7 +451,14 @@ def run_jerry_test_suite(options):
 
 def run_test262_test_suite(options):
     ret_build = ret_test = 0
-    for job in TEST262_TEST_SUITE_OPTIONS:
+
+    jobs = []
+    if options.test262:
+        jobs.extend(TEST262_TEST_SUITE_OPTIONS)
+    if options.test262_es2015:
+        jobs.extend(TEST262_ES2015_TEST_SUITE_OPTIONS)
+
+    for job in jobs:
         ret_build, build_dir_path = create_binary(job, options)
         if ret_build:
             print("\n%sBuild failed%s\n" % (TERM_RED, TERM_NORMAL))
@@ -452,9 +466,14 @@ def run_test262_test_suite(options):
 
         test_cmd = get_platform_cmd_prefix() + [
             settings.TEST262_RUNNER_SCRIPT,
-            get_binary_path(build_dir_path),
-            settings.TEST262_TEST_SUITE_DIR
+            '--engine', get_binary_path(build_dir_path),
+            '--test-dir', settings.TEST262_TEST_SUITE_DIR
         ]
+
+        if '--profile=es2015-subset' in job.build_args:
+            test_cmd.append('--es2015')
+        else:
+            test_cmd.append('--es51')
 
         if job.test_args:
             test_cmd.extend(job.test_args)
@@ -520,7 +539,7 @@ def main(options):
         Check(options.jerry_debugger, run_jerry_debugger_tests, options),
         Check(options.jerry_tests, run_jerry_tests, options),
         Check(options.jerry_test_suite, run_jerry_test_suite, options),
-        Check(options.test262, run_test262_test_suite, options),
+        Check(options.test262 or options.test262_es2015, run_test262_test_suite, options),
         Check(options.unittests, run_unittests, options),
         Check(options.buildoption_test, run_buildoption_test, options),
     ]

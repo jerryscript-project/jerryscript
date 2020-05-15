@@ -64,9 +64,13 @@ matrix:
         apt:
           packages: [gcc-multilib]
 
-    - name: "Conformance Tests"
+    - name: "Conformance Tests - ES5.1"
       env:
         - OPTS="--test262"
+
+    - name: "Conformance Tests - ES2015"
+      env:
+        - OPTS="--test262-es2015"
 
     - name: "Unit Tests"
       env:

@@ -1,0 +1,15 @@
+diff --git a/tools/packaging/test262.py b/tools/packaging/test262.py
+index 921360a05e..27a2938e48 100755
+--- a/tools/packaging/test262.py
++++ b/tools/packaging/test262.py
+@@ -469,8 +469,8 @@ class TestSuite(object):
+           if self.ShouldRun(rel_path, tests):
+             basename = path.basename(full_path)[:-3]
+             name = rel_path.split(path.sep)[:-1] + [basename]
+-            if EXCLUDE_LIST.count(basename) >= 1:
+-              print 'Excluded: ' + basename
++            if rel_path in EXCLUDE_LIST:
++              print 'Excluded: ' + rel_path
+             else:
+               if not self.non_strict_only:
+                 strict_case = TestCase(self, name, full_path, True)

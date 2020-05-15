@@ -15,6 +15,7 @@
 # limitations under the License.
 
 from __future__ import print_function
+import argparse
 import os
 import shutil
 import subprocess
@@ -28,21 +29,76 @@ def get_platform_cmd_prefix():
     return ['python2']  # The official test262.py isn't python3 compatible, but has python shebang.
 
 
-def run_test262_tests(runtime, engine, path_to_test262):
-    if not os.path.isdir(os.path.join(path_to_test262, '.git')):
-        return_code = subprocess.call(['git', 'clone', 'https://github.com/tc39/test262.git',
-                                       '-b', 'es5-tests', path_to_test262])
+def get_arguments():
+    execution_runtime = os.environ.get('RUNTIME', '')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--runtime', metavar='FILE', default=execution_runtime,
+                        help='Execution runtime (e.g. qemu)')
+    parser.add_argument('--engine', metavar='FILE', required=True,
+                        help='JerryScript binary to run tests with')
+    parser.add_argument('--test-dir', metavar='DIR', required=True,
+                        help='Directory contains test262 test suite')
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('--es51', action='store_true',
+                       help='Run test262 ES5.1 version')
+    group.add_argument('--es2015', action='store_true',
+                       help='Run test262 ES2015 version')
+
+    args = parser.parse_args()
+
+    if args.es2015:
+        args.test_dir = os.path.join(args.test_dir, 'es2015')
+    else:
+        args.test_dir = os.path.join(args.test_dir, 'es51')
+
+    return args
+
+
+def prepare_test262_test_suite(args):
+    if os.path.isdir(os.path.join(args.test_dir, '.git')):
+        return 0
+
+    return_code = subprocess.call(['git', 'clone', '--no-checkout',
+                                   'https://github.com/tc39/test262.git', args.test_dir])
+    if return_code:
+        print('Cloning test262 repository failed.')
+        return return_code
+
+    if args.es2015:
+        git_hash = 'fd44cd73dfbce0b515a2474b7cd505d6176a9eb5'
+    else:
+        git_hash = 'es5-tests'
+
+    return_code = subprocess.call(['git', 'checkout', git_hash], cwd=args.test_dir)
+    if return_code:
+        print('Cloning test262 repository failed - invalid git revision.')
+        return return_code
+
+    if args.es2015:
+        shutil.copyfile(os.path.join('tests', 'test262-es6-excludelist.xml'),
+                        os.path.join(args.test_dir, 'excludelist.xml'))
+
+        return_code = subprocess.call(['git', 'apply', os.path.join('..', '..', 'test262-es6.patch')],
+                                      cwd=args.test_dir)
         if return_code:
-            print('Cloning test262 repository failed.')
+            print('Applying test262-es6.patch failed')
             return return_code
 
-    path_to_remove = os.path.join(path_to_test262, 'test', 'suite', 'bestPractice')
-    if os.path.isdir(path_to_remove):
-        shutil.rmtree(path_to_remove)
+    else:
+        path_to_remove = os.path.join(args.test_dir, 'test', 'suite', 'bestPractice')
+        if os.path.isdir(path_to_remove):
+            shutil.rmtree(path_to_remove)
 
-    path_to_remove = os.path.join(path_to_test262, 'test', 'suite', 'intl402')
-    if os.path.isdir(path_to_remove):
-        shutil.rmtree(path_to_remove)
+        path_to_remove = os.path.join(args.test_dir, 'test', 'suite', 'intl402')
+        if os.path.isdir(path_to_remove):
+            shutil.rmtree(path_to_remove)
+
+    return 0
+
+def main(args):
+    return_code = prepare_test262_test_suite(args)
+    if return_code:
+        return return_code
 
     if sys.platform == 'win32':
         original_timezone = util.get_timezone()
@@ -50,15 +106,15 @@ def run_test262_tests(runtime, engine, path_to_test262):
         util.set_timezone('Pacific Standard Time')
 
     proc = subprocess.Popen(get_platform_cmd_prefix() +
-                            [os.path.join(path_to_test262, 'tools/packaging/test262.py'),
-                             '--command', (runtime + ' ' + engine).strip(),
-                             '--tests', path_to_test262,
+                            [os.path.join(args.test_dir, 'tools/packaging/test262.py'),
+                             '--command', (args.runtime + ' ' + args.engine).strip(),
+                             '--tests', args.test_dir,
                              '--summary'],
                             universal_newlines=True,
                             stdout=subprocess.PIPE)
 
     return_code = 0
-    with open(os.path.join(os.path.dirname(engine), 'test262.report'), 'w') as output_file:
+    with open(os.path.join(os.path.dirname(args.engine), 'test262.report'), 'w') as output_file:
         counter = 0
         summary_found = False
         while True:
@@ -67,7 +123,7 @@ def run_test262_tests(runtime, engine, path_to_test262):
             if not output:
                 break
             output_file.write(output)
-            if (counter % 100) == 0:
+            if not summary_found and (counter % 100) == 0:
                 print("\rExecuted approx %d tests..." % counter, end='')
 
             if output.startswith('=== Summary ==='):
@@ -87,23 +143,5 @@ def run_test262_tests(runtime, engine, path_to_test262):
     return return_code
 
 
-def main():
-    if len(sys.argv) != 3:
-        print ("This script performs test262 compliance testing of the specified engine.")
-        print ("")
-        print ("Usage:")
-        print ("  1st parameter: JavaScript engine to be tested.")
-        print ("  2nd parameter: path to the directory with official test262 testsuite.")
-        print ("")
-        print ("Example:")
-        print ("  ./run-test-suite-test262.py <engine> <test262_dir>")
-        sys.exit(1)
-
-    runtime = os.environ.get('RUNTIME', '')
-    engine = sys.argv[1]
-    path_to_test262 = sys.argv[2]
-
-    sys.exit(run_test262_tests(runtime, engine, path_to_test262))
-
 if __name__ == "__main__":
-    main()
+    sys.exit(main(get_arguments()))

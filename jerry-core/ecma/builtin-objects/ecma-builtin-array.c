@@ -25,6 +25,7 @@
 #include "ecma-iterator-object.h"
 #include "ecma-objects.h"
 #include "ecma-array-object.h"
+#include "jcontext.h"
 #include "jrt.h"
 
 #if ENABLED (JERRY_BUILTIN_ARRAY)
@@ -485,7 +486,7 @@ ecma_builtin_array_dispatch_call (const ecma_value_t *arguments_list_p, /**< arg
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  return ecma_builtin_array_dispatch_construct (arguments_list_p, arguments_list_len);
+  return ecma_op_create_array_object (arguments_list_p, arguments_list_len, true);
 } /* ecma_builtin_array_dispatch_call */
 
 /**
@@ -499,7 +500,30 @@ ecma_builtin_array_dispatch_construct (const ecma_value_t *arguments_list_p, /**
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
+#if !ENABLED (JERRY_ES2015)
   return ecma_op_create_array_object (arguments_list_p, arguments_list_len, true);
+#else /* ENABLED (JERRY_ES2015) */
+  ecma_object_t *proto_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_new_target),
+                                                                   ECMA_BUILTIN_ID_ARRAY_PROTOTYPE);
+
+  if (proto_p == NULL)
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  ecma_value_t result = ecma_op_create_array_object (arguments_list_p, arguments_list_len, true);
+
+  if (ECMA_IS_VALUE_ERROR (result))
+  {
+    ecma_deref_object (proto_p);
+    return ECMA_VALUE_ERROR;
+  }
+
+  ecma_object_t *object_p = ecma_get_object_from_value (result);
+  ECMA_SET_NON_NULL_POINTER (object_p->u2.prototype_cp, proto_p);
+  ecma_deref_object (proto_p);
+  return result;
+#endif /* ENABLED (JERRY_ES2015) */
 } /* ecma_builtin_array_dispatch_construct */
 
 /**

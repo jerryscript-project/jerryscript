@@ -1445,15 +1445,26 @@ parser_parse_tagged_template_literal (parser_context_t *context_p) /**< context 
 } /* parser_parse_tagged_template_literal */
 
 /**
+ * Checks wheteher the current expression can be an assignment expression.
+ *
+ * @return true if the current expression can be an assignment expression, false otherwise
+ */
+static inline bool JERRY_ATTR_ALWAYS_INLINE
+parser_is_assignment_expr (parser_context_t *context_p)
+{
+  return (context_p->stack_top_uint8 == LEXER_EXPRESSION_START
+          || context_p->stack_top_uint8 == LEXER_LEFT_PAREN
+          || context_p->stack_top_uint8 == LEXER_COMMA_SEP_LIST
+          || LEXER_IS_BINARY_LVALUE_TOKEN (context_p->stack_top_uint8));
+} /* parser_is_assignment_expr */
+
+/**
  * Throws an error if the current expression is not an assignment expression.
  */
 static inline void JERRY_ATTR_ALWAYS_INLINE
 parser_check_assignment_expr (parser_context_t *context_p)
 {
-  if (context_p->stack_top_uint8 != LEXER_EXPRESSION_START
-      && context_p->stack_top_uint8 != LEXER_LEFT_PAREN
-      && context_p->stack_top_uint8 != LEXER_COMMA_SEP_LIST
-      && !LEXER_IS_BINARY_LVALUE_TOKEN (context_p->stack_top_uint8))
+  if (!parser_is_assignment_expr (context_p))
   {
     parser_raise_error (context_p, PARSER_ERR_ASSIGNMENT_EXPECTED);
   }
@@ -1677,8 +1688,14 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
       if (context_p->next_scanner_info_p->source_p == context_p->source_p)
       {
         JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_INITIALIZER);
-        parser_parse_object_initializer (context_p, PARSER_PATTERN_NO_OPTS);
-        return false;
+
+        if (parser_is_assignment_expr (context_p))
+        {
+          parser_parse_object_initializer (context_p, PARSER_PATTERN_NO_OPTS);
+          return false;
+        }
+
+        scanner_release_next (context_p, sizeof (scanner_location_info_t));
       }
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -1691,8 +1708,14 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
       if (context_p->next_scanner_info_p->source_p == context_p->source_p)
       {
         JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_INITIALIZER);
-        parser_parse_array_initializer (context_p, PARSER_PATTERN_NO_OPTS);
-        return false;
+
+        if (parser_is_assignment_expr (context_p))
+        {
+          parser_parse_array_initializer (context_p, PARSER_PATTERN_NO_OPTS);
+          return false;
+        }
+
+        scanner_release_next (context_p, sizeof (scanner_location_info_t));
       }
 #endif /* ENABLED (JERRY_ES2015) */
 

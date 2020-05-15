@@ -673,6 +673,7 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_number_t this_num, /**< this
   if (!ecma_number_is_zero (this_num))
   {
     num_digits = ecma_number_to_binary_floating_point_number (this_num, digits, &exponent);
+    JERRY_ASSERT (exponent >= 0);
   }
   else
   {
@@ -692,7 +693,7 @@ ecma_builtin_number_prototype_object_to_fixed (ecma_number_t this_num, /**< this
 
   /* 8. */
   num_digits = ecma_builtin_number_prototype_helper_round (digits,
-                                                           num_digits + 1,
+                                                           num_digits + (lit_utf8_size_t) exponent,
                                                            exponent + frac_digits,
                                                            &exponent,
                                                            ecma_number_is_zero (this_num));

@@ -2183,13 +2183,6 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
 
     parser_parse_statements (&context);
 
-    /* When the parsing is successful, only the
-     * dummy value can be remained on the stack. */
-    JERRY_ASSERT (context.stack_top_uint8 == CBC_MAXIMUM_BYTE_VALUE
-                  && context.stack.last_position == 1
-                  && context.stack.first_p != NULL
-                  && context.stack.first_p->next_p == NULL
-                  && context.stack.last_p == NULL);
     JERRY_ASSERT (context.last_statement.current_p == NULL);
 
     JERRY_ASSERT (context.last_cbc_opcode == PARSER_CBC_UNAVAILABLE);
@@ -2205,6 +2198,13 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
 
     compiled_code_p = parser_post_processing (&context);
     parser_list_free (&context.literal_pool);
+
+    /* When parsing is successful, only the dummy value can be remained on the stack. */
+    JERRY_ASSERT (context.stack_top_uint8 == CBC_MAXIMUM_BYTE_VALUE
+                  && context.stack.last_position == 1
+                  && context.stack.first_p != NULL
+                  && context.stack.first_p->next_p == NULL
+                  && context.stack.last_p == NULL);
 
     JERRY_ASSERT (arg_list_p != NULL || !(context.status_flags & PARSER_ARGUMENTS_NEEDED));
 

@@ -39,14 +39,11 @@ matrix:
         apt:
           packages: [gcc-arm-linux-gnueabihf, libc6-dev-armhf-cross, qemu-user-static]
 
-    - name: "Linux/AArch64 Cross Build & Correctness Tests"
+    - name: "Linux/AArch64 Native Build & Correctness Tests"
+      arch: arm64
       env:
-        - OPTS="--quiet --jerry-tests --jerry-test-suite --toolchain=cmake/toolchain_linux_aarch64.cmake --buildoptions=--linker-flag=-static"
-        - RUNTIME=qemu-aarch64-static
+        - OPTS="--quiet --jerry-tests --jerry-test-suite --buildoptions=--linker-flag=-static"
         - TIMEOUT=300
-      addons:
-        apt:
-          packages: [gcc-aarch64-linux-gnu, libc6-dev-arm64-cross, qemu-user-static]
 
     - name: "OSX/x86-64 Build, Correctness & Unit Tests"
       env:

@@ -642,8 +642,11 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
     if (context_p->stack_top_uint8 == PARSER_STATEMENT_IF
         || context_p->stack_top_uint8 == PARSER_STATEMENT_ELSE)
     {
-      JERRY_ASSERT (context_p->next_scanner_info_p->source_p == context_p->source_p);
-      parser_push_block_context (context_p, true);
+      /* There must be a parser error later if this check fails. */
+      if (context_p->next_scanner_info_p->source_p == context_p->source_p)
+      {
+        parser_push_block_context (context_p, true);
+      }
     }
     else if (context_p->stack_top_uint8 == PARSER_STATEMENT_LABEL)
     {

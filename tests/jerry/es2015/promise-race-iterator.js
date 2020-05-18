@@ -62,3 +62,8 @@ var rejects = Promise.race(createIterable([
 
 fulfills.then(result => { assert (result + "" === "foo"); });
 rejects.catch(result => { assert (result === "baz"); });
+
+var closed = false;
+delete Promise.resolve;
+Promise.race(createIterable([1,2,3], {'return': function () { closed = true; }}));
+assert (closed);

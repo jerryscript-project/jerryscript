@@ -553,7 +553,7 @@ ecma_builtin_promise_race_or_all (ecma_value_t this_arg, /**< 'this' argument */
 
   if (ECMA_IS_VALUE_ERROR (ret))
   {
-    if (is_done)
+    if (!is_done)
     {
       ret = ecma_op_iterator_close (iterator);
     }

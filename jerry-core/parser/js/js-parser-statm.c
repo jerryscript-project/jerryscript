@@ -2639,7 +2639,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
     lexer_lit_location_t lit_location;
     parser_strict_mode_type_t strict_mode = PARSER_USE_STRICT_NOT_FOUND;
 
-    JERRY_ASSERT (context_p->stack_depth == 0);
+    JERRY_ASSERT (context_p->stack_depth <= 1);
 #ifndef JERRY_NDEBUG
     JERRY_ASSERT (context_p->context_stack_depth == context_p->stack_depth);
 #endif /* !JERRY_NDEBUG */

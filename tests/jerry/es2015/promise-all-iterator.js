@@ -74,3 +74,8 @@ var rejects = Promise.all(createIterable([
 
 fulfills.then(result => { assert (result + "" === "foo,bar"); });
 rejects.catch(result => { assert (result === "baz"); });
+
+var closed = false;
+delete Promise.resolve;
+Promise.all(createIterable([1,2,3], {'return': function () { closed = true; }}));
+assert (closed);

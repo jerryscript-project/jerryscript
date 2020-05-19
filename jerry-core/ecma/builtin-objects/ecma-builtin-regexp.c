@@ -136,6 +136,10 @@ ecma_builtin_regexp_dispatch_helper (const ecma_value_t *arguments_list_p, /**< 
         return flags_value;
       }
     }
+    else
+    {
+      flags_value = ecma_copy_value (flags_value);
+    }
 
     free_arguments = true;
   }
@@ -151,46 +155,36 @@ ecma_builtin_regexp_dispatch_helper (const ecma_value_t *arguments_list_p, /**< 
   }
 #endif /* ENABLED (JERRY_ES2015) */
 
+  ecma_value_t ret_value = ECMA_VALUE_ERROR;
   ecma_object_t *new_target_obj_p = ecma_op_regexp_alloc (new_target_p);
 
-  if (JERRY_UNLIKELY (new_target_obj_p == NULL))
+  if (JERRY_LIKELY (new_target_obj_p != NULL))
   {
 #if ENABLED (JERRY_ES2015)
-    if (free_arguments)
+    if (create_regexp_from_bc)
     {
-      ecma_free_value (pattern_value);
-      ecma_free_value (flags_value);
+      ret_value = ecma_op_create_regexp_from_bytecode (new_target_obj_p, bc_p);
+      JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (ret_value));
     }
+    else
 #endif /* ENABLED (JERRY_ES2015) */
+    {
+      ret_value = ecma_op_create_regexp_from_pattern (new_target_obj_p, pattern_value, flags_value);
 
-    return ECMA_VALUE_ERROR;
+      if (ECMA_IS_VALUE_ERROR (ret_value))
+      {
+        ecma_deref_object (new_target_obj_p);
+      }
+    }
   }
-
-  ecma_value_t ret_value;
 
 #if ENABLED (JERRY_ES2015)
-  if (create_regexp_from_bc)
-  {
-    ret_value = ecma_op_create_regexp_from_bytecode (new_target_obj_p, bc_p);
-  }
-  else
-  {
-#endif /* ENABLED (JERRY_ES2015) */
-    ret_value = ecma_op_create_regexp_from_pattern (new_target_obj_p, pattern_value, flags_value);
-#if  ENABLED (JERRY_ES2015)
-  }
-
   if (free_arguments)
   {
     ecma_free_value (pattern_value);
     ecma_free_value (flags_value);
   }
 #endif /* ENABLED (JERRY_ES2015) */
-
-  if (ECMA_IS_VALUE_ERROR (ret_value))
-  {
-    ecma_deref_object (new_target_obj_p);
-  }
 
   return ret_value;
 } /* ecma_builtin_regexp_dispatch_helper */

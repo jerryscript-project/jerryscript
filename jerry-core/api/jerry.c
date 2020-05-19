@@ -3928,8 +3928,15 @@ jerry_create_dataview (const jerry_value_t array_buffer, /**< arraybuffer to cre
     ecma_make_uint32_value (byte_offset),
     ecma_make_uint32_value (byte_length)
   };
+  ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target);
+  if (old_new_target_p == NULL)
+  {
+    JERRY_CONTEXT (current_new_target) = ecma_builtin_get (ECMA_BUILTIN_ID_DATAVIEW);
+  }
 
-  return jerry_return (ecma_op_dataview_create (arguments_p, 3));
+  ecma_value_t dataview_value = ecma_op_dataview_create (arguments_p, 3);
+  JERRY_CONTEXT (current_new_target) = old_new_target_p;
+  return jerry_return (dataview_value);
 #else /* !ENABLED (JERRY_BUILTIN_DATAVIEW) */
   JERRY_UNUSED (array_buffer);
   JERRY_UNUSED (byte_offset);

@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include "jcontext.h"
+#include "ecma-function-object.h"
 #include "ecma-arraybuffer-object.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
@@ -45,6 +47,7 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
                          ecma_length_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
+  JERRY_ASSERT (JERRY_CONTEXT (current_new_target));
 
   ecma_value_t buffer = arguments_list_len > 0 ? arguments_list_p[0] : ECMA_VALUE_UNDEFINED;
 
@@ -127,7 +130,14 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
   }
 
   /* 13. */
-  ecma_object_t *object_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_DATAVIEW_PROTOTYPE),
+  ecma_object_t *prototype_obj_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_new_target),
+                                                                           ECMA_BUILTIN_ID_DATAVIEW_PROTOTYPE);
+  if (JERRY_UNLIKELY (prototype_obj_p == NULL))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  ecma_object_t *object_p = ecma_create_object (prototype_obj_p,
                                                 sizeof (ecma_dataview_object_t),
                                                 ECMA_OBJECT_TYPE_CLASS);
 
@@ -137,6 +147,7 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
   dataview_obj_p->buffer_p = buffer_p;
   dataview_obj_p->byte_offset = (uint32_t) offset;
 
+  ecma_deref_object (prototype_obj_p);
   return ecma_make_object_value (object_p);
 } /* ecma_op_dataview_create */
 

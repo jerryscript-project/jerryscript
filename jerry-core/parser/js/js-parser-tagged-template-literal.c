@@ -43,7 +43,7 @@ parser_tagged_template_literal_append_strings (parser_context_t *context_p, /**<
 {
   lexer_lit_location_t *lit_loc_p = &context_p->token.lit_location;
 
-  if (lit_loc_p->length == 0)
+  if (lit_loc_p->length == 0 && !lit_loc_p->has_escape)
   {
     ecma_builtin_helper_def_prop_by_index (template_obj_p,
                                            prop_idx,

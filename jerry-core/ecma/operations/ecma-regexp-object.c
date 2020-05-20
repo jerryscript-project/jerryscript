@@ -381,16 +381,17 @@ ecma_op_create_regexp_from_pattern (ecma_object_t *regexp_obj_p, /**< RegExp obj
 
   const re_compiled_code_t *bc_p = NULL;
   ecma_value_t ret_value = re_compile_bytecode (&bc_p, pattern_str_p, flags);
-  ecma_deref_ecma_string (pattern_str_p);
 
   if (ECMA_IS_VALUE_ERROR (ret_value))
   {
+    ecma_deref_ecma_string (pattern_str_p);
     return ret_value;
   }
 
   JERRY_ASSERT (ecma_is_value_empty (ret_value));
 
   ecma_op_regexp_initialize (regexp_obj_p, bc_p, pattern_str_p, flags);
+  ecma_deref_ecma_string (pattern_str_p);
 
   return ecma_make_object_value (regexp_obj_p);
 } /* ecma_op_create_regexp_from_pattern */

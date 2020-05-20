@@ -1289,6 +1289,11 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
         message_p = ECMA_ERR_MSG ("Generator functions cannot be invoked with 'new'.");
         break;
       }
+      case CBC_FUNCTION_ASYNC:
+      {
+        message_p = ECMA_ERR_MSG ("Async functions cannot be invoked with 'new'.");
+        break;
+      }
       case CBC_FUNCTION_ARROW:
       {
         message_p = ECMA_ERR_MSG ("Arrow functions cannot be invoked with 'new'.");

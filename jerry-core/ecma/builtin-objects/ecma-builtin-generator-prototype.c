@@ -51,14 +51,6 @@ static const uint8_t ecma_builtin_generator_prototype_return[2] =
 };
 
 /**
- * Byte code sequence which throws an exception.
- */
-static const uint8_t ecma_builtin_generator_prototype_throw[1] =
-{
-  CBC_THROW
-};
-
-/**
  * Helper function for next / return / throw
  *
  * @return ecma value
@@ -148,7 +140,7 @@ ecma_builtin_generator_prototype_object_do (ecma_value_t this_arg, /**< this arg
     }
     else if (resume_mode == ECMA_ITERATOR_THROW)
     {
-      executable_object_p->frame_ctx.byte_code_p = ecma_builtin_generator_prototype_throw;
+      executable_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_throw;
     }
 
     ecma_value_t value = opfunc_resume_executable_object (executable_object_p, arg);

@@ -123,22 +123,28 @@ ecma_promise_trigger_reactions (ecma_collection_t *reactions, /**< lists of reac
 
   while (buffer_p < buffer_end_p)
   {
-    ecma_value_t capability_with_tag = *buffer_p++;
-    ecma_object_t *capability_obj_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t, capability_with_tag);
-    ecma_value_t capability = ecma_make_object_value (capability_obj_p);
+    ecma_value_t object_with_tag = *buffer_p++;
+    ecma_object_t *object_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t, object_with_tag);
+    ecma_value_t object = ecma_make_object_value (object_p);
+
+    if (JMEM_CP_GET_THIRD_BIT_FROM_POINTER_TAG (object_with_tag))
+    {
+      ecma_enqueue_promise_async_reaction_job (object, value, is_reject);
+      continue;
+    }
 
     if (!is_reject)
     {
       ecma_value_t handler = ECMA_VALUE_TRUE;
 
-      if (JMEM_CP_GET_FIRST_BIT_FROM_POINTER_TAG (capability_with_tag))
+      if (JMEM_CP_GET_FIRST_BIT_FROM_POINTER_TAG (object_with_tag))
       {
         handler = *buffer_p++;
       }
 
-      ecma_enqueue_promise_reaction_job (capability, handler, value);
+      ecma_enqueue_promise_reaction_job (object, handler, value);
     }
-    else if (JMEM_CP_GET_FIRST_BIT_FROM_POINTER_TAG (capability_with_tag))
+    else if (JMEM_CP_GET_FIRST_BIT_FROM_POINTER_TAG (object_with_tag))
     {
       buffer_p++;
     }
@@ -147,14 +153,14 @@ ecma_promise_trigger_reactions (ecma_collection_t *reactions, /**< lists of reac
     {
       ecma_value_t handler = ECMA_VALUE_FALSE;
 
-      if (JMEM_CP_GET_SECOND_BIT_FROM_POINTER_TAG (capability_with_tag))
+      if (JMEM_CP_GET_SECOND_BIT_FROM_POINTER_TAG (object_with_tag))
       {
         handler = *buffer_p++;
       }
 
-      ecma_enqueue_promise_reaction_job (capability, handler, value);
+      ecma_enqueue_promise_reaction_job (object, handler, value);
     }
-    else if (JMEM_CP_GET_SECOND_BIT_FROM_POINTER_TAG (capability_with_tag))
+    else if (JMEM_CP_GET_SECOND_BIT_FROM_POINTER_TAG (object_with_tag))
     {
       buffer_p++;
     }
@@ -198,7 +204,7 @@ ecma_is_resolver_already_called (ecma_object_t *resolver_p, /**< resolver */
  *
  * See also: ES2015 25.4.1.7
  */
-static void
+void
 ecma_reject_promise (ecma_value_t promise, /**< promise */
                      ecma_value_t reason) /**< reason for reject */
 {
@@ -227,13 +233,44 @@ ecma_reject_promise (ecma_value_t promise, /**< promise */
  *
  * See also: ES2015 25.4.1.4
  */
-static void
+void
 ecma_fulfill_promise (ecma_value_t promise, /**< promise */
                       ecma_value_t value) /**< fulfilled value */
 {
   ecma_object_t *obj_p = ecma_get_object_from_value (promise);
 
   JERRY_ASSERT (ecma_promise_get_flags (obj_p) & ECMA_PROMISE_IS_PENDING);
+
+  if (promise == value)
+  {
+    ecma_raise_type_error (ECMA_ERR_MSG ("A promise cannot be resolved with itself."));
+    ecma_value_t exception = jcontext_take_exception ();
+    ecma_reject_promise (promise, exception);
+    ecma_free_value (exception);
+    return;
+  }
+
+  if (ecma_is_value_object (value))
+  {
+    ecma_value_t then = ecma_op_object_get_by_magic_id (ecma_get_object_from_value (value), LIT_MAGIC_STRING_THEN);
+
+    if (ECMA_IS_VALUE_ERROR (then))
+    {
+      then = jcontext_take_exception ();
+      ecma_reject_promise (promise, then);
+      ecma_free_value (then);
+      return;
+    }
+
+    if (ecma_op_is_callable (then))
+    {
+      ecma_enqueue_promise_resolve_thenable_job (promise, value, then);
+      ecma_free_value (then);
+      return;
+    }
+
+    ecma_free_value (then);
+  }
 
   ecma_promise_set_state (obj_p, true);
   ecma_promise_set_result (obj_p, ecma_copy_value_if_not_object (value));
@@ -311,62 +348,16 @@ ecma_promise_resolve_handler (const ecma_value_t function, /**< the function its
   JERRY_ASSERT (ecma_is_promise (promise_obj_p));
 
   /* 3., 4. */
-  if (ecma_is_resolver_already_called (function_p, promise_obj_p))
+  if (!ecma_is_resolver_already_called (function_p, promise_obj_p))
   {
-    goto end_of_resolve_function;
+    /* 5. */
+    ((ecma_extended_object_t *) promise_obj_p)->u.class_prop.extra_info |= ECMA_PROMISE_ALREADY_RESOLVED;
+
+    ecma_fulfill_promise (promise, (argc == 0) ? ECMA_VALUE_UNDEFINED : argv[0]);
   }
 
-  /* 5. */
-  ((ecma_extended_object_t *) promise_obj_p)->u.class_prop.extra_info |= ECMA_PROMISE_ALREADY_RESOLVED;
-
-  /* If the argc is 0, then fulfill the `undefined`. */
-  if (argc == 0)
-  {
-    ecma_fulfill_promise (promise, ECMA_VALUE_UNDEFINED);
-    goto end_of_resolve_function;
-  }
-
-  /* 6. */
-  if (argv[0] == promise)
-  {
-    ecma_object_t *error_p = ecma_new_standard_error (ECMA_ERROR_TYPE);
-    ecma_reject_promise (promise, ecma_make_object_value (error_p));
-    ecma_deref_object (error_p);
-    goto end_of_resolve_function;
-  }
-
-  /* 7. */
-  if (!ecma_is_value_object (argv[0]))
-  {
-    ecma_fulfill_promise (promise, argv[0]);
-    goto end_of_resolve_function;
-  }
-
-  /* 8. */
-  ecma_value_t then = ecma_op_object_get_by_magic_id (ecma_get_object_from_value (argv[0]),
-                                                      LIT_MAGIC_STRING_THEN);
-
-  if (ECMA_IS_VALUE_ERROR (then))
-  {
-    /* 9. */
-    then = jcontext_take_exception ();
-    ecma_reject_promise (promise, then);
-  }
-  else if (!ecma_op_is_callable (then))
-  {
-    /* 11 .*/
-    ecma_fulfill_promise (promise, argv[0]);
-  }
-  else
-  {
-    /* 12 */
-    ecma_enqueue_promise_resolve_thenable_job (promise, argv[0], then);
-  }
-
-  ecma_free_value (then);
-
-end_of_resolve_function:
   ecma_free_value (promise);
+
   return ECMA_VALUE_UNDEFINED;
 } /* ecma_promise_resolve_handler */
 
@@ -962,6 +953,31 @@ ecma_promise_then (ecma_value_t promise, /**< the promise which call 'then' */
 
   return ret;
 } /* ecma_promise_then */
+
+/**
+ * Resume the execution of an async function after the promise is resolved
+ */
+void
+ecma_promise_async_then (ecma_value_t promise, /**< promise object */
+                         ecma_value_t executable_object) /**< executable object of the async function */
+{
+  ecma_object_t *promise_obj_p = ecma_get_object_from_value (promise);
+  uint16_t flags = ecma_promise_get_flags (promise_obj_p);
+
+  if (flags & ECMA_PROMISE_IS_PENDING)
+  {
+    ecma_value_t executable_object_with_tag;
+    ECMA_SET_NON_NULL_POINTER_TAG (executable_object_with_tag, ecma_get_object_from_value (executable_object), 0);
+    ECMA_SET_THIRD_BIT_TO_POINTER_TAG (executable_object_with_tag);
+
+    ecma_collection_push_back (((ecma_promise_object_t *) promise_obj_p)->reactions, executable_object_with_tag);
+    return;
+  }
+
+  ecma_value_t value = ecma_promise_get_result (promise_obj_p);
+  ecma_enqueue_promise_async_reaction_job (executable_object, value, !(flags & ECMA_PROMISE_IS_FULFILLED));
+  ecma_free_value (value);
+} /* ecma_promise_async_then */
 
 /**
  * @}

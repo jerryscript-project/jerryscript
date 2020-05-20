@@ -86,9 +86,12 @@ bool ecma_is_promise (ecma_object_t *obj_p);
 ecma_value_t ecma_op_create_promise_object (ecma_value_t executor, ecma_promise_executor_type_t type);
 uint16_t ecma_promise_get_flags (ecma_object_t *promise_p);
 ecma_value_t ecma_promise_get_result (ecma_object_t *promise_p);
+void ecma_reject_promise (ecma_value_t promise, ecma_value_t reason);
+void ecma_fulfill_promise (ecma_value_t promise, ecma_value_t value);
 ecma_value_t ecma_promise_new_capability (ecma_value_t constructor);
 ecma_value_t ecma_promise_reject_or_resolve (ecma_value_t this_arg, ecma_value_t value, bool is_resolve);
 ecma_value_t ecma_promise_then (ecma_value_t promise, ecma_value_t on_fulfilled, ecma_value_t on_rejected);
+void ecma_promise_async_then (ecma_value_t promise, ecma_value_t executable_object);
 void ecma_promise_create_resolving_functions (ecma_object_t *object_p, ecma_promise_resolving_functions_t *funcs,
                                               bool create_already_resolved);
 void ecma_promise_free_resolving_functions (ecma_promise_resolving_functions_t *funcs);

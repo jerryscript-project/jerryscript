@@ -687,6 +687,11 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
       JERRY_DEBUG_MSG (",generator");
       break;
     }
+    case CBC_FUNCTION_ASYNC:
+    {
+      JERRY_DEBUG_MSG (",async");
+      break;
+    }
     case CBC_FUNCTION_ARROW:
     {
       JERRY_DEBUG_MSG (",arrow");
@@ -948,6 +953,23 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     parser_branch_t branch;
     parser_stack_pop (context_p, &branch, sizeof (parser_branch_t));
     parser_set_branch_to_current_position (context_p, &branch);
+
+    JERRY_ASSERT (!(context_p->status_flags & PARSER_NO_END_LABEL));
+  }
+
+  if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
+  {
+    PARSER_MINUS_EQUAL_U16 (context_p->stack_depth, PARSER_TRY_CONTEXT_STACK_ALLOCATION);
+#ifndef JERRY_NDEBUG
+    PARSER_MINUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_TRY_CONTEXT_STACK_ALLOCATION);
+#endif /* !JERRY_NDEBUG */
+
+    parser_branch_t branch;
+
+    parser_stack_pop (context_p, &branch, sizeof (parser_branch_t));
+    parser_set_branch_to_current_position (context_p, &branch);
+
+    JERRY_ASSERT (!(context_p->status_flags & PARSER_NO_END_LABEL));
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
@@ -1030,14 +1052,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       flags = cbc_ext_flags[ext_opcode];
       PARSER_NEXT_BYTE (page_p, offset);
       length++;
-
-#if ENABLED (JERRY_ESNEXT)
-      if (ext_opcode == CBC_EXT_RETURN_PROMISE
-          || ext_opcode == CBC_EXT_RETURN_PROMISE_UNDEFINED)
-      {
-        last_opcode = CBC_RETURN;
-      }
-#endif /* ENABLED (JERRY_ESNEXT) */
 
 #if ENABLED (JERRY_LINE_INFO)
       if (ext_opcode == CBC_EXT_LINE)
@@ -1339,13 +1353,17 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   {
     compiled_code_p->status_flags |= CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_ARROW);
   }
-  else if (context_p->status_flags & PARSER_CLASS_CONSTRUCTOR)
-  {
-    compiled_code_p->status_flags |= CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_CONSTRUCTOR);
-  }
   else if (context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION)
   {
     compiled_code_p->status_flags |= CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_GENERATOR);
+  }
+  else if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
+  {
+    compiled_code_p->status_flags |= CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_ASYNC);
+  }
+  else if (context_p->status_flags & PARSER_CLASS_CONSTRUCTOR)
+  {
+    compiled_code_p->status_flags |= CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_CONSTRUCTOR);
   }
   else
   {
@@ -1562,7 +1580,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
     {
       dst_p[-1] = CBC_EXT_OPCODE;
-      dst_p[0] = CBC_EXT_RETURN_PROMISE_UNDEFINED;
+      dst_p[0] = CBC_EXT_ASYNC_EXIT;
       dst_p++;
     }
 #endif /* ENABLED (JERRY_ESNEXT) */
@@ -1727,6 +1745,17 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
   if ((context_p->status_flags & mask) == mask)
   {
     context_p->status_flags &= (uint32_t) ~PARSER_IS_ASYNC_FUNCTION;
+  }
+
+  if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
+  {
+    parser_branch_t branch;
+    parser_emit_cbc_ext_forward_branch (context_p, CBC_EXT_TRY_CREATE_CONTEXT, &branch);
+    parser_stack_push (context_p, &branch, sizeof (parser_branch_t));
+
+#ifndef JERRY_NDEBUG
+    context_p->context_stack_depth = PARSER_TRY_CONTEXT_STACK_ALLOCATION;
+#endif /* !JERRY_NDEBUG */
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
@@ -1968,7 +1997,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
       parser_stack_push (context_p, &branch, sizeof (parser_branch_t));
 
 #ifndef JERRY_NDEBUG
-      context_p->context_stack_depth = PARSER_BLOCK_CONTEXT_STACK_ALLOCATION;
+      PARSER_PLUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_BLOCK_CONTEXT_STACK_ALLOCATION);
 #endif /* !JERRY_NDEBUG */
     }
     else
@@ -2570,20 +2599,13 @@ parser_parse_arrow_function (parser_context_t *context_p, /**< context */
 
     parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
 
-    if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
+    if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
     {
-      parser_emit_cbc_ext (context_p, CBC_EXT_RETURN_PROMISE);
+      context_p->last_cbc_opcode = CBC_RETURN_WITH_LITERAL;
     }
     else
     {
-      if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
-      {
-        context_p->last_cbc_opcode = CBC_RETURN_WITH_LITERAL;
-      }
-      else
-      {
-        parser_emit_cbc (context_p, CBC_RETURN);
-      }
+      parser_emit_cbc (context_p, CBC_RETURN);
     }
     parser_flush_cbc (context_p);
 

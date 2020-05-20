@@ -463,6 +463,11 @@ ecma_gc_mark_executable_object (ecma_object_t *object_p) /**< object */
 
     register_p++;
   }
+
+  if (ecma_is_value_object (executable_object_p->frame_ctx.block_result))
+  {
+    ecma_gc_set_object_visited (ecma_get_object_from_value (executable_object_p->frame_ctx.block_result));
+  }
 } /* ecma_gc_mark_executable_object */
 
 #endif /* ENABLED (JERRY_ESNEXT) */

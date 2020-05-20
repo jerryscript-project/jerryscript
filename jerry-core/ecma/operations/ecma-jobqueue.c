@@ -20,6 +20,7 @@
 #include "ecma-objects.h"
 #include "ecma-promise-object.h"
 #include "jcontext.h"
+#include "opcodes.h"
 
 #if ENABLED (JERRY_BUILTIN_PROMISE)
 
@@ -45,6 +46,16 @@ typedef struct
   ecma_value_t handler; /**< handler function */
   ecma_value_t argument; /**< argument for the reaction */
 } ecma_job_promise_reaction_t;
+
+/**
+ * Description of the PromiseAsyncReactionJob
+ */
+typedef struct
+{
+  ecma_job_queue_item_t header; /**< job queue item header */
+  ecma_value_t executable_object; /**< executable object */
+  ecma_value_t argument; /**< argument for the reaction */
+} ecma_job_promise_async_reaction_t;
 
 /**
  * Description of the PromiseResolveThenableJob
@@ -102,6 +113,21 @@ ecma_free_promise_reaction_job (ecma_job_promise_reaction_t *job_p) /**< points 
 
   jmem_heap_free_block (job_p, sizeof (ecma_job_promise_reaction_t));
 } /* ecma_free_promise_reaction_job */
+
+/**
+ * Free the heap and the member of the PromiseAsyncReactionJob.
+ */
+static void
+ecma_free_promise_async_reaction_job (ecma_job_promise_async_reaction_t *job_p) /**< points to the
+                                                                                 *   PromiseAsyncReactionJob */
+{
+  JERRY_ASSERT (job_p != NULL);
+
+  ecma_free_value (job_p->executable_object);
+  ecma_free_value (job_p->argument);
+
+  jmem_heap_free_block (job_p, sizeof (ecma_job_promise_async_reaction_t));
+} /* ecma_free_promise_async_reaction_job */
 
 /**
  * Free the heap and the member of the PromiseResolveThenableJob.
@@ -197,6 +223,31 @@ ecma_process_promise_reaction_job (ecma_job_promise_reaction_t *job_p) /**< the 
 } /* ecma_process_promise_reaction_job */
 
 /**
+ * The processor for PromiseAsyncReactionJob.
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
+ */
+static ecma_value_t
+ecma_process_promise_async_reaction_job (ecma_job_promise_async_reaction_t *job_p) /**< the job to be operated */
+{
+  ecma_object_t *object_p = ecma_get_object_from_value (job_p->executable_object);
+  vm_executable_object_t *executable_object_p = (vm_executable_object_t *) object_p;
+
+  if (ecma_job_queue_get_type (&job_p->header) == ECMA_JOB_PROMISE_ASYNC_REACTION_REJECTED)
+  {
+    executable_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_throw;
+  }
+
+  ecma_value_t result = opfunc_resume_executable_object (executable_object_p, job_p->argument);
+  /* Argument reference is taken by opfunc_resume_executable_object. */
+  job_p->argument = ECMA_VALUE_UNDEFINED;
+  ecma_free_promise_async_reaction_job (job_p);
+
+  return result;
+} /* ecma_process_promise_async_reaction_job */
+
+/**
  * Process the PromiseResolveThenableJob.
  *
  * See also: ES2015 25.4.2.2
@@ -273,7 +324,7 @@ ecma_enqueue_job (ecma_job_queue_item_t *job_p) /**< the job */
 } /* ecma_enqueue_job */
 
 /**
- * Enqueue a PromiseReactionJob into the jobqueue.
+ * Enqueue a PromiseReactionJob into the job queue.
  */
 void
 ecma_enqueue_promise_reaction_job (ecma_value_t capability, /**< capability object */
@@ -291,7 +342,25 @@ ecma_enqueue_promise_reaction_job (ecma_value_t capability, /**< capability obje
 } /* ecma_enqueue_promise_reaction_job */
 
 /**
- * Enqueue a PromiseResolveThenableJob into the jobqueue.
+ * Enqueue a PromiseAsyncReactionJob into the job queue.
+ */
+void
+ecma_enqueue_promise_async_reaction_job (ecma_value_t executable_object, /**< executable object */
+                                         ecma_value_t argument, /**< argument */
+                                         bool is_rejected) /**< is_fulfilled */
+{
+  ecma_job_promise_async_reaction_t *job_p;
+  job_p = (ecma_job_promise_async_reaction_t *) jmem_heap_alloc_block (sizeof (ecma_job_promise_async_reaction_t));
+  job_p->header.next_and_type = (is_rejected ? ECMA_JOB_PROMISE_ASYNC_REACTION_REJECTED
+                                             : ECMA_JOB_PROMISE_ASYNC_REACTION_FULFILLED);
+  job_p->executable_object = ecma_copy_value (executable_object);
+  job_p->argument = ecma_copy_value (argument);
+
+  ecma_enqueue_job (&job_p->header);
+} /* ecma_enqueue_promise_async_reaction_job */
+
+/**
+ * Enqueue a PromiseResolveThenableJob into the job queue.
  */
 void
 ecma_enqueue_promise_resolve_thenable_job (ecma_value_t promise, /**< promise to be resolved */
@@ -338,6 +407,12 @@ ecma_process_all_enqueued_jobs (void)
         ret = ecma_process_promise_reaction_job ((ecma_job_promise_reaction_t *) job_p);
         break;
       }
+      case ECMA_JOB_PROMISE_ASYNC_REACTION_FULFILLED:
+      case ECMA_JOB_PROMISE_ASYNC_REACTION_REJECTED:
+      {
+        ret = ecma_process_promise_async_reaction_job ((ecma_job_promise_async_reaction_t *) job_p);
+        break;
+      }
       default:
       {
         JERRY_ASSERT (ecma_job_queue_get_type (job_p) == ECMA_JOB_PROMISE_THENABLE);
@@ -367,6 +442,12 @@ ecma_free_all_enqueued_jobs (void)
       case ECMA_JOB_PROMISE_REACTION:
       {
         ecma_free_promise_reaction_job ((ecma_job_promise_reaction_t *) job_p);
+        break;
+      }
+      case ECMA_JOB_PROMISE_ASYNC_REACTION_FULFILLED:
+      case ECMA_JOB_PROMISE_ASYNC_REACTION_REJECTED:
+      {
+        ecma_free_promise_async_reaction_job ((ecma_job_promise_async_reaction_t *) job_p);
         break;
       }
       default:

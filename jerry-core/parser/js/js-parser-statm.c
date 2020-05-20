@@ -3017,7 +3017,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 #if ENABLED (JERRY_ESNEXT)
           if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
           {
-            parser_emit_cbc_ext (context_p, CBC_EXT_RETURN_PROMISE_UNDEFINED);
+            parser_emit_cbc_ext (context_p, CBC_EXT_RETURN_UNDEFINED);
             break;
           }
 #endif /* ENABLED (JERRY_ESNEXT) */
@@ -3027,14 +3027,6 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
         }
 
         parser_parse_expression (context_p, PARSE_EXPR);
-
-#if ENABLED (JERRY_ESNEXT)
-        if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
-        {
-          parser_emit_cbc_ext (context_p, CBC_EXT_RETURN_PROMISE);
-          break;
-        }
-#endif /* ENABLED (JERRY_ESNEXT) */
 
         if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
         {

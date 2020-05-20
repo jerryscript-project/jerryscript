@@ -262,6 +262,20 @@ vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
       }
 
       JERRY_ASSERT (byte_code_p[0] == CBC_EXT_OPCODE);
+
+#if ENABLED (JERRY_ESNEXT)
+      if (JERRY_UNLIKELY (byte_code_p[1] == CBC_EXT_ASYNC_EXIT))
+      {
+        branch_offset = (uint32_t) (byte_code_p - frame_ctx_p->byte_code_start_p);
+        vm_stack_top_p[-1] = VM_CREATE_CONTEXT ((uint32_t) finally_type, branch_offset);
+
+        frame_ctx_p->byte_code_p = byte_code_p;
+
+        *vm_stack_top_ref_p = vm_stack_top_p;
+        return true;
+      }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
       JERRY_ASSERT (byte_code_p[1] >= CBC_EXT_FINALLY
                     && byte_code_p[1] <= CBC_EXT_FINALLY_3);
 
@@ -310,21 +324,17 @@ vm_get_context_value_offsets (ecma_value_t *context_item_p) /**< any item of a c
     {
       return PARSER_TRY_CONTEXT_STACK_ALLOCATION;
     }
-#if ENABLED (JERRY_ESNEXT)
     case VM_CONTEXT_BLOCK:
-#endif /* ENABLED (JERRY_ESNEXT) */
     case VM_CONTEXT_WITH:
     {
       return PARSER_WITH_CONTEXT_STACK_ALLOCATION;
     }
-#if ENABLED (JERRY_ESNEXT)
     case VM_CONTEXT_FOR_OF:
     {
       return ((3 << (VM_CONTEXT_OFFSET_SHIFT * 2))
               | (2 << (VM_CONTEXT_OFFSET_SHIFT))
               | PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION);
     }
-#endif /* ENABLED (JERRY_ESNEXT) */
     default:
     {
       return (4 << (VM_CONTEXT_OFFSET_SHIFT)) | PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION;

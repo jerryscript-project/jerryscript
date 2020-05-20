@@ -45,14 +45,16 @@
 
 static ecma_value_t
 ecma_builtin_regexp_dispatch_helper (const ecma_value_t *arguments_list_p, /**< arguments list */
-                                     ecma_length_t arguments_list_len, /**< number of arguments */
-                                     ecma_object_t *new_target_p) /**< pointer to the new target object */
+                                     ecma_length_t arguments_list_len) /**< number of arguments */
 {
   ecma_value_t pattern_value = ECMA_VALUE_UNDEFINED;
   ecma_value_t flags_value = ECMA_VALUE_UNDEFINED;
 #if ENABLED (JERRY_ES2015)
   bool create_regexp_from_bc = false;
   bool free_arguments = false;
+  ecma_object_t *new_target_p = JERRY_CONTEXT (current_new_target);
+#else /* !ENABLED (JERRY_ES2015) */
+  ecma_object_t *new_target_p = NULL;
 #endif /* ENABLED (JERRY_ES2015) */
 
   if (arguments_list_len > 0)
@@ -206,8 +208,7 @@ ecma_builtin_regexp_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
                                    ecma_length_t arguments_list_len) /**< number of arguments */
 {
   return ecma_builtin_regexp_dispatch_helper (arguments_list_p,
-                                              arguments_list_len,
-                                              NULL);
+                                              arguments_list_len);
 } /* ecma_builtin_regexp_dispatch_call */
 
 /**
@@ -221,8 +222,7 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
                                         ecma_length_t arguments_list_len) /**< number of arguments */
 {
   return ecma_builtin_regexp_dispatch_helper (arguments_list_p,
-                                              arguments_list_len,
-                                              ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP));
+                                              arguments_list_len);
 } /* ecma_builtin_regexp_dispatch_construct */
 
 #if ENABLED (JERRY_ES2015)

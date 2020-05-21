@@ -915,7 +915,7 @@ lexer_parse_string (parser_context_t *context_p, /**< context */
                     lexer_string_options_t opts) /**< options */
 {
 #if ENABLED (JERRY_ES2015)
-  const size_t raw_length_inc = (opts & LEXER_STRING_RAW) ? 1 : 0;
+  size_t raw_length_dec = 0;
 #else /* ENABLED (JERRY_ES2015) */
   JERRY_UNUSED (opts);
 #endif /* ENABLED (JERRY_ES2015) */
@@ -962,10 +962,6 @@ lexer_parse_string (parser_context_t *context_p, /**< context */
         continue;
       }
 
-#if ENABLED (JERRY_ES2015)
-      length += raw_length_inc;
-#endif /* ENABLED (JERRY_ES2015) */
-
       has_escape = true;
 
       /* Newline is ignored. */
@@ -975,13 +971,13 @@ lexer_parse_string (parser_context_t *context_p, /**< context */
         if (source_p < source_end_p
             && *source_p == LIT_CHAR_LF)
         {
+#if ENABLED (JERRY_ES2015)
+          raw_length_dec++;
+#endif /* ENABLED (JERRY_ES2015) */
           source_p++;
         }
 
         line++;
-#if ENABLED (JERRY_ES2015)
-        length += raw_length_inc;
-#endif /* ENABLED (JERRY_ES2015) */
         column = 1;
         continue;
       }
@@ -989,18 +985,12 @@ lexer_parse_string (parser_context_t *context_p, /**< context */
       {
         source_p++;
         line++;
-#if ENABLED (JERRY_ES2015)
-        length += raw_length_inc;
-#endif /* ENABLED (JERRY_ES2015) */
         column = 1;
         continue;
       }
       else if (*source_p == LEXER_NEWLINE_LS_PS_BYTE_1 && LEXER_NEWLINE_LS_PS_BYTE_23 (source_p))
       {
         source_p += 3;
-#if ENABLED (JERRY_ES2015)
-        length += 3 * raw_length_inc;
-#endif /* ENABLED (JERRY_ES2015) */
         line++;
         column = 1;
         continue;
@@ -1131,6 +1121,7 @@ lexer_parse_string (parser_context_t *context_p, /**< context */
              source_p + 1 < source_end_p &&
              source_p[1] == LIT_CHAR_LEFT_BRACE)
     {
+      raw_length_dec++;
       source_p++;
       break;
     }
@@ -1167,6 +1158,7 @@ lexer_parse_string (parser_context_t *context_p, /**< context */
             && *source_p == LIT_CHAR_LF)
         {
           source_p++;
+          raw_length_dec++;
         }
         line++;
         column = 1;
@@ -1210,6 +1202,13 @@ lexer_parse_string (parser_context_t *context_p, /**< context */
       length++;
     }
   }
+
+#if ENABLED (JERRY_ES2015)
+  if (opts & LEXER_STRING_RAW)
+  {
+    length = (size_t) (source_p - string_start_p) - raw_length_dec;
+  }
+#endif /* ENABLED (JERRY_ES2015) */
 
   if (length > PARSER_MAXIMUM_STRING_LENGTH)
   {

@@ -126,3 +126,14 @@ assert (String.raw`Hi\n${2+3}!` === "Hi\\n5!");
   var localNew = new getStr();
   assert(chainedCall === getStr() && chainedCall === localNew);
 })();
+
+var templateObject;
+
+(function(p) {
+  templateObject = p;
+})`str`;
+
+var desc = Object.getOwnPropertyDescriptor(templateObject, '0');
+assert(desc.writable === false);
+assert(desc.enumerable === true);
+assert(desc.configurable === false);

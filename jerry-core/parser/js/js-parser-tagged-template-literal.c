@@ -48,12 +48,12 @@ parser_tagged_template_literal_append_strings (parser_context_t *context_p, /**<
     ecma_builtin_helper_def_prop_by_index (template_obj_p,
                                            prop_idx,
                                            ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY),
-                                           ECMA_PROPERTY_FIXED);
+                                           ECMA_PROPERTY_FLAG_ENUMERABLE);
 
     ecma_builtin_helper_def_prop_by_index (raw_strings_p,
                                            prop_idx,
                                            ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY),
-                                           ECMA_PROPERTY_FIXED);
+                                           ECMA_PROPERTY_FLAG_ENUMERABLE);
     return;
   }
 
@@ -88,12 +88,12 @@ parser_tagged_template_literal_append_strings (parser_context_t *context_p, /**<
   ecma_builtin_helper_def_prop_by_index (template_obj_p,
                                          prop_idx,
                                          ecma_make_string_value (cooked_str_p),
-                                         ECMA_PROPERTY_FIXED);
+                                         ECMA_PROPERTY_FLAG_ENUMERABLE);
 
   ecma_builtin_helper_def_prop_by_index (raw_strings_p,
                                          prop_idx,
                                          ecma_make_string_value (raw_str_p),
-                                         ECMA_PROPERTY_FIXED);
+                                         ECMA_PROPERTY_FLAG_ENUMERABLE);
 
   ecma_deref_ecma_string (cooked_str_p);
   ecma_deref_ecma_string (raw_str_p);

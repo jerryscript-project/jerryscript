@@ -209,7 +209,7 @@ ecma_process_promise_resolve_thenable_job (ecma_job_promise_resolve_thenable_t *
 {
   ecma_object_t *promise_p = ecma_get_object_from_value (job_p->promise);
   ecma_promise_resolving_functions_t funcs;
-  ecma_promise_create_resolving_functions (promise_p, &funcs);
+  ecma_promise_create_resolving_functions (promise_p, &funcs, true);
 
   ecma_string_t *str_resolve_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_RESOLVE_FUNCTION);
   ecma_string_t *str_reject_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_REJECT_FUNCTION);

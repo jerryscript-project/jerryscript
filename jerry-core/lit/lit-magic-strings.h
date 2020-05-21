@@ -34,6 +34,7 @@ typedef enum
   LIT_NON_INTERNAL_MAGIC_STRING__COUNT, /**< number of non-internal magic strings */
   LIT_INTERNAL_MAGIC_STRING_PROMISE = LIT_NON_INTERNAL_MAGIC_STRING__COUNT, /**<  [[Promise]] of promise
                                                                              *    reject or resolve functions */
+  LIT_INTERNAL_MAGIC_STRING_ALREADY_RESOLVED, /**< [[AlreadyResolved]] of promise reject or resolve functions */
   LIT_INTERNAL_MAGIC_STRING_RESOLVE_FUNCTION, /**< the resolve funtion of the promise object */
   LIT_INTERNAL_MAGIC_STRING_REJECT_FUNCTION, /**< the reject function of the promise object */
   LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_PROMISE, /**< [[Promise]] property */

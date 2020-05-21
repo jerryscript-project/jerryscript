@@ -162,6 +162,38 @@ ecma_promise_trigger_reactions (ecma_collection_t *reactions, /**< lists of reac
 } /* ecma_promise_trigger_reactions */
 
 /**
+ * Checks whether a resolver is called before.
+ *
+ * @return true if it was called before, false otherwise
+ */
+static bool
+ecma_is_resolver_already_called (ecma_object_t *resolver_p, /**< resolver */
+                                 ecma_object_t *promise_obj_p) /**< promise */
+{
+  ecma_string_t *str_already_resolved_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ALREADY_RESOLVED);
+  ecma_property_t *property_p = ecma_find_named_property (resolver_p, str_already_resolved_p);
+
+  if (property_p == NULL)
+  {
+    return (ecma_promise_get_flags (promise_obj_p) & ECMA_PROMISE_ALREADY_RESOLVED) != 0;
+  }
+
+  JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA);
+
+  ecma_value_t already_resolved = ECMA_PROPERTY_VALUE_PTR (property_p)->value;
+  ecma_object_t *object_p = ecma_get_object_from_value (already_resolved);
+  JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_CLASS);
+
+  ecma_extended_object_t *already_resolved_p = (ecma_extended_object_t *) object_p;
+  JERRY_ASSERT (already_resolved_p->u.class_prop.class_id == LIT_MAGIC_STRING_BOOLEAN_UL);
+
+  ecma_value_t current_value = already_resolved_p->u.class_prop.u.value;
+  already_resolved_p->u.class_prop.u.value = ECMA_VALUE_TRUE;
+
+  return current_value == ECMA_VALUE_TRUE;
+} /* ecma_is_resolver_already_called */
+
+/**
  * Reject a Promise with a reason.
  *
  * See also: ES2015 25.4.1.7
@@ -242,18 +274,16 @@ ecma_promise_reject_handler (const ecma_value_t function, /**< the function itse
   JERRY_ASSERT (ecma_is_promise (promise_obj_p));
 
   /* 3., 4. */
-  if (ecma_promise_get_flags (promise_obj_p) & ECMA_PROMISE_ALREADY_RESOLVED)
+  if (!ecma_is_resolver_already_called (function_p, promise_obj_p))
   {
-    ecma_free_value (promise);
-    return ECMA_VALUE_UNDEFINED;
+    /* 5. */
+    ((ecma_extended_object_t *) promise_obj_p)->u.class_prop.extra_info |= ECMA_PROMISE_ALREADY_RESOLVED;
+
+    /* 6. */
+    ecma_value_t reject_value = (argc == 0) ? ECMA_VALUE_UNDEFINED : argv[0];
+    ecma_reject_promise (promise, reject_value);
   }
 
-  /* 5. */
-  ((ecma_extended_object_t *) promise_obj_p)->u.class_prop.extra_info |= ECMA_PROMISE_ALREADY_RESOLVED;
-
-  /* 6. */
-  ecma_value_t reject_value = (argc == 0) ? ECMA_VALUE_UNDEFINED : argv[0];
-  ecma_reject_promise (promise, reject_value);
   ecma_free_value (promise);
   return ECMA_VALUE_UNDEFINED;
 } /* ecma_promise_reject_handler */
@@ -281,7 +311,7 @@ ecma_promise_resolve_handler (const ecma_value_t function, /**< the function its
   JERRY_ASSERT (ecma_is_promise (promise_obj_p));
 
   /* 3., 4. */
-  if (ecma_promise_get_flags (promise_obj_p) & ECMA_PROMISE_ALREADY_RESOLVED)
+  if (ecma_is_resolver_already_called (function_p, promise_obj_p))
   {
     goto end_of_resolve_function;
   }
@@ -428,7 +458,8 @@ ecma_promise_create_resolving_functions_helper (ecma_object_t *obj_p, /**< Promi
  */
 void
 ecma_promise_create_resolving_functions (ecma_object_t *object_p, /**< the promise object */
-                                         ecma_promise_resolving_functions_t *funcs) /**< [out] resolving functions */
+                                         ecma_promise_resolving_functions_t *funcs, /**< [out] resolving functions */
+                                         bool create_already_resolved) /**< create already resolved flag */
 {
   /* 2. - 4. */
   funcs->resolve = ecma_promise_create_resolving_functions_helper (object_p,
@@ -437,6 +468,28 @@ ecma_promise_create_resolving_functions (ecma_object_t *object_p, /**< the promi
   /* 5. - 7. */
   funcs->reject = ecma_promise_create_resolving_functions_helper (object_p,
                                                                   ecma_promise_reject_handler);
+  if (!create_already_resolved)
+  {
+    return;
+  }
+
+  ecma_value_t already_resolved = ecma_op_create_boolean_object (ECMA_VALUE_FALSE);
+  ecma_string_t *str_already_resolved_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ALREADY_RESOLVED);
+  ecma_property_value_t *value_p;
+
+  value_p = ecma_create_named_data_property (ecma_get_object_from_value (funcs->resolve),
+                                             str_already_resolved_p,
+                                             ECMA_PROPERTY_FIXED,
+                                             NULL);
+  value_p->value = already_resolved;
+
+  value_p = ecma_create_named_data_property (ecma_get_object_from_value (funcs->reject),
+                                             str_already_resolved_p,
+                                             ECMA_PROPERTY_FIXED,
+                                             NULL);
+  value_p->value = already_resolved;
+
+  ecma_free_value (already_resolved);
 } /* ecma_promise_create_resolving_functions */
 
 /**
@@ -490,7 +543,7 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
   promise_object_p->reactions = reactions;
   /* 8. */
   ecma_promise_resolving_functions_t funcs;
-  ecma_promise_create_resolving_functions (object_p, &funcs);
+  ecma_promise_create_resolving_functions (object_p, &funcs, false);
 
   ecma_string_t *str_resolve_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_RESOLVE_FUNCTION);
   ecma_string_t *str_reject_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_REJECT_FUNCTION);

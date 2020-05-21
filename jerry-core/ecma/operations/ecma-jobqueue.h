@@ -26,23 +26,25 @@
  */
 
 /**
- * Jerry job handler function type
+ * Job queue item types.
  */
-typedef ecma_value_t (*ecma_job_handler_t) (void *job_p);
+typedef enum
+{
+  ECMA_JOB_PROMISE_REACTION, /**< promise reaction job */
+  ECMA_JOB_PROMISE_THENABLE, /**< promise thenable job */
+} ecma_job_queue_item_type_t;
 
 /**
  * Description of the job queue item.
  */
-typedef struct ecma_job_queueitem_t
+typedef struct
 {
-  struct ecma_job_queueitem_t *next_p; /**< points to next item */
-  ecma_job_handler_t handler; /**< the handler for the job*/
-  void *job_p; /**< points to the job */
-} ecma_job_queueitem_t;
+  uintptr_t next_and_type; /**< next and type members of a queue item */
+} ecma_job_queue_item_t;
 
 void ecma_job_queue_init (void);
 
-void ecma_enqueue_promise_reaction_job (ecma_value_t reaction, ecma_value_t argument);
+void ecma_enqueue_promise_reaction_job (ecma_value_t capability, ecma_value_t handler, ecma_value_t argument);
 void ecma_enqueue_promise_resolve_thenable_job (ecma_value_t promise, ecma_value_t thenable, ecma_value_t then);
 void ecma_free_all_enqueued_jobs (void);
 

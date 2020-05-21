@@ -76,9 +76,8 @@ JERRY_STATIC_ASSERT ((int) RE_FLAG_GLOBAL == (int) JERRY_REGEXP_FLAG_GLOBAL
 
 #if ENABLED (JERRY_ES2015_BUILTIN_PROMISE)
 /* The internal ECMA_PROMISE_STATE_* values are "one byte away" from the API values */
-JERRY_STATIC_ASSERT (((ECMA_PROMISE_STATE_PENDING + 1) == JERRY_PROMISE_STATE_PENDING)
-                     && ((ECMA_PROMISE_STATE_FULFILLED + 1) == JERRY_PROMISE_STATE_FULFILLED)
-                     && ((ECMA_PROMISE_STATE_REJECTED + 1) == JERRY_PROMISE_STATE_REJECTED),
+JERRY_STATIC_ASSERT ((int) ECMA_PROMISE_IS_PENDING == (int) JERRY_PROMISE_STATE_PENDING
+                     && (int) ECMA_PROMISE_IS_FULFILLED == (int) JERRY_PROMISE_STATE_FULFILLED,
                      promise_internal_state_matches_external);
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
 
@@ -1616,14 +1615,14 @@ jerry_create_promise (void)
   jerry_assert_api_available ();
 
 #if ENABLED (JERRY_ES2015_BUILTIN_PROMISE)
-  ecma_object_t * old_new_target_p = JERRY_CONTEXT (current_new_target);
+  ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target);
 
   if (old_new_target_p == NULL)
   {
     JERRY_CONTEXT (current_new_target) = ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE);
   }
 
-  ecma_value_t promise_value =  ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_PROMISE_EXECUTOR_EMPTY);
+  ecma_value_t promise_value = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_PROMISE_EXECUTOR_EMPTY);
 
   JERRY_CONTEXT (current_new_target) = old_new_target_p;
   return promise_value;
@@ -3331,12 +3330,10 @@ jerry_get_promise_state (const jerry_value_t promise) /**< promise object to get
     return JERRY_PROMISE_STATE_NONE;
   }
 
-  uint8_t state = ecma_promise_get_state (ecma_get_object_from_value (promise));
+  uint16_t flags = ecma_promise_get_flags (ecma_get_object_from_value (promise));
+  flags &= (ECMA_PROMISE_IS_PENDING | ECMA_PROMISE_IS_FULFILLED);
 
-  JERRY_ASSERT (state < ECMA_PROMISE_STATE__COUNT);
-
-  /* Static assert above guarantees the mapping from internal type to external type. */
-  return (jerry_promise_state_t) (state + 1);
+  return (flags ? flags : JERRY_PROMISE_STATE_REJECTED);
 #else /* !ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
   JERRY_UNUSED (promise);
   return JERRY_PROMISE_STATE_NONE;

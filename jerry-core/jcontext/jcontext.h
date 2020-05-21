@@ -177,8 +177,8 @@ struct jerry_context_t
 #endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
 
 #if ENABLED (JERRY_ES2015_BUILTIN_PROMISE)
-  ecma_job_queueitem_t *job_queue_head_p; /**< points to the head item of the jobqueue */
-  ecma_job_queueitem_t *job_queue_tail_p; /**< points to the tail item of the jobqueue*/
+  ecma_job_queue_item_t *job_queue_head_p; /**< points to the head item of the job queue */
+  ecma_job_queue_item_t *job_queue_tail_p; /**< points to the tail item of the job queue */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
 
 #if ENABLED (JERRY_VM_EXEC_STOP)

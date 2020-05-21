@@ -934,19 +934,18 @@ ecma_number_parse_float (const lit_utf8_byte_t *string_buff, /**< routine's firs
     }
   }
 
-  const lit_utf8_byte_t *infinity_str_p = lit_get_magic_string_utf8 (LIT_MAGIC_STRING_INFINITY_UL);
-  lit_utf8_byte_t *infinity_str_curr_p = (lit_utf8_byte_t *) infinity_str_p;
-  lit_utf8_byte_t *infinity_str_end_p = infinity_str_curr_p + sizeof (*infinity_str_p);
-
   /* Check if string is equal to "Infinity". */
-  while (str_curr_p < str_end_p
-         && *str_curr_p++ == *infinity_str_curr_p++)
+  const lit_utf8_byte_t *infinity_str_p = lit_get_magic_string_utf8 (LIT_MAGIC_STRING_INFINITY_UL);
+  const lit_utf8_size_t infinity_length = lit_get_magic_string_size (LIT_MAGIC_STRING_INFINITY_UL);
+
+  /* The input string should be at least the length of "Infinity" to be correctly processed as
+   * the infinity value.
+   */
+  if (string_buff_size >= infinity_length
+      && memcmp (infinity_str_p, str_curr_p, infinity_length) == 0)
   {
-    if (infinity_str_curr_p == infinity_str_end_p)
-    {
-      /* String matched Infinity. */
-      return ecma_make_number_value (ecma_number_make_infinity (sign));
-    }
+    /* String matched Infinity. */
+    return ecma_make_number_value (ecma_number_make_infinity (sign));
   }
 
   /* Reset to starting position. */

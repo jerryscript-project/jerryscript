@@ -594,38 +594,42 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_des
   }
   else
   {
-    /* 4. */
+#if !ENABLED (JERRY_ES2015)
     JERRY_ASSERT (src_prop_desc_p->flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED));
-
-    /* a. */
-    if (src_prop_desc_p->get_p == NULL)
+#else /* ENABLED (JERRY_ES2015) */
+    if (src_prop_desc_p->flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED))
+#endif /* ENABLED (JERRY_ES2015) */
     {
-      prop_desc.value = ECMA_VALUE_UNDEFINED;
-    }
-    else
-    {
-      prop_desc.value = ecma_make_object_value (src_prop_desc_p->get_p);
-    }
+      /* a. */
+      if (src_prop_desc_p->get_p == NULL)
+      {
+        prop_desc.value = ECMA_VALUE_UNDEFINED;
+      }
+      else
+      {
+        prop_desc.value = ecma_make_object_value (src_prop_desc_p->get_p);
+      }
 
-    completion = ecma_op_object_define_own_property (obj_p,
-                                                     ecma_get_magic_string (LIT_MAGIC_STRING_GET),
-                                                     &prop_desc);
-    JERRY_ASSERT (ecma_is_value_true (completion));
+      completion = ecma_op_object_define_own_property (obj_p,
+                                                       ecma_get_magic_string (LIT_MAGIC_STRING_GET),
+                                                       &prop_desc);
+      JERRY_ASSERT (ecma_is_value_true (completion));
 
-    /* b. */
-    if (src_prop_desc_p->set_p == NULL)
-    {
-      prop_desc.value = ECMA_VALUE_UNDEFINED;
-    }
-    else
-    {
-      prop_desc.value = ecma_make_object_value (src_prop_desc_p->set_p);
-    }
+      /* b. */
+      if (src_prop_desc_p->set_p == NULL)
+      {
+        prop_desc.value = ECMA_VALUE_UNDEFINED;
+      }
+      else
+      {
+        prop_desc.value = ecma_make_object_value (src_prop_desc_p->set_p);
+      }
 
-    completion = ecma_op_object_define_own_property (obj_p,
-                                                     ecma_get_magic_string (LIT_MAGIC_STRING_SET),
-                                                     &prop_desc);
-    JERRY_ASSERT (ecma_is_value_true (completion));
+      completion = ecma_op_object_define_own_property (obj_p,
+                                                       ecma_get_magic_string (LIT_MAGIC_STRING_SET),
+                                                       &prop_desc);
+      JERRY_ASSERT (ecma_is_value_true (completion));
+    }
   }
 
   prop_desc.value = ecma_make_boolean_value (src_prop_desc_p->flags & ECMA_PROP_IS_ENUMERABLE);

@@ -257,7 +257,7 @@ jerryx_debugger_tcp_configure_socket (jerryx_socket server_socket, /** < socket 
     return false;
   }
 
-  if (bind (server_socket, (struct sockaddr *)&addr, sizeof (struct sockaddr_in)) != 0)
+  if (bind (server_socket, (struct sockaddr *) &addr, sizeof (struct sockaddr_in)) != 0)
   {
     return false;
   }
@@ -309,7 +309,7 @@ jerryx_debugger_tcp_create (uint16_t port) /**< listening port */
   struct sockaddr_in addr;
   socklen_t sin_size = sizeof (struct sockaddr_in);
 
-  jerryx_socket tcp_socket = accept (server_socket, (struct sockaddr *)&addr, &sin_size);
+  jerryx_socket tcp_socket = accept (server_socket, (struct sockaddr *) &addr, &sin_size);
 
   jerryx_debugger_tcp_close_socket (server_socket);
 

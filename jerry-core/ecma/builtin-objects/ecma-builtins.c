@@ -43,15 +43,15 @@ typedef const ecma_builtin_property_descriptor_t *ecma_builtin_property_list_ref
 /**
  * Definition of built-in dispatch routine function pointer.
  */
-typedef ecma_value_t (*ecma_builtin_dispatch_routine_t)(uint16_t builtin_routine_id,
-                                                        ecma_value_t this_arg,
-                                                        const ecma_value_t arguments_list[],
-                                                        ecma_length_t arguments_number);
+typedef ecma_value_t (*ecma_builtin_dispatch_routine_t) (uint16_t builtin_routine_id,
+                                                         ecma_value_t this_arg,
+                                                         const ecma_value_t arguments_list[],
+                                                         ecma_length_t arguments_number);
 /**
  * Definition of built-in dispatch call function pointer.
  */
-typedef ecma_value_t (*ecma_builtin_dispatch_call_t)(const ecma_value_t arguments_list[],
-                                                     ecma_length_t arguments_number);
+typedef ecma_value_t (*ecma_builtin_dispatch_call_t) (const ecma_value_t arguments_list[],
+                                                      ecma_length_t arguments_number);
 /**
  * Definition of a builtin descriptor which contains the builtin object's:
  * - prototype objects's id (13-bits)

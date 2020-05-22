@@ -92,7 +92,7 @@ test_read_with_offset (uint8_t offset) /**< offset for buffer read. */
 
   /* Try to copy more than the target buffer size. */
   jerry_length_t copied = jerry_arraybuffer_read (arraybuffer, offset, buffer, 20);
-  TEST_ASSERT (copied == (jerry_length_t)(15 - offset));
+  TEST_ASSERT (copied == (jerry_length_t) (15 - offset));
 
   for (uint8_t i = 0; i < copied; i++)
   {
@@ -132,7 +132,7 @@ static void test_write_with_offset (uint8_t offset) /**< offset for buffer write
 
   /* Intentionally copy more than the allowed space. */
   jerry_length_t copied = jerry_arraybuffer_write (arraybuffer, offset, buffer, 20);
-  TEST_ASSERT (copied == (jerry_length_t)(15 - offset));
+  TEST_ASSERT (copied == (jerry_length_t) (15 - offset));
 
   const jerry_char_t eval_test_arraybuffer[] = TEST_STRING_LITERAL (
     "for (var i = 0; i < offset; i++)"
@@ -340,7 +340,7 @@ main (void)
     double sum = 0;
     for (int i = 0; i < 20; i++)
     {
-      data[i] = (uint8_t)(i * 3);
+      data[i] = (uint8_t) (i * 3);
       sum += data[i];
     }
 

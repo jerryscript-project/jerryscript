@@ -60,7 +60,7 @@ atanh (double x)
   ix = hx & 0x7fffffff;
 
   /* |x| > 1 */
-  if ((ix | ((unsigned int)(temp.as_int.lo | (-temp.as_int.lo)) >> 31)) > 0x3ff00000)
+  if ((ix | ((unsigned int) (temp.as_int.lo | (-temp.as_int.lo)) >> 31)) > 0x3ff00000)
   {
     return NAN;
   }

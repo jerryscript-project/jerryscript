@@ -228,7 +228,7 @@ ecma_op_container_free_weakmap_entries (ecma_object_t *object_p, /**< object poi
 
   for (uint32_t i = 0; i < entry_count; i += ECMA_CONTAINER_PAIR_SIZE)
   {
-    ecma_container_pair_t *entry_p = (ecma_container_pair_t *)(start_p + i);
+    ecma_container_pair_t *entry_p = (ecma_container_pair_t *) (start_p + i);
 
     if (ecma_is_value_empty (entry_p->key))
     {
@@ -287,7 +287,7 @@ ecma_op_container_free_map_entries (ecma_collection_t *container_p)
 
   for (uint32_t i = 0; i < entry_count; i += ECMA_CONTAINER_PAIR_SIZE)
   {
-    ecma_container_pair_t *entry_p = (ecma_container_pair_t *)(start_p + i);
+    ecma_container_pair_t *entry_p = (ecma_container_pair_t *) (start_p + i);
 
     if (ecma_is_value_empty (entry_p->key))
     {

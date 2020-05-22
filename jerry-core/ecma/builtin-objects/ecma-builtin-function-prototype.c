@@ -392,6 +392,13 @@ ecma_builtin_function_prototype_dispatch_routine (uint16_t builtin_routine_id, /
 {
   if (!ecma_op_is_callable (this_arg))
   {
+#if ENABLED (JERRY_ES2015)
+    if (JERRY_UNLIKELY (builtin_routine_id == ECMA_FUNCTION_PROTOTYPE_SYMBOL_HAS_INSTANCE))
+    {
+      return ECMA_VALUE_FALSE;
+    }
+#endif /* ENABLED (JERRY_ES2015) */
+
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a function."));
   }
 

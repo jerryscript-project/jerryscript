@@ -22,6 +22,7 @@
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
+#include "ecma-proxy-object.h"
 #include "jcontext.h"
 
 #if ENABLED (JERRY_ES2015_BUILTIN_REFLECT)
@@ -227,19 +228,26 @@ ecma_builtin_reflect_dispatch_routine (uint16_t builtin_routine_id, /**< built-i
     }
     case ECMA_REFLECT_OBJECT_SET_PROTOTYPE_OF:
     {
-      ecma_value_t result = ecma_builtin_object_object_set_prototype_of (arguments_list[0], arguments_list[1]);
-      bool is_error = ECMA_IS_VALUE_ERROR (result);
-
-      if (is_error)
+      if (!ecma_is_value_object (arguments_list[1]) && !ecma_is_value_null (arguments_list[1]))
       {
-        jcontext_release_exception ();
+        return ecma_raise_type_error (ECMA_ERR_MSG ("proto is neither Object nor Null."));
+      }
+
+      ecma_object_t *obj_p = ecma_get_object_from_value (arguments_list[0]);
+      ecma_value_t status;
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+      if (ECMA_OBJECT_IS_PROXY (obj_p))
+      {
+        status = ecma_proxy_object_set_prototype_of (obj_p, arguments_list[1]);
       }
       else
+#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
       {
-        ecma_free_value (result);
+        status = ecma_op_ordinary_object_set_prototype_of (obj_p, arguments_list[1]);
       }
 
-      return ecma_make_boolean_value (!is_error);
+      return status;
     }
     case ECMA_REFLECT_OBJECT_APPLY:
     {

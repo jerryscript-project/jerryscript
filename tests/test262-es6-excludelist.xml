@@ -198,9 +198,6 @@
   <test id="built-ins/Reflect/preventExtensions/return-boolean-from-proxy-object.js"><reason></reason></test>
   <test id="built-ins/Reflect/set/name.js"><reason></reason></test>
   <test id="built-ins/Reflect/setPrototypeOf/name.js"><reason></reason></test>
-  <test id="built-ins/Reflect/setPrototypeOf/proto-is-not-object-and-not-null-throws.js"><reason></reason></test>
-  <test id="built-ins/Reflect/setPrototypeOf/proto-is-symbol-throws.js"><reason></reason></test>
-  <test id="built-ins/Reflect/setPrototypeOf/return-abrupt-from-result.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/exec/get-sticky-coerce.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/exec/get-sticky-err.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/flags/name.js"><reason></reason></test>

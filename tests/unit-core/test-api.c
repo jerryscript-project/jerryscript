@@ -1025,7 +1025,7 @@ main (void)
     TEST_ASSERT (jerry_get_boolean_value (has_prop_js));
     jerry_release_value (has_prop_js);
     jerry_value_t parsed_data = jerry_get_property (parsed_json, key);
-    TEST_ASSERT (jerry_value_is_string (parsed_data)== true);
+    TEST_ASSERT (jerry_value_is_string (parsed_data) == true);
     jerry_size_t buff_size = jerry_get_string_size (parsed_data);
     JERRY_VLA (char, buff, buff_size + 1);
     jerry_string_to_char_buffer (parsed_data, (jerry_char_t *) buff, buff_size);

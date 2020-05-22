@@ -1527,7 +1527,7 @@ uintptr_t JERRY_ATTR_NOINLINE
 ecma_get_current_stack_usage (void)
 {
   volatile int __sp;
-  return (uintptr_t) (JERRY_CONTEXT (stack_base) - (uintptr_t)&__sp);
+  return (uintptr_t) (JERRY_CONTEXT (stack_base) - (uintptr_t) &__sp);
 } /* ecma_get_current_stack_usage */
 
 #endif /* (JERRY_STACK_LIMIT != 0) */

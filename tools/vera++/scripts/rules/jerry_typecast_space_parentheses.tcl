@@ -22,7 +22,7 @@ proc check_part_of_the_file {file line_num col_start col_end} {
     set line [getLine $file $line_num]
     set line [string range $line $col_start $col_end]
 
-    if {[regexp {\)\w} $line]} {
+    if {[regexp {\)[\w\(&~=]} $line]} {
         report $file $line_num "there should be exactly one space after right parentheses"
     }
 }

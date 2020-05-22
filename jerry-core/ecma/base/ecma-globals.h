@@ -1748,12 +1748,12 @@ typedef struct
 /**
  * Function callback descriptor of a %TypedArray% object getter
  */
-typedef ecma_number_t (*ecma_typedarray_getter_fn_t)(lit_utf8_byte_t *src);
+typedef ecma_number_t (*ecma_typedarray_getter_fn_t) (lit_utf8_byte_t *src);
 
 /**
  * Function callback descriptor of a %TypedArray% object setter
  */
-typedef void (*ecma_typedarray_setter_fn_t)(lit_utf8_byte_t *src, ecma_number_t value);
+typedef void (*ecma_typedarray_setter_fn_t) (lit_utf8_byte_t *src, ecma_number_t value);
 
 /**
  * Builtin id for the different types of TypedArray's

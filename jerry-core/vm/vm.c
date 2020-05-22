@@ -2271,7 +2271,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                     stack_top_p[-2] = stack_top_p[-3];
                     stack_top_p[-3] = result;
                   }
-                  opcode_data &= (uint32_t)~VM_OC_PUT_STACK;
+                  opcode_data &= (uint32_t) ~VM_OC_PUT_STACK;
                 }
                 else if (opcode_data & VM_OC_PUT_BLOCK)
                 {
@@ -2334,7 +2334,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                 stack_top_p[-2] = stack_top_p[-3];
                 stack_top_p[-3] = ecma_copy_value (result);
               }
-              opcode_data &= (uint32_t)~VM_OC_PUT_STACK;
+              opcode_data &= (uint32_t) ~VM_OC_PUT_STACK;
             }
             else if (opcode_data & VM_OC_PUT_BLOCK)
             {

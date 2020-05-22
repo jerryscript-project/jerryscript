@@ -234,9 +234,9 @@ ecma_builtin_helper_error_dispatch_call (ecma_standard_error_t error_type, const
 /**
  * Comparison callback function header for sorting helper routines.
  */
-typedef ecma_value_t (*ecma_builtin_helper_sort_compare_fn_t)(ecma_value_t lhs, /**< left value */
-                                                              ecma_value_t rhs, /**< right value */
-                                                              ecma_value_t compare_func); /**< compare function */
+typedef ecma_value_t (*ecma_builtin_helper_sort_compare_fn_t) (ecma_value_t lhs, /**< left value */
+                                                               ecma_value_t rhs, /**< right value */
+                                                               ecma_value_t compare_func); /**< compare function */
 
 ecma_value_t ecma_builtin_helper_array_heap_sort_helper (ecma_value_t *array_p,
                                                          uint32_t right,

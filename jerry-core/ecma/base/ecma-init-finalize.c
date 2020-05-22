@@ -53,7 +53,7 @@ ecma_init (void)
 
 #if (JERRY_STACK_LIMIT != 0)
   volatile int sp;
-  JERRY_CONTEXT (stack_base) = (uintptr_t)&sp;
+  JERRY_CONTEXT (stack_base) = (uintptr_t) &sp;
 #endif /* (JERRY_STACK_LIMIT != 0) */
 
 #if ENABLED (JERRY_ES2015_BUILTIN_PROMISE)

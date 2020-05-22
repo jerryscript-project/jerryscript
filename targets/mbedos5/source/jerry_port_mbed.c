@@ -79,7 +79,7 @@ jerry_port_get_current_time (void)
    * are within the mentioned 71 mins. Above that interval we can assume
    * that the milliseconds part of the time is negligibe.
    */
-  if (curr_time - last_time > (time_t)(((uint32_t)-1) / 1000000)) {
+  if (curr_time - last_time > (time_t) (((uint32_t) - 1) / 1000000)) {
     skew = 0;
   } else if (last_tick > curr_tick) {
     skew = (skew + 33) % 1000;

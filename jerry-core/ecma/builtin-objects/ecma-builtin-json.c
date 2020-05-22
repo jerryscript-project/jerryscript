@@ -204,7 +204,7 @@ ecma_builtin_json_parse_string (ecma_json_token_t *token_p) /**< token argument 
 
   ecma_stringbuilder_append_raw (&result_builder,
                                  unappended_p,
-                                 (lit_utf8_size_t)(current_p - unappended_p));
+                                 (lit_utf8_size_t) (current_p - unappended_p));
   token_p->u.string_p = ecma_stringbuilder_finalize (&result_builder);
   token_p->current_p = current_p + 1;
   token_p->type = TOKEN_STRING;

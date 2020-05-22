@@ -152,3 +152,5 @@ for (var value of s) {
 
   assert(value === expected[loopCount++]);
 }
+
+assert(Set.prototype.values === Set.prototype.keys);

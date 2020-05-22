@@ -725,6 +725,10 @@ ecma_builtin_routine_try_to_instantiate_property (ecma_object_t *object_p, /**< 
       {
         name_p = ecma_get_magic_string (LIT_MAGIC_STRING_VALUES);
       }
+      else if (JERRY_UNLIKELY (name_id == LIT_INTERNAL_MAGIC_STRING_SET_PROTOTYPE_KEYS))
+      {
+        name_p = ecma_get_magic_string (LIT_MAGIC_STRING_VALUES);
+      }
       else
       {
         JERRY_ASSERT (LIT_IS_GLOBAL_SYMBOL (name_id));

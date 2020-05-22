@@ -14,6 +14,7 @@
  */
 
 #include "ecma-builtins.h"
+#include "ecma-container-object.h"
 #include "ecma-array-object.h"
 #include "ecma-gc.h"
 #include "lit-char-helpers.h"
@@ -36,7 +37,8 @@ enum
   ECMA_INTRINSIC_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
   ECMA_INTRINSIC_PARSE_FLOAT,
   ECMA_INTRINSIC_PARSE_INT,
-  ECMA_INTRINSIC_ARRAY_PROTOTYPE_VALUES
+  ECMA_INTRINSIC_ARRAY_PROTOTYPE_VALUES,
+  ECMA_INTRINSIC_SET_PROTOTYPE_KEYS
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-intrinsic.inc.h"
@@ -82,6 +84,32 @@ ecma_builtin_intrinsic_array_prototype_values (ecma_value_t this_value) /**< thi
 } /* ecma_builtin_intrinsic_array_prototype_values */
 
 /**
+ * The Set.prototype values, keys and [@@iterator] routines
+ *
+ * See also:
+ *          ECMA-262 v6, 23.2.3.8
+ *          ECMA-262 v6, 23.2.3.10
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_intrinsic_set_prototype_keys (ecma_value_t this_value)
+{
+  ecma_extended_object_t *map_object_p = ecma_op_container_get_object (this_value, LIT_MAGIC_STRING_SET_UL);
+
+  if (map_object_p == NULL)
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  return ecma_op_container_create_iterator (this_value,
+                                            0,
+                                            ECMA_BUILTIN_ID_SET_ITERATOR_PROTOTYPE,
+                                            ECMA_PSEUDO_SET_ITERATOR);
+} /* ecma_builtin_intrinsic_set_prototype_keys */
+
+/**
  * Dispatcher of the built-in's routines
  *
  * @return ecma value
@@ -103,6 +131,12 @@ ecma_builtin_intrinsic_dispatch_routine (uint16_t builtin_routine_id, /**< built
   {
     return ecma_builtin_intrinsic_array_prototype_values (this_arg);
   }
+
+  if (builtin_routine_id == ECMA_INTRINSIC_SET_PROTOTYPE_KEYS)
+  {
+    return ecma_builtin_intrinsic_set_prototype_keys (this_arg);
+  }
+
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
   if (builtin_routine_id <= ECMA_INTRINSIC_PARSE_INT)
   {

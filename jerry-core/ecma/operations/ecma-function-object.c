@@ -1326,7 +1326,7 @@ ecma_op_lazy_instantiate_prototype_object (ecma_object_t *object_p) /**< the fun
                                            ECMA_OBJECT_TYPE_GENERAL);
       init_constructor = false;
     }
-    else if (byte_code_p->status_flags & CBC_CODE_FLAGS_ARROW_FUNCTION)
+    else if (byte_code_p->status_flags & (CBC_CODE_FLAGS_ARROW_FUNCTION | CBC_CODE_FLAGS_ACCESSOR))
     {
       return NULL;
     }
@@ -1616,7 +1616,7 @@ ecma_op_function_list_lazy_property_names (ecma_object_t *object_p, /**< functio
   bytecode_data_p = ecma_op_function_get_compiled_code ((ecma_extended_object_t *) object_p);
 
 #if ENABLED (JERRY_ES2015)
-  if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_ARROW_FUNCTION)
+  if (bytecode_data_p->status_flags & (CBC_CODE_FLAGS_ARROW_FUNCTION | CBC_CODE_FLAGS_ACCESSOR))
   {
     return;
   }

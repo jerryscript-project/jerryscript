@@ -2053,8 +2053,6 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
   ecma_collection_t *ret_p = ecma_new_collection ();
   ecma_collection_t *skipped_non_enumerable_p = ecma_new_collection ();
 
-  const ecma_object_type_t type = ecma_get_object_type (obj_p);
-  const bool obj_is_builtin = ecma_get_object_is_builtin (obj_p);
   const bool is_enumerable_only = (opts & ECMA_LIST_ENUMERABLE) != 0;
   const bool is_array_indices_only = (opts & ECMA_LIST_ARRAY_INDICES) != 0;
   const bool is_with_prototype_chain = (opts & ECMA_LIST_PROTOTYPE) != 0;
@@ -2069,10 +2067,10 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
   memset (names_hashes_bitmap, 0, names_hashes_bitmap_size * sizeof (names_hashes_bitmap[0]));
 
-  ecma_object_t *prototype_chain_iter_p = obj_p;
-
   while (true)
   {
+    const ecma_object_type_t type = ecma_get_object_type (obj_p);
+    const bool obj_is_builtin = ecma_get_object_is_builtin (obj_p);
     ecma_length_t string_named_properties_count = 0;
     ecma_length_t array_index_named_properties_count = 0;
 #if ENABLED (JERRY_ES2015)
@@ -2224,14 +2222,14 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
       }
     }
 
-    jmem_cpointer_t prop_iter_cp = prototype_chain_iter_p->u1.property_list_cp;
+    jmem_cpointer_t prop_iter_cp = obj_p->u1.property_list_cp;
 
-    if (ecma_op_object_is_fast_array (prototype_chain_iter_p) && prop_iter_cp != JMEM_CP_NULL)
+    if (ecma_op_object_is_fast_array (obj_p) && prop_iter_cp != JMEM_CP_NULL)
     {
-      ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) prototype_chain_iter_p;
+      ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
 
       uint32_t length = ext_obj_p->u.array.length;
-      array_index_named_properties_count = length - ecma_fast_array_get_hole_count (prototype_chain_iter_p);
+      array_index_named_properties_count = length - ecma_fast_array_get_hole_count (obj_p);
 
       ecma_value_t *values_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, prop_iter_cp);
 
@@ -2563,13 +2561,12 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
     JMEM_FINALIZE_LOCAL_ARRAY (names_p);
 
-    if (!is_with_prototype_chain || prototype_chain_iter_p->u2.prototype_cp == JMEM_CP_NULL)
+    if (!is_with_prototype_chain || obj_p->u2.prototype_cp == JMEM_CP_NULL)
     {
       break;
     }
 
-    prototype_chain_iter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t,
-                                                        prototype_chain_iter_p->u2.prototype_cp);
+    obj_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, obj_p->u2.prototype_cp);
   }
 
   ecma_collection_free (skipped_non_enumerable_p);

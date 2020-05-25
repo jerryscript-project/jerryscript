@@ -3159,12 +3159,6 @@ scan_completed:
   }
   PARSER_CATCH
   {
-    /* Ignore the errors thrown by the lexer. */
-    if (context_p->error != PARSER_ERR_OUT_OF_MEMORY)
-    {
-      context_p->error = PARSER_ERR_NO_ERROR;
-    }
-
 #if ENABLED (JERRY_ES2015)
     while (scanner_context.active_binding_list_p != NULL)
     {
@@ -3172,29 +3166,41 @@ scan_completed:
     }
 #endif /* ENABLED (JERRY_ES2015) */
 
-    /* The following code may allocate memory, so it is enclosed in a try/catch. */
-    PARSER_TRY (context_p->try_buffer)
+    if (JERRY_UNLIKELY (context_p->error != PARSER_ERR_OUT_OF_MEMORY))
     {
-#if ENABLED (JERRY_ES2015)
-      if (scanner_context.status_flags & SCANNER_CONTEXT_THROW_ERR_ASYNC_FUNCTION)
-      {
-        JERRY_ASSERT (scanner_context.async_source_p != NULL);
+      /* Ignore the errors thrown by the lexer. */
+      context_p->error = PARSER_ERR_NO_ERROR;
 
-        scanner_info_t *info_p;
-        info_p = scanner_insert_info (context_p, scanner_context.async_source_p, sizeof (scanner_info_t));
-        info_p->type = SCANNER_TYPE_ERR_ASYNC_FUNCTION;
-      }
-#endif /* ENABLED (JERRY_ES2015) */
-
-      while (scanner_context.active_literal_pool_p != NULL)
+      /* The following code may allocate memory, so it is enclosed in a try/catch. */
+      PARSER_TRY (context_p->try_buffer)
       {
-        scanner_pop_literal_pool (context_p, &scanner_context);
+  #if ENABLED (JERRY_ES2015)
+        if (scanner_context.status_flags & SCANNER_CONTEXT_THROW_ERR_ASYNC_FUNCTION)
+        {
+          JERRY_ASSERT (scanner_context.async_source_p != NULL);
+
+          scanner_info_t *info_p;
+          info_p = scanner_insert_info (context_p, scanner_context.async_source_p, sizeof (scanner_info_t));
+          info_p->type = SCANNER_TYPE_ERR_ASYNC_FUNCTION;
+        }
+  #endif /* ENABLED (JERRY_ES2015) */
+
+        while (scanner_context.active_literal_pool_p != NULL)
+        {
+          scanner_pop_literal_pool (context_p, &scanner_context);
+        }
       }
+      PARSER_CATCH
+      {
+        JERRY_ASSERT (context_p->error == PARSER_ERR_OUT_OF_MEMORY);
+      }
+      PARSER_TRY_END
     }
-    PARSER_CATCH
-    {
-      JERRY_ASSERT (context_p->error == PARSER_ERR_NO_ERROR);
 
+    JERRY_ASSERT (context_p->error == PARSER_ERR_NO_ERROR || context_p->error == PARSER_ERR_OUT_OF_MEMORY);
+
+    if (context_p->error == PARSER_ERR_OUT_OF_MEMORY)
+    {
       while (scanner_context.active_literal_pool_p != NULL)
       {
         scanner_literal_pool_t *literal_pool_p = scanner_context.active_literal_pool_p;
@@ -3204,12 +3210,10 @@ scan_completed:
         parser_list_free (&literal_pool_p->literal_pool);
         scanner_free (literal_pool_p, sizeof (scanner_literal_pool_t));
       }
-    }
-    PARSER_TRY_END
 
-#if ENABLED (JERRY_ES2015)
-    context_p->status_flags &= (uint32_t) ~PARSER_IS_GENERATOR_FUNCTION;
-#endif /* ENABLED (JERRY_ES2015) */
+      parser_stack_free (context_p);
+      return;
+    }
   }
   PARSER_TRY_END
 

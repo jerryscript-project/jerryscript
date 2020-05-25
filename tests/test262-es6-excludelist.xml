@@ -189,7 +189,6 @@
   <test id="built-ins/Reflect/getPrototypeOf/name.js"><reason></reason></test>
   <test id="built-ins/Reflect/has/name.js"><reason></reason></test>
   <test id="built-ins/Reflect/isExtensible/name.js"><reason></reason></test>
-  <test id="built-ins/Reflect/ownKeys/length.js"><reason></reason></test>
   <test id="built-ins/Reflect/ownKeys/name.js"><reason></reason></test>
   <test id="built-ins/Reflect/preventExtensions/always-return-true-from-ordinary-object.js"><reason></reason></test>
   <test id="built-ins/Reflect/preventExtensions/name.js"><reason></reason></test>

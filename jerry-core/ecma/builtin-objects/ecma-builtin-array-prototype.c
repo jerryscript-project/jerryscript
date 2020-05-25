@@ -1775,9 +1775,11 @@ ecma_builtin_array_prototype_object_last_index_of (const ecma_value_t args[], /*
   if (ecma_op_object_is_fast_array (obj_p))
   {
     ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
+    // It is possible that the length changed due to the callback performed above.
+    uint32_t array_length = ext_obj_p->u.array.length;
 
     if (ext_obj_p->u.array.u.hole_count < ECMA_FAST_ARRAY_HOLE_ONE
-        && len != 0)
+        && array_length > 0)
     {
       ecma_value_t *buffer_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, obj_p->u1.property_list_cp);
 

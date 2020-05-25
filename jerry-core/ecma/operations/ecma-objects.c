@@ -901,14 +901,6 @@ ecma_op_object_get_length (ecma_object_t *object_p, /**< the object */
     return ECMA_VALUE_EMPTY;
   }
 
-#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
-  if (ecma_object_is_typedarray (object_p))
-  {
-    *length_p = ecma_typedarray_get_length (object_p);
-    return ECMA_VALUE_EMPTY;
-  }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
-
   ecma_value_t len_value = ecma_op_object_get_by_magic_id (object_p, LIT_MAGIC_STRING_LENGTH);
   ecma_value_t len_number = ecma_op_to_length (len_value, length_p);
   ecma_free_value (len_value);

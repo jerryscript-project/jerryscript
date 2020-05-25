@@ -68,7 +68,6 @@
   <test id="built-ins/Function/prototype/bind/instance-name-non-string.js"><reason></reason></test>
   <test id="built-ins/Function/prototype/name.js"><reason></reason></test>
   <test id="built-ins/Function/prototype/Symbol.hasInstance/name.js"><reason></reason></test>
-  <test id="built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js"><reason></reason></test>
   <test id="built-ins/Function/StrictFunction_restricted-properties.js"><reason></reason></test>
   <test id="built-ins/GeneratorFunction/instance-name.js"><reason></reason></test>
   <test id="built-ins/GeneratorFunction/instance-restricted-properties.js"><reason></reason></test>

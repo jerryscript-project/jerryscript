@@ -807,7 +807,15 @@ typedef struct
   uint8_t length_and_bitset_size; /**< length for built-in functions and
                                    *   bit set size for all built-ins */
   uint16_t routine_id; /**< routine id for built-in functions */
-  uint32_t instantiated_bitset[1]; /**< bit set for instantiated properties */
+  union
+  {
+    uint32_t instantiated_bitset[1]; /**< bit set for instantiated properties */
+    struct
+    {
+      uint16_t name; /**< name of the built-in functions */
+      uint16_t bitset; /**< bit set for instantiated properties of builtin functions */
+    } builtin_routine;
+  } u;
 } ecma_built_in_props_t;
 
 /**

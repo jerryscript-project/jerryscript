@@ -31,11 +31,10 @@
  */
 typedef enum
 {
-  ECMA_PROMISE_STATE_PENDING, /**< pending state */
-  ECMA_PROMISE_STATE_FULFILLED, /**< fulfilled state */
-  ECMA_PROMISE_STATE_REJECTED, /** rejected state */
-  ECMA_PROMISE_STATE__COUNT /**< number of states */
-} ecma_promise_state_t;
+  ECMA_PROMISE_IS_PENDING = (1 << 0), /**< pending state */
+  ECMA_PROMISE_IS_FULFILLED = (1 << 1), /**< fulfilled state */
+  ECMA_PROMISE_ALREADY_RESOLVED = (1 << 2), /**< already resolved */
+} ecma_promise_flags_t;
 
 /**
  * Indicates the type of the executor in promise construct.
@@ -62,20 +61,35 @@ typedef struct
  */
 typedef struct
 {
-  ecma_extended_object_t ecma_extended_object_t; /**< extended object part */
-  uint8_t state; /**< promise state, see ecma_promise_state_t */
-  ecma_collection_t *fulfill_reactions; /**< list of PromiseFullfillReactions */
-  ecma_collection_t *reject_reactions; /**< list of PromiseRejectReactions */
+  ecma_extended_object_t header; /**< extended object part */
+  ecma_collection_t *reactions; /**< list of promise reactions */
 } ecma_promise_object_t;
+
+/* The Promise reaction is a compressed structure, where each item can
+ * be a sequence of up to three ecma object values as seen below:
+ *
+ * [ Capability ][ Optional fullfilled callback ][ Optional rejected callback ]
+ * [ Async function callback ]
+ *
+ * The first member is an object, which lower bits specify the type of the reaction:
+ *   bit 2 is not set: callback reactions
+ *     The first two objects specify the resolve/reject functions of the promise
+ *     returned by the `then` operation which can be used to chain event handlers.
+ *
+ *     bit 0: has a fullfilled callback
+ *     bit 1: has a rejected callback
+ *
+ *   bit 2 is set: async function callback
+ */
 
 bool ecma_is_promise (ecma_object_t *obj_p);
 ecma_value_t ecma_op_create_promise_object (ecma_value_t executor, ecma_promise_executor_type_t type);
-uint8_t ecma_promise_get_state (ecma_object_t *promise_p);
+uint16_t ecma_promise_get_flags (ecma_object_t *promise_p);
 ecma_value_t ecma_promise_get_result (ecma_object_t *promise_p);
 ecma_value_t ecma_promise_new_capability (ecma_value_t constructor);
 ecma_value_t ecma_promise_reject_or_resolve (ecma_value_t this_arg, ecma_value_t value, bool is_resolve);
 ecma_value_t ecma_promise_then (ecma_value_t promise, ecma_value_t on_fulfilled, ecma_value_t on_rejected);
-ecma_promise_resolving_functions_t *ecma_promise_create_resolving_functions (ecma_object_t *object_p);
+void ecma_promise_create_resolving_functions (ecma_object_t *object_p, ecma_promise_resolving_functions_t *funcs);
 void ecma_promise_free_resolving_functions (ecma_promise_resolving_functions_t *funcs);
 
 /**

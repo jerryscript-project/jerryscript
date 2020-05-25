@@ -84,60 +84,29 @@ ecma_promise_set_result (ecma_object_t *obj_p, /**< points to promise object */
  *
  * @return the state's enum value
  */
-uint8_t
-ecma_promise_get_state (ecma_object_t *obj_p) /**< points to promise object */
+uint16_t
+ecma_promise_get_flags (ecma_object_t *obj_p) /**< points to promise object */
 {
   JERRY_ASSERT (ecma_is_promise (obj_p));
 
-  return ((ecma_promise_object_t *) obj_p)->state;
-} /* ecma_promise_get_state */
+  return ((ecma_extended_object_t *) obj_p)->u.class_prop.extra_info;
+} /* ecma_promise_get_flags */
 
 /**
  * Set the PromiseState of promise.
  */
 static inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_promise_set_state (ecma_object_t *obj_p, /**< points to promise object */
-                        uint8_t state) /**< the state */
+                        bool is_fulfilled) /**< new flags */
 {
   JERRY_ASSERT (ecma_is_promise (obj_p));
+  JERRY_ASSERT (ecma_promise_get_flags (obj_p) & ECMA_PROMISE_IS_PENDING);
 
-  ((ecma_promise_object_t *) obj_p)->state = state;
+  uint16_t flags_to_invert = (is_fulfilled ? (ECMA_PROMISE_IS_PENDING | ECMA_PROMISE_IS_FULFILLED)
+                                           : ECMA_PROMISE_IS_PENDING);
+
+  ((ecma_extended_object_t *) obj_p)->u.class_prop.extra_info ^= flags_to_invert;
 } /* ecma_promise_set_state */
-
-/**
- * Get the bool value of alreadyResolved.
- *
- * @return bool value of alreadyResolved.
- */
-static bool
-ecma_get_already_resolved_bool_value (ecma_value_t already_resolved) /**< the alreadyResolved */
-{
-  JERRY_ASSERT (ecma_is_value_object (already_resolved));
-
-  ecma_object_t *already_resolved_p = ecma_get_object_from_value (already_resolved);
-  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) already_resolved_p;
-
-  JERRY_ASSERT (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_BOOLEAN_UL);
-
-  return ext_object_p->u.class_prop.u.value == ECMA_VALUE_TRUE;
-} /* ecma_get_already_resolved_bool_value */
-
-/**
- * Set the value of alreadyResolved.
- */
-static void
-ecma_set_already_resolved_value (ecma_value_t already_resolved, /**< the alreadyResolved */
-                                 bool value) /**< the value to set */
-{
-  JERRY_ASSERT (ecma_is_value_object (already_resolved));
-
-  ecma_object_t *already_resolved_p = ecma_get_object_from_value (already_resolved);
-  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) already_resolved_p;
-
-  JERRY_ASSERT (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_BOOLEAN_UL);
-
-  ext_object_p->u.class_prop.u.value = ecma_make_boolean_value (value);
-} /* ecma_set_already_resolved_value */
 
 /**
  * Take a collection of Reactions and enqueue a new PromiseReactionJob for each Reaction.
@@ -146,13 +115,49 @@ ecma_set_already_resolved_value (ecma_value_t already_resolved, /**< the already
  */
 static void
 ecma_promise_trigger_reactions (ecma_collection_t *reactions, /**< lists of reactions */
-                                ecma_value_t value) /**< value for resolve or reject */
+                                ecma_value_t value, /**< value for resolve or reject */
+                                bool is_reject) /**< true if promise is rejected, false otherwise */
 {
   ecma_value_t *buffer_p = reactions->buffer_p;
+  ecma_value_t *buffer_end_p = buffer_p + reactions->item_count;
 
-  for (uint32_t i = 0; i < reactions->item_count; i++)
+  while (buffer_p < buffer_end_p)
   {
-    ecma_enqueue_promise_reaction_job (buffer_p[i], value);
+    ecma_value_t capability_with_tag = *buffer_p++;
+    ecma_object_t *capability_obj_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t, capability_with_tag);
+    ecma_value_t capability = ecma_make_object_value (capability_obj_p);
+
+    if (!is_reject)
+    {
+      ecma_value_t handler = ECMA_VALUE_TRUE;
+
+      if (JMEM_CP_GET_FIRST_BIT_FROM_POINTER_TAG (capability_with_tag))
+      {
+        handler = *buffer_p++;
+      }
+
+      ecma_enqueue_promise_reaction_job (capability, handler, value);
+    }
+    else if (JMEM_CP_GET_FIRST_BIT_FROM_POINTER_TAG (capability_with_tag))
+    {
+      buffer_p++;
+    }
+
+    if (is_reject)
+    {
+      ecma_value_t handler = ECMA_VALUE_FALSE;
+
+      if (JMEM_CP_GET_SECOND_BIT_FROM_POINTER_TAG (capability_with_tag))
+      {
+        handler = *buffer_p++;
+      }
+
+      ecma_enqueue_promise_reaction_job (capability, handler, value);
+    }
+    else if (JMEM_CP_GET_SECOND_BIT_FROM_POINTER_TAG (capability_with_tag))
+    {
+      buffer_p++;
+    }
   }
 } /* ecma_promise_trigger_reactions */
 
@@ -167,25 +172,22 @@ ecma_reject_promise (ecma_value_t promise, /**< promise */
 {
   ecma_object_t *obj_p = ecma_get_object_from_value (promise);
 
-  JERRY_ASSERT (ecma_promise_get_state (obj_p) == ECMA_PROMISE_STATE_PENDING);
+  JERRY_ASSERT (ecma_promise_get_flags (obj_p) & ECMA_PROMISE_IS_PENDING);
 
-  ecma_promise_set_state (obj_p, ECMA_PROMISE_STATE_REJECTED);
+  ecma_promise_set_state (obj_p, false);
   ecma_promise_set_result (obj_p, ecma_copy_value_if_not_object (reason));
   ecma_promise_object_t *promise_p = (ecma_promise_object_t *) obj_p;
 
   /* GC can be triggered by ecma_new_collection so freeing the collection
      first and creating a new one might cause a heap after use event. */
-  ecma_collection_t *reject_reactions = promise_p->reject_reactions;
-  ecma_collection_t *fulfill_reactions = promise_p->fulfill_reactions;
+  ecma_collection_t *reactions = promise_p->reactions;
 
   /* Fulfill reactions will never be triggered. */
-  ecma_promise_trigger_reactions (reject_reactions, reason);
+  ecma_promise_trigger_reactions (reactions, reason, true);
 
-  promise_p->reject_reactions = ecma_new_collection ();
-  promise_p->fulfill_reactions = ecma_new_collection ();
+  promise_p->reactions = ecma_new_collection ();
 
-  ecma_collection_free_if_not_object (reject_reactions);
-  ecma_collection_free_if_not_object (fulfill_reactions);
+  ecma_collection_destroy (reactions);
 } /* ecma_reject_promise */
 
 /**
@@ -199,25 +201,22 @@ ecma_fulfill_promise (ecma_value_t promise, /**< promise */
 {
   ecma_object_t *obj_p = ecma_get_object_from_value (promise);
 
-  JERRY_ASSERT (ecma_promise_get_state (obj_p) == ECMA_PROMISE_STATE_PENDING);
+  JERRY_ASSERT (ecma_promise_get_flags (obj_p) & ECMA_PROMISE_IS_PENDING);
 
-  ecma_promise_set_state (obj_p, ECMA_PROMISE_STATE_FULFILLED);
+  ecma_promise_set_state (obj_p, true);
   ecma_promise_set_result (obj_p, ecma_copy_value_if_not_object (value));
   ecma_promise_object_t *promise_p = (ecma_promise_object_t *) obj_p;
 
   /* GC can be triggered by ecma_new_collection so freeing the collection
      first and creating a new one might cause a heap after use event. */
-  ecma_collection_t *reject_reactions = promise_p->reject_reactions;
-  ecma_collection_t *fulfill_reactions = promise_p->fulfill_reactions;
+  ecma_collection_t *reactions = promise_p->reactions;
 
   /* Reject reactions will never be triggered. */
-  ecma_promise_trigger_reactions (fulfill_reactions, value);
+  ecma_promise_trigger_reactions (reactions, value, false);
 
-  promise_p->reject_reactions = ecma_new_collection ();
-  promise_p->fulfill_reactions = ecma_new_collection ();
+  promise_p->reactions = ecma_new_collection ();
 
-  ecma_collection_free_if_not_object (reject_reactions);
-  ecma_collection_free_if_not_object (fulfill_reactions);
+  ecma_collection_destroy (reactions);
 } /* ecma_fulfill_promise */
 
 /**
@@ -235,33 +234,27 @@ ecma_promise_reject_handler (const ecma_value_t function, /**< the function itse
 {
   JERRY_UNUSED (this);
 
-  ecma_string_t *str_promise_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE);
-  ecma_string_t *str_already_resolved_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ALREADY_RESOLVED);
-
   ecma_object_t *function_p = ecma_get_object_from_value (function);
   /* 2. */
-  ecma_value_t promise = ecma_op_object_get (function_p, str_promise_p);
+  ecma_value_t promise = ecma_op_object_get_by_magic_id (function_p, LIT_INTERNAL_MAGIC_STRING_PROMISE);
   /* 1. */
-  JERRY_ASSERT (ecma_is_promise (ecma_get_object_from_value (promise)));
-  /* 3. */
-  ecma_value_t already_resolved = ecma_op_object_get (function_p, str_already_resolved_p);
+  ecma_object_t *promise_obj_p = ecma_get_object_from_value (promise);
+  JERRY_ASSERT (ecma_is_promise (promise_obj_p));
 
-  /* 4. */
-  if (ecma_get_already_resolved_bool_value (already_resolved))
+  /* 3., 4. */
+  if (ecma_promise_get_flags (promise_obj_p) & ECMA_PROMISE_ALREADY_RESOLVED)
   {
-    ecma_free_value (already_resolved);
     ecma_free_value (promise);
     return ECMA_VALUE_UNDEFINED;
   }
 
   /* 5. */
-  ecma_set_already_resolved_value (already_resolved, true);
+  ((ecma_extended_object_t *) promise_obj_p)->u.class_prop.extra_info |= ECMA_PROMISE_ALREADY_RESOLVED;
 
   /* 6. */
   ecma_value_t reject_value = (argc == 0) ? ECMA_VALUE_UNDEFINED : argv[0];
   ecma_reject_promise (promise, reject_value);
   ecma_free_value (promise);
-  ecma_free_value (already_resolved);
   return ECMA_VALUE_UNDEFINED;
 } /* ecma_promise_reject_handler */
 
@@ -280,25 +273,21 @@ ecma_promise_resolve_handler (const ecma_value_t function, /**< the function its
 {
   JERRY_UNUSED (this);
 
-  ecma_string_t *str_promise_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE);
-  ecma_string_t *str_already_resolved_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ALREADY_RESOLVED);
-
   ecma_object_t *function_p = ecma_get_object_from_value (function);
   /* 2. */
-  ecma_value_t promise = ecma_op_object_get (function_p, str_promise_p);
+  ecma_value_t promise = ecma_op_object_get_by_magic_id (function_p, LIT_INTERNAL_MAGIC_STRING_PROMISE);
   /* 1. */
-  JERRY_ASSERT (ecma_is_promise (ecma_get_object_from_value (promise)));
-  /* 3. */
-  ecma_value_t already_resolved = ecma_op_object_get (function_p, str_already_resolved_p);
+  ecma_object_t *promise_obj_p = ecma_get_object_from_value (promise);
+  JERRY_ASSERT (ecma_is_promise (promise_obj_p));
 
-  /* 4. */
-  if (ecma_get_already_resolved_bool_value (already_resolved))
+  /* 3., 4. */
+  if (ecma_promise_get_flags (promise_obj_p) & ECMA_PROMISE_ALREADY_RESOLVED)
   {
     goto end_of_resolve_function;
   }
 
   /* 5. */
-  ecma_set_already_resolved_value (already_resolved, true);
+  ((ecma_extended_object_t *) promise_obj_p)->u.class_prop.extra_info |= ECMA_PROMISE_ALREADY_RESOLVED;
 
   /* If the argc is 0, then fulfill the `undefined`. */
   if (argc == 0)
@@ -348,12 +337,11 @@ ecma_promise_resolve_handler (const ecma_value_t function, /**< the function its
 
 end_of_resolve_function:
   ecma_free_value (promise);
-  ecma_free_value (already_resolved);
   return ECMA_VALUE_UNDEFINED;
 } /* ecma_promise_resolve_handler */
 
 /**
- * CapabilityiesExecutor Function.
+ * CapabilitiesExecutor Function.
  *
  * See also: ES2015 25.4.1.5.1
  *
@@ -416,13 +404,11 @@ ecma_call_builtin_executor (ecma_object_t *executor_p, /**< the executor object 
  *
  * @return pointer to the resolving function
  */
-static ecma_object_t *
+static ecma_value_t
 ecma_promise_create_resolving_functions_helper (ecma_object_t *obj_p, /**< Promise Object */
-                                                ecma_value_t already_resolved, /**< AlreadyResolved property */
                                                 ecma_external_handler_t handler_cb) /**< Callback handler */
 {
   ecma_string_t *str_promise_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE);
-  ecma_string_t *str_already_resolved_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ALREADY_RESOLVED);
   ecma_object_t *func_obj_p = ecma_op_create_external_function_object (handler_cb);
 
   ecma_op_object_put (func_obj_p,
@@ -430,12 +416,7 @@ ecma_promise_create_resolving_functions_helper (ecma_object_t *obj_p, /**< Promi
                       ecma_make_object_value (obj_p),
                       false);
 
-  ecma_op_object_put (func_obj_p,
-                      str_already_resolved_p,
-                      already_resolved,
-                      false);
-
-  return func_obj_p;
+  return ecma_make_object_value (func_obj_p);
 } /* ecma_promise_create_resolving_functions_helper */
 
 /**
@@ -445,29 +426,17 @@ ecma_promise_create_resolving_functions_helper (ecma_object_t *obj_p, /**< Promi
  *
  * @return pointer to the resolving functions
  */
-ecma_promise_resolving_functions_t *
-ecma_promise_create_resolving_functions (ecma_object_t *object_p) /**< the promise object */
+void
+ecma_promise_create_resolving_functions (ecma_object_t *object_p, /**< the promise object */
+                                         ecma_promise_resolving_functions_t *funcs) /**< [out] resolving functions */
 {
-  /* 1. */
-  ecma_value_t already_resolved = ecma_op_create_boolean_object (ECMA_VALUE_FALSE);
-
   /* 2. - 4. */
-  ecma_object_t *resolve_p = ecma_promise_create_resolving_functions_helper (object_p,
-                                                                             already_resolved,
-                                                                             ecma_promise_resolve_handler);
+  funcs->resolve = ecma_promise_create_resolving_functions_helper (object_p,
+                                                                   ecma_promise_resolve_handler);
 
   /* 5. - 7. */
-  ecma_object_t *reject_p = ecma_promise_create_resolving_functions_helper (object_p,
-                                                                            already_resolved,
-                                                                            ecma_promise_reject_handler);
-
-  /* 8. */
-  ecma_promise_resolving_functions_t *funcs = jmem_heap_alloc_block (sizeof (ecma_promise_resolving_functions_t));
-  funcs->resolve = ecma_make_object_value (resolve_p);
-  funcs->reject = ecma_make_object_value (reject_p);
-
-  ecma_free_value (already_resolved);
-  return funcs;
+  funcs->reject = ecma_promise_create_resolving_functions_helper (object_p,
+                                                                  ecma_promise_reject_handler);
 } /* ecma_promise_create_resolving_functions */
 
 /**
@@ -478,7 +447,6 @@ ecma_promise_free_resolving_functions (ecma_promise_resolving_functions_t *funcs
 {
   ecma_free_value (funcs->resolve);
   ecma_free_value (funcs->reject);
-  jmem_heap_free_block (funcs, sizeof (ecma_promise_resolving_functions_t));
 } /* ecma_promise_free_resolving_functions */
 
 /**
@@ -503,35 +471,37 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
     return ECMA_VALUE_ERROR;
   }
 
+  /* Calling ecma_new_collection might trigger a GC call, so this
+   * allocation is performed before the object is constructed. */
+  ecma_collection_t *reactions = ecma_new_collection ();
+
   ecma_object_t *object_p = ecma_create_object (proto_p,
                                                 sizeof (ecma_promise_object_t),
                                                 ECMA_OBJECT_TYPE_CLASS);
   ecma_deref_object (proto_p);
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
   ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_PROMISE_UL;
+  /* 5 */
+  ext_object_p->u.class_prop.extra_info = ECMA_PROMISE_IS_PENDING;
   ext_object_p->u.class_prop.u.value = ECMA_VALUE_UNDEFINED;
   ecma_promise_object_t *promise_object_p = (ecma_promise_object_t *) object_p;
-  promise_object_p->fulfill_reactions = NULL;
-  promise_object_p->reject_reactions = NULL;
 
-  /* 5 */
-  ecma_promise_set_state (object_p, ECMA_PROMISE_STATE_PENDING);
   /* 6-7. */
-  promise_object_p->fulfill_reactions = ecma_new_collection ();
-  promise_object_p->reject_reactions = ecma_new_collection ();
+  promise_object_p->reactions = reactions;
   /* 8. */
-  ecma_promise_resolving_functions_t *funcs = ecma_promise_create_resolving_functions (object_p);
+  ecma_promise_resolving_functions_t funcs;
+  ecma_promise_create_resolving_functions (object_p, &funcs);
 
   ecma_string_t *str_resolve_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_RESOLVE_FUNCTION);
   ecma_string_t *str_reject_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_REJECT_FUNCTION);
 
   ecma_op_object_put (object_p,
                       str_resolve_p,
-                      funcs->resolve,
+                      funcs.resolve,
                       false);
   ecma_op_object_put (object_p,
                       str_reject_p,
-                      funcs->reject,
+                      funcs.reject,
                       false);
 
   /* 9. */
@@ -541,7 +511,7 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
   {
     JERRY_ASSERT (ecma_op_is_callable (executor));
 
-    ecma_value_t argv[] = { funcs->resolve, funcs->reject };
+    ecma_value_t argv[] = { funcs.resolve, funcs.reject };
     completion = ecma_op_function_call (ecma_get_object_from_value (executor),
                                         ECMA_VALUE_UNDEFINED,
                                         argv,
@@ -552,8 +522,8 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
     JERRY_ASSERT (ecma_is_value_object (executor));
 
     completion = ecma_call_builtin_executor (ecma_get_object_from_value (executor),
-                                             funcs->resolve,
-                                             funcs->reject);
+                                             funcs.resolve,
+                                             funcs.reject);
   }
   else
   {
@@ -567,13 +537,13 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
   {
     /* 10.a. */
     completion = jcontext_take_exception ();
-    status = ecma_op_function_call (ecma_get_object_from_value (funcs->reject),
+    status = ecma_op_function_call (ecma_get_object_from_value (funcs.reject),
                                     ECMA_VALUE_UNDEFINED,
                                     &completion,
                                     1);
   }
 
-  ecma_promise_free_resolving_functions (funcs);
+  ecma_promise_free_resolving_functions (&funcs);
   ecma_free_value (completion);
 
   /* 10.b. */
@@ -830,8 +800,6 @@ ecma_promise_do_then (ecma_value_t promise, /**< the promise which call 'then' *
                       ecma_value_t on_rejected, /**< on_rejected function */
                       ecma_value_t result_capability) /**< promise capability */
 {
-  ecma_string_t *capability_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_CAPABILITY);
-  ecma_string_t *handler_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_HANDLER);
   ecma_string_t *promise_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_PROMISE);
 
   /* 3. boolean true indicates "indentity" */
@@ -846,57 +814,56 @@ ecma_promise_do_then (ecma_value_t promise, /**< the promise which call 'then' *
     on_rejected = ECMA_VALUE_FALSE;
   }
 
-  /* 5-6. */
-  ecma_object_t *fulfill_reaction_p = ecma_op_create_object_object_noarg ();
-  ecma_object_t *reject_reaction_p = ecma_op_create_object_object_noarg ();
-  ecma_op_object_put (fulfill_reaction_p,
-                      capability_str_p,
-                      result_capability,
-                      false);
-  ecma_op_object_put (fulfill_reaction_p,
-                      handler_str_p,
-                      on_fulfilled,
-                      false);
+  ecma_object_t *promise_obj_p = ecma_get_object_from_value (promise);
+  ecma_promise_object_t *promise_p = (ecma_promise_object_t *) promise_obj_p;
 
-  ecma_op_object_put (reject_reaction_p,
-                      capability_str_p,
-                      result_capability,
-                      false);
-  ecma_op_object_put (reject_reaction_p,
-                      handler_str_p,
-                      on_rejected,
-                      false);
+  uint16_t flags = ecma_promise_get_flags (promise_obj_p);
 
-  ecma_object_t *obj_p = ecma_get_object_from_value (promise);
-  ecma_promise_object_t *promise_p = (ecma_promise_object_t *) obj_p;
-
-  if (ecma_promise_get_state (obj_p) == ECMA_PROMISE_STATE_PENDING)
+  if (flags & ECMA_PROMISE_IS_PENDING)
   {
     /* 7. */
-    ecma_collection_push_back (promise_p->fulfill_reactions, ecma_make_object_value (fulfill_reaction_p));
-    ecma_collection_push_back (promise_p->reject_reactions, ecma_make_object_value (reject_reaction_p));
+    ecma_value_t capability_with_tag;
+    ECMA_SET_NON_NULL_POINTER_TAG (capability_with_tag, ecma_get_object_from_value (result_capability), 0);
+
+    if (on_fulfilled != ECMA_VALUE_TRUE)
+    {
+      ECMA_SET_FIRST_BIT_TO_POINTER_TAG (capability_with_tag);
+    }
+
+    if (on_rejected != ECMA_VALUE_FALSE)
+    {
+      ECMA_SET_SECOND_BIT_TO_POINTER_TAG (capability_with_tag);
+    }
+
+    ecma_collection_push_back (promise_p->reactions, capability_with_tag);
+
+    if (on_fulfilled != ECMA_VALUE_TRUE)
+    {
+      ecma_collection_push_back (promise_p->reactions, on_fulfilled);
+    }
+
+    if (on_rejected != ECMA_VALUE_FALSE)
+    {
+      ecma_collection_push_back (promise_p->reactions, on_rejected);
+    }
   }
-  else if (ecma_promise_get_state (obj_p) == ECMA_PROMISE_STATE_FULFILLED)
+  else if (flags & ECMA_PROMISE_IS_FULFILLED)
   {
     /* 8. */
-    ecma_value_t value = ecma_promise_get_result (obj_p);
-    ecma_enqueue_promise_reaction_job (ecma_make_object_value (fulfill_reaction_p), value);
+    ecma_value_t value = ecma_promise_get_result (promise_obj_p);
+    ecma_enqueue_promise_reaction_job (result_capability, on_fulfilled, value);
     ecma_free_value (value);
   }
   else
   {
     /* 9. */
-    ecma_value_t reason = ecma_promise_get_result (obj_p);
-    ecma_enqueue_promise_reaction_job (ecma_make_object_value (reject_reaction_p), reason);
+    ecma_value_t reason = ecma_promise_get_result (promise_obj_p);
+    ecma_enqueue_promise_reaction_job (result_capability, on_rejected, reason);
     ecma_free_value (reason);
   }
 
   /* 10. */
-  ecma_value_t ret = ecma_op_object_get (ecma_get_object_from_value (result_capability), promise_str_p);
-
-  ecma_deref_object (fulfill_reaction_p);
-  ecma_deref_object (reject_reaction_p);
-  return ret;
+  return ecma_op_object_get (ecma_get_object_from_value (result_capability), promise_str_p);
 } /* ecma_promise_do_then */
 
 /**

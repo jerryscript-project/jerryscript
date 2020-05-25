@@ -23,6 +23,11 @@
 
 #if ENABLED (JERRY_ES2015_BUILTIN_PROMISE)
 
+/**
+ * Mask for job queue type.
+ */
+#define ECMA_JOB_QUEURE_TYPE_MASK ((uintptr_t) 0x07)
+
 /** \addtogroup ecma ECMA
  * @{
  *
@@ -35,7 +40,9 @@
  */
 typedef struct
 {
-  ecma_value_t reaction; /**< the PromiseReaction */
+  ecma_job_queue_item_t header; /**< job queue item header */
+  ecma_value_t capability; /**< capability object */
+  ecma_value_t handler; /**< handler function */
   ecma_value_t argument; /**< argument for the reaction */
 } ecma_job_promise_reaction_t;
 
@@ -44,8 +51,9 @@ typedef struct
  */
 typedef struct
 {
+  ecma_job_queue_item_t header; /**< job queue item header */
   ecma_value_t promise; /**< promise to be resolved */
-  ecma_value_t thenable; /**< thenbale object */
+  ecma_value_t thenable; /**< thenable object */
   ecma_value_t then; /**< 'then' function */
 } ecma_job_promise_resolve_thenable_t;
 
@@ -59,23 +67,26 @@ void ecma_job_queue_init (void)
 } /* ecma_job_queue_init */
 
 /**
- * Create a PromiseReactionJob.
+ * Get the type of the job.
  *
- * @return pointer to the PromiseReactionJob
+ * @return type of the job
  */
-static ecma_job_promise_reaction_t *
-ecma_create_promise_reaction_job (ecma_value_t reaction, /**< PromiseReaction */
-                                  ecma_value_t argument) /**< argument for the reaction */
+static inline ecma_job_queue_item_type_t JERRY_ATTR_ALWAYS_INLINE
+ecma_job_queue_get_type (ecma_job_queue_item_t *job_p) /**< the job */
 {
-  JERRY_ASSERT (ecma_is_value_object (reaction));
+  return (ecma_job_queue_item_type_t) (job_p->next_and_type & ECMA_JOB_QUEURE_TYPE_MASK);
+} /* ecma_job_queue_get_type */
 
-  ecma_job_promise_reaction_t *job_p;
-  job_p = (ecma_job_promise_reaction_t *) jmem_heap_alloc_block (sizeof (ecma_job_promise_reaction_t));
-  job_p->reaction = ecma_copy_value (reaction);
-  job_p->argument = ecma_copy_value (argument);
-
-  return job_p;
-} /* ecma_create_promise_reaction_job */
+/**
+ * Get the next job of the job queue.
+ *
+ * @return next job
+ */
+static inline ecma_job_queue_item_t *JERRY_ATTR_ALWAYS_INLINE
+ecma_job_queue_get_next (ecma_job_queue_item_t *job_p) /**< the job */
+{
+  return (ecma_job_queue_item_t *) (job_p->next_and_type & ~ECMA_JOB_QUEURE_TYPE_MASK);
+} /* ecma_job_queue_get_next */
 
 /**
  * Free the heap and the member of the PromiseReactionJob.
@@ -85,35 +96,12 @@ ecma_free_promise_reaction_job (ecma_job_promise_reaction_t *job_p) /**< points 
 {
   JERRY_ASSERT (job_p != NULL);
 
-  ecma_free_value (job_p->reaction);
+  ecma_free_value (job_p->capability);
+  ecma_free_value (job_p->handler);
   ecma_free_value (job_p->argument);
 
   jmem_heap_free_block (job_p, sizeof (ecma_job_promise_reaction_t));
 } /* ecma_free_promise_reaction_job */
-
-/**
- * Create a PromiseResolveThenableJob
- *
- * @return pointer to the PromiseResolveThenableJob
- */
-static ecma_job_promise_resolve_thenable_t *
-ecma_create_promise_resolve_thenable_job (ecma_value_t promise, /**< promise to be resolved */
-                                          ecma_value_t thenable, /**< thenable object */
-                                          ecma_value_t then) /**< 'then' function */
-{
-  JERRY_ASSERT (ecma_is_promise (ecma_get_object_from_value (promise)));
-  JERRY_ASSERT (ecma_is_value_object (thenable));
-  JERRY_ASSERT (ecma_op_is_callable (then));
-
-  ecma_job_promise_resolve_thenable_t *job_p;
-  job_p = (ecma_job_promise_resolve_thenable_t *) jmem_heap_alloc_block (sizeof (ecma_job_promise_resolve_thenable_t));
-
-  job_p->promise = ecma_copy_value (promise);
-  job_p->thenable = ecma_copy_value (thenable);
-  job_p->then = ecma_copy_value (then);
-
-  return job_p;
-} /* ecma_create_promise_resolve_thenable_job */
 
 /**
  * Free the heap and the member of the PromiseResolveThenableJob.
@@ -140,20 +128,15 @@ ecma_free_promise_resolve_thenable_job (ecma_job_promise_resolve_thenable_t *job
  *         Returned value must be freed with ecma_free_value
  */
 static ecma_value_t
-ecma_process_promise_reaction_job (void *obj_p) /**< the job to be operated */
+ecma_process_promise_reaction_job (ecma_job_promise_reaction_t *job_p) /**< the job to be operated */
 {
-  ecma_job_promise_reaction_t *job_p = (ecma_job_promise_reaction_t *) obj_p;
-  ecma_object_t *reaction_p = ecma_get_object_from_value (job_p->reaction);
-
-  ecma_string_t *capability_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_CAPABILITY);
-  ecma_string_t *handler_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_HANDLER);
   ecma_string_t *resolve_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_RESOLVE);
   ecma_string_t *reject_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REJECT);
 
   /* 2. */
-  ecma_value_t capability = ecma_op_object_get (reaction_p, capability_str_p);
+  ecma_value_t capability = job_p->capability;
   /* 3. */
-  ecma_value_t handler = ecma_op_object_get (reaction_p, handler_str_p);
+  ecma_value_t handler = job_p->handler;
 
   JERRY_ASSERT (ecma_is_value_boolean (handler) || ecma_op_is_callable (handler));
 
@@ -208,8 +191,6 @@ ecma_process_promise_reaction_job (void *obj_p) /**< the job to be operated */
   }
 
   ecma_free_value (handler_result);
-  ecma_free_value (handler);
-  ecma_free_value (capability);
   ecma_free_promise_reaction_job (job_p);
 
   return status;
@@ -224,25 +205,25 @@ ecma_process_promise_reaction_job (void *obj_p) /**< the job to be operated */
  *         Returned value must be freed with ecma_free_value
  */
 static ecma_value_t
-ecma_process_promise_resolve_thenable_job (void *obj_p) /**< the job to be operated */
+ecma_process_promise_resolve_thenable_job (ecma_job_promise_resolve_thenable_t *job_p) /**< the job to be operated */
 {
-  ecma_job_promise_resolve_thenable_t *job_p = (ecma_job_promise_resolve_thenable_t *) obj_p;
   ecma_object_t *promise_p = ecma_get_object_from_value (job_p->promise);
-  ecma_promise_resolving_functions_t *funcs = ecma_promise_create_resolving_functions (promise_p);
+  ecma_promise_resolving_functions_t funcs;
+  ecma_promise_create_resolving_functions (promise_p, &funcs);
 
   ecma_string_t *str_resolve_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_RESOLVE_FUNCTION);
   ecma_string_t *str_reject_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_REJECT_FUNCTION);
 
   ecma_op_object_put (promise_p,
                       str_resolve_p,
-                      funcs->resolve,
+                      funcs.resolve,
                       false);
   ecma_op_object_put (promise_p,
                       str_reject_p,
-                      funcs->reject,
+                      funcs.reject,
                       false);
 
-  ecma_value_t argv[] = { funcs->resolve, funcs->reject };
+  ecma_value_t argv[] = { funcs.resolve, funcs.reject };
   ecma_value_t ret;
   ecma_value_t then_call_result = ecma_op_function_call (ecma_get_object_from_value (job_p->then),
                                                          job_p->thenable,
@@ -255,7 +236,7 @@ ecma_process_promise_resolve_thenable_job (void *obj_p) /**< the job to be opera
   {
     then_call_result = jcontext_take_exception ();
 
-    ret = ecma_op_function_call (ecma_get_object_from_value (funcs->reject),
+    ret = ecma_op_function_call (ecma_get_object_from_value (funcs.reject),
                                  ECMA_VALUE_UNDEFINED,
                                  &then_call_result,
                                  1);
@@ -263,7 +244,7 @@ ecma_process_promise_resolve_thenable_job (void *obj_p) /**< the job to be opera
     ecma_free_value (then_call_result);
   }
 
-  ecma_promise_free_resolving_functions (funcs);
+  ecma_promise_free_resolving_functions (&funcs);
   ecma_free_promise_resolve_thenable_job (job_p);
 
   return ret;
@@ -273,23 +254,21 @@ ecma_process_promise_resolve_thenable_job (void *obj_p) /**< the job to be opera
  * Enqueue a Promise job into the jobqueue.
  */
 static void
-ecma_enqueue_job (ecma_job_handler_t handler, /**< the handler for the job */
-                  void *job_p) /**< the job */
+ecma_enqueue_job (ecma_job_queue_item_t *job_p) /**< the job */
 {
-  ecma_job_queueitem_t *item_p = jmem_heap_alloc_block (sizeof (ecma_job_queueitem_t));
-  item_p->job_p = job_p;
-  item_p->handler = handler;
-  item_p->next_p = NULL;
+  JERRY_ASSERT (job_p->next_and_type <= ECMA_JOB_QUEURE_TYPE_MASK);
 
   if (JERRY_CONTEXT (job_queue_head_p) == NULL)
   {
-    JERRY_CONTEXT (job_queue_head_p) = item_p;
-    JERRY_CONTEXT (job_queue_tail_p) = item_p;
+    JERRY_CONTEXT (job_queue_head_p) = job_p;
+    JERRY_CONTEXT (job_queue_tail_p) = job_p;
   }
   else
   {
-    JERRY_CONTEXT (job_queue_tail_p)->next_p = item_p;
-    JERRY_CONTEXT (job_queue_tail_p) = item_p;
+    JERRY_ASSERT ((JERRY_CONTEXT (job_queue_tail_p)->next_and_type & ~ECMA_JOB_QUEURE_TYPE_MASK) == 0);
+
+    JERRY_CONTEXT (job_queue_tail_p)->next_and_type |= (uintptr_t) job_p;
+    JERRY_CONTEXT (job_queue_tail_p) = job_p;
   }
 } /* ecma_enqueue_job */
 
@@ -297,11 +276,18 @@ ecma_enqueue_job (ecma_job_handler_t handler, /**< the handler for the job */
  * Enqueue a PromiseReactionJob into the jobqueue.
  */
 void
-ecma_enqueue_promise_reaction_job (ecma_value_t reaction, /**< PromiseReaction */
+ecma_enqueue_promise_reaction_job (ecma_value_t capability, /**< capability object */
+                                   ecma_value_t handler, /**< handler function */
                                    ecma_value_t argument) /**< argument for the reaction */
 {
-  ecma_job_promise_reaction_t *job_p = ecma_create_promise_reaction_job (reaction, argument);
-  ecma_enqueue_job (ecma_process_promise_reaction_job, job_p);
+  ecma_job_promise_reaction_t *job_p;
+  job_p = (ecma_job_promise_reaction_t *) jmem_heap_alloc_block (sizeof (ecma_job_promise_reaction_t));
+  job_p->header.next_and_type = ECMA_JOB_PROMISE_REACTION;
+  job_p->capability = ecma_copy_value (capability);
+  job_p->handler = ecma_copy_value (handler);
+  job_p->argument = ecma_copy_value (argument);
+
+  ecma_enqueue_job (&job_p->header);
 } /* ecma_enqueue_promise_reaction_job */
 
 /**
@@ -312,10 +298,18 @@ ecma_enqueue_promise_resolve_thenable_job (ecma_value_t promise, /**< promise to
                                            ecma_value_t thenable, /**< thenable object */
                                            ecma_value_t then) /**< 'then' function */
 {
-  ecma_job_promise_resolve_thenable_t *job_p = ecma_create_promise_resolve_thenable_job (promise,
-                                                                                         thenable,
-                                                                                         then);
-  ecma_enqueue_job (ecma_process_promise_resolve_thenable_job, job_p);
+  JERRY_ASSERT (ecma_is_promise (ecma_get_object_from_value (promise)));
+  JERRY_ASSERT (ecma_is_value_object (thenable));
+  JERRY_ASSERT (ecma_op_is_callable (then));
+
+  ecma_job_promise_resolve_thenable_t *job_p;
+  job_p = (ecma_job_promise_resolve_thenable_t *) jmem_heap_alloc_block (sizeof (ecma_job_promise_resolve_thenable_t));
+  job_p->header.next_and_type = ECMA_JOB_PROMISE_THENABLE;
+  job_p->promise = ecma_copy_value (promise);
+  job_p->thenable = ecma_copy_value (thenable);
+  job_p->then = ecma_copy_value (then);
+
+  ecma_enqueue_job (&job_p->header);
 } /* ecma_enqueue_promise_resolve_thenable_job */
 
 /**
@@ -332,15 +326,26 @@ ecma_process_all_enqueued_jobs (void)
 
   while (JERRY_CONTEXT (job_queue_head_p) != NULL && !ECMA_IS_VALUE_ERROR (ret))
   {
-    ecma_job_queueitem_t *item_p = JERRY_CONTEXT (job_queue_head_p);
-    JERRY_CONTEXT (job_queue_head_p) = JERRY_CONTEXT (job_queue_head_p)->next_p;
+    ecma_job_queue_item_t *job_p = JERRY_CONTEXT (job_queue_head_p);
+    JERRY_CONTEXT (job_queue_head_p) = ecma_job_queue_get_next (job_p);
 
-    void *job_p = item_p->job_p;
-    ecma_job_handler_t handler = item_p->handler;
-    jmem_heap_free_block (item_p, sizeof (ecma_job_queueitem_t));
+    ecma_fast_free_value (ret);
 
-    ecma_free_value (ret);
-    ret = handler (job_p);
+    switch (ecma_job_queue_get_type (job_p))
+    {
+      case ECMA_JOB_PROMISE_REACTION:
+      {
+        ret = ecma_process_promise_reaction_job ((ecma_job_promise_reaction_t *) job_p);
+        break;
+      }
+      default:
+      {
+        JERRY_ASSERT (ecma_job_queue_get_type (job_p) == ECMA_JOB_PROMISE_THENABLE);
+
+        ret = ecma_process_promise_resolve_thenable_job ((ecma_job_promise_resolve_thenable_t *) job_p);
+        break;
+      }
+    }
   }
 
   return ret;
@@ -354,12 +359,24 @@ ecma_free_all_enqueued_jobs (void)
 {
   while (JERRY_CONTEXT (job_queue_head_p) != NULL)
   {
-    ecma_job_queueitem_t *item_p = JERRY_CONTEXT (job_queue_head_p);
-    JERRY_CONTEXT (job_queue_head_p) = item_p->next_p;
-    void *job_p = item_p->job_p;
-    jmem_heap_free_block (item_p, sizeof (ecma_job_queueitem_t));
+    ecma_job_queue_item_t *job_p = JERRY_CONTEXT (job_queue_head_p);
+    JERRY_CONTEXT (job_queue_head_p) = ecma_job_queue_get_next (job_p);
 
-    ecma_free_promise_reaction_job (job_p);
+    switch (ecma_job_queue_get_type (job_p))
+    {
+      case ECMA_JOB_PROMISE_REACTION:
+      {
+        ecma_free_promise_reaction_job ((ecma_job_promise_reaction_t *) job_p);
+        break;
+      }
+      default:
+      {
+        JERRY_ASSERT (ecma_job_queue_get_type (job_p) == ECMA_JOB_PROMISE_THENABLE);
+
+        ecma_free_promise_resolve_thenable_job ((ecma_job_promise_resolve_thenable_t *) job_p);
+        break;
+      }
+    }
   }
 } /* ecma_free_all_enqueued_jobs */
 

@@ -268,27 +268,28 @@ ecma_gc_mark_promise_object (ecma_extended_object_t *ext_object_p) /**< extended
 
   /* Mark all reactions. */
   ecma_promise_object_t *promise_object_p = (ecma_promise_object_t *) ext_object_p;
-  ecma_collection_t *collection_p = promise_object_p->fulfill_reactions;
+  ecma_collection_t *collection_p = promise_object_p->reactions;
 
   if (collection_p != NULL)
   {
     ecma_value_t *buffer_p = collection_p->buffer_p;
+    ecma_value_t *buffer_end_p = buffer_p + collection_p->item_count;
 
-    for (uint32_t i = 0; i < collection_p->item_count; i++)
+    while (buffer_p < buffer_end_p)
     {
-      ecma_gc_set_object_visited (ecma_get_object_from_value (buffer_p[i]));
-    }
-  }
+      ecma_value_t value = *buffer_p++;
 
-  collection_p = promise_object_p->reject_reactions;
+      ecma_gc_set_object_visited (ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t, value));
 
-  if (collection_p != NULL)
-  {
-    ecma_value_t *buffer_p = collection_p->buffer_p;
+      if (JMEM_CP_GET_FIRST_BIT_FROM_POINTER_TAG (value))
+      {
+        ecma_gc_set_object_visited (ecma_get_object_from_value (*buffer_p++));
+      }
 
-    for (uint32_t i = 0; i < collection_p->item_count; i++)
-    {
-      ecma_gc_set_object_visited (ecma_get_object_from_value (buffer_p[i]));
+      if (JMEM_CP_GET_SECOND_BIT_FROM_POINTER_TAG (value))
+      {
+        ecma_gc_set_object_visited (ecma_get_object_from_value (*buffer_p++));
+      }
     }
   }
 } /* ecma_gc_mark_promise_object */
@@ -1145,8 +1146,10 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
         case LIT_MAGIC_STRING_PROMISE_UL:
         {
           ecma_free_value_if_not_object (ext_object_p->u.class_prop.u.value);
-          ecma_collection_free_if_not_object (((ecma_promise_object_t *) object_p)->fulfill_reactions);
-          ecma_collection_free_if_not_object (((ecma_promise_object_t *) object_p)->reject_reactions);
+
+          /* Reactions only contains objects. */
+          ecma_collection_destroy (((ecma_promise_object_t *) object_p)->reactions);
+
           ext_object_size = sizeof (ecma_promise_object_t);
           break;
         }

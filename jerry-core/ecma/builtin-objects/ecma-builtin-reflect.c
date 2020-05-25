@@ -261,20 +261,32 @@ ecma_builtin_reflect_dispatch_routine (uint16_t builtin_routine_id, /**< built-i
         return ECMA_VALUE_ERROR;
       }
 
-      ecma_value_t result = ecma_builtin_object_object_define_property (obj_p, name_str_p, arguments_list[2]);
+      ecma_property_descriptor_t prop_desc;
+      ecma_value_t conv_result = ecma_op_to_property_descriptor (arguments_list[2], &prop_desc);
+
+      if (ECMA_IS_VALUE_ERROR (conv_result))
+      {
+        ecma_deref_ecma_string (name_str_p);
+        return conv_result;
+      }
+
+      prop_desc.flags |= ECMA_PROP_IS_THROW;
+
+      ecma_value_t result = ecma_op_object_define_own_property (obj_p,
+                                                                name_str_p,
+                                                                &prop_desc);
+
       ecma_deref_ecma_string (name_str_p);
-      bool is_error = ECMA_IS_VALUE_ERROR (result);
+      ecma_free_property_descriptor (&prop_desc);
 
-      if (is_error)
+      if (ECMA_IS_VALUE_ERROR (result))
       {
-        jcontext_release_exception ();
-      }
-      else
-      {
-        ecma_free_value (result);
+        return result;
       }
 
-      return ecma_make_boolean_value (!is_error);
+      bool boolean_result = ecma_op_to_boolean (result);
+
+      return ecma_make_boolean_value (boolean_result);
     }
     case ECMA_REFLECT_OBJECT_GET_OWN_PROPERTY_DESCRIPTOR:
     {

@@ -161,7 +161,6 @@
   <test id="built-ins/Promise/reject/name.js"><reason></reason></test>
   <test id="built-ins/Promise/resolve/name.js"><reason></reason></test>
   <test id="built-ins/Promise/symbol-species-name.js"><reason></reason></test>
-  <test id="built-ins/Proxy/defineProperty/trap-return-is-false.js"><reason></reason></test>
   <test id="built-ins/Proxy/enumerate/call-parameters.js"><reason></reason></test>
   <test id="built-ins/Proxy/enumerate/return-is-abrupt.js"><reason></reason></test>
   <test id="built-ins/Proxy/enumerate/return-trap-result.js"><reason></reason></test>
@@ -175,8 +174,6 @@
   <test id="built-ins/Reflect/apply/name.js"><reason></reason></test>
   <test id="built-ins/Reflect/construct/name.js"><reason></reason></test>
   <test id="built-ins/Reflect/defineProperty/name.js"><reason></reason></test>
-  <test id="built-ins/Reflect/defineProperty/return-abrupt-from-attributes.js"><reason></reason></test>
-  <test id="built-ins/Reflect/defineProperty/return-abrupt-from-result.js"><reason></reason></test>
   <test id="built-ins/Reflect/deleteProperty/name.js"><reason></reason></test>
   <test id="built-ins/Reflect/enumerate/does-not-iterate-over-symbol-properties.js"><reason></reason></test>
   <test id="built-ins/Reflect/enumerate/enumerate.js"><reason></reason></test>

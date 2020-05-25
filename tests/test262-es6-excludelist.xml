@@ -20,8 +20,6 @@
   <test id="built-ins/ArrayBuffer/symbol-species-name.js"><reason></reason></test>
   <test id="built-ins/Array/from/Array.from-name.js"><reason></reason></test>
   <test id="built-ins/Array/of/name.js"><reason></reason></test>
-  <test id="built-ins/Array/prototype/concat/Array.prototype.concat_large-typed-array.js"><reason></reason></test>
-  <test id="built-ins/Array/prototype/concat/Array.prototype.concat_small-typed-array.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/copyWithin/name.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/entries/name.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/fill/name.js"><reason></reason></test>

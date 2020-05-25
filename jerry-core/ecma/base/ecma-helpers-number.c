@@ -941,7 +941,7 @@ ecma_number_parse_float (const lit_utf8_byte_t *string_buff, /**< routine's firs
   /* The input string should be at least the length of "Infinity" to be correctly processed as
    * the infinity value.
    */
-  if (string_buff_size >= infinity_length
+  if ((str_end_p - str_curr_p) >= (int) infinity_length
       && memcmp (infinity_str_p, str_curr_p, infinity_length) == 0)
   {
     /* String matched Infinity. */

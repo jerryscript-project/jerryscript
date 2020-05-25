@@ -867,6 +867,14 @@ opfunc_create_implicit_class_constructor (uint8_t opcode) /**< current cbc opcod
     ext_func_obj_p->u.external_handler_cb = ecma_op_implicit_constructor_handler_cb;
   }
 
+  ecma_property_value_t *prop_value_p;
+  prop_value_p = ecma_create_named_data_property (func_obj_p,
+                                                  ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH),
+                                                  ECMA_PROPERTY_FLAG_CONFIGURABLE,
+                                                  NULL);
+
+  prop_value_p->value = ecma_make_uint32_value (0);
+
   return ecma_make_object_value (func_obj_p);
 } /* opfunc_create_implicit_class_constructor */
 
@@ -1064,8 +1072,8 @@ opfunc_set_class_attributes (ecma_object_t *obj_p, /**< object */
 
       if (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_NAMEDDATA)
       {
-        JERRY_ASSERT (ecma_is_value_object (property_pair_p->values[index].value));
-        if (ecma_is_property_enumerable (property))
+        if (ecma_is_value_object (property_pair_p->values[index].value)
+            && ecma_is_property_enumerable (property))
         {
           property_pair_p->header.types[index] = (uint8_t) (property & ~ECMA_PROPERTY_FLAG_ENUMERABLE);
           opfunc_set_home_object (ecma_get_object_from_value (property_pair_p->values[index].value), parent_env_p);

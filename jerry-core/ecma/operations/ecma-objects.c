@@ -2108,7 +2108,8 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
           {
             if (!is_array_indices_only)
             {
-              ecma_op_external_function_list_lazy_property_names (opts,
+              ecma_op_external_function_list_lazy_property_names (obj_p,
+                                                                  opts,
                                                                   prop_names_p,
                                                                   skipped_non_enumerable_p);
             }
@@ -2160,6 +2161,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 #endif /* ENABLED (JERRY_ES2015) */
 
     ecma_value_t *buffer_p = prop_names_p->buffer_p;
+    uint32_t lazy_prop_name_count = prop_names_p->item_count;
 
     const size_t own_names_hashes_bitmap_size = ECMA_OBJECT_HASH_BITMAP_SIZE / bitmap_row_size;
     JERRY_VLA (uint32_t, own_names_hashes_bitmap, own_names_hashes_bitmap_size);
@@ -2392,6 +2394,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 
     uint32_t array_index_name_pos = 0;
     uint32_t string_name_pos = string_named_properties_count;
+    uint32_t lazy_string_name_pos = 0;
 #if ENABLED (JERRY_ES2015)
     uint32_t symbol_name_pos = symbol_named_properties_count;
 #endif /* ENABLED (JERRY_ES2015) */
@@ -2453,12 +2456,19 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
         JERRY_ASSERT (string_name_pos > 0);
         JERRY_ASSERT (string_name_pos <= string_named_properties_count);
 
-        string_names_p[--string_name_pos] = name_p;
+        if (i < lazy_prop_name_count)
+        {
+          string_names_p[lazy_string_name_pos++] = name_p;
+        }
+        else
+        {
+          string_names_p[--string_name_pos] = name_p;
+        }
       }
     }
 
     JERRY_ASSERT (array_index_name_pos == array_index_named_properties_count);
-    JERRY_ASSERT (string_name_pos == 0);
+    JERRY_ASSERT (string_name_pos - lazy_string_name_pos == 0);
 #if ENABLED (JERRY_ES2015)
     JERRY_ASSERT (symbol_name_pos == 0);
 #endif /* ENABLED (JERRY_ES2015) */

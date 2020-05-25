@@ -1649,7 +1649,8 @@ ecma_op_function_list_lazy_property_names (ecma_object_t *object_p, /**< functio
  *          ecma_op_external_function_try_to_lazy_instantiate_property
  */
 void
-ecma_op_external_function_list_lazy_property_names (uint32_t opts, /**< listing options using flags
+ecma_op_external_function_list_lazy_property_names (ecma_object_t *object_p, /**< function object */
+                                                    uint32_t opts, /**< listing options using flags
                                                                     *   from ecma_list_properties_options_t */
                                                     ecma_collection_t *main_collection_p, /**< 'main' collection */
                                                     ecma_collection_t *non_enum_collection_p) /**< skipped
@@ -1659,8 +1660,15 @@ ecma_op_external_function_list_lazy_property_names (uint32_t opts, /**< listing 
 
   ecma_collection_t *for_non_enumerable_p = (opts & ECMA_LIST_ENUMERABLE) ? non_enum_collection_p : main_collection_p;
 
-  /* 'prototype' property is non-enumerable (ECMA-262 v5, 13.2.18) */
-  ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_PROTOTYPE));
+#if !ENABLED (JERRY_ES2015)
+  JERRY_UNUSED (object_p);
+#else /* ENABLED (JERRY_ES2015) */
+  if (!ecma_op_ordinary_object_has_own_property (object_p, ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE)))
+#endif /* !ENABLED (JERRY_ES2015) */
+  {
+    /* 'prototype' property is non-enumerable (ECMA-262 v5, 13.2.18) */
+    ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_PROTOTYPE));
+  }
 } /* ecma_op_external_function_list_lazy_property_names */
 
 /**

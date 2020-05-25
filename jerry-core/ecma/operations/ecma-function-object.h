@@ -94,7 +94,8 @@ ecma_op_function_list_lazy_property_names (ecma_object_t *object_p,
                                            ecma_collection_t *non_enum_collection_p);
 
 void
-ecma_op_external_function_list_lazy_property_names (uint32_t opts,
+ecma_op_external_function_list_lazy_property_names (ecma_object_t *object_p,
+                                                    uint32_t opts,
                                                     ecma_collection_t *main_collection_p,
                                                     ecma_collection_t *non_enum_collection_p);
 

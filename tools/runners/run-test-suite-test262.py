@@ -16,6 +16,7 @@
 
 from __future__ import print_function
 import argparse
+import filecmp
 import os
 import shutil
 import subprocess
@@ -55,6 +56,16 @@ def get_arguments():
 
 
 def prepare_test262_test_suite(args):
+    if args.es2015:
+        try:
+            if not filecmp.cmp(os.path.join('tests', 'test262-es6-excludelist.xml'),
+                               os.path.join(args.test_dir, 'excludelist.xml')):
+                shutil.copyfile(os.path.join('tests', 'test262-es6-excludelist.xml'),
+                                os.path.join(args.test_dir, 'excludelist.xml'))
+        except:
+            print('Could not copy exclude list.');
+            return 1
+
     if os.path.isdir(os.path.join(args.test_dir, '.git')):
         return 0
 
@@ -75,9 +86,6 @@ def prepare_test262_test_suite(args):
         return return_code
 
     if args.es2015:
-        shutil.copyfile(os.path.join('tests', 'test262-es6-excludelist.xml'),
-                        os.path.join(args.test_dir, 'excludelist.xml'))
-
         return_code = subprocess.call(['git', 'apply', os.path.join('..', '..', 'test262-es6.patch')],
                                       cwd=args.test_dir)
         if return_code:

@@ -166,9 +166,6 @@
   <test id="built-ins/Proxy/enumerate/trap-is-undefined.js"><reason></reason></test>
   <test id="built-ins/Proxy/getOwnPropertyDescriptor/trap-is-undefined.js"><reason></reason></test>
   <test id="built-ins/Proxy/name.js"><reason></reason></test>
-  <test id="built-ins/Proxy/preventExtensions/return-false.js"><reason></reason></test>
-  <test id="built-ins/Proxy/preventExtensions/return-true-target-is-not-extensible.js"><reason></reason></test>
-  <test id="built-ins/Proxy/preventExtensions/trap-is-undefined.js"><reason></reason></test>
   <test id="built-ins/Reflect/apply/name.js"><reason></reason></test>
   <test id="built-ins/Reflect/construct/name.js"><reason></reason></test>
   <test id="built-ins/Reflect/defineProperty/name.js"><reason></reason></test>
@@ -185,9 +182,7 @@
   <test id="built-ins/Reflect/has/name.js"><reason></reason></test>
   <test id="built-ins/Reflect/isExtensible/name.js"><reason></reason></test>
   <test id="built-ins/Reflect/ownKeys/name.js"><reason></reason></test>
-  <test id="built-ins/Reflect/preventExtensions/always-return-true-from-ordinary-object.js"><reason></reason></test>
   <test id="built-ins/Reflect/preventExtensions/name.js"><reason></reason></test>
-  <test id="built-ins/Reflect/preventExtensions/return-boolean-from-proxy-object.js"><reason></reason></test>
   <test id="built-ins/Reflect/set/name.js"><reason></reason></test>
   <test id="built-ins/Reflect/setPrototypeOf/name.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/exec/get-sticky-coerce.js"><reason></reason></test>

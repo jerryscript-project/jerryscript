@@ -319,7 +319,17 @@ ecma_builtin_reflect_dispatch_routine (uint16_t builtin_routine_id, /**< built-i
     {
       JERRY_ASSERT (builtin_routine_id == ECMA_REFLECT_OBJECT_PREVENT_EXTENSIONS);
       ecma_object_t *obj_p = ecma_get_object_from_value (arguments_list[0]);
-      return ecma_builtin_object_object_prevent_extensions (obj_p);
+
+#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+      if (ECMA_OBJECT_IS_PROXY (obj_p))
+      {
+        return ecma_proxy_object_prevent_extensions (obj_p);
+      }
+#endif /* !ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+
+      ecma_op_ordinary_object_prevent_extensions (obj_p);
+
+      return ECMA_VALUE_TRUE;
     }
   }
 } /* ecma_builtin_reflect_dispatch_routine */

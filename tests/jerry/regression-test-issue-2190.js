@@ -13,7 +13,7 @@
 // limitations under the License.
 
 try {
-  /(?:(?=x)){1000}xyz/.exec('xyz');
+  /(?:(?=x)){10000}xyz/.exec('xyz');
   assert(false);
 } catch (e) {
   assert(e instanceof RangeError);

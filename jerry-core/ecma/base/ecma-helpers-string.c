@@ -2362,8 +2362,7 @@ ecma_string_trim_helper (const lit_utf8_byte_t **utf8_str_p, /**< [in, out] curr
   {
     read_size = lit_read_code_unit_from_utf8 (current_p, &ch);
 
-    if (!lit_char_is_white_space (ch)
-        && !lit_char_is_line_terminator (ch))
+    if (!lit_char_is_white_space (ch))
     {
       nonws_start_p = current_p;
       break;
@@ -2378,8 +2377,7 @@ ecma_string_trim_helper (const lit_utf8_byte_t **utf8_str_p, /**< [in, out] curr
   {
     read_size = lit_read_prev_code_unit_from_utf8 (current_p, &ch);
 
-    if (!lit_char_is_white_space (ch)
-        && !lit_char_is_line_terminator (ch))
+    if (!lit_char_is_white_space (ch))
     {
       break;
     }

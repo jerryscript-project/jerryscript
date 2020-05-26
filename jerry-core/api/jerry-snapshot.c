@@ -559,7 +559,6 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
 #if ENABLED (JERRY_BUILTIN_REGEXP)
   if (!(bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION))
   {
-    const re_compiled_code_t *re_bytecode_p = NULL;
 
     const uint8_t *regex_start_p = ((const uint8_t *) bytecode_p) + sizeof (ecma_compiled_code_t);
 
@@ -567,10 +566,8 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
     ecma_string_t *pattern_str_p = ecma_new_ecma_string_from_utf8 (regex_start_p,
                                                                    bytecode_p->refs);
 
-    re_compile_bytecode (&re_bytecode_p,
-                         pattern_str_p,
-                         bytecode_p->status_flags);
-
+    const re_compiled_code_t *re_bytecode_p = re_compile_bytecode (pattern_str_p,
+                                                                   bytecode_p->status_flags);
     ecma_deref_ecma_string (pattern_str_p);
 
     return (ecma_compiled_code_t *) re_bytecode_p;

@@ -505,12 +505,10 @@ ecma_instantiate_builtin (ecma_builtin_id_t obj_builtin_id) /**< built-in id */
 
       ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_REGEXP_UL;
 
-      const re_compiled_code_t *bc_p = NULL;
-      ecma_value_t ret_value = re_compile_bytecode (&bc_p,
-                                                    ecma_get_magic_string (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP),
-                                                    RE_FLAG_EMPTY);
+      re_compiled_code_t *bc_p = re_compile_bytecode (ecma_get_magic_string (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP),
+                                                      RE_FLAG_EMPTY);
 
-      JERRY_ASSERT (ecma_is_value_empty (ret_value));
+      JERRY_ASSERT (bc_p != NULL);
 
       ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.class_prop.u.value, bc_p);
 

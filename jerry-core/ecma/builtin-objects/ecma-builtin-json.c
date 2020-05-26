@@ -174,18 +174,13 @@ ecma_builtin_json_parse_string (ecma_json_token_t *token_p) /**< token argument 
         }
         case LIT_CHAR_LOWERCASE_U:
         {
-          if ((end_p - current_p <= ECMA_JSON_HEX_ESCAPE_SEQUENCE_LENGTH))
+          uint32_t hex_value = lit_char_hex_lookup (current_p + 1, end_p, ECMA_JSON_HEX_ESCAPE_SEQUENCE_LENGTH);
+          if (hex_value == UINT32_MAX)
           {
             goto invalid_string;
           }
 
-          ecma_char_t code_unit;
-          if (!(lit_read_code_unit_from_hex (current_p + 1, ECMA_JSON_HEX_ESCAPE_SEQUENCE_LENGTH, &code_unit)))
-          {
-            goto invalid_string;
-          }
-
-          ecma_stringbuilder_append_char (&result_builder, code_unit);
+          ecma_stringbuilder_append_char (&result_builder, (ecma_char_t) hex_value);
           current_p += ECMA_JSON_HEX_ESCAPE_SEQUENCE_LENGTH + 1;
           break;
         }

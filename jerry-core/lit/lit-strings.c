@@ -513,7 +513,7 @@ lit_cesu8_read_prev (const lit_utf8_byte_t **buf_p) /**< [in,out] buffer with ch
  *
  * @return next code unit
  */
-ecma_char_t
+ecma_char_t JERRY_ATTR_NOINLINE
 lit_cesu8_peek_next (const lit_utf8_byte_t *buf_p) /**< [in,out] buffer with characters */
 {
   JERRY_ASSERT (buf_p != NULL);
@@ -529,7 +529,7 @@ lit_cesu8_peek_next (const lit_utf8_byte_t *buf_p) /**< [in,out] buffer with cha
  *
  * @return previous code unit
  */
-ecma_char_t
+ecma_char_t JERRY_ATTR_NOINLINE
 lit_cesu8_peek_prev (const lit_utf8_byte_t *buf_p) /**< [in,out] buffer with characters */
 {
   JERRY_ASSERT (buf_p != NULL);
@@ -543,7 +543,7 @@ lit_cesu8_peek_prev (const lit_utf8_byte_t *buf_p) /**< [in,out] buffer with cha
 /**
  * Increase cesu-8 encoded string pointer by one code unit.
  */
-void
+inline void JERRY_ATTR_ALWAYS_INLINE
 lit_utf8_incr (const lit_utf8_byte_t **buf_p) /**< [in,out] buffer with characters */
 {
   JERRY_ASSERT (*buf_p);

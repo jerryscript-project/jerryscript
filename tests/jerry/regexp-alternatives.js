@@ -58,3 +58,6 @@ assert (r.exec("a") == "a");
 
 r = new RegExp ("a|bb|c|d");
 assert (r.exec("b") == undefined);
+
+r = new RegExp("(?:a|b)\\b|\\.\\w+", "g");
+assert (r.exec("name.lower()")[0] === ".lower")

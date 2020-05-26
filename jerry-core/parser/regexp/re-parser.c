@@ -35,234 +35,336 @@
  */
 
 /**
- * Lookup a character in the input string.
+ * Get the start opcode for the current group.
  *
- * @return true - if lookup number of characters ahead are hex digits
- *         false - otherwise
+ * @return RegExp opcode
  */
-bool
-re_hex_lookup (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context */
-               uint32_t lookup) /**< size of lookup */
+static re_opcode_t
+re_get_group_start_opcode (bool is_capturing) /**< is capturing group */
 {
-  const lit_utf8_byte_t *curr_p = parser_ctx_p->input_curr_p;
+  return (is_capturing) ? RE_OP_CAPTURING_GROUP_START : RE_OP_NON_CAPTURING_GROUP_START;
+} /* re_get_group_start_opcode*/
 
-  if (JERRY_UNLIKELY (curr_p + lookup > parser_ctx_p->input_end_p))
+/**
+ * Get the end opcode for the current group.
+ *
+ * @return RegExp opcode
+ */
+static re_opcode_t
+re_get_group_end_opcode (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
+                         bool is_capturing) /**< is capturing group */
+{
+  if (is_capturing)
   {
-    return false;
-  }
-
-  for (uint32_t i = 0; i < lookup; i++)
-  {
-    if (!lit_char_is_hex_digit (*curr_p++))
+    if (re_ctx_p->token.greedy)
     {
-      return false;
+      return RE_OP_GREEDY_CAPTURING_GROUP_END;
     }
+
+    return RE_OP_LAZY_CAPTURING_GROUP_END;
   }
 
-  return true;
-} /* re_hex_lookup */
+  if (re_ctx_p->token.greedy)
+  {
+    return RE_OP_GREEDY_NON_CAPTURING_GROUP_END;
+  }
+
+  return RE_OP_LAZY_NON_CAPTURING_GROUP_END;
+} /* re_get_group_end_opcode */
+
+/**
+ * Enclose the given bytecode to a group.
+ */
+static void
+re_insert_into_group (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
+                      uint32_t group_start_offset, /**< offset of group start */
+                      uint32_t idx, /**< index of group */
+                      uint32_t capture_start, /**< index of first nested capture */
+                      bool is_capturing) /**< is capturing group */
+{
+  uint32_t qmin = re_ctx_p->token.qmin;
+  uint32_t qmax = re_ctx_p->token.qmax;
+
+  if (JERRY_UNLIKELY (!is_capturing && re_bytecode_size (re_ctx_p) == group_start_offset))
+  {
+    return;
+  }
+
+  if (qmin == 0)
+  {
+    re_insert_value (re_ctx_p,
+                     group_start_offset,
+                     re_bytecode_size (re_ctx_p) - group_start_offset);
+  }
+
+  re_insert_value (re_ctx_p, group_start_offset, qmin);
+  re_insert_value (re_ctx_p, group_start_offset, re_ctx_p->captures_count - capture_start);
+
+  if (!is_capturing)
+  {
+    re_insert_value (re_ctx_p, group_start_offset, capture_start);
+  }
+  else
+  {
+    JERRY_ASSERT (idx == capture_start);
+  }
+
+  re_insert_value (re_ctx_p, group_start_offset, idx);
+  re_insert_opcode (re_ctx_p, group_start_offset, re_get_group_start_opcode (is_capturing));
+
+  re_append_opcode (re_ctx_p, re_get_group_end_opcode (re_ctx_p, is_capturing));
+  re_append_value (re_ctx_p, idx);
+  re_append_value (re_ctx_p, qmin);
+  re_append_value (re_ctx_p, qmax + RE_QMAX_OFFSET);
+} /* re_insert_into_group */
+
+/**
+ * Insert simple atom iterator.
+ */
+static void
+re_insert_atom_iterator (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
+                         uint32_t start_offset) /**< atom start offset */
+{
+  const uint32_t qmin = re_ctx_p->token.qmin;
+  const uint32_t qmax = re_ctx_p->token.qmax;
+
+  if (qmin == 1 && qmax == 1)
+  {
+    return;
+  }
+
+  re_append_opcode (re_ctx_p, RE_OP_ITERATOR_END);
+  re_insert_value (re_ctx_p, start_offset, re_bytecode_size (re_ctx_p) - start_offset);
+  re_insert_value (re_ctx_p, start_offset, qmax + RE_QMAX_OFFSET);
+  re_insert_value (re_ctx_p, start_offset, qmin);
+  re_insert_opcode (re_ctx_p, start_offset, re_ctx_p->token.greedy ? RE_OP_GREEDY_ITERATOR : RE_OP_LAZY_ITERATOR);
+} /* re_insert_atom_iterator */
+
+/**
+ * Insert a lookahead assertion.
+ */
+static void
+re_insert_assertion_lookahead (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
+                               uint32_t start_offset, /**< atom start offset */
+                               uint32_t capture_start, /**< index of first nested capture */
+                               bool negative) /** lookahead type */
+{
+  const uint32_t qmin = re_ctx_p->token.qmin;
+
+  re_append_opcode (re_ctx_p, RE_OP_ASSERT_END);
+  re_insert_value (re_ctx_p, start_offset, re_bytecode_size (re_ctx_p) - start_offset);
+
+  /* We need to clear nested capturing group results when a negative assertion or the tail after a positive assertion
+   * does not match, so we store the begin and end index of nested capturing groups. */
+  re_insert_value (re_ctx_p, start_offset, re_ctx_p->captures_count - capture_start);
+  re_insert_value (re_ctx_p, start_offset, capture_start);
+
+  /* Lookaheads always result in zero length matches, which means iterations will always stop on the first match.
+   * This allows us to not have to deal with iterations beyond one. Either qmin == 0 which will implicitly match,
+   * or qmin > 0, in which case the first iteration will decide whether the assertion matches depending on whether
+   * the iteration matched or not. This also allows us to ignore qmax entirely. */
+  re_insert_byte (re_ctx_p, start_offset, (uint8_t) JERRY_MIN (qmin, 1));
+
+  const re_opcode_t opcode = (negative) ? RE_OP_ASSERT_LOOKAHEAD_NEG : RE_OP_ASSERT_LOOKAHEAD_POS;
+  re_insert_opcode (re_ctx_p, start_offset, opcode);
+} /* re_insert_assertion_lookahead */
 
 /**
  * Consume non greedy (question mark) character if present.
- *
- * @return true - if non-greedy character found
- *         false - otherwise
  */
-static inline bool JERRY_ATTR_ALWAYS_INLINE
-re_parse_non_greedy_char (re_parser_ctx_t *parser_ctx_p) /**< RegExp parser context */
+static void
+re_parse_lazy_char (re_compiler_ctx_t *re_ctx_p) /**< RegExp parser context */
 {
-  if (parser_ctx_p->input_curr_p < parser_ctx_p->input_end_p
-      && *parser_ctx_p->input_curr_p == LIT_CHAR_QUESTION)
+  if (re_ctx_p->input_curr_p < re_ctx_p->input_end_p
+      && *re_ctx_p->input_curr_p == LIT_CHAR_QUESTION)
   {
-    parser_ctx_p->input_curr_p++;
-    return true;
+    re_ctx_p->input_curr_p++;
+    re_ctx_p->token.greedy = false;
+    return;
   }
 
-  return false;
-} /* re_parse_non_greedy_char */
+  re_ctx_p->token.greedy = true;
+} /* re_parse_lazy_char */
 
 /**
- * Parse a max 3 digit long octal number from input string iterator.
+ * Parse a max 3 digit long octal number from the input string, with a decimal value less than 256.
  *
- * @return uint32_t - parsed octal number
+ * @return value of the octal number
  */
-uint32_t
-re_parse_octal (re_parser_ctx_t *parser_ctx_p) /**< RegExp parser context */
+static uint32_t
+re_parse_octal (re_compiler_ctx_t *re_ctx_p) /**< RegExp parser context */
 {
-  uint32_t number = 0;
-  for (int index = 0;
-       index < 3
-       && parser_ctx_p->input_curr_p < parser_ctx_p->input_end_p
-       && lit_char_is_octal_digit (*parser_ctx_p->input_curr_p);
-       index++)
+  JERRY_ASSERT (re_ctx_p->input_curr_p < re_ctx_p->input_end_p);
+  JERRY_ASSERT (lit_char_is_octal_digit (*re_ctx_p->input_curr_p));
+
+  uint32_t value = (uint32_t) (*re_ctx_p->input_curr_p++) - LIT_CHAR_0;
+
+  if (re_ctx_p->input_curr_p < re_ctx_p->input_end_p
+      && lit_char_is_octal_digit (*re_ctx_p->input_curr_p))
   {
-    number = number * 8 + lit_char_hex_to_int (*parser_ctx_p->input_curr_p++);
+    value = value * 8 + (*re_ctx_p->input_curr_p++) - LIT_CHAR_0;
   }
 
-  return number;
+  if (re_ctx_p->input_curr_p < re_ctx_p->input_end_p
+      && lit_char_is_octal_digit (*re_ctx_p->input_curr_p))
+  {
+    const uint32_t new_value = value * 8 + (*re_ctx_p->input_curr_p) - LIT_CHAR_0;
+
+    if (new_value <= RE_MAX_OCTAL_VALUE)
+    {
+      value = new_value;
+      re_ctx_p->input_curr_p++;
+    }
+  }
+
+  return value;
 } /* re_parse_octal */
 
 /**
- * Parse RegExp iterators
+ * Check that the currently parsed quantifier is valid.
  *
- * @return empty ecma value - if parsed successfully
- *         error ecma value - otherwise
- *
- *         Returned value must be freed with ecma_free_value
+ * @return ECMA_VALUE_ERROR, if quantifier is invalid
+ *         ECMA_VALUE_EMPTY, otherwise
  */
-ecma_value_t
-re_parse_iterator (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context */
-                   re_token_t *re_token_p) /**< [out] output token */
+static ecma_value_t
+re_check_quantifier (re_compiler_ctx_t *re_ctx_p)
 {
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-
-  re_token_p->qmin = 1;
-  re_token_p->qmax = 1;
-  re_token_p->greedy = true;
-
-  if (parser_ctx_p->input_curr_p >= parser_ctx_p->input_end_p)
+  if (re_ctx_p->token.qmin > re_ctx_p->token.qmax)
   {
-    return ret_value;
+    /* ECMA-262 v5.1 15.10.2.5 */
+    return ecma_raise_syntax_error (ECMA_ERR_MSG ("quantifier error: min > max."));
   }
 
-  ecma_char_t ch = *parser_ctx_p->input_curr_p;
+  return ECMA_VALUE_EMPTY;
+} /* re_check_quantifier */
 
-  switch (ch)
+/**
+ * Parse RegExp quantifier.
+ *
+ * @return ECMA_VALUE_TRUE - if parsed successfully
+ *         ECMA_VALUE_FALSE - otherwise
+ */
+static ecma_value_t
+re_parse_quantifier (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context */
+{
+  if (re_ctx_p->input_curr_p < re_ctx_p->input_end_p)
   {
-    case LIT_CHAR_QUESTION:
+    switch (*re_ctx_p->input_curr_p)
     {
-      parser_ctx_p->input_curr_p++;
-      re_token_p->qmin = 0;
-      re_token_p->qmax = 1;
-      re_token_p->greedy = !re_parse_non_greedy_char (parser_ctx_p);
-      break;
-    }
-    case LIT_CHAR_ASTERISK:
-    {
-      parser_ctx_p->input_curr_p++;
-      re_token_p->qmin = 0;
-      re_token_p->qmax = RE_ITERATOR_INFINITE;
-      re_token_p->greedy = !re_parse_non_greedy_char (parser_ctx_p);
-      break;
-    }
-    case LIT_CHAR_PLUS:
-    {
-      parser_ctx_p->input_curr_p++;
-      re_token_p->qmin = 1;
-      re_token_p->qmax = RE_ITERATOR_INFINITE;
-      re_token_p->greedy = !re_parse_non_greedy_char (parser_ctx_p);
-      break;
-    }
-    case LIT_CHAR_LEFT_BRACE:
-    {
-      parser_ctx_p->input_curr_p++;
-      uint32_t qmin = 0;
-      uint32_t qmax = RE_ITERATOR_INFINITE;
-      uint32_t digits = 0;
-
-      while (true)
+      case LIT_CHAR_QUESTION:
       {
-        if (parser_ctx_p->input_curr_p >= parser_ctx_p->input_end_p)
+        re_ctx_p->input_curr_p++;
+        re_ctx_p->token.qmin = 0;
+        re_ctx_p->token.qmax = 1;
+
+        re_parse_lazy_char (re_ctx_p);
+        return ECMA_VALUE_TRUE;
+      }
+      case LIT_CHAR_ASTERISK:
+      {
+        re_ctx_p->input_curr_p++;
+        re_ctx_p->token.qmin = 0;
+        re_ctx_p->token.qmax = RE_INFINITY;
+
+        re_parse_lazy_char (re_ctx_p);
+        return ECMA_VALUE_TRUE;
+      }
+      case LIT_CHAR_PLUS:
+      {
+        re_ctx_p->input_curr_p++;
+        re_ctx_p->token.qmin = 1;
+        re_ctx_p->token.qmax = RE_INFINITY;
+
+        re_parse_lazy_char (re_ctx_p);
+        return ECMA_VALUE_TRUE;
+      }
+      case LIT_CHAR_LEFT_BRACE:
+      {
+        const lit_utf8_byte_t *current_p = re_ctx_p->input_curr_p + 1;
+        uint32_t qmin = 0;
+        uint32_t qmax = RE_INFINITY;
+
+        if (current_p >= re_ctx_p->input_end_p)
         {
-          return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid quantifier"));
+          break;
         }
 
-        ch = *parser_ctx_p->input_curr_p++;
-
-        if (lit_char_is_decimal_digit (ch))
+        if (!lit_char_is_decimal_digit (*current_p))
         {
-          if (digits >= ECMA_NUMBER_MAX_DIGITS)
-          {
-            return ecma_raise_syntax_error (ECMA_ERR_MSG ("RegExp quantifier error: too many digits."));
-          }
-          digits++;
-          qmin = qmin * 10 + lit_char_hex_to_int (ch);
+          break;
+        }
+
+        qmin = lit_parse_decimal (&current_p, re_ctx_p->input_end_p);
+
+        if (current_p >= re_ctx_p->input_end_p)
+        {
+          break;
+        }
+
+        lit_utf8_byte_t ch = *current_p++;
+        if (ch == LIT_CHAR_RIGHT_BRACE)
+        {
+          qmax = qmin;
         }
         else if (ch == LIT_CHAR_COMMA)
         {
-          if (qmax != RE_ITERATOR_INFINITE)
+          if (current_p >= re_ctx_p->input_end_p)
           {
-            return ecma_raise_syntax_error (ECMA_ERR_MSG ("RegExp quantifier error: double comma."));
-          }
-
-          if (parser_ctx_p->input_curr_p >= parser_ctx_p->input_end_p)
-          {
-            return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid quantifier"));
-          }
-
-          if (*parser_ctx_p->input_curr_p == LIT_CHAR_RIGHT_BRACE)
-          {
-            if (digits == 0)
-            {
-              return ecma_raise_syntax_error (ECMA_ERR_MSG ("RegExp quantifier error: missing digits."));
-            }
-
-            parser_ctx_p->input_curr_p++;
-            re_token_p->qmin = qmin;
-            re_token_p->qmax = RE_ITERATOR_INFINITE;
             break;
           }
-          qmax = qmin;
-          qmin = 0;
-          digits = 0;
-        }
-        else if (ch == LIT_CHAR_RIGHT_BRACE)
-        {
-          if (digits == 0)
+
+          if (lit_char_is_decimal_digit (*current_p))
           {
-            return ecma_raise_syntax_error (ECMA_ERR_MSG ("RegExp quantifier error: missing digits."));
+            qmax = lit_parse_decimal (&current_p, re_ctx_p->input_end_p);
           }
 
-          if (qmax != RE_ITERATOR_INFINITE)
+          if (current_p >= re_ctx_p->input_end_p || *current_p++ != LIT_CHAR_RIGHT_BRACE)
           {
-            re_token_p->qmin = qmax;
+            break;
           }
-          else
-          {
-            re_token_p->qmin = qmin;
-          }
-
-          re_token_p->qmax = qmin;
-
-          break;
         }
         else
         {
-          return ecma_raise_syntax_error (ECMA_ERR_MSG ("RegExp quantifier error: unknown char."));
+          break;
         }
-      }
 
-      re_token_p->greedy = !re_parse_non_greedy_char (parser_ctx_p);
-      break;
-    }
-    default:
-    {
-      break;
+        re_ctx_p->token.qmin = qmin;
+        re_ctx_p->token.qmax = qmax;
+        re_ctx_p->input_curr_p = current_p;
+        re_parse_lazy_char (re_ctx_p);
+        return ECMA_VALUE_TRUE;
+      }
+      default:
+      {
+        break;
+      }
     }
   }
 
-  JERRY_ASSERT (ecma_is_value_empty (ret_value));
+  re_ctx_p->token.qmin = 1;
+  re_ctx_p->token.qmax = 1;
+  re_ctx_p->token.greedy = true;
 
-  return ret_value;
-} /* re_parse_iterator */
+  return ECMA_VALUE_FALSE;
+} /* re_parse_quantifier */
 
 /**
- * Count the number of groups in pattern
+ * Count the number of groups in the current pattern.
  */
 static void
-re_count_num_of_groups (re_parser_ctx_t *parser_ctx_p) /**< RegExp parser context */
+re_count_groups (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context */
 {
-  int char_class_in = 0;
-  parser_ctx_p->groups_count = 0;
-  const lit_utf8_byte_t *curr_p = parser_ctx_p->input_start_p;
+  bool is_char_class = 0;
+  re_ctx_p->groups_count = 0;
+  const lit_utf8_byte_t *curr_p = re_ctx_p->input_start_p;
 
-  while (curr_p < parser_ctx_p->input_end_p)
+  while (curr_p < re_ctx_p->input_end_p)
   {
     switch (*curr_p++)
     {
       case LIT_CHAR_BACKSLASH:
       {
-        if (curr_p < parser_ctx_p->input_end_p)
+        if (curr_p < re_ctx_p->input_end_p)
         {
           lit_utf8_incr (&curr_p);
         }
@@ -270,30 +372,298 @@ re_count_num_of_groups (re_parser_ctx_t *parser_ctx_p) /**< RegExp parser contex
       }
       case LIT_CHAR_LEFT_SQUARE:
       {
-        char_class_in++;
+        is_char_class = true;
         break;
       }
       case LIT_CHAR_RIGHT_SQUARE:
       {
-        if (char_class_in)
-        {
-          char_class_in--;
-        }
+        is_char_class = false;
         break;
       }
       case LIT_CHAR_LEFT_PAREN:
       {
-        if (curr_p < parser_ctx_p->input_end_p
+        if (curr_p < re_ctx_p->input_end_p
             && *curr_p != LIT_CHAR_QUESTION
-            && !char_class_in)
+            && !is_char_class)
         {
-          parser_ctx_p->groups_count++;
+          re_ctx_p->groups_count++;
         }
         break;
       }
     }
   }
-} /* re_count_num_of_groups */
+} /* re_count_groups */
+
+#if ENABLED (JERRY_ES2015)
+/**
+ * Check if a code point is a Syntax character
+ *
+ * @return true, if syntax character
+ *         false, otherwise
+ */
+static bool
+re_is_syntax_char (lit_code_point_t cp) /**< code point */
+{
+  return (cp == LIT_CHAR_CIRCUMFLEX
+          || cp == LIT_CHAR_DOLLAR_SIGN
+          || cp == LIT_CHAR_BACKSLASH
+          || cp == LIT_CHAR_DOT
+          || cp == LIT_CHAR_ASTERISK
+          || cp == LIT_CHAR_PLUS
+          || cp == LIT_CHAR_QUESTION
+          || cp == LIT_CHAR_LEFT_PAREN
+          || cp == LIT_CHAR_RIGHT_PAREN
+          || cp == LIT_CHAR_LEFT_SQUARE
+          || cp == LIT_CHAR_RIGHT_SQUARE
+          || cp == LIT_CHAR_LEFT_BRACE
+          || cp == LIT_CHAR_RIGHT_BRACE
+          || cp == LIT_CHAR_VLINE);
+} /* re_is_syntax_char */
+#endif /* ENABLED (JERRY_ES2015) */
+
+/**
+ * Parse a Character Escape or a Character Class Escape.
+ *
+ * @return ECMA_VALUE_EMPTY, if parsed successfully
+ *         ECMA_VALUE_ERROR, otherwise
+ */
+static ecma_value_t
+re_parse_char_escape (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context */
+{
+  JERRY_ASSERT (re_ctx_p->input_curr_p < re_ctx_p->input_end_p);
+  re_ctx_p->token.type = RE_TOK_CHAR;
+
+  if (lit_char_is_decimal_digit (*re_ctx_p->input_curr_p))
+  {
+    /* NULL code point escape, only valid if there are no following digits. */
+    if (*re_ctx_p->input_curr_p == LIT_CHAR_0
+        && (re_ctx_p->input_curr_p + 1 >= re_ctx_p->input_end_p
+            || !lit_char_is_decimal_digit (re_ctx_p->input_curr_p[1])))
+    {
+      re_ctx_p->input_curr_p++;
+      re_ctx_p->token.value = LIT_UNICODE_CODE_POINT_NULL;
+      return ECMA_VALUE_EMPTY;
+    }
+
+#if ENABLED (JERRY_ES2015)
+    if (re_ctx_p->flags & RE_FLAG_UNICODE)
+    {
+      return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid escape sequence"));
+    }
+#endif /* ENABLED (JERRY_ES2015) */
+
+    /* Legacy octal escape sequence */
+    if (lit_char_is_octal_digit (*re_ctx_p->input_curr_p))
+    {
+      re_ctx_p->token.value = re_parse_octal (re_ctx_p);
+      return ECMA_VALUE_EMPTY;
+    }
+
+    /* Identity escape */
+    re_ctx_p->token.value = *re_ctx_p->input_curr_p++;
+    return ECMA_VALUE_EMPTY;
+  }
+
+  lit_code_point_t ch = lit_cesu8_read_next (&re_ctx_p->input_curr_p);
+  switch (ch)
+  {
+    /* Character Class escapes */
+    case LIT_CHAR_LOWERCASE_D:
+    {
+      re_ctx_p->token.type = RE_TOK_CLASS_ESCAPE;
+      re_ctx_p->token.value = RE_ESCAPE_DIGIT;
+      break;
+    }
+    case LIT_CHAR_UPPERCASE_D:
+    {
+      re_ctx_p->token.type = RE_TOK_CLASS_ESCAPE;
+      re_ctx_p->token.value = RE_ESCAPE_NOT_DIGIT;
+      break;
+    }
+    case LIT_CHAR_LOWERCASE_S:
+    {
+      re_ctx_p->token.type = RE_TOK_CLASS_ESCAPE;
+      re_ctx_p->token.value = RE_ESCAPE_WHITESPACE;
+      break;
+    }
+    case LIT_CHAR_UPPERCASE_S:
+    {
+      re_ctx_p->token.type = RE_TOK_CLASS_ESCAPE;
+      re_ctx_p->token.value = RE_ESCAPE_NOT_WHITESPACE;
+      break;
+    }
+    case LIT_CHAR_LOWERCASE_W:
+    {
+      re_ctx_p->token.type = RE_TOK_CLASS_ESCAPE;
+      re_ctx_p->token.value = RE_ESCAPE_WORD_CHAR;
+      break;
+    }
+    case LIT_CHAR_UPPERCASE_W:
+    {
+      re_ctx_p->token.type = RE_TOK_CLASS_ESCAPE;
+      re_ctx_p->token.value = RE_ESCAPE_NOT_WORD_CHAR;
+      break;
+    }
+    /* Control escapes */
+    case LIT_CHAR_LOWERCASE_F:
+    {
+      re_ctx_p->token.value = LIT_CHAR_FF;
+      break;
+    }
+    case LIT_CHAR_LOWERCASE_N:
+    {
+      re_ctx_p->token.value = LIT_CHAR_LF;
+      break;
+    }
+    case LIT_CHAR_LOWERCASE_R:
+    {
+      re_ctx_p->token.value = LIT_CHAR_CR;
+      break;
+    }
+    case LIT_CHAR_LOWERCASE_T:
+    {
+      re_ctx_p->token.value = LIT_CHAR_TAB;
+      break;
+    }
+    case LIT_CHAR_LOWERCASE_V:
+    {
+      re_ctx_p->token.value = LIT_CHAR_VTAB;
+      break;
+    }
+    /* Control letter */
+    case LIT_CHAR_LOWERCASE_C:
+    {
+      if (re_ctx_p->input_curr_p < re_ctx_p->input_end_p)
+      {
+        ch = *re_ctx_p->input_curr_p;
+
+        if ((ch >= LIT_CHAR_ASCII_UPPERCASE_LETTERS_BEGIN && ch <= LIT_CHAR_ASCII_UPPERCASE_LETTERS_END)
+            || (ch >= LIT_CHAR_ASCII_LOWERCASE_LETTERS_BEGIN && ch <= LIT_CHAR_ASCII_LOWERCASE_LETTERS_END))
+        {
+          re_ctx_p->token.value = (ch % 32);
+          re_ctx_p->input_curr_p++;
+
+          break;
+        }
+      }
+
+#if ENABLED (JERRY_ES2015)
+      if (re_ctx_p->flags & RE_FLAG_UNICODE)
+      {
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid control escape sequence"));
+      }
+#endif /* ENABLED (JERRY_ES2015) */
+
+      re_ctx_p->token.value = LIT_CHAR_BACKSLASH;
+      re_ctx_p->input_curr_p--;
+
+      break;
+    }
+    /* Hex escape */
+    case LIT_CHAR_LOWERCASE_X:
+    {
+      uint32_t hex_value = lit_char_hex_lookup (re_ctx_p->input_curr_p, re_ctx_p->input_end_p, 2);
+      if (hex_value != UINT32_MAX)
+      {
+        re_ctx_p->token.value = hex_value;
+        re_ctx_p->input_curr_p += 2;
+        break;
+      }
+
+#if ENABLED (JERRY_ES2015)
+      if (re_ctx_p->flags & RE_FLAG_UNICODE)
+      {
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid hex escape sequence"));
+      }
+#endif /* ENABLED (JERRY_ES2015) */
+
+      re_ctx_p->token.value = LIT_CHAR_LOWERCASE_X;
+      break;
+    }
+    /* Unicode escape */
+    case LIT_CHAR_LOWERCASE_U:
+    {
+      uint32_t hex_value = lit_char_hex_lookup (re_ctx_p->input_curr_p, re_ctx_p->input_end_p, 4);
+      if (hex_value != UINT32_MAX)
+      {
+        re_ctx_p->token.value = hex_value;
+        re_ctx_p->input_curr_p += 4;
+
+#if ENABLED (JERRY_ES2015)
+        if (re_ctx_p->flags & RE_FLAG_UNICODE
+            && lit_is_code_point_utf16_high_surrogate (re_ctx_p->token.value)
+            && re_ctx_p->input_curr_p + 6 <= re_ctx_p->input_end_p
+            && re_ctx_p->input_curr_p[0] == '\\'
+            && re_ctx_p->input_curr_p[1] == 'u')
+        {
+          hex_value = lit_char_hex_lookup (re_ctx_p->input_curr_p + 2, re_ctx_p->input_end_p, 4);
+          if (lit_is_code_point_utf16_low_surrogate (hex_value))
+          {
+            re_ctx_p->token.value = lit_convert_surrogate_pair_to_code_point ((ecma_char_t) re_ctx_p->token.value,
+                                                                              (ecma_char_t) hex_value);
+            re_ctx_p->input_curr_p += 6;
+          }
+        }
+#endif /* ENABLED (JERRY_ES2015) */
+
+        break;
+      }
+
+#if ENABLED (JERRY_ES2015)
+      if (re_ctx_p->flags & RE_FLAG_UNICODE)
+      {
+        if (*re_ctx_p->input_curr_p == LIT_CHAR_LEFT_BRACE)
+        {
+          re_ctx_p->input_curr_p++;
+
+          if (re_ctx_p->input_curr_p < re_ctx_p->input_end_p && lit_char_is_hex_digit (*re_ctx_p->input_curr_p))
+          {
+            lit_code_point_t cp = lit_char_hex_to_int (*re_ctx_p->input_curr_p++);
+
+            while (re_ctx_p->input_curr_p < re_ctx_p->input_end_p && lit_char_is_hex_digit (*re_ctx_p->input_curr_p))
+            {
+              cp = cp * 16 + lit_char_hex_to_int (*re_ctx_p->input_curr_p++);
+
+              if (JERRY_UNLIKELY (cp > LIT_UNICODE_CODE_POINT_MAX))
+              {
+                return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid unicode escape sequence"));
+              }
+            }
+
+            if (re_ctx_p->input_curr_p < re_ctx_p->input_end_p && *re_ctx_p->input_curr_p == LIT_CHAR_RIGHT_BRACE)
+            {
+              re_ctx_p->input_curr_p++;
+              re_ctx_p->token.value = cp;
+              break;
+            }
+          }
+        }
+
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid unicode escape sequence"));
+      }
+#endif /* ENABLED (JERRY_ES2015) */
+
+      re_ctx_p->token.value = LIT_CHAR_LOWERCASE_U;
+      break;
+    }
+    /* Identity escape */
+    default:
+    {
+#if ENABLED (JERRY_ES2015)
+      /* Must be '/', or one of SyntaxCharacter */
+      if (re_ctx_p->flags & RE_FLAG_UNICODE
+          && ch != LIT_CHAR_SLASH
+          && !re_is_syntax_char (ch))
+      {
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid escape"));
+      }
+#endif /* ENABLED (JERRY_ES2015) */
+      re_ctx_p->token.value = ch;
+    }
+  }
+
+  return ECMA_VALUE_EMPTY;
+} /* re_parse_char_escape */
 
 /**
  * Read the input pattern and parse the next token for the RegExp compiler
@@ -303,291 +673,123 @@ re_count_num_of_groups (re_parser_ctx_t *parser_ctx_p) /**< RegExp parser contex
  *
  *         Returned value must be freed with ecma_free_value
  */
-ecma_value_t
-re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context */
-                     re_token_t *out_token_p) /**< [out] output token */
+static ecma_value_t
+re_parse_next_token (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context */
 {
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-
-  if (parser_ctx_p->input_curr_p >= parser_ctx_p->input_end_p)
+  if (re_ctx_p->input_curr_p >= re_ctx_p->input_end_p)
   {
-    out_token_p->type = RE_TOK_EOF;
-    return ret_value;
+    re_ctx_p->token.type = RE_TOK_EOF;
+    return ECMA_VALUE_EMPTY;
   }
 
-  ecma_char_t ch = lit_cesu8_read_next (&parser_ctx_p->input_curr_p);
+  ecma_char_t ch = lit_cesu8_read_next (&re_ctx_p->input_curr_p);
 
   switch (ch)
   {
-    case LIT_CHAR_VLINE:
-    {
-      out_token_p->type = RE_TOK_ALTERNATIVE;
-      break;
-    }
     case LIT_CHAR_CIRCUMFLEX:
     {
-      out_token_p->type = RE_TOK_ASSERT_START;
-      break;
+      re_ctx_p->token.type = RE_TOK_ASSERT_START;
+      return ECMA_VALUE_EMPTY;
     }
     case LIT_CHAR_DOLLAR_SIGN:
     {
-      out_token_p->type = RE_TOK_ASSERT_END;
-      break;
+      re_ctx_p->token.type = RE_TOK_ASSERT_END;
+      return ECMA_VALUE_EMPTY;
+    }
+    case LIT_CHAR_VLINE:
+    {
+      re_ctx_p->token.type = RE_TOK_ALTERNATIVE;
+      return ECMA_VALUE_EMPTY;
     }
     case LIT_CHAR_DOT:
     {
-      out_token_p->type = RE_TOK_PERIOD;
-      ret_value = re_parse_iterator (parser_ctx_p, out_token_p);
+      re_ctx_p->token.type = RE_TOK_PERIOD;
+      /* Check quantifier */
       break;
     }
     case LIT_CHAR_BACKSLASH:
     {
-      if (parser_ctx_p->input_curr_p >= parser_ctx_p->input_end_p)
+      if (re_ctx_p->input_curr_p >= re_ctx_p->input_end_p)
       {
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid regular experssion"));
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid escape"));
       }
 
-      out_token_p->type = RE_TOK_CHAR;
-      ch = lit_cesu8_read_next (&parser_ctx_p->input_curr_p);
+      /* DecimalEscape, Backreferences cannot start with a zero digit. */
+      if (*re_ctx_p->input_curr_p > LIT_CHAR_0 && *re_ctx_p->input_curr_p <= LIT_CHAR_9)
+      {
+        const lit_utf8_byte_t *digits_p = re_ctx_p->input_curr_p;
+        const uint32_t value = lit_parse_decimal (&digits_p, re_ctx_p->input_end_p);
 
-      if (ch == LIT_CHAR_LOWERCASE_B)
-      {
-        out_token_p->type = RE_TOK_ASSERT_WORD_BOUNDARY;
-      }
-      else if (ch == LIT_CHAR_UPPERCASE_B)
-      {
-        out_token_p->type = RE_TOK_ASSERT_NOT_WORD_BOUNDARY;
-      }
-      else if (ch == LIT_CHAR_LOWERCASE_F)
-      {
-        out_token_p->value = LIT_CHAR_FF;
-      }
-      else if (ch == LIT_CHAR_LOWERCASE_N)
-      {
-        out_token_p->value = LIT_CHAR_LF;
-      }
-      else if (ch == LIT_CHAR_LOWERCASE_T)
-      {
-        out_token_p->value = LIT_CHAR_TAB;
-      }
-      else if (ch == LIT_CHAR_LOWERCASE_R)
-      {
-        out_token_p->value = LIT_CHAR_CR;
-      }
-      else if (ch == LIT_CHAR_LOWERCASE_V)
-      {
-        out_token_p->value = LIT_CHAR_VTAB;
-      }
-      else if (ch == LIT_CHAR_LOWERCASE_C)
-      {
-        if (parser_ctx_p->input_curr_p < parser_ctx_p->input_end_p)
+        if (re_ctx_p->groups_count < 0)
         {
-          ch = *parser_ctx_p->input_curr_p;
-
-          if ((ch >= LIT_CHAR_ASCII_UPPERCASE_LETTERS_BEGIN && ch <= LIT_CHAR_ASCII_UPPERCASE_LETTERS_END)
-              || (ch >= LIT_CHAR_ASCII_LOWERCASE_LETTERS_BEGIN && ch <= LIT_CHAR_ASCII_LOWERCASE_LETTERS_END))
-          {
-            out_token_p->value = (ch % 32);
-            parser_ctx_p->input_curr_p++;
-          }
-          else
-          {
-            out_token_p->value = LIT_CHAR_BACKSLASH;
-            parser_ctx_p->input_curr_p--;
-          }
-        }
-        else
-        {
-          out_token_p->value = LIT_CHAR_BACKSLASH;
-          parser_ctx_p->input_curr_p--;
-        }
-      }
-      else if (ch == LIT_CHAR_LOWERCASE_X
-               && re_hex_lookup (parser_ctx_p, 2))
-      {
-        ecma_char_t code_unit;
-
-        if (!lit_read_code_unit_from_hex (parser_ctx_p->input_curr_p, 2, &code_unit))
-        {
-          return ecma_raise_syntax_error (ECMA_ERR_MSG ("decode error"));
+          re_count_groups (re_ctx_p);
         }
 
-        parser_ctx_p->input_curr_p += 2;
-        out_token_p->value = code_unit;
-      }
-      else if (ch == LIT_CHAR_LOWERCASE_U
-               && re_hex_lookup (parser_ctx_p, 4))
-      {
-        ecma_char_t code_unit;
-
-        if (!lit_read_code_unit_from_hex (parser_ctx_p->input_curr_p, 4, &code_unit))
+        if (value <= (uint32_t) re_ctx_p->groups_count)
         {
-          return ecma_raise_syntax_error (ECMA_ERR_MSG ("decode error"));
-        }
+          /* Valid backreference */
+          re_ctx_p->input_curr_p = digits_p;
+          re_ctx_p->token.type = RE_TOK_BACKREFERENCE;
+          re_ctx_p->token.value = value;
 
-        parser_ctx_p->input_curr_p += 4;
-        out_token_p->value = code_unit;
-      }
-      else if (ch == LIT_CHAR_LOWERCASE_D)
-      {
-        out_token_p->type = RE_TOK_DIGIT;
-        break;
-      }
-      else if (ch == LIT_CHAR_UPPERCASE_D)
-      {
-        out_token_p->type = RE_TOK_NOT_DIGIT;
-        break;
-      }
-      else if (ch == LIT_CHAR_LOWERCASE_S)
-      {
-        out_token_p->type = RE_TOK_WHITE;
-        break;
-      }
-      else if (ch == LIT_CHAR_UPPERCASE_S)
-      {
-        out_token_p->type = RE_TOK_NOT_WHITE;
-        break;
-      }
-      else if (ch == LIT_CHAR_LOWERCASE_W)
-      {
-        out_token_p->type = RE_TOK_WORD_CHAR;
-        break;
-      }
-      else if (ch == LIT_CHAR_UPPERCASE_W)
-      {
-        out_token_p->type = RE_TOK_NOT_WORD_CHAR;
-        break;
-      }
-      else if (lit_char_is_decimal_digit (ch))
-      {
-        if (ch == LIT_CHAR_0)
-        {
-          if (parser_ctx_p->input_curr_p < parser_ctx_p->input_end_p
-              && lit_char_is_decimal_digit (*parser_ctx_p->input_curr_p))
-          {
-            return ecma_raise_syntax_error (ECMA_ERR_MSG ("RegExp escape pattern error."));
-          }
-
-          out_token_p->value = LIT_UNICODE_CODE_POINT_NULL;
-        }
-        else
-        {
-          if (parser_ctx_p->groups_count == -1)
-          {
-            re_count_num_of_groups (parser_ctx_p);
-          }
-
-          if (parser_ctx_p->groups_count)
-          {
-            parser_ctx_p->input_curr_p--;
-            uint32_t number = 0;
-            int index = 0;
-
-            do
-            {
-              if (index >= RE_MAX_RE_DECESC_DIGITS)
-              {
-                ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("RegExp escape error: decimal escape too long."));
-                return ret_value;
-              }
-              if (parser_ctx_p->input_curr_p >= parser_ctx_p->input_end_p)
-              {
-                break;
-              }
-
-              ecma_char_t digit = *parser_ctx_p->input_curr_p++;
-
-              if (!lit_char_is_decimal_digit (digit))
-              {
-                parser_ctx_p->input_curr_p--;
-                break;
-              }
-              number = number * 10 + lit_char_hex_to_int (digit);
-              index++;
-            }
-            while (true);
-
-            if ((int) number <= parser_ctx_p->groups_count)
-            {
-              out_token_p->type = RE_TOK_BACKREFERENCE;
-            }
-            else
-            /* Invalid backreference, fallback to octal */
-            {
-              /* Rewind to start of number. */
-              parser_ctx_p->input_curr_p -= index;
-
-              /* Try to reparse as octal. */
-              ecma_char_t digit = *parser_ctx_p->input_curr_p;
-
-              if (!lit_char_is_octal_digit (digit))
-              {
-                /* Not octal, keep digit character value. */
-                number = digit;
-                parser_ctx_p->input_curr_p++;
-              }
-              else
-              {
-                number = re_parse_octal (parser_ctx_p);
-              }
-            }
-            out_token_p->value = number;
-          }
-          else
-          /* Invalid backreference, fallback to octal if possible */
-          {
-            if (!lit_char_is_octal_digit (ch))
-            {
-              /* Not octal, keep character value. */
-              out_token_p->value = ch;
-            }
-            else
-            {
-              parser_ctx_p->input_curr_p--;
-              out_token_p->value = re_parse_octal (parser_ctx_p);
-            }
-          }
+          /* Check quantifier */
+          break;
         }
       }
-      else
+
+      if (*re_ctx_p->input_curr_p == LIT_CHAR_LOWERCASE_B)
       {
-        out_token_p->value = ch;
+        re_ctx_p->input_curr_p++;
+        re_ctx_p->token.type = RE_TOK_ASSERT_WORD_BOUNDARY;
+        return ECMA_VALUE_EMPTY;
+      }
+      else if (*re_ctx_p->input_curr_p == LIT_CHAR_UPPERCASE_B)
+      {
+        re_ctx_p->input_curr_p++;
+        re_ctx_p->token.type = RE_TOK_ASSERT_NOT_WORD_BOUNDARY;
+        return ECMA_VALUE_EMPTY;
       }
 
-      ret_value = re_parse_iterator (parser_ctx_p, out_token_p);
+      const ecma_value_t parse_result = re_parse_char_escape (re_ctx_p);
+
+      if (ECMA_IS_VALUE_ERROR (parse_result))
+      {
+        return parse_result;
+      }
+
+      /* Check quantifier */
       break;
     }
     case LIT_CHAR_LEFT_PAREN:
     {
-      if (parser_ctx_p->input_curr_p >= parser_ctx_p->input_end_p)
+      if (re_ctx_p->input_curr_p >= re_ctx_p->input_end_p)
       {
         return ecma_raise_syntax_error (ECMA_ERR_MSG ("Unterminated group"));
       }
 
-      if (*parser_ctx_p->input_curr_p == LIT_CHAR_QUESTION)
+      if (*re_ctx_p->input_curr_p == LIT_CHAR_QUESTION)
       {
-        parser_ctx_p->input_curr_p++;
-        if (parser_ctx_p->input_curr_p >= parser_ctx_p->input_end_p)
+        re_ctx_p->input_curr_p++;
+        if (re_ctx_p->input_curr_p >= re_ctx_p->input_end_p)
         {
           return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid group"));
         }
 
-        ch = *parser_ctx_p->input_curr_p++;
+        ch = *re_ctx_p->input_curr_p++;
 
         if (ch == LIT_CHAR_EQUALS)
         {
-          /* (?= */
-          out_token_p->type = RE_TOK_ASSERT_START_POS_LOOKAHEAD;
+          re_ctx_p->token.type = RE_TOK_ASSERT_LOOKAHEAD;
+          re_ctx_p->token.value = false;
         }
         else if (ch == LIT_CHAR_EXCLAMATION)
         {
-          /* (?! */
-          out_token_p->type = RE_TOK_ASSERT_START_NEG_LOOKAHEAD;
+          re_ctx_p->token.type = RE_TOK_ASSERT_LOOKAHEAD;
+          re_ctx_p->token.value = true;
         }
         else if (ch == LIT_CHAR_COLON)
         {
-          /* (?: */
-          out_token_p->type = RE_TOK_START_NON_CAPTURE_GROUP;
+          re_ctx_p->token.type = RE_TOK_START_NON_CAPTURE_GROUP;
         }
         else
         {
@@ -596,103 +798,582 @@ re_parse_next_token (re_parser_ctx_t *parser_ctx_p, /**< RegExp parser context *
       }
       else
       {
-        /* ( */
-        out_token_p->type = RE_TOK_START_CAPTURE_GROUP;
+        re_ctx_p->token.type = RE_TOK_START_CAPTURE_GROUP;
       }
-      break;
+
+      return ECMA_VALUE_EMPTY;
     }
     case LIT_CHAR_RIGHT_PAREN:
     {
-      out_token_p->type = RE_TOK_END_GROUP;
-      ret_value = re_parse_iterator (parser_ctx_p, out_token_p);
-      break;
+      re_ctx_p->token.type = RE_TOK_END_GROUP;
+
+      return ECMA_VALUE_EMPTY;
     }
     case LIT_CHAR_LEFT_SQUARE:
     {
-      out_token_p->type = RE_TOK_START_CHAR_CLASS;
+      re_ctx_p->token.type = RE_TOK_CHAR_CLASS;
 
-      if (parser_ctx_p->input_curr_p >= parser_ctx_p->input_end_p)
+      if (re_ctx_p->input_curr_p >= re_ctx_p->input_end_p)
       {
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("invalid character class"));
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Unterminated character class."));
       }
 
-      if (*parser_ctx_p->input_curr_p == LIT_CHAR_CIRCUMFLEX)
-      {
-        out_token_p->type = RE_TOK_START_INV_CHAR_CLASS;
-        parser_ctx_p->input_curr_p++;
-      }
-
-      break;
+      return ECMA_VALUE_EMPTY;
     }
     case LIT_CHAR_QUESTION:
     case LIT_CHAR_ASTERISK:
     case LIT_CHAR_PLUS:
     {
-      return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid RegExp token."));
-    }
-    case LIT_CHAR_NULL:
-    {
-      out_token_p->type = RE_TOK_EOF;
-      break;
+      return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid quantifier."));
     }
     case LIT_CHAR_LEFT_BRACE:
     {
-#if ENABLED (JERRY_REGEXP_STRICT_MODE)
-      return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid RegExp token."));
-#else /* !ENABLED (JERRY_REGEXP_STRICT_MODE) */
-
-      /* Make sure that the current '{' does not start an iterator.
-       *
-       * E.g: /\s+{3,4}/ should fail as there is nothing to iterate.
-       *     However /\s+{3,4/ should be valid in web compatibility mode.
-       */
-      const lit_utf8_byte_t *input_curr_p = parser_ctx_p->input_curr_p;
-
-      lit_utf8_decr (&parser_ctx_p->input_curr_p);
-      ret_value = re_parse_iterator (parser_ctx_p, out_token_p);
-      if (ecma_is_value_empty (ret_value))
+      re_ctx_p->input_curr_p--;
+      if (ecma_is_value_true (re_parse_quantifier (re_ctx_p)))
       {
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid RegExp token."));
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Nothing to repeat."));
       }
 
-      JERRY_ASSERT (ECMA_IS_VALUE_ERROR (ret_value));
-      jcontext_release_exception ();
+#if ENABLED (JERRY_ES2015)
+      if (re_ctx_p->flags & RE_FLAG_UNICODE)
+      {
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Lone quantifier bracket."));
+      }
+#endif /* ENABLED (JERRY_ES2015) */
 
-      parser_ctx_p->input_curr_p = input_curr_p;
-      /* It was not an iterator, continue the parsing. */
-#endif /* ENABLED (JERRY_REGEXP_STRICT_MODE) */
+      re_ctx_p->input_curr_p++;
+      re_ctx_p->token.type = RE_TOK_CHAR;
+      re_ctx_p->token.value = ch;
+
+      /* Check quantifier */
+      break;
+    }
+#if ENABLED (JERRY_ES2015)
+    case LIT_CHAR_RIGHT_SQUARE:
+    case LIT_CHAR_RIGHT_BRACE:
+    {
+      if (re_ctx_p->flags & RE_FLAG_UNICODE)
+      {
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Lone quantifier bracket."));
+      }
+
       /* FALLTHRU */
     }
+#endif /* ENABLED (JERRY_ES2015) */
     default:
     {
-      out_token_p->type = RE_TOK_CHAR;
-      out_token_p->value = ch;
-#if ENABLED (JERRY_REGEXP_STRICT_MODE)
-      ret_value = re_parse_iterator (parser_ctx_p, out_token_p);
-#else
-      /* In case of compatiblity mode try the following:
-       * 1. Try parsing an iterator after the character.
-       * 2.a. If no error is reported: it was an iterator so return an empty value.
-       * 2.b. If there was an error: it was not an iterator thus return the current position
-       *      to the start of the iterator parsing and set the return value to the empty value.
-       * 3. The next 're_parse_next_token' call will handle the further parsing of characters.
-       */
-      const lit_utf8_byte_t *input_curr_p = parser_ctx_p->input_curr_p;
-      ret_value = re_parse_iterator (parser_ctx_p, out_token_p);
+      re_ctx_p->token.type = RE_TOK_CHAR;
+      re_ctx_p->token.value = ch;
 
-      if (!ecma_is_value_empty (ret_value))
+#if ENABLED (JERRY_ES2015)
+      if (re_ctx_p->flags & RE_FLAG_UNICODE
+          && lit_is_code_point_utf16_high_surrogate (ch))
       {
-        jcontext_release_exception ();
-        parser_ctx_p->input_curr_p = input_curr_p;
-        ret_value = ECMA_VALUE_EMPTY;
+        const ecma_char_t next = lit_cesu8_peek_next (re_ctx_p->input_curr_p);
+        if (lit_is_code_point_utf16_low_surrogate (next))
+        {
+          re_ctx_p->token.value = lit_convert_surrogate_pair_to_code_point (ch, next);
+          re_ctx_p->input_curr_p += LIT_UTF8_MAX_BYTES_IN_CODE_UNIT;
+        }
       }
-#endif
+#endif /* ENABLED (JERRY_ES2015) */
+
+      /* Check quantifier */
       break;
     }
   }
 
-  return ret_value;
+  re_parse_quantifier (re_ctx_p);
+  return re_check_quantifier (re_ctx_p);
 } /* re_parse_next_token */
+
+/**
+ * Append a character class range to the bytecode.
+ */
+static void
+re_class_add_range (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
+                    lit_code_point_t start, /**< range begin */
+                    lit_code_point_t end) /**< range end */
+{
+  if (re_ctx_p->flags & RE_FLAG_IGNORE_CASE)
+  {
+    start = ecma_regexp_canonicalize_char (start, re_ctx_p->flags & RE_FLAG_UNICODE);
+    end = ecma_regexp_canonicalize_char (end, re_ctx_p->flags & RE_FLAG_UNICODE);
+  }
+
+  re_append_char (re_ctx_p, start);
+  re_append_char (re_ctx_p, end);
+} /* re_class_add_range */
+
+/**
+ * Add a single character to the character class
+ */
+static void
+re_class_add_char (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
+                    uint32_t class_offset, /**< character class bytecode offset*/
+                    lit_code_point_t cp) /**< code point */
+{
+  if (re_ctx_p->flags & RE_FLAG_IGNORE_CASE)
+  {
+    cp = ecma_regexp_canonicalize_char (cp, re_ctx_p->flags & RE_FLAG_UNICODE);
+  }
+
+  re_insert_char (re_ctx_p, class_offset, cp);
+} /* re_class_add_char */
+
+/**
+ * Invalid character code point
+ */
+#define RE_INVALID_CP 0xFFFFFFFF
+
+/**
+ * Read the input pattern and parse the range of character class
+ *
+ * @return empty ecma value - if parsed successfully
+ *         error ecma value - otherwise
+ *
+ *         Returned value must be freed with ecma_free_value
+ */
+static ecma_value_t
+re_parse_char_class (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context */
+{
+  static const uint8_t escape_flags[] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20};
+  const uint32_t class_offset = re_bytecode_size (re_ctx_p);
+
+  uint8_t found_escape_flags = 0;
+  uint8_t out_class_flags = 0;
+
+  uint32_t range_count = 0;
+  uint32_t char_count = 0;
+  bool is_range = false;
+
+  JERRY_ASSERT (re_ctx_p->input_curr_p < re_ctx_p->input_end_p);
+  if (*re_ctx_p->input_curr_p == LIT_CHAR_CIRCUMFLEX)
+  {
+    re_ctx_p->input_curr_p++;
+    out_class_flags |= RE_CLASS_INVERT;
+  }
+
+  lit_code_point_t start = RE_INVALID_CP;
+
+  while (true)
+  {
+    if (re_ctx_p->input_curr_p >= re_ctx_p->input_end_p)
+    {
+      return ecma_raise_syntax_error (ECMA_ERR_MSG ("Unterminated character class."));
+    }
+
+    if (*re_ctx_p->input_curr_p == LIT_CHAR_RIGHT_SQUARE)
+    {
+      if (is_range)
+      {
+        if (start != RE_INVALID_CP)
+        {
+          re_class_add_char (re_ctx_p, class_offset, start);
+          char_count++;
+        }
+
+        re_class_add_char (re_ctx_p, class_offset, LIT_CHAR_MINUS);
+        char_count++;
+      }
+
+      re_ctx_p->input_curr_p++;
+      break;
+    }
+
+    JERRY_ASSERT (re_ctx_p->input_curr_p < re_ctx_p->input_end_p);
+    lit_code_point_t current;
+
+    if (*re_ctx_p->input_curr_p == LIT_CHAR_BACKSLASH)
+    {
+      re_ctx_p->input_curr_p++;
+      if (re_ctx_p->input_curr_p >= re_ctx_p->input_end_p)
+      {
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid escape"));
+      }
+
+      if (*re_ctx_p->input_curr_p == LIT_CHAR_LOWERCASE_B)
+      {
+        re_ctx_p->input_curr_p++;
+        current = LIT_CHAR_BS;
+      }
+#if ENABLED (JERRY_ES2015)
+      else if (*re_ctx_p->input_curr_p == LIT_CHAR_MINUS)
+      {
+        re_ctx_p->input_curr_p++;
+        current = LIT_CHAR_MINUS;
+      }
+#endif /* ENABLED (JERRY_ES2015) */
+      else if ((re_ctx_p->flags & RE_FLAG_UNICODE) == 0
+               && *re_ctx_p->input_curr_p == LIT_CHAR_LOWERCASE_C
+               && re_ctx_p->input_curr_p + 1 < re_ctx_p->input_end_p
+               && (lit_char_is_decimal_digit (*(re_ctx_p->input_curr_p + 1))
+                   || *(re_ctx_p->input_curr_p + 1) == LIT_CHAR_UNDERSCORE))
+      {
+        current = ((uint8_t) *(re_ctx_p->input_curr_p + 1) % 32);
+        re_ctx_p->input_curr_p += 2;
+      }
+      else
+      {
+        if (ECMA_IS_VALUE_ERROR (re_parse_char_escape (re_ctx_p)))
+        {
+          return ECMA_VALUE_ERROR;
+        }
+
+        if (re_ctx_p->token.type == RE_TOK_CLASS_ESCAPE)
+        {
+          const uint8_t escape = (uint8_t) re_ctx_p->token.value;
+          found_escape_flags |= escape_flags[escape];
+          current = RE_INVALID_CP;
+        }
+        else
+        {
+          JERRY_ASSERT (re_ctx_p->token.type == RE_TOK_CHAR);
+          current = re_ctx_p->token.value;
+        }
+      }
+    }
+#if ENABLED (JERRY_ES2015)
+    else if (re_ctx_p->flags & RE_FLAG_UNICODE)
+    {
+      current = ecma_regexp_unicode_advance (&re_ctx_p->input_curr_p, re_ctx_p->input_end_p);
+    }
+#endif /* ENABLED (JERRY_ES2015) */
+    else
+    {
+      current = lit_cesu8_read_next (&re_ctx_p->input_curr_p);
+    }
+
+    if (is_range)
+    {
+      is_range = false;
+
+      if (start != RE_INVALID_CP && current != RE_INVALID_CP)
+      {
+        if (start > current)
+        {
+          return ecma_raise_syntax_error (ECMA_ERR_MSG ("Range out of order in character class"));
+        }
+
+        re_class_add_range (re_ctx_p, start, current);
+        range_count++;
+        continue;
+      }
+
+#if ENABLED (JERRY_ES2015)
+      if (re_ctx_p->flags & RE_FLAG_UNICODE)
+      {
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid character class"));
+      }
+#endif /* ENABLED (JERRY_ES2015) */
+
+      if (start != RE_INVALID_CP)
+      {
+        re_class_add_char (re_ctx_p, class_offset, start);
+        char_count++;
+      }
+      else if (current != RE_INVALID_CP)
+      {
+        re_class_add_char (re_ctx_p, class_offset, current);
+        char_count++;
+      }
+
+      re_class_add_char (re_ctx_p, class_offset, LIT_CHAR_MINUS);
+      char_count++;
+      continue;
+    }
+
+    if (re_ctx_p->input_curr_p < re_ctx_p->input_end_p
+        && *re_ctx_p->input_curr_p == LIT_CHAR_MINUS)
+    {
+      re_ctx_p->input_curr_p++;
+      start = current;
+      is_range = true;
+      continue;
+    }
+
+    if (current != RE_INVALID_CP)
+    {
+      re_class_add_char (re_ctx_p, class_offset, current);
+      char_count++;
+    }
+  }
+
+  uint8_t escape_count = 0;
+  for (ecma_class_escape_t escape = RE_ESCAPE__START; escape < RE_ESCAPE__COUNT; ++escape)
+  {
+    if (found_escape_flags & escape_flags[escape])
+    {
+      re_insert_byte (re_ctx_p, class_offset, (uint8_t) escape);
+      escape_count++;
+    }
+  }
+
+  if (range_count > 0)
+  {
+    re_insert_value (re_ctx_p, class_offset, range_count);
+    out_class_flags |= RE_CLASS_HAS_RANGES;
+  }
+
+  if (char_count > 0)
+  {
+    re_insert_value (re_ctx_p, class_offset, char_count);
+    out_class_flags |= RE_CLASS_HAS_CHARS;
+  }
+
+  JERRY_ASSERT (escape_count <= RE_CLASS_ESCAPE_COUNT_MASK);
+  out_class_flags |= escape_count;
+
+  re_insert_byte (re_ctx_p, class_offset, out_class_flags);
+  re_insert_opcode (re_ctx_p, class_offset, RE_OP_CHAR_CLASS);
+
+  re_parse_quantifier (re_ctx_p);
+  return re_check_quantifier (re_ctx_p);
+} /* re_parse_char_class */
+
+/**
+ * Parse alternatives
+ *
+ * @return empty ecma value - if alternative was successfully parsed
+ *         error ecma value - otherwise
+ *
+ *         Returned value must be freed with ecma_free_value
+ */
+ecma_value_t
+re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
+                      bool expect_eof) /**< expect end of file */
+{
+  ECMA_CHECK_STACK_USAGE ();
+  uint32_t alternative_offset = re_bytecode_size (re_ctx_p);
+  bool first_alternative = true;
+
+  while (true)
+  {
+    ecma_value_t next_token_result = re_parse_next_token (re_ctx_p);
+    if (ECMA_IS_VALUE_ERROR (next_token_result))
+    {
+      return next_token_result;
+    }
+
+    JERRY_ASSERT (ecma_is_value_empty (next_token_result));
+
+    uint32_t atom_offset = re_bytecode_size (re_ctx_p);
+
+    switch (re_ctx_p->token.type)
+    {
+      case RE_TOK_START_CAPTURE_GROUP:
+      {
+        const uint32_t idx = re_ctx_p->captures_count++;
+        const uint32_t capture_start = idx;
+
+        ecma_value_t result = re_parse_alternative (re_ctx_p, false);
+        if (ECMA_IS_VALUE_ERROR (result))
+        {
+          return result;
+        }
+
+        re_parse_quantifier (re_ctx_p);
+
+        if (ECMA_IS_VALUE_ERROR (re_check_quantifier (re_ctx_p)))
+        {
+          return ECMA_VALUE_ERROR;
+        }
+
+        re_insert_into_group (re_ctx_p, atom_offset, idx, capture_start, true);
+        break;
+      }
+      case RE_TOK_START_NON_CAPTURE_GROUP:
+      {
+        const uint32_t idx = re_ctx_p->non_captures_count++;
+        const uint32_t capture_start = re_ctx_p->captures_count;
+
+        ecma_value_t result = re_parse_alternative (re_ctx_p, false);
+        if (ECMA_IS_VALUE_ERROR (result))
+        {
+          return result;
+        }
+
+        re_parse_quantifier (re_ctx_p);
+
+        if (ECMA_IS_VALUE_ERROR (re_check_quantifier (re_ctx_p)))
+        {
+          return ECMA_VALUE_ERROR;
+        }
+
+        re_insert_into_group (re_ctx_p, atom_offset, idx, capture_start, false);
+        break;
+      }
+      case RE_TOK_PERIOD:
+      {
+#if ENABLED (JERRY_ES2015)
+        re_append_opcode (re_ctx_p, (re_ctx_p->flags & RE_FLAG_UNICODE) ? RE_OP_UNICODE_PERIOD : RE_OP_PERIOD);
+#else /* !ENABLED (JERRY_ES2015) */
+        re_append_opcode (re_ctx_p, RE_OP_PERIOD);
+#endif /* !ENABLED (JERRY_ES2015) */
+
+        re_insert_atom_iterator (re_ctx_p, atom_offset);
+        break;
+      }
+      case RE_TOK_ALTERNATIVE:
+      {
+        re_insert_value (re_ctx_p, alternative_offset, re_bytecode_size (re_ctx_p) - alternative_offset);
+        re_insert_opcode (re_ctx_p, alternative_offset, first_alternative ? RE_OP_ALTERNATIVE_START
+                                                                          : RE_OP_ALTERNATIVE_NEXT);
+
+        alternative_offset = re_bytecode_size (re_ctx_p);
+        first_alternative = false;
+        break;
+      }
+      case RE_TOK_ASSERT_START:
+      {
+        re_append_opcode (re_ctx_p, RE_OP_ASSERT_LINE_START);
+        break;
+      }
+      case RE_TOK_ASSERT_END:
+      {
+        re_append_opcode (re_ctx_p, RE_OP_ASSERT_LINE_END);
+        break;
+      }
+      case RE_TOK_ASSERT_WORD_BOUNDARY:
+      {
+        re_append_opcode (re_ctx_p, RE_OP_ASSERT_WORD_BOUNDARY);
+        break;
+      }
+      case RE_TOK_ASSERT_NOT_WORD_BOUNDARY:
+      {
+        re_append_opcode (re_ctx_p, RE_OP_ASSERT_NOT_WORD_BOUNDARY);
+        break;
+      }
+      case RE_TOK_ASSERT_LOOKAHEAD:
+      {
+        const uint32_t start_capture_count = re_ctx_p->captures_count;
+        const bool is_negative = !!re_ctx_p->token.value;
+
+        ecma_value_t result = re_parse_alternative (re_ctx_p, false);
+
+        if (ECMA_IS_VALUE_ERROR (result))
+        {
+          return result;
+        }
+
+#if ENABLED (JERRY_ES2015)
+        if (re_ctx_p->flags & RE_FLAG_UNICODE)
+        {
+          re_ctx_p->token.qmin = 1;
+          re_ctx_p->token.qmax = 1;
+          re_ctx_p->token.greedy = true;
+        }
+        else
+#endif /* ENABLED (JERRY_ES2015) */
+        {
+          re_parse_quantifier (re_ctx_p);
+
+          if (ECMA_IS_VALUE_ERROR (re_check_quantifier (re_ctx_p)))
+          {
+            return ECMA_VALUE_ERROR;
+          }
+        }
+
+        re_insert_assertion_lookahead (re_ctx_p, atom_offset, start_capture_count, is_negative);
+        break;
+      }
+      case RE_TOK_BACKREFERENCE:
+      {
+        const uint32_t backref_idx = re_ctx_p->token.value;
+        re_append_opcode (re_ctx_p, RE_OP_BACKREFERENCE);
+        re_append_value (re_ctx_p, backref_idx);
+
+        if (re_ctx_p->token.qmin != 1 || re_ctx_p->token.qmax != 1)
+        {
+          const uint32_t group_idx = re_ctx_p->non_captures_count++;
+          re_insert_into_group (re_ctx_p, atom_offset, group_idx, re_ctx_p->captures_count, false);
+        }
+
+        break;
+      }
+      case RE_TOK_CLASS_ESCAPE:
+      {
+        const ecma_class_escape_t escape = (ecma_class_escape_t) re_ctx_p->token.value;
+        re_append_opcode (re_ctx_p, RE_OP_CLASS_ESCAPE);
+        re_append_byte (re_ctx_p, (uint8_t) escape);
+
+        re_insert_atom_iterator (re_ctx_p, atom_offset);
+        break;
+      }
+      case RE_TOK_CHAR_CLASS:
+      {
+        ecma_value_t result = re_parse_char_class (re_ctx_p);
+
+        if (ECMA_IS_VALUE_ERROR (result))
+        {
+          return result;
+        }
+
+        re_insert_atom_iterator (re_ctx_p, atom_offset);
+        break;
+      }
+      case RE_TOK_END_GROUP:
+      {
+        if (expect_eof)
+        {
+          return ecma_raise_syntax_error (ECMA_ERR_MSG ("Unmatched ')'"));
+        }
+
+        if (!first_alternative)
+        {
+          re_insert_value (re_ctx_p, alternative_offset, re_bytecode_size (re_ctx_p) - alternative_offset);
+          re_insert_opcode (re_ctx_p, alternative_offset, RE_OP_ALTERNATIVE_NEXT);
+        }
+
+        return ECMA_VALUE_EMPTY;
+      }
+      case RE_TOK_EOF:
+      {
+        if (!expect_eof)
+        {
+          return ecma_raise_syntax_error (ECMA_ERR_MSG ("Unexpected end of pattern."));
+        }
+
+        if (!first_alternative)
+        {
+          re_insert_value (re_ctx_p, alternative_offset, re_bytecode_size (re_ctx_p) - alternative_offset);
+          re_insert_opcode (re_ctx_p, alternative_offset, RE_OP_ALTERNATIVE_NEXT);
+        }
+
+        re_append_opcode (re_ctx_p, RE_OP_EOF);
+        return ECMA_VALUE_EMPTY;
+      }
+      default:
+      {
+        JERRY_ASSERT (re_ctx_p->token.type == RE_TOK_CHAR);
+
+        lit_code_point_t ch = re_ctx_p->token.value;
+
+        if (ch <= LIT_UTF8_1_BYTE_CODE_POINT_MAX && (re_ctx_p->flags & RE_FLAG_IGNORE_CASE) == 0)
+        {
+          re_append_opcode (re_ctx_p, RE_OP_BYTE);
+          re_append_byte (re_ctx_p, (uint8_t) ch);
+
+          re_insert_atom_iterator (re_ctx_p, atom_offset);
+          break;
+        }
+
+        if (re_ctx_p->flags & RE_FLAG_IGNORE_CASE)
+        {
+          ch = ecma_regexp_canonicalize_char (ch, re_ctx_p->flags & RE_FLAG_UNICODE);
+        }
+
+        re_append_opcode (re_ctx_p, RE_OP_CHAR);
+        re_append_char (re_ctx_p, ch);
+
+        re_insert_atom_iterator (re_ctx_p, atom_offset);
+        break;
+      }
+    }
+  }
+
+  return ECMA_VALUE_EMPTY;
+} /* re_parse_alternative */
 
 /**
  * @}

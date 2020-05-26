@@ -13,13 +13,12 @@
  * limitations under the License.
  */
 
-#ifndef RE_COMPILER_H
-#define RE_COMPILER_H
+#ifndef RE_COMPILER_CONTEXT_H
+#define RE_COMPILER_CONTEXT_H
 
 #if ENABLED (JERRY_BUILTIN_REGEXP)
 
-#include "ecma-globals.h"
-#include "re-bytecode.h"
+#include "re-token.h"
 
 /** \addtogroup parser Parser
  * @{
@@ -31,10 +30,25 @@
  * @{
  */
 
-re_compiled_code_t *
-re_compile_bytecode (ecma_string_t *pattern_str_p, uint16_t flags);
+/**
+ * RegExp compiler context
+ */
+typedef struct
+{
+  const lit_utf8_byte_t *input_start_p; /**< start of input pattern */
+  const lit_utf8_byte_t *input_curr_p;  /**< current position in input pattern */
+  const lit_utf8_byte_t *input_end_p;   /**< end of input pattern */
 
-void re_cache_gc (void);
+  uint8_t *bytecode_start_p;            /**< start of bytecode block */
+  size_t bytecode_size;                 /**< size of bytecode */
+
+  uint32_t captures_count;              /**< number of capture groups */
+  uint32_t non_captures_count;          /**< number of non-capture groups */
+
+  int groups_count;                     /**< number of groups */
+  uint16_t flags;                       /**< RegExp flags */
+  re_token_t token;                     /**< current token */
+} re_compiler_ctx_t;
 
 /**
  * @}
@@ -43,4 +57,4 @@ void re_cache_gc (void);
  */
 
 #endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
-#endif /* !RE_COMPILER_H */
+#endif /* !RE_COMPILER_CONTEXT_H */

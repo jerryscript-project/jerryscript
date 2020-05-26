@@ -223,13 +223,13 @@ ecma_builtin_global_object_decode_uri_helper (lit_utf8_byte_t *input_start_p, /*
       continue;
     }
 
-    ecma_char_t decoded_byte;
-
-    if (!lit_read_code_unit_from_hex (input_char_p + 1, 2, &decoded_byte))
+    uint32_t hex_value = lit_char_hex_lookup (input_char_p + 1, input_end_p, 2);
+    if (hex_value == UINT32_MAX)
     {
       return ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid hexadecimal value."));
     }
 
+    ecma_char_t decoded_byte = (ecma_char_t) hex_value;
     input_char_p += URI_ENCODED_BYTE_SIZE;
 
     if (decoded_byte <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
@@ -272,20 +272,18 @@ ecma_builtin_global_object_decode_uri_helper (lit_utf8_byte_t *input_start_p, /*
     /* Input decode. */
     if (*input_char_p != '%')
     {
-      *output_char_p = *input_char_p;
-      output_char_p++;
-      input_char_p++;
+      *output_char_p++ = *input_char_p++;
       continue;
     }
 
-    ecma_char_t decoded_byte;
-
-    if (!lit_read_code_unit_from_hex (input_char_p + 1, 2, &decoded_byte))
+    uint32_t hex_value = lit_char_hex_lookup (input_char_p + 1, input_end_p, 2);
+    if (hex_value == UINT32_MAX)
     {
       ret_value = ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid hexadecimal value."));
       break;
     }
 
+    ecma_char_t decoded_byte = (ecma_char_t) hex_value;
     input_char_p += URI_ENCODED_BYTE_SIZE;
 
     if (decoded_byte <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
@@ -337,17 +335,16 @@ ecma_builtin_global_object_decode_uri_helper (lit_utf8_byte_t *input_start_p, /*
         }
         else
         {
-          ecma_char_t chr;
+          hex_value = lit_char_hex_lookup (input_char_p + 1, input_end_p, 2);
 
-          if (!lit_read_code_unit_from_hex (input_char_p + 1, 2, &chr)
-              || ((chr & LIT_UTF8_EXTRA_BYTE_MASK) != LIT_UTF8_EXTRA_BYTE_MARKER))
+          if (hex_value == UINT32_MAX || (hex_value & LIT_UTF8_EXTRA_BYTE_MASK) != LIT_UTF8_EXTRA_BYTE_MARKER)
           {
             is_valid = false;
             break;
           }
 
-          octets[i] = (lit_utf8_byte_t) chr;
           input_char_p += URI_ENCODED_BYTE_SIZE;
+          octets[i] = (lit_utf8_byte_t) hex_value;
         }
       }
 

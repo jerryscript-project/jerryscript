@@ -25,6 +25,7 @@
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
 #include "ecma-proxy-object.h"
+#include "jcontext.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -994,6 +995,7 @@ ecma_proxy_object_has (ecma_object_t *obj_p, /**< proxy object */
                        ecma_string_t *prop_name_p) /**< property name */
 {
   JERRY_ASSERT (ECMA_OBJECT_IS_PROXY (obj_p));
+  ECMA_CHECK_STACK_USAGE ();
 
   ecma_proxy_object_t *proxy_obj_p = (ecma_proxy_object_t *) obj_p;
 
@@ -1097,6 +1099,7 @@ ecma_proxy_object_get (ecma_object_t *obj_p, /**< proxy object */
                        ecma_value_t receiver) /**< receiver to invoke getter function */
 {
   JERRY_ASSERT (ECMA_OBJECT_IS_PROXY (obj_p));
+  ECMA_CHECK_STACK_USAGE ();
 
   ecma_proxy_object_t *proxy_obj_p = (ecma_proxy_object_t *) obj_p;
 
@@ -1201,6 +1204,7 @@ ecma_proxy_object_set (ecma_object_t *obj_p, /**< proxy object */
                        ecma_value_t receiver) /**< receiver to invoke setter function */
 {
   JERRY_ASSERT (ECMA_OBJECT_IS_PROXY (obj_p));
+  ECMA_CHECK_STACK_USAGE ();
 
   ecma_proxy_object_t *proxy_obj_p = (ecma_proxy_object_t *) obj_p;
 

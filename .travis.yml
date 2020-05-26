@@ -77,7 +77,7 @@ matrix:
       env:
         # Skipping maximum stack usage related tests due to 'detect_stack_use_after_return=1' ASAN option.
         # For more detailed description: https://github.com/google/sanitizers/wiki/AddressSanitizerUseAfterReturn#compatibility
-        - OPTS="--quiet --jerry-tests --jerry-test-suite --skip-list=parser-oom.js,parser-oom2.js,stack-limit.js,regression-test-issue-2190.js,regression-test-issue-2258-2963.js,regression-test-issue-2448.js,regression-test-issue-2905.js --buildoptions=--stack-limit=0,--compile-flag=-fsanitize=address,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--compile-flag=-O2,--debug,--system-allocator=on,--linker-flag=-fuse-ld=gold"
+        - OPTS="--quiet --jerry-tests --jerry-test-suite --skip-list=parser-oom.js,parser-oom2.js,stack-limit.js,regression-test-issue-2190.js,regression-test-issue-2258-2963.js,regression-test-issue-2448.js,regression-test-issue-2905.js,regression-test-issue-3785.js --buildoptions=--stack-limit=0,--compile-flag=-fsanitize=address,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--compile-flag=-O2,--debug,--system-allocator=on,--linker-flag=-fuse-ld=gold"
         - ASAN_OPTIONS=detect_stack_use_after_return=1:check_initialization_order=true:strict_init_order=true
         - TIMEOUT=600
       addons:

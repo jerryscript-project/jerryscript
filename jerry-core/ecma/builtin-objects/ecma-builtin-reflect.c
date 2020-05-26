@@ -278,8 +278,6 @@ ecma_builtin_reflect_dispatch_routine (uint16_t builtin_routine_id, /**< built-i
         return conv_result;
       }
 
-      prop_desc.flags |= ECMA_PROP_IS_THROW;
-
       ecma_value_t result = ecma_op_object_define_own_property (obj_p,
                                                                 name_str_p,
                                                                 &prop_desc);

@@ -79,3 +79,41 @@ var obj = { '0' : 2, '2' : "foo", length : 3, copyWithin : Array.prototype.copyW
 obj.copyWithin(1);
 assert(obj[0] === 2);
 assert(obj[1] === 2);
+
+function array_check(result_array, expected_array) {
+  assert(result_array instanceof Array);
+  assert(result_array.length === expected_array.length);
+  for (var idx = 0; idx < expected_array.length; idx++) {
+    assert(result_array[idx] === expected_array[idx]);
+  }
+}
+
+// Remove the buffer
+var array = [1, 2, 3];
+var value = array.copyWithin(0, {
+    valueOf: function() {
+        array.length = 0;
+    }
+})
+
+array_check(value, []);
+
+// Extend the buffer
+var array = [1, 2, 3];
+var value = array.copyWithin(1, {
+    valueOf: function() {
+        array.length = 6;
+    }
+})
+
+array_check(value, [1, 1, 2, undefined, undefined, undefined]);
+
+// Reduce the buffer
+var array = [1, 2, 3, 4, 5, 6, 7];
+var value = array.copyWithin(4, 2, {
+    valueOf: function() {
+        array.length = 3;
+    }
+})
+
+array_check(value, [1, 2, 3]);

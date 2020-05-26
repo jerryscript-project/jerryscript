@@ -69,3 +69,33 @@ try {
   assert(e.message === "foo");
   assert(e instanceof ReferenceError);
 }
+
+// Remove the buffer
+var array = [1, 2, 3, 4, 5];
+var value = array.lastIndexOf(4, {
+    valueOf: function() {
+        array.length = 0;
+    }
+})
+
+assert(value === -1);
+
+// Extend the buffer
+var array = [1, 2, 3];
+var value = array.lastIndexOf(1, {
+    valueOf: function() {
+        array.length = 5;
+    }
+})
+
+assert(value === 0);
+
+// Reduce the buffer
+var array = [1, 2, 3, 4, 5, 6, 7];
+var value = array.indexOf(5, {
+    valueOf: function() {
+        array.length = 2;
+    }
+})
+
+assert(value === -1);

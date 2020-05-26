@@ -16,6 +16,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+function array_check(result_array, expected_array) {
+  assert(result_array instanceof Array);
+  assert(result_array.length === expected_array.length);
+  for (var idx = 0; idx < expected_array.length; idx++) {
+    assert(result_array[idx] === expected_array[idx]);
+  }
+}
+
 var target = {};
 var handler = { ownKeys (target) {
   throw 42;
@@ -56,26 +64,29 @@ try {
 }
 
 // test basic functionality
+var symA = Symbol("smA");
+var symB = Symbol("smB");
 var target = { prop1: "prop1", prop2: "prop2"};
+target[symB] = "s3";
 var handler = {
   ownKeys: function(target) {
-    return ["foo", "bar"];
+    return ["foo", "bar", symA];
   }
 }
 
 var proxy = new Proxy(target, handler);
 
-assert(JSON.stringify(Reflect.ownKeys(proxy)) === '["foo","bar"]');
-assert(JSON.stringify(Object.getOwnPropertyNames(proxy)) === '["foo","bar"]');
-assert(JSON.stringify(Object.keys(proxy)) === '["foo","bar"]');
-assert(JSON.stringify(Object.getOwnPropertySymbols(proxy)) === '["foo","bar"]');
+array_check(Reflect.ownKeys(proxy), ["foo", "bar", symA]);
+array_check(Object.getOwnPropertyNames(proxy), ["foo", "bar"]);
+array_check(Object.keys(proxy), ["foo", "bar"]);
+array_check(Object.getOwnPropertySymbols(proxy), [symA]);
 
 handler.ownKeys = function(target) {return Object.getOwnPropertyNames(target);};
 
-assert(JSON.stringify(Reflect.ownKeys(proxy)) === '["prop1","prop2"]');
-assert(JSON.stringify(Object.getOwnPropertyNames(proxy)) === '["prop1","prop2"]');
-assert(JSON.stringify(Object.keys(proxy)) === '["prop1","prop2"]');
-assert(JSON.stringify(Object.getOwnPropertySymbols(proxy)) === '["prop1","prop2"]');
+array_check(Reflect.ownKeys(proxy), ["prop1", "prop2"]);
+array_check(Object.getOwnPropertyNames(proxy), ["prop1", "prop2"]);
+array_check(Object.keys(proxy), ["prop1", "prop2"]);
+array_check(Object.getOwnPropertySymbols(proxy), []);
 
 // test with no trap
 var target = { prop1: "prop1", prop2: "prop2"};

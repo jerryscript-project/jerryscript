@@ -2041,7 +2041,37 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
 #if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
   if (ECMA_OBJECT_IS_PROXY (obj_p))
   {
-    return ecma_proxy_object_own_property_keys (obj_p);
+    /* Integrated a part of ECMA 262 v6 7.3.21 EnumerableOwnNames operation. */
+    ecma_collection_t *proxy_keys = ecma_proxy_object_own_property_keys (obj_p);
+    if (JERRY_UNLIKELY (proxy_keys == NULL))
+    {
+      return proxy_keys;
+    }
+    ecma_collection_t *return_keys = ecma_new_collection ();
+
+    /* Move valid elements to the output collection */
+    for (uint32_t i = 0; i < proxy_keys->item_count; i++)
+    {
+      ecma_value_t entry = proxy_keys->buffer_p[i];
+      ecma_string_t *prop_name_p = ecma_get_prop_name_from_value (entry);
+      bool prop_is_symbol = ecma_prop_name_is_symbol (prop_name_p);
+
+      if (prop_is_symbol && ((opts & (ECMA_LIST_SYMBOLS | ECMA_LIST_SYMBOLS_ONLY)) != 0))
+      {
+        ecma_collection_push_back (return_keys, entry);
+      }
+      else if (!prop_is_symbol && (opts & ECMA_LIST_SYMBOLS_ONLY) == 0)
+      {
+        ecma_collection_push_back (return_keys, entry);
+      }
+      else
+      {
+        ecma_free_value (entry);
+      }
+    }
+
+    ecma_collection_destroy (proxy_keys);
+    return return_keys;
   }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
 

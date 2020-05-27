@@ -779,6 +779,11 @@ parser_parse_class (parser_context_t *context_p, /**< context */
     parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_ANONYMOUS_CLASS_ENV);
   }
 
+  bool is_strict = (context_p->status_flags & PARSER_IS_STRICT) != 0;
+
+  /* 14.5. A ClassBody is always strict code. */
+  context_p->status_flags |= PARSER_IS_STRICT;
+
   if (context_p->token.type == LEXER_KEYW_EXTENDS)
   {
     lexer_next_token (context_p);
@@ -795,11 +800,6 @@ parser_parse_class (parser_context_t *context_p, /**< context */
   {
     parser_raise_error (context_p, PARSER_ERR_LEFT_BRACE_EXPECTED);
   }
-
-  bool is_strict = context_p->status_flags & PARSER_IS_STRICT;
-
-  /* 14.5. A ClassBody is always strict code. */
-  context_p->status_flags |= PARSER_IS_STRICT;
 
   /* ClassDeclaration is parsed. Continue with class body. */
   parser_parse_class_literal (context_p, opts);

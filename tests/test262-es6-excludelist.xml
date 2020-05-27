@@ -594,7 +594,6 @@
   <test id="language/statements/class/name-binding/in-extends-expression.js"><reason></reason></test>
   <test id="language/statements/class/name.js"><reason></reason></test>
   <test id="language/statements/class/strict-mode/arguments-caller.js"><reason></reason></test>
-  <test id="language/statements/class/strict-mode/with.js"><reason></reason></test>
   <test id="language/statements/class/syntax/early-errors/class-body-static-method-get-propname-prototype.js"><reason></reason></test>
   <test id="language/statements/const/fn-name-arrow.js"><reason></reason></test>
   <test id="language/statements/const/fn-name-class.js"><reason></reason></test>

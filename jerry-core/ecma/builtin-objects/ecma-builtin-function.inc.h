@@ -34,4 +34,10 @@ NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               1,
               ECMA_PROPERTY_FLAG_DEFAULT_LENGTH)
 
+#if ENABLED (JERRY_ES2015)
+STRING_VALUE (LIT_MAGIC_STRING_NAME,
+              LIT_MAGIC_STRING_FUNCTION_UL,
+              ECMA_PROPERTY_FLAG_CONFIGURABLE)
+#endif /* ENABLED (JERRY_ES2015) */
+
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

@@ -348,15 +348,21 @@ ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p , /**
     return name_value;
   }
 
-  if (!ecma_is_value_string (name_value))
+  ecma_string_t *name_p;
+
+  if (ecma_is_value_string (name_value))
+  {
+    name_p = ecma_get_string_from_value (name_value);
+  }
+  else
   {
     ecma_free_value (name_value);
-    name_value = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
+    name_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
   }
 
-  ecma_value_t bound_function_name = ecma_op_function_form_name (name_value, "bound ", 6);
+  ecma_value_t bound_function_name = ecma_op_function_form_name (name_p, "bound ", 6);
 
-  ecma_free_value (name_value);
+  ecma_deref_ecma_string (name_p);
 
   ecma_property_value_t *name_prop_value_p;
   name_prop_value_p = ecma_create_named_data_property (function_p,

@@ -34,6 +34,12 @@ ROUTINE (LIT_MAGIC_STRING_PARSE, ecma_builtin_date_parse, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_UTC_U, ecma_builtin_date_utc, NON_FIXED, 7)
 ROUTINE (LIT_MAGIC_STRING_NOW, ecma_builtin_date_now, 0, 0)
 
+#if ENABLED (JERRY_ES2015)
+STRING_VALUE (LIT_MAGIC_STRING_NAME,
+              LIT_MAGIC_STRING_DATE_UL,
+              ECMA_PROPERTY_FLAG_CONFIGURABLE)
+#endif /* ENABLED (JERRY_ES2015) */
+
 #endif /* ENABLED (JERRY_BUILTIN_DATE) */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

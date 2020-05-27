@@ -28,6 +28,10 @@ NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               2,
               ECMA_PROPERTY_FLAG_CONFIGURABLE)
 
+STRING_VALUE (LIT_MAGIC_STRING_NAME,
+              LIT_MAGIC_STRING_PROXY_UL,
+              ECMA_PROPERTY_FLAG_CONFIGURABLE)
+
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 

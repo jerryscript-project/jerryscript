@@ -60,12 +60,10 @@ ecma_op_resource_name (const ecma_compiled_code_t *bytecode_header_p)
  * @return resource name as ecma-string
  */
 ecma_value_t
-ecma_op_function_form_name (ecma_value_t prop_name, /**< property name */
+ecma_op_function_form_name (ecma_string_t *prop_name_p, /**< property name */
                             char *prefix_p, /**< prefix */
                             lit_utf8_size_t prefix_size) /**< prefix length */
 {
-  ecma_string_t *prop_name_p = ecma_get_prop_name_from_value (prop_name);
-
   /* 4. */
   if (ecma_prop_name_is_symbol (prop_name_p))
   {

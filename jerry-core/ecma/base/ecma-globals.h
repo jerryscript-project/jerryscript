@@ -819,6 +819,18 @@ typedef struct
 } ecma_built_in_props_t;
 
 /**
+ * Builtin routine function object status flags
+ */
+typedef enum
+{
+  ECMA_BUILTIN_ROUTINE_NO_OPTS = 0,                     /**< No options are provided */
+  ECMA_BUILTIN_ROUTINE_LENGTH_INITIALIZED = (1u << 0),  /**< 'length' property has been initialized */
+  ECMA_BUILTIN_ROUTINE_NAME_INITIALIZED  = (1u << 1),   /**< 'name' property has been initialized */
+  ECMA_BUILTIN_ROUTINE_GETTER = (1u << 2),              /**< this routine is getter */
+  ECMA_BUILTIN_ROUTINE_SETTER = (1u << 3),              /**< this routine is setter */
+} ecma_builtin_routine_flags_t;
+
+/**
  * Start position of bit set size in length_and_bitset_size field.
  */
 #define ECMA_BUILT_IN_BITSET_SHIFT 5

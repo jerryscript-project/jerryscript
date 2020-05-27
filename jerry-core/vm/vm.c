@@ -1883,7 +1883,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             ECMA_SET_SECOND_BIT_TO_POINTER_TAG (((ecma_extended_object_t *) func_obj_p)->u.function.scope_cp);
           }
 
-          value_p->value = ecma_op_function_form_name (left_value, prefix_p, prefix_size);
+          value_p->value = ecma_op_function_form_name (ecma_get_prop_name_from_value (left_value),
+                                                       prefix_p,
+                                                       prefix_size);
           ecma_free_value (left_value);
           continue;
         }

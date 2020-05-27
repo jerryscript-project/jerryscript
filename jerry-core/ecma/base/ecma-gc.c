@@ -683,7 +683,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 #if ENABLED (JERRY_ESNEXT)
           const ecma_compiled_code_t *byte_code_p = ecma_op_function_get_compiled_code (ext_func_p);
 
-          if (byte_code_p->status_flags & CBC_CODE_FLAGS_ARROW_FUNCTION)
+          if (CBC_FUNCTION_GET_TYPE (byte_code_p->status_flags) == CBC_FUNCTION_ARROW)
           {
             ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) object_p;
 
@@ -1201,7 +1201,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
                                                                               ext_func_p->u.function.bytecode_cp));
 
 #if ENABLED (JERRY_ESNEXT)
-        if (byte_code_p->status_flags & CBC_CODE_FLAGS_ARROW_FUNCTION)
+        if (CBC_FUNCTION_GET_TYPE (byte_code_p->status_flags) == CBC_FUNCTION_ARROW)
         {
           ecma_free_value_if_not_object (((ecma_arrow_function_t *) object_p)->this_binding);
           ecma_free_value_if_not_object (((ecma_arrow_function_t *) object_p)->new_target);

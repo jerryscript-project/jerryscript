@@ -602,9 +602,9 @@ ecma_op_function_is_generator (ecma_object_t *obj_p) /**< object */
       && !ecma_get_object_is_builtin (obj_p))
   {
     ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) obj_p;
-    const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_obj_p);
+    const ecma_compiled_code_t *byte_code_p = ecma_op_function_get_compiled_code (ext_func_obj_p);
 
-    return (bytecode_data_p->status_flags & CBC_CODE_FLAGS_GENERATOR) != 0;
+    return CBC_FUNCTION_GET_TYPE (byte_code_p->status_flags) == CBC_FUNCTION_GENERATOR;
   }
 
   return false;
@@ -844,18 +844,12 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
   uint16_t status_flags = bytecode_data_p->status_flags;
 
 #if ENABLED (JERRY_ESNEXT)
-  bool is_construct_call = JERRY_CONTEXT (current_new_target) != NULL;
-  if (JERRY_UNLIKELY (status_flags & (CBC_CODE_FLAGS_CLASS_CONSTRUCTOR | CBC_CODE_FLAGS_GENERATOR)))
-  {
-    if (!is_construct_call && (status_flags & CBC_CODE_FLAGS_CLASS_CONSTRUCTOR))
-    {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor cannot be invoked without 'new'."));
-    }
+  uint16_t function_type = CBC_FUNCTION_GET_TYPE (status_flags);
 
-    if ((status_flags & CBC_CODE_FLAGS_GENERATOR) && is_construct_call)
-    {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Generator functions cannot be invoked with 'new'."));
-    }
+  if (JERRY_UNLIKELY (function_type == CBC_FUNCTION_CONSTRUCTOR)
+      && JERRY_CONTEXT (current_new_target) == NULL)
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor cannot be invoked without 'new'."));
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
@@ -863,7 +857,7 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
 #if ENABLED (JERRY_ESNEXT)
   ecma_object_t *old_function_object_p = JERRY_CONTEXT (current_function_obj_p);
 
-  if (JERRY_UNLIKELY (status_flags & CBC_CODE_FLAGS_ARROW_FUNCTION))
+  if (JERRY_UNLIKELY (function_type == CBC_FUNCTION_ARROW))
   {
     ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) func_obj_p;
 
@@ -921,7 +915,7 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
     }
 #if ENABLED (JERRY_ESNEXT)
     // ECMAScript v6, 9.2.2.8
-    if (JERRY_UNLIKELY (status_flags & CBC_CODE_FLAGS_CLASS_CONSTRUCTOR))
+    if (JERRY_UNLIKELY (function_type == CBC_FUNCTION_CONSTRUCTOR))
     {
       ecma_value_t lexical_this;
       lexical_this = (ECMA_GET_THIRD_BIT_FROM_POINTER_TAG (ext_func_p->u.function.scope_cp) ? ECMA_VALUE_UNINITIALIZED
@@ -1279,20 +1273,39 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
 
   ecma_object_t *new_this_obj_p = NULL;
   ecma_value_t this_arg;
+
+#if ENABLED (JERRY_ESNEXT)
   ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) func_obj_p;
   const ecma_compiled_code_t *byte_code_p = ecma_op_function_get_compiled_code (ext_func_obj_p);
 
-  if (byte_code_p->status_flags & (CBC_CODE_FLAGS_ARROW_FUNCTION | CBC_CODE_FLAGS_ACCESSOR))
+  if (!CBC_FUNCTION_IS_CONSTRUCTABLE (byte_code_p->status_flags))
   {
-    if (byte_code_p->status_flags & CBC_CODE_FLAGS_ARROW_FUNCTION)
+    const char *message_p;
+
+    switch (CBC_FUNCTION_GET_TYPE (byte_code_p->status_flags))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Arrow functions have no constructor."));
+      case CBC_FUNCTION_GENERATOR:
+      {
+        message_p = ECMA_ERR_MSG ("Generator functions cannot be invoked with 'new'.");
+        break;
+      }
+      case CBC_FUNCTION_ARROW:
+      {
+        message_p = ECMA_ERR_MSG ("Arrow functions cannot be invoked with 'new'.");
+        break;
+      }
+      default:
+      {
+        JERRY_ASSERT (CBC_FUNCTION_GET_TYPE (byte_code_p->status_flags) == CBC_FUNCTION_ACCESSOR);
+
+        message_p = ECMA_ERR_MSG ("Accessor functions cannot be invoked with 'new'.");
+        break;
+      }
     }
 
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Expected a constructor."));
+    return ecma_raise_type_error (message_p);
   }
 
-#if ENABLED (JERRY_ESNEXT)
   /* 6. */
   ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target);
   JERRY_CONTEXT (current_new_target) = new_target_p;
@@ -1367,16 +1380,17 @@ ecma_op_lazy_instantiate_prototype_object (ecma_object_t *object_p) /**< the fun
   {
     const ecma_compiled_code_t *byte_code_p = ecma_op_function_get_compiled_code ((ecma_extended_object_t *) object_p);
 
-    if (byte_code_p->status_flags & CBC_CODE_FLAGS_GENERATOR)
+    if (!CBC_FUNCTION_HAS_PROTOTYPE (byte_code_p->status_flags))
+    {
+      return NULL;
+    }
+
+    if (CBC_FUNCTION_GET_TYPE (byte_code_p->status_flags) == CBC_FUNCTION_GENERATOR)
     {
       proto_object_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_GENERATOR_PROTOTYPE),
                                            0,
                                            ECMA_OBJECT_TYPE_GENERAL);
       init_constructor = false;
-    }
-    else if (byte_code_p->status_flags & (CBC_CODE_FLAGS_ARROW_FUNCTION | CBC_CODE_FLAGS_ACCESSOR))
-    {
-      return NULL;
     }
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
@@ -1475,7 +1489,7 @@ ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**<
       ECMA_SET_SECOND_BIT_TO_POINTER_TAG (ext_func_p->u.function.scope_cp);
       const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
 
-      if (!(bytecode_data_p->status_flags & CBC_CODE_FLAGS_CLASS_CONSTRUCTOR))
+      if (CBC_FUNCTION_GET_TYPE (bytecode_data_p->status_flags) != CBC_FUNCTION_CONSTRUCTOR)
       {
         ecma_value_t value = *ecma_compiled_code_resolve_function_name (bytecode_data_p);
         if (value != ECMA_VALUE_EMPTY)
@@ -1695,7 +1709,7 @@ ecma_op_function_list_lazy_property_names (ecma_object_t *object_p, /**< functio
   bytecode_data_p = ecma_op_function_get_compiled_code ((ecma_extended_object_t *) object_p);
 
 #if ENABLED (JERRY_ESNEXT)
-  if (bytecode_data_p->status_flags & (CBC_CODE_FLAGS_ARROW_FUNCTION | CBC_CODE_FLAGS_ACCESSOR))
+  if (!CBC_FUNCTION_HAS_PROTOTYPE (bytecode_data_p->status_flags))
   {
     return;
   }

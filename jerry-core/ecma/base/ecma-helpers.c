@@ -1367,7 +1367,7 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
     return;
   }
 
-  if (bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION)
+  if (CBC_IS_FUNCTION (bytecode_p->status_flags))
   {
     ecma_value_t *literal_start_p = NULL;
     uint32_t literal_end;
@@ -1439,7 +1439,7 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
 #if ENABLED (JERRY_ESNEXT)
-    if (bytecode_p->status_flags & CBC_CODE_FLAG_HAS_TAGGED_LITERALS)
+    if (bytecode_p->status_flags & CBC_CODE_FLAGS_HAS_TAGGED_LITERALS)
     {
       ecma_collection_t *collection_p = ecma_compiled_code_get_tagged_template_collection (bytecode_p);
 
@@ -1477,7 +1477,7 @@ ecma_collection_t *
 ecma_compiled_code_get_tagged_template_collection (const ecma_compiled_code_t *bytecode_header_p) /**< compiled code */
 {
   JERRY_ASSERT (bytecode_header_p != NULL);
-  JERRY_ASSERT (bytecode_header_p->status_flags & CBC_CODE_FLAG_HAS_TAGGED_LITERALS);
+  JERRY_ASSERT (bytecode_header_p->status_flags & CBC_CODE_FLAGS_HAS_TAGGED_LITERALS);
 
   ecma_value_t *base_p = ecma_compiled_code_resolve_function_name (bytecode_header_p);
 
@@ -1539,7 +1539,7 @@ ecma_compiled_code_resolve_function_name (const ecma_compiled_code_t *bytecode_h
   ecma_value_t *base_p = ecma_compiled_code_resolve_arguments_start (bytecode_header_p);
 
 #if ENABLED (JERRY_ESNEXT)
-  if (!(bytecode_header_p->status_flags & CBC_CODE_FLAGS_CLASS_CONSTRUCTOR))
+  if (CBC_FUNCTION_GET_TYPE (bytecode_header_p->status_flags) != CBC_FUNCTION_CONSTRUCTOR)
   {
     base_p--;
   }

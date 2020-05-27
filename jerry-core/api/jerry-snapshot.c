@@ -161,21 +161,21 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
   ecma_compiled_code_t *copied_code_p = (ecma_compiled_code_t *) copied_code_start_p;
 
 #if ENABLED (JERRY_ESNEXT)
-  if (compiled_code_p->status_flags & CBC_CODE_FLAG_HAS_TAGGED_LITERALS)
+  if (compiled_code_p->status_flags & CBC_CODE_FLAGS_HAS_TAGGED_LITERALS)
   {
     const char * const error_message_p = "Unsupported feature: tagged template literals.";
     globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
     return 0;
   }
 
-  if (compiled_code_p->status_flags & CBC_CODE_FLAGS_CLASS_CONSTRUCTOR)
+  if (CBC_FUNCTION_GET_TYPE (compiled_code_p->status_flags) == CBC_FUNCTION_CONSTRUCTOR)
   {
     globals_p->class_found = true;
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
 #if ENABLED (JERRY_BUILTIN_REGEXP)
-  if (!(compiled_code_p->status_flags & CBC_CODE_FLAGS_FUNCTION))
+  if (!CBC_IS_FUNCTION (compiled_code_p->status_flags))
   {
     /* Regular expression. */
     if (globals_p->snapshot_buffer_write_offset + sizeof (ecma_compiled_code_t) > snapshot_buffer_size)
@@ -228,7 +228,7 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
   }
 #endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
 
-  JERRY_ASSERT (compiled_code_p->status_flags & CBC_CODE_FLAGS_FUNCTION);
+  JERRY_ASSERT (CBC_IS_FUNCTION (compiled_code_p->status_flags));
 
   if (!snapshot_write_to_buffer_by_offset (snapshot_buffer_p,
                                            snapshot_buffer_size,
@@ -345,7 +345,7 @@ static_snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< c
   uint8_t *copied_code_start_p = snapshot_buffer_p + globals_p->snapshot_buffer_write_offset;
   ecma_compiled_code_t *copied_code_p = (ecma_compiled_code_t *) copied_code_start_p;
 
-  if (!(compiled_code_p->status_flags & CBC_CODE_FLAGS_FUNCTION))
+  if (!CBC_IS_FUNCTION (compiled_code_p->status_flags))
   {
     /* Regular expression literals are not supported. */
     const char * const error_message_p = "Regular expression literals are not supported.";
@@ -454,7 +454,7 @@ jerry_snapshot_set_offsets (uint32_t *buffer_p, /**< buffer */
     ecma_compiled_code_t *bytecode_p = (ecma_compiled_code_t *) buffer_p;
     uint32_t code_size = ((uint32_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
 
-    if (bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION)
+    if (CBC_IS_FUNCTION (bytecode_p->status_flags))
     {
       ecma_value_t *literal_start_p;
       uint32_t const_literal_end;
@@ -549,9 +549,8 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
   uint32_t code_size = ((uint32_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
 
 #if ENABLED (JERRY_BUILTIN_REGEXP)
-  if (!(bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION))
+  if (!CBC_IS_FUNCTION (bytecode_p->status_flags))
   {
-
     const uint8_t *regex_start_p = ((const uint8_t *) bytecode_p) + sizeof (ecma_compiled_code_t);
 
     /* Real size is stored in refs. */
@@ -564,9 +563,9 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
 
     return (ecma_compiled_code_t *) re_bytecode_p;
   }
+#else /* !ENABLED (JERRY_BUILTIN_REGEXP) */
+  JERRY_ASSERT (CBC_IS_FUNCTION (bytecode_p->status_flags));
 #endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
-
-  JERRY_ASSERT (bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION);
 
   size_t header_size;
   uint32_t argument_end;
@@ -620,13 +619,13 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
 
 #if ENABLED (JERRY_ESNEXT)
     /* function name */
-    if (!(bytecode_p->status_flags & CBC_CODE_FLAGS_CLASS_CONSTRUCTOR))
+    if (CBC_FUNCTION_GET_TYPE (bytecode_p->status_flags) != CBC_FUNCTION_CONSTRUCTOR)
     {
       extra_bytes += (uint32_t) sizeof (ecma_value_t);
     }
 
     /* tagged template literals */
-    if (bytecode_p->status_flags & CBC_CODE_FLAG_HAS_TAGGED_LITERALS)
+    if (bytecode_p->status_flags & CBC_CODE_FLAGS_HAS_TAGGED_LITERALS)
     {
       extra_bytes += (uint32_t) sizeof (ecma_value_t);
     }
@@ -1083,7 +1082,7 @@ scan_snapshot_functions (const uint8_t *buffer_p, /**< snapshot buffer start */
     const ecma_compiled_code_t *bytecode_p = (ecma_compiled_code_t *) buffer_p;
     uint32_t code_size = ((uint32_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
 
-    if ((bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION)
+    if (CBC_IS_FUNCTION (bytecode_p->status_flags)
         && !(bytecode_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))
     {
       const ecma_value_t *literal_start_p;
@@ -1149,7 +1148,7 @@ update_literal_offsets (uint8_t *buffer_p, /**< [in,out] snapshot buffer start *
     const ecma_compiled_code_t *bytecode_p = (ecma_compiled_code_t *) buffer_p;
     uint32_t code_size = ((uint32_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG;
 
-    if ((bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION)
+    if (CBC_IS_FUNCTION (bytecode_p->status_flags)
         && !(bytecode_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))
     {
       ecma_value_t *literal_start_p;

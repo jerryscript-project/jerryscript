@@ -41,6 +41,8 @@ typedef enum
   RE_FLAG_MULTILINE = (1u << 3),   /**< ECMA-262 v5, 15.10.7.4 */
   RE_FLAG_STICKY = (1u << 4),      /**< ECMA-262 v6, 21.2.5.12 */
   RE_FLAG_UNICODE = (1u << 5)      /**< ECMA-262 v6, 21.2.5.15 */
+
+  /* Bits from bit 13 is reserved for function types (see CBC_FUNCTION_TYPE_SHIFT). */
 } ecma_regexp_flags_t;
 
 /**

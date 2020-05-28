@@ -225,9 +225,9 @@ typedef enum
   VM_OC_BREAKPOINT_ENABLED,      /**< enabled breakpoint for debugger */
   VM_OC_BREAKPOINT_DISABLED,     /**< disabled breakpoint for debugger */
 #endif /* ENABLED (JERRY_DEBUGGER) */
-#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+#if ENABLED (JERRY_RESOURCE_NAME)
   VM_OC_RESOURCE_NAME,           /**< resource name of the current function */
-#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#endif /* ENABLED (JERRY_RESOURCE_NAME) */
 #if ENABLED (JERRY_LINE_INFO)
   VM_OC_LINE,                    /**< line number of the next statement */
 #endif /* ENABLED (JERRY_LINE_INFO) */
@@ -254,6 +254,7 @@ typedef enum
   VM_OC_PUSH_SUPER_CONSTRUCTOR,  /**< getSuperConstructor operation */
   VM_OC_RESOLVE_LEXICAL_THIS,    /**< resolve this_binding from from the lexical environment */
   VM_OC_SUPER_REFERENCE,         /**< push super reference */
+  VM_OC_SET_FUNCTION_NAME,       /**< set function name property */
 
   VM_OC_PUSH_SPREAD_ELEMENT,     /**< push spread element */
   VM_OC_GET_ITERATOR,            /**< GetIterator abstract operation */
@@ -290,9 +291,9 @@ typedef enum
   VM_OC_BREAKPOINT_ENABLED = VM_OC_NONE,      /**< enabled breakpoint for debugger is unused */
   VM_OC_BREAKPOINT_DISABLED = VM_OC_NONE,     /**< disabled breakpoint for debugger is unused */
 #endif /* !ENABLED (JERRY_DEBUGGER) */
-#if !ENABLED (JERRY_LINE_INFO) && !ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+#if !ENABLED (JERRY_RESOURCE_NAME)
   VM_OC_RESOURCE_NAME = VM_OC_NONE,           /**< resource name of the current function is unused */
-#endif /* !ENABLED (JERRY_LINE_INFO) && !ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#endif /* !ENABLED (JERRY_RESOURCE_NAME) */
 #if !ENABLED (JERRY_LINE_INFO)
   VM_OC_LINE = VM_OC_NONE,                    /**< line number of the next statement is unused */
 #endif /* !ENABLED (JERRY_LINE_INFO) */
@@ -319,6 +320,7 @@ typedef enum
   VM_OC_PUSH_SUPER_CONSTRUCTOR = VM_OC_NONE,  /**< getSuperConstructor operation */
   VM_OC_RESOLVE_LEXICAL_THIS = VM_OC_NONE,    /**< resolve this_binding from from the lexical environment */
   VM_OC_SUPER_REFERENCE = VM_OC_NONE,         /**< push super reference */
+  VM_OC_SET_FUNCTION_NAME = VM_OC_NONE,       /**< set function name property */
 
   VM_OC_PUSH_SPREAD_ELEMENT = VM_OC_NONE,     /**< push spread element */
   VM_OC_GET_ITERATOR = VM_OC_NONE,            /**< GetIterator abstract operation */

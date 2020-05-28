@@ -429,7 +429,7 @@ jerry_parse (const jerry_char_t *resource_name_p, /**< resource name (usually a 
 #if ENABLED (JERRY_PARSER)
   jerry_assert_api_available ();
 
-#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ERROR_MESSAGES) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+#if ENABLED (JERRY_RESOURCE_NAME)
   if (resource_name_length == 0)
   {
     JERRY_CONTEXT (resource_name) = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
@@ -439,7 +439,7 @@ jerry_parse (const jerry_char_t *resource_name_p, /**< resource name (usually a 
     JERRY_CONTEXT (resource_name) = ecma_find_or_create_literal_string (resource_name_p,
                                                                         (lit_utf8_size_t) resource_name_length);
   }
-#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ERROR_MESSAGES) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#endif /* ENABLED (JERRY_RESOURCE_NAME) */
 
   ecma_compiled_code_t *bytecode_data_p;
   ecma_value_t parse_status;
@@ -507,7 +507,7 @@ jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (u
   ecma_compiled_code_t *bytecode_data_p;
   ecma_value_t parse_status;
 
-#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ERROR_MESSAGES) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+#if ENABLED (JERRY_RESOURCE_NAME)
   if (resource_name_length == 0)
   {
     JERRY_CONTEXT (resource_name) = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
@@ -517,7 +517,7 @@ jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (u
     JERRY_CONTEXT (resource_name) = ecma_find_or_create_literal_string (resource_name_p,
                                                                         (lit_utf8_size_t) resource_name_length);
   }
-#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ERROR_MESSAGES) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#endif /* ENABLED (JERRY_RESOURCE_NAME) */
 
   if (arg_list_p == NULL)
   {
@@ -3546,7 +3546,7 @@ jerry_get_backtrace (uint32_t max_depth) /**< depth limit of the backtrace */
 jerry_value_t
 jerry_get_resource_name (const jerry_value_t value) /**< jerry api value */
 {
-#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+#if ENABLED (JERRY_RESOURCE_NAME)
   if (ecma_is_value_undefined (value))
   {
     if (JERRY_CONTEXT (vm_top_context_p) != NULL)
@@ -3554,7 +3554,7 @@ jerry_get_resource_name (const jerry_value_t value) /**< jerry api value */
       return ecma_copy_value (JERRY_CONTEXT (vm_top_context_p)->resource_name);
     }
   }
-#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#endif /* ENABLED (JERRY_RESOURCE_NAME) */
 #if ENABLED (JERRY_LINE_INFO)
   else if (ecma_is_value_object (value))
   {

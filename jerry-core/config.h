@@ -684,4 +684,13 @@
 # define JERRY_ES2015_BUILTIN_CONTAINER 0
 #endif
 
+/**
+ * Resource name relatey types into a single guard
+ */
+#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ERROR_MESSAGES) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+# define JERRY_RESOURCE_NAME 1
+#else
+# define JERRY_RESOURCE_NAME 0
+#endif
+
 #endif /* !JERRYSCRIPT_CONFIG_H */

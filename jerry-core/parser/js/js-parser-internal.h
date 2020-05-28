@@ -116,6 +116,7 @@ typedef enum
   PARSER_PATTERN_REST_ELEMENT = (1u << 7),     /**< parse rest array initializer */
   PARSER_PATTERN_ARGUMENTS = (1u << 8),        /**< parse arguments binding */
   PARSER_PATTERN_ARRAY = (1u << 9),            /**< array pattern is being parsed */
+  PARSER_PATTERN_GROUP_EXPR = (1u << 10),      /**< group expression is being assigned */
 } parser_pattern_flags_t;
 
 /**
@@ -415,6 +416,21 @@ typedef struct
  */
 #define PARSER_REGISTER_START 0x8000
 
+/**
+ * Lastly emitted opcode is not a function literal
+ */
+#define PARSER_NOT_FUNCTION_LITERAL UINT16_MAX
+
+/**
+ * Lastly emitted opcode is not a named function literal
+ */
+#define PARSER_NAMED_FUNCTION (uint16_t) (PARSER_NOT_FUNCTION_LITERAL - 1)
+
+/**
+ * Lastly emitted opcode is not an anonymous class literal
+ */
+#define PARSER_ANONYMOUS_CLASS (uint16_t) (PARSER_NAMED_FUNCTION - 1)
+
 /* Forward definitions for js-scanner-internal.h. */
 struct scanner_context_t;
 typedef struct scanner_context_t scanner_context_t;
@@ -692,6 +708,7 @@ void lexer_convert_ident_to_cesu8 (uint8_t *destination_p, const uint8_t *source
 const uint8_t *lexer_convert_literal_to_chars (parser_context_t *context_p,  const lexer_lit_location_t *literal_p,
                                                uint8_t *local_byte_array_p, lexer_string_options_t opts);
 void lexer_expect_object_literal_id (parser_context_t *context_p, uint32_t ident_opts);
+uint16_t scanner_save_literal (parser_context_t *context_p, uint16_t ident_index);
 void lexer_construct_literal_object (parser_context_t *context_p, const lexer_lit_location_t *lit_location_p,
                                      uint8_t literal_type);
 bool lexer_construct_number_object (parser_context_t *context_p, bool is_expr, bool is_negative_number);
@@ -814,6 +831,11 @@ void parser_module_add_names_to_node (parser_context_t *context_p,
 ecma_compiled_code_t *parser_parse_function (parser_context_t *context_p, uint32_t status_flags);
 #if ENABLED (JERRY_ES2015)
 ecma_compiled_code_t *parser_parse_arrow_function (parser_context_t *context_p, uint32_t status_flags);
+void parser_set_function_name (parser_context_t *context_p, uint16_t function_literal_index, uint16_t name_index,
+                               uint32_t status_flags);
+void parser_compiled_code_set_function_name (parser_context_t *context_p, ecma_compiled_code_t *bytecode_p,
+                                             uint16_t name_index, uint32_t status_flags);
+uint16_t parser_check_anonymous_function_declaration (parser_context_t *context_p);
 #endif /* ENABLED (JERRY_ES2015) */
 
 /* Error management. */

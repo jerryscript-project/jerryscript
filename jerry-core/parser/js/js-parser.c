@@ -1191,18 +1191,24 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   }
 
 #if ENABLED (JERRY_ES2015)
+  /* function.name */
+  if (!(context_p->status_flags & PARSER_CLASS_CONSTRUCTOR))
+  {
+    total_size += sizeof (ecma_value_t);
+  }
+
   if (context_p->tagged_template_literal_cp != JMEM_CP_NULL)
   {
     total_size += sizeof (ecma_value_t);
   }
 #endif /* ENABLED (JERRY_ES2015) */
 
-#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+#if ENABLED (JERRY_RESOURCE_NAME)
   if (JERRY_CONTEXT (resource_name) != ECMA_VALUE_UNDEFINED)
   {
     total_size += sizeof (ecma_value_t);
   }
-#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#endif /* ENABLED (JERRY_RESOURCE_NAME) */
 
 #if ENABLED (JERRY_SNAPSHOT_SAVE)
   total_size_used = total_size;
@@ -1590,13 +1596,14 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   }
 #endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
+  ecma_value_t *base_p = (ecma_value_t *) (((uint8_t *) compiled_code_p) + total_size);
+
   if (PARSER_NEEDS_MAPPED_ARGUMENTS (context_p->status_flags))
   {
     parser_list_iterator_t literal_iterator;
     uint16_t argument_count = 0;
     uint16_t register_count = context_p->register_count;
-    ecma_value_t *argument_base_p = (ecma_value_t *) (((uint8_t *) compiled_code_p) + total_size);
-    argument_base_p -= context_p->argument_count;
+    base_p -= context_p->argument_count;
 
     parser_list_iterator_init (&context_p->literal_pool, &literal_iterator);
     while (argument_count < context_p->argument_count)
@@ -1614,7 +1621,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       /* All arguments must be moved to initialized registers. */
       if (literal_p->type == LEXER_UNUSED_LITERAL)
       {
-        argument_base_p[argument_count] = ECMA_VALUE_EMPTY;
+        base_p[argument_count] = ECMA_VALUE_EMPTY;
         argument_count++;
         continue;
       }
@@ -1623,22 +1630,29 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 
       JERRY_ASSERT (literal_p->prop.index >= register_count);
 
-      argument_base_p[argument_count] = literal_pool_p[literal_p->prop.index];
+      base_p[argument_count] = literal_pool_p[literal_p->prop.index];
       argument_count++;
     }
   }
 
 #if ENABLED (JERRY_ES2015)
+  if (!(context_p->status_flags & PARSER_CLASS_CONSTRUCTOR))
+  {
+    *(--base_p) = ECMA_VALUE_EMPTY;
+  }
+#endif /* ENABLED (JERRY_ES2015) */
+
+#if ENABLED (JERRY_RESOURCE_NAME)
+  if (JERRY_CONTEXT (resource_name) != ECMA_VALUE_UNDEFINED)
+  {
+    *(--base_p) = JERRY_CONTEXT (resource_name);
+  }
+#endif /* ENABLED (JERRY_RESOURCE_NAME) */
+
+#if ENABLED (JERRY_ES2015)
   if (context_p->tagged_template_literal_cp != JMEM_CP_NULL)
   {
-    ecma_value_t *tagged_base_p = (ecma_value_t *) (((uint8_t *) compiled_code_p) + total_size);
-
-    if (PARSER_NEEDS_MAPPED_ARGUMENTS (context_p->status_flags))
-    {
-      tagged_base_p -= context_p->argument_count;
-    }
-
-    tagged_base_p[-1] = (ecma_value_t) context_p->tagged_template_literal_cp;
+    base_p[-1] = (ecma_value_t) context_p->tagged_template_literal_cp;
 
     ecma_collection_t *collection_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t,
                                                                        context_p->tagged_template_literal_cp);
@@ -1649,27 +1663,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     }
   }
 #endif /* ENABLED (JERRY_ES2015) */
-
-#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
-  if (JERRY_CONTEXT (resource_name) != ECMA_VALUE_UNDEFINED)
-  {
-    ecma_value_t *resource_name_p = (ecma_value_t *) (((uint8_t *) compiled_code_p) + total_size);
-
-    if (PARSER_NEEDS_MAPPED_ARGUMENTS (context_p->status_flags))
-    {
-      resource_name_p -= context_p->argument_count;
-    }
-
-#if ENABLED (JERRY_ES2015)
-    if (context_p->tagged_template_literal_cp != JMEM_CP_NULL)
-    {
-      resource_name_p--;
-    }
-#endif /* ENABLED (JERRY_ES2015) */
-
-    resource_name_p[-1] = JERRY_CONTEXT (resource_name);
-  }
-#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
 
 #if ENABLED (JERRY_DEBUGGER)
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
@@ -2598,6 +2591,124 @@ parser_parse_arrow_function (parser_context_t *context_p, /**< context */
 
   return compiled_code_p;
 } /* parser_parse_arrow_function */
+
+/**
+ * Check whether the last emitted cbc opcode was an anonymous function declaration
+ *
+ * @return PARSER_NOT_FUNCTION_LITERAL - if the last opcode is not a function literal
+ *         PARSER_NAMED_FUNCTION - if the last opcode is not a named function declataion
+ *         PARSER_ANONYMOUS_CLASS - if the last opcode is an anonymous class declaration
+ *         literal index of the anonymous function literal - otherwise
+ */
+uint16_t
+parser_check_anonymous_function_declaration (parser_context_t *context_p) /**< context */
+{
+  if (context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_FINALIZE_ANONYMOUS_CLASS))
+  {
+    return PARSER_ANONYMOUS_CLASS;
+  }
+
+  if (context_p->last_cbc.literal_type != LEXER_FUNCTION_LITERAL)
+  {
+    return PARSER_NOT_FUNCTION_LITERAL;
+  }
+
+  uint16_t literal_index = PARSER_NOT_FUNCTION_LITERAL;
+
+  if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
+  {
+    literal_index = context_p->last_cbc.literal_index;
+  }
+  else if (context_p->last_cbc_opcode == CBC_PUSH_TWO_LITERALS)
+  {
+    literal_index = context_p->last_cbc.value;
+  }
+  else if (context_p->last_cbc_opcode == CBC_PUSH_THREE_LITERALS)
+  {
+    literal_index = context_p->last_cbc.third_literal_index;
+  }
+  else
+  {
+    return PARSER_NOT_FUNCTION_LITERAL;
+  }
+
+  const ecma_compiled_code_t *bytecode_p;
+  bytecode_p = (const ecma_compiled_code_t *) (PARSER_GET_LITERAL (literal_index)->u.bytecode_p);
+  ecma_value_t *func_name_start_p = ecma_compiled_code_resolve_function_name (bytecode_p);
+
+  return (*func_name_start_p == ECMA_VALUE_EMPTY ? literal_index : PARSER_NAMED_FUNCTION);
+} /* parser_check_anonymous_function_declaration */
+
+/**
+ * Set the function name of the function literal corresponds to the given function literal index
+ * to the given character buffer of literal corresponds to the given name index.
+ */
+void
+parser_set_function_name (parser_context_t *context_p, /**< context */
+                          uint16_t function_literal_index, /**< function literal index */
+                          uint16_t name_index, /**< function name literal index */
+                          uint32_t status_flags) /**< status flags */
+{
+  ecma_compiled_code_t *bytecode_p;
+  bytecode_p = (ecma_compiled_code_t *) (PARSER_GET_LITERAL (function_literal_index)->u.bytecode_p);
+
+  parser_compiled_code_set_function_name (context_p, bytecode_p, name_index, status_flags);
+} /* parser_set_function_name */
+
+/**
+ * Set the function name of the given compiled code
+ * to the given character buffer of literal corresponds to the given name index.
+ */
+void
+parser_compiled_code_set_function_name (parser_context_t *context_p, /**< context */
+                                        ecma_compiled_code_t *bytecode_p, /**< function literal index */
+                                        uint16_t name_index, /**< function name literal index */
+                                        uint32_t status_flags) /**< status flags */
+{
+  ecma_value_t *func_name_start_p;
+  func_name_start_p = ecma_compiled_code_resolve_function_name ((const ecma_compiled_code_t *) bytecode_p);
+
+  if (JERRY_UNLIKELY (*func_name_start_p != ECMA_VALUE_EMPTY))
+  {
+    return;
+  }
+
+  parser_scope_stack_t *scope_stack_start_p = context_p->scope_stack_p;
+  parser_scope_stack_t *scope_stack_p = scope_stack_start_p + context_p->scope_stack_top;
+
+  while (scope_stack_p > scope_stack_start_p)
+  {
+    scope_stack_p--;
+
+    if (scope_stack_p->map_from != PARSER_SCOPE_STACK_FUNC
+        && scanner_decode_map_to (scope_stack_p) == name_index)
+    {
+      name_index = scope_stack_p->map_from;
+      break;
+    }
+  }
+
+  lexer_literal_t *name_lit_p = (lexer_literal_t *) PARSER_GET_LITERAL (name_index);
+
+  uint8_t *name_buffer_p = (uint8_t *) name_lit_p->u.char_p;
+  uint32_t name_length = name_lit_p->prop.length;
+
+  if (status_flags & (PARSER_IS_PROPERTY_GETTER | PARSER_IS_PROPERTY_SETTER))
+  {
+    name_length += 4;
+    name_buffer_p = (uint8_t *) parser_malloc (context_p, name_length * sizeof (uint8_t));
+    char *prefix_p = (status_flags & PARSER_IS_PROPERTY_GETTER) ? "get " : "set ";
+    memcpy (name_buffer_p, prefix_p, 4);
+    memcpy (name_buffer_p + 4, name_lit_p->u.char_p, name_lit_p->prop.length);
+  }
+
+  *func_name_start_p = ecma_find_or_create_literal_string (name_buffer_p, name_length);
+
+  if (name_buffer_p != name_lit_p->u.char_p)
+  {
+    parser_free (name_buffer_p, name_length);
+  }
+} /* parser_compiled_code_set_function_name */
 
 #endif /* ENABLED (JERRY_ES2015) */
 

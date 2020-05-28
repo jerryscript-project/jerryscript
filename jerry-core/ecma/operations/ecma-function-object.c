@@ -25,6 +25,7 @@
 #include "ecma-objects-general.h"
 #include "ecma-objects-arguments.h"
 #include "ecma-proxy-object.h"
+#include "ecma-symbol-object.h"
 #include "ecma-try-catch-macro.h"
 #include "jcontext.h"
 
@@ -35,7 +36,7 @@
  * @{
  */
 
-#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+#if ENABLED (JERRY_RESOURCE_NAME)
 /**
  * Get the resource name from the compiled code header
  *
@@ -46,22 +47,62 @@ ecma_op_resource_name (const ecma_compiled_code_t *bytecode_header_p)
 {
   JERRY_ASSERT (bytecode_header_p != NULL);
 
-  uint8_t *byte_p = (uint8_t *) bytecode_header_p;
-  byte_p += ((size_t) bytecode_header_p->size) << JMEM_ALIGNMENT_LOG;
-
-  ecma_value_t *resource_name_p = (ecma_value_t *) byte_p;
-  resource_name_p -= ecma_compiled_code_get_formal_params (bytecode_header_p);
+  return ecma_compiled_code_resolve_function_name (bytecode_header_p)[-1];
+} /* ecma_op_resource_name */
+#endif /* ENABLED (JERRY_RESOURCE_NAME) */
 
 #if ENABLED (JERRY_ES2015)
-  if (bytecode_header_p->status_flags & CBC_CODE_FLAG_HAS_TAGGED_LITERALS)
-  {
-    resource_name_p--;
-  }
-#endif /* ENABLED (JERRY_ES2015) */
+/**
+ * SetFunctionName operation
+ *
+ * See also: ECMAScript v6, 9.2.1.1
+ *
+ * @return resource name as ecma-string
+ */
+ecma_value_t
+ecma_op_function_form_name (ecma_value_t prop_name, /**< property name */
+                            char *prefix_p, /**< prefix */
+                            lit_utf8_size_t prefix_size) /**< prefix length */
+{
+  ecma_string_t *prop_name_p = ecma_get_prop_name_from_value (prop_name);
 
-  return resource_name_p[-1];
-} /* ecma_op_resource_name */
-#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+  /* 4. */
+  if (ecma_prop_name_is_symbol (prop_name_p))
+  {
+    /* .a */
+    ecma_string_t *string_desc_p = ecma_get_symbol_description (prop_name_p);
+
+    /* .b */
+    if (ecma_string_is_empty (string_desc_p))
+    {
+      prop_name_p = string_desc_p;
+    }
+    /* .c */
+    else
+    {
+      ecma_stringbuilder_t builder = ecma_stringbuilder_create_raw ((lit_utf8_byte_t *) "[", 1);
+      ecma_stringbuilder_append (&builder, string_desc_p);
+      ecma_stringbuilder_append_byte (&builder, (lit_utf8_byte_t) LIT_CHAR_RIGHT_SQUARE);
+      prop_name_p = ecma_stringbuilder_finalize (&builder);
+    }
+  }
+  else
+  {
+    ecma_ref_ecma_string (prop_name_p);
+  }
+
+  /* 5. */
+  if (JERRY_UNLIKELY (prefix_p != NULL))
+  {
+    ecma_stringbuilder_t builder = ecma_stringbuilder_create_raw ((lit_utf8_byte_t *) prefix_p, prefix_size);
+    ecma_stringbuilder_append (&builder, prop_name_p);
+    ecma_deref_ecma_string (prop_name_p);
+    prop_name_p = ecma_stringbuilder_finalize (&builder);
+  }
+
+  return ecma_make_string_value (prop_name_p);
+} /* ecma_op_function_form_name */
+#endif /* ENABLED (JERRY_ES2015) */
 
 /**
  * IsCallable operation.
@@ -328,9 +369,9 @@ ecma_op_create_dynamic_function (const ecma_value_t *arguments_list_p, /**< argu
   ECMA_STRING_TO_UTF8_STRING (arguments_str_p, arguments_buffer_p, arguments_buffer_size);
   ECMA_STRING_TO_UTF8_STRING (function_body_str_p, function_body_buffer_p, function_body_buffer_size);
 
-#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ERROR_MESSAGES) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+#if ENABLED (JERRY_RESOURCE_NAME)
   JERRY_CONTEXT (resource_name) = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
-#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ERROR_MESSAGES) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#endif /* ENABLED (JERRY_RESOURCE_NAME) */
 
   ecma_compiled_code_t *bytecode_data_p = NULL;
 
@@ -344,6 +385,12 @@ ecma_op_create_dynamic_function (const ecma_value_t *arguments_list_p, /**< argu
   if (!ECMA_IS_VALUE_ERROR (ret_value))
   {
     JERRY_ASSERT (ecma_is_value_true (ret_value));
+
+#if ENABLED (JERRY_ES2015)
+    ecma_value_t *func_name_p;
+    func_name_p = ecma_compiled_code_resolve_function_name ((const ecma_compiled_code_t *) bytecode_data_p);
+    *func_name_p = ecma_make_magic_string_value (LIT_MAGIC_STRING_ANONYMOUS);
+#endif /* ENABLED (JERRY_ES2015) */
 
     ecma_object_t *global_env_p = ecma_get_global_environment ();
     ecma_builtin_id_t fallback_proto = ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE;
@@ -1413,6 +1460,34 @@ ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**<
                                                                         &value_prop_p);
       value_p->value = ecma_make_uint32_value (len);
       return value_prop_p;
+    }
+
+    return NULL;
+  }
+
+  if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_NAME))
+  {
+    ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
+    if (!ECMA_GET_SECOND_BIT_FROM_POINTER_TAG (ext_func_p->u.function.scope_cp))
+    {
+      /* Set tag bit to represent initialized 'name' property */
+      ECMA_SET_SECOND_BIT_TO_POINTER_TAG (ext_func_p->u.function.scope_cp);
+      const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
+
+      ecma_value_t value = *ecma_compiled_code_resolve_function_name (bytecode_data_p);
+      if (value != ECMA_VALUE_EMPTY)
+      {
+        JERRY_ASSERT (ecma_is_value_string (value));
+
+        /* Initialize 'name' property */
+        ecma_property_t *value_prop_p;
+        ecma_property_value_t *value_p = ecma_create_named_data_property (object_p,
+                                                                          property_name_p,
+                                                                          ECMA_PROPERTY_FLAG_CONFIGURABLE,
+                                                                          &value_prop_p);
+        value_p->value = ecma_copy_value (value);
+        return value_prop_p;
+      }
     }
 
     return NULL;

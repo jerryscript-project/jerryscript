@@ -55,6 +55,8 @@ bool ecma_save_literals_for_snapshot (ecma_collection_t *lit_pool_p, uint32_t *b
 #if ENABLED (JERRY_SNAPSHOT_EXEC) || ENABLED (JERRY_SNAPSHOT_SAVE)
 ecma_value_t
 ecma_snapshot_get_literal (const uint8_t *literal_base_p, ecma_value_t literal_value);
+ecma_value_t *
+ecma_snapshot_resolve_serializable_values (ecma_compiled_code_t *compiled_code_p, uint8_t *byte_code_end_p);
 #endif /* ENABLED (JERRY_SNAPSHOT_EXEC) || ENABLED (JERRY_SNAPSHOT_SAVE) */
 
 /**

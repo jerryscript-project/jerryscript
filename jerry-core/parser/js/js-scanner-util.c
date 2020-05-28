@@ -2430,6 +2430,38 @@ scanner_decode_map_to (parser_scope_stack_t *stack_item_p) /**< scope stack item
 #if ENABLED (JERRY_ES2015)
 
 /**
+ * Find the given literal index in the scope stack
+ * and save it the constant literal pool if the literal is register stored
+ *
+ * @return given literal index - if literal corresponds to this index is not register stored
+ *         literal index on which literal index has been mapped - otherwise
+ */
+uint16_t
+scanner_save_literal (parser_context_t *context_p, /**< context */
+                      uint16_t literal_index) /**< literal index */
+{
+  if (literal_index >= PARSER_REGISTER_START)
+  {
+    literal_index = (uint16_t) (literal_index - (PARSER_REGISTER_START - 1));
+
+    parser_scope_stack_t *scope_stack_p = context_p->scope_stack_p + context_p->scope_stack_top;
+
+    do
+    {
+      /* Registers must be found in the scope stack. */
+      JERRY_ASSERT (scope_stack_p > context_p->scope_stack_p);
+      scope_stack_p--;
+    }
+    while (literal_index != (scope_stack_p->map_to & PARSER_SCOPE_STACK_REGISTER_MASK));
+
+    literal_index = scope_stack_p->map_from;
+    PARSER_GET_LITERAL (literal_index)->status_flags |= LEXER_FLAG_USED;
+  }
+
+  return literal_index;
+} /* scanner_save_literal */
+
+/**
  * Checks whether the literal is a const in the current scope.
  *
  * @return true if the literal is a const, false otherwise

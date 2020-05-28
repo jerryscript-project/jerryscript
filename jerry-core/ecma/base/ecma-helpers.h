@@ -488,9 +488,11 @@ void ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p);
 #if ENABLED (JERRY_ES2015)
 ecma_collection_t *ecma_compiled_code_get_tagged_template_collection (const ecma_compiled_code_t *bytecode_header_p);
 #endif /* ENABLED (JERRY_ES2015) */
-#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) || ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_RESOURCE_NAME) || ENABLED (JERRY_ES2015)
 ecma_length_t ecma_compiled_code_get_formal_params (const ecma_compiled_code_t *bytecode_p);
-#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) || ENABLED (JERRY_ES2015) */
+ecma_value_t *ecma_compiled_code_resolve_arguments_start (const ecma_compiled_code_t *bytecode_header_p);
+ecma_value_t *ecma_compiled_code_resolve_function_name (const ecma_compiled_code_t *bytecode_header_p);
+#endif /* ENABLED (JERRY_RESOURCE_NAME) || ENABLED (JERRY_ES2015) */
 #if (JERRY_STACK_LIMIT != 0)
 uintptr_t ecma_get_current_stack_usage (void);
 #endif /* (JERRY_STACK_LIMIT != 0) */

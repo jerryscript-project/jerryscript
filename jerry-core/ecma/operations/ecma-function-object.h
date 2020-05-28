@@ -27,9 +27,13 @@
  * @{
  */
 
-#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+#if ENABLED (JERRY_RESOURCE_NAME)
 ecma_value_t ecma_op_resource_name (const ecma_compiled_code_t *bytecode_header_p);
-#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#endif /* ENABLED (JERRY_RESOURCE_NAME) */
+
+#if ENABLED (JERRY_ES2015)
+ecma_value_t ecma_op_function_form_name (ecma_value_t prop_name, char *prefix_p, lit_utf8_size_t prefix_size);
+#endif /* ENABLED (JERRY_ES2015) */
 
 bool ecma_op_is_callable (ecma_value_t value);
 bool ecma_op_object_is_callable (ecma_object_t *obj_p);

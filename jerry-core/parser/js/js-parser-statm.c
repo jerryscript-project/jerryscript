@@ -571,6 +571,18 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
         cbc_opcode_t opcode = CBC_ASSIGN_SET_IDENT;
 
 #if ENABLED (JERRY_ES2015)
+        uint16_t function_literal_index = parser_check_anonymous_function_declaration (context_p);
+
+        if (function_literal_index == PARSER_ANONYMOUS_CLASS)
+        {
+          uint16_t name_index = scanner_save_literal (context_p, index);
+          parser_emit_cbc_ext_literal (context_p, CBC_EXT_SET_CLASS_NAME, name_index);
+        }
+        else if (function_literal_index < PARSER_NAMED_FUNCTION)
+        {
+          parser_set_function_name (context_p, function_literal_index, index, 0);
+        }
+
         if (declaration_type != LEXER_KEYW_VAR
             && (index < PARSER_REGISTER_START))
         {
@@ -706,6 +718,7 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
 #endif /* ENABLED (JERRY_ES2015) */
 
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+  uint16_t function_name_index = context_p->lit_object.index;
   parser_module_append_export_name (context_p);
   context_p->status_flags &= (uint32_t) ~(PARSER_MODULE_STORE_IDENT);
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
@@ -827,6 +840,10 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
 
   literal_p->u.bytecode_p = compiled_code_p;
   literal_p->type = LEXER_FUNCTION_LITERAL;
+
+#if ENABLED (JERRY_ES2015)
+  parser_compiled_code_set_function_name (context_p, compiled_code_p, function_name_index, 0);
+#endif /* ENABLED (JERRY_ES2015) */
 
   lexer_next_token (context_p);
 } /* parser_parse_function_statement */
@@ -2623,13 +2640,13 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
   }
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
-#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+#if ENABLED (JERRY_RESOURCE_NAME)
   if (JERRY_CONTEXT (resource_name) != ECMA_VALUE_UNDEFINED)
   {
     parser_emit_cbc_ext (context_p, CBC_EXT_RESOURCE_NAME);
     parser_flush_cbc (context_p);
   }
-#endif /* ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#endif /* ENABLED (JERRY_RESOURCE_NAME) */
 #if ENABLED (JERRY_LINE_INFO)
   context_p->last_line_info_line = 0;
 #endif /* ENABLED (JERRY_LINE_INFO) */

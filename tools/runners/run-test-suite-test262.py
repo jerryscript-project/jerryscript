@@ -113,7 +113,7 @@ def main(args):
                             universal_newlines=True,
                             stdout=subprocess.PIPE)
 
-    return_code = 0
+    return_code = 1
     with open(os.path.join(os.path.dirname(args.engine), 'test262.report'), 'w') as output_file:
         counter = 0
         summary_found = False
@@ -132,8 +132,8 @@ def main(args):
 
             if summary_found:
                 print(output, end='')
-                if ('Failed tests' in output) or ('Expected to fail but passed' in output):
-                    return_code = 1
+                if 'All tests succeeded' in output:
+                    return_code = 0
 
     proc.wait()
 

@@ -1474,19 +1474,22 @@ ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**<
       ECMA_SET_SECOND_BIT_TO_POINTER_TAG (ext_func_p->u.function.scope_cp);
       const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
 
-      ecma_value_t value = *ecma_compiled_code_resolve_function_name (bytecode_data_p);
-      if (value != ECMA_VALUE_EMPTY)
+      if (!(bytecode_data_p->status_flags & CBC_CODE_FLAGS_CLASS_CONSTRUCTOR))
       {
-        JERRY_ASSERT (ecma_is_value_string (value));
+        ecma_value_t value = *ecma_compiled_code_resolve_function_name (bytecode_data_p);
+        if (value != ECMA_VALUE_EMPTY)
+        {
+          JERRY_ASSERT (ecma_is_value_string (value));
 
-        /* Initialize 'name' property */
-        ecma_property_t *value_prop_p;
-        ecma_property_value_t *value_p = ecma_create_named_data_property (object_p,
-                                                                          property_name_p,
-                                                                          ECMA_PROPERTY_FLAG_CONFIGURABLE,
-                                                                          &value_prop_p);
-        value_p->value = ecma_copy_value (value);
-        return value_prop_p;
+          /* Initialize 'name' property */
+          ecma_property_t *value_prop_p;
+          ecma_property_value_t *value_p = ecma_create_named_data_property (object_p,
+                                                                            property_name_p,
+                                                                            ECMA_PROPERTY_FLAG_CONFIGURABLE,
+                                                                            &value_prop_p);
+          value_p->value = ecma_copy_value (value);
+          return value_prop_p;
+        }
       }
     }
 

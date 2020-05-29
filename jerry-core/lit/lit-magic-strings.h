@@ -76,6 +76,11 @@ typedef enum
 } lit_magic_string_id_t;
 
 /**
+ * Checks whether the given id corresponds to a global symbol
+ */
+#define LIT_IS_GLOBAL_SYMBOL(id) ((id) >= LIT_GLOBAL_SYMBOL_HAS_INSTANCE && (id) <= LIT_GLOBAL_SYMBOL_UNSCOPABLES)
+
+/**
  * Identifiers of implementation-defined external magic string constants
  */
 typedef uint32_t lit_magic_string_ex_id_t;

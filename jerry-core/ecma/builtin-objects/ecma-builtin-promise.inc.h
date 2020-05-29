@@ -35,6 +35,10 @@ OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
               ECMA_BUILTIN_ID_PROMISE_PROTOTYPE,
               ECMA_PROPERTY_FIXED)
 
+STRING_VALUE (LIT_MAGIC_STRING_NAME,
+              LIT_MAGIC_STRING_PROMISE_UL,
+              ECMA_PROPERTY_FLAG_CONFIGURABLE)
+
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_MAGIC_STRING_REJECT, ecma_builtin_promise_reject, 1, 1)

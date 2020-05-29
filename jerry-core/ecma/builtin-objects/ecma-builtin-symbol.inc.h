@@ -29,6 +29,10 @@ NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               0,
               ECMA_PROPERTY_FLAG_CONFIGURABLE)
 
+STRING_VALUE (LIT_MAGIC_STRING_NAME,
+              LIT_MAGIC_STRING_STRING_UL,
+              ECMA_PROPERTY_FLAG_CONFIGURABLE)
+
 /* Object properties:
  *  (property name, object pointer getter) */
 

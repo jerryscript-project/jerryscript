@@ -34,6 +34,12 @@ OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
               ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
               ECMA_PROPERTY_FIXED)
 
+#if ENABLED (JERRY_ES2015)
+STRING_VALUE (LIT_MAGIC_STRING_NAME,
+              LIT_MAGIC_STRING_OBJECT_UL,
+              ECMA_PROPERTY_FLAG_CONFIGURABLE)
+#endif /* ENABLED (JERRY_ES2015) */
+
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_MAGIC_STRING_GET_PROTOTYPE_OF_UL, ECMA_OBJECT_ROUTINE_GET_PROTOTYPE_OF, 1, 1)

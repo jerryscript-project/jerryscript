@@ -32,7 +32,7 @@ ecma_value_t ecma_op_resource_name (const ecma_compiled_code_t *bytecode_header_
 #endif /* ENABLED (JERRY_RESOURCE_NAME) */
 
 #if ENABLED (JERRY_ES2015)
-ecma_value_t ecma_op_function_form_name (ecma_value_t prop_name, char *prefix_p, lit_utf8_size_t prefix_size);
+ecma_value_t ecma_op_function_form_name (ecma_string_t *prop_name_p, char *prefix_p, lit_utf8_size_t prefix_size);
 #endif /* ENABLED (JERRY_ES2015) */
 
 bool ecma_op_is_callable (ecma_value_t value);

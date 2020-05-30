@@ -1186,36 +1186,36 @@ ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p, 
     ecma_object_t *obj_p = ecma_get_object_from_value (value);
     lit_magic_string_id_t class_name = ecma_object_get_class_name (obj_p);
 
-    ecma_value_t result = ECMA_VALUE_EMPTY;
-
     /* 5.a */
     if (class_name == LIT_MAGIC_STRING_NUMBER_UL)
     {
-      result = ecma_op_to_number (value);
+      value = ecma_op_to_number (value);
+      ecma_deref_object (obj_p);
+
+      if (ECMA_IS_VALUE_ERROR (value))
+      {
+        return value;
+      }
     }
     /* 5.b */
     else if (class_name == LIT_MAGIC_STRING_STRING_UL)
     {
       ecma_string_t *str_p = ecma_op_to_string (value);
-      result = ecma_make_string_value (str_p);
+      ecma_deref_object (obj_p);
+
+      if (JERRY_UNLIKELY (str_p == NULL))
+      {
+        return ECMA_VALUE_ERROR;
+      }
+
+      value = ecma_make_string_value (str_p);
     }
     /* 5.c */
     else if (class_name == LIT_MAGIC_STRING_BOOLEAN_UL)
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
-      result = ext_object_p->u.class_prop.u.value;
-    }
-
-    if (!ecma_is_value_empty (result))
-    {
+      value = ext_object_p->u.class_prop.u.value;
       ecma_deref_object (obj_p);
-
-      if (ECMA_IS_VALUE_ERROR (result))
-      {
-        return result;
-      }
-
-      value = result;
     }
   }
 

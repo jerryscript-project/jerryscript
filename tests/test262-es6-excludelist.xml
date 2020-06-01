@@ -45,7 +45,6 @@
   <test id="built-ins/GeneratorFunction/instance-restricted-properties.js"><reason></reason></test>
   <test id="built-ins/GeneratorPrototype/next/context-constructor-invocation.js"><reason></reason></test>
   <test id="built-ins/GeneratorPrototype/throw/from-state-completed.js"><reason></reason></test>
-  <test id="built-ins/Map/prototype/size/size.js"><reason></reason></test>
   <test id="built-ins/Map/prototype/Symbol.iterator.js"><reason></reason></test>
   <test id="built-ins/Number/15.7.4-1.js"><reason></reason></test>
   <test id="built-ins/Number/prototype/S15.7.3.1_A2_T1.js"><reason></reason></test>
@@ -146,7 +145,6 @@
   <test id="built-ins/RegExp/prototype/Symbol.search/get-sticky-err.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/test/get-sticky-err.js"><reason></reason></test>
   <test id="built-ins/Set/prototype/keys/keys.js"><reason></reason></test>
-  <test id="built-ins/Set/prototype/size/size.js"><reason></reason></test>
   <test id="built-ins/Set/prototype/Symbol.iterator.js"><reason></reason></test>
   <test id="built-ins/String/prototype/normalize/form-is-not-valid-throws.js"><reason></reason></test>
   <test id="built-ins/String/prototype/normalize/length.js"><reason></reason></test>

@@ -54,7 +54,7 @@ ROUTINE (LIT_GLOBAL_SYMBOL_ITERATOR, ecma_builtin_map_prototype_object_entries, 
 /* ECMA-262 v6, 23.1.3.10 */
 ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_SIZE,
                     ecma_builtin_map_prototype_object_size_getter,
-                    ECMA_PROPERTY_FIXED)
+                    ECMA_PROPERTY_FLAG_CONFIGURABLE)
 
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
 

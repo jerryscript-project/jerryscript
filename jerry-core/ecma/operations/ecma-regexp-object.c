@@ -3115,7 +3115,22 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
                                     (lit_utf8_size_t) (match_position_p - source_position_p));
       replace_ctx.match_byte_pos = (lit_utf8_size_t) (match_position_p - replace_ctx.string_p);
 
-      source_position_p = JERRY_MIN (match_position_p + matched_str_size, string_end_p);
+      if ((string_flags & ECMA_STRING_FLAG_IS_ASCII) && matched_str_size == matched_str_length)
+      {
+        source_position_p = JERRY_MIN (match_position_p + matched_str_size, string_end_p);
+      }
+      else
+      {
+        lit_utf8_size_t code_unit_count = matched_str_length;
+
+        while (code_unit_count-- > 0 && JERRY_LIKELY (match_position_p < string_end_p))
+        {
+          lit_utf8_incr (&match_position_p);
+        }
+
+        source_position_p = match_position_p;
+      }
+
       replace_ctx.index = JERRY_MIN (position + matched_str_length, string_length);
     }
 

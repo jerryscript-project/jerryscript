@@ -621,6 +621,10 @@ try {
   assert (e instanceof TypeError);
 }
 
+assert(replace.call({ exec : ( ) => { return {  } } }, 'һ', "a") === "a");
+assert(replace.call({ exec : ( ) => { return {  } } }, 'һһһһһһһһһ', "a") === "a");
+assert(replace.call({ exec : ( ) => { return {  } } }, 'һһһһһһһһһһ', "a") === "aһ");
+
 /* Object with custom @@replace method */
 var o = {}
 o[Symbol.replace] = function () {

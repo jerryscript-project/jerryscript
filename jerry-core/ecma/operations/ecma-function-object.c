@@ -641,7 +641,8 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
   }
 
   JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION
-                || ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+                || ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION
+                || ECMA_OBJECT_IS_PROXY (func_obj_p));
 
   ecma_object_t *v_obj_p = ecma_get_object_from_value (value);
 

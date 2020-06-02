@@ -2467,11 +2467,6 @@ parser_append_binary_single_assignment_token (parser_context_t *context_p, /**< 
     assign_opcode = CBC_ASSIGN_SET_IDENT;
 
 #if ENABLED (JERRY_ES2015)
-    if (pattern_flags & PARSER_PATTERN_GROUP_EXPR)
-    {
-      parser_stack_push_uint8 (context_p, LEXER_ASSIGN_GROUP_EXPR);
-    }
-
     if (!(pattern_flags & (PARSER_PATTERN_LET | PARSER_PATTERN_CONST | PARSER_PATTERN_LOCAL)))
     {
       if (scanner_literal_is_const_reg (context_p, literal_index))
@@ -3380,7 +3375,7 @@ parser_process_expression_sequence (parser_context_t *context_p) /**< context */
 /**
  * Process group expression.
  */
-static bool
+static void
 parser_process_group_expression (parser_context_t *context_p, /**< context */
                                  size_t *grouping_level_p) /**< grouping level */
 {
@@ -3398,21 +3393,17 @@ parser_process_group_expression (parser_context_t *context_p, /**< context */
   parser_stack_pop_uint8 (context_p);
   lexer_next_token (context_p);
 
-  if (context_p->token.type == LEXER_ASSIGN)
-  {
-    uint32_t flags = 0;
 #if ENABLED (JERRY_ES2015)
-    if (JERRY_UNLIKELY (token == LEXER_LEFT_PAREN))
-    {
-      flags = PARSER_PATTERN_GROUP_EXPR;
-    }
-#endif /* ENABLED (JERRY_ES2015) */
-    parser_append_binary_single_assignment_token (context_p, flags);
-    lexer_next_token (context_p);
-    return true;
+  /* Lookahead for anonymous function declaration after '=' token when the assignment base is LHS expression
+     with a single indentifier in it. e.g.: (a) = function () {} */
+  if (JERRY_UNLIKELY (context_p->token.type == LEXER_ASSIGN
+                      && PARSER_IS_PUSH_LITERALS_WITH_THIS (context_p->last_cbc_opcode)
+                      && context_p->last_cbc.literal_type == LEXER_IDENT_LITERAL))
+  {
+    parser_stack_push_uint8 (context_p, LEXER_ASSIGN_GROUP_EXPR);
   }
+#endif /* ENABLED (JERRY_ES2015) */
 
-  return false;
 } /* parser_process_group_expression */
 
 /**
@@ -3473,7 +3464,6 @@ parser_parse_expression (parser_context_t *context_p, /**< context */
 
   while (true)
   {
-parse_unary_expression:
     if (parser_parse_unary_expression (context_p, &grouping_level))
     {
       parser_process_binary_opcodes (context_p, 0);
@@ -3520,10 +3510,7 @@ process_unary_expression:
           && (context_p->stack_top_uint8 == LEXER_LEFT_PAREN
               || context_p->stack_top_uint8 == LEXER_COMMA_SEP_LIST))
       {
-        if (parser_process_group_expression (context_p, &grouping_level))
-        {
-          goto parse_unary_expression;
-        }
+        parser_process_group_expression (context_p, &grouping_level);
         continue;
       }
 

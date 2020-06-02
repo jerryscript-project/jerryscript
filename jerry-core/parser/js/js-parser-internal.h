@@ -116,7 +116,6 @@ typedef enum
   PARSER_PATTERN_REST_ELEMENT = (1u << 7),     /**< parse rest array initializer */
   PARSER_PATTERN_ARGUMENTS = (1u << 8),        /**< parse arguments binding */
   PARSER_PATTERN_ARRAY = (1u << 9),            /**< array pattern is being parsed */
-  PARSER_PATTERN_GROUP_EXPR = (1u << 10),      /**< group expression is being assigned */
 } parser_pattern_flags_t;
 
 /**

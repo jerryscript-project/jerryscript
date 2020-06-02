@@ -24,7 +24,6 @@
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
-#include "ecma-try-catch-macro.h"
 #include "lit-char-helpers.h"
 
 #if ENABLED (JERRY_BUILTIN_DATE)
@@ -198,91 +197,52 @@ static ecma_value_t
 ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to the Date constructor */
                             ecma_length_t args_len) /**< number of arguments */
 {
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+  ecma_number_t date_nums[7] =
+  {
+    ECMA_NUMBER_ZERO, /* year */
+    ECMA_NUMBER_ZERO, /* month */
+    ECMA_NUMBER_ONE, /* date */
+    ECMA_NUMBER_ZERO, /* hours */
+    ECMA_NUMBER_ZERO, /* minutes */
+    ECMA_NUMBER_ZERO, /* seconds */
+    ECMA_NUMBER_ZERO /* miliseconds */
+  };
+
+  args_len = JERRY_MIN (args_len, sizeof (date_nums) / sizeof (date_nums[0]));
+
+  /* 1-7. */
+  for (uint32_t i = 0; i < args_len; i++)
+  {
+    ecma_value_t status = ecma_get_number (args[i], date_nums + i);
+
+    if (ECMA_IS_VALUE_ERROR (status))
+    {
+      return status;
+    }
+  }
+
   ecma_number_t prim_value = ecma_number_make_nan ();
 
-  ECMA_TRY_CATCH (year_value, ecma_op_to_number (args[0]), ret_value);
-  ECMA_TRY_CATCH (month_value, ecma_op_to_number (args[1]), ret_value);
-
-  ecma_number_t year = ecma_get_number_from_value (year_value);
-  ecma_number_t month = ecma_get_number_from_value (month_value);
-  ecma_number_t date = ECMA_NUMBER_ONE;
-  ecma_number_t hours = ECMA_NUMBER_ZERO;
-  ecma_number_t minutes = ECMA_NUMBER_ZERO;
-  ecma_number_t seconds = ECMA_NUMBER_ZERO;
-  ecma_number_t milliseconds = ECMA_NUMBER_ZERO;
-
-  /* 3. */
-  if (args_len >= 3 && ecma_is_value_empty (ret_value))
+  if (!ecma_number_is_nan (date_nums[0]))
   {
-    ECMA_TRY_CATCH (date_value, ecma_op_to_number (args[2]), ret_value);
-    date = ecma_get_number_from_value (date_value);
-    ECMA_FINALIZE (date_value);
-  }
+    /* 8. */
+    ecma_number_t y = ecma_number_trunc (date_nums[0]);
 
-  /* 4. */
-  if (args_len >= 4 && ecma_is_value_empty (ret_value))
-  {
-    ECMA_TRY_CATCH (hours_value, ecma_op_to_number (args[3]), ret_value);
-    hours = ecma_get_number_from_value (hours_value);
-    ECMA_FINALIZE (hours_value);
-  }
-
-  /* 5. */
-  if (args_len >= 5 && ecma_is_value_empty (ret_value))
-  {
-    ECMA_TRY_CATCH (minutes_value, ecma_op_to_number (args[4]), ret_value);
-    minutes = ecma_get_number_from_value (minutes_value);
-    ECMA_FINALIZE (minutes_value);
-  }
-
-  /* 6. */
-  if (args_len >= 6 && ecma_is_value_empty (ret_value))
-  {
-    ECMA_TRY_CATCH (seconds_value, ecma_op_to_number (args[5]), ret_value);
-    seconds = ecma_get_number_from_value (seconds_value);
-    ECMA_FINALIZE (seconds_value);
-  }
-
-  /* 7. */
-  if (args_len >= 7 && ecma_is_value_empty (ret_value))
-  {
-    ECMA_TRY_CATCH (milliseconds_value, ecma_op_to_number (args[6]), ret_value);
-    milliseconds = ecma_get_number_from_value (milliseconds_value);
-    ECMA_FINALIZE (milliseconds_value);
-  }
-
-  if (ecma_is_value_empty (ret_value))
-  {
-    if (!ecma_number_is_nan (year))
+    if (y >= 0 && y <= 99)
     {
-      /* 8. */
-      ecma_number_t y = ecma_number_trunc (year);
-
-      if (y >= 0 && y <= 99)
-      {
-        year = 1900 + y;
-      }
+      date_nums[0] = 1900 + y;
     }
-
-    prim_value = ecma_date_make_date (ecma_date_make_day (year,
-                                                          month,
-                                                          date),
-                                      ecma_date_make_time (hours,
-                                                           minutes,
-                                                           seconds,
-                                                           milliseconds));
   }
 
-  ECMA_FINALIZE (month_value);
-  ECMA_FINALIZE (year_value);
+  prim_value = ecma_date_make_date (ecma_date_make_day (date_nums[0],
+                                                        date_nums[1],
+                                                        date_nums[2]),
+                                    ecma_date_make_time (date_nums[3],
+                                                         date_nums[4],
+                                                         date_nums[5],
+                                                         date_nums[6]));
 
-  if (ecma_is_value_empty (ret_value))
-  {
-    ret_value = ecma_make_number_value (prim_value);
-  }
-
-  return ret_value;
+  return ecma_make_number_value (prim_value);
 } /* ecma_date_construct_helper */
 
 /**
@@ -656,7 +616,6 @@ ecma_builtin_date_utc (ecma_value_t this_arg, /**< this argument */
                        ecma_length_t args_number) /**< number of arguments */
 {
   JERRY_UNUSED (this_arg);
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   if (args_number < 2)
   {
@@ -667,15 +626,30 @@ ecma_builtin_date_utc (ecma_value_t this_arg, /**< this argument */
     return ecma_make_number_value (ecma_number_make_nan ());
   }
 
-  ECMA_TRY_CATCH (time_value, ecma_date_construct_helper (args, args_number), ret_value);
+  ecma_value_t time_value = ecma_date_construct_helper (args, args_number);
+
+  if (ECMA_IS_VALUE_ERROR (time_value))
+  {
+    return time_value;
+  }
 
   ecma_number_t time = ecma_get_number_from_value (time_value);
-  ret_value = ecma_make_number_value (ecma_date_time_clip (time));
 
-  ECMA_FINALIZE (time_value);
+  ecma_free_value (time_value);
 
-  return ret_value;
+  return ecma_make_number_value (ecma_date_time_clip (time));
 } /* ecma_builtin_date_utc */
+
+/**
+ * Helper method to get the current time
+ *
+ * @return ecma_number_t
+ */
+static ecma_number_t
+ecma_builtin_date_now_helper (void)
+{
+  return floor (DOUBLE_TO_ECMA_NUMBER_T (jerry_port_get_current_time ()));
+} /* ecma_builtin_date_now_helper */
 
 /**
  * The Date object's 'now' routine
@@ -690,7 +664,7 @@ static ecma_value_t
 ecma_builtin_date_now (ecma_value_t this_arg) /**< this argument */
 {
   JERRY_UNUSED (this_arg);
-  return ecma_make_number_value (floor (DOUBLE_TO_ECMA_NUMBER_T (jerry_port_get_current_time ())));
+  return ecma_make_number_value (ecma_builtin_date_now_helper ());
 } /* ecma_builtin_date_now */
 
 /**
@@ -707,17 +681,10 @@ ecma_builtin_date_dispatch_call (const ecma_value_t *arguments_list_p, /**< argu
 {
   JERRY_UNUSED (arguments_list_p);
   JERRY_UNUSED (arguments_list_len);
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
-  ECMA_TRY_CATCH (now_val,
-                  ecma_builtin_date_now (ECMA_VALUE_UNDEFINED),
-                  ret_value);
+  ecma_number_t now_val_num = ecma_builtin_date_now_helper ();
 
-  ret_value = ecma_date_value_to_string (ecma_get_number_from_value (now_val));
-
-  ECMA_FINALIZE (now_val);
-
-  return ret_value;
+  return ecma_date_value_to_string (now_val_num);
 } /* ecma_builtin_date_dispatch_call */
 
 /**
@@ -732,104 +699,107 @@ ecma_value_t
 ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
                                       ecma_length_t arguments_list_len) /**< number of arguments */
 {
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-  ecma_number_t prim_value_num = ECMA_NUMBER_ZERO;
-
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_DATE_PROTOTYPE);
 #if ENABLED (JERRY_ESNEXT)
-  if (JERRY_CONTEXT (current_new_target))
+  JERRY_ASSERT (JERRY_CONTEXT (current_new_target));
+
+  ecma_object_t *prototype_obj_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_new_target),
+                                                                           ECMA_BUILTIN_ID_DATE_PROTOTYPE);
+  if (JERRY_UNLIKELY (prototype_obj_p == NULL))
   {
-    prototype_obj_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_new_target),
-                                                              ECMA_BUILTIN_ID_DATE_PROTOTYPE);
-    if (JERRY_UNLIKELY (prototype_obj_p == NULL))
-    {
-      return ECMA_VALUE_ERROR;
-    }
+    return ECMA_VALUE_ERROR;
   }
-#endif /* !(ENABLED (JERRY_ESNEXT) */
+#else /* !ENABLED (JERRY_ESNEXT) */
+  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_DATE_PROTOTYPE);
+#endif /* (ENABLED (JERRY_ESNEXT) */
+
   ecma_object_t *obj_p = ecma_create_object (prototype_obj_p,
                                              sizeof (ecma_extended_object_t),
                                              ECMA_OBJECT_TYPE_CLASS);
 
+#if ENABLED (JERRY_ESNEXT)
+  ecma_deref_object (prototype_obj_p);
+#endif /* ENABLED (JERRY_ESNEXT) */
+
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
   ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_UNDEFINED;
 
+  ecma_number_t prim_value_num = ECMA_NUMBER_ZERO;
+
   if (arguments_list_len == 0)
   {
-    ECMA_TRY_CATCH (parse_res_value,
-                    ecma_builtin_date_now (ecma_make_object_value (obj_p)),
-                    ret_value);
-
-    prim_value_num = ecma_get_number_from_value (parse_res_value);
-
-    ECMA_FINALIZE (parse_res_value)
+    prim_value_num = ecma_builtin_date_now_helper ();
   }
   else if (arguments_list_len == 1)
   {
-    ECMA_TRY_CATCH (prim_comp_value,
-                    ecma_op_to_primitive (arguments_list_p[0], ECMA_PREFERRED_TYPE_NUMBER),
-                    ret_value);
+    ecma_value_t prim_comp_value = ecma_op_to_primitive (arguments_list_p[0], ECMA_PREFERRED_TYPE_NUMBER);
+
+    if (ECMA_IS_VALUE_ERROR (prim_comp_value))
+    {
+      ecma_deref_object (obj_p);
+      return prim_comp_value;
+    }
 
     if (ecma_is_value_string (prim_comp_value))
     {
-      ECMA_TRY_CATCH (parse_res_value,
-                      ecma_builtin_date_parse (ecma_make_object_value (obj_p), prim_comp_value),
-                      ret_value);
+      ecma_value_t parse_res_value = ecma_builtin_date_parse (ecma_make_object_value (obj_p), prim_comp_value);
+
+      if (ECMA_IS_VALUE_ERROR (parse_res_value))
+      {
+        ecma_deref_object (obj_p);
+        ecma_free_value (prim_comp_value);
+        return parse_res_value;
+      }
 
       prim_value_num = ecma_get_number_from_value (parse_res_value);
 
-      ECMA_FINALIZE (parse_res_value);
+      ecma_free_value (parse_res_value);
     }
     else
     {
-      ECMA_TRY_CATCH (prim_value, ecma_op_to_number (arguments_list_p[0]), ret_value);
+      ecma_value_t prim_value = ecma_op_to_number (arguments_list_p[0]);
+
+      if (ECMA_IS_VALUE_ERROR (prim_value))
+      {
+        ecma_deref_object (obj_p);
+        ecma_free_value (prim_comp_value);
+        return prim_value;
+      }
 
       prim_value_num = ecma_date_time_clip (ecma_get_number_from_value (prim_value));
 
-      ECMA_FINALIZE (prim_value);
+      ecma_free_value (prim_value);
     }
 
-    ECMA_FINALIZE (prim_comp_value);
+    ecma_free_value (prim_comp_value);
   }
   else
   {
-    ECMA_TRY_CATCH (time_value,
-                    ecma_date_construct_helper (arguments_list_p, arguments_list_len),
-                    ret_value);
+    ecma_value_t time_value = ecma_date_construct_helper (arguments_list_p, arguments_list_len);
+
+    if (ECMA_IS_VALUE_ERROR (time_value))
+    {
+      ecma_deref_object (obj_p);
+      return time_value;
+    }
 
     ecma_number_t time = ecma_get_number_from_value (time_value);
     prim_value_num = ecma_date_time_clip (ecma_date_utc (time));
 
-    ECMA_FINALIZE (time_value);
+    ecma_free_value (time_value);
   }
 
-  if (ecma_is_value_empty (ret_value))
+  if (!ecma_number_is_nan (prim_value_num) && ecma_number_is_infinity (prim_value_num))
   {
-    if (!ecma_number_is_nan (prim_value_num) && ecma_number_is_infinity (prim_value_num))
-    {
-      prim_value_num = ecma_number_make_nan ();
-    }
-
-    ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_DATE_UL;
-
-    ecma_number_t *date_num_p = ecma_alloc_number ();
-    *date_num_p = prim_value_num;
-    ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.class_prop.u.value, date_num_p);
-
-    ret_value = ecma_make_object_value (obj_p);
+    prim_value_num = ecma_number_make_nan ();
   }
-  else
-  {
-    JERRY_ASSERT (ECMA_IS_VALUE_ERROR (ret_value));
-    ecma_deref_object (obj_p);
-  }
-#if ENABLED (JERRY_ESNEXT)
-  if (JERRY_CONTEXT (current_new_target))
-  {
-    ecma_deref_object (prototype_obj_p);
-  }
-#endif /* !(ENABLED (JERRY_ESNEXT) */
-  return ret_value;
+
+  ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_DATE_UL;
+
+  ecma_number_t *date_num_p = ecma_alloc_number ();
+  *date_num_p = prim_value_num;
+  ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.class_prop.u.value, date_num_p);
+
+  return ecma_make_object_value (obj_p);
 } /* ecma_builtin_date_dispatch_construct */
 
 /**

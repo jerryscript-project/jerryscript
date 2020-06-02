@@ -22,7 +22,6 @@
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
 #include "ecma-string-object.h"
-#include "ecma-try-catch-macro.h"
 #include "jrt.h"
 
 #if ENABLED (JERRY_BUILTIN_BOOLEAN)
@@ -56,26 +55,21 @@
 static ecma_value_t
 ecma_builtin_boolean_prototype_object_to_string (ecma_value_t this_arg) /**< this argument */
 {
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+  ecma_value_t value_of_ret = ecma_builtin_boolean_prototype_object_value_of (this_arg);
 
-  ECMA_TRY_CATCH (value_of_ret,
-                  ecma_builtin_boolean_prototype_object_value_of (this_arg),
-                  ret_value);
+  if (ECMA_IS_VALUE_ERROR (value_of_ret))
+  {
+    return value_of_ret;
+  }
 
   if (ecma_is_value_true (value_of_ret))
   {
-    ret_value = ecma_make_magic_string_value (LIT_MAGIC_STRING_TRUE);
-  }
-  else
-  {
-    JERRY_ASSERT (ecma_is_value_boolean (value_of_ret));
-
-    ret_value = ecma_make_magic_string_value (LIT_MAGIC_STRING_FALSE);
+    return ecma_make_magic_string_value (LIT_MAGIC_STRING_TRUE);
   }
 
-  ECMA_FINALIZE (value_of_ret);
+  JERRY_ASSERT (ecma_is_value_boolean (value_of_ret));
 
-  return ret_value;
+  return ecma_make_magic_string_value (LIT_MAGIC_STRING_FALSE);
 } /* ecma_builtin_boolean_prototype_object_to_string */
 
 /**

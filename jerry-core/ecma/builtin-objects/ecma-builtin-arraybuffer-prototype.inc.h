@@ -31,7 +31,7 @@ OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
 /* Readonly accessor properties */
 ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_BYTE_LENGTH_UL,
                     ecma_builtin_arraybuffer_prototype_bytelength_getter,
-                    ECMA_PROPERTY_FIXED)
+                    ECMA_PROPERTY_FLAG_CONFIGURABLE)
 
 #if ENABLED (JERRY_ES2015)
 /* ECMA-262 v6, 24.1.4.4 */

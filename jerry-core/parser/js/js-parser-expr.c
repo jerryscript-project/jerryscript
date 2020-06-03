@@ -888,17 +888,26 @@ parser_reparse_as_common_identifier (parser_context_t *context_p, /**< context *
                                      parser_line_counter_t start_line, /**< start line */
                                      parser_line_counter_t start_column) /**< start column */
 {
+  /* context_p->token.lit_location.char_p is showing the character after the string start,
+     so it is not suitable for reparsing as identifier.
+     e.g.: { 'foo' } */
+  if (context_p->token.lit_location.type != LEXER_IDENT_LITERAL)
+  {
+    parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
+  }
+
   context_p->source_p = context_p->token.lit_location.char_p;
   context_p->line = start_line;
   context_p->column = start_column;
 
   lexer_next_token (context_p);
 
-  if (context_p->token.type != LEXER_LITERAL
-      || context_p->token.lit_location.type != LEXER_IDENT_LITERAL)
+  if (context_p->token.type != LEXER_LITERAL)
   {
     parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
   }
+
+  JERRY_ASSERT (context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
 
   lexer_construct_literal_object (context_p,
                                   &context_p->token.lit_location,

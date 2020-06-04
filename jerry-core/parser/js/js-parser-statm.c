@@ -710,9 +710,9 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
                 && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
 
 #if ENABLED (JERRY_ES2015)
-  if (context_p->next_scanner_info_p->source_p == context_p->source_p)
+  if (context_p->next_scanner_info_p->source_p == context_p->source_p
+      && context_p->next_scanner_info_p->type == SCANNER_TYPE_ERR_REDECLARED)
   {
-    JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_ERR_REDECLARED);
     parser_raise_error (context_p, PARSER_ERR_VARIABLE_REDECLARED);
   }
 #endif /* ENABLED (JERRY_ES2015) */
@@ -729,8 +729,6 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
   {
     status_flags |= PARSER_HAS_NON_STRICT_ARG;
   }
-
-  JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
 
 #if ENABLED (JERRY_ES2015)
   if (is_generator_function)

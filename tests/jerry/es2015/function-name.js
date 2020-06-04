@@ -285,3 +285,13 @@ assert(Object.getOwnPropertyDescriptor(Array, Symbol.species).get.name === 'get 
 assert(Object.getOwnPropertyDescriptor(String.prototype, Symbol.iterator).value.name === '[Symbol.iterator]');
 assert(Object.getOwnPropertyDescriptor(Object.prototype, '__proto__').get.name === 'get __proto__');
 assert(Object.getOwnPropertyDescriptor(Object.prototype, '__proto__').set.name === 'set __proto__');
+
+let arFunc;
+let array = [];
+array['original'] = array;
+array['original'][arFunc = ()=>{ }]=function(){}
+assertNameNotExists(array[arFunc]);
+
+var o = { 0 : class {} };
+
+assertMethodName(o['0'], '0');

@@ -2690,6 +2690,11 @@ parser_compiled_code_set_function_name (parser_context_t *context_p, /**< contex
 
   lexer_literal_t *name_lit_p = (lexer_literal_t *) PARSER_GET_LITERAL (name_index);
 
+  if (name_lit_p->type != LEXER_IDENT_LITERAL && name_lit_p->type != LEXER_STRING_LITERAL)
+  {
+    return;
+  }
+
   uint8_t *name_buffer_p = (uint8_t *) name_lit_p->u.char_p;
   uint32_t name_length = name_lit_p->prop.length;
 

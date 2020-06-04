@@ -1834,15 +1834,22 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           char *prefix_p = NULL;
           lit_utf8_size_t prefix_size = 0;
 
-          if (opcode == CBC_EXT_SET_CLASS_NAME)
+          if (opcode != CBC_EXT_SET_FUNCTION_NAME)
           {
-            uint16_t literal_index;
-            READ_LITERAL_INDEX (literal_index);
-            left_value = ecma_copy_value (literal_start_p[literal_index]);
-          }
-          else if (opcode != CBC_EXT_SET_FUNCTION_NAME)
-          {
-            ecma_string_t *prop_name_p = ecma_op_to_prop_name (stack_top_p[-2]);
+            ecma_value_t prop_name_value;
+
+            if (opcode == CBC_EXT_SET_CLASS_NAME)
+            {
+              uint16_t literal_index;
+              READ_LITERAL_INDEX (literal_index);
+              prop_name_value = literal_start_p[literal_index];
+            }
+            else
+            {
+              prop_name_value = stack_top_p[-2];
+            }
+
+            ecma_string_t *prop_name_p = ecma_op_to_prop_name (prop_name_value);
 
             if (JERRY_UNLIKELY (prop_name_p == NULL))
             {
@@ -1850,15 +1857,17 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               goto error;
             }
 
-            ecma_free_value (stack_top_p[-2]);
-            ecma_ref_ecma_string (prop_name_p);
             left_value = ecma_make_prop_name_value (prop_name_p);
-            stack_top_p[-2] = left_value;
 
-            if (opcode != CBC_EXT_SET_COMPUTED_FUNCTION_NAME)
+            if (opcode != CBC_EXT_SET_CLASS_NAME)
             {
-              JERRY_ASSERT (opcode == CBC_EXT_SET_COMPUTED_GETTER_NAME
-                            || opcode == CBC_EXT_SET_COMPUTED_SETTER_NAME);
+              ecma_ref_ecma_string (prop_name_p);
+              ecma_free_value (stack_top_p[-2]);
+              stack_top_p[-2] = left_value;
+            }
+
+            if (opcode == CBC_EXT_SET_COMPUTED_GETTER_NAME || opcode == CBC_EXT_SET_COMPUTED_SETTER_NAME)
+            {
               prefix_p = (opcode == CBC_EXT_SET_COMPUTED_GETTER_NAME) ? "get " : "set ";
               prefix_size = 4;
             }

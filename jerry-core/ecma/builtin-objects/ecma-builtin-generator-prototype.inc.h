@@ -36,9 +36,9 @@ OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
-ROUTINE (LIT_MAGIC_STRING_NEXT, ecma_builtin_generator_prototype_object_next, 1, 1)
-ROUTINE (LIT_MAGIC_STRING_RETURN, ecma_builtin_generator_prototype_object_return, 1, 1)
-ROUTINE (LIT_MAGIC_STRING_THROW, ecma_builtin_generator_prototype_object_throw, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_NEXT, ECMA_GENERATOR_PROTOTYPE_ROUTINE_NEXT, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_RETURN, ECMA_GENERATOR_PROTOTYPE_ROUTINE_RETURN, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_THROW, ECMA_GENERATOR_PROTOTYPE_ROUTINE_THROW, 1, 1)
 
 #endif /* ENABLED (JERRY_ES2015) */
 

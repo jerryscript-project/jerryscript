@@ -15,6 +15,7 @@
 
 #include "ecma-arraybuffer-object.h"
 #include "ecma-try-catch-macro.h"
+#include "ecma-typedarray-object.h"
 #include "ecma-objects.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"

@@ -534,15 +534,21 @@ ecma_typedarray_create_object_with_length (ecma_length_t array_length, /**< leng
 
     ecma_object_t *ctor_proto_p = ecma_get_object_from_value (ctor_proto);
 
-    ecma_value_t byte_length_val = ecma_make_uint32_value (byte_length);
-    ecma_value_t new_arraybuffer = ecma_op_function_construct (ctor_proto_p,
-                                                               ctor_proto_p,
-                                                               &byte_length_val,
-                                                               1);
-    ecma_deref_object (ctor_proto_p);
-    ecma_free_value (byte_length_val);
+    ecma_object_t *prototype_p = ecma_op_get_prototype_from_constructor (ctor_proto_p,
+                                                                         ECMA_BUILTIN_ID_ARRAYBUFFER_PROTOTYPE);
 
-    new_arraybuffer_p = ecma_get_object_from_value (new_arraybuffer);
+    ecma_deref_object (ctor_proto_p);
+
+    if (JERRY_UNLIKELY (prototype_p == NULL))
+    {
+      return ECMA_VALUE_ERROR;
+    }
+
+    new_arraybuffer_p = ecma_arraybuffer_new_object (byte_length);
+
+    ECMA_SET_NON_NULL_POINTER (new_arraybuffer_p->u2.prototype_cp, prototype_p);
+
+    ecma_deref_object (prototype_p);
   }
 
   ecma_object_t *object_p = ecma_create_object (proto_p,

@@ -3304,13 +3304,9 @@ parser_parse_initializer_by_next_char (parser_context_t *context_p, /**< context
 
 /**
  * Process ternary expression.
- *
- * @return true - continue with primary expression parsing
- *         false - otherwise
  */
-static bool
-parser_process_ternary_expression (parser_context_t *context_p, /**< context */
-                                   size_t grouping_level) /**< grouping level */
+static void
+parser_process_ternary_expression (parser_context_t *context_p) /**< context */
 {
   JERRY_ASSERT (context_p->token.type == LEXER_QUESTION_MARK);
 
@@ -3354,7 +3350,6 @@ parser_process_ternary_expression (parser_context_t *context_p, /**< context */
   parser_flush_cbc (context_p);
 
   parser_process_binary_opcodes (context_p, 0);
-  return grouping_level >= PARSER_GROUPING_LEVEL_INCREASE;
 } /* parser_process_ternary_expression */
 
 /**
@@ -3524,18 +3519,28 @@ process_unary_expression:
         continue;
       }
 
-      if (JERRY_UNLIKELY (context_p->token.type == LEXER_QUESTION_MARK)
-          && (grouping_level != PARSE_EXPR_LEFT_HAND_SIDE)
-          && parser_process_ternary_expression (context_p, grouping_level))
-      {
-        continue;
-      }
       break;
     }
 
     if (grouping_level == PARSE_EXPR_LEFT_HAND_SIDE)
     {
       break;
+    }
+
+    if (JERRY_UNLIKELY (context_p->token.type == LEXER_QUESTION_MARK))
+    {
+      parser_process_ternary_expression (context_p);
+
+      if (context_p->token.type == LEXER_RIGHT_PAREN)
+      {
+        goto process_unary_expression;
+      }
+    }
+    else if (LEXER_IS_BINARY_OP_TOKEN (context_p->token.type))
+    {
+      parser_append_binary_token (context_p);
+      lexer_next_token (context_p);
+      continue;
     }
 
     if (JERRY_UNLIKELY (context_p->token.type == LEXER_COMMA)
@@ -3545,12 +3550,6 @@ process_unary_expression:
       continue;
     }
 
-    if (LEXER_IS_BINARY_OP_TOKEN (context_p->token.type))
-    {
-      parser_append_binary_token (context_p);
-      lexer_next_token (context_p);
-      continue;
-    }
     break;
   }
 

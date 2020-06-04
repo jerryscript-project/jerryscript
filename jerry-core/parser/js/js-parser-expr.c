@@ -1581,14 +1581,14 @@ parser_check_assignment_expr (parser_context_t *context_p)
 } /* parser_check_assignment_expr */
 
 /**
- * Checks whether the next token is a valid continuation token after an arrow function.
+ * Checks whether the next token is a valid continuation token after an AssignmentExpression.
  */
 static inline bool JERRY_ATTR_ALWAYS_INLINE
-parser_abort_parsing_after_arrow (parser_context_t *context_p)
+parser_abort_parsing_after_assignment_expression (parser_context_t *context_p)
 {
   return (context_p->token.type != LEXER_RIGHT_PAREN
           && context_p->token.type != LEXER_COMMA);
-} /* parser_abort_parsing_after_arrow */
+} /* parser_abort_parsing_after_assignment_expression */
 
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -1732,7 +1732,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
 
         parser_check_assignment_expr (context_p);
         parser_parse_function_expression (context_p, arrow_status_flags);
-        return parser_abort_parsing_after_arrow (context_p);
+        return parser_abort_parsing_after_assignment_expression (context_p);
       }
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -1828,7 +1828,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
         if (parser_is_assignment_expr (context_p))
         {
           parser_parse_object_initializer (context_p, PARSER_PATTERN_NO_OPTS);
-          return false;
+          return parser_abort_parsing_after_assignment_expression (context_p);
         }
 
         scanner_release_next (context_p, sizeof (scanner_location_info_t));
@@ -1848,7 +1848,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
         if (parser_is_assignment_expr (context_p))
         {
           parser_parse_array_initializer (context_p, PARSER_PATTERN_NO_OPTS);
-          return false;
+          return parser_abort_parsing_after_assignment_expression (context_p);
         }
 
         scanner_release_next (context_p, sizeof (scanner_location_info_t));
@@ -1949,7 +1949,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
       parser_check_assignment_expr (context_p);
 
       parser_parse_function_expression (context_p, PARSER_IS_FUNCTION | PARSER_IS_ARROW_FUNCTION);
-      return parser_abort_parsing_after_arrow (context_p);
+      return parser_abort_parsing_after_assignment_expression (context_p);
     }
     case LEXER_KEYW_YIELD:
     {

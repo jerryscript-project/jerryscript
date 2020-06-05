@@ -735,7 +735,7 @@ ecma_proxy_object_get_own_property_descriptor (ecma_object_t *obj_p, /**< proxy 
     /* .a */
     if (ecma_is_value_false (target_status))
     {
-      return ECMA_VALUE_UNDEFINED;
+      return ECMA_VALUE_FALSE;
     }
     /* .b */
     if (!(target_desc.flags & ECMA_PROP_IS_CONFIGURABLE))

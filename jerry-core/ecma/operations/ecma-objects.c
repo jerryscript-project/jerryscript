@@ -1858,6 +1858,8 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
  *                                      [Enumerable], [Configurable]
  *                                    }.
  *
+ * The output property descriptor will always be initialized to an empty descriptor.
+ *
  * @return true - if property found
  *         false - otherwise
  */
@@ -1866,6 +1868,8 @@ ecma_op_object_get_own_property_descriptor (ecma_object_t *object_p, /**< the ob
                                             ecma_string_t *property_name_p, /**< property name */
                                             ecma_property_descriptor_t *prop_desc_p) /**< property descriptor */
 {
+  *prop_desc_p = ecma_make_empty_property_descriptor ();
+
 #if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
   if (ECMA_OBJECT_IS_PROXY (object_p))
   {
@@ -1884,8 +1888,6 @@ ecma_op_object_get_own_property_descriptor (ecma_object_t *object_p, /**< the ob
   {
     return ECMA_VALUE_FALSE;
   }
-
-  *prop_desc_p = ecma_make_empty_property_descriptor ();
 
   uint32_t flags = ecma_is_property_enumerable (property) ? ECMA_PROP_IS_ENUMERABLE : ECMA_PROP_NO_OPTS;
   flags |= ecma_is_property_configurable (property) ? ECMA_PROP_IS_CONFIGURABLE: ECMA_PROP_NO_OPTS;

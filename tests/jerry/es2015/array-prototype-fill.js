@@ -177,3 +177,42 @@ function TestFillFrozenObject () {
   }
 }
 TestFillFrozenObject ();
+
+function array_check(result_array, expected_array) {
+  assert(result_array instanceof Array);
+  assert(result_array.length === expected_array.length);
+  for (var idx = 0; idx < expected_array.length; idx++) {
+    assert(result_array[idx] === expected_array[idx]);
+  }
+}
+
+
+// Remove the buffer
+var array = [1, 2, 3, 4, 5];
+var value = array.fill(2, 0, {
+    valueOf: function() {
+        array.length = 0;
+    }
+})
+
+array_check(value, []);
+
+// Extend the buffer
+var array = [1, 2, 3];
+var value = array.fill(1, {
+    valueOf: function() {
+        array.length = 6;
+    }
+})
+
+array_check(value, [1, 1, 1, undefined, undefined, undefined]);
+
+// Reduce the buffer
+var array = [1, 2, 3, 4, 5, 6, 7];
+var value = array.fill(4, {
+    valueOf: function() {
+        array.length = 3;
+    }
+})
+
+array_check(value, [4, 4, 4]);

@@ -1676,9 +1676,15 @@ ecma_builtin_array_prototype_object_index_of (const ecma_value_t args[], /**< ar
   {
     ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
 
-    if (ext_obj_p->u.array.u.hole_count < ECMA_FAST_ARRAY_HOLE_ONE
-        && len != 0)
+    if (ext_obj_p->u.array.u.hole_count < ECMA_FAST_ARRAY_HOLE_ONE)
     {
+      if (JERRY_UNLIKELY (obj_p->u1.property_list_cp == JMEM_CP_NULL))
+      {
+        return ecma_make_integer_value (-1);
+      }
+
+      len = JERRY_MIN (ext_obj_p->u.array.length, len);
+
       ecma_value_t *buffer_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, obj_p->u1.property_list_cp);
 
       while (from_idx < len)
@@ -1775,12 +1781,16 @@ ecma_builtin_array_prototype_object_last_index_of (const ecma_value_t args[], /*
   if (ecma_op_object_is_fast_array (obj_p))
   {
     ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
-    // It is possible that the length changed due to the callback performed above.
-    uint32_t array_length = ext_obj_p->u.array.length;
 
-    if (ext_obj_p->u.array.u.hole_count < ECMA_FAST_ARRAY_HOLE_ONE
-        && array_length > 0)
+    if (ext_obj_p->u.array.u.hole_count < ECMA_FAST_ARRAY_HOLE_ONE)
     {
+      if (JERRY_UNLIKELY (obj_p->u1.property_list_cp == JMEM_CP_NULL))
+      {
+        return ecma_make_integer_value (-1);
+      }
+
+      len = JERRY_MIN (ext_obj_p->u.array.length, len);
+
       ecma_value_t *buffer_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, obj_p->u1.property_list_cp);
 
       while (from_idx < len)
@@ -2294,9 +2304,14 @@ ecma_builtin_array_prototype_fill (ecma_value_t value, /**< value */
     ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
 
     if (ext_obj_p->u.array.u.hole_count < ECMA_FAST_ARRAY_HOLE_ONE
-        && len != 0
         && ecma_op_ordinary_object_is_extensible (obj_p))
     {
+      if (JERRY_UNLIKELY (obj_p->u1.property_list_cp == JMEM_CP_NULL))
+      {
+        ecma_ref_object (obj_p);
+        return ecma_make_object_value (obj_p);
+      }
+
       ecma_value_t *buffer_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, obj_p->u1.property_list_cp);
 
       while (k < final)

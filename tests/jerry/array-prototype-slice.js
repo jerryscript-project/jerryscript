@@ -151,3 +151,41 @@ try {
   assert (e.message === "foo");
   assert (e instanceof ReferenceError);
 }
+
+function array_check(result_array, expected_array) {
+  assert(result_array instanceof Array);
+  assert(result_array.length === expected_array.length);
+  for (var idx = 0; idx < expected_array.length; idx++) {
+    assert(result_array[idx] === expected_array[idx]);
+  }
+}
+
+// Remove the buffer
+var array = [1, 2, 3, 4, 5];
+var value = array.slice(4, {
+    valueOf: function() {
+        array.length = 0;
+    }
+})
+
+array_check(value, []);
+
+// Extend the buffer
+var array = [1, 2, 3, 4, 5];
+var value = array.slice(6, {
+    valueOf: function() {
+        array.length = 10;
+    }
+})
+
+array_check(value, []);
+
+// Reduce the buffer
+var array = [1, 2, 3, 4, 5];
+var value = array.slice(1, {
+    valueOf: function() {
+        array.length = 3;
+    }
+})
+
+array_check(value, []);

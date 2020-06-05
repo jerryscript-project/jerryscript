@@ -1018,7 +1018,8 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       length++;
 
 #if ENABLED (JERRY_ES2015)
-      if (ext_opcode == CBC_EXT_RETURN_PROMISE)
+      if (ext_opcode == CBC_EXT_RETURN_PROMISE
+          || ext_opcode == CBC_EXT_RETURN_PROMISE_UNDEFINED)
       {
         last_opcode = CBC_RETURN;
       }
@@ -1163,7 +1164,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 #if ENABLED (JERRY_ES2015)
     if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
     {
-      length += 2;
+      length++;
     }
 #endif /* ENABLED (JERRY_ES2015) */
 
@@ -1540,10 +1541,9 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 #if ENABLED (JERRY_ES2015)
     if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
     {
-      dst_p[-1] = CBC_PUSH_UNDEFINED;
-      dst_p[0] = CBC_EXT_OPCODE;
-      dst_p[1] = CBC_EXT_RETURN_PROMISE;
-      dst_p += 2;
+      dst_p[-1] = CBC_EXT_OPCODE;
+      dst_p[0] = CBC_EXT_RETURN_PROMISE_UNDEFINED;
+      dst_p++;
     }
 #endif /* ENABLED (JERRY_ES2015) */
   }

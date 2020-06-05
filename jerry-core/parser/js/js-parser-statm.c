@@ -3017,8 +3017,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 #if ENABLED (JERRY_ES2015)
           if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
           {
-            parser_emit_cbc (context_p, CBC_PUSH_UNDEFINED);
-            parser_emit_cbc_ext (context_p, CBC_EXT_RETURN_PROMISE);
+            parser_emit_cbc_ext (context_p, CBC_EXT_RETURN_PROMISE_UNDEFINED);
             break;
           }
 #endif /* ENABLED (JERRY_ES2015) */

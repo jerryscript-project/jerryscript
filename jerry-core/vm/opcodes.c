@@ -471,7 +471,7 @@ opfunc_spread_arguments (ecma_value_t *stack_top_p, /**< pointer to the current 
     {
       for (uint32_t k = i + 1; k < arguments_list_len; k++)
       {
-        ecma_free_value (*(++stack_top_p));
+        ecma_free_value (*stack_top_p++);
       }
 
       ecma_collection_free (buff_p);

@@ -154,84 +154,101 @@ vm_op_get_value (ecma_value_t object, /**< base object */
  *         if the property setting is unsuccessful
  */
 static ecma_value_t
-vm_op_set_value (ecma_value_t object, /**< base object */
+vm_op_set_value (ecma_value_t base, /**< base object */
                  ecma_value_t property, /**< property name */
                  ecma_value_t value, /**< ecma value */
                  bool is_strict) /**< strict mode */
 {
-  ecma_object_t * object_p;
-
-  if (JERRY_UNLIKELY (!ecma_is_value_object (object)))
-  {
-    ecma_value_t to_object = ecma_op_to_object (object);
-    ecma_free_value (object);
-
-    if (ECMA_IS_VALUE_ERROR (to_object))
-    {
-#if ENABLED (JERRY_ERROR_MESSAGES)
-      ecma_free_value (to_object);
-      jcontext_release_exception ();
-
-      ecma_value_t error_value = ecma_raise_standard_error_with_format (ECMA_ERROR_TYPE,
-                                                                        "Cannot set property '%' of %",
-                                                                        property,
-                                                                        object);
-      ecma_free_value (property);
-
-      return error_value;
-#else /* !ENABLED (JERRY_ERROR_MESSAGES) */
-      ecma_free_value (property);
-      return to_object;
-#endif /* ENABLED (JERRY_ERROR_MESSAGES) */
-    }
-
-    object_p = ecma_get_object_from_value (to_object);
-    ecma_op_ordinary_object_prevent_extensions (object_p);
-  }
-  else
-  {
-    object_p = ecma_get_object_from_value (object);
-  }
-
+  ecma_value_t result = ECMA_VALUE_EMPTY;
+  ecma_object_t *object_p;
   ecma_string_t *property_p;
 
-  if (!ecma_is_value_prop_name (property))
+  if (JERRY_UNLIKELY (!ecma_is_value_object (base)))
   {
-    property_p = ecma_op_to_prop_name (property);
-    ecma_fast_free_value (property);
-
-    if (JERRY_UNLIKELY (property_p == NULL))
+    if (JERRY_UNLIKELY (ecma_is_value_null (base) || ecma_is_value_undefined (base)))
     {
-      ecma_deref_object (object_p);
-      return ECMA_VALUE_ERROR;
+#if ENABLED (JERRY_ERROR_MESSAGES)
+      result = ecma_raise_standard_error_with_format (ECMA_ERROR_TYPE,
+                                                      "Cannot set property '%' of %",
+                                                      property,
+                                                      base);
+#else /* !ENABLED (JERRY_ERROR_MESSAGES) */
+      result = ecma_raise_type_error (NULL);
+#endif /* ENABLED (JERRY_ERROR_MESSAGES) */
+      ecma_free_value (property);
+      return result;
     }
+
+    if (JERRY_UNLIKELY (!ecma_is_value_prop_name (property)))
+    {
+      property_p = ecma_op_to_string (property);
+      ecma_fast_free_value (property);
+
+      if (JERRY_UNLIKELY (property_p == NULL))
+      {
+        ecma_free_value (base);
+        return ECMA_VALUE_ERROR;
+      }
+    }
+    else
+    {
+      property_p = ecma_get_prop_name_from_value (property);
+    }
+
+    ecma_value_t object = ecma_op_to_object (base);
+    JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (object));
+
+    object_p = ecma_get_object_from_value (object);
+    ecma_op_ordinary_object_prevent_extensions (object_p);
+
+    result = ecma_op_object_put_with_receiver (object_p,
+                                               property_p,
+                                               value,
+                                               base,
+                                               is_strict);
+
+    ecma_free_value (base);
   }
   else
   {
-    property_p = ecma_get_prop_name_from_value (property);
-  }
+    object_p = ecma_get_object_from_value (base);
 
-  ecma_value_t completion_value = ECMA_VALUE_EMPTY;
+    if (JERRY_UNLIKELY (!ecma_is_value_prop_name (property)))
+    {
+      property_p = ecma_op_to_string (property);
+      ecma_fast_free_value (property);
 
-  if (!ecma_is_lexical_environment (object_p))
-  {
-    completion_value = ecma_op_object_put (object_p,
-                                           property_p,
-                                           value,
-                                           is_strict);
-  }
-  else
-  {
-    completion_value = ecma_op_set_mutable_binding (object_p,
-                                                    property_p,
-                                                    value,
-                                                    is_strict);
+      if (JERRY_UNLIKELY (property_p == NULL))
+      {
+        ecma_deref_object (object_p);
+        return ECMA_VALUE_ERROR;
+      }
+    }
+    else
+    {
+      property_p = ecma_get_prop_name_from_value (property);
+    }
+
+    if (!ecma_is_lexical_environment (object_p))
+    {
+      result = ecma_op_object_put_with_receiver (object_p,
+                                                 property_p,
+                                                 value,
+                                                 base,
+                                                 is_strict);
+    }
+    else
+    {
+      result = ecma_op_set_mutable_binding (object_p,
+                                            property_p,
+                                            value,
+                                            is_strict);
+    }
   }
 
   ecma_deref_object (object_p);
   ecma_deref_ecma_string (property_p);
-
-  return completion_value;
+  return result;
 } /* vm_op_set_value */
 
 /** Compact bytecode define */
@@ -3882,9 +3899,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
       else if (opcode_data & VM_OC_PUT_REFERENCE)
       {
         ecma_value_t property = *(--stack_top_p);
-        ecma_value_t object = *(--stack_top_p);
+        ecma_value_t base = *(--stack_top_p);
 
-        if (object == ECMA_VALUE_REGISTER_REF)
+        if (base == ECMA_VALUE_REGISTER_REF)
         {
           property = (ecma_value_t) ecma_get_integer_from_value (property);
           ecma_fast_free_value (VM_GET_REGISTER (frame_ctx_p, property));
@@ -3898,7 +3915,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         else
         {
-          ecma_value_t set_value_result = vm_op_set_value (object,
+          ecma_value_t set_value_result = vm_op_set_value (base,
                                                            property,
                                                            result,
                                                            is_strict);

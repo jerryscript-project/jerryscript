@@ -3301,9 +3301,19 @@ scan_completed:
                 break;
               }
 #if ENABLED (JERRY_ES2015)
+              case SCANNER_STREAM_TYPE_ARG_VAR:
+              {
+                JERRY_DEBUG_MSG ("    ARG_VAR ");
+                break;
+              }
               case SCANNER_STREAM_TYPE_DESTRUCTURED_ARG:
               {
                 JERRY_DEBUG_MSG ("    DESTRUCTURED_ARG ");
+                break;
+              }
+              case SCANNER_STREAM_TYPE_DESTRUCTURED_ARG_VAR:
+              {
+                JERRY_DEBUG_MSG ("    DESTRUCTURED_ARG_VAR ");
                 break;
               }
 #endif /* ENABLED (JERRY_ES2015) */

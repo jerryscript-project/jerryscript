@@ -154,9 +154,14 @@ typedef enum
 #if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
   SCANNER_STREAM_TYPE_IMPORT, /**< module import */
 #endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+  /* The next four types must be in this order (see SCANNER_STREAM_TYPE_IS_ARG). */
   SCANNER_STREAM_TYPE_ARG, /**< argument declaration */
 #if ENABLED (JERRY_ES2015)
+  SCANNER_STREAM_TYPE_ARG_VAR, /**< argument declaration which is later copied
+                                *   into a variable declared by var statement */
   SCANNER_STREAM_TYPE_DESTRUCTURED_ARG, /**< destructuring argument declaration */
+  SCANNER_STREAM_TYPE_DESTRUCTURED_ARG_VAR, /**< destructuring argument declaration which is later
+                                             *   copied into a variable declared by var statement */
 #endif /* ENABLED (JERRY_ES2015) */
   /* Function types should be at the end. See the SCANNER_STREAM_TYPE_IS_FUNCTION macro. */
   SCANNER_STREAM_TYPE_ARG_FUNC, /**< argument declaration which
@@ -184,7 +189,7 @@ typedef enum
  * Checks whether the decoded type represents a function argument.
  */
 #define SCANNER_STREAM_TYPE_IS_ARG(type) \
-  ((type) == SCANNER_STREAM_TYPE_ARG || (type) == SCANNER_STREAM_TYPE_DESTRUCTURED_ARG)
+  ((type) >= SCANNER_STREAM_TYPE_ARG && (type) <= SCANNER_STREAM_TYPE_DESTRUCTURED_ARG_VAR)
 
 /**
  * Checks whether the decoded type represents both a function argument and a function declaration.

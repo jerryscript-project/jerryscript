@@ -43,3 +43,55 @@ function f(x = eval("eval('var a = 3; function b() { return 4 } () => a')"), y =
   assert(y() === 4);
 }
 f()
+
+function g() {
+  'use strict'
+
+  function h(x, y = function() { return x }) {
+    var x = 2;
+
+    /* This should not overwrite y. */
+    eval("var y = 3; assert (y === 3)");
+
+    assert(x === 2);
+    assert(typeof y === "function");
+    assert(y() === 1);
+  }
+  h(1);
+}
+g();
+
+function h(a, get = () => a, set = (v) => a = v) {
+  assert(a === 1);
+
+  var a = 2;
+
+  assert(a === 2);
+  assert(get() === 1);
+
+  set(3)
+  a = 4;
+
+  assert(a === 4);
+  assert(get() === 3);
+}
+h(1);
+
+function i([a], get = () => a, set = (v) => a = v) {
+  assert(a === 1);
+
+  var a;
+  assert(a === 1);
+
+  a = 2;
+
+  assert(a === 2);
+  assert(get() === 1);
+
+  set(3)
+  a = 4;
+
+  assert(a === 4);
+  assert(get() === 3);
+}
+i([1]);

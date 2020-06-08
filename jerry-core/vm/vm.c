@@ -1686,6 +1686,35 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           goto free_left_value;
         }
+        case VM_OC_COPY_FROM_ARG:
+        {
+          uint32_t literal_index;
+          READ_LITERAL_INDEX (literal_index);
+          JERRY_ASSERT (literal_index >= register_end);
+
+          ecma_string_t *name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
+          ecma_object_t *lex_env_p = frame_ctx_p->lex_env_p;
+          ecma_object_t *arg_lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
+
+          JERRY_ASSERT ((lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_BLOCK)
+                        && ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
+          JERRY_ASSERT (arg_lex_env_p != NULL
+                        && !(arg_lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_BLOCK)
+                        && ecma_get_lex_env_type (arg_lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
+
+          ecma_property_value_t *property_value_p;
+          property_value_p = ecma_create_named_data_property (lex_env_p,
+                                                              name_p,
+                                                              ECMA_PROPERTY_FLAG_WRITABLE,
+                                                              NULL);
+
+          ecma_property_t *property_p = ecma_find_named_property (arg_lex_env_p, name_p);
+          JERRY_ASSERT (property_p != NULL);
+
+          ecma_property_value_t *arg_prop_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+          property_value_p->value = ecma_copy_value_if_not_object (arg_prop_value_p->value);
+          continue;
+        }
         case VM_OC_CLONE_CONTEXT:
         {
           JERRY_ASSERT (byte_code_start_p[0] == CBC_EXT_OPCODE);

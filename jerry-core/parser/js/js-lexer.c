@@ -3048,6 +3048,16 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
         return;
       }
       case LIT_CHAR_ASTERISK:
+      {
+        if (ident_opts & (LEXER_OBJ_IDENT_ONLY_IDENTIFIERS | LEXER_OBJ_IDENT_OBJECT_PATTERN))
+        {
+          break;
+        }
+
+        context_p->token.type = LEXER_MULTIPLY;
+        lexer_consume_next_character (context_p);
+        return;
+      }
 #endif /* ENABLED (JERRY_ES2015) */
       case LIT_CHAR_RIGHT_BRACE:
       {
@@ -3057,13 +3067,6 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
         }
 
         context_p->token.type = LEXER_RIGHT_BRACE;
-#if ENABLED (JERRY_ES2015)
-        if (context_p->source_p[0] == LIT_CHAR_ASTERISK)
-        {
-          context_p->token.type = LEXER_MULTIPLY;
-        }
-#endif /* ENABLED (JERRY_ES2015) */
-
         lexer_consume_next_character (context_p);
         return;
       }

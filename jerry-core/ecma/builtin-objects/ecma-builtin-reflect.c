@@ -179,7 +179,7 @@ ecma_builtin_reflect_dispatch_routine (uint16_t builtin_routine_id, /**< built-i
 
     ecma_object_t *target_p = ecma_get_object_from_value (arguments_list[0]);
 
-    /* 2. new_target_p is not supported for now*/
+    /* 2. */
     ecma_object_t *new_target_p = target_p;
 
     if (arguments_number > 2)

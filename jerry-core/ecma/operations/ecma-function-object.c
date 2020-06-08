@@ -419,6 +419,8 @@ ecma_op_create_dynamic_function (const ecma_value_t *arguments_list_p, /**< argu
     if (JERRY_UNLIKELY (proto == NULL))
     {
       ecma_bytecode_deref (bytecode_data_p);
+      ecma_deref_ecma_string (arguments_str_p);
+      ecma_deref_ecma_string (function_body_str_p);
       return ECMA_VALUE_ERROR;
     }
 #endif /* ENABLED (JERRY_ES2015) */

@@ -51,8 +51,8 @@ function DogClass () {
 
 var obj1 = Reflect.construct (CatClass, args, DogClass);
 assert (obj1.name === 'Cat');
-// assert (!(ob1 instanceof CatClass)); This is true because new target is not supported yet
-// assert (obj1 instanceof DogClass); This is false because new target is not supported yet
+assert (!(obj1 instanceof CatClass));
+assert (obj1 instanceof DogClass);
 
 try {
   Reflect.construct (func1, 5, 5);

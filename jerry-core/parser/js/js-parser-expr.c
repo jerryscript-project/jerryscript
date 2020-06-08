@@ -2224,16 +2224,23 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
           context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED;
 
 #if ENABLED (JERRY_ES2015)
+          uint16_t eval_flags = PARSER_SAVE_STATUS_FLAGS (context_p->status_flags);
+          const uint32_t required_flags = PARSER_IS_FUNCTION | PARSER_LEXICAL_BLOCK_NEEDED;
+
           if (context_p->status_flags & PARSER_FUNCTION_IS_PARSING_ARGS)
           {
             context_p->status_flags |= PARSER_LEXICAL_BLOCK_NEEDED;
           }
-
-          if (context_p->status_flags & (PARSER_ALLOW_SUPER_CALL | PARSER_ALLOW_SUPER | PARSER_ALLOW_NEW_TARGET))
+          else if (((context_p->status_flags & (required_flags | PARSER_IS_STRICT)) == required_flags)
+                   || ((context_p->global_status_flags & ECMA_PARSE_FUNCTION_CONTEXT)
+                       && !(context_p->status_flags & PARSER_IS_FUNCTION)))
           {
-            parser_emit_cbc_ext_call (context_p,
-                                      CBC_EXT_LOCAL_EVAL,
-                                      PARSER_SAVE_STATUS_FLAGS (context_p->status_flags));
+            eval_flags |= PARSER_GET_EVAL_FLAG (ECMA_PARSE_FUNCTION_CONTEXT);
+          }
+
+          if (eval_flags != 0)
+          {
+            parser_emit_cbc_ext_call (context_p, CBC_EXT_LOCAL_EVAL, eval_flags);
           }
           else
           {

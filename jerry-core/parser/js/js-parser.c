@@ -27,8 +27,13 @@ JERRY_STATIC_ASSERT ((int) ECMA_PARSE_STRICT_MODE == (int) PARSER_IS_STRICT,
                      ecma_parse_strict_mode_must_be_equal_to_parser_is_strict);
 
 #if ENABLED (JERRY_ES2015)
-JERRY_STATIC_ASSERT ((ECMA_PARSE_CLASS_CONSTRUCTOR << PARSER_SAVED_FLAGS_OFFSET) == PARSER_CLASS_CONSTRUCTOR,
-                     ecma_saved_parse_options_must_be_transformed_to_ecma_general_flags);
+JERRY_STATIC_ASSERT (PARSER_SAVE_STATUS_FLAGS (PARSER_ALLOW_SUPER) == 0x1,
+                     incorrect_saving_of_ecma_parse_allow_super);
+JERRY_STATIC_ASSERT (PARSER_RESTORE_STATUS_FLAGS (ECMA_PARSE_ALLOW_SUPER) == PARSER_ALLOW_SUPER,
+                     incorrect_restoring_of_ecma_parse_allow_super);
+
+JERRY_STATIC_ASSERT (PARSER_RESTORE_STATUS_FLAGS (ECMA_PARSE_FUNCTION_CONTEXT) == 0,
+                     ecma_parse_function_context_must_not_be_transformed);
 #endif /* ENABLED (JERRY_ES2015) */
 
 /** \addtogroup parser Parser
@@ -2016,7 +2021,7 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   }
 
 #if ENABLED (JERRY_ES2015)
-  context.status_flags |= PARSER_GET_SAVED_FLAGS (parse_opts);
+  context.status_flags |= PARSER_RESTORE_STATUS_FLAGS (parse_opts);
   context.tagged_template_literal_cp = JMEM_CP_NULL;
 #endif /* ENABLED (JERRY_ES2015) */
 

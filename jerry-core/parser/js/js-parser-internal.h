@@ -67,9 +67,9 @@ typedef enum
   PARSER_FUNCTION_IS_PARSING_ARGS = (1u << 17), /**< set when parsing function arguments */
   PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM = (1u << 18), /**< function has a non simple parameter */
   PARSER_FUNCTION_HAS_REST_PARAM = (1u << 19), /**< function has rest parameter */
-  /* These 4 status flags must be in this order. See PARSER_SAVED_FLAGS_OFFSET. */
   PARSER_CLASS_CONSTRUCTOR = (1u << 20),      /**< a class constructor is parsed
                                                *   Note: PARSER_ALLOW_SUPER must be present */
+  /* These three status flags must be in this order. See PARSER_SAVED_FLAGS_OFFSET. */
   PARSER_ALLOW_SUPER = (1u << 21),            /**< allow super property access */
   PARSER_ALLOW_SUPER_CALL = (1u << 22),       /**< allow super constructor call
                                                *   Note: PARSER_CLASS_CONSTRUCTOR must be present */
@@ -154,40 +154,52 @@ typedef enum
 
 #if ENABLED (JERRY_ES2015)
 /**
- * Offset between PARSER_CLASS_CONSTRUCTOR and ECMA_PARSE_CLASS_CONSTRUCTOR
+ * Offset of PARSER_ALLOW_SUPER
  */
 #define PARSER_SAVED_FLAGS_OFFSET \
-  (JERRY_LOG2 (PARSER_CLASS_CONSTRUCTOR) - JERRY_LOG2 (ECMA_PARSE_CLASS_CONSTRUCTOR))
+  JERRY_LOG2 (PARSER_ALLOW_SUPER)
 
 /**
- * Count of ecma_parse_opts_t class parsing options related bits
+ * Mask of saved flags
  */
-#define PARSER_SAVED_FLAGS_COUNT \
-  (JERRY_LOG2 (ECMA_PARSE_ALLOW_NEW_TARGET) - JERRY_LOG2 (ECMA_PARSE_CLASS_CONSTRUCTOR) + 1)
-
-/**
- * Mask for get class option bits from ecma_parse_opts_t
- */
-#define PARSER_CLASS_ECMA_PARSE_OPTS_TO_PARSER_OPTS_MASK \
-  (((1 << PARSER_SAVED_FLAGS_COUNT) - 1) << JERRY_LOG2 (ECMA_PARSE_CLASS_CONSTRUCTOR))
-
-/**
- * Get class option bits from ecma_parse_opts_t
- */
-#define PARSER_GET_SAVED_FLAGS(opts) \
-  (((opts) & PARSER_CLASS_ECMA_PARSE_OPTS_TO_PARSER_OPTS_MASK) << PARSER_SAVED_FLAGS_OFFSET)
+#define PARSER_SAVED_FLAGS_MASK \
+  ((1 << (JERRY_LOG2 (PARSER_ALLOW_NEW_TARGET) - JERRY_LOG2 (PARSER_ALLOW_SUPER) + 1)) - 1)
 
 /**
  * Get class option bits from parser_general_flags_t
  */
 #define PARSER_SAVE_STATUS_FLAGS(opts) \
-  ((uint16_t) (((opts) >> PARSER_SAVED_FLAGS_OFFSET) & PARSER_CLASS_ECMA_PARSE_OPTS_TO_PARSER_OPTS_MASK))
+  ((uint16_t) (((opts) >> PARSER_SAVED_FLAGS_OFFSET) & PARSER_SAVED_FLAGS_MASK))
+
+/**
+ * Mask for get class option bits from ecma_parse_opts_t
+ */
+#define PARSER_RESTORE_STATUS_FLAGS_MASK \
+  (((ECMA_PARSE_ALLOW_NEW_TARGET << 1) - 1) - (ECMA_PARSE_ALLOW_SUPER - 1))
+
+/**
+ * Shift for get class option bits from ecma_parse_opts_t
+ */
+#define PARSER_RESTORE_STATUS_FLAGS_SHIFT \
+  (JERRY_LOG2 (PARSER_ALLOW_SUPER) - JERRY_LOG2 (ECMA_PARSE_ALLOW_SUPER))
+
+/**
+ * Get class option bits from ecma_parse_opts_t
+ */
+#define PARSER_RESTORE_STATUS_FLAGS(opts) \
+  (((opts) & PARSER_RESTORE_STATUS_FLAGS_MASK) << PARSER_RESTORE_STATUS_FLAGS_SHIFT)
 
 /**
  * All flags that affect exotic arguments object creation.
  */
 #define PARSER_ARGUMENTS_RELATED_FLAGS \
   (PARSER_ARGUMENTS_NEEDED | PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM | PARSER_IS_STRICT)
+
+/**
+ * Get the corresponding eval flag for a ecma_parse_opts_t flag
+ */
+#define PARSER_GET_EVAL_FLAG(type) \
+  ((type) >> JERRY_LOG2 (ECMA_PARSE_ALLOW_SUPER))
 
 #else /* !ENABLED (JERRY_ES2015) */
 

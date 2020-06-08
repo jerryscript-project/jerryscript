@@ -2227,9 +2227,9 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
           context_p->scope_stack_top = (uint16_t) (scope_stack_p - context_p->scope_stack_p);
 #endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
-          uint16_t opcode = ((option_flags & SCANNER_CREATE_VARS_IS_SCRIPT) ? CBC_CREATE_VAR_EVAL
-                                                                            : CBC_CREATE_VAR);
 #if ENABLED (JERRY_ES2015)
+          uint16_t opcode;
+
           switch (type)
           {
             case SCANNER_STREAM_TYPE_LET:
@@ -2242,14 +2242,34 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
               opcode = CBC_CREATE_CONST;
               break;
             }
-            case SCANNER_STREAM_TYPE_LOCAL:
-            case SCANNER_STREAM_TYPE_DESTRUCTURED_ARG:
-            case SCANNER_STREAM_TYPE_DESTRUCTURED_ARG_FUNC:
+            case SCANNER_STREAM_TYPE_VAR:
             {
+              opcode = CBC_CREATE_VAR;
+
+              if (option_flags & SCANNER_CREATE_VARS_IS_SCRIPT)
+              {
+                opcode = CBC_CREATE_VAR_EVAL;
+
+                if (context_p->global_status_flags & ECMA_PARSE_FUNCTION_CONTEXT)
+                {
+                  opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_CREATE_VAR_EVAL);
+                }
+              }
+              break;
+            }
+            default:
+            {
+              JERRY_ASSERT (type == SCANNER_STREAM_TYPE_LOCAL
+                            || type == SCANNER_STREAM_TYPE_DESTRUCTURED_ARG
+                            || type == SCANNER_STREAM_TYPE_DESTRUCTURED_ARG_FUNC);
+
               opcode = CBC_CREATE_LOCAL;
               break;
             }
           }
+#else /* !ENABLED (JERRY_ES2015) */
+          uint16_t opcode = ((option_flags & SCANNER_CREATE_VARS_IS_SCRIPT) ? CBC_CREATE_VAR_EVAL
+                                                                            : CBC_CREATE_VAR);
 #endif /* ENABLED (JERRY_ES2015) */
 
           parser_emit_cbc_literal (context_p, opcode, map_to);
@@ -2323,6 +2343,11 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
             || !scanner_scope_find_let_declaration (context_p, &literal))
         {
           func_init_opcode = CBC_CREATE_VAR_FUNC_EVAL;
+
+          if (context_p->global_status_flags & ECMA_PARSE_FUNCTION_CONTEXT)
+          {
+            func_init_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_CREATE_VAR_FUNC_EVAL);
+          }
         }
         literal.char_p += data_p[1];
 #else /* !ENABLED (JERRY_ES2015) */

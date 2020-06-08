@@ -64,7 +64,6 @@ main (void)
   TEST_ASSERT (jerry_value_is_undefined (prop_desc.getter));
   TEST_ASSERT (prop_desc.is_set_defined == false);
   TEST_ASSERT (jerry_value_is_undefined (prop_desc.setter));
-  jerry_release_value (global_obj_val);
   jerry_free_property_descriptor_fields (&prop_desc);
 
   if (jerry_is_feature_enabled (JERRY_FEATURE_PROXY))
@@ -82,6 +81,24 @@ main (void)
   }
 
   jerry_release_value (prop_name);
+
+  /* Test: define and get own property descriptor */
+  prop_desc.is_enumerable = true;
+  prop_name = jerry_create_string ((const jerry_char_t *) "enumerable-property");
+  res = jerry_define_own_property (global_obj_val, prop_name, &prop_desc);
+  TEST_ASSERT (!jerry_value_is_error (res));
+  TEST_ASSERT (jerry_value_is_boolean (res));
+  TEST_ASSERT (jerry_get_boolean_value (res));
+  jerry_release_value (res);
+  jerry_free_property_descriptor_fields (&prop_desc);
+  is_ok = jerry_get_own_property_descriptor (global_obj_val, prop_name, &prop_desc);
+  TEST_ASSERT (is_ok);
+  TEST_ASSERT (prop_desc.is_writable == false);
+  TEST_ASSERT (prop_desc.is_enumerable == true);
+  TEST_ASSERT (prop_desc.is_configurable == false);
+
+  jerry_release_value (prop_name);
+  jerry_release_value (global_obj_val);
 
   jerry_cleanup ();
 

@@ -2582,8 +2582,8 @@ jerry_define_own_property (const jerry_value_t obj_val, /**< object value */
 
   if (prop_desc_p->is_configurable_defined)
   {
-    flags |= (uint32_t) (ECMA_PROP_IS_CONFIGURABLE_DEFINED | (prop_desc_p->is_enumerable ? ECMA_PROP_IS_CONFIGURABLE
-                                                                                         : ECMA_PROP_NO_OPTS));
+    flags |= (uint32_t) (ECMA_PROP_IS_CONFIGURABLE_DEFINED | (prop_desc_p->is_configurable ? ECMA_PROP_IS_CONFIGURABLE
+                                                                                           : ECMA_PROP_NO_OPTS));
   }
 
   /* Copy data property info. */

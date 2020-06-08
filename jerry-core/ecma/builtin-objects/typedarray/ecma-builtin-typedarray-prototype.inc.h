@@ -30,20 +30,20 @@ OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
 /* ES2015 22.2.3.1 */
 ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_BUFFER,
                     ecma_builtin_typedarray_prototype_buffer_getter,
-                    ECMA_PROPERTY_FIXED)
+                    ECMA_PROPERTY_FLAG_CONFIGURABLE)
 /* ES2015 22.2.3.2 */
 ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_BYTE_LENGTH_UL,
                     ecma_builtin_typedarray_prototype_bytelength_getter,
-                    ECMA_PROPERTY_FIXED)
+                    ECMA_PROPERTY_FLAG_CONFIGURABLE)
 /* ES2015 22.2.3.3 */
 ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_BYTE_OFFSET_UL,
                     ecma_builtin_typedarray_prototype_byteoffset_getter,
-                    ECMA_PROPERTY_FIXED)
+                    ECMA_PROPERTY_FLAG_CONFIGURABLE)
 
 /* ES2015 22.2.3.17 */
 ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_LENGTH,
                     ecma_builtin_typedarray_prototype_length_getter,
-                    ECMA_PROPERTY_FIXED)
+                    ECMA_PROPERTY_FLAG_CONFIGURABLE)
 
 #if ENABLED (JERRY_ES2015)
 /* ECMA-262 v6, 23.1.3.13 */

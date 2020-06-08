@@ -1441,7 +1441,12 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
 #if ENABLED (JERRY_ES2015)
     if (bytecode_p->status_flags & CBC_CODE_FLAG_HAS_TAGGED_LITERALS)
     {
-      ecma_collection_destroy (ecma_compiled_code_get_tagged_template_collection (bytecode_p));
+      ecma_collection_t *collection_p = ecma_compiled_code_get_tagged_template_collection (bytecode_p);
+
+      /* Since the objects in the tagged template collection are not strong referenced anymore by the compiled code
+         we can treat them as 'new' objects. */
+      JERRY_CONTEXT (ecma_gc_new_objects) += collection_p->item_count;
+      ecma_collection_free (collection_p);
     }
 #endif /* ENABLED (JERRY_ES2015) */
 

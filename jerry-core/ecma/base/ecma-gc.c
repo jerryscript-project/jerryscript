@@ -115,8 +115,6 @@ ecma_init_gc_info (ecma_object_t *object_p) /**< object */
   JERRY_CONTEXT (ecma_gc_objects_number)++;
   JERRY_CONTEXT (ecma_gc_new_objects)++;
 
-  JERRY_ASSERT (JERRY_CONTEXT (ecma_gc_new_objects) <= JERRY_CONTEXT (ecma_gc_objects_number));
-
   JERRY_ASSERT (object_p->type_flags_refs < ECMA_OBJECT_REF_ONE);
   object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs | ECMA_OBJECT_REF_ONE);
 
@@ -398,23 +396,6 @@ ecma_gc_mark_set_object (ecma_object_t *object_p) /**< object */
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_SET) */
 
 #if ENABLED (JERRY_ES2015)
-
-/**
- * Mark tagged template literals of the compiled code.
- */
-static void
-ecma_gc_mark_tagged_template_literals (const ecma_compiled_code_t *byte_code_p)
-{
-  JERRY_ASSERT (byte_code_p->status_flags & CBC_CODE_FLAG_HAS_TAGGED_LITERALS);
-
-  ecma_collection_t *collection_p = ecma_compiled_code_get_tagged_template_collection (byte_code_p);
-
-  for (uint32_t i = 0; i < collection_p->item_count; i++)
-  {
-    ecma_gc_set_object_visited (ecma_get_object_from_value (collection_p->buffer_p[i]));
-  }
-} /* ecma_gc_mark_tagged_template_literals */
-
 /**
  * Mark objects referenced by inactive generator functions, async functions, etc.
  */
@@ -701,11 +682,6 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 
 #if ENABLED (JERRY_ES2015)
           const ecma_compiled_code_t *byte_code_p = ecma_op_function_get_compiled_code (ext_func_p);
-
-          if (byte_code_p->status_flags & CBC_CODE_FLAG_HAS_TAGGED_LITERALS)
-          {
-            ecma_gc_mark_tagged_template_literals (byte_code_p);
-          }
 
           if (byte_code_p->status_flags & CBC_CODE_FLAGS_ARROW_FUNCTION)
           {

@@ -2644,6 +2644,7 @@ ecma_object_check_class_name_is_object (ecma_object_t *obj_p) /**< object */
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_RANGE_ERROR_PROTOTYPE)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_REFERENCE_ERROR_PROTOTYPE)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_SYNTAX_ERROR_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_GENERATOR_PROTOTYPE)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_TYPE_ERROR_PROTOTYPE)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_ERROR_PROTOTYPE)

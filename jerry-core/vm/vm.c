@@ -3419,6 +3419,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                        instruction.
                      - For other objects we should keep the current implementation due to performance reasons.*/
             result = ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Proxy support in for-in."));
+            ecma_free_value (value);
             goto error;
           }
 #endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */

@@ -612,30 +612,28 @@ re_parse_char_escape (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context 
 #if ENABLED (JERRY_ES2015)
       if (re_ctx_p->flags & RE_FLAG_UNICODE)
       {
-        if (*re_ctx_p->input_curr_p == LIT_CHAR_LEFT_BRACE)
+        if (re_ctx_p->input_curr_p + 1 < re_ctx_p->input_end_p
+            && re_ctx_p->input_curr_p[0] == LIT_CHAR_LEFT_BRACE
+            && lit_char_is_hex_digit (re_ctx_p->input_curr_p[1]))
         {
-          re_ctx_p->input_curr_p++;
+          lit_code_point_t cp = lit_char_hex_to_int (re_ctx_p->input_curr_p[1]);
+          re_ctx_p->input_curr_p += 2;
 
-          if (re_ctx_p->input_curr_p < re_ctx_p->input_end_p && lit_char_is_hex_digit (*re_ctx_p->input_curr_p))
+          while (re_ctx_p->input_curr_p < re_ctx_p->input_end_p && lit_char_is_hex_digit (*re_ctx_p->input_curr_p))
           {
-            lit_code_point_t cp = lit_char_hex_to_int (*re_ctx_p->input_curr_p++);
+            cp = cp * 16 + lit_char_hex_to_int (*re_ctx_p->input_curr_p++);
 
-            while (re_ctx_p->input_curr_p < re_ctx_p->input_end_p && lit_char_is_hex_digit (*re_ctx_p->input_curr_p))
+            if (JERRY_UNLIKELY (cp > LIT_UNICODE_CODE_POINT_MAX))
             {
-              cp = cp * 16 + lit_char_hex_to_int (*re_ctx_p->input_curr_p++);
-
-              if (JERRY_UNLIKELY (cp > LIT_UNICODE_CODE_POINT_MAX))
-              {
-                return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid unicode escape sequence"));
-              }
+              return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid unicode escape sequence"));
             }
+          }
 
-            if (re_ctx_p->input_curr_p < re_ctx_p->input_end_p && *re_ctx_p->input_curr_p == LIT_CHAR_RIGHT_BRACE)
-            {
-              re_ctx_p->input_curr_p++;
-              re_ctx_p->token.value = cp;
-              break;
-            }
+          if (re_ctx_p->input_curr_p < re_ctx_p->input_end_p && *re_ctx_p->input_curr_p == LIT_CHAR_RIGHT_BRACE)
+          {
+            re_ctx_p->input_curr_p++;
+            re_ctx_p->token.value = cp;
+            break;
           }
         }
 
@@ -867,7 +865,8 @@ re_parse_next_token (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
 
 #if ENABLED (JERRY_ES2015)
       if (re_ctx_p->flags & RE_FLAG_UNICODE
-          && lit_is_code_point_utf16_high_surrogate (ch))
+          && lit_is_code_point_utf16_high_surrogate (ch)
+          && re_ctx_p->input_curr_p < re_ctx_p->input_end_p)
       {
         const ecma_char_t next = lit_cesu8_peek_next (re_ctx_p->input_curr_p);
         if (lit_is_code_point_utf16_low_surrogate (next))

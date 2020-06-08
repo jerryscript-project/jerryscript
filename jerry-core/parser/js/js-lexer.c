@@ -915,7 +915,7 @@ lexer_parse_string (parser_context_t *context_p, /**< context */
                     lexer_string_options_t opts) /**< options */
 {
 #if ENABLED (JERRY_ES2015)
-  size_t raw_length_dec = 0;
+  int32_t raw_length_adjust = 0;
 #else /* ENABLED (JERRY_ES2015) */
   JERRY_UNUSED (opts);
 #endif /* ENABLED (JERRY_ES2015) */
@@ -972,7 +972,7 @@ lexer_parse_string (parser_context_t *context_p, /**< context */
             && *source_p == LIT_CHAR_LF)
         {
 #if ENABLED (JERRY_ES2015)
-          raw_length_dec++;
+          raw_length_adjust--;
 #endif /* ENABLED (JERRY_ES2015) */
           source_p++;
         }
@@ -1121,7 +1121,7 @@ lexer_parse_string (parser_context_t *context_p, /**< context */
              source_p + 1 < source_end_p &&
              source_p[1] == LIT_CHAR_LEFT_BRACE)
     {
-      raw_length_dec++;
+      raw_length_adjust--;
       source_p++;
       break;
     }
@@ -1135,6 +1135,9 @@ lexer_parse_string (parser_context_t *context_p, /**< context */
       length += 2 * 3;
       has_escape = true;
       source_p += 4;
+#if ENABLED (JERRY_ES2015)
+      raw_length_adjust += 2;
+#endif /* ENABLED (JERRY_ES2015) */
       column++;
       continue;
     }
@@ -1158,7 +1161,7 @@ lexer_parse_string (parser_context_t *context_p, /**< context */
             && *source_p == LIT_CHAR_LF)
         {
           source_p++;
-          raw_length_dec++;
+          raw_length_adjust--;
         }
         line++;
         column = 1;
@@ -1206,7 +1209,7 @@ lexer_parse_string (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ES2015)
   if (opts & LEXER_STRING_RAW)
   {
-    length = (size_t) (source_p - string_start_p) - raw_length_dec;
+    length = (size_t) ((source_p - string_start_p) + raw_length_adjust);
   }
 #endif /* ENABLED (JERRY_ES2015) */
 

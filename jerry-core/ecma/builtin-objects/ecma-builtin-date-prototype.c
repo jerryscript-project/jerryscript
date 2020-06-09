@@ -237,7 +237,7 @@ ecma_builtin_date_prototype_dispatch_get (uint16_t builtin_routine_id, /**< buil
 {
   if (ecma_number_is_nan (date_num))
   {
-    return ecma_make_magic_string_value (LIT_MAGIC_STRING_NAN);
+    return ecma_make_nan_value ();
   }
 
   switch (builtin_routine_id)

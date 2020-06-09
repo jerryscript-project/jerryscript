@@ -2108,7 +2108,7 @@ scanner_scan_statement_end (parser_context_t *context_p, /**< context */
         while ((literal_p = (lexer_lit_location_t *) parser_list_iterator_next (&literal_iterator)) != NULL)
         {
           if ((literal_p->type & (SCANNER_LITERAL_IS_LET | SCANNER_LITERAL_IS_CONST))
-              && literal_p->type & SCANNER_LITERAL_NO_REG)
+              && (literal_p->type & SCANNER_LITERAL_IS_USED))
           {
             literal_p->type |= SCANNER_LITERAL_EARLY_CREATE;
           }

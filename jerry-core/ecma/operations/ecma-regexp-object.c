@@ -210,31 +210,13 @@ ecma_object_t *
 ecma_op_regexp_alloc (ecma_object_t *ctr_obj_p) /**< constructor object pointer */
 {
 #if ENABLED (JERRY_ES2015)
-  bool default_alloc = false;
-
   if (ctr_obj_p == NULL)
   {
-    ecma_object_t *re_prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE);
-
-    ecma_value_t ctr_value = ecma_op_object_get_by_magic_id (re_prototype_obj_p, LIT_MAGIC_STRING_CONSTRUCTOR);
-
-    if (ECMA_IS_VALUE_ERROR (ctr_value))
-    {
-      return NULL;
-    }
-
-    ctr_obj_p = ecma_get_object_from_value (ctr_value);
-
-    default_alloc = true;
+    ctr_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP);
   }
 
   ecma_object_t *proto_obj_p = ecma_op_get_prototype_from_constructor (ctr_obj_p,
                                                                        ECMA_BUILTIN_ID_REGEXP_PROTOTYPE);
-
-  if (default_alloc)
-  {
-    ecma_deref_object (ctr_obj_p);
-  }
 
   if (JERRY_UNLIKELY (proto_obj_p == NULL))
   {

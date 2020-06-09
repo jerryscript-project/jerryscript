@@ -1336,7 +1336,7 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
           parser_emit_cbc_ext (context_p, is_for_in ? CBC_EXT_FOR_IN_GET_NEXT
                                                     : CBC_EXT_FOR_OF_GET_NEXT);
 
-          if (context_p->next_scanner_info_p->source_p == context_p->source_p)
+          if (context_p->next_scanner_info_p->source_p == (context_p->source_p + 1))
           {
             JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_INITIALIZER);
 

@@ -17,6 +17,7 @@
 from __future__ import print_function
 import argparse
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -41,8 +42,10 @@ def get_arguments():
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--es51', action='store_true',
                        help='Run test262 ES5.1 version')
-    group.add_argument('--es2015', action='store_true',
-                       help='Run test262 ES2015 version')
+    group.add_argument('--es2015', default=False, const='default',
+                       nargs='?', choices=['default', 'all', 'update'],
+                       help='Run test262 - ES2015. default: all tests except excludelist, ' +
+                       'all: all tests, update: all tests and update excludelist')
 
     args = parser.parse_args()
 
@@ -75,15 +78,11 @@ def prepare_test262_test_suite(args):
         return return_code
 
     if args.es2015:
-        shutil.copyfile(os.path.join('tests', 'test262-es6-excludelist.xml'),
-                        os.path.join(args.test_dir, 'excludelist.xml'))
-
         return_code = subprocess.call(['git', 'apply', os.path.join('..', '..', 'test262-es6.patch')],
                                       cwd=args.test_dir)
         if return_code:
             print('Applying test262-es6.patch failed')
             return return_code
-
     else:
         path_to_remove = os.path.join(args.test_dir, 'test', 'suite', 'bestPractice')
         if os.path.isdir(path_to_remove):
@@ -95,8 +94,82 @@ def prepare_test262_test_suite(args):
 
     return 0
 
+
+def prepare_exclude_list(args):
+    if args.es2015 == 'all' or args.es2015 == 'update':
+        return_code = subprocess.call(['git', 'checkout', 'excludelist.xml'], cwd=args.test_dir)
+        if return_code:
+            print('Reverting excludelist.xml failed')
+            return return_code
+    elif args.es2015 == 'default':
+        shutil.copyfile(os.path.join('tests', 'test262-es6-excludelist.xml'),
+                        os.path.join(args.test_dir, 'excludelist.xml'))
+
+    return 0
+
+
+def update_exclude_list(args):
+    assert args.es2015 == 'update', "Only --es2015 option supports updating excludelist"
+
+    print("=== Summary - updating excludelist ===\n")
+    failing_tests = set()
+    new_passing_tests = set()
+    with open(os.path.join(os.path.dirname(args.engine), 'test262.report'), 'r') as report_file:
+        summary_found = False
+        for line in report_file:
+            if summary_found:
+                match = re.match(r"  (\S*) ", line)
+                if match:
+                    failing_tests.add(match.group(1) + '.js')
+            elif line.startswith('Failed Tests'):
+                summary_found = True
+
+    with open(os.path.join('tests', 'test262-es6-excludelist.xml'), 'r+') as exclude_file:
+        lines = exclude_file.readlines()
+        exclude_file.seek(0)
+        exclude_file.truncate()
+        exclude_file.write('<?xml version="1.0" encoding="utf-8" ?>\n')
+        exclude_file.write('<excludeList>\n')
+
+        for line in lines:
+            match = re.match(r"  <test id=\"(\S*)\">", line)
+            if match:
+                test = match.group(1)
+                if test in failing_tests:
+                    failing_tests.remove(test)
+                    exclude_file.write(line)
+                else:
+                    new_passing_tests.add(test)
+
+        if failing_tests:
+            print("New failing tests added to the excludelist")
+            for test in sorted(failing_tests):
+                exclude_file.write('  <test id="' + test + '"><reason></reason></test>\n')
+                print("  " + test)
+            print("")
+
+        exclude_file.write('</excludeList>\n')
+
+    if new_passing_tests:
+        print("New passing tests removed from the excludelist")
+        for test in sorted(new_passing_tests):
+            print("  " + test)
+        print("")
+
+    if failing_tests or new_passing_tests:
+        print("Excludelist was updated succesfully.")
+        return 1
+
+    print("Excludelist was already up-to-date.")
+    return 0
+
+
 def main(args):
     return_code = prepare_test262_test_suite(args)
+    if return_code:
+        return return_code
+
+    return_code = prepare_exclude_list(args)
     if return_code:
         return return_code
 
@@ -105,13 +178,25 @@ def main(args):
         util.set_sighdl_to_reset_timezone(original_timezone)
         util.set_timezone('Pacific Standard Time')
 
+    command = (args.runtime + ' ' + args.engine).strip()
+    if args.es2015:
+        try:
+            subprocess.check_output(["timeout", "--version"])
+            command = "timeout 3 " + command
+        except subprocess.CalledProcessError:
+            pass
+
+    kwargs = {}
+    if sys.version_info.major >= 3:
+        kwargs['errors'] = 'ignore'
     proc = subprocess.Popen(get_platform_cmd_prefix() +
                             [os.path.join(args.test_dir, 'tools/packaging/test262.py'),
-                             '--command', (args.runtime + ' ' + args.engine).strip(),
+                             '--command', command,
                              '--tests', args.test_dir,
                              '--summary'],
                             universal_newlines=True,
-                            stdout=subprocess.PIPE)
+                            stdout=subprocess.PIPE,
+                            **kwargs)
 
     return_code = 1
     with open(os.path.join(os.path.dirname(args.engine), 'test262.report'), 'w') as output_file:
@@ -139,6 +224,9 @@ def main(args):
 
     if sys.platform == 'win32':
         util.set_timezone(original_timezone)
+
+    if args.es2015 == 'update':
+        return_code = update_exclude_list(args)
 
     return return_code
 

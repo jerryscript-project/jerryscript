@@ -219,8 +219,10 @@ def get_arguments():
                         help='Run jerry-test-suite')
     parser.add_argument('--test262', action='store_true',
                         help='Run test262 - ES5.1')
-    parser.add_argument('--test262-es2015', action='store_true',
-                        help='Run test262 - ES2015')
+    parser.add_argument('--test262-es2015', default=False, const='default',
+                        nargs='?', choices=['default', 'all', 'update'],
+                        help='Run test262 - ES2015. default: all tests except excludelist, ' +
+                        'all: all tests, update: all tests and update excludelist')
     parser.add_argument('--unittests', action='store_true',
                         help='Run unittests (including doctests)')
     parser.add_argument('--buildoption-test', action='store_true',
@@ -472,6 +474,7 @@ def run_test262_test_suite(options):
 
         if '--profile=es.next' in job.build_args:
             test_cmd.append('--es2015')
+            test_cmd.append(options.test262_es2015)
         else:
             test_cmd.append('--es51')
 

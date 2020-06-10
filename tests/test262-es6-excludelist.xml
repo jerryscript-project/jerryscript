@@ -422,12 +422,8 @@
   <test id="language/statements/continue/labeled-continue.js"><reason></reason></test>
   <test id="language/statements/continue/nested-let-bound-for-loops-labeled-continue.js"><reason></reason></test>
   <test id="language/statements/continue/simple-and-labeled.js"><reason></reason></test>
-  <test id="language/statements/for-in/const-bound-names-fordecl-tdz-for-in.js"><reason></reason></test>
-  <test id="language/statements/for-in/let-bound-names-fordecl-tdz-for-in.js"><reason></reason></test>
   <test id="language/statements/for-of/body-dstr-assign-error.js"><reason></reason></test>
   <test id="language/statements/for-of/body-dstr-assign.js"><reason></reason></test>
-  <test id="language/statements/for-of/const-bound-names-fordecl-tdz-for-of.js"><reason></reason></test>
-  <test id="language/statements/for-of/let-bound-names-fordecl-tdz-for-of.js"><reason></reason></test>
   <test id="language/statements/for/S12.6.3_A9.1.js"><reason></reason></test>
   <test id="language/statements/for/S12.6.3_A9.js"><reason></reason></test>
   <test id="language/statements/function/13.2-30-s.js"><reason></reason></test>

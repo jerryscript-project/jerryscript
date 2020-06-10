@@ -388,7 +388,7 @@ lexer_skip_spaces (parser_context_t *context_p) /**< context */
     context_p->source_p++;
 
     if (context_p->source_p < source_end_p
-        && IS_UTF8_INTERMEDIATE_OCTET (context_p->source_p[0]))
+        && !IS_UTF8_INTERMEDIATE_OCTET (context_p->source_p[0]))
     {
       context_p->column++;
     }

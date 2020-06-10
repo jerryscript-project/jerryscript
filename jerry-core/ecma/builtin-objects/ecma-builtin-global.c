@@ -588,13 +588,10 @@ ecma_builtin_global_object_escape (lit_utf8_byte_t *input_start_p, /**< routine'
                                    lit_utf8_size_t input_size) /**< routine's first argument's
                                                                 *   string buffer's size */
 {
-  /*
-   * The escape routine has two major phases: first we compute
-   * the length of the output, then we encode the input.
-   */
   const lit_utf8_byte_t *input_curr_p = input_start_p;
   const lit_utf8_byte_t *input_end_p = input_start_p + input_size;
-  lit_utf8_size_t output_length = 0;
+  ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
+  lit_utf8_byte_t result_chars[URI_ENCODED_BYTE_SIZE];
 
   while (input_curr_p < input_end_p)
   {
@@ -604,79 +601,33 @@ ecma_builtin_global_object_escape (lit_utf8_byte_t *input_start_p, /**< routine'
     {
       if (ecma_builtin_global_object_character_is_in ((uint32_t) chr, ecma_escape_set))
       {
-        output_length++;
+        ecma_stringbuilder_append_char (&builder, chr);
       }
       else
       {
-        output_length += URI_ENCODED_BYTE_SIZE;
+        ecma_builtin_global_object_byte_to_hex (result_chars, chr);
+        ecma_stringbuilder_append_raw (&builder, result_chars, URI_ENCODED_BYTE_SIZE);
       }
     }
     else if (chr > ECMA_ESCAPE_MAXIMUM_BYTE_VALUE)
     {
-      output_length += ECMA_ESCAPE_ENCODED_UNICODE_CHARACTER_SIZE;
+      ecma_stringbuilder_append_char (&builder, LIT_CHAR_PERCENT);
+      ecma_stringbuilder_append_char (&builder, LIT_CHAR_LOWERCASE_U);
+
+      ecma_builtin_global_object_byte_to_hex (result_chars, (chr >> JERRY_BITSINBYTE));
+      ecma_stringbuilder_append_raw (&builder, result_chars + 1, 2);
+
+      ecma_builtin_global_object_byte_to_hex (result_chars, (chr & 0xff));
+      ecma_stringbuilder_append_raw (&builder, result_chars + 1, 2);
     }
     else
     {
-      output_length += URI_ENCODED_BYTE_SIZE;
+      ecma_builtin_global_object_byte_to_hex (result_chars, chr);
+      ecma_stringbuilder_append_raw (&builder, result_chars, URI_ENCODED_BYTE_SIZE);
     }
   }
 
-  ecma_value_t ret_value;
-
-  JMEM_DEFINE_LOCAL_ARRAY (output_start_p,
-                           output_length,
-                           lit_utf8_byte_t);
-
-  lit_utf8_byte_t *output_char_p = output_start_p;
-
-  input_curr_p = input_start_p;
-
-  while (input_curr_p < input_end_p)
-  {
-    ecma_char_t chr = lit_cesu8_read_next (&input_curr_p);
-
-    if (chr <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
-    {
-      if (ecma_builtin_global_object_character_is_in ((uint32_t) chr, ecma_escape_set))
-      {
-        *output_char_p = (lit_utf8_byte_t) chr;
-        output_char_p++;
-      }
-      else
-      {
-        ecma_builtin_global_object_byte_to_hex (output_char_p, (lit_utf8_byte_t) chr);
-        output_char_p += URI_ENCODED_BYTE_SIZE;
-      }
-    }
-    else if (chr > ECMA_ESCAPE_MAXIMUM_BYTE_VALUE)
-    {
-      /*
-       * Although ecma_builtin_global_object_byte_to_hex inserts a percent (%) sign
-       * the follow-up changes overwrites it. We call this function twice to
-       * produce four hexadecimal characters (%uxxxx format).
-       */
-      ecma_builtin_global_object_byte_to_hex (output_char_p + 3, (lit_utf8_byte_t) (chr & 0xff));
-      ecma_builtin_global_object_byte_to_hex (output_char_p + 1, (lit_utf8_byte_t) (chr >> JERRY_BITSINBYTE));
-      output_char_p[0] = LIT_CHAR_PERCENT;
-      output_char_p[1] = LIT_CHAR_LOWERCASE_U;
-      output_char_p += ECMA_ESCAPE_ENCODED_UNICODE_CHARACTER_SIZE;
-    }
-    else
-    {
-      ecma_builtin_global_object_byte_to_hex (output_char_p, (lit_utf8_byte_t) chr);
-      output_char_p += URI_ENCODED_BYTE_SIZE;
-    }
-  }
-
-  JERRY_ASSERT (output_start_p + output_length == output_char_p);
-
-  ecma_string_t *output_string_p = ecma_new_ecma_string_from_utf8 (output_start_p, output_length);
-
-  ret_value = ecma_make_string_value (output_string_p);
-
-  JMEM_FINALIZE_LOCAL_ARRAY (output_start_p);
-
-  return ret_value;
+  return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
 } /* ecma_builtin_global_object_escape */
 
 /**

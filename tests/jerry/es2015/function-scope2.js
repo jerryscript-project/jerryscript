@@ -95,3 +95,17 @@ function i([a], get = () => a, set = (v) => a = v) {
   assert(get() === 3);
 }
 i([1]);
+
+function j(a = eval()) {
+  var a = 3.14;
+
+  try {
+    eval("throw 1; function a() { return 8; }")
+    assert(false)
+  } catch (e) {
+    assert(e === 1)
+  }
+
+  assert(a() === 8)
+}
+j()

@@ -422,35 +422,30 @@ ecma_builtin_global_object_encode_uri_helper (lit_utf8_byte_t *input_start_p, /*
                                                                            *   string buffer's size */
                                               const uint8_t *unescaped_uri_bitset_p) /**< unescaped bitset */
 {
-  /*
-   * The URI encoding has two major phases: first we validate the input,
-   * and compute the length of the output, then we encode the input.
-   */
-
   lit_utf8_byte_t *input_char_p = input_start_p;
   const lit_utf8_byte_t *input_end_p = input_start_p + input_size;
-  lit_utf8_size_t output_length = 0;
-  lit_code_point_t cp;
   ecma_char_t ch;
+  ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
   lit_utf8_byte_t octets[LIT_UTF8_MAX_BYTES_IN_CODE_POINT];
   memset (octets, LIT_BYTE_NULL, LIT_UTF8_MAX_BYTES_IN_CODE_POINT);
 
   while (input_char_p < input_end_p)
   {
-    /* Input validation, we need to reject stray surrogates. */
     input_char_p += lit_read_code_unit_from_utf8 (input_char_p, &ch);
 
     if (lit_is_code_point_utf16_low_surrogate (ch))
     {
+      ecma_stringbuilder_destroy (&builder);
       return ecma_raise_uri_error (ECMA_ERR_MSG ("Unicode surrogate pair missing."));
     }
 
-    cp = ch;
+    lit_code_point_t cp = ch;
 
     if (lit_is_code_point_utf16_high_surrogate (ch))
     {
       if (input_char_p == input_end_p)
       {
+        ecma_stringbuilder_destroy (&builder);
         return ecma_raise_uri_error (ECMA_ERR_MSG ("Unicode surrogate pair missing."));
       }
 
@@ -464,89 +459,38 @@ ecma_builtin_global_object_encode_uri_helper (lit_utf8_byte_t *input_start_p, /*
       }
       else
       {
+        ecma_stringbuilder_destroy (&builder);
         return ecma_raise_uri_error (ECMA_ERR_MSG ("Unicode surrogate pair missing."));
       }
     }
 
     lit_utf8_size_t utf_size = lit_code_point_to_utf8 (cp, octets);
+    lit_utf8_byte_t result_chars[URI_ENCODED_BYTE_SIZE];
 
     if (utf_size == 1)
     {
       if (ecma_builtin_global_object_character_is_in (octets[0], unescaped_uri_bitset_p))
       {
-        output_length++;
+        ecma_stringbuilder_append_byte (&builder, octets[0]);
       }
       else
       {
-        output_length += URI_ENCODED_BYTE_SIZE;
-      }
-    }
-    else
-    {
-      output_length += utf_size * URI_ENCODED_BYTE_SIZE;
-    }
-  }
-
-  ecma_value_t ret_value;
-
-  JMEM_DEFINE_LOCAL_ARRAY (output_start_p,
-                           output_length,
-                           lit_utf8_byte_t);
-
-  lit_utf8_byte_t *output_char_p = output_start_p;
-  input_char_p = input_start_p;
-
-  while (input_char_p < input_end_p)
-  {
-    /* Input decode. */
-    input_char_p += lit_read_code_unit_from_utf8 (input_char_p, &ch);
-    cp = ch;
-
-    if (lit_is_code_point_utf16_high_surrogate (ch))
-    {
-      ecma_char_t next_ch;
-      lit_utf8_size_t read_size = lit_read_code_unit_from_utf8 (input_char_p, &next_ch);
-
-      if (lit_is_code_point_utf16_low_surrogate (next_ch))
-      {
-        cp = lit_convert_surrogate_pair_to_code_point (ch, next_ch);
-        input_char_p += read_size;
-      }
-    }
-
-    lit_utf8_size_t utf_size = lit_code_point_to_utf8 (cp, octets);
-
-    if (utf_size == 1)
-    {
-      if (ecma_builtin_global_object_character_is_in (octets[0], unescaped_uri_bitset_p))
-      {
-        *output_char_p++ = octets[0];
-      }
-      else
-      {
-        ecma_builtin_global_object_byte_to_hex (output_char_p, octets[0]);
-        output_char_p += URI_ENCODED_BYTE_SIZE;
+        ecma_builtin_global_object_byte_to_hex (result_chars, octets[0]);
+        ecma_stringbuilder_append_raw (&builder, result_chars, URI_ENCODED_BYTE_SIZE);
       }
     }
     else
     {
       for (uint32_t i = 0; i < utf_size; i++)
       {
-        ecma_builtin_global_object_byte_to_hex (output_char_p, octets[i]);
-        output_char_p += URI_ENCODED_BYTE_SIZE;
+        JERRY_ASSERT (utf_size <= LIT_UTF8_MAX_BYTES_IN_CODE_POINT);
+        ecma_builtin_global_object_byte_to_hex (result_chars, octets[i]);
+        ecma_stringbuilder_append_raw (&builder, result_chars, URI_ENCODED_BYTE_SIZE);
       }
     }
   }
 
-  JERRY_ASSERT (output_start_p + output_length == output_char_p);
-
-  ecma_string_t *output_string_p = ecma_new_ecma_string_from_utf8 (output_start_p, output_length);
-
-  ret_value = ecma_make_string_value (output_string_p);
-
-  JMEM_FINALIZE_LOCAL_ARRAY (output_start_p);
-
-  return ret_value;
+  return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
 } /* ecma_builtin_global_object_encode_uri_helper */
 
 #if ENABLED (JERRY_BUILTIN_ANNEXB)

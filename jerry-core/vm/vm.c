@@ -1421,17 +1421,31 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
           JERRY_ASSERT (prev_lex_env_p != NULL
                         && ecma_get_lex_env_type (prev_lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
-          JERRY_ASSERT (ecma_find_named_property (prev_lex_env_p, name_p) == NULL);
 
+          ecma_property_t *property_p = ecma_find_named_property (prev_lex_env_p, name_p);
           ecma_property_value_t *property_value_p;
-          property_value_p = ecma_create_named_data_property (prev_lex_env_p,
-                                                              name_p,
-                                                              ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
-                                                              NULL);
 
-          if (lit_value == ECMA_VALUE_UNDEFINED)
+          if (property_p == NULL)
           {
-            continue;
+            property_value_p = ecma_create_named_data_property (prev_lex_env_p,
+                                                                name_p,
+                                                                ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
+                                                                NULL);
+
+            if (lit_value == ECMA_VALUE_UNDEFINED)
+            {
+              continue;
+            }
+          }
+          else
+          {
+            if (lit_value == ECMA_VALUE_UNDEFINED)
+            {
+              continue;
+            }
+
+            property_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+            ecma_free_value_if_not_object (property_value_p->value);
           }
 
           property_value_p->value = lit_value;

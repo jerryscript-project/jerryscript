@@ -203,29 +203,20 @@ ecma_builtin_global_object_decode_uri_helper (lit_utf8_byte_t *input_start_p, /*
 {
   lit_utf8_byte_t *input_char_p = input_start_p;
   lit_utf8_byte_t *input_end_p = input_start_p + input_size;
-  lit_utf8_size_t output_size = 0;
-  /*
-   * The URI decoding has two major phases: first we validate the input,
-   * and compute the length of the output, then we decode the input.
-   */
+  ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
 
   while (input_char_p < input_end_p)
   {
-    /*
-     * We expect that the input is a valid UTF-8 sequence,
-     * so characters >= 0x80 can be let through.
-     */
-
     if (*input_char_p != '%')
     {
-      output_size++;
-      input_char_p++;
+      ecma_stringbuilder_append_byte (&builder, *input_char_p++);
       continue;
     }
 
     uint32_t hex_value = lit_char_hex_lookup (input_char_p + 1, input_end_p, 2);
     if (hex_value == UINT32_MAX)
     {
+      ecma_stringbuilder_destroy (&builder);
       return ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid hexadecimal value."));
     }
 
@@ -234,70 +225,15 @@ ecma_builtin_global_object_decode_uri_helper (lit_utf8_byte_t *input_start_p, /*
 
     if (decoded_byte <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
     {
-      /*
-       * We don't decode those bytes, which are part of reserved_uri_bitset
-       * but not part of unescaped_uri_component_set.
-       */
       if (ecma_builtin_global_object_character_is_in (decoded_byte, reserved_uri_bitset)
           && !ecma_builtin_global_object_character_is_in (decoded_byte, unescaped_uri_component_set))
       {
-        output_size += URI_ENCODED_BYTE_SIZE;
-      }
-      else
-      {
-        output_size++;
-      }
-    }
-    else if ((decoded_byte & LIT_UTF8_4_BYTE_MASK) == LIT_UTF8_4_BYTE_MARKER)
-    {
-      output_size += 3;
-    }
-    else
-    {
-      output_size++;
-    }
-  }
-
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-
-  JMEM_DEFINE_LOCAL_ARRAY (output_start_p,
-                           output_size,
-                           lit_utf8_byte_t);
-
-  input_char_p = input_start_p;
-  lit_utf8_byte_t *output_char_p = output_start_p;
-
-  while (input_char_p < input_end_p)
-  {
-    /* Input decode. */
-    if (*input_char_p != '%')
-    {
-      *output_char_p++ = *input_char_p++;
-      continue;
-    }
-
-    uint32_t hex_value = lit_char_hex_lookup (input_char_p + 1, input_end_p, 2);
-    if (hex_value == UINT32_MAX)
-    {
-      ret_value = ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid hexadecimal value."));
-      break;
-    }
-
-    ecma_char_t decoded_byte = (ecma_char_t) hex_value;
-    input_char_p += URI_ENCODED_BYTE_SIZE;
-
-    if (decoded_byte <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
-    {
-      if (ecma_builtin_global_object_character_is_in (decoded_byte, reserved_uri_bitset)
-          && !ecma_builtin_global_object_character_is_in (decoded_byte, unescaped_uri_component_set))
-      {
-        *output_char_p = '%';
-        output_char_p++;
+        ecma_stringbuilder_append_char (&builder, LIT_CHAR_PERCENT);
         input_char_p -= 2;
       }
       else
       {
-        *output_char_p++ = (lit_utf8_byte_t) decoded_byte;
+        ecma_stringbuilder_append_byte (&builder, (lit_utf8_byte_t) decoded_byte);
       }
     }
     else
@@ -318,8 +254,8 @@ ecma_builtin_global_object_decode_uri_helper (lit_utf8_byte_t *input_start_p, /*
       }
       else
       {
-        ret_value = ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid UTF8 character."));
-        break;
+        ecma_stringbuilder_destroy (&builder);
+        return ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid UTF8 character."));
       }
 
       lit_utf8_byte_t octets[LIT_UTF8_MAX_BYTES_IN_CODE_POINT];
@@ -351,8 +287,8 @@ ecma_builtin_global_object_decode_uri_helper (lit_utf8_byte_t *input_start_p, /*
       if (!is_valid
           || !lit_is_valid_utf8_string (octets, bytes_count))
       {
-        ret_value = ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid UTF8 string."));
-        break;
+        ecma_stringbuilder_destroy (&builder);
+        return ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid UTF8 string."));
       }
 
       lit_code_point_t cp;
@@ -361,32 +297,17 @@ ecma_builtin_global_object_decode_uri_helper (lit_utf8_byte_t *input_start_p, /*
       if (lit_is_code_point_utf16_high_surrogate (cp)
           || lit_is_code_point_utf16_low_surrogate (cp))
       {
-        ret_value = ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid UTF8 codepoint."));
-        break;
+        ecma_stringbuilder_destroy (&builder);
+        return ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid UTF8 codepoint."));
       }
 
-      output_char_p += lit_code_point_to_cesu8 (cp, output_char_p);
+      lit_utf8_byte_t result_chars[LIT_CESU8_MAX_BYTES_IN_CODE_POINT];
+      lit_utf8_size_t cp_size = lit_code_point_to_cesu8 (cp, result_chars);
+      ecma_stringbuilder_append_raw (&builder, result_chars, cp_size);
     }
   }
 
-  if (ecma_is_value_empty (ret_value))
-  {
-    JERRY_ASSERT (output_start_p + output_size == output_char_p);
-
-    if (lit_is_valid_cesu8_string (output_start_p, output_size))
-    {
-      ecma_string_t *output_string_p = ecma_new_ecma_string_from_utf8 (output_start_p, output_size);
-      ret_value = ecma_make_string_value (output_string_p);
-    }
-    else
-    {
-      ret_value = ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid CESU8 string."));
-    }
-  }
-
-  JMEM_FINALIZE_LOCAL_ARRAY (output_start_p);
-
-  return ret_value;
+  return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
 } /* ecma_builtin_global_object_decode_uri_helper */
 
 /**

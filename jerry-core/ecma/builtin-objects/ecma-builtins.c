@@ -539,7 +539,22 @@ ecma_finalize_builtins (void)
   {
     if (JERRY_CONTEXT (ecma_builtin_objects)[id] != JMEM_CP_NULL)
     {
-      ecma_deref_object (ECMA_GET_NON_NULL_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_builtin_objects)[id]));
+      ecma_object_t *obj_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_builtin_objects)[id]);
+      ecma_deref_object (obj_p);
+
+#if ENABLED (JERRY_ES2015)
+      /* Note: In ES2015 a function object may contain tagged template literal collection. Whenever
+         this function is assigned to a builtin function or function routine during the GC it may cause unresolvable
+         circle since one part of the circle is a weak reference (marked by GC) and the other part is hard reference
+         (reference count). In this case when the function which contains the tagged template literal collection
+         is getting GC marked the arrays in the collection are still holding weak references to properties/prototypes
+         which prevents these objects from getting freed. Releasing the property list and the prototype reference
+         manually eliminates the existence of the unresolvable circle described above. */
+      ecma_gc_free_properties (obj_p);
+      obj_p->u1.property_list_cp = JMEM_CP_NULL;
+      obj_p->u2.prototype_cp = JMEM_CP_NULL;
+#endif /* ENABLED (JERRY_ES2015) */
+
       JERRY_CONTEXT (ecma_builtin_objects)[id] = JMEM_CP_NULL;
     }
   }

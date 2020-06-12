@@ -906,7 +906,7 @@ ecma_gc_free_executable_object (ecma_object_t *object_p) /**< object */
 /**
  * Free properties of an object
  */
-static void
+void
 ecma_gc_free_properties (ecma_object_t *object_p) /**< object */
 {
   jmem_cpointer_t prop_iter_cp = object_p->u1.property_list_cp;

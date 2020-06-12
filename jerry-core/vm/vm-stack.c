@@ -30,6 +30,9 @@
 JERRY_STATIC_ASSERT (PARSER_WITH_CONTEXT_STACK_ALLOCATION == PARSER_BLOCK_CONTEXT_STACK_ALLOCATION,
                      parser_with_context_stack_allocation_must_be_equal_to_parser_block_context_stack_allocation);
 
+JERRY_STATIC_ASSERT (PARSER_WITH_CONTEXT_STACK_ALLOCATION == PARSER_TRY_CONTEXT_STACK_ALLOCATION,
+                     parser_with_context_stack_allocation_must_be_equal_to_parser_block_context_stack_allocation);
+
 /**
  * Abort (finalize) the current stack context, and remove it.
  *
@@ -58,13 +61,13 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
       /* FALLTHRU */
     }
     case VM_CONTEXT_FINALLY_JUMP:
-    case VM_CONTEXT_TRY:
-    case VM_CONTEXT_CATCH:
     {
-      VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_TRY_CONTEXT_STACK_ALLOCATION);
-      vm_stack_top_p -= PARSER_TRY_CONTEXT_STACK_ALLOCATION;
+      VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_FINALLY_CONTEXT_STACK_ALLOCATION);
+      vm_stack_top_p -= PARSER_FINALLY_CONTEXT_STACK_ALLOCATION;
       break;
     }
+    case VM_CONTEXT_TRY:
+    case VM_CONTEXT_CATCH:
 #if ENABLED (JERRY_ESNEXT)
     case VM_CONTEXT_BLOCK:
 #endif /* ENABLED (JERRY_ESNEXT) */
@@ -243,6 +246,8 @@ vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
       }
       else
       {
+        JERRY_ASSERT (context_type == VM_CONTEXT_CATCH);
+
 #if !ENABLED (JERRY_ESNEXT)
         if (vm_stack_top_p[-1] & VM_CONTEXT_HAS_LEX_ENV)
         {
@@ -262,6 +267,9 @@ vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
       }
 
       JERRY_ASSERT (byte_code_p[0] == CBC_EXT_OPCODE);
+
+      VM_PLUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_FINALLY_CONTEXT_EXTRA_STACK_ALLOCATION);
+      vm_stack_top_p += PARSER_FINALLY_CONTEXT_EXTRA_STACK_ALLOCATION;
 
 #if ENABLED (JERRY_ESNEXT)
       if (JERRY_UNLIKELY (byte_code_p[1] == CBC_EXT_ASYNC_EXIT))
@@ -316,14 +324,14 @@ vm_get_context_value_offsets (ecma_value_t *context_item_p) /**< any item of a c
     case VM_CONTEXT_FINALLY_THROW:
     case VM_CONTEXT_FINALLY_RETURN:
     {
-      return (2 << (VM_CONTEXT_OFFSET_SHIFT)) | PARSER_TRY_CONTEXT_STACK_ALLOCATION;
+      return (2 << (VM_CONTEXT_OFFSET_SHIFT)) | PARSER_FINALLY_CONTEXT_STACK_ALLOCATION;
     }
     case VM_CONTEXT_FINALLY_JUMP:
+    {
+      return PARSER_FINALLY_CONTEXT_STACK_ALLOCATION;
+    }
     case VM_CONTEXT_TRY:
     case VM_CONTEXT_CATCH:
-    {
-      return PARSER_TRY_CONTEXT_STACK_ALLOCATION;
-    }
     case VM_CONTEXT_BLOCK:
     case VM_CONTEXT_WITH:
     {

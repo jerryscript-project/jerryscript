@@ -1886,9 +1886,9 @@ parser_parse_try_statement_end (parser_context_t *context_p) /**< context */
   if (try_statement.type == parser_finally_block)
   {
     parser_flush_cbc (context_p);
-    PARSER_MINUS_EQUAL_U16 (context_p->stack_depth, PARSER_TRY_CONTEXT_STACK_ALLOCATION);
+    PARSER_MINUS_EQUAL_U16 (context_p->stack_depth, PARSER_FINALLY_CONTEXT_STACK_ALLOCATION);
 #ifndef JERRY_NDEBUG
-    PARSER_MINUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_TRY_CONTEXT_STACK_ALLOCATION);
+    PARSER_MINUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_FINALLY_CONTEXT_STACK_ALLOCATION);
 #endif /* !JERRY_NDEBUG */
 
     parser_emit_cbc (context_p, CBC_CONTEXT_END);
@@ -1919,11 +1919,15 @@ parser_parse_try_statement_end (parser_context_t *context_p) /**< context */
         try_statement.type = parser_finally_block;
       }
     }
-    else if (try_statement.type == parser_try_block
-             && context_p->token.type != LEXER_KEYW_CATCH
-             && context_p->token.type != LEXER_KEYW_FINALLY)
+    else
     {
-      parser_raise_error (context_p, PARSER_ERR_CATCH_FINALLY_EXPECTED);
+      JERRY_ASSERT (try_statement.type == parser_try_block);
+
+      if (context_p->token.type != LEXER_KEYW_CATCH
+          && context_p->token.type != LEXER_KEYW_FINALLY)
+      {
+        parser_raise_error (context_p, PARSER_ERR_CATCH_FINALLY_EXPECTED);
+      }
     }
   }
 
@@ -2028,6 +2032,10 @@ parser_parse_try_statement_end (parser_context_t *context_p) /**< context */
     {
       parser_raise_error (context_p, PARSER_ERR_LEFT_BRACE_EXPECTED);
     }
+
+#ifndef JERRY_NDEBUG
+    PARSER_PLUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_FINALLY_CONTEXT_EXTRA_STACK_ALLOCATION);
+#endif /* !JERRY_NDEBUG */
 
     try_statement.type = parser_finally_block;
     parser_emit_cbc_ext_forward_branch (context_p,

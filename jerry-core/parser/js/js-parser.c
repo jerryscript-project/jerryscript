@@ -964,6 +964,11 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     PARSER_MINUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_TRY_CONTEXT_STACK_ALLOCATION);
 #endif /* !JERRY_NDEBUG */
 
+    if (context_p->stack_limit < PARSER_FINALLY_CONTEXT_STACK_ALLOCATION)
+    {
+      context_p->stack_limit = PARSER_FINALLY_CONTEXT_STACK_ALLOCATION;
+    }
+
     parser_branch_t branch;
 
     parser_stack_pop (context_p, &branch, sizeof (parser_branch_t));

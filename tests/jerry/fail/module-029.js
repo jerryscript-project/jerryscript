@@ -14,4 +14,4 @@
  */
 
 /* Import/export statements must be in the global scope. */
-Function('','import { c } from "../es2015/module-export-01.js";')
+Function('','import { c } from "../es.next/module-export-01.js";')

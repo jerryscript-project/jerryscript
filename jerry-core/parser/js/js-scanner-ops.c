@@ -29,7 +29,7 @@
  * @{
  */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 
 /**
  * Add the "async" literal to the literal pool.
@@ -343,7 +343,7 @@ typedef enum
   SCANNER_SCAN_BRACKET_ARROW_WITH_ONE_ARG, /**< arrow function with one argument */
 } scanner_scan_bracket_arrow_type_t;
 
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Scan bracketed expressions.
@@ -353,19 +353,19 @@ scanner_scan_bracket (parser_context_t *context_p, /**< context */
                       scanner_context_t *scanner_context_p) /**< scanner context */
 {
   size_t depth = 0;
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   const uint8_t *arrow_source_p;
   const uint8_t *async_source_p = NULL;
   scanner_scan_bracket_arrow_type_t arrow_type = SCANNER_SCAN_BRACKET_NO_ARROW;
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   JERRY_ASSERT (context_p->token.type == LEXER_LEFT_PAREN);
 
   do
   {
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     arrow_source_p = context_p->source_p;
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
     depth++;
     lexer_next_token (context_p);
   }
@@ -379,13 +379,13 @@ scanner_scan_bracket (parser_context_t *context_p, /**< context */
     {
       if (context_p->token.lit_location.type != LEXER_IDENT_LITERAL)
       {
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
         arrow_source_p = NULL;
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
         break;
       }
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
       const uint8_t *source_p = context_p->source_p;
 
       if (lexer_check_arrow (context_p))
@@ -396,7 +396,7 @@ scanner_scan_bracket (parser_context_t *context_p, /**< context */
       }
 
       size_t total_depth = depth;
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
       while (depth > 0 && lexer_check_next_character (context_p, LIT_CHAR_RIGHT_PAREN))
       {
@@ -407,16 +407,16 @@ scanner_scan_bracket (parser_context_t *context_p, /**< context */
       if (context_p->token.keyword_type == LEXER_KEYW_EVAL
           && lexer_check_next_character (context_p, LIT_CHAR_LEFT_PAREN))
       {
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
         /* A function call cannot be an eval function. */
         arrow_source_p = NULL;
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
         scanner_context_p->active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_CAN_EVAL;
         break;
       }
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
       if (total_depth == depth)
       {
         if (lexer_check_arrow_param (context_p))
@@ -446,10 +446,10 @@ scanner_scan_bracket (parser_context_t *context_p, /**< context */
       }
 
       arrow_source_p = NULL;
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
       break;
     }
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     case LEXER_THREE_DOTS:
     case LEXER_LEFT_SQUARE:
     case LEXER_LEFT_BRACE:
@@ -459,23 +459,23 @@ scanner_scan_bracket (parser_context_t *context_p, /**< context */
       depth--;
       break;
     }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
     default:
     {
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
       arrow_source_p = NULL;
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
       break;
     }
   }
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   if (JERRY_UNLIKELY (scanner_context_p->async_source_p != NULL)
       && (arrow_source_p == NULL || depth > 0))
   {
     scanner_context_p->async_source_p = NULL;
   }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   while (depth > 0)
   {
@@ -483,7 +483,7 @@ scanner_scan_bracket (parser_context_t *context_p, /**< context */
     depth--;
   }
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   if (arrow_source_p != NULL)
   {
     JERRY_ASSERT (async_source_p == NULL);
@@ -531,7 +531,7 @@ scanner_scan_bracket (parser_context_t *context_p, /**< context */
     scanner_context_p->async_source_p = async_source_p;
     scanner_check_async_function (context_p, scanner_context_p);
   }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 } /* scanner_scan_bracket */
 
 /**

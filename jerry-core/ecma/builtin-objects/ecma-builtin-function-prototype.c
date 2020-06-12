@@ -46,9 +46,9 @@ enum
   ECMA_FUNCTION_PROTOTYPE_CALL,
   ECMA_FUNCTION_PROTOTYPE_APPLY,
   ECMA_FUNCTION_PROTOTYPE_BIND,
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   ECMA_FUNCTION_PROTOTYPE_SYMBOL_HAS_INSTANCE,
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-function-prototype.inc.h"
@@ -211,10 +211,10 @@ ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p , /**
   /* 4. 11. 18. */
   ecma_object_t *prototype_obj_p;
 
-#if !ENABLED (JERRY_ES2015)
+#if !ENABLED (JERRY_ESNEXT)
   prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
-#else /* ENABLED (JERRY_ES2015) */
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#else /* ENABLED (JERRY_ESNEXT) */
+#if ENABLED (JERRY_BUILTIN_PROXY)
   if (ECMA_OBJECT_IS_PROXY (this_arg_obj_p))
   {
     ecma_value_t proto = ecma_proxy_object_get_prototype_of (this_arg_obj_p);
@@ -227,7 +227,7 @@ ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p , /**
   }
   else
   {
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
     jmem_cpointer_t proto_cp = ecma_op_ordinary_object_get_prototype_of (this_arg_obj_p);
     if (proto_cp != JMEM_CP_NULL)
     {
@@ -238,10 +238,10 @@ ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p , /**
     {
       prototype_obj_p = NULL;
     }
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
-#endif /* !ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+#endif /* !ENABLED (JERRY_ESNEXT) */
 
   ecma_object_t *function_p;
   ecma_bound_function_t *bound_func_p;
@@ -296,7 +296,7 @@ ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p , /**
     bound_func_p->header.u.bound_function.args_len_or_this = args_len_or_this;
   }
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   if (prototype_obj_p != NULL)
   {
     ecma_deref_object (prototype_obj_p);
@@ -309,13 +309,13 @@ ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p , /**
                                                                     len_string,
                                                                     &prop_desc);
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   if (ECMA_IS_VALUE_ERROR (status))
   {
     ecma_deref_object (function_p);
     return status;
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
   if (ecma_is_value_true (status))
   {
@@ -371,7 +371,7 @@ ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p , /**
                                                        NULL);
 
   name_prop_value_p->value = bound_function_name;
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   /*
    * [[Class]] property is not stored explicitly for objects of ECMA_OBJECT_TYPE_FUNCTION type.
@@ -427,12 +427,12 @@ ecma_builtin_function_prototype_dispatch_routine (uint16_t builtin_routine_id, /
 {
   if (!ecma_op_is_callable (this_arg))
   {
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     if (JERRY_UNLIKELY (builtin_routine_id == ECMA_FUNCTION_PROTOTYPE_SYMBOL_HAS_INSTANCE))
     {
       return ECMA_VALUE_FALSE;
     }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a function."));
   }
@@ -459,12 +459,12 @@ ecma_builtin_function_prototype_dispatch_routine (uint16_t builtin_routine_id, /
     {
       return ecma_builtin_function_prototype_object_bind (func_obj_p, arguments_list_p, arguments_number);
     }
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     case ECMA_FUNCTION_PROTOTYPE_SYMBOL_HAS_INSTANCE:
     {
       return ecma_op_object_has_instance (func_obj_p, arguments_list_p[0]);
     }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
     default:
     {
       JERRY_UNREACHABLE ();

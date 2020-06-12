@@ -39,10 +39,10 @@ construct_handler (const jerry_value_t func_obj_val, /**< function object */
 int
 main (void)
 {
-  /* Test JERRY_FEATURE_SYMBOL feature as it is a must-have in ES2015 */
+  /* Test JERRY_FEATURE_SYMBOL feature as it is a must-have in ES.next */
   if (!jerry_is_feature_enabled (JERRY_FEATURE_SYMBOL))
   {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Skipping test, ES2015 support is disabled.\n");
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Skipping test, ES.next support is disabled.\n");
     return 0;
   }
 

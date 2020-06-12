@@ -218,15 +218,15 @@ lit_code_point_is_identifier_start (lit_code_point_t code_point) /**< code point
             || code_point == LIT_CHAR_UNDERSCORE);
   }
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   if (code_point >= LIT_UTF8_4_BYTE_CODE_POINT_MIN)
   {
     /* TODO: detect these ranges correctly. */
     return (code_point >= 0x10C80 && code_point <= 0x10CF2);
   }
-#else /* !ENABLED (JERRY_ES2015) */
+#else /* !ENABLED (JERRY_ESNEXT) */
   JERRY_ASSERT (code_point <= LIT_UTF8_4_BYTE_CODE_POINT_MIN);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   return lit_char_is_unicode_letter ((ecma_char_t) code_point);
 } /* lit_code_point_is_identifier_start */
@@ -249,15 +249,15 @@ lit_code_point_is_identifier_part (lit_code_point_t code_point) /**< code point 
             || code_point == LIT_CHAR_UNDERSCORE);
   }
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   if (code_point >= LIT_UTF8_4_BYTE_CODE_POINT_MIN)
   {
     /* TODO: detect these ranges correctly. */
     return (code_point >= 0x10C80 && code_point <= 0x10CF2);
   }
-#else /* !ENABLED (JERRY_ES2015) */
+#else /* !ENABLED (JERRY_ESNEXT) */
   JERRY_ASSERT (code_point <= LIT_UTF8_4_BYTE_CODE_POINT_MIN);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   return (lit_char_is_unicode_letter ((ecma_char_t) code_point)
           || lit_char_is_unicode_non_letter_ident_part ((ecma_char_t) code_point));
@@ -298,7 +298,7 @@ lit_char_is_hex_digit (ecma_char_t c) /**< code unit */
               && LEXER_TO_ASCII_LOWERCASE (c) <= LIT_CHAR_ASCII_LOWERCASE_LETTERS_HEX_END));
 } /* lit_char_is_hex_digit */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 /**
  * Check if specified character is one of BinaryDigits characters (ECMA-262 v6, 11.8.3)
  *
@@ -309,7 +309,7 @@ lit_char_is_binary_digit (ecma_char_t c) /** code unit */
 {
   return (c == LIT_CHAR_0 || c == LIT_CHAR_1);
 } /* lit_char_is_binary_digit */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Convert a HexDigit character to its numeric value, as defined in ECMA-262 v5, 7.8.3

@@ -86,9 +86,9 @@ typedef enum
 
   RE_OP_CLASS_ESCAPE,                             /**< class escape */
   RE_OP_CHAR_CLASS,                               /**< character class */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   RE_OP_UNICODE_PERIOD,                           /**< period in full unicode mode */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
   RE_OP_PERIOD,                                   /**< period in non-unicode mode */
   RE_OP_CHAR,                                     /**< any code point */
   RE_OP_BYTE,                                     /**< 1-byte utf8 character */

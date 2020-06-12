@@ -45,9 +45,9 @@ snapshot_get_global_flags (bool has_regex, /**< regex literal is present */
 #if ENABLED (JERRY_BUILTIN_REGEXP)
   flags |= (has_regex ? JERRY_SNAPSHOT_HAS_REGEX_LITERAL : 0);
 #endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   flags |= (has_class ? JERRY_SNAPSHOT_HAS_CLASS_LITERAL : 0);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   return flags;
 } /* snapshot_get_global_flags */
@@ -63,9 +63,9 @@ snapshot_check_global_flags (uint32_t global_flags) /**< global flags */
 #if ENABLED (JERRY_BUILTIN_REGEXP)
   global_flags &= (uint32_t) ~JERRY_SNAPSHOT_HAS_REGEX_LITERAL;
 #endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   global_flags &= (uint32_t) ~JERRY_SNAPSHOT_HAS_CLASS_LITERAL;
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   return global_flags == snapshot_get_global_flags (false, false);
 } /* snapshot_check_global_flags */
@@ -160,7 +160,7 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
   uint8_t *copied_code_start_p = snapshot_buffer_p + globals_p->snapshot_buffer_write_offset;
   ecma_compiled_code_t *copied_code_p = (ecma_compiled_code_t *) copied_code_start_p;
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   if (compiled_code_p->status_flags & CBC_CODE_FLAG_HAS_TAGGED_LITERALS)
   {
     const char * const error_message_p = "Unsupported feature: tagged template literals.";
@@ -172,7 +172,7 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
   {
     globals_p->class_found = true;
   }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 #if ENABLED (JERRY_BUILTIN_REGEXP)
   if (!(compiled_code_p->status_flags & CBC_CODE_FLAGS_FUNCTION))
@@ -618,7 +618,7 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
       extra_bytes += (uint32_t) (argument_end * sizeof (ecma_value_t));
     }
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     /* function name */
     if (!(bytecode_p->status_flags & CBC_CODE_FLAGS_CLASS_CONSTRUCTOR))
     {
@@ -630,7 +630,7 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
     {
       extra_bytes += (uint32_t) sizeof (ecma_value_t);
     }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 #if ENABLED (JERRY_RESOURCE_NAME)
     /* resource name */
@@ -1000,12 +1000,12 @@ jerry_snapshot_result (const uint32_t *snapshot_p, /**< snapshot */
 
   if (as_function)
   {
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     if (bytecode_p->status_flags & CBC_CODE_FLAGS_LEXICAL_BLOCK_NEEDED)
     {
       ecma_create_global_lexical_block ();
     }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
     ecma_object_t *lex_env_p = ecma_get_global_scope ();
     ecma_object_t *func_obj_p = ecma_op_create_simple_function_object (lex_env_p, bytecode_p);

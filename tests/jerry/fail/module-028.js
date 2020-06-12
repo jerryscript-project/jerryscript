@@ -14,4 +14,4 @@
  */
 
 /* Ambiguous import */
-import { x } from "../es2015/module-export-05.js"
+import { x } from "../es.next/module-export-05.js"

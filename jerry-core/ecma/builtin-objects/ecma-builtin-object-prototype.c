@@ -147,7 +147,7 @@ static ecma_value_t
 ecma_builtin_object_prototype_object_has_own_property (ecma_object_t *obj_p, /**< this argument */
                                                        ecma_string_t *prop_name_p) /**< first argument */
 {
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   if (ECMA_OBJECT_IS_PROXY (obj_p))
   {
     ecma_property_descriptor_t prop_desc;
@@ -161,7 +161,7 @@ ecma_builtin_object_prototype_object_has_own_property (ecma_object_t *obj_p, /**
 
     return status;
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
   return ecma_make_boolean_value (ecma_op_ordinary_object_has_own_property (obj_p, prop_name_p));
 } /* ecma_builtin_object_prototype_object_has_own_property */
@@ -280,12 +280,12 @@ ecma_builtin_object_prototype_dispatch_routine (uint16_t builtin_routine_id, /**
       ret_value = ecma_builtin_object_prototype_object_is_prototype_of (obj_p, arguments_list_p[0]);
     }
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     else if (builtin_routine_id == ECMA_OBJECT_PROTOTYPE_GET_PROTO)
     {
       ret_value = ecma_builtin_object_object_get_prototype_of (obj_p);
     }
-#endif /* ENABLED (JERRY_ES2015)*/
+#endif /* ENABLED (JERRY_ESNEXT)*/
 
     else
     {
@@ -299,12 +299,12 @@ ecma_builtin_object_prototype_dispatch_routine (uint16_t builtin_routine_id, /**
 
   JERRY_ASSERT (builtin_routine_id >= ECMA_OBJECT_PROTOTYPE_HAS_OWN_PROPERTY);
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   if (builtin_routine_id == ECMA_OBJECT_PROTOTYPE_SET_PROTO)
   {
     return ecma_builtin_object_object_set_proto (this_arg, arguments_list_p[0]);
   }
-#endif /* ENABLED (JERRY_ES2015)*/
+#endif /* ENABLED (JERRY_ESNEXT)*/
 
   ecma_string_t *prop_name_p = ecma_op_to_prop_name (arguments_list_p[0]);
 

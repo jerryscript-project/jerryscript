@@ -29,7 +29,7 @@
 #include "ecma-helpers.h"
 #include "jcontext.h"
 
-#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
+#if ENABLED (JERRY_BUILTIN_TYPEDARRAY)
 
 /** \addtogroup ecma ECMA
  * @{
@@ -1378,4 +1378,4 @@ ecma_typedarray_get_info (ecma_object_t *typedarray_p)
  * @}
  * @}
  */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
+#endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */

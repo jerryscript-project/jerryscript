@@ -97,9 +97,9 @@ ecma_op_eval_chars_buffer (const lit_utf8_byte_t *code_p, /**< code characters b
   JERRY_CONTEXT (resource_name) = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_EVAL);
 #endif /* ENABLED (JERRY_RESOURCE_NAME) */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   ECMA_CLEAR_LOCAL_PARSE_OPTS ();
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   ecma_value_t parse_status = parser_parse_script (NULL,
                                                    0,

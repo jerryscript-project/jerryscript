@@ -31,9 +31,9 @@
 ecma_value_t ecma_op_resource_name (const ecma_compiled_code_t *bytecode_header_p);
 #endif /* ENABLED (JERRY_RESOURCE_NAME) */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 ecma_value_t ecma_op_function_form_name (ecma_string_t *prop_name_p, char *prefix_p, lit_utf8_size_t prefix_size);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 bool ecma_op_is_callable (ecma_value_t value);
 bool ecma_op_object_is_callable (ecma_object_t *obj_p);
@@ -54,7 +54,7 @@ ecma_op_create_dynamic_function (const ecma_value_t *arguments_list_p,
                                  ecma_length_t arguments_list_len,
                                  ecma_parse_opts_t opts);
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 ecma_value_t
 ecma_op_function_get_super_constructor (ecma_object_t *func_obj_p);
 
@@ -66,7 +66,7 @@ ecma_op_create_arrow_function_object (ecma_object_t *scope_p, const ecma_compile
                                       ecma_value_t this_binding);
 bool
 ecma_op_function_is_generator (ecma_object_t *func_obj_p);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 ecma_object_t *
 ecma_op_get_prototype_from_constructor (ecma_object_t *ctor_obj_p, ecma_builtin_id_t default_proto_id);

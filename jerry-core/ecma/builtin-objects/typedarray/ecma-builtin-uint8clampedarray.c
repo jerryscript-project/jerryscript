@@ -21,7 +21,7 @@
 #include "ecma-typedarray-object.h"
 #include "jrt.h"
 
-#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
+#if ENABLED (JERRY_BUILTIN_TYPEDARRAY)
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -77,4 +77,4 @@ ecma_builtin_uint8clampedarray_dispatch_construct (const ecma_value_t *arguments
   * @}
   */
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
+#endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */

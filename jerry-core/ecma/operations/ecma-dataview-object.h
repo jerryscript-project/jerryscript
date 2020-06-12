@@ -18,7 +18,7 @@
 
 #include "ecma-globals.h"
 
-#if ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW)
+#if ENABLED (JERRY_BUILTIN_DATAVIEW)
 
 /** \addtogroup ecma ECMA
  * @{
@@ -39,6 +39,6 @@ bool ecma_is_dataview (ecma_value_t value);
  * @}
  */
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW */
+#endif /* ENABLED (JERRY_BUILTIN_DATAVIEW */
 
 #endif /* !ECMA_DATAVIEW_OBJECT_H */

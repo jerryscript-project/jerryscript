@@ -67,14 +67,14 @@ typedef enum
   VM_CONTEXT_FINALLY_RETURN,                  /**< finally context with a return */
   VM_CONTEXT_TRY,                             /**< try context */
   VM_CONTEXT_CATCH,                           /**< catch context */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   VM_CONTEXT_BLOCK,                           /**< block context */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
   VM_CONTEXT_WITH,                            /**< with context */
   VM_CONTEXT_FOR_IN,                          /**< for-in context */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   VM_CONTEXT_FOR_OF,                          /**< for-of context */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 } vm_stack_context_type_t;
 
 /**

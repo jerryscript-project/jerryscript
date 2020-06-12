@@ -17,7 +17,7 @@
 #include "ecma-builtins.h"
 #include "ecma-container-object.h"
 
-#if ENABLED (JERRY_ES2015_BUILTIN_SET)
+#if ENABLED (JERRY_BUILTIN_SET)
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -60,4 +60,4 @@ ecma_builtin_set_iterator_prototype_object_next (ecma_value_t this_val) /**< thi
  * @}
  */
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SET) */
+#endif /* ENABLED (JERRY_BUILTIN_SET) */

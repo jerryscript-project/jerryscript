@@ -15,7 +15,7 @@
 
 #include "js-parser-internal.h"
 
-#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+#if ENABLED (JERRY_MODULE_SYSTEM)
 #include "jcontext.h"
 #include "jerryscript-port.h"
 
@@ -463,13 +463,13 @@ parser_module_parse_import_clause (parser_context_t *context_p) /**< parser cont
       parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
     }
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     if (context_p->next_scanner_info_p->source_p == context_p->source_p)
     {
       JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_ERR_REDECLARED);
       parser_raise_error (context_p, PARSER_ERR_VARIABLE_REDECLARED);
     }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
     ecma_string_t *import_name_p = NULL;
     ecma_string_t *local_name_p = NULL;
@@ -490,13 +490,13 @@ parser_module_parse_import_clause (parser_context_t *context_p) /**< parser cont
         parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
       }
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
       if (context_p->next_scanner_info_p->source_p == context_p->source_p)
       {
         JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_ERR_REDECLARED);
         parser_raise_error (context_p, PARSER_ERR_VARIABLE_REDECLARED);
       }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
       lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_NEW_IDENT_LITERAL);
 
@@ -615,4 +615,4 @@ module_found:
   lexer_next_token (context_p);
 } /* parser_module_handle_module_specifier */
 
-#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#endif /* ENABLED (JERRY_MODULE_SYSTEM) */

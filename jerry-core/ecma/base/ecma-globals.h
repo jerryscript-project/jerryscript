@@ -346,10 +346,10 @@ typedef enum
                                        *   that are not indices */
   ECMA_LIST_ENUMERABLE = (1 << 1), /**< exclude non-enumerable properties */
   ECMA_LIST_PROTOTYPE = (1 << 2), /**< list properties from prototype chain */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   ECMA_LIST_SYMBOLS = (1 << 3), /**< list symbol properties */
   ECMA_LIST_SYMBOLS_ONLY = (1 << 4), /**< list symbol properties only */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
   ECMA_LIST_CONVERT_FAST_ARRAYS = (1 << 5), /**< after listing the properties convert
                                              *   the fast access mode array back to normal array */
 } ecma_list_properties_options_t;
@@ -413,11 +413,11 @@ typedef enum
 /**
  * Default flag of length property.
  */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 #define ECMA_PROPERTY_FLAG_DEFAULT_LENGTH ECMA_PROPERTY_FLAG_CONFIGURABLE
-#else /* !ENABLED (JERRY_ES2015) */
+#else /* !ENABLED (JERRY_ESNEXT) */
 #define ECMA_PROPERTY_FLAG_DEFAULT_LENGTH ECMA_PROPERTY_FIXED
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Shift for property name part.
@@ -677,7 +677,7 @@ typedef enum
   ECMA_LEXICAL_ENVIRONMENT_TYPE__MAX = ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND /**< maximum value */
 } ecma_lexical_environment_type_t;
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 
 /**
  * Types of array iterators.
@@ -689,7 +689,7 @@ typedef enum
   ECMA_ITERATOR_KEYS_VALUES, /**< List key indices and values */
 } ecma_array_iterator_type_t;
 
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Offset for JERRY_CONTEXT (status_flags) top 8 bits.
@@ -975,9 +975,9 @@ typedef struct
 typedef struct
 {
   ecma_extended_object_t header; /**< extended object header */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   ecma_integer_value_t target_length; /**< length of target function */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 } ecma_bound_function_t;
 
 #if ENABLED (JERRY_SNAPSHOT_EXEC)
@@ -993,7 +993,7 @@ typedef struct
 
 #endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 
 /**
  * Description of arrow function objects.
@@ -1018,9 +1018,9 @@ typedef struct
 
 #endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_CONTAINER)
+#if ENABLED (JERRY_BUILTIN_CONTAINER)
 /**
  * Flags for container objects
  */
@@ -1073,7 +1073,7 @@ typedef struct
 #define ECMA_CONTAINER_START(collection_p) \
   (collection_p->buffer_p + 1)
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_CONTAINER) */
+#endif /* ENABLED (JERRY_BUILTIN_CONTAINER) */
 
 typedef enum
 {
@@ -1765,7 +1765,7 @@ typedef struct
 
 #endif /* ENABLED (JERRY_LCACHE) */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
+#if ENABLED (JERRY_BUILTIN_TYPEDARRAY)
 
 /**
  * Function callback descriptor of a %TypedArray% object getter
@@ -1849,9 +1849,9 @@ typedef struct
   uint8_t element_size; /**< element size based on [[TypedArrayName]] in Table 49 */
 } ecma_typedarray_info_t;
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
+#endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 
 /**
  * Executable (e.g. generator, async) object flags.
@@ -1870,9 +1870,9 @@ typedef enum
 #define ECMA_EXECUTABLE_OBJECT_IS_SUSPENDED(extra_info) \
   (!((extra_info) & (ECMA_EXECUTABLE_OBJECT_COMPLETED | ECMA_EXECUTABLE_OBJECT_RUNNING)))
 
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW)
+#if ENABLED (JERRY_BUILTIN_DATAVIEW)
 /**
  * Description of DataView objects.
  */
@@ -1882,7 +1882,7 @@ typedef struct
   ecma_object_t *buffer_p; /**< [[ViewedArrayBuffer]] internal slot */
   uint32_t byte_offset; /**< [[ByteOffset]] internal slot */
 } ecma_dataview_object_t;
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW */
+#endif /* ENABLED (JERRY_BUILTIN_DATAVIEW */
 
 /**
  * Flag for indicating whether the symbol is a well known symbol
@@ -1927,7 +1927,7 @@ do \
  */
 #define ECMA_OBJECT_POINTER_ERROR ((ecma_object_t *) 0x01)
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
 /**
  * Description of Proxy objects.
  */
@@ -1946,7 +1946,7 @@ typedef struct
   ecma_extended_object_t header; /**< header part */
   ecma_value_t proxy; /**< [[RevocableProxy]] internal slot */
 } ecma_revocable_proxy_object_t;
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
 /**
  * @}

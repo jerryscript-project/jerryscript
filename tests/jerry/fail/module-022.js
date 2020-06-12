@@ -14,4 +14,4 @@
  */
 
 /* FromClause must follow an ImportClause. */
-import from "../es2015/module-export-02.js"
+import from "../es.next/module-export-02.js"

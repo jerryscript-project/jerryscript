@@ -41,12 +41,12 @@ typedef enum
   SCAN_MODE_VAR_STATEMENT,                 /**< scanning var statement */
   SCAN_MODE_PROPERTY_NAME,                 /**< scanning property name */
   SCAN_MODE_FUNCTION_ARGUMENTS,            /**< scanning function arguments */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   SCAN_MODE_CONTINUE_FUNCTION_ARGUMENTS,   /**< continue scanning function arguments */
   SCAN_MODE_BINDING,                       /**< array or object binding */
   SCAN_MODE_CLASS_DECLARATION,             /**< scanning class declaration */
   SCAN_MODE_CLASS_METHOD,                  /**< scanning class method */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 } scan_modes_t;
 
 /**
@@ -60,9 +60,9 @@ typedef enum
   SCAN_STACK_FUNCTION_STATEMENT,           /**< function statement */
   SCAN_STACK_FUNCTION_EXPRESSION,          /**< function expression */
   SCAN_STACK_FUNCTION_PROPERTY,            /**< function expression in an object literal or class */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   SCAN_STACK_FUNCTION_ARROW,               /**< arrow function expression */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
   SCAN_STACK_SWITCH_BLOCK,                 /**< block part of "switch" statement */
   SCAN_STACK_IF_STATEMENT,                 /**< statement part of "if" statements */
   SCAN_STACK_WITH_STATEMENT,               /**< statement part of "with" statements */
@@ -72,19 +72,19 @@ typedef enum
   SCAN_STACK_WHILE_EXPRESSION,             /**< expression part of "while" iterator */
   SCAN_STACK_PAREN_EXPRESSION,             /**< expression in brackets */
   SCAN_STACK_STATEMENT_WITH_EXPR,          /**< statement which starts with expression enclosed in brackets */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   SCAN_STACK_BINDING_INIT,                 /**< post processing after a single initializer */
   SCAN_STACK_BINDING_LIST_INIT,            /**< post processing after an initializer list */
   SCAN_STACK_LET,                          /**< let statement */
   SCAN_STACK_CONST,                        /**< const statement */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
   /* The SCANNER_IS_FOR_START macro needs to be updated when the following constants are reordered. */
   SCAN_STACK_VAR,                          /**< var statement */
   SCAN_STACK_FOR_VAR_START,                /**< start of "for" iterator with var statement */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   SCAN_STACK_FOR_LET_START,                /**< start of "for" iterator with let statement */
   SCAN_STACK_FOR_CONST_START,              /**< start of "for" iterator with const statement */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
   SCAN_STACK_FOR_START,                    /**< start of "for" iterator */
   SCAN_STACK_FOR_CONDITION,                /**< condition part of "for" iterator */
   SCAN_STACK_FOR_EXPRESSION,               /**< expression part of "for" iterator */
@@ -96,7 +96,7 @@ typedef enum
   SCAN_STACK_ARRAY_LITERAL,                /**< array literal or destructuring assignment or binding */
   SCAN_STACK_OBJECT_LITERAL,               /**< object literal group */
   SCAN_STACK_PROPERTY_ACCESSOR,            /**< property accessor in square brackets */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   /* These four must be in this order. */
   SCAN_STACK_COMPUTED_PROPERTY,            /**< computed property name */
   SCAN_STACK_COMPUTED_GENERATOR,           /**< computed generator function */
@@ -115,7 +115,7 @@ typedef enum
   SCAN_STACK_CLASS_EXTENDS,                /**< class extends expression */
   SCAN_STACK_FUNCTION_PARAMETERS,          /**< function parameter initializer */
   SCAN_STACK_USE_ASYNC,                    /**< an "async" identifier is used */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 } scan_stack_modes_t;
 
 /**
@@ -124,9 +124,9 @@ typedef enum
 typedef enum
 {
   SCANNER_CONTEXT_NO_FLAGS = 0, /**< no flags are set */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   SCANNER_CONTEXT_THROW_ERR_ASYNC_FUNCTION = (1 << 0), /**< throw async function error */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 #if ENABLED (JERRY_DEBUGGER)
   SCANNER_CONTEXT_DEBUGGER_ENABLED = (1 << 1), /**< debugger is enabled */
 #endif /* ENABLED (JERRY_DEBUGGER) */
@@ -161,24 +161,24 @@ typedef enum
 {
   SCANNER_LITERAL_IS_ARG = (1 << 0), /**< literal is argument */
   SCANNER_LITERAL_IS_VAR = (1 << 1), /**< literal is var */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   /** literal is a destructured argument binding of a possible arrow function */
   SCANNER_LITERAL_IS_ARROW_DESTRUCTURED_ARG = SCANNER_LITERAL_IS_VAR,
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
   SCANNER_LITERAL_IS_FUNC = (1 << 2), /**< literal is function */
   SCANNER_LITERAL_NO_REG = (1 << 3), /**< literal cannot be stored in a register */
   SCANNER_LITERAL_IS_LET = (1 << 4), /**< literal is let */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   /** literal is a function declared in this block (prevents declaring let/const with the same name) */
   SCANNER_LITERAL_IS_FUNC_DECLARATION = SCANNER_LITERAL_IS_LET,
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
   SCANNER_LITERAL_IS_CONST = (1 << 5), /**< literal is const */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   /** literal is a destructured argument binding */
   SCANNER_LITERAL_IS_DESTRUCTURED_ARG = SCANNER_LITERAL_IS_CONST,
   SCANNER_LITERAL_IS_USED = (1 << 6), /**< literal is used */
   SCANNER_LITERAL_EARLY_CREATE = (1 << 7), /**< binding should be created early with ECMA_VALUE_UNINITIALIZED */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 } scanner_literal_type_flags_t;
 
 /*
@@ -222,7 +222,7 @@ typedef struct
   scanner_case_info_t **last_case_p; /**< last case info */
 } scanner_switch_statement_t;
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 
 /**
  * Types of scanner destructuring bindings.
@@ -263,7 +263,7 @@ typedef struct scanner_binding_list_t
   bool is_nested; /**< is nested binding declaration */
 } scanner_binding_list_t;
 
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Flags for scanner_literal_pool_t structure.
@@ -275,19 +275,19 @@ typedef enum
   SCANNER_LITERAL_POOL_IS_STRICT = (1 << 2), /**< literal pool represents a strict mode code block */
   SCANNER_LITERAL_POOL_CAN_EVAL = (1 << 3), /**< prepare for executing eval in this block */
   SCANNER_LITERAL_POOL_NO_ARGUMENTS = (1 << 4), /**< arguments object must not be constructed */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   SCANNER_LITERAL_POOL_ARGUMENTS_UNMAPPED = (1 << 5), /**< arguments object should be unmapped */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
   SCANNER_LITERAL_POOL_IN_WITH = (1 << 6), /**< literal pool is in a with statement */
-#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+#if ENABLED (JERRY_MODULE_SYSTEM)
   SCANNER_LITERAL_POOL_IN_EXPORT = (1 << 7), /**< the declared variables are exported by the module system */
-#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
-#if ENABLED (JERRY_ES2015)
+#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
+#if ENABLED (JERRY_ESNEXT)
   SCANNER_LITERAL_POOL_FUNCTION_STATEMENT = (1 << 8), /**< function statement */
   SCANNER_LITERAL_POOL_GENERATOR = (1 << 9), /**< generator function */
   SCANNER_LITERAL_POOL_ASYNC = (1 << 10), /**< async function */
   SCANNER_LITERAL_POOL_ASYNC_ARROW = (1 << 11), /**< can be an async arrow function */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 } scanner_literal_pool_flags_t;
 
 /**
@@ -327,27 +327,27 @@ struct scanner_context_t
 {
   uint32_t context_status_flags; /**< original status flags of the context */
   uint8_t mode; /**< scanner mode */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   uint8_t binding_type; /**< current destructuring binding type */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
   uint16_t status_flags; /**< scanner status flags */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   scanner_binding_list_t *active_binding_list_p; /**< currently active binding list */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
   scanner_literal_pool_t *active_literal_pool_p; /**< currently active literal pool */
   scanner_switch_statement_t active_switch_statement; /**< currently active switch statement */
   scanner_info_t *end_arguments_p; /**< position of end arguments */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   const uint8_t *async_source_p; /**< source position for async functions */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 };
 
 /* Scanner utils. */
 
 void scanner_raise_error (parser_context_t *context_p);
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 void scanner_raise_redeclaration_error (parser_context_t *context_p);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 void *scanner_malloc (parser_context_t *context_p, size_t size);
 void scanner_free (void *ptr, size_t size);
@@ -359,34 +359,34 @@ scanner_info_t *scanner_insert_info_before (parser_context_t *context_p, const u
 scanner_literal_pool_t *scanner_push_literal_pool (parser_context_t *context_p, scanner_context_t *scanner_context_p,
                                                    uint16_t status_flags);
 void scanner_pop_literal_pool (parser_context_t *context_p, scanner_context_t *scanner_context_p);
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 void scanner_construct_global_block (parser_context_t *context_p, scanner_context_t *scanner_context_p);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 void scanner_filter_arguments (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 lexer_lit_location_t *scanner_add_custom_literal (parser_context_t *context_p, scanner_literal_pool_t *literal_pool_p,
                                                   const lexer_lit_location_t *literal_location_p);
 lexer_lit_location_t *scanner_add_literal (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 void scanner_add_reference (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 lexer_lit_location_t *scanner_append_argument (parser_context_t *context_p, scanner_context_t *scanner_context_p);
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 void scanner_detect_invalid_var (parser_context_t *context_p, scanner_context_t *scanner_context_p,
                                  lexer_lit_location_t *var_literal_p);
 void scanner_detect_invalid_let (parser_context_t *context_p, lexer_lit_location_t *let_literal_p);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 void scanner_detect_eval_call (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 void scanner_push_class_declaration (parser_context_t *context_p, scanner_context_t *scanner_context_p,
                                      uint8_t stack_mode);
 void scanner_push_destructuring_pattern (parser_context_t *context_p, scanner_context_t *scanner_context_p,
                                          uint8_t binding_type, bool is_nested);
 void scanner_pop_binding_list (scanner_context_t *scanner_context_p);
 void scanner_append_hole (parser_context_t *context_p, scanner_context_t *scanner_context_p);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /* Scanner operations. */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 void scanner_add_async_literal (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 void scanner_check_arrow (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 void scanner_scan_simple_arrow (parser_context_t *context_p, scanner_context_t *scanner_context_p,
@@ -394,7 +394,7 @@ void scanner_scan_simple_arrow (parser_context_t *context_p, scanner_context_t *
 void scanner_check_arrow_arg (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 bool scanner_check_async_function (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 void scanner_check_function_after_if (parser_context_t *context_p, scanner_context_t *scanner_context_p);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 void scanner_scan_bracket (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 void scanner_check_directives (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 

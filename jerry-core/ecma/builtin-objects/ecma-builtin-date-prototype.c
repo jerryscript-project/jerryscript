@@ -100,9 +100,9 @@ enum
   ECMA_DATE_PROTOTYPE_SET_TIME, /* ECMA-262 v5, 15.9.5.27 */
   ECMA_DATE_PROTOTYPE_TO_JSON, /* ECMA-262 v5, 15.9.5.44 */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   ECMA_DATE_PROTOTYPE_TO_PRIMITIVE, /*  ECMA-262 v6 20.3.4.45 */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-date-prototype.inc.h"
@@ -184,7 +184,7 @@ ecma_builtin_date_prototype_to_json (ecma_value_t this_arg) /**< this argument *
   return ret_value;
 } /* ecma_builtin_date_prototype_to_json */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 /**
  * The Date.prototype object's toPrimitive routine
  *
@@ -222,7 +222,7 @@ ecma_builtin_date_prototype_to_primitive (ecma_value_t this_arg, /**< this argum
 
   return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type in toPrimitive."));
 } /* ecma_builtin_date_prototype_to_primitive */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Dispatch get date functions
@@ -605,13 +605,13 @@ ecma_builtin_date_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< 
     return ecma_builtin_date_prototype_to_json (this_arg);
   }
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   if (JERRY_UNLIKELY (builtin_routine_id == ECMA_DATE_PROTOTYPE_TO_PRIMITIVE))
   {
     ecma_value_t argument = arguments_number > 0 ? arguments_list[0] : ECMA_VALUE_UNDEFINED;
     return ecma_builtin_date_prototype_to_primitive (this_arg, argument);
   }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   if (!ecma_is_value_object (this_arg)
       || !ecma_object_class_is (ecma_get_object_from_value (this_arg), LIT_MAGIC_STRING_DATE_UL))

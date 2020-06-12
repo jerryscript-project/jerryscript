@@ -900,12 +900,12 @@ ecma_builtin_json_serialize_object (ecma_json_stringify_context_t *context_p, /*
   {
     property_keys_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_ENUMERABLE);
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
     if (property_keys_p == NULL)
     {
       return ECMA_VALUE_ERROR;
     }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
   }
 
   /* 8. */
@@ -1029,7 +1029,7 @@ ecma_builtin_json_serialize_array (ecma_json_stringify_context_t *context_p, /**
   /* 6. */
   uint32_t array_length;
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   if (ECMA_OBJECT_IS_PROXY (obj_p))
   {
     ecma_value_t length_value = ecma_op_object_get_length (obj_p, &array_length);
@@ -1040,7 +1040,7 @@ ecma_builtin_json_serialize_array (ecma_json_stringify_context_t *context_p, /**
     }
   }
   else
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
   {
     array_length = ((ecma_extended_object_t *) obj_p)->u.array.length;
   }
@@ -1278,13 +1278,13 @@ ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p, 
   {
     ecma_value_t is_array = ecma_is_value_array (value);
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     if (ECMA_IS_VALUE_ERROR (is_array))
     {
       ecma_free_value (value);
       return is_array;
     }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
     ecma_object_t *obj_p = ecma_get_object_from_value (value);
 

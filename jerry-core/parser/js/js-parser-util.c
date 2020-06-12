@@ -838,12 +838,12 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Invalid hexadecimal digit.";
     }
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     case PARSER_ERR_INVALID_BIN_DIGIT:
     {
       return "Invalid binary digit.";
     }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
     case PARSER_ERR_INVALID_ESCAPE_SEQUENCE:
     {
       return "Invalid escape sequence.";
@@ -944,7 +944,7 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Arguments is not allowed to be used here in strict mode.";
     }
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     case PARSER_ERR_USE_STRICT_NOT_ALLOWED:
     {
       return "The 'use strict' directive is not allowed for functions with non-simple arguments.";
@@ -965,7 +965,7 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Duplicate __proto__ fields are not allowed in object literals.";
     }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
     case PARSER_ERR_DELETE_IDENT_NOT_ALLOWED:
     {
       return "Deleting identifier is not allowed in strict mode.";
@@ -1122,7 +1122,7 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Non-strict argument definition.";
     }
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     case PARSER_ERR_VARIABLE_REDECLARED:
     {
       return "Local variable is redeclared.";
@@ -1211,8 +1211,8 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "new.target expression is not allowed here.";
     }
-#endif /* ENABLED (JERRY_ES2015) */
-#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+#endif /* ENABLED (JERRY_ESNEXT) */
+#if ENABLED (JERRY_MODULE_SYSTEM)
     case PARSER_ERR_FILE_NOT_FOUND:
     {
       return "Requested module not found.";
@@ -1257,7 +1257,7 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Duplicated imported binding name.";
     }
-#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
     default:
     {

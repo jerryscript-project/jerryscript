@@ -25,7 +25,7 @@
  * @{
  */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 /**
  * Free symbol list
  */
@@ -53,7 +53,7 @@ ecma_free_symbol_list (jmem_cpointer_t symbol_list_cp) /**< symbol list */
     symbol_list_cp = next_item_cp;
   }
 } /* ecma_free_symbol_list */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Free string list
@@ -115,9 +115,9 @@ ecma_free_number_list (jmem_cpointer_t number_list_cp) /**< string list */
 void
 ecma_finalize_lit_storage (void)
 {
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   ecma_free_symbol_list (JERRY_CONTEXT (symbol_list_first_cp));
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
   ecma_free_string_list (JERRY_CONTEXT (string_list_first_cp));
   ecma_free_number_list (JERRY_CONTEXT (number_list_first_cp));
 } /* ecma_finalize_lit_storage */
@@ -542,7 +542,7 @@ ecma_snapshot_get_literal (const uint8_t *literal_base_p, /**< literal start */
  * Compute the start of the serializable ecma-values of the bytecode
  * Related values:
  *  - function argument names, if CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED is present
- *  - function name, if CBC_CODE_FLAGS_CLASS_CONSTRUCTOR is not present and ES2015 profile is enabled
+ *  - function name, if CBC_CODE_FLAGS_CLASS_CONSTRUCTOR is not present and ES.next profile is enabled
  *  - resource name, if JERRY_RESOURCE_NAME is enabled
  *
  * @return pointer to the beginning of the serializable ecma-values
@@ -568,13 +568,13 @@ ecma_snapshot_resolve_serializable_values (ecma_compiled_code_t *compiled_code_p
     base_p -= argument_end;
   }
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   /* function name */
   if (!(compiled_code_p->status_flags & CBC_CODE_FLAGS_CLASS_CONSTRUCTOR))
   {
     base_p--;
   }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 #if ENABLED (JERRY_RESOURCE_NAME)
   /* resource name */

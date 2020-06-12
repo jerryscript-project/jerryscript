@@ -45,9 +45,9 @@ ecma_init_global_environment (void)
                                                                 glob_obj_p,
                                                                 ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
   ECMA_SET_NON_NULL_POINTER (JERRY_CONTEXT (ecma_global_env_cp), global_lex_env_p);
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   ECMA_SET_NON_NULL_POINTER (JERRY_CONTEXT (ecma_global_scope_cp), global_lex_env_p);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 } /* ecma_init_global_environment */
 
 /**
@@ -56,13 +56,13 @@ ecma_init_global_environment (void)
 void
 ecma_finalize_global_environment (void)
 {
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   if (JERRY_CONTEXT (ecma_global_scope_cp) != JERRY_CONTEXT (ecma_global_env_cp))
   {
     ecma_deref_object (ECMA_GET_NON_NULL_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_global_scope_cp)));
   }
   JERRY_CONTEXT (ecma_global_scope_cp) = JMEM_CP_NULL;
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
   ecma_deref_object (ECMA_GET_NON_NULL_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_global_env_cp)));
   JERRY_CONTEXT (ecma_global_env_cp) = JMEM_CP_NULL;
 } /* ecma_finalize_global_environment */
@@ -80,7 +80,7 @@ ecma_get_global_environment (void)
   return ECMA_GET_NON_NULL_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_global_env_cp));
 } /* ecma_get_global_environment */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 /**
  * Create the global lexical block on top of the global environment.
  */
@@ -94,7 +94,7 @@ ecma_create_global_lexical_block (void)
     ECMA_SET_NON_NULL_POINTER (JERRY_CONTEXT (ecma_global_scope_cp), global_scope_p);
   }
 } /* ecma_create_global_lexical_block */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Get reference to Global lexical scope
@@ -105,12 +105,12 @@ ecma_create_global_lexical_block (void)
 ecma_object_t *
 ecma_get_global_scope (void)
 {
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   JERRY_ASSERT (JERRY_CONTEXT (ecma_global_scope_cp) != JMEM_CP_NULL);
   return ECMA_GET_NON_NULL_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_global_scope_cp));
-#else /* !ENABLED (JERRY_ES2015) */
+#else /* !ENABLED (JERRY_ESNEXT) */
   return ecma_get_global_environment ();
-#endif /* !ENABLED (JERRY_ES2015) */
+#endif /* !ENABLED (JERRY_ESNEXT) */
 } /* ecma_get_global_scope */
 
 /**
@@ -239,12 +239,12 @@ ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment 
     {
       ecma_named_data_property_assign_value (lex_env_p, ECMA_PROPERTY_VALUE_PTR (property_p), value);
     }
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     else if (ecma_is_property_enumerable (*property_p))
     {
       return ecma_raise_type_error (ECMA_ERR_MSG ("Constant bindings cannot be reassigned."));
     }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
     else if (is_strict)
     {
       return ecma_raise_type_error (ECMA_ERR_MSG ("Binding cannot be set."));
@@ -433,7 +433,7 @@ ecma_op_create_immutable_binding (ecma_object_t *lex_env_p, /**< lexical environ
   prop_value_p->value = ecma_copy_value_if_not_object (value);
 } /* ecma_op_create_immutable_binding */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 /**
  * InitializeBinding operation.
  *
@@ -569,7 +569,7 @@ ecma_op_this_binding_is_initialized (ecma_property_t *prop_p) /**< [[ThisBinding
   return ECMA_PROPERTY_VALUE_PTR (prop_p)->value != ECMA_VALUE_UNINITIALIZED;
 } /* ecma_op_this_binding_is_initialized */
 
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * @}

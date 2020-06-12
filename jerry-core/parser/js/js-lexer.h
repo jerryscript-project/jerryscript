@@ -39,10 +39,10 @@ typedef enum
   LEXER_LIT_TRUE,                /**< true (not a keyword!) */
   LEXER_LIT_FALSE,               /**< false (not a keyword!) */
   LEXER_LIT_NULL,                /**< null (not a keyword!) */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   LEXER_TEMPLATE_LITERAL,        /**< multi segment template literal */
   LEXER_THREE_DOTS,              /**< ... (rest or spread operator) */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   /* Unary operators
    * IMPORTANT: update CBC_UNARY_OP_TOKEN_TO_OPCODE and
@@ -58,9 +58,9 @@ typedef enum
   LEXER_BIT_NOT,                 /**< "~" */
   LEXER_KEYW_VOID,               /**< void */
   LEXER_KEYW_TYPEOF,             /**< typeof */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   LEXER_KEYW_AWAIT,              /**< await */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
   LEXER_KEYW_DELETE,             /**< delete */
   LEXER_INCREASE,                /**< "++" */
   LEXER_DECREASE,                /**< "--" */
@@ -69,13 +69,13 @@ typedef enum
    * IMPORTANT: update CBC_BINARY_OP_TOKEN_TO_OPCODE,
    *            CBC_BINARY_LVALUE_OP_TOKEN_TO_OPCODE and
    *            parser_binary_precedence_table after changes. */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 #define LEXER_IS_BINARY_OP_TOKEN(token_type) \
   ((token_type) >= LEXER_ASSIGN && (token_type) <= LEXER_EXPONENTIATION)
-#else /* !ENABLED (JERRY_ES2015) */
+#else /* !ENABLED (JERRY_ESNEXT) */
 #define LEXER_IS_BINARY_OP_TOKEN(token_type) \
   ((token_type) >= LEXER_ASSIGN && (token_type) <= LEXER_MODULO)
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 #define LEXER_IS_BINARY_LVALUE_TOKEN(token_type) \
   ((token_type) >= LEXER_ASSIGN && (token_type) <= LEXER_ASSIGN_BIT_XOR)
@@ -88,9 +88,9 @@ typedef enum
   LEXER_ASSIGN_MULTIPLY,         /**< "*=" (prec: 3) */
   LEXER_ASSIGN_DIVIDE,           /**< "/=" (prec: 3) */
   LEXER_ASSIGN_MODULO,           /**< "%=" (prec: 3) */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   LEXER_ASSIGN_EXPONENTIATION,   /**< "**=" (prec: 3) */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
   LEXER_ASSIGN_LEFT_SHIFT,       /**< "<<=" (prec: 3) */
   LEXER_ASSIGN_RIGHT_SHIFT,      /**< ">>=" (prec: 3) */
   LEXER_ASSIGN_UNS_RIGHT_SHIFT,  /**< ">>>=" (prec: 3) */
@@ -121,9 +121,9 @@ typedef enum
   LEXER_MULTIPLY,                /**< "*" (prec: 14) */
   LEXER_DIVIDE,                  /**< "/" (prec: 14) */
   LEXER_MODULO,                  /**< "%" (prec: 14) */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   LEXER_EXPONENTIATION,          /**< "**" (prec: 15) */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   LEXER_LEFT_BRACE,              /**< "{" */
   LEXER_LEFT_PAREN,              /**< "(" */
@@ -135,9 +135,9 @@ typedef enum
   LEXER_SEMICOLON,               /**< ";" */
   LEXER_COLON,                   /**< ":" */
   LEXER_COMMA,                   /**< "," */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   LEXER_ARROW,                   /**< "=>" */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   LEXER_KEYW_BREAK,              /**< break */
   LEXER_KEYW_DO,                 /**< do */
@@ -173,21 +173,21 @@ typedef enum
   LEXER_PROPERTY_GETTER,         /**< property getter function */
   LEXER_PROPERTY_SETTER,         /**< property setter function */
   LEXER_COMMA_SEP_LIST,          /**< comma separated bracketed expression list */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   LEXER_ASSIGN_GROUP_EXPR,       /**< indetifier for the assignment is located in a group expression */
   LEXER_ASSIGN_CONST,            /**< a const binding is reassigned */
   LEXER_CLASS_CONSTRUCTOR,       /**< special value for class constructor method */
   LEXER_INVALID_PATTERN,         /**< special value for invalid destructuring pattern */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   /* Keywords which are not keyword tokens. */
 #define LEXER_FIRST_NON_RESERVED_KEYWORD LEXER_KEYW_ASYNC
   LEXER_KEYW_ASYNC,              /**< async */
-#else /* !ENABLED (JERRY_ES2015) */
+#else /* !ENABLED (JERRY_ESNEXT) */
   /* Keywords which are not keyword tokens. */
 #define LEXER_FIRST_NON_RESERVED_KEYWORD LEXER_KEYW_EVAL
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   /* Keywords which cannot be assigned in strict mode. */
 #define LEXER_FIRST_NON_STRICT_ARGUMENTS LEXER_KEYW_EVAL

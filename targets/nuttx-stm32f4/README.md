@@ -44,7 +44,7 @@ jerryscript/tools/build.py \
     --jerry-libm=ON \
     --all-in-one=ON \
     --mem-heap=70 \
-    --profile=es2015-subset \
+    --profile=es.next \
     --compile-flag="--sysroot=${PWD}/nuttx" \
     --toolchain=${PWD}/jerryscript/cmake/toolchain_mcu_stm32f4.cmake
 ```

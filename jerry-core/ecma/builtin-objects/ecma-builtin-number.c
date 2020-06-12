@@ -93,7 +93,7 @@ ecma_builtin_number_dispatch_construct (const ecma_value_t *arguments_list_p, /*
   }
 } /* ecma_builtin_number_dispatch_construct */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 
 /**
  * The Number object 'isFinite' routine
@@ -222,7 +222,7 @@ ecma_builtin_number_object_is_safe_integer (ecma_value_t this_arg, /**< this arg
   return ECMA_VALUE_FALSE;
 } /* ecma_builtin_number_object_is_safe_integer */
 
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * @}

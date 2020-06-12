@@ -138,19 +138,19 @@ struct jerry_context_t
   const lit_utf8_byte_t * const *lit_magic_string_ex_array; /**< array of external magic strings */
   const lit_utf8_size_t *lit_magic_string_ex_sizes; /**< external magic string lengths */
   jmem_cpointer_t string_list_first_cp; /**< first item of the literal string list */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   jmem_cpointer_t symbol_list_first_cp; /**< first item of the global symbol list */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
   jmem_cpointer_t number_list_first_cp; /**< first item of the literal number list */
   jmem_cpointer_t ecma_global_env_cp; /**< global lexical environment */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   jmem_cpointer_t ecma_global_scope_cp; /**< global lexical scope */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
-#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+#if ENABLED (JERRY_MODULE_SYSTEM)
   ecma_module_t *ecma_modules_p; /**< list of referenced modules */
   ecma_module_context_t *module_top_context_p; /**< top (current) module parser context */
-#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
   vm_frame_ctx_t *vm_top_context_p; /**< top (current) interpreter context */
   jerry_context_data_header_t *context_data_p; /**< linked list of user-provided context-specific pointers */
@@ -176,10 +176,10 @@ struct jerry_context_t
   uint8_t re_cache_idx; /**< evicted item index when regex cache is full (round-robin) */
 #endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROMISE)
+#if ENABLED (JERRY_BUILTIN_PROMISE)
   ecma_job_queue_item_t *job_queue_head_p; /**< points to the head item of the job queue */
   ecma_job_queue_item_t *job_queue_tail_p; /**< points to the tail item of the job queue */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
+#endif /* ENABLED (JERRY_BUILTIN_PROMISE) */
 
 #if ENABLED (JERRY_VM_EXEC_STOP)
   uint32_t vm_exec_stop_frequency; /**< reset value for vm_exec_stop_counter */
@@ -224,7 +224,7 @@ struct jerry_context_t
   ecma_lcache_hash_entry_t lcache[ECMA_LCACHE_HASH_ROWS_COUNT][ECMA_LCACHE_HASH_ROW_LENGTH];
 #endif /* ENABLED (JERRY_LCACHE) */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   /**
    * Allowed values and it's meaning:
    * * NULL (0x0): the current "new.target" is undefined, that is the execution is inside a normal method.
@@ -233,7 +233,7 @@ struct jerry_context_t
   ecma_object_t *current_new_target;
   ecma_object_t *current_function_obj_p; /** currently invoked function object
                                              (Note: currently used only in generator functions) */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 };
 
 #if ENABLED (JERRY_EXTERNAL_CONTEXT)

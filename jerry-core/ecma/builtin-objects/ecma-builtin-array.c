@@ -65,7 +65,7 @@ ecma_builtin_array_object_is_array (ecma_value_t this_arg, /**< 'this' argument 
   return ecma_is_value_array (arg);
 } /* ecma_builtin_array_object_is_array */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 /**
  * The Array object's 'from' routine
  *
@@ -473,7 +473,7 @@ ecma_builtin_array_species_get (ecma_value_t this_value) /**< This Value */
 {
   return ecma_copy_value (this_value);
 } /* ecma_builtin_array_species_get */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Handle calling [[Call]] of built-in Array object
@@ -500,9 +500,9 @@ ecma_builtin_array_dispatch_construct (const ecma_value_t *arguments_list_p, /**
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-#if !ENABLED (JERRY_ES2015)
+#if !ENABLED (JERRY_ESNEXT)
   return ecma_op_create_array_object (arguments_list_p, arguments_list_len, true);
-#else /* ENABLED (JERRY_ES2015) */
+#else /* ENABLED (JERRY_ESNEXT) */
   ecma_object_t *proto_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_new_target),
                                                                    ECMA_BUILTIN_ID_ARRAY_PROTOTYPE);
 
@@ -523,7 +523,7 @@ ecma_builtin_array_dispatch_construct (const ecma_value_t *arguments_list_p, /**
   ECMA_SET_NON_NULL_POINTER (object_p->u2.prototype_cp, proto_p);
   ecma_deref_object (proto_p);
   return result;
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 } /* ecma_builtin_array_dispatch_construct */
 
 /**

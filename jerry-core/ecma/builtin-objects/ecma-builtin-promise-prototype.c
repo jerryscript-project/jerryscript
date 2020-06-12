@@ -16,7 +16,7 @@
 #include "ecma-globals.h"
 #include "ecma-promise-object.h"
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROMISE)
+#if ENABLED (JERRY_BUILTIN_PROMISE)
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -76,4 +76,4 @@ ecma_builtin_promise_prototype_catch (ecma_value_t this_arg, /**< this argument 
  * @}
  */
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
+#endif /* ENABLED (JERRY_BUILTIN_PROMISE) */

@@ -298,7 +298,7 @@ ecma_utf8_string_to_number_by_radix (const lit_utf8_byte_t *str_p, /**< utf-8 st
   JERRY_ASSERT (radix == 2 || radix == 8 || radix == 16);
   ecma_number_t num = ECMA_NUMBER_ZERO;
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   if (radix <= 8)
   {
     lit_code_point_t upper_limit = LIT_CHAR_0 + radix;
@@ -321,7 +321,7 @@ ecma_utf8_string_to_number_by_radix (const lit_utf8_byte_t *str_p, /**< utf-8 st
 
     return num;
   }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   for (const lit_utf8_byte_t * iter_p = str_p; iter_p <= end_p; iter_p++)
   {

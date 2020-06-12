@@ -35,9 +35,9 @@ typedef enum
   NUMBER_ARITHMETIC_MULTIPLICATION, /**< multiplication */
   NUMBER_ARITHMETIC_DIVISION, /**< division */
   NUMBER_ARITHMETIC_REMAINDER, /**< remainder calculation */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   NUMBER_ARITHMETIC_EXPONENTIATION, /**< exponentiation */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 } number_arithmetic_op;
 
 /**
@@ -104,15 +104,15 @@ vm_op_delete_var (ecma_value_t name_literal, ecma_object_t *lex_env_p);
 ecma_collection_t *
 opfunc_for_in (ecma_value_t left_value, ecma_value_t *result_obj_p);
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 ecma_collection_t *
 opfunc_spread_arguments (ecma_value_t *stack_top_p, uint8_t argument_list_len);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 ecma_value_t
 opfunc_append_array (ecma_value_t *stack_top_p, uint16_t values_length);
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 ecma_value_t
 opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p);
 
@@ -143,7 +143,7 @@ opfunc_form_super_reference (ecma_value_t **vm_stack_top_p, vm_frame_ctx_t *fram
 
 ecma_value_t
 opfunc_assign_super_reference (ecma_value_t **vm_stack_top_p, vm_frame_ctx_t *frame_ctx_p, uint32_t opcode_data);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * @}

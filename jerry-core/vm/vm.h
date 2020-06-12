@@ -182,9 +182,9 @@ typedef enum
   VM_OC_MUL,                     /**< mul */
   VM_OC_DIV,                     /**< div */
   VM_OC_MOD,                     /**< mod */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   VM_OC_EXP,                     /**< exponentiation */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   VM_OC_EQUAL,                   /**< equal */
   VM_OC_NOT_EQUAL,               /**< not equal */
@@ -219,10 +219,10 @@ typedef enum
   VM_OC_CREATE_BINDING,          /**< create variables */
   VM_OC_SET_BYTECODE_PTR,        /**< setting bytecode pointer */
   VM_OC_VAR_EVAL,                /**< variable and function evaluation */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   VM_OC_EXT_VAR_EVAL,            /**< variable and function evaluation for
                                   *   functions with separate argument context */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
   VM_OC_INIT_ARG_OR_FUNC,        /**< create and init a function or argument binding */
 
 #if ENABLED (JERRY_DEBUGGER)
@@ -235,7 +235,7 @@ typedef enum
 #if ENABLED (JERRY_LINE_INFO)
   VM_OC_LINE,                    /**< line number of the next statement */
 #endif /* ENABLED (JERRY_LINE_INFO) */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   VM_OC_CHECK_VAR,               /**< check redeclared vars in the global scope */
   VM_OC_CHECK_LET,               /**< check redeclared lets in the global scope */
   VM_OC_ASSIGN_LET_CONST,        /**< assign values to let/const declarations */
@@ -280,7 +280,7 @@ typedef enum
   VM_OC_REQUIRE_OBJECT_COERCIBLE,/**< RequireObjectCoercible opretaion */
   VM_OC_ASSIGN_SUPER,            /**< assign super reference */
   VM_OC_SET__PROTO__,            /**< set prototpe when __proto__: form is used */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
   VM_OC_NONE,                    /**< a special opcode for unsupported byte codes */
 } vm_oc_types;
 
@@ -289,9 +289,9 @@ typedef enum
  */
 typedef enum
 {
-#if !ENABLED (JERRY_ES2015)
+#if !ENABLED (JERRY_ESNEXT)
   VM_OC_EXP = VM_OC_NONE,                     /**< exponentiation */
-#endif /* !ENABLED (JERRY_ES2015) */
+#endif /* !ENABLED (JERRY_ESNEXT) */
 #if !ENABLED (JERRY_DEBUGGER)
   VM_OC_BREAKPOINT_ENABLED = VM_OC_NONE,      /**< enabled breakpoint for debugger is unused */
   VM_OC_BREAKPOINT_DISABLED = VM_OC_NONE,     /**< disabled breakpoint for debugger is unused */
@@ -302,7 +302,7 @@ typedef enum
 #if !ENABLED (JERRY_LINE_INFO)
   VM_OC_LINE = VM_OC_NONE,                    /**< line number of the next statement is unused */
 #endif /* !ENABLED (JERRY_LINE_INFO) */
-#if !ENABLED (JERRY_ES2015)
+#if !ENABLED (JERRY_ESNEXT)
   VM_OC_EXT_VAR_EVAL = VM_OC_NONE,            /**< variable and function evaluation for
                                                *   functions with separate argument context */
   VM_OC_CHECK_VAR = VM_OC_NONE,               /**< check redeclared vars in the global scope */
@@ -349,7 +349,7 @@ typedef enum
   VM_OC_REQUIRE_OBJECT_COERCIBLE = VM_OC_NONE,/**< RequireObjectCoercible opretaion */
   VM_OC_ASSIGN_SUPER = VM_OC_NONE,            /**< assign super reference */
   VM_OC_SET__PROTO__ = VM_OC_NONE,            /**< set prototpe when __proto__: form is used */
-#endif /* !ENABLED (JERRY_ES2015) */
+#endif /* !ENABLED (JERRY_ESNEXT) */
 
   VM_OC_UNUSED = VM_OC_NONE                   /**< placeholder if the list is empty */
 } vm_oc_unused_types;
@@ -439,9 +439,9 @@ typedef enum
 ecma_value_t vm_run_global (const ecma_compiled_code_t *bytecode_p);
 ecma_value_t vm_run_eval (ecma_compiled_code_t *bytecode_data_p, uint32_t parse_opts);
 
-#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+#if ENABLED (JERRY_MODULE_SYSTEM)
 ecma_value_t vm_run_module (const ecma_compiled_code_t *bytecode_p, ecma_object_t *lex_env_p);
-#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
 ecma_value_t vm_run (const ecma_compiled_code_t *bytecode_header_p, ecma_value_t this_binding_value,
                      ecma_object_t *lex_env_p, const ecma_value_t *arg_list_p, ecma_length_t arg_list_len);

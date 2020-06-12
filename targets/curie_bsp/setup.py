@@ -96,7 +96,7 @@ def build_jerry_data(jerry_path):
         '-DJERRY_BUILTIN_DATE=0',
         '-DJERRY_BUILTIN_REGEXP=0',
         '-DJERRY_BUILTIN_ANNEXB=0',
-        '-DJERRY_ES2015=0',
+        '-DJERRY_ESNEXT=0',
         '-DJERRY_LCACHE=0',
         '-DJERRY_PROPRETY_HASHMAP=0',
     ]

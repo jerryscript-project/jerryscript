@@ -14,4 +14,4 @@
  */
 
 var a;
-import { a } from "../es2015/module-export-fail-test.js";
+import { a } from "../es.next/module-export-fail-test.js";

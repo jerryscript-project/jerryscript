@@ -57,7 +57,7 @@ typedef enum
                                                *   after the last byte code */
   PARSER_DEBUGGER_BREAKPOINT_APPENDED = (1u << 11), /**< pending (unsent) breakpoint
                                                      *   info is available */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   PARSER_LEXICAL_BLOCK_NEEDED = (1u << 12),   /**< global script: needs a lexical environment for let and const
                                                *   function: needs a lexical environment for arguments */
   PARSER_IS_ARROW_FUNCTION = (1u << 13),      /**< an arrow function is parsed */
@@ -75,11 +75,11 @@ typedef enum
                                                *   Note: PARSER_CLASS_CONSTRUCTOR must be present */
   PARSER_ALLOW_NEW_TARGET = (1u << 23),       /**< allow new.target parsing in the current context */
 
-#endif /* ENABLED (JERRY_ES2015) */
-#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+#endif /* ENABLED (JERRY_ESNEXT) */
+#if ENABLED (JERRY_MODULE_SYSTEM)
   PARSER_MODULE_DEFAULT_CLASS_OR_FUNC = (1u << 24),  /**< parsing a function or class default export */
   PARSER_MODULE_STORE_IDENT = (1u << 25),     /**< store identifier of the current export statement */
-#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
   PARSER_HAS_LATE_LIT_INIT = (1u << 30),      /**< there are identifier or string literals which construction
                                                *   is postponed after the local parser data is freed */
 #ifndef JERRY_NDEBUG
@@ -124,10 +124,10 @@ typedef enum
 typedef enum
 {
   PARSER_CHECK_BLOCK_CONTEXT,                  /**< check block context */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   PARSER_CHECK_GLOBAL_CONTEXT,                 /**< check global context */
   PARSER_CHECK_FUNCTION_CONTEXT,               /**< check function context */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 } parser_check_context_type_t;
 
 /**
@@ -152,7 +152,7 @@ typedef enum
 #define PARSER_MAX_BRANCH_LENGTH 3
 #endif /* PARSER_MAXIMUM_CODE_SIZE <= UINT16_MAX */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 /**
  * Offset of PARSER_ALLOW_SUPER
  */
@@ -201,7 +201,7 @@ typedef enum
 #define PARSER_GET_EVAL_FLAG(type) \
   ((type) >> JERRY_LOG2 (ECMA_PARSE_ALLOW_SUPER))
 
-#else /* !ENABLED (JERRY_ES2015) */
+#else /* !ENABLED (JERRY_ESNEXT) */
 
 /**
  * All flags that affect exotic arguments object creation.
@@ -209,7 +209,7 @@ typedef enum
 #define PARSER_ARGUMENTS_RELATED_FLAGS \
   (PARSER_ARGUMENTS_NEEDED | PARSER_IS_STRICT)
 
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /* Checks whether unmapped arguments are needed. */
 #define PARSER_NEEDS_MAPPED_ARGUMENTS(status_flags) \
@@ -397,7 +397,7 @@ typedef struct
  */
 #define PARSER_SCOPE_STACK_FUNC 0xffff
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 
 /**
  * Mask for decoding the register index of map_to
@@ -420,7 +420,7 @@ typedef struct
  */
 #define PARSER_SCOPE_STACK_IS_LOCAL_CREATED (PARSER_SCOPE_STACK_IS_CONST_REG)
 
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Starting literal index for registers.
@@ -489,10 +489,10 @@ typedef struct parser_saved_context_t
   uint16_t scope_stack_size;                  /**< size of scope stack */
   uint16_t scope_stack_top;                   /**< preserved top of scope stack */
   uint16_t scope_stack_reg_top;               /**< preserved top register of scope stack */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   uint16_t scope_stack_global_end;            /**< end of global declarations of a function */
   ecma_value_t tagged_template_literal_cp;    /**< compessed pointer to the tagged template literal collection */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 #ifndef JERRY_NDEBUG
   uint16_t context_stack_depth;               /**< current context stack depth */
@@ -523,10 +523,10 @@ typedef struct
   parser_saved_context_t *last_context_p;     /**< last saved context */
   parser_stack_iterator_t last_statement;     /**< last statement position */
 
-#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+#if ENABLED (JERRY_MODULE_SYSTEM)
   ecma_module_node_t *module_current_node_p;  /**< import / export node that is being processed */
   lexer_literal_t *module_identifier_lit_p;   /**< the literal for the identifier of the current element */
-#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
   /* Lexer members. */
   lexer_token_t token;                        /**< current token */
@@ -561,10 +561,10 @@ typedef struct
   uint16_t scope_stack_size;                  /**< size of scope stack */
   uint16_t scope_stack_top;                   /**< current top of scope stack */
   uint16_t scope_stack_reg_top;               /**< current top register of scope stack */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   uint16_t scope_stack_global_end;            /**< end of global declarations of a function */
   ecma_value_t tagged_template_literal_cp;    /**< compessed pointer to the tagged template literal collection */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
   uint8_t stack_top_uint8;                    /**< top byte stored on the stack */
 
 #ifndef JERRY_NDEBUG
@@ -702,14 +702,14 @@ bool lexer_check_next_characters (parser_context_t *context_p, lit_utf8_byte_t c
                                   lit_utf8_byte_t character2);
 uint8_t lexer_consume_next_character (parser_context_t *context_p);
 bool lexer_check_post_primary_exp (parser_context_t *context_p);
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 void lexer_skip_empty_statements (parser_context_t *context_p);
 bool lexer_check_arrow (parser_context_t *context_p);
 bool lexer_check_arrow_param (parser_context_t *context_p);
 bool lexer_check_yield_no_arg (parser_context_t *context_p);
 bool lexer_consume_generator (parser_context_t *context_p);
 void lexer_update_await_yield (parser_context_t *context_p, uint32_t status_flags);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 void lexer_parse_string (parser_context_t *context_p, lexer_string_options_t opts);
 void lexer_expect_identifier (parser_context_t *context_p, uint8_t literal_type);
 bool lexer_scan_identifier (parser_context_t *context_p);
@@ -732,12 +732,12 @@ bool lexer_compare_identifiers (parser_context_t *context_p, const lexer_lit_loc
 bool lexer_current_is_literal (parser_context_t *context_p, const lexer_lit_location_t *right_ident_p);
 bool lexer_string_is_use_strict (parser_context_t *context_p);
 bool lexer_string_is_directive (parser_context_t *context_p);
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 bool lexer_token_is_identifier (parser_context_t *context_p, const char *identifier_p,
                                 size_t identifier_length);
 bool lexer_token_is_let (parser_context_t *context_p);
 bool lexer_token_is_async (parser_context_t *context_p);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 bool lexer_compare_literal_to_string (parser_context_t *context_p, const char *string_p, size_t string_length);
 uint8_t lexer_convert_binary_lvalue_token_to_binary (uint8_t token);
 
@@ -753,11 +753,11 @@ uint8_t lexer_convert_binary_lvalue_token_to_binary (uint8_t token);
 void parser_parse_block_expression (parser_context_t *context_p, int options);
 void parser_parse_expression_statement (parser_context_t *context_p, int options);
 void parser_parse_expression (parser_context_t *context_p, int options);
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 void parser_parse_class (parser_context_t *context_p, bool is_statement);
 void parser_parse_initializer (parser_context_t *context_p, parser_pattern_flags_t flags);
 void parser_parse_initializer_by_next_char (parser_context_t *context_p, parser_pattern_flags_t flags);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * @}
@@ -776,20 +776,20 @@ void scanner_reverse_info_list (parser_context_t *context_p);
 void scanner_cleanup (parser_context_t *context_p);
 
 bool scanner_is_context_needed (parser_context_t *context_p, parser_check_context_type_t check_type);
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 bool scanner_scope_find_let_declaration (parser_context_t *context_p, lexer_lit_location_t *literal_p);
 bool scanner_try_scan_new_target (parser_context_t *context_p);
 void scanner_check_variables (parser_context_t *context_p);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 void scanner_create_variables (parser_context_t *context_p, uint32_t option_flags);
 
 void scanner_get_location (scanner_location_t *location_p, parser_context_t *context_p);
 void scanner_set_location (parser_context_t *context_p, scanner_location_t *location_p);
 uint16_t scanner_decode_map_to (parser_scope_stack_t *stack_item_p);
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 bool scanner_literal_is_const_reg (parser_context_t *context_p, uint16_t literal_index);
 bool scanner_literal_is_created (parser_context_t *context_p, uint16_t literal_index);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 void scanner_scan_all (parser_context_t *context_p, const uint8_t *arg_list_p, const uint8_t *arg_list_end_p,
                        const uint8_t *source_p, const uint8_t *source_end_p);
@@ -804,7 +804,7 @@ void scanner_scan_all (parser_context_t *context_p, const uint8_t *arg_list_p, c
 void parser_parse_statements (parser_context_t *context_p);
 void parser_free_jumps (parser_stack_iterator_t iterator);
 
-#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+#if ENABLED (JERRY_MODULE_SYSTEM)
 /**
  * @}
  *
@@ -830,7 +830,7 @@ void parser_module_add_names_to_node (parser_context_t *context_p,
                                       ecma_string_t *imex_name_p,
                                       ecma_string_t *local_name_p);
 
-#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
 /**
  * @}
@@ -840,14 +840,14 @@ void parser_module_add_names_to_node (parser_context_t *context_p,
  */
 
 ecma_compiled_code_t *parser_parse_function (parser_context_t *context_p, uint32_t status_flags);
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 ecma_compiled_code_t *parser_parse_arrow_function (parser_context_t *context_p, uint32_t status_flags);
 void parser_set_function_name (parser_context_t *context_p, uint16_t function_literal_index, uint16_t name_index,
                                uint32_t status_flags);
 void parser_compiled_code_set_function_name (parser_context_t *context_p, ecma_compiled_code_t *bytecode_p,
                                              uint16_t name_index, uint32_t status_flags);
 uint16_t parser_check_anonymous_function_declaration (parser_context_t *context_p);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /* Error management. */
 

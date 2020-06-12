@@ -15,7 +15,7 @@
 
 #include "ecma-globals.h"
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -69,4 +69,4 @@ ecma_builtin_generator_function_dispatch_construct (const ecma_value_t *argument
  * @}
  */
 
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */

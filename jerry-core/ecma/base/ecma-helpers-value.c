@@ -316,7 +316,7 @@ ecma_is_value_string (ecma_value_t value) /**< ecma value */
   return ((value & (ECMA_VALUE_TYPE_MASK - 0x4)) == ECMA_TYPE_STRING);
 } /* ecma_is_value_string */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 /**
  * Check if the value is symbol.
  *
@@ -328,7 +328,7 @@ ecma_is_value_symbol (ecma_value_t value) /**< ecma value */
 {
   return (ecma_get_value_type_field (value) == ECMA_TYPE_SYMBOL);
 } /* ecma_is_value_symbol */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Check if the value can be property name.
@@ -339,11 +339,11 @@ ecma_is_value_symbol (ecma_value_t value) /**< ecma value */
 inline bool JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
 ecma_is_value_prop_name (ecma_value_t value) /**< ecma value */
 {
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   return ecma_is_value_string (value) || ecma_is_value_symbol (value);
-#else /* !ENABLED (JERRY_ES2015) */
+#else /* !ENABLED (JERRY_ESNEXT) */
   return ecma_is_value_string (value);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 } /* ecma_is_value_prop_name */
 
 /**
@@ -431,7 +431,7 @@ ecma_is_value_array (ecma_value_t arg) /**< argument */
     return ECMA_VALUE_TRUE;
   }
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   if (ECMA_OBJECT_IS_PROXY (arg_obj_p))
   {
     ecma_proxy_object_t *proxy_obj_p = (ecma_proxy_object_t *) arg_obj_p;
@@ -444,7 +444,7 @@ ecma_is_value_array (ecma_value_t arg) /**< argument */
 
     return ecma_is_value_array (proxy_obj_p->target);
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
   return ECMA_VALUE_FALSE;
 } /* ecma_is_value_array */
@@ -591,9 +591,9 @@ inline ecma_value_t JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_make_string_value (const ecma_string_t *ecma_string_p) /**< string to reference in value */
 {
   JERRY_ASSERT (ecma_string_p != NULL);
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   JERRY_ASSERT (!ecma_prop_name_is_symbol ((ecma_string_t *) ecma_string_p));
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   if ((((uintptr_t) ecma_string_p) & ECMA_VALUE_TYPE_MASK) != 0)
   {
@@ -603,7 +603,7 @@ ecma_make_string_value (const ecma_string_t *ecma_string_p) /**< string to refer
   return ecma_pointer_to_ecma_value (ecma_string_p) | ECMA_TYPE_STRING;
 } /* ecma_make_string_value */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 /**
  * Symbol value constructor
  *
@@ -617,7 +617,7 @@ ecma_make_symbol_value (const ecma_string_t *ecma_symbol_p) /**< symbol to refer
 
   return ecma_pointer_to_ecma_value (ecma_symbol_p) | ECMA_TYPE_SYMBOL;
 } /* ecma_make_symbol_value */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Property-name value constructor
@@ -629,12 +629,12 @@ ecma_make_prop_name_value (const ecma_string_t *ecma_prop_name_p) /**< property 
 {
   JERRY_ASSERT (ecma_prop_name_p != NULL);
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   if (ecma_prop_name_is_symbol ((ecma_string_t *) ecma_prop_name_p))
   {
     return ecma_make_symbol_value (ecma_prop_name_p);
   }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   return ecma_make_string_value (ecma_prop_name_p);
 } /* ecma_make_prop_name_value */
@@ -749,7 +749,7 @@ ecma_get_string_from_value (ecma_value_t value) /**< ecma value */
   return (ecma_string_t *) ecma_get_pointer_from_ecma_value (value);
 } /* ecma_get_string_from_value */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 /**
  * Get pointer to ecma-string from ecma value
  *
@@ -762,7 +762,7 @@ ecma_get_symbol_from_value (ecma_value_t value) /**< ecma value */
 
   return (ecma_string_t *) ecma_get_pointer_from_ecma_value (value);
 } /* ecma_get_symbol_from_value */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Get pointer to a property name from ecma value
@@ -842,13 +842,13 @@ ecma_copy_value (ecma_value_t value)  /**< value description */
       ecma_ref_ecma_string (ecma_get_string_from_value (value));
       return value;
     }
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     case ECMA_TYPE_SYMBOL:
     {
       ecma_ref_ecma_string (ecma_get_symbol_from_value (value));
       return value;
     }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
     case ECMA_TYPE_OBJECT:
     {
       ecma_ref_object (ecma_get_object_from_value (value));
@@ -1063,13 +1063,13 @@ ecma_free_value (ecma_value_t value) /**< value description */
       ecma_deref_ecma_string (string_p);
       break;
     }
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     case ECMA_TYPE_SYMBOL:
     {
       ecma_deref_ecma_string (ecma_get_symbol_from_value (value));
       break;
     }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
     case ECMA_TYPE_OBJECT:
     {
       ecma_deref_object (ecma_get_object_from_value (value));
@@ -1169,12 +1169,12 @@ ecma_get_typeof_lit_id (ecma_value_t value) /**< input ecma value */
   {
     ret_value = LIT_MAGIC_STRING_STRING;
   }
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   else if (ecma_is_value_symbol (value))
   {
     ret_value = LIT_MAGIC_STRING_SYMBOL;
   }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
   else
   {
     JERRY_ASSERT (ecma_is_value_object (value));

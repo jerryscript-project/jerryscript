@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
+#if ENABLED (JERRY_BUILTIN_TYPEDARRAY)
 
 /* Object properties:
  *  (property name, object pointer getter) */
@@ -33,17 +33,17 @@ ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_BYTE_LENGTH_UL,
                     ecma_builtin_arraybuffer_prototype_bytelength_getter,
                     ECMA_PROPERTY_FLAG_CONFIGURABLE)
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 /* ECMA-262 v6, 24.1.4.4 */
 STRING_VALUE (LIT_GLOBAL_SYMBOL_TO_STRING_TAG,
               LIT_MAGIC_STRING_ARRAY_BUFFER_UL,
               ECMA_PROPERTY_FLAG_CONFIGURABLE)
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_MAGIC_STRING_SLICE, ecma_builtin_arraybuffer_prototype_object_slice, 2, 2)
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
+#endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

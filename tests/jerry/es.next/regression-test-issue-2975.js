@@ -16,7 +16,7 @@
 /* Import/export statements must be in the global scope. */
 var eval = eval.bind();
 try {
-  eval('import { c } from "tests/jerry/es2015/module-export-01.js";');
+  eval('import { c } from "tests/jerry/es.next/module-export-01.js";');
   assert (false);
 } catch (e) {
   assert (e instanceof SyntaxError);

@@ -17,7 +17,7 @@
 #include "ecma-exceptions.h"
 #include "ecma-dataview-object.h"
 
-#if ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW)
+#if ENABLED (JERRY_BUILTIN_DATAVIEW)
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -68,4 +68,4 @@ ecma_builtin_dataview_dispatch_construct (const ecma_value_t *arguments_list_p, 
  * @}
  */
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW */
+#endif /* ENABLED (JERRY_BUILTIN_DATAVIEW */

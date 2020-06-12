@@ -26,7 +26,7 @@
 #include "ecma-property-hashmap.h"
 #include "ecma-objects.h"
 
-#if ENABLED (JERRY_ES2015_BUILTIN_CONTAINER)
+#if ENABLED (JERRY_BUILTIN_CONTAINER)
 
 /** \addtogroup ecma ECMA
  * @{
@@ -184,7 +184,7 @@ ecma_op_container_entry_size (lit_magic_string_id_t lit_id) /**< class id */
   return ECMA_CONTAINER_VALUE_SIZE;
 } /* ecma_op_container_entry_size */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_WEAKSET)
+#if ENABLED (JERRY_BUILTIN_WEAKSET)
 /**
  * Release the entries in the WeakSet container.
  */
@@ -213,9 +213,9 @@ ecma_op_container_free_weakset_entries (ecma_object_t *object_p, /**< object poi
     *entry_p = ECMA_VALUE_EMPTY;
   }
 } /* ecma_op_container_free_weakset_entries */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_WEAKSET) */
+#endif /* ENABLED (JERRY_BUILTIN_WEAKSET) */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP)
+#if ENABLED (JERRY_BUILTIN_WEAKMAP)
 /**
  * Release the entries in the WeakMap container.
  */
@@ -247,9 +247,9 @@ ecma_op_container_free_weakmap_entries (ecma_object_t *object_p, /**< object poi
     entry_p->value = ECMA_VALUE_EMPTY;
   }
 } /* ecma_op_container_free_weakmap_entries */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP) */
+#endif /* ENABLED (JERRY_BUILTIN_WEAKMAP) */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_SET)
+#if ENABLED (JERRY_BUILTIN_SET)
 /**
  * Release the entries in the Set container.
  */
@@ -274,9 +274,9 @@ ecma_op_container_free_set_entries (ecma_collection_t *container_p)
     *entry_p = ECMA_VALUE_EMPTY;
   }
 } /* ecma_op_container_free_set_entries */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SET) */
+#endif /* ENABLED (JERRY_BUILTIN_SET) */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_MAP)
+#if ENABLED (JERRY_BUILTIN_MAP)
 /**
  * Release the entries in the Map container.
  */
@@ -304,7 +304,7 @@ ecma_op_container_free_map_entries (ecma_collection_t *container_p)
     entry_p->value = ECMA_VALUE_EMPTY;
   }
 } /* ecma_op_container_free_map_entries */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
+#endif /* ENABLED (JERRY_BUILTIN_MAP) */
 
 /**
  * Release the internal buffer and the stored entries.
@@ -320,34 +320,34 @@ ecma_op_container_free_entries (ecma_object_t *object_p) /**< collection object 
 
   switch (map_object_p->u.class_prop.class_id)
   {
-#if ENABLED (JERRY_ES2015_BUILTIN_WEAKSET)
+#if ENABLED (JERRY_BUILTIN_WEAKSET)
     case LIT_MAGIC_STRING_WEAKSET_UL:
     {
       ecma_op_container_free_weakset_entries (object_p, container_p);
       break;
     }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_WEAKSET) */
-#if ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP)
+#endif /* ENABLED (JERRY_BUILTIN_WEAKSET) */
+#if ENABLED (JERRY_BUILTIN_WEAKMAP)
     case LIT_MAGIC_STRING_WEAKMAP_UL:
     {
       ecma_op_container_free_weakmap_entries (object_p, container_p);
       break;
     }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP) */
-#if ENABLED (JERRY_ES2015_BUILTIN_SET)
+#endif /* ENABLED (JERRY_BUILTIN_WEAKMAP) */
+#if ENABLED (JERRY_BUILTIN_SET)
     case LIT_MAGIC_STRING_SET_UL:
     {
       ecma_op_container_free_set_entries (container_p);
       break;
     }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_SET) */
-#if ENABLED (JERRY_ES2015_BUILTIN_MAP)
+#endif /* ENABLED (JERRY_BUILTIN_SET) */
+#if ENABLED (JERRY_BUILTIN_MAP)
     case LIT_MAGIC_STRING_MAP_UL:
     {
       ecma_op_container_free_map_entries (container_p);
       break;
     }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
+#endif /* ENABLED (JERRY_BUILTIN_MAP) */
     default:
     {
       break;
@@ -401,7 +401,7 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
   ecma_value_t set_value = ecma_make_object_value (object_p);
   ecma_value_t result = set_value;
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   if (arguments_list_len == 0)
   {
     return result;
@@ -542,7 +542,7 @@ cleanup_adder:
   ecma_deref_object (adder_func_p);
 cleanup_object:
   ecma_deref_object (object_p);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   return result;
 } /* ecma_op_container_create */
@@ -623,12 +623,12 @@ ecma_op_container_get (ecma_value_t this_arg, /**< this argument */
     return ECMA_VALUE_ERROR;
   }
 
-#if ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP)
+#if ENABLED (JERRY_BUILTIN_WEAKMAP)
   if (lit_id == LIT_MAGIC_STRING_WEAKMAP_UL && !ecma_is_value_object (key_arg))
   {
     return ECMA_VALUE_UNDEFINED;
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP) */
+#endif /* ENABLED (JERRY_BUILTIN_WEAKMAP) */
 
   ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t,
                                                                     map_object_p->u.class_prop.u.value);
@@ -669,13 +669,13 @@ ecma_op_container_has (ecma_value_t this_arg, /**< this argument */
   ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t,
                                                                     map_object_p->u.class_prop.u.value);
 
-#if ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP) || ENABLED (JERRY_ES2015_BUILTIN_WEAKSET)
+#if ENABLED (JERRY_BUILTIN_WEAKMAP) || ENABLED (JERRY_BUILTIN_WEAKSET)
   if ((map_object_p->u.class_prop.extra_info & ECMA_CONTAINER_FLAGS_WEAK) != 0
       && !ecma_is_value_object (key_arg))
   {
     return ECMA_VALUE_FALSE;
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP) ||  ENABLED (JERRY_ES2015_BUILTIN_WEAKSET) */
+#endif /* ENABLED (JERRY_BUILTIN_WEAKMAP) ||  ENABLED (JERRY_BUILTIN_WEAKSET) */
 
   if (ECMA_CONTAINER_GET_SIZE (container_p) == 0)
   {
@@ -778,13 +778,13 @@ ecma_op_container_set (ecma_value_t this_arg, /**< this argument */
   ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t,
                                                                     map_object_p->u.class_prop.u.value);
 
-#if ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP) ||  ENABLED (JERRY_ES2015_BUILTIN_WEAKSET)
+#if ENABLED (JERRY_BUILTIN_WEAKMAP) ||  ENABLED (JERRY_BUILTIN_WEAKSET)
   if ((map_object_p->u.class_prop.extra_info & ECMA_CONTAINER_FLAGS_WEAK) != 0
       && !ecma_is_value_object (key_arg))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Key must be an object"));
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP) ||  ENABLED (JERRY_ES2015_BUILTIN_WEAKSET) */
+#endif /* ENABLED (JERRY_BUILTIN_WEAKMAP) ||  ENABLED (JERRY_BUILTIN_WEAKSET) */
 
   ecma_value_t *entry_p = ecma_op_internal_buffer_find (container_p, key_arg, lit_id);
 
@@ -795,13 +795,13 @@ ecma_op_container_set (ecma_value_t this_arg, /**< this argument */
                                     value_arg,
                                     lit_id);
 
-#if ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP) ||  ENABLED (JERRY_ES2015_BUILTIN_WEAKSET)
+#if ENABLED (JERRY_BUILTIN_WEAKMAP) ||  ENABLED (JERRY_BUILTIN_WEAKSET)
     if ((map_object_p->u.class_prop.extra_info & ECMA_CONTAINER_FLAGS_WEAK) != 0)
     {
       ecma_object_t *key_p = ecma_get_object_from_value (key_arg);
       ecma_op_container_set_weak (key_p, map_object_p);
     }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP) ||  ENABLED (JERRY_ES2015_BUILTIN_WEAKSET) */
+#endif /* ENABLED (JERRY_BUILTIN_WEAKMAP) ||  ENABLED (JERRY_BUILTIN_WEAKSET) */
   }
   else
   {
@@ -1014,7 +1014,7 @@ ecma_op_container_remove_weak_entry (ecma_object_t *object_p, /**< internal cont
   ecma_op_internal_buffer_delete (container_p, (ecma_container_pair_t *) entry_p, map_object_p->u.class_prop.class_id);
 } /* ecma_op_container_remove_weak_entry */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 
 /**
  * The Create{Set, Map}Iterator Abstract operation
@@ -1207,11 +1207,11 @@ ecma_op_container_iterator_next (ecma_value_t this_val, /**< this argument */
   return ret_value;
 } /* ecma_op_container_iterator_next */
 
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * @}
  * @}
  */
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_CONTAINER) */
+#endif /* ENABLED (JERRY_BUILTIN_CONTAINER) */

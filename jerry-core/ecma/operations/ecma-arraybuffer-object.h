@@ -18,7 +18,7 @@
 
 #include "ecma-globals.h"
 
-#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
+#if ENABLED (JERRY_BUILTIN_TYPEDARRAY)
 
 /** \addtogroup ecma ECMA
  * @{
@@ -57,5 +57,5 @@ ecma_is_arraybuffer (ecma_value_t val);
  * @}
  */
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
+#endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
 #endif /* !ECMA_ARRAYBUFFER_OBJECT_H */

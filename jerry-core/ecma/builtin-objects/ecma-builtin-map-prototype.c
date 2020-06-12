@@ -15,7 +15,7 @@
 
 #include "ecma-container-object.h"
 
-#if ENABLED (JERRY_ES2015_BUILTIN_MAP)
+#if ENABLED (JERRY_BUILTIN_MAP)
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -147,7 +147,7 @@ ecma_builtin_map_prototype_object_size_getter (ecma_value_t this_arg) /**< this 
   return ecma_op_container_size (this_arg, LIT_MAGIC_STRING_MAP_UL);
 } /* ecma_builtin_map_prototype_object_size_getter */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 
 /**
  * The Map.prototype object's 'entries' routine
@@ -206,7 +206,7 @@ ecma_builtin_map_prototype_object_values (ecma_value_t this_arg) /**< this argum
                                             ECMA_PSEUDO_MAP_ITERATOR);
 } /* ecma_builtin_map_prototype_object_values */
 
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * @}
@@ -214,4 +214,4 @@ ecma_builtin_map_prototype_object_values (ecma_value_t this_arg) /**< this argum
  * @}
  */
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
+#endif /* ENABLED (JERRY_BUILTIN_MAP) */

@@ -129,7 +129,7 @@ ecma_op_same_value (ecma_value_t x, /**< ecma value */
   return false;
 } /* ecma_op_same_value */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_MAP)
+#if ENABLED (JERRY_BUILTIN_MAP)
 /**
  * SameValueZero operation.
  *
@@ -175,7 +175,7 @@ ecma_op_same_value_zero (ecma_value_t x, /**< ecma value */
 
   return ecma_op_same_value (x, y);
 } /* ecma_op_same_value_zero */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
+#endif /* ENABLED (JERRY_BUILTIN_MAP) */
 
 /**
  * ToPrimitive operation.
@@ -280,12 +280,12 @@ ecma_op_to_number (ecma_value_t value) /**< ecma value */
     ecma_string_t *str_p = ecma_get_string_from_value (value);
     return ecma_make_number_value (ecma_string_to_number (str_p));
   }
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   if (ecma_is_value_symbol (value))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a Symbol value to a number."));
   }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   if (ecma_is_value_object (value))
   {
@@ -381,12 +381,12 @@ ecma_get_number (ecma_value_t value, /**< ecma value*/
     return ECMA_VALUE_EMPTY;
   }
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   if (ecma_is_value_symbol (value))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a Symbol value to a number."));
   }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   JERRY_ASSERT (ecma_is_value_boolean (value));
 
@@ -456,13 +456,13 @@ ecma_op_to_string (ecma_value_t value) /**< ecma value */
   {
     return ecma_get_magic_string (LIT_MAGIC_STRING_NULL);
   }
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   else if (ecma_is_value_symbol (value))
   {
     ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a Symbol value to a string."));
     return NULL;
   }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
   JERRY_ASSERT (ecma_is_value_boolean (value));
 
   if (ecma_is_value_true (value))
@@ -484,14 +484,14 @@ ecma_op_to_prop_name (ecma_value_t value) /**< ecma value */
 {
   ecma_check_value_type_is_spec_defined (value);
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   if (ecma_is_value_symbol (value))
   {
     ecma_string_t *symbol_p = ecma_get_symbol_from_value (value);
     ecma_ref_ecma_string (symbol_p);
     return symbol_p;
   }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   return ecma_op_to_string (value);
 } /* ecma_op_to_prop_name */
@@ -522,12 +522,12 @@ ecma_op_to_object (ecma_value_t value) /**< ecma value */
   {
     return ecma_copy_value (value);
   }
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   else if (ecma_is_value_symbol (value))
   {
     return ecma_op_create_symbol_object (value);
   }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
   else
   {
     if (ecma_is_value_undefined (value)
@@ -594,11 +594,11 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_des
   }
   else
   {
-#if !ENABLED (JERRY_ES2015)
+#if !ENABLED (JERRY_ESNEXT)
     JERRY_ASSERT (src_prop_desc_p->flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED));
-#else /* ENABLED (JERRY_ES2015) */
+#else /* ENABLED (JERRY_ESNEXT) */
     if (src_prop_desc_p->flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED))
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
     {
       /* a. */
       if (src_prop_desc_p->get_p == NULL)
@@ -925,7 +925,7 @@ ecma_op_to_length (ecma_value_t value, /**< ecma value */
     return value;
   }
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   /* 2 */
   ecma_number_t num;
   ecma_value_t length_num = ecma_op_to_integer (value, &num);
@@ -953,7 +953,7 @@ ecma_op_to_length (ecma_value_t value, /**< ecma value */
   /* 6 */
   *length = (uint32_t) num;
   return ECMA_VALUE_EMPTY;
-#else /* !ENABLED (JERRY_ES2015) */
+#else /* !ENABLED (JERRY_ESNEXT) */
   /* In the case of ES5, ToLength(ES6) operation is the same as ToUint32(ES5) */
   ecma_number_t num;
   ecma_value_t to_number = ecma_get_number (value, &num);
@@ -966,10 +966,10 @@ ecma_op_to_length (ecma_value_t value, /**< ecma value */
 
   *length = ecma_number_to_uint32 (num);
   return ECMA_VALUE_EMPTY;
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 } /* ecma_op_to_length */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 /**
  * CreateListFromArrayLike operation.
  * Different types are not handled yet.
@@ -1031,7 +1031,7 @@ ecma_op_create_list_from_array_like (ecma_value_t arr,  /**< array value */
   /* 9. */
   return list_ptr;
 } /* ecma_op_create_list_from_array_like */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * @}

@@ -73,11 +73,11 @@ main (void)
   ecma_free_value (negative);
 
   TEST_ASSERT (!ECMA_IS_VALUE_ERROR (result));
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   TEST_ASSERT (num == 0);
-#else /* !ENABLED (JERRY_ES2015) */
+#else /* !ENABLED (JERRY_ESNEXT) */
   TEST_ASSERT (num == 4294967270);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   /* +infinity */
   ecma_value_t positive_infinity = ecma_make_number_value (ecma_number_make_infinity (false));
@@ -87,11 +87,11 @@ main (void)
   ecma_free_value (positive_infinity);
 
   TEST_ASSERT (!ECMA_IS_VALUE_ERROR (result));
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   TEST_ASSERT (num == UINT32_MAX);
-#else /* !ENABLED (JERRY_ES2015) */
+#else /* !ENABLED (JERRY_ESNEXT) */
   TEST_ASSERT (num == 0);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   /* -infinity */
   ecma_value_t negative_infinity = ecma_make_number_value (ecma_number_make_infinity (true));

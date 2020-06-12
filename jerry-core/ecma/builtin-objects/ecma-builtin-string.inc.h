@@ -36,20 +36,20 @@ OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
               ECMA_BUILTIN_ID_STRING_PROTOTYPE,
               ECMA_PROPERTY_FIXED)
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 STRING_VALUE (LIT_MAGIC_STRING_NAME,
               LIT_MAGIC_STRING_STRING_UL,
               ECMA_PROPERTY_FLAG_CONFIGURABLE)
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_MAGIC_STRING_FROM_CHAR_CODE_UL, ecma_builtin_string_object_from_char_code, NON_FIXED, 1)
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 ROUTINE (LIT_MAGIC_STRING_FROM_CODE_POINT_UL, ecma_builtin_string_object_from_code_point, NON_FIXED, 1)
 ROUTINE (LIT_MAGIC_STRING_RAW, ecma_builtin_string_object_raw, NON_FIXED, 1)
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 #endif /* ENABLED (JERRY_BUILTIN_STRING) */
 

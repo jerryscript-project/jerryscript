@@ -64,19 +64,19 @@
 
 #define CBC_HAS_POP_STACK_BYTE_ARG (CBC_HAS_BYTE_ARG | CBC_POP_STACK_BYTE_ARG)
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 /**
  * CBC_NO_RESULT_OPERATION for ext opcodes
  */
 #define CBC_EXT_NO_RESULT_OPERATION(opcode) \
   ((opcode) >= PARSER_TO_EXT_OPCODE (CBC_EXT_SUPER_CALL) \
     && (opcode) <= PARSER_TO_EXT_OPCODE (CBC_EXT_SPREAD_CALL_PROP_BLOCK))
-#else /* !ENABLED (JERRY_ES2015) */
+#else /* !ENABLED (JERRY_ESNEXT) */
 /**
  * CBC_NO_RESULT_OPERATION for ext opcodes
  */
 #define CBC_EXT_NO_RESULT_OPERATION(opcode) false
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /* Debug macro. */
 #define CBC_ARGS_EQ(op, types) \

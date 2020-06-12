@@ -18,7 +18,7 @@
 #include "ecma-gc.h"
 #include "lit-char-helpers.h"
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -140,4 +140,4 @@ ecma_builtin_intrinsic_dispatch_routine (uint16_t builtin_routine_id, /**< built
  * @}
  */
 
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */

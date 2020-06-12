@@ -34,7 +34,7 @@
  * @{
  */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
 /**
  * Check whether the argument satifies the requrements of [[ProxyTarget]] or [[ProxyHandler]]
  *
@@ -1810,7 +1810,7 @@ ecma_proxy_object_construct (ecma_object_t *obj_p, /**< proxy object */
   return new_obj;
 } /* ecma_proxy_object_construct */
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
 /**
  * @}

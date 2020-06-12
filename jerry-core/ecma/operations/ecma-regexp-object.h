@@ -148,9 +148,9 @@ typedef struct
   uint8_t char_size;                           /**< size of encoded characters */
 } ecma_regexp_ctx_t;
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 lit_code_point_t ecma_regexp_unicode_advance (const lit_utf8_byte_t **str_p, const lit_utf8_byte_t *end_p);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 ecma_object_t *ecma_op_regexp_alloc (ecma_object_t *new_target_obj_p);
 ecma_value_t ecma_regexp_exec_helper (ecma_object_t *regexp_object_p,

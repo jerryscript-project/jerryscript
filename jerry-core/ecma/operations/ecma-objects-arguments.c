@@ -140,7 +140,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
 
   ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   /* ECMAScript v6, 9.4.4.6.7, 9.4.4.7.22 */
   ecma_string_t *symbol_p = ecma_op_get_global_symbol (LIT_GLOBAL_SYMBOL_ITERATOR);
 
@@ -154,7 +154,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
 
   JERRY_ASSERT (ecma_is_value_object (prop_value_p->value));
   ecma_deref_object (ecma_get_object_from_value (prop_value_p->value));
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   /* 13. */
   if (!is_strict)

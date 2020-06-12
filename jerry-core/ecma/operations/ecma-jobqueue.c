@@ -21,7 +21,7 @@
 #include "ecma-promise-object.h"
 #include "jcontext.h"
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROMISE)
+#if ENABLED (JERRY_BUILTIN_PROMISE)
 
 /**
  * Mask for job queue type.
@@ -384,4 +384,4 @@ ecma_free_all_enqueued_jobs (void)
  * @}
  * @}
  */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
+#endif /* ENABLED (JERRY_BUILTIN_PROMISE) */

@@ -49,13 +49,13 @@ ecma_builtin_regexp_dispatch_helper (const ecma_value_t *arguments_list_p, /**< 
 {
   ecma_value_t pattern_value = ECMA_VALUE_UNDEFINED;
   ecma_value_t flags_value = ECMA_VALUE_UNDEFINED;
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   bool create_regexp_from_bc = false;
   bool free_arguments = false;
   ecma_object_t *new_target_p = JERRY_CONTEXT (current_new_target);
-#else /* !ENABLED (JERRY_ES2015) */
+#else /* !ENABLED (JERRY_ESNEXT) */
   ecma_object_t *new_target_p = NULL;
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   if (arguments_list_len > 0)
   {
@@ -68,7 +68,7 @@ ecma_builtin_regexp_dispatch_helper (const ecma_value_t *arguments_list_p, /**< 
     }
   }
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   ecma_value_t regexp_value = ecma_op_is_regexp (pattern_value);
 
   if (ECMA_IS_VALUE_ERROR (regexp_value))
@@ -145,7 +145,7 @@ ecma_builtin_regexp_dispatch_helper (const ecma_value_t *arguments_list_p, /**< 
 
     free_arguments = true;
   }
-#else /* !ENABLED (JERRY_ES2015) */
+#else /* !ENABLED (JERRY_ESNEXT) */
   if (ecma_object_is_regexp_object (pattern_value))
   {
     if (ecma_is_value_undefined (flags_value))
@@ -155,21 +155,21 @@ ecma_builtin_regexp_dispatch_helper (const ecma_value_t *arguments_list_p, /**< 
 
     return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument of RegExp call."));
   }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   ecma_value_t ret_value = ECMA_VALUE_ERROR;
   ecma_object_t *new_target_obj_p = ecma_op_regexp_alloc (new_target_p);
 
   if (JERRY_LIKELY (new_target_obj_p != NULL))
   {
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     if (create_regexp_from_bc)
     {
       ret_value = ecma_op_create_regexp_from_bytecode (new_target_obj_p, bc_p);
       JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (ret_value));
     }
     else
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
     {
       ret_value = ecma_op_create_regexp_from_pattern (new_target_obj_p, pattern_value, flags_value);
 
@@ -180,13 +180,13 @@ ecma_builtin_regexp_dispatch_helper (const ecma_value_t *arguments_list_p, /**< 
     }
   }
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   if (free_arguments)
   {
     ecma_free_value (pattern_value);
     ecma_free_value (flags_value);
   }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   return ret_value;
 } /* ecma_builtin_regexp_dispatch_helper */
@@ -219,7 +219,7 @@ ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /*
                                               arguments_list_len);
 } /* ecma_builtin_regexp_dispatch_construct */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 /**
  * 21.2.4.2 get RegExp [ @@species ] accessor
  *
@@ -231,7 +231,7 @@ ecma_builtin_regexp_species_get (ecma_value_t this_value) /**< This Value */
 {
   return ecma_copy_value (this_value);
 } /* ecma_builtin_regexp_species_get */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * @}

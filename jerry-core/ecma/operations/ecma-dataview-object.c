@@ -22,7 +22,7 @@
 #include "ecma-typedarray-object.h"
 #include "ecma-objects.h"
 
-#if ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW)
+#if ENABLED (JERRY_BUILTIN_DATAVIEW)
 
 /** \addtogroup ecma ECMA
  * @{
@@ -333,4 +333,4 @@ ecma_is_dataview (ecma_value_t value) /**< the target need to be checked */
  * @}
  */
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_DATAVIEW */
+#endif /* ENABLED (JERRY_BUILTIN_DATAVIEW */

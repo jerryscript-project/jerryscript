@@ -56,14 +56,14 @@ ecma_init (void)
   JERRY_CONTEXT (stack_base) = (uintptr_t) &sp;
 #endif /* (JERRY_STACK_LIMIT != 0) */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROMISE)
+#if ENABLED (JERRY_BUILTIN_PROMISE)
   ecma_job_queue_init ();
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
+#endif /* ENABLED (JERRY_BUILTIN_PROMISE) */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   JERRY_CONTEXT (current_new_target) = NULL;
   JERRY_CONTEXT (current_function_obj_p) = NULL;
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 } /* ecma_init */
 
 /**
@@ -72,10 +72,10 @@ ecma_init (void)
 void
 ecma_finalize (void)
 {
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   JERRY_ASSERT (JERRY_CONTEXT (current_new_target) == NULL);
   JERRY_ASSERT (JERRY_CONTEXT (current_function_obj_p) == NULL);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   ecma_finalize_global_environment ();
   uint8_t runs = 0;

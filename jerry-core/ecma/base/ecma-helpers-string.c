@@ -204,7 +204,7 @@ ecma_new_ecma_string_from_magic_string_ex_id (lit_magic_string_ex_id_t id) /**< 
   return string_desc_p;
 } /* ecma_new_ecma_string_from_magic_string_ex_id */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 /**
  * Allocate new ecma-string and fill it with reference to the symbol descriptor
  *
@@ -238,7 +238,7 @@ ecma_prop_name_is_symbol (ecma_string_t *string_p) /**< ecma-string */
   return (!ECMA_IS_DIRECT_STRING (string_p)
           && ECMA_STRING_GET_CONTAINER (string_p) == ECMA_STRING_CONTAINER_SYMBOL);
 } /* ecma_prop_name_is_symbol */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Allocate new UTF8 ecma-string and fill it with characters from the given utf8 buffer
@@ -457,7 +457,7 @@ ecma_new_ecma_string_from_code_unit (ecma_char_t code_unit) /**< code unit */
   return ecma_new_ecma_string_from_utf8 (lit_utf8_bytes, bytes_size);
 } /* ecma_new_ecma_string_from_code_unit */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 
 /**
  * Allocate new ecma-string and fill it with cesu-8 character which represents specified code units
@@ -475,7 +475,7 @@ ecma_new_ecma_string_from_code_units (ecma_char_t first_code_unit, /**< code uni
   return ecma_new_ecma_string_from_utf8 (lit_utf8_bytes, bytes_size);
 } /* ecma_new_ecma_string_from_code_units */
 
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Allocate new ecma-string and fill it with ecma-number
@@ -845,7 +845,7 @@ ecma_destroy_ecma_string (ecma_string_t *string_p) /**< ecma-string */
                                   ((ecma_ascii_string_t *) string_p)->size + sizeof (ecma_ascii_string_t));
       return;
     }
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     case ECMA_STRING_CONTAINER_SYMBOL:
     {
       ecma_extended_string_t * symbol_p = (ecma_extended_string_t *) string_p;
@@ -853,7 +853,7 @@ ecma_destroy_ecma_string (ecma_string_t *string_p) /**< ecma-string */
       ecma_dealloc_extended_string (symbol_p);
       return;
     }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
     default:
     {
       JERRY_ASSERT (ECMA_STRING_GET_CONTAINER (string_p) == ECMA_STRING_CONTAINER_UINT32_IN_DESC
@@ -1735,12 +1735,12 @@ ecma_compare_ecma_strings (const ecma_string_t *string1_p, /**< ecma-string */
     return true;
   }
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   if (string1_container == ECMA_STRING_CONTAINER_SYMBOL)
   {
     return false;
   }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   return ecma_compare_ecma_strings_longpath (string1_p, string2_p);
 } /* ecma_compare_ecma_strings */
@@ -1781,12 +1781,12 @@ ecma_compare_ecma_non_direct_strings (const ecma_string_t *string1_p, /**< ecma-
     return true;
   }
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   if (string1_container == ECMA_STRING_CONTAINER_SYMBOL)
   {
     return false;
   }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   return ecma_compare_ecma_strings_longpath (string1_p, string2_p);
 } /* ecma_compare_ecma_non_direct_strings */
@@ -2730,7 +2730,7 @@ ecma_stringbuilder_destroy (ecma_stringbuilder_t *builder_p) /**< string builder
 #endif /* ENABLED (JERRY_MEM_STATS) */
 } /* ecma_stringbuilder_destroy */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 /**
  * AdvanceStringIndex operation
  *
@@ -2780,7 +2780,7 @@ ecma_op_advance_string_index (ecma_string_t *str_p, /**< input string */
 
   return next_index + 1;
 } /* ecma_op_advance_string_index */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * @}

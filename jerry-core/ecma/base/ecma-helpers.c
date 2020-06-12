@@ -139,12 +139,12 @@ ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< out
                             ecma_object_t *binding_obj_p, /**< binding object */
                             ecma_lexical_environment_type_t type) /**< type of the new lexical environment */
 {
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   JERRY_ASSERT (type == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND
                 || type == ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND);
-#else /* !ENABLED (JERRY_ES2015) */
+#else /* !ENABLED (JERRY_ESNEXT) */
   JERRY_ASSERT (type == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   JERRY_ASSERT (binding_obj_p != NULL
                 && !ecma_is_lexical_environment (binding_obj_p));
@@ -286,12 +286,12 @@ ecma_get_lex_env_binding_object (const ecma_object_t *object_p) /**< object-boun
 {
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (ecma_is_lexical_environment (object_p));
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   JERRY_ASSERT (ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND
                 || ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND);
-#else /* !ENABLED (JERRY_ES2015) */
+#else /* !ENABLED (JERRY_ESNEXT) */
   JERRY_ASSERT (ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   return ECMA_GET_NON_NULL_POINTER (ecma_object_t, object_p->u1.bound_object_cp);
 } /* ecma_get_lex_env_binding_object */
@@ -1438,7 +1438,7 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
     }
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     if (bytecode_p->status_flags & CBC_CODE_FLAG_HAS_TAGGED_LITERALS)
     {
       ecma_collection_t *collection_p = ecma_compiled_code_get_tagged_template_collection (bytecode_p);
@@ -1448,7 +1448,7 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
       JERRY_CONTEXT (ecma_gc_new_objects) += collection_p->item_count;
       ecma_collection_free (collection_p);
     }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 #if ENABLED (JERRY_MEM_STATS)
     jmem_stats_free_byte_code_bytes (((size_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG);
@@ -1467,7 +1467,7 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
                         ((size_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG);
 } /* ecma_bytecode_deref */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 /**
  * Get the tagged template collection of the compiled code
  *
@@ -1487,9 +1487,9 @@ ecma_compiled_code_get_tagged_template_collection (const ecma_compiled_code_t *b
 
   return ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, base_p[-1]);
 } /* ecma_compiled_code_get_tagged_template_collection */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
-#if ENABLED (JERRY_RESOURCE_NAME) || ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_RESOURCE_NAME) || ENABLED (JERRY_ESNEXT)
 /**
  * Get the number of formal parameters of the compiled code
  *
@@ -1538,16 +1538,16 @@ ecma_compiled_code_resolve_function_name (const ecma_compiled_code_t *bytecode_h
   JERRY_ASSERT (bytecode_header_p != NULL);
   ecma_value_t *base_p = ecma_compiled_code_resolve_arguments_start (bytecode_header_p);
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   if (!(bytecode_header_p->status_flags & CBC_CODE_FLAGS_CLASS_CONSTRUCTOR))
   {
     base_p--;
   }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   return base_p;
 } /* ecma_compiled_code_resolve_function_name */
-#endif /* ENABLED (JERRY_RESOURCE_NAME) || ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_RESOURCE_NAME) || ENABLED (JERRY_ESNEXT) */
 
 #if (JERRY_STACK_LIMIT != 0)
 /**

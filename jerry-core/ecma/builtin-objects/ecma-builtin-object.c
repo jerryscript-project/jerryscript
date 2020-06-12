@@ -137,12 +137,12 @@ ecma_builtin_object_dispatch_construct (const ecma_value_t *arguments_list_p, /*
 ecma_value_t
 ecma_builtin_object_object_get_prototype_of (ecma_object_t *obj_p) /**< routine's argument */
 {
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   if (ECMA_OBJECT_IS_PROXY (obj_p))
   {
     return ecma_proxy_object_get_prototype_of (obj_p);
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
   jmem_cpointer_t proto_cp = ecma_op_ordinary_object_get_prototype_of (obj_p);
 
@@ -156,7 +156,7 @@ ecma_builtin_object_object_get_prototype_of (ecma_object_t *obj_p) /**< routine'
   return ECMA_VALUE_NULL;
 } /* ecma_builtin_object_object_get_prototype_of */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 /**
  * The Object object's 'setPrototypeOf' routine
  *
@@ -192,7 +192,7 @@ ecma_builtin_object_object_set_prototype_of (ecma_value_t arg1, /**< routine's f
   ecma_value_t status;
 
   /* 5. */
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   if (ECMA_OBJECT_IS_PROXY (obj_p))
   {
     status = ecma_proxy_object_set_prototype_of (obj_p, arg2);
@@ -204,11 +204,11 @@ ecma_builtin_object_object_set_prototype_of (ecma_value_t arg1, /**< routine's f
   }
   else
   {
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
     status = ecma_op_ordinary_object_set_prototype_of (obj_p, arg2);
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
   if (ecma_is_value_false (status))
   {
@@ -256,7 +256,7 @@ ecma_builtin_object_object_set_proto (ecma_value_t arg1, /**< routine's first ar
   ecma_value_t status;
 
   /* 5. */
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   if (ECMA_OBJECT_IS_PROXY (obj_p))
   {
     status = ecma_proxy_object_set_prototype_of (obj_p, arg2);
@@ -268,11 +268,11 @@ ecma_builtin_object_object_set_proto (ecma_value_t arg1, /**< routine's first ar
   }
   else
   {
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
     status = ecma_op_ordinary_object_set_prototype_of (obj_p, arg2);
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
   if (ecma_is_value_false (status))
   {
@@ -283,7 +283,7 @@ ecma_builtin_object_object_set_proto (ecma_value_t arg1, /**< routine's first ar
 
   return ECMA_VALUE_UNDEFINED;
 } /* ecma_builtin_object_object_set_proto */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * The Object object's 'getOwnPropertyNames' routine
@@ -300,7 +300,7 @@ ecma_builtin_object_object_get_own_property_names (ecma_object_t *obj_p) /**< ro
   return ecma_builtin_helper_object_get_properties (obj_p, ECMA_LIST_NO_OPTS);
 } /* ecma_builtin_object_object_get_own_property_names */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 
 /**
  * The Object object's 'getOwnPropertySymbols' routine
@@ -317,7 +317,7 @@ ecma_builtin_object_object_get_own_property_symbols (ecma_object_t *obj_p) /**< 
   return ecma_builtin_helper_object_get_properties (obj_p, ECMA_LIST_SYMBOLS_ONLY);
 } /* ecma_builtin_object_object_get_own_property_symbols */
 
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * SetIntegrityLevel operation
@@ -334,7 +334,7 @@ ecma_builtin_object_set_integrity_level (ecma_object_t *obj_p, /**< object */
                                                         *   false - set "frozen" */
 {
   /* 3. */
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   if (ECMA_OBJECT_IS_PROXY (obj_p))
   {
     ecma_value_t status = ecma_proxy_object_prevent_extensions (obj_p);
@@ -346,26 +346,26 @@ ecma_builtin_object_set_integrity_level (ecma_object_t *obj_p, /**< object */
   }
   else
   {
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
     ecma_op_ordinary_object_prevent_extensions (obj_p);
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
   /* 6. */
   uint32_t opts = ECMA_LIST_CONVERT_FAST_ARRAYS;
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   opts |= ECMA_LIST_SYMBOLS;
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   ecma_collection_t *props_p = ecma_op_object_get_property_names (obj_p, opts);
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   if (props_p == NULL)
   {
     return ECMA_VALUE_ERROR;
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
   ecma_value_t *buffer_p = props_p->buffer_p;
 
@@ -379,12 +379,12 @@ ecma_builtin_object_set_integrity_level (ecma_object_t *obj_p, /**< object */
       ecma_property_descriptor_t prop_desc;
       ecma_value_t status = ecma_op_object_get_own_property_descriptor (obj_p, property_name_p, &prop_desc);
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
       if (ECMA_IS_VALUE_ERROR (status))
       {
         break;
       }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
       if (ecma_is_value_false (status))
       {
@@ -422,12 +422,12 @@ ecma_builtin_object_set_integrity_level (ecma_object_t *obj_p, /**< object */
       ecma_property_descriptor_t prop_desc;
       ecma_value_t status = ecma_op_object_get_own_property_descriptor (obj_p, property_name_p, &prop_desc);
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
       if (ECMA_IS_VALUE_ERROR (status))
       {
         break;
       }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
       if (ecma_is_value_false (status))
       {
@@ -487,12 +487,12 @@ ecma_builtin_object_object_seal (ecma_object_t *obj_p) /**< routine's argument *
     return status;
   }
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   if (ecma_is_value_false (status))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Object cannot be sealed."));
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
   /* 4. */
   ecma_ref_object (obj_p);
@@ -518,12 +518,12 @@ ecma_builtin_object_object_freeze (ecma_object_t *obj_p) /**< routine's argument
     return status;
   }
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   if (ecma_is_value_false (status))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Object cannot be frozen."));
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
   /* 4. */
   ecma_ref_object (obj_p);
@@ -542,7 +542,7 @@ ecma_builtin_object_object_freeze (ecma_object_t *obj_p) /**< routine's argument
 ecma_value_t
 ecma_builtin_object_object_prevent_extensions (ecma_object_t *obj_p) /**< routine's argument */
 {
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   if (ECMA_OBJECT_IS_PROXY (obj_p))
   {
     ecma_value_t status = ecma_proxy_object_prevent_extensions (obj_p);
@@ -561,11 +561,11 @@ ecma_builtin_object_object_prevent_extensions (ecma_object_t *obj_p) /**< routin
   }
   else
   {
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
     ecma_op_ordinary_object_prevent_extensions (obj_p);
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
   ecma_ref_object (obj_p);
 
   return ecma_make_object_value (obj_p);
@@ -589,7 +589,7 @@ ecma_builtin_object_test_integrity_level (ecma_object_t *obj_p, /**< routine's a
 
   /* 3. */
   bool is_extensible;
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   if (ECMA_OBJECT_IS_PROXY (obj_p))
   {
     ecma_value_t status = ecma_proxy_object_is_extensible (obj_p);
@@ -603,11 +603,11 @@ ecma_builtin_object_test_integrity_level (ecma_object_t *obj_p, /**< routine's a
   }
   else
   {
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
     is_extensible = ecma_op_ordinary_object_is_extensible (obj_p);
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
   if (is_extensible)
   {
@@ -620,12 +620,12 @@ ecma_builtin_object_test_integrity_level (ecma_object_t *obj_p, /**< routine's a
   /* 2. */
   ecma_collection_t *props_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_NO_OPTS);
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   if (props_p == NULL)
   {
     return ECMA_VALUE_ERROR;
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
   ecma_value_t *buffer_p = props_p->buffer_p;
 
@@ -637,13 +637,13 @@ ecma_builtin_object_test_integrity_level (ecma_object_t *obj_p, /**< routine's a
     ecma_property_descriptor_t prop_desc;
     ecma_value_t status = ecma_op_object_get_own_property_descriptor (obj_p, property_name_p, &prop_desc);
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
     if (ECMA_IS_VALUE_ERROR (status))
     {
       ret_value = status;
       break;
     }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
     if (ecma_is_value_false (status))
     {
@@ -683,12 +683,12 @@ ecma_builtin_object_test_integrity_level (ecma_object_t *obj_p, /**< routine's a
 ecma_value_t
 ecma_builtin_object_object_is_extensible (ecma_object_t *obj_p) /**< routine's argument */
 {
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   if (ECMA_OBJECT_IS_PROXY (obj_p))
   {
     return ecma_proxy_object_is_extensible (obj_p);
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
   return ecma_make_boolean_value (ecma_op_ordinary_object_is_extensible (obj_p));
 } /* ecma_builtin_object_object_is_extensible */
@@ -726,12 +726,12 @@ ecma_builtin_object_object_get_own_property_descriptor (ecma_object_t *obj_p, /*
 
   ecma_value_t status = ecma_op_object_get_own_property_descriptor (obj_p, name_str_p, &prop_desc);
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   if (ECMA_IS_VALUE_ERROR (status))
   {
     return status;
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
   if (ecma_is_value_true (status))
   {
@@ -773,13 +773,13 @@ ecma_builtin_object_object_define_properties (ecma_object_t *obj_p, /**< routine
                                                                                 | ECMA_LIST_ENUMERABLE);
   ecma_value_t ret_value = ECMA_VALUE_ERROR;
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   if (prop_names_p == NULL)
   {
     ecma_deref_object (props_p);
     return ret_value;
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
   ecma_value_t *buffer_p = prop_names_p->buffer_p;
 
@@ -941,7 +941,7 @@ ecma_builtin_object_object_define_property (ecma_object_t *obj_p, /**< routine's
   return ecma_make_object_value (obj_p);
 } /* ecma_builtin_object_object_define_property */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 
 /**
  * The Object object's 'assign' routine
@@ -981,13 +981,13 @@ ecma_builtin_object_object_assign (ecma_object_t *target_p, /**< target object *
     ecma_collection_t *props_p = ecma_op_object_get_property_names (from_obj_p, ECMA_LIST_CONVERT_FAST_ARRAYS
                                                                                 | ECMA_LIST_ENUMERABLE
                                                                                 | ECMA_LIST_SYMBOLS);
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
     if (props_p == NULL)
     {
       ecma_deref_object (from_obj_p);
       return ECMA_VALUE_ERROR;
     }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
     ecma_value_t *buffer_p = props_p->buffer_p;
 
@@ -999,13 +999,13 @@ ecma_builtin_object_object_assign (ecma_object_t *target_p, /**< target object *
       ecma_property_descriptor_t prop_desc;
       ecma_value_t desc_status = ecma_op_object_get_own_property_descriptor (from_obj_p, property_name_p, &prop_desc);
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
       if (ECMA_IS_VALUE_ERROR (desc_status))
       {
         ret_value = desc_status;
         break;
       }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
       if (ecma_is_value_false (desc_status))
       {
@@ -1072,7 +1072,7 @@ ecma_builtin_object_object_is (ecma_value_t arg1, /**< routine's first argument 
   return ecma_op_same_value (arg1, arg2) ? ECMA_VALUE_TRUE : ECMA_VALUE_FALSE;
 } /* ecma_builtin_object_object_is */
 
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Dispatcher of the built-in's routines
@@ -1102,7 +1102,7 @@ ecma_builtin_object_dispatch_routine (uint16_t builtin_routine_id, /**< built-in
     {
       return ecma_builtin_object_object_create (arg1, arg2);
     }
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     case ECMA_OBJECT_ROUTINE_SET_PROTOTYPE_OF:
     {
       return ecma_builtin_object_object_set_prototype_of (arg1, arg2);
@@ -1111,7 +1111,7 @@ ecma_builtin_object_dispatch_routine (uint16_t builtin_routine_id, /**< built-in
     {
       return ecma_builtin_object_object_is (arg1, arg2);
     }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
     default:
     {
       break;
@@ -1119,21 +1119,21 @@ ecma_builtin_object_dispatch_routine (uint16_t builtin_routine_id, /**< built-in
   }
 
   ecma_object_t *obj_p;
-#if !ENABLED (JERRY_ES2015)
+#if !ENABLED (JERRY_ESNEXT)
   if (!ecma_is_value_object (arg1))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object."));
   }
-#endif /* !ENABLED (JERRY_ES2015) */
+#endif /* !ENABLED (JERRY_ESNEXT) */
 
   if (builtin_routine_id <= ECMA_OBJECT_ROUTINE_DEFINE_PROPERTIES)
   {
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     if (!ecma_is_value_object (arg1))
     {
       return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object."));
     }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
     obj_p = ecma_get_object_from_value (arg1);
 
@@ -1157,7 +1157,7 @@ ecma_builtin_object_dispatch_routine (uint16_t builtin_routine_id, /**< built-in
   }
   else if (builtin_routine_id <= ECMA_OBJECT_ROUTINE_KEYS)
   {
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     ecma_value_t object = ecma_op_to_object (arg1);
     if (ECMA_IS_VALUE_ERROR (object))
     {
@@ -1165,9 +1165,9 @@ ecma_builtin_object_dispatch_routine (uint16_t builtin_routine_id, /**< built-in
     }
 
     obj_p = ecma_get_object_from_value (object);
-#else /* !ENABLED (JERRY_ES2015) */
+#else /* !ENABLED (JERRY_ESNEXT) */
     obj_p = ecma_get_object_from_value (arg1);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
     ecma_value_t result;
     switch (builtin_routine_id)
@@ -1182,7 +1182,7 @@ ecma_builtin_object_dispatch_routine (uint16_t builtin_routine_id, /**< built-in
         result = ecma_builtin_object_object_get_own_property_names (obj_p);
         break;
       }
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
       case ECMA_OBJECT_ROUTINE_ASSIGN:
       {
         result = ecma_builtin_object_object_assign (obj_p, arguments_list_p + 1, arguments_number - 1);
@@ -1193,7 +1193,7 @@ ecma_builtin_object_dispatch_routine (uint16_t builtin_routine_id, /**< built-in
         result = ecma_builtin_object_object_get_own_property_symbols (obj_p);
         break;
       }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
       case ECMA_OBJECT_ROUTINE_KEYS:
       {
         result = ecma_builtin_object_object_keys (obj_p);
@@ -1219,19 +1219,19 @@ ecma_builtin_object_dispatch_routine (uint16_t builtin_routine_id, /**< built-in
       }
     }
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     ecma_deref_object (obj_p);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
     return result;
   }
   else if (builtin_routine_id <= ECMA_OBJECT_ROUTINE_SEAL)
   {
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     if (!ecma_is_value_object (arg1))
     {
       return ecma_copy_value (arg1);
     }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
     obj_p = ecma_get_object_from_value (arg1);
     switch (builtin_routine_id)
@@ -1257,12 +1257,12 @@ ecma_builtin_object_dispatch_routine (uint16_t builtin_routine_id, /**< built-in
   else
   {
     JERRY_ASSERT (builtin_routine_id <= ECMA_OBJECT_ROUTINE_IS_SEALED);
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     if (!ecma_is_value_object (arg1))
     {
       return ecma_make_boolean_value (builtin_routine_id != ECMA_OBJECT_ROUTINE_IS_EXTENSIBLE);
     }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
     obj_p = ecma_get_object_from_value (arg1);
     switch (builtin_routine_id)

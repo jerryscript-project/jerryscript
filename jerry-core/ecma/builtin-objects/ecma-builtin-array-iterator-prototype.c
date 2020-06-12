@@ -18,7 +18,7 @@
 #include "ecma-iterator-object.h"
 #include "ecma-typedarray-object.h"
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -172,4 +172,4 @@ ecma_builtin_array_iterator_prototype_object_next (ecma_value_t this_val) /**< t
  * @}
  */
 
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */

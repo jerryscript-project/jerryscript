@@ -25,7 +25,7 @@ then
                      --jerry-debugger=on \
                      --line-info=on \
                      --mem-stats=on \
-                     --profile=es2015-subset \
+                     --profile=es.next \
                      --snapshot-save=on \
                      --snapshot-exec=on \
                      --valgrind=on \
@@ -39,7 +39,7 @@ else
                    --jerry-debugger=on \
                    --line-info=on \
                    --mem-stats=on \
-                   --profile=es2015-subset \
+                   --profile=es.next \
                    --snapshot-save=on \
                    --snapshot-exec=on \
                    --valgrind=on \

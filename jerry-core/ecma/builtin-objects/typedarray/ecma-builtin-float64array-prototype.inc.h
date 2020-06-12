@@ -17,7 +17,7 @@
  * Float64Array prototype description
  */
 
-#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
+#if ENABLED (JERRY_BUILTIN_TYPEDARRAY)
 #if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
 
 #define TYPEDARRAY_BYTES_PER_ELEMENT 8
@@ -25,4 +25,4 @@
 #include "ecma-builtin-typedarray-prototype-template.inc.h"
 
 #endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
+#endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */

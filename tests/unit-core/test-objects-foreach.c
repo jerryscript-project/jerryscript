@@ -40,7 +40,7 @@ test_container (void)
   jerry_release_value (map_str);
   jerry_release_value (global);
 
-  /* If there is no Map function this is not an es2015 profile build, skip this test case. */
+  /* If there is no Map function this is not an es.next profile build, skip this test case. */
   if (type != JERRY_TYPE_FUNCTION)
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Container based test is disabled!\n");

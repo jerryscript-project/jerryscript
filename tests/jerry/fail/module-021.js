@@ -14,5 +14,5 @@
  */
 
 /* Can't have duplicated local bindings. */
-import { b } from "../es2015/module-export-01.js"
-import { b } from "../es2015/module-export-02.js"
+import { b } from "../es.next/module-export-01.js"
+import { b } from "../es.next/module-export-02.js"

@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 
 /* Object properties:
  *  (property name, object pointer getter) */
@@ -40,6 +40,6 @@ ROUTINE (LIT_MAGIC_STRING_NEXT, ecma_builtin_generator_prototype_object_next, 1,
 ROUTINE (LIT_MAGIC_STRING_RETURN, ecma_builtin_generator_prototype_object_return, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_THROW, ecma_builtin_generator_prototype_object_throw, 1, 1)
 
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

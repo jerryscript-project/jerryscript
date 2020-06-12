@@ -24,7 +24,7 @@
 #include "ecma-helpers.h"
 #include "jmem.h"
 
-#if ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY)
+#if ENABLED (JERRY_BUILTIN_TYPEDARRAY)
 
 /** \addtogroup ecma ECMA
  * @{
@@ -280,4 +280,4 @@ ecma_arraybuffer_detach (ecma_object_t *object_p) /**< pointer to the ArrayBuffe
  * @}
  * @}
  */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_TYPEDARRAY) */
+#endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */

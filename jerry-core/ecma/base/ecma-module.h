@@ -16,7 +16,7 @@
 #ifndef ECMA_MODULE_H
 #define ECMA_MODULE_H
 
-#if ENABLED (JERRY_ES2015_MODULE_SYSTEM)
+#if ENABLED (JERRY_MODULE_SYSTEM)
 
 #include "common.h"
 #include "ecma-globals.h"
@@ -139,6 +139,6 @@ ecma_value_t ecma_module_check_indirect_exports (void);
 
 void ecma_module_release_module_nodes (ecma_module_node_t *module_node_p);
 void ecma_module_cleanup (void);
-#endif /* ENABLED (JERRY_ES2015_MODULE_SYSTEM) */
+#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
 #endif /* !ECMA_MODULE_H */

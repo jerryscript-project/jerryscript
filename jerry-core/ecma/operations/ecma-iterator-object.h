@@ -18,7 +18,7 @@
 
 #include "ecma-globals.h"
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 
 /** \addtogroup ecma ECMA
  * @{
@@ -69,7 +69,7 @@ ecma_value_t
 ecma_op_iterator_do (ecma_iterator_command_type_t command, ecma_value_t iterator,
                      ecma_value_t value, bool *done_p);
 
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * @}

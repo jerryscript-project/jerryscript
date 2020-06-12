@@ -23,9 +23,9 @@
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
 #include "ecma-string-object.h"
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 #include "ecma-symbol-object.h"
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
 
@@ -110,7 +110,7 @@ ecma_builtin_string_object_from_char_code (ecma_value_t this_arg, /**< 'this' ar
   return ret_value;
 } /* ecma_builtin_string_object_from_char_code */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 
 /**
  * The String object's 'raw' routine
@@ -333,7 +333,7 @@ ecma_builtin_string_object_from_code_point (ecma_value_t this_arg, /**< 'this' a
   return ecma_make_string_value (ret_str_p);
 } /* ecma_builtin_string_object_from_code_point */
 
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Handle calling [[Call]] of built-in String object
@@ -356,13 +356,13 @@ ecma_builtin_string_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
   {
     ret_value = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
   }
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   /* 2.a */
   else if (ecma_is_value_symbol (arguments_list_p[0]))
   {
     ret_value = ecma_get_symbol_descriptive_string (arguments_list_p[0]);
   }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
   /* 2.b */
   else
   {

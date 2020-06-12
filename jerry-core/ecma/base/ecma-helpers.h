@@ -180,17 +180,17 @@ typedef enum
  */
 #define ECMA_BOOL_TO_BITFIELD(x) ((x) ? 1 : 0)
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 /**
  * JERRY_ASSERT compatible macro for checking whether the given ecma-value is symbol
  */
 #define ECMA_ASSERT_VALUE_IS_SYMBOL(value) (ecma_is_value_symbol ((value)))
-#else /* !ENABLED (JERRY_ES2015) */
+#else /* !ENABLED (JERRY_ESNEXT) */
 /**
  * JERRY_ASSERT compatible macro for checking whether the given ecma-value is symbol
  */
 #define ECMA_ASSERT_VALUE_IS_SYMBOL(value) (false)
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Check whether the given type is ECMA_OBJECT_TYPE_PROXY
@@ -204,11 +204,11 @@ typedef enum
  *
  * @param obj_p ecma-object
  */
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
 #define ECMA_OBJECT_IS_PROXY(obj_p) (ECMA_OBJECT_TYPE_IS_PROXY (ecma_get_object_type ((obj_p))))
-#else /* !ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#else /* !ENABLED (JERRY_BUILTIN_PROXY) */
 #define ECMA_OBJECT_IS_PROXY(obj_p) (false)
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
 /* ecma-helpers-value.c */
 ecma_type_t JERRY_ATTR_CONST ecma_get_value_type_field (ecma_value_t value);
@@ -228,9 +228,9 @@ bool JERRY_ATTR_CONST ecma_are_values_integer_numbers (ecma_value_t first_value,
 bool JERRY_ATTR_CONST ecma_is_value_float_number (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_number (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_string (ecma_value_t value);
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 bool JERRY_ATTR_CONST ecma_is_value_symbol (ecma_value_t value);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 bool JERRY_ATTR_CONST ecma_is_value_prop_name (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_direct_string (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_non_direct_string (ecma_value_t value);
@@ -248,9 +248,9 @@ ecma_value_t ecma_make_number_value (ecma_number_t ecma_number);
 ecma_value_t ecma_make_int32_value (int32_t int32_number);
 ecma_value_t ecma_make_uint32_value (uint32_t uint32_number);
 ecma_value_t JERRY_ATTR_PURE ecma_make_string_value (const ecma_string_t *ecma_string_p);
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 ecma_value_t JERRY_ATTR_PURE ecma_make_symbol_value (const ecma_string_t *ecma_symbol_p);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 ecma_value_t JERRY_ATTR_PURE ecma_make_prop_name_value (const ecma_string_t *ecma_prop_name_p);
 ecma_value_t JERRY_ATTR_PURE ecma_make_magic_string_value (lit_magic_string_id_t id);
 ecma_value_t JERRY_ATTR_PURE ecma_make_object_value (const ecma_object_t *object_p);
@@ -260,9 +260,9 @@ ecma_number_t JERRY_ATTR_PURE ecma_get_float_from_value (ecma_value_t value);
 ecma_number_t * ecma_get_pointer_from_float_value (ecma_value_t value);
 ecma_number_t JERRY_ATTR_PURE ecma_get_number_from_value (ecma_value_t value);
 ecma_string_t JERRY_ATTR_PURE *ecma_get_string_from_value (ecma_value_t value);
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 ecma_string_t JERRY_ATTR_PURE *ecma_get_symbol_from_value (ecma_value_t value);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 ecma_string_t JERRY_ATTR_PURE *ecma_get_prop_name_from_value (ecma_value_t value);
 ecma_object_t JERRY_ATTR_PURE *ecma_get_object_from_value (ecma_value_t value);
 ecma_error_reference_t JERRY_ATTR_PURE *ecma_get_error_reference_from_value (ecma_value_t value);
@@ -282,22 +282,22 @@ void ecma_free_number (ecma_value_t value);
 lit_magic_string_id_t ecma_get_typeof_lit_id (ecma_value_t value);
 
 /* ecma-helpers-string.c */
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 ecma_string_t *ecma_new_symbol_from_descriptor_string (ecma_value_t string_desc);
 bool ecma_prop_name_is_symbol (ecma_string_t *string_p);
 uint32_t ecma_op_advance_string_index (ecma_string_t *str_p, uint32_t index, bool is_unicode);
-#endif /* ENABLED (JERRY_ES2015) */
-#if ENABLED (JERRY_ES2015_BUILTIN_MAP) || ENABLED (JERRY_ES2015_BUILTIN_SET)
+#endif /* ENABLED (JERRY_ESNEXT) */
+#if ENABLED (JERRY_BUILTIN_MAP) || ENABLED (JERRY_BUILTIN_SET)
 ecma_string_t *ecma_new_map_key_string (ecma_value_t value);
 bool ecma_prop_name_is_map_key (ecma_string_t *string_p);
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) || ENABLED (JERRY_ES2015_BUILTIN_SET) */
+#endif /* ENABLED (JERRY_BUILTIN_MAP) || ENABLED (JERRY_BUILTIN_SET) */
 ecma_string_t *ecma_new_ecma_string_from_utf8 (const lit_utf8_byte_t *string_p, lit_utf8_size_t string_size);
 ecma_string_t *ecma_new_ecma_string_from_utf8_converted_to_cesu8 (const lit_utf8_byte_t *string_p,
                                                                   lit_utf8_size_t string_size);
 ecma_string_t *ecma_new_ecma_string_from_code_unit (ecma_char_t code_unit);
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 ecma_string_t *ecma_new_ecma_string_from_code_units (ecma_char_t first_code_unit, ecma_char_t second_code_unit);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 ecma_string_t *ecma_new_ecma_string_from_uint32 (uint32_t uint32_number);
 ecma_string_t *ecma_new_non_direct_string_from_uint32 (uint32_t uint32_number);
 ecma_string_t *ecma_get_ecma_string_from_uint32 (uint32_t uint32_number);
@@ -485,14 +485,14 @@ void ecma_raise_error_from_error_reference (ecma_value_t value);
 
 void ecma_bytecode_ref (ecma_compiled_code_t *bytecode_p);
 void ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p);
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 ecma_collection_t *ecma_compiled_code_get_tagged_template_collection (const ecma_compiled_code_t *bytecode_header_p);
-#endif /* ENABLED (JERRY_ES2015) */
-#if ENABLED (JERRY_RESOURCE_NAME) || ENABLED (JERRY_ES2015)
+#endif /* ENABLED (JERRY_ESNEXT) */
+#if ENABLED (JERRY_RESOURCE_NAME) || ENABLED (JERRY_ESNEXT)
 ecma_length_t ecma_compiled_code_get_formal_params (const ecma_compiled_code_t *bytecode_p);
 ecma_value_t *ecma_compiled_code_resolve_arguments_start (const ecma_compiled_code_t *bytecode_header_p);
 ecma_value_t *ecma_compiled_code_resolve_function_name (const ecma_compiled_code_t *bytecode_header_p);
-#endif /* ENABLED (JERRY_RESOURCE_NAME) || ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_RESOURCE_NAME) || ENABLED (JERRY_ESNEXT) */
 #if (JERRY_STACK_LIMIT != 0)
 uintptr_t ecma_get_current_stack_usage (void);
 #endif /* (JERRY_STACK_LIMIT != 0) */

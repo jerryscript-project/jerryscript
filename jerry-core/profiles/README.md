@@ -2,7 +2,7 @@
 
 Specify compile definitions in profile files to use when compiling the `jerry-core` target.
 
-The default profile is ``es5.1`` which disables the ES2015 features.
+The default profile is ``es.next`` which enables all of the currently implemented features.
 
 ### Using profiles with the build system
 
@@ -29,12 +29,12 @@ Alternatively, if you want to use a custom profile at
 `/absolute/path/to/my.profile`:
 
 ```
-# Turn off every ES2015 feature EXCEPT the module system
-JERRY_ES2015_BUILTIN_DATAVIEW=0
-JERRY_ES2015_BUILTIN_MAP=0
-JERRY_ES2015_BUILTIN_PROMISE=0
-JERRY_ES2015_BUILTIN_SET=0
-JERRY_ES2015_BUILTIN_TYPEDARRAY=0
+# Disable not needed features
+JERRY_BUILTIN_DATAVIEW=0
+JERRY_BUILTIN_MAP=0
+JERRY_BUILTIN_PROMISE=0
+JERRY_BUILTIN_SET=0
+JERRY_BUILTIN_TYPEDARRAY=0
 ```
 
 Run the build script as follows (assuming that you are in the project root
@@ -96,21 +96,21 @@ defined to `1`.
     * `JERRY_BUILTIN_REGEXP`
     * `JERRY_BUILTIN_STRING`
 
-#### ES6 (ES 2015) features
+#### ES2015+ features
 
-* `JERRY_ES2015_BUILTIN_DATAVIEW`:
+* `JERRY_BUILTIN_DATAVIEW`:
   Enables or disables the [DataView](https://www.ecma-international.org/ecma-262/6.0/#sec-dataview-objects) built-in.
-* `JERRY_ES2015_BUILTIN_MAP`:
+* `JERRY_BUILTIN_MAP`:
   Enables or disables the [Map](http://www.ecma-international.org/ecma-262/6.0/#sec-keyed-collection) built-ins.
-* `JERRY_ES2015_BUILTIN_SET`:
+* `JERRY_BUILTIN_SET`:
   Enables or disables the [SET](https://www.ecma-international.org/ecma-262/6.0/#sec-set-objects) built-in.
-* `JERRY_ES2015_BUILTIN_PROMISE`:
+* `JERRY_BUILTIN_PROMISE`:
   Enables or disables the [Promise](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-objects) built-in.
-* `JERRY_ES2015_BUILTIN_TYPEDARRAY`:
+* `JERRY_BUILTIN_TYPEDARRAY`:
   Enables or disables the [ArrayBuffer](http://www.ecma-international.org/ecma-262/6.0/#sec-arraybuffer-objects) and [TypedArray](http://www.ecma-international.org/ecma-262/6.0/#sec-typedarray-objects) built-ins.
-* `JERRY_ES2015_MODULE_SYSTEM`:
+* `JERRY_MODULE_SYSTEM`:
   Enables or disable the [module system](http://www.ecma-international.org/ecma-262/6.0/#sec-modules) language element.
-* `JERRY_ES2015`: Enables or disable all of the implemented [ECMAScript2015 features](http://www.ecma-international.org/ecma-262/6.0/).
+* `JERRY_ESNEXT`: Enables or disables all of the implemented [ECMAScript2015+ features](http://www.ecma-international.org/ecma-262/10.0/).
   * [arrow functions](http://www.ecma-international.org/ecma-262/6.0/#sec-arrow-function-definitions) language element.
   * [class](https://www.ecma-international.org/ecma-262/6.0/#sec-class-definitions) language element.
   * [default value](http://www.ecma-international.org/ecma-262/6.0/#sec-function-definitions) for formal parameters.
@@ -123,13 +123,13 @@ defined to `1`.
   * [rest parameter](http://www.ecma-international.org/ecma-262/6.0/#sec-function-definitions) language element.
   * [symbol](https://www.ecma-international.org/ecma-262/6.0/#sec-symbol-objects) language element.
   * [template strings](http://www.ecma-international.org/ecma-262/6.0/#sec-static-semantics-templatestrings) language element.
-  Furthermore all builtins follow the ES2015 specification including those which behave differently in ES5.1.
-  This option is evaulated first, any other `JERRY_ES2015_<name>` defines will override that specific entry.
-  Equivalent with setting the following defines to the `JERRY_ES2015` value:
-    * `JERRY_ES2015_BUILTIN_DATAVIEW`
-    * `JERRY_ES2015_BUILTIN_MAP`
-    * `JERRY_ES2015_BUILTIN_SET`
-    * `JERRY_ES2015_BUILTIN_PROMISE`
-    * `JERRY_ES2015_BUILTIN_TYPEDARRAY`
-    * `JERRY_ES2015_MODULE_SYSTEM`
+  Furthermore all builtins follow the latest ECMAScript specification including those which behave differently in ES5.1.
+  This option is evaulated first, any other `JERRY_<name>` defines will override that specific entry.
+  Equivalent with setting the following defines to the `JERRY_ESNEXT` value:
+    * `JERRY_BUILTIN_DATAVIEW`
+    * `JERRY_BUILTIN_MAP`
+    * `JERRY_BUILTIN_SET`
+    * `JERRY_BUILTIN_PROMISE`
+    * `JERRY_BUILTIN_TYPEDARRAY`
+    * `JERRY_MODULE_SYSTEM`
 

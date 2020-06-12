@@ -47,22 +47,22 @@ ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, /**< starting lexical 
 
   while (true)
   {
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND)
     {
       JERRY_ASSERT (lex_env_p->u2.outer_reference_cp != JMEM_CP_NULL);
       lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
     }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
     ecma_value_t has_binding = ecma_op_has_binding (lex_env_p, name_p);
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
     if (ECMA_IS_VALUE_ERROR (has_binding))
     {
       return ECMA_OBJECT_POINTER_ERROR;
     }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
     if (ecma_is_value_true (has_binding))
     {
@@ -78,7 +78,7 @@ ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, /**< starting lexical 
   }
 } /* ecma_op_resolve_reference_base */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 /**
  * Perform GetThisEnvironment and GetSuperBase operations
  *
@@ -99,12 +99,12 @@ ecma_op_resolve_super_base (ecma_object_t *lex_env_p) /**< starting lexical envi
     {
       ecma_object_t *home_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u1.home_object_cp);
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
       if (ECMA_OBJECT_IS_PROXY (home_p))
       {
         return ecma_proxy_object_get_prototype_of (home_p);
       }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
       jmem_cpointer_t proto_cp = ecma_op_ordinary_object_get_prototype_of (home_p);
 
@@ -173,7 +173,7 @@ ecma_op_is_prop_unscopable (ecma_object_t *binding_obj_p, /**< binding object */
 
   return ECMA_VALUE_FALSE;
 } /* ecma_op_is_prop_unscopable */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Helper method for HasBindig operation
@@ -205,7 +205,7 @@ ecma_op_object_bound_environment_resolve_reference_value (ecma_object_t *lex_env
   ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
   ecma_value_t found_binding;
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   if (ECMA_OBJECT_IS_PROXY (binding_obj_p))
   {
     found_binding = ecma_proxy_object_has (binding_obj_p, name_p);
@@ -217,7 +217,7 @@ ecma_op_object_bound_environment_resolve_reference_value (ecma_object_t *lex_env
   }
   else
   {
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
     found_binding = ecma_op_object_find (binding_obj_p, name_p);
 
     if (ECMA_IS_VALUE_ERROR (found_binding) || !ecma_is_value_found (found_binding))
@@ -225,39 +225,39 @@ ecma_op_object_bound_environment_resolve_reference_value (ecma_object_t *lex_env
       return found_binding;
     }
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     if (JERRY_LIKELY (lex_env_p == ecma_get_global_scope ()))
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
     {
       return found_binding;
     }
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   ecma_value_t blocked = ecma_op_is_prop_unscopable (binding_obj_p, name_p);
 
   if (ecma_is_value_false (blocked))
   {
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
     if (ECMA_OBJECT_IS_PROXY (binding_obj_p))
     {
       return ecma_proxy_object_get (binding_obj_p, name_p, ecma_make_object_value (binding_obj_p));
     }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
     return found_binding;
   }
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   if (!ECMA_OBJECT_IS_PROXY (binding_obj_p))
   {
     ecma_free_value (found_binding);
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
   return ECMA_IS_VALUE_ERROR (blocked) ? blocked : ECMA_VALUE_NOT_FOUND;
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 } /* ecma_op_object_bound_environment_resolve_reference_value */
 
 /**
@@ -283,24 +283,24 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
       {
         ecma_property_value_t *property_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
         if (JERRY_UNLIKELY (property_value_p->value == ECMA_VALUE_UNINITIALIZED))
         {
           return ecma_raise_reference_error (ECMA_ERR_MSG ("Variables declared by let/const must be"
                                                            " initialized before reading their value."));
         }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
         return ecma_fast_copy_value (property_value_p->value);
       }
     }
     else if (lex_env_type == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND)
     {
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
       bool lcache_lookup_allowed = (lex_env_p == ecma_get_global_environment ());
-#else /* !ENABLED (JERRY_ES2015)*/
+#else /* !ENABLED (JERRY_ESNEXT)*/
       bool lcache_lookup_allowed = true;
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
       if (lcache_lookup_allowed)
       {
@@ -344,11 +344,11 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
     }
     else
     {
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
       JERRY_ASSERT (lex_env_type == ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND);
-#else /* !ENABLED (JERRY_ES2015) */
+#else /* !ENABLED (JERRY_ESNEXT) */
       JERRY_UNREACHABLE ();
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
     }
 
     if (lex_env_p->u2.outer_reference_cp == JMEM_CP_NULL)

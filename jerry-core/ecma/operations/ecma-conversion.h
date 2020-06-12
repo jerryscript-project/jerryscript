@@ -39,9 +39,9 @@ typedef enum
 
 ecma_value_t ecma_op_check_object_coercible (ecma_value_t value);
 bool ecma_op_same_value (ecma_value_t x, ecma_value_t y);
-#if ENABLED (JERRY_ES2015_BUILTIN_MAP)
+#if ENABLED (JERRY_BUILTIN_MAP)
 bool ecma_op_same_value_zero (ecma_value_t x, ecma_value_t y);
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_MAP) */
+#endif /* ENABLED (JERRY_BUILTIN_MAP) */
 ecma_value_t ecma_op_to_primitive (ecma_value_t value, ecma_preferred_type_hint_t preferred_type);
 bool ecma_op_to_boolean (ecma_value_t value);
 ecma_value_t ecma_op_to_number (ecma_value_t value);
@@ -51,9 +51,9 @@ ecma_string_t *ecma_op_to_prop_name (ecma_value_t value);
 ecma_value_t ecma_op_to_object (ecma_value_t value);
 ecma_value_t ecma_op_to_integer (ecma_value_t value, ecma_number_t *number_p);
 ecma_value_t ecma_op_to_length (ecma_value_t value, uint32_t *length);
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 ecma_collection_t *ecma_op_create_list_from_array_like (ecma_value_t arr, bool prop_names_only);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 ecma_object_t *ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_desc_p);
 ecma_value_t ecma_op_to_property_descriptor (ecma_value_t obj_value, ecma_property_descriptor_t *out_prop_desc_p);

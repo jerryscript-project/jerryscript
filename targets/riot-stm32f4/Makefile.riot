@@ -49,6 +49,7 @@ libjerry:
 	 -DENABLE_ALL_IN_ONE=OFF \
 	 -DJERRY_LIBM=OFF \
 	 -DJERRY_CMDLINE=OFF \
+	 -DJERRY_PROFILE="es5.1" \
 	 -DEXTERNAL_COMPILE_FLAGS="$(EXT_CFLAGS)" \
 	 -DJERRY_GLOBAL_HEAP_SIZE=$(JERRYHEAP)
 	make -C$(BUILD_DIR) jerry-core jerry-port-default-minimal jerry-ext

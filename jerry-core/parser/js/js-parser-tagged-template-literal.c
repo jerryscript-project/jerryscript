@@ -31,7 +31,7 @@
  * @{
  */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 /**
  * Append the cooked and raw string to the corresponding array
  */
@@ -143,7 +143,7 @@ parser_tagged_template_literal_finalize (ecma_object_t *template_obj_p, /**< tem
   parser_tagged_template_literal_freeze_array (template_obj_p);
   parser_tagged_template_literal_freeze_array (raw_strings_p);
 } /* parser_tagged_template_literal_finalize */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * @}

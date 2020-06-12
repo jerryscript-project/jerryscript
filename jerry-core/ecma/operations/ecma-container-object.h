@@ -19,7 +19,7 @@
 #include "ecma-globals.h"
 #include "ecma-builtins.h"
 
-#if ENABLED (JERRY_ES2015_BUILTIN_CONTAINER)
+#if ENABLED (JERRY_BUILTIN_CONTAINER)
 
 /** \addtogroup ecma ECMA
  * @{
@@ -53,6 +53,6 @@ ecma_value_t ecma_op_container_iterator_next (ecma_value_t this_val, ecma_pseudo
  * @}
  */
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_CONTAINER) */
+#endif /* ENABLED (JERRY_BUILTIN_CONTAINER) */
 
 #endif /* !ECMA_CONTAINER_OBJECT_H */

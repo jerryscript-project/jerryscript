@@ -65,16 +65,16 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
       vm_stack_top_p -= PARSER_TRY_CONTEXT_STACK_ALLOCATION;
       break;
     }
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     case VM_CONTEXT_BLOCK:
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
     case VM_CONTEXT_WITH:
     {
       VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_WITH_CONTEXT_STACK_ALLOCATION);
       vm_stack_top_p -= PARSER_WITH_CONTEXT_STACK_ALLOCATION;
       break;
     }
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     case VM_CONTEXT_FOR_OF:
     {
       ecma_value_t iterator = vm_stack_top_p[-3];
@@ -90,7 +90,7 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
       vm_stack_top_p -= PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION;
       break;
     }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
     default:
     {
       JERRY_ASSERT (VM_GET_CONTEXT_TYPE (vm_stack_top_p[-1]) == VM_CONTEXT_FOR_IN);
@@ -195,7 +195,7 @@ vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
         return false;
       }
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
       if (vm_stack_top_p[-1] & VM_CONTEXT_HAS_LEX_ENV)
       {
         ecma_object_t *lex_env_p = frame_ctx_p->lex_env_p;
@@ -203,7 +203,7 @@ vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
         frame_ctx_p->lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
         ecma_deref_object (lex_env_p);
       }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
       byte_code_p = frame_ctx_p->byte_code_start_p + context_end;
 
@@ -243,7 +243,7 @@ vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
       }
       else
       {
-#if !ENABLED (JERRY_ES2015)
+#if !ENABLED (JERRY_ESNEXT)
         if (vm_stack_top_p[-1] & VM_CONTEXT_HAS_LEX_ENV)
         {
           ecma_object_t *lex_env_p = frame_ctx_p->lex_env_p;
@@ -251,7 +251,7 @@ vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
           frame_ctx_p->lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
           ecma_deref_object (lex_env_p);
         }
-#endif /* !ENABLED (JERRY_ES2015) */
+#endif /* !ENABLED (JERRY_ESNEXT) */
 
         if (byte_code_p[0] == CBC_CONTEXT_END)
         {
@@ -287,7 +287,7 @@ vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
   return false;
 } /* vm_stack_find_finally */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 
 /**
  * Get the offsets of ecma values from the specified item of a context.
@@ -310,21 +310,21 @@ vm_get_context_value_offsets (ecma_value_t *context_item_p) /**< any item of a c
     {
       return PARSER_TRY_CONTEXT_STACK_ALLOCATION;
     }
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     case VM_CONTEXT_BLOCK:
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
     case VM_CONTEXT_WITH:
     {
       return PARSER_WITH_CONTEXT_STACK_ALLOCATION;
     }
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
     case VM_CONTEXT_FOR_OF:
     {
       return ((3 << (VM_CONTEXT_OFFSET_SHIFT * 2))
               | (2 << (VM_CONTEXT_OFFSET_SHIFT))
               | PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION);
     }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
     default:
     {
       return (4 << (VM_CONTEXT_OFFSET_SHIFT)) | PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION;
@@ -387,7 +387,7 @@ vm_ref_lex_env_chain (ecma_object_t *lex_env_p, /**< top of lexical environment 
   while (context_top_p > context_end_p);
 } /* vm_ref_lex_env_chain */
 
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * @}

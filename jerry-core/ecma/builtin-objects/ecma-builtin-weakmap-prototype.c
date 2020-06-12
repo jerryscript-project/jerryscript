@@ -15,7 +15,7 @@
 
 #include "ecma-container-object.h"
 
-#if ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP)
+#if ENABLED (JERRY_BUILTIN_WEAKMAP)
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -105,4 +105,4 @@ ecma_builtin_weakmap_prototype_object_set (ecma_value_t this_arg, /**< this argu
  * @}
  */
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_WEAKMAP) */
+#endif /* ENABLED (JERRY_BUILTIN_WEAKMAP) */

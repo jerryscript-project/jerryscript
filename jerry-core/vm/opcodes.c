@@ -56,12 +56,12 @@ vm_var_decl (ecma_object_t *lex_env_p, /**< target lexical environment */
 {
   ecma_value_t has_binding = ecma_op_has_binding (lex_env_p, var_name_str_p);
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   if (ECMA_IS_VALUE_ERROR (has_binding))
   {
     return has_binding;
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
   if (ecma_is_value_false (has_binding))
   {
@@ -192,12 +192,12 @@ vm_op_delete_prop (ecma_value_t object, /**< base object */
                    ecma_value_t property, /**< property name */
                    bool is_strict) /**< strict mode */
 {
-#if !ENABLED (JERRY_ES2015)
+#if !ENABLED (JERRY_ESNEXT)
   if (ecma_is_value_undefined (object))
   {
     return ECMA_VALUE_TRUE;
   }
-#endif /* !ENABLED (JERRY_ES2015) */
+#endif /* !ENABLED (JERRY_ESNEXT) */
 
   ecma_value_t check_coercible = ecma_op_check_object_coercible (object);
   if (ECMA_IS_VALUE_ERROR (check_coercible))
@@ -244,12 +244,12 @@ vm_op_delete_var (ecma_value_t name_literal, /**< name literal */
 
   ecma_object_t *ref_base_lex_env_p = ecma_op_resolve_reference_base (lex_env_p, var_name_str_p);
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   if (JERRY_UNLIKELY (ref_base_lex_env_p == ECMA_OBJECT_POINTER_ERROR))
   {
     return ECMA_VALUE_ERROR;
   }
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
   if (ref_base_lex_env_p == NULL)
   {
@@ -289,9 +289,9 @@ opfunc_for_in (ecma_value_t left_value, /**< left value */
   /* ecma_op_to_object will only raise error on null/undefined values but those are handled above. */
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (obj_expr_value));
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_expr_value);
-#if ENABLED (JERRY_ES2015_BUILTIN_PROXY)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   JERRY_ASSERT (!ECMA_OBJECT_IS_PROXY (obj_p));
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROXY) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
   ecma_collection_t *prop_names_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_ENUMERABLE_PROTOTYPE);
 
   if (prop_names_p->item_count != 0)
@@ -306,7 +306,7 @@ opfunc_for_in (ecma_value_t left_value, /**< left value */
   return NULL;
 } /* opfunc_for_in */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 
 /**
  * 'VM_OC_APPEND_ARRAY' opcode handler specialized for spread objects
@@ -483,7 +483,7 @@ opfunc_spread_arguments (ecma_value_t *stack_top_p, /**< pointer to the current 
   return buff_p;
 } /* opfunc_spread_arguments */
 
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * 'VM_OC_APPEND_ARRAY' opcode handler, for setting array object properties
@@ -496,12 +496,12 @@ opfunc_append_array (ecma_value_t *stack_top_p, /**< current stack top */
                      uint16_t values_length) /**< number of elements to set
                                               *   with potential OPFUNC_HAS_SPREAD_ELEMENT flag */
 {
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   if (values_length >= OPFUNC_HAS_SPREAD_ELEMENT)
   {
     return opfunc_append_to_spread_array (stack_top_p, (uint16_t) (values_length & ~OPFUNC_HAS_SPREAD_ELEMENT));
   }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   ecma_object_t *array_obj_p = ecma_get_object_from_value (stack_top_p[-1]);
   JERRY_ASSERT (ecma_get_object_type (array_obj_p) == ECMA_OBJECT_TYPE_ARRAY);
@@ -568,7 +568,7 @@ opfunc_append_array (ecma_value_t *stack_top_p, /**< current stack top */
   return ECMA_VALUE_EMPTY;
 } /* opfunc_append_array */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 
 /**
  * Create an executable object using the current frame context
@@ -1301,7 +1301,7 @@ opfunc_assign_super_reference (ecma_value_t **vm_stack_top_p, /**< vm stack top 
 
   return result;
 } /* opfunc_assign_super_reference */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * @}

@@ -26,7 +26,7 @@
 #include "ecma-promise-object.h"
 #include "jcontext.h"
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROMISE)
+#if ENABLED (JERRY_BUILTIN_PROMISE)
 
 /** \addtogroup ecma ECMA
  * @{
@@ -967,4 +967,4 @@ ecma_promise_then (ecma_value_t promise, /**< the promise which call 'then' */
  * @}
  * @}
  */
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
+#endif /* ENABLED (JERRY_BUILTIN_PROMISE) */

@@ -49,7 +49,7 @@
  * @{
  */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 /**
  * Helper function to retrieve the flags associated with a RegExp object
  *
@@ -352,7 +352,7 @@ ecma_builtin_regexp_prototype_get_unicode (ecma_value_t this_arg) /**< this argu
 
   return ecma_make_boolean_value (flags & RE_FLAG_UNICODE);
 } /* ecma_builtin_regexp_prototype_get_unicode */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 #if ENABLED (JERRY_BUILTIN_ANNEXB)
 
@@ -373,9 +373,9 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument
                                        ecma_value_t flags_arg) /**< flags */
 {
   if (!ecma_object_is_regexp_object (this_arg)
-#if !ENABLED (JERRY_ES2015)
+#if !ENABLED (JERRY_ESNEXT)
       || ecma_get_object_from_value (this_arg) == ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE)
-#endif /* !ENABLED (JERRY_ES2015) */
+#endif /* !ENABLED (JERRY_ESNEXT) */
       )
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not a RegExp object"));
@@ -481,7 +481,7 @@ static ecma_value_t
 ecma_builtin_regexp_prototype_test (ecma_value_t this_arg, /**< this argument */
                                     ecma_value_t arg) /**< routine's argument */
 {
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   if (!ecma_is_value_object (this_arg))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("'this' value is not an object"));
@@ -502,14 +502,14 @@ ecma_builtin_regexp_prototype_test (ecma_value_t this_arg, /**< this argument */
   {
     return result;
   }
-#else /* !ENABLED (JERRY_ES2015) */
+#else /* !ENABLED (JERRY_ESNEXT) */
   ecma_value_t result = ecma_builtin_regexp_prototype_exec (this_arg, arg);
 
   if (ECMA_IS_VALUE_ERROR (result))
   {
     return result;
   }
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   ecma_value_t ret_value = ecma_make_boolean_value (!ecma_is_value_null (result));
   ecma_free_value (result);
@@ -529,7 +529,7 @@ ecma_builtin_regexp_prototype_test (ecma_value_t this_arg, /**< this argument */
 static ecma_value_t
 ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argument */
 {
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
   if (!ecma_is_value_object (this_arg))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("'this' value is not an object."));
@@ -577,7 +577,7 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
   ecma_deref_ecma_string (flags_p);
 
   return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
-#else /* !ENABLED (JERRY_ES2015) */
+#else /* !ENABLED (JERRY_ESNEXT) */
   if (!ecma_object_is_regexp_object (this_arg))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("'this' value is not a RegExp object."));
@@ -613,10 +613,10 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
   }
 
   return ecma_make_string_value (ecma_stringbuilder_finalize (&result));
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 } /* ecma_builtin_regexp_prototype_to_string */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 /**
  * Helper function to determine if method is the builtin exec method
  *
@@ -695,7 +695,7 @@ ecma_builtin_regexp_prototype_symbol_match (ecma_value_t this_arg, /**< this arg
 {
   return ecma_regexp_match_helper (this_arg, string_arg);
 } /* ecma_builtin_regexp_prototype_symbol_match */
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * @}

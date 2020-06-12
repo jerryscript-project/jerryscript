@@ -35,7 +35,7 @@
  * @{
  */
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 
 /**
  * Implementation of 'CreateArrayFromList' specialized for iterators
@@ -602,7 +602,7 @@ ecma_op_iterator_do (ecma_iterator_command_type_t command, /**< command to be ex
   return result;
 } /* ecma_op_iterator_do */
 
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * @}

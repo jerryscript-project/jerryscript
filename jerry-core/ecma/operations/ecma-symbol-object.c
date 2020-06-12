@@ -24,7 +24,7 @@
 #include "ecma-symbol-object.h"
 #include "lit-char-helpers.h"
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 
 /** \addtogroup ecma ECMA
  * @{
@@ -173,7 +173,7 @@ ecma_symbol_to_string_helper (ecma_value_t this_arg, /**< this argument value */
   return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is must be a Symbol."));
 } /* ecma_symbol_to_string_helper */
 
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * @}

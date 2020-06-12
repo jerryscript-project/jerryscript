@@ -35,8 +35,8 @@ def skip_if(condition, desc):
 
 OPTIONS_COMMON = ['--lto=off']
 OPTIONS_PROFILE_MIN = ['--profile=minimal']
-OPTIONS_PROFILE_ES51 = [] # NOTE: same as ['--profile=es5.1']
-OPTIONS_PROFILE_ES2015 = ['--profile=es2015-subset']
+OPTIONS_PROFILE_ES51 = ['--profile=es5.1']
+OPTIONS_PROFILE_ESNEXT = ['--profile=es.next']
 OPTIONS_STACK_LIMIT = ['--stack-limit=96']
 OPTIONS_GC_MARK_LIMIT = ['--gc-mark-limit=16']
 OPTIONS_DEBUG = ['--debug']
@@ -49,14 +49,14 @@ OPTIONS_DOCTESTS = ['--doctests=on', '--jerry-cmdline=off', '--error-messages=on
 
 # Test options for unittests
 JERRY_UNITTESTS_OPTIONS = [
-    Options('unittests-es2015_subset',
-            OPTIONS_COMMON + OPTIONS_UNITTESTS + OPTIONS_PROFILE_ES2015),
-    Options('unittests-es2015_subset-debug',
-            OPTIONS_COMMON + OPTIONS_UNITTESTS + OPTIONS_PROFILE_ES2015 + OPTIONS_DEBUG),
-    Options('doctests-es2015_subset',
-            OPTIONS_COMMON + OPTIONS_DOCTESTS + OPTIONS_PROFILE_ES2015),
-    Options('doctests-es2015_subset-debug',
-            OPTIONS_COMMON + OPTIONS_DOCTESTS + OPTIONS_PROFILE_ES2015 + OPTIONS_DEBUG),
+    Options('unittests-es.next',
+            OPTIONS_COMMON + OPTIONS_UNITTESTS + OPTIONS_PROFILE_ESNEXT),
+    Options('unittests-es.next-debug',
+            OPTIONS_COMMON + OPTIONS_UNITTESTS + OPTIONS_PROFILE_ESNEXT + OPTIONS_DEBUG),
+    Options('doctests-es.next',
+            OPTIONS_COMMON + OPTIONS_DOCTESTS + OPTIONS_PROFILE_ESNEXT),
+    Options('doctests-es.next-debug',
+            OPTIONS_COMMON + OPTIONS_DOCTESTS + OPTIONS_PROFILE_ESNEXT + OPTIONS_DEBUG),
     Options('unittests-es5.1',
             OPTIONS_COMMON + OPTIONS_UNITTESTS + OPTIONS_PROFILE_ES51),
     Options('unittests-es5.1-debug',
@@ -75,8 +75,8 @@ JERRY_UNITTESTS_OPTIONS = [
 
 # Test options for jerry-tests
 JERRY_TESTS_OPTIONS = [
-    Options('jerry_tests-es2015_subset-debug',
-            OPTIONS_COMMON + OPTIONS_PROFILE_ES2015 + OPTIONS_DEBUG + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT),
+    Options('jerry_tests-es.next-debug',
+            OPTIONS_COMMON + OPTIONS_PROFILE_ESNEXT + OPTIONS_DEBUG + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT),
     Options('jerry_tests-es5.1',
             OPTIONS_COMMON + OPTIONS_PROFILE_ES51 + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT),
     Options('jerry_tests-es5.1-snapshot',
@@ -108,25 +108,25 @@ JERRY_TEST_SUITE_OPTIONS.extend([
     Options('jerry_test_suite-minimal-debug-snapshot',
             OPTIONS_COMMON + OPTIONS_PROFILE_MIN + OPTIONS_SNAPSHOT + OPTIONS_DEBUG,
             ['--snapshot']),
-    Options('jerry_test_suite-es2015_subset',
-            OPTIONS_COMMON + OPTIONS_PROFILE_ES2015),
-    Options('jerry_test_suite-es2015_subset-snapshot',
-            OPTIONS_COMMON + OPTIONS_PROFILE_ES2015 + OPTIONS_SNAPSHOT,
+    Options('jerry_test_suite-es.next',
+            OPTIONS_COMMON + OPTIONS_PROFILE_ESNEXT),
+    Options('jerry_test_suite-es.next-snapshot',
+            OPTIONS_COMMON + OPTIONS_PROFILE_ESNEXT + OPTIONS_SNAPSHOT,
             ['--snapshot']),
-    Options('jerry_test_suite-es2015_subset-debug-snapshot',
-            OPTIONS_COMMON + OPTIONS_PROFILE_ES2015 + OPTIONS_SNAPSHOT + OPTIONS_DEBUG,
+    Options('jerry_test_suite-es.next-debug-snapshot',
+            OPTIONS_COMMON + OPTIONS_PROFILE_ESNEXT + OPTIONS_SNAPSHOT + OPTIONS_DEBUG,
             ['--snapshot']),
 ])
 
 # Test options for test262
 TEST262_TEST_SUITE_OPTIONS = [
-    Options('test262_tests'),
-    Options('test262_tests-debug', OPTIONS_DEBUG)
+    Options('test262_tests', OPTIONS_PROFILE_ES51),
+    Options('test262_tests-debug', OPTIONS_PROFILE_ES51 + OPTIONS_DEBUG)
 ]
 
 # Test options for test262-es2015
 TEST262_ES2015_TEST_SUITE_OPTIONS = [
-    Options('test262_tests_es2015', OPTIONS_PROFILE_ES2015 + ['--line-info=on', '--error-messages=on']),
+    Options('test262_tests_es2015', OPTIONS_PROFILE_ESNEXT + ['--line-info=on', '--error-messages=on']),
 ]
 
 # Test options for jerry-debugger
@@ -396,10 +396,10 @@ def run_jerry_tests(options):
 
         skip_list = []
 
-        if '--profile=es2015-subset' in job.build_args:
+        if '--profile=es.next' in job.build_args:
             skip_list.append(os.path.join('es5.1', ''))
         else:
-            skip_list.append(os.path.join('es2015', ''))
+            skip_list.append(os.path.join('es.next', ''))
 
         if options.skip_list:
             skip_list.append(options.skip_list)
@@ -428,10 +428,10 @@ def run_jerry_test_suite(options):
         else:
             test_cmd.append('--test-dir')
             test_cmd.append(settings.JERRY_TEST_SUITE_DIR)
-            if '--profile=es2015-subset' in job.build_args:
+            if '--profile=es.next' in job.build_args:
                 skip_list.append(os.path.join('es5.1', ''))
             else:
-                skip_list.append(os.path.join('es2015', ''))
+                skip_list.append(os.path.join('es.next', ''))
 
         if options.quiet:
             test_cmd.append("-q")
@@ -470,7 +470,7 @@ def run_test262_test_suite(options):
             '--test-dir', settings.TEST262_TEST_SUITE_DIR
         ]
 
-        if '--profile=es2015-subset' in job.build_args:
+        if '--profile=es.next' in job.build_args:
             test_cmd.append('--es2015')
         else:
             test_cmd.append('--es51')

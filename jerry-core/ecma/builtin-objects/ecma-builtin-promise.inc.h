@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if ENABLED (JERRY_ES2015_BUILTIN_PROMISE)
+#if ENABLED (JERRY_BUILTIN_PROMISE)
 
 /* Number properties:
  *  (property name, number value, writable, enumerable, configurable) */
@@ -51,6 +51,6 @@ ACCESSOR_READ_ONLY (LIT_GLOBAL_SYMBOL_SPECIES,
                     ecma_builtin_promise_species_get,
                     ECMA_PROPERTY_FLAG_CONFIGURABLE)
 
-#endif /* ENABLED (JERRY_ES2015_BUILTIN_PROMISE) */
+#endif /* ENABLED (JERRY_BUILTIN_PROMISE) */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

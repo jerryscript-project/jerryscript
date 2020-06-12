@@ -96,10 +96,10 @@ typedef struct
 void
 ecma_builtin_replace_substitute (ecma_replace_context_t *ctx_p);
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 bool
 ecma_builtin_is_regexp_exec (ecma_extended_object_t *obj_p);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 #if ENABLED (JERRY_BUILTIN_DATE)
 

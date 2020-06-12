@@ -99,7 +99,7 @@ ecma_value_t
 ecma_op_create_array_object (const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len,
                              bool is_treat_single_arg_as_length);
 
-#if ENABLED (JERRY_ES2015)
+#if ENABLED (JERRY_ESNEXT)
 ecma_value_t
 ecma_op_array_species_create (ecma_object_t *original_array_p,
                               ecma_length_t length);
@@ -107,7 +107,7 @@ ecma_op_array_species_create (ecma_object_t *original_array_p,
 ecma_value_t
 ecma_op_create_array_iterator (ecma_object_t *obj_p,
                                ecma_array_iterator_type_t type);
-#endif /* ENABLED (JERRY_ES2015) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 ecma_value_t
 ecma_op_array_object_set_length (ecma_object_t *object_p, ecma_value_t new_value, uint32_t flags);

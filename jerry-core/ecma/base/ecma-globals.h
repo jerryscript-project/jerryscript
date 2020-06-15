@@ -963,8 +963,8 @@ typedef struct
   uint16_t size;                    /**< real size >> JMEM_ALIGNMENT_LOG */
   uint16_t refs;                    /**< reference counter for the byte code */
   uint16_t status_flags;            /**< various status flags:
-                                     *   CBC_CODE_FLAGS_FUNCTION flag tells whether
-                                     *   the byte code is function or regular expression.
+                                     *   CBC_IS_FUNCTION check tells whether the byte code
+                                     *   is function or regular expression.
                                      *   If function, the other flags must be CBC_CODE_FLAGS...
                                      *   If regexp, the other flags must be RE_FLAG... */
 } ecma_compiled_code_t;

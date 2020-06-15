@@ -814,23 +814,75 @@ typedef struct
  */
 typedef enum
 {
-  CBC_CODE_FLAGS_FUNCTION = (1u << 0), /**< compiled code is JavaScript function */
-  CBC_CODE_FLAGS_FULL_LITERAL_ENCODING = (1u << 1), /**< full literal encoding mode is enabled */
-  CBC_CODE_FLAGS_UINT16_ARGUMENTS = (1u << 2), /**< compiled code data is cbc_uint16_arguments_t */
-  CBC_CODE_FLAGS_STRICT_MODE = (1u << 3), /**< strict mode is enabled */
-  CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED = (1u << 4), /**< mapped arguments object must be constructed */
-  CBC_CODE_FLAGS_UNMAPPED_ARGUMENTS_NEEDED = (1u << 5), /**< mapped arguments object must be constructed */
-  CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED = (1u << 6), /**< no need to create a lexical environment */
-  CBC_CODE_FLAGS_ARROW_FUNCTION = (1u << 7), /**< this function is an arrow function */
-  CBC_CODE_FLAGS_STATIC_FUNCTION = (1u << 8), /**< this function is a static snapshot function */
-  CBC_CODE_FLAGS_DEBUGGER_IGNORE = (1u << 9), /**< this function should be ignored by debugger */
-  CBC_CODE_FLAGS_CLASS_CONSTRUCTOR = (1u << 10), /**< this function is a class constructor */
-  CBC_CODE_FLAGS_GENERATOR = (1u << 11), /**< this function is a generator */
-  CBC_CODE_FLAGS_REST_PARAMETER = (1u << 12), /**< this function has rest parameter */
-  CBC_CODE_FLAG_HAS_TAGGED_LITERALS = (1u << 13), /**< this function has tagged template literal list */
-  CBC_CODE_FLAGS_LEXICAL_BLOCK_NEEDED = (1u << 14), /**< compiled code needs a lexical block */
-  CBC_CODE_FLAGS_ACCESSOR = (1u << 15) /**< accessor propety 'get' and 'set' functions */
-} cbc_code_flags;
+  CBC_CODE_FLAGS_FULL_LITERAL_ENCODING = (1u << 0), /**< full literal encoding mode is enabled */
+  CBC_CODE_FLAGS_UINT16_ARGUMENTS = (1u << 1), /**< compiled code data is cbc_uint16_arguments_t */
+  CBC_CODE_FLAGS_STRICT_MODE = (1u << 2), /**< strict mode is enabled */
+  CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED = (1u << 3), /**< mapped arguments object must be constructed */
+  CBC_CODE_FLAGS_UNMAPPED_ARGUMENTS_NEEDED = (1u << 4), /**< mapped arguments object must be constructed */
+  CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED = (1u << 5), /**< no need to create a lexical environment */
+  CBC_CODE_FLAGS_STATIC_FUNCTION = (1u << 6), /**< this function is a static snapshot function */
+  CBC_CODE_FLAGS_DEBUGGER_IGNORE = (1u << 7), /**< this function should be ignored by debugger */
+  CBC_CODE_FLAGS_REST_PARAMETER = (1u << 8), /**< this function has rest parameter */
+  CBC_CODE_FLAGS_HAS_TAGGED_LITERALS = (1u << 9), /**< this function has tagged template literal list */
+  CBC_CODE_FLAGS_LEXICAL_BLOCK_NEEDED = (1u << 10), /**< compiled code needs a lexical block */
+
+  /* Bits from bit 13 is reserved for function types (see CBC_FUNCTION_TYPE_SHIFT).
+   * Note: the last bits are used for type flags because < and >= operators can be used to
+           check a range of types without decoding the actual type. */
+} cbc_code_flags_t;
+
+/**
+ * Compact byte code function types.
+ */
+typedef enum
+{
+  /* The first type must be regular expression (see CBC_IS_FUNCTION) */
+  CBC_REGULAR_EXPRESSION, /**< regular expression literal */
+  CBC_FUNCTION_NORMAL, /**< function without special properties */
+  CBC_FUNCTION_CONSTRUCTOR, /**< constructor function */
+
+  /* The following functions cannot be constructed (see CBC_FUNCTION_IS_CONSTRUCTABLE) */
+  CBC_FUNCTION_GENERATOR, /**< generator function */
+
+  /* The following functions has no prototype (see CBC_FUNCTION_HAS_PROTOTYPE) */
+  CBC_FUNCTION_ARROW, /**< arrow function */
+  CBC_FUNCTION_ACCESSOR, /**< property accessor function */
+} cbc_code_function_types_t;
+
+/**
+ * Shift for getting / setting the function type of a byte code.
+ */
+#define CBC_FUNCTION_TYPE_SHIFT 13
+
+/**
+ * Compute function type bits in code flags.
+ */
+#define CBC_FUNCTION_TO_TYPE_BITS(name) \
+  ((name) << CBC_FUNCTION_TYPE_SHIFT)
+
+/**
+ * Get function type from code flags.
+ */
+#define CBC_FUNCTION_GET_TYPE(flags) \
+  ((uint16_t) ((flags) >> CBC_FUNCTION_TYPE_SHIFT))
+
+/**
+ * Checks whether the byte code is a function or a regular expression.
+ */
+#define CBC_IS_FUNCTION(flags) \
+  ((flags) >= (CBC_FUNCTION_NORMAL << CBC_FUNCTION_TYPE_SHIFT))
+
+/**
+ * Checks whether the function can be constructed with new operator.
+ */
+#define CBC_FUNCTION_IS_CONSTRUCTABLE(flags) \
+  ((flags) < (CBC_FUNCTION_GENERATOR << CBC_FUNCTION_TYPE_SHIFT))
+
+/**
+ * Checks whether the function has prototype property.
+ */
+#define CBC_FUNCTION_HAS_PROTOTYPE(flags) \
+  ((flags) < (CBC_FUNCTION_ARROW << CBC_FUNCTION_TYPE_SHIFT))
 
 /**
  * Any arguments object is needed

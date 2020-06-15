@@ -675,19 +675,28 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
   }
 
 #if ENABLED (JERRY_ESNEXT)
-  if (compiled_code_p->status_flags & CBC_CODE_FLAGS_ARROW_FUNCTION)
+  switch (CBC_FUNCTION_GET_TYPE (compiled_code_p->status_flags))
   {
-    JERRY_DEBUG_MSG (",arrow");
-  }
-
-  if (compiled_code_p->status_flags & CBC_CODE_FLAGS_CLASS_CONSTRUCTOR)
-  {
-    JERRY_DEBUG_MSG (",constructor");
-  }
-
-  if (compiled_code_p->status_flags & CBC_CODE_FLAGS_GENERATOR)
-  {
-    JERRY_DEBUG_MSG (",generator");
+    case CBC_FUNCTION_CONSTRUCTOR:
+    {
+      JERRY_DEBUG_MSG (",constructor");
+      break;
+    }
+    case CBC_FUNCTION_GENERATOR:
+    {
+      JERRY_DEBUG_MSG (",generator");
+      break;
+    }
+    case CBC_FUNCTION_ARROW:
+    {
+      JERRY_DEBUG_MSG (",arrow");
+      break;
+    }
+    case CBC_FUNCTION_ACCESSOR:
+    {
+      JERRY_DEBUG_MSG (",accessor");
+      break;
+    }
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
@@ -1238,7 +1247,12 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   byte_code_p = (uint8_t *) compiled_code_p;
   compiled_code_p->size = (uint16_t) (total_size >> JMEM_ALIGNMENT_LOG);
   compiled_code_p->refs = 1;
-  compiled_code_p->status_flags = CBC_CODE_FLAGS_FUNCTION;
+
+#if ENABLED (JERRY_ESNEXT)
+  compiled_code_p->status_flags = 0;
+#else /* !ENABLED (JERRY_ESNEXT) */
+  compiled_code_p->status_flags = CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_NORMAL);
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 #if ENABLED (JERRY_ESNEXT)
   if (context_p->status_flags & PARSER_FUNCTION_HAS_REST_PARAM)
@@ -1319,22 +1333,23 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 #if ENABLED (JERRY_ESNEXT)
   if (context_p->status_flags & (PARSER_IS_PROPERTY_GETTER | PARSER_IS_PROPERTY_SETTER))
   {
-    compiled_code_p->status_flags |= CBC_CODE_FLAGS_ACCESSOR;
+    compiled_code_p->status_flags |= CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_ACCESSOR);
   }
-
-  if (context_p->status_flags & PARSER_IS_ARROW_FUNCTION)
+  else if (context_p->status_flags & PARSER_IS_ARROW_FUNCTION)
   {
-    compiled_code_p->status_flags |= CBC_CODE_FLAGS_ARROW_FUNCTION;
+    compiled_code_p->status_flags |= CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_ARROW);
   }
-
-  if (context_p->status_flags & PARSER_CLASS_CONSTRUCTOR)
+  else if (context_p->status_flags & PARSER_CLASS_CONSTRUCTOR)
   {
-    compiled_code_p->status_flags |= CBC_CODE_FLAGS_CLASS_CONSTRUCTOR;
+    compiled_code_p->status_flags |= CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_CONSTRUCTOR);
   }
-
-  if (context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION)
+  else if (context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION)
   {
-    compiled_code_p->status_flags |= CBC_CODE_FLAGS_GENERATOR;
+    compiled_code_p->status_flags |= CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_GENERATOR);
+  }
+  else
+  {
+    compiled_code_p->status_flags |= CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_NORMAL);
   }
 
   if (context_p->status_flags & PARSER_FUNCTION_HAS_REST_PARAM)
@@ -1344,7 +1359,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 
   if (context_p->tagged_template_literal_cp != JMEM_CP_NULL)
   {
-    compiled_code_p->status_flags |= CBC_CODE_FLAG_HAS_TAGGED_LITERALS;
+    compiled_code_p->status_flags |= CBC_CODE_FLAGS_HAS_TAGGED_LITERALS;
   }
 
   if (context_p->status_flags & PARSER_LEXICAL_BLOCK_NEEDED)

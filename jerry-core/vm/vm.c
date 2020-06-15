@@ -456,7 +456,7 @@ vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 #endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 
 #if ENABLED (JERRY_BUILTIN_REGEXP)
-  if (!(bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION))
+  if (JERRY_UNLIKELY (!CBC_IS_FUNCTION (bytecode_p->status_flags)))
   {
     ecma_object_t *regexp_obj_p = ecma_op_regexp_alloc (NULL);
 
@@ -465,30 +465,36 @@ vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
       return ECMA_VALUE_ERROR;
     }
 
-    return ecma_op_create_regexp_from_bytecode (regexp_obj_p, (re_compiled_code_t *) bytecode_p);;
+    return ecma_op_create_regexp_from_bytecode (regexp_obj_p, (re_compiled_code_t *) bytecode_p);
   }
+#else /* !ENABLED (JERRY_BUILTIN_REGEXP) */
+  JERRY_ASSERT (CBC_IS_FUNCTION (bytecode_p->status_flags));
 #endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
-
-  JERRY_ASSERT (bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION);
 
   ecma_object_t *func_obj_p;
 
 #if ENABLED (JERRY_ESNEXT)
-  if (bytecode_p->status_flags & CBC_CODE_FLAGS_ARROW_FUNCTION)
+  switch (CBC_FUNCTION_GET_TYPE (bytecode_p->status_flags))
   {
-    func_obj_p = ecma_op_create_arrow_function_object (frame_ctx_p->lex_env_p,
-                                                       bytecode_p,
-                                                       frame_ctx_p->this_binding);
-  }
-  else if (bytecode_p->status_flags & CBC_CODE_FLAGS_GENERATOR)
-  {
-    func_obj_p = ecma_op_create_generator_function_object (frame_ctx_p->lex_env_p, bytecode_p);
-  }
-  else
-  {
+    case CBC_FUNCTION_GENERATOR:
+    {
+      func_obj_p = ecma_op_create_generator_function_object (frame_ctx_p->lex_env_p, bytecode_p);
+      break;
+    }
+    case CBC_FUNCTION_ARROW:
+    {
+      func_obj_p = ecma_op_create_arrow_function_object (frame_ctx_p->lex_env_p,
+                                                         bytecode_p,
+                                                         frame_ctx_p->this_binding);
+      break;
+    }
+    default:
+    {
 #endif /* ENABLED (JERRY_ESNEXT) */
-    func_obj_p = ecma_op_create_simple_function_object (frame_ctx_p->lex_env_p, bytecode_p);
+      func_obj_p = ecma_op_create_simple_function_object (frame_ctx_p->lex_env_p, bytecode_p);
 #if ENABLED (JERRY_ESNEXT)
+      break;
+    }
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
 

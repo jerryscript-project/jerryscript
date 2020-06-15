@@ -334,7 +334,7 @@ ecma_save_literals_add_compiled_code (const ecma_compiled_code_t *compiled_code_
   uint32_t const_literal_end;
   uint32_t literal_end;
 
-  JERRY_ASSERT (compiled_code_p->status_flags & CBC_CODE_FLAGS_FUNCTION);
+  JERRY_ASSERT (CBC_IS_FUNCTION (compiled_code_p->status_flags));
 
   if (compiled_code_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
   {
@@ -377,7 +377,7 @@ ecma_save_literals_add_compiled_code (const ecma_compiled_code_t *compiled_code_
     ecma_compiled_code_t *bytecode_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
                                                                         literal_p[i]);
 
-    if ((bytecode_p->status_flags & CBC_CODE_FLAGS_FUNCTION)
+    if (CBC_IS_FUNCTION (bytecode_p->status_flags)
         && bytecode_p != compiled_code_p)
     {
       ecma_save_literals_add_compiled_code (bytecode_p, lit_pool_p);
@@ -570,7 +570,7 @@ ecma_snapshot_resolve_serializable_values (ecma_compiled_code_t *compiled_code_p
 
 #if ENABLED (JERRY_ESNEXT)
   /* function name */
-  if (!(compiled_code_p->status_flags & CBC_CODE_FLAGS_CLASS_CONSTRUCTOR))
+  if (CBC_FUNCTION_GET_TYPE (compiled_code_p->status_flags) != CBC_FUNCTION_CONSTRUCTOR)
   {
     base_p--;
   }

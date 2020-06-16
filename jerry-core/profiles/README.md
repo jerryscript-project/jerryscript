@@ -103,7 +103,7 @@ defined to `1`.
 * `JERRY_BUILTIN_MAP`:
   Enables or disables the [Map](http://www.ecma-international.org/ecma-262/6.0/#sec-keyed-collection) built-ins.
 * `JERRY_BUILTIN_SET`:
-  Enables or disables the [SET](https://www.ecma-international.org/ecma-262/6.0/#sec-set-objects) built-in.
+  Enables or disables the [Set](https://www.ecma-international.org/ecma-262/6.0/#sec-set-objects) built-in.
 * `JERRY_BUILTIN_PROMISE`:
   Enables or disables the [Promise](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-objects) built-in.
 * `JERRY_BUILTIN_TYPEDARRAY`:
@@ -123,6 +123,7 @@ defined to `1`.
   * [rest parameter](http://www.ecma-international.org/ecma-262/6.0/#sec-function-definitions) language element.
   * [symbol](https://www.ecma-international.org/ecma-262/6.0/#sec-symbol-objects) language element.
   * [template strings](http://www.ecma-international.org/ecma-262/6.0/#sec-static-semantics-templatestrings) language element.
+
   Furthermore all builtins follow the latest ECMAScript specification including those which behave differently in ES5.1.
   This option is evaulated first, any other `JERRY_<name>` defines will override that specific entry.
   Equivalent with setting the following defines to the `JERRY_ESNEXT` value:

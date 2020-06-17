@@ -184,3 +184,13 @@ assert(f()()() === 7);
 
 var f = (((a=1,b=2) => ((x => (((a) => 8))))));
 assert(f()()() === 8);
+
+var f = () => {};
+
+assert(f.hasOwnProperty('caller') === false);
+assert(f.hasOwnProperty('arguments') === false);
+
+must_throw("var f = () => {}; f.caller")
+must_throw("var f = () => {}; f.arguments")
+must_throw("var f = () => {}; f.caller = 1")
+must_throw("var f = () => {}; f.arguments = 2")

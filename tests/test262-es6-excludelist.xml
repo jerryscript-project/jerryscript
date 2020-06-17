@@ -330,7 +330,6 @@
   <test id="language/computed-property-names/object/accessor/setter-super.js"><reason></reason></test>
   <test id="language/computed-property-names/object/method/super.js"><reason></reason></test>
   <test id="language/default-parameters/function-length.js"><reason></reason></test>
-  <test id="language/expressions/arrow-function/ArrowFunction_restricted-properties.js"><reason></reason></test>
   <test id="language/expressions/arrow-function/lexical-super-call-from-within-constructor.js"><reason></reason></test>
   <test id="language/expressions/assignment/destructuring/array-rest-init.js"><reason></reason></test>
   <test id="language/expressions/assignment/destructuring/obj-prop-elem-target-yield-expr.js"><reason></reason></test>

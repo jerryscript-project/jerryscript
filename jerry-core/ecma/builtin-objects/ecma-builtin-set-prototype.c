@@ -20,6 +20,10 @@
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
+/**
+ * This object has a custom dispatch function.
+ */
+#define BUILTIN_CUSTOM_DISPATCH
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-set-prototype.inc.h"
 #define BUILTIN_UNDERSCORED_ID set_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
@@ -33,168 +37,32 @@
  * \addtogroup set ECMA Set object built-in
  * @{
  */
-
-/**
- * The Set.prototype object's 'add' routine
- *
- * See also:
- *          ECMA-262 v6, 23.2.3.1
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_set_prototype_object_add (ecma_value_t this_arg, /**< this argument */
-                                       ecma_value_t value_arg) /**< value argument */
-{
-  return ecma_op_container_set (this_arg, value_arg, value_arg, LIT_MAGIC_STRING_SET_UL);
-} /* ecma_builtin_set_prototype_object_add */
-
-/**
- * The Set.prototype object's 'clear' routine
- *
- * See also:
- *          ECMA-262 v6, 23.2.3.2
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_set_prototype_object_clear (ecma_value_t this_arg) /**< this argument */
-{
-  return ecma_op_container_clear (this_arg, LIT_MAGIC_STRING_SET_UL);
-} /* ecma_builtin_set_prototype_object_clear */
-
-/**
- * The Set.prototype object's 'delete' routine
- *
- * See also:
- *          ECMA-262 v6, 23.2.3.4
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_set_prototype_object_delete (ecma_value_t this_arg, /**< this argument */
-                                          ecma_value_t value_arg) /**< value argument */
-{
-  return ecma_op_container_delete (this_arg, value_arg, LIT_MAGIC_STRING_SET_UL);
-} /* ecma_builtin_set_prototype_object_delete */
-
-/**
- * The Set.prototype object's 'forEach' routine
- *
- * See also:
- *          ECMA-262 v6, 23.2.3.6
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_set_prototype_object_foreach (ecma_value_t this_arg, /**< this argument */
-                                           ecma_value_t predicate, /**< callback function */
-                                           ecma_value_t predicate_this_arg) /**< this argument for
-                                                                             *   invoke predicate */
-{
-  return ecma_op_container_foreach (this_arg, predicate, predicate_this_arg, LIT_MAGIC_STRING_SET_UL);
-} /* ecma_builtin_set_prototype_object_foreach */
-
-/**
- * The Set.prototype object's 'has' routine
- *
- * See also:
- *          ECMA-262 v6, 23.2.3.7
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_set_prototype_object_has (ecma_value_t this_arg, /**< this argument */
-                                       ecma_value_t value_arg) /**< value argument */
-{
-  return ecma_op_container_has (this_arg, value_arg, LIT_MAGIC_STRING_SET_UL);
-} /* ecma_builtin_set_prototype_object_has */
-
-/**
- * The Set.prototype object's 'size' getter
- *
- * See also:
- *          ECMA-262 v6, 23.2.3.9
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_set_prototype_object_size_getter (ecma_value_t this_arg) /**< this argument */
-{
-  return ecma_op_container_size (this_arg, LIT_MAGIC_STRING_SET_UL);
-} /* ecma_builtin_set_prototype_object_size_getter */
-
 #if ENABLED (JERRY_ESNEXT)
-
 /**
- * The Set.prototype object's 'entries' routine
- *
- * See also:
- *          ECMA-262 v6, 23.2.3.5
+ * Dispatcher of the built-in's routines
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
-static ecma_value_t
-ecma_builtin_set_prototype_object_entries (ecma_value_t this_arg) /**< this argument */
+ecma_value_t
+ecma_builtin_set_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide routine
+                                                                           *   identifier */
+                                             ecma_value_t this_arg, /**< 'this' argument value */
+                                             const ecma_value_t arguments_list_p[], /**< list of arguments
+                                                                                     *   passed to routine */
+                                             ecma_length_t arguments_number) /**< length of arguments' list */
 {
-  return ecma_op_container_create_iterator (this_arg,
-                                            ECMA_ITERATOR_KEYS_VALUES,
-                                            LIT_MAGIC_STRING_SET_UL,
-                                            ECMA_BUILTIN_ID_SET_ITERATOR_PROTOTYPE,
-                                            ECMA_PSEUDO_SET_ITERATOR);
-} /* ecma_builtin_set_prototype_object_entries */
-
+  JERRY_UNUSED (arguments_number);
+  return ecma_builtin_container_dispatch_routine (builtin_routine_id,
+                                                  this_arg,
+                                                  arguments_list_p,
+                                                  LIT_MAGIC_STRING_SET_UL);
+} /* ecma_builtin_set_prototype_dispatch_routine */
+#endif /* ENABLED (JERRY_ES2015) */
 /**
- * The Set.prototype object's 'keys' routine
- *
- * See also:
- *          ECMA-262 v6, 23.2.3.8
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
+ * @}
+ * @}
+ * @}
  */
-static ecma_value_t
-ecma_builtin_set_prototype_object_keys (ecma_value_t this_arg) /**< this argument */
-{
-  return ecma_op_container_create_iterator (this_arg,
-                                            ECMA_ITERATOR_KEYS,
-                                            LIT_MAGIC_STRING_SET_UL,
-                                            ECMA_BUILTIN_ID_SET_ITERATOR_PROTOTYPE,
-                                            ECMA_PSEUDO_SET_ITERATOR);
-} /* ecma_builtin_set_prototype_object_keys */
-
-/**
- * The Set.prototype object's 'values' routine
- *
- * See also:
- *          ECMA-262 v6, 23.2.3.10
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_set_prototype_object_values (ecma_value_t this_arg) /**< this argument */
-{
-  return ecma_op_container_create_iterator (this_arg,
-                                            ECMA_ITERATOR_VALUES,
-                                            LIT_MAGIC_STRING_SET_UL,
-                                            ECMA_BUILTIN_ID_SET_ITERATOR_PROTOTYPE,
-                                            ECMA_PSEUDO_SET_ITERATOR);
-} /* ecma_builtin_set_prototype_object_values */
 
 #endif /* ENABLED (JERRY_ESNEXT) */
-
-/**
- * @}
- * @}
- * @}
- */
-
-#endif /* ENABLED (JERRY_BUILTIN_SET) */

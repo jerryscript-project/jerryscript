@@ -20,6 +20,10 @@
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
+/**
+ * This object has a custom dispatch function.
+ */
+#define BUILTIN_CUSTOM_DISPATCH
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-weakset-prototype.inc.h"
 #define BUILTIN_UNDERSCORED_ID weakset_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
@@ -35,53 +39,25 @@
  */
 
 /**
- * The WeakSet.prototype object's 'add' routine
- *
- * See also:
- *          ECMA-262 v6, 23.4.3.1
+ * Dispatcher of the built-in's routines
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
-static ecma_value_t
-ecma_builtin_weakset_prototype_object_add (ecma_value_t this_arg, /**< this argument */
-                                           ecma_value_t value_arg) /**< value argument */
+ecma_value_t
+ecma_builtin_weakset_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide routine
+                                                                               *   identifier */
+                                                 ecma_value_t this_arg, /**< 'this' argument value */
+                                                 const ecma_value_t arguments_list_p[], /**< list of arguments
+                                                                                         *   passed to routine */
+                                                 ecma_length_t arguments_number) /**< length of arguments' list */
 {
-  return ecma_op_container_set (this_arg, value_arg, ECMA_VALUE_UNDEFINED, LIT_MAGIC_STRING_WEAKSET_UL);
-} /* ecma_builtin_weakset_prototype_object_add */
-
-/**
- * The WeakSet.prototype object's 'delete' routine
- *
- * See also:
- *          ECMA-262 v6, 23.4.3.3
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_weakset_prototype_object_delete (ecma_value_t this_arg, /**< this argument */
-                                              ecma_value_t value_arg) /**< value argument */
-{
-  return ecma_op_container_delete_weak (this_arg, value_arg, LIT_MAGIC_STRING_WEAKSET_UL);
-} /* ecma_builtin_weakset_prototype_object_delete */
-
-/**
- * The WeakSet.prototype object's 'has' routine
- *
- * See also:
- *          ECMA-262 v6, 23.4.3.4
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_weakset_prototype_object_has (ecma_value_t this_arg, /**< this argument */
-                                           ecma_value_t value_arg) /**< value argument */
-{
-  return ecma_op_container_has (this_arg, value_arg, LIT_MAGIC_STRING_WEAKSET_UL);
-} /* ecma_builtin_weakset_prototype_object_has */
-
+  JERRY_UNUSED (arguments_number);
+  return ecma_builtin_container_dispatch_routine (builtin_routine_id,
+                                                  this_arg,
+                                                  arguments_list_p,
+                                                  LIT_MAGIC_STRING_WEAKSET_UL);
+} /* ecma_builtin_weakset_prototype_dispatch_routine */
 /**
  * @}
  * @}

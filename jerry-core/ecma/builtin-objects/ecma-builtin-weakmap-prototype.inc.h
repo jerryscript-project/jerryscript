@@ -36,10 +36,10 @@ STRING_VALUE (LIT_GLOBAL_SYMBOL_TO_STRING_TAG,
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
-ROUTINE (LIT_MAGIC_STRING_DELETE, ecma_builtin_weakmap_prototype_object_delete, 1, 1)
-ROUTINE (LIT_MAGIC_STRING_GET, ecma_builtin_weakmap_prototype_object_get, 1, 1)
-ROUTINE (LIT_MAGIC_STRING_HAS, ecma_builtin_weakmap_prototype_object_has, 1, 1)
-ROUTINE (LIT_MAGIC_STRING_SET, ecma_builtin_weakmap_prototype_object_set, 2, 2)
+ROUTINE (LIT_MAGIC_STRING_DELETE, ECMA_CONTAINER_ROUTINE_DELETE_WEAK, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_GET, ECMA_CONTAINER_ROUTINE_GET, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_HAS, ECMA_CONTAINER_ROUTINE_HAS, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_SET, ECMA_CONTAINER_ROUTINE_SET, 2, 2)
 
 #endif /* ENABLED (JERRY_BUILTIN_WEAKMAP) */
 

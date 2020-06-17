@@ -51,31 +51,50 @@ jobs:
       - name: Correctness - jerry-tests
         run: $RUNNER --jerry-tests $BUILD_OPTIONS -q
 
-  OSX_x86-64_Build_Correctness_Unit_Tests:
+  OSX_x86-64_Correctness:
     runs-on: macos-10.15
     steps:
       - uses: actions/checkout@v1
       - name: Correctness - jerry-tests
-        run: $RUNNER --jerry-tests -q
-      - name: Unit Tests
         run: $RUNNER --unittests -q
 
-  Conformance_Tests_ES5_1:
+  Conformance_Tests_ES5_1_release:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
       - name: Test262 - ES5.1
-        run: $RUNNER --test262
+        run: $RUNNER --test262 es5.1
 
-  Conformance_Tests_ES2015:
+  Conformance_Tests_ES5_1_debug:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - name: Test262 - ES5.1
+        run: $RUNNER --test262 es5.1 debug
+
+  Conformance_Tests_ES2015_release:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
       - name: Test262 - ES2015
-        run: $RUNNER --test262-es2015 update
+        run: $RUNNER --test262 es2015 update
 
-  Unit_Tests:
+  Conformance_Tests_ES2015_debug:
     runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - name: Test262 - ES2015
+        run: $RUNNER --test262 es2015 debug update
+
+  Linux_x86-64_Unit_Tests:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - name: Unit Tests
+        run: $RUNNER --unittests -q
+
+  OSX_x86-64_Unit_Tests:
+    runs-on: macos-10.15
     steps:
       - uses: actions/checkout@v1
       - name: Unit Tests

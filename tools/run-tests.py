@@ -39,6 +39,7 @@ OPTIONS_PROFILE_ES51 = ['--profile=es5.1']
 OPTIONS_PROFILE_ESNEXT = ['--profile=es.next']
 OPTIONS_STACK_LIMIT = ['--stack-limit=96']
 OPTIONS_GC_MARK_LIMIT = ['--gc-mark-limit=16']
+OPTIONS_LINE_INFO = ['--line-info=on', '--error-messages=on']
 OPTIONS_DEBUG = ['--debug']
 OPTIONS_SNAPSHOT = ['--snapshot-save=on', '--snapshot-exec=on', '--jerry-cmdline-snapshot=on']
 OPTIONS_UNITTESTS = ['--unittests=on', '--jerry-cmdline=off', '--error-messages=on',
@@ -93,17 +94,6 @@ JERRY_TESTS_OPTIONS = [
     Options('jerry_tests-es5.1-debug-external_context',
             OPTIONS_COMMON + OPTIONS_PROFILE_ES51 + OPTIONS_DEBUG + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT
             + ['--external-context=on']),
-]
-
-# Test options for test262
-TEST262_TEST_SUITE_OPTIONS = [
-    Options('test262_tests', OPTIONS_PROFILE_ES51),
-    Options('test262_tests-debug', OPTIONS_PROFILE_ES51 + OPTIONS_DEBUG)
-]
-
-# Test options for test262-es2015
-TEST262_ES2015_TEST_SUITE_OPTIONS = [
-    Options('test262_tests_es2015', OPTIONS_PROFILE_ESNEXT + ['--line-info=on', '--error-messages=on']),
 ]
 
 # Test options for jerry-debugger
@@ -192,12 +182,9 @@ def get_arguments():
                         help='Run jerry-debugger tests')
     parser.add_argument('--jerry-tests', action='store_true',
                         help='Run jerry-tests')
-    parser.add_argument('--test262', action='store_true',
+    parser.add_argument('--test262',
+                        nargs='+', choices=['debug', 'es5.1', 'es2015', 'all', 'update'],
                         help='Run test262 - ES5.1')
-    parser.add_argument('--test262-es2015', default=False, const='default',
-                        nargs='?', choices=['default', 'all', 'update'],
-                        help='Run test262 - ES2015. default: all tests except excludelist, ' +
-                        'all: all tests, update: all tests and update excludelist')
     parser.add_argument('--unittests', action='store_true',
                         help='Run unittests (including doctests)')
     parser.add_argument('--buildoption-test', action='store_true',
@@ -395,10 +382,23 @@ def run_test262_test_suite(options):
     ret_build = ret_test = 0
 
     jobs = []
-    if options.test262:
-        jobs.extend(TEST262_TEST_SUITE_OPTIONS)
-    if options.test262_es2015:
-        jobs.extend(TEST262_ES2015_TEST_SUITE_OPTIONS)
+    profiles = [('es2015', OPTIONS_PROFILE_ESNEXT + OPTIONS_LINE_INFO),
+                ('es5.1', OPTIONS_PROFILE_ES51)]
+
+    for profile in profiles:
+        build_options = []
+        build_type = 'release'
+        if profile[0] in options.test262:
+            build_options.extend(profile[1])
+            if 'debug' in options.test262:
+                build_options.extend(OPTIONS_DEBUG)
+                build_type = 'debug'
+
+            jobs.append(Options('test262-%s-%s' % (profile[0], build_type), build_options))
+
+    if not jobs:
+        print("\n%sBuild profile should be specified%s\n" % (TERM_RED, TERM_NORMAL))
+        return 1
 
     for job in jobs:
         ret_build, build_dir_path = create_binary(job, options)
@@ -412,9 +412,14 @@ def run_test262_test_suite(options):
             '--test-dir', settings.TEST262_TEST_SUITE_DIR
         ]
 
-        if '--profile=es.next' in job.build_args:
+        if 'es2015' in options.test262:
             test_cmd.append('--es2015')
-            test_cmd.append(options.test262_es2015)
+            if 'all' in options.test262:
+                test_cmd.append('all')
+            elif 'update' in options.test262:
+                test_cmd.append('update')
+            else:
+                test_cmd.append('default')
         else:
             test_cmd.append('--es51')
 
@@ -481,7 +486,7 @@ def main(options):
         Check(options.check_magic_strings, run_check, [settings.MAGIC_STRINGS_SCRIPT]),
         Check(options.jerry_debugger, run_jerry_debugger_tests, options),
         Check(options.jerry_tests, run_jerry_tests, options),
-        Check(options.test262 or options.test262_es2015, run_test262_test_suite, options),
+        Check(options.test262, run_test262_test_suite, options),
         Check(options.unittests, run_unittests, options),
         Check(options.buildoption_test, run_buildoption_test, options),
     ]

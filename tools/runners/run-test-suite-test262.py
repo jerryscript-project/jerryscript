@@ -182,7 +182,7 @@ def main(args):
     if args.es2015:
         try:
             subprocess.check_output(["timeout", "--version"])
-            command = "timeout 3 " + command
+            command = "timeout 5 " + command
         except subprocess.CalledProcessError:
             pass
 

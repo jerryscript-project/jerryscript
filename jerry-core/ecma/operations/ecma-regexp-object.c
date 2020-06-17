@@ -2793,6 +2793,7 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
     if (ecma_object_class_is (this_obj_p, LIT_MAGIC_STRING_REGEXP_UL)
         && ecma_builtin_is_regexp_exec (function_p))
     {
+      ecma_deref_object ((ecma_object_t *) function_p);
       result = ecma_op_object_get_by_magic_id (this_obj_p, LIT_MAGIC_STRING_STICKY);
       if (ECMA_IS_VALUE_ERROR (result))
       {
@@ -2817,8 +2818,6 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
 
         if (replace_ctx.index > string_length)
         {
-          ecma_deref_object ((ecma_object_t *) function_p);
-
           result = ecma_op_object_put (this_obj_p,
                                        ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
                                        ecma_make_uint32_value (0),
@@ -2840,7 +2839,6 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
                                                 string_p,
                                                 replace_arg);
 
-      ecma_deref_object ((ecma_object_t *) function_p);
       goto cleanup_replace;
     }
   }

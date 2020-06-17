@@ -672,3 +672,17 @@ class Regexplike2 {
 }
 re = new Regexplike2();
 assert (replace.call (re, "1") === "undefined");
+
+var abruptStickyRegexp = /./;
+Object.defineProperty(abruptStickyRegexp, 'sticky', {
+  get: function() {
+    throw "abrupt sticky";
+  }
+});
+
+try {
+  abruptStickyRegexp[Symbol.replace]();
+  assert(false);
+} catch (e) {
+  assert(e === "abrupt sticky");
+}

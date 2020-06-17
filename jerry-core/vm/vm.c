@@ -2255,7 +2255,6 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_ASYNC_EXIT:
         {
-          JERRY_ASSERT (frame_ctx_p->context_depth == PARSER_TRY_CONTEXT_STACK_ALLOCATION);
           JERRY_ASSERT (VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth == stack_top_p);
 
           result = frame_ctx_p->block_result;
@@ -2271,22 +2270,26 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             JERRY_CONTEXT (current_new_target) = old_new_target_p;
           }
 
-          left_value = stack_top_p[-2];
+          vm_stack_context_type_t context_type = VM_GET_CONTEXT_TYPE (stack_top_p[-1]);
 
-          if (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_FINALLY_THROW)
+          if (context_type == VM_CONTEXT_TRY)
+          {
+            JERRY_ASSERT (frame_ctx_p->context_depth == PARSER_TRY_CONTEXT_STACK_ALLOCATION);
+            left_value = ECMA_VALUE_UNDEFINED;
+          }
+          else
+          {
+            JERRY_ASSERT (frame_ctx_p->context_depth == PARSER_FINALLY_CONTEXT_STACK_ALLOCATION);
+            left_value = stack_top_p[-2];
+          }
+
+          if (context_type == VM_CONTEXT_FINALLY_THROW)
           {
             ecma_reject_promise (result, left_value);
           }
           else
           {
-            JERRY_ASSERT (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_TRY
-                          || VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_FINALLY_RETURN);
-
-            if (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_TRY)
-            {
-              left_value = ECMA_VALUE_UNDEFINED;
-            }
-
+            JERRY_ASSERT (context_type == VM_CONTEXT_TRY || context_type == VM_CONTEXT_FINALLY_RETURN);
             ecma_fulfill_promise (result, left_value);
           }
 
@@ -3835,9 +3838,10 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             JERRY_ASSERT (lex_env_p->u2.outer_reference_cp != JMEM_CP_NULL);
             frame_ctx_p->lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
             ecma_deref_object (lex_env_p);
-
-            stack_top_p[-1] &= (ecma_value_t) ~VM_CONTEXT_HAS_LEX_ENV;
           }
+
+          VM_PLUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_FINALLY_CONTEXT_EXTRA_STACK_ALLOCATION);
+          stack_top_p += PARSER_FINALLY_CONTEXT_EXTRA_STACK_ALLOCATION;
 
           stack_top_p[-1] = VM_CREATE_CONTEXT (VM_CONTEXT_FINALLY_JUMP, branch_offset);
           stack_top_p[-2] = (ecma_value_t) branch_offset;
@@ -3869,8 +3873,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 #endif /* ENABLED (JERRY_ESNEXT) */
 
           VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth,
-                              PARSER_TRY_CONTEXT_STACK_ALLOCATION);
-          stack_top_p -= PARSER_TRY_CONTEXT_STACK_ALLOCATION;
+                              PARSER_FINALLY_CONTEXT_STACK_ALLOCATION);
+          stack_top_p -= PARSER_FINALLY_CONTEXT_STACK_ALLOCATION;
 
           if (context_type == VM_CONTEXT_FINALLY_RETURN)
           {

@@ -95,29 +95,6 @@ JERRY_TESTS_OPTIONS = [
             + ['--external-context=on']),
 ]
 
-# Test options for jerry-test-suite
-JERRY_TEST_SUITE_OPTIONS = JERRY_TESTS_OPTIONS[:]
-JERRY_TEST_SUITE_OPTIONS.extend([
-    Options('jerry_test_suite-minimal',
-            OPTIONS_COMMON + OPTIONS_PROFILE_MIN),
-    Options('jerry_test_suite-minimal-snapshot',
-            OPTIONS_COMMON + OPTIONS_PROFILE_MIN + OPTIONS_SNAPSHOT,
-            ['--snapshot']),
-    Options('jerry_test_suite-minimal-debug',
-            OPTIONS_COMMON + OPTIONS_PROFILE_MIN + OPTIONS_DEBUG),
-    Options('jerry_test_suite-minimal-debug-snapshot',
-            OPTIONS_COMMON + OPTIONS_PROFILE_MIN + OPTIONS_SNAPSHOT + OPTIONS_DEBUG,
-            ['--snapshot']),
-    Options('jerry_test_suite-es.next',
-            OPTIONS_COMMON + OPTIONS_PROFILE_ESNEXT),
-    Options('jerry_test_suite-es.next-snapshot',
-            OPTIONS_COMMON + OPTIONS_PROFILE_ESNEXT + OPTIONS_SNAPSHOT,
-            ['--snapshot']),
-    Options('jerry_test_suite-es.next-debug-snapshot',
-            OPTIONS_COMMON + OPTIONS_PROFILE_ESNEXT + OPTIONS_SNAPSHOT + OPTIONS_DEBUG,
-            ['--snapshot']),
-])
-
 # Test options for test262
 TEST262_TEST_SUITE_OPTIONS = [
     Options('test262_tests', OPTIONS_PROFILE_ES51),
@@ -215,8 +192,6 @@ def get_arguments():
                         help='Run jerry-debugger tests')
     parser.add_argument('--jerry-tests', action='store_true',
                         help='Run jerry-tests')
-    parser.add_argument('--jerry-test-suite', action='store_true',
-                        help='Run jerry-test-suite')
     parser.add_argument('--test262', action='store_true',
                         help='Run test262 - ES5.1')
     parser.add_argument('--test262-es2015', action='store_true',
@@ -414,41 +389,6 @@ def run_jerry_tests(options):
 
     return ret_build | ret_test
 
-def run_jerry_test_suite(options):
-    ret_build = ret_test = 0
-    for job, ret_build, test_cmd in iterate_test_runner_jobs(JERRY_TEST_SUITE_OPTIONS, options):
-        if ret_build:
-            break
-
-        skip_list = []
-
-        if '--profile=minimal' in job.build_args:
-            test_cmd.append('--test-list')
-            test_cmd.append(settings.JERRY_TEST_SUITE_MINIMAL_LIST)
-        else:
-            test_cmd.append('--test-dir')
-            test_cmd.append(settings.JERRY_TEST_SUITE_DIR)
-            if '--profile=es.next' in job.build_args:
-                skip_list.append(os.path.join('es5.1', ''))
-            else:
-                skip_list.append(os.path.join('es.next', ''))
-
-        if options.quiet:
-            test_cmd.append("-q")
-
-        if options.skip_list:
-            skip_list.append(options.skip_list)
-
-        if skip_list:
-            test_cmd.append("--skip-list=" + ",".join(skip_list))
-
-        if job.test_args:
-            test_cmd.extend(job.test_args)
-
-        ret_test |= run_check(test_cmd)
-
-    return ret_build | ret_test
-
 def run_test262_test_suite(options):
     ret_build = ret_test = 0
 
@@ -538,7 +478,6 @@ def main(options):
         Check(options.check_magic_strings, run_check, [settings.MAGIC_STRINGS_SCRIPT]),
         Check(options.jerry_debugger, run_jerry_debugger_tests, options),
         Check(options.jerry_tests, run_jerry_tests, options),
-        Check(options.jerry_test_suite, run_jerry_test_suite, options),
         Check(options.test262 or options.test262_es2015, run_test262_test_suite, options),
         Check(options.unittests, run_unittests, options),
         Check(options.buildoption_test, run_buildoption_test, options),

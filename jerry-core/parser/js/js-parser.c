@@ -1793,11 +1793,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
   while (true)
   {
 #if ENABLED (JERRY_ESNEXT)
-    if (context_p->status_flags & PARSER_FUNCTION_HAS_REST_PARAM)
-    {
-      parser_raise_error (context_p, PARSER_ERR_FORMAL_PARAM_AFTER_REST_PARAMETER);
-    }
-    else if (context_p->token.type == LEXER_THREE_DOTS)
+    if (context_p->token.type == LEXER_THREE_DOTS)
     {
       if (context_p->status_flags & PARSER_IS_PROPERTY_SETTER)
       {
@@ -1965,18 +1961,31 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 
     if (context_p->token.type != LEXER_COMMA)
     {
+      if (context_p->token.type != end_type)
+      {
+        parser_error_t error = ((end_type == LEXER_RIGHT_PAREN) ? PARSER_ERR_RIGHT_PAREN_EXPECTED
+                                                                : PARSER_ERR_IDENTIFIER_EXPECTED);
+
+        parser_raise_error (context_p, error);
+      }
       break;
     }
 
+#if ENABLED (JERRY_ESNEXT)
+    if (context_p->status_flags & PARSER_FUNCTION_HAS_REST_PARAM)
+    {
+      parser_raise_error (context_p, PARSER_ERR_FORMAL_PARAM_AFTER_REST_PARAMETER);
+    }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
     lexer_next_token (context_p);
-  }
 
-  if (context_p->token.type != end_type)
-  {
-    parser_error_t error = ((end_type == LEXER_RIGHT_PAREN) ? PARSER_ERR_RIGHT_PAREN_EXPECTED
-                                                            : PARSER_ERR_IDENTIFIER_EXPECTED);
-
-    parser_raise_error (context_p, error);
+#if ENABLED (JERRY_ESNEXT)
+    if (context_p->token.type == end_type)
+    {
+      break;
+    }
+#endif /* ENABLED (JERRY_ESNEXT) */
   }
 
   scanner_revert_active (context_p);

@@ -30,6 +30,7 @@
 #include "ecma-lex-env.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
+#include "ecma-promise-object.h"
 #include "ecma-regexp-object.h"
 #include "ecma-try-catch-macro.h"
 #include "jcontext.h"
@@ -2176,14 +2177,11 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           frame_ctx_p->call_operation = VM_EXEC_RETURN;
           frame_ctx_p->byte_code_p = byte_code_p;
           frame_ctx_p->stack_top_p = stack_top_p;
-          result = opfunc_create_executable_object (frame_ctx_p);
 
-          if (ECMA_IS_VALUE_ERROR (result))
-          {
-            goto error;
-          }
+          vm_executable_object_t *executable_object_p;
+          executable_object_p = opfunc_create_executable_object (frame_ctx_p, VM_CREATE_EXECUTABLE_OBJECT_GENERATOR);
 
-          return result;
+          return ecma_make_object_value ((ecma_object_t *) executable_object_p);
         }
         case VM_OC_YIELD:
         {
@@ -2194,7 +2192,52 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_AWAIT:
         {
-          continue;
+          ecma_value_t promise = ecma_make_object_value (ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE));
+          ecma_value_t argument = *(--stack_top_p);
+
+          result = ecma_promise_reject_or_resolve (promise, argument, true);
+          ecma_free_value (argument);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          frame_ctx_p->call_operation = VM_EXEC_RETURN;
+          frame_ctx_p->byte_code_p = byte_code_p;
+          frame_ctx_p->stack_top_p = stack_top_p;
+
+          if (frame_ctx_p->block_result == ECMA_VALUE_UNDEFINED)
+          {
+            vm_executable_object_t *executable_object_p;
+            executable_object_p = opfunc_create_executable_object (frame_ctx_p, VM_CREATE_EXECUTABLE_OBJECT_ASYNC);
+
+            ecma_promise_async_then (result, ecma_make_object_value ((ecma_object_t *) executable_object_p));
+            ecma_deref_object ((ecma_object_t *) executable_object_p);
+            ecma_free_value (result);
+
+            ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target);
+            JERRY_CONTEXT (current_new_target) = ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE);
+
+            result = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_PROMISE_EXECUTOR_EMPTY);
+
+            JERRY_ASSERT (ecma_is_value_object (result));
+            executable_object_p->frame_ctx.block_result = result;
+
+            JERRY_CONTEXT (current_new_target) = old_new_target_p;
+          }
+          else
+          {
+            const uintptr_t object_offset = (uintptr_t) offsetof (vm_executable_object_t, frame_ctx);
+
+            ecma_object_t *object_p = (ecma_object_t *) (((uintptr_t) frame_ctx_p) - object_offset);
+            ecma_promise_async_then (result, ecma_make_object_value (object_p));
+
+            ecma_free_value (result);
+            result = ECMA_VALUE_UNDEFINED;
+          }
+
+          return result;
         }
         case VM_OC_EXT_RETURN:
         {
@@ -2210,11 +2253,48 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           goto error;
         }
-        case VM_OC_RETURN_PROMISE:
+        case VM_OC_ASYNC_EXIT:
         {
-          result = opfunc_return_promise (left_value);
-          left_value = ECMA_VALUE_UNDEFINED;
-          goto error;
+          JERRY_ASSERT (frame_ctx_p->context_depth == PARSER_TRY_CONTEXT_STACK_ALLOCATION);
+          JERRY_ASSERT (VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth == stack_top_p);
+
+          result = frame_ctx_p->block_result;
+          frame_ctx_p->block_result = ECMA_VALUE_UNDEFINED;
+
+          if (result == ECMA_VALUE_UNDEFINED)
+          {
+            ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target);
+            JERRY_CONTEXT (current_new_target) = ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE);
+
+            result = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_PROMISE_EXECUTOR_EMPTY);
+
+            JERRY_CONTEXT (current_new_target) = old_new_target_p;
+          }
+
+          left_value = stack_top_p[-2];
+
+          if (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_FINALLY_THROW)
+          {
+            ecma_reject_promise (result, left_value);
+          }
+          else
+          {
+            JERRY_ASSERT (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_TRY
+                          || VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_FINALLY_RETURN);
+
+            if (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_TRY)
+            {
+              left_value = ECMA_VALUE_UNDEFINED;
+            }
+
+            ecma_fulfill_promise (result, left_value);
+          }
+
+          ecma_free_value (left_value);
+
+          frame_ctx_p->context_depth = 0;
+          frame_ctx_p->call_operation = VM_NO_EXEC_OP;
+          return result;
         }
         case VM_OC_STRING_CONCAT:
         {

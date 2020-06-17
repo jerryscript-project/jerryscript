@@ -273,7 +273,7 @@ typedef enum
   VM_OC_YIELD,                   /**< yield operation */
   VM_OC_AWAIT,                   /**< await operation */
   VM_OC_EXT_RETURN,              /**< return which also clears the stack */
-  VM_OC_RETURN_PROMISE,          /**< return from an async function */
+  VM_OC_ASYNC_EXIT,              /**< return from async function */
   VM_OC_STRING_CONCAT,           /**< string concatenation */
   VM_OC_GET_TEMPLATE_OBJECT,     /**< GetTemplateObject operation */
   VM_OC_PUSH_NEW_TARGET,         /**< push new.target onto the stack */
@@ -342,7 +342,7 @@ typedef enum
   VM_OC_YIELD = VM_OC_NONE,                   /**< yield operation */
   VM_OC_AWAIT = VM_OC_NONE,                   /**< await operation */
   VM_OC_EXT_RETURN = VM_OC_NONE,              /**< return which also clears the stack */
-  VM_OC_RETURN_PROMISE = VM_OC_NONE,          /**< return from an async function */
+  VM_OC_ASYNC_EXIT = VM_OC_NONE,              /**< return from async function */
   VM_OC_STRING_CONCAT = VM_OC_NONE,           /**< string concatenation */
   VM_OC_GET_TEMPLATE_OBJECT = VM_OC_NONE,     /**< GetTemplateObject operation */
   VM_OC_PUSH_NEW_TARGET = VM_OC_NONE,         /**< push new.target onto the stack */

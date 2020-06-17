@@ -54,6 +54,19 @@ typedef enum
   NUMBER_BITWISE_NOT, /**< bitwise NOT calculation */
 } number_bitwise_logic_op;
 
+#if ENABLED (JERRY_ESNEXT)
+
+/**
+ * Types for opfunc_create_executable_object.
+ */
+typedef enum
+{
+  VM_CREATE_EXECUTABLE_OBJECT_GENERATOR, /**< create a generator function */
+  VM_CREATE_EXECUTABLE_OBJECT_ASYNC, /**< create an async function */
+} vm_create_executable_object_type_t;
+
+#endif /* ENABLED (JERRY_ESNEXT) */
+
 /**
  * The stack contains spread object during the upcoming APPEND_ARRAY operation
  */
@@ -113,14 +126,13 @@ ecma_value_t
 opfunc_append_array (ecma_value_t *stack_top_p, uint16_t values_length);
 
 #if ENABLED (JERRY_ESNEXT)
-ecma_value_t
-opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p);
+vm_executable_object_t *
+opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p, vm_create_executable_object_type_t type);
+
+extern const uint8_t opfunc_resume_executable_object_with_throw[];
 
 ecma_value_t
 opfunc_resume_executable_object (vm_executable_object_t *executable_object_p, ecma_value_t value);
-
-ecma_value_t
-opfunc_return_promise (ecma_value_t value);
 
 ecma_value_t
 opfunc_create_implicit_class_constructor (uint8_t opcode);

@@ -575,43 +575,54 @@ opfunc_append_array (ecma_value_t *stack_top_p, /**< current stack top */
  *
  * @return executable object
  */
-ecma_value_t
-opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
+vm_executable_object_t *
+opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
+                                 vm_create_executable_object_type_t type) /**< executable object type */
 {
   const ecma_compiled_code_t *bytecode_header_p = frame_ctx_p->bytecode_header_p;
-  size_t size;
+  size_t size, register_end;
 
   ecma_bytecode_ref ((ecma_compiled_code_t *) bytecode_header_p);
 
   if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
   {
     cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_header_p;
-    size = ((size_t) args_p->register_end + (size_t) args_p->stack_limit) * sizeof (ecma_value_t);
+    register_end = (size_t) args_p->register_end;
+    size = (register_end + (size_t) args_p->stack_limit) * sizeof (ecma_value_t);
   }
   else
   {
     cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_header_p;
-    size = ((size_t) args_p->register_end + (size_t) args_p->stack_limit) * sizeof (ecma_value_t);
+    register_end = (size_t) args_p->register_end;
+    size = (register_end + (size_t) args_p->stack_limit) * sizeof (ecma_value_t);
   }
 
   size_t total_size = JERRY_ALIGNUP (sizeof (vm_executable_object_t) + size, sizeof (uintptr_t));
 
-  ecma_object_t *proto_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_function_obj_p),
-                                                                   ECMA_BUILTIN_ID_GENERATOR_PROTOTYPE);
+  ecma_object_t *proto_p = NULL;
+
+  if (type == VM_CREATE_EXECUTABLE_OBJECT_GENERATOR)
+  {
+    proto_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_function_obj_p),
+                                                      ECMA_BUILTIN_ID_GENERATOR_PROTOTYPE);
+  }
 
   ecma_object_t *object_p = ecma_create_object (proto_p,
                                                 total_size,
                                                 ECMA_OBJECT_TYPE_CLASS);
 
-  ecma_deref_object (proto_p);
-
   vm_executable_object_t *executable_object_p = (vm_executable_object_t *) object_p;
 
+  if (type == VM_CREATE_EXECUTABLE_OBJECT_GENERATOR)
+  {
+    ecma_deref_object (proto_p);
+  }
+
+  /* Async function objects are not accessible, so their class_id is not relevant. */
   executable_object_p->extended_object.u.class_prop.class_id = LIT_MAGIC_STRING_GENERATOR_UL;
   executable_object_p->extended_object.u.class_prop.extra_info = 0;
 
   JERRY_ASSERT (!frame_ctx_p->is_eval_code);
-  JERRY_ASSERT (frame_ctx_p->context_depth == 0);
 
   vm_frame_ctx_t *new_frame_ctx_p = &(executable_object_p->frame_ctx);
   *new_frame_ctx_p = *frame_ctx_p;
@@ -627,17 +638,50 @@ opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p) /**< frame context
 
   /* Initial state is "not running", so all object references are released. */
 
+  if (frame_ctx_p->context_depth > 0)
+  {
+    JERRY_ASSERT (type != VM_CREATE_EXECUTABLE_OBJECT_GENERATOR);
+
+    ecma_value_t *register_end_p = new_registers_p + register_end;
+
+    JERRY_ASSERT (register_end_p <= new_stack_top_p);
+
+    while (new_registers_p < register_end_p)
+    {
+      ecma_deref_if_object (*new_registers_p++);
+    }
+
+    vm_ref_lex_env_chain (frame_ctx_p->lex_env_p,
+                          frame_ctx_p->context_depth,
+                          new_registers_p,
+                          false);
+
+    new_registers_p += frame_ctx_p->context_depth;
+
+    JERRY_ASSERT (new_registers_p <= new_stack_top_p);
+  }
+
   while (new_registers_p < new_stack_top_p)
   {
     ecma_deref_if_object (*new_registers_p++);
   }
 
+  JERRY_ASSERT (new_frame_ctx_p->block_result == ECMA_VALUE_UNDEFINED);
+
   new_frame_ctx_p->this_binding = ecma_copy_value_if_not_object (new_frame_ctx_p->this_binding);
 
   JERRY_CONTEXT (vm_top_context_p) = new_frame_ctx_p->prev_context_p;
 
-  return ecma_make_object_value (object_p);
+  return executable_object_p;
 } /* opfunc_create_executable_object */
+
+/**
+ * Byte code which resumes an executable object with throw
+ */
+const uint8_t opfunc_resume_executable_object_with_throw[1] =
+{
+  CBC_THROW
+};
 
 /**
  * Resume the execution of an inactive executable object
@@ -663,13 +707,15 @@ opfunc_resume_executable_object (vm_executable_object_t *executable_object_p, /*
     register_end_p = register_p + args_p->register_end;
   }
 
-  while (register_p < register_end_p)
-  {
-    ecma_ref_if_object (*register_p++);
-  }
+  ecma_value_t *stack_top_p = executable_object_p->frame_ctx.stack_top_p;
 
   if (executable_object_p->frame_ctx.context_depth > 0)
   {
+    while (register_p < register_end_p)
+    {
+      ecma_ref_if_object (*register_p++);
+    }
+
     vm_ref_lex_env_chain (executable_object_p->frame_ctx.lex_env_p,
                           executable_object_p->frame_ctx.context_depth,
                           register_p,
@@ -678,12 +724,12 @@ opfunc_resume_executable_object (vm_executable_object_t *executable_object_p, /*
     register_p += executable_object_p->frame_ctx.context_depth;
   }
 
-  ecma_value_t *stack_top_p = executable_object_p->frame_ctx.stack_top_p;
-
   while (register_p < stack_top_p)
   {
     ecma_ref_if_object (*register_p++);
   }
+
+  ecma_ref_if_object (executable_object_p->frame_ctx.block_result);
 
   *register_p++ = value;
   executable_object_p->frame_ctx.stack_top_p = register_p;
@@ -716,14 +762,15 @@ opfunc_resume_executable_object (vm_executable_object_t *executable_object_p, /*
   JERRY_CONTEXT (vm_top_context_p) = executable_object_p->frame_ctx.prev_context_p;
 
   register_p = VM_GET_REGISTERS (&executable_object_p->frame_ctx);
-
-  while (register_p < register_end_p)
-  {
-    ecma_deref_if_object (*register_p++);
-  }
+  stack_top_p = executable_object_p->frame_ctx.stack_top_p;
 
   if (executable_object_p->frame_ctx.context_depth > 0)
   {
+    while (register_p < register_end_p)
+    {
+      ecma_deref_if_object (*register_p++);
+    }
+
     vm_ref_lex_env_chain (executable_object_p->frame_ctx.lex_env_p,
                           executable_object_p->frame_ctx.context_depth,
                           register_p,
@@ -732,30 +779,15 @@ opfunc_resume_executable_object (vm_executable_object_t *executable_object_p, /*
     register_p += executable_object_p->frame_ctx.context_depth;
   }
 
-  stack_top_p = executable_object_p->frame_ctx.stack_top_p;
-
   while (register_p < stack_top_p)
   {
     ecma_deref_if_object (*register_p++);
   }
 
+  ecma_deref_if_object (executable_object_p->frame_ctx.block_result);
+
   return result;
 } /* opfunc_resume_executable_object */
-
-/**
- * Create a Promise object if needed and resolve it with a value
- *
- * @return Promise object
- */
-ecma_value_t
-opfunc_return_promise (ecma_value_t value) /**< value */
-{
-  ecma_value_t promise = ecma_make_object_value (ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE));
-  ecma_value_t result = ecma_promise_reject_or_resolve (promise, value, true);
-
-  ecma_free_value (value);
-  return result;
-} /* opfunc_return_promise */
 
 /**
  * Implicit class constructor handler when the classHeritage is not present.

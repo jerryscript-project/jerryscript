@@ -242,6 +242,12 @@ scanner_check_arrow_arg (parser_context_t *context_p, /**< context */
   scanner_pop_literal_pool (context_p, scanner_context_p);
 
   parser_stack_pop_uint8 (context_p);
+
+  if (context_p->stack_top_uint8 == SCAN_STACK_USE_ASYNC)
+  {
+    scanner_add_async_literal (context_p, scanner_context_p);
+  }
+
   parser_stack_push_uint8 (context_p, SCAN_STACK_PAREN_EXPRESSION);
 
   if (process_arrow)

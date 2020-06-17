@@ -28,6 +28,22 @@
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
+/**
+  * This object has a custom dispatch function.
+  */
+ #define BUILTIN_CUSTOM_DISPATCH
+
+/**
+ * List of built-in routine identifiers.
+ */
+enum
+{
+  ECMA_GENERATOR_PROTOTYPE_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
+  ECMA_GENERATOR_PROTOTYPE_ROUTINE_RETURN,
+  ECMA_GENERATOR_PROTOTYPE_ROUTINE_THROW,
+  ECMA_GENERATOR_PROTOTYPE_ROUTINE_NEXT
+};
+
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-generator-prototype.inc.h"
 #define BUILTIN_UNDERSCORED_ID generator_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
@@ -65,42 +81,10 @@ static const uint8_t ecma_builtin_generator_prototype_throw[1] =
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_generator_prototype_object_do (ecma_value_t this_arg, /**< this argument */
+ecma_builtin_generator_prototype_object_do (vm_executable_object_t *executable_object_p, /**< executable object */
                                             ecma_value_t arg, /**< argument */
                                             ecma_iterator_command_type_t resume_mode) /**< resume mode */
 {
-  vm_executable_object_t *executable_object_p = NULL;
-
-  if (ecma_is_value_object (this_arg))
-  {
-    ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
-
-    if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_CLASS)
-    {
-      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-
-      if (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_GENERATOR_UL)
-      {
-        executable_object_p = (vm_executable_object_t *) ext_object_p;
-      }
-    }
-  }
-
-  if (executable_object_p == NULL)
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a generator object."));
-  }
-
-  if (executable_object_p->extended_object.u.class_prop.extra_info & ECMA_EXECUTABLE_OBJECT_RUNNING)
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Generator is currently under execution."));
-  }
-
-  if (executable_object_p->extended_object.u.class_prop.extra_info & ECMA_EXECUTABLE_OBJECT_COMPLETED)
-  {
-    return ecma_create_iter_result_object (ECMA_VALUE_UNDEFINED, ECMA_VALUE_TRUE);
-  }
-
   arg = ecma_copy_value (arg);
 
   while (true)
@@ -194,52 +178,81 @@ ecma_builtin_generator_prototype_object_do (ecma_value_t this_arg, /**< this arg
 } /* ecma_builtin_generator_prototype_object_do */
 
 /**
- * The Generator.prototype object's 'next' routine
- *
- * See also:
- *          ECMA-262 v6, 25.3.1.2
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_generator_prototype_object_next (ecma_value_t this_arg, /**< this argument */
-                                              ecma_value_t next_arg) /**< next argument */
+  * Dispatcher of the Generator built-in's routines
+  *
+  * @return ecma value
+  *         Returned value must be freed with ecma_free_value.
+  */
+ecma_value_t
+ecma_builtin_generator_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide routine
+                                                                                 *   identifier */
+                                                   ecma_value_t this_arg, /**< 'this' argument value */
+                                                   const ecma_value_t arguments_list_p[], /**< list of arguments
+                                                                                           *   passed to routine */
+                                                   ecma_length_t arguments_number) /**< length of arguments' list */
 {
-  return ecma_builtin_generator_prototype_object_do (this_arg, next_arg, ECMA_ITERATOR_NEXT);
-} /* ecma_builtin_generator_prototype_object_next */
+  JERRY_UNUSED (arguments_number);
 
-/**
- * The Generator.prototype object's 'return' routine
- *
- * See also:
- *          ECMA-262 v6, 25.3.1.3
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_generator_prototype_object_return (ecma_value_t this_arg, /**< this argument */
-                                                ecma_value_t return_arg) /**< return argument */
-{
-  return ecma_builtin_generator_prototype_object_do (this_arg, return_arg, ECMA_ITERATOR_RETURN);
-} /* ecma_builtin_generator_prototype_object_return */
+  vm_executable_object_t *executable_object_p = NULL;
 
-/**
- * The Generator.prototype object's 'throw' routine
- *
- * See also:
- *          ECMA-262 v6, 25.3.1.4
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_generator_prototype_object_throw (ecma_value_t this_arg, /**< this argument */
-                                                ecma_value_t throw_arg) /**< throw argument */
-{
-  return ecma_builtin_generator_prototype_object_do (this_arg, throw_arg, ECMA_ITERATOR_THROW);
-} /* ecma_builtin_generator_prototype_object_throw */
+  if (ecma_is_value_object (this_arg))
+  {
+    ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
+
+    if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_CLASS)
+    {
+      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+
+      if (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_GENERATOR_UL)
+      {
+        executable_object_p = (vm_executable_object_t *) ext_object_p;
+      }
+    }
+  }
+
+  if (executable_object_p == NULL)
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a generator object."));
+  }
+
+  if (executable_object_p->extended_object.u.class_prop.extra_info & ECMA_EXECUTABLE_OBJECT_RUNNING)
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Generator is currently under execution."));
+  }
+
+  if (executable_object_p->extended_object.u.class_prop.extra_info & ECMA_EXECUTABLE_OBJECT_COMPLETED)
+  {
+    return ecma_create_iter_result_object (ECMA_VALUE_UNDEFINED, ECMA_VALUE_TRUE);
+  }
+
+  switch (builtin_routine_id)
+  {
+    case ECMA_GENERATOR_PROTOTYPE_ROUTINE_NEXT:
+    {
+      return ecma_builtin_generator_prototype_object_do (executable_object_p,
+                                                         arguments_list_p[0],
+                                                         ECMA_ITERATOR_NEXT);
+    }
+    case ECMA_GENERATOR_PROTOTYPE_ROUTINE_THROW:
+    {
+      return ecma_builtin_generator_prototype_object_do (executable_object_p,
+                                                         arguments_list_p[0],
+                                                         ECMA_ITERATOR_THROW);
+    }
+    case ECMA_GENERATOR_PROTOTYPE_ROUTINE_RETURN:
+    {
+      return ecma_builtin_generator_prototype_object_do (executable_object_p,
+                                                         arguments_list_p[0],
+                                                         ECMA_ITERATOR_RETURN);
+    }
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+
+  return ECMA_VALUE_EMPTY;
+} /* ecma_builtin_generator_prototype_dispatch_routine */
 
 /**
  * @}

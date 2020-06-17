@@ -1530,10 +1530,11 @@ ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**<
     bytecode_data_p = ecma_op_function_get_compiled_code ((ecma_extended_object_t *) object_p);
 
 #if ENABLED (JERRY_ESNEXT)
-    if (!(bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE))
+    if (!(bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE)
+        && !(CBC_FUNCTION_GET_TYPE (bytecode_data_p->status_flags) == CBC_FUNCTION_ARROW))
     {
       ecma_property_t *value_prop_p;
-      /* The property_name_p argument contans the name. */
+      /* The property_name_p argument contains the name. */
       ecma_property_value_t *value_p = ecma_create_named_data_property (object_p,
                                                                         property_name_p,
                                                                         ECMA_PROPERTY_FIXED,
@@ -1547,7 +1548,7 @@ ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**<
       ecma_object_t *thrower_p = ecma_builtin_get (ECMA_BUILTIN_ID_TYPE_ERROR_THROWER);
 
       ecma_property_t *caller_prop_p;
-      /* The property_name_p argument contans the name. */
+      /* The property_name_p argument contains the name. */
       ecma_create_named_accessor_property (object_p,
                                            property_name_p,
                                            thrower_p,

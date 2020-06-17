@@ -67,7 +67,7 @@ matrix:
 
     - name: "Conformance Tests - ES2015"
       env:
-        - OPTS="--test262-es2015"
+        - OPTS="--test262-es2015 update"
 
     - name: "Unit Tests"
       env:

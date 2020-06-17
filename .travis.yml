@@ -11,25 +11,6 @@ script: tools/run-tests.py $OPTS
 # All the job definitions in the matrix.
 matrix:
   include:
-    - name: "Checks"
-      script:
-        - tools/run-tests.py --check-signed-off=travis --check-doxygen --check-vera --check-license --check-magic-strings --check-pylint
-        - travis_wait 40 tools/run-tests.py --check-cppcheck
-      addons:
-        apt:
-          packages: [doxygen, cppcheck, vera++, pylint]
-
-    - name: "Linux/x86-64 Build, Correctness & Debugger Tests"
-      env:
-        - OPTS="--quiet --jerry-tests --jerry-debugger"
-
-    - name: "Linux/x86 (cpointer-32bit) Build & Correctness Tests"
-      env:
-        - OPTS="--quiet --jerry-tests --buildoptions=--compile-flag=-m32,--cpointer-32bit=on"
-      addons:
-        apt:
-          packages: [gcc-multilib]
-
     - name: "Linux/ARM Build & Correctness Tests"
       env:
         - OPTS="--quiet --jerry-tests --toolchain=cmake/toolchain_linux_armv7l.cmake --buildoptions=--linker-flag=-static"
@@ -44,56 +25,6 @@ matrix:
       env:
         - OPTS="--quiet --jerry-tests --buildoptions=--linker-flag=-static"
         - TIMEOUT=300
-
-    - name: "OSX/x86-64 Build, Correctness & Unit Tests"
-      env:
-        - OPTS="--quiet --jerry-tests --unittests"
-      os: osx
-      osx_image: xcode11.4
-      addons:
-        homebrew:
-          packages: [cmake, cppcheck, vera++]
-
-    - name: "Build Tests"
-      env:
-        - OPTS="--buildoption-test"
-      addons:
-        apt:
-          packages: [gcc-multilib]
-
-    - name: "Conformance Tests - ES5.1"
-      env:
-        - OPTS="--test262"
-
-    - name: "Conformance Tests - ES2015"
-      env:
-        - OPTS="--test262-es2015 update"
-
-    - name: "Unit Tests"
-      env:
-        - OPTS="--unittests"
-
-    - name: "ASAN Tests"
-      env:
-        # Skipping maximum stack usage related tests due to 'detect_stack_use_after_return=1' ASAN option.
-        # For more detailed description: https://github.com/google/sanitizers/wiki/AddressSanitizerUseAfterReturn#compatibility
-        - OPTS="--quiet --jerry-tests --skip-list=parser-oom.js,parser-oom2.js,stack-limit.js,regression-test-issue-2190.js,regression-test-issue-2258-2963.js,regression-test-issue-2448.js,regression-test-issue-2905.js,regression-test-issue-3785.js --buildoptions=--stack-limit=0,--compile-flag=-fsanitize=address,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--compile-flag=-O2,--debug,--system-allocator=on,--linker-flag=-fuse-ld=gold"
-        - ASAN_OPTIONS=detect_stack_use_after_return=1:check_initialization_order=true:strict_init_order=true
-        - TIMEOUT=600
-      addons:
-        apt:
-          sources: ubuntu-toolchain-r-test
-          packages: [gcc-multilib]
-
-    - name: "UBSAN Tests"
-      env:
-        - OPTS="--quiet --jerry-tests --skip-list=parser-oom.js,parser-oom2.js --buildoptions=--compile-flag=-fsanitize=undefined,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--debug,--system-allocator=on,--linker-flag=-fuse-ld=gold"
-        - UBSAN_OPTIONS=print_stacktrace=1
-        - TIMEOUT=600
-      addons:
-        apt:
-          sources: ubuntu-toolchain-r-test
-          packages: [gcc-multilib]
 
     - name: "Coverity Scan & SonarQube"
       env:

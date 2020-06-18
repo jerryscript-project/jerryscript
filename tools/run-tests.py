@@ -174,7 +174,7 @@ def get_arguments():
     parser.add_argument('--outdir', metavar='DIR', default=OUTPUT_DIR,
                         help='Specify output directory (default: %(default)s)')
     parser.add_argument('--check-signed-off', metavar='TYPE', nargs='?',
-                        choices=['strict', 'tolerant', 'travis'], const='strict',
+                        choices=['strict', 'tolerant', 'gh-actions'], const='strict',
                         help='Run signed-off check (%(choices)s; default type if not given: %(const)s)')
     parser.add_argument('--check-cppcheck', action='store_true',
                         help='Run cppcheck')
@@ -472,7 +472,7 @@ Check = collections.namedtuple('Check', ['enabled', 'runner', 'arg'])
 def main(options):
     checks = [
         Check(options.check_signed_off, run_check, [settings.SIGNED_OFF_SCRIPT]
-              + {'tolerant': ['--tolerant'], 'travis': ['--travis']}.get(options.check_signed_off, [])),
+              + {'tolerant': ['--tolerant'], 'gh-actions': ['--gh-actions']}.get(options.check_signed_off, [])),
         Check(options.check_cppcheck, run_check, [settings.CPPCHECK_SCRIPT]),
         Check(options.check_doxygen, run_check, [settings.DOXYGEN_SCRIPT]),
         Check(options.check_pylint, run_check, [settings.PYLINT_SCRIPT]),

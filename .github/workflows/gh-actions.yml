@@ -17,7 +17,7 @@ jobs:
       - name: Initializtaion
         run: sudo apt-get install doxygen vera++ cppcheck pylint pylint python-serial -q
       - name: Signed-off
-        run: $RUNNER --check-signed-off=travis
+        run: $RUNNER --check-signed-off=gh-actions
       - name: Doxygen
         run: $RUNNER --check-doxygen
       - name: Vera++

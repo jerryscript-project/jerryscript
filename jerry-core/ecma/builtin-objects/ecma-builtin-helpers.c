@@ -117,15 +117,15 @@ ecma_builtin_helper_object_to_string_tag_helper (ecma_value_t tag_value) /**< st
 ecma_value_t
 ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this argument */
 {
-  lit_magic_string_id_t type_string;
+  lit_magic_string_id_t builtin_tag;
 
   if (ecma_is_value_undefined (this_arg))
   {
-    type_string = LIT_MAGIC_STRING_UNDEFINED_UL;
+    builtin_tag = LIT_MAGIC_STRING_UNDEFINED_UL;
   }
   else if (ecma_is_value_null (this_arg))
   {
-    type_string = LIT_MAGIC_STRING_NULL_UL;
+    builtin_tag = LIT_MAGIC_STRING_NULL_UL;
   }
   else
   {
@@ -140,58 +140,49 @@ ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this arg
 
     ecma_object_t *obj_p = ecma_get_object_from_value (obj_this);
 
-    type_string = ecma_object_get_class_name (obj_p);
+    builtin_tag = ecma_object_get_class_name (obj_p);
 
 #if ENABLED (JERRY_ESNEXT)
-    ecma_value_t tag_value = ecma_op_object_get_by_symbol_id (obj_p, LIT_GLOBAL_SYMBOL_TO_STRING_TAG);
+    ecma_value_t is_array = ecma_is_value_array (obj_this);
 
-    if (ECMA_IS_VALUE_ERROR (tag_value))
+    if (ECMA_IS_VALUE_ERROR (is_array))
     {
       ecma_deref_object (obj_p);
-      return tag_value;
+      return is_array;
     }
 
-    if (ecma_is_value_string (tag_value))
+    if (ecma_is_value_true (is_array))
+    {
+      builtin_tag = LIT_MAGIC_STRING_ARRAY_UL;
+    }
+
+    ecma_value_t tag = ecma_op_object_get_by_symbol_id (obj_p, LIT_GLOBAL_SYMBOL_TO_STRING_TAG);
+
+    if (ECMA_IS_VALUE_ERROR (tag))
     {
       ecma_deref_object (obj_p);
-      return ecma_builtin_helper_object_to_string_tag_helper (tag_value);
+      return tag;
     }
 
-    ecma_free_value (tag_value);
+    if (ecma_is_value_string (tag))
+    {
+      ecma_deref_object (obj_p);
+      return ecma_builtin_helper_object_to_string_tag_helper (tag);
+    }
+
+    ecma_free_value (tag);
 #endif /* ENABLED (JERRY_ESNEXT) */
 
     ecma_deref_object (obj_p);
   }
 
-  ecma_string_t *ret_string_p;
+  ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
 
-  /* Building string "[object #type#]" where type is 'Undefined',
-     'Null' or one of possible object's classes.
-     The string with null character is maximum 27 characters long. */
-  const lit_utf8_size_t buffer_size = 27;
-  JERRY_VLA (lit_utf8_byte_t, str_buffer, buffer_size);
+  ecma_stringbuilder_append_magic (&builder, LIT_MAGIC_STRING_OBJECT_TO_STRING_UL);
+  ecma_stringbuilder_append_magic (&builder, builtin_tag);
+  ecma_stringbuilder_append_byte (&builder, LIT_CHAR_RIGHT_SQUARE);
 
-  lit_utf8_byte_t *buffer_ptr = str_buffer;
-
-  const lit_magic_string_id_t magic_string_ids[] =
-  {
-    LIT_MAGIC_STRING_LEFT_SQUARE_CHAR,
-    LIT_MAGIC_STRING_OBJECT,
-    LIT_MAGIC_STRING_SPACE_CHAR,
-    type_string,
-    LIT_MAGIC_STRING_RIGHT_SQUARE_CHAR
-  };
-
-  for (uint32_t i = 0; i < sizeof (magic_string_ids) / sizeof (lit_magic_string_id_t); ++i)
-  {
-    buffer_ptr = lit_copy_magic_string_to_buffer (magic_string_ids[i], buffer_ptr,
-                                                  (lit_utf8_size_t) ((str_buffer + buffer_size) - buffer_ptr));
-    JERRY_ASSERT (buffer_ptr <= str_buffer + buffer_size);
-  }
-
-  ret_string_p = ecma_new_ecma_string_from_utf8 (str_buffer, (lit_utf8_size_t) (buffer_ptr - str_buffer));
-
-  return ecma_make_string_value (ret_string_p);
+  return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
 } /* ecma_builtin_helper_object_to_string */
 
 /**

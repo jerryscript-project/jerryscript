@@ -143,8 +143,6 @@
   <test id="built-ins/RegExp/prototype/Symbol.search/get-sticky-coerce.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/Symbol.search/get-sticky-err.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/test/get-sticky-err.js"><reason></reason></test>
-  <test id="built-ins/Set/prototype/keys/keys.js"><reason></reason></test>
-  <test id="built-ins/Set/prototype/Symbol.iterator.js"><reason></reason></test>
   <test id="built-ins/String/prototype/normalize/form-is-not-valid-throws.js"><reason></reason></test>
   <test id="built-ins/String/prototype/normalize/length.js"><reason></reason></test>
   <test id="built-ins/String/prototype/normalize/name.js"><reason></reason></test>

@@ -17,7 +17,7 @@
 # Usage
 function print_usage
 {
- echo "Usage: $0 [--help] [--tolerant] [--travis]"
+ echo "Usage: $0 [--help] [--tolerant] [--gh-actions]"
 }
 
 function print_help
@@ -31,7 +31,7 @@ function print_help
  echo "  --tolerant        check the existence of the message only but don't"
  echo "                    require the name and email address to match the author"
  echo "                    of the commit"
- echo "  --travis          perform check in tolerant mode if on Travis CI and not"
+ echo "  --gh-actions      perform check in tolerant mode if on GitHub-Actions and not"
  echo "                    checking a pull request, perform strict check otherwise"
  echo ""
  echo "The last line of every commit message must follow the form of:"
@@ -52,16 +52,16 @@ do
  then
   TOLERANT="yes"
   shift
- elif [ "$1" == "--travis" ]
+ elif [ "$1" == "--gh-actions" ]
  then
-  if [ "$TRAVIS_PULL_REQUEST" == "" ]
+  if [ "$GITHUB_EVENT_NAME" == "" ]
   then
-   echo -e "\e[1;33mWarning! Travis-tolerant mode requested but not running on Travis CI! \e[0m"
-  elif [ "$TRAVIS_PULL_REQUEST" == "false" ]
+   echo -e "\e[1;33mWarning! GitHub-Actions-tolerant mode requested but not running on GitHub-Actions! \e[0m"
+  elif [ "$GITHUB_EVENT_NAME" == "pull_request" ]
   then
-   TOLERANT="yes"
-  else
    TOLERANT="no"
+  else
+   TOLERANT="yes"
   fi
   shift
  else

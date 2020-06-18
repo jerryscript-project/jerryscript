@@ -50,7 +50,7 @@ ecma_string_t *ecma_op_to_string (ecma_value_t value);
 ecma_string_t *ecma_op_to_property_key (ecma_value_t value);
 ecma_value_t ecma_op_to_object (ecma_value_t value);
 ecma_value_t ecma_op_to_integer (ecma_value_t value, ecma_number_t *number_p);
-ecma_value_t ecma_op_to_length (ecma_value_t value, uint32_t *length);
+ecma_value_t ecma_op_to_length (ecma_value_t value, ecma_length_t *length);
 #if ENABLED (JERRY_ESNEXT)
 ecma_collection_t *ecma_op_create_list_from_array_like (ecma_value_t arr, bool prop_names_only);
 #endif /* ENABLED (JERRY_ESNEXT) */

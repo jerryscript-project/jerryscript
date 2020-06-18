@@ -531,6 +531,23 @@ ecma_is_number_equal_to_positive_zero (ecma_number_t ecma_number) /**< number */
 } /* ecma_is_number_equal_to_positive_zero */
 
 /**
+ * Encode a property length number into an ecma-value
+ *
+ * @return ecma-value
+ */
+ecma_value_t
+ecma_make_length_value (ecma_length_t number) /**< number to be encoded */
+{
+  if (number <= ECMA_INTEGER_NUMBER_MAX)
+  {
+    return ecma_make_integer_value ((ecma_integer_value_t) number);
+  }
+
+  JERRY_ASSERT (number <= ECMA_NUMBER_MAX_SAFE_INTEGER);
+  return ecma_create_float_number ((ecma_number_t) number);
+} /* ecma_make_length_value */
+
+/**
  * Encode a number into an ecma-value
  *
  * @return ecma-value

@@ -652,7 +652,7 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
 ecma_value_t
 ecma_op_array_species_create (ecma_object_t *original_array_p, /**< The object from whom the new array object
                                                                 *   is being created */
-                              uint32_t length) /**< length of the array */
+                              ecma_length_t length) /**< length of the array */
 {
   ecma_value_t constructor = ECMA_VALUE_UNDEFINED;
   ecma_value_t original_array = ecma_make_object_value (original_array_p);
@@ -698,7 +698,7 @@ ecma_op_array_species_create (ecma_object_t *original_array_p, /**< The object f
 
   if (ecma_is_value_undefined (constructor))
   {
-    ecma_value_t length_val = ecma_make_uint32_value (length);
+    ecma_value_t length_val = ecma_make_length_value (length);
     ecma_value_t new_array = ecma_op_create_array_object (&length_val, 1, true);
     ecma_free_value (length_val);
 
@@ -711,7 +711,7 @@ ecma_op_array_species_create (ecma_object_t *original_array_p, /**< The object f
     return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid species constructor"));
   }
 
-  ecma_value_t len_val = ecma_make_uint32_value (length);
+  ecma_value_t len_val = ecma_make_length_value (length);
   ecma_object_t *ctor_object_p = ecma_get_object_from_value (constructor);
   ecma_value_t ret_val = ecma_op_function_construct (ctor_object_p,
                                                      ctor_object_p,

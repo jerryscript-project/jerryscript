@@ -35,11 +35,11 @@ main (void)
   jmem_init ();
   ecma_init ();
 
-  uint32_t num;
+  ecma_length_t num;
 
   ecma_value_t int_num = ecma_make_int32_value (123);
 
-  uint32_t result = ecma_op_to_length (int_num, &num);
+  ecma_value_t result = ecma_op_to_length (int_num, &num);
 
   ecma_free_value (int_num);
 
@@ -88,7 +88,7 @@ main (void)
 
   TEST_ASSERT (!ECMA_IS_VALUE_ERROR (result));
 #if ENABLED (JERRY_ESNEXT)
-  TEST_ASSERT (num == UINT32_MAX);
+  TEST_ASSERT (num == ECMA_NUMBER_MAX_SAFE_INTEGER);
 #else /* !ENABLED (JERRY_ESNEXT) */
   TEST_ASSERT (num == 0);
 #endif /* ENABLED (JERRY_ESNEXT) */

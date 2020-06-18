@@ -914,20 +914,22 @@ ecma_builtin_typedarray_prototype_set (ecma_value_t this_arg, /**< this argument
   /* 18.~ 19. */
   ecma_object_t *source_obj_p = ecma_get_object_from_value (source_obj);
 
-  uint32_t source_length_uint32;
+  ecma_length_t source_length;
 
-  if (ECMA_IS_VALUE_ERROR (ecma_op_object_get_length (source_obj_p, &source_length_uint32)))
+  if (ECMA_IS_VALUE_ERROR (ecma_op_object_get_length (source_obj_p, &source_length)))
   {
     ecma_deref_object (source_obj_p);
     return ECMA_VALUE_ERROR;
   }
 
   /* 20. if srcLength + targetOffset > targetLength, throw a RangeError */
-  if ((int64_t) source_length_uint32 + target_offset_uint32 > target_info.length)
+  if ((int64_t) source_length + target_offset_uint32 > target_info.length)
   {
     ecma_deref_object (source_obj_p);
     return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid range of index"));
   }
+  JERRY_ASSERT (source_length <= UINT32_MAX);
+  uint32_t source_length_uint32 = (uint32_t) source_length;
 
   /* 21.~ 25. */
   uint32_t target_byte_index = target_offset_uint32 * target_info.element_size;
@@ -937,7 +939,7 @@ ecma_builtin_typedarray_prototype_set (ecma_value_t this_arg, /**< this argument
 
   while (k < source_length_uint32)
   {
-    ecma_value_t elem = ecma_op_object_get_by_uint32_index (source_obj_p, k);
+    ecma_value_t elem = ecma_op_object_get_by_index (source_obj_p, k);
 
     if (ECMA_IS_VALUE_ERROR (elem))
     {
@@ -981,7 +983,7 @@ static ecma_string_t *
 ecma_op_typedarray_get_to_string_at_index (ecma_object_t *obj_p, /**< this object */
                                            uint32_t index) /**< array index */
 {
-  ecma_value_t index_value = ecma_op_object_get_by_uint32_index (obj_p, index);
+  ecma_value_t index_value = ecma_op_object_get_by_index (obj_p, index);
 
   if (ECMA_IS_VALUE_ERROR (index_value))
   {
@@ -1159,9 +1161,9 @@ ecma_builtin_typedarray_prototype_subarray (ecma_value_t this_arg, /**< this arg
   uint32_t begin_index_uint32 = 0, end_index_uint32 = 0;
 
   /* 7. relativeBegin */
-  if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_array_index_normalize (begin,
-                                                                      info.length,
-                                                                      &begin_index_uint32)))
+  if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_uint32_index_normalize (begin,
+                                                                       info.length,
+                                                                       &begin_index_uint32)))
   {
     return ECMA_VALUE_ERROR;
   }
@@ -1173,9 +1175,9 @@ ecma_builtin_typedarray_prototype_subarray (ecma_value_t this_arg, /**< this arg
   else
   {
     /* 10. relativeEnd */
-    if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_array_index_normalize (end,
-                                                                        info.length,
-                                                                        &end_index_uint32)))
+    if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_uint32_index_normalize (end,
+                                                                         info.length,
+                                                                         &end_index_uint32)))
     {
       return ECMA_VALUE_ERROR;
     }
@@ -1244,9 +1246,9 @@ ecma_builtin_typedarray_prototype_fill (ecma_value_t this_arg, /**< this argumen
 
   uint32_t begin_index_uint32 = 0, end_index_uint32 = 0;
 
-  if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_array_index_normalize (begin,
-                                                                      info.length,
-                                                                      &begin_index_uint32)))
+  if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_uint32_index_normalize (begin,
+                                                                       info.length,
+                                                                       &begin_index_uint32)))
   {
     return ECMA_VALUE_ERROR;
   }
@@ -1257,9 +1259,9 @@ ecma_builtin_typedarray_prototype_fill (ecma_value_t this_arg, /**< this argumen
   }
   else
   {
-    if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_array_index_normalize (end,
-                                                                        info.length,
-                                                                        &end_index_uint32)))
+    if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_uint32_index_normalize (end,
+                                                                         info.length,
+                                                                         &end_index_uint32)))
     {
       return ECMA_VALUE_ERROR;
     }
@@ -1772,27 +1774,27 @@ ecma_builtin_typedarray_prototype_copy_within (ecma_value_t this_arg, /**< this 
 
   if (args_number > 0)
   {
-    if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_array_index_normalize (args[0],
-                                                                        info.length,
-                                                                        &relative_target)))
+    if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_uint32_index_normalize (args[0],
+                                                                         info.length,
+                                                                         &relative_target)))
     {
       return ECMA_VALUE_ERROR;
     }
 
     if (args_number > 1)
     {
-      if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_array_index_normalize (args[1],
-                                                                          info.length,
-                                                                          &relative_start)))
+      if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_uint32_index_normalize (args[1],
+                                                                           info.length,
+                                                                           &relative_start)))
       {
         return ECMA_VALUE_ERROR;
       }
 
       if (args_number > 2 && args[2] != ECMA_VALUE_UNDEFINED)
       {
-        if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_array_index_normalize (args[2],
-                                                                            info.length,
-                                                                            &relative_end)))
+        if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_uint32_index_normalize (args[2],
+                                                                             info.length,
+                                                                             &relative_end)))
         {
           return ECMA_VALUE_ERROR;
         }
@@ -1850,18 +1852,18 @@ ecma_builtin_typedarray_prototype_slice (ecma_value_t this_arg, /**< this argume
 
   if (args_number > 0)
   {
-    if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_array_index_normalize (args[0],
-                                                                        info.length,
-                                                                        &relative_start)))
+    if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_uint32_index_normalize (args[0],
+                                                                         info.length,
+                                                                         &relative_start)))
     {
       return ECMA_VALUE_ERROR;
     }
 
     if (args_number > 1
         && args[1] != ECMA_VALUE_UNDEFINED
-        && ECMA_IS_VALUE_ERROR (ecma_builtin_helper_array_index_normalize (args[1],
-                                                                           info.length,
-                                                                           &relative_end)))
+        && ECMA_IS_VALUE_ERROR (ecma_builtin_helper_uint32_index_normalize (args[1],
+                                                                            info.length,
+                                                                            &relative_end)))
     {
       return ECMA_VALUE_ERROR;
     }
@@ -2059,7 +2061,7 @@ ecma_builtin_typedarray_prototype_includes (ecma_value_t this_arg, /**< this arg
 
   if (args_number > 1)
   {
-    if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_array_index_normalize (args[1], info.length, &from_index)))
+    if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_uint32_index_normalize (args[1], info.length, &from_index)))
     {
       return ECMA_VALUE_ERROR;
     }

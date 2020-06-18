@@ -196,9 +196,9 @@ ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this arg
  */
 ecma_string_t *
 ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, /**< this object */
-                                                   uint32_t index) /**< array index */
+                                                   ecma_length_t index) /**< array index */
 {
-  ecma_value_t index_value = ecma_op_object_get_by_uint32_index (obj_p, index);
+  ecma_value_t index_value = ecma_op_object_get_by_index (obj_p, index);
 
   if (ECMA_IS_VALUE_ERROR (index_value))
   {
@@ -232,9 +232,46 @@ ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, /**< th
  * See also:
  *          ECMA-262 v5, 15.4.4.10 steps 5, 6, 7 part 2, 8
  *          ECMA-262 v5, 15.4.4.12 steps 5, 6
- *          ECMA-262 v5, 15.5.4.13 steps 4 - 7
+ *
  *          ECMA-262 v6, 22.1.3.6 steps 5 - 7, 8 part 2, 9, 10
  *          ECMA-262 v6, 22.1.3.3 steps 5 - 10, 11 part 2, 12, 13
+ *
+ * Used by:
+ *         - The Array.prototype.slice routine.
+ *         - The Array.prototype.splice routine.
+ *         - The Array.prototype.fill routine.
+ *         - The Array.prototype.copyWithin routine.
+ *
+ * @return ECMA_VALUE_EMPTY if successful
+ *         conversion error otherwise
+ */
+ecma_value_t
+ecma_builtin_helper_array_index_normalize (ecma_value_t arg, /**< index */
+                                           ecma_length_t length, /**< array's length */
+                                           ecma_length_t *number_p) /**< [out] ecma_length_t */
+{
+#if ENABLED (JERRY_ESNEXT)
+  ecma_number_t to_int;
+
+  if (ECMA_IS_VALUE_ERROR (ecma_op_to_integer (arg, &to_int)))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  *number_p = ((to_int < 0) ? (ecma_length_t) JERRY_MAX (((ecma_number_t) length + to_int), 0)
+                            : (ecma_length_t) JERRY_MIN (to_int, (ecma_number_t) length));
+
+  return ECMA_VALUE_EMPTY;
+#else /* !ENABLED (JERRY_ESNEXT) */
+  return ecma_builtin_helper_uint32_index_normalize (arg, length, number_p);
+#endif /* ENABLED (JERRY_ESNEXT) */
+} /* ecma_builtin_helper_array_index_normalize */
+
+/**
+ * Helper function to normalizing an uint32 index
+ *
+ * See also:
+ *          ECMA-262 v5, 15.5.4.13 steps 4 - 7
  *          ECMA-262 v6, 22.2.3.5 steps 5 - 10, 11 part 2, 12, 13
  *          ECMA-262 v6, 22.2.3.23 steps 5 - 10
  *          ECMA-262 v6, 24.1.4.3 steps 6 - 8, 9 part 2, 10, 11
@@ -242,10 +279,7 @@ ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, /**< th
  *          ECMA-262 v6, 22.2.3.8 steps 5 - 7, 8 part 2, 9, 10
  *
  * Used by:
- *         - The Array.prototype.slice routine.
- *         - The Array.prototype.splice routine.
  *         - The String.prototype.slice routine.
- *         - The Array.prototype.fill routine.
  *         - The Array.prototype.copyWithin routine.
  *         - The TypedArray.prototype.copyWithin routine.
  *         - The TypedArray.prototype.slice routine.
@@ -256,10 +290,10 @@ ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, /**< th
  * @return ECMA_VALUE_EMPTY if successful
  *         conversion error otherwise
  */
-uint32_t
-ecma_builtin_helper_array_index_normalize (ecma_value_t arg, /**< index */
-                                           uint32_t length, /**< array's length */
-                                           uint32_t *number_p) /**< [out] uint32_t */
+ecma_value_t
+ecma_builtin_helper_uint32_index_normalize (ecma_value_t arg, /**< index */
+                                            uint32_t length, /**< array's length */
+                                            uint32_t *number_p) /**< [out] uint32_t number */
 {
   ecma_number_t to_int;
 
@@ -268,11 +302,11 @@ ecma_builtin_helper_array_index_normalize (ecma_value_t arg, /**< index */
     return ECMA_VALUE_ERROR;
   }
 
-  *number_p = ((to_int < 0) ? (uint32_t) JERRY_MAX ((length + to_int), 0)
+  *number_p = ((to_int < 0) ? (uint32_t) JERRY_MAX (length + to_int, 0)
                             : (uint32_t) JERRY_MIN (to_int, length));
 
   return ECMA_VALUE_EMPTY;
-} /* ecma_builtin_helper_array_index_normalize */
+} /* ecma_builtin_helper_uint32_index_normalize */
 
 /**
  * Helper function for concatenating an ecma_value_t to an Array.
@@ -288,7 +322,7 @@ ecma_builtin_helper_array_index_normalize (ecma_value_t arg, /**< index */
  */
 ecma_value_t
 ecma_builtin_helper_array_concat_value (ecma_object_t *array_obj_p, /**< array */
-                                        uint32_t *length_p, /**< [in,out] array's length */
+                                        ecma_length_t *length_p, /**< [in,out] array's length */
                                         ecma_value_t value) /**< value to concat */
 {
   /* 5.b */
@@ -314,22 +348,28 @@ ecma_builtin_helper_array_concat_value (ecma_object_t *array_obj_p, /**< array *
     ecma_object_t *obj_p = ecma_get_object_from_value (value);
 
 #if ENABLED (JERRY_ESNEXT)
-    uint32_t arg_len;
+    ecma_length_t arg_len;
     ecma_value_t error = ecma_op_object_get_length (obj_p, &arg_len);
 
     if (ECMA_IS_VALUE_ERROR (error))
     {
       return error;
     }
+
+    /* 4 . */
+    if (*length_p + arg_len > ECMA_NUMBER_MAX_SAFE_INTEGER)
+    {
+      return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid array length."));
+    }
 #else /* !ENABLED (JERRY_ESNEXT) */
     /* 5.b.ii */
     uint32_t arg_len = ecma_array_get_length (obj_p);
 #endif /* ENABLED (JERRY_ESNEXT) */
     /* 5.b.iii */
-    for (uint32_t array_index = 0; array_index < arg_len; array_index++)
+    for (ecma_length_t array_index = 0; array_index < arg_len; array_index++)
     {
       /* 5.b.iii.2 */
-      ecma_value_t get_value = ecma_op_object_find_by_uint32_index (obj_p, array_index);
+      ecma_value_t get_value = ecma_op_object_find_by_index (obj_p, array_index);
 
       if (ECMA_IS_VALUE_ERROR (get_value))
       {
@@ -725,7 +765,7 @@ ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, /**< index
  */
 ecma_value_t
 ecma_builtin_helper_def_prop_by_index (ecma_object_t *obj_p, /**< object */
-                                       uint32_t index, /**< property index */
+                                       ecma_length_t index, /**< property index */
                                        ecma_value_t value, /**< value */
                                        uint32_t opts) /**< any combination of ecma_property_flag_t bits */
 {
@@ -737,11 +777,8 @@ ecma_builtin_helper_def_prop_by_index (ecma_object_t *obj_p, /**< object */
                                          opts);
   }
 
-  ecma_string_t *index_str_p = ecma_new_non_direct_string_from_uint32 (index);
-  ecma_value_t ret_value = ecma_builtin_helper_def_prop (obj_p,
-                                                         index_str_p,
-                                                         value,
-                                                         opts);
+  ecma_string_t *index_str_p = ecma_new_ecma_string_from_length (index);
+  ecma_value_t ret_value = ecma_builtin_helper_def_prop (obj_p, index_str_p, value, opts);
   ecma_deref_ecma_string (index_str_p);
 
   return ret_value;

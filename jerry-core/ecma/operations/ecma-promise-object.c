@@ -598,10 +598,10 @@ ecma_promise_all_handler_cb (const ecma_value_t function_obj, /**< the function 
   }
 
   /* 8. */
-  ecma_op_object_put_by_uint32_index (ecma_get_object_from_value (executor_p->values),
-                                      (uint32_t) (executor_p->index - 1),
-                                      args_p[0],
-                                      false);
+  ecma_op_object_put_by_index (ecma_get_object_from_value (executor_p->values),
+                               (uint32_t) (executor_p->index - 1),
+                               args_p[0],
+                               false);
   /* 3. */
   executor_p->index = 0;
 

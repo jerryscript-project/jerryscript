@@ -894,14 +894,22 @@ ecma_op_typedarray_from (ecma_value_t items_val, /**< the source array-like obje
   ecma_object_t *arraylike_object_p = ecma_get_object_from_value (arraylike_object_val);
 
   /* 12 */
-  uint32_t len;
-  ecma_value_t len_value = ecma_op_object_get_length (arraylike_object_p, &len);
+  ecma_length_t length_index;
+  ecma_value_t len_value = ecma_op_object_get_length (arraylike_object_p, &length_index);
 
   if (ECMA_IS_VALUE_ERROR (len_value))
   {
     ecma_deref_object (arraylike_object_p);
     return len_value;
   }
+
+  if (length_index >= UINT32_MAX)
+  {
+    ecma_deref_object (arraylike_object_p);
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid TypedArray length"));
+  }
+
+  uint32_t len = (uint32_t) length_index;
 
   /* 14 */
   ecma_value_t new_typedarray = ecma_typedarray_create_object_with_length (len,
@@ -924,7 +932,7 @@ ecma_op_typedarray_from (ecma_value_t items_val, /**< the source array-like obje
   /* 17 */
   for (uint32_t index = 0; index < len; index++)
   {
-    ecma_value_t current_value = ecma_op_object_find_by_uint32_index (arraylike_object_p, index);
+    ecma_value_t current_value = ecma_op_object_find_by_index (arraylike_object_p, index);
 
     if (ECMA_IS_VALUE_ERROR (current_value))
     {
@@ -1173,7 +1181,7 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
         }
         else
         {
-          uint32_t new_length;
+          ecma_length_t new_length;
           if (ECMA_IS_VALUE_ERROR (ecma_op_to_length (arg3, &new_length)))
           {
             return ECMA_VALUE_ERROR;

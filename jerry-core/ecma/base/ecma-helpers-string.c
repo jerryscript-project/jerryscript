@@ -15,6 +15,7 @@
 
 #include "ecma-alloc.h"
 #include "ecma-conversion.h"
+#include "ecma-exceptions.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
@@ -549,7 +550,32 @@ ecma_new_non_direct_string_from_uint32 (uint32_t uint32_number) /**< uint32 valu
 } /* ecma_new_non_direct_string_from_uint32 */
 
 /**
- * Allocate new ecma-string and fill it with ecma-number
+ * Allocate new ecma-string and fill it with property length number
+ *
+ * @return pointer to ecma-string descriptor
+ */
+ecma_string_t *
+ecma_new_ecma_string_from_length (ecma_length_t number) /**< property length */
+{
+  if (JERRY_LIKELY (number <= ECMA_DIRECT_STRING_MAX_IMM))
+  {
+    return (ecma_string_t *) ECMA_CREATE_DIRECT_STRING (ECMA_DIRECT_STRING_UINT, (uintptr_t) number);
+  }
+
+#if ENABLED (JERRY_ESNEXT)
+  JERRY_ASSERT (number <= ECMA_NUMBER_MAX_SAFE_INTEGER);
+
+  if (JERRY_UNLIKELY (number > UINT32_MAX))
+  {
+    return ecma_new_ecma_string_from_number ((ecma_number_t) number);
+  }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+  return ecma_new_non_direct_string_from_uint32 ((uint32_t) number);
+} /* ecma_new_ecma_string_from_length */
+
+/**
+ * Allocate new ecma-string and fill it with uint32 number
  *
  * @return pointer to ecma-string descriptor
  */
@@ -2498,7 +2524,7 @@ ecma_string_pad (ecma_value_t original_string_p, /**< Input ecma string */
 {
 
   /* 3 */
-  uint32_t int_max_length;
+  ecma_length_t int_max_length;
   if (ECMA_IS_VALUE_ERROR (ecma_op_to_length (max_length, &int_max_length)))
   {
     return ECMA_VALUE_ERROR;
@@ -2529,8 +2555,14 @@ ecma_string_pad (ecma_value_t original_string_p, /**< Input ecma string */
     }
   }
 
+  if (int_max_length >= UINT32_MAX)
+  {
+    ecma_deref_ecma_string (filler_p);
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Maximum string length is reached."));
+  }
+
   /* 9 */
-  uint32_t fill_len = int_max_length - string_length;
+  uint32_t fill_len = (uint32_t) int_max_length - string_length;
 
   /* 10 */
   uint32_t filler_length = ecma_string_get_length (filler_p);
@@ -2904,15 +2936,19 @@ ecma_stringbuilder_destroy (ecma_stringbuilder_t *builder_p) /**< string builder
  */
 uint32_t
 ecma_op_advance_string_index (ecma_string_t *str_p, /**< input string */
-                              uint32_t index, /**< given character index */
+                              ecma_length_t index_num, /**< given character index */
                               bool is_unicode) /**< true - if regexp object's "unicode" flag is set
                                                     false - otherwise */
 {
-  if (index >= UINT32_MAX - 1)
+  JERRY_ASSERT (index_num <= ECMA_NUMBER_MAX_SAFE_INTEGER);
+
+  /* Note: The internal string length limit is 2^32 */
+  if (JERRY_UNLIKELY (index_num >= (UINT32_MAX - 1)))
   {
     return UINT32_MAX;
   }
 
+  uint32_t index = (uint32_t) index_num;
   uint32_t next_index = index + 1;
 
   if (!is_unicode)

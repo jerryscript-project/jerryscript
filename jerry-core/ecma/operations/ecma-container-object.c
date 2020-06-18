@@ -494,7 +494,7 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
 
       ecma_object_t *next_object_p = ecma_get_object_from_value (result);
 
-      result = ecma_op_object_get_by_uint32_index (next_object_p, 0);
+      result = ecma_op_object_get_by_index (next_object_p, 0);
 
       if (ECMA_IS_VALUE_ERROR (result))
       {
@@ -505,7 +505,7 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
 
       const ecma_value_t key = result;
 
-      result = ecma_op_object_get_by_uint32_index (next_object_p, 1);
+      result = ecma_op_object_get_by_index (next_object_p, 1);
 
       if (ECMA_IS_VALUE_ERROR (result))
       {

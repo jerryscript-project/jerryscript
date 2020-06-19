@@ -37,7 +37,6 @@
  * \addtogroup set ECMA Set object built-in
  * @{
  */
-#if ENABLED (JERRY_ESNEXT)
 /**
  * Dispatcher of the built-in's routines
  *
@@ -58,11 +57,10 @@ ecma_builtin_set_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< b
                                                   arguments_list_p,
                                                   LIT_MAGIC_STRING_SET_UL);
 } /* ecma_builtin_set_prototype_dispatch_routine */
-#endif /* ENABLED (JERRY_ES2015) */
 /**
  * @}
  * @}
  * @}
  */
 
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* ENABLED (JERRY_BUILTIN_SET) */

@@ -179,12 +179,10 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
       /* ES2015 9.4.5.1 */
       if (ecma_object_is_typedarray (object_p))
       {
-#if ENABLED (JERRY_ESNEXT)
         if (ecma_prop_name_is_symbol (property_name_p))
         {
           break;
         }
-#endif /* ENABLED (JERRY_ESNEXT) */
 
         uint32_t array_index = ecma_string_get_array_index (property_name_p);
 
@@ -2138,12 +2136,12 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
         {
           case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
           {
-  #if ENABLED (JERRY_BUILTIN_TYPEDARRAY)
+#if ENABLED (JERRY_BUILTIN_TYPEDARRAY)
             if (ecma_object_is_typedarray (obj_p))
             {
               ecma_op_typedarray_list_lazy_property_names (obj_p, prop_names_p);
             }
-  #endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
+#endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
             break;
           }
           case ECMA_OBJECT_TYPE_FUNCTION:

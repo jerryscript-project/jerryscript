@@ -147,7 +147,6 @@ ecma_builtin_typedarray_prototype_length_getter (ecma_value_t this_arg) /**< thi
   return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
 } /* ecma_builtin_typedarray_prototype_length_getter */
 
-#if ENABLED (JERRY_ESNEXT)
 /**
  * The %TypedArray%.prototype[Symbol.toStringTag] accessor
  *
@@ -167,7 +166,6 @@ ecma_builtin_typedarray_prototype_to_string_tag_getter (ecma_value_t this_arg) /
 
   return ecma_make_magic_string_value (ecma_object_get_class_name (ecma_get_object_from_value (this_arg)));
 } /* ecma_builtin_typedarray_prototype_to_string_tag_getter */
-#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Type of routine.
@@ -332,8 +330,6 @@ ecma_builtin_typedarray_prototype_for_each (ecma_value_t this_arg, /**< this arg
                                                          TYPEDARRAY_ROUTINE_FOREACH);
 } /* ecma_builtin_typedarray_prototype_for_each */
 
-#if ENABLED (JERRY_ESNEXT)
-
 /**
  * Helper function for typedArray.prototype object's {'keys', 'values', 'entries', '@@iterator'}
  * routines common parts.
@@ -414,8 +410,6 @@ ecma_builtin_typedarray_prototype_entries (ecma_value_t this_arg) /**< this argu
 {
   return ecma_builtin_typedarray_iterators_helper (this_arg, ECMA_ITERATOR_KEYS_VALUES);
 } /* ecma_builtin_typedarray_prototype_entries */
-
-#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * The %TypedArray%.prototype object's 'map' routine

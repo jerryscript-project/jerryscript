@@ -29,12 +29,10 @@ OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
               ECMA_BUILTIN_ID_DATAVIEW,
               ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
 
-#if ENABLED (JERRY_ESNEXT)
 /* ECMA-262 v6, 23.2.4.21 */
 STRING_VALUE (LIT_GLOBAL_SYMBOL_TO_STRING_TAG,
               LIT_MAGIC_STRING_DATAVIEW_UL,
               ECMA_PROPERTY_FLAG_CONFIGURABLE)
-#endif /* ENABLED (JERRY_ESNEXT) */
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */

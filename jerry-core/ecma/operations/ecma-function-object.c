@@ -1531,7 +1531,7 @@ ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**<
 
 #if ENABLED (JERRY_ESNEXT)
     if (!(bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE)
-        && !(CBC_FUNCTION_GET_TYPE (bytecode_data_p->status_flags) == CBC_FUNCTION_ARROW))
+        && CBC_FUNCTION_GET_TYPE (bytecode_data_p->status_flags) == CBC_FUNCTION_NORMAL)
     {
       ecma_property_t *value_prop_p;
       /* The property_name_p argument contains the name. */
@@ -1660,6 +1660,7 @@ ecma_op_bound_function_try_to_lazy_instantiate_property (ecma_object_t *object_p
     return len_prop_p;
   }
 
+#if !ENABLED (JERRY_ESNEXT)
   if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_CALLER)
       || ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_ARGUMENTS))
   {
@@ -1675,6 +1676,7 @@ ecma_op_bound_function_try_to_lazy_instantiate_property (ecma_object_t *object_p
                                          &caller_prop_p);
     return caller_prop_p;
   }
+#endif /* !ENABLED (JERRY_ESNEXT) */
 
   return NULL;
 } /* ecma_op_bound_function_try_to_lazy_instantiate_property */

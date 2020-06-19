@@ -39,9 +39,9 @@
 enum
 {
   ECMA_GENERATOR_PROTOTYPE_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
-  ECMA_GENERATOR_PROTOTYPE_ROUTINE_RETURN,
+  ECMA_GENERATOR_PROTOTYPE_ROUTINE_NEXT,
   ECMA_GENERATOR_PROTOTYPE_ROUTINE_THROW,
-  ECMA_GENERATOR_PROTOTYPE_ROUTINE_NEXT
+  ECMA_GENERATOR_PROTOTYPE_ROUTINE_RETURN
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-generator-prototype.inc.h"
@@ -214,7 +214,13 @@ ecma_builtin_generator_prototype_dispatch_routine (uint16_t builtin_routine_id, 
 
   if (executable_object_p->extended_object.u.class_prop.extra_info & ECMA_EXECUTABLE_OBJECT_COMPLETED)
   {
-    return ecma_create_iter_result_object (ECMA_VALUE_UNDEFINED, ECMA_VALUE_TRUE);
+    if (builtin_routine_id != ECMA_GENERATOR_PROTOTYPE_ROUTINE_THROW)
+    {
+      return ecma_create_iter_result_object (ECMA_VALUE_UNDEFINED, ECMA_VALUE_TRUE);
+    }
+
+    jcontext_raise_exception (ecma_copy_value (arguments_list_p[0]));
+    return ECMA_VALUE_ERROR;
   }
 
   switch (builtin_routine_id)
@@ -231,15 +237,12 @@ ecma_builtin_generator_prototype_dispatch_routine (uint16_t builtin_routine_id, 
                                                          arguments_list_p[0],
                                                          ECMA_ITERATOR_THROW);
     }
-    case ECMA_GENERATOR_PROTOTYPE_ROUTINE_RETURN:
+    default:
     {
+      JERRY_ASSERT (builtin_routine_id == ECMA_GENERATOR_PROTOTYPE_ROUTINE_RETURN);
       return ecma_builtin_generator_prototype_object_do (executable_object_p,
                                                          arguments_list_p[0],
                                                          ECMA_ITERATOR_RETURN);
-    }
-    default:
-    {
-      JERRY_UNREACHABLE ();
     }
   }
 

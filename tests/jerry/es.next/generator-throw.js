@@ -69,7 +69,7 @@ check_result(f.throw("throw"), "z", false)
 check_throw("f.next()", "throw")
 check_result(f.next(), undefined, true)
 
-function* gen3() {
+function/* generator */*/* generator */gen3() {
   try {
     return 8
   } finally {
@@ -80,3 +80,15 @@ function* gen3() {
 f = gen3()
 check_result(f.next(), 1, false)
 check_throw("f.throw(2)", 2)
+
+function
+  /* generator */
+  *
+  /* generator */
+  gen4()
+{
+}
+
+f = gen4()
+check_result(f.next(), undefined, true)
+check_throw("f.throw('Str')", "Str")

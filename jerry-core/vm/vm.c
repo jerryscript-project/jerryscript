@@ -482,6 +482,11 @@ vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
       func_obj_p = ecma_op_create_generator_function_object (frame_ctx_p->lex_env_p, bytecode_p);
       break;
     }
+    case CBC_FUNCTION_ASYNC_GENERATOR:
+    {
+      func_obj_p = ecma_op_create_async_generator_function_object (frame_ctx_p->lex_env_p, bytecode_p);
+      break;
+    }
     case CBC_FUNCTION_ARROW:
     {
       func_obj_p = ecma_op_create_arrow_function_object (frame_ctx_p->lex_env_p,
@@ -2190,6 +2195,37 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           frame_ctx_p->stack_top_p = --stack_top_p;
           return *stack_top_p;
         }
+        case VM_OC_ASYNC_YIELD:
+        {
+          const uintptr_t object_offset = (uintptr_t) offsetof (vm_executable_object_t, frame_ctx);
+          ecma_extended_object_t *async_generator_object_p;
+          async_generator_object_p = (ecma_extended_object_t *) (((uintptr_t) frame_ctx_p) - object_offset);
+
+          ecma_async_generator_task_t *task_p;
+          task_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_async_generator_task_t,
+                                                    async_generator_object_p->u.class_prop.u.head);
+
+          ecma_value_t iter_result = ecma_create_iter_result_object (stack_top_p[-1], ECMA_VALUE_FALSE);
+          ecma_fulfill_promise (task_p->promise, iter_result);
+
+          ecma_free_value (iter_result);
+          ecma_free_value (stack_top_p[-1]);
+          async_generator_object_p->u.class_prop.u.head = task_p->next;
+
+          if (!ECMA_IS_INTERNAL_VALUE_NULL (task_p->next))
+          {
+            ecma_value_t executable_object = ecma_make_object_value ((ecma_object_t *) async_generator_object_p);
+            ecma_enqueue_promise_async_generator_job (executable_object);
+          }
+
+          JERRY_ASSERT (task_p->operation_value == ECMA_VALUE_UNDEFINED);
+          jmem_heap_free_block (task_p, sizeof (ecma_async_generator_task_t));
+
+          frame_ctx_p->call_operation = VM_EXEC_RETURN;
+          frame_ctx_p->byte_code_p = byte_code_p;
+          frame_ctx_p->stack_top_p = --stack_top_p;
+          return ECMA_VALUE_UNDEFINED;
+        }
         case VM_OC_AWAIT:
         {
           ecma_value_t promise = ecma_make_object_value (ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE));
@@ -2238,6 +2274,30 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
 
           return result;
+        }
+        case VM_OC_GENERATOR_AWAIT:
+        {
+          ecma_value_t promise = ecma_make_object_value (ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE));
+          ecma_value_t argument = *(--stack_top_p);
+
+          result = ecma_promise_reject_or_resolve (promise, argument, true);
+          ecma_free_value (argument);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          frame_ctx_p->call_operation = VM_EXEC_RETURN;
+          frame_ctx_p->byte_code_p = byte_code_p;
+          frame_ctx_p->stack_top_p = stack_top_p;
+
+          const uintptr_t object_offset = (uintptr_t) offsetof (vm_executable_object_t, frame_ctx);
+
+          ecma_object_t *object_p = (ecma_object_t *) (((uintptr_t) frame_ctx_p) - object_offset);
+          ecma_promise_async_then (result, ecma_make_object_value (object_p));
+          ecma_free_value (result);
+          return ECMA_VALUE_UNDEFINED;
         }
         case VM_OC_EXT_RETURN:
         {

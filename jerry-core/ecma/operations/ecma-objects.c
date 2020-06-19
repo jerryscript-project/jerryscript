@@ -2781,6 +2781,10 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
           {
             return LIT_MAGIC_STRING_GENERATOR_UL;
           }
+          case ECMA_BUILTIN_ID_ASYNC_GENERATOR:
+          {
+            return LIT_MAGIC_STRING_ASYNC_GENERATOR_UL;
+          }
 #endif /* ENABLED (JERRY_ESNEXT) */
 #if ENABLED (JERRY_BUILTIN_JSON)
           case ECMA_BUILTIN_ID_JSON:

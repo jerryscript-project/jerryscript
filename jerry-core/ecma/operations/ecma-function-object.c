@@ -395,23 +395,28 @@ ecma_op_create_dynamic_function (const ecma_value_t *arguments_list_p, /**< argu
 
 #if ENABLED (JERRY_ESNEXT)
     ecma_object_t *new_target_p = JERRY_CONTEXT (current_new_target);
-    bool is_generator_func = parse_opts & ECMA_PARSE_GENERATOR_FUNCTION;
 
-    if (is_generator_func)
+    if (JERRY_UNLIKELY (parse_opts & (ECMA_PARSE_GENERATOR_FUNCTION | ECMA_PARSE_ASYNC_FUNCTION)))
     {
       fallback_proto = ECMA_BUILTIN_ID_GENERATOR;
-    }
 
-    if (new_target_p == NULL)
-    {
-      if (is_generator_func)
+      if (parse_opts & ECMA_PARSE_ASYNC_FUNCTION)
+      {
+        fallback_proto = ECMA_BUILTIN_ID_ASYNC_GENERATOR;
+
+        if (new_target_p == NULL)
+        {
+          new_target_p = ecma_builtin_get (ECMA_BUILTIN_ID_ASYNC_GENERATOR_FUNCTION);
+        }
+      }
+      else if (new_target_p == NULL)
       {
         new_target_p = ecma_builtin_get (ECMA_BUILTIN_ID_GENERATOR_FUNCTION);
       }
-      else
-      {
-        new_target_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION);
-      }
+    }
+    else if (new_target_p == NULL)
+    {
+      new_target_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION);
     }
 
     ecma_object_t *proto = ecma_op_get_prototype_from_constructor (new_target_p, fallback_proto);
@@ -474,6 +479,20 @@ ecma_op_create_generator_function_object (ecma_object_t *scope_p, /**< function'
 {
   return ecma_op_create_function_object (scope_p, bytecode_data_p, ECMA_BUILTIN_ID_GENERATOR);
 } /* ecma_op_create_generator_function_object */
+
+/**
+ * AsyncGeneratorFunction object creation operation.
+ *
+ * See also: ECMA-262 v10, 25.3
+ *
+ * @return pointer to newly created Function object
+ */
+ecma_object_t *
+ecma_op_create_async_generator_function_object (ecma_object_t *scope_p, /**< function's scope */
+                                                const ecma_compiled_code_t *bytecode_data_p) /**< byte-code array */
+{
+  return ecma_op_create_function_object (scope_p, bytecode_data_p, ECMA_BUILTIN_ID_ASYNC_GENERATOR);
+} /* ecma_op_create_async_generator_function_object */
 
 /**
  * Arrow function object creation operation.
@@ -1294,6 +1313,11 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
         message_p = ECMA_ERR_MSG ("Async functions cannot be invoked with 'new'.");
         break;
       }
+      case CBC_FUNCTION_ASYNC_GENERATOR:
+      {
+        message_p = ECMA_ERR_MSG ("Async generator functions cannot be invoked with 'new'.");
+        break;
+      }
       case CBC_FUNCTION_ARROW:
       {
         message_p = ECMA_ERR_MSG ("Arrow functions cannot be invoked with 'new'.");
@@ -1393,6 +1417,14 @@ ecma_op_lazy_instantiate_prototype_object (ecma_object_t *object_p) /**< the fun
     if (CBC_FUNCTION_GET_TYPE (byte_code_p->status_flags) == CBC_FUNCTION_GENERATOR)
     {
       proto_object_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_GENERATOR_PROTOTYPE),
+                                           0,
+                                           ECMA_OBJECT_TYPE_GENERAL);
+      init_constructor = false;
+    }
+
+    if (CBC_FUNCTION_GET_TYPE (byte_code_p->status_flags) == CBC_FUNCTION_ASYNC_GENERATOR)
+    {
+      proto_object_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_ASYNC_GENERATOR_PROTOTYPE),
                                            0,
                                            ECMA_OBJECT_TYPE_GENERAL);
       init_constructor = false;

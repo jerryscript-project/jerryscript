@@ -2335,6 +2335,10 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
       {
         status_flags |= SCANNER_LITERAL_POOL_GENERATOR;
       }
+      if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
+      {
+        status_flags |= SCANNER_LITERAL_POOL_ASYNC;
+      }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
       scanner_push_literal_pool (context_p, &scanner_context, status_flags);

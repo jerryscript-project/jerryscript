@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "ecma-async-generator-object.h"
 #include "ecma-function-object.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
@@ -56,6 +57,15 @@ typedef struct
   ecma_value_t executable_object; /**< executable object */
   ecma_value_t argument; /**< argument for the reaction */
 } ecma_job_promise_async_reaction_t;
+
+/**
+ * Description of the PromiseAsyncGeneratorJob
+ */
+typedef struct
+{
+  ecma_job_queue_item_t header; /**< job queue item header */
+  ecma_value_t executable_object; /**< executable object */
+} ecma_job_promise_async_generator_t;
 
 /**
  * Description of the PromiseResolveThenableJob
@@ -128,6 +138,20 @@ ecma_free_promise_async_reaction_job (ecma_job_promise_async_reaction_t *job_p) 
 
   jmem_heap_free_block (job_p, sizeof (ecma_job_promise_async_reaction_t));
 } /* ecma_free_promise_async_reaction_job */
+
+/**
+ * Free the heap and the member of the PromiseAsyncGeneratorJob.
+ */
+static void
+ecma_free_promise_async_generator_job (ecma_job_promise_async_generator_t *job_p) /**< points to the
+                                                                                   *   PromiseAsyncReactionJob */
+{
+  JERRY_ASSERT (job_p != NULL);
+
+  ecma_free_value (job_p->executable_object);
+
+  jmem_heap_free_block (job_p, sizeof (ecma_job_promise_async_generator_t));
+} /* ecma_free_promise_async_generator_job */
 
 /**
  * Free the heap and the member of the PromiseResolveThenableJob.
@@ -240,12 +264,33 @@ ecma_process_promise_async_reaction_job (ecma_job_promise_async_reaction_t *job_
   }
 
   ecma_value_t result = opfunc_resume_executable_object (executable_object_p, job_p->argument);
-  /* Argument reference is taken by opfunc_resume_executable_object. */
+  /* Argument reference has been taken by opfunc_resume_executable_object. */
   job_p->argument = ECMA_VALUE_UNDEFINED;
-  ecma_free_promise_async_reaction_job (job_p);
 
+  uint16_t expected_bits = (ECMA_EXECUTABLE_OBJECT_COMPLETED | ECMA_ASYNC_GENERATOR_CALLED);
+  if ((executable_object_p->extended_object.u.class_prop.extra_info & expected_bits) == expected_bits)
+  {
+    ecma_async_generator_finalize (executable_object_p, result);
+    result = ECMA_VALUE_UNDEFINED;
+  }
+
+  ecma_free_promise_async_reaction_job (job_p);
   return result;
 } /* ecma_process_promise_async_reaction_job */
+
+/**
+ * The processor for PromiseAsyncGeneratorJob.
+ */
+static void
+ecma_process_promise_async_generator_job (ecma_job_promise_async_generator_t *job_p) /**< the job to be operated */
+{
+  ecma_object_t *object_p = ecma_get_object_from_value (job_p->executable_object);
+
+  ecma_async_generator_run ((vm_executable_object_t *) object_p);
+
+  ecma_free_value (job_p->executable_object);
+  jmem_heap_free_block (job_p, sizeof (ecma_job_promise_async_generator_t));
+} /* ecma_process_promise_async_generator_job */
 
 /**
  * Process the PromiseResolveThenableJob.
@@ -360,6 +405,20 @@ ecma_enqueue_promise_async_reaction_job (ecma_value_t executable_object, /**< ex
 } /* ecma_enqueue_promise_async_reaction_job */
 
 /**
+ * Enqueue a PromiseAsyncGeneratorJob into the job queue.
+ */
+void
+ecma_enqueue_promise_async_generator_job (ecma_value_t executable_object) /**< executable object */
+{
+  ecma_job_promise_async_generator_t *job_p;
+  job_p = (ecma_job_promise_async_generator_t *) jmem_heap_alloc_block (sizeof (ecma_job_promise_async_generator_t));
+  job_p->header.next_and_type = ECMA_JOB_PROMISE_ASYNC_GENERATOR;
+  job_p->executable_object = ecma_copy_value (executable_object);
+
+  ecma_enqueue_job (&job_p->header);
+} /* ecma_enqueue_promise_async_generator_job */
+
+/**
  * Enqueue a PromiseResolveThenableJob into the job queue.
  */
 void
@@ -413,6 +472,11 @@ ecma_process_all_enqueued_jobs (void)
         ret = ecma_process_promise_async_reaction_job ((ecma_job_promise_async_reaction_t *) job_p);
         break;
       }
+      case ECMA_JOB_PROMISE_ASYNC_GENERATOR:
+      {
+        ecma_process_promise_async_generator_job ((ecma_job_promise_async_generator_t *) job_p);
+        break;
+      }
       default:
       {
         JERRY_ASSERT (ecma_job_queue_get_type (job_p) == ECMA_JOB_PROMISE_THENABLE);
@@ -448,6 +512,11 @@ ecma_free_all_enqueued_jobs (void)
       case ECMA_JOB_PROMISE_ASYNC_REACTION_REJECTED:
       {
         ecma_free_promise_async_reaction_job ((ecma_job_promise_async_reaction_t *) job_p);
+        break;
+      }
+      case ECMA_JOB_PROMISE_ASYNC_GENERATOR:
+      {
+        ecma_free_promise_async_generator_job ((ecma_job_promise_async_generator_t *) job_p);
         break;
       }
       default:

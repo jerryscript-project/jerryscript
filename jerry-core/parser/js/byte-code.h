@@ -734,8 +734,12 @@
               VM_OC_YIELD) \
   CBC_OPCODE (CBC_EXT_YIELD_ITERATOR, CBC_NO_FLAG, 0, \
               VM_OC_YIELD) \
+  CBC_OPCODE (CBC_EXT_ASYNC_YIELD, CBC_NO_FLAG, 0, \
+              VM_OC_ASYNC_YIELD) \
   CBC_OPCODE (CBC_EXT_AWAIT, CBC_NO_FLAG, 0, \
               VM_OC_AWAIT) \
+  CBC_OPCODE (CBC_EXT_GENERATOR_AWAIT, CBC_NO_FLAG, 0, \
+              VM_OC_GENERATOR_AWAIT) \
   CBC_OPCODE (CBC_EXT_ASYNC_EXIT, CBC_NO_FLAG, 0, \
               VM_OC_ASYNC_EXIT) \
   CBC_OPCODE (CBC_EXT_RETURN, CBC_NO_FLAG, -1, \
@@ -852,6 +856,7 @@ typedef enum
   /* The following functions cannot be constructed (see CBC_FUNCTION_IS_CONSTRUCTABLE) */
   CBC_FUNCTION_GENERATOR, /**< generator function */
   CBC_FUNCTION_ASYNC, /**< async function */
+  CBC_FUNCTION_ASYNC_GENERATOR, /**< async generator function */
 
   /* The following functions has no prototype (see CBC_FUNCTION_HAS_PROTOTYPE) */
   CBC_FUNCTION_ARROW, /**< arrow function */

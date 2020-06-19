@@ -201,6 +201,12 @@ typedef enum
 #define PARSER_GET_EVAL_FLAG(type) \
   ((type) >> JERRY_LOG2 (ECMA_PARSE_ALLOW_SUPER))
 
+/**
+ * Check non-generator async functions
+ */
+#define PARSER_IS_NORMAL_ASYNC_FUNCTION(status_flags) \
+  (((status_flags) & (PARSER_IS_GENERATOR_FUNCTION | PARSER_IS_ASYNC_FUNCTION)) == PARSER_IS_ASYNC_FUNCTION)
+
 #else /* !ENABLED (JERRY_ESNEXT) */
 
 /**

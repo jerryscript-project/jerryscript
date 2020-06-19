@@ -127,13 +127,13 @@ typedef enum
  * Set an internal property value from pointer.
  */
 #define ECMA_SET_INTERNAL_VALUE_POINTER(field, pointer) \
-  (field) = ((ecma_value_t) pointer)
+  ((field) = ((ecma_value_t) pointer))
 
 /**
  * Set an internal property value from pointer. Pointer can be NULL.
  */
 #define ECMA_SET_INTERNAL_VALUE_ANY_POINTER(field, pointer) \
-  (field) = ((ecma_value_t) pointer)
+  ((field) = ((ecma_value_t) pointer))
 
 /**
  * Convert an internal property value to pointer.
@@ -146,6 +146,12 @@ typedef enum
  */
 #define ECMA_GET_INTERNAL_VALUE_ANY_POINTER(type, field) \
   ((type *) field)
+
+/**
+ * Checks whether an internal property is NULL.
+ */
+#define ECMA_IS_INTERNAL_VALUE_NULL(field) \
+  ((field) == ((ecma_value_t) NULL))
 
 #else /* !ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
 
@@ -172,6 +178,12 @@ typedef enum
  */
 #define ECMA_GET_INTERNAL_VALUE_ANY_POINTER(type, field) \
   ECMA_GET_POINTER (type, field)
+
+/**
+ * Checks whether an internal property is NULL.
+ */
+#define ECMA_IS_INTERNAL_VALUE_NULL(field) \
+  ((field) == ((ecma_value_t) JMEM_CP_NULL))
 
 #endif /* ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY */
 

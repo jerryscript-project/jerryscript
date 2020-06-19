@@ -271,7 +271,9 @@ typedef enum
   VM_OC_SPREAD_ARGUMENTS,        /**< perform function call/construct with spreaded arguments */
   VM_OC_CREATE_GENERATOR,        /**< create a generator object */
   VM_OC_YIELD,                   /**< yield operation */
+  VM_OC_ASYNC_YIELD,             /**< async yield operation */
   VM_OC_AWAIT,                   /**< await operation */
+  VM_OC_GENERATOR_AWAIT,         /**< generator await operation */
   VM_OC_EXT_RETURN,              /**< return which also clears the stack */
   VM_OC_ASYNC_EXIT,              /**< return from async function */
   VM_OC_STRING_CONCAT,           /**< string concatenation */
@@ -340,7 +342,9 @@ typedef enum
   VM_OC_SPREAD_ARGUMENTS = VM_OC_NONE,        /**< perform function call/construct with spreaded arguments */
   VM_OC_CREATE_GENERATOR = VM_OC_NONE,        /**< create a generator object */
   VM_OC_YIELD = VM_OC_NONE,                   /**< yield operation */
+  VM_OC_ASYNC_YIELD = VM_OC_NONE,             /**< async yield operation */
   VM_OC_AWAIT = VM_OC_NONE,                   /**< await operation */
+  VM_OC_GENERATOR_AWAIT = VM_OC_NONE,         /**< generator await operation */
   VM_OC_EXT_RETURN = VM_OC_NONE,              /**< return which also clears the stack */
   VM_OC_ASYNC_EXIT = VM_OC_NONE,              /**< return from async function */
   VM_OC_STRING_CONCAT = VM_OC_NONE,           /**< string concatenation */

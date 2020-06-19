@@ -31,7 +31,7 @@
 /**
   * This object has a custom dispatch function.
   */
- #define BUILTIN_CUSTOM_DISPATCH
+#define BUILTIN_CUSTOM_DISPATCH
 
 /**
  * List of built-in routine identifiers.
@@ -57,14 +57,6 @@ enum
  * \addtogroup generator ECMA Generator.prototype object built-in
  * @{
  */
-
-/**
- * Byte code sequence which returns from the generator.
- */
-static const uint8_t ecma_builtin_generator_prototype_return[2] =
-{
-  CBC_EXT_OPCODE, CBC_EXT_RETURN
-};
 
 /**
  * Helper function for next / return / throw
@@ -120,7 +112,7 @@ ecma_builtin_generator_prototype_object_do (vm_executable_object_t *executable_o
 
     if (resume_mode == ECMA_ITERATOR_RETURN)
     {
-      executable_object_p->frame_ctx.byte_code_p = ecma_builtin_generator_prototype_return;
+      executable_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_return;
     }
     else if (resume_mode == ECMA_ITERATOR_THROW)
     {

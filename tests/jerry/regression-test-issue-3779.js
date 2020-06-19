@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var array = [1, 2, 3];
+var array = [ 1, 2, 3 ];
 var idx_50 = array.lastIndexOf(50, {
-    valueOf: function() {
-        // Trigger removing elements from fast array.
-        array.length = 0;
-    }
-})
+  valueOf: function() {
+    // Trigger removing elements from fast array.
+    array.length = 0;
+  },
+});
 
-assert (idx_50 === -1);
+assert(idx_50 === -1);
 
 var idx_51 = array.lastIndexOf(51, {
-    valueOf: function() {
-        array.push(51)
-        return 10;
-    }
-})
+  valueOf: function() {
+    array.push(51);
+    return 10;
+  },
+});
 
-assert (idx_51 === -1);
+assert(idx_51 === -1);

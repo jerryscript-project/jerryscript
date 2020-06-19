@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function f (arg1, arg2, arg3)
-{
+function f(arg1, arg2, arg3) {
   this.string = arg1;
   this.number = arg2;
   this.boolean = arg3;
@@ -21,8 +20,8 @@ function f (arg1, arg2, arg3)
 
 var this_arg = {};
 
-f.call (this_arg, 's', 1, true, null);
+f.call(this_arg, 's', 1, true, null);
 
-assert (this_arg.string  === 's');
-assert (this_arg.number  === 1);
-assert (this_arg.boolean === true);
+assert(this_arg.string === 's');
+assert(this_arg.number === 1);
+assert(this_arg.boolean === true);

@@ -13,26 +13,26 @@
  * limitations under the License.
  */
 
-var dateObj = new Date("1997-04-10");
+var dateObj = new Date('1997-04-10');
 var dateNaN = new Date(NaN);
 
 // Test with default hint
-var result = dateObj[Symbol.toPrimitive]("default");
-assert(result.toString().substring(0,15) === "Thu Apr 10 1997");
-result = dateNaN[Symbol.toPrimitive]("default");
-assert(dateNaN == "Invalid Date");
+var result = dateObj[Symbol.toPrimitive]('default');
+assert(result.toString().substring(0, 15) === 'Thu Apr 10 1997');
+result = dateNaN[Symbol.toPrimitive]('default');
+assert(dateNaN == 'Invalid Date');
 
 // Test with number hint
-result = dateObj[Symbol.toPrimitive]("number");
-assert(result.toString() === "860630400000");
-result = dateNaN[Symbol.toPrimitive]("number");
+result = dateObj[Symbol.toPrimitive]('number');
+assert(result.toString() === '860630400000');
+result = dateNaN[Symbol.toPrimitive]('number');
 assert(isNaN(result) === true);
 
 // Test with string hint
-result = dateObj[Symbol.toPrimitive]("string");
-assert(result.toString().substring(0,15) === "Thu Apr 10 1997");
-result = dateNaN[Symbol.toPrimitive]("string");
-assert(result == "Invalid Date");
+result = dateObj[Symbol.toPrimitive]('string');
+assert(result.toString().substring(0, 15) === 'Thu Apr 10 1997');
+result = dateNaN[Symbol.toPrimitive]('string');
+assert(result == 'Invalid Date');
 
 // Test with invalid hint
 try {

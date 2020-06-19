@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-((new RegExp("}").constructor)("a", "g").constructor)(undefined).constructor.prototype.toString();
-new Date("2015-07-09T12:13:14.121+01:30").toISOString();
+((new RegExp('}').constructor)('a', 'g').constructor)(undefined).constructor.prototype.toString();
+new Date('2015-07-09T12:13:14.121+01:30').toISOString();
 
 try {
-  RegExp(new RegExp("a", "g")).constructor("").constructor.prototype.compile(RegExp.prototype);
-  assert (false);
+  RegExp(new RegExp('a', 'g')).constructor('').constructor.prototype.compile(RegExp.prototype);
+  assert(false);
 } catch (e) {
   assert(e instanceof TypeError);
 }
 
-new Date("2015-09-17").getUTCFullYear();
+new Date('2015-09-17').getUTCFullYear();

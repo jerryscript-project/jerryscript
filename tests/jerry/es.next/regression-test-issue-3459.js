@@ -15,7 +15,7 @@
 class MyOtherArray {}
 
 class MyNonArray extends Array {
-  static [Symbol.species] () {}
+  static [Symbol.species]() {}
 }
 
-(() => MyNonArray)().prototype.slice.call(new MyNonArray((0) === 1))
+(() => MyNonArray)().prototype.slice.call(new MyNonArray((0) === 1));

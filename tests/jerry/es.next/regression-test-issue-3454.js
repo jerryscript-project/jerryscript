@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-"use strict"
+'use strict';
 try {
-  eval("var $ = function yield() {}");
+  eval('var $ = function yield() {}');
   assert(false);
 } catch (e) {
   assert(e instanceof SyntaxError);

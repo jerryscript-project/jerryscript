@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var v1 = (new Int8Array (149)).subarray (78);
-var v1ToString = v1.toString ();
-v1.set (v1);
-assert (v1ToString === v1.toString ());
+var v1 = (new Int8Array(149)).subarray(78);
+var v1ToString = v1.toString();
+v1.set(v1);
+assert(v1ToString === v1.toString());

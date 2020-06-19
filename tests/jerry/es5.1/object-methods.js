@@ -13,77 +13,71 @@
 // limitations under the License.
 
 try {
-  Object.getOwnPropertyNames("hello");
-  assert (false);
+  Object.getOwnPropertyNames('hello');
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
-try
-{
+try {
   Object.preventExtensions(42);
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
-try
-{
+try {
   Object.isExtensible(42);
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
-try
-{
+try {
   Object.seal(42);
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
-try
-{
+try {
   Object.isSealed(42);
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
-try
-{
+try {
   Object.freeze(42);
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
-try
-{
+try {
   Object.isFrozen(42);
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 try {
-  Object.keys("hello");
-  assert (false);
+  Object.keys('hello');
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 try {
-  Object.getOwnPropertyNames("hello");
-  assert (false);
+  Object.getOwnPropertyNames('hello');
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 try {
-  Object.getOwnPropertyDescriptor("hello", '1');
-  assert (false);
+  Object.getOwnPropertyDescriptor('hello', '1');
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }

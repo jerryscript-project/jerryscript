@@ -13,6 +13,6 @@
 // limitations under the License.
 
 try {
-    RegExp("");
-    eval(encodeURI(isNaN(__proto__)));
+  RegExp('');
+  eval(encodeURI(isNaN(__proto__)));
 } catch (e) { }

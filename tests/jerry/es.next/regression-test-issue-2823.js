@@ -13,4 +13,4 @@
 // limitations under the License.
 
 class myArray extends Array {}
-assert (!(undefined instanceof myArray));
+assert(!(undefined instanceof myArray));

@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-Array.prototype.push("A", "B", 0, 1)
-Array.prototype.sort(JSON.parse)
+Array.prototype.push('A', 'B', 0, 1);
+Array.prototype.sort(JSON.parse);

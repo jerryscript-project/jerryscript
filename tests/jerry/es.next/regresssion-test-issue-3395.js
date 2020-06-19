@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-for (var [] of [[], []])
-    "".split(new RegExp())
+for (var [] of [ [], [] ])
+  ''.split(new RegExp());

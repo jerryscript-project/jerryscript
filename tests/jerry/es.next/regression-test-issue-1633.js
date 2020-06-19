@@ -12,4 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-delete new Uint16Array()[0]
+delete new Uint16Array()[0];

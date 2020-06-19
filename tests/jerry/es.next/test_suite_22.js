@@ -13,12 +13,11 @@
 // limitations under the License.
 
 (function tc_22_02_02__004() {
-  function foo(v, k)
-  {
+  function foo(v, k) {
     return this.num + v + k;
   }
 
-  var a = Float32Array.from([10,20,30], foo, {num:0.5});
+  var a = Float32Array.from([ 10, 20, 30 ], foo, {num: 0.5});
 
   assert(a[0] === 10.5);
   assert(a[1] === 21.5);
@@ -38,62 +37,50 @@
 })();
 
 (function tc_22_02_02__005() {
-  var name = "";
+  var name = '';
 
-  try
-  {
+  try {
     Int16Array.from.call(1);
-  }
-  catch (e)
-  {
+  } catch (e) {
     name = e.name;
   }
 
-  assert(name === "TypeError");
+  assert(name === 'TypeError');
 
-  name = "";
+  name = '';
 
-  try
-  {
+  try {
     Int16Array.from.call(Float32Array);
-  }
-  catch (e)
-  {
+  } catch (e) {
     name = e.name;
   }
 
-  assert(name === "TypeError");
+  assert(name === 'TypeError');
 
-  name = "";
+  name = '';
 
-  try
-  {
-    Int16Array.from.call(Float32Array, [1,2,3], 1);
-  }
-  catch (e)
-  {
+  try {
+    Int16Array.from.call(Float32Array, [ 1, 2, 3 ], 1);
+  } catch (e) {
     name = e.name;
   }
 
-  assert(name === "TypeError");
+  assert(name === 'TypeError');
 
-  name = "";
+  name = '';
 
-  try
-  {
-    Int16Array.from.call(Number, [1,2,3]);
-  }
-  catch (e)
-  {
+  try {
+    Int16Array.from.call(Number, [ 1, 2, 3 ]);
+  } catch (e) {
     name = e.name;
   }
 
-  assert(name === "TypeError");
+  assert(name === 'TypeError');
 })();
 
 (function tc_22_02_02__001() {
   var a = Object.getPrototypeOf(Int8Array);
-  assert(a.name === "TypedArray");
+  assert(a.name === 'TypedArray');
 })();
 
 (function tc_22_02_01__013() {
@@ -107,13 +94,13 @@
 })();
 
 (function tc_22_02_01__021() {
-  var a = new Float32Array([0.1, 0.2, 0.3]);
+  var a = new Float32Array([ 0.1, 0.2, 0.3 ]);
 
   var b = a.hasOwnProperty(1);
   var c = a.hasOwnProperty(3);
 
-  assert (b === true);
-  assert (c === false);
+  assert(b === true);
+  assert(c === false);
 })();
 
 (function tc_22_02_01__002() {
@@ -122,7 +109,7 @@
 })();
 
 (function tc_22_02_01__006() {
-  var a = new Int8Array([1,2,3]);
+  var a = new Int8Array([ 1, 2, 3 ]);
   assert(a instanceof Int8Array);
 })();
 
@@ -165,18 +152,15 @@
 })();
 
 (function tc_22_02_01__020() {
-  var name = "";
+  var name = '';
 
-  try
-  {
+  try {
     new Int16Array(Float32Array.prototype);
-  }
-  catch (e)
-  {
+  } catch (e) {
     name = e.name;
   }
 
-  assert(name === "TypeError");
+  assert(name === 'TypeError');
 })();
 
 (function tc_22_02_01__016() {
@@ -192,7 +176,7 @@
 })();
 
 (function tc_22_02_01__010() {
-  var a = new Float32Array([0.1, -3.4, 65535.9]);
+  var a = new Float32Array([ 0.1, -3.4, 65535.9 ]);
   var b = new Int16Array(a);
   var c = new Uint8Array(a);
   var d = new Int32Array(a);
@@ -209,7 +193,7 @@
 })();
 
 (function tc_22_02_01__008() {
-  var a = new Int8Array([1.5,1000,-9]);
+  var a = new Int8Array([ 1.5, 1000, -9 ]);
   a[2] = a[1] * a[0];
   assert(a[2] === -24);
 })();
@@ -278,7 +262,7 @@
 })();
 
 (function tc_22_02_01__011() {
-  var a = new Uint8ClampedArray([1.5, 2.5, -1.5, 10000]);
+  var a = new Uint8ClampedArray([ 1.5, 2.5, -1.5, 10000 ]);
 
   assert(a[0] === 2);
   assert(a[1] === 2);
@@ -293,7 +277,7 @@
 })();
 
 (function tc_22_02_03__015() {
-  var total = new Float32Array([-1.5, 0, 1.5, 2]).reduce(function(a, b, c) {
+  var total = new Float32Array([ -1.5, 0, 1.5, 2 ]).reduce(function(a, b, c) {
     return a + b + c;
   }, 10);
 
@@ -308,45 +292,45 @@
 (function tc_22_02_03__020() {
   var uint8 = new Uint8Array(4);
 
-  uint8.set([10, "11", 12]);
+  uint8.set([ 10, '11', 12 ]);
   assert(uint8[0] === 10 && uint8[1] === 11 && uint8[2] === 12);
 
-  uint8.set([13, 14.3, 15], 1);
+  uint8.set([ 13, 14.3, 15 ], 1);
   assert(uint8[0] === 10 && uint8[1] === 13 && uint8[2] === 14 && uint8[3] === 15);
 
-  uint8.set([16], NaN);
+  uint8.set([ 16 ], NaN);
   assert(uint8[0] === 16 && uint8[1] === 13 && uint8[2] === 14 && uint8[3] === 15);
 
-  uint8.set([17], "");
+  uint8.set([ 17 ], '');
   assert(uint8[0] === 17 && uint8[1] === 13 && uint8[2] === 14 && uint8[3] === 15);
 
-  uint8.set([18], "0");
+  uint8.set([ 18 ], '0');
   assert(uint8[0] === 18 && uint8[1] === 13 && uint8[2] === 14 && uint8[3] === 15);
 
-  uint8.set([19], false);
+  uint8.set([ 19 ], false);
   assert(uint8[0] === 19 && uint8[1] === 13 && uint8[2] === 14 && uint8[3] === 15);
 
-  uint8.set([20], 0.2);
+  uint8.set([ 20 ], 0.2);
   assert(uint8[0] === 20 && uint8[1] === 13 && uint8[2] === 14 && uint8[3] === 15);
 
-  uint8.set([21], 0.9);
+  uint8.set([ 21 ], 0.9);
   assert(uint8[0] === 21 && uint8[1] === 13 && uint8[2] === 14 && uint8[3] === 15);
 
-  uint8.set([22], null);
+  uint8.set([ 22 ], null);
   assert(uint8[0] === 22 && uint8[1] === 13 && uint8[2] === 14 && uint8[3] === 15);
 
-  uint8.set([23], {});
+  uint8.set([ 23 ], {});
   assert(uint8[0] === 23 && uint8[1] === 13 && uint8[2] === 14 && uint8[3] === 15);
 
-  uint8.set([24], []);
+  uint8.set([ 24 ], []);
   assert(uint8[0] === 24 && uint8[1] === 13 && uint8[2] === 14 && uint8[3] === 15);
 
-  uint8.set([25], true);
+  uint8.set([ 25 ], true);
   assert(uint8[0] === 24 && uint8[1] === 25 && uint8[2] === 14 && uint8[3] === 15);
 })();
 
 (function tc_22_02_03__011() {
-  var a = new Float32Array([1.25, 2.5, 3.75]);
+  var a = new Float32Array([ 1.25, 2.5, 3.75 ]);
 
   var b = a.map(function(num) {
     return num * 2;
@@ -366,11 +350,10 @@
 })();
 
 (function tc_22_02_03__012() {
-  var a = new Float32Array([1.1, 2.2, 3.3, 4.4]);
+  var a = new Float32Array([ 1.1, 2.2, 3.3, 4.4 ]);
   var count = 0;
 
-  function f_every(num)
-  {
+  function f_every(num) {
     count++;
     return num < 3;
   }
@@ -382,22 +365,18 @@
 })();
 
 (function tc_22_02_03__007() {
-  var a = new Uint8Array([10, 20, 30, 40]);
+  var a = new Uint8Array([ 10, 20, 30, 40 ]);
   var o = {
-    "small":0,
-    "large":0
+    'small': 0,
+    'large': 0,
   };
-  var func = function(v, k)
-  {
-    if (v < 25)
-    {
+  var func = function(v, k) {
+    if (v < 25) {
       this.small = this.small + k;
-    }
-    else
-    {
+    } else {
       this.large = this.large + k;
     }
-  }
+  };
 
   var ret = a.forEach(func, o);
 
@@ -408,29 +387,26 @@
 
 (function tc_22_02_03__021() {
   var float64 = new Float64Array(4);
-  float64.set([10.1, "11.2", 12.3]);
+  float64.set([ 10.1, '11.2', 12.3 ]);
   assert(float64[0] === 10.1 && float64[1] === 11.2 && float64[2] === 12.3);
 
-  float64.set([13.1, 14.2, 15.3], 1);
+  float64.set([ 13.1, 14.2, 15.3 ], 1);
   assert(float64[0] === 10.1 && float64[1] === 13.1 && float64[2] === 14.2 && float64[3] === 15.3);
 
-  try
-  {
+  try {
 
-    float64.set([17.1, 18.2, 19.3], 2);
+    float64.set([ 17.1, 18.2, 19.3 ], 2);
     assert(false);
-  } catch (e)
-  {
-    assert(e instanceof RangeError)
+  } catch (e) {
+    assert(e instanceof RangeError);
   }
 })();
 
 (function tc_22_02_03__009() {
-  var a = new Uint8Array([1, 2, 3, 4]);
+  var a = new Uint8Array([ 1, 2, 3, 4 ]);
   var count = 0;
 
-  function f_every(num)
-  {
+  function f_every(num) {
     count++;
     return num < 3;
   }
@@ -442,22 +418,18 @@
 })();
 
 (function tc_22_02_03__014() {
-  var a = new Float32Array([-1.1, 0.1, 2.5, 3.0]);
+  var a = new Float32Array([ -1.1, 0.1, 2.5, 3.0 ]);
   var o = {
-    "small":0,
-    "large":0
+    'small': 0,
+    'large': 0,
   };
-  var func = function(v, k)
-  {
-    if (v < 2)
-    {
+  var func = function(v, k) {
+    if (v < 2) {
       this.small = this.small + k;
-    }
-    else
-    {
+    } else {
       this.large = this.large + k;
     }
-  }
+  };
 
   var ret = a.forEach(func, o);
 
@@ -472,11 +444,10 @@
 })();
 
 (function tc_22_02_03__010() {
-  var a = new Uint8Array([1, 2, 3, 4]);
+  var a = new Uint8Array([ 1, 2, 3, 4 ]);
   var count = 0;
 
-  function f_some(num)
-  {
+  function f_some(num) {
     count++;
     return num > 3;
   }
@@ -488,7 +459,7 @@
 })();
 
 (function tc_22_02_03__006() {
-  var a = new Int8Array([1,2,3,4,5]);
+  var a = new Int8Array([ 1, 2, 3, 4, 5 ]);
   var b = new Int8Array(a.buffer, 2, 3);
 
   b[0] = 5.6;
@@ -496,8 +467,8 @@
 })();
 
 (function tc_22_02_03__018() {
-  var a = new Float32Array([-1.5, 0, 1.5]);
-  var b = a.reverse()
+  var a = new Float32Array([ -1.5, 0, 1.5 ]);
+  var b = a.reverse();
 
   assert(a === b);
   assert(a[0] === 1.5);
@@ -506,7 +477,7 @@
 })();
 
 (function tc_22_02_03__008() {
-  var a = new Uint8Array([1, 2, 3]);
+  var a = new Uint8Array([ 1, 2, 3 ]);
 
   var b = a.map(function(num) {
     return num * 2;
@@ -521,19 +492,18 @@
 })();
 
 (function tc_22_02_03__016() {
-  var total = new Float32Array([-1.5, 0, 1.5, 2]).reduceRight(function(a, b) {
+  var total = new Float32Array([ -1.5, 0, 1.5, 2 ]).reduceRight(function(a, b) {
     return a - b;
   });
 
-  assert (total === 2)
+  assert(total === 2);
 })();
 
 (function tc_22_02_03__013() {
-  var a = new Float32Array([1.1, 2.2, 3.3, 4.4]);
+  var a = new Float32Array([ 1.1, 2.2, 3.3, 4.4 ]);
   var count = 0;
 
-  function f_some(num)
-  {
+  function f_some(num) {
     count++;
     return num > 3;
   }
@@ -545,7 +515,7 @@
 })();
 
 (function tc_22_02_03__005() {
-  var a = new Int8Array([1,2,3,4,5]);
+  var a = new Int8Array([ 1, 2, 3, 4, 5 ]);
   var b = new Int8Array(a.buffer, 2, 3);
 
   assert(a.buffer === b.buffer);
@@ -555,8 +525,8 @@
 })();
 
 (function tc_22_02_03__017() {
-  var a = new Float32Array([-1.5, 0, 1.5, 2]);
-  var b = a.filter(function(x){
+  var a = new Float32Array([ -1.5, 0, 1.5, 2 ]);
+  var b = a.filter(function(x) {
     return x > 0;
   });
 
@@ -572,62 +542,49 @@
 (function tc_22_02_03__019() {
   var uint8 = new Uint8Array(4);
 
+  assert(uint8.set.length === 1);
 
-  assert(uint8.set.length === 1)
-
-  try
-  {
-    uint8.set([1], -1);
+  try {
+    uint8.set([ 1 ], -1);
     assert(false);
-  } catch (e)
-  {
+  } catch (e) {
     assert(e instanceof RangeError);
   }
 
-  try
-  {
-    uint8.set([1], - (Math.pow(2, 32) + 1));
+  try {
+    uint8.set([ 1 ], - (Math.pow(2, 32) + 1));
     assert(false);
-  } catch (e)
-  {
+  } catch (e) {
     assert(e instanceof RangeError);
   }
 
-  try
-  {
-    uint8.set([1], -Infinity);
+  try {
+    uint8.set([ 1 ], -Infinity);
     assert(false);
-  } catch (e)
-  {
+  } catch (e) {
     assert(e instanceof RangeError);
   }
 
-  try
-  {
-    uint8.set([1], Infinity);
+  try {
+    uint8.set([ 1 ], Infinity);
     assert(false);
-  } catch (e)
-  {
+  } catch (e) {
     assert(e instanceof RangeError);
   }
 
-  try
-  {
-    uint8.set([1], (Math.pow(2, 32) + 1));
+  try {
+    uint8.set([ 1 ], (Math.pow(2, 32) + 1));
     assert(false);
-  } catch (e)
-  {
+  } catch (e) {
     assert(e instanceof RangeError);
   }
 
-  try
-  {
+  try {
 
-    uint8.set([17, 18, 19], 2);
+    uint8.set([ 17, 18, 19 ], 2);
     assert(false);
-  } catch (e)
-  {
-    assert(e instanceof RangeError)
+  } catch (e) {
+    assert(e instanceof RangeError);
   }
 })();
 

@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var B = class {}
-eval = class extends B {}
+var B = class {};
+eval = class extends B {};
 
 try {
   eval();
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }

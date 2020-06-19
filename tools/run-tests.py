@@ -182,6 +182,8 @@ def get_arguments():
                         help='Run doxygen')
     parser.add_argument('--check-pylint', action='store_true',
                         help='Run pylint')
+    parser.add_argument('--check-eslint', action='store_true',
+                        help='Run pylint')
     parser.add_argument('--check-vera', action='store_true',
                         help='Run vera check')
     parser.add_argument('--check-license', action='store_true',
@@ -476,6 +478,7 @@ def main(options):
         Check(options.check_cppcheck, run_check, [settings.CPPCHECK_SCRIPT]),
         Check(options.check_doxygen, run_check, [settings.DOXYGEN_SCRIPT]),
         Check(options.check_pylint, run_check, [settings.PYLINT_SCRIPT]),
+        Check(options.check_eslint, run_check, [settings.ESLINT_SCRIPT]),
         Check(options.check_vera, run_check, [settings.VERA_SCRIPT]),
         Check(options.check_license, run_check, [settings.LICENSE_SCRIPT]),
         Check(options.check_magic_strings, run_check, [settings.MAGIC_STRINGS_SCRIPT]),

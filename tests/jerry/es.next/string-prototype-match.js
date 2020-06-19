@@ -13,14 +13,14 @@
 // limitations under the License.
 
 class NewRegExp extends RegExp {
-    [Symbol.match](str) {
-        var result = RegExp.prototype[Symbol.match].call(this, str);
-        var successful = 0;
-        if (result) {
-            successful = 1;
-        }
-        return successful;
+  [Symbol.match](str) {
+    var result = RegExp.prototype[Symbol.match].call(this, str);
+    var successful = 0;
+    if (result) {
+      successful = 1;
     }
+    return successful;
+  }
 }
 
 var str = 'This is a random string.';
@@ -35,7 +35,7 @@ try {
 }
 
 var regexp2 = /[A-Z]/g;
-regexp2[Symbol.match] = "foo";
+regexp2[Symbol.match] = 'foo';
 
 try {
   str.match(regexp2);
@@ -44,16 +44,18 @@ try {
   assert(e instanceof TypeError);
 }
 
-Object.defineProperty (regexp2, Symbol.match, { get () { throw 5 }});
+Object.defineProperty(regexp2, Symbol.match, { get() {
+  throw 5;
+}});
 
 try {
   str.match(regexp2);
   assert(false);
 } catch (e) {
-  assert(e === 5); 
+  assert(e === 5);
 }
 
-var wrong_sytnax = "str.match(/[A-5]/g";
+var wrong_sytnax = 'str.match(/[A-5]/g';
 
 try {
   eval(wrong_sytnax);
@@ -71,7 +73,7 @@ try {
   assert(e instanceof TypeError);
 }
 
-var regexp3 = "foo";
+var regexp3 = 'foo';
 RegExp.prototype[Symbol.match] = 3;
 
 try {

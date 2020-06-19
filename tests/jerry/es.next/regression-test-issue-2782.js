@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var arrayLikeObj = { "0" : 0, "1" : 1, "2" : 2, "length": 3 }
+var arrayLikeObj = { '0': 0, '1': 1, '2': 2, 'length': 3 };
 
-iterator = Array.prototype.keys.call (arrayLikeObj);
+iterator = Array.prototype.keys.call(arrayLikeObj);
 
 for (var i = 0; i < arrayLikeObj.length; i++) {
-  var next = iterator.next ();
-  assert (next.value === i && next.done === false);
+  var next = iterator.next();
+  assert(next.value === i && next.done === false);
 }
 
-next = iterator.next ();
-assert (next.done === true);
+next = iterator.next();
+assert(next.done === true);

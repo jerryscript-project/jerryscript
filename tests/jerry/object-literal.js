@@ -13,83 +13,85 @@
 // limitations under the License.
 
 var person = {
-    firstName:"John",
-    lastName:"Doe",
-    age:50,
-    eyeColor:"blue",
-    "gender":"male",
-    0:0
+  firstName: 'John',
+  lastName: 'Doe',
+  age: 50,
+  eyeColor: 'blue',
+  'gender': 'male',
+  0: 0,
 };
 
-assert (person.firstName === "John");
-assert (person["firstName"] === "John");
-assert (person.lastName === "Doe");
-assert (person["lastName"] === "Doe");
-assert (person.age === 50);
-assert (person["age"] === 50);
-assert (person.eyeColor === "blue");
-assert (person["eyeColor"] === "blue");
-assert (person.gender === "male");
-assert (person["gender"] === "male");
-assert (person["0"] === 0);
+assert(person.firstName === 'John');
+assert(person['firstName'] === 'John');
+assert(person.lastName === 'Doe');
+assert(person['lastName'] === 'Doe');
+assert(person.age === 50);
+assert(person['age'] === 50);
+assert(person.eyeColor === 'blue');
+assert(person['eyeColor'] === 'blue');
+assert(person.gender === 'male');
+assert(person['gender'] === 'male');
+assert(person['0'] === 0);
 
 var x = person;
 x.age = 40;
-assert (x.age === 40);
-assert (person.age === 40);
+assert(x.age === 40);
+assert(person.age === 40);
 
 var john = new Object();
-john.firstName = "John";
-john.lastName = "Doe";
+john.firstName = 'John';
+john.lastName = 'Doe';
 john.age = 40;
-john.eyeColor = "blue";
+john.eyeColor = 'blue';
 
-assert (person.firstName === john.firstName);
-assert (person.lastName === john.lastName);
-assert (person.age === john.age);
-assert (person.eyeColor === john.eyeColor);
+assert(person.firstName === john.firstName);
+assert(person.lastName === john.lastName);
+assert(person.age === john.age);
+assert(person.eyeColor === john.eyeColor);
 
-var a, b; 
-b = 'property1'; 
-a = { 
-  'property1' : 'value1', 
-  get property2 () { return 1; }, 
-  set property2 (a) {
+var a, b;
+b = 'property1';
+a = {
+  'property1': 'value1',
+  get property2() {
+    return 1;
+  },
+  set property2(a) {
     if (true)
       this.property3 = a * 10;
     else
       this.property3 = a;
   },
-  set property3 (b) { this.property1 = b; }
-}; 
-assert (a.property1 === 'value1'); 
-assert (a.property2 === 1); 
-a.property3 = 'value2'; 
-assert (a.property1 === 'value2'); 
-a.property2 = 2.5; 
-assert (a.property1 === 25); 
-b = delete a[b]; 
-assert (b === true); 
-assert (a.property1 === undefined); 
+  set property3(b) {
+    this.property1 = b;
+  },
+};
+assert(a.property1 === 'value1');
+assert(a.property2 === 1);
+a.property3 = 'value2';
+assert(a.property1 === 'value2');
+a.property2 = 2.5;
+assert(a.property1 === 25);
+b = delete a[b];
+assert(b === true);
+assert(a.property1 === undefined);
 
 flow = '';
 a = {
-  get q ()
-  {
+  get q() {
     flow += 'get: ' + (typeof q);
 
     return 0;
   },
-  set q (v)
-  {
+  set q(v) {
     flow += ', set: ' + (typeof q);
-  }
+  },
 };
 
 a.q;
 a.q = 1;
 
-assert (flow == 'get: undefined, set: undefined');
+assert(flow == 'get: undefined, set: undefined');
 
 var data = {
   '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8,
@@ -221,7 +223,6 @@ var data = {
   '1009': 1009, '1010': 1010, '1011': 1011, '1012': 1012, '1013': 1013, '1014': 1014, '1015': 1015, '1016': 1016,
   '1017': 1017, '1018': 1018, '1019': 1019, '1020': 1020, '1021': 1021, '1022': 1022, '1023': 1023, '1024': 1024 };
 
-for (i = 1; i <= 1024; i++)
-{
-  assert (data[i] === i);
+for (i = 1; i <= 1024; i++) {
+  assert(data[i] === i);
 }

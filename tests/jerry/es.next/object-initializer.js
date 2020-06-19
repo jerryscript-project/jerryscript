@@ -19,10 +19,10 @@ default:
     func() {
       return 234 + this.value;
     },
-    ["a" + "b"]() {
+    ['a' + 'b']() {
       return 456 - this.value;
-    }
-  }
+    },
+  };
 }
 
 assert(o.func() === 244);
@@ -35,8 +35,8 @@ default:
   o = {
     ab,
     cd: 8,
-    cd
-  }
+    cd,
+  };
 }
 
 assert(o.ab === 5);
@@ -61,7 +61,7 @@ default:
   // These forms are valid.
   ({ true: true });
   ({ 13: 13 });
-  ({ "x": "x" });
+  ({ 'x': 'x' });
 
   var get = 8;
   var set = 12;
@@ -71,7 +71,11 @@ default:
   assert(o.set == 12);
 }
 
-var obj = { get() { return 5; }, set() { return 6; } };
+var obj = { get() {
+  return 5;
+}, set() {
+  return 6;
+} };
 
-assert (obj.get() === 5);
-assert (obj.set() === 6);
+assert(obj.get() === 5);
+assert(obj.set() === 6);

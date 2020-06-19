@@ -13,8 +13,8 @@
 // limitations under the License.
 
 try {
-  eval(".5.");
+  eval('.5.');
   assert(false);
-} catch(e) {
+} catch (e) {
   assert(e instanceof SyntaxError);
 }

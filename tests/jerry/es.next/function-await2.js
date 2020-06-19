@@ -12,135 +12,140 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var successCount = 0
-var p, r
+var successCount = 0;
+var p, r;
 
 // Test 1
 
-async function f1(p)
-{
-  assert(await p === 1)
-  return 2
+async function f1(p) {
+  assert(await p === 1);
+  return 2;
 }
 
-p = new Promise(function(resolve, reject) { r = resolve })
+p = new Promise(function(resolve, reject) {
+  r = resolve;
+});
 
-f1(p).then(function (v) {
-  assert(v === 2)
-  successCount++
-})
+f1(p).then(function(v) {
+  assert(v === 2);
+  successCount++;
+});
 
-r(1)
+r(1);
 
 // Test 2
 
-var f2 = async(p) =>
-{
-  assert(await p === 3)
-}
+var f2 = async (p) => {
+  assert(await p === 3);
+};
 
-p = new Promise(function(resolve, reject) { r = resolve })
+p = new Promise(function(resolve, reject) {
+  r = resolve;
+});
 
-f2(p).then(function (v) {
-  assert(v === undefined)
-  successCount++
-})
+f2(p).then(function(v) {
+  assert(v === undefined);
+  successCount++;
+});
 
-r(3)
+r(3);
 
 // Test 3
 
-var thenableCounter = 0
+var thenableCounter = 0;
 
-async function f3()
-{
-  return new Promise(function(resolve) { resolve(f3) })
+async function f3() {
+  return new Promise(function(resolve) {
+    resolve(f3);
+  });
 }
 
 f3.then = function(resolve) {
   // Repeating resolve with 'then'
   if (++thenableCounter < 5) {
-    resolve(f3)
+    resolve(f3);
   } else {
-    successCount++
+    successCount++;
   }
-}
+};
 
-f3()
+f3();
 
 // Test 4
 
-async function f4(p)
-{
+async function f4(p) {
   try {
-    throw 4
+    throw 4;
   } catch (e) {
-    throw 5
+    throw 5;
   }
 }
 
-p = new Promise(function(resolve, reject) { r = resolve })
+p = new Promise(function(resolve, reject) {
+  r = resolve;
+});
 
-f4(p).then(undefined, function (v) {
-  assert(v === 5)
-  successCount++
-})
+f4(p).then(undefined, function(v) {
+  assert(v === 5);
+  successCount++;
+});
 
-r(1)
+r(1);
 
 // Test 5
 
-async function f5(p)
-{
+async function f5(p) {
   try {
-    return 6
+    return 6;
   } finally {
-    throw 7
+    throw 7;
   }
 }
 
-p = new Promise(function(resolve, reject) { r = resolve })
+p = new Promise(function(resolve, reject) {
+  r = resolve;
+});
 
-f5(p).then(undefined, function (v) {
-  assert(v === 7)
-  successCount++
-})
+f5(p).then(undefined, function(v) {
+  assert(v === 7);
+  successCount++;
+});
 
-r(1)
+r(1);
 
 // Test 6
 
-p = new Promise(function(resolve, reject) { r = resolve })
+p = new Promise(function(resolve, reject) {
+  r = resolve;
+});
 
-async function f6(p)
-{
-  await p
-  return self
+async function f6(p) {
+  await p;
+  return self;
 }
 
-var self = f6()
+var self = f6();
 
-self.then(undefined, function (v) {
-  assert(v instanceof TypeError)
-  successCount++
-})
+self.then(undefined, function(v) {
+  assert(v instanceof TypeError);
+  successCount++;
+});
 
-r(1)
+r(1);
 
 // Test 7
 
-async function f7(p)
-{
-  var x = {}
-  assert((await x) === x)
+async function f7(p) {
+  var x = {};
+  assert((await x) === x);
 
-  x = 3.14
-  assert((await x) === x)
+  x = 3.14;
+  assert((await x) === x);
 
-  x = "Test string"
-  assert((await x) === x)
+  x = 'Test string';
+  assert((await x) === x);
 
-  successCount++
+  successCount++;
 }
 f7();
 
@@ -148,19 +153,21 @@ f7();
 
 async function f8() {
   var p = new Promise(function() {});
-  Object.defineProperty(p, 'constructor', { get() { throw "Error!" } });
+  Object.defineProperty(p, 'constructor', { get() {
+    throw 'Error!';
+  } });
 
-  await p
+  await p;
 }
 
-f8().then(undefined, function (v) {
-  assert(v === "Error!")
-  successCount++
-})
+f8().then(undefined, function(v) {
+  assert(v === 'Error!');
+  successCount++;
+});
 
 // END
 
 function __checkAsync() {
-  assert(successCount === 8)
-  assert(thenableCounter === 5)
+  assert(successCount === 8);
+  assert(thenableCounter === 5);
 }

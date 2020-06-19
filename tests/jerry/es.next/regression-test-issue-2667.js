@@ -13,8 +13,8 @@
 // limitations under the License.
 
 try {
-  eval ("new Strin = class extends f ()() { constructor () { var C = class extends$B {}");
-  assert (false);
+  eval('new Strin = class extends f ()() { constructor () { var C = class extends$B {}');
+  assert(false);
 } catch (e) {
-  assert (e instanceof SyntaxError);
+  assert(e instanceof SyntaxError);
 }

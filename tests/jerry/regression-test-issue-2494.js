@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-Object.defineProperty(Object.prototype, "", {});
-assert(JSON.stringify() === undefined)
+Object.defineProperty(Object.prototype, '', {});
+assert(JSON.stringify() === undefined);

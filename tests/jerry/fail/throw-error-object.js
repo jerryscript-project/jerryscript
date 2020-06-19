@@ -12,4 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-throw new SyntaxError("error");
+throw new SyntaxError('error');

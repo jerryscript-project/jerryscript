@@ -13,41 +13,41 @@
 // limitations under the License.
 
 (function tc_25_04_05__004() {
-  var a = new Promise(function(f, r){
-    f("a");
+  var a = new Promise(function(f, r) {
+    f('a');
   });
 
-  var b = new Promise(function(f, r){
+  var b = new Promise(function(f, r) {
     f(a);
-  })
+  });
 
   b.then(function(x) {
-    assert (x === "a");
-  })
+    assert(x === 'a');
+  });
 })();
 
 (function tc_25_04_05__002() {
-  var obj = {name:""};
+  var obj = {name: ''};
 
-  var a = new Promise(function(f, r){
-    obj.name = obj.name + "a";
+  var a = new Promise(function(f, r) {
+    obj.name = obj.name + 'a';
     f(obj);
   });
 
   a.then(function(x) {
-    x.name = x.name + "b";
+    x.name = x.name + 'b';
     return x;
   }).then(null, function(x) {
-    x.name = x.name + "c";
+    x.name = x.name + 'c';
     return x;
   }).then(function(x) {
-    x.name = x.name + "d";
-    assert (obj.name === "aebd");
+    x.name = x.name + 'd';
+    assert(obj.name === 'aebd');
   });
 
-  obj.name = obj.name + "e";
+  obj.name = obj.name + 'e';
 
-  assert (obj.name === "ae")
+  assert(obj.name === 'ae');
 })();
 
 (function tc_25_04_05__006() {
@@ -63,40 +63,39 @@
 })();
 
 (function tc_25_04_05__001() {
-  assert (Promise.length === 1);
+  assert(Promise.length === 1);
 })();
 
 (function tc_25_04_05__003() {
-  var a = new Promise(function(f, r){
+  var a = new Promise(function(f, r) {
     r(0);
   });
 
   a
-  .then(function f1(x) {
-    return x + 1;
-  }, function r1(x){
-    return x + 10;
-  })
-  .then(function f2(x) {
-    throw x + 100
-  })
-  .then(function f3(x) {
-    return x + 1000
-  }, function r3(x) {
-    return x + 10000
-  })
-  .then(function(x) {
-    assert (x === 10110);
-  })
+    .then(function f1(x) {
+      return x + 1;
+    }, function r1(x) {
+      return x + 10;
+    })
+    .then(function f2(x) {
+      throw x + 100;
+    })
+    .then(function f3(x) {
+      return x + 1000;
+    }, function r3(x) {
+      return x + 10000;
+    })
+    .then(function(x) {
+      assert(x === 10110);
+    });
 })();
 
 (function tc_25_04_05__005() {
-  Promise.reject("abc").catch(function(x)
-  {
-    assert (x === "abc");
-    return "def";
+  Promise.reject('abc').catch(function(x) {
+    assert(x === 'abc');
+    return 'def';
   }).then(function(x) {
-    assert (x === "def");
+    assert(x === 'def');
   });
 })();
 
@@ -105,68 +104,55 @@
   var b = Promise.resolve('b');
   var c = Promise.reject('c');
 
-  Promise.all([a, b, 1]).then(function(x)
-  {
-    assert (x[0] === 'a');
-    assert (x[1] === 'b');
-    assert (x[2] === 1);
-  }, function(x)
-  {
-    assert (false);
+  Promise.all([ a, b, 1 ]).then(function(x) {
+    assert(x[0] === 'a');
+    assert(x[1] === 'b');
+    assert(x[2] === 1);
+  }, function(x) {
+    assert(false);
   });
 
-  Promise.all([a, b, c, 1]).then(function(x)
-  {
-    assert (false);
-  }, function(x)
-  {
-    assert (x === 'c');
+  Promise.all([ a, b, c, 1 ]).then(function(x) {
+    assert(false);
+  }, function(x) {
+    assert(x === 'c');
   });
 
-  Promise.all([]).then(function(x)
-  {
-    assert (x.length === 0);
-  }, function(x)
-  {
-    assert (false);
+  Promise.all([]).then(function(x) {
+    assert(x.length === 0);
+  }, function(x) {
+    assert(false);
   });
 
-  Promise.all(a).then(function(x)
-  {
-    assert (false);
-  }, function(x)
-  {
-    assert(x.name === "TypeError");
+  Promise.all(a).then(function(x) {
+    assert(false);
+  }, function(x) {
+    assert(x.name === 'TypeError');
   });
 })();
 
 (function tc_25_04_04__001() {
-  Promise.resolve("abc").then(function(x)
-  {
-    assert (x === "abc");
+  Promise.resolve('abc').then(function(x) {
+    assert(x === 'abc');
   });
 })();
 
 (function tc_25_04_04__003() {
-  Promise.reject("abc").then(function(x)
-  {
-    assert (false);
-  }, function(x)
-  {
-    assert (x === "abc");
+  Promise.reject('abc').then(function(x) {
+    assert(false);
+  }, function(x) {
+    assert(x === 'abc');
   });
 })();
 
 (function tc_25_04_04__002() {
-  var a = new Promise(function(f)
-  {
-    var o = {name: "abc"};
+  var a = new Promise(function(f) {
+    var o = {name: 'abc'};
     f(o);
-  })
+  });
 
-  Promise.resolve(a).then(function(x)
-  {
-    assert (x.name === "abc");
+  Promise.resolve(a).then(function(x) {
+    assert(x.name === 'abc');
   });
 })();
 
@@ -174,75 +160,58 @@
   var a = Promise.resolve('a');
   var b = Promise.reject('b');
 
-  Promise.race([a, b]).then(function(x)
-  {
-    assert (x === 'a');
-  }, function(x)
-  {
-    assert (false);
+  Promise.race([ a, b ]).then(function(x) {
+    assert(x === 'a');
+  }, function(x) {
+    assert(false);
   });
 
-  Promise.race([b, a]).then(function(x)
-  {
-    assert (false);
-  }, function(x)
-  {
-    assert (x === 'b');
+  Promise.race([ b, a ]).then(function(x) {
+    assert(false);
+  }, function(x) {
+    assert(x === 'b');
   });
 
-  Promise.race([ ,b, a]).then(function(x)
-  {
-    assert (x === undefined);
-  }, function(x)
-  {
-    assert (false);
+  Promise.race([ , b, a ]).then(function(x) {
+    assert(x === undefined);
+  }, function(x) {
+    assert(false);
   });
 
-  Promise.race(a).then(function(x)
-  {
-    assert (false);
-  }, function(x)
-  {
-    assert(x.name === "TypeError");
+  Promise.race(a).then(function(x) {
+    assert(false);
+  }, function(x) {
+    assert(x.name === 'TypeError');
   });
 })();
 
 (function tc_25_04_03__002() {
-  var name1 = "";
-  var name2 = "";
-  var name3 = "";
+  var name1 = '';
+  var name2 = '';
+  var name3 = '';
   function foo() {};
 
-  try
-  {
+  try {
     new Promise();
-  }
-  catch (e)
-  {
+  } catch (e) {
     name1 = e.name;
   }
 
-  try
-  {
+  try {
     Promise(foo);
-  }
-  catch (e)
-  {
+  } catch (e) {
     name2 = e.name;
   }
 
-  try
-  {
-    new Promise("string");
-  }
-  catch (e)
-  {
+  try {
+    new Promise('string');
+  } catch (e) {
     name3 = e.name;
   }
 
-  assert (name1 === "TypeError");
-  assert (name2 === "TypeError");
-  assert (name3 === "TypeError");
+  assert(name1 === 'TypeError');
+  assert(name2 === 'TypeError');
+  assert(name3 === 'TypeError');
 })();
 
 (function tc_25_04_03__001() {
@@ -250,5 +219,5 @@
 
   var a = new Promise(foo);
 
-  assert (a instanceof Promise);
+  assert(a instanceof Promise);
 })();

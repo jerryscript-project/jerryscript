@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var methods = ['entries', 'keys', 'values', Symbol.iterator];
+var methods = [ 'entries', 'keys', 'values', Symbol.iterator ];
 
-methods.forEach(function (method) {
+methods.forEach(function(method) {
   try {
     Set.prototype[method].call(5);
     assert(false);
@@ -23,7 +23,7 @@ methods.forEach(function (method) {
   }
 });
 
-methods.forEach(function (method) {
+methods.forEach(function(method) {
   try {
     Set.prototype[method].call({});
     assert(false);
@@ -32,13 +32,13 @@ methods.forEach(function (method) {
   }
 });
 
-var s = new Set([0, 1, 2, 3, 4, 5, 6]);
+var s = new Set([ 0, 1, 2, 3, 4, 5, 6 ]);
 
 methods.forEach(function(method) {
   assert(s[method]().toString() === '[object Set Iterator]');
 });
 
-methods.forEach(function (method) {
+methods.forEach(function(method) {
   try {
     s[method].next.call(5);
     assert(false);
@@ -47,7 +47,7 @@ methods.forEach(function (method) {
   }
 });
 
-methods.forEach(function (method) {
+methods.forEach(function(method) {
   try {
     s[method].next.call({});
     assert(false);
@@ -59,7 +59,7 @@ methods.forEach(function (method) {
 var setFromSet = new Set(s);
 assert(setFromSet.size === 7);
 
-var iterators = [s.keys(), s.values(), s[Symbol.iterator]()];
+var iterators = [ s.keys(), s.values(), s[Symbol.iterator]() ];
 var entryIterator = s.entries();
 var elementCount = s.size;
 
@@ -77,17 +77,16 @@ for (var i = 0; i < elementCount; i++) {
 }
 
 iterators.forEach(function(element) {
-    var next = element.next();
-    assert(next.done === true);
-    assert(next.value === undefined);
-  });
+  var next = element.next();
+  assert(next.done === true);
+  assert(next.value === undefined);
+});
 
 var next = entryIterator.next();
 assert(next.done === true);
 assert(next.value === undefined);
 
-
-iterators = [s.keys(), s.values(), s[Symbol.iterator]()];
+iterators = [ s.keys(), s.values(), s[Symbol.iterator]() ];
 entryIterator = s.entries();
 var elementCount = s.size;
 
@@ -107,13 +106,13 @@ for (var i = 0; i < elementCount; i++) {
 
 assert(s.size === 0);
 
-s = new Set ([0, 1]);
-var expected = [0, 1, 2, 4, 5, 6, 3];
+s = new Set([ 0, 1 ]);
+var expected = [ 0, 1, 2, 4, 5, 6, 3 ];
 var loopCount = 0;
 
 s.forEach(function(element) {
   if (loopCount === 0) {
-    for (var i = 0; i < expected.length ; i++) {
+    for (var i = 0; i < expected.length; i++) {
       s.add(i);
     }
     s.delete(3);
@@ -124,8 +123,8 @@ s.forEach(function(element) {
 
 assert(loopCount === expected.length);
 
-s = new Set([0, 1, 2, 3, 4, 5, 6]);
-expected = [0, 1];
+s = new Set([ 0, 1, 2, 3, 4, 5, 6 ]);
+expected = [ 0, 1 ];
 loopCount = 0;
 
 for (var value of s) {
@@ -137,8 +136,8 @@ for (var value of s) {
   assert(value === expected[loopCount++]);
 }
 
-s = new Set([0])
-expected = [0, 1];
+s = new Set([ 0 ]);
+expected = [ 0, 1 ];
 loopCount = 0;
 
 for (var value of s) {

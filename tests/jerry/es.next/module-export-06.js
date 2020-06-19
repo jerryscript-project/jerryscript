@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-export {}
-export {} from "module-export-01.js";
 export {};
-export {} from "module-export-04.js"
+export {} from 'module-export-01.js';
+export {};
+export {} from 'module-export-04.js';

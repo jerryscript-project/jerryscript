@@ -17,7 +17,7 @@
 // found in the LICENSE file.
 
 var target = {};
-var handler = { has (target) {
+var handler = { has(target) {
   throw 42;
 }};
 
@@ -25,7 +25,7 @@ var proxy = new Proxy(target, handler);
 
 try {
   // 12.9.3
-  "foo" in proxy;
+  'foo' in proxy;
   assert(false);
 } catch (e) {
   assert(e === 42);
@@ -45,7 +45,7 @@ try {
 try {
   // ecma_op_put_value_lex_env_base/[[HasProperty]]
   with (proxy) {
-    function a (){}
+    function a() {}
     assert(false);
   }
   assert(false);
@@ -55,23 +55,23 @@ try {
 
 // test basic functionality
 var target = {
-  "target_one": 1
+  'target_one': 1,
 };
 
 var handler = {
   has: function(target, prop) {
-    return prop == "present";
-  }
-}
+    return prop == 'present';
+  },
+};
 
 var proxy = new Proxy(target, handler);
 
-assert("present" in proxy === true);
-assert("non_present" in proxy === false);
+assert('present' in proxy === true);
+assert('non_present' in proxy === false);
 
 var target = {
   foo: 5,
-  bar: 10
+  bar: 10,
 };
 
 var handler = {
@@ -80,41 +80,41 @@ var handler = {
       return false;
     }
     return prop in target;
-  }
+  },
 };
 
 var proxy = new Proxy(target, handler);
 
-assert("foo" in proxy === false);
-assert("bar" in proxy === true);
+assert('foo' in proxy === false);
+assert('bar' in proxy === true);
 
 // test with no trap
 var target = {
-  foo: "foo"
+  foo: 'foo',
 };
 var handler = {};
 var proxy = new Proxy(target, handler);
 
-assert("foo" in proxy === true);
+assert('foo' in proxy === true);
 
 // test with "undefined" trap
 var target = {
-  foo: "foo"
+  foo: 'foo',
 };
 var handler = {has: null};
 var proxy = new Proxy(target, handler);
 
-assert("foo" in proxy === true);
+assert('foo' in proxy === true);
 
 // test with invalid trap
 var target = {
-  foo: "foo"
+  foo: 'foo',
 };
 var handler = {has: 42};
 var proxy = new Proxy(target, handler);
 
 try {
-  "foo" in proxy;
+  'foo' in proxy;
   assert(false);
 } catch (e) {
   assert(e instanceof TypeError);
@@ -122,33 +122,33 @@ try {
 
 // test when target is proxy
 var target = {
-  foo: "foo"
+  foo: 'foo',
 };
 
 var handler = {
   has: function(target, prop) {
     return prop in target;
-  }
-}
+  },
+};
 
 var proxy1 = new Proxy(target, handler);
 var proxy2 = new Proxy(proxy1, handler);
 
-assert("foo" in proxy2 === true);
+assert('foo' in proxy2 === true);
 
 // test when invariants gets violated
 var target = {};
 
-Object.defineProperty(target, "prop", {
+Object.defineProperty(target, 'prop', {
   configurable: false,
-  value: 10
-})
+  value: 10,
+});
 
 var handler = {
   has: function(target, prop) {
     return false;
-  }
-}
+  },
+};
 
 var proxy = new Proxy(target, handler);
 

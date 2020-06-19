@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var alpha = []; 
-var $ = {[$] : $} 
-obj = {}  
-obj[ Symbol.isConcatSpreadable ] = "\O"  
-alpha.concat(obj)
+var alpha = [];
+var $ = {[$]: $};
+obj = {};
+obj[Symbol.isConcatSpreadable] = '\O';
+alpha.concat(obj);

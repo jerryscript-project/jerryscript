@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function a()
-{
+function a() {
   for (i = 1; i < 5; i++)
     if (i) {
       5;

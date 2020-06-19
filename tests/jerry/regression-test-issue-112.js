@@ -13,4 +13,4 @@
 // limitations under the License.
 
 delete Function.prototype.toString;
-assert (Math.cos + 1 === '[object Function]1');
+assert(Math.cos + 1 === '[object Function]1');

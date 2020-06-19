@@ -13,8 +13,8 @@
 // limitations under the License.
 
 // Test with regular arrays
-var alpha = ['a', 'b', 'c'];
-var numeric = [1, 2, 3];
+var alpha = [ 'a', 'b', 'c' ];
+var numeric = [ 1, 2, 3 ];
 
 var alphaNumeric = alpha.concat(numeric);
 assert(JSON.stringify(alphaNumeric) === '["a","b","c",1,2,3]');
@@ -32,8 +32,8 @@ var fakeArray = {
   [Symbol.isConcatSpreadable]: true,
   length: 2,
   0: 4,
-  1: 5
-}
+  1: 5,
+};
 
 var numericArray = numeric.concat(fakeArray);
 assert(JSON.stringify(numericArray) === '[1,2,3,4,5]');
@@ -70,12 +70,14 @@ assert(numericBool.length === 4);
 // Test when unable to concat
 var array1 = [];
 var array2 = [];
-Object.defineProperty(array2, '0', { 'get' : function () {throw new ReferenceError ("foo"); } });
+Object.defineProperty(array2, '0', { 'get': function() {
+  throw new ReferenceError('foo');
+} });
 
 try {
   array1.concat(array2);
   assert(false);
 } catch (e) {
-  assert(e.message === "foo");
+  assert(e.message === 'foo');
   assert(e instanceof ReferenceError);
 }

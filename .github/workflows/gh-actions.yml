@@ -28,6 +28,10 @@ jobs:
         run: $RUNNER --check-magic-strings
       - name: Pylint
         run: $RUNNER --check-pylint
+      - name: ESlint
+        run: |
+            sudo npm install -g eslint
+            $RUNNER --check-eslint
       - name: Cppcheck
         run: $RUNNER --check-cppcheck
 

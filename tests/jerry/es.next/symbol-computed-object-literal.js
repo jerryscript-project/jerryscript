@@ -13,26 +13,26 @@
  * limitations under the License.
  */
 
-var symbolFoo = Symbol ('foo');
-var symbolBar = Symbol ('bar');
+var symbolFoo = Symbol('foo');
+var symbolBar = Symbol('bar');
 
 var obj = {
-  _a : 5,
+  _a: 5,
   get [symbolFoo]() {
     return this._a;
   },
   set [symbolFoo](a) {
     this._a = a;
   },
-  [symbolBar] : 10
-}
+  [symbolBar]: 10,
+};
 
 /* Test accessor properties */
-assert (obj[symbolFoo] === 5);
+assert(obj[symbolFoo] === 5);
 obj[symbolFoo] = 6;
-assert (obj[symbolFoo] === 6);
+assert(obj[symbolFoo] === 6);
 
 /* Test nameddata properties */
-assert (obj[symbolBar] === 10);
+assert(obj[symbolBar] === 10);
 obj[symbolBar] = 20;
-assert (obj[symbolBar] === 20);
+assert(obj[symbolBar] === 20);

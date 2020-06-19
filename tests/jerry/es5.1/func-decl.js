@@ -13,13 +13,13 @@
 // limitations under the License.
 
 function f() {
-    return 'foo';
+  return 'foo';
 }
-assert ((function() {
-    if (1 === 0) {
-        function f() {
-            return 'bar';
-        }
+assert((function() {
+  if (1 === 0) {
+    function f() {
+      return 'bar';
     }
-    return f();
+  }
+  return f();
 })() === 'bar');

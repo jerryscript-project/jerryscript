@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-try
-{
-  print({toString: function() { throw new TypeError("foo"); }}, []);
-  assert (false);
-}
-catch (e)
-{
-  assert (e instanceof TypeError);
-  assert (e.message === "foo");
+try {
+  print({toString: function() {
+    throw new TypeError('foo');
+  }}, []);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+  assert(e.message === 'foo');
 }

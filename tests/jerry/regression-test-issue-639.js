@@ -13,5 +13,5 @@
 // limitations under the License.
 
 function f_0() {
-      var f_0 = print;
+  var f_0 = print;
 }

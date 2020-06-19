@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var str0 = "𐐀";
-var str1 = "\ud801\udc00";
-var str2 = "\ud801";
-var str3 = "\udc00";
+var str0 = '𐐀';
+var str1 = '\ud801\udc00';
+var str2 = '\ud801';
+var str3 = '\udc00';
 
 var str_concat = str2 + str3;
 

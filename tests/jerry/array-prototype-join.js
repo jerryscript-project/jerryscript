@@ -12,55 +12,61 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert ([].join() === "");
-assert ([1].join() === "1");
-assert ([1, 2].join() === "1,2");
+assert([].join() === '');
+assert([ 1 ].join() === '1');
+assert([ 1, 2 ].join() === '1,2');
 
+assert([].join('--') === '');
+assert([ 1 ].join('--') === '1');
+assert([ 1, 2 ].join('--') === '1--2');
 
-assert ([].join('--') === "");
-assert ([1].join("--") === "1");
-assert ([1, 2].join('--') === "1--2");
-
-assert ([1,2,3].join({toString: function() { return "--"; }}) === "1--2--3");
-
+assert([ 1, 2, 3 ].join({toString: function() {
+  return '--';
+}}) === '1--2--3');
 
 // Join should use 'length' to as the number of elements int the array.
-var lst = [1,2,3,4];
+var lst = [ 1, 2, 3, 4 ];
 lst.length = 3;
-assert (lst.join() === [1,2,3].join());
+assert(lst.join() === [ 1, 2, 3 ].join());
 
 // Checking behavior when unable to get length.
 var obj = {};
-Object.defineProperty(obj, 'length', { 'get' : function () {throw new ReferenceError ("foo"); } });
+Object.defineProperty(obj, 'length', { 'get': function() {
+  throw new ReferenceError('foo');
+} });
 obj.join = Array.prototype.join;
 
 try {
   obj.join();
   // Should not be reached.
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e.message === "foo");
-  assert (e instanceof ReferenceError);
+  assert(e.message === 'foo');
+  assert(e instanceof ReferenceError);
 }
 
 // Check join argument fail.
 try {
-  [1,2,3].join({toString: function() { throw new ReferenceError ("foo"); }});
+  [ 1, 2, 3 ].join({toString: function() {
+    throw new ReferenceError('foo');
+  }});
   // Should not be reached.
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e.message === "foo");
-  assert (e instanceof ReferenceError);
+  assert(e.message === 'foo');
+  assert(e instanceof ReferenceError);
 }
 
 // Check single join element fail.
 try {
-  [1, 2, {toString: function() { throw new ReferenceError ("foo"); }}, 4].join();
+  [ 1, 2, {toString: function() {
+    throw new ReferenceError('foo');
+  }}, 4 ].join();
   // Should not be reached.
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e.message === "foo");
-  assert (e instanceof ReferenceError);
+  assert(e.message === 'foo');
+  assert(e instanceof ReferenceError);
 }
 
 // Check join on different object.
@@ -73,17 +79,19 @@ obj_2[3] = 4;
 
 obj_2.join = Array.prototype.join;
 
-assert (obj_2.join() === "1,2,3");
+assert(obj_2.join() === '1,2,3');
 
 /* ES v5.1 15.4.4.5.7.
    Checking behavior when an element throws error */
 try {
-  var f = function () { throw new TypeError("ooo");};
-  var arr = [0, 1, 2, 3];
-  Object.defineProperty(arr, '0', { 'get' : f });
+  var f = function() {
+    throw new TypeError('ooo');
+  };
+  var arr = [ 0, 1, 2, 3 ];
+  Object.defineProperty(arr, '0', { 'get': f });
   Array.prototype.join.call(arr);
   assert(false);
 } catch (e) {
   assert(e instanceof TypeError);
-  assert(e.message == "ooo");
+  assert(e.message == 'ooo');
 }

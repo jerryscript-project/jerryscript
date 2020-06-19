@@ -12,6 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert (typeof x === 'undefined');
+assert(typeof x === 'undefined');
 let { t: [ { a: b } ] } = { t: [ { a: 'a' } ] };
-assert (b === 'a');
+assert(b === 'a');

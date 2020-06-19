@@ -13,109 +13,107 @@
  * limitations under the License.
  */
 
-function check_result(result, value, done)
-{
-  assert(result.value === value)
-  assert(result.done === done)
+function check_result(result, value, done) {
+  assert(result.value === value);
+  assert(result.done === done);
 }
 
 function *gen1() {
-  yield 1
-  yield *[2,3,4]
-  yield 5
+  yield 1;
+  yield *[ 2, 3, 4 ];
+  yield 5;
 }
 
-var g = gen1()
-check_result(g.next(), 1, false)
-check_result(g.next(), 2, false)
-check_result(g.next(), 3, false)
-check_result(g.next(), 4, false)
-check_result(g.next(), 5, false)
-check_result(g.next(), undefined, true)
+var g = gen1();
+check_result(g.next(), 1, false);
+check_result(g.next(), 2, false);
+check_result(g.next(), 3, false);
+check_result(g.next(), 4, false);
+check_result(g.next(), 5, false);
+check_result(g.next(), undefined, true);
 
 function *gen2() {
-  yield * true
+  yield * true;
 }
 
 try {
-  g = gen2()
-  g.next()
-  assert(false)
+  g = gen2();
+  g.next();
+  assert(false);
 } catch (e) {
-  assert(e instanceof TypeError)
+  assert(e instanceof TypeError);
 }
 
-var t0 = 0, t1 = 0
+var t0 = 0, t1 = 0;
 
 function *gen3() {
   function *f() {
     try {
-      yield 5
+      yield 5;
     } finally {
-      t0 = 1
+      t0 = 1;
     }
   }
 
   try {
-    yield *f()
+    yield *f();
   } finally {
-    t1 = 1
+    t1 = 1;
   }
 }
 
-g = gen3()
-check_result(g.next(), 5, false)
-check_result(g.return(13), 13, true)
-assert(t0 === 1)
-assert(t1 === 1)
+g = gen3();
+check_result(g.next(), 5, false);
+check_result(g.return(13), 13, true);
+assert(t0 === 1);
+assert(t1 === 1);
 
-t0 = -1
-t1 = 0
+t0 = -1;
+t1 = 0;
 
 function *gen4() {
-  function next(arg)
-  {
+  function next(arg) {
     t0++;
 
-    if (t0 === 0)
-    {
+    if (t0 === 0) {
       assert(arg === undefined);
-      return { value:2, done:false }
+      return { value: 2, done: false };
     }
-    if (t0 === 1)
-    {
+    if (t0 === 1) {
       assert(arg === -3);
-      return { value:3, done:false }
+      return { value: 3, done: false };
     }
     assert(arg === -4);
-    return { value:4, done:true }
+    return { value: 4, done: true };
   }
 
-  var o = { [Symbol.iterator]() { return { next } } }
-  assert((yield *o) === 4)
+  var o = { [Symbol.iterator]() {
+    return { next };
+  } };
+  assert((yield *o) === 4);
   return 5;
 }
 
-g = gen4()
-check_result(g.next(-2), 2, false)
-check_result(g.next(-3), 3, false)
-check_result(g.next(-4), 5, true)
+g = gen4();
+check_result(g.next(-2), 2, false);
+check_result(g.next(-3), 3, false);
+check_result(g.next(-4), 5, true);
 
 function *gen5() {
   function *f() {
     try {
-      yield 1
-      assert(false)
+      yield 1;
+      assert(false);
     } catch (e) {
-      assert(e === 10)
+      assert(e === 10);
     }
-    return 2
+    return 2;
   }
 
-  assert((yield *f()) === 2)
-  yield 3
+  assert((yield *f()) === 2);
+  yield 3;
 }
 
-g = gen5()
-check_result(g.next(), 1, false)
-check_result(g.throw(10), 3, false)
+g = gen5();
+check_result(g.next(), 1, false);
+check_result(g.throw(10), 3, false);

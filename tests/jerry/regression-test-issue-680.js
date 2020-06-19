@@ -12,16 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-try
-{
-  f1(function(a1){});
-  assert (false);
-}
-catch (e)
-{
-  assert (e instanceof ReferenceError);
+try {
+  f1(function(a1) {});
+  assert(false);
+} catch (e) {
+  assert(e instanceof ReferenceError);
 }
 
 var x = {
-foo: function () { throw new TypeError("bar"); }
+  foo: function() {
+    throw new TypeError('bar');
+  },
 };

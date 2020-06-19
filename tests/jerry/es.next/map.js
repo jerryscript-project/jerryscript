@@ -29,100 +29,106 @@ assert(m.size == 3);
 assert(m.has(null));
 assert(m.get(null) === 456);
 
-assert(m.set("strItem", { x:789 }) === m);
+assert(m.set('strItem', { x: 789 }) === m);
 assert(m.size == 4);
-assert(m.has("str" + "Item"));
-assert(m.get("st" + "rItem").x === 789);
+assert(m.has('str' + 'Item'));
+assert(m.get('st' + 'rItem').x === 789);
 
 assert(m.set(12.25, 12.25) === m);
 assert(m.size == 5);
-assert(m.has(12 + (function() { return 0.25 })()));
-assert(m.get(13 - (function() { return 0.75 })()) === 12.25);
+assert(m.has(12 + (function() {
+  return 0.25;
+})()));
+assert(m.get(13 - (function() {
+  return 0.75;
+})()) === 12.25);
 
-assert(m.delete(1))
+assert(m.delete(1));
 assert(m.size == 4);
 assert(!m.has(1));
 assert(m.get(1) === undefined);
 
 assert(!m.delete(2));
 
-assert(m.delete(12 + (function() { return 0.25 })()));
+assert(m.delete(12 + (function() {
+  return 0.25;
+})()));
 assert(m.size == 3);
 assert(!m.has(12.25));
 assert(m.get(12.25) === undefined);
 
-assert(m.delete("strI" + "tem"))
-assert(m.delete(undefined))
+assert(m.delete('strI' + 'tem'));
+assert(m.delete(undefined));
 assert(m.size == 1);
 
-assert(m.delete(null))
+assert(m.delete(null));
 assert(m.size == 0);
 
-m.set(1,1)
-m.set(2,2)
-m.set(3,3)
-m.set(1,7)
-m.set(1,8)
-m.set(2,7)
-m.set(2,8)
-m.set(3,7)
-m.set(3,8)
+m.set(1, 1);
+m.set(2, 2);
+m.set(3, 3);
+m.set(1, 7);
+m.set(1, 8);
+m.set(2, 7);
+m.set(2, 8);
+m.set(3, 7);
+m.set(3, 8);
 
 assert(m.size == 3);
 assert(m.get(1) === 8);
 assert(m.get(2) === 8);
 assert(m.get(3) === 8);
 
-m.set(NaN, "not a number");
+m.set(NaN, 'not a number');
 assert(m.size === 4);
-assert(m.get(NaN) === "not a number");
-assert(m.get(Number("foo")) === "not a number")
+assert(m.get(NaN) === 'not a number');
+assert(m.get(Number('foo')) === 'not a number');
 
-m.set(0, "PosZero");
+m.set(0, 'PosZero');
 assert(m.size === 5);
-m.set(-0, "NegZero");
+m.set(-0, 'NegZero');
 assert(m.size === 5);
-assert(m.get (0) === "NegZero");
-assert(m.get (-0) === "NegZero");
+assert(m.get(0) === 'NegZero');
+assert(m.get(-0) === 'NegZero');
 
-var symbolFoo = Symbol ("foo");
-m.set (symbolFoo, "SymbolFoo");
+var symbolFoo = Symbol('foo');
+m.set(symbolFoo, 'SymbolFoo');
 assert(m.size === 6);
-assert(m.get(symbolFoo) === "SymbolFoo");
+assert(m.get(symbolFoo) === 'SymbolFoo');
 
 var object = {};
-m.set (object, "object");
+m.set(object, 'object');
 assert(m.size === 7);
-assert(m.get(object) === "object");
+assert(m.get(object) === 'object');
 assert(m.get({}) === undefined);
 
-var myObj = { o : 4 };
-m.set("foo", myObj);
+var myObj = { o: 4 };
+m.set('foo', myObj);
 assert(m.size === 8);
-assert(m.get ("foo") === myObj);
-assert(m.get ("foo").o === 4);
+assert(m.get('foo') === myObj);
+assert(m.get('foo').o === 4);
 
 m.clear();
 assert(m.size === 0);
 
-m.set("foo", myObj);
+m.set('foo', myObj);
 assert(m.size === 1);
-assert(m.get ("foo") === myObj);
-assert(m.get ("foo").o === 4);
+assert(m.get('foo') === myObj);
+assert(m.get('foo').o === 4);
 
-var mapNameDesc = Object.getOwnPropertyDescriptor (Map, 'name');
-assert(mapNameDesc.value === "Map");
+var mapNameDesc = Object.getOwnPropertyDescriptor(Map, 'name');
+assert(mapNameDesc.value === 'Map');
 assert(mapNameDesc.writable === false);
 assert(mapNameDesc.enumerable === false);
 assert(mapNameDesc.configurable === true);
 
 assert(Map.prototype.name === undefined);
 
-m = new Map([{0: "foo", 1: 3}, {0 : "bar", 1 : 2}]);
+m = new Map([ {0: 'foo', 1: 3}, {0: 'bar', 1: 2} ]);
 
-assert (m.size === 2);
-assert (m.get("foo") === 3);
-assert (m.get("bar") === 2);
+assert(m.size === 2);
+assert(m.get('foo') === 3);
+assert(m.get('bar') === 2);
 
 function createIterable(arr, methods = {}) {
   let iterable = function *() {
@@ -139,21 +145,23 @@ function createIterable(arr, methods = {}) {
 };
 
 var closed = false;
-var iter = createIterable([1, 2, 3], {
-  'return': function(){ closed = true; return {}; }
+var iter = createIterable([ 1, 2, 3 ], {
+  'return': function() {
+    closed = true; return {};
+  },
 });
 try {
   new Map(iter);
-} catch(e){}
+} catch (e) {}
 
 assert(closed === true);
 
 var map = new Map();
-map.set(-0, "foo");
+map.set(-0, 'foo');
 var k;
-map.forEach(function (value, key) {
+map.forEach(function(value, key) {
   k = 1 / key;
 });
 
 assert(k === Infinity);
-assert(map.get(+0) === "foo");
+assert(map.get(+0) === 'foo');

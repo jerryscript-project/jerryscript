@@ -17,7 +17,7 @@
 // found in the LICENSE file.
 
 var target = {};
-var handler = { getPrototypeOf (target) {
+var handler = { getPrototypeOf(target) {
   throw 42;
 }};
 
@@ -39,10 +39,10 @@ try {
   assert(e === 42);
 }
 
-(function () {
+(function() {
   class e extends Array {};
-  function f () {};
-  function g () {};
+  function f() {};
+  function g() {};
 
   Object.setPrototypeOf(g, proxy);
 
@@ -76,8 +76,8 @@ var target = {};
 var handler = {
   getPrototypeOf(target) {
     return Array.prototype;
-  }
-}
+  },
+};
 var proxy = new Proxy(target, handler);
 
 assert(Object.getPrototypeOf(proxy) === Array.prototype);
@@ -91,8 +91,8 @@ assert(Object.getPrototypeOf(obj) === Object.prototype);
 var handler = {
   getPrototypeOf(target) {
     return Object.prototype;
-  }
-}
+  },
+};
 var proxy = new Proxy(target, handler);
 assert(Object.getPrototypeOf(proxy) === Object.prototype);
 
@@ -116,7 +116,7 @@ var handler = { getPrototypeOf: 42 };
 var proxy = new Proxy(target, handler);
 
 try {
-  Object.getPrototypeOf(proxy)
+  Object.getPrototypeOf(proxy);
   assert(false);
 } catch (e) {
   assert(e instanceof TypeError);
@@ -129,8 +129,8 @@ var proxy = new Proxy(target, handler);
 
 var target_prototype = {};
 handler.getPrototypeOf = function() {
-  return target_prototype ;
-}
+  return target_prototype;
+};
 
 var proxy2 = new Proxy(proxy, handler);
 assert(Object.getPrototypeOf(proxy2) === target_prototype);
@@ -140,8 +140,8 @@ var target = {};
 var handler = {
   getPrototypeOf(target) {
     return 'foo';
-  }
-}
+  },
+};
 var proxy = new Proxy(target, handler);
 
 try {
@@ -155,8 +155,8 @@ var target = Object.preventExtensions({});
 var handler = {
   getPrototypeOf(target) {
     return {};
-  }
-}
+  },
+};
 
 var proxy = new Proxy(target, handler);
 

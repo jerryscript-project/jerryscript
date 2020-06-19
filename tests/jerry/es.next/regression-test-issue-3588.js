@@ -16,4 +16,4 @@
 // when used as parent "class"
 
 class C extends print {}
-new C ()
+new C();

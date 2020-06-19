@@ -13,7 +13,7 @@
 // limitations under the License.
 
 var obj = {
-    sort: Array.prototype.sort,
-    $: 0
-}
+  sort: Array.prototype.sort,
+  $: 0,
+};
 assert(obj.sort() === obj);

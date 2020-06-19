@@ -13,20 +13,20 @@
  * limitations under the License.
  */
 
- class C extends Array {
-   constructor () {
-     var a = eval ('super (1, 2); 5');
-     assert (a === 5);
-   }
- }
+class C extends Array {
+  constructor() {
+    var a = eval('super (1, 2); 5');
+    assert(a === 5);
+  }
+}
 
- class D extends C {
-   constructor () {
-      var a = eval ("eval ('super (1, 2); 3')");
-      assert (a === 3);
-   }
- }
+class D extends C {
+  constructor() {
+    var a = eval('eval (\'super (1, 2); 3\')');
+    assert(a === 3);
+  }
+}
 
- var d = new D;
+var d = new D;
 
- assert (JSON.stringify (d) === "[1,2]");
+assert(JSON.stringify(d) === '[1,2]');

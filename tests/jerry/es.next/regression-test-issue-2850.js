@@ -13,14 +13,14 @@
 // limitations under the License.
 
 try {
-  (function () {
-    var d = new DataView(new ArrayBuffer())
+  (function() {
+    var d = new DataView(new ArrayBuffer());
     for (var $; ;) {
-      d.setInt8(0)
+      d.setInt8(0);
     }
-  })()
-  assert (false);
+  })();
+  assert(false);
 } catch (e) {
-  assert (e instanceof RangeError);
+  assert(e instanceof RangeError);
 }
 

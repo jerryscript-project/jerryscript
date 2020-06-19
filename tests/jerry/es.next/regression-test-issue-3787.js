@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var symbol = Symbol("s");
-var obj = {demo: "3"};
+var symbol = Symbol('s');
+var obj = {demo: '3'};
 obj[symbol] = 3;
 
 var proxy = new Proxy(obj, []);

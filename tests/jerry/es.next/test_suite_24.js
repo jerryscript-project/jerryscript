@@ -23,37 +23,31 @@
 })();
 
 (function tc_24_01_02__012() {
-  var name = "";
-  try
-  {
+  var name = '';
+  try {
     var a = new ArrayBuffer(-1.9);
-  }
-  catch (e)
-  {
+  } catch (e) {
     name = e.name;
   }
 
-  assert(name === "RangeError");
+  assert(name === 'RangeError');
 })();
 
 (function tc_24_01_02__003() {
-  var a = new ArrayBuffer("5");
+  var a = new ArrayBuffer('5');
   assert(typeof a === 'object');
   assert(a.byteLength === 5);
 })();
 
 (function tc_24_01_02__013() {
-  var name = "";
-  try
-  {
+  var name = '';
+  try {
     var a = new ArrayBuffer(Math.pow(2, 32) - 1);
-  }
-  catch (e)
-  {
+  } catch (e) {
     name = e.name;
   }
 
-  assert(name === "RangeError");
+  assert(name === 'RangeError');
 })();
 
 (function tc_24_01_02__002() {
@@ -63,7 +57,7 @@
 })();
 
 (function tc_24_01_02__007() {
-  var a = new ArrayBuffer("string");
+  var a = new ArrayBuffer('string');
   assert(a.byteLength === 0);
 })();
 
@@ -73,18 +67,15 @@
 })();
 
 (function tc_24_01_02__004() {
-  var name = "";
+  var name = '';
 
-  try
-  {
+  try {
     var a = ArrayBuffer();
-  }
-  catch (e)
-  {
+  } catch (e) {
     name = e.name;
   }
 
-  assert(name === "TypeError");
+  assert(name === 'TypeError');
 })();
 
 (function tc_24_01_02__005() {
@@ -118,7 +109,7 @@
 
 (function tc_24_01_04__006() {
   var a = new ArrayBuffer(5);
-  var b = a.slice (3, 2);
+  var b = a.slice(3, 2);
   assert(b.byteLength === 0);
 })();
 
@@ -128,7 +119,7 @@
 
 (function tc_24_01_04__004() {
   var a = new ArrayBuffer(5);
-  var b = a.slice (1, 3);
+  var b = a.slice(1, 3);
   assert(b.byteLength === 2);
 })();
 

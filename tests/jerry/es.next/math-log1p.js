@@ -15,8 +15,7 @@
 var p_zero = 0.0;
 var n_zero = -p_zero;
 
-function isSameZero (x, y)
-{
+function isSameZero(x, y) {
   return x === 0 && (1 / x) === (1 / y);
 }
 

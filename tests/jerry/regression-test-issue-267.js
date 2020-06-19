@@ -13,9 +13,9 @@
 // limitations under the License.
 
 try {
-    RegExp("\u2029");
-} catch(err) {}
+  RegExp('\u2029');
+} catch (err) {}
 
 try {
-    URIError(isNaN(__proto__));
-} catch(err) {}
+  URIError(isNaN(__proto__));
+} catch (err) {}

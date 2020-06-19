@@ -36,7 +36,7 @@ function $() {
   var id_39 = id_40;
   var id_41 = id_42.id_43;
   var id_43 = id_44.id_45;
-  var id_45 = id_46.store
+  var id_45 = id_46.store;
   var id_47 = id_48.id_49;
   var id_49 = id_50.id_51;
   var id_56 = id_57.splat;
@@ -79,48 +79,48 @@ function $() {
 
   function id_165() {
     value = id_166;
-    id_167(id_168)
+    id_167(id_168);
   }
 
   function id_169() {
-    return id_170(id_171)
+    return id_170(id_171);
   }
 
   function id_172() {
     $ = id_173;
-    id_174(id_175)
+    id_174(id_175);
   }
 
   function id_176() {
-    return id_177(id_178)
+    return id_177(id_178);
   }
 
   function id_179() {
     $ = id_180;
-    id_181(id_182)
+    id_181(id_182);
   }
 
   function id_183() {
-    return id_184(id_185)
+    return id_184(id_185);
   }
 
   function id_186() {
     $ = id_187;
-    id_188(id_189)
+    id_188(id_189);
   }
 
   function id_190() {}
 
   function id_193() {
     $ = id_194;
-    id_195(id_196)
+    id_195(id_196);
   }
 
   function $() {}
 
   function id_200() {
     id_201(id_202, id_203);
-    return id_204(id_205)
+    return id_204(id_205);
   }
 
   function id_206() {
@@ -129,21 +129,21 @@ function $() {
       id_209 = id_210;
       for (;;) {
         switch ($) {
-          case $:
-            id_211(id_212, id_213);
-          case $:
-            id_214(id_215, id_216);
-          case $:
-            id_217(id_218, id_219);
-          case $:
-            id_220(id_221, id_222)
+        case $:
+          id_211(id_212, id_213);
+        case $:
+          id_214(id_215, id_216);
+        case $:
+          id_217(id_218, id_219);
+        case $:
+          id_220(id_221, id_222);
         }
-        id_223 = id_224(id_225, id_226)
+        id_223 = id_224(id_225, id_226);
       }
 
     }
 
-    return id_227(id_228)
+    return id_227(id_228);
   }
 
   function id_229() {
@@ -152,21 +152,21 @@ function $() {
       id_232 = id_233;
       for (;;) {
         switch ($) {
-          case $:
-            id_234(id_235, id_236);
-          case $:
-            id_237(id_238, id_239);
-          case $:
-            id_240(id_241, id_242);
-          case $:
-            id_243(id_244, id_245)
+        case $:
+          id_234(id_235, id_236);
+        case $:
+          id_237(id_238, id_239);
+        case $:
+          id_240(id_241, id_242);
+        case $:
+          id_243(id_244, id_245);
         }
-        id_246 = id_247(id_248, id_249)
+        id_246 = id_247(id_248, id_249);
       }
 
     }
 
-    return id_250(id_251)
+    return id_250(id_251);
   }
 
   function id_252() {
@@ -175,20 +175,20 @@ function $() {
       id_255 = id_256;
       for (;;) {
         switch ($) {
-          case $:
-            id_257(id_258, id_259);
-          case $:
-            id_260(id_261, id_262);
-          case $:
-            id_263(id_264, id_265);
-          case $:
-            id_266(id_267, id_268)
+        case $:
+          id_257(id_258, id_259);
+        case $:
+          id_260(id_261, id_262);
+        case $:
+          id_263(id_264, id_265);
+        case $:
+          id_266(id_267, id_268);
         }
-        id_269 = id_270(id_271, id_272)
+        id_269 = id_270(id_271, id_272);
       }
 
     }
-    while ($) return id_273(id_274)
+    while ($); return id_273(id_274);
   }
 
   function id_275() {
@@ -197,12 +197,12 @@ function $() {
       id_278 = id_279;
       for (;;) {
         id_280(id_281, id_282);
-        id_283 = id_284(id_285, id_286)
+        id_283 = id_284(id_285, id_286);
       }
 
     }
 
-    return id_287(id_288)
+    return id_287(id_288);
   }
 
   function id_289() {
@@ -211,12 +211,12 @@ function $() {
       id_292 = id_293;
       for (;;) {
         id_294(id_295, id_296);
-        id_297 = id_298(id_299, id_300)
+        id_297 = id_298(id_299, id_300);
       }
 
     }
 
-    return id_301(id_302)
+    return id_301(id_302);
   }
 
   function id_303() {
@@ -225,12 +225,12 @@ function $() {
       id_306 = id_307;
       for (;;) {
         id_308(id_309, id_310);
-        id_311 = id_312(id_313, id_314)
+        id_311 = id_312(id_313, id_314);
       }
 
     }
 
-    return id_315(id_316)
+    return id_315(id_316);
   }
 
   function id_317() {
@@ -239,12 +239,12 @@ function $() {
       id_320 = id_321;
       for (;;) {
         id_322(id_323, id_324);
-        id_325 = id_326(id_327, id_328)
+        id_325 = id_326(id_327, id_328);
       }
 
     }
 
-    return id_329(id_330)
+    return id_329(id_330);
   }
 
   function id_331() {
@@ -253,12 +253,12 @@ function $() {
       id_334 = id_335;
       for (;;) {
         id_336(id_337, id_338);
-        id_339 = id_340(id_341, id_342)
+        id_339 = id_340(id_341, id_342);
       }
 
     }
 
-    return id_343(id_344)
+    return id_343(id_344);
   }
 
   function id_345() {
@@ -267,12 +267,12 @@ function $() {
       id_348 = id_349;
       for (;;) {
         id_350(id_351, id_352);
-        id_353 = id_354(id_355, id_356)
+        id_353 = id_354(id_355, id_356);
       }
 
     }
 
-    return id_357(id_358)
+    return id_357(id_358);
   }
 
   function id_359() {
@@ -280,14 +280,14 @@ function $() {
     while ($) {
       for (;;) {
         switch (functionPicker) {
-          case $:
-            v = id_361(id_362);
-          case $:
-            $ = id_363(id_364);
-          case $:
-            $ = id_365(id_366);
-          case $:
-            $ = id_367(id_368, idx)
+        case $:
+          v = id_361(id_362);
+        case $:
+          $ = id_363(id_364);
+        case $:
+          $ = id_365(id_366);
+        case $:
+          $ = id_367(id_368, idx);
         }
       }
 
@@ -300,14 +300,14 @@ function $() {
     for (;;) {
       for (;;) {
         switch ($) {
-          case $:
-            $ = id_371(id_372);
-          case $:
-            $ = id_373(id_374);
-          case $:
-            $ = id_375(id_376);
-          case $:
-            $ = id_377(id_378)
+        case $:
+          $ = id_371(id_372);
+        case $:
+          $ = id_373(id_374);
+        case $:
+          $ = id_375(id_376);
+        case $:
+          $ = id_377(id_378);
         }
       }
 
@@ -320,26 +320,26 @@ function $() {
     do {
       for (;;) {
         switch ($) {
-          case $:
-            $ = id_381(id_382);
-          case $:
-            $ = id_383(id_384);
-          case $:
-            $ = id_385(id_386);
-          case $:
-            $ = id_387(id_388)
+        case $:
+          $ = id_381(id_382);
+        case $:
+          $ = id_383(id_384);
+        case $:
+          $ = id_385(id_386);
+        case $:
+          $ = id_387(id_388);
         }
       }
 
     }
-    while ($)
+    while ($);
   }
 
   function id_389() {
     var $ = id_390;
     while ($) {
       for (;;) {
-        $ = id_391(id_392)
+        $ = id_391(id_392);
       }
 
     }
@@ -348,14 +348,14 @@ function $() {
 
   function id_393() {
     var $ = id_394;
-    end = (((length)))
+    end = (((length)));
   }
 
   function id_397() {
     var $ = id_398;
     while ($) {
       for (;;) {
-        $ = id_399(id_400)
+        $ = id_399(id_400);
       }
 
     }
@@ -366,7 +366,7 @@ function $() {
     var $ = id_402;
     while ($) {
       for (;;) {
-        $ = id_403(id_404)
+        $ = id_403(id_404);
       }
 
     }
@@ -376,7 +376,7 @@ function $() {
   function id_405() {
     while ($) {
       for (;;) {
-        $ = id_407(id_408)
+        $ = id_407(id_408);
       }
 
     }
@@ -387,7 +387,7 @@ function $() {
     var $ = id_410;
     while ($) {
       for (;;) {
-        $ = id_411(id_412)
+        $ = id_411(id_412);
       }
 
     }
@@ -427,6 +427,6 @@ function $() {
     id_471: id_472,
     id_473: id_474,
     id_475: id_476,
-    id_477: $
-  }
+    id_477: $,
+  };
 }

@@ -13,72 +13,83 @@
  * limitations under the License.
  */
 
+assert(typeof f === 'undefined');
 
-assert (typeof f === "undefined");
-
-function g() { return 6; }
+function g() {
+  return 6;
+}
 
 switch (g()) {
 case f():
 
   let g = 9;
 
-  assert (g === 9);
+  assert(g === 9);
 
-  function f() { return 6; }
+  function f() {
+    return 6;
+  }
   break;
 
 default:
-  assert (false);
+  assert(false);
 }
 
-assert (f() === 6);
+assert(f() === 6);
 
 switch (g()) {
 case f() - 2:
 
   let g = 9;
 
-  assert ((function() { return g + f(); })() === 17);
+  assert((function() {
+    return g + f();
+  })() === 17);
 
-  function f() { return 8; }
+  function f() {
+    return 8;
+  }
   break;
 
 default:
-  assert (false);
+  assert(false);
 }
 
-assert (f() === 8);
+assert(f() === 8);
 
 switch (g()) {
 case g() + 5:
   {
     let g = 4;
-    assert (g == 4);
+    assert(g == 4);
   }
   break;
 
 default:
   /* If the declaration is not "executed", it has no effect */
-  function g() { return 1; }
-  assert (false);
+  function g() {
+    return 1;
+  }
+  assert(false);
 }
 
-assert (g() === 6);
+assert(g() === 6);
 
 switch (g()) {
 case g() * 2:
   {
     let g = 4;
-    assert (g == 4);
+    assert(g == 4);
     eval();
   }
 
-  function g() { return 3; }
+  function g() {
+    return 3;
+  }
   break;
 
 default:
-  assert (false);
+  assert(false);
 }
 
-assert (g() === 3);
+assert(g() === 3);

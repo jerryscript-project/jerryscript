@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-with(0xB276)
-  eval("foo = true;");
+with (0xB276)
+eval('foo = true;');

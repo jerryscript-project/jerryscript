@@ -12,4 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert (new RegExp("\ud800", "u").exec("\ud800")[0] === "\ud800");
+assert(new RegExp('\ud800', 'u').exec('\ud800')[0] === '\ud800');

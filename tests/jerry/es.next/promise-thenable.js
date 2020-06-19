@@ -19,14 +19,14 @@ function f() { }
 
 f.then = function(resolve) {
   if (++counter < 10) {
-    resolve(f)
+    resolve(f);
   }
-}
+};
 
 new Promise(function(resolve) {
-  resolve(f)
-})
+  resolve(f);
+});
 
 function __checkAsync() {
-  assert(counter == 10)
+  assert(counter == 10);
 }

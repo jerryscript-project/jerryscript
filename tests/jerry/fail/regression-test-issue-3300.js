@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-y = 6
-function i ( a , b = ( y ) + 2 , c = typeof id_0 ) {
-  function x ( ) { }
-    eval ( "//Single Line Comments\u2029 var =;" )
-   c === "undefined"
-   print ( y === 10 )
-   ( id_2 === 11 )
+y = 6;
+function i(a, b = (y) + 2, c = typeof id_0) {
+  function x() { }
+  eval('//Single Line Comments\u2029 var =;');
+  c === 'undefined';
+  print(y === 10);
+  (id_2 === 11);
 }
-i ( )
+i();

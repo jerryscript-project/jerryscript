@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function a () {
- function b () {
-   // Can be any unicode escape character, ie: A
-   \u0041
- }
+function a() {
+  function b() {
+    // Can be any unicode escape character, ie: A
+    \u0041;
+  }
 }

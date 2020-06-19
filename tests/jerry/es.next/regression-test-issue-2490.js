@@ -14,28 +14,28 @@
 
 // Original issue
 Object.defineProperty(Object.prototype, 6, {});
-Promise.all([0]);
+Promise.all([ 0 ]);
 
 // Variant 2
 Object.defineProperty(Object.prototype, 2, {});
-Promise.all([0]);
+Promise.all([ 0 ]);
 
 // Variant 3
 Object.defineProperty(Object.prototype, 3, {});
-Promise.all([0]);
+Promise.all([ 0 ]);
 
 // Variant 4
 Object.defineProperty(Object.prototype, 4, {});
-Promise.all([0]);
+Promise.all([ 0 ]);
 
 // Variant 5
 Object.defineProperty(Object.prototype, 5, {});
-Promise.all([0]);
+Promise.all([ 0 ]);
 
 // Variant 7
 Object.defineProperty(Object.prototype, 7, {});
-Promise.all([0]);
+Promise.all([ 0 ]);
 
 // Variant 8
 Object.defineProperty(Object.prototype, 8, {});
-Promise.all([0]);
+Promise.all([ 0 ]);

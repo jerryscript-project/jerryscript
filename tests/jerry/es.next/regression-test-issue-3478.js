@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-Object.prototype["symbol"] = 0;
+Object.prototype['symbol'] = 0;
 try {
   Promise.race([]);
   assert(false);
-} catch(e) {
+} catch (e) {
   assert(e instanceof TypeError);
 }

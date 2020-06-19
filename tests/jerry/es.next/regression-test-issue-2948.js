@@ -13,8 +13,8 @@
 // limitations under the License.
 
 try {
-  new (new Object()).constructor().constructor('abcdefghi').repeat(-4956799914495204378)
-  assert (false);
+  new (new Object()).constructor().constructor('abcdefghi').repeat(-4956799914495204378);
+  assert(false);
 } catch (e) {
-  assert (e instanceof RangeError);
+  assert(e instanceof RangeError);
 }

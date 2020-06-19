@@ -28,42 +28,74 @@ function createIterable(arr, methods = {}) {
 };
 
 // iterator next
-Promise.race({[Symbol.iterator]() { return {get next() { throw 5; }}}
+Promise.race({[Symbol.iterator]() {
+  return {get next() {
+    throw 5;
+  }};
+},
 }).catch(err => {
   assert(err === 5);
 });
 
 // iterator value
-Promise.race({ [Symbol.iterator] () { return { next () { return { get value () { throw 5 }}}}}
+Promise.race({ [Symbol.iterator]() {
+  return { next() {
+    return { get value() {
+      throw 5;
+    }};
+  }};
+},
 }).catch(err => {
   assert(err === 5);
 });
 
 // iterator done
-Promise.race({ [Symbol.iterator] () { return { next () { return { get done () { throw 5 }}}}}
+Promise.race({ [Symbol.iterator]() {
+  return { next() {
+    return { get done() {
+      throw 5;
+    }};
+  }};
+},
 }).catch(err => {
   assert(err === 5);
 });
 
 // iterator get
-Promise.race({ get [Symbol.iterator] () { throw 5 }
+Promise.race({ get [Symbol.iterator]() {
+  throw 5;
+},
 }).catch(err => {
   assert(err === 5);
 });
 
 var fulfills = Promise.race(createIterable([
-  new Promise(resolve => { resolve("foo"); }),
-  new Promise(resolve => { resolve("bar"); }),
+  new Promise(resolve => {
+    resolve('foo');
+  }),
+  new Promise(resolve => {
+    resolve('bar');
+  }),
 ]));
 var rejects = Promise.race(createIterable([
-  new Promise((_, reject) => { reject("baz"); }),
-  new Promise((_, reject) => { reject("qux"); }),
+  new Promise((_, reject) => {
+    reject('baz');
+  }),
+  new Promise((_, reject) => {
+    reject('qux');
+  }),
 ]));
 
-fulfills.then(result => { assert (result + "" === "foo"); });
-rejects.catch(result => { assert (result === "baz"); });
+fulfills.then(result => {
+  assert(result + '' === 'foo');
+});
+rejects.catch(result => {
+  assert(result === 'baz');
+});
 
 var closed = false;
 delete Promise.resolve;
-Promise.race(createIterable([1,2,3], {'return': function () { closed = true; }}));
-assert (closed);
+Promise.race(createIterable([ 1, 2, 3 ], {'return': function() {
+  closed = true;
+}}));
+assert(closed);

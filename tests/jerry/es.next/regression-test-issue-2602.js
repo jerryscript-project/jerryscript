@@ -12,5 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-Object.defineProperty ( Array.prototype , 0 , { set : function ( ) { throw "MyError" } } ) ;
-Promise.all ( [ "2015-01-01" ] ) ;
+Object.defineProperty(Array.prototype, 0, { set: function() {
+  throw 'MyError';
+} });
+Promise.all([ '2015-01-01' ]);

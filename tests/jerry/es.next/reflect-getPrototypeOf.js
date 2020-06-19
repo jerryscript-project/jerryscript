@@ -12,20 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert (Reflect['getPrototypeOf']({}) === Object.prototype);
-assert (Reflect['getPrototypeOf'](Object.create(null)) === null);
-assert (Reflect['getPrototypeOf'](Object.prototype) === null);
+assert(Reflect['getPrototypeOf']({}) === Object.prototype);
+assert(Reflect['getPrototypeOf'](Object.create(null)) === null);
+assert(Reflect['getPrototypeOf'](Object.prototype) === null);
 
 try {
   Reflect.getPrototypeOf();
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 try {
-  Reflect.getPrototypeOf("str");
-  assert (false);
+  Reflect.getPrototypeOf('str');
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }

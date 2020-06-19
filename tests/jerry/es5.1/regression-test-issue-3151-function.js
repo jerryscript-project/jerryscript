@@ -12,4 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-do function $ ( ) { } while (0);
+do function $() { } while (0);

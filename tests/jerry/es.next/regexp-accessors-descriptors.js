@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var accessors = [ 'flags', 'global', 'ignoreCase', 'multiline', 'source', 'sticky', 'unicode' ]
+var accessors = [ 'flags', 'global', 'ignoreCase', 'multiline', 'source', 'sticky', 'unicode' ];
 
 accessors.forEach(function(attr) {
-    var desc = Object.getOwnPropertyDescriptor(RegExp.prototype, attr);
-    assert(typeof desc.get === 'function')
-    assert(desc.set === undefined)
-    assert(desc.enumerable === false)
-    assert(desc.configurable === true)
+  var desc = Object.getOwnPropertyDescriptor(RegExp.prototype, attr);
+  assert(typeof desc.get === 'function');
+  assert(desc.set === undefined);
+  assert(desc.enumerable === false);
+  assert(desc.configurable === true);
 });

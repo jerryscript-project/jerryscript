@@ -14,4 +14,4 @@
  */
 
 /* Module requests must always be evaluated. */
-import "./module-sideeffect.js"
+import './module-sideeffect.js';

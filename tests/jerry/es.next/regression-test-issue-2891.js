@@ -12,15 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-function f (name){
+function f(name) {
   delete this.keywords[name];
-  assert (false);
+  assert(false);
 }
 
 try {
-  f ("jerry");
-  assert (false);
+  f('jerry');
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }

@@ -14,19 +14,19 @@
 
 var a = true;
 obj = Object.getPrototypeOf(a);
-assert (obj == Boolean.prototype);
+assert(obj == Boolean.prototype);
 
 a = 5;
 obj = Object.getPrototypeOf(a);
-assert (obj == Number.prototype);
+assert(obj == Number.prototype);
 
-a = "string";
+a = 'string';
 obj = Object.getPrototypeOf(a);
-assert (obj == String.prototype);
+assert(obj == String.prototype);
 
-a = [1,2,3];
+a = [ 1, 2, 3 ];
 obj = Object.getPrototypeOf(a);
-assert (obj == Array.prototype);
+assert(obj == Array.prototype);
 
 try {
   a = null;

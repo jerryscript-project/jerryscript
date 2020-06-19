@@ -13,5 +13,5 @@
  * limitations under the License.
  */
 
-export var x = 41
-export default a = "str"
+export var x = 41;
+export default a = 'str';

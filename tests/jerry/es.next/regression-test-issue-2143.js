@@ -13,4 +13,6 @@
 // limitations under the License.
 
 var a = new Uint8Array(2);
-a[0] = { valueOf : function() { throw "intoint"; } };
+a[0] = { valueOf: function() {
+  throw 'intoint';
+} };

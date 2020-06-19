@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var array = [$, Infinity]
+var array = [ $, Infinity ];
 Reflect.preventExtensions(array);
 
 try {
-  var $ = array.pop()
+  var $ = array.pop();
   assert(false);
 } catch (e) {
   assert(e instanceof TypeError);

@@ -19,7 +19,7 @@
   }
 
   arg = 4;
-  var b = function () {
+  var b = function() {
     return 6 + arg;
   };
 
@@ -32,8 +32,8 @@
 })();
 
 (function tc_06__005() {
-  var a = "\u0410\u0411";
-  var b = "\u0509\u0413";
+  var a = '\u0410\u0411';
+  var b = '\u0509\u0413';
 
   assert(a < b);
 })();
@@ -41,11 +41,10 @@
 (function tc_06__003() {
   var obj = new Object();
 
-  function c(arg)
-  {
+  function c(arg) {
     var obj = new Object();
     obj.par = arg;
-    obj.print = function () {
+    obj.print = function() {
       return arg;
     };
     return obj;
@@ -57,15 +56,14 @@
 })();
 
 (function tc_06__001() {
-  var str = "a\u000Ab";
+  var str = 'a\u000Ab';
   assert(str[1] === '\n');
 })();
 
 (function tc_06__002() {
-  function c(arg)
-  {
+  function c(arg) {
     var obj = new Object();
-    obj.print = function () {
+    obj.print = function() {
       f = arg;
     };
     return obj;

@@ -15,40 +15,40 @@
 try {
   var v;
   Object.getPrototypeOf(v);
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 try {
-  Object.getPrototypeOf("foo");
-  assert (false);
+  Object.getPrototypeOf('foo');
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 try {
   Object.getPrototypeOf(60);
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 try {
   var y = Object.getPrototypeOf(null);
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
-var obj = { x : "foo" };
-assert (Object.getPrototypeOf(obj) === Object.prototype);
+var obj = { x: 'foo' };
+assert(Object.getPrototypeOf(obj) === Object.prototype);
 
-var constructor = function () {};
+var constructor = function() {};
 constructor.prototype = obj;
 
 var d_obj = new constructor();
-assert (Object.getPrototypeOf(d_obj) === obj);
+assert(Object.getPrototypeOf(d_obj) === obj);
 
 obj = Object.create(null);
-assert (Object.getPrototypeOf(obj) === null);
+assert(Object.getPrototypeOf(obj) === null);

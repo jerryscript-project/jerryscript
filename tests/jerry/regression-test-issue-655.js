@@ -13,7 +13,7 @@
 // limitations under the License.
 
 try {
-  eval("if (true) {}\n/a/;");
+  eval('if (true) {}\n/a/;');
 } catch (e) {
-  assert (false);
+  assert(false);
 }

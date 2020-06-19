@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var buffer = new ArrayBuffer()
-var dataView = new DataView(buffer, 0, undefined)
+var buffer = new ArrayBuffer();
+var dataView = new DataView(buffer, 0, undefined);
 
 assert(dataView.byteLength === 0);

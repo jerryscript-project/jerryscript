@@ -13,7 +13,7 @@
 // limitations under the License.
 
 try {
-  [$, this.$] = [ ];
+  [ $, this.$ ] = [];
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }

@@ -13,58 +13,58 @@
  * limitations under the License.
  */
 
-assert (Object.prototype.toString.call (String.prototype) === '[object String]');
-assert (String.prototype.toString() === "");
+assert(Object.prototype.toString.call(String.prototype) === '[object String]');
+assert(String.prototype.toString() === '');
 
-assert (Object.prototype.toString.call (Boolean.prototype) === '[object Boolean]');
-assert (Boolean.prototype.valueOf() === false);
+assert(Object.prototype.toString.call(Boolean.prototype) === '[object Boolean]');
+assert(Boolean.prototype.valueOf() === false);
 
-assert (Object.prototype.toString.call (Number.prototype) === '[object Number]');
-assert (Number.prototype.valueOf() === 0);
+assert(Object.prototype.toString.call(Number.prototype) === '[object Number]');
+assert(Number.prototype.valueOf() === 0);
 
-assert (Object.prototype.toString.call (Date.prototype) === '[object Date]');
-assert (isNaN(Date.prototype.valueOf()));
+assert(Object.prototype.toString.call(Date.prototype) === '[object Date]');
+assert(isNaN(Date.prototype.valueOf()));
 
-assert (isNaN (Date.prototype.setTime()));
-assert (isNaN (Date.prototype.setMilliseconds()));
-assert (isNaN (Date.prototype.setUTCMilliseconds()));
-assert (isNaN (Date.prototype.setSeconds()));
-assert (isNaN (Date.prototype.setUTCSeconds()));
-assert (isNaN (Date.prototype.setMinutes()));
-assert (isNaN (Date.prototype.setUTCMinutes()));
-assert (isNaN (Date.prototype.setHours()));
-assert (isNaN (Date.prototype.setUTCHours()));
-assert (isNaN (Date.prototype.setDate()));
-assert (isNaN (Date.prototype.getUTCDate()));
-assert (isNaN (Date.prototype.setMonth()));
-assert (isNaN (Date.prototype.setUTCMonth()));
-assert (isNaN (Date.prototype.setFullYear()));
-assert (isNaN (Date.prototype.setUTCFullYear()));
+assert(isNaN(Date.prototype.setTime()));
+assert(isNaN(Date.prototype.setMilliseconds()));
+assert(isNaN(Date.prototype.setUTCMilliseconds()));
+assert(isNaN(Date.prototype.setSeconds()));
+assert(isNaN(Date.prototype.setUTCSeconds()));
+assert(isNaN(Date.prototype.setMinutes()));
+assert(isNaN(Date.prototype.setUTCMinutes()));
+assert(isNaN(Date.prototype.setHours()));
+assert(isNaN(Date.prototype.setUTCHours()));
+assert(isNaN(Date.prototype.setDate()));
+assert(isNaN(Date.prototype.getUTCDate()));
+assert(isNaN(Date.prototype.setMonth()));
+assert(isNaN(Date.prototype.setUTCMonth()));
+assert(isNaN(Date.prototype.setFullYear()));
+assert(isNaN(Date.prototype.setUTCFullYear()));
 
-assert (Object.prototype.toString.call (RegExp.prototype) === '[object RegExp]');
+assert(Object.prototype.toString.call(RegExp.prototype) === '[object RegExp]');
 
-assert (RegExp.prototype.source === "(?:)");
-assert (RegExp.prototype.global === false);
-assert (RegExp.prototype.ignoreCase === false);
-assert (RegExp.prototype.multiline === false);
+assert(RegExp.prototype.source === '(?:)');
+assert(RegExp.prototype.global === false);
+assert(RegExp.prototype.ignoreCase === false);
+assert(RegExp.prototype.multiline === false);
 
-RegExp.prototype.source = "a";
+RegExp.prototype.source = 'a';
 RegExp.prototype.global = true;
 RegExp.prototype.ignoreCase = true;
 RegExp.prototype.multiline = true;
-assert (RegExp.prototype.source === "(?:)");
-assert (RegExp.prototype.global === false);
-assert (RegExp.prototype.ignoreCase === false);
-assert (RegExp.prototype.multiline === false);
+assert(RegExp.prototype.source === '(?:)');
+assert(RegExp.prototype.global === false);
+assert(RegExp.prototype.ignoreCase === false);
+assert(RegExp.prototype.multiline === false);
 
 delete RegExp.prototype.source;
 delete RegExp.prototype.global;
 delete RegExp.prototype.ignoreCase;
 delete RegExp.prototype.multiline;
-assert (RegExp.prototype.source === "(?:)");
-assert (RegExp.prototype.global === false);
-assert (RegExp.prototype.ignoreCase === false);
-assert (RegExp.prototype.multiline === false);
+assert(RegExp.prototype.source === '(?:)');
+assert(RegExp.prototype.global === false);
+assert(RegExp.prototype.ignoreCase === false);
+assert(RegExp.prototype.multiline === false);
 
 var prototypes = [
   Error.prototype,
@@ -73,9 +73,9 @@ var prototypes = [
   ReferenceError.prototype,
   SyntaxError.prototype,
   TypeError.prototype,
-  URIError.prototype
-]
+  URIError.prototype,
+];
 
-prototypes.forEach (function (proto) {
-  assert (Object.prototype.toString.call (proto) === '[object Error]');
-})
+prototypes.forEach(function(proto) {
+  assert(Object.prototype.toString.call(proto) === '[object Error]');
+});

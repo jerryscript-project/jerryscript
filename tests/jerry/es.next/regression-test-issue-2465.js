@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var a = eval("Object.prototype[1] = 0;\
-              Promise.all()")
+var a = eval('Object.prototype[1] = 0;\
+              Promise.all()');
 a.catch(function(err) {
   assert(err instanceof TypeError);
 });

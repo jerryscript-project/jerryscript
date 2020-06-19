@@ -17,10 +17,10 @@
 // found in the LICENSE file.
 
 var target = {};
-var handler = { deleteProperty (target) {
+var handler = { deleteProperty(target) {
   throw 42;
-}, get (object, propName) {
-  if (propName == "length") {
+}, get(object, propName) {
+  if (propName == 'length') {
     return 5;
   }
 }};
@@ -31,7 +31,7 @@ var a = 5;
 
 // ecma_op_delete_binding
 with (proxy) {
-  delete a
+  delete a;
 }
 
 try {
@@ -43,17 +43,17 @@ try {
 }
 
 // test basic functionality
-var target = {foo: "bar"};
+var target = {foo: 'bar'};
 var handler = {
   deleteProperty(obj, prop) {
     delete obj[prop];
-  }
-}
+  },
+};
 
 var proxy = new Proxy(target, handler);
 
-assert(target.foo === "bar")
-assert(proxy.foo === "bar");
+assert(target.foo === 'bar');
+assert(proxy.foo === 'bar');
 
 assert(delete proxy.foo === false);
 
@@ -68,8 +68,8 @@ var handler2 = {
   deleteProperty(obj, prop) {
     delete obj[prop];
     return true;
-  }
-}
+  },
+};
 
 var proxy = new Proxy(target, handler2);
 
@@ -82,8 +82,8 @@ var target = {1: 42};
 var handler = {};
 var proxy = new Proxy(target, handler);
 
-assert(target[1] === 42)
-assert(delete proxy[1] === true)
+assert(target[1] === 42);
+assert(delete proxy[1] === true);
 assert(target[1] === undefined);
 
 // test with undefined trap
@@ -91,8 +91,8 @@ var target = {2: 52};
 var handler = { deleteProperty: null};
 var proxy = new Proxy(target, handler);
 
-assert(target[2] === 52)
-assert(delete proxy[2] === true)
+assert(target[2] === 52);
+assert(delete proxy[2] === true);
 assert(target[2] === undefined);
 
 // test when trap is invalid
@@ -108,7 +108,7 @@ try {
 }
 
 // test when handler is null
-var revocable = Proxy.revocable ({}, {});
+var revocable = Proxy.revocable({}, {});
 var proxy = revocable.proxy;
 revocable.revoke();
 
@@ -120,19 +120,19 @@ try {
 }
 
 // test when target is proxy
-var target = {prop: "foo"};
+var target = {prop: 'foo'};
 var handler = {
   deleteProperty(obj, prop) {
     delete obj[prop];
-  }
+  },
 };
 
 var proxy1 = new Proxy(target, handler);
 var proxy2 = new Proxy(proxy1, handler);
 
-assert(target.prop === "foo");
-assert(proxy1.prop === "foo");
-assert(proxy2.prop === "foo");
+assert(target.prop === 'foo');
+assert(proxy1.prop === 'foo');
+assert(proxy2.prop === 'foo');
 
 delete proxy2.prop;
 
@@ -146,15 +146,15 @@ var handler = {
   deleteProperty(obj, prop) {
     delete obj[prop];
     return true;
-  }
+  },
 };
 
-Object.defineProperty(target, "foo", {
+Object.defineProperty(target, 'foo', {
   configurable: false,
-  value: "foo"
+  value: 'foo',
 });
 
-var proxy = new Proxy (target, handler);
+var proxy = new Proxy(target, handler);
 
 try {
   delete proxy.foo;

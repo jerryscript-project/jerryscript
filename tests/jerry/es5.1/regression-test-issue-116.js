@@ -12,12 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-try
-{
+try {
   Symbol.for.length.toString.length.toExponential.length.valueOf.length.toExponential.length.valueOf.length.toFixed.name.anchor.name.bold.length.toExponential.caller;
-  assert (false);
-}
-catch (e)
-{
-  assert (e instanceof ReferenceError);
+  assert(false);
+} catch (e) {
+  assert(e instanceof ReferenceError);
 }

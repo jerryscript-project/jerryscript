@@ -17,7 +17,7 @@
 try {
   eval('for (var i = 0 in {}) {}');
   assert(false);
-} catch(e) {
+} catch (e) {
   assert(e instanceof SyntaxError);
 }
 

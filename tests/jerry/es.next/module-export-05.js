@@ -13,6 +13,6 @@
  * limitations under the License.
  */
 
-export * from "module-export-01.js";
-export * from "module-export-04.js";
-export default a = "str"
+export * from 'module-export-01.js';
+export * from 'module-export-04.js';
+export default a = 'str';

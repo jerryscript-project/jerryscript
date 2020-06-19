@@ -12,4 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-"98765".replace(76, function ( ) { return $ })
+'98765'.replace(76, function() {
+  return $;
+});

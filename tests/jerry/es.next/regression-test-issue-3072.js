@@ -17,7 +17,7 @@ var arrb = new ArrayBuffer(13);
 try {
   var d = new DataView(arrb, 12, -Infinity);
   d.setFloat32(1, 1);
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof RangeError);
+  assert(e instanceof RangeError);
 }

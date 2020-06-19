@@ -13,9 +13,8 @@
 // limitations under the License.
 
 try {
-  var a = Function.prototype.bind({0:0},30000000000);
+  var a = Function.prototype.bind({0: 0}, 30000000000);
   a();
-}
-catch (e) {
+} catch (e) {
   assert(false);
 }

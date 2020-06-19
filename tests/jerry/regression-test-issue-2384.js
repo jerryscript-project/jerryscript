@@ -13,8 +13,8 @@
 // limitations under the License.
 
 try {
-  "[]{83}".match("(?=){12,8}");
-  assert (false);
+  '[]{83}'.match('(?=){12,8}');
+  assert(false);
 } catch (e) {
-  assert (e instanceof SyntaxError);
+  assert(e instanceof SyntaxError);
 }

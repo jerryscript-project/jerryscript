@@ -12,12 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-try
-{
-  v_0 = new RegExp("N(?![^6](?:.)|(?!C[^k-o]*|p){0,}|H)|\\\\xDF\\db{0,}|i\\\\0?)");
-  assert (false);
-}
-catch (e)
-{
-  assert (e instanceof SyntaxError);
+try {
+  v_0 = new RegExp('N(?![^6](?:.)|(?!C[^k-o]*|p){0,}|H)|\\\\xDF\\db{0,}|i\\\\0?)');
+  assert(false);
+} catch (e) {
+  assert(e instanceof SyntaxError);
 }

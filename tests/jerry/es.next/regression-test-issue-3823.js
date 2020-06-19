@@ -13,7 +13,7 @@
 // limitations under the License.
 
 try {
-  eval(`function f ({"aba,a"}){}`);
+  eval('function f ({"aba,a"}){}');
   assert(false);
 } catch (e) {
   assert(e instanceof SyntaxError);

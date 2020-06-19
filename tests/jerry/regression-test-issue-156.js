@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function dec(x) { return x - 1 };
+function dec(x) {
+  return x - 1;
+};
 for (var i = 5; i > 0; i = dec(i)) {}
-for (var i = 11; i = dec (i); i--) {}
-for (var i = dec (12); i > 0; i--) {}
+for (var i = 11; i = dec(i); i--) {}
+for (var i = dec(12); i > 0; i--) {}

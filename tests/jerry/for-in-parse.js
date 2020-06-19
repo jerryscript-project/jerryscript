@@ -12,33 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function parse (txt) {
+function parse(txt) {
   try {
-    eval (txt)
-    assert (false)
+    eval(txt);
+    assert(false);
   } catch (e) {
-    assert (e instanceof SyntaxError)
+    assert(e instanceof SyntaxError);
   }
 }
 
-var obj = {a: 1, b: 2, c:3, d:4};
+var obj = {a: 1, b: 2, c: 3, d: 4};
 
 var forIn =
-  "for var prop in obj" +
-  "   obj [prop] += 4"
-parse (forIn)
+  'for var prop in obj' +
+  '   obj [prop] += 4';
+parse(forIn);
 
 var forIn =
-  "for [var prop in obj]" +
-  "   obj[prop] += 4;"
-parse (forIn)
+  'for [var prop in obj]' +
+  '   obj[prop] += 4;';
+parse(forIn);
 
 var forIn =
-  "for (var prop obj)" +
-  "   obj[prop] += 4;"
-parse (forIn)
+  'for (var prop obj)' +
+  '   obj[prop] += 4;';
+parse(forIn);
 
 var forIn =
-  "foreach (var prop in obj)" +
-  "   obj[prop] += 4;"
-parse (forIn)
+  'foreach (var prop in obj)' +
+  '   obj[prop] += 4;';
+parse(forIn);

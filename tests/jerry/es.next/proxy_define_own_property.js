@@ -16,17 +16,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-var target = function () {};
-var handler = { defineProperty (target) {
+var target = function() {};
+var handler = { defineProperty(target) {
   throw 42;
-}, construct () {
+}, construct() {
   return {};
 }};
 
 var proxy = new Proxy(target, handler);
 
 // 22.1.2.3.8.c
-Array.of.call(proxy, 5)
+Array.of.call(proxy, 5);
 
 // test basic functionality
 var g_target, g_name;
@@ -36,27 +36,27 @@ var handler = {
     g_target = target;
     g_name = name;
     return true;
-  }
-}
+  },
+};
 
 var target = {};
 var proxy = new Proxy(target, handler);
 var desc = { value: 1, writable: true, configurable: true };
 
-Object.defineProperty(proxy, "foo", desc);
+Object.defineProperty(proxy, 'foo', desc);
 
 assert(target === g_target);
-assert("foo" === g_name);
+assert('foo' === g_name);
 
 var handler = {
   defineProperty: function(target, name, desc) {
     Object.defineProperty(target, name, desc);
-  }
-}
+  },
+};
 
 var proxy = new Proxy(target, handler);
 
-Object.defineProperty(proxy, "bar", desc);
+Object.defineProperty(proxy, 'bar', desc);
 
 assert(proxy.bar === 1);
 
@@ -87,13 +87,13 @@ assert(target.name === "foo");
 // test when trap is not callable
 var target = {};
 var handler = {
-  defineProperty: 1
-}
+  defineProperty: 1,
+};
 
 var proxy = new Proxy(target, handler);
 
 try {
-  Object.defineProperty(proxy, "foo", {value: "foo"});
+  Object.defineProperty(proxy, 'foo', {value: 'foo'});
   assert(false);
 } catch (e) {
   assert(e instanceof TypeError);
@@ -102,19 +102,19 @@ try {
 // test when trap is undefined
 var target = {};
 var handler = {
-  defineProperty: undefined
-}
+  defineProperty: undefined,
+};
 
 var proxy = new Proxy(target, handler);
 var desc = { value: 1 };
 
-Object.defineProperty(proxy, "prop1", desc);
+Object.defineProperty(proxy, 'prop1', desc);
 assert(proxy.prop1 === 1);
 
 var target2 = {};
 var proxy2 = new Proxy(target2, {});
 
-Object.defineProperty(proxy2, "prop2", desc);
+Object.defineProperty(proxy2, 'prop2', desc);
 assert(proxy2.prop2 === 1);
 
 // test when invariants gets violated
@@ -122,15 +122,15 @@ var target = {};
 var handler = {
   defineProperty: function(target, name, desc) {
     return true;
-  }
-}
+  },
+};
 
 var proxy = new Proxy(target, handler);
 
 Object.preventExtensions(target);
 
 try {
-  Object.defineProperty(proxy, "foo", {value: 1});
+  Object.defineProperty(proxy, 'foo', {value: 1});
   assert(false);
 } catch (e) {
   assert(e instanceof TypeError);
@@ -142,7 +142,7 @@ var desc = {value: 1, writable: true, configurable: false, enumerable: true};
 var proxy = new Proxy(target, handler);
 
 try {
-  Object.defineProperty(proxy, "foo", desc);
+  Object.defineProperty(proxy, 'foo', desc);
   assert(false);
 } catch (e) {
   assert(e instanceof TypeError);
@@ -152,12 +152,12 @@ var target = {};
 var handler = {
   defineProperty: function(target, name, desc) {
     return true;
-  }
-}
+  },
+};
 
 var proxy = new Proxy(target, handler);
 
-Object.defineProperty(target, "foo", {value: 1, writable: false, configurable: false});
+Object.defineProperty(target, 'foo', {value: 1, writable: false, configurable: false});
 
 try {
   Object.defineProperty(proxy, 'foo', {value: 2});
@@ -166,7 +166,7 @@ try {
   assert(e instanceof TypeError);
 }
 
-target.bar = "baz";
+target.bar = 'baz';
 
 try {
   Object.defineProperty(proxy, 'bar', {value: 2, configurable: false});

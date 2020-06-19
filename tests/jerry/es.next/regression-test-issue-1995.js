@@ -12,15 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var name = "";
+var name = '';
 
-try
-{
-    Promise.race([""]).$()
-}
-catch (e)
-{
-    name = e.name;
+try {
+  Promise.race([ '' ]).$();
+} catch (e) {
+  name = e.name;
 }
 
-assert(name === "TypeError");
+assert(name === 'TypeError');

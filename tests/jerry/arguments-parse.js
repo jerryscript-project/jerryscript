@@ -12,24 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function check_parse_error (txt) {
+function check_parse_error(txt) {
   try {
-    eval (txt)
-    assert (false)
+    eval(txt);
+    assert(false);
   } catch (e) {
-    assert (e instanceof SyntaxError)
+    assert(e instanceof SyntaxError);
   }
 }
 
-function f_args (a,b,c) {
+function f_args(a, b, c) {
   return arguments;
 }
 
-check_parse_error ("f_args (1 2 3)");
-check_parse_error ("f_args (1; 2; 3)");
-check_parse_error ("f_args (())");
-check_parse_error ("f_args (1, 2, 3");
-check_parse_error ("f_args 1, 2, 3)");
-check_parse_error ("f_args 1, 2, 3");
-check_parse_error ("f_args 1; 2; 3");
-check_parse_error ("f_args{1, 2, 3}");
+check_parse_error('f_args (1 2 3)');
+check_parse_error('f_args (1; 2; 3)');
+check_parse_error('f_args (())');
+check_parse_error('f_args (1, 2, 3');
+check_parse_error('f_args 1, 2, 3)');
+check_parse_error('f_args 1, 2, 3');
+check_parse_error('f_args 1; 2; 3');
+check_parse_error('f_args{1, 2, 3}');

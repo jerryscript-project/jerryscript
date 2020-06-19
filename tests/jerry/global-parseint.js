@@ -12,36 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert(parseInt("123") === 123);
-assert(parseInt("+123") === 123);
-assert(parseInt("-123") === -123);
-assert(parseInt("0123") === 123);
-assert(parseInt("  123") === 123);
-assert(parseInt(" \n  123") === 123);
-assert(parseInt(" \n  123  \t") === 123);
-assert(parseInt("0x123") === 291);
-assert(parseInt("0X123") === 291);
-assert(parseInt("123", 4) === 27);
-assert(parseInt("ABC", 16) === 2748);
-assert(parseInt("12A3") === 12);
-assert(parseInt("12.34") === 12);
-assert(isNaN(parseInt("AB")));
-assert(isNaN(parseInt("")));
-assert(isNaN(parseInt("-")));
-assert(isNaN(parseInt("-", 11)));
-assert(parseInt("\u00a0123") === 123);
-assert(parseInt("\u20291  123\u00D0") === 1);
-assert(parseInt("\u00a0123", 13) === 198);
-assert(parseInt("\u2029123  1\u00D0", 11) === 146);
-assert(isNaN(parseInt("\u0009")));
-assert(isNaN(parseInt("\u00A0")));
-assert(parseInt("\u00A0\u00A0-1") === parseInt("-1"));
-assert(parseInt("\u00A01") === parseInt("1"));
+assert(parseInt('123') === 123);
+assert(parseInt('+123') === 123);
+assert(parseInt('-123') === -123);
+assert(parseInt('0123') === 123);
+assert(parseInt('  123') === 123);
+assert(parseInt(' \n  123') === 123);
+assert(parseInt(' \n  123  \t') === 123);
+assert(parseInt('0x123') === 291);
+assert(parseInt('0X123') === 291);
+assert(parseInt('123', 4) === 27);
+assert(parseInt('ABC', 16) === 2748);
+assert(parseInt('12A3') === 12);
+assert(parseInt('12.34') === 12);
+assert(isNaN(parseInt('AB')));
+assert(isNaN(parseInt('')));
+assert(isNaN(parseInt('-')));
+assert(isNaN(parseInt('-', 11)));
+assert(parseInt('\u00a0123') === 123);
+assert(parseInt('\u20291  123\u00D0') === 1);
+assert(parseInt('\u00a0123', 13) === 198);
+assert(parseInt('\u2029123  1\u00D0', 11) === 146);
+assert(isNaN(parseInt('\u0009')));
+assert(isNaN(parseInt('\u00A0')));
+assert(parseInt('\u00A0\u00A0-1') === parseInt('-1'));
+assert(parseInt('\u00A01') === parseInt('1'));
 
 var bool = true;
 var obj = new Object();
 var num = 8;
-var arr = [2,3,4];
+var arr = [ 2, 3, 4 ];
 var undef;
 
 assert(isNaN(parseInt(bool, bool)));
@@ -69,11 +69,13 @@ assert(isNaN(parseInt(undef, obj)));
 assert(isNaN(parseInt(undef, num)));
 assert(isNaN(parseInt(undef, arr)));
 
-var obj = { toString : function () { throw new ReferenceError("foo") } };
+var obj = { toString: function() {
+  throw new ReferenceError('foo');
+} };
 try {
   parseInt(obj);
   assert(false);
 } catch (e) {
   assert(e instanceof ReferenceError);
-  assert(e.message === "foo");
+  assert(e.message === 'foo');
 }

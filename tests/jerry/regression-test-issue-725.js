@@ -13,9 +13,9 @@
 // limitations under the License.
 
 try {
-	eval("switch(foo){} {}");
-	assert(false);
+  eval('switch(foo){} {}');
+  assert(false);
 } catch (e) {
-	assert(e instanceof ReferenceError);
+  assert(e instanceof ReferenceError);
 }
 

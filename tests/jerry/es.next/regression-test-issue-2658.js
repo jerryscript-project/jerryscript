@@ -13,9 +13,9 @@
 // limitations under the License.
 
 try {
-  var A = class extends null { }
+  var A = class extends null { };
   new A;
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }

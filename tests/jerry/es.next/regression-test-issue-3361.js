@@ -12,6 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var fakeArray = { [ Symbol ] : 0};
-fakeArray[ Symbol.isConcatSpreadable ] = 2.756;
+var fakeArray = { [Symbol]: 0};
+fakeArray[Symbol.isConcatSpreadable] = 2.756;
 [].concat(fakeArray);

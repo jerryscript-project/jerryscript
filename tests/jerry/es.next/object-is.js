@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert(Object.is(2, "foo") === false);
+assert(Object.is(2, 'foo') === false);
 assert(Object.is(null, 2) === false);
 
 var x;
@@ -36,7 +36,7 @@ assert(Object.is(true, true) === true);
 assert(Object.is(false, false) === true);
 assert(Object.is(true, false) === false);
 assert(Object.is(false, true) === false);
-assert(Object.is("", false) === false);
+assert(Object.is('', false) === false);
 assert(Object.is(0, false) === false);
 
 sym1 = Symbol.for('foo');

@@ -14,8 +14,8 @@
 
 // TODO: Update these tests when the internal routine has been implemented
 
-var target = function () {};
-var handler = { get (name) {
+var target = function() {};
+var handler = { get(name) {
   return 5;
 }};
 

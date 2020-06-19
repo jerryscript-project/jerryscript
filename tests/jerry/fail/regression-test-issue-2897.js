@@ -12,5 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-object = { valueOf: function ( ) { return Symbol ( "foo" ) } };
-assert("" + object);
+object = { valueOf: function() {
+  return Symbol('foo');
+} };
+assert('' + object);

@@ -15,8 +15,7 @@
 // This test file should use CR-LF styled line endings to test if everything is
 // parsed correctly
 
-
 var value =
   5;
 
-assert (value === 5);
+assert(value === 5);

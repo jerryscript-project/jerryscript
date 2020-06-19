@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var map = new Map()
-map.set()
-map.set('bar')
+var map = new Map();
+map.set();
+map.set('bar');
 
-var count = 0
-map.forEach(function () {
+var count = 0;
+map.forEach(function() {
   if (count === 0) {
-    map.delete('bar')
+    map.delete('bar');
   }
   count++;
-})
+});
 
 assert(count === 1);

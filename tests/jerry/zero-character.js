@@ -13,10 +13,9 @@
 // limitations under the License.
 
 try {
-  eval("/*var " + String.fromCharCode(0) + "xx = 1*/");
-}
-catch (e) {
-  assert (false);
+  eval('/*var ' + String.fromCharCode(0) + 'xx = 1*/');
+} catch (e) {
+  assert(false);
 }
 
-assert ("x\0y" !== "x\0z");
+assert('x\0y' !== 'x\0z');

@@ -18,24 +18,24 @@ var num = 12131233;
 
 // Test with string input
 var result = regexp[Symbol.match](str);
-assert(result.toString() === "2016,01,02");
+assert(result.toString() === '2016,01,02');
 
 regexp = /[0-5]+/g;
 result = regexp[Symbol.match](str);
-assert(result.toString() === "201,01,02");
+assert(result.toString() === '201,01,02');
 
 regexp = /[0-1]+/g;
 result = regexp[Symbol.match](str);
-assert(result.toString() === "01,01,0");
+assert(result.toString() === '01,01,0');
 
-regexp = /([0-9]+)-([0-9]+)-([0-9]+)/g
+regexp = /([0-9]+)-([0-9]+)-([0-9]+)/g;
 result = regexp[Symbol.match](str);
-assert(result.toString() === "2016-01-02");
+assert(result.toString() === '2016-01-02');
 
 // Test with number input
 regexp = /[0-9]+/g;
 result = regexp[Symbol.match](num);
-assert(result.toString() === "12131233");
+assert(result.toString() === '12131233');
 
 // Test with empty string
 result = regexp[Symbol.match]('');
@@ -60,15 +60,13 @@ class RegExpSub extends RegExp {
   [Symbol.match](str) {
     var result = RegExp.prototype[Symbol.match].call(this, str);
     if (result) {
-      return "VALID";
-    }
-    else
-    {
-      return "INVALID";
+      return 'VALID';
+    } else {
+      return 'INVALID';
     }
   }
 }
 
 var regexp1 = new RegExpSub('([0-9]+)-([0-9]+)-([0-9]+)');
 result = regexp1[Symbol.match](str);
-assert(result === "VALID");
+assert(result === 'VALID');

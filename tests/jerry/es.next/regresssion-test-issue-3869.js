@@ -13,8 +13,8 @@
 // limitations under the License.
 
 try {
-  eval('function a ({ *x:x }) {}')
-  assert(false)
+  eval('function a ({ *x:x }) {}');
+  assert(false);
 } catch (e) {
-  assert(e instanceof SyntaxError)
+  assert(e instanceof SyntaxError);
 }

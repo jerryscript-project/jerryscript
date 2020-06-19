@@ -12,5 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-Object.defineProperty(Array.prototype, 0, {set: function() {var $ = $()}});
-Promise.all([0]);
+Object.defineProperty(Array.prototype, 0, {set: function() {
+  var $ = $();
+}});
+Promise.all([ 0 ]);

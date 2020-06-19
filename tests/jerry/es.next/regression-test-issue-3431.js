@@ -13,15 +13,15 @@
 // limitations under the License.
 
 try {
-  eval ('function g({["y"]: []}) {}; g({xy: {}})');
-  assert (false);
+  eval('function g({["y"]: []}) {}; g({xy: {}})');
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 try {
-  eval ('function g([], {}, [], {}) {}; g()');
-  assert (false);
+  eval('function g([], {}, [], {}) {}; g()');
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }

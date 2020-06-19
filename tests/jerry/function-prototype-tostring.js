@@ -12,16 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert (Math.cos.toString() === "function(){/* ecmascript */}");
+assert(Math.cos.toString() === 'function(){/* ecmascript */}');
 
-function none() { return 1; }
-assert (none.toString() === "function(){/* ecmascript */}");
+function none() {
+  return 1;
+}
+assert(none.toString() === 'function(){/* ecmascript */}');
 
-function single(b) { return 1; }
-assert (single.toString() === "function(){/* ecmascript */}");
+function single(b) {
+  return 1;
+}
+assert(single.toString() === 'function(){/* ecmascript */}');
 
-function multiple(a,b) { return 1; }
-assert (multiple.toString() === "function(){/* ecmascript */}");
+function multiple(a, b) {
+  return 1;
+}
+assert(multiple.toString() === 'function(){/* ecmascript */}');
 
-function lots(a,b,c,d,e,f,g,h,i,j,k) { return 1; }
-assert (lots.toString() === "function(){/* ecmascript */}");
+function lots(a, b, c, d, e, f, g, h, i, j, k) {
+  return 1;
+}
+assert(lots.toString() === 'function(){/* ecmascript */}');

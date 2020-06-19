@@ -51,27 +51,26 @@ var builtin_typedArrays = [
   Uint8ClampedArray,
 ];
 
-
-(function () {
+(function() {
   /* each length property is configurable */
   var desc;
-  
+
   for (obj of builtin_objects) {
-    desc = Object.getOwnPropertyDescriptor(obj, 'length');                                                                                                                    
+    desc = Object.getOwnPropertyDescriptor(obj, 'length');
     assert(desc.writable === false);
     assert(desc.enumerable === false);
     assert(desc.configurable === true);
   }
-  
+
   for (ta of builtin_typedArrays) {
-    desc = Object.getOwnPropertyDescriptor(ta, 'length');                                                                                                                    
+    desc = Object.getOwnPropertyDescriptor(ta, 'length');
     assert(desc.writable === false);
     assert(desc.enumerable === false);
     assert(desc.configurable === true);
   }
 })();
 
-(function () {
+(function() {
   /* each length property can be deleted */
   for (obj of builtin_objects) {
     assert(obj.hasOwnProperty('length') === true);
@@ -86,7 +85,7 @@ var builtin_typedArrays = [
   }
 })();
 
-(function () {
+(function() {
   /* test length property of builtin function */
   for (obj of builtin_objects) {
     var property_names = Object.getOwnPropertyNames(obj);
@@ -106,14 +105,14 @@ var builtin_typedArrays = [
   }
 })();
 
-(function () {
+(function() {
   /* test length property of function objects */
-  var normal_func = function () {};
+  var normal_func = function() {};
   var arrow_func = () => {};
   var bound_func = normal_func.bind({});
   var nested_bound_func = arrow_func.bind().bind(1);
 
-  var functions = [normal_func, arrow_func, bound_func, nested_bound_func];
+  var functions = [ normal_func, arrow_func, bound_func, nested_bound_func ];
 
   for (func of functions) {
     var desc = Object.getOwnPropertyDescriptor(func, 'length');
@@ -131,16 +130,16 @@ var builtin_typedArrays = [
 
 (function() {
   /* changing the length of f affects the bound function */
-  function f(a,b,c) {}
-  Object.defineProperty(f, "length", { value: 30 });
-  var g = f.bind(1,2)
+  function f(a, b, c) {}
+  Object.defineProperty(f, 'length', { value: 30 });
+  var g = f.bind(1, 2);
   assert(g.length === 29);
 })();
 
 (function() {
   /* changing the length of f does not affect the bound function */
-  function f(a,b,c) {}
-  var g = f.bind(1,2)
-  Object.defineProperty(f, "length", { value: 30 });
+  function f(a, b, c) {}
+  var g = f.bind(1, 2);
+  Object.defineProperty(f, 'length', { value: 30 });
   assert(g.length === 2);
 })();

@@ -14,8 +14,8 @@
  */
 function fn(x) {
   switch (x) {
-    case 1: { return }
+  case 1: {return;}
   }
 }
 
-new Function("switch(1) { default: { return }}")
+new Function('switch(1) { default: { return }}');

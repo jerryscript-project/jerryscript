@@ -13,8 +13,8 @@
 // limitations under the License.
 
 try {
-  eval ('Function("[]", 0)()');
-  assert (false);
+  eval('Function("[]", 0)()');
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }

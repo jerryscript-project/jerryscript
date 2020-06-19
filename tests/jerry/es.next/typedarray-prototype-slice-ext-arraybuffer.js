@@ -40,32 +40,32 @@ for (var typeIdx = 0; typeIdx < typedarrays.length; typeIdx++) {
   }
 
   // Test with normal inputs
-  assert(typed.slice(1, 3).toString() === "1,2");
-  assert(typed.slice(2, 5).toString() === "2,3,4");
-  assert(typed.slice(0, 6).toString() === "0,1,2,3,4,5");
+  assert(typed.slice(1, 3).toString() === '1,2');
+  assert(typed.slice(2, 5).toString() === '2,3,4');
+  assert(typed.slice(0, 6).toString() === '0,1,2,3,4,5');
 
   // Test witn negative inputs
-  assert(typed.slice(-2, 5).toString() === "4");
-  assert(typed.slice(0, -3).toString() === "0,1,2");
-  assert(typed.slice(-1, -4).toString() === "");
+  assert(typed.slice(-2, 5).toString() === '4');
+  assert(typed.slice(0, -3).toString() === '0,1,2');
+  assert(typed.slice(-1, -4).toString() === '');
 
   // Test with bigger inputs then length
-  assert(typed.slice(7, 1).toString() === "");
-  assert(typed.slice(2, 9).toString() === "2,3,4,5");
+  assert(typed.slice(7, 1).toString() === '');
+  assert(typed.slice(2, 9).toString() === '2,3,4,5');
 
   // Test with undefined
-  assert(typed.slice(undefined, 4).toString() === "0,1,2,3");
-  assert(typed.slice(0, undefined).toString() === "0,1,2,3,4,5");
-  assert(typed.slice(undefined, undefined).toString() === "0,1,2,3,4,5");
+  assert(typed.slice(undefined, 4).toString() === '0,1,2,3');
+  assert(typed.slice(0, undefined).toString() === '0,1,2,3,4,5');
+  assert(typed.slice(undefined, undefined).toString() === '0,1,2,3,4,5');
 
   // Test with NaN and +/-Infinity
-  assert(typed.slice(NaN, 3).toString() === "0,1,2");
-  assert(typed.slice(2, Infinity).toString() === "2,3,4,5");
-  assert(typed.slice(-Infinity, Infinity).toString() === "0,1,2,3,4,5");
+  assert(typed.slice(NaN, 3).toString() === '0,1,2');
+  assert(typed.slice(2, Infinity).toString() === '2,3,4,5');
+  assert(typed.slice(-Infinity, Infinity).toString() === '0,1,2,3,4,5');
 
   // Test with default inputs
-  assert(typed.slice().toString() === "0,1,2,3,4,5");
-  assert(typed.slice(4).toString() === "4,5");
+  assert(typed.slice().toString() === '0,1,2,3,4,5');
+  assert(typed.slice(4).toString() === '4,5');
 
   delete buffer;
 }

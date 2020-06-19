@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function $ (b = [ ].$) { };
-assert ($() === undefined);
+function $(b = [].$) { };
+assert($() === undefined);

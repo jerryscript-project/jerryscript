@@ -14,21 +14,21 @@
 
 try {
   assert(!({} instanceof assert));
-} catch(e) {
+} catch (e) {
   assert(false);
 }
 
 try {
   ({} instanceof Math.sin);
   assert(false);
-} catch(e) {
+} catch (e) {
   assert(e instanceof TypeError);
 }
 
-Math.sin.prototype = {}
+Math.sin.prototype = {};
 
 try {
   assert(!({} instanceof Math.sin));
-} catch(e) {
+} catch (e) {
   assert(false);
 }

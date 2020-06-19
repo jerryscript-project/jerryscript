@@ -12,20 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function f1()
-{
-  function f2()
-    {
-      assert(k > 0);
-      assert(i < 10000);
+function f1() {
+  function f2() {
+    assert(k > 0);
+    assert(i < 10000);
 
-      if(--k == 0)
-        {
-          return;
-        }
-
-      f2();
+    if (--k == 0) {
+      return;
     }
+
+    f2();
+  }
 
   k = 17;
 
@@ -35,7 +32,6 @@ function f1()
 var k;
 var i;
 
-for(i = 0; i < 100; i++)
-{
+for (i = 0; i < 100; i++) {
   f1();
 }

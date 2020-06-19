@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function check_syntax_error (code) {
+function check_syntax_error(code) {
   try {
     eval(code);
-    assert (false);
+    assert(false);
   } catch (e) {
-    assert (e instanceof SyntaxError);
+    assert(e instanceof SyntaxError);
   }
 }
 
-check_syntax_error ("function eval () {'use strict';}");
-check_syntax_error ("function f (eval) {'use strict';}");
-check_syntax_error ("function arguments () {'use strict';}");
-check_syntax_error ("function f (arguments) {'use strict';}");
+check_syntax_error('function eval () {\'use strict\';}');
+check_syntax_error('function f (eval) {\'use strict\';}');
+check_syntax_error('function arguments () {\'use strict\';}');
+check_syntax_error('function f (arguments) {\'use strict\';}');
 
-check_syntax_error ("(function eval () {'use strict';})");
-check_syntax_error ("(function f (eval) {'use strict';})");
-check_syntax_error ("(function arguments () {'use strict';})");
-check_syntax_error ("(function f (arguments) {'use strict';})");
+check_syntax_error('(function eval () {\'use strict\';})');
+check_syntax_error('(function f (eval) {\'use strict\';})');
+check_syntax_error('(function arguments () {\'use strict\';})');
+check_syntax_error('(function f (arguments) {\'use strict\';})');

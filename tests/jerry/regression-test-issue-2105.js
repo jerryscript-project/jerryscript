@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /* Adding property to a frozen object */
-var a = {one: "test"};
+var a = {one: 'test'};
 a.two = 3;
 Object.freeze(a);
 a.three = 7;
@@ -21,7 +21,7 @@ assert(a.three === undefined);
 
 /* Adding properties to frozen global object */
 Object.freeze(this);
-assert(eval ('function b() {};') === undefined);
+assert(eval('function b() {};') === undefined);
 assert(eval('var test_var = 3') === undefined);
 
 /* Check strict mode TypeError */
@@ -49,6 +49,6 @@ try {
   assert(e instanceof TypeError);
 }
 /* Check properties of a */
-assert(Object.keys(a) == "one,two");
+assert(Object.keys(a) == 'one,two');
 /* Check properties of global object */
-assert(Object.keys(this) == "assert,gc,print,resourceName,a,fail,fail_two");
+assert(Object.keys(this) == 'assert,gc,print,resourceName,a,fail,fail_two');

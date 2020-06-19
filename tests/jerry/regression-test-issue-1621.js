@@ -12,6 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var eval = eval.bind()
+var eval = eval.bind();
 gc();
-eval("1");
+eval('1');

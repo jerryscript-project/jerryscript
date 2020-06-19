@@ -12,28 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert(isNaN (Math['min'] (1.0, NaN)));
-assert(isNaN (Math['min'] (NaN, 1.0)));
-assert(isNaN (Math['min'] (-Infinity, NaN)));
-assert(isNaN (Math['min'] (NaN, -Infinity)));
-assert(Math['min'] (1.0, 3.0, 0.0) === 0.0);
-assert(Math['min'] (1.0, 3.0, Infinity) === 1.0);
-assert(Math['min'] (1.0, 3.0, -Infinity) === -Infinity);
-assert(Math['min'] (-Infinity, Infinity) === -Infinity);
-assert(Math['min'] (Infinity, -Infinity) === -Infinity);
-assert(Math['min'] (Infinity, Infinity) === Infinity);
-assert(Math['min'] (-Infinity, -Infinity) === -Infinity);
-assert(Math['min'] () === Infinity);
+assert(isNaN(Math['min'](1.0, NaN)));
+assert(isNaN(Math['min'](NaN, 1.0)));
+assert(isNaN(Math['min'](-Infinity, NaN)));
+assert(isNaN(Math['min'](NaN, -Infinity)));
+assert(Math['min'](1.0, 3.0, 0.0) === 0.0);
+assert(Math['min'](1.0, 3.0, Infinity) === 1.0);
+assert(Math['min'](1.0, 3.0, -Infinity) === -Infinity);
+assert(Math['min'](-Infinity, Infinity) === -Infinity);
+assert(Math['min'](Infinity, -Infinity) === -Infinity);
+assert(Math['min'](Infinity, Infinity) === Infinity);
+assert(Math['min'](-Infinity, -Infinity) === -Infinity);
+assert(Math['min']() === Infinity);
 
-assert(Math['min'] (0.0, -0.0) === -0.0);
-assert(Math['min'] (-0.0, 0.0) === -0.0);
+assert(Math['min'](0.0, -0.0) === -0.0);
+assert(Math['min'](-0.0, 0.0) === -0.0);
 
-assert(Math['min'] (2, -Infinity) === -Infinity);
-assert(Math['min'] (-Infinity, 2) === -Infinity);
-assert(Math['min'] (2, Infinity) === 2);
-assert(Math['min'] (Infinity, 2) === 2);
+assert(Math['min'](2, -Infinity) === -Infinity);
+assert(Math['min'](-Infinity, 2) === -Infinity);
+assert(Math['min'](2, Infinity) === 2);
+assert(Math['min'](Infinity, 2) === 2);
 
-assert(Math['min'] (-2, Infinity) === -2);
-assert(Math['min'] (Infinity, -2) === -2);
-assert(Math['min'] (-2, -Infinity) === -Infinity);
-assert(Math['min'] (-Infinity, -2) === -Infinity);
+assert(Math['min'](-2, Infinity) === -2);
+assert(Math['min'](Infinity, -2) === -2);
+assert(Math['min'](-2, -Infinity) === -Infinity);
+assert(Math['min'](-Infinity, -2) === -Infinity);

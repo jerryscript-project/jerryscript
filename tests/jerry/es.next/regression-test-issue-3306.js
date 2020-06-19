@@ -15,7 +15,7 @@
 try {
   typeof(a);
   let a;
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof ReferenceError);
+  assert(e instanceof ReferenceError);
 }

@@ -13,42 +13,45 @@
 // limitations under the License.
 
 function f() {
-    return 'foo';
+  return 'foo';
 }
-assert ((function() {
-    if (1 === 1) {
-        function f() {
-            return 'bar';
-        }
+assert((function() {
+  if (1 === 1) {
+    function f() {
+      return 'bar';
     }
-    return f();
+  }
+  return f();
 })() === 'bar');
 
-function check_syntax_error (s) {
+function check_syntax_error(s) {
   try {
-    eval (s);
-    assert (false);
-  }
-  catch (e) {
-    assert (e instanceof SyntaxError);
+    eval(s);
+    assert(false);
+  } catch (e) {
+    assert(e instanceof SyntaxError);
   }
 }
 
-check_syntax_error ("'use strict'; function arguments () {}");
-check_syntax_error ("'use strict'; var l = function arguments () {}");
+check_syntax_error('\'use strict\'; function arguments () {}');
+check_syntax_error('\'use strict\'; var l = function arguments () {}');
 
-check_syntax_error ("function f__strict_mode_duplicate_parameters (p, p) { 'use strict'; }");
+check_syntax_error('function f__strict_mode_duplicate_parameters (p, p) { \'use strict\'; }');
 
-function test_strict_mode_propagation_in_func_expr_and_getters_setters () {
-  var p = function () {
+function test_strict_mode_propagation_in_func_expr_and_getters_setters() {
+  var p = function() {
     'use strict';
 
     return true;
-  }
+  };
 
-  var o = { get prop () { 'use strict'; return true; }, set prop (v) { 'use strict'; } };
+  var o = { get prop() {
+    'use strict'; return true;
+  }, set prop(v) {
+    'use strict';
+  } };
 
-  function test () {
+  function test() {
     tmp_eval = eval;
     eval = tmp_eval;
   }

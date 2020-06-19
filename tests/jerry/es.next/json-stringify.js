@@ -13,28 +13,27 @@
 // limitations under the License.
 
 // Test with proxy
-assert(JSON.stringify(new Proxy(['foo'], {})) === '["foo"]');
-assert(JSON.stringify(new Proxy({0:"foo"}, {})) === '{"0":"foo"}');
+assert(JSON.stringify(new Proxy([ 'foo' ], {})) === '["foo"]');
+assert(JSON.stringify(new Proxy({0: 'foo'}, {})) === '{"0":"foo"}');
 
-var target = [1,2,3];
+var target = [ 1, 2, 3 ];
 var handler = {
   get(target, prop) {
-    if (prop == "length")
-    {
+    if (prop == 'length') {
       throw 42;
     }
-  }
-}
+  },
+};
 
 try {
-  JSON.stringify(new Proxy(target,handler));
+  JSON.stringify(new Proxy(target, handler));
   assert(false);
 } catch (e) {
   assert(e === 42);
 }
 
-var revocable = Proxy.revocable (target, { get (t, p , r) {
-  if (p == "toJSON") {
+var revocable = Proxy.revocable(target, { get(t, p, r) {
+  if (p == 'toJSON') {
     revocable.revoke();
   }
 }});

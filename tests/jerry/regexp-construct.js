@@ -14,67 +14,67 @@
 
 var r;
 
-r = new RegExp ();
-assert (r.source == "(?:)");
-assert (r.global == false);
-assert (r.ignoreCase == false);
-assert (r.multiline == false);
+r = new RegExp();
+assert(r.source == '(?:)');
+assert(r.global == false);
+assert(r.ignoreCase == false);
+assert(r.multiline == false);
 
-r = new RegExp ("a");
-assert (r.source == "a");
-assert (r.global == false);
-assert (r.ignoreCase == false);
-assert (r.multiline == false);
+r = new RegExp('a');
+assert(r.source == 'a');
+assert(r.global == false);
+assert(r.ignoreCase == false);
+assert(r.multiline == false);
 
-r = new RegExp ("a","gim");
-assert (r.source == "a");
-assert (r.global == true);
-assert (r.ignoreCase == true);
-assert (r.multiline == true);
+r = new RegExp('a', 'gim');
+assert(r.source == 'a');
+assert(r.global == true);
+assert(r.ignoreCase == true);
+assert(r.multiline == true);
 
-r = RegExp ("a");
-assert (r.source == "a");
-assert (r.global == false);
-assert (r.ignoreCase == false);
-assert (r.multiline == false);
+r = RegExp('a');
+assert(r.source == 'a');
+assert(r.global == false);
+assert(r.ignoreCase == false);
+assert(r.multiline == false);
 
-r = RegExp ("a","gim");
-assert (r.source == "a");
-assert (r.global == true);
-assert (r.ignoreCase == true);
-assert (r.multiline == true);
+r = RegExp('a', 'gim');
+assert(r.source == 'a');
+assert(r.global == true);
+assert(r.ignoreCase == true);
+assert(r.multiline == true);
 
 var r2;
 
-r2 = RegExp (r);
-assert (r2.source == "a");
-assert (r2.global == true);
-assert (r2.ignoreCase == true);
-assert (r2.multiline == true);
+r2 = RegExp(r);
+assert(r2.source == 'a');
+assert(r2.global == true);
+assert(r2.ignoreCase == true);
+assert(r2.multiline == true);
 
-r2 = RegExp (r, undefined);
-assert (r2.source == "a");
-assert (r2.global == true);
-assert (r2.ignoreCase == true);
-assert (r2.multiline == true);
+r2 = RegExp(r, undefined);
+assert(r2.source == 'a');
+assert(r2.global == true);
+assert(r2.ignoreCase == true);
+assert(r2.multiline == true);
 
 r = /(?:)/;
-assert (r.source == "(?:)");
-assert (r.global == false);
-assert (r.ignoreCase == false);
-assert (r.multiline == false);
+assert(r.source == '(?:)');
+assert(r.global == false);
+assert(r.ignoreCase == false);
+assert(r.multiline == false);
 
 r = /a/;
-assert (r.source == "a");
-assert (r.global == false);
-assert (r.ignoreCase == false);
-assert (r.multiline == false);
+assert(r.source == 'a');
+assert(r.global == false);
+assert(r.ignoreCase == false);
+assert(r.multiline == false);
 
 r = /a/gim;
-assert (r.source == "a");
-assert (r.global == true);
-assert (r.ignoreCase == true);
-assert (r.multiline == true);
+assert(r.source == 'a');
+assert(r.global == true);
+assert(r.ignoreCase == true);
+assert(r.multiline == true);
 
 /* The 'undefined' argument for the RegExp constructor should not be converted to string,
  * and it should behave just like when there is no argument.
@@ -82,49 +82,49 @@ assert (r.multiline == true);
 r1 = new RegExp();
 r2 = new RegExp(undefined);
 var foo;
-r3 = new RegExp(foo)
+r3 = new RegExp(foo);
 
-assert (r1.source === r2.source);
-assert (r2.source === r3.source);
+assert(r1.source === r2.source);
+assert(r2.source === r3.source);
 
-r = new RegExp ("foo", undefined);
-assert (r.source === "foo");
-assert (r.global === false);
-assert (r.ignoreCase === false);
-assert (r.multiline === false);
+r = new RegExp('foo', undefined);
+assert(r.source === 'foo');
+assert(r.global === false);
+assert(r.ignoreCase === false);
+assert(r.multiline === false);
 
-r = new RegExp ("foo", void 0);
-assert (r.source === "foo");
-assert (r.global === false);
-assert (r.ignoreCase === false);
-assert (r.multiline === false);
+r = new RegExp('foo', void 0);
+assert(r.source === 'foo');
+assert(r.global === false);
+assert(r.ignoreCase === false);
+assert(r.multiline === false);
 
 try {
-  new RegExp (undefined, "ii");
-  assert (false);
+  new RegExp(undefined, 'ii');
+  assert(false);
 } catch (e) {
-  assert (e instanceof SyntaxError);
+  assert(e instanceof SyntaxError);
 }
 
 try {
-  new RegExp ("", "gg");
-  assert (false);
+  new RegExp('', 'gg');
+  assert(false);
 } catch (e) {
-  assert (e instanceof SyntaxError);
+  assert(e instanceof SyntaxError);
 }
 
 try {
-  new RegExp (void 0, "mm");
-  assert (false);
+  new RegExp(void 0, 'mm');
+  assert(false);
 } catch (e) {
-  assert (e instanceof SyntaxError);
+  assert(e instanceof SyntaxError);
 }
 
-r = new RegExp (undefined, undefined);
-assert (r.source == "(?:)");
-assert (r.global == false);
-assert (r.ignoreCase == false);
-assert (r.multiline == false);
+r = new RegExp(undefined, undefined);
+assert(r.source == '(?:)');
+assert(r.global == false);
+assert(r.ignoreCase == false);
+assert(r.multiline == false);
 
 /* RegExp properties */
-assert (RegExp.length === 2);
+assert(RegExp.length === 2);

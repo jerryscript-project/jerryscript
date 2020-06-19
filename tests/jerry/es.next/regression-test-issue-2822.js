@@ -13,19 +13,19 @@
 // limitations under the License.
 
 class Animal {
-    constructor() {
-        eval();
-    }
-    explain() { }
+  constructor() {
+    eval();
+  }
+  explain() { }
 }
 class Dog extends Animal {
-    constructor() {
-        super()
-    }
+  constructor() {
+    super();
+  }
 }
 class Doge extends Dog {
-    whoAmI() {}
+  whoAmI() {}
 }
 
 var d = new Doge;
-assert (typeof d === "object");
+assert(typeof d === 'object');

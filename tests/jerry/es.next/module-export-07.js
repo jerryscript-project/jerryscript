@@ -14,4 +14,4 @@
  */
 
 var y, z;
-export default x = y = z = "default";
+export default x = y = z = 'default';

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-var a = new Int32Array([1, 2, 3, 4, 5]);
+var a = new Int32Array([ 1, 2, 3, 4, 5 ]);
 assert(a.fill(0).toString() === '0,0,0,0,0');
 assert(a.toString() === '0,0,0,0,0');
 assert(a.fill(1, 3).toString() === '0,0,0,1,1');
@@ -55,7 +55,7 @@ assert(b.toString() === '');
 assert(b.fill(3, b.length, b.length).toString() === '');
 assert(b.toString() === '');
 
-var c = new Uint8Array([0]);
+var c = new Uint8Array([ 0 ]);
 assert(c.fill(256).toString() === '0');
 assert(c.toString() === '0');
 assert(c.fill(257).toString() === '1');
@@ -68,7 +68,7 @@ try {
   assert(c.toString() === '1');
 }
 
-var d = new Float32Array([0]);
+var d = new Float32Array([ 0 ]);
 assert(d.fill(NaN).toString() === 'NaN');
 assert(d.toString() === 'NaN');
 

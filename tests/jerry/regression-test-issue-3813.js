@@ -12,12 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var o = Object("str");
-o.toString = function() { throw "toString error" };
+var o = Object('str');
+o.toString = function() {
+  throw 'toString error';
+};
 
 try {
   JSON.stringify(o);
   assert(false);
 } catch (e) {
-  assert(e === "toString error");
+  assert(e === 'toString error');
 }

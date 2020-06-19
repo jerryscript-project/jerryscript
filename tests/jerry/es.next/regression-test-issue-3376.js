@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-(function () {
-  new Promise(isFinite.toString)
+(function() {
+  new Promise(isFinite.toString);
 })();
 
-(function () {
-  [ ] = [ ]
-})
-({})
+(function() {
+  [] = [];
+})({});

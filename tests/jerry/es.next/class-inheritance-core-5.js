@@ -13,15 +13,15 @@
  * limitations under the License.
  */
 
- class A extends Array {
-   constructor (a, b, c) {
-     eval ("eval ('super (a, b, c)')");
-     eval ("eval ('this.f = 5;')");
-   }
- }
+class A extends Array {
+  constructor(a, b, c) {
+    eval('eval (\'super (a, b, c)\')');
+    eval('eval (\'this.f = 5;\')');
+  }
+}
 
- class B extends A { }
+class B extends A { }
 
- var b = new B (1, 2, 3, 4);
- assert (b.f === 5);
- assert (b.length === 3);
+var b = new B(1, 2, 3, 4);
+assert(b.f === 5);
+assert(b.length === 3);

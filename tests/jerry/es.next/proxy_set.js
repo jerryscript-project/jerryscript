@@ -26,32 +26,34 @@ var handler = {
     if (prop == 'eyeCount') {
       obj[prop] = value;
     } else {
-      obj[prop] = "foo";
+      obj[prop] = 'foo';
     }
-  }
+  },
 };
 
 var monster = new Monster();
 var proxy = new Proxy(monster, handler);
 
 proxy.eyeCount = 1;
-proxy.foo = "bar";
+proxy.foo = 'bar';
 
 assert(monster.eyeCount === 1);
-assert(monster.foo === "foo");
+assert(monster.foo === 'foo');
 
-var target = { foo: "foo"};
+var target = { foo: 'foo'};
 var handler = {
   set: function(obj, prop, value) {
-    obj[prop] = "";
-  }
+    obj[prop] = '';
+  },
 };
 var proxy = new Proxy(target, handler);
 
 proxy.foo = 12;
-assert(target.foo === "");
+assert(target.foo === '');
 
-var properties = ["bla", "0", 1, Symbol(), {[Symbol.toPrimitive]() {return "a"}}];
+var properties = [ 'bla', '0', 1, Symbol(), {[Symbol.toPrimitive]() {
+  return 'a';
+}} ];
 
 var target = {};
 var handler = {};
@@ -80,25 +82,25 @@ var target = {};
 var handler = {
   set(obj, prop, value) {
     obj[prop] = value;
-  }
+  },
 };
 
 var proxy = new Proxy(target, handler);
 var proxy2 = new Proxy(proxy, handler);
 
-proxy2.prop = "foo";
+proxy2.prop = 'foo';
 
-assert(target.prop === "foo");
+assert(target.prop === 'foo');
 
 // test when handler is null
 var target = {};
 var handler = {
   set(obj, prop, value) {
     obj[prop] = value;
-  }
+  },
 };
 
-var revocable = Proxy.revocable (target, {});
+var revocable = Proxy.revocable(target, {});
 var proxy = revocable.proxy;
 revocable.revoke();
 
@@ -111,13 +113,15 @@ try {
 
 // test when invariants gets violated
 var target = {};
-var handler = { set() {return 42} };
+var handler = { set() {
+  return 42;
+} };
 var proxy = new Proxy(target, handler);
 
-Object.defineProperty(target, "key", {
+Object.defineProperty(target, 'key', {
   configurable: false,
   writable: false,
-  value: 0
+  value: 0,
 });
 
 try {
@@ -127,9 +131,9 @@ try {
   assert(e instanceof TypeError);
 }
 
-Object.defineProperty(target, "key2", {
+Object.defineProperty(target, 'key2', {
   configurable: false,
-  set: undefined
+  set: undefined,
 });
 
 try {

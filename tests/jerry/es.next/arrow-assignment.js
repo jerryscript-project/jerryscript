@@ -13,34 +13,36 @@
  * limitations under the License.
  */
 
-var y = 0
-var prot = Object.getPrototypeOf(/ /)
+var y = 0;
+var prot = Object.getPrototypeOf(/ /);
 
-prot.setY = function (v) { y = v }
+prot.setY = function(v) {
+  y = v;
+};
 
-assert(y === 0)
+assert(y === 0);
 // Since arrow function is an assignment expression, this affects certain constructs
-var f = x => {}
-/ /.setY(5)
-assert(y === 5)
+var f = x => {};
+/ /.setY(5);
+assert(y === 5);
 
-var s
+var s;
 // This is not a function call
-assert(eval("s = x => { return 1 }\n(3)") === 3)
-assert(typeof s === "function")
+assert(eval('s = x => { return 1 }\n(3)') === 3);
+assert(typeof s === 'function');
 
 // This is a function call
-assert(eval("s = function () { return 1 }\n(3)") === 1)
-assert(s === 1)
+assert(eval('s = function () { return 1 }\n(3)') === 1);
+assert(s === 1);
 
-var f = 5 ? x => 1 : x => 2
-assert(f() === 1)
+var f = 5 ? x => 1 : x => 2;
+assert(f() === 1);
 
-var f = [x => 2][0]
-assert(f() === 2)
+var f = [ x => 2 ][0];
+assert(f() === 2);
 
-var f = 123; f += x => y
-assert(typeof f === "string")
+var f = 123; f += x => y;
+assert(typeof f === 'string');
 
 // Comma operator
-assert(eval("x => {}, 5") === 5)
+assert(eval('x => {}, 5') === 5);

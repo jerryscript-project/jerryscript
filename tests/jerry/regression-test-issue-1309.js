@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var errorMessage = "toStringThrows"
+var errorMessage = 'toStringThrows';
 
 var toStringThrows = {
-  toString : function() {
+  toString: function() {
     throw new Error(errorMessage);
-  }
-}
+  },
+};
 
 try {
   var obj = {};

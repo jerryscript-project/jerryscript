@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function parse (txt) {
+function parse(txt) {
   try {
-    eval (txt)
-    assert (false)
+    eval(txt);
+    assert(false);
   } catch (e) {
-    assert (e instanceof SyntaxError)
+    assert(e instanceof SyntaxError);
   }
 }
 
@@ -25,27 +25,27 @@ var a = 21;
 var b = 10;
 var c;
 
-parse ("c =  a++b");
-parse ("c =  a--b");
+parse('c =  a++b');
+parse('c =  a--b');
 
-parse ("c = a +* b");
-parse ("c = a -* b");
-parse ("c = a +/ b");
-parse ("c = a -/ b");
-parse ("c = a +% b");
-parse ("c = a -% b");
+parse('c = a +* b');
+parse('c = a -* b');
+parse('c = a +/ b');
+parse('c = a -/ b');
+parse('c = a +% b');
+parse('c = a -% b');
 
-parse ("a =* b");
-parse ("a =/ b");
-parse ("a =% b");
+parse('a =* b');
+parse('a =/ b');
+parse('a =% b');
 
-parse ("c = a+");
-parse ("c = a-");
+parse('c = a+');
+parse('c = a-');
 
-parse("a++\n()");
-parse("a--\n.b");
+parse('a++\n()');
+parse('a--\n.b');
 
-assert((-2 .toString()) === -2);
+assert((eval('-2 .toString()')) === -2);
 
 Number.prototype[0] = 123;
 assert(-2[0] === -123);
@@ -55,33 +55,33 @@ function f() {
   function g() {}
 
   try {
-    eval ("g(this, 'a' = 1)");
-    assert (false);
+    eval('g(this, \'a\' = 1)');
+    assert(false);
   } catch (e) {
-    assert (e instanceof ReferenceError);
+    assert(e instanceof ReferenceError);
   }
 
   try {
-    eval ("g(this, 'a' += 1)");
-    assert (false);
+    eval('g(this, \'a\' += 1)');
+    assert(false);
   } catch (e) {
-    assert (e instanceof ReferenceError);
+    assert(e instanceof ReferenceError);
   }
 
-  assert (a === 0);
+  assert(a === 0);
 }
 f();
 
-function g(a, b)
-{
-  assert(b === "undefined");
+function g(a, b) {
+  assert(b === 'undefined');
 }
-g(this, typeof undeclared_var)
+g(this, typeof undeclared_var);
 
-function h()
-{
+function h() {
   var done = false;
-  var o = { a: function () { done = (this === o) } }
+  var o = { a: function() {
+    done = (this === o);
+  } };
   function f() {}
 
   with (o) {

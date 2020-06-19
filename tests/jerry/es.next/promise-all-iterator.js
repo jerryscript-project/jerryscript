@@ -28,7 +28,11 @@ function createIterable(arr, methods = {}) {
 };
 
 // iterator next
-Promise.all({[Symbol.iterator]() { return {get next() { throw 5; }}}
+Promise.all({[Symbol.iterator]() {
+  return {get next() {
+    throw 5;
+  }};
+},
 }).then(onfullfilled => {
   // If this is not called, the promise has failed, and catch must be called.
   assert(false);
@@ -37,7 +41,13 @@ Promise.all({[Symbol.iterator]() { return {get next() { throw 5; }}}
 });
 
 // iterator value
-Promise.all({ [Symbol.iterator] () { return { next () { return { get value () { throw 5 }}}}}
+Promise.all({ [Symbol.iterator]() {
+  return { next() {
+    return { get value() {
+      throw 5;
+    }};
+  }};
+},
 }).then(onfullfilled => {
   // If this is not called, the promise has failed, and catch must be called.
   assert(false);
@@ -46,7 +56,13 @@ Promise.all({ [Symbol.iterator] () { return { next () { return { get value () { 
 });
 
 // iterator done
-Promise.all({ [Symbol.iterator] () { return { next () { return { get done () { throw 5 }}}}}
+Promise.all({ [Symbol.iterator]() {
+  return { next() {
+    return { get done() {
+      throw 5;
+    }};
+  }};
+},
 }).then(onfullfilled => {
   // If this is not called, the promise has failed, and catch must be called.
   assert(false);
@@ -55,7 +71,9 @@ Promise.all({ [Symbol.iterator] () { return { next () { return { get done () { t
 });
 
 // iterator get
-Promise.all({ get [Symbol.iterator] () { throw 5 }
+Promise.all({ get [Symbol.iterator]() {
+  throw 5;
+},
 }).then(onfullfilled => {
   // If this is not called, the promise has failed, and catch must be called.
   assert(false);
@@ -64,18 +82,32 @@ Promise.all({ get [Symbol.iterator] () { throw 5 }
 });
 
 var fulfills = Promise.all(createIterable([
-  new Promise(resolve => { resolve("foo"); }),
-  new Promise(resolve => { resolve("bar"); }),
+  new Promise(resolve => {
+    resolve('foo');
+  }),
+  new Promise(resolve => {
+    resolve('bar');
+  }),
 ]));
 var rejects = Promise.all(createIterable([
-  new Promise((_, reject) => { reject("baz"); }),
-  new Promise((_, reject) => { reject("qux"); }),
+  new Promise((_, reject) => {
+    reject('baz');
+  }),
+  new Promise((_, reject) => {
+    reject('qux');
+  }),
 ]));
 
-fulfills.then(result => { assert (result + "" === "foo,bar"); });
-rejects.catch(result => { assert (result === "baz"); });
+fulfills.then(result => {
+  assert(result + '' === 'foo,bar');
+});
+rejects.catch(result => {
+  assert(result === 'baz');
+});
 
 var closed = false;
 delete Promise.resolve;
-Promise.all(createIterable([1,2,3], {'return': function () { closed = true; }}));
-assert (closed);
+Promise.all(createIterable([ 1, 2, 3 ], {'return': function() {
+  closed = true;
+}}));
+assert(closed);

@@ -12,20 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function checkSyntax (str) {
+function checkSyntax(str) {
   try {
-    eval (str);
-    assert (false);
+    eval(str);
+    assert(false);
   } catch (e) {
-    assert (e instanceof SyntaxError);
+    assert(e instanceof SyntaxError);
   }
 }
 
 // Only \u200C-Zero width non-joiner, and \u200D-Zero width joiner are allowed
 
-checkSyntax ("_\u200b\u200d");
-checkSyntax ("_\u200c\u200e");
+checkSyntax('_\u200b\u200d');
+checkSyntax('_\u200c\u200e');
 
 var _\u200c\u200d = 5;
 
-assert (_\u200c\u200d === 5);
+assert(_\u200c\u200d === 5);

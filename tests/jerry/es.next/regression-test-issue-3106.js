@@ -13,9 +13,9 @@
 // limitations under the License.
 
 var symbol = Symbol();
-var arr = [{}];
-with (arr.pop()){
-    arr.push(symbol.valueOf());
+var arr = [ {} ];
+with (arr.pop()) {
+  arr.push(symbol.valueOf());
 }
 
 try {

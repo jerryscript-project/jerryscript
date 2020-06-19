@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import "module-import-01.js";
-import "module-export-05.js";
-import "module-export-06.js";
-import "module-export-07.js";
+import 'module-import-01.js';
+import 'module-export-05.js';
+import 'module-export-06.js';
+import 'module-export-07.js';

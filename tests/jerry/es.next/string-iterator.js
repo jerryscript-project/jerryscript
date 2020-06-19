@@ -31,7 +31,7 @@ var iterator = str[Symbol.iterator]();
 
 try {
   iterator.next.call(5);
-  assert (false);
+  assert(false);
 } catch (e) {
   assert(e instanceof TypeError);
 }
@@ -44,7 +44,7 @@ try {
 }
 
 var str = 'Example string.';
-var expected = ['E', 'x', 'a', 'm', 'p', 'l', 'e', ' ', 's', 't', 'r', 'i', 'n', 'g', '.'];
+var expected = [ 'E', 'x', 'a', 'm', 'p', 'l', 'e', ' ', 's', 't', 'r', 'i', 'n', 'g', '.' ];
 
 var iterator = str[Symbol.iterator]();
 var next = iterator.next();
@@ -59,7 +59,7 @@ while (!next.done) {
 assert(next.value === undefined);
 
 var str = '^o𓙦һR񼴆]ŭ媖?᯾豼עW򏋁';
-var expected = ['^', 'o', '𓙦', 'һ', 'R', '񼴆', ']', 'ŭ', '媖', '?', '᯾', '豼', 'ע', 'W', '򏋁'];
+var expected = [ '^', 'o', '𓙦', 'һ', 'R', '񼴆', ']', 'ŭ', '媖', '?', '᯾', '豼', 'ע', 'W', '򏋁' ];
 
 iterator = str[Symbol.iterator]();
 next = iterator.next();

@@ -12,18 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function f_empty()
-{
+function f_empty() {
   return;
 }
 
-function f_42()
-{
+function f_42() {
   return 42;
 }
 
-function f_expr()
-{
+function f_expr() {
   var a = 5;
   var b = 5;
   return a + b;

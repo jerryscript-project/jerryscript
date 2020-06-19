@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-async function async_method () {
-    assert (new.target === undefined);
+async function async_method() {
+  assert(new.target === undefined);
 }
 
-async_method ();
+async_method();

@@ -13,27 +13,23 @@
 // limitations under the License.
 
 /* String which is 32 bytes long. */
-var str = "1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+";
+var str = '1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+';
 
 for (var i = 0; i < 10; i++) {
   str = str + str;
 }
 
-str = "(function() { return " + str + "1 })";
+str = '(function() { return ' + str + '1 })';
 
 /* Eat memory. */
 var array = [];
 
-try
-{
-  for (var i = 0; i < 30; i++)
-  {
+try {
+  for (var i = 0; i < 30; i++) {
     array[i] = eval(str);
   }
-  assert (false);
-}
-catch (err)
-{
+  assert(false);
+} catch (err) {
   array = null;
-  assert (err === null);
+  assert(err === null);
 }

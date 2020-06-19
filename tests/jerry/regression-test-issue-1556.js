@@ -13,18 +13,18 @@
 // limitations under the License.
 
 /* Maximum 256 paramaters are allowed. */
-var src = "(function (";
+var src = '(function (';
 for (var i = 0; i < 254; i++)
-    src += "a" + i + ", ";
-src += "b) { var c = 1; })()";
+  src += 'a' + i + ', ';
+src += 'b) { var c = 1; })()';
 
 eval(src);
 
 /* More than 256 parameters is a syntax error. */
-var src = "(function (";
+var src = '(function (';
 for (var i = 0; i < 255; i++)
-    src += "a" + i + ", ";
-src += "b) { })()";
+  src += 'a' + i + ', ';
+src += 'b) { })()';
 
 try {
   eval(src);
@@ -35,9 +35,9 @@ try {
 
 /* Maximum 256 local variables are stored in registers.
  * The rest is stored in the lexical environment. */
-var src = "(function () {";
+var src = '(function () {';
 for (var i = 0; i < 400; i++)
-    src += "var a" + i + " = 5; ";
-src += "})()";
+  src += 'var a' + i + ' = 5; ';
+src += '})()';
 
 eval(src);

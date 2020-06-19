@@ -14,19 +14,19 @@
 
 // Test case minimalized from issue #3067
 
-function f () { }
+function f() { }
 
 class B extends f {
-  constructor () {
-    super (0)
-    super.$
-    this.$ = $
+  constructor() {
+    super(0);
+    super.$;
+    this.$ = $;
   }
 }
 
 try {
   var b = new B;
-  assert (false);
+  assert(false);
 } catch (ex) {
-  assert (ex instanceof ReferenceError);
+  assert(ex instanceof ReferenceError);
 }

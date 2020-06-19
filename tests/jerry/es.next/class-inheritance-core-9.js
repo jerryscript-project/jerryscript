@@ -13,17 +13,17 @@
  * limitations under the License.
  */
 
- var order = 0;
+var order = 0;
 
- try {
-   var A = class extends null {
-     constructor () {
-       order++;
-     }
-   }
+try {
+  var A = class extends null {
+    constructor() {
+      order++;
+    }
+  };
 
-   new A;
- } catch (e) {
-   assert (order === 1);
-   assert (e instanceof ReferenceError);
- }
+  new A;
+} catch (e) {
+  assert(order === 1);
+  assert(e instanceof ReferenceError);
+}

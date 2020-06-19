@@ -12,5 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-Object.defineProperty(Array.prototype, 0, { get : function ( ) { throw $ } });
-Promise.all([,]);
+Object.defineProperty(Array.prototype, 0, { get: function() {
+  throw $;
+} });
+Promise.all([ , ]);

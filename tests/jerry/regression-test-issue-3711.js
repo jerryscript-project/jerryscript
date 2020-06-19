@@ -18,25 +18,25 @@ var bound = func.bind();
 
 /* original test case from the issue report */
 if (function() {
-  return func.bind()(0, 0, 0, 0, 0, 0, 0)
+  return func.bind()(0, 0, 0, 0, 0, 0, 0);
 }());
 
 /* various versions of the issue report */
 
 /* call the bound function with a lots of args */
 for (var idx = 0; idx < 50; idx++) {
-    var args = new Array(idx);
+  var args = new Array(idx);
 
-    bound.apply(undefined, args);
+  bound.apply(undefined, args);
 
-    delete args;
+  delete args;
 }
 
 /* bind the function with multiple args and invoke it */
 for (var idx = 0; idx < 25; idx++) {
-    var args = new Array(idx);
+  var args = new Array(idx);
 
-    func.bind.apply(func, args).apply(undefined, args);
+  func.bind.apply(func, args).apply(undefined, args);
 
-    delete args;
+  delete args;
 }

@@ -15,7 +15,6 @@
 // This issue was triggered when show opcodes was enabled at compile
 // time but not enabled in runtime. A memory leak was created.
 
-function f()
-{
+function f() {
   var \u0042 = true;
 };

@@ -16,7 +16,7 @@ JSON.stringify & (Date = 1);
 
 b = 1;
 this.a = 2;
-this.a
+this.a;
 b = 3;
 assert(b == 3);
 assert(a == 2);

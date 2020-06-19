@@ -33,9 +33,9 @@ assert((number % 79) == 2);
 var num1 = 1234567, num2 = 1234000;
 assert((num1 % num2) == 567);
 
-assert (1 / (-1 % -1) < 0);
-assert (1 / (-1 % 1) < 0);
-assert (1 / (1 % -1) > 0);
-assert (1 / (1 % 1) > 0);
+assert(1 / (-1 % -1) < 0);
+assert(1 / (-1 % 1) < 0);
+assert(1 / (1 % -1) > 0);
+assert(1 / (1 % 1) > 0);
 
-assert (eval ("x\n\n=\n\n6\n\n/\n\n3") === 2)
+assert(eval('x\n\n=\n\n6\n\n/\n\n3') === 2);

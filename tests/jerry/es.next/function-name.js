@@ -31,7 +31,7 @@ function assertConfigurableOnlyMethod(func) {
   assertNameNotExists(func);
 
   Object.defineProperty(func, 'name', {value: 'newName', configurable: true});
-  assert (Object.getOwnPropertyDescriptor(func, 'name').value === 'newName');
+  assert(Object.getOwnPropertyDescriptor(func, 'name').value === 'newName');
   assertNameExists(func);
 
   delete func.name;
@@ -46,44 +46,44 @@ function assertConfigurableOnlyAccessor(func, name, method) {
 
 function assertMethodName(func, name, functionName = name) {
   assertNameExists(func);
-  assertConfigurableOnlyMethod(func)
-  assert(Object.getOwnPropertyDescriptor(func, 'name').value === functionName)
+  assertConfigurableOnlyMethod(func);
+  assert(Object.getOwnPropertyDescriptor(func, 'name').value === functionName);
 }
 
 function assertGetterName(obj, name, functionName = name) {
   assertConfigurableOnlyAccessor(obj, name, 'get');
-  assert(Object.getOwnPropertyDescriptor(obj, name).get['name'] === 'get ' + functionName)
+  assert(Object.getOwnPropertyDescriptor(obj, name).get['name'] === 'get ' + functionName);
 }
 
 function assertSetterName(obj, name, functionName = name) {
   assertConfigurableOnlyAccessor(obj, name, 'set');
-  assert(Object.getOwnPropertyDescriptor(obj, name).set['name'] === 'set ' + functionName)
+  assert(Object.getOwnPropertyDescriptor(obj, name).set['name'] === 'set ' + functionName);
 }
 
-var func1 = function () {};
+var func1 = function() {};
 assertMethodName(func1, 'func1');
 
 var func2 = function bar() {};
 assertMethodName(func2, 'bar');
 
-var func3 = (function () {}).prototype.constructor;
+var func3 = (function() {}).prototype.constructor;
 assert(typeof func3 === 'function');
 assertNameNotExists(func3);
 
 var func4;
-func4 = function () {}
+func4 = function() {};
 assertMethodName(func4, 'func4');
 
 var func5;
-func5 = function bar () {}
+func5 = function bar() {};
 assertMethodName(func5, 'bar');
 
 var func6;
-(func6) = function () {}
+(func6) = function() {};
 assertNameNotExists(func6);
 
 var func7;
-(func7) = function bar () {}
+(func7) = function bar() {};
 assertMethodName(func7, 'bar');
 
 let emptySymbolMethod = Symbol();
@@ -95,19 +95,23 @@ let namedSymbolSetter = Symbol('foo');
 
 var o = {
   func1() {},
-  func2: function () {},
+  func2: function() {},
   func3: function bar() {},
   func4: () => {},
   func5: class {},
   func6: class A {},
-  func7: class name { static name () {} },
+  func7: class name {
+    static name() {}
+  },
   ['func' + '8']() {},
-  ['func' + '9']: function () {},
+  ['func' + '9']: function() {},
   ['func' + '10']: function bar() {},
   ['func' + '11']: () => {},
   ['func' + '12']: class {},
   ['func' + '13']: class A {},
-  ['func' + '14']: class name { static name () {} },
+  ['func' + '14']: class name {
+    static name() {}
+  },
   get func15() {},
   get ['func' + '16']() {},
   set func17(a) {},
@@ -118,7 +122,7 @@ var o = {
   get [namedSymbolGetter]() {},
   set [emptySymbolSetter](a) {},
   set [namedSymbolSetter](a) {},
-}
+};
 
 assertMethodName(o.func1, 'func1');
 assertMethodName(o.func2, 'func2');
@@ -148,8 +152,8 @@ assertGetterName(o, namedSymbolGetter, '[foo]');
 assertSetterName(o, emptySymbolSetter, '');
 assertSetterName(o, namedSymbolSetter, '[foo]');
 
-class A  {
-  constructor () {}
+class A {
+  constructor() {}
   func1() {}
   get func2() {}
   set func3(a) {}
@@ -211,7 +215,7 @@ assertGetterName(A.prototype, namedSymbolGetter, '[foo]');
 assertSetterName(A.prototype, emptySymbolSetter, '');
 assertSetterName(A.prototype, namedSymbolSetter, '[foo]');
 
-class B  {
+class B {
   func1() {}
   get func2() {}
   set func3(a) {}
@@ -273,7 +277,7 @@ assertGetterName(B.prototype, namedSymbolGetter, '[foo]');
 assertSetterName(B.prototype, emptySymbolSetter, '');
 assertSetterName(B.prototype, namedSymbolSetter, '[foo]');
 
-let names = ['push', 'pop', 'reduce', 'reduceRight'];
+let names = [ 'push', 'pop', 'reduce', 'reduceRight' ];
 
 for (let n of names) {
   assert(Array.prototype[n].name === n);
@@ -289,9 +293,9 @@ assert(Object.getOwnPropertyDescriptor(Object.prototype, '__proto__').set.name =
 let arFunc;
 let array = [];
 array['original'] = array;
-array['original'][arFunc = ()=>{ }]=function(){}
+array['original'][arFunc = ()=>{ }]=function() {};
 assertNameNotExists(array[arFunc]);
 
-var o = { 0 : class {} };
+var o = { 0: class {} };
 
 assertMethodName(o['0'], '0');

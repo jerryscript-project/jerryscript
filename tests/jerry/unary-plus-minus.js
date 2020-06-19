@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert (+0 === -0);
-assert (1/-0 === -Infinity);
-assert (1/+0 === Infinity);
-assert ("3" -+-+-+ "1" + "1" / "3" * "6" + "2" === "42");
-assert (isNaN (-NaN));
+assert(+0 === -0);
+assert(1/-0 === -Infinity);
+assert(1/+0 === Infinity);
+assert('3' -+-+-+ '1' + '1' / '3' * '6' + '2' === '42');
+assert(isNaN(-NaN));

@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var v0 = (Array((((new String).split().constructor)(Symbol( )))))
+var v0 = (Array((((new String).split().constructor)(Symbol()))));
 
 try {
-  var $ = (new Uint8ClampedArray).set((new ((new constructor).constructor(this).Uint32Array)), v0)
-  assert (false);
+  var $ = (new Uint8ClampedArray).set((new ((new constructor).constructor(this).Uint32Array)), v0);
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }

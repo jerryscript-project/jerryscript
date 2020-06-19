@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function g ( a, b = a ) {
-  function a ( ) { }
-  function $ ( ) { }
-  eval ( "" )
+function g(a, b = a) {
+  function a() { }
+  function $() { }
+  eval('');
 }
-g ( );
+g();
 
-$ = function ( ) {
-  function x ( ) { }
-}
+$ = function() {
+  function x() { }
+};
 
-function j ( ) { }
+function j() { }

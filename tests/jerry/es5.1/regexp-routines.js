@@ -13,8 +13,8 @@
 // limitations under the License.
 
 try {
-  RegExp.prototype.toString.call ({});
-  assert (false);
+  RegExp.prototype.toString.call({});
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }

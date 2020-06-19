@@ -15,7 +15,7 @@
 // 1.
 var simple_obj = {a: 1, b: 2, c: 3, d: 4};
 for (var prop_of_simple_obj in simple_obj) {
-    simple_obj[prop_of_simple_obj] += 4;
+  simple_obj[prop_of_simple_obj] += 4;
 }
 
 assert(simple_obj.a === 5
@@ -25,11 +25,11 @@ assert(simple_obj.a === 5
 
 // 2.
 for
-    (
-    var
-        prop_of_simple_obj in simple_obj
-    ) {
-    simple_obj[prop_of_simple_obj] -= 4;
+(
+  var
+    prop_of_simple_obj in simple_obj
+) {
+  simple_obj[prop_of_simple_obj] -= 4;
 }
 
 assert(simple_obj.a === 1
@@ -68,7 +68,7 @@ var prop_of_array_obj;
 array_obj.eight = 8;
 
 for (prop_of_array_obj in array_obj) {
-    array_obj[prop_of_array_obj] += 1;
+  array_obj[prop_of_array_obj] += 1;
 }
 
 assert(array_obj[0] === 2
@@ -83,25 +83,25 @@ assert(array_obj[0] === 2
 // 5.
 var null_obj = null;
 for (var prop_of_null_obj in null_obj) {
-    assert(false);
+  assert(false);
 }
 
 // 6.
 var empty_object = {};
 for (var prop_of_empty_object in empty_object) {
-    assert(false);
+  assert(false);
 }
 
 // 7.
 for (var i in undefined) {
-    assert(false);
+  assert(false);
 }
 
 // 8.
-var base_obj = {base_prop: "base"};
+var base_obj = {base_prop: 'base'};
 
 function constr() {
-    this.derived_prop = "derived";
+  this.derived_prop = 'derived';
 }
 
 constr.prototype = base_obj;
@@ -109,34 +109,36 @@ constr.prototype = base_obj;
 var derived_obj = new constr();
 
 for (var prop_of_derived_obj in derived_obj) {
-    derived_obj[prop_of_derived_obj] += "A";
+  derived_obj[prop_of_derived_obj] += 'A';
 }
 
-assert(derived_obj.base_prop === "baseA" && derived_obj.derived_prop === "derivedA");
+assert(derived_obj.base_prop === 'baseA' && derived_obj.derived_prop === 'derivedA');
 
 // 9.
 log = {};
 count = 0;
 
-for (i in {q : 1})
-{
-  log [i] = true;
+for (i in {q: 1}) {
+  log[i] = true;
   count++;
 }
 
-assert (count == 1 && 'q' in log);
+assert(count == 1 && 'q' in log);
 
 // 10.
 log = {};
 count = 0;
 
-for (i in {q : 1, p : 2, get f() { ; }, set f (v) { ; }, get t () { }, set c (v) {}})
-{
-  log [i] = true;
+for (i in {q: 1, p: 2, get f() {
+  ;
+}, set f(v) {
+  ;
+}, get t() { }, set c(v) {}}) {
+  log[i] = true;
   count++;
 }
 
-assert (count == 5
+assert(count == 5
         && 'q' in log
         && 'p' in log
         && 'f' in log
@@ -149,23 +151,21 @@ count = 0;
 
 var a = [];
 a[5] = 5;
-for (var x in a)
-{
+for (var x in a) {
   log[x] = true;
   count++;
 }
 
-assert (count == 1
+assert(count == 1
         && '5' in log);
 
 // 12.
 log = {};
 count = 0;
 
-q = { c : 3, d : 4 };
+q = { c: 3, d: 4 };
 
-function p_constructor ()
-{
+function p_constructor() {
   this.a = 1;
   this.b = 2;
 
@@ -173,18 +173,17 @@ function p_constructor ()
 }
 
 p_constructor.prototype = q;
-p = new p_constructor ();
+p = new p_constructor();
 
-Object.defineProperty (p, 'h', { value : 5, enumerable : false, configurable : true });
-Object.defineProperty (q, 'h', { value : 6, enumerable : true, configurable : true });
+Object.defineProperty(p, 'h', { value: 5, enumerable: false, configurable: true });
+Object.defineProperty(q, 'h', { value: 6, enumerable: true, configurable: true });
 
-for (var i in p)
-{
+for (var i in p) {
   log[i] = true;
   count++;
 }
 
-assert (count == 4
+assert(count == 4
         && 'a' in log
         && 'b' in log
         && 'c' in log
@@ -194,20 +193,18 @@ assert (count == 4
 log = {};
 count = 0;
 
-function f()
-{
+function f() {
   var tmp = { a: 1, b: 2, c: 3, d: 4 };
 
   return tmp;
 }
 
-for (var i in f())
-{
+for (var i in f()) {
   log[i] = true;
   count++;
 }
 
-assert (count == 4
+assert(count == 4
         && 'a' in log
         && 'b' in log
         && 'c' in log
@@ -218,36 +215,33 @@ log = {};
 count = 0;
 
 b = 'prop';
-c = { prop : 1 };
+c = { prop: 1 };
 Boolean.prototype.boolean_prototype_prop = 1;
 
-for (a in b in c)
-{
+for (a in b in c) {
   log[a] = true;
   count++;
 }
 
-assert (count == 1
+assert(count == 1
         && 'boolean_prototype_prop' in log);
 
 // 15.
 log = {};
 count = 0;
 
-for (a in 'prop' in { prop : 1 })
-{
+for (a in 'prop' in { prop: 1 }) {
   log[a] = true;
   count++;
 }
 
-assert (count == 1
+assert(count == 1
         && 'boolean_prototype_prop' in log);
 
 // 16.
 a = 'str';
 b = {};
-for ((a in b) ; ; )
-{
+for ((a in b) ; ;) {
   break;
 }
 
@@ -255,11 +249,11 @@ for ((a in b) ; ; )
 log = {};
 count = 0;
 
-var base_obj = { base_prop1: "base1", base_prop2: "base2" };
+var base_obj = { base_prop1: 'base1', base_prop2: 'base2' };
 
-function l () {
-    this.derived_prop1 = "derived1";
-    this.derived_prop2 = "derived2";
+function l() {
+  this.derived_prop1 = 'derived1';
+  this.derived_prop2 = 'derived2';
 }
 
 l.prototype = base_obj;
@@ -284,7 +278,7 @@ assert(count == 1
 
 try {
   /* This form is a SyntaxError even in ES5.1. */
-  eval("for (a = b in {}) ;");
+  eval('for (a = b in {}) ;');
   assert(false);
 } catch (e) {
   assert(e instanceof SyntaxError);

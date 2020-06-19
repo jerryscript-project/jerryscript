@@ -15,11 +15,11 @@
 // Test if the native function as constructor is correctly invoked
 // when used as parent "class"
 
-var src = "({ $($) { a(...args) }";
+var src = '({ $($) { a(...args) }';
 
 try {
-  eval (src);
-  assert (false);
+  eval(src);
+  assert(false);
 } catch (e) {
-  assert (e instanceof SyntaxError);
+  assert(e instanceof SyntaxError);
 }

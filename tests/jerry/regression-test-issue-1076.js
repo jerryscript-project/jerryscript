@@ -12,6 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-try { Array.prototype.unshift(1)  } catch($){}
-try { Object.freeze(this.Array.prototype)()  } catch($){}
-try { new String(1).split("")  } catch($){}
+try {
+  Array.prototype.unshift(1);
+} catch ($) {}
+try {
+  Object.freeze(this.Array.prototype)();
+} catch ($) {}
+try {
+  new String(1).split('');
+} catch ($) {}

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 try {
-  eval(`[]=$--['']`);
+  eval('[]=$--[\'\']');
   assert(false);
 } catch (e) {
   assert(e instanceof SyntaxError);

@@ -14,4 +14,4 @@
  */
 
 /* No default export found. */
-import def from "../es.next/module-export-06.js"
+import def from '../es.next/module-export-06.js';

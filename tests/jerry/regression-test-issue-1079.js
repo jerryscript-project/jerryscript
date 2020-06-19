@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-Array.prototype.push(1)
-Object.freeze(Array.prototype)
-try { new RegExp().constructor.prototype.exec()  } catch($){}
+Array.prototype.push(1);
+Object.freeze(Array.prototype);
+try {
+  new RegExp().constructor.prototype.exec();
+} catch ($) {}

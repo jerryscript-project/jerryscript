@@ -18,7 +18,7 @@
 
 // error checks
 var target = {};
-var handler = { isExtensible (target) {
+var handler = { isExtensible(target) {
   throw 42;
 }};
 
@@ -26,7 +26,7 @@ var proxy = new Proxy(target, handler);
 
 try {
   // 7.3.15
-  Object.isFrozen(proxy)
+  Object.isFrozen(proxy);
   assert(false);
 } catch (e) {
   assert(e === 42);
@@ -34,7 +34,7 @@ try {
 
 try {
   // 7.3.15
-  Object.isSealed(proxy)
+  Object.isSealed(proxy);
   assert(false);
 } catch (e) {
   assert(e === 42);
@@ -42,7 +42,7 @@ try {
 
 try {
   // 7.2.5
-  Object.isExtensible(proxy)
+  Object.isExtensible(proxy);
   assert(false);
 } catch (e) {
   assert(e === 42);
@@ -52,7 +52,7 @@ try {
 var target = {};
 var handler = {};
 var proxy = new Proxy(target, handler);
-assert(Object.isExtensible(target) === true)
+assert(Object.isExtensible(target) === true);
 assert(Object.isExtensible(proxy) === true);
 Object.preventExtensions(target);
 assert(Object.isExtensible(target) === false);
@@ -60,9 +60,9 @@ assert(Object.isExtensible(proxy) === false);
 
 // undefined trap
 var target = {};
-var handler =  { isExtensible: null };
+var handler = { isExtensible: null };
 var proxy = new Proxy(target, handler);
-assert(Object.isExtensible(target) === true)
+assert(Object.isExtensible(target) === true);
 assert(Object.isExtensible(proxy) === true);
 Object.preventExtensions(target);
 assert(Object.isExtensible(target) === false);
@@ -70,14 +70,14 @@ assert(Object.isExtensible(proxy) === false);
 
 // invalid trap
 var target = {};
-var handler =  { isExtensible: true };
+var handler = { isExtensible: true };
 var proxy = new Proxy(target, handler);
 
 try {
   Object.isExtensible(proxy);
   assert(false);
 } catch (e) {
-  assert(e instanceof TypeError); 
+  assert(e instanceof TypeError);
 }
 
 // valid trap
@@ -86,7 +86,7 @@ var handler = {
   isExtensible(target) {
     target.prop1 = false;
     return Object.isExtensible(target);
-  }
+  },
 };
 
 var proxy = new Proxy(target, handler);
@@ -101,7 +101,7 @@ var target = {};
 var handler = {
   isExtensible(target) {
     return false;
-  }
+  },
 };
 
 var proxy = new Proxy(target, handler);
@@ -115,13 +115,13 @@ try {
 
 // handler is null
 var target = {};
-var handler = { 
-  isExtensible (target) {
+var handler = {
+  isExtensible(target) {
     return Object.isExtensible(target);
-  }
+  },
 };
 
-var revocable = Proxy.revocable (target, {});
+var revocable = Proxy.revocable(target, {});
 var proxy = revocable.proxy;
 revocable.revoke();
 
@@ -137,13 +137,13 @@ var target = {};
 var handler1 = {
   isExtensible(target) {
     return Object.isExtensible(target);
-  }
+  },
 };
 
 var handler2 = {
   isExtensible(target) {
     return false;
-  }
+  },
 };
 
 var proxy = new Proxy(target, handler1);

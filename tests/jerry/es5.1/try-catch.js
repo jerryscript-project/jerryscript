@@ -18,7 +18,9 @@ function f() {
     throw 8;
     assert(false);
   } catch (e) {
-    function e() { return 6 }
+    function e() {
+      return 6
+    }
     assert(e == 8);
   }
 }

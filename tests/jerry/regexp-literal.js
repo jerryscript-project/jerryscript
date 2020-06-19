@@ -14,71 +14,71 @@
 
 var t;
 
-t = /\//.exec("/");
-assert (t == "/");
+t = /\//.exec('/');
+assert(t == '/');
 
-t = /[/]/.exec("/");
-assert ("a"+/x/+"b" == "a/x/b");
+t = /[/]/.exec('/');
+assert('a'+/x/+'b' == 'a/x/b');
 
-t = /\/\[[\]/]/.exec("/[/");
-assert (t == "/[/");
+t = /\/\[[\]/]/.exec('/[/');
+assert(t == '/[/');
 
-t = /\u0000/.exec("\u0000");
-assert (t == "\u0000");
+t = /\u0000/.exec('\u0000');
+assert(t == '\u0000');
 
 try {
-  eval("/" + String.fromCharCode("0x0000") + "/");
+  eval('/' + String.fromCharCode('0x0000') + '/');
 } catch (e) {
-  assert (false);
+  assert(false);
 }
 
 try {
-  eval("var x = 5\n\n/foo/");
+  eval('var x = 5\n\n/foo/');
   assert(false);
 } catch (e) {
   assert(e instanceof SyntaxError);
 }
 
 try {
-  eval("var x = 5;\n\n/foo/");
+  eval('var x = 5;\n\n/foo/');
 } catch (e) {
   assert(false);
 }
 
 try {
-  eval("for (;false;/abc/.exec(\"abc\")) {5}");
+  eval('for (;false;/abc/.exec("abc")) {5}');
 } catch (e) {
   assert(false);
 }
 
 try {
-  eval("var a = [] /foo/");
-  assert(false);
-} catch (e) {
-  assert(e instanceof SyntaxError);
-}
-
-try {
-  eval("/");
+  eval('var a = [] /foo/');
   assert(false);
 } catch (e) {
   assert(e instanceof SyntaxError);
 }
 
 try {
-  eval("var x = /aaa/");
+  eval('/');
+  assert(false);
 } catch (e) {
-  assert (false);
+  assert(e instanceof SyntaxError);
 }
 
 try {
-  eval("{}/a/g");
+  eval('var x = /aaa/');
 } catch (e) {
-  assert (false);
+  assert(false);
 }
 
 try {
-  eval("var a, g; +{}/a/g");
+  eval('{}/a/g');
 } catch (e) {
-  assert (false);
+  assert(false);
+}
+
+try {
+  eval('var a, g; +{}/a/g');
+} catch (e) {
+  assert(false);
 }

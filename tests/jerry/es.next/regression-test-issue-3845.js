@@ -13,7 +13,7 @@
 // limitations under the License.
 
 try {
-  eval(`typeof (a) = 1 === 'undefined';`);
+  eval('typeof (a) = 1 === \'undefined\';');
   assert(false);
 } catch (e) {
   assert(e instanceof ReferenceError);

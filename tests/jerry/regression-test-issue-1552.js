@@ -12,15 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var o = []
+var o = [];
 
-function add(i)
-{
+function add(i) {
   delete o[i & 31];
   o[i] = 0;
 }
 
-for (var i = 0; i < 130; i++)
-{
-  add(i)
+for (var i = 0; i < 130; i++) {
+  add(i);
 }

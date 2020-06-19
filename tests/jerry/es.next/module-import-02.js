@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-import def, * as mod from "module-export-02.js";
-import {b_, c_,} from "module-export-02.js";
+import def, * as mod from 'module-export-02.js';
+import {b_, c_} from 'module-export-02.js';
 
-assert (def() === "default")
-assert (mod.aa === "a")
-assert (b_ === 5)
-assert (c_(b_) === 10)
-assert (mod.x === 42)
-assert (Array.isArray(mod.d))
+assert(def() === 'default');
+assert(mod.aa === 'a');
+assert(b_ === 5);
+assert(c_(b_) === 10);
+assert(mod.x === 42);
+assert(Array.isArray(mod.d));

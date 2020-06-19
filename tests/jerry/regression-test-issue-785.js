@@ -12,7 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-try { RegExp.prototype.toString() } catch (err) {  }
-try { isNaN.apply(unescape, JSON.stringify) } catch (err) {  }
-try { Array.prototype.forEach(eval) } catch (err) {  }
-try { RegExp.prototype.compile(RegExp.prototype) } catch (err) {  }
+try {
+  RegExp.prototype.toString();
+} catch (err) { }
+try {
+  isNaN.apply(unescape, JSON.stringify);
+} catch (err) { }
+try {
+  Array.prototype.forEach(eval);
+} catch (err) { }
+try {
+  RegExp.prototype.compile(RegExp.prototype);
+} catch (err) { }

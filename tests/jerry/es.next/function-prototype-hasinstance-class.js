@@ -13,41 +13,40 @@
 // limitations under the License.
 
 class base {
-  constructor (value) {
+  constructor(value) {
     this.member = value;
   }
 
-  method () {
+  method() {
     return this.member;
   }
 }
 
 class sub {
-  constructor (value) {
+  constructor(value) {
     this.member = value;
   }
 }
 
-var obj_base = new base (3);
-var obj_sub = new sub (4);
+var obj_base = new base(3);
+var obj_sub = new sub(4);
 
-assert (base[Symbol.hasInstance](obj_base) === true);
-assert (base[Symbol.hasInstance](obj_sub) === false);
+assert(base[Symbol.hasInstance](obj_base) === true);
+assert(base[Symbol.hasInstance](obj_sub) === false);
 
-assert (sub[Symbol.hasInstance](obj_base) === false);
-assert (sub[Symbol.hasInstance](obj_sub) === true);
-
+assert(sub[Symbol.hasInstance](obj_base) === false);
+assert(sub[Symbol.hasInstance](obj_sub) === true);
 
 class sub_c extends base {
-  constructor (value) {
+  constructor(value) {
     super(value);
     this.member = value;
   }
 }
 
-var obj_sub_c = new sub_c (5);
+var obj_sub_c = new sub_c(5);
 
-assert (base[Symbol.hasInstance](obj_sub_c) === true);
+assert(base[Symbol.hasInstance](obj_sub_c) === true);
 
-assert (sub_c[Symbol.hasInstance](obj_base) === false);
-assert (sub_c[Symbol.hasInstance](obj_sub_c) === true);
+assert(sub_c[Symbol.hasInstance](obj_base) === false);
+assert(sub_c[Symbol.hasInstance](obj_sub_c) === true);

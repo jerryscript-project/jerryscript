@@ -13,6 +13,6 @@
 // limitations under the License.
 
 switch (true) {
-    case {"foo": "bar"}:
-        break;
+case {'foo': 'bar'}:
+  break;
 }

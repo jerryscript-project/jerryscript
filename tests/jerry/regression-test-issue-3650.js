@@ -13,5 +13,5 @@
 // limitations under the License.
 
 var u = 5;
-assert ([this, u = u - 1].length === 2);
-assert (u === 4);
+assert([ this, u = u - 1 ].length === 2);
+assert(u === 4);

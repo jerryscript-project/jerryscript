@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert(Number['isNaN'] ('valami') === false);
-assert(Number['isNaN'] (NaN) === true);
-assert(Number['isNaN'] (1) === false);
-assert(Number['isNaN'] (Number.NaN) === true);
-assert(Number['isNaN'] (0 / 0) === true);
+assert(Number['isNaN']('valami') === false);
+assert(Number['isNaN'](NaN) === true);
+assert(Number['isNaN'](1) === false);
+assert(Number['isNaN'](Number.NaN) === true);
+assert(Number['isNaN'](0 / 0) === true);

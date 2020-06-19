@@ -13,7 +13,7 @@
 // limitations under the License.
 
 assert(Array.isArray([]) === true);
-assert(Array.isArray([1]) === true);
+assert(Array.isArray([ 1 ]) === true);
 assert(Array.isArray(new Array()) === true);
 assert(Array.isArray(new Array('a', 'b', 'c', 'd')) === true);
 assert(Array.isArray(new Array(3)) === true);
@@ -31,7 +31,7 @@ assert(Array.isArray(false) === false);
 assert(Array.isArray(new Uint8Array(32)) === false);
 assert(Array.isArray({ __proto__: Array.prototype }) === false);
 
-var revocable = Proxy.revocable ({}, {});
+var revocable = Proxy.revocable({}, {});
 var proxy = revocable.proxy;
 revocable.revoke();
 
@@ -42,7 +42,7 @@ try {
   assert(e instanceof TypeError);
 }
 
-var revocable = Proxy.revocable ([], {});
+var revocable = Proxy.revocable([], {});
 var proxy = revocable.proxy;
 
 assert(Array.isArray(proxy) === true);

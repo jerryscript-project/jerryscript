@@ -19,7 +19,7 @@ try {
 
   f_1(new f_1);
 
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof ReferenceError);
+  assert(e instanceof ReferenceError);
 }

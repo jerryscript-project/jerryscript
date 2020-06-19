@@ -13,4 +13,4 @@
 // limitations under the License.
 
 var arrowFn = () => { };
-assert (arrowFn.prototype === undefined);
+assert(arrowFn.prototype === undefined);

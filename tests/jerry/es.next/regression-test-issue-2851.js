@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function a (n) {
-  var array = new Int32Array(n)
-  var array2 = new Int32Array(array)
-  array2.set(new Uint8Array(array.buffer, 34))
+function a(n) {
+  var array = new Int32Array(n);
+  var array2 = new Int32Array(array);
+  array2.set(new Uint8Array(array.buffer, 34));
 }
 
-a(10)
+a(10);

@@ -12,4 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert ((new Float64Array(Object('foobar').split())).every(function (p_0) { return p_0 }) === false);
+assert((new Float64Array(Object('foobar').split())).every(function(p_0) {
+  return p_0;
+}) === false);

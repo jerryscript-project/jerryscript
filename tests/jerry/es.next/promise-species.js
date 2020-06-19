@@ -21,9 +21,11 @@
 
 // Another constructor with no species will not be instantiated
 
-var test = new Promise(function(){});
+var test = new Promise(function() {});
 var bogoCount = 0;
-function bogusConstructor() { bogoCount++; }
+function bogusConstructor() {
+  bogoCount++;
+}
 test.constructor = bogusConstructor;
 assert(Promise.resolve(test) instanceof Promise);
 assert(!(Promise.resolve(test) instanceof bogusConstructor));
@@ -40,7 +42,7 @@ class MyPromise extends Promise {
     params = args;
   }
   static get [Symbol.species]() {
-    count++
+    count++;
     return this;
   }
 }

@@ -12,4 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert('foobar'.replace(/(ob)/g, '$0') == 'fo$0ar')
+assert('foobar'.replace(/(ob)/g, '$0') == 'fo$0ar');

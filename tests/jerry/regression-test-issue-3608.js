@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var src = "function $() { return $ ? $ : $ * $++() } switch ($) {}";
+var src = 'function $() { return $ ? $ : $ * $++() } switch ($) {}';
 
 try {
-  eval (src);
-  assert (false);
+  eval(src);
+  assert(false);
 } catch (e) {
-  assert (e instanceof SyntaxError);
+  assert(e instanceof SyntaxError);
 }

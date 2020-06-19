@@ -12,13 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-try
-{
+try {
   for (v_0 in v_1) {};
   f_0(v_2.v_3 === 5);
-  assert (false);
-}
-catch (e)
-{
-  assert (e instanceof ReferenceError);
+  assert(false);
+} catch (e) {
+  assert(e instanceof ReferenceError);
 }

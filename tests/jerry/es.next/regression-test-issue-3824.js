@@ -13,7 +13,7 @@
 // limitations under the License.
 
 try {
-  eval(`var a = {"foo//b", };`);
+  eval('var a = {"foo//b", };');
   assert(false);
 } catch (e) {
   assert(e instanceof SyntaxError);

@@ -13,10 +13,10 @@
 // limitations under the License.
 
 try {
-    eval("do { \
+  eval('do { \
         return null; \
-        } while (false);");
-    assert (false);
+        } while (false);');
+  assert(false);
 } catch (e) {
-    assert (e instanceof SyntaxError);
+  assert(e instanceof SyntaxError);
 }

@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 class A {
   // Test skipping spaces
-  get     (a, b, c) {
+  get(a, b, c) {
     return a + b + c;
   }
 
@@ -24,11 +23,11 @@ class A {
     return a - b - c;
   }
 
-  set (a, b) {
+  set(a, b) {
     return a * b;
   }
 
-  static set (a, b) {
+  static set(a, b) {
     return a / b;
   }
 }

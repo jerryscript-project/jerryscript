@@ -41,7 +41,7 @@ function f_unmapped(b = 2) {
 assert(f_mapped(1, 2, 3, 4, 5) === 15);
 assert(f_unmapped(1, 2, 3, 4, 5) === 15);
 
-Object.defineProperty(Array.prototype, "values", { get : function () {
+Object.defineProperty(Array.prototype, 'values', { get: function() {
   /* should not be executed */
   assert(false);
 }});

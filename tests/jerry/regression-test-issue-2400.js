@@ -14,7 +14,7 @@
 
 // Wrong byte codes were dumped for this function when show opcodes had been enabled
 
-function abc(a,b) {
+function abc(a, b) {
   var c = 6;
   return arguments[0] + b + c;
 }

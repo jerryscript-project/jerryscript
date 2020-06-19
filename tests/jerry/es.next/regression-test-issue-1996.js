@@ -13,9 +13,9 @@
 // limitations under the License.
 
 new Promise(function(f) {
-    f.apply()
+  f.apply();
 });
 
 new Promise(function(f, r) {
-    r.apply()
+  r.apply();
 });

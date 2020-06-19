@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var desc = Object.getOwnPropertyDescriptor(Function, "length");
+var desc = Object.getOwnPropertyDescriptor(Function, 'length');
 assert(desc.value === 1 &&
         desc.writable === false &&
         desc.enumerable === false &&

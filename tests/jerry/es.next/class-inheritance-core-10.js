@@ -13,17 +13,17 @@
  * limitations under the License.
  */
 
- class A extends Array {
-   constructor () {
-     return null;
-   }
- }
+class A extends Array {
+  constructor() {
+    return null;
+  }
+}
 
- class B extends A { }
+class B extends A { }
 
- try {
-   new B;
-   assert (false);
- } catch (e) {
-   assert (e instanceof TypeError);
- }
+try {
+  new B;
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}

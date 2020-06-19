@@ -12,76 +12,76 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function CheckSyntaxError (str)
-{
+function CheckSyntaxError(str) {
   try {
-    eval (str);
-    assert (false);
+    eval(str);
+    assert(false);
   } catch (e) {
-    assert (e instanceof SyntaxError);
+    assert(e instanceof SyntaxError);
   }
 
   /* force the pre-scanner */
   try {
-    eval ('switch (1) { default: ' + str + '}');
-    assert (false);
+    eval('switch (1) { default: ' + str + '}');
+    assert(false);
   } catch (e) {
-    assert (e instanceof SyntaxError);
+    assert(e instanceof SyntaxError);
   }
 }
 
-CheckSyntaxError ('function x (a, b, ...c, d) {}');
-CheckSyntaxError ('function x (... c = 5) {}');
-CheckSyntaxError ('function x (...) {}');
-CheckSyntaxError ('function x (a, a, ...a) {}');
-CheckSyntaxError ('"use strict" function x (...arguments) {}');
-CheckSyntaxError ('var o = { set e (...args) { } }');
+CheckSyntaxError('function x (a, b, ...c, d) {}');
+CheckSyntaxError('function x (... c = 5) {}');
+CheckSyntaxError('function x (...) {}');
+CheckSyntaxError('function x (a, a, ...a) {}');
+CheckSyntaxError('\'use strict\' function x (...arguments) {}');
+CheckSyntaxError('var o = { set e (...args) { } }');
 
-rest_params = ['hello', true, 7, {}, [], function () {}];
+rest_params = [ 'hello', true, 7, {}, [], function() {} ];
 
-function f (x, y, ...a) {
+function f(x, y, ...a) {
   for (var i = 0; i < a.length; i++) {
-    assert (a[i] == rest_params[i]);
+    assert(a[i] == rest_params[i]);
   }
   return (x + y) * a.length;
 }
 
-assert (f (1, 2, rest_params[0], rest_params[1], rest_params[2]) === 9);
-assert (f.length === 2);
+assert(f(1, 2, rest_params[0], rest_params[1], rest_params[2]) === 9);
+assert(f.length === 2);
 
-function g (...a) {
-  return a.reduce (function (accumulator, currentValue) { return accumulator + currentValue });
+function g(...a) {
+  return a.reduce(function(accumulator, currentValue) {
+    return accumulator + currentValue;
+  });
 }
 
-assert (g (1, 2, 3, 4) === 10);
+assert(g(1, 2, 3, 4) === 10);
 
-function h (...arguments) {
+function h(...arguments) {
   return arguments.length;
 }
 
-assert (h (1, 2, 3, 4) === 4);
+assert(h(1, 2, 3, 4) === 4);
 
-function f2 (a = 1, b = 1, c = 1, ...d) {
-  assert (JSON.stringify (d) === '[]');
+function f2(a = 1, b = 1, c = 1, ...d) {
+  assert(JSON.stringify(d) === '[]');
   return a + b + c;
 }
 
-assert (f2 () === 3);
-assert (f2 (2) === 4);
-assert (f2 (2, 3) === 6);
-assert (f2 (2, 3, 4) === 9);
+assert(f2() === 3);
+assert(f2(2) === 4);
+assert(f2(2, 3) === 6);
+assert(f2(2, 3, 4) === 9);
 
-function g2 (a = 5, b = a + 1, ...c) {
+function g2(a = 5, b = a + 1, ...c) {
   return a + b + c.length;
 }
 
-assert (g2 () === 11);
-assert (g2 (1) === 3);
-assert (g2 (1, 2) === 3);
-assert (g2 (1, 2, 3) === 4);
+assert(g2() === 11);
+assert(g2(1) === 3);
+assert(g2(1, 2) === 3);
+assert(g2(1, 2, 3) === 4);
 
-function args(a, ...b)
-{
+function args(a, ...b) {
   assert(a === 1);
   assert(arguments[0] === 1);
 
@@ -91,6 +91,6 @@ function args(a, ...b)
   assert(arguments[0] === 1);
 
   assert(arguments[1] === 2);
-  assert(b[0] === 2)
+  assert(b[0] === 2);
 }
 args(1, 2);

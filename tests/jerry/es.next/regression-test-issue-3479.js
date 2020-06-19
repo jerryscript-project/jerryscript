@@ -13,9 +13,9 @@
 // limitations under the License.
 
 class MyObservedArray extends Array {
-    constructor() {
-        super('"use strict"; var x = "\\411";')
-    } [Symbol]() {}
+  constructor() {
+    super('\'use strict\'; var x = "\\411";');
+  } [Symbol]() {}
 }
 
-new MyObservedArray().slice()
+new MyObservedArray().slice();

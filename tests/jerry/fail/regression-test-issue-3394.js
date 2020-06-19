@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 class Animal { }
 
 class Dog extends Animal {
-    static explain() {
-        super.explain(...[])
-    }
+  static explain() {
+    super.explain(...[]);
+  }
 }
 
-Dog.explain()
+Dog.explain();

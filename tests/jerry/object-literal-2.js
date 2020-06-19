@@ -12,28 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var a = {get a(){return undefined}, set a(b){}}
+var a = {get a() {
+  return undefined;
+}, set a(b) {}};
 
-var b = {if:0, else:1, try:2, catch:3, finally:4, let:5}
+var b = {if: 0, else: 1, try: 2, catch: 3, finally: 4, let: 5};
 
-assert (b.if + b.else + b.try + b.catch + b.finally + b.let === 15)
+assert(b.if + b.else + b.try + b.catch + b.finally + b.let === 15);
 
 function c() {
-  "use strict"
-  var b = {let:15, enum:10}
-  assert (b.let + b.enum === 25)
+  'use strict';
+  var b = {let: 15, enum: 10};
+  assert(b.let + b.enum === 25);
 }
 c();
 
-function d () {
-  "use strict";
+function d() {
+  'use strict';
 
   try {
     /* 'let' is a FutureReservedWord in strict mode code */
-    eval ('var a = { get prop () { let = 1; } }');
-    assert (false);
+    eval('var a = { get prop () { let = 1; } }');
+    assert(false);
   } catch (e) {
-    assert (e instanceof SyntaxError);
+    assert(e instanceof SyntaxError);
   }
 }
-d ();
+d();

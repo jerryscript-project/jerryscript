@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var result = "0".split(RegExp.prototype);
+var result = '0'.split(RegExp.prototype);
 
 assert(result.length === 1);
-assert(result[0] === "0");
+assert(result[0] === '0');

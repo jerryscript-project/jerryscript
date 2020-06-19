@@ -27,7 +27,7 @@ try {
     get p() {
       function decl() {
       }
-    }
+    },
   };
   decl();
   assert(false);

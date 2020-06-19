@@ -15,7 +15,7 @@
 /* extended class */
 (function() {
   class C extends Function {}
-  var c = new C("x", "y", "return this.foo + x + y;").bind({foo : 1}, 2);
+  var c = new C('x', 'y', 'return this.foo + x + y;').bind({foo: 1}, 2);
   assert(c(3) === 6);
   assert(c instanceof C);
 })();
@@ -29,25 +29,25 @@ function boundPrototypeChecker(f, proto) {
 
 /* generator function */
 (function() {
-  var f = function*(){};
-  boundPrototypeChecker(f, Function.prototype)
-  boundPrototypeChecker(f, {})
+  var f = function*() {};
+  boundPrototypeChecker(f, Function.prototype);
+  boundPrototypeChecker(f, {});
   boundPrototypeChecker(f, null);
 })();
 
 /* arrow function */
 (function() {
   var f = () => 5;
-  boundPrototypeChecker(f, Function.prototype)
-  boundPrototypeChecker(f, {})
+  boundPrototypeChecker(f, Function.prototype);
+  boundPrototypeChecker(f, {});
   boundPrototypeChecker(f, null);
 })();
 
 /* simple class */
 (function() {
   class C {};
-  boundPrototypeChecker(C, Function.prototype)
-  boundPrototypeChecker(C, {})
+  boundPrototypeChecker(C, Function.prototype);
+  boundPrototypeChecker(C, {});
   boundPrototypeChecker(C, null);
 })();
 
@@ -63,7 +63,7 @@ function boundPrototypeChecker(f, proto) {
     assert(Object.getPrototypeOf(boundF) === Object.getPrototypeOf(C));
   }
 
-  boundPrototypeChecker(function(){});
+  boundPrototypeChecker(function() {});
   boundPrototypeChecker(Array);
   boundPrototypeChecker(null);
 })();

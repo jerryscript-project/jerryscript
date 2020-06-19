@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-import incrementer, {aa, c_, x,} from "module-export-03.js"
+import incrementer, {aa, c_, x} from 'module-export-03.js';
 var i = new incrementer(3);
 assert(i.incr() === 4);
 assert(i.incr() === 5);
 assert(i.incr() === 6);
 
-assert (aa === "a");
-assert (x === 42);
-assert (c_(x) == 84);
+assert(aa === 'a');
+assert(x === 42);
+assert(c_(x) == 84);

@@ -12,4 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-Date.parse("2015-01-01T01߄'a': 1}:01F");
+Date.parse('2015-01-01T01߄\'a\': 1}:01F');

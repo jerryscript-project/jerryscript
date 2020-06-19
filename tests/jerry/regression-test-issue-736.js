@@ -26,8 +26,8 @@ catch (e)\n\
 try {
   eval(code);
   assert(false);
-} catch(e) {
+} catch (e) {
   assert(e instanceof ReferenceError);
 }
 
-assert (!eval("var x = {}; x instanceof assert;"));
+assert(!eval('var x = {}; x instanceof assert;'));

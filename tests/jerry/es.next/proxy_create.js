@@ -14,7 +14,7 @@
 
 // TODO: Update these tests when the internal routine has been implemented
 
-var target = {}
+var target = {};
 var handler = {};
 var proxy = new Proxy(target, handler);
 

@@ -13,8 +13,8 @@
 // limitations under the License.
 
 try {
-  eval('while(0 ? 0 : ()=>{} | {})')
-  assert(false)
+  eval('while(0 ? 0 : ()=>{} | {})');
+  assert(false);
 } catch (e) {
-  assert(e instanceof SyntaxError)
+  assert(e instanceof SyntaxError);
 }

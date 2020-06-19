@@ -17,7 +17,7 @@
 // found in the LICENSE file.
 
 var target = {};
-var handler = { preventExtensions (target) {
+var handler = { preventExtensions(target) {
   throw 42;
 }};
 
@@ -25,7 +25,7 @@ var proxy = new Proxy(target, handler);
 
 try {
   // 7.3.14
-  Object.freeze(proxy)
+  Object.freeze(proxy);
   assert(false);
 } catch (e) {
   assert(e === 42);
@@ -33,7 +33,7 @@ try {
 
 try {
   // 7.3.14
-  Object.seal(proxy)
+  Object.seal(proxy);
   assert(false);
 } catch (e) {
   assert(e === 42);
@@ -74,31 +74,31 @@ try {
 }
 
 // test with valid trap
-var target = { foo: "bar" };
+var target = { foo: 'bar' };
 var handler = {
   preventExtensions(target) {
-    target.foo = "foo"
+    target.foo = 'foo';
     Object.preventExtensions(target);
     return true;
-  }
-}
+  },
+};
 
 var proxy = new Proxy(target, handler);
 assert(Object.isExtensible(target) === true);
 assert(Object.isExtensible(proxy) === true);
-assert(target.foo === "bar");
+assert(target.foo === 'bar');
 Object.preventExtensions(proxy);
 assert(Object.isExtensible(target) === false);
 assert(Object.isExtensible(proxy) === false);
-assert(target.foo === "foo");
+assert(target.foo === 'foo');
 
 // test when invariants gets violated
 var target = {};
 var handler = {
   preventExtensions(target) {
     return true;
-  }
-}
+  },
+};
 
 var proxy = new Proxy(target, handler);
 
@@ -115,8 +115,8 @@ var handler = {
   preventExtensions(target) {
     Object.preventExtensions(target);
     return true;
-  }
-}
+  },
+};
 
 var proxy1 = new Proxy(target, handler);
 var proxy2 = new Proxy(proxy1, handler);
@@ -133,8 +133,8 @@ var target = {};
 var handler = {
   preventExtensions(target) {
     return true;
-  }
-}
+  },
+};
 
 var proxy1 = new Proxy(target, handler);
 var proxy2 = new Proxy(proxy1, handler);

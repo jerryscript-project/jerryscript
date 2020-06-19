@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//This test will not pass on FLOAT32 due to precision issues
+// This test will not pass on FLOAT32 due to precision issues
 
 assert(Number.MAX_SAFE_INTEGER === 9007199254740991);
 assert(Number.MIN_SAFE_INTEGER === -9007199254740991);

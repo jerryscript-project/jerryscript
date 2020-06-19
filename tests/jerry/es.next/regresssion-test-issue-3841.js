@@ -13,8 +13,8 @@
 // limitations under the License.
 
 try {
-  eval('$?$:$=>{ }?{ }:$')
-  assert(false)
+  eval('$?$:$=>{ }?{ }:$');
+  assert(false);
 } catch (e) {
-  assert(e instanceof SyntaxError)
+  assert(e instanceof SyntaxError);
 }

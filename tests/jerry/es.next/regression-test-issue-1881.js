@@ -12,4 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-new Promise(isFinite.toString).catch(Promise.prototype.then)
+new Promise(isFinite.toString).catch(Promise.prototype.then);

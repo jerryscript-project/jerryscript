@@ -12,12 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-try
-{
+try {
   String.prototype.search(RegExp.prototype);
-  assert (false);
-}
-catch (e)
-{
-  assert (e instanceof TypeError);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
 }

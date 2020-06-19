@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function f(a,b,c) {
+function f(a, b, c) {
   var args = Array.prototype.slice.call(arguments, 3);
-  assert (typeof args.splice === "function");
+  assert(typeof args.splice === 'function');
 }
 f();

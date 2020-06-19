@@ -13,8 +13,8 @@
 // limitations under the License.
 
 try {
-  eval("async(a,b+)")
-  assert(false)
+  eval('async(a,b+)');
+  assert(false);
 } catch (e) {
-  assert(e instanceof SyntaxError)
+  assert(e instanceof SyntaxError);
 }

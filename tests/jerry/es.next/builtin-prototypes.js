@@ -25,93 +25,93 @@ var prototypes = [
   ReferenceError.prototype,
   SyntaxError.prototype,
   TypeError.prototype,
-  URIError.prototype
-]
+  URIError.prototype,
+];
 
 for (proto of prototypes) {
-  assert (Object.prototype.toString.call (proto) === '[object Object]');
+  assert(Object.prototype.toString.call(proto) === '[object Object]');
 }
 
 try {
   String.prototype.toString();
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 try {
   Boolean.prototype.valueOf();
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 try {
   Number.prototype.valueOf();
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 try {
   Date.prototype.valueOf();
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 try {
-  RegExp.prototype.exec("");
-  assert (false);
+  RegExp.prototype.exec('');
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 try {
-  RegExp.prototype.compile("a", "u");
-  assert (false);
+  RegExp.prototype.compile('a', 'u');
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 try {
   RegExp.prototype.source;
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 try {
   RegExp.prototype.global;
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 try {
   RegExp.prototype.ignoreCase;
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 try {
   RegExp.prototype.multiline;
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 try {
   RegExp.prototype.sticky;
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 try {
   RegExp.prototype.unicode;
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }

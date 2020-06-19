@@ -12,15 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function f1(x)
-{
+function f1(x) {
   var c1 = (x >= 1);
   var c2 = (x <= 10);
 
-  if (c1 === true)
-  {
-    if (c2 === true)
-    {
+  if (c1 === true) {
+    if (c2 === true) {
       assert(t);
 
       return;
@@ -33,40 +30,35 @@ function f1(x)
 var i;
 var t = true;
 
-for(i = 1; i <= 10; i++)
-{
+for (i = 1; i <= 10; i++) {
   f1(i);
 }
 
 t = false;
 
-for(i = 11; i <= 20; i++)
-{
+for (i = 11; i <= 20; i++) {
   f1(i);
 }
 
-function g (p, p) {
-  assert (p === arguments[1]);
-  assert (p === 'second');
+function g(p, p) {
+  assert(p === arguments[1]);
+  assert(p === 'second');
 }
 
-g ('first', 'second');
+g('first', 'second');
 
 try {
-  f1 ({});
-  f1 (undefined_variable);
-  assert (false);
-}
-catch (e) {
-  assert (e instanceof ReferenceError);
+  f1({});
+  f1(undefined_variable);
+  assert(false);
+} catch (e) {
+  assert(e instanceof ReferenceError);
 }
 
-function f2 ()
-{
+function f2() {
   return this;
 }
 
-with ({})
-{
-  assert (f2 () === this);
+with ({}) {
+  assert(f2() === this);
 }

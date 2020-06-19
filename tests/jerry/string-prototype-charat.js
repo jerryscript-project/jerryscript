@@ -14,11 +14,10 @@
 
 // check properties
 
-function length_configurable()
-{
+function length_configurable() {
   function is_es51() {
-    return (typeof g === "function");
-    { function g() {} }
+    return (typeof g === 'function');
+    {function g() {}}
   }
   return is_es51() ? false : true;
 }
@@ -32,57 +31,57 @@ assert(Object.getOwnPropertyDescriptor(String.prototype.charAt, 'length').writab
 assert(String.prototype.charAt.length === 1);
 
 // check empty string
-assert(String.prototype.charAt.call(new String()) === "");
+assert(String.prototype.charAt.call(new String()) === '');
 
 // check NaN
-assert("hello world!".charAt(NaN) === "h");
+assert('hello world!'.charAt(NaN) === 'h');
 
 // check Object
-assert(String.prototype.charAt.call({})  === "[");
+assert(String.prototype.charAt.call({}) === '[');
 
 // simple checks
-assert("hello world!".charAt(0) === "h");
+assert('hello world!'.charAt(0) === 'h');
 
-assert("hello world!".charAt(1) === "e");
+assert('hello world!'.charAt(1) === 'e');
 
 // check +-Inf
-assert("hello world!".charAt(-Infinity) === "");
+assert('hello world!'.charAt(-Infinity) === '');
 
-assert("hello world!".charAt(Infinity) === "");
+assert('hello world!'.charAt(Infinity) === '');
 
-assert("hello world!".charAt(11) === "!");
+assert('hello world!'.charAt(11) === '!');
 
-assert("hello world!".charAt(12) === "");
+assert('hello world!'.charAt(12) === '');
 
 // check unicode
-assert("hello\u000B\u000C\u0020\u00A0world!".charAt(8) === "\u00A0");
+assert('hello\u000B\u000C\u0020\u00A0world!'.charAt(8) === '\u00A0');
 
-assert("hello\uD834\uDF06world!".charAt(6) === "\uDF06");
+assert('hello\uD834\uDF06world!'.charAt(6) === '\uDF06');
 
-assert("hell\u006F\u006F w\u006F\u006Frld!".charAt(8) === "\u006F");
+assert('hell\u006F\u006F w\u006F\u006Frld!'.charAt(8) === '\u006F');
 
-assert("\u00A9\u006F".charAt(2) === "");
+assert('\u00A9\u006F'.charAt(2) === '');
 
 // check negative
-assert("hello world!".charAt(-1) === "");
+assert('hello world!'.charAt(-1) === '');
 
-assert("hello world!".charAt(-9999999) === "");
+assert('hello world!'.charAt(-9999999) === '');
 
-assert("hello world!".charAt(-0) === "h");
+assert('hello world!'.charAt(-0) === 'h');
 
 // check undefined
-assert("hello world!".charAt(undefined) === "h");
+assert('hello world!'.charAt(undefined) === 'h');
 
 // check booleans
-assert("hello world!".charAt(true) === "e");
+assert('hello world!'.charAt(true) === 'e');
 
-assert("hello world!".charAt(false) === "h");
+assert('hello world!'.charAt(false) === 'h');
 
 // check this is undefined
 try {
   String.prototype.charAt.call(undefined);
   assert(false);
-} catch(e) {
+} catch (e) {
   assert(e instanceof TypeError);
 }
 
@@ -90,13 +89,13 @@ try {
 try {
   String.prototype.charAt.call(null);
   assert(false);
-} catch(e) {
+} catch (e) {
   assert(e instanceof TypeError);
 }
 
 // check coercible - undefined
 try {
-  assert(true.charAt() === "");
+  assert(true.charAt() === '');
   assert(false);
 } catch (e) {
   assert(e instanceof TypeError);
@@ -104,18 +103,18 @@ try {
 
 // check coercible - null
 try {
-  assert(String.prototype.charAt.call(null, 0) === "");
+  assert(String.prototype.charAt.call(null, 0) === '');
   assert(false);
 } catch (e) {
   assert(e instanceof TypeError);
 }
 
 // check coercible - Boolean
-assert(String.prototype.charAt.call(true, 1) === "r");
+assert(String.prototype.charAt.call(true, 1) === 'r');
 
 // check coercible - Object
-var test_object = {firstName:"John", lastName:"Doe"};
-assert(String.prototype.charAt.call(test_object, 1) === "o");
+var test_object = {firstName: 'John', lastName: 'Doe'};
+assert(String.prototype.charAt.call(test_object, 1) === 'o');
 
 // check coercible - Number
-assert(String.prototype.charAt.call(123, 2) === "3");
+assert(String.prototype.charAt.call(123, 2) === '3');

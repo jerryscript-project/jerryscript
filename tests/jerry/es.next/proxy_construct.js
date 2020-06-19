@@ -16,8 +16,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-var target = function () {};
-var handler = { construct (target) {
+var target = function() {};
+var handler = { construct(target) {
   throw 42;
 }};
 
@@ -25,7 +25,7 @@ var proxy = new Proxy(target, handler);
 
 try {
   // opfunc_call
-  new proxy(5)
+  new proxy(5);
   assert(false);
 } catch (e) {
   assert(e === 42);
@@ -40,7 +40,7 @@ try {
 }
 
 // test basic functionality
-var proxy = new Proxy({},{});
+var proxy = new Proxy({}, {});
 
 try {
   new proxy();
@@ -89,8 +89,8 @@ function Target2(a, b) {
 };
 var handler = {
   construct(t, c, args) {
-      return { sum: 42 };
-  }
+    return { sum: 42 };
+  },
 };
 var proxy = new Proxy(Target2, handler);
 assert((new proxy(1, 2)).sum === 42);
@@ -106,8 +106,8 @@ var handler = {
     seen_arguments = args;
     seen_new_target = new_target;
     return Reflect.construct(target, args, new_target);
-  }
-}
+  },
+};
 var proxy = new Proxy(Target3, handler);
 var instance = new proxy('a', 'b');
 
@@ -117,7 +117,7 @@ assert(proxy === seen_new_target);
 assert('a' === instance.arg1);
 assert('b' === instance.arg2);
 
-var instance2 = Reflect.construct(proxy, ['a1', 'b1'], Array);
+var instance2 = Reflect.construct(proxy, [ 'a1', 'b1' ], Array);
 assert(Target3 === seen_target);
 assert(JSON.stringify(seen_arguments) === '["a1","b1"]');
 assert(Array === seen_new_target);
@@ -127,7 +127,7 @@ assert('b1' === instance2.arg2);
 var p = new Proxy(function() {}, {
   construct: function(target, argumentsList, newTarget) {
     throw 42;
-  }
+  },
 });
 
 try {
@@ -141,25 +141,25 @@ try {
 var p = new Proxy(function() {}, {
   construct: function(target, argumentsList, newTarget) {
     return 1;
-  }
+  },
 });
 
 try {
   new p();
   assert(false);
 } catch (e) {
-  assert(e instanceof TypeError); 
+  assert(e instanceof TypeError);
 }
 
 var p = new Proxy({}, {
   construct: function(target, argumentsList, newTarget) {
     return {};
-  }
+  },
 });
 
 try {
   new p();
   assert(false);
 } catch (e) {
-  assert(e instanceof TypeError); 
+  assert(e instanceof TypeError);
 }

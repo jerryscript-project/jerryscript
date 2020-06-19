@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert (Map.prototype.toString() === "[object Map]");
-assert (Object.prototype.toString.call (Symbol.prototype) === "[object Symbol]");
+assert(Map.prototype.toString() === '[object Map]');
+assert(Object.prototype.toString.call(Symbol.prototype) === '[object Symbol]');

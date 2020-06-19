@@ -13,7 +13,7 @@
 // limitations under the License.
 
 var object1 = {
-    property1: 42
+  property1: 42,
 };
 
 assert(Reflect.getOwnPropertyDescriptor(object1, 'property1').value === 42);

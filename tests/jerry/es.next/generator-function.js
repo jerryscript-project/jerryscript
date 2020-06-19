@@ -12,22 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 // Test %GeneratorPrototype%
-(function () {
-  function* generatorFn(){}
+(function() {
+  function* generatorFn() {}
   var ownProto = Object.getPrototypeOf(generatorFn());
   var sharedProto = Object.getPrototypeOf(ownProto);
 
   assert(ownProto === generatorFn.prototype);
   assert(sharedProto !== Object.prototype);
-  assert(sharedProto === Object.getPrototypeOf(function*(){}.prototype));
+  assert(sharedProto === Object.getPrototypeOf(function*() {}.prototype));
   assert(sharedProto.hasOwnProperty('next'));
 })();
 
 // Test %GeneratorPrototype% prototype chain
-(function () {
-  function* generatorFn(){}
+(function() {
+  function* generatorFn() {}
   var g = generatorFn();
   var ownProto = Object.getPrototypeOf(g);
   var sharedProto = Object.getPrototypeOf(ownProto);
@@ -41,9 +40,9 @@
 })();
 
 // Test %GeneratorPrototype% prototype chain
-(function () {
-  function* g(){}
-  var iterator = new g.constructor("a","b","c","() => yield\n yield a; yield b; yield c;")(1,2,3);
+(function() {
+  function* g() {}
+  var iterator = new g.constructor('a', 'b', 'c', '() => yield\n yield a; yield b; yield c;')(1, 2, 3);
 
   var item = iterator.next();
   assert(item.value === 1);
@@ -61,22 +60,22 @@
   assert(item.value === undefined);
   assert(item.done === true);
 
-  assert(g.constructor === (function*(){}).constructor);
+  assert(g.constructor === (function*() {}).constructor);
 })();
 
 // Test GeneratorFunction parsing
-(function () {
+(function() {
   function *f() {};
 
   try {
-    Object.getPrototypeOf(f).constructor("yield", "");
+    Object.getPrototypeOf(f).constructor('yield', '');
   } catch (e) {
     assert(e instanceof SyntaxError);
   }
 })();
 
 // Test correct property membership
-(function () {
+(function() {
   function *f() {};
 
   Object.getPrototypeOf(f).xx = 5;
@@ -84,13 +83,13 @@
 })();
 
 // Test GetPrototypeFromConstructor
-(function () {
+(function() {
   function *f() {};
 
   var originalProto = f.prototype;
   f.prototype = 5;
   assert(Object.getPrototypeOf(f()) === Object.getPrototypeOf(originalProto));
-  var fakeProto = { x : 6 };
+  var fakeProto = { x: 6 };
   f.prototype = fakeProto;
   assert(Object.getPrototypeOf(f()) === fakeProto);
   assert(f.next === undefined);

@@ -25,7 +25,7 @@ function array_check(result_array, expected_array) {
 }
 
 var target = {};
-var handler = { ownKeys (target) {
+var handler = { ownKeys(target) {
   throw 42;
 }};
 
@@ -64,46 +64,48 @@ try {
 }
 
 // test basic functionality
-var symA = Symbol("smA");
-var symB = Symbol("smB");
-var target = { prop1: "prop1", prop2: "prop2"};
-target[symB] = "s3";
+var symA = Symbol('smA');
+var symB = Symbol('smB');
+var target = { prop1: 'prop1', prop2: 'prop2'};
+target[symB] = 's3';
 var handler = {
   ownKeys: function(target) {
-    return ["foo", "bar", symA];
-  }
-}
+    return [ 'foo', 'bar', symA ];
+  },
+};
 
 var proxy = new Proxy(target, handler);
 
-array_check(Reflect.ownKeys(proxy), ["foo", "bar", symA]);
-array_check(Object.getOwnPropertyNames(proxy), ["foo", "bar"]);
-array_check(Object.keys(proxy), ["foo", "bar"]);
-array_check(Object.getOwnPropertySymbols(proxy), [symA]);
+array_check(Reflect.ownKeys(proxy), [ 'foo', 'bar', symA ]);
+array_check(Object.getOwnPropertyNames(proxy), [ 'foo', 'bar' ]);
+array_check(Object.keys(proxy), [ 'foo', 'bar' ]);
+array_check(Object.getOwnPropertySymbols(proxy), [ symA ]);
 
-handler.ownKeys = function(target) {return Object.getOwnPropertyNames(target);};
+handler.ownKeys = function(target) {
+  return Object.getOwnPropertyNames(target);
+};
 
-array_check(Reflect.ownKeys(proxy), ["prop1", "prop2"]);
-array_check(Object.getOwnPropertyNames(proxy), ["prop1", "prop2"]);
-array_check(Object.keys(proxy), ["prop1", "prop2"]);
+array_check(Reflect.ownKeys(proxy), [ 'prop1', 'prop2' ]);
+array_check(Object.getOwnPropertyNames(proxy), [ 'prop1', 'prop2' ]);
+array_check(Object.keys(proxy), [ 'prop1', 'prop2' ]);
 array_check(Object.getOwnPropertySymbols(proxy), []);
 
 // test with no trap
-var target = { prop1: "prop1", prop2: "prop2"};
+var target = { prop1: 'prop1', prop2: 'prop2'};
 var handler = {};
 var proxy = new Proxy(target, handler);
 
 assert(JSON.stringify(Object.getOwnPropertyNames(proxy)) === '["prop1","prop2"]');
 
 // test wtih "undefined" trap
-var target = { prop1: "prop1", prop2: "prop2"};
+var target = { prop1: 'prop1', prop2: 'prop2'};
 var handler = {ownKeys: null};
 var proxy = new Proxy(target, handler);
 
 assert(JSON.stringify(Object.getOwnPropertyNames(proxy)) === '["prop1","prop2"]');
 
 // test with invalid trap
-var target = { prop1: "prop1", prop2: "prop2"};
+var target = { prop1: 'prop1', prop2: 'prop2'};
 var handler = {ownKeys: 42};
 var proxy = new Proxy(target, handler);
 
@@ -115,11 +117,11 @@ try {
 }
 
 // test when CreateListFromArrayLike called on non-object
-var target = { prop1: "prop1", prop2: "prop2"};
+var target = { prop1: 'prop1', prop2: 'prop2'};
 var handler = {
-	ownKeys: function(target) {
-      return "foo";
-    }
+  ownKeys: function(target) {
+    return 'foo';
+  },
 };
 
 var proxy = new Proxy(target, handler);
@@ -134,9 +136,9 @@ try {
 // test with invalid property key
 var target = {};
 var handler = {
-	ownKeys: function(target) {
-      return [5];
-    }
+  ownKeys: function(target) {
+    return [ 5 ];
+  },
 };
 
 var proxy = new Proxy(target, handler);
@@ -149,11 +151,11 @@ try {
 }
 
 // test with duplicated keys
-var target = { prop1: "prop1", prop2: "prop2"};
+var target = { prop1: 'prop1', prop2: 'prop2'};
 var handler = {
-	ownKeys: function(target) {
-      return ["a", "a", "a"];
-    }
+  ownKeys: function(target) {
+    return [ 'a', 'a', 'a' ];
+  },
 };
 
 var proxy = new Proxy(target, handler);
@@ -164,12 +166,12 @@ assert(JSON.stringify(Object.getOwnPropertyNames(proxy)) === '["a","a","a"]');
 var keyslist = [];
 
 var handler = {
-	ownKeys: function(target) {
-      for (var idx = 0; idx < 30; idx++) {
-        keyslist.push("K" + idx);
-      }
-      return keyslist;
+  ownKeys: function(target) {
+    for (var idx = 0; idx < 30; idx++) {
+      keyslist.push('K' + idx);
     }
+    return keyslist;
+  },
 };
 
 var proxy = new Proxy(target, handler);
@@ -177,16 +179,16 @@ assert(JSON.stringify(Object.getOwnPropertyNames(proxy)) === JSON.stringify(keys
 
 // test when invariants gets violated
 var target = {
-  "target_one": 1
+  'target_one': 1,
 };
-Object.defineProperty(target, "nonconf", {value: 1, configurable: false});
+Object.defineProperty(target, 'nonconf', {value: 1, configurable: false});
 
-var keys = ["foo"];
+var keys = [ 'foo' ];
 
 var handler = {
-	ownKeys: function(target) {
-      return keys;
-    }
+  ownKeys: function(target) {
+    return keys;
+  },
 };
 
 var proxy = new Proxy(target, handler);
@@ -198,11 +200,11 @@ try {
   assert(e instanceof TypeError);
 }
 
-keys = ["nonconf"];
+keys = [ 'nonconf' ];
 assert(JSON.stringify(Object.getOwnPropertyNames(proxy)) === '["nonconf"]');
 
 Object.preventExtensions(target);
-keys = ["foo", "nonconf"];
+keys = [ 'foo', 'nonconf' ];
 
 try {
   Object.getOwnPropertyNames(proxy);
@@ -211,11 +213,11 @@ try {
   assert(e instanceof TypeError);
 }
 
-keys = ["target_one", "nonconf"];
+keys = [ 'target_one', 'nonconf' ];
 
 assert(JSON.stringify(Object.getOwnPropertyNames(proxy)) === '["target_one","nonconf"]');
 
-keys = ["target_one", "nonconf", "foo"];
+keys = [ 'target_one', 'nonconf', 'foo' ];
 
 try {
   Object.getOwnPropertyNames(proxy);

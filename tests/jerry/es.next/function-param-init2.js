@@ -12,21 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function f(a, b = a)
-{
-  function a() { return 2; }
+function f(a, b = a) {
+  function a() {
+    return 2;
+  }
 
   assert(a() === 2);
-  assert(b === 1)
+  assert(b === 1);
 }
 f(1);
 
-function g(a, b = a)
-{
-  function a() { return 2; }
+function g(a, b = a) {
+  function a() {
+    return 2;
+  }
 
-  eval("assert(a() === 2)");
-  eval("assert(b === 1)");
+  eval('assert(a() === 2)');
+  eval('assert(b === 1)');
 }
 g(1);
 
@@ -39,51 +41,51 @@ function h(a = x) {
 }
 h();
 
-x = function() { return 4; }
+x = function() {
+  return 4;
+};
 let y = 6;
 
 function i(a = x() / 2, b = (y) + 2, c = typeof z) {
   let y = 10;
   let z = 11;
 
-  function x() { return 5; }
+  function x() {
+    return 5;
+  }
 
   assert(a === 2);
   assert(x() === 5);
   assert(b === 8);
-  assert(c === "undefined");
+  assert(c === 'undefined');
   assert(y === 10);
   assert(z === 11);
 }
 i();
 
 var arguments = 10;
-function j(a = arguments[1])
-{
+function j(a = arguments[1]) {
   assert(a === 2);
   a = 3;
-  assert(arguments[0] === undefined)
+  assert(arguments[0] === undefined);
 }
-j(undefined,2);
+j(undefined, 2);
 
-function k(a = 2)
-{
+function k(a = 2) {
   let d = 5;
   assert(d === 5);
-  eval("assert(a === 2)");
+  eval('assert(a === 2)');
 }
 k();
 
-function l(a = 3)
-{
+function l(a = 3) {
   const d = 6;
   assert(d === 6);
-  eval("assert(a === 3)");
+  eval('assert(a === 3)');
 }
 l();
 
-function m(a, b = 2)
-{
+function m(a, b = 2) {
   assert(a === 1);
   assert(arguments[0] === 1);
   assert(b === 2);

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-var a = new Int32Array([1, 2, 3, 4, 5]);
+var a = new Int32Array([ 1, 2, 3, 4, 5 ]);
 var b = new Int32Array(5);
 
 try {
@@ -32,21 +32,21 @@ try {
   assert(e instanceof RangeError);
 }
 
-b.set(new Int32Array([99, 98]), 2);
+b.set(new Int32Array([ 99, 98 ]), 2);
 assert(b.join() === '1,2,99,98,5');
 
-b.set(new Int32Array([99, 98, 97]), 2);
+b.set(new Int32Array([ 99, 98, 97 ]), 2);
 assert(b.join() === '1,2,99,98,97');
 
 try {
-  b.set(new Int32Array([99, 98, 97, 96]), 2);
+  b.set(new Int32Array([ 99, 98, 97, 96 ]), 2);
   assert(1 === 0); // Should not get here.
 } catch (e) {
   assert(e instanceof RangeError);
 }
 
 try {
-  b.set([101, 102, 103, 104], 4);
+  b.set([ 101, 102, 103, 104 ], 4);
   assert(1 === 0); // Should not get here.
 } catch (e) {
   assert(e instanceof RangeError);
@@ -58,7 +58,7 @@ try {
 var ab = new ArrayBuffer(8);
 var a1 = new Uint8Array(ab);
 for (var i = 0; i < a1.length; i += 1) {
-  a1.set([i], i);
+  a1.set([ i ], i);
 }
 
 var a2 = new Uint8Array(ab, 4);
@@ -81,12 +81,12 @@ a1.set(a5, 2);
 assert(a1.join() === '0,1,6,1,6,5,6,7');
 assert(a5.join() === '117835014');
 
-var c = new Int32Array([0xFFFFFFFF]);
+var c = new Int32Array([ 0xFFFFFFFF ]);
 var d = new Uint8Array(4);
 d.set(c);
 assert(d.join() === '255,0,0,0');
 
-var e = new Float32Array([3.33]);
+var e = new Float32Array([ 3.33 ]);
 var f = new Uint8Array(1);
 f.set(e);
 assert(f.join() === '3');

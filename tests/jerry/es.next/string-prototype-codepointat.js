@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var str = "A🌃B\uD800";
+var str = 'A🌃B\uD800';
 var obj = {};
 
 // Test with normal inputs
@@ -23,8 +23,8 @@ assert(str.codePointAt(3) === 66);
 assert(str.codePointAt(4) === 55296);
 
 // Test with string
-assert(str.codePointAt("a") === 65);
-assert(str.codePointAt("B") === 65);
+assert(str.codePointAt('a') === 65);
+assert(str.codePointAt('B') === 65);
 
 // Test with object
 assert(str.codePointAt(obj) === 65);

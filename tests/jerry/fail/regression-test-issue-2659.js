@@ -12,4 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-`eval`("eval ('super (a, b, c)')");
+'eval'('eval (\'super (a, b, c)\')');

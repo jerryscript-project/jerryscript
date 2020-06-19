@@ -13,4 +13,6 @@
 // limitations under the License.
 
 var b = Symbol.for();
-for (var $;;) {$ = $("" + b)};
+for (var $; ;) {
+  $ = $('' + b);
+};

@@ -15,7 +15,7 @@
 
 export default class {
   constructor(num) {
-    this.num = num
+    this.num = num;
   }
 
   incr() {
@@ -23,4 +23,4 @@ export default class {
   }
 }
 
-export * from "module-export-02.js"
+export * from 'module-export-02.js';

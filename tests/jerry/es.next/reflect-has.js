@@ -16,49 +16,53 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-assert (Reflect.has ({x: 0}, 'x') === true);
-assert (Reflect.has ({x: 0}, 'y') === false);
+assert(Reflect.has({x: 0}, 'x') === true);
+assert(Reflect.has({x: 0}, 'y') === false);
 
-assert (Reflect.has ({x: 0}, 'toString') === true);
+assert(Reflect.has({x: 0}, 'toString') === true);
 
 var object = {
-  prop: 'Apple'
+  prop: 'Apple',
 };
 
-assert (Reflect.has (object, 'prop') === true);
+assert(Reflect.has(object, 'prop') === true);
 
-assert (2 === Reflect.has.length);
+assert(2 === Reflect.has.length);
 
 try {
-  Reflect.has ();
-  assert (false);
+  Reflect.has();
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 try {
-  Reflect.has (42, 'batcat');
-  assert (false);
+  Reflect.has(42, 'batcat');
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 try {
-  Reflect.has (null, 'bat');
-  assert (false);
+  Reflect.has(null, 'bat');
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 var target = {bat: 42};
-var a = { [Symbol.toPrimitive]: function () { return 'bat' } };
-var b = { [Symbol.toPrimitive]: function () { throw 'cat' } };
+var a = { [Symbol.toPrimitive]: function() {
+  return 'bat';
+} };
+var b = { [Symbol.toPrimitive]: function() {
+  throw 'cat';
+} };
 
-assert (Reflect.has (target, a) === true);
+assert(Reflect.has(target, a) === true);
 
 try {
-  Reflect.has (target, b);
-  assert (false);
+  Reflect.has(target, b);
+  assert(false);
 } catch (e) {
-  assert (e === 'cat');
+  assert(e === 'cat');
 }

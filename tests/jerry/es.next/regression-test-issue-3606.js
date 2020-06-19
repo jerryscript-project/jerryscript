@@ -12,6 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 var expected = '{"copyWithin":true,"entries":true,"fill":true,"find":true,"findIndex":true,"keys":true,"values":true}';
 assert(JSON.stringify(Array.prototype[Symbol.unscopables]) === expected);

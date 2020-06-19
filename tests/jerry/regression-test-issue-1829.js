@@ -12,4 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-for ({ get 10() {} } ; ; ) break;
+for ({ get 10() {} }; ;) break;

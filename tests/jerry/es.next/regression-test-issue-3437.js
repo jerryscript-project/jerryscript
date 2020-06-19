@@ -12,6 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-[...RegExp.prototype.compile] = ([]);
+[ ...RegExp.prototype.compile ] = ([]);
 
 assert(RegExp.prototype.compile.length === 0);

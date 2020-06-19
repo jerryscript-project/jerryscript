@@ -14,9 +14,9 @@
  */
 
 try {
-  undefined[Symbol ("foo")];
-  assert (false);
+  undefined[Symbol('foo')];
+  assert(false);
 } catch (e) {
   /* Error message: Cannot read property 'Symbol(foo)' of undefined */
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }

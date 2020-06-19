@@ -12,6 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var r = new RegExp("([X]{6}|.*)", "g");
-var s = "a";
-s.replace(r, () => r.compile("[PqaCZlWQUT]{0}", "m"));
+var r = new RegExp('([X]{6}|.*)', 'g');
+var s = 'a';
+s.replace(r, () => r.compile('[PqaCZlWQUT]{0}', 'm'));

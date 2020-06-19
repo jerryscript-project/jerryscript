@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var expr = "Dummy value";
+var expr = 'Dummy value';
 
 var f = function expr() {
   assert(expr === f);
@@ -20,7 +20,7 @@ var f = function expr() {
   assert(expr === f);
   assert(!(delete expr));
   assert(expr === f);
-}
+};
 
 f();
 
@@ -28,15 +28,15 @@ f = function expr() {
   assert(expr === undefined);
   var expr = 6;
   assert(expr === 6);
-}
+};
 
 f();
 
 var f = function expr() {
   assert(expr === f);
-  eval("var expr = 8");
+  eval('var expr = 8');
   assert(expr === 8);
-}
+};
 
 f();
 
@@ -46,6 +46,6 @@ var f = function expr(i) {
   if (i > 0) {
     expr(i - 1);
   }
-}
+};
 
 f(10);

@@ -13,21 +13,21 @@
  * limitations under the License.
  */
 
-import "./module-export-01.js";
-import def from "module-export-01.js";
-import {} from "module-export-01.js";
-import {aa as a,} from "module-export-01.js";
-import {bb as b, cc as c} from "module-export-01.js";
-import {x} from "module-export-01.js";
-import * as mod from "module-export-01.js";
+import './module-export-01.js';
+import def from 'module-export-01.js';
+import {} from 'module-export-01.js';
+import {aa as a} from 'module-export-01.js';
+import {bb as b, cc as c} from 'module-export-01.js';
+import {x} from 'module-export-01.js';
+import * as mod from 'module-export-01.js';
 
-assert (def === "default");
-assert (a === "a");
-assert (b === 5);
-assert (c(b) === 10);
-assert (Array.isArray(mod.d))
-assert (x === 42)
-assert (mod.f("str") === "str")
+assert(def === 'default');
+assert(a === 'a');
+assert(b === 5);
+assert(c(b) === 10);
+assert(Array.isArray(mod.d));
+assert(x === 42);
+assert(mod.f('str') === 'str');
 
-var dog = new mod.Dog("Oddie")
-assert (dog.speak() === "Oddie barks.")
+var dog = new mod.Dog('Oddie');
+assert(dog.speak() === 'Oddie barks.');

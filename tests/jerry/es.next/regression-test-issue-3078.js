@@ -18,4 +18,4 @@ for (var idx = 0; idx < arr.length; idx++) {
   arr[idx] = idx + 1;
 }
 
-assert(arr.slice(1).toString() == "2,3,4");
+assert(arr.slice(1).toString() == '2,3,4');

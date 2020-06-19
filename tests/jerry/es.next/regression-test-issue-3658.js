@@ -13,11 +13,10 @@
 // limitations under the License.
 
 function g({
-  ["y"]: {
-      a
-  }
-})
-{
+  ['y']: {
+    a,
+  },
+}) {
   {
     function a() {}
   }

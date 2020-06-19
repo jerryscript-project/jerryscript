@@ -12,19 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-function check_reference_error (code)
-{
+function check_reference_error(code) {
   try {
-    eval (code)
-    assert (false)
+    eval(code);
+    assert(false);
   } catch (e) {
-    assert (e instanceof ReferenceError)
+    assert(e instanceof ReferenceError);
   }
 }
 
-check_reference_error("for (let x of [x]) {}")
-check_reference_error("for (const x of [x]) {}")
+check_reference_error('for (let x of [x]) {}');
+check_reference_error('for (const x of [x]) {}');
 
-check_reference_error("for (let x in {x}) {}")
-check_reference_error("for (const x in {x}) {}")
+check_reference_error('for (let x in {x}) {}');
+check_reference_error('for (const x in {x}) {}');

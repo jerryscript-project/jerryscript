@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function f (a) {
+function f(a) {
   assert(a[0] === '𞹴');
 }
 

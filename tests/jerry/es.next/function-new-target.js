@@ -13,16 +13,22 @@
 // limitations under the License.
 
 var get = [];
-var p = new Proxy(Function, { get: function(o, k) { get.push(k); return o[k]; }});
+var p = new Proxy(Function, { get: function(o, k) {
+  get.push(k); return o[k];
+}});
 new p;
 
-assert(get + '' === "prototype");
+assert(get + '' === 'prototype');
 
-var func = function() {}
-var reflect = Reflect.construct(Function, ['a','b','return a+b'], func);
+var func = function() {};
+var reflect = Reflect.construct(Function, [ 'a', 'b', 'return a+b' ], func);
 assert(Object.getPrototypeOf(reflect) == func.prototype);
 
-var o = new Proxy (function f () {}, { get(t,p,r) { if (p == "prototype") { throw 42 }}})
+var o = new Proxy(function f() {}, { get(t, p, r) {
+  if (p == 'prototype') {
+    throw 42;
+  }
+}});
 
 try {
   Reflect.construct(Function, [], o);

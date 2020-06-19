@@ -14,4 +14,4 @@
 
 function async() {}
 
-new async
+new async;

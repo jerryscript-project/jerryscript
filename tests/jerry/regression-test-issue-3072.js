@@ -13,6 +13,6 @@
 // limitations under the License.
 
 var arr = [ , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , ];
-arr [4294967294] = 0
-assert (arr.length === 4294967295);
-assert (arr[4294967294] === 0);
+arr[4294967294] = 0;
+assert(arr.length === 4294967295);
+assert(arr[4294967294] === 0);

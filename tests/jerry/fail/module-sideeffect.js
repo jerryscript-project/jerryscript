@@ -13,4 +13,4 @@
  * limitations under the License.
  */
 
-throw new Error("side-effect")
+throw new Error('side-effect');

@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function createMap (count) {
-  var map = new Map()
+function createMap(count) {
+  var map = new Map();
   for (var i = 0; i < count; i++) {
-    map.set(i)
+    map.set(i);
   }
-  return map
+  return map;
 }
 
 var counter = 0;
-createMap(2000).forEach(function ($, key) {
+createMap(2000).forEach(function($, key) {
   counter++;
-  $ += key
-})
+  $ += key;
+});
 
 assert(counter === 2000);

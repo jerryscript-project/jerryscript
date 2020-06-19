@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var g = (Object.getOwnPropertyDescriptor({get a(){}}, 'a')).get;
+var g = (Object.getOwnPropertyDescriptor({get a() {}}, 'a')).get;
 
 try {
   new g;
@@ -21,7 +21,7 @@ try {
   assert(e instanceof TypeError);
 }
 
-var s = (Object.getOwnPropertyDescriptor({set a(value){}}, 'a')).set;
+var s = (Object.getOwnPropertyDescriptor({set a(value) {}}, 'a')).set;
 
 try {
   new s;

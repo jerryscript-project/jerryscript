@@ -14,15 +14,15 @@
 
 class Animal {}
 class Dog extends Animal {
-  static explain () {
-    super.f = 8
+  static explain() {
+    super.f = 8;
   }
 }
 
-assert (Dog.f === undefined);
-assert (Animal.f === undefined);
+assert(Dog.f === undefined);
+assert(Animal.f === undefined);
 
-Dog.explain ()
+Dog.explain();
 
-assert (Animal.f === undefined);
-assert (Dog.f === 8);
+assert(Animal.f === undefined);
+assert(Dog.f === 8);

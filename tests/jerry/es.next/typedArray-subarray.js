@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-var a = new Int32Array([1, 2, 3, 4, 5]);
+var a = new Int32Array([ 1, 2, 3, 4, 5 ]);
 assert(a.subarray().toString() === '1,2,3,4,5');
 assert(a.subarray(3).toString() === '4,5');
 assert(a.subarray(1, 3).toString() === '2,3');
@@ -32,7 +32,7 @@ assert(b.subarray().subarray().toString() === '');
 
 var ab = new ArrayBuffer(28);
 var tmp = new Int32Array(ab);
-tmp.set([0, 1, 2, 3, 4, 5, 0]);
+tmp.set([ 0, 1, 2, 3, 4, 5, 0 ]);
 var c = new Int32Array(ab, 4, 5);
 assert(c.toString() === '1,2,3,4,5');
 assert(c.subarray().toString() === '1,2,3,4,5');

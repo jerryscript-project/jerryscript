@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var a = "foo", r;
-switch(a) {
-    case true ? "foo" : "bar":
-        r = "OK";
-        break;
+var a = 'foo', r;
+switch (a) {
+case true ? 'foo' : 'bar':
+  r = 'OK';
+  break;
 }
-assert(r === "OK");
+assert(r === 'OK');

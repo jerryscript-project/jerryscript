@@ -14,18 +14,18 @@
 
 try {
   e;
-  assert (false);
+  assert(false);
 } catch (e) {
-  eval("var e");
+  eval('var e');
 }
-assert (e === undefined);
+assert(e === undefined);
 
 function f() {
   try {
     throw 1;
-    assert (false);
+    assert(false);
   } catch (e) {
-    eval("var e");
+    eval('var e');
   }
 }
 f();

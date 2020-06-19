@@ -12,23 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var o = { length : 4294967294, push : Array.prototype.push };
-assert(o.push("x") === 4294967295);
+var o = { length: 4294967294, push: Array.prototype.push };
+assert(o.push('x') === 4294967295);
 assert(o.length === 4294967295);
-assert(o[4294967294] === "x");
+assert(o[4294967294] === 'x');
 
 try {
-  assert(o.push("y") === 4294967296);
+  assert(o.push('y') === 4294967296);
 } catch (e) {
   assert(false);
 }
 assert(o.length === 4294967296);
-assert(o[4294967295] === "y");
+assert(o[4294967295] === 'y');
 
 try {
-  assert(o.push("z") === 1);
+  assert(o.push('z') === 1);
 } catch (e) {
   assert(false);
 }
 assert(o.length === 1);
-assert(o[0] === "z");
+assert(o[0] === 'z');

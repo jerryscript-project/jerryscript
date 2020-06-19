@@ -12,17 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 try {
-  (new RegExp("[\\u0020")).exec("u");
-  assert (false);
+  (new RegExp('[\\u0020')).exec('u');
+  assert(false);
 } catch (e) {
-  assert (e instanceof SyntaxError);
+  assert(e instanceof SyntaxError);
 }
 
 try {
-  (new RegExp("[\\x20")).exec("x");
-  assert (false);
+  (new RegExp('[\\x20')).exec('x');
+  assert(false);
 } catch (e) {
-  assert (e instanceof SyntaxError);
+  assert(e instanceof SyntaxError);
 }

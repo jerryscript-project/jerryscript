@@ -13,7 +13,7 @@
 // limitations under the License.
 
 class $ {
-  set ( ) {
-    switch ( $ ) { }
+  set() {
+    switch ($) { }
   }
 }

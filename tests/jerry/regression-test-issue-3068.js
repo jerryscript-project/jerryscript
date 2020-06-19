@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var arr = [0, Infinity];
+var arr = [ 0, Infinity ];
 Object.defineProperties(arr, {
-    length: {
+  length: {
     value: 1,
-    }
+  },
 });
 
 assert(arr.length === 1);

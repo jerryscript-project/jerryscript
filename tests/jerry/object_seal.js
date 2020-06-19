@@ -14,7 +14,7 @@
 
 var obj = {
   prop: function() {},
-  foo: 'bar'
+  foo: 'bar',
 };
 // New properties may be added, existing properties may be changed or removed.
 obj.foo = 'baz';
@@ -23,63 +23,65 @@ delete obj.prop;
 
 var o = Object.seal(obj);
 
-assert (o === obj);
-assert (Object.isSealed (obj) === true);
+assert(o === obj);
+assert(Object.isSealed(obj) === true);
 
 // Changing property values on a sealed object still works.
 obj.foo = 'quux';
-assert (obj.foo === 'quux');
+assert(obj.foo === 'quux');
 // But you can't convert data properties to accessors, or vice versa.
 try {
-    Object.defineProperty(obj, 'foo', { get: function() { return 42; } }); // throws a TypeError
-    assert (false);
+  Object.defineProperty(obj, 'foo', { get: function() {
+    return 42;
+  } }); // throws a TypeError
+  assert(false);
 } catch (e) {
-    assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 // Now any changes, other than to property values, will fail.
 obj.quaxxor = 'the friendly duck'; // silently doesn't add the property
 delete obj.foo; // silently doesn't delete the property
 
-assert (obj.quaxxor === undefined);
-assert (obj.foo === 'quux')
+assert(obj.quaxxor === undefined);
+assert(obj.foo === 'quux');
 
 try {
-    // Attempted additions through Object.defineProperty will also throw.
-    Object.defineProperty (obj, 'ohai', { value: 17 }); // throws a TypeError
-    assert (false);
+  // Attempted additions through Object.defineProperty will also throw.
+  Object.defineProperty(obj, 'ohai', { value: 17 }); // throws a TypeError
+  assert(false);
 } catch (e) {
-    assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 try {
-    Object.defineProperties (obj, { 'ohai' : { value: 17 } });
-    assert (false);
+  Object.defineProperties(obj, { 'ohai': { value: 17 } });
+  assert(false);
 } catch (e) {
-    assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
-Object.defineProperty (obj, 'foo', { value: 'eit' });
-assert (obj.foo === 'eit')
+Object.defineProperty(obj, 'foo', { value: 'eit' });
+assert(obj.foo === 'eit');
 
 // Objects aren't sealed by default.
 var empty = {};
-assert (Object.isSealed (empty) === false);
+assert(Object.isSealed(empty) === false);
 
 // If you make an empty object non-extensible, it is vacuously sealed.
-Object.preventExtensions (empty);
-assert (Object.isSealed (empty) === true);
+Object.preventExtensions(empty);
+assert(Object.isSealed(empty) === true);
 
 // The same is not true of a non-empty object, unless its properties are all non-configurable.
 var hasProp = { fee: 'fie foe fum' };
-Object.preventExtensions (hasProp);
-assert (Object.isSealed (hasProp) === false);
+Object.preventExtensions(hasProp);
+assert(Object.isSealed(hasProp) === false);
 
 // But make them all non-configurable and the object becomes sealed.
-Object.defineProperty (hasProp, 'fee', { configurable: false });
-assert (Object.isSealed (hasProp) === true);
+Object.defineProperty(hasProp, 'fee', { configurable: false });
+assert(Object.isSealed(hasProp) === true);
 
 // The easiest way to seal an object, of course, is Object.seal.
 var sealed = {};
-Object.seal (sealed);
-assert (Object.isSealed (sealed) === true);
+Object.seal(sealed);
+assert(Object.isSealed(sealed) === true);

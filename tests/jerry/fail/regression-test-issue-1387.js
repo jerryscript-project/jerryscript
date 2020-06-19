@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-'use strict'
-function undefined () {}
+'use strict';
+function undefined() {}

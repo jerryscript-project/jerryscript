@@ -23,4 +23,4 @@ assert(Math.log10(p_zero) === Number.NEGATIVE_INFINITY);
 assert(Math.log10(1) === p_zero);
 assert(Math.log10(Number.POSITIVE_INFINITY) === Number.POSITIVE_INFINITY);
 assert(Math.log10(10.0) === 1);
-assert(Math.log10(100.0) === 2)
+assert(Math.log10(100.0) === 2);

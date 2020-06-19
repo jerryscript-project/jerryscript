@@ -13,13 +13,13 @@
 // limitations under the License.
 
 var builtinEval = eval;
-var eval = builtinEval.bind(undefined, "context");
+var eval = builtinEval.bind(undefined, 'context');
 
-var context = "global";
+var context = 'global';
 function checkIfDirectEval() {
-  var context = "function";
-  return (eval() == "function");
+  var context = 'function';
+  return (eval() == 'function');
 }
 
-assert (!checkIfDirectEval());
+assert(!checkIfDirectEval());
 

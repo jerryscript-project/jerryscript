@@ -13,5 +13,7 @@
 // limitations under the License.
 
 // This test case should not throw an error anymore.
-Object.defineProperty(Object.prototype, 0, {'get': function() { throw $ }});
+Object.defineProperty(Object.prototype, 0, {'get': function() {
+  throw $;
+}});
 Promise.all();

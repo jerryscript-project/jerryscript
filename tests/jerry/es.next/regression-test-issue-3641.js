@@ -14,13 +14,13 @@
 
 eval = class extends SyntaxError {
   constructor() {
-      super()
+    super();
   }
-}
+};
 
 try {
-  eval()
-  assert (false);
+  eval();
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }

@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var iter = "" [ Symbol.iterator ] ( );
-iter.next.constructor ( Object.getPrototypeOf( iter ) )
+var iter = ''[Symbol.iterator]();
+iter.next.constructor(Object.getPrototypeOf(iter));

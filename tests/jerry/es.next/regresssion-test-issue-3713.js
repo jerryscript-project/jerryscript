@@ -13,6 +13,6 @@
 // limitations under the License.
 
 function $(b = eval()) {
-    ""
-    eval()
+  '';
+  eval();
 }

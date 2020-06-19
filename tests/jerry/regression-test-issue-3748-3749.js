@@ -13,7 +13,6 @@
 // limitations under the License.
 
 /* try to trigger the gc a few times*/
-for (var i = 0; i < 2; i++)
-{
-  new RegExp(32.2, "g")
+for (var i = 0; i < 2; i++) {
+  new RegExp(32.2, 'g');
 }

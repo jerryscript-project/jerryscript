@@ -13,7 +13,7 @@
 // limitations under the License.
 
 try {
-  new String(Number.MAX_VALUE)
-} catch(e) {
+  new String(Number.MAX_VALUE);
+} catch (e) {
   assert(false);
 }

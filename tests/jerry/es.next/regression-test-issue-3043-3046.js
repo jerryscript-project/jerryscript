@@ -14,12 +14,12 @@
 
 // issue #3046
 var map = new Map();
-var array = [1.5];
+var array = [ 1.5 ];
 map.set(array);
 assert(map.has(array));
 
 // issue #3043
 map = new Map();
-array = [0];
+array = [ 0 ];
 map.set(array);
 assert(map.has(array));

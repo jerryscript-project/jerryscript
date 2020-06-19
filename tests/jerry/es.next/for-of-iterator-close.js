@@ -28,8 +28,10 @@ function createIterable(arr, methods = {}) {
 
 function close1() {
   var closed = false;
-  var iter = createIterable([1, 2, 3], {
-    'return': function() { closed = true; return {}; }
+  var iter = createIterable([ 1, 2, 3 ], {
+    'return': function() {
+      closed = true; return {};
+    },
   });
   for (var it of iter) break;
   return closed;
@@ -39,13 +41,15 @@ assert(close1());
 
 function close2() {
   var closed = false;
-  var iter = createIterable([1, 2, 3], {
-    'return': function() { closed = true; return {}; }
+  var iter = createIterable([ 1, 2, 3 ], {
+    'return': function() {
+      closed = true; return {};
+    },
   });
   try {
     for (var it of iter) throw 0;
     assert(false);
-  } catch(e){
+  } catch (e) {
     assert(e === 0);
   }
   return closed;
@@ -55,8 +59,10 @@ assert(close2());
 
 function close3() {
   var closed = false;
-  var iter = createIterable([1, 2, 3], {
-    'return': function() { closed = true; return {}; }
+  var iter = createIterable([ 1, 2, 3 ], {
+    'return': function() {
+      closed = true; return {};
+    },
   });
   for (var it of iter) continue;
   return closed;
@@ -66,13 +72,15 @@ assert(!close3());
 
 function close4() {
   var closed = false;
-  var iter = createIterable([1, 2, 3], {
-    'return': function() { closed = true; throw 6; }
+  var iter = createIterable([ 1, 2, 3 ], {
+    'return': function() {
+      closed = true; throw 6;
+    },
   });
   try {
     for (var it of iter) throw 5;
     assert(false);
-  } catch(e) {
+  } catch (e) {
     assert(e === 5);
   }
   return closed;
@@ -82,8 +90,10 @@ assert(close4());
 
 function close5() {
   var closed_called = 0;
-  var iter = createIterable([1, 2, 3], {
-    'return': function() { closed_called++; throw 6; }
+  var iter = createIterable([ 1, 2, 3 ], {
+    'return': function() {
+      closed_called++; throw 6;
+    },
   });
   try {
     for (var it of iter) {
@@ -93,7 +103,7 @@ function close5() {
       assert(false);
     }
     assert(false);
-  } catch(e) {
+  } catch (e) {
     assert(e === 5);
   }
   return closed_called === 2;
@@ -103,8 +113,10 @@ assert(close5());
 
 function close6() {
   var closed = false;
-  var iter = createIterable([1, 2, 3], {
-    'return': function() { closed = true; return {}; }
+  var iter = createIterable([ 1, 2, 3 ], {
+    'return': function() {
+      closed = true; return {};
+    },
   });
   for (var it of iter) {};
 
@@ -115,12 +127,14 @@ assert(!close6());
 
 var close7_result = false;
 function close7() {
-  var iter = createIterable([1, 2, 3], {
-    'return': function() { close7_result = true; throw "5"; }
+  var iter = createIterable([ 1, 2, 3 ], {
+    'return': function() {
+      close7_result = true; throw '5';
+    },
   });
 
   for (var it of iter) {
-    return "foo";
+    return 'foo';
   }
 }
 
@@ -129,16 +143,18 @@ try {
   assert(false);
 } catch (e) {
   assert(close7_result);
-  assert(e === "5");
+  assert(e === '5');
 }
 
 function close8() {
-  var iter = createIterable([1, 2, 3], {
-    'return': function() { close8_result = true; throw "5"; }
+  var iter = createIterable([ 1, 2, 3 ], {
+    'return': function() {
+      close8_result = true; throw '5';
+    },
   });
 
   for (var it of iter) {
-    throw "foo";
+    throw 'foo';
   }
 }
 
@@ -147,14 +163,16 @@ try {
   close8();
   assert(false);
 } catch (e) {
-  assert(e === "foo");
+  assert(e === 'foo');
   assert(close8_result);
 }
 
 function close9() {
   var closed = false;
-  var iter = createIterable([1, 2, 3], {
-    'return': function() { closed = true; throw "5"; }
+  var iter = createIterable([ 1, 2, 3 ], {
+    'return': function() {
+      closed = true; throw '5';
+    },
   });
 
   try {
@@ -163,7 +181,7 @@ function close9() {
     }
   } finally {
     assert(closed);
-    throw "foo"
+    throw 'foo';
   }
 }
 
@@ -171,22 +189,24 @@ try {
   close9();
   assert(false);
 } catch (e) {
-  assert(e === "foo");
+  assert(e === 'foo');
 }
 
 function close10() {
   var closed = false;
-  var iter = createIterable([1, 2, 3], {
-    'return': function() { closed = true; return {}; }
+  var iter = createIterable([ 1, 2, 3 ], {
+    'return': function() {
+      closed = true; return {};
+    },
   });
 
   try {
     for (var it of iter) {
-      return "foo";
+      return 'foo';
     }
   } finally {
     assert(closed);
-    throw "bar";
+    throw 'bar';
   }
 }
 
@@ -194,22 +214,24 @@ try {
   close10();
   assert(false);
 } catch (e) {
-  assert(e === "bar");
+  assert(e === 'bar');
 }
 
 function close11() {
   var closed = false;
-  var iter = createIterable([1, 2, 3], {
-    'return': function() { closed = true; throw "5"; }
+  var iter = createIterable([ 1, 2, 3 ], {
+    'return': function() {
+      closed = true; throw '5';
+    },
   });
 
   try {
     for (var it of iter) {
-      return "foo";
+      return 'foo';
     }
   } finally {
     assert(closed);
-    throw "bar";
+    throw 'bar';
   }
 }
 
@@ -217,22 +239,24 @@ try {
   close11();
   assert(false);
 } catch (e) {
-  assert(e === "bar");
+  assert(e === 'bar');
 }
 
 function close12() {
   var closed = false;
-  var iter = createIterable([1, 2, 3], {
-    'return': function() { closed = true; throw "5"; }
+  var iter = createIterable([ 1, 2, 3 ], {
+    'return': function() {
+      closed = true; throw '5';
+    },
   });
 
   try {
     for (var it of iter) {
-      throw "foo";
+      throw 'foo';
     }
   } finally {
     assert(closed);
-    throw "bar";
+    throw 'bar';
   }
 }
 
@@ -240,5 +264,5 @@ try {
   close12();
   assert(false);
 } catch (e) {
-  assert(e === "bar");
+  assert(e === 'bar');
 }

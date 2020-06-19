@@ -15,95 +15,113 @@
 var split = RegExp.prototype[Symbol.split];
 
 try {
-  split.call (0, "string");
-  assert (false);
+  split.call(0, 'string');
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 try {
-  split.call (new RegExp(), {
+  split.call(new RegExp(), {
     toString: () => {
-      throw "abrupt string"
-    }
+      throw 'abrupt string';
+    },
   });
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e === "abrupt string");
+  assert(e === 'abrupt string');
 }
 
 try {
   var o = {};
-  o.constructor = "ctor";
-  split.call (o, "str");
-  assert (false);
+  o.constructor = 'ctor';
+  split.call(o, 'str');
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
 try {
   var o = {};
   var c = {};
   o.constructor = c;
-  Object.defineProperty (c, Symbol.species, { get: function () { throw "abrupt species";} });
+  Object.defineProperty(c, Symbol.species, { get: function() {
+    throw 'abrupt species';
+  } });
 
-  split.call (o, "str");
-  assert (false);
+  split.call(o, 'str');
+  assert(false);
 } catch (e) {
-  assert (e === "abrupt species");
+  assert(e === 'abrupt species');
 }
 
 try {
-  split.call ({
+  split.call({
     get flags() {
-      throw "abrupt flags";
-    }
-  }, "string");
-  assert (false);
+      throw 'abrupt flags';
+    },
+  }, 'string');
+  assert(false);
 } catch (e) {
-  assert (e === "abrupt flags");
+  assert(e === 'abrupt flags');
 }
 
 try {
-  split.call ({ toString: function () { return "s"; }, flags: "g"},
-              "string",
-              { valueOf: function () { throw "abrupt limit"; } });
-  assert (false);
+  split.call({ toString: function() {
+    return 's';
+  }, flags: 'g'},
+  'string',
+  { valueOf: function() {
+    throw 'abrupt limit';
+  } });
+  assert(false);
 } catch (e) {
-  assert (e === "abrupt limit");
+  assert(e === 'abrupt limit');
 }
 
 var exec = RegExp.prototype.exec;
 
 try {
-  Object.defineProperty(RegExp.prototype, "exec", { get : function() { throw "abrupt get exec"; }})
-  split.call ({ toString: function () { return "s"; }, flags: "g"},
-              "string")
-  assert (false);
+  Object.defineProperty(RegExp.prototype, 'exec', { get: function() {
+    throw 'abrupt get exec';
+  }});
+  split.call({ toString: function() {
+    return 's';
+  }, flags: 'g'},
+  'string');
+  assert(false);
 } catch (e) {
-  assert (e === "abrupt get exec");
+  assert(e === 'abrupt get exec');
 }
 
 try {
-  Object.defineProperty(RegExp.prototype, "exec", { value: function (str) {
+  Object.defineProperty(RegExp.prototype, 'exec', { value: function(str) {
     this.lastIndex++;
-    return { get length() { throw "abrupt match length"; }}
+    return { get length() {
+      throw 'abrupt match length';
+    }};
   }});
-  split.call ({ toString: function () { return "s"; }, flags: "g"},
-              "string");
-  assert (false);
+  split.call({ toString: function() {
+    return 's';
+  }, flags: 'g'},
+  'string');
+  assert(false);
 } catch (e) {
-  assert (e === "abrupt match length");
+  assert(e === 'abrupt match length');
 }
 
 try {
-  Object.defineProperty(RegExp.prototype, "exec", { value: function (str) {
+  Object.defineProperty(RegExp.prototype, 'exec', { value: function(str) {
     this.lastIndex++;
-    return { length: 2, get 1() { throw "abrupt capture"; }}
+    return { length: 2, get 1() {
+      throw 'abrupt capture';
+    }};
   }});
-  split.call ({ toString: function () { return "s"; }, flags: "g"},
-              "string");
-  assert (false);
+  split.call({ toString: function() {
+    return 's';
+  }, flags: 'g'},
+  'string');
+  assert(false);
 } catch (e) {
-  assert (e === "abrupt capture");
+  assert(e === 'abrupt capture');
 }

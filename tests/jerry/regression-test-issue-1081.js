@@ -12,18 +12,48 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-try { new RegExp().compile(A)  } catch (err) {}
-try { A } catch (err) {}
-try { new RegExp().constructor.prototype.toString()  } catch (A) {}
-try { A } catch (err) {}
-try { new RegExp(1, "g").exec(1)  } catch (A) {}
-try { A } catch (err) {}
-try { A } catch (A) {}
-try { A } catch (A) {}
-try { new (Boolean.constructor.prototype)  } catch (err) {}
-try { Boolean  } catch (A) {}
-try { A } catch(A) {}
-try { new RegExp().compile(new (RegExp)())  } catch (A) {}
-try { Math.max().constructor.seal(A) } catch (err) {}
-try { Date.parse(RegExp.prototype.compile(RegExp.prototype)) } catch(A) {}
-try { Boolean.A() } catch (err) {}
+try {
+  new RegExp().compile(A);
+} catch (err) {}
+try {
+  A;
+} catch (err) {}
+try {
+  new RegExp().constructor.prototype.toString();
+} catch (A) {}
+try {
+  A;
+} catch (err) {}
+try {
+  new RegExp(1, 'g').exec(1);
+} catch (A) {}
+try {
+  A;
+} catch (err) {}
+try {
+  A;
+} catch (A) {}
+try {
+  A;
+} catch (A) {}
+try {
+  new (Boolean.constructor.prototype);
+} catch (err) {}
+try {
+  Boolean;
+} catch (A) {}
+try {
+  A;
+} catch (A) {}
+try {
+  new RegExp().compile(new (RegExp)());
+} catch (A) {}
+try {
+  Math.max().constructor.seal(A);
+} catch (err) {}
+try {
+  Date.parse(RegExp.prototype.compile(RegExp.prototype));
+} catch (A) {}
+try {
+  Boolean.A();
+} catch (err) {}

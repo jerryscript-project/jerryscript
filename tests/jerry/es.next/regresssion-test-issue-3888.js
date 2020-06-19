@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function i(id_0, b = (eval("var x"))) {
-    function x() {}
-    eval(!eval("var x = {}; x instanceof assert;"))
+function i(id_0, b = (eval('var x'))) {
+  function x() {}
+  eval(!eval('var x = {}; x instanceof assert;'));
 }
-i()
+i();

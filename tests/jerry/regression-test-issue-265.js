@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-parseInt(NaN,RegExp("54"));
+parseInt(NaN, RegExp('54'));
 
 try {
-    parseInt(ArrayBuffer());
-} catch(err) {}
+  parseInt(ArrayBuffer());
+} catch (err) {}
 
 try {
-    isNaN(__proto__);
-} catch(err) {}
+  isNaN(__proto__);
+} catch (err) {}
 
 try {
-    RangeError(parseInt(Infinity,readbuffer()));
+  RangeError(parseInt(Infinity, readbuffer()));
 } catch (err) {}

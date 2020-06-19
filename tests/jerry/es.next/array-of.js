@@ -37,7 +37,7 @@ assert(array4[0] === undefined);
 // Test when input is an object
 var obj = {
   0: 0,
-  1: 1
+  1: 1,
 };
 
 var array5 = Array.of(obj, 2, 3);
@@ -47,14 +47,14 @@ assert(array5[0][1] === 1);
 assert(array5[2] === 3);
 
 // Test with array holes
-var array6 = Array.of.apply(null, [,,undefined]);
+var array6 = Array.of.apply(null, [ ,, undefined ]);
 assert(array6.length === 3);
 assert(array6[0] === undefined);
 
 // Test with another class
 var hits = 0;
 function Test() {
-    hits++;
+  hits++;
 }
 Test.of = Array.of;
 
@@ -71,7 +71,7 @@ assert(array7.length === 1);
 assert(array7[0] === boundedBuiltinFn);
 
 // Test superficial features
-var desc = Object.getOwnPropertyDescriptor(Array, "of");
+var desc = Object.getOwnPropertyDescriptor(Array, 'of');
 assert(desc.configurable === true);
 assert(desc.writable === true);
 assert(desc.enumerable === false);

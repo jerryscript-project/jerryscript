@@ -41,15 +41,15 @@ assert(new RegExp(/\?\//g).source === '\\?\\/');
 
 try {
   RegExp.prototype.source;
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }
 
-var sourceProp = Object.getOwnPropertyDescriptor (RegExp.prototype, "source");
+var sourceProp = Object.getOwnPropertyDescriptor(RegExp.prototype, 'source');
 try {
   sourceProp.get.call({});
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof TypeError);
+  assert(e instanceof TypeError);
 }

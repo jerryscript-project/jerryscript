@@ -14,70 +14,75 @@
 
 /* This test checks async modifiers (nothing else). */
 
-function check_promise(p, value)
-{
-  assert(p instanceof Promise)
+function check_promise(p, value) {
+  assert(p instanceof Promise);
 
   p.then(function(v) {
-    assert(v === value)
-  })
+    assert(v === value);
+  });
 }
 
 /* Async functions */
 
 async function f(a) {
-  return a
+  return a;
 }
 
-check_promise(f(1), 1)
+check_promise(f(1), 1);
 
-f = async function (a) { return a }
-check_promise(f(2), 2)
+f = async function(a) {
+  return a;
+};
+check_promise(f(2), 2);
 
-f = (async function (a) { return a })
-check_promise(f(3), 3)
+f = (async function(a) {
+  return a;
+});
+check_promise(f(3), 3);
 
-f = [async function (a) { return a }]
-check_promise(f[0](4), 4)
+f = [ async function(a) {
+  return a;
+} ];
+check_promise(f[0](4), 4);
 
 /* These four are parser tests. */
-async => {}
-async async => {}
-(async => {})
-(async async => {})
+async => {};
+async async => {};
+(async => {});
+(async async => {});
 
 f = async => async;
-assert(f(5) === 5)
+assert(f(5) === 5);
 
 f = async async => async;
-check_promise(f(6), 6)
+check_promise(f(6), 6);
 
-f = (async => async)
-assert(f(7) === 7)
+f = (async => async);
+assert(f(7) === 7);
 
-f = (async async => async)
-check_promise(f(8), 8)
+f = (async async => async);
+check_promise(f(8), 8);
 
-f = [async => async]
-assert(f[0](9) === 9)
+f = [ async => async ];
+assert(f[0](9) === 9);
 
-f = [async async => async]
-check_promise(f[0](10), 10)
+f = [ async async => async ];
+check_promise(f[0](10), 10);
 
 f = async (a, b) => a + b;
-check_promise(f(10, 1), 11)
+check_promise(f(10, 1), 11);
 
 f = (async (a, b) => a + b);
-check_promise(f(10, 2), 12)
+check_promise(f(10, 2), 12);
 
-f = [async (a, b) => a + b];
-check_promise(f[0](10, 3), 13)
+f = [ async (a, b) => a + b ];
+check_promise(f[0](10, 3), 13);
 
 f = true ? async () => 14 : 0;
-check_promise(f(), 14)
+check_promise(f(), 14);
 
-f = (1, async async => async)
-check_promise(f(15), 15)
+f = (1, async async => async);
+check_promise(f(15), 15);
 
 /* Functions contain async references */
 
@@ -85,27 +90,33 @@ function f1() {
   var async = 1;
 
   /* The arrow function after the newline should be ignored. */
-  var v1 = async
-  async => async
+  var v1 = async;
+  async => async;
 
   /* The function statement after the newline should not be an async function. */
-  var v2 = async
-  function g() { return 2 }
+  var v2 = async;
+  function g() {
+    return 2;
+  }
 
-  async
-  function h() { return 3 }
+  async;
+  function h() {
+    return 3;
+  }
 
-  assert(v1 === 1)
-  assert(v2 === 1)
-  assert(g() === 2)
-  assert(h() === 3)
+  assert(v1 === 1);
+  assert(v2 === 1);
+  assert(g() === 2);
+  assert(h() === 3);
 }
 f1();
 
 function f2() {
   var async = 1;
 
-  function g() { async = 2; }
+  function g() {
+    async = 2;
+  }
   g();
 
   assert(async == 2);
@@ -116,7 +127,9 @@ function f3() {
   var v = 3;
   var async = () => v = 4;
 
-  function g() { async(); }
+  function g() {
+    async();
+  }
   g();
 
   assert(v === 4);
@@ -127,7 +140,9 @@ function f4() {
   var v = 5;
   var async = (a, b) => v = a + b;
 
-  function g() { async(((v)), ((v))); }
+  function g() {
+    async(((v)), ((v)));
+  }
   g();
 
   assert(v === 10);
@@ -138,7 +153,9 @@ function f5() {
   var v = 0;
   var async = (a, b) => v = a + b;
 
-  function g() { async((async(1,2)), ((async(3,4)))); }
+  function g() {
+    async((async(1, 2)), ((async(3, 4))));
+  }
   g();
 
   assert(v === 10);

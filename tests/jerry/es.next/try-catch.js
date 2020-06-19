@@ -13,118 +13,115 @@
  * limitations under the License.
  */
 
-var e = -1
+var e = -1;
 
-function f1()
-{
-  assert(e === undefined)
+function f1() {
+  assert(e === undefined);
   try {
-    throw 0
+    throw 0;
   } catch (e) {
-    var e = 1
-    assert(e === 1)
+    var e = 1;
+    assert(e === 1);
   }
-  assert(e === undefined)
+  assert(e === undefined);
 }
-f1()
+f1();
 
-function f2()
-{
-  assert(e === undefined)
+function f2() {
+  assert(e === undefined);
   try {
-    throw 0
+    throw 0;
   } catch (e) {
     {
-      var e = 2
-      assert(e === 2)
+      var e = 2;
+      assert(e === 2);
     }
-    assert(e === 2)
+    assert(e === 2);
   }
-  assert(e === undefined)
+  assert(e === undefined);
 }
-f2()
+f2();
 
-function f3()
-{
-  assert(e === -1)
+function f3() {
+  assert(e === -1);
   try {
-    throw [0]
-  } catch ([e]) {
+    throw [ 0 ];
+  } catch ([ e ]) {
     {
       try {
-        eval("var e = 2")
-        assert(false)
+        eval('var e = 2');
+        assert(false);
       } catch (e) {
-        assert(e instanceof SyntaxError)
+        assert(e instanceof SyntaxError);
       }
     }
-    assert(e === 0)
+    assert(e === 0);
   }
-  assert(e === -1)
+  assert(e === -1);
 }
-f3()
+f3();
 
-function f4()
-{
-  assert(e === undefined)
+function f4() {
+  assert(e === undefined);
   try {
-    throw 0
+    throw 0;
   } catch (e) {
     {
-      function e() { return 3 }
-      assert(e() === 3)
+      function e() {
+        return 3;
+      }
+      assert(e() === 3);
     }
-    assert(e === 0)
+    assert(e === 0);
   }
-  assert(e() === 3)
+  assert(e() === 3);
 }
-f4()
+f4();
 
-function f5()
-{
-  assert(e === -1)
+function f5() {
+  assert(e === -1);
   try {
-    throw 0
+    throw 0;
   } catch (e) {
     {
-      eval("function e() { return 3 } assert(e === 0)")
-      assert(e === 0)
+      eval('function e() { return 3 } assert(e === 0)');
+      assert(e === 0);
     }
-    assert(e === 0)
+    assert(e === 0);
   }
-  assert(e() === 3)
+  assert(e() === 3);
 }
-f5()
+f5();
 
-function f6()
-{
+function f6() {
   let e = 4;
-  assert(e === 4)
+  assert(e === 4);
   try {
-    throw 0
+    throw 0;
   } catch (e) {
     {
-      function e() { return 5 }
-      assert(e() === 5)
+      function e() {
+        return 5;
+      }
+      assert(e() === 5);
     }
-    assert(e === 0)
+    assert(e === 0);
   }
-  assert(e === 4)
+  assert(e === 4);
 }
-f6()
+f6();
 
-function f7()
-{
+function f7() {
   let e = 6;
-  assert(e === 6)
+  assert(e === 6);
   try {
-    throw 0
+    throw 0;
   } catch (e) {
     {
-      eval("function e() { return 7 } assert(e() === 7)")
+      eval('function e() { return 7 } assert(e() === 7)');
     }
-    assert(e === 0)
+    assert(e === 0);
   }
-  assert(e === 6)
+  assert(e === 6);
 }
-f7()
+f7();

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 function g({
-    ["y"]: {
-        get = 5
-    }
+  ['y']: {
+    get = 5,
+  },
 }) {}

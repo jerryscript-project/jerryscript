@@ -17,7 +17,7 @@
 var eval = eval.bind();
 try {
   eval('import { c } from "tests/jerry/es.next/module-export-01.js";');
-  assert (false);
+  assert(false);
 } catch (e) {
-  assert (e instanceof SyntaxError);
+  assert(e instanceof SyntaxError);
 }

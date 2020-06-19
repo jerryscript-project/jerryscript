@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-RegExp.prototype.constructor = ""
+RegExp.prototype.constructor = '';
 var r = /a/;
-assert (r.test ("a"));
+assert(r.test('a'));
 
-RegExp.prototype.constructor = {}
+RegExp.prototype.constructor = {};
 r = /b/;
-assert (r.test ("b"));
+assert(r.test('b'));

@@ -13,173 +13,141 @@
 // limitations under the License.
 
 (function tc_19_01_02__003() {
-  function test_set_prototype_of_success(o, proto, msg)
-  {
+  function test_set_prototype_of_success(o, proto, msg) {
     assert(o === Object.setPrototypeOf(o, proto));
 
-    if (msg)
-    {
-      print(msg + " PASS");
+    if (msg) {
+      print(msg + ' PASS');
     }
   }
 
-  (function test_nonobject_o(undefined)
-  {
-    test_set_prototype_of_success(true, new Object(), "Object.setPrototypeOf(boolean, ...)");
-    test_set_prototype_of_success(3.14, new Object(), "Object.setPrototypeOf(number, ...)");
-    test_set_prototype_of_success("xyz", new Object(), "Object.setPrototypeOf(string, ...)");
-  })()
+  (function test_nonobject_o(undefined) {
+    test_set_prototype_of_success(true, new Object(), 'Object.setPrototypeOf(boolean, ...)');
+    test_set_prototype_of_success(3.14, new Object(), 'Object.setPrototypeOf(number, ...)');
+    test_set_prototype_of_success('xyz', new Object(), 'Object.setPrototypeOf(string, ...)');
+  })();
 })();
 
 (function tc_19_01_02__006() {
-  function test_set_prototype_of_success_set(o, proto, msg)
-  {
+  function test_set_prototype_of_success_set(o, proto, msg) {
     assert(o === Object.setPrototypeOf(o, proto));
     assert(proto === Object.getPrototypeOf(o));
 
-    if (msg)
-    {
-      print(msg + " PASS");
+    if (msg) {
+      print(msg + ' PASS');
     }
   }
 
-  (function test_set_prototype_of(undefined)
-  {
-    test_set_prototype_of_success_set(new Object(), new Object(), "Object.setPrototypeOf(o1, o2)");
-    test_set_prototype_of_success_set(new Object(), null, "Object.setPrototypeOf(o, null)");
-  })()
+  (function test_set_prototype_of(undefined) {
+    test_set_prototype_of_success_set(new Object(), new Object(), 'Object.setPrototypeOf(o1, o2)');
+    test_set_prototype_of_success_set(new Object(), null, 'Object.setPrototypeOf(o, null)');
+  })();
 })();
 
 (function tc_19_01_02__004() {
-  function test_set_prototype_of_error(o, proto, msg)
-  {
-    var name = "";
+  function test_set_prototype_of_error(o, proto, msg) {
+    var name = '';
 
-    try
-    {
+    try {
       Object.setPrototypeOf(o, proto);
-    }
-    catch (e)
-    {
+    } catch (e) {
       name = e.name;
     }
 
-    assert(name === "TypeError");
+    assert(name === 'TypeError');
 
-    if (msg)
-    {
-      print(msg + " PASS (XFAIL)");
+    if (msg) {
+      print(msg + ' PASS (XFAIL)');
     }
   }
 
-  function test_set_prototype_of_success_set(o, proto, msg)
-  {
+  function test_set_prototype_of_success_set(o, proto, msg) {
     assert(o === Object.setPrototypeOf(o, proto));
     assert(proto === Object.getPrototypeOf(o));
 
-    if (msg)
-    {
-      print(msg + " PASS");
+    if (msg) {
+      print(msg + ' PASS');
     }
   }
 
-  (function test_nonextensible_o(undefined)
-  {
+  (function test_nonextensible_o(undefined) {
     var o = new Object();
     var o_proto = Object.getPrototypeOf(o);
     Object.preventExtensions(o);
 
-    test_set_prototype_of_success_set(o, o_proto, "Object.setPrototypeOf(o_nonext, o_nonext.__proto__)");
-    test_set_prototype_of_error(o, new Object(), "Object.setPrototypeOf(o_nonext, ...)");
-  })()
+    test_set_prototype_of_success_set(o, o_proto, 'Object.setPrototypeOf(o_nonext, o_nonext.__proto__)');
+    test_set_prototype_of_error(o, new Object(), 'Object.setPrototypeOf(o_nonext, ...)');
+  })();
 })();
 
 (function tc_19_01_02__002() {
-  function test_set_prototype_of_error(o, proto, msg)
-  {
-    var name = "";
+  function test_set_prototype_of_error(o, proto, msg) {
+    var name = '';
 
-    try
-    {
+    try {
       Object.setPrototypeOf(o, proto);
-    }
-    catch (e)
-    {
+    } catch (e) {
       name = e.name;
     }
 
-    assert(name === "TypeError");
+    assert(name === 'TypeError');
 
-    if (msg)
-    {
-      print(msg + " PASS (XFAIL)");
+    if (msg) {
+      print(msg + ' PASS (XFAIL)');
     }
   }
 
-  (function test_nonobject_proto(undefined)
-  {
-    test_set_prototype_of_error(new Object(), undefined, "Object.setPrototypeOf(..., undefined)");
-    test_set_prototype_of_error(new Object(), true, "Object.setPrototypeOf(..., boolean)");
-    test_set_prototype_of_error(new Object(), 3.14, "Object.setPrototypeOf(..., number)");
-    test_set_prototype_of_error(new Object(), "xyz", "Object.setPrototypeOf(..., string)");
-  })()
+  (function test_nonobject_proto(undefined) {
+    test_set_prototype_of_error(new Object(), undefined, 'Object.setPrototypeOf(..., undefined)');
+    test_set_prototype_of_error(new Object(), true, 'Object.setPrototypeOf(..., boolean)');
+    test_set_prototype_of_error(new Object(), 3.14, 'Object.setPrototypeOf(..., number)');
+    test_set_prototype_of_error(new Object(), 'xyz', 'Object.setPrototypeOf(..., string)');
+  })();
 })();
 
 (function tc_19_01_02__005() {
-  function test_set_prototype_of_error(o, proto, msg)
-  {
-    var name = "";
+  function test_set_prototype_of_error(o, proto, msg) {
+    var name = '';
 
-    try
-    {
+    try {
       Object.setPrototypeOf(o, proto);
-    }
-    catch (e)
-    {
+    } catch (e) {
       name = e.name;
     }
 
-    assert(name === "TypeError");
+    assert(name === 'TypeError');
 
-    if (msg)
-    {
-      print(msg + " PASS (XFAIL)");
+    if (msg) {
+      print(msg + ' PASS (XFAIL)');
     }
   }
 
-  (function test_circularity(undefined)
-  {
+  (function test_circularity(undefined) {
     var o = new Object();
 
-    test_set_prototype_of_error(o, o, "Object.setPrototypeOf(o, o)");
-  })()
+    test_set_prototype_of_error(o, o, 'Object.setPrototypeOf(o, o)');
+  })();
 })();
 
 (function tc_19_01_02__001() {
-  function test_set_prototype_of_error(o, proto, msg)
-  {
-    var name = "";
+  function test_set_prototype_of_error(o, proto, msg) {
+    var name = '';
 
-    try
-    {
+    try {
       Object.setPrototypeOf(o, proto);
-    }
-    catch (e)
-    {
+    } catch (e) {
       name = e.name;
     }
 
-    assert(name === "TypeError");
+    assert(name === 'TypeError');
 
-    if (msg)
-    {
-      print(msg + " PASS (XFAIL)");
+    if (msg) {
+      print(msg + ' PASS (XFAIL)');
     }
   }
 
-  (function test_incoercible_o(undefined)
-  {
-    test_set_prototype_of_error(undefined, new Object(), "Object.setPrototypeOf(undefined, ...)");
-    test_set_prototype_of_error(null, new Object(), "Object.setPrototypeOf(null, ...)");
+  (function test_incoercible_o(undefined) {
+    test_set_prototype_of_error(undefined, new Object(), 'Object.setPrototypeOf(undefined, ...)');
+    test_set_prototype_of_error(null, new Object(), 'Object.setPrototypeOf(null, ...)');
   })();
 })();

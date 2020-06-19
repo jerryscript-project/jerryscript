@@ -13,62 +13,62 @@
  * limitations under the License.
  */
 
-const a = 6
-assert(!delete a)
-assert(a === 6)
+const a = 6;
+assert(!delete a);
+assert(a === 6);
 
 try {
-  eval("a = 7")
-  assert(false)
+  eval('a = 7');
+  assert(false);
 } catch (e) {
-  assert(e instanceof TypeError)
+  assert(e instanceof TypeError);
 }
 
 function check_type_error(code) {
   try {
-    eval(code)
-    assert(false)
+    eval(code);
+    assert(false);
   } catch (e) {
-    assert(e instanceof TypeError)
+    assert(e instanceof TypeError);
   }
 }
 
 // Register cases
-check_type_error("{ const a = 0; a = 1 }");
-check_type_error("{ const a = 0; a += 1 }");
-check_type_error("{ const a = 0; a -= 1 }");
-check_type_error("{ const a = 0; a *= 1 }");
-check_type_error("{ const a = 0; a %= 1 }");
-check_type_error("{ const a = 0; a /= 1 }");
-check_type_error("{ const a = 0; a <<= 1 }");
-check_type_error("{ const a = 0; a >>= 1 }");
-check_type_error("{ const a = 0; a >>>= 1 }");
-check_type_error("{ const a = 0; a &= 1 }");
-check_type_error("{ const a = 0; a |= 1 }");
-check_type_error("{ const a = 0; a ^= 1 }");
-check_type_error("{ const a = 0; a++ }");
-check_type_error("{ const a = 0; a-- }");
-check_type_error("{ const a = 0; ++a }");
-check_type_error("{ const a = 0; --a }");
-check_type_error("{ const a = 0; [a] = [1] }");
-check_type_error("{ const a = 0; ({a} = { a:1 }) }");
+check_type_error('{ const a = 0; a = 1 }');
+check_type_error('{ const a = 0; a += 1 }');
+check_type_error('{ const a = 0; a -= 1 }');
+check_type_error('{ const a = 0; a *= 1 }');
+check_type_error('{ const a = 0; a %= 1 }');
+check_type_error('{ const a = 0; a /= 1 }');
+check_type_error('{ const a = 0; a <<= 1 }');
+check_type_error('{ const a = 0; a >>= 1 }');
+check_type_error('{ const a = 0; a >>>= 1 }');
+check_type_error('{ const a = 0; a &= 1 }');
+check_type_error('{ const a = 0; a |= 1 }');
+check_type_error('{ const a = 0; a ^= 1 }');
+check_type_error('{ const a = 0; a++ }');
+check_type_error('{ const a = 0; a-- }');
+check_type_error('{ const a = 0; ++a }');
+check_type_error('{ const a = 0; --a }');
+check_type_error('{ const a = 0; [a] = [1] }');
+check_type_error('{ const a = 0; ({a} = { a:1 }) }');
 
 // Non-register cases
-check_type_error("{ const a = 0; (function (){ a = 1 })() }");
-check_type_error("{ const a = 0; (function (){ a += 1 })() }");
-check_type_error("{ const a = 0; (function (){ a -= 1 })() }");
-check_type_error("{ const a = 0; (function (){ a *= 1 })() }");
-check_type_error("{ const a = 0; (function (){ a %= 1 })() }");
-check_type_error("{ const a = 0; (function (){ a /= 1 })() }");
-check_type_error("{ const a = 0; (function (){ a <<= 1 })() }");
-check_type_error("{ const a = 0; (function (){ a >>= 1 })() }");
-check_type_error("{ const a = 0; (function (){ a >>>= 1 })() }");
-check_type_error("{ const a = 0; (function (){ a &= 1 })() }");
-check_type_error("{ const a = 0; (function (){ a |= 1 })() }");
-check_type_error("{ const a = 0; (function (){ a ^= 1 })() }");
-check_type_error("{ const a = 0; (function (){ a++ })() }");
-check_type_error("{ const a = 0; (function (){ a-- })() }");
-check_type_error("{ const a = 0; (function (){ ++a })() }");
-check_type_error("{ const a = 0; (function (){ --a })() }");
-check_type_error("{ const a = 0; (function (){ [a] = [1] })() }");
-check_type_error("{ const a = 0; (function (){ ({a} = { a:1 }) })() }");
+check_type_error('{ const a = 0; (function (){ a = 1 })() }');
+check_type_error('{ const a = 0; (function (){ a += 1 })() }');
+check_type_error('{ const a = 0; (function (){ a -= 1 })() }');
+check_type_error('{ const a = 0; (function (){ a *= 1 })() }');
+check_type_error('{ const a = 0; (function (){ a %= 1 })() }');
+check_type_error('{ const a = 0; (function (){ a /= 1 })() }');
+check_type_error('{ const a = 0; (function (){ a <<= 1 })() }');
+check_type_error('{ const a = 0; (function (){ a >>= 1 })() }');
+check_type_error('{ const a = 0; (function (){ a >>>= 1 })() }');
+check_type_error('{ const a = 0; (function (){ a &= 1 })() }');
+check_type_error('{ const a = 0; (function (){ a |= 1 })() }');
+check_type_error('{ const a = 0; (function (){ a ^= 1 })() }');
+check_type_error('{ const a = 0; (function (){ a++ })() }');
+check_type_error('{ const a = 0; (function (){ a-- })() }');
+check_type_error('{ const a = 0; (function (){ ++a })() }');
+check_type_error('{ const a = 0; (function (){ --a })() }');
+check_type_error('{ const a = 0; (function (){ [a] = [1] })() }');
+check_type_error('{ const a = 0; (function (){ ({a} = { a:1 }) })() }');

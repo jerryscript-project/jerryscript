@@ -13,9 +13,9 @@
 // limitations under the License.
 
 class B extends Array {
-    constructor() {
-        super();
-        super.f = 8;
-    }
+  constructor() {
+    super();
+    super.f = 8;
+  }
 }
-var arg = new B()
+var arg = new B();

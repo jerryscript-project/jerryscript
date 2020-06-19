@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var props = ['arguments', 'caller'];
+var props = [ 'arguments', 'caller' ];
 
-function f_simple () {
+function f_simple() {
 }
 
-function f_strict () {
-  "use strict";
+function f_strict() {
+  'use strict';
 }
 
 for (let prop of props) {

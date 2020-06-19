@@ -12,6 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var array = [0, 0, obj, 0, 0];
+var array = [ 0, 0, obj, 0, 0 ];
 array.copyWithin(NaN, 67, 0);
-var obj
+var obj;

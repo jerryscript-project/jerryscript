@@ -20,7 +20,7 @@
 
 (function tc_12_02__019() {
   var
-          a = 2
+    a = 2;
 
   assert(a === 2);
 })();
@@ -45,20 +45,20 @@
 (function tc_12_02__006() {
   var a = 'undefined';
 
-  assert(a === "undefined");
+  assert(a === 'undefined');
 })();
 
 (function tc_12_02__014() {
   var
 
-          $a = 2;
+    $a = 2;
   assert($a === 2);
 })();
 
 (function tc_12_02__010() {
   var a, b = 3.14, c;
 
-  assert(a === undefined && b === 3.14 && c === undefined)
+  assert(a === undefined && b === 3.14 && c === undefined);
 })();
 
 (function tc_12_02__004() {
@@ -68,15 +68,15 @@
 })();
 
 (function tc_12_02__005() {
-  var a = "undefined";
+  var a = 'undefined';
 
-  assert(a === "undefined");
+  assert(a === 'undefined');
 })();
 
 (function tc_12_02__009() {
   var a = 1,
-          b,
-          c = 4;
+    b,
+    c = 4;
 
   b = a + c;
 
@@ -101,9 +101,9 @@
 })();
 
 (function tc_12_02__015() {
-  var a = 12 + "abc";
+  var a = 12 + 'abc';
 
-  assert(a === "12abc");
+  assert(a === '12abc');
 })();
 
 (function tc_12_02__018() {
@@ -116,7 +116,7 @@
   var a = {};
   var b = typeof (a);
 
-  assert(b === "object" && b === typeof (Object()) && b === typeof ({}));
+  assert(b === 'object' && b === typeof (Object()) && b === typeof ({}));
 })();
 
 (function tc_12_02__008() {
@@ -127,14 +127,14 @@
 
 (function tc_12_02__013() {
   var
-          _a$1 = 2;
+    _a$1 = 2;
 
   assert(_a$1 === 2);
 })();
 
 (function tc_12_02__012() {
   var
-          _a1 = 2;
+    _a1 = 2;
 
   assert(_a1 === 2);
 })();
@@ -147,18 +147,18 @@
 
 (function tc_12_02_01__002() {
   var arguments = 2;
-  assert(arguments === 2 && typeof (arguments) === "number");
+  assert(arguments === 2 && typeof (arguments) === 'number');
 })();
 
 (function tc_12_02_01__001() {
   var eval = 1;
-  assert(eval === 1 && typeof (eval) === "number");
+  assert(eval === 1 && typeof (eval) === 'number');
 })();
 
 (function tc_12_12__006() {
   var x = 0;
   lablemark:
-          if (x < 6) {
+  if (x < 6) {
     ++x;
     break lablemark;
   }
@@ -170,7 +170,7 @@
   var x = 0;
   for (i = 0; i < 10; ++i) {
     lablemark:
-            for (j = 0; j < 10; ++j) {
+    for (j = 0; j < 10; ++j) {
       for (k = 0; k < 10; ++k) {
         ++x;
         continue lablemark;
@@ -178,7 +178,7 @@
     }
   }
 
-  assert(x == 100)
+  assert(x == 100);
 })();
 
 (function tc_12_12__007() {
@@ -186,32 +186,32 @@
   for (i = 0; i < 10; ++i) {
     for (j = 0; j < 10; ++j) {
       lablemark:
-              for (k = 0; k < 10; ++k) {
+      for (k = 0; k < 10; ++k) {
         ++x;
         break lablemark;
       }
     }
   }
 
-  assert(x == 100)
+  assert(x == 100);
 })();
 
 (function tc_12_12__003() {
   switchMark:
-          switch (1) {
-    case 0:
-      break;
-    case 1:
-      break switchMark;
-    case 2:
-      assert(false);
+  switch (1) {
+  case 0:
+    break;
+  case 1:
+    break switchMark;
+  case 2:
+    assert(false);
   }
 })();
 
 (function tc_12_12__009() {
   var x = 0;
   lablemark:
-          for (i = 0; i < 10; ++i) {
+  for (i = 0; i < 10; ++i) {
     for (j = 0; j < 10; ++j) {
       for (k = 0; k < 10; ++k) {
         ++x;
@@ -220,14 +220,14 @@
     }
   }
 
-  assert(x == 1)
+  assert(x == 1);
 })();
 
 (function tc_12_12__008() {
   var x = 0;
   for (i = 0; i < 10; ++i) {
     lablemark:
-            for (j = 0; j < 10; ++j) {
+    for (j = 0; j < 10; ++j) {
       for (k = 0; k < 10; ++k) {
         ++x;
         break lablemark;
@@ -235,12 +235,12 @@
     }
   }
 
-  assert(x == 10)
+  assert(x == 10);
 })();
 
 (function tc_12_12__005() {
   whileMark:
-          for (i = 0; i < 10; ++i) {
+  for (i = 0; i < 10; ++i) {
     continue whileMark;
     assert(false);
   }
@@ -248,7 +248,7 @@
 
 (function tc_12_12__001() {
   loop:
-          while (true) {
+  while (true) {
     break loop;
   }
 })();
@@ -257,7 +257,7 @@
   var i = 0;
 
   whileMark:
-          while (i < 10) {
+  while (i < 10) {
     ++i;
     continue whileMark;
     assert(false);
@@ -266,9 +266,9 @@
 
 (function tc_12_12__002() {
   loop:
-          while (true) {
+  while (true) {
     do {
-      for (; true; ) {
+      for (; true;) {
         break loop;
       }
     } while (true);
@@ -276,35 +276,32 @@
 })();
 
 (function tc_12_03__003() {
-  var a="ab;c"
+  var a='ab;c'
   ;
   ;
-  assert (a === 'ab;c');
+  assert(a === 'ab;c');
 })();
 
 (function tc_12_03__001() {
-  function test()
-  {
+  function test() {
     ;
-    return 1;;;;;;
+    return 1; ;;;;;
   }
 
   test();
 })();
 
 (function tc_12_03__002() {
-  function test()
-  {
-   ;;;;;;
-   return 1
+  function test() {
+    ;;;;;;
+    return 1;
   }
 
   test();
 })();
 
 (function tc_12_05__001() {
-  function test()
-  {
+  function test() {
     if (true) {
       return 1;
     }
@@ -317,12 +314,10 @@
 (function tc_12_05__007() {
   var a = 1, b = 2;
   var c;
-  if (a === 1)
-  {
+  if (a === 1) {
     if (b === 1)
       c = 3;
-  }
-  else
+  } else
   if (b === 2)
     c = 5;
   else
@@ -348,8 +343,7 @@
 })();
 
 (function tc_12_05__004() {
-  function test()
-  {
+  function test() {
     if (false)
       assert(false);
     else {
@@ -366,8 +360,7 @@
 })();
 
 (function tc_12_05__002() {
-  function test()
-  {
+  function test() {
     if (false) {
       assert(false);
     }
@@ -377,22 +370,18 @@
 })();
 
 (function tc_12_05__005() {
-  function test()
-  {
-      if(true);
+  function test() {
+    if (true);
   }
 
   test();
 })();
 
 (function tc_12_05__003() {
-  function test()
-  {
-    if (true)
-    {
+  function test() {
+    if (true) {
       return 1;
-    }
-    else
+    } else
       assert(false);
   }
 
@@ -410,14 +399,13 @@
 
 (function tc_12_06_03__010() {
   for
-          (
-                  var i = 0
-                  ;
-                  i < 10
-                  ;
-                  i++
-                  )
-  {
+  (
+    var i = 0
+    ;
+    i < 10
+    ;
+    i++
+  ) {
     i++;
   }
 
@@ -426,8 +414,7 @@
 
 (function tc_12_06_03__005() {
   var i = 0;
-  for (; ; )
-  {
+  for (; ;) {
     if (i++ === 100)
       break;
   }
@@ -436,7 +423,7 @@
 (function tc_12_06_03__004() {
   var i;
 
-  for (i = 1; i < 20; )
+  for (i = 1; i < 20;)
     i *= 2;
 
   assert(i === 32);
@@ -445,10 +432,8 @@
 (function tc_12_06_03__011() {
   var i;
 
-  function test()
-  {
-    for (i = 0; i < 10; i++)
-    {
+  function test() {
+    for (i = 0; i < 10; i++) {
       if (i === 4)
         return 1;
     }
@@ -464,8 +449,7 @@
 (function tc_12_06_03__009() {
   var init;
 
-  for (init = (129 - 8) / 11; init != 11; )
-  {
+  for (init = (129 - 8) / 11; init != 11;) {
     init = 33;
   }
 
@@ -483,10 +467,8 @@
 
 (function tc_12_06_03__006() {
   var sum = 0;
-  for (var i = 1; i <= 10; i++)
-  {
-    for (var j = 1; j <= 5; j++)
-    {
+  for (var i = 1; i <= 10; i++) {
+    for (var j = 1; j <= 5; j++) {
       sum += i * j;
     }
   }
@@ -496,8 +478,7 @@
 
 (function tc_12_06_03__007() {
   var sum = 0;
-  for (var i = 1, j = 1, k = 1; i + j + k <= 100; i++, j += 2, k += 3)
-  {
+  for (var i = 1, j = 1, k = 1; i + j + k <= 100; i++, j += 2, k += 3) {
     sum += i + j + k;
   }
 
@@ -507,8 +488,7 @@
 (function tc_12_06_03__003() {
   var i;
 
-  for (i = 0; ; i += 5)
-  {
+  for (i = 0; ; i += 5) {
     if (i === 100)
       break;
   }
@@ -527,10 +507,8 @@
 (function tc_12_06_04__007() {
   var o = {a: 1, b: 2, c: 3, d: 4, e: 5};
 
-  function test()
-  {
-    for (var p in o)
-    {
+  function test() {
+    for (var p in o) {
       if (p === 'c')
         return 1;
 
@@ -549,11 +527,10 @@
   var o = {a: 1, b: 2, c: 3};
 
   for
-          (
-                  var
-                  p in o
-                  )
-  {
+  (
+    var
+      p in o
+  ) {
     o[p] += 4;
   }
 
@@ -565,8 +542,7 @@
   a.eight = 8;
 
   var p;
-  for (p in a)
-  {
+  for (p in a) {
     a[p] += 1;
   }
 
@@ -575,29 +551,26 @@
 })();
 
 (function tc_12_06_04__005() {
-  var b = {basep: "base"};
+  var b = {basep: 'base'};
 
-  function dConstr()
-  {
-    this.derivedp = "derived";
+  function dConstr() {
+    this.derivedp = 'derived';
   }
   dConstr.prototype = b;
 
   var d = new dConstr();
 
-  for (var p in d)
-  {
-    d[p] += "A";
+  for (var p in d) {
+    d[p] += 'A';
   }
 
-  assert(d.basep === "baseA" && d.derivedp === "derivedA");
+  assert(d.basep === 'baseA' && d.derivedp === 'derivedA');
 })();
 
 (function tc_12_06_04__004() {
   var a;
 
-  for (var p in a)
-  {
+  for (var p in a) {
     assert(false);
   }
 })();
@@ -605,8 +578,7 @@
 (function tc_12_06_04__001() {
   var o = {a: 1, b: 2, c: 3};
 
-  for (var p in o)
-  {
+  for (var p in o) {
     o[p] += 4;
   }
 
@@ -616,16 +588,14 @@
 (function tc_12_06_04__003() {
   var a = null;
 
-  for (var p in a)
-  {
+  for (var p in a) {
     assert(false);
   }
 })();
 
 (function tc_12_06_01__002() {
   var cnt = 1;
-  do
-  {
+  do {
     cnt++;
     if (cnt === 42) {
       break;
@@ -636,10 +606,8 @@
 (function tc_12_06_01__010() {
   var cnt = 0;
 
-  function test()
-  {
-    do
-    {
+  function test() {
+    do {
       cnt++;
       if (cnt === 8)
         return 1;
@@ -656,21 +624,19 @@
 
 (function tc_12_06_01__009() {
   var cnt = 0;
-  do
-  {
+  do {
     cnt++;
   }
   while
-          (cnt < 10
-                  );
+  (cnt < 10
+  );
 
   assert(cnt === 10);
 })();
 
 (function tc_12_06_01__006() {
   var cnt = 1;
-  do
-  {
+  do {
     cnt++;
   }
   while (false);
@@ -689,11 +655,10 @@
 
 (function tc_12_06_01__007() {
   var cnt = 1;
-  do
-  {
+  do {
     cnt++;
   }
-  while (!"string");
+  while (!'string');
 
   assert(cnt === 2);
 })();
@@ -703,8 +668,7 @@
   do {
     cnt++;
 
-    if (cnt === 10)
-    {
+    if (cnt === 10) {
       break;
     }
   }
@@ -713,18 +677,16 @@
 
 (function tc_12_06_01__005() {
   var x = 1 / 3;
-  do
-  {
+  do {
     x = 1;
   }
   while (x === 3 / 9);
-  assert (x === 1);
+  assert(x === 1);
 })();
 
 (function tc_12_06_01__008() {
   var cnt = 0;
-  do
-  {
+  do {
     cnt++;
   }
   while (!(cnt & 0x8000));
@@ -734,9 +696,8 @@
 
 (function tc_12_06_01__004() {
   var obj = new Object();
-  obj.x = "defined";
-  do
-  {
+  obj.x = 'defined';
+  do {
     delete obj.x;
   }
   while (obj.x !== undefined);
@@ -745,7 +706,7 @@
 (function tc_12_06_02__004() {
   var cnt = 33;
 
-  while ("")
+  while ('')
     cnt /= 2;
 
   assert(cnt === 33);
@@ -753,23 +714,20 @@
 
 (function tc_12_06_02__005() {
   var bVal = true;
-  var val = "test";
+  var val = 'test';
 
-  while (!bVal)
-  {
-    val += " of while";
+  while (!bVal) {
+    val += ' of while';
   }
 
-  assert(val === "test");
+  assert(val === 'test');
 })();
 
 (function tc_12_06_02__008() {
   var cnt = 25;
 
-  function test()
-  {
-    while (cnt)
-    {
+  function test() {
+    while (cnt) {
       cnt--;
       if (cnt === 3)
         return 1;
@@ -794,8 +752,7 @@
 
 (function tc_12_06_02__003() {
   var cnt = 0;
-  while ((1234 - 34) % 23 - 1234 * 23.222)
-  {
+  while ((1234 - 34) % 23 - 1234 * 23.222) {
     cnt++;
     if (cnt === 10)
       break;
@@ -815,11 +772,10 @@
   var cnt = 0;
 
   while
-          (
-                  bitField >>= 1 &&
+  (
+    bitField >>= 1 &&
                   true
-                  )
-  {
+  ) {
     cnt++;
   }
 
@@ -830,8 +786,7 @@
   var bitField = 0x1000000;
   var cnt = 0;
 
-  while (bitField >>= 1)
-  {
+  while (bitField >>= 1) {
     cnt++;
   }
 
@@ -839,27 +794,25 @@
 })();
 
 (function tc_12_09__002() {
-  var r = test()
+  var r = test();
 
   assert(r === 1);
 
-  function test()
-  {
+  function test() {
     return ((23 << 2) + 8) / 100;
   }
 })();
 
 (function tc_12_09__001() {
-  var r = test()
+  var r = test();
 
-  assert(typeof r == 'object' && r.prop1 === "property1" && r.prop2 === 2 && r.prop3 === false);
+  assert(typeof r == 'object' && r.prop1 === 'property1' && r.prop2 === 2 && r.prop3 === false);
 
-  function test()
-  {
+  function test() {
     var o = {
-      prop1: "property1",
+      prop1: 'property1',
       prop2: 2,
-      prop3: false
+      prop3: false,
     };
 
     return o;
@@ -867,14 +820,12 @@
 })();
 
 (function tc_12_09__005() {
-  var r = test()
+  var r = test();
 
   assert(r === 100);
 
-  function test()
-  {
-    function internal()
-    {
+  function test() {
+    function internal() {
       return 100;
     }
 
@@ -883,14 +834,12 @@
 })();
 
 (function tc_12_09__006() {
-  var r = test()
+  var r = test();
 
   assert(typeof r == 'function');
 
-  function test()
-  {
-    function internal()
-    {
+  function test() {
+    function internal() {
       return 100;
     }
 
@@ -899,32 +848,30 @@
 })();
 
 (function tc_12_09__004() {
-  var r = test()
+  var r = test();
 
   assert(r == undefined);
 
-  function test()
-  {
+  function test() {
     var r = 1;
-    return
+    return;
     r;
   }
 })();
 
 (function tc_12_09__003() {
-  var r = test()
+  var r = test();
 
   assert(r === 33);
 
-  function test()
-  {
+  function test() {
     return 33;
   }
 })();
 
 (function tc_12_04__003() {
-  var a, b, c
-  a = 2, b = 3, c = 4
+  var a, b, c;
+  a = 2, b = 3, c = 4;
 })();
 
 (function tc_12_04__001() {
@@ -938,23 +885,21 @@
 })();
 
 (function tc_12_04__004() {
-  var a
-  a = function () {
-  }
+  var a;
+  a = function() {
+  };
 })();
 
 (function tc_12_08__008() {
   var i = 9;
   var cnt = 0;
 
-  while (i-- > 0)
-  {
+  while (i-- > 0) {
     if (i % 2)
       break;
 
     var j = 0;
-    while (j++ < 20)
-    {
+    while (j++ < 20) {
       if (j % 2 === 0)
         break;
       cnt++;
@@ -969,12 +914,10 @@
   var sum = 0;
   var i = 0, j = 0;
   top:
-          do
-  {
+  do {
     j = 0;
 
-    do
-    {
+    do {
       if (j > 9 && i % 2)
         break top;
 
@@ -993,10 +936,8 @@
   var sum = 0, i = 0;
 
   WhileLabel:
-          while (++i < 10)
-  {
-    if (i === 5)
-    {
+  while (++i < 10) {
+    if (i === 5) {
       break WhileLabel;
     }
 
@@ -1010,11 +951,9 @@
   var sum = 0;
   var i = 0, j = 0;
   top:
-          while (i++ < 10)
-  {
+  while (i++ < 10) {
     j = 0;
-    while (j++ < 20)
-    {
+    while (j++ < 20) {
       if (j > 9 && i % 2)
         break top;
 
@@ -1031,8 +970,7 @@
   var mask = 0xff0f;
   var numOnes = 0;
 
-  do
-  {
+  do {
     if (!(mask & 1))
       break;
 
@@ -1045,31 +983,26 @@
 
 (function tc_12_08__002() {
   var o = {p1: 1,
-    p2: {p1: 100, p2: 200, p3: 100},
-    p3: 4,
-    p4: 7,
-    p5: 124686,
-    p6: {p1: 100, p2: 200, p3: 100},
-    p7: 1},
-  sum = 0;
+      p2: {p1: 100, p2: 200, p3: 100},
+      p3: 4,
+      p4: 7,
+      p5: 124686,
+      p6: {p1: 100, p2: 200, p3: 100},
+      p7: 1},
+    sum = 0;
 
-  for (var p in o)
-  {
-    if (p === "p4")
+  for (var p in o) {
+    if (p === 'p4')
       break;
 
-    if (typeof (o[p]) === "object")
-    {
-      for (var pp in o[p])
-      {
-        if (pp === "p2")
+    if (typeof (o[p]) === 'object') {
+      for (var pp in o[p]) {
+        if (pp === 'p2')
           break;
 
         sum += o[p][pp];
       }
-    }
-    else
-    {
+    } else {
       sum += 20;
     }
   }
@@ -1081,8 +1014,7 @@
   var mask = 0xff0f;
   var numOnes = 0;
 
-  while (mask)
-  {
+  while (mask) {
     if (!(mask & 1))
       break;
 
@@ -1094,12 +1026,10 @@
 })();
 
 (function tc_12_08__004() {
-  function main()
-  {
+  function main() {
     var sum = 0;
     for (var i = 0; i < 10; i++)
-      for (var j = 0; j < 20; j++)
-      {
+      for (var j = 0; j < 20; j++) {
         if (j === 10)
           break;
 
@@ -1109,27 +1039,23 @@
     assert(sum === 100);
   }
 
-  main ();
+  main();
 })();
 
 (function tc_12_08__016() {
   var o = {p1: 1, p2: 2, p3: {p1: 150, p2: 200, p3: 130, p4: 20}, p4: 4, p5: 46}, sum = 0;
-  for (var p in o)
-  {
-    if (p === "p4")
+  for (var p in o) {
+    if (p === 'p4')
       continue;
 
-    if (typeof (o[p]) === "object")
-    {
-      for (var pp in o[p])
-      {
-        if (pp === "p2")
+    if (typeof (o[p]) === 'object') {
+      for (var pp in o[p]) {
+        if (pp === 'p2')
           break;
 
         sum += o[p][pp];
       }
-    }
-    else {
+    } else {
       sum += o[p];
     }
   }
@@ -1141,16 +1067,14 @@
   var i = 10;
   var cnt = 0;
 
-  do
-  {
+  do {
     var j = 0;
-    do
-    {
+    do {
       if (j % 2 === 0)
         break;
       cnt++;
     }
-    while (j++ < 20)
+    while (j++ < 20);
 
     if (i % 2)
       break;
@@ -1162,26 +1086,22 @@
 
 (function tc_12_08__001() {
   var o = {p1: 1,
-    p2: {p1: 100, p2: 200, p3: 100},
-    p3: 4,
-    p4: 7,
-    p5: 124686,
-    p6: {p1: 100, p2: 200, p3: 100},
-    p7: 1},
-  sum = 0;
+      p2: {p1: 100, p2: 200, p3: 100},
+      p3: 4,
+      p4: 7,
+      p5: 124686,
+      p6: {p1: 100, p2: 200, p3: 100},
+      p7: 1},
+    sum = 0;
 
-
-  for (var p in o)
-  {
-    if (p === "p4")
+  for (var p in o) {
+    if (p === 'p4')
       break;
 
-    if (typeof (o[p]) === "object")
-    {
+    if (typeof (o[p]) === 'object') {
       top:
-              for (var pp in o[p])
-      {
-        if (pp === "p2")
+      for (var pp in o[p]) {
+        if (pp === 'p2')
           break top;
 
         sum += o[p][pp];
@@ -1197,25 +1117,22 @@
 
 (function tc_12_08__018() {
   var o = {p1: 1,
-    p2: {p1: 100, p2: 200, p3: 100},
-    p3: 4,
-    p4: 7,
-    p5: 124686,
-    p6: {p1: 100, p2: 200, p3: 100},
-    p7: 1},
-  sum = 0;
+      p2: {p1: 100, p2: 200, p3: 100},
+      p3: 4,
+      p4: 7,
+      p5: 124686,
+      p6: {p1: 100, p2: 200, p3: 100},
+      p7: 1},
+    sum = 0;
 
   top:
-          for (var p in o)
-  {
-    if (p === "p4")
+  for (var p in o) {
+    if (p === 'p4')
       break;
 
-    if (typeof (o[p]) === "object")
-    {
-      for (var pp in o[p])
-      {
-        if (pp === "p2")
+    if (typeof (o[p]) === 'object') {
+      for (var pp in o[p]) {
+        if (pp === 'p2')
           break top;
 
         sum += o[p][pp];
@@ -1226,17 +1143,15 @@
 
   }
 
-  assert(sum === 120)
+  assert(sum === 120);
 })();
 
 (function tc_12_08__013() {
   var sum = 0, i = 0;
 
   DoWhileLabel:
-          do
-  {
-    if (i === 5)
-    {
+  do {
+    if (i === 5) {
       break DoWhileLabel;
     }
 
@@ -1251,10 +1166,8 @@
   var sum = 0;
 
   ForLabel:
-          for (var i = 0; i < 10; i++)
-  {
-    if (i === 5)
-    {
+  for (var i = 0; i < 10; i++) {
+    if (i === 5) {
       break ForLabel;
     }
 
@@ -1266,10 +1179,8 @@
 
 (function tc_12_08__015() {
   var o = {p1: 1, p2: 2, p3: 3, p4: 1, p5: 2}, sum = 0;
-  for (var p in o)
-  {
-    if (p === "p3")
-    {
+  for (var p in o) {
+    if (p === 'p3') {
       break;
     }
 
@@ -1283,9 +1194,8 @@
   var o = {a: 1, b: 2, c: 3};
 
   ForLabel:
-          for (var p in o)
-  {
-    if (p === "b")
+  for (var p in o) {
+    if (p === 'b')
       break ForLabel;
     o[p] += 4;
   }
@@ -1295,10 +1205,8 @@
 
 (function tc_12_08__003() {
   var sum = 0;
-  for (var i = 0; i < 10; i++)
-  {
-    if (i === 5)
-    {
+  for (var i = 0; i < 10; i++) {
+    if (i === 5) {
       break;
     }
 
@@ -1311,10 +1219,8 @@
 (function tc_12_08__006() {
   var sum = 0;
   top:
-          for (var i = 0; i < 10; i++)
-  {
-    for (var j = 0; j < 20; j++)
-    {
+  for (var i = 0; i < 10; i++) {
+    for (var j = 0; j < 20; j++) {
       if (j > 9 && i % 2)
         break top;
 
@@ -1328,29 +1234,26 @@
 })();
 
 (function tc_12_10__003() {
-  var o = {prop: "property"};
+  var o = {prop: 'property'};
 
   with (o) {
-    assert(prop == "property");
+    assert(prop == 'property');
   }
 })();
 
 (function tc_12_10__005() {
-  with ({})
-  {
-    var x = "abc";
+  with ({}) {
+    var x = 'abc';
   }
 
-  assert(x === "abc");
+  assert(x === 'abc');
 })();
 
 (function tc_12_10__004() {
   var x;
 
-  function test()
-  {
-    with (Math)
-    {
+  function test() {
+    with (Math) {
       x = abs(-396);
       return 1;
     }
@@ -1364,10 +1267,10 @@
 })();
 
 (function tc_12_10__002() {
-  var o = {prop: "property"};
+  var o = {prop: 'property'};
 
   with (o) {
-    assert(prop == "property");
+    assert(prop == 'property');
   }
 })();
 
@@ -1375,9 +1278,8 @@
   var x, y;
 
   with
-          (
-                  Math)
-  {
+  (
+    Math) {
     x = cos(PI);
   }
 
@@ -1395,7 +1297,7 @@
 })();
 
 (function tc_12_10__006() {
-  assert(test("hello") == "hello" && typeof test({}) == "object" && test({arg: "hello"}) == "hello")
+  assert(test('hello') == 'hello' && typeof test({}) == 'object' && test({arg: 'hello'}) == 'hello');
 
   function test(arg) {
     with (arg) {
@@ -1412,92 +1314,91 @@
 (function tc_12_11__002() {
   var matchesCount = 0;
 
-  switch ("key") {
-    case "key":
-      ++matchesCount;
-      break;
-    case "key":
-      ++matchesCount;
-      break;
-    case "another key":
-      ++matchesCount;
-      break;
-    default:
-      ++matchesCount;
-      break;
+  switch ('key') {
+  case 'key':
+    ++matchesCount;
+    break;
+  case 'key':
+    ++matchesCount;
+    break;
+  case 'another key':
+    ++matchesCount;
+    break;
+  default:
+    ++matchesCount;
+    break;
   }
 
-  assert (matchesCount === 1);
+  assert(matchesCount === 1);
 })();
 
 (function tc_12_11__001() {
   switch (1) {
-    case 0:
-      assert(false);
-    case 1:
-      break;
-    default:
-      assert(false);
+  case 0:
+    assert(false);
+  case 1:
+    break;
+  default:
+    assert(false);
   }
 })();
 
 (function tc_12_11__006() {
-  function fact(n)
-  {
+  function fact(n) {
     return n < 2 ? 1 : n * fact(n - 1);
   }
 
   switch (fact(5)) {
-    case 5 * fact(4):
-      break;
-    default:
-      assert(false);
+  case 5 * fact(4):
+    break;
+  default:
+    assert(false);
   }
 })();
 
 (function tc_12_11__004() {
   var counter = 0;
 
-  switch ("key") {
-    case "key":
-      ++counter;
-    case "another key":
-      ++counter;
-    case "another key2":
-      ++counter;
-    default:
-      ++counter;
+  switch ('key') {
+  case 'key':
+    ++counter;
+  case 'another key':
+    ++counter;
+  case 'another key2':
+    ++counter;
+  default:
+    ++counter;
   }
 
-  assert (counter == 4);
+  assert(counter == 4);
 })();
 
 (function tc_12_11__003() {
   switch (1) {
-    case true:
-      assert(false);
-    case false:
-      assert(false);
-    default:
-      assert(true);
+  case true:
+    assert(false);
+  case false:
+    assert(false);
+  default:
+    assert(true);
   }
 })();
 
 (function tc_12_11__007() {
-  switch ("key") {
-    case "another key":
-      assert(false);
-    default:
-      break;
-    case "another key2":
-      assert(false);
+  switch ('key') {
+  case 'another key':
+    assert(false);
+  default:
+    break;
+  case 'another key2':
+    assert(false);
   }
 })();
 
 (function tc_12_14__001() {
   try {
     try {
-      throw "error";
+      throw 'error';
     } catch (e) {
       throw e;
     }
@@ -1507,25 +1408,23 @@
 })();
 
 (function tc_12_14__003() {
-  function test ()
-  {
-      try {
-          throw 1;
-      } catch (e) {
-          return (e === 1);
-      }
+  function test() {
+    try {
+      throw 1;
+    } catch (e) {
+      return (e === 1);
+    }
 
-      return false;
+    return false;
   }
 
-  assert (test ());
+  assert(test());
 })();
 
 (function tc_12_14__004() {
-  function test ()
-  {
+  function test() {
     try {
-      throw "error";
+      throw 'error';
     } catch (e) {
       return false;
     } finally {
@@ -1535,12 +1434,11 @@
     return false;
   }
 
-  assert (test ());
+  assert(test());
 })();
 
 (function tc_12_14__006() {
-  function test ()
-  {
+  function test() {
     try {
       var x = 1;
     } finally {
@@ -1550,28 +1448,26 @@
     return false;
   }
 
-  assert (test ());
+  assert(test());
 })();
 
 (function tc_12_14__005() {
-  function test ()
-  {
-      try {
-          throw "error";
-      } catch (e) {
-          return true;
-      } finally {
-      }
+  function test() {
+    try {
+      throw 'error';
+    } catch (e) {
+      return true;
+    } finally {
+    }
 
-      return false;
+    return false;
   }
 
-  assert (test ());
+  assert(test());
 })();
 
 (function tc_12_14__002() {
-  function test ()
-  {
+  function test() {
     try {
       var x = 1;
     } catch (e) {
@@ -1581,7 +1477,7 @@
     return true;
   }
 
-  assert (test ());
+  assert(test());
 })();
 
 (function tc_12_01__005() {
@@ -1611,15 +1507,14 @@
 })();
 
 (function tc_12_01__002() {
-  function test ()
-  {
+  function test() {
     {
       return true;
     }
     return false;
   }
 
-  assert (test ());
+  assert(test());
 })();
 
 (function tc_12_01__003() {
@@ -1632,11 +1527,10 @@
 })();
 
 (function tc_12_13__001() {
-  function test ()
-  {
+  function test() {
     try {
       if (true) {
-        throw "error";
+        throw 'error';
       }
     } catch (e) {
       return true;
@@ -1644,42 +1538,40 @@
     return false;
   }
 
-  assert (test ());
+  assert(test());
 })();
 
 (function tc_12_13__003() {
-  function d () {
-    throw "exception";
+  function d() {
+    throw 'exception';
   }
-  function c () {
-    d ();
+  function c() {
+    d();
   }
-  function b () {
-    c ();
+  function b() {
+    c();
   }
-  function a () {
-    b ();
+  function a() {
+    b();
   }
 
-  function test ()
-  {
+  function test() {
     try {
-      a ();
+      a();
     } catch (e) {
       return true;
     }
     return false;
   }
 
-  assert (test ());
+  assert(test());
 })();
 
 (function tc_12_13__002() {
-  function test ()
-  {
+  function test() {
     try {
       while (true) {
-        throw "error";
+        throw 'error';
       }
     } catch (e) {
       return true;
@@ -1687,15 +1579,13 @@
     return false;
   }
 
-  assert (test ());
+  assert(test());
 })();
 
 (function tc_12_07__001() {
   var sum = 0;
-  for (var i = 0; i < 10; i++)
-  {
-    if (i === 5)
-    {
+  for (var i = 0; i < 10; i++) {
+    if (i === 5) {
       continue;
     }
 
@@ -1709,10 +1599,8 @@
   var sum = 0, i = 0;
 
   WhileLabel:
-          while (++i < 10)
-  {
-    if (i === 5)
-    {
+  while (++i < 10) {
+    if (i === 5) {
       continue WhileLabel;
     }
 
@@ -1725,10 +1613,8 @@
 (function tc_12_07__006() {
   var sum = 0;
   top:
-          for (var i = 0; i < 10; i++)
-  {
-    for (var j = 0; j < 20; j++)
-    {
+  for (var i = 0; i < 10; i++) {
+    for (var j = 0; j < 20; j++) {
       if (j > 9 && i % 2)
         continue top;
 
@@ -1744,8 +1630,7 @@
 (function tc_12_07__002() {
   var sum = 0;
   for (var i = 0; i < 10; i++)
-    for (var j = 0; j < 20; j++)
-    {
+    for (var j = 0; j < 20; j++) {
       if (j > 9)
         continue;
 
@@ -1757,31 +1642,27 @@
 
 (function tc_12_07__015() {
   var o = {p1: 1, p2: 2, p3: 3, p4: 4, p5: 5}, sum = 0;
-  for (var p in o)
-  {
-    if (p == "p3")
-    {
+  for (var p in o) {
+    if (p == 'p3') {
       continue;
     }
 
     sum += o[p];
   }
 
-  assert(sum == 12)
+  assert(sum == 12);
 })();
 
 (function tc_12_07__008() {
   var i = 10;
   var cnt = 0;
 
-  while (i-- > 0)
-  {
+  while (i-- > 0) {
     if (i % 2)
       continue;
 
     var j = 0;
-    while (j++ < 20)
-    {
+    while (j++ < 20) {
       if (j % 2 === 0)
         continue;
       cnt++;
@@ -1796,9 +1677,8 @@
   var o = {a: 1, b: 2, c: 3};
 
   ForLabel:
-          for (var p in o)
-  {
-    if (p === "b")
+  for (var p in o) {
+    if (p === 'b')
       continue ForLabel;
     o[p] += 4;
   }
@@ -1810,19 +1690,17 @@
   var i = 10;
   var cnt = 0;
 
-  do
-  {
+  do {
     if (i % 2)
       continue;
 
     var j = 0;
-    do
-    {
+    do {
       if (j % 2 === 0)
         continue;
       cnt++;
     }
-    while (j++ < 20)
+    while (j++ < 20);
   }
   while (i-- > 0);
 
@@ -1833,16 +1711,13 @@
   var o = {p1: 1, p2: 2, p3: {p1: 100, p2: 200, p3: 100}, p4: 4, p5: 5}, sum = 0;
 
   top:
-          for (var p in o)
-  {
-    if (p === "p2")
+  for (var p in o) {
+    if (p === 'p2')
       continue;
 
-    if (typeof (o[p]) === "object")
-    {
-      for (var pp in o[p])
-      {
-        if (pp === "p2")
+    if (typeof (o[p]) === 'object') {
+      for (var pp in o[p]) {
+        if (pp === 'p2')
           continue top;
 
         sum += o[p][pp];
@@ -1858,22 +1733,18 @@
 
 (function tc_12_07__016() {
   var o = {p1: 1, p2: 2, p3: {p1: 100, p2: 200}, p4: 4, p5: 5}, sum = 0;
-  for (var p in o)
-  {
-    if (p === "p2")
+  for (var p in o) {
+    if (p === 'p2')
       continue;
 
-    if (typeof (o[p]) === "object")
-    {
-      for (var pp in o[p])
-      {
-        if (pp === "p2")
+    if (typeof (o[p]) === 'object') {
+      for (var pp in o[p]) {
+        if (pp === 'p2')
           continue;
 
         sum += o[p][pp];
       }
-    }
-    else {
+    } else {
       sum += o[p];
     }
   }
@@ -1885,10 +1756,8 @@
   var sum = 0, i = 0;
 
   DoWhileLabel:
-          do
-  {
-    if (i === 5)
-    {
+  do {
+    if (i === 5) {
       continue DoWhileLabel;
     }
 
@@ -1903,11 +1772,9 @@
   var sum = 0;
   var i = 0, j = 0;
   top:
-          while (i++ < 10)
-  {
+  while (i++ < 10) {
     j = 0;
-    while (j++ < 20)
-    {
+    while (j++ < 20) {
       if (j > 9 && i % 2)
         continue top;
 
@@ -1924,8 +1791,7 @@
   var mask = 0xff0f;
   var numZeroes = 0;
 
-  while (mask)
-  {
+  while (mask) {
     mask >>= 1;
 
     if (mask & 1)
@@ -1941,8 +1807,7 @@
   var mask = 0xff0f;
   var numZeroes = 0;
 
-  do
-  {
+  do {
     mask >>= 1;
 
     if (mask & 1)
@@ -1958,10 +1823,8 @@
   var sum = 0;
 
   ForLabel:
-          for (var i = 0; i < 10; i++)
-  {
-    if (i === 5)
-    {
+  for (var i = 0; i < 10; i++) {
+    if (i === 5) {
       continue ForLabel;
     }
 
@@ -1975,12 +1838,10 @@
   var sum = 0;
   var i = 0, j = 0;
   top:
-          do
-  {
+  do {
     j = 0;
 
-    do
-    {
+    do {
       if (j > 9 && i % 2)
         continue top;
 

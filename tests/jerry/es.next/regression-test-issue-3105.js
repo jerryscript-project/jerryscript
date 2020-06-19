@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var str = String.fromCharCode([-10] + "123", Date.UTC(15, 13, 15));
+var str = String.fromCharCode([ -10 ] + '123', Date.UTC(15, 13, 15));
 str.repeat(11);

@@ -46,7 +46,7 @@ class B extends A {
 
 var obj = new B();
 
-assert (obj.getid_A() === 100);
-assert (obj.getid_B(1) === 101);
-assert (obj.getid_C(1) === 102);
-assert (obj.id === 102);
+assert(obj.getid_A() === 100);
+assert(obj.getid_B(1) === 101);
+assert(obj.getid_C(1) === 102);
+assert(obj.id === 102);

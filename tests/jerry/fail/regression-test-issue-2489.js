@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-Object.defineProperty(Object.prototype, 0, {'get': function() { throw $ }});
+Object.defineProperty(Object.prototype, 0, {'get': function() {
+  throw $;
+}});
 /**
  * The below line is added becase the patch #2526 introduces internal properties for promises.
  * The Reference Error this issue produced can still be reproduced by calling this line.

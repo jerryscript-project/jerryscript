@@ -12,12 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function f() { return 4 }
+function f() {
+  return 4;
+}
 
 exit: {
   assert(f() === 6);
   break exit;
-  function f() { return 6; }
+  function f() {
+    return 6;
+  }
 }
 assert(f() === 4);
 
@@ -25,18 +29,26 @@ assert(f() === 4);
   assert(f() === 6);
   f = 1;
   assert(f === 1);
-  function f() { return 6; }
+  function f() {
+    return 6;
+  }
   f = 2;
   assert(f === 2);
 }
 assert(f === 1);
 
-function g() { return 3 }
+function g() {
+  return 3;
+}
 exit: {
   assert(g() === 5);
-  function g() { return 4; }
+  function g() {
+    return 4;
+  }
   break exit;
-  function g() { return 5; }
+  function g() {
+    return 5;
+  }
 }
 assert(g() === 5);
 
@@ -48,7 +60,7 @@ function h() {
     assert(e instanceof ReferenceError);
   }
 
-  eval("exit: { assert(x() === 8); x = 4; break exit; function x() { return 8; } }");
+  eval('exit: { assert(x() === 8); x = 4; break exit; function x() { return 8; } }');
   assert(x === undefined);
 }
 h();

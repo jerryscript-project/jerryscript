@@ -13,8 +13,8 @@
 // limitations under the License.
 
 do {
-    try {
-    } finally {
-        break;
-    }
+  try {
+  } finally {
+    break;
+  }
 } while (false);

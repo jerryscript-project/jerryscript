@@ -12,4 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-assert((8e-9).toFixed(20) == "0.00000000800000000000");
+assert((8e-9).toFixed(20) == '0.00000000800000000000');

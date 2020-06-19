@@ -13,10 +13,10 @@
 // limitations under the License.
 
 try {
-    String("test");
-    isNaN(__proto__);
-} catch(err) {}
+  String('test');
+  isNaN(__proto__);
+} catch (err) {}
 
 try {
-    SyntaxError(RegExp("[/]"));
-} catch(err) {}
+  SyntaxError(RegExp('[/]'));
+} catch (err) {}

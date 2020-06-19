@@ -12,10 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function f(){return}
+function f() {
+  return;
+}
 
 switch (1) {
-  case 1:
-    break}
+case 1:
+  break;
+}
 
-while (false) {continue}
+while (false) {
+  continue;
+}

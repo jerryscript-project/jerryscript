@@ -13,15 +13,15 @@
 // limitations under the License.
 
 // Must be a success.
-eval('g\\u0065t: break get')
+eval('g\\u0065t: break get');
 
 try {
   // Must be a fail.
-  eval('({ g\\u0065t a() {} })')
+  eval('({ g\\u0065t a() {} })');
   assert(false);
 } catch (e) {
   assert(e instanceof SyntaxError);
 }
 
 // Must be a success.
-eval('({ g\\u0065t: 5 })')
+eval('({ g\\u0065t: 5 })');

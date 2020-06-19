@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var 测试 = "您好";
-assert(测试 === "您好");
+var 测试 = '您好';
+assert(测试 === '您好');

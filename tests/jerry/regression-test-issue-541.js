@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-new RegExp("m\u2820");
-parseInt("145");
+new RegExp('m\u2820');
+parseInt('145');

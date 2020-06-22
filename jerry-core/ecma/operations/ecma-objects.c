@@ -1860,8 +1860,8 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
  *
  * The output property descriptor will always be initialized to an empty descriptor.
  *
- * @return true - if property found
- *         false - otherwise
+ * @return ECMA_VALUE_ERROR - if the Proxy.[[GetOwnProperty]] operation raises error
+ *         ECMA_VALUE_{TRUE, FALSE} - if property found or not
  */
 ecma_value_t
 ecma_op_object_get_own_property_descriptor (ecma_object_t *object_p, /**< the object */

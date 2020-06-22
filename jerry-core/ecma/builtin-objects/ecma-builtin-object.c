@@ -53,6 +53,7 @@ enum
   /* These should be in this order. */
   ECMA_OBJECT_ROUTINE_ASSIGN,
   ECMA_OBJECT_ROUTINE_GET_OWN_PROPERTY_DESCRIPTOR,
+  ECMA_OBJECT_ROUTINE_GET_OWN_PROPERTY_DESCRIPTORS,
   ECMA_OBJECT_ROUTINE_GET_OWN_PROPERTY_NAMES,
   ECMA_OBJECT_ROUTINE_GET_OWN_PROPERTY_SYMBOLS,
   ECMA_OBJECT_ROUTINE_GET_PROTOTYPE_OF,
@@ -746,6 +747,76 @@ ecma_builtin_object_object_get_own_property_descriptor (ecma_object_t *obj_p, /*
   return ECMA_VALUE_UNDEFINED;
 } /* ecma_builtin_object_object_get_own_property_descriptor */
 
+#if ENABLED (JERRY_ESNEXT)
+/**
+ * The Object object's 'getOwnPropertyDescriptors' routine
+ *
+ * See also:
+ *          ECMA-262 v11, 19.1.2.9
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_object_object_get_own_property_descriptors (ecma_object_t *obj_p) /**< routine's first argument */
+{
+  /* 2 */
+  ecma_collection_t *prop_names_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_SYMBOLS);
+
+#if ENABLED (JERRY_BUILTIN_PROXY)
+  if (prop_names_p == NULL)
+  {
+    return ECMA_VALUE_ERROR;
+  }
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+
+  ecma_value_t *names_buffer_p = prop_names_p->buffer_p;
+
+  /* 3 */
+  ecma_object_t *object_prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
+  ecma_object_t *descriptors_p = ecma_create_object (object_prototype_p, 0, ECMA_OBJECT_TYPE_GENERAL);
+
+  /* 4 */
+  for (uint32_t i = 0; i < prop_names_p->item_count; i++)
+  {
+    ecma_string_t *property_name_p = ecma_get_prop_name_from_value (names_buffer_p[i]);
+
+    /* 4.a */
+    ecma_property_descriptor_t prop_desc;
+    ecma_value_t status = ecma_op_object_get_own_property_descriptor (obj_p, property_name_p, &prop_desc);
+
+#if ENABLED (JERRY_BUILTIN_PROXY)
+    if (ECMA_IS_VALUE_ERROR (status))
+    {
+      ecma_deref_object (descriptors_p);
+      ecma_collection_free (prop_names_p);
+
+      return status;
+    }
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+
+    if (ecma_is_value_true (status))
+    {
+      /* 4.b */
+      ecma_object_t *desc_obj_p = ecma_op_from_property_descriptor (&prop_desc);
+      /* 4.c */
+      ecma_property_value_t *value_p = ecma_create_named_data_property (descriptors_p,
+                                                                        property_name_p,
+                                                                        ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                                        NULL);
+      value_p->value = ecma_make_object_value (desc_obj_p);
+
+      ecma_deref_object (desc_obj_p);
+      ecma_free_property_descriptor (&prop_desc);
+    }
+  }
+
+  ecma_collection_free (prop_names_p);
+
+  return ecma_make_object_value (descriptors_p);
+} /* ecma_builtin_object_object_get_own_property_descriptors */
+#endif /* ENABLED (JERRY_ESNEXT) */
+
 /**
  * The Object object's 'defineProperties' routine
  *
@@ -1213,6 +1284,13 @@ ecma_builtin_object_dispatch_routine (uint16_t builtin_routine_id, /**< built-in
         ecma_deref_ecma_string (prop_name_p);
         break;
       }
+#if ENABLED (JERRY_ESNEXT)
+      case ECMA_OBJECT_ROUTINE_GET_OWN_PROPERTY_DESCRIPTORS:
+      {
+        result = ecma_builtin_object_object_get_own_property_descriptors (obj_p);
+        break;
+      }
+#endif /* ENABLED (JERRY_ESNEXT) */
       default:
       {
         JERRY_UNREACHABLE ();

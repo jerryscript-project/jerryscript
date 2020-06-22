@@ -75,7 +75,7 @@ ecma_builtin_generator_prototype_object_do (vm_executable_object_t *executable_o
   {
     if (executable_object_p->extended_object.u.class_prop.extra_info & ECMA_GENERATOR_ITERATE_AND_YIELD)
     {
-      ecma_value_t iterator = executable_object_p->extended_object.u.class_prop.u.value;
+      ecma_value_t iterator = executable_object_p->frame_ctx.block_result;
 
       bool done = false;
       ecma_value_t result = ecma_op_iterator_do (resume_mode, iterator, arg, &done);
@@ -102,6 +102,7 @@ ecma_builtin_generator_prototype_object_do (vm_executable_object_t *executable_o
       }
 
       executable_object_p->extended_object.u.class_prop.extra_info &= (uint16_t) ~ECMA_GENERATOR_ITERATE_AND_YIELD;
+      executable_object_p->frame_ctx.block_result = ECMA_VALUE_UNDEFINED;
 
       if (ECMA_IS_VALUE_ERROR (arg))
       {
@@ -137,7 +138,7 @@ ecma_builtin_generator_prototype_object_do (vm_executable_object_t *executable_o
 
       if (byte_code_p[-1] == CBC_EXT_YIELD_ITERATOR)
       {
-        ecma_value_t iterator = ecma_op_get_iterator (value, ECMA_VALUE_EMPTY);
+        ecma_value_t iterator = ecma_op_get_iterator (value, ECMA_VALUE_SYNC_ITERATOR);
         ecma_free_value (value);
 
         if (ECMA_IS_VALUE_ERROR (iterator))
@@ -149,7 +150,7 @@ ecma_builtin_generator_prototype_object_do (vm_executable_object_t *executable_o
 
         ecma_deref_object (ecma_get_object_from_value (iterator));
         executable_object_p->extended_object.u.class_prop.extra_info |= ECMA_GENERATOR_ITERATE_AND_YIELD;
-        executable_object_p->extended_object.u.class_prop.u.value = iterator;
+        executable_object_p->frame_ctx.block_result = iterator;
         arg = ECMA_VALUE_UNDEFINED;
         continue;
       }

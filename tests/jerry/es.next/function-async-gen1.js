@@ -114,58 +114,34 @@ check_rejected(gen.throw("End"), "End")
 // Test 4
 
 async function *f4() {
-  if (state === 0) {
-    state = 1;
-  }
-
+  assert(++state === 1)
   await 1
-
-  if (state === 3) {
-    state = 4;
-  }
+  assert(++state === 4)
 }
 
 var state = 0
 gen = f4()
 gen.next()
 
-if (state === 1) {
-  state = 2
-}
-
+assert(++state === 2)
 gen.next()
-
-if (state === 2) {
-  state = 3
-}
+assert(++state === 3)
 
 // Test 5
 
 async function *f5() {
-  if (state2 === 0) {
-    state2 = 1;
-  }
-
+  assert(++state2 === 1)
   yield 1
-
-  if (state2 === 3) {
-    state2 = 4;
-  }
+  assert(++state2 === 4)
 }
 
 var state2 = 0
 gen = f5()
 gen.next()
 
-if (state2 === 1) {
-  state2 = 2
-}
-
+assert(++state2 === 2)
 gen.next()
-
-if (state2 === 2) {
-  state2 = 3
-}
+assert(++state2 === 3)
 
 // Test 6
 

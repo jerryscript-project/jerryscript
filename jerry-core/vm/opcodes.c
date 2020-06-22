@@ -339,7 +339,7 @@ opfunc_append_to_spread_array (ecma_value_t *stack_top_p, /**< current stack top
       ecma_value_t ret_value = ECMA_VALUE_ERROR;
       ecma_value_t spread_value = stack_top_p[i];
 
-      ecma_value_t iterator = ecma_op_get_iterator (spread_value, ECMA_VALUE_EMPTY);
+      ecma_value_t iterator = ecma_op_get_iterator (spread_value, ECMA_VALUE_SYNC_ITERATOR);
 
       if (!ECMA_IS_VALUE_ERROR (iterator))
       {
@@ -432,7 +432,7 @@ opfunc_spread_arguments (ecma_value_t *stack_top_p, /**< pointer to the current 
     ecma_value_t spread_value = *stack_top_p++;
     i++;
 
-    ecma_value_t iterator = ecma_op_get_iterator (spread_value, ECMA_VALUE_EMPTY);
+    ecma_value_t iterator = ecma_op_get_iterator (spread_value, ECMA_VALUE_SYNC_ITERATOR);
 
     if (!ECMA_IS_VALUE_ERROR (iterator))
     {
@@ -805,6 +805,36 @@ opfunc_resume_executable_object (vm_executable_object_t *executable_object_p, /*
 
   return result;
 } /* opfunc_resume_executable_object */
+
+/**
+ * Fulfill the next promise of the async generator with the value
+ */
+void
+opfunc_async_generator_yield (ecma_extended_object_t *async_generator_object_p, /**< async generator object */
+                              ecma_value_t value) /**< value (takes the reference) */
+{
+  ecma_async_generator_task_t *task_p;
+  task_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_async_generator_task_t,
+                                            async_generator_object_p->u.class_prop.u.head);
+
+  ecma_value_t iter_result = ecma_create_iter_result_object (value, ECMA_VALUE_FALSE);
+  ecma_fulfill_promise (task_p->promise, iter_result);
+
+  ecma_free_value (iter_result);
+  ecma_free_value (value);
+
+  ecma_value_t next = task_p->next;
+  async_generator_object_p->u.class_prop.u.head = next;
+
+  JERRY_ASSERT (task_p->operation_value == ECMA_VALUE_UNDEFINED);
+  jmem_heap_free_block (task_p, sizeof (ecma_async_generator_task_t));
+
+  if (!ECMA_IS_INTERNAL_VALUE_NULL (next))
+  {
+    ecma_value_t executable_object = ecma_make_object_value ((ecma_object_t *) async_generator_object_p);
+    ecma_enqueue_promise_async_generator_job (executable_object);
+  }
+} /* opfunc_async_generator_yield */
 
 /**
  * Implicit class constructor handler when the classHeritage is not present.

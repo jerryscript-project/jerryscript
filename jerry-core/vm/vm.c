@@ -2041,7 +2041,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_GET_ITERATOR:
         {
-          result = ecma_op_get_iterator (stack_top_p[-1], ECMA_VALUE_EMPTY);
+          result = ecma_op_get_iterator (stack_top_p[-1], ECMA_VALUE_SYNC_ITERATOR);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {
@@ -2197,33 +2197,52 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_ASYNC_YIELD:
         {
-          const uintptr_t object_offset = (uintptr_t) offsetof (vm_executable_object_t, frame_ctx);
-          ecma_extended_object_t *async_generator_object_p;
-          async_generator_object_p = (ecma_extended_object_t *) (((uintptr_t) frame_ctx_p) - object_offset);
+          ecma_extended_object_t *async_generator_object_p = VM_GET_EXECUTABLE_OBJECT (frame_ctx_p);
 
-          ecma_async_generator_task_t *task_p;
-          task_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_async_generator_task_t,
-                                                    async_generator_object_p->u.class_prop.u.head);
-
-          ecma_value_t iter_result = ecma_create_iter_result_object (stack_top_p[-1], ECMA_VALUE_FALSE);
-          ecma_fulfill_promise (task_p->promise, iter_result);
-
-          ecma_free_value (iter_result);
-          ecma_free_value (stack_top_p[-1]);
-          async_generator_object_p->u.class_prop.u.head = task_p->next;
-
-          if (!ECMA_IS_INTERNAL_VALUE_NULL (task_p->next))
-          {
-            ecma_value_t executable_object = ecma_make_object_value ((ecma_object_t *) async_generator_object_p);
-            ecma_enqueue_promise_async_generator_job (executable_object);
-          }
-
-          JERRY_ASSERT (task_p->operation_value == ECMA_VALUE_UNDEFINED);
-          jmem_heap_free_block (task_p, sizeof (ecma_async_generator_task_t));
+          opfunc_async_generator_yield (async_generator_object_p, stack_top_p[-1]);
 
           frame_ctx_p->call_operation = VM_EXEC_RETURN;
           frame_ctx_p->byte_code_p = byte_code_p;
           frame_ctx_p->stack_top_p = --stack_top_p;
+          return ECMA_VALUE_UNDEFINED;
+        }
+        case VM_OC_ASYNC_YIELD_ITERATOR:
+        {
+          ecma_extended_object_t *async_generator_object_p = VM_GET_EXECUTABLE_OBJECT (frame_ctx_p);
+
+          JERRY_ASSERT (!(async_generator_object_p->u.class_prop.extra_info & ECMA_GENERATOR_ITERATE_AND_YIELD));
+
+          /* Byte code is executed at the first time. */
+          left_value = *(--stack_top_p);
+          result = ecma_op_get_iterator (left_value, ECMA_VALUE_ASYNC_ITERATOR);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          ecma_free_value (left_value);
+          left_value = result;
+          result = ecma_op_iterator_next (left_value, ECMA_VALUE_UNDEFINED);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          result = ecma_promise_async_await (async_generator_object_p, result);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          async_generator_object_p->u.class_prop.extra_info |= ECMA_GENERATOR_ITERATE_AND_YIELD;
+          frame_ctx_p->block_result = left_value;
+
+          frame_ctx_p->call_operation = VM_EXEC_RETURN;
+          frame_ctx_p->byte_code_p = byte_code_p;
+          frame_ctx_p->stack_top_p = stack_top_p;
           return ECMA_VALUE_UNDEFINED;
         }
         case VM_OC_AWAIT:
@@ -2264,9 +2283,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
           else
           {
-            const uintptr_t object_offset = (uintptr_t) offsetof (vm_executable_object_t, frame_ctx);
-
-            ecma_object_t *object_p = (ecma_object_t *) (((uintptr_t) frame_ctx_p) - object_offset);
+            ecma_object_t *object_p = (ecma_object_t *) VM_GET_EXECUTABLE_OBJECT (frame_ctx_p);
             ecma_promise_async_then (result, ecma_make_object_value (object_p));
 
             ecma_free_value (result);
@@ -2277,11 +2294,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_GENERATOR_AWAIT:
         {
-          ecma_value_t promise = ecma_make_object_value (ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE));
-          ecma_value_t argument = *(--stack_top_p);
+          ecma_extended_object_t *async_generator_object_p = VM_GET_EXECUTABLE_OBJECT (frame_ctx_p);
 
-          result = ecma_promise_reject_or_resolve (promise, argument, true);
-          ecma_free_value (argument);
+          result = ecma_promise_async_await (async_generator_object_p, *(--stack_top_p));
 
           if (ECMA_IS_VALUE_ERROR (result))
           {
@@ -2291,12 +2306,6 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           frame_ctx_p->call_operation = VM_EXEC_RETURN;
           frame_ctx_p->byte_code_p = byte_code_p;
           frame_ctx_p->stack_top_p = stack_top_p;
-
-          const uintptr_t object_offset = (uintptr_t) offsetof (vm_executable_object_t, frame_ctx);
-
-          ecma_object_t *object_p = (ecma_object_t *) (((uintptr_t) frame_ctx_p) - object_offset);
-          ecma_promise_async_then (result, ecma_make_object_value (object_p));
-          ecma_free_value (result);
           return ECMA_VALUE_UNDEFINED;
         }
         case VM_OC_EXT_RETURN:
@@ -3777,7 +3786,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           JERRY_ASSERT (VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth == stack_top_p);
 
-          ecma_value_t iterator = ecma_op_get_iterator (value, ECMA_VALUE_EMPTY);
+          ecma_value_t iterator = ecma_op_get_iterator (value, ECMA_VALUE_SYNC_ITERATOR);
 
           ecma_free_value (value);
 

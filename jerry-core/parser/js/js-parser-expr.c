@@ -1971,13 +1971,8 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
         if (context_p->token.type == LEXER_MULTIPLY)
         {
           lexer_next_token (context_p);
-          opcode = CBC_EXT_YIELD_ITERATOR;
-
-          /* TODO: support yield * in async generator. Currently a meaningless error is thrown. */
-          if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
-          {
-            parser_raise_error (context_p, PARSER_ERR_INVALID_CHARACTER);
-          }
+          opcode = ((context_p->status_flags & PARSER_IS_ASYNC_FUNCTION) ? CBC_EXT_ASYNC_YIELD_ITERATOR
+                                                                         : CBC_EXT_YIELD_ITERATOR);
         }
 
         parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);

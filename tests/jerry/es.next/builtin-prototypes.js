@@ -14,9 +14,6 @@
  */
 
 var prototypes = [
-  String.prototype,
-  Boolean.prototype,
-  Number.prototype,
   Date.prototype,
   RegExp.prototype,
   Error.prototype,
@@ -30,27 +27,6 @@ var prototypes = [
 
 for (proto of prototypes) {
   assert (Object.prototype.toString.call (proto) === '[object Object]');
-}
-
-try {
-  String.prototype.toString();
-  assert (false);
-} catch (e) {
-  assert (e instanceof TypeError);
-}
-
-try {
-  Boolean.prototype.valueOf();
-  assert (false);
-} catch (e) {
-  assert (e instanceof TypeError);
-}
-
-try {
-  Number.prototype.valueOf();
-  assert (false);
-} catch (e) {
-  assert (e instanceof TypeError);
 }
 
 try {

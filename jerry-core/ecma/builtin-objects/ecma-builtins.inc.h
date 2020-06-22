@@ -47,33 +47,6 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_ARRAY,
 #endif /* ENABLED (JERRY_BUILTIN_ARRAY) */
 
 #if ENABLED (JERRY_ESNEXT)
-# if ENABLED (JERRY_BUILTIN_STRING)
-/* The String.prototype object (21.1.3) */
-BUILTIN (ECMA_BUILTIN_ID_STRING_PROTOTYPE,
-         ECMA_OBJECT_TYPE_GENERAL,
-         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
-         true,
-         string_prototype)
-# endif /* ENABLED (JERRY_BUILTIN_STRING) */
-
-# if ENABLED (JERRY_BUILTIN_BOOLEAN)
-/* The Boolean.prototype object (19.3.3) */
-BUILTIN (ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE,
-         ECMA_OBJECT_TYPE_GENERAL,
-         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
-         true,
-         boolean_prototype)
-# endif /* ENABLED (JERRY_BUILTIN_BOOLEAN) */
-
-# if ENABLED (JERRY_BUILTIN_NUMBER)
-/* The Number.prototype object (20.1.3) */
-BUILTIN (ECMA_BUILTIN_ID_NUMBER_PROTOTYPE,
-         ECMA_OBJECT_TYPE_GENERAL,
-         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
-         true,
-         number_prototype)
-# endif /* ENABLED (JERRY_BUILTIN_NUMBER) */
-
 # if ENABLED (JERRY_BUILTIN_DATE)
 /* The Date.prototype object (20.3.4) */
 BUILTIN (ECMA_BUILTIN_ID_DATE_PROTOTYPE,
@@ -92,33 +65,6 @@ BUILTIN (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE,
          regexp_prototype)
 # endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
 #else /* !ENABLED (JERRY_ESNEXT) */
-# if ENABLED (JERRY_BUILTIN_STRING)
-/* The String.prototype object (15.5.4) */
-BUILTIN (ECMA_BUILTIN_ID_STRING_PROTOTYPE,
-         ECMA_OBJECT_TYPE_CLASS,
-         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
-         true,
-         string_prototype)
-# endif /* ENABLED (JERRY_BUILTIN_STRING) */
-
-# if ENABLED (JERRY_BUILTIN_BOOLEAN)
-/* The Boolean.prototype object (15.6.4) */
-BUILTIN (ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE,
-         ECMA_OBJECT_TYPE_CLASS,
-         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
-         true,
-         boolean_prototype)
-# endif /* ENABLED (JERRY_BUILTIN_BOOLEAN) */
-
-# if ENABLED (JERRY_BUILTIN_NUMBER)
-/* The Number.prototype object (15.7.4) */
-BUILTIN (ECMA_BUILTIN_ID_NUMBER_PROTOTYPE,
-         ECMA_OBJECT_TYPE_CLASS,
-         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
-         true,
-         number_prototype)
-# endif /* ENABLED (JERRY_BUILTIN_NUMBER) */
-
 # if ENABLED (JERRY_BUILTIN_DATE)
 /* The Date.prototype object (15.9.4) */
 BUILTIN (ECMA_BUILTIN_ID_DATE_PROTOTYPE,
@@ -139,6 +85,13 @@ BUILTIN (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE,
 #endif /* !ENABLED (JERRY_ESNEXT) */
 
 #if ENABLED (JERRY_BUILTIN_STRING)
+/* The String.prototype object (15.5.4) */
+BUILTIN (ECMA_BUILTIN_ID_STRING_PROTOTYPE,
+          ECMA_OBJECT_TYPE_CLASS,
+          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
+          true,
+          string_prototype)
+
 /* The String object (15.5.1) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_STRING,
                  ECMA_OBJECT_TYPE_FUNCTION,
@@ -148,6 +101,13 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_STRING,
 #endif /* ENABLED (JERRY_BUILTIN_STRING) */
 
 #if ENABLED (JERRY_BUILTIN_BOOLEAN)
+/* The Boolean.prototype object (15.6.4) */
+BUILTIN (ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE,
+         ECMA_OBJECT_TYPE_CLASS,
+         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
+         true,
+         boolean_prototype)
+
 /* The Boolean object (15.6.1) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_BOOLEAN,
                  ECMA_OBJECT_TYPE_FUNCTION,
@@ -157,6 +117,13 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_BOOLEAN,
 #endif /* ENABLED (JERRY_BUILTIN_BOOLEAN) */
 
 #if ENABLED (JERRY_BUILTIN_NUMBER)
+/* The Number.prototype object (15.7.4) */
+BUILTIN (ECMA_BUILTIN_ID_NUMBER_PROTOTYPE,
+         ECMA_OBJECT_TYPE_CLASS,
+         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
+         true,
+         number_prototype)
+
 /* The Number object (15.7.1) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_NUMBER,
                  ECMA_OBJECT_TYPE_FUNCTION,

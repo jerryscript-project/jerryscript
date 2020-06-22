@@ -13,15 +13,6 @@
  * limitations under the License.
  */
 
-assert (Object.prototype.toString.call (String.prototype) === '[object String]');
-assert (String.prototype.toString() === "");
-
-assert (Object.prototype.toString.call (Boolean.prototype) === '[object Boolean]');
-assert (Boolean.prototype.valueOf() === false);
-
-assert (Object.prototype.toString.call (Number.prototype) === '[object Number]');
-assert (Number.prototype.valueOf() === 0);
-
 assert (Object.prototype.toString.call (Date.prototype) === '[object Date]');
 assert (isNaN(Date.prototype.valueOf()));
 

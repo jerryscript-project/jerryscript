@@ -446,7 +446,6 @@ ecma_instantiate_builtin (ecma_builtin_id_t obj_builtin_id) /**< built-in id */
     }
 #endif /* ENABLED (JERRY_BUILTIN_ARRAY) */
 
-#if !ENABLED (JERRY_ESNEXT)
 #if ENABLED (JERRY_BUILTIN_STRING)
     case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
     {
@@ -483,6 +482,7 @@ ecma_instantiate_builtin (ecma_builtin_id_t obj_builtin_id) /**< built-in id */
     }
 #endif /* ENABLED (JERRY_BUILTIN_BOOLEAN) */
 
+#if !ENABLED (JERRY_ESNEXT)
 #if ENABLED (JERRY_BUILTIN_DATE)
     case ECMA_BUILTIN_ID_DATE_PROTOTYPE:
     {

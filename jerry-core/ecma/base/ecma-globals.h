@@ -120,6 +120,7 @@ typedef enum
   ECMA_PARSE_FUNCTION_CONTEXT = (1u << 8), /**< function context is present (ECMA_PARSE_DIRECT_EVAL must be set) */
 
   ECMA_PARSE_GENERATOR_FUNCTION = (1u << 9), /**< generator function is parsed */
+  ECMA_PARSE_ASYNC_FUNCTION = (1u << 10), /**< async function is parsed */
 
   /* These flags are internally used by the parser. */
 #ifndef JERRY_NDEBUG
@@ -870,6 +871,7 @@ typedef struct
         ecma_value_t value; /**< value of the object (e.g. boolean, number, string, etc.) */
         uint32_t length; /**< length related property (e.g. length of ArrayBuffer) */
         ecma_value_t target; /**< [[ProxyTarget]] internal property */
+        ecma_value_t head; /**< points to the async generator task queue head item */
       } u;
     } class_prop;
 
@@ -1862,6 +1864,7 @@ typedef enum
   ECMA_EXECUTABLE_OBJECT_RUNNING = (1u << 1), /**< executable object is currently running */
   /* Generator specific flags. */
   ECMA_GENERATOR_ITERATE_AND_YIELD = (1u << 2), /**< the generator performs a yield* operation */
+  ECMA_ASYNC_GENERATOR_CALLED = (1u << 3), /**< the async generator was executed before */
 } ecma_executable_object_flags_t;
 
 /**
@@ -1869,6 +1872,23 @@ typedef enum
  */
 #define ECMA_EXECUTABLE_OBJECT_IS_SUSPENDED(extra_info) \
   (!((extra_info) & (ECMA_EXECUTABLE_OBJECT_COMPLETED | ECMA_EXECUTABLE_OBJECT_RUNNING)))
+
+/**
+ * Enqueued task of an AsyncGenerator.
+ *
+ * An execution of a task has three steps:
+ *  1) Perform a next/throw/return operation
+ *  2) Resume the execution of the AsyncGenerator
+ *  3) Fulfill or reject a promise if the AsyncGenerator yielded a value
+ *     (these Promises are created by the AsyncGenerator itself)
+ */
+typedef struct
+{
+  ecma_value_t next; /**< points to the next task which will be performed after this task is completed */
+  ecma_value_t promise; /**< promise which will be fulfilled or rejected after this task is completed */
+  ecma_value_t operation_value; /**< value argument of the operation */
+  uint8_t operation_type; /**< type of operation (see ecma_async_generator_operation_type_t) */
+} ecma_async_generator_task_t;
 
 #endif /* ENABLED (JERRY_ESNEXT) */
 

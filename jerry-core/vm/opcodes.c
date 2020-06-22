@@ -600,11 +600,20 @@ opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context
   size_t total_size = JERRY_ALIGNUP (sizeof (vm_executable_object_t) + size, sizeof (uintptr_t));
 
   ecma_object_t *proto_p = NULL;
+  /* Async function objects are not accessible, so their class_id is not relevant. */
+  uint16_t class_id = LIT_MAGIC_STRING_GENERATOR_UL;
 
   if (type == VM_CREATE_EXECUTABLE_OBJECT_GENERATOR)
   {
-    proto_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_function_obj_p),
-                                                      ECMA_BUILTIN_ID_GENERATOR_PROTOTYPE);
+    ecma_builtin_id_t default_proto_id = ECMA_BUILTIN_ID_GENERATOR_PROTOTYPE;
+
+    if (CBC_FUNCTION_GET_TYPE (frame_ctx_p->bytecode_header_p->status_flags) == CBC_FUNCTION_ASYNC_GENERATOR)
+    {
+      default_proto_id = ECMA_BUILTIN_ID_ASYNC_GENERATOR_PROTOTYPE;
+      class_id = LIT_MAGIC_STRING_ASYNC_GENERATOR_UL;
+    }
+
+    proto_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_function_obj_p), default_proto_id);
   }
 
   ecma_object_t *object_p = ecma_create_object (proto_p,
@@ -618,9 +627,9 @@ opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context
     ecma_deref_object (proto_p);
   }
 
-  /* Async function objects are not accessible, so their class_id is not relevant. */
-  executable_object_p->extended_object.u.class_prop.class_id = LIT_MAGIC_STRING_GENERATOR_UL;
+  executable_object_p->extended_object.u.class_prop.class_id = class_id;
   executable_object_p->extended_object.u.class_prop.extra_info = 0;
+  ECMA_SET_INTERNAL_VALUE_ANY_POINTER (executable_object_p->extended_object.u.class_prop.u.head, NULL);
 
   JERRY_ASSERT (!frame_ctx_p->is_eval_code);
 
@@ -681,6 +690,14 @@ opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context
 const uint8_t opfunc_resume_executable_object_with_throw[1] =
 {
   CBC_THROW
+};
+
+/**
+ * Byte code which resumes an executable object with return
+ */
+const uint8_t opfunc_resume_executable_object_with_return[2] =
+{
+  CBC_EXT_OPCODE, CBC_EXT_RETURN
 };
 
 /**

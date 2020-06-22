@@ -692,6 +692,11 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
       JERRY_DEBUG_MSG (",async");
       break;
     }
+    case CBC_FUNCTION_ASYNC_GENERATOR:
+    {
+      JERRY_DEBUG_MSG (",async_generator");
+      break;
+    }
     case CBC_FUNCTION_ARROW:
     {
       JERRY_DEBUG_MSG (",arrow");
@@ -957,7 +962,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     JERRY_ASSERT (!(context_p->status_flags & PARSER_NO_END_LABEL));
   }
 
-  if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
+  if (PARSER_IS_NORMAL_ASYNC_FUNCTION (context_p->status_flags))
   {
     PARSER_MINUS_EQUAL_U16 (context_p->stack_depth, PARSER_TRY_CONTEXT_STACK_ALLOCATION);
 #ifndef JERRY_NDEBUG
@@ -1195,7 +1200,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     context_p->status_flags &= (uint32_t) ~PARSER_NO_END_LABEL;
 
 #if ENABLED (JERRY_ESNEXT)
-    if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
+    if (PARSER_IS_NORMAL_ASYNC_FUNCTION (context_p->status_flags))
     {
       length++;
     }
@@ -1350,30 +1355,41 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   }
 
 #if ENABLED (JERRY_ESNEXT)
+  uint16_t function_type = CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_NORMAL);
+
   if (context_p->status_flags & (PARSER_IS_PROPERTY_GETTER | PARSER_IS_PROPERTY_SETTER))
   {
-    compiled_code_p->status_flags |= CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_ACCESSOR);
+    function_type = CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_ACCESSOR);
   }
   else if (context_p->status_flags & PARSER_IS_ARROW_FUNCTION)
   {
-    compiled_code_p->status_flags |= CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_ARROW);
+    function_type = CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_ARROW);
   }
   else if (context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION)
   {
-    compiled_code_p->status_flags |= CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_GENERATOR);
+    if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
+    {
+      function_type = CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_ASYNC_GENERATOR);
+    }
+    else
+    {
+      function_type = CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_GENERATOR);
+    }
   }
   else if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
   {
-    compiled_code_p->status_flags |= CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_ASYNC);
+    function_type = CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_ASYNC);
   }
   else if (context_p->status_flags & PARSER_CLASS_CONSTRUCTOR)
   {
-    compiled_code_p->status_flags |= CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_CONSTRUCTOR);
+    function_type = CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_CONSTRUCTOR);
   }
   else
   {
-    compiled_code_p->status_flags |= CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_NORMAL);
+    function_type = CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_NORMAL);
   }
+
+  compiled_code_p->status_flags |= function_type;
 
   if (context_p->status_flags & PARSER_FUNCTION_HAS_REST_PARAM)
   {
@@ -1582,7 +1598,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     *dst_p++ = CBC_RETURN_WITH_BLOCK;
 
 #if ENABLED (JERRY_ESNEXT)
-    if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
+    if (PARSER_IS_NORMAL_ASYNC_FUNCTION (context_p->status_flags))
     {
       dst_p[-1] = CBC_EXT_OPCODE;
       dst_p[0] = CBC_EXT_ASYNC_EXIT;
@@ -1745,14 +1761,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 
   bool has_duplicated_arg_names = false;
 
-  /* TODO: Currently async iterators are not supported, so generators ignore the async modifier. */
-  uint32_t mask = (PARSER_IS_GENERATOR_FUNCTION | PARSER_IS_ASYNC_FUNCTION);
-  if ((context_p->status_flags & mask) == mask)
-  {
-    context_p->status_flags &= (uint32_t) ~PARSER_IS_ASYNC_FUNCTION;
-  }
-
-  if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
+  if (PARSER_IS_NORMAL_ASYNC_FUNCTION (context_p->status_flags))
   {
     parser_branch_t branch;
     parser_emit_cbc_ext_forward_branch (context_p, CBC_EXT_TRY_CREATE_CONTEXT, &branch);
@@ -2057,6 +2066,10 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
     if (parse_opts & ECMA_PARSE_GENERATOR_FUNCTION)
     {
       context.status_flags |= PARSER_IS_GENERATOR_FUNCTION;
+    }
+    if (parse_opts & ECMA_PARSE_ASYNC_FUNCTION)
+    {
+      context.status_flags |= PARSER_IS_ASYNC_FUNCTION;
     }
 #endif /* ENABLED (JERRY_ESNEXT) */
   }

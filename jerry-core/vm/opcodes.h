@@ -130,6 +130,7 @@ vm_executable_object_t *
 opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p, vm_create_executable_object_type_t type);
 
 extern const uint8_t opfunc_resume_executable_object_with_throw[];
+extern const uint8_t opfunc_resume_executable_object_with_return[];
 
 ecma_value_t
 opfunc_resume_executable_object (vm_executable_object_t *executable_object_p, ecma_value_t value);

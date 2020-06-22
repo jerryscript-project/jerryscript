@@ -404,6 +404,27 @@ ecma_gc_mark_executable_object (ecma_object_t *object_p) /**< object */
 {
   vm_executable_object_t *executable_object_p = (vm_executable_object_t *) object_p;
 
+  if (executable_object_p->extended_object.u.class_prop.extra_info & ECMA_ASYNC_GENERATOR_CALLED)
+  {
+    ecma_value_t task = executable_object_p->extended_object.u.class_prop.u.head;
+
+    while (!ECMA_IS_INTERNAL_VALUE_NULL (task))
+    {
+      ecma_async_generator_task_t *task_p;
+      task_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_async_generator_task_t, task);
+
+      JERRY_ASSERT (ecma_is_value_object (task_p->promise));
+      ecma_gc_set_object_visited (ecma_get_object_from_value (task_p->promise));
+
+      if (ecma_is_value_object (task_p->operation_value))
+      {
+        ecma_gc_set_object_visited (ecma_get_object_from_value (task_p->operation_value));
+      }
+
+      task = task_p->next;
+    }
+  }
+
   if (!ECMA_EXECUTABLE_OBJECT_IS_SUSPENDED (executable_object_p->extended_object.u.class_prop.extra_info))
   {
     /* All objects referenced by running executable objects are strong roots,
@@ -584,6 +605,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 #endif /* ENABLED (JERRY_BUILTIN_CONTAINER) */
 #if ENABLED (JERRY_ESNEXT)
           case LIT_MAGIC_STRING_GENERATOR_UL:
+          case LIT_MAGIC_STRING_ASYNC_GENERATOR_UL:
           {
             ecma_gc_mark_executable_object (object_p);
             break;
@@ -849,6 +871,23 @@ ecma_gc_free_executable_object (ecma_object_t *object_p) /**< object */
   JERRY_ASSERT (!(executable_object_p->extended_object.u.class_prop.extra_info & ECMA_EXECUTABLE_OBJECT_RUNNING));
 
   ecma_bytecode_deref ((ecma_compiled_code_t *) bytecode_header_p);
+
+  if (executable_object_p->extended_object.u.class_prop.extra_info & ECMA_ASYNC_GENERATOR_CALLED)
+  {
+    ecma_value_t task = executable_object_p->extended_object.u.class_prop.u.head;
+
+    while (!ECMA_IS_INTERNAL_VALUE_NULL (task))
+    {
+      ecma_async_generator_task_t *task_p;
+      task_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_async_generator_task_t, task);
+
+      JERRY_ASSERT (ecma_is_value_object (task_p->promise));
+      ecma_free_value_if_not_object (task_p->operation_value);
+
+      task = task_p->next;
+      jmem_heap_free_block (task_p, sizeof (ecma_async_generator_task_t));
+    }
+  }
 
   if (executable_object_p->extended_object.u.class_prop.extra_info & ECMA_EXECUTABLE_OBJECT_COMPLETED)
   {
@@ -1167,6 +1206,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 #endif /* ENABLED (JERRY_BUILTIN_DATAVIEW) */
 #if ENABLED (JERRY_ESNEXT)
         case LIT_MAGIC_STRING_GENERATOR_UL:
+        case LIT_MAGIC_STRING_ASYNC_GENERATOR_UL:
         {
           ext_object_size = ecma_gc_free_executable_object (object_p);
           break;

@@ -1964,14 +1964,20 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
       parser_check_assignment_expr (context_p);
       lexer_next_token (context_p);
 
-      cbc_ext_opcode_t opcode = CBC_EXT_YIELD;
-
+      cbc_ext_opcode_t opcode = ((context_p->status_flags & PARSER_IS_ASYNC_FUNCTION) ? CBC_EXT_ASYNC_YIELD
+                                                                                      : CBC_EXT_YIELD);
       if (!lexer_check_yield_no_arg (context_p))
       {
         if (context_p->token.type == LEXER_MULTIPLY)
         {
           lexer_next_token (context_p);
           opcode = CBC_EXT_YIELD_ITERATOR;
+
+          /* TODO: support yield * in async generator. Currently a meaningless error is thrown. */
+          if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
+          {
+            parser_raise_error (context_p, PARSER_ERR_INVALID_CHARACTER);
+          }
         }
 
         parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
@@ -2389,7 +2395,9 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ESNEXT)
     else if (JERRY_UNLIKELY (token == LEXER_KEYW_AWAIT))
     {
-      parser_emit_cbc_ext (context_p, CBC_EXT_AWAIT);
+      cbc_ext_opcode_t opcode = ((context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION) ? CBC_EXT_GENERATOR_AWAIT
+                                                                                          : CBC_EXT_AWAIT);
+      parser_emit_cbc_ext (context_p, opcode);
     }
 #endif /* ENABLED (JERRY_ESNEXT) */
     else

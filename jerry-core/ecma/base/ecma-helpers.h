@@ -393,6 +393,7 @@ void ecma_stringbuilder_append_magic (ecma_stringbuilder_t *builder_p, const lit
 void ecma_stringbuilder_append_raw (ecma_stringbuilder_t *builder_p,
                                     const lit_utf8_byte_t *data_p,
                                     const lit_utf8_size_t data_size);
+void ecma_stringbuilder_append_codepoint (ecma_stringbuilder_t *builder_p, lit_code_point_t cp);
 void ecma_stringbuilder_append_char (ecma_stringbuilder_t *builder_p, const ecma_char_t c);
 void ecma_stringbuilder_append_byte (ecma_stringbuilder_t *builder_p, const lit_utf8_byte_t);
 ecma_string_t *ecma_stringbuilder_finalize (ecma_stringbuilder_t *builder_p);

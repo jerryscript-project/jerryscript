@@ -2606,16 +2606,26 @@ ecma_stringbuilder_append_raw (ecma_stringbuilder_t *builder_p, /**< string buil
 } /* ecma_stringbuilder_append_raw */
 
 /**
+ * Append a codepoint to a string builder
+ */
+void
+ecma_stringbuilder_append_codepoint (ecma_stringbuilder_t *builder_p, /**< string builder */
+                                     lit_code_point_t cp) /**< code point */
+{
+  const lit_utf8_size_t size = (lit_utf8_size_t) lit_code_point_get_cesu8_length (cp);
+  lit_utf8_byte_t *dest_p = ecma_stringbuilder_grow (builder_p, size);
+
+  lit_code_point_to_cesu8_bytes (dest_p, cp);
+} /* ecma_stringbuilder_append_codepoint */
+
+/**
  * Append an ecma_char_t to a string builder
  */
 void
 ecma_stringbuilder_append_char (ecma_stringbuilder_t *builder_p, /**< string builder */
                                 const ecma_char_t c) /**< ecma char */
 {
-  const lit_utf8_size_t size = (lit_utf8_size_t) lit_code_point_get_cesu8_length (c);
-  lit_utf8_byte_t *dest_p = ecma_stringbuilder_grow (builder_p, size);
-
-  lit_code_point_to_cesu8_bytes (dest_p, c);
+  ecma_stringbuilder_append_codepoint (builder_p, c);
 } /* ecma_stringbuilder_append_char */
 
 /**

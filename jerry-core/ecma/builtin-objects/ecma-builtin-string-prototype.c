@@ -988,96 +988,42 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_string_t *input_str
                                                         bool lower_case) /**< convert to lower (true)
                                                                           *   or upper (false) case */
 {
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+  ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
 
-  /* 3. */
   ECMA_STRING_TO_UTF8_STRING (input_string_p, input_start_p, input_start_size);
 
-  /*
-   * The URI encoding has two major phases: first we compute
-   * the length of the lower case string, then we encode it.
-   */
-
-  lit_utf8_size_t output_length = 0;
-  const lit_utf8_byte_t *input_str_curr_p = input_start_p;
+  const lit_utf8_byte_t *input_curr_p = input_start_p;
   const lit_utf8_byte_t *input_str_end_p = input_start_p + input_start_size;
 
-  while (input_str_curr_p < input_str_end_p)
+  while (input_curr_p < input_str_end_p)
   {
-    ecma_char_t character = lit_cesu8_read_next (&input_str_curr_p);
-    ecma_char_t character_buffer[LIT_MAXIMUM_OTHER_CASE_LENGTH];
-    ecma_length_t character_length;
-    lit_utf8_byte_t utf8_byte_buffer[LIT_CESU8_MAX_BYTES_IN_CODE_POINT];
+    lit_code_point_t cp = lit_cesu8_read_next (&input_curr_p);
+
+#if ENABLED (JERRY_ESNEXT)
+    if (lit_is_code_point_utf16_high_surrogate (cp))
+    {
+      const ecma_char_t next_ch = lit_cesu8_peek_next (input_curr_p);
+      if (lit_is_code_point_utf16_low_surrogate (next_ch))
+      {
+        cp = lit_convert_surrogate_pair_to_code_point ((ecma_char_t) cp, next_ch);
+        input_curr_p += LIT_UTF8_MAX_BYTES_IN_CODE_UNIT;
+      }
+    }
+#endif /* ENABLED (JERRY_ESNEXT) */
 
     if (lower_case)
     {
-      character_length = lit_char_to_lower_case (character,
-                                                 character_buffer,
-                                                 LIT_MAXIMUM_OTHER_CASE_LENGTH);
+      lit_char_to_lower_case (cp, &builder);
     }
     else
     {
-      character_length = lit_char_to_upper_case (character,
-                                                 character_buffer,
-                                                 LIT_MAXIMUM_OTHER_CASE_LENGTH);
-    }
-
-    JERRY_ASSERT (character_length >= 1 && character_length <= LIT_MAXIMUM_OTHER_CASE_LENGTH);
-
-    for (ecma_length_t i = 0; i < character_length; i++)
-    {
-      output_length += lit_code_unit_to_utf8 (character_buffer[i], utf8_byte_buffer);
+      lit_char_to_upper_case (cp, &builder);
     }
   }
 
-  /* Second phase. */
-
-  JMEM_DEFINE_LOCAL_ARRAY (output_start_p,
-                           output_length,
-                           lit_utf8_byte_t);
-
-  lit_utf8_byte_t *output_char_p = output_start_p;
-
-  /* Encoding the output. */
-  input_str_curr_p = input_start_p;
-
-  while (input_str_curr_p < input_str_end_p)
-  {
-    ecma_char_t character = lit_cesu8_read_next (&input_str_curr_p);
-    ecma_char_t character_buffer[LIT_MAXIMUM_OTHER_CASE_LENGTH];
-    ecma_length_t character_length;
-
-    if (lower_case)
-    {
-      character_length = lit_char_to_lower_case (character,
-                                                 character_buffer,
-                                                 LIT_MAXIMUM_OTHER_CASE_LENGTH);
-    }
-    else
-    {
-      character_length = lit_char_to_upper_case (character,
-                                                 character_buffer,
-                                                 LIT_MAXIMUM_OTHER_CASE_LENGTH);
-    }
-
-    JERRY_ASSERT (character_length >= 1 && character_length <= LIT_MAXIMUM_OTHER_CASE_LENGTH);
-
-    for (ecma_length_t i = 0; i < character_length; i++)
-    {
-      output_char_p += lit_code_unit_to_utf8 (character_buffer[i], output_char_p);
-    }
-  }
-
-  JERRY_ASSERT (output_start_p + output_length == output_char_p);
-
-  ecma_string_t *output_string_p = ecma_new_ecma_string_from_utf8 (output_start_p, output_length);
-
-  ret_value = ecma_make_string_value (output_string_p);
-
-  JMEM_FINALIZE_LOCAL_ARRAY (output_start_p);
   ECMA_FINALIZE_UTF8_STRING (input_start_p, input_start_size);
 
-  return ret_value;
+  return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
 } /* ecma_builtin_string_prototype_object_conversion_helper */
 
 /**

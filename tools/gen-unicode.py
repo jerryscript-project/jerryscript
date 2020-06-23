@@ -17,10 +17,10 @@
 from __future__ import print_function
 
 import argparse
-import bisect
 import csv
 import itertools
 import os
+import re
 import warnings
 
 from gen_c_source import LICENSE, format_code
@@ -28,268 +28,286 @@ from settings import PROJECT_DIR
 
 
 RANGES_C_SOURCE = os.path.join(PROJECT_DIR, 'jerry-core/lit/lit-unicode-ranges.inc.h')
+RANGES_SUP_C_SOURCE = os.path.join(PROJECT_DIR, 'jerry-core/lit/lit-unicode-ranges-sup.inc.h')
 CONVERSIONS_C_SOURCE = os.path.join(PROJECT_DIR, 'jerry-core/lit/lit-unicode-conversions.inc.h')
+CONVERSIONS_SUP_C_SOURCE = os.path.join(PROJECT_DIR, 'jerry-core/lit/lit-unicode-conversions-sup.inc.h')
 
+UNICODE_PLANE_TYPE_BASIC = 0
+UNICODE_PLANE_TYPE_SUPPLEMENTARY = 1
+
+# For ES5.1 profile we use a predefined subset of whitespace characters
+ES5_1_WHITE_SPACE_UNITS = [0x1680, 0x180e]
+ES5_1_WHITE_SPACE_UNITS.extend(range(0x2000, 0x200c))
+ES5_1_WHITE_SPACE_UNITS.extend([0x202f, 0x205f, 0x3000])
 
 # common code generation
 
+class UnicodeBasicSource(object):
+    # pylint: disable=too-many-instance-attributes
+    def __init__(self, filepath, character_type="uint16_t", length_type="uint8_t"):
+        self._filepath = filepath
+        self._header = [LICENSE, ""]
+        self._data = []
+        self._table_name_suffix = ""
+        self.character_type = character_type
+        self.length_type = length_type
 
-class UniCodeSource(object):
-    def __init__(self, filepath):
-        self.__filepath = filepath
-        self.__header = [LICENSE, ""]
-        self.__data = []
+        self._range_table_types = [self.character_type,
+                                   self.length_type,
+                                   self.character_type]
+        self._range_table_names = ["interval_starts",
+                                   "interval_lengths",
+                                   "chars"]
+        self._range_table_descriptions = ["Character interval starting points for",
+                                          "Character interval lengths for",
+                                          "Non-interval characters for"]
+
+        self._conversion_range_types = [self.character_type,
+                                        self.length_type]
+        self._conversion_range_names = ["ranges",
+                                        "range_lengths"]
 
     def complete_header(self, completion):
-        self.__header.append(completion)
-        self.__header.append("")  # for an extra empty line
+        self._header.append(completion)
+        self._header.append("")  # for an extra empty line
 
-    def add_table(self, table, table_name, table_type, table_descr):
-        self.__data.append(table_descr)
-        self.__data.append("static const %s lit_%s[] JERRY_ATTR_CONST_DATA =" % (table_type, table_name))
-        self.__data.append("{")
-        self.__data.append(format_code(table, 1))
-        self.__data.append("};")
-        self.__data.append("")  # for an extra empty line
+    def add_whitepace_range(self, category, categorizer, units):
+        self._data.append("#if ENABLED (JERRY_ESNEXT)")
+        self.add_range(category, categorizer.create_tables(units))
+        self._data.append("#else /* !ENABLED (JERRY_ESNEXT) */")
+        self.add_range(category, categorizer.create_tables(ES5_1_WHITE_SPACE_UNITS))
+        self._data.append("#endif /* ENABLED (JERRY_ESNEXT) */\n")
+
+    def add_range(self, category, tables):
+        idx = 0
+        for table in tables:
+            self.add_table(table,
+                           "/**\n * %s %s.\n */" % (self._range_table_descriptions[idx], category),
+                           self._range_table_types[idx],
+                           category,
+                           self._range_table_names[idx])
+            idx += 1
+
+    def add_conversion_range(self, category, tables, descriptions):
+        self.add_named_conversion_range(category, tables, self._conversion_range_names, descriptions)
+
+    def add_named_conversion_range(self, category, tables, table_names, descriptions):
+        idx = 0
+        for table in tables:
+            self.add_table(table,
+                           descriptions[idx],
+                           self._conversion_range_types[idx],
+                           category,
+                           table_names[idx])
+            idx += 1
+
+    def add_table(self, table, description, table_type, category, table_name):
+        if table and sum(table) != 0:
+            self._data.append(description)
+            self._data.append("static const %s lit_unicode_%s%s%s[] JERRY_ATTR_CONST_DATA ="
+                              % (table_type,
+                                 category.lower(),
+                                 "_" + table_name if table_name else "",
+                                 self._table_name_suffix))
+            self._data.append("{")
+            self._data.append(format_code(table, 1, 6 if self._table_name_suffix else 4))
+            self._data.append("};")
+            self._data.append("")  # for an extra empty line
 
     def generate(self):
-        with open(self.__filepath, 'w') as generated_source:
-            generated_source.write("\n".join(self.__header))
-            generated_source.write("\n".join(self.__data))
+        with open(self._filepath, 'w') as generated_source:
+            generated_source.write("\n".join(self._header))
+            generated_source.write("\n".join(self._data))
 
-class UnicodeCategorizer(object):
+
+class UnicodeSupplementarySource(UnicodeBasicSource):
+    def __init__(self, filepath):
+        UnicodeBasicSource.__init__(self, filepath, "uint32_t", "uint16_t")
+        self._table_name_suffix = "_sup"
+
+    def add_whitepace_range(self, category, categorizer, units):
+        self.add_range(category, categorizer.create_tables(units))
+
+class UnicodeBasicCategorizer(object):
     def __init__(self):
-        # unicode categories:      Lu Ll Lt Mn Mc Me Nd Nl No Zs Zl Zp Cc Cf Cs
-        #                          Co Lm Lo Pc Pd Ps Pe Pi Pf Po Sm Sc Sk So
-        # letter:                  Lu Ll Lt Lm Lo Nl
-        # non-letter-indent-part:
-        #   digit:                 Nd
-        #   punctuation mark:      Mn Mc
-        #   connector punctuation: Pc
-        # separators:              Zs
-        self._unicode_categories = {
-            'letters_category' : ["Lu", "Ll", "Lt", "Lm", "Lo", "Nl"],
-            'non_letters_category' : ["Nd", "Mn", "Mc", "Pc"],
-            'separators_category' : ["Zs"]
-        }
+        self._length_limit = 0xff
+        self.extra_id_continue_units = set([0x200C, 0x200D])
 
-        self._categories = {
-            'letters' : [],
-            'non_letters' : [],
-            'separators' : []
-        }
+    #pylint: disable=no-self-use
+    def in_range(self, i):
+        return i >= 0x80 and i < 0x10000
 
-    def _store_by_category(self, unicode_id, category):
+    def _group_ranges(self, units):
         """
-        Store the given unicode_id by its category
+        Convert an increasing list of integers into a range list
+        :return: List of ranges.
         """
-        for target_category in self._categories:
-            if category in self._unicode_categories[target_category + '_category']:
-                self._categories[target_category].append(unicode_id)
+        for _, group in itertools.groupby(enumerate(units), lambda q: (q[1] - q[0])):
+            group = list(group)
+            yield group[0][1], group[-1][1]
 
-    def read_categories(self, unicode_data_file):
+    def create_tables(self, units):
         """
-        Read the corresponding unicode values and store them in category lists.
-
-        :return: List of letters, non_letter and separators.
+        Split list of ranges into intervals and single char lists.
+        :return: A tuple containing the following info:
+            - list of interval starting points
+            - list of interval lengths
+            - list of single chars
         """
 
-        range_start_id = 0
+        interval_sps = []
+        interval_lengths = []
+        chars = []
 
+        for element in self._group_ranges(units):
+            interval_length = element[1] - element[0]
+            if interval_length == 0:
+                chars.append(element[0])
+            elif interval_length > self._length_limit:
+                for i in range(element[0], element[1], self._length_limit + 1):
+                    length = min(self._length_limit, element[1] - i)
+                    interval_sps.append(i)
+                    interval_lengths.append(length)
+            else:
+                interval_sps.append(element[0])
+                interval_lengths.append(interval_length)
+
+        return interval_sps, interval_lengths, chars
+
+    def read_units(self, file_path, categories, subcategories=None):
+        """
+        Read the Unicode Derived Core Properties file and extract the ranges
+        for the given categories.
+
+        :param file_path: Path to the Unicode "DerivedCoreProperties.txt" file.
+        :param categories: A list of category strings to extract from the Unicode file.
+        :param subcategories: A list of subcategory strings to restrict categories.
+        :return: A dictionary each string from the :param categories: is a key and for each
+                key list of code points are stored.
+        """
+        # Create a dictionary in the format: { category[0]: [ ], ..., category[N]: [ ] }
+        units = {}
+        for category in categories:
+            units[category] = []
+
+        # Formats to match:
+        #  <HEX>     ; <category> #
+        #  <HEX>..<HEX>     ; <category> # <subcategory>
+        matcher = r"(?P<start>[\dA-F]+)(?:\.\.(?P<end>[\dA-F]+))?\s+; (?P<category>[\w]+) # (?P<subcategory>[\w&]{2})"
+
+        with open(file_path, "r") as src_file:
+            for line in src_file:
+                match = re.match(matcher, line)
+
+                if (match
+                        and match.group("category") in categories
+                        and (not subcategories or match.group("subcategory") in subcategories)):
+                    start = int(match.group("start"), 16)
+                    # if no "end" found use the "start"
+                    end = int(match.group("end") or match.group("start"), 16)
+
+                    matching_code_points = [
+                        code_point for code_point in range(start, end + 1) if self.in_range(code_point)
+                    ]
+
+                    units[match.group("category")].extend(matching_code_points)
+
+        return units
+
+    def read_case_mappings(self, unicode_data_file, special_casing_file):
+        """
+        Read the corresponding unicode values of lower and upper case letters and store these in tables.
+
+        :param unicode_data_file: Contains the default case mappings (one-to-one mappings).
+        :param special_casing_file: Contains additional informative case mappings that are either not one-to-one
+                                    or which are context-sensitive.
+        :return: Upper and lower case mappings.
+        """
+
+        lower_case_mapping = {}
+        upper_case_mapping = {}
+
+        # Add one-to-one mappings
         with open(unicode_data_file) as unicode_data:
-            for line in csv.reader(unicode_data, delimiter=';'):
-                unicode_id = int(line[0], 16)
+            reader = csv.reader(unicode_data, delimiter=';')
 
-                # Skip supplementary planes and ascii chars
-                if unicode_id >= 0x10000 or unicode_id < 128:
+            for line in reader:
+                letter_id = int(line[0], 16)
+
+                if not self.in_range(letter_id):
                     continue
 
-                category = line[2]
+                capital_letter = line[12]
+                small_letter = line[13]
 
-                if range_start_id != 0:
-                    while range_start_id <= unicode_id:
-                        self._store_by_category(range_start_id, category)
-                        range_start_id += 1
-                    range_start_id = 0
+                if capital_letter:
+                    upper_case_mapping[letter_id] = parse_unicode_sequence(capital_letter)
+
+                if small_letter:
+                    lower_case_mapping[letter_id] = parse_unicode_sequence(small_letter)
+
+        # Update the conversion tables with the special cases
+        with open(special_casing_file) as special_casing:
+            reader = csv.reader(special_casing, delimiter=';')
+
+            for line in reader:
+                # Skip comment sections and empty lines
+                if not line or line[0].startswith('#'):
                     continue
 
-                if line[1].startswith('<'):
-                    # Save the start position of the range
-                    range_start_id = unicode_id
+                # Replace '#' character with empty string
+                for idx, fragment in enumerate(line):
+                    if fragment.find('#') >= 0:
+                        line[idx] = ''
 
-                self._store_by_category(unicode_id, category)
+                letter_id = int(line[0], 16)
+                condition_list = line[4]
 
-        # This separator char is handled separatly
-        separators = self._categories['separators']
-        non_breaking_space = 0x00A0
-        if non_breaking_space in separators:
-            separators.remove(int(non_breaking_space))
+                if not self.in_range(letter_id) or condition_list:
+                    continue
 
-        # These separator chars are not in the unicode data file or not in Zs category
-        mongolian_vowel_separator = 0x180E
-        medium_mathematical_space = 0x205F
-        zero_width_space = 0x200B
+                small_letter = parse_unicode_sequence(line[1])
+                capital_letter = parse_unicode_sequence(line[3])
 
-        if mongolian_vowel_separator not in separators:
-            bisect.insort(separators, int(mongolian_vowel_separator))
-        if medium_mathematical_space not in separators:
-            bisect.insort(separators, int(medium_mathematical_space))
-        if zero_width_space not in separators:
-            bisect.insort(separators, int(zero_width_space))
+                lower_case_mapping[letter_id] = small_letter
+                upper_case_mapping[letter_id] = capital_letter
 
-        # https://www.ecma-international.org/ecma-262/5.1/#sec-7.1 format-control characters
-        non_letters = self._categories['non_letters']
-        zero_width_non_joiner = 0x200C
-        zero_width_joiner = 0x200D
+        return lower_case_mapping, upper_case_mapping
 
-        bisect.insort(non_letters, int(zero_width_non_joiner))
-        bisect.insort(non_letters, int(zero_width_joiner))
+class UnicodeSupplementaryCategorizer(UnicodeBasicCategorizer):
+    def __init__(self):
+        UnicodeBasicCategorizer.__init__(self)
+        self._length_limit = 0xffff
+        self.extra_id_continue_units = set()
 
-        return self._categories['letters'], self._categories['non_letters'], self._categories['separators']
+    def in_range(self, i):
+        return i >= 0x10000
 
-
-def group_ranges(i):
-    """
-    Convert an increasing list of integers into a range list
-
-    :return: List of ranges.
-    """
-    for _, group in itertools.groupby(enumerate(i), lambda q: (q[1] - q[0])):
-        group = list(group)
-        yield group[0][1], group[-1][1]
-
-
-def split_list(category_list):
-    """
-    Split list of ranges into intervals and single char lists.
-
-    :return: List of interval starting points, interval lengths and single chars
-    """
-
-    interval_sps = []
-    interval_lengths = []
-    chars = []
-
-    for element in category_list:
-        interval_length = element[1] - element[0]
-        if interval_length == 0:
-            chars.append(element[0])
-        elif interval_length > 255:
-            for i in range(element[0], element[1], 256):
-                length = 255 if (element[1] - i > 255) else (element[1] - i)
-                interval_sps.append(i)
-                interval_lengths.append(length)
-        else:
-            interval_sps.append(element[0])
-            interval_lengths.append(element[1] - element[0])
-
-    return interval_sps, interval_lengths, chars
-
-
-def generate_ranges(script_args):
-    categorizer = UnicodeCategorizer()
-    letters, non_letters, separators = categorizer.read_categories(script_args.unicode_data)
-
-    letter_tables = split_list(list(group_ranges(letters)))
-    non_letter_tables = split_list(list(group_ranges(non_letters)))
-    separator_tables = split_list(list(group_ranges(separators)))
-
-    c_source = UniCodeSource(RANGES_C_SOURCE)
+def generate_ranges(script_args, plane_type):
+    if plane_type == UNICODE_PLANE_TYPE_SUPPLEMENTARY:
+        c_source = UnicodeSupplementarySource(RANGES_SUP_C_SOURCE)
+        categorizer = UnicodeSupplementaryCategorizer()
+    else:
+        c_source = UnicodeBasicSource(RANGES_C_SOURCE)
+        categorizer = UnicodeBasicCategorizer()
 
     header_completion = ["/* This file is automatically generated by the %s script" % os.path.basename(__file__),
-                         " * from %s. Do not edit! */" % os.path.basename(script_args.unicode_data),
+                         " * from %s. Do not edit! */" % os.path.basename(script_args.derived_core_properties),
                          ""]
 
     c_source.complete_header("\n".join(header_completion))
 
-    c_source.add_table(letter_tables[0],
-                       "unicode_letter_interval_sps",
-                       "uint16_t",
-                       ("/**\n"
-                        " * Character interval starting points for the unicode letters.\n"
-                        " *\n"
-                        " * The characters covered by these intervals are from\n"
-                        " * the following Unicode categories: Lu, Ll, Lt, Lm, Lo, Nl\n"
-                        " */"))
+    units = categorizer.read_units(script_args.derived_core_properties, ["ID_Start", "ID_Continue"])
 
-    c_source.add_table(letter_tables[1],
-                       "unicode_letter_interval_lengths",
-                       "uint8_t",
-                       ("/**\n"
-                        " * Character lengths for the unicode letters.\n"
-                        " *\n"
-                        " * The characters covered by these intervals are from\n"
-                        " * the following Unicode categories: Lu, Ll, Lt, Lm, Lo, Nl\n"
-                        " */"))
+    units["ID_Continue"] = sorted(set(units["ID_Continue"]).union(categorizer.extra_id_continue_units)
+                                  - set(units["ID_Start"]))
 
-    c_source.add_table(letter_tables[2],
-                       "unicode_letter_chars",
-                       "uint16_t",
-                       ("/**\n"
-                        " * Those unicode letter characters that are not inside any of\n"
-                        " * the intervals specified in lit_unicode_letter_interval_sps array.\n"
-                        " *\n"
-                        " * The characters are from the following Unicode categories:\n"
-                        " * Lu, Ll, Lt, Lm, Lo, Nl\n"
-                        " */"))
+    for category, unit in units.items():
+        c_source.add_range(category, categorizer.create_tables(unit))
 
-    c_source.add_table(non_letter_tables[0],
-                       "unicode_non_letter_ident_part_interval_sps",
-                       "uint16_t",
-                       ("/**\n"
-                        " * Character interval starting points for non-letter character\n"
-                        " * that can be used as a non-first character of an identifier.\n"
-                        " *\n"
-                        " * The characters covered by these intervals are from\n"
-                        " * the following Unicode categories: Nd, Mn, Mc, Pc\n"
-                        " */"))
+    white_space_units = categorizer.read_units(script_args.prop_list, ["White_Space"], ["Zs"])["White_Space"]
 
-    c_source.add_table(non_letter_tables[1],
-                       "unicode_non_letter_ident_part_interval_lengths",
-                       "uint8_t",
-                       ("/**\n"
-                        " * Character interval lengths for non-letter character\n"
-                        " * that can be used as a non-first character of an identifier.\n"
-                        " *\n"
-                        " * The characters covered by these intervals are from\n"
-                        " * the following Unicode categories: Nd, Mn, Mc, Pc\n"
-                        " */"))
-
-    c_source.add_table(non_letter_tables[2],
-                       "unicode_non_letter_ident_part_chars",
-                       "uint16_t",
-                       ("/**\n"
-                        " * Those non-letter characters that can be used as a non-first\n"
-                        " * character of an identifier and not included in any of the intervals\n"
-                        " * specified in lit_unicode_non_letter_ident_part_interval_sps array.\n"
-                        " *\n"
-                        " * The characters are from the following Unicode categories:\n"
-                        " * Nd, Mn, Mc, Pc\n"
-                        " */"))
-
-    c_source.add_table(separator_tables[0],
-                       "unicode_separator_char_interval_sps",
-                       "uint16_t",
-                       ("/**\n"
-                        " * Unicode separator character interval starting points from Unicode category: Zs\n"
-                        " */"))
-
-    c_source.add_table(separator_tables[1],
-                       "unicode_separator_char_interval_lengths",
-                       "uint8_t",
-                       ("/**\n"
-                        " * Unicode separator character interval lengths from Unicode category: Zs\n"
-                        " */"))
-
-    c_source.add_table(separator_tables[2],
-                       "unicode_separator_chars",
-                       "uint16_t",
-                       ("/**\n"
-                        " * Unicode separator characters that are not in the\n"
-                        " * lit_unicode_separator_char_intervals array.\n"
-                        " *\n"
-                        " * Unicode category: Zs\n"
-                        " */"))
+    c_source.add_whitepace_range("White_Space", categorizer, white_space_units)
 
     c_source.generate()
 
@@ -319,70 +337,6 @@ def parse_unicode_sequence(raw_data):
             result += chr(hex_val)
 
     return result
-
-
-def read_case_mappings(unicode_data_file, special_casing_file):
-    """
-    Read the corresponding unicode values of lower and upper case letters and store these in tables.
-
-    :param unicode_data_file: Contains the default case mappings (one-to-one mappings).
-    :param special_casing_file: Contains additional informative case mappings that are either not one-to-one
-                                or which are context-sensitive.
-    :return: Upper and lower case mappings.
-    """
-
-    lower_case_mapping = {}
-    upper_case_mapping = {}
-
-    # Add one-to-one mappings
-    with open(unicode_data_file) as unicode_data:
-        unicode_data_reader = csv.reader(unicode_data, delimiter=';')
-
-        for line in unicode_data_reader:
-            letter_id = int(line[0], 16)
-
-            # Skip supplementary planes and ascii chars
-            if letter_id >= 0x10000 or letter_id < 128:
-                continue
-
-            capital_letter = line[12]
-            small_letter = line[13]
-
-            if capital_letter:
-                upper_case_mapping[letter_id] = parse_unicode_sequence(capital_letter)
-
-            if small_letter:
-                lower_case_mapping[letter_id] = parse_unicode_sequence(small_letter)
-
-    # Update the conversion tables with the special cases
-    with open(special_casing_file) as special_casing:
-        special_casing_reader = csv.reader(special_casing, delimiter=';')
-
-        for line in special_casing_reader:
-            # Skip comment sections and empty lines
-            if not line or line[0].startswith('#'):
-                continue
-
-            # Replace '#' character with empty string
-            for idx, i in enumerate(line):
-                if i.find('#') >= 0:
-                    line[idx] = ''
-
-            letter_id = int(line[0], 16)
-            condition_list = line[4]
-
-            # Skip supplementary planes, ascii chars, and condition_list
-            if letter_id >= 0x10000 or letter_id < 128 or condition_list:
-                continue
-
-            small_letter = parse_unicode_sequence(line[1])
-            capital_letter = parse_unicode_sequence(line[3])
-
-            lower_case_mapping[letter_id] = small_letter
-            upper_case_mapping[letter_id] = capital_letter
-
-    return lower_case_mapping, upper_case_mapping
-
 
 def extract_ranges(letter_case, reverse_letter_case=None):
     """
@@ -675,27 +629,13 @@ def calculate_conversion_distance(letter_case, letter_id):
     return ord(letter_case[letter_id]) - letter_id
 
 
-def generate_conversions(script_args):
-    # Read the corresponding unicode values of lower and upper case letters and store these in tables
-    case_mappings = read_case_mappings(script_args.unicode_data, script_args.special_casing)
-    lower_case = case_mappings[0]
-    upper_case = case_mappings[1]
-
-    character_case_ranges = extract_ranges(lower_case, upper_case)
-    character_pair_ranges = extract_character_pair_ranges(lower_case, upper_case)
-    character_pairs = extract_character_pairs(lower_case, upper_case)
-    upper_case_special_ranges = extract_special_ranges(upper_case)
-    lower_case_ranges = extract_ranges(lower_case)
-    lower_case_conversions = extract_conversions(lower_case)
-    upper_case_conversions = extract_conversions(upper_case)
-
-    if lower_case:
-        warnings.warn('Not all elements extracted from the lowercase table!')
-    if upper_case:
-        warnings.warn('Not all elements extracted from the uppercase table!')
-
-    # Generate conversions output
-    c_source = UniCodeSource(CONVERSIONS_C_SOURCE)
+def generate_conversions(script_args, plane_type):
+    if plane_type == UNICODE_PLANE_TYPE_SUPPLEMENTARY:
+        c_source = UnicodeSupplementarySource(CONVERSIONS_SUP_C_SOURCE)
+        categorizer = UnicodeSupplementaryCategorizer()
+    else:
+        c_source = UnicodeBasicSource(CONVERSIONS_C_SOURCE)
+        categorizer = UnicodeBasicCategorizer()
 
     unicode_file = os.path.basename(script_args.unicode_data)
     spec_casing_file = os.path.basename(script_args.special_casing)
@@ -706,75 +646,58 @@ def generate_conversions(script_args):
 
     c_source.complete_header("\n".join(header_completion))
 
-    c_source.add_table(character_case_ranges[0],
-                       "character_case_ranges",
-                       "uint16_t",
-                       ("/* Contains start points of character case ranges "
-                        "(these are bidirectional conversions). */"))
+    # Read the corresponding unicode values of lower and upper case letters and store these in tables
+    lower_case, upper_case = categorizer.read_case_mappings(script_args.unicode_data, script_args.special_casing)
 
-    c_source.add_table(character_case_ranges[1],
-                       "character_case_range_lengths",
-                       "uint8_t",
-                       "/* Interval lengths of start points in `character_case_ranges` table. */")
+    c_source.add_conversion_range("character_case",
+                                  extract_ranges(lower_case, upper_case),
+                                  [("/* Contains start points of character case ranges "
+                                    "(these are bidirectional conversions). */"),
+                                   "/* Interval lengths of start points in `character_case_ranges` table. */"])
+    c_source.add_conversion_range("character_pair",
+                                  extract_character_pair_ranges(lower_case, upper_case),
+                                  ["/* Contains the start points of bidirectional conversion ranges. */",
+                                   "/* Interval lengths of start points in `character_pair_ranges` table. */"])
 
-    c_source.add_table(character_pair_ranges[0],
-                       "character_pair_ranges",
-                       "uint16_t",
-                       "/* Contains the start points of bidirectional conversion ranges. */")
-
-    c_source.add_table(character_pair_ranges[1],
-                       "character_pair_range_lengths",
-                       "uint8_t",
-                       "/* Interval lengths of start points in `character_pair_ranges` table. */")
-
-    c_source.add_table(character_pairs,
+    c_source.add_table(extract_character_pairs(lower_case, upper_case),
+                       "/* Contains lower/upper case bidirectional conversion pairs. */",
+                       c_source.character_type,
                        "character_pairs",
-                       "uint16_t",
-                       "/* Contains lower/upper case bidirectional conversion pairs. */")
+                       "")
 
-    c_source.add_table(upper_case_special_ranges[0],
-                       "upper_case_special_ranges",
-                       "uint16_t",
-                       ("/* Contains start points of one-to-two uppercase ranges where the second character\n"
-                        " * is always the same.\n"
-                        " */"))
+    c_source.add_conversion_range("upper_case_special",
+                                  extract_special_ranges(upper_case),
+                                  [("/* Contains start points of one-to-two uppercase ranges where the "
+                                    "second character\n"
+                                    " * is always the same.\n"
+                                    " */"),
+                                   "/* Interval lengths for start points in `upper_case_special_ranges` table. */"])
 
-    c_source.add_table(upper_case_special_ranges[1],
-                       "upper_case_special_range_lengths",
-                       "uint8_t",
-                       "/* Interval lengths for start points in `upper_case_special_ranges` table. */")
+    c_source.add_conversion_range("lower_case",
+                                  extract_ranges(lower_case),
+                                  ["/* Contains start points of lowercase ranges. */",
+                                   "/* Interval lengths for start points in `lower_case_ranges` table. */"])
 
-    c_source.add_table(lower_case_ranges[0],
-                       "lower_case_ranges",
-                       "uint16_t",
-                       "/* Contains start points of lowercase ranges. */")
+    c_source.add_named_conversion_range("lower_case",
+                                        extract_conversions(lower_case),
+                                        ["conversions", "conversion_counters"],
+                                        [("/* The remaining lowercase conversions. The lowercase variant can "
+                                          "be one-to-three character long. */"),
+                                         ("/* Number of one-to-one, one-to-two, and one-to-three lowercase "
+                                          "conversions. */")])
 
-    c_source.add_table(lower_case_ranges[1],
-                       "lower_case_range_lengths",
-                       "uint8_t",
-                       "/* Interval lengths for start points in `lower_case_ranges` table. */")
+    c_source.add_named_conversion_range("upper_case",
+                                        extract_conversions(upper_case),
+                                        ["conversions", "conversion_counters"],
+                                        [("/* The remaining uppercase conversions. The uppercase variant can "
+                                          "be one-to-three character long. */"),
+                                         ("/* Number of one-to-one, one-to-two, and one-to-three uppercase "
+                                          "conversions. */")])
 
-    c_source.add_table(lower_case_conversions[0],
-                       "lower_case_conversions",
-                       "uint16_t",
-                       ("/* The remaining lowercase conversions. The lowercase variant can "
-                        "be one-to-three character long. */"))
-
-    c_source.add_table(lower_case_conversions[1],
-                       "lower_case_conversion_counters",
-                       "uint8_t",
-                       "/* Number of one-to-one, one-to-two, and one-to-three lowercase conversions. */")
-
-    c_source.add_table(upper_case_conversions[0],
-                       "upper_case_conversions",
-                       "uint16_t",
-                       ("/* The remaining uppercase conversions. The uppercase variant can "
-                        "be one-to-three character long. */"))
-
-    c_source.add_table(upper_case_conversions[1],
-                       "upper_case_conversion_counters",
-                       "uint8_t",
-                       "/* Number of one-to-one, one-to-two, and one-to-three uppercase conversions. */")
+    if lower_case:
+        warnings.warn('Not all elements extracted from the lowercase table!')
+    if upper_case:
+        warnings.warn('Not all elements extracted from the uppercase table!')
 
     c_source.generate()
 
@@ -783,29 +706,37 @@ def generate_conversions(script_args):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='lit-unicode-{conversions,ranges}.inc.h generator',
+    parser = argparse.ArgumentParser(description='lit-unicode-{conversions,ranges}-{sup}.inc.h generator',
                                      epilog='''
-                                        The input files (UnicodeData.txt, SpecialCasing.txt)
+                                        The input files:
+                                            - UnicodeData.txt
+                                            - SpecialCasing.txt
+                                            - DerivedCoreProperties.txt
+                                            - PropList.txt
                                         must be retrieved from
                                         http://www.unicode.org/Public/<VERSION>/ucd/.
                                         The last known good version is 13.0.0.
                                         ''')
+    def check_file(path):
+        if not os.path.isfile(path) or not os.access(path, os.R_OK):
+            raise argparse.ArgumentTypeError('The %s file is missing or not readable!' % path)
+        return path
 
     parser.add_argument('--unicode-data', metavar='FILE', action='store', required=True,
-                        help='specify the unicode data file')
+                        type=check_file, help='specify the unicode data file')
     parser.add_argument('--special-casing', metavar='FILE', action='store', required=True,
-                        help='specify the special casing file')
+                        type=check_file, help='specify the special casing file')
+    parser.add_argument('--prop-list', metavar='FILE', action='store', required=True,
+                        type=check_file, help='specify the prop list file')
+    parser.add_argument('--derived-core-properties', metavar='FILE', action='store', required=True,
+                        type=check_file, help='specify the DerivedCodeProperties file')
 
     script_args = parser.parse_args()
 
-    if not os.path.isfile(script_args.unicode_data) or not os.access(script_args.unicode_data, os.R_OK):
-        parser.error('The %s file is missing or not readable!' % script_args.unicode_data)
-
-    if not os.path.isfile(script_args.special_casing) or not os.access(script_args.special_casing, os.R_OK):
-        parser.error('The %s file is missing or not readable!' % script_args.special_casing)
-
-    generate_ranges(script_args)
-    generate_conversions(script_args)
+    generate_ranges(script_args, UNICODE_PLANE_TYPE_BASIC)
+    generate_ranges(script_args, UNICODE_PLANE_TYPE_SUPPLEMENTARY)
+    generate_conversions(script_args, UNICODE_PLANE_TYPE_BASIC)
+    generate_conversions(script_args, UNICODE_PLANE_TYPE_SUPPLEMENTARY)
 
 
 if __name__ == "__main__":

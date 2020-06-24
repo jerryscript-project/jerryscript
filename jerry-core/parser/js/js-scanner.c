@@ -2738,20 +2738,15 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
         }
         case SCAN_MODE_CONTINUE_FUNCTION_ARGUMENTS:
         {
-#endif /* ENABLED (JERRY_ESNEXT) */
           if (context_p->token.type != LEXER_RIGHT_PAREN && context_p->token.type != LEXER_EOS)
           {
-#if ENABLED (JERRY_ESNEXT)
             lexer_lit_location_t *argument_literal_p;
-#endif /* ENABLED (JERRY_ESNEXT) */
 
-            while (true)
+            do
             {
-#if ENABLED (JERRY_ESNEXT)
               if (context_p->token.type == LEXER_THREE_DOTS)
               {
                 scanner_context.active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_ARGUMENTS_UNMAPPED;
-
                 lexer_next_token (context_p);
               }
 
@@ -2760,7 +2755,6 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
                 argument_literal_p = NULL;
                 break;
               }
-#endif /* ENABLED (JERRY_ESNEXT) */
 
               if (context_p->token.type != LEXER_LITERAL
                   || context_p->token.lit_location.type != LEXER_IDENT_LITERAL)
@@ -2768,22 +2762,18 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
                 scanner_raise_error (context_p);
               }
 
-#if ENABLED (JERRY_ESNEXT)
               argument_literal_p = scanner_append_argument (context_p, &scanner_context);
-#else /* !ENABLED (JERRY_ESNEXT) */
-              scanner_append_argument (context_p, &scanner_context);
-#endif /* ENABLED (JERRY_ESNEXT) */
-
               lexer_next_token (context_p);
 
               if (context_p->token.type != LEXER_COMMA)
               {
                 break;
               }
+
               lexer_next_token (context_p);
             }
+            while (context_p->token.type != LEXER_RIGHT_PAREN && context_p->token.type != LEXER_EOS);
 
-#if ENABLED (JERRY_ESNEXT)
             if (argument_literal_p == NULL)
             {
               scanner_context.active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_ARGUMENTS_UNMAPPED;
@@ -2824,8 +2814,30 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
               parser_stack_push_uint8 (context_p, SCAN_STACK_BINDING_INIT);
               break;
             }
-#endif /* ENABLED (JERRY_ESNEXT) */
           }
+#else /* !ENABLED (JERRY_ESNEXT) */
+          if (context_p->token.type != LEXER_RIGHT_PAREN && context_p->token.type != LEXER_EOS)
+          {
+            while (true)
+            {
+              if (context_p->token.type != LEXER_LITERAL
+                  || context_p->token.lit_location.type != LEXER_IDENT_LITERAL)
+              {
+                scanner_raise_error (context_p);
+              }
+
+              scanner_append_argument (context_p, &scanner_context);
+              lexer_next_token (context_p);
+
+              if (context_p->token.type != LEXER_COMMA)
+              {
+                break;
+              }
+
+              lexer_next_token (context_p);
+            }
+          }
+#endif /* ENABLED (JERRY_ESNEXT) */
 
           if (context_p->token.type == LEXER_EOS && stack_top == SCAN_STACK_SCRIPT_FUNCTION)
           {

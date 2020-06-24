@@ -27,10 +27,6 @@
  * @{
  */
 
-#if ENABLED (JERRY_RESOURCE_NAME)
-ecma_value_t ecma_op_resource_name (const ecma_compiled_code_t *bytecode_header_p);
-#endif /* ENABLED (JERRY_RESOURCE_NAME) */
-
 #if ENABLED (JERRY_ESNEXT)
 ecma_value_t ecma_op_function_form_name (ecma_string_t *prop_name_p, char *prefix_p, lit_utf8_size_t prefix_size);
 #endif /* ENABLED (JERRY_ESNEXT) */

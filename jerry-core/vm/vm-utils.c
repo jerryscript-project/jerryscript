@@ -76,13 +76,8 @@ vm_get_backtrace (uint32_t max_depth) /**< maximum backtrace depth, 0 = unlimite
 
   while (context_p != NULL)
   {
-    if (context_p->resource_name == ECMA_VALUE_UNDEFINED)
-    {
-      context_p = context_p->prev_context_p;
-      continue;
-    }
-
-    ecma_string_t *str_p = ecma_get_string_from_value (context_p->resource_name);
+    ecma_value_t resource_name = ecma_get_resource_name (context_p->bytecode_header_p);
+    ecma_string_t *str_p = ecma_get_string_from_value (resource_name);
     ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
 
     if (ecma_string_is_empty (str_p))

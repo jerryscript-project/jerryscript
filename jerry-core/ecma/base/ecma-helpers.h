@@ -500,11 +500,12 @@ void ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p);
 #if ENABLED (JERRY_ESNEXT)
 ecma_collection_t *ecma_compiled_code_get_tagged_template_collection (const ecma_compiled_code_t *bytecode_header_p);
 #endif /* ENABLED (JERRY_ESNEXT) */
-#if ENABLED (JERRY_RESOURCE_NAME) || ENABLED (JERRY_ESNEXT)
+#if ENABLED (JERRY_ESNEXT)
 ecma_length_t ecma_compiled_code_get_formal_params (const ecma_compiled_code_t *bytecode_p);
 ecma_value_t *ecma_compiled_code_resolve_arguments_start (const ecma_compiled_code_t *bytecode_header_p);
 ecma_value_t *ecma_compiled_code_resolve_function_name (const ecma_compiled_code_t *bytecode_header_p);
-#endif /* ENABLED (JERRY_RESOURCE_NAME) || ENABLED (JERRY_ESNEXT) */
+#endif /* ENABLED (JERRY_ESNEXT) */
+ecma_value_t ecma_get_resource_name (const ecma_compiled_code_t *bytecode_p);
 #if (JERRY_STACK_LIMIT != 0)
 uintptr_t ecma_get_current_stack_usage (void);
 #endif /* (JERRY_STACK_LIMIT != 0) */

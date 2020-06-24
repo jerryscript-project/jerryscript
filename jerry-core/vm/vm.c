@@ -4090,13 +4090,6 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           continue;
         }
 #endif /* ENABLED (JERRY_DEBUGGER) */
-#if ENABLED (JERRY_RESOURCE_NAME)
-        case VM_OC_RESOURCE_NAME:
-        {
-          frame_ctx_p->resource_name = ecma_op_resource_name (bytecode_header_p);
-          continue;
-        }
-#endif /* ENABLED (JERRY_RESOURCE_NAME) */
 #if ENABLED (JERRY_LINE_INFO)
         case VM_OC_LINE:
         {
@@ -4380,9 +4373,6 @@ vm_init_exec (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 {
   frame_ctx_p->prev_context_p = JERRY_CONTEXT (vm_top_context_p);
   frame_ctx_p->block_result = ECMA_VALUE_UNDEFINED;
-#if ENABLED (JERRY_RESOURCE_NAME)
-  frame_ctx_p->resource_name = ECMA_VALUE_UNDEFINED;
-#endif /* ENABLED (JERRY_RESOURCE_NAME) */
 #if ENABLED (JERRY_LINE_INFO)
   frame_ctx_p->current_line = 0;
 #endif /* ENABLED (JERRY_LINE_INFO) */

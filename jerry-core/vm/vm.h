@@ -229,9 +229,6 @@ typedef enum
   VM_OC_BREAKPOINT_ENABLED,      /**< enabled breakpoint for debugger */
   VM_OC_BREAKPOINT_DISABLED,     /**< disabled breakpoint for debugger */
 #endif /* ENABLED (JERRY_DEBUGGER) */
-#if ENABLED (JERRY_RESOURCE_NAME)
-  VM_OC_RESOURCE_NAME,           /**< resource name of the current function */
-#endif /* ENABLED (JERRY_RESOURCE_NAME) */
 #if ENABLED (JERRY_LINE_INFO)
   VM_OC_LINE,                    /**< line number of the next statement */
 #endif /* ENABLED (JERRY_LINE_INFO) */
@@ -299,9 +296,6 @@ typedef enum
   VM_OC_BREAKPOINT_ENABLED = VM_OC_NONE,      /**< enabled breakpoint for debugger is unused */
   VM_OC_BREAKPOINT_DISABLED = VM_OC_NONE,     /**< disabled breakpoint for debugger is unused */
 #endif /* !ENABLED (JERRY_DEBUGGER) */
-#if !ENABLED (JERRY_RESOURCE_NAME)
-  VM_OC_RESOURCE_NAME = VM_OC_NONE,           /**< resource name of the current function is unused */
-#endif /* !ENABLED (JERRY_RESOURCE_NAME) */
 #if !ENABLED (JERRY_LINE_INFO)
   VM_OC_LINE = VM_OC_NONE,                    /**< line number of the next statement is unused */
 #endif /* !ENABLED (JERRY_LINE_INFO) */

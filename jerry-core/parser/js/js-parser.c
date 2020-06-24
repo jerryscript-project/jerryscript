@@ -62,6 +62,17 @@ parser_compute_indicies (parser_context_t *context_p, /**< context */
   uint16_t ident_count = 0;
   uint16_t const_literal_count = 0;
 
+#if ENABLED (JERRY_RESOURCE_NAME)
+  /* Resource name will be stored as the last const literal. */
+  if (JERRY_UNLIKELY (context_p->literal_count >= PARSER_MAXIMUM_NUMBER_OF_LITERALS))
+  {
+    parser_raise_error (context_p, PARSER_ERR_LITERAL_LIMIT_REACHED);
+  }
+
+  const_literal_count++;
+  context_p->literal_count++;
+#endif /* ENABLED (JERRY_RESOURCE_NAME) */
+
   uint16_t ident_index;
   uint16_t const_literal_index;
   uint16_t literal_index;
@@ -190,6 +201,11 @@ parser_compute_indicies (parser_context_t *context_p, /**< context */
       }
     }
   }
+
+#if ENABLED (JERRY_RESOURCE_NAME)
+  /* Resource name will be stored as the last const literal. */
+  const_literal_index++;
+#endif /* ENABLED (JERRY_RESOURCE_NAME) */
 
   JERRY_ASSERT (ident_index == context_p->register_count + ident_count);
   JERRY_ASSERT (const_literal_index == ident_index + const_literal_count);
@@ -1242,13 +1258,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
-#if ENABLED (JERRY_RESOURCE_NAME)
-  if (JERRY_CONTEXT (resource_name) != ECMA_VALUE_UNDEFINED)
-  {
-    total_size += sizeof (ecma_value_t);
-  }
-#endif /* ENABLED (JERRY_RESOURCE_NAME) */
-
 #if ENABLED (JERRY_SNAPSHOT_SAVE)
   total_size_used = total_size;
 #endif /* ENABLED (JERRY_SNAPSHOT_SAVE) */
@@ -1413,6 +1422,10 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   dst_p = byte_code_p;
 
   parser_init_literal_pool (context_p, literal_pool_p);
+
+#if ENABLED (JERRY_RESOURCE_NAME)
+  literal_pool_p[const_literal_end - 1] = context_p->resource_name;
+#endif /* ENABLED (JERRY_RESOURCE_NAME) */
 
   page_p = context_p->byte_code.first_p;
   offset = 0;
@@ -1699,16 +1712,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   {
     *(--base_p) = ECMA_VALUE_EMPTY;
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
 
-#if ENABLED (JERRY_RESOURCE_NAME)
-  if (JERRY_CONTEXT (resource_name) != ECMA_VALUE_UNDEFINED)
-  {
-    *(--base_p) = JERRY_CONTEXT (resource_name);
-  }
-#endif /* ENABLED (JERRY_RESOURCE_NAME) */
-
-#if ENABLED (JERRY_ESNEXT)
   if (context_p->tagged_template_literal_cp != JMEM_CP_NULL)
   {
     base_p[-1] = (ecma_value_t) context_p->tagged_template_literal_cp;
@@ -2052,6 +2056,7 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
                      size_t arg_list_size, /**< size of function argument list */
                      const uint8_t *source_p, /**< valid UTF-8 source code */
                      size_t source_size, /**< size of the source code */
+                     ecma_value_t resource_name, /**< resource name */
                      uint32_t parse_opts, /**< ecma_parse_opts_t option bits */
                      parser_error_location_t *error_location_p) /**< error location */
 {
@@ -2096,6 +2101,11 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   context.token.flags = 0;
   context.line = 1;
   context.column = 1;
+#if ENABLED (JERRY_RESOURCE_NAME)
+  context.resource_name = resource_name;
+#else /* !ENABLED (JERRY_RESOURCE_NAME) */
+  JERRY_UNUSED (resource_name);
+#endif /* !ENABLED (JERRY_RESOURCE_NAME) */
 
   scanner_info_t scanner_info_end;
   scanner_info_end.next_p = NULL;
@@ -2847,16 +2857,16 @@ parser_raise_error (parser_context_t *context_p, /**< context */
  *      if arg_list_p is not NULL, a function body is parsed
  *      returned value must be freed with ecma_free_value
  *
- * @return true - if success
- *         syntax error - otherwise
+ * @return pointer to compiled byte code - if success
+ *         NULL - otherwise
  */
-ecma_value_t
+ecma_compiled_code_t *
 parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
                      size_t arg_list_size, /**< size of function argument list */
                      const uint8_t *source_p, /**< source code */
                      size_t source_size, /**< size of the source code */
-                     uint32_t parse_opts, /**< ecma_parse_opts_t option bits */
-                     ecma_compiled_code_t **bytecode_data_p) /**< [out] JS bytecode */
+                     ecma_value_t resource_name, /**< resource name */
+                     uint32_t parse_opts) /**< ecma_parse_opts_t option bits */
 {
 #if ENABLED (JERRY_PARSER)
   parser_error_location_t parser_error;
@@ -2871,14 +2881,15 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
   }
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
-  *bytecode_data_p = parser_parse_source (arg_list_p,
-                                          arg_list_size,
-                                          source_p,
-                                          source_size,
-                                          parse_opts,
-                                          &parser_error);
+  ecma_compiled_code_t *bytecode_p = parser_parse_source (arg_list_p,
+                                                          arg_list_size,
+                                                          source_p,
+                                                          source_size,
+                                                          resource_name,
+                                                          parse_opts,
+                                                          &parser_error);
 
-  if (!*bytecode_data_p)
+  if (JERRY_UNLIKELY (bytecode_p == NULL))
   {
 #if ENABLED (JERRY_MODULE_SYSTEM)
     if (JERRY_CONTEXT (module_top_context_p) != NULL)
@@ -2898,14 +2909,14 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
       /* It is unlikely that memory can be allocated in an out-of-memory
        * situation. However, a simple value can still be thrown. */
       jcontext_raise_exception (ECMA_VALUE_NULL);
-      return ECMA_VALUE_ERROR;
+      return NULL;
     }
 
     if (parser_error.error == PARSER_ERR_INVALID_REGEXP)
     {
       /* The RegExp compiler has already raised an exception. */
       JERRY_ASSERT (jcontext_has_pending_exception ());
-      return ECMA_VALUE_ERROR;
+      return NULL;
     }
 
 #if ENABLED (JERRY_ERROR_MESSAGES)
@@ -2917,36 +2928,30 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
     ecma_value_t line_str_val = ecma_make_uint32_value (parser_error.line);
     ecma_value_t col_str_val = ecma_make_uint32_value (parser_error.column);
 
-    ecma_value_t error_value = ecma_raise_standard_error_with_format (ECMA_ERROR_SYNTAX,
-                                                                      "% [%:%:%]",
-                                                                      err_str_val,
-                                                                      JERRY_CONTEXT (resource_name),
-                                                                      line_str_val,
-                                                                      col_str_val);
+    ecma_raise_standard_error_with_format (ECMA_ERROR_SYNTAX,
+                                           "% [%:%:%]",
+                                           err_str_val,
+                                           resource_name,
+                                           line_str_val,
+                                           col_str_val);
 
     ecma_free_value (col_str_val);
     ecma_free_value (line_str_val);
     ecma_free_value (err_str_val);
-
-    return error_value;
 #else /* !ENABLED (JERRY_ERROR_MESSAGES) */
-    return ecma_raise_syntax_error ("");
+    ecma_raise_syntax_error ("");
 #endif /* ENABLED (JERRY_ERROR_MESSAGES) */
+
+    return NULL;
   }
 
 #if ENABLED (JERRY_MODULE_SYSTEM)
-  if (JERRY_CONTEXT (module_top_context_p) != NULL)
+  if (JERRY_CONTEXT (module_top_context_p) != NULL && ECMA_IS_VALUE_ERROR (ecma_module_parse_modules ()))
   {
-    ecma_value_t ret_value = ecma_module_parse_modules ();
+    ecma_bytecode_deref (bytecode_p);
+    ecma_module_cleanup ();
 
-    if (ECMA_IS_VALUE_ERROR (ret_value))
-    {
-      ecma_bytecode_deref (*bytecode_data_p);
-      *bytecode_data_p = NULL;
-      ecma_module_cleanup ();
-
-      return ret_value;
-    }
+    return NULL;
   }
 #endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
@@ -2971,16 +2976,17 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
   }
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
-  return ECMA_VALUE_TRUE;
+  return bytecode_p;
 #else /* !ENABLED (JERRY_PARSER) */
   JERRY_UNUSED (arg_list_p);
   JERRY_UNUSED (arg_list_size);
   JERRY_UNUSED (source_p);
   JERRY_UNUSED (source_size);
   JERRY_UNUSED (parse_opts);
-  JERRY_UNUSED (bytecode_data_p);
+  JERRY_UNUSED (resource_name);
 
-  return ecma_raise_syntax_error (ECMA_ERR_MSG ("The parser has been disabled."));
+  ecma_raise_syntax_error (ECMA_ERR_MSG ("The parser has been disabled."));
+  return NULL;
 #endif /* ENABLED (JERRY_PARSER) */
 } /* parser_parse_script */
 

@@ -429,34 +429,26 @@ jerry_parse (const jerry_char_t *resource_name_p, /**< resource name (usually a 
 #if ENABLED (JERRY_PARSER)
   jerry_assert_api_available ();
 
+  ecma_value_t resource_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
+
 #if ENABLED (JERRY_RESOURCE_NAME)
-  if (resource_name_length == 0)
+  if (resource_name_length > 0)
   {
-    JERRY_CONTEXT (resource_name) = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
-  }
-  else
-  {
-    JERRY_CONTEXT (resource_name) = ecma_find_or_create_literal_string (resource_name_p,
-                                                                        (lit_utf8_size_t) resource_name_length);
+    resource_name = ecma_find_or_create_literal_string (resource_name_p, (lit_utf8_size_t) resource_name_length);
   }
 #endif /* ENABLED (JERRY_RESOURCE_NAME) */
 
-  ecma_compiled_code_t *bytecode_data_p;
-  ecma_value_t parse_status;
+  ecma_compiled_code_t *bytecode_data_p = parser_parse_script (NULL,
+                                                               0,
+                                                               source_p,
+                                                               source_size,
+                                                               resource_name,
+                                                               parse_opts);
 
-  parse_status = parser_parse_script (NULL,
-                                      0,
-                                      source_p,
-                                      source_size,
-                                      parse_opts,
-                                      &bytecode_data_p);
-
-  if (ECMA_IS_VALUE_ERROR (parse_status))
+  if (JERRY_UNLIKELY (bytecode_data_p == NULL))
   {
     return ecma_create_error_reference_from_context ();
   }
-
-  ecma_free_value (parse_status);
 
   ecma_object_t *lex_env_p = ecma_get_global_environment ();
   ecma_object_t *func_obj_p = ecma_op_create_simple_function_object (lex_env_p, bytecode_data_p);
@@ -504,18 +496,12 @@ jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (u
 #if ENABLED (JERRY_PARSER)
   jerry_assert_api_available ();
 
-  ecma_compiled_code_t *bytecode_data_p;
-  ecma_value_t parse_status;
+  ecma_value_t resource_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
 
 #if ENABLED (JERRY_RESOURCE_NAME)
-  if (resource_name_length == 0)
+  if (resource_name_length > 0)
   {
-    JERRY_CONTEXT (resource_name) = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
-  }
-  else
-  {
-    JERRY_CONTEXT (resource_name) = ecma_find_or_create_literal_string (resource_name_p,
-                                                                        (lit_utf8_size_t) resource_name_length);
+    resource_name = ecma_find_or_create_literal_string (resource_name_p, (lit_utf8_size_t) resource_name_length);
   }
 #endif /* ENABLED (JERRY_RESOURCE_NAME) */
 
@@ -525,23 +511,21 @@ jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (u
     arg_list_p = (const jerry_char_t *) "";
   }
 
-  parse_status = parser_parse_script (arg_list_p,
-                                      arg_list_size,
-                                      source_p,
-                                      source_size,
-                                      parse_opts,
-                                      &bytecode_data_p);
+  ecma_compiled_code_t *bytecode_p = parser_parse_script (arg_list_p,
+                                                          arg_list_size,
+                                                          source_p,
+                                                          source_size,
+                                                          resource_name,
+                                                          parse_opts);
 
-  if (ECMA_IS_VALUE_ERROR (parse_status))
+  if (JERRY_UNLIKELY (bytecode_p == NULL))
   {
     return ecma_create_error_reference_from_context ();
   }
 
-  ecma_free_value (parse_status);
-
   ecma_object_t *lex_env_p = ecma_get_global_environment ();
-  ecma_object_t *func_obj_p = ecma_op_create_simple_function_object (lex_env_p, bytecode_data_p);
-  ecma_bytecode_deref (bytecode_data_p);
+  ecma_object_t *func_obj_p = ecma_op_create_simple_function_object (lex_env_p, bytecode_p);
+  ecma_bytecode_deref (bytecode_p);
 
   return ecma_make_object_value (func_obj_p);
 #else /* !ENABLED (JERRY_PARSER) */
@@ -3551,11 +3535,9 @@ jerry_get_resource_name (const jerry_value_t value) /**< jerry api value */
   {
     if (JERRY_CONTEXT (vm_top_context_p) != NULL)
     {
-      return ecma_copy_value (JERRY_CONTEXT (vm_top_context_p)->resource_name);
+      return ecma_copy_value (ecma_get_resource_name (JERRY_CONTEXT (vm_top_context_p)->bytecode_header_p));
     }
   }
-#endif /* ENABLED (JERRY_RESOURCE_NAME) */
-#if ENABLED (JERRY_LINE_INFO)
   else if (ecma_is_value_object (value))
   {
     ecma_object_t *obj_p = ecma_get_object_from_value (value);
@@ -3567,10 +3549,10 @@ jerry_get_resource_name (const jerry_value_t value) /**< jerry api value */
 
       const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
 
-      return ecma_copy_value (ecma_op_resource_name (bytecode_data_p));
+      return ecma_copy_value (ecma_get_resource_name (bytecode_data_p));
     }
   }
-#endif /* ENABLED (JERRY_LINE_INFO) */
+#endif /* ENABLED (JERRY_RESOURCE_NAME) */
 
   JERRY_UNUSED (value);
   return ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);

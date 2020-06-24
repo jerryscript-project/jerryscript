@@ -293,7 +293,7 @@ parser_module_add_names_to_node (parser_context_t *context_p, /**< parser contex
  * Create module context if needed.
  */
 void
-parser_module_context_init (void)
+parser_module_context_init (parser_context_t *context_p)
 {
   if (JERRY_CONTEXT (module_top_context_p) == NULL)
   {
@@ -302,7 +302,7 @@ parser_module_context_init (void)
     memset (module_context_p, 0, sizeof (ecma_module_context_t));
     JERRY_CONTEXT (module_top_context_p) = module_context_p;
 
-    ecma_string_t *path_str_p = ecma_get_string_from_value (JERRY_CONTEXT (resource_name));
+    ecma_string_t *path_str_p = ecma_get_string_from_value (context_p->resource_name);
 
     lit_utf8_size_t path_str_size;
     uint8_t flags = ECMA_STRING_FLAG_EMPTY;

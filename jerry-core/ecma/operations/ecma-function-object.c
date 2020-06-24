@@ -36,21 +36,6 @@
  * @{
  */
 
-#if ENABLED (JERRY_RESOURCE_NAME)
-/**
- * Get the resource name from the compiled code header
- *
- * @return resource name as ecma-string
- */
-ecma_value_t
-ecma_op_resource_name (const ecma_compiled_code_t *bytecode_header_p)
-{
-  JERRY_ASSERT (bytecode_header_p != NULL);
-
-  return ecma_compiled_code_resolve_function_name (bytecode_header_p)[-1];
-} /* ecma_op_resource_name */
-#endif /* ENABLED (JERRY_RESOURCE_NAME) */
-
 #if ENABLED (JERRY_ESNEXT)
 /**
  * SetFunctionName operation
@@ -367,87 +352,77 @@ ecma_op_create_dynamic_function (const ecma_value_t *arguments_list_p, /**< argu
   ECMA_STRING_TO_UTF8_STRING (arguments_str_p, arguments_buffer_p, arguments_buffer_size);
   ECMA_STRING_TO_UTF8_STRING (function_body_str_p, function_body_buffer_p, function_body_buffer_size);
 
-#if ENABLED (JERRY_RESOURCE_NAME)
-  JERRY_CONTEXT (resource_name) = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
-#endif /* ENABLED (JERRY_RESOURCE_NAME) */
+  ecma_value_t resource_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
+  ecma_compiled_code_t *bytecode_p = parser_parse_script (arguments_buffer_p,
+                                                          arguments_buffer_size,
+                                                          function_body_buffer_p,
+                                                          function_body_buffer_size,
+                                                          resource_name,
+                                                          parse_opts);
 
-  ecma_compiled_code_t *bytecode_data_p = NULL;
+  ECMA_FINALIZE_UTF8_STRING (function_body_buffer_p, function_body_buffer_size);
+  ECMA_FINALIZE_UTF8_STRING (arguments_buffer_p, arguments_buffer_size);
+  ecma_deref_ecma_string (arguments_str_p);
+  ecma_deref_ecma_string (function_body_str_p);
 
-  ecma_value_t ret_value = parser_parse_script (arguments_buffer_p,
-                                                arguments_buffer_size,
-                                                function_body_buffer_p,
-                                                function_body_buffer_size,
-                                                parse_opts,
-                                                &bytecode_data_p);
-
-  if (!ECMA_IS_VALUE_ERROR (ret_value))
+  if (JERRY_UNLIKELY (bytecode_p == NULL))
   {
-    JERRY_ASSERT (ecma_is_value_true (ret_value));
+    return ECMA_VALUE_ERROR;
+  }
 
 #if ENABLED (JERRY_ESNEXT)
-    ecma_value_t *func_name_p;
-    func_name_p = ecma_compiled_code_resolve_function_name ((const ecma_compiled_code_t *) bytecode_data_p);
-    *func_name_p = ecma_make_magic_string_value (LIT_MAGIC_STRING_ANONYMOUS);
+  ecma_value_t *func_name_p;
+  func_name_p = ecma_compiled_code_resolve_function_name ((const ecma_compiled_code_t *) bytecode_p);
+  *func_name_p = ecma_make_magic_string_value (LIT_MAGIC_STRING_ANONYMOUS);
 #endif /* ENABLED (JERRY_ESNEXT) */
 
-    ecma_object_t *global_env_p = ecma_get_global_environment ();
-    ecma_builtin_id_t fallback_proto = ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE;
+  ecma_object_t *global_env_p = ecma_get_global_environment ();
+  ecma_builtin_id_t fallback_proto = ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE;
 
 #if ENABLED (JERRY_ESNEXT)
-    ecma_object_t *new_target_p = JERRY_CONTEXT (current_new_target);
+  ecma_object_t *new_target_p = JERRY_CONTEXT (current_new_target);
 
-    if (JERRY_UNLIKELY (parse_opts & (ECMA_PARSE_GENERATOR_FUNCTION | ECMA_PARSE_ASYNC_FUNCTION)))
+  if (JERRY_UNLIKELY (parse_opts & (ECMA_PARSE_GENERATOR_FUNCTION | ECMA_PARSE_ASYNC_FUNCTION)))
+  {
+    fallback_proto = ECMA_BUILTIN_ID_GENERATOR;
+
+    if (parse_opts & ECMA_PARSE_ASYNC_FUNCTION)
     {
-      fallback_proto = ECMA_BUILTIN_ID_GENERATOR;
+      fallback_proto = ECMA_BUILTIN_ID_ASYNC_GENERATOR;
 
-      if (parse_opts & ECMA_PARSE_ASYNC_FUNCTION)
+      if (new_target_p == NULL)
       {
-        fallback_proto = ECMA_BUILTIN_ID_ASYNC_GENERATOR;
-
-        if (new_target_p == NULL)
-        {
-          new_target_p = ecma_builtin_get (ECMA_BUILTIN_ID_ASYNC_GENERATOR_FUNCTION);
-        }
-      }
-      else if (new_target_p == NULL)
-      {
-        new_target_p = ecma_builtin_get (ECMA_BUILTIN_ID_GENERATOR_FUNCTION);
+        new_target_p = ecma_builtin_get (ECMA_BUILTIN_ID_ASYNC_GENERATOR_FUNCTION);
       }
     }
     else if (new_target_p == NULL)
     {
-      new_target_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION);
+      new_target_p = ecma_builtin_get (ECMA_BUILTIN_ID_GENERATOR_FUNCTION);
     }
-
-    ecma_object_t *proto = ecma_op_get_prototype_from_constructor (new_target_p, fallback_proto);
-
-    if (JERRY_UNLIKELY (proto == NULL))
-    {
-      ecma_bytecode_deref (bytecode_data_p);
-      ecma_deref_ecma_string (arguments_str_p);
-      ecma_deref_ecma_string (function_body_str_p);
-      return ECMA_VALUE_ERROR;
-    }
-#endif /* ENABLED (JERRY_ESNEXT) */
-
-    ecma_object_t *func_obj_p = ecma_op_create_function_object (global_env_p, bytecode_data_p, fallback_proto);
-
-#if ENABLED (JERRY_ESNEXT)
-    ECMA_SET_NON_NULL_POINTER (func_obj_p->u2.prototype_cp, proto);
-    ecma_deref_object (proto);
-#endif /* ENABLED (JERRY_ESNEXT) */
-
-    ecma_bytecode_deref (bytecode_data_p);
-    ret_value = ecma_make_object_value (func_obj_p);
+  }
+  else if (new_target_p == NULL)
+  {
+    new_target_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION);
   }
 
-  ECMA_FINALIZE_UTF8_STRING (function_body_buffer_p, function_body_buffer_size);
-  ECMA_FINALIZE_UTF8_STRING (arguments_buffer_p, arguments_buffer_size);
+  ecma_object_t *proto = ecma_op_get_prototype_from_constructor (new_target_p, fallback_proto);
 
-  ecma_deref_ecma_string (arguments_str_p);
-  ecma_deref_ecma_string (function_body_str_p);
+  if (JERRY_UNLIKELY (proto == NULL))
+  {
+    ecma_bytecode_deref (bytecode_p);
+    return ECMA_VALUE_ERROR;
+  }
+#endif /* ENABLED (JERRY_ESNEXT) */
 
-  return ret_value;
+  ecma_object_t *func_obj_p = ecma_op_create_function_object (global_env_p, bytecode_p, fallback_proto);
+
+#if ENABLED (JERRY_ESNEXT)
+  ECMA_SET_NON_NULL_POINTER (func_obj_p->u2.prototype_cp, proto);
+  ecma_deref_object (proto);
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+  ecma_bytecode_deref (bytecode_p);
+  return ecma_make_object_value (func_obj_p);
 } /* ecma_op_create_dynamic_function */
 
 /**

@@ -877,28 +877,23 @@ ecma_module_parse (ecma_module_t *module_p) /**< module */
   }
 #endif /* ENABLED (JERRY_DEBUGGER) && ENABLED (JERRY_PARSER) */
 
-  JERRY_CONTEXT (resource_name) = ecma_make_string_value (module_p->path_p);
-
-  ecma_compiled_code_t *bytecode_data_p;
-  ecma_value_t ret_value = parser_parse_script (NULL,
-                                                0,
-                                                (jerry_char_t *) source_p,
-                                                source_size,
-                                                ECMA_PARSE_STRICT_MODE | ECMA_PARSE_MODULE,
-                                                &bytecode_data_p);
+  ecma_compiled_code_t *bytecode_p = parser_parse_script (NULL,
+                                                          0,
+                                                          (jerry_char_t *) source_p,
+                                                          source_size,
+                                                          ecma_make_string_value (module_p->path_p),
+                                                          ECMA_PARSE_STRICT_MODE | ECMA_PARSE_MODULE);
 
   JERRY_CONTEXT (module_top_context_p) = module_p->context_p->parent_p;
 
   jerry_port_release_source (source_p);
 
-  if (ECMA_IS_VALUE_ERROR (ret_value))
+  if (JERRY_UNLIKELY (bytecode_p == NULL))
   {
-    return ret_value;
+    return ECMA_VALUE_ERROR;
   }
 
-  ecma_free_value (ret_value);
-
-  module_p->compiled_code_p = bytecode_data_p;
+  module_p->compiled_code_p = bytecode_p;
   module_p->state = ECMA_MODULE_STATE_PARSED;
 
   return ECMA_VALUE_EMPTY;

@@ -79,6 +79,8 @@ enum
   ECMA_ARRAY_PROTOTYPE_FILL,
   ECMA_ARRAY_PROTOTYPE_COPY_WITHIN,
   ECMA_ARRAY_PROTOTYPE_INCLUDES,
+  ECMA_ARRAY_PROTOTYPE_FLAT,
+  ECMA_ARRAY_PROTOTYPE_FLATMAP,
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-array-prototype.inc.h"
@@ -2672,6 +2674,222 @@ ecma_builtin_array_prototype_includes (const ecma_value_t args[], /**< arguments
   /* 9. */
   return ECMA_VALUE_FALSE;
 } /* ecma_builtin_array_prototype_includes */
+
+/**
+ * Abstract operation: FlattenIntoArray
+ *
+ * See also:
+ *          ECMA-262 v10, 22.1.3.10.1
+ *
+ * @return  ECMA_VALUE_ERROR -if the operation fails
+ *          ecma value which contains target_index
+ */
+static ecma_value_t
+ecma_builtin_array_flatten_into_array (ecma_value_t target, /**< target will contains source's elements  */
+                                       ecma_object_t *source, /**< source object */
+                                       ecma_length_t source_len, /**< source object length */
+                                       ecma_length_t start, /**< remaining recursion depth */
+                                       ecma_number_t depth, /**< start index offset */
+                                       ecma_value_t mapped_value, /**< mapped value  */
+                                       ecma_value_t thisArg) /**< this arg */
+{
+  /* 7. */
+  ecma_length_t target_index = start;
+
+  /* 9. */
+  for (ecma_length_t source_index = 0; source_index < source_len; source_index++)
+  {
+    /* a. */
+    ecma_value_t element = ecma_op_object_find_by_index (source, source_index);
+
+    if (ECMA_IS_VALUE_ERROR (element))
+    {
+      return element;
+    }
+
+    if (!ecma_is_value_found (element))
+    {
+      continue;
+    }
+
+    /* b-c. */
+    if (!ecma_is_value_undefined (mapped_value))
+    {
+      /* i-ii. */
+      ecma_value_t source_val = ecma_make_length_value (source_index);
+      ecma_value_t args[] = {element, source_val, ecma_make_object_value (source)};
+      ecma_value_t temp_element = ecma_op_function_call (ecma_get_object_from_value (mapped_value), thisArg, args, 3);
+
+      ecma_free_value (element);
+      ecma_free_value (source_val);
+
+      if (ECMA_IS_VALUE_ERROR (temp_element))
+      {
+        return temp_element;
+      }
+
+      element = temp_element;
+    }
+
+    /* iv-v. */
+    if (depth > 0)
+    {
+      ecma_value_t is_array = ecma_is_value_array (element);
+
+      if (ECMA_IS_VALUE_ERROR (is_array))
+      {
+        ecma_free_value (element);
+        return is_array;
+      }
+
+      if (ecma_is_value_true (is_array))
+      {
+        ecma_object_t *element_obj = ecma_get_object_from_value (element);
+        ecma_length_t element_len;
+        ecma_value_t len_value = ecma_op_object_get_length (element_obj, &element_len);
+
+        if (ECMA_IS_VALUE_ERROR (len_value))
+        {
+          ecma_deref_object (element_obj);
+          return len_value;
+        }
+
+        ecma_value_t target_index_val = ecma_builtin_array_flatten_into_array (target,
+                                                                               element_obj,
+                                                                               element_len,
+                                                                               target_index,
+                                                                               depth - 1,
+                                                                               ECMA_VALUE_UNDEFINED,
+                                                                               ECMA_VALUE_UNDEFINED);
+
+        ecma_deref_object (element_obj);
+
+        if (ECMA_IS_VALUE_ERROR (target_index_val))
+        {
+          return target_index_val;
+        }
+
+        target_index = (ecma_length_t) ecma_get_number_from_value (target_index_val);
+        continue;
+      }
+    }
+
+    /* vi. */
+    const uint8_t flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_IS_THROW;
+    ecma_value_t element_temp = ecma_builtin_helper_def_prop_by_index (ecma_get_object_from_value (target),
+                                                                       target_index,
+                                                                       element,
+                                                                       flags);
+
+    ecma_free_value (element);
+
+    if (ECMA_IS_VALUE_ERROR (element_temp))
+    {
+      return element_temp;
+    }
+
+    target_index++;
+  }
+  /* 10. */
+  return ecma_make_length_value (target_index);
+} /* ecma_builtin_array_flatten_into_array */
+
+/**
+ * The Array.prototype object's 'flat' routine
+ *
+ * See also:
+ *          ECMA-262 v10, 22.1.3.10
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_array_prototype_object_flat (const ecma_value_t args[], /**< arguments list */
+                                          uint32_t args_number, /**< number of arguments */
+                                          ecma_object_t *obj_p, /**< array object */
+                                          ecma_length_t len) /**< array object's length */
+{
+  /* 3. */
+  ecma_number_t depth_num = 1;
+
+  /* 4. */
+  if (args_number > 0 && ECMA_IS_VALUE_ERROR (ecma_op_to_integer (args[0], &depth_num)))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  /* 5. */
+  ecma_value_t new_array = ecma_op_array_species_create (obj_p, 0);
+
+  if (ECMA_IS_VALUE_ERROR (new_array))
+  {
+    return new_array;
+  }
+
+  /* 6. */
+  ecma_value_t flatten_val = ecma_builtin_array_flatten_into_array (new_array,
+                                                                    obj_p,
+                                                                    len,
+                                                                    0,
+                                                                    depth_num,
+                                                                    ECMA_VALUE_UNDEFINED,
+                                                                    ECMA_VALUE_UNDEFINED);
+
+  if (ECMA_IS_VALUE_ERROR (flatten_val))
+  {
+    ecma_free_value (new_array);
+    return flatten_val;
+  }
+
+  /* 7. */
+  return new_array;
+} /* ecma_builtin_array_prototype_object_flat */
+
+/**
+ * The Array.prototype object's 'flatMap' routine
+ *
+ * See also:
+ *          ECMA-262 v10, 22.1.3.11
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_array_prototype_object_flat_map (ecma_value_t callback, /**< callbackFn */
+                                              ecma_value_t this_arg, /**< thisArg */
+                                              ecma_object_t *obj_p, /**< array object */
+                                              ecma_length_t len) /**< array object's length */
+{
+  if (!ecma_op_is_callable (callback))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable."));
+  }
+
+  /* 4. */
+  ecma_value_t new_array = ecma_op_array_species_create (obj_p, 0);
+
+  if (ECMA_IS_VALUE_ERROR (new_array))
+  {
+    return new_array;
+  }
+
+  /* 5. */
+  ecma_value_t flatten_val = ecma_builtin_array_flatten_into_array (new_array,
+                                                                    obj_p,
+                                                                    len,
+                                                                    0,
+                                                                    1,
+                                                                    callback,
+                                                                    this_arg);
+  if (ECMA_IS_VALUE_ERROR (flatten_val))
+  {
+    ecma_free_value (new_array);
+    return flatten_val;
+  }
+
+  /* 6. */
+  return new_array;
+} /* ecma_builtin_array_prototype_object_flat_map */
 #endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
@@ -2899,6 +3117,22 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
                                                          arguments_number,
                                                          obj_p,
                                                          length);
+      break;
+    }
+    case ECMA_ARRAY_PROTOTYPE_FLAT:
+    {
+      ret_value = ecma_builtin_array_prototype_object_flat (arguments_list_p,
+                                                            arguments_number,
+                                                            obj_p,
+                                                            length);
+      break;
+    }
+    case ECMA_ARRAY_PROTOTYPE_FLATMAP:
+    {
+      ret_value = ecma_builtin_array_prototype_object_flat_map (routine_arg_1,
+                                                                routine_arg_2,
+                                                                obj_p,
+                                                                length);
       break;
     }
 #endif /* ENABLED (JERRY_ESNEXT) */

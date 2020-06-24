@@ -14,6 +14,7 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-array-object.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
@@ -58,6 +59,8 @@ enum
   ECMA_OBJECT_ROUTINE_GET_OWN_PROPERTY_SYMBOLS,
   ECMA_OBJECT_ROUTINE_GET_PROTOTYPE_OF,
   ECMA_OBJECT_ROUTINE_KEYS,
+  ECMA_OBJECT_ROUTINE_VALUES,
+  ECMA_OBJECT_ROUTINE_ENTRIES,
 
   /* These should be in this order. */
   ECMA_OBJECT_ROUTINE_FREEZE,
@@ -695,19 +698,35 @@ ecma_builtin_object_object_is_extensible (ecma_object_t *obj_p) /**< routine's a
 } /* ecma_builtin_object_object_is_extensible */
 
 /**
- * The Object object's 'keys' routine
+ * Common implementation of the Object object's 'keys', 'values', 'entries' routines
  *
  * See also:
- *          ECMA-262 v5, 15.2.3.14
+ *          ECMA-262 v11, 19.1.2.17
+ *          ECMA-262 v11, 19.1.2.22
+ *          ECMA-262 v11, 19.1.2.5
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_object_object_keys (ecma_object_t *obj_p) /**< routine's argument */
+ecma_builtin_object_object_keys_values_helper (ecma_object_t *obj_p, /**< routine's first argument */
+                                               ecma_enumerable_property_names_options_t option) /**< listing option */
 {
-  return ecma_builtin_helper_object_get_properties (obj_p, ECMA_LIST_ENUMERABLE);
-} /* ecma_builtin_object_object_keys */
+  /* 2. */
+  ecma_collection_t *props_p = ecma_op_object_get_enumerable_property_names (obj_p, option);
+
+  if (props_p == NULL)
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  ecma_value_t *names_buffer_p = props_p->buffer_p;
+  /* 3. */
+  ecma_value_t array_value = ecma_op_create_array_object (names_buffer_p, props_p->item_count, false);
+  ecma_collection_free (props_p);
+
+  return array_value;
+} /* ecma_builtin_object_object_keys_values_helper */
 
 /**
  * The Object object's 'getOwnPropertyDescriptor' routine
@@ -1228,7 +1247,7 @@ ecma_builtin_object_dispatch_routine (uint16_t builtin_routine_id, /**< built-in
     JERRY_ASSERT (builtin_routine_id == ECMA_OBJECT_ROUTINE_DEFINE_PROPERTIES);
     return ecma_builtin_object_object_define_properties (obj_p, arg2);
   }
-  else if (builtin_routine_id <= ECMA_OBJECT_ROUTINE_KEYS)
+  else if (builtin_routine_id <= ECMA_OBJECT_ROUTINE_ENTRIES)
   {
 #if ENABLED (JERRY_ESNEXT)
     ecma_value_t object = ecma_op_to_object (arg1);
@@ -1266,10 +1285,16 @@ ecma_builtin_object_dispatch_routine (uint16_t builtin_routine_id, /**< built-in
         result = ecma_builtin_object_object_get_own_property_symbols (obj_p);
         break;
       }
+      case ECMA_OBJECT_ROUTINE_ENTRIES:
+      case ECMA_OBJECT_ROUTINE_VALUES:
 #endif /* ENABLED (JERRY_ESNEXT) */
       case ECMA_OBJECT_ROUTINE_KEYS:
       {
-        result = ecma_builtin_object_object_keys (obj_p);
+        JERRY_ASSERT (builtin_routine_id - ECMA_OBJECT_ROUTINE_KEYS < ECMA_ENUMERABLE_PROPERTY__COUNT);
+
+        const int option = builtin_routine_id - ECMA_OBJECT_ROUTINE_KEYS;
+        result = ecma_builtin_object_object_keys_values_helper (obj_p,
+                                                               (ecma_enumerable_property_names_options_t) option);
         break;
       }
       case ECMA_OBJECT_ROUTINE_GET_OWN_PROPERTY_DESCRIPTOR:

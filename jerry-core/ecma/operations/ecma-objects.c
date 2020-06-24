@@ -1984,6 +1984,118 @@ ecma_op_object_is_prototype_of (ecma_object_t *base_p, /**< base object */
 } /* ecma_op_object_is_prototype_of */
 
 /**
+ * Object's EnumerableOwnPropertyNames operation
+ *
+ * See also:
+ *          ECMA-262 v11, 7.3.23
+ *
+ * @return NULL - if operation fails
+ *         collection of property names / values / name-value pairs - otherwise
+ */
+ecma_collection_t *
+ecma_op_object_get_enumerable_property_names (ecma_object_t *obj_p, /**< routine's first argument */
+                                              ecma_enumerable_property_names_options_t option) /**< listing option */
+{
+  /* 2. */
+  ecma_collection_t *prop_names_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_NO_OPTS);
+
+#if ENABLED (JERRY_BUILTIN_PROXY)
+  if (JERRY_UNLIKELY (prop_names_p == NULL))
+  {
+    return prop_names_p;
+  }
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+
+  ecma_value_t *names_buffer_p = prop_names_p->buffer_p;
+  /* 3. */
+  ecma_collection_t *properties_p = ecma_new_collection ();
+
+  /* 4. */
+  for (uint32_t i = 0; i < prop_names_p->item_count; i++)
+  {
+    /* 4.a */
+    JERRY_ASSERT (ecma_is_value_string (names_buffer_p[i]));
+
+    ecma_string_t *key_p = ecma_get_string_from_value (names_buffer_p[i]);
+
+    /* 4.a.i */
+    ecma_property_descriptor_t prop_desc;
+    ecma_value_t status;
+
+#if ENABLED (JERRY_BUILTIN_PROXY)
+    if (ECMA_OBJECT_IS_PROXY (obj_p))
+    {
+      status = ecma_proxy_object_get_own_property_descriptor (obj_p, key_p, &prop_desc);
+    }
+    else
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+    {
+      status = ecma_op_object_get_own_property_descriptor (obj_p, key_p, &prop_desc);
+    }
+
+    if (ECMA_IS_VALUE_ERROR (status))
+    {
+      ecma_collection_free (prop_names_p);
+      ecma_collection_free (properties_p);
+
+      return NULL;
+    }
+
+    /* 4.a.ii */
+    if ((prop_desc.flags & ECMA_PROP_IS_ENUMERABLE) != 0)
+    {
+      /* 4.a.ii.1 */
+      if (option == ECMA_ENUMERABLE_PROPERTY_KEYS)
+      {
+        ecma_collection_push_back (properties_p, ecma_copy_value (names_buffer_p[i]));
+      }
+      else
+      {
+        /* 4.a.ii.2.a */
+        ecma_value_t value = ecma_op_object_get (obj_p, key_p);
+
+        if (ECMA_IS_VALUE_ERROR (value))
+        {
+          ecma_collection_free (prop_names_p);
+          ecma_collection_free (properties_p);
+
+          return NULL;
+        }
+
+        /* 4.a.ii.2.b */
+        if (option == ECMA_ENUMERABLE_PROPERTY_VALUES)
+        {
+          ecma_collection_push_back (properties_p, value);
+        }
+        else
+        {
+          /* 4.a.ii.2.c.i */
+          JERRY_ASSERT (option == ECMA_ENUMERABLE_PROPERTY_ENTRIES);
+
+          /* 4.a.ii.2.c.ii */
+          ecma_object_t *entry_p = ecma_op_new_fast_array_object (2);
+          ecma_fast_array_set_property (entry_p, 0, names_buffer_p[i]);
+          ecma_fast_array_set_property (entry_p, 1, value);
+          ecma_free_value (value);
+
+          /* 4.a.ii.2.c.iii */
+          ecma_collection_push_back (properties_p, ecma_make_object_value (entry_p));
+        }
+      }
+    }
+
+    if (ecma_is_value_true (status))
+    {
+      ecma_free_property_descriptor (&prop_desc);
+    }
+  }
+
+  ecma_collection_free (prop_names_p);
+
+  return properties_p;
+} /* ecma_op_object_get_enumerable_property_names */
+
+/**
  * Get collection of property names
  *
  * Order of names in the collection:

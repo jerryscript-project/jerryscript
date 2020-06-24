@@ -118,7 +118,7 @@ def update_exclude_list(args):
         summary_found = False
         for line in report_file:
             if summary_found:
-                match = re.match(r"  (\S*) ", line)
+                match = re.match(r"  (\S*) in ", line)
                 if match:
                     failing_tests.add(match.group(1) + '.js')
             elif line.startswith('Failed Tests'):
@@ -193,7 +193,7 @@ def main(args):
                             [os.path.join(args.test_dir, 'tools/packaging/test262.py'),
                              '--command', command,
                              '--tests', args.test_dir,
-                             '--summary'],
+                             '--full-summary'],
                             universal_newlines=True,
                             stdout=subprocess.PIPE,
                             **kwargs)

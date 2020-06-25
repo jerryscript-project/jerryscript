@@ -148,6 +148,9 @@ ecma_value_t
 opfunc_create_implicit_class_constructor (uint8_t opcode);
 
 void
+opfunc_set_home_object (ecma_object_t *func_p, ecma_object_t *parent_env_p);
+
+void
 opfunc_push_class_environment (vm_frame_ctx_t *frame_ctx_p,  ecma_value_t **vm_stack_top, ecma_value_t class_name);
 
 ecma_value_t

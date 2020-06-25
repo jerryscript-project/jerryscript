@@ -332,22 +332,6 @@ parser_stack_iterator_read_uint8 (parser_stack_iterator_t *iterator) /**< iterat
 } /* parser_stack_iterator_read_uint8 */
 
 /**
- * Change last byte of the stack.
- */
-static inline void
-parser_stack_change_last_uint8 (parser_context_t *context_p, /**< context */
-                                uint8_t new_value) /**< new value */
-{
-  parser_mem_page_t *page_p = context_p->stack.first_p;
-
-  JERRY_ASSERT (page_p != NULL
-                && context_p->stack_top_uint8 == page_p->bytes[context_p->stack.last_position - 1]);
-
-  page_p->bytes[context_p->stack.last_position - 1] = new_value;
-  context_p->stack_top_uint8 = new_value;
-} /* parser_stack_change_last_uint8 */
-
-/**
  * Parse expression enclosed in parens.
  */
 static inline void

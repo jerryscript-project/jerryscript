@@ -115,6 +115,7 @@ typedef enum
   SCAN_STACK_CLASS_EXTENDS,                /**< class extends expression */
   SCAN_STACK_FUNCTION_PARAMETERS,          /**< function parameter initializer */
   SCAN_STACK_USE_ASYNC,                    /**< an "async" identifier is used */
+  SCAN_STACK_OBJECT_LITERAL_WITH_SUPER,    /**< object literal with inner super reference */
 #endif /* ENABLED (JERRY_ESNEXT) */
 } scan_stack_modes_t;
 
@@ -287,6 +288,7 @@ typedef enum
   SCANNER_LITERAL_POOL_ARROW = (1 << 9), /**< arrow function */
   SCANNER_LITERAL_POOL_GENERATOR = (1 << 10), /**< generator function */
   SCANNER_LITERAL_POOL_ASYNC = (1 << 11), /**< async function */
+  SCANNER_LITERAL_POOL_HAS_SUPER_REFERENCE = (1 << 12), /**< function body contains super reference */
 #endif /* ENABLED (JERRY_ESNEXT) */
 } scanner_literal_pool_flags_t;
 

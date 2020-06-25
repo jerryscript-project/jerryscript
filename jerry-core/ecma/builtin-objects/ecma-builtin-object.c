@@ -769,8 +769,13 @@ ecma_builtin_object_object_define_properties (ecma_object_t *obj_p, /**< routine
 
   ecma_object_t *props_p = ecma_get_object_from_value (props);
   /* 3. */
-  ecma_collection_t *prop_names_p = ecma_op_object_get_property_names (props_p, ECMA_LIST_CONVERT_FAST_ARRAYS
-                                                                                | ECMA_LIST_ENUMERABLE);
+  uint32_t options = ECMA_LIST_CONVERT_FAST_ARRAYS | ECMA_LIST_ENUMERABLE;
+
+#if ENABLED (JERRY_ESNEXT)
+  options |= ECMA_LIST_SYMBOLS;
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+  ecma_collection_t *prop_names_p = ecma_op_object_get_property_names (props_p, options);
   ecma_value_t ret_value = ECMA_VALUE_ERROR;
 
 #if ENABLED (JERRY_BUILTIN_PROXY)
@@ -790,7 +795,7 @@ ecma_builtin_object_object_define_properties (ecma_object_t *obj_p, /**< routine
   for (uint32_t i = 0; i < prop_names_p->item_count; i++)
   {
     /* 5.a */
-    ecma_value_t desc_obj = ecma_op_object_get (props_p, ecma_get_string_from_value (buffer_p[i]));
+    ecma_value_t desc_obj = ecma_op_object_get (props_p, ecma_get_prop_name_from_value (buffer_p[i]));
 
     if (ECMA_IS_VALUE_ERROR (desc_obj))
     {
@@ -816,13 +821,11 @@ ecma_builtin_object_object_define_properties (ecma_object_t *obj_p, /**< routine
   }
 
   /* 6. */
-  buffer_p = prop_names_p->buffer_p;
-
   for (uint32_t i = 0; i < prop_names_p->item_count; i++)
   {
-    ecma_value_t define_own_prop_ret =  ecma_op_object_define_own_property (obj_p,
-                                                                            ecma_get_string_from_value (buffer_p[i]),
-                                                                            &property_descriptors[i]);
+    ecma_value_t define_own_prop_ret = ecma_op_object_define_own_property (obj_p,
+                                                                           ecma_get_prop_name_from_value (buffer_p[i]),
+                                                                           &property_descriptors[i]);
     if (ECMA_IS_VALUE_ERROR (define_own_prop_ret))
     {
       goto cleanup;

@@ -72,6 +72,12 @@ typedef struct vm_frame_ctx_t
 #define VM_GET_REGISTER(frame_ctx_p, i) (((ecma_value_t *) ((frame_ctx_p) + 1))[i])
 
 /**
+ * Get the executable object.
+ */
+#define VM_GET_EXECUTABLE_OBJECT(frame_ctx_p) \
+  ((ecma_extended_object_t *) ((uintptr_t) (frame_ctx_p) - (uintptr_t) offsetof (vm_executable_object_t, frame_ctx)))
+
+/**
  * Generator frame context.
  */
 typedef struct

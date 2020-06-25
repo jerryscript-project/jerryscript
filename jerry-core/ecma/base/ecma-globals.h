@@ -208,6 +208,8 @@ enum
   ECMA_VALUE_UNINITIALIZED = ECMA_MAKE_VALUE (10), /**< a special value for uninitialized let/const declarations */
   ECMA_VALUE_SPREAD_ELEMENT = ECMA_MAKE_VALUE (11), /**< a special value for spread elements in array initialization
                                                      *   or function call argument list */
+  ECMA_VALUE_SYNC_ITERATOR = ECMA_MAKE_VALUE (12), /**< option for ecma_op_get_iterator: sync iterator is requested */
+  ECMA_VALUE_ASYNC_ITERATOR = ECMA_MAKE_VALUE (13), /**< option for ecma_op_get_iterator: async iterator is requested */
 };
 
 #if !ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
@@ -1865,6 +1867,8 @@ typedef enum
   /* Generator specific flags. */
   ECMA_GENERATOR_ITERATE_AND_YIELD = (1u << 2), /**< the generator performs a yield* operation */
   ECMA_ASYNC_GENERATOR_CALLED = (1u << 3), /**< the async generator was executed before */
+  /* This must be the last generator specific flag. */
+  ECMA_ASYNC_YIELD_ITERATOR_STATE_SHIFT = 4, /**< shift for async yield iterator state */
 } ecma_executable_object_flags_t;
 
 /**

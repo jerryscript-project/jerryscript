@@ -181,15 +181,27 @@ ecma_op_get_iterator (ecma_value_t value, /**< value to get iterator from */
     return value;
   }
 
-  /* 2. */
-  bool has_method = !ecma_is_value_empty (method);
+  bool has_method = false;
 
-  if (!has_method)
+  /* 2. */
+  if (method == ECMA_VALUE_SYNC_ITERATOR)
   {
     /* 2.a */
+    has_method = true;
     method = ecma_op_get_method_by_symbol_id (value, LIT_GLOBAL_SYMBOL_ITERATOR);
 
     /* 2.b */
+    if (ECMA_IS_VALUE_ERROR (method))
+    {
+      return method;
+    }
+  }
+  else if (method == ECMA_VALUE_ASYNC_ITERATOR)
+  {
+    /* TODO: CreateAsyncFromSyncIterator should be supported. */
+    has_method = true;
+    method = ecma_op_get_method_by_symbol_id (value, LIT_GLOBAL_SYMBOL_ASYNC_ITERATOR);
+
     if (ECMA_IS_VALUE_ERROR (method))
     {
       return method;
@@ -206,7 +218,7 @@ ecma_op_get_iterator (ecma_value_t value, /**< value to get iterator from */
   ecma_object_t *method_obj_p = ecma_get_object_from_value (method);
   ecma_value_t iterator = ecma_op_function_call (method_obj_p, value, NULL, 0);
 
-  if (!has_method)
+  if (has_method)
   {
     ecma_deref_object (method_obj_p);
   }
@@ -239,7 +251,7 @@ ecma_op_get_iterator (ecma_value_t value, /**< value to get iterator from */
  * @return iterator result object - if success
  *         raised error - otherwise
  */
-static ecma_value_t
+ecma_value_t
 ecma_op_iterator_next (ecma_value_t iterator, /**< iterator value */
                        ecma_value_t value) /**< the routines's value argument */
 {

@@ -60,6 +60,9 @@ ecma_value_t
 ecma_op_iterator_value (ecma_value_t iter_result);
 
 ecma_value_t
+ecma_op_iterator_next (ecma_value_t iterator, ecma_value_t value);
+
+ecma_value_t
 ecma_op_iterator_close (ecma_value_t iterator);
 
 ecma_value_t

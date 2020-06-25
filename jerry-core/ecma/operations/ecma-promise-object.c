@@ -980,6 +980,30 @@ ecma_promise_async_then (ecma_value_t promise, /**< promise object */
 } /* ecma_promise_async_then */
 
 /**
+ * Resolves the value and resume the execution of an async function after the resolve is completed
+ *
+ * @return ECMA_VALUE_UNDEFINED if not error is occured, an error otherwise
+ */
+ecma_value_t
+ecma_promise_async_await (ecma_extended_object_t *async_generator_object_p, /**< async generator function */
+                          ecma_value_t value) /**< value to be resolved (takes the reference) */
+{
+  ecma_value_t promise = ecma_make_object_value (ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE));
+  ecma_value_t result = ecma_promise_reject_or_resolve (promise, value, true);
+
+  ecma_free_value (value);
+
+  if (ECMA_IS_VALUE_ERROR (result))
+  {
+    return result;
+  }
+
+  ecma_promise_async_then (result, ecma_make_object_value ((ecma_object_t *) async_generator_object_p));
+  ecma_free_value (result);
+  return ECMA_VALUE_UNDEFINED;
+} /* ecma_promise_async_await */
+
+/**
  * @}
  * @}
  */

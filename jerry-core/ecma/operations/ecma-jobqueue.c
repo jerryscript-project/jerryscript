@@ -260,7 +260,49 @@ ecma_process_promise_async_reaction_job (ecma_job_promise_async_reaction_t *job_
 
   if (ecma_job_queue_get_type (&job_p->header) == ECMA_JOB_PROMISE_ASYNC_REACTION_REJECTED)
   {
-    executable_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_throw;
+    if (!(executable_object_p->extended_object.u.class_prop.extra_info & ECMA_GENERATOR_ITERATE_AND_YIELD))
+    {
+      executable_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_throw;
+    }
+    else if (ECMA_ASYNC_YIELD_ITERATOR_GET_STATE (executable_object_p) == ECMA_ASYNC_YIELD_ITERATOR_AWAIT_RETURN)
+    {
+      /* Unlike other operations, return captures rejected promises as well. */
+      ECMA_ASYNC_YIELD_ITERATOR_CHANGE_STATE (executable_object_p, RETURN, OPERATION);
+    }
+    else
+    {
+      /* Exception: Abort iterators, clear all status. */
+      ECMA_ASYNC_YIELD_ITERATOR_END (executable_object_p);
+
+      JERRY_ASSERT (ecma_is_value_object (executable_object_p->frame_ctx.block_result));
+      executable_object_p->frame_ctx.block_result = ECMA_VALUE_UNDEFINED;
+      executable_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_throw;
+    }
+  }
+
+  if (executable_object_p->extended_object.u.class_prop.extra_info & ECMA_GENERATOR_ITERATE_AND_YIELD)
+  {
+    job_p->argument = ecma_async_yield_continue_await (executable_object_p, job_p->argument);
+
+    if (ECMA_IS_VALUE_ERROR (job_p->argument))
+    {
+      job_p->argument = jcontext_take_exception ();
+      executable_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_throw;
+    }
+    else if (executable_object_p->extended_object.u.class_prop.extra_info & ECMA_GENERATOR_ITERATE_AND_YIELD)
+    {
+      /* Continue iteration. */
+      JERRY_ASSERT (job_p->argument == ECMA_VALUE_UNDEFINED);
+
+      ecma_free_promise_async_reaction_job (job_p);
+      return ECMA_VALUE_UNDEFINED;
+    }
+
+    /* End of yield*, clear all status. */
+    ECMA_ASYNC_YIELD_ITERATOR_END (executable_object_p);
+
+    JERRY_ASSERT (ecma_is_value_object (executable_object_p->frame_ctx.block_result));
+    executable_object_p->frame_ctx.block_result = ECMA_VALUE_UNDEFINED;
   }
 
   ecma_value_t result = opfunc_resume_executable_object (executable_object_p, job_p->argument);

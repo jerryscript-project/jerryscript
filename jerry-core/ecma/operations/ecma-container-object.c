@@ -439,7 +439,7 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
 
   ecma_object_t *adder_func_p = ecma_get_object_from_value (result);
 
-  result = ecma_op_get_iterator (iterable, ECMA_VALUE_EMPTY);
+  result = ecma_op_get_iterator (iterable, ECMA_VALUE_SYNC_ITERATOR);
 
   if (ECMA_IS_VALUE_ERROR (result))
   {

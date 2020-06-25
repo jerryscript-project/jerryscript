@@ -135,6 +135,9 @@ extern const uint8_t opfunc_resume_executable_object_with_return[];
 ecma_value_t
 opfunc_resume_executable_object (vm_executable_object_t *executable_object_p, ecma_value_t value);
 
+void
+opfunc_async_generator_yield (ecma_extended_object_t *async_generator_object_p, ecma_value_t value);
+
 ecma_value_t
 opfunc_create_implicit_class_constructor (uint8_t opcode);
 

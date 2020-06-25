@@ -55,6 +55,7 @@ typedef enum
   LIT_GLOBAL_SYMBOL_HAS_INSTANCE, /**< @@hasInstance well known symbol */
   LIT_GLOBAL_SYMBOL_IS_CONCAT_SPREADABLE, /**< @@isConcatSpreadable well known symbol */
   LIT_GLOBAL_SYMBOL_ITERATOR, /**< @@iterator well known symbol */
+  LIT_GLOBAL_SYMBOL_ASYNC_ITERATOR, /**< @@asyncIterator well known symbol */
   LIT_GLOBAL_SYMBOL_MATCH, /**< @@match well known symbol */
   LIT_GLOBAL_SYMBOL_REPLACE, /**< @@replace well known symbol */
   LIT_GLOBAL_SYMBOL_SEARCH, /**< @@search well known symbol */

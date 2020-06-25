@@ -153,7 +153,7 @@ ecma_builtin_array_object_from (ecma_value_t this_arg, /**< 'this' argument */
     ecma_object_t *array_obj_p = ecma_get_object_from_value (array);
 
     /* 6.d */
-    ecma_value_t iterator = ecma_op_get_iterator (items, using_iterator);
+    ecma_value_t iterator = ecma_op_get_iterator (items, using_iterator, NULL);
     ecma_free_value (using_iterator);
 
     /* 6.e */

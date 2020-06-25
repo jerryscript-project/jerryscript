@@ -46,6 +46,20 @@ enum
   ECMA_ASYNC_GENERATOR_PROTOTYPE_ROUTINE_RETURN
 };
 
+#define BUILTIN_INC_HEADER_NAME "ecma-builtin-async-generator-prototype.inc.h"
+#define BUILTIN_UNDERSCORED_ID async_generator_prototype
+#include "ecma-builtin-internal-routines-template.inc.h"
+
+/** \addtogroup ecma ECMA
+ * @{
+ *
+ * \addtogroup ecmabuiltins
+ * @{
+ *
+ * \addtogroup asyncgenerator ECMA AsyncGenerator.prototype object built-in
+ * @{
+ */
+
 /**
  * Convert routine type to operation type..
  */
@@ -63,20 +77,6 @@ JERRY_STATIC_ASSERT (ECMA_ASYNC_GENERATOR_ROUTINE_TO_OPERATION (ECMA_ASYNC_GENER
 JERRY_STATIC_ASSERT (ECMA_ASYNC_GENERATOR_ROUTINE_TO_OPERATION (ECMA_ASYNC_GENERATOR_PROTOTYPE_ROUTINE_RETURN)
                      == ECMA_ASYNC_GENERATOR_DO_RETURN,
                      convert_ecma_async_generator_routine_return_to_ecma_async_generator_do_return_failed);
-
-#define BUILTIN_INC_HEADER_NAME "ecma-builtin-async-generator-prototype.inc.h"
-#define BUILTIN_UNDERSCORED_ID async_generator_prototype
-#include "ecma-builtin-internal-routines-template.inc.h"
-
-/** \addtogroup ecma ECMA
- * @{
- *
- * \addtogroup ecmabuiltins
- * @{
- *
- * \addtogroup asyncgenerator ECMA AsyncGenerator.prototype object built-in
- * @{
- */
 
 /**
   * Dispatcher of the Generator built-in's routines

@@ -2041,7 +2041,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_GET_ITERATOR:
         {
-          result = ecma_op_get_iterator (stack_top_p[-1], ECMA_VALUE_SYNC_ITERATOR);
+          result = ecma_op_get_iterator (stack_top_p[-1], ECMA_VALUE_SYNC_ITERATOR, NULL);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {
@@ -2213,8 +2213,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           JERRY_ASSERT (!(async_generator_object_p->u.class_prop.extra_info & ECMA_GENERATOR_ITERATE_AND_YIELD));
 
           /* Byte code is executed at the first time. */
-          left_value = *(--stack_top_p);
-          result = ecma_op_get_iterator (left_value, ECMA_VALUE_ASYNC_ITERATOR);
+          left_value = stack_top_p[-1];
+          result = ecma_op_get_iterator (left_value, ECMA_VALUE_ASYNC_ITERATOR, stack_top_p - 1);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {
@@ -2223,7 +2223,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           ecma_free_value (left_value);
           left_value = result;
-          result = ecma_op_iterator_next (left_value, ECMA_VALUE_UNDEFINED);
+          result = ecma_op_iterator_next (left_value, stack_top_p[-1], ECMA_VALUE_UNDEFINED);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {
@@ -3786,7 +3786,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           JERRY_ASSERT (VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth == stack_top_p);
 
-          ecma_value_t iterator = ecma_op_get_iterator (value, ECMA_VALUE_SYNC_ITERATOR);
+          ecma_value_t iterator = ecma_op_get_iterator (value, ECMA_VALUE_SYNC_ITERATOR, NULL);
 
           ecma_free_value (value);
 

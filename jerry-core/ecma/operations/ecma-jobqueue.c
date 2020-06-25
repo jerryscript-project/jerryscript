@@ -277,6 +277,10 @@ ecma_process_promise_async_reaction_job (ecma_job_promise_async_reaction_t *job_
       JERRY_ASSERT (ecma_is_value_object (executable_object_p->frame_ctx.block_result));
       executable_object_p->frame_ctx.block_result = ECMA_VALUE_UNDEFINED;
       executable_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_throw;
+
+      JERRY_ASSERT (executable_object_p->frame_ctx.stack_top_p[-1] == ECMA_VALUE_UNDEFINED
+                    || ecma_is_value_object (executable_object_p->frame_ctx.stack_top_p[-1]));
+      executable_object_p->frame_ctx.stack_top_p--;
     }
   }
 
@@ -303,6 +307,10 @@ ecma_process_promise_async_reaction_job (ecma_job_promise_async_reaction_t *job_
 
     JERRY_ASSERT (ecma_is_value_object (executable_object_p->frame_ctx.block_result));
     executable_object_p->frame_ctx.block_result = ECMA_VALUE_UNDEFINED;
+
+    JERRY_ASSERT (executable_object_p->frame_ctx.stack_top_p[-1] == ECMA_VALUE_UNDEFINED
+                  || ecma_is_value_object (executable_object_p->frame_ctx.stack_top_p[-1]));
+    executable_object_p->frame_ctx.stack_top_p--;
   }
 
   ecma_value_t result = opfunc_resume_executable_object (executable_object_p, job_p->argument);

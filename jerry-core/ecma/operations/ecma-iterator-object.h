@@ -33,8 +33,8 @@
 typedef enum
 {
   ECMA_ITERATOR_NEXT, /**< generator should continue its execution */
-  ECMA_ITERATOR_RETURN, /**< generator should perform a return operation */
   ECMA_ITERATOR_THROW, /**< generator should perform a throw operation */
+  ECMA_ITERATOR_RETURN, /**< generator should perform a return operation */
 } ecma_iterator_command_type_t;
 
 /**
@@ -54,13 +54,13 @@ ecma_value_t
 ecma_create_array_from_iter_element (ecma_value_t value, ecma_value_t index_value);
 
 ecma_value_t
-ecma_op_get_iterator (ecma_value_t value, ecma_value_t method);
+ecma_op_get_iterator (ecma_value_t value, ecma_value_t method, ecma_value_t *next_method_p);
 
 ecma_value_t
 ecma_op_iterator_value (ecma_value_t iter_result);
 
 ecma_value_t
-ecma_op_iterator_next (ecma_value_t iterator, ecma_value_t value);
+ecma_op_iterator_next (ecma_value_t iterator, ecma_value_t next_method, ecma_value_t value);
 
 ecma_value_t
 ecma_op_iterator_close (ecma_value_t iterator);
@@ -70,7 +70,7 @@ ecma_op_iterator_step (ecma_value_t iterator);
 
 ecma_value_t
 ecma_op_iterator_do (ecma_iterator_command_type_t command, ecma_value_t iterator,
-                     ecma_value_t value, bool *done_p);
+                     ecma_value_t next_method, ecma_value_t value, bool *done_p);
 
 #endif /* ENABLED (JERRY_ESNEXT) */
 

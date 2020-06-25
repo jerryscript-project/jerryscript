@@ -119,3 +119,88 @@ function *gen5() {
 g = gen5()
 check_result(g.next(), 1, false)
 check_result(g.throw(10), 3, false)
+
+var o = {}
+var state = 0
+var iter6 = {
+  [Symbol.iterator]() {
+    return {
+      get next() {
+        assert(++state === 2)
+        return function () {
+          return { value:"Res", done:false }
+        }
+      },
+      get throw() {
+        ++state
+        assert(state === 4 || state === 9 || state == 14)
+        return function (v) {
+          assert(v === "Input")
+          return { value:o, done:false }
+        }
+      },
+      get return() {
+        ++state
+        assert(state === 6 || state === 11 || state == 16)
+        return function (v) {
+          assert(v === o)
+          return { value:4.5, done:false }
+        }
+      }
+    }
+  }
+}
+
+function *gen6() {
+  assert(++state === 1)
+  yield *iter6
+  assert(false)
+}
+
+g = gen6()
+check_result(g.next(), "Res", false)
+assert(++state === 3)
+check_result(g.throw("Input"), o, false)
+assert(++state === 5)
+check_result(g.return(o), 4.5, false)
+assert(++state === 7)
+
+check_result(g.next(), "Res", false)
+assert(++state === 8)
+check_result(g.throw("Input"), o, false)
+assert(++state === 10)
+check_result(g.return(o), 4.5, false)
+assert(++state === 12)
+
+check_result(g.next(), "Res", false)
+assert(++state === 13)
+check_result(g.throw("Input"), o, false)
+assert(++state === 15)
+check_result(g.return(o), 4.5, false)
+assert(++state === 17)
+
+state = 0
+var iter7 = {
+  [Symbol.iterator]() {
+    return {
+      get next() {
+        assert(++state === 2)
+        return "Not callable"
+      }
+    }
+  }
+}
+
+function *gen7() {
+  assert(++state === 1)
+  yield *iter7
+  assert(false)
+}
+
+g = gen7()
+try {
+  g.next()
+  assert(false)
+} catch (e) {
+  assert(e instanceof TypeError)
+}

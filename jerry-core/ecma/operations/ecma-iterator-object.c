@@ -163,7 +163,7 @@ ecma_op_create_iterator_object (ecma_value_t iterated_value, /**< value from cre
 /**
  * GetIterator operation
  *
- * See also: ECMA-262 v6, 7.4.1
+ * See also: ECMA-262 v10, 7.4.1
  *
  * Note:
  *      Returned value must be freed with ecma_free_value.
@@ -173,21 +173,28 @@ ecma_op_create_iterator_object (ecma_value_t iterated_value, /**< value from cre
  */
 ecma_value_t
 ecma_op_get_iterator (ecma_value_t value, /**< value to get iterator from */
-                      ecma_value_t method) /**< provided method argument */
+                      ecma_value_t method, /**< provided method argument */
+                      ecma_value_t *next_method_p) /**< [out] next method */
 {
+  if (next_method_p != NULL)
+  {
+    /* TODO: NULL support should be removed after all functions support next method caching. */
+    *next_method_p = ECMA_VALUE_UNDEFINED;
+  }
+
   /* 1. */
   if (ECMA_IS_VALUE_ERROR (value))
   {
     return value;
   }
 
-  bool has_method = false;
+  bool use_default_method = false;
 
   /* 2. */
   if (method == ECMA_VALUE_SYNC_ITERATOR)
   {
     /* 2.a */
-    has_method = true;
+    use_default_method = true;
     method = ecma_op_get_method_by_symbol_id (value, LIT_GLOBAL_SYMBOL_ITERATOR);
 
     /* 2.b */
@@ -199,7 +206,7 @@ ecma_op_get_iterator (ecma_value_t value, /**< value to get iterator from */
   else if (method == ECMA_VALUE_ASYNC_ITERATOR)
   {
     /* TODO: CreateAsyncFromSyncIterator should be supported. */
-    has_method = true;
+    use_default_method = true;
     method = ecma_op_get_method_by_symbol_id (value, LIT_GLOBAL_SYMBOL_ASYNC_ITERATOR);
 
     if (ECMA_IS_VALUE_ERROR (method))
@@ -212,13 +219,13 @@ ecma_op_get_iterator (ecma_value_t value, /**< value to get iterator from */
   if (!ecma_is_value_object (method) || !ecma_op_is_callable (method))
   {
     ecma_free_value (method);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("object is not iterable"));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator is not function"));
   }
 
   ecma_object_t *method_obj_p = ecma_get_object_from_value (method);
   ecma_value_t iterator = ecma_op_function_call (method_obj_p, value, NULL, 0);
 
-  if (has_method)
+  if (use_default_method)
   {
     ecma_deref_object (method_obj_p);
   }
@@ -236,6 +243,27 @@ ecma_op_get_iterator (ecma_value_t value, /**< value to get iterator from */
     return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator is not an object."));
   }
 
+  if (next_method_p != NULL)
+  {
+    ecma_object_t *obj_p = ecma_get_object_from_value (iterator);
+    ecma_value_t next_method = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_NEXT);
+
+    if (ECMA_IS_VALUE_ERROR (next_method))
+    {
+      ecma_free_value (iterator);
+      return next_method;
+    }
+
+    if (ecma_is_value_object (next_method) && ecma_op_is_callable (next_method))
+    {
+      *next_method_p = next_method;
+    }
+    else
+    {
+      ecma_free_value (next_method);
+    }
+  }
+
   /* 6. */
   return iterator;
 } /* ecma_op_get_iterator */
@@ -251,9 +279,9 @@ ecma_op_get_iterator (ecma_value_t value, /**< value to get iterator from */
  * @return iterator result object - if success
  *         raised error - otherwise
  */
-ecma_value_t
-ecma_op_iterator_next (ecma_value_t iterator, /**< iterator value */
-                       ecma_value_t value) /**< the routines's value argument */
+static ecma_value_t
+ecma_op_iterator_next_old (ecma_value_t iterator, /**< iterator value */
+                           ecma_value_t value) /**< the routines's value argument */
 {
   JERRY_ASSERT (ecma_is_value_object (iterator));
 
@@ -291,6 +319,42 @@ ecma_op_iterator_next (ecma_value_t iterator, /**< iterator value */
 
   /* 5. */
   return result;
+} /* ecma_op_iterator_next_old */
+
+/**
+ * IteratorNext operation
+ *
+ * See also: ECMA-262 v10, 7.4.2
+ *
+ * Note:
+ *      Returned value must be freed with ecma_free_value.
+ *
+ * @return iterator result object - if success
+ *         raised error - otherwise
+ */
+ecma_value_t
+ecma_op_iterator_next (ecma_value_t iterator, /**< iterator value */
+                       ecma_value_t next_method, /**< next method */
+                       ecma_value_t value) /**< the routines's value argument */
+{
+  JERRY_ASSERT (ecma_is_value_object (iterator));
+
+  /* 1 - 2. */
+  if (next_method == ECMA_VALUE_UNDEFINED)
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator next() is not callable."));
+  }
+
+  ecma_object_t *next_method_obj_p = ecma_get_object_from_value (next_method);
+
+  bool has_value = !ecma_is_value_empty (value);
+
+  if (has_value)
+  {
+    return ecma_op_function_call (next_method_obj_p, iterator, &value, 1);
+  }
+
+  return ecma_op_function_call (next_method_obj_p, iterator, NULL, 0);
 } /* ecma_op_iterator_next */
 
 /**
@@ -518,7 +582,7 @@ ecma_value_t
 ecma_op_iterator_step (ecma_value_t iterator) /**< iterator value */
 {
   /* 1. */
-  ecma_value_t result = ecma_op_iterator_next (iterator, ECMA_VALUE_EMPTY);
+  ecma_value_t result = ecma_op_iterator_next_old (iterator, ECMA_VALUE_EMPTY);
 
   /* 2. */
   if (ECMA_IS_VALUE_ERROR (result))
@@ -569,6 +633,7 @@ ecma_op_iterator_step (ecma_value_t iterator) /**< iterator value */
 ecma_value_t
 ecma_op_iterator_do (ecma_iterator_command_type_t command, /**< command to be executed */
                      ecma_value_t iterator, /**< iterator object */
+                     ecma_value_t next_method, /**< next method */
                      ecma_value_t value, /**< the routines's value argument */
                      bool *done_p) /**< it contains the logical value of the done property */
 {
@@ -576,16 +641,16 @@ ecma_op_iterator_do (ecma_iterator_command_type_t command, /**< command to be ex
 
   if (command == ECMA_ITERATOR_NEXT)
   {
-    result = ecma_op_iterator_next (iterator, value);
+    result = ecma_op_iterator_next (iterator, next_method, value);
   }
-  else if (command == ECMA_ITERATOR_RETURN)
+  else if (command == ECMA_ITERATOR_THROW)
   {
-    result = ecma_op_iterator_return (iterator, value);
+    result = ecma_op_iterator_throw (iterator, value);
   }
   else
   {
-    JERRY_ASSERT (command == ECMA_ITERATOR_THROW);
-    result = ecma_op_iterator_throw (iterator, value);
+    JERRY_ASSERT (command == ECMA_ITERATOR_RETURN);
+    result = ecma_op_iterator_return (iterator, value);
   }
 
   if (ECMA_IS_VALUE_ERROR (result))

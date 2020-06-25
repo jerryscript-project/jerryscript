@@ -226,3 +226,54 @@ validateResult(view3, 4, false, [65, 65, 16648, 16648, 1091043328, 1091043328, 8
 validateResult(view3, 4, true, [65, 65, 2113, 2113, 2113, 2113, 2.9609436551183385e-42, 1.044e-320]);
 validateResult(view2, 4, false, [-48, 208, -12110, 53426, -793624312, 3501342984, -23924850688, -5.411000515087672e+80]);
 validateResult(view2, 4, true, [-48, 208, -19760, 45776, 138523344, 138523344, 5.828901796903399e-34, 6.84396254e-316]);
+
+/* Second and third arguments can be "undefined" and there should be no error. */
+var arrayBufferOk = new ArrayBuffer (12);
+
+var dtviewA = new DataView (arrayBufferOk, 0, undefined);
+assert (dtviewA.byteLength === 12);
+assert (dtviewA.byteOffset === 0);
+
+var dtviewB = new DataView (arrayBufferOk, 1, undefined);
+assert (dtviewB.byteLength === 11);
+assert (dtviewB.byteOffset === 1);
+
+var dtviewC = new DataView (arrayBufferOk, null, undefined);
+assert (dtviewC.byteLength === 12);
+assert (dtviewC.byteOffset === 0);
+
+var dtviewD = new DataView (arrayBufferOk, 0, null);
+assert (dtviewD.byteLength === 0);
+assert (dtviewD.byteOffset === 0);
+
+var dtviewE = new DataView (arrayBufferOk, null, null);
+assert (dtviewE.byteLength === 0);
+assert (dtviewE.byteOffset === 0);
+
+var dtviewF = new DataView (arrayBufferOk, null, 1);
+assert (dtviewF.byteLength === 1);
+assert (dtviewF.byteOffset === 0);
+
+/* In ES6 the second argument is processed with ToNumber and ToInteger calls.
+ * A RangeError is reported if the values returned by the operations are different.
+ * The "undefined" value converted with ToNumber will return "NaN" and the ToInteger
+ * operation will return "0". Thus creating a RangeError.
+ *
+ * After ES6 the second argument should be converted via ToIndex.
+ * Providing "undefined" value for the ToIndex operation will return "0".
+ * Thus there is no error generated.
+ */
+try {
+  var dtviewF = new DataView (arrayBufferOk, undefined, 1);
+
+  /* TODO: enable these tests after the DataView is updated for newer standard and
+   *       remove the try-catch.
+   */
+  /*
+   * assert(dtviewF.byteLength === 1);
+   * assert(dtviewF.byteOffset === 0);
+   */
+  assert (false);
+} catch (ex) {
+  assert (ex instanceof RangeError);
+}

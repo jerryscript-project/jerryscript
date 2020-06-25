@@ -106,7 +106,7 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
 
   /* 11 - 12. */
   uint32_t viewByteLength;
-  if (arguments_list_len > 2)
+  if (arguments_list_len > 2 && !ecma_is_value_undefined (arguments_list_p[2]))
   {
     /* 12.a */
     ecma_value_t byte_length_value = ecma_op_to_length (arguments_list_p[2], &viewByteLength);

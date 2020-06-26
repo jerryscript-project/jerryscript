@@ -144,25 +144,18 @@ jerryx_handler_fuzzilli(const jerry_value_t func_obj_val, /**< function object *
   (void)func_obj_val; /* unused */
   (void)this_p;       /* unused */
 
-  jerry_char_t operation[256] = {0};
-  jerry_value_t ret_val = jerry_create_undefined();
-
-  if (args_cnt > 0 && jerry_value_is_string (args_p[0]))
+  if (args_cnt < 1 || !jerry_value_is_string(args_p[0]))
   {
-    jerry_value_t str_val;
-    str_val = jerry_value_to_string (args_p[0]);
+    return jerry_create_error(JERRY_ERROR_TYPE, (jerry_char_t *)"Expected a string");
+  }
 
-    if (!jerry_value_is_error (str_val))
-    {
-      jerry_length_t length = jerry_get_utf8_string_length (str_val);
+  jerry_value_t ret_val = jerry_create_undefined ();
+  jerry_size_t str_size = jerry_get_utf8_string_size (args_p[0]);
+  jerry_char_t *operation = jerry_heap_alloc (str_size * sizeof(jerry_char_t));
 
-      if (length > 0 && length < 256)
-      {
-        jerry_string_to_utf8_char_buffer (str_val, operation, length);
-      }
-    }
-
-    jerry_release_value (str_val);
+  if (operation == NULL || jerry_string_to_utf8_char_buffer(args_p[0], operation, str_size) != str_size)
+  {
+    return jerry_create_error(JERRY_ERROR_RANGE, (jerry_char_t *)"Internal error");
   }
 
   if (strcmp((char *)operation, "FUZZILLI_CRASH") == 0)
@@ -269,6 +262,8 @@ jerryx_handler_fuzzilli(const jerry_value_t func_obj_val, /**< function object *
     }
     fflush(fzliout);
   }
+
+  jerry_heap_free(operation, str_size * sizeof(jerry_char_t));
   return ret_val;
 }
 

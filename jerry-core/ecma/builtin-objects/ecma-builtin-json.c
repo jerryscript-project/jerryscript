@@ -1349,13 +1349,16 @@ static ecma_value_t ecma_builtin_json_str_helper (ecma_json_stringify_context_t 
 } /* ecma_builtin_json_str_helper */
 
 /**
- * Function to create a json formated string from an object
+ * Function to create a JSON string from a JS value.
  *
- * @return ecma_value_t containing a json string
- *         Returned value must be freed with ecma_free_value.
+ * Note:
+ *      The returned value must be freed with ecma_free_value.
+ *
+ * @return - ecma_value_t containing a json string.
+ *         - Error value in case of any errors.
  */
 ecma_value_t
-ecma_builtin_json_string_from_object (const ecma_value_t arg1) /**< object argument */
+ecma_builtin_json_stringify_no_opts (const ecma_value_t value) /**< value to stringify */
 {
   ecma_json_stringify_context_t context;
   context.occurence_stack_last_p = NULL;
@@ -1364,12 +1367,12 @@ ecma_builtin_json_string_from_object (const ecma_value_t arg1) /**< object argum
   context.replacer_function_p = NULL;
   context.gap_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
 
-  ecma_value_t ret_value = ecma_builtin_json_str_helper (&context, arg1);
+  ecma_value_t ret_value = ecma_builtin_json_str_helper (&context, value);
 
   ecma_deref_ecma_string (context.gap_str_p);
   ecma_stringbuilder_destroy (&context.indent_builder);
   return ret_value;
-} /*ecma_builtin_json_string_from_object*/
+} /* ecma_builtin_json_stringify_no_opts */
 
 /**
  * The JSON object's 'stringify' routine

@@ -46,6 +46,7 @@ set(JERRY_CMDLINE           ON  CACHE BOOL "Build jerry command line tool?")
 set(JERRY_CMDLINE_TEST      OFF CACHE BOOL "Build jerry test command line tool?")
 set(JERRY_CMDLINE_SNAPSHOT  OFF CACHE BOOL "Build jerry snapshot command line tool?")
 set(JERRY_LIBFUZZER         OFF CACHE BOOL "Build jerry with libfuzzer support?")
+set(JERRY_FUZZILLI          OFF CACHE BOOL "Build jerry with fuzzilli support?")
 set(JERRY_PORT_DEFAULT      ON  CACHE BOOL "Build default jerry port implementation?")
 set(JERRY_EXT               ON  CACHE BOOL "Build jerry-ext?")
 set(JERRY_LIBM              ON  CACHE BOOL "Build and use jerry-libm?")
@@ -60,14 +61,16 @@ set(ENABLE_STRIP       ON  CACHE BOOL "Enable stripping all symbols from release
 # Option overrides
 if(NOT USING_CLANG)
   set(JERRY_LIBFUZZER OFF)
+  set(JERRY_FUZZILLI  OFF)
 
   set(JERRY_LIBFUZZER_MESSAGE " (FORCED BY COMPILER)")
+  set(JERRY_FUZZILLI_MESSAGE  " (FORCED BY COMPILER)")
 endif()
 
-if(JERRY_CMDLINE OR JERRY_CMDLINE_TEST OR JERRY_CMDLINE_SNAPSHOT OR JERRY_LIBFUZZER OR UNITTESTS OR DOCTESTS)
+if(JERRY_CMDLINE OR JERRY_CMDLINE_TEST OR JERRY_CMDLINE_SNAPSHOT OR JERRY_LIBFUZZER OR JERRY_FUZZILLI OR UNITTESTS OR DOCTESTS)
   set(JERRY_PORT_DEFAULT ON)
 
-  set(JERRY_PORT_DEFAULT_MESSAGE " (FORCED BY CMDLINE OR LIBFUZZER OR TESTS)")
+  set(JERRY_PORT_DEFAULT_MESSAGE " (FORCED BY CMDLINE OR LIBFUZZER OR FUZZILLI OR TESTS)")
 endif()
 
 if(JERRY_CMDLINE OR DOCTESTS)
@@ -118,6 +121,7 @@ message(STATUS "JERRY_CMDLINE               " ${JERRY_CMDLINE} ${JERRY_CMDLINE_M
 message(STATUS "JERRY_CMDLINE_TEST          " ${JERRY_CMDLINE_TEST} ${JERRY_CMDLINE_TEST_MESSAGE})
 message(STATUS "JERRY_CMDLINE_SNAPSHOT      " ${JERRY_CMDLINE_SNAPSHOT} ${JERRY_CMDLINE_SNAPSHOT_MESSAGE})
 message(STATUS "JERRY_LIBFUZZER             " ${JERRY_LIBFUZZER} ${JERRY_LIBFUZZER_MESSAGE})
+message(STATUS "JERRY_FUZZILLI              " ${JERRY_FUZZILLI} ${JERRY_FUZZILLI_MESSAGE})
 message(STATUS "JERRY_PORT_DEFAULT          " ${JERRY_PORT_DEFAULT} ${JERRY_PORT_DEFAULT_MESSAGE})
 message(STATUS "JERRY_EXT                   " ${JERRY_EXT} ${JERRY_EXT_MESSAGE})
 message(STATUS "JERRY_LIBM                  " ${JERRY_LIBM} ${JERRY_LIBM_MESSAGE})
@@ -223,6 +227,10 @@ if(JERRY_LIBFUZZER)
   jerry_add_compile_flags(-fsanitize=fuzzer-no-link)
 endif()
 
+if(JERRY_FUZZILLI)
+  jerry_add_compile_flags(-fsanitize-coverage=trace-pc-guard)
+endif()
+
 # Strip binary
 if(ENABLE_STRIP AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
   jerry_add_link_flags(-s)
@@ -259,7 +267,7 @@ if(JERRY_PORT_DEFAULT)
 endif()
 
 # Jerry command line tool
-if(JERRY_CMDLINE OR JERRY_CMDLINE_TEST OR JERRY_CMDLINE_SNAPSHOT OR JERRY_LIBFUZZER)
+if(JERRY_CMDLINE OR JERRY_CMDLINE_TEST OR JERRY_CMDLINE_SNAPSHOT OR JERRY_LIBFUZZER OR JERRY_FUZZILLI)
   add_subdirectory(jerry-main)
 endif()
 

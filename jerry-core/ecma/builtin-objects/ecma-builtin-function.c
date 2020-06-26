@@ -24,10 +24,6 @@
 #include "js-parser.h"
 #include "lit-magic-strings.h"
 
-#if ENABLED (JERRY_RESOURCE_NAME)
-#include "jcontext.h"
-#endif /* ENABLED (JERRY_RESOURCE_NAME) */
-
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 

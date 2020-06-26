@@ -1481,15 +1481,9 @@ ecma_compiled_code_get_tagged_template_collection (const ecma_compiled_code_t *b
 
   ecma_value_t *base_p = ecma_compiled_code_resolve_function_name (bytecode_header_p);
 
-#if ENABLED (JERRY_RESOURCE_NAME)
-  base_p--;
-#endif /* ENABLED (JERRY_RESOURCE_NAME) */
-
   return ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, base_p[-1]);
 } /* ecma_compiled_code_get_tagged_template_collection */
-#endif /* ENABLED (JERRY_ESNEXT) */
 
-#if ENABLED (JERRY_RESOURCE_NAME) || ENABLED (JERRY_ESNEXT)
 /**
  * Get the number of formal parameters of the compiled code
  *
@@ -1517,7 +1511,7 @@ ecma_compiled_code_get_formal_params (const ecma_compiled_code_t *bytecode_heade
  * @return start position of the arguments list start of the compiled code
  */
 ecma_value_t *
-ecma_compiled_code_resolve_arguments_start (const ecma_compiled_code_t *bytecode_header_p)
+ecma_compiled_code_resolve_arguments_start (const ecma_compiled_code_t *bytecode_header_p) /**< compiled code */
 {
   JERRY_ASSERT (bytecode_header_p != NULL);
 
@@ -1533,7 +1527,7 @@ ecma_compiled_code_resolve_arguments_start (const ecma_compiled_code_t *bytecode
  * @return position of the function name of the compiled code
  */
 inline ecma_value_t * JERRY_ATTR_ALWAYS_INLINE
-ecma_compiled_code_resolve_function_name (const ecma_compiled_code_t *bytecode_header_p)
+ecma_compiled_code_resolve_function_name (const ecma_compiled_code_t *bytecode_header_p) /**< compiled code */
 {
   JERRY_ASSERT (bytecode_header_p != NULL);
   ecma_value_t *base_p = ecma_compiled_code_resolve_arguments_start (bytecode_header_p);
@@ -1547,7 +1541,32 @@ ecma_compiled_code_resolve_function_name (const ecma_compiled_code_t *bytecode_h
 
   return base_p;
 } /* ecma_compiled_code_resolve_function_name */
-#endif /* ENABLED (JERRY_RESOURCE_NAME) || ENABLED (JERRY_ESNEXT) */
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+/**
+ * Get the resource name of a compiled code.
+ *
+ * @return resource name value
+ */
+ecma_value_t
+ecma_get_resource_name (const ecma_compiled_code_t *bytecode_p) /**< compiled code */
+{
+#if ENABLED (JERRY_RESOURCE_NAME)
+  if (bytecode_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+  {
+    cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_p;
+    ecma_value_t *lit_pool_p = (ecma_value_t *) ((uint8_t *) bytecode_p + sizeof (cbc_uint16_arguments_t));
+    return lit_pool_p[args_p->const_literal_end - args_p->register_end - 1];
+  }
+
+  cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_p;
+  ecma_value_t *lit_pool_p = (ecma_value_t *) ((uint8_t *) bytecode_p + sizeof (cbc_uint8_arguments_t));
+  return lit_pool_p[args_p->const_literal_end - args_p->register_end - 1];
+#else /* !ENABLED (JERRY_RESOURCE_NAME) */
+  JERRY_UNUSED (bytecode_p);
+  return ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
+#endif /* !ENABLED (JERRY_RESOURCE_NAME) */
+} /* ecma_get_resource_name */
 
 #if (JERRY_STACK_LIMIT != 0)
 /**

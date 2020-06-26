@@ -745,21 +745,16 @@ jerry_generate_snapshot_with_args (const jerry_char_t *resource_name_p, /**< scr
   JERRY_UNUSED (resource_name_p);
   JERRY_UNUSED (resource_name_length);
 
+  ecma_value_t resource_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
+
 #if ENABLED (JERRY_RESOURCE_NAME)
-  if (resource_name_length == 0)
+  if (resource_name_length > 0)
   {
-    JERRY_CONTEXT (resource_name) = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
-  }
-  else
-  {
-    JERRY_CONTEXT (resource_name) = ecma_find_or_create_literal_string (resource_name_p,
-                                                                        (lit_utf8_size_t) resource_name_length);
+    resource_name = ecma_find_or_create_literal_string (resource_name_p, (lit_utf8_size_t) resource_name_length);
   }
 #endif /* ENABLED (JERRY_RESOURCE_NAME) */
 
   snapshot_globals_t globals;
-  ecma_value_t parse_status;
-  ecma_compiled_code_t *bytecode_data_p;
   const uint32_t aligned_header_size = JERRY_ALIGNUP (sizeof (jerry_snapshot_header_t),
                                                       JMEM_ALIGNMENT);
 
@@ -771,19 +766,17 @@ jerry_generate_snapshot_with_args (const jerry_char_t *resource_name_p, /**< scr
   uint32_t status_flags = ((generate_snapshot_opts & JERRY_SNAPSHOT_SAVE_STRICT) ? ECMA_PARSE_STRICT_MODE
                                                                                  : ECMA_PARSE_NO_OPTS);
 
-  parse_status = parser_parse_script (args_p,
-                                      args_size,
-                                      source_p,
-                                      source_size,
-                                      status_flags,
-                                      &bytecode_data_p);
+  ecma_compiled_code_t *bytecode_data_p = parser_parse_script (args_p,
+                                                               args_size,
+                                                               source_p,
+                                                               source_size,
+                                                               resource_name,
+                                                               status_flags);
 
-  if (ECMA_IS_VALUE_ERROR (parse_status))
+  if (JERRY_UNLIKELY (bytecode_data_p == NULL))
   {
     return ecma_create_error_reference_from_context ();
   }
-
-  JERRY_ASSERT (bytecode_data_p != NULL);
 
   if (generate_snapshot_opts & JERRY_SNAPSHOT_SAVE_STATIC)
   {

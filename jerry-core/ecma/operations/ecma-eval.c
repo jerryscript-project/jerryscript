@@ -82,8 +82,6 @@ ecma_op_eval_chars_buffer (const lit_utf8_byte_t *code_p, /**< code characters b
 #if ENABLED (JERRY_PARSER)
   JERRY_ASSERT (code_p != NULL);
 
-  ecma_compiled_code_t *bytecode_data_p;
-
   uint32_t is_strict_call = ECMA_PARSE_STRICT_MODE | ECMA_PARSE_DIRECT_EVAL;
 
   if ((parse_opts & is_strict_call) != is_strict_call)
@@ -93,27 +91,24 @@ ecma_op_eval_chars_buffer (const lit_utf8_byte_t *code_p, /**< code characters b
 
   parse_opts |= ECMA_PARSE_EVAL;
 
-#if ENABLED (JERRY_RESOURCE_NAME)
-  JERRY_CONTEXT (resource_name) = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_EVAL);
-#endif /* ENABLED (JERRY_RESOURCE_NAME) */
-
 #if ENABLED (JERRY_ESNEXT)
   ECMA_CLEAR_LOCAL_PARSE_OPTS ();
 #endif /* ENABLED (JERRY_ESNEXT) */
 
-  ecma_value_t parse_status = parser_parse_script (NULL,
-                                                   0,
-                                                   code_p,
-                                                   code_buffer_size,
-                                                   parse_opts,
-                                                   &bytecode_data_p);
+  ecma_value_t resource_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_EVAL);
+  ecma_compiled_code_t *bytecode_p = parser_parse_script (NULL,
+                                                          0,
+                                                          code_p,
+                                                          code_buffer_size,
+                                                          resource_name,
+                                                          parse_opts);
 
-  if (ECMA_IS_VALUE_ERROR (parse_status))
+  if (JERRY_UNLIKELY (bytecode_p == NULL))
   {
-    return parse_status;
+    return ECMA_VALUE_ERROR;
   }
 
-  return vm_run_eval (bytecode_data_p, parse_opts);
+  return vm_run_eval (bytecode_p, parse_opts);
 #else /* !ENABLED (JERRY_PARSER) */
   JERRY_UNUSED (code_p);
   JERRY_UNUSED (code_buffer_size);

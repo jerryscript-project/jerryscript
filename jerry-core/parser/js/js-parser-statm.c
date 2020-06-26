@@ -2339,7 +2339,7 @@ parser_parse_import_statement (parser_context_t *context_p) /**< parser context 
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_IMPORT);
 
   parser_module_check_request_place (context_p);
-  parser_module_context_init ();
+  parser_module_context_init (context_p);
 
   context_p->module_current_node_p = parser_module_create_module_node (context_p);
 
@@ -2455,7 +2455,7 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_EXPORT);
 
   parser_module_check_request_place (context_p);
-  parser_module_context_init ();
+  parser_module_context_init (context_p);
 
   context_p->module_current_node_p = parser_module_create_module_node (context_p);
 
@@ -2646,13 +2646,6 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
   }
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
-#if ENABLED (JERRY_RESOURCE_NAME)
-  if (JERRY_CONTEXT (resource_name) != ECMA_VALUE_UNDEFINED)
-  {
-    parser_emit_cbc_ext (context_p, CBC_EXT_RESOURCE_NAME);
-    parser_flush_cbc (context_p);
-  }
-#endif /* ENABLED (JERRY_RESOURCE_NAME) */
 #if ENABLED (JERRY_LINE_INFO)
   context_p->last_line_info_line = 0;
 #endif /* ENABLED (JERRY_LINE_INFO) */

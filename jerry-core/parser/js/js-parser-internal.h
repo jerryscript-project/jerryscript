@@ -585,12 +585,16 @@ typedef struct
 
 #if ENABLED (JERRY_DEBUGGER)
   parser_breakpoint_info_t breakpoint_info[PARSER_MAX_BREAKPOINT_INFO_COUNT]; /**< breakpoint info list */
-  uint16_t breakpoint_info_count; /**< current breakpoint index */
+  uint16_t breakpoint_info_count;             /**< current breakpoint index */
   parser_line_counter_t last_breakpoint_line; /**< last line where breakpoint has been inserted */
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
+#if ENABLED (JERRY_RESOURCE_NAME)
+  ecma_value_t resource_name;                 /**< resource name */
+#endif /* ENABLED (JERRY_RESOURCE_NAME) */
+
 #if ENABLED (JERRY_LINE_INFO)
-  parser_line_counter_t last_line_info_line; /**< last line where line info has been inserted */
+  parser_line_counter_t last_line_info_line;  /**< last line where line info has been inserted */
 #endif /* ENABLED (JERRY_LINE_INFO) */
 } parser_context_t;
 
@@ -822,7 +826,7 @@ extern const lexer_lit_location_t lexer_default_literal;
 void parser_module_add_export_node_to_context (parser_context_t *context_p);
 void parser_module_add_import_node_to_context (parser_context_t *context_p);
 void parser_module_check_request_place (parser_context_t *context_p);
-void parser_module_context_init (void);
+void parser_module_context_init (parser_context_t *context_p);
 void parser_module_handle_module_specifier (parser_context_t *context_p);
 void parser_module_handle_requests (parser_context_t *context_p);
 void parser_module_parse_export_clause (parser_context_t *context_p);

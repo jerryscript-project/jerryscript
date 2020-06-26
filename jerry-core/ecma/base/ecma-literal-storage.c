@@ -543,7 +543,6 @@ ecma_snapshot_get_literal (const uint8_t *literal_base_p, /**< literal start */
  * Related values:
  *  - function argument names, if CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED is present
  *  - function name, if CBC_CODE_FLAGS_CLASS_CONSTRUCTOR is not present and ES.next profile is enabled
- *  - resource name, if JERRY_RESOURCE_NAME is enabled
  *
  * @return pointer to the beginning of the serializable ecma-values
  */
@@ -575,11 +574,6 @@ ecma_snapshot_resolve_serializable_values (ecma_compiled_code_t *compiled_code_p
     base_p--;
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
-
-#if ENABLED (JERRY_RESOURCE_NAME)
-  /* resource name */
-  base_p--;
-#endif /* ENABLED (JERRY_RESOURCE_NAME) */
 
   return base_p;
 } /* ecma_snapshot_resolve_serializable_values */

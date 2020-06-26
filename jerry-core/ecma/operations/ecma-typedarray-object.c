@@ -777,7 +777,7 @@ ecma_op_typedarray_from (ecma_value_t items_val, /**< the source array-like obje
   if (!ecma_is_value_undefined (using_iterator))
   {
     /* 8.a */
-    ecma_value_t iterator = ecma_op_get_iterator (items_val, using_iterator);
+    ecma_value_t iterator = ecma_op_get_iterator (items_val, using_iterator, NULL);
     ecma_free_value (using_iterator);
 
     /* 8.b */

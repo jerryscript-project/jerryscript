@@ -339,7 +339,7 @@ opfunc_append_to_spread_array (ecma_value_t *stack_top_p, /**< current stack top
       ecma_value_t ret_value = ECMA_VALUE_ERROR;
       ecma_value_t spread_value = stack_top_p[i];
 
-      ecma_value_t iterator = ecma_op_get_iterator (spread_value, ECMA_VALUE_SYNC_ITERATOR);
+      ecma_value_t iterator = ecma_op_get_iterator (spread_value, ECMA_VALUE_SYNC_ITERATOR, NULL);
 
       if (!ECMA_IS_VALUE_ERROR (iterator))
       {
@@ -432,7 +432,7 @@ opfunc_spread_arguments (ecma_value_t *stack_top_p, /**< pointer to the current 
     ecma_value_t spread_value = *stack_top_p++;
     i++;
 
-    ecma_value_t iterator = ecma_op_get_iterator (spread_value, ECMA_VALUE_SYNC_ITERATOR);
+    ecma_value_t iterator = ecma_op_get_iterator (spread_value, ECMA_VALUE_SYNC_ITERATOR, NULL);
 
     if (!ECMA_IS_VALUE_ERROR (iterator))
     {

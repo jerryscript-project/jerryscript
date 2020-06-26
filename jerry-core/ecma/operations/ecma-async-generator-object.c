@@ -203,7 +203,9 @@ ecma_async_generator_run (vm_executable_object_t *async_generator_object_p) /**<
     {
       case ECMA_ASYNC_GENERATOR_DO_NEXT:
       {
-        result = ecma_op_iterator_next (async_generator_object_p->frame_ctx.block_result, task_p->operation_value);
+        result = ecma_op_iterator_next (async_generator_object_p->frame_ctx.block_result,
+                                        async_generator_object_p->frame_ctx.stack_top_p[-1],
+                                        task_p->operation_value);
 
         if (ECMA_IS_VALUE_ERROR (result))
         {
@@ -255,6 +257,10 @@ ecma_async_generator_run (vm_executable_object_t *async_generator_object_p) /**<
     ECMA_ASYNC_YIELD_ITERATOR_END (async_generator_object_p);
     async_generator_object_p->frame_ctx.block_result = ECMA_VALUE_UNDEFINED;
     async_generator_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_throw;
+
+    JERRY_ASSERT (async_generator_object_p->frame_ctx.stack_top_p[-1] == ECMA_VALUE_UNDEFINED
+                  || ecma_is_value_object (async_generator_object_p->frame_ctx.stack_top_p[-1]));
+    async_generator_object_p->frame_ctx.stack_top_p--;
 
     result = jcontext_take_exception ();
   }

@@ -528,7 +528,7 @@ ecma_builtin_promise_race_or_all (ecma_value_t this_arg, /**< 'this' argument */
   }
 
   ecma_value_t iterator;
-  iterator = ecma_builtin_promise_reject_abrupt (ecma_op_get_iterator (iterable, ECMA_VALUE_SYNC_ITERATOR),
+  iterator = ecma_builtin_promise_reject_abrupt (ecma_op_get_iterator (iterable, ECMA_VALUE_SYNC_ITERATOR, NULL),
                                                  capability);
 
   if (ECMA_IS_VALUE_ERROR (iterator))

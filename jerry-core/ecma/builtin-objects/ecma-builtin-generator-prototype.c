@@ -42,7 +42,7 @@ enum
   ECMA_GENERATOR_PROTOTYPE_ROUTINE_NEXT,
   ECMA_GENERATOR_PROTOTYPE_ROUTINE_THROW,
   ECMA_GENERATOR_PROTOTYPE_ROUTINE_RETURN
-};
+} ecma_generator_operation_type_t;
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-generator-prototype.inc.h"
 #define BUILTIN_UNDERSCORED_ID generator_prototype
@@ -59,13 +59,31 @@ enum
  */
 
 /**
+ * Convert routine type to operation type..
+ */
+#define ECMA_GENERATOR_ROUTINE_TO_OPERATION(type) \
+  ((ecma_iterator_command_type_t) ((type) - ECMA_GENERATOR_PROTOTYPE_ROUTINE_NEXT))
+
+JERRY_STATIC_ASSERT (ECMA_GENERATOR_ROUTINE_TO_OPERATION (ECMA_GENERATOR_PROTOTYPE_ROUTINE_NEXT)
+                     == ECMA_ITERATOR_NEXT,
+                     convert_ecma_generator_routine_next_to_ecma_iterator_next_failed);
+
+JERRY_STATIC_ASSERT (ECMA_GENERATOR_ROUTINE_TO_OPERATION (ECMA_GENERATOR_PROTOTYPE_ROUTINE_THROW)
+                     == ECMA_ITERATOR_THROW,
+                     convert_ecma_generator_routine_throw_to_ecma_iterator_throw_failed);
+
+JERRY_STATIC_ASSERT (ECMA_GENERATOR_ROUTINE_TO_OPERATION (ECMA_GENERATOR_PROTOTYPE_ROUTINE_RETURN)
+                     == ECMA_ITERATOR_RETURN,
+                     convert_ecma_generator_routine_return_to_ecma_iterator_return_failed);
+
+/**
  * Helper function for next / return / throw
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_generator_prototype_object_do (vm_executable_object_t *executable_object_p, /**< executable object */
+ecma_builtin_generator_prototype_object_do (vm_executable_object_t *generator_object_p, /**< generator object */
                                             ecma_value_t arg, /**< argument */
                                             ecma_iterator_command_type_t resume_mode) /**< resume mode */
 {
@@ -73,12 +91,13 @@ ecma_builtin_generator_prototype_object_do (vm_executable_object_t *executable_o
 
   while (true)
   {
-    if (executable_object_p->extended_object.u.class_prop.extra_info & ECMA_GENERATOR_ITERATE_AND_YIELD)
+    if (generator_object_p->extended_object.u.class_prop.extra_info & ECMA_GENERATOR_ITERATE_AND_YIELD)
     {
-      ecma_value_t iterator = executable_object_p->frame_ctx.block_result;
+      ecma_value_t iterator = generator_object_p->frame_ctx.block_result;
+      ecma_value_t next_method = generator_object_p->frame_ctx.stack_top_p[-1];
 
       bool done = false;
-      ecma_value_t result = ecma_op_iterator_do (resume_mode, iterator, arg, &done);
+      ecma_value_t result = ecma_op_iterator_do (resume_mode, iterator, next_method, arg, &done);
       ecma_free_value (arg);
 
       if (ECMA_IS_VALUE_ERROR (result))
@@ -89,10 +108,9 @@ ecma_builtin_generator_prototype_object_do (vm_executable_object_t *executable_o
       {
         arg = ecma_op_iterator_value (result);
         ecma_free_value (result);
+
         if (resume_mode == ECMA_ITERATOR_THROW)
         {
-          /* This part is changed in the newest ECMAScript standard.
-           * It was ECMA_ITERATOR_RETURN in ES2015, but I think it was a typo. */
           resume_mode = ECMA_ITERATOR_NEXT;
         }
       }
@@ -101,8 +119,12 @@ ecma_builtin_generator_prototype_object_do (vm_executable_object_t *executable_o
         return result;
       }
 
-      executable_object_p->extended_object.u.class_prop.extra_info &= (uint16_t) ~ECMA_GENERATOR_ITERATE_AND_YIELD;
-      executable_object_p->frame_ctx.block_result = ECMA_VALUE_UNDEFINED;
+      generator_object_p->extended_object.u.class_prop.extra_info &= (uint16_t) ~ECMA_GENERATOR_ITERATE_AND_YIELD;
+      generator_object_p->frame_ctx.block_result = ECMA_VALUE_UNDEFINED;
+
+      JERRY_ASSERT (generator_object_p->frame_ctx.stack_top_p[-1] == ECMA_VALUE_UNDEFINED
+                    || ecma_is_value_object (generator_object_p->frame_ctx.stack_top_p[-1]));
+      generator_object_p->frame_ctx.stack_top_p--;
 
       if (ECMA_IS_VALUE_ERROR (arg))
       {
@@ -113,32 +135,34 @@ ecma_builtin_generator_prototype_object_do (vm_executable_object_t *executable_o
 
     if (resume_mode == ECMA_ITERATOR_RETURN)
     {
-      executable_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_return;
+      generator_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_return;
     }
     else if (resume_mode == ECMA_ITERATOR_THROW)
     {
-      executable_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_throw;
+      generator_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_throw;
     }
 
-    ecma_value_t value = opfunc_resume_executable_object (executable_object_p, arg);
+    ecma_value_t value = opfunc_resume_executable_object (generator_object_p, arg);
 
     if (ECMA_IS_VALUE_ERROR (value))
     {
       return value;
     }
 
-    bool done = (executable_object_p->extended_object.u.class_prop.extra_info & ECMA_EXECUTABLE_OBJECT_COMPLETED);
+    bool done = (generator_object_p->extended_object.u.class_prop.extra_info & ECMA_EXECUTABLE_OBJECT_COMPLETED);
 
     if (!done)
     {
-      const uint8_t *byte_code_p = executable_object_p->frame_ctx.byte_code_p;
+      const uint8_t *byte_code_p = generator_object_p->frame_ctx.byte_code_p;
 
       JERRY_ASSERT (byte_code_p[-2] == CBC_EXT_OPCODE
                     && (byte_code_p[-1] == CBC_EXT_YIELD || byte_code_p[-1] == CBC_EXT_YIELD_ITERATOR));
 
       if (byte_code_p[-1] == CBC_EXT_YIELD_ITERATOR)
       {
-        ecma_value_t iterator = ecma_op_get_iterator (value, ECMA_VALUE_SYNC_ITERATOR);
+        ecma_value_t iterator = ecma_op_get_iterator (value,
+                                                      ECMA_VALUE_SYNC_ITERATOR,
+                                                      generator_object_p->frame_ctx.stack_top_p);
         ecma_free_value (value);
 
         if (ECMA_IS_VALUE_ERROR (iterator))
@@ -149,8 +173,15 @@ ecma_builtin_generator_prototype_object_do (vm_executable_object_t *executable_o
         }
 
         ecma_deref_object (ecma_get_object_from_value (iterator));
-        executable_object_p->extended_object.u.class_prop.extra_info |= ECMA_GENERATOR_ITERATE_AND_YIELD;
-        executable_object_p->frame_ctx.block_result = iterator;
+        generator_object_p->extended_object.u.class_prop.extra_info |= ECMA_GENERATOR_ITERATE_AND_YIELD;
+        generator_object_p->frame_ctx.block_result = iterator;
+
+        if (generator_object_p->frame_ctx.stack_top_p[0] != ECMA_VALUE_UNDEFINED)
+        {
+          ecma_deref_object (ecma_get_object_from_value (generator_object_p->frame_ctx.stack_top_p[0]));
+        }
+
+        generator_object_p->frame_ctx.stack_top_p++;
         arg = ECMA_VALUE_UNDEFINED;
         continue;
       }
@@ -216,30 +247,9 @@ ecma_builtin_generator_prototype_dispatch_routine (uint16_t builtin_routine_id, 
     return ECMA_VALUE_ERROR;
   }
 
-  switch (builtin_routine_id)
-  {
-    case ECMA_GENERATOR_PROTOTYPE_ROUTINE_NEXT:
-    {
-      return ecma_builtin_generator_prototype_object_do (executable_object_p,
-                                                         arguments_list_p[0],
-                                                         ECMA_ITERATOR_NEXT);
-    }
-    case ECMA_GENERATOR_PROTOTYPE_ROUTINE_THROW:
-    {
-      return ecma_builtin_generator_prototype_object_do (executable_object_p,
-                                                         arguments_list_p[0],
-                                                         ECMA_ITERATOR_THROW);
-    }
-    default:
-    {
-      JERRY_ASSERT (builtin_routine_id == ECMA_GENERATOR_PROTOTYPE_ROUTINE_RETURN);
-      return ecma_builtin_generator_prototype_object_do (executable_object_p,
-                                                         arguments_list_p[0],
-                                                         ECMA_ITERATOR_RETURN);
-    }
-  }
-
-  return ECMA_VALUE_EMPTY;
+  return ecma_builtin_generator_prototype_object_do (executable_object_p,
+                                                     arguments_list_p[0],
+                                                     ECMA_GENERATOR_ROUTINE_TO_OPERATION (builtin_routine_id));
 } /* ecma_builtin_generator_prototype_dispatch_routine */
 
 /**

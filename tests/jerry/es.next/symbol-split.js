@@ -107,3 +107,14 @@ try {
 } catch (e) {
   assert (e === "abrupt capture");
 }
+
+Object.defineProperty(RegExp.prototype, "exec", { value: function (str) {
+  this.lastIndex = 10;
+  return { };
+}});
+
+var result = split.call ({flags: "g"}, "string");
+
+assert(result.length === 2)
+assert(result[0] === "")
+assert(result[1] === "")

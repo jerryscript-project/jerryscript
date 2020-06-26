@@ -2113,10 +2113,13 @@ ecma_regexp_split_helper (ecma_value_t this_arg, /**< this value */
   uint32_t limit = UINT32_MAX;
   if (!ecma_is_value_undefined (limit_arg))
   {
-    if (ECMA_IS_VALUE_ERROR (ecma_op_to_length (limit_arg, &limit)))
+    /* ECMA-262 v11, 21.2.5.13 13 */
+    ecma_number_t num;
+    if (ECMA_IS_VALUE_ERROR (ecma_get_number (limit_arg, &num)))
     {
       goto cleanup_splitter;
     }
+    limit = ecma_number_to_uint32 (num);
   }
 
   /* 15. */
@@ -2213,6 +2216,12 @@ ecma_regexp_split_helper (ecma_value_t this_arg, /**< this value */
       result = ECMA_VALUE_ERROR;
       ecma_deref_object (match_array_p);
       goto cleanup_array;
+    }
+
+    /* ECMA-262 v11, 21.2.5.11 19.d.ii */
+    if (end_index > string_length)
+    {
+      end_index = string_length;
     }
 
     /* 24.f.iii. */

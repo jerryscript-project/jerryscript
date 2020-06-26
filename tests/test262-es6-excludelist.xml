@@ -86,6 +86,7 @@
   <test id="built-ins/RegExp/prototype/Symbol.replace/y-set-lastindex.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/Symbol.search/get-sticky-coerce.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/Symbol.search/get-sticky-err.js"><reason></reason></test>
+  <test id="built-ins/RegExp/prototype/Symbol.split/coerce-limit.js"><reason>Test is outdated: ES11, 21.2.5.13 13</reason></test>
   <test id="built-ins/RegExp/prototype/test/get-sticky-err.js"><reason></reason></test>
   <test id="built-ins/String/prototype/normalize/form-is-not-valid-throws.js"><reason></reason></test>
   <test id="built-ins/String/prototype/normalize/length.js"><reason></reason></test>
@@ -96,7 +97,6 @@
   <test id="built-ins/String/prototype/normalize/return-normalized-string-from-coerced-form.js"><reason></reason></test>
   <test id="built-ins/String/prototype/normalize/return-normalized-string.js"><reason></reason></test>
   <test id="built-ins/String/prototype/normalize/return-normalized-string-using-default-parameter.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/split/S15.5.4.14_A2_T37.js"><reason></reason></test>
   <test id="built-ins/String/prototype/toLocaleLowerCase/special_casing_conditional.js"><reason></reason></test>
   <test id="built-ins/String/prototype/toLocaleLowerCase/supplementary_plane.js"><reason></reason></test>
   <test id="built-ins/String/prototype/toLocaleUpperCase/supplementary_plane.js"><reason></reason></test>

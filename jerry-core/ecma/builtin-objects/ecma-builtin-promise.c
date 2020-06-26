@@ -126,6 +126,7 @@ ecma_builtin_promise_resolve (ecma_value_t this_arg, /**< 'this' argument */
  */
 inline static ecma_value_t
 ecma_builtin_promise_perform_race (ecma_value_t iterator, /**< the iterator for race */
+                                   ecma_value_t next_method, /**< next method */
                                    ecma_value_t capability, /**< PromiseCapability record */
                                    ecma_value_t ctor, /**< Constructor value */
                                    bool *done_p) /**< [out] iteratorRecord[[done]] */
@@ -138,7 +139,7 @@ ecma_builtin_promise_perform_race (ecma_value_t iterator, /**< the iterator for 
   while (true)
   {
     /* a. */
-    ecma_value_t next = ecma_op_iterator_step (iterator);
+    ecma_value_t next = ecma_op_iterator_step (iterator, next_method);
     /* b, c. */
     if (ECMA_IS_VALUE_ERROR (next))
     {
@@ -321,8 +322,9 @@ ecma_builtin_promise_all_handler (const ecma_value_t function, /**< the function
  */
 inline static ecma_value_t
 ecma_builtin_promise_perform_all (ecma_value_t iterator, /**< iteratorRecord */
-                                  ecma_value_t ctor, /**< the caller of Promise.race */
+                                  ecma_value_t next_method, /**< next method */
                                   ecma_value_t capability,  /**< PromiseCapability record */
+                                  ecma_value_t ctor, /**< the caller of Promise.race */
                                   bool *done_p) /**< [out] iteratorRecord[[done]] */
 {
   /* 1. - 2. */
@@ -350,7 +352,7 @@ ecma_builtin_promise_perform_all (ecma_value_t iterator, /**< iteratorRecord */
   while (true)
   {
     /* a. */
-    ecma_value_t next = ecma_op_iterator_step (iterator);
+    ecma_value_t next = ecma_op_iterator_step (iterator, next_method);
     /* b. - c. */
     if (ECMA_IS_VALUE_ERROR (next))
     {
@@ -527,9 +529,9 @@ ecma_builtin_promise_race_or_all (ecma_value_t this_arg, /**< 'this' argument */
     return capability;
   }
 
-  ecma_value_t iterator;
-  iterator = ecma_builtin_promise_reject_abrupt (ecma_op_get_iterator (iterable, ECMA_VALUE_SYNC_ITERATOR, NULL),
-                                                 capability);
+  ecma_value_t next_method;
+  ecma_value_t iterator = ecma_op_get_iterator (iterable, ECMA_VALUE_SYNC_ITERATOR, &next_method);
+  iterator = ecma_builtin_promise_reject_abrupt (iterator, capability);
 
   if (ECMA_IS_VALUE_ERROR (iterator))
   {
@@ -543,11 +545,11 @@ ecma_builtin_promise_race_or_all (ecma_value_t this_arg, /**< 'this' argument */
 
   if (is_race)
   {
-    ret = ecma_builtin_promise_perform_race (iterator, capability, constructor_value, &is_done);
+    ret = ecma_builtin_promise_perform_race (iterator, next_method, capability, constructor_value, &is_done);
   }
   else
   {
-    ret = ecma_builtin_promise_perform_all (iterator, constructor_value, capability, &is_done);
+    ret = ecma_builtin_promise_perform_all (iterator, next_method, capability, constructor_value, &is_done);
   }
 
   ecma_free_value (constructor_value);
@@ -563,6 +565,7 @@ ecma_builtin_promise_race_or_all (ecma_value_t this_arg, /**< 'this' argument */
   }
 
   ecma_free_value (iterator);
+  ecma_free_value (next_method);
   ecma_free_value (capability);
 
   return ret;

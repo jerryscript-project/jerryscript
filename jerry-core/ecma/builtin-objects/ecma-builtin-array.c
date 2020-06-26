@@ -153,7 +153,8 @@ ecma_builtin_array_object_from (ecma_value_t this_arg, /**< 'this' argument */
     ecma_object_t *array_obj_p = ecma_get_object_from_value (array);
 
     /* 6.d */
-    ecma_value_t iterator = ecma_op_get_iterator (items, using_iterator, NULL);
+    ecma_value_t next_method;
+    ecma_value_t iterator = ecma_op_get_iterator (items, using_iterator, &next_method);
     ecma_free_value (using_iterator);
 
     /* 6.e */
@@ -170,7 +171,7 @@ ecma_builtin_array_object_from (ecma_value_t this_arg, /**< 'this' argument */
     while (true)
     {
       /* 6.g.ii */
-      ecma_value_t next = ecma_op_iterator_step (iterator);
+      ecma_value_t next = ecma_op_iterator_step (iterator, next_method);
 
       /* 6.g.iii */
       if (ECMA_IS_VALUE_ERROR (next))
@@ -196,6 +197,7 @@ ecma_builtin_array_object_from (ecma_value_t this_arg, /**< 'this' argument */
         }
 
         ecma_free_value (iterator);
+        ecma_free_value (next_method);
         /* 6.g.iv.3 */
         return array;
       }
@@ -254,6 +256,7 @@ ecma_builtin_array_object_from (ecma_value_t this_arg, /**< 'this' argument */
 
 iterator_cleanup:
     ecma_free_value (iterator);
+    ecma_free_value (next_method);
     ecma_free_value (array);
 
     return ret_value;

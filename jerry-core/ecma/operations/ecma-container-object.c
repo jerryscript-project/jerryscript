@@ -439,22 +439,23 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
 
   ecma_object_t *adder_func_p = ecma_get_object_from_value (result);
 
-  result = ecma_op_get_iterator (iterable, ECMA_VALUE_SYNC_ITERATOR, NULL);
+  ecma_value_t next_method;
+  result = ecma_op_get_iterator (iterable, ECMA_VALUE_SYNC_ITERATOR, &next_method);
 
   if (ECMA_IS_VALUE_ERROR (result))
   {
     goto cleanup_adder;
   }
 
-  const ecma_value_t iter = result;
+  const ecma_value_t iterator = result;
 
   while (true)
   {
-    result = ecma_op_iterator_step (iter);
+    result = ecma_op_iterator_step (iterator, next_method);
 
     if (ECMA_IS_VALUE_ERROR (result))
     {
-      goto cleanup_iter;
+      goto cleanup_iterator;
     }
 
     if (ecma_is_value_false (result))
@@ -468,7 +469,7 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
 
     if (ECMA_IS_VALUE_ERROR (result))
     {
-      goto cleanup_iter;
+      goto cleanup_iterator;
     }
 
     if (lit_id == LIT_MAGIC_STRING_SET_UL || lit_id == LIT_MAGIC_STRING_WEAKSET_UL)
@@ -486,9 +487,9 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
       {
         ecma_free_value (result);
         ecma_raise_type_error (ECMA_ERR_MSG ("Iterator value is not an object."));
-        result = ecma_op_iterator_close (iter);
+        result = ecma_op_iterator_close (iterator);
         JERRY_ASSERT (ECMA_IS_VALUE_ERROR (result));
-        goto cleanup_iter;
+        goto cleanup_iterator;
       }
 
       ecma_object_t *next_object_p = ecma_get_object_from_value (result);
@@ -498,8 +499,8 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
       if (ECMA_IS_VALUE_ERROR (result))
       {
         ecma_deref_object (next_object_p);
-        ecma_op_iterator_close (iter);
-        goto cleanup_iter;
+        ecma_op_iterator_close (iterator);
+        goto cleanup_iterator;
       }
 
       const ecma_value_t key = result;
@@ -510,8 +511,8 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
       {
         ecma_deref_object (next_object_p);
         ecma_free_value (key);
-        ecma_op_iterator_close (iter);
-        goto cleanup_iter;
+        ecma_op_iterator_close (iterator);
+        goto cleanup_iterator;
       }
 
       const ecma_value_t value = result;
@@ -525,19 +526,19 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
 
     if (ECMA_IS_VALUE_ERROR (result))
     {
-      ecma_op_iterator_close (iter);
-      goto cleanup_iter;
+      ecma_op_iterator_close (iterator);
+      goto cleanup_iterator;
     }
 
     ecma_free_value (result);
   }
 
-  ecma_free_value (iter);
-  ecma_deref_object (adder_func_p);
-  return ecma_make_object_value (object_p);
+  ecma_ref_object (object_p);
+  result = ecma_make_object_value (object_p);
 
-cleanup_iter:
-  ecma_free_value (iter);
+cleanup_iterator:
+  ecma_free_value (iterator);
+  ecma_free_value (next_method);
 cleanup_adder:
   ecma_deref_object (adder_func_p);
 cleanup_object:

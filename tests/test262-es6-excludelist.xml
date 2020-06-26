@@ -360,6 +360,7 @@
   <test id="language/statements/continue/simple-and-labeled.js"><reason></reason></test>
   <test id="language/statements/for-of/body-dstr-assign-error.js"><reason></reason></test>
   <test id="language/statements/for-of/body-dstr-assign.js"><reason></reason></test>
+  <test id="language/statements/for-of/iterator-next-reference.js"><reason>ES spec change: next method must be cached</reason></test>
   <test id="language/statements/for/S12.6.3_A9.1.js"><reason></reason></test>
   <test id="language/statements/for/S12.6.3_A9.js"><reason></reason></test>
   <test id="language/statements/generators/has-instance.js"><reason></reason></test>

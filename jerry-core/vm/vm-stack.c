@@ -81,6 +81,8 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
     case VM_CONTEXT_FOR_OF:
     {
       ecma_value_t iterator = vm_stack_top_p[-3];
+      ecma_free_value (vm_stack_top_p[-2]);
+      ecma_free_value (vm_stack_top_p[-4]);
 
       if (context_info & VM_CONTEXT_CLOSE_ITERATOR)
       {
@@ -88,7 +90,6 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
       }
       ecma_free_value (iterator);
 
-      ecma_free_value (vm_stack_top_p[-2]);
       VM_MINUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION);
       vm_stack_top_p -= PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION;
       break;
@@ -339,7 +340,8 @@ vm_get_context_value_offsets (ecma_value_t *context_item_p) /**< any item of a c
     }
     case VM_CONTEXT_FOR_OF:
     {
-      return ((3 << (VM_CONTEXT_OFFSET_SHIFT * 2))
+      return ((4 << (VM_CONTEXT_OFFSET_SHIFT * 3))
+              | (3 << (VM_CONTEXT_OFFSET_SHIFT * 2))
               | (2 << (VM_CONTEXT_OFFSET_SHIFT))
               | PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION);
     }

@@ -119,3 +119,41 @@ var i = 0;
 for (var a of obj) {
   assert (a === i++);
 }
+
+var status = 0;
+i = 0;
+
+function yieldNext() {
+  ++status
+  assert(status === 3 || status === 6 || status === 9)
+  return {
+    get value() {
+      ++status
+      assert(status === 4 || status === 7)
+      return "Res"
+    },
+    done: ++i >= 3
+  }
+}
+
+obj = {
+  [Symbol.iterator]() {
+    assert(++status === 1)
+    return {
+      get next() {
+        assert(++status === 2)
+        return yieldNext
+      }
+    }
+  }
+}
+
+function getX() {
+  ++status
+  assert(status === 5 || status === 8)
+  return { x:0 }
+}
+
+for (getX().x of obj)
+  ;
+assert(status == 9)

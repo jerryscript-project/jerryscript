@@ -339,13 +339,14 @@ opfunc_append_to_spread_array (ecma_value_t *stack_top_p, /**< current stack top
       ecma_value_t ret_value = ECMA_VALUE_ERROR;
       ecma_value_t spread_value = stack_top_p[i];
 
-      ecma_value_t iterator = ecma_op_get_iterator (spread_value, ECMA_VALUE_SYNC_ITERATOR, NULL);
+      ecma_value_t next_method;
+      ecma_value_t iterator = ecma_op_get_iterator (spread_value, ECMA_VALUE_SYNC_ITERATOR, &next_method);
 
       if (!ECMA_IS_VALUE_ERROR (iterator))
       {
         while (true)
         {
-          ecma_value_t next_value = ecma_op_iterator_step (iterator);
+          ecma_value_t next_value = ecma_op_iterator_step (iterator, next_method);
 
           if (ECMA_IS_VALUE_ERROR (next_value))
           {
@@ -380,6 +381,7 @@ opfunc_append_to_spread_array (ecma_value_t *stack_top_p, /**< current stack top
       }
 
       ecma_free_value (iterator);
+      ecma_free_value (next_method);
       ecma_free_value (spread_value);
 
       if (ECMA_IS_VALUE_ERROR (ret_value))
@@ -432,13 +434,14 @@ opfunc_spread_arguments (ecma_value_t *stack_top_p, /**< pointer to the current 
     ecma_value_t spread_value = *stack_top_p++;
     i++;
 
-    ecma_value_t iterator = ecma_op_get_iterator (spread_value, ECMA_VALUE_SYNC_ITERATOR, NULL);
+    ecma_value_t next_method;
+    ecma_value_t iterator = ecma_op_get_iterator (spread_value, ECMA_VALUE_SYNC_ITERATOR, &next_method);
 
     if (!ECMA_IS_VALUE_ERROR (iterator))
     {
       while (true)
       {
-        ecma_value_t next_value = ecma_op_iterator_step (iterator);
+        ecma_value_t next_value = ecma_op_iterator_step (iterator, next_method);
 
         if (ECMA_IS_VALUE_ERROR (next_value))
         {
@@ -465,6 +468,7 @@ opfunc_spread_arguments (ecma_value_t *stack_top_p, /**< pointer to the current 
     }
 
     ecma_free_value (iterator);
+    ecma_free_value (next_method);
     ecma_free_value (spread_value);
 
     if (ECMA_IS_VALUE_ERROR (ret_value))

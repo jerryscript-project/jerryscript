@@ -777,7 +777,8 @@ ecma_op_typedarray_from (ecma_value_t items_val, /**< the source array-like obje
   if (!ecma_is_value_undefined (using_iterator))
   {
     /* 8.a */
-    ecma_value_t iterator = ecma_op_get_iterator (items_val, using_iterator, NULL);
+    ecma_value_t next_method;
+    ecma_value_t iterator = ecma_op_get_iterator (items_val, using_iterator, &next_method);
     ecma_free_value (using_iterator);
 
     /* 8.b */
@@ -794,7 +795,7 @@ ecma_op_typedarray_from (ecma_value_t items_val, /**< the source array-like obje
     while (true)
     {
       /* 8.e.i */
-      ecma_value_t next = ecma_op_iterator_step (iterator);
+      ecma_value_t next = ecma_op_iterator_step (iterator, next_method);
 
       /* 8.e.ii */
       if (ECMA_IS_VALUE_ERROR (next))
@@ -822,6 +823,7 @@ ecma_op_typedarray_from (ecma_value_t items_val, /**< the source array-like obje
     }
 
     ecma_free_value (iterator);
+    ecma_free_value (next_method);
 
     if (ECMA_IS_VALUE_ERROR (ret_value))
     {

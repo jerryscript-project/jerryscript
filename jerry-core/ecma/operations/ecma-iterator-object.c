@@ -579,10 +579,20 @@ ecma_op_iterator_close (ecma_value_t iterator) /**< iterator value */
  *         raised error - otherwise
  */
 ecma_value_t
-ecma_op_iterator_step (ecma_value_t iterator) /**< iterator value */
+ecma_op_iterator_step (ecma_value_t iterator, /**< iterator value */
+                       ecma_value_t next_method) /**< next method */
 {
   /* 1. */
-  ecma_value_t result = ecma_op_iterator_next_old (iterator, ECMA_VALUE_EMPTY);
+  ecma_value_t result;
+  if (next_method == ECMA_VALUE_EMPTY)
+  {
+    /* TODO: EMPTY support should be removed after all functions support next method caching. */
+    result = ecma_op_iterator_next_old (iterator, ECMA_VALUE_EMPTY);
+  }
+  else
+  {
+    result = ecma_op_iterator_next (iterator, next_method, ECMA_VALUE_EMPTY);
+  }
 
   /* 2. */
   if (ECMA_IS_VALUE_ERROR (result))

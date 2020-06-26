@@ -66,7 +66,7 @@ ecma_value_t
 ecma_op_iterator_close (ecma_value_t iterator);
 
 ecma_value_t
-ecma_op_iterator_step (ecma_value_t iterator);
+ecma_op_iterator_step (ecma_value_t iterator, ecma_value_t next_method);
 
 ecma_value_t
 ecma_op_iterator_do (ecma_iterator_command_type_t command, ecma_value_t iterator,

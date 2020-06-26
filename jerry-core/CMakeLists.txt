@@ -264,8 +264,8 @@ endif()
 
 if(EXISTS ${JERRY_PROFILE})
   file(READ "${JERRY_PROFILE}" PROFILE_SETTINGS)
-  string(REGEX REPLACE "^#.*$" "" PROFILE_SETTINGS "${PROFILE_SETTINGS}")
-  string(REGEX REPLACE "[\r|\n]" ";" PROFILE_SETTINGS "${PROFILE_SETTINGS}")
+  string(REGEX REPLACE "[ \t]*#[^\n]*" "" PROFILE_SETTINGS "${PROFILE_SETTINGS}")
+  string(REGEX REPLACE "[\r\n]" ";" PROFILE_SETTINGS "${PROFILE_SETTINGS}")
 
   # Process entries and save them as CMake variables.
   # This is required to correctly generate the jerryscript-config.h file.

@@ -260,40 +260,43 @@ ecma_process_promise_async_reaction_job (ecma_job_promise_async_reaction_t *job_
 
   if (ecma_job_queue_get_type (&job_p->header) == ECMA_JOB_PROMISE_ASYNC_REACTION_REJECTED)
   {
-    if (!(executable_object_p->extended_object.u.class_prop.extra_info & ECMA_GENERATOR_ITERATE_AND_YIELD))
+    if (!(executable_object_p->extended_object.u.class_prop.extra_info & ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD))
     {
       executable_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_throw;
     }
-    else if (ECMA_ASYNC_YIELD_ITERATOR_GET_STATE (executable_object_p) == ECMA_ASYNC_YIELD_ITERATOR_AWAIT_RETURN)
+    else if (ECMA_AWAIT_GET_STATE (executable_object_p) == ECMA_AWAIT_YIELD_RETURN)
     {
       /* Unlike other operations, return captures rejected promises as well. */
-      ECMA_ASYNC_YIELD_ITERATOR_CHANGE_STATE (executable_object_p, RETURN, OPERATION);
+      ECMA_AWAIT_CHANGE_STATE (executable_object_p, YIELD_RETURN, YIELD_OPERATION);
     }
     else
     {
+      if (ECMA_AWAIT_GET_STATE (executable_object_p) <= ECMA_AWAIT_YIELD_END)
+      {
+        JERRY_ASSERT (ecma_is_value_object (executable_object_p->frame_ctx.block_result));
+        executable_object_p->frame_ctx.block_result = ECMA_VALUE_UNDEFINED;
+
+        JERRY_ASSERT (executable_object_p->frame_ctx.stack_top_p[-1] == ECMA_VALUE_UNDEFINED
+                      || ecma_is_value_object (executable_object_p->frame_ctx.stack_top_p[-1]));
+        executable_object_p->frame_ctx.stack_top_p--;
+      }
+
       /* Exception: Abort iterators, clear all status. */
-      ECMA_ASYNC_YIELD_ITERATOR_END (executable_object_p);
-
-      JERRY_ASSERT (ecma_is_value_object (executable_object_p->frame_ctx.block_result));
-      executable_object_p->frame_ctx.block_result = ECMA_VALUE_UNDEFINED;
+      executable_object_p->extended_object.u.class_prop.extra_info &= ECMA_AWAIT_CLEAR_MASK;
       executable_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_throw;
-
-      JERRY_ASSERT (executable_object_p->frame_ctx.stack_top_p[-1] == ECMA_VALUE_UNDEFINED
-                    || ecma_is_value_object (executable_object_p->frame_ctx.stack_top_p[-1]));
-      executable_object_p->frame_ctx.stack_top_p--;
     }
   }
 
-  if (executable_object_p->extended_object.u.class_prop.extra_info & ECMA_GENERATOR_ITERATE_AND_YIELD)
+  if (executable_object_p->extended_object.u.class_prop.extra_info & ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD)
   {
-    job_p->argument = ecma_async_yield_continue_await (executable_object_p, job_p->argument);
+    job_p->argument = ecma_await_continue (executable_object_p, job_p->argument);
 
     if (ECMA_IS_VALUE_ERROR (job_p->argument))
     {
       job_p->argument = jcontext_take_exception ();
       executable_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_throw;
     }
-    else if (executable_object_p->extended_object.u.class_prop.extra_info & ECMA_GENERATOR_ITERATE_AND_YIELD)
+    else if (executable_object_p->extended_object.u.class_prop.extra_info & ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD)
     {
       /* Continue iteration. */
       JERRY_ASSERT (job_p->argument == ECMA_VALUE_UNDEFINED);
@@ -302,15 +305,18 @@ ecma_process_promise_async_reaction_job (ecma_job_promise_async_reaction_t *job_
       return ECMA_VALUE_UNDEFINED;
     }
 
-    /* End of yield*, clear all status. */
-    ECMA_ASYNC_YIELD_ITERATOR_END (executable_object_p);
+    if (ECMA_AWAIT_GET_STATE (executable_object_p) <= ECMA_AWAIT_YIELD_END)
+    {
+      JERRY_ASSERT (ecma_is_value_object (executable_object_p->frame_ctx.block_result));
+      executable_object_p->frame_ctx.block_result = ECMA_VALUE_UNDEFINED;
 
-    JERRY_ASSERT (ecma_is_value_object (executable_object_p->frame_ctx.block_result));
-    executable_object_p->frame_ctx.block_result = ECMA_VALUE_UNDEFINED;
+      JERRY_ASSERT (executable_object_p->frame_ctx.stack_top_p[-1] == ECMA_VALUE_UNDEFINED
+                    || ecma_is_value_object (executable_object_p->frame_ctx.stack_top_p[-1]));
+      executable_object_p->frame_ctx.stack_top_p--;
+    }
 
-    JERRY_ASSERT (executable_object_p->frame_ctx.stack_top_p[-1] == ECMA_VALUE_UNDEFINED
-                  || ecma_is_value_object (executable_object_p->frame_ctx.stack_top_p[-1]));
-    executable_object_p->frame_ctx.stack_top_p--;
+    /* Clear all status. */
+    executable_object_p->extended_object.u.class_prop.extra_info &= ECMA_AWAIT_CLEAR_MASK;
   }
 
   ecma_value_t result = opfunc_resume_executable_object (executable_object_p, job_p->argument);

@@ -60,6 +60,7 @@ typedef enum
   PARSER_STATEMENT_FOR_IN,
 #if ENABLED (JERRY_ESNEXT)
   PARSER_STATEMENT_FOR_OF,
+  PARSER_STATEMENT_FOR_AWAIT_OF,
 #endif /* ENABLED (JERRY_ESNEXT) */
   PARSER_STATEMENT_WITH,
   PARSER_STATEMENT_TRY,
@@ -118,6 +119,8 @@ static const uint8_t parser_statement_flags[] =
   PARSER_STATM_BREAK_TARGET | PARSER_STATM_CONTINUE_TARGET | PARSER_STATM_SINGLE_STATM | PARSER_STATM_CONTEXT_BREAK,
 #if ENABLED (JERRY_ESNEXT)
   /* PARSER_STATEMENT_FOR_OF */
+  PARSER_STATM_BREAK_TARGET | PARSER_STATM_CONTINUE_TARGET | PARSER_STATM_SINGLE_STATM | PARSER_STATM_CONTEXT_BREAK,
+  /* PARSER_STATEMENT_FOR_AWAIT_OF */
   PARSER_STATM_BREAK_TARGET | PARSER_STATM_CONTINUE_TARGET | PARSER_STATM_SINGLE_STATM | PARSER_STATM_CONTEXT_BREAK,
 #endif /* ENABLED (JERRY_ESNEXT) */
   /* PARSER_STATEMENT_WITH */
@@ -290,6 +293,8 @@ parser_statement_length (uint8_t type) /**< type of statement */
     (uint8_t) (sizeof (parser_for_in_of_statement_t) + sizeof (parser_loop_statement_t) + 1),
 #if ENABLED (JERRY_ESNEXT)
     /* PARSER_STATEMENT_FOR_OF */
+    (uint8_t) (sizeof (parser_for_in_of_statement_t) + sizeof (parser_loop_statement_t) + 1),
+    /* PARSER_STATEMENT_FOR_AWAIT_OF */
     (uint8_t) (sizeof (parser_for_in_of_statement_t) + sizeof (parser_loop_statement_t) + 1),
 #endif /* ENABLED (JERRY_ESNEXT) */
     /* PARSER_STATEMENT_WITH */
@@ -1198,8 +1203,30 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_FOR);
   lexer_next_token (context_p);
 
+#if ENABLED (JERRY_ESNEXT)
+  bool is_for_await = false;
+
+  if (context_p->token.type == LEXER_KEYW_AWAIT)
+  {
+    if (JERRY_UNLIKELY (context_p->token.lit_location.has_escape))
+    {
+      parser_raise_error (context_p, PARSER_ERR_INVALID_KEYWORD);
+    }
+    lexer_next_token (context_p);
+    is_for_await = true;
+  }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
   if (context_p->token.type != LEXER_LEFT_PAREN)
   {
+#if ENABLED (JERRY_ESNEXT)
+    if (context_p->token.type == LEXER_LITERAL
+        && context_p->token.keyword_type == LEXER_KEYW_AWAIT
+        && !context_p->token.lit_location.has_escape)
+    {
+      parser_raise_error (context_p, PARSER_ERR_FOR_AWAIT_NO_ASYNC);
+    }
+#endif /* ENABLED (JERRY_ESNEXT) */
     parser_raise_error (context_p, PARSER_ERR_LEFT_PAREN_EXPECTED);
   }
 
@@ -1274,6 +1301,16 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
     const uint8_t *source_end_p = context_p->source_p - 2;
 
     scanner_seek (context_p);
+
+#if ENABLED (JERRY_ESNEXT)
+    if (is_for_in && is_for_await)
+    {
+      context_p->token.line = context_p->line;
+      context_p->token.column = context_p->column - 2;
+      parser_raise_error (context_p, PARSER_ERR_FOR_AWAIT_NO_OF);
+    }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
     lexer_next_token (context_p);
     parser_parse_expression (context_p, PARSE_EXPR);
 
@@ -1288,10 +1325,16 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
                                      : PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION);
 #endif /* !JERRY_NDEBUG */
 
-    parser_emit_cbc_ext_forward_branch (context_p,
-                                        is_for_in ? CBC_EXT_FOR_IN_CREATE_CONTEXT
-                                                  : CBC_EXT_FOR_OF_CREATE_CONTEXT,
-                                        &for_in_of_statement.branch);
+    cbc_ext_opcode_t init_opcode = CBC_EXT_FOR_IN_INIT;
+
+#if ENABLED (JERRY_ESNEXT)
+    if (!is_for_in)
+    {
+      init_opcode = is_for_await ? CBC_EXT_FOR_AWAIT_OF_INIT : CBC_EXT_FOR_OF_INIT;
+    }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+    parser_emit_cbc_ext_forward_branch (context_p, init_opcode, &for_in_of_statement.branch);
 
     JERRY_ASSERT (context_p->last_cbc_opcode == PARSER_CBC_UNAVAILABLE);
     for_in_of_statement.start_offset = context_p->byte_code_size;
@@ -1443,12 +1486,17 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
 
     parser_stack_push (context_p, &for_in_of_statement, sizeof (parser_for_in_of_statement_t));
     parser_stack_push (context_p, &loop, sizeof (parser_loop_statement_t));
+
+    uint8_t for_type = PARSER_STATEMENT_FOR_IN;
+
 #if ENABLED (JERRY_ESNEXT)
-    parser_stack_push_uint8 (context_p, is_for_in ? PARSER_STATEMENT_FOR_IN
-                                                  : PARSER_STATEMENT_FOR_OF);
-#else /* !ENABLED (JERRY_ESNEXT) */
-    parser_stack_push_uint8 (context_p, PARSER_STATEMENT_FOR_IN);
+    if (!is_for_in)
+    {
+      for_type = is_for_await ? PARSER_STATEMENT_FOR_AWAIT_OF : PARSER_STATEMENT_FOR_OF;
+    }
 #endif /* ENABLED (JERRY_ESNEXT) */
+
+    parser_stack_push_uint8 (context_p, for_type);
     parser_stack_iterator_init (context_p, &context_p->last_statement);
     return;
   }
@@ -1514,6 +1562,13 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
       parser_raise_error (context_p, PARSER_ERR_SEMICOLON_EXPECTED);
     }
   }
+
+#if ENABLED (JERRY_ESNEXT)
+  if (is_for_await)
+  {
+    parser_raise_error (context_p, PARSER_ERR_FOR_AWAIT_NO_OF);
+  }
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   JERRY_ASSERT (context_p->next_scanner_info_p->source_p != context_p->source_p
                 || context_p->next_scanner_info_p->type == SCANNER_TYPE_FOR);
@@ -3286,15 +3341,14 @@ consume_last_statement:
         case PARSER_STATEMENT_FOR_IN:
 #if ENABLED (JERRY_ESNEXT)
         case PARSER_STATEMENT_FOR_OF:
+        case PARSER_STATEMENT_FOR_AWAIT_OF:
 #endif /* ENABLED (JERRY_ESNEXT) */
         {
           parser_for_in_of_statement_t for_in_of_statement;
           parser_loop_statement_t loop;
 
 #if ENABLED (JERRY_ESNEXT)
-          bool is_for_in = (context_p->stack_top_uint8 == PARSER_STATEMENT_FOR_IN);
-#else
-          bool is_for_in = true;
+          uint8_t for_type = context_p->stack_top_uint8;
 #endif /* ENABLED (JERRY_ESNEXT) */
 
           parser_stack_pop_uint8 (context_p);
@@ -3305,18 +3359,32 @@ consume_last_statement:
           parser_set_continues_to_current_position (context_p, loop.branch_list_p);
 
           parser_flush_cbc (context_p);
-          PARSER_MINUS_EQUAL_U16 (context_p->stack_depth, is_for_in ? PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION
-                                                                    : PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION);
+
+          uint16_t stack_allocation = PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION;
+#if ENABLED (JERRY_ESNEXT)
+          if (for_type != PARSER_STATEMENT_FOR_IN)
+          {
+            stack_allocation = (for_type == PARSER_STATEMENT_FOR_OF ? PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION
+                                                                    : PARSER_FOR_AWAIT_OF_CONTEXT_STACK_ALLOCATION);
+          }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+          PARSER_MINUS_EQUAL_U16 (context_p->stack_depth, stack_allocation);
 #ifndef JERRY_NDEBUG
-          PARSER_MINUS_EQUAL_U16 (context_p->context_stack_depth,
-                                  is_for_in ? PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION
-                                            : PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION);
+          PARSER_MINUS_EQUAL_U16 (context_p->context_stack_depth, stack_allocation);
 #endif /* !JERRY_NDEBUG */
 
-          parser_emit_cbc_ext_backward_branch (context_p,
-                                               is_for_in ? CBC_EXT_BRANCH_IF_FOR_IN_HAS_NEXT
-                                                         : CBC_EXT_BRANCH_IF_FOR_OF_HAS_NEXT,
-                                               for_in_of_statement.start_offset);
+          cbc_ext_opcode_t opcode = CBC_EXT_BRANCH_IF_FOR_IN_HAS_NEXT;
+
+#if ENABLED (JERRY_ESNEXT)
+          if (for_type != PARSER_STATEMENT_FOR_IN)
+          {
+            opcode = (for_type == PARSER_STATEMENT_FOR_OF ? CBC_EXT_BRANCH_IF_FOR_OF_HAS_NEXT
+                                                          : CBC_EXT_BRANCH_IF_FOR_AWAIT_OF_HAS_NEXT);
+          }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+          parser_emit_cbc_ext_backward_branch (context_p, opcode, for_in_of_statement.start_offset);
 
           parser_set_breaks_to_current_position (context_p, loop.branch_list_p);
           parser_set_branch_to_current_position (context_p, &for_in_of_statement.branch);

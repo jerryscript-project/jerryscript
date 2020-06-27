@@ -206,7 +206,7 @@ typedef enum
 
   VM_OC_BLOCK_CREATE_CONTEXT,    /**< create lexical environment for blocks enclosed in braces */
   VM_OC_WITH,                    /**< with */
-  VM_OC_FOR_IN_CREATE_CONTEXT,   /**< for in create context */
+  VM_OC_FOR_IN_INIT,             /**< for-in init context */
   VM_OC_FOR_IN_GET_NEXT,         /**< get next */
   VM_OC_FOR_IN_HAS_NEXT,         /**< has next */
 
@@ -243,9 +243,11 @@ typedef enum
   VM_OC_CLONE_CONTEXT,           /**< clone lexical environment with let/const declarations */
   VM_OC_SET_COMPUTED_PROPERTY,   /**< set computed property */
 
-  VM_OC_FOR_OF_CREATE_CONTEXT,   /**< for of create context */
-  VM_OC_FOR_OF_GET_NEXT,         /**< get next */
-  VM_OC_FOR_OF_HAS_NEXT,         /**< has next */
+  VM_OC_FOR_OF_INIT,             /**< for-of init context */
+  VM_OC_FOR_OF_GET_NEXT,         /**< for-of get next */
+  VM_OC_FOR_OF_HAS_NEXT,         /**< for-of has next */
+  VM_OC_FOR_AWAIT_OF_INIT,       /**< for-await-of init context */
+  VM_OC_FOR_AWAIT_OF_HAS_NEXT,   /**< for-await-of has next */
 
   VM_OC_LOCAL_EVAL,              /**< eval in local context */
   VM_OC_SUPER_CALL,              /**< call the 'super' constructor */
@@ -312,9 +314,11 @@ typedef enum
   VM_OC_CLONE_CONTEXT = VM_OC_NONE,           /**< clone lexical environment with let/const declarations */
   VM_OC_SET_COMPUTED_PROPERTY = VM_OC_NONE,   /**< set computed property is unused */
 
-  VM_OC_FOR_OF_CREATE_CONTEXT = VM_OC_NONE,   /**< for of create context */
-  VM_OC_FOR_OF_GET_NEXT = VM_OC_NONE,         /**< get next */
-  VM_OC_FOR_OF_HAS_NEXT = VM_OC_NONE,         /**< has next */
+  VM_OC_FOR_OF_INIT = VM_OC_NONE,             /**< for-of init context */
+  VM_OC_FOR_OF_GET_NEXT = VM_OC_NONE,         /**< for-of get next */
+  VM_OC_FOR_OF_HAS_NEXT = VM_OC_NONE,         /**< for-of has next */
+  VM_OC_FOR_AWAIT_OF_INIT = VM_OC_NONE,       /**< for-await-of init context */
+  VM_OC_FOR_AWAIT_OF_HAS_NEXT = VM_OC_NONE,   /**< for-await-of has next */
 
   VM_OC_LOCAL_EVAL = VM_OC_NONE,              /**< eval in local context */
   VM_OC_SUPER_CALL = VM_OC_NONE,              /**< call the 'super' constructor */

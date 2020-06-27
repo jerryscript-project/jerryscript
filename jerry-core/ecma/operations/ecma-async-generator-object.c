@@ -27,6 +27,7 @@
 #include "jcontext.h"
 #include "opcodes.h"
 #include "vm.h"
+#include "vm-stack.h"
 
 #if ENABLED (JERRY_ESNEXT)
 
@@ -165,7 +166,7 @@ ecma_async_yield_throw (vm_executable_object_t *async_generator_object_p, /**< a
       return result;
     }
 
-    ECMA_ASYNC_YIELD_ITERATOR_CHANGE_STATE (async_generator_object_p, OPERATION, CLOSE);
+    ECMA_AWAIT_CHANGE_STATE (async_generator_object_p, YIELD_OPERATION, YIELD_CLOSE);
     return ECMA_VALUE_UNDEFINED;
   }
 
@@ -179,7 +180,7 @@ ecma_async_yield_throw (vm_executable_object_t *async_generator_object_p, /**< a
     return result;
   }
 
-  ECMA_ASYNC_YIELD_ITERATOR_CHANGE_STATE (async_generator_object_p, OPERATION, NEXT);
+  ECMA_AWAIT_CHANGE_STATE (async_generator_object_p, YIELD_OPERATION, YIELD_NEXT);
   return ECMA_VALUE_UNDEFINED;
 } /* ecma_async_yield_throw */
 
@@ -197,7 +198,7 @@ ecma_async_generator_run (vm_executable_object_t *async_generator_object_p) /**<
   ecma_async_generator_task_t *task_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_async_generator_task_t, head);
   ecma_value_t result;
 
-  if (async_generator_object_p->extended_object.u.class_prop.extra_info & ECMA_GENERATOR_ITERATE_AND_YIELD)
+  if (async_generator_object_p->extended_object.u.class_prop.extra_info & ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD)
   {
     switch (task_p->operation_type)
     {
@@ -219,7 +220,7 @@ ecma_async_generator_run (vm_executable_object_t *async_generator_object_p) /**<
           break;
         }
 
-        ECMA_ASYNC_YIELD_ITERATOR_CHANGE_STATE (async_generator_object_p, OPERATION, NEXT);
+        ECMA_AWAIT_CHANGE_STATE (async_generator_object_p, YIELD_OPERATION, YIELD_NEXT);
         break;
       }
       case ECMA_ASYNC_GENERATOR_DO_THROW:
@@ -239,7 +240,7 @@ ecma_async_generator_run (vm_executable_object_t *async_generator_object_p) /**<
           break;
         }
 
-        ECMA_ASYNC_YIELD_ITERATOR_CHANGE_STATE (async_generator_object_p, OPERATION, RETURN);
+        ECMA_AWAIT_CHANGE_STATE (async_generator_object_p, YIELD_OPERATION, YIELD_RETURN);
         break;
       }
     }
@@ -254,7 +255,7 @@ ecma_async_generator_run (vm_executable_object_t *async_generator_object_p) /**<
 
     JERRY_ASSERT (ECMA_IS_VALUE_ERROR (result));
 
-    ECMA_ASYNC_YIELD_ITERATOR_END (async_generator_object_p);
+    async_generator_object_p->extended_object.u.class_prop.extra_info &= ECMA_AWAIT_CLEAR_MASK;
     async_generator_object_p->frame_ctx.block_result = ECMA_VALUE_UNDEFINED;
     async_generator_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_throw;
 
@@ -346,13 +347,15 @@ ecma_async_generator_finalize (vm_executable_object_t *async_generator_object_p,
  * @return an updated value for the value argument
  */
 ecma_value_t
-ecma_async_yield_continue_await (vm_executable_object_t *async_generator_object_p, /**< async generator */
-                                 ecma_value_t value) /**< job value (takes reference) */
+ecma_await_continue (vm_executable_object_t *executable_object_p, /**< executable object */
+                     ecma_value_t value) /**< job value (takes reference) */
 {
-  switch (ECMA_ASYNC_YIELD_ITERATOR_GET_STATE (async_generator_object_p))
+  ecma_await_states_t state = (ecma_await_states_t) ECMA_AWAIT_GET_STATE (executable_object_p);
+
+  switch (state)
   {
-    case ECMA_ASYNC_YIELD_ITERATOR_AWAIT_NEXT:
-    case ECMA_ASYNC_YIELD_ITERATOR_AWAIT_NEXT_RETURN:
+    case ECMA_AWAIT_YIELD_NEXT:
+    case ECMA_AWAIT_YIELD_NEXT_RETURN:
     {
       if (!ecma_is_value_object (value))
       {
@@ -381,23 +384,21 @@ ecma_async_yield_continue_await (vm_executable_object_t *async_generator_object_
 
       if (!done)
       {
-        ECMA_ASYNC_YIELD_ITERATOR_SET_STATE (async_generator_object_p, NEXT_VALUE);
-        return ecma_promise_async_await ((ecma_extended_object_t *) async_generator_object_p, result);
+        ECMA_AWAIT_SET_STATE (executable_object_p, YIELD_NEXT_VALUE);
+        return ecma_promise_async_await ((ecma_extended_object_t *) executable_object_p, result);
       }
 
-      if (ECMA_ASYNC_YIELD_ITERATOR_GET_STATE (async_generator_object_p) == ECMA_ASYNC_YIELD_ITERATOR_AWAIT_NEXT)
+      ECMA_EXECUTABLE_OBJECT_RESUME_EXEC (executable_object_p);
+
+      if (state == ECMA_AWAIT_YIELD_NEXT_RETURN)
       {
-        ECMA_ASYNC_YIELD_ITERATOR_END (async_generator_object_p);
-        return result;
+        executable_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_return;
       }
-
-      ECMA_ASYNC_YIELD_ITERATOR_END (async_generator_object_p);
-      async_generator_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_return;
       return result;
     }
-    case ECMA_ASYNC_YIELD_ITERATOR_AWAIT_RETURN:
+    case ECMA_AWAIT_YIELD_RETURN:
     {
-      ecma_object_t *obj_p = ecma_get_object_from_value (async_generator_object_p->frame_ctx.block_result);
+      ecma_object_t *obj_p = ecma_get_object_from_value (executable_object_p->frame_ctx.block_result);
       ecma_value_t result = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_RETURN);
 
       if (ECMA_IS_VALUE_ERROR (result))
@@ -408,13 +409,13 @@ ecma_async_yield_continue_await (vm_executable_object_t *async_generator_object_
 
       if (result == ECMA_VALUE_UNDEFINED)
       {
-        ECMA_ASYNC_YIELD_ITERATOR_END (async_generator_object_p);
-        async_generator_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_return;
+        ECMA_EXECUTABLE_OBJECT_RESUME_EXEC (executable_object_p);
+        executable_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_return;
         return value;
       }
 
       result = ecma_async_yield_call (result,
-                                      async_generator_object_p,
+                                      executable_object_p,
                                       value,
                                       ECMA_ERR_MSG ("Iterator return() is not callable."));
       ecma_free_value (value);
@@ -425,35 +426,92 @@ ecma_async_yield_continue_await (vm_executable_object_t *async_generator_object_
       }
 
       JERRY_ASSERT (result == ECMA_VALUE_UNDEFINED);
-      ECMA_ASYNC_YIELD_ITERATOR_CHANGE_STATE (async_generator_object_p, RETURN, NEXT_RETURN);
+      ECMA_AWAIT_CHANGE_STATE (executable_object_p, YIELD_RETURN, YIELD_NEXT_RETURN);
       return ECMA_VALUE_UNDEFINED;
     }
-    case ECMA_ASYNC_YIELD_ITERATOR_AWAIT_NEXT_VALUE:
+    case ECMA_AWAIT_YIELD_NEXT_VALUE:
     {
-      ECMA_ASYNC_YIELD_ITERATOR_CHANGE_STATE (async_generator_object_p, NEXT_VALUE, OPERATION);
-      opfunc_async_generator_yield ((ecma_extended_object_t *) async_generator_object_p, value);
+      ECMA_AWAIT_CHANGE_STATE (executable_object_p, YIELD_NEXT_VALUE, YIELD_OPERATION);
+      opfunc_async_generator_yield ((ecma_extended_object_t *) executable_object_p, value);
       return ECMA_VALUE_UNDEFINED;
     }
-    case ECMA_ASYNC_YIELD_ITERATOR_AWAIT_OPERATION:
+    case ECMA_AWAIT_YIELD_OPERATION:
     {
       /* Currently this is always a throw exception case. */
-      ecma_value_t result = ecma_async_yield_throw (async_generator_object_p, value);
+      ecma_value_t result = ecma_async_yield_throw (executable_object_p, value);
       ecma_free_value (value);
       return result;
     }
-    default:
+    case ECMA_AWAIT_YIELD_CLOSE:
     {
-      JERRY_ASSERT (ECMA_ASYNC_YIELD_ITERATOR_GET_STATE (async_generator_object_p)
-                    == ECMA_ASYNC_YIELD_ITERATOR_AWAIT_CLOSE);
-
       const char *msg_p = (ecma_is_value_object (value) ? ECMA_ERR_MSG ("Iterator throw() is not available.")
                                                         : ECMA_ERR_MSG ("Value received by yield* is not Object."));
 
       ecma_free_value (value);
       return ecma_raise_type_error (msg_p);
     }
+    default:
+    {
+      JERRY_ASSERT (state == ECMA_AWAIT_FOR_NEXT);
+      JERRY_ASSERT (VM_GET_CONTEXT_TYPE (executable_object_p->frame_ctx.stack_top_p[-1]) == VM_CONTEXT_FOR_AWAIT_OF);
+
+      if (!ecma_is_value_object (value))
+      {
+        ecma_free_value (value);
+        return ecma_raise_type_error (ECMA_ERR_MSG ("Value received by for-async-of is not Object."));
+      }
+
+      ecma_object_t *result_obj_p = ecma_get_object_from_value (value);
+      ecma_value_t result = ecma_op_object_get_by_magic_id (result_obj_p, LIT_MAGIC_STRING_DONE);
+
+      if (ECMA_IS_VALUE_ERROR (result))
+      {
+        ecma_deref_object (result_obj_p);
+        return result;
+      }
+
+      bool done = ecma_op_to_boolean (result);
+      ecma_free_value (result);
+
+      ecma_value_t *stack_top_p = executable_object_p->frame_ctx.stack_top_p;
+      JERRY_ASSERT (stack_top_p[-2] == ECMA_VALUE_UNDEFINED);
+      JERRY_ASSERT (ecma_is_value_object (stack_top_p[-3]));
+      JERRY_ASSERT (stack_top_p[-4] == ECMA_VALUE_UNDEFINED || ecma_is_value_object (stack_top_p[-4]));
+
+      if (!done)
+      {
+        result = ecma_op_object_get_by_magic_id (result_obj_p, LIT_MAGIC_STRING_VALUE);
+        ecma_deref_object (result_obj_p);
+
+        if (ECMA_IS_VALUE_ERROR (result))
+        {
+          return result;
+        }
+
+        /* It seems browsers call Await(result) here, although the standard does not
+         * requests to do so. The following code might follow browsers in the future. */
+        ecma_deref_if_object (result);
+        stack_top_p[-2] = result;
+        ECMA_EXECUTABLE_OBJECT_RESUME_EXEC (executable_object_p);
+        return ECMA_VALUE_EMPTY;
+      }
+
+      ecma_deref_object (result_obj_p);
+
+      /* This code jumps to the end regardless of the byte code which triggered this await. */
+      uint32_t context_end = VM_GET_CONTEXT_END (stack_top_p[-1]);
+      executable_object_p->frame_ctx.byte_code_p = executable_object_p->frame_ctx.byte_code_start_p + context_end;
+
+      VM_MINUS_EQUAL_U16 (executable_object_p->frame_ctx.context_depth,
+                          PARSER_FOR_AWAIT_OF_CONTEXT_STACK_ALLOCATION);
+      stack_top_p -= PARSER_FOR_AWAIT_OF_CONTEXT_STACK_ALLOCATION;
+      executable_object_p->frame_ctx.stack_top_p = stack_top_p;
+
+      ECMA_EXECUTABLE_OBJECT_RESUME_EXEC (executable_object_p);
+      return ECMA_VALUE_EMPTY;
+    }
   }
-} /* ecma_async_yield_continue_await */
+} /* ecma_await_continue */
 
 #endif /* ENABLED (JERRY_ESNEXT) */
 

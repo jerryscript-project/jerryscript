@@ -956,6 +956,14 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "for in-of loop variable declaration may not have an initializer.";
     }
+    case PARSER_ERR_FOR_AWAIT_NO_ASYNC:
+    {
+      return "for-await-of is only allowed inside async functions and generators.";
+    }
+    case PARSER_ERR_FOR_AWAIT_NO_OF:
+    {
+      return "only 'of' form is allowed for for-await loops.";
+    }
     case PARSER_ERR_DUPLICATED_PROTO:
     {
       return "Duplicate __proto__ fields are not allowed in object literals.";

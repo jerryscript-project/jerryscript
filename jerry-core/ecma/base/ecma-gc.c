@@ -937,7 +937,7 @@ ecma_gc_free_executable_object (ecma_object_t *object_p) /**< object */
 
     do
     {
-      context_top_p[-1] &= (uint32_t) ~(VM_CONTEXT_HAS_LEX_ENV | VM_CONTEXT_CLOSE_ITERATOR);
+      context_top_p[-1] &= (uint32_t) ~VM_CONTEXT_HAS_LEX_ENV;
 
       uint32_t offsets = vm_get_context_value_offsets (context_top_p);
 

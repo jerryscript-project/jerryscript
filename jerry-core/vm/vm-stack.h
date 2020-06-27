@@ -79,6 +79,19 @@ typedef enum
 } vm_stack_context_type_t;
 
 /**
+ * Return types for vm_stack_find_finally.
+ */
+typedef enum
+{
+  VM_CONTEXT_FOUND_FINALLY,                   /**< found finally */
+#if ENABLED (JERRY_ESNEXT)
+  VM_CONTEXT_FOUND_ERROR,                     /**< found an error */
+  VM_CONTEXT_FOUND_AWAIT,                     /**< found an await operation */
+#endif /* ENABLED (JERRY_ESNEXT) */
+  VM_CONTEXT_FOUND_EXPECTED,                  /**< found the type specified in finally_type */
+} vm_stack_found_type;
+
+/**
  * Checks whether the context type is a finally type.
  */
 #define VM_CONTEXT_IS_FINALLY(context_type) \
@@ -100,8 +113,8 @@ typedef enum
 #define VM_CONTEXT_GET_NEXT_OFFSET(offsets) (-((int32_t) ((offsets) & ((1 << VM_CONTEXT_OFFSET_SHIFT) - 1))))
 
 ecma_value_t *vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, ecma_value_t *vm_stack_top_p);
-bool vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, ecma_value_t **vm_stack_top_ref_p,
-                            vm_stack_context_type_t finally_type, uint32_t search_limit);
+vm_stack_found_type vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, ecma_value_t *stack_top_p,
+                                           vm_stack_context_type_t finally_type, uint32_t search_limit);
 uint32_t vm_get_context_value_offsets (ecma_value_t *context_item_p);
 void vm_ref_lex_env_chain (ecma_object_t *lex_env_p, uint16_t context_depth,
                            ecma_value_t *context_end_p, bool do_ref);

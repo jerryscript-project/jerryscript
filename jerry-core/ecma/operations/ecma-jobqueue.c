@@ -22,6 +22,7 @@
 #include "ecma-promise-object.h"
 #include "jcontext.h"
 #include "opcodes.h"
+#include "vm-stack.h"
 
 #if ENABLED (JERRY_BUILTIN_PROMISE)
 
@@ -279,6 +280,12 @@ ecma_process_promise_async_reaction_job (ecma_job_promise_async_reaction_t *job_
         JERRY_ASSERT (executable_object_p->frame_ctx.stack_top_p[-1] == ECMA_VALUE_UNDEFINED
                       || ecma_is_value_object (executable_object_p->frame_ctx.stack_top_p[-1]));
         executable_object_p->frame_ctx.stack_top_p--;
+      }
+      else if (ECMA_AWAIT_GET_STATE (executable_object_p) == ECMA_AWAIT_FOR_CLOSE
+               && VM_GET_CONTEXT_TYPE (executable_object_p->frame_ctx.stack_top_p[-1]) == VM_CONTEXT_FINALLY_THROW)
+      {
+        ecma_free_value (job_p->argument);
+        job_p->argument = ecma_copy_value (executable_object_p->frame_ctx.stack_top_p[-2]);
       }
 
       /* Exception: Abort iterators, clear all status. */

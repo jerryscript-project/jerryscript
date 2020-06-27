@@ -3818,6 +3818,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           ecma_value_t *context_top_p = VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth;
           JERRY_ASSERT (VM_GET_CONTEXT_TYPE (context_top_p[-1]) == VM_CONTEXT_FOR_OF
                         || VM_GET_CONTEXT_TYPE (context_top_p[-1]) == VM_CONTEXT_FOR_AWAIT_OF);
+          JERRY_ASSERT (context_top_p[-1] & VM_CONTEXT_CLOSE_ITERATOR);
 
           *stack_top_p++ = context_top_p[-2];
           context_top_p[-2] = ECMA_VALUE_UNDEFINED;
@@ -3827,7 +3828,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           JERRY_ASSERT (VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth == stack_top_p);
           JERRY_ASSERT (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_FOR_OF);
+          JERRY_ASSERT (stack_top_p[-1] & VM_CONTEXT_CLOSE_ITERATOR);
 
+          stack_top_p[-1] &= (uint32_t) ~VM_CONTEXT_CLOSE_ITERATOR;
           result = ecma_op_iterator_step (stack_top_p[-3], stack_top_p[-4]);
 
           if (ECMA_IS_VALUE_ERROR (result))
@@ -3855,6 +3858,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
 
           JERRY_ASSERT (stack_top_p[-2] == ECMA_VALUE_UNDEFINED);
+          stack_top_p[-1] |= VM_CONTEXT_CLOSE_ITERATOR;
           stack_top_p[-2] = next_value;
           byte_code_p = byte_code_start_p + branch_offset;
           continue;
@@ -3934,7 +3938,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           JERRY_ASSERT (VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth == stack_top_p);
           JERRY_ASSERT (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_FOR_AWAIT_OF);
+          JERRY_ASSERT (stack_top_p[-1] & VM_CONTEXT_CLOSE_ITERATOR);
 
+          stack_top_p[-1] &= (uint32_t) ~VM_CONTEXT_CLOSE_ITERATOR;
           result = ecma_op_iterator_next (stack_top_p[-3], stack_top_p[-4], ECMA_VALUE_EMPTY);
 
           if (ECMA_IS_VALUE_ERROR (result))
@@ -4056,18 +4062,40 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           uint32_t jump_target = *stack_top_p;
 
-          if (vm_stack_find_finally (frame_ctx_p,
-                                     &stack_top_p,
-                                     VM_CONTEXT_FINALLY_JUMP,
-                                     jump_target))
+          vm_stack_found_type type = vm_stack_find_finally (frame_ctx_p,
+                                                            stack_top_p,
+                                                            VM_CONTEXT_FINALLY_JUMP,
+                                                            jump_target);
+          stack_top_p = frame_ctx_p->stack_top_p;
+          switch (type)
           {
-            JERRY_ASSERT (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_FINALLY_JUMP);
-            byte_code_p = frame_ctx_p->byte_code_p;
-            stack_top_p[-2] = jump_target;
-          }
-          else
-          {
-            byte_code_p = frame_ctx_p->byte_code_start_p + jump_target;
+            case VM_CONTEXT_FOUND_FINALLY:
+            {
+              byte_code_p = frame_ctx_p->byte_code_p;
+
+              JERRY_ASSERT (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_FINALLY_JUMP);
+              stack_top_p[-2] = jump_target;
+              break;
+            }
+#if ENABLED (JERRY_ESNEXT)
+            case VM_CONTEXT_FOUND_ERROR:
+            {
+              JERRY_ASSERT (jcontext_has_pending_exception ());
+              result = ECMA_VALUE_ERROR;
+              goto error;
+            }
+            case VM_CONTEXT_FOUND_AWAIT:
+            {
+              JERRY_ASSERT (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_FINALLY_JUMP);
+              stack_top_p[-2] = jump_target;
+              return ECMA_VALUE_UNDEFINED;
+            }
+#endif /* ENABLED (JERRY_ESNEXT) */
+            default:
+            {
+              byte_code_p = frame_ctx_p->byte_code_start_p + jump_target;
+              break;
+            }
           }
 
           JERRY_ASSERT (VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth == stack_top_p);
@@ -4080,27 +4108,41 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           branch_offset += (int32_t) (byte_code_start_p - frame_ctx_p->byte_code_start_p);
 
-          if (vm_stack_find_finally (frame_ctx_p,
-                                     &stack_top_p,
-                                     VM_CONTEXT_FINALLY_JUMP,
-                                     (uint32_t) branch_offset))
+          vm_stack_found_type type = vm_stack_find_finally (frame_ctx_p,
+                                                            stack_top_p,
+                                                            VM_CONTEXT_FINALLY_JUMP,
+                                                            (uint32_t) branch_offset);
+          stack_top_p = frame_ctx_p->stack_top_p;
+          switch (type)
           {
-            JERRY_ASSERT (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_FINALLY_JUMP);
-            byte_code_p = frame_ctx_p->byte_code_p;
-            stack_top_p[-2] = (uint32_t) branch_offset;
-          }
-          else
-          {
-            byte_code_p = frame_ctx_p->byte_code_start_p + branch_offset;
-          }
+            case VM_CONTEXT_FOUND_FINALLY:
+            {
+              byte_code_p = frame_ctx_p->byte_code_p;
 
+              JERRY_ASSERT (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_FINALLY_JUMP);
+              stack_top_p[-2] = (uint32_t) branch_offset;
+              break;
+            }
 #if ENABLED (JERRY_ESNEXT)
-          if (jcontext_has_pending_exception ())
-          {
-            result = ECMA_VALUE_ERROR;
-            goto error;
-          }
+            case VM_CONTEXT_FOUND_ERROR:
+            {
+              JERRY_ASSERT (jcontext_has_pending_exception ());
+              result = ECMA_VALUE_ERROR;
+              goto error;
+            }
+            case VM_CONTEXT_FOUND_AWAIT:
+            {
+              JERRY_ASSERT (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_FINALLY_JUMP);
+              stack_top_p[-2] = (uint32_t) branch_offset;
+              return ECMA_VALUE_UNDEFINED;
+            }
 #endif /* ENABLED (JERRY_ESNEXT) */
+            default:
+            {
+              byte_code_p = frame_ctx_p->byte_code_start_p + branch_offset;
+              break;
+            }
+          }
 
           JERRY_ASSERT (VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth == stack_top_p);
           continue;
@@ -4361,7 +4403,6 @@ error:
     if (frame_ctx_p->context_depth == 0)
     {
       /* In most cases there is no context. */
-
       ecma_fast_free_value (frame_ctx_p->block_result);
       frame_ctx_p->call_operation = VM_NO_EXEC_OP;
       return result;
@@ -4369,64 +4410,92 @@ error:
 
     if (!ECMA_IS_VALUE_ERROR (result))
     {
-      if (vm_stack_find_finally (frame_ctx_p,
-                                 &stack_top_p,
-                                 VM_CONTEXT_FINALLY_RETURN,
-                                 0))
+      switch (vm_stack_find_finally (frame_ctx_p,
+                                     stack_top_p,
+                                     VM_CONTEXT_FINALLY_RETURN,
+                                     0))
       {
-        JERRY_ASSERT (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_FINALLY_RETURN);
-        JERRY_ASSERT (VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth == stack_top_p);
-
-#if ENABLED (JERRY_ESNEXT)
-        if (jcontext_has_pending_exception ())
+        case VM_CONTEXT_FOUND_FINALLY:
         {
-          stack_top_p[-1] = (ecma_value_t) (stack_top_p[-1] - VM_CONTEXT_FINALLY_RETURN + VM_CONTEXT_FINALLY_THROW);
-          ecma_free_value (result);
-          result = jcontext_take_exception ();
-        }
-#endif /* ENABLED (JERRY_ESNEXT) */
+          stack_top_p = frame_ctx_p->stack_top_p;
+          byte_code_p = frame_ctx_p->byte_code_p;
 
-        byte_code_p = frame_ctx_p->byte_code_p;
-        stack_top_p[-2] = result;
-        continue;
-      }
-
-#if ENABLED (JERRY_ESNEXT)
-      if (jcontext_has_pending_exception ())
-      {
-        ecma_free_value (result);
-        result = ECMA_VALUE_ERROR;
-      }
-#endif /* ENABLED (JERRY_ESNEXT) */
-    }
-    else if (jcontext_has_pending_exception () && !jcontext_has_pending_abort ())
-    {
-      if (vm_stack_find_finally (frame_ctx_p,
-                                 &stack_top_p,
-                                 VM_CONTEXT_FINALLY_THROW,
-                                 0))
-      {
-        JERRY_ASSERT (VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth == stack_top_p);
-        JERRY_ASSERT (!(stack_top_p[-1] & VM_CONTEXT_HAS_LEX_ENV));
-
-#if ENABLED (JERRY_DEBUGGER)
-        JERRY_DEBUGGER_CLEAR_FLAGS (JERRY_DEBUGGER_VM_EXCEPTION_THROWN);
-#endif /* ENABLED (JERRY_DEBUGGER) */
-
-        result = jcontext_take_exception ();
-
-        byte_code_p = frame_ctx_p->byte_code_p;
-
-        if (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_FINALLY_THROW)
-        {
+          JERRY_ASSERT (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_FINALLY_RETURN);
+          JERRY_ASSERT (VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth == stack_top_p);
           stack_top_p[-2] = result;
           continue;
         }
+#if ENABLED (JERRY_ESNEXT)
+        case VM_CONTEXT_FOUND_ERROR:
+        {
+          JERRY_ASSERT (jcontext_has_pending_exception ());
 
-        JERRY_ASSERT (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_CATCH);
+          ecma_free_value (result);
+          stack_top_p = frame_ctx_p->stack_top_p;
+          result = ECMA_VALUE_ERROR;
+          break;
+        }
+        case VM_CONTEXT_FOUND_AWAIT:
+        {
+          stack_top_p = frame_ctx_p->stack_top_p;
 
-        *stack_top_p++ = result;
-        continue;
+          JERRY_ASSERT (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_FINALLY_RETURN);
+          stack_top_p[-2] = result;
+          return ECMA_VALUE_UNDEFINED;
+        }
+#endif /* ENABLED (JERRY_ESNEXT) */
+        default:
+        {
+          goto finish;
+        }
+      }
+    }
+
+    JERRY_ASSERT (jcontext_has_pending_exception ());
+
+    if (!jcontext_has_pending_abort ())
+    {
+      switch (vm_stack_find_finally (frame_ctx_p,
+                                     stack_top_p,
+                                     VM_CONTEXT_FINALLY_THROW,
+                                     0))
+      {
+        case VM_CONTEXT_FOUND_FINALLY:
+        {
+          stack_top_p = frame_ctx_p->stack_top_p;
+          byte_code_p = frame_ctx_p->byte_code_p;
+
+          JERRY_ASSERT (VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth == stack_top_p);
+          JERRY_ASSERT (!(stack_top_p[-1] & VM_CONTEXT_HAS_LEX_ENV));
+
+#if ENABLED (JERRY_DEBUGGER)
+          JERRY_DEBUGGER_CLEAR_FLAGS (JERRY_DEBUGGER_VM_EXCEPTION_THROWN);
+#endif /* ENABLED (JERRY_DEBUGGER) */
+
+          result = jcontext_take_exception ();
+
+          if (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_FINALLY_THROW)
+          {
+            stack_top_p[-2] = result;
+            continue;
+          }
+
+          JERRY_ASSERT (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_CATCH);
+
+          *stack_top_p++ = result;
+          continue;
+        }
+#if ENABLED (JERRY_ESNEXT)
+        case VM_CONTEXT_FOUND_AWAIT:
+        {
+          JERRY_ASSERT (VM_GET_CONTEXT_TYPE (frame_ctx_p->stack_top_p[-1]) == VM_CONTEXT_FINALLY_THROW);
+          return ECMA_VALUE_UNDEFINED;
+        }
+#endif /* ENABLED (JERRY_ESNEXT) */
+        default:
+        {
+          break;
+        }
       }
     }
     else
@@ -4440,9 +4509,9 @@ error:
       while (frame_ctx_p->context_depth > 0);
     }
 
+finish:
     ecma_free_value (frame_ctx_p->block_result);
     frame_ctx_p->call_operation = VM_NO_EXEC_OP;
-
     return result;
   }
 } /* vm_loop */

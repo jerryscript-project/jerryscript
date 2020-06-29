@@ -92,7 +92,7 @@ void __sanitizer_cov_trace_pc_guard_init (uint32_t *start, uint32_t *stop)
   const char *shm_key = getenv ("SHM_ID");
   if (!shm_key)
   {
-    fprintf (stderr, "[COV] no shared memory bitmap available, skipping");
+    fprintf (stderr, "[COV] no shared memory bitmap available, skipping\n");
     __shmem = (struct shmem_data *) malloc (SHM_SIZE);
   }
   else
@@ -110,12 +110,12 @@ void __sanitizer_cov_trace_pc_guard_init (uint32_t *start, uint32_t *stop)
       fprintf (stderr, "Failed to mmap shared memory region\n");
       _exit (-1);
     }
+
+    sanitizer_cov_reset_edgeguards ();
+
+    __shmem->num_edges = (uint32_t) (stop - start);
+    fprintf (stderr, "[COV] edge counters initialized. Shared memory: %s with %u edges\n", shm_key, __shmem->num_edges);
   }
-
-  sanitizer_cov_reset_edgeguards ();
-
-  __shmem->num_edges = (uint32_t) (stop - start);
-  fprintf (stderr, "[COV] edge counters initialized. Shared memory: %s with %u edges\n", shm_key, __shmem->num_edges);
 } /* __sanitizer_cov_trace_pc_guard_init */
 
 void __sanitizer_cov_trace_pc_guard (uint32_t *guard)
@@ -245,7 +245,7 @@ int main ()
     size_t len = 0;
 
     read (REPRL_CRFD, &script_size, 8);
-    source_buffer_tail = buffer;
+
     ssize_t remaining = (ssize_t) script_size;
     while (remaining > 0)
     {
@@ -266,11 +266,10 @@ int main ()
       int status_rc = 0;
 
       jerry_value_t parse_value = jerry_parse (NULL, 0, (jerry_char_t *) buffer, len, JERRY_PARSE_NO_OPTS);
-      jerry_value_t run_value;
 
       if (!jerry_value_is_error (parse_value))
       {
-        run_value = jerry_run (parse_value);
+        jerry_value_t run_value = jerry_run (parse_value);
 
         if (!jerry_value_is_error (run_value))
         {

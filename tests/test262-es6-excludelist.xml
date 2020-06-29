@@ -26,8 +26,6 @@
   <test id="built-ins/Array/prototype/slice/S15.4.4.10_A3_T1.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/slice/S15.4.4.10_A3_T2.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/splice/S15.4.4.12_A3_T1.js"><reason></reason></test>
-  <test id="built-ins/Array/prototype/toLocaleString/primitive_this_value_getter.js"><reason></reason></test>
-  <test id="built-ins/Array/prototype/toLocaleString/primitive_this_value.js"><reason></reason></test>
   <test id="built-ins/Date/construct_with_date.js"><reason></reason></test>
   <test id="built-ins/Date/prototype/Symbol.toPrimitive/hint-invalid.js"><reason></reason></test>
   <test id="built-ins/decodeURIComponent/S15.1.3.2_A2.5_T1.js"><reason></reason></test>
@@ -40,8 +38,6 @@
   <test id="built-ins/Object/prototype/propertyIsEnumerable/symbol_property_toPrimitive.js"><reason></reason></test>
   <test id="built-ins/Object/prototype/propertyIsEnumerable/symbol_property_toString.js"><reason></reason></test>
   <test id="built-ins/Object/prototype/propertyIsEnumerable/symbol_property_valueOf.js"><reason></reason></test>
-  <test id="built-ins/Object/prototype/toLocaleString/primitive_this_value_getter.js"><reason></reason></test>
-  <test id="built-ins/Object/prototype/toLocaleString/primitive_this_value.js"><reason></reason></test>
   <test id="built-ins/Promise/all/invoke-then.js"><reason></reason></test>
   <test id="built-ins/Promise/all/species-get-error.js"><reason></reason></test>
   <test id="built-ins/Promise/exec-args.js"><reason></reason></test>

@@ -501,31 +501,10 @@ ecma_builtin_promise_race_or_all (ecma_value_t this_arg, /**< 'this' argument */
     return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not an object."));
   }
 
-  ecma_object_t *this_obj_p = ecma_get_object_from_value (this_arg);
-  ecma_value_t species_symbol = ecma_op_object_get_by_magic_id (this_obj_p,
-                                                                LIT_MAGIC_STRING_SYMBOL);
-
-  if (ECMA_IS_VALUE_ERROR (species_symbol))
-  {
-    return species_symbol;
-  }
-
-  ecma_value_t constructor_value = this_arg;
-
-  if (!ecma_is_value_null (species_symbol) && !ecma_is_value_undefined (species_symbol))
-  {
-    constructor_value = species_symbol;
-  }
-  else
-  {
-    ecma_ref_object (this_obj_p);
-  }
-
-  ecma_value_t capability = ecma_promise_new_capability (constructor_value);
+  ecma_value_t capability = ecma_promise_new_capability (this_arg);
 
   if (ECMA_IS_VALUE_ERROR (capability))
   {
-    ecma_free_value (constructor_value);
     return capability;
   }
 
@@ -535,7 +514,6 @@ ecma_builtin_promise_race_or_all (ecma_value_t this_arg, /**< 'this' argument */
 
   if (ECMA_IS_VALUE_ERROR (iterator))
   {
-    ecma_free_value (constructor_value);
     ecma_free_value (capability);
     return iterator;
   }
@@ -545,14 +523,12 @@ ecma_builtin_promise_race_or_all (ecma_value_t this_arg, /**< 'this' argument */
 
   if (is_race)
   {
-    ret = ecma_builtin_promise_perform_race (iterator, next_method, capability, constructor_value, &is_done);
+    ret = ecma_builtin_promise_perform_race (iterator, next_method, capability, this_arg, &is_done);
   }
   else
   {
-    ret = ecma_builtin_promise_perform_all (iterator, next_method, capability, constructor_value, &is_done);
+    ret = ecma_builtin_promise_perform_all (iterator, next_method, capability, this_arg, &is_done);
   }
-
-  ecma_free_value (constructor_value);
 
   if (ECMA_IS_VALUE_ERROR (ret))
   {

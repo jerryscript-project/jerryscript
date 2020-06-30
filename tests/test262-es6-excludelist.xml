@@ -103,7 +103,6 @@
   <test id="built-ins/String/prototype/toLowerCase/special_casing_conditional.js"><reason></reason></test>
   <test id="built-ins/String/prototype/toLowerCase/supplementary_plane.js"><reason></reason></test>
   <test id="built-ins/String/prototype/toUpperCase/supplementary_plane.js"><reason></reason></test>
-  <test id="built-ins/Symbol/prototype/Symbol.toPrimitive/length.js"><reason></reason></test>
   <test id="intl402/6.2.2_a.js"><reason></reason></test>
   <test id="intl402/6.2.2_b.js"><reason></reason></test>
   <test id="intl402/6.2.2_c.js"><reason></reason></test>

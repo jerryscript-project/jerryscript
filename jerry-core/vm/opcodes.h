@@ -139,6 +139,9 @@ void
 opfunc_async_generator_yield (ecma_extended_object_t *async_generator_object_p, ecma_value_t value);
 
 ecma_value_t
+opfunc_async_create_and_await (vm_frame_ctx_t *frame_ctx_p, ecma_value_t value, uint16_t extra_flags);
+
+ecma_value_t
 opfunc_create_implicit_class_constructor (uint8_t opcode);
 
 void

@@ -2210,7 +2210,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           ecma_extended_object_t *async_generator_object_p = VM_GET_EXECUTABLE_OBJECT (frame_ctx_p);
 
-          JERRY_ASSERT (!(async_generator_object_p->u.class_prop.extra_info & ECMA_GENERATOR_ITERATE_AND_YIELD));
+          JERRY_ASSERT (!(async_generator_object_p->u.class_prop.extra_info
+                          & ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD));
 
           /* Byte code is executed at the first time. */
           left_value = stack_top_p[-1];
@@ -2237,7 +2238,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             goto error;
           }
 
-          async_generator_object_p->u.class_prop.extra_info |= ECMA_GENERATOR_ITERATE_AND_YIELD;
+          async_generator_object_p->u.class_prop.extra_info |= ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD;
           frame_ctx_p->block_result = left_value;
 
           frame_ctx_p->call_operation = VM_EXEC_RETURN;
@@ -2247,50 +2248,21 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_AWAIT:
         {
-          ecma_value_t promise = ecma_make_object_value (ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE));
-          ecma_value_t argument = *(--stack_top_p);
-
-          result = ecma_promise_reject_or_resolve (promise, argument, true);
-          ecma_free_value (argument);
-
-          if (ECMA_IS_VALUE_ERROR (result))
+          if (JERRY_UNLIKELY (frame_ctx_p->block_result == ECMA_VALUE_UNDEFINED))
           {
-            goto error;
+            frame_ctx_p->call_operation = VM_EXEC_RETURN;
+            frame_ctx_p->byte_code_p = byte_code_p;
+            frame_ctx_p->stack_top_p = --stack_top_p;
+
+            result = opfunc_async_create_and_await (frame_ctx_p, *stack_top_p, 0);
+
+            if (ECMA_IS_VALUE_ERROR (result))
+            {
+              goto error;
+            }
+            return result;
           }
-
-          frame_ctx_p->call_operation = VM_EXEC_RETURN;
-          frame_ctx_p->byte_code_p = byte_code_p;
-          frame_ctx_p->stack_top_p = stack_top_p;
-
-          if (frame_ctx_p->block_result == ECMA_VALUE_UNDEFINED)
-          {
-            vm_executable_object_t *executable_object_p;
-            executable_object_p = opfunc_create_executable_object (frame_ctx_p, VM_CREATE_EXECUTABLE_OBJECT_ASYNC);
-
-            ecma_promise_async_then (result, ecma_make_object_value ((ecma_object_t *) executable_object_p));
-            ecma_deref_object ((ecma_object_t *) executable_object_p);
-            ecma_free_value (result);
-
-            ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target);
-            JERRY_CONTEXT (current_new_target) = ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE);
-
-            result = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_PROMISE_EXECUTOR_EMPTY);
-
-            JERRY_ASSERT (ecma_is_value_object (result));
-            executable_object_p->frame_ctx.block_result = result;
-
-            JERRY_CONTEXT (current_new_target) = old_new_target_p;
-          }
-          else
-          {
-            ecma_object_t *object_p = (ecma_object_t *) VM_GET_EXECUTABLE_OBJECT (frame_ctx_p);
-            ecma_promise_async_then (result, ecma_make_object_value (object_p));
-
-            ecma_free_value (result);
-            result = ECMA_VALUE_UNDEFINED;
-          }
-
-          return result;
+          /* FALLTHRU */
         }
         case VM_OC_GENERATOR_AWAIT:
         {
@@ -3668,7 +3640,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           frame_ctx_p->lex_env_p = with_env_p;
           continue;
         }
-        case VM_OC_FOR_IN_CREATE_CONTEXT:
+        case VM_OC_FOR_IN_INIT:
         {
           ecma_value_t value = *(--stack_top_p);
 
@@ -3780,7 +3752,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           continue;
         }
 #if ENABLED (JERRY_ESNEXT)
-        case VM_OC_FOR_OF_CREATE_CONTEXT:
+        case VM_OC_FOR_OF_INIT:
         {
           ecma_value_t value = *(--stack_top_p);
 
@@ -3844,7 +3816,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_FOR_OF_GET_NEXT:
         {
           ecma_value_t *context_top_p = VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth;
-          JERRY_ASSERT (VM_GET_CONTEXT_TYPE (context_top_p[-1]) == VM_CONTEXT_FOR_OF);
+          JERRY_ASSERT (VM_GET_CONTEXT_TYPE (context_top_p[-1]) == VM_CONTEXT_FOR_OF
+                        || VM_GET_CONTEXT_TYPE (context_top_p[-1]) == VM_CONTEXT_FOR_AWAIT_OF);
 
           *stack_top_p++ = context_top_p[-2];
           context_top_p[-2] = ECMA_VALUE_UNDEFINED;
@@ -3853,6 +3826,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_FOR_OF_HAS_NEXT:
         {
           JERRY_ASSERT (VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth == stack_top_p);
+          JERRY_ASSERT (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_FOR_OF);
 
           result = ecma_op_iterator_step (stack_top_p[-3], stack_top_p[-4]);
 
@@ -3884,6 +3858,106 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           stack_top_p[-2] = next_value;
           byte_code_p = byte_code_start_p + branch_offset;
           continue;
+        }
+        case VM_OC_FOR_AWAIT_OF_INIT:
+        {
+          ecma_value_t value = *(--stack_top_p);
+
+          JERRY_ASSERT (VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth == stack_top_p);
+
+          ecma_value_t next_method;
+          result = ecma_op_get_iterator (value, ECMA_VALUE_ASYNC_ITERATOR, &next_method);
+
+          ecma_free_value (value);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          ecma_value_t iterator = result;
+          result = ecma_op_iterator_next (result, next_method, ECMA_VALUE_EMPTY);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            ecma_free_value (iterator);
+            ecma_free_value (next_method);
+            goto error;
+          }
+
+          branch_offset += (int32_t) (byte_code_start_p - frame_ctx_p->byte_code_start_p);
+
+          VM_PLUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_FOR_AWAIT_OF_CONTEXT_STACK_ALLOCATION);
+          stack_top_p += PARSER_FOR_AWAIT_OF_CONTEXT_STACK_ALLOCATION;
+          stack_top_p[-1] = VM_CREATE_CONTEXT (VM_CONTEXT_FOR_AWAIT_OF, branch_offset);
+          stack_top_p[-2] = ECMA_VALUE_UNDEFINED;
+          stack_top_p[-3] = iterator;
+          stack_top_p[-4] = next_method;
+
+          if (byte_code_p[0] == CBC_EXT_OPCODE && byte_code_p[1] == CBC_EXT_CLONE_CONTEXT)
+          {
+            /* No need to duplicate the first context. */
+            byte_code_p += 2;
+          }
+
+          frame_ctx_p->call_operation = VM_EXEC_RETURN;
+          frame_ctx_p->byte_code_p = byte_code_p;
+          frame_ctx_p->stack_top_p = stack_top_p;
+
+          uint16_t extra_flags = (ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD
+                                 | (ECMA_AWAIT_FOR_NEXT << ECMA_AWAIT_STATE_SHIFT));
+
+          if (CBC_FUNCTION_GET_TYPE (frame_ctx_p->bytecode_header_p->status_flags) == CBC_FUNCTION_ASYNC_GENERATOR
+              || frame_ctx_p->block_result != ECMA_VALUE_UNDEFINED)
+          {
+            ecma_extended_object_t *executable_object_p = VM_GET_EXECUTABLE_OBJECT (frame_ctx_p);
+            result = ecma_promise_async_await (executable_object_p, result);
+
+            if (ECMA_IS_VALUE_ERROR (result))
+            {
+              goto error;
+            }
+
+            executable_object_p->u.class_prop.extra_info |= extra_flags;
+            return ECMA_VALUE_UNDEFINED;
+          }
+
+          result = opfunc_async_create_and_await (frame_ctx_p, result, extra_flags);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+          return result;
+        }
+        case VM_OC_FOR_AWAIT_OF_HAS_NEXT:
+        {
+          JERRY_ASSERT (VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth == stack_top_p);
+          JERRY_ASSERT (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_FOR_AWAIT_OF);
+
+          result = ecma_op_iterator_next (stack_top_p[-3], stack_top_p[-4], ECMA_VALUE_EMPTY);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          ecma_extended_object_t *executable_object_p = VM_GET_EXECUTABLE_OBJECT (frame_ctx_p);
+          result = ecma_promise_async_await (executable_object_p, result);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          uint16_t extra_flags = (ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD
+                                 | (ECMA_AWAIT_FOR_NEXT << ECMA_AWAIT_STATE_SHIFT));
+          executable_object_p->u.class_prop.extra_info |= extra_flags;
+
+          frame_ctx_p->call_operation = VM_EXEC_RETURN;
+          frame_ctx_p->byte_code_p = byte_code_start_p + branch_offset;
+          frame_ctx_p->stack_top_p = stack_top_p;
+          return ECMA_VALUE_UNDEFINED;
         }
 #endif /* ENABLED (JERRY_ESNEXT) */
         case VM_OC_TRY:

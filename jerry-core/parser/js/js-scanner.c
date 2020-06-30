@@ -1181,6 +1181,14 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
     case LEXER_KEYW_FOR:
     {
       lexer_next_token (context_p);
+
+#if ENABLED (JERRY_ESNEXT)
+      if (context_p->token.type == LEXER_KEYW_AWAIT)
+      {
+        lexer_next_token (context_p);
+      }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
       if (context_p->token.type != LEXER_LEFT_PAREN)
       {
         scanner_raise_error (context_p);

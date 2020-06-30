@@ -466,7 +466,36 @@ ecma_gc_mark_executable_object (ecma_object_t *object_p) /**< object */
     register_p++;
   }
 
-  register_p += executable_object_p->frame_ctx.context_depth;
+  if (executable_object_p->frame_ctx.context_depth > 0)
+  {
+    ecma_value_t *context_end_p = register_p;
+
+    register_p += executable_object_p->frame_ctx.context_depth;
+
+    ecma_value_t *context_top_p = register_p;
+
+    do
+    {
+      uint32_t offsets = vm_get_context_value_offsets (context_top_p);
+
+      while (VM_CONTEXT_HAS_NEXT_OFFSET (offsets))
+      {
+        int32_t offset = VM_CONTEXT_GET_NEXT_OFFSET (offsets);
+
+        if (ecma_is_value_object (context_top_p[offset]))
+        {
+          ecma_gc_set_object_visited (ecma_get_object_from_value (context_top_p[offset]));
+        }
+
+        offsets >>= VM_CONTEXT_OFFSET_SHIFT;
+      }
+
+      JERRY_ASSERT (context_top_p >= context_end_p + offsets);
+      context_top_p -= offsets;
+    }
+    while (context_top_p > context_end_p);
+  }
+
   register_end_p = executable_object_p->frame_ctx.stack_top_p;
 
   while (register_p < register_end_p)

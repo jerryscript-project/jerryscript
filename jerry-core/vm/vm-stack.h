@@ -74,6 +74,7 @@ typedef enum
   VM_CONTEXT_FOR_IN,                          /**< for-in context */
 #if ENABLED (JERRY_ESNEXT)
   VM_CONTEXT_FOR_OF,                          /**< for-of context */
+  VM_CONTEXT_FOR_AWAIT_OF,                    /**< for-await-of context */
 #endif /* ENABLED (JERRY_ESNEXT) */
 } vm_stack_context_type_t;
 
@@ -94,7 +95,7 @@ typedef enum
 #define VM_CONTEXT_HAS_NEXT_OFFSET(offsets) ((offsets) >= (1 << VM_CONTEXT_OFFSET_SHIFT))
 
 /**
- * Gets the next offset from the offset array.
+ * Get the next offset from the offset array.
  */
 #define VM_CONTEXT_GET_NEXT_OFFSET(offsets) (-((int32_t) ((offsets) & ((1 << VM_CONTEXT_OFFSET_SHIFT) - 1))))
 

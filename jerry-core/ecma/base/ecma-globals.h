@@ -1865,17 +1865,49 @@ typedef enum
   ECMA_EXECUTABLE_OBJECT_COMPLETED = (1u << 0), /**< executable object is completed and cannot be resumed */
   ECMA_EXECUTABLE_OBJECT_RUNNING = (1u << 1), /**< executable object is currently running */
   /* Generator specific flags. */
-  ECMA_GENERATOR_ITERATE_AND_YIELD = (1u << 2), /**< the generator performs a yield* operation */
+  ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD = (1u << 2), /**< the executable object performs
+                                                         *   an await or a yield* operation */
   ECMA_ASYNC_GENERATOR_CALLED = (1u << 3), /**< the async generator was executed before */
   /* This must be the last generator specific flag. */
-  ECMA_ASYNC_YIELD_ITERATOR_STATE_SHIFT = 4, /**< shift for async yield iterator state */
+  ECMA_AWAIT_STATE_SHIFT = 4, /**< shift for await states */
 } ecma_executable_object_flags_t;
+
+/**
+ * Async function states after an await is completed.
+ */
+typedef enum
+{
+  ECMA_AWAIT_YIELD_NEXT, /**< wait for an iterator result object */
+  ECMA_AWAIT_YIELD_NEXT_RETURN, /**< wait for an iterator result object after a return operation */
+  ECMA_AWAIT_YIELD_RETURN, /**< wait for the argument passed to return operation */
+  ECMA_AWAIT_YIELD_NEXT_VALUE, /**< wait for the value property of an iterator result object */
+  ECMA_AWAIT_YIELD_OPERATION, /**< wait for the generator operation (next/throw/return) */
+  ECMA_AWAIT_YIELD_CLOSE, /**< wait for the result of iterator close operation */
+  /* After adding new ECMA_AWAIT_YIELD items, the ECMA_AWAIT_YIELD_END should be updated. */
+  ECMA_AWAIT_FOR_NEXT, /**< wait for an iterator result object of for-await-of statement */
+} ecma_await_states_t;
 
 /**
  * Checks whether the executable object is waiting for resuming.
  */
 #define ECMA_EXECUTABLE_OBJECT_IS_SUSPENDED(extra_info) \
   (!((extra_info) & (ECMA_EXECUTABLE_OBJECT_COMPLETED | ECMA_EXECUTABLE_OBJECT_RUNNING)))
+
+/**
+ * Last item of yield* related await states.
+ */
+#define ECMA_AWAIT_YIELD_END ECMA_AWAIT_YIELD_CLOSE
+
+/**
+ * Helper macro for ECMA_EXECUTABLE_OBJECT_RESUME_EXEC.
+ */
+#define ECMA_EXECUTABLE_OBJECT_RESUME_EXEC_MASK ((uint16_t) ~ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD)
+
+/**
+ * Resume execution of the byte code.
+ */
+#define ECMA_EXECUTABLE_OBJECT_RESUME_EXEC(executable_object_p) \
+  ((executable_object_p)->extended_object.u.class_prop.extra_info &= ECMA_EXECUTABLE_OBJECT_RESUME_EXEC_MASK)
 
 /**
  * Enqueued task of an AsyncGenerator.

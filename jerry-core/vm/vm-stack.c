@@ -28,10 +28,13 @@
  */
 
 JERRY_STATIC_ASSERT (PARSER_WITH_CONTEXT_STACK_ALLOCATION == PARSER_BLOCK_CONTEXT_STACK_ALLOCATION,
-                     parser_with_context_stack_allocation_must_be_equal_to_parser_block_context_stack_allocation);
+                     with_context_stack_allocation_must_be_equal_to_block_context_stack_allocation);
 
 JERRY_STATIC_ASSERT (PARSER_WITH_CONTEXT_STACK_ALLOCATION == PARSER_TRY_CONTEXT_STACK_ALLOCATION,
-                     parser_with_context_stack_allocation_must_be_equal_to_parser_block_context_stack_allocation);
+                     with_context_stack_allocation_must_be_equal_to_block_context_stack_allocation);
+
+JERRY_STATIC_ASSERT (PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION == PARSER_FOR_AWAIT_OF_CONTEXT_STACK_ALLOCATION,
+                     for_of_context_stack_allocation_must_be_equal_to_for_await_of_context_stack_allocation);
 
 /**
  * Abort (finalize) the current stack context, and remove it.
@@ -79,6 +82,7 @@ vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
     }
 #if ENABLED (JERRY_ESNEXT)
     case VM_CONTEXT_FOR_OF:
+    case VM_CONTEXT_FOR_AWAIT_OF:
     {
       ecma_value_t iterator = vm_stack_top_p[-3];
       ecma_free_value (vm_stack_top_p[-2]);
@@ -313,7 +317,7 @@ vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 #if ENABLED (JERRY_ESNEXT)
 
 /**
- * Get the offsets of ecma values from the specified item of a context.
+ * Get the offsets of ecma values corresponding to the passed context.
  *
  * @return array of offsets, last item represents the size of the context item
  */
@@ -325,7 +329,7 @@ vm_get_context_value_offsets (ecma_value_t *context_item_p) /**< any item of a c
     case VM_CONTEXT_FINALLY_THROW:
     case VM_CONTEXT_FINALLY_RETURN:
     {
-      return (2 << (VM_CONTEXT_OFFSET_SHIFT)) | PARSER_FINALLY_CONTEXT_STACK_ALLOCATION;
+      return (PARSER_FINALLY_CONTEXT_STACK_ALLOCATION << VM_CONTEXT_OFFSET_SHIFT) | 2;
     }
     case VM_CONTEXT_FINALLY_JUMP:
     {
@@ -338,16 +342,19 @@ vm_get_context_value_offsets (ecma_value_t *context_item_p) /**< any item of a c
     {
       return PARSER_WITH_CONTEXT_STACK_ALLOCATION;
     }
-    case VM_CONTEXT_FOR_OF:
+    case VM_CONTEXT_FOR_IN:
     {
-      return ((4 << (VM_CONTEXT_OFFSET_SHIFT * 3))
-              | (3 << (VM_CONTEXT_OFFSET_SHIFT * 2))
-              | (2 << (VM_CONTEXT_OFFSET_SHIFT))
-              | PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION);
+      return (PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION << VM_CONTEXT_OFFSET_SHIFT) | 4;
     }
     default:
     {
-      return (4 << (VM_CONTEXT_OFFSET_SHIFT)) | PARSER_FOR_IN_CONTEXT_STACK_ALLOCATION;
+      JERRY_ASSERT (VM_GET_CONTEXT_TYPE (context_item_p[-1]) == VM_CONTEXT_FOR_OF
+                    || VM_GET_CONTEXT_TYPE (context_item_p[-1]) == VM_CONTEXT_FOR_AWAIT_OF);
+
+      return ((PARSER_FOR_OF_CONTEXT_STACK_ALLOCATION << (VM_CONTEXT_OFFSET_SHIFT * 3))
+              | (4 << (VM_CONTEXT_OFFSET_SHIFT * 2))
+              | (3 << VM_CONTEXT_OFFSET_SHIFT)
+              | 2);
     }
   }
 } /* vm_get_context_value_offsets */

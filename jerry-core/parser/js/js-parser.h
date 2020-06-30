@@ -82,6 +82,8 @@ typedef enum
   PARSER_ERR_YIELD_NOT_ALLOWED,                       /**< yield expression is not allowed */
   PARSER_ERR_AWAIT_NOT_ALLOWED,                       /**< await expression is not allowed */
   PARSER_ERR_FOR_IN_OF_DECLARATION,                   /**< variable declaration in for-in or for-of loop */
+  PARSER_ERR_FOR_AWAIT_NO_ASYNC,                      /**< for-await-of is only allowed inside async functions */
+  PARSER_ERR_FOR_AWAIT_NO_OF,                         /**< only 'of' form is allowed for for-await loops */
   PARSER_ERR_DUPLICATED_PROTO,                        /**< duplicated __proto__ fields are not allowed */
 #endif /* ENABLED (JERRY_ESNEXT) */
   PARSER_ERR_DELETE_IDENT_NOT_ALLOWED,                /**< identifier delete is not allowed in strict mode */

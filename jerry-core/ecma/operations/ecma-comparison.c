@@ -16,6 +16,7 @@
 #include "ecma-comparison.h"
 #include "ecma-conversion.h"
 #include "ecma-globals.h"
+#include "ecma-objects.h"
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
 
@@ -150,33 +151,6 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
     return ecma_op_abstract_equality_compare (x, ecma_make_integer_value (ecma_is_value_true (y) ? 1 : 0));
   }
 
-  if (ecma_is_value_object (x))
-  {
-    if (ecma_is_value_string (y)
-#if ENABLED (JERRY_ESNEXT)
-        || ecma_is_value_symbol (y)
-#endif /* ENABLED (JERRY_ESNEXT) */
-        || ecma_is_value_number (y))
-    {
-      /* 9. */
-      ecma_value_t x_prim_value = ecma_op_to_primitive (x, ECMA_PREFERRED_TYPE_NO);
-
-      if (ECMA_IS_VALUE_ERROR (x_prim_value))
-      {
-        return x_prim_value;
-      }
-
-      ecma_value_t compare_result = ecma_op_abstract_equality_compare (x_prim_value, y);
-
-      ecma_free_value (x_prim_value);
-      return compare_result;
-    }
-
-    /* 1., f. */
-    /* Note: the (x == y) comparison captures the true case. */
-    return ECMA_VALUE_FALSE;
-  }
-
   if (ecma_is_value_boolean (x))
   {
     /* 6. */
@@ -191,6 +165,31 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
     bool is_equal = ecma_is_value_undefined (y) || ecma_is_value_null (y);
 
     return ecma_make_boolean_value (is_equal);
+  }
+
+  JERRY_ASSERT (ecma_is_value_object (x));
+
+  if (ecma_is_value_string (y)
+#if ENABLED (JERRY_ESNEXT)
+      || ecma_is_value_symbol (y)
+#endif /* ENABLED (JERRY_ESNEXT) */
+      || ecma_is_value_number (y))
+  {
+    /* 9. */
+    ecma_object_t *obj_p = ecma_get_object_from_value (x);
+
+    ecma_value_t def_value = ecma_op_object_default_value (obj_p, ECMA_PREFERRED_TYPE_NO);
+
+    if (ECMA_IS_VALUE_ERROR (def_value))
+    {
+      return def_value;
+    }
+
+    ecma_value_t compare_result = ecma_op_abstract_equality_compare (def_value, y);
+
+    ecma_free_value (def_value);
+
+    return compare_result;
   }
 
   return ECMA_VALUE_FALSE;

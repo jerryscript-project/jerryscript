@@ -110,14 +110,16 @@ scanner_check_arrow (parser_context_t *context_p, /**< context */
   scanner_literal_pool_t *literal_pool_p = scanner_context_p->active_literal_pool_p;
   uint16_t status_flags = literal_pool_p->status_flags;
 
-  status_flags |= SCANNER_LITERAL_POOL_FUNCTION_WITHOUT_ARGUMENTS;
+  bool is_async_arrow = (status_flags & SCANNER_LITERAL_POOL_MAY_ASYNC_ARROW) != 0;
+
+  status_flags |= SCANNER_LITERAL_POOL_ARROW_FLAGS;
   status_flags &= (uint16_t) ~(SCANNER_LITERAL_POOL_IN_WITH
                                | SCANNER_LITERAL_POOL_GENERATOR
                                | SCANNER_LITERAL_POOL_ASYNC);
 
   context_p->status_flags &= (uint32_t) ~(PARSER_IS_GENERATOR_FUNCTION | PARSER_IS_ASYNC_FUNCTION);
 
-  if (status_flags & SCANNER_LITERAL_POOL_ASYNC_ARROW)
+  if (is_async_arrow)
   {
     status_flags |= SCANNER_LITERAL_POOL_ASYNC;
     context_p->status_flags |= PARSER_IS_ASYNC_FUNCTION;
@@ -137,7 +139,7 @@ scanner_scan_simple_arrow (parser_context_t *context_p, /**< context */
                            scanner_context_t *scanner_context_p, /**< scanner context */
                            const uint8_t *source_p) /**< identifier end position */
 {
-  uint16_t status_flags = SCANNER_LITERAL_POOL_FUNCTION_WITHOUT_ARGUMENTS;
+  uint16_t status_flags = SCANNER_LITERAL_POOL_ARROW_FLAGS;
 
   context_p->status_flags &= (uint32_t) ~(PARSER_IS_GENERATOR_FUNCTION | PARSER_IS_ASYNC_FUNCTION);
 
@@ -519,7 +521,7 @@ scanner_scan_bracket (parser_context_t *context_p, /**< context */
 
     if (JERRY_UNLIKELY (scanner_context_p->async_source_p != NULL))
     {
-      status_flags |= SCANNER_LITERAL_POOL_ASYNC_ARROW;
+      status_flags |= SCANNER_LITERAL_POOL_MAY_ASYNC_ARROW;
       arrow_source_p = scanner_context_p->async_source_p;
       scanner_context_p->async_source_p = NULL;
     }

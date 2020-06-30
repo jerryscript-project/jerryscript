@@ -2283,7 +2283,9 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
       context_p->source_p = source_p;
       context_p->source_end_p = source_end_p;
 
-      uint16_t status_flags = SCANNER_LITERAL_POOL_FUNCTION_WITHOUT_ARGUMENTS | SCANNER_LITERAL_POOL_CAN_EVAL;
+      uint16_t status_flags = (SCANNER_LITERAL_POOL_FUNCTION
+                               | SCANNER_LITERAL_POOL_NO_ARGUMENTS
+                               | SCANNER_LITERAL_POOL_CAN_EVAL);
 
       if (context_p->status_flags & PARSER_IS_STRICT)
       {
@@ -2726,7 +2728,7 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
             {
               if (context_p->token.type == LEXER_THREE_DOTS)
               {
-                scanner_context.active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_ARGUMENTS_UNMAPPED;
+                scanner_context.active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_HAS_COMPLEX_ARGUMENT;
                 lexer_next_token (context_p);
               }
 
@@ -2756,7 +2758,7 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
 
             if (argument_literal_p == NULL)
             {
-              scanner_context.active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_ARGUMENTS_UNMAPPED;
+              scanner_context.active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_HAS_COMPLEX_ARGUMENT;
 
               parser_stack_push_uint8 (context_p, SCAN_STACK_FUNCTION_PARAMETERS);
               scanner_append_hole (context_p, &scanner_context);
@@ -2776,7 +2778,7 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
 
             if (context_p->token.type == LEXER_ASSIGN)
             {
-              scanner_context.active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_ARGUMENTS_UNMAPPED;
+              scanner_context.active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_HAS_COMPLEX_ARGUMENT;
 
               parser_stack_push_uint8 (context_p, SCAN_STACK_FUNCTION_PARAMETERS);
               scanner_context.mode = SCAN_MODE_PRIMARY_EXPRESSION;

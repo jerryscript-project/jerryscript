@@ -2773,7 +2773,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 
 #if ENABLED (JERRY_ESNEXT)
     if (strict_mode != PARSER_USE_STRICT_NOT_FOUND
-        && (context_p->status_flags & PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM))
+        && (context_p->status_flags & PARSER_FUNCTION_HAS_COMPLEX_ARGUMENT))
     {
       parser_raise_error (context_p, PARSER_ERR_USE_STRICT_NOT_ALLOWED);
     }

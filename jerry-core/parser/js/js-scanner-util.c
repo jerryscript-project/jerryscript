@@ -717,7 +717,7 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
         }
 
 #if ENABLED (JERRY_ESNEXT)
-        const uint16_t is_unmapped = SCANNER_LITERAL_POOL_IS_STRICT | SCANNER_LITERAL_POOL_ARGUMENTS_UNMAPPED;
+        const uint16_t is_unmapped = SCANNER_LITERAL_POOL_IS_STRICT | SCANNER_LITERAL_POOL_HAS_COMPLEX_ARGUMENT;
 #else /* !ENABLED (JERRY_ESNEXT) */
         const uint16_t is_unmapped = SCANNER_LITERAL_POOL_IS_STRICT;
 #endif /* ENABLED (JERRY_ESNEXT) */
@@ -726,13 +726,14 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
         {
           arguments_required = false;
         }
-        else
-        {
-          u8_arg |= SCANNER_FUNCTION_MAPPED_ARGUMENTS;
-        }
       }
 
 #if ENABLED (JERRY_ESNEXT)
+      if (status_flags & (SCANNER_LITERAL_POOL_HAS_COMPLEX_ARGUMENT | SCANNER_LITERAL_POOL_ARROW))
+      {
+        u8_arg |= SCANNER_FUNCTION_HAS_COMPLEX_ARGUMENT;
+      }
+
       if (status_flags & SCANNER_LITERAL_POOL_ASYNC)
       {
         u8_arg |= SCANNER_FUNCTION_ASYNC;
@@ -2047,7 +2048,10 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
         continue;
       }
 
-      if (info_u8_arg & SCANNER_FUNCTION_MAPPED_ARGUMENTS)
+      uint8_t mask = SCANNER_FUNCTION_ARGUMENTS_NEEDED | SCANNER_FUNCTION_HAS_COMPLEX_ARGUMENT;
+
+      if (!(context_p->status_flags & PARSER_IS_STRICT)
+          && (info_u8_arg & mask) == SCANNER_FUNCTION_ARGUMENTS_NEEDED)
       {
         scanner_create_unused_literal (context_p, LEXER_FLAG_FUNCTION_ARGUMENT);
       }
@@ -2329,9 +2333,9 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ESNEXT)
           scope_stack_map_to |= PARSER_SCOPE_STACK_NO_FUNCTION_COPY;
 
-          /* Argument initializers of functions with mapped arguments (e.g. function f(a,b,a) {}) are
+          /* Argument initializers of functions with simple arguments (e.g. function f(a,b,a) {}) are
            * generated here. The other initializers are handled by parser_parse_function_arguments(). */
-          if (info_u8_arg & SCANNER_FUNCTION_MAPPED_ARGUMENTS)
+          if (!(info_u8_arg & SCANNER_FUNCTION_HAS_COMPLEX_ARGUMENT))
           {
 #endif /* ENABLED (JERRY_ESNEXT) */
             parser_emit_cbc_literal_value (context_p,

@@ -276,7 +276,7 @@ typedef enum
   SCANNER_LITERAL_POOL_CAN_EVAL = (1 << 3), /**< prepare for executing eval in this block */
   SCANNER_LITERAL_POOL_NO_ARGUMENTS = (1 << 4), /**< arguments object must not be constructed */
 #if ENABLED (JERRY_ESNEXT)
-  SCANNER_LITERAL_POOL_ARGUMENTS_UNMAPPED = (1 << 5), /**< arguments object should be unmapped */
+  SCANNER_LITERAL_POOL_HAS_COMPLEX_ARGUMENT = (1 << 5), /**< function has complex (ES2015+) argument definition */
 #endif /* ENABLED (JERRY_ESNEXT) */
   SCANNER_LITERAL_POOL_IN_WITH = (1 << 6), /**< literal pool is in a with statement */
 #if ENABLED (JERRY_MODULE_SYSTEM)
@@ -284,29 +284,35 @@ typedef enum
 #endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 #if ENABLED (JERRY_ESNEXT)
   SCANNER_LITERAL_POOL_FUNCTION_STATEMENT = (1 << 8), /**< function statement */
-  SCANNER_LITERAL_POOL_GENERATOR = (1 << 9), /**< generator function */
-  SCANNER_LITERAL_POOL_ASYNC = (1 << 10), /**< async function */
-  SCANNER_LITERAL_POOL_ASYNC_ARROW = (1 << 11), /**< can be an async arrow function */
+  SCANNER_LITERAL_POOL_ARROW = (1 << 9), /**< arrow function */
+  SCANNER_LITERAL_POOL_GENERATOR = (1 << 10), /**< generator function */
+  SCANNER_LITERAL_POOL_ASYNC = (1 << 11), /**< async function */
 #endif /* ENABLED (JERRY_ESNEXT) */
 } scanner_literal_pool_flags_t;
 
 /**
  * Define a function where no arguments are allowed.
  */
-#define SCANNER_LITERAL_POOL_FUNCTION_WITHOUT_ARGUMENTS \
-  (SCANNER_LITERAL_POOL_FUNCTION | SCANNER_LITERAL_POOL_NO_ARGUMENTS)
+#define SCANNER_LITERAL_POOL_ARROW_FLAGS \
+  (SCANNER_LITERAL_POOL_FUNCTION | SCANNER_LITERAL_POOL_NO_ARGUMENTS | SCANNER_LITERAL_POOL_ARROW)
+
+/**
+ * This flag represents that the bracketed expression might be an async arrow function.
+ * The SCANNER_LITERAL_POOL_ARROW flag is reused for this purpose.
+ */
+#define SCANNER_LITERAL_POOL_MAY_ASYNC_ARROW SCANNER_LITERAL_POOL_ARROW
 
 /**
  * Getting the generator and async properties of literal pool status flags.
  */
 #define SCANNER_FROM_LITERAL_POOL_TO_COMPUTED(status_flags) \
-  ((uint8_t) ((((status_flags) >> 9) & 0x3) + SCAN_STACK_COMPUTED_PROPERTY))
+  ((uint8_t) ((((status_flags) >> 10) & 0x3) + SCAN_STACK_COMPUTED_PROPERTY))
 
 /**
  * Setting the generator and async properties of literal pool status flags.
  */
 #define SCANNER_FROM_COMPUTED_TO_LITERAL_POOL(mode) \
-  (((mode) - SCAN_STACK_COMPUTED_PROPERTY) << 9)
+  (((mode) - SCAN_STACK_COMPUTED_PROPERTY) << 10)
 
 /**
  * Local literal pool.

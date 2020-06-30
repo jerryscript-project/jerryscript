@@ -14,6 +14,7 @@
  */
 
 #include "config.h"
+#include "ecma-helpers.h"
 #include "lit-char-helpers.h"
 #include "lit-unicode-ranges.inc.h"
 #include "lit-strings.h"
@@ -310,6 +311,26 @@ lit_char_is_binary_digit (ecma_char_t c) /** code unit */
   return (c == LIT_CHAR_0 || c == LIT_CHAR_1);
 } /* lit_char_is_binary_digit */
 #endif /* ENABLED (JERRY_ESNEXT) */
+
+/**
+ * UnicodeEscape abstract method
+ *
+ * See also: ECMA-262 v10, 24.5.2.3
+ */
+void
+lit_char_unicode_escape (ecma_stringbuilder_t *builder_p, /**< stringbuilder to append */
+                         ecma_char_t c) /**< code unit to convert */
+{
+  ecma_stringbuilder_append_raw (builder_p, (lit_utf8_byte_t *) "\\u", 2);
+
+  for (int8_t i = 3; i >= 0; i--)
+  {
+    int32_t result_char = (c >> (i * 4)) & 0xF;
+    ecma_stringbuilder_append_byte (builder_p, (lit_utf8_byte_t) (result_char + (result_char <= 9
+                                                                                 ? LIT_CHAR_0
+                                                                                 : (LIT_CHAR_LOWERCASE_A - 10))));
+  }
+} /* lit_char_unicode_escape */
 
 /**
  * Convert a HexDigit character to its numeric value, as defined in ECMA-262 v5, 7.8.3

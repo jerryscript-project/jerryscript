@@ -559,6 +559,21 @@
 || ((JERRY_MODULE_SYSTEM != 0) && (JERRY_MODULE_SYSTEM != 1))
 # error "Invalid value for JERRY_MODULE_SYSTEM macro."
 #endif
+#if (JERRY_ESNEXT == 0) \
+&& ((JERRY_BUILTIN_DATAVIEW == 1) \
+|| (JERRY_BUILTIN_MAP == 1) \
+|| (JERRY_BUILTIN_SET == 1) \
+|| (JERRY_BUILTIN_WEAKMAP == 1) \
+|| (JERRY_BUILTIN_WEAKSET == 1) \
+|| (JERRY_BUILTIN_PROMISE == 1) \
+|| (JERRY_BUILTIN_PROXY == 1) \
+|| (JERRY_BUILTIN_REFLECT == 1) \
+|| (JERRY_BUILTIN_TYPEDARRAY == 1))
+# error "JERRY_ESNEXT should be enabled too to enable JERRY_BUILTIN_xxxxx macro."
+#endif
+#if (JERRY_ESNEXT == 0) && (JERRY_MODULE_SYSTEM == 1)
+# error "JERRY_ESNEXT should be enabled too to enable JERRY_MODULE_SYSTEM macro."
+#endif
 
 /**
  * Internal options.
@@ -685,7 +700,7 @@
 #endif
 
 /**
- * Resource name relatey types into a single guard
+ * Resource name related types into a single guard
  */
 #if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ERROR_MESSAGES) || ENABLED (JERRY_MODULE_SYSTEM)
 # define JERRY_RESOURCE_NAME 1

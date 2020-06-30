@@ -45,12 +45,10 @@ ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_LENGTH,
                     ecma_builtin_typedarray_prototype_length_getter,
                     ECMA_PROPERTY_FLAG_CONFIGURABLE)
 
-#if ENABLED (JERRY_ESNEXT)
 /* ECMA-262 v6, 23.1.3.13 */
 ACCESSOR_READ_ONLY (LIT_GLOBAL_SYMBOL_TO_STRING_TAG,
                     ecma_builtin_typedarray_prototype_to_string_tag_getter,
                     ECMA_PROPERTY_FLAG_CONFIGURABLE)
-#endif /* ENABLED (JERRY_ESNEXT) */
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
@@ -75,15 +73,10 @@ ROUTINE (LIT_MAGIC_STRING_LAST_INDEX_OF_UL, ecma_builtin_typedarray_prototype_la
 ROUTINE (LIT_MAGIC_STRING_COPY_WITHIN, ecma_builtin_typedarray_prototype_copy_within, NON_FIXED, 2)
 ROUTINE (LIT_MAGIC_STRING_SLICE, ecma_builtin_typedarray_prototype_slice, NON_FIXED, 2)
 ROUTINE (LIT_MAGIC_STRING_TO_LOCALE_STRING_UL, ecma_builtin_typedarray_prototype_to_locale_string, 0, 0)
-
-#if ENABLED (JERRY_ESNEXT)
-
 ROUTINE (LIT_MAGIC_STRING_KEYS, ecma_builtin_typedarray_prototype_keys, 0, 0)
 ROUTINE (LIT_MAGIC_STRING_VALUES, ecma_builtin_typedarray_prototype_values, 0, 0)
 ROUTINE (LIT_MAGIC_STRING_ENTRIES, ecma_builtin_typedarray_prototype_entries, 0, 0)
 ROUTINE (LIT_GLOBAL_SYMBOL_ITERATOR, ecma_builtin_typedarray_prototype_values, 0, 0)
-
-#endif /* ENABLED (JERRY_ESNEXT) */
 
 #endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
 

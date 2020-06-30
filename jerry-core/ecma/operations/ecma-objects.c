@@ -2064,7 +2064,36 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
       }
       else if (!prop_is_symbol && (opts & ECMA_LIST_SYMBOLS_ONLY) == 0)
       {
-        ecma_collection_push_back (return_keys, entry);
+        if ((opts & ECMA_LIST_ENUMERABLE) == 0)
+        {
+          ecma_collection_push_back (return_keys, entry);
+        }
+        else
+        {
+          ecma_property_descriptor_t prop_desc;
+          ecma_value_t status = ecma_proxy_object_get_own_property_descriptor (obj_p, prop_name_p, &prop_desc);
+
+          if (ECMA_IS_VALUE_ERROR (status))
+          {
+            ecma_collection_destroy (proxy_keys);
+
+            return NULL;
+          }
+
+          if ((prop_desc.flags & ECMA_PROP_IS_ENUMERABLE) == 0)
+          {
+            ecma_deref_ecma_string (prop_name_p);
+          }
+          else
+          {
+            ecma_collection_push_back (return_keys, entry);
+          }
+
+          if (ecma_is_value_true (status))
+          {
+            ecma_free_property_descriptor (&prop_desc);
+          }
+        }
       }
       else
       {

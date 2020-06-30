@@ -78,7 +78,7 @@ var proxy = new Proxy(target, handler);
 
 array_check(Reflect.ownKeys(proxy), ["foo", "bar", symA]);
 array_check(Object.getOwnPropertyNames(proxy), ["foo", "bar"]);
-array_check(Object.keys(proxy), ["foo", "bar"]);
+array_check(Object.keys(proxy), []);
 array_check(Object.getOwnPropertySymbols(proxy), [symA]);
 
 handler.ownKeys = function(target) {return Object.getOwnPropertyNames(target);};
@@ -223,3 +223,21 @@ try {
 } catch (e) {
   assert(e instanceof TypeError);
 }
+
+var object = {};
+Object.defineProperties(object, {
+  a: { value: 42, enumerable: false },
+  b: { value: "foo", enumerable: true },
+  c: { value: "bar", enumerable: false }
+});
+
+var handler = {
+  ownKeys(target) {
+    return Reflect.ownKeys(target);
+  }
+};
+
+var proxy = new Proxy(object, handler);
+
+assert(Object.keys(proxy).length === 1);
+assert(Object.keys(proxy)[0] === "b");

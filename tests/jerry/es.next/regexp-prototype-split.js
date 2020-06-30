@@ -12,12 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var str = "foo//bar/baz//foo";
-res = str.split("a", -1);
-assert (res.length === 3);
-assert (res[0] === "foo//b");
-assert (res[1] === "r/b");
-assert (res[2] === "z//foo");
 
-res = str.split(/\/\//, Infinity);
-assert (res.length === 0);
+result = /./[Symbol.split]('string', -13);
+assert(result.length === 7);
+
+result = /./[Symbol.split]('string', 2);
+assert(result.length === 2);

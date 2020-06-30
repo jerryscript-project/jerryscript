@@ -795,10 +795,13 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_value, /**< this a
   uint32_t limit = UINT32_MAX;
   if (!ecma_is_value_undefined (limit_value))
   {
-    if (ECMA_IS_VALUE_ERROR (ecma_op_to_length (limit_value, &limit)))
+    /* ECMA-262 v11, 21.1.3.20 6 */
+    ecma_number_t num;
+    if (ECMA_IS_VALUE_ERROR (ecma_get_number (limit_value, &num)))
     {
       goto cleanup_string;
     }
+    limit = ecma_number_to_uint32 (num);
   }
 
   /* 12. */

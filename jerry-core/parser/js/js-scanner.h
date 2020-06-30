@@ -217,7 +217,7 @@ typedef enum
 typedef enum
 {
   SCANNER_FUNCTION_ARGUMENTS_NEEDED = (1 << 0), /**< arguments object needs to be created */
-  SCANNER_FUNCTION_MAPPED_ARGUMENTS = (1 << 1), /**< arguments object should be mapped */
+  SCANNER_FUNCTION_HAS_COMPLEX_ARGUMENT = (1 << 1), /**< function has complex (ES2015+) argument definition */
 #if ENABLED (JERRY_ESNEXT)
   SCANNER_FUNCTION_LEXICAL_ENV_NEEDED = (1 << 2), /**< lexical environment is needed for the function body */
   SCANNER_FUNCTION_STATEMENT = (1 << 3), /**< function is function statement (not arrow expression)

@@ -65,7 +65,7 @@ typedef enum
   PARSER_IS_ASYNC_FUNCTION = (1u << 15),      /**< an async function is parsed */
   PARSER_DISALLOW_AWAIT_YIELD = (1u << 16),   /**< throw SyntaxError for await / yield keywords */
   PARSER_FUNCTION_IS_PARSING_ARGS = (1u << 17), /**< set when parsing function arguments */
-  PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM = (1u << 18), /**< function has a non simple parameter */
+  PARSER_FUNCTION_HAS_COMPLEX_ARGUMENT = (1u << 18), /**< function has complex (ES2015+) argument definition */
   PARSER_FUNCTION_HAS_REST_PARAM = (1u << 19), /**< function has rest parameter */
   PARSER_CLASS_CONSTRUCTOR = (1u << 20),      /**< a class constructor is parsed
                                                *   Note: PARSER_ALLOW_SUPER must be present */
@@ -193,7 +193,7 @@ typedef enum
  * All flags that affect exotic arguments object creation.
  */
 #define PARSER_ARGUMENTS_RELATED_FLAGS \
-  (PARSER_ARGUMENTS_NEEDED | PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM | PARSER_IS_STRICT)
+  (PARSER_ARGUMENTS_NEEDED | PARSER_FUNCTION_HAS_COMPLEX_ARGUMENT | PARSER_IS_STRICT)
 
 /**
  * Get the corresponding eval flag for a ecma_parse_opts_t flag

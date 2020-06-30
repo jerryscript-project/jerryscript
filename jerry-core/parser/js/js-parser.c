@@ -1793,7 +1793,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
   }
 
 #if ENABLED (JERRY_ESNEXT)
-  bool has_mapped_arguments = (context_p->next_scanner_info_p->u8_arg & SCANNER_FUNCTION_MAPPED_ARGUMENTS) != 0;
+  bool has_complex_argument = (context_p->next_scanner_info_p->u8_arg & SCANNER_FUNCTION_HAS_COMPLEX_ARGUMENT) != 0;
 #endif /* ENABLED (JERRY_ESNEXT) */
 
   scanner_create_variables (context_p, SCANNER_CREATE_VARS_IS_FUNCTION_ARGS);
@@ -1819,7 +1819,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
         parser_raise_error (context_p, PARSER_ERR_DUPLICATED_ARGUMENT_NAMES);
       }
 
-      context_p->status_flags |= PARSER_FUNCTION_HAS_REST_PARAM | PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM;
+      context_p->status_flags |= PARSER_FUNCTION_HAS_REST_PARAM | PARSER_FUNCTION_HAS_COMPLEX_ARGUMENT;
     }
 
     if (context_p->token.type == LEXER_LEFT_SQUARE || context_p->token.type == LEXER_LEFT_BRACE)
@@ -1829,7 +1829,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
         parser_raise_error (context_p, PARSER_ERR_DUPLICATED_ARGUMENT_NAMES);
       }
 
-      context_p->status_flags |= PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM;
+      context_p->status_flags |= PARSER_FUNCTION_HAS_COMPLEX_ARGUMENT;
 
       parser_emit_cbc_literal (context_p,
                                CBC_PUSH_LITERAL,
@@ -1888,7 +1888,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
     if (JERRY_UNLIKELY (context_p->lit_object.literal_p->status_flags & LEXER_FLAG_FUNCTION_ARGUMENT))
     {
 #if ENABLED (JERRY_ESNEXT)
-      if ((context_p->status_flags & PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM)
+      if ((context_p->status_flags & PARSER_FUNCTION_HAS_COMPLEX_ARGUMENT)
           || (context_p->status_flags & PARSER_IS_ARROW_FUNCTION))
       {
         parser_raise_error (context_p, PARSER_ERR_DUPLICATED_ARGUMENT_NAMES);
@@ -1910,7 +1910,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 
     if (context_p->token.type == LEXER_ASSIGN)
     {
-      JERRY_ASSERT (!has_mapped_arguments);
+      JERRY_ASSERT (has_complex_argument);
 
       if (context_p->status_flags & PARSER_FUNCTION_HAS_REST_PARAM)
       {
@@ -1924,7 +1924,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
         parser_raise_error (context_p, PARSER_ERR_DUPLICATED_ARGUMENT_NAMES);
       }
 
-      context_p->status_flags |= PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM;
+      context_p->status_flags |= PARSER_FUNCTION_HAS_COMPLEX_ARGUMENT;
 
       /* LEXER_ASSIGN does not overwrite lit_object. */
       parser_emit_cbc_literal (context_p,
@@ -1950,7 +1950,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 
       parser_emit_cbc_literal (context_p, opcode, literal_index);
     }
-    else if (!has_mapped_arguments && literal_index < PARSER_REGISTER_START)
+    else if (has_complex_argument && literal_index < PARSER_REGISTER_START)
     {
       uint16_t opcode = CBC_INIT_ARG_OR_FUNC;
 
@@ -2004,7 +2004,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
   scanner_revert_active (context_p);
 
 #if ENABLED (JERRY_ESNEXT)
-  JERRY_ASSERT (!has_mapped_arguments || !(context_p->status_flags & PARSER_FUNCTION_HAS_NON_SIMPLE_PARAM));
+  JERRY_ASSERT (has_complex_argument || !(context_p->status_flags & PARSER_FUNCTION_HAS_COMPLEX_ARGUMENT));
 
   if (context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION)
   {

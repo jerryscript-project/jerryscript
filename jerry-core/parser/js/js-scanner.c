@@ -2182,17 +2182,25 @@ scanner_scan_statement_end (parser_context_t *context_p, /**< context */
 
         lexer_next_token (context_p);
 
+        scanner_literal_pool_t *literal_pool_p;
+        literal_pool_p = scanner_push_literal_pool (context_p, scanner_context_p, SCANNER_LITERAL_POOL_BLOCK);
+        literal_pool_p->source_p = context_p->source_p;
+        parser_stack_push_uint8 (context_p, SCAN_STACK_CATCH_STATEMENT);
+
+#if ENABLED (JERRY_ESNEXT)
+        if (context_p->token.type == LEXER_LEFT_BRACE)
+        {
+          scanner_context_p->mode = SCAN_MODE_STATEMENT_OR_TERMINATOR;
+          return SCAN_NEXT_TOKEN;
+        }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
         if (context_p->token.type != LEXER_LEFT_PAREN)
         {
           scanner_raise_error (context_p);
         }
 
-        scanner_literal_pool_t *literal_pool_p;
-        literal_pool_p = scanner_push_literal_pool (context_p, scanner_context_p, SCANNER_LITERAL_POOL_BLOCK);
-        literal_pool_p->source_p = context_p->source_p;
-
         lexer_next_token (context_p);
-        parser_stack_push_uint8 (context_p, SCAN_STACK_CATCH_STATEMENT);
 
 #if ENABLED (JERRY_ESNEXT)
         if (context_p->token.type == LEXER_LEFT_SQUARE || context_p->token.type == LEXER_LEFT_BRACE)

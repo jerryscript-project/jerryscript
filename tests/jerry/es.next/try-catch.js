@@ -128,3 +128,37 @@ function f7()
   assert(e === 6)
 }
 f7()
+
+function f8()
+{
+  var cnt = 0;
+
+  try {
+    throw "A"
+    asert(false)
+  } catch {
+    cnt++
+  }
+
+  let i = 0
+  const j = 0
+
+  try {
+    throw {}
+    asert(false)
+  } catch {
+    const i = 1.5
+    let j = 2
+    cnt += i * j
+  }
+
+  assert(i === 0)
+  assert(j === 0)
+  return cnt
+}
+
+try {
+  assert(f8() === 4)
+} catch {
+  assert(false)
+}

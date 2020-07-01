@@ -1884,6 +1884,7 @@ typedef enum
   ECMA_AWAIT_YIELD_OPERATION, /**< wait for the generator operation (next/throw/return) */
   ECMA_AWAIT_YIELD_CLOSE, /**< wait for the result of iterator close operation */
   /* After adding new ECMA_AWAIT_YIELD items, the ECMA_AWAIT_YIELD_END should be updated. */
+  ECMA_AWAIT_FOR_CLOSE, /**< wait for a close iterator result object of for-await-of statement */
   ECMA_AWAIT_FOR_NEXT, /**< wait for an iterator result object of for-await-of statement */
 } ecma_await_states_t;
 

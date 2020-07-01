@@ -450,10 +450,24 @@ ecma_await_continue (vm_executable_object_t *executable_object_p, /**< executabl
       ecma_free_value (value);
       return ecma_raise_type_error (msg_p);
     }
+    case ECMA_AWAIT_FOR_CLOSE:
+    {
+      bool is_value_object = ecma_is_value_object (value);
+      ecma_free_value (value);
+      ECMA_EXECUTABLE_OBJECT_RESUME_EXEC (executable_object_p);
+
+      if (!is_value_object
+          && VM_GET_CONTEXT_TYPE (executable_object_p->frame_ctx.stack_top_p[-1]) != VM_CONTEXT_FINALLY_THROW)
+      {
+        return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator return() result is not object"));
+      }
+      return ECMA_VALUE_EMPTY;
+    }
     default:
     {
       JERRY_ASSERT (state == ECMA_AWAIT_FOR_NEXT);
       JERRY_ASSERT (VM_GET_CONTEXT_TYPE (executable_object_p->frame_ctx.stack_top_p[-1]) == VM_CONTEXT_FOR_AWAIT_OF);
+      JERRY_ASSERT (!(executable_object_p->frame_ctx.stack_top_p[-1] & VM_CONTEXT_CLOSE_ITERATOR));
 
       if (!ecma_is_value_object (value))
       {
@@ -491,6 +505,7 @@ ecma_await_continue (vm_executable_object_t *executable_object_p, /**< executabl
         /* It seems browsers call Await(result) here, although the standard does not
          * requests to do so. The following code might follow browsers in the future. */
         ecma_deref_if_object (result);
+        stack_top_p[-1] |= VM_CONTEXT_CLOSE_ITERATOR;
         stack_top_p[-2] = result;
         ECMA_EXECUTABLE_OBJECT_RESUME_EXEC (executable_object_p);
         return ECMA_VALUE_EMPTY;

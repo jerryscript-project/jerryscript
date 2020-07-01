@@ -235,8 +235,13 @@ ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, /**< th
   }
 
   ecma_object_t *locale_func_obj_p = ecma_get_object_from_value (to_locale_value);
+#if ENABLED (JERRY_ESNEXT)
+  ecma_value_t index_parameter = index_value;
+#else /* !ENABLED (JERRY_ESNEXT) */
+  ecma_value_t index_parameter = index_obj_value;
+#endif /* ENABLED (JERRY_ESNEXT) */
   ecma_value_t call_value = ecma_op_function_call (locale_func_obj_p,
-                                                   index_obj_value,
+                                                   index_parameter,
                                                    NULL,
                                                    0);
   ecma_deref_object (locale_func_obj_p);

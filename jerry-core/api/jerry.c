@@ -4332,11 +4332,15 @@ jerry_get_typedarray_buffer (jerry_value_t value, /**< TypedArray to get the arr
 } /* jerry_get_typedarray_buffer */
 
 /**
- * Create an object from JSON
+ * Parse the given JSON string to create a jerry_value_t.
+ *
+ * The behaviour is equivalent with the "JSON.parse(string)" JS call.
  *
  * Note:
- *      The returned value must be freed with jerry_release_value
- * @return jerry_value_t from json formated string or an error massage
+ *      The returned value must be freed with jerry_release_value.
+ *
+ * @return - jerry_value_t containing a JavaScript value.
+ *         - Error value if there was problems during the parse.
  */
 jerry_value_t
 jerry_json_parse (const jerry_char_t *string_p, /**< json string */
@@ -4352,7 +4356,7 @@ jerry_json_parse (const jerry_char_t *string_p, /**< json string */
     ret_value = jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("JSON string parse error.")));
   }
 
-  return ret_value;
+  return jerry_return (ret_value);
 #else /* !ENABLED (JERRY_BUILTIN_JSON) */
   JERRY_UNUSED (string_p);
   JERRY_UNUSED (string_size);
@@ -4362,32 +4366,36 @@ jerry_json_parse (const jerry_char_t *string_p, /**< json string */
 } /* jerry_json_parse */
 
 /**
- * Create a Json formated string from an object
+ * Create a JSON string from a JavaScript value.
+ *
+ * The behaviour is equivalent with the "JSON.stringify(input_value)" JS call.
  *
  * Note:
- *      The returned value must be freed with jerry_release_value
- * @return json formated jerry_value_t or an error massage
+ *      The returned value must be freed with jerry_release_value,
+ *
+ * @return - jerry_value_t containing a JSON string.
+ *         - Error value if there was a problem during the stringification.
  */
 jerry_value_t
-jerry_json_stringify (const jerry_value_t object_to_stringify) /**< a jerry_object_t to stringify */
+jerry_json_stringify (const jerry_value_t input_value) /**< a value to stringify */
 {
   jerry_assert_api_available ();
 #if ENABLED (JERRY_BUILTIN_JSON)
-  ecma_value_t ret_value = ecma_builtin_json_string_from_object (object_to_stringify);
-
-  if (ecma_is_value_error_reference (object_to_stringify))
+  if (ecma_is_value_error_reference (input_value))
   {
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_value_msg_p)));
   }
+
+  ecma_value_t ret_value = ecma_builtin_json_stringify_no_opts (input_value);
 
   if (ecma_is_value_undefined (ret_value))
   {
     ret_value = jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("JSON stringify error.")));
   }
 
-  return ret_value;
+  return jerry_return (ret_value);
 #else /* ENABLED (JERRY_BUILTIN_JSON) */
-  JERRY_UNUSED (object_to_stringify);
+  JERRY_UNUSED (input_value);
 
   return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("The JSON has been disabled.")));
 #endif /* ENABLED (JERRY_BUILTIN_JSON) */

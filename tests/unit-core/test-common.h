@@ -42,6 +42,26 @@
     } \
   } while (0)
 
+#define TEST_ASSERT_STR(EXPECTED, RESULT) \
+  do \
+  { \
+    const char* __expected = (const char *) (EXPECTED); \
+    const char* __result = (const char *) (RESULT); \
+    if (strcmp(__expected, __result) != 0) \
+    { \
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, \
+                      "TEST: String comparison failed at %s(%s):%lu.\n" \
+                      " Expected: '%s'\n Got: '%s'\n", \
+                      __FILE__, \
+                       __func__, \
+                      (unsigned long) __LINE__, \
+                      __expected, \
+                      __result); \
+      jerry_port_fatal (ERR_FAILED_INTERNAL_ASSERTION); \
+      \
+    } \
+  } while (0)
+
 /**
  * Test initialization statement that should be included
  * at the beginning of main function in every unit test.

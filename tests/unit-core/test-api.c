@@ -1015,49 +1015,6 @@ main (void)
 
   jerry_release_value (args[1]);
 
-  {
-    /*json parser check*/
-    const char data_check[]="John";
-    jerry_value_t key = jerry_create_string ((const jerry_char_t *) "name");
-    const jerry_char_t data[] = "{\"name\": \"John\", \"age\": 5}";
-    jerry_value_t parsed_json = jerry_json_parse (data, sizeof (data) - 1);
-    jerry_value_t has_prop_js = jerry_has_property (parsed_json, key);
-    TEST_ASSERT (jerry_get_boolean_value (has_prop_js));
-    jerry_release_value (has_prop_js);
-    jerry_value_t parsed_data = jerry_get_property (parsed_json, key);
-    TEST_ASSERT (jerry_value_is_string (parsed_data) == true);
-    jerry_size_t buff_size = jerry_get_string_size (parsed_data);
-    JERRY_VLA (char, buff, buff_size + 1);
-    jerry_string_to_char_buffer (parsed_data, (jerry_char_t *) buff, buff_size);
-    buff[buff_size] = '\0';
-    TEST_ASSERT (strcmp (data_check, buff) == false);
-    jerry_release_value (parsed_json);
-    jerry_release_value (key);
-    jerry_release_value (parsed_data);
-  }
-
-  /*json stringify test*/
-  {
-    jerry_value_t obj = jerry_create_object ();
-    char check_value[] = "{\"name\":\"John\"}";
-    jerry_value_t key = jerry_create_string ((const jerry_char_t *) "name");
-    jerry_value_t value = jerry_create_string ((const jerry_char_t *) "John");
-    res = jerry_set_property (obj, key, value);
-    TEST_ASSERT (!jerry_value_is_error (res));
-    TEST_ASSERT (jerry_value_is_boolean (res) && jerry_get_boolean_value (res));
-    jerry_release_value (res);
-    jerry_value_t stringified = jerry_json_stringify (obj);
-    TEST_ASSERT (jerry_value_is_string (stringified));
-    jerry_size_t buff_size = jerry_get_string_size (stringified);
-    JERRY_VLA (char, buff, buff_size + 1);
-    jerry_string_to_char_buffer (stringified, (jerry_char_t *) buff, buff_size);
-    buff[buff_size] = '\0';
-    TEST_ASSERT (strcmp ((const char *) check_value, (const char *) buff)  == 0);
-    jerry_release_value (stringified);
-    jerry_release_value (obj);
-    jerry_release_value (key);
-    jerry_release_value (value);
-  }
   jerry_cleanup ();
 
   return 0;

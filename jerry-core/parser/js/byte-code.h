@@ -844,7 +844,7 @@ typedef enum
   CBC_CODE_FLAGS_HAS_TAGGED_LITERALS = (1u << 9), /**< this function has tagged template literal list */
   CBC_CODE_FLAGS_LEXICAL_BLOCK_NEEDED = (1u << 10), /**< compiled code needs a lexical block */
 
-  /* Bits from bit 13 is reserved for function types (see CBC_FUNCTION_TYPE_SHIFT).
+  /* Bits from bit 12 is reserved for function types (see CBC_FUNCTION_TYPE_SHIFT).
    * Note: the last bits are used for type flags because < and >= operators can be used to
            check a range of types without decoding the actual type. */
 } cbc_code_flags_t;
@@ -865,14 +865,17 @@ typedef enum
   CBC_FUNCTION_ASYNC_GENERATOR, /**< async generator function */
 
   /* The following functions has no prototype (see CBC_FUNCTION_HAS_PROTOTYPE) */
-  CBC_FUNCTION_ARROW, /**< arrow function */
   CBC_FUNCTION_ACCESSOR, /**< property accessor function */
+
+  /* The following functions are arrow function (see CBC_FUNCTION_IS_ARROW) */
+  CBC_FUNCTION_ARROW, /**< arrow function */
+  CBC_FUNCTION_ASYNC_ARROW, /**< arrow function */
 } cbc_code_function_types_t;
 
 /**
  * Shift for getting / setting the function type of a byte code.
  */
-#define CBC_FUNCTION_TYPE_SHIFT 13
+#define CBC_FUNCTION_TYPE_SHIFT 12
 
 /**
  * Compute function type bits in code flags.
@@ -902,7 +905,13 @@ typedef enum
  * Checks whether the function has prototype property.
  */
 #define CBC_FUNCTION_HAS_PROTOTYPE(flags) \
-  ((flags) < (CBC_FUNCTION_ARROW << CBC_FUNCTION_TYPE_SHIFT))
+  ((flags) < (CBC_FUNCTION_ACCESSOR << CBC_FUNCTION_TYPE_SHIFT))
+
+/**
+ * Checks whether the function is an arrow function.
+ */
+#define CBC_FUNCTION_IS_ARROW(flags) \
+  ((flags) >= (CBC_FUNCTION_ARROW << CBC_FUNCTION_TYPE_SHIFT))
 
 /**
  * Any arguments object is needed

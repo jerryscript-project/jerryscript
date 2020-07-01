@@ -857,9 +857,8 @@ opfunc_async_create_and_await (vm_frame_ctx_t *frame_ctx_p, /**< frame context *
                                uint16_t extra_flags) /**< extra flags */
 {
   JERRY_ASSERT (frame_ctx_p->block_result == ECMA_VALUE_UNDEFINED);
-  /* TODO: An CBC_FUNCTION_ASYNC_ARROW should be defined. */
   JERRY_ASSERT (CBC_FUNCTION_GET_TYPE (frame_ctx_p->bytecode_header_p->status_flags) == CBC_FUNCTION_ASYNC
-                || CBC_FUNCTION_GET_TYPE (frame_ctx_p->bytecode_header_p->status_flags) == CBC_FUNCTION_ARROW);
+                || CBC_FUNCTION_GET_TYPE (frame_ctx_p->bytecode_header_p->status_flags) == CBC_FUNCTION_ASYNC_ARROW);
 
   ecma_object_t *promise_p = ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE);
   ecma_value_t result = ecma_promise_reject_or_resolve (ecma_make_object_value (promise_p), value, true);

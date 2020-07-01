@@ -442,32 +442,42 @@ ecma_op_create_simple_function_object (ecma_object_t *scope_p, /**< function's s
 #if ENABLED (JERRY_ESNEXT)
 
 /**
- * GeneratorFunction object creation operation.
- *
- * See also: ECMA-262 v5, 13.2
+ * Create a function object with the appropriate prototype.
  *
  * @return pointer to newly created Function object
  */
 ecma_object_t *
-ecma_op_create_generator_function_object (ecma_object_t *scope_p, /**< function's scope */
-                                          const ecma_compiled_code_t *bytecode_data_p) /**< byte-code array */
+ecma_op_create_any_function_object (ecma_object_t *scope_p, /**< function's scope */
+                                    const ecma_compiled_code_t *bytecode_data_p) /**< byte-code array */
 {
-  return ecma_op_create_function_object (scope_p, bytecode_data_p, ECMA_BUILTIN_ID_GENERATOR);
-} /* ecma_op_create_generator_function_object */
+  ecma_builtin_id_t proto_id;
 
-/**
- * AsyncGeneratorFunction object creation operation.
- *
- * See also: ECMA-262 v10, 25.3
- *
- * @return pointer to newly created Function object
- */
-ecma_object_t *
-ecma_op_create_async_generator_function_object (ecma_object_t *scope_p, /**< function's scope */
-                                                const ecma_compiled_code_t *bytecode_data_p) /**< byte-code array */
-{
-  return ecma_op_create_function_object (scope_p, bytecode_data_p, ECMA_BUILTIN_ID_ASYNC_GENERATOR);
-} /* ecma_op_create_async_generator_function_object */
+  switch (CBC_FUNCTION_GET_TYPE (bytecode_data_p->status_flags))
+  {
+    case CBC_FUNCTION_GENERATOR:
+    {
+      proto_id = ECMA_BUILTIN_ID_GENERATOR;
+      break;
+    }
+    case CBC_FUNCTION_ASYNC:
+    {
+      proto_id = ECMA_BUILTIN_ID_ASYNC_FUNCTION_PROTOTYPE;
+      break;
+    }
+    case CBC_FUNCTION_ASYNC_GENERATOR:
+    {
+      proto_id = ECMA_BUILTIN_ID_ASYNC_GENERATOR;
+      break;
+    }
+    default:
+    {
+      proto_id = ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE;
+      break;
+    }
+  }
+
+  return ecma_op_create_function_object (scope_p, bytecode_data_p, proto_id);
+} /* ecma_op_create_any_function_object */
 
 /**
  * Arrow function object creation operation.
@@ -481,7 +491,17 @@ ecma_op_create_arrow_function_object (ecma_object_t *scope_p, /**< function's sc
                                       const ecma_compiled_code_t *bytecode_data_p, /**< byte-code array */
                                       ecma_value_t this_binding) /**< value of 'this' binding */
 {
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
+  ecma_object_t *prototype_obj_p;
+
+  if (CBC_FUNCTION_GET_TYPE (bytecode_data_p->status_flags) == CBC_FUNCTION_ARROW)
+  {
+    prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
+  }
+  else
+  {
+    JERRY_ASSERT (CBC_FUNCTION_GET_TYPE (bytecode_data_p->status_flags) == CBC_FUNCTION_ASYNC_ARROW);
+    prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_ASYNC_FUNCTION_PROTOTYPE);
+  }
 
   size_t arrow_function_object_size = sizeof (ecma_arrow_function_t);
 
@@ -851,7 +871,7 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
 #if ENABLED (JERRY_ESNEXT)
   ecma_object_t *old_function_object_p = JERRY_CONTEXT (current_function_obj_p);
 
-  if (JERRY_UNLIKELY (function_type == CBC_FUNCTION_ARROW))
+  if (JERRY_UNLIKELY (CBC_FUNCTION_IS_ARROW (status_flags)))
   {
     ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) func_obj_p;
 
@@ -1296,6 +1316,11 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
       case CBC_FUNCTION_ARROW:
       {
         message_p = ECMA_ERR_MSG ("Arrow functions cannot be invoked with 'new'.");
+        break;
+      }
+      case CBC_FUNCTION_ASYNC_ARROW:
+      {
+        message_p = ECMA_ERR_MSG ("Async arrow functions cannot be invoked with 'new'.");
         break;
       }
       default:

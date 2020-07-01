@@ -576,6 +576,20 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_SYMBOL,
                  true,
                  symbol)
 
+/* The %AsyncFunction% object (ECMA-262 v11, 25.7.2) */
+BUILTIN_ROUTINE (ECMA_BUILTIN_ID_ASYNC_FUNCTION,
+                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_BUILTIN_ID_FUNCTION,
+                 true,
+                 async_function)
+
+/* The %AsyncFunctionPrototype% object (ECMA-262 v11, 25.7.3) */
+BUILTIN (ECMA_BUILTIN_ID_ASYNC_FUNCTION_PROTOTYPE,
+         ECMA_OBJECT_TYPE_GENERAL,
+         ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
+         true,
+         async_function_prototype)
+
 /* The %IteratorPrototype% object (ECMA-262 v6, 25.1.2) */
 BUILTIN (ECMA_BUILTIN_ID_ITERATOR_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
@@ -596,6 +610,13 @@ BUILTIN (ECMA_BUILTIN_ID_STRING_ITERATOR_PROTOTYPE,
          ECMA_BUILTIN_ID_ITERATOR_PROTOTYPE,
          true,
          string_iterator_prototype)
+
+/* The %AsyncIteratorPrototype% object (ECMA-262 v10, 25.1.3) */
+BUILTIN (ECMA_BUILTIN_ID_ASYNC_ITERATOR_PROTOTYPE,
+         ECMA_OBJECT_TYPE_GENERAL,
+         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
+         true,
+         async_iterator_prototype)
 
 /* The %(GeneratorFunction)% object */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_GENERATOR_FUNCTION,
@@ -635,7 +656,7 @@ BUILTIN (ECMA_BUILTIN_ID_ASYNC_GENERATOR,
 /* The %(AsyncGenerator).prototype% object */
 BUILTIN (ECMA_BUILTIN_ID_ASYNC_GENERATOR_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
-         ECMA_BUILTIN_ID_ITERATOR_PROTOTYPE,
+         ECMA_BUILTIN_ID_ASYNC_ITERATOR_PROTOTYPE,
          true,
          async_generator_prototype)
 

@@ -1215,6 +1215,7 @@ opfunc_set_class_attributes (ecma_object_t *obj_p, /**< object */
       }
       else if (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR)
       {
+        property_pair_p->header.types[index] = (uint8_t) (property & ~ECMA_PROPERTY_FLAG_ENUMERABLE);
         ecma_property_value_t *accessor_objs_p = property_pair_p->values + index;
 
         ecma_getter_setter_pointers_t *get_set_pair_p = ecma_get_named_accessor_property (accessor_objs_p);

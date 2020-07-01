@@ -344,11 +344,8 @@
   <test id="language/object-literal/getter.js"><reason></reason></test>
   <test id="language/object-literal/method.js"><reason></reason></test>
   <test id="language/object-literal/setter.js"><reason></reason></test>
-  <test id="language/statements/class/definition/accessors.js"><reason></reason></test>
-  <test id="language/statements/class/definition/getters.js"><reason></reason></test>
   <test id="language/statements/class/definition/methods.js"><reason></reason></test>
   <test id="language/statements/class/definition/numeric-property-names.js"><reason></reason></test>
-  <test id="language/statements/class/definition/setters.js"><reason></reason></test>
   <test id="language/statements/class/definition/this-access-restriction.js"><reason></reason></test>
   <test id="language/statements/class/definition/this-check-ordering.js"><reason></reason></test>
   <test id="language/statements/class/name-binding/in-extends-expression-assigned.js"><reason></reason></test>

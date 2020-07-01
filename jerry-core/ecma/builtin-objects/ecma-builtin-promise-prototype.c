@@ -65,9 +65,8 @@ static ecma_value_t
 ecma_builtin_promise_prototype_catch (ecma_value_t this_arg, /**< this argument */
                                       ecma_value_t on_rejected) /**< on_rejected function */
 {
-  return ecma_promise_then (this_arg,
-                            ECMA_VALUE_UNDEFINED,
-                            on_rejected);
+  ecma_value_t args[] = {ECMA_VALUE_UNDEFINED, on_rejected};
+  return ecma_op_invoke_by_magic_id (this_arg, LIT_MAGIC_STRING_THEN, args, 2);
 } /* ecma_builtin_promise_prototype_catch */
 
 /**

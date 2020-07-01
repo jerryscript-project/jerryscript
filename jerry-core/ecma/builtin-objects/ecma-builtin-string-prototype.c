@@ -655,24 +655,8 @@ ecma_builtin_string_prototype_object_search (ecma_value_t this_value, /**< this 
   ecma_deref_object (ecma_get_object_from_value (new_regexp));
 #else /* ENABLED (JERRY_ESNEXT) */
   ecma_object_t *regexp_obj_p = ecma_get_object_from_value (new_regexp);
-  ecma_value_t search_symbol = ecma_op_object_get_by_symbol_id (regexp_obj_p, LIT_GLOBAL_SYMBOL_SEARCH);
-  if (ECMA_IS_VALUE_ERROR (search_symbol))
-  {
-    goto cleanup_regexp;
-  }
-
-  if (!ecma_op_is_callable (search_symbol))
-  {
-    result = ecma_raise_type_error (ECMA_ERR_MSG ("@@search is not callable"));
-    goto cleanup_regexp;
-  }
-
-  ecma_object_t *search_method_p = ecma_get_object_from_value (search_symbol);
-  ecma_value_t arguments[] = { ecma_make_string_value (string_p) };
-  result = ecma_op_function_call (search_method_p, new_regexp, arguments, 1);
-  ecma_deref_object (search_method_p);
-
-cleanup_regexp:
+  ecma_value_t this_str_value = ecma_make_string_value (string_p);
+  result = ecma_op_invoke_by_symbol_id (new_regexp, LIT_GLOBAL_SYMBOL_SEARCH, &this_str_value, 1);
   ecma_deref_object (regexp_obj_p);
 #endif /* !ENABLED (JERRY_ESNEXT) */
 

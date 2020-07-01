@@ -108,33 +108,9 @@ ecma_builtin_object_prototype_object_value_of (ecma_value_t this_arg) /**< this 
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_object_prototype_object_to_locale_string (ecma_value_t this_arg, /**< this argument */
-                                                       ecma_object_t *obj_p) /**< this argument as an object */
+ecma_builtin_object_prototype_object_to_locale_string (ecma_value_t this_arg) /**< this argument */
 {
-  /* 2. */
-
-  ecma_string_t *string_to_string = ecma_get_magic_string (LIT_MAGIC_STRING_TO_STRING_UL);
-  ecma_value_t to_string_val = ecma_op_object_get_with_receiver (obj_p, string_to_string, this_arg);
-
-  if (ECMA_IS_VALUE_ERROR (to_string_val))
-  {
-    return to_string_val;
-  }
-
-  /* 3. */
-  if (!ecma_op_is_callable (to_string_val))
-  {
-    ecma_free_value (to_string_val);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("'toString is missing or not a function.'"));
-  }
-
-  /* 4. */
-  ecma_object_t *to_string_func_obj_p = ecma_get_object_from_value (to_string_val);
-  ecma_value_t ret_value = ecma_op_function_call (to_string_func_obj_p, this_arg, NULL, 0);
-
-  ecma_deref_object (to_string_func_obj_p);
-
-  return ret_value;
+  return ecma_op_invoke_by_magic_id (this_arg, LIT_MAGIC_STRING_TO_STRING_UL, &this_arg, 1);
 } /* ecma_builtin_object_prototype_object_to_locale_string */
 
 /**
@@ -267,6 +243,11 @@ ecma_builtin_object_prototype_dispatch_routine (uint16_t builtin_routine_id, /**
       }
     }
 
+    if (builtin_routine_id == ECMA_OBJECT_PROTOTYPE_TO_LOCALE_STRING)
+    {
+      return ecma_builtin_object_prototype_object_to_locale_string (this_arg);
+    }
+
     ecma_value_t to_object = ecma_op_to_object (this_arg);
 
     if (ECMA_IS_VALUE_ERROR (to_object))
@@ -278,26 +259,15 @@ ecma_builtin_object_prototype_dispatch_routine (uint16_t builtin_routine_id, /**
 
     ecma_value_t ret_value;
 
-    if (builtin_routine_id == ECMA_OBJECT_PROTOTYPE_IS_PROTOTYPE_OF)
-    {
-      ret_value = ecma_builtin_object_prototype_object_is_prototype_of (obj_p, arguments_list_p[0]);
-    }
-
 #if ENABLED (JERRY_ESNEXT)
-    else if (builtin_routine_id == ECMA_OBJECT_PROTOTYPE_GET_PROTO)
+    if (builtin_routine_id == ECMA_OBJECT_PROTOTYPE_GET_PROTO)
     {
       ret_value = ecma_builtin_object_object_get_prototype_of (obj_p);
     }
-#endif /* ENABLED (JERRY_ESNEXT)*/
-
     else
+#endif /* ENABLED (JERRY_ESNEXT)*/
     {
-#if ENABLED (JERRY_ESNEXT)
-      ecma_value_t this_parameter = this_arg;
-#else /* !ENABLED (JERRY_ESNEXT) */
-      ecma_value_t this_parameter = ecma_make_object_value (obj_p);
-#endif /* ENABLED (JERRY_ESNEXT) */
-      ret_value = ecma_builtin_object_prototype_object_to_locale_string (this_parameter, obj_p);
+      ret_value = ecma_builtin_object_prototype_object_is_prototype_of (obj_p, arguments_list_p[0]);
     }
 
     ecma_deref_object (obj_p);

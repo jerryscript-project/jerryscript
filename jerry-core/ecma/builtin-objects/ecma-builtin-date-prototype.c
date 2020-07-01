@@ -202,7 +202,7 @@ ecma_builtin_date_prototype_to_primitive (ecma_value_t this_arg, /**< this argum
   {
     ecma_string_t *hint_str_p = ecma_get_string_from_value (hint_arg);
 
-    ecma_preferred_type_hint_t hint = ECMA_PREFERRED_TYPE_NUMBER;
+    ecma_preferred_type_hint_t hint = ECMA_PREFERRED_TYPE_NO;
 
     if (hint_str_p == ecma_get_magic_string (LIT_MAGIC_STRING_STRING)
         || hint_str_p == ecma_get_magic_string (LIT_MAGIC_STRING_DEFAULT))

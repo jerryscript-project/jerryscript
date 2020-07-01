@@ -159,7 +159,7 @@ opfunc_in (ecma_value_t left_value, /**< left value */
     return ecma_raise_type_error (ECMA_ERR_MSG ("Expected an object in 'in' check."));
   }
 
-  ecma_string_t *property_name_p = ecma_op_to_prop_name (left_value);
+  ecma_string_t *property_name_p = ecma_op_to_property_key (left_value);
 
   if (JERRY_UNLIKELY (property_name_p == NULL))
   {

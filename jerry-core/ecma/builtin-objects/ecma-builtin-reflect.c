@@ -96,8 +96,8 @@ ecma_builtin_reflect_dispatch_routine (uint16_t builtin_routine_id, /**< built-i
     }
 
     /* 2. */
-    ecma_string_t *name_str_p = ecma_op_to_prop_name (((arguments_number > 1) ? arguments_list[1]
-                                                                              : ECMA_VALUE_UNDEFINED));
+    ecma_string_t *name_str_p = ecma_op_to_property_key (((arguments_number > 1) ? arguments_list[1]
+                                                                                 : ECMA_VALUE_UNDEFINED));
 
     /* 3. */
     if (name_str_p == NULL)
@@ -262,7 +262,7 @@ ecma_builtin_reflect_dispatch_routine (uint16_t builtin_routine_id, /**< built-i
     case ECMA_REFLECT_OBJECT_DEFINE_PROPERTY:
     {
       ecma_object_t *obj_p = ecma_get_object_from_value (arguments_list[0]);
-      ecma_string_t *name_str_p = ecma_op_to_prop_name (arguments_list[1]);
+      ecma_string_t *name_str_p = ecma_op_to_property_key (arguments_list[1]);
 
       if (name_str_p == NULL)
       {
@@ -297,7 +297,7 @@ ecma_builtin_reflect_dispatch_routine (uint16_t builtin_routine_id, /**< built-i
     case ECMA_REFLECT_OBJECT_GET_OWN_PROPERTY_DESCRIPTOR:
     {
       ecma_object_t *obj_p = ecma_get_object_from_value (arguments_list[0]);
-      ecma_string_t *name_str_p = ecma_op_to_prop_name (arguments_list[1]);
+      ecma_string_t *name_str_p = ecma_op_to_property_key (arguments_list[1]);
 
       if (name_str_p == NULL)
       {

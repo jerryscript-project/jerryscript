@@ -314,7 +314,7 @@ ecma_builtin_object_prototype_dispatch_routine (uint16_t builtin_routine_id, /**
   }
 #endif /* ENABLED (JERRY_ESNEXT)*/
 
-  ecma_string_t *prop_name_p = ecma_op_to_prop_name (arguments_list_p[0]);
+  ecma_string_t *prop_name_p = ecma_op_to_property_key (arguments_list_p[0]);
 
   if (prop_name_p == NULL)
   {

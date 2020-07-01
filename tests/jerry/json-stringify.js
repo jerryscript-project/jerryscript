@@ -212,3 +212,10 @@ assert (JSON.stringify (object, null, undefined) == '{"a":2}');
 assert (JSON.stringify (object, null, new Boolean (true)) == '{"a":2}');
 assert (JSON.stringify (object, null, [1, 2, 3] ) == '{"a":2}');
 assert (JSON.stringify (object, null, { "a": 3 }) == '{"a":2}');
+
+// Test array replacer
+assert (JSON.stringify ({"key1": false, "key2": 12}, [], "abc") === '{}');
+assert (JSON.stringify ({"key1": false, "key2": 12}, ["key1"], "abc") === '{\nabc"key1": false\n}');
+assert (JSON.stringify ({"key1": false, "key2": 12}, ["key2"], "abc") === '{\nabc"key2": 12\n}');
+assert (JSON.stringify ({"key1": false, "key2": 12}, ["key1", "key2"], "abc") === '{\nabc"key1": false,\nabc"key2": 12\n}');
+assert (JSON.stringify ({"key1": false, "key2": 12}, ["key", "key3"], "abc") === '{}');

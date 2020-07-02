@@ -692,6 +692,7 @@ ecma_builtin_date_dispatch_call (const ecma_value_t *arguments_list_p, /**< argu
  *
  * See also:
  *          ECMA-262 v5, 15.9.3.1
+ *          ECMA-262 v11, 20.4.2
  *
  * @return ecma value
  */
@@ -725,53 +726,74 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
 
   ecma_number_t prim_value_num = ECMA_NUMBER_ZERO;
 
+  /* 20.4.2.3 */
   if (arguments_list_len == 0)
   {
     prim_value_num = ecma_builtin_date_now_helper ();
   }
+  /* 20.4.2.2 */
   else if (arguments_list_len == 1)
   {
-    ecma_value_t prim_comp_value = ecma_op_to_primitive (arguments_list_p[0], ECMA_PREFERRED_TYPE_NUMBER);
+    ecma_value_t argument = arguments_list_p[0];
+    ecma_object_t *arg_obj = NULL;
 
-    if (ECMA_IS_VALUE_ERROR (prim_comp_value))
+    /* 4.a */
+    if (ecma_is_value_object (argument))
     {
-      ecma_deref_object (obj_p);
-      return prim_comp_value;
+      arg_obj = ecma_get_object_from_value (argument);
     }
 
-    if (ecma_is_value_string (prim_comp_value))
+    if (arg_obj && ecma_object_class_is (arg_obj, LIT_MAGIC_STRING_DATE_UL))
     {
-      ecma_value_t parse_res_value = ecma_builtin_date_parse (ecma_make_object_value (obj_p), prim_comp_value);
-
-      if (ECMA_IS_VALUE_ERROR (parse_res_value))
-      {
-        ecma_deref_object (obj_p);
-        ecma_free_value (prim_comp_value);
-        return parse_res_value;
-      }
-
-      prim_value_num = ecma_get_number_from_value (parse_res_value);
-
-      ecma_free_value (parse_res_value);
+      ecma_extended_object_t *arg_ext_object_p = (ecma_extended_object_t *) arg_obj;
+      prim_value_num = *ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, arg_ext_object_p->u.class_prop.u.value);
     }
+    /* 4.b */
     else
     {
-      ecma_value_t prim_value = ecma_op_to_number (arguments_list_p[0]);
+      ecma_value_t prim_comp_value = ecma_op_to_primitive (argument, ECMA_PREFERRED_TYPE_NUMBER);
 
-      if (ECMA_IS_VALUE_ERROR (prim_value))
+      if (ECMA_IS_VALUE_ERROR (prim_comp_value))
       {
         ecma_deref_object (obj_p);
-        ecma_free_value (prim_comp_value);
-        return prim_value;
+        return prim_comp_value;
       }
 
-      prim_value_num = ecma_date_time_clip (ecma_get_number_from_value (prim_value));
+      if (ecma_is_value_string (prim_comp_value))
+      {
+        ecma_value_t parse_res_value = ecma_builtin_date_parse (ecma_make_object_value (obj_p), prim_comp_value);
 
-      ecma_free_value (prim_value);
+        if (ECMA_IS_VALUE_ERROR (parse_res_value))
+        {
+          ecma_deref_object (obj_p);
+          ecma_free_value (prim_comp_value);
+          return parse_res_value;
+        }
+
+        prim_value_num = ecma_get_number_from_value (parse_res_value);
+
+        ecma_free_value (parse_res_value);
+      }
+      else
+      {
+        ecma_value_t prim_value = ecma_op_to_number (argument);
+
+        if (ECMA_IS_VALUE_ERROR (prim_value))
+        {
+          ecma_deref_object (obj_p);
+          ecma_free_value (prim_comp_value);
+          return prim_value;
+        }
+
+        prim_value_num = ecma_date_time_clip (ecma_get_number_from_value (prim_value));
+
+        ecma_free_value (prim_value);
+      }
+
+      ecma_free_value (prim_comp_value);
     }
-
-    ecma_free_value (prim_comp_value);
   }
+  /* 20.4.2.1 */
   else
   {
     ecma_value_t time_value = ecma_date_construct_helper (arguments_list_p, arguments_list_len);

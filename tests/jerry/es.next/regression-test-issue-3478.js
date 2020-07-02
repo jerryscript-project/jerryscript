@@ -13,9 +13,4 @@
 // limitations under the License.
 
 Object.prototype["symbol"] = 0;
-try {
-  Promise.race([]);
-  assert(false);
-} catch(e) {
-  assert(e instanceof TypeError);
-}
+Promise.race([]);

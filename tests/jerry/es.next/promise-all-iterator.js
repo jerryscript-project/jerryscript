@@ -79,3 +79,7 @@ var closed = false;
 delete Promise.resolve;
 Promise.all(createIterable([1,2,3], {'return': function () { closed = true; }}));
 assert (closed);
+
+var arr = [];
+Object.defineProperty(arr, Symbol.species, { get: function () { assert(false) }});
+Promise.all(arr);

@@ -42,6 +42,14 @@ try {
   assert(e instanceof TypeError);
 }
 
+// Test with invalid hint value
+try {
+  dateObj[Symbol.toPrimitive]('error');
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
 // Test when unable to call toPrimitive
 try {
   Date.prototype[Symbol.toPrimitive].call(undefined);

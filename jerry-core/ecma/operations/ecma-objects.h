@@ -35,7 +35,6 @@ ecma_value_t ecma_op_object_find_own (ecma_value_t base_value, ecma_object_t *ob
 ecma_value_t ecma_op_object_find (ecma_object_t *object_p, ecma_string_t *property_name_p);
 ecma_value_t ecma_op_object_find_by_uint32_index (ecma_object_t *object_p, uint32_t index);
 ecma_value_t ecma_op_object_find_by_number_index (ecma_object_t *object_p, ecma_number_t index);
-ecma_value_t ecma_op_object_get_own_data_prop (ecma_object_t *object_p, ecma_string_t *property_name_p);
 ecma_value_t ecma_op_object_get (ecma_object_t *object_p, ecma_string_t *property_name_p);
 ecma_value_t ecma_op_object_get_with_receiver (ecma_object_t *object_p, ecma_string_t *property_name_p,
                                                ecma_value_t receiver);

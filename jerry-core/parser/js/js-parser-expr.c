@@ -1068,6 +1068,13 @@ parser_parse_object_literal (parser_context_t *context_p) /**< context */
         }
         break;
       }
+      case LEXER_THREE_DOTS:
+      {
+        lexer_next_token (context_p);
+        parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
+        parser_emit_cbc_ext (context_p, CBC_EXT_COPY_DATA_PROPERTIES);
+        break;
+      }
       case LEXER_KEYW_ASYNC:
       case LEXER_MULTIPLY:
       {
@@ -3418,7 +3425,6 @@ parser_process_group_expression (parser_context_t *context_p, /**< context */
     parser_stack_push_uint8 (context_p, LEXER_ASSIGN_GROUP_EXPR);
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
-
 } /* parser_process_group_expression */
 
 /**

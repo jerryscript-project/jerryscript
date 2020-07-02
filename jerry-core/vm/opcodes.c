@@ -121,6 +121,42 @@ opfunc_typeof (ecma_value_t left_value) /**< left value */
 } /* opfunc_typeof */
 
 /**
+ * Update data property for object literals.
+ */
+void
+opfunc_set_data_property (ecma_object_t *object_p, /**< object */
+                          ecma_string_t *prop_name_p, /**< data property name */
+                          ecma_value_t value) /**< new value */
+{
+  JERRY_ASSERT (!ecma_op_object_is_fast_array (object_p));
+
+  ecma_property_t *property_p = ecma_find_named_property (object_p, prop_name_p);
+
+  if (property_p != NULL
+      && ECMA_PROPERTY_GET_TYPE (*property_p) != ECMA_PROPERTY_TYPE_NAMEDDATA)
+  {
+    ecma_delete_property (object_p, ECMA_PROPERTY_VALUE_PTR (property_p));
+    property_p = NULL;
+  }
+
+  ecma_property_value_t *prop_value_p;
+
+  if (property_p == NULL)
+  {
+    prop_value_p = ecma_create_named_data_property (object_p,
+                                                    prop_name_p,
+                                                    ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                    NULL);
+  }
+  else
+  {
+    prop_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+  }
+
+  ecma_named_data_property_assign_value (object_p, prop_value_p, value);
+} /* opfunc_set_data_property */
+
+/**
  * Update getter or setter for object literals.
  */
 void

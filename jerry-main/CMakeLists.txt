@@ -17,9 +17,11 @@ project (jerry-main C)
 
 # Optional build settings
 set(ENABLE_LINK_MAP OFF CACHE BOOL "Enable generating a link map file?")
+set(JERRY_TEST_STACK_MEASURE OFF CACHE BOOL "Enable stack measurement for the jerry-test binary?")
 
 # Status messages
 message(STATUS "ENABLE_LINK_MAP             " ${ENABLE_LINK_MAP})
+message(STATUS "JERRY_TEST_STACK_MEASURE    " ${JERRY_TEST_STACK_MEASURE})
 
 # Generate map file
 if(ENABLE_LINK_MAP)
@@ -69,6 +71,7 @@ endif()
 if(JERRY_CMDLINE_TEST)
   jerry_create_executable("jerry-test" "main-unix-test.c" "benchmarking.c")
   target_link_libraries("jerry-test" jerry-port-default-minimal)
+  target_compile_definitions("jerry-test" PRIVATE -DJERRY_TEST_STACK_MEASURE=1)
 endif()
 
 if(JERRY_CMDLINE_SNAPSHOT)

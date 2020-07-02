@@ -3061,6 +3061,22 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
         lexer_consume_next_character (context_p);
         return;
       }
+      case LIT_CHAR_DOT:
+      {
+        if (ident_opts != LEXER_OBJ_IDENT_NO_OPTS
+            || context_p->source_p + 2 >= context_p->source_end_p
+            || context_p->source_p[1] != LIT_CHAR_DOT
+            || context_p->source_p[2] != LIT_CHAR_DOT)
+        {
+          break;
+        }
+
+        context_p->token.type = LEXER_THREE_DOTS;
+        context_p->token.flags &= (uint8_t) ~LEXER_NO_SKIP_SPACES;
+        PARSER_PLUS_EQUAL_LC (context_p->column, 3);
+        context_p->source_p += 3;
+        return;
+      }
 #endif /* ENABLED (JERRY_ESNEXT) */
       case LIT_CHAR_RIGHT_BRACE:
       {

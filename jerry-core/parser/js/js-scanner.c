@@ -2883,6 +2883,17 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
             scanner_context.mode = SCAN_MODE_PRIMARY_EXPRESSION;
             break;
           }
+
+          if (context_p->token.type == LEXER_THREE_DOTS)
+          {
+            scanner_context.mode = SCAN_MODE_PRIMARY_EXPRESSION;
+
+            if (scanner_context.binding_type != SCANNER_BINDING_NONE)
+            {
+              scanner_context.mode = SCAN_MODE_BINDING;
+            }
+            break;
+          }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
           if (context_p->token.type == LEXER_RIGHT_BRACE)

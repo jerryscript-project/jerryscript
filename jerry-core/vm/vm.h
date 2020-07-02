@@ -241,6 +241,7 @@ typedef enum
   VM_OC_COPY_TO_GLOBAL,          /**< copy value to global lex env */
   VM_OC_COPY_FROM_ARG,           /**< copy value from arg lex env */
   VM_OC_CLONE_CONTEXT,           /**< clone lexical environment with let/const declarations */
+  VM_OC_COPY_DATA_PROPERTIES,    /**< copy data properties of an object */
   VM_OC_SET_COMPUTED_PROPERTY,   /**< set computed property */
 
   VM_OC_FOR_OF_INIT,             /**< for-of init context */
@@ -312,6 +313,7 @@ typedef enum
   VM_OC_COPY_TO_GLOBAL = VM_OC_NONE,          /**< copy value to global lex env */
   VM_OC_COPY_FROM_ARG = VM_OC_NONE,           /**< copy value from arg lex env */
   VM_OC_CLONE_CONTEXT = VM_OC_NONE,           /**< clone lexical environment with let/const declarations */
+  VM_OC_COPY_DATA_PROPERTIES = VM_OC_NONE,    /**< copy data properties of an object */
   VM_OC_SET_COMPUTED_PROPERTY = VM_OC_NONE,   /**< set computed property is unused */
 
   VM_OC_FOR_OF_INIT = VM_OC_NONE,             /**< for-of init context */

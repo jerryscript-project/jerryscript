@@ -1758,6 +1758,63 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
           goto free_left_value;
         }
+        case VM_OC_COPY_DATA_PROPERTIES:
+        {
+          result = *(--stack_top_p);
+
+          if (ecma_is_value_undefined (result) || ecma_is_value_null (result))
+          {
+            continue;
+          }
+
+          if (!ecma_is_value_object (result))
+          {
+            ecma_value_t value = result;
+            result = ecma_op_to_object (value);
+            ecma_free_value (value);
+
+            if (ECMA_IS_VALUE_ERROR (result))
+            {
+              goto error;
+            }
+          }
+
+          ecma_object_t *object_p = ecma_get_object_from_value (result);
+          ecma_collection_t *names_p = ecma_op_object_get_property_names (object_p, ECMA_LIST_ENUMERABLE);
+
+#if ENABLED (JERRY_BUILTIN_PROXY)
+          if (names_p == NULL)
+          {
+            ecma_deref_object (object_p);
+            result = ECMA_VALUE_ERROR;
+            goto error;
+          }
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+
+          ecma_object_t *target_object_p = ecma_get_object_from_value (stack_top_p[-1]);
+          ecma_value_t *buffer_p = names_p->buffer_p;
+          ecma_value_t *buffer_end_p = buffer_p + names_p->item_count;
+
+          while (buffer_p < buffer_end_p)
+          {
+            ecma_string_t *property_name_p = ecma_get_string_from_value (*buffer_p++);
+            result = ecma_op_object_get (object_p, property_name_p);
+
+            if (ECMA_IS_VALUE_ERROR (result))
+            {
+              ecma_collection_free (names_p);
+              ecma_deref_object (object_p);
+              goto error;
+            }
+
+            opfunc_set_data_property (target_object_p, property_name_p, result);
+            ecma_free_value (result);
+          }
+
+          ecma_collection_free (names_p);
+          ecma_deref_object (object_p);
+          continue;
+        }
         case VM_OC_SET_COMPUTED_PROPERTY:
         {
           /* Swap values. */
@@ -1797,33 +1854,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           ecma_object_t *object_p = ecma_get_object_from_value (stack_top_p[index]);
 
-          JERRY_ASSERT (!ecma_op_object_is_fast_array (object_p));
-
-          ecma_property_t *property_p = ecma_find_named_property (object_p, prop_name_p);
-
-          if (property_p != NULL
-              && ECMA_PROPERTY_GET_TYPE (*property_p) != ECMA_PROPERTY_TYPE_NAMEDDATA)
-          {
-            ecma_delete_property (object_p, ECMA_PROPERTY_VALUE_PTR (property_p));
-            property_p = NULL;
-          }
-
-          ecma_property_value_t *prop_value_p;
-
-          if (property_p == NULL)
-          {
-            prop_value_p = ecma_create_named_data_property (object_p,
-                                                            prop_name_p,
-                                                            ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
-                                                            NULL);
-          }
-          else
-          {
-            prop_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
-          }
-
-          ecma_named_data_property_assign_value (object_p, prop_value_p, left_value);
-
+          opfunc_set_data_property (object_p, prop_name_p, left_value);
           ecma_deref_ecma_string (prop_name_p);
 
           goto free_both_values;

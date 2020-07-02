@@ -2147,9 +2147,9 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
         if (type == ECMA_OBJECT_TYPE_FUNCTION && ecma_builtin_function_is_routine (obj_p))
         {
           ecma_builtin_routine_list_lazy_property_names (obj_p,
-                                                          opts,
-                                                          prop_names_p,
-                                                          skipped_non_enumerable_p);
+                                                         opts,
+                                                         prop_names_p,
+                                                         skipped_non_enumerable_p);
         }
         else
         {

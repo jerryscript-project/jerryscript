@@ -428,6 +428,12 @@ typedef enum
 #define ECMA_PROPERTY_NAME_TYPE_SHIFT (ECMA_PROPERTY_FLAG_SHIFT + 4)
 
 /**
+ * Convert data property to accessor property or accessor property to data property
+ */
+#define ECMA_CHANGE_PROPERTY_TYPE(property_p) \
+  *(property_p) ^= ECMA_PROPERTY_TYPE_NAMEDACCESSOR ^ ECMA_PROPERTY_TYPE_NAMEDDATA;
+
+/**
  * Convert data property to internal property.
  */
 #define ECMA_CONVERT_DATA_PROPERTY_TO_INTERNAL_PROPERTY(property_p) \

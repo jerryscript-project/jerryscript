@@ -131,14 +131,6 @@ opfunc_set_data_property (ecma_object_t *object_p, /**< object */
   JERRY_ASSERT (!ecma_op_object_is_fast_array (object_p));
 
   ecma_property_t *property_p = ecma_find_named_property (object_p, prop_name_p);
-
-  if (property_p != NULL
-      && ECMA_PROPERTY_GET_TYPE (*property_p) != ECMA_PROPERTY_TYPE_NAMEDDATA)
-  {
-    ecma_delete_property (object_p, ECMA_PROPERTY_VALUE_PTR (property_p));
-    property_p = NULL;
-  }
-
   ecma_property_value_t *prop_value_p;
 
   if (property_p == NULL)
@@ -151,6 +143,21 @@ opfunc_set_data_property (ecma_object_t *object_p, /**< object */
   else
   {
     prop_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+
+    if (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR)
+    {
+#if ENABLED (JERRY_CPOINTER_32_BIT)
+      ecma_getter_setter_pointers_t *getter_setter_pair_p;
+      getter_setter_pair_p = ECMA_GET_NON_NULL_POINTER (ecma_getter_setter_pointers_t,
+                                                        ECMA_PROPERTY_VALUE_PTR (property_p)->getter_setter_pair_cp);
+      jmem_pools_free (getter_setter_pair_p, sizeof (ecma_getter_setter_pointers_t));
+#endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
+
+      ECMA_CHANGE_PROPERTY_TYPE (property_p);
+      *property_p = (uint8_t) (*property_p | ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+      prop_value_p->value = ecma_copy_value_if_not_object (value);
+      return;
+    }
   }
 
   ecma_named_data_property_assign_value (object_p, prop_value_p, value);
@@ -170,28 +177,22 @@ opfunc_set_accessor (bool is_getter, /**< is getter accessor */
   JERRY_ASSERT (!ecma_op_object_is_fast_array (object_p));
 
   ecma_property_t *property_p = ecma_find_named_property (object_p, accessor_name_p);
+  ecma_object_t *accessor_p = ecma_get_object_from_value (accessor);
 
-  if (property_p != NULL
-      && ECMA_PROPERTY_GET_TYPE (*property_p) != ECMA_PROPERTY_TYPE_NAMEDACCESSOR)
+  ecma_object_t *getter_func_p = NULL;
+  ecma_object_t *setter_func_p = NULL;
+
+  if (is_getter)
   {
-    ecma_delete_property (object_p, ECMA_PROPERTY_VALUE_PTR (property_p));
-    property_p = NULL;
+    getter_func_p = accessor_p;
+  }
+  else
+  {
+    setter_func_p = accessor_p;
   }
 
   if (property_p == NULL)
   {
-    ecma_object_t *getter_func_p = NULL;
-    ecma_object_t *setter_func_p = NULL;
-
-    if (is_getter)
-    {
-      getter_func_p = ecma_get_object_from_value (accessor);
-    }
-    else
-    {
-      setter_func_p = ecma_get_object_from_value (accessor);
-    }
-
     ecma_create_named_accessor_property (object_p,
                                          accessor_name_p,
                                          getter_func_p,
@@ -199,21 +200,40 @@ opfunc_set_accessor (bool is_getter, /**< is getter accessor */
                                          ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE,
                                          NULL);
   }
-  else if (is_getter)
-  {
-    ecma_object_t *getter_func_p = ecma_get_object_from_value (accessor);
-
-    ecma_set_named_accessor_property_getter (object_p,
-                                             ECMA_PROPERTY_VALUE_PTR (property_p),
-                                             getter_func_p);
-  }
   else
   {
-    ecma_object_t *setter_func_p = ecma_get_object_from_value (accessor);
+    ecma_property_value_t *prop_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
 
-    ecma_set_named_accessor_property_setter (object_p,
-                                             ECMA_PROPERTY_VALUE_PTR (property_p),
-                                             setter_func_p);
+    if (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA)
+    {
+#if ENABLED (JERRY_CPOINTER_32_BIT)
+      ecma_getter_setter_pointers_t *getter_setter_pair_p;
+      getter_setter_pair_p = jmem_pools_alloc (sizeof (ecma_getter_setter_pointers_t));
+#endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
+
+      ecma_free_value_if_not_object (prop_value_p->value);
+      ECMA_CHANGE_PROPERTY_TYPE (property_p);
+      *property_p = (uint8_t) (*property_p & ~ECMA_PROPERTY_FLAG_WRITABLE);
+
+#if ENABLED (JERRY_CPOINTER_32_BIT)
+      ECMA_SET_POINTER (getter_setter_pair_p->getter_cp, getter_func_p);
+      ECMA_SET_POINTER (getter_setter_pair_p->setter_cp, setter_func_p);
+      ECMA_SET_NON_NULL_POINTER (prop_value_p->getter_setter_pair_cp, getter_setter_pair_p);
+#else /* !ENABLED (JERRY_CPOINTER_32_BIT) */
+      ECMA_SET_POINTER (prop_value_p->getter_setter_pair.getter_cp, getter_func_p);
+      ECMA_SET_POINTER (prop_value_p->getter_setter_pair.setter_cp, setter_func_p);
+#endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
+      return;
+    }
+
+    if (is_getter)
+    {
+      ecma_set_named_accessor_property_getter (object_p, prop_value_p, accessor_p);
+    }
+    else
+    {
+      ecma_set_named_accessor_property_setter (object_p, prop_value_p, accessor_p);
+    }
   }
 } /* opfunc_set_accessor */
 

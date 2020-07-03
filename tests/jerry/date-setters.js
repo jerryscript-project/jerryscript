@@ -207,6 +207,23 @@ d.setTime(0);
 assert (d.setUTCFullYear(1970) == 0);
 assert (d.getUTCFullYear() == 1970);
 
+/* ECMA262 v11 20.4.1.2 Day Number and Time within Day
+   msPerDay = 86400000
+   TimeWithinDay(t) = t modulo msPerDay
+
+   ECMA262 v11 5.2.5 Mathematical Operations
+   The notation “x modulo y” (y must be finite and nonzero) computes a value k of the same sign as y (or zero).
+
+   Consequently TimeWithinDay(t) >= 0. It can be tested properly with dates close to 1970.
+*/
+d = new Date("1969-12-01T01:00:00.000Z");
+d.setFullYear(1968);
+assert (d.toISOString() == "1968-12-01T01:00:00.000Z");
+
+d = new Date("1970-01-31T01:00:00.000Z");
+d.setFullYear(1971);
+assert (d.toISOString() == "1971-01-31T01:00:00.000Z");
+
 /* Without argument */
 d = new Date();
 assert (isNaN (d.setTime()));

@@ -186,8 +186,11 @@ ecma_async_yield_throw (vm_executable_object_t *async_generator_object_p, /**< a
 
 /**
  * Execute the next task in the command queue of the async generator
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
-void
+ecma_value_t
 ecma_async_generator_run (vm_executable_object_t *async_generator_object_p) /**< async generator */
 {
   JERRY_ASSERT (async_generator_object_p->extended_object.u.class_prop.class_id
@@ -250,7 +253,7 @@ ecma_async_generator_run (vm_executable_object_t *async_generator_object_p) /**<
 
     if (result == ECMA_VALUE_UNDEFINED)
     {
-      return;
+      return ECMA_VALUE_UNDEFINED;
     }
 
     JERRY_ASSERT (ECMA_IS_VALUE_ERROR (result));
@@ -287,7 +290,10 @@ ecma_async_generator_run (vm_executable_object_t *async_generator_object_p) /**<
   {
     JERRY_ASSERT (head == async_generator_object_p->extended_object.u.class_prop.u.head);
     ecma_async_generator_finalize (async_generator_object_p, result);
+    result = ECMA_VALUE_UNDEFINED;
   }
+
+  return result;
 } /* ecma_async_generator_run */
 
 /**

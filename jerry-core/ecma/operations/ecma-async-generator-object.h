@@ -78,7 +78,7 @@ typedef enum
 ecma_value_t ecma_async_generator_enqueue (vm_executable_object_t *async_generator_object_p,
                                            ecma_async_generator_operation_type_t operation, ecma_value_t value);
 
-void ecma_async_generator_run (vm_executable_object_t *async_generator_object_p);
+ecma_value_t ecma_async_generator_run (vm_executable_object_t *async_generator_object_p);
 void ecma_async_generator_finalize (vm_executable_object_t *async_generator_object_p, ecma_value_t value);
 
 ecma_value_t ecma_await_continue (vm_executable_object_t *async_generator_object_p, ecma_value_t value);

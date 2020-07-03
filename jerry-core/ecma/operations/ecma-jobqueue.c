@@ -343,16 +343,20 @@ ecma_process_promise_async_reaction_job (ecma_job_promise_async_reaction_t *job_
 
 /**
  * The processor for PromiseAsyncGeneratorJob.
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
  */
-static void
+static ecma_value_t
 ecma_process_promise_async_generator_job (ecma_job_promise_async_generator_t *job_p) /**< the job to be operated */
 {
   ecma_object_t *object_p = ecma_get_object_from_value (job_p->executable_object);
 
-  ecma_async_generator_run ((vm_executable_object_t *) object_p);
+  ecma_value_t result = ecma_async_generator_run ((vm_executable_object_t *) object_p);
 
   ecma_free_value (job_p->executable_object);
   jmem_heap_free_block (job_p, sizeof (ecma_job_promise_async_generator_t));
+  return result;
 } /* ecma_process_promise_async_generator_job */
 
 /**
@@ -537,7 +541,7 @@ ecma_process_all_enqueued_jobs (void)
       }
       case ECMA_JOB_PROMISE_ASYNC_GENERATOR:
       {
-        ecma_process_promise_async_generator_job ((ecma_job_promise_async_generator_t *) job_p);
+        ret = ecma_process_promise_async_generator_job ((ecma_job_promise_async_generator_t *) job_p);
         break;
       }
       default:

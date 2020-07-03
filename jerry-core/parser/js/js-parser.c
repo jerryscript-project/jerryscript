@@ -713,14 +713,19 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
       JERRY_DEBUG_MSG (",async_generator");
       break;
     }
+    case CBC_FUNCTION_ACCESSOR:
+    {
+      JERRY_DEBUG_MSG (",accessor");
+      break;
+    }
     case CBC_FUNCTION_ARROW:
     {
       JERRY_DEBUG_MSG (",arrow");
       break;
     }
-    case CBC_FUNCTION_ACCESSOR:
+    case CBC_FUNCTION_ASYNC_ARROW:
     {
-      JERRY_DEBUG_MSG (",accessor");
+      JERRY_DEBUG_MSG (",async_arrow");
       break;
     }
   }
@@ -1372,7 +1377,14 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   }
   else if (context_p->status_flags & PARSER_IS_ARROW_FUNCTION)
   {
-    function_type = CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_ARROW);
+    if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
+    {
+      function_type = CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_ASYNC_ARROW);
+    }
+    else
+    {
+      function_type = CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_ARROW);
+    }
   }
   else if (context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION)
   {

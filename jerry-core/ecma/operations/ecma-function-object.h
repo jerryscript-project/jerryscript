@@ -55,10 +55,7 @@ ecma_value_t
 ecma_op_function_get_super_constructor (ecma_object_t *func_obj_p);
 
 ecma_object_t *
-ecma_op_create_generator_function_object (ecma_object_t *scope_p, const ecma_compiled_code_t *bytecode_data_p);
-
-ecma_object_t *
-ecma_op_create_async_generator_function_object (ecma_object_t *scope_p, const ecma_compiled_code_t *bytecode_data_p);
+ecma_op_create_any_function_object (ecma_object_t *scope_p, const ecma_compiled_code_t *bytecode_data_p);
 
 ecma_object_t *
 ecma_op_create_arrow_function_object (ecma_object_t *scope_p, const ecma_compiled_code_t *bytecode_data_p,

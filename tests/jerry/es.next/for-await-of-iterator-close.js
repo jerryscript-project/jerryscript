@@ -615,9 +615,35 @@ async function f11() {
 
 f11()
 
+// Test 12
+
+var o12 = {}
+async function *gen12()
+{
+  try {
+    yield 9.5
+    assert(false)
+  } finally {
+    successCount++
+  }
+  assert(false)
+}
+
+async function f12()
+{
+  for await (var v of gen12())
+  {
+    assert(v === 9.5)
+    break;
+  }
+  successCount++
+}
+
+f12()
+
 // END
 
 function __checkAsync() {
   assert(returnCount2 === 5)
-  assert(successCount === 34)
+  assert(successCount === 36)
 }

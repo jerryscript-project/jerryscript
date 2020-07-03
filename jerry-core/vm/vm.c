@@ -475,33 +475,18 @@ vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
   ecma_object_t *func_obj_p;
 
 #if ENABLED (JERRY_ESNEXT)
-  switch (CBC_FUNCTION_GET_TYPE (bytecode_p->status_flags))
+  if (JERRY_UNLIKELY (CBC_FUNCTION_IS_ARROW (bytecode_p->status_flags)))
   {
-    case CBC_FUNCTION_GENERATOR:
-    {
-      func_obj_p = ecma_op_create_generator_function_object (frame_ctx_p->lex_env_p, bytecode_p);
-      break;
-    }
-    case CBC_FUNCTION_ASYNC_GENERATOR:
-    {
-      func_obj_p = ecma_op_create_async_generator_function_object (frame_ctx_p->lex_env_p, bytecode_p);
-      break;
-    }
-    case CBC_FUNCTION_ARROW:
-    {
-      func_obj_p = ecma_op_create_arrow_function_object (frame_ctx_p->lex_env_p,
-                                                         bytecode_p,
-                                                         frame_ctx_p->this_binding);
-      break;
-    }
-    default:
-    {
-#endif /* ENABLED (JERRY_ESNEXT) */
-      func_obj_p = ecma_op_create_simple_function_object (frame_ctx_p->lex_env_p, bytecode_p);
-#if ENABLED (JERRY_ESNEXT)
-      break;
-    }
+    func_obj_p = ecma_op_create_arrow_function_object (frame_ctx_p->lex_env_p,
+                                                       bytecode_p,
+                                                       frame_ctx_p->this_binding);
   }
+  else
+  {
+    func_obj_p = ecma_op_create_any_function_object (frame_ctx_p->lex_env_p, bytecode_p);
+  }
+#else /* !ENABLED (JERRY_ESNEXT) */
+  func_obj_p = ecma_op_create_simple_function_object (frame_ctx_p->lex_env_p, bytecode_p);
 #endif /* ENABLED (JERRY_ESNEXT) */
 
   return ecma_make_object_value (func_obj_p);

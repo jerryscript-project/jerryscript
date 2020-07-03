@@ -190,9 +190,41 @@ async function f2b() {
 
 f2b();
 
+// Test 3
+
+var o3 = {}
+async function* gen3()
+{
+  yield o3
+  yield "Res"
+}
+
+async function f3()
+{
+  var idx = 0
+
+  for await (var v of gen3())
+  {
+    idx++
+
+    if (idx === 1)
+    {
+      assert(v === o3)
+    }
+    else
+    {
+      assert(idx === 2)
+      assert(v === "Res")
+    }
+  }
+  successCount++
+}
+
+f3()
+
 // END
 
 function __checkAsync() {
   assert(state2 === 8)
-  assert(successCount === 23)
+  assert(successCount === 24)
 }

@@ -475,6 +475,14 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
   scanner_literal_pool_t *literal_pool_p = scanner_context_p->active_literal_pool_p;
   scanner_literal_pool_t *prev_literal_pool_p = literal_pool_p->prev_p;
 
+#if ENABLED (JERRY_ESNEXT)
+  const uint32_t arrow_super_flags = (SCANNER_LITERAL_POOL_ARROW | SCANNER_LITERAL_POOL_HAS_SUPER_REFERENCE);
+  if ((literal_pool_p->status_flags & arrow_super_flags) == arrow_super_flags)
+  {
+    prev_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_HAS_SUPER_REFERENCE;
+  }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
   if (literal_pool_p->source_p == NULL)
   {
     JERRY_ASSERT (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_FUNCTION);
@@ -1287,7 +1295,13 @@ scanner_detect_eval_call (parser_context_t *context_p, /**< context */
   if (context_p->token.keyword_type == LEXER_KEYW_EVAL
       && lexer_check_next_character (context_p, LIT_CHAR_LEFT_PAREN))
   {
-    scanner_context_p->active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_CAN_EVAL;
+#if ENABLED (JERRY_ESNEXT)
+    const uint16_t flags = (uint16_t) (SCANNER_LITERAL_POOL_CAN_EVAL | SCANNER_LITERAL_POOL_HAS_SUPER_REFERENCE);
+#else /* !ENABLED (JERRY_ESNEXT) */
+    const uint16_t flags = SCANNER_LITERAL_POOL_CAN_EVAL;
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+    scanner_context_p->active_literal_pool_p->status_flags |= flags;
   }
 } /* scanner_detect_eval_call */
 
@@ -1654,6 +1668,7 @@ scanner_cleanup (parser_context_t *context_p) /**< context */
         JERRY_ASSERT (scanner_info_p->type == SCANNER_TYPE_END_ARGUMENTS
                       || scanner_info_p->type == SCANNER_TYPE_LET_EXPRESSION
                       || scanner_info_p->type == SCANNER_TYPE_CLASS_CONSTRUCTOR
+                      || scanner_info_p->type == SCANNER_TYPE_OBJECT_LITERAL_WITH_SUPER
                       || scanner_info_p->type == SCANNER_TYPE_ERR_REDECLARED
                       || scanner_info_p->type == SCANNER_TYPE_ERR_ASYNC_FUNCTION);
 #else /* !ENABLED (JERRY_ESNEXT) */

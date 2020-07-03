@@ -1970,6 +1970,34 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           *stack_top_p++ = result;
           continue;
         }
+        case VM_OC_OBJECT_LITERAL_HOME_ENV:
+        {
+          if (opcode == CBC_EXT_PUSH_OBJECT_SUPER_ENVIRONMENT)
+          {
+            ecma_value_t obj_value = stack_top_p[-1];
+            ecma_object_t *obj_env_p = ecma_create_object_lex_env (frame_ctx_p->lex_env_p,
+                                                                  ecma_get_object_from_value (obj_value),
+                                                                  ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND);
+
+            stack_top_p[-1] = ecma_make_object_value (obj_env_p);
+            *stack_top_p++ = obj_value;
+          }
+          else
+          {
+            JERRY_ASSERT (opcode == CBC_EXT_POP_OBJECT_SUPER_ENVIRONMENT);
+            ecma_deref_object (ecma_get_object_from_value (stack_top_p[-2]));
+            stack_top_p[-2] = stack_top_p[-1];
+            stack_top_p--;
+          }
+          continue;
+        }
+        case VM_OC_SET_HOME_OBJECT:
+        {
+          int offset = opcode == CBC_EXT_OBJECT_LITERAL_SET_HOME_OBJECT_COMPUTED ? -1 : 0;
+          opfunc_set_home_object (ecma_get_object_from_value (stack_top_p[-1]),
+                                  ecma_get_object_from_value (stack_top_p[-3 + offset]));
+          continue;
+        }
         case VM_OC_SUPER_REFERENCE:
         {
           result = opfunc_form_super_reference (&stack_top_p, frame_ctx_p, left_value, opcode);

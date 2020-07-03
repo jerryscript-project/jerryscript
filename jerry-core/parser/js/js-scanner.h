@@ -50,6 +50,7 @@ typedef enum
   SCANNER_TYPE_LET_EXPRESSION, /**< let expression */
   SCANNER_TYPE_ERR_REDECLARED, /**< syntax error: a variable is redeclared */
   SCANNER_TYPE_ERR_ASYNC_FUNCTION, /**< an invalid async function follows */
+  SCANNER_TYPE_OBJECT_LITERAL_WITH_SUPER, /**< object literal with inner super reference */
 #endif /* ENABLED (JERRY_ESNEXT) */
 } scanner_info_type_t;
 

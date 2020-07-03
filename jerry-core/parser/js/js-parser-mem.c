@@ -437,6 +437,22 @@ parser_stack_pop_uint8 (parser_context_t *context_p) /**< context */
 } /* parser_stack_pop_uint8 */
 
 /**
+ * Change last byte of the stack.
+ */
+void
+parser_stack_change_last_uint8 (parser_context_t *context_p, /**< context */
+                                uint8_t new_value) /**< new value */
+{
+  parser_mem_page_t *page_p = context_p->stack.first_p;
+
+  JERRY_ASSERT (page_p != NULL
+                && context_p->stack_top_uint8 == page_p->bytes[context_p->stack.last_position - 1]);
+
+  page_p->bytes[context_p->stack.last_position - 1] = new_value;
+  context_p->stack_top_uint8 = new_value;
+} /* parser_stack_change_last_uint8 */
+
+/**
  * Pushes an uint16_t value onto the stack.
  */
 void

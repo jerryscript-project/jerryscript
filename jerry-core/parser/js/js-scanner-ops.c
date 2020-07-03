@@ -66,6 +66,8 @@ scanner_check_arrow_body (parser_context_t *context_p, /**< context */
 {
   lexer_next_token (context_p);
 
+  scanner_context_p->active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_ARROW;
+
   if (context_p->token.type != LEXER_LEFT_BRACE)
   {
     scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
@@ -431,9 +433,12 @@ scanner_scan_bracket (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ESNEXT)
         /* A function call cannot be an eval function. */
         arrow_source_p = NULL;
+        const uint16_t flags = (uint16_t) (SCANNER_LITERAL_POOL_CAN_EVAL | SCANNER_LITERAL_POOL_HAS_SUPER_REFERENCE);
+#else /* !ENABLED (JERRY_ESNEXT) */
+        const uint16_t flags = SCANNER_LITERAL_POOL_CAN_EVAL;
 #endif /* ENABLED (JERRY_ESNEXT) */
 
-        scanner_context_p->active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_CAN_EVAL;
+        scanner_context_p->active_literal_pool_p->status_flags |= flags;
         break;
       }
 

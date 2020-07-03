@@ -641,6 +641,7 @@ void parser_stack_init (parser_context_t *context_p);
 void parser_stack_free (parser_context_t *context_p);
 void parser_stack_push_uint8 (parser_context_t *context_p, uint8_t uint8_value);
 void parser_stack_pop_uint8 (parser_context_t *context_p);
+void parser_stack_change_last_uint8 (parser_context_t *context_p, uint8_t new_value);
 void parser_stack_push_uint16 (parser_context_t *context_p, uint16_t uint16_value);
 uint16_t parser_stack_pop_uint16 (parser_context_t *context_p);
 void parser_stack_push (parser_context_t *context_p, const void *data_p, uint32_t length);

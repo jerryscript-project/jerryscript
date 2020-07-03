@@ -259,6 +259,8 @@ typedef enum
   VM_OC_PUSH_SUPER_CONSTRUCTOR,  /**< getSuperConstructor operation */
   VM_OC_RESOLVE_LEXICAL_THIS,    /**< resolve this_binding from from the lexical environment */
   VM_OC_SUPER_REFERENCE,         /**< push super reference */
+  VM_OC_SET_HOME_OBJECT,         /**< set the [[HomeObject]] environment in an object literal */
+  VM_OC_OBJECT_LITERAL_HOME_ENV, /**< create/destroy [[HomeObject]] environment of an object literal */
   VM_OC_SET_FUNCTION_NAME,       /**< set function name property */
 
   VM_OC_PUSH_SPREAD_ELEMENT,     /**< push spread element */
@@ -331,6 +333,8 @@ typedef enum
   VM_OC_PUSH_SUPER_CONSTRUCTOR = VM_OC_NONE,  /**< getSuperConstructor operation */
   VM_OC_RESOLVE_LEXICAL_THIS = VM_OC_NONE,    /**< resolve this_binding from from the lexical environment */
   VM_OC_SUPER_REFERENCE = VM_OC_NONE,         /**< push super reference */
+  VM_OC_SET_HOME_OBJECT = VM_OC_NONE,         /**< set the [[HomeObject]] internal property in an object literal */
+  VM_OC_OBJECT_LITERAL_HOME_ENV = VM_OC_NONE, /**< create/destroy [[HomeObject]] environment of an object literal */
   VM_OC_SET_FUNCTION_NAME = VM_OC_NONE,       /**< set function name property */
 
   VM_OC_PUSH_SPREAD_ELEMENT = VM_OC_NONE,     /**< push spread element */

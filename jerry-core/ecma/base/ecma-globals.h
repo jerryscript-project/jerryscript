@@ -880,6 +880,7 @@ typedef struct
         uint32_t length; /**< length related property (e.g. length of ArrayBuffer) */
         ecma_value_t target; /**< [[ProxyTarget]] internal property */
         ecma_value_t head; /**< points to the async generator task queue head item */
+        ecma_value_t promise; /**< PromiseCapability[[Promise]] internal slot */
       } u;
     } class_prop;
 
@@ -1932,6 +1933,39 @@ typedef struct
   ecma_value_t operation_value; /**< value argument of the operation */
   uint8_t operation_type; /**< type of operation (see ecma_async_generator_operation_type_t) */
 } ecma_async_generator_task_t;
+
+/**
+ * Definition of PromiseCapability Records
+ */
+typedef struct
+{
+  ecma_extended_object_t header; /**< object header, and [[Promise]] internal slot */
+  ecma_value_t resolve; /**< [[Resolve]] internal slot */
+  ecma_value_t reject; /**< [[Reject]] internal slot */
+} ecma_promise_capabality_t;
+
+/**
+ * Definition of GetCapabilitiesExecutor Functions
+ */
+typedef struct
+{
+  ecma_extended_object_t header; /**< object header */
+  ecma_value_t capability; /**< [[Capability]] internal slot */
+} ecma_promise_capability_executor_t;
+
+/**
+ * Definition of Promise.all Resolve Element Functions
+ */
+typedef struct
+{
+  ecma_extended_object_t header; /**< object header */
+  ecma_value_t remaining_elements; /**< [[Remaining elements]] internal slot */
+  ecma_value_t capability; /**< [[Capabilities]] internal slot */
+  ecma_value_t values; /**< [[Values]] internal slot */
+  uint32_t index; /**< [[Index]] and [[AlreadyCalled]] internal slot
+                   *   0 - if the element has been resolved
+                   *   real index + 1 in the [[Values]] list - otherwise */
+} ecma_promise_all_executor_t;
 
 #endif /* ENABLED (JERRY_ESNEXT) */
 

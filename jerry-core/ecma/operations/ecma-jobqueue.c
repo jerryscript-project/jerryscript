@@ -181,11 +181,11 @@ ecma_free_promise_resolve_thenable_job (ecma_job_promise_resolve_thenable_t *job
 static ecma_value_t
 ecma_process_promise_reaction_job (ecma_job_promise_reaction_t *job_p) /**< the job to be operated */
 {
-  ecma_string_t *resolve_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_RESOLVE);
-  ecma_string_t *reject_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REJECT);
-
   /* 2. */
-  ecma_value_t capability = job_p->capability;
+  JERRY_ASSERT (ecma_object_class_is (ecma_get_object_from_value (job_p->capability),
+                                      LIT_INTERNAL_MAGIC_PROMISE_CAPABILITY));
+  ecma_promise_capabality_t *capability_p;
+  capability_p = (ecma_promise_capabality_t *) ecma_get_object_from_value (job_p->capability);
   /* 3. */
   ecma_value_t handler = job_p->handler;
 
@@ -217,28 +217,18 @@ ecma_process_promise_reaction_job (ecma_job_promise_reaction_t *job_p) /**< the 
     }
 
     /* 7. */
-    ecma_value_t reject = ecma_op_object_get (ecma_get_object_from_value (capability), reject_str_p);
-
-    JERRY_ASSERT (ecma_op_is_callable (reject));
-
-    status = ecma_op_function_call (ecma_get_object_from_value (reject),
+    status = ecma_op_function_call (ecma_get_object_from_value (capability_p->reject),
                                     ECMA_VALUE_UNDEFINED,
                                     &handler_result,
                                     1);
-    ecma_free_value (reject);
   }
   else
   {
     /* 8. */
-    ecma_value_t resolve = ecma_op_object_get (ecma_get_object_from_value (capability), resolve_str_p);
-
-    JERRY_ASSERT (ecma_op_is_callable (resolve));
-
-    status = ecma_op_function_call (ecma_get_object_from_value (resolve),
+    status = ecma_op_function_call (ecma_get_object_from_value (capability_p->resolve),
                                     ECMA_VALUE_UNDEFINED,
                                     &handler_result,
                                     1);
-    ecma_free_value (resolve);
   }
 
   ecma_free_value (handler_result);

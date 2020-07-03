@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "ecma-alloc.h"
 #include "ecma-array-object.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-exceptions.h"
@@ -54,22 +55,22 @@
  */
 inline static ecma_value_t
 ecma_builtin_promise_reject_abrupt (ecma_value_t value, /**< value */
-                                    ecma_value_t capability) /**< capability */
+                                    ecma_object_t *capability_obj_p) /**< capability */
 {
+  JERRY_ASSERT (ecma_object_class_is (capability_obj_p, LIT_INTERNAL_MAGIC_PROMISE_CAPABILITY));
+
   if (!ECMA_IS_VALUE_ERROR (value))
   {
     return value;
   }
 
   ecma_value_t reason = jcontext_take_exception ();
-  ecma_value_t reject = ecma_op_object_get_by_magic_id (ecma_get_object_from_value (capability),
-                                                        LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REJECT);
 
-  ecma_value_t call_ret = ecma_op_function_call (ecma_get_object_from_value (reject),
+  ecma_promise_capabality_t *capability_p = (ecma_promise_capabality_t *) capability_obj_p;
+  ecma_value_t call_ret = ecma_op_function_call (ecma_get_object_from_value (capability_p->reject),
                                                  ECMA_VALUE_UNDEFINED,
                                                  &reason,
                                                  1);
-  ecma_free_value (reject);
   ecma_free_value (reason);
 
   if (ECMA_IS_VALUE_ERROR (call_ret))
@@ -79,8 +80,7 @@ ecma_builtin_promise_reject_abrupt (ecma_value_t value, /**< value */
 
   ecma_free_value (call_ret);
 
-  return ecma_op_object_get_by_magic_id (ecma_get_object_from_value (capability),
-                                         LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_PROMISE);
+  return ecma_copy_value (capability_p->header.u.class_prop.u.promise);
 } /* ecma_builtin_promise_reject_abrupt */
 
 /**
@@ -127,14 +127,15 @@ ecma_builtin_promise_resolve (ecma_value_t this_arg, /**< 'this' argument */
 inline static ecma_value_t
 ecma_builtin_promise_perform_race (ecma_value_t iterator, /**< the iterator for race */
                                    ecma_value_t next_method, /**< next method */
-                                   ecma_value_t capability, /**< PromiseCapability record */
+                                   ecma_object_t *capability_obj_p, /**< PromiseCapability record */
                                    ecma_value_t ctor, /**< Constructor value */
                                    bool *done_p) /**< [out] iteratorRecord[[done]] */
 {
-  JERRY_ASSERT (ecma_is_value_object (iterator)
-                && ecma_is_value_object (capability));
+  JERRY_ASSERT (ecma_is_value_object (iterator));
+  JERRY_ASSERT (ecma_object_class_is (capability_obj_p, LIT_INTERNAL_MAGIC_PROMISE_CAPABILITY));
 
-  ecma_object_t *capability_obj_p = ecma_get_object_from_value (capability);
+  ecma_promise_capabality_t *capability_p = (ecma_promise_capabality_t *) capability_obj_p;
+
   /* 1. */
   while (true)
   {
@@ -153,7 +154,7 @@ ecma_builtin_promise_perform_race (ecma_value_t iterator, /**< the iterator for 
       /* i. */
       *done_p = true;
       /* ii. */
-      return ecma_op_object_get_by_magic_id (capability_obj_p, LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_PROMISE);
+      return ecma_copy_value (capability_p->header.u.class_prop.u.promise);
     }
 
     /* e. */
@@ -178,16 +179,9 @@ ecma_builtin_promise_perform_race (ecma_value_t iterator, /**< the iterator for 
     }
 
     /* j. */
-    ecma_value_t args[2];
-    args[0] = ecma_op_object_get_by_magic_id (capability_obj_p, LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_RESOLVE);
-    args[1] = ecma_op_object_get_by_magic_id (capability_obj_p, LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REJECT);
+    ecma_value_t args[2] = {capability_p->resolve, capability_p->reject};
     ecma_value_t result = ecma_op_invoke_by_magic_id (next_promise, LIT_MAGIC_STRING_THEN, args, 2);
     ecma_free_value (next_promise);
-
-    for (uint8_t i = 0; i < 2; i++)
-    {
-      ecma_free_value (args[i]);
-    }
 
     /* k. */
     if (ECMA_IS_VALUE_ERROR (result))
@@ -202,116 +196,6 @@ ecma_builtin_promise_perform_race (ecma_value_t iterator, /**< the iterator for 
 } /* ecma_builtin_promise_perform_race */
 
 /**
- * Helper function for increase or decrease the remaining count.
- *
- * @return the current remaining count after increase or decrease.
- */
-static ecma_length_t
-ecma_builtin_promise_remaining_inc_or_dec (ecma_value_t remaining, /**< the remaining count */
-                                           bool is_inc) /**< whether to increase the count */
-{
-  JERRY_ASSERT (ecma_is_value_object (remaining));
-
-  ecma_object_t *remaining_p = ecma_get_object_from_value (remaining);
-  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) remaining_p;
-
-  JERRY_ASSERT (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_NUMBER_UL);
-
-  JERRY_ASSERT (ecma_is_value_integer_number (ext_object_p->u.class_prop.u.value));
-
-  ecma_length_t current = (ecma_length_t) ecma_get_integer_from_value (ext_object_p->u.class_prop.u.value);
-
-  if (is_inc)
-  {
-    current++;
-  }
-  else
-  {
-    current--;
-  }
-  ext_object_p->u.class_prop.u.value = ecma_make_uint32_value (current);
-
-  return current;
-} /* ecma_builtin_promise_remaining_inc_or_dec */
-
-/**
- * Native handler for Promise.all Resolve Element Function.
- *
- * See also:
- *         ES2015 25.4.4.1.2
- *
- * @return ecma value of undefined.
- */
-static ecma_value_t
-ecma_builtin_promise_all_handler (const ecma_value_t function, /**< the function itself */
-                                  const ecma_value_t this, /**< this_arg of the function */
-                                  const ecma_value_t argv[], /**< argument list */
-                                  const ecma_length_t argc) /**< argument number */
-{
-  JERRY_UNUSED (this);
-  JERRY_UNUSED (argc);
-
-  /* 1. */
-  ecma_object_t *function_p = ecma_get_object_from_value (function);
-  ecma_string_t *already_called_str_p;
-  already_called_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_ALREADY_CALLED);
-  ecma_value_t already_called = ecma_op_object_get (function_p, already_called_str_p);
-
-  JERRY_ASSERT (ecma_is_value_boolean (already_called));
-
-  /* 2. */
-  if (ecma_is_value_true (already_called))
-  {
-    return ECMA_VALUE_UNDEFINED;
-  }
-
-  /* 3. */
-  ecma_op_object_put (function_p,
-                      already_called_str_p,
-                      ECMA_VALUE_TRUE,
-                      false);
-
-  ecma_string_t *str_index_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_INDEX);
-  ecma_string_t *str_value_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_VALUE);
-  ecma_string_t *str_capability_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_CAPABILITY);
-  ecma_string_t *str_remaining_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REMAINING_ELEMENT);
-
-  /* 4-7. */
-  ecma_value_t index_val = ecma_op_object_get (function_p, str_index_p);
-  ecma_value_t values_array = ecma_op_object_get (function_p, str_value_p);
-  ecma_value_t capability = ecma_op_object_get (function_p, str_capability_p);
-  ecma_value_t remaining = ecma_op_object_get (function_p, str_remaining_p);
-
-  JERRY_ASSERT (ecma_is_value_integer_number (index_val));
-
-  /* 8. */
-  ecma_op_object_put_by_uint32_index (ecma_get_object_from_value (values_array),
-                                      (uint32_t) ecma_get_integer_from_value (index_val),
-                                      argv[0],
-                                      false);
-
-  /* 9-10. */
-  ecma_value_t ret = ECMA_VALUE_UNDEFINED;
-  if (ecma_builtin_promise_remaining_inc_or_dec (remaining, false) == 0)
-  {
-    ecma_value_t resolve = ecma_op_object_get_by_magic_id (ecma_get_object_from_value (capability),
-                                                           LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_RESOLVE);
-    ret = ecma_op_function_call (ecma_get_object_from_value (resolve),
-                                 ECMA_VALUE_UNDEFINED,
-                                 &values_array,
-                                 1);
-    ecma_free_value (resolve);
-  }
-
-  ecma_free_value (remaining);
-  ecma_free_value (capability);
-  ecma_free_value (values_array);
-  ecma_free_value (index_val);
-
-  return ret;
-} /* ecma_builtin_promise_all_handler */
-
-/**
  * Runtime Semantics: PerformPromiseAll.
  *
  * See also:
@@ -323,12 +207,15 @@ ecma_builtin_promise_all_handler (const ecma_value_t function, /**< the function
 inline static ecma_value_t
 ecma_builtin_promise_perform_all (ecma_value_t iterator, /**< iteratorRecord */
                                   ecma_value_t next_method, /**< next method */
-                                  ecma_value_t capability,  /**< PromiseCapability record */
+                                  ecma_object_t *capability_obj_p,  /**< PromiseCapability record */
                                   ecma_value_t ctor, /**< the caller of Promise.race */
                                   bool *done_p) /**< [out] iteratorRecord[[done]] */
 {
   /* 1. - 2. */
-  JERRY_ASSERT (ecma_is_value_object (capability) && ecma_is_constructor (ctor));
+  JERRY_ASSERT (ecma_object_class_is (capability_obj_p, LIT_INTERNAL_MAGIC_PROMISE_CAPABILITY));
+  JERRY_ASSERT (ecma_is_constructor (ctor));
+
+  ecma_promise_capabality_t *capability_p = (ecma_promise_capabality_t *) capability_obj_p;
 
   /* 3. */
   ecma_object_t *values_array_obj_p = ecma_op_new_fast_array_object (0);
@@ -339,14 +226,6 @@ ecma_builtin_promise_perform_all (ecma_value_t iterator, /**< iteratorRecord */
   uint32_t idx = 0;
 
   ecma_value_t ret_value = ECMA_VALUE_ERROR;
-  ecma_object_t *capability_obj_p = ecma_get_object_from_value (capability);
-
-  ecma_string_t *already_called_str_p;
-  already_called_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_ALREADY_CALLED);
-  ecma_string_t *index_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_INDEX);
-  ecma_string_t *value_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_VALUE);
-  ecma_string_t *capability_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_CAPABILITY);
-  ecma_string_t *remaining_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REMAINING_ELEMENT);
 
   /* 6. */
   while (true)
@@ -367,17 +246,13 @@ ecma_builtin_promise_perform_all (ecma_value_t iterator, /**< iteratorRecord */
       *done_p = true;
 
       /* ii. - iii. */
-      if (ecma_builtin_promise_remaining_inc_or_dec (remaining, false) == 0)
+      if (ecma_promise_remaining_inc_or_dec (remaining, false) == 0)
       {
         /* 2. */
-        ecma_value_t resolve = ecma_op_object_get_by_magic_id (capability_obj_p,
-                                                               LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_RESOLVE);
-        ecma_value_t resolve_result = ecma_op_function_call (ecma_get_object_from_value (resolve),
+        ecma_value_t resolve_result = ecma_op_function_call (ecma_get_object_from_value (capability_p->resolve),
                                                              ECMA_VALUE_UNDEFINED,
                                                              &values_array,
                                                              1);
-        ecma_free_value (resolve);
-
         /* 3. */
         if (ECMA_IS_VALUE_ERROR (resolve_result))
         {
@@ -388,8 +263,7 @@ ecma_builtin_promise_perform_all (ecma_value_t iterator, /**< iteratorRecord */
       }
 
       /* iv. */
-      ret_value = ecma_op_object_get_by_magic_id (capability_obj_p,
-                                                  LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_PROMISE);
+      ret_value = ecma_copy_value (capability_p->header.u.class_prop.u.promise);
       break;
     }
 
@@ -421,52 +295,43 @@ ecma_builtin_promise_perform_all (ecma_value_t iterator, /**< iteratorRecord */
     }
 
     /* k. */
-    ecma_object_t *res_ele_p;
-    res_ele_p = ecma_op_create_external_function_object (ecma_builtin_promise_all_handler);
+    ecma_object_t *executor_func_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE),
+                                                         sizeof (ecma_promise_all_executor_t),
+                                                         ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+
+    ecma_promise_all_executor_t *executor_p = (ecma_promise_all_executor_t *) executor_func_p;
+    executor_p->header.u.external_handler_cb = ecma_promise_all_handler_cb;
+
     /* l. */
-    ecma_op_object_put (res_ele_p,
-                        already_called_str_p,
-                        ECMA_VALUE_FALSE,
-                        false);
-    /* m. */
-    ecma_value_t idx_value = ecma_make_uint32_value (idx);
-    ecma_op_object_put (res_ele_p,
-                        index_str_p,
-                        idx_value,
-                        false);
-    ecma_free_value (idx_value);
+    if (JERRY_UNLIKELY (idx == UINT32_MAX - 1))
+    {
+      ecma_deref_object (executor_func_p);
+      ecma_raise_range_error (ECMA_ERR_MSG ("Promise.all remaining elements limit reached."));
+      break;
+    }
+
+    /* m. + t. */
+    executor_p->index = ++idx;
 
     /* n. */
-    ecma_op_object_put (res_ele_p,
-                        value_str_p,
-                        values_array,
-                        false);
+    executor_p->values = values_array;
 
     /* o. */
-    ecma_op_object_put (res_ele_p,
-                        capability_str_p,
-                        capability,
-                        false);
+    executor_p->capability = ecma_make_object_value (capability_obj_p);
+
     /* p. */
-    ecma_op_object_put (res_ele_p,
-                        remaining_str_p,
-                        remaining,
-                        false);
+    executor_p->remaining_elements = remaining;
 
     /* q. */
-    ecma_builtin_promise_remaining_inc_or_dec (remaining, true);
+    ecma_promise_remaining_inc_or_dec (remaining, true);
 
     /* r. */
     ecma_value_t args[2];
-    args[0] = ecma_make_object_value (res_ele_p);
-    args[1] = ecma_op_object_get_by_magic_id (capability_obj_p, LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REJECT);
+    args[0] = ecma_make_object_value (executor_func_p);
+    args[1] = capability_p->reject;
     ecma_value_t result = ecma_op_invoke_by_magic_id (next_promise, LIT_MAGIC_STRING_THEN, args, 2);
     ecma_free_value (next_promise);
-
-    for (uint8_t i = 0; i < 2; i++)
-    {
-      ecma_free_value (args[i]);
-    }
+    ecma_deref_object (executor_func_p);
 
     /* s. */
     if (ECMA_IS_VALUE_ERROR (result))
@@ -475,13 +340,11 @@ ecma_builtin_promise_perform_all (ecma_value_t iterator, /**< iteratorRecord */
     }
 
     ecma_free_value (result);
-
-    /* t. */
-    idx++;
   }
 
   ecma_free_value (remaining);
   ecma_deref_object (values_array_obj_p);
+
   return ret_value;
 } /* ecma_builtin_promise_perform_all */
 
@@ -501,20 +364,20 @@ ecma_builtin_promise_race_or_all (ecma_value_t this_arg, /**< 'this' argument */
     return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not an object."));
   }
 
-  ecma_value_t capability = ecma_promise_new_capability (this_arg);
+  ecma_object_t *capability_obj_p = ecma_promise_new_capability (this_arg);
 
-  if (ECMA_IS_VALUE_ERROR (capability))
+  if (JERRY_UNLIKELY (capability_obj_p == NULL))
   {
-    return capability;
+    return ECMA_VALUE_ERROR;
   }
 
   ecma_value_t next_method;
   ecma_value_t iterator = ecma_op_get_iterator (iterable, ECMA_VALUE_SYNC_ITERATOR, &next_method);
-  iterator = ecma_builtin_promise_reject_abrupt (iterator, capability);
+  iterator = ecma_builtin_promise_reject_abrupt (iterator, capability_obj_p);
 
   if (ECMA_IS_VALUE_ERROR (iterator))
   {
-    ecma_free_value (capability);
+    ecma_deref_object (capability_obj_p);
     return iterator;
   }
 
@@ -523,11 +386,11 @@ ecma_builtin_promise_race_or_all (ecma_value_t this_arg, /**< 'this' argument */
 
   if (is_race)
   {
-    ret = ecma_builtin_promise_perform_race (iterator, next_method, capability, this_arg, &is_done);
+    ret = ecma_builtin_promise_perform_race (iterator, next_method, capability_obj_p, this_arg, &is_done);
   }
   else
   {
-    ret = ecma_builtin_promise_perform_all (iterator, next_method, capability, this_arg, &is_done);
+    ret = ecma_builtin_promise_perform_all (iterator, next_method, capability_obj_p, this_arg, &is_done);
   }
 
   if (ECMA_IS_VALUE_ERROR (ret))
@@ -537,12 +400,12 @@ ecma_builtin_promise_race_or_all (ecma_value_t this_arg, /**< 'this' argument */
       ret = ecma_op_iterator_close (iterator);
     }
 
-    ret = ecma_builtin_promise_reject_abrupt (ret, capability);
+    ret = ecma_builtin_promise_reject_abrupt (ret, capability_obj_p);
   }
 
   ecma_free_value (iterator);
   ecma_free_value (next_method);
-  ecma_free_value (capability);
+  ecma_deref_object (capability_obj_p);
 
   return ret;
 } /* ecma_builtin_promise_race_or_all */

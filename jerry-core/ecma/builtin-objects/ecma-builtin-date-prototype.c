@@ -19,6 +19,7 @@
 #include "ecma-builtin-helpers.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
+#include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
@@ -131,38 +132,46 @@ enum
 static ecma_value_t
 ecma_builtin_date_prototype_to_json (ecma_value_t this_arg) /**< this argument */
 {
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-
   /* 1. */
-  ECMA_TRY_CATCH (obj,
-                  ecma_op_to_object (this_arg),
-                  ret_value);
+  ecma_value_t obj = ecma_op_to_object (this_arg);
+
+  if (ECMA_IS_VALUE_ERROR (obj))
+  {
+    return obj;
+  }
 
   /* 2. */
-  ECMA_TRY_CATCH (tv,
-                  ecma_op_to_primitive (obj, ECMA_PREFERRED_TYPE_NUMBER),
-                  ret_value);
+  ecma_value_t tv = ecma_op_to_primitive (obj, ECMA_PREFERRED_TYPE_NUMBER);
+
+  if (ECMA_IS_VALUE_ERROR (tv))
+  {
+    ecma_free_value (obj);
+    return tv;
+  }
 
   /* 3. */
   if (ecma_is_value_number (tv))
   {
     ecma_number_t num_value = ecma_get_number_from_value (tv);
 
+    ecma_free_value (tv);
+
     if (ecma_number_is_nan (num_value) || ecma_number_is_infinity (num_value))
     {
-      ret_value = ECMA_VALUE_NULL;
+      ecma_free_value (obj);
+      return ECMA_VALUE_NULL;
     }
   }
 
-  if (ecma_is_value_empty (ret_value))
+  ecma_value_t ret_value = ECMA_VALUE_ERROR;
+
+  ecma_object_t *value_obj_p = ecma_get_object_from_value (obj);
+
+  /* 4. */
+  ecma_value_t to_iso = ecma_op_object_get_by_magic_id (value_obj_p, LIT_MAGIC_STRING_TO_ISO_STRING_UL);
+
+  if (!ECMA_IS_VALUE_ERROR (to_iso))
   {
-    ecma_object_t *value_obj_p = ecma_get_object_from_value (obj);
-
-    /* 4. */
-    ECMA_TRY_CATCH (to_iso,
-                    ecma_op_object_get_by_magic_id (value_obj_p, LIT_MAGIC_STRING_TO_ISO_STRING_UL),
-                    ret_value);
-
     /* 5. */
     if (!ecma_op_is_callable (to_iso))
     {
@@ -175,11 +184,10 @@ ecma_builtin_date_prototype_to_json (ecma_value_t this_arg) /**< this argument *
       ret_value = ecma_op_function_call (to_iso_obj_p, this_arg, NULL, 0);
     }
 
-    ECMA_FINALIZE (to_iso);
+    ecma_free_value (to_iso);
   }
 
-  ECMA_FINALIZE (tv);
-  ECMA_FINALIZE (obj);
+  ecma_deref_object (value_obj_p);
 
   return ret_value;
 } /* ecma_builtin_date_prototype_to_json */

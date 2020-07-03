@@ -32,7 +32,6 @@
 #include "ecma-objects-general.h"
 #include "ecma-string-object.h"
 #include "ecma-symbol-object.h"
-#include "ecma-try-catch-macro.h"
 #include "jrt-libc-includes.h"
 
 /** \addtogroup ecma ECMA
@@ -680,193 +679,183 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
                                                                                   if return value is normal
                                                                                   empty completion value */
 {
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-
   /* 1. */
   if (!ecma_is_value_object (obj_value))
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected an object."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Expected an object."));
   }
-  else
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (obj_value);
+  ecma_value_t ret_value = ECMA_VALUE_ERROR;
+
+  /* 3. */
+  ecma_value_t enumerable_prop_value = ecma_op_object_find (obj_p,
+                                                            ecma_get_magic_string (LIT_MAGIC_STRING_ENUMERABLE));
+
+  if (ECMA_IS_VALUE_ERROR (enumerable_prop_value))
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (obj_value);
+    return enumerable_prop_value;
+  }
 
-    /* 2. */
-    ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
+  /* 2. */
+  ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
 
-    /* 3. */
-    ECMA_TRY_CATCH (enumerable_prop_value,
-                    ecma_op_object_find (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_ENUMERABLE)),
-                    ret_value);
-
-    if (ecma_is_value_found (enumerable_prop_value))
-    {
-      uint32_t is_enumerable = (ecma_op_to_boolean (enumerable_prop_value) ? ECMA_PROP_IS_ENUMERABLE
-                                                                           : ECMA_PROP_NO_OPTS);
-
-      prop_desc.flags |= (uint16_t) (ECMA_PROP_IS_ENUMERABLE_DEFINED | is_enumerable);
-    }
-
-    ECMA_FINALIZE (enumerable_prop_value);
-
-    if (!ECMA_IS_VALUE_ERROR (ret_value))
-    {
-      JERRY_ASSERT (ecma_is_value_empty (ret_value));
-
-      /* 4. */
-      ECMA_TRY_CATCH (configurable_prop_value,
-                      ecma_op_object_find (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_CONFIGURABLE)),
-                      ret_value);
-
-      if (ecma_is_value_found (configurable_prop_value))
-      {
-        uint32_t is_configurable = (ecma_op_to_boolean (configurable_prop_value) ? ECMA_PROP_IS_CONFIGURABLE
-                                                                                 : ECMA_PROP_NO_OPTS);
-
-        prop_desc.flags |= (uint16_t) (ECMA_PROP_IS_CONFIGURABLE_DEFINED | is_configurable);
-      }
-
-      ECMA_FINALIZE (configurable_prop_value);
-    }
-
-    if (!ECMA_IS_VALUE_ERROR (ret_value))
-    {
-      JERRY_ASSERT (ecma_is_value_empty (ret_value));
-
-      /* 5. */
-      ECMA_TRY_CATCH (value_prop_value,
-                      ecma_op_object_find (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_VALUE)),
-                      ret_value);
-
-      if (ecma_is_value_found (value_prop_value))
-      {
-        prop_desc.flags |= ECMA_PROP_IS_VALUE_DEFINED;
-        prop_desc.value = ecma_copy_value (value_prop_value);
-      }
-
-      ECMA_FINALIZE (value_prop_value);
-    }
-
-    if (!ECMA_IS_VALUE_ERROR (ret_value))
-    {
-      JERRY_ASSERT (ecma_is_value_empty (ret_value));
-
-      /* 6. */
-      ECMA_TRY_CATCH (writable_prop_value,
-                      ecma_op_object_find (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_WRITABLE)),
-                      ret_value);
-
-      if (ecma_is_value_found (writable_prop_value))
-      {
-        uint32_t is_writable = (ecma_op_to_boolean (writable_prop_value) ? ECMA_PROP_IS_WRITABLE
+  if (ecma_is_value_found (enumerable_prop_value))
+  {
+    uint32_t is_enumerable = (ecma_op_to_boolean (enumerable_prop_value) ? ECMA_PROP_IS_ENUMERABLE
                                                                          : ECMA_PROP_NO_OPTS);
 
-        prop_desc.flags |= (uint16_t) (ECMA_PROP_IS_WRITABLE_DEFINED | is_writable);
-      }
+    prop_desc.flags |= (uint16_t) (ECMA_PROP_IS_ENUMERABLE_DEFINED | is_enumerable);
 
-      ECMA_FINALIZE (writable_prop_value);
+    ecma_free_value (enumerable_prop_value);
+  }
+
+  /* 4. */
+  ecma_value_t configurable_prop_value = ecma_op_object_find (obj_p,
+                                                              ecma_get_magic_string (LIT_MAGIC_STRING_CONFIGURABLE));
+
+  if (ECMA_IS_VALUE_ERROR (configurable_prop_value))
+  {
+    goto free_desc;
+  }
+
+  if (ecma_is_value_found (configurable_prop_value))
+  {
+    uint32_t is_configurable = (ecma_op_to_boolean (configurable_prop_value) ? ECMA_PROP_IS_CONFIGURABLE
+                                                                             : ECMA_PROP_NO_OPTS);
+
+    prop_desc.flags |= (uint16_t) (ECMA_PROP_IS_CONFIGURABLE_DEFINED | is_configurable);
+
+    ecma_free_value (configurable_prop_value);
+  }
+
+  /* 5. */
+  ecma_value_t value_prop_value = ecma_op_object_find (obj_p,
+                                                       ecma_get_magic_string (LIT_MAGIC_STRING_VALUE));
+
+  if (ECMA_IS_VALUE_ERROR (value_prop_value))
+  {
+    goto free_desc;
+  }
+
+  if (ecma_is_value_found (value_prop_value))
+  {
+    prop_desc.flags |= ECMA_PROP_IS_VALUE_DEFINED;
+    prop_desc.value = ecma_copy_value (value_prop_value);
+    ecma_free_value (value_prop_value);
+  }
+
+  /* 6. */
+  ecma_value_t writable_prop_value = ecma_op_object_find (obj_p,
+                                                          ecma_get_magic_string (LIT_MAGIC_STRING_WRITABLE));
+
+  if (ECMA_IS_VALUE_ERROR (writable_prop_value))
+  {
+    goto free_desc;
+  }
+
+  if (ecma_is_value_found (writable_prop_value))
+  {
+    uint32_t is_writable = (ecma_op_to_boolean (writable_prop_value) ? ECMA_PROP_IS_WRITABLE
+                                                                     : ECMA_PROP_NO_OPTS);
+
+    prop_desc.flags |= (uint16_t) (ECMA_PROP_IS_WRITABLE_DEFINED | is_writable);
+
+    ecma_free_value (writable_prop_value);
+  }
+
+  /* 7. */
+  ecma_value_t get_prop_value = ecma_op_object_find (obj_p,
+                                                      ecma_get_magic_string (LIT_MAGIC_STRING_GET));
+
+  if (ECMA_IS_VALUE_ERROR (get_prop_value))
+  {
+    goto free_desc;
+  }
+
+  if (ecma_is_value_found (get_prop_value))
+  {
+    if (!ecma_op_is_callable (get_prop_value)
+        && !ecma_is_value_undefined (get_prop_value))
+    {
+      ecma_free_value (get_prop_value);
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function."));
+      goto free_desc;
     }
 
-    if (!ECMA_IS_VALUE_ERROR (ret_value))
+    prop_desc.flags |= ECMA_PROP_IS_GET_DEFINED;
+
+    if (ecma_is_value_undefined (get_prop_value))
     {
-      JERRY_ASSERT (ecma_is_value_empty (ret_value));
-
-      /* 7. */
-      ECMA_TRY_CATCH (get_prop_value,
-                      ecma_op_object_find (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_GET)),
-                      ret_value);
-
-      if (ecma_is_value_found (get_prop_value))
-      {
-        if (!ecma_op_is_callable (get_prop_value)
-            && !ecma_is_value_undefined (get_prop_value))
-        {
-          ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function."));
-        }
-        else
-        {
-          prop_desc.flags |= ECMA_PROP_IS_GET_DEFINED;
-
-          if (ecma_is_value_undefined (get_prop_value))
-          {
-            prop_desc.get_p = NULL;
-          }
-          else
-          {
-            JERRY_ASSERT (ecma_is_value_object (get_prop_value));
-
-            ecma_object_t *get_p = ecma_get_object_from_value (get_prop_value);
-            ecma_ref_object (get_p);
-
-            prop_desc.get_p = get_p;
-          }
-        }
-      }
-
-      ECMA_FINALIZE (get_prop_value);
-    }
-
-    if (!ECMA_IS_VALUE_ERROR (ret_value))
-    {
-      JERRY_ASSERT (ecma_is_value_empty (ret_value));
-
-      /* 8. */
-      ECMA_TRY_CATCH (set_prop_value,
-                      ecma_op_object_find (obj_p, ecma_get_magic_string (LIT_MAGIC_STRING_SET)),
-                      ret_value);
-
-      if (ecma_is_value_found (set_prop_value))
-      {
-        if (!ecma_op_is_callable (set_prop_value)
-            && !ecma_is_value_undefined (set_prop_value))
-        {
-          ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function."));
-        }
-        else
-        {
-          prop_desc.flags |= ECMA_PROP_IS_SET_DEFINED;
-
-          if (ecma_is_value_undefined (set_prop_value))
-          {
-            prop_desc.set_p = NULL;
-          }
-          else
-          {
-            JERRY_ASSERT (ecma_is_value_object (set_prop_value));
-
-            ecma_object_t *set_p = ecma_get_object_from_value (set_prop_value);
-            ecma_ref_object (set_p);
-
-            prop_desc.set_p = set_p;
-          }
-        }
-      }
-
-      ECMA_FINALIZE (set_prop_value);
-    }
-
-    if (!ECMA_IS_VALUE_ERROR (ret_value))
-    {
-      JERRY_ASSERT (ecma_is_value_empty (ret_value));
-
-      /* 9. */
-      if ((prop_desc.flags & (ECMA_PROP_IS_VALUE_DEFINED | ECMA_PROP_IS_WRITABLE_DEFINED))
-           && (prop_desc.flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED)))
-      {
-        ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Accessors cannot be writable."));
-      }
-    }
-
-    if (!ECMA_IS_VALUE_ERROR (ret_value))
-    {
-      JERRY_ASSERT (ecma_is_value_empty (ret_value));
+      prop_desc.get_p = NULL;
     }
     else
     {
-      ecma_free_property_descriptor (&prop_desc);
+      JERRY_ASSERT (ecma_is_value_object (get_prop_value));
+
+      ecma_object_t *get_p = ecma_get_object_from_value (get_prop_value);
+      ecma_ref_object (get_p);
+
+      prop_desc.get_p = get_p;
     }
 
+    ecma_free_value (get_prop_value);
+  }
+
+  /* 8. */
+  ecma_value_t set_prop_value = ecma_op_object_find (obj_p,
+                                                      ecma_get_magic_string (LIT_MAGIC_STRING_SET));
+
+  if (ECMA_IS_VALUE_ERROR (set_prop_value))
+  {
+    goto free_desc;
+  }
+
+  if (ecma_is_value_found (set_prop_value))
+  {
+    if (!ecma_op_is_callable (set_prop_value)
+        && !ecma_is_value_undefined (set_prop_value))
+    {
+      ecma_free_value (set_prop_value);
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function."));
+      goto free_desc;
+    }
+
+    prop_desc.flags |= ECMA_PROP_IS_SET_DEFINED;
+
+    if (ecma_is_value_undefined (set_prop_value))
+    {
+      prop_desc.set_p = NULL;
+    }
+    else
+    {
+      JERRY_ASSERT (ecma_is_value_object (set_prop_value));
+
+      ecma_object_t *set_p = ecma_get_object_from_value (set_prop_value);
+      ecma_ref_object (set_p);
+
+      prop_desc.set_p = set_p;
+    }
+
+    ecma_free_value (set_prop_value);
+  }
+
+  /* 9. */
+  if ((prop_desc.flags & (ECMA_PROP_IS_VALUE_DEFINED | ECMA_PROP_IS_WRITABLE_DEFINED))
+        && (prop_desc.flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED)))
+  {
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Accessors cannot be writable."));
+  }
+  else
+  {
     *out_prop_desc_p = prop_desc;
+    ret_value = ECMA_VALUE_EMPTY;
+  }
+
+free_desc:
+  if (ECMA_IS_VALUE_ERROR (ret_value))
+  {
+    ecma_free_property_descriptor (&prop_desc);
   }
 
   return ret_value;

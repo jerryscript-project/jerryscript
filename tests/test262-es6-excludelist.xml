@@ -257,7 +257,6 @@
   <test id="language/block-scope/syntax/redeclaration-in-block/attempt-to-redeclare-function-declaration-with-function-declaration.js"><reason></reason></test>
   <test id="language/block-scope/syntax/redeclaration-in-block/attempt-to-redeclare-function-declaration-with-var.js"><reason></reason></test>
   <test id="language/block-scope/syntax/redeclaration-in-block/attempt-to-redeclare-var-with-function-declaration.js"><reason></reason></test>
-  <test id="language/default-parameters/function-length.js"><reason></reason></test>
   <test id="language/expressions/arrow-function/lexical-super-call-from-within-constructor.js"><reason></reason></test>
   <test id="language/expressions/assignment/destructuring/array-rest-init.js"><reason></reason></test>
   <test id="language/expressions/assignment/destructuring/obj-prop-elem-target-yield-expr.js"><reason></reason></test>

@@ -2009,6 +2009,12 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           goto free_left_value;
         }
+        case VM_OC_EXPLICIT_FUNCTION_LENGTH:
+        {
+          /* Note: During execution this instruction is a no-op. */
+          byte_code_p++;
+          continue;
+        }
         case VM_OC_SET_FUNCTION_NAME:
         {
           char *prefix_p = NULL;

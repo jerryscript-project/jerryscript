@@ -289,6 +289,7 @@ typedef enum
   SCANNER_LITERAL_POOL_GENERATOR = (1 << 10), /**< generator function */
   SCANNER_LITERAL_POOL_ASYNC = (1 << 11), /**< async function */
   SCANNER_LITERAL_POOL_HAS_SUPER_REFERENCE = (1 << 12), /**< function body contains super reference */
+  SCANNER_LITERAL_POOL_HAS_DEFAULT_ARGUMENT = (1 << 13), /**< function has default arguments */
 #endif /* ENABLED (JERRY_ESNEXT) */
 } scanner_literal_pool_flags_t;
 

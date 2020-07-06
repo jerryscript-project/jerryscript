@@ -2818,6 +2818,7 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
             if (context_p->token.type == LEXER_ASSIGN)
             {
               scanner_context.active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_HAS_COMPLEX_ARGUMENT;
+              scanner_context.active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_HAS_DEFAULT_ARGUMENT;
 
               parser_stack_push_uint8 (context_p, SCAN_STACK_FUNCTION_PARAMETERS);
               scanner_context.mode = SCAN_MODE_PRIMARY_EXPRESSION;

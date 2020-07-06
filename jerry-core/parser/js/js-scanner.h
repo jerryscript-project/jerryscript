@@ -224,6 +224,7 @@ typedef enum
   SCANNER_FUNCTION_STATEMENT = (1 << 3), /**< function is function statement (not arrow expression)
                                           *   this flag must be combined with the type of function (e.g. async) */
   SCANNER_FUNCTION_ASYNC = (1 << 4), /**< function is async function */
+  SCANNER_FUNCTION_HAS_DEFAULT_ARGUMENTS = (1 << 5), /**< function has default arguments */
 #endif /* ENABLED (JERRY_ESNEXT) */
 } scanner_function_flags_t;
 

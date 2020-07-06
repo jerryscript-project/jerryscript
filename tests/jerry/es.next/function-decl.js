@@ -32,17 +32,17 @@ function f1(a,) {}
 assert(f1.length === 1)
 
 function f2(a = 1,) {}
-assert(f2.length === 1)
+assert(f2.length === 0)
 
 function f3(a = 1, b = 1 + 1, c,) {}
-assert(f3.length === 3)
+assert(f3.length === 0)
 
 var f4 = async(a,) => {}
 assert(f4.length === 1)
 
 var f5 = async(a = 1,) => {}
-assert(f5.length === 1)
+assert(f5.length === 0)
 
-assert(((a = 1, b = 1 + 1, c,) => {}).length === 3)
+assert(((a = 1, b = 1 + 1, c,) => {}).length === 0)
 
-assert(((a = 1, b, c = 1 + 1,) => {}).length === 3)
+assert(((a = 1, b, c = 1 + 1,) => {}).length === 0)

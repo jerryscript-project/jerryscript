@@ -224,6 +224,8 @@ scanner_check_arrow_arg (parser_context_t *context_p, /**< context */
         break;
       }
 
+      scanner_context_p->active_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_HAS_DEFAULT_ARGUMENT;
+
       if (argument_literal_p->type & SCANNER_LITERAL_IS_USED)
       {
         JERRY_ASSERT (argument_literal_p->type & SCANNER_LITERAL_EARLY_CREATE);

@@ -756,6 +756,11 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
       {
         u8_arg |= SCANNER_FUNCTION_LEXICAL_ENV_NEEDED;
       }
+
+      if (status_flags & SCANNER_LITERAL_POOL_HAS_DEFAULT_ARGUMENT)
+      {
+        u8_arg |= SCANNER_FUNCTION_HAS_DEFAULT_ARGUMENTS;
+      }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
       info_p->u8_arg = u8_arg;

@@ -1777,6 +1777,15 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 
   bool has_duplicated_arg_names = false;
 
+  bool has_default_arguments = (context_p->next_scanner_info_p->u8_arg & SCANNER_FUNCTION_HAS_DEFAULT_ARGUMENTS) != 0;
+  uint8_t *cbc_fn_length_p = NULL;
+  if (has_default_arguments)
+  {
+    parser_emit_cbc_ext_call (context_p, CBC_EXT_EXPLICIT_FUNCTION_LENGTH, 0);
+    parser_flush_cbc (context_p);
+    cbc_fn_length_p = &context_p->byte_code.last_p->bytes[context_p->byte_code.last_position - 1];
+  }
+
   if (PARSER_IS_NORMAL_ASYNC_FUNCTION (context_p->status_flags))
   {
     parser_branch_t branch;
@@ -1937,6 +1946,13 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
       }
 
       context_p->status_flags |= PARSER_FUNCTION_HAS_COMPLEX_ARGUMENT;
+
+      if (cbc_fn_length_p)
+      {
+        JERRY_ASSERT (*cbc_fn_length_p == 0);
+        *cbc_fn_length_p = (uint8_t) context_p->argument_count;
+        cbc_fn_length_p = NULL;
+      }
 
       /* LEXER_ASSIGN does not overwrite lit_object. */
       parser_emit_cbc_literal (context_p,

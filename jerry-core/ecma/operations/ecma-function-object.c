@@ -1491,16 +1491,38 @@ ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**<
     {
       /* Initialize 'length' property */
       const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
+      uint8_t *len_cbc_p = NULL;
       uint32_t len;
+
       if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
       {
         cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_data_p;
+
+        ecma_value_t *literal_p = (ecma_value_t *) ((uint8_t *) bytecode_data_p + sizeof (cbc_uint16_arguments_t));
+        literal_p -= args_p->register_end;
+        literal_p += args_p->literal_end;
+
         len = args_p->argument_end;
+        len_cbc_p = (uint8_t *) literal_p;
       }
       else
       {
         cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_data_p;
+
+        ecma_value_t *literal_p = (ecma_value_t *) ((uint8_t *) bytecode_data_p + sizeof (cbc_uint8_arguments_t));
+        literal_p -= args_p->register_end;
+        literal_p += args_p->literal_end;
+
         len = args_p->argument_end;
+        len_cbc_p = (uint8_t *) literal_p;
+      }
+
+      /* Function length is the number of non-initialized parameters, in which case
+       * there is an additional instruction at the beginning of the bytecode stream */
+      JERRY_ASSERT (len_cbc_p != NULL);
+      if (len_cbc_p[0] == CBC_EXT_OPCODE && len_cbc_p[1] == CBC_EXT_EXPLICIT_FUNCTION_LENGTH)
+      {
+        len = len_cbc_p[2];
       }
 
       /* Set tag bit to represent initialized 'length' property */

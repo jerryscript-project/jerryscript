@@ -262,6 +262,7 @@ typedef enum
   VM_OC_SET_HOME_OBJECT,         /**< set the [[HomeObject]] environment in an object literal */
   VM_OC_OBJECT_LITERAL_HOME_ENV, /**< create/destroy [[HomeObject]] environment of an object literal */
   VM_OC_SET_FUNCTION_NAME,       /**< set function name property */
+  VM_OC_EXPLICIT_FUNCTION_LENGTH,/**< set function length property */
 
   VM_OC_PUSH_SPREAD_ELEMENT,     /**< push spread element */
   VM_OC_GET_ITERATOR,            /**< GetIterator abstract operation */
@@ -336,6 +337,7 @@ typedef enum
   VM_OC_SET_HOME_OBJECT = VM_OC_NONE,         /**< set the [[HomeObject]] internal property in an object literal */
   VM_OC_OBJECT_LITERAL_HOME_ENV = VM_OC_NONE, /**< create/destroy [[HomeObject]] environment of an object literal */
   VM_OC_SET_FUNCTION_NAME = VM_OC_NONE,       /**< set function name property */
+  VM_OC_EXPLICIT_FUNCTION_LENGTH = VM_OC_NONE,/**< set function length property */
 
   VM_OC_PUSH_SPREAD_ELEMENT = VM_OC_NONE,     /**< push spread element */
   VM_OC_GET_ITERATOR = VM_OC_NONE,            /**< GetIterator abstract operation */

@@ -1506,6 +1506,7 @@ ecma_builtin_typedarray_prototype_sort (ecma_value_t this_arg, /**< this argumen
     return ecma_copy_value (this_arg);
   }
 
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
   JMEM_DEFINE_LOCAL_ARRAY (values_buffer, info.length, ecma_value_t);
 
   uint32_t byte_index = 0, buffer_index = 0;
@@ -1533,27 +1534,31 @@ ecma_builtin_typedarray_prototype_sort (ecma_value_t this_arg, /**< this argumen
 
   if (ECMA_IS_VALUE_ERROR (sort_value))
   {
-    return sort_value;
+    ret_value = sort_value;
   }
-
-  JERRY_ASSERT (sort_value == ECMA_VALUE_EMPTY);
-
-  ecma_typedarray_setter_fn_t typedarray_setter_cb = ecma_get_typedarray_setter_fn (info.id);
-
-  byte_index = 0;
-  buffer_index = 0;
-  limit = info.length * info.element_size;
-  /* Put sorted values from the native array back into the typedarray buffer. */
-  while (byte_index < limit)
+  else
   {
-    JERRY_ASSERT (buffer_index < info.length);
-    ecma_value_t element_value = values_buffer[buffer_index++];
-    ecma_number_t element_num = ecma_get_number_from_value (element_value);
-    typedarray_setter_cb (info.buffer_p + byte_index, element_num);
-    byte_index += info.element_size;
-  }
+    JERRY_ASSERT (sort_value == ECMA_VALUE_EMPTY);
 
-  JERRY_ASSERT (buffer_index == info.length);
+    ecma_typedarray_setter_fn_t typedarray_setter_cb = ecma_get_typedarray_setter_fn (info.id);
+
+    byte_index = 0;
+    buffer_index = 0;
+    limit = info.length * info.element_size;
+    /* Put sorted values from the native array back into the typedarray buffer. */
+    while (byte_index < limit)
+    {
+      JERRY_ASSERT (buffer_index < info.length);
+      ecma_value_t element_value = values_buffer[buffer_index++];
+      ecma_number_t element_num = ecma_get_number_from_value (element_value);
+      typedarray_setter_cb (info.buffer_p + byte_index, element_num);
+      byte_index += info.element_size;
+    }
+
+    JERRY_ASSERT (buffer_index == info.length);
+
+    ret_value = ecma_copy_value (this_arg);
+  }
 
   /* Free values that were copied to the local array. */
   for (uint32_t index = 0; index < info.length; index++)
@@ -1563,7 +1568,7 @@ ecma_builtin_typedarray_prototype_sort (ecma_value_t this_arg, /**< this argumen
 
   JMEM_FINALIZE_LOCAL_ARRAY (values_buffer);
 
-  return ecma_copy_value (this_arg);
+  return ret_value;
 } /* ecma_builtin_typedarray_prototype_sort */
 
 /**

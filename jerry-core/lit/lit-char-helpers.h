@@ -18,6 +18,16 @@
 
 #include "lit-globals.h"
 
+/**
+ * Invalid character code point
+ */
+#define LIT_INVALID_CP 0xFFFFFFFF
+
+/**
+ * Result of lit_char_to_lower_case/lit_char_to_upper_case consist more than of a single code unit
+ */
+#define LIT_MULTIPLE_CU 0xFFFFFFFE
+
 /*
  * Format control characters (ECMA-262 v5, Table 1)
  */
@@ -234,12 +244,7 @@ bool lit_char_is_word_char (lit_code_point_t c);
  * Utility functions for uppercasing / lowercasing
  */
 
-/**
- * Minimum buffer size for lit_char_to_lower_case / lit_char_to_upper_case functions.
- */
-#define LIT_MAXIMUM_OTHER_CASE_LENGTH (3)
-
-ecma_length_t lit_char_to_lower_case (ecma_char_t character, ecma_char_t *output_buffer_p, ecma_length_t buffer_size);
-ecma_length_t lit_char_to_upper_case (ecma_char_t character, ecma_char_t *output_buffer_p, ecma_length_t buffer_size);
+lit_code_point_t lit_char_to_lower_case (lit_code_point_t cp, ecma_stringbuilder_t *builder_p);
+lit_code_point_t lit_char_to_upper_case (lit_code_point_t cp, ecma_stringbuilder_t *builder_p);
 
 #endif /* !LIT_CHAR_HELPERS_H */

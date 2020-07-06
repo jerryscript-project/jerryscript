@@ -413,23 +413,13 @@ ecma_regexp_canonicalize_char (lit_code_point_t ch, /**< character */
     return ch;
   }
 
-#if ENABLED (JERRY_ESNEXT)
-  /* TODO: Implement case folding for code points in the upper planes. */
-  if (JERRY_UNLIKELY (ch > LIT_UTF16_CODE_UNIT_MAX))
-  {
-    return ch;
-  }
-#endif /* ENABLED (JERRY_ESNEXT) */
+  lit_code_point_t cu = lit_char_to_upper_case (ch, NULL);
 
-  ecma_char_t u[LIT_MAXIMUM_OTHER_CASE_LENGTH];
-  const ecma_length_t size = lit_char_to_upper_case ((ecma_char_t) ch, u, LIT_MAXIMUM_OTHER_CASE_LENGTH);
-
-  if (size != 1)
+  if (cu == LIT_MULTIPLE_CU)
   {
     return ch;
   }
 
-  const ecma_char_t cu = u[0];
   if (cu <= LIT_UTF8_1_BYTE_CODE_POINT_MAX && !unicode)
   {
     /* 6. */

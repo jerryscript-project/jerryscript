@@ -489,27 +489,51 @@ ecma_op_to_string (ecma_value_t value) /**< ecma value */
 } /* ecma_op_to_string */
 
 /**
- * ToPropertyName operation.
+ * ToPropertyKey operation.
+ *
+ * See also:
+ *   ECMA 262 v6, 7.1.14
+ *   ECMA 262 v10, 7.1.14
+ *   ECMA 262 v11, 7.1.19
  *
  * @return NULL - if the conversion fails
  *         ecma-string - otherwise
  */
 ecma_string_t *
-ecma_op_to_prop_name (ecma_value_t value) /**< ecma value */
+ecma_op_to_property_key (ecma_value_t value) /**< ecma value */
 {
-  ecma_check_value_type_is_spec_defined (value);
+  /* Fast path for strings and symbols */
+  if (JERRY_LIKELY (ecma_is_value_prop_name (value)))
+  {
+    ecma_string_t *key_p = ecma_get_prop_name_from_value (value);
+    ecma_ref_ecma_string (key_p);
+    return key_p;
+  }
 
 #if ENABLED (JERRY_ESNEXT)
-  if (ecma_is_value_symbol (value))
+  ecma_value_t key = ecma_op_to_primitive (value, ECMA_PREFERRED_TYPE_STRING);
+
+  if (ECMA_IS_VALUE_ERROR (key))
   {
-    ecma_string_t *symbol_p = ecma_get_symbol_from_value (value);
-    ecma_ref_ecma_string (symbol_p);
+    return NULL;
+  }
+
+  if (ecma_is_value_symbol (key))
+  {
+    ecma_string_t *symbol_p = ecma_get_symbol_from_value (key);
     return symbol_p;
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
+
+  ecma_string_t *result = ecma_op_to_string (key);
+  ecma_free_value (key);
+
+  return result;
+#else /* !ENABLED (JERRY_ESNEXT) */
+  ecma_check_value_type_is_spec_defined (value);
 
   return ecma_op_to_string (value);
-} /* ecma_op_to_prop_name */
+#endif /* ENABLED (JERRY_ESNEXT) */
+} /* ecma_op_to_property_key */
 
 /**
  * ToObject operation.

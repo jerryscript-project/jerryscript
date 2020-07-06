@@ -1213,7 +1213,7 @@ ecma_builtin_object_dispatch_routine (uint16_t builtin_routine_id, /**< built-in
 
     if (builtin_routine_id == ECMA_OBJECT_ROUTINE_DEFINE_PROPERTY)
     {
-      ecma_string_t *prop_name_p = ecma_op_to_prop_name (arg2);
+      ecma_string_t *prop_name_p = ecma_op_to_property_key (arg2);
 
       if (prop_name_p == NULL)
       {
@@ -1275,7 +1275,7 @@ ecma_builtin_object_dispatch_routine (uint16_t builtin_routine_id, /**< built-in
       }
       case ECMA_OBJECT_ROUTINE_GET_OWN_PROPERTY_DESCRIPTOR:
       {
-        ecma_string_t *prop_name_p = ecma_op_to_prop_name (arg2);
+        ecma_string_t *prop_name_p = ecma_op_to_property_key (arg2);
 
         if (prop_name_p == NULL)
         {

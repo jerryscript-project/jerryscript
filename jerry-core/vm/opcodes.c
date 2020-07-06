@@ -262,7 +262,7 @@ vm_op_delete_prop (ecma_value_t object, /**< base object */
   }
   JERRY_ASSERT (check_coercible == ECMA_VALUE_EMPTY);
 
-  ecma_string_t *name_string_p = ecma_op_to_prop_name (property);
+  ecma_string_t *name_string_p = ecma_op_to_property_key (property);
 
   if (JERRY_UNLIKELY (name_string_p == NULL))
   {
@@ -1398,7 +1398,7 @@ opfunc_form_super_reference (ecma_value_t **vm_stack_top_p, /**< current vm stac
   }
 
   ecma_object_t *parent_p = ecma_get_object_from_value (parent);
-  ecma_string_t *prop_name_p = ecma_op_to_prop_name (prop_name);
+  ecma_string_t *prop_name_p = ecma_op_to_property_key (prop_name);
 
   if (prop_name_p == NULL)
   {
@@ -1448,7 +1448,7 @@ opfunc_assign_super_reference (ecma_value_t **vm_stack_top_p, /**< vm stack top 
   }
 
   ecma_object_t *base_obj_p = ecma_get_object_from_value (base_obj);
-  ecma_string_t *prop_name_p = ecma_op_to_prop_name (stack_top_p[-2]);
+  ecma_string_t *prop_name_p = ecma_op_to_property_key (stack_top_p[-2]);
 
   if (prop_name_p == NULL)
   {

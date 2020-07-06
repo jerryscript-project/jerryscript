@@ -132,7 +132,7 @@ vm_op_get_value (ecma_value_t object, /**< base object */
     return error_value;
   }
 
-  ecma_string_t *property_name_p = ecma_op_to_prop_name (property);
+  ecma_string_t *property_name_p = ecma_op_to_property_key (property);
 
   if (property_name_p == NULL)
   {
@@ -1816,7 +1816,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           JERRY_ASSERT ((opcode_data >> VM_OC_NON_STATIC_SHIFT) <= 0x1);
 
-          ecma_string_t *prop_name_p = ecma_op_to_prop_name (right_value);
+          ecma_string_t *prop_name_p = ecma_op_to_property_key (right_value);
 
           if (JERRY_UNLIKELY (prop_name_p == NULL))
           {
@@ -1849,7 +1849,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           JERRY_ASSERT ((opcode_data >> VM_OC_NON_STATIC_SHIFT) <= 0x1);
 
-          ecma_string_t *prop_name_p = ecma_op_to_prop_name (left_value);
+          ecma_string_t *prop_name_p = ecma_op_to_property_key (left_value);
 
           if (JERRY_UNLIKELY (prop_name_p == NULL))
           {
@@ -2029,7 +2029,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               prop_name_value = stack_top_p[-2];
             }
 
-            ecma_string_t *prop_name_p = ecma_op_to_prop_name (prop_name_value);
+            ecma_string_t *prop_name_p = ecma_op_to_property_key (prop_name_value);
 
             if (JERRY_UNLIKELY (prop_name_p == NULL))
             {

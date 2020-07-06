@@ -3072,7 +3072,14 @@ ecma_op_invoke (ecma_value_t object, /**< Object value */
   }
 
   ecma_object_t *object_p = ecma_get_object_from_value (object_value);
-  ecma_value_t func = ecma_op_object_get (object_p, property_name_p);
+
+#if ENABLED (JERRY_ESNEXT)
+  ecma_value_t this_arg = object;
+#else /* !ENABLED (JERRY_ESNEXT) */
+  ecma_value_t this_arg = object_value;
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+  ecma_value_t func = ecma_op_object_get_with_receiver (object_p, property_name_p, this_arg);
 
   if (ECMA_IS_VALUE_ERROR (func))
   {
@@ -3089,7 +3096,8 @@ ecma_op_invoke (ecma_value_t object, /**< Object value */
   }
 
   ecma_object_t *func_obj_p = ecma_get_object_from_value (func);
-  ecma_value_t call_result = ecma_op_function_call (func_obj_p, object, args_p, args_len);
+  ecma_value_t call_result = ecma_op_function_call (func_obj_p, this_arg, args_p, args_len);
+
   ecma_deref_object (object_p);
   ecma_deref_object (func_obj_p);
 

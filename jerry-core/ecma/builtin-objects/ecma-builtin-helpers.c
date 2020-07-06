@@ -210,53 +210,18 @@ ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, /**< th
     return ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
   }
 
-  ecma_value_t index_obj_value = ecma_op_to_object (index_value);
+  ecma_value_t call_value = ecma_op_invoke_by_magic_id (index_value, LIT_MAGIC_STRING_TO_LOCALE_STRING_UL, NULL, 0);
 
-  if (ECMA_IS_VALUE_ERROR (index_obj_value))
-  {
-    ecma_free_value (index_value);
-    return NULL;
-  }
-
-  ecma_string_t *ret_string_p = NULL;
-  ecma_object_t *index_obj_p = ecma_get_object_from_value (index_obj_value);
-  ecma_value_t to_locale_value = ecma_op_object_get_by_magic_id (index_obj_p, LIT_MAGIC_STRING_TO_LOCALE_STRING_UL);
-
-  if (ECMA_IS_VALUE_ERROR (to_locale_value))
-  {
-    goto cleanup;
-  }
-
-  if (!ecma_op_is_callable (to_locale_value))
-  {
-    ecma_free_value (to_locale_value);
-    ecma_raise_type_error (ECMA_ERR_MSG ("'toLocaleString' is missing or not a function."));
-    goto cleanup;
-  }
-
-  ecma_object_t *locale_func_obj_p = ecma_get_object_from_value (to_locale_value);
-#if ENABLED (JERRY_ESNEXT)
-  ecma_value_t index_parameter = index_value;
-#else /* !ENABLED (JERRY_ESNEXT) */
-  ecma_value_t index_parameter = index_obj_value;
-#endif /* ENABLED (JERRY_ESNEXT) */
-  ecma_value_t call_value = ecma_op_function_call (locale_func_obj_p,
-                                                   index_parameter,
-                                                   NULL,
-                                                   0);
-  ecma_deref_object (locale_func_obj_p);
+  ecma_free_value (index_value);
 
   if (ECMA_IS_VALUE_ERROR (call_value))
   {
-    goto cleanup;
+    return NULL;
   }
 
-  ret_string_p = ecma_op_to_string (call_value);
-  ecma_free_value (call_value);
+  ecma_string_t *ret_string_p = ecma_op_to_string (call_value);
 
-cleanup:
-  ecma_deref_object (index_obj_p);
-  ecma_free_value (index_value);
+  ecma_free_value (call_value);
 
   return ret_string_p;
 } /* ecma_builtin_helper_get_to_locale_string_at_index */

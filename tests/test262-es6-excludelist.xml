@@ -40,7 +40,6 @@
   <test id="built-ins/Promise/all/invoke-then.js"><reason></reason></test>
   <test id="built-ins/Promise/all/species-get-error.js"><reason></reason></test>
   <test id="built-ins/Promise/exec-args.js"><reason></reason></test>
-  <test id="built-ins/Promise/prototype/catch/invokes-then.js"><reason></reason></test>
   <test id="built-ins/Promise/prototype/then/ctor-custom.js"><reason></reason></test>
   <test id="built-ins/Promise/prototype/then/on-fulfilled-return-thenable.js"><reason></reason></test>
   <test id="built-ins/Promise/race/invoke-then.js"><reason></reason></test>

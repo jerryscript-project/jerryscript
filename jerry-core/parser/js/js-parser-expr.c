@@ -267,9 +267,10 @@ parser_emit_unary_lvalue_opcode (parser_context_t *context_p, /**< context */
 
 #if ENABLED (JERRY_ESNEXT)
     parser_check_invalid_new_target (context_p, opcode);
-#endif /* ENABLED (JERRY_ESNEXT) */
-
+    parser_raise_error (context_p, PARSER_ERR_INVALID_LHS_POSTFIX_OP);
+#else /* ENABLED (JERRY_ESNEXT) */
     parser_emit_cbc_ext (context_p, CBC_EXT_THROW_REFERENCE_ERROR);
+#endif /* ENABLED (JERRY_ESNEXT) */
   }
 
   parser_emit_cbc (context_p, (uint16_t) opcode);
@@ -2637,12 +2638,13 @@ parser_append_binary_single_assignment_token (parser_context_t *context_p, /**< 
 #endif /* ENABLED (JERRY_ESNEXT) */
   else
   {
-    /* Invalid LeftHandSide expression. */
+    /* Invalid LeftHandSide expression. */ //3820, 3815
 #if ENABLED (JERRY_ESNEXT)
     parser_check_invalid_new_target (context_p, CBC_ASSIGN);
-#endif /* ENABLED (JERRY_ESNEXT) */
-
+    parser_raise_error (context_p, PARSER_ERR_INVALID_LHS_ASSIGNMENT);
+#else /* !ENABLED (JERRY_ESNEXT) */
     parser_emit_cbc_ext (context_p, CBC_EXT_THROW_REFERENCE_ERROR);
+#endif /* ENABLED (JERRY_ESNEXT) */
   }
 
   parser_stack_push_uint8 (context_p, assign_opcode);
@@ -2692,9 +2694,11 @@ parser_append_binary_token (parser_context_t *context_p) /**< context */
       /* Invalid LeftHandSide expression. */
 #if ENABLED (JERRY_ESNEXT)
       parser_check_invalid_new_target (context_p, CBC_ASSIGN);
-#endif /* ENABLED (JERRY_ESNEXT) */
-
+      parser_raise_error (context_p, PARSER_ERR_INVALID_LHS_ASSIGNMENT);
+#else /* !ENABLED (JERRY_ES2015) */
       parser_emit_cbc_ext (context_p, CBC_EXT_THROW_REFERENCE_ERROR);
+#endif /* ENABLED (JERRY_ES2015) */
+
       parser_emit_cbc (context_p, CBC_PUSH_PROP_REFERENCE);
     }
   }

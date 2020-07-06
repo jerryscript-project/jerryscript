@@ -309,5 +309,5 @@ try {
   eval ("var a = 0; 1 + [a] = [1]");
   assert (false);
 } catch (e) {
-  assert (e instanceof ReferenceError);
+  assert (e instanceof SyntaxError);
 }

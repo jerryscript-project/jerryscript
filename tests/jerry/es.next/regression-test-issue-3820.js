@@ -13,8 +13,8 @@
 // limitations under the License.
 
 try {
-  (isNaN(parseFloat("."))) = 'abcd';
+  eval('(isNaN(parseFloat("."))) = \'abcd\'');
   assert (false);
 } catch (e) {
-  assert (e instanceof ReferenceError);
+  assert (e instanceof SyntaxError);
 }

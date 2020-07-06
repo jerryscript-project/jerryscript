@@ -1169,7 +1169,12 @@ parser_check_left_hand_side_expression (parser_context_t *context_p, /**< contex
   else
   {
     /* Invalid LeftHandSide expression. */
+#if ENABLED (JERRY_ESNEXT)
+    parser_raise_error (context_p, PARSER_ERR_INVALID_LHS_FOR_LOOP);
+#else /* !ENABLED (JERRY_ESNEXT) */
     parser_emit_cbc_ext (context_p, CBC_EXT_THROW_REFERENCE_ERROR);
+#endif /* ENABLED (JERRY_ESNEXT) */
+
     return CBC_ASSIGN;
   }
 

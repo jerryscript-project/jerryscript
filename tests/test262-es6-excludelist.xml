@@ -1,5 +1,36 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <excludeList>
+  <!-- ES11 change: Should throw Syntaxerror -->
+  <test id="language/types/boolean/S8.3_A2.1.js"><reason></reason></test>
+  <test id="language/types/boolean/S8.3_A2.2.js"><reason></reason></test>
+  <test id="language/types/reference/S8.7.2_A1_T1.js"><reason></reason></test>
+  <test id="language/types/reference/S8.7.2_A1_T2.js"><reason></reason></test>
+  <test id="language/reserved-words/S7.6.1_A1.1.js"><reason></reason></test>
+  <test id="language/reserved-words/S7.6.1_A1.2.js"><reason></reason></test>
+  <test id="language/reserved-words/S7.6.1_A1.3.js"><reason></reason></test>
+  <test id="language/expressions/this/S11.1.1_A1.js"><reason></reason></test>
+  <test id="language/keywords/S7.6.1.1_A1.18.js"><reason></reason></test>
+  <test id="language/expressions/prefix-increment/non-simple.js"><reason></reason></test>
+  <test id="language/expressions/prefix-decrement/non-simple.js"><reason></reason></test>
+  <test id="language/expressions/postfix-increment/non-simple.js"><reason></reason></test>
+  <test id="language/expressions/postfix-decrement/non-simple.js"><reason></reason></test>
+  <test id="language/expressions/compound-assignment/add-non-simple.js"><reason></reason></test>
+  <test id="language/expressions/compound-assignment/btws-and-non-simple.js"><reason></reason></test>
+  <test id="language/expressions/compound-assignment/btws-or-non-simple.js"><reason></reason></test>
+  <test id="language/expressions/compound-assignment/btws-xor-non-simple.js"><reason></reason></test>
+  <test id="language/expressions/compound-assignment/div-non-simple.js"><reason></reason></test>
+  <test id="language/expressions/compound-assignment/left-shift-non-simple.js"><reason></reason></test>
+  <test id="language/expressions/compound-assignment/mod-div-non-simple.js"><reason></reason></test>
+  <test id="language/expressions/compound-assignment/mult-non-simple.js"><reason></reason></test>
+  <test id="language/expressions/compound-assignment/right-shift-non-simple.js"><reason></reason></test>
+  <test id="language/expressions/compound-assignment/subtract-non-simple.js"><reason></reason></test>
+  <test id="language/expressions/compound-assignment/u-right-shift-non-simple.js"><reason></reason></test>
+  <test id="language/expressions/assignment/non-simple-target.js"><reason></reason></test>
+  <test id="language/expressions/assignment/11.13.1-1-1.js"><reason></reason></test>
+  <test id="language/expressions/assignment/11.13.1-1-2.js"><reason></reason></test>
+  <test id="language/expressions/assignment/11.13.1-1-3.js"><reason></reason></test>
+  <test id="language/expressions/assignment/11.13.1-1-4.js"><reason></reason></test>
+
   <test id="annexB/B.2.3.10.js"><reason></reason></test>
   <test id="annexB/B.2.3.11.js"><reason></reason></test>
   <test id="annexB/B.2.3.12.js"><reason></reason></test>

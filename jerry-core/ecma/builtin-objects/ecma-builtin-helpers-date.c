@@ -72,7 +72,13 @@ ecma_date_time_within_day (ecma_number_t time) /**< time value */
 {
   JERRY_ASSERT (!ecma_number_is_nan (time));
 
-  return (ecma_number_t) fmod (time, ECMA_DATE_MS_PER_DAY);
+  ecma_number_t modulo = fmod (time, ECMA_DATE_MS_PER_DAY);
+  if (modulo < 0)
+  {
+    modulo += ECMA_DATE_MS_PER_DAY;
+  }
+
+  return modulo;
 } /* ecma_date_time_within_day */
 
 /**

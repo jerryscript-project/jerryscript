@@ -40,12 +40,11 @@
  * See also: ECMA-262 v5, 10.6
  */
 void
-ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
+ecma_op_create_arguments_object (const ecma_compiled_code_t *bytecode_data_p, /**< byte code */
                                  ecma_object_t *lex_env_p, /**< lexical environment the Arguments
                                                                 object is created for */
-                                 const ecma_value_t *arguments_list_p, /**< arguments list */
-                                 ecma_length_t arguments_number, /**< length of arguments list */
-                                 const ecma_compiled_code_t *bytecode_data_p) /**< byte code */
+                                 ecma_call_args_t *call_args_p) /**< call arguments */
+
 {
   bool is_strict = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0;
 
@@ -69,7 +68,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
   ecma_object_t *obj_p;
 
   if ((bytecode_data_p->status_flags & CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED)
-      && arguments_number > 0
+      && call_args_p->argc > 0
       && formal_params_number > 0)
   {
     size_t formal_params_size = formal_params_number * sizeof (ecma_value_t);
@@ -114,9 +113,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
   ecma_property_value_t *prop_value_p;
 
   /* 11.a, 11.b */
-  for (ecma_length_t index = 0;
-       index < arguments_number;
-       index++)
+  for (ecma_length_t index = 0; index < call_args_p->argc; index++)
   {
     ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
 
@@ -125,7 +122,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
                                                     ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
                                                     NULL);
 
-    prop_value_p->value = ecma_copy_value_if_not_object (arguments_list_p[index]);
+    prop_value_p->value = ecma_copy_value_if_not_object (call_args_p->argv[index]);
 
     ecma_deref_ecma_string (index_string_p);
   }
@@ -136,7 +133,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
                                                   ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
                                                   NULL);
 
-  prop_value_p->value = ecma_make_uint32_value (arguments_number);
+  prop_value_p->value = ecma_make_uint32_value (call_args_p->argc);
 
   ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
 
@@ -164,7 +161,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
                                                     ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
                                                     NULL);
 
-    prop_value_p->value = ecma_make_object_value (func_obj_p);
+    prop_value_p->value = ecma_make_object_value (call_args_p->func_obj_p);
   }
   else
   {

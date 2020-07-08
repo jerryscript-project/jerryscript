@@ -1179,42 +1179,45 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_dispatch_routine (ecma_extended_object_t *func_obj_p, /**< builtin object */
-                               ecma_value_t this_arg_value, /**< 'this' argument value */
-                               const ecma_value_t *arguments_list_p, /**< list of arguments passed to routine */
-                               ecma_length_t arguments_list_len) /**< length of arguments' list */
+ecma_builtin_dispatch_routine (ecma_call_args_t *call_args_p) /**< call arguments */
 {
-  JERRY_ASSERT (ecma_builtin_function_is_routine ((ecma_object_t *) func_obj_p));
+  JERRY_ASSERT (ecma_builtin_function_is_routine (call_args_p->func_obj_p));
 
   ecma_value_t padded_arguments_list_p[3] = { ECMA_VALUE_UNDEFINED, ECMA_VALUE_UNDEFINED, ECMA_VALUE_UNDEFINED };
+  const ecma_value_t *argv;
 
-  if (arguments_list_len <= 2)
+  if (call_args_p->argc <= 2)
   {
-    switch (arguments_list_len)
+    argv = padded_arguments_list_p;
+    switch (call_args_p->argc)
     {
       case 2:
       {
-        padded_arguments_list_p[1] = arguments_list_p[1];
+        padded_arguments_list_p[1] = call_args_p->argv[1];
         /* FALLTHRU */
       }
       case 1:
       {
-        padded_arguments_list_p[0] = arguments_list_p[0];
+        padded_arguments_list_p[0] = call_args_p->argv[0];
         break;
       }
       default:
       {
-        JERRY_ASSERT (arguments_list_len == 0);
+        JERRY_ASSERT (call_args_p->argc == 0);
       }
     }
-
-    arguments_list_p = padded_arguments_list_p;
+  }
+  else
+  {
+    argv = call_args_p->argv;
   }
 
-  return ecma_builtin_routines[func_obj_p->u.built_in.id] (func_obj_p->u.built_in.routine_id,
-                                                           this_arg_value,
-                                                           arguments_list_p,
-                                                           arguments_list_len);
+  ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) call_args_p->func_obj_p;
+  /* [[TODO]]: Rework builtin dispatchers */
+  return ecma_builtin_routines[ext_func_obj_p->u.built_in.id] (ext_func_obj_p->u.built_in.routine_id,
+                                                               call_args_p->this_value,
+                                                               argv,
+                                                               call_args_p->argc);
 } /* ecma_builtin_dispatch_routine */
 
 /**
@@ -1223,27 +1226,20 @@ ecma_builtin_dispatch_routine (ecma_extended_object_t *func_obj_p, /**< builtin 
  * @return ecma value
  */
 ecma_value_t
-ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
-                            ecma_value_t this_arg_value, /**< 'this' argument value */
-                            const ecma_value_t *arguments_list_p, /**< arguments list */
-                            ecma_length_t arguments_list_len) /**< arguments list length */
+ecma_builtin_dispatch_call (ecma_call_args_t *call_args_p) /**< call arguments */
 {
-  JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION);
-  JERRY_ASSERT (ecma_get_object_is_builtin (obj_p));
+  JERRY_ASSERT (ecma_get_object_type (call_args_p->func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION);
+  JERRY_ASSERT (ecma_get_object_is_builtin (call_args_p->func_obj_p));
 
-  ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
-
-  if (ecma_builtin_function_is_routine (obj_p))
+  if (ecma_builtin_function_is_routine (call_args_p->func_obj_p))
   {
-    return ecma_builtin_dispatch_routine (ext_obj_p,
-                                          this_arg_value,
-                                          arguments_list_p,
-                                          arguments_list_len);
+    return ecma_builtin_dispatch_routine (call_args_p);
   }
 
+  ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) call_args_p->func_obj_p;
   ecma_builtin_id_t builtin_object_id = ext_obj_p->u.built_in.id;
   JERRY_ASSERT (builtin_object_id < sizeof (ecma_builtin_call_functions) / sizeof (ecma_builtin_dispatch_call_t));
-  return ecma_builtin_call_functions[builtin_object_id] (arguments_list_p, arguments_list_len);
+  return ecma_builtin_call_functions[builtin_object_id] (call_args_p->argv, call_args_p->argc);
 } /* ecma_builtin_dispatch_call */
 
 /**

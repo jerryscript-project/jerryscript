@@ -453,8 +453,8 @@ ecma_value_t vm_run_eval (ecma_compiled_code_t *bytecode_data_p, uint32_t parse_
 ecma_value_t vm_run_module (const ecma_compiled_code_t *bytecode_p, ecma_object_t *lex_env_p);
 #endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
-ecma_value_t vm_run (const ecma_compiled_code_t *bytecode_header_p, ecma_value_t this_binding_value,
-                     ecma_object_t *lex_env_p, const ecma_value_t *arg_list_p, ecma_length_t arg_list_len);
+ecma_value_t vm_run (const ecma_compiled_code_t *bytecode_header_p, ecma_object_t *lex_env_p,
+                     ecma_call_args_t *call_args_p);
 ecma_value_t vm_execute (vm_frame_ctx_t *frame_ctx_p);
 
 bool vm_is_strict_mode (void);

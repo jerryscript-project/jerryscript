@@ -220,7 +220,9 @@ ecma_builtin_array_object_from (ecma_value_t this_arg, /**< 'this' argument */
         /* 6.g.vii.1 */
         ecma_value_t args_p[2] = { next_value, ecma_make_uint32_value (k) };
         /* 6.g.vii.3 */
-        mapped_value = ecma_op_function_call (mapfn_obj_p, call_this_arg, args_p, 2);
+
+        ecma_call_args_t call_args = ecma_op_function_make_args (mapfn_obj_p, call_this_arg, args_p, 2);
+        mapped_value = ecma_op_function_call (&call_args);
         ecma_free_value (args_p[1]);
         ecma_free_value (next_value);
 
@@ -339,7 +341,8 @@ iterator_cleanup:
     {
       /* 16.d.i */
       ecma_value_t args_p[2] = { k_value, ecma_make_uint32_value (k) };
-      mapped_value = ecma_op_function_call (mapfn_obj_p, call_this_arg, args_p, 2);
+      ecma_call_args_t call_args = ecma_op_function_make_args (mapfn_obj_p, call_this_arg, args_p, 2);
+      mapped_value = ecma_op_function_call (&call_args);
       ecma_free_value (args_p[1]);
       ecma_free_value (k_value);
 

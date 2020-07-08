@@ -248,10 +248,8 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
     ecma_object_t *call_func_p = ecma_get_object_from_value (exotic_to_prim);
     ecma_value_t argument = ecma_make_magic_string_value (hints[hint]);
 
-    ecma_value_t result = ecma_op_function_call (call_func_p,
-                                                 obj_value,
-                                                 &argument,
-                                                 1);
+    ecma_call_args_t call_args = ecma_op_function_make_args (call_func_p, obj_value, &argument, 1);
+    ecma_value_t result = ecma_op_function_call (&call_args);
 
     ecma_free_value (exotic_to_prim);
 
@@ -321,10 +319,8 @@ ecma_op_general_object_ordinary_value (ecma_object_t *obj_p, /**< the object */
     {
       ecma_object_t *func_obj_p = ecma_get_object_from_value (function_value);
 
-      call_completion = ecma_op_function_call (func_obj_p,
-                                               ecma_make_object_value (obj_p),
-                                               NULL,
-                                               0);
+      ecma_call_args_t call_args = ecma_op_function_make_args (func_obj_p, ecma_make_object_value (obj_p), NULL, 0);
+      call_completion = ecma_op_function_call (&call_args);
     }
 
     ecma_free_value (function_value);

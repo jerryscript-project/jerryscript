@@ -148,7 +148,8 @@ ecma_builtin_array_prototype_object_to_string (ecma_value_t this_arg, /**< this 
   /* 4. */
   ecma_object_t *join_func_obj_p = ecma_get_object_from_value (join_value);
 
-  ecma_value_t ret_value = ecma_op_function_call (join_func_obj_p, this_arg, NULL, 0);
+  ecma_call_args_t call_args = ecma_op_function_make_args (join_func_obj_p, this_arg, NULL, 0);
+  ecma_value_t ret_value = ecma_op_function_call (&call_args);
 
   ecma_deref_object (join_func_obj_p);
 
@@ -1062,10 +1063,12 @@ ecma_builtin_array_prototype_object_sort_compare_helper (ecma_value_t lhs, /**< 
 
     ecma_value_t compare_args[] = { lhs, rhs };
 
-    ecma_value_t call_value = ecma_op_function_call (comparefn_obj_p,
-                                                     ECMA_VALUE_UNDEFINED,
-                                                     compare_args,
-                                                     2);
+    ecma_call_args_t call_args = ecma_op_function_make_args (comparefn_obj_p,
+                                                             ECMA_VALUE_UNDEFINED,
+                                                             compare_args,
+                                                             2);
+    ecma_value_t call_value = ecma_op_function_call (&call_args);
+
     if (ECMA_IS_VALUE_ERROR (call_value))
     {
       return call_value;
@@ -1892,9 +1895,10 @@ ecma_builtin_array_apply (ecma_value_t arg1, /**< callbackfn */
       /* 7.c.i */
       current_index = ecma_make_uint32_value (index);
 
-      ecma_value_t call_args[] = { get_value, current_index, ecma_make_object_value (obj_p) };
+      ecma_value_t args[] = { get_value, current_index, ecma_make_object_value (obj_p) };
       /* 7.c.ii */
-      ecma_value_t call_value = ecma_op_function_call (func_object_p, arg2, call_args, 3);
+      ecma_call_args_t call_args = ecma_op_function_make_args (func_object_p, arg2, args, 3);
+      ecma_value_t call_value = ecma_op_function_call (&call_args);
 
       if (ECMA_IS_VALUE_ERROR (call_value))
       {
@@ -1993,9 +1997,10 @@ ecma_builtin_array_prototype_object_map (ecma_value_t arg1, /**< callbackfn */
     {
       /* 8.c.i, 8.c.ii */
       current_index = ecma_make_uint32_value (index);
-      ecma_value_t call_args[] = { current_value, current_index, ecma_make_object_value (obj_p) };
+      ecma_value_t args[] = { current_value, current_index, ecma_make_object_value (obj_p) };
 
-      ecma_value_t mapped_value = ecma_op_function_call (func_object_p, arg2, call_args, 3);
+      ecma_call_args_t call_args = ecma_op_function_make_args (func_object_p, arg2, args, 3);
+      ecma_value_t mapped_value = ecma_op_function_call (&call_args);
 
       if (ECMA_IS_VALUE_ERROR (mapped_value))
       {
@@ -2088,9 +2093,10 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t arg1, /**< callbackfn *
       /* 9.c.i */
       current_index = ecma_make_uint32_value (index);
 
-      ecma_value_t call_args[] = { get_value, current_index, ecma_make_object_value (obj_p) };
+      ecma_value_t args[] = { get_value, current_index, ecma_make_object_value (obj_p) };
       /* 9.c.ii */
-      ecma_value_t call_value = ecma_op_function_call (func_object_p, arg2, call_args, 3);
+      ecma_call_args_t call_args = ecma_op_function_make_args (func_object_p, arg2, args, 3);
+      ecma_value_t call_value = ecma_op_function_call (&call_args);
 
       if (ECMA_IS_VALUE_ERROR (call_value))
       {
@@ -2231,12 +2237,11 @@ ecma_builtin_array_reduce_from (const ecma_value_t args_p[], /**< routine's argu
     {
       /* 9.c.i, 9.c.ii */
       current_index = ecma_make_uint32_value (corrected_index);
-      ecma_value_t call_args[] = {accumulator, current_value, current_index, ecma_make_object_value (obj_p)};
+      ecma_value_t args[] = {accumulator, current_value, current_index, ecma_make_object_value (obj_p)};
 
-      ecma_value_t call_value = ecma_op_function_call (func_object_p,
-                                                       ECMA_VALUE_UNDEFINED,
-                                                       call_args,
-                                                       4);
+      ecma_call_args_t call_args = ecma_op_function_make_args (func_object_p, ECMA_VALUE_UNDEFINED, args, 4);
+      ecma_value_t call_value = ecma_op_function_call (&call_args);
+
       ecma_free_value (current_index);
       ecma_free_value (accumulator);
       ecma_free_value (current_value);
@@ -2389,9 +2394,10 @@ ecma_builtin_array_prototype_object_find (ecma_value_t predicate, /**< callback 
     /* 8.d - 8.e */
     ecma_value_t current_index = ecma_make_uint32_value (index);
 
-    ecma_value_t call_args[] = { get_value, current_index, ecma_make_object_value (obj_p) };
+    ecma_value_t args[] = { get_value, current_index, ecma_make_object_value (obj_p) };
 
-    ecma_value_t call_value = ecma_op_function_call (func_object_p, predicate_this_arg, call_args, 3);
+    ecma_call_args_t call_args = ecma_op_function_make_args (func_object_p, predicate_this_arg, args, 3);
+    ecma_value_t call_value = ecma_op_function_call (&call_args);
 
     if (ECMA_IS_VALUE_ERROR (call_value))
     {

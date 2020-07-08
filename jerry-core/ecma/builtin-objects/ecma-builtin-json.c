@@ -677,10 +677,12 @@ ecma_builtin_json_internalize_property (ecma_object_t *reviver_p, /**< reviver f
   arguments_list[1] = value;
 
   /* 4. */
-  ecma_value_t ret_value =  ecma_op_function_call (reviver_p,
-                                                   ecma_make_object_value (holder_p),
-                                                   arguments_list,
-                                                   2);
+  ecma_call_args_t call_args = ecma_op_function_make_args (reviver_p,
+                                                           ecma_make_object_value (holder_p),
+                                                           arguments_list,
+                                                           2);
+  ecma_value_t ret_value = ecma_op_function_call (&call_args);
+
   ecma_free_value (value);
   return ret_value;
 } /* ecma_builtin_json_internalize_property */
@@ -1145,10 +1147,10 @@ ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p, 
     if (ecma_op_is_callable (to_json))
     {
       ecma_value_t key_value = ecma_make_string_value (key_p);
-      ecma_value_t call_args[] = { key_value };
       ecma_object_t *to_json_obj_p = ecma_get_object_from_value (to_json);
 
-      ecma_value_t result = ecma_op_function_call (to_json_obj_p, value, call_args, 1);
+      ecma_call_args_t call_args = ecma_op_function_make_args (to_json_obj_p, value, &key_value, 1);
+      ecma_value_t result = ecma_op_function_call (&call_args);
       ecma_deref_object (value_obj_p);
 
       if (ECMA_IS_VALUE_ERROR (result))
@@ -1167,9 +1169,11 @@ ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p, 
   {
     ecma_value_t holder_value = ecma_make_object_value (holder_p);
     ecma_value_t key_value = ecma_make_string_value (key_p);
-    ecma_value_t call_args[] = { key_value, value };
+    ecma_value_t args[] = { key_value, value };
 
-    ecma_value_t result = ecma_op_function_call (context_p->replacer_function_p, holder_value, call_args, 2);
+    ecma_call_args_t call_args = ecma_op_function_make_args (context_p->replacer_function_p, holder_value, args, 2);
+    ecma_value_t result = ecma_op_function_call (&call_args);
+
     ecma_free_value (value);
 
     if (ECMA_IS_VALUE_ERROR (result))

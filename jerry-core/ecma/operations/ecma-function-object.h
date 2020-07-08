@@ -70,9 +70,12 @@ ecma_op_get_prototype_from_constructor (ecma_object_t *ctor_obj_p, ecma_builtin_
 ecma_value_t
 ecma_op_function_has_instance (ecma_object_t *func_obj_p, ecma_value_t value);
 
+ecma_call_args_t
+ecma_op_function_make_args (ecma_object_t *func_obj_p, ecma_value_t this_arg_value,
+                               const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len);
+
 ecma_value_t
-ecma_op_function_call (ecma_object_t *func_obj_p, ecma_value_t this_arg_value,
-                       const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len);
+ecma_op_function_call (ecma_call_args_t *call_args_p);
 
 ecma_value_t
 ecma_op_function_construct (ecma_object_t *func_obj_p, ecma_object_t *new_target_p,

@@ -2589,12 +2589,11 @@ ecma_regexp_replace_helper_fast (ecma_replace_context_t *ctx_p, /**<replace cont
         ecma_ref_ecma_string (string_p);
         ecma_collection_push_back (arguments_p, ecma_make_string_value (string_p));
         ecma_object_t *function_p = ecma_get_object_from_value (replace_arg);
-
-        result = ecma_op_function_call (function_p,
-                                        ECMA_VALUE_UNDEFINED,
-                                        arguments_p->buffer_p,
-                                        arguments_p->item_count);
-
+        ecma_call_args_t call_args = ecma_op_function_make_args (function_p,
+                                                                 ECMA_VALUE_UNDEFINED,
+                                                                 arguments_p->buffer_p,
+                                                                 arguments_p->item_count);
+        result = ecma_op_function_call (&call_args);
         ecma_collection_free (arguments_p);
 
         if (ECMA_IS_VALUE_ERROR (result))
@@ -2852,7 +2851,8 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
       ecma_object_t *const function_p = ecma_get_object_from_value (result);
 
       ecma_value_t arguments[] = { ecma_make_string_value (string_p) };
-      result = ecma_op_function_call (function_p, this_arg, arguments, 1);
+      ecma_call_args_t call_args = ecma_op_function_make_args (function_p, this_arg, arguments, 1);
+      result = ecma_op_function_call (&call_args);
 
       ecma_deref_object (function_p);
 
@@ -3124,11 +3124,11 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
       ecma_ref_ecma_string (string_p);
       ecma_collection_push_back (arguments_p, ecma_make_string_value (string_p));
 
-      result = ecma_op_function_call (ecma_get_object_from_value (replace_arg),
-                                      ECMA_VALUE_UNDEFINED,
-                                      arguments_p->buffer_p,
-                                      arguments_p->item_count);
-
+      ecma_call_args_t call_args = ecma_op_function_make_args (ecma_get_object_from_value (replace_arg),
+                                                               ECMA_VALUE_UNDEFINED,
+                                                               arguments_p->buffer_p,
+                                                               arguments_p->item_count);
+      result = ecma_op_function_call (&call_args);
       ecma_collection_free (arguments_p);
 
       if (ECMA_IS_VALUE_ERROR (result))
@@ -3415,7 +3415,8 @@ ecma_op_regexp_exec (ecma_value_t this_arg, /**< this argument */
     ecma_object_t *function_p = ecma_get_object_from_value (exec);
     ecma_value_t arguments[] = { ecma_make_string_value (str_p) };
 
-    ecma_value_t result = ecma_op_function_call (function_p, this_arg, arguments, 1);
+    ecma_call_args_t call_args = ecma_op_function_make_args (function_p, this_arg, arguments, 1);
+    ecma_value_t result = ecma_op_function_call (&call_args);
 
     ecma_deref_object (function_p);
 

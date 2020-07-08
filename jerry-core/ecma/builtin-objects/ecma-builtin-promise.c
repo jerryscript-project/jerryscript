@@ -65,10 +65,12 @@ ecma_builtin_promise_reject_abrupt (ecma_value_t value, /**< value */
   ecma_value_t reject = ecma_op_object_get_by_magic_id (ecma_get_object_from_value (capability),
                                                         LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REJECT);
 
-  ecma_value_t call_ret = ecma_op_function_call (ecma_get_object_from_value (reject),
-                                                 ECMA_VALUE_UNDEFINED,
-                                                 &reason,
-                                                 1);
+  ecma_call_args_t call_args = ecma_op_function_make_args (ecma_get_object_from_value (reject),
+                                                           ECMA_VALUE_UNDEFINED,
+                                                           &reason,
+                                                           1);
+  ecma_value_t call_ret = ecma_op_function_call (&call_args);
+
   ecma_free_value (reject);
   ecma_free_value (reason);
 
@@ -296,10 +298,12 @@ ecma_builtin_promise_all_handler (const ecma_value_t function, /**< the function
   {
     ecma_value_t resolve = ecma_op_object_get_by_magic_id (ecma_get_object_from_value (capability),
                                                            LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_RESOLVE);
-    ret = ecma_op_function_call (ecma_get_object_from_value (resolve),
-                                 ECMA_VALUE_UNDEFINED,
-                                 &values_array,
-                                 1);
+
+    ecma_call_args_t call_args = ecma_op_function_make_args (ecma_get_object_from_value (resolve),
+                                                             ECMA_VALUE_UNDEFINED,
+                                                             &values_array,
+                                                             1);
+    ret = ecma_op_function_call (&call_args);
     ecma_free_value (resolve);
   }
 
@@ -372,10 +376,12 @@ ecma_builtin_promise_perform_all (ecma_value_t iterator, /**< iteratorRecord */
         /* 2. */
         ecma_value_t resolve = ecma_op_object_get_by_magic_id (capability_obj_p,
                                                                LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_RESOLVE);
-        ecma_value_t resolve_result = ecma_op_function_call (ecma_get_object_from_value (resolve),
-                                                             ECMA_VALUE_UNDEFINED,
-                                                             &values_array,
-                                                             1);
+
+        ecma_call_args_t call_args = ecma_op_function_make_args (ecma_get_object_from_value (resolve),
+                                                                 ECMA_VALUE_UNDEFINED,
+                                                                 &values_array,
+                                                                 1);
+        ecma_value_t resolve_result = ecma_op_function_call (&call_args);
         ecma_free_value (resolve);
 
         /* 3. */

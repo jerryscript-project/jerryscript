@@ -99,10 +99,7 @@ ecma_collection_t *
 ecma_proxy_object_own_property_keys (ecma_object_t *obj_p);
 
 ecma_value_t
-ecma_proxy_object_call (ecma_object_t *obj_p,
-                        ecma_value_t this_argument,
-                        const ecma_value_t *args_p,
-                        ecma_length_t argc);
+ecma_proxy_object_call (ecma_call_args_t *call_args_p);
 
 ecma_value_t
 ecma_proxy_object_construct (ecma_object_t *obj_p,

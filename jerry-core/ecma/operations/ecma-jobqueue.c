@@ -201,10 +201,11 @@ ecma_process_promise_reaction_job (ecma_job_promise_reaction_t *job_p) /**< the 
   else
   {
     /* 6. */
-    handler_result = ecma_op_function_call (ecma_get_object_from_value (handler),
-                                            ECMA_VALUE_UNDEFINED,
-                                            &(job_p->argument),
-                                            1);
+    ecma_call_args_t call_args = ecma_op_function_make_args (ecma_get_object_from_value (handler),
+                                                             ECMA_VALUE_UNDEFINED,
+                                                             &(job_p->argument),
+                                                             1);
+    handler_result = ecma_op_function_call (&call_args);
   }
 
   ecma_value_t status;
@@ -221,10 +222,11 @@ ecma_process_promise_reaction_job (ecma_job_promise_reaction_t *job_p) /**< the 
 
     JERRY_ASSERT (ecma_op_is_callable (reject));
 
-    status = ecma_op_function_call (ecma_get_object_from_value (reject),
-                                    ECMA_VALUE_UNDEFINED,
-                                    &handler_result,
-                                    1);
+    ecma_call_args_t call_args = ecma_op_function_make_args (ecma_get_object_from_value (reject),
+                                                             ECMA_VALUE_UNDEFINED,
+                                                             &handler_result,
+                                                             1);
+    status = ecma_op_function_call (&call_args);
     ecma_free_value (reject);
   }
   else
@@ -234,10 +236,11 @@ ecma_process_promise_reaction_job (ecma_job_promise_reaction_t *job_p) /**< the 
 
     JERRY_ASSERT (ecma_op_is_callable (resolve));
 
-    status = ecma_op_function_call (ecma_get_object_from_value (resolve),
-                                    ECMA_VALUE_UNDEFINED,
-                                    &handler_result,
-                                    1);
+    ecma_call_args_t call_args = ecma_op_function_make_args (ecma_get_object_from_value (resolve),
+                                                             ECMA_VALUE_UNDEFINED,
+                                                             &handler_result,
+                                                             1);
+    status = ecma_op_function_call (&call_args);
     ecma_free_value (resolve);
   }
 
@@ -388,22 +391,22 @@ ecma_process_promise_resolve_thenable_job (ecma_job_promise_resolve_thenable_t *
 
   ecma_value_t argv[] = { funcs.resolve, funcs.reject };
   ecma_value_t ret;
-  ecma_value_t then_call_result = ecma_op_function_call (ecma_get_object_from_value (job_p->then),
-                                                         job_p->thenable,
-                                                         argv,
-                                                         2);
-
+  ecma_call_args_t call_args = ecma_op_function_make_args (ecma_get_object_from_value (job_p->then),
+                                                           job_p->thenable,
+                                                           argv,
+                                                           2);
+  ecma_value_t then_call_result = ecma_op_function_call (&call_args);
   ret = then_call_result;
 
   if (ECMA_IS_VALUE_ERROR (then_call_result))
   {
     then_call_result = jcontext_take_exception ();
 
-    ret = ecma_op_function_call (ecma_get_object_from_value (funcs.reject),
-                                 ECMA_VALUE_UNDEFINED,
-                                 &then_call_result,
-                                 1);
-
+    call_args = ecma_op_function_make_args (ecma_get_object_from_value (funcs.reject),
+                                            ECMA_VALUE_UNDEFINED,
+                                            &then_call_result,
+                                            1);
+    ret = ecma_op_function_call (&call_args);
     ecma_free_value (then_call_result);
   }
 

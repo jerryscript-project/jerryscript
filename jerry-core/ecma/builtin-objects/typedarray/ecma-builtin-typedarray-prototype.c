@@ -222,9 +222,9 @@ ecma_builtin_typedarray_prototype_exec_routine (ecma_value_t this_arg, /**< this
     ecma_number_t element_num = typedarray_getter_cb (info.buffer_p + byte_pos);
     ecma_value_t get_value = ecma_make_number_value (element_num);
 
-    ecma_value_t call_args[] = { get_value, current_index, this_arg };
-
-    ecma_value_t call_value = ecma_op_function_call (func_object_p, cb_this_arg, call_args, 3);
+    ecma_value_t args[] = { get_value, current_index, this_arg };
+    ecma_call_args_t call_args = ecma_op_function_make_args (func_object_p, cb_this_arg, args, 3);
+    ecma_value_t call_value = ecma_op_function_call (&call_args);
 
     ecma_fast_free_value (current_index);
     ecma_fast_free_value (get_value);
@@ -466,9 +466,10 @@ ecma_builtin_typedarray_prototype_map (ecma_value_t this_arg, /**< this argument
     ecma_value_t current_index = ecma_make_uint32_value (index);
     ecma_number_t element_num = src_typedarray_getter_cb (src_info.buffer_p + src_byte_pos);
     ecma_value_t get_value = ecma_make_number_value (element_num);
-    ecma_value_t call_args[] = { get_value, current_index, this_arg };
+    ecma_value_t args[] = { get_value, current_index, this_arg };
+    ecma_call_args_t call_args = ecma_op_function_make_args (func_object_p, cb_this_arg, args, 3);
+    ecma_value_t mapped_value = ecma_op_function_call (&call_args);
 
-    ecma_value_t mapped_value = ecma_op_function_call (func_object_p, cb_this_arg, call_args, 3);
     if (ECMA_IS_VALUE_ERROR (mapped_value))
     {
       ecma_free_value (current_index);
@@ -593,14 +594,12 @@ ecma_builtin_typedarray_prototype_reduce_with_direction (ecma_value_t this_arg, 
     ecma_number_t get_num = getter_cb (info.buffer_p + byte_pos);
     ecma_value_t get_value = ecma_make_number_value (get_num);
 
-    ecma_value_t call_args[] = { accumulator, get_value, current_index, this_arg };
+    ecma_value_t args[] = { accumulator, get_value, current_index, this_arg };
 
     JERRY_ASSERT (ecma_is_value_number (get_value));
 
-    ecma_value_t call_value = ecma_op_function_call (func_object_p,
-                                                     ECMA_VALUE_UNDEFINED,
-                                                     call_args,
-                                                     4);
+    ecma_call_args_t call_args = ecma_op_function_make_args (func_object_p, ECMA_VALUE_UNDEFINED, args, 4);
+    ecma_value_t call_value = ecma_op_function_call (&call_args);
 
     ecma_fast_free_value (accumulator);
     ecma_fast_free_value (get_value);
@@ -727,9 +726,9 @@ ecma_builtin_typedarray_prototype_filter (ecma_value_t this_arg, /**< this argum
 
     JERRY_ASSERT (ecma_is_value_number (get_value));
 
-    ecma_value_t call_args[] = { get_value, current_index, this_arg };
-
-    ecma_value_t call_value = ecma_op_function_call (func_object_p, cb_this_arg, call_args, 3);
+    ecma_value_t args[] = { get_value, current_index, this_arg };
+    ecma_call_args_t call_args = ecma_op_function_make_args (func_object_p, cb_this_arg, args, 3);
+    ecma_value_t call_value = ecma_op_function_call (&call_args);
 
     ecma_fast_free_value (current_index);
     ecma_fast_free_value (get_value);
@@ -1220,7 +1219,8 @@ ecma_builtin_typedarray_prototype_object_to_string (ecma_value_t this_arg) /**< 
     /* 4. */
     ecma_object_t *join_func_obj_p = ecma_get_object_from_value (join_value);
 
-    ret_value = ecma_op_function_call (join_func_obj_p, this_arg, NULL, 0);
+    ecma_call_args_t call_args = ecma_op_function_make_args (join_func_obj_p, this_arg, NULL, 0);
+    ret_value = ecma_op_function_call (&call_args);
   }
 
   ecma_free_value (join_value);
@@ -1440,11 +1440,8 @@ ecma_builtin_typedarray_prototype_sort_compare_helper (ecma_value_t lhs, /**< le
   ecma_object_t *comparefn_obj_p = ecma_get_object_from_value (compare_func);
 
   ecma_value_t compare_args[] = { lhs, rhs };
-
-  ecma_value_t call_value = ecma_op_function_call (comparefn_obj_p,
-                                                   ECMA_VALUE_UNDEFINED,
-                                                   compare_args,
-                                                   2);
+  ecma_call_args_t call_args = ecma_op_function_make_args (comparefn_obj_p, ECMA_VALUE_UNDEFINED, compare_args, 2);
+  ecma_value_t call_value = ecma_op_function_call (&call_args);
 
   if (ECMA_IS_VALUE_ERROR (call_value) || ecma_is_value_number (call_value))
   {
@@ -1617,9 +1614,9 @@ ecma_builtin_typedarray_prototype_find_helper (ecma_value_t this_arg, /**< this 
     ecma_number_t element_num = typedarray_getter_cb (info.buffer_p + byte_index);
     ecma_value_t element_value = ecma_make_number_value (element_num);
 
-    ecma_value_t call_args[] = { element_value, ecma_make_uint32_value (buffer_index), this_arg };
-
-    ecma_value_t call_value = ecma_op_function_call (func_object_p, predicate_this_arg, call_args, 3);
+    ecma_value_t args[] = { element_value, ecma_make_uint32_value (buffer_index), this_arg };
+    ecma_call_args_t call_args = ecma_op_function_make_args (func_object_p, predicate_this_arg, args, 3);
+    ecma_value_t call_value = ecma_op_function_call (&call_args);
 
     if (ECMA_IS_VALUE_ERROR (call_value))
     {
@@ -2032,10 +2029,8 @@ ecma_builtin_typedarray_prototype_to_locale_string_helper (ecma_object_t *this_o
   if (ecma_op_is_callable (func_value))
   {
     ecma_object_t *func_obj = ecma_get_object_from_value (func_value);
-    ecma_value_t call_value = ecma_op_function_call (func_obj,
-                                                     element_obj,
-                                                     NULL,
-                                                     0);
+    ecma_call_args_t call_args = ecma_op_function_make_args (func_obj, element_obj, NULL, 0);
+    ecma_value_t call_value = ecma_op_function_call (&call_args);
 
     ecma_deref_object (func_obj);
 

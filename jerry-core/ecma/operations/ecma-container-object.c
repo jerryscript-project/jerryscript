@@ -475,10 +475,8 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
     if (lit_id == LIT_MAGIC_STRING_SET_UL || lit_id == LIT_MAGIC_STRING_WEAKSET_UL)
     {
       const ecma_value_t value = result;
-
-      ecma_value_t arguments[] = { value };
-      result = ecma_op_function_call (adder_func_p, set_value, arguments, 1);
-
+      ecma_call_args_t call_args = ecma_op_function_make_args (adder_func_p, set_value, &value, 1);
+      result = ecma_op_function_call (&call_args);
       ecma_free_value (value);
     }
     else
@@ -517,7 +515,9 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
 
       const ecma_value_t value = result;
       ecma_value_t arguments[] = { key, value };
-      result = ecma_op_function_call (adder_func_p, set_value, arguments, 2);
+
+      ecma_call_args_t call_args = ecma_op_function_make_args (adder_func_p, set_value, arguments, 2);
+      result = ecma_op_function_call (&call_args);
 
       ecma_free_value (key);
       ecma_free_value (value);
@@ -824,8 +824,9 @@ ecma_op_container_foreach (ecma_extended_object_t *map_object_p, /**< map object
     ecma_value_t value_arg = ecma_op_container_get_value (entry_p, lit_id);
 
     ecma_value_t this_arg = ecma_make_object_value ((ecma_object_t *) map_object_p);
-    ecma_value_t call_args[] = { value_arg, key_arg, this_arg };
-    ecma_value_t call_value = ecma_op_function_call (func_object_p, predicate_this_arg, call_args, 3);
+    ecma_value_t args[] = { value_arg, key_arg, this_arg };
+    ecma_call_args_t call_args = ecma_op_function_make_args (func_object_p, predicate_this_arg, args, 3);
+    ecma_value_t call_value = ecma_op_function_call (&call_args);
 
     if (ECMA_IS_VALUE_ERROR (call_value))
     {

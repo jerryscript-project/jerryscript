@@ -666,8 +666,9 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
   }
 
   ecma_object_t *getter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->getter_cp);
+  ecma_call_args_t call_args = ecma_op_function_make_args (getter_p, base_value, NULL, 0);
 
-  return ecma_op_function_call (getter_p, base_value, NULL, 0);
+  return ecma_op_function_call (&call_args);
 } /* ecma_op_object_find_own */
 
 /**
@@ -1586,10 +1587,9 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
     return ecma_reject (is_throw);
   }
 
-  ecma_value_t ret_value = ecma_op_function_call (ECMA_GET_NON_NULL_POINTER (ecma_object_t, setter_cp),
-                                                  receiver,
-                                                  &value,
-                                                  1);
+  ecma_object_t *setter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, setter_cp);
+  ecma_call_args_t call_args = ecma_op_function_make_args (setter_p, receiver, &value, 1);
+  ecma_value_t ret_value = ecma_op_function_call (&call_args);
 
   if (!ECMA_IS_VALUE_ERROR (ret_value))
   {
@@ -3096,7 +3096,9 @@ ecma_op_invoke (ecma_value_t object, /**< Object value */
   }
 
   ecma_object_t *func_obj_p = ecma_get_object_from_value (func);
-  ecma_value_t call_result = ecma_op_function_call (func_obj_p, this_arg, args_p, args_len);
+
+  ecma_call_args_t call_args = ecma_op_function_make_args (func_obj_p, this_arg, args_p, args_len);
+  ecma_value_t call_result = ecma_op_function_call (&call_args);
 
   ecma_deref_object (object_p);
   ecma_deref_object (func_obj_p);

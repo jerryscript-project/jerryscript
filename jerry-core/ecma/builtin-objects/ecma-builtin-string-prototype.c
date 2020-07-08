@@ -304,7 +304,9 @@ ecma_builtin_string_prototype_object_match (ecma_value_t this_argument, /**< thi
     {
       /* 3.c.i */
       ecma_object_t *matcher_method = ecma_get_object_from_value (matcher);
-      ecma_value_t result = ecma_op_function_call (matcher_method, regexp_arg, &this_argument, 1);
+
+      ecma_call_args_t call_args = ecma_op_function_make_args (matcher_method, regexp_arg, &this_argument, 1);
+      ecma_value_t result = ecma_op_function_call (&call_args);
       ecma_deref_object (matcher_method);
       return result;
     }
@@ -415,7 +417,9 @@ ecma_builtin_string_prototype_object_replace (ecma_value_t this_value, /**< this
       ecma_object_t *replace_method = ecma_get_object_from_value (replace_symbol);
 
       ecma_value_t arguments[] = { this_value, replace_value };
-      ecma_value_t replace_result = ecma_op_function_call (replace_method, search_value, arguments, 2);
+
+      ecma_call_args_t call_args = ecma_op_function_make_args (replace_method, search_value, arguments, 2);
+      ecma_value_t replace_result = ecma_op_function_call (&call_args);
 
       ecma_deref_object (replace_method);
       return replace_result;
@@ -496,10 +500,8 @@ ecma_builtin_string_prototype_object_replace (ecma_value_t this_value, /**< this
             ecma_make_string_value (input_str_p)
           };
 
-          result = ecma_op_function_call (function_p,
-                                          ECMA_VALUE_UNDEFINED,
-                                          args,
-                                          3);
+          ecma_call_args_t call_args = ecma_op_function_make_args (function_p, ECMA_VALUE_UNDEFINED, args, 3);
+          result = ecma_op_function_call (&call_args);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {
@@ -602,7 +604,9 @@ ecma_builtin_string_prototype_object_search (ecma_value_t this_value, /**< this 
       }
 
       ecma_object_t *search_method = ecma_get_object_from_value (search_symbol);
-      ecma_value_t search_result = ecma_op_function_call (search_method, regexp_value, &this_value, 1);
+
+      ecma_call_args_t call_args = ecma_op_function_make_args (search_method, regexp_value, &this_value, 1);
+      ecma_value_t search_result = ecma_op_function_call (&call_args);
 
       ecma_deref_object (search_method);
       return search_result;
@@ -753,7 +757,9 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_value, /**< this a
       ecma_object_t *split_method_p = ecma_get_object_from_value (split_symbol);
 
       ecma_value_t arguments[] = { this_value, limit_value };
-      ecma_value_t split_result = ecma_op_function_call (split_method_p, separator_value, arguments, 2);
+
+      ecma_call_args_t call_args = ecma_op_function_make_args (split_method_p, separator_value, arguments, 2);
+      ecma_value_t split_result = ecma_op_function_call (&call_args);
 
       ecma_deref_object (split_method_p);
       return split_result;

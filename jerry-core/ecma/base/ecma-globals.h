@@ -2012,6 +2012,17 @@ typedef struct
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
 /**
+ * Description of function call arguments.
+ */
+typedef struct
+{
+  ecma_object_t *func_obj_p; /**< function object to call */
+  const ecma_value_t *argv; /**< pointer to the beginning of the arguments */
+  ecma_length_t argc; /**< number of arguments */
+  ecma_value_t this_value; /**< this value to invoke the function */
+} ecma_call_args_t;
+
+/**
  * @}
  * @}
  */

@@ -120,7 +120,8 @@ opfunc_instanceof (ecma_value_t left_value, /**< left value */
   if (JERRY_UNLIKELY (!ecma_is_value_undefined (has_instance_method)))
   {
     ecma_object_t *method_obj_p = ecma_get_object_from_value (has_instance_method);
-    ecma_value_t has_instance_result = ecma_op_function_call (method_obj_p, right_value, &left_value, 1);
+    ecma_call_args_t call_args = ecma_op_function_make_args (method_obj_p, right_value, &left_value, 1);
+    ecma_value_t has_instance_result = ecma_op_function_call (&call_args);
 
     ecma_free_value (has_instance_method);
 

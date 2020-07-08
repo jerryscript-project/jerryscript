@@ -2793,10 +2793,12 @@ jerry_invoke_function (bool is_invoke_as_constructor, /**< true - invoke functio
   {
     JERRY_ASSERT (jerry_value_is_function (func_obj_val));
 
-    return jerry_return (ecma_op_function_call (ecma_get_object_from_value (func_obj_val),
-                                                this_val,
-                                                args_p,
-                                                args_count));
+    ecma_call_args_t call_args = ecma_op_function_make_args (ecma_get_object_from_value (func_obj_val),
+                                                             this_val,
+                                                             args_p,
+                                                             args_count);
+
+    return jerry_return (ecma_op_function_call (&call_args));
   }
 } /* jerry_invoke_function */
 
@@ -3255,10 +3257,11 @@ jerry_resolve_or_reject_promise (jerry_value_t promise, /**< the promise value *
 
   ecma_value_t function = ecma_op_object_get_by_magic_id (ecma_get_object_from_value (promise), prop_name);
 
-  ecma_value_t ret = ecma_op_function_call (ecma_get_object_from_value (function),
-                                            ECMA_VALUE_UNDEFINED,
-                                            &argument,
-                                            1);
+  ecma_call_args_t call_args = ecma_op_function_make_args (ecma_get_object_from_value (function),
+                                                           ECMA_VALUE_UNDEFINED,
+                                                           &argument,
+                                                           1);
+  ecma_value_t ret = ecma_op_function_call (&call_args);
 
   ecma_free_value (function);
 

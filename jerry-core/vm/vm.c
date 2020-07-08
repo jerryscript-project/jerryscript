@@ -285,11 +285,9 @@ vm_run_module (const ecma_compiled_code_t *bytecode_p, /**< pointer to bytecode 
     return module_init_result;
   }
 
-  return vm_run (bytecode_p,
-                 ECMA_VALUE_UNDEFINED,
-                 lex_env_p,
-                 NULL,
-                 0);
+  ecma_call_args_t call_args = ecma_op_function_make_args (NULL, ECMA_VALUE_UNDEFINED, NULL, 0);
+
+  return vm_run (bytecode_p, lex_env_p, &call_args);
 } /* vm_run_module */
 #endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
@@ -336,11 +334,9 @@ vm_run_global (const ecma_compiled_code_t *bytecode_p) /**< pointer to bytecode 
   }
 #endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
-  return vm_run (bytecode_p,
-                 ecma_make_object_value (glob_obj_p),
-                 global_scope_p,
-                 NULL,
-                 0);
+  ecma_call_args_t call_args = ecma_op_function_make_args (glob_obj_p, ecma_make_object_value (glob_obj_p), NULL, 0);
+
+  return vm_run (bytecode_p, global_scope_p, &call_args);
 } /* vm_run_global */
 
 /**
@@ -354,12 +350,14 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
 {
   ecma_value_t this_binding;
   ecma_object_t *lex_env_p;
+  ecma_value_t *argv = NULL;
 
   /* ECMA-262 v5, 10.4.2 */
   if (parse_opts & ECMA_PARSE_DIRECT_EVAL)
   {
     this_binding = ecma_copy_value (JERRY_CONTEXT (vm_top_context_p)->this_binding);
     lex_env_p = JERRY_CONTEXT (vm_top_context_p)->lex_env_p;
+    argv = VM_DIRECT_EVAL;
 
 #if ENABLED (JERRY_DEBUGGER)
     uint32_t chain_index = parse_opts >> ECMA_PARSE_CHAIN_INDEX_SHIFT;
@@ -409,11 +407,9 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
     lex_env_p = lex_block_p;
   }
 
-  ecma_value_t completion_value = vm_run (bytecode_data_p,
-                                          this_binding,
-                                          lex_env_p,
-                                          (parse_opts & ECMA_PARSE_DIRECT_EVAL) ? VM_DIRECT_EVAL : NULL,
-                                          0);
+  ecma_call_args_t call_args = ecma_op_function_make_args (NULL, this_binding, argv, 0);
+
+  ecma_value_t completion_value = vm_run (bytecode_data_p, lex_env_p, &call_args);
 
   ecma_deref_object (lex_env_p);
   ecma_free_value (this_binding);
@@ -690,11 +686,11 @@ vm_spread_operation (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
     else
     {
       ecma_object_t *func_obj_p = ecma_get_object_from_value (func_value);
-
-      completion_value = ecma_op_function_call (func_obj_p,
-                                                this_value,
-                                                collection_p->buffer_p,
-                                                collection_p->item_count);
+      ecma_call_args_t call_args = ecma_op_function_make_args (func_obj_p,
+                                                               this_value,
+                                                               collection_p->buffer_p,
+                                                               collection_p->item_count);
+      completion_value = ecma_op_function_call (&call_args);
     }
 
     if (is_call_prop)
@@ -774,11 +770,11 @@ opfunc_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   else
   {
     ecma_object_t *func_obj_p = ecma_get_object_from_value (func_value);
-
-    completion_value = ecma_op_function_call (func_obj_p,
-                                              this_value,
-                                              stack_top_p,
-                                              arguments_list_len);
+    ecma_call_args_t call_args = ecma_op_function_make_args (func_obj_p,
+                                                             this_value,
+                                                             stack_top_p,
+                                                             arguments_list_len);
+    completion_value = ecma_op_function_call (&call_args);
   }
 
   JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_DIRECT_EVAL;
@@ -4642,6 +4638,7 @@ vm_init_exec (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
   }
 
 #if ENABLED (JERRY_ESNEXT)
+  /* [[TODO]]: Emit bytecode for rest parameter creation */
   if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_REST_PARAMETER)
   {
     JERRY_ASSERT (function_call_argument_count >= arg_list_len);
@@ -4743,10 +4740,8 @@ vm_execute (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
  */
 ecma_value_t
 vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data header */
-        ecma_value_t this_binding_value, /**< value of 'ThisBinding' */
         ecma_object_t *lex_env_p, /**< lexical environment to use */
-        const ecma_value_t *arg_list_p, /**< arguments list */
-        ecma_length_t arg_list_len) /**< length of arguments list */
+        ecma_call_args_t *call_args_p) /**< call arguments */
 {
   vm_frame_ctx_t *frame_ctx_p;
   size_t frame_size;
@@ -4772,9 +4767,10 @@ vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data heade
 
   frame_ctx_p->bytecode_header_p = bytecode_header_p;
   frame_ctx_p->lex_env_p = lex_env_p;
-  frame_ctx_p->this_binding = this_binding_value;
+  /* [[TODO]]: Store call args instead of only the this binding */
+  frame_ctx_p->this_binding = call_args_p->this_value;
 
-  vm_init_exec (frame_ctx_p, arg_list_p, arg_list_len);
+  vm_init_exec (frame_ctx_p, call_args_p->argv, call_args_p->argc);
   return vm_execute (frame_ctx_p);
 } /* vm_run */
 

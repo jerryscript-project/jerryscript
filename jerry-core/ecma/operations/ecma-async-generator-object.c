@@ -113,15 +113,18 @@ ecma_async_yield_call (ecma_value_t function, /**< function (takes reference) */
   ecma_value_t iterator = async_generator_object_p->frame_ctx.block_result;
   ecma_value_t result;
 
+  ecma_call_args_t call_args;
+
   if (argument == ECMA_VALUE_EMPTY)
   {
-    result = ecma_op_function_call (return_obj_p, iterator, NULL, 0);
+    call_args = ecma_op_function_make_args (return_obj_p, iterator, NULL, 0);
   }
   else
   {
-    result = ecma_op_function_call (return_obj_p, iterator, &argument, 1);
+    call_args = ecma_op_function_make_args (return_obj_p, iterator, &argument, 1);
   }
 
+  result = ecma_op_function_call (&call_args);
   ecma_deref_object (return_obj_p);
 
   if (ECMA_IS_VALUE_ERROR (result))

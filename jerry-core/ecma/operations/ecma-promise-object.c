@@ -556,10 +556,12 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
     JERRY_ASSERT (ecma_op_is_callable (executor));
 
     ecma_value_t argv[] = { funcs.resolve, funcs.reject };
-    completion = ecma_op_function_call (ecma_get_object_from_value (executor),
-                                        ECMA_VALUE_UNDEFINED,
-                                        argv,
-                                        2);
+
+    ecma_call_args_t call_args = ecma_op_function_make_args (ecma_get_object_from_value (executor),
+                                                             ECMA_VALUE_UNDEFINED,
+                                                             argv,
+                                                             2);
+    completion = ecma_op_function_call (&call_args);
   }
   else if (type == ECMA_PROMISE_EXECUTOR_OBJECT)
   {
@@ -581,10 +583,12 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
   {
     /* 10.a. */
     completion = jcontext_take_exception ();
-    status = ecma_op_function_call (ecma_get_object_from_value (funcs.reject),
-                                    ECMA_VALUE_UNDEFINED,
-                                    &completion,
-                                    1);
+
+    ecma_call_args_t call_args = ecma_op_function_make_args (ecma_get_object_from_value (funcs.reject),
+                                                             ECMA_VALUE_UNDEFINED,
+                                                             &completion,
+                                                             1);
+    status = ecma_op_function_call (&call_args);
   }
 
   ecma_promise_free_resolving_functions (&funcs);
@@ -808,10 +812,11 @@ ecma_promise_reject_or_resolve (ecma_value_t this_arg, /**< "this" argument */
 
   ecma_value_t func = ecma_op_object_get (ecma_get_object_from_value (capability), property_str_p);
 
-  ecma_value_t call_ret = ecma_op_function_call (ecma_get_object_from_value (func),
-                                                 ECMA_VALUE_UNDEFINED,
-                                                 &value,
-                                                 1);
+  ecma_call_args_t call_args = ecma_op_function_make_args (ecma_get_object_from_value (func),
+                                                           ECMA_VALUE_UNDEFINED,
+                                                           &value,
+                                                           1);
+  ecma_value_t call_ret = ecma_op_function_call (&call_args);
 
   ecma_free_value (func);
 

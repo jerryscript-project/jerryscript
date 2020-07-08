@@ -329,7 +329,8 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
           ecma_object_t *getter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->getter_cp);
 
           ecma_value_t base_value = ecma_make_object_value (binding_obj_p);
-          return ecma_op_function_call (getter_p, base_value, NULL, 0);
+          ecma_call_args_t call_args = ecma_op_function_make_args (getter_p, base_value, NULL, 0);
+          return ecma_op_function_call (&call_args);
         }
 #endif /* ENABLED (JERRY_LCACHE) */
       }

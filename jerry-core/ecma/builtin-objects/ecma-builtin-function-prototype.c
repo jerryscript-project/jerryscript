@@ -102,7 +102,8 @@ ecma_builtin_function_prototype_object_apply (ecma_object_t *func_obj_p, /**< th
   /* 2. */
   if (ecma_is_value_null (arg2) || ecma_is_value_undefined (arg2))
   {
-    return  ecma_op_function_call (func_obj_p, arg1, NULL, 0);
+    ecma_call_args_t call_args = ecma_op_function_make_args (func_obj_p, arg1, NULL, 0);
+    return ecma_op_function_call (&call_args);
   }
 
   /* 3. */
@@ -149,10 +150,9 @@ ecma_builtin_function_prototype_object_apply (ecma_object_t *func_obj_p, /**< th
   if (ecma_is_value_empty (ret_value))
   {
     JERRY_ASSERT (index == length);
-    ret_value = ecma_op_function_call (func_obj_p,
-                                       arg1,
-                                       arguments_list_p,
-                                       length);
+
+    ecma_call_args_t call_args = ecma_op_function_make_args (func_obj_p, arg1, arguments_list_p, length);
+    ret_value = ecma_op_function_call (&call_args);
   }
 
   for (uint32_t remove_index = 0; remove_index < index; remove_index++)
@@ -179,19 +179,22 @@ ecma_builtin_function_prototype_object_call (ecma_object_t *func_obj_p , /**< th
                                              const ecma_value_t *arguments_list_p, /**< list of arguments */
                                              ecma_length_t arguments_number) /**< number of arguments */
 {
+  ecma_call_args_t call_args;
+
   if (arguments_number == 0)
   {
     /* Even a 'this' argument is missing. */
-    return ecma_op_function_call (func_obj_p,
-                                  ECMA_VALUE_UNDEFINED,
-                                  NULL,
-                                  0);
+    call_args = ecma_op_function_make_args (func_obj_p, ECMA_VALUE_UNDEFINED, NULL, 0);
+  }
+  else
+  {
+    call_args = ecma_op_function_make_args (func_obj_p,
+                                            arguments_list_p[0],
+                                            arguments_list_p + 1,
+                                            (ecma_length_t) (arguments_number - 1u));
   }
 
-  return ecma_op_function_call (func_obj_p,
-                                arguments_list_p[0],
-                                arguments_list_p + 1,
-                                (ecma_length_t) (arguments_number - 1u));
+  return ecma_op_function_call (&call_args);
 } /* ecma_builtin_function_prototype_object_call */
 
 /**

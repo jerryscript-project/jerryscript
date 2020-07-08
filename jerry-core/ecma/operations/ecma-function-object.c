@@ -832,28 +832,23 @@ ecma_op_get_prototype_from_constructor (ecma_object_t *ctor_obj_p, /**< construc
  * @return the result of the function call.
  */
 static ecma_value_t
-ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
-                              ecma_value_t this_arg_value, /**< 'this' argument's value */
-                              const ecma_value_t *arguments_list_p, /**< arguments list */
-                              ecma_length_t arguments_list_len) /**< length of arguments list */
+ecma_op_function_call_simple (ecma_call_args_t *call_args_p) /**< call arguments */
 {
-  JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION);
+  JERRY_ASSERT (ecma_get_object_type (call_args_p->func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION);
 
-  if (JERRY_UNLIKELY (ecma_get_object_is_builtin (func_obj_p)))
+  if (JERRY_UNLIKELY (ecma_get_object_is_builtin (call_args_p->func_obj_p)))
   {
-    return ecma_builtin_dispatch_call (func_obj_p, this_arg_value, arguments_list_p, arguments_list_len);
+    return ecma_builtin_dispatch_call (call_args_p);
   }
 
   /* Entering Function Code (ECMA-262 v5, 10.4.3) */
-  ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) func_obj_p;
+  ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) call_args_p->func_obj_p;
 
   ecma_object_t *scope_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
                                                                        ext_func_p->u.function.scope_cp);
 
   /* 8. */
-  ecma_value_t this_binding = this_arg_value;
   bool free_this_binding = false;
-
   const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
   uint16_t status_flags = bytecode_data_p->status_flags;
 
@@ -869,11 +864,12 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
 
   /* 1. */
 #if ENABLED (JERRY_ESNEXT)
+  /* [[TODO]]: Use the call args func_obj_p member to resolve the active function object */
   ecma_object_t *old_function_object_p = JERRY_CONTEXT (current_function_obj_p);
 
   if (JERRY_UNLIKELY (CBC_FUNCTION_IS_ARROW (status_flags)))
   {
-    ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) func_obj_p;
+    ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) ext_func_p;
 
     if (ecma_is_value_undefined (arrow_func_p->new_target))
     {
@@ -883,27 +879,26 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
     {
       JERRY_CONTEXT (current_new_target) = ecma_get_object_from_value (arrow_func_p->new_target);
     }
-    this_binding = arrow_func_p->this_binding;
+    call_args_p->this_value = arrow_func_p->this_binding;
   }
   else
   {
-    JERRY_CONTEXT (current_function_obj_p) = func_obj_p;
+    JERRY_CONTEXT (current_function_obj_p) = (ecma_object_t *) ext_func_p;
 #endif /* ENABLED (JERRY_ESNEXT) */
     if (!(status_flags & CBC_CODE_FLAGS_STRICT_MODE))
     {
-      if (ecma_is_value_undefined (this_binding)
-          || ecma_is_value_null (this_binding))
+      if (ecma_is_value_undefined (call_args_p->this_value)
+          || ecma_is_value_null (call_args_p->this_value))
       {
         /* 2. */
-        this_binding = ecma_make_object_value (ecma_builtin_get_global ());
+        call_args_p->this_value = ecma_make_object_value (ecma_builtin_get_global ());
       }
-      else if (!ecma_is_value_object (this_binding))
+      else if (!ecma_is_value_object (call_args_p->this_value))
       {
         /* 3., 4. */
-        this_binding = ecma_op_to_object (this_binding);
+        call_args_p->this_value = ecma_op_to_object (call_args_p->this_value);
         free_this_binding = true;
-
-        JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (this_binding));
+        JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (call_args_p->this_value));
       }
     }
 #if ENABLED (JERRY_ESNEXT)
@@ -921,11 +916,10 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
     local_env_p = ecma_create_decl_lex_env (scope_p);
     if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_IS_ARGUMENTS_NEEDED)
     {
-      ecma_op_create_arguments_object (func_obj_p,
+      /* [[TODO]]: Emit bytecode for arguments creation */
+      ecma_op_create_arguments_object (bytecode_data_p,
                                        local_env_p,
-                                       arguments_list_p,
-                                       arguments_list_len,
-                                       bytecode_data_p);
+                                       call_args_p);
     }
 #if ENABLED (JERRY_ESNEXT)
     // ECMAScript v6, 9.2.2.8
@@ -933,17 +927,13 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
     {
       ecma_value_t lexical_this;
       lexical_this = (ECMA_GET_THIRD_BIT_FROM_POINTER_TAG (ext_func_p->u.function.scope_cp) ? ECMA_VALUE_UNINITIALIZED
-                                                                                            : this_binding);
+                                                                                            : call_args_p->this_value);
       ecma_op_init_this_binding (local_env_p, lexical_this);
     }
 #endif /* ENABLED (JERRY_ESNEXT) */
   }
 
-  ecma_value_t ret_value = vm_run (bytecode_data_p,
-                                   this_binding,
-                                   local_env_p,
-                                   arguments_list_p,
-                                   arguments_list_len);
+  ecma_value_t ret_value = vm_run (bytecode_data_p, local_env_p, call_args_p);
 
 #if ENABLED (JERRY_ESNEXT)
   JERRY_CONTEXT (current_function_obj_p) = old_function_object_p;
@@ -974,7 +964,7 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
 
   if (JERRY_UNLIKELY (free_this_binding))
   {
-    ecma_free_value (this_binding);
+    ecma_free_value (call_args_p->this_value);
   }
 
   return ret_value;
@@ -986,20 +976,18 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
  * @return the result of the function call.
  */
 static ecma_value_t JERRY_ATTR_NOINLINE
-ecma_op_function_call_external (ecma_object_t *func_obj_p, /**< Function object */
-                                ecma_value_t this_arg_value, /**< 'this' argument's value */
-                                const ecma_value_t *arguments_list_p, /**< arguments list */
-                                ecma_length_t arguments_list_len) /**< length of arguments list */
+ecma_op_function_call_external (ecma_call_args_t *call_args_p) /**< call arguments */
 
 {
-  JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
-  ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) func_obj_p;
+  JERRY_ASSERT (ecma_get_object_type (call_args_p->func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+  ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) call_args_p->func_obj_p;
   JERRY_ASSERT (ext_func_obj_p->u.external_handler_cb != NULL);
 
-  ecma_value_t ret_value = ext_func_obj_p->u.external_handler_cb (ecma_make_object_value (func_obj_p),
-                                                                  this_arg_value,
-                                                                  arguments_list_p,
-                                                                  arguments_list_len);
+  /* [[TODO]]: Rework internal/API external handler cb */
+  ecma_value_t ret_value = ext_func_obj_p->u.external_handler_cb (ecma_make_object_value (call_args_p->func_obj_p),
+                                                                  call_args_p->this_value,
+                                                                  call_args_p->argv,
+                                                                  call_args_p->argc);
   if (JERRY_UNLIKELY (ecma_is_value_error_reference (ret_value)))
   {
     ecma_raise_error_from_error_reference (ret_value);
@@ -1068,32 +1056,52 @@ ecma_op_bound_function_get_argument_list (ecma_object_t *func_obj_p, /**< bound 
  *         Returned value must be freed with ecma_free_value
  */
 static ecma_value_t JERRY_ATTR_NOINLINE
-ecma_op_function_call_bound (ecma_object_t *func_obj_p, /**< Function object */
-                             const ecma_value_t *arguments_list_p, /**< arguments list */
-                             ecma_length_t arguments_list_len) /**< length of arguments list */
+ecma_op_function_call_bound (ecma_call_args_t *call_args_p) /**< call arguments */
 {
-  JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+  JERRY_ASSERT (ecma_get_object_type (call_args_p->func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
 
   JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_DIRECT_EVAL;
 
   ecma_collection_t *bound_arg_list_p = ecma_new_collection ();
   ecma_collection_push_back (bound_arg_list_p, ECMA_VALUE_EMPTY);
 
-  ecma_object_t *target_obj_p = ecma_op_bound_function_get_argument_list (func_obj_p, bound_arg_list_p);
+  ecma_call_args_t call_args;
+  call_args.func_obj_p = ecma_op_bound_function_get_argument_list (call_args_p->func_obj_p, bound_arg_list_p);
 
-  ecma_collection_append (bound_arg_list_p, arguments_list_p, arguments_list_len);
-
+  ecma_collection_append (bound_arg_list_p, call_args_p->argv, call_args_p->argc);
   JERRY_ASSERT (!ecma_is_value_empty (bound_arg_list_p->buffer_p[0]));
 
-  ecma_value_t ret_value = ecma_op_function_call (target_obj_p,
-                                                  bound_arg_list_p->buffer_p[0],
-                                                  bound_arg_list_p->buffer_p + 1,
-                                                  (ecma_length_t) (bound_arg_list_p->item_count - 1));
+  call_args.this_value = bound_arg_list_p->buffer_p[0];
+  call_args.argv = bound_arg_list_p->buffer_p + 1;
+  call_args.argc = (ecma_length_t) (bound_arg_list_p->item_count - 1);
+
+  ecma_value_t ret_value = ecma_op_function_call (&call_args);
 
   ecma_collection_destroy (bound_arg_list_p);
 
   return ret_value;
 } /* ecma_op_function_call_bound */
+
+/**
+ * Create a new function call packed info from the given function call arguments
+ *
+ * @return ecma_call_args_t structure
+ */
+ecma_call_args_t
+ecma_op_function_make_args (ecma_object_t *func_obj_p, /**< Function object */
+                            ecma_value_t this_arg_value, /**< 'this' argument's value */
+                            const ecma_value_t *arguments_list_p, /**< arguments list */
+                            ecma_length_t arguments_list_len) /**< length of arguments list */
+{
+  ecma_call_args_t call_args =
+  {
+    .func_obj_p = func_obj_p,
+    .this_value = this_arg_value,
+    .argv = arguments_list_p,
+    .argc = arguments_list_len
+  };
+  return call_args;
+} /* ecma_op_function_make_args */
 
 /**
  * [[Call]] implementation for Function objects,
@@ -1106,27 +1114,26 @@ ecma_op_function_call_bound (ecma_object_t *func_obj_p, /**< Function object */
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
-                       ecma_value_t this_arg_value, /**< 'this' argument's value */
-                       const ecma_value_t *arguments_list_p, /**< arguments list */
-                       ecma_length_t arguments_list_len) /**< length of arguments list */
+ecma_op_function_call (ecma_call_args_t *call_args_p) /**< call arguments */
 {
-  JERRY_ASSERT (func_obj_p != NULL
-                && !ecma_is_lexical_environment (func_obj_p));
-  JERRY_ASSERT (ecma_op_object_is_callable (func_obj_p));
+  JERRY_ASSERT (call_args_p != NULL);
+  JERRY_ASSERT (call_args_p->func_obj_p != NULL
+                && !ecma_is_lexical_environment (call_args_p->func_obj_p));
+  JERRY_ASSERT (ecma_op_object_is_callable (call_args_p->func_obj_p));
 
   ECMA_CHECK_STACK_USAGE ();
 
-  const ecma_object_type_t type = ecma_get_object_type (func_obj_p);
+  const ecma_object_type_t type = ecma_get_object_type (call_args_p->func_obj_p);
 
 #if ENABLED (JERRY_BUILTIN_PROXY)
   if (ECMA_OBJECT_TYPE_IS_PROXY (type))
   {
-    return ecma_proxy_object_call (func_obj_p, this_arg_value, arguments_list_p, arguments_list_len);
+    return ecma_proxy_object_call (call_args_p);
   }
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
 #if ENABLED (JERRY_ESNEXT)
+  /* [[TODO]]: Store new.target as part of the call args */
   ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target);
   if (JERRY_UNLIKELY (!(JERRY_CONTEXT (status_flags) & ECMA_STATUS_DIRECT_EVAL)))
   {
@@ -1138,15 +1145,15 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
 
   if (JERRY_LIKELY (type == ECMA_OBJECT_TYPE_FUNCTION))
   {
-    result = ecma_op_function_call_simple (func_obj_p, this_arg_value, arguments_list_p, arguments_list_len);
+    result = ecma_op_function_call_simple (call_args_p);
   }
   else if (type == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
   {
-    result = ecma_op_function_call_external (func_obj_p, this_arg_value, arguments_list_p, arguments_list_len);
+    result = ecma_op_function_call_external (call_args_p);
   }
   else
   {
-    result = ecma_op_function_call_bound (func_obj_p, arguments_list_p, arguments_list_len);
+    result = ecma_op_function_call_bound (call_args_p);
   }
 
 #if ENABLED (JERRY_ESNEXT)
@@ -1222,7 +1229,9 @@ ecma_op_function_construct_external (ecma_object_t *func_obj_p, /**< Function ob
   JERRY_CONTEXT (current_new_target) = new_target_p;
 #endif /* ENABLED (JERRY_ESNEXT) */
 
-  ecma_value_t ret_value = ecma_op_function_call_external (func_obj_p, this_arg, arguments_list_p, arguments_list_len);
+  /* [[TODO]]: Rework internal/API external handler cb */
+  ecma_call_args_t call_args = ecma_op_function_make_args (func_obj_p, this_arg, arguments_list_p, arguments_list_len);
+  ecma_value_t ret_value = ecma_op_function_call_external (&call_args);
 
 #if ENABLED (JERRY_ESNEXT)
   JERRY_CONTEXT (current_new_target) = old_new_target_p;
@@ -1363,7 +1372,9 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
-  ecma_value_t ret_value = ecma_op_function_call_simple (func_obj_p, this_arg, arguments_list_p, arguments_list_len);
+  /* [[TODO]]: Rework [[Construct]] to reuse the call structure */
+  ecma_call_args_t call_args = ecma_op_function_make_args (func_obj_p, this_arg, arguments_list_p, arguments_list_len);
+  ecma_value_t ret_value = ecma_op_function_call_simple (&call_args);
 
 #if ENABLED (JERRY_ESNEXT)
   JERRY_CONTEXT (current_new_target) = old_new_target_p;

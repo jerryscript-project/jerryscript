@@ -268,3 +268,17 @@ try {
 }
 
 // Step 17: See (Inv-2) above.
+
+var result = [];
+var proxy = new Proxy({foo: 1, bar: 2}, {
+  getOwnPropertyDescriptor: function(o, v) {
+    result.push(v);
+    return Object.getOwnPropertyDescriptor(o, v);
+  }
+});
+
+Object.assign({}, proxy);
+
+assert(result.length === 2);
+assert(result[0] === "foo");
+assert(result[1] === "bar");

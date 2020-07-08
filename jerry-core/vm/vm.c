@@ -2922,6 +2922,20 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           ecma_fast_free_value (value);
           continue;
         }
+#if ENABLED (JERRY_ESNEXT)
+        case VM_OC_BRANCH_IF_NULLISH:
+        {
+          left_value = stack_top_p[-1];
+
+          if (!ecma_is_value_null (left_value) && !ecma_is_value_undefined (left_value))
+          {
+            byte_code_p = byte_code_start_p + branch_offset;
+            continue;
+          }
+          --stack_top_p;
+          continue;
+        }
+#endif /* ENABLED (JERRY_ESNEXT) */
         case VM_OC_PLUS:
         case VM_OC_MINUS:
         {

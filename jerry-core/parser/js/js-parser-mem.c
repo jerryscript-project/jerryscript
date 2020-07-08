@@ -622,6 +622,29 @@ parser_stack_pop (parser_context_t *context_p, /**< context */
 } /* parser_stack_pop */
 
 /**
+ * Initialize stack iterator.
+ */
+inline void
+parser_stack_iterator_init (parser_context_t *context_p, /**< context */
+                            parser_stack_iterator_t *iterator) /**< iterator */
+{
+  iterator->current_p = context_p->stack.first_p;
+  iterator->current_position = context_p->stack.last_position;
+} /* parser_stack_iterator_init */
+
+/**
+ * Read the next byte from the stack.
+ *
+ * @return byte
+ */
+inline uint8_t
+parser_stack_iterator_read_uint8 (parser_stack_iterator_t *iterator) /**< iterator */
+{
+  JERRY_ASSERT (iterator->current_position > 0 && iterator->current_position <= PARSER_STACK_PAGE_SIZE);
+  return iterator->current_p->bytes[iterator->current_position - 1];
+} /* parser_stack_iterator_read_uint8 */
+
+/**
  * Skip the next n bytes of the stack.
  */
 void

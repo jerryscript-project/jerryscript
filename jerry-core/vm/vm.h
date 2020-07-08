@@ -161,6 +161,9 @@ typedef enum
   VM_OC_ERROR,                   /**< error while the vm_loop is suspended */
 
   VM_OC_JUMP,                    /**< jump */
+#if ENABLED (JERRY_ESNEXT)
+  VM_OC_BRANCH_IF_NULLISH,       /** branch if undefined or null */
+#endif /* ENABLED (JERRY_ESNEXT) */
   VM_OC_BRANCH_IF_STRICT_EQUAL,  /**< branch if strict equal */
 
   /* These four opcodes must be in this order. */
@@ -296,6 +299,7 @@ typedef enum
 {
 #if !ENABLED (JERRY_ESNEXT)
   VM_OC_EXP = VM_OC_NONE,                     /**< exponentiation */
+  VM_OC_BRANCH_IF_NULLISH = VM_OC_NONE,       /** branch if undefined or null */
 #endif /* !ENABLED (JERRY_ESNEXT) */
 #if !ENABLED (JERRY_DEBUGGER)
   VM_OC_BREAKPOINT_ENABLED = VM_OC_NONE,      /**< enabled breakpoint for debugger is unused */

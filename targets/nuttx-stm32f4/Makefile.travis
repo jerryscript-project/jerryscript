@@ -33,7 +33,7 @@ install-kconfig:
 	mkdir -p $(LOCAL_INSTALL)
 	# FIXME: 'autoreconf --force --install' is a workaround after
 	#        https://bitbucket.org/nuttx/tools/commits/164450f982b404fdc2b3233db51dc3eaa1f08b7f
-	cd ../tools/kconfig-frontends && autoreconf --force --install && ./configure --disable-mconf --disable-nconf --disable-gconf --disable-qconf --disable-utils --disable-shared --enable-static --prefix=$(LOCAL_INSTALL)
+	cd ../tools/kconfig-frontends && autoreconf --force --install && ./configure --disable-mconf --disable-nconf --disable-gconf --disable-qconf --disable-shared --enable-static --prefix=$(LOCAL_INSTALL)
 	$(MAKE) -C ../tools/kconfig-frontends
 	$(MAKE) -C ../tools/kconfig-frontends install
 

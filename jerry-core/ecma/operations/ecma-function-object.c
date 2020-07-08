@@ -19,6 +19,7 @@
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
+#include "ecma-promise-object.h"
 #include "lit-char-helpers.h"
 #include "ecma-lex-env.h"
 #include "ecma-objects.h"
@@ -1615,6 +1616,25 @@ ecma_op_external_function_try_to_lazy_instantiate_property (ecma_object_t *objec
   {
     return ecma_op_lazy_instantiate_prototype_object (object_p);
   }
+
+#if ENABLED (JERRY_ESNEXT)
+  if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_LENGTH))
+  {
+    ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
+
+    if (ext_obj_p->u.external_handler_cb == ecma_promise_then_finally_cb
+        || ext_obj_p->u.external_handler_cb == ecma_promise_catch_finally_cb)
+    {
+      ecma_property_t *value_prop_p;
+      ecma_property_value_t *value_p = ecma_create_named_data_property (object_p,
+                                                                        property_name_p,
+                                                                        ECMA_PROPERTY_FLAG_CONFIGURABLE,
+                                                                        &value_prop_p);
+      value_p->value = ecma_make_uint32_value (1);
+      return value_prop_p;
+    }
+  }
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   return NULL;
 } /* ecma_op_external_function_try_to_lazy_instantiate_property */

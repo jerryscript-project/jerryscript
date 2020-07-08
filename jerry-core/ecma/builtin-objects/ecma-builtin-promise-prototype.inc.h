@@ -31,6 +31,7 @@ STRING_VALUE (LIT_GLOBAL_SYMBOL_TO_STRING_TAG,
 
 ROUTINE (LIT_MAGIC_STRING_THEN, ecma_builtin_promise_prototype_then, 2, 2)
 ROUTINE (LIT_MAGIC_STRING_CATCH, ecma_builtin_promise_prototype_catch, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_FINALLY, ecma_builtin_promise_prototype_finally, 1, 1)
 
 #endif /* ENABLED (JERRY_BUILTIN_PROMISE) */
 

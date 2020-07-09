@@ -1053,7 +1053,6 @@ ecma_builtin_object_object_assign (ecma_object_t *target_p, /**< target object *
 
     /* 5.b.iii */
     ecma_collection_t *props_p = ecma_op_object_get_property_names (from_obj_p, ECMA_LIST_CONVERT_FAST_ARRAYS
-                                                                                | ECMA_LIST_ENUMERABLE
                                                                                 | ECMA_LIST_SYMBOLS);
 #if ENABLED (JERRY_BUILTIN_PROXY)
     if (props_p == NULL)

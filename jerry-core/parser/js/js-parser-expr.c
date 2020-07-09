@@ -3487,7 +3487,8 @@ parser_process_group_expression (parser_context_t *context_p, /**< context */
   if (JERRY_UNLIKELY (context_p->token.type == LEXER_ASSIGN
                       && PARSER_IS_PUSH_LITERALS_WITH_THIS (context_p->last_cbc_opcode)
                       && context_p->last_cbc.literal_type == LEXER_IDENT_LITERAL
-                      && parser_is_assignment_expr (context_p)))
+                      && parser_is_assignment_expr (context_p)
+                      && *grouping_level_p != PARSE_EXPR_LEFT_HAND_SIDE))
   {
     parser_stack_push_uint8 (context_p, LEXER_ASSIGN_GROUP_EXPR);
   }

@@ -1397,25 +1397,6 @@ ecma_proxy_object_delete_property (ecma_object_t *obj_p, /**< proxy object */
 } /* ecma_proxy_object_delete_property */
 
 /**
- * The Proxy object [[Enumerate]] internal routine
- *
- * See also:
- *          ECMAScript v6, 9.5.11
- *
- * Note: Returned value must be freed with ecma_free_value.
- *
- * @return ECMA_VALUE_ERROR - if the operation fails
- *         ecma-object - otherwise
- */
-ecma_value_t
-ecma_proxy_object_enumerate (ecma_object_t *obj_p) /**< proxy object */
-{
-  JERRY_ASSERT (ECMA_OBJECT_IS_PROXY (obj_p));
-  JERRY_UNUSED (obj_p);
-  return ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Proxy.[[Enumerate]]"));
-} /* ecma_proxy_object_enumerate */
-
-/**
  * Helper method for the Proxy object [[OwnPropertyKeys]] operation
  *
  * See also:

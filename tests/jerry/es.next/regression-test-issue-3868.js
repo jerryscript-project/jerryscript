@@ -13,10 +13,10 @@
 // limitations under the License.
 
 var a = new Proxy({}, {});
+var reached = false;
 
-try {
-  for (var $ in a);
-  assert(false);
-} catch (e) {
-  assert(e instanceof TypeError);
+for (var $ in a) {
+  reached = true;
 }
+
+assert(reached === false);

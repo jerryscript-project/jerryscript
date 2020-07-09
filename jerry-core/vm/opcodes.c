@@ -340,6 +340,14 @@ opfunc_for_in (ecma_value_t left_value, /**< left value */
     return NULL;
   }
 
+#if ENABLED (JERRY_BUILTIN_PROXY)
+  if (ecma_is_value_object (left_value)
+      && ECMA_OBJECT_IS_PROXY (ecma_get_object_from_value (left_value)))
+  {
+    return NULL;
+  }
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+
   /* 4. */
   ecma_value_t obj_expr_value = ecma_op_to_object (left_value);
   /* ecma_op_to_object will only raise error on null/undefined values but those are handled above. */

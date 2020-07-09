@@ -92,9 +92,6 @@ ecma_value_t
 ecma_proxy_object_delete_property (ecma_object_t *obj_p,
                                    ecma_string_t *prop_name_p);
 
-ecma_value_t
-ecma_proxy_object_enumerate (ecma_object_t *obj_p);
-
 ecma_collection_t *
 ecma_proxy_object_own_property_keys (ecma_object_t *obj_p);
 

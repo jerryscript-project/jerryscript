@@ -14,9 +14,9 @@ Clone the necessary projects into a `jerry-nuttx` directory. The last tested wor
 mkdir jerry-nuttx && cd jerry-nuttx
 
 git clone https://github.com/jerryscript-project/jerryscript.git
-git clone https://bitbucket.org/nuttx/nuttx.git -b release/9.0
-git clone https://bitbucket.org/nuttx/apps.git -b release/9.0
-git clone https://github.com/texane/stlink.git -b v1.5.1
+git clone https://bitbucket.org/nuttx/nuttx.git -b releases/9.0
+git clone https://bitbucket.org/nuttx/apps.git -b releases/9.0
+git clone https://github.com/texane/stlink.git -b v1.5.1-patch
 ```
 
 The following directory structure is created after these commands:
@@ -108,7 +108,6 @@ cd nuttx-tools/kconfig-frontends
     --disable-nconf \
     --disable-gconf \
     --disable-qconf \
-    --disable-utils \
     --disable-shared \
     --enable-static \
     --prefix=${PWD}/install

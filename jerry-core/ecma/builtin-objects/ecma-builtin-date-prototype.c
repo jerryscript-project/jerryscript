@@ -162,28 +162,15 @@ ecma_builtin_date_prototype_to_json (ecma_value_t this_arg) /**< this argument *
       return ECMA_VALUE_NULL;
     }
   }
+  else
+  {
+    ecma_free_value (tv);
+  }
 
-  ecma_value_t ret_value = ECMA_VALUE_ERROR;
   ecma_object_t *value_obj_p = ecma_get_object_from_value (obj);
 
   /* 4. */
-  ecma_value_t to_iso = ecma_op_object_get_by_magic_id (value_obj_p, LIT_MAGIC_STRING_TO_ISO_STRING_UL);
-
-  if (!ECMA_IS_VALUE_ERROR (to_iso))
-  {
-    /* 5. */
-    if (!ecma_op_is_callable (to_iso))
-    {
-      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("'toISOString' is missing or not a function."));
-    }
-    /* 6. */
-    else
-    {
-      ret_value = ecma_op_invoke_by_magic_id (obj, LIT_MAGIC_STRING_TO_ISO_STRING_UL, NULL, 0);
-    }
-
-    ecma_free_value (to_iso);
-  }
+  ecma_value_t ret_value = ecma_op_invoke_by_magic_id (obj, LIT_MAGIC_STRING_TO_ISO_STRING_UL, NULL, 0);
 
   ecma_deref_object (value_obj_p);
 

@@ -30,6 +30,23 @@
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
+/**
+ * This object has a custom dispatch function.
+ */
+#define BUILTIN_CUSTOM_DISPATCH
+
+/**
+ * List of built-in routine identifiers.
+ */
+enum
+{
+  ECMA_SYMBOL_PROTOTYPE_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
+  ECMA_SYMBOL_PROTOTYPE_VALUE_OF, /**< ECMA-262 v11, 19.4.3.4 */
+  ECMA_SYMBOL_PROTOTYPE_TO_PRIMITIVE, /**< ECMA-262 v11, 19.4.3.5 */
+  ECMA_SYMBOL_PROTOTYPE_TO_STRING, /**< ECMA-262 v11, 19.4.3.3 */
+  ECMA_SYMBOL_PROTOTYPE_DESCRIPTION, /**< ECMA-262 v11, 19.4.3.2 */
+};
+
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-symbol-prototype.inc.h"
 #define BUILTIN_UNDERSCORED_ID symbol_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
@@ -45,49 +62,45 @@
  */
 
 /**
- * The Symbol.prototype object's 'toString' routine
- *
- * See also:
- *          ECMA-262 v6, 19.4.3.2
+ * Dispatcher of the Symbol built-in's routines
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
-static ecma_value_t
-ecma_builtin_symbol_prototype_object_to_string (ecma_value_t this_arg) /**< this argument */
+ecma_value_t
+ecma_builtin_symbol_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide routine
+                                                                     *   identifier */
+                                                ecma_value_t this_arg, /**< 'this' argument value */
+                                                const ecma_value_t arguments_list[], /**< list of arguments
+                                                                             *   passed to routine */
+                                                ecma_length_t arguments_number) /**< length of arguments' list */
 {
-  return ecma_symbol_to_string_helper (this_arg, true);
-} /* ecma_builtin_symbol_prototype_object_to_string */
+  JERRY_UNUSED_2 (arguments_list, arguments_number);
 
-/**
- * The Symbol.prototype object's 'valueOf' routine
- *
- * See also:
- *          ECMA-262 v6, 19.4.3.3
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_symbol_prototype_object_value_of (ecma_value_t this_arg) /**< this argument */
-{
-  return ecma_symbol_to_string_helper (this_arg, false);
-} /* ecma_builtin_symbol_prototype_object_value_of */
+  ecma_value_t sym = ecma_symbol_this_value (this_arg);
 
-/**
- * The Symbol.prototype object's '@@toPrimitive' routine
- *
- * See also:
- *          ECMA-262 v6, 19.4.3.3
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_symbol_prototype_object_to_primitive (ecma_value_t this_arg) /**< this argument */
-{
-  return ecma_builtin_symbol_prototype_object_value_of (this_arg);
-} /* ecma_builtin_symbol_prototype_object_to_primitive */
+  if (ECMA_IS_VALUE_ERROR (sym))
+  {
+    return sym;
+  }
+
+  if (builtin_routine_id < ECMA_SYMBOL_PROTOTYPE_TO_STRING)
+  {
+    return ecma_copy_value (sym);
+  }
+
+  if (builtin_routine_id == ECMA_SYMBOL_PROTOTYPE_TO_STRING)
+  {
+    return ecma_get_symbol_descriptive_string (sym);
+  }
+
+  JERRY_ASSERT (builtin_routine_id == ECMA_SYMBOL_PROTOTYPE_DESCRIPTION);
+  ecma_string_t *symbol_p = ecma_get_symbol_from_value (sym);
+  ecma_string_t *desc_p = ecma_get_symbol_description (symbol_p);
+  ecma_ref_ecma_string (desc_p);
+
+  return ecma_make_string_value (desc_p);
+} /* ecma_builtin_symbol_prototype_dispatch_routine */
 
 /**
  * @}

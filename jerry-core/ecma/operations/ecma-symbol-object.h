@@ -39,7 +39,7 @@ ecma_string_t *
 ecma_get_symbol_description (ecma_string_t *symbol_p);
 
 ecma_value_t
-ecma_symbol_to_string_helper (ecma_value_t this_arg, bool is_to_string);
+ecma_symbol_this_value (ecma_value_t this_arg);
 
 ecma_value_t
 ecma_get_symbol_descriptive_string (ecma_value_t symbol_value);

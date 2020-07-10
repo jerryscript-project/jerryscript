@@ -42,7 +42,6 @@ typedef enum
 typedef enum
 {
   ECMA_PROMISE_EXECUTOR_FUNCTION, /**< the executor is a function, it is for the usual constructor */
-  ECMA_PROMISE_EXECUTOR_OBJECT, /**< the executor is an object, it is for the `then` routine */
   ECMA_PROMISE_EXECUTOR_EMPTY /**< the executor is empty, it is for external C API */
 } ecma_promise_executor_type_t;
 
@@ -88,7 +87,7 @@ uint16_t ecma_promise_get_flags (ecma_object_t *promise_p);
 ecma_value_t ecma_promise_get_result (ecma_object_t *promise_p);
 void ecma_reject_promise (ecma_value_t promise, ecma_value_t reason);
 void ecma_fulfill_promise (ecma_value_t promise, ecma_value_t value);
-ecma_value_t ecma_promise_new_capability (ecma_value_t constructor);
+ecma_object_t *ecma_promise_new_capability (ecma_value_t constructor);
 ecma_value_t ecma_promise_reject_or_resolve (ecma_value_t this_arg, ecma_value_t value, bool is_resolve);
 ecma_value_t ecma_promise_then (ecma_value_t promise, ecma_value_t on_fulfilled, ecma_value_t on_rejected);
 void ecma_promise_async_then (ecma_value_t promise, ecma_value_t executable_object);
@@ -96,6 +95,13 @@ ecma_value_t ecma_promise_async_await (ecma_extended_object_t *async_generator_o
 void ecma_promise_create_resolving_functions (ecma_object_t *object_p, ecma_promise_resolving_functions_t *funcs,
                                               bool create_already_resolved);
 void ecma_promise_free_resolving_functions (ecma_promise_resolving_functions_t *funcs);
+
+ecma_length_t ecma_promise_remaining_inc_or_dec (ecma_value_t remaining, bool is_inc);
+ecma_value_t ecma_promise_all_handler_cb (const ecma_value_t function_obj, const ecma_value_t this_val,
+                                          const ecma_value_t args_p[], const ecma_length_t args_count);
+
+ecma_value_t ecma_op_get_capabilities_executor_cb (const ecma_value_t function_obj, const ecma_value_t this_val,
+                                                   const ecma_value_t args_p[], const ecma_length_t args_count);
 
 /**
  * @}

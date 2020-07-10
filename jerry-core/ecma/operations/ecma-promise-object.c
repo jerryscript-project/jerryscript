@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include "ecma-alloc.h"
+#include "ecma-array-object.h"
 #include "ecma-boolean-object.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
@@ -362,63 +364,6 @@ ecma_promise_resolve_handler (const ecma_value_t function, /**< the function its
 } /* ecma_promise_resolve_handler */
 
 /**
- * CapabilitiesExecutor Function.
- *
- * See also: ES2015 25.4.1.5.1
- *
- * @return ecma value of undefined or typerror.
- *         Returned value must be freed with ecma_free_value
- */
-static ecma_value_t
-ecma_call_builtin_executor (ecma_object_t *executor_p, /**< the executor object */
-                            ecma_value_t resolve_func, /**< the resolve function */
-                            ecma_value_t reject_func) /**< the reject function */
-{
-  ecma_string_t *capability_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_CAPABILITY);
-  ecma_string_t *resolve_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_RESOLVE);
-  ecma_string_t *reject_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REJECT);
-
-  /* 2. */
-  ecma_value_t capability = ecma_op_object_get (executor_p, capability_str_p);
-  /* 3. */
-  ecma_value_t resolve = ecma_op_object_get (ecma_get_object_from_value (capability), resolve_str_p);
-
-  if (resolve != ECMA_VALUE_UNDEFINED)
-  {
-    ecma_free_value (resolve);
-    ecma_free_value (capability);
-
-    return ecma_raise_type_error (ECMA_ERR_MSG ("'resolve' function should be undefined."));
-  }
-
-  /* 4. */
-  ecma_value_t reject = ecma_op_object_get (ecma_get_object_from_value (capability), reject_str_p);
-
-  if (reject != ECMA_VALUE_UNDEFINED)
-  {
-    ecma_free_value (reject);
-    ecma_free_value (capability);
-
-    return ecma_raise_type_error (ECMA_ERR_MSG ("'reject' function should be undefined."));
-  }
-
-  /* 5. */
-  ecma_op_object_put (ecma_get_object_from_value (capability),
-                      resolve_str_p,
-                      resolve_func,
-                      false);
-  /* 6. */
-  ecma_op_object_put (ecma_get_object_from_value (capability),
-                      reject_str_p,
-                      reject_func,
-                      false);
-
-  ecma_free_value (capability);
-
-  return ECMA_VALUE_UNDEFINED;
-} /* ecma_call_builtin_executor */
-
-/**
  * Helper function for PromiseCreateResovingFucntions.
  *
  * See also: ES2015 25.4.1.3 2. - 7.
@@ -561,14 +506,6 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
                                         argv,
                                         2);
   }
-  else if (type == ECMA_PROMISE_EXECUTOR_OBJECT)
-  {
-    JERRY_ASSERT (ecma_is_value_object (executor));
-
-    completion = ecma_call_builtin_executor (ecma_get_object_from_value (executor),
-                                             funcs.resolve,
-                                             funcs.reject);
-  }
   else
   {
     JERRY_ASSERT (type == ECMA_PROMISE_EXECUTOR_EMPTY);
@@ -604,6 +541,86 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
 } /* ecma_op_create_promise_object */
 
 /**
+ * Helper function for increase or decrease the remaining count.
+ *
+ * @return the current remaining count after increase or decrease.
+ */
+ecma_length_t
+ecma_promise_remaining_inc_or_dec (ecma_value_t remaining, /**< the remaining count */
+                                   bool is_inc) /**< whether to increase the count */
+{
+  JERRY_ASSERT (ecma_is_value_object (remaining));
+
+  ecma_object_t *remaining_p = ecma_get_object_from_value (remaining);
+  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) remaining_p;
+
+  JERRY_ASSERT (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_NUMBER_UL);
+
+  JERRY_ASSERT (ecma_is_value_integer_number (ext_object_p->u.class_prop.u.value));
+
+  ecma_length_t current = (ecma_length_t) ecma_get_integer_from_value (ext_object_p->u.class_prop.u.value);
+
+  if (is_inc)
+  {
+    current++;
+  }
+  else
+  {
+    current--;
+  }
+  ext_object_p->u.class_prop.u.value = ecma_make_uint32_value (current);
+
+  return current;
+} /* ecma_promise_remaining_inc_or_dec */
+
+/**
+ * Native handler for Promise.all Resolve Element Function.
+ *
+ * See also:
+ *         ES2015 25.4.4.1.2
+ *
+ * @return ecma value of undefined.
+ */
+ecma_value_t
+ecma_promise_all_handler_cb (const ecma_value_t function_obj, /**< the function itself */
+                             const ecma_value_t this_val, /**< this_arg of the function */
+                             const ecma_value_t args_p[], /**< argument list */
+                             const ecma_length_t args_count) /**< argument number */
+{
+  JERRY_UNUSED (this_val);
+  JERRY_UNUSED (args_count);
+  ecma_promise_all_executor_t *executor_p = (ecma_promise_all_executor_t *) ecma_get_object_from_value (function_obj);
+
+  /* 1 - 2. */
+  if (executor_p->index == 0)
+  {
+    return ECMA_VALUE_UNDEFINED;
+  }
+
+  /* 8. */
+  ecma_op_object_put_by_uint32_index (ecma_get_object_from_value (executor_p->values),
+                                      (uint32_t) (executor_p->index - 1),
+                                      args_p[0],
+                                      false);
+  /* 3. */
+  executor_p->index = 0;
+
+  /* 9-10. */
+  ecma_value_t ret = ECMA_VALUE_UNDEFINED;
+  if (ecma_promise_remaining_inc_or_dec (executor_p->remaining_elements, false) == 0)
+  {
+    ecma_value_t capability = executor_p->capability;
+    ecma_promise_capabality_t *capability_p = (ecma_promise_capabality_t *) ecma_get_object_from_value (capability);
+    ret = ecma_op_function_call (ecma_get_object_from_value (capability_p->resolve),
+                                 ECMA_VALUE_UNDEFINED,
+                                 &executor_p->values,
+                                 1);
+  }
+
+  return ret;
+} /* ecma_promise_all_handler_cb */
+
+/**
  * 25.4.1.5.1 GetCapabilitiesExecutor Functions
  *
  * Checks and sets a promiseCapability's resolve and reject properties.
@@ -611,58 +628,39 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
  * @return ECMA_VALUE_UNDEFINED or TypeError
  *         returned value must be freed with ecma_free_value
  */
-static ecma_value_t
+ecma_value_t
 ecma_op_get_capabilities_executor_cb (const ecma_value_t function_obj, /**< the function itself */
                                       const ecma_value_t this_val, /**< this_arg of the function */
                                       const ecma_value_t args_p[], /**< argument list */
                                       const ecma_length_t args_count) /**< argument number */
 {
   JERRY_UNUSED (this_val);
-  /* 1. */
-  ecma_value_t capability = ecma_op_object_get_by_magic_id (ecma_get_object_from_value (function_obj),
-                                                            LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_CAPABILITY);
-  JERRY_ASSERT (ecma_is_value_object (capability));
+  JERRY_ASSERT (args_count >= 2);
+
+  ecma_promise_capability_executor_t *executor_p;
+  executor_p = (ecma_promise_capability_executor_t *) ecma_get_object_from_value (function_obj);
 
   /* 2. */
-  ecma_object_t *capability_obj_p = ecma_get_object_from_value (capability);
+  ecma_object_t *capability_obj_p = ecma_get_object_from_value (executor_p->capability);
+  JERRY_ASSERT (ecma_object_class_is (capability_obj_p, LIT_INTERNAL_MAGIC_PROMISE_CAPABILITY));
+  ecma_promise_capabality_t *capability_p = (ecma_promise_capabality_t *) capability_obj_p;
 
   /* 3. */
-  ecma_value_t resolve = ecma_op_object_get_by_magic_id (capability_obj_p,
-                                                         LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_RESOLVE);
-
-  if (!ecma_is_value_undefined (resolve))
+  if (!ecma_is_value_undefined (capability_p->resolve))
   {
-    ecma_free_value (resolve);
-    ecma_deref_object (capability_obj_p);
-
     return ecma_raise_type_error (ECMA_ERR_MSG ("Resolve must be undefined"));
   }
 
   /* 4. */
-  ecma_value_t reject = ecma_op_object_get_by_magic_id (capability_obj_p,
-                                                        LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REJECT);
-
-  if (!ecma_is_value_undefined (reject))
+  if (!ecma_is_value_undefined (capability_p->reject))
   {
-    ecma_free_value (reject);
-    ecma_deref_object (capability_obj_p);
-
     return ecma_raise_type_error (ECMA_ERR_MSG ("Reject must be undefined"));
   }
 
   /* 5. */
-  ecma_op_object_put (capability_obj_p,
-                      ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_RESOLVE),
-                      args_count > 0 ? args_p[0] : ECMA_VALUE_UNDEFINED,
-                      false);
-
+  capability_p->resolve = args_p[0];
   /* 6. */
-  ecma_op_object_put (capability_obj_p,
-                      ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REJECT),
-                      args_count > 1 ? args_p[1] : ECMA_VALUE_UNDEFINED,
-                      false);
-
-  ecma_deref_object (capability_obj_p);
+  capability_p->reject = args_p[1];
 
   /* 7. */
   return ECMA_VALUE_UNDEFINED;
@@ -673,34 +671,44 @@ ecma_op_get_capabilities_executor_cb (const ecma_value_t function_obj, /**< the 
  *
  * See also: ES2015 25.4.1.5
  *
- * @return ecma value of the new PromiseCapability
- *         Returned value must be freed with ecma_free_value
+ * @return NULL - if the operation raises error
+ *         new PromiseCapability object - otherwise
  */
-ecma_value_t
+ecma_object_t *
 ecma_promise_new_capability (ecma_value_t constructor)
 {
   /* 1. */
   if (!ecma_is_constructor (constructor))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid capability"));
+    ecma_raise_type_error (ECMA_ERR_MSG ("Invalid capability"));
+    return NULL;
   }
 
   ecma_object_t *constructor_obj_p = ecma_get_object_from_value (constructor);
-  /* 3. */
-  ecma_object_t *capability_p = ecma_op_create_object_object_noarg ();
 
-  ecma_string_t *capability_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_CAPABILITY);
-  ecma_string_t *promise_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_PROMISE);
+  /* 3. */
+  ecma_object_t *capability_obj_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE),
+                                                        sizeof (ecma_promise_capabality_t),
+                                                        ECMA_OBJECT_TYPE_CLASS);
+
+  ecma_promise_capabality_t *capability_p = (ecma_promise_capabality_t *) capability_obj_p;
+  capability_p->header.u.class_prop.class_id = LIT_INTERNAL_MAGIC_PROMISE_CAPABILITY;
+  capability_p->header.u.class_prop.u.promise = ECMA_VALUE_UNDEFINED;
+  capability_p->resolve = ECMA_VALUE_UNDEFINED;
+  capability_p->reject = ECMA_VALUE_UNDEFINED;
+
   /* 4. */
-  ecma_object_t *executor_p = ecma_op_create_external_function_object (ecma_op_get_capabilities_executor_cb);
-  ecma_value_t executor = ecma_make_object_value (executor_p);
+  ecma_object_t *executor_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE),
+                                                  sizeof (ecma_promise_capability_executor_t),
+                                                  ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+
   /* 5. */
-  ecma_op_object_put (executor_p,
-                      capability_str_p,
-                      ecma_make_object_value (capability_p),
-                      false);
+  ecma_promise_capability_executor_t *executor_func_p = (ecma_promise_capability_executor_t *) executor_p;
+  executor_func_p->header.u.external_handler_cb = ecma_op_get_capabilities_executor_cb;
+  executor_func_p->capability = ecma_make_object_value (capability_obj_p);
 
   /* 6. */
+  ecma_value_t executor = ecma_make_object_value (executor_p);
   ecma_value_t promise = ecma_op_function_construct (constructor_obj_p,
                                                      constructor_obj_p,
                                                      &executor,
@@ -710,44 +718,35 @@ ecma_promise_new_capability (ecma_value_t constructor)
   /* 7. */
   if (ECMA_IS_VALUE_ERROR (promise))
   {
-    ecma_deref_object (capability_p);
-    return promise;
+    ecma_deref_object (capability_obj_p);
+    return NULL;
+  }
+
+  /* 8. */
+  if (!ecma_op_is_callable (capability_p->resolve))
+  {
+    ecma_free_value (promise);
+    ecma_deref_object (capability_obj_p);
+    ecma_raise_type_error (ECMA_ERR_MSG ("'resolve' parameter must be callable."));
+    return NULL;
+  }
+
+  /* 9. */
+  if (!ecma_op_is_callable (capability_p->reject))
+  {
+    ecma_free_value (promise);
+    ecma_deref_object (capability_obj_p);
+    ecma_raise_type_error (ECMA_ERR_MSG ("'reject' parameter must be callable."));
+    return NULL;
   }
 
   /* 10. */
-  ecma_op_object_put (capability_p,
-                      promise_str_p,
-                      promise,
-                      false);
+  capability_p->header.u.class_prop.u.promise = promise;
 
   ecma_free_value (promise);
 
-  /* 8. */
-  ecma_string_t *resolve_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_RESOLVE);
-  ecma_value_t resolve = ecma_op_object_get (capability_p, resolve_str_p);
-
-  if (!ecma_op_is_callable (resolve))
-  {
-    ecma_free_value (resolve);
-    ecma_deref_object (capability_p);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("'resolve' parameter must be callable."));
-  }
-
-  ecma_free_value (resolve);
-  /* 9. */
-  ecma_string_t *reject_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REJECT);
-  ecma_value_t reject = ecma_op_object_get (capability_p, reject_str_p);
-
-  if (!ecma_op_is_callable (reject))
-  {
-    ecma_free_value (reject);
-    ecma_deref_object (capability_p);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("'reject' parameter must be callable."));
-  }
-
-  ecma_free_value (reject);
   /* 11. */
-  return ecma_make_object_value (capability_p);
+  return capability_obj_p;
 } /* ecma_promise_new_capability */
 
 /**
@@ -788,32 +787,21 @@ ecma_promise_reject_or_resolve (ecma_value_t this_arg, /**< "this" argument */
     }
   }
 
-  ecma_value_t capability = ecma_promise_new_capability (this_arg);
+  ecma_object_t *capability_obj_p = ecma_promise_new_capability (this_arg);
 
-  if (ECMA_IS_VALUE_ERROR (capability))
+  if (JERRY_UNLIKELY (capability_obj_p == NULL))
   {
-    return capability;
+    return ECMA_VALUE_ERROR;
   }
 
-  ecma_string_t *property_str_p;
+  ecma_promise_capabality_t *capability_p = (ecma_promise_capabality_t *) capability_obj_p;
 
-  if (is_resolve)
-  {
-    property_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_RESOLVE);
-  }
-  else
-  {
-    property_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REJECT);
-  }
-
-  ecma_value_t func = ecma_op_object_get (ecma_get_object_from_value (capability), property_str_p);
+  ecma_value_t func = is_resolve ? capability_p->resolve : capability_p->reject;
 
   ecma_value_t call_ret = ecma_op_function_call (ecma_get_object_from_value (func),
                                                  ECMA_VALUE_UNDEFINED,
                                                  &value,
                                                  1);
-
-  ecma_free_value (func);
 
   if (ECMA_IS_VALUE_ERROR (call_ret))
   {
@@ -822,9 +810,8 @@ ecma_promise_reject_or_resolve (ecma_value_t this_arg, /**< "this" argument */
 
   ecma_free_value (call_ret);
 
-  ecma_string_t *promise_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_PROMISE);
-  ecma_value_t promise = ecma_op_object_get (ecma_get_object_from_value (capability), promise_str_p);
-  ecma_free_value (capability);
+  ecma_value_t promise = ecma_copy_value (capability_p->header.u.class_prop.u.promise);
+  ecma_deref_object (capability_obj_p);
 
   return promise;
 } /* ecma_promise_reject_or_resolve */
@@ -842,9 +829,11 @@ static ecma_value_t
 ecma_promise_do_then (ecma_value_t promise, /**< the promise which call 'then' */
                       ecma_value_t on_fulfilled, /**< on_fulfilled function */
                       ecma_value_t on_rejected, /**< on_rejected function */
-                      ecma_value_t result_capability) /**< promise capability */
+                      ecma_object_t *result_capability_obj_p) /**< promise capability */
 {
-  ecma_string_t *promise_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_PROMISE);
+  JERRY_ASSERT (ecma_object_class_is (result_capability_obj_p, LIT_INTERNAL_MAGIC_PROMISE_CAPABILITY));
+
+  ecma_promise_capabality_t *capability_p = (ecma_promise_capabality_t *) result_capability_obj_p;
 
   /* 3. boolean true indicates "indentity" */
   if (!ecma_op_is_callable (on_fulfilled))
@@ -867,7 +856,7 @@ ecma_promise_do_then (ecma_value_t promise, /**< the promise which call 'then' *
   {
     /* 7. */
     ecma_value_t capability_with_tag;
-    ECMA_SET_NON_NULL_POINTER_TAG (capability_with_tag, ecma_get_object_from_value (result_capability), 0);
+    ECMA_SET_NON_NULL_POINTER_TAG (capability_with_tag, result_capability_obj_p, 0);
 
     if (on_fulfilled != ECMA_VALUE_TRUE)
     {
@@ -895,19 +884,19 @@ ecma_promise_do_then (ecma_value_t promise, /**< the promise which call 'then' *
   {
     /* 8. */
     ecma_value_t value = ecma_promise_get_result (promise_obj_p);
-    ecma_enqueue_promise_reaction_job (result_capability, on_fulfilled, value);
+    ecma_enqueue_promise_reaction_job (ecma_make_object_value (result_capability_obj_p), on_fulfilled, value);
     ecma_free_value (value);
   }
   else
   {
     /* 9. */
     ecma_value_t reason = ecma_promise_get_result (promise_obj_p);
-    ecma_enqueue_promise_reaction_job (result_capability, on_rejected, reason);
+    ecma_enqueue_promise_reaction_job (ecma_make_object_value (result_capability_obj_p), on_rejected, reason);
     ecma_free_value (reason);
   }
 
   /* 10. */
-  return ecma_op_object_get (ecma_get_object_from_value (result_capability), promise_str_p);
+  return ecma_copy_value (capability_p->header.u.class_prop.u.promise);
 } /* ecma_promise_do_then */
 
 /**
@@ -940,16 +929,16 @@ ecma_promise_then (ecma_value_t promise, /**< the promise which call 'then' */
     return species;
   }
 
-  ecma_value_t result_capability = ecma_promise_new_capability (species);
+  ecma_object_t *result_capability_obj_p = ecma_promise_new_capability (species);
   ecma_free_value (species);
 
-  if (ECMA_IS_VALUE_ERROR (result_capability))
+  if (JERRY_UNLIKELY (result_capability_obj_p == NULL))
   {
-    return result_capability;
+    return ECMA_VALUE_ERROR;
   }
 
-  ecma_value_t ret = ecma_promise_do_then (promise, on_fulfilled, on_rejected, result_capability);
-  ecma_free_value (result_capability);
+  ecma_value_t ret = ecma_promise_do_then (promise, on_fulfilled, on_rejected, result_capability_obj_p);
+  ecma_deref_object (result_capability_obj_p);
 
   return ret;
 } /* ecma_promise_then */

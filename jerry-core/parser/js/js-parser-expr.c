@@ -2216,8 +2216,13 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
 
         if (context_p->stack_top_uint8 == LEXER_KEYW_NEW)
         {
-          parser_stack_pop_uint8 (context_p);
-          opcode = CBC_NEW;
+#if ENABLED (JERRY_ESNEXT)
+          if (context_p->token.type == LEXER_LEFT_PAREN)
+#endif /* ENABLED (JERRY_ESNEXT) */
+          {
+            parser_stack_pop_uint8 (context_p);
+            opcode = CBC_NEW;
+          }
         }
         else
         {

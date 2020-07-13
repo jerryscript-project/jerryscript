@@ -1683,8 +1683,7 @@ ecma_regexp_exec_helper (ecma_object_t *regexp_object_p, /**< RegExp object */
   uint32_t index = 0;
   if (bc_p->header.status_flags & (RE_FLAG_GLOBAL | RE_FLAG_STICKY))
   {
-    ecma_string_t *lastindex_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL);
-    ecma_value_t lastindex_value = ecma_op_object_get_own_data_prop (regexp_object_p, lastindex_str_p);
+    ecma_value_t lastindex_value = ecma_op_object_get_by_magic_id (regexp_object_p, LIT_MAGIC_STRING_LASTINDEX_UL);
 
     ecma_number_t lastindex_num;
     ret_value = ecma_op_to_integer (lastindex_value, &lastindex_num);
@@ -1710,7 +1709,7 @@ ecma_regexp_exec_helper (ecma_object_t *regexp_object_p, /**< RegExp object */
     if (index > input_length)
     {
       ret_value = ecma_op_object_put (regexp_object_p,
-                                      lastindex_str_p,
+                                      ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
                                       ecma_make_integer_value (0),
                                       true);
 
@@ -2804,8 +2803,7 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
 
       if (sticky && !global)
       {
-        ecma_string_t *lastindex_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL);
-        ecma_value_t lastindex_value = ecma_op_object_get_own_data_prop (this_obj_p, lastindex_str_p);
+        ecma_value_t lastindex_value = ecma_op_object_get_by_magic_id (this_obj_p, LIT_MAGIC_STRING_LASTINDEX_UL);
 
         result = ecma_op_to_length (lastindex_value, &replace_ctx.index);
         ecma_free_value (lastindex_value);

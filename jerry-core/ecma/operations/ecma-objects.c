@@ -758,39 +758,6 @@ ecma_op_object_find (ecma_object_t *object_p, /**< the object */
 } /* ecma_op_object_find */
 
 /**
- * Get own property by name
- *
- * Note: property must be an existing data property
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
- */
-inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
-ecma_op_object_get_own_data_prop (ecma_object_t *object_p, /**< the object */
-                                  ecma_string_t *property_name_p) /**< property name */
-{
-  JERRY_ASSERT (ecma_is_lexical_environment (object_p)
-                || !ecma_op_object_is_fast_array (object_p));
-
-  ecma_value_t result = ecma_op_object_find_own (ecma_make_object_value (object_p),
-                                                 object_p,
-                                                 property_name_p);
-
-#ifndef JERRY_NDEBUG
-  /* Because ecma_op_object_find_own might create a property
-   * this check is executed after the function return. */
-  ecma_property_t *property_p = ecma_find_named_property (object_p,
-                                                          property_name_p);
-
-  JERRY_ASSERT (property_p != NULL
-                && ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA
-                && !ecma_is_property_configurable (*property_p));
-#endif /* !JERRY_NDEBUG */
-
-  return result;
-} /* ecma_op_object_get_own_data_prop */
-
-/**
  * [[Get]] operation of ecma object
  *
  * This function returns the value of a named property, or undefined

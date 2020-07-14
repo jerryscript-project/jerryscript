@@ -2816,6 +2816,12 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
     {
       flag = RE_FLAG_STICKY;
     }
+#if ENABLED (JERRY_ESNEXT)
+    else if (source_p[0] == LIT_CHAR_LOWERCASE_S)
+    {
+      flag = RE_FLAG_DOTALL;
+    }
+#endif /* ENABLED (JERRY_ESNEXT) */
 
     if (flag == 0)
     {

@@ -98,6 +98,13 @@ ecma_regexp_parse_flags (ecma_string_t *flags_str_p, /**< Input string with flag
         flag = RE_FLAG_UNICODE;
         break;
       }
+#if ENABLED (JERRY_ESNEXT)
+      case 's':
+      {
+        flag = RE_FLAG_DOTALL;
+        break;
+      }
+#endif /* ENABLED (JERRY_ESNEXT) */
       default:
       {
         flag = RE_FLAG_EMPTY;
@@ -1505,7 +1512,9 @@ class_found:
 
         const lit_code_point_t cp = ecma_regexp_unicode_advance (&str_curr_p, re_ctx_p->input_end_p);
 
-        if (JERRY_UNLIKELY (cp <= LIT_UTF16_CODE_UNIT_MAX && lit_char_is_line_terminator ((ecma_char_t) cp)))
+        if (!(re_ctx_p->flags & RE_FLAG_DOTALL)
+            && JERRY_UNLIKELY (cp <= LIT_UTF16_CODE_UNIT_MAX
+                               && lit_char_is_line_terminator ((ecma_char_t) cp)))
         {
           goto fail;
         }
@@ -1521,8 +1530,13 @@ class_found:
         }
 
         const ecma_char_t ch = lit_cesu8_read_next (&str_curr_p);
+#if !ENABLED (JERRY_ESNEXT)
+        bool has_dot_all_flag = false;
+#else /* ENABLED (JERRY_ESNEXT) */
+        bool has_dot_all_flag = (re_ctx_p->flags & RE_FLAG_DOTALL) != 0;
+#endif /* !ENABLED (JERRY_ESNEXT) */
 
-        if (lit_char_is_line_terminator (ch))
+        if (!has_dot_all_flag && lit_char_is_line_terminator (ch))
         {
           goto fail;
         }

@@ -84,18 +84,10 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
  */
 void
 ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p, /**< a String object */
-                                         uint32_t opts, /**< listing options using flags
-                                                         *   from ecma_list_properties_options_t */
-                                         ecma_collection_t *main_collection_p, /**< 'main' collection */
-                                         ecma_collection_t *non_enum_collection_p) /**< skipped
-                                                                                    *   'non-enumerable'
-                                                                                    *   collection */
+                                         ecma_collection_t *prop_names_p, /**< prop name collection */
+                                         ecma_property_counter_t *prop_counter_p)  /**< prop counter */
 {
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_CLASS);
-
-  ecma_collection_t *for_enumerable_p = main_collection_p;
-
-  ecma_collection_t *for_non_enumerable_p = (opts & ECMA_LIST_ENUMERABLE) ? non_enum_collection_p : main_collection_p;
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
   JERRY_ASSERT (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_STRING_UL);
@@ -109,13 +101,13 @@ ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p, /**< a String obj
     ecma_string_t *name_p = ecma_new_ecma_string_from_uint32 (i);
 
     /* the properties are enumerable (ECMA-262 v5, 15.5.5.2.9) */
-    ecma_collection_push_back (for_enumerable_p, ecma_make_string_value (name_p));
+    ecma_collection_push_back (prop_names_p, ecma_make_string_value (name_p));
   }
 
-  if ((opts & ECMA_LIST_ARRAY_INDICES) == 0)
-  {
-    ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
-  }
+  prop_counter_p->array_index_named_props += length;
+
+  ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
+  prop_counter_p->string_named_props++;
 } /* ecma_op_string_list_lazy_property_names */
 
 /**

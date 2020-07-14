@@ -39,7 +39,7 @@ assert(getProperties(func) == "dummy");
 
 var bound_func = (function() {}).bind(null);
 Object.setPrototypeOf(bound_func, prototype_obj);
-assert(getProperties(bound_func) == "dummy prototype");
+assert(getProperties(bound_func) == "dummy caller arguments prototype");
 
 // 'print' is an external function
 Object.setPrototypeOf(print, prototype_obj);

@@ -69,10 +69,15 @@
   <test id="built-ins/Promise/race/species-get-error.js"><reason></reason></test>
   <test id="built-ins/Proxy/enumerate/call-parameters.js"><reason></reason></test>
   <test id="built-ins/Proxy/enumerate/return-is-abrupt.js"><reason></reason></test>
+  <test id="built-ins/Proxy/enumerate/result-not-an-object-throws-boolean.js"><reason>For-in supports proxy</reason></test>
+  <test id="built-ins/Proxy/enumerate/result-not-an-object-throws-number.js"><reason>For-in supports proxy</reason></test>
+  <test id="built-ins/Proxy/enumerate/result-not-an-object-throws-string.js"><reason>For-in supports proxy</reason></test>
+  <test id="built-ins/Proxy/enumerate/result-not-an-object-throws-symbol.js"><reason>For-in supports proxy</reason></test>
+  <test id="built-ins/Proxy/enumerate/result-not-an-object-throws-undefined.js"><reason>For-in supports proxy</reason></test>
+  <test id="built-ins/Proxy/enumerate/null-handler.js"><reason>For-in supports proxy</reason></test>
   <test id="built-ins/Proxy/enumerate/return-trap-result.js"><reason></reason></test>
   <test id="built-ins/Proxy/enumerate/return-trap-result-no-value.js"><reason></reason></test>
-  <test id="built-ins/Proxy/enumerate/trap-is-undefined.js"><reason></reason></test>
-  <test id="built-ins/Proxy/getOwnPropertyDescriptor/trap-is-undefined.js"><reason></reason></test>
+  <test id="built-ins/Proxy/enumerate/trap-is-not-callable.js"><reason>For-in supports proxy</reason></test>
   <test id="built-ins/Reflect/enumerate/does-not-iterate-over-symbol-properties.js"><reason></reason></test>
   <test id="built-ins/Reflect/enumerate/enumerate.js"><reason></reason></test>
   <test id="built-ins/Reflect/enumerate/length.js"><reason></reason></test>

@@ -694,7 +694,8 @@ ecma_builtin_json_internalize_property (ecma_object_t *reviver_p, /**< reviver f
     /* 3.d */
     else
     {
-      ecma_collection_t *props_p = ecma_op_object_get_property_names (object_p, ECMA_LIST_ENUMERABLE);
+      ecma_collection_t *props_p = ecma_op_object_get_enumerable_property_names (object_p,
+                                                                                 ECMA_ENUMERABLE_PROPERTY_KEYS);
 
       JERRY_ASSERT (props_p != NULL);
 
@@ -983,7 +984,7 @@ ecma_builtin_json_serialize_object (ecma_json_stringify_context_t *context_p, /*
   /* 6. */
   else
   {
-    property_keys_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_ENUMERABLE);
+    property_keys_p = ecma_op_object_get_enumerable_property_names (obj_p, ECMA_ENUMERABLE_PROPERTY_KEYS);
 
 #if ENABLED (JERRY_BUILTIN_PROXY)
     if (property_keys_p == NULL)
@@ -1573,7 +1574,7 @@ ecma_builtin_json_stringify (ecma_value_t this_arg, /**< 'this' argument */
             JERRY_ASSERT (ecma_is_value_string (item));
             ecma_string_t *string_p = ecma_get_string_from_value (item);
 
-            if (!ecma_has_string_value_in_collection (context.property_list_p, string_p))
+            if (!ecma_collection_has_string_value (context.property_list_p, string_p))
             {
               ecma_collection_push_back (context.property_list_p, item);
             }

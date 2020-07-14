@@ -1397,25 +1397,6 @@ ecma_proxy_object_delete_property (ecma_object_t *obj_p, /**< proxy object */
 } /* ecma_proxy_object_delete_property */
 
 /**
- * The Proxy object [[Enumerate]] internal routine
- *
- * See also:
- *          ECMAScript v6, 9.5.11
- *
- * Note: Returned value must be freed with ecma_free_value.
- *
- * @return ECMA_VALUE_ERROR - if the operation fails
- *         ecma-object - otherwise
- */
-ecma_value_t
-ecma_proxy_object_enumerate (ecma_object_t *obj_p) /**< proxy object */
-{
-  JERRY_ASSERT (ECMA_OBJECT_IS_PROXY (obj_p));
-  JERRY_UNUSED (obj_p);
-  return ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Proxy.[[Enumerate]]"));
-} /* ecma_proxy_object_enumerate */
-
-/**
  * Helper method for the Proxy object [[OwnPropertyKeys]] operation
  *
  * See also:
@@ -1532,7 +1513,7 @@ ecma_proxy_check_invariants_for_own_prop_keys (ecma_collection_t *trap_result,
  * The Proxy object [[OwnPropertyKeys]] internal routine
  *
  * See also:
- *          ECMAScript v6, 9.5.12
+ *          ECMAScript v11, 9.5.11
  *
  * Note: If the returned collection is not NULL, it must be freed with
  *       ecma_collection_free if it is no longer needed
@@ -1553,7 +1534,6 @@ ecma_proxy_object_own_property_keys (ecma_object_t *obj_p) /**< proxy object */
   /* 2-5. */
   ecma_value_t trap = ecma_validate_proxy_object (handler, LIT_MAGIC_STRING_OWN_KEYS_UL);
 
-  /* 6. */
   if (ECMA_IS_VALUE_ERROR (trap))
   {
     return NULL;
@@ -1562,15 +1542,15 @@ ecma_proxy_object_own_property_keys (ecma_object_t *obj_p) /**< proxy object */
   ecma_value_t target = proxy_obj_p->target;
   ecma_object_t *target_obj_p = ecma_get_object_from_value (target);
 
-  /* 7. */
+  /* 6. */
   if (ecma_is_value_undefined (trap))
   {
-    return ecma_op_object_get_property_names (target_obj_p, ECMA_LIST_SYMBOLS);
+    return ecma_op_object_own_property_keys (target_obj_p);
   }
 
   ecma_object_t *func_obj_p = ecma_get_object_from_value (trap);
 
-  /* 8. */
+  /* 7. */
   ecma_value_t trap_result_array = ecma_op_function_call (func_obj_p, handler, &target, 1);
 
   ecma_deref_object (func_obj_p);
@@ -1580,46 +1560,51 @@ ecma_proxy_object_own_property_keys (ecma_object_t *obj_p) /**< proxy object */
     return NULL;
   }
 
-  /* 9. */
+  /* 8. */
   ecma_collection_t *trap_result = ecma_op_create_list_from_array_like (trap_result_array, true);
 
   ecma_free_value (trap_result_array);
 
-  /* 10. */
   if (trap_result == NULL)
   {
     return trap_result;
   }
 
-  /* 11. */
+  /* 9. */
+  if (ecma_collection_check_duplicated_entries (trap_result))
+  {
+    ecma_collection_free (trap_result);
+    ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned duplicate entries"));
+    return NULL;
+  }
+
+  /* 10. */
   ecma_value_t extensible_target = ecma_builtin_object_object_is_extensible (target_obj_p);
 
-  /* 12. */
   if (ECMA_IS_VALUE_ERROR (extensible_target))
   {
     ecma_collection_free (trap_result);
     return NULL;
   }
 
-  /* 13. */
-  ecma_collection_t *target_keys = ecma_op_object_get_property_names (target_obj_p, ECMA_LIST_SYMBOLS);
+  /* 11. */
+  ecma_collection_t *target_keys = ecma_op_object_own_property_keys (target_obj_p);
 
-  /* 14. */
   if (target_keys == NULL)
   {
     ecma_collection_free (trap_result);
     return target_keys;
   }
 
-  /* 16. */
+  /* 14. */
   ecma_collection_t *target_configurable_keys = ecma_new_collection ();
 
-  /* 17. */
+  /* 15. */
   ecma_collection_t *target_non_configurable_keys = ecma_new_collection ();
 
   ecma_collection_t *ret_value = NULL;
 
-  /* 18. */
+  /* 16. */
   for (uint32_t i = 0; i < target_keys->item_count; i++)
   {
     ecma_property_descriptor_t target_desc;
@@ -1654,12 +1639,12 @@ ecma_proxy_object_own_property_keys (ecma_object_t *obj_p) /**< proxy object */
     }
   }
 
-  /* 19. */
+  /* 17. */
   if (ecma_is_value_true (extensible_target) && target_non_configurable_keys->item_count == 0)
   {
     ret_value = trap_result;
   }
-  /* 20-25. */
+  /* 18-22. */
   else if (ecma_proxy_check_invariants_for_own_prop_keys (trap_result,
                                                           target_non_configurable_keys,
                                                           target_configurable_keys,
@@ -1678,6 +1663,7 @@ free_target_collections:
   ecma_collection_free (target_configurable_keys);
   ecma_collection_free (target_non_configurable_keys);
 
+  /* 23. */
   return ret_value;
 } /* ecma_proxy_object_own_property_keys */
 

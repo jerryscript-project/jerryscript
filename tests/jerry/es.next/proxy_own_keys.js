@@ -32,14 +32,6 @@ var handler = { ownKeys (target) {
 var proxy = new Proxy(target, handler);
 
 try {
-  // Array.prototype.sort
-  Array.prototype.sort.call(proxy);
-  assert(false);
-} catch (e) {
-  assert(e === 42);
-}
-
-try {
   // 19.1.2.14.4
   Object.keys(proxy);
   assert(false);
@@ -62,6 +54,14 @@ try {
 } catch (e) {
   assert(e === 42);
 }
+
+var handler = { ownKeys (target) {
+  return ["a"];
+}};
+
+var proxy = new Proxy(target, handler);
+var sort_result = Array.prototype.sort.call(proxy);
+assert(Object.keys(sort_result).length === 0);
 
 // test basic functionality
 var symA = Symbol("smA");
@@ -149,16 +149,18 @@ try {
 }
 
 // test with duplicated keys
-var target = { prop1: "prop1", prop2: "prop2"};
-var handler = {
+var p = new Proxy({}, {
 	ownKeys: function(target) {
-      return ["a", "a", "a"];
-    }
-};
+	  return ["foo", "foo"];
+	}
+});
 
-var proxy = new Proxy(target, handler);
-
-assert(JSON.stringify(Object.getOwnPropertyNames(proxy)) === '["a","a","a"]');
+try {
+  Object.keys(p);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
 
 // test with lots of keys
 var keyslist = [];

@@ -1079,38 +1079,38 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
     return ecma_raise_type_error (ECMA_ERR_MSG ("Compare function is not callable."));
   }
 
-  ecma_collection_t *array_index_props_p = ecma_op_object_get_property_names (obj_p, ECMA_LIST_ARRAY_INDICES);
+  ecma_collection_t *array_index_props_p = ecma_new_collection ();
 
-#if ENABLED (JERRY_BUILTIN_PROXY)
-  if (array_index_props_p == NULL)
+  for (uint32_t i = 0; i < len; i++)
   {
-    return ECMA_VALUE_ERROR;
-  }
-#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+    ecma_string_t *prop_name_p = ecma_new_ecma_string_from_uint32 (i);
 
-  uint32_t defined_prop_count = 0;
+    ecma_property_descriptor_t prop_desc;
+    ecma_value_t get_desc = ecma_op_object_get_own_property_descriptor (obj_p, prop_name_p, &prop_desc);
 
-  ecma_value_t *buffer_p = array_index_props_p->buffer_p;
-
-  /* Count properties with name that is array index less than len */
-  for (uint32_t i = 0; i < array_index_props_p->item_count; i++)
-  {
-    ecma_string_t *property_name_p = ecma_get_string_from_value (buffer_p[i]);
-
-    uint32_t index = ecma_string_get_array_index (property_name_p);
-    JERRY_ASSERT (index != ECMA_STRING_NOT_ARRAY_INDEX);
-
-    if (index < len)
+    if (ECMA_IS_VALUE_ERROR (get_desc))
     {
-      defined_prop_count++;
+      ecma_collection_free (array_index_props_p);
+      ecma_deref_ecma_string (prop_name_p);
+      return get_desc;
+    }
+
+    if (ecma_is_value_true (get_desc))
+    {
+      ecma_ref_ecma_string (prop_name_p);
+      ecma_collection_push_back (array_index_props_p, ecma_make_string_value (prop_name_p));
+      ecma_free_property_descriptor (&prop_desc);
+      continue;
     }
   }
+
+  uint32_t defined_prop_count = array_index_props_p->item_count;
 
   ecma_value_t ret_value = ECMA_VALUE_ERROR;
   uint32_t copied_num = 0;
   JMEM_DEFINE_LOCAL_ARRAY (values_buffer, defined_prop_count, ecma_value_t);
 
-  buffer_p = array_index_props_p->buffer_p;
+  ecma_value_t *buffer_p = array_index_props_p->buffer_p;
 
   /* Copy unsorted array into a native c array. */
   for (uint32_t i = 0; i < array_index_props_p->item_count; i++)
@@ -1184,8 +1184,7 @@ clean_up:
   JERRY_ASSERT (ecma_is_value_empty (ret_value));
 
   /* Undefined properties should be in the back of the array. */
-
-  buffer_p = array_index_props_p->buffer_p;
+  ecma_value_t *buffer_p = array_index_props_p->buffer_p;
 
   for (uint32_t i = 0; i < array_index_props_p->item_count; i++)
   {

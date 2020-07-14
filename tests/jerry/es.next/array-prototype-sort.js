@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var a = new Proxy({ a : 4, b :4}, {});
-var reached = false;
+var proxy = new Proxy({length: 5}, {
+  getOwnPropertyDescriptor() { throw 42.5; }
+})
 
-for (var $ in a)
-{
-  reached = true;
+try {
+  Array.prototype.sort.call(proxy);
+  assert(false);
+} catch (e) {
+  assert(e === 42.5);
 }
-
-assert (reached === true);

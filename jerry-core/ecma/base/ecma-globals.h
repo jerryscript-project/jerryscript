@@ -1431,7 +1431,7 @@ typedef struct
  * Compute the total allocated size of the collection based on it's capacity
  */
 #define ECMA_COLLECTION_ALLOCATED_SIZE(capacity) \
-  (uint32_t) (sizeof (ecma_collection_t) + (capacity * sizeof (ecma_value_t)))
+  (uint32_t) (capacity * sizeof (ecma_value_t))
 
 /**
  * Initial allocated size of an ecma-collection
@@ -2065,6 +2065,17 @@ typedef struct
   ecma_value_t proxy; /**< [[RevocableProxy]] internal slot */
 } ecma_revocable_proxy_object_t;
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+
+/**
+ * Struct for counting the different types properties in objects
+ */
+typedef struct
+{
+  uint32_t array_index_named_props; /**< number of array index named properties */
+  uint32_t string_named_props; /**< number of string named properties */
+  uint32_t symbol_named_props; /**< number of symbol named properties */
+  uint32_t lazy_string_named_props; /**< number of lazy instantiated properties */
+} ecma_property_counter_t;
 
 /**
  * @}

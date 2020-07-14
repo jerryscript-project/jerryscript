@@ -1041,43 +1041,32 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
  */
 void
 ecma_builtin_routine_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in object */
-                                               uint32_t opts, /**< listing options using flags
-                                                               *   from ecma_list_properties_options_t */
-                                               ecma_collection_t *main_collection_p, /**< 'main' collection */
-                                               ecma_collection_t *non_enum_collection_p) /**< skipped 'non-enumerable'
-                                                                                          *   collection */
+                                               ecma_collection_t *prop_names_p,  /**< prop name collection */
+                                               ecma_property_counter_t *prop_counter_p)  /**< prop counter */
 {
   JERRY_ASSERT (ecma_get_object_is_builtin (object_p));
   JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION);
   JERRY_ASSERT (ecma_builtin_function_is_routine (object_p));
 
-  const bool separate_enumerable = (opts & ECMA_LIST_ENUMERABLE) != 0;
-  const bool is_array_indices_only = (opts & ECMA_LIST_ARRAY_INDICES) != 0;
-
-  ecma_collection_t *for_enumerable_p = main_collection_p;
-  JERRY_UNUSED (for_enumerable_p);
-
-  ecma_collection_t *for_non_enumerable_p = separate_enumerable ? non_enum_collection_p : main_collection_p;
-
-  if (!is_array_indices_only)
-  {
 #if ENABLED (JERRY_ESNEXT)
-    ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
-    if (!(ext_func_p->u.built_in.u.builtin_routine.bitset & ECMA_BUILTIN_ROUTINE_LENGTH_INITIALIZED))
-    {
-      /* Unintialized 'length' property is non-enumerable (ECMA-262 v6, 19.2.4.1) */
-      ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
-    }
-    if (!(ext_func_p->u.built_in.u.builtin_routine.bitset & ECMA_BUILTIN_ROUTINE_NAME_INITIALIZED))
-    {
-      /* Unintialized 'name' property is non-enumerable (ECMA-262 v6, 19.2.4.2) */
-      ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_NAME));
-    }
-#else /* !ENABLED (JERRY_ESNEXT) */
-    /* 'length' property is non-enumerable (ECMA-262 v5, 15) */
-    ecma_collection_push_back (for_non_enumerable_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
-#endif /* ENABLED (JERRY_ESNEXT) */
+  ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
+  if (!(ext_func_p->u.built_in.u.builtin_routine.bitset & ECMA_BUILTIN_ROUTINE_LENGTH_INITIALIZED))
+  {
+    /* Unintialized 'length' property is non-enumerable (ECMA-262 v6, 19.2.4.1) */
+    ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
+    prop_counter_p->string_named_props++;
   }
+  if (!(ext_func_p->u.built_in.u.builtin_routine.bitset & ECMA_BUILTIN_ROUTINE_NAME_INITIALIZED))
+  {
+    /* Unintialized 'name' property is non-enumerable (ECMA-262 v6, 19.2.4.2) */
+    ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_NAME));
+    prop_counter_p->string_named_props++;
+  }
+#else /* !ENABLED (JERRY_ESNEXT) */
+  /* 'length' property is non-enumerable (ECMA-262 v5, 15) */
+  ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
+  prop_counter_p->string_named_props++;
+#endif /* ENABLED (JERRY_ESNEXT) */
 } /* ecma_builtin_routine_list_lazy_property_names */
 
 /**
@@ -1088,18 +1077,12 @@ ecma_builtin_routine_list_lazy_property_names (ecma_object_t *object_p, /**< a b
  */
 void
 ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in object */
-                                       uint32_t opts, /**< listing options using flags
-                                                       *   from ecma_list_properties_options_t */
-                                       ecma_collection_t *main_collection_p, /**< 'main' collection */
-                                       ecma_collection_t *non_enum_collection_p) /**< skipped 'non-enumerable'
-                                                                                  *   collection */
+                                       ecma_collection_t *prop_names_p, /**< prop name collection */
+                                       ecma_property_counter_t *prop_counter_p)  /**< prop counter */
 {
   JERRY_ASSERT (ecma_get_object_is_builtin (object_p));
   JERRY_ASSERT (ecma_get_object_type (object_p) != ECMA_OBJECT_TYPE_FUNCTION
                 || !ecma_builtin_function_is_routine (object_p));
-
-  const bool separate_enumerable = (opts & ECMA_LIST_ENUMERABLE) != 0;
-  const bool is_array_indices_only = (opts & ECMA_LIST_ARRAY_INDICES) != 0;
 
   ecma_built_in_props_t *built_in_props_p;
   ecma_object_type_t object_type = ecma_get_object_type (object_p);
@@ -1123,9 +1106,6 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
   uint32_t index = 0;
   uint32_t *bitset_p = built_in_props_p->u.instantiated_bitset;
 
-  ecma_collection_t *for_non_enumerable_p = (separate_enumerable ? non_enum_collection_p
-                                                                 : main_collection_p);
-
   while (curr_property_p->magic_string_id != LIT_MAGIC_STRING__COUNT)
   {
     if (index == 32)
@@ -1145,28 +1125,13 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
 
     ecma_string_t *name_p = ecma_get_magic_string ((lit_magic_string_id_t) curr_property_p->magic_string_id);
 
-    if (is_array_indices_only && ecma_string_get_array_index (name_p) == ECMA_STRING_NOT_ARRAY_INDEX)
-    {
-      curr_property_p++;
-      continue;
-    }
-
     uint32_t bit_for_index = (uint32_t) 1u << index;
 
     if (!(*bitset_p & bit_for_index) || ecma_op_ordinary_object_has_own_property (object_p, name_p))
     {
       ecma_value_t name = ecma_make_magic_string_value ((lit_magic_string_id_t) curr_property_p->magic_string_id);
-
-#if ENABLED (JERRY_ESNEXT)
-      if (curr_property_p->attributes & ECMA_PROPERTY_FLAG_ENUMERABLE)
-      {
-        ecma_collection_push_back (main_collection_p, name);
-      }
-      else
-#endif /* ENABLED (JERRY_ESNEXT) */
-      {
-        ecma_collection_push_back (for_non_enumerable_p, name);
-      }
+      ecma_collection_push_back (prop_names_p, name);
+      prop_counter_p->string_named_props++;
     }
 
     curr_property_p++;

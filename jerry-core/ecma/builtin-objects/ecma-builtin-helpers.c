@@ -227,11 +227,10 @@ ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, /**< th
 } /* ecma_builtin_helper_get_to_locale_string_at_index */
 
 /**
- * The Object.keys and Object.getOwnPropertyNames routine's common part.
+ * The Object's 'getOwnPropertyNames' routine.
  *
  * See also:
  *          ECMA-262 v5, 15.2.3.4 steps 2-5
- *          ECMA-262 v5, 15.2.3.14 steps 3-6
  *
  * @return ecma value - Array of property names.
  *         Returned value must be freed with ecma_free_value.

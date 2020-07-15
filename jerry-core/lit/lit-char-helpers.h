@@ -247,4 +247,9 @@ bool lit_char_is_word_char (lit_code_point_t c);
 lit_code_point_t lit_char_to_lower_case (lit_code_point_t cp, ecma_stringbuilder_t *builder_p);
 lit_code_point_t lit_char_to_upper_case (lit_code_point_t cp, ecma_stringbuilder_t *builder_p);
 
+#if ENABLED (JERRY_ESNEXT)
+bool lit_char_fold_to_lower (lit_code_point_t cp);
+bool lit_char_fold_to_upper (lit_code_point_t cp);
+#endif /* ENABLED (JERRY_ESNEXT) */
+
 #endif /* !LIT_CHAR_HELPERS_H */

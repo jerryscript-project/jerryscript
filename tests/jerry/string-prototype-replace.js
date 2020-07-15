@@ -132,3 +132,17 @@ try {
 } catch (e) {
   assert (e === "abrupt replacer toString");
 }
+
+var r = /./;
+r.lastIndex = {
+  valueOf: function() {
+    throw "abrupt lastIndex"
+  }
+}
+
+try {
+  "a".replace(r, "b");
+  assert(false);
+} catch (e) {
+  assert(e === "abrupt lastIndex");
+}

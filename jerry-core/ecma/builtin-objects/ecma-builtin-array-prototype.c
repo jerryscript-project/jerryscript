@@ -76,6 +76,7 @@ enum
   ECMA_ARRAY_PROTOTYPE_SYMBOL_ITERATOR,
   ECMA_ARRAY_PROTOTYPE_FILL,
   ECMA_ARRAY_PROTOTYPE_COPY_WITHIN,
+  ECMA_ARRAY_PROTOTYPE_INCLUDES,
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-array-prototype.inc.h"
@@ -2579,6 +2580,90 @@ ecma_builtin_array_prototype_object_copy_within (const ecma_value_t args[], /**<
 
   return ecma_copy_value (ecma_make_object_value (obj_p));
 } /* ecma_builtin_array_prototype_object_copy_within */
+
+/**
+ * The Array.prototype object's 'includes' routine
+ *
+ * See also:
+ *          ECMA-262 v11, 22.1.3.13
+ *
+ * @return ECMA_VALUE_ERROR -if the operation fails
+ *         ECMA_VALUE_{TRUE/FALSE} - depends on whether the search element is in the array or not
+ */
+static ecma_value_t
+ecma_builtin_array_prototype_includes (const ecma_value_t args[], /**< arguments list */
+                                       ecma_length_t args_number, /**< number of arguments */
+                                       ecma_object_t *obj_p, /**< array object */
+                                       uint32_t len) /**< array object's length */
+{
+  /* 3. */
+  if (len == 0)
+  {
+    return ECMA_VALUE_FALSE;
+  }
+
+  uint32_t from_index = 0;
+
+  /* 4-7. */
+  if (args_number > 1)
+  {
+    if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_array_index_normalize (args[1], len, &from_index)))
+    {
+      return ECMA_VALUE_ERROR;
+    }
+  }
+
+  /* Fast array path */
+  if (ecma_op_object_is_fast_array (obj_p))
+  {
+    ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
+
+    if (ext_obj_p->u.array.u.hole_count < ECMA_FAST_ARRAY_HOLE_ONE)
+    {
+      if (obj_p->u1.property_list_cp != JMEM_CP_NULL)
+      {
+        len = JERRY_MIN (ext_obj_p->u.array.length, len);
+
+        ecma_value_t *buffer_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, obj_p->u1.property_list_cp);
+
+        while (from_index < len)
+        {
+          if (ecma_op_same_value_zero (buffer_p[from_index], args[0]))
+          {
+            return ECMA_VALUE_TRUE;
+          }
+
+          from_index++;
+        }
+      }
+
+      return ECMA_VALUE_FALSE;
+    }
+  }
+
+  /* 8. */
+  while (from_index < len)
+  {
+    ecma_value_t element = ecma_op_object_get_by_uint32_index (obj_p, from_index);
+
+    if (ECMA_IS_VALUE_ERROR (element))
+    {
+      return element;
+    }
+
+    if (ecma_op_same_value_zero (element, args[0]))
+    {
+      ecma_free_value (element);
+      return ECMA_VALUE_TRUE;
+    }
+
+    ecma_free_value (element);
+    from_index++;
+  }
+
+  /* 9. */
+  return ECMA_VALUE_FALSE;
+} /* ecma_builtin_array_prototype_includes */
 #endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
@@ -2796,6 +2881,14 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
                                                      arguments_list_p[2],
                                                      obj_p,
                                                      length);
+      break;
+    }
+    case ECMA_ARRAY_PROTOTYPE_INCLUDES:
+    {
+      ret_value = ecma_builtin_array_prototype_includes (arguments_list_p,
+                                                         arguments_number,
+                                                         obj_p,
+                                                         length);
       break;
     }
 #endif /* ENABLED (JERRY_ESNEXT) */

@@ -621,9 +621,11 @@ ecma_promise_all_handler_cb (const ecma_value_t function_obj, /**< the function 
 } /* ecma_promise_all_handler_cb */
 
 /**
- * 25.4.1.5.1 GetCapabilitiesExecutor Functions
+ * GetCapabilitiesExecutor Functions
  *
  * Checks and sets a promiseCapability's resolve and reject properties.
+ *
+ * See also: ES11 25.6.1.5.1
  *
  * @return ECMA_VALUE_UNDEFINED or TypeError
  *         returned value must be freed with ecma_free_value
@@ -635,41 +637,41 @@ ecma_op_get_capabilities_executor_cb (const ecma_value_t function_obj, /**< the 
                                       const ecma_length_t args_count) /**< argument number */
 {
   JERRY_UNUSED (this_val);
-  JERRY_ASSERT (args_count >= 2);
 
+  /* 1. */
   ecma_promise_capability_executor_t *executor_p;
   executor_p = (ecma_promise_capability_executor_t *) ecma_get_object_from_value (function_obj);
 
-  /* 2. */
+  /* 2-3. */
   ecma_object_t *capability_obj_p = ecma_get_object_from_value (executor_p->capability);
   JERRY_ASSERT (ecma_object_class_is (capability_obj_p, LIT_INTERNAL_MAGIC_PROMISE_CAPABILITY));
   ecma_promise_capabality_t *capability_p = (ecma_promise_capabality_t *) capability_obj_p;
 
-  /* 3. */
+  /* 4. */
   if (!ecma_is_value_undefined (capability_p->resolve))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Resolve must be undefined"));
   }
 
-  /* 4. */
+  /* 5. */
   if (!ecma_is_value_undefined (capability_p->reject))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Reject must be undefined"));
   }
 
-  /* 5. */
-  capability_p->resolve = args_p[0];
   /* 6. */
-  capability_p->reject = args_p[1];
-
+  capability_p->resolve = args_count > 0 ? args_p[0] : ECMA_VALUE_UNDEFINED;
   /* 7. */
+  capability_p->reject = args_count > 1 ? args_p[1] : ECMA_VALUE_UNDEFINED;
+
+  /* 8. */
   return ECMA_VALUE_UNDEFINED;
 } /* ecma_op_get_capabilities_executor_cb */
 
 /**
  * Create a new PromiseCapability.
  *
- * See also: ES2015 25.4.1.5
+ * See also: ES11 25.6.1.5
  *
  * @return NULL - if the operation raises error
  *         new PromiseCapability object - otherwise
@@ -697,17 +699,17 @@ ecma_promise_new_capability (ecma_value_t constructor)
   capability_p->resolve = ECMA_VALUE_UNDEFINED;
   capability_p->reject = ECMA_VALUE_UNDEFINED;
 
-  /* 4. */
+  /* 4-5. */
   ecma_object_t *executor_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE),
                                                   sizeof (ecma_promise_capability_executor_t),
                                                   ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
 
-  /* 5. */
+  /* 6. */
   ecma_promise_capability_executor_t *executor_func_p = (ecma_promise_capability_executor_t *) executor_p;
   executor_func_p->header.u.external_handler_cb = ecma_op_get_capabilities_executor_cb;
   executor_func_p->capability = ecma_make_object_value (capability_obj_p);
 
-  /* 6. */
+  /* 7. */
   ecma_value_t executor = ecma_make_object_value (executor_p);
   ecma_value_t promise = ecma_op_function_construct (constructor_obj_p,
                                                      constructor_obj_p,
@@ -715,7 +717,6 @@ ecma_promise_new_capability (ecma_value_t constructor)
                                                      1);
   ecma_deref_object (executor_p);
 
-  /* 7. */
   if (ECMA_IS_VALUE_ERROR (promise))
   {
     ecma_deref_object (capability_obj_p);

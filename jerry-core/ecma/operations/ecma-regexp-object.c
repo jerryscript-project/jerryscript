@@ -1666,6 +1666,7 @@ ecma_regexp_cleanup_context (ecma_regexp_ctx_t *ctx_p) /**< regexp context */
  *
  * See also:
  *          ECMA-262 v5, 15.10.6.2
+ *          ECMA-262 v11, 21.2.5.2.2
  *
  * @return array object - if matched
  *         null         - otherwise
@@ -1679,12 +1680,15 @@ ecma_regexp_exec_helper (ecma_object_t *regexp_object_p, /**< RegExp object */
 {
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
+  /* 1. */
   JERRY_ASSERT (ecma_object_is_regexp_object (ecma_make_object_value (regexp_object_p)));
 
+  /* 9. */
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) regexp_object_p;
   re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_ANY_POINTER (re_compiled_code_t,
                                                                   ext_object_p->u.class_prop.u.value);
 
+  /* 3. */
   lit_utf8_size_t input_size;
   lit_utf8_size_t input_length;
   uint8_t input_flags = ECMA_STRING_FLAG_IS_ASCII;
@@ -1695,47 +1699,48 @@ ecma_regexp_exec_helper (ecma_object_t *regexp_object_p, /**< RegExp object */
                                                                  &input_flags);
 
   const lit_utf8_byte_t *input_curr_p = input_buffer_p;
+  const lit_utf8_byte_t *input_end_p = input_buffer_p + input_size;
+
+  ecma_regexp_ctx_t re_ctx;
+  ecma_regexp_initialize_context (&re_ctx,
+                                  bc_p,
+                                  input_buffer_p,
+                                  input_end_p);
+
+  /* 4. */
   uint32_t index = 0;
-  if (bc_p->header.status_flags & (RE_FLAG_GLOBAL | RE_FLAG_STICKY))
-  {
-    ecma_value_t lastindex_value = ecma_op_object_get_by_magic_id (regexp_object_p, LIT_MAGIC_STRING_LASTINDEX_UL);
+  ecma_value_t lastindex_value = ecma_op_object_get_by_magic_id (regexp_object_p, LIT_MAGIC_STRING_LASTINDEX_UL);
 
-    ecma_number_t lastindex_num;
-    ret_value = ecma_op_to_integer (lastindex_value, &lastindex_num);
-
-    ecma_free_value (lastindex_value);
-
-    if (ECMA_IS_VALUE_ERROR (ret_value))
-    {
-      goto cleanup_string;
-    }
-
-    /* TODO: Replace with ToLength */
-    if (lastindex_num < 0.0f)
-    {
 #if ENABLED (JERRY_ESNEXT)
-      lastindex_num = 0.0f;
+  ret_value = ecma_op_to_length (lastindex_value, &index);
+  ecma_free_value (lastindex_value);
 #else /* !ENABLED (JERRY_ESNEXT) */
-      lastindex_num = input_length + 1;
-#endif /* ENABLED (JERRY_ESNEXT) */
-    }
-    index = ecma_number_to_uint32 (lastindex_num);
+  ecma_number_t lastindex_num = 0.0f;
+  ret_value = ecma_op_to_integer (lastindex_value, &lastindex_num);
+  ecma_free_value (lastindex_value);
 
+  /* The ToInteger operation might have thrown an error, however in that case lastindex_num will still be zero,
+   * and the error will be handled later after the uint32 coercion. */
+  if ((re_ctx.flags & RE_FLAG_GLOBAL) && lastindex_num < 0.0f)
+  {
+    JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (ret_value));
+    goto fail_put_lastindex;
+  }
+
+  index = ecma_number_to_uint32 (lastindex_num);
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+  if (ECMA_IS_VALUE_ERROR (ret_value))
+  {
+    goto cleanup_context;
+  }
+
+  if (re_ctx.flags & (RE_FLAG_GLOBAL | RE_FLAG_STICKY))
+  {
+    /* 12.a */
     if (index > input_length)
     {
-      ret_value = ecma_op_object_put (regexp_object_p,
-                                      ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                                      ecma_make_integer_value (0),
-                                      true);
-
-      if (!ECMA_IS_VALUE_ERROR (ret_value))
-      {
-        JERRY_ASSERT (ecma_is_value_boolean (ret_value));
-        /* lastIndex is out of bounds, the match should fail. */
-        ret_value = ECMA_VALUE_NULL;
-      }
-
-      goto cleanup_string;
+      goto fail_put_lastindex;
     }
 
     if (index > 0)
@@ -1753,18 +1758,19 @@ ecma_regexp_exec_helper (ecma_object_t *regexp_object_p, /**< RegExp object */
       }
     }
   }
+  /* 8. */
+  else
+  {
+    index = 0;
+  }
 
-  const lit_utf8_byte_t *input_end_p = input_buffer_p + input_size;
-  ecma_regexp_ctx_t re_ctx;
-  ecma_regexp_initialize_context (&re_ctx,
-                                  bc_p,
-                                  input_buffer_p,
-                                  input_end_p);
-
-  /* 2. Try to match */
+  /* 9. */
   uint8_t *bc_start_p = (uint8_t *) (bc_p + 1);
+
+  /* 11. */
   const lit_utf8_byte_t *matched_p = NULL;
 
+  /* 12. */
   JERRY_ASSERT (index <= input_length);
   while (true)
   {
@@ -1772,58 +1778,37 @@ ecma_regexp_exec_helper (ecma_object_t *regexp_object_p, /**< RegExp object */
 
     if (matched_p != NULL)
     {
-      break;
+      goto match_found;
     }
 
 #if ENABLED (JERRY_ESNEXT)
+    /* 12.c.i */
     if (re_ctx.flags & RE_FLAG_STICKY)
     {
-      ecma_value_t put_result = ecma_op_object_put (regexp_object_p,
-                                                    ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                                                    ecma_make_uint32_value (0),
-                                                    true);
-      if (ECMA_IS_VALUE_ERROR (put_result))
-      {
-        ret_value = put_result;
-        goto cleanup_context;
-      }
-
-      JERRY_ASSERT (ecma_is_value_boolean (put_result));
-      ret_value = ECMA_VALUE_NULL;
-      goto cleanup_context;
+      goto fail_put_lastindex;
     }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
+    /* 12.a */
     if (input_curr_p >= input_end_p)
     {
       if (re_ctx.flags & RE_FLAG_GLOBAL)
       {
-        ecma_value_t put_result = ecma_op_object_put (regexp_object_p,
-                                                      ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                                                      ecma_make_uint32_value (0),
-                                                      true);
-        if (ECMA_IS_VALUE_ERROR (put_result))
-        {
-          ret_value = put_result;
-          goto cleanup_context;
-        }
-
-        JERRY_ASSERT (ecma_is_value_boolean (put_result));
+        goto fail_put_lastindex;
       }
 
-      /* Failed to match, return 'null'. */
-      ret_value = ECMA_VALUE_NULL;
-      goto cleanup_context;
+      goto match_failed;
     }
 
     JERRY_ASSERT (input_curr_p < input_end_p);
 
+    /* 12.c.ii */
+    index++;
+
 #if ENABLED (JERRY_ESNEXT)
     if (re_ctx.flags & RE_FLAG_UNICODE)
     {
-      index++;
-      const lit_code_point_t cp = ecma_regexp_unicode_advance (&input_curr_p,
-                                                               input_end_p);
+      const lit_code_point_t cp = ecma_regexp_unicode_advance (&input_curr_p, input_end_p);
 
       if (cp > LIT_UTF16_CODE_UNIT_MAX)
       {
@@ -1834,10 +1819,33 @@ ecma_regexp_exec_helper (ecma_object_t *regexp_object_p, /**< RegExp object */
     }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
-    index++;
     lit_utf8_incr (&input_curr_p);
   }
 
+  JERRY_UNREACHABLE ();
+
+fail_put_lastindex:
+  /* We should only get here if the regexp is global or sticky */
+  JERRY_ASSERT ((re_ctx.flags & (RE_FLAG_GLOBAL | RE_FLAG_STICKY)) != 0);
+
+  ret_value = ecma_op_object_put (regexp_object_p,
+                                  ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
+                                  ecma_make_integer_value (0),
+                                  true);
+
+  if (ECMA_IS_VALUE_ERROR (ret_value))
+  {
+    goto cleanup_context;
+  }
+
+  JERRY_ASSERT (ecma_is_value_boolean (ret_value));
+
+match_failed:
+  /* 12.a.ii */
+  ret_value = ECMA_VALUE_NULL;
+  goto cleanup_context;
+
+match_found:
   JERRY_ASSERT (matched_p != NULL);
 
   if (ECMA_RE_STACK_LIMIT_REACHED (matched_p))
@@ -1846,10 +1854,12 @@ ecma_regexp_exec_helper (ecma_object_t *regexp_object_p, /**< RegExp object */
     goto cleanup_context;
   }
 
+  /* 15. */
   if (re_ctx.flags & (RE_FLAG_GLOBAL | RE_FLAG_STICKY))
   {
     JERRY_ASSERT (index <= input_length);
 
+    /* 13-14. */
     lit_utf8_size_t match_length;
     const lit_utf8_byte_t *match_begin_p = re_ctx.captures_p[0].begin_p;
     const lit_utf8_byte_t *match_end_p = re_ctx.captures_p[0].end_p;
@@ -1864,25 +1874,25 @@ ecma_regexp_exec_helper (ecma_object_t *regexp_object_p, /**< RegExp object */
                                              (lit_utf8_size_t) (match_end_p - match_begin_p));
     }
 
-    ecma_value_t put_result = ecma_op_object_put (regexp_object_p,
-                                                  ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                                                  ecma_make_uint32_value (index + match_length),
-                                                  true);
-    if (ECMA_IS_VALUE_ERROR (put_result))
+    ret_value = ecma_op_object_put (regexp_object_p,
+                                    ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
+                                    ecma_make_uint32_value (index + match_length),
+                                    true);
+
+    if (ECMA_IS_VALUE_ERROR (ret_value))
     {
-      ret_value = put_result;
       goto cleanup_context;
     }
 
-    JERRY_ASSERT (ecma_is_value_boolean (put_result));
+    JERRY_ASSERT (ecma_is_value_boolean (ret_value));
   }
 
+  /* 16-27. */
   ret_value = ecma_regexp_create_result_object (&re_ctx, input_string_p, index);
 
 cleanup_context:
   ecma_regexp_cleanup_context (&re_ctx);
 
-cleanup_string:
   if (input_flags & ECMA_STRING_FLAG_MUST_BE_FREED)
   {
     jmem_heap_free_block ((void *) input_buffer_p, input_size);

@@ -101,3 +101,17 @@ assert (re2.ignoreCase === re1.ignoreCase);
 assert (re2.multiline === re1.multiline);
 assert (re2.source === re1.source);
 assert (re2.lastIndex === 0);
+
+var r = /./
+r.lastIndex = {
+  valueOf: function() {
+    throw "abrupt lastIndex"
+  }
+}
+
+try {
+  r.exec("a");
+  assert(false);
+} catch (e) {
+  assert (e === "abrupt lastIndex");
+}

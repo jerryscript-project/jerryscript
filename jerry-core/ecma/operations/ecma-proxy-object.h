@@ -39,7 +39,7 @@ ecma_value_t
 ecma_proxy_revoke_cb (const ecma_value_t function_obj,
                       const ecma_value_t this_val,
                       const ecma_value_t args_p[],
-                      const ecma_length_t args_count);
+                      const uint32_t args_count);
 
 jmem_cpointer_t
 ecma_proxy_object_prototype_to_cp (ecma_value_t proto);
@@ -102,13 +102,13 @@ ecma_value_t
 ecma_proxy_object_call (ecma_object_t *obj_p,
                         ecma_value_t this_argument,
                         const ecma_value_t *args_p,
-                        ecma_length_t argc);
+                        uint32_t argc);
 
 ecma_value_t
 ecma_proxy_object_construct (ecma_object_t *obj_p,
                              ecma_object_t *new_target_p,
                              const ecma_value_t *args_p,
-                             ecma_length_t argc);
+                             uint32_t argc);
 
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 

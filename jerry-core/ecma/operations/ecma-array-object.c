@@ -67,7 +67,7 @@
  * @return pointer to the constructed array object
  */
 ecma_object_t *
-ecma_op_new_array_object (ecma_length_t length) /**< length of the new array */
+ecma_op_new_array_object (uint32_t length) /**< length of the new array */
 {
 #if ENABLED (JERRY_BUILTIN_ARRAY)
   ecma_object_t *array_prototype_object_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY_PROTOTYPE);
@@ -127,7 +127,7 @@ ecma_op_array_is_fast_array (ecma_extended_object_t *array_p) /**< ecma-array-ob
  *         pointer to the constructed fast access mode array object otherwise
  */
 ecma_object_t *
-ecma_op_new_fast_array_object (ecma_length_t length) /**< length of the new fast access mode array */
+ecma_op_new_fast_array_object (uint32_t length) /**< length of the new fast access mode array */
 {
   const uint32_t aligned_length = ECMA_FAST_ARRAY_ALIGN_LENGTH (length);
   ecma_value_t *values_p = NULL;
@@ -579,7 +579,7 @@ ecma_fast_array_get_property_names (ecma_object_t *object_p, /**< fast access mo
 ecma_value_t
 ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of arguments that
                                                                     *   are passed to Array constructor */
-                             ecma_length_t arguments_list_len, /**< length of the arguments' list */
+                             uint32_t arguments_list_len, /**< length of the arguments' list */
                              bool is_treat_single_arg_as_length) /**< if the value is true,
                                                                   *   arguments_list_len is 1
                                                                   *   and single argument is Number,
@@ -592,7 +592,7 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
 
   uint32_t length;
   const ecma_value_t *array_items_p;
-  ecma_length_t array_items_count;
+  uint32_t array_items_count;
 
   if (is_treat_single_arg_as_length
       && arguments_list_len == 1
@@ -678,7 +678,7 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
 ecma_value_t
 ecma_op_array_species_create (ecma_object_t *original_array_p, /**< The object from whom the new array object
                                                                 *   is being created */
-                              ecma_length_t length) /**< length of the array */
+                              uint32_t length) /**< length of the array */
 {
   ecma_value_t constructor = ECMA_VALUE_UNDEFINED;
   ecma_value_t original_array = ecma_make_object_value (original_array_p);

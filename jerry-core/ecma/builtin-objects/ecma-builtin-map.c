@@ -43,7 +43,7 @@
  */
 ecma_value_t
 ecma_builtin_map_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
-                                ecma_length_t arguments_list_len) /**< number of arguments */
+                                uint32_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
@@ -57,7 +57,7 @@ ecma_builtin_map_dispatch_call (const ecma_value_t *arguments_list_p, /**< argum
  */
 ecma_value_t
 ecma_builtin_map_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
-                                     ecma_length_t arguments_list_len) /**< number of arguments */
+                                     uint32_t arguments_list_len) /**< number of arguments */
 {
   return ecma_op_container_create (arguments_list_p,
                                    arguments_list_len,

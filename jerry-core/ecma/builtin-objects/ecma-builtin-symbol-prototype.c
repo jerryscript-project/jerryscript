@@ -73,7 +73,7 @@ ecma_builtin_symbol_prototype_dispatch_routine (uint16_t builtin_routine_id, /**
                                                 ecma_value_t this_arg, /**< 'this' argument value */
                                                 const ecma_value_t arguments_list[], /**< list of arguments
                                                                              *   passed to routine */
-                                                ecma_length_t arguments_number) /**< length of arguments' list */
+                                                uint32_t arguments_number) /**< length of arguments' list */
 {
   JERRY_UNUSED_2 (arguments_list, arguments_number);
 

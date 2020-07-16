@@ -101,7 +101,7 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
             ecma_value_t prim_value_p = ext_object_p->u.class_prop.u.value;
             ecma_string_t *prim_value_str_p = ecma_get_string_from_value (prim_value_p);
 
-            ecma_length_t length = ecma_string_get_length (prim_value_str_p);
+            lit_utf8_size_t length = ecma_string_get_length (prim_value_str_p);
             property_ref_p->virtual_value = ecma_make_uint32_value (length);
           }
 
@@ -193,7 +193,7 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
 
           if (array_index < info.length)
           {
-            ecma_length_t byte_pos = array_index << info.shift;
+            uint32_t byte_pos = array_index << info.shift;
             ecma_number_t num = ecma_get_typedarray_element (info.buffer_p + byte_pos, info.id);
             value = ecma_make_number_value (num);
           }
@@ -464,7 +464,7 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
           ecma_value_t prim_value_p = ext_object_p->u.class_prop.u.value;
 
           ecma_string_t *prim_value_str_p = ecma_get_string_from_value (prim_value_p);
-          ecma_length_t length = ecma_string_get_length (prim_value_str_p);
+          lit_utf8_size_t length = ecma_string_get_length (prim_value_str_p);
 
           return ecma_make_uint32_value (length);
         }
@@ -564,7 +564,7 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
             return ECMA_VALUE_UNDEFINED;
           }
 
-          ecma_length_t byte_pos = array_index << info.shift;
+          uint32_t byte_pos = array_index << info.shift;
           ecma_number_t num = ecma_get_typedarray_element (info.buffer_p + byte_pos, info.id);
           return ecma_make_number_value (num);
         }
@@ -1330,7 +1330,7 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
             return ecma_reject (is_throw);
           }
 
-          ecma_length_t byte_pos = array_index << info.shift;
+          uint32_t byte_pos = array_index << info.shift;
           ecma_set_typedarray_element (info.buffer_p + byte_pos, num_var, info.id);
 
           return ECMA_VALUE_TRUE;
@@ -2209,10 +2209,10 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
   {
     const ecma_object_type_t type = ecma_get_object_type (obj_p);
     const bool obj_is_builtin = ecma_get_object_is_builtin (obj_p);
-    ecma_length_t string_named_properties_count = 0;
-    ecma_length_t array_index_named_properties_count = 0;
+    uint32_t string_named_properties_count = 0;
+    uint32_t array_index_named_properties_count = 0;
 #if ENABLED (JERRY_ESNEXT)
-    ecma_length_t symbol_named_properties_count = 0;
+    uint32_t symbol_named_properties_count = 0;
 #endif /* ENABLED (JERRY_ESNEXT) */
     ecma_collection_t *prop_names_p = ecma_new_collection ();
 
@@ -2537,7 +2537,7 @@ ecma_op_object_get_property_names (ecma_object_t *obj_p, /**< object */
       }
     }
 
-    ecma_length_t all_properties_count = array_index_named_properties_count + string_named_properties_count;
+    uint32_t all_properties_count = array_index_named_properties_count + string_named_properties_count;
 
 #if ENABLED (JERRY_ESNEXT)
     all_properties_count += symbol_named_properties_count;
@@ -3106,7 +3106,7 @@ inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_op_invoke_by_symbol_id (ecma_value_t object, /**< Object value */
                              lit_magic_string_id_t symbol_id, /**< Symbol ID */
                              ecma_value_t *args_p, /**< Argument list */
-                             ecma_length_t args_len) /**< Argument list length */
+                             uint32_t args_len) /**< Argument list length */
 {
   ecma_string_t *symbol_p = ecma_op_get_global_symbol (symbol_id);
   ecma_value_t ret_value = ecma_op_invoke (object, symbol_p, args_p, args_len);
@@ -3126,7 +3126,7 @@ inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_op_invoke_by_magic_id (ecma_value_t object, /**< Object value */
                             lit_magic_string_id_t magic_string_id, /**< Magic string ID */
                             ecma_value_t *args_p, /**< Argument list */
-                            ecma_length_t args_len) /**< Argument list length */
+                            uint32_t args_len) /**< Argument list length */
 {
   return ecma_op_invoke (object, ecma_get_magic_string (magic_string_id), args_p, args_len);
 } /* ecma_op_invoke_by_magic_id */
@@ -3141,7 +3141,7 @@ ecma_value_t
 ecma_op_invoke (ecma_value_t object, /**< Object value */
                 ecma_string_t *property_name_p, /**< Property name */
                 ecma_value_t *args_p, /**< Argument list */
-                ecma_length_t args_len) /**< Argument list length */
+                uint32_t args_len) /**< Argument list length */
 {
   /* 3. */
   ecma_value_t object_value = ecma_op_to_object (object);

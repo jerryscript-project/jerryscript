@@ -177,7 +177,7 @@ ecma_builtin_function_prototype_object_apply (ecma_object_t *func_obj_p, /**< th
 static ecma_value_t
 ecma_builtin_function_prototype_object_call (ecma_object_t *func_obj_p , /**< this argument object */
                                              const ecma_value_t *arguments_list_p, /**< list of arguments */
-                                             ecma_length_t arguments_number) /**< number of arguments */
+                                             uint32_t arguments_number) /**< number of arguments */
 {
   if (arguments_number == 0)
   {
@@ -191,7 +191,7 @@ ecma_builtin_function_prototype_object_call (ecma_object_t *func_obj_p , /**< th
   return ecma_op_function_call (func_obj_p,
                                 arguments_list_p[0],
                                 arguments_list_p + 1,
-                                (ecma_length_t) (arguments_number - 1u));
+                                (uint32_t) (arguments_number - 1u));
 } /* ecma_builtin_function_prototype_object_call */
 
 /**
@@ -206,7 +206,7 @@ ecma_builtin_function_prototype_object_call (ecma_object_t *func_obj_p , /**< th
 static ecma_value_t
 ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p , /**< this argument object */
                                              const ecma_value_t *arguments_list_p, /**< list of arguments */
-                                             ecma_length_t arguments_number) /**< number of arguments */
+                                             uint32_t arguments_number) /**< number of arguments */
 {
   /* 4. 11. 18. */
   ecma_object_t *prototype_obj_p;
@@ -287,7 +287,7 @@ ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p , /**
     bound_func_p->header.u.bound_function.args_len_or_this = ECMA_VALUE_UNDEFINED;
     ecma_value_t *args_p = (ecma_value_t *) (bound_func_p + 1);
 
-    for (ecma_length_t i = 0; i < arguments_number; i++)
+    for (uint32_t i = 0; i < arguments_number; i++)
     {
       *args_p++ = ecma_copy_value_if_not_object (arguments_list_p[i]);
     }
@@ -390,7 +390,7 @@ ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p , /**
  */
 ecma_value_t
 ecma_builtin_function_prototype_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
-                                               ecma_length_t arguments_list_len) /**< number of arguments */
+                                               uint32_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
@@ -404,7 +404,7 @@ ecma_builtin_function_prototype_dispatch_call (const ecma_value_t *arguments_lis
  */
 ecma_value_t
 ecma_builtin_function_prototype_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
-                                                    ecma_length_t arguments_list_len) /**< number of arguments */
+                                                    uint32_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
@@ -423,7 +423,7 @@ ecma_builtin_function_prototype_dispatch_routine (uint16_t builtin_routine_id, /
                                                   ecma_value_t this_arg, /**< 'this' argument value */
                                                   const ecma_value_t arguments_list_p[], /**< list of arguments
                                                                                         *   passed to routine */
-                                                  ecma_length_t arguments_number) /**< length of arguments' list */
+                                                  uint32_t arguments_number) /**< length of arguments' list */
 {
   if (!ecma_op_is_callable (this_arg))
   {

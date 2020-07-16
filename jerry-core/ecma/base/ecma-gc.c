@@ -1200,7 +1200,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 #if ENABLED (JERRY_BUILTIN_TYPEDARRAY)
         case LIT_MAGIC_STRING_ARRAY_BUFFER_UL:
         {
-          ecma_length_t arraybuffer_length = ext_object_p->u.class_prop.u.length;
+          uint32_t arraybuffer_length = ext_object_p->u.class_prop.u.length;
 
           if (ECMA_ARRAYBUFFER_HAS_EXTERNAL_MEMORY (ext_object_p))
           {
@@ -1340,14 +1340,14 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
         {
           JERRY_ASSERT (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS);
 
-          ecma_length_t formal_params_number = ext_object_p->u.pseudo_array.u1.length;
-          ecma_value_t *arg_Literal_p = (ecma_value_t *) (ext_object_p + 1);
+          uint32_t formal_params_number = ext_object_p->u.pseudo_array.u1.length;
+          ecma_value_t *arg_literal_p = (ecma_value_t *) (ext_object_p + 1);
 
-          for (ecma_length_t i = 0; i < formal_params_number; i++)
+          for (uint32_t i = 0; i < formal_params_number; i++)
           {
-            if (arg_Literal_p[i] != ECMA_VALUE_EMPTY)
+            if (arg_literal_p[i] != ECMA_VALUE_EMPTY)
             {
-              ecma_string_t *name_p = ecma_get_string_from_value (arg_Literal_p[i]);
+              ecma_string_t *name_p = ecma_get_string_from_value (arg_literal_p[i]);
               ecma_deref_ecma_string (name_p);
             }
           }

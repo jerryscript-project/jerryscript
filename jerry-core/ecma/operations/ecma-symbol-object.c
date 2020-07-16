@@ -43,7 +43,7 @@
  */
 ecma_value_t
 ecma_op_create_symbol (const ecma_value_t *arguments_list_p, /**< list of arguments */
-                       ecma_length_t arguments_list_len) /**< length of the arguments' list */
+                       uint32_t arguments_list_len) /**< length of the arguments' list */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 

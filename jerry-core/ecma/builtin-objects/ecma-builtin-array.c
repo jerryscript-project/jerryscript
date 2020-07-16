@@ -78,7 +78,7 @@ ecma_builtin_array_object_is_array (ecma_value_t this_arg, /**< 'this' argument 
 static ecma_value_t
 ecma_builtin_array_object_from (ecma_value_t this_arg, /**< 'this' argument */
                                 const ecma_value_t *arguments_list_p, /**< arguments list */
-                                ecma_length_t arguments_list_len) /**< number of arguments */
+                                uint32_t arguments_list_len) /**< number of arguments */
 {
   /* 1. */
   ecma_value_t constructor = this_arg;
@@ -408,7 +408,7 @@ cleanup:
 static ecma_value_t
 ecma_builtin_array_object_of (ecma_value_t this_arg, /**< 'this' argument */
                               const ecma_value_t *arguments_list_p, /**< arguments list */
-                              ecma_length_t arguments_list_len) /**< number of arguments */
+                              uint32_t arguments_list_len) /**< number of arguments */
 {
   if (!ecma_is_constructor (this_arg))
   {
@@ -485,7 +485,7 @@ ecma_builtin_array_species_get (ecma_value_t this_value) /**< This Value */
  */
 ecma_value_t
 ecma_builtin_array_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
-                                  ecma_length_t arguments_list_len) /**< number of arguments */
+                                  uint32_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
@@ -499,7 +499,7 @@ ecma_builtin_array_dispatch_call (const ecma_value_t *arguments_list_p, /**< arg
  */
 ecma_value_t
 ecma_builtin_array_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
-                                       ecma_length_t arguments_list_len) /**< number of arguments */
+                                       uint32_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 

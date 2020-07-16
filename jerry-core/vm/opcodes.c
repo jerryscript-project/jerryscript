@@ -958,7 +958,7 @@ static ecma_value_t
 ecma_op_implicit_constructor_handler_cb (const ecma_value_t function_obj, /**< the function itself */
                                          const ecma_value_t this_val, /**< this_arg of the function */
                                          const ecma_value_t args_p[], /**< argument list */
-                                         const ecma_length_t args_count) /**< argument number */
+                                         const uint32_t args_count) /**< argument number */
 {
   JERRY_UNUSED_4 (function_obj, this_val, args_p, args_count);
 
@@ -982,7 +982,7 @@ static ecma_value_t
 ecma_op_implicit_constructor_handler_heritage_cb (const ecma_value_t function_obj, /**< the function itself */
                                                   const ecma_value_t this_val, /**< this_arg of the function */
                                                   const ecma_value_t args_p[], /**< argument list */
-                                                  const ecma_length_t args_count) /**< argument number */
+                                                  const uint32_t args_count) /**< argument number */
 {
   JERRY_UNUSED_4 (function_obj, this_val, args_p, args_count);
 

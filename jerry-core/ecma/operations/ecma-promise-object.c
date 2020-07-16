@@ -301,7 +301,7 @@ static ecma_value_t
 ecma_promise_reject_handler (const ecma_value_t function, /**< the function itself */
                              const ecma_value_t this, /**< this_arg of the function */
                              const ecma_value_t argv[], /**< argument list */
-                             const ecma_length_t argc) /**< argument number */
+                             const uint32_t argc) /**< argument number */
 {
   JERRY_UNUSED (this);
 
@@ -338,7 +338,7 @@ static ecma_value_t
 ecma_promise_resolve_handler (const ecma_value_t function, /**< the function itself */
                               const ecma_value_t this, /**< this_arg of the function */
                               const ecma_value_t argv[], /**< argument list */
-                              const ecma_length_t argc) /**< argument number */
+                              const uint32_t argc) /**< argument number */
 {
   JERRY_UNUSED (this);
 
@@ -545,7 +545,7 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
  *
  * @return the current remaining count after increase or decrease.
  */
-ecma_length_t
+uint32_t
 ecma_promise_remaining_inc_or_dec (ecma_value_t remaining, /**< the remaining count */
                                    bool is_inc) /**< whether to increase the count */
 {
@@ -558,7 +558,7 @@ ecma_promise_remaining_inc_or_dec (ecma_value_t remaining, /**< the remaining co
 
   JERRY_ASSERT (ecma_is_value_integer_number (ext_object_p->u.class_prop.u.value));
 
-  ecma_length_t current = (ecma_length_t) ecma_get_integer_from_value (ext_object_p->u.class_prop.u.value);
+  uint32_t current = (uint32_t) ecma_get_integer_from_value (ext_object_p->u.class_prop.u.value);
 
   if (is_inc)
   {
@@ -585,7 +585,7 @@ ecma_value_t
 ecma_promise_all_handler_cb (const ecma_value_t function_obj, /**< the function itself */
                              const ecma_value_t this_val, /**< this_arg of the function */
                              const ecma_value_t args_p[], /**< argument list */
-                             const ecma_length_t args_count) /**< argument number */
+                             const uint32_t args_count) /**< argument number */
 {
   JERRY_UNUSED (this_val);
   JERRY_UNUSED (args_count);
@@ -634,7 +634,7 @@ ecma_value_t
 ecma_op_get_capabilities_executor_cb (const ecma_value_t function_obj, /**< the function itself */
                                       const ecma_value_t this_val, /**< this_arg of the function */
                                       const ecma_value_t args_p[], /**< argument list */
-                                      const ecma_length_t args_count) /**< argument number */
+                                      const uint32_t args_count) /**< argument number */
 {
   JERRY_UNUSED (this_val);
 

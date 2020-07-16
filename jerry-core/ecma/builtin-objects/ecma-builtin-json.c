@@ -1668,7 +1668,7 @@ ecma_builtin_json_stringify (ecma_value_t this_arg, /**< 'this' argument */
   else if (ecma_is_value_string (space))
   {
     ecma_string_t *space_str_p = ecma_get_string_from_value (space);
-    ecma_length_t num_of_chars = ecma_string_get_length (space_str_p);
+    lit_utf8_size_t num_of_chars = ecma_string_get_length (space_str_p);
 
     if (num_of_chars < 10)
     {

@@ -2163,7 +2163,7 @@ ecma_regexp_split_helper (ecma_value_t this_arg, /**< this value */
   const lit_utf8_size_t string_length = ecma_string_get_length (string_p);
 
   ecma_object_t *const array_p = ecma_get_object_from_value (array);
-  ecma_length_t array_length = 0;
+  uint32_t array_length = 0;
 
   /* 22. */
   if (string_length == 0)
@@ -2379,7 +2379,7 @@ cleanup_string:
   }
 
   ecma_object_t *const array_p = ecma_get_object_from_value (array);
-  ecma_length_t array_length = 0;
+  uint32_t array_length = 0;
 
   ecma_object_t *const regexp_p = ecma_get_object_from_value (this_arg);
   ecma_extended_object_t *const ext_object_p = (ecma_extended_object_t *) regexp_p;
@@ -2561,7 +2561,7 @@ ecma_regexp_replace_helper_fast (ecma_replace_context_t *ctx_p, /**<replace cont
   const lit_utf8_byte_t *matched_p = NULL;
   const lit_utf8_byte_t *current_p = ctx_p->string_p;
   const lit_utf8_byte_t *last_append_p = current_p;
-  ecma_length_t index;
+  lit_utf8_size_t index;
 
   ecma_regexp_ctx_t re_ctx;
   ecma_regexp_initialize_context (&re_ctx,
@@ -2607,7 +2607,7 @@ ecma_regexp_replace_helper_fast (ecma_replace_context_t *ctx_p, /**<replace cont
     }
     else
     {
-      ecma_length_t counter = index;
+      lit_utf8_size_t counter = index;
       while (counter--)
       {
         lit_utf8_incr (&current_p);
@@ -3039,7 +3039,7 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
   replace_ctx.builder = ecma_stringbuilder_create ();
   replace_ctx.matched_p = NULL;
   replace_ctx.capture_count = 0;
-  ecma_length_t index = 0;
+  lit_utf8_size_t index = 0;
 
   /* 15. */
   const lit_utf8_byte_t *source_position_p = replace_ctx.string_p;
@@ -3101,7 +3101,7 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
     }
 
     /* 16.i */
-    ecma_length_t position = JERRY_MIN ((ecma_length_t) JERRY_MAX (position_num, 0.0f), string_length);
+    lit_utf8_size_t position = JERRY_MIN ((lit_utf8_size_t) JERRY_MAX (position_num, 0.0f), string_length);
 
     /* 16.k */
     ecma_collection_t *arguments_p = ecma_new_collection ();

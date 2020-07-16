@@ -287,11 +287,11 @@ lit_zt_utf8_string_size (const lit_utf8_byte_t *utf8_str_p) /**< zero-terminated
  *
  * @return UTF-16 code units count
  */
-ecma_length_t
+lit_utf8_size_t
 lit_utf8_string_length (const lit_utf8_byte_t *utf8_buf_p, /**< utf-8 string */
                         lit_utf8_size_t utf8_buf_size) /**< string size */
 {
-  ecma_length_t length = 0;
+  lit_utf8_size_t length = 0;
   lit_utf8_size_t size = 0;
 
   while (size < utf8_buf_size)
@@ -341,12 +341,12 @@ lit_get_utf8_size_of_cesu8_string (const lit_utf8_byte_t *cesu8_buf_p, /**< cesu
  *
  * @return length of an utf-8 encoded string
  */
-ecma_length_t
+lit_utf8_size_t
 lit_get_utf8_length_of_cesu8_string (const lit_utf8_byte_t *cesu8_buf_p, /**< cesu-8 string */
                                      lit_utf8_size_t cesu8_buf_size) /**< string size */
 {
   lit_utf8_size_t offset = 0;
-  ecma_length_t utf8_length = 0;
+  lit_utf8_size_t utf8_length = 0;
   ecma_char_t prev_ch = 0;
 
   while (offset < cesu8_buf_size)
@@ -387,7 +387,7 @@ lit_read_code_point_from_utf8 (const lit_utf8_byte_t *buf_p, /**< buffer with ch
   }
 
   lit_code_point_t ret = LIT_UNICODE_CODE_POINT_NULL;
-  ecma_length_t bytes_count = 0;
+  lit_utf8_size_t bytes_count = 0;
   if ((c & LIT_UTF8_2_BYTE_MASK) == LIT_UTF8_2_BYTE_MARKER)
   {
     bytes_count = 2;
@@ -436,7 +436,7 @@ lit_read_code_unit_from_utf8 (const lit_utf8_byte_t *buf_p, /**< buffer with cha
   }
 
   lit_code_point_t ret = LIT_UNICODE_CODE_POINT_NULL;
-  ecma_length_t bytes_count;
+  lit_utf8_size_t bytes_count;
   if ((c & LIT_UTF8_2_BYTE_MASK) == LIT_UTF8_2_BYTE_MARKER)
   {
     bytes_count = 2;
@@ -623,7 +623,7 @@ lit_utf8_string_calc_hash (const lit_utf8_byte_t *utf8_buf_p, /**< characters bu
 ecma_char_t
 lit_utf8_string_code_unit_at (const lit_utf8_byte_t *utf8_buf_p, /**< utf-8 string */
                               lit_utf8_size_t utf8_buf_size, /**< string size in bytes */
-                              ecma_length_t code_unit_offset) /**< ofset of a code_unit */
+                              lit_utf8_size_t code_unit_offset) /**< ofset of a code_unit */
 {
   lit_utf8_byte_t *current_p = (lit_utf8_byte_t *) utf8_buf_p;
   ecma_char_t code_unit;

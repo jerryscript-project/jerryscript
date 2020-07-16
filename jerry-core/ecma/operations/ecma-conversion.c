@@ -1026,7 +1026,7 @@ ecma_op_create_list_from_array_like (ecma_value_t arr,  /**< array value */
   ecma_object_t *obj_p = ecma_get_object_from_value (arr);
 
   /* 4. 5. */
-  ecma_length_t len;
+  uint32_t len;
   if (ECMA_IS_VALUE_ERROR (ecma_op_object_get_length (obj_p, &len)))
   {
     return NULL;

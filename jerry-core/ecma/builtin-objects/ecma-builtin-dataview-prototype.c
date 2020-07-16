@@ -142,7 +142,7 @@ ecma_builtin_dataview_prototype_dispatch_routine (uint16_t builtin_routine_id, /
                                                   ecma_value_t this_arg, /**< 'this' argument value */
                                                   const ecma_value_t arguments_list_p[], /**< list of arguments
                                                                                           *   passed to routine */
-                                                  ecma_length_t arguments_number) /**< length of arguments' list */
+                                                  uint32_t arguments_number) /**< length of arguments' list */
 {
   ecma_value_t byte_offset = arguments_number > 0 ? arguments_list_p[0] : ECMA_VALUE_UNDEFINED;
 

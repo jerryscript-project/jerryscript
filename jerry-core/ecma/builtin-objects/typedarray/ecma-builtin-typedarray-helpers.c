@@ -33,7 +33,7 @@
  */
 ecma_value_t
 ecma_typedarray_helper_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
-                                           ecma_length_t arguments_list_len, /**< number of arguments */
+                                           uint32_t arguments_list_len, /**< number of arguments */
                                            ecma_typedarray_type_t typedarray_id) /**< id of the typedarray */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);

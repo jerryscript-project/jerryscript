@@ -62,10 +62,10 @@ typedef enum
 } ecma_array_object_set_length_flags_t;
 
 ecma_object_t *
-ecma_op_new_array_object (ecma_length_t length);
+ecma_op_new_array_object (uint32_t length);
 
 ecma_object_t *
-ecma_op_new_fast_array_object (ecma_length_t length);
+ecma_op_new_fast_array_object (uint32_t length);
 
 bool
 ecma_op_object_is_fast_array (ecma_object_t *object_p);
@@ -96,13 +96,13 @@ void
 ecma_fast_array_convert_to_normal (ecma_object_t *object_p);
 
 ecma_value_t
-ecma_op_create_array_object (const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len,
+ecma_op_create_array_object (const ecma_value_t *arguments_list_p, uint32_t arguments_list_len,
                              bool is_treat_single_arg_as_length);
 
 #if ENABLED (JERRY_ESNEXT)
 ecma_value_t
 ecma_op_array_species_create (ecma_object_t *original_array_p,
-                              ecma_length_t length);
+                              uint32_t length);
 
 ecma_value_t
 ecma_op_create_array_iterator (ecma_object_t *obj_p,

@@ -189,7 +189,7 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
     ecma_value_t pattern = ((re_compiled_code_t *) compiled_code_p)->source;
     ecma_string_t *pattern_string_p = ecma_get_string_from_value (pattern);
 
-    ecma_length_t pattern_size = 0;
+    lit_utf8_size_t pattern_size = 0;
 
     ECMA_STRING_TO_UTF8_STRING (pattern_string_p, buffer_p, buffer_size);
 
@@ -219,7 +219,7 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
     /* Regexp character size is stored in refs. */
     copied_code_p->refs = (uint16_t) pattern_size;
 
-    pattern_size += (ecma_length_t) sizeof (ecma_compiled_code_t);
+    pattern_size += (lit_utf8_size_t) sizeof (ecma_compiled_code_t);
     copied_code_p->size = (uint16_t) ((pattern_size + JMEM_ALIGNMENT - 1) >> JMEM_ALIGNMENT_LOG);
 
     copied_code_p->status_flags = compiled_code_p->status_flags;

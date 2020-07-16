@@ -340,10 +340,10 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
                                           ecma_number_t date_num, /**< date converted to number */
                                           const ecma_value_t arguments_list[], /**< list of arguments
                                                                                 *   passed to routine */
-                                          ecma_length_t arguments_number) /**< length of arguments' list */
+                                          uint32_t arguments_number) /**< length of arguments' list */
 {
   ecma_number_t converted_number[4];
-  ecma_length_t conversions = 0;
+  uint32_t conversions = 0;
 
   /* If the first argument is not specified, it is always converted to NaN. */
   converted_number[0] = ecma_number_make_nan ();
@@ -392,7 +392,7 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
     conversions = arguments_number;
   }
 
-  for (ecma_length_t i = 0; i < conversions; i++)
+  for (uint32_t i = 0; i < conversions; i++)
   {
     ecma_value_t value = ecma_op_to_number (arguments_list[i]);
 
@@ -591,7 +591,7 @@ ecma_builtin_date_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< 
                                               ecma_value_t this_arg, /**< 'this' argument value */
                                               const ecma_value_t arguments_list[], /**< list of arguments
                                                                                     *   passed to routine */
-                                              ecma_length_t arguments_number) /**< length of arguments' list */
+                                              uint32_t arguments_number) /**< length of arguments' list */
 {
   if (JERRY_UNLIKELY (builtin_routine_id == ECMA_DATE_PROTOTYPE_TO_JSON))
   {

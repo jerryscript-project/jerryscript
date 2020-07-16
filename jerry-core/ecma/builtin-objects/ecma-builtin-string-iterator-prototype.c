@@ -80,7 +80,7 @@ ecma_builtin_string_iterator_prototype_object_next (ecma_value_t this_val) /**< 
   ecma_string_t *string_p = ecma_get_string_from_value (iterated_value);
 
   /* 6. */
-  ecma_length_t position = ext_obj_p->u.pseudo_array.u1.iterator_index;
+  lit_utf8_size_t position = ext_obj_p->u.pseudo_array.u1.iterator_index;
 
   if (JERRY_UNLIKELY (position == ECMA_ITERATOR_INDEX_LIMIT))
   {
@@ -88,7 +88,7 @@ ecma_builtin_string_iterator_prototype_object_next (ecma_value_t this_val) /**< 
   }
 
   /* 7. */
-  ecma_length_t len = ecma_string_get_length (string_p);
+  lit_utf8_size_t len = ecma_string_get_length (string_p);
 
   /* 8. */
   if (position >= len)
@@ -102,7 +102,7 @@ ecma_builtin_string_iterator_prototype_object_next (ecma_value_t this_val) /**< 
   ecma_char_t first = ecma_string_get_char_at_pos (string_p, position);
 
   ecma_string_t *result_str_p;
-  ecma_length_t result_size = 1;
+  lit_utf8_size_t result_size = 1;
 
   /* 10. */
   if (first < LIT_UTF16_HIGH_SURROGATE_MIN || first > LIT_UTF16_HIGH_SURROGATE_MAX || (position + 1 == len))
@@ -113,7 +113,7 @@ ecma_builtin_string_iterator_prototype_object_next (ecma_value_t this_val) /**< 
   else
   {
     /* 11.a */
-    ecma_char_t second = ecma_string_get_char_at_pos (string_p, (ecma_length_t) (position + 1));
+    ecma_char_t second = ecma_string_get_char_at_pos (string_p, position + 1);
 
     /* 11.b */
     if (second < LIT_UTF16_LOW_SURROGATE_MIN || second > LIT_UTF16_LOW_SURROGATE_MAX)

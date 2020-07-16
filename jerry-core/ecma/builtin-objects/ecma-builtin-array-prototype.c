@@ -218,7 +218,7 @@ ecma_builtin_array_prototype_object_to_locale_string (ecma_object_t *obj_p, /**<
  */
 static ecma_value_t
 ecma_builtin_array_prototype_object_concat (const ecma_value_t args[], /**< arguments list */
-                                            ecma_length_t args_number, /**< number of arguments */
+                                            uint32_t args_number, /**< number of arguments */
                                             ecma_object_t *obj_p) /**< array object */
 {
   /* 2. */
@@ -472,7 +472,7 @@ ecma_builtin_array_prototype_object_pop (ecma_object_t *obj_p, /**< array object
  */
 static ecma_value_t
 ecma_builtin_array_prototype_object_push (const ecma_value_t *argument_list_p, /**< arguments list */
-                                          ecma_length_t arguments_number, /**< number of arguments */
+                                          uint32_t arguments_number, /**< number of arguments */
                                           ecma_object_t *obj_p, /**< array object */
                                           uint32_t length) /**< array object's length */
 {
@@ -1259,7 +1259,7 @@ clean_up:
  */
 static ecma_value_t
 ecma_builtin_array_prototype_object_splice (const ecma_value_t args[], /**< arguments list */
-                                            ecma_length_t args_number, /**< number of arguments */
+                                            uint32_t args_number, /**< number of arguments */
                                             ecma_object_t *obj_p, /**< array object */
                                             uint32_t len) /**< array object's length */
 {
@@ -1380,11 +1380,11 @@ ecma_builtin_array_prototype_object_splice (const ecma_value_t args[], /**< argu
 #endif /* ENABLED (JERRY_ESNEXT) */
 
   /* 11. */
-  ecma_length_t item_count;
+  uint32_t item_count;
 
   if (args_number > 2)
   {
-    item_count = (ecma_length_t) (args_number - 2);
+    item_count = (uint32_t) (args_number - 2);
   }
   else
   {
@@ -1489,8 +1489,8 @@ ecma_builtin_array_prototype_object_splice (const ecma_value_t args[], /**< argu
   }
 
   /* 15. */
-  ecma_length_t idx = 0;
-  for (ecma_length_t arg_index = 2; arg_index < args_number; arg_index++, idx++)
+  uint32_t idx = 0;
+  for (uint32_t arg_index = 2; arg_index < args_number; arg_index++, idx++)
   {
     ecma_value_t put_value = ecma_op_object_put_by_uint32_index (obj_p,
                                                                  (uint32_t) (start + idx),
@@ -1527,7 +1527,7 @@ ecma_builtin_array_prototype_object_splice (const ecma_value_t args[], /**< argu
  */
 static ecma_value_t
 ecma_builtin_array_prototype_object_unshift (const ecma_value_t args[], /**< arguments list */
-                                             ecma_length_t args_number, /**< number of arguments */
+                                             uint32_t args_number, /**< number of arguments */
                                              ecma_object_t *obj_p, /**< array object */
                                              uint32_t len) /**< array object's length */
 {
@@ -1635,7 +1635,7 @@ ecma_builtin_array_prototype_object_unshift (const ecma_value_t args[], /**< arg
  */
 static ecma_value_t
 ecma_builtin_array_prototype_object_index_of (const ecma_value_t args[], /**< arguments list */
-                                              ecma_length_t args_number, /**< number of arguments */
+                                              uint32_t args_number, /**< number of arguments */
                                               ecma_object_t *obj_p, /**< array object */
                                               uint32_t len) /**< array object's length */
 {
@@ -1740,7 +1740,7 @@ ecma_builtin_array_prototype_object_index_of (const ecma_value_t args[], /**< ar
  */
 static ecma_value_t
 ecma_builtin_array_prototype_object_last_index_of (const ecma_value_t args[], /**< arguments list */
-                                                   ecma_length_t args_number, /**< number of arguments */
+                                                   uint32_t args_number, /**< number of arguments */
                                                    ecma_object_t *obj_p, /**< array object */
                                                    uint32_t len) /**< array object's length */
 {
@@ -2142,7 +2142,7 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t arg1, /**< callbackfn *
  */
 static ecma_value_t
 ecma_builtin_array_reduce_from (const ecma_value_t args_p[], /**< routine's arguments */
-                                ecma_length_t args_number, /**< arguments list length */
+                                uint32_t args_number, /**< arguments list length */
                                 bool start_from_left, /**< whether the reduce starts from left or right */
                                 ecma_object_t *obj_p, /**< array object */
                                 uint32_t len) /**< array object's length */
@@ -2436,7 +2436,7 @@ ecma_builtin_array_prototype_object_find (ecma_value_t predicate, /**< callback 
  */
 static ecma_value_t
 ecma_builtin_array_prototype_object_copy_within (const ecma_value_t args[], /**< arguments list */
-                                                 ecma_length_t args_number, /**< number of arguments */
+                                                 uint32_t args_number, /**< number of arguments */
                                                  ecma_object_t *obj_p, /**< array object */
                                                  uint32_t len) /**< array object's length */
 {
@@ -2592,7 +2592,7 @@ ecma_builtin_array_prototype_object_copy_within (const ecma_value_t args[], /**<
  */
 static ecma_value_t
 ecma_builtin_array_prototype_includes (const ecma_value_t args[], /**< arguments list */
-                                       ecma_length_t args_number, /**< number of arguments */
+                                       uint32_t args_number, /**< number of arguments */
                                        ecma_object_t *obj_p, /**< array object */
                                        uint32_t len) /**< array object's length */
 {
@@ -2678,7 +2678,7 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
                                               ecma_value_t this_arg, /**< 'this' argument value */
                                               const ecma_value_t arguments_list_p[], /**< list of arguments
                                                                                     *   passed to routine */
-                                              ecma_length_t arguments_number) /**< length of arguments' list */
+                                              uint32_t arguments_number) /**< length of arguments' list */
 {
   ecma_value_t obj_this = ecma_op_to_object (this_arg);
 

@@ -27,7 +27,7 @@
  */
 
 ecma_value_t
-ecma_op_create_symbol (const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len);
+ecma_op_create_symbol (const ecma_value_t *arguments_list_p, uint32_t arguments_list_len);
 
 ecma_value_t
 ecma_op_create_symbol_object (const ecma_value_t value);

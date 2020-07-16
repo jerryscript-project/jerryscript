@@ -501,7 +501,7 @@ ecma_typedarray_helper_builtin_to_typedarray_id (ecma_builtin_id_t builtin_id)
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-ecma_typedarray_create_object_with_length (ecma_length_t array_length, /**< length of the typedarray */
+ecma_typedarray_create_object_with_length (uint32_t array_length, /**< length of the typedarray */
                                            ecma_object_t *src_buffer_p, /**< source buffer */
                                            ecma_object_t *proto_p, /**< prototype object */
                                            uint8_t element_size_shift, /**< the size shift of the element length */
@@ -512,7 +512,7 @@ ecma_typedarray_create_object_with_length (ecma_length_t array_length, /**< leng
     return ecma_raise_range_error (ECMA_ERR_MSG ("Maximum typedarray size is reached."));
   }
 
-  ecma_length_t byte_length = array_length << element_size_shift;
+  uint32_t byte_length = array_length << element_size_shift;
 
   if (byte_length > UINT32_MAX - sizeof (ecma_extended_object_t) - JMEM_ALIGNMENT + 1)
   {
@@ -576,8 +576,8 @@ ecma_typedarray_create_object_with_length (ecma_length_t array_length, /**< leng
  */
 static ecma_value_t
 ecma_typedarray_create_object_with_buffer (ecma_object_t *arraybuffer_p, /**< the arraybuffer inside */
-                                           ecma_length_t byte_offset, /**< the byte offset of the arraybuffer */
-                                           ecma_length_t array_length, /**< length of the typedarray */
+                                           uint32_t byte_offset, /**< the byte offset of the arraybuffer */
+                                           uint32_t array_length, /**< length of the typedarray */
                                            ecma_object_t *proto_p, /**< prototype object */
                                            uint8_t element_size_shift, /**< the size shift of the element length */
                                            ecma_typedarray_type_t typedarray_id) /**< id of the typedarray */
@@ -586,7 +586,7 @@ ecma_typedarray_create_object_with_buffer (ecma_object_t *arraybuffer_p, /**< th
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
   }
-  ecma_length_t expected_length = (ecma_arraybuffer_get_length (arraybuffer_p) >> element_size_shift);
+  uint32_t expected_length = (ecma_arraybuffer_get_length (arraybuffer_p) >> element_size_shift);
 
   bool needs_ext_typedarray_obj = (byte_offset != 0 || array_length != expected_length);
 
@@ -627,7 +627,7 @@ ecma_typedarray_create_object_with_typedarray (ecma_object_t *typedarray_p, /**<
                                                uint8_t element_size_shift, /**< the size shift of the element length */
                                                ecma_typedarray_type_t typedarray_id) /**< id of the typedarray */
 {
-  ecma_length_t array_length = ecma_typedarray_get_length (typedarray_p);
+  uint32_t array_length = ecma_typedarray_get_length (typedarray_p);
   ecma_object_t *src_arraybuffer_p = ecma_typedarray_get_arraybuffer (typedarray_p);
   if (ecma_arraybuffer_is_detached (src_arraybuffer_p))
   {
@@ -992,7 +992,7 @@ ecma_typedarray_get_element_size_shift (ecma_object_t *typedarray_p) /**< the po
  *
  * @return the array length
  */
-ecma_length_t
+uint32_t
 ecma_typedarray_get_length (ecma_object_t *typedarray_p) /**< the pointer to the typedarray object */
 {
   JERRY_ASSERT (ecma_object_is_typedarray (typedarray_p));
@@ -1002,7 +1002,7 @@ ecma_typedarray_get_length (ecma_object_t *typedarray_p) /**< the pointer to the
   if (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_TYPEDARRAY)
   {
     ecma_object_t *arraybuffer_p = ecma_get_object_from_value (ext_object_p->u.pseudo_array.u2.arraybuffer);
-    ecma_length_t buffer_length = ecma_arraybuffer_get_length (arraybuffer_p);
+    uint32_t buffer_length = ecma_arraybuffer_get_length (arraybuffer_p);
     uint8_t shift = ecma_typedarray_get_element_size_shift (typedarray_p);
 
     return buffer_length >> shift;
@@ -1024,7 +1024,7 @@ ecma_typedarray_get_length (ecma_object_t *typedarray_p) /**< the pointer to the
  *
  * @return the offset
  */
-ecma_length_t
+uint32_t
 ecma_typedarray_get_offset (ecma_object_t *typedarray_p) /**< the pointer to the typedarray object */
 {
   JERRY_ASSERT (ecma_object_is_typedarray (typedarray_p));
@@ -1073,7 +1073,7 @@ ecma_typedarray_get_buffer (ecma_object_t *typedarray_p) /**< the pointer to the
  */
 ecma_value_t
 ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg list passed to typedarray construct */
-                           ecma_length_t arguments_list_len, /**< the length of the arguments_list_p */
+                           uint32_t arguments_list_len, /**< the length of the arguments_list_p */
                            ecma_object_t *proto_p, /**< prototype object */
                            uint8_t element_size_shift, /**< the size shift of the element length */
                            ecma_typedarray_type_t typedarray_id) /**< id of the typedarray */
@@ -1152,8 +1152,8 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
       }
       else
       {
-        ecma_length_t buf_byte_length = ecma_arraybuffer_get_length (arraybuffer_p);
-        ecma_length_t new_byte_length = 0;
+        uint32_t buf_byte_length = ecma_arraybuffer_get_length (arraybuffer_p);
+        uint32_t new_byte_length = 0;
 
         if (ecma_is_value_undefined (arg3))
         {
@@ -1167,7 +1167,7 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
           }
           else
           {
-            new_byte_length = (ecma_length_t) (buf_byte_length - offset);
+            new_byte_length = (uint32_t) (buf_byte_length - offset);
           }
         }
         else
@@ -1184,7 +1184,7 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
           }
           else
           {
-            new_byte_length = (ecma_length_t) new_length << element_size_shift;
+            new_byte_length = (uint32_t) new_length << element_size_shift;
 
             if (((ecma_number_t) new_byte_length + offset) > buf_byte_length)
             {
@@ -1195,9 +1195,9 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
 
         if (ecma_is_value_empty (ret))
         {
-          ecma_length_t array_length = new_byte_length >> element_size_shift;
+          uint32_t array_length = new_byte_length >> element_size_shift;
           ret = ecma_typedarray_create_object_with_buffer (arraybuffer_p,
-                                                           (ecma_length_t) offset,
+                                                           (uint32_t) offset,
                                                            array_length,
                                                            proto_p,
                                                            element_size_shift,
@@ -1271,9 +1271,9 @@ ecma_op_typedarray_list_lazy_property_names (ecma_object_t *obj_p, /**< a TypedA
 {
   JERRY_ASSERT (ecma_object_is_typedarray (obj_p));
 
-  ecma_length_t array_length = ecma_typedarray_get_length (obj_p);
+  uint32_t array_length = ecma_typedarray_get_length (obj_p);
 
-  for (ecma_length_t i = 0; i < array_length; i++)
+  for (uint32_t i = 0; i < array_length; i++)
   {
     ecma_string_t *name_p = ecma_new_ecma_string_from_uint32 (i);
 
@@ -1296,7 +1296,7 @@ ecma_op_typedarray_define_index_prop (ecma_object_t *obj_p, /**< a TypedArray ob
 {
   JERRY_ASSERT (ecma_object_is_typedarray (obj_p));
 
-  ecma_length_t array_length = ecma_typedarray_get_length (obj_p);
+  uint32_t array_length = ecma_typedarray_get_length (obj_p);
 
   if ((index >= array_length)
       || (property_desc_p->flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED))
@@ -1342,7 +1342,7 @@ ecma_op_typedarray_define_index_prop (ecma_object_t *obj_p, /**< a TypedArray ob
  */
 ecma_value_t
 ecma_op_create_typedarray_with_type_and_length (ecma_typedarray_type_t typedarray_id, /** TypedArray id  */
-                                                ecma_length_t array_length) /**< length of the typedarray */
+                                                uint32_t array_length) /**< length of the typedarray */
 {
   // TODO: assert validate typedarray_id
   ecma_object_t *proto_p = ecma_builtin_get (ecma_typedarray_helper_get_prototype_id (typedarray_id));

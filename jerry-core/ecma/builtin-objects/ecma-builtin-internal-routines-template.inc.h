@@ -40,7 +40,7 @@
 #define ROUTINE_ARG_LIST_2 ROUTINE_ARG_LIST_1 ROUTINE_ARG(2)
 #define ROUTINE_ARG_LIST_3 ROUTINE_ARG_LIST_2 ROUTINE_ARG(3)
 #define ROUTINE_ARG_LIST_NON_FIXED ROUTINE_ARG_LIST_0, \
-  const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len
+  const ecma_value_t *arguments_list_p, uint32_t arguments_list_len
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) \
   static ecma_value_t c_function_name (ROUTINE_ARG_LIST_ ## args_number);
 #define ROUTINE_CONFIGURABLE_ONLY(name, c_function_name, args_number, length_prop_value) \
@@ -236,8 +236,8 @@ DISPATCH_ROUTINE_ROUTINE_NAME (uint16_t builtin_routine_id, /**< built-in wide r
                                                                  value */
                                const ecma_value_t arguments_list[], /**< list of arguments
                                                                          passed to routine */
-                               ecma_length_t arguments_number) /**< length of
-                                                                    arguments' list */
+                               uint32_t arguments_number) /**< length of
+                                                           *   arguments' list */
 {
   /* the arguments may be unused for some built-ins */
   JERRY_UNUSED (this_arg_value);

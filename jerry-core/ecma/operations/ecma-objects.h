@@ -79,12 +79,12 @@ ecma_value_t ecma_op_is_concat_spreadable (ecma_value_t arg);
 ecma_value_t ecma_op_is_regexp (ecma_value_t arg);
 ecma_value_t ecma_op_species_constructor (ecma_object_t *this_value, ecma_builtin_id_t default_constructor_id);
 ecma_value_t ecma_op_invoke_by_symbol_id (ecma_value_t object, lit_magic_string_id_t magic_string_id,
-                                          ecma_value_t *args_p, ecma_length_t args_len);
+                                          ecma_value_t *args_p, uint32_t args_len);
 #endif /* ENABLED (JERRY_ESNEXT) */
 ecma_value_t ecma_op_invoke (ecma_value_t object, ecma_string_t *property_name_p, ecma_value_t *args_p,
-                             ecma_length_t args_len);
+                             uint32_t args_len);
 ecma_value_t ecma_op_invoke_by_magic_id (ecma_value_t object, lit_magic_string_id_t magic_string_id,
-                                         ecma_value_t *args_p, ecma_length_t args_len);
+                                         ecma_value_t *args_p, uint32_t args_len);
 
 jmem_cpointer_t ecma_op_ordinary_object_get_prototype_of (ecma_object_t *obj_p);
 ecma_value_t ecma_op_ordinary_object_set_prototype_of (ecma_object_t *base_p, ecma_value_t proto);

@@ -44,7 +44,7 @@
  * @return ecma_object_t *
  */
 ecma_object_t *
-ecma_arraybuffer_new_object (ecma_length_t length) /**< length of the arraybuffer */
+ecma_arraybuffer_new_object (uint32_t length) /**< length of the arraybuffer */
 {
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAYBUFFER_PROTOTYPE);
   ecma_object_t *object_p = ecma_create_object (prototype_obj_p,
@@ -73,7 +73,7 @@ ecma_arraybuffer_new_object (ecma_length_t length) /**< length of the arraybuffe
  * @return ecma_object_t *, pointer to the created ArrayBuffer object
  */
 ecma_object_t *
-ecma_arraybuffer_new_object_external (ecma_length_t length, /**< length of the buffer_p to use */
+ecma_arraybuffer_new_object_external (uint32_t length, /**< length of the buffer_p to use */
                                       void *buffer_p, /**< pointer for ArrayBuffer's buffer backing */
                                       ecma_object_native_free_callback_t free_cb) /**< buffer free callback */
 {
@@ -104,7 +104,7 @@ ecma_arraybuffer_new_object_external (ecma_length_t length, /**< length of the b
 ecma_value_t
 ecma_op_create_arraybuffer_object (const ecma_value_t *arguments_list_p, /**< list of arguments that
                                                                           *   are passed to String constructor */
-                                   ecma_length_t arguments_list_len) /**< length of the arguments' list */
+                                   uint32_t arguments_list_len) /**< length of the arguments' list */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
@@ -169,9 +169,9 @@ ecma_is_arraybuffer (ecma_value_t target) /**< the target value */
 /**
  * Helper function: return the length of the buffer inside the arraybuffer object
  *
- * @return ecma_length_t, the length of the arraybuffer
+ * @return uint32_t, the length of the arraybuffer
  */
-ecma_length_t JERRY_ATTR_PURE
+uint32_t JERRY_ATTR_PURE
 ecma_arraybuffer_get_length (ecma_object_t *object_p) /**< pointer to the ArrayBuffer object */
 {
   JERRY_ASSERT (ecma_object_class_is (object_p, LIT_MAGIC_STRING_ARRAY_BUFFER_UL));

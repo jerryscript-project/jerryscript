@@ -48,13 +48,13 @@ ecma_value_t ecma_op_typedarray_from (ecma_value_t items_val,
                                       ecma_object_t *proto_p,
                                       uint8_t element_size_shift,
                                       ecma_typedarray_type_t typedarray_id);
-ecma_length_t ecma_typedarray_get_length (ecma_object_t *typedarray_p);
-ecma_length_t ecma_typedarray_get_offset (ecma_object_t *typedarray_p);
+uint32_t ecma_typedarray_get_length (ecma_object_t *typedarray_p);
+uint32_t ecma_typedarray_get_offset (ecma_object_t *typedarray_p);
 lit_utf8_byte_t *ecma_typedarray_get_buffer (ecma_object_t *typedarray_p);
 uint8_t ecma_typedarray_get_element_size_shift (ecma_object_t *typedarray_p);
 ecma_object_t *ecma_typedarray_get_arraybuffer (ecma_object_t *typedarray_p);
 ecma_value_t ecma_op_create_typedarray (const ecma_value_t *arguments_list_p,
-                                        ecma_length_t arguments_list_len,
+                                        uint32_t arguments_list_len,
                                         ecma_object_t *proto_p,
                                         uint8_t element_size_shift,
                                         ecma_typedarray_type_t typedarray_id);
@@ -66,9 +66,9 @@ bool ecma_op_typedarray_define_index_prop (ecma_object_t *obj_p,
                                            uint32_t index,
                                            const ecma_property_descriptor_t *property_desc_p);
 ecma_value_t ecma_op_create_typedarray_with_type_and_length (ecma_typedarray_type_t typedarray_id,
-                                                             ecma_length_t array_length);
+                                                             uint32_t array_length);
 ecma_typedarray_info_t ecma_typedarray_get_info (ecma_object_t *typedarray_p);
-ecma_value_t ecma_typedarray_create_object_with_length (ecma_length_t array_length,
+ecma_value_t ecma_typedarray_create_object_with_length (uint32_t array_length,
                                                         ecma_object_t *src_arraybuffer_p,
                                                         ecma_object_t *proto_p,
                                                         uint8_t element_size_shift,

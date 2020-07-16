@@ -58,7 +58,7 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_string_t *original_st
                                                       ecma_value_t arg2, ecma_string_index_of_mode_t mode);
 bool
 ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, ecma_string_t *search_str_p, bool first_index,
-                                       ecma_length_t start_pos, ecma_length_t *ret_index_p);
+                                       lit_utf8_size_t start_pos, lit_utf8_size_t *ret_index_p);
 ecma_value_t
 ecma_builtin_helper_def_prop (ecma_object_t *obj_p, ecma_string_t *name_p, ecma_value_t value, uint32_t opts);
 
@@ -227,7 +227,7 @@ ecma_builtin_helper_json_create_non_formatted_json (lit_utf8_byte_t left_bracket
 
 ecma_value_t
 ecma_builtin_helper_error_dispatch_call (ecma_standard_error_t error_type, const ecma_value_t *arguments_list_p,
-                                         ecma_length_t arguments_list_len);
+                                         uint32_t arguments_list_len);
 
 /* ecma-builtin-helpers-sort.c */
 

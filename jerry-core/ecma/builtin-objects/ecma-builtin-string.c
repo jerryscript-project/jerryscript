@@ -60,7 +60,7 @@
 static ecma_value_t
 ecma_builtin_string_object_from_char_code (ecma_value_t this_arg, /**< 'this' argument */
                                            const ecma_value_t args[], /**< arguments list */
-                                           ecma_length_t args_number) /**< number of arguments */
+                                           uint32_t args_number) /**< number of arguments */
 {
   JERRY_UNUSED (this_arg);
 
@@ -79,7 +79,7 @@ ecma_builtin_string_object_from_char_code (ecma_value_t this_arg, /**< 'this' ar
 
   lit_utf8_size_t utf8_buf_used = 0;
 
-  for (ecma_length_t arg_index = 0;
+  for (uint32_t arg_index = 0;
        arg_index < args_number && ecma_is_value_empty (ret_value);
        arg_index++)
   {
@@ -124,13 +124,13 @@ ecma_builtin_string_object_from_char_code (ecma_value_t this_arg, /**< 'this' ar
 static ecma_value_t
 ecma_builtin_string_object_raw (ecma_value_t this_arg, /**< 'this' argument */
                                 const ecma_value_t args[], /**< arguments list */
-                                ecma_length_t args_number) /**< number of arguments */
+                                uint32_t args_number) /**< number of arguments */
 {
   JERRY_UNUSED (this_arg);
 
   /* 1 - 2. */
   const ecma_value_t *substitutions;
-  ecma_length_t number_of_substitutions;
+  uint32_t number_of_substitutions;
 
   if (args_number > 1)
   {
@@ -278,7 +278,7 @@ cleanup:
 static ecma_value_t
 ecma_builtin_string_object_from_code_point (ecma_value_t this_arg, /**< 'this' argument */
                                             const ecma_value_t args[], /**< arguments list */
-                                            ecma_length_t args_number) /**< number of arguments */
+                                            uint32_t args_number) /**< number of arguments */
 {
   JERRY_UNUSED (this_arg);
 
@@ -289,7 +289,7 @@ ecma_builtin_string_object_from_code_point (ecma_value_t this_arg, /**< 'this' a
 
   ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
 
-  for (ecma_length_t index = 0; index < args_number; index++)
+  for (uint32_t index = 0; index < args_number; index++)
   {
     ecma_value_t to_number_value = ecma_op_to_number (args[index]);
 
@@ -317,7 +317,7 @@ ecma_builtin_string_object_from_code_point (ecma_value_t this_arg, /**< 'this' a
       return ecma_raise_range_error (ECMA_ERR_MSG ("Error: Invalid code point"));
     }
 
-    lit_code_point_t code_point = (uint32_t) to_int_num;
+    lit_code_point_t code_point = (lit_code_point_t) to_int_num;
 
     ecma_char_t converted_cp[2];
     uint8_t encoded_size = lit_utf16_encode_code_point (code_point, converted_cp);
@@ -345,7 +345,7 @@ ecma_builtin_string_object_from_code_point (ecma_value_t this_arg, /**< 'this' a
  */
 ecma_value_t
 ecma_builtin_string_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
-                                   ecma_length_t arguments_list_len) /**< number of arguments */
+                                   uint32_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
@@ -385,7 +385,7 @@ ecma_builtin_string_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
  */
 ecma_value_t
 ecma_builtin_string_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
-                                        ecma_length_t arguments_list_len) /**< number of arguments */
+                                        uint32_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 

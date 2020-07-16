@@ -4586,7 +4586,7 @@ finish:
 static void JERRY_ATTR_NOINLINE
 vm_init_exec (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
               const ecma_value_t *arg_p, /**< arguments list */
-              ecma_length_t arg_list_len) /**< length of arguments list */
+              uint32_t arg_list_len) /**< length of arguments list */
 {
   frame_ctx_p->prev_context_p = JERRY_CONTEXT (vm_top_context_p);
   frame_ctx_p->block_result = ECMA_VALUE_UNDEFINED;
@@ -4760,7 +4760,7 @@ vm_run (const ecma_compiled_code_t *bytecode_header_p, /**< byte-code data heade
         ecma_value_t this_binding_value, /**< value of 'ThisBinding' */
         ecma_object_t *lex_env_p, /**< lexical environment to use */
         const ecma_value_t *arg_list_p, /**< arguments list */
-        ecma_length_t arg_list_len) /**< length of arguments list */
+        uint32_t arg_list_len) /**< length of arguments list */
 {
   vm_frame_ctx_t *frame_ctx_p;
   size_t frame_size;

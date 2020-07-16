@@ -924,32 +924,24 @@ ecma_op_array_object_set_length (ecma_object_t *object_p, /**< the array object 
                                  uint32_t flags) /**< configuration options */
 {
   bool is_throw = (flags & ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_IS_THROW);
-
-  ecma_value_t completion = ecma_op_to_number (new_value, ECMA_TO_NUMERIC_NO_OPTS);
+  ecma_number_t new_len_num;
+  ecma_value_t completion = ecma_op_to_number (new_value, &new_len_num);
 
   if (ECMA_IS_VALUE_ERROR (completion))
   {
     return completion;
   }
 
-  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (completion)
-                && ecma_is_value_number (completion));
-
-  ecma_number_t new_len_num = ecma_get_number_from_value (completion);
-
-  ecma_free_value (completion);
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (completion));
 
   if (ecma_is_value_object (new_value))
   {
-    ecma_value_t compared_num_val = ecma_op_to_number (new_value, ECMA_TO_NUMERIC_NO_OPTS);
+    ecma_value_t compared_num_val = ecma_op_to_number (new_value, &new_len_num);
 
     if (ECMA_IS_VALUE_ERROR (compared_num_val))
     {
       return compared_num_val;
     }
-
-    new_len_num = ecma_get_number_from_value (compared_num_val);
-    ecma_free_value (compared_num_val);
   }
 
   uint32_t new_len_uint32 = ecma_number_to_uint32 (new_len_num);

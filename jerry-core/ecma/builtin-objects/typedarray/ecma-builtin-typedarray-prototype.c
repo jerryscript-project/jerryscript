@@ -1086,7 +1086,7 @@ ecma_builtin_typedarray_prototype_join (ecma_value_t this_arg, /**< this argumen
 
   ecma_number_t length_number;
 
-  if (ECMA_IS_VALUE_ERROR (ecma_op_to_numeric (length_value, &length_number, ECMA_TO_NUMERIC_NO_OPTS)))
+  if (ECMA_IS_VALUE_ERROR (ecma_op_to_number (length_value, &length_number)))
   {
     ecma_free_value (length_value);
     ecma_free_value (obj_value);
@@ -1408,7 +1408,7 @@ ecma_builtin_typedarray_prototype_sort_compare_helper (ecma_value_t lhs, /**< le
   }
 
   ecma_number_t ret_num;
-  ecma_value_t number_result = ecma_op_to_numeric (call_value, &ret_num, ECMA_TO_NUMERIC_NO_OPTS);
+  ecma_value_t number_result = ecma_op_to_number (call_value, &ret_num);
 
   ecma_free_value (call_value);
 

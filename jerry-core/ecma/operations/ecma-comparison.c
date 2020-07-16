@@ -113,16 +113,17 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
     if (ecma_is_value_number (y))
     {
       /* 4. */
-      ecma_value_t x_num_value = ecma_op_to_number (x, ECMA_TO_NUMERIC_NO_OPTS);
+      ecma_number_t num;
+      ecma_value_t x_num_value = ecma_op_to_number (x, &num);
 
       if (ECMA_IS_VALUE_ERROR (x_num_value))
       {
         return x_num_value;
       }
+      ecma_value_t num_value = ecma_make_number_value (num);
+      ecma_value_t compare_result = ecma_op_abstract_equality_compare (num_value, y);
 
-      ecma_value_t compare_result = ecma_op_abstract_equality_compare (x_num_value, y);
-
-      ecma_free_value (x_num_value);
+      ecma_free_value (num_value);
       return compare_result;
     }
 

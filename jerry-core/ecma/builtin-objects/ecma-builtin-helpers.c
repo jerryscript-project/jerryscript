@@ -539,7 +539,7 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_string_t *original_st
   else
   {
 #endif /* ENABLED (JERRY_ESNEXT) */
-    ret_value = ecma_op_to_numeric (arg2, &pos_num, ECMA_TO_NUMERIC_NO_OPTS);
+    ret_value = ecma_op_to_number (arg2, &pos_num);
 #if ENABLED (JERRY_ESNEXT)
   }
 #endif /* ENABLED (JERRY_ESNEXT) */

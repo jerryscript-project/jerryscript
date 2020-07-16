@@ -119,16 +119,12 @@ ecma_op_create_arraybuffer_object (const ecma_value_t *arguments_list_p, /**< li
     }
     else
     {
-      ecma_value_t to_number_value = ecma_op_to_number (arguments_list_p[0], ECMA_TO_NUMERIC_NO_OPTS);
+      ecma_value_t to_number_value = ecma_op_to_number (arguments_list_p[0], &length_num);
 
       if (ECMA_IS_VALUE_ERROR (to_number_value))
       {
         return to_number_value;
       }
-
-      length_num = ecma_get_number_from_value (to_number_value);
-
-      ecma_free_value (to_number_value);
     }
 
     if (ecma_number_is_nan (length_num))

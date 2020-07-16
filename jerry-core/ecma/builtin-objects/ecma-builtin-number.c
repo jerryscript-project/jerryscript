@@ -85,7 +85,13 @@ ecma_builtin_number_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
   }
   else
   {
-    ret_value = ecma_op_to_number (arguments_list_p[0], ECMA_TO_NUMERIC_ALLOW_BIGINT);
+    ecma_number_t num;
+    ret_value = ecma_op_to_numeric (arguments_list_p[0], &num, ECMA_TO_NUMERIC_ALLOW_BIGINT);
+
+    if (ECMA_IS_VALUE_ERROR (ret_value))
+    {
+      return ret_value;
+    }
 
 #if ENABLED (JERRY_BUILTIN_BIGINT)
     if (ecma_is_value_bigint (ret_value))
@@ -94,7 +100,11 @@ ecma_builtin_number_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
       ret_value = ecma_bigint_to_number (bigint);
       ecma_free_value (bigint);
     }
+    else
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+    {
+      ret_value = ecma_make_number_value (num);
+    }
   }
 
   return ret_value;
@@ -117,7 +127,13 @@ ecma_builtin_number_dispatch_construct (const ecma_value_t *arguments_list_p, /*
   }
 
 #if ENABLED (JERRY_BUILTIN_BIGINT)
-  ecma_value_t value = ecma_op_to_number (arguments_list_p[0], ECMA_TO_NUMERIC_ALLOW_BIGINT);
+  ecma_number_t num;
+  ecma_value_t value = ecma_op_to_numeric (arguments_list_p[0], &num, ECMA_TO_NUMERIC_ALLOW_BIGINT);
+
+  if (ECMA_IS_VALUE_ERROR (value))
+  {
+    return value;
+  }
 
   if (ecma_is_value_bigint (value))
   {
@@ -125,10 +141,9 @@ ecma_builtin_number_dispatch_construct (const ecma_value_t *arguments_list_p, /*
     value = ecma_bigint_to_number (bigint);
     ecma_free_value (bigint);
   }
-
-  if (ECMA_IS_VALUE_ERROR (value))
+  else
   {
-    return value;
+    value = ecma_make_number_value (num);
   }
 
   ecma_value_t result = ecma_op_create_number_object (value);

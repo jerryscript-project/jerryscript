@@ -1301,7 +1301,15 @@ jerry_value_to_number (const jerry_value_t value) /**< input value */
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_value_msg_p)));
   }
 
-  return jerry_return (ecma_op_to_number (value, ECMA_TO_NUMERIC_NO_OPTS));
+  ecma_number_t num;
+  ecma_value_t ret_value = ecma_op_to_number (value, &num);
+
+  if (ECMA_IS_VALUE_ERROR (ret_value))
+  {
+    return ecma_create_error_reference_from_context ();
+  }
+
+  return ecma_make_number_value (num);
 } /* jerry_value_to_number */
 
 /**

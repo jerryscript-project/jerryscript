@@ -213,7 +213,7 @@ ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to t
   /* 1-7. */
   for (uint32_t i = 0; i < args_len; i++)
   {
-    ecma_value_t status = ecma_op_to_numeric (args[i], date_nums + i, ECMA_TO_NUMERIC_NO_OPTS);
+    ecma_value_t status = ecma_op_to_number (args[i], date_nums + i);
 
     if (ECMA_IS_VALUE_ERROR (status))
     {
@@ -776,7 +776,8 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
       }
       else
       {
-        ecma_value_t prim_value = ecma_op_to_number (argument, ECMA_TO_NUMERIC_NO_OPTS);
+        ecma_number_t arg;
+        ecma_value_t prim_value = ecma_op_to_number (argument, &arg);
 
         if (ECMA_IS_VALUE_ERROR (prim_value))
         {
@@ -785,9 +786,8 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
           return prim_value;
         }
 
-        prim_value_num = ecma_date_time_clip (ecma_get_number_from_value (prim_value));
+        prim_value_num = ecma_date_time_clip (arg);
 
-        ecma_free_value (prim_value);
       }
 
       ecma_free_value (prim_comp_value);

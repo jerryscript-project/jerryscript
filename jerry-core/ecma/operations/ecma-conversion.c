@@ -276,79 +276,11 @@ ecma_op_to_boolean (ecma_value_t value) /**< ecma value */
  * @return ecma value
  *         Returned value must be freed with ecma_free_value
  */
-ecma_value_t
+inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_op_to_number (ecma_value_t value, /**< ecma value */
-                   ecma_to_numeric_options_t options) /**< option bits */
+                   ecma_number_t *number_p) /**< [out] ecma number */
 {
-  JERRY_UNUSED (options);
-
-  ecma_check_value_type_is_spec_defined (value);
-
-  if (ecma_is_value_integer_number (value))
-  {
-    return value;
-  }
-
-  if (ecma_is_value_float_number (value))
-  {
-    return ecma_copy_value (value);
-  }
-
-  if (ecma_is_value_string (value))
-  {
-    ecma_string_t *str_p = ecma_get_string_from_value (value);
-    return ecma_make_number_value (ecma_string_to_number (str_p));
-  }
-
-  if (ecma_is_value_undefined (value))
-  {
-    return ecma_make_nan_value ();
-  }
-
-  if (ecma_is_value_null (value))
-  {
-    return ecma_make_integer_value (0);
-  }
-
-  if (ecma_is_value_boolean (value))
-  {
-    return ecma_make_integer_value (ecma_is_value_true (value) ? 1 : 0);
-  }
-
-#if ENABLED (JERRY_ESNEXT)
-  if (ecma_is_value_symbol (value))
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a Symbol value to a number"));
-  }
-#endif /* ENABLED (JERRY_ESNEXT) */
-
-#if ENABLED (JERRY_BUILTIN_BIGINT)
-  if (ecma_is_value_bigint (value))
-  {
-    if (options & ECMA_TO_NUMERIC_ALLOW_BIGINT)
-    {
-      return ecma_copy_value (value);
-    }
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a BigInt value to a number"));
-  }
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
-
-  JERRY_ASSERT (ecma_is_value_object (value));
-
-  ecma_object_t *obj_p = ecma_get_object_from_value (value);
-
-  ecma_value_t def_value = ecma_op_object_default_value (obj_p, ECMA_PREFERRED_TYPE_NUMBER);
-
-  if (ECMA_IS_VALUE_ERROR (def_value))
-  {
-    return def_value;
-  }
-
-  ecma_value_t ret_value = ecma_op_to_number (def_value, options);
-
-  ecma_fast_free_value (def_value);
-
-  return ret_value;
+  return ecma_op_to_numeric (value, number_p, ECMA_TO_NUMERIC_NO_OPTS);
 } /* ecma_op_to_number */
 
 /**
@@ -945,6 +877,30 @@ free_desc:
 } /* ecma_op_to_property_descriptor */
 
 /**
+ * IsInteger operation.
+ *
+ * See also:
+ *          ECMA-262 v5, 9.4
+ *          ECMA-262 v6, 7.1.4
+ *
+ * @return true - if the argument is integer
+ *              false - otherwise
+ */
+bool
+ecma_op_is_integer (ecma_number_t num) /**< ecma number */
+{
+
+  if (ecma_number_is_nan (num) || ecma_number_is_infinity (num))
+  {
+    return false;
+  }
+
+  ecma_number_t floor_fabs = floor (fabs (num));
+  ecma_number_t fabs_value = fabs (num);
+
+  return (floor_fabs == fabs_value);
+} /* ecma_op_is_integer*/
+/**
  * ToInteger operation.
  *
  * See also:
@@ -964,7 +920,7 @@ ecma_op_to_integer (ecma_value_t value, /**< ecma value */
   }
 
   /* 1 */
-  ecma_value_t to_number = ecma_op_to_numeric (value, number_p, ECMA_TO_NUMERIC_NO_OPTS);
+  ecma_value_t to_number = ecma_op_to_number (value, number_p);
 
   /* 2 */
   if (ECMA_IS_VALUE_ERROR (to_number))
@@ -988,7 +944,6 @@ ecma_op_to_integer (ecma_value_t value, /**< ecma value */
   }
 
   ecma_number_t floor_fabs = floor (fabs (number));
-
   /* 5 */
   *number_p = ecma_number_is_negative (number) ? -floor_fabs : floor_fabs;
   return ECMA_VALUE_EMPTY;
@@ -1044,7 +999,7 @@ ecma_op_to_length (ecma_value_t value, /**< ecma value */
 #else /* !ENABLED (JERRY_ESNEXT) */
   /* In the case of ES5, ToLength(ES6) operation is the same as ToUint32(ES5) */
   ecma_number_t num;
-  ecma_value_t to_number = ecma_op_to_numeric (value, &num, ECMA_TO_NUMERIC_NO_OPTS);
+  ecma_value_t to_number = ecma_op_to_number (value, &num);
 
   /* 2 */
   if (ECMA_IS_VALUE_ERROR (to_number))

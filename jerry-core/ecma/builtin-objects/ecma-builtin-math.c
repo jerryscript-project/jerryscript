@@ -135,16 +135,12 @@ ecma_builtin_math_object_max_min (bool is_max, /**< 'max' or 'min' operation */
     }
     else
     {
-      ecma_value_t value = ecma_op_to_number (*arg, ECMA_TO_NUMERIC_NO_OPTS);
+      ecma_value_t value = ecma_op_to_number (*arg, &arg_num);
 
       if (ECMA_IS_VALUE_ERROR (value))
       {
         return value;
       }
-
-      arg_num = ecma_get_number_from_value (value);
-
-      ecma_fast_free_value (value);
     }
 
     arg++;
@@ -215,13 +211,11 @@ ecma_builtin_math_object_hypot (const ecma_value_t *arg, /**< arguments list */
     }
     else
     {
-      ecma_value_t value = ecma_op_to_number (*arg, ECMA_TO_NUMERIC_NO_OPTS);
+      ecma_value_t value = ecma_op_to_number (*arg, &arg_num);
       if (ECMA_IS_VALUE_ERROR (value))
       {
         return value;
       }
-      arg_num = ecma_get_number_from_value (value);
-      ecma_fast_free_value (value);
     }
 
     arg++;
@@ -357,16 +351,12 @@ ecma_builtin_math_dispatch_routine (uint16_t builtin_routine_id, /**< built-in w
       }
       else
       {
-        ecma_value_t value = ecma_op_to_number (arguments_list[0], ECMA_TO_NUMERIC_NO_OPTS);
+        ecma_value_t value = ecma_op_to_number (arguments_list[0], &x);
 
         if (ECMA_IS_VALUE_ERROR (value))
         {
           return value;
         }
-
-        x = ecma_get_number_from_value (value);
-
-        ecma_fast_free_value (value);
       }
     }
 
@@ -379,16 +369,12 @@ ecma_builtin_math_dispatch_routine (uint16_t builtin_routine_id, /**< built-in w
       }
       else
       {
-        ecma_value_t value = ecma_op_to_number (arguments_list[1], ECMA_TO_NUMERIC_NO_OPTS);
+        ecma_value_t value = ecma_op_to_number (arguments_list[1], &y);
 
         if (ECMA_IS_VALUE_ERROR (value))
         {
           return value;
         }
-
-        y = ecma_get_number_from_value (value);
-
-        ecma_fast_free_value (value);
       }
     }
 

@@ -1753,7 +1753,24 @@ lexer_next_token (parser_context_t *context_p) /**< context */
                         LEXER_ASSIGN_BIT_XOR)
 
     LEXER_TYPE_A_TOKEN (LIT_CHAR_TILDE, LEXER_BIT_NOT);
-    LEXER_TYPE_A_TOKEN (LIT_CHAR_QUESTION, LEXER_QUESTION_MARK);
+    case (uint8_t) (LIT_CHAR_QUESTION):
+    {
+#if ENABLED (JERRY_ESNEXT)
+      if (length >= 2)
+      {
+        if (context_p->source_p[1] == (uint8_t) LIT_CHAR_QUESTION)
+        {
+          context_p->token.type = LEXER_NULLISH_COALESCING;
+          length = 2;
+          break;
+        }
+      }
+#endif /* ENABLED (JERRY_ESNEXT) */
+      context_p->token.type = LEXER_QUESTION_MARK;
+      length = 1;
+      break;
+    }
+
     LEXER_TYPE_A_TOKEN (LIT_CHAR_COLON, LEXER_COLON);
 
     case LIT_CHAR_SINGLE_QUOTE:

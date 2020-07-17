@@ -1206,6 +1206,10 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Left operand of ** operator cannot be unary expression.";
     }
+    case PARSER_ERR_INVALID_NULLISH_COALESCING:
+    {
+      return "Cannot chain nullish with logical AND or OR.";
+    }
     case PARSER_ERR_FORMAL_PARAM_AFTER_REST_PARAMETER:
     {
       return "Rest parameter must be the last formal parameter.";

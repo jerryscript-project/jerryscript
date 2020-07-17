@@ -3297,38 +3297,40 @@ ecma_regexp_match_helper (ecma_value_t this_arg, /**< this argument */
     }
 
     ecma_object_t *result_value_p = ecma_get_object_from_value (result_value);
-    ecma_value_t match_str_value = ecma_op_object_get_by_uint32_index (result_value_p, 0);
+    ecma_value_t match_value = ecma_op_object_get_by_uint32_index (result_value_p, 0);
 
     ecma_deref_object (result_value_p);
 
-    if (ECMA_IS_VALUE_ERROR (match_str_value))
+    if (ECMA_IS_VALUE_ERROR (match_value))
     {
       goto result_cleanup;
     }
 
-    ecma_string_t *match_str_p = ecma_op_to_string (match_str_value);
+    ecma_string_t *match_str_p = ecma_op_to_string (match_value);
+    ecma_free_value (match_value);
 
     if (JERRY_UNLIKELY (match_str_p == NULL))
     {
-      ecma_free_value (match_str_value);
       goto result_cleanup;
     }
 
     ecma_value_t new_prop = ecma_builtin_helper_def_prop_by_index (result_array_p,
                                                                    n,
-                                                                   match_str_value,
+                                                                   ecma_make_string_value (match_str_p),
                                                                    ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
 
     JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_prop));
 
-    ecma_value_t match_result = ECMA_VALUE_ERROR;
-    if (ecma_string_is_empty (match_str_p))
+    const bool is_match_empty = ecma_string_is_empty (match_str_p);
+    ecma_deref_ecma_string (match_str_p);
+
+    if (is_match_empty)
     {
       ecma_value_t this_index = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_LASTINDEX_UL);
 
       if (ECMA_IS_VALUE_ERROR (this_index))
       {
-        goto match_cleanup;
+        goto result_cleanup;
       }
 
 #if ENABLED (JERRY_ESNEXT)
@@ -3339,7 +3341,7 @@ ecma_regexp_match_helper (ecma_value_t this_arg, /**< this argument */
 
       if (ECMA_IS_VALUE_ERROR (length_value))
       {
-        goto match_cleanup;
+        goto result_cleanup;
       }
 
       uint32_t next_index = ecma_op_advance_string_index (str_p, index, full_unicode);
@@ -3361,19 +3363,8 @@ ecma_regexp_match_helper (ecma_value_t this_arg, /**< this argument */
 
       if (ECMA_IS_VALUE_ERROR (next_set_status))
       {
-        goto match_cleanup;
+        goto result_cleanup;
       }
-    }
-
-    match_result = ECMA_VALUE_EMPTY;
-
-match_cleanup:
-    ecma_deref_ecma_string (match_str_p);
-    ecma_free_value (match_str_value);
-
-    if (ECMA_IS_VALUE_ERROR (match_result))
-    {
-      goto result_cleanup;
     }
 
     n++;

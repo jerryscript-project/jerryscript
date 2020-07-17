@@ -803,7 +803,7 @@ int
 main (int argc, /**< number of arguments */
       char **argv) /**< argument list */
 {
-  cli_state_t cli_state = cli_init (main_opts, argc - 1, argv + 1);
+  cli_state_t cli_state = cli_init (main_opts, argc, argv);
 
   for (int id = cli_consume_option (&cli_state); id != CLI_OPT_END; id = cli_consume_option (&cli_state))
   {

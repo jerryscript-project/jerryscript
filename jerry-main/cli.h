@@ -17,6 +17,7 @@
 #define CLI_H
 
 #include <string.h>
+#include <stdint.h>
 
 /**
  * Command line option definition.
@@ -52,6 +53,7 @@ typedef struct
   const char *arg; /**< last processed argument as string */
 
   /* Private fields. */
+  int index; /**< current argument index */
   int argc; /**< remaining number of arguments */
   char **argv; /**< remaining arguments */
   const cli_opt_t *opts; /**< options */
@@ -71,6 +73,7 @@ void cli_change_opts (cli_state_t *state_p, const cli_opt_t *options_p);
 int cli_consume_option (cli_state_t *state_p);
 const char * cli_consume_string (cli_state_t *state_p);
 int cli_consume_int (cli_state_t *state_p);
+uint32_t cli_consume_path (cli_state_t *state_p);
 void cli_help (const char *prog_name_p, const char *command_name_p, const cli_opt_t *options_p);
 
 #endif /* !CLI_H */

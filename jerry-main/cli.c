@@ -70,6 +70,7 @@ cli_init (const cli_opt_t *options_p, /**< array of option definitions, terminat
   {
     .error = NULL,
     .arg = NULL,
+    .index = 1,
     .argc = argc,
     .argv = argv,
     .opts = options_p
@@ -102,17 +103,17 @@ cli_consume_option (cli_state_t *state_p) /**< state of the command line option 
     return CLI_OPT_END;
   }
 
-  if (state_p->argc <= 0)
+  if (state_p->index >= state_p->argc)
   {
     state_p->arg = NULL;
     return CLI_OPT_END;
   }
 
-  const char *arg = state_p->argv[0];
+  const char *arg = state_p->argv[state_p->index];
 
   state_p->arg = arg;
 
-  if (arg[0] != '-' || arg[1] == '\0')
+  if (arg[0] != '-')
   {
     return CLI_OPT_DEFAULT;
   }
@@ -125,8 +126,7 @@ cli_consume_option (cli_state_t *state_p) /**< state of the command line option 
     {
       if (opt->longopt != NULL && strcmp (arg, opt->longopt) == 0)
       {
-        state_p->argc--;
-        state_p->argv++;
+        state_p->index++;
         return opt->id;
       }
     }
@@ -141,8 +141,7 @@ cli_consume_option (cli_state_t *state_p) /**< state of the command line option 
   {
     if (opt->opt != NULL && strcmp (arg, opt->opt) == 0)
     {
-      state_p->argc--;
-      state_p->argv++;
+      state_p->index++;
       return opt->id;
     }
   }
@@ -167,17 +166,16 @@ cli_consume_string (cli_state_t *state_p) /**< state of the command line option 
     return NULL;
   }
 
-  if (state_p->argc <= 0)
+  if (state_p->index >= state_p->argc)
   {
     state_p->error = "Expected string argument";
     state_p->arg = NULL;
     return NULL;
   }
 
-  state_p->arg = state_p->argv[0];
+  state_p->arg = state_p->argv[state_p->index];
 
-  state_p->argc--;
-  state_p->argv++;
+  state_p->index++;
   return state_p->arg;
 } /* cli_consume_string */
 
@@ -199,13 +197,13 @@ cli_consume_int (cli_state_t *state_p) /**< state of the command line option pro
 
   state_p->error = "Expected integer argument";
 
-  if (state_p->argc <= 0)
+  if (state_p->index >= state_p->argc)
   {
     state_p->arg = NULL;
     return 0;
   }
 
-  state_p->arg = state_p->argv[0];
+  state_p->arg = state_p->argv[state_p->index];
 
   char *endptr;
   long int value = strtol (state_p->arg, &endptr, 10);
@@ -216,10 +214,28 @@ cli_consume_int (cli_state_t *state_p) /**< state of the command line option pro
   }
 
   state_p->error = NULL;
-  state_p->argc--;
-  state_p->argv++;
+  state_p->index++;
   return (int) value;
 } /* cli_consume_int */
+
+/**
+ * Return next agument as path index.
+ *
+ * @return path index
+ */
+uint32_t
+cli_consume_path (cli_state_t *state_p) /**< state of the command line option processor */
+{
+  if (state_p->error != NULL)
+  {
+    return 0;
+  }
+
+  uint32_t path_index = (uint32_t) state_p->index;
+  cli_consume_string (state_p);
+
+  return path_index;
+} /* cli_consume_path */
 
 /*
  * Print helper functions

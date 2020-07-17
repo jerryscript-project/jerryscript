@@ -50,7 +50,7 @@ jerry_port_read_source (const char *file_name_p, /**< file name */
 
   if (file_p == NULL)
   {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: failed to open file: %s\n", file_name_p);
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: Failed to open file: %s\n", file_name_p);
     return NULL;
   }
 
@@ -61,18 +61,18 @@ jerry_port_read_source (const char *file_name_p, /**< file name */
   {
     fclose (file_p);
 
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: failed to allocate memory for module");
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: Failed to allocate memory for file: %s\n", file_name_p);
     return NULL;
   }
 
   size_t bytes_read = fread (buffer_p, 1u, file_size, file_p);
 
-  if (!bytes_read)
+  if (bytes_read != file_size)
   {
     fclose (file_p);
     free (buffer_p);
 
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: failed to read file: %s\n", file_name_p);
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: Failed to read file: %s\n", file_name_p);
     return NULL;
   }
 

@@ -31,6 +31,11 @@ jerry_value_t jerryx_handler_register_global (const jerry_char_t *name_p,
                                               jerry_external_handler_t handler_p);
 
 /*
+ * Print handler helper
+ */
+jerry_value_t jerryx_handler_print_helper (const jerry_value_t args_p[], const jerry_length_t args_cnt);
+
+/*
  * Common external function handlers
  */
 

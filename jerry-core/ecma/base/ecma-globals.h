@@ -283,6 +283,12 @@ enum
 typedef ecma_value_t (*ecma_vm_exec_stop_callback_t) (void *user_p);
 
 /**
+ * User defined callback to track unhandled promise rejections
+ */
+typedef void (*ecma_promise_rejection_tracker_t) (const jerry_value_t promise,
+                                                  const ecma_value_t reason);
+
+/**
  * Type of an external function handler.
  */
 typedef ecma_value_t (*ecma_external_handler_t) (const ecma_value_t function_obj,

@@ -30,8 +30,11 @@ static const jerry_char_t test_source[] = TEST_STRING_LITERAL (
 );
 
 static int count_in_assert = 0;
+static int tracter_counter = 0;
 static jerry_value_t my_promise1;
 static jerry_value_t my_promise2;
+static jerry_value_t last_rejected_promise = 0;
+static jerry_value_t last_rejected_reason = 0;
 static const jerry_char_t s1[] = "resolved";
 static const jerry_char_t s2[] = "rejected";
 
@@ -112,10 +115,23 @@ register_js_function (const char *name_p, /**< name of the function */
   jerry_release_value (result_val);
 } /* register_js_function */
 
+/**
+ * Unhandled rejection tracker
+ */
+static void
+promise_rejection_trackter (jerry_value_t promise,
+                            jerry_value_t reason)
+{
+  last_rejected_promise = jerry_acquire_value (promise);
+  last_rejected_reason = jerry_acquire_value (reason);
+  tracter_counter++;
+} /* promise_rejection_trackter */
+
 int
 main (void)
 {
   jerry_init (JERRY_INIT_EMPTY);
+  jerry_set_promise_rejection_callback (promise_rejection_trackter);
 
   if (!jerry_is_feature_enabled (JERRY_FEATURE_PROMISE))
   {
@@ -158,6 +174,34 @@ main (void)
   jerry_resolve_or_reject_promise (my_promise2, str_resolve, true);
   jerry_resolve_or_reject_promise (my_promise1, str_reject, false);
 
+  jerry_value_t number = jerry_create_number (42);
+
+  jerry_char_t src_3[] = "Promise.reject(42)";
+  jerry_value_t my_promise3 = jerry_eval (src_3, sizeof (src_3) - 1, JERRY_PARSE_NO_OPTS);
+  TEST_ASSERT (!jerry_value_is_error (my_promise3));
+  TEST_ASSERT (tracter_counter == 1);
+  TEST_ASSERT (jerry_get_boolean_value (jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL,
+                                                                last_rejected_promise,
+                                                                my_promise3)));
+  TEST_ASSERT (jerry_get_boolean_value (jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL,
+                                                                last_rejected_reason,
+                                                                number)));
+  jerry_release_value (last_rejected_promise);
+  jerry_release_value (last_rejected_reason);
+  jerry_release_value (number);
+
+  jerry_char_t src_4[] = "Promise.race()";
+  jerry_value_t my_promise4 = jerry_eval (src_4, sizeof (src_4) - 1, JERRY_PARSE_NO_OPTS);
+  TEST_ASSERT (!jerry_value_is_error (my_promise4));
+  TEST_ASSERT (tracter_counter == 2);
+  TEST_ASSERT (jerry_get_boolean_value (jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL,
+                                                                last_rejected_promise,
+                                                                my_promise4)));
+  TEST_ASSERT (jerry_value_is_object (last_rejected_reason));
+  TEST_ASSERT (jerry_get_error_type (last_rejected_reason) == JERRY_ERROR_TYPE);
+  jerry_release_value (last_rejected_promise);
+  jerry_release_value (last_rejected_reason);
+
   /* Run the jobqueue. */
   res = jerry_run_all_enqueued_jobs ();
 
@@ -166,6 +210,8 @@ main (void)
 
   jerry_release_value (my_promise1);
   jerry_release_value (my_promise2);
+  jerry_release_value (my_promise3);
+  jerry_release_value (my_promise4);
   jerry_release_value (str_resolve);
   jerry_release_value (str_reject);
 

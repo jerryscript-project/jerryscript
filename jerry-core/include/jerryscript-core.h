@@ -239,6 +239,12 @@ typedef void (*jerry_object_native_free_callback_t) (void *native_p);
 typedef jerry_value_t (*jerry_vm_exec_stop_callback_t) (void *user_p);
 
 /**
+ * User defined callback to track unhandled promise rejections
+ */
+typedef void (*jerry_promise_rejection_tracker_t) (const jerry_value_t promise,
+                                                   const jerry_value_t reason);
+
+/**
  * Function type applied for each data property of an object.
  */
 typedef bool (*jerry_object_property_foreach_t) (const jerry_value_t property_name,
@@ -611,6 +617,7 @@ jerry_context_t *jerry_create_context (uint32_t heap_size, jerry_context_alloc_t
  * Miscellaneous functions.
  */
 void jerry_set_vm_exec_stop_callback (jerry_vm_exec_stop_callback_t stop_cb, void *user_p, uint32_t frequency);
+void jerry_set_promise_rejection_callback (jerry_promise_rejection_tracker_t tracker_cb);
 jerry_value_t jerry_get_backtrace (uint32_t max_depth);
 jerry_value_t jerry_get_resource_name (const jerry_value_t value);
 jerry_value_t jerry_get_new_target (void);

@@ -20,12 +20,6 @@
 /**
  * Provide a 'print' implementation for scripts.
  *
- * The routine converts all of its arguments to strings and outputs them
- * char-by-char using jerry_port_print_char.
- *
- * The NUL character is output as "\u0000", other characters are output
- * bytewise.
- *
  * Note:
  *      This implementation does not use standard C `printf` to print its
  *      output. This allows more flexibility but also extends the core
@@ -45,6 +39,23 @@ jerryx_handler_print (const jerry_value_t func_obj_val, /**< function object */
   (void) func_obj_val; /* unused */
   (void) this_p; /* unused */
 
+  return jerryx_handler_print_helper (args_p, args_cnt);
+} /* jerryx_handler_print */
+
+/**
+ * The routine converts all of its arguments to strings and outputs them
+ * char-by-char using jerry_port_print_char.
+ *
+ * The NULL character is output as "\u0000", other characters are output
+ * bytewise.
+ *
+ * @return undefined - if all arguments could be converted to strings,
+ *         error - otherwise.
+ */
+jerry_value_t
+jerryx_handler_print_helper (const jerry_value_t args_p[], /**< argument list */
+                             const jerry_length_t args_cnt) /**< number of arguments */
+{
   const char * const null_str = "\\u0000";
 
   jerry_value_t ret_val = jerry_create_undefined ();
@@ -125,4 +136,4 @@ jerryx_handler_print (const jerry_value_t func_obj_val, /**< function object */
   }
 
   return ret_val;
-} /* jerryx_handler_print */
+} /* jerryx_handler_print_helper */

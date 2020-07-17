@@ -21,6 +21,7 @@
 #include "jerryscript.h"
 #include "jerryscript-ext/debugger.h"
 #include "jerryscript-ext/handler.h"
+#include "jerryscript-ext/promise.h"
 #include "jerryscript-port.h"
 #include "jerryscript-port-default.h"
 
@@ -467,6 +468,8 @@ init_engine (jerry_init_flag_t flags, /**< initialized flags for the engine */
   register_js_function ("gc", jerryx_handler_gc);
   register_js_function ("print", jerryx_handler_print);
   register_js_function ("resourceName", jerryx_handler_resource_name);
+
+  jerry_set_promise_rejection_callback (jerryx_promise_rejection_tracker);
 } /* init_engine */
 
 int

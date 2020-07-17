@@ -202,6 +202,24 @@ ecma_is_resolver_already_called (ecma_object_t *resolver_p, /**< resolver */
 } /* ecma_is_resolver_already_called */
 
 /**
+ * HostPromiseRejectionTracker
+ *
+ * See also: ES11 25.6.1.9
+ */
+static void
+ecma_promise_track_rejection (ecma_object_t *obj_p, /**< promise */
+                              ecma_value_t reason) /**< reason for reject */
+{
+  JERRY_ASSERT (ecma_is_promise (obj_p));
+
+  if (JERRY_CONTEXT (promise_rejection_cb) != NULL
+      && !(ecma_promise_get_flags (obj_p) & ECMA_PROMISE_HANDLED))
+  {
+    JERRY_CONTEXT (promise_rejection_cb) (ecma_make_object_value (obj_p), reason);
+  }
+} /* ecma_promise_track_rejection */
+
+/**
  * Reject a Promise with a reason.
  *
  * See also: ES2015 25.4.1.7
@@ -228,6 +246,7 @@ ecma_reject_promise (ecma_value_t promise, /**< promise */
   promise_p->reactions = ecma_new_collection ();
 
   ecma_collection_destroy (reactions);
+  ecma_promise_track_rejection (obj_p, reason);
 } /* ecma_reject_promise */
 
 /**
@@ -892,9 +911,13 @@ ecma_promise_do_then (ecma_value_t promise, /**< the promise which call 'then' *
   {
     /* 9. */
     ecma_value_t reason = ecma_promise_get_result (promise_obj_p);
+    ecma_promise_track_rejection (promise_obj_p, reason);
     ecma_enqueue_promise_reaction_job (ecma_make_object_value (result_capability_obj_p), on_rejected, reason);
     ecma_free_value (reason);
   }
+
+  /* ES11: 11. */
+  promise_p->header.u.class_prop.extra_info |= ECMA_PROMISE_HANDLED;
 
   /* 10. */
   return ecma_copy_value (capability_p->header.u.class_prop.u.promise);

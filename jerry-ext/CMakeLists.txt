@@ -39,7 +39,8 @@ file(GLOB SOURCE_EXT
      debugger/*.c
      handle-scope/*.c
      handler/*.c
-     module/*.c)
+     module/*.c
+     promise/*.c)
 
 add_library(${JERRY_EXT_NAME} ${SOURCE_EXT})
 

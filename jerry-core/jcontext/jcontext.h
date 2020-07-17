@@ -229,6 +229,8 @@ struct jerry_context_t
   ecma_object_t *current_new_target;
   ecma_object_t *current_function_obj_p; /** currently invoked function object
                                              (Note: currently used only in generator functions) */
+  ecma_promise_rejection_tracker_t promise_rejection_cb; /**< user defined function to track
+                                                          *   unhandled promise rejections. */
 #endif /* ENABLED (JERRY_ESNEXT) */
 };
 

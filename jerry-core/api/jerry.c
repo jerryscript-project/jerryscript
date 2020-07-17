@@ -3505,6 +3505,21 @@ jerry_set_vm_exec_stop_callback (jerry_vm_exec_stop_callback_t stop_cb, /**< per
 } /* jerry_set_vm_exec_stop_callback */
 
 /**
+ * Register a callback to track unhandled promise rejections.
+ *
+ * Note: passing NULL as argument can disable a previously set tracker callback
+ */
+void
+jerry_set_promise_rejection_callback (jerry_promise_rejection_tracker_t tracker_cb) /**< tracker callback */
+{
+#if ENABLED (JERRY_ESNEXT)
+  JERRY_CONTEXT (promise_rejection_cb) = tracker_cb;
+#else /* !ENABLED (JERRY_ESNEXT) */
+  JERRY_UNUSED (tracker_cb);
+#endif /* ENABLED (JERRY_ESNEXT) */
+} /* jerry_set_promise_rejection_callback */
+
+/**
  * Get backtrace. The backtrace is an array of strings where
  * each string contains the position of the corresponding frame.
  * The array length is zero if the backtrace is not available.

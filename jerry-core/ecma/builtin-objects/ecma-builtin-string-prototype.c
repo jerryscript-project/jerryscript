@@ -1241,7 +1241,7 @@ ecma_builtin_string_prototype_object_iterator (ecma_value_t to_string) /**< this
   return ecma_op_create_iterator_object (ecma_copy_value (to_string),
                                          ecma_builtin_get (ECMA_BUILTIN_ID_STRING_ITERATOR_PROTOTYPE),
                                          ECMA_PSEUDO_STRING_ITERATOR,
-                                         0);
+                                         ECMA_ITERATOR_VALUES);
 } /* ecma_builtin_string_prototype_object_iterator */
 
 #endif /* ENABLED (JERRY_ESNEXT) */

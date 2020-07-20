@@ -768,14 +768,14 @@ ecma_op_array_species_create (ecma_object_t *original_array_p, /**< The object f
  */
 ecma_value_t
 ecma_op_create_array_iterator (ecma_object_t *obj_p, /**< array object */
-                               ecma_array_iterator_type_t type) /**< array iterator type */
+                               ecma_iterator_kind_t kind) /**< array iterator kind */
 {
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY_ITERATOR_PROTOTYPE);
 
   return ecma_op_create_iterator_object (ecma_make_object_value (obj_p),
                                          prototype_obj_p,
                                          ECMA_PSEUDO_ARRAY_ITERATOR,
-                                         (uint8_t) type);
+                                         kind);
 } /* ecma_op_create_array_iterator */
 #endif /* ENABLED (JERRY_ESNEXT) */
 
@@ -1195,6 +1195,50 @@ ecma_array_get_length (ecma_object_t *array_p) /**< array object */
 
   return ((ecma_extended_object_t *) array_p)->u.array.length;
 } /* ecma_array_get_length */
+
+/**
+ * The Array.prototype and %TypedArray%.prototype objects' 'toString' routine.
+ *
+ * See also:
+ *          ECMA-262 v5, 15.4.4.2
+ *          ECMA-262 v6, 22.1.3.7
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_array_object_to_string (ecma_value_t this_arg) /**< this argument */
+{
+  JERRY_ASSERT (ecma_is_value_object (this_arg));
+
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
+
+  /* 2. */
+  ecma_value_t join_value = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_JOIN);
+  if (ECMA_IS_VALUE_ERROR (join_value))
+  {
+    return join_value;
+  }
+
+  if (!ecma_op_is_callable (join_value))
+  {
+    /* 3. */
+    ret_value = ecma_builtin_helper_object_to_string (this_arg);
+  }
+  else
+  {
+    /* 4. */
+    ecma_object_t *join_func_obj_p = ecma_get_object_from_value (join_value);
+
+    ret_value = ecma_op_function_call (join_func_obj_p, this_arg, NULL, 0);
+  }
+
+  ecma_free_value (join_value);
+
+  return ret_value;
+} /* ecma_array_object_to_string */
 
 /**
  * List names of a String object's lazy instantiated properties

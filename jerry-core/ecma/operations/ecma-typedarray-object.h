@@ -58,6 +58,9 @@ ecma_value_t ecma_op_create_typedarray (const ecma_value_t *arguments_list_p,
                                         ecma_object_t *proto_p,
                                         uint8_t element_size_shift,
                                         ecma_typedarray_type_t typedarray_id);
+ecma_value_t
+ecma_typedarray_iterators_helper (ecma_value_t this_arg, ecma_iterator_kind_t kind);
+
 bool ecma_object_is_typedarray (ecma_object_t *obj_p);
 bool ecma_is_typedarray (ecma_value_t target);
 void ecma_op_typedarray_list_lazy_property_names (ecma_object_t *obj_p,

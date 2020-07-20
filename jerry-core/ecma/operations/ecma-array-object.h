@@ -106,7 +106,7 @@ ecma_op_array_species_create (ecma_object_t *original_array_p,
 
 ecma_value_t
 ecma_op_create_array_iterator (ecma_object_t *obj_p,
-                               ecma_array_iterator_type_t type);
+                               ecma_iterator_kind_t kind);
 #endif /* ENABLED (JERRY_ESNEXT) */
 
 ecma_value_t
@@ -117,6 +117,9 @@ ecma_op_array_object_define_own_property (ecma_object_t *object_p, ecma_string_t
                                           const ecma_property_descriptor_t *property_desc_p);
 
 uint32_t ecma_array_get_length (ecma_object_t *array_p);
+
+ecma_value_t
+ecma_array_object_to_string (ecma_value_t this_arg);
 
 void
 ecma_op_array_list_lazy_property_names (ecma_object_t *obj_p,

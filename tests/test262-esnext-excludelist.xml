@@ -2059,8 +2059,6 @@
   <test id="built-ins/TypedArray/prototype/join/get-length-uses-internal-arraylength.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/join/return-abrupt-from-separator-symbol.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/join/return-abrupt-from-separator.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/join/this-is-not-object.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/join/this-is-not-typedarray-instance.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/keys/BigInt/detached-buffer.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/keys/detached-buffer.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/lastIndexOf/BigInt/detached-buffer.js"><reason></reason></test>

@@ -238,10 +238,10 @@ typedef ecma_value_t (*ecma_builtin_helper_sort_compare_fn_t) (ecma_value_t lhs,
                                                                ecma_value_t rhs, /**< right value */
                                                                ecma_value_t compare_func); /**< compare function */
 
-ecma_value_t ecma_builtin_helper_array_heap_sort_helper (ecma_value_t *array_p,
-                                                         uint32_t right,
-                                                         ecma_value_t compare_func,
-                                                         const ecma_builtin_helper_sort_compare_fn_t sort_cb);
+ecma_value_t ecma_builtin_helper_array_merge_sort_helper (ecma_value_t *array_p,
+                                                          uint32_t length,
+                                                          ecma_value_t compare_func,
+                                                          const ecma_builtin_helper_sort_compare_fn_t sort_cb);
 
 /**
  * @}

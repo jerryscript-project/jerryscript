@@ -17,133 +17,136 @@
 #include "ecma-globals.h"
 
 /**
- * Function used to reconstruct the ordered binary tree.
- * Shifts 'index' down in the tree until it is in the correct position.
+ * Function used to merge two arrays for merge sort.
+ * Arrays are stored as below:
+ * First  -> source_array_p [left_idx : right_idx - 1]
+ * Second -> source_array_p [right_idx : end_idx - 1]
+ * Output -> output_array_p
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_helper_array_to_heap (ecma_value_t *array_p, /**< heap data array */
-                                   uint32_t index, /**< current item index */
-                                   uint32_t right, /**< right index is a maximum index */
-                                   ecma_value_t compare_func, /**< compare function */
-                                   const ecma_builtin_helper_sort_compare_fn_t sort_cb) /**< sorting cb */
+ecma_builtin_helper_array_merge_sort_bottom_up (ecma_value_t *source_array_p, /**< arrays to merge */
+                                                uint32_t left_idx, /**< first array begin */
+                                                uint32_t right_idx, /**< first array end */
+                                                uint32_t end_idx, /**< second array end */
+                                                ecma_value_t *output_array_p, /**< output array */
+                                                ecma_value_t compare_func, /**< compare function */
+                                                const ecma_builtin_helper_sort_compare_fn_t sort_cb) /**< sorting cb */
 {
-  /* Left child of the current index. */
-  uint32_t child = index * 2 + 1;
-  ecma_value_t swap = array_p[index];
-
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+  uint32_t i = left_idx, j = right_idx;
 
-  while (child <= right)
+  for (uint32_t k = left_idx; k < end_idx; k++)
   {
-    if (child < right)
-    {
-      /* Compare the two child nodes. */
-      ecma_value_t child_compare_value = sort_cb (array_p[child], array_p[child + 1], compare_func);
+    ecma_value_t compare_value = ecma_make_number_value (ECMA_NUMBER_ZERO);
 
-      if (ECMA_IS_VALUE_ERROR (child_compare_value))
+    if (i < right_idx && j < end_idx)
+    {
+      compare_value = sort_cb (source_array_p[i], source_array_p[j], compare_func);
+      if (ECMA_IS_VALUE_ERROR (compare_value))
       {
         ret_value = ECMA_VALUE_ERROR;
         break;
       }
-
-      JERRY_ASSERT (ecma_is_value_number (child_compare_value));
-
-      /* Use the child that is greater. */
-      if (ecma_get_number_from_value (child_compare_value) < ECMA_NUMBER_ZERO)
-      {
-        child++;
-      }
-
-      ecma_free_value (child_compare_value);
     }
 
-    JERRY_ASSERT (child <= right);
-
-    /* Compare current child node with the swap (tree top). */
-    ecma_value_t swap_compare_value = sort_cb (array_p[child], swap, compare_func);
-
-    if (ECMA_IS_VALUE_ERROR (swap_compare_value))
+    if (i < right_idx && ecma_get_number_from_value (compare_value) <= ECMA_NUMBER_ZERO)
     {
-      ret_value = ECMA_VALUE_ERROR;
-      break;
+      output_array_p[k] = source_array_p[i];
+      i++;
     }
-
-    JERRY_ASSERT (ecma_is_value_number (swap_compare_value));
-
-    if (ecma_get_number_from_value (swap_compare_value) <= ECMA_NUMBER_ZERO)
+    else
     {
-      /* Break from loop if current child is less than swap (tree top) */
-      ecma_free_value (swap_compare_value);
-      break;
+      output_array_p[k] = source_array_p[j];
+      j++;
     }
-
-    /* We have to move 'swap' lower in the tree, so shift current child up in the hierarchy. */
-    uint32_t parent = (child - 1) / 2;
-    JERRY_ASSERT (parent <= right);
-    array_p[parent] = array_p[child];
-
-    /* Update child to be the left child of the current node. */
-    child = child * 2 + 1;
-
-    ecma_free_value (swap_compare_value);
+    ecma_free_value (compare_value);
   }
 
-  /*
-   * Loop ended, either current child does not exist, or is less than swap.
-   * This means that 'swap' should be placed in the parent node.
-   */
-  uint32_t parent = (child - 1) / 2;
-  JERRY_ASSERT (parent <= right);
-  array_p[parent] = swap;
-
   return ret_value;
-} /* ecma_builtin_helper_array_to_heap */
+} /* ecma_builtin_helper_array_merge_sort_bottom_up */
 
 /**
- * Heapsort function
+ * Mergesort function
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_builtin_helper_array_heap_sort_helper (ecma_value_t *array_p, /**< array to sort */
-                                            uint32_t right, /**< right index */
-                                            ecma_value_t compare_func, /**< compare function */
-                                            const ecma_builtin_helper_sort_compare_fn_t sort_cb) /**< sorting cb */
+ecma_builtin_helper_array_merge_sort_helper (ecma_value_t *array_p, /**< array to sort */
+                                             uint32_t length, /**< length */
+                                             ecma_value_t compare_func, /**< compare function */
+                                             const ecma_builtin_helper_sort_compare_fn_t sort_cb) /**< sorting cb */
 {
-  /* First, construct the ordered binary tree from the array. */
-  for (uint32_t i = (right / 2) + 1; i > 0; i--)
-  {
-    ecma_value_t value = ecma_builtin_helper_array_to_heap (array_p, i - 1, right, compare_func, sort_cb);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+  JMEM_DEFINE_LOCAL_ARRAY (dest_array_p, length, ecma_value_t);
 
-    if (ECMA_IS_VALUE_ERROR (value))
+  ecma_value_t *temp_p;
+  ecma_value_t *base_array_p = array_p;
+  uint32_t r, e;
+
+  for (uint32_t w = 1; w < length; w = 2 * w)
+  {
+    for (uint32_t i = 0; i < length; i = i + 2 * w)
     {
-      return value;
+      // End of first array
+      r = i + w;
+      if (r > length)
+      {
+        r = length;
+      }
+
+      // End of second array
+      e = i + 2 * w;
+      if (e > length)
+      {
+        e = length;
+      }
+
+      // Merge two arrays
+      ret_value = ecma_builtin_helper_array_merge_sort_bottom_up (array_p,
+                                                                  i,
+                                                                  r,
+                                                                  e,
+                                                                  dest_array_p,
+                                                                  compare_func,
+                                                                  sort_cb);
+      if (ECMA_IS_VALUE_ERROR (ret_value))
+      {
+        break;
+      }
     }
+
+    if (ECMA_IS_VALUE_ERROR (ret_value))
+    {
+      break;
+    }
+
+    // Swap arrays
+    temp_p = dest_array_p;
+    dest_array_p = array_p;
+    array_p = temp_p;
   }
 
-  /* Sorting elements. */
-  for (uint32_t i = right; i > 0; i--)
+  // Sorted array is in dest_array_p - there was uneven number of arrays swaps
+  if (dest_array_p == base_array_p)
   {
-    /*
-     * The top element will always contain the largest value.
-     * Move top to the end, and remove it from the tree.
-     */
-    ecma_value_t swap = array_p[0];
-    array_p[0] = array_p[i];
-    array_p[i] = swap;
+    uint32_t index = 0;
+    temp_p = dest_array_p;
+    dest_array_p = array_p;
+    array_p = temp_p;
 
-    /* Rebuild binary tree from the remaining elements. */
-    ecma_value_t value = ecma_builtin_helper_array_to_heap (array_p, 0, i - 1, compare_func, sort_cb);
-
-    if (ECMA_IS_VALUE_ERROR (value))
+    while (index < length)
     {
-      return value;
+      array_p[index] = dest_array_p[index];
+      index++;
     }
+    JERRY_ASSERT (index == length);
   }
 
-  return ECMA_VALUE_EMPTY;
-} /* ecma_builtin_helper_array_heap_sort_helper */
+  JMEM_FINALIZE_LOCAL_ARRAY (dest_array_p);
+
+  return ret_value;
+} /* ecma_builtin_helper_array_merge_sort_helper */

@@ -403,30 +403,43 @@ lit_code_point_t
 ecma_regexp_canonicalize_char (lit_code_point_t ch, /**< character */
                                bool unicode) /**< unicode */
 {
-  if (JERRY_LIKELY (ch <= LIT_UTF8_1_BYTE_CODE_POINT_MAX))
+#if ENABLED (JERRY_ESNEXT)
+  if (unicode)
   {
-    if (ch >= LIT_CHAR_LOWERCASE_A && ch <= LIT_CHAR_LOWERCASE_Z)
+    /* In unicode mode the mappings contained in the CaseFolding.txt file should be used to canonicalize the character.
+     * These mappings generally correspond to the lowercase variant of the character, however there are some
+     * differences. In some cases the uppercase variant is used, in others the lowercase of the uppercase character is
+     * used, and there are also cases where the character has no case folding mapping even though it has upper/lower
+     * variants. Since lowercasing is the most common this is used as the default behaviour, and characters with
+     * differing behaviours are encoded in lookup tables. */
+
+    if (lit_char_fold_to_upper (ch))
     {
-      return (ecma_char_t) (ch - (LIT_CHAR_LOWERCASE_A - LIT_CHAR_UPPERCASE_A));
+      ch = lit_char_to_upper_case (ch, NULL);
+      JERRY_ASSERT (ch != LIT_MULTIPLE_CU);
+    }
+
+    if (lit_char_fold_to_lower (ch))
+    {
+      ch = lit_char_to_lower_case (ch, NULL);
+      JERRY_ASSERT (ch != LIT_MULTIPLE_CU);
     }
 
     return ch;
   }
+#endif /* !ENABLED (JERRY_ESNEXT) */
 
+  JERRY_UNUSED (unicode);
   lit_code_point_t cu = lit_char_to_upper_case (ch, NULL);
 
-  if (cu == LIT_MULTIPLE_CU)
+  if (ch <= LIT_UTF8_1_BYTE_CODE_POINT_MAX
+      || (cu > LIT_UTF8_1_BYTE_CODE_POINT_MAX
+          && cu != LIT_MULTIPLE_CU))
   {
-    return ch;
+    return cu;
   }
 
-  if (cu <= LIT_UTF8_1_BYTE_CODE_POINT_MAX && !unicode)
-  {
-    /* 6. */
-    return ch;
-  }
-
-  return cu;
+  return ch;
 } /* ecma_regexp_canonicalize_char */
 
 /**

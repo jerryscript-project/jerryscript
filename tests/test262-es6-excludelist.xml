@@ -338,7 +338,6 @@
   <test id="language/expressions/tagged-template/cache-identical-source-new-function.js"><reason></reason></test>
   <test id="language/expressions/tagged-template/constructor-invocation.js"><reason></reason></test>
   <test id="language/expressions/template-literal/invalid-legacy-octal-escape-sequence.js"><reason></reason></test>
-  <test id="language/literals/regexp/u-case-mapping.js"><reason></reason></test>
   <test id="language/literals/string/7.8.4-1-s.js"><reason></reason></test>
   <test id="language/module-code/export-unresolvable.js"><reason></reason></test>
   <test id="language/statements/class/definition/methods.js"><reason></reason></test>

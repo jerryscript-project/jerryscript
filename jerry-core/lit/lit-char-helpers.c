@@ -23,6 +23,9 @@
 #if ENABLED (JERRY_UNICODE_CASE_CONVERSION)
 #include "lit-unicode-conversions.inc.h"
 #include "lit-unicode-conversions-sup.inc.h"
+#if ENABLED (JERRY_ESNEXT)
+#include "lit-unicode-folding.inc.h"
+#endif /* ENABLED (JERRY_ESNEXT) */
 #endif /* ENABLED (JERRY_UNICODE_CASE_CONVERSION) */
 
 #define NUM_OF_ELEMENTS(array) (sizeof (array) / sizeof ((array)[0]))
@@ -914,3 +917,51 @@ lit_char_to_upper_case (lit_code_point_t cp, /**< code point */
   return cp;
 #endif /* ENABLED (JERRY_UNICODE_CASE_CONVERSION) */
 } /* lit_char_to_upper_case */
+
+#if ENABLED (JERRY_ESNEXT)
+/*
+ * Look up whether the character should be folded to the lowercase variant.
+ *
+ * @return true, if character should be lowercased
+ *         false, otherwise
+ */
+bool
+lit_char_fold_to_lower (lit_code_point_t cp) /**< code point */
+{
+#if ENABLED (JERRY_UNICODE_CASE_CONVERSION)
+  return (cp > LIT_UTF16_CODE_UNIT_MAX
+          || (!lit_search_char_in_interval_array ((ecma_char_t) cp,
+                                                  lit_unicode_folding_skip_to_lower_interval_starts,
+                                                  lit_unicode_folding_skip_to_lower_interval_lengths,
+                                                  NUM_OF_ELEMENTS (lit_unicode_folding_skip_to_lower_interval_starts))
+              && !lit_search_char_in_array ((ecma_char_t) cp,
+                                            lit_unicode_folding_skip_to_lower_chars,
+                                            NUM_OF_ELEMENTS (lit_unicode_folding_skip_to_lower_chars))));
+#else /* !ENABLED (JERRY_UNICODE_CASE_CONVERSION) */
+  return true;
+#endif /* ENABLED (JERRY_UNICODE_CASE_CONVERSION) */
+} /* lit_char_fold_to_lower */
+
+/*
+ * Look up whether the character should be folded to the uppercase variant.
+ *
+ * @return true, if character should be uppercased
+ *         false, otherwise
+ */
+bool
+lit_char_fold_to_upper (lit_code_point_t cp) /**< code point */
+{
+#if ENABLED (JERRY_UNICODE_CASE_CONVERSION)
+  return (cp <= LIT_UTF16_CODE_UNIT_MAX
+          && (lit_search_char_in_interval_array ((ecma_char_t) cp,
+                                                  lit_unicode_folding_to_upper_interval_starts,
+                                                  lit_unicode_folding_to_upper_interval_lengths,
+                                                  NUM_OF_ELEMENTS (lit_unicode_folding_to_upper_interval_starts))
+              || lit_search_char_in_array ((ecma_char_t) cp,
+                                           lit_unicode_folding_to_upper_chars,
+                                           NUM_OF_ELEMENTS (lit_unicode_folding_to_upper_chars))));
+#else /* !ENABLED (JERRY_UNICODE_CASE_CONVERSION) */
+  return false;
+#endif /* ENABLED (JERRY_UNICODE_CASE_CONVERSION) */
+} /* lit_char_fold_to_upper */
+#endif /* ENABLED (JERRY_ESNEXT) */

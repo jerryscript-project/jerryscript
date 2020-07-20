@@ -359,3 +359,8 @@ try {
 } catch (e) {
   assert (e instanceof SyntaxError);
 }
+
+assert(/\w/iu.test("ſ"));
+assert(/\w/iu.test("\u212a"));
+assert(/k/iu.test("\u212a"));
+assert(/\u{10c90}/iu.test("\u{10cd0}"));

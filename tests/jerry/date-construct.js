@@ -75,4 +75,3 @@ catch (e)
 
 assert (typeof Date (2015) == "string");
 assert (typeof Date() != typeof (new Date ()));
-assert (Date (Number.NaN) == Date ());

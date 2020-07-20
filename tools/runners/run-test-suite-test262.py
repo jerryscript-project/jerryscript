@@ -140,6 +140,8 @@ def update_exclude_list(args):
                     exclude_file.write(line)
                 else:
                     new_passing_tests.add(test)
+            else:
+                exclude_file.write(line)
 
         if failing_tests:
             print("New failing tests added to the excludelist")

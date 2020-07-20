@@ -65,7 +65,7 @@ ecma_builtin_arraybuffer_prototype_bytelength_getter (ecma_value_t this_arg) /**
       {
         return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
       }
-      ecma_length_t len = ecma_arraybuffer_get_length (object_p);
+      uint32_t len = ecma_arraybuffer_get_length (object_p);
 
       return ecma_make_uint32_value (len);
     }
@@ -105,9 +105,9 @@ ecma_builtin_arraybuffer_prototype_object_slice (ecma_value_t this_arg, /**< thi
     return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
   }
 
-  ecma_length_t len = ecma_arraybuffer_get_length (object_p);
+  uint32_t len = ecma_arraybuffer_get_length (object_p);
 
-  ecma_length_t start = 0, end = len;
+  uint32_t start = 0, end = len;
 
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
@@ -134,7 +134,7 @@ ecma_builtin_arraybuffer_prototype_object_slice (ecma_value_t this_arg, /**< thi
   }
 
   JERRY_ASSERT (start <= len && end <= len);
-  ecma_length_t new_len = (end >= start) ? (end - start) : 0;
+  uint32_t new_len = (end >= start) ? (end - start) : 0;
   ecma_object_t *new_arraybuffer_p = ecma_arraybuffer_new_object (new_len);
   lit_utf8_byte_t *old_buf = ecma_arraybuffer_get_buffer (object_p);
   lit_utf8_byte_t *new_buf = ecma_arraybuffer_get_buffer (new_arraybuffer_p);

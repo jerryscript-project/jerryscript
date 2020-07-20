@@ -120,7 +120,7 @@ enum
 static ecma_value_t
 ecma_builtin_math_object_max_min (bool is_max, /**< 'max' or 'min' operation */
                                   const ecma_value_t *arg, /**< arguments list */
-                                  ecma_length_t args_number) /**< number of arguments */
+                                  uint32_t args_number) /**< number of arguments */
 {
   ecma_number_t result_num = ecma_number_make_infinity (is_max);
   bool nan_found = false;
@@ -195,7 +195,7 @@ ecma_builtin_math_object_max_min (bool is_max, /**< 'max' or 'min' operation */
  */
 static ecma_value_t
 ecma_builtin_math_object_hypot (const ecma_value_t *arg, /**< arguments list */
-                                ecma_length_t args_number) /**< number of arguments */
+                                uint32_t args_number) /**< number of arguments */
 {
   if (args_number == 0)
   {
@@ -340,7 +340,7 @@ ecma_builtin_math_dispatch_routine (uint16_t builtin_routine_id, /**< built-in w
                                     ecma_value_t this_arg, /**< 'this' argument value */
                                     const ecma_value_t arguments_list[], /**< list of arguments
                                                                           *   passed to routine */
-                                    ecma_length_t arguments_number) /**< length of arguments' list */
+                                    uint32_t arguments_number) /**< length of arguments' list */
 {
   JERRY_UNUSED (this_arg);
 

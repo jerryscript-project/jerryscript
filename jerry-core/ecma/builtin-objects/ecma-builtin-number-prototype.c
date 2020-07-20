@@ -247,7 +247,7 @@ ecma_builtin_number_prototype_helper_round (lit_utf8_byte_t *digits_p, /**< [in,
 static ecma_value_t
 ecma_builtin_number_prototype_object_to_string (ecma_number_t this_arg_number, /**< this argument number */
                                                 const ecma_value_t *arguments_list_p, /**< arguments list */
-                                                ecma_length_t arguments_list_len) /**< number of arguments */
+                                                uint32_t arguments_list_len) /**< number of arguments */
 {
   static const lit_utf8_byte_t digit_chars[36] =
   {
@@ -977,7 +977,7 @@ ecma_builtin_number_prototype_dispatch_routine (uint16_t builtin_routine_id, /**
                                                 ecma_value_t this_arg, /**< 'this' argument value */
                                                 const ecma_value_t arguments_list_p[], /**< list of arguments
                                                                                       *   passed to routine */
-                                                ecma_length_t arguments_number) /**< length of arguments' list */
+                                                uint32_t arguments_number) /**< length of arguments' list */
 {
   ecma_value_t this_value = ecma_builtin_number_prototype_object_value_of (this_arg);
 

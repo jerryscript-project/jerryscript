@@ -94,7 +94,7 @@ enum
  */
 ecma_value_t
 ecma_builtin_object_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
-                                   ecma_length_t arguments_list_len) /**< number of arguments */
+                                   uint32_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
@@ -115,7 +115,7 @@ ecma_builtin_object_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
  */
 ecma_value_t
 ecma_builtin_object_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
-                                        ecma_length_t arguments_list_len) /**< number of arguments */
+                                        uint32_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
@@ -1048,7 +1048,7 @@ ecma_builtin_object_object_define_property (ecma_object_t *obj_p, /**< routine's
 static ecma_value_t
 ecma_builtin_object_object_assign (ecma_object_t *target_p, /**< target object */
                                    const ecma_value_t arguments_list_p[], /**< arguments list */
-                                   ecma_length_t arguments_list_len) /**< number of arguments */
+                                   uint32_t arguments_list_len) /**< number of arguments */
 {
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
@@ -1178,7 +1178,7 @@ ecma_builtin_object_dispatch_routine (uint16_t builtin_routine_id, /**< built-in
                                       ecma_value_t this_arg, /**< 'this' argument value */
                                       const ecma_value_t arguments_list_p[], /**< list of arguments
                                                                               *   passed to routine */
-                                      ecma_length_t arguments_number) /**< length of arguments' list */
+                                      uint32_t arguments_number) /**< length of arguments' list */
 {
   JERRY_UNUSED (this_arg);
   JERRY_UNUSED (arguments_list_p);

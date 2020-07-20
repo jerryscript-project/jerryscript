@@ -453,7 +453,7 @@ ecma_save_literals_for_snapshot (ecma_collection_t *lit_pool_p, /**< list of kno
   }
 
   lit_mem_to_snapshot_id_map_entry_t *map_p;
-  ecma_length_t total_count = lit_pool_p->item_count;
+  uint32_t total_count = lit_pool_p->item_count;
 
   map_p = jmem_heap_alloc_block (total_count * sizeof (lit_mem_to_snapshot_id_map_entry_t));
 
@@ -475,7 +475,7 @@ ecma_save_literals_for_snapshot (ecma_collection_t *lit_pool_p, /**< list of kno
     map_p->literal_id = lit_buffer_p[i];
     map_p->literal_offset = (literal_offset << JERRY_SNAPSHOT_LITERAL_SHIFT) | ECMA_TYPE_SNAPSHOT_OFFSET;
 
-    ecma_length_t length;
+    lit_utf8_size_t length;
 
     if (ecma_is_value_float_number (lit_buffer_p[i]))
     {

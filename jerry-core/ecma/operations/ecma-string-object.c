@@ -41,7 +41,7 @@
 ecma_value_t
 ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of arguments that
                                                                          are passed to String constructor */
-                              ecma_length_t arguments_list_len) /**< length of the arguments' list */
+                              uint32_t arguments_list_len) /**< length of the arguments' list */
 {
   JERRY_ASSERT (arguments_list_len == 0
                 || arguments_list_p != NULL);
@@ -102,9 +102,9 @@ ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p, /**< a String obj
 
   ecma_string_t *prim_value_str_p = ecma_get_string_from_value (ext_object_p->u.class_prop.u.value);
 
-  ecma_length_t length = ecma_string_get_length (prim_value_str_p);
+  lit_utf8_size_t length = ecma_string_get_length (prim_value_str_p);
 
-  for (ecma_length_t i = 0; i < length; i++)
+  for (lit_utf8_size_t i = 0; i < length; i++)
   {
     ecma_string_t *name_p = ecma_new_ecma_string_from_uint32 (i);
 

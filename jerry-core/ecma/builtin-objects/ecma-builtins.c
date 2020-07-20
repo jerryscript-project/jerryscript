@@ -47,12 +47,12 @@ typedef const ecma_builtin_property_descriptor_t *ecma_builtin_property_list_ref
 typedef ecma_value_t (*ecma_builtin_dispatch_routine_t) (uint16_t builtin_routine_id,
                                                          ecma_value_t this_arg,
                                                          const ecma_value_t arguments_list[],
-                                                         ecma_length_t arguments_number);
+                                                         uint32_t arguments_number);
 /**
  * Definition of built-in dispatch call function pointer.
  */
 typedef ecma_value_t (*ecma_builtin_dispatch_call_t) (const ecma_value_t arguments_list[],
-                                                      ecma_length_t arguments_number);
+                                                      uint32_t arguments_number);
 /**
  * Definition of a builtin descriptor which contains the builtin object's:
  * - prototype objects's id (13-bits)
@@ -1118,7 +1118,7 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
 
   const ecma_builtin_property_descriptor_t *curr_property_p = ecma_builtin_property_list_references[builtin_id];
 
-  ecma_length_t index = 0;
+  uint32_t index = 0;
   uint32_t *bitset_p = built_in_props_p->u.instantiated_bitset;
 
   ecma_collection_t *for_non_enumerable_p = (separate_enumerable ? non_enum_collection_p
@@ -1182,7 +1182,7 @@ static ecma_value_t
 ecma_builtin_dispatch_routine (ecma_extended_object_t *func_obj_p, /**< builtin object */
                                ecma_value_t this_arg_value, /**< 'this' argument value */
                                const ecma_value_t *arguments_list_p, /**< list of arguments passed to routine */
-                               ecma_length_t arguments_list_len) /**< length of arguments' list */
+                               uint32_t arguments_list_len) /**< length of arguments' list */
 {
   JERRY_ASSERT (ecma_builtin_function_is_routine ((ecma_object_t *) func_obj_p));
 
@@ -1226,7 +1226,7 @@ ecma_value_t
 ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
                             ecma_value_t this_arg_value, /**< 'this' argument value */
                             const ecma_value_t *arguments_list_p, /**< arguments list */
-                            ecma_length_t arguments_list_len) /**< arguments list length */
+                            uint32_t arguments_list_len) /**< arguments list length */
 {
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION);
   JERRY_ASSERT (ecma_get_object_is_builtin (obj_p));
@@ -1255,7 +1255,7 @@ ecma_value_t
 ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
                                  ecma_object_t *new_target_p, /**< new target */
                                  const ecma_value_t *arguments_list_p, /**< arguments list */
-                                 ecma_length_t arguments_list_len) /**< arguments list length */
+                                 uint32_t arguments_list_len) /**< arguments list length */
 {
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION);
   JERRY_ASSERT (ecma_get_object_is_builtin (obj_p));

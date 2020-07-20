@@ -45,7 +45,7 @@
 
 static ecma_value_t
 ecma_builtin_regexp_dispatch_helper (const ecma_value_t *arguments_list_p, /**< arguments list */
-                                     ecma_length_t arguments_list_len) /**< number of arguments */
+                                     uint32_t arguments_list_len) /**< number of arguments */
 {
   ecma_value_t pattern_value = ECMA_VALUE_UNDEFINED;
   ecma_value_t flags_value = ECMA_VALUE_UNDEFINED;
@@ -199,7 +199,7 @@ ecma_builtin_regexp_dispatch_helper (const ecma_value_t *arguments_list_p, /**< 
  */
 ecma_value_t
 ecma_builtin_regexp_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
-                                   ecma_length_t arguments_list_len) /**< number of arguments */
+                                   uint32_t arguments_list_len) /**< number of arguments */
 {
   return ecma_builtin_regexp_dispatch_helper (arguments_list_p,
                                               arguments_list_len);
@@ -213,7 +213,7 @@ ecma_builtin_regexp_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
  */
 ecma_value_t
 ecma_builtin_regexp_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
-                                        ecma_length_t arguments_list_len) /**< number of arguments */
+                                        uint32_t arguments_list_len) /**< number of arguments */
 {
   return ecma_builtin_regexp_dispatch_helper (arguments_list_p,
                                               arguments_list_len);

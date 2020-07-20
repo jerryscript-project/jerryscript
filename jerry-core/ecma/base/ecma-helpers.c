@@ -1489,7 +1489,7 @@ ecma_compiled_code_get_tagged_template_collection (const ecma_compiled_code_t *b
  *
  * @return number of formal parameters
  */
-ecma_length_t
+uint32_t
 ecma_compiled_code_get_formal_params (const ecma_compiled_code_t *bytecode_header_p) /**< compiled code */
 {
   if (!(bytecode_header_p->status_flags & CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED))

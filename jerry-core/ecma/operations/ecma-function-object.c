@@ -190,7 +190,7 @@ ecma_is_constructor (ecma_value_t value) /**< ecma value */
  */
 static ecma_string_t *
 ecma_op_create_dynamic_function_arguments_helper (const ecma_value_t *arguments_list_p, /**< arguments list */
-                                                  ecma_length_t arguments_list_len) /**< number of arguments */
+                                                  uint32_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
@@ -214,7 +214,7 @@ ecma_op_create_dynamic_function_arguments_helper (const ecma_value_t *arguments_
   ecma_stringbuilder_t builder = ecma_stringbuilder_create_from (str_p);
   ecma_deref_ecma_string (str_p);
 
-  for (ecma_length_t idx = 1; idx < arguments_list_len - 1; idx++)
+  for (uint32_t idx = 1; idx < arguments_list_len - 1; idx++)
   {
     str_p = ecma_op_to_string (arguments_list_p[idx]);
 
@@ -318,7 +318,7 @@ ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
  */
 ecma_value_t
 ecma_op_create_dynamic_function (const ecma_value_t *arguments_list_p, /**< arguments list */
-                                 ecma_length_t arguments_list_len, /**< number of arguments */
+                                 uint32_t arguments_list_len, /**< number of arguments */
                                  ecma_parse_opts_t parse_opts) /**< parse options */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
@@ -835,7 +835,7 @@ static ecma_value_t
 ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
                               ecma_value_t this_arg_value, /**< 'this' argument's value */
                               const ecma_value_t *arguments_list_p, /**< arguments list */
-                              ecma_length_t arguments_list_len) /**< length of arguments list */
+                              uint32_t arguments_list_len) /**< length of arguments list */
 {
   JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION);
 
@@ -989,7 +989,7 @@ static ecma_value_t JERRY_ATTR_NOINLINE
 ecma_op_function_call_external (ecma_object_t *func_obj_p, /**< Function object */
                                 ecma_value_t this_arg_value, /**< 'this' argument's value */
                                 const ecma_value_t *arguments_list_p, /**< arguments list */
-                                ecma_length_t arguments_list_len) /**< length of arguments list */
+                                uint32_t arguments_list_len) /**< length of arguments list */
 
 {
   JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
@@ -1034,11 +1034,11 @@ ecma_op_bound_function_get_argument_list (ecma_object_t *func_obj_p, /**< bound 
 
   ecma_value_t args_len_or_this = bound_func_p->header.u.bound_function.args_len_or_this;
 
-  ecma_length_t args_length = 1;
+  uint32_t args_length = 1;
 
   if (ecma_is_value_integer_number (args_len_or_this))
   {
-    args_length = (ecma_length_t) ecma_get_integer_from_value (args_len_or_this);
+    args_length = (uint32_t) ecma_get_integer_from_value (args_len_or_this);
   }
 
   /* 5. */
@@ -1070,7 +1070,7 @@ ecma_op_bound_function_get_argument_list (ecma_object_t *func_obj_p, /**< bound 
 static ecma_value_t JERRY_ATTR_NOINLINE
 ecma_op_function_call_bound (ecma_object_t *func_obj_p, /**< Function object */
                              const ecma_value_t *arguments_list_p, /**< arguments list */
-                             ecma_length_t arguments_list_len) /**< length of arguments list */
+                             uint32_t arguments_list_len) /**< length of arguments list */
 {
   JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
 
@@ -1088,7 +1088,7 @@ ecma_op_function_call_bound (ecma_object_t *func_obj_p, /**< Function object */
   ecma_value_t ret_value = ecma_op_function_call (target_obj_p,
                                                   bound_arg_list_p->buffer_p[0],
                                                   bound_arg_list_p->buffer_p + 1,
-                                                  (ecma_length_t) (bound_arg_list_p->item_count - 1));
+                                                  (uint32_t) (bound_arg_list_p->item_count - 1));
 
   ecma_collection_destroy (bound_arg_list_p);
 
@@ -1109,7 +1109,7 @@ ecma_value_t
 ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
                        ecma_value_t this_arg_value, /**< 'this' argument's value */
                        const ecma_value_t *arguments_list_p, /**< arguments list */
-                       ecma_length_t arguments_list_len) /**< length of arguments list */
+                       uint32_t arguments_list_len) /**< length of arguments list */
 {
   JERRY_ASSERT (func_obj_p != NULL
                 && !ecma_is_lexical_environment (func_obj_p));
@@ -1166,7 +1166,7 @@ static ecma_value_t JERRY_ATTR_NOINLINE
 ecma_op_function_construct_bound (ecma_object_t *func_obj_p, /**< Function object */
                                   ecma_object_t *new_target_p, /**< new target */
                                   const ecma_value_t *arguments_list_p, /**< arguments list */
-                                  ecma_length_t arguments_list_len) /**< length of arguments list */
+                                  uint32_t arguments_list_len) /**< length of arguments list */
 {
   JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
 
@@ -1185,7 +1185,7 @@ ecma_op_function_construct_bound (ecma_object_t *func_obj_p, /**< Function objec
   ecma_value_t ret_value = ecma_op_function_construct (target_obj_p,
                                                        new_target_p,
                                                        bound_arg_list_p->buffer_p + 1,
-                                                       (ecma_length_t) (bound_arg_list_p->item_count - 1));
+                                                       (uint32_t) (bound_arg_list_p->item_count - 1));
 
   ecma_collection_destroy (bound_arg_list_p);
 
@@ -1202,7 +1202,7 @@ static ecma_value_t JERRY_ATTR_NOINLINE
 ecma_op_function_construct_external (ecma_object_t *func_obj_p, /**< Function object */
                                      ecma_object_t *new_target_p, /**< new target */
                                      const ecma_value_t *arguments_list_p, /**< arguments list */
-                                     ecma_length_t arguments_list_len) /**< length of arguments list */
+                                     uint32_t arguments_list_len) /**< length of arguments list */
 {
   JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
 
@@ -1251,7 +1251,7 @@ ecma_value_t
 ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
                             ecma_object_t *new_target_p, /**< new target */
                             const ecma_value_t *arguments_list_p, /**< arguments list */
-                            ecma_length_t arguments_list_len) /**< length of arguments list */
+                            uint32_t arguments_list_len) /**< length of arguments list */
 {
   JERRY_ASSERT (func_obj_p != NULL
                 && !ecma_is_lexical_environment (func_obj_p));

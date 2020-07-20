@@ -364,7 +364,7 @@ ecma_op_container_free_entries (ecma_object_t *object_p) /**< collection object 
  */
 ecma_value_t
 ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments list */
-                          ecma_length_t arguments_list_len, /**< number of arguments */
+                          uint32_t arguments_list_len, /**< number of arguments */
                           lit_magic_string_id_t lit_id, /**< internal class id */
                           ecma_builtin_id_t proto_id) /**< prototype builtin id */
 {

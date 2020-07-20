@@ -40,7 +40,7 @@
 ecma_value_t
 ecma_builtin_helper_error_dispatch_call (ecma_standard_error_t error_type, /**< native error type */
                                          const ecma_value_t *arguments_list_p, /**< arguments list */
-                                         ecma_length_t arguments_list_len) /**< number of arguments */
+                                         uint32_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 

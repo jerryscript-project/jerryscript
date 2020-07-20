@@ -288,7 +288,7 @@ typedef ecma_value_t (*ecma_vm_exec_stop_callback_t) (void *user_p);
 typedef ecma_value_t (*ecma_external_handler_t) (const ecma_value_t function_obj,
                                                  const ecma_value_t this_val,
                                                  const ecma_value_t args_p[],
-                                                 const ecma_length_t args_count);
+                                                 const uint32_t args_count);
 
 /**
  * Native free callback of an object.
@@ -1851,8 +1851,8 @@ typedef struct
 typedef struct
 {
   ecma_extended_object_t extended_object; /**< extended object part */
-  ecma_length_t byte_offset; /**< the byteoffset of the above arraybuffer */
-  ecma_length_t array_length; /**< the array length */
+  uint32_t byte_offset; /**< the byteoffset of the above arraybuffer */
+  uint32_t array_length; /**< the array length */
 } ecma_extended_typedarray_object_t;
 
 /**
@@ -1867,7 +1867,7 @@ typedef struct
                               *    - This address must be used during indexed read/write operation. */
   ecma_typedarray_type_t id; /**< [[TypedArrayName]] internal slot */
   uint32_t length; /**< [[ByteLength]] internal slot */
-  ecma_length_t offset; /**< [[ByteOffset]] internal slot. */
+  uint32_t offset; /**< [[ByteOffset]] internal slot. */
   uint8_t shift; /**< the element size shift in the typedArray */
   uint8_t element_size; /**< element size based on [[TypedArrayName]] in Table 49 */
 } ecma_typedarray_info_t;

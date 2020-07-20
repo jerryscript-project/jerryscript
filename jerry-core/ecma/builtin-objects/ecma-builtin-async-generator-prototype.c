@@ -91,8 +91,8 @@ ecma_builtin_async_generator_prototype_dispatch_routine (uint16_t builtin_routin
                                                          const ecma_value_t arguments_list_p[], /**< list of arguments
                                                                                                  *   passed to
                                                                                                  *   routine */
-                                                         ecma_length_t arguments_number) /**< length of arguments'
-                                                                                          *   list */
+                                                         uint32_t arguments_number) /**< length of arguments'
+                                                                                     *   list */
 {
   JERRY_UNUSED (arguments_number);
 

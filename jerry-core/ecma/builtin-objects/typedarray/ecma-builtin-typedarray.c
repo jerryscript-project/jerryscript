@@ -57,7 +57,7 @@
 static ecma_value_t
 ecma_builtin_typedarray_from (ecma_value_t this_arg, /**< 'this' argument */
                               const ecma_value_t *arguments_list_p, /**< arguments list */
-                              ecma_length_t arguments_list_len) /**< number of arguments */
+                              uint32_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
@@ -126,7 +126,7 @@ ecma_builtin_typedarray_from (ecma_value_t this_arg, /**< 'this' argument */
 static ecma_value_t
 ecma_builtin_typedarray_of (ecma_value_t this_arg, /**< 'this' argument */
                             const ecma_value_t *arguments_list_p, /**< arguments list */
-                            ecma_length_t arguments_list_len) /**< number of arguments */
+                            uint32_t arguments_list_len) /**< number of arguments */
 {
   if (!ecma_is_constructor (this_arg))
   {
@@ -192,7 +192,7 @@ ecma_builtin_typedarray_of (ecma_value_t this_arg, /**< 'this' argument */
  */
 ecma_value_t
 ecma_builtin_typedarray_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
-                                       ecma_length_t arguments_list_len) /**< number of arguments */
+                                       uint32_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
@@ -209,7 +209,7 @@ ecma_builtin_typedarray_dispatch_call (const ecma_value_t *arguments_list_p, /**
  */
 ecma_value_t
 ecma_builtin_typedarray_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
-                                            ecma_length_t arguments_list_len) /**< number of arguments */
+                                            uint32_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 

@@ -74,11 +74,6 @@
 typedef uint16_t ecma_char_t;
 
 /**
- * Description of a collection's/string's length
- */
-typedef uint32_t ecma_length_t;
-
-/**
  * Max bytes needed to represent a code unit (utf-16 char) via utf-8 encoding
  */
 #define LIT_UTF8_MAX_BYTES_IN_CODE_UNIT (3)

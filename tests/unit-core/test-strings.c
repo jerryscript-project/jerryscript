@@ -72,11 +72,11 @@ generate_cesu8_char (utf8_char_size char_size,
   return lit_code_unit_to_utf8 ((ecma_char_t) code_point, buf);
 } /* generate_cesu8_char */
 
-static ecma_length_t
+static lit_utf8_size_t
 generate_cesu8_string (lit_utf8_byte_t *buf_p,
                        lit_utf8_size_t buf_size)
 {
-  ecma_length_t length = 0;
+  lit_utf8_size_t length = 0;
 
   lit_utf8_size_t size = 0;
   while (size  < buf_size)
@@ -114,10 +114,10 @@ main (void)
   for (int i = 0; i < test_iters; i++)
   {
     lit_utf8_size_t cesu8_string_size = (i == 0) ? 0 : (lit_utf8_size_t) (rand () % max_bytes_in_string);
-    ecma_length_t length = generate_cesu8_string (cesu8_string, cesu8_string_size);
+    lit_utf8_size_t length = generate_cesu8_string (cesu8_string, cesu8_string_size);
 
     ecma_string_t *char_collection_string_p = ecma_new_ecma_string_from_utf8 (cesu8_string, cesu8_string_size);
-    ecma_length_t char_collection_len = ecma_string_get_length (char_collection_string_p);
+    lit_utf8_size_t char_collection_len = ecma_string_get_length (char_collection_string_p);
     TEST_ASSERT (char_collection_len == length);
     ecma_deref_ecma_string (char_collection_string_p);
 
@@ -126,8 +126,8 @@ main (void)
     const lit_utf8_byte_t *curr_p = cesu8_string;
     const lit_utf8_byte_t *end_p = cesu8_string + cesu8_string_size;
 
-    ecma_length_t calculated_length = 0;
-    ecma_length_t code_units_count = 0;
+    lit_utf8_size_t calculated_length = 0;
+    lit_utf8_size_t code_units_count = 0;
 
     while (curr_p < end_p)
     {
@@ -145,7 +145,7 @@ main (void)
     {
       for (int j = 0; j < test_subiters; j++)
       {
-        ecma_length_t index = (ecma_length_t) rand () % code_units_count;
+        lit_utf8_size_t index = (lit_utf8_size_t) rand () % code_units_count;
         curr_p = saved_positions[index];
         TEST_ASSERT (lit_cesu8_peek_next (curr_p) == code_units[index]);
       }

@@ -44,7 +44,7 @@
  */
 ecma_value_t
 ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments list */
-                         ecma_length_t arguments_list_len) /**< number of arguments */
+                         uint32_t arguments_list_len) /**< number of arguments */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
   JERRY_ASSERT (JERRY_CONTEXT (current_new_target));
@@ -96,10 +96,10 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
   }
 
   /* 9. */
-  ecma_length_t buffer_byte_length = ecma_arraybuffer_get_length (buffer_p);
+  uint32_t buffer_byte_length = ecma_arraybuffer_get_length (buffer_p);
 
   /* 10. */
-  if ((ecma_length_t) offset > buffer_byte_length)
+  if (offset > buffer_byte_length)
   {
     return ecma_raise_range_error (ECMA_ERR_MSG ("Start offset is outside the bounds of the buffer."));
   }
@@ -126,7 +126,7 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
   else
   {
     /* 11.a */
-    viewByteLength = (uint32_t) (buffer_byte_length - (ecma_length_t) offset);
+    viewByteLength = (uint32_t) (buffer_byte_length - offset);
   }
 
   /* 13. */

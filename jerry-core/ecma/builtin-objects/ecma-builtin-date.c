@@ -195,7 +195,7 @@ ecma_date_parse_month_name (const lit_utf8_byte_t **str_p, /**< pointer to the c
   */
 static ecma_value_t
 ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to the Date constructor */
-                            ecma_length_t args_len) /**< number of arguments */
+                            uint32_t args_len) /**< number of arguments */
 {
   ecma_number_t date_nums[7] =
   {
@@ -301,8 +301,8 @@ ecma_builtin_date_parse_ISO_string_format (const lit_utf8_byte_t *date_str_curr_
       ecma_number_t seconds = ECMA_NUMBER_ZERO;
       ecma_number_t milliseconds = ECMA_NUMBER_ZERO;
 
-      ecma_length_t remaining_length = lit_utf8_string_length (date_str_curr_p,
-                                                               (lit_utf8_size_t) (date_str_end_p - date_str_curr_p));
+      lit_utf8_size_t remaining_length = lit_utf8_string_length (date_str_curr_p,
+                                                                 (lit_utf8_size_t) (date_str_end_p - date_str_curr_p));
 
       if (remaining_length >= 5)
       {
@@ -613,7 +613,7 @@ ecma_builtin_date_parse (ecma_value_t this_arg, /**< this argument */
 static ecma_value_t
 ecma_builtin_date_utc (ecma_value_t this_arg, /**< this argument */
                        const ecma_value_t args[], /**< arguments list */
-                       ecma_length_t args_number) /**< number of arguments */
+                       uint32_t args_number) /**< number of arguments */
 {
   JERRY_UNUSED (this_arg);
 
@@ -677,7 +677,7 @@ ecma_builtin_date_now (ecma_value_t this_arg) /**< this argument */
  */
 ecma_value_t
 ecma_builtin_date_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
-                                 ecma_length_t arguments_list_len) /**< number of arguments */
+                                 uint32_t arguments_list_len) /**< number of arguments */
 {
   JERRY_UNUSED (arguments_list_p);
   JERRY_UNUSED (arguments_list_len);
@@ -698,7 +698,7 @@ ecma_builtin_date_dispatch_call (const ecma_value_t *arguments_list_p, /**< argu
  */
 ecma_value_t
 ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
-                                      ecma_length_t arguments_list_len) /**< number of arguments */
+                                      uint32_t arguments_list_len) /**< number of arguments */
 {
 #if ENABLED (JERRY_ESNEXT)
   JERRY_ASSERT (JERRY_CONTEXT (current_new_target));

@@ -49,7 +49,7 @@ ecma_builtin_set_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< b
                                              ecma_value_t this_arg, /**< 'this' argument value */
                                              const ecma_value_t arguments_list_p[], /**< list of arguments
                                                                                      *   passed to routine */
-                                             ecma_length_t arguments_number) /**< length of arguments' list */
+                                             uint32_t arguments_number) /**< length of arguments' list */
 {
   JERRY_UNUSED (arguments_number);
   return ecma_builtin_container_dispatch_routine (builtin_routine_id,

@@ -47,7 +47,7 @@ ecma_op_function_get_compiled_code (ecma_extended_object_t *function_p);
 
 ecma_value_t
 ecma_op_create_dynamic_function (const ecma_value_t *arguments_list_p,
-                                 ecma_length_t arguments_list_len,
+                                 uint32_t arguments_list_len,
                                  ecma_parse_opts_t opts);
 
 #if ENABLED (JERRY_ESNEXT)
@@ -72,11 +72,11 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, ecma_value_t value);
 
 ecma_value_t
 ecma_op_function_call (ecma_object_t *func_obj_p, ecma_value_t this_arg_value,
-                       const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len);
+                       const ecma_value_t *arguments_list_p, uint32_t arguments_list_len);
 
 ecma_value_t
 ecma_op_function_construct (ecma_object_t *func_obj_p, ecma_object_t *new_target_p,
-                            const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len);
+                            const ecma_value_t *arguments_list_p, uint32_t arguments_list_len);
 
 ecma_property_t *
 ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, ecma_string_t *property_name_p);

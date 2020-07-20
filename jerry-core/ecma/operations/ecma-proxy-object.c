@@ -107,7 +107,7 @@ ecma_value_t
 ecma_proxy_revoke_cb (const ecma_value_t function_obj, /**< the function itself */
                       const ecma_value_t this_val, /**< this_arg of the function */
                       const ecma_value_t args_p[], /**< argument list */
-                      const ecma_length_t args_count) /**< argument number */
+                      const uint32_t args_count) /**< argument number */
 {
   JERRY_UNUSED_3 (this_val, args_p, args_count);
 
@@ -1696,7 +1696,7 @@ ecma_value_t
 ecma_proxy_object_call (ecma_object_t *obj_p, /**< proxy object */
                         ecma_value_t this_argument, /**< this argument to invoke the function */
                         const ecma_value_t *args_p, /**< argument list */
-                        ecma_length_t argc) /**< number of arguments */
+                        uint32_t argc) /**< number of arguments */
 {
   JERRY_ASSERT (ECMA_OBJECT_IS_PROXY (obj_p));
 
@@ -1750,7 +1750,7 @@ ecma_value_t
 ecma_proxy_object_construct (ecma_object_t *obj_p, /**< proxy object */
                              ecma_object_t *new_target_p, /**< new target */
                              const ecma_value_t *args_p, /**< argument list */
-                             ecma_length_t argc) /**< number of arguments */
+                             uint32_t argc) /**< number of arguments */
 {
   JERRY_ASSERT (ECMA_OBJECT_IS_PROXY (obj_p));
 

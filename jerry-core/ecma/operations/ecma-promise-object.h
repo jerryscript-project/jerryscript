@@ -96,12 +96,12 @@ void ecma_promise_create_resolving_functions (ecma_object_t *object_p, ecma_prom
                                               bool create_already_resolved);
 void ecma_promise_free_resolving_functions (ecma_promise_resolving_functions_t *funcs);
 
-ecma_length_t ecma_promise_remaining_inc_or_dec (ecma_value_t remaining, bool is_inc);
+uint32_t ecma_promise_remaining_inc_or_dec (ecma_value_t remaining, bool is_inc);
 ecma_value_t ecma_promise_all_handler_cb (const ecma_value_t function_obj, const ecma_value_t this_val,
-                                          const ecma_value_t args_p[], const ecma_length_t args_count);
+                                          const ecma_value_t args_p[], const uint32_t args_count);
 
 ecma_value_t ecma_op_get_capabilities_executor_cb (const ecma_value_t function_obj, const ecma_value_t this_val,
-                                                   const ecma_value_t args_p[], const ecma_length_t args_count);
+                                                   const ecma_value_t args_p[], const uint32_t args_count);
 
 /**
  * @}

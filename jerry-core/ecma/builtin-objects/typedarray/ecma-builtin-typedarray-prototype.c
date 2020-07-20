@@ -213,7 +213,7 @@ ecma_builtin_typedarray_prototype_exec_routine (ecma_value_t this_arg, /**< this
   ecma_typedarray_getter_fn_t typedarray_getter_cb = ecma_get_typedarray_getter_fn (info.id);
 
   ecma_object_t *func_object_p = ecma_get_object_from_value (cb_func_val);
-  ecma_length_t byte_pos = 0;
+  uint32_t byte_pos = 0;
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   for (uint32_t index = 0; index < info.length && ecma_is_value_empty (ret_value); index++)
@@ -459,7 +459,7 @@ ecma_builtin_typedarray_prototype_map (ecma_value_t this_arg, /**< this argument
   ecma_typedarray_getter_fn_t src_typedarray_getter_cb = ecma_get_typedarray_getter_fn (src_info.id);
   ecma_typedarray_setter_fn_t target_typedarray_setter_cb = ecma_get_typedarray_setter_fn (target_info.id);
 
-  ecma_length_t src_byte_pos = 0;
+  uint32_t src_byte_pos = 0;
 
   for (uint32_t index = 0; index < src_info.length; index++)
   {
@@ -488,7 +488,7 @@ ecma_builtin_typedarray_prototype_map (ecma_value_t this_arg, /**< this argument
     }
     else
     {
-      ecma_length_t target_byte_pos = index << target_info.shift;
+      uint32_t target_byte_pos = index << target_info.shift;
       target_typedarray_setter_cb (target_info.buffer_p + target_byte_pos, mapped_num);
     }
 
@@ -535,7 +535,7 @@ ecma_builtin_typedarray_prototype_reduce_with_direction (ecma_value_t this_arg, 
   ecma_typedarray_info_t info = ecma_typedarray_get_info (obj_p);
 
   ecma_typedarray_getter_fn_t getter_cb = ecma_get_typedarray_getter_fn (info.id);
-  ecma_length_t byte_pos;
+  uint32_t byte_pos;
 
   if (info.length == 0)
   {
@@ -717,7 +717,7 @@ ecma_builtin_typedarray_prototype_filter (ecma_value_t this_arg, /**< this argum
   JMEM_DEFINE_LOCAL_ARRAY (pass_value_list_p, info.length * info.element_size, lit_utf8_byte_t);
 
   lit_utf8_byte_t *pass_value_p = pass_value_list_p;
-  ecma_length_t byte_pos = 0;
+  uint32_t byte_pos = 0;
 
   for (uint32_t index = 0; index < info.length; index++)
   {
@@ -1286,7 +1286,7 @@ ecma_builtin_typedarray_prototype_subarray (ecma_value_t this_arg, /**< this arg
   }
 
   /* 13. newLength */
-  ecma_length_t subarray_length = 0;
+  uint32_t subarray_length = 0;
 
   if (end_index_uint32 > begin_index_uint32)
   {
@@ -1294,7 +1294,7 @@ ecma_builtin_typedarray_prototype_subarray (ecma_value_t this_arg, /**< this arg
   }
 
   /* 17. beginByteOffset */
-  ecma_length_t begin_byte_offset = info.offset + begin_index_uint32 * info.element_size;
+  uint32_t begin_byte_offset = info.offset + begin_index_uint32 * info.element_size;
 
   ecma_value_t arguments_p[3] =
   {
@@ -1364,7 +1364,7 @@ ecma_builtin_typedarray_prototype_fill (ecma_value_t this_arg, /**< this argumen
     }
   }
 
-  ecma_length_t subarray_length = 0;
+  uint32_t subarray_length = 0;
 
   if (end_index_uint32 > begin_index_uint32)
   {
@@ -1695,7 +1695,7 @@ ecma_builtin_typedarray_prototype_find_index (ecma_value_t this_arg, /**< this a
 static ecma_value_t
 ecma_builtin_typedarray_prototype_index_of (ecma_value_t this_arg, /**< this argument */
                                             const ecma_value_t args[], /**< arguments list */
-                                            ecma_length_t args_number) /**< number of arguments */
+                                            uint32_t args_number) /**< number of arguments */
 {
   if (!ecma_is_typedarray (this_arg))
   {
@@ -1775,7 +1775,7 @@ ecma_builtin_typedarray_prototype_index_of (ecma_value_t this_arg, /**< this arg
 static ecma_value_t
 ecma_builtin_typedarray_prototype_last_index_of (ecma_value_t this_arg, /**< this argument */
                                                 const ecma_value_t args[], /**< arguments list */
-                                                ecma_length_t args_number) /**< number of arguments */
+                                                uint32_t args_number) /**< number of arguments */
 {
   if (!ecma_is_typedarray (this_arg))
   {
@@ -1856,7 +1856,7 @@ ecma_builtin_typedarray_prototype_last_index_of (ecma_value_t this_arg, /**< thi
 static ecma_value_t
 ecma_builtin_typedarray_prototype_copy_within (ecma_value_t this_arg, /**< this argument */
                                                const ecma_value_t args[], /**< arguments list */
-                                               ecma_length_t args_number) /**< number of arguments */
+                                               uint32_t args_number) /**< number of arguments */
 {
   if (!ecma_is_typedarray (this_arg))
   {
@@ -1929,7 +1929,7 @@ ecma_builtin_typedarray_prototype_copy_within (ecma_value_t this_arg, /**< this 
 static ecma_value_t
 ecma_builtin_typedarray_prototype_slice (ecma_value_t this_arg, /**< this argument */
                                          const ecma_value_t args[], /**< arguments list */
-                                         ecma_length_t args_number) /**< number of arguments */
+                                         uint32_t args_number) /**< number of arguments */
 {
   if (!ecma_is_typedarray (this_arg))
   {

@@ -51,7 +51,7 @@ enum
 
 uint8_t ecma_op_container_entry_size (lit_magic_string_id_t lit_id);
 ecma_extended_object_t *ecma_op_container_get_object (ecma_value_t this_arg, lit_magic_string_id_t lit_id);
-ecma_value_t ecma_op_container_create (const ecma_value_t *arguments_list_p, ecma_length_t arguments_list_len,
+ecma_value_t ecma_op_container_create (const ecma_value_t *arguments_list_p, uint32_t arguments_list_len,
                                        lit_magic_string_id_t lit_id, ecma_builtin_id_t proto_id);
 ecma_value_t ecma_op_container_size (ecma_extended_object_t *map_object_p);
 ecma_value_t ecma_op_container_get (ecma_extended_object_t *map_object_p, ecma_value_t key_arg,

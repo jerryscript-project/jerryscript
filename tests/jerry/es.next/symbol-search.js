@@ -226,3 +226,70 @@ o = {
 }
 
 assert (RegExp.prototype[Symbol.search].call (o, "str") === 0);
+
+var r = /a/;
+r.lastIndex = 3.14;
+
+var get_calls = [];
+var set_calls = [];
+
+var handler = {
+  get: function(o, k) {
+    get_calls.push(k);
+
+    if (k === "exec") {
+      return (str) => r.exec(str);
+    }
+
+    return r[k];
+  },
+  set: function(o, k, v) {
+    set_calls.push(k);
+    r[k] = v;
+  }
+};
+
+var p = new Proxy(r, handler);
+assert (search.call(p, "bba") === 2);
+
+assert (get_calls.join(",") === "lastIndex,exec,lastIndex");
+assert (set_calls.join(",") === "lastIndex,lastIndex");
+assert (r.lastIndex === 3.14);
+
+var o = {
+  get lastIndex() {
+    Object.defineProperty(o, "lastIndex", {
+      get: function () { throw "abrupt get second lastIndex"; }
+    });
+    return 1;
+  },
+  set lastIndex(v) {},
+  exec: () => { return null; }
+}
+
+try {
+  search.call(o, "str");
+  assert (false);
+} catch (e) {
+  assert (e === "abrupt get second lastIndex");
+}
+
+var index = 1;
+var o = {
+  get lastIndex() {
+    return index++;
+  },
+  set lastIndex(v) {
+    Object.defineProperty(o, "lastIndex", {
+      set: function (v) { throw "abrupt set second lastIndex"; }
+    });
+  },
+  exec: () => { return null; }
+}
+
+try {
+  search.call(o, "str");
+  assert (false);
+} catch (e) {
+  assert (e === "abrupt set second lastIndex");
+}

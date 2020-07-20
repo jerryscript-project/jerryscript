@@ -378,4 +378,6 @@
   <test id="built-ins/String/prototype/trim/15.5.4.20-3-6.js"><reason>Unicode 13: 0x180E is no longer whitespace character</reason></test>
   <test id="built-ins/parseFloat/S15.1.2.3_A2_T10.js"><reason>Unicode 13: 0x180E is no longer whitespace character</reason></test>
   <test id="built-ins/parseInt/S15.1.2.2_A2_T10.js"><reason>Unicode 13: 0x180E is no longer whitespace character</reason></test>
+  <test id="built-ins/RegExp/prototype/Symbol.search/set-lastindex-restore-err.js"><reason>lastIndex handling in Symbol.search has changed since ES6</reason></test>
+  <test id="built-ins/RegExp/prototype/Symbol.search/set-lastindex-restore.js"><reason>lastIndex handling in Symbol.search has changed since ES6</reason></test>
 </excludeList>

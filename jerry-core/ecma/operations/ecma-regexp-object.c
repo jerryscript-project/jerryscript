@@ -1921,7 +1921,7 @@ ecma_regexp_search_helper (ecma_value_t regexp_arg, /**< regexp argument */
 
   ecma_value_t result = ECMA_VALUE_ERROR;
 
-  /* 3-4. */
+  /* 3. */
   ecma_string_t *const string_p = ecma_op_to_string (string_arg);
   if (string_p == NULL)
   {
@@ -1930,7 +1930,7 @@ ecma_regexp_search_helper (ecma_value_t regexp_arg, /**< regexp argument */
 
   ecma_object_t *const regexp_object_p = ecma_get_object_from_value (regexp_arg);
 
-  /* 5-6. */
+  /* 4. */
   ecma_string_t *const last_index_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL);
   const ecma_value_t prev_last_index = ecma_op_object_get (regexp_object_p, last_index_str_p);
   if (ECMA_IS_VALUE_ERROR (prev_last_index))
@@ -1938,35 +1938,56 @@ ecma_regexp_search_helper (ecma_value_t regexp_arg, /**< regexp argument */
     goto cleanup_string;
   }
 
-  /* 7-8. */
-  const ecma_value_t status = ecma_op_object_put (regexp_object_p, last_index_str_p, ecma_make_uint32_value (0), true);
-  if (ECMA_IS_VALUE_ERROR (status))
+  /* 5. */
+  if (prev_last_index != ecma_make_uint32_value (0))
   {
-    ecma_free_value (prev_last_index);
-    goto cleanup_string;
+    const ecma_value_t status = ecma_op_object_put (regexp_object_p,
+                                                    last_index_str_p,
+                                                    ecma_make_uint32_value (0),
+                                                    true);
+
+    if (ECMA_IS_VALUE_ERROR (status))
+    {
+      goto cleanup_prev_last_index;
+    }
+
+    JERRY_ASSERT (ecma_is_value_boolean (status));
   }
 
-  JERRY_ASSERT (ecma_is_value_boolean (status));
-
-  /* 9-10. */
+  /* 6. */
   const ecma_value_t match = ecma_op_regexp_exec (regexp_arg, string_p);
   if (ECMA_IS_VALUE_ERROR (match))
   {
-    ecma_free_value (prev_last_index);
-    goto cleanup_string;
+    goto cleanup_prev_last_index;
   }
 
-  /* 11-12. */
-  result = ecma_op_object_put (regexp_object_p, last_index_str_p, prev_last_index, true);
-  ecma_free_value (prev_last_index);
-
-  if (ECMA_IS_VALUE_ERROR (result))
+  /* 7. */
+  const ecma_value_t current_last_index = ecma_op_object_get (regexp_object_p, last_index_str_p);
+  if (ECMA_IS_VALUE_ERROR (current_last_index))
   {
     ecma_free_value (match);
-    goto cleanup_string;
+    goto cleanup_prev_last_index;
   }
 
-  /* 13-14. */
+  const bool same_value = ecma_op_same_value (prev_last_index, current_last_index);
+
+  ecma_free_value (current_last_index);
+
+  /* 8. */
+  if (!same_value)
+  {
+    result = ecma_op_object_put (regexp_object_p, last_index_str_p, prev_last_index, true);
+
+    if (ECMA_IS_VALUE_ERROR (result))
+    {
+      ecma_free_value (match);
+      goto cleanup_prev_last_index;
+    }
+
+    JERRY_ASSERT (ecma_is_value_boolean (result));
+  }
+
+  /* 9-10. */
   if (ecma_is_value_null (match))
   {
     result = ecma_make_int32_value (-1);
@@ -1977,6 +1998,9 @@ ecma_regexp_search_helper (ecma_value_t regexp_arg, /**< regexp argument */
     result = ecma_op_object_get_by_magic_id (match_p, LIT_MAGIC_STRING_INDEX);
     ecma_deref_object (match_p);
   }
+
+cleanup_prev_last_index:
+  ecma_free_value (prev_last_index);
 
 cleanup_string:
   ecma_deref_ecma_string (string_p);

@@ -72,3 +72,22 @@ class RegExpSub extends RegExp {
 var regexp1 = new RegExpSub('([0-9]+)-([0-9]+)-([0-9]+)');
 result = regexp1[Symbol.match](str);
 assert(result === "VALID");
+
+var o = {
+  lastIndex: 0,
+  global: true,
+  exec: function () {
+    if (this.lastIndex === 0)
+    {
+      this.lastIndex = 1;
+      return {0: 3.14, index: 2};
+    }
+
+    return null;
+  }
+}
+
+var result = RegExp.prototype[Symbol.match].call(o, "asd");
+assert(result.length === 1);
+assert(typeof result[0] === "string");
+assert(result[0] === "3.14");

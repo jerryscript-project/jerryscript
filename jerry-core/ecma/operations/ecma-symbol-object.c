@@ -137,42 +137,42 @@ ecma_get_symbol_descriptive_string (ecma_value_t symbol_value) /**< symbol to st
 } /* ecma_get_symbol_descriptive_string */
 
 /**
- * Helper for Symbol.prototype.{toString, valueOf} routines
+ * thisSymbolValue abstract operation
  *
- * See also: 19.4.3.2, 19.4.3.3
+ * See also:
+ *          ECMA-262 v11, 19.4.3
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_symbol_to_string_helper (ecma_value_t this_arg, /**< this argument value */
-                              bool is_to_string) /**< true - perform the 'toString' routine steps
-                                                  *   false - perform the 'valueOf' routine steps */
+ecma_symbol_this_value (ecma_value_t this_arg) /**< this argument value */
 {
+  /* 1. */
   if (ecma_is_value_symbol (this_arg))
   {
-    return is_to_string ? ecma_get_symbol_descriptive_string (this_arg) : ecma_copy_value (this_arg);
+    return this_arg;
   }
 
+  /* 2. */
   if (ecma_is_value_object (this_arg))
   {
     ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
 
     if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_CLASS)
     {
-      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+      ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
 
-      if (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_SYMBOL_UL)
+      if (ext_obj_p->u.class_prop.class_id == LIT_MAGIC_STRING_SYMBOL_UL)
       {
-        return (is_to_string ? ecma_get_symbol_descriptive_string (ext_object_p->u.class_prop.u.value)
-                             : ecma_copy_value (ext_object_p->u.class_prop.u.value));
+        return ext_obj_p->u.class_prop.u.value;
       }
     }
   }
 
-  return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is must be a Symbol."));
-} /* ecma_symbol_to_string_helper */
-
+  /* 3. */
+  return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' must be a Symbol."));
+} /* ecma_symbol_this_value */
 #endif /* ENABLED (JERRY_ESNEXT) */
 
 /**

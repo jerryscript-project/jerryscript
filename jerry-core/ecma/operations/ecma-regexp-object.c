@@ -694,6 +694,7 @@ ecma_regexp_run (ecma_regexp_ctx_t *re_ctx_p, /**< RegExp matcher context */
         group_p->subcapture_start = re_get_value (&bc_p);
         group_p->subcapture_count = re_get_value (&bc_p);
 
+        const lit_utf8_byte_t *const saved_begin_p = group_p->begin_p;
         const uint32_t saved_iterator = group_p->iterator;
         const uint32_t qmin = re_get_value (&bc_p);
 
@@ -720,6 +721,7 @@ ecma_regexp_run (ecma_regexp_ctx_t *re_ctx_p, /**< RegExp matcher context */
 
         if (matched_p == NULL)
         {
+          group_p->begin_p = saved_begin_p;
           goto fail;
         }
 

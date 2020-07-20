@@ -46,3 +46,8 @@ try {
 } catch (e) {
   assert(e instanceof TypeError);
 }
+
+// Checking quoting strings
+assert(JSON.stringify("ab𬄕c") === '"ab𬄕\\u001fc"');
+assert(JSON.stringify("ab\uDC01cd") === '"ab\\udc01c\\u001fd"');
+assert(JSON.stringify("ab\uDC01cd\uD8331e") === '"ab\\udc01c\\u001fd\\ud8331e"');

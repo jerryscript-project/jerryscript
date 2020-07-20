@@ -849,7 +849,29 @@ ecma_builtin_json_quote (ecma_stringbuilder_t *builder_p, /**< builder for the r
 
   while (str_p < str_end_p)
   {
-    lit_utf8_byte_t c = *str_p++;
+    ecma_char_t c = lit_cesu8_read_next (&str_p);
+
+    bool should_escape = false;
+
+#if ENABLED (JERRY_ESNEXT)
+    if (lit_is_code_point_utf16_high_surrogate (c))
+    {
+      const ecma_char_t next_ch = lit_cesu8_peek_next (str_p);
+      if (lit_is_code_point_utf16_low_surrogate (next_ch))
+      {
+        str_p += LIT_UTF8_MAX_BYTES_IN_CODE_UNIT;
+        continue;
+      }
+      else
+      {
+        should_escape = true;
+      }
+    }
+    else if (lit_is_code_point_utf16_low_surrogate (c))
+    {
+      should_escape = true;
+    }
+#endif /* ENABLED (JERRY_ESNEXT) */
 
     if (c == LIT_CHAR_BACKSLASH || c == LIT_CHAR_DOUBLE_QUOTE)
     {
@@ -858,56 +880,52 @@ ecma_builtin_json_quote (ecma_stringbuilder_t *builder_p, /**< builder for the r
                                      (lit_utf8_size_t) (str_p - regular_str_start_p - 1));
       regular_str_start_p = str_p;
       ecma_stringbuilder_append_byte (builder_p, LIT_CHAR_BACKSLASH);
-      ecma_stringbuilder_append_byte (builder_p, c);
+      ecma_stringbuilder_append_byte (builder_p, (lit_utf8_byte_t) c);
     }
-    else if (c < LIT_CHAR_SP)
+    else if (c < LIT_CHAR_SP || should_escape)
     {
+      /**
+        * In ES10 we should escape high or low surrogate characters,
+        * so we shouldn't append the unescaped character to the stringbuilder
+        */
+      uint8_t offset = should_escape ? LIT_UTF8_MAX_BYTES_IN_CODE_UNIT : 1;
+
       ecma_stringbuilder_append_raw (builder_p,
                                      regular_str_start_p,
-                                     (lit_utf8_size_t) (str_p - regular_str_start_p - 1));
+                                     (lit_utf8_size_t) (str_p - regular_str_start_p - offset));
+
       regular_str_start_p = str_p;
-      ecma_stringbuilder_append_byte (builder_p, LIT_CHAR_BACKSLASH);
+
       switch (c)
       {
         case LIT_CHAR_BS:
         {
-          ecma_stringbuilder_append_byte (builder_p, LIT_CHAR_LOWERCASE_B);
+          ecma_stringbuilder_append_raw (builder_p, (lit_utf8_byte_t *) "\\b", 2);
           break;
         }
         case LIT_CHAR_FF:
         {
-          ecma_stringbuilder_append_byte (builder_p, LIT_CHAR_LOWERCASE_F);
+          ecma_stringbuilder_append_raw (builder_p, (lit_utf8_byte_t *) "\\f", 2);
           break;
         }
         case LIT_CHAR_LF:
         {
-          ecma_stringbuilder_append_byte (builder_p, LIT_CHAR_LOWERCASE_N);
+          ecma_stringbuilder_append_raw (builder_p, (lit_utf8_byte_t *) "\\n", 2);
           break;
         }
         case LIT_CHAR_CR:
         {
-          ecma_stringbuilder_append_byte (builder_p, LIT_CHAR_LOWERCASE_R);
+          ecma_stringbuilder_append_raw (builder_p, (lit_utf8_byte_t *) "\\r", 2);
           break;
         }
         case LIT_CHAR_TAB:
         {
-          ecma_stringbuilder_append_byte (builder_p, LIT_CHAR_LOWERCASE_T);
+          ecma_stringbuilder_append_raw (builder_p, (lit_utf8_byte_t *) "\\t", 2);
           break;
         }
         default: /* Hexadecimal. */
         {
-          ecma_stringbuilder_append_byte (builder_p, LIT_CHAR_LOWERCASE_U);
-          ecma_stringbuilder_append_byte (builder_p, LIT_CHAR_0);
-          ecma_stringbuilder_append_byte (builder_p, LIT_CHAR_0);
-
-          /* Max range 0-9, hex digits unnecessary. */
-          ecma_stringbuilder_append_byte (builder_p, (lit_utf8_byte_t) (LIT_CHAR_0 + (c >> 4)));
-
-          lit_utf8_byte_t c2 = (c & 0xf);
-          ecma_stringbuilder_append_byte (builder_p,
-                                          (lit_utf8_byte_t) (c2 + ((c2 <= 9)
-                                                                   ? LIT_CHAR_0
-                                                                   : (LIT_CHAR_LOWERCASE_A - 10))));
+          lit_char_unicode_escape (builder_p, c);
           break;
         }
       }

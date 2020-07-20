@@ -680,9 +680,45 @@ Object.defineProperty(abruptStickyRegexp, 'sticky', {
   }
 });
 
+assert(abruptStickyRegexp[Symbol.replace]() === "undefinedndefined");
+
+var r = /./;
+r.lastIndex = {
+  valueOf: function() {
+    throw "abrupt lastIndex"
+  }
+}
+
 try {
-  abruptStickyRegexp[Symbol.replace]();
+  r[Symbol.replace]("a", "b");
   assert(false);
 } catch (e) {
-  assert(e === "abrupt sticky");
+  assert(e === "abrupt lastIndex");
 }
+
+var r = /a/y;
+r.lastIndex = 3;
+assert (r[Symbol.replace]("aaaaa", "b") === "aaaba");
+assert (r.lastIndex === 4);
+
+assert (r[Symbol.replace]("ccccc", "b") === "ccccc");
+assert (r.lastIndex === 0);
+
+var r = /a/yg;
+r.lastIndex = 3;
+assert (r[Symbol.replace]("aaaaa", "b") === "bbbbb");
+assert (r.lastIndex === 0);
+
+var replaceCalled = false;
+var r = /a/
+r.lastIndex = 2;
+
+assert(r[Symbol.replace]("aaaa", function(match, index) {
+  replaceCalled = true;
+  assert (match === "a");
+  assert (index === 0);
+  return "b";
+}) === "baaa");
+
+assert (replaceCalled);
+assert (r.lastIndex === 2)

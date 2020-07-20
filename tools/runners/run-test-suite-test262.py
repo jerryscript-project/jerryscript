@@ -128,10 +128,9 @@ def update_exclude_list(args):
         lines = exclude_file.readlines()
         exclude_file.seek(0)
         exclude_file.truncate()
-        exclude_file.write('<?xml version="1.0" encoding="utf-8" ?>\n')
-        exclude_file.write('<excludeList>\n')
 
-        for line in lines:
+        # Skip the last line "</excludeList>" to be able to insert new failing tests.
+        for line in lines[:-1]:
             match = re.match(r"  <test id=\"(\S*)\">", line)
             if match:
                 test = match.group(1)

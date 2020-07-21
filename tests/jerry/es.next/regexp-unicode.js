@@ -364,3 +364,8 @@ assert(/\w/iu.test("ſ"));
 assert(/\w/iu.test("\u212a"));
 assert(/k/iu.test("\u212a"));
 assert(/\u{10c90}/iu.test("\u{10cd0}"));
+
+assert(/\b/iu.test("ſ"));
+assert(/\b/iu.test("\u212a"));
+assert(/.\B/iu.test("aſ"));
+assert(/.\B/iu.test("a\u212a"));

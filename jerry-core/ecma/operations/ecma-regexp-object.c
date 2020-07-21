@@ -590,6 +590,56 @@ ecma_regexp_step_back (ecma_regexp_ctx_t *re_ctx_p, /**< regexp context */
 } /* ecma_regexp_step_back */
 
 /**
+ * Check if the current poisition is on a word boundary.
+ *
+ * @return true, if on a word boundary
+ *         false - otherwise
+ */
+static bool
+ecma_regexp_is_word_boundary (ecma_regexp_ctx_t *re_ctx_p, /**< regexp context */
+                              const lit_utf8_byte_t *str_p) /**< string pointer */
+{
+  lit_code_point_t left_cp;
+  lit_code_point_t right_cp;
+
+  if (JERRY_UNLIKELY (str_p <= re_ctx_p->input_start_p))
+  {
+    left_cp = LIT_INVALID_CP;
+  }
+#if ENABLED (JERRY_ESNEXT)
+  else if (JERRY_UNLIKELY ((re_ctx_p->flags & (RE_FLAG_UNICODE | RE_FLAG_IGNORE_CASE))
+                           == (RE_FLAG_UNICODE | RE_FLAG_IGNORE_CASE)))
+  {
+    const lit_utf8_byte_t *prev_p = ecma_regexp_step_back (re_ctx_p, str_p);
+    left_cp = ecma_regexp_advance (re_ctx_p, &prev_p);
+    JERRY_ASSERT (prev_p == str_p);
+  }
+#endif /* ENABLED (JERRY_ESNEXT) */
+  else
+  {
+    left_cp = str_p[-1];
+  }
+
+  if (JERRY_UNLIKELY (str_p >= re_ctx_p->input_end_p))
+  {
+    right_cp = LIT_INVALID_CP;
+  }
+#if ENABLED (JERRY_ESNEXT)
+  else if (JERRY_UNLIKELY ((re_ctx_p->flags & (RE_FLAG_UNICODE | RE_FLAG_IGNORE_CASE))
+                           == (RE_FLAG_UNICODE | RE_FLAG_IGNORE_CASE)))
+  {
+    right_cp = ecma_regexp_advance (re_ctx_p, &str_p);
+  }
+#endif /* ENABLED (JERRY_ESNEXT) */
+  else
+  {
+    right_cp = str_p[0];
+  }
+
+  return lit_char_is_word_char (left_cp) != lit_char_is_word_char (right_cp);
+} /* ecma_regexp_is_word_boundary */
+
+/**
  * Recursive function for executing RegExp bytecode.
  *
  * See also:
@@ -1254,12 +1304,7 @@ ecma_regexp_run (ecma_regexp_ctx_t *re_ctx_p, /**< RegExp matcher context */
       }
       case RE_OP_ASSERT_WORD_BOUNDARY:
       {
-        const bool is_wordchar_left = ((str_curr_p > re_ctx_p->input_start_p)
-                                       && lit_char_is_word_char (str_curr_p[-1]));
-
-        const bool is_wordchar_right = ((str_curr_p < re_ctx_p->input_end_p)
-                                        && lit_char_is_word_char (str_curr_p[0]));
-        if (is_wordchar_right == is_wordchar_left)
+        if (!ecma_regexp_is_word_boundary (re_ctx_p, str_curr_p))
         {
           goto fail;
         }
@@ -1268,12 +1313,7 @@ ecma_regexp_run (ecma_regexp_ctx_t *re_ctx_p, /**< RegExp matcher context */
       }
       case RE_OP_ASSERT_NOT_WORD_BOUNDARY:
       {
-        const bool is_wordchar_left = ((str_curr_p > re_ctx_p->input_start_p)
-                                       && lit_char_is_word_char (str_curr_p[-1]));
-
-        const bool is_wordchar_right = ((str_curr_p < re_ctx_p->input_end_p)
-                                        && lit_char_is_word_char (str_curr_p[0]));
-        if (is_wordchar_right != is_wordchar_left)
+        if (ecma_regexp_is_word_boundary (re_ctx_p, str_curr_p))
         {
           goto fail;
         }

@@ -2026,6 +2026,67 @@ ecma_builtin_typedarray_prototype_to_locale_string (ecma_value_t this_arg) /**< 
 } /* ecma_builtin_typedarray_prototype_to_locale_string */
 
 /**
+ * The %TypedArray%.prototype object's 'includes' routine
+ *
+ * See also:
+ *          ECMA-262 v11, 22.2.3.13.
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_typedarray_prototype_includes (ecma_value_t this_arg, /**< this argument */
+                                            const ecma_value_t args[], /**< arguments list */
+                                            uint32_t args_number) /**< number of arguments */
+{
+  if (!ecma_is_typedarray (this_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
+  }
+
+  ecma_object_t *typedarray_p = ecma_get_object_from_value (this_arg);
+  ecma_typedarray_info_t info = ecma_typedarray_get_info (typedarray_p);
+  uint32_t limit = info.length * info.element_size;
+
+  if (args_number == 0
+      || !ecma_is_value_number (args[0])
+      || info.length == 0)
+  {
+    return ECMA_VALUE_FALSE;
+  }
+
+  uint32_t from_index = 0;
+
+  if (args_number > 1)
+  {
+    if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_array_index_normalize (args[1], info.length, &from_index)))
+    {
+      return ECMA_VALUE_ERROR;
+    }
+  }
+
+  ecma_number_t search_num = ecma_get_number_from_value (args[0]);
+
+  ecma_typedarray_getter_fn_t getter_cb = ecma_get_typedarray_getter_fn (info.id);
+
+  uint32_t search_pos = (uint32_t) from_index * info.element_size;
+
+  while (search_pos < limit)
+  {
+    ecma_number_t element_num = getter_cb (info.buffer_p + search_pos);
+
+    if (search_num == element_num)
+    {
+      return ECMA_VALUE_TRUE;
+    }
+
+    search_pos += info.element_size;
+  }
+
+  return ECMA_VALUE_FALSE;
+} /* ecma_builtin_typedarray_prototype_includes */
+
+/**
  * @}
  * @}
  * @}

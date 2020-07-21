@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var t = new RegExp ("abc","g");
-t.lastIndex = -12;
+var t = /abc/g;
+t.lastIndex = -12.5;
 result = t.exec("abc   abc");
 assert(!result);
 assert(t.lastIndex === 0);

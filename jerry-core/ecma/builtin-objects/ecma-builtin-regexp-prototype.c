@@ -35,6 +35,43 @@
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
+/**
+ * This object has a custom dispatch function.
+ */
+ #define BUILTIN_CUSTOM_DISPATCH
+
+/**
+ * List of built-in routine identifiers.
+ */
+enum
+{
+  /** These routines must be in this order */
+  ECMA_REGEXP_PROTOTYPE_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
+  ECMA_REGEXP_PROTOTYPE_ROUTINE_EXEC,
+#if ENABLED (JERRY_ESNEXT)
+  ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_SOURCE,
+  ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_GLOBAL,
+  ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_IGNORE_CASE,
+  ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_MULTILINE,
+  ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_STICKY,
+  ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_UNICODE,
+#endif /* ENABLED (JERRY_ESNEXT) */
+#if ENABLED (JERRY_BUILTIN_ANNEXB)
+  ECMA_REGEXP_PROTOTYPE_ROUTINE_COMPILE,
+#endif /* ENABLED (JERRY_BUILTIN_ANNEXB) */
+
+  ECMA_REGEXP_PROTOTYPE_ROUTINE_TEST,
+  ECMA_REGEXP_PROTOTYPE_ROUTINE_TO_STRING,
+#if ENABLED (JERRY_ESNEXT)
+  ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_FLAGS,
+
+  ECMA_REGEXP_PROTOTYPE_ROUTINE_SYMBOL_SEARCH,
+  ECMA_REGEXP_PROTOTYPE_ROUTINE_SYMBOL_MATCH,
+  ECMA_REGEXP_PROTOTYPE_ROUTINE_SYMBOL_REPLACE,
+  ECMA_REGEXP_PROTOTYPE_ROUTINE_SYMBOL_SPLIT,
+#endif /* ENABLED (JERRY_ESNEXT) */
+};
+
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-regexp-prototype.inc.h"
 #define BUILTIN_UNDERSCORED_ID regexp_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
@@ -53,24 +90,28 @@
 /**
  * Helper function to retrieve the flags associated with a RegExp object
  *
- * @return ECMA_VALUE_ERROR - if 'this' is not a RegExp object
- *         ECMA_VALUE_EMPTY - otherwise
+ * @return ECMA_VALUE_{TRUE,FALSE} depends on whether the given flag is present.
  */
 static ecma_value_t
-ecma_builtin_regexp_prototype_flags_helper (ecma_value_t this, /**< this value */
-                                            uint16_t *flags_p) /**< [out] flags */
+ecma_builtin_regexp_prototype_flags_helper (ecma_extended_object_t *re_obj_p, /**< this object */
+                                            uint16_t builtin_routine_id) /**< id of the flag */
 {
-  if (!ecma_object_is_regexp_object (this))
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not a RegExp object"));
-  }
-
-  ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) ecma_get_object_from_value (this);
   re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t,
                                                               re_obj_p->u.class_prop.u.value);
 
-  *flags_p = bc_p->header.status_flags;
-  return ECMA_VALUE_EMPTY;
+  uint16_t flags = bc_p->header.status_flags;
+
+  static const uint8_t re_flags[] =
+  {
+    RE_FLAG_GLOBAL,
+    RE_FLAG_IGNORE_CASE,
+    RE_FLAG_MULTILINE,
+    RE_FLAG_STICKY,
+    RE_FLAG_UNICODE
+  };
+
+  uint16_t offset = (uint16_t) (builtin_routine_id - ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_GLOBAL);
+  return ecma_make_boolean_value (flags & re_flags[offset]);
 } /* ecma_builtin_regexp_prototype_flags_helper */
 
 /**
@@ -85,7 +126,7 @@ ecma_builtin_regexp_prototype_flags_helper (ecma_value_t this, /**< this value *
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_regexp_prototype_get_flags (ecma_value_t this_arg) /**< this argument */
+ecma_builtin_regexp_prototype_get_flags (ecma_object_t *object_p) /**< this object */
 {
   static const lit_magic_string_id_t flag_lit_ids[] =
   {
@@ -104,13 +145,6 @@ ecma_builtin_regexp_prototype_get_flags (ecma_value_t this_arg) /**< this argume
     LIT_CHAR_LOWERCASE_U,
     LIT_CHAR_LOWERCASE_Y
   };
-
-  if (!ecma_is_value_object (this_arg))
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' value is not an object."));
-  }
-
-  ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
 
   ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
   for (uint32_t i = 0; i < sizeof (flag_lit_ids) / sizeof (lit_magic_string_id_t); i++)
@@ -214,148 +248,16 @@ ecma_op_escape_regexp_pattern (ecma_string_t *pattern_str_p) /**< RegExp pattern
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_regexp_prototype_get_source (ecma_value_t this_arg) /**< this argument */
+ecma_builtin_regexp_prototype_get_source (ecma_extended_object_t *re_obj_p) /**< this argument */
 {
-  if (!ecma_object_is_regexp_object (this_arg))
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not a RegExp object"));
-  }
-
-  ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) ecma_get_object_from_value (this_arg);
   re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t,
                                                               re_obj_p->u.class_prop.u.value);
 
   return ecma_op_escape_regexp_pattern (ecma_get_string_from_value (bc_p->source));
 } /* ecma_builtin_regexp_prototype_get_source */
-
-/**
- * The RegExp.prototype object's 'global' accessor property
- *
- * See also:
- *          ECMA-262 v6, 21.2.5.4
- *
- * @return ECMA_VALUE_ERROR - if 'this' is not a RegExp object
- *         ECMA_VALUE_TRUE  - if 'global' flag is set
- *         ECMA_VALUE_FALSE - otherwise
- *
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_regexp_prototype_get_global (ecma_value_t this_arg) /**< this argument */
-{
-  uint16_t flags = RE_FLAG_EMPTY;
-  ecma_value_t ret_value = ecma_builtin_regexp_prototype_flags_helper (this_arg, &flags);
-  if (ECMA_IS_VALUE_ERROR (ret_value))
-  {
-    return ret_value;
-  }
-
-  return ecma_make_boolean_value (flags & RE_FLAG_GLOBAL);
-} /* ecma_builtin_regexp_prototype_get_global */
-
-/**
- * The RegExp.prototype object's 'ignoreCase' accessor property
- *
- * See also:
- *          ECMA-262 v6, 21.2.5.5
- *
- * @return ECMA_VALUE_ERROR - if 'this' is not a RegExp object
- *         ECMA_VALUE_TRUE  - if 'ignoreCase' flag is set
- *         ECMA_VALUE_FALSE - otherwise
- *
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_regexp_prototype_get_ignorecase (ecma_value_t this_arg) /**< this argument */
-{
-  uint16_t flags = RE_FLAG_EMPTY;
-  ecma_value_t ret_value = ecma_builtin_regexp_prototype_flags_helper (this_arg, &flags);
-  if (ECMA_IS_VALUE_ERROR (ret_value))
-  {
-    return ret_value;
-  }
-
-  return ecma_make_boolean_value (flags & RE_FLAG_IGNORE_CASE);
-} /* ecma_builtin_regexp_prototype_get_ignorecase */
-
-/**
- * The RegExp.prototype object's 'multiline' accessor property
- *
- * See also:
- *          ECMA-262 v6, 21.2.5.7
- *
- * @return ECMA_VALUE_ERROR - if 'this' is not a RegExp object
- *         ECMA_VALUE_TRUE  - if 'multiline' flag is set
- *         ECMA_VALUE_FALSE - otherwise
- *
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_regexp_prototype_get_multiline (ecma_value_t this_arg) /**< this argument */
-{
-  uint16_t flags = RE_FLAG_EMPTY;
-  ecma_value_t ret_value = ecma_builtin_regexp_prototype_flags_helper (this_arg, &flags);
-  if (ECMA_IS_VALUE_ERROR (ret_value))
-  {
-    return ret_value;
-  }
-
-  return ecma_make_boolean_value (flags & RE_FLAG_MULTILINE);
-} /* ecma_builtin_regexp_prototype_get_multiline */
-
-/**
- * The RegExp.prototype object's 'sticky' accessor property
- *
- * See also:
- *          ECMA-262 v6, 21.2.5.12
- *
- * @return ECMA_VALUE_ERROR - if 'this' is not a RegExp object
- *         ECMA_VALUE_TRUE  - if 'sticky' flag is set
- *         ECMA_VALUE_FALSE - otherwise
- *
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_regexp_prototype_get_sticky (ecma_value_t this_arg) /**< this argument */
-{
-  uint16_t flags = RE_FLAG_EMPTY;
-  ecma_value_t ret_value = ecma_builtin_regexp_prototype_flags_helper (this_arg, &flags);
-  if (ECMA_IS_VALUE_ERROR (ret_value))
-  {
-    return ret_value;
-  }
-
-  return ecma_make_boolean_value (flags & RE_FLAG_STICKY);
-} /* ecma_builtin_regexp_prototype_get_sticky */
-
-/**
- * The RegExp.prototype object's 'unicode' accessor property
- *
- * See also:
- *          ECMA-262 v6, 21.2.5.15
- *
- * @return ECMA_VALUE_ERROR - if 'this' is not a RegExp object
- *         ECMA_VALUE_TRUE  - if 'unicode' flag is set
- *         ECMA_VALUE_FALSE - otherwise
- *
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_regexp_prototype_get_unicode (ecma_value_t this_arg) /**< this argument */
-{
-  uint16_t flags = RE_FLAG_EMPTY;
-  ecma_value_t ret_value = ecma_builtin_regexp_prototype_flags_helper (this_arg, &flags);
-  if (ECMA_IS_VALUE_ERROR (ret_value))
-  {
-    return ret_value;
-  }
-
-  return ecma_make_boolean_value (flags & RE_FLAG_UNICODE);
-} /* ecma_builtin_regexp_prototype_get_unicode */
 #endif /* ENABLED (JERRY_ESNEXT) */
 
 #if ENABLED (JERRY_BUILTIN_ANNEXB)
-
 /**
  * The RegExp.prototype object's 'compile' routine
  *
@@ -368,23 +270,21 @@ ecma_builtin_regexp_prototype_get_unicode (ecma_value_t this_arg) /**< this argu
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this argument */
+ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this */
                                        ecma_value_t pattern_arg, /**< pattern or RegExp object */
                                        ecma_value_t flags_arg) /**< flags */
 {
-  if (!ecma_object_is_regexp_object (this_arg)
 #if !ENABLED (JERRY_ESNEXT)
-      || ecma_get_object_from_value (this_arg) == ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE)
-#endif /* !ENABLED (JERRY_ESNEXT) */
-      )
+  if (ecma_get_object_from_value (this_arg) == ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not a RegExp object"));
   }
+#endif /* !ENABLED (JERRY_ESNEXT) */
 
   ecma_object_t *this_obj_p = ecma_get_object_from_value (this_arg);
-  ecma_extended_object_t *regexp_obj_p = (ecma_extended_object_t *) this_obj_p;
+  ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) this_obj_p;
   re_compiled_code_t *old_bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t,
-                                                                  regexp_obj_p->u.class_prop.u.value);
+                                                                  re_obj_p->u.class_prop.u.value);
 
   ecma_value_t status = ecma_builtin_helper_def_prop (this_obj_p,
                                                       ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
@@ -439,11 +339,6 @@ static ecma_value_t
 ecma_builtin_regexp_prototype_exec (ecma_value_t this_arg, /**< this argument */
                                     ecma_value_t arg) /**< routine's argument */
 {
-  if (!ecma_object_is_regexp_object (this_arg))
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Incomplete RegExp type"));
-  }
-
   ecma_value_t obj_this = ecma_op_to_object (this_arg);
   if (ECMA_IS_VALUE_ERROR (obj_this))
   {
@@ -482,11 +377,6 @@ ecma_builtin_regexp_prototype_test (ecma_value_t this_arg, /**< this argument */
                                     ecma_value_t arg) /**< routine's argument */
 {
 #if ENABLED (JERRY_ESNEXT)
-  if (!ecma_is_value_object (this_arg))
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' value is not an object"));
-  }
-
   ecma_string_t *arg_str_p = ecma_op_to_string (arg);
 
   if (JERRY_UNLIKELY (arg_str_p == NULL))
@@ -527,16 +417,9 @@ ecma_builtin_regexp_prototype_test (ecma_value_t this_arg, /**< this argument */
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argument */
+ecma_builtin_regexp_prototype_to_string (ecma_object_t *object_p) /**< this object */
 {
 #if ENABLED (JERRY_ESNEXT)
-  if (!ecma_is_value_object (this_arg))
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' value is not an object."));
-  }
-
-  ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
-
   ecma_value_t result = ecma_op_object_get_by_magic_id (object_p, LIT_MAGIC_STRING_SOURCE);
   if (ECMA_IS_VALUE_ERROR (result))
   {
@@ -578,13 +461,7 @@ ecma_builtin_regexp_prototype_to_string (ecma_value_t this_arg) /**< this argume
 
   return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
 #else /* !ENABLED (JERRY_ESNEXT) */
-  if (!ecma_object_is_regexp_object (this_arg))
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' value is not a RegExp object."));
-  }
-
-  ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
-  ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) obj_p;
+  ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) object_p;
 
   re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t,
                                                               re_obj_p->u.class_prop.u.value);
@@ -627,76 +504,116 @@ inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_builtin_is_regexp_exec (ecma_extended_object_t *obj_p)
 {
   return (ecma_get_object_is_builtin ((ecma_object_t *) obj_p)
-          && obj_p->u.built_in.routine_id == ECMA_ROUTINE_LIT_MAGIC_STRING_EXECecma_builtin_regexp_prototype_exec);
+          && obj_p->u.built_in.routine_id == ECMA_REGEXP_PROTOTYPE_ROUTINE_EXEC);
 } /* ecma_builtin_is_regexp_exec */
-
-/**
- * The RegExp.prototype object's '@@replace' routine
- *
- * See also:
- *          ECMA-262 v6.0, 21.2.5.8
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_regexp_prototype_symbol_replace (ecma_value_t this_arg, /**< this argument */
-                                              ecma_value_t string_arg, /**< source string */
-                                              ecma_value_t replace_arg) /**< replace string */
-{
-  return ecma_regexp_replace_helper (this_arg, string_arg, replace_arg);
-} /* ecma_builtin_regexp_prototype_symbol_replace */
-
-/**
- * The RegExp.prototype object's '@@search' routine
- *
- * See also:
- *          ECMA-262 v6.0, 21.2.5.9
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_regexp_prototype_symbol_search (ecma_value_t this_arg, /**< this argument */
-                                             ecma_value_t string_arg) /**< string argument */
-{
-  return ecma_regexp_search_helper (this_arg, string_arg);
-} /* ecma_builtin_regexp_prototype_symbol_search */
-
-/**
- * The RegExp.prototype object's '@@split' routine
- *
- * See also:
- *          ECMA-262 v6.0, 21.2.5.11
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_regexp_prototype_symbol_split (ecma_value_t this_arg, /**< this argument */
-                                            ecma_value_t string_arg, /**< source string */
-                                            ecma_value_t limit_arg) /**< limit */
-{
-  return ecma_regexp_split_helper (this_arg, string_arg, limit_arg);
-} /* ecma_builtin_regexp_prototype_symbol_split */
-
-/**
- * The RegExp.prototype object's '@@match' routine
- *
- * See also:
- *          ECMA-262 v6.0, 21.2.5.6
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_regexp_prototype_symbol_match (ecma_value_t this_arg, /**< this argument */
-                                            ecma_value_t string_arg) /**< source string */
-{
-  return ecma_regexp_match_helper (this_arg, string_arg);
-} /* ecma_builtin_regexp_prototype_symbol_match */
 #endif /* ENABLED (JERRY_ESNEXT) */
 
+/**
+ * Dispatcher of the Regexp built-in's routines
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_builtin_regexp_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide routine
+                                                                              *   identifier */
+                                                ecma_value_t this_arg, /**< 'this' argument value */
+                                                const ecma_value_t arguments_list_p[], /**< list of arguments
+                                                                                        *   passed to routine */
+                                                uint32_t arguments_number) /**< length of arguments' list */
+{
+  JERRY_UNUSED (arguments_number);
+
+#if !ENABLED (JERRY_ESNEXT)
+  bool require_regexp = builtin_routine_id <= ECMA_REGEXP_PROTOTYPE_ROUTINE_TO_STRING;
+#else /* ENABLED (JERRY_ESNEXT) */
+  bool require_regexp = builtin_routine_id < ECMA_REGEXP_PROTOTYPE_ROUTINE_TEST;
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+  ecma_object_t *obj_p = NULL;
+
+  if (ecma_is_value_object (this_arg))
+  {
+    /* 2. */
+    obj_p = ecma_get_object_from_value (this_arg);
+
+    if (require_regexp && !ecma_object_class_is (obj_p, LIT_MAGIC_STRING_REGEXP_UL))
+    {
+      return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not a RegExp object"));
+    }
+  }
+  /* 1. */
+  else
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not an object"));
+  }
+
+  JERRY_ASSERT (obj_p != NULL);
+
+  switch (builtin_routine_id)
+  {
+#if ENABLED (JERRY_BUILTIN_ANNEXB)
+    case ECMA_REGEXP_PROTOTYPE_ROUTINE_COMPILE:
+    {
+      return ecma_builtin_regexp_prototype_compile (this_arg, arguments_list_p[0], arguments_list_p[1]);
+    }
+#endif /* ENABLED (JERRY_BUILTIN_ANNEXB) */
+    case ECMA_REGEXP_PROTOTYPE_ROUTINE_TEST:
+    {
+      return ecma_builtin_regexp_prototype_test (this_arg, arguments_list_p[0]);
+    }
+    case ECMA_REGEXP_PROTOTYPE_ROUTINE_EXEC:
+    {
+      return ecma_builtin_regexp_prototype_exec (this_arg, arguments_list_p[0]);
+    }
+    case ECMA_REGEXP_PROTOTYPE_ROUTINE_TO_STRING:
+    {
+      return ecma_builtin_regexp_prototype_to_string (obj_p);
+    }
+#if ENABLED (JERRY_ESNEXT)
+    case ECMA_REGEXP_PROTOTYPE_ROUTINE_SYMBOL_SEARCH:
+    {
+      return ecma_regexp_search_helper (this_arg, arguments_list_p[0]);
+    }
+    case ECMA_REGEXP_PROTOTYPE_ROUTINE_SYMBOL_MATCH:
+    {
+      return ecma_regexp_match_helper (this_arg, arguments_list_p[0]);
+    }
+    case ECMA_REGEXP_PROTOTYPE_ROUTINE_SYMBOL_REPLACE:
+    {
+      return ecma_regexp_replace_helper (this_arg, arguments_list_p[0], arguments_list_p[1]);
+    }
+    case ECMA_REGEXP_PROTOTYPE_ROUTINE_SYMBOL_SPLIT:
+    {
+      return ecma_regexp_split_helper (this_arg, arguments_list_p[0], arguments_list_p[1]);
+    }
+    case ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_FLAGS:
+    {
+      return ecma_builtin_regexp_prototype_get_flags (obj_p);
+    }
+    case ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_SOURCE:
+    {
+      ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) obj_p;
+
+      return ecma_builtin_regexp_prototype_get_source (re_obj_p);
+    }
+    case ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_GLOBAL:
+    case ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_IGNORE_CASE:
+    case ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_MULTILINE:
+    case ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_STICKY:
+    case ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_UNICODE:
+    {
+      ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) obj_p;
+
+      return ecma_builtin_regexp_prototype_flags_helper (re_obj_p, builtin_routine_id);
+    }
+#endif /* ENABLED (JERRY_ESNEXT) */
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+} /* ecma_builtin_regexp_prototype_dispatch_routine */
 /**
  * @}
  * @}

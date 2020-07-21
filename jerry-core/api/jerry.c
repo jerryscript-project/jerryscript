@@ -1711,6 +1711,42 @@ jerry_create_string_sz (const jerry_char_t *str_p, /**< pointer to string */
 } /* jerry_create_string_sz */
 
 /**
+ * Create external string from a valid CESU-8 string
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return value of the created external string
+ */
+jerry_value_t
+jerry_create_external_string (const jerry_char_t *str_p, /**< pointer to string */
+                              jerry_object_native_free_callback_t free_cb) /**< free callback */
+{
+  return jerry_create_external_string_sz (str_p, lit_zt_utf8_string_size ((lit_utf8_byte_t *) str_p), free_cb);
+} /* jerry_create_external_string */
+
+/**
+ * Create external string from a valid CESU-8 string
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value when it is no longer needed.
+ *
+ * @return value of the created external string
+ */
+jerry_value_t
+jerry_create_external_string_sz (const jerry_char_t *str_p, /**< pointer to string */
+                                 jerry_size_t str_size, /**< string size */
+                                 jerry_object_native_free_callback_t free_cb) /**< free callback */
+{
+  jerry_assert_api_available ();
+
+  ecma_string_t *ecma_str_p = ecma_new_ecma_external_string_from_cesu8 ((lit_utf8_byte_t *) str_p,
+                                                                        (lit_utf8_size_t) str_size,
+                                                                        free_cb);
+  return ecma_make_string_value (ecma_str_p);
+} /* jerry_create_external_string_sz */
+
+/**
  * Create symbol from an api value
  *
  * Note:

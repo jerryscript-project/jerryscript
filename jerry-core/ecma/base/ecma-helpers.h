@@ -306,6 +306,8 @@ bool ecma_prop_name_is_map_key (ecma_string_t *string_p);
 ecma_string_t *ecma_new_ecma_string_from_utf8 (const lit_utf8_byte_t *string_p, lit_utf8_size_t string_size);
 ecma_string_t *ecma_new_ecma_string_from_utf8_converted_to_cesu8 (const lit_utf8_byte_t *string_p,
                                                                   lit_utf8_size_t string_size);
+ecma_string_t *ecma_new_ecma_external_string_from_cesu8 (const lit_utf8_byte_t *string_p, lit_utf8_size_t string_size,
+                                                         ecma_object_native_free_callback_t free_cb);
 ecma_string_t *ecma_new_ecma_string_from_code_unit (ecma_char_t code_unit);
 #if ENABLED (JERRY_ESNEXT)
 ecma_string_t *ecma_new_ecma_string_from_code_units (ecma_char_t first_code_unit, ecma_char_t second_code_unit);

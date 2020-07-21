@@ -291,6 +291,11 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this */
                                                       ecma_make_uint32_value (0),
                                                       ECMA_PROPERTY_FLAG_WRITABLE | ECMA_PROP_IS_THROW);
 
+  if (ECMA_IS_VALUE_ERROR (status))
+  {
+    return status;
+  }
+
   JERRY_ASSERT (ecma_is_value_true (status));
 
   if (ecma_object_is_regexp_object (pattern_arg))

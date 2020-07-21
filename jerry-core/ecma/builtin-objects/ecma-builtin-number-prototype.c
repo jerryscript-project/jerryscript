@@ -27,6 +27,7 @@
 #include "ecma-try-catch-macro.h"
 #include "jrt.h"
 #include "jrt-libc-includes.h"
+#include "lit-char-helpers.h"
 
 #if ENABLED (JERRY_BUILTIN_NUMBER)
 
@@ -67,123 +68,6 @@ enum
  */
 
 /**
- * Helper for stringifying numbers
- *
- * @return the length of the generated string representation
- */
-static lit_utf8_size_t
-ecma_builtin_number_prototype_helper_to_string (lit_utf8_byte_t *digits_p, /**< number as string in decimal form */
-                                                lit_utf8_size_t num_digits, /**< length of the string representation */
-                                                int32_t exponent, /**< decimal exponent */
-                                                lit_utf8_byte_t *to_digits_p, /**< [out] buffer to write */
-                                                lit_utf8_size_t to_num_digits) /**< requested number of digits */
-{
-  lit_utf8_byte_t *p = to_digits_p;
-
-  if (exponent <= 0)
-  {
-    /* Add zero to the integer part. */
-    *p++ = '0';
-    to_num_digits--;
-
-    if (to_num_digits > 0)
-    {
-      *p++ = '.';
-
-      /* Add leading zeros to the fraction part. */
-      for (int i = 0; i < -exponent && to_num_digits > 0; i++)
-      {
-        *p++ = '0';
-        to_num_digits--;
-      }
-    }
-  }
-  else
-  {
-    /* Add significant digits of the integer part. */
-    lit_utf8_size_t to_copy = JERRY_MIN (num_digits, to_num_digits);
-    to_copy = JERRY_MIN (to_copy, (lit_utf8_size_t) exponent);
-    memmove (p, digits_p, (size_t) to_copy);
-    p += to_copy;
-    to_num_digits -= to_copy;
-    digits_p += to_copy;
-    num_digits -= to_copy;
-    exponent -= (int32_t) to_copy;
-
-    /* Add zeros before decimal point. */
-    while (exponent > 0 && to_num_digits > 0)
-    {
-      JERRY_ASSERT (num_digits == 0);
-      *p++ = '0';
-      to_num_digits--;
-      exponent--;
-    }
-
-    if (to_num_digits > 0)
-    {
-      *p++ = '.';
-    }
-  }
-
-  if (to_num_digits > 0)
-  {
-    /* Add significant digits of the fraction part. */
-    lit_utf8_size_t to_copy = JERRY_MIN (num_digits, to_num_digits);
-    memmove (p, digits_p, (size_t) to_copy);
-    p += to_copy;
-    to_num_digits -= to_copy;
-
-    /* Add trailing zeros. */
-    while (to_num_digits > 0)
-    {
-      *p++ = '0';
-      to_num_digits--;
-    }
-  }
-
-  return (lit_utf8_size_t) (p - to_digits_p);
-} /* ecma_builtin_number_prototype_helper_to_string */
-
-/**
- * Helper function to convert a binary floating point number to string.
- *
- * @return size of result string
- */
-static inline lit_utf8_size_t JERRY_ATTR_ALWAYS_INLINE
-ecma_builtin_binary_floating_number_to_string (lit_utf8_byte_t *digits_p, /**< number as string
-                                                                           * in binary-floating point number */
-                                               int32_t exponent, /**< decimal exponent */
-                                               lit_utf8_byte_t *to_digits_p, /**< [out] buffer to write */
-                                               lit_utf8_size_t to_num_digits) /**< requested number of digits */
-{
-  lit_utf8_byte_t *p = to_digits_p;
-  /* Add significant digits of the decimal part. */
-  while (exponent > 0)
-  {
-    *p++ = *digits_p++;
-    exponent--;
-    to_num_digits--;
-  }
-
-  if (to_num_digits > 0)
-  {
-    *p++ = '.';
-  }
-
-  if (to_num_digits > 0)
-  {
-    /* Add significant digits of the fraction part and fill the remaining digits with zero */
-    while (to_num_digits > 0)
-    {
-      *p++ = (*digits_p == 0 ? '0' : *digits_p++);
-      to_num_digits--;
-    }
-  }
-
-  return (lit_utf8_size_t) (p - to_digits_p);
-} /* ecma_builtin_binary_floating_number_to_string */
-
-/**
  * Helper for rounding numbers
  *
  * @return rounded number
@@ -196,6 +80,20 @@ ecma_builtin_number_prototype_helper_round (lit_utf8_byte_t *digits_p, /**< [in,
                                             int32_t *exponent_p, /**< [in, out] decimal exponent */
                                             bool zero) /**< true if digits_p represents zero */
 {
+  if (round_num == 0 && *exponent_p == 0)
+  {
+    if (digits_p[0] >= 5)
+    {
+      digits_p[0] = '1';
+    }
+    else
+    {
+      digits_p[0] = '0';
+    }
+
+    return 1;
+  }
+
   if (round_num < 1)
   {
     return 0;
@@ -567,403 +465,273 @@ ecma_builtin_number_prototype_object_value_of (ecma_value_t this_arg) /**< this 
  */
 typedef enum
 {
-  NUMBER_ROUTINE_TO_FIXED,       /**< Number.prototype.toFixed: ECMA-262 v5, 15.7.4.4 */
-  NUMBER_ROUTINE_TO_EXPONENTIAL, /**< Number.prototype.toExponential: ECMA-262 v5, 15.7.4.5 */
-  NUMBER_ROUTINE_TO_PRECISION,   /**< Number.prototype.toPrecision: ECMA-262 v5, 15.7.4.6 */
+  NUMBER_ROUTINE_TO_FIXED,       /**< Number.prototype.toFixed: ECMA-262 v11, 20.1.3.3 */
+  NUMBER_ROUTINE_TO_EXPONENTIAL, /**< Number.prototype.toExponential: ECMA-262 v11, 20.1.3.2 */
+  NUMBER_ROUTINE_TO_PRECISION,   /**< Number.prototype.toPrecision: ECMA-262 v11, 20.1.3.5 */
   NUMBER_ROUTINE__COUNT,         /**< count of the modes */
 } number_routine_mode_t;
 
 /**
- * Helper function for the Number.prototype object's
- * 'toFixed', 'toExponential' and 'toPrecision' routines to
- * check the special cases before the conversion
- *
- * @return ECMA_VALUE_EMPTY - if the conversion should continue
- *         ecma-value - otherwise
+ * Helper method to convert a number based on the given routine.
  */
 static ecma_value_t
-ecma_builtin_number_prepare_conversion (ecma_number_t *this_num_p, /**< [out] this argument number */
-                                        ecma_value_t arg_1, /**< routine's argument */
-                                        bool *is_negative_p, /**< [out] is negative */
-                                        int32_t *arg_1_int32_p, /**< [out] routine's argument number
-                                                                 *    converted to int32_t */
-                                        number_routine_mode_t mode) /**< number routine mode */
+ecma_builtin_number_prototype_object_to_number_convert (ecma_number_t this_num, /**< this argument number */
+                                                        ecma_value_t arg, /**< routine's argument */
+                                                        number_routine_mode_t mode) /**< number routine mode */
 {
-  JERRY_ASSERT (mode < NUMBER_ROUTINE__COUNT);
+  if (ecma_is_value_undefined (arg)
+      && mode == NUMBER_ROUTINE_TO_PRECISION)
+  {
+    return ecma_builtin_number_prototype_object_to_string (this_num, NULL, 0);
+  }
 
   ecma_number_t arg_num;
-  arg_1 = ecma_op_to_integer (arg_1, &arg_num);
+  ecma_value_t to_integer = ecma_op_to_integer (arg, &arg_num);
 
-  if (ECMA_IS_VALUE_ERROR (arg_1))
+  if (ECMA_IS_VALUE_ERROR (to_integer))
   {
-    return arg_1;
+    return to_integer;
   }
 
+  /* Argument boundary checks */
   if (mode != NUMBER_ROUTINE_TO_PRECISION
-      && (arg_num <= -1 || arg_num >= 21))
+      && (arg_num <= -1 || arg_num >= 101))
   {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Fraction digits must be between 0 and 20."));
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Fraction digits must be between 0 and 100."));
+  }
+  else if (mode == NUMBER_ROUTINE_TO_PRECISION
+          && (arg_num < 1 || arg_num > 100))
+  {
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Precision digits must be between 1 and 100."));
   }
 
-  if (ecma_number_is_nan (*this_num_p))
+  /* Handle NaN separately */
+  if (ecma_number_is_nan (this_num))
   {
     return ecma_make_magic_string_value (LIT_MAGIC_STRING_NAN);
   }
 
-  bool is_negative = false;
-
-  if (ecma_number_is_negative (*this_num_p))
-  {
-    is_negative = ecma_number_is_zero (*this_num_p) ? false : true;
-    *this_num_p *= -1;
-  }
-
-  *is_negative_p = is_negative;
-
-  /* We handle infinities separately. */
-  if (ecma_number_is_infinity (*this_num_p))
-  {
-    return ecma_make_magic_string_value ((is_negative ? LIT_MAGIC_STRING_NEGATIVE_INFINITY_UL
-                                                      : LIT_MAGIC_STRING_INFINITY_UL));
-  }
-
-  if (mode == NUMBER_ROUTINE_TO_PRECISION &&
-      (ecma_number_is_nan (arg_num) || arg_num < 1 || arg_num >= 22))
-  {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Precision digits must be between 1 and 21."));
-  }
-
-  *arg_1_int32_p = ecma_number_to_int32 (arg_num);
-
-  return ECMA_VALUE_EMPTY;
-} /* ecma_builtin_number_prepare_conversion */
-
-/**
- * The Number.prototype object's 'toFixed' routine
- *
- * See also:
- *          ECMA-262 v5, 15.7.4.5
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_number_prototype_object_to_fixed (ecma_number_t this_num, /**< this argument number */
-                                               ecma_value_t radix) /**< routine's argument */
-{
-  bool is_negative;
-  int32_t frac_digits;
-
-  ecma_value_t comp_value = ecma_builtin_number_prepare_conversion (&this_num,
-                                                                    radix,
-                                                                    &is_negative,
-                                                                    &frac_digits,
-                                                                    NUMBER_ROUTINE_TO_FIXED);
-
-  if (!ecma_is_value_empty (comp_value))
-  {
-    return comp_value;
-  }
-
-  /* Get the parameters of the number if non-zero. */
+  /* Get the parameters of the number */
   lit_utf8_byte_t digits[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
-  lit_utf8_size_t num_digits;
+  lit_utf8_size_t num_of_digits;
   int32_t exponent;
+  int32_t arg_int = ecma_number_to_int32 (arg_num);
+  bool is_zero = ecma_number_is_zero (this_num);
+  bool is_negative = ecma_number_is_negative (this_num);
 
-  if (!ecma_number_is_zero (this_num))
+  ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
+
+  if (is_negative)
   {
-    num_digits = ecma_number_to_binary_floating_point_number (this_num, digits, &exponent);
-    JERRY_ASSERT (exponent >= 0);
-  }
-  else
-  {
-    for (int32_t i = 0; i <= frac_digits; i++)
+    if (!is_zero)
     {
-      digits[i] = '0';
+      ecma_stringbuilder_append_char (&builder, LIT_CHAR_MINUS);
     }
-    num_digits = (lit_utf8_size_t) frac_digits + 1;
-    exponent = 1;
+
+    this_num *= -1;
   }
 
-  /* 7. */
-  if (exponent > 21)
+  /* Handle zero separately */
+  if (is_zero)
   {
-    return ecma_builtin_number_prototype_object_to_string (this_num, NULL, 0);
-  }
-
-  /* 8. */
-  num_digits = ecma_builtin_number_prototype_helper_round (digits,
-                                                           num_digits + (lit_utf8_size_t) exponent,
-                                                           exponent + frac_digits,
-                                                           &exponent,
-                                                           ecma_number_is_zero (this_num));
-
-  /* Buffer that is used to construct the string. */
-  int buffer_size = (exponent > 0) ? exponent + frac_digits + 2 : frac_digits + 3;
-
-  if (is_negative)
-  {
-    buffer_size++;
-  }
-
-  JERRY_ASSERT (buffer_size > 0);
-
-  ecma_value_t ret_value;
-  JMEM_DEFINE_LOCAL_ARRAY (buff, buffer_size, lit_utf8_byte_t);
-
-  lit_utf8_byte_t *p = buff;
-
-  if (is_negative)
-  {
-    *p++ = '-';
-  }
-
-  lit_utf8_size_t to_num_digits = ((exponent > 0) ? (lit_utf8_size_t) (exponent + frac_digits)
-                                                  : (lit_utf8_size_t) (frac_digits + 1));
-  p += ecma_builtin_binary_floating_number_to_string (digits,
-                                                      exponent,
-                                                      p,
-                                                      to_num_digits);
-
-  JERRY_ASSERT (p - buff < buffer_size);
-  /* String terminator. */
-  *p = 0;
-  ecma_string_t *str = ecma_new_ecma_string_from_utf8 (buff, (lit_utf8_size_t) (p - buff));
-
-  ret_value = ecma_make_string_value (str);
-  JMEM_FINALIZE_LOCAL_ARRAY (buff);
-
-  return ret_value;
-} /* ecma_builtin_number_prototype_object_to_fixed */
-
-/**
- * The Number.prototype object's 'toExponential' routine
- *
- * See also:
- *          ECMA-262 v5, 15.7.4.6
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_number_prototype_object_to_exponential (ecma_number_t this_num, /**< this argument number */
-                                                     ecma_value_t fraction_digits) /**< routine's argument */
-{
-  bool is_negative;
-  int32_t frac_digits;
-
-  ecma_value_t comp_value = ecma_builtin_number_prepare_conversion (&this_num,
-                                                                    fraction_digits,
-                                                                    &is_negative,
-                                                                    &frac_digits,
-                                                                    NUMBER_ROUTINE_TO_EXPONENTIAL);
-
-  if (!ecma_is_value_empty (comp_value))
-  {
-    return comp_value;
-  }
-
-  /* Get the parameters of the number if non zero. */
-  lit_utf8_byte_t digits[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
-  lit_utf8_size_t num_digits;
-  int32_t exponent;
-
-  if (!ecma_number_is_zero (this_num))
-  {
-    num_digits = ecma_number_to_decimal (this_num, digits, &exponent);
-  }
-  else
-  {
-    digits[0] = '0';
-    num_digits = 1;
-    exponent = 1;
-  }
-
-  if (ecma_is_value_undefined (fraction_digits))
-  {
-    frac_digits = (int32_t) num_digits - 1;
-  }
-
-  num_digits = ecma_builtin_number_prototype_helper_round (digits, num_digits, frac_digits + 1, &exponent, false);
-
-  /* frac_digits + 2 characters for number, 5 characters for exponent, 1 for \0. */
-  int buffer_size = frac_digits + 2 + 5 + 1;
-
-  if (is_negative)
-  {
-    /* +1 character for sign. */
-    buffer_size++;
-  }
-
-  ecma_value_t ret_value;
-  JMEM_DEFINE_LOCAL_ARRAY (buff, buffer_size, lit_utf8_byte_t);
-
-  lit_utf8_byte_t *actual_char_p = buff;
-
-  if (is_negative)
-  {
-    *actual_char_p++ = '-';
-  }
-
-  actual_char_p += ecma_builtin_number_prototype_helper_to_string (digits,
-                                                                   num_digits,
-                                                                   1,
-                                                                   actual_char_p,
-                                                                   (lit_utf8_size_t) (frac_digits + 1));
-
-  *actual_char_p++ = 'e';
-
-  exponent--;
-  if (exponent < 0)
-  {
-    exponent *= -1;
-    *actual_char_p++ = '-';
-  }
-  else
-  {
-    *actual_char_p++ = '+';
-  }
-
-  /* Add exponent digits. */
-  actual_char_p += ecma_uint32_to_utf8_string ((uint32_t) exponent, actual_char_p, 3);
-
-  JERRY_ASSERT (actual_char_p - buff < buffer_size);
-  *actual_char_p = '\0';
-  ecma_string_t *str = ecma_new_ecma_string_from_utf8 (buff, (lit_utf8_size_t) (actual_char_p - buff));
-  ret_value = ecma_make_string_value (str);
-  JMEM_FINALIZE_LOCAL_ARRAY (buff);
-
-  return ret_value;
-} /* ecma_builtin_number_prototype_object_to_exponential */
-
-/**
- * The Number.prototype object's 'toPrecision' routine
- *
- * See also:
- *          ECMA-262 v5, 15.7.4.7
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_number_prototype_object_to_precision (ecma_number_t this_num, /**< this argument number */
-                                                   ecma_value_t precision_value) /**< routine's argument */
-{
-  if (ecma_is_value_undefined (precision_value))
-  {
-    return ecma_builtin_number_prototype_object_to_string (this_num, NULL, 0);
-  }
-
-  bool is_negative;
-  int32_t precision;
-
-  ecma_value_t comp_value = ecma_builtin_number_prepare_conversion (&this_num,
-                                                                    precision_value,
-                                                                    &is_negative,
-                                                                    &precision,
-                                                                    NUMBER_ROUTINE_TO_PRECISION);
-
-  if (!ecma_is_value_empty (comp_value))
-  {
-    return comp_value;
-  }
-
-  /* Get the parameters of the number if non-zero. */
-  lit_utf8_byte_t digits[ECMA_MAX_CHARS_IN_STRINGIFIED_NUMBER];
-  lit_utf8_size_t num_digits;
-  int32_t exponent;
-
-  if (!ecma_number_is_zero (this_num))
-  {
-    num_digits = ecma_number_to_decimal (this_num, digits, &exponent);
-  }
-  else
-  {
-    digits[0] = '0';
-    num_digits = 1;
-    exponent = 1;
-  }
-
-  num_digits = ecma_builtin_number_prototype_helper_round (digits, num_digits, precision, &exponent, false);
-
-  int buffer_size;
-  if (exponent  < -5 || exponent > precision)
-  {
-    /* Exponential notation, precision + 1 digits for number, 5 for exponent, 1 for \0 */
-    buffer_size = precision + 1 + 5 + 1;
-  }
-  else if (exponent <= 0)
-  {
-    /* Fixed notation, -exponent + 2 digits for leading zeros, precision digits, 1 for \0 */
-    buffer_size = -exponent + 2 + precision + 1;
-  }
-  else
-  {
-    /* Fixed notation, precision + 1 digits for number, 1 for \0 */
-    buffer_size = precision + 1 + 1;
-  }
-
-  if (is_negative)
-  {
-    buffer_size++;
-  }
-
-  ecma_value_t ret_value;
-  JMEM_DEFINE_LOCAL_ARRAY (buff, buffer_size, lit_utf8_byte_t);
-  lit_utf8_byte_t *actual_char_p = buff;
-
-  if (is_negative)
-  {
-    *actual_char_p++ = '-';
-  }
-
-  /* 10.c, Exponential notation.*/
-  if (exponent < -5 || exponent > precision)
-  {
-    actual_char_p  += ecma_builtin_number_prototype_helper_to_string (digits,
-                                                                      num_digits,
-                                                                      1,
-                                                                      actual_char_p,
-                                                                      (lit_utf8_size_t) precision);
-
-    *actual_char_p++ = 'e';
-
-    exponent--;
-    if (exponent < 0)
+    if (mode == NUMBER_ROUTINE_TO_PRECISION)
     {
-      exponent *= -1;
-      *actual_char_p++ = '-';
+      arg_int--;
+    }
+
+    ecma_stringbuilder_append_char (&builder, LIT_CHAR_0);
+
+    if (arg_int > 0)
+    {
+      ecma_stringbuilder_append_char (&builder, LIT_CHAR_DOT);
+    }
+
+    for (int32_t i = 0; i < arg_int; i++)
+    {
+      ecma_stringbuilder_append_char (&builder, LIT_CHAR_0);
+    }
+
+    if (mode == NUMBER_ROUTINE_TO_EXPONENTIAL)
+    {
+      ecma_stringbuilder_append_raw (&builder, (const lit_utf8_byte_t *) "e+0", 3);
+    }
+
+    return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
+  }
+
+  /* Handle infinity separately */
+  if (ecma_number_is_infinity (this_num))
+  {
+    ecma_stringbuilder_append_magic (&builder, LIT_MAGIC_STRING_INFINITY_UL);
+    return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
+  }
+
+  num_of_digits = ecma_number_to_decimal (this_num, digits, &exponent);
+
+  /* Handle undefined argument */
+  if (ecma_is_value_undefined (arg) && mode == NUMBER_ROUTINE_TO_EXPONENTIAL)
+  {
+    arg_int = (int32_t) num_of_digits - 1;
+  }
+
+  if (mode == NUMBER_ROUTINE_TO_FIXED
+      && exponent > 21)
+  {
+    ecma_stringbuilder_destroy (&builder);
+
+    if (is_negative)
+    {
+      this_num *= -1;
+    }
+
+    return ecma_builtin_number_prototype_object_to_string (this_num, NULL, 0);
+  }
+
+  int32_t digits_to_keep = arg_int;
+
+  if (mode == NUMBER_ROUTINE_TO_FIXED)
+  {
+    digits_to_keep += exponent;
+  }
+  else if (mode == NUMBER_ROUTINE_TO_EXPONENTIAL)
+  {
+    digits_to_keep += 1;
+  }
+
+  num_of_digits = ecma_builtin_number_prototype_helper_round (digits,
+                                                              num_of_digits,
+                                                              digits_to_keep,
+                                                              &exponent,
+                                                              false);
+
+  /* toExponent routine and toPrecision cases where the exponent > precision or exponent < -5 */
+  if (mode == NUMBER_ROUTINE_TO_EXPONENTIAL
+      || (mode == NUMBER_ROUTINE_TO_PRECISION
+          && (exponent < -5 || exponent > arg_int)))
+  {
+    /* Append first digit */
+    ecma_stringbuilder_append_byte (&builder, *digits);
+
+    if (mode == NUMBER_ROUTINE_TO_PRECISION)
+    {
+      arg_int--;
+    }
+
+    if (arg_int > 0)
+    {
+      ecma_stringbuilder_append_char (&builder, LIT_CHAR_DOT);
+    }
+
+    /* Append significant fraction digits */
+    ecma_stringbuilder_append_raw (&builder, digits + 1, num_of_digits - 1);
+
+    /* Append leading zeros */
+    for (int32_t i = (int32_t) (num_of_digits); i < arg_int + 1; i++)
+    {
+      ecma_stringbuilder_append_char (&builder, LIT_CHAR_0);
+    }
+
+    ecma_stringbuilder_append_char (&builder, LIT_CHAR_LOWERCASE_E);
+
+    if (exponent <= 0)
+    {
+      exponent = (-exponent) + 1;
+      ecma_stringbuilder_append_char (&builder, LIT_CHAR_MINUS);
     }
     else
     {
-      *actual_char_p++ = '+';
+      exponent -= 1;
+      ecma_stringbuilder_append_char (&builder, LIT_CHAR_PLUS);
     }
 
-    /* Add exponent digits. */
-    actual_char_p += ecma_uint32_to_utf8_string ((uint32_t) exponent, actual_char_p, 3);
+    /* Append exponent part */
+    lit_utf8_size_t exp_size = ecma_uint32_to_utf8_string ((uint32_t) exponent, digits, 3);
+    ecma_stringbuilder_append_raw (&builder, digits, exp_size);
+
+    return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
   }
-  /* Fixed notation. */
+
+  /* toFixed routine and toPrecision cases where the exponent <= precision and exponent >= -5 */
+  lit_utf8_size_t result_digits;
+
+  if (mode == NUMBER_ROUTINE_TO_FIXED)
+  {
+    result_digits = ((exponent > 0) ? (lit_utf8_size_t) (exponent + arg_int)
+                                    : (lit_utf8_size_t) (arg_int + 1));
+  }
   else
   {
-    lit_utf8_size_t to_num_digits = ((exponent <= 0) ? (lit_utf8_size_t) (1 - exponent + precision)
-                                                     : (lit_utf8_size_t) precision);
-    actual_char_p += ecma_builtin_number_prototype_helper_to_string (digits,
-                                                                     num_digits,
-                                                                     exponent,
-                                                                     actual_char_p,
-                                                                     to_num_digits);
-
+    result_digits = ((exponent <= 0) ? (lit_utf8_size_t) (1 - exponent + arg_int)
+                                     : (lit_utf8_size_t) arg_int);
   }
 
-  JERRY_ASSERT (actual_char_p - buff < buffer_size);
-  *actual_char_p = '\0';
-  ecma_string_t *str_p = ecma_new_ecma_string_from_utf8 (buff, (lit_utf8_size_t) (actual_char_p - buff));
+  /* Number of digits we copied from digits array */
+  lit_utf8_size_t copied_digits = 0;
 
-  ret_value = ecma_make_string_value (str_p);
-  JMEM_FINALIZE_LOCAL_ARRAY (buff);
+  if (exponent == 0 && digits_to_keep == 0)
+  {
+    ecma_stringbuilder_append_char (&builder, *digits);
+    return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
+  }
 
-  return ret_value;
-} /* ecma_builtin_number_prototype_object_to_precision */
+  if (exponent <= 0)
+  {
+    ecma_stringbuilder_append_char (&builder, LIT_CHAR_0);
+    result_digits--;
+
+    if (result_digits > 0)
+    {
+      ecma_stringbuilder_append_char (&builder, LIT_CHAR_DOT);
+
+      /* Append leading zeros to the fraction part */
+      for (int32_t i = 0; i < -exponent && result_digits > 0; i++)
+      {
+        ecma_stringbuilder_append_char (&builder, LIT_CHAR_0);
+        result_digits--;
+      }
+    }
+  }
+  else
+  {
+    /* Append significant digits of integer part */
+    copied_digits = JERRY_MIN (JERRY_MIN (num_of_digits, result_digits), (lit_utf8_size_t) exponent);
+    ecma_stringbuilder_append_raw (&builder, digits, copied_digits);
+
+    result_digits -= copied_digits;
+    num_of_digits -= copied_digits;
+    exponent -= (int32_t) copied_digits;
+
+    /* Append zeros before decimal point */
+    while (exponent > 0 && result_digits > 0)
+    {
+      ecma_stringbuilder_append_char (&builder, LIT_CHAR_0);
+      result_digits--;
+      exponent--;
+    }
+
+    if (result_digits > 0)
+    {
+      ecma_stringbuilder_append_char (&builder, LIT_CHAR_DOT);
+    }
+  }
+
+  if (result_digits > 0)
+  {
+    /* Append significant digits to the fraction part */
+    lit_utf8_size_t to_copy = JERRY_MIN (num_of_digits, result_digits);
+    ecma_stringbuilder_append_raw (&builder, digits + copied_digits, to_copy);
+    result_digits -= to_copy;
+
+    /* Append leading zeros */
+    while (result_digits > 0)
+    {
+      ecma_stringbuilder_append_char (&builder, LIT_CHAR_0);
+      result_digits--;
+    }
+  }
+
+  return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
+} /* ecma_builtin_number_prototype_object_to_number_convert */
 
 /**
  * Dispatcher of the built-in's routines
@@ -1006,16 +774,13 @@ ecma_builtin_number_prototype_dispatch_routine (uint16_t builtin_routine_id, /**
       return ecma_builtin_number_prototype_object_to_string (this_arg_number, NULL, 0);
     }
     case ECMA_NUMBER_PROTOTYPE_TO_FIXED:
-    {
-      return ecma_builtin_number_prototype_object_to_fixed (this_arg_number, routine_arg_1);
-    }
     case ECMA_NUMBER_PROTOTYPE_TO_EXPONENTIAL:
-    {
-      return ecma_builtin_number_prototype_object_to_exponential (this_arg_number, routine_arg_1);
-    }
     case ECMA_NUMBER_PROTOTYPE_TO_PRECISION:
     {
-      return ecma_builtin_number_prototype_object_to_precision (this_arg_number, routine_arg_1);
+      const int option = NUMBER_ROUTINE_TO_FIXED + (builtin_routine_id - ECMA_NUMBER_PROTOTYPE_TO_FIXED);
+      return ecma_builtin_number_prototype_object_to_number_convert (this_arg_number,
+                                                                     routine_arg_1,
+                                                                     (number_routine_mode_t) option);
     }
     default:
     {

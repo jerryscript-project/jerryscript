@@ -32,9 +32,14 @@ assert((0.0).toPrecision(6) === "0.00000");
 assert((123456789012345678901.0).toPrecision(20) === "1.2345678901234568000e+20");
 assert((123456789012345678901.0).toPrecision(21) === "123456789012345680000");
 assert((123456789012345678901.0).toPrecision("6") === "1.23457e+20");
+assert((0.0000004).toPrecision(2) === "4.0e-7");
+assert((0.000004).toPrecision(2) === "0.0000040");
+assert((1234.92).toPrecision(4) === "1235");
+assert((1234.92).toPrecision(3) === "1.23e+3");
 
 assert((123.56).toPrecision(1.3) === "1e+2");
 assert((123.56).toPrecision(21.9) === "123.560000000000000000");
+assert((12).toPrecision(22) === "12.00000000000000000000")
 
 assert(Number(982).toPrecision(1) === "1e+3");
 assert(Number(982).toPrecision(2) === "9.8e+2");
@@ -43,13 +48,6 @@ assert(Number(1500).toPrecision(1) === "2e+3");
 
 try {
     (12).toPrecision(0);
-    assert(false);
-} catch (e) {
-    assert(e instanceof RangeError)
-}
-
-try {
-    (12).toPrecision(22);
     assert(false);
 } catch (e) {
     assert(e instanceof RangeError)

@@ -33,15 +33,17 @@ assert((0.0).toFixed(0) === "0");
 assert((0.0).toFixed(1) === "0.0");
 assert((-0.0).toFixed(0) === "0");
 assert((-0.0).toFixed(1) === "0.0");
-assert((123456789012345678901.0).toFixed(20) === "123456789012345683968.00000000000000000000");
 assert((123.56).toFixed(NaN) === "124");
 assert((123.56).toFixed(-0.9) === "124");
 assert((0.095).toFixed(2) === "0.10");
-assert((0.995).toFixed(2) === "0.99");
-assert((9.995).toFixed(2) === "9.99");
+assert((0.995).toFixed(2) === "1.00")
+assert((9.995).toFixed(2) === "10.00");
 assert((7.995).toFixed(2) === "8.00");
-assert((8.995).toFixed(2) === "8.99");
+assert((8.995).toFixed(2) === "9.00");
 assert((99.995).toFixed(2) === "100.00");
+assert((12).toFixed(21) === "12.000000000000000000000");
+assert((-1111111111111111111111.12).toFixed(3) === "-1.1111111111111111e+21");
+assert((1111111111111111111111.12).toFixed(3) === "1.1111111111111111e+21");
 
 try {
     Number.prototype.toExponential.call(new Object());
@@ -52,13 +54,6 @@ try {
 
 try {
     (12).toFixed(-1);
-    assert(false);
-} catch (e) {
-    assert(e instanceof RangeError)
-}
-
-try {
-    (12).toFixed(21);
     assert(false);
 } catch (e) {
     assert(e instanceof RangeError)

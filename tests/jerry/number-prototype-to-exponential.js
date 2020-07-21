@@ -34,6 +34,7 @@ assert((123456789012345678901.0).toExponential(20) === "1.23456789012345680000e+
 assert((123456789012345678901.0).toExponential("6") === "1.234568e+20");
 assert((123.45).toExponential(3.2) === "1.235e+2");
 assert((123.45).toExponential(-0.1) === "1e+2");
+assert((12).toExponential(21) === "1.200000000000000000000e+1")
 
 try {
     (12).toExponential(Number.MAX_VALUE);
@@ -51,13 +52,6 @@ try {
 
 try {
     (12).toExponential(-1);
-    assert(false);
-} catch (e) {
-    assert(e instanceof RangeError)
-}
-
-try {
-    (12).toExponential(21);
     assert(false);
 } catch (e) {
     assert(e instanceof RangeError)

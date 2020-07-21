@@ -421,9 +421,6 @@ ecma_value_t ecma_number_parse_float (const lit_utf8_byte_t *string_buff,
                                       lit_utf8_size_t string_buff_size);
 ecma_value_t ecma_integer_multiply (ecma_integer_value_t left_integer, ecma_integer_value_t right_integer);
 lit_utf8_size_t ecma_number_to_decimal (ecma_number_t num, lit_utf8_byte_t *out_digits_p, int32_t *out_decimal_exp_p);
-lit_utf8_size_t ecma_number_to_binary_floating_point_number (ecma_number_t num,
-                                                             lit_utf8_byte_t *out_digits_p,
-                                                             int32_t *out_decimal_exp_p);
 
 /* ecma-helpers-collection.c */
 ecma_collection_t *ecma_new_collection (void);

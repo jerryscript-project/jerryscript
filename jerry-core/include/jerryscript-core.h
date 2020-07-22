@@ -506,6 +506,10 @@ jerry_value_t jerry_create_string_from_utf8 (const jerry_char_t *str_p);
 jerry_value_t jerry_create_string_sz_from_utf8 (const jerry_char_t *str_p, jerry_size_t str_size);
 jerry_value_t jerry_create_string (const jerry_char_t *str_p);
 jerry_value_t jerry_create_string_sz (const jerry_char_t *str_p, jerry_size_t str_size);
+jerry_value_t jerry_create_external_string (const jerry_char_t *str_p,
+                                            jerry_object_native_free_callback_t free_cb);
+jerry_value_t jerry_create_external_string_sz (const jerry_char_t *str_p, jerry_size_t str_size,
+                                               jerry_object_native_free_callback_t free_cb);
 jerry_value_t jerry_create_symbol (const jerry_value_t value);
 jerry_value_t jerry_create_undefined (void);
 

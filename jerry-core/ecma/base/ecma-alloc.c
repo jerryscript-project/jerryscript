@@ -180,6 +180,34 @@ ecma_dealloc_extended_string (ecma_extended_string_t *ext_string_p) /**< extende
 } /* ecma_dealloc_extended_string */
 
 /**
+ * Allocate memory for external ecma-string descriptor
+ *
+ * @return pointer to allocated memory
+ */
+inline ecma_external_string_t * JERRY_ATTR_ALWAYS_INLINE
+ecma_alloc_external_string (void)
+{
+#if ENABLED (JERRY_MEM_STATS)
+  jmem_stats_allocate_string_bytes (sizeof (ecma_external_string_t));
+#endif /* ENABLED (JERRY_MEM_STATS) */
+
+  return (ecma_external_string_t *) jmem_heap_alloc_block (sizeof (ecma_external_string_t));
+} /* ecma_alloc_external_string */
+
+/**
+ * Dealloc memory from external ecma-string descriptor
+ */
+inline void JERRY_ATTR_ALWAYS_INLINE
+ecma_dealloc_external_string (ecma_external_string_t *ext_string_p) /**< external string to be freed */
+{
+#if ENABLED (JERRY_MEM_STATS)
+  jmem_stats_free_string_bytes (sizeof (ecma_external_string_t));
+#endif /* ENABLED (JERRY_MEM_STATS) */
+
+  jmem_heap_free_block (ext_string_p, sizeof (ecma_external_string_t));
+} /* ecma_dealloc_external_string */
+
+/**
  * Allocate memory for an string with character data
  *
  * @return pointer to allocated memory

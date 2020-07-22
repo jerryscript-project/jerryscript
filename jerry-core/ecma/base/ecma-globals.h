@@ -1526,14 +1526,12 @@ typedef enum
 {
   ECMA_STRING_CONTAINER_HEAP_UTF8_STRING, /**< actual data is on the heap as an utf-8 (cesu8) string
                                            *   maximum size is 2^16. */
-  ECMA_STRING_CONTAINER_HEAP_LONG_UTF8_STRING, /**< actual data is on the heap as an utf-8 (cesu8) string
-                                                *   maximum size is 2^32. */
-  ECMA_STRING_CONTAINER_UINT32_IN_DESC, /**< actual data is UInt32-represeneted Number
-                                             stored locally in the string's descriptor */
+  ECMA_STRING_CONTAINER_LONG_OR_EXTERNAL_STRING, /**< the string is a long string or provided externally
+                                                  *   and only its attributes are stored. */
+  ECMA_STRING_CONTAINER_UINT32_IN_DESC, /**< string representation of an uint32 number */
   ECMA_STRING_CONTAINER_HEAP_ASCII_STRING, /**< actual data is on the heap as an ASCII string
                                             *   maximum size is 2^16. */
   ECMA_STRING_CONTAINER_MAGIC_STRING_EX, /**< the ecma-string is equal to one of external magic strings */
-
   ECMA_STRING_CONTAINER_SYMBOL, /**< the ecma-string is a symbol */
 
   ECMA_STRING_CONTAINER__MAX = ECMA_STRING_CONTAINER_SYMBOL /**< maximum value */
@@ -1612,42 +1610,52 @@ typedef struct
 } ecma_ascii_string_t;
 
 /**
- * ECMA long UTF8 string-value descriptor
- */
-typedef struct
-{
-  ecma_string_t header; /**< string header */
-  uint16_t size; /**< size of this utf-8 string in bytes */
-  uint16_t length; /**< length of this utf-8 string in bytes */
-} ecma_utf8_string_t;
-
-/**
  * ECMA UTF8 string-value descriptor
  */
 typedef struct
 {
   ecma_string_t header; /**< string header */
-  lit_utf8_size_t size; /**< size of this long utf-8 string in bytes */
-  lit_utf8_size_t length; /**< length of this long utf-8 string in bytes */
-} ecma_long_utf8_string_t;
+  uint16_t size; /**< size of this utf-8 string in bytes */
+  uint16_t length; /**< length of this utf-8 string in characters */
+} ecma_utf8_string_t;
+
+/**
+ * Long or external CESU8 string-value descriptor
+ */
+typedef struct
+{
+  ecma_string_t header; /**< string header */
+  const lit_utf8_byte_t *string_p; /**< string data */
+  lit_utf8_size_t size; /**< size of this external string in bytes */
+  lit_utf8_size_t length; /**< length of this external string in characters */
+} ecma_long_string_t;
+
+/**
+ * External UTF8 string-value descriptor
+ */
+typedef struct
+{
+  ecma_long_string_t header;
+  ecma_object_native_free_callback_t free_cb; /**< free callback */
+} ecma_external_string_t;
 
 /**
  * Get the start position of the string buffer of an ecma ASCII string
  */
 #define ECMA_ASCII_STRING_GET_BUFFER(string_p) \
-  ((lit_utf8_byte_t *) ((lit_utf8_byte_t *) (string_p) +  sizeof (ecma_ascii_string_t)))
+  ((lit_utf8_byte_t *) ((lit_utf8_byte_t *) (string_p) + sizeof (ecma_ascii_string_t)))
 
 /**
  * Get the start position of the string buffer of an ecma UTF8 string
  */
 #define ECMA_UTF8_STRING_GET_BUFFER(string_p) \
-  ((lit_utf8_byte_t *) ((lit_utf8_byte_t *) (string_p) +  sizeof (ecma_utf8_string_t)))
+  ((lit_utf8_byte_t *) ((lit_utf8_byte_t *) (string_p) + sizeof (ecma_utf8_string_t)))
 
 /**
- * Get the start position of the string buffer of an ecma long UTF8 string
+ * Get the start position of the string buffer of an ecma long CESU8 string
  */
-#define ECMA_LONG_UTF8_STRING_GET_BUFFER(string_p) \
-  ((lit_utf8_byte_t *) ((lit_utf8_byte_t *) (string_p) +  sizeof (ecma_long_utf8_string_t)))
+#define ECMA_LONG_STRING_BUFFER_START(string_p) \
+  ((lit_utf8_byte_t *) ((lit_utf8_byte_t *) (string_p) + sizeof (ecma_long_string_t)))
 
 /**
  * ECMA extended string-value descriptor

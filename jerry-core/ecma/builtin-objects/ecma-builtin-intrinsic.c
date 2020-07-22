@@ -18,7 +18,9 @@
 #include "ecma-container-object.h"
 #include "ecma-array-object.h"
 #include "ecma-typedarray-object.h"
+#include "ecma-string-object.h"
 #include "ecma-gc.h"
+#include "ecma-helpers.h"
 #include "lit-char-helpers.h"
 
 #if ENABLED (JERRY_ESNEXT)
@@ -44,7 +46,9 @@ enum
   ECMA_INTRINSIC_ARRAY_TO_STRING,
   ECMA_INTRINSIC_DATE_TO_UTC_STRING,
   ECMA_INTRINSIC_PARSE_FLOAT,
-  ECMA_INTRINSIC_PARSE_INT
+  ECMA_INTRINSIC_PARSE_INT,
+  ECMA_INTRINSIC_STRING_TRIM_START,
+  ECMA_INTRINSIC_STRING_TRIM_END,
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-intrinsic.inc.h"
@@ -206,6 +210,48 @@ ecma_builtin_intrinsic_dispatch_routine (uint16_t builtin_routine_id, /**< built
 
       return ecma_date_value_to_utc_string (*prim_value_p);
     }
+    case ECMA_INTRINSIC_STRING_TRIM_START:
+    case ECMA_INTRINSIC_STRING_TRIM_END:
+    {
+      ecma_value_t coercible = ecma_op_check_object_coercible (this_arg);
+
+      if (ECMA_IS_VALUE_ERROR (coercible))
+      {
+        return coercible;
+      }
+
+      ecma_string_t *to_str_p = ecma_op_to_string (this_arg);
+      if (to_str_p == NULL)
+      {
+        return ECMA_VALUE_ERROR;
+      }
+
+      ECMA_STRING_TO_UTF8_STRING (to_str_p, start_p, input_start_size);
+
+      lit_utf8_size_t size;
+      const lit_utf8_byte_t *input_start_p = start_p;
+      const lit_utf8_byte_t *input_str_end_p = start_p + input_start_size;
+
+      ecma_string_t *ret_str_p;
+      if (builtin_routine_id == ECMA_INTRINSIC_STRING_TRIM_START)
+      {
+        const lit_utf8_byte_t *new_start_p = ecma_string_trim_front (input_start_p, input_str_end_p);
+        size = (lit_utf8_size_t) (input_str_end_p - new_start_p);
+        ret_str_p = ecma_new_ecma_string_from_utf8 (new_start_p, size);
+      }
+      else
+      {
+        const lit_utf8_byte_t *new_end_p = ecma_string_trim_back (input_start_p, input_str_end_p);
+        size = (lit_utf8_size_t) (new_end_p - input_start_p);
+        ret_str_p = ecma_new_ecma_string_from_utf8 (input_start_p, size);
+      }
+
+      ECMA_FINALIZE_UTF8_STRING (start_p, input_start_size);
+      ecma_value_t result = ecma_make_string_value (ret_str_p);
+      ecma_deref_ecma_string (to_str_p);
+      return result;
+
+    }
     default:
     {
       JERRY_ASSERT (builtin_routine_id == ECMA_INTRINSIC_PARSE_INT
@@ -236,7 +282,6 @@ ecma_builtin_intrinsic_dispatch_routine (uint16_t builtin_routine_id, /**< built
 
       ECMA_FINALIZE_UTF8_STRING (string_buff, string_buff_size);
       ecma_deref_ecma_string (str_p);
-
       return result;
     }
   }

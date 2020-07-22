@@ -1602,15 +1602,6 @@ typedef struct
 } ecma_string_t;
 
 /**
- * ECMA ASCII string-value descriptor
- */
-typedef struct
-{
-  ecma_string_t header; /**< string header */
-  uint16_t size; /**< size of this ASCII string in bytes */
-} ecma_ascii_string_t;
-
-/**
  * ECMA UTF8 string-value descriptor
  */
 typedef struct
@@ -1618,7 +1609,7 @@ typedef struct
   ecma_string_t header; /**< string header */
   uint16_t size; /**< size of this utf-8 string in bytes */
   uint16_t length; /**< length of this utf-8 string in characters */
-} ecma_utf8_string_t;
+} ecma_short_string_t;
 
 /**
  * Long or external CESU8 string-value descriptor
@@ -1641,22 +1632,40 @@ typedef struct
 } ecma_external_string_t;
 
 /**
+ * Header size of an ecma ASCII string
+ */
+#define ECMA_ASCII_STRING_HEADER_SIZE \
+  ((lit_utf8_size_t) (sizeof (ecma_string_t) + sizeof (uint8_t)))
+
+/**
+ * Get the size of an ecma ASCII string
+ */
+#define ECMA_ASCII_STRING_GET_SIZE(string_p) \
+  ((lit_utf8_size_t) *((lit_utf8_byte_t *) (string_p) + sizeof (ecma_string_t)) + 1)
+
+/**
+ * Set the size of an ecma ASCII string
+ */
+#define ECMA_ASCII_STRING_SET_SIZE(string_p, size) \
+  (*((lit_utf8_byte_t *) (string_p) + sizeof (ecma_string_t)) = (uint8_t) ((size) - 1))
+
+/**
  * Get the start position of the string buffer of an ecma ASCII string
  */
 #define ECMA_ASCII_STRING_GET_BUFFER(string_p) \
-  ((lit_utf8_byte_t *) ((lit_utf8_byte_t *) (string_p) + sizeof (ecma_ascii_string_t)))
+  ((lit_utf8_byte_t *) (string_p) + ECMA_ASCII_STRING_HEADER_SIZE)
 
 /**
  * Get the start position of the string buffer of an ecma UTF8 string
  */
-#define ECMA_UTF8_STRING_GET_BUFFER(string_p) \
-  ((lit_utf8_byte_t *) ((lit_utf8_byte_t *) (string_p) + sizeof (ecma_utf8_string_t)))
+#define ECMA_SHORT_STRING_GET_BUFFER(string_p) \
+  ((lit_utf8_byte_t *) (string_p) + sizeof (ecma_short_string_t))
 
 /**
  * Get the start position of the string buffer of an ecma long CESU8 string
  */
 #define ECMA_LONG_STRING_BUFFER_START(string_p) \
-  ((lit_utf8_byte_t *) ((lit_utf8_byte_t *) (string_p) + sizeof (ecma_long_string_t)))
+  ((lit_utf8_byte_t *) (string_p) + sizeof (ecma_long_string_t))
 
 /**
  * ECMA extended string-value descriptor
@@ -1684,13 +1693,13 @@ typedef struct
  * Get pointer to the beginning of the stored string in the string builder
  */
 #define ECMA_STRINGBUILDER_STRING_PTR(header_p) \
-  ((lit_utf8_byte_t *) (((lit_utf8_byte_t *) header_p) + sizeof (ecma_ascii_string_t)))
+  ((lit_utf8_byte_t *) (((lit_utf8_byte_t *) header_p) + ECMA_ASCII_STRING_HEADER_SIZE))
 
 /**
  * Get the size of the stored string in the string builder
  */
 #define ECMA_STRINGBUILDER_STRING_SIZE(header_p) \
-  ((lit_utf8_size_t) (header_p->current_size - sizeof (ecma_ascii_string_t)))
+  ((lit_utf8_size_t) (header_p->current_size - ECMA_ASCII_STRING_HEADER_SIZE))
 
 /**
  * String builder handle

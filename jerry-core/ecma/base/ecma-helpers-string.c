@@ -1843,24 +1843,10 @@ ecma_compare_ecma_non_direct_strings (const ecma_string_t *string1_p, /**< ecma-
     return false;
   }
 
-  ecma_string_container_t string1_container = ECMA_STRING_GET_CONTAINER (string1_p);
-
-  if (string1_container != ECMA_STRING_GET_CONTAINER (string2_p))
+  if (ECMA_STRING_GET_CONTAINER (string1_p) == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
   {
-    return false;
+    return ECMA_STRING_GET_CONTAINER (string2_p) == ECMA_STRING_CONTAINER_UINT32_IN_DESC;
   }
-
-  if (string1_container == ECMA_STRING_CONTAINER_UINT32_IN_DESC)
-  {
-    return true;
-  }
-
-#if ENABLED (JERRY_ESNEXT)
-  if (string1_container == ECMA_STRING_CONTAINER_SYMBOL)
-  {
-    return false;
-  }
-#endif /* ENABLED (JERRY_ESNEXT) */
 
   return ecma_compare_ecma_strings_longpath (string1_p, string2_p);
 } /* ecma_compare_ecma_non_direct_strings */

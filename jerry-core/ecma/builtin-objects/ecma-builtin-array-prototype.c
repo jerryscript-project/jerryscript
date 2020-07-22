@@ -1178,10 +1178,10 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
   if (copied_num > 1)
   {
     const ecma_builtin_helper_sort_compare_fn_t sort_cb = &ecma_builtin_array_prototype_object_sort_compare_helper;
-    ecma_value_t sort_value = ecma_builtin_helper_array_heap_sort_helper (values_buffer,
-                                                                          (uint32_t) (copied_num - 1),
-                                                                          arg1,
-                                                                          sort_cb);
+    ecma_value_t sort_value = ecma_builtin_helper_array_merge_sort_helper (values_buffer,
+                                                                           (uint32_t) (copied_num),
+                                                                           arg1,
+                                                                           sort_cb);
     if (ECMA_IS_VALUE_ERROR (sort_value))
     {
       goto clean_up;

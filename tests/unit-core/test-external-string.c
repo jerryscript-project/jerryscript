@@ -22,6 +22,7 @@ static int free_count = 0;
 static const char *external_1 = "External string! External string! External string! External string!";
 static const char *external_2 = "Object";
 static const char *external_3 = "x!?:s";
+static const char *external_4 = "Object property external string! Object property external string!";
 
 static void
 free_external1 (void *ptr)
@@ -116,6 +117,43 @@ main (void)
   TEST_ASSERT (free_count == 4);
   jerry_release_value (external_string);
   TEST_ASSERT (free_count == 5);
+
+  /* Test property access. */
+  external_string = jerry_create_external_string ((jerry_char_t *) external_4, NULL);
+  other_string = jerry_create_string ((jerry_char_t *) external_4);
+
+  jerry_value_t obj = jerry_create_object ();
+  result = jerry_set_property (obj, external_string, other_string);
+  TEST_ASSERT (jerry_value_is_boolean (result));
+  TEST_ASSERT (jerry_get_boolean_value (result));
+  jerry_release_value (result);
+
+  jerry_value_t get_result = jerry_get_property (obj, other_string);
+  TEST_ASSERT (jerry_value_is_string (get_result));
+
+  result = jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL, get_result, external_string);
+  jerry_release_value (get_result);
+  TEST_ASSERT (jerry_value_is_boolean (result));
+  TEST_ASSERT (jerry_get_boolean_value (result));
+  jerry_release_value (result);
+
+  result = jerry_set_property (obj, other_string, external_string);
+  TEST_ASSERT (jerry_value_is_boolean (result));
+  TEST_ASSERT (jerry_get_boolean_value (result));
+  jerry_release_value (result);
+
+  get_result = jerry_get_property (obj, external_string);
+  TEST_ASSERT (jerry_value_is_string (get_result));
+
+  result = jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL, get_result, other_string);
+  jerry_release_value (get_result);
+  TEST_ASSERT (jerry_value_is_boolean (result));
+  TEST_ASSERT (jerry_get_boolean_value (result));
+  jerry_release_value (result);
+
+  jerry_release_value (obj);
+  jerry_release_value (external_string);
+  jerry_release_value (other_string);
 
   jerry_cleanup ();
   return 0;

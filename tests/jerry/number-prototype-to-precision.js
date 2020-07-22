@@ -59,3 +59,31 @@ try {
 } catch (e) {
     assert(e instanceof TypeError)
 }
+
+
+assert((+Infinity).toPrecision(1000) === "Infinity");
+var n = new Number(+Infinity);
+assert(n.toPrecision(1000) === "Infinity");
+
+assert((-Infinity).toPrecision(1000) === "-Infinity");
+var n = new Number(-Infinity);
+assert(n.toPrecision(1000) === "-Infinity");
+
+assert(NaN.toPrecision(undefined) === "NaN");
+  
+var calls = 0;
+
+var p = {
+  valueOf: function() {
+    calls++;
+	return Infinity;
+  }
+};
+
+assert(NaN.toPrecision(p) === "NaN");
+assert(calls === 1);
+
+var n = new Number(NaN);
+calls = 0;
+assert(n.toPrecision(p) === "NaN");
+assert(calls === 1);

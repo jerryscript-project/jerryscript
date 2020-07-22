@@ -51,7 +51,11 @@ enum
   ECMA_OBJECT_PROTOTYPE_IS_PROTOTYPE_OF,
   ECMA_OBJECT_PROTOTYPE_HAS_OWN_PROPERTY,
   ECMA_OBJECT_PROTOTYPE_PROPERTY_IS_ENUMERABLE,
-  ECMA_OBJECT_PROTOTYPE_SET_PROTO
+  ECMA_OBJECT_PROTOTYPE_SET_PROTO,
+#if ENABLED (JERRY_ESNEXT) && ENABLED (JERRY_BUILTIN_ANNEXB)
+  ECMA_OBJECT_PROTOTYPE_DEFINE_GETTER,
+  ECMA_OBJECT_PROTOTYPE_DEFINE_SETTER,
+#endif /* ENABLED (JERRY_ESNEXT) && ENABLED (JERRY_BUILTIN_ANNEXB) */
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-object-prototype.inc.h"
@@ -203,6 +207,63 @@ ecma_builtin_object_prototype_object_property_is_enumerable (ecma_object_t *obj_
   return ecma_make_boolean_value (is_enumerable);
 } /* ecma_builtin_object_prototype_object_property_is_enumerable */
 
+#if ENABLED (JERRY_ESNEXT) && ENABLED (JERRY_BUILTIN_ANNEXB)
+/**
+ * The Object.prototype object's '__defineGetter__' and '__defineSetter__' routine
+ *
+ * See also:
+ *          ECMA-262 v11, B.2.2.2
+ *          ECMA-262 v11, B.2.2.3
+ *
+ * @return ECMA_VALUE_ERROR - if the operation fails,
+ *         ECMA_VALUE_UNDEFINED - otherwise
+ */
+static ecma_value_t
+ecma_builtin_object_prototype_define_getter_setter (ecma_object_t *obj_p, /**< this argument */
+                                                    ecma_string_t *prop_name_p, /**< property name */
+                                                    ecma_value_t accessor, /**< getter/setter function */
+                                                    bool define_getter) /**< true - defineGetter method
+                                                                             false - defineSetter method */
+{
+  /* 2. */
+  if (!ecma_op_is_callable (accessor))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Getter is not callable."));
+  }
+
+  ecma_object_t *accessor_obj_p = ecma_get_object_from_value (accessor);
+
+  /* 3. */
+  ecma_property_descriptor_t desc = ecma_make_empty_property_descriptor ();
+  desc.flags |= (ECMA_PROP_IS_ENUMERABLE
+                 | ECMA_PROP_IS_CONFIGURABLE
+                 | ECMA_PROP_IS_ENUMERABLE_DEFINED
+                 | ECMA_PROP_IS_CONFIGURABLE_DEFINED);
+
+  if (define_getter)
+  {
+    desc.get_p = accessor_obj_p;
+    desc.flags |= ECMA_PROP_IS_GET_DEFINED;
+  }
+  else
+  {
+    desc.set_p = accessor_obj_p;
+    desc.flags |= ECMA_PROP_IS_SET_DEFINED;
+  }
+
+  /* 5. */
+  ecma_value_t define_prop = ecma_op_object_define_own_property (obj_p, prop_name_p, &desc);
+
+  if (ECMA_IS_VALUE_ERROR (define_prop))
+  {
+    return define_prop;
+  }
+
+  /* 6. */
+  return ECMA_VALUE_UNDEFINED;
+} /* ecma_builtin_object_prototype_define_getter_setter */
+#endif /* ENABLED (JERRY_ESNEXT) && ENABLED (JERRY_BUILTIN_ANNEXB) */
+
 /**
  * Dispatcher of the built-in's routines
  *
@@ -307,6 +368,16 @@ ecma_builtin_object_prototype_dispatch_routine (uint16_t builtin_routine_id, /**
   {
     ret_value = ecma_builtin_object_prototype_object_has_own_property (obj_p, prop_name_p);
   }
+#if ENABLED (JERRY_ESNEXT) && ENABLED (JERRY_BUILTIN_ANNEXB)
+  else if (builtin_routine_id == ECMA_OBJECT_PROTOTYPE_DEFINE_GETTER)
+  {
+    ret_value = ecma_builtin_object_prototype_define_getter_setter (obj_p, prop_name_p, arguments_list_p[1], true);
+  }
+  else if (builtin_routine_id == ECMA_OBJECT_PROTOTYPE_DEFINE_SETTER)
+  {
+    ret_value = ecma_builtin_object_prototype_define_getter_setter (obj_p, prop_name_p, arguments_list_p[1], false);
+  }
+#endif /* ENABLED (JERRY_ESNEXT) && ENABLED (JERRY_BUILTIN_ANNEXB) */
   else
   {
     ret_value = ecma_builtin_object_prototype_object_property_is_enumerable (obj_p, prop_name_p);

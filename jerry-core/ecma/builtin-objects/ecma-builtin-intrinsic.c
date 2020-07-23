@@ -38,7 +38,8 @@ enum
   ECMA_INTRINSIC_PARSE_FLOAT,
   ECMA_INTRINSIC_PARSE_INT,
   ECMA_INTRINSIC_ARRAY_PROTOTYPE_VALUES,
-  ECMA_INTRINSIC_SET_PROTOTYPE_KEYS
+  ECMA_INTRINSIC_SET_PROTOTYPE_KEYS,
+  ECMA_INTRINSIC_MAP_PROTOTYPE_ENTRIES,
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-intrinsic.inc.h"
@@ -110,6 +111,32 @@ ecma_builtin_intrinsic_set_prototype_keys (ecma_value_t this_value)
 } /* ecma_builtin_intrinsic_set_prototype_keys */
 
 /**
+ * The Map.prototype entries, and [@@iterator] routines
+ *
+ * See also:
+ *          ECMA-262 v6, 23.1.3.4
+ *          ECMA-262 v6, 23.1.3.12
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_intrinsic_map_prototype_entries (ecma_value_t this_value)
+{
+  ecma_extended_object_t *map_object_p = ecma_op_container_get_object (this_value, LIT_MAGIC_STRING_MAP_UL);
+
+  if (map_object_p == NULL)
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  return ecma_op_container_create_iterator (this_value,
+                                            2,
+                                            ECMA_BUILTIN_ID_MAP_ITERATOR_PROTOTYPE,
+                                            ECMA_PSEUDO_MAP_ITERATOR);
+} /* ecma_builtin_intrinsic_map_prototype_entries */
+
+/**
  * Dispatcher of the built-in's routines
  *
  * @return ecma value
@@ -135,6 +162,11 @@ ecma_builtin_intrinsic_dispatch_routine (uint16_t builtin_routine_id, /**< built
   if (builtin_routine_id == ECMA_INTRINSIC_SET_PROTOTYPE_KEYS)
   {
     return ecma_builtin_intrinsic_set_prototype_keys (this_arg);
+  }
+
+  if (builtin_routine_id == ECMA_INTRINSIC_MAP_PROTOTYPE_ENTRIES)
+  {
+    return ecma_builtin_intrinsic_map_prototype_entries (this_arg);
   }
 
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;

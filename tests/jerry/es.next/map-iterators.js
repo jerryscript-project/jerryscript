@@ -182,3 +182,5 @@ for (var [key, value] of m) {
 
   loopCount++;
 }
+
+assert(Map.prototype.entries === Map.prototype[Symbol.iterator]);

@@ -157,7 +157,7 @@ unsigned int jsmbed_js_magic_string_lengths[] = {
 
     magic_values = ',\n    '.join(pins)
     magic_source = '''
-unsigned int jsmbed_js_magic_string_values[] = {
+int jsmbed_js_magic_string_values[] = {
     %s
 };
     ''' % magic_values

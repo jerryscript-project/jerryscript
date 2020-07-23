@@ -782,8 +782,8 @@ parser_parse_class (parser_context_t *context_p, /**< context */
 {
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_CLASS);
 
-  uint16_t class_ident_index = UINT16_MAX;
-  uint16_t class_name_index = UINT16_MAX;
+  uint16_t class_ident_index = PARSER_INVALID_LITERAL_INDEX;
+  uint16_t class_name_index = PARSER_INVALID_LITERAL_INDEX;
   parser_class_literal_opts_t opts = PARSER_CLASS_LITERAL_NO_OPTS;
 
   if (context_p->next_scanner_info_p->source_p == context_p->source_p)
@@ -830,7 +830,7 @@ parser_parse_class (parser_context_t *context_p, /**< context */
     }
   }
 
-  if (class_name_index != UINT16_MAX)
+  if (class_name_index != PARSER_INVALID_LITERAL_INDEX)
   {
     parser_emit_cbc_ext_literal (context_p, CBC_EXT_PUSH_NAMED_CLASS_ENV, class_name_index);
   }
@@ -864,7 +864,7 @@ parser_parse_class (parser_context_t *context_p, /**< context */
   /* ClassDeclaration is parsed. Continue with class body. */
   parser_parse_class_literal (context_p, opts);
 
-  if (class_name_index != UINT16_MAX)
+  if (class_name_index != PARSER_INVALID_LITERAL_INDEX)
   {
     parser_emit_cbc_ext_literal (context_p, CBC_EXT_FINALIZE_NAMED_CLASS, class_name_index);
     parser_emit_cbc_ext_literal (context_p, CBC_EXT_SET_FUNCTION_NAME, class_name_index);
@@ -1976,6 +1976,14 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
 
       uint16_t literal_index = (uint16_t) (context_p->literal_count - 1);
 
+#if ENABLED (JERRY_ESNEXT)
+      if (JERRY_UNLIKELY (context_p->lit_object.literal_p->type == LEXER_STRING_LITERAL))
+      {
+        parser_emit_cbc_ext_literal (context_p, CBC_EXT_THROW_SYNTAX_ERROR, literal_index);
+        break;
+      }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
       if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
       {
         context_p->last_cbc_opcode = CBC_PUSH_TWO_LITERALS;
@@ -2892,7 +2900,7 @@ parser_process_binary_opcodes (parser_context_t *context_p, /**< context */
       opcode = (cbc_opcode_t) context_p->stack_top_uint8;
       parser_stack_pop_uint8 (context_p);
 
-      uint16_t index = UINT16_MAX;
+      uint16_t index = PARSER_INVALID_LITERAL_INDEX;
 
       if (cbc_flags[opcode] & CBC_HAS_LITERAL_ARG)
       {
@@ -2923,7 +2931,7 @@ parser_process_binary_opcodes (parser_context_t *context_p, /**< context */
       }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
-      if (index != UINT16_MAX)
+      if (index != PARSER_INVALID_LITERAL_INDEX)
       {
 #if ENABLED (JERRY_ESNEXT)
         if (!group_expr_assingment)
@@ -3039,7 +3047,7 @@ typedef struct
 /**
  * Literal index should not be emitted while processing rhs target value
  */
-#define PARSER_PATTERN_RHS_NO_LIT UINT16_MAX
+#define PARSER_PATTERN_RHS_NO_LIT PARSER_INVALID_LITERAL_INDEX
 
 /**
  * Process the target of an initializer pattern.
@@ -3161,7 +3169,7 @@ parser_pattern_form_assignment (parser_context_t *context_p, /**< context */
 {
   JERRY_UNUSED (ident_line_counter);
 
-  uint16_t name_index = UINT16_MAX;
+  uint16_t name_index = PARSER_INVALID_LITERAL_INDEX;
 
   if ((flags & PARSER_PATTERN_BINDING)
       || (context_p->last_cbc_opcode == CBC_PUSH_LITERAL
@@ -3191,7 +3199,7 @@ parser_pattern_form_assignment (parser_context_t *context_p, /**< context */
 
     parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
 
-    if (name_index != UINT16_MAX)
+    if (name_index != PARSER_INVALID_LITERAL_INDEX)
     {
       uint16_t function_literal_index = parser_check_anonymous_function_declaration (context_p);
 

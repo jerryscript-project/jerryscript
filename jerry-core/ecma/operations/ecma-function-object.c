@@ -1324,6 +1324,11 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
         message_p = ECMA_ERR_MSG ("Async arrow functions cannot be invoked with 'new'.");
         break;
       }
+      case CBC_FUNCTION_METHOD:
+      {
+        message_p = ECMA_ERR_MSG ("Methods cannot be invoked with 'new'.");
+        break;
+      }
       default:
       {
         JERRY_ASSERT (CBC_FUNCTION_GET_TYPE (byte_code_p->status_flags) == CBC_FUNCTION_ACCESSOR);

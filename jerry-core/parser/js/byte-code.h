@@ -880,6 +880,7 @@ typedef enum
 
   /* The following functions has no prototype (see CBC_FUNCTION_HAS_PROTOTYPE) */
   CBC_FUNCTION_ACCESSOR, /**< property accessor function */
+  CBC_FUNCTION_METHOD, /**< method */
 
   /* The following functions are arrow function (see CBC_FUNCTION_IS_ARROW) */
   CBC_FUNCTION_ARROW, /**< arrow function */

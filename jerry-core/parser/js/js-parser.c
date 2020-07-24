@@ -1405,6 +1405,10 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   {
     function_type = CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_CONSTRUCTOR);
   }
+  else if (context_p->status_flags & PARSER_IS_METHOD)
+  {
+    function_type = CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_METHOD);
+  }
   else
   {
     function_type = CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_NORMAL);

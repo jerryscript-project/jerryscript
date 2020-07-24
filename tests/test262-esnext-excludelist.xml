@@ -6779,9 +6779,7 @@
   <test id="language/expressions/object/method-definition/generator-length-dflt.js"><reason></reason></test>
   <test id="language/expressions/object/method-definition/meth-dflt-params-trailing-comma.js"><reason></reason></test>
   <test id="language/expressions/object/method-definition/meth-eval-var-scope-syntax-err.js"><reason></reason></test>
-  <test id="language/expressions/object/method-definition/name-invoke-ctor.js"><reason></reason></test>
   <test id="language/expressions/object/method-definition/name-length-dflt.js"><reason></reason></test>
-  <test id="language/expressions/object/method-definition/name-prototype-prop.js"><reason></reason></test>
   <test id="language/expressions/object/object-spread-proxy-ownkeys-returned-keys-order.js"><reason></reason></test>
   <test id="language/expressions/object/setter-length-dflt.js"><reason></reason></test>
   <test id="language/expressions/optional-chaining/call-expression.js"><reason></reason></test>
@@ -7413,8 +7411,6 @@
   <test id="language/statements/class/class-name-ident-yield.js"><reason></reason></test>
   <test id="language/statements/class/classelementname-abrupt-completion.js"><reason></reason></test>
   <test id="language/statements/class/constructor-inferred-observable-iteration.js"><reason></reason></test>
-  <test id="language/statements/class/definition/methods.js"><reason></reason></test>
-  <test id="language/statements/class/definition/numeric-property-names.js"><reason></reason></test>
   <test id="language/statements/class/definition/this-access-restriction.js"><reason></reason></test>
   <test id="language/statements/class/definition/this-check-ordering.js"><reason></reason></test>
   <test id="language/statements/class/dstr/async-gen-meth-ary-init-iter-no-close.js"><reason></reason></test>

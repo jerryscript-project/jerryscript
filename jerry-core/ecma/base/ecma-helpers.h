@@ -382,6 +382,12 @@ ecma_string_t *ecma_string_substr (const ecma_string_t *string_p, lit_utf8_size_
 void ecma_string_trim_helper (const lit_utf8_byte_t **utf8_str_p,
                               lit_utf8_size_t *utf8_str_size);
 ecma_string_t *ecma_string_trim (const ecma_string_t *string_p);
+#if ENABLED (JERRY_ESNEXT)
+ecma_value_t ecma_string_pad (ecma_value_t original_string_p,
+                              ecma_value_t max_length,
+                              ecma_value_t fill_string,
+                              bool pad_on_start);
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 ecma_stringbuilder_t ecma_stringbuilder_create (void);
 ecma_stringbuilder_t ecma_stringbuilder_create_from (ecma_string_t *string_p);

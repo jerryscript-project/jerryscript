@@ -80,6 +80,8 @@ enum
 
   ECMA_STRING_PROTOTYPE_REPEAT,
   ECMA_STRING_PROTOTYPE_CODE_POINT_AT,
+  ECMA_STRING_PROTOTYPE_PAD_START,
+  ECMA_STRING_PROTOTYPE_PAD_END,
   /* Note: These 5 routines MUST be in this order */
   ECMA_STRING_PROTOTYPE_LAST_INDEX_OF,
   ECMA_STRING_PROTOTYPE_INDEX_OF,
@@ -1386,6 +1388,12 @@ ecma_builtin_string_prototype_dispatch_routine (uint16_t builtin_routine_id, /**
     case ECMA_STRING_PROTOTYPE_ITERATOR:
     {
       ret_value = ecma_builtin_string_prototype_object_iterator (to_string_val);
+      break;
+    }
+    case ECMA_STRING_PROTOTYPE_PAD_END:
+    case ECMA_STRING_PROTOTYPE_PAD_START:
+    {
+      ret_value = ecma_string_pad (to_string_val, arg1, arg2, builtin_routine_id == ECMA_STRING_PROTOTYPE_PAD_START);
       break;
     }
 #endif /* ENABLED (JERRY_ESNEXT) */

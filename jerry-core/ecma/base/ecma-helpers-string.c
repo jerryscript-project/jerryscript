@@ -2482,6 +2482,97 @@ ecma_string_trim (const ecma_string_t *string_p) /**< pointer to an ecma string 
   return ret_string_p;
 } /* ecma_string_trim */
 
+#if ENABLED (JERRY_ESNEXT)
+
+/**
+ * Pad the beginning or the end of string with parameter given in fill_string to the length of max_length.
+ *
+ * @return new string from original, padded with given parameters
+ */
+ecma_value_t
+ecma_string_pad (ecma_value_t original_string_p, /**< Input ecma string */
+                 ecma_value_t max_length, /**< Length to pad to, including original length */
+                 ecma_value_t fill_string,  /**< The string to pad with */
+                 bool pad_on_start) /**< true - if we are padding to the start, calling with padStart
+                                         false - if we are padding to the end, calling with padEnd */
+{
+
+  /* 3 */
+  uint32_t int_max_length;
+  if (ECMA_IS_VALUE_ERROR (ecma_op_to_length (max_length, &int_max_length)))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+  /* 4 */
+  ecma_string_t *original_str_val_p = ecma_get_string_from_value (original_string_p);
+  const uint32_t string_length = ecma_string_get_length (original_str_val_p);
+  /* 5 */
+  if (int_max_length <= string_length)
+  {
+    ecma_ref_ecma_string (original_str_val_p);
+    return original_string_p;
+  }
+
+  ecma_string_t *filler_p = ecma_get_magic_string (LIT_MAGIC_STRING_SPACE_CHAR);
+  /* 6 - 7 */
+  if (!ecma_is_value_undefined (fill_string))
+  {
+    filler_p = ecma_op_to_string (fill_string);
+    if (filler_p == NULL)
+    {
+      return ECMA_VALUE_ERROR;
+    }
+    if (ecma_string_is_empty (filler_p))
+    {
+      ecma_ref_ecma_string (original_str_val_p);
+      return original_string_p;
+    }
+  }
+
+  /* 9 */
+  uint32_t fill_len = int_max_length - string_length;
+
+  /* 10 */
+  uint32_t filler_length = ecma_string_get_length (filler_p);
+  uint32_t prepend_count = fill_len / filler_length;
+  ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
+
+  if (!pad_on_start)
+  {
+    ecma_stringbuilder_append (&builder, original_str_val_p);
+  }
+
+  for (uint32_t i = 0; i < prepend_count; i++)
+  {
+    ecma_stringbuilder_append (&builder, filler_p);
+  }
+
+  lit_utf8_size_t read_size;
+  ecma_char_t ch;
+
+  uint32_t remaining = fill_len - (prepend_count * filler_length);
+
+  ECMA_STRING_TO_UTF8_STRING (filler_p, start_p, utf8_str_size);
+  while (remaining > 0)
+  {
+    read_size = lit_read_code_unit_from_utf8 (start_p, &ch);
+    ecma_stringbuilder_append_char (&builder, ch);
+    start_p += read_size;
+    remaining--;
+  }
+  ECMA_FINALIZE_UTF8_STRING (start_p, utf8_str_size);
+  ecma_deref_ecma_string (filler_p);
+
+  /* 11 - 12 */
+  if (pad_on_start)
+  {
+    ecma_stringbuilder_append (&builder, original_str_val_p);
+  }
+
+  return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
+} /* ecma_string_pad */
+#endif /* ENABLED (JERRY_ESNEXT) */
+
 /**
  * Create an empty string builder
  *

@@ -1357,7 +1357,8 @@ void
 ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
 {
   JERRY_ASSERT (bytecode_p->refs > 0);
-  JERRY_ASSERT (!(bytecode_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION));
+  JERRY_ASSERT (!CBC_IS_FUNCTION (bytecode_p->status_flags)
+                || !(bytecode_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION));
 
   bytecode_p->refs--;
 

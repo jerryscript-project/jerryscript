@@ -61,7 +61,7 @@ re_cache_lookup (ecma_string_t *pattern_str_p, /**< pattern string */
 
     ecma_string_t *cached_pattern_str_p = ecma_get_string_from_value (cached_bytecode_p->source);
 
-    if ((cached_bytecode_p->header.status_flags & RE_FLAGS_MASK) == flags
+    if (cached_bytecode_p->header.status_flags == flags
         && ecma_compare_ecma_strings (cached_pattern_str_p, pattern_str_p))
     {
       return cached_bytecode_p;

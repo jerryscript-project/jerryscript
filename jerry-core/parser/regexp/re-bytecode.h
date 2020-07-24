@@ -37,11 +37,6 @@
 #define RE_CACHE_SIZE 8u
 
 /**
-  * RegExp flags mask (first 10 bits are for reference count and the rest for the actual RegExp flags)
-  */
-#define RE_FLAGS_MASK 0x3F
-
-/**
  * Maximum value that can be encoded in the RegExp bytecode as a single byte.
  */
 #define RE_VALUE_1BYTE_MAX 0xFE

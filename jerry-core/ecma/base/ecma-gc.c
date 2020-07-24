@@ -795,6 +795,23 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
           ecma_gc_set_object_visited (ecma_get_object_from_value (executor_p->values));
           ecma_gc_set_object_visited (ecma_get_object_from_value (executor_p->remaining_elements));
         }
+        else if (ext_func_p->u.external_handler_cb == ecma_promise_then_finally_cb
+                 || ext_func_p->u.external_handler_cb == ecma_promise_catch_finally_cb)
+        {
+          ecma_promise_finally_function_t *finally_obj_p = (ecma_promise_finally_function_t *) object_p;
+          ecma_gc_set_object_visited (ecma_get_object_from_value (finally_obj_p->constructor));
+          ecma_gc_set_object_visited (ecma_get_object_from_value (finally_obj_p->on_finally));
+        }
+        else if (ext_func_p->u.external_handler_cb == ecma_value_thunk_helper_cb
+                 || ext_func_p->u.external_handler_cb == ecma_value_thunk_thrower_cb)
+        {
+          ecma_promise_value_thunk_t *thunk_obj_p = (ecma_promise_value_thunk_t *) object_p;
+
+          if (ecma_is_value_object (thunk_obj_p->value))
+          {
+            ecma_gc_set_object_visited (ecma_get_object_from_value (thunk_obj_p->value));
+          }
+        }
         break;
       }
 #endif /* ENABLED (JERRY_ESNEXT) */
@@ -1161,6 +1178,20 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
       else if (ext_func_p->u.external_handler_cb == ecma_promise_all_handler_cb)
       {
         ext_object_size = sizeof (ecma_promise_all_executor_t);
+      }
+      else if (ext_func_p->u.external_handler_cb == ecma_promise_then_finally_cb
+               || ext_func_p->u.external_handler_cb == ecma_promise_catch_finally_cb)
+      {
+        ext_object_size = sizeof (ecma_promise_finally_function_t);
+      }
+      else if (ext_func_p->u.external_handler_cb == ecma_value_thunk_helper_cb
+               || ext_func_p->u.external_handler_cb == ecma_value_thunk_thrower_cb)
+      {
+        ecma_promise_value_thunk_t *thunk_obj_p = (ecma_promise_value_thunk_t *) object_p;
+
+        ecma_free_value_if_not_object (thunk_obj_p->value);
+
+        ext_object_size = sizeof (ecma_promise_value_thunk_t);
       }
 #endif /* ENABLED (JERRY_ESNEXT) */
       break;

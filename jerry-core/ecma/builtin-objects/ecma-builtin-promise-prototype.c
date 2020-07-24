@@ -70,6 +70,22 @@ ecma_builtin_promise_prototype_catch (ecma_value_t this_arg, /**< this argument 
 } /* ecma_builtin_promise_prototype_catch */
 
 /**
+ * Promise routine: finally.
+ *
+ * See also:
+ *          ECMA-262 v11, 25.6.5.3
+ *
+ * @return ecma value of a new promise object.
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_promise_prototype_finally (ecma_value_t this_arg, /**< this argument */
+                                        ecma_value_t on_finally) /**< on_finally function */
+{
+  return ecma_promise_finally (this_arg, on_finally);
+} /* ecma_builtin_promise_prototype_finally */
+
+/**
  * @}
  * @}
  * @}

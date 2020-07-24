@@ -64,6 +64,25 @@ typedef struct
   ecma_collection_t *reactions; /**< list of promise reactions */
 } ecma_promise_object_t;
 
+/**
+ * Description of the finally function object
+ */
+typedef struct
+{
+  ecma_extended_object_t header; /**< extended object part */
+  ecma_value_t constructor; /**< [[Constructor]] internal slot */
+  ecma_value_t on_finally; /**< [[OnFinally]] internal slot */
+} ecma_promise_finally_function_t;
+
+/**
+ * Description of the thunk function object
+ */
+typedef struct
+{
+  ecma_extended_object_t header; /**< extended object part */
+  ecma_value_t value; /**< value thunk */
+} ecma_promise_value_thunk_t;
+
 /* The Promise reaction is a compressed structure, where each item can
  * be a sequence of up to three ecma object values as seen below:
  *
@@ -90,6 +109,23 @@ void ecma_fulfill_promise (ecma_value_t promise, ecma_value_t value);
 ecma_object_t *ecma_promise_new_capability (ecma_value_t constructor);
 ecma_value_t ecma_promise_reject_or_resolve (ecma_value_t this_arg, ecma_value_t value, bool is_resolve);
 ecma_value_t ecma_promise_then (ecma_value_t promise, ecma_value_t on_fulfilled, ecma_value_t on_rejected);
+ecma_value_t ecma_value_thunk_helper_cb (const ecma_value_t function_obj,
+                                         const ecma_value_t this_val,
+                                         const ecma_value_t args_p[],
+                                         const uint32_t args_count);
+ecma_value_t ecma_value_thunk_thrower_cb (const ecma_value_t function_obj,
+                                          const ecma_value_t this_val,
+                                          const ecma_value_t args_p[],
+                                          const uint32_t args_count);
+ecma_value_t ecma_promise_then_finally_cb (const ecma_value_t function_obj,
+                                           const ecma_value_t this_val,
+                                           const ecma_value_t args_p[],
+                                           const uint32_t args_count);
+ecma_value_t ecma_promise_catch_finally_cb (const ecma_value_t function_obj,
+                                            const ecma_value_t this_val,
+                                            const ecma_value_t args_p[],
+                                            const uint32_t args_count);
+ecma_value_t ecma_promise_finally (ecma_value_t promise, ecma_value_t on_finally);
 void ecma_promise_async_then (ecma_value_t promise, ecma_value_t executable_object);
 ecma_value_t ecma_promise_async_await (ecma_extended_object_t *async_generator_object_p, ecma_value_t value);
 void ecma_promise_create_resolving_functions (ecma_object_t *object_p, ecma_promise_resolving_functions_t *funcs,

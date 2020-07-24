@@ -945,6 +945,242 @@ ecma_promise_then (ecma_value_t promise, /**< the promise which call 'then' */
 } /* ecma_promise_then */
 
 /**
+ * Definition of valueThunk function
+ *
+ * See also:
+ *         ES2020 25.6.5.3.1 step 8.
+ *
+ * @return ecma value
+ */
+ecma_value_t
+ecma_value_thunk_helper_cb (const ecma_value_t function_obj, /**< the function itself */
+                            const ecma_value_t this_val, /**< this_arg of the function */
+                            const ecma_value_t args_p[], /**< argument list */
+                            const uint32_t args_count) /**< argument number */
+{
+  JERRY_UNUSED_3 (this_val, args_p, args_count);
+
+  ecma_object_t *func_obj_p = ecma_get_object_from_value (function_obj);
+  ecma_promise_value_thunk_t *value_thunk_obj_p = (ecma_promise_value_thunk_t *) func_obj_p;
+
+  return ecma_copy_value (value_thunk_obj_p->value);
+} /* ecma_value_thunk_helper_cb */
+
+/**
+ * Definition of thrower function
+ *
+ * See also:
+ *         ES2020 25.6.5.3.2 step 8.
+ *
+ * @return ecma value
+ */
+ecma_value_t
+ecma_value_thunk_thrower_cb (const ecma_value_t function_obj, /**< the function itself */
+                             const ecma_value_t this_val, /**< this_arg of the function */
+                             const ecma_value_t args_p[], /**< argument list */
+                             const uint32_t args_count) /**< argument number */
+{
+  JERRY_UNUSED_3 (this_val, args_p, args_count);
+
+  ecma_object_t *func_obj_p = ecma_get_object_from_value (function_obj);
+  ecma_promise_value_thunk_t *value_thunk_obj_p = (ecma_promise_value_thunk_t *) func_obj_p;
+
+  jcontext_raise_exception (ecma_copy_value (value_thunk_obj_p->value));
+
+  return ECMA_VALUE_ERROR;
+} /* ecma_value_thunk_thrower_cb */
+
+/**
+ * Helper function for Then Finally and Catch Finally common parts
+ *
+ * See also:
+ *         ES2020 25.6.5.3.1
+ *         ES2020 25.6.5.3.2
+ *
+ * @return ecma value
+ */
+static ecma_value_t
+ecma_promise_than_catch_finally_helper (ecma_value_t function_obj,  /**< the function itself */
+                                        ecma_external_handler_t ext_func_obj, /**< external function object */
+                                        ecma_value_t arg) /**< callback function argument */
+{
+  /* 2. */
+  ecma_object_t *func_obj_p = ecma_get_object_from_value (function_obj);
+  ecma_promise_finally_function_t *finally_func_obj = (ecma_promise_finally_function_t *) func_obj_p;
+
+  /* 3. */
+  JERRY_ASSERT (ecma_op_is_callable (finally_func_obj->on_finally));
+
+  /* 4. */
+  ecma_value_t result = ecma_op_function_call (ecma_get_object_from_value (finally_func_obj->on_finally),
+                                               ECMA_VALUE_UNDEFINED,
+                                               NULL,
+                                               0);
+
+  if (ECMA_IS_VALUE_ERROR (result))
+  {
+    return result;
+  }
+
+  /* 6. */
+  JERRY_ASSERT (ecma_is_constructor (finally_func_obj->constructor));
+
+  /* 7. */
+  ecma_value_t promise = ecma_promise_reject_or_resolve (finally_func_obj->constructor, result, true);
+
+  ecma_free_value (result);
+
+  if (ECMA_IS_VALUE_ERROR (promise))
+  {
+    return promise;
+  }
+
+  /* 8. */
+  ecma_object_t *value_thunk_func_p;
+  value_thunk_func_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE),
+                                    sizeof (ecma_promise_value_thunk_t),
+                                    ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+
+  ecma_promise_value_thunk_t *value_thunk_func_obj = (ecma_promise_value_thunk_t *) value_thunk_func_p;
+  value_thunk_func_obj->header.u.external_handler_cb = ext_func_obj;
+
+  value_thunk_func_obj->value = ecma_copy_value_if_not_object (arg);
+
+  /* 9. */
+  ecma_value_t value_thunk = ecma_make_object_value (value_thunk_func_p);
+  ecma_value_t ret_value = ecma_op_invoke_by_magic_id (promise, LIT_MAGIC_STRING_THEN, &value_thunk, 1);
+
+  ecma_free_value (promise);
+  ecma_deref_object (value_thunk_func_p);
+
+  return ret_value;
+} /* ecma_promise_than_catch_finally_helper */
+
+/**
+ * Definition of Then Finally Function
+ *
+ * See also:
+ *         ES2020 25.6.5.3.1
+ *
+ * @return ecma value
+ */
+ecma_value_t
+ecma_promise_then_finally_cb (const ecma_value_t function_obj, /**< the function itself */
+                              const ecma_value_t this_val, /**< this_arg of the function */
+                              const ecma_value_t args_p[], /**< argument list */
+                              const uint32_t args_count) /**< argument number */
+{
+  JERRY_UNUSED_2 (this_val, args_count);
+  JERRY_ASSERT (args_count > 0);
+
+  return ecma_promise_than_catch_finally_helper (function_obj, ecma_value_thunk_helper_cb, args_p[0]);
+} /* ecma_promise_then_finally_cb */
+
+/**
+ * Definition of Catch Finally Function
+ *
+ * See also:
+ *         ES2020 25.6.5.3.2
+ *
+ * @return ecma value
+ */
+ecma_value_t
+ecma_promise_catch_finally_cb (const ecma_value_t function_obj, /**< the function itself */
+                               const ecma_value_t this_val, /**< this_arg of the function */
+                               const ecma_value_t args_p[], /**< argument list */
+                               const uint32_t args_count) /**< argument number */
+{
+  JERRY_UNUSED_2 (this_val, args_count);
+  JERRY_ASSERT (args_count > 0);
+
+  return ecma_promise_than_catch_finally_helper (function_obj, ecma_value_thunk_thrower_cb, args_p[0]);
+} /* ecma_promise_catch_finally_cb */
+
+/**
+ * The common function for ecma_builtin_promise_prototype_finally
+ *
+ * @return ecma value of a new promise object.
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_promise_finally (ecma_value_t promise, /**< the promise which call 'finally' */
+                      ecma_value_t on_finally) /**< on_finally function */
+{
+  /* 2. */
+  if (!ecma_is_value_object (promise))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not an object."));
+  }
+
+  ecma_object_t *obj = ecma_get_object_from_value (promise);
+
+  /* 3. */
+  ecma_value_t species = ecma_op_species_constructor (obj, ECMA_BUILTIN_ID_PROMISE);
+
+  if (ECMA_IS_VALUE_ERROR (species))
+  {
+    return species;
+  }
+
+  /* 4. */
+  JERRY_ASSERT (ecma_is_constructor (species));
+
+  /* 5. */
+  if (!ecma_op_is_callable (on_finally))
+  {
+    ecma_free_value (species);
+    ecma_value_t invoke_args[2] = {on_finally, on_finally};
+    return ecma_op_invoke_by_magic_id (promise, LIT_MAGIC_STRING_THEN, invoke_args, 2);
+  }
+
+  /* 6. a,b */
+  ecma_object_t *then_finally_obj_p;
+  then_finally_obj_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE),
+                                           sizeof (ecma_promise_finally_function_t),
+                                           ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+
+  ecma_promise_finally_function_t *then_finally_func_obj = (ecma_promise_finally_function_t *) then_finally_obj_p;
+  then_finally_func_obj->header.u.external_handler_cb = ecma_promise_then_finally_cb;
+
+  /* 6.c */
+  then_finally_func_obj->constructor = species;
+
+  /* 6.d*/
+  then_finally_func_obj->on_finally = on_finally;
+
+  /* 6. e,f */
+  ecma_object_t *catch_finally_obj_p;
+  catch_finally_obj_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE),
+                                            sizeof (ecma_promise_finally_function_t),
+                                            ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+
+  ecma_promise_finally_function_t *catch_finally_func_obj = (ecma_promise_finally_function_t *) catch_finally_obj_p;
+  catch_finally_func_obj->header.u.external_handler_cb = ecma_promise_catch_finally_cb;
+
+  /* 6.g */
+  catch_finally_func_obj->constructor = species;
+
+  /* 6.h */
+  catch_finally_func_obj->on_finally = on_finally;
+
+  ecma_free_value (species);
+
+  /* 7. */
+  ecma_value_t invoke_args[2] =
+  {
+    ecma_make_object_value (then_finally_obj_p),
+    ecma_make_object_value (catch_finally_obj_p)
+  };
+
+  ecma_value_t ret_value = ecma_op_invoke_by_magic_id (promise, LIT_MAGIC_STRING_THEN, invoke_args, 2);
+
+  ecma_deref_object (then_finally_obj_p);
+  ecma_deref_object (catch_finally_obj_p);
+
+  return ret_value;
+} /* ecma_promise_finally */
+
+/**
  * Resume the execution of an async function after the promise is resolved
  */
 void

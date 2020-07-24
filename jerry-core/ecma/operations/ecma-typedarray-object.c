@@ -1222,6 +1222,39 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
 } /* ecma_op_create_typedarray */
 
 /**
+ * Helper function for typedArray.prototype object's {'keys', 'values', 'entries', '@@iterator'}
+ * routines common parts.
+ *
+ * See also:
+ *          ECMA-262 v6, 22.2.3.15
+ *          ECMA-262 v6, 22.2.3.29
+ *          ECMA-262 v6, 22.2.3.6
+ *          ECMA-262 v6, 22.1.3.30
+ *
+ * Note:
+ *      Returned value must be freed with ecma_free_value.
+ *
+ * @return iterator result object, if success
+ *         error - otherwise
+ */
+ecma_value_t
+ecma_typedarray_iterators_helper (ecma_value_t this_arg, /**< this argument */
+                                  ecma_iterator_kind_t kind) /**< iterator kind */
+{
+  if (!ecma_is_typedarray (this_arg))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
+  }
+
+  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY_ITERATOR_PROTOTYPE);
+
+  return ecma_op_create_iterator_object (this_arg,
+                                         prototype_obj_p,
+                                         ECMA_PSEUDO_ARRAY_ITERATOR,
+                                         kind);
+} /* ecma_typedarray_iterators_helper */
+
+/**
  * Check if the object is typedarray
  *
  * @return true - if object is a TypedArray object

@@ -135,11 +135,13 @@ ecma_create_iter_result_object (ecma_value_t value, /**< value */
 ecma_value_t
 ecma_op_create_iterator_object (ecma_value_t iterated_value, /**< value from create iterator */
                                 ecma_object_t *prototype_obj_p, /**< prototype object */
-                                uint8_t iterator_type, /**< iterator type, see ecma_pseudo_array_type_t */
-                                uint8_t extra_info) /**< extra information */
+                                ecma_pseudo_array_type_t iterator_type, /**< iterator type */
+                                ecma_iterator_kind_t kind) /**< iterator kind*/
 {
   /* 1. */
-  JERRY_ASSERT (iterator_type >= ECMA_PSEUDO_ARRAY_ITERATOR && iterator_type <= ECMA_PSEUDO_ARRAY__MAX);
+  JERRY_ASSERT (iterator_type >= ECMA_PSEUDO_ARRAY_ITERATOR
+                && iterator_type <= ECMA_PSEUDO_ARRAY__MAX
+                && kind < ECMA_ITERATOR__COUNT);
 
   /* 2. */
   ecma_object_t *object_p = ecma_create_object (prototype_obj_p,
@@ -147,14 +149,14 @@ ecma_op_create_iterator_object (ecma_value_t iterated_value, /**< value from cre
                                                 ECMA_OBJECT_TYPE_PSEUDO_ARRAY);
 
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
-  ext_obj_p->u.pseudo_array.type = iterator_type;
+  ext_obj_p->u.pseudo_array.type = (uint8_t) iterator_type;
 
   /* 3. */
   ext_obj_p->u.pseudo_array.u2.iterated_value = iterated_value;
   /* 4. */
   ext_obj_p->u.pseudo_array.u1.iterator_index = 0;
   /* 5. */
-  ext_obj_p->u.pseudo_array.extra_info = extra_info;
+  ext_obj_p->u.pseudo_array.extra_info = (uint8_t) kind;
 
   /* 6. */
   return ecma_make_object_value (object_p);

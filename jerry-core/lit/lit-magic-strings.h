@@ -41,7 +41,9 @@ typedef enum
   LIT_INTERNAL_MAGIC_STRING_MAP_KEY, /**< Property key used when an object is a key in a map object */
   LIT_INTERNAL_MAGIC_API_INTERNAL, /**< Property key used to add non-visible JS properties from the public API  */
   LIT_INTERNAL_MAGIC_STRING_ARRAY_PROTOTYPE_VALUES, /**< %ArrayProto_values% intrinsic routine */
-  LIT_INTERNAL_MAGIC_STRING_SET_PROTOTYPE_KEYS, /**< Set.prototype values, keys and [@@iterator] routines */
+  LIT_INTERNAL_MAGIC_STRING_TYPEDARRAY_PROTOTYPE_VALUES, /**< %TypedArray%.prototype values and [@@iterator] routine */
+  LIT_INTERNAL_MAGIC_STRING_SET_PROTOTYPE_VALUES, /**< Set.prototype values, keys and [@@iterator] routines */
+  LIT_INTERNAL_MAGIC_STRING_MAP_PROTOTYPE_ENTRIES, /**< Map.prototype entries and [@@iterator] routines */
   LIT_INTERNAL_MAGIC_THIS_BINDING_VALUE, /**< FunctionEnvironmentRecord [[ThisBindingValue]] internal slot */
   LIT_INTERNAL_MAGIC_PROMISE_CAPABILITY, /**< PromiseCapability record */
   /* List of well known symbols */

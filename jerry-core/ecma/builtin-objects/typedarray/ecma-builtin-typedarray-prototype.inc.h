@@ -52,7 +52,6 @@ ACCESSOR_READ_ONLY (LIT_GLOBAL_SYMBOL_TO_STRING_TAG,
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
-ROUTINE (LIT_MAGIC_STRING_TO_STRING_UL, ecma_builtin_typedarray_prototype_object_to_string, 0, 0)
 ROUTINE (LIT_MAGIC_STRING_JOIN,  ecma_builtin_typedarray_prototype_join, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_EVERY, ecma_builtin_typedarray_prototype_every, 2, 1)
 ROUTINE (LIT_MAGIC_STRING_SOME, ecma_builtin_typedarray_prototype_some, 2, 1)
@@ -74,9 +73,13 @@ ROUTINE (LIT_MAGIC_STRING_COPY_WITHIN, ecma_builtin_typedarray_prototype_copy_wi
 ROUTINE (LIT_MAGIC_STRING_SLICE, ecma_builtin_typedarray_prototype_slice, NON_FIXED, 2)
 ROUTINE (LIT_MAGIC_STRING_TO_LOCALE_STRING_UL, ecma_builtin_typedarray_prototype_to_locale_string, 0, 0)
 ROUTINE (LIT_MAGIC_STRING_KEYS, ecma_builtin_typedarray_prototype_keys, 0, 0)
-ROUTINE (LIT_MAGIC_STRING_VALUES, ecma_builtin_typedarray_prototype_values, 0, 0)
 ROUTINE (LIT_MAGIC_STRING_ENTRIES, ecma_builtin_typedarray_prototype_entries, 0, 0)
-ROUTINE (LIT_GLOBAL_SYMBOL_ITERATOR, ecma_builtin_typedarray_prototype_values, 0, 0)
+INTRINSIC_PROPERTY (LIT_MAGIC_STRING_TO_STRING_UL, LIT_MAGIC_STRING_TO_STRING_UL,
+                    ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
+INTRINSIC_PROPERTY (LIT_MAGIC_STRING_VALUES, LIT_INTERNAL_MAGIC_STRING_TYPEDARRAY_PROTOTYPE_VALUES,
+                    ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
+INTRINSIC_PROPERTY (LIT_GLOBAL_SYMBOL_ITERATOR, LIT_INTERNAL_MAGIC_STRING_TYPEDARRAY_PROTOTYPE_VALUES,
+                    ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
 
 #endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
 

@@ -46,7 +46,9 @@ enum
 {
   ECMA_ARRAY_PROTOTYPE_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
   /* Note: these 2 routine ids must be in this order */
+#if !ENABLED (JERRY_ESNEXT)
   ECMA_ARRAY_PROTOTYPE_TO_STRING,
+#endif /* !ENABLED (JERRY_ESNEXT) */
   ECMA_ARRAY_PROTOTYPE_CONCAT,
   ECMA_ARRAY_PROTOTYPE_TO_LOCALE_STRING,
   ECMA_ARRAY_PROTOTYPE_JOIN,
@@ -116,45 +118,6 @@ ecma_builtin_array_prototype_helper_set_length (ecma_object_t *object, /**< obje
                 || ECMA_IS_VALUE_ERROR (ret_value));
   return ret_value;
 } /* ecma_builtin_array_prototype_helper_set_length */
-
-/**
- * The Array.prototype object's 'toString' routine
- *
- * See also:
- *          ECMA-262 v5, 15.4.4.2
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_array_prototype_object_to_string (ecma_value_t this_arg, /**< this argument */
-                                               ecma_object_t *obj_p) /**< array object */
-
-{
-  /* 2. */
-  ecma_value_t join_value = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_JOIN);
-
-  if (ECMA_IS_VALUE_ERROR (join_value))
-  {
-    return join_value;
-  }
-
-  if (!ecma_op_is_callable (join_value))
-  {
-    /* 3. */
-    ecma_free_value (join_value);
-    return ecma_builtin_helper_object_to_string (this_arg);
-  }
-
-  /* 4. */
-  ecma_object_t *join_func_obj_p = ecma_get_object_from_value (join_value);
-
-  ecma_value_t ret_value = ecma_op_function_call (join_func_obj_p, this_arg, NULL, 0);
-
-  ecma_deref_object (join_func_obj_p);
-
-  return ret_value;
-} /* ecma_builtin_array_prototype_object_to_string */
 
 /**
  * The Array.prototype object's 'toLocaleString' routine
@@ -2693,11 +2656,13 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
   {
     ecma_value_t ret_value;
 
+#if !ENABLED (JERRY_ESNEXT)
     if (builtin_routine_id == ECMA_ARRAY_PROTOTYPE_TO_STRING)
     {
-      ret_value = ecma_builtin_array_prototype_object_to_string (this_arg, obj_p);
+      ret_value = ecma_array_object_to_string (obj_this);
     }
     else
+#endif /* !ENABLED (JERRY_ESNEXT) */
     {
       JERRY_ASSERT (builtin_routine_id == ECMA_ARRAY_PROTOTYPE_CONCAT);
       ret_value = ecma_builtin_array_prototype_object_concat (arguments_list_p,
@@ -2717,7 +2682,7 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
 
     if (builtin_routine_id == ECMA_ARRAY_PROTOTYPE_ENTRIES)
     {
-      ret_value = ecma_op_create_array_iterator (obj_p, ECMA_ITERATOR_KEYS_VALUES);
+      ret_value = ecma_op_create_array_iterator (obj_p, ECMA_ITERATOR_ENTRIES);
     }
     else
     {

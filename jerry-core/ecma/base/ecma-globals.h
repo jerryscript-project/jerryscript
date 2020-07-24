@@ -705,10 +705,11 @@ typedef enum
  */
 typedef enum
 {
-  ECMA_ITERATOR_KEYS, /**< List only key indices */
-  ECMA_ITERATOR_VALUES, /**< List only key values */
-  ECMA_ITERATOR_KEYS_VALUES, /**< List key indices and values */
-} ecma_array_iterator_type_t;
+  ECMA_ITERATOR_KEYS,     /**< keys iterator */
+  ECMA_ITERATOR_VALUES,   /**< values iterator */
+  ECMA_ITERATOR_ENTRIES,  /**< entries iterator */
+  ECMA_ITERATOR__COUNT,   /**< number of iterator kinds */
+} ecma_iterator_kind_t;
 
 #endif /* ENABLED (JERRY_ESNEXT) */
 

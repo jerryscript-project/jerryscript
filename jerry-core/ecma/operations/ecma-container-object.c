@@ -974,17 +974,16 @@ ecma_op_container_remove_weak_entry (ecma_object_t *object_p, /**< internal cont
  * @return Map/Set iterator object, if success
  *         error - otherwise
  */
-ecma_value_t
+inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_op_container_create_iterator (ecma_value_t this_arg, /**< this argument */
-                                   uint8_t type, /**< any combination of
-                                                  *   ecma_iterator_type_t bits */
                                    ecma_builtin_id_t proto_id, /**< prototype builtin id */
-                                   ecma_pseudo_array_type_t iterator_type) /**< type of the iterator */
+                                   ecma_pseudo_array_type_t iterator_type, /**< iterator type */
+                                   ecma_iterator_kind_t kind) /**< iterator kind */
 {
   return ecma_op_create_iterator_object (this_arg,
                                          ecma_builtin_get (proto_id),
-                                         (uint8_t) iterator_type,
-                                         type);
+                                         iterator_type,
+                                         kind);
 } /* ecma_op_container_create_iterator */
 
 /**
@@ -1129,7 +1128,7 @@ ecma_op_container_iterator_next (ecma_value_t this_val, /**< this argument */
     }
     else
     {
-      JERRY_ASSERT (iterator_kind == ECMA_ITERATOR_KEYS_VALUES);
+      JERRY_ASSERT (iterator_kind == ECMA_ITERATOR_ENTRIES);
 
       ecma_value_t entry_array_value;
       entry_array_value = ecma_create_array_from_iter_element (value_arg, key_arg);
@@ -1216,12 +1215,12 @@ ecma_builtin_container_dispatch_routine (uint16_t builtin_routine_id, /**< built
         iterator_type = ECMA_PSEUDO_SET_ITERATOR;
       }
 
-      uint8_t mode = (uint8_t) (builtin_routine_id - ECMA_CONTAINER_ROUTINE_KEYS);
+      ecma_iterator_kind_t kind = (ecma_iterator_kind_t) (builtin_routine_id - ECMA_CONTAINER_ROUTINE_KEYS);
 
       return ecma_op_container_create_iterator (this_arg,
-                                                mode,
                                                 builtin_iterator_prototype,
-                                                iterator_type);
+                                                iterator_type,
+                                                kind);
     }
     default:
     {

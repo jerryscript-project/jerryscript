@@ -93,8 +93,10 @@ enum
 
   ECMA_DATE_PROTOTYPE_TO_STRING, /* ECMA-262 v5, 15.9.5.2 */
   ECMA_DATE_PROTOTYPE_TO_DATE_STRING, /* ECMA-262 v5, 15.9.5.3 */
-  ECMA_DATE_PROTOTYPE_TO_TIME_STRING, /* ECMA-262 v5, 15.9.5.4 */
+#if !ENABLED (JERRY_ESNEXT)
   ECMA_DATE_PROTOTYPE_TO_UTC_STRING, /* ECMA-262 v5, 15.9.5.42 */
+#endif /* ENABLED (JERRY_ESNEXT) */
+  ECMA_DATE_PROTOTYPE_TO_TIME_STRING, /* ECMA-262 v5, 15.9.5.4 */
   ECMA_DATE_PROTOTYPE_TO_ISO_STRING, /* ECMA-262 v5, 15.9.5.43 */
 
   ECMA_DATE_PROTOTYPE_GET_TIME, /* ECMA-262 v5, 15.9.5.9 */
@@ -681,15 +683,17 @@ ecma_builtin_date_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< 
     {
       return ecma_date_value_to_date_string (*prim_value_p);
     }
-    case ECMA_DATE_PROTOTYPE_TO_TIME_STRING:
+#if !ENABLED (JERRY_ESNEXT)
+    case ECMA_DATE_PROTOTYPE_TO_UTC_STRING:
     {
-      return ecma_date_value_to_time_string (*prim_value_p);
+      return ecma_date_value_to_utc_string (*prim_value_p);
     }
+#endif /* ENABLED (JERRY_ESNEXT) */
     default:
     {
-      JERRY_ASSERT (builtin_routine_id == ECMA_DATE_PROTOTYPE_TO_UTC_STRING);
+      JERRY_ASSERT (builtin_routine_id == ECMA_DATE_PROTOTYPE_TO_TIME_STRING);
 
-      return ecma_date_value_to_utc_string (*prim_value_p);
+      return ecma_date_value_to_time_string (*prim_value_p);
     }
   }
 } /* ecma_builtin_date_prototype_dispatch_routine */

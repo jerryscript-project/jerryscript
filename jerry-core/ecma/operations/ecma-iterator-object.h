@@ -44,8 +44,10 @@ typedef enum
 #define ECMA_ITERATOR_INDEX_LIMIT UINT16_MAX
 
 ecma_value_t
-ecma_op_create_iterator_object (ecma_value_t iterated_value, ecma_object_t *prototype_obj_p,
-                                uint8_t iterator_type, uint8_t extra_info);
+ecma_op_create_iterator_object (ecma_value_t iterated_value,
+                                ecma_object_t *prototype_obj_p,
+                                ecma_pseudo_array_type_t iterator_type,
+                                ecma_iterator_kind_t kind);
 
 ecma_value_t
 ecma_create_iter_result_object (ecma_value_t value, ecma_value_t done);

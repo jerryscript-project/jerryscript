@@ -297,7 +297,7 @@ ecma_fulfill_promise (ecma_value_t promise, /**< promise */
  *
  * @return ecma value of undefined.
  */
-static ecma_value_t
+ecma_value_t
 ecma_promise_reject_handler (const ecma_value_t function, /**< the function itself */
                              const ecma_value_t this, /**< this_arg of the function */
                              const ecma_value_t argv[], /**< argument list */
@@ -334,7 +334,7 @@ ecma_promise_reject_handler (const ecma_value_t function, /**< the function itse
  *
  * @return ecma value of undefined.
  */
-static ecma_value_t
+ecma_value_t
 ecma_promise_resolve_handler (const ecma_value_t function, /**< the function itself */
                               const ecma_value_t this, /**< this_arg of the function */
                               const ecma_value_t argv[], /**< argument list */

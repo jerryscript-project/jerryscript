@@ -125,6 +125,17 @@ ecma_value_t ecma_promise_catch_finally_cb (const ecma_value_t function_obj,
                                             const ecma_value_t this_val,
                                             const ecma_value_t args_p[],
                                             const uint32_t args_count);
+ecma_value_t
+ecma_promise_reject_handler (const ecma_value_t function,
+                             const ecma_value_t this,
+                             const ecma_value_t argv[],
+                             const uint32_t argc);
+ecma_value_t
+ecma_promise_resolve_handler (const ecma_value_t function,
+                              const ecma_value_t this,
+                              const ecma_value_t argv[],
+                              const uint32_t argc);
+
 ecma_value_t ecma_promise_finally (ecma_value_t promise, ecma_value_t on_finally);
 void ecma_promise_async_then (ecma_value_t promise, ecma_value_t executable_object);
 ecma_value_t ecma_promise_async_await (ecma_extended_object_t *async_generator_object_p, ecma_value_t value);

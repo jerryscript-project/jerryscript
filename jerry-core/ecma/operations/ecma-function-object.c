@@ -1621,16 +1621,21 @@ ecma_op_external_function_try_to_lazy_instantiate_property (ecma_object_t *objec
   if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_LENGTH))
   {
     ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
+    ecma_external_handler_t handler = ext_obj_p->u.external_handler_cb;
 
-    if (ext_obj_p->u.external_handler_cb == ecma_promise_then_finally_cb
-        || ext_obj_p->u.external_handler_cb == ecma_promise_catch_finally_cb)
+    if (handler == ecma_promise_then_finally_cb
+        || handler == ecma_promise_catch_finally_cb
+        || handler == ecma_promise_resolve_handler
+        || handler == ecma_promise_reject_handler
+        || handler == ecma_promise_all_handler_cb
+        || handler == ecma_op_get_capabilities_executor_cb)
     {
       ecma_property_t *value_prop_p;
       ecma_property_value_t *value_p = ecma_create_named_data_property (object_p,
                                                                         property_name_p,
                                                                         ECMA_PROPERTY_FLAG_CONFIGURABLE,
                                                                         &value_prop_p);
-      value_p->value = ecma_make_uint32_value (1);
+      value_p->value = ecma_make_uint32_value (handler == ecma_op_get_capabilities_executor_cb ? 2 : 1);
       return value_prop_p;
     }
   }

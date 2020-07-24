@@ -137,3 +137,45 @@ var desc = Object.getOwnPropertyDescriptor(templateObject, '0');
 assert(desc.writable === false);
 assert(desc.enumerable === true);
 assert(desc.configurable === false);
+
+(function () {
+  function f (strings, ...args) {
+    return function () {
+      return Array(...args);
+    };
+  }
+
+  var a = new f`${1}${2}${3}`;
+  assert(a.length === 3);
+  assert(a[0] === 1);
+  assert(a[1] === 2);
+  assert(a[2] === 3);
+
+  function g (strings, ...args) {
+    return Array;
+  }
+
+  a = new g`${1}${2}${3}`(4, 5, 6);
+  assert(a.length === 3);
+  assert(a[0] === 4);
+  assert(a[1] === 5);
+  assert(a[2] === 6);
+
+  try {
+    new (g`${1}${2}${3}`(4, 5, 6));
+    assert(false);
+  } catch (e) {
+    assert (e instanceof TypeError);
+  }
+
+  function h (strings, ...args) {
+    return 5;
+  }
+
+  try {
+    new h`foo`;
+    assert(false);
+  } catch (e) {
+    assert (e instanceof TypeError);
+  }
+})();

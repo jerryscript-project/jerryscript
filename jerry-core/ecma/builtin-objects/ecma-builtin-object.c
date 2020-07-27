@@ -1116,8 +1116,9 @@ ecma_builtin_object_object_assign (ecma_object_t *target_p, /**< target object *
         }
 
         ecma_free_value (prop_value);
-        ecma_free_property_descriptor (&prop_desc);
       }
+
+      ecma_free_property_descriptor (&prop_desc);
     }
 
     ecma_deref_object (from_obj_p);

@@ -64,7 +64,8 @@ ecma_typedarray_iterators_helper (ecma_value_t this_arg, ecma_iterator_kind_t ki
 bool ecma_object_is_typedarray (ecma_object_t *obj_p);
 bool ecma_is_typedarray (ecma_value_t target);
 void ecma_op_typedarray_list_lazy_property_names (ecma_object_t *obj_p,
-                                                  ecma_collection_t *main_collection_p);
+                                                  ecma_collection_t *prop_names_p,
+                                                  ecma_property_counter_t *prop_counter_p);
 bool ecma_op_typedarray_define_index_prop (ecma_object_t *obj_p,
                                            uint32_t index,
                                            const ecma_property_descriptor_t *property_desc_p);

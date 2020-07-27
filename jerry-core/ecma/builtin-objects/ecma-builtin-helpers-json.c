@@ -54,33 +54,6 @@ ecma_json_has_object_in_stack (ecma_json_occurence_stack_item_t *stack_p, /**< s
   return false;
 } /* ecma_json_has_object_in_stack */
 
-/**
- * Check the string value existance in the collection.
- *
- * Used by:
- *         - ecma_builtin_json_stringify step 4.b.ii.5
- *
- * @return true, if the string is already in the collection.
- */
-bool
-ecma_has_string_value_in_collection (ecma_collection_t *collection_p, /**< collection */
-                                     ecma_string_t *string_p) /**< string */
-{
-  ecma_value_t *buffer_p = collection_p->buffer_p;
-
-  for (uint32_t i = 0; i < collection_p->item_count; i++)
-  {
-    ecma_string_t *current_p = ecma_get_string_from_value (buffer_p[i]);
-
-    if (ecma_compare_ecma_strings (current_p, string_p))
-    {
-      return true;
-    }
-  }
-
-  return false;
-} /* ecma_has_string_value_in_collection */
-
 #endif /* ENABLED (JERRY_BUILTIN_JSON) */
 
 /**

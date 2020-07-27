@@ -1300,7 +1300,8 @@ ecma_is_typedarray (ecma_value_t value) /**< the target need to be checked */
  */
 void
 ecma_op_typedarray_list_lazy_property_names (ecma_object_t *obj_p, /**< a TypedArray object */
-                                             ecma_collection_t *main_collection_p) /**< 'main' collection */
+                                             ecma_collection_t *prop_names_p, /**< prop name collection */
+                                             ecma_property_counter_t *prop_counter_p)  /**< prop counter */
 {
   JERRY_ASSERT (ecma_object_is_typedarray (obj_p));
 
@@ -1309,9 +1310,10 @@ ecma_op_typedarray_list_lazy_property_names (ecma_object_t *obj_p, /**< a TypedA
   for (uint32_t i = 0; i < array_length; i++)
   {
     ecma_string_t *name_p = ecma_new_ecma_string_from_uint32 (i);
-
-    ecma_collection_push_back (main_collection_p, ecma_make_string_value (name_p));
+    ecma_collection_push_back (prop_names_p, ecma_make_string_value (name_p));
   }
+
+  prop_counter_p->array_index_named_props += array_length;
 } /* ecma_op_typedarray_list_lazy_property_names */
 
 /**

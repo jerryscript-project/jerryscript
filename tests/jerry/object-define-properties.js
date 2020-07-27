@@ -174,7 +174,6 @@ assert (obj.a === "b");
 assert (obj.bar === 42);
 assert (obj.a === undefined);
 
-// This code should throw TypeError
 var obj = {};
 var props = {
   prop1: {
@@ -196,9 +195,15 @@ var props = {
   }
 };
 
-try {
-  Object.defineProperties(obj, props);
-  assert (false);
-} catch (e) {
-  assert (e instanceof TypeError);
-}
+Object.defineProperties(obj, props);
+var bar_desc = Object.getOwnPropertyDescriptor(obj, 'bar');
+assert(bar_desc.value === 2);
+assert(bar_desc.writable === true);
+assert(obj.prop2 === undefined);
+
+var prop1_desc = Object.getOwnPropertyDescriptor(obj, 'prop1');
+var prop3_desc = Object.getOwnPropertyDescriptor(obj, 'prop3');
+assert(prop1_desc.value === 1);
+assert(prop1_desc.writable === true);
+assert(prop3_desc.value === 4);
+assert(prop3_desc.writable === true);

@@ -2922,8 +2922,21 @@ jerry_get_object_keys (const jerry_value_t obj_val) /**< object value */
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
   }
 
-  return ecma_builtin_helper_object_get_properties (ecma_get_object_from_value (obj_val),
-                                                    ECMA_LIST_ENUMERABLE);
+  ecma_collection_t *prop_names = ecma_op_object_get_enumerable_property_names (ecma_get_object_from_value (obj_val),
+                                                                                ECMA_ENUMERABLE_PROPERTY_KEYS);
+
+#if ENABLED (JERRY_BUILTIN_PROXY)
+  if (JERRY_UNLIKELY (prop_names == NULL))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+
+  ecma_value_t result_array = ecma_op_create_array_object (prop_names->buffer_p, prop_names->item_count, false);
+
+  ecma_collection_free (prop_names);
+
+  return result_array;
 } /* jerry_get_object_keys */
 
 /**
@@ -3219,7 +3232,7 @@ jerry_foreach_object_property (const jerry_value_t obj_val, /**< object value */
   }
 
   ecma_object_t *object_p = ecma_get_object_from_value (obj_val);
-  ecma_collection_t *names_p = ecma_op_object_get_property_names (object_p, ECMA_LIST_ENUMERABLE_PROTOTYPE);
+  ecma_collection_t *names_p = ecma_op_object_enumerate (object_p);
 
 #if ENABLED (JERRY_BUILTIN_PROXY)
   if (names_p == NULL)

@@ -124,7 +124,6 @@ assert (object[symbol] === "a symbol");
 assert (object.bar === 42);
 assert (object[symbol] === undefined);
 
-// This code should throw TypeError
 var object = {};
 var props = {
   [symbol]: {
@@ -142,9 +141,9 @@ var props = {
   },
 };
 
-try {
-  Object.defineProperties(object, props);
-  assert (false);
-} catch (e) {
-  assert (e instanceof TypeError);
-}
+Object.defineProperties(object, props);
+var bar_desc = Object.getOwnPropertyDescriptor(object, 'bar');
+assert(bar_desc.value === 2);
+assert(bar_desc.writable === true);
+assert(object.prop1 === undefined);
+assert(object[symbol] === undefined);

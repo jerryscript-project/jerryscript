@@ -90,7 +90,7 @@ uint32_t
 ecma_delete_fast_array_properties (ecma_object_t *object_p, uint32_t new_length);
 
 ecma_collection_t *
-ecma_fast_array_get_property_names (ecma_object_t *object_p, uint32_t opts);
+ecma_fast_array_object_own_property_keys (ecma_object_t *object_p);
 
 void
 ecma_fast_array_convert_to_normal (ecma_object_t *object_p);
@@ -120,12 +120,6 @@ uint32_t ecma_array_get_length (ecma_object_t *array_p);
 
 ecma_value_t
 ecma_array_object_to_string (ecma_value_t this_arg);
-
-void
-ecma_op_array_list_lazy_property_names (ecma_object_t *obj_p,
-                                        uint32_t opts,
-                                        ecma_collection_t *main_collection_p,
-                                        ecma_collection_t *non_enum_collection_p);
 
 /**
  * @}

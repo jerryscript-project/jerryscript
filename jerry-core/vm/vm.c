@@ -1773,7 +1773,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
 
           ecma_object_t *object_p = ecma_get_object_from_value (result);
-          ecma_collection_t *names_p = ecma_op_object_get_property_names (object_p, ECMA_LIST_ENUMERABLE);
+          ecma_collection_t *names_p = ecma_op_object_get_enumerable_property_names (object_p,
+                                                                                     ECMA_ENUMERABLE_PROPERTY_KEYS);
 
 #if ENABLED (JERRY_BUILTIN_PROXY)
           if (names_p == NULL)
@@ -3712,21 +3713,6 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           JERRY_ASSERT (VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth == stack_top_p);
 
-#if ENABLED (JERRY_BUILTIN_PROXY)
-          if (ecma_is_value_object (value)
-              && ECMA_OBJECT_IS_PROXY (ecma_get_object_from_value (value)))
-          {
-            /* Note: - For proxy objects we should create a new object which implements the iterable protocol,
-                       and iterates through the enumerated collection below.
-                     - This inkoves that the VM context type should be adjusted and checked in all FOR-IN related
-                       instruction.
-                     - For other objects we should keep the current implementation due to performance reasons.*/
-            result = ecma_raise_type_error (ECMA_ERR_MSG ("UNIMPLEMENTED: Proxy support in for-in."));
-            ecma_free_value (value);
-            goto error;
-          }
-#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
-
           ecma_value_t expr_obj_value = ECMA_VALUE_UNDEFINED;
           ecma_collection_t *prop_names_p = opfunc_for_in (value, &expr_obj_value);
           ecma_free_value (value);
@@ -3784,9 +3770,6 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           ecma_value_t *buffer_p = collection_p->buffer_p;
           ecma_object_t *object_p = ecma_get_object_from_value (stack_top_p[-4]);
           uint32_t index = stack_top_p[-3];
-#if ENABLED (JERRY_BUILTIN_PROXY)
-          JERRY_ASSERT (!ECMA_OBJECT_IS_PROXY (object_p));
-#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
           while (index < collection_p->item_count)
           {

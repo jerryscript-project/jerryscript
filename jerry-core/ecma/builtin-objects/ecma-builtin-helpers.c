@@ -227,42 +227,6 @@ ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, /**< th
 } /* ecma_builtin_helper_get_to_locale_string_at_index */
 
 /**
- * The Object's 'getOwnPropertyNames' routine.
- *
- * See also:
- *          ECMA-262 v5, 15.2.3.4 steps 2-5
- *
- * @return ecma value - Array of property names.
- *         Returned value must be freed with ecma_free_value.
- */
-ecma_value_t
-ecma_builtin_helper_object_get_properties (ecma_object_t *obj_p, /**< object */
-                                           uint32_t opts) /**< any combination of ecma_list_properties_options_t */
-{
-  JERRY_ASSERT (obj_p != NULL);
-
-  ecma_collection_t *props_p = ecma_op_object_get_property_names (obj_p, opts);
-
-#if ENABLED (JERRY_BUILTIN_PROXY)
-  if (props_p == NULL)
-  {
-    return ECMA_VALUE_ERROR;
-  }
-#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
-
-  if (props_p->item_count == 0)
-  {
-    ecma_collection_destroy (props_p);
-    return ecma_op_create_array_object (NULL, 0, false);
-  }
-
-  ecma_value_t new_array = ecma_op_create_array_object (props_p->buffer_p, props_p->item_count, false);
-  ecma_collection_free (props_p);
-
-  return new_array;
-} /* ecma_builtin_helper_object_get_properties */
-
-/**
  * Helper function to normalizing an array index
  *
  * See also:

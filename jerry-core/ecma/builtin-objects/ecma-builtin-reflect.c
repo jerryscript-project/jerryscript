@@ -165,8 +165,21 @@ ecma_builtin_reflect_dispatch_routine (uint16_t builtin_routine_id, /**< built-i
 
     ecma_object_t *target_p = ecma_get_object_from_value (arguments_list[0]);
 
-    /* 2. 3. */
-    return ecma_builtin_helper_object_get_properties (target_p, ECMA_LIST_SYMBOLS);
+    /* 2. */
+    ecma_collection_t *prop_names = ecma_op_object_own_property_keys (target_p);
+
+#if ENABLED (JERRY_BUILTIN_PROXY)
+    if (prop_names == NULL)
+    {
+      return ECMA_VALUE_ERROR;
+    }
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+
+    /* 3. */
+    ecma_value_t new_array = ecma_op_create_array_object (prop_names->buffer_p, prop_names->item_count, false);
+    ecma_collection_free (prop_names);
+
+    return new_array;
   }
 
   if (builtin_routine_id == ECMA_REFLECT_OBJECT_CONSTRUCT)

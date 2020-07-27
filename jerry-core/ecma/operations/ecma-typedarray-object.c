@@ -1142,8 +1142,9 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
         return ECMA_VALUE_ERROR;
       }
 
-      if (ecma_number_is_negative (offset))
+      if (ecma_number_is_negative (offset) || fmod (offset, (1 << element_size_shift)) != 0)
       {
+        /* ES2015 22.2.1.5: 9 - 10. */
         ret = ecma_raise_range_error (ECMA_ERR_MSG ("Invalid offset."));
       }
       else if (ecma_arraybuffer_is_detached (arraybuffer_p))

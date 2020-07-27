@@ -302,7 +302,7 @@ ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p , /**
     ecma_deref_object (prototype_obj_p);
   }
 
-  ecma_integer_value_t len = 0;
+  ecma_value_t target_length = ecma_make_integer_value (0);
   ecma_string_t *len_string = ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH);
   ecma_property_descriptor_t prop_desc;
   ecma_value_t status = ecma_op_object_get_own_property_descriptor (this_arg_obj_p,
@@ -333,12 +333,12 @@ ecma_builtin_function_prototype_object_bind (ecma_object_t *this_arg_obj_p , /**
     {
       ecma_number_t len_num;
       ecma_op_to_integer (len_value, &len_num);
-      len = (ecma_integer_value_t) len_num;
+      target_length = ecma_make_number_value (len_num);
     }
     ecma_free_value (len_value);
   }
 
-  bound_func_p->target_length = len;
+  bound_func_p->target_length = target_length;
 
   /* 12. */
   ecma_value_t name_value = ecma_op_object_get_by_magic_id (this_arg_obj_p, LIT_MAGIC_STRING_NAME);

@@ -347,7 +347,8 @@ ecma_builtin_object_set_integrity_level (ecma_object_t *obj_p, /**< object */
 #if ENABLED (JERRY_BUILTIN_PROXY)
       if (ECMA_IS_VALUE_ERROR (status))
       {
-        break;
+        ecma_collection_free (props_p);
+        return ECMA_VALUE_ERROR;
       }
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
@@ -390,7 +391,8 @@ ecma_builtin_object_set_integrity_level (ecma_object_t *obj_p, /**< object */
 #if ENABLED (JERRY_BUILTIN_PROXY)
       if (ECMA_IS_VALUE_ERROR (status))
       {
-        break;
+        ecma_collection_free (props_p);
+        return ECMA_VALUE_ERROR;
       }
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 

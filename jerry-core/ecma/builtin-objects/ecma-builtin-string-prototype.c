@@ -1002,7 +1002,8 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_string_t *input_str
     lit_code_point_t cp = lit_cesu8_read_next (&input_curr_p);
 
 #if ENABLED (JERRY_ESNEXT)
-    if (lit_is_code_point_utf16_high_surrogate (cp))
+    if (lit_is_code_point_utf16_high_surrogate (cp)
+        && input_curr_p < input_str_end_p)
     {
       const ecma_char_t next_ch = lit_cesu8_peek_next (input_curr_p);
       if (lit_is_code_point_utf16_low_surrogate (next_ch))

@@ -1336,10 +1336,6 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     return ecma_raise_type_error (message_p);
   }
 
-  /* 6. */
-  ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target);
-  JERRY_CONTEXT (current_new_target) = new_target_p;
-
   /* 5. */
   if (!ECMA_GET_THIRD_BIT_FROM_POINTER_TAG (ext_func_obj_p->u.function.scope_cp))
   {
@@ -1362,6 +1358,10 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
   {
     this_arg = ECMA_VALUE_UNDEFINED;
   }
+
+  /* 6. */
+  ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target);
+  JERRY_CONTEXT (current_new_target) = new_target_p;
 #endif /* ENABLED (JERRY_ESNEXT) */
 
   ecma_value_t ret_value = ecma_op_function_call_simple (func_obj_p, this_arg, arguments_list_p, arguments_list_len);

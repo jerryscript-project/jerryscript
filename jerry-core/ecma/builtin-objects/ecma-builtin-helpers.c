@@ -301,7 +301,11 @@ ecma_builtin_helper_array_concat_value (ecma_object_t *array_obj_p, /**< array *
   }
 
   bool spread_object = is_spreadable == ECMA_VALUE_TRUE;
+  /* ES11: 22.1.3.1.5.c.iv.3.b */
+  const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_IS_THROW;
 #else /* !ENABLED (JERRY_ESNEXT) */
+  /* ES5.1: 15.4.4.4.5.b.iii.3.b */
+  const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE;
   bool spread_object = ecma_is_value_true (ecma_is_value_array (value));
 #endif /* ENABLED (JERRY_ESNEXT) */
 
@@ -342,10 +346,16 @@ ecma_builtin_helper_array_concat_value (ecma_object_t *array_obj_p, /**< array *
       ecma_value_t put_comp = ecma_builtin_helper_def_prop_by_index (array_obj_p,
                                                                      *length_p + array_index,
                                                                      get_value,
-                                                                     ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
-
-      JERRY_ASSERT (ecma_is_value_true (put_comp));
+                                                                     prop_flags);
       ecma_free_value (get_value);
+#if ENABLED (JERRY_ESNEXT)
+      if (ECMA_IS_VALUE_ERROR (put_comp))
+      {
+        return put_comp;
+      }
+#else /* !ENABLED (JERRY_ESNEXT) */
+      JERRY_ASSERT (ecma_is_value_true (put_comp));
+#endif /* ENABLED (JERRY_ESNEXT) */
     }
 
     *length_p += arg_len;
@@ -357,8 +367,16 @@ ecma_builtin_helper_array_concat_value (ecma_object_t *array_obj_p, /**< array *
   ecma_value_t put_comp = ecma_builtin_helper_def_prop_by_index (array_obj_p,
                                                                  (*length_p)++,
                                                                  value,
-                                                                 ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+                                                                 prop_flags);
+
+#if ENABLED (JERRY_ESNEXT)
+  if (ECMA_IS_VALUE_ERROR (put_comp))
+  {
+    return put_comp;
+  }
+#else /* !ENABLED (JERRY_ESNEXT) */
   JERRY_ASSERT (ecma_is_value_true (put_comp));
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   return ECMA_VALUE_EMPTY;
 } /* ecma_builtin_helper_array_concat_value */

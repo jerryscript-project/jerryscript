@@ -3080,7 +3080,10 @@ parser_pattern_get_target (parser_context_t *context_p, /**< context */
     }
     else
     {
-      JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_INITIALIZER);
+      if (context_p->next_scanner_info_p->type != SCANNER_TYPE_INITIALIZER)
+      {
+        parser_raise_error (context_p, PARSER_ERR_INVALID_DESTRUCTURING_PATTERN);
+      }
       scanner_get_location (&start_location, context_p);
 
       scanner_set_location (context_p, &((scanner_location_info_t *) context_p->next_scanner_info_p)->location);

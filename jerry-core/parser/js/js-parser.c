@@ -1854,7 +1854,10 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 
       if (context_p->next_scanner_info_p->source_p == context_p->source_p)
       {
-        JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_INITIALIZER);
+        if (context_p->next_scanner_info_p->type != SCANNER_TYPE_INITIALIZER)
+        {
+          parser_raise_error (context_p, PARSER_ERR_INVALID_DESTRUCTURING_PATTERN);
+        }
 
         if (context_p->status_flags & PARSER_FUNCTION_HAS_REST_PARAM)
         {

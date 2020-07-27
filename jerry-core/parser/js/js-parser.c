@@ -2924,18 +2924,27 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
       return NULL;
     }
 
+#if ENABLED (JERRY_ERROR_MESSAGES)
+    ecma_string_t *err_str_p;
+
+#if !ENABLED (JERRY_ESNEXT)
     if (parser_error.error == PARSER_ERR_INVALID_REGEXP)
     {
-      /* The RegExp compiler has already raised an exception. */
-      JERRY_ASSERT (jcontext_has_pending_exception ());
-      return NULL;
+      ecma_value_t error = jcontext_take_exception ();
+      ecma_property_t *prop_p = ecma_find_named_property (ecma_get_object_from_value (error),
+                                                          ecma_get_magic_string (LIT_MAGIC_STRING_MESSAGE));
+      ecma_free_value (error);
+      JERRY_ASSERT (prop_p);
+      err_str_p = ecma_get_string_from_value (ECMA_PROPERTY_VALUE_PTR (prop_p)->value);
+      ecma_ref_ecma_string (err_str_p);
     }
-
-#if ENABLED (JERRY_ERROR_MESSAGES)
-    const lit_utf8_byte_t *err_bytes_p = (const lit_utf8_byte_t *) parser_error_to_string (parser_error.error);
-    lit_utf8_size_t err_bytes_size = lit_zt_utf8_string_size (err_bytes_p);
-
-    ecma_string_t *err_str_p = ecma_new_ecma_string_from_utf8 (err_bytes_p, err_bytes_size);
+    else
+#endif /* !ENABLED (JERRY_ESNEXT) */
+    {
+      const lit_utf8_byte_t *err_bytes_p = (const lit_utf8_byte_t *) parser_error_to_string (parser_error.error);
+      lit_utf8_size_t err_bytes_size = lit_zt_utf8_string_size (err_bytes_p);
+      err_str_p = ecma_new_ecma_string_from_utf8 (err_bytes_p, err_bytes_size);
+    }
     ecma_value_t err_str_val = ecma_make_string_value (err_str_p);
     ecma_value_t line_str_val = ecma_make_uint32_value (parser_error.line);
     ecma_value_t col_str_val = ecma_make_uint32_value (parser_error.column);
@@ -2949,9 +2958,14 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
 
     ecma_free_value (col_str_val);
     ecma_free_value (line_str_val);
-    ecma_free_value (err_str_val);
+    ecma_deref_ecma_string (err_str_p);
 #else /* !ENABLED (JERRY_ERROR_MESSAGES) */
-    ecma_raise_syntax_error ("");
+#if !ENABLED (JERRY_ESNEXT)
+    if (parser_error.error != PARSER_ERR_INVALID_REGEXP)
+#endif /* !ENABLED (JERRY_ESNEXT) */
+    {
+      ecma_raise_syntax_error ("");
+    }
 #endif /* ENABLED (JERRY_ERROR_MESSAGES) */
 
     return NULL;

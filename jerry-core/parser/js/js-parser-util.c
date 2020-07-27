@@ -393,7 +393,7 @@ parser_emit_cbc_push_number (parser_context_t *context_p, /**< context */
                              bool is_negative_number) /**< sign is negative */
 {
   uint16_t value = context_p->lit_object.index;
-  uint16_t lit_value = UINT16_MAX;
+  uint16_t lit_value = PARSER_INVALID_LITERAL_INDEX;
 
   if (context_p->last_cbc_opcode != PARSER_CBC_UNAVAILABLE)
   {
@@ -420,7 +420,7 @@ parser_emit_cbc_push_number (parser_context_t *context_p, /**< context */
 
   if (value == 0)
   {
-    if (lit_value == UINT16_MAX)
+    if (lit_value == PARSER_INVALID_LITERAL_INDEX)
     {
       context_p->last_cbc_opcode = CBC_PUSH_NUMBER_0;
       return;
@@ -433,7 +433,7 @@ parser_emit_cbc_push_number (parser_context_t *context_p, /**< context */
 
   uint16_t opcode;
 
-  if (lit_value == UINT16_MAX)
+  if (lit_value == PARSER_INVALID_LITERAL_INDEX)
   {
     opcode = (is_negative_number ? CBC_PUSH_NUMBER_NEG_BYTE
                                  : CBC_PUSH_NUMBER_POS_BYTE);

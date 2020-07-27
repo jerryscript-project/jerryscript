@@ -153,8 +153,6 @@ parser_flush_cbc (parser_context_t *context_p) /**< context */
     return;
   }
 
-  JERRY_ASSERT (last_opcode != PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_SUPER));
-
   context_p->status_flags |= PARSER_NO_END_LABEL;
 
   if (PARSER_IS_BASIC_OPCODE (last_opcode))

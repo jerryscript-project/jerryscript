@@ -301,6 +301,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this */
   }
 
   JERRY_ASSERT (ecma_is_value_true (status));
+  ecma_value_t ret_value;
 
   if (ecma_object_is_regexp_object (pattern_arg))
   {
@@ -314,13 +315,13 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this */
                                                                 pattern_obj_p->u.class_prop.u.value);
 
     ecma_ref_object (this_obj_p);
-    /* ecma_op_create_regexp_from_bytecode will never throw an error while re-initalizing the regexp object, so we
-     * can deref the old bytecode without leaving a dangling pointer. */
+    ret_value = ecma_op_create_regexp_from_bytecode (this_obj_p, bc_p);
+
     ecma_bytecode_deref ((ecma_compiled_code_t *) old_bc_p);
-    return ecma_op_create_regexp_from_bytecode (this_obj_p, bc_p);
+    return ret_value;
   }
 
-  ecma_value_t ret_value = ecma_op_create_regexp_from_pattern (this_obj_p, pattern_arg, flags_arg);
+  ret_value = ecma_op_create_regexp_from_pattern (this_obj_p, pattern_arg, flags_arg);
 
   if (!ECMA_IS_VALUE_ERROR (ret_value))
   {

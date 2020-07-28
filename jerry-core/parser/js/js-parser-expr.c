@@ -571,6 +571,10 @@ parser_parse_class_literal (parser_context_t *context_p, /**< context */
 
     if (context_p->token.type == LEXER_RIGHT_BRACE)
     {
+      if (JERRY_UNLIKELY (is_static))
+      {
+        parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
+      }
       break;
     }
 

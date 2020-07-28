@@ -199,6 +199,7 @@ set(SOURCE_CORE_FILES
   ecma/builtin-objects/ecma-builtin-referenceerror.c
   ecma/builtin-objects/ecma-builtin-reflect.c
   ecma/builtin-objects/ecma-builtin-regexp-prototype.c
+  ecma/builtin-objects/ecma-builtin-regexp-string-iterator-prototype.c
   ecma/builtin-objects/ecma-builtin-regexp.c
   ecma/builtin-objects/ecma-builtin-set-iterator-prototype.c
   ecma/builtin-objects/ecma-builtin-set-prototype.c
@@ -386,6 +387,7 @@ if(ENABLE_AMALGAM)
     ecma/builtin-objects/ecma-builtin-referenceerror.inc.h
     ecma/builtin-objects/ecma-builtin-reflect.inc.h
     ecma/builtin-objects/ecma-builtin-regexp-prototype.inc.h
+    ecma/builtin-objects/ecma-builtin-regexp-string-iterator-prototype.inc.h
     ecma/builtin-objects/ecma-builtin-regexp.inc.h
     ecma/builtin-objects/ecma-builtin-set-iterator-prototype.inc.h
     ecma/builtin-objects/ecma-builtin-set-prototype.inc.h

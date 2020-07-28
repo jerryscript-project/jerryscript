@@ -231,6 +231,7 @@ size_t lit_code_point_get_cesu8_length (lit_code_point_t code_point);
 void lit_four_byte_utf8_char_to_cesu8 (uint8_t *dst_p, const uint8_t *source_p);
 uint32_t lit_char_hex_lookup (const lit_utf8_byte_t *buf_p, const lit_utf8_byte_t *const buf_end_p, uint32_t lookup);
 uint32_t lit_parse_decimal (const lit_utf8_byte_t **buffer_p, const lit_utf8_byte_t *const buffer_end_p);
+bool lit_find_char_in_string (ecma_string_t *str_p, lit_utf8_byte_t c);
 
 /**
  * Null character

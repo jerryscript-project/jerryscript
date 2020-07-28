@@ -639,6 +639,13 @@ BUILTIN (ECMA_BUILTIN_ID_STRING_ITERATOR_PROTOTYPE,
          true,
          string_iterator_prototype)
 
+/* The %RegExpStringIteratorPrototype% object (ECMA-262 v11, 21.2.7.1) */
+BUILTIN (ECMA_BUILTIN_ID_REGEXP_STRING_ITERATOR_PROTOTYPE,
+         ECMA_OBJECT_TYPE_GENERAL,
+         ECMA_BUILTIN_ID_ITERATOR_PROTOTYPE,
+         true,
+         regexp_string_iterator_prototype)
+
 /* The %AsyncIteratorPrototype% object (ECMA-262 v10, 25.1.3) */
 BUILTIN (ECMA_BUILTIN_ID_ASYNC_ITERATOR_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,

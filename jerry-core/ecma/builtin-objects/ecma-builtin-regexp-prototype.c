@@ -68,6 +68,7 @@ enum
   ECMA_REGEXP_PROTOTYPE_ROUTINE_SYMBOL_MATCH,
   ECMA_REGEXP_PROTOTYPE_ROUTINE_SYMBOL_REPLACE,
   ECMA_REGEXP_PROTOTYPE_ROUTINE_SYMBOL_SPLIT,
+  ECMA_REGEXP_PROTOTYPE_ROUTINE_SYMBOL_MATCH_ALL,
 #endif /* ENABLED (JERRY_ESNEXT) */
 };
 
@@ -514,6 +515,147 @@ ecma_builtin_is_regexp_exec (ecma_extended_object_t *obj_p)
 } /* ecma_builtin_is_regexp_exec */
 #endif /* ENABLED (JERRY_ESNEXT) */
 
+#if ENABLED (JERRY_ESNEXT)
+/**
+ * The RegExp.prototype object's 'matchAll' routine
+ *
+ * See also:
+ *          ECMA-262 v11, 21.2.5.8
+ *
+ * @return ecma_value_t
+ */
+static ecma_value_t
+ecma_builtin_regexp_prototype_match_all (ecma_object_t *regexp_obj_p, /**< this argument */
+                                         ecma_value_t string_arg) /**< source string */
+{
+  /* 3. */
+  ecma_string_t *str_p = ecma_op_to_string (string_arg);
+
+  if (JERRY_UNLIKELY (str_p == NULL))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  /* 4. */
+  ecma_value_t constructor = ecma_op_species_constructor (regexp_obj_p, ECMA_BUILTIN_ID_REGEXP);
+
+  if (ECMA_IS_VALUE_ERROR (constructor))
+  {
+    ecma_deref_ecma_string (str_p);
+    return constructor;
+  }
+
+  /* 5. */
+  ecma_value_t get_flag = ecma_op_object_get_by_magic_id (regexp_obj_p, LIT_MAGIC_STRING_FLAGS);
+
+  if (ECMA_IS_VALUE_ERROR (get_flag))
+  {
+    ecma_deref_ecma_string (str_p);
+    ecma_free_value (constructor);
+    return get_flag;
+  }
+
+  ecma_string_t *flags = ecma_op_to_string (get_flag);
+
+  ecma_free_value (get_flag);
+
+  if (JERRY_UNLIKELY (flags == NULL))
+  {
+    ecma_deref_ecma_string (str_p);
+    ecma_free_value (constructor);
+    return ECMA_VALUE_ERROR;
+  }
+
+  /* 6. */
+  ecma_object_t *constructor_obj_p = ecma_get_object_from_value (constructor);
+  ecma_value_t flags_value = ecma_make_string_value (flags);
+  ecma_value_t match_args[] = { ecma_make_object_value (regexp_obj_p), flags_value};
+  ecma_value_t matcher = ecma_op_function_construct (constructor_obj_p, constructor_obj_p, match_args, 2);
+
+  ecma_deref_object (constructor_obj_p);
+
+  if (ECMA_IS_VALUE_ERROR (matcher))
+  {
+    ecma_deref_ecma_string (str_p);
+    ecma_deref_ecma_string (flags);
+    return matcher;
+  }
+
+  /* 7. */
+  ecma_value_t get_last_index = ecma_op_object_get_by_magic_id (regexp_obj_p, LIT_MAGIC_STRING_LASTINDEX_UL);
+
+  if (ECMA_IS_VALUE_ERROR (get_last_index))
+  {
+    ecma_deref_ecma_string (str_p);
+    ecma_deref_ecma_string (flags);
+    ecma_free_value (matcher);
+    return get_last_index;
+  }
+
+  ecma_length_t last_index;
+  ecma_value_t to_len = ecma_op_to_length (get_last_index, &last_index);
+
+  ecma_free_value (get_last_index);
+
+  if (ECMA_IS_VALUE_ERROR (to_len))
+  {
+    ecma_deref_ecma_string (str_p);
+    ecma_deref_ecma_string (flags);
+    ecma_free_value (matcher);
+    return to_len;
+  }
+
+  /* 8. */
+  ecma_object_t *matcher_obj_p = ecma_get_object_from_value (matcher);
+  ecma_value_t last_index_value = ecma_make_length_value (last_index);
+  ecma_value_t set = ecma_op_object_put (matcher_obj_p,
+                                         ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
+                                         last_index_value,
+                                         true);
+
+  ecma_free_value (last_index_value);
+
+  if (ECMA_IS_VALUE_ERROR (set))
+  {
+    ecma_deref_ecma_string (str_p);
+    ecma_deref_ecma_string (flags);
+    ecma_deref_object (matcher_obj_p);
+  }
+
+  uint16_t parsed_flag;
+  ecma_value_t flag_parse = ecma_regexp_parse_flags (flags, &parsed_flag);
+
+  ecma_deref_ecma_string (flags);
+
+  if (ECMA_IS_VALUE_ERROR (flag_parse))
+  {
+    ecma_deref_ecma_string (str_p);
+    ecma_deref_object (matcher_obj_p);
+    return flag_parse;
+  }
+
+  /* 13. */
+  ecma_object_t *result_obj;
+  ecma_object_t *proto_p = ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_STRING_ITERATOR_PROTOTYPE);
+  result_obj = ecma_create_object (proto_p,
+                                   sizeof (ecma_regexp_string_iterator_t),
+                                   ECMA_OBJECT_TYPE_PSEUDO_ARRAY);
+
+  ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) result_obj;
+  ext_obj_p->u.pseudo_array.type = (uint8_t) ECMA_PSEUDO_REGEXP_STRING_ITERATOR;
+  ext_obj_p->u.pseudo_array.extra_info = (uint8_t) (parsed_flag & (RE_FLAG_GLOBAL | RE_FLAG_UNICODE));
+
+  ecma_regexp_string_iterator_t *regexp_string_iterator_obj = (ecma_regexp_string_iterator_t *) result_obj;
+
+  regexp_string_iterator_obj->iterating_regexp = matcher;
+  regexp_string_iterator_obj->iterated_string = ecma_make_string_value (str_p);
+
+  ecma_deref_object (matcher_obj_p);
+
+  return ecma_make_object_value (result_obj);
+} /* ecma_builtin_regexp_prototype_match_all */
+#endif /* ENABLED (JERRY_ESNEXT) */
+
 /**
  * Dispatcher of the Regexp built-in's routines
  *
@@ -583,6 +725,10 @@ ecma_builtin_regexp_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
     case ECMA_REGEXP_PROTOTYPE_ROUTINE_SYMBOL_MATCH:
     {
       return ecma_regexp_match_helper (this_arg, arguments_list_p[0]);
+    }
+    case ECMA_REGEXP_PROTOTYPE_ROUTINE_SYMBOL_MATCH_ALL:
+    {
+      return ecma_builtin_regexp_prototype_match_all (obj_p, arguments_list_p[0]);
     }
     case ECMA_REGEXP_PROTOTYPE_ROUTINE_SYMBOL_REPLACE:
     {

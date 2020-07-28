@@ -89,6 +89,10 @@ SYMBOL_VALUE (LIT_MAGIC_STRING_TO_STRING_TAG,
 SYMBOL_VALUE (LIT_MAGIC_STRING_UNSCOPABLES,
               LIT_GLOBAL_SYMBOL_UNSCOPABLES)
 
+/* ECMA-262 v11, 19.4.2.8 */
+SYMBOL_VALUE (LIT_MAGIC_STRING_MATCH_ALL,
+              LIT_GLOBAL_SYMBOL_MATCH_ALL)
+
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_MAGIC_STRING_FOR, ecma_builtin_symbol_for, 1, 1)

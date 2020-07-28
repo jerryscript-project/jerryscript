@@ -1877,6 +1877,13 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 
       if (context_p->token.type != LEXER_COMMA)
       {
+        if (context_p->token.type != end_type)
+        {
+          parser_error_t error = ((end_type == LEXER_RIGHT_PAREN) ? PARSER_ERR_RIGHT_PAREN_EXPECTED
+                                                                  : PARSER_ERR_IDENTIFIER_EXPECTED);
+
+          parser_raise_error (context_p, error);
+        }
         break;
       }
 

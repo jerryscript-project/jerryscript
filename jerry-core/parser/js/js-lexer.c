@@ -2939,7 +2939,7 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
       JERRY_ASSERT (!ECMA_IS_DIRECT_STRING (message_p));
       JERRY_ASSERT (ECMA_STRING_GET_CONTAINER (message_p) == ECMA_STRING_CONTAINER_HEAP_ASCII_STRING);
       buffer_p = ECMA_ASCII_STRING_GET_BUFFER (message_p);
-      size = ((ecma_ascii_string_t *) message_p)->size;
+      size = ECMA_ASCII_STRING_GET_SIZE (message_p);
     }
 
     uint16_t literal_index = parser_find_string_literal (context_p, &literal_p, buffer_p, size);

@@ -17,4 +17,4 @@ Stopped at tests/debugger/do_throw.js:34
 (jerry-debugger) eval e.message.length
 538
 (jerry-debugger) throw new Error('Exit')
-err: Script Error: Error: Exit
+err: Error: Exit

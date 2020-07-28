@@ -52,7 +52,7 @@ ecma_op_create_symbol (const ecma_value_t *arguments_list_p, /**< list of argume
   /* 1-3. */
   if (arguments_list_len == 0)
   {
-    string_desc = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
+    string_desc = ECMA_VALUE_UNDEFINED;
   }
   else
   {
@@ -101,13 +101,13 @@ ecma_op_create_symbol_object (const ecma_value_t value) /**< symbol value */
  *
  * @return pointer to ecma-string descriptor
  */
-ecma_string_t *
+ecma_value_t
 ecma_get_symbol_description (ecma_string_t *symbol_p) /**< ecma-symbol */
 {
   JERRY_ASSERT (symbol_p != NULL);
   JERRY_ASSERT (ecma_prop_name_is_symbol (symbol_p));
 
-  return ecma_get_string_from_value (((ecma_extended_string_t *) symbol_p)->u.symbol_descriptor);
+  return ((ecma_extended_string_t *) symbol_p)->u.symbol_descriptor;
 } /* ecma_get_symbol_description */
 
 /**
@@ -126,13 +126,16 @@ ecma_get_symbol_descriptive_string (ecma_value_t symbol_value) /**< symbol to st
 
   /* 2 - 3. */
   ecma_string_t *symbol_p = ecma_get_symbol_from_value (symbol_value);
-  ecma_string_t *string_desc_p = ecma_get_symbol_description (symbol_p);
-
-  /* 5. */
+  ecma_value_t string_desc = ecma_get_symbol_description (symbol_p);
   ecma_stringbuilder_t builder = ecma_stringbuilder_create_raw ((lit_utf8_byte_t *) ("Symbol("), 7);
-  ecma_stringbuilder_append (&builder, string_desc_p);
-  ecma_stringbuilder_append_byte (&builder, LIT_CHAR_RIGHT_PAREN);
 
+  if (!ecma_is_value_undefined (string_desc))
+  {
+    ecma_string_t *string_desc_p = ecma_get_string_from_value (string_desc);
+    ecma_stringbuilder_append (&builder, string_desc_p);
+  }
+
+  ecma_stringbuilder_append_byte (&builder, LIT_CHAR_RIGHT_PAREN);
   return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
 } /* ecma_get_symbol_descriptive_string */
 

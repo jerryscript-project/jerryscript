@@ -96,10 +96,15 @@ ecma_builtin_symbol_prototype_dispatch_routine (uint16_t builtin_routine_id, /**
 
   JERRY_ASSERT (builtin_routine_id == ECMA_SYMBOL_PROTOTYPE_DESCRIPTION);
   ecma_string_t *symbol_p = ecma_get_symbol_from_value (sym);
-  ecma_string_t *desc_p = ecma_get_symbol_description (symbol_p);
-  ecma_ref_ecma_string (desc_p);
+  ecma_value_t desc = ecma_get_symbol_description (symbol_p);
+  if (ecma_is_value_undefined (desc))
+  {
+    return desc;
+  }
 
-  return ecma_make_string_value (desc_p);
+  ecma_string_t *desc_p = ecma_get_string_from_value (desc);
+  ecma_ref_ecma_string (desc_p);
+  return desc;
 } /* ecma_builtin_symbol_prototype_dispatch_routine */
 
 /**

@@ -1438,6 +1438,14 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
         scanner_raise_redeclaration_error (context_p);
       }
 
+      scanner_literal_pool_t *literal_pool_p = scanner_context_p->active_literal_pool_p;
+
+      if (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_BLOCK
+          && (literal_p->type & (SCANNER_LITERAL_IS_VAR)))
+      {
+        scanner_raise_redeclaration_error (context_p);
+      }
+
       literal_p->type |= SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_FUNC_DECLARATION;
 
       scanner_context_p->status_flags &= (uint16_t) ~SCANNER_CONTEXT_THROW_ERR_ASYNC_FUNCTION;

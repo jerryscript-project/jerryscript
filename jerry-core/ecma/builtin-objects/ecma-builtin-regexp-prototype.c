@@ -113,7 +113,7 @@ ecma_builtin_regexp_prototype_flags_helper (ecma_extended_object_t *re_obj_p, /*
   };
 
   uint16_t offset = (uint16_t) (builtin_routine_id - ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_GLOBAL);
-  return ecma_make_boolean_value (flags & re_flags[offset]);
+  return ecma_make_boolean_value ((flags & re_flags[offset]) != 0);
 } /* ecma_builtin_regexp_prototype_flags_helper */
 
 /**

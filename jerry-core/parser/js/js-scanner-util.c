@@ -625,7 +625,7 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
       {
         compressed_size += 2 + 1;
       }
-      else if (diff >= -UINT8_MAX && diff <= UINT16_MAX)
+      else if (diff >= -UINT8_MAX && diff <= (intptr_t) UINT16_MAX)
       {
         compressed_size += 2 + 2;
       }
@@ -888,7 +888,7 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
       {
         data_p[-1] = (uint8_t) diff;
       }
-      else if (diff >= -UINT8_MAX && diff <= UINT16_MAX)
+      else if (diff >= -UINT8_MAX && diff <= (intptr_t) UINT16_MAX)
       {
         if (diff < 0)
         {

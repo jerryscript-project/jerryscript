@@ -254,7 +254,7 @@ re_insert_value (re_compiler_ctx_t *re_ctx_p, /**< RegExp bytecode context */
  *
  * @return decoded value
  */
-uint32_t JERRY_ATTR_ALWAYS_INLINE
+inline uint32_t JERRY_ATTR_ALWAYS_INLINE
 re_get_value (const uint8_t **bc_p) /** refence to bytecode pointer */
 {
   uint32_t value = *(*bc_p)++;

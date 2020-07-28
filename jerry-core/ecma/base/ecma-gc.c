@@ -1426,6 +1426,10 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 
       ecma_value_t args_len_or_this = bound_func_p->header.u.bound_function.args_len_or_this;
 
+#if ENABLED (JERRY_ESNEXT)
+      ecma_free_value (bound_func_p->target_length);
+#endif /* ENABLED (JERRY_ESNEXT) */
+
       if (!ecma_is_value_integer_number (args_len_or_this))
       {
         ecma_free_value_if_not_object (args_len_or_this);

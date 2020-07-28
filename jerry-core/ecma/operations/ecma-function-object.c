@@ -1663,7 +1663,7 @@ ecma_op_bound_function_try_to_lazy_instantiate_property (ecma_object_t *object_p
   {
     ecma_bound_function_t *bound_func_p = (ecma_bound_function_t *) object_p;
     ecma_value_t args_len_or_this = bound_func_p->header.u.bound_function.args_len_or_this;
-    ecma_integer_value_t length = 0;
+    ecma_number_t length = 0;
     ecma_integer_value_t args_length = 1;
     uint8_t length_attributes;
 
@@ -1679,7 +1679,7 @@ ecma_op_bound_function_try_to_lazy_instantiate_property (ecma_object_t *object_p
     }
 
     length_attributes = ECMA_PROPERTY_FLAG_CONFIGURABLE;
-    length = bound_func_p->target_length - (args_length - 1);
+    length = ecma_get_number_from_value (bound_func_p->target_length) - (args_length - 1);
 
     /* Set tag bit to represent initialized 'length' property */
     ECMA_SET_FIRST_BIT_TO_POINTER_TAG (bound_func_p->header.u.bound_function.target_function);
@@ -1713,7 +1713,7 @@ ecma_op_bound_function_try_to_lazy_instantiate_property (ecma_object_t *object_p
                                                                                length_attributes,
                                                                                &len_prop_p);
 
-    len_prop_value_p->value = ecma_make_integer_value (length);
+    len_prop_value_p->value = ecma_make_number_value (length);
     return len_prop_p;
   }
 

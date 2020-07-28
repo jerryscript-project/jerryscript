@@ -1000,7 +1000,7 @@ typedef struct
 {
   ecma_extended_object_t header; /**< extended object header */
 #if ENABLED (JERRY_ESNEXT)
-  ecma_integer_value_t target_length; /**< length of target function */
+  ecma_value_t target_length; /**< length of target function */
 #endif /* ENABLED (JERRY_ESNEXT) */
 } ecma_bound_function_t;
 

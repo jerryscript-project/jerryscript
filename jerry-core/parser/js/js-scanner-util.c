@@ -2540,7 +2540,8 @@ scanner_save_literal (parser_context_t *context_p, /**< context */
       JERRY_ASSERT (scope_stack_p > context_p->scope_stack_p);
       scope_stack_p--;
     }
-    while (literal_index != (scope_stack_p->map_to & PARSER_SCOPE_STACK_REGISTER_MASK));
+    while (scope_stack_p->map_from == PARSER_SCOPE_STACK_FUNC
+           || literal_index != (scope_stack_p->map_to & PARSER_SCOPE_STACK_REGISTER_MASK));
 
     literal_index = scope_stack_p->map_from;
     PARSER_GET_LITERAL (literal_index)->status_flags |= LEXER_FLAG_USED;
@@ -2574,7 +2575,8 @@ scanner_literal_is_const_reg (parser_context_t *context_p, /**< context */
     JERRY_ASSERT (scope_stack_p > context_p->scope_stack_p);
     scope_stack_p--;
   }
-  while (literal_index != (scope_stack_p->map_to & PARSER_SCOPE_STACK_REGISTER_MASK));
+  while (scope_stack_p->map_from == PARSER_SCOPE_STACK_FUNC
+         || literal_index != (scope_stack_p->map_to & PARSER_SCOPE_STACK_REGISTER_MASK));
 
   return (scope_stack_p->map_to & PARSER_SCOPE_STACK_IS_CONST_REG) != 0;
 } /* scanner_literal_is_const_reg */

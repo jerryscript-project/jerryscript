@@ -20,6 +20,8 @@
 #include <math.h>
 
 #include "ecma-alloc.h"
+#include "ecma-bigint.h"
+#include "ecma-bigint-object.h"
 #include "ecma-boolean-object.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
@@ -279,12 +281,6 @@ ecma_op_to_number (ecma_value_t value) /**< ecma value */
     ecma_string_t *str_p = ecma_get_string_from_value (value);
     return ecma_make_number_value (ecma_string_to_number (str_p));
   }
-#if ENABLED (JERRY_ESNEXT)
-  if (ecma_is_value_symbol (value))
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a Symbol value to a number."));
-  }
-#endif /* ENABLED (JERRY_ESNEXT) */
 
   if (ecma_is_value_undefined (value))
   {
@@ -300,6 +296,20 @@ ecma_op_to_number (ecma_value_t value) /**< ecma value */
   {
     return ecma_make_integer_value (ecma_is_value_true (value) ? 1 : 0);
   }
+
+#if ENABLED (JERRY_ESNEXT)
+  if (ecma_is_value_symbol (value))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a Symbol value to a number"));
+  }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  if (ecma_is_value_bigint (value))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a BigInt value to a number"));
+  }
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 
   JERRY_ASSERT (ecma_is_value_object (value));
 
@@ -364,13 +374,6 @@ ecma_get_number (ecma_value_t value, /**< ecma value*/
     return ECMA_VALUE_EMPTY;
   }
 
-#if ENABLED (JERRY_ESNEXT)
-  if (ecma_is_value_symbol (value))
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a Symbol value to a number."));
-  }
-#endif /* ENABLED (JERRY_ESNEXT) */
-
   if (ecma_is_value_true (value))
   {
     *number_p = 1;
@@ -382,6 +385,20 @@ ecma_get_number (ecma_value_t value, /**< ecma value*/
     *number_p = 0;
     return ECMA_VALUE_EMPTY;
   }
+
+#if ENABLED (JERRY_ESNEXT)
+  if (ecma_is_value_symbol (value))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a Symbol value to a number."));
+  }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  if (ecma_is_value_bigint (value))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a BigInt value to a number"));
+  }
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 
   JERRY_ASSERT (ecma_is_value_object (value));
 
@@ -452,14 +469,6 @@ ecma_op_to_string (ecma_value_t value) /**< ecma value */
     return ecma_get_magic_string (LIT_MAGIC_STRING_NULL);
   }
 
-#if ENABLED (JERRY_ESNEXT)
-  if (ecma_is_value_symbol (value))
-  {
-    ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a Symbol value to a string."));
-    return NULL;
-  }
-#endif /* ENABLED (JERRY_ESNEXT) */
-
   if (ecma_is_value_true (value))
   {
     return ecma_get_magic_string (LIT_MAGIC_STRING_TRUE);
@@ -469,6 +478,21 @@ ecma_op_to_string (ecma_value_t value) /**< ecma value */
   {
     return ecma_get_magic_string (LIT_MAGIC_STRING_FALSE);
   }
+
+#if ENABLED (JERRY_ESNEXT)
+  if (ecma_is_value_symbol (value))
+  {
+    ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a Symbol value to a string."));
+    return NULL;
+  }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  if (ecma_is_value_bigint (value))
+  {
+    return ecma_bigint_to_string (value, 10);
+  }
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 
   JERRY_ASSERT (ecma_is_value_object (value));
 
@@ -567,6 +591,12 @@ ecma_op_to_object (ecma_value_t value) /**< ecma value */
     return ecma_op_create_symbol_object (value);
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  else if (ecma_is_value_bigint (value))
+  {
+    return ecma_op_create_bigint_object (value);
+  }
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
   else
   {
     if (ecma_is_value_undefined (value)

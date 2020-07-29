@@ -253,6 +253,13 @@ OBJECT_VALUE (LIT_MAGIC_STRING_PROXY_UL,
               ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+/* ECMA-262 v11, 20.2.1 */
+OBJECT_VALUE (LIT_MAGIC_STRING_BIGINT_UL,
+              ECMA_BUILTIN_ID_BIGINT,
+              ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 

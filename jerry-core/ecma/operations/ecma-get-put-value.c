@@ -174,6 +174,12 @@ ecma_op_get_value_object_base (ecma_value_t base_value, /**< base value */
       id = ECMA_BUILTIN_ID_SYMBOL_PROTOTYPE;
     }
 #endif /* ENABLED (JERRY_ESNEXT) */
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+    else if (ecma_is_value_bigint (base_value))
+    {
+      id = ECMA_BUILTIN_ID_BIGINT_PROTOTYPE;
+    }
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
     else
     {
       JERRY_ASSERT (ecma_is_value_boolean (base_value));

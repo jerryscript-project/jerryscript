@@ -243,6 +243,9 @@ bool JERRY_ATTR_CONST ecma_is_value_string (ecma_value_t value);
 #if ENABLED (JERRY_ESNEXT)
 bool JERRY_ATTR_CONST ecma_is_value_symbol (ecma_value_t value);
 #endif /* ENABLED (JERRY_ESNEXT) */
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+bool JERRY_ATTR_CONST ecma_is_value_bigint (ecma_value_t value);
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 bool JERRY_ATTR_CONST ecma_is_value_prop_name (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_direct_string (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_non_direct_string (ecma_value_t value);
@@ -267,7 +270,8 @@ ecma_value_t JERRY_ATTR_PURE ecma_make_symbol_value (const ecma_string_t *ecma_s
 ecma_value_t JERRY_ATTR_PURE ecma_make_prop_name_value (const ecma_string_t *ecma_prop_name_p);
 ecma_value_t JERRY_ATTR_PURE ecma_make_magic_string_value (lit_magic_string_id_t id);
 ecma_value_t JERRY_ATTR_PURE ecma_make_object_value (const ecma_object_t *object_p);
-ecma_value_t JERRY_ATTR_PURE ecma_make_error_reference_value (const ecma_error_reference_t *error_ref_p);
+ecma_value_t JERRY_ATTR_PURE ecma_make_extended_primitive_value (const ecma_extended_primitive_t *primitve_p,
+                                                                 uint32_t type);
 ecma_integer_value_t JERRY_ATTR_CONST ecma_get_integer_from_value (ecma_value_t value);
 ecma_number_t JERRY_ATTR_PURE ecma_get_float_from_value (ecma_value_t value);
 ecma_number_t * ecma_get_pointer_from_float_value (ecma_value_t value);
@@ -278,7 +282,7 @@ ecma_string_t JERRY_ATTR_PURE *ecma_get_symbol_from_value (ecma_value_t value);
 #endif /* ENABLED (JERRY_ESNEXT) */
 ecma_string_t JERRY_ATTR_PURE *ecma_get_prop_name_from_value (ecma_value_t value);
 ecma_object_t JERRY_ATTR_PURE *ecma_get_object_from_value (ecma_value_t value);
-ecma_error_reference_t JERRY_ATTR_PURE *ecma_get_error_reference_from_value (ecma_value_t value);
+ecma_extended_primitive_t JERRY_ATTR_PURE *ecma_get_extended_primitive_from_value (ecma_value_t value);
 ecma_value_t JERRY_ATTR_CONST ecma_invert_boolean_value (ecma_value_t value);
 ecma_value_t ecma_copy_value (ecma_value_t value);
 ecma_value_t ecma_fast_copy_value (ecma_value_t value);
@@ -498,11 +502,15 @@ void ecma_set_property_lcached (ecma_property_t *property_p, bool is_lcached);
 ecma_property_descriptor_t ecma_make_empty_property_descriptor (void);
 void ecma_free_property_descriptor (ecma_property_descriptor_t *prop_desc_p);
 
+void ecma_ref_extended_primitive (ecma_extended_primitive_t *primitve_p);
+void ecma_deref_error_reference (ecma_extended_primitive_t *error_ref_p);
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+void ecma_deref_bigint (ecma_extended_primitive_t *bigint_p);
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+
 ecma_value_t ecma_create_error_reference (ecma_value_t value, bool is_exception);
 ecma_value_t ecma_create_error_reference_from_context (void);
 ecma_value_t ecma_create_error_object_reference (ecma_object_t *object_p);
-void ecma_ref_error_reference (ecma_error_reference_t *error_ref_p);
-void ecma_deref_error_reference (ecma_error_reference_t *error_ref_p);
 void ecma_raise_error_from_error_reference (ecma_value_t value);
 
 void ecma_bytecode_ref (ecma_compiled_code_t *bytecode_p);

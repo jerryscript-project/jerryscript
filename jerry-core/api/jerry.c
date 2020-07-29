@@ -652,9 +652,9 @@ jerry_value_is_abort (const jerry_value_t value) /**< api value */
     return false;
   }
 
-  ecma_error_reference_t *error_ref_p = ecma_get_error_reference_from_value (value);
+  ecma_extended_primitive_t *error_ref_p = ecma_get_extended_primitive_from_value (value);
 
-  return (error_ref_p->refs_and_flags & ECMA_ERROR_REF_ABORT) != 0;
+  return ECMA_EXTENDED_PRIMITIVE_GET_TYPE (error_ref_p) == ECMA_EXTENDED_PRIMITIVE_ABORT;
 } /* jerry_value_is_abort */
 
 /**
@@ -998,6 +998,9 @@ jerry_is_feature_enabled (const jerry_feature_t feature) /**< feature to check *
 #if ENABLED (JERRY_BUILTIN_WEAKSET)
           || feature == JERRY_FEATURE_WEAKSET
 #endif /* ENABLED (JERRY_BUILTIN_WEAKSET) */
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+          || feature == JERRY_FEATURE_BIGINT
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
           );
 } /* jerry_is_feature_enabled */
 
@@ -1166,7 +1169,7 @@ jerry_get_value_from_error (jerry_value_t value, /**< api value */
     return release ? value : ecma_copy_value (value);
   }
 
-  jerry_value_t ret_val = jerry_acquire_value (ecma_get_error_reference_from_value (value)->value);
+  jerry_value_t ret_val = jerry_acquire_value (ecma_get_extended_primitive_from_value (value)->u.value);
 
   if (release)
   {
@@ -1186,7 +1189,7 @@ jerry_get_error_type (jerry_value_t value) /**< api value */
 {
   if (JERRY_UNLIKELY (ecma_is_value_error_reference (value)))
   {
-    value = ecma_get_error_reference_from_value (value)->value;
+    value = ecma_get_extended_primitive_from_value (value)->u.value;
   }
 
   if (!ecma_is_value_object (value))
@@ -1360,7 +1363,7 @@ jerry_acquire_value (jerry_value_t value) /**< API value */
 
   if (JERRY_UNLIKELY (ecma_is_value_error_reference (value)))
   {
-    ecma_ref_error_reference (ecma_get_error_reference_from_value (value));
+    ecma_ref_extended_primitive (ecma_get_extended_primitive_from_value (value));
     return value;
   }
 
@@ -1377,7 +1380,7 @@ jerry_release_value (jerry_value_t value) /**< API value */
 
   if (JERRY_UNLIKELY (ecma_is_value_error_reference (value)))
   {
-    ecma_deref_error_reference (ecma_get_error_reference_from_value (value));
+    ecma_deref_error_reference (ecma_get_extended_primitive_from_value (value));
     return;
   }
 

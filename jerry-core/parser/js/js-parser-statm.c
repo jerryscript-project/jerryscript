@@ -680,10 +680,11 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
   {
     parser_raise_error (context_p, PARSER_ERR_VARIABLE_REDECLARED);
   }
+
+  uint16_t function_name_index = context_p->lit_object.index;
 #endif /* ENABLED (JERRY_ESNEXT) */
 
 #if ENABLED (JERRY_MODULE_SYSTEM)
-  uint16_t function_name_index = context_p->lit_object.index;
   parser_module_append_export_name (context_p);
   context_p->status_flags &= (uint32_t) ~(PARSER_MODULE_STORE_IDENT);
 #endif /* ENABLED (JERRY_MODULE_SYSTEM) */

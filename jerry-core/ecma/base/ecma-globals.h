@@ -2075,6 +2075,22 @@ typedef struct
 } ecma_revocable_proxy_object_t;
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
+#if ENABLED (JERRY_ESNEXT)
+/**
+ * Type to repesent the maximum property index
+ *
+ * For ES6+ the maximum valid property index is 2**53 - 1
+ */
+typedef uint64_t ecma_length_t;
+#else /* !ENABLED (JERRY_ESNEXT) */
+/**
+ * Type to repesent the maximum property index
+ *
+ * For ES5+ the maximum valid property index is 2**32 - 1
+ */
+typedef uint32_t ecma_length_t;
+#endif /* ENABLED (JERRY_ESNEXT) */
+
 /**
  * Struct for counting the different types properties in objects
  */

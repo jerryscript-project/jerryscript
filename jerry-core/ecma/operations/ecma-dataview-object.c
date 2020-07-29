@@ -105,11 +105,12 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
   }
 
   /* 11 - 12. */
-  uint32_t viewByteLength;
+  uint32_t view_byte_length;
   if (arguments_list_len > 2 && !ecma_is_value_undefined (arguments_list_p[2]))
   {
     /* 12.a */
-    ecma_value_t byte_length_value = ecma_op_to_length (arguments_list_p[2], &viewByteLength);
+    ecma_length_t view_byte_to_length;
+    ecma_value_t byte_length_value = ecma_op_to_length (arguments_list_p[2], &view_byte_to_length);
 
     /* 12.b */
     if (ECMA_IS_VALUE_ERROR (byte_length_value))
@@ -118,15 +119,18 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
     }
 
     /* 12.c */
-    if ((ecma_number_t) offset + viewByteLength > buffer_byte_length)
+    if ((ecma_number_t) offset + (ecma_number_t) view_byte_to_length > buffer_byte_length)
     {
       return ecma_raise_range_error (ECMA_ERR_MSG ("Start offset is outside the bounds of the buffer."));
     }
+
+    JERRY_ASSERT (view_byte_to_length <= UINT32_MAX);
+    view_byte_length = (uint32_t) view_byte_to_length;
   }
   else
   {
     /* 11.a */
-    viewByteLength = (uint32_t) (buffer_byte_length - offset);
+    view_byte_length = (uint32_t) (buffer_byte_length - offset);
   }
 
   /* 13. */
@@ -143,7 +147,7 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
 
   ecma_dataview_object_t *dataview_obj_p = (ecma_dataview_object_t *) object_p;
   dataview_obj_p->header.u.class_prop.class_id = LIT_MAGIC_STRING_DATAVIEW_UL;
-  dataview_obj_p->header.u.class_prop.u.length = viewByteLength;
+  dataview_obj_p->header.u.class_prop.u.length = view_byte_length;
   dataview_obj_p->buffer_p = buffer_p;
   dataview_obj_p->byte_offset = (uint32_t) offset;
 

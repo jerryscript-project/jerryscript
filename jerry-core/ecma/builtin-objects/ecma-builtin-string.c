@@ -180,7 +180,7 @@ ecma_builtin_string_object_raw (ecma_value_t this_arg, /**< 'this' argument */
   ecma_value_t ret_value = ECMA_VALUE_ERROR;
 
   /* 7 - 8. */
-  uint32_t literal_segments;
+  ecma_length_t literal_segments;
   if (ECMA_IS_VALUE_ERROR (ecma_op_object_get_length (raw_obj_p, &literal_segments)))
   {
     goto cleanup;
@@ -197,13 +197,13 @@ ecma_builtin_string_object_raw (ecma_value_t this_arg, /**< 'this' argument */
   ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
 
   /* 11. */
-  uint32_t next_index = 0;
+  ecma_length_t next_index = 0;
 
   /* 12. */
   while (true)
   {
     /* 12.a,b */
-    ecma_value_t next_seg = ecma_op_object_get_by_uint32_index (raw_obj_p, next_index);
+    ecma_value_t next_seg = ecma_op_object_get_by_index (raw_obj_p, next_index);
 
     if (ECMA_IS_VALUE_ERROR (next_seg))
     {

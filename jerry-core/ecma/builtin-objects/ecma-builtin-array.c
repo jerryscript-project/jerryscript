@@ -274,7 +274,7 @@ iterator_cleanup:
   ecma_object_t *array_like_obj_p = ecma_get_object_from_value (array_like);
 
   /* 10. */
-  uint32_t len;
+  ecma_length_t len;
   ecma_value_t len_value = ecma_op_object_get_length (array_like_obj_p, &len);
 
   /* 11. */
@@ -283,7 +283,7 @@ iterator_cleanup:
     goto cleanup;
   }
 
-  len_value = ecma_make_uint32_value (len);
+  len_value = ecma_make_length_value (len);
 
   /* 12. */
   ecma_value_t array;
@@ -319,13 +319,13 @@ iterator_cleanup:
   ecma_object_t *array_obj_p = ecma_get_object_from_value (array);
 
   /* 15. */
-  uint32_t k = 0;
+  ecma_length_t k = 0;
 
   /* 16. */
   while (k < len)
   {
     /* 16.b */
-    ecma_value_t k_value = ecma_op_object_get_by_uint32_index (array_like_obj_p, k);
+    ecma_value_t k_value = ecma_op_object_get_by_index (array_like_obj_p, k);
 
     /* 16.c */
     if (ECMA_IS_VALUE_ERROR (k_value))
@@ -338,7 +338,7 @@ iterator_cleanup:
     if (mapfn_obj_p != NULL)
     {
       /* 16.d.i */
-      ecma_value_t args_p[2] = { k_value, ecma_make_uint32_value (k) };
+      ecma_value_t args_p[2] = { k_value, ecma_make_length_value (k) };
       mapped_value = ecma_op_function_call (mapfn_obj_p, call_this_arg, args_p, 2);
       ecma_free_value (args_p[1]);
       ecma_free_value (k_value);
@@ -372,7 +372,7 @@ iterator_cleanup:
   }
 
   /* 17. */
-  len_value = ecma_make_uint32_value (k);
+  len_value = ecma_make_length_value (k);
   ecma_value_t set_status = ecma_op_object_put (array_obj_p,
                                                 ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH),
                                                 len_value,

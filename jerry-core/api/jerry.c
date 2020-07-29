@@ -2348,7 +2348,7 @@ jerry_get_property_by_index (const jerry_value_t obj_val, /**< object value */
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
   }
 
-  ecma_value_t ret_value = ecma_op_object_get_by_uint32_index (ecma_get_object_from_value (obj_val), index);
+  ecma_value_t ret_value = ecma_op_object_get_by_index (ecma_get_object_from_value (obj_val), index);
 
   return jerry_return (ret_value);
 } /* jerry_get_property_by_index */
@@ -2453,10 +2453,10 @@ jerry_set_property_by_index (const jerry_value_t obj_val, /**< object value */
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
   }
 
-  ecma_value_t ret_value = ecma_op_object_put_by_uint32_index (ecma_get_object_from_value (obj_val),
-                                                               index,
-                                                               value_to_set,
-                                                               true);
+  ecma_value_t ret_value = ecma_op_object_put_by_index (ecma_get_object_from_value (obj_val),
+                                                        index,
+                                                        value_to_set,
+                                                        true);
 
   return jerry_return (ret_value);
 } /* jerry_set_property_by_index */

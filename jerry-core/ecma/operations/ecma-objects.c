@@ -671,7 +671,7 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
 } /* ecma_op_object_find_own */
 
 /**
- * Search the value corresponding to an uint32_t property index
+ * Search the value corresponding to a property index
  *
  * Note: this method falls back to the general ecma_op_object_find
  *
@@ -680,40 +680,20 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-ecma_op_object_find_by_uint32_index (ecma_object_t *object_p, /**< the object */
-                                     uint32_t index) /**< property index */
+ecma_op_object_find_by_index (ecma_object_t *object_p, /**< the object */
+                              ecma_length_t index) /**< property index */
 {
   if (JERRY_LIKELY (index <= ECMA_DIRECT_STRING_MAX_IMM))
   {
     return ecma_op_object_find (object_p, ECMA_CREATE_DIRECT_UINT32_STRING (index));
   }
 
-  ecma_string_t *index_str_p = ecma_new_non_direct_string_from_uint32 (index);
+  ecma_string_t *index_str_p = ecma_new_ecma_string_from_length (index);
   ecma_value_t ret_value = ecma_op_object_find (object_p, index_str_p);
   ecma_deref_ecma_string (index_str_p);
 
   return ret_value;
-} /* ecma_op_object_find_by_uint32_index */
-
-/**
- * Search the value corresponding to an ecma_number_t property index
- *
- * Note: this method falls back to the general ecma_op_object_find
- *
- * @return ecma value if property is found
- *         ECMA_VALUE_NOT_FOUND if property is not found
- *         Returned value must be freed with ecma_free_value
- */
-ecma_value_t
-ecma_op_object_find_by_number_index (ecma_object_t *object_p, /**< the object */
-                                     ecma_number_t index) /**< property index */
-{
-  ecma_string_t *index_str_p = ecma_new_ecma_string_from_number (index);
-  ecma_value_t ret_value = ecma_op_object_find (object_p, index_str_p);
-  ecma_deref_ecma_string (index_str_p);
-
-  return ret_value;
-} /* ecma_op_object_find_by_number_index */
+} /* ecma_op_object_find_by_index */
 
 /**
  * Search the value corresponding to a property name
@@ -827,26 +807,26 @@ ecma_op_object_get_with_receiver (ecma_object_t *object_p, /**< the object */
 } /* ecma_op_object_get_with_receiver */
 
 /**
- * [[Get]] operation of ecma object specified for uint32_t property index
+ * [[Get]] operation of ecma object specified for property index
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-ecma_op_object_get_by_uint32_index (ecma_object_t *object_p, /**< the object */
-                                    uint32_t index) /**< property index */
+ecma_op_object_get_by_index (ecma_object_t *object_p, /**< the object */
+                             ecma_length_t index) /**< property index */
 {
   if (JERRY_LIKELY (index <= ECMA_DIRECT_STRING_MAX_IMM))
   {
     return ecma_op_object_get (object_p, ECMA_CREATE_DIRECT_UINT32_STRING (index));
   }
 
-  ecma_string_t *index_str_p = ecma_new_non_direct_string_from_uint32 (index);
+  ecma_string_t *index_str_p = ecma_new_ecma_string_from_length (index);
   ecma_value_t ret_value = ecma_op_object_get (object_p, index_str_p);
   ecma_deref_ecma_string (index_str_p);
 
   return ret_value;
-} /* ecma_op_object_get_by_uint32_index */
+} /* ecma_op_object_get_by_index */
 
 /**
  * Perform ToLength(O.[[Get]]("length")) operation
@@ -858,11 +838,11 @@ ecma_op_object_get_by_uint32_index (ecma_object_t *object_p, /**< the object */
  */
 ecma_value_t
 ecma_op_object_get_length (ecma_object_t *object_p, /**< the object */
-                           uint32_t *length_p) /**< [out] length value converted to uint32 */
+                           ecma_length_t *length_p) /**< [out] length value converted to uint32 */
 {
   if (JERRY_LIKELY (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_ARRAY))
   {
-    *length_p = ecma_array_get_length (object_p);
+    *length_p = (ecma_length_t) ecma_array_get_length (object_p);
     return ECMA_VALUE_EMPTY;
   }
 
@@ -1023,7 +1003,7 @@ ecma_op_get_method_by_magic_id (ecma_value_t value, /**< ecma value */
 #endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
- * [[Put]] ecma general object's operation specialized for uint32_ property index
+ * [[Put]] ecma general object's operation specialized for property index
  *
  * Note: This function falls back to the general ecma_op_object_put
  *
@@ -1031,10 +1011,10 @@ ecma_op_get_method_by_magic_id (ecma_value_t value, /**< ecma value */
  *         The returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_op_object_put_by_uint32_index (ecma_object_t *object_p, /**< the object */
-                                    uint32_t index, /**< property index */
-                                    ecma_value_t value, /**< ecma value */
-                                    bool is_throw) /**< flag that controls failure handling */
+ecma_op_object_put_by_index (ecma_object_t *object_p, /**< the object */
+                             ecma_length_t index, /**< property index */
+                             ecma_value_t value, /**< ecma value */
+                             bool is_throw) /**< flag that controls failure handling */
 {
   if (JERRY_LIKELY (index <= ECMA_DIRECT_STRING_MAX_IMM))
   {
@@ -1044,33 +1024,12 @@ ecma_op_object_put_by_uint32_index (ecma_object_t *object_p, /**< the object */
                                is_throw);
   }
 
-  ecma_string_t *index_str_p = ecma_new_non_direct_string_from_uint32 (index);
+  ecma_string_t *index_str_p = ecma_new_ecma_string_from_length (index);
   ecma_value_t ret_value = ecma_op_object_put (object_p, index_str_p, value, is_throw);
   ecma_deref_ecma_string (index_str_p);
 
   return ret_value;
-} /* ecma_op_object_put_by_uint32_index */
-
-/**
- * [[Put]] ecma general object's operation specialized for ecma_number_ property index
- *
- * Note: This function falls back to the general ecma_op_object_put
- *
- * @return ecma value
- *         The returned value must be freed with ecma_free_value.
- */
-ecma_value_t
-ecma_op_object_put_by_number_index (ecma_object_t *object_p, /**< the object */
-                                    ecma_number_t index, /**< property index */
-                                    ecma_value_t value, /**< ecma value */
-                                    bool is_throw) /**< flag that controls failure handling */
-{
-  ecma_string_t *index_str_p = ecma_new_ecma_string_from_number (index);
-  ecma_value_t ret_value = ecma_op_object_put (object_p, index_str_p, value, is_throw);
-  ecma_deref_ecma_string (index_str_p);
-
-  return ret_value;
-} /* ecma_op_object_put_by_number_index */
+} /* ecma_op_object_put_by_index */
 
 /**
  * [[Put]] ecma general object's operation
@@ -1568,7 +1527,7 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
 } /* ecma_op_object_put_with_receiver */
 
 /**
- * [[Delete]] ecma object's operation specialized for uint32_t property index
+ * [[Delete]] ecma object's operation specialized for property index
  *
  * Note:
  *      This method falls back to the general ecma_op_object_delete
@@ -1577,42 +1536,21 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
  *         false - or type error otherwise (based in 'is_throw')
  */
 ecma_value_t
-ecma_op_object_delete_by_uint32_index (ecma_object_t *obj_p, /**< the object */
-                                       uint32_t index, /**< property index */
-                                       bool is_throw) /**< flag that controls failure handling */
+ecma_op_object_delete_by_index (ecma_object_t *obj_p, /**< the object */
+                                ecma_length_t index, /**< property index */
+                                bool is_throw) /**< flag that controls failure handling */
 {
   if (JERRY_LIKELY (index <= ECMA_DIRECT_STRING_MAX_IMM))
   {
-    return ecma_op_object_delete (obj_p, ECMA_CREATE_DIRECT_UINT32_STRING (index), is_throw);
+    return ecma_op_object_delete (obj_p, ECMA_CREATE_DIRECT_UINT32_STRING (index), is_throw);;
   }
 
-  ecma_string_t *index_str_p = ecma_new_non_direct_string_from_uint32 (index);
+  ecma_string_t *index_str_p = ecma_new_ecma_string_from_length (index);
   ecma_value_t ret_value = ecma_op_object_delete (obj_p, index_str_p, is_throw);
   ecma_deref_ecma_string (index_str_p);
 
   return ret_value;
-} /* ecma_op_object_delete_by_uint32_index */
-
-/**
- * [[Delete]] ecma object's operation specialized for ecma_number_t property index
- *
- * Note:
- *      This method falls back to the general ecma_op_object_delete
- *
- * @return true - if deleted successfully
- *         false - or type error otherwise (based in 'is_throw')
- */
-ecma_value_t
-ecma_op_object_delete_by_number_index (ecma_object_t *obj_p, /**< the object */
-                                       ecma_number_t index, /**< property index */
-                                       bool is_throw) /**< flag that controls failure handling */
-{
-  ecma_string_t *index_str_p = ecma_new_ecma_string_from_number (index);
-  ecma_value_t ret_value = ecma_op_object_delete (obj_p, index_str_p, is_throw);
-  ecma_deref_ecma_string (index_str_p);
-
-  return ret_value;
-} /* ecma_op_object_delete_by_number_index */
+} /* ecma_op_object_delete_by_index */
 
 /**
  * [[Delete]] ecma object's operation

@@ -44,12 +44,14 @@ typedef enum
 ecma_value_t
 ecma_builtin_helper_object_to_string (const ecma_value_t this_arg);
 ecma_string_t *
-ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, uint32_t index);
+ecma_builtin_helper_get_to_locale_string_at_index (ecma_object_t *obj_p, ecma_length_t index);
 ecma_value_t
-ecma_builtin_helper_array_concat_value (ecma_object_t *obj_p, uint32_t *length_p, ecma_value_t value);
-uint32_t
-ecma_builtin_helper_array_index_normalize (ecma_value_t arg, uint32_t length, uint32_t *number_p);
-uint32_t
+ecma_builtin_helper_array_concat_value (ecma_object_t *obj_p, ecma_length_t *length_p, ecma_value_t value);
+ecma_value_t
+ecma_builtin_helper_uint32_index_normalize (ecma_value_t arg, uint32_t length, uint32_t *number_p);
+ecma_value_t
+ecma_builtin_helper_array_index_normalize (ecma_value_t arg, ecma_length_t length, ecma_length_t *number_p);
+ecma_value_t
 ecma_builtin_helper_string_index_normalize (ecma_number_t index, uint32_t length, bool nan_to_zero);
 ecma_value_t
 ecma_builtin_helper_string_prototype_object_index_of (ecma_string_t *original_str_p, ecma_value_t arg1,
@@ -61,8 +63,8 @@ ecma_value_t
 ecma_builtin_helper_def_prop (ecma_object_t *obj_p, ecma_string_t *name_p, ecma_value_t value, uint32_t opts);
 
 ecma_value_t
-ecma_builtin_helper_def_prop_by_index (ecma_object_t *obj_p, uint32_t index, ecma_value_t value, uint32_t opts);
-
+ecma_builtin_helper_def_prop_by_index (ecma_object_t *obj_p, ecma_length_t index, ecma_value_t value,
+                                       uint32_t opts);
 /**
  * Context for replace substitutions
  */

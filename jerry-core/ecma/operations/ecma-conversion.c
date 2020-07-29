@@ -946,7 +946,7 @@ ecma_op_to_integer (ecma_value_t value, /**< ecma value */
  */
 ecma_value_t
 ecma_op_to_length (ecma_value_t value, /**< ecma value */
-                   uint32_t *length) /**< [out] ecma number */
+                   ecma_length_t *length) /**< [out] ecma number */
 {
   /* 1 */
   if (ECMA_IS_VALUE_ERROR (value))
@@ -973,14 +973,14 @@ ecma_op_to_length (ecma_value_t value, /**< ecma value */
   }
 
   /* 5 */
-  if (num >= (ecma_number_t) UINT32_MAX)
+  if (num >= ECMA_NUMBER_MAX_SAFE_INTEGER)
   {
-    *length = UINT32_MAX;
+    *length = (ecma_length_t) ECMA_NUMBER_MAX_SAFE_INTEGER;
     return ECMA_VALUE_EMPTY;
   }
 
   /* 6 */
-  *length = (uint32_t) num;
+  *length = (ecma_length_t) num;
   return ECMA_VALUE_EMPTY;
 #else /* !ENABLED (JERRY_ESNEXT) */
   /* In the case of ES5, ToLength(ES6) operation is the same as ToUint32(ES5) */
@@ -1026,7 +1026,7 @@ ecma_op_create_list_from_array_like (ecma_value_t arr,  /**< array value */
   ecma_object_t *obj_p = ecma_get_object_from_value (arr);
 
   /* 4. 5. */
-  uint32_t len;
+  ecma_length_t len;
   if (ECMA_IS_VALUE_ERROR (ecma_op_object_get_length (obj_p, &len)))
   {
     return NULL;
@@ -1036,9 +1036,9 @@ ecma_op_create_list_from_array_like (ecma_value_t arr,  /**< array value */
   ecma_collection_t *list_ptr = ecma_new_collection ();
 
   /* 7. 8. */
-  for (uint32_t idx = 0; idx < len; idx++)
+  for (ecma_length_t idx = 0; idx < len; idx++)
   {
-    ecma_value_t next = ecma_op_object_get_by_uint32_index (obj_p, idx);
+    ecma_value_t next = ecma_op_object_get_by_index (obj_p, idx);
     if (ECMA_IS_VALUE_ERROR (next))
     {
       ecma_collection_free (list_ptr);

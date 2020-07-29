@@ -688,9 +688,9 @@ ecma_builtin_string_prototype_object_slice (ecma_string_t *get_string_val, /**< 
   /* 4. 6. */
   lit_utf8_size_t start = 0, end = len;
 
-  if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_array_index_normalize (arg1,
-                                                                      len,
-                                                                      &start)))
+  if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_uint32_index_normalize (arg1,
+                                                                       len,
+                                                                       &start)))
   {
     return ECMA_VALUE_ERROR;
   }
@@ -702,9 +702,9 @@ ecma_builtin_string_prototype_object_slice (ecma_string_t *get_string_val, /**< 
   }
   else
   {
-    if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_array_index_normalize (arg2,
-                                                                        len,
-                                                                        &end)))
+    if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_uint32_index_normalize (arg2,
+                                                                         len,
+                                                                         &end)))
     {
       return ECMA_VALUE_ERROR;
     }
@@ -778,7 +778,8 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_value, /**< this a
   }
 
   /* 8. */
-  uint32_t limit = UINT32_MAX;
+  uint32_t limit = UINT32_MAX - 1;
+
   if (!ecma_is_value_undefined (limit_value))
   {
     /* ECMA-262 v11, 21.1.3.20 6 */

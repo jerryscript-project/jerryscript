@@ -111,18 +111,18 @@ ecma_builtin_arraybuffer_prototype_object_slice (ecma_value_t this_arg, /**< thi
 
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
-  if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_array_index_normalize (arg1,
-                                                                      len,
-                                                                      &start)))
+  if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_uint32_index_normalize (arg1,
+                                                                       len,
+                                                                       &start)))
   {
     return ECMA_VALUE_ERROR;
   }
 
   if (!ecma_is_value_undefined (arg2))
   {
-    if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_array_index_normalize (arg2,
-                                                                        len,
-                                                                        &end)))
+    if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_uint32_index_normalize (arg2,
+                                                                         len,
+                                                                         &end)))
     {
       return ECMA_VALUE_ERROR;
     }

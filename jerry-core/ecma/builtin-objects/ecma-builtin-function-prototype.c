@@ -114,7 +114,7 @@ ecma_builtin_function_prototype_object_apply (ecma_object_t *func_obj_p, /**< th
   ecma_object_t *obj_p = ecma_get_object_from_value (arg2);
 
   /* 4-5. */
-  uint32_t length;
+  ecma_length_t length;
   ecma_value_t len_value = ecma_op_object_get_length (obj_p, &length);
 
   if (ECMA_IS_VALUE_ERROR (len_value))
@@ -130,12 +130,12 @@ ecma_builtin_function_prototype_object_apply (ecma_object_t *func_obj_p, /**< th
   /* 6. */
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
   JMEM_DEFINE_LOCAL_ARRAY (arguments_list_p, length, ecma_value_t);
-  uint32_t index = 0;
+  ecma_length_t index = 0;
 
   /* 7. */
   for (index = 0; index < length; index++)
   {
-    ecma_value_t get_value = ecma_op_object_get_by_uint32_index (obj_p, index);
+    ecma_value_t get_value = ecma_op_object_get_by_index (obj_p, index);
 
     if (ECMA_IS_VALUE_ERROR (get_value))
     {
@@ -152,7 +152,7 @@ ecma_builtin_function_prototype_object_apply (ecma_object_t *func_obj_p, /**< th
     ret_value = ecma_op_function_call (func_obj_p,
                                        arg1,
                                        arguments_list_p,
-                                       length);
+                                       (uint32_t) length);
   }
 
   for (uint32_t remove_index = 0; remove_index < index; remove_index++)

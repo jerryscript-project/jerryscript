@@ -102,7 +102,7 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, uint32_t argu
 #if ENABLED (JERRY_ESNEXT)
 ecma_value_t
 ecma_op_array_species_create (ecma_object_t *original_array_p,
-                              uint32_t length);
+                              ecma_length_t length);
 
 ecma_value_t
 ecma_op_create_array_iterator (ecma_object_t *obj_p,

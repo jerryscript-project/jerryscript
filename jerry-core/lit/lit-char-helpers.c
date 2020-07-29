@@ -788,16 +788,19 @@ lit_code_point_t
 lit_char_to_lower_case (lit_code_point_t cp, /**< code point */
                         ecma_stringbuilder_t *builder_p) /**< string builder */
 {
-  if (cp >= LIT_CHAR_UPPERCASE_A && cp <= LIT_CHAR_UPPERCASE_Z)
+  if (cp <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
   {
-    lit_utf8_byte_t lowercase_char = (lit_utf8_byte_t) (cp + (LIT_CHAR_LOWERCASE_A - LIT_CHAR_UPPERCASE_A));
+    if (cp >= LIT_CHAR_UPPERCASE_A && cp <= LIT_CHAR_UPPERCASE_Z)
+    {
+      cp = (lit_utf8_byte_t) (cp + (LIT_CHAR_LOWERCASE_A - LIT_CHAR_UPPERCASE_A));
+    }
 
     if (builder_p != NULL)
     {
-      ecma_stringbuilder_append_byte (builder_p, lowercase_char);
+      ecma_stringbuilder_append_byte (builder_p, (lit_utf8_byte_t) cp);
     }
 
-    return lowercase_char;
+    return cp;
   }
 
 #if ENABLED (JERRY_UNICODE_CASE_CONVERSION)
@@ -859,16 +862,19 @@ lit_code_point_t
 lit_char_to_upper_case (lit_code_point_t cp, /**< code point */
                         ecma_stringbuilder_t *builder_p) /**< string builder */
 {
-  if (cp >= LIT_CHAR_LOWERCASE_A && cp <= LIT_CHAR_LOWERCASE_Z)
+  if (cp <= LIT_UTF8_1_BYTE_CODE_POINT_MAX)
   {
-    lit_utf8_byte_t uppercase_char = (lit_utf8_byte_t) (cp - (LIT_CHAR_LOWERCASE_A - LIT_CHAR_UPPERCASE_A));
+    if (cp >= LIT_CHAR_LOWERCASE_A && cp <= LIT_CHAR_LOWERCASE_Z)
+    {
+      cp = (lit_utf8_byte_t) (cp - (LIT_CHAR_LOWERCASE_A - LIT_CHAR_UPPERCASE_A));
+    }
 
     if (builder_p != NULL)
     {
-      ecma_stringbuilder_append_byte (builder_p, uppercase_char);
+      ecma_stringbuilder_append_byte (builder_p, (lit_utf8_byte_t) cp);
     }
 
-    return uppercase_char;
+    return cp;
   }
 
 #if ENABLED (JERRY_UNICODE_CASE_CONVERSION)
@@ -929,7 +935,8 @@ bool
 lit_char_fold_to_lower (lit_code_point_t cp) /**< code point */
 {
 #if ENABLED (JERRY_UNICODE_CASE_CONVERSION)
-  return (cp > LIT_UTF16_CODE_UNIT_MAX
+  return (cp <= LIT_UTF8_1_BYTE_CODE_POINT_MAX
+          || cp > LIT_UTF16_CODE_UNIT_MAX
           || (!lit_search_char_in_interval_array ((ecma_char_t) cp,
                                                   lit_unicode_folding_skip_to_lower_interval_starts,
                                                   lit_unicode_folding_skip_to_lower_interval_lengths,
@@ -952,7 +959,8 @@ bool
 lit_char_fold_to_upper (lit_code_point_t cp) /**< code point */
 {
 #if ENABLED (JERRY_UNICODE_CASE_CONVERSION)
-  return (cp <= LIT_UTF16_CODE_UNIT_MAX
+  return (cp > LIT_UTF8_1_BYTE_CODE_POINT_MAX
+          && cp <= LIT_UTF16_CODE_UNIT_MAX
           && (lit_search_char_in_interval_array ((ecma_char_t) cp,
                                                   lit_unicode_folding_to_upper_interval_starts,
                                                   lit_unicode_folding_to_upper_interval_lengths,

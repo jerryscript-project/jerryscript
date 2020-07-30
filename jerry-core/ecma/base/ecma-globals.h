@@ -85,6 +85,7 @@ typedef enum
   ECMA_TYPE_OBJECT = 3, /**< pointer to description of an object */
   ECMA_TYPE_SYMBOL = 4, /**< pointer to description of a symbol */
   ECMA_TYPE_DIRECT_STRING = 5, /**< directly encoded string values */
+  ECMA_TYPE_BIGINT = 6, /**< pointer to a bigint primitive */
   ECMA_TYPE_ERROR = 7, /**< pointer to description of an error reference (only supported by C API) */
   ECMA_TYPE_SNAPSHOT_OFFSET = ECMA_TYPE_ERROR, /**< offset to a snapshot number/string */
   ECMA_TYPE___MAX = ECMA_TYPE_ERROR /** highest value for ecma types */
@@ -1710,28 +1711,44 @@ typedef struct
 } ecma_stringbuilder_t;
 
 /**
- * Abort flag for error reference.
+ * Types for extended primitive values.
  */
-#define ECMA_ERROR_REF_ABORT 0x1
-
-/**
- * Value for increasing or decreasing the reference counter.
- */
-#define ECMA_ERROR_REF_ONE (1u << 1)
-
-/**
- * Maximum value of the reference counter.
- */
-#define ECMA_ERROR_MAX_REF (UINT32_MAX - 1u)
+typedef enum
+{
+#ifndef JERRY_BUILTIN_BIGINT
+  ECMA_EXTENDED_PRIMITIVE_BIGINT, /**< BigInt value */
+#endif /* !defined (JERRY_BUILTIN_BIGINT) */
+  ECMA_EXTENDED_PRIMITIVE_ERROR, /**< external API error reference */
+  ECMA_EXTENDED_PRIMITIVE_ABORT, /**< external API abort reference */
+} ecma_extended_primitive_type_t;
 
 /**
  * Representation of a thrown value on API level.
  */
 typedef struct
 {
-  uint32_t refs_and_flags; /**< reference counter */
-  ecma_value_t value; /**< referenced value */
-} ecma_error_reference_t;
+  uint32_t refs_and_type; /**< reference counter and type */
+  union
+  {
+    ecma_value_t value; /**< referenced value */
+    uint32_t bigint_sign_and_size; /**< BigInt properties */
+  } u;
+} ecma_extended_primitive_t;
+
+/**
+ * Get the type of an extended primitve value.
+ */
+#define ECMA_EXTENDED_PRIMITIVE_GET_TYPE(primitve_p) ((primitve_p)->refs_and_type & 0x7)
+
+/**
+ * Value for increasing or decreasing the reference counter.
+ */
+#define ECMA_EXTENDED_PRIMITIVE_REF_ONE (1u << 3)
+
+/**
+ * Maximum value of the reference counter.
+ */
+#define ECMA_EXTENDED_PRIMITIVE_MAX_REF (UINT32_MAX - (ECMA_EXTENDED_PRIMITIVE_REF_ONE - 1))
 
 #if ENABLED (JERRY_PROPRETY_HASHMAP)
 
@@ -2009,7 +2026,7 @@ typedef struct
   ecma_object_t *buffer_p; /**< [[ViewedArrayBuffer]] internal slot */
   uint32_t byte_offset; /**< [[ByteOffset]] internal slot */
 } ecma_dataview_object_t;
-#endif /* ENABLED (JERRY_BUILTIN_DATAVIEW */
+#endif /* ENABLED (JERRY_BUILTIN_DATAVIEW) */
 
 /**
  * Flag for indicating whether the symbol is a well known symbol
@@ -2090,6 +2107,28 @@ typedef uint64_t ecma_length_t;
  */
 typedef uint32_t ecma_length_t;
 #endif /* ENABLED (JERRY_ESNEXT) */
+
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+
+/**
+ * BigUInt data is a sequence of uint32_t numbers.
+ */
+typedef uint32_t ecma_bigint_digit_t;
+
+/**
+ * Return the size of a BigInt value in ecma_bigint_data_t units.
+ */
+#define ECMA_BIGINT_GET_SIZE(value_p) \
+  ((value_p)->u.bigint_sign_and_size & ~(uint32_t) (sizeof (ecma_bigint_digit_t) - 1))
+
+/**
+ * Size of memory needs to be allocated for the digits of a BigInt.
+ * The value is rounded up for two digits.
+ */
+#define ECMA_BIGINT_GET_BYTE_SIZE(size) \
+  (size_t) (((size) + sizeof (ecma_bigint_digit_t)) & ~(2 * sizeof (ecma_bigint_digit_t) - 1))
+
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 
 /**
  * Struct for counting the different types properties in objects

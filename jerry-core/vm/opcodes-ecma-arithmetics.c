@@ -14,7 +14,9 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-bigint.h"
 #include "ecma-conversion.h"
+#include "ecma-exceptions.h"
 #include "ecma-helpers.h"
 #include "ecma-number-arithmetic.h"
 #include "ecma-objects.h"
@@ -45,48 +47,128 @@ do_number_arithmetic (number_arithmetic_op op, /**< number arithmetic operation 
                       ecma_value_t left_value, /**< left value */
                       ecma_value_t right_value) /**< right value */
 {
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+  bool free_left_value = false;
+  bool free_right_value = false;
 
-  ECMA_OP_TO_NUMBER_TRY_CATCH (num_left, left_value, ret_value);
-  ECMA_OP_TO_NUMBER_TRY_CATCH (num_right, right_value, ret_value);
-
-  ecma_number_t result = ECMA_NUMBER_ZERO;
-
-  switch (op)
+  if (ecma_is_value_object (left_value))
   {
-    case NUMBER_ARITHMETIC_SUBTRACTION:
+    ecma_object_t *obj_p = ecma_get_object_from_value (left_value);
+    left_value = ecma_op_object_default_value (obj_p, ECMA_PREFERRED_TYPE_NUMBER);
+    free_left_value = true;
+
+    if (ECMA_IS_VALUE_ERROR (left_value))
     {
-      result = num_left - num_right;
-      break;
+      return left_value;
     }
-    case NUMBER_ARITHMETIC_MULTIPLICATION:
-    {
-      result = num_left * num_right;
-      break;
-    }
-    case NUMBER_ARITHMETIC_DIVISION:
-    {
-      result = num_left / num_right;
-      break;
-    }
-    case NUMBER_ARITHMETIC_REMAINDER:
-    {
-      result = ecma_op_number_remainder (num_left, num_right);
-      break;
-    }
-#if ENABLED (JERRY_ESNEXT)
-    case NUMBER_ARITHMETIC_EXPONENTIATION:
-    {
-      result = ecma_number_pow (num_left, num_right);
-      break;
-    }
-#endif /* ENABLED (JERRY_ESNEXT) */
   }
 
-  ret_value = ecma_make_number_value (result);
+  if (ecma_is_value_object (right_value))
+  {
+    ecma_object_t *obj_p = ecma_get_object_from_value (right_value);
+    right_value = ecma_op_object_default_value (obj_p, ECMA_PREFERRED_TYPE_NUMBER);
+    free_right_value = true;
 
-  ECMA_OP_TO_NUMBER_FINALIZE (num_right);
-  ECMA_OP_TO_NUMBER_FINALIZE (num_left);
+    if (ECMA_IS_VALUE_ERROR (right_value))
+    {
+      if (free_left_value)
+      {
+        ecma_free_value (left_value);
+      }
+      return right_value;
+    }
+  }
+
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  if (JERRY_LIKELY (!ecma_is_value_bigint (left_value))
+      || JERRY_LIKELY (!ecma_is_value_bigint (right_value)))
+  {
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+    ECMA_OP_TO_NUMBER_TRY_CATCH (num_left, left_value, ret_value);
+    ECMA_OP_TO_NUMBER_TRY_CATCH (num_right, right_value, ret_value);
+
+    ecma_number_t result = ECMA_NUMBER_ZERO;
+
+    switch (op)
+    {
+      case NUMBER_ARITHMETIC_SUBTRACTION:
+      {
+        result = num_left - num_right;
+        break;
+      }
+      case NUMBER_ARITHMETIC_MULTIPLICATION:
+      {
+        result = num_left * num_right;
+        break;
+      }
+      case NUMBER_ARITHMETIC_DIVISION:
+      {
+        result = num_left / num_right;
+        break;
+      }
+      case NUMBER_ARITHMETIC_REMAINDER:
+      {
+        result = ecma_op_number_remainder (num_left, num_right);
+        break;
+      }
+#if ENABLED (JERRY_ESNEXT)
+      case NUMBER_ARITHMETIC_EXPONENTIATION:
+      {
+        result = ecma_number_pow (num_left, num_right);
+        break;
+      }
+#endif /* ENABLED (JERRY_ESNEXT) */
+    }
+
+    ret_value = ecma_make_number_value (result);
+
+    ECMA_OP_TO_NUMBER_FINALIZE (num_right);
+    ECMA_OP_TO_NUMBER_FINALIZE (num_left);
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  }
+  else
+  {
+    switch (op)
+    {
+      case NUMBER_ARITHMETIC_SUBTRACTION:
+      {
+        ret_value = ecma_bigint_add_sub (left_value, right_value, false);
+        break;
+      }
+      case NUMBER_ARITHMETIC_MULTIPLICATION:
+      {
+        ret_value = ecma_bigint_mul (left_value, right_value);
+        break;
+      }
+      case NUMBER_ARITHMETIC_DIVISION:
+      {
+        ret_value = ecma_bigint_div_mod (left_value, right_value, false);
+        break;
+      }
+      case NUMBER_ARITHMETIC_REMAINDER:
+      {
+        ret_value = ecma_bigint_div_mod (left_value, right_value, true);
+        break;
+      }
+      default:
+      {
+        ret_value = ecma_raise_common_error (ECMA_ERR_MSG ("Not supported BigInt operation"));
+        break;
+      }
+    }
+  }
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+
+  if (free_left_value)
+  {
+    ecma_free_value (left_value);
+  }
+
+  if (free_right_value)
+  {
+    ecma_free_value (right_value);
+  }
 
   return ret_value;
 } /* do_number_arithmetic */
@@ -175,6 +257,13 @@ opfunc_addition (ecma_value_t left_value, /**< left value */
 
     ecma_deref_ecma_string (string2_p);
   }
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  else if (JERRY_UNLIKELY (ecma_is_value_bigint (left_value))
+           && JERRY_UNLIKELY (ecma_is_value_bigint (right_value)))
+  {
+    ret_value = ecma_bigint_add_sub (left_value, right_value, true);
+  }
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
   else
   {
     ECMA_OP_TO_NUMBER_TRY_CATCH (num_left, left_value, ret_value);
@@ -211,15 +300,63 @@ ecma_value_t
 opfunc_unary_operation (ecma_value_t left_value, /**< left value */
                         bool is_plus) /**< unary plus flag */
 {
+  bool free_left_value = false;
+
+  if (ecma_is_value_object (left_value))
+  {
+    ecma_object_t *obj_p = ecma_get_object_from_value (left_value);
+    left_value = ecma_op_object_default_value (obj_p, ECMA_PREFERRED_TYPE_NUMBER);
+    free_left_value = true;
+
+    if (ECMA_IS_VALUE_ERROR (left_value))
+    {
+      return left_value;
+    }
+  }
+
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
-  ECMA_OP_TO_NUMBER_TRY_CATCH (num_var_value,
-                               left_value,
-                               ret_value);
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  if (JERRY_LIKELY (!ecma_is_value_bigint (left_value)))
+  {
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+    ECMA_OP_TO_NUMBER_TRY_CATCH (num_var_value,
+                                 left_value,
+                                 ret_value);
 
-  ret_value = ecma_make_number_value (is_plus ? num_var_value : -num_var_value);
+    ret_value = ecma_make_number_value (is_plus ? num_var_value : -num_var_value);
 
-  ECMA_OP_TO_NUMBER_FINALIZE (num_var_value);
+    ECMA_OP_TO_NUMBER_FINALIZE (num_var_value);
+
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  }
+  else
+  {
+    if (is_plus)
+    {
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Unary operation plus is not allowed for BigInt numbers"));
+    }
+    else
+    {
+      ecma_extended_primitive_t *left_p = ecma_get_extended_primitive_from_value (left_value);
+
+      if (ECMA_BIGINT_GET_SIZE (left_p) == 0)
+      {
+        ecma_ref_extended_primitive (left_p);
+        ret_value = left_value;
+      }
+      else
+      {
+        ret_value = ecma_bigint_negate (left_p);
+      }
+    }
+  }
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+
+  if (free_left_value)
+  {
+    ecma_free_value (left_value);
+  }
 
   return ret_value;
 } /* opfunc_unary_operation */

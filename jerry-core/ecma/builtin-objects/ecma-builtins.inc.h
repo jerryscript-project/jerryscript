@@ -677,6 +677,23 @@ BUILTIN (ECMA_BUILTIN_ID_MAP_ITERATOR_PROTOTYPE,
          true,
          map_iterator_prototype)
 #endif /* ENABLED (JERRY_BUILTIN_SET) */
+
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+/* The %BigInt.prototype% object */
+BUILTIN (ECMA_BUILTIN_ID_BIGINT_PROTOTYPE,
+         ECMA_OBJECT_TYPE_GENERAL,
+         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
+         true,
+         bigint_prototype)
+
+/* The %BigInt% object */
+BUILTIN_ROUTINE (ECMA_BUILTIN_ID_BIGINT,
+                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
+                 true,
+                 bigint)
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+
 #endif /* ENABLED (JERRY_ESNEXT) */
 
 #if ENABLED (JERRY_BUILTIN_DATAVIEW)

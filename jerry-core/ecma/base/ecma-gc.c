@@ -1202,11 +1202,14 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 
       switch (ext_object_p->u.class_prop.class_id)
       {
+        case LIT_MAGIC_STRING_STRING_UL:
+        case LIT_MAGIC_STRING_NUMBER_UL:
 #if ENABLED (JERRY_ESNEXT)
         case LIT_MAGIC_STRING_SYMBOL_UL:
 #endif /* ENABLED (JERRY_ESNEXT) */
-        case LIT_MAGIC_STRING_STRING_UL:
-        case LIT_MAGIC_STRING_NUMBER_UL:
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+        case LIT_MAGIC_STRING_BIGINT_UL:
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
         {
           ecma_free_value (ext_object_p->u.class_prop.u.value);
           break;

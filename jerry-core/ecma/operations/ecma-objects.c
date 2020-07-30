@@ -2648,6 +2648,12 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
             return LIT_MAGIC_STRING_FUNCTION_UL;
           }
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+          case ECMA_BUILTIN_ID_BIGINT:
+          {
+            return LIT_MAGIC_STRING_FUNCTION_UL;
+          }
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
           default:
           {
             JERRY_ASSERT (ecma_object_check_class_name_is_object (obj_p));

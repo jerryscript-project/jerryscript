@@ -1216,8 +1216,72 @@ ecma_free_property_descriptor (ecma_property_descriptor_t *prop_desc_p) /**< pro
 /**
  * The size of error reference must be 8 bytes to use jmem_pools_alloc().
  */
-JERRY_STATIC_ASSERT (sizeof (ecma_error_reference_t) == 8,
+JERRY_STATIC_ASSERT (sizeof (ecma_extended_primitive_t) == 8,
                      ecma_error_reference_size_must_be_8_bytes);
+
+/**
+ * Increase ref count of an extended primitve value.
+ */
+void
+ecma_ref_extended_primitive (ecma_extended_primitive_t *primitve_p) /**< extended primitve value */
+{
+  if (JERRY_LIKELY (primitve_p->refs_and_type < ECMA_EXTENDED_PRIMITIVE_MAX_REF))
+  {
+    primitve_p->refs_and_type += ECMA_EXTENDED_PRIMITIVE_REF_ONE;
+  }
+  else
+  {
+    jerry_fatal (ERR_REF_COUNT_LIMIT);
+  }
+} /* ecma_ref_extended_primitive */
+
+/**
+ * Decrease ref count of an error reference.
+ */
+void
+ecma_deref_error_reference (ecma_extended_primitive_t *error_ref_p) /**< error reference */
+{
+  JERRY_ASSERT (error_ref_p->refs_and_type >= ECMA_EXTENDED_PRIMITIVE_REF_ONE);
+
+  error_ref_p->refs_and_type -= ECMA_EXTENDED_PRIMITIVE_REF_ONE;
+
+  if (error_ref_p->refs_and_type < ECMA_EXTENDED_PRIMITIVE_REF_ONE)
+  {
+    ecma_free_value (error_ref_p->u.value);
+    jmem_pools_free (error_ref_p, sizeof (ecma_extended_primitive_t));
+  }
+} /* ecma_deref_error_reference */
+
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+
+/**
+ * Decrease ref count of a bigint value.
+ */
+void
+ecma_deref_bigint (ecma_extended_primitive_t *bigint_p) /**< bigint value */
+{
+  JERRY_ASSERT (bigint_p->refs_and_type >= ECMA_EXTENDED_PRIMITIVE_REF_ONE);
+
+  bigint_p->refs_and_type -= ECMA_EXTENDED_PRIMITIVE_REF_ONE;
+
+  if (bigint_p->refs_and_type >= ECMA_EXTENDED_PRIMITIVE_REF_ONE)
+  {
+    return;
+  }
+
+  uint32_t size = ECMA_BIGINT_GET_SIZE (bigint_p);
+
+  if (size == 0)
+  {
+    jmem_pools_free (bigint_p, sizeof (ecma_extended_primitive_t));
+    return;
+  }
+
+  size_t mem_size = ECMA_BIGINT_GET_BYTE_SIZE (size) + sizeof (ecma_extended_primitive_t);
+  jmem_heap_free_block (bigint_p, mem_size);
+} /* ecma_deref_bigint */
+
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 
 /**
  * Create an error reference from a given value.
@@ -1231,11 +1295,13 @@ ecma_value_t
 ecma_create_error_reference (ecma_value_t value, /**< referenced value */
                              bool is_exception) /**< error reference is an exception */
 {
-  ecma_error_reference_t *error_ref_p = (ecma_error_reference_t *) jmem_pools_alloc (sizeof (ecma_error_reference_t));
+  ecma_extended_primitive_t *error_ref_p;
+  error_ref_p = (ecma_extended_primitive_t *) jmem_pools_alloc (sizeof (ecma_extended_primitive_t));
 
-  error_ref_p->refs_and_flags = ECMA_ERROR_REF_ONE | (is_exception ? 0 : ECMA_ERROR_REF_ABORT);
-  error_ref_p->value = value;
-  return ecma_make_error_reference_value (error_ref_p);
+  error_ref_p->refs_and_type = (ECMA_EXTENDED_PRIMITIVE_REF_ONE
+                                | (is_exception ? ECMA_EXTENDED_PRIMITIVE_ERROR : ECMA_EXTENDED_PRIMITIVE_ABORT));
+  error_ref_p->u.value = value;
+  return ecma_make_extended_primitive_value (error_ref_p, ECMA_TYPE_ERROR);
 } /* ecma_create_error_reference */
 
 /**
@@ -1270,39 +1336,6 @@ ecma_create_error_object_reference (ecma_object_t *object_p) /**< referenced obj
 } /* ecma_create_error_object_reference */
 
 /**
- * Increase ref count of an error reference.
- */
-void
-ecma_ref_error_reference (ecma_error_reference_t *error_ref_p) /**< error reference */
-{
-  if (JERRY_LIKELY (error_ref_p->refs_and_flags < ECMA_ERROR_MAX_REF))
-  {
-    error_ref_p->refs_and_flags += ECMA_ERROR_REF_ONE;
-  }
-  else
-  {
-    jerry_fatal (ERR_REF_COUNT_LIMIT);
-  }
-} /* ecma_ref_error_reference */
-
-/**
- * Decrease ref count of an error reference.
- */
-void
-ecma_deref_error_reference (ecma_error_reference_t *error_ref_p) /**< error reference */
-{
-  JERRY_ASSERT (error_ref_p->refs_and_flags >= ECMA_ERROR_REF_ONE);
-
-  error_ref_p->refs_and_flags -= ECMA_ERROR_REF_ONE;
-
-  if (error_ref_p->refs_and_flags < ECMA_ERROR_REF_ONE)
-  {
-    ecma_free_value (error_ref_p->value);
-    jmem_pools_free (error_ref_p, sizeof (ecma_error_reference_t));
-  }
-} /* ecma_deref_error_reference */
-
-/**
  * Raise error from the given error reference.
  *
  * Note: the error reference's ref count is also decreased
@@ -1311,23 +1344,23 @@ void
 ecma_raise_error_from_error_reference (ecma_value_t value) /**< error reference */
 {
   JERRY_ASSERT (!jcontext_has_pending_exception () && !jcontext_has_pending_abort ());
-  ecma_error_reference_t *error_ref_p = ecma_get_error_reference_from_value (value);
+  ecma_extended_primitive_t *error_ref_p = ecma_get_extended_primitive_from_value (value);
 
-  JERRY_ASSERT (error_ref_p->refs_and_flags >= ECMA_ERROR_REF_ONE);
+  JERRY_ASSERT (error_ref_p->refs_and_type >= ECMA_EXTENDED_PRIMITIVE_REF_ONE);
 
-  ecma_value_t referenced_value = error_ref_p->value;
+  ecma_value_t referenced_value = error_ref_p->u.value;
 
   jcontext_set_exception_flag (true);
-  jcontext_set_abort_flag (error_ref_p->refs_and_flags & ECMA_ERROR_REF_ABORT);
+  jcontext_set_abort_flag (ECMA_EXTENDED_PRIMITIVE_GET_TYPE (error_ref_p) == ECMA_EXTENDED_PRIMITIVE_ABORT);
 
-  if (error_ref_p->refs_and_flags >= 2 * ECMA_ERROR_REF_ONE)
+  if (error_ref_p->refs_and_type >= 2 * ECMA_EXTENDED_PRIMITIVE_REF_ONE)
   {
-    error_ref_p->refs_and_flags -= ECMA_ERROR_REF_ONE;
+    error_ref_p->refs_and_type -= ECMA_EXTENDED_PRIMITIVE_REF_ONE;
     referenced_value = ecma_copy_value (referenced_value);
   }
   else
   {
-    jmem_pools_free (error_ref_p, sizeof (ecma_error_reference_t));
+    jmem_pools_free (error_ref_p, sizeof (ecma_extended_primitive_t));
   }
 
   JERRY_CONTEXT (error_value) = referenced_value;

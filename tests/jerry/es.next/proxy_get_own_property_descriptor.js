@@ -282,3 +282,30 @@ Object.assign({}, proxy);
 assert(result.length === 2);
 assert(result[0] === "foo");
 assert(result[1] === "bar");
+
+
+var trapCalls = 0;
+var p = new Proxy({}, {
+  getOwnPropertyDescriptor: function(t, prop) {
+    Object.defineProperty(t, prop, {
+      configurable: false,
+      writable: true,
+    });
+
+    trapCalls++;
+    return {
+      configurable: false,
+      writable: false,
+    };
+  },
+});
+
+try
+{
+  Object.getOwnPropertyDescriptor(p, "prop");
+  assert (false)
+}
+catch (e)
+{
+  assert(e instanceof TypeError)
+}

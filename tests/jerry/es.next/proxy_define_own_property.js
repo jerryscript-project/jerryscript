@@ -174,3 +174,27 @@ try {
 } catch (e) {
   assert(e instanceof TypeError);
 }
+
+var trapCalls = 0;
+var p = new Proxy({}, {
+  defineProperty: function(t, prop, desc) {
+    Object.defineProperty(t, prop, {
+      configurable: false,
+      writable: true,
+    });
+
+    trapCalls++;
+    return true;
+  },
+});
+
+try {
+  Reflect.defineProperty (p, "prop", {
+    writable: false,
+  });
+  assert (false);
+} catch (e) {
+  assert (e instanceof TypeError);
+}
+
+assert (trapCalls == 1)

@@ -162,3 +162,21 @@ try {
 } catch (e) {
   assert(e instanceof TypeError);
 }
+
+var trapCalls = 0;
+var p = new Proxy({prop: 1}, {
+  deleteProperty: function(t, prop) {
+    Object.preventExtensions(t);
+    trapCalls++;
+    return true;
+  },
+});
+
+try {
+  Reflect.deleteProperty (p, "prop");
+  assert (false);
+} catch (e) {
+  assert (e instanceof TypeError);
+}
+
+assert (trapCalls == 1);

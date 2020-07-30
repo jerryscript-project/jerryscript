@@ -348,49 +348,6 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
 } /* ecma_op_object_get_own_property */
 
 /**
- * [[GetProperty]] ecma object's operation
- *
- * See also:
- *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
- *
- * @return pointer to a property - if it exists,
- *         NULL (i.e. ecma-undefined) - otherwise.
- */
-static ecma_property_t
-ecma_op_object_get_property (ecma_object_t *object_p, /**< the object */
-                             ecma_string_t *property_name_p, /**< property name */
-                             ecma_property_ref_t *property_ref_p, /**< property reference */
-                             uint32_t options) /**< option bits */
-{
-  while (true)
-  {
-    ecma_property_t property = ecma_op_object_get_own_property (object_p,
-                                                                property_name_p,
-                                                                property_ref_p,
-                                                                options);
-
-    if (property != ECMA_PROPERTY_TYPE_NOT_FOUND && property != ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP)
-    {
-      return property;
-    }
-
-    if (property == ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP)
-    {
-      break;
-    }
-
-    if (object_p->u2.prototype_cp == JMEM_CP_NULL)
-    {
-      break;
-    }
-
-    object_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, object_p->u2.prototype_cp);
-  }
-
-  return ECMA_PROPERTY_TYPE_NOT_FOUND;
-} /* ecma_op_object_get_property */
-
-/**
  * Generic [[HasProperty]] operation
  *
  * See also:
@@ -1417,12 +1374,21 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
   {
     bool create_new_property = true;
 
-    jmem_cpointer_t proto_cp = ecma_op_ordinary_object_get_prototype_of (object_p);
+    jmem_cpointer_t obj_cp;
+    ECMA_SET_NON_NULL_POINTER (obj_cp, object_p);
+    ecma_object_t *proto_p = object_p;
 
-    if (proto_cp != JMEM_CP_NULL)
+    while (true)
     {
+      obj_cp = ecma_op_ordinary_object_get_prototype_of (proto_p);
+
+      if (obj_cp == JMEM_CP_NULL)
+      {
+        break;
+      }
+
       ecma_property_ref_t property_ref = { NULL };
-      ecma_object_t *proto_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, proto_cp);
+      proto_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, obj_cp);
 
 #if ENABLED (JERRY_BUILTIN_PROXY)
       if (ECMA_OBJECT_IS_PROXY (proto_p))
@@ -1435,10 +1401,10 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
       }
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
-      ecma_property_t inherited_property = ecma_op_object_get_property (proto_p,
-                                                                        property_name_p,
-                                                                        &property_ref,
-                                                                        ECMA_PROPERTY_GET_NO_OPTIONS);
+      ecma_property_t inherited_property = ecma_op_object_get_own_property (proto_p,
+                                                                            property_name_p,
+                                                                            &property_ref,
+                                                                            ECMA_PROPERTY_GET_NO_OPTIONS);
 
       if (inherited_property != ECMA_PROPERTY_TYPE_NOT_FOUND)
       {

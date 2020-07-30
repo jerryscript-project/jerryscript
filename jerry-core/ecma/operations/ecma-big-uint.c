@@ -99,7 +99,7 @@ ecma_big_uint_extend (ecma_extended_primitive_t *value_p, /**< BigInt value */
 /**
  * Compare two BigUInt numbers
  *
- * return -1, if value1 < value2, 0 if they are equal, and 1 otherwise
+ * return -1, if left value < right value, 0 if they are equal, and 1 otherwise
  */
 int
 ecma_big_uint_compare (ecma_extended_primitive_t *left_value_p, /**< left BigUInt value */

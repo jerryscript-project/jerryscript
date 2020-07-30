@@ -707,9 +707,6 @@
   <test id="built-ins/BigInt/constructor-from-octal-string.js"><reason></reason></test>
   <test id="built-ins/BigInt/constructor-integer.js"><reason></reason></test>
   <test id="built-ins/BigInt/constructor-trailing-leading-spaces.js"><reason></reason></test>
-  <test id="built-ins/BigInt/infinity-throws-rangeerror.js"><reason></reason></test>
-  <test id="built-ins/BigInt/nan-throws-rangeerror.js"><reason></reason></test>
-  <test id="built-ins/BigInt/negative-infinity-throws.rangeerror.js"><reason></reason></test>
   <test id="built-ins/BigInt/non-integer-rangeerror.js"><reason></reason></test>
   <test id="built-ins/BigInt/prototype/toString/a-z.js"><reason></reason></test>
   <test id="built-ins/BigInt/prototype/toString/default-radix.js"><reason></reason></test>
@@ -720,8 +717,6 @@
   <test id="built-ins/BigInt/prototype/toString/thisbigintvalue-not-valid-throws.js"><reason></reason></test>
   <test id="built-ins/BigInt/prototype/valueOf/cross-realm.js"><reason></reason></test>
   <test id="built-ins/BigInt/prototype/valueOf/return.js"><reason></reason></test>
-  <test id="built-ins/BigInt/tostring-throws.js"><reason></reason></test>
-  <test id="built-ins/BigInt/valueof-throws.js"><reason></reason></test>
   <test id="built-ins/Boolean/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/DataView/buffer-does-not-have-arraybuffer-data-throws-sab.js"><reason></reason></test>
   <test id="built-ins/DataView/buffer-reference-sab.js"><reason></reason></test>
@@ -1167,7 +1162,6 @@
   <test id="built-ins/Object/prototype/toString/symbol-tag-non-str-bigint.js"><reason></reason></test>
   <test id="built-ins/Object/prototype/toString/symbol-tag-non-str-builtin.js"><reason></reason></test>
   <test id="built-ins/Object/prototype/toString/symbol-tag-non-str-proxy-function.js"><reason></reason></test>
-  <test id="built-ins/Object/prototype/toString/symbol-tag-override-bigint.js"><reason></reason></test>
   <test id="built-ins/Object/setPrototypeOf/bigint.js"><reason></reason></test>
   <test id="built-ins/Object/subclass-object-arg.js"><reason></reason></test>
   <test id="built-ins/Object/values/order-after-define-property.js"><reason></reason></test>

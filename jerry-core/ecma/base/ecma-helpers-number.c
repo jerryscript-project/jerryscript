@@ -68,7 +68,7 @@ ecma_number_pack (bool sign, /**< sign */
 /**
  * Unpacking sign, fraction and biased exponent from ecma-number
  */
-static void
+void
 ecma_number_unpack (ecma_number_t num, /**< ecma-number */
                     bool *sign_p, /**< [out] sign (optional) */
                     uint32_t *biased_exp_p, /**< [out] biased exponent (optional) */
@@ -131,7 +131,7 @@ ecma_number_pack (bool sign, /**< sign */
 /**
  * Unpacking sign, fraction and biased exponent from ecma-number
  */
-static void
+void
 ecma_number_unpack (ecma_number_t num, /**< ecma-number */
                     bool *sign_p, /**< [out] sign (optional) */
                     uint32_t *biased_exp_p, /**< [out] biased exponent (optional) */

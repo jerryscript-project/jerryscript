@@ -51,20 +51,37 @@ ecma_builtin_bigint_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
   ecma_value_t value = (arguments_list_len == 0) ? ECMA_VALUE_UNDEFINED : arguments_list_p[0];
+  bool free_value = false;
 
-  if (!ecma_is_value_string (value))
+  if (ecma_is_value_object (value))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("TODO: Only strings are supported now"));
+    ecma_object_t *obj_p = ecma_get_object_from_value (value);
+    value = ecma_op_object_default_value (obj_p, ECMA_PREFERRED_TYPE_NUMBER);
+    free_value = true;
+
+    if (ECMA_IS_VALUE_ERROR (value))
+    {
+      return value;
+    }
   }
 
-  ecma_string_t *string_p = ecma_get_string_from_value (value);
+  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
-  ECMA_STRING_TO_UTF8_STRING (string_p, string_buffer_p, string_buffer_size);
+  if (ecma_is_value_number (value))
+  {
+    ret_value = ecma_bigint_number_to_bigint (ecma_get_number_from_value (value));
+  }
+  else
+  {
+    ret_value = ecma_bigint_to_bigint (value);
+  }
 
-  ecma_value_t result = ecma_bigint_parse_string (string_buffer_p, string_buffer_size);
+  if (free_value)
+  {
+    ecma_free_value (value);
+  }
 
-  ECMA_FINALIZE_UTF8_STRING (string_buffer_p, string_buffer_size);
-  return result;
+  return ret_value;
 } /* ecma_builtin_bigint_dispatch_call */
 
 /**

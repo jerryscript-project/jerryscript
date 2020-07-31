@@ -142,6 +142,9 @@ struct jerry_context_t
   jmem_cpointer_t symbol_list_first_cp; /**< first item of the global symbol list */
 #endif /* ENABLED (JERRY_ESNEXT) */
   jmem_cpointer_t number_list_first_cp; /**< first item of the literal number list */
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  jmem_cpointer_t bigint_list_first_cp; /**< first item of the literal bigint list */
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
   jmem_cpointer_t ecma_global_env_cp; /**< global lexical environment */
 #if ENABLED (JERRY_ESNEXT)
   jmem_cpointer_t ecma_global_scope_cp; /**< global lexical scope */

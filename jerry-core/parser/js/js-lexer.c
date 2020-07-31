@@ -14,6 +14,7 @@
  */
 
 #include "ecma-alloc.h"
+#include "ecma-bigint.h"
 #include "ecma-helpers.h"
 #include "ecma-function-object.h"
 #include "ecma-literal-storage.h"
@@ -1303,6 +1304,9 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
   const uint8_t *source_p = context_p->source_p;
   const uint8_t *source_end_p = context_p->source_end_p;
   bool can_be_float = false;
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  bool can_be_bigint = true;
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
   size_t length;
 
   context_p->token.type = LEXER_LITERAL;
@@ -1337,8 +1341,6 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
     else if (LEXER_TO_ASCII_LOWERCASE (source_p[1]) == LIT_CHAR_LOWERCASE_O)
     {
       context_p->token.extra_value = LEXER_NUMBER_OCTAL;
-      context_p->token.lit_location.char_p++;
-      context_p->source_p++;
       source_p += 2;
 
       if (source_p >= source_end_p
@@ -1354,6 +1356,9 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
              && source_p[1] <= LIT_CHAR_7)
     {
       context_p->token.extra_value = LEXER_NUMBER_OCTAL;
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+      can_be_bigint = false;
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 
       if (context_p->status_flags & PARSER_IS_STRICT)
       {
@@ -1371,8 +1376,6 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
     else if (LEXER_TO_ASCII_LOWERCASE (source_p[1]) == LIT_CHAR_LOWERCASE_B)
     {
       context_p->token.extra_value = LEXER_NUMBER_BINARY;
-      context_p->token.lit_location.char_p++;
-      context_p->source_p++;
       source_p += 2;
 
       if (source_p >= source_end_p
@@ -1413,6 +1416,10 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
         && source_p[0] == LIT_CHAR_DOT)
     {
       source_p++;
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+      can_be_bigint = false;
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+
       while (source_p < source_end_p
              && source_p[0] >= LIT_CHAR_0
              && source_p[0] <= LIT_CHAR_9)
@@ -1425,6 +1432,9 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
         && LEXER_TO_ASCII_LOWERCASE (source_p[0]) == LIT_CHAR_LOWERCASE_E)
     {
       source_p++;
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+      can_be_bigint = false;
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 
       if (source_p < source_end_p
           && (source_p[0] == LIT_CHAR_PLUS || source_p[0] == LIT_CHAR_MINUS))
@@ -1448,6 +1458,18 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
              && source_p[0] <= LIT_CHAR_9);
     }
   }
+
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  if (source_p < source_end_p && source_p[0] == LIT_CHAR_LOWERCASE_N)
+  {
+    if (!can_be_bigint)
+    {
+      parser_raise_error (context_p, PARSER_ERR_INVALID_BIGINT);
+    }
+    context_p->token.extra_value = LEXER_NUMBER_BIGINT;
+    source_p++;
+  }
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 
   length = (size_t) (source_p - context_p->source_p);
   if (length > PARSER_MAXIMUM_IDENT_LENGTH)
@@ -2515,56 +2537,94 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
 {
   parser_list_iterator_t literal_iterator;
   lexer_literal_t *literal_p;
+  ecma_value_t lit_value;
   ecma_number_t num;
   uint32_t literal_index = 0;
   prop_length_t length = context_p->token.lit_location.length;
 
-  if (context_p->token.extra_value < LEXER_NUMBER_OCTAL)
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  if (JERRY_LIKELY (context_p->token.extra_value != LEXER_NUMBER_BIGINT))
   {
-    num = ecma_utf8_string_to_number (context_p->token.lit_location.char_p,
-                                      length);
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+    if (context_p->token.extra_value < LEXER_NUMBER_OCTAL)
+    {
+      num = ecma_utf8_string_to_number (context_p->token.lit_location.char_p,
+                                        length);
+    }
+    else
+    {
+      const uint8_t *src_p = context_p->token.lit_location.char_p;
+      const uint8_t *src_end_p = src_p + length - 1;
+      ecma_number_t multiplier = 8.0;
+
+      JERRY_ASSERT (src_p[0] == LIT_CHAR_0);
+
+#if ENABLED (JERRY_ESNEXT)
+      if (context_p->token.extra_value == LEXER_NUMBER_BINARY)
+      {
+        src_p++;
+        multiplier = 2.0;
+      }
+      else if (LEXER_TO_ASCII_LOWERCASE (src_p[1]) == LIT_CHAR_LOWERCASE_O)
+      {
+        src_p++;
+      }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+      num = 0;
+      do
+      {
+        num = num * multiplier + (ecma_number_t) (*(++src_p) - LIT_CHAR_0);
+      }
+      while (src_p < src_end_p);
+    }
+
+    if (is_expr)
+    {
+      int32_t int_num = (int32_t) num;
+
+      if (int_num == num
+          && int_num <= CBC_PUSH_NUMBER_BYTE_RANGE_END
+          && (int_num != 0 || !is_negative_number))
+      {
+        context_p->lit_object.index = (uint16_t) int_num;
+        return true;
+      }
+    }
+
+    if (is_negative_number)
+    {
+      num = -num;
+    }
+
+    lit_value = ecma_find_or_create_literal_number (num);
+#if ENABLED (JERRY_BUILTIN_BIGINT)
   }
   else
   {
-    const uint8_t *src_p = context_p->token.lit_location.char_p;
-    const uint8_t *src_end_p = src_p + length - 1;
-    ecma_number_t multiplier = 8.0;
+    uint32_t options = ECMA_BIGINT_PARSE_DISALLOW_SYNTAX_ERROR | ECMA_BIGINT_PARSE_DISALLOW_MEMORY_ERROR;
 
-#if ENABLED (JERRY_ESNEXT)
-    if (context_p->token.extra_value == LEXER_NUMBER_BINARY)
+    if (is_negative_number)
     {
-      multiplier = 2.0;
+      options |= ECMA_BIGINT_PARSE_SET_NEGATIVE;
     }
-#endif /* ENABLED (JERRY_ESNEXT) */
 
-    num = 0;
-    do
+    JERRY_ASSERT (length >= 2);
+    lit_value = ecma_bigint_parse_string (context_p->token.lit_location.char_p,
+                                          (lit_utf8_size_t) (length - 1),
+                                          options);
+
+    JERRY_ASSERT (lit_value != ECMA_VALUE_FALSE && !ECMA_IS_VALUE_ERROR (lit_value));
+
+    if (lit_value == ECMA_VALUE_NULL)
     {
-      src_p++;
-      num = num * multiplier + (ecma_number_t) (*src_p - LIT_CHAR_0);
+      parser_raise_error (context_p, PARSER_ERR_OUT_OF_MEMORY);
     }
-    while (src_p < src_end_p);
+
+    lit_value = ecma_find_or_create_literal_bigint (lit_value);
   }
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 
-  if (is_expr)
-  {
-    int32_t int_num = (int32_t) num;
-
-    if (int_num == num
-        && int_num <= CBC_PUSH_NUMBER_BYTE_RANGE_END
-        && (int_num != 0 || !is_negative_number))
-    {
-      context_p->lit_object.index = (uint16_t) int_num;
-      return true;
-    }
-  }
-
-  if (is_negative_number)
-  {
-    num = -num;
-  }
-
-  ecma_value_t lit_value = ecma_find_or_create_literal_number (num);
   parser_list_iterator_init (&context_p->literal_pool, &literal_iterator);
 
   while ((literal_p = (lexer_literal_t *) parser_list_iterator_next (&literal_iterator)) != NULL)

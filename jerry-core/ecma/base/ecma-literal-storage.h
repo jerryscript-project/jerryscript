@@ -42,6 +42,9 @@ void ecma_finalize_lit_storage (void);
 
 ecma_value_t ecma_find_or_create_literal_string (const lit_utf8_byte_t *chars_p, lit_utf8_size_t size);
 ecma_value_t ecma_find_or_create_literal_number (ecma_number_t number_arg);
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+ecma_value_t ecma_find_or_create_literal_bigint (ecma_value_t bigint);
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 
 #if ENABLED (JERRY_SNAPSHOT_SAVE)
 void ecma_save_literals_append_value (ecma_value_t value, ecma_collection_t *lit_pool_p);

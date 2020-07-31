@@ -279,6 +279,9 @@ typedef enum
   LEXER_NUMBER_HEXADECIMAL,                 /**< hexadecimal number */
   LEXER_NUMBER_OCTAL,                       /**< octal number */
   LEXER_NUMBER_BINARY,                      /**< binary number */
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  LEXER_NUMBER_BIGINT,                      /**< bigint number */
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 } lexer_number_type_t;
 
 /**

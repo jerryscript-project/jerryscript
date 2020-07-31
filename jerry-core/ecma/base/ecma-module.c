@@ -470,6 +470,45 @@ ecma_module_resolve_export (ecma_module_t * const module_p, /**< base module */
 } /* ecma_module_resolve_export */
 
 /**
+ * Evaluates an EcmaScript module.
+ *
+ * @return ECMA_VALUE_ERROR - if an error occured
+ *         ECMA_VALUE_EMPTY - otherwise
+ */
+static ecma_value_t
+ecma_module_evaluate (ecma_module_t *module_p) /**< module */
+{
+  JERRY_ASSERT (module_p->state >= ECMA_MODULE_STATE_PARSED);
+
+  if (module_p->state >= ECMA_MODULE_STATE_EVALUATING)
+  {
+    return ECMA_VALUE_EMPTY;
+  }
+
+  module_p->state = ECMA_MODULE_STATE_EVALUATING;
+  module_p->scope_p = ecma_create_decl_lex_env (ecma_get_global_environment ());
+  module_p->context_p->parent_p = JERRY_CONTEXT (module_top_context_p);
+  JERRY_CONTEXT (module_top_context_p) = module_p->context_p;
+
+  ecma_value_t ret_value;
+  ret_value = vm_run_module (module_p->compiled_code_p,
+                             module_p->scope_p);
+
+  if (!ECMA_IS_VALUE_ERROR (ret_value))
+  {
+    ecma_free_value (ret_value);
+    ret_value = ECMA_VALUE_EMPTY;
+  }
+
+  JERRY_CONTEXT (module_top_context_p) = module_p->context_p->parent_p;
+
+  ecma_bytecode_deref (module_p->compiled_code_p);
+  module_p->state = ECMA_MODULE_STATE_EVALUATED;
+
+  return ret_value;
+} /* ecma_module_evaluate */
+
+/**
  * Resolves an export and adds it to the modules namespace object, if the export name is not yet handled.
  * Note: See 15.2.1.16.2 and 15.2.1.18
  *
@@ -483,7 +522,9 @@ ecma_module_namespace_object_add_export_if_needed (ecma_module_t *module_p, /**<
   JERRY_ASSERT (module_p->namespace_object_p != NULL);
   ecma_value_t result = ECMA_VALUE_EMPTY;
 
-  if (ecma_find_named_property (module_p->namespace_object_p, export_name_p) != NULL)
+  /* Default exports should not be added to the namespace object. */
+  if (ecma_compare_ecma_string_to_magic_id (export_name_p, LIT_MAGIC_STRING_DEFAULT)
+      || ecma_find_named_property (module_p->namespace_object_p, export_name_p) != NULL)
   {
     /* This export name has already been handled. */
     return result;
@@ -563,6 +604,13 @@ ecma_module_create_namespace_object (ecma_module_t *module_p) /**< module */
       continue;
     }
 
+    result = ecma_module_evaluate (current_module_p);
+
+    if (ECMA_IS_VALUE_ERROR (result))
+    {
+      break;
+    }
+
     if (context_p->local_exports_p != NULL)
     {
       /* 15.2.1.16.2 / 5 */
@@ -614,45 +662,6 @@ ecma_module_create_namespace_object (ecma_module_t *module_p) /**< module */
 
   return result;
 } /* ecma_module_create_namespace_object */
-
-/**
- * Evaluates an EcmaScript module.
- *
- * @return ECMA_VALUE_ERROR - if an error occured
- *         ECMA_VALUE_EMPTY - otherwise
- */
-static ecma_value_t
-ecma_module_evaluate (ecma_module_t *module_p) /**< module */
-{
-  JERRY_ASSERT (module_p->state >= ECMA_MODULE_STATE_PARSED);
-
-  if (module_p->state >= ECMA_MODULE_STATE_EVALUATING)
-  {
-    return ECMA_VALUE_EMPTY;
-  }
-
-  module_p->state = ECMA_MODULE_STATE_EVALUATING;
-  module_p->scope_p = ecma_create_decl_lex_env (ecma_get_global_environment ());
-  module_p->context_p->parent_p = JERRY_CONTEXT (module_top_context_p);
-  JERRY_CONTEXT (module_top_context_p) = module_p->context_p;
-
-  ecma_value_t ret_value;
-  ret_value = vm_run_module (module_p->compiled_code_p,
-                             module_p->scope_p);
-
-  if (!ECMA_IS_VALUE_ERROR (ret_value))
-  {
-    jerry_release_value (ret_value);
-    ret_value = ECMA_VALUE_EMPTY;
-  }
-
-  JERRY_CONTEXT (module_top_context_p) = module_p->context_p->parent_p;
-
-  ecma_bytecode_deref (module_p->compiled_code_p);
-  module_p->state = ECMA_MODULE_STATE_EVALUATED;
-
-  return ret_value;
-} /* ecma_module_evaluate */
 
 /**
  * Connects imported values to the current context.

@@ -184,7 +184,7 @@ def main(args):
                       [test262_harness_path,
                        '--command', command,
                        '--tests', args.test_dir,
-                       '--full-summary']
+                       '--summary']
 
     if 'excludelist_path' in args and args.mode == 'default':
         test262_command.extend(['--exclude-list', args.excludelist_path])

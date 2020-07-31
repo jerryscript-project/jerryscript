@@ -159,6 +159,8 @@ JERRY_BUILDOPTIONS = [
             ['--cmake-param=-DENABLE_ALL_IN_ONE_SOURCE=ON']),
     Options('buildoption_test-jerry-debugger',
             ['--jerry-debugger=on']),
+    Options('buildoption_test-module-off',
+            ['--compile-flag=-DJERRY_MODULE_SYSTEM=0', '--lto=off']),
 ]
 
 def get_arguments():

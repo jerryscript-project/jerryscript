@@ -1739,13 +1739,19 @@ scanner_is_context_needed (parser_context_t *context_p, /**< context */
     }
     else if (check_type == PARSER_CHECK_GLOBAL_CONTEXT)
     {
+#if ENABLED (JERRY_MODULE_SYSTEM)
+      const bool is_import = (type == SCANNER_STREAM_TYPE_IMPORT);
+#else
+      const bool is_import = true;
+#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
+
       /* FIXME: a private declarative lexical environment should always be present
        * for modules. Remove SCANNER_STREAM_TYPE_IMPORT after it is implemented. */
       JERRY_ASSERT (type == SCANNER_STREAM_TYPE_VAR
                     || type == SCANNER_STREAM_TYPE_LET
                     || type == SCANNER_STREAM_TYPE_CONST
                     || type == SCANNER_STREAM_TYPE_FUNC
-                    || type == SCANNER_STREAM_TYPE_IMPORT);
+                    || is_import);
 
       /* Only let/const can be stored in registers */
       JERRY_ASSERT ((data & SCANNER_STREAM_NO_REG)
@@ -1792,10 +1798,16 @@ scanner_is_context_needed (parser_context_t *context_p, /**< context */
     }
 
 #if ENABLED (JERRY_ESNEXT)
+#if ENABLED (JERRY_MODULE_SYSTEM)
+    const bool is_import = (type == SCANNER_STREAM_TYPE_IMPORT);
+#else
+    const bool is_import = true;
+#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
+
     if (JERRY_UNLIKELY (check_type == PARSER_CHECK_GLOBAL_CONTEXT)
         && (type == SCANNER_STREAM_TYPE_VAR
             || (type == SCANNER_STREAM_TYPE_FUNC && !(context_p->global_status_flags & ECMA_PARSE_DIRECT_EVAL))
-            || type == SCANNER_STREAM_TYPE_IMPORT))
+            || is_import))
     {
       continue;
     }

@@ -46,13 +46,29 @@ def get_arguments():
                        nargs='?', choices=['default', 'all', 'update'],
                        help='Run test262 - ES2015. default: all tests except excludelist, ' +
                        'all: all tests, update: all tests and update excludelist')
+    group.add_argument('--esnext', default=False, const='default',
+                       nargs='?', choices=['default', 'all', 'update'],
+                       help='Run test262 - ES.next. default: all tests except excludelist, ' +
+                       'all: all tests, update: all tests and update excludelist')
 
     args = parser.parse_args()
 
     if args.es2015:
         args.test_dir = os.path.join(args.test_dir, 'es2015')
+        args.test262_harness_dir = os.path.abspath(os.path.dirname(__file__))
+        args.test262_git_hash = 'fd44cd73dfbce0b515a2474b7cd505d6176a9eb5'
+        args.excludelist_path = os.path.join('tests', 'test262-es6-excludelist.xml')
+    elif args.esnext:
+        args.test_dir = os.path.join(args.test_dir, 'esnext')
+        args.test262_harness_dir = os.path.abspath(os.path.dirname(__file__))
+        args.test262_git_hash = '281eb10b2844929a7c0ac04527f5b42ce56509fd'
+        args.excludelist_path = os.path.join('tests', 'test262-esnext-excludelist.xml')
     else:
         args.test_dir = os.path.join(args.test_dir, 'es51')
+        args.test262_harness_dir = args.test_dir
+        args.test262_git_hash = 'es5-tests'
+
+    args.mode = args.es2015 or args.esnext
 
     return args
 
@@ -67,23 +83,10 @@ def prepare_test262_test_suite(args):
         print('Cloning test262 repository failed.')
         return return_code
 
-    if args.es2015:
-        git_hash = 'fd44cd73dfbce0b515a2474b7cd505d6176a9eb5'
-    else:
-        git_hash = 'es5-tests'
+    return_code = subprocess.call(['git', 'checkout', args.test262_git_hash], cwd=args.test_dir)
+    assert not return_code, 'Cloning test262 repository failed - invalid git revision.'
 
-    return_code = subprocess.call(['git', 'checkout', git_hash], cwd=args.test_dir)
-    if return_code:
-        print('Cloning test262 repository failed - invalid git revision.')
-        return return_code
-
-    if args.es2015:
-        return_code = subprocess.call(['git', 'apply', os.path.join('..', '..', 'test262-es6.patch')],
-                                      cwd=args.test_dir)
-        if return_code:
-            print('Applying test262-es6.patch failed')
-            return return_code
-    else:
+    if args.es51:
         path_to_remove = os.path.join(args.test_dir, 'test', 'suite', 'bestPractice')
         if os.path.isdir(path_to_remove):
             shutil.rmtree(path_to_remove)
@@ -95,22 +98,7 @@ def prepare_test262_test_suite(args):
     return 0
 
 
-def prepare_exclude_list(args):
-    if args.es2015 == 'all' or args.es2015 == 'update':
-        return_code = subprocess.call(['git', 'checkout', 'excludelist.xml'], cwd=args.test_dir)
-        if return_code:
-            print('Reverting excludelist.xml failed')
-            return return_code
-    elif args.es2015 == 'default':
-        shutil.copyfile(os.path.join('tests', 'test262-es6-excludelist.xml'),
-                        os.path.join(args.test_dir, 'excludelist.xml'))
-
-    return 0
-
-
 def update_exclude_list(args):
-    assert args.es2015 == 'update', "Only --es2015 option supports updating excludelist"
-
     print("=== Summary - updating excludelist ===\n")
     failing_tests = set()
     new_passing_tests = set()
@@ -124,7 +112,7 @@ def update_exclude_list(args):
             elif line.startswith('Failed Tests'):
                 summary_found = True
 
-    with open(os.path.join('tests', 'test262-es6-excludelist.xml'), 'r+') as exclude_file:
+    with open(args.excludelist_path, 'r+') as exclude_file:
         lines = exclude_file.readlines()
         exclude_file.seek(0)
         exclude_file.truncate()
@@ -170,17 +158,13 @@ def main(args):
     if return_code:
         return return_code
 
-    return_code = prepare_exclude_list(args)
-    if return_code:
-        return return_code
-
     if sys.platform == 'win32':
         original_timezone = util.get_timezone()
         util.set_sighdl_to_reset_timezone(original_timezone)
         util.set_timezone('Pacific Standard Time')
 
     command = (args.runtime + ' ' + args.engine).strip()
-    if args.es2015:
+    if args.es2015 or args.esnext:
         try:
             subprocess.check_output(["timeout", "--version"])
             command = "timeout 3 " + command
@@ -190,11 +174,22 @@ def main(args):
     kwargs = {}
     if sys.version_info.major >= 3:
         kwargs['errors'] = 'ignore'
-    proc = subprocess.Popen(get_platform_cmd_prefix() +
-                            [os.path.join(args.test_dir, 'tools/packaging/test262.py'),
-                             '--command', command,
-                             '--tests', args.test_dir,
-                             '--full-summary'],
+
+    if args.es51:
+        test262_harness_path = os.path.join(args.test262_harness_dir, 'tools/packaging/test262.py')
+    else:
+        test262_harness_path = os.path.join(args.test262_harness_dir, 'test262-harness.py')
+
+    test262_command = get_platform_cmd_prefix() + \
+                      [test262_harness_path,
+                       '--command', command,
+                       '--tests', args.test_dir,
+                       '--full-summary']
+
+    if 'excludelist_path' in args and args.mode == 'default':
+        test262_command.extend(['--exclude-list', args.excludelist_path])
+
+    proc = subprocess.Popen(test262_command,
                             universal_newlines=True,
                             stdout=subprocess.PIPE,
                             **kwargs)
@@ -226,7 +221,7 @@ def main(args):
     if sys.platform == 'win32':
         util.set_timezone(original_timezone)
 
-    if args.es2015 == 'update':
+    if args.mode == 'update':
         return_code = update_exclude_list(args)
 
     return return_code

@@ -74,6 +74,13 @@ jobs:
       - name: Test262 - ES2015
         run: $RUNNER --test262-es2015 update
 
+  Conformance_Tests_ESNext:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - name: Test262 - ESNext
+        run: $RUNNER --test262-esnext update
+
   Unit_Tests:
     runs-on: ubuntu-18.04
     steps:

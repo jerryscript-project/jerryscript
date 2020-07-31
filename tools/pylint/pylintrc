@@ -303,7 +303,7 @@ ignore-imports=no
 [DESIGN]
 
 # Maximum number of arguments for function / method
-max-args=6
+max-args=10
 
 # Argument names that match this expression will be ignored. Default to name
 # with leading underscore
@@ -316,7 +316,7 @@ max-locals=20
 max-returns=6
 
 # Maximum number of branch for function / method body
-max-branches=15
+max-branches=20
 
 # Maximum number of statements in function / method body
 max-statements=75
@@ -325,7 +325,7 @@ max-statements=75
 max-parents=7
 
 # Maximum number of attributes for a class (see R0902).
-max-attributes=7
+max-attributes=10
 
 # Minimum number of public methods for a class (see R0903).
 min-public-methods=0

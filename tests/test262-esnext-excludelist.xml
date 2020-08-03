@@ -10445,14 +10445,6 @@
   <test id="language/types/reference/get-value-prop-base-primitive-realm.js"><reason></reason></test>
   <test id="language/types/reference/put-value-prop-base-primitive-realm.js"><reason></reason></test>
 
-  <!-- regression caused by: Rework Object's [[OwnPropertyKeys]] (#4001) -->
-  <test id="built-ins/Object/getOwnPropertyNames/proxy-invariant-absent-not-configurable-symbol-key.js"><reason></reason></test>
-  <test id="built-ins/Object/getOwnPropertyNames/proxy-invariant-not-extensible-absent-symbol-key.js"><reason></reason></test>
-  <test id="built-ins/Object/getOwnPropertySymbols/proxy-invariant-absent-not-configurable-string-key.js"><reason></reason></test>
-  <test id="built-ins/Object/getOwnPropertySymbols/proxy-invariant-not-extensible-absent-string-key.js"><reason></reason></test>
-  <test id="built-ins/Object/keys/proxy-non-enumerable-prop-invariant-1.js"><reason></reason></test>
-  <test id="built-ins/Object/keys/proxy-non-enumerable-prop-invariant-2.js"><reason></reason></test>
-
   <!-- regression caused by: Invalid regexp patterns should not throw syntax error during parsing (#4038) -->
   <test id="built-ins/RegExp/property-escapes/binary-property-with-value-ASCII_-_F-negated.js"><reason></reason></test>
   <test id="built-ins/RegExp/property-escapes/binary-property-with-value-ASCII_-_F.js"><reason></reason></test>

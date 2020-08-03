@@ -197,6 +197,11 @@ ecma_collection_append (ecma_collection_t *collection_p, /**< value collection *
 bool
 ecma_collection_check_duplicated_entries (ecma_collection_t *collection_p) /**< prop name collection */
 {
+  if (collection_p->item_count == 0)
+  {
+    return false;
+  }
+
   ecma_value_t *buffer_p = collection_p->buffer_p;
 
   for (uint32_t i = 0; i < collection_p->item_count - 1; i++)

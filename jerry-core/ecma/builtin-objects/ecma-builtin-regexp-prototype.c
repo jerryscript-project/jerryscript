@@ -48,15 +48,6 @@ enum
   /** These routines must be in this order */
   ECMA_REGEXP_PROTOTYPE_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
   ECMA_REGEXP_PROTOTYPE_ROUTINE_EXEC,
-#if ENABLED (JERRY_ESNEXT)
-  ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_SOURCE,
-  ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_GLOBAL,
-  ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_IGNORE_CASE,
-  ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_MULTILINE,
-  ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_STICKY,
-  ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_UNICODE,
-  ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_DOT_ALL,
-#endif /* ENABLED (JERRY_ESNEXT) */
 #if ENABLED (JERRY_BUILTIN_ANNEXB)
   ECMA_REGEXP_PROTOTYPE_ROUTINE_COMPILE,
 #endif /* ENABLED (JERRY_BUILTIN_ANNEXB) */
@@ -64,7 +55,15 @@ enum
   ECMA_REGEXP_PROTOTYPE_ROUTINE_TEST,
   ECMA_REGEXP_PROTOTYPE_ROUTINE_TO_STRING,
 #if ENABLED (JERRY_ESNEXT)
+  ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_SOURCE,
   ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_FLAGS,
+
+  ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_GLOBAL,
+  ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_IGNORE_CASE,
+  ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_MULTILINE,
+  ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_STICKY,
+  ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_UNICODE,
+  ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_DOT_ALL,
 
   ECMA_REGEXP_PROTOTYPE_ROUTINE_SYMBOL_SEARCH,
   ECMA_REGEXP_PROTOTYPE_ROUTINE_SYMBOL_MATCH,
@@ -603,8 +602,17 @@ ecma_builtin_regexp_prototype_dispatch_routine (uint16_t builtin_routine_id, /**
     }
     case ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_SOURCE:
     {
-      ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) obj_p;
+      if (!ecma_object_class_is (obj_p, LIT_MAGIC_STRING_REGEXP_UL))
+      {
+        if (ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_REGEXP_PROTOTYPE))
+        {
+          return ecma_make_magic_string_value (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP);
+        }
 
+        return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not a RegExp object"));
+      }
+
+      ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) obj_p;
       return ecma_builtin_regexp_prototype_get_source (re_obj_p);
     }
     case ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_GLOBAL:
@@ -614,8 +622,17 @@ ecma_builtin_regexp_prototype_dispatch_routine (uint16_t builtin_routine_id, /**
     case ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_UNICODE:
     case ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_DOT_ALL:
     {
-      ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) obj_p;
+      if (!ecma_object_class_is (obj_p, LIT_MAGIC_STRING_REGEXP_UL))
+      {
+        if (ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_REGEXP_PROTOTYPE))
+        {
+          return ECMA_VALUE_UNDEFINED;
+        }
 
+        return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not a RegExp object"));
+      }
+
+      ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) obj_p;
       return ecma_builtin_regexp_prototype_flags_helper (re_obj_p, builtin_routine_id);
     }
 #endif /* ENABLED (JERRY_ESNEXT) */

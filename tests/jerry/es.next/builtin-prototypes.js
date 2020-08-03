@@ -50,44 +50,11 @@ try {
   assert (e instanceof TypeError);
 }
 
-try {
-  RegExp.prototype.source;
-  assert (false);
-} catch (e) {
-  assert (e instanceof TypeError);
-}
-
-try {
-  RegExp.prototype.global;
-  assert (false);
-} catch (e) {
-  assert (e instanceof TypeError);
-}
-
-try {
-  RegExp.prototype.ignoreCase;
-  assert (false);
-} catch (e) {
-  assert (e instanceof TypeError);
-}
-
-try {
-  RegExp.prototype.multiline;
-  assert (false);
-} catch (e) {
-  assert (e instanceof TypeError);
-}
-
-try {
-  RegExp.prototype.sticky;
-  assert (false);
-} catch (e) {
-  assert (e instanceof TypeError);
-}
-
-try {
-  RegExp.prototype.unicode;
-  assert (false);
-} catch (e) {
-  assert (e instanceof TypeError);
-}
+assert (RegExp.prototype.source === '(?:)');
+assert (RegExp.prototype.global === undefined);
+assert (RegExp.prototype.ignoreCase === undefined);
+assert (RegExp.prototype.multiline === undefined);
+assert (RegExp.prototype.sticky === undefined);
+assert (RegExp.prototype.unicode === undefined);
+assert (RegExp.prototype.dotAll === undefined);
+assert (RegExp.prototype.flags === '');

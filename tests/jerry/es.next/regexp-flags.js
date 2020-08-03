@@ -61,12 +61,7 @@ var r = /abc/yg;
 m = r.exec ("strabcstr");
 assert (m === null);
 
-try {
-  RegExp.prototype.flags;
-  assert (false);
-} catch (e) {
-  assert (e instanceof TypeError);
-}
+assert (RegExp.prototype.flags === "");
 
 var flagsProp = Object.getOwnPropertyDescriptor (RegExp.prototype, "flags");
 assert(flagsProp.get.call({}) === '');

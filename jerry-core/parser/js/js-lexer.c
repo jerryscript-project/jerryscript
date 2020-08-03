@@ -1184,6 +1184,14 @@ lexer_parse_string (parser_context_t *context_p, /**< context */
       column--;
     }
 #if ENABLED (JERRY_ESNEXT)
+    else if (*source_p == LEXER_NEWLINE_LS_PS_BYTE_1 && LEXER_NEWLINE_LS_PS_BYTE_23 (source_p))
+    {
+      source_p += 3;
+      length += 3;
+      line++;
+      column = 1;
+      continue;
+    }
     else if (str_end_character == LIT_CHAR_GRAVE_ACCENT)
     {
       /* Newline (without backslash) is part of the string.
@@ -1211,19 +1219,13 @@ lexer_parse_string (parser_context_t *context_p, /**< context */
         column = 1;
         continue;
       }
-      else if (*source_p == LEXER_NEWLINE_LS_PS_BYTE_1 && LEXER_NEWLINE_LS_PS_BYTE_23 (source_p))
-      {
-        source_p += 3;
-        length += 3;
-        line++;
-        column = 1;
-        continue;
-      }
     }
 #endif /* ENABLED (JERRY_ESNEXT) */
     else if (*source_p == LIT_CHAR_CR
-             || *source_p == LIT_CHAR_LF
-             || (*source_p == LEXER_NEWLINE_LS_PS_BYTE_1 && LEXER_NEWLINE_LS_PS_BYTE_23 (source_p)))
+#if !ENABLED (JERRY_ESNEXT)
+             || (*source_p == LEXER_NEWLINE_LS_PS_BYTE_1 && LEXER_NEWLINE_LS_PS_BYTE_23 (source_p))
+#endif /* !ENABLED (JERRY_ESNEXT) */
+             || *source_p == LIT_CHAR_LF)
     {
       context_p->token.line = line;
       context_p->token.column = column;

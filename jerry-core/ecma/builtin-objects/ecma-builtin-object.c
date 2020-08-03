@@ -596,7 +596,7 @@ ecma_builtin_object_test_integrity_level (ecma_object_t *obj_p, /**< routine's a
 
   for (uint32_t i = 0; i < props_p->item_count; i++)
   {
-    ecma_string_t *property_name_p = ecma_get_string_from_value (buffer_p[i]);
+    ecma_string_t *property_name_p = ecma_get_prop_name_from_value (buffer_p[i]);
 
     /* 2.a */
     ecma_property_descriptor_t prop_desc;

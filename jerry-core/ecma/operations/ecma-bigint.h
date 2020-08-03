@@ -25,8 +25,17 @@
  */
 #define ECMA_BIGINT_SIGN 0x1
 
-ecma_value_t ecma_bigint_parse_string (const lit_utf8_byte_t *string_p, lit_utf8_size_t size);
+ecma_value_t ecma_bigint_parse_string (const lit_utf8_byte_t *string_p, lit_utf8_size_t size,
+                                       bool throw_syntax_error);
+ecma_value_t ecma_bigint_parse_string_value (ecma_value_t string, bool throw_syntax_error);
 ecma_string_t *ecma_bigint_to_string (ecma_value_t value, ecma_bigint_digit_t radix);
+ecma_value_t ecma_bigint_number_to_bigint (ecma_number_t number);
+ecma_value_t ecma_bigint_to_bigint (ecma_value_t value);
+
+bool ecma_bigint_is_equal_to_bigint (ecma_value_t left_value, ecma_value_t right_value);
+bool ecma_bigint_is_equal_to_number (ecma_value_t left_value, ecma_number_t right_value);
+int ecma_bigint_compare_to_bigint (ecma_value_t left_value, ecma_value_t right_value);
+int ecma_bigint_compare_to_number (ecma_value_t left_value, ecma_number_t right_value);
 
 ecma_value_t ecma_bigint_negate (ecma_extended_primitive_t *value_p);
 ecma_value_t ecma_bigint_add_sub (ecma_value_t left_value, ecma_value_t right_value, bool is_add);

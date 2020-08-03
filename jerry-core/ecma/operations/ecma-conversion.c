@@ -125,7 +125,7 @@ ecma_op_same_value (ecma_value_t x, /**< ecma value */
     return ecma_compare_ecma_strings (x_str_p, y_str_p);
   }
 
-  JERRY_ASSERT (ecma_is_value_object (x) || ECMA_ASSERT_VALUE_IS_SYMBOL (x));
+  JERRY_ASSERT (ecma_is_value_object (x) || ECMA_CHECK_SYMBOL_IN_ASSERT (x));
 
   return false;
 } /* ecma_op_same_value */
@@ -247,7 +247,7 @@ ecma_op_to_boolean (ecma_value_t value) /**< ecma value */
     return !ecma_string_is_empty (str_p);
   }
 
-  JERRY_ASSERT (ecma_is_value_object (value) || ECMA_ASSERT_VALUE_IS_SYMBOL (value));
+  JERRY_ASSERT (ecma_is_value_object (value) || ECMA_CHECK_SYMBOL_IN_ASSERT (value));
 
   return true;
 } /* ecma_op_to_boolean */

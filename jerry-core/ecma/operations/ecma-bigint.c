@@ -41,7 +41,9 @@ ecma_bigint_raise_memory_error (void)
  */
 ecma_value_t
 ecma_bigint_parse_string (const lit_utf8_byte_t *string_p, /**< string represenation of the BigInt */
-                          lit_utf8_size_t size) /**< string size */
+                          lit_utf8_size_t size, /**< string size */
+                          bool throw_syntax_error) /**< true, if syntax errors should be thrown
+                                                    *   otherwise ECMA_VALUE_FALSE is returned on syntax error */
 {
   ecma_bigint_digit_t radix = 10;
   uint32_t sign = 0;
@@ -77,6 +79,10 @@ ecma_bigint_parse_string (const lit_utf8_byte_t *string_p, /**< string represena
   }
   else if (size == 0)
   {
+    if (!throw_syntax_error)
+    {
+      return ECMA_VALUE_FALSE;
+    }
     return ecma_raise_syntax_error (ECMA_ERR_MSG ("BigInt cannot be constructed from empty string"));
   }
 
@@ -119,6 +125,11 @@ ecma_bigint_parse_string (const lit_utf8_byte_t *string_p, /**< string represena
         {
           ecma_deref_bigint (result_p);
         }
+
+        if (!throw_syntax_error)
+        {
+          return ECMA_VALUE_FALSE;
+        }
         return ecma_raise_syntax_error (ECMA_ERR_MSG ("String cannot be converted to BigInt value"));
       }
 
@@ -140,6 +151,26 @@ ecma_bigint_parse_string (const lit_utf8_byte_t *string_p, /**< string represena
   result_p->u.bigint_sign_and_size |= sign;
   return ecma_make_extended_primitive_value (result_p, ECMA_TYPE_BIGINT);
 } /* ecma_bigint_parse_string */
+
+/**
+ * Parse a string value and create a BigInt value
+ *
+ * @return ecma BigInt value or ECMA_VALUE_ERROR
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_bigint_parse_string_value (ecma_value_t string, /**< ecma string */
+                                bool throw_syntax_error) /**< true, if syntax errors should be thrown
+                                                          *   otherwise ECMA_VALUE_FALSE is returned on syntax error */
+{
+  JERRY_ASSERT (ecma_is_value_string (string));
+
+  ECMA_STRING_TO_UTF8_STRING (ecma_get_string_from_value (string), string_buffer_p, string_buffer_size);
+  ecma_value_t result = ecma_bigint_parse_string (string_buffer_p, string_buffer_size, throw_syntax_error);
+  ECMA_FINALIZE_UTF8_STRING (string_buffer_p, string_buffer_size);
+
+  return result;
+} /* ecma_bigint_parse_string_value */
 
 /**
  * Create a string representation for a BigInt value
@@ -182,6 +213,431 @@ ecma_bigint_to_string (ecma_value_t value, /**< BigInt value */
   jmem_heap_free_block (string_buffer_p, char_size_p);
   return string_p;
 } /* ecma_bigint_to_string */
+
+/**
+ * Get the size of zero digits from the result of ecma_bigint_number_to_digits
+ */
+#define ECMA_BIGINT_NUMBER_TO_DIGITS_GET_ZERO_SIZE(value) \
+  (((value) & 0xffff) * (uint32_t) sizeof (ecma_bigint_digit_t))
+
+/**
+ * Get the number of digits from the result of ecma_bigint_number_to_digits
+ */
+#define ECMA_BIGINT_NUMBER_TO_DIGITS_GET_DIGITS(value) ((value) >> 20)
+
+/**
+ * Get the size of digits from the result of ecma_bigint_number_to_digits
+ */
+#define ECMA_BIGINT_NUMBER_TO_DIGITS_GET_DIGITS_SIZE(value) \
+  (ECMA_BIGINT_NUMBER_TO_DIGITS_GET_DIGITS (value) * (uint32_t) sizeof (ecma_bigint_digit_t))
+
+/**
+ * Set number of digits in the result of ecma_bigint_number_to_digits
+ */
+#define ECMA_BIGINT_NUMBER_TO_DIGITS_SET_DIGITS(value) ((uint32_t) (value) << 20)
+
+/**
+ * This flag is set when the number passed to ecma_bigint_number_to_digits has fraction part
+ */
+#define ECMA_BIGINT_NUMBER_TO_DIGITS_HAS_FRACTION 0x10000
+
+/**
+ * Convert a number to maximum of 3 digits and left shift
+ *
+ * @return packed value, ECMA_BIGINT_NUMBER_TO_DIGITS* macros can be used to decode it
+ */
+static uint32_t
+ecma_bigint_number_to_digits (ecma_number_t number, /**< ecma number */
+                              ecma_bigint_digit_t *digits_p) /**< [out] BigInt digits */
+{
+  uint32_t biased_exp;
+  uint64_t fraction;
+
+  ecma_number_unpack (number, NULL, &biased_exp, &fraction);
+
+  if (biased_exp == 0)
+  {
+    /* Number is zero. */
+    return ECMA_BIGINT_NUMBER_TO_DIGITS_SET_DIGITS (0);
+  }
+
+  if (biased_exp < ((1 << (ECMA_NUMBER_BIASED_EXP_WIDTH - 1)) - 1))
+  {
+    /* Number is less than 1. */
+    return ECMA_BIGINT_NUMBER_TO_DIGITS_SET_DIGITS (0) | ECMA_BIGINT_NUMBER_TO_DIGITS_HAS_FRACTION;
+  }
+
+  biased_exp -= ((1 << (ECMA_NUMBER_BIASED_EXP_WIDTH - 1)) - 1);
+  fraction |= ((uint64_t) 1) << ECMA_NUMBER_FRACTION_WIDTH;
+
+  if (biased_exp <= ECMA_NUMBER_FRACTION_WIDTH)
+  {
+    uint32_t has_fraction = 0;
+
+    if (biased_exp < ECMA_NUMBER_FRACTION_WIDTH
+        && (fraction << (biased_exp + ((8 * sizeof (uint64_t)) - ECMA_NUMBER_FRACTION_WIDTH))) != 0)
+    {
+      has_fraction |= ECMA_BIGINT_NUMBER_TO_DIGITS_HAS_FRACTION;
+    }
+
+    fraction >>= ECMA_NUMBER_FRACTION_WIDTH - biased_exp;
+    digits_p[0] = (ecma_bigint_digit_t) fraction;
+
+#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+    digits_p[1] = (ecma_bigint_digit_t) (fraction >> (8 * sizeof (ecma_bigint_digit_t)));
+    return ECMA_BIGINT_NUMBER_TO_DIGITS_SET_DIGITS (digits_p[1] == 0 ? 1 : 2) | has_fraction;
+#else /* !ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+    return ECMA_BIGINT_NUMBER_TO_DIGITS_SET_DIGITS (1) | has_fraction;
+#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+  }
+
+  digits_p[0] = (ecma_bigint_digit_t) fraction;
+#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+  digits_p[1] = (ecma_bigint_digit_t) (fraction >> (8 * sizeof (ecma_bigint_digit_t)));
+#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+
+  biased_exp -= ECMA_NUMBER_FRACTION_WIDTH;
+
+  uint32_t shift_left = biased_exp & ((8 * sizeof (ecma_bigint_digit_t)) - 1);
+  biased_exp = biased_exp >> ECMA_BIGINT_DIGIT_SHIFT;
+
+  if (shift_left == 0)
+  {
+#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+    return biased_exp | ECMA_BIGINT_NUMBER_TO_DIGITS_SET_DIGITS (2);
+#else /* !ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+    return biased_exp | ECMA_BIGINT_NUMBER_TO_DIGITS_SET_DIGITS (1);
+#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+  }
+
+  uint32_t shift_right = (1 << ECMA_BIGINT_DIGIT_SHIFT) - shift_left;
+
+#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+  digits_p[2] = digits_p[1] >> shift_right;
+  digits_p[1] = (digits_p[1] << shift_left) | (digits_p[0] >> shift_right);
+  digits_p[0] <<= shift_left;
+
+  return biased_exp | ECMA_BIGINT_NUMBER_TO_DIGITS_SET_DIGITS (digits_p[2] == 0 ? 2 : 3);
+#else /* !ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+  digits_p[1] = digits_p[0] >> shift_right;
+  digits_p[0] <<= shift_left;
+
+  return biased_exp | ECMA_BIGINT_NUMBER_TO_DIGITS_SET_DIGITS (digits_p[1] == 0 ? 1 : 2);
+#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+} /* ecma_bigint_number_to_digits */
+
+/**
+ * Convert an ecma number to BigInt value
+ *
+ * See also:
+ *          ECMA-262 v11, 20.2.1.1.1
+ *
+ * @return ecma BigInt value or ECMA_VALUE_ERROR
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_bigint_number_to_bigint (ecma_number_t number) /**< ecma number */
+{
+  if (ecma_number_is_nan (number) || ecma_number_is_infinity (number))
+  {
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Infinity or NaN cannot be converted to BigInt"));
+  }
+
+  ecma_bigint_digit_t digits[3];
+  uint32_t result = ecma_bigint_number_to_digits (number, digits);
+
+  JERRY_ASSERT (ECMA_BIGINT_NUMBER_TO_DIGITS_GET_DIGITS (result) == 0
+                || digits[ECMA_BIGINT_NUMBER_TO_DIGITS_GET_DIGITS (result) - 1] > 0);
+
+  if (result & ECMA_BIGINT_NUMBER_TO_DIGITS_HAS_FRACTION)
+  {
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Only integer numbers can be converted to BigInt"));
+  }
+
+  uint32_t digits_size = ECMA_BIGINT_NUMBER_TO_DIGITS_GET_DIGITS_SIZE (result);
+  uint32_t zero_size = ECMA_BIGINT_NUMBER_TO_DIGITS_GET_ZERO_SIZE (result);
+
+  ecma_extended_primitive_t *result_p = ecma_bigint_create (digits_size + zero_size);
+
+  if (JERRY_UNLIKELY (result_p == NULL))
+  {
+    return ecma_bigint_raise_memory_error ();
+  }
+
+  if (digits_size > 0)
+  {
+    uint8_t *data_p = (uint8_t *) ECMA_BIGINT_GET_DIGITS (result_p, 0);
+    memset (data_p, 0, zero_size);
+    memcpy (data_p + zero_size, digits, digits_size);
+
+    if (number < 0)
+    {
+      result_p->u.bigint_sign_and_size |= ECMA_BIGINT_SIGN;
+    }
+  }
+
+  return ecma_make_extended_primitive_value (result_p, ECMA_TYPE_BIGINT);
+} /* ecma_bigint_number_to_bigint */
+
+/**
+ * Convert a value to BigInt value
+ *
+ * See also:
+ *          ECMA-262 v11, 7.1.13
+ *
+ * @return ecma BigInt value or ECMA_VALUE_ERROR
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_bigint_to_bigint (ecma_value_t value) /**< any value */
+{
+  if (ecma_is_value_boolean (value))
+  {
+    uint32_t size = ecma_is_value_true (value) ? sizeof (ecma_bigint_digit_t) : 0;
+
+    ecma_extended_primitive_t *result_p = ecma_bigint_create (size);
+
+    if (JERRY_UNLIKELY (result_p == NULL))
+    {
+      return ecma_bigint_raise_memory_error ();
+    }
+
+    if (ecma_is_value_true (value))
+    {
+      *ECMA_BIGINT_GET_DIGITS (result_p, 0) = 1;
+    }
+
+    return ecma_make_extended_primitive_value (result_p, ECMA_TYPE_BIGINT);
+  }
+
+  if (!ecma_is_value_string (value))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Value cannot be converted to BigInt"));
+  }
+
+  return ecma_bigint_parse_string_value (value, true);
+} /* ecma_bigint_to_bigint */
+
+/**
+ * Compare two BigInt values
+ *
+ * @return true if they are the same, false otherwise
+ */
+bool
+ecma_bigint_is_equal_to_bigint (ecma_value_t left_value, /**< left BigInt value */
+                                ecma_value_t right_value) /**< right BigInt value */
+{
+  JERRY_ASSERT (ecma_is_value_bigint (left_value) && ecma_is_value_bigint (right_value));
+
+  ecma_extended_primitive_t *left_p = ecma_get_extended_primitive_from_value (left_value);
+  ecma_extended_primitive_t *right_p = ecma_get_extended_primitive_from_value (right_value);
+
+  if (left_p->u.bigint_sign_and_size != right_p->u.bigint_sign_and_size)
+  {
+    return false;
+  }
+
+  uint32_t size = ECMA_BIGINT_GET_SIZE (left_p);
+  return memcmp (ECMA_BIGINT_GET_DIGITS (left_p, 0), ECMA_BIGINT_GET_DIGITS (right_p, 0), size) == 0;
+} /* ecma_bigint_is_equal_to_bigint */
+
+/**
+ * Compare a BigInt value and a number
+ *
+ * @return true if they are the same, false otherwise
+ */
+bool
+ecma_bigint_is_equal_to_number (ecma_value_t left_value, /**< left BigInt value */
+                                ecma_number_t right_value) /**< right number value */
+{
+  JERRY_ASSERT (ecma_is_value_bigint (left_value));
+
+  if (ecma_number_is_nan (right_value) || ecma_number_is_infinity (right_value))
+  {
+    return false;
+  }
+
+  ecma_extended_primitive_t *left_value_p = ecma_get_extended_primitive_from_value (left_value);
+  uint32_t left_size = ECMA_BIGINT_GET_SIZE (left_value_p);
+
+  if (right_value == 0)
+  {
+    return left_size == 0;
+  }
+
+  /* Sign must be the same. */
+  if (left_value_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN)
+  {
+    if (right_value > 0)
+    {
+      return false;
+    }
+  }
+  else if (right_value < 0)
+  {
+    return false;
+  }
+
+  ecma_bigint_digit_t digits[3];
+  uint32_t result = ecma_bigint_number_to_digits (right_value, digits);
+
+  JERRY_ASSERT (ECMA_BIGINT_NUMBER_TO_DIGITS_GET_DIGITS (result) == 0
+                || digits[ECMA_BIGINT_NUMBER_TO_DIGITS_GET_DIGITS (result) - 1] > 0);
+
+  if (result & ECMA_BIGINT_NUMBER_TO_DIGITS_HAS_FRACTION)
+  {
+    return false;
+  }
+
+  uint32_t digits_size = ECMA_BIGINT_NUMBER_TO_DIGITS_GET_DIGITS_SIZE (result);
+  uint32_t zero_size = ECMA_BIGINT_NUMBER_TO_DIGITS_GET_ZERO_SIZE (result);
+
+  if (left_size != digits_size + zero_size)
+  {
+    return false;
+  }
+
+  ecma_bigint_digit_t *left_p = ECMA_BIGINT_GET_DIGITS (left_value_p, 0);
+  ecma_bigint_digit_t *left_end_p = (ecma_bigint_digit_t *) (((uint8_t *) left_p) + zero_size);
+
+  /* Check value bits first. */
+  if (memcmp (left_end_p, digits, digits_size) != 0)
+  {
+    return false;
+  }
+
+  while (left_p < left_end_p)
+  {
+    if (*left_p++ != 0)
+    {
+      return false;
+    }
+  }
+
+  return true;
+} /* ecma_bigint_is_equal_to_number */
+
+/**
+ * Convert 0 to 1, and 1 to -1. Useful for getting sign.
+ */
+#define ECMA_BIGINT_TO_SIGN(value) (1 - (((int) (value)) << 1))
+
+/**
+ * Compare two BigInt values
+ *
+ * return -1, if left value < right value, 0 if they are equal, 1 otherwise
+ */
+int
+ecma_bigint_compare_to_bigint (ecma_value_t left_value, /**< left BigInt value */
+                               ecma_value_t right_value) /**< right BigInt value */
+{
+  JERRY_ASSERT (ecma_is_value_bigint (left_value) && ecma_is_value_bigint (right_value));
+
+  ecma_extended_primitive_t *left_p = ecma_get_extended_primitive_from_value (left_value);
+  ecma_extended_primitive_t *right_p = ecma_get_extended_primitive_from_value (right_value);
+
+  uint32_t left_sign = left_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN;
+  uint32_t right_sign = right_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN;
+
+  if ((left_sign ^ right_sign) != 0)
+  {
+    return ECMA_BIGINT_TO_SIGN (left_sign);
+  }
+
+  return ecma_big_uint_compare (left_p, right_p);
+} /* ecma_bigint_compare_to_bigint */
+
+/**
+ * Compare a BigInt value and a number
+ *
+ * return -1, if left value < right value, 0 if they are equal, 1 otherwise
+ */
+int
+ecma_bigint_compare_to_number (ecma_value_t left_value, /**< left BigInt value */
+                               ecma_number_t right_value) /**< right number value */
+{
+  JERRY_ASSERT (ecma_is_value_bigint (left_value));
+  JERRY_ASSERT (!ecma_number_is_nan (right_value));
+
+  ecma_extended_primitive_t *left_value_p = ecma_get_extended_primitive_from_value (left_value);
+  uint32_t left_size = ECMA_BIGINT_GET_SIZE (left_value_p);
+  int left_sign = ECMA_BIGINT_TO_SIGN (left_value_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN);
+  int right_invert_sign = ECMA_BIGINT_TO_SIGN (right_value > 0);
+
+  if (left_size == 0)
+  {
+    if (right_value == 0)
+    {
+      return 0;
+    }
+
+    return right_invert_sign;
+  }
+
+  if (right_value == 0 || left_sign == right_invert_sign)
+  {
+    /* Second condition: a positive BigInt is always greater than any negative number, and the opposite is true. */
+    return left_sign;
+  }
+
+  if (ecma_number_is_infinity (right_value))
+  {
+    /* Infinity is always bigger than any BigInt number. */
+    return right_invert_sign;
+  }
+
+  ecma_bigint_digit_t digits[3];
+  uint32_t result = ecma_bigint_number_to_digits (right_value, digits);
+
+  JERRY_ASSERT (ECMA_BIGINT_NUMBER_TO_DIGITS_GET_DIGITS (result) == 0
+                || digits[ECMA_BIGINT_NUMBER_TO_DIGITS_GET_DIGITS (result) - 1] > 0);
+
+  uint32_t digits_size = ECMA_BIGINT_NUMBER_TO_DIGITS_GET_DIGITS_SIZE (result);
+
+  if (digits_size == 0)
+  {
+    JERRY_ASSERT (result & ECMA_BIGINT_NUMBER_TO_DIGITS_HAS_FRACTION);
+    /* The number is between [-1 .. 1] exclusive. */
+    return left_sign;
+  }
+
+  uint32_t right_size = digits_size + ECMA_BIGINT_NUMBER_TO_DIGITS_GET_ZERO_SIZE (result);
+
+  if (left_size != right_size)
+  {
+    return left_size > right_size ? left_sign : -left_sign;
+  }
+
+  ecma_bigint_digit_t *left_p = ECMA_BIGINT_GET_DIGITS (left_value_p, right_size);
+  ecma_bigint_digit_t *left_end_p = (ecma_bigint_digit_t *) (((uint8_t *) left_p) - digits_size);
+  ecma_bigint_digit_t *digits_p = (ecma_bigint_digit_t *) (((uint8_t *) digits) + digits_size);
+
+  do
+  {
+    ecma_bigint_digit_t left = *(--left_p);
+    ecma_bigint_digit_t right = *(--digits_p);
+
+    if (left != right)
+    {
+      return left > right ? left_sign : -left_sign;
+    }
+  }
+  while (left_p > left_end_p);
+
+  left_end_p = ECMA_BIGINT_GET_DIGITS (left_value_p, 0);
+
+  while (left_p > left_end_p)
+  {
+    if (*(--left_p) != 0)
+    {
+      return left_sign;
+    }
+  }
+
+  return (result & ECMA_BIGINT_NUMBER_TO_DIGITS_HAS_FRACTION) ? -left_sign : 0;
+} /* ecma_bigint_compare_to_number */
+
+#undef ECMA_BIGINT_TO_SIGN
 
 /**
  * Negate a non-zero BigInt value

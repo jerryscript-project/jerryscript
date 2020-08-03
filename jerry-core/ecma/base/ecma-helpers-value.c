@@ -417,29 +417,14 @@ ecma_is_value_error_reference (ecma_value_t value) /**< ecma value */
 void
 ecma_check_value_type_is_spec_defined (ecma_value_t value) /**< ecma value */
 {
-#if ENABLED (JERRY_ESNEXT)
-#define ECMA_CHECK_IS_VALUE_SYMBOL(value) ecma_is_value_symbol(value)
-#else /* !ENABLED (JERRY_ESNEXT) */
-#define ECMA_CHECK_IS_VALUE_SYMBOL(value) false
-#endif /* ENABLED (JERRY_ESNEXT) */
-
-#if ENABLED (JERRY_BUILTIN_BIGINT)
-#define ECMA_CHECK_IS_VALUE_BIGINT(value) ecma_is_value_bigint(value)
-#else /* !ENABLED (JERRY_BUILTIN_BIGINT) */
-#define ECMA_CHECK_IS_VALUE_BIGINT(value) false
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
-
   JERRY_ASSERT (ecma_is_value_undefined (value)
                 || ecma_is_value_null (value)
                 || ecma_is_value_boolean (value)
                 || ecma_is_value_number (value)
                 || ecma_is_value_string (value)
-                || ECMA_CHECK_IS_VALUE_SYMBOL (value)
-                || ECMA_CHECK_IS_VALUE_BIGINT (value)
+                || ECMA_CHECK_SYMBOL_IN_ASSERT (value)
+                || ECMA_CHECK_BIGINT_IN_ASSERT (value)
                 || ecma_is_value_object (value));
-
-#undef ECMA_CHECK_IS_VALUE_SYMBOL
-#undef ECMA_CHECK_IS_VALUE_BIGINT
 } /* ecma_check_value_type_is_spec_defined */
 
 /**

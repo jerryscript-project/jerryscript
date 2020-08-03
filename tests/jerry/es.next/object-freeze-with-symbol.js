@@ -26,3 +26,5 @@ obj[s2] = 3
 assert(obj[s1] === 1);
 assert(obj[s2] === undefined);
 assert(delete obj[s1] === false);
+
+assert(Object.isFrozen(obj));

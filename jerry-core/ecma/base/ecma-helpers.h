@@ -302,7 +302,7 @@ lit_magic_string_id_t ecma_get_typeof_lit_id (ecma_value_t value);
 #if ENABLED (JERRY_ESNEXT)
 ecma_string_t *ecma_new_symbol_from_descriptor_string (ecma_value_t string_desc);
 bool ecma_prop_name_is_symbol (ecma_string_t *string_p);
-uint32_t ecma_op_advance_string_index (ecma_string_t *str_p, ecma_length_t index_num, bool is_unicode);
+ecma_length_t ecma_op_advance_string_index (ecma_string_t *str_p, ecma_length_t index_num, bool is_unicode);
 #endif /* ENABLED (JERRY_ESNEXT) */
 #if ENABLED (JERRY_BUILTIN_MAP) || ENABLED (JERRY_BUILTIN_SET)
 ecma_string_t *ecma_new_map_key_string (ecma_value_t value);

@@ -2929,22 +2929,14 @@ ecma_stringbuilder_destroy (ecma_stringbuilder_t *builder_p) /**< string builder
  *
  * @return uint32_t - the proper character index based on the operation
  */
-uint32_t
+ecma_length_t
 ecma_op_advance_string_index (ecma_string_t *str_p, /**< input string */
-                              ecma_length_t index_num, /**< given character index */
+                              ecma_length_t index, /**< given character index */
                               bool is_unicode) /**< true - if regexp object's "unicode" flag is set
                                                     false - otherwise */
 {
-  JERRY_ASSERT (index_num <= ECMA_NUMBER_MAX_SAFE_INTEGER);
-
-  /* Note: The internal string length limit is 2^32 */
-  if (JERRY_UNLIKELY (index_num >= (UINT32_MAX - 1)))
-  {
-    return UINT32_MAX;
-  }
-
-  uint32_t index = (uint32_t) index_num;
-  uint32_t next_index = index + 1;
+  JERRY_ASSERT (index <= ECMA_NUMBER_MAX_SAFE_INTEGER);
+  ecma_length_t next_index = index + 1;
 
   if (!is_unicode)
   {
@@ -2958,16 +2950,17 @@ ecma_op_advance_string_index (ecma_string_t *str_p, /**< input string */
     return next_index;
   }
 
-  ecma_char_t first = ecma_string_get_char_at_pos (str_p, index);
+  JERRY_ASSERT (index < UINT32_MAX);
+  ecma_char_t first = ecma_string_get_char_at_pos (str_p, (lit_utf8_size_t) index);
 
-  if (first < LIT_UTF16_HIGH_SURROGATE_MIN || first > LIT_UTF16_HIGH_SURROGATE_MAX)
+  if (!lit_is_code_point_utf16_high_surrogate (first))
   {
     return next_index;
   }
 
-  ecma_char_t second = ecma_string_get_char_at_pos (str_p, next_index);
+  ecma_char_t second = ecma_string_get_char_at_pos (str_p, (lit_utf8_size_t) next_index);
 
-  if (second < LIT_UTF16_LOW_SURROGATE_MIN || second > LIT_UTF16_LOW_SURROGATE_MAX)
+  if (!lit_is_code_point_utf16_low_surrogate (second))
   {
     return next_index;
   }

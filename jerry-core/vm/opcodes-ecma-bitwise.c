@@ -145,6 +145,21 @@ do_number_bitwise_logic (number_bitwise_logic_op op, /**< number bitwise logic o
   {
     switch (op)
     {
+      case NUMBER_BITWISE_LOGIC_AND:
+      {
+        ret_value = ecma_bigint_and (left_value, right_value);
+        break;
+      }
+      case NUMBER_BITWISE_LOGIC_OR:
+      {
+        ret_value = ecma_bigint_or (left_value, right_value);
+        break;
+      }
+      case NUMBER_BITWISE_LOGIC_XOR:
+      {
+        ret_value = ecma_bigint_xor (left_value, right_value);
+        break;
+      }
       case NUMBER_BITWISE_SHIFT_LEFT:
       {
         ret_value = ecma_bigint_shift (left_value, right_value, true);
@@ -157,7 +172,7 @@ do_number_bitwise_logic (number_bitwise_logic_op op, /**< number bitwise logic o
       }
       default:
       {
-        ret_value = ecma_raise_common_error (ECMA_ERR_MSG ("Not supported BigInt operation"));
+        ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Not supported BigInt operation"));
         break;
       }
     }

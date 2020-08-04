@@ -970,4 +970,198 @@ ecma_bigint_shift (ecma_value_t left_value, /**< left BigInt value */
   result_p->u.bigint_sign_and_size |= left_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN;
   return ecma_make_extended_primitive_value (result_p, ECMA_TYPE_BIGINT);
 } /* ecma_bigint_shift */
+
+/**
+ * Convert the result to an ecma value
+ *
+ * @return ecma BigInt value or ECMA_VALUE_ERROR
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_bigint_bitwise_op (uint32_t operation_and_options, /**< bitwise operation type and options */
+                        ecma_extended_primitive_t *left_value_p, /**< left BigInt value */
+                        ecma_extended_primitive_t *right_value_p) /**< right BigInt value */
+{
+  ecma_extended_primitive_t *result_p;
+  result_p = ecma_big_uint_bitwise_op (operation_and_options, left_value_p, right_value_p);
+
+  if (JERRY_UNLIKELY (result_p == NULL))
+  {
+    return ecma_bigint_raise_memory_error ();
+  }
+
+  if ((operation_and_options & ECMA_BIG_UINT_BITWISE_INCREASE_RESULT)
+      && ECMA_BIGINT_GET_SIZE (result_p) > 0)
+  {
+    result_p->u.bigint_sign_and_size |= ECMA_BIGINT_SIGN;
+  }
+
+  return ecma_make_extended_primitive_value (result_p, ECMA_TYPE_BIGINT);
+} /* ecma_bigint_bitwise_op */
+
+/**
+ * Perform bitwise 'and' operations on two BigUInt numbers
+ *
+ * @return ecma BigInt value or ECMA_VALUE_ERROR
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_bigint_and (ecma_value_t left_value, /**< left BigInt value */
+                 ecma_value_t right_value) /**< right BigInt value */
+{
+  ecma_extended_primitive_t *left_p = ecma_get_extended_primitive_from_value (left_value);
+  ecma_extended_primitive_t *right_p = ecma_get_extended_primitive_from_value (right_value);
+  uint32_t left_size = ECMA_BIGINT_GET_SIZE (left_p);
+  uint32_t right_size = ECMA_BIGINT_GET_SIZE (right_p);
+
+  if (left_size == 0)
+  {
+    ecma_ref_extended_primitive (left_p);
+    return left_value;
+  }
+
+  if (right_size == 0)
+  {
+    ecma_ref_extended_primitive (right_p);
+    return right_value;
+  }
+
+  if (!(left_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN))
+  {
+    if (!(right_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN))
+    {
+      return ecma_bigint_bitwise_op (ECMA_BIG_UINT_BITWISE_AND, left_p, right_p);
+    }
+
+    /* x & (-y) == x & ~(y-1) == x &~ (y-1) */
+    uint32_t operation_and_options = ECMA_BIG_UINT_BITWISE_AND_NOT | ECMA_BIG_UINT_BITWISE_DECREASE_RIGHT;
+    return ecma_bigint_bitwise_op (operation_and_options, left_p, right_p);
+  }
+
+  if (!(right_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN))
+  {
+    /* (-x) & y == ~(x-1) & y == y &~ (x-1) */
+    uint32_t operation_and_options = ECMA_BIG_UINT_BITWISE_AND_NOT | ECMA_BIG_UINT_BITWISE_DECREASE_RIGHT;
+    return ecma_bigint_bitwise_op (operation_and_options, right_p, left_p);
+  }
+
+  /* (-x) & (-y) == ~(x-1) & ~(y-1) == ~((x-1) | (y-1)) == -(((x-1) | (y-1)) + 1) */
+  uint32_t operation_and_options = (ECMA_BIG_UINT_BITWISE_OR
+                                    | ECMA_BIG_UINT_BITWISE_DECREASE_BOTH
+                                    | ECMA_BIG_UINT_BITWISE_INCREASE_RESULT);
+  return ecma_bigint_bitwise_op (operation_and_options, left_p, right_p);
+} /* ecma_bigint_and */
+
+/**
+ * Perform bitwise 'or' operations on two BigUInt numbers
+ *
+ * @return ecma BigInt value or ECMA_VALUE_ERROR
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_bigint_or (ecma_value_t left_value, /**< left BigInt value */
+                ecma_value_t right_value) /**< right BigInt value */
+{
+  ecma_extended_primitive_t *left_p = ecma_get_extended_primitive_from_value (left_value);
+  ecma_extended_primitive_t *right_p = ecma_get_extended_primitive_from_value (right_value);
+  uint32_t left_size = ECMA_BIGINT_GET_SIZE (left_p);
+  uint32_t right_size = ECMA_BIGINT_GET_SIZE (right_p);
+
+  if (left_size == 0)
+  {
+    ecma_ref_extended_primitive (right_p);
+    return right_value;
+  }
+
+  if (right_size == 0)
+  {
+    ecma_ref_extended_primitive (left_p);
+    return left_value;
+  }
+
+  if (!(left_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN))
+  {
+    if (!(right_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN))
+    {
+      return ecma_bigint_bitwise_op (ECMA_BIG_UINT_BITWISE_OR, left_p, right_p);
+    }
+
+    /* x | (-y) == x | ~(y-1) == ~((y-1) &~ x) == -(((y-1) &~ x) + 1) */
+    uint32_t operation_and_options = (ECMA_BIG_UINT_BITWISE_AND_NOT
+                                      | ECMA_BIG_UINT_BITWISE_DECREASE_LEFT
+                                      | ECMA_BIG_UINT_BITWISE_INCREASE_RESULT);
+    return ecma_bigint_bitwise_op (operation_and_options, right_p, left_p);
+  }
+
+  if (!(right_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN))
+  {
+    /* (-x) | y == ~(x-1) | y == ~((x-1) &~ y) == -(((x-1) &~ y) + 1) */
+    uint32_t operation_and_options = (ECMA_BIG_UINT_BITWISE_AND_NOT
+                                      | ECMA_BIG_UINT_BITWISE_DECREASE_LEFT
+                                      | ECMA_BIG_UINT_BITWISE_INCREASE_RESULT);
+    return ecma_bigint_bitwise_op (operation_and_options, left_p, right_p);
+  }
+
+  /* (-x) | (-y) == ~(x-1) | ~(y-1) == ~((x-1) & (y-1)) = -(((x-1) & (y-1)) + 1) */
+  uint32_t operation_and_options = (ECMA_BIG_UINT_BITWISE_AND
+                                    | ECMA_BIG_UINT_BITWISE_DECREASE_BOTH
+                                    | ECMA_BIG_UINT_BITWISE_INCREASE_RESULT);
+  return ecma_bigint_bitwise_op (operation_and_options, left_p, right_p);
+} /* ecma_bigint_or */
+
+/**
+ * Perform bitwise 'xor' operations on two BigUInt numbers
+ *
+ * @return ecma BigInt value or ECMA_VALUE_ERROR
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_bigint_xor (ecma_value_t left_value, /**< left BigInt value */
+                 ecma_value_t right_value) /**< right BigInt value */
+{
+  ecma_extended_primitive_t *left_p = ecma_get_extended_primitive_from_value (left_value);
+  ecma_extended_primitive_t *right_p = ecma_get_extended_primitive_from_value (right_value);
+  uint32_t left_size = ECMA_BIGINT_GET_SIZE (left_p);
+  uint32_t right_size = ECMA_BIGINT_GET_SIZE (right_p);
+
+  if (left_size == 0)
+  {
+    ecma_ref_extended_primitive (right_p);
+    return right_value;
+  }
+
+  if (right_size == 0)
+  {
+    ecma_ref_extended_primitive (left_p);
+    return left_value;
+  }
+
+  if (!(left_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN))
+  {
+    if (!(right_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN))
+    {
+      return ecma_bigint_bitwise_op (ECMA_BIG_UINT_BITWISE_XOR, left_p, right_p);
+    }
+
+    /* x ^ (-y) == x ^ ~(y-1) == ~(x ^ (y-1)) == -((x ^ (y-1)) + 1) */
+    uint32_t operation_and_options = (ECMA_BIG_UINT_BITWISE_XOR
+                                      | ECMA_BIG_UINT_BITWISE_DECREASE_RIGHT
+                                      | ECMA_BIG_UINT_BITWISE_INCREASE_RESULT);
+    return ecma_bigint_bitwise_op (operation_and_options, left_p, right_p);
+  }
+
+  if (!(right_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN))
+  {
+    /* (-x) | y == ~(x-1) ^ y == ~((x-1) ^ y) == -(((x-1) ^ y) + 1) */
+    uint32_t operation_and_options = (ECMA_BIG_UINT_BITWISE_XOR
+                                      | ECMA_BIG_UINT_BITWISE_DECREASE_LEFT
+                                      | ECMA_BIG_UINT_BITWISE_INCREASE_RESULT);
+    return ecma_bigint_bitwise_op (operation_and_options, left_p, right_p);
+  }
+
+  /* (-x) ^ (-y) == ~(x-1) ^ ~(y-1) == (x-1) ^ (y-1) */
+  uint32_t operation_and_options = ECMA_BIG_UINT_BITWISE_XOR | ECMA_BIG_UINT_BITWISE_DECREASE_BOTH;
+  return ecma_bigint_bitwise_op (operation_and_options, left_p, right_p);
+} /* ecma_bigint_xor */
+
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */

@@ -59,6 +59,39 @@ typedef uint64_t ecma_bigint_two_digits_t;
 #define ECMA_BIGINT_HIGH_DIGIT(digit) \
   (((ecma_bigint_two_digits_t) digit) << (8 * sizeof (ecma_bigint_digit_t)))
 
+/**
+ * Bitwise operation types.
+ */
+typedef enum
+{
+  ECMA_BIG_UINT_BITWISE_AND, /**< bitwise 'and' operation */
+  ECMA_BIG_UINT_BITWISE_OR, /**< bitwise 'or' operation */
+  ECMA_BIG_UINT_BITWISE_XOR, /**< bitwise 'xor' operation */
+  ECMA_BIG_UINT_BITWISE_AND_NOT, /**< bitwise 'and not' operation */
+} ecma_big_uint_bitwise_operation_types_t;
+
+/**
+ * Returns with the type of the operation.
+ */
+#define ECMA_BIGINT_BITWISE_GET_OPERATION_TYPE(operation_and_options) \
+  ((operation_and_options) & 0xf)
+
+/**
+ * Options for bitwise operations.
+ */
+typedef enum
+{
+  ECMA_BIG_UINT_BITWISE_DECREASE_LEFT = (1 << 4), /**< subtract 1 from left value */
+  ECMA_BIG_UINT_BITWISE_DECREASE_RIGHT = (1 << 5), /**< subtract 1 from right value */
+  ECMA_BIG_UINT_BITWISE_INCREASE_RESULT = (1 << 6), /**< add 1 to the result */
+} ecma_big_uint_bitwise_options_t;
+
+/**
+ * Subtract 1 from both left and right values.
+ */
+#define ECMA_BIG_UINT_BITWISE_DECREASE_BOTH \
+  (ECMA_BIG_UINT_BITWISE_DECREASE_LEFT | ECMA_BIG_UINT_BITWISE_DECREASE_RIGHT)
+
 ecma_extended_primitive_t *ecma_bigint_create (uint32_t size);
 ecma_extended_primitive_t *ecma_big_uint_extend (ecma_extended_primitive_t *value_p, ecma_bigint_digit_t digit);
 
@@ -82,6 +115,10 @@ ecma_extended_primitive_t *ecma_big_uint_div_mod (ecma_extended_primitive_t *div
 
 ecma_extended_primitive_t *ecma_big_uint_shift_left (ecma_extended_primitive_t *left_value_p, uint32_t right_value);
 ecma_extended_primitive_t *ecma_big_uint_shift_right (ecma_extended_primitive_t *left_value_p, uint32_t right_value);
+
+ecma_extended_primitive_t *ecma_big_uint_bitwise_op (uint32_t operation_and_options,
+                                                     ecma_extended_primitive_t *left_value_p,
+                                                     ecma_extended_primitive_t *right_value_p);
 
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 

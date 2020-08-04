@@ -43,6 +43,7 @@
 #define LIT_CHAR_FF   ((ecma_char_t) 0x000C) /* form feed */
 #define LIT_CHAR_SP   ((ecma_char_t) 0x0020) /* space */
 #define LIT_CHAR_NBSP ((ecma_char_t) 0x00A0) /* no-break space */
+#define LIT_CHAR_MVS  ((ecma_char_t) 0x180E) /* mongolian vowel separator */
 /* LIT_CHAR_BOM is defined above */
 
 bool lit_char_is_white_space (lit_code_point_t c);

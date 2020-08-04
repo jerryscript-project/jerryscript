@@ -201,7 +201,6 @@ static const uint16_t lit_unicode_id_continue_chars[] JERRY_ATTR_CONST_DATA =
   0xaa43, 0xaab0, 0xaac1, 0xfb1e, 0xff3f
 };
 
-#if ENABLED (JERRY_ESNEXT)
 /**
  * Character interval starting points for White_Space.
  */
@@ -225,30 +224,3 @@ static const uint16_t lit_unicode_white_space_chars[] JERRY_ATTR_CONST_DATA =
 {
   0x00a0, 0x1680, 0x202f, 0x205f, 0x3000
 };
-
-#else /* !ENABLED (JERRY_ESNEXT) */
-/**
- * Character interval starting points for White_Space.
- */
-static const uint16_t lit_unicode_white_space_interval_starts[] JERRY_ATTR_CONST_DATA =
-{
-  0x2000
-};
-
-/**
- * Character interval lengths for White_Space.
- */
-static const uint8_t lit_unicode_white_space_interval_lengths[] JERRY_ATTR_CONST_DATA =
-{
-  0x000b
-};
-
-/**
- * Non-interval characters for White_Space.
- */
-static const uint16_t lit_unicode_white_space_chars[] JERRY_ATTR_CONST_DATA =
-{
-  0x1680, 0x180e, 0x202f, 0x205f, 0x3000
-};
-
-#endif /* ENABLED (JERRY_ESNEXT) */

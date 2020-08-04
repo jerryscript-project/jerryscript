@@ -87,3 +87,5 @@ assert("\u0009\u000B\u000C\u0020\u00A01\u0009\u000B\u000C\u0020\u00A0".trim() ==
 assert("\u000A\u000D\u2028\u202911\u000A\u000D\u2028\u2029".trim() === "11");
 
 assert ("\u200B".trim() === '\u200B')
+assert ("\u200A".trim() === '')
+assert ("\u00A0".trim() === '')

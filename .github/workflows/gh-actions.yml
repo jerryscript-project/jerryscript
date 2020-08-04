@@ -74,6 +74,7 @@ jobs:
       - name: Test262 - ES2015
         run: $RUNNER --test262-es2015 update
       - uses: actions/upload-artifact@v2
+        if: success() || failure()
         with:
           name: Test262-ES2015-results
           path: build/tests/test262_tests_es2015/local/bin/test262.report
@@ -85,6 +86,7 @@ jobs:
       - name: Test262 - ESNext
         run: $RUNNER --test262-esnext update
       - uses: actions/upload-artifact@v2
+        if: success() || failure()
         with:
           name: Test262-ESNext-results
           path: build/tests/test262_tests_esnext/local/bin/test262.report

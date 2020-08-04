@@ -2058,9 +2058,15 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t arg1, /**< callbackfn *
   {
     return new_array;
   }
+
+  /* ES11: 22.1.3.7. 7.c.iii.1 */
+  const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_IS_THROW;
 #else /* !ENABLED (JERRY_ESNEXT) */
   ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
+
+  /* ES5.1: 15.4.4.20. 9.c.iii.1 */
+  const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE;
 #endif /* ENABLED (JERRY_ESNEXT) */
 
   ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
@@ -2108,7 +2114,7 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t arg1, /**< callbackfn *
         put_comp = ecma_builtin_helper_def_prop_by_index (new_array_p,
                                                           new_array_index,
                                                           get_value,
-                                                          ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+                                                          prop_flags);
 #if ENABLED (JERRY_ESNEXT)
         if (ECMA_IS_VALUE_ERROR (put_comp))
         {

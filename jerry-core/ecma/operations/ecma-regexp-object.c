@@ -2254,8 +2254,8 @@ ecma_regexp_split_helper (ecma_value_t this_arg, /**< this value */
   }
 
   /* 23. */
-  uint32_t current_index = 0;
-  uint32_t previous_index = 0;
+  ecma_length_t current_index = 0;
+  ecma_length_t previous_index = 0;
 
   ecma_string_t *const lastindex_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL);
 
@@ -2265,7 +2265,7 @@ ecma_regexp_split_helper (ecma_value_t this_arg, /**< this value */
     /* 24.a-b. */
     result = ecma_op_object_put (splitter_obj_p,
                                  lastindex_str_p,
-                                 ecma_make_uint32_value (current_index),
+                                 ecma_make_length_value (current_index),
                                  true);
 
     if (ECMA_IS_VALUE_ERROR (result))
@@ -2325,7 +2325,10 @@ ecma_regexp_split_helper (ecma_value_t this_arg, /**< this value */
     }
 
     /* 24.f.iv.1-4. */
-    ecma_string_t *const split_str_p = ecma_string_substr (string_p, previous_index, current_index);
+    JERRY_ASSERT (previous_index <= string_length && current_index <= string_length);
+    ecma_string_t *const split_str_p = ecma_string_substr (string_p,
+                                                           (lit_utf8_size_t) previous_index,
+                                                           (lit_utf8_size_t) current_index);
 
     result = ecma_builtin_helper_def_prop_by_index (array_p,
                                                     array_length++,
@@ -2343,8 +2346,7 @@ ecma_regexp_split_helper (ecma_value_t this_arg, /**< this value */
     }
 
     /* 24.f.iv.6. */
-    JERRY_ASSERT (end_index <= UINT32_MAX);
-    previous_index = (uint32_t) end_index;
+    previous_index = end_index;
 
     /* 24.f.iv.7-8. */
     ecma_length_t match_length;
@@ -2395,7 +2397,8 @@ ecma_regexp_split_helper (ecma_value_t this_arg, /**< this value */
     ecma_deref_object (match_array_p);
   }
 
-  ecma_string_t *const end_str_p = ecma_string_substr (string_p, previous_index, string_length);
+  JERRY_ASSERT (previous_index <= string_length);
+  ecma_string_t *const end_str_p = ecma_string_substr (string_p, (lit_utf8_size_t) previous_index, string_length);
   result = ecma_builtin_helper_def_prop_by_index (array_p,
                                                   array_length++,
                                                   ecma_make_string_value (end_str_p),
@@ -3484,11 +3487,11 @@ ecma_regexp_match_helper (ecma_value_t this_arg, /**< this argument */
         goto result_cleanup;
       }
 
-      uint32_t next_index = ecma_op_advance_string_index (str_p, index, full_unicode);
+      index = ecma_op_advance_string_index (str_p, index, full_unicode);
 
       ecma_value_t next_set_status = ecma_op_object_put (obj_p,
                                                          ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                                                         ecma_make_uint32_value (next_index),
+                                                         ecma_make_length_value (index),
                                                          true);
 #else /* !ENABLED (JERRY_ESNEXT) */
       ecma_number_t next_index = ecma_get_number_from_value (this_index);

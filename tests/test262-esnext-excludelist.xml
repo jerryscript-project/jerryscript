@@ -1926,7 +1926,6 @@
   <test id="built-ins/RegExp/prototype/Symbol.matchAll/this-tolength-lastindex-throws.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/Symbol.matchAll/this-tostring-flags-throws.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/Symbol.matchAll/this-tostring-flags.js"><reason></reason></test>
-  <test id="built-ins/RegExp/prototype/Symbol.replace/coerce-lastindex.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/Symbol.replace/named-groups-fn.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/Symbol.replace/named-groups.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/Symbol.replace/poisoned-stdlib.js"><reason></reason></test>

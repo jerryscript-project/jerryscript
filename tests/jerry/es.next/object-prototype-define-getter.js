@@ -49,3 +49,96 @@ var def = [];
 var p = new Proxy({}, { defineProperty: function(o, v, desc) { def.push(v); Object.defineProperty(o, v, desc); return true; }});
 Object.prototype.__defineGetter__.call(p, "foo", Object);
 assert(def + '' === "foo");
+
+var func = function() {};
+var subject = Object.defineProperty(
+  {}, 'foo', { value: 1, configurable: false }
+);
+
+try {
+  subject.__defineGetter__('foo', func);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+var subject = Object.preventExtensions({ existing: null });
+
+subject.__defineGetter__('existing', func);
+
+try {
+  subject.__defineGetter__('brand new', func);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+var __defineGetter__ = Object.prototype.__defineGetter__;
+var counter = 0;
+var key = {
+  toString: function() {
+    counter += 1;
+  }
+};
+
+try {
+  __defineGetter__.call(undefined, key, func);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+try {
+  __defineGetter__.call(null, key, func);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+assert(counter === 0);
+
+var subject = {};
+var symbol = Symbol('');
+var counter = 0;
+var key = {
+  toString: function() {
+    counter += 1;
+  }
+};
+
+try {
+  subject.__defineGetter__(key, '');
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+try {
+  subject.__defineGetter__(key, 23);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+try {
+  subject.__defineGetter__(key, true);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+try {
+  subject.__defineGetter__(key, symbol);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+try {
+  subject.__defineGetter__(key, {});
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+assert(counter === 0);

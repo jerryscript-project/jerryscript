@@ -477,6 +477,9 @@ jerry_snapshot_set_offsets (uint32_t *buffer_p, /**< buffer */
       for (uint32_t i = 0; i < const_literal_end; i++)
       {
         if (ecma_is_value_string (literal_start_p[i])
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+            || ecma_is_value_bigint (literal_start_p[i])
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
             || ecma_is_value_float_number (literal_start_p[i]))
         {
           lit_mem_to_snapshot_id_map_entry_t *current_p = lit_map_p;

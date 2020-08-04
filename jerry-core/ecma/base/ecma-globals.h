@@ -1578,10 +1578,16 @@ typedef enum
   ((ecma_string_container_t) ((string_desc_p)->refs_and_container & ECMA_STRING_CONTAINER_MASK))
 
 /**
- * Checks whether the reference counter is 1.
+ * Checks whether the reference counter is 1 of a string.
  */
 #define ECMA_STRING_IS_REF_EQUALS_TO_ONE(string_desc_p) \
   (((string_desc_p)->refs_and_container >> 4) == 1)
+
+/**
+ * Checks whether the reference counter is 1 of an extended primitive.
+ */
+#define ECMA_EXTENDED_PRIMITIVE_IS_REF_EQUALS_TO_ONE(extended_primitive_p) \
+  (((extended_primitive_p)->refs_and_type >> 3) == 1)
 
 /**
  * ECMA string-value descriptor
@@ -1779,15 +1785,6 @@ typedef struct
   jmem_cpointer_t next_cp; /**< cpointer ot next item */
   jmem_cpointer_t values[ECMA_LIT_STORAGE_VALUE_COUNT]; /**< list of values */
 } ecma_lit_storage_item_t;
-
-/**
- * Number storage item
- */
-typedef struct
-{
-  jmem_cpointer_t next_cp; /**< cpointer ot next item */
-  jmem_cpointer_t values[ECMA_LIT_STORAGE_VALUE_COUNT]; /**< list of values */
-} ecma_number_storage_item_t;
 
 #if ENABLED (JERRY_LCACHE)
 /**

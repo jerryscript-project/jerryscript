@@ -171,7 +171,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
 
     if (ecma_is_value_string (y))
     {
-      ecma_value_t bigint = ecma_bigint_parse_string_value (y, false);
+      ecma_value_t bigint = ecma_bigint_parse_string_value (y, ECMA_BIGINT_PARSE_DISALLOW_SYNTAX_ERROR);
 
       if (ECMA_IS_VALUE_ERROR (bigint)
           || bigint == ECMA_VALUE_FALSE)
@@ -483,7 +483,7 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
       }
       else if (ecma_is_value_string (py))
       {
-        ret_value = ecma_bigint_parse_string_value (py, false);
+        ret_value = ecma_bigint_parse_string_value (py, ECMA_BIGINT_PARSE_DISALLOW_SYNTAX_ERROR);
 
         if (!ECMA_IS_VALUE_ERROR (ret_value))
         {

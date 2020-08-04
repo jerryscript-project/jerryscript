@@ -36,23 +36,28 @@ ecma_bigint_raise_memory_error (void)
 /**
  * Parse a string and create a BigInt value
  *
- * @return ecma BigInt value or ECMA_VALUE_ERROR
+ * @return ecma BigInt value or a special value allowed by the option flags
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
 ecma_bigint_parse_string (const lit_utf8_byte_t *string_p, /**< string represenation of the BigInt */
                           lit_utf8_size_t size, /**< string size */
-                          bool throw_syntax_error) /**< true, if syntax errors should be thrown
-                                                    *   otherwise ECMA_VALUE_FALSE is returned on syntax error */
+                          uint32_t options) /**< ecma_bigint_parse_string_options_t option bits */
 {
   ecma_bigint_digit_t radix = 10;
-  uint32_t sign = 0;
+  uint32_t sign = (options & ECMA_BIGINT_PARSE_SET_NEGATIVE) ? ECMA_BIGINT_SIGN : 0;
 
   if (size >= 3 && string_p[0] == LIT_CHAR_0)
   {
     if (string_p[1] == LIT_CHAR_LOWERCASE_X || string_p[1] == LIT_CHAR_UPPERCASE_X)
     {
       radix = 16;
+      string_p += 2;
+      size -= 2;
+    }
+    else if (string_p[1] == LIT_CHAR_LOWERCASE_O || string_p[1] == LIT_CHAR_UPPERCASE_O)
+    {
+      radix = 8;
       string_p += 2;
       size -= 2;
     }
@@ -79,7 +84,7 @@ ecma_bigint_parse_string (const lit_utf8_byte_t *string_p, /**< string represena
   }
   else if (size == 0)
   {
-    if (!throw_syntax_error)
+    if (options & ECMA_BIGINT_PARSE_DISALLOW_SYNTAX_ERROR)
     {
       return ECMA_VALUE_FALSE;
     }
@@ -97,6 +102,7 @@ ecma_bigint_parse_string (const lit_utf8_byte_t *string_p, /**< string represena
 
   if (string_p == string_end_p)
   {
+    sign = 0;
     result_p = ecma_bigint_create (0);
   }
   else
@@ -126,7 +132,7 @@ ecma_bigint_parse_string (const lit_utf8_byte_t *string_p, /**< string represena
           ecma_deref_bigint (result_p);
         }
 
-        if (!throw_syntax_error)
+        if (options & ECMA_BIGINT_PARSE_DISALLOW_SYNTAX_ERROR)
         {
           return ECMA_VALUE_FALSE;
         }
@@ -145,6 +151,10 @@ ecma_bigint_parse_string (const lit_utf8_byte_t *string_p, /**< string represena
 
   if (JERRY_UNLIKELY (result_p == NULL))
   {
+    if (options & ECMA_BIGINT_PARSE_DISALLOW_MEMORY_ERROR)
+    {
+      return ECMA_VALUE_NULL;
+    }
     return ecma_bigint_raise_memory_error ();
   }
 
@@ -160,13 +170,12 @@ ecma_bigint_parse_string (const lit_utf8_byte_t *string_p, /**< string represena
  */
 ecma_value_t
 ecma_bigint_parse_string_value (ecma_value_t string, /**< ecma string */
-                                bool throw_syntax_error) /**< true, if syntax errors should be thrown
-                                                          *   otherwise ECMA_VALUE_FALSE is returned on syntax error */
+                                uint32_t options) /**< ecma_bigint_parse_string_options_t option bits */
 {
   JERRY_ASSERT (ecma_is_value_string (string));
 
   ECMA_STRING_TO_UTF8_STRING (ecma_get_string_from_value (string), string_buffer_p, string_buffer_size);
-  ecma_value_t result = ecma_bigint_parse_string (string_buffer_p, string_buffer_size, throw_syntax_error);
+  ecma_value_t result = ecma_bigint_parse_string (string_buffer_p, string_buffer_size, options);
   ECMA_FINALIZE_UTF8_STRING (string_buffer_p, string_buffer_size);
 
   return result;
@@ -415,7 +424,7 @@ ecma_bigint_to_bigint (ecma_value_t value) /**< any value */
     return ecma_raise_type_error (ECMA_ERR_MSG ("Value cannot be converted to BigInt"));
   }
 
-  return ecma_bigint_parse_string_value (value, true);
+  return ecma_bigint_parse_string_value (value, ECMA_BIGINT_PARSE_NO_OPTIONS);
 } /* ecma_bigint_to_bigint */
 
 /**

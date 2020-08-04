@@ -869,6 +869,12 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Identifier cannot start after a number.";
     }
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+    case PARSER_ERR_INVALID_BIGINT:
+    {
+      return "Number is not a valid BigInt.";
+    }
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
     case PARSER_ERR_INVALID_REGEXP:
     {
       return "Invalid regular expression.";

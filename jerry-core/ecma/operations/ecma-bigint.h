@@ -25,9 +25,22 @@
  */
 #define ECMA_BIGINT_SIGN 0x1
 
+/**
+ * Flags for ecma_bigint_parse_string.
+ */
+typedef enum
+{
+  ECMA_BIGINT_PARSE_NO_OPTIONS = 0, /**< no options */
+  ECMA_BIGINT_PARSE_SET_NEGATIVE = (1 << 0), /**< return with a negative BigInt value */
+  ECMA_BIGINT_PARSE_DISALLOW_SYNTAX_ERROR = (1 << 1), /**< don't throw SyntaxError,
+                                                       *   return with ECMA_VALUE_FALSE */
+  ECMA_BIGINT_PARSE_DISALLOW_MEMORY_ERROR = (1 << 2), /**< don't throw out-of-memory error,
+                                                       *   return with ECMA_VALUE_NULL instead */
+} ecma_bigint_parse_string_options_t;
+
 ecma_value_t ecma_bigint_parse_string (const lit_utf8_byte_t *string_p, lit_utf8_size_t size,
-                                       bool throw_syntax_error);
-ecma_value_t ecma_bigint_parse_string_value (ecma_value_t string, bool throw_syntax_error);
+                                       uint32_t options);
+ecma_value_t ecma_bigint_parse_string_value (ecma_value_t string, uint32_t options);
 ecma_string_t *ecma_bigint_to_string (ecma_value_t value, ecma_bigint_digit_t radix);
 ecma_value_t ecma_bigint_number_to_bigint (ecma_number_t number);
 ecma_value_t ecma_bigint_to_bigint (ecma_value_t value);

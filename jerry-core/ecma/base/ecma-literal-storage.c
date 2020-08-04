@@ -318,6 +318,11 @@ ecma_find_or_create_literal_bigint (ecma_value_t bigint) /**< bigint to be searc
 {
   JERRY_ASSERT (ecma_is_value_bigint (bigint));
 
+  if (bigint == ECMA_BIGINT_ZERO)
+  {
+    return bigint;
+  }
+
   jmem_cpointer_t bigint_list_cp = JERRY_CONTEXT (bigint_list_first_cp);
   jmem_cpointer_t *empty_cpointer_p = NULL;
 
@@ -416,7 +421,7 @@ void ecma_save_literals_append_value (ecma_value_t value, /**< value to be appen
   /* Unlike direct numbers, direct strings are converted to character literals. */
   if (!ecma_is_value_string (value)
 #if ENABLED (JERRY_BUILTIN_BIGINT)
-      && !ecma_is_value_bigint (value)
+      && (!ecma_is_value_bigint (value) || value == ECMA_BIGINT_ZERO)
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
       && !ecma_is_value_float_number (value))
   {

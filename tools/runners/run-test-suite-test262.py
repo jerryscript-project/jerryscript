@@ -198,23 +198,30 @@ def main(args):
     with open(os.path.join(os.path.dirname(args.engine), 'test262.report'), 'w') as output_file:
         counter = 0
         summary_found = False
+        summary_end_found = False
         while True:
-            counter += 1
             output = proc.stdout.readline()
             if not output:
                 break
             output_file.write(output)
-            if not summary_found and (counter % 100) == 0:
-                print("\rExecuted approx %d tests..." % counter, end='')
 
             if output.startswith('=== Summary ==='):
                 summary_found = True
                 print('')
 
             if summary_found:
-                print(output, end='')
+                if not summary_end_found:
+                    print(output, end='')
+                    if not output.strip():
+                        summary_end_found = True
                 if 'All tests succeeded' in output:
                     return_code = 0
+            elif re.search('in (non-)?strict mode', output):
+                counter += 1
+                if (counter % 100) == 0:
+                    print(".", end='')
+                if (counter % 5000) == 0:
+                    print(" Executed %d tests." % counter)
 
     proc.wait()
 

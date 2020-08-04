@@ -6979,10 +6979,6 @@
   <test id="language/literals/numeric/numeric-separators/numeric-separator-literal-sign-plus-dds-nsl-dd.js"><reason></reason></test>
   <test id="language/literals/regexp/named-groups/forward-reference.js"><reason></reason></test>
   <test id="language/literals/string/legacy-octal-escape-sequence-prologue-strict.js"><reason></reason></test>
-  <test id="language/literals/string/line-separator-eval.js"><reason></reason></test>
-  <test id="language/literals/string/line-separator.js"><reason></reason></test>
-  <test id="language/literals/string/paragraph-separator-eval.js"><reason></reason></test>
-  <test id="language/literals/string/paragraph-separator.js"><reason></reason></test>
   <test id="language/module-code/early-export-global.js"><reason></reason></test>
   <test id="language/module-code/early-export-unresolvable.js"><reason></reason></test>
   <test id="language/module-code/early-strict-mode.js"><reason></reason></test>

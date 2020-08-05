@@ -10,14 +10,6 @@
   <test id="annexB/built-ins/Function/createdynfn-html-open-comment-body.js"><reason></reason></test>
   <test id="annexB/built-ins/Function/createdynfn-html-open-comment-params.js"><reason></reason></test>
   <test id="annexB/built-ins/Function/createdynfn-no-line-terminator-html-close-comment-body.js"><reason></reason></test>
-  <test id="annexB/built-ins/Object/prototype/__defineGetter__/define-non-configurable.js"><reason></reason></test>
-  <test id="annexB/built-ins/Object/prototype/__defineGetter__/define-non-extensible.js"><reason></reason></test>
-  <test id="annexB/built-ins/Object/prototype/__defineGetter__/getter-non-callable.js"><reason></reason></test>
-  <test id="annexB/built-ins/Object/prototype/__defineGetter__/this-non-obj.js"><reason></reason></test>
-  <test id="annexB/built-ins/Object/prototype/__defineSetter__/define-non-configurable.js"><reason></reason></test>
-  <test id="annexB/built-ins/Object/prototype/__defineSetter__/define-non-extensible.js"><reason></reason></test>
-  <test id="annexB/built-ins/Object/prototype/__defineSetter__/setter-non-callable.js"><reason></reason></test>
-  <test id="annexB/built-ins/Object/prototype/__defineSetter__/this-non-obj.js"><reason></reason></test>
   <test id="annexB/built-ins/RegExp/match-indices/indices-groups-object.js"><reason></reason></test>
   <test id="annexB/built-ins/RegExp/named-groups/groups-object.js"><reason></reason></test>
   <test id="annexB/built-ins/RegExp/named-groups/non-unicode-malformed-lookbehind.js"><reason></reason></test>

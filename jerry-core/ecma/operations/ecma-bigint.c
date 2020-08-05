@@ -17,6 +17,7 @@
 #include "ecma-big-uint.h"
 #include "ecma-exceptions.h"
 #include "ecma-helpers.h"
+#include "ecma-objects.h"
 #include "lit-char-helpers.h"
 
 #if ENABLED (JERRY_BUILTIN_BIGINT)
@@ -340,7 +341,7 @@ ecma_bigint_number_to_digits (ecma_number_t number, /**< ecma number */
  * @return ecma BigInt value or ECMA_VALUE_ERROR
  *         Returned value must be freed with ecma_free_value.
  */
-ecma_value_t
+static ecma_value_t
 ecma_bigint_number_to_bigint (ecma_number_t number) /**< ecma number */
 {
   if (ecma_number_is_nan (number) || ecma_number_is_infinity (number))
@@ -397,33 +398,221 @@ ecma_bigint_number_to_bigint (ecma_number_t number) /**< ecma number */
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_bigint_to_bigint (ecma_value_t value) /**< any value */
+ecma_bigint_to_bigint (ecma_value_t value, /**< any value */
+                       bool allow_numbers) /**< converting ecma numbers is allowed */
 {
-  if (ecma_is_value_boolean (value))
-  {
-    if (ecma_is_value_false (value))
-    {
-      return ECMA_BIGINT_ZERO;
-    }
+  bool free_value = false;
 
+  if (ecma_is_value_object (value))
+  {
+    value = ecma_op_object_default_value (ecma_get_object_from_value (value), ECMA_PREFERRED_TYPE_NUMBER);
+    free_value = true;
+
+    if (ECMA_IS_VALUE_ERROR (value))
+    {
+      return value;
+    }
+  }
+
+  ecma_value_t result;
+
+  if (ecma_is_value_string (value))
+  {
+    result = ecma_bigint_parse_string_value (value, ECMA_BIGINT_PARSE_NO_OPTIONS);
+  }
+  else if (ecma_is_value_bigint (value))
+  {
+    result = value;
+
+    if (!free_value && value != ECMA_BIGINT_ZERO)
+    {
+      ecma_ref_extended_primitive (ecma_get_extended_primitive_from_value (value));
+    }
+    else
+    {
+      free_value = false;
+    }
+  }
+  else if (allow_numbers && ecma_is_value_number (value))
+  {
+    result = ecma_bigint_number_to_bigint (ecma_get_number_from_value (value));
+  }
+  else if (ecma_is_value_false (value))
+  {
+    result = ECMA_BIGINT_ZERO;
+  }
+  else if (ecma_is_value_true (value))
+  {
     ecma_extended_primitive_t *result_p = ecma_bigint_create (sizeof (ecma_bigint_digit_t));
 
-    if (JERRY_UNLIKELY (result_p == NULL))
+    if (result_p != NULL)
     {
-      return ecma_bigint_raise_memory_error ();
+      *ECMA_BIGINT_GET_DIGITS (result_p, 0) = 1;
+      result = ecma_make_extended_primitive_value (result_p, ECMA_TYPE_BIGINT);
     }
-
-    *ECMA_BIGINT_GET_DIGITS (result_p, 0) = 1;
-    return ecma_make_extended_primitive_value (result_p, ECMA_TYPE_BIGINT);
+    else
+    {
+      result = ecma_bigint_raise_memory_error ();
+    }
   }
-
-  if (!ecma_is_value_string (value))
+  else
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Value cannot be converted to BigInt"));
+    result = ecma_raise_type_error (ECMA_ERR_MSG ("Value cannot be converted to BigInt"));
   }
 
-  return ecma_bigint_parse_string_value (value, ECMA_BIGINT_PARSE_NO_OPTIONS);
+  if (free_value)
+  {
+    ecma_free_value (value);
+  }
+
+  return result;
 } /* ecma_bigint_to_bigint */
+
+/**
+ * Create BigInt value from uint64 digits
+ *
+ * @return ecma BigInt value or ECMA_VALUE_ERROR
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_bigint_create_from_digits (const uint64_t *digits_p, /**< BigInt digits */
+                                uint32_t size, /**< number of BigInt digits */
+                                bool sign) /**< sign bit, true if the result should be negative */
+{
+  const uint64_t *digits_end_p = digits_p + size;
+
+  while (digits_end_p > digits_p && digits_end_p[-1] == 0)
+  {
+    digits_end_p--;
+  }
+
+  if (digits_p == digits_end_p)
+  {
+    return ECMA_BIGINT_ZERO;
+  }
+
+  size = (uint32_t) (digits_end_p - digits_p);
+
+  if (size < ECMA_BIGINT_MAX_SIZE)
+  {
+    size *= (uint32_t) sizeof (uint64_t);
+  }
+
+  if ((digits_end_p[-1] >> (8 * sizeof (ecma_bigint_digit_t))) == 0)
+  {
+    size -= (uint32_t) sizeof (ecma_bigint_digit_t);
+  }
+
+  ecma_extended_primitive_t *result_value_p = ecma_bigint_create (size);
+
+  if (JERRY_UNLIKELY (result_value_p == NULL))
+  {
+    return ecma_bigint_raise_memory_error ();
+  }
+
+  if (sign)
+  {
+    result_value_p->u.bigint_sign_and_size |= ECMA_BIGINT_SIGN;
+  }
+
+  ecma_bigint_digit_t *result_p = ECMA_BIGINT_GET_DIGITS (result_value_p, 0);
+
+  while (digits_p < digits_end_p)
+  {
+    uint64_t digit = *digits_p++;
+
+    result_p[0] = (ecma_bigint_digit_t) digit;
+    result_p[1] = (ecma_bigint_digit_t) (digit >> (8 * sizeof (ecma_bigint_digit_t)));
+    result_p+= 2;
+  }
+
+  return ecma_make_extended_primitive_value (result_value_p, ECMA_TYPE_BIGINT);
+} /* ecma_bigint_create_from_digits */
+
+/**
+ * Get the number of uint64 digits of a BigInt value
+ *
+ * @return number of uint64 digits
+ */
+uint32_t
+ecma_bigint_get_size_in_digits (ecma_value_t value) /**< BigInt value */
+{
+  JERRY_ASSERT (ecma_is_value_bigint (value));
+
+  if (value == ECMA_BIGINT_ZERO)
+  {
+    return 0;
+  }
+
+  ecma_extended_primitive_t *value_p = ecma_get_extended_primitive_from_value (value);
+  uint32_t size = ECMA_BIGINT_GET_SIZE (value_p);
+
+  return (size + (uint32_t) sizeof (ecma_bigint_digit_t)) / sizeof (uint64_t);
+} /* ecma_bigint_get_size_in_digits */
+
+/**
+ * Get the uint64 digits of a BigInt value
+ */
+void
+ecma_bigint_get_digits_and_sign (ecma_value_t value, /**< BigInt value */
+                                 uint64_t *digits_p, /**< [out] buffer for digits */
+                                 uint32_t size, /**< buffer size in digits */
+                                 bool *sign_p) /**< [out] sign of BigInt */
+{
+  JERRY_ASSERT (ecma_is_value_bigint (value));
+
+  if (value == ECMA_BIGINT_ZERO)
+  {
+    if (sign_p != NULL)
+    {
+      *sign_p = false;
+    }
+    memset (digits_p, 0, size * sizeof (uint64_t));
+    return;
+  }
+
+  ecma_extended_primitive_t *value_p = ecma_get_extended_primitive_from_value (value);
+
+  if (sign_p != NULL)
+  {
+    *sign_p = (value_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN) != 0;
+  }
+
+  uint32_t bigint_size = ECMA_BIGINT_GET_SIZE (value_p);
+  uint32_t copy_size = bigint_size / sizeof (uint64_t);
+
+  if (copy_size > size)
+  {
+    copy_size = size;
+  }
+
+  const uint64_t *digits_end_p = digits_p + copy_size;
+  ecma_bigint_digit_t *source_p = ECMA_BIGINT_GET_DIGITS (value_p, 0);
+
+  while (digits_p < digits_end_p)
+  {
+    *digits_p++ = source_p[0] | (((uint64_t) source_p[1]) << (8 * sizeof (ecma_bigint_digit_t)));
+    source_p += 2;
+  }
+
+  size -= copy_size;
+
+  if (size == 0)
+  {
+    return;
+  }
+
+  if (ECMA_BIGINT_SIZE_IS_ODD (bigint_size))
+  {
+    *digits_p++ = source_p[0];
+    size--;
+  }
+
+  if (size > 0)
+  {
+    memset (digits_p, 0, size * sizeof (uint64_t));
+  }
+} /* ecma_bigint_get_digits_and_sign */
 
 /**
  * Compare two BigInt values

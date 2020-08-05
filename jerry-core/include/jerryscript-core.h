@@ -388,6 +388,7 @@ bool jerry_value_is_promise (const jerry_value_t value);
 bool jerry_value_is_proxy (const jerry_value_t value);
 bool jerry_value_is_string (const jerry_value_t value);
 bool jerry_value_is_symbol (const jerry_value_t value);
+bool jerry_value_is_bigint (const jerry_value_t value);
 bool jerry_value_is_undefined (const jerry_value_t value);
 
 /**
@@ -474,6 +475,7 @@ jerry_value_t jerry_value_to_number (const jerry_value_t value);
 jerry_value_t jerry_value_to_object (const jerry_value_t value);
 jerry_value_t jerry_value_to_primitive (const jerry_value_t value);
 jerry_value_t jerry_value_to_string (const jerry_value_t value);
+jerry_value_t jerry_value_to_bigint (const jerry_value_t value);
 
 /**
  * Acquire types with reference counter (increase the references).
@@ -512,6 +514,7 @@ jerry_value_t jerry_create_external_string (const jerry_char_t *str_p,
 jerry_value_t jerry_create_external_string_sz (const jerry_char_t *str_p, jerry_size_t str_size,
                                                jerry_object_native_free_callback_t free_cb);
 jerry_value_t jerry_create_symbol (const jerry_value_t value);
+jerry_value_t jerry_create_bigint (const uint64_t *digits_p, uint32_t size, bool sign);
 jerry_value_t jerry_create_undefined (void);
 
 /**
@@ -594,6 +597,12 @@ jerry_promise_state_t jerry_get_promise_state (const jerry_value_t promise);
  * Symbol functions.
  */
 jerry_value_t jerry_get_symbol_descriptive_string (const jerry_value_t symbol);
+
+/**
+ * BigInt functions.
+ */
+uint32_t jerry_get_bigint_size_in_digits (jerry_value_t value);
+void jerry_get_bigint_digits (jerry_value_t value, uint64_t *digits_p, uint32_t size, bool *sign_p);
 
 /**
  * Input validator functions.

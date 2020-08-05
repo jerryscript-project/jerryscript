@@ -18,4 +18,8 @@ class MyNonArray extends Array {
   static [Symbol.species] () {}
 }
 
-(() => MyNonArray)().prototype.slice.call(new MyNonArray((0) === 1))
+try {
+  (() => MyNonArray)().prototype.slice.call(new MyNonArray((0) === 1))
+} catch (e) {
+  assert (e instanceof TypeError);
+}

@@ -743,7 +743,7 @@ parser_parse_class_literal (parser_context_t *context_p, /**< context */
 parse_class_method:
     ; /* Empty statement to make compiler happy. */
     uint16_t literal_index = context_p->lit_object.index;
-    uint16_t function_literal_index = lexer_construct_function_object (context_p, status_flags);
+    uint16_t function_literal_index = lexer_construct_function_object (context_p, status_flags | PARSER_IS_METHOD);
 
     parser_emit_cbc_literal (context_p,
                              CBC_PUSH_LITERAL,
@@ -915,7 +915,8 @@ parser_parse_object_method (parser_context_t *context_p) /**< context */
   context_p->source_p--;
   context_p->column--;
   uint16_t function_literal_index = lexer_construct_function_object (context_p, (PARSER_FUNCTION_CLOSURE
-                                                                                 | PARSER_ALLOW_SUPER));
+                                                                                 | PARSER_ALLOW_SUPER
+                                                                                 | PARSER_IS_METHOD));
 
   parser_emit_cbc_literal (context_p,
                            CBC_PUSH_LITERAL,

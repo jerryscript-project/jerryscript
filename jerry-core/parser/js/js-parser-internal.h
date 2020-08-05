@@ -74,11 +74,11 @@ typedef enum
   PARSER_ALLOW_SUPER_CALL = (1u << 22),       /**< allow super constructor call
                                                *   Note: PARSER_CLASS_CONSTRUCTOR must be present */
   PARSER_ALLOW_NEW_TARGET = (1u << 23),       /**< allow new.target parsing in the current context */
-
+  PARSER_IS_METHOD = (1u << 24),              /**< method is parsed */
 #endif /* ENABLED (JERRY_ESNEXT) */
 #if ENABLED (JERRY_MODULE_SYSTEM)
-  PARSER_MODULE_DEFAULT_CLASS_OR_FUNC = (1u << 24),  /**< parsing a function or class default export */
-  PARSER_MODULE_STORE_IDENT = (1u << 25),     /**< store identifier of the current export statement */
+  PARSER_MODULE_DEFAULT_CLASS_OR_FUNC = (1u << 25),  /**< parsing a function or class default export */
+  PARSER_MODULE_STORE_IDENT = (1u << 26),     /**< store identifier of the current export statement */
 #endif /* ENABLED (JERRY_MODULE_SYSTEM) */
   PARSER_HAS_LATE_LIT_INIT = (1u << 30),      /**< there are identifier or string literals which construction
                                                *   is postponed after the local parser data is freed */

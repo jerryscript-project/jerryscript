@@ -286,9 +286,7 @@
   <test id="language/expressions/equals/coerce-symbol-to-prim-return-prim.js"><reason></reason></test>
   <test id="language/expressions/generators/has-instance.js"><reason></reason></test>
   <test id="language/expressions/generators/prototype-value.js"><reason></reason></test>
-  <test id="language/expressions/object/method-definition/generator-invoke-ctor.js"><reason></reason></test>
-  <test id="language/expressions/object/method-definition/name-invoke-ctor.js"><reason></reason></test>
-  <test id="language/expressions/object/method-definition/name-prototype-prop.js"><reason></reason></test>
+  <test id="language/expressions/object/method-definition/generator-invoke-ctor.js"><reason>ES2016 change: Generator methods isn't constructor - https://github.com/tc39/ecma262/pull/171 </reason></test>
   <test id="language/expressions/postfix-decrement/S11.3.2_A5_T1.js"><reason></reason></test>
   <test id="language/expressions/postfix-decrement/S11.3.2_A5_T2.js"><reason></reason></test>
   <test id="language/expressions/postfix-decrement/S11.3.2_A5_T3.js"><reason></reason></test>
@@ -324,8 +322,6 @@
   <test id="language/line-terminators/S7.3_A2.4.js"><reason>No longer a SyntaxError in ES11</reason></test>
   <test id="language/literals/string/7.8.4-1-s.js"><reason></reason></test>
   <test id="language/module-code/export-unresolvable.js"><reason></reason></test>
-  <test id="language/statements/class/definition/methods.js"><reason></reason></test>
-  <test id="language/statements/class/definition/numeric-property-names.js"><reason></reason></test>
   <test id="language/statements/class/definition/this-access-restriction.js"><reason></reason></test>
   <test id="language/statements/class/definition/this-check-ordering.js"><reason></reason></test>
   <test id="language/statements/class/name-binding/in-extends-expression-assigned.js"><reason></reason></test>

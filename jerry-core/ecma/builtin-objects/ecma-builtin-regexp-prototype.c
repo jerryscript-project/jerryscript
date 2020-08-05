@@ -266,7 +266,7 @@ ecma_builtin_regexp_prototype_get_source (ecma_extended_object_t *re_obj_p) /**<
  * The RegExp.prototype object's 'compile' routine
  *
  * See also:
- *          ECMA-262 v5, B.2.5.1
+ *          ECMA-262 v11, B.2.5.1
  *
  * @return undefined        - if compiled successfully
  *         error ecma value - otherwise
@@ -290,17 +290,6 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this */
   re_compiled_code_t *old_bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t,
                                                                   re_obj_p->u.class_prop.u.value);
 
-  ecma_value_t status = ecma_builtin_helper_def_prop (this_obj_p,
-                                                      ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                                                      ecma_make_uint32_value (0),
-                                                      ECMA_PROPERTY_FLAG_WRITABLE | ECMA_PROP_IS_THROW);
-
-  if (ECMA_IS_VALUE_ERROR (status))
-  {
-    return status;
-  }
-
-  JERRY_ASSERT (ecma_is_value_true (status));
   ecma_value_t ret_value;
 
   if (ecma_object_is_regexp_object (pattern_arg))
@@ -314,19 +303,28 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this */
     re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t,
                                                                 pattern_obj_p->u.class_prop.u.value);
 
-    ecma_ref_object (this_obj_p);
     ret_value = ecma_op_create_regexp_from_bytecode (this_obj_p, bc_p);
-
-    ecma_bytecode_deref ((ecma_compiled_code_t *) old_bc_p);
-    return ret_value;
   }
-
-  ret_value = ecma_op_create_regexp_from_pattern (this_obj_p, pattern_arg, flags_arg);
+  else
+  {
+    ret_value = ecma_op_create_regexp_from_pattern (this_obj_p, pattern_arg, flags_arg);
+  }
 
   if (!ECMA_IS_VALUE_ERROR (ret_value))
   {
-    ecma_ref_object (this_obj_p);
+    ecma_value_t status = ecma_builtin_helper_def_prop (this_obj_p,
+                                                        ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
+                                                        ecma_make_uint32_value (0),
+                                                        ECMA_PROPERTY_FLAG_WRITABLE | ECMA_PROP_IS_THROW);
+
     ecma_bytecode_deref ((ecma_compiled_code_t *) old_bc_p);
+
+    if (ECMA_IS_VALUE_ERROR (status))
+    {
+      return status;
+    }
+
+    ecma_ref_object (this_obj_p);
   }
 
   return ret_value;

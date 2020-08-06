@@ -38,6 +38,16 @@ typedef enum
                                                        *   return with ECMA_VALUE_NULL instead */
 } ecma_bigint_parse_string_options_t;
 
+/**
+ * Types for unary operations
+ */
+typedef enum
+{
+  ECMA_BIGINT_UNARY_BITWISE_NOT, /**< bitwise not operation */
+  ECMA_BIGINT_UNARY_INCREASE, /**< increase operation */
+  ECMA_BIGINT_UNARY_DECREASE, /**< decrease operation */
+} ecma_bigint_unary_operation_type;
+
 ecma_value_t ecma_bigint_parse_string (const lit_utf8_byte_t *string_p, lit_utf8_size_t size,
                                        uint32_t options);
 ecma_value_t ecma_bigint_parse_string_value (ecma_value_t string, uint32_t options);
@@ -54,6 +64,7 @@ int ecma_bigint_compare_to_bigint (ecma_value_t left_value, ecma_value_t right_v
 int ecma_bigint_compare_to_number (ecma_value_t left_value, ecma_number_t right_value);
 
 ecma_value_t ecma_bigint_negate (ecma_extended_primitive_t *value_p);
+ecma_value_t ecma_bigint_unary (ecma_value_t value, ecma_bigint_unary_operation_type type);
 ecma_value_t ecma_bigint_add_sub (ecma_value_t left_value, ecma_value_t right_value, bool is_add);
 ecma_value_t ecma_bigint_mul (ecma_value_t left_value, ecma_value_t right_value);
 ecma_value_t ecma_bigint_div_mod (ecma_value_t left_value, ecma_value_t right_value, bool is_mod);

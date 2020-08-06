@@ -97,15 +97,12 @@ do_number_bitwise_logic (number_bitwise_logic_op op, /**< number bitwise logic o
         result = (ecma_number_t) (ecma_number_to_int32 (left_number) >> (right_uint32 & 0x1F));
         break;
       }
-      case NUMBER_BITWISE_SHIFT_URIGHT:
+      default:
       {
+        JERRY_ASSERT (op == NUMBER_BITWISE_SHIFT_URIGHT);
+
         uint32_t left_uint32 = ecma_number_to_uint32 (left_number);
         result = (ecma_number_t) (left_uint32 >> (right_uint32 & 0x1F));
-        break;
-      }
-      case NUMBER_BITWISE_NOT:
-      {
-        result = (ecma_number_t) ((int32_t) ~right_uint32);
         break;
       }
     }
@@ -155,7 +152,9 @@ do_number_bitwise_logic (number_bitwise_logic_op op, /**< number bitwise logic o
       }
       default:
       {
-        ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Not supported BigInt operation"));
+        JERRY_ASSERT (op == NUMBER_BITWISE_SHIFT_URIGHT);
+
+        ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Unsigned right shift is not allowed for BigInts"));
         break;
       }
     }
@@ -170,6 +169,39 @@ do_number_bitwise_logic (number_bitwise_logic_op op, /**< number bitwise logic o
 
   return ret_value;
 } /* do_number_bitwise_logic */
+
+/**
+ * Perform ECMA number bitwise not operation.
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
+ */
+ecma_value_t
+do_number_bitwise_not (ecma_value_t value) /**< value */
+{
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (value));
+
+  ecma_number_t number;
+  value = ecma_op_to_numeric (value, &number, ECMA_TO_NUMERIC_ALLOW_BIGINT);
+
+  if (ECMA_IS_VALUE_ERROR (value))
+  {
+    return value;
+  }
+
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  if (JERRY_LIKELY (!ecma_is_value_bigint (value)))
+  {
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+    return ecma_make_number_value ((ecma_number_t) ((int32_t) ~ecma_number_to_uint32 (number)));
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  }
+
+  ecma_value_t ret_value = ecma_bigint_unary (value, ECMA_BIGINT_UNARY_BITWISE_NOT);
+  ecma_free_value (value);
+  return ret_value;
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+} /* do_number_bitwise_not */
 
 /**
  * @}

@@ -103,6 +103,9 @@ ecma_extended_primitive_t *ecma_big_uint_mul_digit (ecma_extended_primitive_t *v
 uint8_t *ecma_big_uint_to_string (ecma_extended_primitive_t *value_p, uint32_t radix,
                                   uint32_t *char_start_p, uint32_t *char_size_p);
 
+ecma_extended_primitive_t *ecma_big_uint_increase (ecma_extended_primitive_t *value_p);
+ecma_extended_primitive_t *ecma_big_uint_decrease (ecma_extended_primitive_t *value_p);
+
 ecma_extended_primitive_t *ecma_big_uint_add (ecma_extended_primitive_t *left_value_p,
                                               ecma_extended_primitive_t *right_value_p);
 ecma_extended_primitive_t *ecma_big_uint_sub (ecma_extended_primitive_t *left_value_p,

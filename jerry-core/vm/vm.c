@@ -17,6 +17,7 @@
 
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
+#include "ecma-bigint.h"
 #include "ecma-builtins.h"
 #include "ecma-builtin-object.h"
 #include "ecma-comparison.h"
@@ -951,6 +952,41 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
     } \
   } \
   while (0)
+
+/**
+ * Store the original value for post increase/decrease operators
+ *
+ * @param value original value
+ */
+#define POST_INCREASE_DECREASE_PUT_RESULT(value) \
+  if (opcode_data & VM_OC_PUT_STACK) \
+  { \
+    if (opcode_flags & VM_OC_IDENT_INCR_DECR_OPERATOR_FLAG) \
+    { \
+      JERRY_ASSERT (opcode == CBC_POST_INCR_IDENT_PUSH_RESULT \
+                    || opcode == CBC_POST_DECR_IDENT_PUSH_RESULT); \
+      *stack_top_p++ = (value); \
+    } \
+    else \
+    { \
+      /* The parser ensures there is enough space for the \
+       * extra value on the stack. See js-parser-expr.c. */ \
+      JERRY_ASSERT (opcode == CBC_POST_INCR_PUSH_RESULT \
+                    || opcode == CBC_POST_DECR_PUSH_RESULT); \
+      stack_top_p++; \
+      stack_top_p[-1] = stack_top_p[-2]; \
+      stack_top_p[-2] = stack_top_p[-3]; \
+      stack_top_p[-3] = (value); \
+    } \
+    opcode_data &= (uint32_t) ~VM_OC_PUT_STACK; \
+  } \
+  else \
+  { \
+    JERRY_ASSERT (opcode_data & VM_OC_PUT_BLOCK); \
+    ecma_free_value (frame_ctx_p->block_result); \
+    frame_ctx_p->block_result = (value); \
+    opcode_data &= (uint32_t) ~VM_OC_PUT_BLOCK; \
+  }
 
 /**
  * Run generic byte code.
@@ -2597,6 +2633,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_POST_DECR:
         {
           uint32_t opcode_flags = VM_OC_GROUP_GET_INDEX (opcode_data) - VM_OC_PROP_PRE_INCR;
+          ecma_number_t result_number;
 
           byte_code_p = byte_code_start_p + 1;
 
@@ -2625,59 +2662,68 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               /* Postfix operators require the unmodifed number value. */
               if (opcode_flags & VM_OC_POST_INCR_DECR_OPERATOR_FLAG)
               {
-                if (opcode_data & VM_OC_PUT_STACK)
-                {
-                  if (opcode_flags & VM_OC_IDENT_INCR_DECR_OPERATOR_FLAG)
-                  {
-                    JERRY_ASSERT (opcode == CBC_POST_INCR_IDENT_PUSH_RESULT
-                                  || opcode == CBC_POST_DECR_IDENT_PUSH_RESULT);
-
-                    *stack_top_p++ = result;
-                  }
-                  else
-                  {
-                    /* The parser ensures there is enough space for the
-                     * extra value on the stack. See js-parser-expr.c. */
-
-                    JERRY_ASSERT (opcode == CBC_POST_INCR_PUSH_RESULT
-                                  || opcode == CBC_POST_DECR_PUSH_RESULT);
-
-                    stack_top_p++;
-                    stack_top_p[-1] = stack_top_p[-2];
-                    stack_top_p[-2] = stack_top_p[-3];
-                    stack_top_p[-3] = result;
-                  }
-                  opcode_data &= (uint32_t) ~VM_OC_PUT_STACK;
-                }
-                else if (opcode_data & VM_OC_PUT_BLOCK)
-                {
-                  ecma_free_value (frame_ctx_p->block_result);
-                  frame_ctx_p->block_result = result;
-                  opcode_data &= (uint32_t) ~VM_OC_PUT_BLOCK;
-                }
+                POST_INCREASE_DECREASE_PUT_RESULT (result);
               }
 
               result = (ecma_value_t) (int_value + int_increase);
               break;
             }
+            result_number = ecma_get_integer_from_value (result);
           }
           else if (ecma_is_value_float_number (left_value))
           {
             result = left_value;
             left_value = ECMA_VALUE_UNDEFINED;
+            result_number = ecma_get_number_from_value (result);
           }
           else
           {
-            result = ecma_op_to_number (left_value);
+            result = ecma_op_to_numeric (left_value, &result_number, ECMA_TO_NUMERIC_ALLOW_BIGINT);
 
             if (ECMA_IS_VALUE_ERROR (result))
             {
               goto error;
             }
+
+            ecma_free_value (left_value);
+            left_value = ECMA_VALUE_UNDEFINED;
+
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+            if (JERRY_UNLIKELY (ecma_is_value_bigint (result)))
+            {
+              ecma_bigint_unary_operation_type operation_type = ECMA_BIGINT_UNARY_INCREASE;
+
+              if (opcode_flags & VM_OC_DECREMENT_OPERATOR_FLAG)
+              {
+                operation_type = ECMA_BIGINT_UNARY_DECREASE;
+              }
+
+              /* Postfix operators require the unmodifed number value. */
+              if (opcode_flags & VM_OC_POST_INCR_DECR_OPERATOR_FLAG)
+              {
+                POST_INCREASE_DECREASE_PUT_RESULT (result);
+
+                result = ecma_bigint_unary (result, operation_type);
+              }
+              else
+              {
+                ecma_value_t original_value = result;
+                result = ecma_bigint_unary (original_value, operation_type);
+                ecma_free_value (original_value);
+              }
+
+              if (ECMA_IS_VALUE_ERROR (result))
+              {
+                goto error;
+              }
+              break;
+            }
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+
+            result = ecma_make_number_value (result_number);
           }
 
           ecma_number_t increase = ECMA_NUMBER_ONE;
-          ecma_number_t result_number = ecma_get_number_from_value (result);
 
           if (opcode_flags & VM_OC_DECREMENT_OPERATOR_FLAG)
           {
@@ -2685,39 +2731,13 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             increase = ECMA_NUMBER_MINUS_ONE;
           }
 
-          /* Post operators require the unmodifed number value. */
+          /* Postfix operators require the unmodifed number value. */
           if (opcode_flags & VM_OC_POST_INCR_DECR_OPERATOR_FLAG)
           {
-            if (opcode_data & VM_OC_PUT_STACK)
-            {
-              if (opcode_flags & VM_OC_IDENT_INCR_DECR_OPERATOR_FLAG)
-              {
-                JERRY_ASSERT (opcode == CBC_POST_INCR_IDENT_PUSH_RESULT
-                              || opcode == CBC_POST_DECR_IDENT_PUSH_RESULT);
+            POST_INCREASE_DECREASE_PUT_RESULT (result);
 
-                *stack_top_p++ = ecma_copy_value (result);
-              }
-              else
-              {
-                /* The parser ensures there is enough space for the
-                 * extra value on the stack. See js-parser-expr.c. */
-
-                JERRY_ASSERT (opcode == CBC_POST_INCR_PUSH_RESULT
-                              || opcode == CBC_POST_DECR_PUSH_RESULT);
-
-                stack_top_p++;
-                stack_top_p[-1] = stack_top_p[-2];
-                stack_top_p[-2] = stack_top_p[-3];
-                stack_top_p[-3] = ecma_copy_value (result);
-              }
-              opcode_data &= (uint32_t) ~VM_OC_PUT_STACK;
-            }
-            else if (opcode_data & VM_OC_PUT_BLOCK)
-            {
-              ecma_free_value (frame_ctx_p->block_result);
-              frame_ctx_p->block_result = ecma_copy_value (result);
-              opcode_data &= (uint32_t) ~VM_OC_PUT_BLOCK;
-            }
+            result = ecma_make_number_value (result_number + increase);
+            break;
           }
 
           if (ecma_is_value_integer_number (result))
@@ -2975,9 +2995,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             goto free_left_value;
           }
 
-          result = do_number_bitwise_logic (NUMBER_BITWISE_NOT,
-                                            left_value,
-                                            left_value);
+          result = do_number_bitwise_not (left_value);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {

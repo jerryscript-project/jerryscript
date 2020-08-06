@@ -51,7 +51,6 @@ typedef enum
   NUMBER_BITWISE_SHIFT_LEFT, /**< bitwise LEFT SHIFT calculation */
   NUMBER_BITWISE_SHIFT_RIGHT, /**< bitwise RIGHT_SHIFT calculation */
   NUMBER_BITWISE_SHIFT_URIGHT, /**< bitwise UNSIGNED RIGHT SHIFT calculation */
-  NUMBER_BITWISE_NOT, /**< bitwise NOT calculation */
 } number_bitwise_logic_op;
 
 #if ENABLED (JERRY_ESNEXT)
@@ -89,6 +88,9 @@ opfunc_unary_operation (ecma_value_t left_value, bool is_plus);
 
 ecma_value_t
 do_number_bitwise_logic (number_bitwise_logic_op op, ecma_value_t left_value, ecma_value_t right_value);
+
+ecma_value_t
+do_number_bitwise_not (ecma_value_t value);
 
 ecma_value_t
 opfunc_addition (ecma_value_t left_value, ecma_value_t right_value);

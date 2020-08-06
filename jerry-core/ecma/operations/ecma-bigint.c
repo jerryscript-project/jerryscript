@@ -35,6 +35,34 @@ ecma_bigint_raise_memory_error (void)
 } /* ecma_bigint_raise_memory_error */
 
 /**
+ * Create a single digit long BigInt value
+ *
+ * @return ecma BigInt value or ECMA_VALUE_ERROR
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_bigint_create_from_digit (ecma_bigint_digit_t digit, /* single digit */
+                               bool sign) /* set ECMA_BIGINT_SIGN if true */
+{
+  JERRY_ASSERT (digit != 0);
+
+  ecma_extended_primitive_t *result_value_p = ecma_bigint_create (sizeof (ecma_bigint_digit_t));
+
+  if (JERRY_UNLIKELY (result_value_p == NULL))
+  {
+    return ecma_bigint_raise_memory_error ();
+  }
+
+  if (sign)
+  {
+    result_value_p->u.bigint_sign_and_size |= ECMA_BIGINT_SIGN;
+  }
+
+  *ECMA_BIGINT_GET_DIGITS (result_value_p, 0) = digit;
+  return ecma_make_extended_primitive_value (result_value_p, ECMA_TYPE_BIGINT);
+} /* ecma_bigint_create_from_digit */
+
+/**
  * Parse a string and create a BigInt value
  *
  * @return ecma BigInt value or a special value allowed by the option flags
@@ -443,17 +471,7 @@ ecma_bigint_to_bigint (ecma_value_t value, /**< any value */
   }
   else if (ecma_is_value_true (value))
   {
-    ecma_extended_primitive_t *result_p = ecma_bigint_create (sizeof (ecma_bigint_digit_t));
-
-    if (result_p != NULL)
-    {
-      *ECMA_BIGINT_GET_DIGITS (result_p, 0) = 1;
-      result = ecma_make_extended_primitive_value (result_p, ECMA_TYPE_BIGINT);
-    }
-    else
-    {
-      result = ecma_bigint_raise_memory_error ();
-    }
+    result = ecma_bigint_create_from_digit (1, false);
   }
   else
   {
@@ -910,6 +928,62 @@ ecma_bigint_negate (ecma_extended_primitive_t *value_p) /**< BigInt value */
 
   return ecma_make_extended_primitive_value (result_p, ECMA_TYPE_BIGINT);
 } /* ecma_bigint_negate */
+
+/**
+ * Invert all bits of a BigInt value
+ *
+ * @return ecma BigInt value or ECMA_VALUE_ERROR
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_bigint_unary (ecma_value_t value, /**< BigInt value */
+                   ecma_bigint_unary_operation_type type) /**< type of unary operation */
+{
+  JERRY_ASSERT (ecma_is_value_bigint (value));
+
+  if (value == ECMA_BIGINT_ZERO)
+  {
+    return ecma_bigint_create_from_digit (1, type != ECMA_BIGINT_UNARY_INCREASE);
+  }
+
+  ecma_extended_primitive_t *value_p = ecma_get_extended_primitive_from_value (value);
+
+  uint32_t sign = (type != ECMA_BIGINT_UNARY_DECREASE) ? ECMA_BIGINT_SIGN : 0;
+
+  if ((value_p->u.bigint_sign_and_size == (uint32_t) (sizeof (ecma_bigint_digit_t) | sign))
+      && *ECMA_BIGINT_GET_DIGITS (value_p, 0) == 1)
+  {
+    return ECMA_BIGINT_ZERO;
+  }
+
+  ecma_extended_primitive_t *result_p;
+
+  if ((value_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN) == (sign ^ ECMA_BIGINT_SIGN))
+  {
+    result_p = ecma_big_uint_increase (value_p);
+
+    if (type != ECMA_BIGINT_UNARY_INCREASE && result_p != NULL)
+    {
+      result_p->u.bigint_sign_and_size |= ECMA_BIGINT_SIGN;
+    }
+  }
+  else
+  {
+    result_p = ecma_big_uint_decrease (value_p);
+
+    if (type == ECMA_BIGINT_UNARY_INCREASE && result_p != NULL)
+    {
+      result_p->u.bigint_sign_and_size |= ECMA_BIGINT_SIGN;
+    }
+  }
+
+  if (JERRY_UNLIKELY (result_p == NULL))
+  {
+    return ecma_bigint_raise_memory_error ();
+  }
+
+  return ecma_make_extended_primitive_value (result_p, ECMA_TYPE_BIGINT);
+} /* ecma_bigint_unary */
 
 /**
  * Add/subtract right BigInt value to/from left BigInt value

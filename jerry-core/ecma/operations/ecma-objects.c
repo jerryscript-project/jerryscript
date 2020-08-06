@@ -1231,7 +1231,7 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
         if (array_index != ECMA_STRING_NOT_ARRAY_INDEX)
         {
           ecma_number_t num_var;
-          ecma_value_t error = ecma_get_number (value, &num_var);
+          ecma_value_t error = ecma_op_to_numeric (value, &num_var, ECMA_TO_NUMERIC_NO_OPTS);
 
           if (ECMA_IS_VALUE_ERROR (error))
           {

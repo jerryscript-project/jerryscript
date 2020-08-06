@@ -469,6 +469,46 @@ ecma_bigint_to_bigint (ecma_value_t value, /**< any value */
 } /* ecma_bigint_to_bigint */
 
 /**
+ * Returns with a BigInt if the value is BigInt,
+ * or the value is object, and its default value is BigInt
+ *
+ * @return ecma BigInt value or ECMA_VALUE_ERROR
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_bigint_get_bigint (ecma_value_t value, /**< any value */
+                        bool *free_result_p) /**< [out] result should be freed */
+{
+  *free_result_p = false;
+
+  if (ecma_is_value_bigint (value))
+  {
+    return value;
+  }
+
+  if (ecma_is_value_object (value))
+  {
+    ecma_object_t *object_p = ecma_get_object_from_value (value);
+    ecma_value_t default_value = ecma_op_object_default_value (object_p, ECMA_PREFERRED_TYPE_NUMBER);
+
+    if (ECMA_IS_VALUE_ERROR (default_value))
+    {
+      return default_value;
+    }
+
+    if (ecma_is_value_bigint (default_value))
+    {
+      *free_result_p = (default_value != ECMA_BIGINT_ZERO);
+      return default_value;
+    }
+
+    ecma_free_value (default_value);
+  }
+
+  return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a BigInt value to a number"));
+} /* ecma_bigint_get_bigint */
+
+/**
  * Create BigInt value from uint64 digits
  *
  * @return ecma BigInt value or ECMA_VALUE_ERROR

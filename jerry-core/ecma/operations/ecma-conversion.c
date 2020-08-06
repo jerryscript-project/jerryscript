@@ -247,6 +247,13 @@ ecma_op_to_boolean (ecma_value_t value) /**< ecma value */
     return !ecma_string_is_empty (str_p);
   }
 
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  if (ecma_is_value_bigint (value))
+  {
+    return value != ECMA_BIGINT_ZERO;
+  }
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+
   JERRY_ASSERT (ecma_is_value_object (value) || ECMA_CHECK_SYMBOL_IN_ASSERT (value));
 
   return true;
@@ -330,19 +337,22 @@ ecma_op_to_number (ecma_value_t value) /**< ecma value */
 } /* ecma_op_to_number */
 
 /**
- * Helper to get the number contained in an ecma value.
+ * Helper to get the numeric value of an ecma value
  *
  * See also:
- *          ECMA-262 v5, 9.3
+ *          ECMA-262 v11, 7.1.3
  *
- * @return ECMA_VALUE_EMPTY if successful
- *         conversion error otherwise
+ * @return ECMA_VALUE_EMPTY if converted to number, BigInt if
+ *         converted to BigInt, and conversion error otherwise
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-ecma_get_number (ecma_value_t value, /**< ecma value*/
-                 ecma_number_t *number_p) /**< [out] ecma number */
+ecma_op_to_numeric (ecma_value_t value, /**< ecma value */
+                    ecma_number_t *number_p, /**< [out] ecma number */
+                    ecma_to_numeric_options_t options) /**< option bits */
 {
+  JERRY_UNUSED (options);
+
   if (ecma_is_value_integer_number (value))
   {
     *number_p = ecma_get_integer_from_value (value);
@@ -396,27 +406,31 @@ ecma_get_number (ecma_value_t value, /**< ecma value*/
 #if ENABLED (JERRY_BUILTIN_BIGINT)
   if (ecma_is_value_bigint (value))
   {
+    if (options & ECMA_TO_NUMERIC_ALLOW_BIGINT)
+    {
+      return ecma_copy_value (value);
+    }
     return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a BigInt value to a number"));
   }
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 
   JERRY_ASSERT (ecma_is_value_object (value));
 
-  ecma_object_t *obj_p = ecma_get_object_from_value (value);
+  ecma_object_t *object_p = ecma_get_object_from_value (value);
 
-  ecma_value_t def_value = ecma_op_object_default_value (obj_p, ECMA_PREFERRED_TYPE_NUMBER);
+  ecma_value_t def_value = ecma_op_object_default_value (object_p, ECMA_PREFERRED_TYPE_NUMBER);
 
   if (ECMA_IS_VALUE_ERROR (def_value))
   {
     return def_value;
   }
 
-  ecma_value_t ret_value = ecma_get_number (def_value, number_p);
+  ecma_value_t ret_value = ecma_op_to_numeric (def_value, number_p, options);
 
   ecma_fast_free_value (def_value);
 
   return ret_value;
-} /* ecma_get_number */
+} /* ecma_op_to_numeric */
 
 /**
  * ToString operation.
@@ -935,7 +949,7 @@ ecma_op_to_integer (ecma_value_t value, /**< ecma value */
   }
 
   /* 1 */
-  ecma_value_t to_number = ecma_get_number (value, number_p);
+  ecma_value_t to_number = ecma_op_to_numeric (value, number_p, ECMA_TO_NUMERIC_NO_OPTS);
 
   /* 2 */
   if (ECMA_IS_VALUE_ERROR (to_number))
@@ -1015,7 +1029,7 @@ ecma_op_to_length (ecma_value_t value, /**< ecma value */
 #else /* !ENABLED (JERRY_ESNEXT) */
   /* In the case of ES5, ToLength(ES6) operation is the same as ToUint32(ES5) */
   ecma_number_t num;
-  ecma_value_t to_number = ecma_get_number (value, &num);
+  ecma_value_t to_number = ecma_op_to_numeric (value, &num, ECMA_TO_NUMERIC_NO_OPTS);
 
   /* 2 */
   if (ECMA_IS_VALUE_ERROR (to_number))

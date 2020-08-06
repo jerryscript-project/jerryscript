@@ -13,6 +13,12 @@
  * limitations under the License.
  */
 
+/* Boolean. */
+
+assert(!BigInt("0") === true)
+assert(!BigInt("1") === false)
+assert(!BigInt("-1") === false)
+
 /* Strict equal. */
 
 assert(BigInt("0") === BigInt("0"))

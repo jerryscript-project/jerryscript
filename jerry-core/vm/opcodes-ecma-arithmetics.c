@@ -47,46 +47,21 @@ do_number_arithmetic (number_arithmetic_op op, /**< number arithmetic operation 
                       ecma_value_t left_value, /**< left value */
                       ecma_value_t right_value) /**< right value */
 {
-  bool free_left_value = false;
-  bool free_right_value = false;
+  ecma_number_t left_number;
+  left_value = ecma_op_to_numeric (left_value, &left_number, ECMA_TO_NUMERIC_ALLOW_BIGINT);
 
-  if (ecma_is_value_object (left_value))
+  if (ECMA_IS_VALUE_ERROR (left_value))
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (left_value);
-    left_value = ecma_op_object_default_value (obj_p, ECMA_PREFERRED_TYPE_NUMBER);
-    free_left_value = true;
-
-    if (ECMA_IS_VALUE_ERROR (left_value))
-    {
-      return left_value;
-    }
-  }
-
-  if (ecma_is_value_object (right_value))
-  {
-    ecma_object_t *obj_p = ecma_get_object_from_value (right_value);
-    right_value = ecma_op_object_default_value (obj_p, ECMA_PREFERRED_TYPE_NUMBER);
-    free_right_value = true;
-
-    if (ECMA_IS_VALUE_ERROR (right_value))
-    {
-      if (free_left_value)
-      {
-        ecma_free_value (left_value);
-      }
-      return right_value;
-    }
+    return left_value;
   }
 
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
 #if ENABLED (JERRY_BUILTIN_BIGINT)
-  if (JERRY_LIKELY (!ecma_is_value_bigint (left_value))
-      || JERRY_LIKELY (!ecma_is_value_bigint (right_value)))
+  if (JERRY_LIKELY (!ecma_is_value_bigint (left_value)))
   {
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
-    ECMA_OP_TO_NUMBER_TRY_CATCH (num_left, left_value, ret_value);
-    ECMA_OP_TO_NUMBER_TRY_CATCH (num_right, right_value, ret_value);
+    ECMA_OP_TO_NUMBER_TRY_CATCH (right_number, right_value, ret_value);
 
     ecma_number_t result = ECMA_NUMBER_ZERO;
 
@@ -94,28 +69,28 @@ do_number_arithmetic (number_arithmetic_op op, /**< number arithmetic operation 
     {
       case NUMBER_ARITHMETIC_SUBTRACTION:
       {
-        result = num_left - num_right;
+        result = left_number - right_number;
         break;
       }
       case NUMBER_ARITHMETIC_MULTIPLICATION:
       {
-        result = num_left * num_right;
+        result = left_number * right_number;
         break;
       }
       case NUMBER_ARITHMETIC_DIVISION:
       {
-        result = num_left / num_right;
+        result = left_number / right_number;
         break;
       }
       case NUMBER_ARITHMETIC_REMAINDER:
       {
-        result = ecma_op_number_remainder (num_left, num_right);
+        result = ecma_op_number_remainder (left_number, right_number);
         break;
       }
 #if ENABLED (JERRY_ESNEXT)
       case NUMBER_ARITHMETIC_EXPONENTIATION:
       {
-        result = ecma_number_pow (num_left, num_right);
+        result = ecma_number_pow (left_number, right_number);
         break;
       }
 #endif /* ENABLED (JERRY_ESNEXT) */
@@ -123,12 +98,20 @@ do_number_arithmetic (number_arithmetic_op op, /**< number arithmetic operation 
 
     ret_value = ecma_make_number_value (result);
 
-    ECMA_OP_TO_NUMBER_FINALIZE (num_right);
-    ECMA_OP_TO_NUMBER_FINALIZE (num_left);
+    ECMA_OP_TO_NUMBER_FINALIZE (right_number);
 #if ENABLED (JERRY_BUILTIN_BIGINT)
   }
   else
   {
+    bool free_right_value;
+    right_value = ecma_bigint_get_bigint (right_value, &free_right_value);
+
+    if (ECMA_IS_VALUE_ERROR (right_value))
+    {
+      ecma_free_value (left_value);
+      return right_value;
+    }
+
     switch (op)
     {
       case NUMBER_ARITHMETIC_SUBTRACTION:
@@ -157,19 +140,14 @@ do_number_arithmetic (number_arithmetic_op op, /**< number arithmetic operation 
         break;
       }
     }
+
+    ecma_free_value (left_value);
+    if (free_right_value)
+    {
+      ecma_free_value (right_value);
+    }
   }
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
-
-  if (free_left_value)
-  {
-    ecma_free_value (left_value);
-  }
-
-  if (free_right_value)
-  {
-    ecma_free_value (right_value);
-  }
-
   return ret_value;
 } /* do_number_arithmetic */
 
@@ -300,60 +278,41 @@ ecma_value_t
 opfunc_unary_operation (ecma_value_t left_value, /**< left value */
                         bool is_plus) /**< unary plus flag */
 {
-  bool free_left_value = false;
+  ecma_number_t left_number;
+  left_value = ecma_op_to_numeric (left_value, &left_number, ECMA_TO_NUMERIC_ALLOW_BIGINT);
 
-  if (ecma_is_value_object (left_value))
+  if (ECMA_IS_VALUE_ERROR (left_value))
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (left_value);
-    left_value = ecma_op_object_default_value (obj_p, ECMA_PREFERRED_TYPE_NUMBER);
-    free_left_value = true;
-
-    if (ECMA_IS_VALUE_ERROR (left_value))
-    {
-      return left_value;
-    }
+    return left_value;
   }
-
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
 #if ENABLED (JERRY_BUILTIN_BIGINT)
   if (JERRY_LIKELY (!ecma_is_value_bigint (left_value)))
   {
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
-    ECMA_OP_TO_NUMBER_TRY_CATCH (num_var_value,
-                                 left_value,
-                                 ret_value);
+    return ecma_make_number_value (is_plus ? left_number : -left_number);
+  }
 
-    ret_value = ecma_make_number_value (is_plus ? num_var_value : -num_var_value);
+  ecma_value_t ret_value;
 
-    ECMA_OP_TO_NUMBER_FINALIZE (num_var_value);
-
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+  if (is_plus)
+  {
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Unary operation plus is not allowed for BigInt numbers"));
   }
   else
   {
-    if (is_plus)
-    {
-      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Unary operation plus is not allowed for BigInt numbers"));
-    }
-    else
-    {
-      ret_value = left_value;
+    ret_value = left_value;
 
-      if (left_value != ECMA_BIGINT_ZERO)
-      {
-        ret_value = ecma_bigint_negate (ecma_get_extended_primitive_from_value (left_value));
-      }
+    if (left_value != ECMA_BIGINT_ZERO)
+    {
+      ret_value = ecma_bigint_negate (ecma_get_extended_primitive_from_value (left_value));
     }
   }
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 
-  if (free_left_value)
-  {
-    ecma_free_value (left_value);
-  }
-
+  ecma_free_value (left_value);
   return ret_value;
+#else /* !ENABLED (JERRY_BUILTIN_BIGINT) */
+  return ecma_make_number_value (is_plus ? left_number : -left_number);
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 } /* opfunc_unary_operation */
 
 /**

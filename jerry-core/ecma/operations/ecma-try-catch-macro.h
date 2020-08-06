@@ -32,7 +32,7 @@
 #define ECMA_OP_TO_NUMBER_TRY_CATCH(num_var, value, return_value) \
   JERRY_ASSERT (return_value == ECMA_VALUE_EMPTY); \
   ecma_number_t num_var; \
-  return_value = ecma_get_number (value, &num_var); \
+  return_value = ecma_op_to_numeric (value, &num_var, ECMA_TO_NUMERIC_NO_OPTS); \
   \
   if (JERRY_LIKELY (ecma_is_value_empty (return_value))) \
   {

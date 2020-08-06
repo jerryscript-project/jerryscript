@@ -429,7 +429,7 @@ ecma_builtin_typedarray_prototype_map (ecma_value_t this_arg, /**< this argument
     }
 
     ecma_number_t mapped_num;
-    if (ECMA_IS_VALUE_ERROR (ecma_get_number (mapped_value, &mapped_num)))
+    if (ECMA_IS_VALUE_ERROR (ecma_op_to_numeric (mapped_value, &mapped_num, ECMA_TO_NUMERIC_NO_OPTS)))
     {
       ecma_free_value (mapped_value);
       ecma_free_value (current_index);
@@ -949,7 +949,7 @@ ecma_builtin_typedarray_prototype_set (ecma_value_t this_arg, /**< this argument
 
     ecma_number_t elem_num;
 
-    if (ECMA_IS_VALUE_ERROR (ecma_get_number (elem, &elem_num)))
+    if (ECMA_IS_VALUE_ERROR (ecma_op_to_numeric (elem, &elem_num, ECMA_TO_NUMERIC_NO_OPTS)))
     {
       ecma_free_value (elem);
       ecma_deref_object (source_obj_p);
@@ -1059,7 +1059,7 @@ ecma_builtin_typedarray_prototype_join (ecma_value_t this_arg, /**< this argumen
 
   ecma_number_t length_number;
 
-  if (ECMA_IS_VALUE_ERROR (ecma_get_number (length_value, &length_number)))
+  if (ECMA_IS_VALUE_ERROR (ecma_op_to_numeric (length_value, &length_number, ECMA_TO_NUMERIC_NO_OPTS)))
   {
     ecma_free_value (length_value);
     ecma_free_value (obj_value);
@@ -1234,7 +1234,7 @@ ecma_builtin_typedarray_prototype_fill (ecma_value_t this_arg, /**< this argumen
   }
 
   ecma_number_t value_num;
-  ecma_value_t ret_value = ecma_get_number (value, &value_num);
+  ecma_value_t ret_value = ecma_op_to_numeric (value, &value_num, ECMA_TO_NUMERIC_NO_OPTS);
 
   if (!ecma_is_value_empty (ret_value))
   {
@@ -1355,7 +1355,7 @@ ecma_builtin_typedarray_prototype_sort_compare_helper (ecma_value_t lhs, /**< le
   }
 
   ecma_number_t ret_num;
-  ecma_value_t number_result = ecma_get_number (call_value, &ret_num);
+  ecma_value_t number_result = ecma_op_to_numeric (call_value, &ret_num, ECMA_TO_NUMERIC_NO_OPTS);
 
   ecma_free_value (call_value);
 

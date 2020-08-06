@@ -137,14 +137,20 @@ lit_char_is_white_space (lit_code_point_t c) /**< code point */
     return (c == LIT_CHAR_SP || (c >= LIT_CHAR_TAB && c <= LIT_CHAR_CR));
   }
 
-  if (c == LIT_CHAR_NBSP || c == LIT_CHAR_BOM || c == LIT_CHAR_LS || c == LIT_CHAR_PS)
+  if (c == LIT_CHAR_BOM
+#if !ENABLED (JERRY_ESNEXT)
+      /* Mongolian Vowel Separator (u180e) used to be a whitespace character. */
+      || c == LIT_CHAR_MVS
+#endif /* !ENABLED (JERRY_ESNEXT) */
+      || c == LIT_CHAR_LS
+      || c == LIT_CHAR_PS)
   {
     return true;
   }
 
   return (c <= LIT_UTF16_CODE_UNIT_MAX
           && ((c >= lit_unicode_white_space_interval_starts[0]
-                 && c < lit_unicode_white_space_interval_starts[0] + lit_unicode_white_space_interval_lengths[0])
+                 && c <= lit_unicode_white_space_interval_starts[0] + lit_unicode_white_space_interval_lengths[0])
               || lit_search_char_in_array ((ecma_char_t) c,
                                             lit_unicode_white_space_chars,
                                             NUM_OF_ELEMENTS (lit_unicode_white_space_chars))));

@@ -1065,9 +1065,6 @@
   <test id="built-ins/NativeErrors/SyntaxError/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/NativeErrors/TypeError/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/NativeErrors/URIError/proto-from-ctor-realm.js"><reason></reason></test>
-  <test id="built-ins/Number/S9.3.1_A2.js"><reason></reason></test>
-  <test id="built-ins/Number/S9.3.1_A3_T1.js"><reason></reason></test>
-  <test id="built-ins/Number/S9.3.1_A3_T2.js"><reason></reason></test>
   <test id="built-ins/Number/bigint-conversion.js"><reason></reason></test>
   <test id="built-ins/Number/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/Number/prototype/toExponential/return-values.js"><reason></reason></test>
@@ -1384,7 +1381,6 @@
   <test id="built-ins/RegExp/CharacterClassEscapes/character-class-non-word-class-escape-plus-quantifier-flags-u.js"><reason></reason></test>
   <test id="built-ins/RegExp/CharacterClassEscapes/character-class-non-word-class-escape-plus-quantifier.js"><reason></reason></test>
   <test id="built-ins/RegExp/CharacterClassEscapes/character-class-non-word-class-escape.js"><reason></reason></test>
-  <test id="built-ins/RegExp/character-class-escape-non-whitespace.js"><reason></reason></test>
   <test id="built-ins/RegExp/lookBehind/alternations.js"><reason></reason></test>
   <test id="built-ins/RegExp/lookBehind/back-references-to-captures.js"><reason></reason></test>
   <test id="built-ins/RegExp/lookBehind/back-references.js"><reason></reason></test>
@@ -2029,11 +2025,6 @@
   <test id="built-ins/String/prototype/toLowerCase/Final_Sigma_U180E.js"><reason></reason></test>
   <test id="built-ins/String/prototype/toLowerCase/special_casing_conditional.js"><reason></reason></test>
   <test id="built-ins/String/prototype/toString/non-generic-realm.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/trim/15.5.4.20-3-2.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/trim/15.5.4.20-3-3.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/trim/15.5.4.20-3-4.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/trim/15.5.4.20-3-5.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/trim/15.5.4.20-3-6.js"><reason></reason></test>
   <test id="built-ins/String/prototype/trimEnd/length.js"><reason></reason></test>
   <test id="built-ins/String/prototype/trimEnd/name.js"><reason></reason></test>
   <test id="built-ins/String/prototype/trimEnd/prop-desc.js"><reason></reason></test>
@@ -3091,8 +3082,6 @@
   <test id="built-ins/WeakSet/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/global/global-object.js"><reason></reason></test>
   <test id="built-ins/global/property-descriptor.js"><reason></reason></test>
-  <test id="built-ins/parseFloat/S15.1.2.3_A2_T10.js"><reason></reason></test>
-  <test id="built-ins/parseInt/S15.1.2.2_A2_T10.js"><reason></reason></test>
   <test id="harness/isConstructor.js"><reason></reason></test>
   <test id="intl402/BigInt/prototype/toLocaleString/de-DE.js"><reason></reason></test>
   <test id="intl402/BigInt/prototype/toLocaleString/default-options-object-prototype.js"><reason></reason></test>

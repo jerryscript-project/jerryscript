@@ -43,11 +43,6 @@ FOLDING_SUP_C_SOURCE = os.path.join(PROJECT_DIR, 'jerry-core/lit/lit-unicode-fol
 UNICODE_PLANE_TYPE_BASIC = 0
 UNICODE_PLANE_TYPE_SUPPLEMENTARY = 1
 
-# For ES5.1 profile we use a predefined subset of whitespace characters
-ES5_1_WHITE_SPACE_UNITS = [0x1680, 0x180e]
-ES5_1_WHITE_SPACE_UNITS.extend(range(0x2000, 0x200c))
-ES5_1_WHITE_SPACE_UNITS.extend([0x202f, 0x205f, 0x3000])
-
 # common code generation
 
 class UnicodeBasicSource(object):
@@ -80,11 +75,7 @@ class UnicodeBasicSource(object):
         self._header.append("")  # for an extra empty line
 
     def add_whitepace_range(self, category, categorizer, units):
-        self._data.append("#if ENABLED (JERRY_ESNEXT)")
         self.add_range(category, categorizer.create_tables(units))
-        self._data.append("#else /* !ENABLED (JERRY_ESNEXT) */")
-        self.add_range(category, categorizer.create_tables(ES5_1_WHITE_SPACE_UNITS))
-        self._data.append("#endif /* ENABLED (JERRY_ESNEXT) */\n")
 
     def add_range(self, category, tables):
         idx = 0

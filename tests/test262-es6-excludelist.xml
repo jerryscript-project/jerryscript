@@ -243,14 +243,6 @@
   <test id="intl402/String/prototype/toLocaleUpperCase/special_casing_Turkish.js"><reason></reason></test>
   <test id="language/arguments-object/10.6-13-a-2.js"><reason></reason></test>
   <test id="language/arguments-object/10.6-13-a-3.js"><reason></reason></test>
-  <test id="language/arguments-object/mapped/mapped-arguments-nonconfigurable-2.js"><reason></reason></test>
-  <test id="language/arguments-object/mapped/mapped-arguments-nonconfigurable-4.js"><reason></reason></test>
-  <test id="language/arguments-object/mapped/mapped-arguments-nonconfigurable-delete-2.js"><reason></reason></test>
-  <test id="language/arguments-object/mapped/mapped-arguments-nonconfigurable-delete-4.js"><reason></reason></test>
-  <test id="language/arguments-object/mapped/mapped-arguments-nonconfigurable-nonwritable-3.js"><reason></reason></test>
-  <test id="language/arguments-object/mapped/mapped-arguments-nonconfigurable-nonwritable-4.js"><reason></reason></test>
-  <test id="language/arguments-object/mapped/mapped-arguments-nonconfigurable-strict-delete-2.js"><reason></reason></test>
-  <test id="language/arguments-object/mapped/mapped-arguments-nonconfigurable-strict-delete-4.js"><reason></reason></test>
   <test id="language/asi/S7.9_A5.7_T1.js"><reason></reason></test>
   <test id="language/block-scope/syntax/redeclaration-in-block/attempt-to-redeclare-function-declaration-with-function-declaration.js"><reason>No longer a SyntaxError in ES11</reason></test>
   <test id="language/default-parameters/function-length.js"><reason></reason></test>
@@ -345,4 +337,11 @@
   <test id="built-ins/RegExp/prototype/ignoreCase/15.10.7.3-1.js"><reason>RegExp accessors should no longer throw when called on the RegExp prototype</reason></test>
   <test id="built-ins/RegExp/prototype/multiline/15.10.7.4-1.js"><reason>RegExp accessors should no longer throw when called on the RegExp prototype</reason></test>
   <test id="built-ins/RegExp/prototype/source/15.10.7.1-1.js"><reason>RegExp accessors should no longer throw when called on the RegExp prototype</reason></test>
+  <test id="language/arguments-object/10.6-13-b-1-s.js"><reason>ES11: arguments object no longer has caller property</reason></test>
+  <test id="language/arguments-object/10.6-13-b-2-s.js"><reason>ES11: arguments object no longer has caller property</reason></test>
+  <test id="language/arguments-object/10.6-13-b-3-s.js"><reason>ES11: arguments object no longer has caller property</reason></test>
+  <test id="language/arguments-object/10.6-14-1-s.js"><reason>ES11: arguments object no longer has caller property</reason></test>
+  <test id="language/arguments-object/10.6-14-b-1-s.js"><reason>ES11: arguments object no longer has caller property</reason></test>
+  <test id="language/arguments-object/10.6-14-b-4-s.js"><reason>ES11: arguments object no longer has caller property</reason></test>
+  <test id="language/statements/class/strict-mode/arguments-caller.js"><reason>ES11: arguments object no longer has caller property</reason></test>
 </excludeList>

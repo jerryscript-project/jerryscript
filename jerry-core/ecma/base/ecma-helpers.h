@@ -536,12 +536,10 @@ void ecma_raise_error_from_error_reference (ecma_value_t value);
 
 void ecma_bytecode_ref (ecma_compiled_code_t *bytecode_p);
 void ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p);
-#if ENABLED (JERRY_ESNEXT)
-ecma_collection_t *ecma_compiled_code_get_tagged_template_collection (const ecma_compiled_code_t *bytecode_header_p);
-#endif /* ENABLED (JERRY_ESNEXT) */
-#if ENABLED (JERRY_ESNEXT)
 uint32_t ecma_compiled_code_get_formal_params (const ecma_compiled_code_t *bytecode_p);
 ecma_value_t *ecma_compiled_code_resolve_arguments_start (const ecma_compiled_code_t *bytecode_header_p);
+#if ENABLED (JERRY_ESNEXT)
+ecma_collection_t *ecma_compiled_code_get_tagged_template_collection (const ecma_compiled_code_t *bytecode_header_p);
 ecma_value_t *ecma_compiled_code_resolve_function_name (const ecma_compiled_code_t *bytecode_header_p);
 #endif /* ENABLED (JERRY_ESNEXT) */
 ecma_value_t ecma_get_resource_name (const ecma_compiled_code_t *bytecode_p);

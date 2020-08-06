@@ -32,6 +32,25 @@
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
+#if ENABLED (JERRY_ESNEXT)
+/**
+ * This object has a custom dispatch function.
+ */
+#define BUILTIN_CUSTOM_DISPATCH
+
+/**
+ * List of built-in routine identifiers.
+ */
+enum
+{
+  ECMA_NUMBER_OBJECT_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
+  ECMA_NUMBER_OBJECT_ROUTINE_IS_FINITE,
+  ECMA_NUMBER_OBJECT_ROUTINE_IS_NAN,
+  ECMA_NUMBER_OBJECT_ROUTINE_IS_INTEGER,
+  ECMA_NUMBER_OBJECT_ROUTINE_IS_SAFE_INTEGER
+};
+#endif /* ENABLED (JERRY_ESNEXT) */
+
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-number.inc.h"
 #define BUILTIN_UNDERSCORED_ID number
 #include "ecma-builtin-internal-routines-template.inc.h"
@@ -94,133 +113,91 @@ ecma_builtin_number_dispatch_construct (const ecma_value_t *arguments_list_p, /*
 } /* ecma_builtin_number_dispatch_construct */
 
 #if ENABLED (JERRY_ESNEXT)
-
 /**
- * The Number object 'isFinite' routine
+ * The Number object 'isInteger' and 'isSafeInteger' routine
  *
  * See also:
- *          ECMA-262 v6, 20.1.2.2
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_number_object_is_finite (ecma_value_t this_arg, /**< this argument */
-                                      ecma_value_t arg) /**< routine's argument */
-{
-  JERRY_UNUSED (this_arg);
-
-  if (ecma_is_value_number (arg))
-  {
-    ecma_number_t num = ecma_get_number_from_value (arg);
-    if (!(ecma_number_is_nan (num) || ecma_number_is_infinity (num)))
-    {
-      return ECMA_VALUE_TRUE;
-    }
-  }
-  return ECMA_VALUE_FALSE;
-} /* ecma_builtin_number_object_is_finite */
-
-/**
- * The Number object 'isNan' routine
- *
- * See also:
- *          ECMA-262 v6, 20.1.2.4
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_number_object_is_nan (ecma_value_t this_arg, /**< this argument */
-                                   ecma_value_t arg) /**< routine's argument */
-{
-  JERRY_UNUSED (this_arg);
-
-  if (ecma_is_value_number (arg))
-  {
-    ecma_number_t num_val = ecma_get_number_from_value (arg);
-
-    if (ecma_number_is_nan (num_val))
-    {
-      return ECMA_VALUE_TRUE;
-    }
-  }
-  return ECMA_VALUE_FALSE;
-} /* ecma_builtin_number_object_is_nan */
-
-/**
- * The Number object 'isInteger' routine
- *
- * See also:
+ *          ECMA-262 v6, 20.1.2.3
  *          ECMA-262 v6, 20.1.2.3
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_number_object_is_integer (ecma_value_t this_arg, /**< this argument */
-                                       ecma_value_t arg) /**< routine's argument */
+ecma_builtin_number_object_is_integer_helper (ecma_value_t arg, /**< routine's argument */
+                                              ecma_number_t num, /**< this number */
+                                              bool is_safe) /**< is the number safe */
 {
-  JERRY_UNUSED (this_arg);
-  if (!ecma_is_value_number (arg))
-  {
-    return ECMA_VALUE_FALSE;
-  }
-
-  ecma_number_t num = ecma_get_number_from_value (arg);
-
   if (ecma_number_is_nan (num) || ecma_number_is_infinity (num))
   {
     return ECMA_VALUE_FALSE;
   }
 
   ecma_number_t int_num;
-  ecma_op_to_integer (arg, &int_num);
 
-  if (int_num != num)
+  if (is_safe)
   {
-    return ECMA_VALUE_FALSE;
+    int_num = ecma_number_trunc (num);
+
+    if (fabs (int_num) > ECMA_NUMBER_MAX_SAFE_INTEGER)
+    {
+      return ECMA_VALUE_FALSE;
+    }
+  }
+  else
+  {
+    ecma_op_to_integer (arg, &int_num);
   }
 
-  return ECMA_VALUE_TRUE;
-} /* ecma_builtin_number_object_is_integer */
+  return (int_num == num) ? ECMA_VALUE_TRUE : ECMA_VALUE_FALSE;
+} /* ecma_builtin_number_object_is_integer_helper */
 
 /**
- * The Number object 'isSafeInteger' routine
- *
- * See also:
- *          ECMA-262 v6, 20.1.2.3
+ * Dispatcher of the built-in's routines
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
-static ecma_value_t
-ecma_builtin_number_object_is_safe_integer (ecma_value_t this_arg, /**< this argument */
-                                            ecma_value_t arg) /**< routine's argument */
+ecma_value_t
+ecma_builtin_number_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide routine
+                                                                    *   identifier */
+                                      ecma_value_t this_arg, /**< 'this' argument value */
+                                      const ecma_value_t arguments_list_p[], /**< list of arguments
+                                                                              *   passed to routine */
+                                      uint32_t arguments_number) /**< length of arguments' list */
 {
   JERRY_UNUSED (this_arg);
+  JERRY_UNUSED (arguments_number);
 
-  if (!ecma_is_value_number (arg))
+  if (!ecma_is_value_number (arguments_list_p[0]))
   {
     return ECMA_VALUE_FALSE;
   }
 
-  ecma_number_t num = ecma_get_number_from_value (arg);
+  ecma_number_t num = ecma_get_number_from_value (arguments_list_p[0]);
 
-  if (ecma_number_is_nan (num) || ecma_number_is_infinity (num))
+  switch (builtin_routine_id)
   {
-    return ECMA_VALUE_FALSE;
+    case ECMA_NUMBER_OBJECT_ROUTINE_IS_FINITE:
+    {
+      return ecma_make_boolean_value (!(ecma_number_is_nan (num) || ecma_number_is_infinity (num)));
+    }
+    case ECMA_NUMBER_OBJECT_ROUTINE_IS_NAN:
+    {
+      return ecma_make_boolean_value (ecma_number_is_nan (num));
+    }
+    case ECMA_NUMBER_OBJECT_ROUTINE_IS_INTEGER:
+    case ECMA_NUMBER_OBJECT_ROUTINE_IS_SAFE_INTEGER:
+    {
+      bool is_safe = (builtin_routine_id == ECMA_NUMBER_OBJECT_ROUTINE_IS_SAFE_INTEGER);
+      return ecma_builtin_number_object_is_integer_helper (arguments_list_p[0], num, is_safe);
+    }
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
   }
-
-  ecma_number_t int_num = ecma_number_trunc (num);
-
-  if (int_num == num && fabs (int_num) <= ECMA_NUMBER_MAX_SAFE_INTEGER)
-  {
-    return ECMA_VALUE_TRUE;
-  }
-
-  return ECMA_VALUE_FALSE;
-} /* ecma_builtin_number_object_is_safe_integer */
+} /* ecma_builtin_number_dispatch_routine */
 
 #endif /* ENABLED (JERRY_ESNEXT) */
 

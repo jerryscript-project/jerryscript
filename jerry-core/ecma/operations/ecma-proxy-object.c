@@ -806,6 +806,7 @@ ecma_proxy_object_get_own_property_descriptor (ecma_object_t *obj_p, /**< proxy 
                                                              is_extensible);
 
   bool target_has_desc = ecma_is_value_true (target_status);
+  bool target_is_writable = (target_desc.flags & ECMA_PROP_IS_WRITABLE) ;
   bool target_is_configurable = false;
 
   if (target_has_desc)
@@ -825,6 +826,14 @@ ecma_proxy_object_get_own_property_descriptor (ecma_object_t *obj_p, /**< proxy 
   else if (!(prop_desc_p->flags & ECMA_PROP_IS_CONFIGURABLE))
   {
     if (!target_has_desc || target_is_configurable)
+    {
+      ecma_free_property_descriptor (prop_desc_p);
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Not compatible."));
+    }
+
+    /* ES11: 17.b */
+    if ((prop_desc_p->flags & (ECMA_PROP_IS_WRITABLE_DEFINED | ECMA_PROP_IS_WRITABLE)) == ECMA_PROP_IS_WRITABLE_DEFINED
+        && target_is_writable)
     {
       ecma_free_property_descriptor (prop_desc_p);
       return ecma_raise_type_error (ECMA_ERR_MSG ("Not compatible."));
@@ -963,6 +972,16 @@ ecma_proxy_object_define_own_property (ecma_object_t *obj_p, /**< proxy object *
                                                        "incompatible with the existing property in the target"));
     }
     else if (setting_config_false && (target_desc.flags & ECMA_PROP_IS_CONFIGURABLE))
+    {
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned truish for defining non-configurable property "
+                                                       "which is configurable in the target"));
+    }
+    /* ES11: 16.c */
+    else if ((target_desc.flags & (ECMA_PROP_IS_VALUE_DEFINED | ECMA_PROP_IS_WRITABLE_DEFINED)) != 0
+             && (prop_desc_p->flags & (ECMA_PROP_IS_WRITABLE_DEFINED | ECMA_PROP_IS_WRITABLE))
+                 == ECMA_PROP_IS_WRITABLE_DEFINED
+             && (target_desc.flags & (ECMA_PROP_IS_WRITABLE | ECMA_PROP_IS_CONFIGURABLE)) == ECMA_PROP_IS_WRITABLE)
+
     {
       ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned truish for defining non-configurable property "
                                                        "which is configurable in the target"));
@@ -1388,6 +1407,13 @@ ecma_proxy_object_delete_property (ecma_object_t *obj_p, /**< proxy object */
   {
     ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned truish for property which is "
                                                      "non-configurable in the proxy target."));
+  }
+  /* ES11: 13-14 */
+  ecma_value_t extensible_target = ecma_builtin_object_object_is_extensible (target_obj_p);
+
+  if (!ecma_is_value_true (extensible_target))
+  {
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned truish for target is not extensible"));
   }
 
   ecma_free_property_descriptor (&target_desc);

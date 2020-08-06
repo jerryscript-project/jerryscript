@@ -1341,12 +1341,10 @@
   <test id="built-ins/Proxy/defineProperty/targetdesc-configurable-desc-not-configurable-realm.js"><reason></reason></test>
   <test id="built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor-not-configurable-target-realm.js"><reason></reason></test>
   <test id="built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor-realm.js"><reason></reason></test>
-  <test id="built-ins/Proxy/defineProperty/targetdesc-not-configurable-writable-desc-not-writable.js"><reason></reason></test>
   <test id="built-ins/Proxy/defineProperty/targetdesc-undefined-not-configurable-descriptor-realm.js"><reason></reason></test>
   <test id="built-ins/Proxy/defineProperty/targetdesc-undefined-target-is-not-extensible-realm.js"><reason></reason></test>
   <test id="built-ins/Proxy/defineProperty/trap-is-not-callable-realm.js"><reason></reason></test>
   <test id="built-ins/Proxy/defineProperty/trap-is-undefined-target-is-proxy.js"><reason></reason></test>
-  <test id="built-ins/Proxy/deleteProperty/targetdesc-is-configurable-target-is-not-extensible.js"><reason></reason></test>
   <test id="built-ins/Proxy/deleteProperty/trap-is-missing-target-is-proxy.js"><reason></reason></test>
   <test id="built-ins/Proxy/deleteProperty/trap-is-not-callable-realm.js"><reason></reason></test>
   <test id="built-ins/Proxy/deleteProperty/trap-is-null-target-is-proxy.js"><reason></reason></test>
@@ -1355,7 +1353,6 @@
   <test id="built-ins/Proxy/get-fn-realm.js"><reason></reason></test>
   <test id="built-ins/Proxy/get/trap-is-not-callable-realm.js"><reason></reason></test>
   <test id="built-ins/Proxy/getOwnPropertyDescriptor/result-type-is-not-object-nor-undefined-realm.js"><reason></reason></test>
-  <test id="built-ins/Proxy/getOwnPropertyDescriptor/resultdesc-is-not-configurable-not-writable-targetdesc-is-writable.js"><reason></reason></test>
   <test id="built-ins/Proxy/getOwnPropertyDescriptor/trap-is-not-callable-realm.js"><reason></reason></test>
   <test id="built-ins/Proxy/getPrototypeOf/trap-is-not-callable-realm.js"><reason></reason></test>
   <test id="built-ins/Proxy/has/trap-is-not-callable-realm.js"><reason></reason></test>

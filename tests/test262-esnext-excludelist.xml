@@ -6183,7 +6183,6 @@
   <test id="language/expressions/conditional/tco-cond.js"><reason></reason></test>
   <test id="language/expressions/conditional/tco-pos.js"><reason></reason></test>
   <test id="language/expressions/does-not-equals/bigint-and-number-extremes.js"><reason></reason></test>
-  <test id="language/expressions/does-not-equals/bigint-and-number.js"><reason></reason></test>
   <test id="language/expressions/does-not-equals/bigint-and-object.js"><reason></reason></test>
   <test id="language/expressions/does-not-equals/bigint-and-string.js"><reason></reason></test>
   <test id="language/expressions/dynamic-import/always-create-new-promise.js"><reason></reason></test>
@@ -6597,7 +6596,6 @@
   <test id="language/expressions/dynamic-import/usage/top-level-import-then-returns-thenable.js"><reason></reason></test>
   <test id="language/expressions/dynamic-import/usage/top-level-import-then-specifier-tostring.js"><reason></reason></test>
   <test id="language/expressions/equals/bigint-and-number-extremes.js"><reason></reason></test>
-  <test id="language/expressions/equals/bigint-and-number.js"><reason></reason></test>
   <test id="language/expressions/equals/bigint-and-object.js"><reason></reason></test>
   <test id="language/expressions/equals/bigint-and-string.js"><reason></reason></test>
   <test id="language/expressions/equals/coerce-symbol-to-prim-return-prim.js"><reason></reason></test>

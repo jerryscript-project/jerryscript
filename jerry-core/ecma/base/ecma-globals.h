@@ -2113,6 +2113,16 @@ typedef uint32_t ecma_length_t;
 typedef uint32_t ecma_bigint_digit_t;
 
 /**
+ * Special BigInt value representing zero.
+ */
+#define ECMA_BIGINT_ZERO ((ecma_value_t) ECMA_TYPE_BIGINT)
+
+/**
+ * Special BigInt value representing zero when the result is pointer.
+ */
+#define ECMA_BIGINT_POINTER_TO_ZERO ((ecma_extended_primitive_t *) 0x1)
+
+/**
  * Return the size of a BigInt value in ecma_bigint_data_t units.
  */
 #define ECMA_BIGINT_GET_SIZE(value_p) \

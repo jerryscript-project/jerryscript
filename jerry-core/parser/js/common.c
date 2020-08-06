@@ -88,14 +88,13 @@ util_print_number (ecma_number_t num_p) /**< number to print */
 static void
 util_print_bigint (ecma_value_t bigint) /**< bigint to print */
 {
-  ecma_extended_primitive_t *bigint_p = ecma_get_extended_primitive_from_value (bigint);
-
-  if (ECMA_BIGINT_GET_SIZE (bigint_p) == 0)
+  if (bigint == ECMA_BIGINT_ZERO)
   {
     JERRY_DEBUG_MSG ("0");
     return;
   }
 
+  ecma_extended_primitive_t *bigint_p = ecma_get_extended_primitive_from_value (bigint);
   uint32_t char_start_p, char_size_p;
   lit_utf8_byte_t *string_buffer_p = ecma_big_uint_to_string (bigint_p, 10, &char_start_p, &char_size_p);
 

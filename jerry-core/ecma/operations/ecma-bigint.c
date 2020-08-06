@@ -102,52 +102,49 @@ ecma_bigint_parse_string (const lit_utf8_byte_t *string_p, /**< string represena
 
   if (string_p == string_end_p)
   {
-    sign = 0;
-    result_p = ecma_bigint_create (0);
+    return ECMA_BIGINT_ZERO;
   }
-  else
+
+  do
   {
-    do
+    ecma_bigint_digit_t digit = radix;
+
+    if (*string_p >= LIT_CHAR_0 && *string_p <= LIT_CHAR_9)
     {
-      ecma_bigint_digit_t digit = radix;
+      digit = (ecma_bigint_digit_t) (*string_p - LIT_CHAR_0);
+    }
+    else
+    {
+      lit_utf8_byte_t character = (lit_utf8_byte_t) LEXER_TO_ASCII_LOWERCASE (*string_p);
 
-      if (*string_p >= LIT_CHAR_0 && *string_p <= LIT_CHAR_9)
+      if (character >= LIT_CHAR_LOWERCASE_A && character <= LIT_CHAR_LOWERCASE_F)
       {
-        digit = (ecma_bigint_digit_t) (*string_p - LIT_CHAR_0);
-      }
-      else
-      {
-        lit_utf8_byte_t character = (lit_utf8_byte_t) LEXER_TO_ASCII_LOWERCASE (*string_p);
-
-        if (character >= LIT_CHAR_LOWERCASE_A && character <= LIT_CHAR_LOWERCASE_F)
-        {
-          digit = (ecma_bigint_digit_t) (character - (LIT_CHAR_LOWERCASE_A - 10));
-        }
-      }
-
-      if (digit >= radix)
-      {
-        if (result_p != NULL)
-        {
-          ecma_deref_bigint (result_p);
-        }
-
-        if (options & ECMA_BIGINT_PARSE_DISALLOW_SYNTAX_ERROR)
-        {
-          return ECMA_VALUE_FALSE;
-        }
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("String cannot be converted to BigInt value"));
-      }
-
-      result_p = ecma_big_uint_mul_digit (result_p, radix, digit);
-
-      if (JERRY_UNLIKELY (result_p == NULL))
-      {
-        break;
+        digit = (ecma_bigint_digit_t) (character - (LIT_CHAR_LOWERCASE_A - 10));
       }
     }
-    while (++string_p < string_end_p);
+
+    if (digit >= radix)
+    {
+      if (result_p != NULL)
+      {
+        ecma_deref_bigint (result_p);
+      }
+
+      if (options & ECMA_BIGINT_PARSE_DISALLOW_SYNTAX_ERROR)
+      {
+        return ECMA_VALUE_FALSE;
+      }
+      return ecma_raise_syntax_error (ECMA_ERR_MSG ("String cannot be converted to BigInt value"));
+    }
+
+    result_p = ecma_big_uint_mul_digit (result_p, radix, digit);
+
+    if (JERRY_UNLIKELY (result_p == NULL))
+    {
+      break;
+    }
   }
+  while (++string_p < string_end_p);
 
   if (JERRY_UNLIKELY (result_p == NULL))
   {
@@ -193,14 +190,13 @@ ecma_bigint_to_string (ecma_value_t value, /**< BigInt value */
 {
   JERRY_ASSERT (ecma_is_value_bigint (value));
 
-  ecma_extended_primitive_t *bigint_p = ecma_get_extended_primitive_from_value (value);
-
-  if (ECMA_BIGINT_GET_SIZE (bigint_p) == 0)
+  if (value == ECMA_BIGINT_ZERO)
   {
     return ecma_new_ecma_string_from_code_unit (LIT_CHAR_0);
   }
 
   uint32_t char_start_p, char_size_p;
+  ecma_extended_primitive_t *bigint_p = ecma_get_extended_primitive_from_value (value);
   lit_utf8_byte_t *string_buffer_p = ecma_big_uint_to_string (bigint_p, radix, &char_start_p, &char_size_p);
 
   if (JERRY_UNLIKELY (string_buffer_p == NULL))
@@ -364,6 +360,12 @@ ecma_bigint_number_to_bigint (ecma_number_t number) /**< ecma number */
   }
 
   uint32_t digits_size = ECMA_BIGINT_NUMBER_TO_DIGITS_GET_DIGITS_SIZE (result);
+
+  if (digits_size == 0)
+  {
+    return ECMA_BIGINT_ZERO;
+  }
+
   uint32_t zero_size = ECMA_BIGINT_NUMBER_TO_DIGITS_GET_ZERO_SIZE (result);
 
   ecma_extended_primitive_t *result_p = ecma_bigint_create (digits_size + zero_size);
@@ -373,16 +375,13 @@ ecma_bigint_number_to_bigint (ecma_number_t number) /**< ecma number */
     return ecma_bigint_raise_memory_error ();
   }
 
-  if (digits_size > 0)
-  {
-    uint8_t *data_p = (uint8_t *) ECMA_BIGINT_GET_DIGITS (result_p, 0);
-    memset (data_p, 0, zero_size);
-    memcpy (data_p + zero_size, digits, digits_size);
+  uint8_t *data_p = (uint8_t *) ECMA_BIGINT_GET_DIGITS (result_p, 0);
+  memset (data_p, 0, zero_size);
+  memcpy (data_p + zero_size, digits, digits_size);
 
-    if (number < 0)
-    {
-      result_p->u.bigint_sign_and_size |= ECMA_BIGINT_SIGN;
-    }
+  if (number < 0)
+  {
+    result_p->u.bigint_sign_and_size |= ECMA_BIGINT_SIGN;
   }
 
   return ecma_make_extended_primitive_value (result_p, ECMA_TYPE_BIGINT);
@@ -402,20 +401,19 @@ ecma_bigint_to_bigint (ecma_value_t value) /**< any value */
 {
   if (ecma_is_value_boolean (value))
   {
-    uint32_t size = ecma_is_value_true (value) ? sizeof (ecma_bigint_digit_t) : 0;
+    if (ecma_is_value_false (value))
+    {
+      return ECMA_BIGINT_ZERO;
+    }
 
-    ecma_extended_primitive_t *result_p = ecma_bigint_create (size);
+    ecma_extended_primitive_t *result_p = ecma_bigint_create (sizeof (ecma_bigint_digit_t));
 
     if (JERRY_UNLIKELY (result_p == NULL))
     {
       return ecma_bigint_raise_memory_error ();
     }
 
-    if (ecma_is_value_true (value))
-    {
-      *ECMA_BIGINT_GET_DIGITS (result_p, 0) = 1;
-    }
-
+    *ECMA_BIGINT_GET_DIGITS (result_p, 0) = 1;
     return ecma_make_extended_primitive_value (result_p, ECMA_TYPE_BIGINT);
   }
 
@@ -437,6 +435,15 @@ ecma_bigint_is_equal_to_bigint (ecma_value_t left_value, /**< left BigInt value 
                                 ecma_value_t right_value) /**< right BigInt value */
 {
   JERRY_ASSERT (ecma_is_value_bigint (left_value) && ecma_is_value_bigint (right_value));
+
+  if (left_value == ECMA_BIGINT_ZERO)
+  {
+    return right_value == ECMA_BIGINT_ZERO;
+  }
+  else if (right_value == ECMA_BIGINT_ZERO)
+  {
+    return false;
+  }
 
   ecma_extended_primitive_t *left_p = ecma_get_extended_primitive_from_value (left_value);
   ecma_extended_primitive_t *right_p = ecma_get_extended_primitive_from_value (right_value);
@@ -466,13 +473,12 @@ ecma_bigint_is_equal_to_number (ecma_value_t left_value, /**< left BigInt value 
     return false;
   }
 
-  ecma_extended_primitive_t *left_value_p = ecma_get_extended_primitive_from_value (left_value);
-  uint32_t left_size = ECMA_BIGINT_GET_SIZE (left_value_p);
-
-  if (right_value == 0)
+  if (left_value == ECMA_BIGINT_ZERO)
   {
-    return left_size == 0;
+    return right_value == 0;
   }
+
+  ecma_extended_primitive_t *left_value_p = ecma_get_extended_primitive_from_value (left_value);
 
   /* Sign must be the same. */
   if (left_value_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN)
@@ -501,7 +507,7 @@ ecma_bigint_is_equal_to_number (ecma_value_t left_value, /**< left BigInt value 
   uint32_t digits_size = ECMA_BIGINT_NUMBER_TO_DIGITS_GET_DIGITS_SIZE (result);
   uint32_t zero_size = ECMA_BIGINT_NUMBER_TO_DIGITS_GET_ZERO_SIZE (result);
 
-  if (left_size != digits_size + zero_size)
+  if (ECMA_BIGINT_GET_SIZE (left_value_p) != digits_size + zero_size)
   {
     return false;
   }
@@ -568,12 +574,9 @@ ecma_bigint_compare_to_number (ecma_value_t left_value, /**< left BigInt value *
   JERRY_ASSERT (ecma_is_value_bigint (left_value));
   JERRY_ASSERT (!ecma_number_is_nan (right_value));
 
-  ecma_extended_primitive_t *left_value_p = ecma_get_extended_primitive_from_value (left_value);
-  uint32_t left_size = ECMA_BIGINT_GET_SIZE (left_value_p);
-  int left_sign = ECMA_BIGINT_TO_SIGN (left_value_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN);
   int right_invert_sign = ECMA_BIGINT_TO_SIGN (right_value > 0);
 
-  if (left_size == 0)
+  if (left_value == ECMA_BIGINT_ZERO)
   {
     if (right_value == 0)
     {
@@ -582,6 +585,9 @@ ecma_bigint_compare_to_number (ecma_value_t left_value, /**< left BigInt value *
 
     return right_invert_sign;
   }
+
+  ecma_extended_primitive_t *left_value_p = ecma_get_extended_primitive_from_value (left_value);
+  int left_sign = ECMA_BIGINT_TO_SIGN (left_value_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN);
 
   if (right_value == 0 || left_sign == right_invert_sign)
   {
@@ -610,6 +616,7 @@ ecma_bigint_compare_to_number (ecma_value_t left_value, /**< left BigInt value *
     return left_sign;
   }
 
+  uint32_t left_size = ECMA_BIGINT_GET_SIZE (left_value_p);
   uint32_t right_size = digits_size + ECMA_BIGINT_NUMBER_TO_DIGITS_GET_ZERO_SIZE (result);
 
   if (left_size != right_size)
@@ -688,18 +695,14 @@ ecma_bigint_add_sub (ecma_value_t left_value, /**< left BigInt value */
 {
   JERRY_ASSERT (ecma_is_value_bigint (left_value) && ecma_is_value_bigint (right_value));
 
-  ecma_extended_primitive_t *left_p = ecma_get_extended_primitive_from_value (left_value);
-  ecma_extended_primitive_t *right_p = ecma_get_extended_primitive_from_value (right_value);
-  uint32_t left_size = ECMA_BIGINT_GET_SIZE (left_p);
-  uint32_t right_size = ECMA_BIGINT_GET_SIZE (right_p);
-
-  if (right_size == 0)
+  if (right_value == ECMA_BIGINT_ZERO)
   {
-    ecma_ref_extended_primitive (left_p);
-    return left_value;
+    return ecma_copy_value (left_value);
   }
 
-  if (left_size == 0)
+  ecma_extended_primitive_t *right_p = ecma_get_extended_primitive_from_value (right_value);
+
+  if (left_value == ECMA_BIGINT_ZERO)
   {
     if (!is_add)
     {
@@ -710,6 +713,7 @@ ecma_bigint_add_sub (ecma_value_t left_value, /**< left BigInt value */
     return right_value;
   }
 
+  ecma_extended_primitive_t *left_p = ecma_get_extended_primitive_from_value (left_value);
   uint32_t sign = is_add ? 0 : ECMA_BIGINT_SIGN;
 
   if (((left_p->u.bigint_sign_and_size ^ right_p->u.bigint_sign_and_size) & ECMA_BIGINT_SIGN) == sign)
@@ -730,10 +734,10 @@ ecma_bigint_add_sub (ecma_value_t left_value, /**< left BigInt value */
 
   if (compare_result == 0)
   {
-    sign = 0;
-    result_p = ecma_bigint_create (0);
+    return ECMA_BIGINT_ZERO;
   }
-  else if (compare_result > 0)
+
+  if (compare_result > 0)
   {
     sign = left_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN;
     result_p = ecma_big_uint_sub (left_p, right_p);
@@ -771,22 +775,15 @@ ecma_bigint_mul (ecma_value_t left_value, /**< left BigInt value */
 {
   JERRY_ASSERT (ecma_is_value_bigint (left_value) && ecma_is_value_bigint (right_value));
 
+  if (left_value == ECMA_BIGINT_ZERO || right_value == ECMA_BIGINT_ZERO)
+  {
+    return ECMA_BIGINT_ZERO;
+  }
+
   ecma_extended_primitive_t *left_p = ecma_get_extended_primitive_from_value (left_value);
   ecma_extended_primitive_t *right_p = ecma_get_extended_primitive_from_value (right_value);
   uint32_t left_size = ECMA_BIGINT_GET_SIZE (left_p);
   uint32_t right_size = ECMA_BIGINT_GET_SIZE (right_p);
-
-  if (left_size == 0)
-  {
-    ecma_ref_extended_primitive (left_p);
-    return left_value;
-  }
-
-  if (right_size == 0)
-  {
-    ecma_ref_extended_primitive (right_p);
-    return right_value;
-  }
 
   if (left_size == sizeof (ecma_bigint_digit_t)
       && ECMA_BIGINT_GET_LAST_DIGIT (left_p, sizeof (ecma_bigint_digit_t)) == 1)
@@ -837,66 +834,59 @@ ecma_bigint_div_mod (ecma_value_t left_value, /**< left BigInt value */
 {
   JERRY_ASSERT (ecma_is_value_bigint (left_value) && ecma_is_value_bigint (right_value));
 
-  ecma_extended_primitive_t *left_p = ecma_get_extended_primitive_from_value (left_value);
-  ecma_extended_primitive_t *right_p = ecma_get_extended_primitive_from_value (right_value);
-  uint32_t left_size = ECMA_BIGINT_GET_SIZE (left_p);
-  uint32_t right_size = ECMA_BIGINT_GET_SIZE (right_p);
-
-  if (right_size == 0)
+  if (right_value == ECMA_BIGINT_ZERO)
   {
     return ecma_raise_range_error (ECMA_ERR_MSG ("BigInt division by zero"));
   }
 
-  if (left_size == 0)
+  if (left_value == ECMA_BIGINT_ZERO)
   {
-    ecma_ref_extended_primitive (left_p);
     return left_value;
   }
+
+  ecma_extended_primitive_t *left_p = ecma_get_extended_primitive_from_value (left_value);
+  ecma_extended_primitive_t *right_p = ecma_get_extended_primitive_from_value (right_value);
 
   int compare_result = ecma_big_uint_compare (left_p, right_p);
   ecma_extended_primitive_t *result_p;
 
   if (compare_result < 0)
   {
-    if (is_mod)
+    if (!is_mod)
     {
-      ecma_ref_extended_primitive (left_p);
-      return left_value;
+      return ECMA_BIGINT_ZERO;
     }
-    else
-    {
-      result_p = ecma_bigint_create (0);
-    }
+
+    ecma_ref_extended_primitive (left_p);
+    return left_value;
   }
   else if (compare_result == 0)
   {
     if (is_mod)
     {
-      result_p = ecma_bigint_create (0);
+      return ECMA_BIGINT_ZERO;
     }
-    else
-    {
-      result_p = ecma_bigint_create (sizeof (ecma_bigint_digit_t));
 
-      if (result_p != NULL)
-      {
-        *ECMA_BIGINT_GET_DIGITS (result_p, 0) = 1;
-      }
+    result_p = ecma_bigint_create (sizeof (ecma_bigint_digit_t));
+
+    if (result_p != NULL)
+    {
+      *ECMA_BIGINT_GET_DIGITS (result_p, 0) = 1;
     }
   }
   else
   {
     result_p = ecma_big_uint_div_mod (left_p, right_p, is_mod);
+
+    if (result_p == ECMA_BIGINT_POINTER_TO_ZERO)
+    {
+      return ECMA_BIGINT_ZERO;
+    }
   }
 
   if (JERRY_UNLIKELY (result_p == NULL))
   {
     return ecma_bigint_raise_memory_error ();
-  }
-
-  if (ECMA_BIGINT_GET_SIZE (result_p) == 0)
-  {
-    return ecma_make_extended_primitive_value (result_p, ECMA_TYPE_BIGINT);
   }
 
   if (is_mod)
@@ -925,29 +915,34 @@ ecma_bigint_shift (ecma_value_t left_value, /**< left BigInt value */
 {
   JERRY_ASSERT (ecma_is_value_bigint (left_value) && ecma_is_value_bigint (right_value));
 
-  ecma_extended_primitive_t *left_p = ecma_get_extended_primitive_from_value (left_value);
-  ecma_extended_primitive_t *right_p = ecma_get_extended_primitive_from_value (right_value);
-  uint32_t right_size = ECMA_BIGINT_GET_SIZE (right_p);
+  if (left_value == ECMA_BIGINT_ZERO)
+  {
+    return ECMA_BIGINT_ZERO;
+  }
 
-  if (right_size == 0 ||  ECMA_BIGINT_GET_SIZE (left_p) == 0)
+  ecma_extended_primitive_t *left_p = ecma_get_extended_primitive_from_value (left_value);
+
+  if (right_value == ECMA_BIGINT_ZERO)
   {
     ecma_ref_extended_primitive (left_p);
     return left_value;
   }
+
+  ecma_extended_primitive_t *right_p = ecma_get_extended_primitive_from_value (right_value);
 
   if (right_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN)
   {
     is_left = !is_left;
   }
 
-  if (right_size > sizeof (ecma_bigint_digit_t))
+  if (ECMA_BIGINT_GET_SIZE (right_p) > sizeof (ecma_bigint_digit_t))
   {
     if (is_left)
     {
       return ecma_bigint_raise_memory_error ();
     }
 
-    return ecma_make_extended_primitive_value (ecma_bigint_create (0), ECMA_TYPE_BIGINT);
+    return ECMA_BIGINT_ZERO;
   }
 
   ecma_extended_primitive_t *result_p;
@@ -960,6 +955,11 @@ ecma_bigint_shift (ecma_value_t left_value, /**< left BigInt value */
   else
   {
     result_p = ecma_big_uint_shift_right (left_p, shift);
+
+    if (result_p == ECMA_BIGINT_POINTER_TO_ZERO)
+    {
+      return ECMA_BIGINT_ZERO;
+    }
   }
 
   if (JERRY_UNLIKELY (result_p == NULL))
@@ -990,8 +990,12 @@ ecma_bigint_bitwise_op (uint32_t operation_and_options, /**< bitwise operation t
     return ecma_bigint_raise_memory_error ();
   }
 
-  if ((operation_and_options & ECMA_BIG_UINT_BITWISE_INCREASE_RESULT)
-      && ECMA_BIGINT_GET_SIZE (result_p) > 0)
+  if (result_p == ECMA_BIGINT_POINTER_TO_ZERO)
+  {
+    return ECMA_BIGINT_ZERO;
+  }
+
+  if (operation_and_options & ECMA_BIG_UINT_BITWISE_INCREASE_RESULT)
   {
     result_p->u.bigint_sign_and_size |= ECMA_BIGINT_SIGN;
   }
@@ -1009,22 +1013,13 @@ ecma_value_t
 ecma_bigint_and (ecma_value_t left_value, /**< left BigInt value */
                  ecma_value_t right_value) /**< right BigInt value */
 {
+  if (left_value == ECMA_BIGINT_ZERO || right_value == ECMA_BIGINT_ZERO)
+  {
+    return ECMA_BIGINT_ZERO;
+  }
+
   ecma_extended_primitive_t *left_p = ecma_get_extended_primitive_from_value (left_value);
   ecma_extended_primitive_t *right_p = ecma_get_extended_primitive_from_value (right_value);
-  uint32_t left_size = ECMA_BIGINT_GET_SIZE (left_p);
-  uint32_t right_size = ECMA_BIGINT_GET_SIZE (right_p);
-
-  if (left_size == 0)
-  {
-    ecma_ref_extended_primitive (left_p);
-    return left_value;
-  }
-
-  if (right_size == 0)
-  {
-    ecma_ref_extended_primitive (right_p);
-    return right_value;
-  }
 
   if (!(left_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN))
   {
@@ -1062,22 +1057,18 @@ ecma_value_t
 ecma_bigint_or (ecma_value_t left_value, /**< left BigInt value */
                 ecma_value_t right_value) /**< right BigInt value */
 {
+  if (left_value == ECMA_BIGINT_ZERO)
+  {
+    return ecma_copy_value (right_value);
+  }
+
+  if (right_value == ECMA_BIGINT_ZERO)
+  {
+    return ecma_copy_value (left_value);
+  }
+
   ecma_extended_primitive_t *left_p = ecma_get_extended_primitive_from_value (left_value);
   ecma_extended_primitive_t *right_p = ecma_get_extended_primitive_from_value (right_value);
-  uint32_t left_size = ECMA_BIGINT_GET_SIZE (left_p);
-  uint32_t right_size = ECMA_BIGINT_GET_SIZE (right_p);
-
-  if (left_size == 0)
-  {
-    ecma_ref_extended_primitive (right_p);
-    return right_value;
-  }
-
-  if (right_size == 0)
-  {
-    ecma_ref_extended_primitive (left_p);
-    return left_value;
-  }
 
   if (!(left_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN))
   {
@@ -1119,22 +1110,18 @@ ecma_value_t
 ecma_bigint_xor (ecma_value_t left_value, /**< left BigInt value */
                  ecma_value_t right_value) /**< right BigInt value */
 {
+  if (left_value == ECMA_BIGINT_ZERO)
+  {
+    return ecma_copy_value (right_value);
+  }
+
+  if (right_value == ECMA_BIGINT_ZERO)
+  {
+    return ecma_copy_value (left_value);
+  }
+
   ecma_extended_primitive_t *left_p = ecma_get_extended_primitive_from_value (left_value);
   ecma_extended_primitive_t *right_p = ecma_get_extended_primitive_from_value (right_value);
-  uint32_t left_size = ECMA_BIGINT_GET_SIZE (left_p);
-  uint32_t right_size = ECMA_BIGINT_GET_SIZE (right_p);
-
-  if (left_size == 0)
-  {
-    ecma_ref_extended_primitive (right_p);
-    return right_value;
-  }
-
-  if (right_size == 0)
-  {
-    ecma_ref_extended_primitive (left_p);
-    return left_value;
-  }
 
   if (!(left_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN))
   {

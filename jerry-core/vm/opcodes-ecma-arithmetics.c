@@ -338,16 +338,11 @@ opfunc_unary_operation (ecma_value_t left_value, /**< left value */
     }
     else
     {
-      ecma_extended_primitive_t *left_p = ecma_get_extended_primitive_from_value (left_value);
+      ret_value = left_value;
 
-      if (ECMA_BIGINT_GET_SIZE (left_p) == 0)
+      if (left_value != ECMA_BIGINT_ZERO)
       {
-        ecma_ref_extended_primitive (left_p);
-        ret_value = left_value;
-      }
-      else
-      {
-        ret_value = ecma_bigint_negate (left_p);
+        ret_value = ecma_bigint_negate (ecma_get_extended_primitive_from_value (left_value));
       }
     }
   }

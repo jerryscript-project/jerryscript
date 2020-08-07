@@ -2207,7 +2207,7 @@ ecma_regexp_split_helper (ecma_value_t this_arg, /**< this value */
   {
     /* ECMA-262 v11, 21.2.5.13 13 */
     ecma_number_t num;
-    if (ECMA_IS_VALUE_ERROR (ecma_get_number (limit_arg, &num)))
+    if (ECMA_IS_VALUE_ERROR (ecma_op_to_numeric (limit_arg, &num, ECMA_TO_NUMERIC_NO_OPTS)))
     {
       goto cleanup_splitter;
     }

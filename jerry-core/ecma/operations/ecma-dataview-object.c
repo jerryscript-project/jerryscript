@@ -71,7 +71,7 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
   if (arguments_list_len > 1)
   {
     ecma_number_t number_offset, offset_num;
-    if (ECMA_IS_VALUE_ERROR (ecma_get_number (arguments_list_p[1], &number_offset)))
+    if (ECMA_IS_VALUE_ERROR (ecma_op_to_numeric (arguments_list_p[1], &number_offset, ECMA_TO_NUMERIC_NO_OPTS)))
     {
       return ECMA_VALUE_ERROR;
     }

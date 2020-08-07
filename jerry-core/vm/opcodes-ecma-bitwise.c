@@ -48,83 +48,58 @@ do_number_bitwise_logic (number_bitwise_logic_op op, /**< number bitwise logic o
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (left_value)
                 && !ECMA_IS_VALUE_ERROR (right_value));
 
-  bool free_left_value = false;
-  bool free_right_value = false;
+  ecma_number_t left_number;
+  left_value = ecma_op_to_numeric (left_value, &left_number, ECMA_TO_NUMERIC_ALLOW_BIGINT);
 
-  if (ecma_is_value_object (left_value))
+  if (ECMA_IS_VALUE_ERROR (left_value))
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (left_value);
-    left_value = ecma_op_object_default_value (obj_p, ECMA_PREFERRED_TYPE_NUMBER);
-    free_left_value = true;
-
-    if (ECMA_IS_VALUE_ERROR (left_value))
-    {
-      return left_value;
-    }
-  }
-
-  if (ecma_is_value_object (right_value))
-  {
-    ecma_object_t *obj_p = ecma_get_object_from_value (right_value);
-    right_value = ecma_op_object_default_value (obj_p, ECMA_PREFERRED_TYPE_NUMBER);
-    free_right_value = true;
-
-    if (ECMA_IS_VALUE_ERROR (right_value))
-    {
-      if (free_left_value)
-      {
-        ecma_free_value (left_value);
-      }
-      return right_value;
-    }
+    return left_value;
   }
 
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
 #if ENABLED (JERRY_BUILTIN_BIGINT)
-  if (JERRY_LIKELY (!ecma_is_value_bigint (left_value))
-      || JERRY_LIKELY (!ecma_is_value_bigint (right_value)))
+  if (JERRY_LIKELY (!ecma_is_value_bigint (left_value)))
   {
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
-    ECMA_OP_TO_NUMBER_TRY_CATCH (num_left, left_value, ret_value);
-    ECMA_OP_TO_NUMBER_TRY_CATCH (num_right, right_value, ret_value);
+    ECMA_OP_TO_NUMBER_TRY_CATCH (right_number, right_value, ret_value);
 
     ecma_number_t result = ECMA_NUMBER_ZERO;
-    uint32_t right_uint32 = ecma_number_to_uint32 (num_right);
+    uint32_t right_uint32 = ecma_number_to_uint32 (right_number);
 
     switch (op)
     {
       case NUMBER_BITWISE_LOGIC_AND:
       {
-        uint32_t left_uint32 = ecma_number_to_uint32 (num_left);
+        uint32_t left_uint32 = ecma_number_to_uint32 (left_number);
         result = (ecma_number_t) ((int32_t) (left_uint32 & right_uint32));
         break;
       }
       case NUMBER_BITWISE_LOGIC_OR:
       {
-        uint32_t left_uint32 = ecma_number_to_uint32 (num_left);
+        uint32_t left_uint32 = ecma_number_to_uint32 (left_number);
         result = (ecma_number_t) ((int32_t) (left_uint32 | right_uint32));
         break;
       }
       case NUMBER_BITWISE_LOGIC_XOR:
       {
-        uint32_t left_uint32 = ecma_number_to_uint32 (num_left);
+        uint32_t left_uint32 = ecma_number_to_uint32 (left_number);
         result = (ecma_number_t) ((int32_t) (left_uint32 ^ right_uint32));
         break;
       }
       case NUMBER_BITWISE_SHIFT_LEFT:
       {
-        result = (ecma_number_t) (ecma_number_to_int32 (num_left) << (right_uint32 & 0x1F));
+        result = (ecma_number_t) (ecma_number_to_int32 (left_number) << (right_uint32 & 0x1F));
         break;
       }
       case NUMBER_BITWISE_SHIFT_RIGHT:
       {
-        result = (ecma_number_t) (ecma_number_to_int32 (num_left) >> (right_uint32 & 0x1F));
+        result = (ecma_number_t) (ecma_number_to_int32 (left_number) >> (right_uint32 & 0x1F));
         break;
       }
       case NUMBER_BITWISE_SHIFT_URIGHT:
       {
-        uint32_t left_uint32 = ecma_number_to_uint32 (num_left);
+        uint32_t left_uint32 = ecma_number_to_uint32 (left_number);
         result = (ecma_number_t) (left_uint32 >> (right_uint32 & 0x1F));
         break;
       }
@@ -138,11 +113,19 @@ do_number_bitwise_logic (number_bitwise_logic_op op, /**< number bitwise logic o
     ret_value = ecma_make_number_value (result);
 
     ECMA_OP_TO_NUMBER_FINALIZE (num_right);
-    ECMA_OP_TO_NUMBER_FINALIZE (num_left);
 #if ENABLED (JERRY_BUILTIN_BIGINT)
   }
   else
   {
+    bool free_right_value;
+    right_value = ecma_bigint_get_bigint (right_value, &free_right_value);
+
+    if (ECMA_IS_VALUE_ERROR (right_value))
+    {
+      ecma_free_value (left_value);
+      return right_value;
+    }
+
     switch (op)
     {
       case NUMBER_BITWISE_LOGIC_AND:
@@ -176,18 +159,14 @@ do_number_bitwise_logic (number_bitwise_logic_op op, /**< number bitwise logic o
         break;
       }
     }
+
+    ecma_free_value (left_value);
+    if (free_right_value)
+    {
+      ecma_free_value (right_value);
+    }
   }
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
-
-  if (free_left_value)
-  {
-    ecma_free_value (left_value);
-  }
-
-  if (free_right_value)
-  {
-    ecma_free_value (right_value);
-  }
 
   return ret_value;
 } /* do_number_bitwise_logic */

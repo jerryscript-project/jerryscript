@@ -612,7 +612,7 @@ ecma_builtin_global_dispatch_routine (uint16_t builtin_routine_id, /**< built-in
   {
     ecma_number_t arg_num;
 
-    routine_arg_1 = ecma_get_number (routine_arg_1, &arg_num);
+    routine_arg_1 = ecma_op_to_numeric (routine_arg_1, &arg_num, ECMA_TO_NUMERIC_NO_OPTS);
 
     if (!ecma_is_value_empty (routine_arg_1))
     {

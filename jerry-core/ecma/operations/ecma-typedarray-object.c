@@ -720,7 +720,7 @@ ecma_op_typedarray_from_helper (ecma_value_t this_val, /**< this_arg for the abo
   }
 
   ecma_number_t num_var;
-  ecma_value_t mapped_number = ecma_get_number (mapped_value, &num_var);
+  ecma_value_t mapped_number = ecma_op_to_numeric (mapped_value, &num_var, ECMA_TO_NUMERIC_NO_OPTS);
   ecma_free_value (mapped_value);
 
   if (ECMA_IS_VALUE_ERROR (mapped_number))
@@ -1357,7 +1357,7 @@ ecma_op_typedarray_define_index_prop (ecma_object_t *obj_p, /**< a TypedArray ob
   if (property_desc_p->flags & ECMA_PROP_IS_VALUE_DEFINED)
   {
     ecma_number_t num_var;
-    ecma_value_t error = ecma_get_number (property_desc_p->value, &num_var);
+    ecma_value_t error = ecma_op_to_numeric (property_desc_p->value, &num_var, ECMA_TO_NUMERIC_NO_OPTS);
 
     if (ECMA_IS_VALUE_ERROR (error))
     {

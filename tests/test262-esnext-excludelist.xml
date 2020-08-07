@@ -6682,7 +6682,6 @@
   <test id="language/expressions/logical-assignment/lgcl-or-assignment-operator-unresolved-rhs.js"><reason></reason></test>
   <test id="language/expressions/logical-assignment/lgcl-or-assignment-operator.js"><reason></reason></test>
   <test id="language/expressions/logical-assignment/lgcl-or-whitespace.js"><reason></reason></test>
-  <test id="language/expressions/logical-not/bigint.js"><reason></reason></test>
   <test id="language/expressions/logical-or/tco-right.js"><reason></reason></test>
   <test id="language/expressions/new/non-ctor-err-realm.js"><reason></reason></test>
   <test id="language/expressions/new/spread-obj-spread-order.js"><reason></reason></test>
@@ -10468,17 +10467,4 @@
   <test id="language/literals/regexp/u-unicode-esc-bounds.js"><reason></reason></test>
   <test id="language/literals/regexp/u-unicode-esc-non-hex.js"><reason></reason></test>
   <test id="language/literals/regexp/unicode-escape-nls-err.js"><reason></reason></test>
-
-  <!-- regression caused by: Implement BigInt primitve type and some of its operations (#4062) -->
-  <test id="language/expressions/bitwise-and/order-of-evaluation.js"><reason></reason></test>
-  <test id="language/expressions/bitwise-or/order-of-evaluation.js"><reason></reason></test>
-  <test id="language/expressions/bitwise-xor/order-of-evaluation.js"><reason></reason></test>
-  <test id="language/expressions/division/order-of-evaluation.js"><reason></reason></test>
-  <test id="language/expressions/exponentiation/order-of-evaluation.js"><reason></reason></test>
-  <test id="language/expressions/left-shift/order-of-evaluation.js"><reason></reason></test>
-  <test id="language/expressions/modulus/order-of-evaluation.js"><reason></reason></test>
-  <test id="language/expressions/multiplication/order-of-evaluation.js"><reason></reason></test>
-  <test id="language/expressions/right-shift/order-of-evaluation.js"><reason></reason></test>
-  <test id="language/expressions/subtraction/order-of-evaluation.js"><reason></reason></test>
-  <test id="language/expressions/unsigned-right-shift/order-of-evaluation.js"><reason></reason></test>
 </excludeList>

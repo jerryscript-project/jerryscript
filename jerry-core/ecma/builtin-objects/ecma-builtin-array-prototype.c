@@ -1070,7 +1070,7 @@ ecma_builtin_array_prototype_object_sort_compare_helper (ecma_value_t lhs, /**< 
     {
       ecma_number_t ret_num;
 
-      if (ECMA_IS_VALUE_ERROR (ecma_get_number (call_value, &ret_num)))
+      if (ECMA_IS_VALUE_ERROR (ecma_op_to_numeric (call_value, &ret_num, ECMA_TO_NUMERIC_NO_OPTS)))
       {
         ecma_free_value (call_value);
         return ECMA_VALUE_ERROR;

@@ -213,7 +213,7 @@ ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to t
   /* 1-7. */
   for (uint32_t i = 0; i < args_len; i++)
   {
-    ecma_value_t status = ecma_get_number (args[i], date_nums + i);
+    ecma_value_t status = ecma_op_to_numeric (args[i], date_nums + i, ECMA_TO_NUMERIC_NO_OPTS);
 
     if (ECMA_IS_VALUE_ERROR (status))
     {

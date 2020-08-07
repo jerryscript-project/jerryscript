@@ -165,7 +165,7 @@ ecma_builtin_typedarray_of (ecma_value_t this_arg, /**< 'this' argument */
   while (k < arguments_list_len)
   {
     ecma_number_t num;
-    ecma_value_t next_val = ecma_get_number (arguments_list_p[k], &num);
+    ecma_value_t next_val = ecma_op_to_numeric (arguments_list_p[k], &num, ECMA_TO_NUMERIC_NO_OPTS);
 
     if (ECMA_IS_VALUE_ERROR (next_val))
     {

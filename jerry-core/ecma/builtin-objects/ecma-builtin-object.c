@@ -27,6 +27,10 @@
 #include "ecma-objects-general.h"
 #include "jrt.h"
 #include "ecma-builtin-object.h"
+#if ENABLED (JERRY_ESNEXT)
+#include "ecma-iterator-object.h"
+#include "ecma-function-object.h"
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -56,6 +60,7 @@ enum
   ECMA_OBJECT_ROUTINE_GET_OWN_PROPERTY_DESCRIPTOR,
   ECMA_OBJECT_ROUTINE_GET_OWN_PROPERTY_DESCRIPTORS,
   ECMA_OBJECT_ROUTINE_GET_PROTOTYPE_OF,
+  ECMA_OBJECT_ROUTINE_FROM_ENTRIES,
   ECMA_OBJECT_ROUTINE_KEYS,
   ECMA_OBJECT_ROUTINE_VALUES,
   ECMA_OBJECT_ROUTINE_ENTRIES,
@@ -1151,6 +1156,141 @@ ecma_builtin_object_object_is (ecma_value_t arg1, /**< routine's first argument 
   return ecma_op_same_value (arg1, arg2) ? ECMA_VALUE_TRUE : ECMA_VALUE_FALSE;
 } /* ecma_builtin_object_object_is */
 
+/**
+ * The Object object's 'fromEntries' routine
+ *
+ * See also:
+ *          ECMA-262 v10, 19.1.2.7
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+static ecma_value_t
+ecma_builtin_object_from_entries (ecma_value_t iterator) /**< object's iterator */
+{
+  JERRY_ASSERT (ecma_op_check_object_coercible (iterator));
+  /* 2 */
+  ecma_object_t *object_prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
+  ecma_object_t *obj_p = ecma_create_object (object_prototype_p, 0, ECMA_OBJECT_TYPE_GENERAL);
+
+  /* 6.a */
+  ecma_value_t next_method;
+  ecma_value_t result = ecma_op_get_iterator (iterator, ECMA_VALUE_SYNC_ITERATOR, &next_method);
+
+  if (ECMA_IS_VALUE_ERROR (result))
+  {
+    ecma_deref_object (obj_p);
+    return result;
+  }
+
+  const ecma_value_t original_iterator = result;
+
+  /* 6.b */
+  while (true)
+  {
+    /* 6.a.i */
+    result = ecma_op_iterator_step (original_iterator, next_method);
+
+    if (ECMA_IS_VALUE_ERROR (result))
+    {
+      goto cleanup_iterator;
+    }
+
+    /* 6.a.ii */
+    if (ecma_is_value_false (result))
+    {
+      break;
+    }
+
+    /* 6.a.iii */
+    const ecma_value_t next = result;
+    result = ecma_op_iterator_value (next);
+    ecma_free_value (next);
+
+    if (ECMA_IS_VALUE_ERROR (result))
+    {
+      goto cleanup_iterator;
+    }
+
+    /* 6.a.iv */
+    if (!ecma_is_value_object (result))
+    {
+      ecma_free_value (result);
+      ecma_raise_type_error (ECMA_ERR_MSG ("Iterator value is not an object."));
+      result = ecma_op_iterator_close (original_iterator);
+      JERRY_ASSERT (ECMA_IS_VALUE_ERROR (result));
+      goto cleanup_iterator;
+    }
+
+    /* 6.a.v-vi */
+    ecma_object_t *next_object_p = ecma_get_object_from_value (result);
+
+    result = ecma_op_object_get_by_index (next_object_p, 0);
+
+    if (ECMA_IS_VALUE_ERROR (result))
+    {
+      ecma_deref_object (next_object_p);
+      ecma_op_iterator_close (original_iterator);
+      goto cleanup_iterator;
+    }
+
+    const ecma_value_t key = result;
+
+    result = ecma_op_object_get_by_index (next_object_p, 1);
+
+    if (ECMA_IS_VALUE_ERROR (result))
+    {
+      ecma_deref_object (next_object_p);
+      ecma_free_value (key);
+      ecma_op_iterator_close (original_iterator);
+      goto cleanup_iterator;
+    }
+
+    /* 6.a.vii */
+    const ecma_value_t value = result;
+    ecma_string_t *property_key = ecma_op_to_property_key (key);
+
+    if (property_key == NULL)
+    {
+      ecma_deref_object (next_object_p);
+      ecma_free_value (key);
+      ecma_op_iterator_close (original_iterator);
+      result = ECMA_VALUE_ERROR;
+      goto cleanup_iterator;
+    }
+
+    ecma_property_value_t *prop;
+    ecma_property_t *property_p = ecma_find_named_property (obj_p, property_key);
+
+    if (property_p == NULL)
+    {
+      prop = ecma_create_named_data_property (obj_p,
+                                              property_key,
+                                              ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                              NULL);
+      prop->value = ecma_copy_value_if_not_object (value);
+    }
+    else
+    {
+      ecma_named_data_property_assign_value (obj_p, ECMA_PROPERTY_VALUE_PTR (property_p), value);
+    }
+
+    ecma_deref_ecma_string (property_key);
+    ecma_free_value (key);
+    ecma_free_value (value);
+    ecma_deref_object (next_object_p);
+  }
+
+  ecma_ref_object (obj_p);
+  result = ecma_make_object_value (obj_p);
+
+cleanup_iterator:
+  ecma_free_value (original_iterator);
+  ecma_free_value (next_method);
+  ecma_deref_object (obj_p);
+
+  return result;
+} /* ecma_builtin_object_from_entries */
+
 #endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
@@ -1357,6 +1497,11 @@ ecma_builtin_object_dispatch_routine (uint16_t builtin_routine_id, /**< built-in
       case ECMA_OBJECT_ROUTINE_GET_OWN_PROPERTY_DESCRIPTORS:
       {
         result = ecma_builtin_object_object_get_own_property_descriptors (obj_p);
+        break;
+      }
+      case ECMA_OBJECT_ROUTINE_FROM_ENTRIES:
+      {
+        result = ecma_builtin_object_from_entries (arg1);
         break;
       }
 #endif /* ENABLED (JERRY_ESNEXT) */

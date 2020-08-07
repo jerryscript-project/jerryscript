@@ -73,3 +73,6 @@ try {
 } catch (e) {
   assert(e instanceof TypeError);
 }
+
+assert(Symbol("").description !== undefined);
+assert(Symbol().description === undefined);

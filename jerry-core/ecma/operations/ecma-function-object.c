@@ -54,16 +54,17 @@ ecma_op_function_form_name (ecma_string_t *prop_name_p, /**< property name */
   if (ecma_prop_name_is_symbol (prop_name_p))
   {
     /* .a */
-    ecma_string_t *string_desc_p = ecma_get_symbol_description (prop_name_p);
+    ecma_value_t string_desc = ecma_get_symbol_description (prop_name_p);
 
     /* .b */
-    if (ecma_string_is_empty (string_desc_p))
+    if (ecma_is_value_undefined (string_desc))
     {
-      prop_name_p = string_desc_p;
+      prop_name_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
     }
     /* .c */
     else
     {
+      ecma_string_t *string_desc_p = ecma_get_string_from_value (string_desc);
       ecma_stringbuilder_t builder = ecma_stringbuilder_create_raw ((lit_utf8_byte_t *) "[", 1);
       ecma_stringbuilder_append (&builder, string_desc_p);
       ecma_stringbuilder_append_byte (&builder, (lit_utf8_byte_t) LIT_CHAR_RIGHT_SQUARE);

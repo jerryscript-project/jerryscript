@@ -35,7 +35,7 @@ ecma_op_create_symbol_object (const ecma_value_t value);
 bool
 ecma_prop_name_is_symbol (ecma_string_t *string_p);
 
-ecma_string_t *
+ecma_value_t
 ecma_get_symbol_description (ecma_string_t *symbol_p);
 
 ecma_value_t

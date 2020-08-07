@@ -31,14 +31,14 @@ function compareArray(a, b) {
     Array.prototype.concat.call({}, {[Symbol.isConcatSpreadable]: true, length : 2 **53 - 1})
     assert(false);
   } catch (e) {
-    assert(e instanceof RangeError);
+    assert(e instanceof TypeError);
   }
 
   try {
     Array.prototype.concat.call([1, 2, 3, 4], {[Symbol.isConcatSpreadable]: true, length : 2 **53 - 4})
     assert(false);
   } catch (e) {
-    assert(e instanceof RangeError);
+    assert(e instanceof TypeError);
   }
 })();
 

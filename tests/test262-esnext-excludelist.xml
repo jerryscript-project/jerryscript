@@ -152,7 +152,6 @@
   <test id="built-ins/Array/proto-from-ctor-realm-two.js"><reason></reason></test>
   <test id="built-ins/Array/proto-from-ctor-realm-zero.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/Symbol.unscopables/value.js"><reason></reason></test>
-  <test id="built-ins/Array/prototype/concat/arg-length-exceeding-integer-limit.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/concat/create-proto-from-ctor-realm-array.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/concat/create-proto-from-ctor-realm-non-array.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/copyWithin/coerced-values-start-change-start.js"><reason></reason></test>

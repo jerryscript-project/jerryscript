@@ -51,37 +51,7 @@ ecma_builtin_bigint_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
   ecma_value_t value = (arguments_list_len == 0) ? ECMA_VALUE_UNDEFINED : arguments_list_p[0];
-  bool free_value = false;
-
-  if (ecma_is_value_object (value))
-  {
-    ecma_object_t *obj_p = ecma_get_object_from_value (value);
-    value = ecma_op_object_default_value (obj_p, ECMA_PREFERRED_TYPE_NUMBER);
-    free_value = true;
-
-    if (ECMA_IS_VALUE_ERROR (value))
-    {
-      return value;
-    }
-  }
-
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-
-  if (ecma_is_value_number (value))
-  {
-    ret_value = ecma_bigint_number_to_bigint (ecma_get_number_from_value (value));
-  }
-  else
-  {
-    ret_value = ecma_bigint_to_bigint (value);
-  }
-
-  if (free_value)
-  {
-    ecma_free_value (value);
-  }
-
-  return ret_value;
+  return ecma_bigint_to_bigint (value, true);
 } /* ecma_builtin_bigint_dispatch_call */
 
 /**

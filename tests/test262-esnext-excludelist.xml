@@ -662,7 +662,6 @@
   <test id="built-ins/BigInt/non-integer-rangeerror.js"><reason></reason></test>
   <test id="built-ins/BigInt/prototype/toString/a-z.js"><reason></reason></test>
   <test id="built-ins/BigInt/prototype/toString/length.js"><reason></reason></test>
-  <test id="built-ins/BigInt/prototype/toString/string-is-code-units-of-decimal-digits-only.js"><reason></reason></test>
   <test id="built-ins/BigInt/prototype/valueOf/cross-realm.js"><reason></reason></test>
   <test id="built-ins/Boolean/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/DataView/buffer-does-not-have-arraybuffer-data-throws-sab.js"><reason></reason></test>
@@ -1097,7 +1096,6 @@
   <test id="built-ins/Object/fromEntries/uses-keys-not-iterator.js"><reason></reason></test>
   <test id="built-ins/Object/keys/order-after-define-property.js"><reason></reason></test>
   <test id="built-ins/Object/proto-from-ctor-realm.js"><reason></reason></test>
-  <test id="built-ins/Object/prototype/toString/Object.prototype.toString.call-bigint.js"><reason></reason></test>
   <test id="built-ins/Object/prototype/toString/proxy-function.js"><reason></reason></test>
   <test id="built-ins/Object/prototype/toString/symbol-tag-non-str-bigint.js"><reason></reason></test>
   <test id="built-ins/Object/prototype/toString/symbol-tag-non-str-builtin.js"><reason></reason></test>
@@ -6833,7 +6831,6 @@
   <test id="language/expressions/tagged-template/tco-member.js"><reason></reason></test>
   <test id="language/expressions/tco-pos.js"><reason></reason></test>
   <test id="language/expressions/template-literal/invalid-legacy-octal-escape-sequence.js"><reason></reason></test>
-  <test id="language/expressions/typeof/bigint.js"><reason></reason></test>
   <test id="language/expressions/typeof/proxy.js"><reason></reason></test>
   <test id="language/expressions/unary-plus/bigint-throws.js"><reason></reason></test>
   <test id="language/expressions/yield/star-return-is-null.js"><reason></reason></test>

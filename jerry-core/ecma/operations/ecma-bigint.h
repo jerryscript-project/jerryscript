@@ -42,8 +42,10 @@ ecma_value_t ecma_bigint_parse_string (const lit_utf8_byte_t *string_p, lit_utf8
                                        uint32_t options);
 ecma_value_t ecma_bigint_parse_string_value (ecma_value_t string, uint32_t options);
 ecma_string_t *ecma_bigint_to_string (ecma_value_t value, ecma_bigint_digit_t radix);
-ecma_value_t ecma_bigint_number_to_bigint (ecma_number_t number);
-ecma_value_t ecma_bigint_to_bigint (ecma_value_t value);
+ecma_value_t ecma_bigint_to_bigint (ecma_value_t value, bool allow_numbers);
+ecma_value_t ecma_bigint_create_from_digits (const uint64_t *digits_p, uint32_t size, bool sign);
+uint32_t ecma_bigint_get_size_in_digits (ecma_value_t value);
+void ecma_bigint_get_digits_and_sign (ecma_value_t value, uint64_t *digits_p, uint32_t size, bool *sign_p);
 
 bool ecma_bigint_is_equal_to_bigint (ecma_value_t left_value, ecma_value_t right_value);
 bool ecma_bigint_is_equal_to_number (ecma_value_t left_value, ecma_number_t right_value);

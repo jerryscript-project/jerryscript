@@ -19,6 +19,7 @@
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
 #include "ecma-arraybuffer-object.h"
+#include "ecma-bigint.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
 #include "ecma-comparison.h"
@@ -107,6 +108,15 @@ static const char * const error_value_msg_p = "argument cannot have an error fla
  * Error message, if types of arguments are incorrect
  */
 static const char * const wrong_args_msg_p = "wrong type of argument";
+
+#if !ENABLED (JERRY_BUILTIN_BIGINT)
+
+/**
+ * Error message, if BigInt support is disabled
+ */
+static const char * const error_bigint_not_supported_p = "BigInt support is disabled";
+
+#endif /* !ENABLED (JERRY_BUILTIN_BIGINT) */
 
 #endif /* ENABLED (JERRY_ERROR_MESSAGES) */
 
@@ -842,6 +852,25 @@ jerry_value_is_symbol (const jerry_value_t value) /**< api value */
 } /* jerry_value_is_symbol */
 
 /**
+ * Check if the specified value is BigInt.
+ *
+ * @return true  - if the specified value is BigInt,
+ *         false - otherwise
+ */
+bool
+jerry_value_is_bigint (const jerry_value_t value) /**< api value */
+{
+  jerry_assert_api_available ();
+
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  return ecma_is_value_bigint (value);
+#else /* !ENABLED (JERRY_BUILTIN_BIGINT) */
+  JERRY_UNUSED (value);
+  return false;
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+} /* jerry_value_is_bigint */
+
+/**
  * Check if the specified value is undefined.
  *
  * @return true  - if the specified value is undefined,
@@ -1345,8 +1374,35 @@ jerry_value_to_string (const jerry_value_t value) /**< input value */
     return ecma_create_error_reference_from_context ();
   }
 
-  return jerry_return (ecma_make_string_value (str_p));
+  return ecma_make_string_value (str_p);
 } /* jerry_value_to_string */
+
+/**
+ * Call the BigInt constructor ecma builtin operation on the api value.
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return BigInt value - if success
+ *         thrown error - otherwise
+ */
+jerry_value_t
+jerry_value_to_bigint (const jerry_value_t value) /**< input value */
+{
+  jerry_assert_api_available ();
+
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  if (ecma_is_value_error_reference (value))
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_value_msg_p)));
+  }
+
+  return jerry_return (ecma_bigint_to_bigint (value, true));
+#else /* !ENABLED (JERRY_BUILTIN_BIGINT) */
+  JERRY_UNUSED (value);
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_bigint_not_supported_p)));
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+} /* jerry_value_to_bigint */
 
 /**
  * Acquire specified Jerry API value.
@@ -1775,6 +1831,29 @@ jerry_create_symbol (const jerry_value_t value) /**< api value */
   return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Symbol is not supported.")));
 #endif /* ENABLED (JERRY_ESNEXT) */
 } /* jerry_create_symbol */
+
+/**
+ * Create BigInt from a sequence of uint64 digits
+ *
+ * @return value of the created bigint, if success
+ *         thrown error, otherwise
+ */
+jerry_value_t
+jerry_create_bigint (const uint64_t *digits_p, /**< BigInt digits (lowest digit first) */
+                     uint32_t size, /**< number of BigInt digits */
+                     bool sign) /**< sign bit, true if the result should be negative */
+{
+  jerry_assert_api_available ();
+
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  return jerry_return (ecma_bigint_create_from_digits (digits_p, size, sign));
+#else /* !ENABLED (JERRY_BUILTIN_BIGINT) */
+  JERRY_UNUSED (digits_p);
+  JERRY_UNUSED (size);
+  JERRY_UNUSED (sign);
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_bigint_not_supported_p)));
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+} /* jerry_create_bigint */
 
 /**
  * Calculates the size of the given pattern and creates a RegExp object.
@@ -3404,6 +3483,60 @@ jerry_get_symbol_descriptive_string (const jerry_value_t symbol) /**< symbol val
   return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Symbol is not supported.")));
 #endif /* ENABLED (JERRY_ESNEXT) */
 } /** jerry_get_symbol_descriptive_string */
+
+/**
+ * Get the number of uint64 digits of a BigInt value
+ *
+ * @return number of uint64 digits
+ */
+uint32_t
+jerry_get_bigint_size_in_digits (jerry_value_t value) /**< BigInt value */
+{
+  jerry_assert_api_available ();
+
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  if (!ecma_is_value_bigint (value))
+  {
+    return 0;
+  }
+
+  return ecma_bigint_get_size_in_digits (value);
+#else /* !ENABLED (JERRY_BUILTIN_BIGINT) */
+  JERRY_UNUSED (value);
+  return 0;
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+} /* jerry_get_bigint_size_in_digits */
+
+/**
+ * Get the uint64 digits of a BigInt value (lowest digit first)
+ */
+void
+jerry_get_bigint_digits (jerry_value_t value, /**< BigInt value */
+                         uint64_t *digits_p, /**< [out] buffer for digits */
+                         uint32_t size, /**< buffer size in digits */
+                         bool *sign_p) /**< [out] sign of BigInt */
+{
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  if (!ecma_is_value_bigint (value))
+  {
+    if (sign_p != NULL)
+    {
+      *sign_p = false;
+    }
+    memset (digits_p, 0, size * sizeof (uint64_t));
+  }
+
+  ecma_bigint_get_digits_and_sign (value, digits_p, size, sign_p);
+#else /* !ENABLED (JERRY_BUILTIN_BIGINT) */
+  JERRY_UNUSED (value);
+
+  if (sign_p != NULL)
+  {
+    *sign_p = false;
+  }
+  memset (digits_p, 0, size * sizeof (uint64_t));
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+} /* jerry_get_bigint_digits */
 
 /**
  * Validate UTF-8 string

@@ -1271,11 +1271,7 @@ ecma_deref_bigint (ecma_extended_primitive_t *bigint_p) /**< bigint value */
 
   uint32_t size = ECMA_BIGINT_GET_SIZE (bigint_p);
 
-  if (size == 0)
-  {
-    jmem_pools_free (bigint_p, sizeof (ecma_extended_primitive_t));
-    return;
-  }
+  JERRY_ASSERT (size > 0);
 
   size_t mem_size = ECMA_BIGINT_GET_BYTE_SIZE (size) + sizeof (ecma_extended_primitive_t);
   jmem_heap_free_block (bigint_p, mem_size);

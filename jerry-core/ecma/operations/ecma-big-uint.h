@@ -60,6 +60,11 @@ typedef uint64_t ecma_bigint_two_digits_t;
   (((ecma_bigint_two_digits_t) digit) << (8 * sizeof (ecma_bigint_digit_t)))
 
 /**
+ * Tells whether a number (usually a digit or uint32_t value) is an odd number.
+ */
+#define ECMA_BIGINT_NUMBER_IS_ODD(number) ((number & 0x1) != 0)
+
+/**
  * Bitwise operation types.
  */
 typedef enum
@@ -117,7 +122,12 @@ ecma_extended_primitive_t *ecma_big_uint_div_mod (ecma_extended_primitive_t *div
                                                   bool is_mod);
 
 ecma_extended_primitive_t *ecma_big_uint_shift_left (ecma_extended_primitive_t *left_value_p, uint32_t right_value);
-ecma_extended_primitive_t *ecma_big_uint_shift_right (ecma_extended_primitive_t *left_value_p, uint32_t right_value);
+ecma_extended_primitive_t *ecma_big_uint_shift_right (ecma_extended_primitive_t *left_value_p, uint32_t right_value,
+                                                      bool increase_result);
+
+#if ENABLED (JERRY_ESNEXT)
+ecma_extended_primitive_t *ecma_big_uint_pow (ecma_extended_primitive_t *left_value_p, uint32_t right_value);
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 ecma_extended_primitive_t *ecma_big_uint_bitwise_op (uint32_t operation_and_options,
                                                      ecma_extended_primitive_t *left_value_p,

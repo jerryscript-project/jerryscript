@@ -1474,7 +1474,7 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 
   length = (size_t) (source_p - context_p->source_p);
-  if (length > PARSER_MAXIMUM_IDENT_LENGTH)
+  if (length > PARSER_MAXIMUM_STRING_LENGTH)
   {
     parser_raise_error (context_p, PARSER_ERR_NUMBER_TOO_LONG);
   }

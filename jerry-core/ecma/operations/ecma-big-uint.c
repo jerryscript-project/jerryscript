@@ -94,22 +94,37 @@ ecma_big_uint_extend (ecma_extended_primitive_t *value_p, /**< BigUInt value */
 } /* ecma_big_uint_extend */
 
 /**
- * Discard the high-order digits of a BigUInt
+ * Helper function which discards the leading zero digits of a BigUInt value
  *
- * @return BigUInt value, NULL on error
+ * @return new BigUInt value, NULL on error
  */
 static ecma_extended_primitive_t *
-ecma_big_uint_shrink_value (ecma_extended_primitive_t *value_p, /**< BigUInt value */
-                            uint32_t new_size) /**< new size, which is smaller than the original size */
+ecma_big_uint_normalize_result (ecma_extended_primitive_t *value_p, /**< BigUInt value */
+                                ecma_bigint_digit_t *last_digit_p) /**< points to the end of BigUInt */
 {
-  JERRY_ASSERT (value_p != NULL);
-  JERRY_ASSERT (ECMA_BIGINT_GET_SIZE (value_p) > new_size);
+  JERRY_ASSERT (last_digit_p[-1] == 0);
 
-  if (new_size == 0)
+  ecma_bigint_digit_t *first_digit_p = ECMA_BIGINT_GET_DIGITS (value_p, 0);
+
+  /* The following code is tricky. The value stored in first_digit_p[-1] is the size
+   * of the BigUInt value, and it cannot be zero. Hence the loop below will terminate. */
+  JERRY_ASSERT (first_digit_p[-1] != 0);
+
+  do
+  {
+    --last_digit_p;
+  }
+  while (last_digit_p[-1] == 0);
+
+  JERRY_ASSERT (last_digit_p >= first_digit_p);
+
+  if (first_digit_p == last_digit_p)
   {
     ecma_deref_bigint (value_p);
     return ECMA_BIGINT_POINTER_TO_ZERO;
   }
+
+  uint32_t new_size = (uint32_t) ((uint8_t *) last_digit_p - (uint8_t *) first_digit_p);
 
   if (ECMA_BIGINT_SIZE_IS_ODD (new_size)
       && ((new_size + sizeof (ecma_bigint_digit_t)) == ECMA_BIGINT_GET_SIZE (value_p)))
@@ -130,7 +145,42 @@ ecma_big_uint_shrink_value (ecma_extended_primitive_t *value_p, /**< BigUInt val
   ecma_deref_bigint (value_p);
 
   return result_p;
-} /* ecma_big_uint_shrink_value */
+} /* ecma_big_uint_normalize_result */
+
+/**
+ * Helper function which increases the result by 1 and extends or shrinks the BigUInt when necessary
+ *
+ * @return new BigUInt value, NULL on error
+ */
+static ecma_extended_primitive_t *
+ecma_big_uint_increase_result (ecma_extended_primitive_t *value_p) /**< BigUInt value */
+{
+  uint32_t size = ECMA_BIGINT_GET_SIZE (value_p);
+
+  JERRY_ASSERT (size > 0);
+
+  ecma_bigint_digit_t *first_digit_p = ECMA_BIGINT_GET_DIGITS (value_p, 0);
+  ecma_bigint_digit_t *last_digit_p = ECMA_BIGINT_GET_DIGITS (value_p, size);
+
+  while (*first_digit_p == ~((ecma_bigint_digit_t) 0))
+  {
+    *first_digit_p++ = 0;
+
+    if (first_digit_p == last_digit_p)
+    {
+      return ecma_big_uint_extend (value_p, 1);
+    }
+  }
+
+  (*first_digit_p)++;
+
+  if (last_digit_p[-1] != 0)
+  {
+    return value_p;
+  }
+
+  return ecma_big_uint_normalize_result (value_p, last_digit_p);
+} /* ecma_big_uint_increase_result */
 
 /**
  * Compare two BigUInt numbers
@@ -376,7 +426,7 @@ ecma_big_uint_to_string (ecma_extended_primitive_t *value_p, /**< BigUInt value 
 /**
  * Increase the value of a BigUInt value by 1
  *
- * return new BigInt value, NULL on error
+ * return new BigUInt value, NULL on error
  */
 ecma_extended_primitive_t *
 ecma_big_uint_increase (ecma_extended_primitive_t *value_p) /**< BigUInt value */
@@ -441,7 +491,7 @@ ecma_big_uint_increase (ecma_extended_primitive_t *value_p) /**< BigUInt value *
 /**
  * Decrease the value of a BigUInt value by 1
  *
- * return new BigInt value, NULL on error
+ * return new BigUInt value, NULL on error
  */
 ecma_extended_primitive_t *
 ecma_big_uint_decrease (ecma_extended_primitive_t *value_p) /**< BigUInt value */
@@ -508,7 +558,7 @@ ecma_big_uint_decrease (ecma_extended_primitive_t *value_p) /**< BigUInt value *
 /**
  * Add right BigUInt value to the left BigUInt value
  *
- * return new BigInt value, NULL on error
+ * return new BigUInt value, NULL on error
  */
 ecma_extended_primitive_t *
 ecma_big_uint_add (ecma_extended_primitive_t *left_value_p, /**< left BigUInt value */
@@ -609,7 +659,7 @@ ecma_big_uint_add (ecma_extended_primitive_t *left_value_p, /**< left BigUInt va
 /**
  * Substract right BigUInt value from the left BigUInt value
  *
- * return new BigInt value, NULL on error
+ * return new BigUInt value, NULL on error
  */
 ecma_extended_primitive_t *
 ecma_big_uint_sub (ecma_extended_primitive_t *left_value_p, /**< left BigUInt value */
@@ -683,29 +733,18 @@ ecma_big_uint_sub (ecma_extended_primitive_t *left_value_p, /**< left BigUInt va
     return result_p;
   }
 
-  ecma_bigint_digit_t *new_end_p = current_p;
-
-  if (new_end_p[-1] != 0)
+  if (current_p[-1] != 0)
   {
     return result_p;
   }
 
-  do
-  {
-    new_end_p--;
-
-    JERRY_ASSERT (new_end_p > ECMA_BIGINT_GET_DIGITS (result_p, 0));
-  }
-  while (new_end_p[-1] == 0);
-
-  ecma_bigint_digit_t *first_digit_p = ECMA_BIGINT_GET_DIGITS (result_p, 0);
-  return ecma_big_uint_shrink_value (result_p, (uint32_t) ((uint8_t *) new_end_p - (uint8_t *) first_digit_p));
+  return ecma_big_uint_normalize_result (result_p, current_p);
 } /* ecma_big_uint_sub */
 
 /**
  * Multiply two BigUInt values
  *
- * return new BigInt value, NULL on error
+ * return new BigUInt value, NULL on error
  */
 ecma_extended_primitive_t *
 ecma_big_uint_mul (ecma_extended_primitive_t *left_value_p, /**< left BigUInt value */
@@ -840,7 +879,7 @@ ecma_big_uint_mul (ecma_extended_primitive_t *left_value_p, /**< left BigUInt va
 /**
  * Count the number of leading zero bits of a digit
  *
- * return new BigInt value, NULL on error
+ * return new BigUInt value, NULL on error
  */
 static ecma_bigint_digit_t
 ecma_big_uint_count_leading_zero (ecma_bigint_digit_t digit) /**< digit value */
@@ -866,7 +905,7 @@ ecma_big_uint_count_leading_zero (ecma_bigint_digit_t digit) /**< digit value */
 /**
  * Divide left BigUInt value with right digit value
  *
- * return new BigInt value, NULL on error
+ * return new BigUInt value, NULL on error
  */
 static ecma_extended_primitive_t *
 ecma_big_uint_div_digit (ecma_extended_primitive_t *left_value_p, /**< left BigUInt value */
@@ -951,7 +990,7 @@ ecma_big_uint_div_digit (ecma_extended_primitive_t *left_value_p, /**< left BigU
 } /* ecma_big_uint_div_digit */
 
 /**
- * Shift left BigInt digits
+ * Shift left a BigUInt value by a digit value
  *
  * return newly allocated buffer, NULL on error
  */
@@ -1014,7 +1053,7 @@ ecma_big_uint_div_shift_left (ecma_extended_primitive_t *value_p, /**< BigUInt v
 /**
  * Divide left BigUInt value with right BigUInt value
  *
- * return new BigInt value, NULL on error
+ * return new BigUInt value, NULL on error
  */
 ecma_extended_primitive_t *
 ecma_big_uint_div_mod (ecma_extended_primitive_t *dividend_value_p, /**< divider BigUInt value */
@@ -1279,9 +1318,9 @@ error:
 } /* ecma_big_uint_div_mod */
 
 /**
- * Shift left BigInt values by an uint32 value
+ * Shift left BigUInt values by an uint32 value
  *
- * return new BigInt value, NULL on error
+ * return new BigUInt value, NULL on error
  */
 ecma_extended_primitive_t *
 ecma_big_uint_shift_left (ecma_extended_primitive_t *left_value_p, /**< left BigUInt value */
@@ -1352,13 +1391,14 @@ ecma_big_uint_shift_left (ecma_extended_primitive_t *left_value_p, /**< left Big
 } /* ecma_big_uint_shift_left */
 
 /**
- * Shift right BigInt values by an uint32 value
+ * Shift right BigUInt values by an uint32 value
  *
- * @return new BigInt value, NULL on error
+ * @return new BigUInt value, NULL on error
  */
 ecma_extended_primitive_t *
 ecma_big_uint_shift_right (ecma_extended_primitive_t *left_value_p,  /**< left BigUInt value */
-                           uint32_t right_value) /**< shift value */
+                           uint32_t right_value, /**< shift value */
+                           bool increase_result) /**< increase result */
 {
   JERRY_ASSERT (right_value > 0);
 
@@ -1380,7 +1420,39 @@ ecma_big_uint_shift_right (ecma_extended_primitive_t *left_value_p,  /**< left B
 
   if (left_size <= crop_size)
   {
-    return ECMA_BIGINT_POINTER_TO_ZERO;
+    if (JERRY_LIKELY (!increase_result))
+    {
+      return ECMA_BIGINT_POINTER_TO_ZERO;
+    }
+
+    ecma_extended_primitive_t *result_value_p = ecma_bigint_create (sizeof (ecma_bigint_digit_t));
+    if (result_value_p != NULL)
+    {
+      *ECMA_BIGINT_GET_DIGITS (result_value_p, 0) = 1;
+    }
+    return result_value_p;
+  }
+
+  if (JERRY_UNLIKELY (increase_result)
+      && (shift_right == 0
+          || (*ECMA_BIGINT_GET_DIGITS (left_value_p, crop_size) << shift_left) == 0))
+  {
+    ecma_bigint_digit_t *left_p = ECMA_BIGINT_GET_DIGITS (left_value_p, 0);
+    ecma_bigint_digit_t *left_end_p = ECMA_BIGINT_GET_DIGITS (left_value_p, crop_size);
+
+    while (left_p < left_end_p)
+    {
+      if (*left_p != 0)
+      {
+        break;
+      }
+      left_p++;
+    }
+
+    if (left_p == left_end_p)
+    {
+      increase_result = false;
+    }
   }
 
   uint32_t size = left_size - crop_size;
@@ -1394,7 +1466,12 @@ ecma_big_uint_shift_right (ecma_extended_primitive_t *left_value_p,  /**< left B
   if (shift_right == 0)
   {
     memcpy (ECMA_BIGINT_GET_DIGITS (result_value_p, 0), ECMA_BIGINT_GET_DIGITS (left_value_p, crop_size), size);
-    return result_value_p;
+
+    if (JERRY_LIKELY (!increase_result))
+    {
+      return result_value_p;
+    }
+    return ecma_big_uint_increase_result (result_value_p);
   }
 
   ecma_bigint_digit_t *left_p = ECMA_BIGINT_GET_DIGITS (left_value_p, left_size);
@@ -1410,71 +1487,91 @@ ecma_big_uint_shift_right (ecma_extended_primitive_t *left_value_p,  /**< left B
   }
   while (result_p > end_p);
 
-  return result_value_p;
+  if (JERRY_LIKELY (!increase_result))
+  {
+    return result_value_p;
+  }
+  return ecma_big_uint_increase_result (result_value_p);
 } /* ecma_big_uint_shift_right */
 
-/**
- * Helper function for bitwise operations which drops leading zeroes
- *
- * @return ecma BigInt value or ECMA_VALUE_ERROR
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_extended_primitive_t *
-ecma_big_uint_normalize_result (ecma_extended_primitive_t *value_p, /**< BigUInt value */
-                                ecma_bigint_digit_t *last_digit_p) /**< points to the end of BigUInt */
-{
-  JERRY_ASSERT (last_digit_p[-1] == 0);
-
-  ecma_bigint_digit_t *first_digit_p = ECMA_BIGINT_GET_DIGITS (value_p, 0);
-
-  do
-  {
-    --last_digit_p;
-  }
-  while (last_digit_p > first_digit_p && last_digit_p[-1] == 0);
-
-  return ecma_big_uint_shrink_value (value_p, (uint32_t) ((uint8_t *) last_digit_p - (uint8_t *) first_digit_p));
-} /* ecma_big_uint_normalize_result */
+#if ENABLED (JERRY_ESNEXT)
 
 /**
- * Helper function for bitwise operations which increases the result by 1
+ * Compute the left value raised to the power of right value
  *
- * @return new BigInt value, NULL on error
+ * return new BigUInt value, NULL on error
  */
-static ecma_extended_primitive_t *
-ecma_big_uint_increase_result (ecma_extended_primitive_t *value_p) /**< BigUInt value */
+ecma_extended_primitive_t *
+ecma_big_uint_pow (ecma_extended_primitive_t *left_value_p, /**< left BigUInt value */
+                   uint32_t right_value) /**< power value */
 {
-  uint32_t size = ECMA_BIGINT_GET_SIZE (value_p);
+  ecma_extended_primitive_t *result_p = ECMA_BIGINT_NUMBER_IS_ODD (right_value) ? left_value_p : NULL;
+  ecma_extended_primitive_t *square_p = left_value_p;
 
-  JERRY_ASSERT (size > 0);
+  JERRY_ASSERT (right_value >= 2);
 
-  ecma_bigint_digit_t *first_digit_p = ECMA_BIGINT_GET_DIGITS (value_p, 0);
-  ecma_bigint_digit_t *last_digit_p = ECMA_BIGINT_GET_DIGITS (value_p, size);
-
-  while (*first_digit_p == ~((ecma_bigint_digit_t) 0))
+  while (true)
   {
-    *first_digit_p++ = 0;
+    ecma_extended_primitive_t *new_square_p = ecma_big_uint_mul (square_p, square_p);
 
-    if (first_digit_p == last_digit_p)
+    if (JERRY_UNLIKELY (new_square_p == NULL))
     {
-      return ecma_big_uint_extend (value_p, 1);
+      if (result_p != NULL && result_p != left_value_p)
+      {
+        ecma_deref_bigint (result_p);
+      }
+      result_p = NULL;
+      break;
+    }
+
+    if (square_p != left_value_p)
+    {
+      ecma_deref_bigint (square_p);
+    }
+
+    square_p = new_square_p;
+    right_value >>= 1;
+
+    if (ECMA_BIGINT_NUMBER_IS_ODD (right_value))
+    {
+      if (result_p != NULL)
+      {
+        ecma_extended_primitive_t *new_result_p = ecma_big_uint_mul (square_p, result_p);
+
+        if (result_p != left_value_p)
+        {
+          ecma_deref_bigint (result_p);
+        }
+
+        result_p = new_result_p;
+      }
+      else
+      {
+        ecma_ref_extended_primitive (square_p);
+        result_p = square_p;
+      }
+
+      if (JERRY_UNLIKELY (result_p == NULL) || right_value == 1)
+      {
+        break;
+      }
     }
   }
 
-  (*first_digit_p)++;
-
-  if (last_digit_p[-1] != 0)
+  if (square_p != left_value_p)
   {
-    return value_p;
+    ecma_deref_bigint (square_p);
   }
 
-  return ecma_big_uint_normalize_result (value_p, last_digit_p);
-} /* ecma_big_uint_increase_result */
+  return result_p;
+} /* ecma_big_uint_pow */
+
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Perform bitwise operations on two BigUInt numbers
  *
- * return new BigInt value, NULL on error
+ * return new BigUInt value, NULL on error
  */
 ecma_extended_primitive_t *
 ecma_big_uint_bitwise_op (uint32_t operation_and_options, /**< bitwise operation type and options */

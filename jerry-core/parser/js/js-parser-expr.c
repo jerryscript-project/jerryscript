@@ -1883,6 +1883,12 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
             {
               is_negative_number = !is_negative_number;
             }
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+            else if (JERRY_LIKELY (context_p->token.extra_value == LEXER_NUMBER_BIGINT))
+            {
+              break;
+            }
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
             parser_stack_pop_uint8 (context_p);
           }
           while (context_p->stack_top_uint8 == LEXER_PLUS

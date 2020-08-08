@@ -69,6 +69,9 @@ ecma_value_t ecma_bigint_add_sub (ecma_value_t left_value, ecma_value_t right_va
 ecma_value_t ecma_bigint_mul (ecma_value_t left_value, ecma_value_t right_value);
 ecma_value_t ecma_bigint_div_mod (ecma_value_t left_value, ecma_value_t right_value, bool is_mod);
 ecma_value_t ecma_bigint_shift (ecma_value_t left_value, ecma_value_t right_value, bool is_left);
+#if ENABLED (JERRY_ESNEXT)
+ecma_value_t ecma_bigint_pow (ecma_value_t left_value, ecma_value_t right_value);
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 ecma_value_t ecma_bigint_and (ecma_value_t left_value, ecma_value_t right_value);
 ecma_value_t ecma_bigint_or (ecma_value_t left_value, ecma_value_t right_value);

@@ -92,9 +92,9 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
     }
 
     /* Swap values. */
-    ecma_value_t tmp = x;
-    x = y;
-    y = tmp;
+    x ^= y;
+    y ^= x;
+    x ^= y;
   }
 
   if (ecma_is_value_string (x))
@@ -127,9 +127,9 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
     }
 
     /* Swap values. */
-    ecma_value_t tmp = x;
-    x = y;
-    y = tmp;
+    x ^= y;
+    y ^= x;
+    x ^= y;
   }
 
   if (ecma_is_value_boolean (y))
@@ -192,7 +192,10 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
       return ecma_make_boolean_value (ecma_bigint_is_equal_to_number (x, ecma_get_number_from_value (y)));
     }
 
-    return ECMA_VALUE_FALSE;
+    /* Swap values. */
+    x ^= y;
+    y ^= x;
+    x ^= y;
   }
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 

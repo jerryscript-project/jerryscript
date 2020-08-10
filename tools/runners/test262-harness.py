@@ -424,7 +424,7 @@ class TestResult(object):
         mode = self.case.get_mode()
         if self.has_unexpected_outcome():
             if self.case.is_negative():
-                print("=== %s was expected to fail in %s, but didn't ===" % (name, mode))
+                print("=== %s passed in %s, but was expected to fail ===" % (name, mode))
                 print("--- expected error: %s ---\n" % self.case.get_negative_type())
             else:
                 if long_format:
@@ -829,7 +829,7 @@ class TestSuite(object):
         if result.has_unexpected_outcome():
             if result.case.is_negative():
                 self.logf.write(
-                    "=== %s was expected to fail in %s, but didn't === \n" % (name, mode))
+                    "=== %s passed in %s, but was expected to fail === \n" % (name, mode))
                 self.logf.write("--- expected error: %s ---\n" % result.case.GetNegativeType())
                 result.write_output(self.logf)
             else:

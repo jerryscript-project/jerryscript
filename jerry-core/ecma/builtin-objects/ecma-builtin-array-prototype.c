@@ -948,10 +948,13 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t arg1, /**< start */
     {
       /* 10.c.ii */
       ecma_value_t put_comp;
+
+      uint32_t opts = (ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_PROP_IS_THROW);
       put_comp = ecma_builtin_helper_def_prop_by_index (new_array_p,
                                                         n,
                                                         get_value,
-                                                        ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+                                                        opts);
+
       ecma_free_value (get_value);
 
 #if ENABLED (JERRY_ESNEXT)

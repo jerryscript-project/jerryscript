@@ -53,3 +53,36 @@ var c = new ExactArray (5);
 var sliced3 = c.slice();
 assert (sliced3.length == 5);
 assert (JSON.stringify (sliced3) == '["baz","baz","baz","baz","baz"]');
+
+
+var func = function() {
+  Object.defineProperty(this, "0", {
+    set: function(value) {},
+    configurable: false,
+  });
+};
+
+var array = [1, 2, 3];
+array.constructor = {};
+array.constructor[Symbol.species] = func;
+
+try {
+  array.slice(0, 1);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+var func = function() {
+  this.length = 0;
+  Object.preventExtensions(this);
+};
+
+array.constructor[Symbol.species] = func;
+
+try {
+  array.slice(0, 1);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}

@@ -113,7 +113,7 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
     if (ecma_is_value_number (y))
     {
       /* 4. */
-      ecma_value_t x_num_value = ecma_op_to_number (x);
+      ecma_value_t x_num_value = ecma_op_to_number (x, ECMA_TO_NUMERIC_NO_OPTS);
 
       if (ECMA_IS_VALUE_ERROR (x_num_value))
       {

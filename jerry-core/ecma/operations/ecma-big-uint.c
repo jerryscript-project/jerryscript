@@ -94,6 +94,32 @@ ecma_big_uint_extend (ecma_extended_primitive_t *value_p, /**< BigUInt value */
 } /* ecma_big_uint_extend */
 
 /**
+ * Count the number of leading zero bits of a digit
+ *
+ * return number of leading zero bits
+ */
+ecma_bigint_digit_t
+ecma_big_uint_count_leading_zero (ecma_bigint_digit_t digit) /**< digit value */
+{
+  ecma_bigint_digit_t shift = 4 * sizeof (ecma_bigint_digit_t);
+  ecma_bigint_digit_t result = 8 * sizeof (ecma_bigint_digit_t);
+
+  do
+  {
+    ecma_bigint_digit_t value = digit >> shift;
+    if (value > 0)
+    {
+      digit = value;
+      result -= shift;
+    }
+    shift >>= 1;
+  }
+  while (shift > 0);
+
+  return result - digit;
+} /* ecma_big_uint_count_leading_zero */
+
+/**
  * Helper function which discards the leading zero digits of a BigUInt value
  *
  * @return new BigUInt value, NULL on error
@@ -875,32 +901,6 @@ ecma_big_uint_mul (ecma_extended_primitive_t *left_value_p, /**< left BigUInt va
 
   return ecma_big_uint_extend (result_p, extra_space[0]);
 } /* ecma_big_uint_mul */
-
-/**
- * Count the number of leading zero bits of a digit
- *
- * return new BigUInt value, NULL on error
- */
-static ecma_bigint_digit_t
-ecma_big_uint_count_leading_zero (ecma_bigint_digit_t digit) /**< digit value */
-{
-  ecma_bigint_digit_t shift = 4 * sizeof (ecma_bigint_digit_t);
-  ecma_bigint_digit_t result = 8 * sizeof (ecma_bigint_digit_t);
-
-  do
-  {
-    ecma_bigint_digit_t value = digit >> shift;
-    if (value > 0)
-    {
-      digit = value;
-      result -= shift;
-    }
-    shift >>= 1;
-  }
-  while (shift > 0);
-
-  return result - digit;
-} /* ecma_big_uint_count_leading_zero */
 
 /**
  * Divide left BigUInt value with right digit value

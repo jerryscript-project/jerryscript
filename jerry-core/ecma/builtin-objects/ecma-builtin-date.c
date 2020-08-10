@@ -776,7 +776,7 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
       }
       else
       {
-        ecma_value_t prim_value = ecma_op_to_number (argument);
+        ecma_value_t prim_value = ecma_op_to_number (argument, ECMA_TO_NUMERIC_NO_OPTS);
 
         if (ECMA_IS_VALUE_ERROR (prim_value))
         {

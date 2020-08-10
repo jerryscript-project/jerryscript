@@ -483,6 +483,140 @@ ecma_bigint_to_bigint (ecma_value_t value, /**< any value */
 } /* ecma_bigint_to_bigint */
 
 /**
+ * Convert a BigInt value to number value
+ *
+ * @return ecma number value or ECMA_VALUE_ERROR
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_bigint_to_number (ecma_value_t value) /**< BigInt value */
+{
+  JERRY_ASSERT (ecma_is_value_bigint (value));
+
+  if (value == ECMA_BIGINT_ZERO)
+  {
+    return ecma_make_integer_value (0);
+  }
+
+  ecma_extended_primitive_t *value_p = ecma_get_extended_primitive_from_value (value);
+  uint32_t size = ECMA_BIGINT_GET_SIZE (value_p);
+  ecma_bigint_digit_t *digits_p = ECMA_BIGINT_GET_DIGITS (value_p, size);
+
+  if (size == sizeof (ecma_bigint_digit_t))
+  {
+    if (!(value_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN))
+    {
+      if (digits_p[-1] <= ECMA_INTEGER_NUMBER_MAX)
+      {
+        return ecma_make_integer_value ((ecma_integer_value_t) digits_p[-1]);
+      }
+    }
+    else if (digits_p[-1] <= -ECMA_INTEGER_NUMBER_MIN)
+    {
+      return ecma_make_integer_value (-(ecma_integer_value_t) digits_p[-1]);
+    }
+  }
+
+  uint64_t fraction = 0;
+  ecma_bigint_digit_t shift_left;
+
+  if (digits_p[-1] == 1)
+  {
+    JERRY_ASSERT (size > sizeof (ecma_bigint_digit_t));
+
+    fraction = ((uint64_t) digits_p[-2]) << (8 * sizeof (ecma_bigint_digit_t));
+    shift_left = (uint32_t) (8 * sizeof (ecma_bigint_digit_t));
+
+    if (size >= 3 * sizeof (ecma_bigint_digit_t))
+    {
+      fraction |= (uint64_t) digits_p[-3];
+    }
+  }
+  else
+  {
+    shift_left = ecma_big_uint_count_leading_zero (digits_p[-1]) + 1;
+
+    fraction = ((uint64_t) digits_p[-1]) << (8 * sizeof (ecma_bigint_digit_t) + shift_left);
+
+    if (size >= 2 * sizeof (ecma_bigint_digit_t))
+    {
+      fraction |= ((uint64_t) digits_p[-2]) << shift_left;
+    }
+
+    if (size >= 3 * sizeof (ecma_bigint_digit_t))
+    {
+      fraction |= ((uint64_t) digits_p[-3]) >> (8 * sizeof (ecma_bigint_digit_t) - shift_left);
+    }
+  }
+
+  uint32_t biased_exp = (uint32_t) (((1 << (ECMA_NUMBER_BIASED_EXP_WIDTH - 1)) - 1) + (size * 8 - shift_left));
+
+  /* Rounding result. */
+  const uint64_t rounding_bit = (((uint64_t) 1) << (8 * sizeof (uint64_t) - ECMA_NUMBER_FRACTION_WIDTH - 1));
+  bool round_up = false;
+
+  if (fraction & rounding_bit)
+  {
+    round_up = true;
+
+    /* IEEE_754 roundTiesToEven mode: when rounding_bit is set, and all the remaining bits
+     * are zero, the number needs to be rounded down the bit before rounding_bit is zero. */
+    if ((fraction & ((rounding_bit << 2) - 1)) == rounding_bit)
+    {
+      round_up = false;
+
+      if ((size >= (3 * sizeof (ecma_bigint_digit_t)))
+          && (shift_left == (8 * sizeof (ecma_bigint_digit_t))
+              || (digits_p[-3] & ((((ecma_bigint_digit_t) 1) << shift_left) - 1)) == 0))
+      {
+        ecma_bigint_digit_t *digits_start_p = ECMA_BIGINT_GET_DIGITS (value_p, 0);
+
+        digits_p -= 3;
+
+        while (digits_p > digits_start_p)
+        {
+          if (digits_p[-1] != 0)
+          {
+            round_up = true;
+            break;
+          }
+          digits_p--;
+        }
+      }
+    }
+  }
+
+  if (round_up)
+  {
+    fraction += rounding_bit;
+    fraction >>= (8 * sizeof (uint64_t) - ECMA_NUMBER_FRACTION_WIDTH);
+
+    if (fraction == 0)
+    {
+      biased_exp++;
+    }
+  }
+  else
+  {
+    fraction >>= (8 * sizeof (uint64_t) - ECMA_NUMBER_FRACTION_WIDTH);
+  }
+
+  bool sign = (value_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN);
+  ecma_number_t result;
+
+  if (biased_exp < (1u << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1)
+  {
+    result = ecma_number_pack (sign, biased_exp, fraction);
+  }
+  else
+  {
+    result = ecma_number_make_infinity (sign);
+  }
+
+  return ecma_make_number_value (result);
+} /* ecma_bigint_to_number */
+
+/**
  * Returns with a BigInt if the value is BigInt,
  * or the value is object, and its default value is BigInt
  *

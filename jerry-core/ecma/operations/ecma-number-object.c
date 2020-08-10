@@ -41,7 +41,7 @@
 ecma_value_t
 ecma_op_create_number_object (ecma_value_t arg) /**< argument passed to the Number constructor */
 {
-  ecma_value_t conv_to_num_completion = ecma_op_to_number (arg);
+  ecma_value_t conv_to_num_completion = ecma_op_to_number (arg, ECMA_TO_NUMERIC_NO_OPTS);
 
   if (ECMA_IS_VALUE_ERROR (conv_to_num_completion))
   {

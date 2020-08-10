@@ -16,6 +16,7 @@
 #include <math.h>
 
 #include "ecma-alloc.h"
+#include "ecma-bigint.h"
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
@@ -84,7 +85,16 @@ ecma_builtin_number_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
   }
   else
   {
-    ret_value = ecma_op_to_number (arguments_list_p[0]);
+    ret_value = ecma_op_to_number (arguments_list_p[0], ECMA_TO_NUMERIC_ALLOW_BIGINT);
+
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+    if (ecma_is_value_bigint (ret_value))
+    {
+      ecma_value_t bigint = ret_value;
+      ret_value = ecma_bigint_to_number (bigint);
+      ecma_free_value (bigint);
+    }
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
   }
 
   return ret_value;
@@ -103,13 +113,30 @@ ecma_builtin_number_dispatch_construct (const ecma_value_t *arguments_list_p, /*
 
   if (arguments_list_len == 0)
   {
-    ecma_value_t completion = ecma_op_create_number_object (ecma_make_integer_value (0));
-    return completion;
+    return ecma_op_create_number_object (ecma_make_integer_value (0));
   }
-  else
+
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  ecma_value_t value = ecma_op_to_number (arguments_list_p[0], ECMA_TO_NUMERIC_ALLOW_BIGINT);
+
+  if (ecma_is_value_bigint (value))
   {
-    return ecma_op_create_number_object (arguments_list_p[0]);
+    ecma_value_t bigint = value;
+    value = ecma_bigint_to_number (bigint);
+    ecma_free_value (bigint);
   }
+
+  if (ECMA_IS_VALUE_ERROR (value))
+  {
+    return value;
+  }
+
+  ecma_value_t result = ecma_op_create_number_object (value);
+  ecma_free_value (value);
+  return result;
+#else /* !ENABLED (JERRY_BUILTIN_BIGINT) */
+  return ecma_op_create_number_object (arguments_list_p[0]);
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 } /* ecma_builtin_number_dispatch_construct */
 
 #if ENABLED (JERRY_ESNEXT)

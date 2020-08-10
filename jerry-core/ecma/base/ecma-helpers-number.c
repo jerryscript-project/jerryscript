@@ -48,7 +48,7 @@ JERRY_STATIC_ASSERT (sizeof (ecma_number_t) == sizeof (uint32_t),
  *
  * @return ecma-number with specified sign, biased_exponent and fraction
  */
-static ecma_number_t
+ecma_number_t
 ecma_number_pack (bool sign, /**< sign */
                   uint32_t biased_exp, /**< biased exponent */
                   uint64_t fraction) /**< fraction */
@@ -111,7 +111,7 @@ JERRY_STATIC_ASSERT (sizeof (ecma_number_t) == sizeof (uint64_t),
  *
  * @return ecma-number with specified sign, biased_exponent and fraction
  */
-static ecma_number_t
+ecma_number_t
 ecma_number_pack (bool sign, /**< sign */
                   uint32_t biased_exp, /**< biased exponent */
                   uint64_t fraction) /**< fraction */

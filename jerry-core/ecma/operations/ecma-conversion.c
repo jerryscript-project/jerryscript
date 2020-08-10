@@ -269,8 +269,11 @@ ecma_op_to_boolean (ecma_value_t value) /**< ecma value */
  *         Returned value must be freed with ecma_free_value
  */
 ecma_value_t
-ecma_op_to_number (ecma_value_t value) /**< ecma value */
+ecma_op_to_number (ecma_value_t value, /**< ecma value */
+                   ecma_to_numeric_options_t options) /**< option bits */
 {
+  JERRY_UNUSED (options);
+
   ecma_check_value_type_is_spec_defined (value);
 
   if (ecma_is_value_integer_number (value))
@@ -314,6 +317,10 @@ ecma_op_to_number (ecma_value_t value) /**< ecma value */
 #if ENABLED (JERRY_BUILTIN_BIGINT)
   if (ecma_is_value_bigint (value))
   {
+    if (options & ECMA_TO_NUMERIC_ALLOW_BIGINT)
+    {
+      return ecma_copy_value (value);
+    }
     return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a BigInt value to a number"));
   }
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
@@ -329,7 +336,7 @@ ecma_op_to_number (ecma_value_t value) /**< ecma value */
     return def_value;
   }
 
-  ecma_value_t ret_value = ecma_op_to_number (def_value);
+  ecma_value_t ret_value = ecma_op_to_number (def_value, options);
 
   ecma_fast_free_value (def_value);
 

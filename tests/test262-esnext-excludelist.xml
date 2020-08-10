@@ -194,12 +194,8 @@
   <test id="built-ins/Array/prototype/flatMap/thisArg-argument.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/map/create-proto-from-ctor-realm-array.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/map/create-proto-from-ctor-realm-non-array.js"><reason></reason></test>
-  <test id="built-ins/Array/prototype/map/target-array-non-extensible.js"><reason></reason></test>
-  <test id="built-ins/Array/prototype/map/target-array-with-non-configurable-property.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/slice/create-proto-from-ctor-realm-array.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/slice/create-proto-from-ctor-realm-non-array.js"><reason></reason></test>
-  <test id="built-ins/Array/prototype/slice/target-array-non-extensible.js"><reason></reason></test>
-  <test id="built-ins/Array/prototype/slice/target-array-with-non-configurable-property.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/sort/comparefn-nonfunction-call-throws.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/splice/create-non-array-invalid-len.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/splice/create-proto-from-ctor-realm-array.js"><reason></reason></test>
@@ -208,8 +204,6 @@
   <test id="built-ins/Array/prototype/splice/create-species-undef-invalid-len.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/splice/create-species.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/splice/property-traps-order-with-species.js"><reason></reason></test>
-  <test id="built-ins/Array/prototype/splice/target-array-non-extensible.js"><reason></reason></test>
-  <test id="built-ins/Array/prototype/splice/target-array-with-non-configurable-property.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/splice/throws-if-integer-limit-exceeded.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/unshift/clamps-to-integer-limit.js"><reason></reason></test>
   <test id="built-ins/ArrayBuffer/data-allocation-after-object-creation.js"><reason></reason></test>

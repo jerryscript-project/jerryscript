@@ -374,6 +374,138 @@ ecma_big_uint_to_string (ecma_extended_primitive_t *value_p, /**< BigUInt value 
 } /* ecma_big_uint_to_string */
 
 /**
+ * Increase the value of a BigUInt value by 1
+ *
+ * return new BigInt value, NULL on error
+ */
+ecma_extended_primitive_t *
+ecma_big_uint_increase (ecma_extended_primitive_t *value_p) /**< BigUInt value */
+{
+  uint32_t size = ECMA_BIGINT_GET_SIZE (value_p);
+
+  JERRY_ASSERT (size > 0 && ECMA_BIGINT_GET_LAST_DIGIT (value_p, size) != 0);
+
+  ecma_bigint_digit_t *digits_p = ECMA_BIGINT_GET_DIGITS (value_p, 0);
+  ecma_bigint_digit_t *digits_end_p = ECMA_BIGINT_GET_DIGITS (value_p, size);
+
+  if (JERRY_UNLIKELY (digits_p[0] == ~((ecma_bigint_digit_t) 0) && digits_end_p[-1] == ~((ecma_bigint_digit_t) 0)))
+  {
+    do
+    {
+      digits_p++;
+    }
+    while (digits_p < digits_end_p && digits_p[0] == ~((ecma_bigint_digit_t) 0));
+
+    if (digits_p == digits_end_p)
+    {
+      ecma_extended_primitive_t *result_value_p;
+      result_value_p = ecma_bigint_create ((uint32_t) (size + sizeof (ecma_bigint_digit_t)));
+
+      if (JERRY_UNLIKELY (result_value_p == NULL))
+      {
+        return NULL;
+      }
+
+      memset (ECMA_BIGINT_GET_DIGITS (result_value_p, 0), 0, size);
+      *ECMA_BIGINT_GET_DIGITS (result_value_p, size) = 1;
+      return result_value_p;
+    }
+
+    digits_p = ECMA_BIGINT_GET_DIGITS (value_p, 0);
+  }
+
+  ecma_extended_primitive_t *result_value_p = ecma_bigint_create (size);
+
+  if (JERRY_UNLIKELY (result_value_p == NULL))
+  {
+    return NULL;
+  }
+
+  ecma_bigint_digit_t *result_p = ECMA_BIGINT_GET_DIGITS (result_value_p, 0);
+
+  while (digits_p[0] == ~((ecma_bigint_digit_t) 0))
+  {
+    digits_p++;
+    *result_p++ = 0;
+  }
+
+  *result_p++ = (*digits_p++) + 1;
+
+  if (digits_p < digits_end_p)
+  {
+    memcpy (result_p, digits_p, (size_t) ((uint8_t *) digits_end_p - (uint8_t *) digits_p));
+  }
+  return result_value_p;
+} /* ecma_big_uint_increase */
+
+/**
+ * Decrease the value of a BigUInt value by 1
+ *
+ * return new BigInt value, NULL on error
+ */
+ecma_extended_primitive_t *
+ecma_big_uint_decrease (ecma_extended_primitive_t *value_p) /**< BigUInt value */
+{
+  uint32_t size = ECMA_BIGINT_GET_SIZE (value_p);
+
+  JERRY_ASSERT (size > 0 && ECMA_BIGINT_GET_LAST_DIGIT (value_p, size) != 0);
+
+  ecma_bigint_digit_t *digits_p = ECMA_BIGINT_GET_DIGITS (value_p, 0);
+  ecma_bigint_digit_t *digits_end_p = ECMA_BIGINT_GET_DIGITS (value_p, size);
+
+  JERRY_ASSERT (size > sizeof (ecma_bigint_digit_t) || *digits_p > 1);
+
+  if (JERRY_UNLIKELY (digits_p[0] == 0 && digits_end_p[-1] == 1))
+  {
+    do
+    {
+      digits_p++;
+      JERRY_ASSERT (digits_p < digits_end_p);
+    }
+    while (digits_p[0] == 0);
+
+    if (digits_p + 1 == digits_end_p)
+    {
+      size -= (uint32_t) sizeof (ecma_bigint_digit_t);
+      ecma_extended_primitive_t *result_value_p = ecma_bigint_create (size);
+
+      if (JERRY_UNLIKELY (result_value_p == NULL))
+      {
+        return NULL;
+      }
+
+      memset (ECMA_BIGINT_GET_DIGITS (result_value_p, 0), 0xff, size);
+      return result_value_p;
+    }
+
+    digits_p = ECMA_BIGINT_GET_DIGITS (value_p, 0);
+  }
+
+  ecma_extended_primitive_t *result_value_p = ecma_bigint_create (size);
+
+  if (JERRY_UNLIKELY (result_value_p == NULL))
+  {
+    return NULL;
+  }
+
+  ecma_bigint_digit_t *result_p = ECMA_BIGINT_GET_DIGITS (result_value_p, 0);
+
+  while (digits_p[0] == 0)
+  {
+    digits_p++;
+    *result_p++ = ~((ecma_bigint_digit_t) 0);
+  }
+
+  *result_p++ = (*digits_p++) - 1;
+
+  if (digits_p < digits_end_p)
+  {
+    memcpy (result_p, digits_p, (size_t) ((uint8_t *) digits_end_p - (uint8_t *) digits_p));
+  }
+  return result_value_p;
+} /* ecma_big_uint_decrease */
+
+/**
  * Add right BigUInt value to the left BigUInt value
  *
  * return new BigInt value, NULL on error

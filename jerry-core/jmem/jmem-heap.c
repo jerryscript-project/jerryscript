@@ -280,11 +280,13 @@ jmem_heap_gc_and_alloc_block (const size_t size, /**< required memory size */
 
 #if !ENABLED (JERRY_MEM_GC_BEFORE_EACH_ALLOC)
   if (JERRY_CONTEXT (jmem_heap_allocated_size) + size >= JERRY_CONTEXT (jmem_heap_limit))
-#endif /* !ENABLED (JERRY_MEM_GC_BEFORE_EACH_ALLOC) */
   {
     pressure = JMEM_PRESSURE_LOW;
     ecma_free_unused_memory (pressure);
   }
+#else /* !ENABLED (JERRY_MEM_GC_BEFORE_EACH_ALLOC) */
+  ecma_gc_run ();
+#endif /* ENABLED (JERRY_MEM_GC_BEFORE_EACH_ALLOC) */
 
   void *data_space_p = jmem_heap_alloc (size);
 
@@ -534,10 +536,12 @@ jmem_heap_realloc_block (void *ptr, /**< memory region to reallocate */
 
 #if !ENABLED (JERRY_MEM_GC_BEFORE_EACH_ALLOC)
   if (JERRY_CONTEXT (jmem_heap_allocated_size) + required_size >= JERRY_CONTEXT (jmem_heap_limit))
-#endif /* !ENABLED (JERRY_MEM_GC_BEFORE_EACH_ALLOC) */
   {
     ecma_free_unused_memory (JMEM_PRESSURE_LOW);
   }
+#else /* !ENABLED (JERRY_MEM_GC_BEFORE_EACH_ALLOC) */
+  ecma_gc_run ();
+#endif /* ENABLED (JERRY_MEM_GC_BEFORE_EACH_ALLOC) */
 
   jmem_heap_free_t *prev_p = jmem_heap_find_prev (block_p);
   JMEM_VALGRIND_DEFINED_SPACE (prev_p, sizeof (jmem_heap_free_t));
@@ -650,12 +654,15 @@ jmem_heap_realloc_block (void *ptr, /**< memory region to reallocate */
   return ret_block_p;
 #else /* ENABLED (JERRY_SYSTEM_ALLOCATOR) */
   const size_t required_size = new_size - old_size;
+
 #if !ENABLED (JERRY_MEM_GC_BEFORE_EACH_ALLOC)
   if (JERRY_CONTEXT (jmem_heap_allocated_size) + required_size >= JERRY_CONTEXT (jmem_heap_limit))
-#endif /* !ENABLED (JERRY_MEM_GC_BEFORE_EACH_ALLOC) */
   {
     ecma_free_unused_memory (JMEM_PRESSURE_LOW);
   }
+#else /* !ENABLED (JERRY_MEM_GC_BEFORE_EACH_ALLOC) */
+  ecma_gc_run ();
+#endif /* ENABLED (JERRY_MEM_GC_BEFORE_EACH_ALLOC) */
 
   JERRY_CONTEXT (jmem_heap_allocated_size) += required_size;
 

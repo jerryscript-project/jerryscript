@@ -59,7 +59,7 @@ extern inline void * JERRY_ATTR_HOT JERRY_ATTR_ALWAYS_INLINE
 jmem_pools_alloc (size_t size) /**< size of the chunk */
 {
 #if ENABLED (JERRY_MEM_GC_BEFORE_EACH_ALLOC)
-  ecma_free_unused_memory (JMEM_PRESSURE_LOW);
+  ecma_gc_run ();
 #endif /* ENABLED (JERRY_MEM_GC_BEFORE_EACH_ALLOC) */
 
 #if ENABLED (JERRY_CPOINTER_32_BIT)

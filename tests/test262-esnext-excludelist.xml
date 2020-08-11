@@ -6773,7 +6773,6 @@
   <test id="language/expressions/template-literal/invalid-legacy-octal-escape-sequence.js"><reason></reason></test>
   <test id="language/expressions/typeof/proxy.js"><reason></reason></test>
   <test id="language/expressions/yield/star-return-is-null.js"><reason></reason></test>
-  <test id="language/expressions/yield/star-rhs-iter-rtrn-no-rtrn.js"><reason></reason></test>
   <test id="language/expressions/yield/star-throw-is-null.js"><reason></reason></test>
   <test id="language/global-code/decl-lex-configurable-global.js"><reason></reason></test>
   <test id="language/global-code/export.js"><reason></reason></test>

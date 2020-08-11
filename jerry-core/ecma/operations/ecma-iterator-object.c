@@ -386,7 +386,7 @@ ecma_op_iterator_return (ecma_value_t iterator, /**< iterator value */
 
   if (func_return == ECMA_VALUE_UNDEFINED)
   {
-    return ecma_create_iter_result_object (value, true);
+    return ecma_create_iter_result_object (value, ECMA_VALUE_TRUE);
   }
 
   if (!ecma_is_value_object (func_return) || !ecma_op_is_callable (func_return))

@@ -678,6 +678,8 @@ BUILTIN (ECMA_BUILTIN_ID_MAP_ITERATOR_PROTOTYPE,
          map_iterator_prototype)
 #endif /* ENABLED (JERRY_BUILTIN_SET) */
 
+#endif /* ENABLED (JERRY_ESNEXT) */
+
 #if ENABLED (JERRY_BUILTIN_BIGINT)
 /* The %BigInt.prototype% object */
 BUILTIN (ECMA_BUILTIN_ID_BIGINT_PROTOTYPE,
@@ -693,8 +695,6 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_BIGINT,
                  true,
                  bigint)
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
-
-#endif /* ENABLED (JERRY_ESNEXT) */
 
 #if ENABLED (JERRY_BUILTIN_DATAVIEW)
 /* The DataView prototype object (ECMA-262 v6, 24.2.3.1) */

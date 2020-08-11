@@ -134,11 +134,13 @@ do_number_arithmetic (number_arithmetic_op op, /**< number arithmetic operation 
         ret_value = ecma_bigint_div_mod (left_value, right_value, true);
         break;
       }
-      default:
+#if ENABLED (JERRY_ESNEXT)
+      case NUMBER_ARITHMETIC_EXPONENTIATION:
       {
-        ret_value = ecma_raise_common_error (ECMA_ERR_MSG ("Not supported BigInt operation"));
+        ret_value = ecma_bigint_pow (left_value, right_value);
         break;
       }
+#endif /* ENABLED (JERRY_ESNEXT) */
     }
 
     ecma_free_value (left_value);

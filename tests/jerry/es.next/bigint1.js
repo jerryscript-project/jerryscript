@@ -227,6 +227,16 @@ check_result16(BigInt("0x8fef5fcfffef5fcfffef5fcfffef5fcff") >> BigInt("51"), "1
 check_result16(BigInt("0x8fef5fcfffef5fcfffef5fcfffef5fcff") >> BigInt("63"), "11fdebf9fffdebf9ff")
 check_result16(BigInt("0x8fef5fcfffef5fcfffef5fcfffef5fcff") >> BigInt("64"), "8fef5fcfffef5fcff")
 
+check_result16(-BigInt("0xff") >> BigInt("8"), "-1")
+check_result16(-BigInt("0xff") >> BigInt("1000"), "-1")
+check_result16(-BigInt("0xff") >> BigInt("7"), "-2")
+check_result16(-BigInt("0xff00000000") >> BigInt("32"), "-ff")
+check_result16(-BigInt("0xff80000000") >> BigInt("32"), "-100")
+check_result16(-BigInt("0xff00000000000000000000000000000000") >> BigInt("128"), "-ff")
+check_result16(-BigInt("0xff80000000000000000000000000000000") >> BigInt("128"), "-100")
+check_result16(-BigInt("0xfe00000000000000000000000000000000") >> BigInt("129"), "-7f")
+check_result16(-BigInt("0xff00000000000000000000000000000000") >> BigInt("129"), "-80")
+
 check_result16(BigInt("0x8fef5fcfffef5fcfffef5fcfffef5fcff") >> BigInt("10000000000000000000000000"), "0")
 
 try {

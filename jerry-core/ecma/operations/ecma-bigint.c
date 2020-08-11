@@ -113,11 +113,7 @@ ecma_bigint_parse_string (const lit_utf8_byte_t *string_p, /**< string represena
   }
   else if (size == 0)
   {
-    if (options & ECMA_BIGINT_PARSE_DISALLOW_SYNTAX_ERROR)
-    {
-      return ECMA_VALUE_FALSE;
-    }
-    return ecma_raise_syntax_error (ECMA_ERR_MSG ("BigInt cannot be constructed from empty string"));
+    return ECMA_BIGINT_ZERO;
   }
 
   const lit_utf8_byte_t *string_end_p = string_p + size;
@@ -289,7 +285,7 @@ ecma_bigint_number_to_digits (ecma_number_t number, /**< ecma number */
 
   ecma_number_unpack (number, NULL, &biased_exp, &fraction);
 
-  if (biased_exp == 0)
+  if (biased_exp == 0 && fraction == 0)
   {
     /* Number is zero. */
     return ECMA_BIGINT_NUMBER_TO_DIGITS_SET_DIGITS (0);
@@ -785,6 +781,11 @@ ecma_bigint_is_equal_to_number (ecma_value_t left_value, /**< left BigInt value 
 #define ECMA_BIGINT_TO_SIGN(value) (1 - (((int) (value)) << 1))
 
 /**
+ * Convert 0 to -1, and 1 to 1. Useful for getting negated sign.
+ */
+#define ECMA_BIGINT_TO_NEGATED_SIGN(value) (-1 + (((int) (value)) << 1))
+
+/**
  * Compare two BigInt values
  *
  * return -1, if left value < right value, 0 if they are equal, 1 otherwise
@@ -795,10 +796,26 @@ ecma_bigint_compare_to_bigint (ecma_value_t left_value, /**< left BigInt value *
 {
   JERRY_ASSERT (ecma_is_value_bigint (left_value) && ecma_is_value_bigint (right_value));
 
-  ecma_extended_primitive_t *left_p = ecma_get_extended_primitive_from_value (left_value);
-  ecma_extended_primitive_t *right_p = ecma_get_extended_primitive_from_value (right_value);
+  if (left_value == ECMA_BIGINT_ZERO)
+  {
+    if (right_value == ECMA_BIGINT_ZERO)
+    {
+      return 0;
+    }
 
+    ecma_extended_primitive_t *right_p = ecma_get_extended_primitive_from_value (right_value);
+    return ECMA_BIGINT_TO_NEGATED_SIGN (right_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN);
+  }
+
+  ecma_extended_primitive_t *left_p = ecma_get_extended_primitive_from_value (left_value);
   uint32_t left_sign = left_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN;
+
+  if (right_value == ECMA_BIGINT_ZERO)
+  {
+    return ECMA_BIGINT_TO_SIGN (left_sign);
+  }
+
+  ecma_extended_primitive_t *right_p = ecma_get_extended_primitive_from_value (right_value);
   uint32_t right_sign = right_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN;
 
   if ((left_sign ^ right_sign) != 0)
@@ -806,7 +823,12 @@ ecma_bigint_compare_to_bigint (ecma_value_t left_value, /**< left BigInt value *
     return ECMA_BIGINT_TO_SIGN (left_sign);
   }
 
-  return ecma_big_uint_compare (left_p, right_p);
+  if (left_sign == 0)
+  {
+    return ecma_big_uint_compare (left_p, right_p);
+  }
+
+  return -ecma_big_uint_compare (left_p, right_p);
 } /* ecma_bigint_compare_to_bigint */
 
 /**
@@ -1250,6 +1272,7 @@ ecma_bigint_shift (ecma_value_t left_value, /**< left BigInt value */
 
   ecma_extended_primitive_t *result_p;
   ecma_bigint_digit_t shift = ECMA_BIGINT_GET_LAST_DIGIT (right_p, sizeof (ecma_bigint_digit_t));
+  uint32_t left_sign = left_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN;
 
   if (is_left)
   {
@@ -1257,7 +1280,10 @@ ecma_bigint_shift (ecma_value_t left_value, /**< left BigInt value */
   }
   else
   {
-    result_p = ecma_big_uint_shift_right (left_p, shift);
+    /* -x >> y == ~(x - 1) >> y == ~((x - 1) >> y) == -(((x - 1) >> y) + 1)
+     * When a non-zero bit is shifted out: (x - 1) >> y == x >> y, so the formula is -((x >> y) + 1)
+     * When only zero bits are shifted out: (((x - 1) >> y) + 1) == x >> y so the formula is: -(x >> y) */
+    result_p = ecma_big_uint_shift_right (left_p, shift, left_sign != 0);
 
     if (result_p == ECMA_BIGINT_POINTER_TO_ZERO)
     {
@@ -1270,9 +1296,101 @@ ecma_bigint_shift (ecma_value_t left_value, /**< left BigInt value */
     return ecma_bigint_raise_memory_error ();
   }
 
-  result_p->u.bigint_sign_and_size |= left_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN;
+  result_p->u.bigint_sign_and_size |= left_sign;
   return ecma_make_extended_primitive_value (result_p, ECMA_TYPE_BIGINT);
 } /* ecma_bigint_shift */
+
+#if ENABLED (JERRY_ESNEXT)
+
+/**
+ * Compute the left value raised to the power of right value
+ *
+ * @return ecma BigInt value or ECMA_VALUE_ERROR
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_bigint_pow (ecma_value_t left_value, /**< left BigInt value */
+                 ecma_value_t right_value) /**< right BigInt value */
+{
+  JERRY_ASSERT (ecma_is_value_bigint (left_value) && ecma_is_value_bigint (right_value));
+
+  if (right_value == ECMA_BIGINT_ZERO)
+  {
+    return ecma_bigint_create_from_digit (1, false);
+  }
+
+  ecma_extended_primitive_t *right_p = ecma_get_extended_primitive_from_value (right_value);
+
+  if (right_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN)
+  {
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Negative exponent is not allowed for BigInts"));
+  }
+
+  if (left_value == ECMA_BIGINT_ZERO)
+  {
+    return ECMA_BIGINT_ZERO;
+  }
+
+  ecma_extended_primitive_t *left_p = ecma_get_extended_primitive_from_value (left_value);
+  ecma_bigint_digit_t base = 0;
+
+  if (ECMA_BIGINT_GET_SIZE (left_p) == sizeof (ecma_bigint_digit_t))
+  {
+    base = *ECMA_BIGINT_GET_DIGITS (left_p, 0);
+
+    JERRY_ASSERT (base != 0);
+
+    if (base == 1)
+    {
+      if (!(left_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN)
+          || ECMA_BIGINT_NUMBER_IS_ODD (*ECMA_BIGINT_GET_DIGITS (right_p, 0)))
+      {
+        ecma_ref_extended_primitive (left_p);
+        return left_value;
+      }
+
+      return ecma_bigint_create_from_digit (1, false);
+    }
+  }
+
+  if (JERRY_UNLIKELY (ECMA_BIGINT_GET_SIZE (right_p) > sizeof (ecma_bigint_digit_t)))
+  {
+    return ecma_bigint_raise_memory_error ();
+  }
+
+  ecma_bigint_digit_t power = *ECMA_BIGINT_GET_DIGITS (right_p, 0);
+
+  if (power == 1)
+  {
+    ecma_ref_extended_primitive (left_p);
+    return left_value;
+  }
+
+  ecma_extended_primitive_t *result_p;
+
+  if (base == 2)
+  {
+    result_p = ecma_big_uint_shift_left (left_p, power - 1);
+  }
+  else
+  {
+    result_p = ecma_big_uint_pow (left_p, power);
+  }
+
+  if (JERRY_UNLIKELY (result_p == NULL))
+  {
+    return ecma_bigint_raise_memory_error ();
+  }
+
+  if ((left_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN) && ECMA_BIGINT_NUMBER_IS_ODD (power))
+  {
+    result_p->u.bigint_sign_and_size |= ECMA_BIGINT_SIGN;
+  }
+
+  return ecma_make_extended_primitive_value (result_p, ECMA_TYPE_BIGINT);
+} /* ecma_bigint_pow */
+
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Convert the result to an ecma value

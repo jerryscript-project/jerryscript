@@ -430,24 +430,6 @@ ecma_builtin_json_parse_next_token (ecma_json_token_t *token_p, /**< token argum
 } /* ecma_builtin_json_parse_next_token */
 
 /**
- * Utility for defining properties.
- *
- * It silently ignores all errors.
- */
-static void
-ecma_builtin_json_define_value_property (ecma_object_t *obj_p, /**< this object */
-                                         ecma_string_t *property_name_p, /**< property name */
-                                         ecma_value_t value) /**< value */
-{
-  ecma_value_t completion_value = ecma_builtin_helper_def_prop (obj_p,
-                                                                property_name_p,
-                                                                value,
-                                                                ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
-
-  JERRY_ASSERT (ecma_is_value_boolean (completion_value));
-} /* ecma_builtin_json_define_value_property */
-
-/**
  * Parse next value.
  *
  * The function fills the fields of the ecma_json_token_t
@@ -516,9 +498,19 @@ ecma_builtin_json_parse_value (ecma_json_token_t *token_p) /**< token argument *
           break;
         }
 
-        ecma_builtin_json_define_value_property (object_p, name_p, value);
+        ecma_value_t completion_value = ecma_builtin_helper_def_prop (object_p,
+                                                                      name_p,
+                                                                      value,
+                                                                      ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+
         ecma_deref_ecma_string (name_p);
         ecma_free_value (value);
+
+        if (ECMA_IS_VALUE_ERROR (completion_value))
+        {
+          ecma_deref_object (object_p);
+          return completion_value;
+        }
 
         ecma_builtin_json_parse_next_token (token_p, false);
         if (token_p->type == TOKEN_RIGHT_BRACE)
@@ -679,17 +671,32 @@ ecma_builtin_json_internalize_property (ecma_object_t *reviver_p, /**< reviver f
         if (ecma_is_value_undefined (new_element))
         {
           ecma_value_t delete_val = ecma_op_object_delete (object_p, prop_index, false);
-          JERRY_ASSERT (ecma_is_value_boolean (delete_val));
+
+          if (ECMA_IS_VALUE_ERROR (delete_val))
+          {
+            ecma_deref_ecma_string (prop_index);
+            ecma_deref_object (object_p);
+            ecma_free_value (value);
+            return delete_val;
+          }
+
         }
         else
         {
-          ecma_builtin_json_define_value_property (object_p,
-                                                   prop_index,
-                                                   new_element);
+          ecma_value_t completion_value = ecma_builtin_helper_def_prop (object_p,
+                                                                        prop_index,
+                                                                        new_element,
+                                                                        ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
           ecma_free_value (new_element);
+          ecma_deref_ecma_string (prop_index);
+
+          if (ECMA_IS_VALUE_ERROR (completion_value))
+          {
+            ecma_deref_object (object_p);
+            return completion_value;
+          }
         }
 
-        ecma_deref_ecma_string (prop_index);
       }
     }
     /* 3.d */
@@ -698,7 +705,11 @@ ecma_builtin_json_internalize_property (ecma_object_t *reviver_p, /**< reviver f
       ecma_collection_t *props_p = ecma_op_object_get_enumerable_property_names (object_p,
                                                                                  ECMA_ENUMERABLE_PROPERTY_KEYS);
 
-      JERRY_ASSERT (props_p != NULL);
+      if (props_p == NULL)
+      {
+        ecma_deref_object (object_p);
+        return ECMA_VALUE_ERROR;
+      }
 
       ecma_value_t *buffer_p = props_p->buffer_p;
 
@@ -722,18 +733,33 @@ ecma_builtin_json_internalize_property (ecma_object_t *reviver_p, /**< reviver f
         /* 3.d.iii.3 */
         if (ecma_is_value_undefined (result))
         {
-          ecma_value_t delete_val = ecma_op_general_object_delete (object_p,
-                                                                  property_name_p,
-                                                                  false);
-          JERRY_ASSERT (ecma_is_value_boolean (delete_val));
+          ecma_value_t delete_val = ecma_op_object_delete (object_p, property_name_p, false);
+
+          if (ECMA_IS_VALUE_ERROR (delete_val))
+          {
+            ecma_collection_free (props_p);
+            ecma_free_value (result);
+            ecma_deref_object (object_p);
+
+            return delete_val;
+          }
         }
         /* 3.d.iii.4 */
         else
         {
-          ecma_builtin_json_define_value_property (object_p,
-                                                  property_name_p,
-                                                  result);
+          ecma_value_t completion_value = ecma_builtin_helper_def_prop (object_p,
+                                                                        property_name_p,
+                                                                        result,
+                                                                        ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
           ecma_free_value (result);
+
+          if (ECMA_IS_VALUE_ERROR (completion_value))
+          {
+            ecma_collection_free (props_p);
+            ecma_deref_object (object_p);
+            return completion_value;
+          }
+
         }
       }
 
@@ -1207,17 +1233,21 @@ ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p, 
   {
     return value;
   }
+  bool value_is_big_int = false;
+#if ENABLED (JERRY_ESNEXT)
+  value_is_big_int = ecma_is_value_bigint (value);
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   /* 3. */
-  if (ecma_is_value_object (value))
+  if (ecma_is_value_object (value) || value_is_big_int)
   {
-    ecma_object_t *value_obj_p = ecma_get_object_from_value (value);
+    ecma_value_t temp_val = ecma_op_to_object (value);
+    ecma_object_t *value_obj_p = ecma_get_object_from_value (temp_val);
 
     ecma_value_t to_json = ecma_op_object_get_by_magic_id (value_obj_p, LIT_MAGIC_STRING_TO_JSON_UL);
 
     if (ECMA_IS_VALUE_ERROR (to_json))
     {
-      ecma_deref_object (value_obj_p);
       return to_json;
     }
 
@@ -1229,7 +1259,6 @@ ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p, 
       ecma_object_t *to_json_obj_p = ecma_get_object_from_value (to_json);
 
       ecma_value_t result = ecma_op_function_call (to_json_obj_p, value, call_args, 1);
-      ecma_deref_object (value_obj_p);
 
       if (ECMA_IS_VALUE_ERROR (result))
       {
@@ -1240,6 +1269,7 @@ ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p, 
       value = result;
     }
     ecma_free_value (to_json);
+    ecma_deref_object (value_obj_p);
   }
 
   /* 4. */
@@ -1297,6 +1327,15 @@ ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p, 
       value = ext_object_p->u.class_prop.u.value;
       ecma_deref_object (obj_p);
     }
+#if ENABLED (JERRY_ESNEXT)
+    /* 5.d */
+    else if (class_name == LIT_MAGIC_STRING_BIGINT_UL)
+    {
+      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
+      value = ecma_copy_value (ext_object_p->u.class_prop.u.value);
+      ecma_deref_object (obj_p);
+    }
+#endif /* ENABLED (JERRY_ESNEXT) */
   }
 
   /* 6. - 8. */
@@ -1352,6 +1391,14 @@ ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p, 
     ecma_free_value (value);
     return ECMA_VALUE_EMPTY;
   }
+#if ENABLED (JERRY_ESNEXT)
+  if (ecma_is_value_bigint (value))
+  {
+    ecma_deref_bigint (ecma_get_extended_primitive_from_value (value));
+    ecma_free_value (value);
+    return ecma_raise_type_error (ECMA_ERR_MSG ("value is BigInt"));
+  }
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   /* 11. */
   if (ecma_is_value_object (value) && !ecma_op_is_callable (value))

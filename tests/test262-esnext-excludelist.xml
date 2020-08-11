@@ -211,7 +211,6 @@
   <test id="built-ins/Array/prototype/splice/target-array-non-extensible.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/splice/target-array-with-non-configurable-property.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/splice/throws-if-integer-limit-exceeded.js"><reason></reason></test>
-  <test id="built-ins/Array/prototype/unshift/clamps-to-integer-limit.js"><reason></reason></test>
   <test id="built-ins/ArrayBuffer/data-allocation-after-object-creation.js"><reason></reason></test>
   <test id="built-ins/ArrayBuffer/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/ArrayBuffer/prototype-from-newtarget.js"><reason></reason></test>

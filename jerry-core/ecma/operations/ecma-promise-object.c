@@ -856,30 +856,28 @@ ecma_promise_do_then (ecma_value_t promise, /**< the promise which call 'then' *
   if (flags & ECMA_PROMISE_IS_PENDING)
   {
     /* 7. */
-    ecma_value_t capability_with_tag;
-    ECMA_SET_NON_NULL_POINTER_TAG (capability_with_tag, result_capability_obj_p, 0);
+    /* [ capability, (on_fulfilled), (on_rejected) ] */
+    ecma_value_t reaction_values[3];
+    ecma_value_t *reactions_p = reaction_values + 1;
+
+    uint8_t tag = 0;
 
     if (on_fulfilled != ECMA_VALUE_TRUE)
     {
-      ECMA_SET_FIRST_BIT_TO_POINTER_TAG (capability_with_tag);
+      tag |= JMEM_FIRST_TAG_BIT_MASK;
+      *reactions_p++ = on_fulfilled;
     }
 
     if (on_rejected != ECMA_VALUE_FALSE)
     {
-      ECMA_SET_SECOND_BIT_TO_POINTER_TAG (capability_with_tag);
+      tag |= JMEM_SECOND_TAG_BIT_MASK;
+      *reactions_p++ = on_rejected;
     }
 
-    ecma_collection_push_back (promise_p->reactions, capability_with_tag);
+    ECMA_SET_NON_NULL_POINTER_TAG (reaction_values[0], result_capability_obj_p, tag);
 
-    if (on_fulfilled != ECMA_VALUE_TRUE)
-    {
-      ecma_collection_push_back (promise_p->reactions, on_fulfilled);
-    }
-
-    if (on_rejected != ECMA_VALUE_FALSE)
-    {
-      ecma_collection_push_back (promise_p->reactions, on_rejected);
-    }
+    uint32_t value_count = (uint32_t) (reactions_p - reaction_values);
+    ecma_collection_append (promise_p->reactions, reaction_values, value_count);
   }
   else if (flags & ECMA_PROMISE_IS_FULFILLED)
   {

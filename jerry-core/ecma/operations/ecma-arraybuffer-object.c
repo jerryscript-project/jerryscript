@@ -119,7 +119,7 @@ ecma_op_create_arraybuffer_object (const ecma_value_t *arguments_list_p, /**< li
     }
     else
     {
-      ecma_value_t to_number_value = ecma_op_to_number (arguments_list_p[0]);
+      ecma_value_t to_number_value = ecma_op_to_number (arguments_list_p[0], ECMA_TO_NUMERIC_NO_OPTS);
 
       if (ECMA_IS_VALUE_ERROR (to_number_value))
       {

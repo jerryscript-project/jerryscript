@@ -291,7 +291,7 @@ ecma_builtin_string_object_from_code_point (ecma_value_t this_arg, /**< 'this' a
 
   for (uint32_t index = 0; index < args_number; index++)
   {
-    ecma_value_t to_number_value = ecma_op_to_number (args[index]);
+    ecma_value_t to_number_value = ecma_op_to_number (args[index], ECMA_TO_NUMERIC_NO_OPTS);
 
     if (ECMA_IS_VALUE_ERROR (to_number_value))
     {

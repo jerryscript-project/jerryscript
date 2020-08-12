@@ -925,7 +925,7 @@ ecma_op_array_object_set_length (ecma_object_t *object_p, /**< the array object 
 {
   bool is_throw = (flags & ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_IS_THROW);
 
-  ecma_value_t completion = ecma_op_to_number (new_value);
+  ecma_value_t completion = ecma_op_to_number (new_value, ECMA_TO_NUMERIC_NO_OPTS);
 
   if (ECMA_IS_VALUE_ERROR (completion))
   {
@@ -941,7 +941,7 @@ ecma_op_array_object_set_length (ecma_object_t *object_p, /**< the array object 
 
   if (ecma_is_value_object (new_value))
   {
-    ecma_value_t compared_num_val = ecma_op_to_number (new_value);
+    ecma_value_t compared_num_val = ecma_op_to_number (new_value, ECMA_TO_NUMERIC_NO_OPTS);
 
     if (ECMA_IS_VALUE_ERROR (compared_num_val))
     {

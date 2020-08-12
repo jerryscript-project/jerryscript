@@ -100,6 +100,8 @@ typedef enum
 ecma_extended_primitive_t *ecma_bigint_create (uint32_t size);
 ecma_extended_primitive_t *ecma_big_uint_extend (ecma_extended_primitive_t *value_p, ecma_bigint_digit_t digit);
 
+ecma_bigint_digit_t ecma_big_uint_count_leading_zero (ecma_bigint_digit_t digit);
+
 int ecma_big_uint_compare (ecma_extended_primitive_t *left_value_p, ecma_extended_primitive_t *right_value_p);
 
 ecma_extended_primitive_t *ecma_big_uint_mul_digit (ecma_extended_primitive_t *value_p,

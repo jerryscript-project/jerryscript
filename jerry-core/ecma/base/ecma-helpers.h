@@ -426,6 +426,7 @@ ecma_string_t *ecma_stringbuilder_finalize (ecma_stringbuilder_t *builder_p);
 void ecma_stringbuilder_destroy (ecma_stringbuilder_t *builder_p);
 
 /* ecma-helpers-number.c */
+ecma_number_t ecma_number_pack (bool sign, uint32_t biased_exp, uint64_t fraction);
 void ecma_number_unpack (ecma_number_t num, bool *sign_p, uint32_t *biased_exp_p, uint64_t *fraction_p);
 ecma_number_t ecma_number_make_nan (void);
 ecma_number_t ecma_number_make_infinity (bool sign);

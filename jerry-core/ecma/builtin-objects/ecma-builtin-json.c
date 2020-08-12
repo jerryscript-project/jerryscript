@@ -601,6 +601,11 @@ ecma_builtin_json_parse_value (ecma_json_token_t *token_p) /**< token argument *
   }
 } /* ecma_builtin_json_parse_value */
 
+static ecma_value_t
+ecma_builtin_json_internalize_process_property (ecma_object_t *reviver_p,
+                                                ecma_object_t *object_p,
+                                                ecma_string_t *prop_name);
+
 /**
  * Abstract operation InternalizeJSONProperty
  *
@@ -666,30 +671,17 @@ ecma_builtin_json_internalize_property (ecma_object_t *reviver_p, /**< reviver f
       for (ecma_length_t i = 0; i < length; i++)
       {
         ecma_string_t *prop_index = ecma_new_ecma_string_from_length (i);
-
-        ecma_value_t new_element = ecma_builtin_json_internalize_property (reviver_p, object_p, prop_index);
-
-        if (ECMA_IS_VALUE_ERROR (new_element))
-        {
-          ecma_deref_ecma_string (prop_index);
-          ecma_deref_object (object_p);
-          return new_element;
-        }
-
-        if (ecma_is_value_undefined (new_element))
-        {
-          ecma_value_t delete_val = ecma_op_object_delete (object_p, prop_index, false);
-          JERRY_ASSERT (ecma_is_value_boolean (delete_val));
-        }
-        else
-        {
-          ecma_builtin_json_define_value_property (object_p,
-                                                   prop_index,
-                                                   new_element);
-          ecma_free_value (new_element);
-        }
+        ecma_value_t result = ecma_builtin_json_internalize_process_property (reviver_p, object_p, prop_index);
 
         ecma_deref_ecma_string (prop_index);
+
+        if (ECMA_IS_VALUE_ERROR (result))
+        {
+          ecma_deref_object (object_p);
+          return result;
+        }
+
+        JERRY_ASSERT (result == ECMA_VALUE_TRUE);
       }
     }
     /* 3.d */
@@ -697,8 +689,15 @@ ecma_builtin_json_internalize_property (ecma_object_t *reviver_p, /**< reviver f
     {
       ecma_collection_t *props_p = ecma_op_object_get_enumerable_property_names (object_p,
                                                                                  ECMA_ENUMERABLE_PROPERTY_KEYS);
-
+#if ENABLED (JERRY_ESNEXT)
+      if (JERRY_UNLIKELY (props_p == NULL))
+      {
+        ecma_deref_object (object_p);
+        return ECMA_VALUE_ERROR;
+      }
+#else /* !ENABLED (JERRY_ESNEXT) */
       JERRY_ASSERT (props_p != NULL);
+#endif /* ENABLED (JERRY_ESNEXT) */
 
       ecma_value_t *buffer_p = props_p->buffer_p;
 
@@ -706,35 +705,16 @@ ecma_builtin_json_internalize_property (ecma_object_t *reviver_p, /**< reviver f
       for (uint32_t i = 0; i < props_p->item_count; i++)
       {
         ecma_string_t *property_name_p = ecma_get_string_from_value (buffer_p[i]);
+        ecma_value_t result = ecma_builtin_json_internalize_process_property (reviver_p, object_p, property_name_p);
 
-        /* 3.d.iii.1 */
-        ecma_value_t result = ecma_builtin_json_internalize_property (reviver_p, object_p, property_name_p);
-
-        /* 3.d.iii.2 */
         if (ECMA_IS_VALUE_ERROR (result))
         {
           ecma_collection_free (props_p);
           ecma_deref_object (object_p);
-
           return result;
         }
 
-        /* 3.d.iii.3 */
-        if (ecma_is_value_undefined (result))
-        {
-          ecma_value_t delete_val = ecma_op_general_object_delete (object_p,
-                                                                  property_name_p,
-                                                                  false);
-          JERRY_ASSERT (ecma_is_value_boolean (delete_val));
-        }
-        /* 3.d.iii.4 */
-        else
-        {
-          ecma_builtin_json_define_value_property (object_p,
-                                                  property_name_p,
-                                                  result);
-          ecma_free_value (result);
-        }
+        JERRY_ASSERT (result == ECMA_VALUE_TRUE);
       }
 
       ecma_collection_free (props_p);
@@ -753,6 +733,66 @@ ecma_builtin_json_internalize_property (ecma_object_t *reviver_p, /**< reviver f
   ecma_free_value (value);
   return ret_value;
 } /* ecma_builtin_json_internalize_property */
+
+/**
+ * Part of the InternalizeJSONProperty abstract method.
+ *
+ * See also:
+ *         ECMA-262 v5, 15.12.2
+ *         ECMA-262 v11, 24.5.1.1 in step 2
+ *
+ * @return ECMA_VALUE_TRUE - if no error occured.
+ *         error if one of the operation failed.
+ */
+static
+ecma_value_t ecma_builtin_json_internalize_process_property (ecma_object_t *reviver_p, /**< reviver function */
+                                                             ecma_object_t *object_p, /**< holder object */
+                                                             ecma_string_t *prop_name) /**< property name */
+{
+  /* ES11: 2.b.iii.1 / 2.c.ii.1 */
+  ecma_value_t new_element = ecma_builtin_json_internalize_property (reviver_p, object_p, prop_name);
+
+  if (ECMA_IS_VALUE_ERROR (new_element))
+  {
+    return new_element;
+  }
+
+  /* ES11: 2.b.iii.2 / 2.c.ii.2 */
+  if (ecma_is_value_undefined (new_element))
+  {
+    /* ES11: 2.b.iii.2.a / 2.c.ii.2.a */
+    ecma_value_t delete_val = ecma_op_object_delete (object_p, prop_name, false);
+
+#if ENABLED (JERRY_ESNEXT)
+    if (ECMA_IS_VALUE_ERROR (delete_val))
+    {
+      return delete_val;
+    }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+    JERRY_ASSERT (ecma_is_value_boolean (delete_val));
+  }
+  else
+  {
+    /* ES11: 2.b.iii.3.a / 2.c.ii.3.a */
+    ecma_value_t def_value = ecma_builtin_helper_def_prop (object_p,
+                                                           prop_name,
+                                                           new_element,
+                                                           ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+    ecma_free_value (new_element);
+
+#if ENABLED (JERRY_ESNEXT)
+    if (ECMA_IS_VALUE_ERROR (def_value))
+    {
+      return def_value;
+    }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+    JERRY_ASSERT (ecma_is_value_boolean (def_value));
+  }
+
+  return ECMA_VALUE_TRUE;
+} /* ecma_builtin_json_internalize_process_property */
 
 /**
  * Function to set a string token from the given arguments, fills its fields and advances the string pointer.

@@ -1022,11 +1022,6 @@
   <test id="built-ins/GeneratorFunction/proto-from-ctor-realm-prototype.js"><reason></reason></test>
   <test id="built-ins/GeneratorFunction/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/GeneratorPrototype/return/from-state-completed.js"><reason></reason></test>
-  <test id="built-ins/JSON/parse/reviver-array-define-prop-err.js"><reason></reason></test>
-  <test id="built-ins/JSON/parse/reviver-array-delete-err.js"><reason></reason></test>
-  <test id="built-ins/JSON/parse/reviver-object-define-prop-err.js"><reason></reason></test>
-  <test id="built-ins/JSON/parse/reviver-object-delete-err.js"><reason></reason></test>
-  <test id="built-ins/JSON/parse/reviver-object-own-keys-err.js"><reason></reason></test>
   <test id="built-ins/JSON/stringify/replacer-array-proxy-revoked-realm.js"><reason></reason></test>
   <test id="built-ins/JSON/stringify/value-bigint-cross-realm.js"><reason></reason></test>
   <test id="built-ins/JSON/stringify/value-bigint-order.js"><reason></reason></test>

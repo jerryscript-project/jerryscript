@@ -948,10 +948,15 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t arg1, /**< start */
     {
       /* 10.c.ii */
       ecma_value_t put_comp;
+#if ENABLED (JERRY_ESNEXT)
+      const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_IS_THROW;
+#else /* !ENABLED (JERRY_ESNEXT) */
+      const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE;
+#endif /* ENABLED (JERRY_ESNEXT) */
       put_comp = ecma_builtin_helper_def_prop_by_index (new_array_p,
                                                         n,
                                                         get_value,
-                                                        ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+                                                        prop_flags);
       ecma_free_value (get_value);
 
 #if ENABLED (JERRY_ESNEXT)
@@ -1345,10 +1350,15 @@ ecma_builtin_array_prototype_object_splice (const ecma_value_t args[], /**< argu
     {
       /* 9.c.ii */
       ecma_value_t put_comp;
+#if ENABLED (JERRY_ESNEXT)
+      const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_IS_THROW;
+#else /* !ENABLED (JERRY_ESNEXT) */
+      const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE;
+#endif /* ENABLED (JERRY_ESNEXT) */
       put_comp = ecma_builtin_helper_def_prop_by_index (new_array_p,
                                                         k,
                                                         get_value,
-                                                        ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+                                                        prop_flags);
       ecma_free_value (get_value);
 #if ENABLED (JERRY_ESNEXT)
       if (ECMA_IS_VALUE_ERROR (put_comp))
@@ -2007,10 +2017,15 @@ ecma_builtin_array_prototype_object_map (ecma_value_t arg1, /**< callbackfn */
 
       /* 8.c.iii */
       ecma_value_t put_comp;
+#if ENABLED (JERRY_ESNEXT)
+      const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_IS_THROW;
+#else /* !ENABLED (JERRY_ESNEXT) */
+      const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE;
+#endif /* ENABLED (JERRY_ESNEXT) */
       put_comp = ecma_builtin_helper_def_prop_by_index (new_array_p,
                                                         index,
                                                         mapped_value,
-                                                        ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+                                                        prop_flags);
 
       ecma_free_value (mapped_value);
       ecma_free_value (current_value);

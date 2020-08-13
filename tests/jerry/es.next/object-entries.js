@@ -132,3 +132,15 @@ assert(entries[0][0] === "b");
 assert(entries[0][1] === "bar");
 assert(handlers.length === 3);
 assert(handlers.toString() === "D,D,G");
+
+// exception during enumeration
+var obj = {
+  get a() { throw "error" },
+  get b() { throw "shouldn't run" }
+};
+
+try {
+  Object.entries(obj);
+} catch (err) {
+  assert(err == "error")
+}

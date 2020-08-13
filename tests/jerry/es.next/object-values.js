@@ -125,3 +125,15 @@ assert(values.length === 1);
 assert(values[0] === "bar")
 assert(handlers.length === 3);
 assert(handlers.toString() === "D,D,G");
+
+// exception during enumeration
+var obj = {
+  get a() { throw "error" },
+  get b() { throw "shouldn't run" }
+};
+
+try {
+  Object.values(obj);
+} catch (err) {
+  assert(err == "error")
+}

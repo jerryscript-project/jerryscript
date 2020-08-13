@@ -79,12 +79,16 @@ ecma_op_create_object_object_arg (ecma_value_t value) /**< argument of construct
 {
   ecma_check_value_type_is_spec_defined (value);
 
-  if (ecma_is_value_object (value)
-      || ecma_is_value_number (value)
-      || ecma_is_value_prop_name (value)
-      || ecma_is_value_boolean (value))
+  if (!ecma_is_value_undefined (value)
+      && !ecma_is_value_null (value))
   {
     /* 1.b, 1.c, 1.d */
+    JERRY_ASSERT (ecma_is_value_object (value)
+                  || ecma_is_value_number (value)
+                  || ecma_is_value_prop_name (value)
+                  || ecma_is_value_boolean (value)
+                  || ECMA_CHECK_BIGINT_IN_ASSERT (value));
+
     return ecma_op_to_object (value);
   }
   else

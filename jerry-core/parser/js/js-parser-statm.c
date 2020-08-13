@@ -1324,6 +1324,11 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
     if (token_type == LEXER_EOS)
     {
       lexer_next_token (context_p);
+
+      if (context_p->token.type == LEXER_LEFT_SQUARE || context_p->token.type == LEXER_LEFT_BRACE)
+      {
+        token_type = context_p->token.type;
+      }
     }
 #else /* !ENABLED (JERRY_ESNEXT) */
     lexer_next_token (context_p);
@@ -1411,6 +1416,25 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
 #endif /* ENABLED (JERRY_ESNEXT) */
         break;
       }
+#if ENABLED (JERRY_ESNEXT)
+      case LEXER_LEFT_BRACE:
+      case LEXER_LEFT_SQUARE:
+      {
+        if (context_p->next_scanner_info_p->source_p == context_p->source_p
+            && context_p->next_scanner_info_p->type == SCANNER_TYPE_FOR_PATTERN)
+        {
+          parser_emit_cbc_ext (context_p, is_for_in ? CBC_EXT_FOR_IN_GET_NEXT
+                                                    : CBC_EXT_FOR_OF_GET_NEXT);
+
+          scanner_release_next (context_p, sizeof (scanner_info_t));
+          parser_parse_initializer (context_p, PARSER_PATTERN_TARGET_ON_STACK);
+          /* Pop the value returned by GET_NEXT. */
+          parser_emit_cbc (context_p, CBC_POP);
+          break;
+        }
+        /* FALLTHRU */
+      }
+#endif /* ENABLED (JERRY_ESNEXT) */
       default:
       {
         uint16_t opcode;

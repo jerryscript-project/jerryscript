@@ -873,6 +873,20 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
         return SCAN_NEXT_TOKEN;
       }
 
+      if (context_p->stack_top_uint8 == SCAN_STACK_FOR_START_PATTERN)
+      {
+        JERRY_ASSERT (binding_type == SCANNER_BINDING_NONE);
+
+        parser_stack_change_last_uint8 (context_p, SCAN_STACK_FOR_START);
+
+        if (context_p->token.type == LEXER_KEYW_IN || SCANNER_IDENTIFIER_IS_OF ())
+        {
+          scanner_info_t *info_p = scanner_insert_info (context_p, source_start.source_p, sizeof (scanner_info_t));
+          info_p->type = SCANNER_TYPE_FOR_PATTERN;
+          return SCAN_KEEP_TOKEN;
+        }
+      }
+
       if (context_p->token.type != LEXER_ASSIGN)
       {
         if (SCANNER_NEEDS_BINDING_LIST (binding_type))
@@ -1243,6 +1257,12 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
           break;
         }
 #if ENABLED (JERRY_ESNEXT)
+        case LEXER_LEFT_BRACE:
+        case LEXER_LEFT_SQUARE:
+        {
+          stack_mode = SCAN_STACK_FOR_START_PATTERN;
+          break;
+        }
         case LEXER_LITERAL:
         {
           if (!lexer_token_is_let (context_p))
@@ -3515,16 +3535,16 @@ scan_completed:
           print_location = true;
           break;
         }
-        case SCANNER_TYPE_OBJECT_LITERAL_WITH_SUPER:
+        case SCANNER_TYPE_FOR_PATTERN:
         {
-          JERRY_DEBUG_MSG ("  OBJECT-LITERAL-WITH-SUPER: source:%d\n",
+          JERRY_DEBUG_MSG ("  SCANNER_TYPE_FOR_PATTERN: source:%d\n",
                            (int) (info_p->source_p - source_start_p));
           print_location = false;
           break;
         }
         case SCANNER_TYPE_CLASS_CONSTRUCTOR:
         {
-          JERRY_DEBUG_MSG ("  CLASS-CONSTRUCTOR: source:%d\n",
+          JERRY_DEBUG_MSG ("  CLASS_CONSTRUCTOR: source:%d\n",
                            (int) (info_p->source_p - source_start_p));
           print_location = false;
           break;
@@ -3545,6 +3565,13 @@ scan_completed:
         {
           JERRY_DEBUG_MSG ("  ERR_ASYNC_FUNCTION: source:%d\n",
                            (int) (info_p->source_p - source_start_p));
+          break;
+        }
+        case SCANNER_TYPE_OBJECT_LITERAL_WITH_SUPER:
+        {
+          JERRY_DEBUG_MSG ("  OBJECT_LITERAL_WITH_SUPER: source:%d\n",
+                           (int) (info_p->source_p - source_start_p));
+          print_location = false;
           break;
         }
 #endif /* ENABLED (JERRY_ESNEXT) */

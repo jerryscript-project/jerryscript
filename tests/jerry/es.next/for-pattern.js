@@ -12,6 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+function check_syntax_error (code)
+{
+  try {
+    eval (code)
+    assert (false)
+  } catch (e) {
+    assert (e instanceof SyntaxError)
+  }
+}
+
 var idx = 0;
 for (var [a,b] of [[1,2], [3,4]])
 {
@@ -69,9 +79,41 @@ for (let [a,b] of [[11,12], [13,14]])
 assert(a === 3);
 assert(b === 4);
 
-try {
-  eval("for (let [a,b] = [1,2] of [[3,4]]) {}");
-  assert(false);
-} catch (e) {
-  assert(e instanceof SyntaxError);
+check_syntax_error("for (let [a,b] = [1,2] of [[3,4]]) {}")
+
+idx = 0;
+for ([a,b] of [[10,true], ["x",null]])
+{
+  if (idx == 0)
+  {
+    assert(a === 10);
+    assert(b === true);
+    idx = 1;
+  }
+  else
+  {
+    assert(a === "x");
+    assert(b === null);
+  }
 }
+
+assert(a === "x");
+assert(b === null);
+
+check_syntax_error("for ([a,b] = [1,2] of [[3,4]]) {}")
+
+var o = {}
+for ([a, b] = [o,false]; false; )
+{
+  assert(false);
+}
+
+assert(a === o);
+assert(b === false);
+
+for ([a, b] + [a, b]; false; )
+{
+  assert(false);
+}
+
+check_syntax_error("for ([a,b] + 1 of [[3,4]]) {}")

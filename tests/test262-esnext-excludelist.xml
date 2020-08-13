@@ -170,7 +170,6 @@
   <test id="built-ins/Array/prototype/splice/create-species.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/splice/property-traps-order-with-species.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/splice/throws-if-integer-limit-exceeded.js"><reason></reason></test>
-  <test id="built-ins/Array/prototype/unshift/clamps-to-integer-limit.js"><reason></reason></test>
   <test id="built-ins/ArrayBuffer/data-allocation-after-object-creation.js"><reason></reason></test>
   <test id="built-ins/ArrayBuffer/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/ArrayBuffer/prototype-from-newtarget.js"><reason></reason></test>

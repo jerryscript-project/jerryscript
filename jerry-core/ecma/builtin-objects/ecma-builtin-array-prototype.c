@@ -1526,7 +1526,8 @@ ecma_builtin_array_prototype_object_splice (const ecma_value_t args[], /**< argu
  * The Array.prototype object's 'unshift' routine
  *
  * See also:
- *          ECMA-262 v5, 15.4.4.13
+ *          ECMA-262  v5, 15.4.4.13
+ *          ECMA-262 v11, 22.1.3.31
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
@@ -1574,60 +1575,70 @@ ecma_builtin_array_prototype_object_unshift (const ecma_value_t args[], /**< arg
     }
   }
 
-  /* 4. */
-  if (len + args_number > ECMA_NUMBER_MAX_SAFE_INTEGER)
+#if ENABLED (JERRY_ESNEXT)
+  const bool should_iterate = args_number > 0;
+#else /* !ENABLED (JERRY_ESNEXT) */
+  const bool should_iterate = true;
+#endif /* ENABLED (JERRY_ESNEXT) */
+  if (should_iterate)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Unshift elements over 2**53-1 length is disallowed"));
+#if ENABLED (JERRY_ESNEXT)
+    /* ES11:4.a. */
+    if (len + args_number > ECMA_NUMBER_MAX_SAFE_INTEGER)
+    {
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Unshift elements over 2**53-1 length is disallowed"));
+    }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+    /* ES5.1:5.,6. ES11: 4.b, 4.c */
+    for (ecma_length_t k = len; k > 0; k--)
+    {
+      /* ES5.1:6.a, 6.c, ES11:4.c.i., 4.c.iii.  */
+      ecma_value_t get_value = ecma_op_object_find_by_index (obj_p, k - 1);
+
+      if (ECMA_IS_VALUE_ERROR (get_value))
+      {
+        return get_value;
+      }
+
+      /* ES5.1:6.b, ES11:4.c.ii. */
+      ecma_number_t new_idx = ((ecma_number_t) k) + ((ecma_number_t) args_number) - 1;
+      ecma_string_t *index_str_p = ecma_new_ecma_string_from_number (new_idx);
+      ecma_value_t operation_value;
+
+      if (ecma_is_value_found (get_value))
+      {
+        /* ES5.1:6.d.i, 6.d.ii, ES11:4.c.iv. */
+        operation_value = ecma_op_object_put (obj_p, index_str_p, get_value, true);
+        ecma_free_value (get_value);
+      }
+      else
+      {
+        /* ES5.1:6.e.i, ES11:4.c.v. */
+        operation_value = ecma_op_object_delete (obj_p, index_str_p, true);
+      }
+
+      ecma_deref_ecma_string (index_str_p);
+
+      if (ECMA_IS_VALUE_ERROR (operation_value))
+      {
+        return operation_value;
+      }
+    }
+
+    for (uint32_t arg_index = 0; arg_index < args_number; arg_index++)
+    {
+      /* ES5.1:9.b, ES11:4.f.ii.  */
+      ecma_value_t put_value = ecma_op_object_put_by_index (obj_p, arg_index, args[arg_index], true);
+
+      if (ECMA_IS_VALUE_ERROR (put_value))
+      {
+        return put_value;
+      }
+    }
   }
 
-  /* 5. and 6. */
-  for (ecma_length_t k = len; k > 0; k--)
-  {
-    /* 6.a, 6.c*/
-    ecma_value_t get_value = ecma_op_object_find_by_index (obj_p, k - 1);
-
-    if (ECMA_IS_VALUE_ERROR (get_value))
-    {
-      return get_value;
-    }
-
-    /* 6.b */
-    ecma_number_t new_idx = ((ecma_number_t) k) + ((ecma_number_t) args_number) - 1;
-    ecma_string_t *index_str_p = ecma_new_ecma_string_from_number (new_idx);
-    ecma_value_t operation_value;
-
-    if (ecma_is_value_found (get_value))
-    {
-      /* 6.d.i, 6.d.ii */
-      operation_value = ecma_op_object_put (obj_p, index_str_p, get_value, true);
-      ecma_free_value (get_value);
-    }
-    else
-    {
-      /* 6.e.i */
-      operation_value = ecma_op_object_delete (obj_p, index_str_p, true);
-    }
-
-    ecma_deref_ecma_string (index_str_p);
-
-    if (ECMA_IS_VALUE_ERROR (operation_value))
-    {
-      return operation_value;
-    }
-  }
-
-  for (uint32_t arg_index = 0; arg_index < args_number; arg_index++)
-  {
-    /* 9.b */
-    ecma_value_t put_value = ecma_op_object_put_by_index (obj_p, arg_index, args[arg_index], true);
-
-    if (ECMA_IS_VALUE_ERROR (put_value))
-    {
-      return put_value;
-    }
-  }
-
-  /* 10. */
+  /* ES5.1:10., ES11:5. */
   ecma_number_t new_len = ((ecma_number_t) len) + ((ecma_number_t) args_number);
   ecma_value_t set_length_value = ecma_builtin_array_prototype_helper_set_length (obj_p, new_len);
 

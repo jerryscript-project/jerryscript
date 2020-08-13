@@ -16,6 +16,7 @@
 #include <math.h>
 
 #include "ecma-arraybuffer-object.h"
+#include "ecma-bigint.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-builtin-typedarray-helpers.h"
 #include "ecma-builtins.h"
@@ -219,15 +220,14 @@ ecma_builtin_typedarray_prototype_exec_routine (ecma_value_t this_arg, /**< this
   for (uint32_t index = 0; index < info.length && ecma_is_value_empty (ret_value); index++)
   {
     ecma_value_t current_index = ecma_make_uint32_value (index);
-    ecma_number_t element_num = typedarray_getter_cb (info.buffer_p + byte_pos);
-    ecma_value_t get_value = ecma_make_number_value (element_num);
+    ecma_value_t element = typedarray_getter_cb (info.buffer_p + byte_pos);
 
-    ecma_value_t call_args[] = { get_value, current_index, this_arg };
+    ecma_value_t call_args[] = { element, current_index, this_arg };
 
     ecma_value_t call_value = ecma_op_function_call (func_object_p, cb_this_arg, call_args, 3);
 
     ecma_fast_free_value (current_index);
-    ecma_fast_free_value (get_value);
+    ecma_fast_free_value (element);
 
     if (ECMA_IS_VALUE_ERROR (call_value))
     {
@@ -415,39 +415,32 @@ ecma_builtin_typedarray_prototype_map (ecma_value_t this_arg, /**< this argument
   for (uint32_t index = 0; index < src_info.length; index++)
   {
     ecma_value_t current_index = ecma_make_uint32_value (index);
-    ecma_number_t element_num = src_typedarray_getter_cb (src_info.buffer_p + src_byte_pos);
-    ecma_value_t get_value = ecma_make_number_value (element_num);
-    ecma_value_t call_args[] = { get_value, current_index, this_arg };
+    ecma_value_t element = src_typedarray_getter_cb (src_info.buffer_p + src_byte_pos);
+
+    ecma_value_t call_args[] = { element, current_index, this_arg };
 
     ecma_value_t mapped_value = ecma_op_function_call (func_object_p, cb_this_arg, call_args, 3);
+
+    ecma_free_value (current_index);
+    ecma_free_value (element);
+
     if (ECMA_IS_VALUE_ERROR (mapped_value))
     {
-      ecma_free_value (current_index);
-      ecma_free_value (get_value);
       ecma_free_value (new_typedarray);
       return mapped_value;
     }
 
-    ecma_number_t mapped_num;
-    if (ECMA_IS_VALUE_ERROR (ecma_op_to_numeric (mapped_value, &mapped_num, ECMA_TO_NUMERIC_NO_OPTS)))
+    uint32_t target_byte_pos = index << target_info.shift;
+    ecma_value_t set_element = target_typedarray_setter_cb (target_info.buffer_p + target_byte_pos, mapped_value);
+    ecma_free_value (mapped_value);
+
+    if (ECMA_IS_VALUE_ERROR (set_element))
     {
-      ecma_free_value (mapped_value);
-      ecma_free_value (current_index);
-      ecma_free_value (get_value);
       ecma_free_value (new_typedarray);
-      return ECMA_VALUE_ERROR;
-    }
-    else
-    {
-      uint32_t target_byte_pos = index << target_info.shift;
-      target_typedarray_setter_cb (target_info.buffer_p + target_byte_pos, mapped_num);
+      return set_element;
     }
 
     src_byte_pos += src_info.element_size;
-
-    ecma_fast_free_value (mapped_value);
-    ecma_fast_free_value (current_index);
-    ecma_fast_free_value (get_value);
   }
 
   return new_typedarray;
@@ -506,8 +499,10 @@ ecma_builtin_typedarray_prototype_reduce_with_direction (ecma_value_t this_arg, 
   if (ecma_is_value_undefined (initial_val))
   {
     byte_pos = index << info.shift;
-    ecma_number_t acc_num = getter_cb (info.buffer_p + byte_pos);
-    accumulator = ecma_make_number_value (acc_num);
+    ecma_value_t acc_value = getter_cb (info.buffer_p + byte_pos);
+    accumulator = ecma_copy_value (acc_value);
+
+    ecma_free_value (acc_value);
 
     JERRY_ASSERT (ecma_is_value_number (accumulator));
 
@@ -541,8 +536,7 @@ ecma_builtin_typedarray_prototype_reduce_with_direction (ecma_value_t this_arg, 
   {
     ecma_value_t current_index = ecma_make_uint32_value (index);
     byte_pos = index << info.shift;
-    ecma_number_t get_num = getter_cb (info.buffer_p + byte_pos);
-    ecma_value_t get_value = ecma_make_number_value (get_num);
+    ecma_value_t get_value = getter_cb (info.buffer_p + byte_pos);
 
     ecma_value_t call_args[] = { accumulator, get_value, current_index, this_arg };
 
@@ -673,8 +667,7 @@ ecma_builtin_typedarray_prototype_filter (ecma_value_t this_arg, /**< this argum
   for (uint32_t index = 0; index < info.length; index++)
   {
     ecma_value_t current_index = ecma_make_uint32_value (index);
-    ecma_number_t get_num = getter_cb (info.buffer_p + byte_pos);
-    ecma_value_t get_value = ecma_make_number_value (get_num);
+    ecma_value_t get_value = getter_cb (info.buffer_p + byte_pos);
 
     JERRY_ASSERT (ecma_is_value_number (get_value));
 
@@ -842,8 +835,15 @@ ecma_op_typedarray_set_with_typedarray (ecma_value_t this_arg, /**< this argumen
     uint32_t src_byte_index = 0;
     while (target_byte_index < limit)
     {
-      ecma_number_t elem_num = src_typedarray_getter_cb (src_info.buffer_p + src_byte_index);
-      target_typedarray_setter_cb (target_info.buffer_p + target_byte_index, elem_num);
+      ecma_value_t element = src_typedarray_getter_cb (src_info.buffer_p + src_byte_index);
+      ecma_value_t set_element = target_typedarray_setter_cb (target_info.buffer_p + target_byte_index, element);
+      ecma_free_value (element);
+
+      if (ECMA_IS_VALUE_ERROR (set_element))
+      {
+        return set_element;
+      }
+
       src_byte_index += src_info.element_size;
       target_byte_index += target_info.element_size;
     }
@@ -947,18 +947,45 @@ ecma_builtin_typedarray_prototype_set (ecma_value_t this_arg, /**< this argument
       return elem;
     }
 
-    ecma_number_t elem_num;
+    ecma_value_t value_to_set;
 
-    if (ECMA_IS_VALUE_ERROR (ecma_op_to_numeric (elem, &elem_num, ECMA_TO_NUMERIC_NO_OPTS)))
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+    if (ECMA_TYPEDARRAY_IS_BIGINT_TYPE (target_info.id))
     {
-      ecma_free_value (elem);
-      ecma_deref_object (source_obj_p);
-      return ECMA_VALUE_ERROR;
+      value_to_set = ecma_bigint_to_bigint (elem, true);
+
+      if (ECMA_IS_VALUE_ERROR (value_to_set))
+      {
+        ecma_deref_object (source_obj_p);
+        ecma_free_value (elem);
+        return value_to_set;
+      }
+    }
+    else
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+    {
+      ecma_number_t elem_num;
+      if (ECMA_IS_VALUE_ERROR (ecma_op_to_numeric (elem, &elem_num, ECMA_TO_NUMERIC_NO_OPTS)))
+      {
+        ecma_free_value (elem);
+        ecma_deref_object (source_obj_p);
+        return ECMA_VALUE_ERROR;
+      }
+
+      value_to_set = ecma_make_number_value (elem_num);
     }
 
-    target_typedarray_setter_cb (target_info.buffer_p + target_byte_index, elem_num);
-
     ecma_free_value (elem);
+
+    ecma_value_t set_element = target_typedarray_setter_cb (target_info.buffer_p + target_byte_index, value_to_set);
+
+    ecma_free_value (value_to_set);
+
+    if (ECMA_IS_VALUE_ERROR (set_element))
+    {
+      ecma_deref_object (source_obj_p);
+      return set_element;
+    }
 
     k++;
     target_byte_index += target_info.element_size;
@@ -1233,16 +1260,33 @@ ecma_builtin_typedarray_prototype_fill (ecma_value_t this_arg, /**< this argumen
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
   }
 
-  ecma_number_t value_num;
-  ecma_value_t ret_value = ecma_op_to_numeric (value, &value_num, ECMA_TO_NUMERIC_NO_OPTS);
-
-  if (!ecma_is_value_empty (ret_value))
-  {
-    return ret_value;
-  }
-
   ecma_object_t *typedarray_p = ecma_get_object_from_value (this_arg);
   ecma_typedarray_info_t info = ecma_typedarray_get_info (typedarray_p);
+  ecma_value_t value_to_set;
+
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  if (ECMA_TYPEDARRAY_IS_BIGINT_TYPE (info.id))
+  {
+    value_to_set = ecma_bigint_to_bigint (value, true);
+
+    if (ECMA_IS_VALUE_ERROR (value_to_set))
+    {
+      return value_to_set;
+    }
+  }
+  else
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+  {
+    ecma_number_t value_num;
+    ecma_value_t ret_value = ecma_op_to_numeric (value, &value_num, ECMA_TO_NUMERIC_NO_OPTS);
+
+    if (!ecma_is_value_empty (ret_value))
+    {
+      return ret_value;
+    }
+
+    value_to_set = ecma_make_number_value (value_num);
+  }
 
   uint32_t begin_index_uint32 = 0, end_index_uint32 = 0;
 
@@ -1280,9 +1324,18 @@ ecma_builtin_typedarray_prototype_fill (ecma_value_t this_arg, /**< this argumen
 
   while (byte_index < limit)
   {
-    typedarray_setter_cb (info.buffer_p + byte_index, value_num);
+    ecma_value_t set_element = typedarray_setter_cb (info.buffer_p + byte_index, value_to_set);
+
+    if (ECMA_IS_VALUE_ERROR (set_element))
+    {
+      ecma_free_value (value_to_set);
+      return set_element;
+    }
+
     byte_index += info.element_size;
   }
+
+  ecma_free_value (value_to_set);
 
   return ecma_copy_value (this_arg);
 } /* ecma_builtin_typedarray_prototype_fill */
@@ -1420,8 +1473,7 @@ ecma_builtin_typedarray_prototype_sort (ecma_value_t this_arg, /**< this argumen
   while (byte_index < limit)
   {
     JERRY_ASSERT (buffer_index < info.length);
-    ecma_number_t element_num = typedarray_getter_cb (info.buffer_p + byte_index);
-    ecma_value_t element_value = ecma_make_number_value (element_num);
+    ecma_value_t element_value = typedarray_getter_cb (info.buffer_p + byte_index);
     values_buffer[buffer_index++] = element_value;
     byte_index += info.element_size;
   }
@@ -1438,31 +1490,37 @@ ecma_builtin_typedarray_prototype_sort (ecma_value_t this_arg, /**< this argumen
   if (ECMA_IS_VALUE_ERROR (sort_value))
   {
     ret_value = sort_value;
+    goto free_values;
   }
-  else
+
+  JERRY_ASSERT (sort_value == ECMA_VALUE_EMPTY);
+
+  ecma_typedarray_setter_fn_t typedarray_setter_cb = ecma_get_typedarray_setter_fn (info.id);
+
+  byte_index = 0;
+  buffer_index = 0;
+  limit = info.length * info.element_size;
+  /* Put sorted values from the native array back into the typedarray buffer. */
+  while (byte_index < limit)
   {
-    JERRY_ASSERT (sort_value == ECMA_VALUE_EMPTY);
+    JERRY_ASSERT (buffer_index < info.length);
+    ecma_value_t element_value = values_buffer[buffer_index++];
+    ecma_value_t set_element = typedarray_setter_cb (info.buffer_p + byte_index, element_value);
 
-    ecma_typedarray_setter_fn_t typedarray_setter_cb = ecma_get_typedarray_setter_fn (info.id);
-
-    byte_index = 0;
-    buffer_index = 0;
-    limit = info.length * info.element_size;
-    /* Put sorted values from the native array back into the typedarray buffer. */
-    while (byte_index < limit)
+    if (ECMA_IS_VALUE_ERROR (set_element))
     {
-      JERRY_ASSERT (buffer_index < info.length);
-      ecma_value_t element_value = values_buffer[buffer_index++];
-      ecma_number_t element_num = ecma_get_number_from_value (element_value);
-      typedarray_setter_cb (info.buffer_p + byte_index, element_num);
-      byte_index += info.element_size;
+      ret_value = set_element;
+      goto free_values;
     }
 
-    JERRY_ASSERT (buffer_index == info.length);
-
-    ret_value = ecma_copy_value (this_arg);
+    byte_index += info.element_size;
   }
 
+  JERRY_ASSERT (buffer_index == info.length);
+
+  ret_value = ecma_copy_value (this_arg);
+
+free_values:
   /* Free values that were copied to the local array. */
   for (uint32_t index = 0; index < info.length; index++)
   {
@@ -1517,16 +1575,15 @@ ecma_builtin_typedarray_prototype_find_helper (ecma_value_t this_arg, /**< this 
   for (uint32_t byte_index = 0; byte_index < limit; byte_index += info.element_size)
   {
     JERRY_ASSERT (buffer_index < info.length);
-    ecma_number_t element_num = typedarray_getter_cb (info.buffer_p + byte_index);
-    ecma_value_t element_value = ecma_make_number_value (element_num);
+    ecma_value_t element_value = typedarray_getter_cb (info.buffer_p + byte_index);
 
     ecma_value_t call_args[] = { element_value, ecma_make_uint32_value (buffer_index), this_arg };
-
     ecma_value_t call_value = ecma_op_function_call (func_object_p, predicate_this_arg, call_args, 3);
+
+    ecma_free_value (element_value);
 
     if (ECMA_IS_VALUE_ERROR (call_value))
     {
-      ecma_free_value (element_value);
       return call_value;
     }
 
@@ -1540,11 +1597,10 @@ ecma_builtin_typedarray_prototype_find_helper (ecma_value_t this_arg, /**< this 
         return element_value;
       }
 
-      ecma_free_value (element_value);
       return ecma_make_uint32_value (buffer_index);
     }
+
     buffer_index++;
-    ecma_free_value (element_value);
   }
 
   return is_find ? ECMA_VALUE_UNDEFINED : ecma_make_integer_value (-1);
@@ -1607,6 +1663,13 @@ ecma_builtin_typedarray_prototype_index_of (ecma_value_t this_arg, /**< this arg
 
   ecma_object_t *typedarray_p = ecma_get_object_from_value (this_arg);
   ecma_typedarray_info_t info = ecma_typedarray_get_info (typedarray_p);
+
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  bool is_bigint = ECMA_TYPEDARRAY_IS_BIGINT_TYPE (info.id);
+#else /* !ENABLED (JERRY_BUILTIN_BIGINT) */
+  bool is_bigint = false;
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+
   if (ecma_arraybuffer_is_detached (info.array_buffer_p))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
@@ -1617,7 +1680,7 @@ ecma_builtin_typedarray_prototype_index_of (ecma_value_t this_arg, /**< this arg
 
    /* 5. */
   if (args_number == 0
-      || !ecma_is_value_number (args[0])
+      || (!ecma_is_value_number (args[0]) && !is_bigint)
       || info.length == 0)
   {
     return ecma_make_integer_value (-1);
@@ -1645,8 +1708,6 @@ ecma_builtin_typedarray_prototype_index_of (ecma_value_t this_arg, /**< this arg
                                  : (uint32_t) (info.length + num_var));
   }
 
-  ecma_number_t search_num = ecma_get_number_from_value (args[0]);
-
   ecma_typedarray_getter_fn_t getter_cb = ecma_get_typedarray_getter_fn (info.id);
 
   /* 11. */
@@ -1654,12 +1715,15 @@ ecma_builtin_typedarray_prototype_index_of (ecma_value_t this_arg, /**< this arg
        (uint32_t) position < limit;
        position += info.element_size)
   {
-    ecma_number_t element_num = getter_cb (info.buffer_p + position);
+    ecma_value_t element = getter_cb (info.buffer_p + position);
 
-    if (search_num == element_num)
+    if (ecma_op_same_value_zero (args[0], element, true))
     {
+      ecma_free_value (element);
       return ecma_make_number_value ((ecma_number_t) position / info.element_size);
     }
+
+    ecma_free_value (element);
   }
 
   /* 12. */
@@ -1687,6 +1751,13 @@ ecma_builtin_typedarray_prototype_last_index_of (ecma_value_t this_arg, /**< thi
 
   ecma_object_t *typedarray_p = ecma_get_object_from_value (this_arg);
   ecma_typedarray_info_t info = ecma_typedarray_get_info (typedarray_p);
+
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  bool is_bigint = ECMA_TYPEDARRAY_IS_BIGINT_TYPE (info.id);
+#else /* !ENABLED (JERRY_BUILTIN_BIGINT) */
+  bool is_bigint = false;
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+
   if (ecma_arraybuffer_is_detached (info.array_buffer_p))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
@@ -1696,7 +1767,7 @@ ecma_builtin_typedarray_prototype_last_index_of (ecma_value_t this_arg, /**< thi
 
   /* 5. */
   if (args_number == 0
-      || !ecma_is_value_number (args[0])
+      || (!ecma_is_value_number (args[0]) && !is_bigint)
       || info.length == 0)
   {
     return ecma_make_integer_value (-1);
@@ -1726,8 +1797,6 @@ ecma_builtin_typedarray_prototype_last_index_of (ecma_value_t this_arg, /**< thi
                                  : (uint32_t) (info.length + num_var));
   }
 
-  ecma_number_t search_num = ecma_get_number_from_value (args[0]);
-
   ecma_typedarray_getter_fn_t getter_cb = ecma_get_typedarray_getter_fn (info.id);
 
   /* 10. */
@@ -1735,12 +1804,15 @@ ecma_builtin_typedarray_prototype_last_index_of (ecma_value_t this_arg, /**< thi
        position >= 0;
        position += -info.element_size)
   {
-    ecma_number_t element_num = getter_cb (info.buffer_p + position);
+    ecma_value_t element = getter_cb (info.buffer_p + position);
 
-    if (search_num == element_num)
+    if (ecma_op_same_value_zero (args[0], element, true))
     {
+      ecma_free_value (element);
       return ecma_make_number_value ((ecma_number_t) position / info.element_size);
     }
+
+    ecma_free_value (element);
   }
 
   /* 11. */
@@ -1912,8 +1984,7 @@ ecma_builtin_typedarray_prototype_to_locale_string_helper (ecma_object_t *this_o
   lit_utf8_byte_t *typedarray_buffer_p = ecma_typedarray_get_buffer (this_obj);
 
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-  ecma_number_t element_num = ecma_get_typedarray_element (typedarray_buffer_p + index, class_id);
-  ecma_value_t element_value = ecma_make_number_value (element_num);
+  ecma_value_t element_value = ecma_get_typedarray_element (typedarray_buffer_p + index, class_id);
 
   ecma_value_t element_obj = ecma_op_create_number_object (element_value);
 
@@ -2050,8 +2121,14 @@ ecma_builtin_typedarray_prototype_includes (ecma_value_t this_arg, /**< this arg
   ecma_typedarray_info_t info = ecma_typedarray_get_info (typedarray_p);
   uint32_t limit = info.length * info.element_size;
 
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  bool is_bigint = ECMA_TYPEDARRAY_IS_BIGINT_TYPE (info.id);
+#else /* !ENABLED (JERRRY_BUILTIN_BIGINT) */
+  bool is_bigint = false;
+#endif /* ENABLED (JERRRY_BUILTIN_BIGINT) */
+
   if (args_number == 0
-      || !ecma_is_value_number (args[0])
+      || (!ecma_is_value_number (args[0]) && !is_bigint)
       || info.length == 0)
   {
     return ECMA_VALUE_FALSE;
@@ -2067,21 +2144,21 @@ ecma_builtin_typedarray_prototype_includes (ecma_value_t this_arg, /**< this arg
     }
   }
 
-  ecma_number_t search_num = ecma_get_number_from_value (args[0]);
-
   ecma_typedarray_getter_fn_t getter_cb = ecma_get_typedarray_getter_fn (info.id);
 
   uint32_t search_pos = (uint32_t) from_index * info.element_size;
 
   while (search_pos < limit)
   {
-    ecma_number_t element_num = getter_cb (info.buffer_p + search_pos);
+    ecma_value_t element = getter_cb (info.buffer_p + search_pos);
 
-    if (search_num == element_num)
+    if (ecma_op_same_value_zero (args[0], element, false))
     {
+      ecma_free_value (element);
       return ECMA_VALUE_TRUE;
     }
 
+    ecma_free_value (element);
     search_pos += info.element_size;
   }
 

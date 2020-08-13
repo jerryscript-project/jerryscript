@@ -2653,7 +2653,7 @@ ecma_builtin_array_prototype_includes (const ecma_value_t args[], /**< arguments
 
         while (from_index < len)
         {
-          if (ecma_op_same_value_zero (buffer_p[from_index], args[0]))
+          if (ecma_op_same_value_zero (buffer_p[from_index], args[0], false))
           {
             return ECMA_VALUE_TRUE;
           }
@@ -2676,7 +2676,7 @@ ecma_builtin_array_prototype_includes (const ecma_value_t args[], /**< arguments
       return element;
     }
 
-    if (ecma_op_same_value_zero (element, args[0]))
+    if (ecma_op_same_value_zero (element, args[0], false))
     {
       ecma_free_value (element);
       return ECMA_VALUE_TRUE;

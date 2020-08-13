@@ -1825,12 +1825,12 @@ typedef struct
 /**
  * Function callback descriptor of a %TypedArray% object getter
  */
-typedef ecma_number_t (*ecma_typedarray_getter_fn_t) (lit_utf8_byte_t *src);
+typedef ecma_value_t (*ecma_typedarray_getter_fn_t) (lit_utf8_byte_t *src);
 
 /**
  * Function callback descriptor of a %TypedArray% object setter
  */
-typedef void (*ecma_typedarray_setter_fn_t) (lit_utf8_byte_t *src, ecma_number_t value);
+typedef ecma_value_t (*ecma_typedarray_setter_fn_t) (lit_utf8_byte_t *src, ecma_value_t value);
 
 /**
  * Builtin id for the different types of TypedArray's
@@ -1846,6 +1846,9 @@ typedef enum
   ECMA_UINT32_ARRAY,        /**< Uint32Array */
   ECMA_FLOAT32_ARRAY,       /**< Float32Array */
   ECMA_FLOAT64_ARRAY,       /**< Float64Array */
+  /* ECMA_TYPEDARRAY_IS_BIGINT_TYPE macro should be updated when new types are added */
+  ECMA_BIGINT64_ARRAY,      /**< BigInt64Array */
+  ECMA_BIGUINT64_ARRAY,     /**< BigUInt64Array */
 } ecma_typedarray_type_t;
 
 /**
@@ -1904,6 +1907,14 @@ typedef struct
   uint8_t element_size; /**< element size based on [[TypedArrayName]] in Table 49 */
 } ecma_typedarray_info_t;
 
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+/**
+ * Checks whether a given typedarray is BigInt type or not.
+ **/
+#define ECMA_TYPEDARRAY_IS_BIGINT_TYPE(id) \
+    ((id) >= ECMA_BIGINT64_ARRAY)
+
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 #endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
 
 #if ENABLED (JERRY_ESNEXT)

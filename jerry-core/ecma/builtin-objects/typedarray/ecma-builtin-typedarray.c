@@ -164,16 +164,13 @@ ecma_builtin_typedarray_of (ecma_value_t this_arg, /**< 'this' argument */
 
   while (k < arguments_list_len)
   {
-    ecma_number_t num;
-    ecma_value_t next_val = ecma_op_to_numeric (arguments_list_p[k], &num, ECMA_TO_NUMERIC_NO_OPTS);
+    ecma_value_t set_element = setter_cb (info.buffer_p, arguments_list_p[k]);
 
-    if (ECMA_IS_VALUE_ERROR (next_val))
+    if (ECMA_IS_VALUE_ERROR (set_element))
     {
       ecma_deref_object (ret_obj_p);
-      return next_val;
+      return set_element;
     }
-
-    setter_cb (info.buffer_p, num);
 
     k++;
     info.buffer_p += info.element_size;

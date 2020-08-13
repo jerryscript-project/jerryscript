@@ -138,7 +138,7 @@ ecma_op_internal_buffer_find (ecma_collection_t *container_p, /**< internal cont
   {
     ecma_value_t *entry_p = start_p + i;
 
-    if (ecma_op_same_value_zero (*entry_p, key_arg))
+    if (ecma_op_same_value_zero (*entry_p, key_arg, false))
     {
       return entry_p;
     }

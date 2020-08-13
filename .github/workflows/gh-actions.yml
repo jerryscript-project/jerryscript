@@ -79,16 +79,28 @@ jobs:
           name: Test262-ES2015-results
           path: build/tests/test262_tests_es2015/local/bin/test262.report
 
-  Conformance_Tests_ESNext:
+  Conformance_Tests_ESNext_A:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
-      - name: Test262 - ESNext
-        run: $RUNNER --test262-esnext update
+      - name: Test262 - ESNext (built-ins,annexB,harness,intl402)
+        run: $RUNNER --test262-esnext update --test262-test-list built-ins,annexB,harness,intl402
       - uses: actions/upload-artifact@v2
         if: success() || failure()
         with:
-          name: Test262-ESNext-results
+          name: Test262-ESNext-results-A
+          path: build/tests/test262_tests_esnext/local/bin/test262.report
+
+  Conformance_Tests_ESNext_B:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - name: Test262 - ESNext (language)
+        run: $RUNNER --test262-esnext update --test262-test-list language
+      - uses: actions/upload-artifact@v2
+        if: success() || failure()
+        with:
+          name: Test262-ESNext-results-B
           path: build/tests/test262_tests_esnext/local/bin/test262.report
 
   Unit_Tests:

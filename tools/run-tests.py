@@ -209,6 +209,8 @@ def get_arguments():
                         nargs='?', choices=['default', 'all', 'update'],
                         help='Run test262 - ESnext. default: all tests except excludelist, ' +
                         'all: all tests, update: all tests and update excludelist')
+    parser.add_argument('--test262-test-list', metavar='LIST',
+                        help='Add a comma separated list of tests or directories to run in test262 test suite')
     parser.add_argument('--unittests', action='store_true',
                         help='Run unittests (including doctests)')
     parser.add_argument('--buildoption-test', action='store_true',
@@ -221,6 +223,12 @@ def get_arguments():
         sys.exit(1)
 
     script_args = parser.parse_args()
+
+    if script_args.test262_test_list and not \
+       (script_args.test262 or script_args.test262_es2015 or script_args.test262_esnext):
+        print("--test262-test-list is only allowed with --test262 or --test262-es2015 or --test262-esnext\n")
+        parser.print_help()
+        sys.exit(1)
 
     return script_args
 
@@ -436,6 +444,10 @@ def run_test262_test_suite(options):
 
         if job.test_args:
             test_cmd.extend(job.test_args)
+
+        if options.test262_test_list:
+            test_cmd.append('--test262-test-list')
+            test_cmd.append(options.test262_test_list)
 
         ret_test |= run_check(test_cmd, env=dict(TZ='America/Los_Angeles'))
 

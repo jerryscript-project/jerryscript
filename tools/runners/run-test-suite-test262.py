@@ -50,6 +50,8 @@ def get_arguments():
                        nargs='?', choices=['default', 'all', 'update'],
                        help='Run test262 - ES.next. default: all tests except excludelist, ' +
                        'all: all tests, update: all tests and update excludelist')
+    parser.add_argument('--test262-test-list', metavar='LIST',
+                        help='Add a comma separated list of tests or directories to run in test262 test suite')
 
     args = parser.parse_args()
 
@@ -100,17 +102,21 @@ def prepare_test262_test_suite(args):
 
 def update_exclude_list(args):
     print("=== Summary - updating excludelist ===\n")
+    passing_tests = set()
     failing_tests = set()
     new_passing_tests = set()
     with open(os.path.join(os.path.dirname(args.engine), 'test262.report'), 'r') as report_file:
-        summary_found = False
         for line in report_file:
-            if summary_found:
-                match = re.match(r"  (\S*) in ", line)
-                if match:
-                    failing_tests.add(match.group(1) + '.js')
-            elif line.startswith('Failed Tests'):
-                summary_found = True
+            match = re.match('(=== )?(.*) (?:failed|passed) in (?:non-strict|strict)', line)
+            if match:
+                (unexpected, test) = match.groups()
+                if unexpected:
+                    failing_tests.add(test + '.js')
+                else:
+                    passing_tests.add(test + '.js')
+
+    # Tests pass in strict-mode but fail in non-strict-mode (or vice versa) should be considered as failures
+    passing_tests = passing_tests - failing_tests
 
     with open(args.excludelist_path, 'r+') as exclude_file:
         lines = exclude_file.readlines()
@@ -125,8 +131,10 @@ def update_exclude_list(args):
                 if test in failing_tests:
                     failing_tests.remove(test)
                     exclude_file.write(line)
-                else:
+                elif test in passing_tests:
                     new_passing_tests.add(test)
+                else:
+                    exclude_file.write(line)
             else:
                 exclude_file.write(line)
 
@@ -188,6 +196,9 @@ def main(args):
 
     if 'excludelist_path' in args and args.mode == 'default':
         test262_command.extend(['--exclude-list', args.excludelist_path])
+
+    if args.test262_test_list:
+        test262_command.extend(args.test262_test_list.split(','))
 
     proc = subprocess.Popen(test262_command,
                             universal_newlines=True,

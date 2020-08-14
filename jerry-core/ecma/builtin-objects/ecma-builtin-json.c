@@ -898,11 +898,15 @@ ecma_builtin_json_quote (ecma_stringbuilder_t *builder_p, /**< builder for the r
 #if ENABLED (JERRY_ESNEXT)
     if (lit_is_code_point_utf16_high_surrogate (c))
     {
-      const ecma_char_t next_ch = lit_cesu8_peek_next (str_p);
-      if (lit_is_code_point_utf16_low_surrogate (next_ch))
+      if (str_p < str_end_p)
       {
-        str_p += LIT_UTF8_MAX_BYTES_IN_CODE_UNIT;
-        continue;
+        const ecma_char_t next_ch = lit_cesu8_peek_next (str_p);
+        if (lit_is_code_point_utf16_low_surrogate (next_ch))
+        {
+          str_p += LIT_UTF8_MAX_BYTES_IN_CODE_UNIT;
+          continue;
+        }
+        should_escape = true;
       }
       else
       {

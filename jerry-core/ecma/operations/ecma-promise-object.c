@@ -806,6 +806,7 @@ ecma_promise_reject_or_resolve (ecma_value_t this_arg, /**< "this" argument */
 
   if (ECMA_IS_VALUE_ERROR (call_ret))
   {
+    ecma_deref_object (capability_obj_p);
     return call_ret;
   }
 

@@ -3091,7 +3091,8 @@ parser_pattern_get_target (parser_context_t *context_p, /**< context */
     }
     else
     {
-      if (context_p->next_scanner_info_p->type != SCANNER_TYPE_INITIALIZER)
+      if (context_p->next_scanner_info_p->type != SCANNER_TYPE_INITIALIZER
+          || (flags & PARSER_PATTERN_REST_ELEMENT))
       {
         parser_raise_error (context_p, PARSER_ERR_INVALID_DESTRUCTURING_PATTERN);
       }
@@ -3195,18 +3196,20 @@ parser_pattern_form_assignment (parser_context_t *context_p, /**< context */
   parser_stack_push_uint8 (context_p, LEXER_EXPRESSION_START);
   uint8_t assign_opcode = parser_append_binary_single_assignment_token (context_p, flags);
 
-  if (flags & PARSER_PATTERN_ARRAY)
-  {
-    int32_t stack_adjustment = (CBC_STACK_ADJUST_BASE - (cbc_flags[assign_opcode] >> CBC_STACK_ADJUST_SHIFT));
-    JERRY_ASSERT (stack_adjustment >= 1 && stack_adjustment <= 3);
+  int32_t stack_adjustment = (CBC_STACK_ADJUST_BASE - (cbc_flags[assign_opcode] >> CBC_STACK_ADJUST_SHIFT));
+  JERRY_ASSERT (stack_adjustment >= 1 && stack_adjustment <= 3);
 
-    rhs_opcode = (uint16_t) (rhs_opcode + stack_adjustment - 1);
-  }
+  rhs_opcode = (uint16_t) (rhs_opcode + stack_adjustment - 1);
 
   parser_pattern_emit_rhs (context_p, rhs_opcode, literal_index);
 
   if (context_p->token.type == LEXER_ASSIGN)
   {
+    if ((flags & (PARSER_PATTERN_REST_ELEMENT | PARSER_PATTERN_NESTED_PATTERN)) == PARSER_PATTERN_REST_ELEMENT)
+    {
+      parser_raise_error (context_p, PARSER_ERR_INVALID_DESTRUCTURING_PATTERN);
+    }
+
     parser_branch_t skip_init;
     lexer_next_token (context_p);
     parser_emit_cbc_ext_forward_branch (context_p, CBC_EXT_DEFAULT_INITIALIZER, &skip_init);
@@ -3378,7 +3381,6 @@ parser_parse_array_initializer (parser_context_t *context_p, /**< context */
                                 parser_pattern_flags_t flags) /**< flags */
 {
   parser_pattern_end_marker_t end_pos = parser_pattern_get_target (context_p, flags);
-  flags |= PARSER_PATTERN_ARRAY;
 
   lexer_next_token (context_p);
   parser_emit_cbc_ext (context_p, CBC_EXT_GET_ITERATOR);

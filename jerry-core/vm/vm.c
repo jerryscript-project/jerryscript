@@ -2235,7 +2235,16 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_INITIALIZER_PUSH_PROP:
         {
-          result = vm_op_get_value (stack_top_p[-1], left_value);
+          uint8_t object_index = 1;
+
+          if (opcode != CBC_EXT_INITIALIZER_PUSH_PROP)
+          {
+            JERRY_ASSERT (opcode >= CBC_EXT_INITIALIZER_PUSH_PROP_LITERAL
+                          && opcode <= CBC_EXT_INITIALIZER_PUSH_PROP_LITERAL_3);
+            object_index = (uint8_t) (1 + (opcode - CBC_EXT_INITIALIZER_PUSH_PROP_LITERAL));
+          }
+
+          result = vm_op_get_value (stack_top_p[-object_index], left_value);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {

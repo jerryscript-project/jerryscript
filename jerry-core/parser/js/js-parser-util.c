@@ -937,6 +937,10 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Missing exponent part.";
     }
+    case PARSER_ERR_INVALID_UNDERSCORE_IN_NUMBER:
+    {
+      return "Invalid use of underscore character in number literals";
+    }
     case PARSER_ERR_IDENTIFIER_AFTER_NUMBER:
     {
       return "Identifier cannot start after a number.";

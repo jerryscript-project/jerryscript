@@ -56,6 +56,7 @@ typedef enum
   PARSER_ERR_INVALID_NUMBER,                          /**< invalid number literal */
   PARSER_ERR_MISSING_EXPONENT,                        /**< missing exponent */
   PARSER_ERR_IDENTIFIER_AFTER_NUMBER,                 /**< identifier start after number */
+  PARSER_ERR_INVALID_UNDERSCORE_IN_NUMBER,        /**< invalid use of underscore in number */
 #if ENABLED (JERRY_BUILTIN_BIGINT)
   PARSER_ERR_INVALID_BIGINT,                          /**< number is not a valid BigInt */
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */

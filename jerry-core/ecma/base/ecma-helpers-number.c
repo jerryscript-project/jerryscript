@@ -1059,7 +1059,7 @@ ecma_number_parse_float (const lit_utf8_byte_t *string_buff, /**< routine's firs
   }
 
   /* 5. */
-  ecma_number_t ret_num = ecma_utf8_string_to_number (start_p, (lit_utf8_size_t) (end_p - start_p));
+  ecma_number_t ret_num = ecma_utf8_string_to_number (start_p, (lit_utf8_size_t) (end_p - start_p), 0);
 
   if (sign)
   {

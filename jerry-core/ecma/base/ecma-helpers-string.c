@@ -985,7 +985,7 @@ ecma_string_to_number (const ecma_string_t *string_p) /**< ecma-string */
     return ECMA_NUMBER_ZERO;
   }
 
-  return ecma_utf8_string_to_number (chars_p, size);
+  return ecma_utf8_string_to_number (chars_p, size, 0);
 } /* ecma_string_to_number */
 
 /**

@@ -2186,8 +2186,8 @@ jerry_has_property (const jerry_value_t obj_val, /**< object value */
     return ECMA_VALUE_FALSE;
   }
 
-  return ecma_op_object_has_property (ecma_get_object_from_value (obj_val),
-                                      ecma_get_prop_name_from_value (prop_name_val));
+  return jerry_return (ecma_op_object_has_property (ecma_get_object_from_value (obj_val),
+                                                    ecma_get_prop_name_from_value (prop_name_val)));
 } /* jerry_has_property */
 
 /**
@@ -2750,9 +2750,9 @@ jerry_define_own_property (const jerry_value_t obj_val, /**< object value */
 
   prop_desc.flags |= (uint16_t) (flags | ECMA_PROP_IS_THROW);
 
-  return ecma_op_object_define_own_property (ecma_get_object_from_value (obj_val),
-                                             ecma_get_prop_name_from_value (prop_name_val),
-                                             &prop_desc);
+  return jerry_return (ecma_op_object_define_own_property (ecma_get_object_from_value (obj_val),
+                                                           ecma_get_prop_name_from_value (prop_name_val),
+                                                           &prop_desc));
 } /* jerry_define_own_property */
 
 /**

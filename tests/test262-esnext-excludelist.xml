@@ -9994,8 +9994,6 @@
   <test id="language/statements/for/dstr/var-obj-ptrn-rest-getter.js"><reason></reason></test>
   <test id="language/statements/for/dstr/var-obj-ptrn-rest-skip-non-enumerable.js"><reason></reason></test>
   <test id="language/statements/for/dstr/var-obj-ptrn-rest-val-obj.js"><reason></reason></test>
-  <test id="language/statements/for/head-init-expr-check-empty-inc-empty-completion.js"><reason></reason></test>
-  <test id="language/statements/for/head-init-var-check-empty-inc-empty-completion.js"><reason></reason></test>
   <test id="language/statements/for/let-block-with-newline.js"><reason></reason></test>
   <test id="language/statements/for/let-identifier-with-newline.js"><reason></reason></test>
   <test id="language/statements/for/scope-body-lex-open.js"><reason></reason></test>
@@ -10093,12 +10091,9 @@
   <test id="language/statements/switch/tco-case-body-dflt.js"><reason></reason></test>
   <test id="language/statements/switch/tco-case-body.js"><reason></reason></test>
   <test id="language/statements/switch/tco-dftl-body.js"><reason></reason></test>
-  <test id="language/statements/try/cptn-catch-empty-break.js"><reason></reason></test>
   <test id="language/statements/try/cptn-catch-empty-continue.js"><reason></reason></test>
-  <test id="language/statements/try/cptn-catch-finally-empty-break.js"><reason></reason></test>
   <test id="language/statements/try/cptn-catch-finally-empty-continue.js"><reason></reason></test>
   <test id="language/statements/try/cptn-catch.js"><reason></reason></test>
-  <test id="language/statements/try/cptn-finally-empty-break.js"><reason></reason></test>
   <test id="language/statements/try/cptn-finally-empty-continue.js"><reason></reason></test>
   <test id="language/statements/try/cptn-finally-from-catch.js"><reason></reason></test>
   <test id="language/statements/try/cptn-finally-skip-catch.js"><reason></reason></test>

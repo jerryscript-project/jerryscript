@@ -2236,6 +2236,11 @@ parser_parse_break_statement (parser_context_t *context_p) /**< context */
 
     if (parser_statement_flags[type] & PARSER_STATM_BREAK_TARGET)
     {
+      if (type == PARSER_STATEMENT_FOR)
+      {
+        parser_emit_cbc_ext (context_p, CBC_EXT_SET_EMPTY_COMPLETION);
+      }
+
       parser_loop_statement_t loop;
 
       parser_stack_iterator_skip (&iterator, 1);

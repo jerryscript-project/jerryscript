@@ -333,8 +333,6 @@
   <test id="language/statements/for-of/body-dstr-assign-error.js"><reason></reason></test>
   <test id="language/statements/for-of/body-dstr-assign.js"><reason></reason></test>
   <test id="language/statements/for-of/iterator-next-reference.js"><reason>ES2018 change: next method must be cached</reason></test>
-  <test id="language/statements/for/S12.6.3_A9.1.js"><reason></reason></test>
-  <test id="language/statements/for/S12.6.3_A9.js"><reason></reason></test>
   <test id="language/statements/generators/has-instance.js"><reason></reason></test>
   <test id="language/statements/generators/prototype-value.js"><reason></reason></test>
   <test id="language/statements/let/syntax/identifier-let-disallowed-as-boundname.js"><reason></reason></test>

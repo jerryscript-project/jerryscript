@@ -1182,7 +1182,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_POP_BLOCK:
         {
           ecma_fast_free_value (frame_ctx_p->block_result);
-          frame_ctx_p->block_result = *(--stack_top_p);
+          JERRY_ASSERT (byte_code_start_p[0] != CBC_EXT_OPCODE
+                        || byte_code_start_p[1] == CBC_EXT_SET_EMPTY_COMPLETION);
+          frame_ctx_p->block_result = (*byte_code_start_p == CBC_EXT_OPCODE) ? ECMA_VALUE_UNDEFINED : *(--stack_top_p);
           continue;
         }
         case VM_OC_PUSH:

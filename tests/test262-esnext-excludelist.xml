@@ -2551,8 +2551,6 @@
   <test id="built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-nextelement-tostring.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-nextelement-valueof.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/toLocaleString/BigInt/return-result.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/toLocaleString/calls-tostring-from-each-value.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/toLocaleString/calls-valueof-from-each-value.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/toLocaleString/detached-buffer.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/toString/BigInt/detached-buffer.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/toString/detached-buffer.js"><reason></reason></test>

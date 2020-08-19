@@ -245,6 +245,33 @@ main (void)
   jerry_release_value (target);
   jerry_release_value (handler);
 
+  {
+    const jerry_char_t has_value_src[] = TEST_STRING_LITERAL ("new Proxy({}, {\n"
+                                                              "  has: function(target, key) { throw 33 }\n"
+                                                              "})");
+    jerry_value_t parsed_has_code_val = jerry_parse (NULL,
+                                                     0,
+                                                     has_value_src,
+                                                     sizeof (has_value_src) - 1,
+                                                     JERRY_PARSE_NO_OPTS);
+    TEST_ASSERT (!jerry_value_is_error (parsed_has_code_val));
+
+    jerry_value_t res = jerry_run (parsed_has_code_val);
+    jerry_release_value (parsed_has_code_val);
+    TEST_ASSERT (jerry_value_is_proxy (res));
+
+    jerry_value_t name = jerry_create_string ((const jerry_char_t *) "key");
+    TEST_ASSERT (jerry_value_is_string (name));
+    jerry_value_t property = jerry_has_property (res, name);
+    jerry_release_value (name);
+    jerry_release_value (res);
+
+    TEST_ASSERT (jerry_value_is_error (property));
+    property = jerry_get_value_from_error (property, true);
+    TEST_ASSERT (jerry_get_number_value (property) == 33);
+    jerry_release_value (property);
+  }
+
   jerry_cleanup ();
   return 0;
 } /* main */

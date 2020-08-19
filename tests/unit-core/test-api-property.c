@@ -100,6 +100,26 @@ main (void)
   jerry_release_value (prop_name);
   jerry_release_value (global_obj_val);
 
+  /* Test: define own property descriptor error */
+  jerry_init_property_descriptor_fields (&prop_desc);
+  prop_desc.is_value_defined = true;
+  prop_desc.value = jerry_create_number (11);
+
+  jerry_value_t obj_val = jerry_create_object ();
+  prop_name = jerry_create_string ((const jerry_char_t *) "property_key");
+  res = jerry_define_own_property (obj_val, prop_name, &prop_desc);
+  TEST_ASSERT (!jerry_value_is_error (res));
+  jerry_release_value (res);
+
+  jerry_release_value (prop_desc.value);
+  prop_desc.value = jerry_create_number (22);
+  res = jerry_define_own_property (obj_val, prop_name, &prop_desc);
+  TEST_ASSERT (jerry_value_is_error (res));
+  jerry_release_value (res);
+
+  jerry_release_value (prop_name);
+  jerry_release_value (obj_val);
+
   jerry_cleanup ();
 
   return 0;

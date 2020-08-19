@@ -1313,12 +1313,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   byte_code_p = (uint8_t *) compiled_code_p;
   compiled_code_p->size = (uint16_t) (total_size >> JMEM_ALIGNMENT_LOG);
   compiled_code_p->refs = 1;
-
-#if ENABLED (JERRY_ESNEXT)
   compiled_code_p->status_flags = 0;
-#else /* !ENABLED (JERRY_ESNEXT) */
-  compiled_code_p->status_flags = CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_NORMAL);
-#endif /* ENABLED (JERRY_ESNEXT) */
 
 #if ENABLED (JERRY_ESNEXT)
   if (context_p->status_flags & PARSER_FUNCTION_HAS_REST_PARAM)
@@ -1396,13 +1391,13 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     compiled_code_p->status_flags |= CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED;
   }
 
-#if ENABLED (JERRY_ESNEXT)
   uint16_t function_type = CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_NORMAL);
 
   if (context_p->status_flags & (PARSER_IS_PROPERTY_GETTER | PARSER_IS_PROPERTY_SETTER))
   {
     function_type = CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_ACCESSOR);
   }
+#if ENABLED (JERRY_ESNEXT)
   else if (context_p->status_flags & PARSER_IS_ARROW_FUNCTION)
   {
     if (context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
@@ -1442,8 +1437,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     function_type = CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_NORMAL);
   }
 
-  compiled_code_p->status_flags |= function_type;
-
   if (context_p->status_flags & PARSER_FUNCTION_HAS_REST_PARAM)
   {
     compiled_code_p->status_flags |= CBC_CODE_FLAGS_REST_PARAMETER;
@@ -1460,6 +1453,8 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     compiled_code_p->status_flags |= CBC_CODE_FLAGS_LEXICAL_BLOCK_NEEDED;
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
+
+  compiled_code_p->status_flags |= function_type;
 
   literal_pool_p = ((ecma_value_t *) byte_code_p) - context_p->register_count;
   byte_code_p += literal_length;

@@ -739,6 +739,41 @@ jerry_value_is_function (const jerry_value_t value) /**< api value */
 } /* jerry_value_is_function */
 
 /**
+ * Check if the specified value is an async function object value.
+ *
+ * @return true - if the specified value is an async function,
+ *         false - otherwise
+ */
+bool
+jerry_value_is_async_function (const jerry_value_t value) /**< api value */
+{
+  jerry_assert_api_available ();
+
+#if ENABLED (JERRY_ESNEXT)
+  if (ecma_is_value_object (value))
+  {
+    ecma_object_t *obj_p = ecma_get_object_from_value (value);
+
+    if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION
+        && !ecma_get_object_is_builtin (obj_p))
+    {
+      const ecma_compiled_code_t *bytecode_data_p;
+      bytecode_data_p = ecma_op_function_get_compiled_code ((ecma_extended_object_t *) obj_p);
+      uint16_t type = CBC_FUNCTION_GET_TYPE (bytecode_data_p->status_flags);
+
+      return (type == CBC_FUNCTION_ASYNC
+              || type == CBC_FUNCTION_ASYNC_ARROW
+              || type == CBC_FUNCTION_ASYNC_GENERATOR);
+    }
+  }
+#else /* !ENABLED (JERRY_ESNEXT) */
+  JERRY_UNUSED (value);
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+  return false;
+} /* jerry_value_is_async_function */
+
+/**
  * Check if the specified value is number.
  *
  * @return true  - if the specified value is number,
@@ -942,6 +977,274 @@ jerry_value_get_type (const jerry_value_t value) /**< input value to check */
     }
   }
 } /* jerry_value_get_type */
+
+/**
+ * Get the object type of the given value
+ *
+ * @return JERRY_OBJECT_TYPE_NONE - if the given value is not an object
+ *         jerry_object_type_t value - otherwise
+ */
+jerry_object_type_t
+jerry_object_get_type (const jerry_value_t value) /**< input value to check */
+{
+  jerry_assert_api_available ();
+
+  if (!ecma_is_value_object (value))
+  {
+    return JERRY_OBJECT_TYPE_NONE;
+  }
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (value);
+  ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
+
+  switch (ecma_get_object_type (obj_p))
+  {
+    case ECMA_OBJECT_TYPE_FUNCTION:
+    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+    case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
+    {
+      return JERRY_OBJECT_TYPE_FUNCTION;
+    }
+    case ECMA_OBJECT_TYPE_ARRAY:
+    {
+      return JERRY_OBJECT_TYPE_ARRAY;
+    }
+#if ENABLED (JERRY_ESNEXT)
+    case ECMA_OBJECT_TYPE_PROXY:
+    {
+      return JERRY_OBJECT_TYPE_PROXY;
+    }
+#endif /* ENABLED (JERRY_ESNEXT) */
+    case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
+    {
+      switch (ext_obj_p->u.pseudo_array.type)
+      {
+        case ECMA_PSEUDO_ARRAY_ARGUMENTS:
+        {
+          return JERRY_OBJECT_TYPE_ARGUMENTS;
+        }
+#if ENABLED (JERRY_BUILTIN_TYPEDARRAY)
+        case ECMA_PSEUDO_ARRAY_TYPEDARRAY:
+        case ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO:
+        {
+          return JERRY_OBJECT_TYPE_TYPEDARRAY;
+        }
+#endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
+#if ENABLED (JERRY_ESNEXT)
+        case ECMA_PSEUDO_STRING_ITERATOR:
+        case ECMA_PSEUDO_ARRAY_ITERATOR:
+#if ENABLED (JERRY_BUILTIN_MAP)
+        case ECMA_PSEUDO_MAP_ITERATOR:
+#endif /* ENABLED (JERRY_BUILTIN_MAP) */
+#if ENABLED (JERRY_BUILTIN_SET)
+        case ECMA_PSEUDO_SET_ITERATOR:
+#endif /* ENABLED (JERRY_BUILTIN_SET) */
+        {
+          return JERRY_OBJECT_TYPE_ITERATOR;
+        }
+#endif /* ENABLED (JERRY_ESNEXT) */
+      }
+      break;
+    }
+    case ECMA_OBJECT_TYPE_CLASS:
+    {
+      switch (ext_obj_p->u.class_prop.class_id)
+      {
+        case LIT_MAGIC_STRING_ARGUMENTS_UL:
+        {
+          return JERRY_OBJECT_TYPE_ARGUMENTS;
+        }
+        case LIT_MAGIC_STRING_BOOLEAN_UL:
+        {
+          return JERRY_OBJECT_TYPE_BOOLEAN;
+        }
+        case LIT_MAGIC_STRING_DATE_UL:
+        {
+          return JERRY_OBJECT_TYPE_DATE;
+        }
+        case LIT_MAGIC_STRING_NUMBER_UL:
+        {
+          return JERRY_OBJECT_TYPE_NUMBER;
+        }
+        case LIT_MAGIC_STRING_REGEXP_UL:
+        {
+          return JERRY_OBJECT_TYPE_REGEXP;
+        }
+        case LIT_MAGIC_STRING_STRING_UL:
+        {
+          return JERRY_OBJECT_TYPE_STRING;
+        }
+#if ENABLED (JERRY_ESNEXT)
+        case LIT_MAGIC_STRING_SYMBOL_UL:
+        {
+          return JERRY_OBJECT_TYPE_SYMBOL;
+        }
+        case LIT_MAGIC_STRING_GENERATOR_UL:
+        {
+          return JERRY_OBJECT_TYPE_GENERATOR;
+        }
+#endif /* ENABLED (JERRY_ESNEXT) */
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+        case LIT_MAGIC_STRING_BIGINT_UL:
+        {
+          return JERRY_OBJECT_TYPE_BIGINT;
+        }
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#if ENABLED (JERRY_BUILTIN_CONTAINER)
+#if ENABLED (JERRY_BUILTIN_MAP)
+        case LIT_MAGIC_STRING_MAP_UL:
+#endif /* ENABLED (JERRY_BUILTIN_MAP) */
+#if ENABLED (JERRY_BUILTIN_SET)
+        case LIT_MAGIC_STRING_SET_UL:
+#endif /* ENABLED (JERRY_BUILTIN_SET) */
+#if ENABLED (JERRY_BUILTIN_WEAKMAP)
+        case LIT_MAGIC_STRING_WEAKMAP_UL:
+#endif /* ENABLED (JERRY_BUILTIN_WEAKMAP) */
+#if ENABLED (JERRY_BUILTIN_WEAKSET)
+        case LIT_MAGIC_STRING_WEAKSET_UL:
+#endif /* ENABLED (JERRY_BUILTIN_WEAKSET) */
+        {
+          return JERRY_OBJECT_TYPE_CONTAINER;
+        }
+#endif /* ENABLED (JERRY_BUILTIN_CONTAINER) */
+        default:
+        {
+          break;
+        }
+      }
+      break;
+    }
+    default:
+    {
+      break;
+    }
+  }
+
+  return JERRY_OBJECT_TYPE_GENERIC;
+} /* jerry_object_get_type */
+
+/**
+ * Get the function type of the given value
+ *
+ * @return JERRY_FUNCTION_TYPE_NONE - if the given value is not a function object
+ *         jerry_function_type_t value - otherwise
+ */
+jerry_function_type_t
+jerry_function_get_type (const jerry_value_t value) /**< input value to check */
+{
+  jerry_assert_api_available ();
+
+  if (ecma_is_value_object (value))
+  {
+    ecma_object_t *obj_p = ecma_get_object_from_value (value);
+    ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
+
+    switch (ecma_get_object_type (obj_p))
+    {
+      case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+      {
+        return JERRY_FUNCTION_TYPE_BOUND;
+      }
+      case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
+      {
+        return JERRY_FUNCTION_TYPE_GENERIC;
+      }
+      case ECMA_OBJECT_TYPE_FUNCTION:
+      {
+        if (!ecma_get_object_is_builtin (obj_p))
+        {
+          const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_obj_p);
+
+          switch (CBC_FUNCTION_GET_TYPE (bytecode_data_p->status_flags))
+          {
+#if ENABLED (JERRY_ESNEXT)
+            case CBC_FUNCTION_ARROW:
+            case CBC_FUNCTION_ASYNC_ARROW:
+            {
+              return JERRY_FUNCTION_TYPE_ARROW;
+            }
+            case CBC_FUNCTION_GENERATOR:
+            case CBC_FUNCTION_ASYNC_GENERATOR:
+            {
+              return JERRY_FUNCTION_TYPE_GENERATOR;
+            }
+#endif /* ENABLED (JERRY_ESNEXT) */
+            case CBC_FUNCTION_ACCESSOR:
+            {
+              return JERRY_FUNCTION_TYPE_ACCESSOR;
+            }
+            default:
+            {
+              break;
+            }
+          }
+        }
+        return JERRY_FUNCTION_TYPE_GENERIC;
+      }
+      default:
+      {
+        break;
+      }
+    }
+  }
+
+  return JERRY_FUNCTION_TYPE_NONE;
+} /* jerry_function_get_type */
+
+/**
+ * Get the itearator type of the given value
+ *
+ * @return JERRY_ITERATOR_TYPE_NONE - if the given value is not an iterator object
+ *         jerry_iterator_type_t value - otherwise
+ */
+jerry_iterator_type_t
+jerry_iterator_get_type (const jerry_value_t value) /**< input value to check */
+{
+  jerry_assert_api_available ();
+
+#if ENABLED (JERRY_ESNEXT)
+  if (ecma_is_value_object (value))
+  {
+    ecma_object_t *obj_p = ecma_get_object_from_value (value);
+    ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
+
+    if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_PSEUDO_ARRAY)
+    {
+      switch (ext_obj_p->u.pseudo_array.type)
+      {
+        case ECMA_PSEUDO_ARRAY_ITERATOR:
+        {
+          return JERRY_ITERATOR_TYPE_ARRAY;
+        }
+        case ECMA_PSEUDO_STRING_ITERATOR:
+        {
+          return JERRY_ITERATOR_TYPE_STRING;
+        }
+#if ENABLED (JERRY_BUILTIN_MAP)
+        case ECMA_PSEUDO_MAP_ITERATOR:
+        {
+          return JERRY_ITERATOR_TYPE_MAP;
+        }
+#endif /* ENABLED (JERRY_BUILTIN_MAP) */
+#if ENABLED (JERRY_BUILTIN_SET)
+        case ECMA_PSEUDO_SET_ITERATOR:
+        {
+          return JERRY_ITERATOR_TYPE_SET;
+        }
+#endif /* ENABLED (JERRY_BUILTIN_SET) */
+        default:
+        {
+          break;
+        }
+      }
+    }
+  }
+#else /* !ENABLED (JERRY_ESNEXT) */
+  JERRY_UNUSED (value);
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+  return JERRY_ITERATOR_TYPE_NONE;
+} /* jerry_iterator_get_type */
 
 /**
  * Check if the specified feature is enabled.

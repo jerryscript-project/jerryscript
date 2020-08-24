@@ -650,6 +650,27 @@ jerry_promise_state_t jerry_get_promise_state (const jerry_value_t promise);
 /**
  * Symbol functions.
  */
+
+/**
+ * List of well-known symbols.
+ */
+typedef enum
+{
+  JERRY_SYMBOL_HAS_INSTANCE,         /**< @@hasInstance well-known symbol */
+  JERRY_SYMBOL_IS_CONCAT_SPREADABLE, /**< @@isConcatSpreadable well-known symbol */
+  JERRY_SYMBOL_ITERATOR,             /**< @@iterator well-known symbol */
+  JERRY_SYMBOL_ASYNC_ITERATOR,       /**< @@asyncIterator well-known symbol */
+  JERRY_SYMBOL_MATCH,                /**< @@match well-known symbol */
+  JERRY_SYMBOL_REPLACE,              /**< @@replace well-known symbol */
+  JERRY_SYMBOL_SEARCH,               /**< @@search well-known symbol */
+  JERRY_SYMBOL_SPECIES,              /**< @@species well-known symbol */
+  JERRY_SYMBOL_SPLIT,                /**< @@split well-known symbol */
+  JERRY_SYMBOL_TO_PRIMITIVE,         /**< @@toPrimitive well-known symbol */
+  JERRY_SYMBOL_TO_STRING_TAG,        /**< @@toStringTag well-known symbol */
+  JERRY_SYMBOL_UNSCOPABLES,          /**< @@unscopables well-known symbol */
+} jerry_well_known_symbol_t;
+
+jerry_value_t jerry_get_well_known_symbol (jerry_well_known_symbol_t symbol);
 jerry_value_t jerry_get_symbol_descriptive_string (const jerry_value_t symbol);
 
 /**

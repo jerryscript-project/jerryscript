@@ -3737,6 +3737,14 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           if (prop_names_p == NULL)
           {
+#if ENABLED (JERRY_ESNEXT)
+            if (JERRY_UNLIKELY (ECMA_IS_VALUE_ERROR (expr_obj_value)))
+            {
+              result = expr_obj_value;
+              goto error;
+            }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
             /* The collection is already released */
             byte_code_p = byte_code_start_p + branch_offset;
             continue;

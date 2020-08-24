@@ -37,7 +37,7 @@ STRING_VALUE (LIT_GLOBAL_SYMBOL_TO_STRING_TAG,
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_MAGIC_STRING_VALUE_OF_UL, ecma_builtin_bigint_prototype_object_value_of, 0, 0)
-ROUTINE (LIT_MAGIC_STRING_TO_STRING_UL, ecma_builtin_bigint_prototype_object_to_string, NON_FIXED, 1)
+ROUTINE (LIT_MAGIC_STRING_TO_STRING_UL, ecma_builtin_bigint_prototype_object_to_string, NON_FIXED, 0)
 
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 

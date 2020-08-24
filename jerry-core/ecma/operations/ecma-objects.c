@@ -194,8 +194,7 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
           if (array_index < info.length)
           {
             uint32_t byte_pos = array_index << info.shift;
-            ecma_number_t num = ecma_get_typedarray_element (info.buffer_p + byte_pos, info.id);
-            value = ecma_make_number_value (num);
+            value = ecma_get_typedarray_element (info.buffer_p + byte_pos, info.id);
           }
 
           if (!ecma_is_value_undefined (value))
@@ -522,8 +521,7 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
           }
 
           uint32_t byte_pos = array_index << info.shift;
-          ecma_number_t num = ecma_get_typedarray_element (info.buffer_p + byte_pos, info.id);
-          return ecma_make_number_value (num);
+          return ecma_get_typedarray_element (info.buffer_p + byte_pos, info.id);
         }
 
         ecma_number_t num = ecma_string_to_number (property_name_p);
@@ -1230,15 +1228,6 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
 
         if (array_index != ECMA_STRING_NOT_ARRAY_INDEX)
         {
-          ecma_number_t num_var;
-          ecma_value_t error = ecma_op_to_numeric (value, &num_var, ECMA_TO_NUMERIC_NO_OPTS);
-
-          if (ECMA_IS_VALUE_ERROR (error))
-          {
-            jcontext_release_exception ();
-            return ecma_reject (is_throw);
-          }
-
           ecma_typedarray_info_t info = ecma_typedarray_get_info (object_p);
 
           if (array_index >= info.length)
@@ -1247,9 +1236,7 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
           }
 
           uint32_t byte_pos = array_index << info.shift;
-          ecma_set_typedarray_element (info.buffer_p + byte_pos, num_var, info.id);
-
-          return ECMA_VALUE_TRUE;
+          return ecma_set_typedarray_element (info.buffer_p + byte_pos, value, info.id);
         }
 
         ecma_number_t num = ecma_string_to_number (property_name_p);
@@ -1682,11 +1669,16 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
 
         if (array_index != ECMA_STRING_NOT_ARRAY_INDEX)
         {
-          bool define_status = ecma_op_typedarray_define_index_prop (obj_p,
-                                                                     array_index,
-                                                                     property_desc_p);
+          ecma_value_t define_status = ecma_op_typedarray_define_index_prop (obj_p,
+                                                                             array_index,
+                                                                             property_desc_p);
 
-          if (define_status)
+          if (ECMA_IS_VALUE_ERROR (define_status))
+          {
+            return define_status;
+          }
+
+          if (ecma_is_value_true (define_status))
           {
             return ECMA_VALUE_TRUE;
           }
@@ -2436,6 +2428,10 @@ ecma_object_check_class_name_is_object (ecma_object_t *obj_p) /**< object */
 #if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_FLOAT64ARRAY_PROTOTYPE)
 #endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_BIGINT64ARRAY_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_BIGUINT64ARRAY_PROTOTYPE)
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 #endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
 #if ENABLED (JERRY_ESNEXT)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_ARRAY_PROTOTYPE_UNSCOPABLES)

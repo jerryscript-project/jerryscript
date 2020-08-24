@@ -103,3 +103,12 @@ assert(h.toString() === '1,0,0,0');
 var j = new Uint16Array(ab2, 2, 1);
 assert(j.fill(1).toString() === '1');
 assert(h.toString() === '1,0,1,0');
+
+var k = new BigInt64Array([1n, 2n, 3n, 4n, 5n]);
+assert(k.fill(1n, 1, 4).toString() === '1,1,1,1,5');
+assert(k.fill(18446744073709551616n, 0, 5).toString() === '0,0,0,0,0');
+assert(k.fill(-5n, 3, 5).toString() === '0,0,0,-5,-5');
+
+var l = new BigUint64Array([1n, 2n, 3n, 4n, 5n]);
+assert(l.fill(-18446744073709551614n, 3, 5).toString() === '1,2,3,2,2');
+assert(l.fill(18446744073709551614n, 4).toString() === '1,2,3,2,18446744073709551614');

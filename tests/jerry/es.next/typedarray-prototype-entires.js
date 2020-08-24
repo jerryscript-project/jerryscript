@@ -69,3 +69,13 @@ empty_typedarrays.forEach(function (e){
 });
 
 assert ([].entries ().toString () === "[object Array Iterator]");
+
+var bigint_array = new BigInt64Array([1n, 2n, 3n, 4n]);
+var entries = bigint_array.entries();
+assert(entries.next().value[1] === 1n);
+assert(entries.next().value[1] === 2n);
+
+var biguint_array = new BigUint64Array([1n, 2n, 3n, 4n]);
+var entries = biguint_array.entries();
+assert(entries.next().value[1] === 1n);
+assert(entries.next().value[1] === 2n);

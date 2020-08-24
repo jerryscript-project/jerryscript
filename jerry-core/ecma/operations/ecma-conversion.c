@@ -125,6 +125,13 @@ ecma_op_same_value (ecma_value_t x, /**< ecma value */
     return ecma_compare_ecma_strings (x_str_p, y_str_p);
   }
 
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  if (ecma_is_value_bigint (x))
+  {
+    return (ecma_is_value_bigint (y) && ecma_bigint_compare_to_bigint (x, y) == 0);
+  }
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+
   JERRY_ASSERT (ecma_is_value_object (x) || ECMA_CHECK_SYMBOL_IN_ASSERT (x));
 
   return false;
@@ -142,7 +149,8 @@ ecma_op_same_value (ecma_value_t x, /**< ecma value */
  */
 bool
 ecma_op_same_value_zero (ecma_value_t x, /**< ecma value */
-                         ecma_value_t y) /**< ecma value */
+                         ecma_value_t y, /**< ecma value */
+                         bool strict_equality) /**< strict equality */
 {
   if (ecma_is_value_number (x) && ecma_is_value_number (y))
   {
@@ -152,15 +160,15 @@ ecma_op_same_value_zero (ecma_value_t x, /**< ecma value */
     bool is_x_nan = ecma_number_is_nan (x_num);
     bool is_y_nan = ecma_number_is_nan (y_num);
 
+    if (strict_equality
+        && is_x_nan
+        && is_y_nan)
+    {
+      return false;
+    }
+
     if (is_x_nan || is_y_nan)
     {
-      /*
-       * If both are NaN
-       *   return true;
-       * else
-       *   one of the numbers is NaN, and another - is not
-       *   return false;
-       */
       return (is_x_nan && is_y_nan);
     }
 

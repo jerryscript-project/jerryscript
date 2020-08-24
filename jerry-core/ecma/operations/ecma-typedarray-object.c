@@ -19,6 +19,8 @@
 #include "ecma-typedarray-object.h"
 #include "ecma-arraybuffer-object.h"
 #include "ecma-function-object.h"
+#include "ecma-bigint.h"
+#include "ecma-big-uint.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-try-catch-macro.h"
 #include "ecma-objects.h"
@@ -39,90 +41,155 @@
  */
 
 /**
+ * Read and copy a number from a given buffer to a value.
+ **/
+#define ECMA_TYPEDARRAY_GET_ELEMENT(src_p, num, type) \
+    do \
+    { \
+      if (JERRY_LIKELY ((((uintptr_t) (src_p)) & (sizeof (type) - 1)) == 0)) \
+      { \
+        num = *(type *) src_p; \
+      } \
+      else \
+      { \
+        memcpy (&num, src_p, sizeof (type)); \
+      } \
+    } \
+    while (0)
+
+/**
+ * Copy a number from a value to the given buffer
+ **/
+#define ECMA_TYPEDARRAY_SET_ELEMENT(src_p, num, type) \
+    do \
+    { \
+      if (JERRY_LIKELY ((((uintptr_t) (src_p)) & (sizeof (type) - 1)) == 0)) \
+      { \
+        *(type *) src_p = num; \
+      } \
+      else \
+      { \
+        memcpy (src_p, &num, sizeof (type)); \
+      } \
+    } \
+    while (0)
+
+/**
  * Read an int8_t value from the given arraybuffer
  */
-static ecma_number_t
+static ecma_value_t
 ecma_typedarray_get_int8_element (lit_utf8_byte_t *src) /**< the location in the internal arraybuffer */
 {
   int8_t num = (int8_t) *src;
-  return (ecma_number_t) num;
+  return ecma_make_integer_value (num);
 } /* ecma_typedarray_get_int8_element */
 
 /**
  * Read an uint8_t value from the given arraybuffer
  */
-static ecma_number_t
+static ecma_value_t
 ecma_typedarray_get_uint8_element (lit_utf8_byte_t *src) /**< the location in the internal arraybuffer */
 {
   uint8_t num = (uint8_t) *src;
-  return (ecma_number_t) num;
+  return ecma_make_integer_value (num);
 } /* ecma_typedarray_get_uint8_element */
 
 /**
  * Read an int16_t value from the given arraybuffer
  */
-static ecma_number_t
+static ecma_value_t
 ecma_typedarray_get_int16_element (lit_utf8_byte_t *src) /**< the location in the internal arraybuffer */
 {
   int16_t num;
-  memcpy (&num, src, sizeof (int16_t));
-  return (ecma_number_t) num;
+  ECMA_TYPEDARRAY_GET_ELEMENT (src, num, int16_t);
+  return ecma_make_integer_value (num);
 } /* ecma_typedarray_get_int16_element */
 
 /**
  * Read an uint16_t value from the given arraybuffer
  */
-static ecma_number_t
+static ecma_value_t
 ecma_typedarray_get_uint16_element (lit_utf8_byte_t *src) /**< the location in the internal arraybuffer */
 {
   uint16_t num;
-  memcpy (&num, src, sizeof (uint16_t));
-  return (ecma_number_t) num;
+  ECMA_TYPEDARRAY_GET_ELEMENT (src, num, uint16_t);
+  return ecma_make_integer_value (num);
 } /* ecma_typedarray_get_uint16_element */
 
 /**
  * Read an int32_t value from the given arraybuffer
  */
-static ecma_number_t
+static ecma_value_t
 ecma_typedarray_get_int32_element (lit_utf8_byte_t *src) /**< the location in the internal arraybuffer */
 {
   int32_t num;
-  memcpy (&num, src, sizeof (int32_t));
-  return (ecma_number_t) num;
+  ECMA_TYPEDARRAY_GET_ELEMENT (src, num, int32_t);
+  return ecma_make_number_value (num);
 } /* ecma_typedarray_get_int32_element */
 
 /**
  * Read an uint32_t value from the given arraybuffer
  */
-static ecma_number_t
+static ecma_value_t
 ecma_typedarray_get_uint32_element (lit_utf8_byte_t *src) /**< the location in the internal arraybuffer */
 {
   uint32_t num;
-  memcpy (&num, src, sizeof (uint32_t));
-  return (ecma_number_t) num;
+  ECMA_TYPEDARRAY_GET_ELEMENT (src, num, uint32_t);
+  return ecma_make_number_value (num);
 } /* ecma_typedarray_get_uint32_element */
 
 /**
  * Read a float value from the given arraybuffer
  */
-static ecma_number_t
+static ecma_value_t
 ecma_typedarray_get_float_element (lit_utf8_byte_t *src) /**< the location in the internal arraybuffer */
 {
   float num;
-  memcpy (&num, src, sizeof (float));
-  return (ecma_number_t) num;
+  ECMA_TYPEDARRAY_GET_ELEMENT (src, num, float);
+  return ecma_make_number_value (num);
 } /* ecma_typedarray_get_float_element */
 
 /**
  * Read a double value from the given arraybuffer
  */
-static ecma_number_t
+static ecma_value_t
 ecma_typedarray_get_double_element (lit_utf8_byte_t *src) /**< the location in the internal arraybuffer */
 {
   double num;
-  memcpy (&num, src, sizeof (double));
-  return (ecma_number_t) num;
+  ECMA_TYPEDARRAY_GET_ELEMENT (src, num, double);
+  return ecma_make_number_value (num);
 } /* ecma_typedarray_get_double_element */
+
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+/**
+ * Read a bigint64 value from the given arraybuffer
+ */
+static ecma_value_t
+ecma_typedarray_get_bigint64_element (lit_utf8_byte_t *src) /**< the location in the internal arraybuffer */
+{
+  uint64_t num;
+  ECMA_TYPEDARRAY_GET_ELEMENT (src, num, uint64_t);
+  bool sign = (num >> 63) != 0;
+
+  if (sign)
+  {
+    num = (uint64_t) (-(int64_t) num);
+  }
+
+  return ecma_bigint_create_from_digits (&num, 1, sign);
+} /* ecma_typedarray_get_bigint64_element */
+
+/**
+ * Read a biguint64 value from the given arraybuffer
+ */
+static ecma_value_t
+ecma_typedarray_get_biguint64_element (lit_utf8_byte_t *src) /**< the location in the internal arraybuffer */
+{
+  uint64_t num;
+  ECMA_TYPEDARRAY_GET_ELEMENT (src, num, uint64_t);
+  return ecma_bigint_create_from_digits (&num, 1, false);
+} /* ecma_typedarray_get_biguint64_element */
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 
 /**
  * Normalize the given ecma_number_t to an uint32_t value
@@ -160,131 +227,279 @@ ecma_typedarray_setter_number_to_uint32 (ecma_number_t value) /**< the number va
 
 /**
  * Write an int8_t value into the given arraybuffer
+ *
+ * @return ECMA_VALUE_ERROR - if the ToNumber operation fails
+ *         ECMA_VALUE_TRUE - otherwise
  */
-static void
+static ecma_value_t
 ecma_typedarray_set_int8_element (lit_utf8_byte_t *dst_p, /**< the location in the internal arraybuffer */
-                                  ecma_number_t value) /**< the number value to set */
+                                  ecma_value_t value) /**< the number value to set */
 {
-  int8_t num = (int8_t) ecma_typedarray_setter_number_to_uint32 (value);
+  ecma_number_t result_num;
+  ecma_value_t to_num = ecma_op_to_numeric (value, &result_num, ECMA_TO_NUMERIC_NO_OPTS);
+
+  if (ECMA_IS_VALUE_ERROR (to_num))
+  {
+    return to_num;
+  }
+
+  int8_t num = (int8_t) ecma_typedarray_setter_number_to_uint32 (result_num);
   *dst_p = (lit_utf8_byte_t) num;
+  return ECMA_VALUE_TRUE;
 } /* ecma_typedarray_set_int8_element */
 
 /**
  * Write an uint8_t value into the given arraybuffer
+ *
+ * @return ECMA_VALUE_ERROR - if the ToNumber operation fails
+ *         ECMA_VALUE_TRUE - otherwise
  */
-static void
+static ecma_value_t
 ecma_typedarray_set_uint8_element (lit_utf8_byte_t *dst_p, /**< the location in the internal arraybuffer */
-                                   ecma_number_t value) /**< the number value to set */
+                                   ecma_value_t value) /**< the number value to set */
 {
-  uint8_t num = (uint8_t) ecma_typedarray_setter_number_to_uint32 (value);
+  ecma_number_t result_num;
+  ecma_value_t to_num = ecma_op_to_numeric (value, &result_num, ECMA_TO_NUMERIC_NO_OPTS);
+
+  if (ECMA_IS_VALUE_ERROR (to_num))
+  {
+    return to_num;
+  }
+
+  uint8_t num = (uint8_t) ecma_typedarray_setter_number_to_uint32 (result_num);
   *dst_p = (lit_utf8_byte_t) num;
+  return ECMA_VALUE_TRUE;
 } /* ecma_typedarray_set_uint8_element */
 
 /**
  * Write an uint8_t clamped value into the given arraybuffer
+ *
+ * @return ECMA_VALUE_ERROR - if the ToNumber operation fails
+ *         ECMA_VALUE_TRUE - otherwise
  */
-static void
+static ecma_value_t
 ecma_typedarray_set_uint8_clamped_element (lit_utf8_byte_t *dst_p, /**< the location in the internal arraybuffer */
-                                           ecma_number_t value) /**< the number value to set */
+                                           ecma_value_t value) /**< the number value to set */
 {
+  ecma_number_t result_num;
+  ecma_value_t to_num = ecma_op_to_numeric (value, &result_num, ECMA_TO_NUMERIC_NO_OPTS);
+
+  if (ECMA_IS_VALUE_ERROR (to_num))
+  {
+    return to_num;
+  }
+
   uint8_t clamped;
 
-  if (value > 255)
+  if (result_num > 255)
   {
     clamped = 255;
   }
-  else if (value <= 0)
+  else if (result_num <= 0)
   {
     clamped = 0;
   }
   else
   {
-    clamped = (uint8_t) value;
+    clamped = (uint8_t) result_num;
 
-    if (clamped + 0.5 < value
-        || (clamped + 0.5 == value && (clamped % 2) == 1))
+    if (clamped + 0.5 < result_num
+        || (clamped + 0.5 == result_num && (clamped % 2) == 1))
     {
       clamped ++;
     }
   }
 
   *dst_p = (lit_utf8_byte_t) clamped;
+  return ECMA_VALUE_TRUE;
 } /* ecma_typedarray_set_uint8_clamped_element */
 
 /**
  * Write an int16_t value into the given arraybuffer
+ *
+ * @return ECMA_VALUE_ERROR - if the ToNumber operation fails
+ *         ECMA_VALUE_TRUE - otherwise
  */
-static void
+static ecma_value_t
 ecma_typedarray_set_int16_element (lit_utf8_byte_t *dst_p, /**< the location in the internal arraybuffer */
-                                   ecma_number_t value) /**< the number value to set */
+                                   ecma_value_t value) /**< the number value to set */
 {
-  int16_t num = (int16_t) ecma_typedarray_setter_number_to_uint32 (value);
-  memcpy (dst_p, &num, sizeof (int16_t));
+  ecma_number_t resut_num;
+  ecma_value_t to_num = ecma_op_to_numeric (value, &resut_num, ECMA_TO_NUMERIC_NO_OPTS);
+
+  if (ECMA_IS_VALUE_ERROR (to_num))
+  {
+    return to_num;
+  }
+
+  int16_t num = (int16_t) ecma_typedarray_setter_number_to_uint32 (resut_num);
+  ECMA_TYPEDARRAY_SET_ELEMENT (dst_p, num, int16_t);
+  return ECMA_VALUE_TRUE;
 } /* ecma_typedarray_set_int16_element */
 
 /**
  * Write an uint8_t value into the given arraybuffer
+ *
+ * @return ECMA_VALUE_ERROR - if the ToNumber operation fails
+ *         ECMA_VALUE_TRUE - otherwise
  */
-static void
+static ecma_value_t
 ecma_typedarray_set_uint16_element (lit_utf8_byte_t *dst_p, /**< the location in the internal arraybuffer */
-                                    ecma_number_t value) /**< the number value to set */
+                                    ecma_value_t value) /**< the number value to set */
 {
-  uint16_t num = (uint16_t) ecma_typedarray_setter_number_to_uint32 (value);
-  memcpy (dst_p, &num, sizeof (uint16_t));
+  ecma_number_t resut_num;
+  ecma_value_t to_num = ecma_op_to_numeric (value, &resut_num, ECMA_TO_NUMERIC_NO_OPTS);
+
+  if (ECMA_IS_VALUE_ERROR (to_num))
+  {
+    return to_num;
+  }
+
+  uint16_t num = (uint16_t) ecma_typedarray_setter_number_to_uint32 (resut_num);
+  ECMA_TYPEDARRAY_SET_ELEMENT (dst_p, num, uint16_t);
+  return ECMA_VALUE_TRUE;
 } /* ecma_typedarray_set_uint16_element */
 
 /**
  * Write an int32_t value into the given arraybuffer
+ *
+ * @return ECMA_VALUE_ERROR - if the ToNumber operation fails
+ *         ECMA_VALUE_TRUE - otherwise
  */
-static void
+static ecma_value_t
 ecma_typedarray_set_int32_element (lit_utf8_byte_t *dst_p, /**< the location in the internal arraybuffer */
-                                   ecma_number_t value) /**< the number value to set */
+                                   ecma_value_t value) /**< the number value to set */
 {
-  int32_t num = (int32_t) ecma_typedarray_setter_number_to_uint32 (value);
-  memcpy (dst_p, &num, sizeof (int32_t));
+  ecma_number_t resut_num;
+  ecma_value_t to_num = ecma_op_to_numeric (value, &resut_num, ECMA_TO_NUMERIC_NO_OPTS);
+
+  if (ECMA_IS_VALUE_ERROR (to_num))
+  {
+    return to_num;
+  }
+
+  int32_t num = (int32_t) ecma_typedarray_setter_number_to_uint32 (resut_num);
+  ECMA_TYPEDARRAY_SET_ELEMENT (dst_p, num, int32_t);
+  return ECMA_VALUE_TRUE;
 } /* ecma_typedarray_set_int32_element */
 
 /**
  * Write an uint32_t value into the given arraybuffer
+ *
+ * @return ECMA_VALUE_ERROR - if the ToNumber operation fails
+ *         ECMA_VALUE_TRUE - otherwise
  */
-static void
+static ecma_value_t
 ecma_typedarray_set_uint32_element (lit_utf8_byte_t *dst_p, /**< the location in the internal arraybuffer */
-                                    ecma_number_t value) /**< the number value to set */
+                                    ecma_value_t value) /**< the number value to set */
 {
-  uint32_t num = (uint32_t) ecma_typedarray_setter_number_to_uint32 (value);
-  memcpy (dst_p, &num, sizeof (uint32_t));
+  ecma_number_t resut_num;
+  ecma_value_t to_num = ecma_op_to_numeric (value, &resut_num, ECMA_TO_NUMERIC_NO_OPTS);
+
+  if (ECMA_IS_VALUE_ERROR (to_num))
+  {
+    return to_num;
+  }
+
+  uint32_t num = (uint32_t) ecma_typedarray_setter_number_to_uint32 (resut_num);
+  ECMA_TYPEDARRAY_SET_ELEMENT (dst_p, num, uint32_t);
+  return ECMA_VALUE_TRUE;
 } /* ecma_typedarray_set_uint32_element */
 
 /**
  * Write a float value into the given arraybuffer
+ *
+ * @return ECMA_VALUE_ERROR - if the ToNumber operation fails
+ *         ECMA_VALUE_TRUE - otherwise
  */
-static void
+static ecma_value_t
 ecma_typedarray_set_float_element (lit_utf8_byte_t *dst_p, /**< the location in the internal arraybuffer */
-                                   ecma_number_t value) /**< the number value to set */
+                                   ecma_value_t value) /**< the number value to set */
 {
-  float num = (float) value;
-  memcpy (dst_p, &num, sizeof (float));
+  ecma_number_t result_num;
+  ecma_value_t to_num = ecma_op_to_numeric (value, &result_num, ECMA_TO_NUMERIC_NO_OPTS);
+
+  if (ECMA_IS_VALUE_ERROR (to_num))
+  {
+    return to_num;
+  }
+
+  float num = (float) result_num;
+  ECMA_TYPEDARRAY_SET_ELEMENT (dst_p, num, float);
+  return ECMA_VALUE_TRUE;
 } /* ecma_typedarray_set_float_element */
 
 #if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
 /**
  * Write a double value into the given arraybuffer
+ *
+ * @return ECMA_VALUE_ERROR - if the ToNumber operation fails
+ *         ECMA_VALUE_TRUE - otherwise
  */
-static void
+static ecma_value_t
 ecma_typedarray_set_double_element (lit_utf8_byte_t *dst_p, /**< the location in the internal arraybuffer */
-                                    ecma_number_t value) /**< the number value to set */
+                                    ecma_value_t value) /**< the number value to set */
 {
-  double num = (double) value;
-  memcpy (dst_p, &num, sizeof (double));
+  ecma_number_t result_num;
+  ecma_value_t to_num = ecma_op_to_numeric (value, &result_num, ECMA_TO_NUMERIC_NO_OPTS);
+
+  if (ECMA_IS_VALUE_ERROR (to_num))
+  {
+    return to_num;
+  }
+
+  double num = (double) result_num;
+  ECMA_TYPEDARRAY_SET_ELEMENT (dst_p, num, double);
+  return ECMA_VALUE_TRUE;
 } /* ecma_typedarray_set_double_element */
 #endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+/**
+ * Write a bigint64/biguint64 value into the given arraybuffer
+ *
+ * @return ECMA_VALUE_ERROR - if the ToBigInt operation fails
+ *         ECMA_VALUE_TRUE - otherwise
+ */
+static ecma_value_t
+ecma_typedarray_set_bigint_element (lit_utf8_byte_t *dst_p, /**< the location in the internal arraybuffer */
+                                    ecma_value_t value) /**< the bigint value to set */
+{
+  ecma_value_t bigint = ecma_bigint_to_bigint (value, false);
+
+  if (ECMA_IS_VALUE_ERROR (bigint))
+  {
+    return bigint;
+  }
+
+  uint64_t num;
+  bool sign;
+  ecma_bigint_get_digits_and_sign (bigint, &num, 1, &sign);
+
+  if (sign)
+  {
+    num = (uint64_t) (-(int64_t) num);
+  }
+
+  ECMA_TYPEDARRAY_SET_ELEMENT (dst_p, num, uint64_t);
+
+  ecma_free_value (bigint);
+
+  return ECMA_VALUE_TRUE;
+} /* ecma_typedarray_set_bigint_element */
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 
 /**
  * Builtin id of the first %TypedArray% builtin routine intrinsic object
  */
 #define ECMA_FIRST_TYPEDARRAY_BUILTIN_ROUTINE_ID ECMA_BUILTIN_ID_INT8ARRAY
 
-#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+/**
+ * Builtin id of the last %TypedArray% builtin routine intrinsic object
+ */
+#define ECMA_LAST_TYPEDARRAY_BUILTIN_ROUTINE_ID ECMA_BUILTIN_ID_BIGUINT64ARRAY
+#elif !ENABLED (JERRY_BUILTIN_BIGINT) && ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
 /**
  * Builtin id of the last %TypedArray% builtin routine intrinsic object
  */
@@ -317,6 +532,10 @@ static const ecma_typedarray_getter_fn_t ecma_typedarray_getters[] =
 #if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
   ecma_typedarray_get_double_element, /**< Float64Array */
 #endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  ecma_typedarray_get_bigint64_element,  /**< BigInt64Array*/
+  ecma_typedarray_get_biguint64_element, /**< BigUint64Array */
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 };
 
 /**
@@ -335,6 +554,10 @@ static const ecma_typedarray_setter_fn_t ecma_typedarray_setters[] =
 #if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
   ecma_typedarray_set_double_element,        /**< Float64Array */
 #endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  ecma_typedarray_set_bigint_element,      /**< BigInt64Array */
+  ecma_typedarray_set_bigint_element,     /**< BigUInt64Array */
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 };
 
 /**
@@ -353,6 +576,10 @@ static const uint8_t ecma_typedarray_element_shift_sizes[] =
 #if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
   3, /**< Float64Array */
 #endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  3, /**< BigInt64Array */
+  3, /**< BigUInt64Array */
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 };
 
 /**
@@ -371,6 +598,10 @@ static const uint16_t ecma_typedarray_magic_string_list[] =
 #if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
   (uint16_t) LIT_MAGIC_STRING_FLOAT64_ARRAY_UL,       /**< Float64Array */
 #endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  (uint16_t) LIT_MAGIC_STRING_BIGINT64_ARRAY_UL,      /**< BigInt64Array */
+  (uint16_t) LIT_MAGIC_STRING_BIGUINT64_ARRAY_UL,     /**< BigUInt64Array */
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT */
 };
 
 /**
@@ -389,7 +620,7 @@ ecma_get_typedarray_getter_fn (ecma_typedarray_type_t typedarray_id)
  *
  * @return ecma_number_t: the value of the element
  */
-inline ecma_number_t JERRY_ATTR_ALWAYS_INLINE
+inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_get_typedarray_element (lit_utf8_byte_t *src_p,
                              ecma_typedarray_type_t typedarray_id)
 {
@@ -410,12 +641,12 @@ ecma_get_typedarray_setter_fn (ecma_typedarray_type_t typedarray_id)
 /**
  * set typedarray's element value
  */
-inline void JERRY_ATTR_ALWAYS_INLINE
+inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_set_typedarray_element (lit_utf8_byte_t *dst_p,
-                             ecma_number_t value,
+                             ecma_value_t value,
                              ecma_typedarray_type_t typedarray_id)
 {
-  ecma_typedarray_setters[typedarray_id](dst_p, value);
+  return ecma_typedarray_setters[typedarray_id](dst_p, value);
 } /* ecma_set_typedarray_element */
 
 /**
@@ -662,6 +893,12 @@ ecma_typedarray_create_object_with_typedarray (ecma_object_t *typedarray_p, /**<
   }
   else
   {
+    if ((ECMA_TYPEDARRAY_IS_BIGINT_TYPE (src_id) ^ ECMA_TYPEDARRAY_IS_BIGINT_TYPE (typedarray_id)) == 1)
+    {
+      ecma_deref_object (new_typedarray_p);
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible typedArray types."));
+    }
+
     uint32_t src_element_size = 1u << ecma_typedarray_get_element_size_shift (typedarray_p);
     uint32_t dst_element_size = 1u << element_size_shift;
     ecma_typedarray_getter_fn_t src_typedarray_getter_cb = ecma_get_typedarray_getter_fn (src_id);
@@ -670,8 +907,16 @@ ecma_typedarray_create_object_with_typedarray (ecma_object_t *typedarray_p, /**<
     for (uint32_t i = 0; i < array_length; i++)
     {
       /* Convert values from source to destination format. */
-      ecma_number_t tmp = src_typedarray_getter_cb (src_buf_p);
-      target_typedarray_setter_cb (dst_buf_p, tmp);
+      ecma_value_t tmp = src_typedarray_getter_cb (src_buf_p);
+      ecma_value_t set_element = target_typedarray_setter_cb (dst_buf_p, tmp);
+
+      ecma_free_value (tmp);
+
+      if (ECMA_IS_VALUE_ERROR (set_element))
+      {
+        ecma_deref_object (new_typedarray_p);
+        return set_element;
+      }
 
       src_buf_p += src_element_size;
       dst_buf_p += dst_element_size;
@@ -719,21 +964,18 @@ ecma_op_typedarray_from_helper (ecma_value_t this_val, /**< this_arg for the abo
     mapped_value = current_value;
   }
 
-  ecma_number_t num_var;
-  ecma_value_t mapped_number = ecma_op_to_numeric (mapped_value, &num_var, ECMA_TO_NUMERIC_NO_OPTS);
-  ecma_free_value (mapped_value);
-
-  if (ECMA_IS_VALUE_ERROR (mapped_number))
-  {
-    return mapped_number;
-  }
-
   if (index >= info_p->length)
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type."));
   }
 
-  setter_cb (info_p->buffer_p + (index << info_p->shift), num_var);
+  ecma_value_t set_element = setter_cb (info_p->buffer_p + (index << info_p->shift), mapped_value);
+  ecma_free_value (mapped_value);
+
+  if (ECMA_IS_VALUE_ERROR (set_element))
+  {
+    return set_element;
+  }
 
   return ECMA_VALUE_TRUE;
 } /* ecma_op_typedarray_from_helper */
@@ -1330,9 +1572,9 @@ ecma_op_typedarray_list_lazy_property_names (ecma_object_t *obj_p, /**< a TypedA
  *
  * See also: ES2015 9.4.5.3: 3.c
  *
- * @return boolean, false if failed
+ * @return ecma value,
  */
-bool
+ecma_value_t
 ecma_op_typedarray_define_index_prop (ecma_object_t *obj_p, /**< a TypedArray object */
                                       uint32_t index, /**< the index number */
                                       const ecma_property_descriptor_t *property_desc_p) /**< the description of
@@ -1351,31 +1593,28 @@ ecma_op_typedarray_define_index_prop (ecma_object_t *obj_p, /**< a TypedArray ob
       || ((property_desc_p->flags & ECMA_PROP_IS_WRITABLE_DEFINED)
           && !(property_desc_p->flags & ECMA_PROP_IS_WRITABLE)))
   {
-    return false;
+    return ECMA_VALUE_FALSE;
   }
 
   if (property_desc_p->flags & ECMA_PROP_IS_VALUE_DEFINED)
   {
-    ecma_number_t num_var;
-    ecma_value_t error = ecma_op_to_numeric (property_desc_p->value, &num_var, ECMA_TO_NUMERIC_NO_OPTS);
-
-    if (ECMA_IS_VALUE_ERROR (error))
-    {
-      jcontext_release_exception ();
-      return false;
-    }
     ecma_typedarray_info_t info = ecma_typedarray_get_info (obj_p);
 
     if (index >= info.length)
     {
-      return false;
+      return ECMA_VALUE_FALSE;
     }
 
     lit_utf8_byte_t *src_buffer = info.buffer_p + (index << info.shift);
-    ecma_set_typedarray_element (src_buffer, num_var, info.id);
+    ecma_value_t set_element = ecma_set_typedarray_element (src_buffer, property_desc_p->value, info.id);
+
+    if (ECMA_IS_VALUE_ERROR (set_element))
+    {
+      return set_element;
+    }
   }
 
-  return true;
+  return ECMA_VALUE_TRUE;
 } /* ecma_op_typedarray_define_index_prop */
 
 /**

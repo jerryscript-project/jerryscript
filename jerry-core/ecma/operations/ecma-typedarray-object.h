@@ -31,11 +31,11 @@
 uint8_t ecma_typedarray_helper_get_shift_size (ecma_typedarray_type_t typedarray_id);
 ecma_typedarray_getter_fn_t ecma_get_typedarray_getter_fn (ecma_typedarray_type_t typedarray_id);
 ecma_typedarray_setter_fn_t ecma_get_typedarray_setter_fn (ecma_typedarray_type_t typedarray_id);
-ecma_number_t ecma_get_typedarray_element (lit_utf8_byte_t *src_p,
-                                           ecma_typedarray_type_t typedarray_id);
-void ecma_set_typedarray_element (lit_utf8_byte_t *dst_p,
-                                  ecma_number_t value,
-                                  ecma_typedarray_type_t typedarray_id);
+ecma_value_t ecma_get_typedarray_element (lit_utf8_byte_t *src_p,
+                                          ecma_typedarray_type_t typedarray_id);
+ecma_value_t ecma_set_typedarray_element (lit_utf8_byte_t *dst_p,
+                                          ecma_value_t value,
+                                          ecma_typedarray_type_t typedarray_id);
 bool ecma_typedarray_helper_is_typedarray (ecma_builtin_id_t builtin_id);
 ecma_typedarray_type_t ecma_get_typedarray_id (ecma_object_t *obj_p);
 ecma_builtin_id_t ecma_typedarray_helper_get_prototype_id (ecma_typedarray_type_t typedarray_id);
@@ -66,9 +66,9 @@ bool ecma_is_typedarray (ecma_value_t target);
 void ecma_op_typedarray_list_lazy_property_names (ecma_object_t *obj_p,
                                                   ecma_collection_t *prop_names_p,
                                                   ecma_property_counter_t *prop_counter_p);
-bool ecma_op_typedarray_define_index_prop (ecma_object_t *obj_p,
-                                           uint32_t index,
-                                           const ecma_property_descriptor_t *property_desc_p);
+ecma_value_t ecma_op_typedarray_define_index_prop (ecma_object_t *obj_p,
+                                                   uint32_t index,
+                                                   const ecma_property_descriptor_t *property_desc_p);
 ecma_value_t ecma_op_create_typedarray_with_type_and_length (ecma_typedarray_type_t typedarray_id,
                                                              uint32_t array_length);
 ecma_typedarray_info_t ecma_typedarray_get_info (ecma_object_t *typedarray_p);

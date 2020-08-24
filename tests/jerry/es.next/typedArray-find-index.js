@@ -114,3 +114,17 @@ typedArrayTypes.forEach (function (TypedArray) {
   // Checking behavior when there are more than 2 arguments
   assert (array.findIndex (function (e) { return e < 2 }, {}, 8, 4, 5, 6, 6) === 0);
 })
+
+function isNegative(element, index, array) {
+  return element < 0;
+}
+
+function isBigger(element, index, array) {
+  return element > 40n;
+}
+
+var bigint_array = new BigInt64Array([10n, -20n, 30n, -40n, 50n]);
+var biguint_array = new BigUint64Array([10n, 20n, 30n, 40n, 50n]);
+
+assert(bigint_array.findIndex(isNegative) === 1);
+assert(biguint_array.findIndex(isBigger) === 4);

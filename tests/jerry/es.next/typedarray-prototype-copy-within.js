@@ -72,3 +72,11 @@ typedarrays.forEach(function(e){
     assert(e.copyWithin(3, Infinity, 5).toString() === '2,1,4,2,1,5');
     assert(e.copyWithin(1, 3, -Infinity).toString() === '2,1,4,2,1,5');
 });
+
+var bigint_array = new BigInt64Array([1n, 2n, 3n, -4n, 5n]);
+assert(bigint_array.copyWithin(2, 1, 4).toString() === '1,2,2,3,-4');
+assert(bigint_array.copyWithin(0, 4).toString() === '-4,2,2,3,-4');
+
+var biguint_array = new BigUint64Array([1n, 2n, 3n, 4n, 5n]);
+assert(biguint_array.copyWithin(0, 2, 4).toString() === '3,4,3,4,5');
+assert(biguint_array.copyWithin(-3, 0, 3).toString() === '3,4,3,4,3');

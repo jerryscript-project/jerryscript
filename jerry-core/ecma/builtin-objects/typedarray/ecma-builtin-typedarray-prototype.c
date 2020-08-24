@@ -1950,15 +1950,15 @@ ecma_builtin_typedarray_prototype_to_locale_string_helper (ecma_object_t *this_o
 
     ecma_string_t *str_p = ecma_op_to_string (call_value);
 
+    ecma_free_value (call_value);
+
     if (JERRY_UNLIKELY (str_p == NULL))
     {
-      ecma_free_value (element_value);
       ecma_deref_object (element_obj_p);
       return ECMA_VALUE_ERROR;
     }
 
     ret_value = ecma_make_string_value (str_p);
-    ecma_deref_ecma_string (str_p);
   }
   else
   {

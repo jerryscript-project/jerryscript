@@ -2580,11 +2580,12 @@ ecma_string_pad (ecma_value_t original_string_p, /**< Input ecma string */
   uint32_t remaining = fill_len - (prepend_count * filler_length);
 
   ECMA_STRING_TO_UTF8_STRING (filler_p, start_p, utf8_str_size);
+  const lit_utf8_byte_t *temp_start_p = start_p;
   while (remaining > 0)
   {
-    read_size = lit_read_code_unit_from_utf8 (start_p, &ch);
+    read_size = lit_read_code_unit_from_utf8 (temp_start_p, &ch);
     ecma_stringbuilder_append_char (&builder, ch);
-    start_p += read_size;
+    temp_start_p += read_size;
     remaining--;
   }
   ECMA_FINALIZE_UTF8_STRING (start_p, utf8_str_size);

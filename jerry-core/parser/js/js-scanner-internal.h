@@ -114,6 +114,7 @@ typedef enum
   SCAN_STACK_CLASS_EXPRESSION,             /**< class expression */
   SCAN_STACK_CLASS_EXTENDS,                /**< class extends expression */
   SCAN_STACK_FUNCTION_PARAMETERS,          /**< function parameter initializer */
+  SCAN_STACK_FOR_START_PATTERN,            /**< possible assignment pattern for "for" iterator */
   SCAN_STACK_USE_ASYNC,                    /**< an "async" identifier is used */
   SCAN_STACK_OBJECT_LITERAL_WITH_SUPER,    /**< object literal with inner super reference */
 #endif /* ENABLED (JERRY_ESNEXT) */

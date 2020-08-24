@@ -3091,10 +3091,7 @@ parser_pattern_get_target (parser_context_t *context_p, /**< context */
     }
     else
     {
-      if (context_p->next_scanner_info_p->type != SCANNER_TYPE_INITIALIZER)
-      {
-        parser_raise_error (context_p, PARSER_ERR_INVALID_DESTRUCTURING_PATTERN);
-      }
+      JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_INITIALIZER);
       scanner_get_location (&start_location, context_p);
 
       scanner_set_location (context_p, &((scanner_location_info_t *) context_p->next_scanner_info_p)->location);
@@ -3205,7 +3202,7 @@ parser_pattern_form_assignment (parser_context_t *context_p, /**< context */
 
   parser_pattern_emit_rhs (context_p, rhs_opcode, literal_index);
 
-  if (context_p->token.type == LEXER_ASSIGN)
+  if (context_p->token.type == LEXER_ASSIGN && !(flags & PARSER_PATTERN_REST_ELEMENT))
   {
     parser_branch_t skip_init;
     lexer_next_token (context_p);
@@ -3273,12 +3270,23 @@ parser_pattern_process_nested_pattern (parser_context_t *context_p, /**< context
                                                 | PARSER_PATTERN_LET
                                                 | PARSER_PATTERN_CONST
                                                 | PARSER_PATTERN_LOCAL
-                                                | PARSER_PATTERN_REST_ELEMENT
                                                 | PARSER_PATTERN_ARGUMENTS)));
 
-  if (context_p->next_scanner_info_p->source_p == context_p->source_p)
+  JERRY_ASSERT (context_p->next_scanner_info_p->source_p != context_p->source_p
+                || context_p->next_scanner_info_p->type == SCANNER_TYPE_INITIALIZER
+                || context_p->next_scanner_info_p->type == SCANNER_TYPE_OBJECT_LITERAL_WITH_SUPER);
+
+  if (context_p->next_scanner_info_p->source_p == context_p->source_p
+      && context_p->next_scanner_info_p->type == SCANNER_TYPE_INITIALIZER)
   {
-    options |= PARSER_PATTERN_TARGET_DEFAULT;
+    if (!(flags & PARSER_PATTERN_REST_ELEMENT))
+    {
+      options |= PARSER_PATTERN_TARGET_DEFAULT;
+    }
+    else
+    {
+      scanner_release_next (context_p, sizeof (scanner_location_info_t));
+    }
   }
 
   parser_pattern_emit_rhs (context_p, rhs_opcode, literal_index);

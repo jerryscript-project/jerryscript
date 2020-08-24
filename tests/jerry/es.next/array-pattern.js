@@ -60,6 +60,9 @@ checkSyntax ("[()] = []");
 checkSyntax ("try { let [$] = $;");
 checkSyntax ("let a, [ b.c ] = [6];");
 checkSyntax ("let [(a)] = [1]");
+checkSyntax ("[...a = []] = [1]");
+checkSyntax ("[...[a] = []] = [1]");
+checkSyntax ("[...[a, [...b] = []] = []] = [1]");
 
 mustThrow ("var [a] = 4");
 mustThrow ("var [a] = 5");

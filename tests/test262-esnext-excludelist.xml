@@ -616,7 +616,6 @@
   <test id="built-ins/BigInt/asUintN/order-of-steps.js"><reason></reason></test>
   <test id="built-ins/BigInt/constructor-empty-string.js"><reason></reason></test>
   <test id="built-ins/BigInt/constructor-trailing-leading-spaces.js"><reason></reason></test>
-  <test id="built-ins/BigInt/prototype/toString/length.js"><reason></reason></test>
   <test id="built-ins/BigInt/prototype/valueOf/cross-realm.js"><reason></reason></test>
   <test id="built-ins/Boolean/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/DataView/buffer-does-not-have-arraybuffer-data-throws-sab.js"><reason></reason></test>

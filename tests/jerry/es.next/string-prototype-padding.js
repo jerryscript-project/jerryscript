@@ -17,8 +17,10 @@ var test = "bar"
 
 assert(test.padStart("5", "foo") === "fobar")
 assert(test.padStart(6, "foo") === "foobar")
+assert(test.padStart(8, '1234')=== "12341bar")
 assert(test.padEnd(5, "baz") === "barba")
 assert(test.padEnd(6, "baz") === "barbaz")
+assert(test.padEnd(8, '1234')=== "bar12341")
 
 // Check for negative value
 assert(test.padStart(-5, "foo") === "bar")

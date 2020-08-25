@@ -729,13 +729,11 @@ ecma_number_parse_int (const lit_utf8_byte_t *string_buff, /**< routine's first 
     return ecma_make_nan_value ();
   }
 
-  const lit_utf8_byte_t *string_curr_p = string_buff;
+   /* 2. Remove leading whitespace. */
 
-  /* 2. Remove leading whitespace. */
-  ecma_string_trim_helper (&string_curr_p, &string_buff_size);
-
-  const lit_utf8_byte_t *string_end_p = string_curr_p + string_buff_size;
-  const lit_utf8_byte_t *start_p = string_curr_p;
+  const lit_utf8_byte_t *string_end_p = string_buff + string_buff_size;
+  const lit_utf8_byte_t *start_p = ecma_string_trim_front (string_buff, string_end_p);
+  const lit_utf8_byte_t *string_curr_p = start_p;
   const lit_utf8_byte_t *end_p = string_end_p;
 
   if (string_curr_p >= string_end_p)
@@ -906,13 +904,11 @@ ecma_number_parse_float (const lit_utf8_byte_t *string_buff, /**< routine's firs
     return ecma_make_nan_value ();
   }
 
-  const lit_utf8_byte_t *str_curr_p = string_buff;
-
   /* 2. Remove leading whitespace. */
-  ecma_string_trim_helper (&str_curr_p, &string_buff_size);
 
-  const lit_utf8_byte_t *str_end_p = str_curr_p + string_buff_size;
-  const lit_utf8_byte_t *start_p = str_curr_p;
+  const lit_utf8_byte_t *str_end_p = string_buff + string_buff_size;
+  const lit_utf8_byte_t *start_p = ecma_string_trim_front (string_buff, str_end_p);
+  const lit_utf8_byte_t *str_curr_p = start_p;
   const lit_utf8_byte_t *end_p = str_end_p;
 
   bool sign = false;

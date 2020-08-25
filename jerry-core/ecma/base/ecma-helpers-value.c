@@ -567,7 +567,6 @@ ecma_make_length_value (ecma_length_t number) /**< number to be encoded */
     return ecma_make_integer_value ((ecma_integer_value_t) number);
   }
 
-  JERRY_ASSERT (number <= ECMA_NUMBER_MAX_SAFE_INTEGER);
   return ecma_create_float_number ((ecma_number_t) number);
 } /* ecma_make_length_value */
 

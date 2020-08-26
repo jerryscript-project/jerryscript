@@ -213,11 +213,9 @@ ecma_builtin_intrinsic_dispatch_routine (uint16_t builtin_routine_id, /**< built
     case ECMA_INTRINSIC_STRING_TRIM_START:
     case ECMA_INTRINSIC_STRING_TRIM_END:
     {
-      ecma_value_t coercible = ecma_op_check_object_coercible (this_arg);
-
-      if (ECMA_IS_VALUE_ERROR (coercible))
+      if (!ecma_op_require_object_coercible (this_arg))
       {
-        return coercible;
+        return ECMA_VALUE_ERROR;
       }
 
       ecma_string_t *to_str_p = ecma_op_to_string (this_arg);

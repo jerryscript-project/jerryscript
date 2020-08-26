@@ -2478,10 +2478,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_REQUIRE_OBJECT_COERCIBLE:
         {
-          result = ecma_op_check_object_coercible (stack_top_p[-1]);
-
-          if (ECMA_IS_VALUE_ERROR (result))
+          if (!ecma_op_require_object_coercible (stack_top_p[-1]))
           {
+            result = ECMA_VALUE_ERROR;
             goto error;
           }
           continue;

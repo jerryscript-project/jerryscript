@@ -255,12 +255,10 @@ vm_op_delete_prop (ecma_value_t object, /**< base object */
   }
 #endif /* !ENABLED (JERRY_ESNEXT) */
 
-  ecma_value_t check_coercible = ecma_op_check_object_coercible (object);
-  if (ECMA_IS_VALUE_ERROR (check_coercible))
+  if (!ecma_op_require_object_coercible (object))
   {
-    return check_coercible;
+    return ECMA_VALUE_ERROR;
   }
-  JERRY_ASSERT (check_coercible == ECMA_VALUE_EMPTY);
 
   ecma_string_t *name_string_p = ecma_op_to_property_key (property);
 
@@ -270,7 +268,7 @@ vm_op_delete_prop (ecma_value_t object, /**< base object */
   }
 
   ecma_value_t obj_value = ecma_op_to_object (object);
-  /* The ecma_op_check_object_coercible call already checked the op_to_object error cases. */
+  /* The ecma_op_require_object_coercible call already checked the op_to_object error cases. */
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (obj_value));
   JERRY_ASSERT (ecma_is_value_object (obj_value));
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_value);
@@ -1376,7 +1374,7 @@ opfunc_form_super_reference (ecma_value_t **vm_stack_top_p, /**< current vm stac
     return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot invoke nullable super method."));
   }
 
-  if (ECMA_IS_VALUE_ERROR (ecma_op_check_object_coercible (parent)))
+  if (!ecma_op_require_object_coercible (parent))
   {
     return ECMA_VALUE_ERROR;
   }

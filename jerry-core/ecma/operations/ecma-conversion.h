@@ -46,7 +46,7 @@ typedef enum
   ECMA_TO_NUMERIC_ALLOW_BIGINT = (1 << 0), /**< allow BigInt values (ignored if BigInts are disabled) */
 } ecma_to_numeric_options_t;
 
-ecma_value_t ecma_op_check_object_coercible (ecma_value_t value);
+bool ecma_op_require_object_coercible (ecma_value_t value);
 bool ecma_op_same_value (ecma_value_t x, ecma_value_t y);
 #if ENABLED (JERRY_BUILTIN_MAP)
 bool ecma_op_same_value_zero (ecma_value_t x, ecma_value_t y, bool strict_equality);

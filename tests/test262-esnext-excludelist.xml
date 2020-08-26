@@ -14,9 +14,6 @@
   <test id="annexB/built-ins/RegExp/named-groups/groups-object.js"><reason></reason></test>
   <test id="annexB/built-ins/RegExp/named-groups/non-unicode-malformed-lookbehind.js"><reason></reason></test>
   <test id="annexB/built-ins/RegExp/named-groups/non-unicode-malformed.js"><reason></reason></test>
-  <test id="annexB/built-ins/RegExp/prototype/compile/length.js"><reason></reason></test>
-  <test id="annexB/built-ins/RegExp/prototype/compile/pattern-regexp-flags-defined.js"><reason></reason></test>
-  <test id="annexB/built-ins/RegExp/prototype/compile/pattern-regexp-immutable-lastindex.js"><reason></reason></test>
   <test id="annexB/built-ins/String/prototype/anchor/B.2.3.2.js"><reason></reason></test>
   <test id="annexB/built-ins/String/prototype/anchor/attr-tostring-err.js"><reason></reason></test>
   <test id="annexB/built-ins/String/prototype/anchor/length.js"><reason></reason></test>

@@ -144,3 +144,69 @@ assert (r.lastIndex === 0);
 
 assert (RegExp.prototype[Symbol.match].call(/a/y, "aaa").length === 1);
 assert (RegExp.prototype[Symbol.match].call(/a/gy, "aaa").length === 3);
+
+var length = Object.getOwnPropertyDescriptor(RegExp.prototype.compile, "length");
+assert(!length.enumerable);
+assert(!length.writable);
+assert(length.configurable);
+assert(length.value === 2);
+
+var re = /./;
+re.lastIndex = 23;
+
+try {
+  re.compile(re, null);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+try {
+  re.compile(re, 0);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+try {
+  re.compile(re, '');
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+try {
+  re.compile(re, false);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+try {
+  re.compile(re, {});
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+  
+try {
+  re.compile(re, []);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+  
+assert(re.lastIndex === 23);
+
+var subject = /initial/;
+Object.defineProperty(subject, 'lastIndex', { value: 45, writable: false });
+
+try {
+  subject.compile(/updated/gi);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
+
+assert(subject.toString() === new RegExp('updated', 'gi').toString());
+assert(subject.lastIndex === 45);

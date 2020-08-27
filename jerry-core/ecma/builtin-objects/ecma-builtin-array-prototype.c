@@ -1252,6 +1252,7 @@ clean_up:
  * The Array.prototype object's 'splice' routine
  *
  * See also:
+ *          ECMA-262 v11, 22.1.3.28
  *          ECMA-262 v5, 15.4.4.12
  *
  * @return ecma value
@@ -1263,105 +1264,97 @@ ecma_builtin_array_prototype_object_splice (const ecma_value_t args[], /**< argu
                                             ecma_object_t *obj_p, /**< object */
                                             ecma_length_t len) /**< object's length */
 {
+  ecma_length_t actual_start = 0;
+  ecma_length_t actual_delete_count = 0;
+  ecma_length_t insert_count = 0;
+
+  if (args_number > 0)
+  {
+    /* ES5.1: 6, ES11: 4. */
+    if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_array_index_normalize (args[0],
+                                                                        len,
+                                                                        &actual_start)))
+    {
+      return ECMA_VALUE_ERROR;
+    }
+
+    /* ES11: 6. */
+    if (args_number == 1)
+    {
+      actual_delete_count = len - actual_start;
+    }
+    /* ES11: 7. */
+    else
+    {
+      insert_count = args_number - 2;
+
+      ecma_number_t delete_num;
+      if (ECMA_IS_VALUE_ERROR (ecma_op_to_integer (args[1], &delete_num)))
+      {
+        return ECMA_VALUE_ERROR;
+      }
+
+      /* ES5.1: 7 */
+      actual_delete_count = (ecma_length_t) (JERRY_MIN (JERRY_MAX (delete_num, 0),
+                                                        (ecma_number_t) (len - actual_start)));
+    }
+  }
+
+  ecma_length_t new_length = len + insert_count - actual_delete_count;
+
 #if ENABLED (JERRY_ESNEXT)
-  ecma_value_t new_array = ecma_op_array_species_create (obj_p, 0);
+  /* ES11: 8. */
+  if (new_length > ECMA_NUMBER_MAX_SAFE_INTEGER)
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid new array length"));
+  }
+
+  /* ES11: 9. */
+  ecma_value_t new_array = ecma_op_array_species_create (obj_p, actual_delete_count);
 
   if (ECMA_IS_VALUE_ERROR (new_array))
   {
     return new_array;
   }
 #else /* !ENABLED (JERRY_ESNEXT) */
-  ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
+  /* ES5.1: 2. */
+  ecma_value_t length = ecma_make_length_value (actual_delete_count);
+  ecma_value_t new_array = ecma_op_create_array_object (&length, 1, true);
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
+  ecma_free_value (length);
 #endif /* ENABLED (JERRY_ESNEXT) */
 
   ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
 
-  ecma_length_t start = 0;
-  ecma_length_t delete_count = 0;
-
-  if (args_number > 0)
-  {
-    /* 5. 6. */
-    if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_array_index_normalize (args[0],
-                                                                        len,
-                                                                        &start)))
-    {
-      ecma_deref_object (new_array_p);
-      return ECMA_VALUE_ERROR;
-    }
-
-    /*
-     * If there is only one argument, that will be the start argument,
-     * and we must delete the additional elements.
-     */
-    if (args_number == 1)
-    {
-      delete_count = len - start;
-    }
-    else
-    {
-      /* 7. */
-      ecma_number_t delete_num;
-      if (ECMA_IS_VALUE_ERROR (ecma_op_to_integer (args[1], &delete_num)))
-      {
-        ecma_deref_object (new_array_p);
-        return ECMA_VALUE_ERROR;
-      }
-
-      if (!ecma_number_is_nan (delete_num))
-      {
-        if (ecma_number_is_negative (delete_num))
-        {
-          delete_count = 0;
-        }
-        else
-        {
-          delete_count = ecma_number_is_infinity (delete_num) ? len : ecma_number_to_uint32 (delete_num);
-
-          if (delete_count > len - start)
-          {
-            delete_count = len - start;
-          }
-        }
-      }
-      else
-      {
-        delete_count = 0;
-      }
-    }
-  }
-
-  /* 8-9. */
+  /* ES5.1: 8, ES11: 10. */
   ecma_length_t k = 0;
 
-  for (ecma_length_t del_item_idx; k < delete_count; k++)
+  /* ES5.1: 9, ES11: 11. */
+  for (; k < actual_delete_count; k++)
   {
-    /* 9.a - 9.b */
-    del_item_idx = k + start;
+    ecma_length_t from = actual_start + k;
+    ecma_value_t from_present = ecma_op_object_find_by_index (obj_p, from);
 
-    ecma_value_t get_value = ecma_op_object_find_by_index (obj_p, del_item_idx);
-
-    if (ECMA_IS_VALUE_ERROR (get_value))
+    if (ECMA_IS_VALUE_ERROR (from_present))
     {
       ecma_deref_object (new_array_p);
-      return get_value;
+      return from_present;
     }
 
-    if (ecma_is_value_found (get_value))
+    if (ecma_is_value_found (from_present))
     {
-      /* 9.c.ii */
-      ecma_value_t put_comp;
 #if ENABLED (JERRY_ESNEXT)
       const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_IS_THROW;
 #else /* !ENABLED (JERRY_ESNEXT) */
       const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE;
 #endif /* ENABLED (JERRY_ESNEXT) */
-      put_comp = ecma_builtin_helper_def_prop_by_index (new_array_p,
-                                                        k,
-                                                        get_value,
-                                                        prop_flags);
-      ecma_free_value (get_value);
+
+      ecma_value_t put_comp = ecma_builtin_helper_def_prop_by_index (new_array_p,
+                                                                     k,
+                                                                     from_present,
+                                                                     prop_flags);
+      ecma_free_value (from_present);
+
 #if ENABLED (JERRY_ESNEXT)
       if (ECMA_IS_VALUE_ERROR (put_comp))
       {
@@ -1375,131 +1368,110 @@ ecma_builtin_array_prototype_object_splice (const ecma_value_t args[], /**< argu
   }
 
 #if ENABLED (JERRY_ESNEXT)
-  ecma_value_t new_set_length_value = ecma_builtin_array_prototype_helper_set_length (new_array_p,
-                                                                                      ((ecma_number_t) delete_count));
+  /* ES11: 12. */
+  ecma_value_t set_length = ecma_builtin_array_prototype_helper_set_length (new_array_p,
+                                                                            ((ecma_number_t) actual_delete_count));
 
-  if (ECMA_IS_VALUE_ERROR (new_set_length_value))
+  if (ECMA_IS_VALUE_ERROR (set_length))
   {
     ecma_deref_object (new_array_p);
-    return new_set_length_value;
+    return set_length;
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
-  /* 11. */
-  uint32_t item_count;
-
-  if (args_number > 2)
+  /* ES5.1: 12, ES11: 15. */
+  if (insert_count < actual_delete_count)
   {
-    item_count = (uint32_t) (args_number - 2);
-  }
-  else
-  {
-    item_count = 0;
-  }
-
-  const ecma_length_t new_len = len - delete_count + item_count;
-
-  if (item_count != delete_count)
-  {
-    ecma_length_t from, to;
-
-    /* 12. */
-    if (item_count < delete_count)
+    for (k = actual_start; k < len - actual_delete_count; k++)
     {
-      /* 12.b */
-      for (k = start; k < (len - delete_count); k++)
+      ecma_length_t from = k + actual_delete_count;
+      ecma_length_t to = k + insert_count;
+
+      ecma_value_t from_present = ecma_op_object_find_by_index (obj_p, from);
+
+      if (ECMA_IS_VALUE_ERROR (from_present))
       {
-        from = k + delete_count;
-        to = k + item_count;
-
-        ecma_value_t get_value = ecma_op_object_find_by_index (obj_p, from);
-
-        if (ECMA_IS_VALUE_ERROR (get_value))
-        {
-          ecma_deref_object (new_array_p);
-          return get_value;
-        }
-
-        /* 12.b.iii */
-        ecma_value_t operation_value;
-        if (ecma_is_value_found (get_value))
-        {
-          /* 12.b.iv */
-          operation_value = ecma_op_object_put_by_index (obj_p, to, get_value, true);
-          ecma_free_value (get_value);
-        }
-        else
-        {
-          /* 12.b.v */
-          operation_value = ecma_op_object_delete_by_index (obj_p, to, true);
-        }
-
-        if (ECMA_IS_VALUE_ERROR (operation_value))
-        {
-          ecma_deref_object (new_array_p);
-          return operation_value;
-        }
+        ecma_deref_object (new_array_p);
+        return from_present;
       }
 
-      /* 12.d */
-      for (k = len; k > new_len; k--)
-      {
-        ecma_value_t del_value = ecma_op_object_delete_by_index (obj_p, k - 1, true);
+      ecma_value_t operation_value;
 
-        if (ECMA_IS_VALUE_ERROR (del_value))
-        {
-          ecma_deref_object (new_array_p);
-          return del_value;
-        }
+      if (ecma_is_value_found (from_present))
+      {
+        operation_value = ecma_op_object_put_by_index (obj_p, to, from_present, true);
+        ecma_free_value (from_present);
+      }
+      else
+      {
+        operation_value = ecma_op_object_delete_by_index (obj_p, to, true);
+      }
+
+      if (ECMA_IS_VALUE_ERROR (operation_value))
+      {
+        ecma_deref_object (new_array_p);
+        return operation_value;
       }
     }
-    /* 13. */
-    else
+
+    k = len;
+
+    for (k = len; k > new_length; k--)
     {
-      JERRY_ASSERT (item_count > delete_count);
-      /* 13.b */
-      for (k = len - delete_count; k > start; k--)
+      ecma_value_t del_value = ecma_op_object_delete_by_index (obj_p, k - 1, true);
+
+      if (ECMA_IS_VALUE_ERROR (del_value))
       {
-        from = k + delete_count - 1;
-        to = k + item_count - 1;
-        /* 13.b.iii */
-        ecma_value_t get_value = ecma_op_object_find_by_index (obj_p, from);
+        ecma_deref_object (new_array_p);
+        return del_value;
+      }
+    }
+  }
+  /* ES5.1: 13, ES11: 16. */
+  else if (insert_count > actual_delete_count)
+  {
+    for (k = len - actual_delete_count; k > actual_start; k--)
+    {
+      ecma_length_t from = k + actual_delete_count - 1;
+      ecma_length_t to = k + insert_count - 1;
 
-        if (ECMA_IS_VALUE_ERROR (get_value))
-        {
-          ecma_deref_object (new_array_p);
-          return get_value;
-        }
+      ecma_value_t from_present = ecma_op_object_find_by_index (obj_p, from);
 
-        ecma_value_t operation_value;
+      if (ECMA_IS_VALUE_ERROR (from_present))
+      {
+        ecma_deref_object (new_array_p);
+        return from_present;
+      }
 
-        if (ecma_is_value_found (get_value))
-        {
-          /* 13.b.iv */
-          operation_value = ecma_op_object_put_by_index (obj_p, to, get_value, true);
-          ecma_free_value (get_value);
-        }
-        else
-        {
-          /* 13.b.v */
-          operation_value = ecma_op_object_delete_by_index (obj_p, to, true);
-        }
+      ecma_value_t operation_value;
 
-        if (ECMA_IS_VALUE_ERROR (operation_value))
-        {
-          ecma_deref_object (new_array_p);
-          return operation_value;
-        }
+      if (ecma_is_value_found (from_present))
+      {
+        operation_value = ecma_op_object_put_by_index (obj_p, to, from_present, true);
+        ecma_free_value (from_present);
+      }
+      else
+      {
+        operation_value = ecma_op_object_delete_by_index (obj_p, to, true);
+      }
+
+      if (ECMA_IS_VALUE_ERROR (operation_value))
+      {
+        ecma_deref_object (new_array_p);
+        return operation_value;
       }
     }
   }
 
-  /* 15. */
+  /* ES5.1: 14, ES11: 17. */
+  k = actual_start;
+
+  /* ES5.1: 15, ES11: 18. */
   uint32_t idx = 0;
   for (uint32_t arg_index = 2; arg_index < args_number; arg_index++, idx++)
   {
     ecma_value_t put_value = ecma_op_object_put_by_index (obj_p,
-                                                          start + idx,
+                                                          actual_start + idx,
                                                           args[arg_index],
                                                           true);
 
@@ -1510,15 +1482,16 @@ ecma_builtin_array_prototype_object_splice (const ecma_value_t args[], /**< argu
     }
   }
 
-  /* 16. */
-  ecma_value_t set_length_value = ecma_builtin_array_prototype_helper_set_length (obj_p, ((ecma_number_t) new_len));
+  /* ES5.1: 16, ES11: 19. */
+  ecma_value_t set_new_length = ecma_builtin_array_prototype_helper_set_length (obj_p, ((ecma_number_t) new_length));
 
-  if (ECMA_IS_VALUE_ERROR (set_length_value))
+  if (ECMA_IS_VALUE_ERROR (set_new_length))
   {
     ecma_deref_object (new_array_p);
-    return set_length_value;
+    return set_new_length;
   }
 
+  /* ES5.1: 17, ES11: 20. */
   return new_array;
 } /* ecma_builtin_array_prototype_object_splice */
 

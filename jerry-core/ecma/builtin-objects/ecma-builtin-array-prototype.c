@@ -2543,6 +2543,7 @@ ecma_builtin_array_prototype_object_copy_within (const ecma_value_t args[], /**<
     {
       if (obj_p->u1.property_list_cp != JMEM_CP_NULL)
       {
+        count = JERRY_MIN (ext_obj_p->u.array.length, count);
         ecma_value_t *buffer_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, obj_p->u1.property_list_cp);
 
         for (; count > 0; count--)

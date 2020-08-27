@@ -274,6 +274,7 @@ typedef enum
   VM_OC_DEFAULT_INITIALIZER,     /**< default initializer inside a pattern */
   VM_OC_REST_INITIALIZER,        /**< create rest object inside an array pattern */
   VM_OC_INITIALIZER_PUSH_PROP,   /**< push property for object initializer */
+  VM_OC_MOVE,                    /**< move element to the stack-top */
   VM_OC_SPREAD_ARGUMENTS,        /**< perform function call/construct with spreaded arguments */
   VM_OC_CREATE_GENERATOR,        /**< create a generator object */
   VM_OC_YIELD,                   /**< yield operation */
@@ -350,6 +351,7 @@ typedef enum
   VM_OC_DEFAULT_INITIALIZER = VM_OC_NONE,     /**< default initializer inside a pattern */
   VM_OC_REST_INITIALIZER = VM_OC_NONE,        /**< create rest object inside an array pattern */
   VM_OC_INITIALIZER_PUSH_PROP = VM_OC_NONE,   /**< push property for object initializer */
+  VM_OC_MOVE = VM_OC_NONE,                    /**< move element to the stack-top */
   VM_OC_SPREAD_ARGUMENTS = VM_OC_NONE,        /**< perform function call/construct with spreaded arguments */
   VM_OC_CREATE_GENERATOR = VM_OC_NONE,        /**< create a generator object */
   VM_OC_YIELD = VM_OC_NONE,                   /**< yield operation */

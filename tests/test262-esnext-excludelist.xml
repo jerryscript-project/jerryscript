@@ -3535,10 +3535,6 @@
   <test id="language/expressions/assignment/dstr/obj-prop-elem-target-obj-literal-prop-ref-init-active.js"><reason></reason></test>
   <test id="language/expressions/assignment/dstr/obj-prop-elem-target-obj-literal-prop-ref-init.js"><reason></reason></test>
   <test id="language/expressions/assignment/dstr/obj-prop-elem-target-obj-literal-prop-ref.js"><reason></reason></test>
-  <test id="language/expressions/assignment/dstr/obj-prop-elem-target-yield-expr.js"><reason></reason></test>
-  <test id="language/expressions/assignment/dstr/obj-prop-elem-target-yield-ident-valid.js"><reason></reason></test>
-  <test id="language/expressions/assignment/dstr/obj-prop-put-prop-ref-no-get.js"><reason></reason></test>
-  <test id="language/expressions/assignment/dstr/obj-prop-put-prop-ref.js"><reason></reason></test>
   <test id="language/expressions/assignment/dstr/obj-rest-computed-property-no-strict.js"><reason></reason></test>
   <test id="language/expressions/assignment/dstr/obj-rest-computed-property.js"><reason></reason></test>
   <test id="language/expressions/assignment/dstr/obj-rest-descriptors.js"><reason></reason></test>
@@ -9015,10 +9011,6 @@
   <test id="language/statements/for-of/dstr/obj-prop-elem-target-obj-literal-prop-ref-init-active.js"><reason></reason></test>
   <test id="language/statements/for-of/dstr/obj-prop-elem-target-obj-literal-prop-ref-init.js"><reason></reason></test>
   <test id="language/statements/for-of/dstr/obj-prop-elem-target-obj-literal-prop-ref.js"><reason></reason></test>
-  <test id="language/statements/for-of/dstr/obj-prop-elem-target-yield-expr.js"><reason></reason></test>
-  <test id="language/statements/for-of/dstr/obj-prop-elem-target-yield-ident-valid.js"><reason></reason></test>
-  <test id="language/statements/for-of/dstr/obj-prop-put-prop-ref-no-get.js"><reason></reason></test>
-  <test id="language/statements/for-of/dstr/obj-prop-put-prop-ref.js"><reason></reason></test>
   <test id="language/statements/for-of/dstr/obj-rest-computed-property-no-strict.js"><reason></reason></test>
   <test id="language/statements/for-of/dstr/obj-rest-computed-property.js"><reason></reason></test>
   <test id="language/statements/for-of/dstr/obj-rest-descriptors.js"><reason></reason></test>

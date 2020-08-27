@@ -50,7 +50,7 @@ ecma_op_create_symbol (const ecma_value_t *arguments_list_p, /**< list of argume
   ecma_value_t string_desc;
 
   /* 1-3. */
-  if (arguments_list_len == 0)
+  if (arguments_list_len == 0 || ecma_is_value_undefined (arguments_list_p[0]))
   {
     string_desc = ECMA_VALUE_UNDEFINED;
   }

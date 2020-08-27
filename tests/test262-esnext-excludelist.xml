@@ -1613,7 +1613,6 @@
   <test id="built-ins/String/prototype/toLowerCase/special_casing_conditional.js"><reason></reason></test>
   <test id="built-ins/String/prototype/toString/non-generic-realm.js"><reason></reason></test>
   <test id="built-ins/String/prototype/valueOf/non-generic-realm.js"><reason></reason></test>
-  <test id="built-ins/String/symbol-string-coercion.js"><reason></reason></test>
   <test id="built-ins/Symbol/asyncIterator/cross-realm.js"><reason></reason></test>
   <test id="built-ins/Symbol/for/cross-realm.js"><reason></reason></test>
   <test id="built-ins/Symbol/hasInstance/cross-realm.js"><reason></reason></test>
@@ -1623,11 +1622,6 @@
   <test id="built-ins/Symbol/match/cross-realm.js"><reason></reason></test>
   <test id="built-ins/Symbol/matchAll/cross-realm.js"><reason></reason></test>
   <test id="built-ins/Symbol/matchAll/prop-desc.js"><reason></reason></test>
-  <test id="built-ins/Symbol/name.js"><reason></reason></test>
-  <test id="built-ins/Symbol/prototype/description/get.js"><reason></reason></test>
-  <test id="built-ins/Symbol/prototype/description/this-val-symbol.js"><reason></reason></test>
-  <test id="built-ins/Symbol/prototype/description/wrapper.js"><reason></reason></test>
-  <test id="built-ins/Symbol/prototype/toString/undefined.js"><reason></reason></test>
   <test id="built-ins/Symbol/replace/cross-realm.js"><reason></reason></test>
   <test id="built-ins/Symbol/search/cross-realm.js"><reason></reason></test>
   <test id="built-ins/Symbol/species/cross-realm.js"><reason></reason></test>

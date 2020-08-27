@@ -1019,6 +1019,13 @@ ecma_builtin_object_object_define_property (ecma_object_t *obj_p, /**< routine's
     return define_own_prop_ret;
   }
 
+  if (ecma_is_value_false (define_own_prop_ret))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("The requested property update cannot be performed."));
+  }
+
+  JERRY_ASSERT (ecma_is_value_true (define_own_prop_ret));
+
   ecma_ref_object (obj_p);
   ecma_free_value (define_own_prop_ret);
 

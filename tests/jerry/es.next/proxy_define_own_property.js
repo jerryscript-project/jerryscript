@@ -56,33 +56,25 @@ var handler = {
 
 var proxy = new Proxy(target, handler);
 
-Object.defineProperty(proxy, "bar", desc);
+try {
+  Object.defineProperty(proxy, "bar", desc);
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
 
-assert(proxy.bar === 1);
+var bar = Object.getOwnPropertyDescriptor(proxy, "bar");
+assert(bar.value === 1);
+assert(bar.writable);
+assert(bar.configurable);
 
-/* TODO - remove this comment when [[GetOwnProperty]] is implemented
-proxy.bar = 2;
-assert(proxy.bar === 2);
-*/
+try {
+  Object.defineProperty(proxy, "name", {});
+  assert(false);
+} catch (e) {
+  assert(e instanceof TypeError);
+}
 
-delete proxy.bar;
-assert(proxy.bar === undefined);
-
-/* TODO - remove this comment when [[GetOwnProperty]] is implemented
-Object.defineProperty(proxy, "name", {
-  get() {
-    return this._name;
-  },
-  set(value) {
-    this._name = value;
-  }
-});
-
-proxy.name = "foo";
-
-assert(proxy.name === "foo");
-assert(target.name === "foo");
-*/
 
 // test when trap is not callable
 var target = {};

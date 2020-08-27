@@ -1254,7 +1254,6 @@
   <test id="built-ins/Proxy/defineProperty/targetdesc-undefined-not-configurable-descriptor-realm.js"><reason></reason></test>
   <test id="built-ins/Proxy/defineProperty/targetdesc-undefined-target-is-not-extensible-realm.js"><reason></reason></test>
   <test id="built-ins/Proxy/defineProperty/trap-is-not-callable-realm.js"><reason></reason></test>
-  <test id="built-ins/Proxy/defineProperty/trap-is-undefined-target-is-proxy.js"><reason></reason></test>
   <test id="built-ins/Proxy/deleteProperty/trap-is-missing-target-is-proxy.js"><reason></reason></test>
   <test id="built-ins/Proxy/deleteProperty/trap-is-not-callable-realm.js"><reason></reason></test>
   <test id="built-ins/Proxy/deleteProperty/trap-is-null-target-is-proxy.js"><reason></reason></test>

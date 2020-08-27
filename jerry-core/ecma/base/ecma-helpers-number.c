@@ -763,11 +763,11 @@ ecma_number_parse_int (const lit_utf8_byte_t *string_buff, /**< routine's first 
 
   /* 6. */
   ecma_number_t radix_num;
-  radix = ecma_op_to_numeric (radix, &radix_num, ECMA_TO_NUMERIC_NO_OPTS);
+  radix = ecma_op_to_number (radix, &radix_num);
 
-  if (!ecma_is_value_empty (radix))
+  if (ECMA_IS_VALUE_ERROR (radix))
   {
-    return radix;
+    return ECMA_VALUE_ERROR;
   }
 
   int32_t rad = ecma_number_to_int32 (radix_num);

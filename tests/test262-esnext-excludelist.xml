@@ -788,10 +788,6 @@
   <test id="built-ins/GeneratorPrototype/return/from-state-completed.js"><reason></reason></test>
   <test id="built-ins/JSON/stringify/replacer-array-proxy-revoked-realm.js"><reason></reason></test>
   <test id="built-ins/JSON/stringify/value-bigint-cross-realm.js"><reason></reason></test>
-  <test id="built-ins/JSON/stringify/value-bigint-order.js"><reason></reason></test>
-  <test id="built-ins/JSON/stringify/value-bigint-tojson-receiver.js"><reason></reason></test>
-  <test id="built-ins/JSON/stringify/value-bigint-tojson.js"><reason></reason></test>
-  <test id="built-ins/JSON/stringify/value-bigint.js"><reason></reason></test>
   <test id="built-ins/Map/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/NativeErrors/EvalError/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/NativeErrors/RangeError/proto-from-ctor-realm.js"><reason></reason></test>

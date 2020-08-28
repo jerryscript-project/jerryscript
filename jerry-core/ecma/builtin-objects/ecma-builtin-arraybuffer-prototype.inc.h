@@ -40,7 +40,7 @@ STRING_VALUE (LIT_GLOBAL_SYMBOL_TO_STRING_TAG,
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
-ROUTINE (LIT_MAGIC_STRING_SLICE, ecma_builtin_arraybuffer_prototype_object_slice, 2, 2)
+ROUTINE (LIT_MAGIC_STRING_SLICE, ecma_builtin_arraybuffer_prototype_object_slice, NON_FIXED, 2)
 
 #endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
 

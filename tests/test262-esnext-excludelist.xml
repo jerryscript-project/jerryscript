@@ -164,14 +164,6 @@
   <test id="built-ins/ArrayBuffer/prototype-from-newtarget.js"><reason></reason></test>
   <test id="built-ins/ArrayBuffer/prototype/byteLength/detached-buffer.js"><reason></reason></test>
   <test id="built-ins/ArrayBuffer/prototype/byteLength/this-is-sharedarraybuffer.js"><reason></reason></test>
-  <test id="built-ins/ArrayBuffer/prototype/slice/species-constructor-is-not-object.js"><reason></reason></test>
-  <test id="built-ins/ArrayBuffer/prototype/slice/species-is-not-constructor.js"><reason></reason></test>
-  <test id="built-ins/ArrayBuffer/prototype/slice/species-is-not-object.js"><reason></reason></test>
-  <test id="built-ins/ArrayBuffer/prototype/slice/species-returns-larger-arraybuffer.js"><reason></reason></test>
-  <test id="built-ins/ArrayBuffer/prototype/slice/species-returns-not-arraybuffer.js"><reason></reason></test>
-  <test id="built-ins/ArrayBuffer/prototype/slice/species-returns-same-arraybuffer.js"><reason></reason></test>
-  <test id="built-ins/ArrayBuffer/prototype/slice/species-returns-smaller-arraybuffer.js"><reason></reason></test>
-  <test id="built-ins/ArrayBuffer/prototype/slice/species.js"><reason></reason></test>
   <test id="built-ins/ArrayBuffer/prototype/slice/this-is-sharedarraybuffer.js"><reason></reason></test>
   <test id="built-ins/ArrayIteratorPrototype/next/detach-typedarray-in-progress.js"><reason></reason></test>
   <test id="built-ins/AsyncFromSyncIteratorPrototype/next/absent-value-not-passed.js"><reason></reason></test>
@@ -4259,7 +4251,6 @@
   <test id="language/statements/class/name-binding/in-extends-expression.js"><reason></reason></test>
   <test id="language/statements/class/setter-length-dflt.js"><reason></reason></test>
   <test id="language/statements/class/static-method-length-dflt.js"><reason></reason></test>
-  <test id="language/statements/class/subclass/builtin-objects/ArrayBuffer/regular-subclassing.js"><reason></reason></test>
   <test id="language/statements/class/subclass/default-constructor-spread-override.js"><reason></reason></test>
   <test id="language/statements/class/subclass/superclass-arrow-function.js"><reason></reason></test>
   <test id="language/statements/class/subclass/superclass-async-function.js"><reason></reason></test>

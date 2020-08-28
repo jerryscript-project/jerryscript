@@ -381,6 +381,7 @@ bool jerry_value_is_boolean (const jerry_value_t value);
 bool jerry_value_is_constructor (const jerry_value_t value);
 bool jerry_value_is_error (const jerry_value_t value);
 bool jerry_value_is_function (const jerry_value_t value);
+bool jerry_value_is_async_function (const jerry_value_t value);
 bool jerry_value_is_number (const jerry_value_t value);
 bool jerry_value_is_null (const jerry_value_t value);
 bool jerry_value_is_object (const jerry_value_t value);
@@ -408,7 +409,60 @@ typedef enum
   JERRY_TYPE_SYMBOL,    /**< symbol type */
 } jerry_type_t;
 
+/**
+ * JerryScript object type information.
+ */
+typedef enum
+{
+  JERRY_OBJECT_TYPE_NONE = 0u,    /**< Non object type */
+  JERRY_OBJECT_TYPE_GENERIC,      /**< Generic JavaScript object without any internal property */
+  JERRY_OBJECT_TYPE_ARRAY,        /**< Array object */
+  JERRY_OBJECT_TYPE_PROXY,        /**< Proxy object */
+  JERRY_OBJECT_TYPE_FUNCTION,     /**< Function object (see jerry_function_get_type) */
+  JERRY_OBJECT_TYPE_TYPEDARRAY,   /**< %TypedArray% object (see jerry_get_typedarray_type) */
+  JERRY_OBJECT_TYPE_ITERATOR,     /**< Iterator object (see jerry_iterator_get_type) */
+  JERRY_OBJECT_TYPE_CONTAINER,    /**< Container object (see jerry_container_get_type) */
+
+  JERRY_OBJECT_TYPE_ARGUMENTS,    /**< Arguments object */
+  JERRY_OBJECT_TYPE_BOOLEAN,      /**< Boolean object */
+  JERRY_OBJECT_TYPE_DATE,         /**< Date object */
+  JERRY_OBJECT_TYPE_NUMBER,       /**< Number object */
+  JERRY_OBJECT_TYPE_REGEXP,       /**< RegExp object */
+  JERRY_OBJECT_TYPE_STRING,       /**< String object */
+  JERRY_OBJECT_TYPE_SYMBOL,       /**< Symbol object */
+  JERRY_OBJECT_TYPE_GENERATOR,    /**< Generator object */
+  JERRY_OBJECT_TYPE_BIGINT,       /**< BigInt object */
+} jerry_object_type_t;
+
+/**
+ * JerryScript function object type information.
+ */
+typedef enum
+{
+  JERRY_FUNCTION_TYPE_NONE = 0u,    /**< Non function type */
+  JERRY_FUNCTION_TYPE_GENERIC,      /**< Generic JavaScript function */
+  JERRY_FUNCTION_TYPE_ACCESSOR,     /**< Accessor function */
+  JERRY_FUNCTION_TYPE_BOUND,        /**< Bound function */
+  JERRY_FUNCTION_TYPE_ARROW,        /**< Arrow fuction */
+  JERRY_FUNCTION_TYPE_GENERATOR,    /**< Generator function */
+} jerry_function_type_t;
+
+/**
+ * JerryScript iterator object type information.
+ */
+typedef enum
+{
+  JERRY_ITERATOR_TYPE_NONE = 0u,    /**< Non iterator type */
+  JERRY_ITERATOR_TYPE_ARRAY,        /**< Array iterator */
+  JERRY_ITERATOR_TYPE_STRING,       /**< String iterator */
+  JERRY_ITERATOR_TYPE_MAP,          /**< Map iterator */
+  JERRY_ITERATOR_TYPE_SET,          /**< Set iterator */
+} jerry_iterator_type_t;
+
 jerry_type_t jerry_value_get_type (const jerry_value_t value);
+jerry_object_type_t jerry_object_get_type (const jerry_value_t value);
+jerry_function_type_t jerry_function_get_type (const jerry_value_t value);
+jerry_iterator_type_t jerry_iterator_get_type (const jerry_value_t value);
 
 /**
  * Checker function of whether the specified compile feature is enabled.

@@ -314,7 +314,21 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
     return ecma_get_typedarray_element (swap_block_p, id);
   }
 
-  if (ecma_is_value_number (value_to_set))
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  bool set_value_is_bigint = ecma_is_value_bigint (value_to_set);
+
+  if (id > ECMA_FLOAT64_ARRAY)
+  {
+    if (!set_value_is_bigint)
+    {
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert set value to BigInt"));
+    }
+  }
+#else /* !ENABLED (JERRY_BUILTIN_BIGINT) */
+  bool set_value_is_bigint = false;
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+
+  if (ecma_is_value_number (value_to_set) || set_value_is_bigint)
   {
     ecma_value_t set_element = ecma_set_typedarray_element (block_p, value_to_set, id);
 

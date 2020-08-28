@@ -2263,10 +2263,13 @@ ecma_regexp_split_helper (ecma_value_t this_arg, /**< this value */
   while (current_index < string_length)
   {
     /* 24.a-b. */
+    ecma_value_t index_value = ecma_make_length_value (current_index);
     result = ecma_op_object_put (splitter_obj_p,
                                  lastindex_str_p,
-                                 ecma_make_length_value (current_index),
+                                 index_value,
                                  true);
+
+    ecma_free_value (index_value);
 
     if (ECMA_IS_VALUE_ERROR (result))
     {
@@ -2771,10 +2774,13 @@ ecma_regexp_replace_helper_fast (ecma_replace_context_t *ctx_p, /**<replace cont
 #if ENABLED (JERRY_ESNEXT)
         if (JERRY_UNLIKELY ((re_ctx.flags & RE_FLAG_STICKY) != 0))
         {
+          ecma_value_t index_value = ecma_make_length_value (index);
           result = ecma_op_object_put ((ecma_object_t *) re_obj_p,
                                        ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                                       ecma_make_length_value (index),
+                                       index_value,
                                        true);
+
+          ecma_free_value (index_value);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {
@@ -3063,23 +3069,27 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
         goto cleanup_results;
       }
 
+      ecma_value_t last_index = result;
+
       ecma_length_t index;
-      if (ECMA_IS_VALUE_ERROR (ecma_op_to_length (result, &index)))
+      result = ecma_op_to_length (last_index, &index);
+      ecma_free_value (last_index);
+
+      if (ECMA_IS_VALUE_ERROR (result))
       {
-        ecma_free_value (result);
-        result = ECMA_VALUE_ERROR;
         goto cleanup_results;
       }
 
-      ecma_free_value (result);
-
       index = ecma_op_advance_string_index (string_p, index, (replace_ctx.flags & RE_FLAG_UNICODE) != 0);
+      last_index = ecma_make_length_value (index);
 
       /* 10.d.iii.3.c */
       result = ecma_op_object_put (this_obj_p,
                                    ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                                   ecma_make_length_value (index),
+                                   last_index,
                                    true);
+
+      ecma_free_value (last_index);
 
       if (ECMA_IS_VALUE_ERROR (result))
       {
@@ -3469,18 +3479,18 @@ ecma_regexp_match_helper (ecma_value_t this_arg, /**< this argument */
 
     if (is_match_empty)
     {
-      ecma_value_t this_index = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_LASTINDEX_UL);
+      ecma_value_t last_index = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_LASTINDEX_UL);
 
-      if (ECMA_IS_VALUE_ERROR (this_index))
+      if (ECMA_IS_VALUE_ERROR (last_index))
       {
         goto result_cleanup;
       }
 
 #if ENABLED (JERRY_ESNEXT)
       ecma_length_t index;
-      ecma_value_t length_value = ecma_op_to_length (this_index, &index);
+      ecma_value_t length_value = ecma_op_to_length (last_index, &index);
 
-      ecma_free_value (this_index);
+      ecma_free_value (last_index);
 
       if (ECMA_IS_VALUE_ERROR (length_value))
       {
@@ -3489,20 +3499,23 @@ ecma_regexp_match_helper (ecma_value_t this_arg, /**< this argument */
 
       index = ecma_op_advance_string_index (str_p, index, full_unicode);
 
+      last_index = ecma_make_length_value (index);
       ecma_value_t next_set_status = ecma_op_object_put (obj_p,
                                                          ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
                                                          ecma_make_length_value (index),
                                                          true);
 #else /* !ENABLED (JERRY_ESNEXT) */
-      ecma_number_t next_index = ecma_get_number_from_value (this_index);
+      ecma_number_t index = ecma_get_number_from_value (last_index);
+      ecma_free_value (last_index);
 
+      last_index = ecma_make_number_value (index + 1);
       ecma_value_t next_set_status = ecma_op_object_put (obj_p,
                                                          ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                                                         ecma_make_number_value (next_index + 1),
+                                                         last_index,
                                                          true);
 
-      ecma_free_value (this_index);
 #endif /* ENABLED (JERRY_ESNEXT) */
+      ecma_free_value (last_index);
 
       if (ECMA_IS_VALUE_ERROR (next_set_status))
       {

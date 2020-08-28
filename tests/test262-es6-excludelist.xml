@@ -56,7 +56,6 @@
   <test id="built-ins/Proxy/enumerate/result-not-an-object-throws-string.js"><reason>For-in supports proxy</reason></test>
   <test id="built-ins/Proxy/enumerate/result-not-an-object-throws-symbol.js"><reason>For-in supports proxy</reason></test>
   <test id="built-ins/Proxy/enumerate/result-not-an-object-throws-undefined.js"><reason>For-in supports proxy</reason></test>
-  <test id="built-ins/Proxy/enumerate/null-handler.js"><reason>For-in supports proxy</reason></test>
   <test id="built-ins/Proxy/enumerate/return-trap-result.js"><reason></reason></test>
   <test id="built-ins/Proxy/enumerate/return-trap-result-no-value.js"><reason></reason></test>
   <test id="built-ins/Proxy/enumerate/trap-is-not-callable.js"><reason>For-in supports proxy</reason></test>

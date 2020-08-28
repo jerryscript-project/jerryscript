@@ -9061,46 +9061,7 @@
        https://github.com/tc39/proposal-string-replaceall
   -->
   <test id="annexB/built-ins/String/prototype/replaceAll/custom-replacer-emulates-undefined.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/getSubstitution-0x0024-0x0024.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/getSubstitution-0x0024-0x0026.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/getSubstitution-0x0024-0x0027.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/getSubstitution-0x0024-0x003C.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/getSubstitution-0x0024-0x0060.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/getSubstitution-0x0024.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/getSubstitution-0x0024N.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/getSubstitution-0x0024NN.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/length.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/name.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/replaceAll.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/replaceValue-call-abrupt.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/replaceValue-call-each-match-position.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/replaceValue-call-matching-empty.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/replaceValue-call-skip-no-match.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/replaceValue-call-tostring-abrupt.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/replaceValue-fn-skip-toString.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/replaceValue-tostring-abrupt.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/replaceValue-value-replaces-string.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/replaceValue-value-tostring.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/searchValue-empty-string-this-empty-string.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/searchValue-empty-string.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/searchValue-flags-no-g-throws.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/searchValue-flags-null-undefined-throws.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/searchValue-flags-toString-abrupt.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/searchValue-get-flags-abrupt.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/searchValue-isRegExp-abrupt.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/searchValue-replacer-RegExp-call-fn.js"><reason></reason></test>
   <test id="built-ins/String/prototype/replaceAll/searchValue-replacer-RegExp-call.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/searchValue-replacer-before-tostring.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/searchValue-replacer-call-abrupt.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/searchValue-replacer-call.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/searchValue-replacer-is-null.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/searchValue-replacer-method-abrupt.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/searchValue-tostring-abrupt.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/searchValue-tostring-regexp.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/this-is-null-throws.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/this-is-undefined-throws.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/this-tostring-abrupt.js"><reason></reason></test>
-  <test id="built-ins/String/prototype/replaceAll/this-tostring.js"><reason></reason></test>
   <!-- END - ESNext stage 4 proposal: String.prototype.replaceAll -->
 
   <!-- ESNext stage 4 proposal: Promise.any

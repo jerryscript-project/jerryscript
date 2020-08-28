@@ -454,12 +454,10 @@ ecma_builtin_string_prototype_object_replace_helper (ecma_value_t this_value, /*
           return get_flags;
         }
 
-        ecma_value_t coercible = ecma_op_check_object_coercible (get_flags);
-
-        if (ECMA_IS_VALUE_ERROR (coercible))
+        if (!ecma_op_require_object_coercible (get_flags))
         {
           ecma_free_value (get_flags);
-          return coercible;
+          return ECMA_VALUE_ERROR;
         }
 
         ecma_string_t *flags = ecma_op_to_string (get_flags);
@@ -1381,11 +1379,9 @@ ecma_builtin_string_prototype_dispatch_routine (uint16_t builtin_routine_id, /**
     return ecma_builtin_string_prototype_object_to_string (this_arg);
   }
 
-  ecma_value_t coercible = ecma_op_check_object_coercible (this_arg);
-
-  if (ECMA_IS_VALUE_ERROR (coercible))
+  if (!ecma_op_require_object_coercible (this_arg))
   {
-    return coercible;
+    return ECMA_VALUE_ERROR;
   }
 
   ecma_value_t arg1 = arguments_list_p[0];

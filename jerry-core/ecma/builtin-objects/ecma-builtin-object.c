@@ -182,7 +182,7 @@ ecma_builtin_object_object_set_prototype_of (ecma_value_t arg1, /**< routine's f
                                              ecma_value_t arg2) /**< routine's second argument */
 {
   /* 1., 2. */
-  if (ECMA_IS_VALUE_ERROR (ecma_op_check_object_coercible (arg1)))
+  if (!ecma_op_require_object_coercible (arg1))
   {
     return ECMA_VALUE_ERROR;
   }
@@ -246,7 +246,7 @@ ecma_builtin_object_object_set_proto (ecma_value_t arg1, /**< routine's first ar
                                       ecma_value_t arg2) /**< routine's second argument */
 {
   /* 1., 2. */
-  if (ECMA_IS_VALUE_ERROR (ecma_op_check_object_coercible (arg1)))
+  if (!ecma_op_require_object_coercible (arg1))
   {
     return ECMA_VALUE_ERROR;
   }
@@ -1174,7 +1174,7 @@ ecma_builtin_object_object_is (ecma_value_t arg1, /**< routine's first argument 
 static ecma_value_t
 ecma_builtin_object_from_entries (ecma_value_t iterator) /**< object's iterator */
 {
-  JERRY_ASSERT (ecma_op_check_object_coercible (iterator));
+  JERRY_ASSERT (ecma_op_require_object_coercible (iterator));
   /* 2 */
   ecma_object_t *object_prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
   ecma_object_t *obj_p = ecma_create_object (object_prototype_p, 0, ECMA_OBJECT_TYPE_GENERAL);

@@ -44,29 +44,27 @@
  */
 
 /**
- * CheckObjectCoercible operation.
+ * RequireObjectCoercible operation.
  *
  * See also:
- *          ECMA-262 v5, 9.10
+ *          ECMA-262 v11, 7.2.1
  *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
+ * @return true - if the value can be coerced to object without any exceptions
+ *         false - otherwise
  */
-ecma_value_t
-ecma_op_check_object_coercible (ecma_value_t value) /**< ecma value */
+bool
+ecma_op_require_object_coercible (ecma_value_t value) /**< ecma value */
 {
   ecma_check_value_type_is_spec_defined (value);
 
-  if (ecma_is_value_undefined (value)
-      || ecma_is_value_null (value))
+  if (ecma_is_value_undefined (value) || ecma_is_value_null (value))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument cannot be converted to an object."));
+    ecma_raise_type_error (ECMA_ERR_MSG ("Argument cannot be converted to an object."));
+    return false;
   }
-  else
-  {
-    return ECMA_VALUE_EMPTY;
-  }
-} /* ecma_op_check_object_coercible */
+
+  return true;
+} /* ecma_op_require_object_coercible */
 
 /**
  * SameValue operation.

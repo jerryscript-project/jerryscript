@@ -226,6 +226,14 @@ mustThrow ("function f ({}) {}; f();");
   assert (a === 7);
 }) ();
 
+(function () {
+  var o = {};
+
+  ({ a : o.c } = { get a() { return 5.2 }})
+
+  assert(o.c == 5.2);
+}) ();
+
 try {
   eval ("var a = 0; -{a} = {a:1}");
   assert (false);

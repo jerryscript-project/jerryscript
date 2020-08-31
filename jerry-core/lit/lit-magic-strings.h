@@ -48,6 +48,7 @@ typedef enum
   LIT_INTERNAL_MAGIC_PROMISE_CAPABILITY, /**< PromiseCapability record */
   /* List of well known symbols */
   LIT_GLOBAL_SYMBOL_HAS_INSTANCE, /**< @@hasInstance well known symbol */
+  LIT_GLOBAL_SYMBOL__FISRT = LIT_GLOBAL_SYMBOL_HAS_INSTANCE, /**< first global symbol */
   LIT_GLOBAL_SYMBOL_IS_CONCAT_SPREADABLE, /**< @@isConcatSpreadable well known symbol */
   LIT_GLOBAL_SYMBOL_ITERATOR, /**< @@iterator well known symbol */
   LIT_GLOBAL_SYMBOL_ASYNC_ITERATOR, /**< @@asyncIterator well known symbol */
@@ -59,6 +60,7 @@ typedef enum
   LIT_GLOBAL_SYMBOL_TO_PRIMITIVE, /**< @@toPrimitive well known symbol */
   LIT_GLOBAL_SYMBOL_TO_STRING_TAG, /**< @@toStringTag well known symbol */
   LIT_GLOBAL_SYMBOL_UNSCOPABLES, /**< @@unscopables well known symbol */
+  LIT_GLOBAL_SYMBOL__LAST = LIT_GLOBAL_SYMBOL_UNSCOPABLES, /**< last global symbol */
   LIT_GC_MARK_REQUIRED_MAGIC_STRING__COUNT,  /**< number of internal magic strings which will be used as
                                               *   property names, and their values need to be marked during gc. */
   LIT_INTERNAL_MAGIC_STRING_DELETED = LIT_GC_MARK_REQUIRED_MAGIC_STRING__COUNT, /**< special value for
@@ -75,7 +77,7 @@ typedef enum
 /**
  * Checks whether the given id corresponds to a global symbol
  */
-#define LIT_IS_GLOBAL_SYMBOL(id) ((id) >= LIT_GLOBAL_SYMBOL_HAS_INSTANCE && (id) <= LIT_GLOBAL_SYMBOL_UNSCOPABLES)
+#define LIT_IS_GLOBAL_SYMBOL(id) ((id) >= LIT_GLOBAL_SYMBOL__FISRT && (id) <= LIT_GLOBAL_SYMBOL__LAST)
 
 /**
  * Identifiers of implementation-defined external magic string constants

@@ -3767,6 +3767,36 @@ jerry_get_promise_state (const jerry_value_t promise) /**< promise object to get
 } /* jerry_get_promise_state */
 
 /**
+ * Get the well-knwon symbol represented by the given `symbol` enum value.
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return undefined value - if invalid well-known symbol was requested
+ *         well-known symbol value - otherwise
+ */
+jerry_value_t
+jerry_get_well_known_symbol (jerry_well_known_symbol_t symbol) /**< jerry_well_known_symbol_t enum value */
+{
+  jerry_assert_api_available ();
+
+#if ENABLED (JERRY_ESNEXT)
+  lit_magic_string_id_t id = (lit_magic_string_id_t) (LIT_GLOBAL_SYMBOL__FISRT + symbol);
+
+  if (!LIT_IS_GLOBAL_SYMBOL (id))
+  {
+    return ECMA_VALUE_UNDEFINED;
+  }
+
+  return ecma_make_symbol_value (ecma_op_get_global_symbol (id));
+#else /* !ENABLED (JERRY_ESNEXT) */
+  JERRY_UNUSED (symbol);
+
+  return ECMA_VALUE_UNDEFINED;
+#endif /* ENABLED (JERRY_ESNEXT) */
+} /** jerry_get_well_known_symbol */
+
+/**
  * Call the SymbolDescriptiveString ecma builtin operation on the symbol value.
  *
  * Note:

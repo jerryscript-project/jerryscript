@@ -191,6 +191,132 @@ main (void)
   jerry_release_value (error_obj);
   jerry_release_value (null_value);
 
+  const jerry_char_t obj_src[] = ""
+  "({"
+  "  [Symbol.hasInstance]: 1,"
+  "  [Symbol.isConcatSpreadable]: 2,"
+  "  [Symbol.iterator]: 3,"
+  "  [Symbol.asyncIterator]: 4,"
+  "  [Symbol.match]: 5,"
+  "  [Symbol.replace]: 6,"
+  "  [Symbol.search]: 7,"
+  "  [Symbol.species]: 8,"
+  "  [Symbol.split]: 9,"
+  "  [Symbol.toPrimitive]: 10,"
+  "  [Symbol.toStringTag]: 11,"
+  "  [Symbol.unscopables]: 12,"
+  "})";
+
+  const char *symbols[] =
+  {
+    "hasInstance",
+    "isConcatSpreadable",
+    "iterator",
+    "asyncIterator",
+    "match",
+    "replace",
+    "search",
+    "species",
+    "split",
+    "toPrimitive",
+    "toStringTag",
+    "unscopables",
+  };
+
+  jerry_value_t obj = jerry_eval (obj_src, sizeof (obj_src) - 1, JERRY_PARSE_NO_OPTS);
+  TEST_ASSERT (jerry_value_is_object (obj));
+
+  jerry_value_t global_obj = jerry_get_global_object ();
+  jerry_value_t symbol_str = jerry_create_string ((const jerry_char_t *) "Symbol");
+  jerry_value_t builtin_symbol = jerry_get_property (global_obj, symbol_str);
+  TEST_ASSERT (jerry_value_is_object (builtin_symbol));
+
+  double expected = 1.0;
+  uint32_t prop_index = 0;
+
+  for (jerry_well_known_symbol_t id = JERRY_SYMBOL_HAS_INSTANCE;
+       id <= JERRY_SYMBOL_UNSCOPABLES;
+       id++, expected++, prop_index++)
+  {
+    jerry_value_t well_known_symbol = jerry_get_well_known_symbol (id);
+
+    jerry_value_t prop_str = jerry_create_string ((const jerry_char_t *) symbols[prop_index]);
+    jerry_value_t current_global_symbol = jerry_get_property (builtin_symbol, prop_str);
+    jerry_release_value (prop_str);
+
+    jerry_value_t relation = jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL,
+                                                     well_known_symbol,
+                                                     current_global_symbol);
+
+    TEST_ASSERT (jerry_value_is_boolean (relation)
+                 && jerry_get_boolean_value (relation));
+
+    jerry_release_value (relation);
+
+    jerry_value_t prop_result_wn = jerry_get_property (obj, well_known_symbol);
+    jerry_value_t prop_result_global = jerry_get_property (obj, current_global_symbol);
+
+    TEST_ASSERT (jerry_value_is_number (prop_result_wn));
+    double number_wn = jerry_get_number_value (prop_result_wn);
+    TEST_ASSERT (number_wn == expected);
+
+    TEST_ASSERT (jerry_value_is_number (prop_result_global));
+    double number_global = jerry_get_number_value (prop_result_global);
+    TEST_ASSERT (number_global == expected);
+
+    jerry_release_value (prop_result_global);
+    jerry_release_value (prop_result_wn);
+    jerry_release_value (current_global_symbol);
+    jerry_release_value (well_known_symbol);
+  }
+
+  jerry_release_value (builtin_symbol);
+
+  /* Deletion of the 'Symbol' builtin makes the well-known symbols unaccessible from JS context
+     but the symbols still can be obtained via 'jerry_get_well_known_symbol' */
+  const jerry_char_t deleter_src[] = "delete Symbol";
+
+  jerry_value_t deleter = jerry_eval (deleter_src, sizeof (deleter_src) - 1, JERRY_PARSE_NO_OPTS);
+  TEST_ASSERT (jerry_value_is_boolean (deleter)
+               && jerry_get_boolean_value (deleter));
+  jerry_release_value (deleter);
+
+  builtin_symbol = jerry_get_property (global_obj, symbol_str);
+  TEST_ASSERT (jerry_value_is_undefined (builtin_symbol));
+  jerry_release_value (builtin_symbol);
+
+  expected = 1.0;
+  prop_index = 0;
+
+  for (jerry_well_known_symbol_t id = JERRY_SYMBOL_HAS_INSTANCE;
+       id <= JERRY_SYMBOL_UNSCOPABLES;
+       id++, expected++, prop_index++)
+  {
+    jerry_value_t well_known_symbol = jerry_get_well_known_symbol (id);
+    jerry_value_t prop_result_wn = jerry_get_property (obj, well_known_symbol);
+
+    TEST_ASSERT (jerry_value_is_number (prop_result_wn));
+    double number_wn = jerry_get_number_value (prop_result_wn);
+    TEST_ASSERT (number_wn == expected);
+
+    jerry_release_value (prop_result_wn);
+    jerry_release_value (well_known_symbol);
+  }
+
+  jerry_well_known_symbol_t invalid_symbol = (jerry_well_known_symbol_t) (JERRY_SYMBOL_UNSCOPABLES + 1);
+  jerry_value_t invalid_well_known_symbol = jerry_get_well_known_symbol (invalid_symbol);
+  TEST_ASSERT (jerry_value_is_undefined (invalid_well_known_symbol));
+  jerry_release_value (invalid_well_known_symbol);
+
+  invalid_symbol = (jerry_well_known_symbol_t) (JERRY_SYMBOL_HAS_INSTANCE - 1);
+  invalid_well_known_symbol = jerry_get_well_known_symbol (invalid_symbol);
+  TEST_ASSERT (jerry_value_is_undefined (invalid_well_known_symbol));
+  jerry_release_value (invalid_well_known_symbol);
+
+  jerry_release_value (symbol_str);
+  jerry_release_value (global_obj);
+  jerry_release_value (obj);
+
   jerry_cleanup ();
 
   return 0;

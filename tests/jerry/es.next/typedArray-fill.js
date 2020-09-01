@@ -112,3 +112,24 @@ assert(k.fill(-5n, 3, 5).toString() === '0,0,0,-5,-5');
 var l = new BigUint64Array([1n, 2n, 3n, 4n, 5n]);
 assert(l.fill(-18446744073709551614n, 3, 5).toString() === '1,2,3,2,2');
 assert(l.fill(18446744073709551614n, 4).toString() === '1,2,3,2,18446744073709551614');
+
+var invalid = {
+  valueOf: function() {
+    throw new Error();
+  }
+};
+
+var m = new BigInt64Array();
+try {
+  m.fill(1n, invalid);
+  assert(false)
+} catch (e) {
+  assert(e instanceof Error);
+}
+
+try {
+  m.fill(1n, 0, invalid);
+  assert(false)
+} catch (e) {
+  assert(e instanceof Error);
+}

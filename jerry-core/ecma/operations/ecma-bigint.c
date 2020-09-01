@@ -76,6 +76,10 @@ ecma_bigint_parse_string (const lit_utf8_byte_t *string_p, /**< string represena
   ecma_bigint_digit_t radix = 10;
   uint32_t sign = (options & ECMA_BIGINT_PARSE_SET_NEGATIVE) ? ECMA_BIGINT_SIGN : 0;
 
+  const lit_utf8_byte_t *string_end_p = string_p + size;
+  string_p = ecma_string_trim_front (string_p, string_p + size);
+  size = (lit_utf8_size_t) (string_end_p - string_p);
+
   if (size >= 3 && string_p[0] == LIT_CHAR_0)
   {
     if (string_p[1] == LIT_CHAR_LOWERCASE_X || string_p[1] == LIT_CHAR_UPPERCASE_X)
@@ -116,8 +120,6 @@ ecma_bigint_parse_string (const lit_utf8_byte_t *string_p, /**< string represena
     return ECMA_BIGINT_ZERO;
   }
 
-  const lit_utf8_byte_t *string_end_p = string_p + size;
-
   while (string_p < string_end_p && *string_p == LIT_CHAR_0)
   {
     string_p++;
@@ -146,8 +148,12 @@ ecma_bigint_parse_string (const lit_utf8_byte_t *string_p, /**< string represena
       {
         digit = (ecma_bigint_digit_t) (character - (LIT_CHAR_LOWERCASE_A - 10));
       }
+      else if (ecma_string_trim_front (string_p, string_end_p) == string_end_p)
+      {
+        string_p = string_end_p;
+        break;
+      }
     }
-
     if (digit >= radix)
     {
       if (result_p != NULL)
@@ -197,6 +203,7 @@ ecma_bigint_parse_string_value (ecma_value_t string, /**< ecma string */
   JERRY_ASSERT (ecma_is_value_string (string));
 
   ECMA_STRING_TO_UTF8_STRING (ecma_get_string_from_value (string), string_buffer_p, string_buffer_size);
+
   ecma_value_t result = ecma_bigint_parse_string (string_buffer_p, string_buffer_size, options);
   ECMA_FINALIZE_UTF8_STRING (string_buffer_p, string_buffer_size);
 

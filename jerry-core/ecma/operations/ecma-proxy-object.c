@@ -1220,7 +1220,8 @@ ecma_value_t
 ecma_proxy_object_set (ecma_object_t *obj_p, /**< proxy object */
                        ecma_string_t *prop_name_p, /**< property name */
                        ecma_value_t value, /**< value to set */
-                       ecma_value_t receiver) /**< receiver to invoke setter function */
+                       ecma_value_t receiver, /**< receiver to invoke setter function */
+                       bool is_strict) /**< indicate strict mode */
 {
   JERRY_ASSERT (ECMA_OBJECT_IS_PROXY (obj_p));
   ECMA_CHECK_STACK_USAGE ();
@@ -1245,7 +1246,7 @@ ecma_proxy_object_set (ecma_object_t *obj_p, /**< proxy object */
   /* 8. */
   if (ecma_is_value_undefined (trap))
   {
-    return ecma_op_object_put_with_receiver (target_obj_p, prop_name_p, value, receiver, false);
+    return ecma_op_object_put_with_receiver (target_obj_p, prop_name_p, value, receiver, is_strict);
   }
 
   ecma_object_t *func_obj_p = ecma_get_object_from_value (trap);

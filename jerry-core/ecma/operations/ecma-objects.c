@@ -1147,7 +1147,7 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
 #if ENABLED (JERRY_BUILTIN_PROXY)
   if (ECMA_OBJECT_IS_PROXY (object_p))
   {
-    return ecma_proxy_object_set (object_p, property_name_p, value, receiver);
+    return ecma_proxy_object_set (object_p, property_name_p, value, receiver, is_throw);
   }
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 

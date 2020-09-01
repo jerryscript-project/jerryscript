@@ -86,7 +86,8 @@ ecma_value_t
 ecma_proxy_object_set (ecma_object_t *obj_p,
                        ecma_string_t *prop_name_p,
                        ecma_value_t name,
-                       ecma_value_t receiver);
+                       ecma_value_t receiver,
+                       bool is_strict);
 
 ecma_value_t
 ecma_proxy_object_delete_property (ecma_object_t *obj_p,

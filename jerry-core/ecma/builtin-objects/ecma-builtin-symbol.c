@@ -23,7 +23,6 @@
  #include "ecma-objects.h"
  #include "ecma-symbol-object.h"
  #include "ecma-literal-storage.h"
- #include "ecma-try-catch-macro.h"
  #include "jcontext.h"
  #include "jrt.h"
 

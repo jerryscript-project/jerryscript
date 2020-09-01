@@ -25,7 +25,6 @@
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
 #include "ecma-regexp-object.h"
-#include "ecma-try-catch-macro.h"
 #include "lit-char-helpers.h"
 
 #if ENABLED (JERRY_BUILTIN_REGEXP)

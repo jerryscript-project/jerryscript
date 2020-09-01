@@ -18,7 +18,6 @@
 #include "ecma-conversion.h"
 #include "ecma-globals.h"
 #include "ecma-objects.h"
-#include "ecma-try-catch-macro.h"
 #include "jrt.h"
 
 /** \addtogroup ecma ECMA
@@ -388,8 +387,19 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
       /* 3. */
 
       /* a. */
-      ECMA_OP_TO_NUMBER_TRY_CATCH (nx, px, ret_value);
-      ECMA_OP_TO_NUMBER_TRY_CATCH (ny, py, ret_value);
+
+      ecma_number_t nx;
+      ecma_number_t ny;
+
+      if (ECMA_IS_VALUE_ERROR (ecma_op_to_number (px, &nx)))
+      {
+        return ECMA_VALUE_ERROR;
+      }
+
+      if (ECMA_IS_VALUE_ERROR (ecma_op_to_number (py, &ny)))
+      {
+        return ECMA_VALUE_ERROR;
+      }
 
       /* b. */
       if (ecma_number_is_nan (nx)
@@ -461,9 +471,6 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
 
         ret_value = ecma_make_boolean_value (is_x_less_than_y);
       }
-
-      ECMA_OP_TO_NUMBER_FINALIZE (ny);
-      ECMA_OP_TO_NUMBER_FINALIZE (nx);
 #if ENABLED (JERRY_BUILTIN_BIGINT)
     }
     else
@@ -505,7 +512,11 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
       }
       else
       {
-        ECMA_OP_TO_NUMBER_TRY_CATCH (ny, py, ret_value);
+        ecma_number_t ny;
+        if (ECMA_IS_VALUE_ERROR (ecma_op_to_number (py,&ny)))
+        {
+          return ECMA_VALUE_ERROR;
+        }
 
         if (ecma_number_is_nan (ny))
         {
@@ -515,8 +526,6 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
         {
           compare_result = ecma_bigint_compare_to_number (px, ny);
         }
-
-        ECMA_OP_TO_NUMBER_FINALIZE (ny);
       }
 
       if (ret_value == ECMA_VALUE_EMPTY)

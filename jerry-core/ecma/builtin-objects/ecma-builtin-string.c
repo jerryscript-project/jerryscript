@@ -26,7 +26,6 @@
 #if ENABLED (JERRY_ESNEXT)
 #include "ecma-symbol-object.h"
 #endif /* ENABLED (JERRY_ESNEXT) */
-#include "ecma-try-catch-macro.h"
 #include "jrt.h"
 
 #if ENABLED (JERRY_BUILTIN_STRING)
@@ -69,9 +68,9 @@ ecma_builtin_string_object_from_char_code (ecma_value_t this_arg, /**< 'this' ar
     return ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
   }
 
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
-  ecma_string_t *ret_string_p = NULL;
   lit_utf8_size_t utf8_buf_size = args_number * LIT_CESU8_MAX_BYTES_IN_CODE_UNIT;
+  ecma_string_t *ret_string_p = NULL;
+  bool isError = false;
 
   JMEM_DEFINE_LOCAL_ARRAY (utf8_buf_p,
                            utf8_buf_size,
@@ -80,10 +79,16 @@ ecma_builtin_string_object_from_char_code (ecma_value_t this_arg, /**< 'this' ar
   lit_utf8_size_t utf8_buf_used = 0;
 
   for (uint32_t arg_index = 0;
-       arg_index < args_number && ecma_is_value_empty (ret_value);
+       arg_index < args_number;
        arg_index++)
   {
-    ECMA_OP_TO_NUMBER_TRY_CATCH (arg_num, args[arg_index], ret_value);
+    ecma_number_t arg_num;
+
+    if (ECMA_IS_VALUE_ERROR (ecma_op_to_number (args[arg_index], &arg_num)))
+    {
+      isError = true;
+      break;
+    }
 
     uint32_t uint32_char_code = ecma_number_to_uint32 (arg_num);
     ecma_char_t code_unit = (uint16_t) uint32_char_code;
@@ -91,23 +96,16 @@ ecma_builtin_string_object_from_char_code (ecma_value_t this_arg, /**< 'this' ar
     JERRY_ASSERT (utf8_buf_used <= utf8_buf_size - LIT_UTF8_MAX_BYTES_IN_CODE_UNIT);
     utf8_buf_used += lit_code_unit_to_utf8 (code_unit, utf8_buf_p + utf8_buf_used);
     JERRY_ASSERT (utf8_buf_used <= utf8_buf_size);
-
-    ECMA_OP_TO_NUMBER_FINALIZE (arg_num);
   }
 
-  if (ecma_is_value_empty (ret_value))
+  if (!isError)
   {
     ret_string_p = ecma_new_ecma_string_from_utf8 (utf8_buf_p, utf8_buf_used);
   }
 
   JMEM_FINALIZE_LOCAL_ARRAY (utf8_buf_p);
 
-  if (ecma_is_value_empty (ret_value))
-  {
-    ret_value = ecma_make_string_value (ret_string_p);
-  }
-
-  return ret_value;
+  return isError ? ECMA_VALUE_ERROR : ecma_make_string_value (ret_string_p);
 } /* ecma_builtin_string_object_from_char_code */
 
 #if ENABLED (JERRY_ESNEXT)

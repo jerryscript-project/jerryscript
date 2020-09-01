@@ -22,7 +22,6 @@
 #include "ecma-helpers.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-objects.h"
-#include "ecma-try-catch-macro.h"
 #include "jrt.h"
 
 #define ECMA_BUILTINS_INTERNAL

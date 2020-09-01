@@ -20,7 +20,6 @@
 #include "ecma-helpers.h"
 #include "ecma-number-arithmetic.h"
 #include "ecma-objects.h"
-#include "ecma-try-catch-macro.h"
 #include "opcodes.h"
 #include "jrt-libc-includes.h"
 
@@ -61,7 +60,12 @@ do_number_arithmetic (number_arithmetic_op op, /**< number arithmetic operation 
   if (JERRY_LIKELY (!ecma_is_value_bigint (left_value)))
   {
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
-    ECMA_OP_TO_NUMBER_TRY_CATCH (right_number, right_value, ret_value);
+
+    ecma_number_t right_number;
+    if (ECMA_IS_VALUE_ERROR (ecma_op_to_number (right_value, &right_number)))
+    {
+      return ECMA_VALUE_ERROR;
+    }
 
     ecma_number_t result = ECMA_NUMBER_ZERO;
 
@@ -97,8 +101,6 @@ do_number_arithmetic (number_arithmetic_op op, /**< number arithmetic operation 
     }
 
     ret_value = ecma_make_number_value (result);
-
-    ECMA_OP_TO_NUMBER_FINALIZE (right_number);
 #if ENABLED (JERRY_BUILTIN_BIGINT)
   }
   else
@@ -246,13 +248,17 @@ opfunc_addition (ecma_value_t left_value, /**< left value */
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
   else
   {
-    ECMA_OP_TO_NUMBER_TRY_CATCH (num_left, left_value, ret_value);
-    ECMA_OP_TO_NUMBER_TRY_CATCH (num_right, right_value, ret_value);
-
-    ret_value = ecma_make_number_value (num_left + num_right);
-
-    ECMA_OP_TO_NUMBER_FINALIZE (num_right);
-    ECMA_OP_TO_NUMBER_FINALIZE (num_left);
+    ecma_number_t num_left;
+    ecma_number_t num_right;
+    if (!ECMA_IS_VALUE_ERROR (ecma_op_to_number (left_value, &num_left))
+        && !ECMA_IS_VALUE_ERROR (ecma_op_to_number (right_value, &num_right)))
+    {
+      ret_value = ecma_make_number_value (num_left + num_right);
+    }
+    else
+    {
+      ret_value = ECMA_VALUE_ERROR;
+    }
   }
 
   if (free_left_value)

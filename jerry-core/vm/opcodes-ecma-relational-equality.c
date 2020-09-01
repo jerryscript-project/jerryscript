@@ -19,7 +19,6 @@
 #include "ecma-function-object.h"
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
-#include "ecma-try-catch-macro.h"
 #include "opcodes.h"
 
 /** \addtogroup vm Virtual machine

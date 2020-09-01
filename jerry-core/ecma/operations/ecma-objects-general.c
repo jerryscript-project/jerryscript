@@ -23,7 +23,6 @@
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
 #include "ecma-proxy-object.h"
-#include "ecma-try-catch-macro.h"
 
 /** \addtogroup ecma ECMA
  * @{

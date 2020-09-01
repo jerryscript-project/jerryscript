@@ -32,7 +32,6 @@
 #if ENABLED (JERRY_BUILTIN_TYPEDARRAY)
 #include "ecma-typedarray-object.h"
 #include "ecma-arraybuffer-object.h"
-#include "ecma-try-catch-macro.h"
 #endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
 
 /** \addtogroup ecma ECMA

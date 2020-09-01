@@ -22,7 +22,6 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
-#include "ecma-try-catch-macro.h"
 #include "jrt.h"
 
 #if ENABLED (JERRY_BUILTIN_BOOLEAN)

@@ -27,7 +27,6 @@
 #include "ecma-objects-arguments.h"
 #include "ecma-proxy-object.h"
 #include "ecma-symbol-object.h"
-#include "ecma-try-catch-macro.h"
 #include "jcontext.h"
 
 /** \addtogroup ecma ECMA

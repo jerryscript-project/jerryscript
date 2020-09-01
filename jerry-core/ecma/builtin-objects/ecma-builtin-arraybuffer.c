@@ -20,7 +20,6 @@
 #include "ecma-helpers.h"
 #include "ecma-arraybuffer-object.h"
 #include "ecma-dataview-object.h"
-#include "ecma-try-catch-macro.h"
 #include "ecma-typedarray-object.h"
 #include "jrt.h"
 

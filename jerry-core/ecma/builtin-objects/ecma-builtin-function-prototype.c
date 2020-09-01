@@ -24,7 +24,6 @@
 #include "ecma-function-object.h"
 #include "ecma-objects.h"
 #include "ecma-proxy-object.h"
-#include "ecma-try-catch-macro.h"
 #include "jrt.h"
 #include "ecma-builtin-function-prototype.h"
 

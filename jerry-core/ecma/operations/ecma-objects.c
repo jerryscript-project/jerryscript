@@ -1083,7 +1083,14 @@ ecma_op_object_put_apply_receiver (ecma_value_t receiver, /**< receiver */
   if (ECMA_OBJECT_IS_PROXY (receiver_obj_p))
   {
     ecma_property_descriptor_t desc;
-    desc.flags = ECMA_NAME_DATA_PROPERTY_DESCRIPTOR_BITS;
+    /* Based on: ES6 9.1.9 [[Set]] 4.d.i. / ES11 9.1.9.2 OrdinarySetWithOwnDescriptor 2.c.i. */
+    desc.flags = (ECMA_PROP_IS_CONFIGURABLE
+                  | ECMA_PROP_IS_CONFIGURABLE_DEFINED
+                  | ECMA_PROP_IS_ENUMERABLE
+                  | ECMA_PROP_IS_ENUMERABLE_DEFINED
+                  | ECMA_PROP_IS_WRITABLE
+                  | ECMA_PROP_IS_WRITABLE_DEFINED
+                  | ECMA_PROP_IS_VALUE_DEFINED);
     desc.value = value;
     return ecma_proxy_object_define_own_property (receiver_obj_p, property_name_p, &desc);
   }

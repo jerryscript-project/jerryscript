@@ -1294,6 +1294,7 @@ ecma_builtin_typedarray_prototype_fill (ecma_value_t this_arg, /**< this argumen
                                                                        info.length,
                                                                        &begin_index_uint32)))
   {
+    ecma_free_value (value_to_set);
     return ECMA_VALUE_ERROR;
   }
 
@@ -1307,6 +1308,7 @@ ecma_builtin_typedarray_prototype_fill (ecma_value_t this_arg, /**< this argumen
                                                                          info.length,
                                                                          &end_index_uint32)))
     {
+      ecma_free_value (value_to_set);
       return ECMA_VALUE_ERROR;
     }
   }

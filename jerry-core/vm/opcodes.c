@@ -1164,7 +1164,7 @@ opfunc_create_implicit_class_constructor (uint8_t opcode) /**< current cbc opcod
   /* 8. */
   ecma_object_t *func_obj_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE),
                                                   sizeof (ecma_extended_object_t),
-                                                  ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+                                                  ECMA_OBJECT_TYPE_NATIVE_FUNCTION);
 
   ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) func_obj_p;
 

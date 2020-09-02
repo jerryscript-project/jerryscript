@@ -360,23 +360,13 @@ ecma_process_promise_async_generator_job (ecma_job_promise_async_generator_t *jo
 static ecma_value_t
 ecma_process_promise_resolve_thenable_job (ecma_job_promise_resolve_thenable_t *job_p) /**< the job to be operated */
 {
-  ecma_object_t *promise_p = ecma_get_object_from_value (job_p->promise);
-  ecma_promise_resolving_functions_t funcs;
-  ecma_promise_create_resolving_functions (promise_p, &funcs, true);
+  ecma_promise_object_t *promise_p = (ecma_promise_object_t *) ecma_get_object_from_value (job_p->promise);
+  ecma_promise_create_resolving_functions (promise_p);
 
-  ecma_string_t *str_resolve_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_RESOLVE_FUNCTION);
-  ecma_string_t *str_reject_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_REJECT_FUNCTION);
+  uint16_t new_flags = (uint16_t) (promise_p->header.u.class_prop.extra_info & ~ECMA_PROMISE_ALREADY_RESOLVED);
+  promise_p->header.u.class_prop.extra_info = new_flags;
 
-  ecma_op_object_put (promise_p,
-                      str_resolve_p,
-                      funcs.resolve,
-                      false);
-  ecma_op_object_put (promise_p,
-                      str_reject_p,
-                      funcs.reject,
-                      false);
-
-  ecma_value_t argv[] = { funcs.resolve, funcs.reject };
+  ecma_value_t argv[] = { promise_p->resolve, promise_p->reject };
   ecma_value_t ret;
   ecma_value_t then_call_result = ecma_op_function_call (ecma_get_object_from_value (job_p->then),
                                                          job_p->thenable,
@@ -389,7 +379,7 @@ ecma_process_promise_resolve_thenable_job (ecma_job_promise_resolve_thenable_t *
   {
     then_call_result = jcontext_take_exception ();
 
-    ret = ecma_op_function_call (ecma_get_object_from_value (funcs.reject),
+    ret = ecma_op_function_call (ecma_get_object_from_value (promise_p->reject),
                                  ECMA_VALUE_UNDEFINED,
                                  &then_call_result,
                                  1);
@@ -397,7 +387,6 @@ ecma_process_promise_resolve_thenable_job (ecma_job_promise_resolve_thenable_t *
     ecma_free_value (then_call_result);
   }
 
-  ecma_promise_free_resolving_functions (&funcs);
   ecma_free_promise_resolve_thenable_job (job_p);
 
   return ret;

@@ -822,7 +822,6 @@
   <test id="built-ins/Object/prototype/toString/symbol-tag-non-str-builtin.js"><reason></reason></test>
   <test id="built-ins/Object/prototype/toString/symbol-tag-non-str-proxy-function.js"><reason></reason></test>
   <test id="built-ins/Object/subclass-object-arg.js"><reason></reason></test>
-  <test id="built-ins/Object/values/order-after-define-property.js"><reason></reason></test>
   <test id="built-ins/Promise/all/invoke-resolve-get-error.js"><reason></reason></test>
   <test id="built-ins/Promise/all/invoke-resolve-get-once-multiple-calls.js"><reason></reason></test>
   <test id="built-ins/Promise/all/invoke-resolve-get-once-no-calls.js"><reason></reason></test>
@@ -995,8 +994,6 @@
   <test id="built-ins/Proxy/revocable/target-is-revoked-function-proxy.js"><reason></reason></test>
   <test id="built-ins/Proxy/revocable/target-is-revoked-proxy.js"><reason></reason></test>
   <test id="built-ins/Proxy/set/call-parameters-prototype-index.js"><reason></reason></test>
-  <test id="built-ins/Proxy/set/trap-is-missing-receiver-multiple-calls-index.js"><reason></reason></test>
-  <test id="built-ins/Proxy/set/trap-is-missing-receiver-multiple-calls.js"><reason></reason></test>
   <test id="built-ins/Proxy/set/trap-is-missing-target-is-proxy.js"><reason></reason></test>
   <test id="built-ins/Proxy/set/trap-is-not-callable-realm.js"><reason></reason></test>
   <test id="built-ins/Proxy/set/trap-is-null-target-is-proxy.js"><reason></reason></test>

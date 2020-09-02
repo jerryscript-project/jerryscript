@@ -138,3 +138,16 @@ try {
 } catch (e) {
   assert(e instanceof TypeError);
 }
+
+/* Setting a new property should be configurable, enumerable, and writable by default
+ * over a proxy.
+ */
+var setPropProxy = new Proxy({}, {});
+setPropProxy["alma"] = 3;
+
+var desc = Object.getOwnPropertyDescriptor(setPropProxy, "alma");
+
+assert(desc.writable === true);
+assert(desc.enumerable === true);
+assert(desc.configurable === true);
+assert(desc.value === 3);

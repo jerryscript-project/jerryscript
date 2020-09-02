@@ -3654,7 +3654,7 @@ lexer_compare_literal_to_string (parser_context_t *context_p, /**< context */
 uint8_t
 lexer_convert_binary_lvalue_token_to_binary (uint8_t token) /**< binary lvalue token */
 {
-  JERRY_ASSERT (LEXER_IS_BINARY_LVALUE_TOKEN (token));
+  JERRY_ASSERT (LEXER_IS_BINARY_LVALUE_OP_TOKEN (token));
   JERRY_ASSERT (token != LEXER_ASSIGN);
 
 #if ENABLED (JERRY_ESNEXT)

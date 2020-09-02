@@ -69,18 +69,37 @@ typedef enum
    * IMPORTANT: update CBC_BINARY_OP_TOKEN_TO_OPCODE,
    *            CBC_BINARY_LVALUE_OP_TOKEN_TO_OPCODE and
    *            parser_binary_precedence_table after changes. */
+/**
+ * Index of first binary operation opcode.
+ */
+#define LEXER_FIRST_BINARY_OP LEXER_ASSIGN
 #if ENABLED (JERRY_ESNEXT)
-#define LEXER_IS_BINARY_OP_TOKEN(token_type) \
-  ((token_type) >= LEXER_ASSIGN && (token_type) <= LEXER_EXPONENTIATION)
+/**
+ * Index of last binary operation opcode.
+ */
+#define LEXER_LAST_BINARY_OP LEXER_EXPONENTIATION
 #else /* !ENABLED (JERRY_ESNEXT) */
-#define LEXER_IS_BINARY_OP_TOKEN(token_type) \
-  ((token_type) >= LEXER_ASSIGN && (token_type) <= LEXER_MODULO)
+/**
+ * Index of last binary operation opcode.
+ */
+#define LEXER_LAST_BINARY_OP LEXER_MODULO
 #endif /* ENABLED (JERRY_ESNEXT) */
 
-#define LEXER_IS_BINARY_LVALUE_TOKEN(token_type) \
+/**
+ * Checks whether the token is a binary operation token.
+ */
+#define LEXER_IS_BINARY_OP_TOKEN(token_type) \
+  ((token_type) >= LEXER_FIRST_BINARY_OP && (token_type) <= LEXER_LAST_BINARY_OP)
+/**
+ * Checks whether the token is an lvalue (assignment) operation token.
+ */
+#define LEXER_IS_BINARY_LVALUE_OP_TOKEN(token_type) \
   ((token_type) >= LEXER_ASSIGN && (token_type) <= LEXER_ASSIGN_BIT_XOR)
-
-#define LEXER_FIRST_BINARY_OP LEXER_ASSIGN
+/**
+ * Checks whether the token is a non-lvalue (assignment) operation token.
+ */
+#define LEXER_IS_BINARY_NON_LVALUE_OP_TOKEN(token_type) \
+  ((token_type) >= LEXER_QUESTION_MARK && (token_type) <= LEXER_LAST_BINARY_OP)
 
   LEXER_ASSIGN,                  /**< "=" (prec: 3) */
   LEXER_ASSIGN_ADD,              /**< "+=" (prec: 3) */

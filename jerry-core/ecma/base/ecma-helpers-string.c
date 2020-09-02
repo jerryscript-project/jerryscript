@@ -561,7 +561,7 @@ ecma_new_ecma_string_from_length (ecma_length_t number) /**< property length */
   }
 
 #if ENABLED (JERRY_ESNEXT)
-  JERRY_ASSERT (number <= ECMA_NUMBER_MAX_SAFE_INTEGER);
+  JERRY_ASSERT ((ecma_number_t) number <= ECMA_NUMBER_MAX_SAFE_INTEGER);
 
   if (JERRY_UNLIKELY (number > UINT32_MAX))
   {
@@ -2968,7 +2968,7 @@ ecma_op_advance_string_index (ecma_string_t *str_p, /**< input string */
                               bool is_unicode) /**< true - if regexp object's "unicode" flag is set
                                                     false - otherwise */
 {
-  JERRY_ASSERT (index <= ECMA_NUMBER_MAX_SAFE_INTEGER);
+  JERRY_ASSERT ((ecma_number_t) index <= ECMA_NUMBER_MAX_SAFE_INTEGER);
   ecma_length_t next_index = index + 1;
 
   if (!is_unicode)

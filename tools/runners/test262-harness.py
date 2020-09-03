@@ -54,6 +54,9 @@ import tempfile
 import xml.dom.minidom
 from collections import Counter
 
+import signal
+import multiprocessing
+
 #######################################################################
 # based on _monkeyYaml.py
 #######################################################################
@@ -350,6 +353,8 @@ def build_options():
                       help="Test only non-strict mode")
     result.add_option("--unmarked_default", default="both",
                       help="default mode for tests of unspecified strictness")
+    result.add_option("-j", "--job-count", default=None, action="store", type=int,
+                      help="Number of parallel test jobs to run. In case of '0' cpu count is used.")
     result.add_option("--logname", help="Filename to save stdout to")
     result.add_option("--loglevel", default="warning",
                       help="sets log level to debug, info, warning, error, or critical")
@@ -471,7 +476,7 @@ class TestResult(object):
 
 class TestCase(object):
 
-    def __init__(self, suite, name, full_path, strict_mode):
+    def __init__(self, suite, name, full_path, strict_mode, command_template):
         self.suite = suite
         self.name = name
         self.full_path = full_path
@@ -484,6 +489,7 @@ class TestCase(object):
         del test_record["header"]
         test_record.pop("commentary", None)    # do not throw if missing
         self.test_record = test_record
+        self.command_template = command_template
 
         self.validate()
 
@@ -601,19 +607,19 @@ class TestCase(object):
             stderr.dispose()
         return (code, out, err)
 
-    def run_test_in(self, command_template, tmp):
+    def run_test_in(self, tmp):
         tmp.write(self.get_source())
         tmp.close()
-        command = TestCase.instantiate_template(command_template, {
+        command = TestCase.instantiate_template(self.command_template, {
             'path': tmp.name
         })
         (code, out, err) = TestCase.execute(command)
         return TestResult(code, out, err, self)
 
-    def run(self, command_template):
+    def run(self):
         tmp = TempFile(suffix=".js", prefix="test262-", text=True)
         try:
-            result = self.run_test_in(command_template, tmp)
+            result = self.run_test_in(tmp)
         finally:
             tmp.dispose()
         return result
@@ -640,6 +646,15 @@ class TestCase(object):
             elif self.get_include_list():
                 raise TypeError(
                     "The `raw` flag is incompatible with the `includes` tag")
+
+
+def pool_init():
+    """Ignore CTRL+C in the worker process."""
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+
+def test_case_run_process(case):
+    return case.run()
 
 
 class ProgressIndicator(object):
@@ -726,7 +741,7 @@ class TestSuite(object):
                 report_error("Can't find: " + static)
         return self.include_cache[name]
 
-    def enumerate_tests(self, tests):
+    def enumerate_tests(self, tests, command_template):
         logging.info("Listing tests in %s", self.test_root)
         cases = []
         for root, dirs, files in os.walk(self.test_root):
@@ -747,12 +762,12 @@ class TestSuite(object):
                         print('Excluded: ' + rel_path)
                     else:
                         if not self.non_strict_only:
-                            strict_case = TestCase(self, name, full_path, True)
+                            strict_case = TestCase(self, name, full_path, True, command_template)
                             if not strict_case.is_no_strict():
                                 if strict_case.is_only_strict() or self.unmarked_default in ['both', 'strict']:
                                     cases.append(strict_case)
                         if not self.strict_only:
-                            non_strict_case = TestCase(self, name, full_path, False)
+                            non_strict_case = TestCase(self, name, full_path, False, command_template)
                             if not non_strict_case.is_only_strict():
                                 if non_strict_case.is_no_strict() or self.unmarked_default in ['both', 'non_strict']:
                                     cases.append(non_strict_case)
@@ -797,21 +812,35 @@ class TestSuite(object):
             print("")
             result.report_outcome(False)
 
-    def run(self, command_template, tests, print_summary, full_summary, logname):
+    def run(self, command_template, tests, print_summary, full_summary, logname, job_count=1):
         if not "{{path}}" in command_template:
             command_template += " {{path}}"
-        cases = self.enumerate_tests(tests)
+        cases = self.enumerate_tests(tests, command_template)
         if not cases:
             report_error("No tests to run")
         progress = ProgressIndicator(len(cases))
         if logname:
             self.logf = open(logname, "w")
 
-        for case in cases:
-            result = case.run(command_template)
-            if logname:
-                self.write_log(result)
-            progress.has_run(result)
+        if job_count == 1:
+            for case in cases:
+                result = case.run_pipe()
+                if logname:
+                    self.write_log(result)
+                progress.has_run(result)
+        else:
+            if job_count == 0:
+                job_count = None # uses multiprocessing.cpu_count()
+
+            pool = multiprocessing.Pool(processes=job_count, initializer=pool_init)
+            try:
+                for result in pool.imap(test_case_run_process, cases):
+                    if logname:
+                        self.write_log(result)
+                    progress.has_run(result)
+            except KeyboardInterrupt:
+                pool.terminate()
+                pool.join()
 
         if print_summary:
             self.print_summary(progress, logname)
@@ -842,12 +871,12 @@ class TestSuite(object):
             self.logf.write("%s passed in %s \n" % (name, mode))
 
     def print_source(self, tests):
-        cases = self.enumerate_tests(tests)
+        cases = self.enumerate_tests(tests, "")
         if cases:
             cases[0].print_source()
 
     def list_includes(self, tests):
-        cases = self.enumerate_tests(tests)
+        cases = self.enumerate_tests(tests, "")
         includes_dict = Counter()
         for case in cases:
             includes = case.get_include_list()
@@ -889,7 +918,8 @@ def main():
         code = test_suite.run(options.command, args,
                               options.summary or options.full_summary,
                               options.full_summary,
-                              options.logname)
+                              options.logname,
+                              options.job_count)
     return code
 
 

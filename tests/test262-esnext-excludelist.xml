@@ -988,7 +988,6 @@
   <test id="built-ins/Proxy/revocable/revocation-function-nonconstructor.js"><reason></reason></test>
   <test id="built-ins/Proxy/revocable/target-is-revoked-function-proxy.js"><reason></reason></test>
   <test id="built-ins/Proxy/revocable/target-is-revoked-proxy.js"><reason></reason></test>
-  <test id="built-ins/Proxy/set/call-parameters-prototype-index.js"><reason></reason></test>
   <test id="built-ins/Proxy/set/trap-is-not-callable-realm.js"><reason></reason></test>
   <test id="built-ins/Proxy/setPrototypeOf/toboolean-trap-result-false.js"><reason></reason></test>
   <test id="built-ins/Proxy/setPrototypeOf/trap-is-not-callable-realm.js"><reason></reason></test>

@@ -2924,6 +2924,16 @@ ecma_op_ordinary_object_set_prototype_of (ecma_object_t *obj_p, /**< base object
   /* 1. */
   JERRY_ASSERT (ecma_is_value_object (proto) || ecma_is_value_null (proto));
 
+  /**
+   * If the prototype of a fast array changes it is required to fall back to
+   * a "normal" array object. This ensures that all [[Get]]/[[Set]]/etc. calls
+   * works as expected.
+   */
+  if (ecma_op_object_is_fast_array (obj_p))
+  {
+    ecma_fast_array_convert_to_normal (obj_p);
+  }
+
   /* 3. */
   ecma_object_t *current_proto_p = ECMA_GET_POINTER (ecma_object_t, ecma_op_ordinary_object_get_prototype_of (obj_p));
   ecma_object_t *new_proto_p = ecma_is_value_null (proto) ? NULL : ecma_get_object_from_value (proto);

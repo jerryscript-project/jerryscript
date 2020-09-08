@@ -110,6 +110,7 @@ def update_exclude_list(args):
             match = re.match('(=== )?(.*) (?:failed|passed) in (?:non-strict|strict)', line)
             if match:
                 (unexpected, test) = match.groups()
+                test = test.replace('\\', '/')
                 if unexpected:
                     failing_tests.add(test + '.js')
                 else:

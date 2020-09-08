@@ -1492,11 +1492,7 @@ ecma_value_t
 ecma_typedarray_iterators_helper (ecma_value_t this_arg, /**< this argument */
                                   ecma_iterator_kind_t kind) /**< iterator kind */
 {
-  if (!ecma_is_typedarray (this_arg))
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
-  }
-
+  JERRY_ASSERT (ecma_is_typedarray (this_arg));
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY_ITERATOR_PROTOTYPE);
 
   return ecma_op_create_iterator_object (this_arg,

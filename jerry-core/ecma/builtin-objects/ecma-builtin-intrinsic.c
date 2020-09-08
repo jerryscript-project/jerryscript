@@ -17,6 +17,7 @@
 #include "ecma-builtin-helpers.h"
 #include "ecma-container-object.h"
 #include "ecma-array-object.h"
+#include "ecma-arraybuffer-object.h"
 #include "ecma-typedarray-object.h"
 #include "ecma-string-object.h"
 #include "ecma-gc.h"
@@ -168,6 +169,16 @@ ecma_builtin_intrinsic_dispatch_routine (uint16_t builtin_routine_id, /**< built
     }
     case ECMA_INTRINSIC_TYPEDARRAY_PROTOTYPE_VALUES:
     {
+      if (!ecma_is_typedarray (this_arg))
+      {
+        return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
+      }
+
+      if (ecma_arraybuffer_is_detached (ecma_typedarray_get_arraybuffer (ecma_get_object_from_value (this_arg))))
+      {
+        return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+      }
+
       return ecma_typedarray_iterators_helper (this_arg, ECMA_ITERATOR_VALUES);
     }
     case ECMA_INTRINSIC_SET_PROTOTYPE_VALUES:

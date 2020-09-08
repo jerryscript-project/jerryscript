@@ -41,7 +41,7 @@ normal_typedarrays.forEach(function(e){
     assert (current_item.value[0] === i);
     assert (current_item.value[1] === e[i]);
     assert (current_item.done === false);
-  
+
     current_item = iterator.next ();
   }
 

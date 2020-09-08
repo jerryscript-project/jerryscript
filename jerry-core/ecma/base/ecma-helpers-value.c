@@ -536,7 +536,7 @@ ecma_create_float_number (ecma_number_t ecma_number) /**< value of the float num
  *
  * @return ecma-value
  */
-ecma_value_t
+extern inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_make_float_value (ecma_number_t *ecma_num_p) /**< pointer to the float number */
 {
   return ecma_pointer_to_ecma_value (ecma_num_p) | ECMA_TYPE_FLOAT;
@@ -899,21 +899,21 @@ ecma_copy_value (ecma_value_t value)  /**< value description */
     case ECMA_TYPE_FLOAT:
     {
       ecma_number_t *num_p = (ecma_number_t *) ecma_get_pointer_from_ecma_value (value);
+      ecma_number_t *new_num_p = ecma_alloc_number ();
 
-      return ecma_create_float_number (*num_p);
-    }
-    case ECMA_TYPE_STRING:
-    {
-      ecma_ref_ecma_string (ecma_get_string_from_value (value));
-      return value;
+      *new_num_p = *num_p;
+
+      return ecma_make_float_value (new_num_p);
     }
 #if JERRY_ESNEXT
     case ECMA_TYPE_SYMBOL:
+#endif /* JERRY_ESNEXT */
+    case ECMA_TYPE_STRING:
     {
-      ecma_ref_ecma_string (ecma_get_symbol_from_value (value));
+      ecma_string_t *string_p = (ecma_string_t *) ecma_get_pointer_from_ecma_value (value);
+      ecma_ref_ecma_string_non_direct (string_p);
       return value;
     }
-#endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_BIGINT
     case ECMA_TYPE_BIGINT:
     {
@@ -926,7 +926,7 @@ ecma_copy_value (ecma_value_t value)  /**< value description */
 #endif /* JERRY_BUILTIN_BIGINT */
     case ECMA_TYPE_OBJECT:
     {
-      ecma_ref_object (ecma_get_object_from_value (value));
+      ecma_ref_object_inline (ecma_get_object_from_value (value));
       return value;
     }
     default:
@@ -1131,26 +1131,20 @@ ecma_free_value (ecma_value_t value) /**< value description */
       ecma_dealloc_number (number_p);
       break;
     }
-
-    case ECMA_TYPE_STRING:
-    {
-      ecma_string_t *string_p = ecma_get_string_from_value (value);
-      ecma_deref_ecma_string (string_p);
-      break;
-    }
 #if JERRY_ESNEXT
     case ECMA_TYPE_SYMBOL:
+#endif /* JERRY_ESNEXT */
+    case ECMA_TYPE_STRING:
     {
-      ecma_deref_ecma_string (ecma_get_symbol_from_value (value));
+      ecma_string_t *string_p = (ecma_string_t *) ecma_get_pointer_from_ecma_value (value);
+      ecma_deref_ecma_string_non_direct (string_p);
       break;
     }
-#endif /* JERRY_ESNEXT */
     case ECMA_TYPE_OBJECT:
     {
       ecma_deref_object (ecma_get_object_from_value (value));
       break;
     }
-
 #if JERRY_BUILTIN_BIGINT
     case ECMA_TYPE_BIGINT:
     {
@@ -1158,10 +1152,10 @@ ecma_free_value (ecma_value_t value) /**< value description */
       {
         ecma_deref_bigint (ecma_get_extended_primitive_from_value (value));
       }
+
       break;
     }
 #endif /* JERRY_BUILTIN_BIGINT */
-
     default:
     {
       JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_DIRECT

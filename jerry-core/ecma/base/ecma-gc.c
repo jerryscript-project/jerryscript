@@ -127,8 +127,8 @@ ecma_init_gc_info (ecma_object_t *object_p) /**< object */
 /**
  * Increase reference counter of an object
  */
-void
-ecma_ref_object (ecma_object_t *object_p) /**< object */
+extern inline void JERRY_ATTR_ALWAYS_INLINE
+ecma_ref_object_inline (ecma_object_t *object_p) /**< object */
 {
   if (JERRY_LIKELY (object_p->type_flags_refs < ECMA_OBJECT_MAX_REF))
   {
@@ -138,6 +138,15 @@ ecma_ref_object (ecma_object_t *object_p) /**< object */
   {
     jerry_fatal (ERR_REF_COUNT_LIMIT);
   }
+} /* ecma_ref_object_inline */
+
+/**
+ * Increase reference counter of an object
+ */
+void
+ecma_ref_object (ecma_object_t *object_p) /**< object */
+{
+  ecma_ref_object_inline (object_p);
 } /* ecma_ref_object */
 
 /**

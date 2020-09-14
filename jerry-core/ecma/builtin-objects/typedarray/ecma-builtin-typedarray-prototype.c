@@ -1037,9 +1037,16 @@ ecma_builtin_typedarray_prototype_sort_compare_helper (ecma_value_t lhs, /**< le
 {
   if (ecma_is_value_undefined (compare_func))
   {
+    /* Default comparison when no comparefn is passed. */
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+    if (ecma_is_value_bigint (lhs) && ecma_is_value_bigint (rhs))
+    {
+      return ecma_make_number_value (ecma_bigint_compare_to_bigint (lhs, rhs));
+    }
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+
     ecma_number_t result = ECMA_NUMBER_ZERO;
 
-    /* Default comparison when no comparefn is passed. */
     double lhs_value = (double) ecma_get_number_from_value (lhs);
     double rhs_value = (double) ecma_get_number_from_value (rhs);
 

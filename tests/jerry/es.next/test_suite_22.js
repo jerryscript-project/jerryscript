@@ -25,9 +25,10 @@
   assert(a[2] === 32.5);
 })();
 
+/* ES11 22.2.1.1 - length is equal to 0 */
 (function tc_22_02_02__002() {
   var a = Object.getPrototypeOf(Int8Array);
-  assert(a.length === 3);
+  assert(a.length === 0);
 })();
 
 (function tc_22_02_02__003() {

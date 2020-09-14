@@ -1617,8 +1617,6 @@
   <test id="built-ins/TypedArray/from/iter-invoke-error.js"><reason></reason></test>
   <test id="built-ins/TypedArray/from/iter-next-error.js"><reason></reason></test>
   <test id="built-ins/TypedArray/from/iter-next-value-error.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/length.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/name.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/Symbol.toStringTag/BigInt/detached-buffer.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/Symbol.toStringTag/detached-buffer.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/buffer/BigInt/detached-buffer.js"><reason></reason></test>
@@ -1818,8 +1816,6 @@
   <test id="built-ins/TypedArray/prototype/some/detached-buffer.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/sort/BigInt/detached-buffer-comparefn.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/sort/BigInt/detached-buffer.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/sort/BigInt/sortcompare-with-no-tostring.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/sort/BigInt/sorted-values.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/sort/detached-buffer-comparefn-coerce.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/sort/detached-buffer-comparefn.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/sort/detached-buffer.js"><reason></reason></test>
@@ -1866,17 +1862,6 @@
   <test id="built-ins/TypedArray/prototype/toString/detached-buffer.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/values/BigInt/detached-buffer.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/values/detached-buffer.js"><reason></reason></test>
-  <test id="built-ins/TypedArrayConstructors/BigInt64Array/name.js"><reason></reason></test>
-  <test id="built-ins/TypedArrayConstructors/BigUint64Array/name.js"><reason></reason></test>
-  <test id="built-ins/TypedArrayConstructors/Float32Array/name.js"><reason></reason></test>
-  <test id="built-ins/TypedArrayConstructors/Float64Array/name.js"><reason></reason></test>
-  <test id="built-ins/TypedArrayConstructors/Int16Array/name.js"><reason></reason></test>
-  <test id="built-ins/TypedArrayConstructors/Int32Array/name.js"><reason></reason></test>
-  <test id="built-ins/TypedArrayConstructors/Int8Array/name.js"><reason></reason></test>
-  <test id="built-ins/TypedArrayConstructors/Uint16Array/name.js"><reason></reason></test>
-  <test id="built-ins/TypedArrayConstructors/Uint32Array/name.js"><reason></reason></test>
-  <test id="built-ins/TypedArrayConstructors/Uint8Array/name.js"><reason></reason></test>
-  <test id="built-ins/TypedArrayConstructors/Uint8ClampedArray/name.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/bufferbyteoffset-throws-from-modulo-element-size-sab.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-is-negative-throws-sab.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-is-negative-zero-sab.js"><reason></reason></test>

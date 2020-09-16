@@ -2556,6 +2556,19 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
     {
       return LIT_MAGIC_STRING_FUNCTION_UL;
     }
+#if ENABLED (JERRY_ESNEXT)
+    case ECMA_OBJECT_TYPE_PROXY:
+    {
+      ecma_proxy_object_t *proxy_obj_p = (ecma_proxy_object_t *) obj_p;
+
+      if (!ecma_is_value_null (proxy_obj_p->target) && ecma_is_value_object (proxy_obj_p->target))
+      {
+        ecma_object_t *target_obj_p = ecma_get_object_from_value (proxy_obj_p->target);
+        return ecma_object_get_class_name (target_obj_p);
+      }
+      return LIT_MAGIC_STRING_OBJECT_UL;
+    }
+#endif /* ENABLED (JERRY_ESNEXT) */
     default:
     {
       JERRY_ASSERT (type == ECMA_OBJECT_TYPE_GENERAL || type == ECMA_OBJECT_TYPE_PROXY);

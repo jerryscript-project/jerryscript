@@ -21,7 +21,7 @@ assert (Symbol.prototype[Symbol.toStringTag] === undefined);
 Symbol.prototype[Symbol.toStringTag] = "myStringTag1";
 assert (Object.prototype.toString.call (Symbol ()) === "[object myStringTag1]");
 Symbol.prototype[Symbol.toStringTag] = {};
-assert (Object.prototype.toString.call (Symbol ()) === "[object Symbol]");
+assert (Object.prototype.toString.call (Symbol ()) === "[object Object]");
 
 /* Math @@toStringTag */
 assert (Math[Symbol.toStringTag] === "Math");
@@ -32,7 +32,7 @@ assert (Math[Symbol.toStringTag] === undefined);
 Math[Symbol.toStringTag] = "myStringTag2";
 assert (Object.prototype.toString.call (Math) === "[object myStringTag2]");
 Math[Symbol.toStringTag] = {};
-assert (Object.prototype.toString.call (Math) === "[object Math]");
+assert (Object.prototype.toString.call (Math) === "[object Object]");
 
 /* ArrayBuffer.prototype @@toStringTag */
 assert (ArrayBuffer.prototype[Symbol.toStringTag] === "ArrayBuffer");
@@ -43,7 +43,7 @@ assert (ArrayBuffer.prototype[Symbol.toStringTag] === undefined);
 ArrayBuffer.prototype[Symbol.toStringTag] = "myStringTag3";
 assert (Object.prototype.toString.call (new ArrayBuffer ()) === "[object myStringTag3]");
 ArrayBuffer.prototype[Symbol.toStringTag] = {};
-assert (ArrayBuffer.prototype.toString.call (new ArrayBuffer ()) === "[object ArrayBuffer]");
+assert (ArrayBuffer.prototype.toString.call (new ArrayBuffer ()) === "[object Object]");
 
 /* Promise.prototype @@toStringTag */
 assert (Promise.prototype[Symbol.toStringTag] === "Promise");
@@ -54,7 +54,7 @@ assert (Promise.prototype[Symbol.toStringTag] === undefined);
 Promise.prototype[Symbol.toStringTag] = "myStringTag4";
 assert (Object.prototype.toString.call (new Promise (function () {})) === "[object myStringTag4]");
 Promise.prototype[Symbol.toStringTag] = {};
-assert (Promise.prototype.toString.call (new Promise (function () {})) === "[object Promise]");
+assert (Promise.prototype.toString.call (new Promise (function () {})) === "[object Object]");
 
 /* Map.prototype @@toStringTag */
 assert (Map.prototype[Symbol.toStringTag] === "Map");
@@ -67,7 +67,7 @@ Map.prototype[Symbol.toStringTag] = "myStringTag5";
 assert (Map.prototype.toString.call (new Map ()) === "[object myStringTag5]");
 assert (Object.prototype.toString.call (Map) === "[object Function]");
 Map.prototype[Symbol.toStringTag] = {};
-assert (Map.prototype.toString.call (new Map) === "[object Map]");
+assert (Map.prototype.toString.call (new Map) === "[object Object]");
 
 /* JSON @@toStringTag */
 assert (JSON[Symbol.toStringTag] === "JSON");
@@ -78,7 +78,7 @@ assert (JSON[Symbol.toStringTag] === undefined);
 JSON[Symbol.toStringTag] = "myStringTag6";
 assert (Map.prototype.toString.call (JSON) === "[object myStringTag6]");
 JSON[Symbol.toStringTag] = {};
-assert (Object.prototype.toString.call (JSON) === "[object JSON]");
+assert (Object.prototype.toString.call (JSON) === "[object Object]");
 
 var typedArrayTypes = ["Int8Array",
                        "Uint8Array",

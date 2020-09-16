@@ -169,6 +169,18 @@ ecma_builtin_helper_object_to_string (const ecma_value_t this_arg) /**< this arg
       ecma_deref_object (obj_p);
       return ecma_builtin_helper_object_to_string_tag_helper (tag);
     }
+    else if (builtin_tag != LIT_MAGIC_STRING_ARGUMENTS_UL
+             && builtin_tag != LIT_MAGIC_STRING_FUNCTION_UL
+             && builtin_tag != LIT_MAGIC_STRING_ERROR_UL
+             && builtin_tag != LIT_MAGIC_STRING_BOOLEAN_UL
+             && builtin_tag != LIT_MAGIC_STRING_NUMBER_UL
+             && builtin_tag != LIT_MAGIC_STRING_STRING_UL
+             && builtin_tag != LIT_MAGIC_STRING_DATE_UL
+             && builtin_tag != LIT_MAGIC_STRING_REGEXP_UL
+             && builtin_tag != LIT_MAGIC_STRING_ARRAY_UL)
+    {
+      builtin_tag = LIT_MAGIC_STRING_OBJECT_UL;
+    }
 
     ecma_free_value (tag);
 #endif /* ENABLED (JERRY_ESNEXT) */

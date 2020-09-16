@@ -812,9 +812,6 @@
   <test id="built-ins/Object/entries/order-after-define-property.js"><reason></reason></test>
   <test id="built-ins/Object/keys/order-after-define-property.js"><reason></reason></test>
   <test id="built-ins/Object/proto-from-ctor-realm.js"><reason></reason></test>
-  <test id="built-ins/Object/prototype/toString/proxy-function.js"><reason></reason></test>
-  <test id="built-ins/Object/prototype/toString/symbol-tag-non-str-bigint.js"><reason></reason></test>
-  <test id="built-ins/Object/prototype/toString/symbol-tag-non-str-builtin.js"><reason></reason></test>
   <test id="built-ins/Object/prototype/toString/symbol-tag-non-str-proxy-function.js"><reason></reason></test>
   <test id="built-ins/Object/subclass-object-arg.js"><reason></reason></test>
   <test id="built-ins/Promise/all/invoke-resolve-get-error.js"><reason></reason></test>
@@ -9346,5 +9343,4 @@
   <test id="language/expressions/optional-chaining/short-circuiting.js"><reason></reason></test>
   <test id="language/expressions/optional-chaining/super-property-optional-call.js"><reason></reason></test>
   <!-- END - ES2020: Optional Chaining -->
-
 </excludeList>

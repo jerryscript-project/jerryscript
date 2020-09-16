@@ -147,6 +147,12 @@ ecma_value_t
 opfunc_async_create_and_await (vm_frame_ctx_t *frame_ctx_p, ecma_value_t value, uint16_t extra_flags);
 
 ecma_value_t
+ecma_op_init_class_fields (ecma_value_t function_object, ecma_value_t this_val);
+
+ecma_value_t
+ecma_op_add_computed_field (ecma_value_t class_object, ecma_value_t name);
+
+ecma_value_t
 opfunc_create_implicit_class_constructor (uint8_t opcode);
 
 void

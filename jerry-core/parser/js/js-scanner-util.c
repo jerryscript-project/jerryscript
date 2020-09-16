@@ -1495,6 +1495,21 @@ scanner_push_class_declaration (parser_context_t *context_p, /**< context */
 } /* scanner_push_class_declaration */
 
 /**
+ * Push the start of a class field initializer.
+ */
+void
+scanner_push_class_field_initializer (parser_context_t *context_p, /**< context */
+                                      scanner_context_t *scanner_context_p) /* scanner context */
+{
+  scanner_source_start_t source_start;
+  source_start.source_p = context_p->source_p;
+
+  parser_stack_push (context_p, &source_start, sizeof (scanner_source_start_t));
+  parser_stack_push_uint8 (context_p, SCAN_STACK_CLASS_FIELD_INITIALIZER);
+  scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
+} /* scanner_push_class_field_initializer */
+
+/**
  * Push the values required for destructuring assignment or binding parsing.
  */
 void
@@ -1658,6 +1673,7 @@ scanner_cleanup (parser_context_t *context_p) /**< context */
       case SCANNER_TYPE_CASE:
 #if ENABLED (JERRY_ESNEXT)
       case SCANNER_TYPE_INITIALIZER:
+      case SCANNER_TYPE_CLASS_FIELD_INITIALIZER_END:
 #endif /* ENABLED (JERRY_ESNEXT) */
       {
         size = sizeof (scanner_location_info_t);

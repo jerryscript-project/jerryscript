@@ -61,16 +61,16 @@ typedef enum
   LIT_GLOBAL_SYMBOL_TO_STRING_TAG, /**< @@toStringTag well known symbol */
   LIT_GLOBAL_SYMBOL_UNSCOPABLES, /**< @@unscopables well known symbol */
   LIT_GLOBAL_SYMBOL__LAST = LIT_GLOBAL_SYMBOL_UNSCOPABLES, /**< last global symbol */
-  LIT_GC_MARK_REQUIRED_MAGIC_STRING__COUNT,  /**< number of internal magic strings which will be used as
-                                              *   property names, and their values need to be marked during gc. */
-  LIT_INTERNAL_MAGIC_STRING_DELETED = LIT_GC_MARK_REQUIRED_MAGIC_STRING__COUNT, /**< special value for
-                                                                                 *   deleted properties */
+
+  LIT_INTERNAL_MAGIC_STRING_DELETED, /**< special value for deleted properties */
+  LIT_INTERNAL_MAGIC_STRING_INTERNAL_OBJECT, /**< Internal object ID for internal properties */
+  LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_INIT, /**< function which initializes properties */
 
   LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER, /**< native pointer info associated with an object */
-  LIT_FIRST_INTERNAL_MAGIC_STRING = LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER,  /**< first index of internal
-                                                                                *   magic strings */
+  LIT_INTERNAL_MAGIC_STRING_FIRST_DATA = LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER, /**< first index of special
+                                                                                    *   data properties */
   LIT_INTERNAL_MAGIC_STRING_WEAK_REFS, /**< Weak references to the current object */
-  LIT_INTERNAL_MAGIC_STRING_INTERNAL_OBJECT, /**< Internal object ID for internal properties */
+  LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED, /**< computed class field name list */
   LIT_MAGIC_STRING__COUNT /**< number of magic strings */
 } lit_magic_string_id_t;
 

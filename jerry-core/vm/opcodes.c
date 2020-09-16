@@ -960,6 +960,105 @@ opfunc_async_create_and_await (vm_frame_ctx_t *frame_ctx_p, /**< frame context *
 } /* opfunc_async_create_and_await */
 
 /**
+ * Initialize implicit class fields.
+ *
+ * @return ECMA_VALUE_ERROR - initialization fails
+ *         ECMA_VALUE_UNDEFINED - otherwise
+ */
+ecma_value_t
+ecma_op_init_class_fields (ecma_value_t function_object, /**< the function itself */
+                           ecma_value_t this_val) /**< this_arg of the function */
+{
+  JERRY_ASSERT (ecma_is_value_object (function_object));
+  JERRY_ASSERT (ecma_is_value_object (this_val));
+
+  ecma_string_t *name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_INIT);
+  ecma_object_t *function_object_p = ecma_get_object_from_value (function_object);
+
+  ecma_property_t *property_p = ecma_find_named_property (function_object_p, name_p);
+
+  if (property_p == NULL)
+  {
+    return ECMA_VALUE_UNDEFINED;
+  }
+
+  ecma_property_value_t *property_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+  ecma_value_t *computed_class_fields_p = NULL;
+
+  name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED);
+  ecma_property_t *class_field_property_p = ecma_find_named_property (function_object_p, name_p);
+
+  if (class_field_property_p != NULL)
+  {
+    ecma_property_value_t *class_field_property_value_p = ECMA_PROPERTY_VALUE_PTR (class_field_property_p);
+    computed_class_fields_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_value_t, class_field_property_value_p->value);
+  }
+
+  JERRY_ASSERT (ecma_op_is_callable (property_value_p->value));
+
+  ecma_extended_object_t *ext_function_p;
+  ext_function_p = (ecma_extended_object_t *) ecma_get_object_from_value (property_value_p->value);
+
+  ecma_object_t *scope_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
+                                                                       ext_function_p->u.function.scope_cp);
+  const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_function_p);
+
+  ecma_value_t *old_computed_class_fields_p = JERRY_CONTEXT (computed_class_fields_p);
+  JERRY_CONTEXT (computed_class_fields_p) = computed_class_fields_p;
+
+  ecma_value_t result = vm_run (bytecode_data_p, this_val, scope_p, NULL, 0);
+
+  JERRY_CONTEXT (computed_class_fields_p) = old_computed_class_fields_p;
+
+  JERRY_ASSERT (ECMA_IS_VALUE_ERROR (result) || result == ECMA_VALUE_UNDEFINED);
+  return result;
+} /* ecma_op_init_class_fields */
+
+ecma_value_t
+ecma_op_add_computed_field (ecma_value_t class_object, /**< class object */
+                            ecma_value_t name) /**< name of the property */
+{
+  ecma_string_t *prop_name_p = ecma_op_to_property_key (name);
+
+  if (JERRY_UNLIKELY (prop_name_p == NULL))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  if (ecma_prop_name_is_symbol (prop_name_p))
+  {
+    name = ecma_make_symbol_value (prop_name_p);
+  }
+  else
+  {
+    name = ecma_make_string_value (prop_name_p);
+  }
+
+  ecma_string_t *name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED);
+  ecma_object_t *class_object_p = ecma_get_object_from_value (class_object);
+
+  ecma_property_t *property_p = ecma_find_named_property (class_object_p, name_p);
+  ecma_value_t *compact_collection_p;
+  ecma_property_value_t *property_value_p;
+
+  if (property_p == NULL)
+  {
+    property_value_p = ecma_create_named_data_property (class_object_p, name_p, ECMA_PROPERTY_FIXED, &property_p);
+    ECMA_CONVERT_DATA_PROPERTY_TO_INTERNAL_PROPERTY (property_p);
+    compact_collection_p = ecma_new_compact_collection ();
+  }
+  else
+  {
+    property_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+    compact_collection_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_value_t, property_value_p->value);
+  }
+
+  compact_collection_p = ecma_compact_collection_push_back (compact_collection_p, name);
+  ECMA_SET_INTERNAL_VALUE_POINTER (property_value_p->value, compact_collection_p);
+  return ECMA_VALUE_UNDEFINED;
+} /* ecma_op_add_computed_field */
+
+/**
  * Implicit class constructor handler when the classHeritage is not present.
  *
  * See also: ECMAScript v6, 14.5.14.10.b.i
@@ -973,14 +1072,14 @@ ecma_op_implicit_constructor_handler_cb (const ecma_value_t function_obj, /**< t
                                          const ecma_value_t args_p[], /**< argument list */
                                          const uint32_t args_count) /**< argument number */
 {
-  JERRY_UNUSED_4 (function_obj, this_val, args_p, args_count);
+  JERRY_UNUSED_2 (args_p, args_count);
 
   if (JERRY_CONTEXT (current_new_target) == NULL)
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor cannot be invoked without 'new'."));
   }
 
-  return ECMA_VALUE_UNDEFINED;
+  return ecma_op_init_class_fields (function_obj, this_val);
 } /* ecma_op_implicit_constructor_handler_cb */
 
 /**
@@ -997,7 +1096,7 @@ ecma_op_implicit_constructor_handler_heritage_cb (const ecma_value_t function_ob
                                                   const ecma_value_t args_p[], /**< argument list */
                                                   const uint32_t args_count) /**< argument number */
 {
-  JERRY_UNUSED_4 (function_obj, this_val, args_p, args_count);
+  JERRY_UNUSED (this_val);
 
   if (JERRY_CONTEXT (current_new_target) == NULL)
   {
@@ -1028,10 +1127,21 @@ ecma_op_implicit_constructor_handler_heritage_cb (const ecma_value_t function_ob
       ecma_free_value (result);
       result = ECMA_VALUE_ERROR;
     }
-    else if (ecma_is_value_object (proto_value))
+    else
     {
-      ECMA_SET_POINTER (ecma_get_object_from_value (result)->u2.prototype_cp,
-                        ecma_get_object_from_value (proto_value));
+      if (ecma_is_value_object (proto_value))
+      {
+        ECMA_SET_POINTER (ecma_get_object_from_value (result)->u2.prototype_cp,
+                          ecma_get_object_from_value (proto_value));
+      }
+
+      ecma_value_t fields_value = ecma_op_init_class_fields (function_obj, result);
+
+      if (ECMA_IS_VALUE_ERROR (fields_value))
+      {
+        ecma_free_value (result);
+        result = ECMA_VALUE_ERROR;
+      }
     }
     ecma_free_value (proto_value);
   }
@@ -1302,10 +1412,9 @@ opfunc_set_class_attributes (ecma_object_t *obj_p, /**< object */
       }
       else
       {
-        JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_SPECIAL);
-
-        JERRY_ASSERT (property == ECMA_PROPERTY_TYPE_HASHMAP
-                      || property == ECMA_PROPERTY_TYPE_DELETED);
+        JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_SPECIAL
+                      || (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_INTERNAL
+                          && property_pair_p->names_cp[index] == LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED));
       }
     }
 

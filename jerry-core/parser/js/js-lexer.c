@@ -857,10 +857,16 @@ lexer_parse_identifier (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ESNEXT)
             if (JERRY_UNLIKELY (keyword_p->type == LEXER_KEYW_AWAIT))
             {
-              if (!(context_p->status_flags & PARSER_IS_ASYNC_FUNCTION)
-                  && !(context_p->global_status_flags & ECMA_PARSE_MODULE))
+              if (!(context_p->status_flags & PARSER_IS_ASYNC_FUNCTION))
               {
-                break;
+                if (context_p->global_status_flags & ECMA_PARSE_MODULE)
+                {
+                  parser_raise_error (context_p, PARSER_ERR_INVALID_KEYWORD);
+                }
+                else
+                {
+                  break;
+                }
               }
 
               if (context_p->status_flags & PARSER_DISALLOW_AWAIT_YIELD)

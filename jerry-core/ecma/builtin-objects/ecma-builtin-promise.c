@@ -120,7 +120,7 @@ ecma_builtin_promise_resolve (ecma_value_t this_arg, /**< 'this' argument */
  * Runtime Semantics: PerformPromiseRace.
  *
  * See also:
- *         ES2015 25.4.4.3.1
+ *         ES2020 25.6.4.4.1
  *
  * @return ecma value of the new promise.
  *         Returned value must be freed with ecma_free_value.
@@ -134,10 +134,29 @@ ecma_builtin_promise_perform_race (ecma_value_t iterator, /**< the iterator for 
 {
   JERRY_ASSERT (ecma_is_value_object (iterator));
   JERRY_ASSERT (ecma_object_class_is (capability_obj_p, LIT_INTERNAL_MAGIC_PROMISE_CAPABILITY));
+  JERRY_ASSERT (ecma_is_constructor (ctor));
 
   ecma_promise_capabality_t *capability_p = (ecma_promise_capabality_t *) capability_obj_p;
 
-  /* 1. */
+  /* 3. */
+  ecma_value_t resolve = ecma_op_object_get_by_magic_id (ecma_get_object_from_value (ctor), LIT_MAGIC_STRING_RESOLVE);
+
+  if (ECMA_IS_VALUE_ERROR (resolve))
+  {
+    return resolve;
+  }
+
+  /* 4. */
+  if (!ecma_op_is_callable (resolve))
+  {
+    ecma_free_value (resolve);
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Resolve method must be callable."));
+  }
+
+  ecma_object_t *resolve_func_p = ecma_get_object_from_value (resolve);
+  ecma_value_t ret_value = ECMA_VALUE_ERROR;
+
+  /* 5. */
   while (true)
   {
     /* a. */
@@ -145,17 +164,15 @@ ecma_builtin_promise_perform_race (ecma_value_t iterator, /**< the iterator for 
     /* b, c. */
     if (ECMA_IS_VALUE_ERROR (next))
     {
-      *done_p = true;
-      return next;
+      goto done;
     }
 
     /* d. */
     if (ecma_is_value_false (next))
     {
-      /* i. */
-      *done_p = true;
       /* ii. */
-      return ecma_copy_value (capability_p->header.u.class_prop.u.promise);
+      ret_value = ecma_copy_value (capability_p->header.u.class_prop.u.promise);
+      goto done;
     }
 
     /* e. */
@@ -165,42 +182,43 @@ ecma_builtin_promise_perform_race (ecma_value_t iterator, /**< the iterator for 
     /* f, g. */
     if (ECMA_IS_VALUE_ERROR (next_val))
     {
-      *done_p = true;
-      return next_val;
+      goto done;
     }
 
     /* h. */
-    ecma_value_t next_promise = ecma_op_invoke_by_magic_id (ctor, LIT_MAGIC_STRING_RESOLVE, &next_val, 1);
+    ecma_value_t next_promise = ecma_op_function_call (resolve_func_p, ctor, &next_val, 1);
     ecma_free_value (next_val);
 
-    /* i. */
     if (ECMA_IS_VALUE_ERROR (next_promise))
     {
-      return next_promise;
+      goto exit;
     }
 
-    /* j. */
+    /* i. */
     ecma_value_t args[2] = {capability_p->resolve, capability_p->reject};
     ecma_value_t result = ecma_op_invoke_by_magic_id (next_promise, LIT_MAGIC_STRING_THEN, args, 2);
     ecma_free_value (next_promise);
 
-    /* k. */
     if (ECMA_IS_VALUE_ERROR (result))
     {
-      return result;
+      goto exit;
     }
 
     ecma_free_value (result);
   }
 
-  JERRY_UNREACHABLE ();
+done:
+  *done_p = true;
+exit:
+  ecma_deref_object (resolve_func_p);
+  return ret_value;
 } /* ecma_builtin_promise_perform_race */
 
 /**
  * Runtime Semantics: PerformPromiseAll.
  *
  * See also:
- *         ES2015 25.4.4.1.1
+ *         ES2020 25.6.4.1.1
  *
  * @return ecma value of the new promise.
  *         Returned value must be freed with ecma_free_value.
@@ -217,6 +235,22 @@ ecma_builtin_promise_perform_all (ecma_value_t iterator, /**< iteratorRecord */
   JERRY_ASSERT (ecma_is_constructor (ctor));
 
   ecma_promise_capabality_t *capability_p = (ecma_promise_capabality_t *) capability_obj_p;
+
+  ecma_value_t resolve = ecma_op_object_get_by_magic_id (ecma_get_object_from_value (ctor),
+                                                         LIT_MAGIC_STRING_RESOLVE);
+
+  if (ECMA_IS_VALUE_ERROR (resolve))
+  {
+    return resolve;
+  }
+
+  if (!ecma_op_is_callable (resolve))
+  {
+    ecma_free_value (resolve);
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Resolve method must be callable."));
+  }
+
+  ecma_object_t *resolve_func_p = ecma_get_object_from_value (resolve);
 
   /* 3. */
   ecma_object_t *values_array_obj_p = ecma_op_new_fast_array_object (0);
@@ -236,16 +270,12 @@ ecma_builtin_promise_perform_all (ecma_value_t iterator, /**< iteratorRecord */
     /* b. - c. */
     if (ECMA_IS_VALUE_ERROR (next))
     {
-      *done_p = true;
-      break;
+      goto done;
     }
 
     /* d. */
     if (ecma_is_value_false (next))
     {
-      /* i. */
-      *done_p = true;
-
       /* ii. - iii. */
       if (ecma_promise_remaining_inc_or_dec (remaining, false) == 0)
       {
@@ -257,7 +287,7 @@ ecma_builtin_promise_perform_all (ecma_value_t iterator, /**< iteratorRecord */
         /* 3. */
         if (ECMA_IS_VALUE_ERROR (resolve_result))
         {
-          break;
+          goto done;
         }
 
         ecma_free_value (resolve_result);
@@ -265,7 +295,7 @@ ecma_builtin_promise_perform_all (ecma_value_t iterator, /**< iteratorRecord */
 
       /* iv. */
       ret_value = ecma_copy_value (capability_p->header.u.class_prop.u.promise);
-      break;
+      goto done;
     }
 
     /* e. */
@@ -275,8 +305,7 @@ ecma_builtin_promise_perform_all (ecma_value_t iterator, /**< iteratorRecord */
     /* f. - g. */
     if (ECMA_IS_VALUE_ERROR (next_value))
     {
-      *done_p = true;
-      break;
+      goto done;
     }
 
     /* h. */
@@ -286,19 +315,19 @@ ecma_builtin_promise_perform_all (ecma_value_t iterator, /**< iteratorRecord */
                                            ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
 
     /* i. */
-    ecma_value_t next_promise = ecma_op_invoke_by_magic_id (ctor, LIT_MAGIC_STRING_RESOLVE, &next_value, 1);
+    ecma_value_t next_promise = ecma_op_function_call (resolve_func_p, ctor, &next_value, 1);
     ecma_free_value (next_value);
 
     /* j. */
     if (ECMA_IS_VALUE_ERROR (next_promise))
     {
-      break;
+      goto exit;
     }
 
     if (JERRY_UNLIKELY (idx == UINT32_MAX - 1))
     {
       ecma_raise_range_error (ECMA_ERR_MSG ("Promise.all remaining elements limit reached."));
-      break;
+      goto exit;
     }
 
     /* k. */
@@ -333,14 +362,18 @@ ecma_builtin_promise_perform_all (ecma_value_t iterator, /**< iteratorRecord */
     /* s. */
     if (ECMA_IS_VALUE_ERROR (result))
     {
-      break;
+      goto exit;
     }
 
     ecma_free_value (result);
   }
 
+done:
+  *done_p = true;
+exit:
   ecma_free_value (remaining);
   ecma_deref_object (values_array_obj_p);
+  ecma_deref_object (resolve_func_p);
 
   return ret_value;
 } /* ecma_builtin_promise_perform_all */
@@ -356,11 +389,6 @@ ecma_builtin_promise_race_or_all (ecma_value_t this_arg, /**< 'this' argument */
                                   ecma_value_t iterable, /**< the items to be resolved */
                                   bool is_race) /**< indicates whether it is race function */
 {
-  if (!ecma_is_value_object (this_arg))
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not an object."));
-  }
-
   ecma_object_t *capability_obj_p = ecma_promise_new_capability (this_arg);
 
   if (JERRY_UNLIKELY (capability_obj_p == NULL))

@@ -2184,7 +2184,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                                                      ECMA_PROPERTY_FLAG_CONFIGURABLE,
                                                      NULL);
 
-          if (ecma_get_object_type (func_obj_p) != ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION)
+          if (ecma_get_object_type (func_obj_p) != ECMA_OBJECT_TYPE_NATIVE_FUNCTION)
           {
             ECMA_SET_SECOND_BIT_TO_POINTER_TAG (((ecma_extended_object_t *) func_obj_p)->u.function.scope_cp);
           }

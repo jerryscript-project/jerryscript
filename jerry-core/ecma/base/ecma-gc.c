@@ -19,6 +19,7 @@
 
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
+#include "ecma-builtin-handlers.h"
 #include "ecma-container-object.h"
 #include "ecma-function-object.h"
 #include "ecma-globals.h"
@@ -267,6 +268,15 @@ ecma_gc_mark_promise_object (ecma_extended_object_t *ext_object_p) /**< extended
 
   /* Mark all reactions. */
   ecma_promise_object_t *promise_object_p = (ecma_promise_object_t *) ext_object_p;
+
+  if (!ecma_is_value_empty (promise_object_p->resolve))
+  {
+    JERRY_ASSERT (ecma_is_value_object (promise_object_p->resolve)
+                  && ecma_is_value_object (promise_object_p->reject));
+    ecma_gc_set_object_visited (ecma_get_object_from_value (promise_object_p->resolve));
+    ecma_gc_set_object_visited (ecma_get_object_from_value (promise_object_p->reject));
+  }
+
   ecma_collection_t *collection_p = promise_object_p->reactions;
 
   if (collection_p != NULL)
@@ -771,48 +781,72 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
         break;
       }
 #if ENABLED (JERRY_ESNEXT)
-      case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
+      case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:
       {
-        ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
-
-        if (ext_func_p->u.external_handler_cb == ecma_proxy_revoke_cb)
+        if (ecma_get_object_is_builtin (object_p))
         {
-          ecma_revocable_proxy_object_t *rev_proxy_p = (ecma_revocable_proxy_object_t *) object_p;
+          ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
 
-          if (!ecma_is_value_null (rev_proxy_p->proxy))
+          switch (ext_func_p->u.native_handler.id)
           {
-            ecma_gc_set_object_visited (ecma_get_object_from_value (rev_proxy_p->proxy));
+            case ECMA_NATIVE_HANDLER_PROMISE_RESOLVE:
+            case ECMA_NATIVE_HANDLER_PROMISE_REJECT:
+            {
+              ecma_promise_resolver_t *resolver_obj_p = (ecma_promise_resolver_t *) object_p;
+              ecma_gc_set_object_visited (ecma_get_object_from_value (resolver_obj_p->promise));
+              break;
+            }
+            case ECMA_NATIVE_HANDLER_PROMISE_THEN_FINALLY:
+            case ECMA_NATIVE_HANDLER_PROMISE_CATCH_FINALLY:
+            {
+              ecma_promise_finally_function_t *finally_obj_p = (ecma_promise_finally_function_t *) object_p;
+              ecma_gc_set_object_visited (ecma_get_object_from_value (finally_obj_p->constructor));
+              ecma_gc_set_object_visited (ecma_get_object_from_value (finally_obj_p->on_finally));
+              break;
+            }
+            case ECMA_NATIVE_HANDLER_PROMISE_CAPABILITY_EXECUTOR:
+            {
+              ecma_promise_capability_executor_t *executor_p = (ecma_promise_capability_executor_t *) object_p;
+              ecma_gc_set_object_visited (ecma_get_object_from_value (executor_p->capability));
+              break;
+            }
+            case ECMA_NATIVE_HANDLER_PROMISE_ALL_HELPER:
+            {
+              ecma_promise_all_executor_t *executor_p = (ecma_promise_all_executor_t *) object_p;
+              ecma_gc_set_object_visited (ecma_get_object_from_value (executor_p->capability));
+              ecma_gc_set_object_visited (ecma_get_object_from_value (executor_p->values));
+              ecma_gc_set_object_visited (ecma_get_object_from_value (executor_p->remaining_elements));
+              break;
+            }
+            case ECMA_NATIVE_HANDLER_PROXY_REVOKE:
+            {
+              ecma_revocable_proxy_object_t *rev_proxy_p = (ecma_revocable_proxy_object_t *) object_p;
+
+              if (!ecma_is_value_null (rev_proxy_p->proxy))
+              {
+                ecma_gc_set_object_visited (ecma_get_object_from_value (rev_proxy_p->proxy));
+              }
+
+              break;
+            }
+            case ECMA_NATIVE_HANDLER_VALUE_THUNK:
+            case ECMA_NATIVE_HANDLER_VALUE_THROWER:
+            {
+              ecma_promise_value_thunk_t *thunk_obj_p = (ecma_promise_value_thunk_t *) object_p;
+
+              if (ecma_is_value_object (thunk_obj_p->value))
+              {
+                ecma_gc_set_object_visited (ecma_get_object_from_value (thunk_obj_p->value));
+              }
+              break;
+            }
+            default:
+            {
+              JERRY_UNREACHABLE ();
+            }
           }
         }
-        else if (ext_func_p->u.external_handler_cb == ecma_op_get_capabilities_executor_cb)
-        {
-          ecma_promise_capability_executor_t *executor_p = (ecma_promise_capability_executor_t *) object_p;
-          ecma_gc_set_object_visited (ecma_get_object_from_value (executor_p->capability));
-        }
-        else if (ext_func_p->u.external_handler_cb == ecma_promise_all_handler_cb)
-        {
-          ecma_promise_all_executor_t *executor_p = (ecma_promise_all_executor_t *) object_p;
-          ecma_gc_set_object_visited (ecma_get_object_from_value (executor_p->capability));
-          ecma_gc_set_object_visited (ecma_get_object_from_value (executor_p->values));
-          ecma_gc_set_object_visited (ecma_get_object_from_value (executor_p->remaining_elements));
-        }
-        else if (ext_func_p->u.external_handler_cb == ecma_promise_then_finally_cb
-                 || ext_func_p->u.external_handler_cb == ecma_promise_catch_finally_cb)
-        {
-          ecma_promise_finally_function_t *finally_obj_p = (ecma_promise_finally_function_t *) object_p;
-          ecma_gc_set_object_visited (ecma_get_object_from_value (finally_obj_p->constructor));
-          ecma_gc_set_object_visited (ecma_get_object_from_value (finally_obj_p->on_finally));
-        }
-        else if (ext_func_p->u.external_handler_cb == ecma_value_thunk_helper_cb
-                 || ext_func_p->u.external_handler_cb == ecma_value_thunk_thrower_cb)
-        {
-          ecma_promise_value_thunk_t *thunk_obj_p = (ecma_promise_value_thunk_t *) object_p;
 
-          if (ecma_is_value_object (thunk_obj_p->value))
-          {
-            ecma_gc_set_object_visited (ecma_get_object_from_value (thunk_obj_p->value));
-          }
-        }
         break;
       }
 #endif /* ENABLED (JERRY_ESNEXT) */
@@ -1155,8 +1189,57 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
     }
     else
     {
-      length_and_bitset_size = ((ecma_extended_object_t *) object_p)->u.built_in.length_and_bitset_size;
-      ext_object_size += (2 * sizeof (uint32_t)) * (length_and_bitset_size >> ECMA_BUILT_IN_BITSET_SHIFT);
+#if ENABLED (JERRY_ESNEXT)
+      if (object_type == ECMA_OBJECT_TYPE_NATIVE_FUNCTION)
+      {
+        ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
+        switch (ext_obj_p->u.native_handler.id)
+        {
+          case ECMA_NATIVE_HANDLER_PROMISE_RESOLVE:
+          case ECMA_NATIVE_HANDLER_PROMISE_REJECT:
+          {
+            ext_object_size = sizeof (ecma_promise_resolver_t);
+            break;
+          }
+          case ECMA_NATIVE_HANDLER_PROMISE_THEN_FINALLY:
+          case ECMA_NATIVE_HANDLER_PROMISE_CATCH_FINALLY:
+          {
+            ext_object_size = sizeof (ecma_promise_finally_function_t);
+            break;
+          }
+          case ECMA_NATIVE_HANDLER_PROMISE_CAPABILITY_EXECUTOR:
+          {
+            ext_object_size = sizeof (ecma_promise_capability_executor_t);
+            break;
+          }
+          case ECMA_NATIVE_HANDLER_PROMISE_ALL_HELPER:
+          {
+            ext_object_size = sizeof (ecma_promise_all_executor_t);
+            break;
+          }
+          case ECMA_NATIVE_HANDLER_PROXY_REVOKE:
+          {
+            ext_object_size = sizeof (ecma_revocable_proxy_object_t);
+            break;
+          }
+          case ECMA_NATIVE_HANDLER_VALUE_THUNK:
+          case ECMA_NATIVE_HANDLER_VALUE_THROWER:
+          {
+            ext_object_size = sizeof (ecma_promise_value_thunk_t);
+            break;
+          }
+          default:
+          {
+            JERRY_UNREACHABLE ();
+          }
+        }
+      }
+      else
+#endif /* ENABLED (JERRY_ESNEXT) */
+      {
+        length_and_bitset_size = ((ecma_extended_object_t *) object_p)->u.built_in.length_and_bitset_size;
+        ext_object_size += (2 * sizeof (uint32_t)) * (length_and_bitset_size >> ECMA_BUILT_IN_BITSET_SHIFT);
+      }
 
       ecma_gc_free_properties (object_p);
       ecma_dealloc_extended_object (object_p, ext_object_size);
@@ -1181,38 +1264,8 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
       }
       break;
     }
-    case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
+    case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:
     {
-#if ENABLED (JERRY_ESNEXT)
-      ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
-
-      if (ext_func_p->u.external_handler_cb == ecma_proxy_revoke_cb)
-      {
-        ext_object_size = sizeof (ecma_revocable_proxy_object_t);
-      }
-      else if (ext_func_p->u.external_handler_cb == ecma_op_get_capabilities_executor_cb)
-      {
-        ext_object_size = sizeof (ecma_promise_capability_executor_t);
-      }
-      else if (ext_func_p->u.external_handler_cb == ecma_promise_all_handler_cb)
-      {
-        ext_object_size = sizeof (ecma_promise_all_executor_t);
-      }
-      else if (ext_func_p->u.external_handler_cb == ecma_promise_then_finally_cb
-               || ext_func_p->u.external_handler_cb == ecma_promise_catch_finally_cb)
-      {
-        ext_object_size = sizeof (ecma_promise_finally_function_t);
-      }
-      else if (ext_func_p->u.external_handler_cb == ecma_value_thunk_helper_cb
-               || ext_func_p->u.external_handler_cb == ecma_value_thunk_thrower_cb)
-      {
-        ecma_promise_value_thunk_t *thunk_obj_p = (ecma_promise_value_thunk_t *) object_p;
-
-        ecma_free_value_if_not_object (thunk_obj_p->value);
-
-        ext_object_size = sizeof (ecma_promise_value_thunk_t);
-      }
-#endif /* ENABLED (JERRY_ESNEXT) */
       break;
     }
     case ECMA_OBJECT_TYPE_CLASS:

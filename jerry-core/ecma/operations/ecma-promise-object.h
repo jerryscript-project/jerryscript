@@ -46,13 +46,13 @@ typedef enum
 } ecma_promise_executor_type_t;
 
 /**
- * Description of the promise resolving functions.
+ * Description of a promise resolving function.
  */
 typedef struct
 {
-  ecma_value_t resolve; /**< the resolve function */
-  ecma_value_t reject; /**< the reject function */
-} ecma_promise_resolving_functions_t;
+  ecma_extended_object_t header;
+  ecma_value_t promise;
+} ecma_promise_resolver_t;
 
 /**
  * Description of the promise object.
@@ -62,6 +62,8 @@ typedef struct
 {
   ecma_extended_object_t header; /**< extended object part */
   ecma_collection_t *reactions; /**< list of promise reactions */
+  ecma_value_t resolve; /**< resolve function */
+  ecma_value_t reject; /**< reject function */
 } ecma_promise_object_t;
 
 /**
@@ -139,9 +141,7 @@ ecma_promise_resolve_handler (const ecma_value_t function,
 ecma_value_t ecma_promise_finally (ecma_value_t promise, ecma_value_t on_finally);
 void ecma_promise_async_then (ecma_value_t promise, ecma_value_t executable_object);
 ecma_value_t ecma_promise_async_await (ecma_extended_object_t *async_generator_object_p, ecma_value_t value);
-void ecma_promise_create_resolving_functions (ecma_object_t *object_p, ecma_promise_resolving_functions_t *funcs,
-                                              bool create_already_resolved);
-void ecma_promise_free_resolving_functions (ecma_promise_resolving_functions_t *funcs);
+void ecma_promise_create_resolving_functions (ecma_promise_object_t *object_p);
 
 uint32_t ecma_promise_remaining_inc_or_dec (ecma_value_t remaining, bool is_inc);
 ecma_value_t ecma_promise_all_handler_cb (const ecma_value_t function_obj, const ecma_value_t this_val,

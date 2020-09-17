@@ -17,6 +17,7 @@
 #include "ecma-array-object.h"
 #include "ecma-boolean-object.h"
 #include "ecma-builtins.h"
+#include "ecma-builtin-handlers.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
@@ -174,31 +175,10 @@ ecma_promise_trigger_reactions (ecma_collection_t *reactions, /**< lists of reac
  *
  * @return true if it was called before, false otherwise
  */
-static bool
-ecma_is_resolver_already_called (ecma_object_t *resolver_p, /**< resolver */
-                                 ecma_object_t *promise_obj_p) /**< promise */
+static inline bool JERRY_ATTR_ALWAYS_INLINE
+ecma_is_resolver_already_called (ecma_object_t *promise_obj_p) /**< promise */
 {
-  ecma_string_t *str_already_resolved_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ALREADY_RESOLVED);
-  ecma_property_t *property_p = ecma_find_named_property (resolver_p, str_already_resolved_p);
-
-  if (property_p == NULL)
-  {
-    return (ecma_promise_get_flags (promise_obj_p) & ECMA_PROMISE_ALREADY_RESOLVED) != 0;
-  }
-
-  JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA);
-
-  ecma_value_t already_resolved = ECMA_PROPERTY_VALUE_PTR (property_p)->value;
-  ecma_object_t *object_p = ecma_get_object_from_value (already_resolved);
-  JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_CLASS);
-
-  ecma_extended_object_t *already_resolved_p = (ecma_extended_object_t *) object_p;
-  JERRY_ASSERT (already_resolved_p->u.class_prop.class_id == LIT_MAGIC_STRING_BOOLEAN_UL);
-
-  ecma_value_t current_value = already_resolved_p->u.class_prop.u.value;
-  already_resolved_p->u.class_prop.u.value = ECMA_VALUE_TRUE;
-
-  return current_value == ECMA_VALUE_TRUE;
+  return (ecma_promise_get_flags (promise_obj_p) & ECMA_PROMISE_ALREADY_RESOLVED) != 0;
 } /* ecma_is_resolver_already_called */
 
 /**
@@ -304,26 +284,23 @@ ecma_promise_reject_handler (const ecma_value_t function, /**< the function itse
                              const uint32_t argc) /**< argument number */
 {
   JERRY_UNUSED (this);
+  ecma_promise_resolver_t *function_p = (ecma_promise_resolver_t *) ecma_get_object_from_value (function);
 
-  ecma_object_t *function_p = ecma_get_object_from_value (function);
-  /* 2. */
-  ecma_value_t promise = ecma_op_object_get_by_magic_id (function_p, LIT_INTERNAL_MAGIC_STRING_PROMISE);
   /* 1. */
-  ecma_object_t *promise_obj_p = ecma_get_object_from_value (promise);
+  ecma_object_t *promise_obj_p = ecma_get_object_from_value (function_p->promise);
   JERRY_ASSERT (ecma_is_promise (promise_obj_p));
 
   /* 3., 4. */
-  if (!ecma_is_resolver_already_called (function_p, promise_obj_p))
+  if (!ecma_is_resolver_already_called (promise_obj_p))
   {
     /* 5. */
     ((ecma_extended_object_t *) promise_obj_p)->u.class_prop.extra_info |= ECMA_PROMISE_ALREADY_RESOLVED;
 
     /* 6. */
     ecma_value_t reject_value = (argc == 0) ? ECMA_VALUE_UNDEFINED : argv[0];
-    ecma_reject_promise (promise, reject_value);
+    ecma_reject_promise (function_p->promise, reject_value);
   }
 
-  ecma_free_value (promise);
   return ECMA_VALUE_UNDEFINED;
 } /* ecma_promise_reject_handler */
 
@@ -341,24 +318,20 @@ ecma_promise_resolve_handler (const ecma_value_t function, /**< the function its
                               const uint32_t argc) /**< argument number */
 {
   JERRY_UNUSED (this);
+  ecma_promise_resolver_t *function_p = (ecma_promise_resolver_t *) ecma_get_object_from_value (function);
 
-  ecma_object_t *function_p = ecma_get_object_from_value (function);
-  /* 2. */
-  ecma_value_t promise = ecma_op_object_get_by_magic_id (function_p, LIT_INTERNAL_MAGIC_STRING_PROMISE);
   /* 1. */
-  ecma_object_t *promise_obj_p = ecma_get_object_from_value (promise);
+  ecma_object_t *promise_obj_p = ecma_get_object_from_value (function_p->promise);
   JERRY_ASSERT (ecma_is_promise (promise_obj_p));
 
   /* 3., 4. */
-  if (!ecma_is_resolver_already_called (function_p, promise_obj_p))
+  if (!ecma_is_resolver_already_called (promise_obj_p))
   {
     /* 5. */
     ((ecma_extended_object_t *) promise_obj_p)->u.class_prop.extra_info |= ECMA_PROMISE_ALREADY_RESOLVED;
 
-    ecma_fulfill_promise (promise, (argc == 0) ? ECMA_VALUE_UNDEFINED : argv[0]);
+    ecma_fulfill_promise (function_p->promise, (argc == 0) ? ECMA_VALUE_UNDEFINED : argv[0]);
   }
-
-  ecma_free_value (promise);
 
   return ECMA_VALUE_UNDEFINED;
 } /* ecma_promise_resolve_handler */
@@ -370,19 +343,16 @@ ecma_promise_resolve_handler (const ecma_value_t function, /**< the function its
  *
  * @return pointer to the resolving function
  */
-static ecma_value_t
-ecma_promise_create_resolving_functions_helper (ecma_object_t *obj_p, /**< Promise Object */
-                                                ecma_external_handler_t handler_cb) /**< Callback handler */
+static ecma_object_t *
+ecma_promise_create_resolving_functions_helper (ecma_object_t *promise_p, /**< Promise Object */
+                                                ecma_native_handler_id_t id) /**< Callback handler */
 {
-  ecma_string_t *str_promise_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE);
-  ecma_object_t *func_obj_p = ecma_op_create_external_function_object (handler_cb);
+  ecma_object_t *func_obj_p = ecma_op_create_native_handler (id, sizeof (ecma_promise_resolver_t));
 
-  ecma_op_object_put (func_obj_p,
-                      str_promise_p,
-                      ecma_make_object_value (obj_p),
-                      false);
+  ecma_promise_resolver_t *resolver_p = (ecma_promise_resolver_t *) func_obj_p;
+  resolver_p->promise = ecma_make_object_value (promise_p);
 
-  return ecma_make_object_value (func_obj_p);
+  return func_obj_p;
 } /* ecma_promise_create_resolving_functions_helper */
 
 /**
@@ -393,50 +363,20 @@ ecma_promise_create_resolving_functions_helper (ecma_object_t *obj_p, /**< Promi
  * @return pointer to the resolving functions
  */
 void
-ecma_promise_create_resolving_functions (ecma_object_t *object_p, /**< the promise object */
-                                         ecma_promise_resolving_functions_t *funcs, /**< [out] resolving functions */
-                                         bool create_already_resolved) /**< create already resolved flag */
+ecma_promise_create_resolving_functions (ecma_promise_object_t *promise_p) /**< the promise object */
 {
-  /* 2. - 4. */
-  funcs->resolve = ecma_promise_create_resolving_functions_helper (object_p,
-                                                                   ecma_promise_resolve_handler);
+  /* 2. - 7. */
+  ecma_object_t *resolve_func_p = ecma_promise_create_resolving_functions_helper ((ecma_object_t *) promise_p,
+                                                                                  ECMA_NATIVE_HANDLER_PROMISE_RESOLVE);
+  ecma_object_t *reject_func_p = ecma_promise_create_resolving_functions_helper ((ecma_object_t *) promise_p,
+                                                                                 ECMA_NATIVE_HANDLER_PROMISE_REJECT);
 
-  /* 5. - 7. */
-  funcs->reject = ecma_promise_create_resolving_functions_helper (object_p,
-                                                                  ecma_promise_reject_handler);
-  if (!create_already_resolved)
-  {
-    return;
-  }
+  promise_p->resolve = ecma_make_object_value (resolve_func_p);
+  promise_p->reject = ecma_make_object_value (reject_func_p);
 
-  ecma_value_t already_resolved = ecma_op_create_boolean_object (ECMA_VALUE_FALSE);
-  ecma_string_t *str_already_resolved_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ALREADY_RESOLVED);
-  ecma_property_value_t *value_p;
-
-  value_p = ecma_create_named_data_property (ecma_get_object_from_value (funcs->resolve),
-                                             str_already_resolved_p,
-                                             ECMA_PROPERTY_FIXED,
-                                             NULL);
-  value_p->value = already_resolved;
-
-  value_p = ecma_create_named_data_property (ecma_get_object_from_value (funcs->reject),
-                                             str_already_resolved_p,
-                                             ECMA_PROPERTY_FIXED,
-                                             NULL);
-  value_p->value = already_resolved;
-
-  ecma_free_value (already_resolved);
+  ecma_deref_object (resolve_func_p);
+  ecma_deref_object (reject_func_p);
 } /* ecma_promise_create_resolving_functions */
-
-/**
- * Free the heap and the member of the resolving functions.
- */
-void
-ecma_promise_free_resolving_functions (ecma_promise_resolving_functions_t *funcs) /**< points to the functions */
-{
-  ecma_free_value (funcs->resolve);
-  ecma_free_value (funcs->reject);
-} /* ecma_promise_free_resolving_functions */
 
 /**
  * Create a promise object.
@@ -473,25 +413,15 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
   /* 5 */
   ext_object_p->u.class_prop.extra_info = ECMA_PROMISE_IS_PENDING;
   ext_object_p->u.class_prop.u.value = ECMA_VALUE_UNDEFINED;
+
+  /* 6-8. */
   ecma_promise_object_t *promise_object_p = (ecma_promise_object_t *) object_p;
-
-  /* 6-7. */
   promise_object_p->reactions = reactions;
-  /* 8. */
-  ecma_promise_resolving_functions_t funcs;
-  ecma_promise_create_resolving_functions (object_p, &funcs, false);
+  /* Creating the resolving function may trigger a GC, so these need to be initialized. */
+  promise_object_p->resolve = ECMA_VALUE_EMPTY;
+  promise_object_p->reject = ECMA_VALUE_EMPTY;
 
-  ecma_string_t *str_resolve_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_RESOLVE_FUNCTION);
-  ecma_string_t *str_reject_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_REJECT_FUNCTION);
-
-  ecma_op_object_put (object_p,
-                      str_resolve_p,
-                      funcs.resolve,
-                      false);
-  ecma_op_object_put (object_p,
-                      str_reject_p,
-                      funcs.reject,
-                      false);
+  ecma_promise_create_resolving_functions (promise_object_p);
 
   /* 9. */
   ecma_value_t completion = ECMA_VALUE_UNDEFINED;
@@ -500,7 +430,7 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
   {
     JERRY_ASSERT (ecma_op_is_callable (executor));
 
-    ecma_value_t argv[] = { funcs.resolve, funcs.reject };
+    ecma_value_t argv[] = { promise_object_p->resolve, promise_object_p->reject };
     completion = ecma_op_function_call (ecma_get_object_from_value (executor),
                                         ECMA_VALUE_UNDEFINED,
                                         argv,
@@ -518,13 +448,12 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
   {
     /* 10.a. */
     completion = jcontext_take_exception ();
-    status = ecma_op_function_call (ecma_get_object_from_value (funcs.reject),
+    status = ecma_op_function_call (ecma_get_object_from_value (promise_object_p->reject),
                                     ECMA_VALUE_UNDEFINED,
                                     &completion,
                                     1);
   }
 
-  ecma_promise_free_resolving_functions (&funcs);
   ecma_free_value (completion);
 
   /* 10.b. */
@@ -700,13 +629,11 @@ ecma_promise_new_capability (ecma_value_t constructor)
   capability_p->reject = ECMA_VALUE_UNDEFINED;
 
   /* 4-5. */
-  ecma_object_t *executor_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE),
-                                                  sizeof (ecma_promise_capability_executor_t),
-                                                  ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+  ecma_object_t *executor_p = ecma_op_create_native_handler (ECMA_NATIVE_HANDLER_PROMISE_CAPABILITY_EXECUTOR,
+                                                             sizeof (ecma_promise_capability_executor_t));
 
   /* 6. */
   ecma_promise_capability_executor_t *executor_func_p = (ecma_promise_capability_executor_t *) executor_p;
-  executor_func_p->header.u.external_handler_cb = ecma_op_get_capabilities_executor_cb;
   executor_func_p->capability = ecma_make_object_value (capability_obj_p);
 
   /* 7. */
@@ -999,8 +926,8 @@ ecma_value_thunk_thrower_cb (const ecma_value_t function_obj, /**< the function 
  * @return ecma value
  */
 static ecma_value_t
-ecma_promise_than_catch_finally_helper (ecma_value_t function_obj,  /**< the function itself */
-                                        ecma_external_handler_t ext_func_obj, /**< external function object */
+ecma_promise_then_catch_finally_helper (ecma_value_t function_obj,  /**< the function itself */
+                                        ecma_native_handler_id_t id, /**< handler id */
                                         ecma_value_t arg) /**< callback function argument */
 {
   /* 2. */
@@ -1036,13 +963,9 @@ ecma_promise_than_catch_finally_helper (ecma_value_t function_obj,  /**< the fun
 
   /* 8. */
   ecma_object_t *value_thunk_func_p;
-  value_thunk_func_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE),
-                                    sizeof (ecma_promise_value_thunk_t),
-                                    ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+  value_thunk_func_p = ecma_op_create_native_handler (id, sizeof (ecma_promise_value_thunk_t));
 
   ecma_promise_value_thunk_t *value_thunk_func_obj = (ecma_promise_value_thunk_t *) value_thunk_func_p;
-  value_thunk_func_obj->header.u.external_handler_cb = ext_func_obj;
-
   value_thunk_func_obj->value = ecma_copy_value_if_not_object (arg);
 
   /* 9. */
@@ -1053,7 +976,7 @@ ecma_promise_than_catch_finally_helper (ecma_value_t function_obj,  /**< the fun
   ecma_deref_object (value_thunk_func_p);
 
   return ret_value;
-} /* ecma_promise_than_catch_finally_helper */
+} /* ecma_promise_then_catch_finally_helper */
 
 /**
  * Definition of Then Finally Function
@@ -1072,7 +995,7 @@ ecma_promise_then_finally_cb (const ecma_value_t function_obj, /**< the function
   JERRY_UNUSED_2 (this_val, args_count);
   JERRY_ASSERT (args_count > 0);
 
-  return ecma_promise_than_catch_finally_helper (function_obj, ecma_value_thunk_helper_cb, args_p[0]);
+  return ecma_promise_then_catch_finally_helper (function_obj, ECMA_NATIVE_HANDLER_VALUE_THUNK, args_p[0]);
 } /* ecma_promise_then_finally_cb */
 
 /**
@@ -1092,7 +1015,7 @@ ecma_promise_catch_finally_cb (const ecma_value_t function_obj, /**< the functio
   JERRY_UNUSED_2 (this_val, args_count);
   JERRY_ASSERT (args_count > 0);
 
-  return ecma_promise_than_catch_finally_helper (function_obj, ecma_value_thunk_thrower_cb, args_p[0]);
+  return ecma_promise_then_catch_finally_helper (function_obj, ECMA_NATIVE_HANDLER_VALUE_THROWER, args_p[0]);
 } /* ecma_promise_catch_finally_cb */
 
 /**
@@ -1132,37 +1055,27 @@ ecma_promise_finally (ecma_value_t promise, /**< the promise which call 'finally
     return ecma_op_invoke_by_magic_id (promise, LIT_MAGIC_STRING_THEN, invoke_args, 2);
   }
 
-  /* 6. a,b */
+  /* 6.a-b */
   ecma_object_t *then_finally_obj_p;
-  then_finally_obj_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE),
-                                           sizeof (ecma_promise_finally_function_t),
-                                           ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+  then_finally_obj_p = ecma_op_create_native_handler (ECMA_NATIVE_HANDLER_PROMISE_THEN_FINALLY,
+                                                      sizeof (ecma_promise_finally_function_t));
 
-  ecma_promise_finally_function_t *then_finally_func_obj = (ecma_promise_finally_function_t *) then_finally_obj_p;
-  then_finally_func_obj->header.u.external_handler_cb = ecma_promise_then_finally_cb;
+  /* 6.c-d */
+  ecma_promise_finally_function_t *then_finally_func_obj_p = (ecma_promise_finally_function_t *) then_finally_obj_p;
+  then_finally_func_obj_p->constructor = species;
+  then_finally_func_obj_p->on_finally = on_finally;
 
-  /* 6.c */
-  then_finally_func_obj->constructor = species;
-
-  /* 6.d*/
-  then_finally_func_obj->on_finally = on_finally;
-
-  /* 6. e,f */
+  /* 6.e-f */
   ecma_object_t *catch_finally_obj_p;
-  catch_finally_obj_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE),
-                                            sizeof (ecma_promise_finally_function_t),
-                                            ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+  catch_finally_obj_p = ecma_op_create_native_handler (ECMA_NATIVE_HANDLER_PROMISE_CATCH_FINALLY,
+                                                       sizeof (ecma_promise_finally_function_t));
 
+  /* 6.g-h */
   ecma_promise_finally_function_t *catch_finally_func_obj = (ecma_promise_finally_function_t *) catch_finally_obj_p;
-  catch_finally_func_obj->header.u.external_handler_cb = ecma_promise_catch_finally_cb;
-
-  /* 6.g */
   catch_finally_func_obj->constructor = species;
-
-  /* 6.h */
   catch_finally_func_obj->on_finally = on_finally;
 
-  ecma_free_value (species);
+  ecma_deref_object (ecma_get_object_from_value (species));
 
   /* 7. */
   ecma_value_t invoke_args[2] =

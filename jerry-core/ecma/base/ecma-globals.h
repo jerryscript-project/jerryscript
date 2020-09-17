@@ -290,10 +290,10 @@ typedef ecma_value_t (*ecma_vm_exec_stop_callback_t) (void *user_p);
 /**
  * Type of an external function handler.
  */
-typedef ecma_value_t (*ecma_external_handler_t) (const ecma_value_t function_obj,
-                                                 const ecma_value_t this_val,
-                                                 const ecma_value_t args_p[],
-                                                 const uint32_t args_count);
+typedef ecma_value_t (*ecma_native_handler_t) (const ecma_value_t function_obj,
+                                               const ecma_value_t this_val,
+                                               const ecma_value_t args_p[],
+                                               const uint32_t args_count);
 
 /**
  * Native free callback of an object.
@@ -664,7 +664,7 @@ typedef enum
   /* Note: these 4 types must be in this order. See IsCallable operation.  */
   ECMA_OBJECT_TYPE_FUNCTION = 5, /**< Function objects (15.3), created through 13.2 routine */
   ECMA_OBJECT_TYPE_BOUND_FUNCTION = 6, /**< Function objects (15.3), created through 15.3.4.5 routine */
-  ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION = 7, /**< External (host) function object */
+  ECMA_OBJECT_TYPE_NATIVE_FUNCTION = 7, /**< Native function object */
   /* Types between 13-15 cannot have a built-in flag. See ecma_lexical_environment_type_t. */
 
   ECMA_OBJECT_TYPE__MAX /**< maximum value */
@@ -959,7 +959,16 @@ typedef struct
       ecma_value_t args_len_or_this; /**< length of arguments or this value */
     } bound_function;
 
-    ecma_external_handler_t external_handler_cb; /**< external function */
+    /**
+     * Description of a built-in native handler object.
+     */
+    struct
+    {
+      uint32_t id;    /**< handler id */
+      uint32_t flags; /**< handler flags */
+    } native_handler;
+
+    ecma_native_handler_t external_handler_cb; /**< external function */
   } u;
 } ecma_extended_object_t;
 

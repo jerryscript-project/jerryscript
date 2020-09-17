@@ -18,6 +18,7 @@
 
 #include "ecma-globals.h"
 #include "ecma-builtins.h"
+#include "ecma-builtin-handlers.h"
 #include "vm.h"
 
 /** \addtogroup ecma ECMA
@@ -40,7 +41,7 @@ ecma_object_t *
 ecma_op_create_simple_function_object (ecma_object_t *scope_p, const ecma_compiled_code_t *bytecode_data_p);
 
 ecma_object_t *
-ecma_op_create_external_function_object (ecma_external_handler_t handler_cb);
+ecma_op_create_external_function_object (ecma_native_handler_t handler_cb);
 
 const ecma_compiled_code_t *
 ecma_op_function_get_compiled_code (ecma_extended_object_t *function_p);
@@ -60,6 +61,18 @@ ecma_op_create_any_function_object (ecma_object_t *scope_p, const ecma_compiled_
 ecma_object_t *
 ecma_op_create_arrow_function_object (ecma_object_t *scope_p, const ecma_compiled_code_t *bytecode_data_p,
                                       ecma_value_t this_binding);
+
+ecma_object_t *
+ecma_op_create_native_handler (ecma_native_handler_id_t id, size_t object_size);
+
+ecma_property_t *
+ecma_op_native_handler_try_to_lazy_instantiate_property (ecma_object_t *object_p, ecma_string_t *property_name_p);
+
+void
+ecma_op_native_handler_list_lazy_property_names (ecma_object_t *object_p,
+                                                 ecma_collection_t *prop_names_p,
+                                                 ecma_property_counter_t *prop_counter_p);
+
 bool
 ecma_op_function_is_generator (ecma_object_t *func_obj_p);
 #endif /* ENABLED (JERRY_ESNEXT) */

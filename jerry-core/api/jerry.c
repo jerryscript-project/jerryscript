@@ -1001,7 +1001,7 @@ jerry_object_get_type (const jerry_value_t value) /**< input value to check */
   {
     case ECMA_OBJECT_TYPE_FUNCTION:
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
-    case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
+    case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:
     {
       return JERRY_OBJECT_TYPE_FUNCTION;
     }
@@ -1145,7 +1145,7 @@ jerry_function_get_type (const jerry_value_t value) /**< input value to check */
       {
         return JERRY_FUNCTION_TYPE_BOUND;
       }
-      case ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION:
+      case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:
       {
         return JERRY_FUNCTION_TYPE_GENERIC;
       }
@@ -3692,19 +3692,13 @@ jerry_resolve_or_reject_promise (jerry_value_t promise, /**< the promise value *
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_value_msg_p)));
   }
 
-  lit_magic_string_id_t prop_name = (is_resolve ? LIT_INTERNAL_MAGIC_STRING_RESOLVE_FUNCTION
-                                                : LIT_INTERNAL_MAGIC_STRING_REJECT_FUNCTION);
+  ecma_promise_object_t *promise_p = (ecma_promise_object_t *) ecma_get_object_from_value (promise);
+  ecma_value_t function = is_resolve ? promise_p->resolve : promise_p->reject;
 
-  ecma_value_t function = ecma_op_object_get_by_magic_id (ecma_get_object_from_value (promise), prop_name);
-
-  ecma_value_t ret = ecma_op_function_call (ecma_get_object_from_value (function),
-                                            ECMA_VALUE_UNDEFINED,
-                                            &argument,
-                                            1);
-
-  ecma_free_value (function);
-
-  return ret;
+  return ecma_op_function_call (ecma_get_object_from_value (function),
+                                ECMA_VALUE_UNDEFINED,
+                                &argument,
+                                1);
 #else /* !ENABLED (JERRY_BUILTIN_PROMISE) */
   JERRY_UNUSED (promise);
   JERRY_UNUSED (argument);

@@ -16,6 +16,7 @@
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
 #include "ecma-builtins.h"
+#include "ecma-builtin-handlers.h"
 #include "ecma-builtin-object.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
@@ -165,13 +166,11 @@ ecma_proxy_create_revocable (ecma_value_t target, /**< target argument */
 
   /* 3. */
   ecma_object_t *func_obj_p;
-  func_obj_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE),
-                                   sizeof (ecma_revocable_proxy_object_t),
-                                   ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
+  func_obj_p = ecma_op_create_native_handler (ECMA_NATIVE_HANDLER_PROXY_REVOKE,
+                                              sizeof (ecma_revocable_proxy_object_t));
 
-  ecma_revocable_proxy_object_t *rev_proxy_p = (ecma_revocable_proxy_object_t *) func_obj_p;
-  rev_proxy_p->header.u.external_handler_cb = ecma_proxy_revoke_cb;
   /* 4. */
+  ecma_revocable_proxy_object_t *rev_proxy_p = (ecma_revocable_proxy_object_t *) func_obj_p;
   rev_proxy_p->proxy = proxy_value;
 
   ecma_property_value_t *prop_value_p;

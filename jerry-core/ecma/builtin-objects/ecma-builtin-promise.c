@@ -16,6 +16,7 @@
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
 #include "ecma-builtin-helpers.h"
+#include "ecma-builtin-handlers.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
@@ -294,21 +295,17 @@ ecma_builtin_promise_perform_all (ecma_value_t iterator, /**< iteratorRecord */
       break;
     }
 
-    /* k. */
-    ecma_object_t *executor_func_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE),
-                                                         sizeof (ecma_promise_all_executor_t),
-                                                         ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
-
-    ecma_promise_all_executor_t *executor_p = (ecma_promise_all_executor_t *) executor_func_p;
-    executor_p->header.u.external_handler_cb = ecma_promise_all_handler_cb;
-
-    /* l. */
     if (JERRY_UNLIKELY (idx == UINT32_MAX - 1))
     {
-      ecma_deref_object (executor_func_p);
       ecma_raise_range_error (ECMA_ERR_MSG ("Promise.all remaining elements limit reached."));
       break;
     }
+
+    /* k. */
+    ecma_object_t *executor_func_p = ecma_op_create_native_handler (ECMA_NATIVE_HANDLER_PROMISE_ALL_HELPER,
+                                                                    sizeof (ecma_promise_all_executor_t));
+
+    ecma_promise_all_executor_t *executor_p = (ecma_promise_all_executor_t *) executor_func_p;
 
     /* m. + t. */
     executor_p->index = ++idx;

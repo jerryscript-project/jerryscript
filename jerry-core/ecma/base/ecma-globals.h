@@ -113,17 +113,21 @@ typedef enum
   ECMA_PARSE_DIRECT_EVAL = (1u << 3), /**< eval is called directly (ECMA-262 v5, 15.1.2.1.1) */
   ECMA_PARSE_CLASS_CONSTRUCTOR = (1u << 4), /**< a class constructor is being parsed */
 
-  /* These four status flags must be in this order. The first three are also parser status flags.
+  /* These five status flags must be in this order. The first four are also parser status flags.
    * See PARSER_SAVE_STATUS_FLAGS / PARSER_RESTORE_STATUS_FLAGS. */
   ECMA_PARSE_ALLOW_SUPER = (1u << 5), /**< allow super property access */
   ECMA_PARSE_ALLOW_SUPER_CALL = (1u << 6), /**< allow super constructor call */
-  ECMA_PARSE_ALLOW_NEW_TARGET = (1u << 7), /**< allow new.target access */
-  ECMA_PARSE_FUNCTION_CONTEXT = (1u << 8), /**< function context is present (ECMA_PARSE_DIRECT_EVAL must be set) */
+  ECMA_PARSE_INSIDE_CLASS_FIELD = (1u << 7), /**< a class field is being parsed */
+  ECMA_PARSE_ALLOW_NEW_TARGET = (1u << 8), /**< allow new.target access */
+  ECMA_PARSE_FUNCTION_CONTEXT = (1u << 9), /**< function context is present (ECMA_PARSE_DIRECT_EVAL must be set) */
 
-  ECMA_PARSE_GENERATOR_FUNCTION = (1u << 9), /**< generator function is parsed */
-  ECMA_PARSE_ASYNC_FUNCTION = (1u << 10), /**< async function is parsed */
+  ECMA_PARSE_GENERATOR_FUNCTION = (1u << 10), /**< generator function is parsed */
+  ECMA_PARSE_ASYNC_FUNCTION = (1u << 11), /**< async function is parsed */
 
   /* These flags are internally used by the parser. */
+#if ENABLED (JERRY_ESNEXT)
+  ECMA_PARSE_INTERNAL_PRE_SCANNING = (1u << 12),
+#endif /* ENABLED (JERRY_ESNEXT) */
 #ifndef JERRY_NDEBUG
   /**
    * This flag represents an error in for in/of statements, which cannot be set
@@ -1438,6 +1442,17 @@ typedef struct
  * Initial allocated size of an ecma-collection
  */
 #define ECMA_COLLECTION_INITIAL_SIZE ECMA_COLLECTION_ALLOCATED_SIZE (ECMA_COLLECTION_INITIAL_CAPACITY)
+
+/**
+ * Size shift of a compact collection
+ */
+#define ECMA_COMPACT_COLLECTION_SIZE_SHIFT 3
+
+/**
+ * Get the size of the compact collection
+ */
+#define ECMA_COMPACT_COLLECTION_GET_SIZE(compact_collection_p) \
+  ((compact_collection_p)[0] >> ECMA_COMPACT_COLLECTION_SIZE_SHIFT)
 
 /**
  * Direct string types (2 bit).

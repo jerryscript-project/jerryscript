@@ -260,6 +260,9 @@ typedef enum
   VM_OC_PUSH_IMPLICIT_CTOR,      /**< create implicit class constructor */
   VM_OC_INIT_CLASS,              /**< initialize class */
   VM_OC_FINALIZE_CLASS,          /**< finalize class */
+  VM_OC_SET_CLASS_FIELD_INIT,    /**< store the class field initializer function */
+  VM_OC_RUN_CLASS_FIELD_INIT,    /**< run the class field initializer function */
+  VM_OC_SET_NEXT_COMPUTED_FIELD, /**< set the next computed field of a class */
   VM_OC_PUSH_SUPER_CONSTRUCTOR,  /**< getSuperConstructor operation */
   VM_OC_RESOLVE_LEXICAL_THIS,    /**< resolve this_binding from from the lexical environment */
   VM_OC_SUPER_REFERENCE,         /**< push super reference */
@@ -289,7 +292,8 @@ typedef enum
   VM_OC_PUSH_NEW_TARGET,         /**< push new.target onto the stack */
   VM_OC_REQUIRE_OBJECT_COERCIBLE,/**< RequireObjectCoercible opretaion */
   VM_OC_ASSIGN_SUPER,            /**< assign super reference */
-  VM_OC_SET__PROTO__,            /**< set prototpe when __proto__: form is used */
+  VM_OC_SET__PROTO__,            /**< set prototype when __proto__: form is used */
+  VM_OC_ADD_COMPUTED_FIELD,      /**< add computed field name */
 #endif /* ENABLED (JERRY_ESNEXT) */
   VM_OC_NONE,                    /**< a special opcode for unsupported byte codes */
 } vm_oc_types;
@@ -337,6 +341,9 @@ typedef enum
   VM_OC_PUSH_IMPLICIT_CTOR = VM_OC_NONE,      /**< create implicit class constructor */
   VM_OC_INIT_CLASS = VM_OC_NONE,              /**< initialize class */
   VM_OC_FINALIZE_CLASS = VM_OC_NONE,          /**< finalize class */
+  VM_OC_SET_CLASS_FIELD_INIT = VM_OC_NONE,    /**< store the class field initializer function */
+  VM_OC_RUN_CLASS_FIELD_INIT = VM_OC_NONE,    /**< run the class field initializer function */
+  VM_OC_SET_NEXT_COMPUTED_FIELD = VM_OC_NONE, /**< set the next computed field of a class */
   VM_OC_PUSH_SUPER_CONSTRUCTOR = VM_OC_NONE,  /**< getSuperConstructor operation */
   VM_OC_RESOLVE_LEXICAL_THIS = VM_OC_NONE,    /**< resolve this_binding from from the lexical environment */
   VM_OC_SUPER_REFERENCE = VM_OC_NONE,         /**< push super reference */
@@ -366,7 +373,8 @@ typedef enum
   VM_OC_PUSH_NEW_TARGET = VM_OC_NONE,         /**< push new.target onto the stack */
   VM_OC_REQUIRE_OBJECT_COERCIBLE = VM_OC_NONE,/**< RequireObjectCoercible opretaion */
   VM_OC_ASSIGN_SUPER = VM_OC_NONE,            /**< assign super reference */
-  VM_OC_SET__PROTO__ = VM_OC_NONE,            /**< set prototpe when __proto__: form is used */
+  VM_OC_SET__PROTO__ = VM_OC_NONE,            /**< set prototype when __proto__: form is used */
+  VM_OC_ADD_COMPUTED_FIELD = VM_OC_NONE,      /**< add computed field name */
 #endif /* !ENABLED (JERRY_ESNEXT) */
 
   VM_OC_UNUSED = VM_OC_NONE                   /**< placeholder if the list is empty */

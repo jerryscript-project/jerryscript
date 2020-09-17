@@ -48,6 +48,7 @@ typedef enum
   SCANNER_TYPE_INITIALIZER, /**< destructuring binding or assignment pattern with initializer */
   SCANNER_TYPE_FOR_PATTERN, /**< assignment pattern for for-in or for-of interators */
   SCANNER_TYPE_CLASS_CONSTRUCTOR, /**< class constructor */
+  SCANNER_TYPE_CLASS_FIELD_INITIALIZER_END, /**< class field initializer end */
   SCANNER_TYPE_LET_EXPRESSION, /**< let expression */
   SCANNER_TYPE_ERR_REDECLARED, /**< syntax error: a variable is redeclared */
   SCANNER_TYPE_ERR_ASYNC_FUNCTION, /**< an invalid async function follows */
@@ -64,6 +65,15 @@ typedef struct
   parser_line_counter_t line; /**< token start line */
   parser_line_counter_t column; /**< token start column */
 } scanner_location_t;
+
+/**
+ * Source code range with its start and end position.
+ */
+typedef struct
+{
+  const uint8_t *source_end_p; /**< end position */
+  scanner_location_t start_location; /**< start location */
+} scanner_range_t;
 
 /**
  * Scanner info blocks which provides information for the parser.

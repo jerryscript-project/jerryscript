@@ -192,7 +192,8 @@ ecma_gc_mark_properties (ecma_property_pair_t *property_pair_p) /**< property pa
       case ECMA_PROPERTY_TYPE_INTERNAL:
       {
         JERRY_ASSERT (ECMA_PROPERTY_GET_NAME_TYPE (property) == ECMA_DIRECT_STRING_MAGIC
-                      && property_pair_p->names_cp[index] >= LIT_FIRST_INTERNAL_MAGIC_STRING);
+                      && property_pair_p->names_cp[index] >= LIT_INTERNAL_MAGIC_STRING_FIRST_DATA
+                      && property_pair_p->names_cp[index] < LIT_MAGIC_STRING__COUNT);
         break;
       }
       default:
@@ -1054,33 +1055,51 @@ ecma_gc_free_properties (ecma_object_t *object_p) /**< object */
       ecma_property_t *property_p = (ecma_property_t *) (prop_iter_p->types + i);
       jmem_cpointer_t name_cp = prop_pair_p->names_cp[i];
 
-      if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_DIRECT_STRING_MAGIC)
+      if (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_INTERNAL)
       {
+        JERRY_ASSERT (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_DIRECT_STRING_MAGIC);
+
         /* Call the native's free callback. */
-        if (JERRY_UNLIKELY (name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER))
+        switch (name_cp)
         {
-          ecma_gc_free_native_pointer (property_p);
-        }
 #if ENABLED (JERRY_BUILTIN_WEAKMAP) || ENABLED (JERRY_BUILTIN_WEAKSET)
-        else if (JERRY_UNLIKELY (name_cp == LIT_INTERNAL_MAGIC_STRING_WEAK_REFS))
-        {
-          ecma_collection_t *refs_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t,
-                                                                       ECMA_PROPERTY_VALUE_PTR (property_p)->value);
-          for (uint32_t j = 0; j < refs_p->item_count; j++)
+          case LIT_INTERNAL_MAGIC_STRING_WEAK_REFS:
           {
-            const ecma_value_t value = refs_p->buffer_p[j];
-            if (!ecma_is_value_empty (value))
+            ecma_collection_t *refs_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t,
+                                                                         prop_pair_p->values[i].value);
+            for (uint32_t j = 0; j < refs_p->item_count; j++)
             {
-              ecma_object_t *container_p = ecma_get_object_from_value (value);
+              const ecma_value_t value = refs_p->buffer_p[j];
+              if (!ecma_is_value_empty (value))
+              {
+                ecma_object_t *container_p = ecma_get_object_from_value (value);
 
-              ecma_op_container_remove_weak_entry (container_p,
-                                                   ecma_make_object_value (object_p));
+                ecma_op_container_remove_weak_entry (container_p,
+                                                     ecma_make_object_value (object_p));
+              }
             }
-          }
 
-          ecma_collection_destroy (refs_p);
-        }
+            ecma_collection_destroy (refs_p);
+            break;
+          }
 #endif /* ENABLED (JERRY_BUILTIN_WEAKMAP) || ENABLED (JERRY_BUILTIN_WEAKSET) */
+#if ENABLED (JERRY_ESNEXT)
+          case LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED:
+          {
+            ecma_value_t *compact_collection_p;
+            compact_collection_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_value_t,
+                                                                    prop_pair_p->values[i].value);
+            ecma_compact_collection_free (compact_collection_p);
+            break;
+          }
+#endif /* ENABLED (JERRY_ESNEXT) */
+          default:
+          {
+            JERRY_ASSERT (name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
+            ecma_gc_free_native_pointer (property_p);
+            break;
+          }
+        }
       }
 
       if (prop_iter_p->types[i] != ECMA_PROPERTY_TYPE_DELETED)

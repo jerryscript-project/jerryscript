@@ -430,6 +430,11 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
       {
         break;
       }
+      case SCAN_STACK_CLASS_FIELD_INITIALIZER:
+      {
+        scanner_raise_error (context_p);
+        break;
+      }
       case SCAN_STACK_FUNCTION_PARAMETERS:
       {
         scanner_context_p->mode = SCAN_MODE_CONTINUE_FUNCTION_ARGUMENTS;
@@ -962,7 +967,7 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
         break;
       }
 
-      lexer_next_token (context_p);
+      lexer_scan_identifier (context_p);
 
       parser_stack_pop_uint8 (context_p);
       stack_top = (scan_stack_modes_t) context_p->stack_top_uint8;
@@ -970,8 +975,30 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
       if (stack_top == SCAN_STACK_FUNCTION_PROPERTY)
       {
         scanner_push_literal_pool (context_p, scanner_context_p, SCANNER_LITERAL_POOL_FUNCTION);
-
         scanner_context_p->mode = SCAN_MODE_FUNCTION_ARGUMENTS;
+        return SCAN_KEEP_TOKEN;
+      }
+
+      if (stack_top == SCAN_STACK_EXPLICIT_CLASS_CONSTRUCTOR
+          || stack_top == SCAN_STACK_IMPLICIT_CLASS_CONSTRUCTOR)
+      {
+        if (context_p->token.type == LEXER_LEFT_PAREN)
+        {
+          scanner_push_literal_pool (context_p, scanner_context_p, SCANNER_LITERAL_POOL_FUNCTION);
+
+          parser_stack_push_uint8 (context_p, SCAN_STACK_FUNCTION_PROPERTY);
+          scanner_context_p->mode = SCAN_MODE_FUNCTION_ARGUMENTS;
+          return SCAN_KEEP_TOKEN;
+        }
+
+        if (context_p->token.type == LEXER_ASSIGN)
+        {
+          scanner_push_class_field_initializer (context_p, scanner_context_p);
+          return SCAN_NEXT_TOKEN;
+        }
+
+        scanner_context_p->mode = (context_p->token.type != LEXER_SEMICOLON ? SCAN_MODE_CLASS_BODY_NO_SCAN
+                                                                            : SCAN_MODE_CLASS_BODY);
         return SCAN_KEEP_TOKEN;
       }
 
@@ -1073,9 +1100,85 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
         break;
       }
 
-      scanner_context_p->mode = SCAN_MODE_CLASS_METHOD;
+      scanner_context_p->mode = SCAN_MODE_CLASS_BODY;
       parser_stack_pop_uint8 (context_p);
 
+      return SCAN_KEEP_TOKEN;
+    }
+    case SCAN_STACK_CLASS_FIELD_INITIALIZER:
+    {
+      scanner_source_start_t source_start;
+
+      parser_stack_pop_uint8 (context_p);
+      parser_stack_pop (context_p, &source_start, sizeof (scanner_source_start_t));
+
+      const uint8_t *source_p = NULL;
+
+      scanner_context_p->mode = SCAN_MODE_CLASS_BODY_NO_SCAN;
+
+      switch (type)
+      {
+        case LEXER_SEMICOLON:
+        {
+          source_p = context_p->source_p - 1;
+          scanner_context_p->mode = SCAN_MODE_CLASS_BODY;
+          break;
+        }
+        case LEXER_RIGHT_BRACE:
+        {
+          source_p = context_p->source_p - 1;
+          break;
+        }
+        default:
+        {
+          if (!(context_p->token.flags & LEXER_WAS_NEWLINE))
+          {
+            break;
+          }
+
+          if (type == LEXER_LEFT_SQUARE)
+          {
+            source_p = context_p->source_p - 1;
+            break;
+          }
+
+          if (type == LEXER_LITERAL)
+          {
+            if (context_p->token.lit_location.type == LEXER_IDENT_LITERAL
+                || context_p->token.lit_location.type == LEXER_NUMBER_LITERAL)
+            {
+              source_p = context_p->token.lit_location.char_p;
+            }
+            else if (context_p->token.lit_location.type == LEXER_STRING_LITERAL)
+            {
+              source_p = context_p->token.lit_location.char_p - 1;
+            }
+            break;
+          }
+
+          if (type == context_p->token.keyword_type && type != LEXER_EOS)
+          {
+            /* Convert keyword to literal. */
+            source_p = context_p->token.lit_location.char_p;
+            context_p->token.type = LEXER_LITERAL;
+          }
+          break;
+        }
+      }
+
+      if (JERRY_UNLIKELY (source_p == NULL))
+      {
+        scanner_raise_error (context_p);
+      }
+
+      scanner_location_info_t *location_info_p;
+      location_info_p = (scanner_location_info_t *) scanner_insert_info (context_p,
+                                                                         source_start.source_p,
+                                                                         sizeof (scanner_location_info_t));
+      location_info_p->info.type = SCANNER_TYPE_CLASS_FIELD_INITIALIZER_END;
+      location_info_p->location.source_p = source_p;
+      location_info_p->location.line = context_p->token.line;
+      location_info_p->location.column = context_p->token.column;
       return SCAN_KEEP_TOKEN;
     }
     case SCAN_STACK_FUNCTION_PARAMETERS:
@@ -2027,7 +2130,7 @@ scanner_scan_statement_end (parser_context_t *context_p, /**< context */
         if (context_p->stack_top_uint8 == SCAN_STACK_EXPLICIT_CLASS_CONSTRUCTOR
             || context_p->stack_top_uint8 == SCAN_STACK_IMPLICIT_CLASS_CONSTRUCTOR)
         {
-          scanner_context_p->mode = SCAN_MODE_CLASS_METHOD;
+          scanner_context_p->mode = SCAN_MODE_CLASS_BODY;
           return SCAN_KEEP_TOKEN;
         }
 
@@ -2337,6 +2440,9 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
 
   /* This assignment must be here because of Apple compilers. */
   context_p->u.scanner_context_p = &scanner_context;
+#if ENABLED (JERRY_ESNEXT)
+  context_p->global_status_flags |= ECMA_PARSE_INTERNAL_PRE_SCANNING;
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   parser_stack_init (context_p);
 
@@ -2437,17 +2543,19 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
             scanner_raise_error (context_p);
           }
 
-          scanner_context.mode = SCAN_MODE_CLASS_METHOD;
+          scanner_context.mode = SCAN_MODE_CLASS_BODY;
           /* FALLTHRU */
         }
-        case SCAN_MODE_CLASS_METHOD:
+        case SCAN_MODE_CLASS_BODY:
+        {
+          lexer_skip_empty_statements (context_p);
+          lexer_scan_identifier (context_p);
+          /* FALLTHRU */
+        }
+        case SCAN_MODE_CLASS_BODY_NO_SCAN:
         {
           JERRY_ASSERT (stack_top == SCAN_STACK_IMPLICIT_CLASS_CONSTRUCTOR
                         || stack_top == SCAN_STACK_EXPLICIT_CLASS_CONSTRUCTOR);
-
-          lexer_skip_empty_statements (context_p);
-
-          lexer_scan_identifier (context_p);
 
           if (context_p->token.type == LEXER_RIGHT_BRACE)
           {
@@ -2476,6 +2584,8 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
             break;
           }
 
+          bool identifier_found = false;
+
           if (context_p->token.type == LEXER_LITERAL
               && LEXER_IS_IDENT_OR_STRING (context_p->token.lit_location.type)
               && lexer_compare_literal_to_string (context_p, "constructor", 11))
@@ -2491,13 +2601,12 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
               parser_stack_push_uint8 (context_p, SCAN_STACK_EXPLICIT_CLASS_CONSTRUCTOR);
             }
           }
-
-          if (lexer_token_is_identifier (context_p, "static", 6))
+          else if (lexer_token_is_identifier (context_p, "static", 6))
           {
             lexer_scan_identifier (context_p);
+            identifier_found = true;
           }
 
-          parser_stack_push_uint8 (context_p, SCAN_STACK_FUNCTION_PROPERTY);
           scanner_context.mode = SCAN_MODE_FUNCTION_ARGUMENTS;
 
           uint16_t literal_pool_flags = SCANNER_LITERAL_POOL_FUNCTION;
@@ -2506,9 +2615,11 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
               || lexer_token_is_identifier (context_p, "set", 3))
           {
             lexer_scan_identifier (context_p);
+            identifier_found = true;
 
             if (context_p->token.type == LEXER_LEFT_PAREN)
             {
+              parser_stack_push_uint8 (context_p, SCAN_STACK_FUNCTION_PROPERTY);
               scanner_push_literal_pool (context_p, &scanner_context, SCANNER_LITERAL_POOL_FUNCTION);
               continue;
             }
@@ -2516,19 +2627,24 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
           else if (lexer_token_is_identifier (context_p, "async", 5))
           {
             lexer_scan_identifier (context_p);
+            identifier_found = true;
 
-            if (context_p->token.type == LEXER_LEFT_PAREN)
+            if (!(context_p->token.flags & LEXER_WAS_NEWLINE))
             {
-              scanner_push_literal_pool (context_p, &scanner_context, SCANNER_LITERAL_POOL_FUNCTION);
-              continue;
-            }
+              if (context_p->token.type == LEXER_LEFT_PAREN)
+              {
+                parser_stack_push_uint8 (context_p, SCAN_STACK_FUNCTION_PROPERTY);
+                scanner_push_literal_pool (context_p, &scanner_context, SCANNER_LITERAL_POOL_FUNCTION);
+                continue;
+              }
 
-            literal_pool_flags |= SCANNER_LITERAL_POOL_ASYNC;
+              literal_pool_flags |= SCANNER_LITERAL_POOL_ASYNC;
 
-            if (context_p->token.type == LEXER_MULTIPLY)
-            {
-              lexer_scan_identifier (context_p);
-              literal_pool_flags |= SCANNER_LITERAL_POOL_GENERATOR;
+              if (context_p->token.type == LEXER_MULTIPLY)
+              {
+                lexer_scan_identifier (context_p);
+                literal_pool_flags |= SCANNER_LITERAL_POOL_GENERATOR;
+              }
             }
           }
           else if (context_p->token.type == LEXER_MULTIPLY)
@@ -2539,23 +2655,63 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
 
           if (context_p->token.type == LEXER_LEFT_SQUARE)
           {
+            if (literal_pool_flags != SCANNER_LITERAL_POOL_FUNCTION)
+            {
+              parser_stack_push_uint8 (context_p, SCAN_STACK_FUNCTION_PROPERTY);
+            }
+
             parser_stack_push_uint8 (context_p, SCANNER_FROM_LITERAL_POOL_TO_COMPUTED (literal_pool_flags));
             scanner_context.mode = SCAN_MODE_PRIMARY_EXPRESSION;
             break;
           }
 
-          if (context_p->token.type != LEXER_LITERAL)
+          if (context_p->token.type == LEXER_LITERAL)
+          {
+            lexer_scan_identifier (context_p);
+            identifier_found = true;
+          }
+
+          if (!identifier_found)
           {
             scanner_raise_error (context_p);
           }
 
-          if (literal_pool_flags & SCANNER_LITERAL_POOL_GENERATOR)
+          if (context_p->token.type == LEXER_LEFT_PAREN)
           {
-            context_p->status_flags |= PARSER_IS_GENERATOR_FUNCTION;
+            if (literal_pool_flags & SCANNER_LITERAL_POOL_GENERATOR)
+            {
+              context_p->status_flags |= PARSER_IS_GENERATOR_FUNCTION;
+            }
+
+            parser_stack_push_uint8 (context_p, SCAN_STACK_FUNCTION_PROPERTY);
+            scanner_push_literal_pool (context_p, &scanner_context, literal_pool_flags);
+            continue;
           }
 
-          scanner_push_literal_pool (context_p, &scanner_context, literal_pool_flags);
-          lexer_next_token (context_p);
+          if (literal_pool_flags != SCANNER_LITERAL_POOL_FUNCTION)
+          {
+            scanner_raise_error (context_p);
+          }
+
+          if (context_p->token.type == LEXER_ASSIGN)
+          {
+            scanner_push_class_field_initializer (context_p, &scanner_context);
+            break;
+          }
+
+          if (context_p->token.type == LEXER_SEMICOLON)
+          {
+            scanner_context.mode = SCAN_MODE_CLASS_BODY;
+            continue;
+          }
+
+          if (context_p->token.type != LEXER_RIGHT_BRACE
+              && !(context_p->token.flags & LEXER_WAS_NEWLINE))
+          {
+            scanner_raise_error (context_p);
+          }
+
+          scanner_context.mode = SCAN_MODE_CLASS_BODY_NO_SCAN;
           continue;
         }
 #endif /* ENABLED (JERRY_ESNEXT) */
@@ -3299,6 +3455,9 @@ scan_completed:
   PARSER_TRY_END
 
   context_p->status_flags = scanner_context.context_status_flags;
+#if ENABLED (JERRY_ESNEXT)
+  context_p->global_status_flags &= (uint32_t) ~ECMA_PARSE_INTERNAL_PRE_SCANNING;
+#endif /* ENABLED (JERRY_ESNEXT) */
   scanner_reverse_info_list (context_p);
 
 #if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
@@ -3547,6 +3706,12 @@ scan_completed:
           JERRY_DEBUG_MSG ("  CLASS_CONSTRUCTOR: source:%d\n",
                            (int) (info_p->source_p - source_start_p));
           print_location = false;
+          break;
+        }
+        case SCANNER_TYPE_CLASS_FIELD_INITIALIZER_END:
+        {
+          name_p = "SCANNER_TYPE_CLASS_FIELD_INITIALIZER_END";
+          print_location = true;
           break;
         }
         case SCANNER_TYPE_LET_EXPRESSION:

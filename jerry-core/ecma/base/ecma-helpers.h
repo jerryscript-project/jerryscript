@@ -464,6 +464,11 @@ void ecma_collection_free_objects (ecma_collection_t *collection_p);
 bool ecma_collection_check_duplicated_entries (ecma_collection_t *collection_p);
 bool ecma_collection_has_string_value (ecma_collection_t *collection_p, ecma_string_t *string_p);
 
+ecma_value_t *ecma_new_compact_collection (void);
+ecma_value_t *ecma_compact_collection_push_back (ecma_value_t *compact_collection_p, ecma_value_t value);
+ecma_value_t *ecma_compact_collection_shrink (ecma_value_t *compact_collection_p);
+void ecma_compact_collection_free (ecma_value_t *compact_collection_p);
+
 /* ecma-helpers.c */
 ecma_object_t *ecma_create_object (ecma_object_t *prototype_object_p, size_t ext_object_size, ecma_object_type_t type);
 ecma_object_t *ecma_create_decl_lex_env (ecma_object_t *outer_lexical_environment_p);

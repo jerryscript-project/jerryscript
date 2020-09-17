@@ -69,16 +69,17 @@ typedef enum
   PARSER_FUNCTION_HAS_REST_PARAM = (1u << 19), /**< function has rest parameter */
   PARSER_CLASS_CONSTRUCTOR = (1u << 20),      /**< a class constructor is parsed
                                                *   Note: PARSER_ALLOW_SUPER must be present */
-  /* These three status flags must be in this order. See PARSER_SAVED_FLAGS_OFFSET. */
+  /* These four status flags must be in this order. See PARSER_SAVED_FLAGS_OFFSET. */
   PARSER_ALLOW_SUPER = (1u << 21),            /**< allow super property access */
   PARSER_ALLOW_SUPER_CALL = (1u << 22),       /**< allow super constructor call
                                                *   Note: PARSER_CLASS_CONSTRUCTOR must be present */
-  PARSER_ALLOW_NEW_TARGET = (1u << 23),       /**< allow new.target parsing in the current context */
-  PARSER_IS_METHOD = (1u << 24),              /**< method is parsed */
+  PARSER_INSIDE_CLASS_FIELD = (1u << 23),     /**< a class field is being parsed */
+  PARSER_ALLOW_NEW_TARGET = (1u << 24),       /**< allow new.target parsing in the current context */
+  PARSER_IS_METHOD = (1u << 25),              /**< method is parsed */
 #endif /* ENABLED (JERRY_ESNEXT) */
 #if ENABLED (JERRY_MODULE_SYSTEM)
-  PARSER_MODULE_DEFAULT_CLASS_OR_FUNC = (1u << 25),  /**< parsing a function or class default export */
-  PARSER_MODULE_STORE_IDENT = (1u << 26),     /**< store identifier of the current export statement */
+  PARSER_MODULE_DEFAULT_CLASS_OR_FUNC = (1u << 26),  /**< parsing a function or class default export */
+  PARSER_MODULE_STORE_IDENT = (1u << 27),     /**< store identifier of the current export statement */
 #endif /* ENABLED (JERRY_MODULE_SYSTEM) */
   PARSER_HAS_LATE_LIT_INIT = (1u << 30),      /**< there are identifier or string literals which construction
                                                *   is postponed after the local parser data is freed */
@@ -128,6 +129,20 @@ typedef enum
   PARSER_CHECK_FUNCTION_CONTEXT,               /**< check function context */
 #endif /* ENABLED (JERRY_ESNEXT) */
 } parser_check_context_type_t;
+
+#if ENABLED (JERRY_ESNEXT)
+
+/**
+ * Class field bits.
+ */
+typedef enum
+{
+  PARSER_CLASS_FIELD_END = (1u << 0),          /**< last class field */
+  PARSER_CLASS_FIELD_NORMAL = (1u << 1),       /**< normal (non-computed) class field */
+  PARSER_CLASS_FIELD_INITIALIZED = (1u << 2),  /**< class field is initialized */
+} parser_class_field_type_t;
+
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Mask for strict mode code
@@ -704,6 +719,10 @@ void parser_set_continues_to_current_position (parser_context_t *context_p, pars
 #define parser_emit_cbc_ext_backward_branch(context_p, opcode, offset) \
   parser_emit_cbc_backward_branch ((context_p), PARSER_TO_EXT_OPCODE (opcode), (offset))
 
+#if ENABLED (JERRY_ESNEXT)
+void parser_reverse_class_fields (parser_context_t *context_p, size_t fields_size);
+#endif /* ENABLED (JERRY_ESNEXT) */
+
 /**
  * @}
  *
@@ -725,6 +744,7 @@ bool lexer_check_arrow (parser_context_t *context_p);
 bool lexer_check_arrow_param (parser_context_t *context_p);
 bool lexer_check_yield_no_arg (parser_context_t *context_p);
 bool lexer_consume_generator (parser_context_t *context_p);
+bool lexer_consume_assign (parser_context_t *context_p);
 void lexer_update_await_yield (parser_context_t *context_p, uint32_t status_flags);
 #endif /* ENABLED (JERRY_ESNEXT) */
 void lexer_parse_string (parser_context_t *context_p, lexer_string_options_t opts);
@@ -736,7 +756,7 @@ void lexer_convert_ident_to_cesu8 (uint8_t *destination_p, const uint8_t *source
 const uint8_t *lexer_convert_literal_to_chars (parser_context_t *context_p,  const lexer_lit_location_t *literal_p,
                                                uint8_t *local_byte_array_p, lexer_string_options_t opts);
 void lexer_expect_object_literal_id (parser_context_t *context_p, uint32_t ident_opts);
-uint16_t scanner_save_literal (parser_context_t *context_p, uint16_t ident_index);
+lexer_literal_t *lexer_construct_unused_literal (parser_context_t *context_p);
 void lexer_construct_literal_object (parser_context_t *context_p, const lexer_lit_location_t *lit_location_p,
                                      uint8_t literal_type);
 bool lexer_construct_number_object (parser_context_t *context_p, bool is_expr, bool is_negative_number);
@@ -804,6 +824,7 @@ void scanner_get_location (scanner_location_t *location_p, parser_context_t *con
 void scanner_set_location (parser_context_t *context_p, scanner_location_t *location_p);
 uint16_t scanner_decode_map_to (parser_scope_stack_t *stack_item_p);
 #if ENABLED (JERRY_ESNEXT)
+uint16_t scanner_save_literal (parser_context_t *context_p, uint16_t ident_index);
 bool scanner_literal_is_const_reg (parser_context_t *context_p, uint16_t literal_index);
 bool scanner_literal_is_created (parser_context_t *context_p, uint16_t literal_index);
 #endif /* ENABLED (JERRY_ESNEXT) */
@@ -859,6 +880,7 @@ void parser_module_add_names_to_node (parser_context_t *context_p,
 ecma_compiled_code_t *parser_parse_function (parser_context_t *context_p, uint32_t status_flags);
 #if ENABLED (JERRY_ESNEXT)
 ecma_compiled_code_t *parser_parse_arrow_function (parser_context_t *context_p, uint32_t status_flags);
+ecma_compiled_code_t *parser_parse_class_fields (parser_context_t *context_p);
 void parser_set_function_name (parser_context_t *context_p, uint16_t function_literal_index, uint16_t name_index,
                                uint32_t status_flags);
 void parser_compiled_code_set_function_name (parser_context_t *context_p, ecma_compiled_code_t *bytecode_p,

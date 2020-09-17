@@ -249,6 +249,134 @@ ecma_collection_has_string_value (ecma_collection_t *collection_p, /**< collecti
 } /* ecma_collection_has_string_value */
 
 /**
+ * Initial capacity of an ecma-collection
+ */
+#define ECMA_COMPACT_COLLECTION_GROWTH 8
+
+/**
+ * Set the size of the compact collection
+ */
+#define ECMA_COMPACT_COLLECTION_SET_SIZE(compact_collection_p, item_count, unused_items) \
+  ((compact_collection_p)[0] = (((item_count) << ECMA_COMPACT_COLLECTION_SIZE_SHIFT) | (unused_items)))
+
+/**
+ * Set the size of the compact collection
+ */
+#define ECMA_COMPACT_COLLECTION_GET_UNUSED_ITEM_COUNT(compact_collection_p) \
+  ((compact_collection_p)[0] & ((1 << ECMA_COMPACT_COLLECTION_SIZE_SHIFT) - 1))
+
+/**
+ * Allocate a compact collection of ecma values
+ *
+ * @return pointer to the compact collection
+ */
+ecma_value_t *
+ecma_new_compact_collection (void)
+{
+  size_t size = (ECMA_COMPACT_COLLECTION_GROWTH / 2) * sizeof (ecma_value_t);
+  ecma_value_t *compact_collection_p = (ecma_value_t *) jmem_heap_alloc_block (size);
+
+  ECMA_COMPACT_COLLECTION_SET_SIZE (compact_collection_p,
+                                    ECMA_COMPACT_COLLECTION_GROWTH / 2,
+                                    (ECMA_COMPACT_COLLECTION_GROWTH / 2) - 1);
+  return compact_collection_p;
+} /* ecma_new_compact_collection */
+
+/**
+ * Append a value to the compact collection
+ *
+ * @return updated pointer to the compact collection
+ */
+ecma_value_t *
+ecma_compact_collection_push_back (ecma_value_t *compact_collection_p, /**< compact collection */
+                                   ecma_value_t value) /**< ecma value to append */
+{
+  ecma_value_t size = ECMA_COMPACT_COLLECTION_GET_SIZE (compact_collection_p);
+  ecma_value_t unused_items = ECMA_COMPACT_COLLECTION_GET_UNUSED_ITEM_COUNT (compact_collection_p);
+
+  if (unused_items > 0)
+  {
+    compact_collection_p[size - unused_items] = value;
+    (*compact_collection_p)--;
+    return compact_collection_p;
+  }
+
+  if (size == ECMA_COMPACT_COLLECTION_GROWTH / 2)
+  {
+    size_t old_size = (ECMA_COMPACT_COLLECTION_GROWTH / 2) * sizeof (ecma_value_t);
+    size_t new_size = ECMA_COMPACT_COLLECTION_GROWTH * sizeof (ecma_value_t);
+    compact_collection_p = jmem_heap_realloc_block (compact_collection_p, old_size, new_size);
+
+    compact_collection_p[ECMA_COMPACT_COLLECTION_GROWTH / 2] = value;
+
+    ECMA_COMPACT_COLLECTION_SET_SIZE (compact_collection_p,
+                                      ECMA_COMPACT_COLLECTION_GROWTH,
+                                      (ECMA_COMPACT_COLLECTION_GROWTH / 2) - 1);
+    return compact_collection_p;
+  }
+
+  size_t old_size = size * sizeof (ecma_value_t);
+  size_t new_size = old_size + (ECMA_COMPACT_COLLECTION_GROWTH * sizeof (ecma_value_t));
+
+  compact_collection_p = jmem_heap_realloc_block (compact_collection_p, old_size, new_size);
+  compact_collection_p[size] = value;
+
+  ECMA_COMPACT_COLLECTION_SET_SIZE (compact_collection_p,
+                                    size + ECMA_COMPACT_COLLECTION_GROWTH,
+                                    ECMA_COMPACT_COLLECTION_GROWTH - 1);
+  return compact_collection_p;
+} /* ecma_compact_collection_push_back */
+
+/**
+ * Discard the unused elements of a compact collection
+ *
+ * Note:
+ *     further items should not be added after this call
+ *
+ * @return updated pointer to the compact collection
+ */
+ecma_value_t *
+ecma_compact_collection_shrink (ecma_value_t *compact_collection_p) /**< compact collection */
+{
+  ecma_value_t unused_items = ECMA_COMPACT_COLLECTION_GET_UNUSED_ITEM_COUNT (compact_collection_p);
+
+  if (unused_items == 0)
+  {
+    return compact_collection_p;
+  }
+
+  ecma_value_t size = ECMA_COMPACT_COLLECTION_GET_SIZE (compact_collection_p);
+
+  size_t old_size = size * sizeof (ecma_value_t);
+  size_t new_size = (size - unused_items) * sizeof (ecma_value_t);
+
+  compact_collection_p = jmem_heap_realloc_block (compact_collection_p, old_size, new_size);
+
+  ECMA_COMPACT_COLLECTION_SET_SIZE (compact_collection_p, size - unused_items, 0);
+  return compact_collection_p;
+} /* ecma_compact_collection_shrink */
+
+/**
+ * Free a compact collection
+ */
+void
+ecma_compact_collection_free (ecma_value_t *compact_collection_p) /**< compact collection */
+{
+  ecma_value_t size = ECMA_COMPACT_COLLECTION_GET_SIZE (compact_collection_p);
+  ecma_value_t unused_items = ECMA_COMPACT_COLLECTION_GET_UNUSED_ITEM_COUNT (compact_collection_p);
+
+  ecma_value_t *end_p = compact_collection_p + size - unused_items;
+  ecma_value_t *current_p = compact_collection_p + 1;
+
+  while (current_p < end_p)
+  {
+    ecma_free_value (*current_p++);
+  }
+
+  jmem_heap_free_block (compact_collection_p, size * sizeof (ecma_value_t));
+} /* ecma_compact_collection_free */
+
+/**
  * @}
  * @}
  */

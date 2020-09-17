@@ -784,7 +784,8 @@ ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to
 
       /* Must be a native pointer. */
       JERRY_ASSERT (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_DIRECT_STRING_MAGIC
-                    && name_cp >= LIT_FIRST_INTERNAL_MAGIC_STRING);
+                    && name_cp >= LIT_INTERNAL_MAGIC_STRING_FIRST_DATA
+                    && name_cp < LIT_MAGIC_STRING__COUNT);
       break;
     }
   }

@@ -198,7 +198,6 @@ typedef enum
 #if ENABLED (JERRY_ESNEXT)
   LEXER_ASSIGN_GROUP_EXPR,       /**< indetifier for the assignment is located in a group expression */
   LEXER_ASSIGN_CONST,            /**< a const binding is reassigned */
-  LEXER_CLASS_CONSTRUCTOR,       /**< special value for class constructor method */
   LEXER_INVALID_PATTERN,         /**< special value for invalid destructuring pattern */
 #endif /* ENABLED (JERRY_ESNEXT) */
 
@@ -276,8 +275,9 @@ typedef enum
 {
   LEXER_OBJ_IDENT_NO_OPTS = (1u << 0),          /**< no options */
   LEXER_OBJ_IDENT_ONLY_IDENTIFIERS = (1u << 1), /**< only identifiers are accepted */
-  LEXER_OBJ_IDENT_CLASS_METHOD = (1u << 2),     /**< expect identifier inside a class body */
-  LEXER_OBJ_IDENT_OBJECT_PATTERN = (1u << 3),   /**< parse "get"/"set" as string literal in object pattern */
+  LEXER_OBJ_IDENT_CLASS_IDENTIFIER = (1u << 2), /**< expect identifier inside a class body */
+  LEXER_OBJ_IDENT_CLASS_NO_STATIC = (1u << 3),  /**< static keyword was not present before the identifier */
+  LEXER_OBJ_IDENT_OBJECT_PATTERN = (1u << 4),   /**< parse "get"/"set" as string literal in object pattern */
 } lexer_obj_ident_opts_t;
 
 /**

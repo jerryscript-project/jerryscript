@@ -610,6 +610,18 @@ vm_super_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
     ecma_collection_destroy (collection_p);
   }
 
+  if (ecma_is_value_object (completion_value))
+  {
+    ecma_value_t current_function = ecma_make_object_value (JERRY_CONTEXT (current_function_obj_p));
+    ecma_value_t fields_value = ecma_op_init_class_fields (current_function, completion_value);
+
+    if (ECMA_IS_VALUE_ERROR (fields_value))
+    {
+      ecma_free_value (completion_value);
+      completion_value = ECMA_VALUE_ERROR;
+    }
+  }
+
   ecma_free_value (func_value);
 
   if (JERRY_UNLIKELY (ECMA_IS_VALUE_ERROR (completion_value)))
@@ -1787,6 +1799,16 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
           goto free_left_value;
         }
+        case VM_OC_ADD_COMPUTED_FIELD:
+        {
+          result = ecma_op_add_computed_field (stack_top_p[-2], left_value);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+          goto free_left_value;
+        }
         case VM_OC_COPY_DATA_PROPERTIES:
         {
           result = *(--stack_top_p);
@@ -1990,6 +2012,56 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           opfunc_finalize_class (frame_ctx_p, &stack_top_p, left_value);
           goto free_left_value;
+        }
+        case VM_OC_SET_CLASS_FIELD_INIT:
+        {
+          ecma_string_t *property_name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_INIT);
+          ecma_object_t *object_p = ecma_get_object_from_value (stack_top_p[-2]);
+
+          ecma_property_value_t *property_value_p = ecma_create_named_data_property (object_p,
+                                                                                     property_name_p,
+                                                                                     ECMA_PROPERTY_FIXED,
+                                                                                     NULL);
+          property_value_p->value = left_value;
+
+          property_name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED);
+          ecma_property_t *property_p = ecma_find_named_property (object_p, property_name_p);
+
+          if (property_p != NULL)
+          {
+            property_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+            ecma_value_t *compact_collection_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_value_t,
+                                                                                  property_value_p->value);
+            compact_collection_p = ecma_compact_collection_shrink (compact_collection_p);
+            ECMA_SET_INTERNAL_VALUE_POINTER (property_value_p->value, compact_collection_p);
+          }
+
+          goto free_left_value;
+        }
+        case VM_OC_RUN_CLASS_FIELD_INIT:
+        {
+          result = ecma_op_init_class_fields (ecma_make_object_value (JERRY_CONTEXT (current_function_obj_p)),
+                                              frame_ctx_p->this_binding);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+          continue;
+        }
+        case VM_OC_SET_NEXT_COMPUTED_FIELD:
+        {
+          ecma_integer_value_t next_index = ecma_get_integer_from_value (stack_top_p[-2]) + 1;
+          stack_top_p[-2] = ecma_make_integer_value (next_index);
+          stack_top_p++;
+
+          ecma_value_t *computed_class_fields_p = JERRY_CONTEXT (computed_class_fields_p);
+          JERRY_ASSERT ((ecma_value_t) next_index < ECMA_COMPACT_COLLECTION_GET_SIZE (computed_class_fields_p));
+
+          result = stack_top_p[-2];
+          stack_top_p[-1] = ecma_copy_value (computed_class_fields_p[next_index]);
+          stack_top_p[-2] = ecma_copy_value (frame_ctx_p->this_binding);
+          break;
         }
         case VM_OC_PUSH_SUPER_CONSTRUCTOR:
         {

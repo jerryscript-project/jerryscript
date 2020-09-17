@@ -56,9 +56,9 @@ ecma_builtin_helper_string_index_normalize (ecma_number_t index, uint32_t length
 ecma_value_t
 ecma_builtin_helper_string_prototype_object_index_of (ecma_string_t *original_str_p, ecma_value_t arg1,
                                                       ecma_value_t arg2, ecma_string_index_of_mode_t mode);
-bool
-ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, ecma_string_t *search_str_p, bool first_index,
-                                       lit_utf8_size_t start_pos, lit_utf8_size_t *ret_index_p);
+uint32_t
+ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, ecma_string_t *search_str_p,
+                                       uint32_t start_pos);
 ecma_value_t
 ecma_builtin_helper_def_prop (ecma_object_t *obj_p, ecma_string_t *name_p, ecma_value_t value, uint32_t opts);
 

@@ -18,7 +18,6 @@
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
 #include "ecma-builtins.h"
-#include "ecma-builtin-object.h"
 #include "ecma-conversion.h"
 #include "ecma-function-object.h"
 #include "ecma-exceptions.h"
@@ -473,6 +472,78 @@ ecma_builtin_helper_string_index_normalize (ecma_number_t index, /**< index */
 } /* ecma_builtin_helper_string_index_normalize */
 
 /**
+ * Helper function for finding lastindex of a search string
+ *
+ * This function clamps the given index to the [0, length] range.
+ * If the index is negative, 0 value is used.
+ * If the index is greater than the length of the string, the normalized index will be the length of the string.
+ *
+ * See also:
+ *          ECMA-262 v6, 21.1.3.9
+ *
+ * Used by:
+ *         - The ecma_builtin_helper_string_prototype_object_index_of helper routine.
+ *         - The ecma_builtin_string_prototype_object_replace_match helper routine.
+ *
+ * @return uint32_t - whether there is a match for the search string
+ */
+static uint32_t
+ecma_builtin_helper_string_find_last_index (ecma_string_t *original_str_p, /**< original string */
+                                            ecma_string_t *search_str_p, /**< search string */
+                                            uint32_t position) /**< start_position */
+{
+  if (ecma_string_is_empty (search_str_p))
+  {
+    return position;
+  }
+
+  uint32_t original_length = ecma_string_get_length (original_str_p);
+
+  ECMA_STRING_TO_UTF8_STRING (search_str_p, search_str_utf8_p, search_str_size);
+  ECMA_STRING_TO_UTF8_STRING (original_str_p, original_str_utf8_p, original_str_size);
+
+  uint32_t ret_value = UINT32_MAX;
+
+  if (original_str_size >= search_str_size)
+  {
+    const lit_utf8_byte_t *end_p = original_str_utf8_p + original_str_size;
+    const lit_utf8_byte_t *current_p = end_p;
+
+    for (ecma_number_t i = original_length; i > position; i--)
+    {
+      lit_utf8_decr (&current_p);
+    }
+
+    while (current_p + search_str_size > end_p)
+    {
+      lit_utf8_decr (&current_p);
+      position--;
+    }
+
+    while (true)
+    {
+      if (memcmp (current_p, search_str_utf8_p, search_str_size) == 0)
+      {
+        ret_value = position;
+        break;
+      }
+
+      if (position == 0)
+      {
+        break;
+      }
+
+      lit_utf8_decr (&current_p);
+      position--;
+    }
+  }
+  ECMA_FINALIZE_UTF8_STRING (original_str_utf8_p, original_str_size);
+  ECMA_FINALIZE_UTF8_STRING (search_str_utf8_p, search_str_size);
+
+  return ret_value;
+} /* ecma_builtin_helper_string_find_last_index */
+
+/**
  * Helper function for string indexOf, lastIndexOf, startsWith, includes, endsWith functions
  *
  * See also:
@@ -528,9 +599,10 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_string_t *original_st
     return ECMA_VALUE_ERROR;
   }
 
+  ecma_value_t ret_value;
+
   /* 4 (indexOf, lastIndexOf), 9 (startsWith, includes), 10 (endsWith) */
   ecma_number_t pos_num;
-  ecma_value_t ret_value;
 #if ENABLED (JERRY_ESNEXT)
   if (mode > ECMA_STRING_LAST_INDEX_OF)
   {
@@ -558,8 +630,6 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_string_t *original_st
 
   ecma_number_t ret_num = ECMA_NUMBER_MINUS_ONE;
 
-  lit_utf8_size_t index_of = 0;
-
   ret_value = ECMA_VALUE_FALSE;
 
   switch (mode)
@@ -567,23 +637,18 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_string_t *original_st
 #if ENABLED (JERRY_ESNEXT)
     case ECMA_STRING_STARTS_WITH:
     {
-      const lit_utf8_size_t search_len = ecma_string_get_length (search_str_p);
-
-      if (search_len + start > original_len)
+      if (start > original_len)
       {
         break;
       }
-
-      if (ecma_builtin_helper_string_find_index (original_str_p, search_str_p, true, start, &index_of))
-      {
-        /* 15, 16 (startsWith) */
-        ret_value = ecma_make_boolean_value (index_of == start);
-      }
+      /* 15, 16 (startsWith) */
+      uint32_t index = ecma_builtin_helper_string_find_index (original_str_p, search_str_p, start);
+      ret_value = ecma_make_boolean_value (index == start);
       break;
     }
     case ECMA_STRING_INCLUDES:
     {
-      if (ecma_builtin_helper_string_find_index (original_str_p, search_str_p, true, start, &index_of))
+      if (ecma_builtin_helper_string_find_index (original_str_p, search_str_p, start) != UINT32_MAX)
       {
         ret_value = ECMA_VALUE_TRUE;
       }
@@ -610,26 +675,42 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_string_t *original_st
       {
         break;
       }
-      if (ecma_builtin_helper_string_find_index (original_str_p, search_str_p, true,
-                                                 (lit_utf8_size_t) start_ends_with, &index_of))
-      {
-        ret_value = ecma_make_boolean_value (index_of == (lit_utf8_size_t) start_ends_with);
-      }
+      uint32_t index = ecma_builtin_helper_string_find_index (original_str_p,
+                                                              search_str_p,
+                                                              (uint32_t) start_ends_with);
+      ret_value = ecma_make_boolean_value (index  == (uint32_t) start_ends_with);
       break;
     }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
     case ECMA_STRING_INDEX_OF:
-    case ECMA_STRING_LAST_INDEX_OF:
-    default:
     {
       /* 8 (indexOf) -- 9 (lastIndexOf) */
-      if (ecma_builtin_helper_string_find_index (original_str_p, search_str_p, use_first_index, start, &index_of))
+      ecma_value_t find_index = ecma_builtin_helper_string_find_index (original_str_p, search_str_p, start);
+
+      if (find_index != UINT32_MAX)
       {
-        ret_num = ((ecma_number_t) index_of);
+        ret_num = ((ecma_number_t) find_index);
       }
       ret_value = ecma_make_number_value (ret_num);
       break;
+    }
+
+    case ECMA_STRING_LAST_INDEX_OF:
+    {
+      uint32_t index = ecma_builtin_helper_string_find_last_index (original_str_p, search_str_p, start);
+
+      if (index != UINT32_MAX)
+      {
+        ret_num = ((ecma_number_t) index);
+      }
+      ret_value = ecma_make_number_value (ret_num);
+      break;
+    }
+
+    default:
+    {
+      JERRY_UNREACHABLE ();
     }
   }
 
@@ -644,113 +725,54 @@ ecma_builtin_helper_string_prototype_object_index_of (ecma_string_t *original_st
  * This function clamps the given index to the [0, length] range.
  * If the index is negative, 0 value is used.
  * If the index is greater than the length of the string, the normalized index will be the length of the string.
- * NaN is mapped to zero or length depending on the nan_to_zero parameter.
  *
  * See also:
- *          ECMA-262 v5, 15.5.4.7,8,11
+ *          ECMA-262 v6, 21.1.3.8
  *
  * Used by:
  *         - The ecma_builtin_helper_string_prototype_object_index_of helper routine.
  *         - The ecma_builtin_string_prototype_object_replace_match helper routine.
  *
- * @return bool - whether there is a match for the search string
+ * @return uint32_t - whether there is a match for the search string
  */
-bool
+uint32_t
 ecma_builtin_helper_string_find_index (ecma_string_t *original_str_p, /**< index */
                                        ecma_string_t *search_str_p, /**< string's length */
-                                       bool first_index, /**< whether search for first (t) or last (f) index */
-                                       lit_utf8_size_t start_pos, /**< start position */
-                                       lit_utf8_size_t *ret_index_p) /**< [out] position found in original string */
+                                       uint32_t start_pos) /**< start position */
 {
-  bool match_found = false;
-  const lit_utf8_size_t original_len = ecma_string_get_length (original_str_p);
-  const lit_utf8_size_t search_len = ecma_string_get_length (search_str_p);
+  uint32_t match_found = UINT32_MAX;
 
-  if (search_len <= original_len)
+  if (ecma_string_is_empty (search_str_p))
   {
-    if (!search_len)
-    {
-      match_found = true;
-      *ret_index_p = first_index ? start_pos : original_len;
-    }
-    else
-    {
-      /* create utf8 string from original string and advance to position */
-      ECMA_STRING_TO_UTF8_STRING (original_str_p, original_str_utf8_p, original_str_size);
-
-      lit_utf8_size_t index = start_pos;
-
-      const lit_utf8_byte_t *original_str_curr_p = original_str_utf8_p;
-      for (lit_utf8_size_t idx = 0; idx < index; idx++)
-      {
-        lit_utf8_incr (&original_str_curr_p);
-      }
-
-      /* create utf8 string from search string */
-      ECMA_STRING_TO_UTF8_STRING (search_str_p, search_str_utf8_p, search_str_size);
-
-      const lit_utf8_byte_t *search_str_curr_p = search_str_utf8_p;
-
-      /* iterate original string and try to match at each position */
-      bool searching = true;
-      ecma_char_t first_char = lit_cesu8_read_next (&search_str_curr_p);
-      while (searching)
-      {
-        /* match as long as possible */
-        lit_utf8_size_t match_len = 0;
-        const lit_utf8_byte_t *stored_original_str_curr_p = original_str_curr_p;
-
-        if (match_len < search_len &&
-            index + match_len < original_len &&
-            lit_cesu8_read_next (&original_str_curr_p) == first_char)
-        {
-          const lit_utf8_byte_t *nested_search_str_curr_p = search_str_curr_p;
-          match_len++;
-
-          while (match_len < search_len &&
-                 index + match_len < original_len &&
-                 lit_cesu8_read_next (&original_str_curr_p) == lit_cesu8_read_next (&nested_search_str_curr_p))
-          {
-            match_len++;
-          }
-        }
-
-        /* check for match */
-        if (match_len == search_len)
-        {
-          match_found = true;
-          *ret_index_p = index;
-
-          break;
-        }
-        else
-        {
-          /* inc/dec index and update iterators and search condition */
-          original_str_curr_p = stored_original_str_curr_p;
-
-          if (first_index)
-          {
-            if ((searching = (index <= original_len - search_len)))
-            {
-              lit_utf8_incr (&original_str_curr_p);
-              index++;
-            }
-          }
-          else
-          {
-            if ((searching = (index > 0)))
-            {
-              lit_utf8_decr (&original_str_curr_p);
-              index--;
-            }
-          }
-        }
-      }
-
-      ECMA_FINALIZE_UTF8_STRING (search_str_utf8_p, search_str_size);
-      ECMA_FINALIZE_UTF8_STRING (original_str_utf8_p, original_str_size);
-    }
+    return start_pos;
   }
+
+  ECMA_STRING_TO_UTF8_STRING (search_str_p, search_str_utf8_p, search_str_size);
+  ECMA_STRING_TO_UTF8_STRING (original_str_p, original_str_utf8_p, original_str_size);
+
+  const lit_utf8_byte_t *str_current_p = original_str_utf8_p;
+
+  for (ecma_number_t i = 0; i < start_pos; i++)
+  {
+    lit_utf8_incr (&str_current_p);
+  }
+
+  const lit_utf8_byte_t *original_end_p = original_str_utf8_p + original_str_size;
+
+  while (!((size_t) (original_end_p - str_current_p) < search_str_size))
+  {
+    if (memcmp (str_current_p , search_str_utf8_p, search_str_size) == 0)
+    {
+      match_found = start_pos;
+      break;
+    }
+
+    lit_utf8_incr (&str_current_p);
+    start_pos++;
+  }
+
+  ECMA_FINALIZE_UTF8_STRING (original_str_utf8_p, original_str_size);
+  ECMA_FINALIZE_UTF8_STRING (search_str_utf8_p, search_str_size);
 
   return match_found;
 } /* ecma_builtin_helper_string_find_index */

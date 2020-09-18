@@ -67,42 +67,6 @@ ecma_op_create_object_object_noarg (void)
 } /* ecma_op_create_object_object_noarg */
 
 /**
- * 'Object' object creation operation with one argument.
- *
- * See also: ECMA-262 v5, 15.2.2.1
- *
- * @return pointer to newly created 'Object' object
- */
-ecma_value_t
-ecma_op_create_object_object_arg (ecma_value_t value) /**< argument of constructor */
-{
-  ecma_check_value_type_is_spec_defined (value);
-
-  if (!ecma_is_value_undefined (value)
-      && !ecma_is_value_null (value))
-  {
-    /* 1.b, 1.c, 1.d */
-    JERRY_ASSERT (ecma_is_value_object (value)
-                  || ecma_is_value_number (value)
-                  || ecma_is_value_prop_name (value)
-                  || ecma_is_value_boolean (value)
-                  || ecma_is_value_bigint (value));
-
-    return ecma_op_to_object (value);
-  }
-  else
-  {
-    /* 2. */
-    JERRY_ASSERT (ecma_is_value_undefined (value)
-                  || ecma_is_value_null (value));
-
-    ecma_object_t *obj_p = ecma_op_create_object_object_noarg ();
-
-    return ecma_make_object_value (obj_p);
-  }
-} /* ecma_op_create_object_object_arg */
-
-/**
  * Object creation operation with no arguments.
  * It sets the given prototype to the newly created object.
  *

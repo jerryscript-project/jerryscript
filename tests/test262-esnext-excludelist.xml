@@ -810,7 +810,6 @@
   <test id="built-ins/Object/prototype/toString/symbol-tag-non-str-bigint.js"><reason></reason></test>
   <test id="built-ins/Object/prototype/toString/symbol-tag-non-str-builtin.js"><reason></reason></test>
   <test id="built-ins/Object/prototype/toString/symbol-tag-non-str-proxy-function.js"><reason></reason></test>
-  <test id="built-ins/Object/subclass-object-arg.js"><reason></reason></test>
   <test id="built-ins/Promise/all/invoke-resolve-get-error.js"><reason>Test expects incorrect call order</reason></test>
   <test id="built-ins/Promise/all/resolve-non-callable.js"><reason>Test expects incorrect call order</reason></test>
   <test id="built-ins/Promise/allSettled/call-resolve-element-after-return.js"><reason></reason></test>

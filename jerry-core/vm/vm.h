@@ -271,6 +271,7 @@ typedef enum
   VM_OC_SET_FUNCTION_NAME,       /**< set function name property */
 
   VM_OC_PUSH_SPREAD_ELEMENT,     /**< push spread element */
+  VM_OC_PUSH_REST_OBJECT,        /**< push rest object */
   VM_OC_GET_ITERATOR,            /**< GetIterator abstract operation */
   VM_OC_ITERATOR_STEP,           /**< IteratorStep abstract operation */
   VM_OC_ITERATOR_CLOSE,          /**< IteratorClose abstract operation */
@@ -352,6 +353,7 @@ typedef enum
   VM_OC_SET_FUNCTION_NAME = VM_OC_NONE,       /**< set function name property */
 
   VM_OC_PUSH_SPREAD_ELEMENT = VM_OC_NONE,     /**< push spread element */
+  VM_OC_PUSH_REST_OBJECT = VM_OC_NONE,        /**< push rest object */
   VM_OC_GET_ITERATOR = VM_OC_NONE,            /**< GetIterator abstract operation */
   VM_OC_ITERATOR_STEP = VM_OC_NONE,           /**< IteratorStep abstract operation */
   VM_OC_ITERATOR_CLOSE = VM_OC_NONE,          /**< IteratorClose abstract operation */
@@ -469,8 +471,7 @@ ecma_value_t vm_run_eval (ecma_compiled_code_t *bytecode_data_p, uint32_t parse_
 ecma_value_t vm_run_module (const ecma_compiled_code_t *bytecode_p, ecma_object_t *lex_env_p);
 #endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
-ecma_value_t vm_run (const ecma_compiled_code_t *bytecode_header_p, ecma_value_t this_binding_value,
-                     ecma_object_t *lex_env_p, const ecma_value_t *arg_list_p, uint32_t arg_list_len);
+ecma_value_t vm_run (vm_frame_ctx_shared_t *shared_p, ecma_value_t this_binding_value, ecma_object_t *lex_env_p);
 ecma_value_t vm_execute (vm_frame_ctx_t *frame_ctx_p);
 
 bool vm_is_strict_mode (void);

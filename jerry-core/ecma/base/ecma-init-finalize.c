@@ -62,7 +62,6 @@ ecma_init (void)
 
 #if ENABLED (JERRY_ESNEXT)
   JERRY_CONTEXT (current_new_target) = NULL;
-  JERRY_CONTEXT (current_function_obj_p) = NULL;
 #endif /* ENABLED (JERRY_ESNEXT) */
 } /* ecma_init */
 
@@ -74,7 +73,6 @@ ecma_finalize (void)
 {
 #if ENABLED (JERRY_ESNEXT)
   JERRY_ASSERT (JERRY_CONTEXT (current_new_target) == NULL);
-  JERRY_ASSERT (JERRY_CONTEXT (current_function_obj_p) == NULL);
 #endif /* ENABLED (JERRY_ESNEXT) */
 
   ecma_finalize_global_environment ();

@@ -131,7 +131,7 @@ jerry_debugger_send_backtrace (const uint8_t *recv_buffer_p) /**< pointer to the
     uint32_t frame_count = 0;
     while (iter_frame_ctx_p != NULL)
     {
-      if (!(iter_frame_ctx_p->bytecode_header_p->status_flags & (CBC_CODE_FLAGS_STATIC_FUNCTION)))
+      if (!(iter_frame_ctx_p->shared_p->bytecode_header_p->status_flags & (CBC_CODE_FLAGS_STATIC_FUNCTION)))
       {
         frame_count++;
       }
@@ -164,7 +164,7 @@ jerry_debugger_send_backtrace (const uint8_t *recv_buffer_p) /**< pointer to the
 
     while (frame_ctx_p != NULL && min_depth_offset++ < max_depth)
     {
-      if (frame_ctx_p->bytecode_header_p->status_flags
+      if (frame_ctx_p->shared_p->bytecode_header_p->status_flags
           & (CBC_CODE_FLAGS_DEBUGGER_IGNORE | CBC_CODE_FLAGS_STATIC_FUNCTION))
       {
         frame_ctx_p = frame_ctx_p->prev_context_p;
@@ -183,10 +183,10 @@ jerry_debugger_send_backtrace (const uint8_t *recv_buffer_p) /**< pointer to the
       jerry_debugger_frame_t *frame_p = backtrace_p->frames + current_frame;
 
       jmem_cpointer_t byte_code_cp;
-      JMEM_CP_SET_NON_NULL_POINTER (byte_code_cp, frame_ctx_p->bytecode_header_p);
+      JMEM_CP_SET_NON_NULL_POINTER (byte_code_cp, frame_ctx_p->shared_p->bytecode_header_p);
       memcpy (frame_p->byte_code_cp, &byte_code_cp, sizeof (jmem_cpointer_t));
 
-      uint32_t offset = (uint32_t) (frame_ctx_p->byte_code_p - (uint8_t *) frame_ctx_p->bytecode_header_p);
+      uint32_t offset = (uint32_t) (frame_ctx_p->byte_code_p - (uint8_t *) frame_ctx_p->shared_p->bytecode_header_p);
       memcpy (frame_p->offset, &offset, sizeof (uint32_t));
 
       frame_ctx_p = frame_ctx_p->prev_context_p;
@@ -1167,10 +1167,10 @@ jerry_debugger_breakpoint_hit (uint8_t message_type) /**< message type */
   vm_frame_ctx_t *frame_ctx_p = JERRY_CONTEXT (vm_top_context_p);
 
   jmem_cpointer_t byte_code_header_cp;
-  JMEM_CP_SET_NON_NULL_POINTER (byte_code_header_cp, frame_ctx_p->bytecode_header_p);
+  JMEM_CP_SET_NON_NULL_POINTER (byte_code_header_cp, frame_ctx_p->shared_p->bytecode_header_p);
   memcpy (breakpoint_hit_p->byte_code_cp, &byte_code_header_cp, sizeof (jmem_cpointer_t));
 
-  uint32_t offset = (uint32_t) (frame_ctx_p->byte_code_p - (uint8_t *) frame_ctx_p->bytecode_header_p);
+  uint32_t offset = (uint32_t) (frame_ctx_p->byte_code_p - (uint8_t *) frame_ctx_p->shared_p->bytecode_header_p);
   memcpy (breakpoint_hit_p->offset, &offset, sizeof (uint32_t));
 
   if (!jerry_debugger_send (sizeof (jerry_debugger_send_breakpoint_hit_t)))

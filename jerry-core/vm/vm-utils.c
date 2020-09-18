@@ -30,7 +30,7 @@ vm_is_strict_mode (void)
 {
   JERRY_ASSERT (JERRY_CONTEXT (vm_top_context_p) != NULL);
 
-  return JERRY_CONTEXT (vm_top_context_p)->bytecode_header_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE;
+  return JERRY_CONTEXT (vm_top_context_p)->status_flags & VM_FRAME_CTX_IS_STRICT;
 } /* vm_is_strict_mode */
 
 /**
@@ -76,7 +76,7 @@ vm_get_backtrace (uint32_t max_depth) /**< maximum backtrace depth, 0 = unlimite
 
   while (context_p != NULL)
   {
-    ecma_value_t resource_name = ecma_get_resource_name (context_p->bytecode_header_p);
+    ecma_value_t resource_name = ecma_get_resource_name (context_p->shared_p->bytecode_header_p);
     ecma_string_t *str_p = ecma_get_string_from_value (resource_name);
     ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
 

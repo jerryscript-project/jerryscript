@@ -18,11 +18,11 @@
 
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+#include "vm-defines.h"
 
 void
 ecma_op_create_arguments_object (ecma_object_t *func_obj_p, ecma_object_t *lex_env_p,
-                                 const ecma_value_t *arguments_list_p, uint32_t arguments_number,
-                                 const ecma_compiled_code_t *bytecode_data_p);
+                                 vm_frame_ctx_shared_args_t *shared_p);
 
 ecma_value_t
 ecma_op_arguments_object_delete (ecma_object_t *object_p, ecma_string_t *property_name_p, bool is_throw);

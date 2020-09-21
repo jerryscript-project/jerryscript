@@ -278,6 +278,12 @@ void * JERRY_ATTR_PURE jmem_decompress_pointer (uintptr_t compressed_pointer);
   ((type *) (jmem_decompress_pointer ((cp_value & ~JMEM_TAG_MASK) >> JMEM_TAG_SHIFT)))
 
 /**
+ * Extract tag bits from pointer-tag value
+ */
+#define JMEM_CP_GET_POINTER_TAG_BITS(cp_value) \
+  (cp_value & (JMEM_FIRST_TAG_BIT_MASK | JMEM_SECOND_TAG_BIT_MASK | JMEM_THIRD_TAG_BIT_MASK))
+
+/**
  * Get value of each tag from specified pointer-tag value
  */
 #define JMEM_CP_GET_FIRST_BIT_FROM_POINTER_TAG(cp_value) \

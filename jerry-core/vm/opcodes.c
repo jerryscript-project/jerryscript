@@ -1208,7 +1208,10 @@ opfunc_set_home_object (ecma_object_t *func_p, /**< function object */
   {
     JERRY_ASSERT (!ecma_get_object_is_builtin (func_p));
 
-    ECMA_SET_NON_NULL_POINTER_TAG (((ecma_extended_object_t *) func_p)->u.function.scope_cp, parent_env_p, 0);
+    ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) func_p;
+    ECMA_SET_NON_NULL_POINTER_TAG (ext_func_p->u.function.scope_cp,
+                                   parent_env_p,
+                                   JMEM_CP_GET_POINTER_TAG_BITS (ext_func_p->u.function.scope_cp));
   }
 } /* opfunc_set_home_object */
 

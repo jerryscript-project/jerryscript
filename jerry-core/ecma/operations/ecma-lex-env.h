@@ -69,20 +69,13 @@ void ecma_op_create_immutable_binding (ecma_object_t *lex_env_p, ecma_string_t *
 #if ENABLED (JERRY_ESNEXT)
 void ecma_op_initialize_binding (ecma_object_t *lex_env_p, ecma_string_t *name_p, ecma_value_t value);
 
-void
-ecma_op_init_this_binding (ecma_object_t *lex_env_p, ecma_value_t this_binding);
+void ecma_op_create_environment_record (ecma_object_t *lex_env_p, ecma_value_t this_binding,
+                                        ecma_object_t *func_obj_p);
+ecma_environment_record_t *ecma_op_get_environment_record (ecma_object_t *lex_env_p);
 
-ecma_property_t *
-ecma_op_get_this_property (ecma_object_t *lex_env_p);
-
-bool
-ecma_op_this_binding_is_initialized (ecma_property_t *prop_p);
-
-ecma_value_t
-ecma_op_get_this_binding (ecma_object_t *lex_env_p);
-
-void
-ecma_op_bind_this_value (ecma_property_t *prop_p, ecma_value_t this_binding);
+bool ecma_op_this_binding_is_initialized (ecma_environment_record_t *environment_record_p);
+void ecma_op_bind_this_value (ecma_environment_record_t *environment_record_p, ecma_value_t this_binding);
+ecma_value_t ecma_op_get_this_binding (ecma_object_t *lex_env_p);
 #endif /* ENABLED (JERRY_ESNEXT) */
 
 /**

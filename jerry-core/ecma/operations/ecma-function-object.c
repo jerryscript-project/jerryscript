@@ -972,7 +972,7 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
       lexical_this = ECMA_VALUE_UNINITIALIZED;
     }
 
-    ecma_op_init_this_binding (scope_p, lexical_this);
+    ecma_op_create_environment_record (scope_p, lexical_this, func_obj_p);
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
 

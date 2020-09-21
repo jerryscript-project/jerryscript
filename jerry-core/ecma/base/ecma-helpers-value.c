@@ -341,6 +341,19 @@ ecma_is_value_symbol (ecma_value_t value) /**< ecma value */
 } /* ecma_is_value_symbol */
 
 /**
+ * Check if the value is a specific magic string.
+ *
+ * @return true - if the value the magic string value,
+ *         false - otherwise
+ */
+extern inline bool JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
+ecma_is_value_magic_string (ecma_value_t value, /**< ecma value */
+                            lit_magic_string_id_t id) /**< magic string id */
+{
+  return value == ecma_make_magic_string_value (id);
+} /* ecma_is_value_magic_string */
+
+/**
  * Check if the value is bigint.
  *
  * @return true - if the value contains bigint value,

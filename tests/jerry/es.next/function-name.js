@@ -68,7 +68,7 @@ assertMethodName(func2, 'bar');
 
 var func3 = (function () {}).prototype.constructor;
 assert(typeof func3 === 'function');
-assertNameNotExists(func3);
+assertMethodName(func3, '');
 
 var func4;
 func4 = function () {}
@@ -80,7 +80,7 @@ assertMethodName(func5, 'bar');
 
 var func6;
 (func6) = function () {}
-assertNameNotExists(func6);
+assertMethodName(func6, '');
 
 var func7;
 (func7) = function bar () {}
@@ -290,7 +290,7 @@ let arFunc;
 let array = [];
 array['original'] = array;
 array['original'][arFunc = ()=>{ }]=function(){}
-assertNameNotExists(array[arFunc]);
+assertMethodName(array[arFunc], '');
 
 var o = { 0 : class {} };
 

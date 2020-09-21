@@ -1358,7 +1358,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 #if ENABLED (JERRY_ESNEXT)
   if (!(context_p->status_flags & PARSER_CLASS_CONSTRUCTOR))
   {
-    *(--base_p) = ECMA_VALUE_EMPTY;
+    *(--base_p) = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
   }
 
   if (context_p->argument_length != UINT16_MAX)
@@ -2625,9 +2625,10 @@ parser_check_anonymous_function_declaration (parser_context_t *context_p) /**< c
 
   const ecma_compiled_code_t *bytecode_p;
   bytecode_p = (const ecma_compiled_code_t *) (PARSER_GET_LITERAL (literal_index)->u.bytecode_p);
-  ecma_value_t *func_name_start_p = ecma_compiled_code_resolve_function_name (bytecode_p);
+  bool is_anon = ecma_is_value_magic_string (*ecma_compiled_code_resolve_function_name (bytecode_p),
+                                             LIT_MAGIC_STRING__EMPTY);
 
-  return (*func_name_start_p == ECMA_VALUE_EMPTY ? literal_index : PARSER_NAMED_FUNCTION);
+  return (is_anon ? literal_index : PARSER_NAMED_FUNCTION);
 } /* parser_check_anonymous_function_declaration */
 
 /**
@@ -2659,7 +2660,7 @@ parser_compiled_code_set_function_name (parser_context_t *context_p, /**< contex
   ecma_value_t *func_name_start_p;
   func_name_start_p = ecma_compiled_code_resolve_function_name ((const ecma_compiled_code_t *) bytecode_p);
 
-  if (JERRY_UNLIKELY (*func_name_start_p != ECMA_VALUE_EMPTY))
+  if (JERRY_UNLIKELY (!ecma_is_value_magic_string (*func_name_start_p, LIT_MAGIC_STRING__EMPTY)))
   {
     return;
   }

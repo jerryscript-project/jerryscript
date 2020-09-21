@@ -671,6 +671,7 @@ typedef enum
 } jerry_well_known_symbol_t;
 
 jerry_value_t jerry_get_well_known_symbol (jerry_well_known_symbol_t symbol);
+jerry_value_t jerry_get_symbol_description (const jerry_value_t symbol);
 jerry_value_t jerry_get_symbol_descriptive_string (const jerry_value_t symbol);
 
 /**

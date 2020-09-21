@@ -323,11 +323,11 @@ vm_run_global (const ecma_compiled_code_t *bytecode_p) /**< pointer to bytecode 
     module_p->scope_p = global_scope_p;
 
     const ecma_value_t module_init_result = ecma_module_initialize_current ();
-    ecma_module_cleanup ();
     JERRY_CONTEXT (module_top_context_p) = NULL;
 
     if (ECMA_IS_VALUE_ERROR (module_init_result))
     {
+      ecma_module_cleanup ();
       return module_init_result;
     }
   }

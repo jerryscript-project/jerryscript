@@ -878,6 +878,14 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
     return ecma_builtin_dispatch_call (func_obj_p, this_arg_value, arguments_list_p, arguments_list_len);
   }
 
+  vm_frame_ctx_shared_args_t shared_args;
+  shared_args.header.status_flags = VM_FRAME_CTX_SHARED_HAS_ARG_LIST;
+  shared_args.arg_list_p = arguments_list_p;
+  shared_args.arg_list_len = arguments_list_len;
+#if ENABLED (JERRY_ESNEXT)
+  shared_args.function_object_p = func_obj_p;
+#endif /* ENABLED (JERRY_ESNEXT) */
+
   /* Entering Function Code (ECMA-262 v5, 10.4.3) */
   ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) func_obj_p;
 
@@ -886,25 +894,14 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
 
   /* 8. */
   ecma_value_t this_binding = this_arg_value;
-  bool free_this_binding = false;
 
   const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
   uint16_t status_flags = bytecode_data_p->status_flags;
 
-#if ENABLED (JERRY_ESNEXT)
-  uint16_t function_type = CBC_FUNCTION_GET_TYPE (status_flags);
-
-  if (JERRY_UNLIKELY (function_type == CBC_FUNCTION_CONSTRUCTOR)
-      && JERRY_CONTEXT (current_new_target) == NULL)
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor cannot be invoked without 'new'."));
-  }
-#endif /* ENABLED (JERRY_ESNEXT) */
+  shared_args.header.bytecode_header_p = bytecode_data_p;
 
   /* 1. */
 #if ENABLED (JERRY_ESNEXT)
-  ecma_object_t *old_function_object_p = JERRY_CONTEXT (current_function_obj_p);
-
   if (JERRY_UNLIKELY (CBC_FUNCTION_IS_ARROW (status_flags)))
   {
     ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) func_obj_p;
@@ -921,8 +918,9 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
   }
   else
   {
-    JERRY_CONTEXT (current_function_obj_p) = func_obj_p;
+    shared_args.header.status_flags |= VM_FRAME_CTX_SHARED_NON_ARROW_FUNC;
 #endif /* ENABLED (JERRY_ESNEXT) */
+
     if (!(status_flags & CBC_CODE_FLAGS_STRICT_MODE))
     {
       if (ecma_is_value_undefined (this_binding)
@@ -935,7 +933,7 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
       {
         /* 3., 4. */
         this_binding = ecma_op_to_object (this_binding);
-        free_this_binding = true;
+        shared_args.header.status_flags |= VM_FRAME_CTX_SHARED_FREE_THIS;
 
         JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (this_binding));
       }
@@ -945,45 +943,45 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
 #endif /* ENABLED (JERRY_ESNEXT) */
 
   /* 5. */
-  ecma_object_t *local_env_p;
-  if (status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED)
+  if (!(status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED))
   {
-    local_env_p = scope_p;
+    shared_args.header.status_flags |= VM_FRAME_CTX_SHARED_FREE_LOCAL_ENV;
+    scope_p = ecma_create_decl_lex_env (scope_p);
+
+    if (JERRY_UNLIKELY (status_flags & CBC_CODE_FLAGS_IS_ARGUMENTS_NEEDED))
+    {
+      ecma_op_create_arguments_object (func_obj_p, scope_p, &shared_args);
+    }
   }
-  else
-  {
-    local_env_p = ecma_create_decl_lex_env (scope_p);
-    if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_IS_ARGUMENTS_NEEDED)
-    {
-      ecma_op_create_arguments_object (func_obj_p,
-                                       local_env_p,
-                                       arguments_list_p,
-                                       arguments_list_len,
-                                       bytecode_data_p);
-    }
+
+  ecma_value_t ret_value;
+
 #if ENABLED (JERRY_ESNEXT)
-    // ECMAScript v6, 9.2.2.8
-    if (JERRY_UNLIKELY (function_type == CBC_FUNCTION_CONSTRUCTOR))
+  if (JERRY_UNLIKELY (CBC_FUNCTION_GET_TYPE (status_flags) == CBC_FUNCTION_CONSTRUCTOR))
+  {
+    if (JERRY_CONTEXT (current_new_target) == NULL)
     {
-      ecma_value_t lexical_this;
-      lexical_this = (ECMA_GET_THIRD_BIT_FROM_POINTER_TAG (ext_func_p->u.function.scope_cp) ? ECMA_VALUE_UNINITIALIZED
-                                                                                            : this_binding);
-      ecma_op_init_this_binding (local_env_p, lexical_this);
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor cannot be invoked without 'new'."));
+      goto exit;
     }
+
+    ecma_value_t lexical_this = this_binding;
+
+    if (ECMA_GET_THIRD_BIT_FROM_POINTER_TAG (ext_func_p->u.function.scope_cp))
+    {
+      shared_args.header.status_flags |= VM_FRAME_CTX_SHARED_HERITAGE_PRESENT;
+      lexical_this = ECMA_VALUE_UNINITIALIZED;
+    }
+
+    ecma_op_init_this_binding (scope_p, lexical_this);
+  }
 #endif /* ENABLED (JERRY_ESNEXT) */
-  }
 
-  ecma_value_t ret_value = vm_run (bytecode_data_p,
-                                   this_binding,
-                                   local_env_p,
-                                   arguments_list_p,
-                                   arguments_list_len);
+  ret_value = vm_run (&shared_args.header, this_binding, scope_p);
 
 #if ENABLED (JERRY_ESNEXT)
-  JERRY_CONTEXT (current_function_obj_p) = old_function_object_p;
-
   /* ECMAScript v6, 9.2.2.13 */
-  if (ECMA_GET_THIRD_BIT_FROM_POINTER_TAG (ext_func_p->u.function.scope_cp))
+  if (JERRY_UNLIKELY (shared_args.header.status_flags & VM_FRAME_CTX_SHARED_HERITAGE_PRESENT))
   {
     if (!ECMA_IS_VALUE_ERROR (ret_value) && !ecma_is_value_object (ret_value))
     {
@@ -994,19 +992,20 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
       }
       else
       {
-        ret_value = ecma_op_get_this_binding (local_env_p);
+        ret_value = ecma_op_get_this_binding (scope_p);
       }
     }
   }
 
+exit:
 #endif /* ENABLED (JERRY_ESNEXT) */
 
-  if (!(status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED))
+  if (JERRY_UNLIKELY (shared_args.header.status_flags & VM_FRAME_CTX_SHARED_FREE_LOCAL_ENV))
   {
-    ecma_deref_object (local_env_p);
+    ecma_deref_object (scope_p);
   }
 
-  if (JERRY_UNLIKELY (free_this_binding))
+  if (JERRY_UNLIKELY (shared_args.header.status_flags & VM_FRAME_CTX_SHARED_FREE_THIS))
   {
     ecma_free_value (this_binding);
   }

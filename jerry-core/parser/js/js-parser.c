@@ -555,13 +555,6 @@ parse_print_literal (ecma_compiled_code_t *compiled_code_p, /**< compiled code *
     ident_end = args_p->ident_end;
   }
 
-#if ENABLED (JERRY_ESNEXT)
-  if (compiled_code_p->status_flags & CBC_CODE_FLAGS_REST_PARAMETER)
-  {
-    argument_end++;
-  }
-#endif /* ENABLED (JERRY_ESNEXT) */
-
   if (literal_index < argument_end)
   {
     JERRY_DEBUG_MSG (" arg:%d", literal_index);
@@ -1437,11 +1430,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     function_type = CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_NORMAL);
   }
 
-  if (context_p->status_flags & PARSER_FUNCTION_HAS_REST_PARAM)
-  {
-    compiled_code_p->status_flags |= CBC_CODE_FLAGS_REST_PARAMETER;
-  }
-
   if (context_p->tagged_template_literal_cp != JMEM_CP_NULL)
   {
     compiled_code_p->status_flags |= CBC_CODE_FLAGS_HAS_TAGGED_LITERALS;
@@ -1870,9 +1858,16 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 
       context_p->status_flags |= PARSER_FUNCTION_HAS_COMPLEX_ARGUMENT;
 
-      parser_emit_cbc_literal (context_p,
-                               CBC_PUSH_LITERAL,
-                               (uint16_t) (PARSER_REGISTER_START + context_p->argument_count));
+      if (!(context_p->status_flags & PARSER_FUNCTION_HAS_REST_PARAM))
+      {
+        parser_emit_cbc_literal (context_p,
+                                 CBC_PUSH_LITERAL,
+                                 (uint16_t) (PARSER_REGISTER_START + context_p->argument_count));
+      }
+      else
+      {
+        parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_REST_OBJECT);
+      }
 
       uint32_t flags = (PARSER_PATTERN_BINDING
                         | PARSER_PATTERN_TARGET_ON_STACK
@@ -1990,11 +1985,29 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 
       if (literal_index >= PARSER_REGISTER_START)
       {
-        opcode = CBC_ASSIGN_SET_IDENT;
+        opcode = CBC_MOV_IDENT;
       }
       else if (!scanner_literal_is_created (context_p, literal_index))
       {
         opcode = CBC_INIT_ARG_OR_CATCH;
+      }
+
+      parser_emit_cbc_literal (context_p, opcode, literal_index);
+    }
+    else if (context_p->status_flags & PARSER_FUNCTION_HAS_REST_PARAM)
+    {
+      parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_REST_OBJECT);
+
+      uint16_t opcode = CBC_MOV_IDENT;
+
+      if (literal_index < PARSER_REGISTER_START)
+      {
+        opcode = CBC_INIT_ARG_OR_CATCH;
+
+        if (scanner_literal_is_created (context_p, literal_index))
+        {
+          opcode = CBC_ASSIGN_LET_CONST;
+        }
       }
 
       parser_emit_cbc_literal (context_p, opcode, literal_index);

@@ -43,10 +43,9 @@ void
 ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
                                  ecma_object_t *lex_env_p, /**< lexical environment the Arguments
                                                                 object is created for */
-                                 const ecma_value_t *arguments_list_p, /**< arguments list */
-                                 uint32_t arguments_number, /**< length of arguments list */
-                                 const ecma_compiled_code_t *bytecode_data_p) /**< byte code */
+                                 vm_frame_ctx_shared_args_t *shared_p) /**< shared context dta */
 {
+  const ecma_compiled_code_t *bytecode_data_p = shared_p->header.bytecode_header_p;
   bool is_strict = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0;
 
   uint32_t formal_params_number;
@@ -65,8 +64,8 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
   }
 
   ecma_object_t *prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
-
   ecma_object_t *obj_p;
+  uint32_t arguments_number = shared_p->arg_list_len;
 
   if ((bytecode_data_p->status_flags & CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED)
       && arguments_number > 0
@@ -125,6 +124,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
                                                     ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
                                                     NULL);
 
+    const ecma_value_t *arguments_list_p = shared_p->arg_list_p;
     prop_value_p->value = ecma_copy_value_if_not_object (arguments_list_p[index]);
 
     ecma_deref_ecma_string (index_string_p);

@@ -4055,7 +4055,7 @@ jerry_get_resource_name (const jerry_value_t value) /**< jerry api value */
   {
     if (JERRY_CONTEXT (vm_top_context_p) != NULL)
     {
-      return ecma_copy_value (ecma_get_resource_name (JERRY_CONTEXT (vm_top_context_p)->bytecode_header_p));
+      return ecma_copy_value (ecma_get_resource_name (JERRY_CONTEXT (vm_top_context_p)->shared_p->bytecode_header_p));
     }
   }
   else if (ecma_is_value_object (value))

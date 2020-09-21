@@ -594,6 +594,8 @@
               VM_OC_EXT_VAR_EVAL) \
   CBC_OPCODE (CBC_EXT_COPY_FROM_ARG, CBC_HAS_LITERAL_ARG, 0, \
               VM_OC_COPY_FROM_ARG) \
+  CBC_OPCODE (CBC_EXT_PUSH_REST_OBJECT, CBC_NO_FLAG, 1, \
+              VM_OC_PUSH_REST_OBJECT) \
   CBC_OPCODE (CBC_EXT_STRING_CONCAT, CBC_NO_FLAG, -1, \
               VM_OC_STRING_CONCAT | VM_OC_GET_STACK_STACK | VM_OC_PUT_STACK) \
   CBC_OPCODE (CBC_EXT_STRING_CONCAT_RIGHT_LITERAL, CBC_HAS_LITERAL_ARG, 0, \
@@ -862,9 +864,8 @@ typedef enum
   CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED = (1u << 5), /**< no need to create a lexical environment */
   CBC_CODE_FLAGS_STATIC_FUNCTION = (1u << 6), /**< this function is a static snapshot function */
   CBC_CODE_FLAGS_DEBUGGER_IGNORE = (1u << 7), /**< this function should be ignored by debugger */
-  CBC_CODE_FLAGS_REST_PARAMETER = (1u << 8), /**< this function has rest parameter */
-  CBC_CODE_FLAGS_HAS_TAGGED_LITERALS = (1u << 9), /**< this function has tagged template literal list */
-  CBC_CODE_FLAGS_LEXICAL_BLOCK_NEEDED = (1u << 10), /**< compiled code needs a lexical block */
+  CBC_CODE_FLAGS_HAS_TAGGED_LITERALS = (1u << 8), /**< this function has tagged template literal list */
+  CBC_CODE_FLAGS_LEXICAL_BLOCK_NEEDED = (1u << 9), /**< compiled code needs a lexical block */
 
   /* Bits from bit 12 is reserved for function types (see CBC_FUNCTION_TYPE_SHIFT).
    * Note: the last bits are used for type flags because < and >= operators can be used to

@@ -652,7 +652,7 @@ vm_executable_object_t *
 opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
                                  vm_create_executable_object_type_t type) /**< executable object type */
 {
-  const ecma_compiled_code_t *bytecode_header_p = frame_ctx_p->bytecode_header_p;
+  const ecma_compiled_code_t *bytecode_header_p = frame_ctx_p->shared_p->bytecode_header_p;
   size_t size, register_end;
 
   ecma_bytecode_ref ((ecma_compiled_code_t *) bytecode_header_p);
@@ -680,13 +680,15 @@ opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context
   {
     ecma_builtin_id_t default_proto_id = ECMA_BUILTIN_ID_GENERATOR_PROTOTYPE;
 
-    if (CBC_FUNCTION_GET_TYPE (frame_ctx_p->bytecode_header_p->status_flags) == CBC_FUNCTION_ASYNC_GENERATOR)
+    if (CBC_FUNCTION_GET_TYPE (bytecode_header_p->status_flags) == CBC_FUNCTION_ASYNC_GENERATOR)
     {
       default_proto_id = ECMA_BUILTIN_ID_ASYNC_GENERATOR_PROTOTYPE;
       class_id = LIT_MAGIC_STRING_ASYNC_GENERATOR_UL;
     }
 
-    proto_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_function_obj_p), default_proto_id);
+    JERRY_ASSERT (frame_ctx_p->shared_p->status_flags & VM_FRAME_CTX_SHARED_NON_ARROW_FUNC);
+    proto_p = ecma_op_get_prototype_from_constructor (VM_FRAME_CTX_GET_FUNCTION_OBJECT (frame_ctx_p),
+                                                      default_proto_id);
   }
 
   ecma_object_t *object_p = ecma_create_object (proto_p,
@@ -704,10 +706,15 @@ opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context
   executable_object_p->extended_object.u.class_prop.extra_info = 0;
   ECMA_SET_INTERNAL_VALUE_ANY_POINTER (executable_object_p->extended_object.u.class_prop.u.head, NULL);
 
-  JERRY_ASSERT (!frame_ctx_p->is_eval_code);
+  JERRY_ASSERT (!(frame_ctx_p->status_flags & VM_FRAME_CTX_DIRECT_EVAL));
+
+  /* Copy shared data and frame context. */
+  vm_frame_ctx_shared_t *new_shared_p = &(executable_object_p->shared);
+  *new_shared_p = *(frame_ctx_p->shared_p);
 
   vm_frame_ctx_t *new_frame_ctx_p = &(executable_object_p->frame_ctx);
   *new_frame_ctx_p = *frame_ctx_p;
+  new_frame_ctx_p->shared_p = new_shared_p;
 
   /* The old register values are discarded. */
   ecma_value_t *new_registers_p = VM_GET_REGISTERS (new_frame_ctx_p);
@@ -782,7 +789,7 @@ ecma_value_t
 opfunc_resume_executable_object (vm_executable_object_t *executable_object_p, /**< executable object */
                                  ecma_value_t value) /**< value pushed onto the stack (takes the reference) */
 {
-  const ecma_compiled_code_t *bytecode_header_p = executable_object_p->frame_ctx.bytecode_header_p;
+  const ecma_compiled_code_t *bytecode_header_p = executable_object_p->shared.bytecode_header_p;
   ecma_value_t *register_p = VM_GET_REGISTERS (&executable_object_p->frame_ctx);
   ecma_value_t *register_end_p;
 
@@ -926,8 +933,9 @@ opfunc_async_create_and_await (vm_frame_ctx_t *frame_ctx_p, /**< frame context *
                                uint16_t extra_flags) /**< extra flags */
 {
   JERRY_ASSERT (frame_ctx_p->block_result == ECMA_VALUE_UNDEFINED);
-  JERRY_ASSERT (CBC_FUNCTION_GET_TYPE (frame_ctx_p->bytecode_header_p->status_flags) == CBC_FUNCTION_ASYNC
-                || CBC_FUNCTION_GET_TYPE (frame_ctx_p->bytecode_header_p->status_flags) == CBC_FUNCTION_ASYNC_ARROW);
+  JERRY_ASSERT (CBC_FUNCTION_GET_TYPE (frame_ctx_p->shared_p->bytecode_header_p->status_flags) == CBC_FUNCTION_ASYNC
+                || (CBC_FUNCTION_GET_TYPE (frame_ctx_p->shared_p->bytecode_header_p->status_flags)
+                    == CBC_FUNCTION_ASYNC_ARROW));
 
   ecma_object_t *promise_p = ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE);
   ecma_value_t result = ecma_promise_reject_or_resolve (ecma_make_object_value (promise_p), value, true);
@@ -982,33 +990,30 @@ ecma_op_init_class_fields (ecma_value_t function_object, /**< the function itsel
     return ECMA_VALUE_UNDEFINED;
   }
 
-  ecma_property_value_t *property_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
-  ecma_value_t *computed_class_fields_p = NULL;
+  vm_frame_ctx_shared_class_fields_t shared_class_fields;
+  shared_class_fields.header.status_flags = VM_FRAME_CTX_SHARED_HAS_CLASS_FIELDS;
+  shared_class_fields.computed_class_fields_p = NULL;
 
   name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED);
   ecma_property_t *class_field_property_p = ecma_find_named_property (function_object_p, name_p);
 
   if (class_field_property_p != NULL)
   {
-    ecma_property_value_t *class_field_property_value_p = ECMA_PROPERTY_VALUE_PTR (class_field_property_p);
-    computed_class_fields_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_value_t, class_field_property_value_p->value);
+    ecma_value_t value = ECMA_PROPERTY_VALUE_PTR (class_field_property_p)->value;
+    shared_class_fields.computed_class_fields_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_value_t, value);
   }
 
+  ecma_property_value_t *property_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
   JERRY_ASSERT (ecma_op_is_callable (property_value_p->value));
 
   ecma_extended_object_t *ext_function_p;
   ext_function_p = (ecma_extended_object_t *) ecma_get_object_from_value (property_value_p->value);
+  shared_class_fields.header.bytecode_header_p = ecma_op_function_get_compiled_code (ext_function_p);
 
   ecma_object_t *scope_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
                                                                        ext_function_p->u.function.scope_cp);
-  const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_function_p);
 
-  ecma_value_t *old_computed_class_fields_p = JERRY_CONTEXT (computed_class_fields_p);
-  JERRY_CONTEXT (computed_class_fields_p) = computed_class_fields_p;
-
-  ecma_value_t result = vm_run (bytecode_data_p, this_val, scope_p, NULL, 0);
-
-  JERRY_CONTEXT (computed_class_fields_p) = old_computed_class_fields_p;
+  ecma_value_t result = vm_run (&shared_class_fields.header, this_val, scope_p);
 
   JERRY_ASSERT (ECMA_IS_VALUE_ERROR (result) || result == ECMA_VALUE_UNDEFINED);
   return result;
@@ -1578,7 +1583,7 @@ opfunc_assign_super_reference (ecma_value_t **vm_stack_top_p, /**< vm stack top 
     return ECMA_VALUE_ERROR;
   }
 
-  bool is_strict = (frame_ctx_p->bytecode_header_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0;
+  bool is_strict = (frame_ctx_p->status_flags & VM_FRAME_CTX_IS_STRICT) != 0;
 
   ecma_value_t result = ecma_op_object_put_with_receiver (base_obj_p,
                                                           prop_name_p,

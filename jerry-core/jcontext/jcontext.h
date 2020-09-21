@@ -137,9 +137,6 @@ struct jerry_context_t
 #endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
   const lit_utf8_byte_t * const *lit_magic_string_ex_array; /**< array of external magic strings */
   const lit_utf8_size_t *lit_magic_string_ex_sizes; /**< external magic string lengths */
-#if ENABLED (JERRY_ESNEXT)
-  ecma_value_t *computed_class_fields_p; /**< names of the computed class fields */
-#endif /* ENABLED (JERRY_ESNEXT) */
   jmem_cpointer_t string_list_first_cp; /**< first item of the literal string list */
 #if ENABLED (JERRY_ESNEXT)
   jmem_cpointer_t symbol_list_first_cp; /**< first item of the global symbol list */
@@ -233,8 +230,6 @@ struct jerry_context_t
    * * Any other valid function object pointer: the current "new.target" is valid and it is constructor call.
    */
   ecma_object_t *current_new_target;
-  ecma_object_t *current_function_obj_p; /** currently invoked function object
-                                             (Note: currently used only in generator functions) */
 #endif /* ENABLED (JERRY_ESNEXT) */
 };
 

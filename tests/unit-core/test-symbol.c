@@ -27,6 +27,9 @@
 /* Symbol(bar) desciptive string */
 #define SYMBOL_DESCIPTIVE_STRING_BAR "Symbol(bar)"
 
+/* bar string desciption */
+#define SYMBOL_DESCIPTION_BAR "bar"
+
 int
 main (void)
 {
@@ -177,7 +180,30 @@ main (void)
   TEST_ASSERT (memcmp (str_buff, SYMBOL_DESCIPTIVE_STRING_BAR, sizeof (SYMBOL_DESCIPTIVE_STRING_BAR) - 1) == 0);
 
   jerry_release_value (bar_symbol_string);
+
+  /* Test symbol get description operation with string description */
+  bar_symbol_string = jerry_get_symbol_description (bar_symbol);
+  TEST_ASSERT (jerry_value_is_string (bar_symbol_string));
+
+  bar_symbol_string_size = jerry_get_string_size (bar_symbol_string);
+  TEST_ASSERT (bar_symbol_string_size == (sizeof (SYMBOL_DESCIPTION_BAR) - 1));
+
+  jerry_string_to_char_buffer (bar_symbol_string, str_buff, bar_symbol_string_size);
+  TEST_ASSERT (memcmp (str_buff, STRING_BAR, sizeof (SYMBOL_DESCIPTION_BAR) - 1) == 0);
+
   jerry_release_value (bar_symbol);
+
+  /* Test symbol get description operation with undefined description */
+  jerry_value_t undefined_value = jerry_create_undefined ();
+  jerry_value_t undefined_symbol = jerry_create_symbol (undefined_value);
+  jerry_release_value (undefined_value);
+  TEST_ASSERT (!jerry_value_is_error (bar_symbol));
+  TEST_ASSERT (jerry_value_is_symbol (bar_symbol));
+
+  undefined_value = jerry_get_symbol_description (undefined_symbol);
+  TEST_ASSERT (jerry_value_is_undefined (undefined_value));
+  jerry_release_value (undefined_value);
+  jerry_release_value (undefined_symbol);
 
   /* Test symbol to string operation with non-symbol argument */
   jerry_value_t null_value = jerry_create_null ();

@@ -3791,6 +3791,35 @@ jerry_get_well_known_symbol (jerry_well_known_symbol_t symbol) /**< jerry_well_k
 } /** jerry_get_well_known_symbol */
 
 /**
+ * Returns the description internal property of a symbol.
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return string or undefined value containing the symbol's description - if success
+ *         thrown error - otherwise
+ */
+jerry_value_t
+jerry_get_symbol_description (const jerry_value_t symbol) /**< symbol value */
+{
+  jerry_assert_api_available ();
+
+#if ENABLED (JERRY_ESNEXT)
+  if (!ecma_is_value_symbol (symbol))
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
+  }
+
+  /* Note: This operation cannot throw an error */
+  return ecma_get_symbol_description (ecma_get_symbol_from_value (symbol));
+#else /* !ENABLED (JERRY_ESNEXT) */
+  JERRY_UNUSED (symbol);
+
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Symbol is not supported.")));
+#endif /* ENABLED (JERRY_ESNEXT) */
+} /* jerry_get_symbol_description */
+
+/**
  * Call the SymbolDescriptiveString ecma builtin operation on the symbol value.
  *
  * Note:

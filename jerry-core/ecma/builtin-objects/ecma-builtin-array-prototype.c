@@ -49,6 +49,7 @@ enum
 #if !ENABLED (JERRY_ESNEXT)
   ECMA_ARRAY_PROTOTYPE_TO_STRING,
 #endif /* !ENABLED (JERRY_ESNEXT) */
+  ECMA_ARRAY_PROTOTYPE_SORT,
   ECMA_ARRAY_PROTOTYPE_CONCAT,
   ECMA_ARRAY_PROTOTYPE_TO_LOCALE_STRING,
   ECMA_ARRAY_PROTOTYPE_JOIN,
@@ -57,7 +58,6 @@ enum
   ECMA_ARRAY_PROTOTYPE_REVERSE,
   ECMA_ARRAY_PROTOTYPE_SHIFT,
   ECMA_ARRAY_PROTOTYPE_SLICE,
-  ECMA_ARRAY_PROTOTYPE_SORT,
   ECMA_ARRAY_PROTOTYPE_SPLICE,
   ECMA_ARRAY_PROTOTYPE_UNSHIFT,
   ECMA_ARRAY_PROTOTYPE_INDEX_OF,
@@ -1108,8 +1108,7 @@ ecma_builtin_array_prototype_object_sort_compare_helper (ecma_value_t lhs, /**< 
 static ecma_value_t
 ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argument */
                                           ecma_value_t arg1, /**< comparefn */
-                                          ecma_object_t *obj_p, /**< object */
-                                          ecma_length_t len) /**< object's length */
+                                          ecma_object_t *obj_p) /**< object */
 {
   /* Check if the provided compare function is callable. */
   if (!ecma_is_value_undefined (arg1) && !ecma_op_is_callable (arg1))
@@ -1117,6 +1116,13 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
     return ecma_raise_type_error (ECMA_ERR_MSG ("Compare function is not callable."));
   }
 
+  ecma_length_t len;
+  ecma_value_t len_value = ecma_op_object_get_length (obj_p, &len);
+
+  if (ECMA_IS_VALUE_ERROR (len_value))
+  {
+    return len_value;
+  }
   ecma_collection_t *array_index_props_p = ecma_new_collection ();
 
   for (uint32_t i = 0; i < len; i++)
@@ -2917,17 +2923,23 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
 
   if (JERRY_UNLIKELY (builtin_routine_id <= ECMA_ARRAY_PROTOTYPE_CONCAT))
   {
-    ecma_value_t ret_value;
+    ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
 #if !ENABLED (JERRY_ESNEXT)
     if (builtin_routine_id == ECMA_ARRAY_PROTOTYPE_TO_STRING)
     {
       ret_value = ecma_array_object_to_string (obj_this);
     }
-    else
 #endif /* !ENABLED (JERRY_ESNEXT) */
+    if (builtin_routine_id == ECMA_ARRAY_PROTOTYPE_SORT)
     {
-      JERRY_ASSERT (builtin_routine_id == ECMA_ARRAY_PROTOTYPE_CONCAT);
+      ret_value = ecma_builtin_array_prototype_object_sort (this_arg,
+                                                            arguments_list_p[0],
+                                                            obj_p);
+
+    }
+    else if (builtin_routine_id == ECMA_ARRAY_PROTOTYPE_CONCAT)
+    {
       ret_value = ecma_builtin_array_prototype_object_concat (arguments_list_p,
                                                               arguments_number,
                                                               obj_p);
@@ -3012,14 +3024,6 @@ ecma_builtin_array_prototype_dispatch_routine (uint16_t builtin_routine_id, /**<
                                                              routine_arg_2,
                                                              obj_p,
                                                              length);
-      break;
-    }
-    case ECMA_ARRAY_PROTOTYPE_SORT:
-    {
-      ret_value = ecma_builtin_array_prototype_object_sort (this_arg,
-                                                            routine_arg_1,
-                                                            obj_p,
-                                                            length);
       break;
     }
     case ECMA_ARRAY_PROTOTYPE_SPLICE:

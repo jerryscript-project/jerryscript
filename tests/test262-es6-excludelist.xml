@@ -311,7 +311,6 @@
   <test id="language/expressions/tagged-template/cache-identical-source-eval.js"><reason></reason></test>
   <test id="language/expressions/tagged-template/cache-identical-source.js"><reason></reason></test>
   <test id="language/expressions/tagged-template/cache-identical-source-new-function.js"><reason></reason></test>
-  <test id="language/expressions/template-literal/invalid-legacy-octal-escape-sequence.js"><reason></reason></test>
   <test id="language/line-terminators/S7.3_A2.3.js"><reason>No longer a SyntaxError in ES11</reason></test>
   <test id="language/line-terminators/S7.3_A2.4.js"><reason>No longer a SyntaxError in ES11</reason></test>
   <test id="language/literals/string/7.8.4-1-s.js"><reason></reason></test>

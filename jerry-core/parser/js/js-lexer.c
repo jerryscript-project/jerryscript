@@ -2841,15 +2841,9 @@ lexer_construct_function_object (parser_context_t *context_p, /**< context */
   {
     compiled_code_p = parser_parse_function (context_p, extra_status_flags);
   }
-  else if (JERRY_LIKELY (!(extra_status_flags & PARSER_CLASS_CONSTRUCTOR)))
-  {
-    compiled_code_p = parser_parse_arrow_function (context_p, extra_status_flags);
-  }
   else
   {
-    /* Since PARSER_IS_ARROW_FUNCTION and PARSER_CLASS_CONSTRUCTOR bits cannot
-     * be set at the same time, this bit combination triggers class field parsing. */
-    compiled_code_p = parser_parse_class_fields (context_p);
+    compiled_code_p = parser_parse_arrow_function (context_p, extra_status_flags);
   }
 #else /* !ENABLED (JERRY_ESNEXT) */
   compiled_code_p = parser_parse_function (context_p, extra_status_flags);

@@ -6086,9 +6086,7 @@
   <test id="language/expressions/class/elements/async-gen-private-method/yield-star-sync-return.js"><reason></reason></test>
   <test id="language/expressions/class/elements/async-gen-private-method/yield-star-sync-throw.js"><reason></reason></test>
   <test id="language/expressions/class/elements/class-name-static-initializer-anonymous.js"><reason></reason></test>
-  <test id="language/expressions/class/elements/class-name-static-initializer-decl.js"><reason></reason></test>
   <test id="language/expressions/class/elements/class-name-static-initializer-default-export.js"><reason></reason></test>
-  <test id="language/expressions/class/elements/class-name-static-initializer-expr.js"><reason></reason></test>
   <test id="language/expressions/class/elements/derived-cls-direct-eval-contains-superproperty-1.js"><reason></reason></test>
   <test id="language/expressions/class/elements/derived-cls-direct-eval-contains-superproperty-2.js"><reason></reason></test>
   <test id="language/expressions/class/elements/direct-eval-err-contains-newtarget.js"><reason></reason></test>
@@ -6102,7 +6100,6 @@
   <test id="language/expressions/class/elements/gen-private-method/yield-spread-arr-single.js"><reason></reason></test>
   <test id="language/expressions/class/elements/gen-private-method/yield-spread-obj.js"><reason></reason></test>
   <test id="language/expressions/class/elements/grammar-private-field-optional-chaining.js"><reason></reason></test>
-  <test id="language/expressions/class/elements/intercalated-static-non-static-computed-fields.js"><reason></reason></test>
   <test id="language/expressions/class/elements/multiple-definitions-grammar-privatename-identifier-semantics-stringvalue.js"><reason></reason></test>
   <test id="language/expressions/class/elements/multiple-definitions-private-field-usage.js"><reason></reason></test>
   <test id="language/expressions/class/elements/multiple-definitions-private-method-getter-usage.js"><reason></reason></test>
@@ -6535,9 +6532,6 @@
   <test id="language/expressions/class/elements/same-line-method-static-private-methods.js"><reason></reason></test>
   <test id="language/expressions/class/elements/static-field-anonymous-function-length.js"><reason></reason></test>
   <test id="language/expressions/class/elements/static-field-anonymous-function-name.js"><reason></reason></test>
-  <test id="language/expressions/class/elements/static-field-init-this-inside-arrow-function.js"><reason></reason></test>
-  <test id="language/expressions/class/elements/static-field-init-with-this.js"><reason></reason></test>
-  <test id="language/expressions/class/elements/static-field-redeclaration.js"><reason></reason></test>
   <test id="language/expressions/class/elements/static-private-fields-proxy-default-handler-throws.js"><reason></reason></test>
   <test id="language/expressions/class/elements/static-private-getter-access-on-inner-arrow-function.js"><reason></reason></test>
   <test id="language/expressions/class/elements/static-private-getter-access-on-inner-class.js"><reason></reason></test>
@@ -7709,7 +7703,6 @@
   <test id="language/statements/class/elements/get-access-of-missing-private-getter.js"><reason></reason></test>
   <test id="language/statements/class/elements/get-access-of-missing-shadowed-private-getter.js"><reason></reason></test>
   <test id="language/statements/class/elements/grammar-private-field-optional-chaining.js"><reason></reason></test>
-  <test id="language/statements/class/elements/intercalated-static-non-static-computed-fields.js"><reason></reason></test>
   <test id="language/statements/class/elements/multiple-definitions-grammar-privatename-identifier-semantics-stringvalue.js"><reason></reason></test>
   <test id="language/statements/class/elements/multiple-definitions-private-field-usage.js"><reason></reason></test>
   <test id="language/statements/class/elements/multiple-definitions-private-method-getter-usage.js"><reason></reason></test>
@@ -8201,9 +8194,6 @@
   <test id="language/statements/class/elements/set-access-of-shadowed-private-method.js"><reason></reason></test>
   <test id="language/statements/class/elements/static-field-anonymous-function-length.js"><reason></reason></test>
   <test id="language/statements/class/elements/static-field-anonymous-function-name.js"><reason></reason></test>
-  <test id="language/statements/class/elements/static-field-init-this-inside-arrow-function.js"><reason></reason></test>
-  <test id="language/statements/class/elements/static-field-init-with-this.js"><reason></reason></test>
-  <test id="language/statements/class/elements/static-field-redeclaration.js"><reason></reason></test>
   <test id="language/statements/class/elements/static-private-fields-proxy-default-handler-throws.js"><reason></reason></test>
   <test id="language/statements/class/elements/static-private-getter-access-on-inner-arrow-function.js"><reason></reason></test>
   <test id="language/statements/class/elements/static-private-getter-access-on-inner-class.js"><reason></reason></test>

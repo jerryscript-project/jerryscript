@@ -515,14 +515,17 @@ parser_is_constructor_literal (parser_context_t *context_p) /**< context */
 
 /**
  * Parse class literal.
+ *
+ * @return true - if the class has static fields, false - otherwise
  */
-static void
-parser_parse_class_literal (parser_context_t *context_p, /**< context */
-                            parser_class_literal_opts_t opts) /**< class literal parsing options */
+static bool
+parser_parse_class_body (parser_context_t *context_p, /**< context */
+                         parser_class_literal_opts_t opts) /**< class literal parsing options */
 {
   JERRY_ASSERT (context_p->token.type == LEXER_LEFT_BRACE);
 
   lexer_literal_t *ctor_literal_p = NULL;
+  lexer_literal_t *static_fields_literal_p = NULL;
 
   if (opts & PARSER_CLASS_LITERAL_CTOR_PRESENT)
   {
@@ -542,6 +545,7 @@ parser_parse_class_literal (parser_context_t *context_p, /**< context */
 
   bool is_static = false;
   size_t fields_size = 0;
+  uint32_t computed_field_count = 0;
 
   while (true)
   {
@@ -715,7 +719,7 @@ parser_parse_class_literal (parser_context_t *context_p, /**< context */
 
     if (!(status_flags & (PARSER_IS_ASYNC_FUNCTION | PARSER_IS_GENERATOR_FUNCTION)))
     {
-      if (!is_static && !lexer_check_next_character (context_p, LIT_CHAR_LEFT_PAREN))
+      if (!lexer_check_next_character (context_p, LIT_CHAR_LEFT_PAREN))
       {
         /* Class field. */
         if (fields_size == 0)
@@ -724,14 +728,19 @@ parser_parse_class_literal (parser_context_t *context_p, /**< context */
         }
 
         scanner_range_t range;
-        uint8_t class_field_type = 0;
+        uint8_t class_field_type = is_static ? PARSER_CLASS_FIELD_STATIC : 0;
 
         if (!is_computed)
         {
+          if (is_static && parser_is_constructor_literal (context_p))
+          {
+            parser_raise_error (context_p, PARSER_ERR_ARGUMENT_LIST_EXPECTED);
+          }
+
           range.start_location.source_p = context_p->token.lit_location.char_p;
           range.start_location.line = context_p->token.line;
           range.start_location.column = context_p->token.column;
-          class_field_type = PARSER_CLASS_FIELD_NORMAL;
+          class_field_type |= PARSER_CLASS_FIELD_NORMAL;
 
           if (context_p->token.lit_location.type == LEXER_STRING_LITERAL)
           {
@@ -740,7 +749,23 @@ parser_parse_class_literal (parser_context_t *context_p, /**< context */
         }
         else
         {
-          parser_emit_cbc_ext (context_p, CBC_EXT_ADD_COMPUTED_FIELD);
+          if (++computed_field_count > ECMA_INTEGER_NUMBER_MAX)
+          {
+            parser_raise_error (context_p, PARSER_ERR_TOO_MANY_CLASS_FIELDS);
+          }
+
+          if (is_static && static_fields_literal_p == NULL)
+          {
+            static_fields_literal_p = lexer_construct_unused_literal (context_p);
+            parser_emit_cbc_ext_literal (context_p,
+                                         CBC_EXT_PUSH_STATIC_COMPUTED_FIELD_FUNC,
+                                         (uint16_t) (context_p->literal_count++));
+          }
+          else
+          {
+            parser_emit_cbc_ext (context_p, (is_static ? CBC_EXT_ADD_STATIC_COMPUTED_FIELD
+                                                       : CBC_EXT_ADD_COMPUTED_FIELD));
+          }
         }
 
         if (lexer_consume_assign (context_p))
@@ -806,62 +831,6 @@ parser_parse_class_literal (parser_context_t *context_p, /**< context */
           lexer_construct_number_object (context_p, false, false);
         }
       }
-
-      if (is_static && !lexer_check_next_character (context_p, LIT_CHAR_LEFT_PAREN))
-      {
-        if (!is_computed && parser_is_constructor_literal (context_p))
-        {
-          parser_raise_error (context_p, PARSER_ERR_ARGUMENT_LIST_EXPECTED);
-        }
-
-        uint16_t literal_index = context_p->lit_object.index;
-        context_p->status_flags |= PARSER_INSIDE_CLASS_FIELD;
-
-        if (lexer_consume_assign (context_p))
-        {
-          if (context_p->next_scanner_info_p->source_p != context_p->source_p)
-          {
-            lexer_next_token (context_p);
-            parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
-            parser_raise_error (context_p, PARSER_ERR_SEMICOLON_EXPECTED);
-          }
-
-          JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_CLASS_FIELD_INITIALIZER_END);
-
-          /* Changing the source_end_p prevents the lexer to process the name of the next class field
-           * as normal token which may cause issues if the name is also a keyword (e.g. var). */
-          const uint8_t *source_end_p = context_p->source_end_p;
-          context_p->source_end_p = ((scanner_location_info_t *) context_p->next_scanner_info_p)->location.source_p;
-          scanner_release_next (context_p, sizeof (scanner_location_info_t));
-
-          lexer_next_token (context_p);
-          parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
-
-          if (context_p->token.type != LEXER_EOS)
-          {
-            parser_raise_error (context_p, PARSER_ERR_SEMICOLON_EXPECTED);
-          }
-
-          context_p->source_end_p = source_end_p;
-        }
-        else
-        {
-          parser_emit_cbc (context_p, CBC_PUSH_UNDEFINED);
-        }
-
-        if (!is_computed)
-        {
-          parser_emit_cbc_ext_literal (context_p, CBC_EXT_SET_STATIC_PROPERTY, literal_index);
-        }
-        else
-        {
-          parser_emit_cbc_ext (context_p, CBC_EXT_SET_STATIC_COMPUTED_PROPERTY);
-        }
-
-        context_p->status_flags &= (uint32_t) ~PARSER_INSIDE_CLASS_FIELD;
-        is_static = false;
-        continue;
-      }
     }
 
     uint16_t literal_index = context_p->lit_object.index;
@@ -897,17 +866,49 @@ parser_parse_class_literal (parser_context_t *context_p, /**< context */
     }
   }
 
-  if (fields_size > 0)
+  if (fields_size == 0)
   {
-    parser_reverse_class_fields (context_p, fields_size);
-
-    /* Since PARSER_IS_ARROW_FUNCTION and PARSER_CLASS_CONSTRUCTOR bits cannot
-     * be set at the same time, this bit combination triggers class field parsing. */
-    uint16_t function_literal_index = lexer_construct_function_object (context_p, (PARSER_IS_ARROW_FUNCTION
-                                                                                   | PARSER_CLASS_CONSTRUCTOR));
-    parser_emit_cbc_ext_literal (context_p, CBC_EXT_SET_CLASS_FIELD_INIT, function_literal_index);
+    return false;
   }
-} /* parser_parse_class_literal */
+
+  parser_reverse_class_fields (context_p, fields_size);
+
+  /* Since PARSER_IS_ARROW_FUNCTION and PARSER_CLASS_CONSTRUCTOR bits cannot
+   * be set at the same time, this bit combination triggers class field parsing. */
+
+  if (!(context_p->stack_top_uint8 & PARSER_CLASS_FIELD_STATIC))
+  {
+    lexer_literal_t *literal_p = lexer_construct_unused_literal (context_p);
+
+    uint16_t function_literal_index = (uint16_t) (context_p->literal_count++);
+    parser_emit_cbc_ext_literal (context_p, CBC_EXT_SET_FIELD_INIT, function_literal_index);
+    parser_flush_cbc (context_p);
+
+    literal_p->u.bytecode_p = parser_parse_class_fields (context_p);
+    literal_p->type = LEXER_FUNCTION_LITERAL;
+  }
+
+  bool has_static_field = false;
+
+  if (context_p->stack_top_uint8 & PARSER_CLASS_FIELD_STATIC)
+  {
+    if (static_fields_literal_p == NULL)
+    {
+      static_fields_literal_p = lexer_construct_unused_literal (context_p);
+      uint16_t function_literal_index = (uint16_t) (context_p->literal_count++);
+      parser_emit_cbc_ext_literal (context_p, CBC_EXT_PUSH_STATIC_FIELD_FUNC, function_literal_index);
+    }
+
+    parser_flush_cbc (context_p);
+    static_fields_literal_p->u.bytecode_p = parser_parse_class_fields (context_p);
+    static_fields_literal_p->type = LEXER_FUNCTION_LITERAL;
+
+    has_static_field = true;
+  }
+
+  parser_stack_pop_uint8 (context_p);
+  return has_static_field;
+} /* parser_parse_class_body */
 
 /**
  * Parse class statement or expression.
@@ -999,7 +1000,7 @@ parser_parse_class (parser_context_t *context_p, /**< context */
   }
 
   /* ClassDeclaration is parsed. Continue with class body. */
-  parser_parse_class_literal (context_p, opts);
+  bool has_static_field = parser_parse_class_body (context_p, opts);
 
   if (class_name_index != PARSER_INVALID_LITERAL_INDEX)
   {
@@ -1009,6 +1010,11 @@ parser_parse_class (parser_context_t *context_p, /**< context */
   else
   {
     parser_emit_cbc_ext (context_p, CBC_EXT_FINALIZE_ANONYMOUS_CLASS);
+  }
+
+  if (has_static_field)
+  {
+    parser_emit_cbc_ext (context_p, CBC_EXT_RUN_STATIC_FIELD_INIT);
   }
 
   if (is_statement)

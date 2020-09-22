@@ -145,6 +145,7 @@ typedef enum
   PARSER_ERR_INVALID_CLASS_CONSTRUCTOR,               /**< class constructor cannot be a generator or async function */
   PARSER_ERR_CLASS_STATIC_PROTOTYPE,                  /**< static method name 'prototype' is not allowed */
   PARSER_ERR_UNEXPECTED_SUPER_KEYWORD,                /**< unexpected super keyword */
+  PARSER_ERR_TOO_MANY_CLASS_FIELDS,                   /**< too many computed class fields */
   PARSER_ERR_ARGUMENTS_IN_CLASS_FIELD,                /**< arguments is not allowed in class fields */
 
   PARSER_ERR_RIGHT_BRACE_EXPECTED,                    /**< right brace expected */

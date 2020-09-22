@@ -2336,11 +2336,18 @@ parser_parse_continue_statement (parser_context_t *context_p) /**< context */
         opcode = CBC_JUMP_FORWARD_EXIT_CONTEXT;
       }
 
+#if ENABLED (JERRY_ESNEXT)
+      const bool is_private_scope = (type == PARSER_STATEMENT_PRIVATE_SCOPE
+                                     || type == PARSER_STATEMENT_PRIVATE_CONTEXT);
+#else /* !ENABLED (JERRY_ESNEXT) */
+      const bool is_private_scope = false;
+#endif /* !ENABLED (JERRY_ESNEXT) */
+
       if (parser_statement_flags[type] & PARSER_STATM_CONTINUE_TARGET)
       {
         loop_iterator = iterator;
       }
-      else
+      else if (!is_private_scope)
       {
         loop_iterator.current_p = NULL;
       }

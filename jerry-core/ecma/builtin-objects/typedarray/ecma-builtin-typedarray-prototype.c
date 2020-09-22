@@ -204,7 +204,9 @@ ecma_builtin_typedarray_prototype_map (ecma_value_t this_arg, /**< this object *
   ecma_object_t *func_object_p = ecma_get_object_from_value (cb_func_val);
 
   // TODO: 22.2.3.18, 7-8.
-  ecma_value_t new_typedarray = ecma_op_create_typedarray_with_type_and_length (src_info_p->id, src_info_p->length);
+  ecma_value_t len = ecma_make_number_value (src_info_p->length);
+  ecma_value_t new_typedarray = ecma_typedarray_species_create (this_arg, &len, 1);
+  ecma_free_value (len);
 
   if (ECMA_IS_VALUE_ERROR (new_typedarray))
   {
@@ -427,7 +429,9 @@ ecma_builtin_typedarray_prototype_filter (ecma_value_t this_arg, /**< this objec
 
   uint32_t pass_num = (uint32_t) ((pass_value_p - pass_value_list_p) >> info_p->shift);
 
-  ret_value = ecma_op_create_typedarray_with_type_and_length (info_p->id, pass_num);
+  ecma_value_t collected = ecma_make_number_value (pass_num);
+  ret_value = ecma_typedarray_species_create (this_arg, &collected, 1);
+  ecma_free_value (collected);
 
   if (!ECMA_IS_VALUE_ERROR (ret_value))
   {
@@ -868,7 +872,8 @@ cleanup:
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_typedarray_prototype_subarray (ecma_typedarray_info_t *info_p, /**< object info */
+ecma_builtin_typedarray_prototype_subarray (ecma_value_t this_arg, /**< this object */
+                                            ecma_typedarray_info_t *info_p, /**< object info */
                                             ecma_value_t begin, /**< begin */
                                             ecma_value_t end) /**< end */
 {
@@ -918,7 +923,7 @@ ecma_builtin_typedarray_prototype_subarray (ecma_typedarray_info_t *info_p, /**<
     ecma_make_uint32_value (subarray_length)
   };
 
-  ret_value = ecma_typedarray_helper_dispatch_construct (arguments_p, 3, info_p->id);
+  ret_value = ecma_typedarray_species_create (this_arg, arguments_p, 3);
 
   ecma_free_value (arguments_p[1]);
   ecma_free_value (arguments_p[2]);
@@ -1489,7 +1494,8 @@ ecma_builtin_typedarray_prototype_copy_within (ecma_value_t this_arg, /**< this 
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_typedarray_prototype_slice (ecma_typedarray_info_t *info_p, /**< object info */
+ecma_builtin_typedarray_prototype_slice (ecma_value_t this_arg, /**< this argument */
+                                         ecma_typedarray_info_t *info_p, /**< object info */
                                          const ecma_value_t args[], /**< arguments list */
                                          uint32_t args_number) /**< number of arguments */
 {
@@ -1518,8 +1524,10 @@ ecma_builtin_typedarray_prototype_slice (ecma_typedarray_info_t *info_p, /**< ob
   int32_t distance = (int32_t) (relative_end - relative_start);
   uint32_t count = distance > 0 ? (uint32_t) distance : 0;
 
+  ecma_value_t len = ecma_make_number_value (count);
   // TODO: 22.2.3.23, 12-13.
-  ecma_value_t new_typedarray = ecma_op_create_typedarray_with_type_and_length (info_p->id, count);
+  ecma_value_t new_typedarray = ecma_typedarray_species_create (this_arg, &len, 1);
+  ecma_free_value (len);
 
   if (ECMA_IS_VALUE_ERROR (new_typedarray))
   {
@@ -1763,7 +1771,6 @@ ecma_builtin_typedarray_prototype_dispatch_routine (uint8_t builtin_routine_id, 
     case ECMA_TYPEDARRAY_PROTOTYPE_ROUTINE_FILTER:
     {
       return ecma_builtin_typedarray_prototype_filter (this_arg, &info, arguments_list_p[0], arguments_list_p[1]);
-
     }
     case ECMA_TYPEDARRAY_PROTOTYPE_ROUTINE_REVERSE:
     {
@@ -1775,7 +1782,7 @@ ecma_builtin_typedarray_prototype_dispatch_routine (uint8_t builtin_routine_id, 
     }
     case ECMA_TYPEDARRAY_PROTOTYPE_ROUTINE_SUBARRAY:
     {
-      return ecma_builtin_typedarray_prototype_subarray (&info, arguments_list_p[0], arguments_list_p[1]);
+      return ecma_builtin_typedarray_prototype_subarray (this_arg, &info, arguments_list_p[0], arguments_list_p[1]);
     }
     case ECMA_TYPEDARRAY_PROTOTYPE_ROUTINE_FILL:
     {
@@ -1819,7 +1826,7 @@ ecma_builtin_typedarray_prototype_dispatch_routine (uint8_t builtin_routine_id, 
     }
     case ECMA_TYPEDARRAY_PROTOTYPE_ROUTINE_SLICE:
     {
-      return ecma_builtin_typedarray_prototype_slice (&info, arguments_list_p, arguments_number);
+      return ecma_builtin_typedarray_prototype_slice (this_arg, &info, arguments_list_p, arguments_number);
     }
     case ECMA_TYPEDARRAY_PROTOTYPE_ROUTINE_TO_LOCALE_STRING:
     {

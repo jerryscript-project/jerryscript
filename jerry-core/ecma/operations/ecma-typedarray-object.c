@@ -1390,7 +1390,7 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
                                                     : ECMA_VALUE_UNDEFINED);
 
       ecma_number_t offset;
-      if (ECMA_IS_VALUE_ERROR (ecma_op_to_integer (arg2, &offset)))
+      if (ECMA_IS_VALUE_ERROR (ecma_op_to_index (arg2, &offset)))
       {
         return ECMA_VALUE_ERROR;
       }
@@ -1615,6 +1615,107 @@ ecma_op_typedarray_define_index_prop (ecma_object_t *obj_p, /**< a TypedArray ob
 
   return ECMA_VALUE_TRUE;
 } /* ecma_op_typedarray_define_index_prop */
+
+/**
+ * Specify the creation of a new TypedArray
+ * object using a constructor function.
+ *
+ * See also: ES11 22.2.4.6
+ *
+ * Used by:
+ *        - ecma_typedarray_species_create
+ *
+ * @return ecma_value_t function object from created from constructor_p argument
+ */
+
+ecma_value_t
+ecma_typedarray_create (ecma_object_t *constructor_p, /**< constructor function */
+                        ecma_value_t *arguments_list_p, /**< argument list */
+                        uint32_t arguments_list_len) /**< length of argument list */
+{
+  ecma_value_t ret_val = ecma_op_function_construct (constructor_p,
+                                                     constructor_p,
+                                                     arguments_list_p,
+                                                     arguments_list_len);
+  if (ECMA_IS_VALUE_ERROR (ret_val))
+  {
+    return ret_val;
+  }
+
+  if (!ecma_is_typedarray (ret_val))
+  {
+    ecma_free_value (ret_val);
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Constructed object is not TypedArray."));
+  }
+
+  ecma_object_t *typedarray_p = ecma_get_object_from_value (ret_val);
+
+  if ((arguments_list_len == 1) && (ecma_is_value_number (arguments_list_p[0])))
+  {
+    ecma_number_t num = ecma_get_number_from_value (arguments_list_p[0]);
+    ecma_typedarray_info_t info = ecma_typedarray_get_info (typedarray_p);
+
+    if (info.length < num)
+    {
+      ecma_free_value (ret_val);
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Constructed typedarray is smaller than filter call result"));
+    }
+  }
+  return ret_val;
+} /* ecma_typedarray_create */
+
+/* Specify the creation of a new TypedArray object
+ * using a constructor function that is derived from this_arg.
+ *
+ * See also: ES11 22.2.4.7
+ *
+ * @return ecma value of the new typedarray object, constructed by default or species constructor
+ */
+ecma_value_t
+ecma_typedarray_species_create (ecma_value_t this_arg, /**< this argument */
+                                ecma_value_t *arguments_list_p, /**< the arg list passed to typedarray construct */
+                                uint32_t arguments_list_len) /**< length of the the arg list */
+{
+  ecma_object_t *typedarray_p = ecma_get_object_from_value (this_arg);
+  ecma_typedarray_info_t info = ecma_typedarray_get_info (typedarray_p);
+
+  JERRY_ASSERT (ecma_is_typedarray (this_arg));
+
+  ecma_builtin_id_t default_constructor = ecma_typedarray_helper_get_constructor_id (info.id);
+
+  ecma_value_t constructor = ecma_op_species_constructor (typedarray_p, default_constructor);
+
+  if (ECMA_IS_VALUE_ERROR (constructor))
+  {
+    return constructor;
+  }
+
+  ecma_object_t *constructor_proto_p = ecma_get_object_from_value (constructor);
+
+  ecma_value_t result = ecma_typedarray_create (constructor_proto_p, arguments_list_p, arguments_list_len);
+  ecma_deref_object (constructor_proto_p);
+
+  if (ECMA_IS_VALUE_ERROR (result))
+  {
+    return result;
+  }
+
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  ecma_object_t *result_p = ecma_get_object_from_value (result);
+  ecma_typedarray_info_t result_info = ecma_typedarray_get_info (result_p);
+  /*
+   * Check result_info.id to to be either bigint type if info.id is one
+   * or be neither of them is info.id is none of them as well.
+   */
+  if (ECMA_TYPEDARRAY_IS_BIGINT_TYPE (info.id) ^ ECMA_TYPEDARRAY_IS_BIGINT_TYPE (result_info.id))
+  {
+    ecma_free_value (result);
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Source and result array does not match in [[ContentType]]"));
+  }
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+
+  return result;
+} /* ecma_typedarray_species_create */
 
 /**
  * Create a typedarray object based on the "type" and arraylength

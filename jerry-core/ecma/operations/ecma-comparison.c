@@ -203,7 +203,15 @@ ecma_op_abstract_equality_compare (ecma_value_t x, /**< first operand */
 #if ENABLED (JERRY_ESNEXT)
   if (JERRY_UNLIKELY (ecma_is_value_symbol (x)))
   {
-    return ECMA_VALUE_FALSE;
+    if (!ecma_is_value_object (y))
+    {
+      return ECMA_VALUE_FALSE;
+    }
+
+    /* Swap values. */
+    x ^= y;
+    y ^= x;
+    x ^= y;
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
 

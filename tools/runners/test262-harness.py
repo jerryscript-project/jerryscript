@@ -334,6 +334,11 @@ def report_error(error_string):
 
 
 def build_options():
+    default_job_count = None
+    if os.environ.get("CI", None):
+        # Force single process execution on CI system
+        default_job_count = 1
+
     result = optparse.OptionParser()
     result.add_option("--command", default=None,
                       help="The command-line to run")
@@ -353,7 +358,7 @@ def build_options():
                       help="Test only non-strict mode")
     result.add_option("--unmarked_default", default="both",
                       help="default mode for tests of unspecified strictness")
-    result.add_option("-j", "--job-count", default=None, action="store", type=int,
+    result.add_option("-j", "--job-count", default=default_job_count, action="store", type=int,
                       help="Number of parallel test jobs to run. In case of '0' cpu count is used.")
     result.add_option("--logname", help="Filename to save stdout to")
     result.add_option("--loglevel", default="warning",
@@ -824,7 +829,7 @@ class TestSuite(object):
 
         if job_count == 1:
             for case in cases:
-                result = case.run_pipe()
+                result = case.run()
                 if logname:
                     self.write_log(result)
                 progress.has_run(result)

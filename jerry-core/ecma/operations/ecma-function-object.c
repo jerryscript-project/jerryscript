@@ -1824,12 +1824,23 @@ ecma_op_function_list_lazy_property_names (ecma_object_t *object_p, /**< functio
 {
 #if ENABLED (JERRY_ESNEXT)
   ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
-  if (!ECMA_GET_FIRST_BIT_FROM_POINTER_TAG (ext_func_p->u.function.scope_cp))
+  ecma_value_t prop_name_val = ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH);
+  if (!ECMA_GET_FIRST_BIT_FROM_POINTER_TAG (ext_func_p->u.function.scope_cp)
+      || ecma_op_ordinary_object_has_own_property (object_p, ecma_op_to_string (prop_name_val)))
   {
     /* Unintialized 'length' property is non-enumerable (ECMA-262 v6, 19.2.4.1) */
-    ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
+    ecma_collection_push_back (prop_names_p, prop_name_val);
     prop_counter_p->string_named_props++;
   }
+
+  prop_name_val = ecma_make_magic_string_value (LIT_MAGIC_STRING_NAME);
+  if (ecma_op_ordinary_object_has_own_property (object_p, ecma_op_to_string (prop_name_val)))
+  {
+    ecma_collection_push_back (prop_names_p, prop_name_val);
+    prop_counter_p->string_named_props++;
+  }
+
+  ecma_free_value (prop_name_val);
 #else /* !ENABLED (JERRY_ESNEXT) */
   /* 'length' property is non-enumerable (ECMA-262 v5, 13.2.5) */
   ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
@@ -1938,11 +1949,22 @@ ecma_op_bound_function_list_lazy_property_names (ecma_object_t *object_p, /**< b
 #if ENABLED (JERRY_ESNEXT)
   /* Unintialized 'length' property is non-enumerable (ECMA-262 v6, 19.2.4.1) */
   ecma_bound_function_t *bound_func_p = (ecma_bound_function_t *) object_p;
-  if (!ECMA_GET_FIRST_BIT_FROM_POINTER_TAG (bound_func_p->header.u.bound_function.target_function))
+  ecma_value_t prop_name_val = ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH);
+  if (!ECMA_GET_FIRST_BIT_FROM_POINTER_TAG (bound_func_p->header.u.bound_function.target_function)
+      || ecma_op_ordinary_object_has_own_property (object_p, ecma_op_to_string (prop_name_val)))
   {
     ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
     prop_counter_p->string_named_props++;
   }
+
+  prop_name_val = ecma_make_magic_string_value (LIT_MAGIC_STRING_NAME);
+  if (ecma_op_ordinary_object_has_own_property (object_p, ecma_op_to_string (prop_name_val)))
+  {
+    ecma_collection_push_back (prop_names_p, prop_name_val);
+    prop_counter_p->string_named_props++;
+  }
+
+  ecma_free_value (prop_name_val);
 #else /* !ENABLED (JERRY_ESNEXT) */
   JERRY_UNUSED (object_p);
   /* 'length' property is non-enumerable (ECMA-262 v5, 13.2.5) */

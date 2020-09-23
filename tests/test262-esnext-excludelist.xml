@@ -142,8 +142,6 @@
   <test id="built-ins/Array/proto-from-ctor-realm-zero.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/concat/create-proto-from-ctor-realm-array.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/concat/create-proto-from-ctor-realm-non-array.js"><reason></reason></test>
-  <test id="built-ins/Array/prototype/copyWithin/coerced-values-start-change-start.js"><reason></reason></test>
-  <test id="built-ins/Array/prototype/copyWithin/coerced-values-start-change-target.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/filter/create-proto-from-ctor-realm-array.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/filter/create-proto-from-ctor-realm-non-array.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/map/create-proto-from-ctor-realm-array.js"><reason></reason></test>

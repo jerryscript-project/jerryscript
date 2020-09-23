@@ -95,7 +95,6 @@ var value = array.copyWithin(0, {
         array.length = 0;
     }
 })
-
 array_check(value, []);
 
 // Extend the buffer
@@ -105,7 +104,6 @@ var value = array.copyWithin(1, {
         array.length = 6;
     }
 })
-
 array_check(value, [1, 1, 2, undefined, undefined, undefined]);
 
 // Reduce the buffer
@@ -115,5 +113,18 @@ var value = array.copyWithin(4, 2, {
         array.length = 3;
     }
 })
-
 array_check(value, [1, 2, 3]);
+
+// Reduce the buffer and extend the buffer
+var array = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+var value = array.copyWithin(7, {
+    valueOf: function() {
+        array.length = 5;
+    }
+})
+array_check(value, [1, 2, 3, 4, 5, , , 1, 2, 3]);
+
+// Copy with overlapping (backward copy)
+var array = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+var value = array.copyWithin(0, 2, 8)
+array_check(value, [3, 4, 5, 6, 7, 8, 7, 8, 9, 10]);

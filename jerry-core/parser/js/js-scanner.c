@@ -215,6 +215,9 @@ scanner_scan_primary_expression (parser_context_t *context_p, /**< context */
       {
         return SCAN_KEEP_TOKEN;
       }
+
+      lexer_lit_location_t *literal_p = scanner_add_literal (context_p, scanner_context_p);
+      literal_p->type |= SCANNER_LITERAL_EARLY_CREATE;
       break;
     }
 #endif /* ENABLED (JERRY_ESNEXT) */
@@ -1597,7 +1600,7 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
       lexer_lit_location_t *literal_p = scanner_add_literal (context_p, scanner_context_p);
 
       scanner_detect_invalid_let (context_p, literal_p);
-      literal_p->type |= SCANNER_LITERAL_IS_LET;
+      literal_p->type |= (SCANNER_LITERAL_IS_LET | SCANNER_LITERAL_EARLY_CREATE);
 
 #if ENABLED (JERRY_MODULE_SYSTEM)
       if (scanner_context_p->active_literal_pool_p->status_flags & SCANNER_LITERAL_POOL_IN_EXPORT)

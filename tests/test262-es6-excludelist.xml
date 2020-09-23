@@ -318,8 +318,6 @@
   <test id="language/module-code/export-unresolvable.js"><reason></reason></test>
   <test id="language/statements/class/definition/this-access-restriction.js"><reason></reason></test>
   <test id="language/statements/class/definition/this-check-ordering.js"><reason></reason></test>
-  <test id="language/statements/class/name-binding/in-extends-expression-assigned.js"><reason></reason></test>
-  <test id="language/statements/class/name-binding/in-extends-expression.js"><reason></reason></test>
   <test id="language/statements/class/syntax/early-errors/class-body-static-method-get-propname-prototype.js"><reason></reason></test>
   <test id="language/statements/continue/labeled-continue.js"><reason></reason></test>
   <test id="language/statements/continue/nested-let-bound-for-loops-labeled-continue.js"><reason></reason></test>

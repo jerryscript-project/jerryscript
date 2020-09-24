@@ -1651,10 +1651,7 @@
   <test id="built-ins/TypedArray/prototype/filter/speciesctor-get-species-returns-throws.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/filter/speciesctor-get-species.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/find/BigInt/detached-buffer.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/find/BigInt/get-length-ignores-length-prop.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/find/BigInt/predicate-call-changes-value.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/find/BigInt/predicate-may-detach-buffer.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/find/BigInt/return-found-value-predicate-result-is-true.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/find/detached-buffer.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/find/predicate-may-detach-buffer.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/findIndex/BigInt/detached-buffer.js"><reason></reason></test>

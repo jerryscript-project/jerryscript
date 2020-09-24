@@ -22,7 +22,6 @@
 #include "ecma-bigint.h"
 #include "ecma-big-uint.h"
 #include "ecma-builtin-helpers.h"
-#include "ecma-try-catch-macro.h"
 #include "ecma-objects.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
@@ -1345,8 +1344,12 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
       return ecma_raise_type_error (ECMA_ERR_MSG ("length argument is undefined"));
     }
 
-    ECMA_OP_TO_NUMBER_TRY_CATCH (num, arguments_list_p[0], ret);
+    ecma_number_t num;
 
+    if (ECMA_IS_VALUE_ERROR (ecma_op_to_number (arguments_list_p[0], &num)))
+    {
+      return ECMA_VALUE_ERROR;
+    }
     uint32_t length = ecma_number_to_uint32 (num);
 
     if (num != ((ecma_number_t) length))
@@ -1361,8 +1364,6 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
                                                        element_size_shift,
                                                        typedarray_id);
     }
-
-    ECMA_OP_TO_NUMBER_FINALIZE (num);
   }
   else if (ecma_is_value_object (arguments_list_p[0]))
   {

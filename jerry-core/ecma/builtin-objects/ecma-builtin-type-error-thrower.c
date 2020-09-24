@@ -21,7 +21,6 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
-#include "ecma-try-catch-macro.h"
 #include "jrt.h"
 
 #define ECMA_BUILTINS_INTERNAL

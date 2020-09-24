@@ -23,7 +23,6 @@
 #include "lit-char-helpers.h"
 #include "ecma-objects.h"
 #include "ecma-string-object.h"
-#include "ecma-try-catch-macro.h"
 #include "jrt.h"
 #include "lit-magic-strings.h"
 

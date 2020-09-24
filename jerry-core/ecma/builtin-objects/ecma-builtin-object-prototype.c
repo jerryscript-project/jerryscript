@@ -26,7 +26,6 @@
 #include "ecma-objects.h"
 #include "ecma-proxy-object.h"
 #include "ecma-string-object.h"
-#include "ecma-try-catch-macro.h"
 #include "jrt.h"
 
 #define ECMA_BUILTINS_INTERNAL

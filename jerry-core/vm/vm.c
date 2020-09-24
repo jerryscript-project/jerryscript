@@ -33,7 +33,6 @@
 #include "ecma-objects-general.h"
 #include "ecma-promise-object.h"
 #include "ecma-regexp-object.h"
-#include "ecma-try-catch-macro.h"
 #include "jcontext.h"
 #include "opcodes.h"
 #include "vm.h"

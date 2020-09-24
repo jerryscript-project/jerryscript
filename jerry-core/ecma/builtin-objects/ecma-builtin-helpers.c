@@ -25,7 +25,6 @@
 #include "ecma-helpers.h"
 #include "jmem.h"
 #include "ecma-objects.h"
-#include "ecma-try-catch-macro.h"
 #include "lit-magic-strings.h"
 #include "lit-char-helpers.h"
 

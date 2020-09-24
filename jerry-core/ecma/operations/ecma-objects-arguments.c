@@ -24,7 +24,7 @@
 #include "ecma-objects.h"
 #include "ecma-objects-arguments.h"
 #include "ecma-objects-general.h"
-#include "ecma-try-catch-macro.h"
+
 #include "jrt.h"
 
 /** \addtogroup ecma ECMA

@@ -22,7 +22,6 @@
  #include "ecma-helpers.h"
  #include "ecma-objects.h"
  #include "ecma-symbol-object.h"
- #include "ecma-try-catch-macro.h"
  #include "jrt.h"
 
 #if ENABLED (JERRY_ESNEXT)

@@ -24,7 +24,6 @@
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
-#include "ecma-try-catch-macro.h"
 
 #if ENABLED (JERRY_BUILTIN_DATE)
 
@@ -622,16 +621,16 @@ ecma_builtin_date_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< 
 
   if (builtin_routine_id == ECMA_DATE_PROTOTYPE_SET_TIME)
   {
-    ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+    ecma_number_t time_num;
 
-    /* 1. */
-    ECMA_OP_TO_NUMBER_TRY_CATCH (time_num, arguments_list[0], ret_value);
+    if (ECMA_IS_VALUE_ERROR (ecma_op_to_number (arguments_list[0], &time_num)))
+    {
+      return ECMA_VALUE_ERROR;
+    }
+
     *prim_value_p = ecma_date_time_clip (time_num);
 
-    ret_value = ecma_make_number_value (time_num);
-    ECMA_OP_TO_NUMBER_FINALIZE (time_num);
-
-    return ret_value;
+    return ecma_make_number_value (time_num);
   }
 
   if (builtin_routine_id <= ECMA_DATE_PROTOTYPE_SET_UTC_MILLISECONDS)

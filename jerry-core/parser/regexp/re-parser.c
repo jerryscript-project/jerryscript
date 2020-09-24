@@ -15,7 +15,6 @@
 
 #include "ecma-exceptions.h"
 #include "ecma-globals.h"
-#include "ecma-try-catch-macro.h"
 #include "jcontext.h"
 #include "jrt-libc-includes.h"
 #include "lit-char-helpers.h"

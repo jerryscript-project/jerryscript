@@ -23,7 +23,6 @@
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
 #include "ecma-arraybuffer-object.h"
-#include "ecma-try-catch-macro.h"
 #include "jrt.h"
 #include "jrt-libc-includes.h"
 

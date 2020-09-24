@@ -19,7 +19,6 @@
 #include "ecma-exceptions.h"
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
-#include "ecma-try-catch-macro.h"
 #include "opcodes.h"
 
 /** \addtogroup vm Virtual machine
@@ -62,7 +61,12 @@ do_number_bitwise_logic (number_bitwise_logic_op op, /**< number bitwise logic o
   if (JERRY_LIKELY (!ecma_is_value_bigint (left_value)))
   {
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
-    ECMA_OP_TO_NUMBER_TRY_CATCH (right_number, right_value, ret_value);
+    ecma_number_t right_number;
+
+    if (ECMA_IS_VALUE_ERROR (ecma_op_to_number (right_value, &right_number)))
+    {
+      return ECMA_VALUE_ERROR;
+    }
 
     ecma_number_t result = ECMA_NUMBER_ZERO;
     uint32_t right_uint32 = ecma_number_to_uint32 (right_number);
@@ -109,7 +113,6 @@ do_number_bitwise_logic (number_bitwise_logic_op op, /**< number bitwise logic o
 
     ret_value = ecma_make_number_value (result);
 
-    ECMA_OP_TO_NUMBER_FINALIZE (num_right);
 #if ENABLED (JERRY_BUILTIN_BIGINT)
   }
   else

@@ -20,7 +20,6 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-typedarray-object.h"
-#include "ecma-try-catch-macro.h"
 #include "ecma-function-object.h"
 #include "jrt.h"
 

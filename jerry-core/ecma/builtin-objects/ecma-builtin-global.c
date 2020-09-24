@@ -21,7 +21,6 @@
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
-#include "ecma-try-catch-macro.h"
 #include "jrt.h"
 #include "lit-char-helpers.h"
 #include "lit-magic-strings.h"

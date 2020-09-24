@@ -28,7 +28,6 @@
 #include "ecma-objects.h"
 #include "ecma-promise-object.h"
 #include "ecma-proxy-object.h"
-#include "ecma-try-catch-macro.h"
 #include "jcontext.h"
 #include "opcodes.h"
 #include "vm-defines.h"

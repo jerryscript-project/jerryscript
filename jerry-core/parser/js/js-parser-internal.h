@@ -140,6 +140,7 @@ typedef enum
   PARSER_CLASS_FIELD_END = (1u << 0),          /**< last class field */
   PARSER_CLASS_FIELD_NORMAL = (1u << 1),       /**< normal (non-computed) class field */
   PARSER_CLASS_FIELD_INITIALIZED = (1u << 2),  /**< class field is initialized */
+  PARSER_CLASS_FIELD_STATIC = (1u << 3),       /**< static class field */
 } parser_class_field_type_t;
 
 #endif /* ENABLED (JERRY_ESNEXT) */

@@ -2594,7 +2594,7 @@ parser_parse_function (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ESNEXT)
   if ((context_p->status_flags & (PARSER_CLASS_CONSTRUCTOR | PARSER_ALLOW_SUPER_CALL)) == PARSER_CLASS_CONSTRUCTOR)
   {
-    parser_emit_cbc_ext (context_p, CBC_EXT_RUN_CLASS_FIELD_INIT);
+    parser_emit_cbc_ext (context_p, CBC_EXT_RUN_FIELD_INIT);
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
@@ -2743,12 +2743,14 @@ parser_parse_class_fields (parser_context_t *context_p) /**< context */
   parser_saved_context_t saved_context;
   ecma_compiled_code_t *compiled_code_p;
 
-  JERRY_ASSERT (context_p->token.type == LEXER_RIGHT_BRACE);
+  uint32_t extra_status_flags = context_p->status_flags & PARSER_INSIDE_WITH;
+
   parser_save_context (context_p, &saved_context);
   context_p->status_flags |= (PARSER_IS_FUNCTION
                               | PARSER_ALLOW_SUPER
                               | PARSER_INSIDE_CLASS_FIELD
-                              | PARSER_ALLOW_NEW_TARGET);
+                              | PARSER_ALLOW_NEW_TARGET
+                              | extra_status_flags);
 
 #if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
   if (context_p->is_show_opcodes)
@@ -2852,14 +2854,13 @@ parser_parse_class_fields (parser_context_t *context_p) /**< context */
       parser_emit_cbc_ext (context_p, CBC_EXT_SET_NEXT_COMPUTED_FIELD);
     }
   }
-  while (context_p->stack_top_uint8 != PARSER_CLASS_FIELD_END);
+  while (!(context_p->stack_top_uint8 & PARSER_CLASS_FIELD_END));
 
   if (!first_computed_class_field)
   {
     parser_emit_cbc (context_p, CBC_POP);
   }
 
-  parser_stack_pop_uint8 (context_p);
   parser_flush_cbc (context_p);
   context_p->source_end_p = source_end_p;
   scanner_set_location (context_p, &end_location);

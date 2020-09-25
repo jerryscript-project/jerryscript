@@ -625,7 +625,7 @@ vm_super_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   if (ecma_is_value_object (completion_value))
   {
     ecma_value_t current_function = ecma_make_object_value (vm_get_class_function (frame_ctx_p));
-    ecma_value_t fields_value = ecma_op_init_class_fields (current_function, completion_value);
+    ecma_value_t fields_value = opfunc_init_class_fields (current_function, completion_value);
 
     if (ECMA_IS_VALUE_ERROR (fields_value))
     {
@@ -1811,9 +1811,40 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
           goto free_left_value;
         }
+        case VM_OC_PUSH_STATIC_FIELD_FUNC:
+        {
+          JERRY_ASSERT (byte_code_start_p[0] == CBC_EXT_OPCODE
+                        && (byte_code_start_p[1] == CBC_EXT_PUSH_STATIC_FIELD_FUNC
+                            || byte_code_start_p[1] == CBC_EXT_PUSH_STATIC_COMPUTED_FIELD_FUNC));
+
+          bool push_computed = (byte_code_start_p[1] == CBC_EXT_PUSH_STATIC_COMPUTED_FIELD_FUNC);
+          ecma_value_t value = stack_top_p[-1];
+
+          if (!push_computed)
+          {
+            stack_top_p++;
+          }
+
+          memmove (stack_top_p - 3, stack_top_p - 4, 3 * sizeof (ecma_value_t));
+          stack_top_p[-4] = left_value;
+
+          if (!push_computed)
+          {
+            continue;
+          }
+
+          left_value = value;
+          /* FALLTHRU */
+        }
         case VM_OC_ADD_COMPUTED_FIELD:
         {
-          result = ecma_op_add_computed_field (stack_top_p[-2], left_value);
+          JERRY_ASSERT (byte_code_start_p[0] == CBC_EXT_OPCODE
+                        && (byte_code_start_p[1] == CBC_EXT_PUSH_STATIC_COMPUTED_FIELD_FUNC
+                            || byte_code_start_p[1] == CBC_EXT_ADD_COMPUTED_FIELD
+                            || byte_code_start_p[1] == CBC_EXT_ADD_STATIC_COMPUTED_FIELD));
+
+          int index = (byte_code_start_p[1] == CBC_EXT_ADD_COMPUTED_FIELD) ? -2 : -4;
+          result = opfunc_add_computed_field (stack_top_p[index], left_value);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {
@@ -2025,7 +2056,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           opfunc_finalize_class (frame_ctx_p, &stack_top_p, left_value);
           goto free_left_value;
         }
-        case VM_OC_SET_CLASS_FIELD_INIT:
+        case VM_OC_SET_FIELD_INIT:
         {
           ecma_string_t *property_name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_INIT);
           ecma_object_t *object_p = ecma_get_object_from_value (stack_top_p[-2]);
@@ -2050,17 +2081,31 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           goto free_left_value;
         }
-        case VM_OC_RUN_CLASS_FIELD_INIT:
+        case VM_OC_RUN_FIELD_INIT:
         {
           JERRY_ASSERT (frame_ctx_p->shared_p->status_flags & VM_FRAME_CTX_SHARED_NON_ARROW_FUNC);
-          result = ecma_op_init_class_fields (ecma_make_object_value (VM_FRAME_CTX_GET_FUNCTION_OBJECT (frame_ctx_p)),
-                                              frame_ctx_p->this_binding);
+          result = opfunc_init_class_fields (ecma_make_object_value (VM_FRAME_CTX_GET_FUNCTION_OBJECT (frame_ctx_p)),
+                                             frame_ctx_p->this_binding);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {
             goto error;
           }
           continue;
+        }
+        case VM_OC_RUN_STATIC_FIELD_INIT:
+        {
+          left_value = stack_top_p[-2];
+          stack_top_p[-2] = stack_top_p[-1];
+          stack_top_p--;
+
+          result = opfunc_init_static_class_fields (left_value, stack_top_p[-1]);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+          goto free_left_value;
         }
         case VM_OC_SET_NEXT_COMPUTED_FIELD:
         {

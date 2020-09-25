@@ -967,22 +967,21 @@ opfunc_async_create_and_await (vm_frame_ctx_t *frame_ctx_p, /**< frame context *
 } /* opfunc_async_create_and_await */
 
 /**
- * Initialize implicit class fields.
+ * Initialize class fields.
  *
  * @return ECMA_VALUE_ERROR - initialization fails
  *         ECMA_VALUE_UNDEFINED - otherwise
  */
 ecma_value_t
-ecma_op_init_class_fields (ecma_value_t function_object, /**< the function itself */
-                           ecma_value_t this_val) /**< this_arg of the function */
+opfunc_init_class_fields (ecma_value_t class_object, /**< the function itself */
+                          ecma_value_t this_val) /**< this_arg of the function */
 {
-  JERRY_ASSERT (ecma_is_value_object (function_object));
+  JERRY_ASSERT (ecma_is_value_object (class_object));
   JERRY_ASSERT (ecma_is_value_object (this_val));
 
   ecma_string_t *name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_INIT);
-  ecma_object_t *function_object_p = ecma_get_object_from_value (function_object);
-
-  ecma_property_t *property_p = ecma_find_named_property (function_object_p, name_p);
+  ecma_object_t *class_object_p = ecma_get_object_from_value (class_object);
+  ecma_property_t *property_p = ecma_find_named_property (class_object_p, name_p);
 
   if (property_p == NULL)
   {
@@ -994,7 +993,7 @@ ecma_op_init_class_fields (ecma_value_t function_object, /**< the function itsel
   shared_class_fields.computed_class_fields_p = NULL;
 
   name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED);
-  ecma_property_t *class_field_property_p = ecma_find_named_property (function_object_p, name_p);
+  ecma_property_t *class_field_property_p = ecma_find_named_property (class_object_p, name_p);
 
   if (class_field_property_p != NULL)
   {
@@ -1016,11 +1015,57 @@ ecma_op_init_class_fields (ecma_value_t function_object, /**< the function itsel
 
   JERRY_ASSERT (ECMA_IS_VALUE_ERROR (result) || result == ECMA_VALUE_UNDEFINED);
   return result;
-} /* ecma_op_init_class_fields */
+} /* opfunc_init_class_fields */
 
+/**
+ * Initialize static class fields.
+ *
+ * @return ECMA_VALUE_ERROR - initialization fails
+ *         ECMA_VALUE_UNDEFINED - otherwise
+ */
 ecma_value_t
-ecma_op_add_computed_field (ecma_value_t class_object, /**< class object */
-                            ecma_value_t name) /**< name of the property */
+opfunc_init_static_class_fields (ecma_value_t function_object, /**< the function itself */
+                                 ecma_value_t this_val) /**< this_arg of the function */
+{
+  JERRY_ASSERT (ecma_op_is_callable (function_object));
+  JERRY_ASSERT (ecma_is_value_object (this_val));
+
+  vm_frame_ctx_shared_class_fields_t shared_class_fields;
+  shared_class_fields.header.status_flags = VM_FRAME_CTX_SHARED_HAS_CLASS_FIELDS;
+  shared_class_fields.computed_class_fields_p = NULL;
+
+  ecma_string_t *name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED);
+  ecma_object_t *function_object_p = ecma_get_object_from_value (function_object);
+  ecma_property_t *class_field_property_p = ecma_find_named_property (function_object_p, name_p);
+
+  if (class_field_property_p != NULL)
+  {
+    ecma_value_t value = ECMA_PROPERTY_VALUE_PTR (class_field_property_p)->value;
+    shared_class_fields.computed_class_fields_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_value_t, value);
+  }
+
+  ecma_extended_object_t *ext_function_p;
+  ext_function_p = (ecma_extended_object_t *) ecma_get_object_from_value (function_object);
+  shared_class_fields.header.bytecode_header_p = ecma_op_function_get_compiled_code (ext_function_p);
+
+  ecma_object_t *scope_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
+                                                                       ext_function_p->u.function.scope_cp);
+
+  ecma_value_t result = vm_run (&shared_class_fields.header, this_val, scope_p);
+
+  JERRY_ASSERT (ECMA_IS_VALUE_ERROR (result) || result == ECMA_VALUE_UNDEFINED);
+  return result;
+} /* opfunc_init_static_class_fields */
+
+/**
+ * Add the name of a computed field to a name list
+ *
+ * @return ECMA_VALUE_ERROR - name is not a valid property name
+ *         ECMA_VALUE_UNDEFINED - otherwise
+ */
+ecma_value_t
+opfunc_add_computed_field (ecma_value_t class_object, /**< class object */
+                           ecma_value_t name) /**< name of the property */
 {
   ecma_string_t *prop_name_p = ecma_op_to_property_key (name);
 
@@ -1060,7 +1105,7 @@ ecma_op_add_computed_field (ecma_value_t class_object, /**< class object */
   compact_collection_p = ecma_compact_collection_push_back (compact_collection_p, name);
   ECMA_SET_INTERNAL_VALUE_POINTER (property_value_p->value, compact_collection_p);
   return ECMA_VALUE_UNDEFINED;
-} /* ecma_op_add_computed_field */
+} /* opfunc_add_computed_field */
 
 /**
  * Implicit class constructor handler when the classHeritage is not present.
@@ -1083,7 +1128,7 @@ ecma_op_implicit_constructor_handler_cb (const ecma_value_t function_obj, /**< t
     return ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor cannot be invoked without 'new'."));
   }
 
-  return ecma_op_init_class_fields (function_obj, this_val);
+  return opfunc_init_class_fields (function_obj, this_val);
 } /* ecma_op_implicit_constructor_handler_cb */
 
 /**
@@ -1139,7 +1184,7 @@ ecma_op_implicit_constructor_handler_heritage_cb (const ecma_value_t function_ob
                           ecma_get_object_from_value (proto_value));
       }
 
-      ecma_value_t fields_value = ecma_op_init_class_fields (function_obj, result);
+      ecma_value_t fields_value = opfunc_init_class_fields (function_obj, result);
 
       if (ECMA_IS_VALUE_ERROR (fields_value))
       {

@@ -329,7 +329,6 @@
   <test id="language/statements/for/S12.6.3_A9.js"><reason></reason></test>
   <test id="language/statements/generators/has-instance.js"><reason></reason></test>
   <test id="language/statements/generators/prototype-value.js"><reason></reason></test>
-  <test id="language/statements/let/syntax/identifier-let-disallowed-as-boundname.js"><reason></reason></test>
   <test id="language/statements/try/S12.14_A16_T4.js"><reason>ES2019 change: catch without parameter is allowed</reason></test>
   <test id="built-ins/Number/S9.3.1_A2.js"><reason>Unicode 13: 0x180E is no longer whitespace character</reason></test>
   <test id="built-ins/Number/S9.3.1_A3_T1.js"><reason>Unicode 13: 0x180E is no longer whitespace character</reason></test>

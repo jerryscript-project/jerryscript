@@ -96,42 +96,6 @@ lexer_hex_to_code_point (const uint8_t *source_p, /**< current source position *
 #if ENABLED (JERRY_ESNEXT)
 
 /**
- * Find a string literal in the literal pool matching with the given buffer's content
- *
- * @return PARSER_INVALID_LITERAL_INDEX - if the literal is not present in the literal pool
- *         literal's index in the pool - otherwise
- */
-static uint16_t
-parser_find_string_literal (parser_context_t *context_p, /**< context */
-                            lexer_literal_t **out_literal_p, /**< [out] found literal */
-                            uint8_t *buffer_p, /**< character buffer */
-                            lit_utf8_size_t size) /**< buffer's size */
-{
-  JERRY_ASSERT (out_literal_p != NULL);
-  JERRY_ASSERT (buffer_p != NULL);
-
-  uint16_t literal_index = 0;
-  lexer_literal_t *literal_p;
-  parser_list_iterator_t literal_iterator;
-  parser_list_iterator_init (&context_p->literal_pool, &literal_iterator);
-
-  while ((literal_p = (lexer_literal_t *) parser_list_iterator_next (&literal_iterator)) != NULL)
-  {
-    if (literal_p->type == LEXER_STRING_LITERAL
-        && literal_p->prop.length == size
-        && memcmp (literal_p->u.char_p, buffer_p, size) == 0)
-    {
-      *out_literal_p = literal_p;
-      return literal_index;
-    }
-
-    literal_index++;
-  }
-
-  return PARSER_INVALID_LITERAL_INDEX;
-} /* parser_find_string_literal */
-
-/**
  * Parse hexadecimal character sequence enclosed in braces
  *
  * @return character value or UINT32_MAX on error
@@ -2864,9 +2828,6 @@ lexer_construct_function_object (parser_context_t *context_p, /**< context */
 
 /**
  * Construct a regular expression object.
- *
- * Note: In ESNEXT the constructed literal's type can be LEXER_STRING_LITERAL which represents
- * invalid pattern. The string literal contains the thrown error message.
  */
 void
 lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
@@ -2878,6 +2839,7 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
   const uint8_t *regex_end_p = regex_start_p;
   const uint8_t *source_end_p = context_p->source_end_p;
   parser_line_counter_t column = context_p->column;
+  lexer_literal_t *literal_p;
   bool in_class = false;
   uint16_t current_flags;
   lit_utf8_size_t length;
@@ -3034,6 +2996,13 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
     parser_raise_error (context_p, PARSER_ERR_LITERAL_LIMIT_REACHED);
   }
 
+  literal_p = (lexer_literal_t *) parser_list_append (context_p, &context_p->literal_pool);
+  literal_p->prop.length = (prop_length_t) length;
+  literal_p->type = LEXER_UNUSED_LITERAL;
+  literal_p->status_flags = 0;
+
+  context_p->literal_count++;
+
   /* Compile the RegExp literal and store the RegExp bytecode pointer */
   ecma_string_t *pattern_str_p = NULL;
 
@@ -3050,56 +3019,13 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
   re_compiled_code_t *re_bytecode_p = re_compile_bytecode (pattern_str_p, current_flags);
   ecma_deref_ecma_string (pattern_str_p);
 
-  lexer_literal_t *literal_p = NULL;
-  uint8_t literal_type = LEXER_REGEXP_LITERAL;
-
   if (JERRY_UNLIKELY (re_bytecode_p == NULL))
   {
-#if ENABLED (JERRY_ESNEXT)
-    ecma_value_t error = jcontext_take_exception ();
-    ecma_property_t *prop_p = ecma_find_named_property (ecma_get_object_from_value (error),
-                                                        ecma_get_magic_string (LIT_MAGIC_STRING_MESSAGE));
-    ecma_free_value (error);
-    const char default_msg[] = "Invalid regular expression";
-    lit_utf8_byte_t *buffer_p = (lit_utf8_byte_t *) default_msg;
-    lit_utf8_size_t size = sizeof (buffer_p) - 1;
-
-    if (prop_p != NULL)
-    {
-      ecma_string_t *message_p = ecma_get_string_from_value (ECMA_PROPERTY_VALUE_PTR (prop_p)->value);
-      JERRY_ASSERT (!ECMA_IS_DIRECT_STRING (message_p));
-      JERRY_ASSERT (ECMA_STRING_GET_CONTAINER (message_p) == ECMA_STRING_CONTAINER_HEAP_ASCII_STRING);
-      buffer_p = ECMA_ASCII_STRING_GET_BUFFER (message_p);
-      size = ECMA_ASCII_STRING_GET_SIZE (message_p);
-    }
-
-    uint16_t literal_index = parser_find_string_literal (context_p, &literal_p, buffer_p, size);
-
-    if (literal_index != PARSER_INVALID_LITERAL_INDEX)
-    {
-      context_p->lit_object.literal_p = literal_p;
-      context_p->lit_object.index = literal_index;
-      return;
-    }
-
-    literal_p = (lexer_literal_t *) parser_list_append (context_p, &context_p->literal_pool);
-    literal_p->u.char_p = (uint8_t *) jmem_heap_alloc_block (size);
-    memcpy ((uint8_t *) literal_p->u.char_p, buffer_p, size);
-    literal_type = LEXER_STRING_LITERAL;
-    length = size;
-#else /* !ENABLED (JERRY_ESNEXT) */
     parser_raise_error (context_p, PARSER_ERR_INVALID_REGEXP);
-#endif /* ENABLED (JERRY_ESNEXT) */
-  }
-  else
-  {
-    literal_p = (lexer_literal_t *) parser_list_append (context_p, &context_p->literal_pool);
-    literal_p->u.bytecode_p = (ecma_compiled_code_t *) re_bytecode_p;
   }
 
-  literal_p->type = literal_type;
-  literal_p->prop.length = (prop_length_t) length;
-  literal_p->status_flags = 0;
+  literal_p->type = LEXER_REGEXP_LITERAL;
+  literal_p->u.bytecode_p = (ecma_compiled_code_t *) re_bytecode_p;
 
   context_p->token.type = LEXER_LITERAL;
   context_p->token.lit_location.type = LEXER_REGEXP_LITERAL;

@@ -12,9 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-try {
-  eval("/?:/");
-  assert(false);
-} catch (e) {
-  assert(e instanceof SyntaxError);
-}
+/?:/

@@ -1700,14 +1700,6 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           result = ecma_raise_type_error (ECMA_ERR_MSG ("Constant bindings cannot be reassigned."));
           goto error;
         }
-        case VM_OC_THROW_SYNTAX_ERROR:
-        {
-          ecma_string_t *msg_p = ecma_get_string_from_value (left_value);
-          ecma_object_t *error_obj_p = ecma_new_standard_error_with_message (ECMA_ERROR_SYNTAX, msg_p);
-          jcontext_raise_exception (ecma_make_object_value (error_obj_p));
-          result = ECMA_VALUE_ERROR;
-          goto error;
-        }
         case VM_OC_COPY_TO_GLOBAL:
         {
           uint32_t literal_index;

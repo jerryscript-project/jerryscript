@@ -449,14 +449,9 @@ typedef struct
 #define PARSER_REGISTER_START 0x8000
 
 /**
- * Invalid literal index
- */
-#define PARSER_INVALID_LITERAL_INDEX UINT16_MAX
-
-/**
  * Lastly emitted opcode is not a function literal
  */
-#define PARSER_NOT_FUNCTION_LITERAL PARSER_INVALID_LITERAL_INDEX
+#define PARSER_NOT_FUNCTION_LITERAL UINT16_MAX
 
 /**
  * Lastly emitted opcode is not a named function literal

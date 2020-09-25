@@ -60,6 +60,15 @@ jobs:
       - name: Unit Tests
         run: $RUNNER --unittests -q
 
+  Linux_x86-64_Build_Option_Tests:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - name: Initializtaion
+        run: sudo apt-get install gcc-multilib
+      - name: Buildoption tests
+        run: $RUNNER --buildoption-test
+
   Conformance_Tests_ES5_1:
     runs-on: ubuntu-20.04
     steps:

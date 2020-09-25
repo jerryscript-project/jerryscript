@@ -391,14 +391,11 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
       ecma_number_t nx;
       ecma_number_t ny;
 
-      if (ECMA_IS_VALUE_ERROR (ecma_op_to_number (px, &nx)))
+      if (ECMA_IS_VALUE_ERROR (ecma_op_to_number (px, &nx))
+          || ECMA_IS_VALUE_ERROR (ecma_op_to_number (py, &ny)))
       {
-        return ECMA_VALUE_ERROR;
-      }
-
-      if (ECMA_IS_VALUE_ERROR (ecma_op_to_number (py, &ny)))
-      {
-        return ECMA_VALUE_ERROR;
+        ret_value = ECMA_VALUE_ERROR;
+        goto end;
       }
 
       /* b. */
@@ -513,9 +510,10 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
       else
       {
         ecma_number_t ny;
-        if (ECMA_IS_VALUE_ERROR (ecma_op_to_number (py,&ny)))
+        if (ECMA_IS_VALUE_ERROR (ecma_op_to_number (py, &ny)))
         {
-          return ECMA_VALUE_ERROR;
+          ret_value = ECMA_VALUE_ERROR;
+          goto end;
         }
 
         if (ecma_number_is_nan (ny))
@@ -552,6 +550,7 @@ ecma_op_abstract_relational_compare (ecma_value_t x, /**< first operand */
     ret_value = ecma_make_boolean_value (is_px_less);
   }
 
+end:
   ecma_free_value (prim_second_converted_value);
   ecma_free_value (prim_first_converted_value);
 

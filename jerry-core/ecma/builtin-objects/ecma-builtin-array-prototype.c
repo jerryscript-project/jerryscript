@@ -2491,13 +2491,12 @@ ecma_builtin_array_prototype_object_copy_within (const ecma_value_t args[], /**<
     }
   }
 
-  if (target >= len || start >= end || end == 0)
+  ecma_length_t count = JERRY_MIN (end - start, len - target);
+  if (end <= start || len <= target) /* count <= 0 check, but variables are unsigned */
   {
     ecma_ref_object (obj_p);
     return ecma_make_object_value (obj_p);
   }
-
-  ecma_length_t count = JERRY_MIN (end - start, len - target);
 
   bool forward = true;
 
@@ -2511,12 +2510,13 @@ ecma_builtin_array_prototype_object_copy_within (const ecma_value_t args[], /**<
   if (ecma_op_object_is_fast_array (obj_p))
   {
     ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
+    const uint32_t actual_length = ext_obj_p->u.array.length;
 
-    if (ext_obj_p->u.array.u.hole_count < ECMA_FAST_ARRAY_HOLE_ONE)
+    if (ext_obj_p->u.array.u.hole_count < ECMA_FAST_ARRAY_HOLE_ONE
+        && ((forward && (target + count - 1 < actual_length)) || (!forward && (target < actual_length))))
     {
       if (obj_p->u1.property_list_cp != JMEM_CP_NULL)
       {
-        count = JERRY_MIN (ext_obj_p->u.array.length, count);
         ecma_value_t *buffer_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, obj_p->u1.property_list_cp);
 
         for (; count > 0; count--)

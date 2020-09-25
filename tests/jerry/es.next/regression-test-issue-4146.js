@@ -32,7 +32,7 @@ Array.prototype.equals = function (array) {
 
 function longDenseArray(){
         var a = [0];
-        for(var i = 0; i < 200; i++){
+        for(var i = 0; i < 60; i++){
                 a[i] = i;
         }
         return a;
@@ -43,7 +43,8 @@ function shorten(){
         return 1;
 }
 
+var array = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,,,,,,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19];
 var currArray = longDenseArray();
-assert (currArray.copyWithin (200, {valueOf: shorten}).length == 20)
-var array = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19];
-assert (currArray.copyWithin(200, {valueOf: shorten}).equals (array))
+currArray.copyWithin(25, {valueOf: shorten})
+assert (currArray.length == 44)
+assert (currArray.equals (array))

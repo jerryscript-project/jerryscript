@@ -4500,8 +4500,6 @@
   <test id="language/statements/for-in/cptn-expr-itr.js"><reason></reason></test>
   <test id="language/statements/for-in/cptn-expr-skip-itr.js"><reason></reason></test>
   <test id="language/statements/for-in/cptn-expr-zero-itr.js"><reason></reason></test>
-  <test id="language/statements/for-in/head-const-bound-names-let.js"><reason></reason></test>
-  <test id="language/statements/for-in/head-let-bound-names-let.js"><reason></reason></test>
   <test id="language/statements/for-in/head-lhs-let.js"><reason></reason></test>
   <test id="language/statements/for-in/let-block-with-newline.js"><reason></reason></test>
   <test id="language/statements/for-in/let-identifier-with-newline.js"><reason></reason></test>
@@ -4579,11 +4577,9 @@
   <test id="language/statements/for-of/dstr/var-obj-ptrn-rest-getter.js"><reason></reason></test>
   <test id="language/statements/for-of/dstr/var-obj-ptrn-rest-skip-non-enumerable.js"><reason></reason></test>
   <test id="language/statements/for-of/dstr/var-obj-ptrn-rest-val-obj.js"><reason></reason></test>
-  <test id="language/statements/for-of/head-const-bound-names-let.js"><reason></reason></test>
   <test id="language/statements/for-of/head-const-init.js"><reason></reason></test>
   <test id="language/statements/for-of/head-decl-no-expr.js"><reason></reason></test>
   <test id="language/statements/for-of/head-expr-no-expr.js"><reason></reason></test>
-  <test id="language/statements/for-of/head-let-bound-names-let.js"><reason></reason></test>
   <test id="language/statements/for-of/head-let-init.js"><reason></reason></test>
   <test id="language/statements/for-of/head-var-init.js"><reason></reason></test>
   <test id="language/statements/for-of/head-var-no-expr.js"><reason></reason></test>
@@ -4661,7 +4657,6 @@
   <test id="language/statements/let/dstr/obj-ptrn-rest-getter.js"><reason></reason></test>
   <test id="language/statements/let/dstr/obj-ptrn-rest-skip-non-enumerable.js"><reason></reason></test>
   <test id="language/statements/let/dstr/obj-ptrn-rest-val-obj.js"><reason></reason></test>
-  <test id="language/statements/let/syntax/identifier-let-disallowed-as-boundname.js"><reason></reason></test>
   <test id="language/statements/let/syntax/let-newline-yield-in-generator-function.js"><reason></reason></test>
   <test id="language/statements/switch/cptn-a-abrupt-empty.js"><reason></reason></test>
   <test id="language/statements/switch/cptn-abrupt-empty.js"><reason></reason></test>

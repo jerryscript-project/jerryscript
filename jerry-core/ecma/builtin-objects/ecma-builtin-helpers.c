@@ -302,8 +302,8 @@ ecma_builtin_helper_uint32_index_normalize (ecma_value_t arg, /**< index */
     return ECMA_VALUE_ERROR;
   }
 
-  *number_p = ((to_int < 0) ? (uint32_t) JERRY_MAX (length + to_int, 0)
-                            : (uint32_t) JERRY_MIN (to_int, length));
+  *number_p = ((to_int < 0) ? (uint32_t) JERRY_MAX ((ecma_number_t) length + to_int, 0)
+                            : (uint32_t) JERRY_MIN (to_int, (ecma_number_t) length));
 
   return ECMA_VALUE_EMPTY;
 } /* ecma_builtin_helper_uint32_index_normalize */

@@ -347,7 +347,7 @@ ecma_utf8_string_to_number_by_radix (const lit_utf8_byte_t *str_p, /**< utf-8 st
       return ecma_number_make_nan ();
     }
 
-    num = num * radix + (ecma_number_t) digit_value;
+    num = num * (ecma_number_t) radix + (ecma_number_t) digit_value;
   }
 
   return num;

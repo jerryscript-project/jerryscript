@@ -4200,9 +4200,6 @@
   <test id="language/statements/const/dstr/obj-ptrn-rest-getter.js"><reason></reason></test>
   <test id="language/statements/const/dstr/obj-ptrn-rest-skip-non-enumerable.js"><reason></reason></test>
   <test id="language/statements/const/dstr/obj-ptrn-rest-val-obj.js"><reason></reason></test>
-  <test id="language/statements/continue/labeled-continue.js"><reason></reason></test>
-  <test id="language/statements/continue/nested-let-bound-for-loops-labeled-continue.js"><reason></reason></test>
-  <test id="language/statements/continue/simple-and-labeled.js"><reason></reason></test>
   <test id="language/statements/do-while/cptn-abrupt-empty.js"><reason></reason></test>
   <test id="language/statements/do-while/cptn-normal.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-from-sync-iterator-continuation-abrupt-completion-get-constructor.js"><reason></reason></test>

@@ -242,6 +242,10 @@ jerry_cleanup (void)
     }
   }
 
+#if ENABLED (JERRY_MODULE_SYSTEM)
+  ecma_module_cleanup ();
+#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
+
 #if ENABLED (JERRY_BUILTIN_PROMISE)
   ecma_free_all_enqueued_jobs ();
 #endif /* ENABLED (JERRY_BUILTIN_PROMISE) */

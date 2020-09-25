@@ -1003,6 +1003,12 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Octal escape sequences are not allowed in strict mode.";
     }
+#if ENABLED (JERRY_ESNEXT)
+    case PARSER_ERR_TEMPLATE_STR_OCTAL_ESCAPE:
+    {
+      return "Octal escape sequences are not allowed in template strings.";
+    }
+#endif /* ENABLED (JERRY_ESNEXT) */
     case PARSER_ERR_STRICT_IDENT_NOT_ALLOWED:
     {
       return "Identifier name is reserved in strict mode.";

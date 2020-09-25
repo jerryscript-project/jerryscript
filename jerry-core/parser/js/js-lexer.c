@@ -1083,6 +1083,13 @@ lexer_parse_string (parser_context_t *context_p, /**< context */
        * converted to a character which has the same byte length. */
       if (*source_p >= LIT_CHAR_0 && *source_p <= LIT_CHAR_3)
       {
+#if ENABLED (JERRY_ESNEXT)
+        if (str_end_character == LIT_CHAR_GRAVE_ACCENT)
+        {
+          parser_raise_error (context_p, PARSER_ERR_TEMPLATE_STR_OCTAL_ESCAPE);
+        }
+#endif
+
         if (context_p->status_flags & PARSER_IS_STRICT)
         {
           parser_raise_error (context_p, PARSER_ERR_OCTAL_ESCAPE_NOT_ALLOWED);

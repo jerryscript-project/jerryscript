@@ -25,7 +25,7 @@
 #include "ecma-lex-env.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
-#include "ecma-objects-arguments.h"
+#include "ecma-arguments-object.h"
 #include "ecma-proxy-object.h"
 #include "ecma-symbol-object.h"
 #include "jcontext.h"

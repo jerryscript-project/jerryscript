@@ -120,7 +120,6 @@ fn_expr = function (a, b, c)
     }
   }
 
-  check_type_error_for_property (arguments, 'caller');
   check_type_error_for_property (arguments, 'callee');
 }
 

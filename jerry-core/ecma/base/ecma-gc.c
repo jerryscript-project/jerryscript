@@ -150,6 +150,36 @@ ecma_deref_object (ecma_object_t *object_p) /**< object */
 } /* ecma_deref_object */
 
 /**
+ * Mark objects referenced by arguments object
+ */
+static void
+ecma_gc_mark_arguments_object (ecma_extended_object_t *ext_object_p) /**< arguments object */
+{
+  JERRY_ASSERT (ecma_get_object_type ((ecma_object_t *) ext_object_p) == ECMA_OBJECT_TYPE_PSEUDO_ARRAY);
+
+  ecma_unmapped_arguments_t *arguments_p = (ecma_unmapped_arguments_t *) ext_object_p;
+  ecma_value_t *argv_p = (ecma_value_t *) (arguments_p + 1);
+
+  if (ext_object_p->u.pseudo_array.extra_info & ECMA_ARGUMENTS_OBJECT_MAPPED)
+  {
+    ecma_mapped_arguments_t *mapped_arguments_p = (ecma_mapped_arguments_t *) ext_object_p;
+    argv_p = (ecma_value_t *) (mapped_arguments_p + 1);
+
+    ecma_gc_set_object_visited (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, mapped_arguments_p->lex_env));
+  }
+
+  uint32_t arguments_number = arguments_p->header.u.pseudo_array.u2.arguments_number;
+
+  for (uint32_t i = 0; i < arguments_number; i++)
+  {
+    if (ecma_is_value_object (argv_p[i]))
+    {
+      ecma_gc_set_object_visited (ecma_get_object_from_value (argv_p[i]));
+    }
+  }
+} /* ecma_gc_mark_arguments_object */
+
+/**
  * Mark referenced object from property
  */
 static inline void JERRY_ATTR_ALWAYS_INLINE
@@ -706,10 +736,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
           {
             JERRY_ASSERT (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS);
 
-            ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                                        ext_object_p->u.pseudo_array.u2.lex_env_cp);
-
-            ecma_gc_set_object_visited (lex_env_p);
+            ecma_gc_mark_arguments_object (ext_object_p);
             break;
           }
         }
@@ -914,6 +941,49 @@ ecma_gc_free_native_pointer (ecma_property_t *property_p) /**< property */
     native_pointer_p = next_p;
   }
 } /* ecma_gc_free_native_pointer */
+
+/**
+ * Free specified arguments object.
+ *
+ * @return allocated object's size
+ */
+static size_t
+ecma_free_arguments_object (ecma_extended_object_t *ext_object_p) /**< arguments object */
+{
+  JERRY_ASSERT (ecma_get_object_type ((ecma_object_t *) ext_object_p) == ECMA_OBJECT_TYPE_PSEUDO_ARRAY);
+
+  size_t object_size = sizeof (ecma_unmapped_arguments_t);
+
+  if (ext_object_p->u.pseudo_array.extra_info & ECMA_ARGUMENTS_OBJECT_MAPPED)
+  {
+    ecma_mapped_arguments_t *mapped_arguments_p = (ecma_mapped_arguments_t *) ext_object_p;
+    object_size = sizeof (ecma_mapped_arguments_t);
+
+#if ENABLED (JERRY_SNAPSHOT_EXEC)
+    if (!(mapped_arguments_p->unmapped.header.u.pseudo_array.extra_info & ECMA_ARGUMENTS_OBJECT_STATIC_BYTECODE))
+#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
+    {
+      ecma_compiled_code_t *byte_code_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
+                                                                           mapped_arguments_p->u.byte_code);
+
+      ecma_bytecode_deref (byte_code_p);
+    }
+  }
+
+  ecma_value_t *argv_p = (ecma_value_t *) (((uint8_t *) ext_object_p) + object_size);
+  ecma_unmapped_arguments_t *arguments_p = (ecma_unmapped_arguments_t *) ext_object_p;
+  uint32_t arguments_number = arguments_p->header.u.pseudo_array.u2.arguments_number;
+
+  for (uint32_t i = 0; i < arguments_number; i++)
+  {
+    ecma_free_value_if_not_object (argv_p[i]);
+  }
+
+  uint32_t saved_argument_count = JERRY_MAX (arguments_number,
+                                             arguments_p->header.u.pseudo_array.u1.formal_params_number);
+
+  return object_size + (saved_argument_count * sizeof (ecma_value_t));
+} /* ecma_free_arguments_object */
 
 /**
  * Free specified fast access mode array object.
@@ -1444,22 +1514,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
       {
         case ECMA_PSEUDO_ARRAY_ARGUMENTS:
         {
-          JERRY_ASSERT (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS);
-
-          uint32_t formal_params_number = ext_object_p->u.pseudo_array.u1.length;
-          ecma_value_t *arg_literal_p = (ecma_value_t *) (ext_object_p + 1);
-
-          for (uint32_t i = 0; i < formal_params_number; i++)
-          {
-            if (arg_literal_p[i] != ECMA_VALUE_EMPTY)
-            {
-              ecma_string_t *name_p = ecma_get_string_from_value (arg_literal_p[i]);
-              ecma_deref_ecma_string (name_p);
-            }
-          }
-
-          size_t formal_params_size = formal_params_number * sizeof (ecma_value_t);
-          ext_object_size += formal_params_size;
+          ext_object_size = ecma_free_arguments_object (ext_object_p);
           break;
         }
 #if ENABLED (JERRY_BUILTIN_TYPEDARRAY)

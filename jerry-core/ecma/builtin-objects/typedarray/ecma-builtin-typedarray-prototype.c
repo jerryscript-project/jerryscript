@@ -1237,10 +1237,9 @@ ecma_builtin_typedarray_prototype_find_helper (ecma_value_t this_arg, /**< this 
     ecma_value_t call_args[] = { element_value, ecma_make_uint32_value (buffer_index), this_arg };
     ecma_value_t call_value = ecma_op_function_call (func_object_p, predicate_this_arg, call_args, 3);
 
-    ecma_free_value (element_value);
-
     if (ECMA_IS_VALUE_ERROR (call_value))
     {
+      ecma_free_value (element_value);
       return call_value;
     }
 
@@ -1254,10 +1253,12 @@ ecma_builtin_typedarray_prototype_find_helper (ecma_value_t this_arg, /**< this 
         return element_value;
       }
 
+      ecma_free_value (element_value);
       return ecma_make_uint32_value (buffer_index);
     }
 
     buffer_index++;
+    ecma_free_value (element_value);
   }
 
   return is_find ? ECMA_VALUE_UNDEFINED : ecma_make_integer_value (-1);

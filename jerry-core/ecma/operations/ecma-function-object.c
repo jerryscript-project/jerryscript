@@ -1769,7 +1769,7 @@ ecma_op_bound_function_try_to_lazy_instantiate_property (ecma_object_t *object_p
       JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (get_len_value));
       JERRY_ASSERT (ecma_is_value_integer_number (get_len_value));
 
-      length = ecma_get_integer_from_value (get_len_value) - (args_length - 1);
+      length = (ecma_number_t) (ecma_get_integer_from_value (get_len_value) - (args_length - 1));
     }
 #endif /* ENABLED (JERRY_ESNEXT) */
 

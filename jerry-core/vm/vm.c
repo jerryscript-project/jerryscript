@@ -2842,7 +2842,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               result = (ecma_value_t) (int_value + int_increase);
               break;
             }
-            result_number = ecma_get_integer_from_value (result);
+            result_number = (ecma_number_t) ecma_get_integer_from_value (result);
           }
           else if (ecma_is_value_float_number (left_value))
           {

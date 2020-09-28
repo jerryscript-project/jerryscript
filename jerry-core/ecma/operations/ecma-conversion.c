@@ -300,7 +300,7 @@ ecma_op_to_numeric (ecma_value_t value, /**< ecma value */
 
   if (ecma_is_value_integer_number (value))
   {
-    *number_p = ecma_get_integer_from_value (value);
+    *number_p = (ecma_number_t) ecma_get_integer_from_value (value);
     return ECMA_VALUE_EMPTY;
   }
 
@@ -893,8 +893,8 @@ ecma_op_is_integer (ecma_number_t num) /**< ecma number */
     return false;
   }
 
-  ecma_number_t floor_fabs = floor (fabs (num));
-  ecma_number_t fabs_value = fabs (num);
+  ecma_number_t floor_fabs = (ecma_number_t) floor (fabs (num));
+  ecma_number_t fabs_value = (ecma_number_t) fabs (num);
 
   return (floor_fabs == fabs_value);
 } /* ecma_op_is_integer*/
@@ -941,7 +941,7 @@ ecma_op_to_integer (ecma_value_t value, /**< ecma value */
     return ECMA_VALUE_EMPTY;
   }
 
-  ecma_number_t floor_fabs = floor (fabs (number));
+  ecma_number_t floor_fabs = (ecma_number_t) floor (fabs (number));
   /* 5 */
   *number_p = ecma_number_is_negative (number) ? -floor_fabs : floor_fabs;
   return ECMA_VALUE_EMPTY;

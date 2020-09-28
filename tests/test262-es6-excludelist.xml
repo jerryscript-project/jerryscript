@@ -269,7 +269,6 @@
   <test id="language/expressions/compound-assignment/S11.13.2_A7.7_T4.js"><reason></reason></test>
   <test id="language/expressions/compound-assignment/S11.13.2_A7.8_T4.js"><reason></reason></test>
   <test id="language/expressions/compound-assignment/S11.13.2_A7.9_T4.js"><reason></reason></test>
-  <test id="language/expressions/equals/coerce-symbol-to-prim-return-prim.js"><reason></reason></test>
   <test id="language/expressions/generators/has-instance.js"><reason></reason></test>
   <test id="language/expressions/generators/prototype-value.js"><reason></reason></test>
   <test id="language/expressions/object/method-definition/generator-invoke-ctor.js"><reason>ES2016 change: Generator methods isn't constructor - https://github.com/tc39/ecma262/pull/171 </reason></test>

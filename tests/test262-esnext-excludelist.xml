@@ -3622,7 +3622,6 @@
   <test id="language/expressions/dynamic-import/usage/top-level-import-then-is-call-expression-square-brackets.js"><reason></reason></test>
   <test id="language/expressions/dynamic-import/usage/top-level-import-then-returns-thenable.js"><reason></reason></test>
   <test id="language/expressions/dynamic-import/usage/top-level-import-then-specifier-tostring.js"><reason></reason></test>
-  <test id="language/expressions/equals/coerce-symbol-to-prim-return-prim.js"><reason></reason></test>
   <test id="language/expressions/function/arguments-with-arguments-fn.js"><reason></reason></test>
   <test id="language/expressions/function/arguments-with-arguments-lex.js"><reason></reason></test>
   <test id="language/expressions/function/dflt-params-trailing-comma.js"><reason></reason></test>

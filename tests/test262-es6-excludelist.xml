@@ -317,8 +317,6 @@
   <test id="language/module-code/export-unresolvable.js"><reason></reason></test>
   <test id="language/statements/class/definition/this-access-restriction.js"><reason></reason></test>
   <test id="language/statements/class/definition/this-check-ordering.js"><reason></reason></test>
-  <test id="language/statements/class/name-binding/in-extends-expression-assigned.js"><reason></reason></test>
-  <test id="language/statements/class/name-binding/in-extends-expression.js"><reason></reason></test>
   <test id="language/statements/class/syntax/early-errors/class-body-static-method-get-propname-prototype.js"><reason></reason></test>
   <test id="language/statements/for-of/iterator-next-reference.js"><reason>ES2018 change: next method must be cached</reason></test>
   <test id="language/statements/for/S12.6.3_A9.1.js"><reason></reason></test>

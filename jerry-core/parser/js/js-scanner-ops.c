@@ -347,9 +347,7 @@ scanner_check_function_after_if (parser_context_t *context_p, /**< context */
   if (JERRY_UNLIKELY (context_p->token.type == LEXER_KEYW_FUNCTION))
   {
     scanner_literal_pool_t *literal_pool_p;
-    literal_pool_p = scanner_push_literal_pool (context_p,
-                                                scanner_context_p,
-                                                SCANNER_LITERAL_POOL_BLOCK);
+    literal_pool_p = scanner_push_literal_pool (context_p, scanner_context_p, 0);
 
     literal_pool_p->source_p = context_p->source_p;
     parser_stack_push_uint8 (context_p, SCAN_STACK_PRIVATE_BLOCK);

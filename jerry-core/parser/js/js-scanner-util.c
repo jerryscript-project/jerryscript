@@ -483,7 +483,7 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
-  if (literal_pool_p->source_p == NULL)
+  if (JERRY_UNLIKELY (literal_pool_p->source_p == NULL))
   {
     JERRY_ASSERT (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_FUNCTION);
     JERRY_ASSERT (literal_pool_p->literal_pool.data.first_p == NULL
@@ -527,6 +527,19 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
   const uint8_t *prev_source_p = literal_pool_p->source_p - 1;
   size_t compressed_size = 1;
   uint32_t no_declarations = literal_pool_p->no_declarations;
+
+#if ENABLED (JERRY_ESNEXT)
+  if (JERRY_UNLIKELY (status_flags & SCANNER_LITERAL_POOL_CLASS_NAME))
+  {
+    literal_p = (lexer_lit_location_t *) parser_list_iterator_next (&literal_iterator);
+
+    if ((literal_p != NULL || (status_flags & SCANNER_LITERAL_POOL_DEFAULT_CLASS_NAME))
+        && no_declarations < PARSER_MAXIMUM_DEPTH_OF_SCOPE_STACK)
+    {
+      no_declarations++;
+    }
+  }
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   while ((literal_p = (lexer_lit_location_t *) parser_list_iterator_next (&literal_iterator)) != NULL)
   {
@@ -654,7 +667,13 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
                                                                              literal_p);
       uint8_t extended_type = literal_location_p->type;
 
-      if ((status_flags & SCANNER_LITERAL_POOL_FUNCTION) || (type & SCANNER_LITERAL_NO_REG))
+#if ENABLED (JERRY_ESNEXT)
+      const uint16_t no_reg_flags = (SCANNER_LITERAL_POOL_FUNCTION | SCANNER_LITERAL_POOL_CLASS_FIELD);
+#else /* !ENABLED (JERRY_ESNEXT) */
+      const uint16_t no_reg_flags = SCANNER_LITERAL_POOL_FUNCTION;
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+      if ((status_flags & no_reg_flags) || (type & SCANNER_LITERAL_NO_REG))
       {
         extended_type |= SCANNER_LITERAL_NO_REG;
       }
@@ -974,6 +993,8 @@ scanner_filter_arguments (parser_context_t *context_p, /**< context */
   bool can_eval = (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_CAN_EVAL) != 0;
   bool has_arguments = (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_NO_ARGUMENTS) == 0;
 
+  JERRY_ASSERT (SCANNER_LITERAL_POOL_MAY_HAVE_ARGUMENTS (literal_pool_p->status_flags));
+
   if (can_eval && prev_literal_pool_p != NULL)
   {
     prev_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_CAN_EVAL;
@@ -1126,53 +1147,64 @@ scanner_add_custom_literal (parser_context_t *context_p, /**< context */
                             scanner_literal_pool_t *literal_pool_p, /**< literal pool */
                             const lexer_lit_location_t *literal_location_p) /**< literal */
 {
-  parser_list_iterator_t literal_iterator;
-  parser_list_iterator_init (&literal_pool_p->literal_pool, &literal_iterator);
-  lexer_lit_location_t *literal_p;
-
-  const uint8_t *char_p = literal_location_p->char_p;
-  prop_length_t length = literal_location_p->length;
-
-  if (JERRY_LIKELY (!literal_location_p->has_escape))
+  while (true)
   {
-    while ((literal_p = (lexer_lit_location_t *) parser_list_iterator_next (&literal_iterator)) != NULL)
+    parser_list_iterator_t literal_iterator;
+    parser_list_iterator_init (&literal_pool_p->literal_pool, &literal_iterator);
+    lexer_lit_location_t *literal_p;
+
+    const uint8_t *char_p = literal_location_p->char_p;
+    prop_length_t length = literal_location_p->length;
+
+    if (JERRY_LIKELY (!literal_location_p->has_escape))
     {
-      if (literal_p->length == length)
+      while ((literal_p = (lexer_lit_location_t *) parser_list_iterator_next (&literal_iterator)) != NULL)
       {
-        if (JERRY_LIKELY (!literal_p->has_escape))
+        if (literal_p->length == length)
         {
-          if (memcmp (literal_p->char_p, char_p, length) == 0)
+          if (JERRY_LIKELY (!literal_p->has_escape))
           {
+            if (memcmp (literal_p->char_p, char_p, length) == 0)
+            {
+              return literal_p;
+            }
+          }
+          else if (lexer_compare_identifier_to_string (literal_p, char_p, length))
+          {
+            /* The non-escaped version is preferred. */
+            literal_p->char_p = char_p;
+            literal_p->has_escape = 0;
             return literal_p;
           }
         }
-        else if (lexer_compare_identifier_to_string (literal_p, char_p, length))
+      }
+    }
+    else
+    {
+      while ((literal_p = (lexer_lit_location_t *) parser_list_iterator_next (&literal_iterator)) != NULL)
+      {
+        if (lexer_compare_identifiers (context_p, literal_p, literal_location_p))
         {
-          /* The non-escaped version is preferred. */
-          literal_p->char_p = char_p;
-          literal_p->has_escape = 0;
           return literal_p;
         }
       }
     }
-  }
-  else
-  {
-    while ((literal_p = (lexer_lit_location_t *) parser_list_iterator_next (&literal_iterator)) != NULL)
+
+#if ENABLED (JERRY_ESNEXT)
+    if (JERRY_UNLIKELY (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_CLASS_NAME))
     {
-      if (lexer_compare_identifiers (context_p, literal_p, literal_location_p))
-      {
-        return literal_p;
-      }
+      literal_pool_p = literal_pool_p->prev_p;
+      continue;
     }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+    literal_p = (lexer_lit_location_t *) parser_list_append (context_p, &literal_pool_p->literal_pool);
+    *literal_p = *literal_location_p;
+
+    literal_p->type = 0;
+
+    return literal_p;
   }
-
-  literal_p = (lexer_lit_location_t *) parser_list_append (context_p, &literal_pool_p->literal_pool);
-  *literal_p = *literal_location_p;
-
-  literal_p->type = 0;
-
-  return literal_p;
 } /* scanner_add_custom_literal */
 
 /**
@@ -1231,6 +1263,8 @@ scanner_append_argument (parser_context_t *context_p, /**< context */
 
   const uint8_t *char_p = literal_location_p->char_p;
   prop_length_t length = literal_location_p->length;
+
+  JERRY_ASSERT (SCANNER_LITERAL_POOL_MAY_HAVE_ARGUMENTS (literal_pool_p->status_flags));
 
   if (JERRY_LIKELY (!context_p->token.lit_location.has_escape))
   {
@@ -1383,9 +1417,9 @@ scanner_detect_invalid_var (parser_context_t *context_p, /**< context */
 
   scanner_literal_pool_t *literal_pool_p = scanner_context_p->active_literal_pool_p;
 
-  if (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_BLOCK
+  if (!(literal_pool_p->status_flags & SCANNER_LITERAL_POOL_FUNCTION)
       && (var_literal_p->type & (SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_FUNC_DECLARATION))
-         == (SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_FUNC_DECLARATION))
+          == (SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_FUNC_DECLARATION))
   {
     scanner_raise_redeclaration_error (context_p);
   }
@@ -1405,10 +1439,10 @@ scanner_detect_invalid_var (parser_context_t *context_p, /**< context */
     {
       while ((literal_p = (lexer_lit_location_t *) parser_list_iterator_next (&literal_iterator)) != NULL)
       {
-        if (literal_p->type & SCANNER_LITERAL_IS_LOCAL
+        if ((literal_p->type & SCANNER_LITERAL_IS_LOCAL)
             && !(literal_p->type & SCANNER_LITERAL_IS_ARG)
             && !((literal_p->type & SCANNER_LITERAL_IS_FUNC)
-                 && (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_BLOCK) == 0)
+                 && (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_FUNCTION))
             && (literal_p->type & SCANNER_LITERAL_IS_LOCAL) != SCANNER_LITERAL_IS_LOCAL
             && literal_p->length == length)
         {
@@ -1432,10 +1466,10 @@ scanner_detect_invalid_var (parser_context_t *context_p, /**< context */
     {
       while ((literal_p = (lexer_lit_location_t *) parser_list_iterator_next (&literal_iterator)) != NULL)
       {
-        if (literal_p->type & SCANNER_LITERAL_IS_LOCAL
+        if ((literal_p->type & SCANNER_LITERAL_IS_LOCAL)
             && !(literal_p->type & SCANNER_LITERAL_IS_ARG)
             && !((literal_p->type & SCANNER_LITERAL_IS_FUNC)
-                 && (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_BLOCK) == 0)
+                 && (literal_pool_p->status_flags & SCANNER_LITERAL_POOL_FUNCTION))
             && (literal_p->type & SCANNER_LITERAL_IS_LOCAL) != SCANNER_LITERAL_IS_LOCAL
             && lexer_compare_identifiers (context_p, literal_p, var_literal_p))
         {
@@ -1475,23 +1509,44 @@ scanner_detect_invalid_let (parser_context_t *context_p, /**< context */
 
 /**
  * Push the values required for class declaration parsing.
+ *
+ * @return literal reference created for class statements, NULL otherwise
  */
-void
+lexer_lit_location_t *
 scanner_push_class_declaration (parser_context_t *context_p, /**< context */
                                 scanner_context_t *scanner_context_p, /* scanner context */
                                 uint8_t stack_mode) /**< stack mode */
 {
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_CLASS);
 
-  parser_stack_push_uint8 (context_p, stack_mode);
-  scanner_source_start_t source_start;
-  source_start.source_p = context_p->source_p;
+  const uint8_t *source_p = context_p->source_p;
+  lexer_lit_location_t *literal_p = NULL;
 
-  parser_stack_push (context_p, &source_start, sizeof (scanner_source_start_t));
+  parser_stack_push_uint8 (context_p, stack_mode);
+  lexer_next_token (context_p);
+
+  bool class_has_name = (context_p->token.type == LEXER_LITERAL
+                         && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
+
+  if (stack_mode == SCAN_STACK_CLASS_STATEMENT && class_has_name)
+  {
+    literal_p = scanner_add_literal (context_p, scanner_context_p);
+  }
+
+  scanner_literal_pool_t *literal_pool_p = scanner_push_literal_pool (context_p, scanner_context_p, 0);
+
+  if (class_has_name)
+  {
+    scanner_add_literal (context_p, scanner_context_p);
+  }
+
+  literal_pool_p->source_p = source_p;
+  literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_CLASS_NAME;
+
   parser_stack_push_uint8 (context_p, SCAN_STACK_IMPLICIT_CLASS_CONSTRUCTOR);
   scanner_context_p->mode = SCAN_MODE_CLASS_DECLARATION;
 
-  lexer_next_token (context_p);
+  return literal_p;
 } /* scanner_push_class_declaration */
 
 /**
@@ -1506,6 +1561,11 @@ scanner_push_class_field_initializer (parser_context_t *context_p, /**< context 
 
   parser_stack_push (context_p, &source_start, sizeof (scanner_source_start_t));
   parser_stack_push_uint8 (context_p, SCAN_STACK_CLASS_FIELD_INITIALIZER);
+
+  scanner_literal_pool_t *literal_pool_p;
+  literal_pool_p = scanner_push_literal_pool (context_p, scanner_context_p, SCANNER_LITERAL_POOL_CLASS_FIELD);
+  literal_pool_p->source_p = context_p->source_p;
+
   scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
 } /* scanner_push_class_field_initializer */
 

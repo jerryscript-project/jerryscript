@@ -71,7 +71,10 @@ JERRY_STATIC_ASSERT ((int) ECMA_INIT_EMPTY == (int) JERRY_INIT_EMPTY
 #if ENABLED (JERRY_BUILTIN_REGEXP)
 JERRY_STATIC_ASSERT ((int) RE_FLAG_GLOBAL == (int) JERRY_REGEXP_FLAG_GLOBAL
                      && (int) RE_FLAG_MULTILINE == (int) JERRY_REGEXP_FLAG_MULTILINE
-                     && (int) RE_FLAG_IGNORE_CASE == (int) JERRY_REGEXP_FLAG_IGNORE_CASE,
+                     && (int) RE_FLAG_IGNORE_CASE == (int) JERRY_REGEXP_FLAG_IGNORE_CASE
+                     && (int) RE_FLAG_STICKY== (int) JERRY_REGEXP_FLAG_STICKY
+                     && (int) RE_FLAG_UNICODE == (int) JERRY_REGEXP_FLAG_UNICODE
+                     && (int) RE_FLAG_DOTALL == (int) JERRY_REGEXP_FLAG_DOTALL,
                      re_flags_t_must_be_equal_to_jerry_regexp_flags_t);
 #endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
 

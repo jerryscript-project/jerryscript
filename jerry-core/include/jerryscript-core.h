@@ -135,7 +135,10 @@ typedef enum
 {
   JERRY_REGEXP_FLAG_GLOBAL = (1u << 1),      /**< Globally scan string */
   JERRY_REGEXP_FLAG_IGNORE_CASE = (1u << 2), /**< Ignore case */
-  JERRY_REGEXP_FLAG_MULTILINE = (1u << 3)    /**< Multiline string scan */
+  JERRY_REGEXP_FLAG_MULTILINE = (1u << 3),   /**< Multiline string scan */
+  JERRY_REGEXP_FLAG_STICKY = (1u << 4),      /**< ECMAScript v11, 21.2.5.14 */
+  JERRY_REGEXP_FLAG_UNICODE = (1u << 5),     /**< ECMAScript v11, 21.2.5.17 */
+  JERRY_REGEXP_FLAG_DOTALL = (1u << 6)       /**< ECMAScript v11, 21.2.5.3 */
 } jerry_regexp_flags_t;
 
 /**

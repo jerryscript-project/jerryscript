@@ -2864,8 +2864,6 @@
   <test id="intl402/supportedLocalesOf-test-option-localeMatcher.js"><reason></reason></test>
   <test id="intl402/supportedLocalesOf-throws-if-element-not-string-or-object.js"><reason></reason></test>
   <test id="intl402/supportedLocalesOf-unicode-extensions-ignored.js"><reason></reason></test>
-  <test id="language/arguments-object/10.6-13-a-2.js"><reason></reason></test>
-  <test id="language/arguments-object/10.6-13-a-3.js"><reason></reason></test>
   <test id="language/block-scope/syntax/redeclaration/async-function-name-redeclaration-attempt-with-async-function.js"><reason></reason></test>
   <test id="language/block-scope/syntax/redeclaration/async-function-name-redeclaration-attempt-with-async-generator.js"><reason></reason></test>
   <test id="language/block-scope/syntax/redeclaration/async-function-name-redeclaration-attempt-with-function.js"><reason></reason></test>

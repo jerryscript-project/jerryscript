@@ -241,8 +241,6 @@
   <test id="intl402/String/prototype/toLocaleUpperCase/special_casing_Azeri.js"><reason></reason></test>
   <test id="intl402/String/prototype/toLocaleUpperCase/special_casing_Lithuanian.js"><reason></reason></test>
   <test id="intl402/String/prototype/toLocaleUpperCase/special_casing_Turkish.js"><reason></reason></test>
-  <test id="language/arguments-object/10.6-13-a-2.js"><reason></reason></test>
-  <test id="language/arguments-object/10.6-13-a-3.js"><reason></reason></test>
   <test id="language/asi/S7.9_A5.7_T1.js"><reason></reason></test>
   <test id="language/block-scope/syntax/redeclaration-in-block/attempt-to-redeclare-function-declaration-with-function-declaration.js"><reason>No longer a SyntaxError in ES11</reason></test>
   <test id="language/default-parameters/function-length.js"><reason></reason></test>

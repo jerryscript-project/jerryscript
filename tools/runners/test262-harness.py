@@ -824,7 +824,7 @@ class TestSuite(object):
 
         if job_count == 1:
             for case in cases:
-                result = case.run_pipe()
+                result = case.run()
                 if logname:
                     self.write_log(result)
                 progress.has_run(result)

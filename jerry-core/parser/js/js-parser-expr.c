@@ -621,8 +621,17 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
       {
         is_computed = true;
       }
-      else if (!is_static && parser_is_constructor_literal (context_p))
+      else if (is_static)
       {
+        if (LEXER_IS_IDENT_OR_STRING (context_p->token.lit_location.type)
+            && lexer_compare_identifier_to_string (&context_p->token.lit_location, (uint8_t *) "prototype", 9))
+        {
+          parser_raise_error (context_p, PARSER_ERR_CLASS_STATIC_PROTOTYPE);
+        }
+      }
+      else if (parser_is_constructor_literal (context_p))
+      {
+        JERRY_ASSERT (!is_static);
         parser_raise_error (context_p, PARSER_ERR_CLASS_CONSTRUCTOR_AS_ACCESSOR);
       }
 
@@ -705,7 +714,7 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
     {
       if (is_static)
       {
-        if (lexer_compare_literal_to_string (context_p, "prototype", 9))
+        if (lexer_compare_identifier_to_string (&context_p->token.lit_location, (uint8_t *) "prototype", 9))
         {
           parser_raise_error (context_p, PARSER_ERR_CLASS_STATIC_PROTOTYPE);
         }

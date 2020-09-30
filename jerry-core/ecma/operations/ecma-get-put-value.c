@@ -238,6 +238,12 @@ ecma_op_put_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
 #if ENABLED (JERRY_ESNEXT)
           else if (ecma_is_property_enumerable (*property_p))
           {
+            if (JERRY_UNLIKELY (ECMA_PROPERTY_VALUE_PTR (property_p)->value == ECMA_VALUE_UNINITIALIZED))
+            {
+              return ecma_raise_reference_error (ECMA_ERR_MSG ("Variables declared by let/const must be"
+                                                               " initialized before writing their value."));
+            }
+
             return ecma_raise_type_error (ECMA_ERR_MSG ("Constant bindings cannot be reassigned."));
           }
 #endif /* ENABLED (JERRY_ESNEXT) */

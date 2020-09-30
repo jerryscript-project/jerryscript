@@ -945,7 +945,8 @@ parser_parse_class (parser_context_t *context_p, /**< context */
     }
     class_ident_index = context_p->lit_object.index;
 
-    lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_STRING_LITERAL);
+    lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_NEW_IDENT_LITERAL);
+    context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_USED;
     class_name_index = context_p->lit_object.index;
 
 #if ENABLED (JERRY_MODULE_SYSTEM)
@@ -962,7 +963,8 @@ parser_parse_class (parser_context_t *context_p, /**< context */
     /* Class expression may contain an identifier. */
     if (context_p->token.type == LEXER_LITERAL && context_p->token.lit_location.type == LEXER_IDENT_LITERAL)
     {
-      lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_STRING_LITERAL);
+      lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_NEW_IDENT_LITERAL);
+      context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_USED;
       class_name_index = context_p->lit_object.index;
       lexer_next_token (context_p);
     }
@@ -970,11 +972,23 @@ parser_parse_class (parser_context_t *context_p, /**< context */
 
   if (class_name_index != PARSER_INVALID_LITERAL_INDEX)
   {
+    if (JERRY_UNLIKELY (context_p->scope_stack_top >= context_p->scope_stack_size))
+    {
+      JERRY_ASSERT (context_p->scope_stack_size == PARSER_MAXIMUM_DEPTH_OF_SCOPE_STACK);
+      parser_raise_error (context_p, PARSER_ERR_SCOPE_STACK_LIMIT_REACHED);
+    }
+
+    parser_scope_stack_t *scope_stack_p = context_p->scope_stack_p + context_p->scope_stack_top;
+
+    PARSER_PLUS_EQUAL_U16 (context_p->scope_stack_top, 1);
+    scope_stack_p->map_from = class_name_index;
+    scope_stack_p->map_to = 0;
+
     parser_emit_cbc_ext_literal (context_p, CBC_EXT_PUSH_NAMED_CLASS_ENV, class_name_index);
   }
   else
   {
-    parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_ANONYMOUS_CLASS_ENV);
+    parser_emit_cbc (context_p, CBC_PUSH_UNDEFINED);
   }
 
   bool is_strict = (context_p->status_flags & PARSER_IS_STRICT) != 0;
@@ -1005,7 +1019,8 @@ parser_parse_class (parser_context_t *context_p, /**< context */
   if (class_name_index != PARSER_INVALID_LITERAL_INDEX)
   {
     parser_emit_cbc_ext_literal (context_p, CBC_EXT_FINALIZE_NAMED_CLASS, class_name_index);
-    parser_emit_cbc_ext_literal (context_p, CBC_EXT_SET_FUNCTION_NAME, class_name_index);
+    parser_emit_cbc_ext_literal (context_p, CBC_EXT_SET_CLASS_NAME, class_name_index);
+    PARSER_MINUS_EQUAL_U16 (context_p->scope_stack_top, 1);
   }
   else
   {

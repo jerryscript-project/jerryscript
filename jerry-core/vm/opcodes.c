@@ -1269,16 +1269,17 @@ opfunc_push_class_environment (vm_frame_ctx_t *frame_ctx_p, /**< frame context *
                                ecma_value_t **vm_stack_top, /**< VM stack top */
                                ecma_value_t class_name) /**< class name */
 {
-  JERRY_ASSERT (ecma_is_value_undefined (class_name) || ecma_is_value_string (class_name));
+  JERRY_ASSERT (ecma_is_value_string (class_name));
   ecma_object_t *class_env_p = ecma_create_decl_lex_env (frame_ctx_p->lex_env_p);
 
   /* 4.a */
-  if (!ecma_is_value_undefined (class_name))
-  {
-    ecma_op_create_immutable_binding (class_env_p,
-                                      ecma_get_string_from_value (class_name),
-                                      ECMA_VALUE_UNINITIALIZED);
-  }
+  ecma_property_value_t *property_value_p;
+  property_value_p = ecma_create_named_data_property (class_env_p,
+                                                      ecma_get_string_from_value (class_name),
+                                                      ECMA_PROPERTY_FLAG_ENUMERABLE,
+                                                      NULL);
+
+  property_value_p->value = ECMA_VALUE_UNINITIALIZED;
   frame_ctx_p->lex_env_p = class_env_p;
 
   *(*vm_stack_top)++ = ECMA_VALUE_RELEASE_LEX_ENV;
@@ -1518,13 +1519,17 @@ opfunc_finalize_class (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 
   ecma_deref_object (proto_env_p);
   ecma_deref_object (ctor_env_p);
-
-  opfunc_pop_lexical_environment (frame_ctx_p);
-
   ecma_deref_object (proto_p);
 
+  JERRY_ASSERT ((ecma_is_value_undefined (class_name) ? stack_top_p[-3] == ECMA_VALUE_UNDEFINED
+                                                      : stack_top_p[-3] == ECMA_VALUE_RELEASE_LEX_ENV));
+
   /* only the current class remains on the stack */
-  JERRY_ASSERT (stack_top_p[-3] == ECMA_VALUE_RELEASE_LEX_ENV);
+  if (stack_top_p[-3] == ECMA_VALUE_RELEASE_LEX_ENV)
+  {
+    opfunc_pop_lexical_environment (frame_ctx_p);
+  }
+
   stack_top_p[-3] = stack_top_p[-2];
   *vm_stack_top_p -= 2;
 } /* opfunc_finalize_class */

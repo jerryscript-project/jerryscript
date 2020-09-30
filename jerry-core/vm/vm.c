@@ -2033,8 +2033,11 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_PUSH_CLASS_ENVIRONMENT:
         {
-          opfunc_push_class_environment (frame_ctx_p, &stack_top_p, left_value);
-          goto free_left_value;
+          uint16_t literal_index;
+
+          READ_LITERAL_INDEX (literal_index);
+          opfunc_push_class_environment (frame_ctx_p, &stack_top_p, literal_start_p[literal_index]);
+          continue;
         }
         case VM_OC_PUSH_IMPLICIT_CTOR:
         {
@@ -2053,8 +2056,17 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_FINALIZE_CLASS:
         {
+          JERRY_ASSERT (opcode == CBC_EXT_FINALIZE_NAMED_CLASS || opcode == CBC_EXT_FINALIZE_ANONYMOUS_CLASS);
+
+          if (opcode == CBC_EXT_FINALIZE_NAMED_CLASS)
+          {
+            uint16_t literal_index;
+            READ_LITERAL_INDEX (literal_index);
+            left_value = literal_start_p[literal_index];
+          }
+
           opfunc_finalize_class (frame_ctx_p, &stack_top_p, left_value);
-          goto free_left_value;
+          continue;
         }
         case VM_OC_SET_FIELD_INIT:
         {

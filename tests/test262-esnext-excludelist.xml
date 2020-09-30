@@ -4161,8 +4161,6 @@
   <test id="language/statements/class/method-length-dflt.js"><reason></reason></test>
   <test id="language/statements/class/method-static/dflt-params-trailing-comma.js"><reason></reason></test>
   <test id="language/statements/class/method/dflt-params-trailing-comma.js"><reason></reason></test>
-  <test id="language/statements/class/name-binding/in-extends-expression-assigned.js"><reason></reason></test>
-  <test id="language/statements/class/name-binding/in-extends-expression.js"><reason></reason></test>
   <test id="language/statements/class/setter-length-dflt.js"><reason></reason></test>
   <test id="language/statements/class/static-method-length-dflt.js"><reason></reason></test>
   <test id="language/statements/class/subclass/default-constructor-spread-override.js"><reason></reason></test>

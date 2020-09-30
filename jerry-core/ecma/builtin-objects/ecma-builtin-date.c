@@ -617,7 +617,13 @@ ecma_builtin_date_utc (ecma_value_t this_arg, /**< this argument */
 {
   JERRY_UNUSED (this_arg);
 
-  if (args_number < 2)
+#if ENABLED (JERRY_ESNEXT)
+  const uint32_t required_args_number = 1;
+#else /* !ENABLED (JERRY_ESNEXT) */
+  const uint32_t required_args_number = 2;
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+  if (args_number < required_args_number)
   {
     /* Note:
      *      When the UTC function is called with fewer than two arguments,

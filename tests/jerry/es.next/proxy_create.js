@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// TODO: Update these tests when the internal routine has been implemented
-
 var target = {}
 var handler = {};
 var proxy = new Proxy(target, handler);
@@ -43,16 +41,6 @@ try {
   assert(e instanceof TypeError);
 }
 
-try {
-  new Proxy({}, rev_proxy);
-  assert(false);
-} catch (e) {
-  assert(e instanceof TypeError);
-}
-
-try {
-  new Proxy(rev_proxy, {});
-  assert(false);
-} catch (e) {
-  assert(e instanceof TypeError);
-}
+/* In ES11+ the standard changed revoked proxy is a valid input for a new Proxy */
+var proxy_rev_handler = new Proxy({}, rev_proxy);
+var proxy_rev_target_Br = new Proxy(rev_proxy, {});

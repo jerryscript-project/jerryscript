@@ -337,4 +337,6 @@
   <test id="language/arguments-object/10.6-14-b-1-s.js"><reason>ES11: arguments object no longer has caller property</reason></test>
   <test id="language/arguments-object/10.6-14-b-4-s.js"><reason>ES11: arguments object no longer has caller property</reason></test>
   <test id="language/statements/class/strict-mode/arguments-caller.js"><reason>ES11: arguments object no longer has caller property</reason></test>
+  <test id="built-ins/Proxy/create-handler-is-revoked-proxy.js"><reason>ES11+: ProxyCreate does not check Proxy handler and target.</reason></test>
+  <test id="built-ins/Proxy/create-target-is-revoked-proxy.js"><reason>ES11+: ProxyCreate does not check Proxy handler and target.</reason></test>
 </excludeList>

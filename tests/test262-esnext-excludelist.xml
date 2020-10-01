@@ -694,7 +694,6 @@
   <test id="built-ins/DataView/toindex-bytelength-sab.js"><reason></reason></test>
   <test id="built-ins/DataView/toindex-byteoffset-sab.js"><reason></reason></test>
   <test id="built-ins/DataView/toindex-byteoffset.js"><reason></reason></test>
-  <test id="built-ins/Date/UTC/return-value.js"><reason></reason></test>
   <test id="built-ins/Date/parse/time-value-maximum-range.js"><reason></reason></test>
   <test id="built-ins/Date/parse/without-utc-offset.js"><reason></reason></test>
   <test id="built-ins/Date/proto-from-ctor-realm-one.js"><reason></reason></test>

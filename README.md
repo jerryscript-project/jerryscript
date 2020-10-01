@@ -52,7 +52,7 @@ For additional information see [Getting Started](docs/00.GETTING-STARTED.md).
 - [Internals](docs/04.INTERNALS.md)
 - [Migration Guide](docs/16.MIGRATION-GUIDE.md)
 
-## Contributing
+## Contribution
 The project can only accept contributions which are licensed under the [Apache License 2.0](LICENSE) and are signed according to the JerryScript [Developer's Certificate of Origin](DCO.md). For further information please see our [Contribution Guidelines](CONTRIBUTING.md).
 
 ## License authentication

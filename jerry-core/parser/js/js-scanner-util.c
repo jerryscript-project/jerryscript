@@ -1889,8 +1889,8 @@ scanner_is_context_needed (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ESNEXT)
 #if ENABLED (JERRY_MODULE_SYSTEM)
     const bool is_import = (type == SCANNER_STREAM_TYPE_IMPORT);
-#else
-    const bool is_import = true;
+#else /* !ENABLED (JERRY_MODULE_SYSTEM) */
+    const bool is_import = false;
 #endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
     if (JERRY_UNLIKELY (check_type == PARSER_CHECK_GLOBAL_CONTEXT)

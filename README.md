@@ -20,9 +20,9 @@ Key characteristics of JerryScript:
 
 Additional information can be found on our [project page](http://jerryscript.net) and [Wiki](https://github.com/jerryscript-project/jerryscript/wiki).
 
-Memory usage and Binary footprint are measured at [here](https://jerryscript-project.github.io/jerryscript-test-results) with real target daily.
+Memory usage and Binary footprint are measured at [here](https://jerryscript-project.github.io/jerryscript-test-results) with a real target daily.
 
-The latest results on  **Raspberry Pi 2**:
+The latest results are on  **Raspberry Pi 2**:
 
 
 [![Remote Testrunner](https://firebasestorage.googleapis.com/v0/b/jsremote-testrunner.appspot.com/o/status%2Fjerryscript%2Frpi2.svg?alt=media&token=1)](https://jerryscript-project.github.io/jerryscript-test-results/?view=rpi2)
@@ -55,7 +55,7 @@ For additional information see [Getting Started](docs/00.GETTING-STARTED.md).
 ## Contributing
 The project can only accept contributions which are licensed under the [Apache License 2.0](LICENSE) and are signed according to the JerryScript [Developer's Certificate of Origin](DCO.md). For further information please see our [Contribution Guidelines](CONTRIBUTING.md).
 
-## License
+## License authentication
 JerryScript is open source software under the [Apache License 2.0](LICENSE). Complete license and copyright information can be found in the source code.
 
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Fjerryscript-project%2Fjerryscript.svg?type=large)](https://app.fossa.io/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Fjerryscript-project%2Fjerryscript?ref=badge_large)

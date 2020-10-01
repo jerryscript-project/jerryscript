@@ -106,7 +106,7 @@ ecma_op_object_is_callable (ecma_object_t *obj_p) /**< ecma object */
 #if ENABLED (JERRY_BUILTIN_PROXY)
   if (ECMA_OBJECT_TYPE_IS_PROXY (type))
   {
-    return ecma_op_is_callable (((ecma_proxy_object_t *) obj_p)->target);
+    return ECMA_GET_FIRST_BIT_FROM_POINTER_TAG (obj_p->u1.property_list_cp) != 0;
   }
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
@@ -159,7 +159,7 @@ ecma_object_is_constructor (ecma_object_t *obj_p) /**< ecma object */
 #if ENABLED (JERRY_BUILTIN_PROXY)
   if (ECMA_OBJECT_TYPE_IS_PROXY (type))
   {
-    return ecma_is_constructor (((ecma_proxy_object_t *) obj_p)->target);
+    return ECMA_GET_SECOND_BIT_FROM_POINTER_TAG (obj_p->u1.property_list_cp) != 0;
   }
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 

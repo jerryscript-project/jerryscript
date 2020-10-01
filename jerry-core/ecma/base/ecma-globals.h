@@ -2128,6 +2128,10 @@ do \
 #if ENABLED (JERRY_BUILTIN_PROXY)
 /**
  * Description of Proxy objects.
+ *
+ * A Proxy object's property list is used to store extra information:
+ *  * The "header.u1.property_list_cp" 1st tag bit stores the IsCallable information.
+ *  * The "header.u1.property_list_cp" 2nd tag bit stores the IsConstructor information.
  */
 typedef struct
 {

@@ -4,7 +4,7 @@ os: linux
 install:
   - wget https://raw.githubusercontent.com/${TRAVIS_REPO_SLUG}/master/tools/check-signed-off.sh
   - chmod u+x check-signed-off.sh
-script: ./check-signed-off.sh --travis
+script: ./check-signed-off.sh --gh-actions
 
 branches:
   only:

@@ -3754,11 +3754,9 @@
   <test id="language/expressions/super/call-spread-obj-spread-order.js"><reason></reason></test>
   <test id="language/expressions/super/call-spread-obj-symbol-property.js"><reason></reason></test>
   <test id="language/expressions/super/prop-dot-cls-ref-strict.js"><reason></reason></test>
-  <test id="language/expressions/super/prop-dot-cls-this-uninit.js"><reason></reason></test>
   <test id="language/expressions/super/prop-dot-obj-ref-non-strict.js"><reason></reason></test>
   <test id="language/expressions/super/prop-dot-obj-ref-strict.js"><reason></reason></test>
   <test id="language/expressions/super/prop-expr-cls-ref-strict.js"><reason></reason></test>
-  <test id="language/expressions/super/prop-expr-cls-this-uninit.js"><reason></reason></test>
   <test id="language/expressions/super/prop-expr-obj-key-err.js"><reason></reason></test>
   <test id="language/expressions/super/prop-expr-obj-ref-non-strict.js"><reason></reason></test>
   <test id="language/expressions/super/prop-expr-obj-ref-strict.js"><reason></reason></test>
@@ -4079,7 +4077,6 @@
   <test id="language/statements/class/class-name-ident-yield-escaped.js"><reason></reason></test>
   <test id="language/statements/class/class-name-ident-yield.js"><reason></reason></test>
   <test id="language/statements/class/constructor-inferred-observable-iteration.js"><reason></reason></test>
-  <test id="language/statements/class/definition/this-access-restriction.js"><reason></reason></test>
   <test id="language/statements/class/definition/this-check-ordering.js"><reason></reason></test>
   <test id="language/statements/class/dstr/async-gen-meth-ary-init-iter-no-close.js"><reason></reason></test>
   <test id="language/statements/class/dstr/async-gen-meth-ary-ptrn-rest-init-ary.js"><reason></reason></test>

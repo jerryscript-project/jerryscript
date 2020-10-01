@@ -1548,6 +1548,17 @@ opfunc_form_super_reference (ecma_value_t **vm_stack_top_p, /**< current vm stac
                              ecma_value_t prop_name, /**< property name to resolve */
                              uint8_t opcode) /**< current cbc opcode */
 {
+  if (CBC_FUNCTION_GET_TYPE (frame_ctx_p->shared_p->bytecode_header_p->status_flags) == CBC_FUNCTION_CONSTRUCTOR)
+  {
+    ecma_property_t *prop_p = ecma_op_get_this_property (frame_ctx_p->lex_env_p);
+
+    if (!ecma_op_this_binding_is_initialized (prop_p))
+    {
+      return ecma_raise_reference_error (ECMA_ERR_MSG ("Must call super constructor in derived class before "
+                                                       "accessing 'this' or returning from it."));
+    }
+  }
+
   ecma_value_t parent = ecma_op_resolve_super_base (frame_ctx_p->lex_env_p);
 
   if (ECMA_IS_VALUE_ERROR (parent))

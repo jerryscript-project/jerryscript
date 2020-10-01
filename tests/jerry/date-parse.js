@@ -98,17 +98,19 @@ assert (d == 1420070400000);
 d = Date.parse("2015-01-01");
 assert (d == 1420070400000);
 
+var timezoneOffsetMS = new Date(0).getTimezoneOffset() * 60000;
+
 d = Date.parse("2015-01T00:00");
-assert (d == 1420070400000);
+assert (d == 1420070400000 + timezoneOffsetMS);
 
 d = Date.parse("2015-01T00:00:00");
-assert (d == 1420070400000);
+assert (d == 1420070400000 + timezoneOffsetMS);
 
 d = Date.parse("2015-01T00:00:00.000");
-assert (d == 1420070400000);
+assert (d == 1420070400000 + timezoneOffsetMS);
 
 d = Date.parse("2015-01T24:00:00.000");
-assert (d == 1420156800000);
+assert (d == 1420156800000 + timezoneOffsetMS);
 
 d = Date.parse("2015-01T00:00:00.000+03:00");
 assert (d == 1420059600000);

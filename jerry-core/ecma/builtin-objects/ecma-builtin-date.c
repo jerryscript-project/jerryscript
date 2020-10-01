@@ -293,6 +293,7 @@ ecma_builtin_date_parse_ISO_string_format (const lit_utf8_byte_t *date_str_curr_
       day = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2, 1, 31);
     }
 
+    bool is_utc = true;
     /* 4. read time if any */
     if (ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, 'T'))
     {
@@ -367,13 +368,24 @@ ecma_builtin_date_parse_ISO_string_format (const lit_utf8_byte_t *date_str_curr_
           ecma_number_t timezone_offset = ecma_date_make_time (hours, minutes, ECMA_NUMBER_ZERO, ECMA_NUMBER_ZERO);
           time += is_timezone_sign_negative ? timezone_offset : -timezone_offset;
         }
+        else
+        {
+          is_utc = false;
+        }
       }
     }
 
     if (date_str_curr_p >= date_str_end_p)
     {
       ecma_number_t date = ecma_date_make_day (year, month - 1, day);
-      return ecma_date_make_date (date, time);
+
+      ecma_number_t result_date = ecma_date_make_date (date, time);
+      if (!is_utc)
+      {
+        result_date = ecma_date_utc (result_date);
+      }
+
+      return result_date;
     }
   }
   return ecma_number_make_nan ();

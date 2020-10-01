@@ -1600,8 +1600,10 @@ ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**<
     return ecma_op_lazy_instantiate_prototype_object (object_p);
   }
 
-  if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_CALLER)
-      || ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_ARGUMENTS))
+  const bool is_arguments = ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_ARGUMENTS);
+
+  if (is_arguments
+      || ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_CALLER))
   {
     const ecma_compiled_code_t *bytecode_data_p;
     bytecode_data_p = ecma_op_function_get_compiled_code ((ecma_extended_object_t *) object_p);
@@ -1616,7 +1618,7 @@ ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**<
                                                                         property_name_p,
                                                                         ECMA_PROPERTY_FIXED,
                                                                         &value_prop_p);
-      value_p->value = ECMA_VALUE_NULL;
+      value_p->value = is_arguments ? ECMA_VALUE_NULL : ECMA_VALUE_UNDEFINED;
       return value_prop_p;
     }
 #else /* !ENABLED (JERRY_ESNEXT) */

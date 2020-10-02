@@ -172,7 +172,7 @@ ecma_arraybuffer_get_length (ecma_object_t *object_p) /**< pointer to the ArrayB
   JERRY_ASSERT (ecma_object_class_is (object_p, LIT_MAGIC_STRING_ARRAY_BUFFER_UL));
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-  return ext_object_p->u.class_prop.u.length;
+  return ecma_arraybuffer_is_detached (object_p) ? 0 : ext_object_p->u.class_prop.u.length;
 } /* ecma_arraybuffer_get_length */
 
 /**
@@ -190,12 +190,15 @@ ecma_arraybuffer_get_buffer (ecma_object_t *object_p) /**< pointer to the ArrayB
   if (ECMA_ARRAYBUFFER_HAS_EXTERNAL_MEMORY (ext_object_p))
   {
     ecma_arraybuffer_external_info *array_p = (ecma_arraybuffer_external_info *) ext_object_p;
+    JERRY_ASSERT (!ecma_arraybuffer_is_detached (object_p) || array_p->buffer_p == NULL);
     return (lit_utf8_byte_t *) array_p->buffer_p;
   }
-  else
+  else if (ext_object_p->u.class_prop.extra_info & ECMA_ARRAYBUFFER_DETACHED)
   {
-    return (lit_utf8_byte_t *) (ext_object_p + 1);
+    return NULL;
   }
+
+  return (lit_utf8_byte_t *) (ext_object_p + 1);
 } /* ecma_arraybuffer_get_buffer */
 
 /**
@@ -209,40 +212,8 @@ ecma_arraybuffer_is_detached (ecma_object_t *object_p) /**< pointer to the Array
 {
   JERRY_ASSERT (ecma_object_class_is (object_p, LIT_MAGIC_STRING_ARRAY_BUFFER_UL));
 
-  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-
-  if (ECMA_ARRAYBUFFER_HAS_EXTERNAL_MEMORY (ext_object_p))
-  {
-    ecma_arraybuffer_external_info *array_p = (ecma_arraybuffer_external_info *) ext_object_p;
-    /* in case the arraybuffer has been detached */
-    return array_p->buffer_p == NULL;
-  }
-
-  return false;
+  return (((ecma_extended_object_t *) object_p)->u.class_prop.extra_info & ECMA_ARRAYBUFFER_DETACHED) != 0;
 } /* ecma_arraybuffer_is_detached */
-
-/**
- * Helper function: check if the target ArrayBuffer is detachable
- *
- * @return true - if value is an detachable ArrayBuffer object
- *         false - otherwise
- */
-inline bool JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
-ecma_arraybuffer_is_detachable (ecma_object_t *object_p) /**< pointer to the ArrayBuffer object */
-{
-  JERRY_ASSERT (ecma_object_class_is (object_p, LIT_MAGIC_STRING_ARRAY_BUFFER_UL));
-
-  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-
-  if (ECMA_ARRAYBUFFER_HAS_EXTERNAL_MEMORY (ext_object_p))
-  {
-    ecma_arraybuffer_external_info *array_p = (ecma_arraybuffer_external_info *) ext_object_p;
-    /* in case the arraybuffer has been detached */
-    return array_p->buffer_p != NULL;
-  }
-
-  return false;
-} /* ecma_arraybuffer_is_detachable */
 
 /**
  * ArrayBuffer object detaching operation
@@ -257,16 +228,27 @@ ecma_arraybuffer_detach (ecma_object_t *object_p) /**< pointer to the ArrayBuffe
 {
   JERRY_ASSERT (ecma_object_class_is (object_p, LIT_MAGIC_STRING_ARRAY_BUFFER_UL));
 
-  if (!ecma_arraybuffer_is_detachable (object_p))
+  if (ecma_arraybuffer_is_detached (object_p))
   {
     return false;
   }
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+  ext_object_p->u.class_prop.extra_info |= ECMA_ARRAYBUFFER_DETACHED;
 
-  ecma_arraybuffer_external_info *array_object_p = (ecma_arraybuffer_external_info *) ext_object_p;
-  array_object_p->buffer_p = NULL;
-  array_object_p->extended_object.u.class_prop.u.length = 0;
+  if (ECMA_ARRAYBUFFER_HAS_EXTERNAL_MEMORY (ext_object_p))
+  {
+    ecma_arraybuffer_external_info *array_p = (ecma_arraybuffer_external_info *) ext_object_p;
+
+    if (array_p->free_cb != NULL)
+    {
+      array_p->free_cb (array_p->buffer_p);
+      array_p->free_cb = NULL;
+    }
+
+    ext_object_p->u.class_prop.u.length = 0;
+    array_p->buffer_p = NULL;
+  }
 
   return true;
 } /* ecma_arraybuffer_detach */

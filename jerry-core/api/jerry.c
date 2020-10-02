@@ -4204,7 +4204,7 @@ jerry_create_arraybuffer_external (const jerry_length_t size, /**< size of the b
 
   if (JERRY_UNLIKELY (size == 0 || buffer_p == NULL))
   {
-    arraybuffer = ecma_arraybuffer_new_object_external (0, NULL, (ecma_object_native_free_callback_t) free_cb);
+    arraybuffer = ecma_arraybuffer_new_object (0);
   }
   else
   {
@@ -4353,7 +4353,9 @@ jerry_get_arraybuffer_byte_length (const jerry_value_t value) /**< ArrayBuffer *
  *      when accessing the pointer elements.
  *
  * @return pointer to the back-buffer of the ArrayBuffer.
- *         pointer is NULL if the parameter is not an ArrayBuffer
+ *         pointer is NULL if:
+ *            - the parameter is not an ArrayBuffer
+ *            - an external ArrayBuffer has been detached
  */
 uint8_t *
 jerry_get_arraybuffer_pointer (const jerry_value_t array_buffer) /**< Array Buffer to use */
@@ -4392,18 +4394,19 @@ jerry_is_arraybuffer_detachable (const jerry_value_t value) /**< ArrayBuffer */
   if (ecma_is_arraybuffer (value))
   {
     ecma_object_t *buffer_p = ecma_get_object_from_value (value);
-    return ecma_arraybuffer_is_detachable (buffer_p) ? ECMA_VALUE_TRUE : ECMA_VALUE_FALSE;
+    return ecma_arraybuffer_is_detached (buffer_p) ? ECMA_VALUE_FALSE : ECMA_VALUE_TRUE;
   }
 #else /* !ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
   JERRY_UNUSED (value);
 #endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Expects an ArrayBuffer")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Expected an ArrayBuffer")));
 } /* jerry_is_arraybuffer_detachable */
 
 /**
  * Detach the underlying data block from ArrayBuffer and set its bytelength to 0.
- * This operation requires the ArrayBuffer to be external that created by
- * `jerry_create_arraybuffer_external`.
+ *
+ * Note: If the ArrayBuffer has been created with `jerry_create_arraybuffer_external`
+ *       the optional free callback is called on a successful detach operation
  *
  * @return null value - if success
  *         value marked with error flag - otherwise
@@ -4417,17 +4420,16 @@ jerry_detach_arraybuffer (const jerry_value_t value) /**< ArrayBuffer */
   if (ecma_is_arraybuffer (value))
   {
     ecma_object_t *buffer_p = ecma_get_object_from_value (value);
-    bool detached = ecma_arraybuffer_detach (buffer_p);
-    if (!detached)
+    if (ecma_arraybuffer_detach (buffer_p))
     {
-      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Expects a detachable ArrayBuffer.")));
+      return ECMA_VALUE_NULL;
     }
-    return ECMA_VALUE_NULL;
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has already been detached.")));
   }
 #else /* !ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
   JERRY_UNUSED (value);
 #endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Expects an ArrayBuffer")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Expected an ArrayBuffer")));
 } /* jerry_detach_arraybuffer */
 
 /**

@@ -1882,8 +1882,12 @@ typedef enum
 {
   ECMA_ARRAYBUFFER_INTERNAL_MEMORY = 0u,        /* ArrayBuffer memory is handled internally. */
   ECMA_ARRAYBUFFER_EXTERNAL_MEMORY = (1u << 0), /* ArrayBuffer created via jerry_create_arraybuffer_external. */
+  ECMA_ARRAYBUFFER_DETACHED = (1u << 1),        /* ArrayBuffer has been detached */
 } ecma_arraybuffer_extra_flag_t;
 
+/**
+ * Check whether the ArrayBuffer has external underlying buffer
+ */
 #define ECMA_ARRAYBUFFER_HAS_EXTERNAL_MEMORY(object_p) \
     ((((ecma_extended_object_t *) object_p)->u.class_prop.extra_info & ECMA_ARRAYBUFFER_EXTERNAL_MEMORY) != 0)
 

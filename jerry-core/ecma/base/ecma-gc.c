@@ -1384,11 +1384,10 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 
             /* Call external free callback if any. */
             ecma_arraybuffer_external_info *array_p = (ecma_arraybuffer_external_info *) ext_object_p;
-            JERRY_ASSERT (array_p != NULL);
 
             if (array_p->free_cb != NULL)
             {
-              (array_p->free_cb) (array_p->buffer_p);
+              array_p->free_cb (array_p->buffer_p);
             }
           }
           else

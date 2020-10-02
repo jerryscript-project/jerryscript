@@ -191,6 +191,7 @@ main (void)
   jerry_string_to_char_buffer (bar_symbol_string, str_buff, bar_symbol_string_size);
   TEST_ASSERT (memcmp (str_buff, STRING_BAR, sizeof (SYMBOL_DESCIPTION_BAR) - 1) == 0);
 
+  jerry_release_value (bar_symbol_string);
   jerry_release_value (bar_symbol);
 
   /* Test symbol get description operation with undefined description */

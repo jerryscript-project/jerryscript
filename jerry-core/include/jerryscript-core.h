@@ -1011,6 +1011,20 @@ typedef enum
   JERRY_CONTAINER_TYPE_WEAKSET, /**< WeakSet type */
 } jerry_container_type_t;
 
+/**
+ * Container operations
+ */
+typedef enum
+{
+  JERRY_CONTAINER_OP_ADD, /**< Set/WeakSet add operation */
+  JERRY_CONTAINER_OP_GET, /**< Map/WeakMap get operation */
+  JERRY_CONTAINER_OP_SET, /**< Map/WeakMap set operation */
+  JERRY_CONTAINER_OP_HAS, /**< Set/WeakSet/Map/WeakMap has operation */
+  JERRY_CONTAINER_OP_DELETE, /**< Set/WeakSet/Map/WeakMap delete operation */
+  JERRY_CONTAINER_OP_SIZE, /**< Set/WeakSet/Map/WeakMap size operation */
+  JERRY_CONTAINER_OP_CLEAR, /**< Set/Map clear operation */
+} jerry_container_operation_t;
+
 bool jerry_value_is_typedarray (jerry_value_t value);
 jerry_value_t jerry_create_typedarray (jerry_typedarray_type_t type_name, jerry_length_t length);
 jerry_value_t jerry_create_typedarray_for_arraybuffer_sz (jerry_typedarray_type_t type_name,
@@ -1030,6 +1044,10 @@ jerry_value_t jerry_create_container (jerry_container_type_t container_type,
                                       const jerry_value_t *arguments_list_p,
                                       jerry_length_t arguments_list_len);
 jerry_container_type_t jerry_get_container_type (const jerry_value_t value);
+jerry_value_t jerry_container_operation (jerry_container_operation_t operation,
+                                         jerry_value_t container,
+                                         jerry_value_t *arguments,
+                                         uint32_t arguments_number);
 
 /**
  * @}

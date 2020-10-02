@@ -86,7 +86,7 @@ ecma_op_create_object_object_arg (ecma_value_t value) /**< argument of construct
                   || ecma_is_value_number (value)
                   || ecma_is_value_prop_name (value)
                   || ecma_is_value_boolean (value)
-                  || ECMA_CHECK_BIGINT_IN_ASSERT (value));
+                  || ecma_is_value_bigint (value));
 
     return ecma_op_to_object (value);
   }

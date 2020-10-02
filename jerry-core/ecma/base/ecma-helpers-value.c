@@ -323,7 +323,6 @@ ecma_is_value_string (ecma_value_t value) /**< ecma value */
   return ((value & (ECMA_VALUE_TYPE_MASK - 0x4)) == ECMA_TYPE_STRING);
 } /* ecma_is_value_string */
 
-#if ENABLED (JERRY_ESNEXT)
 /**
  * Check if the value is symbol.
  *
@@ -333,11 +332,13 @@ ecma_is_value_string (ecma_value_t value) /**< ecma value */
 inline bool JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
 ecma_is_value_symbol (ecma_value_t value) /**< ecma value */
 {
+#if ENABLED (JERRY_ESNEXT)
   return (ecma_get_value_type_field (value) == ECMA_TYPE_SYMBOL);
-} /* ecma_is_value_symbol */
+#else /* ENABLED (JERRY_ESNEXT) */
+  JERRY_UNUSED (value);
+  return false;
 #endif /* ENABLED (JERRY_ESNEXT) */
-
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+} /* ecma_is_value_symbol */
 
 /**
  * Check if the value is bigint.
@@ -348,10 +349,13 @@ ecma_is_value_symbol (ecma_value_t value) /**< ecma value */
 inline bool JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
 ecma_is_value_bigint (ecma_value_t value) /**< ecma value */
 {
+  #if ENABLED (JERRY_BUILTIN_BIGINT)
   return (ecma_get_value_type_field (value) == ECMA_TYPE_BIGINT);
+  #else /* !ENABLED (JERRY_BUILTIN_BIGINT) */
+  JERRY_UNUSED (value);
+  return false;
+  #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 } /* ecma_is_value_bigint */
-
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 
 /**
  * Check if the value can be property name.
@@ -429,8 +433,8 @@ ecma_check_value_type_is_spec_defined (ecma_value_t value) /**< ecma value */
                 || ecma_is_value_boolean (value)
                 || ecma_is_value_number (value)
                 || ecma_is_value_string (value)
-                || ECMA_CHECK_SYMBOL_IN_ASSERT (value)
-                || ECMA_CHECK_BIGINT_IN_ASSERT (value)
+                || ecma_is_value_bigint (value)
+                || ecma_is_value_symbol (value)
                 || ecma_is_value_object (value));
 } /* ecma_check_value_type_is_spec_defined */
 

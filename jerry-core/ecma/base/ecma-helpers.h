@@ -192,30 +192,6 @@ typedef enum
  */
 #define ECMA_BOOL_TO_BITFIELD(x) ((x) ? 1 : 0)
 
-#if ENABLED (JERRY_ESNEXT)
-/**
- * JERRY_ASSERT compatible macro for checking whether the given ecma-value is symbol
- */
-#define ECMA_CHECK_SYMBOL_IN_ASSERT(value) (ecma_is_value_symbol ((value)))
-#else /* !ENABLED (JERRY_ESNEXT) */
-/**
- * JERRY_ASSERT compatible macro for checking whether the given ecma-value is symbol
- */
-#define ECMA_CHECK_SYMBOL_IN_ASSERT(value) (false)
-#endif /* ENABLED (JERRY_ESNEXT) */
-
-#if ENABLED (JERRY_BUILTIN_BIGINT)
-/**
- * JERRY_ASSERT compatible macro for checking whether the given ecma-value is bigint
- */
-#define ECMA_CHECK_BIGINT_IN_ASSERT(value) ecma_is_value_bigint(value)
-#else /* !ENABLED (JERRY_BUILTIN_BIGINT) */
-/**
- * JERRY_ASSERT compatible macro for checking whether the given ecma-value is bigint
- */
-#define ECMA_CHECK_BIGINT_IN_ASSERT(value) false
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
-
 /**
  * Check whether the given type is ECMA_OBJECT_TYPE_PROXY
  *
@@ -252,12 +228,8 @@ bool JERRY_ATTR_CONST ecma_are_values_integer_numbers (ecma_value_t first_value,
 bool JERRY_ATTR_CONST ecma_is_value_float_number (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_number (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_string (ecma_value_t value);
-#if ENABLED (JERRY_ESNEXT)
 bool JERRY_ATTR_CONST ecma_is_value_symbol (ecma_value_t value);
-#endif /* ENABLED (JERRY_ESNEXT) */
-#if ENABLED (JERRY_BUILTIN_BIGINT)
 bool JERRY_ATTR_CONST ecma_is_value_bigint (ecma_value_t value);
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 bool JERRY_ATTR_CONST ecma_is_value_prop_name (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_direct_string (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_non_direct_string (ecma_value_t value);

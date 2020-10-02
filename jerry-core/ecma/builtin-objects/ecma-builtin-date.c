@@ -610,7 +610,7 @@ ecma_builtin_date_parse (ecma_value_t this_arg, /**< this argument */
 
   ECMA_FINALIZE_UTF8_STRING (date_start_p, date_start_size);
   ecma_deref_ecma_string (date_str_p);
-  return ecma_make_number_value (ret_value);
+  return ecma_make_number_value (ecma_date_time_clip (ret_value));
 } /* ecma_builtin_date_parse */
 
 /**

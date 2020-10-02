@@ -121,6 +121,7 @@ assert (d == 1420081200000);
 d = Date.parse("2015-07-03T14:35:43.123+01:30");
 assert (d == 1435928743123);
 
+assert (isNaN(Date.parse("-271821-04-19T23:59:59.999Z"))) // -8640000000000001 - out of range
 assert (Date.parse("-271821-04-20T00:00:00.000Z") == -8640000000000000)
 assert (Date.parse("-000001-12-31T23:59:59.999Z") == -62167219200001)
 assert (Date.parse("0000-01-01T00:00:00.000Z") == -62167219200000)
@@ -136,9 +137,10 @@ assert (Date.parse("1970-01-01T00:00:00.001Z") == 1)
 assert (Date.parse("9999-12-31T23:59:59.999Z") == 253402300799999)
 assert (Date.parse("+010000-01-01T00:00:00.000Z") == 253402300800000)
 assert (Date.parse("+275760-09-13T00:00:00.000Z") == 8640000000000000)
-assert (Date.parse("+275760-09-13T00:00:00.001Z") == 8640000000000001)
+assert (isNaN(Date.parse("+275760-09-13T00:00:00.001Z"))) // 8640000000000001 - out of range
 
 // Date.toString() format
+assert (isNaN(Date.parse("Mon Apr 19 -271821 23:59:59 GMT+0000"))) // -8640000000001000 - out of range
 assert (Date.parse("Tue Apr 20 -271821 00:00:00 GMT+0000") == -8640000000000000)
 assert (Date.parse("Fri Dec 31 -0001 23:59:59 GMT+0000") == -62167219201000)
 assert (Date.parse("Sat Jan 01 0000 00:00:00 GMT+0000") == -62167219200000)
@@ -154,8 +156,10 @@ assert (Date.parse("Thu Jan 01 1970 00:00:01 GMT+0000") == 1000)
 assert (Date.parse("Fri Dec 31 9999 23:59:59 GMT+0000") == 253402300799000)
 assert (Date.parse("Sat Jan 01 10000 00:00:00 GMT+0000") == 253402300800000)
 assert (Date.parse("Sat Sep 13 275760 00:00:00 GMT+0000") == 8640000000000000)
+assert (isNaN(Date.parse("Sat Sep 13 275760 00:00:01 GMT+0000"))) // 8640000000001000 - out of range
 
 // Date.toUTCString() format
+assert (isNaN(Date.parse("Mon, 19 Apr -271821 23:59:59 GMT"))) // -8640000000001000 - out of range
 assert (Date.parse("Tue, 20 Apr -271821 00:00:00 GMT") == -8640000000000000)
 assert (Date.parse("Fri, 31 Dec -0001 23:59:59 GMT") == -62167219201000)
 assert (Date.parse("Sat, 01 Jan 0000 00:00:00 GMT") == -62167219200000)
@@ -171,3 +175,4 @@ assert (Date.parse("Thu, 01 Jan 1970 00:00:01 GMT") == 1000)
 assert (Date.parse("Fri, 31 Dec 9999 23:59:59 GMT") == 253402300799000)
 assert (Date.parse("Sat, 01 Jan 10000 00:00:00 GMT") == 253402300800000)
 assert (Date.parse("Sat, 13 Sep 275760 00:00:00 GMT") == 8640000000000000)
+assert (isNaN(Date.parse("Sat, 13 Sep 275760 00:00:01 GMT"))) // 8640000000001000 - out of range

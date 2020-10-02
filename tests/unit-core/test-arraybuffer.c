@@ -256,7 +256,9 @@ main (void)
     jerry_value_t arraybuffer = jerry_create_arraybuffer_external (length, NULL, NULL);
     TEST_ASSERT (!jerry_value_is_error (arraybuffer));
     TEST_ASSERT (jerry_value_is_arraybuffer (arraybuffer));
+    TEST_ASSERT (jerry_is_arraybuffer_detachable (arraybuffer));
     TEST_ASSERT (jerry_get_arraybuffer_byte_length (arraybuffer) == length);
+    TEST_ASSERT (jerry_get_arraybuffer_pointer (arraybuffer) == NULL);
 
     uint8_t data[20];
     memset (data, 11, 20);
@@ -377,6 +379,7 @@ main (void)
     TEST_ASSERT (!jerry_get_boolean_value (is_detachable));
 
     jerry_value_t res = jerry_detach_arraybuffer (arraybuffer);
+    TEST_ASSERT (jerry_get_arraybuffer_pointer (arraybuffer) != NULL);
     TEST_ASSERT (jerry_value_is_error (res));
 
     jerry_release_value (res);
@@ -398,6 +401,7 @@ main (void)
     jerry_release_value (is_detachable);
 
     jerry_value_t res = jerry_detach_arraybuffer (arraybuffer);
+    TEST_ASSERT (jerry_get_arraybuffer_pointer (arraybuffer) == NULL);
     TEST_ASSERT (!jerry_value_is_error (res));
 
     is_detachable = jerry_is_arraybuffer_detachable (arraybuffer);

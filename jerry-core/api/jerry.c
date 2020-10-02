@@ -4204,7 +4204,9 @@ jerry_create_arraybuffer_external (const jerry_length_t size, /**< size of the b
 
   if (JERRY_UNLIKELY (size == 0 || buffer_p == NULL))
   {
-    arraybuffer = ecma_arraybuffer_new_object_external (0, NULL, (ecma_object_native_free_callback_t) free_cb);
+    arraybuffer = ecma_arraybuffer_new_object_external (0,
+                                                        ECMA_EXTERNAL_EMPTY_ARRAY_BUFFER,
+                                                        (ecma_object_native_free_callback_t) free_cb);
   }
   else
   {
@@ -4353,7 +4355,10 @@ jerry_get_arraybuffer_byte_length (const jerry_value_t value) /**< ArrayBuffer *
  *      when accessing the pointer elements.
  *
  * @return pointer to the back-buffer of the ArrayBuffer.
- *         pointer is NULL if the parameter is not an ArrayBuffer
+ *         pointer is NULL if:
+ *            - the parameter is not an ArrayBuffer
+ *            - an external ArrayBuffer constructed with 0 length or NULL buffer
+ *            - an external ArrayBuffer has been detached
  */
 uint8_t *
 jerry_get_arraybuffer_pointer (const jerry_value_t array_buffer) /**< Array Buffer to use */
@@ -4369,7 +4374,7 @@ jerry_get_arraybuffer_pointer (const jerry_value_t array_buffer) /**< Array Buff
 
   ecma_object_t *buffer_p = ecma_get_object_from_value (array_buffer);
   lit_utf8_byte_t *mem_buffer_p = ecma_arraybuffer_get_buffer (buffer_p);
-  return (uint8_t *const) mem_buffer_p;
+  return mem_buffer_p == ECMA_EXTERNAL_EMPTY_ARRAY_BUFFER ? NULL : (uint8_t *const) mem_buffer_p;
 #else /* !ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
   JERRY_UNUSED (array_buffer);
 #endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */

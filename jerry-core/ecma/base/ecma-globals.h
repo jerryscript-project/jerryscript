@@ -1888,6 +1888,11 @@ typedef enum
     ((((ecma_extended_object_t *) object_p)->u.class_prop.extra_info & ECMA_ARRAYBUFFER_EXTERNAL_MEMORY) != 0)
 
 /**
+ * Symbolic constant to represent 0 length or NULL buffer constructed external array buffer.
+ */
+#define ECMA_EXTERNAL_EMPTY_ARRAY_BUFFER ((void *) UINTPTR_MAX)
+
+/**
  * Struct to store information for ArrayBuffers with external memory.
  *
  * The following elements are stored in Jerry memory.

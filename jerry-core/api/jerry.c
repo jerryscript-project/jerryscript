@@ -3815,7 +3815,7 @@ jerry_get_symbol_description (const jerry_value_t symbol) /**< symbol value */
   }
 
   /* Note: This operation cannot throw an error */
-  return ecma_get_symbol_description (ecma_get_symbol_from_value (symbol));
+  return ecma_copy_value (ecma_get_symbol_description (ecma_get_symbol_from_value (symbol)));
 #else /* !ENABLED (JERRY_ESNEXT) */
   JERRY_UNUSED (symbol);
 

@@ -86,6 +86,16 @@ if("${PLATFORM}" STREQUAL "DARWIN")
   set(ENABLE_STRIP_MESSAGE       " (FORCED BY PLATFORM)")
 endif()
 
+if("${PLATFORM}" STREQUAL "ESP-IDF")
+  set(JERRY_LIBM         OFF)
+  set(ENABLE_LTO         OFF)
+  set(ENABLE_STRIP       OFF)
+  
+  set(JERRY_LIBM_MESSAGE         " (FORCED BY PLATFORM)")
+  set(ENABLE_LTO_MESSAGE         " (FORCED BY PLATFORM)")
+  set(ENABLE_STRIP_MESSAGE       " (FORCED BY PLATFORM)")
+endif()
+
 if(USING_TI)
   set(ENABLE_STRIP       OFF)
 

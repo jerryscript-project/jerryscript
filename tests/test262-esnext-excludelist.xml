@@ -929,9 +929,7 @@
   <test id="built-ins/Proxy/construct/trap-is-not-callable-realm.js"><reason></reason></test>
   <test id="built-ins/Proxy/construct/trap-is-undefined-proto-from-cross-realm-newtarget.js"><reason></reason></test>
   <test id="built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js"><reason></reason></test>
-  <test id="built-ins/Proxy/create-handler-is-revoked-proxy.js"><reason></reason></test>
   <test id="built-ins/Proxy/create-target-is-revoked-function-proxy.js"><reason></reason></test>
-  <test id="built-ins/Proxy/create-target-is-revoked-proxy.js"><reason></reason></test>
   <test id="built-ins/Proxy/defineProperty/desc-realm.js"><reason></reason></test>
   <test id="built-ins/Proxy/defineProperty/null-handler-realm.js"><reason></reason></test>
   <test id="built-ins/Proxy/defineProperty/targetdesc-configurable-desc-not-configurable-realm.js"><reason></reason></test>
@@ -956,9 +954,7 @@
   <test id="built-ins/Proxy/ownKeys/trap-is-not-callable-realm.js"><reason></reason></test>
   <test id="built-ins/Proxy/preventExtensions/trap-is-not-callable-realm.js"><reason></reason></test>
   <test id="built-ins/Proxy/preventExtensions/trap-is-undefined-target-is-proxy.js"><reason></reason></test>
-  <test id="built-ins/Proxy/revocable/handler-is-revoked-proxy.js"><reason></reason></test>
   <test id="built-ins/Proxy/revocable/target-is-revoked-function-proxy.js"><reason></reason></test>
-  <test id="built-ins/Proxy/revocable/target-is-revoked-proxy.js"><reason></reason></test>
   <test id="built-ins/Proxy/set/trap-is-not-callable-realm.js"><reason></reason></test>
   <test id="built-ins/Proxy/setPrototypeOf/toboolean-trap-result-false.js"><reason></reason></test>
   <test id="built-ins/Proxy/setPrototypeOf/trap-is-not-callable-realm.js"><reason></reason></test>

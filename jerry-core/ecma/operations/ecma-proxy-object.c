@@ -37,34 +37,11 @@
 
 #if ENABLED (JERRY_BUILTIN_PROXY)
 /**
- * Check whether the argument satifies the requrements of [[ProxyTarget]] or [[ProxyHandler]]
- *
- * See also:
- *          ES2015 9.5.15.1-2
- *          ES2015 9.5.15.3-4
- *
- * @return true - if the arguments can be a valid [[ProxyTarget]] or [[ProxyHandler]]
- *         false - otherwise
- */
-static bool
-ecma_proxy_validate (ecma_value_t argument) /**< argument to validate */
-{
-  if (ecma_is_value_object (argument))
-  {
-    ecma_object_t *obj_p = ecma_get_object_from_value (argument);
-
-    return (!ECMA_OBJECT_IS_PROXY (obj_p)
-            || !ecma_is_value_null (((ecma_proxy_object_t *) obj_p)->handler));
-  }
-
-  return false;
-} /* ecma_proxy_validate */
-
-/**
  * ProxyCreate operation for create a new proxy object
  *
  * See also:
  *         ES2015 9.5.15
+ *         ES11+: 9.5.14 ProxyCreate
  *
  * @return created Proxy object as an ecma-value - if success
  *         raised error - otherwise
@@ -73,26 +50,32 @@ ecma_object_t *
 ecma_proxy_create (ecma_value_t target, /**< proxy target */
                    ecma_value_t handler) /**< proxy handler */
 {
-  /* 1 - 4. */
-  if (!ecma_proxy_validate (target) || !ecma_proxy_validate (handler))
+  /* ES2015: 1, 3. */
+  /* ES11+: 1 - 2. */
+  if (!ecma_is_value_object (target) || !ecma_is_value_object (handler))
   {
     ecma_raise_type_error (ECMA_ERR_MSG ("Cannot create proxy with a non-object target or handler"));
     return NULL;
   }
 
-  /* 5 - 6. */
+  /* ES2015: 5 - 6. */
+  /* ES11+: 3 - 4. */
   ecma_object_t *obj_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE),
                                              sizeof (ecma_proxy_object_t),
                                              ECMA_OBJECT_TYPE_PROXY);
 
   ecma_proxy_object_t *proxy_obj_p = (ecma_proxy_object_t *) obj_p;
 
-  /* 8. */
+  /* ES2015: 8. */
+  /* ES11+: 6. */
   proxy_obj_p->target = target;
-  /* 9. */
+
+  /* ES2015: 9. */
+  /* ES11+: 7. */
   proxy_obj_p->handler = handler;
 
-  /* 10. */
+  /* ES2015: 10. */
+  /* ES11+: 8 */
   return obj_p;
 } /* ecma_proxy_create */
 

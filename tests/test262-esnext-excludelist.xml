@@ -148,7 +148,6 @@
   <test id="built-ins/Array/prototype/map/create-proto-from-ctor-realm-non-array.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/slice/create-proto-from-ctor-realm-array.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/slice/create-proto-from-ctor-realm-non-array.js"><reason></reason></test>
-  <test id="built-ins/Array/prototype/sort/comparefn-nonfunction-call-throws.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/splice/create-proto-from-ctor-realm-array.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/splice/create-proto-from-ctor-realm-non-array.js"><reason></reason></test>
   <test id="built-ins/Array/prototype/splice/property-traps-order-with-species.js"><reason></reason></test>

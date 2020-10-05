@@ -287,8 +287,10 @@ ecma_op_strict_equality_compare (ecma_value_t x, /**< first operand */
     /* The +0 === -0 case handled below. */
   }
 
-  JERRY_ASSERT (ecma_is_value_number (x) || ecma_is_value_string (x) || ECMA_CHECK_BIGINT_IN_ASSERT (x));
-  JERRY_ASSERT (ecma_is_value_number (y) || ecma_is_value_string (y) || ECMA_CHECK_BIGINT_IN_ASSERT (y));
+  JERRY_ASSERT (ecma_is_value_number (x) || ecma_is_value_string (x) ||
+                ecma_is_value_bigint (x));
+  JERRY_ASSERT (ecma_is_value_number (y) || ecma_is_value_string (y) ||
+                ecma_is_value_bigint (y));
 
   if (ecma_is_value_string (x))
   {

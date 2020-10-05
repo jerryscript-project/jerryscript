@@ -130,7 +130,7 @@ ecma_op_same_value (ecma_value_t x, /**< ecma value */
   }
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 
-  JERRY_ASSERT (ecma_is_value_object (x) || ECMA_CHECK_SYMBOL_IN_ASSERT (x));
+  JERRY_ASSERT (ecma_is_value_object (x) || ecma_is_value_symbol (x));
 
   return false;
 } /* ecma_op_same_value */
@@ -260,7 +260,7 @@ ecma_op_to_boolean (ecma_value_t value) /**< ecma value */
   }
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 
-  JERRY_ASSERT (ecma_is_value_object (value) || ECMA_CHECK_SYMBOL_IN_ASSERT (value));
+  JERRY_ASSERT (ecma_is_value_object (value) || ecma_is_value_symbol (value));
 
   return true;
 } /* ecma_op_to_boolean */

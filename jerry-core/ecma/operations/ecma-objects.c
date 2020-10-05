@@ -1612,7 +1612,7 @@ ecma_op_object_delete_by_index (ecma_object_t *obj_p, /**< the object */
 ecma_value_t
 ecma_op_object_delete (ecma_object_t *obj_p, /**< the object */
                        ecma_string_t *property_name_p, /**< property name */
-                       bool is_throw) /**< flag that controls failure handling */
+                       bool is_strict) /**< flag that controls failure handling */
 {
   JERRY_ASSERT (obj_p != NULL
                 && !ecma_is_lexical_environment (obj_p));
@@ -1626,14 +1626,14 @@ ecma_op_object_delete (ecma_object_t *obj_p, /**< the object */
     {
       return ecma_op_arguments_object_delete (obj_p,
                                               property_name_p,
-                                              is_throw);
+                                              is_strict);
     }
   }
 
 #if ENABLED (JERRY_BUILTIN_PROXY)
   if (ECMA_OBJECT_IS_PROXY (obj_p))
   {
-    return ecma_proxy_object_delete_property (obj_p, property_name_p);
+    return ecma_proxy_object_delete_property (obj_p, property_name_p, is_strict);
   }
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
@@ -1641,7 +1641,7 @@ ecma_op_object_delete (ecma_object_t *obj_p, /**< the object */
 
   return ecma_op_general_object_delete (obj_p,
                                         property_name_p,
-                                        is_throw);
+                                        is_strict);
 } /* ecma_op_object_delete */
 
 /**

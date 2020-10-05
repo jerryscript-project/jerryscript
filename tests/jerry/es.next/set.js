@@ -136,3 +136,5 @@ set.forEach(function (value) {
 
 assert(k === Infinity);
 assert(set.has(+0) === true);
+
+[Symbol.iterator, Symbol.toStringTag].forEach(e => assert (Reflect.ownKeys(Set.prototype).includes(e)));

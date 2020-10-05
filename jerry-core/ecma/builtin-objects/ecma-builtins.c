@@ -1114,24 +1114,38 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
       index = 0;
     }
 
-#if ENABLED (JERRY_ESNEXT)
-    /* Builtin symbol properties are internal magic strings which must not be listed */
-    if (curr_property_p->magic_string_id > LIT_NON_INTERNAL_MAGIC_STRING__COUNT)
-    {
-      curr_property_p++;
-      continue;
-    }
-#endif /* ENABLED (JERRY_ESNEXT) */
-
-    ecma_string_t *name_p = ecma_get_magic_string ((lit_magic_string_id_t) curr_property_p->magic_string_id);
-
     uint32_t bit_for_index = (uint32_t) 1u << index;
 
-    if (!(*bitset_p & bit_for_index) || ecma_op_ordinary_object_has_own_property (object_p, name_p))
+    if (curr_property_p->magic_string_id > LIT_NON_INTERNAL_MAGIC_STRING__COUNT)
     {
-      ecma_value_t name = ecma_make_magic_string_value ((lit_magic_string_id_t) curr_property_p->magic_string_id);
-      ecma_collection_push_back (prop_names_p, name);
-      prop_counter_p->string_named_props++;
+#if ENABLED (JERRY_ESNEXT)
+      if (LIT_IS_GLOBAL_SYMBOL (curr_property_p->magic_string_id))
+      {
+        ecma_string_t *name_p = ecma_op_get_global_symbol (curr_property_p->magic_string_id);
+
+        if (!(*bitset_p & bit_for_index) || ecma_op_ordinary_object_has_own_property (object_p, name_p))
+        {
+          ecma_value_t name = ecma_make_symbol_value (name_p);
+          ecma_collection_push_back (prop_names_p, name);
+          prop_counter_p->symbol_named_props++;
+        }
+        else
+        {
+          ecma_deref_ecma_string (name_p);
+        }
+      }
+#endif /* ENABLED (JERRY_ESNEXT) */
+    }
+    else
+    {
+      ecma_string_t *name_p = ecma_get_magic_string ((lit_magic_string_id_t) curr_property_p->magic_string_id);
+
+      if (!(*bitset_p & bit_for_index) || ecma_op_ordinary_object_has_own_property (object_p, name_p))
+      {
+        ecma_value_t name = ecma_make_magic_string_value ((lit_magic_string_id_t) curr_property_p->magic_string_id);
+        ecma_collection_push_back (prop_names_p, name);
+        prop_counter_p->string_named_props++;
+      }
     }
 
     curr_property_p++;

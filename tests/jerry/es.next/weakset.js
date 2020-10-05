@@ -166,3 +166,5 @@ try {
 } catch (e) {
   assert (e === "abrupt add getter");
 }
+
+[Symbol.toStringTag].forEach(e => assert (Reflect.ownKeys(WeakSet.prototype).includes(e)));

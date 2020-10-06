@@ -2615,6 +2615,7 @@ ecma_regexp_replace_helper_fast (ecma_replace_context_t *ctx_p, /**<replace cont
 {
   const re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t,
                                                                     re_obj_p->u.class_prop.u.value);
+  ecma_bytecode_ref ((ecma_compiled_code_t *) bc_p);
 
   JERRY_ASSERT (bc_p != NULL);
   ecma_value_t result = ECMA_VALUE_EMPTY;
@@ -2850,6 +2851,7 @@ cleanup_builder:
 
 cleanup_context:
   ecma_regexp_cleanup_context (&re_ctx);
+  ecma_bytecode_deref ((ecma_compiled_code_t *) bc_p);
 
   if (string_flags & ECMA_STRING_FLAG_MUST_BE_FREED)
   {

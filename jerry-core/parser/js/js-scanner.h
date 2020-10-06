@@ -236,6 +236,7 @@ typedef enum
                                           *   this flag must be combined with the type of function (e.g. async) */
   SCANNER_FUNCTION_ASYNC = (1 << 4), /**< function is async function */
 #endif /* ENABLED (JERRY_ESNEXT) */
+  SCANNER_FUNCTION_IS_STRICT = (1 << 5), /**< function is strict */
 } scanner_function_flags_t;
 
 /**

@@ -1822,6 +1822,7 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ESNEXT)
   bool has_complex_argument = (context_p->next_scanner_info_p->u8_arg & SCANNER_FUNCTION_HAS_COMPLEX_ARGUMENT) != 0;
 #endif /* ENABLED (JERRY_ESNEXT) */
+  bool is_strict = (context_p->next_scanner_info_p->u8_arg & SCANNER_FUNCTION_IS_STRICT) != 0;
 
   scanner_create_variables (context_p, SCANNER_CREATE_VARS_IS_FUNCTION_ARGS);
   scanner_set_active (context_p);
@@ -2099,6 +2100,11 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 #endif /* ENABLED (JERRY_ESNEXT) */
 
   scanner_create_variables (context_p, SCANNER_CREATE_VARS_IS_FUNCTION_BODY);
+
+  if (is_strict)
+  {
+    context_p->status_flags |= PARSER_IS_STRICT;
+  }
 } /* parser_parse_function_arguments */
 
 #ifndef JERRY_NDEBUG
@@ -2263,6 +2269,14 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
 
   context.module_current_node_p = NULL;
 #endif /* ENABLED (JERRY_MODULE_SYSTEM) */
+
+  JERRY_ASSERT (context.next_scanner_info_p->source_p == context.source_p);
+  JERRY_ASSERT (context.next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
+
+  if (context.next_scanner_info_p->u8_arg & SCANNER_FUNCTION_IS_STRICT)
+  {
+    context.status_flags |= PARSER_IS_STRICT;
+  }
 
   PARSER_TRY (context.try_buffer)
   {

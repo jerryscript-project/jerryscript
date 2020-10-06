@@ -182,3 +182,5 @@ try {
 } catch (e) {
   assert (e === "abrupt set getter");
 }
+
+[Symbol.toStringTag].forEach(e => assert (Reflect.ownKeys(WeakMap.prototype).includes(e)));

@@ -157,3 +157,5 @@ map.forEach(function (value, key) {
 
 assert(k === Infinity);
 assert(map.get(+0) === "foo");
+
+[Symbol.iterator, Symbol.toStringTag].forEach(e => assert (Reflect.ownKeys(Map.prototype).includes(e)));

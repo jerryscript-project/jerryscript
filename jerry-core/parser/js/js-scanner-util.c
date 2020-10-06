@@ -1764,7 +1764,8 @@ scanner_cleanup (parser_context_t *context_p) /**< context */
                       || scanner_info_p->type == SCANNER_TYPE_CLASS_CONSTRUCTOR
                       || scanner_info_p->type == SCANNER_TYPE_OBJECT_LITERAL_WITH_SUPER
                       || scanner_info_p->type == SCANNER_TYPE_ERR_REDECLARED
-                      || scanner_info_p->type == SCANNER_TYPE_ERR_ASYNC_FUNCTION);
+                      || scanner_info_p->type == SCANNER_TYPE_ERR_ASYNC_FUNCTION
+                      || scanner_info_p->type == SCANNER_TYPE_EXPORT_MODULE_SPECIFIER);
 #else /* !ENABLED (JERRY_ESNEXT) */
         JERRY_ASSERT (scanner_info_p->type == SCANNER_TYPE_END_ARGUMENTS);
 #endif /* ENABLED (JERRY_ESNEXT) */
@@ -2712,6 +2713,31 @@ scanner_literal_is_created (parser_context_t *context_p, /**< context */
 
   return (scope_stack_p->map_to & PARSER_SCOPE_STACK_IS_LOCAL_CREATED) != 0;
 } /* scanner_literal_is_created */
+
+/**
+ * Checks whether the literal exists.
+ *
+ * @return true if the literal exists, false otherwise
+ */
+bool
+scanner_literal_exists (parser_context_t *context_p, /**< context */
+                        uint16_t literal_index) /**< literal index */
+{
+  JERRY_ASSERT (literal_index < PARSER_REGISTER_START);
+
+  parser_scope_stack_t *scope_stack_p = context_p->scope_stack_p + context_p->scope_stack_top;
+
+  while (scope_stack_p-- > context_p->scope_stack_p)
+  {
+    if (scope_stack_p->map_from != PARSER_SCOPE_STACK_FUNC
+        && scanner_decode_map_to (scope_stack_p) == literal_index)
+    {
+      return true;
+    }
+  }
+
+  return false;
+} /* scanner_literal_exists */
 
 #endif /* ENABLED (JERRY_ESNEXT) */
 

@@ -1879,6 +1879,9 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
         return SCAN_NEXT_TOKEN;
       }
 
+      scanner_source_start_t source_start;
+      source_start.source_p = context_p->source_p;
+
       if (context_p->token.type == LEXER_LEFT_BRACE)
       {
         lexer_next_token (context_p);
@@ -1923,6 +1926,9 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
         {
           return SCAN_KEEP_TOKEN;
         }
+
+        scanner_info_t *info_p = scanner_insert_info (context_p, source_start.source_p, sizeof (scanner_info_t));
+        info_p->type = SCANNER_TYPE_EXPORT_MODULE_SPECIFIER;
 
         lexer_next_token (context_p);
 
@@ -3733,6 +3739,13 @@ scan_completed:
         case SCANNER_TYPE_OBJECT_LITERAL_WITH_SUPER:
         {
           JERRY_DEBUG_MSG ("  OBJECT_LITERAL_WITH_SUPER: source:%d\n",
+                           (int) (info_p->source_p - source_start_p));
+          print_location = false;
+          break;
+        }
+        case SCANNER_TYPE_EXPORT_MODULE_SPECIFIER:
+        {
+          JERRY_DEBUG_MSG ("  EXPORT_WITH_MODULE_SPECIFIER: source:%d\n",
                            (int) (info_p->source_p - source_start_p));
           print_location = false;
           break;

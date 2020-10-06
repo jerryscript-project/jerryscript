@@ -1418,6 +1418,10 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Duplicated imported binding name.";
     }
+    case PARSER_ERR_EXPORT_NOT_DEFINED:
+    {
+      return "Export not defined in module.";
+    }
 #endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
     default:

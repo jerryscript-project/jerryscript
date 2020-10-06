@@ -828,6 +828,7 @@ uint16_t scanner_decode_map_to (parser_scope_stack_t *stack_item_p);
 uint16_t scanner_save_literal (parser_context_t *context_p, uint16_t ident_index);
 bool scanner_literal_is_const_reg (parser_context_t *context_p, uint16_t literal_index);
 bool scanner_literal_is_created (parser_context_t *context_p, uint16_t literal_index);
+bool scanner_literal_exists (parser_context_t *context_p, uint16_t literal_index);
 #endif /* ENABLED (JERRY_ESNEXT) */
 
 void scanner_scan_all (parser_context_t *context_p, const uint8_t *arg_list_p, const uint8_t *arg_list_end_p,

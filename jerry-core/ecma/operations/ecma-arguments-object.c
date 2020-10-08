@@ -58,19 +58,10 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
 
   uint32_t object_size = sizeof (ecma_unmapped_arguments_t);
   uint32_t saved_arg_count = JERRY_MAX (shared_p->arg_list_len, formal_params_number);
-  uint8_t flags = ECMA_ARGUMENTS_OBJECT_NO_FLAGS;
 
   if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED)
   {
-    flags = ECMA_ARGUMENTS_OBJECT_MAPPED;
     object_size = sizeof (ecma_mapped_arguments_t);
-
-#if ENABLED (JERRY_SNAPSHOT_EXEC)
-    if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION)
-    {
-      flags |= ECMA_ARGUMENTS_OBJECT_STATIC_BYTECODE;
-    }
-#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
   }
 
   ecma_object_t *obj_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE),
@@ -80,7 +71,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
   ecma_unmapped_arguments_t *arguments_p = (ecma_unmapped_arguments_t *) obj_p;
 
   arguments_p->header.u.pseudo_array.type = ECMA_PSEUDO_ARRAY_ARGUMENTS;
-  arguments_p->header.u.pseudo_array.extra_info = flags;
+  arguments_p->header.u.pseudo_array.extra_info = ECMA_ARGUMENTS_OBJECT_NO_FLAGS;
   arguments_p->header.u.pseudo_array.u1.formal_params_number = formal_params_number;
   arguments_p->header.u.pseudo_array.u2.arguments_number = 0;
   arguments_p->callee = ecma_make_object_value (func_obj_p);
@@ -104,10 +95,12 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
     ecma_mapped_arguments_t *mapped_arguments_p = (ecma_mapped_arguments_t *) obj_p;
 
     ECMA_SET_INTERNAL_VALUE_POINTER (mapped_arguments_p->lex_env, lex_env_p);
+    arguments_p->header.u.pseudo_array.extra_info |= ECMA_ARGUMENTS_OBJECT_MAPPED;
 
 #if ENABLED (JERRY_SNAPSHOT_EXEC)
-    if (flags & ECMA_ARGUMENTS_OBJECT_STATIC_BYTECODE)
+    if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION)
     {
+      arguments_p->header.u.pseudo_array.extra_info |= ECMA_ARGUMENTS_OBJECT_STATIC_BYTECODE;
       mapped_arguments_p->u.byte_code_p = (ecma_compiled_code_t *) bytecode_data_p;
     }
     else

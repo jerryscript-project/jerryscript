@@ -278,6 +278,13 @@ vm_op_delete_prop (ecma_value_t object, /**< base object */
   ecma_deref_object (obj_p);
   ecma_deref_ecma_string (name_string_p);
 
+#if ENABLED (JERRY_ESNEXT)
+  if (is_strict && ecma_is_value_false (delete_op_ret))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("delete returned false in strict mode."));
+  }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
   return delete_op_ret;
 } /* vm_op_delete_prop */
 

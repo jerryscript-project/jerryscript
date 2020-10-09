@@ -45,8 +45,6 @@ uint32_t JERRY_ATTR_PURE
 ecma_arraybuffer_get_length (ecma_object_t *obj_p);
 bool JERRY_ATTR_PURE
 ecma_arraybuffer_is_detached (ecma_object_t *obj_p);
-bool JERRY_ATTR_PURE
-ecma_arraybuffer_is_detachable (ecma_object_t *obj_p);
 bool
 ecma_arraybuffer_detach (ecma_object_t *obj_p);
 bool

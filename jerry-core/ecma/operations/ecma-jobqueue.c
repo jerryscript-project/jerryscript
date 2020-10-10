@@ -498,7 +498,7 @@ ecma_process_all_enqueued_jobs (void)
 {
   ecma_value_t ret = ECMA_VALUE_UNDEFINED;
 
-  while (JERRY_CONTEXT (job_queue_head_p) != NULL && !ECMA_IS_VALUE_ERROR (ret))
+  while (JERRY_CONTEXT (job_queue_head_p) != NULL)
   {
     ecma_job_queue_item_t *job_p = JERRY_CONTEXT (job_queue_head_p);
     JERRY_CONTEXT (job_queue_head_p) = ecma_job_queue_get_next (job_p);
@@ -531,9 +531,15 @@ ecma_process_all_enqueued_jobs (void)
         break;
       }
     }
+
+    if (ECMA_IS_VALUE_ERROR (ret))
+    {
+      return ret;
+    }
   }
 
-  return ret;
+  ecma_free_value (ret);
+  return ECMA_VALUE_UNDEFINED;
 } /* ecma_process_all_enqueued_jobs */
 
 /**

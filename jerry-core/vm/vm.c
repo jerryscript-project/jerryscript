@@ -577,11 +577,7 @@ vm_super_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
   ecma_property_t *prop_p = ecma_op_get_this_property (frame_ctx_p->lex_env_p);
 
-  if (ecma_op_this_binding_is_initialized (prop_p))
-  {
-    completion_value = ecma_raise_reference_error (ECMA_ERR_MSG ("Super constructor may only be called once"));
-  }
-  else if (!ecma_is_constructor (func_value))
+  if (!ecma_is_constructor (func_value))
   {
     completion_value = ecma_raise_type_error (ECMA_ERR_MSG ("Class extends value is not a constructor."));
   }
@@ -608,6 +604,12 @@ vm_super_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                           ecma_get_object_from_value (proto_value));
       }
       ecma_free_value (proto_value);
+    }
+
+    if (!ECMA_IS_VALUE_ERROR (completion_value) && ecma_op_this_binding_is_initialized (prop_p))
+    {
+      ecma_free_value (completion_value);
+      completion_value = ecma_raise_reference_error (ECMA_ERR_MSG ("Super constructor may only be called once"));
     }
   }
 

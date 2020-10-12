@@ -1416,7 +1416,7 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
     }
 #endif /* ENABLED (JERRY_ESNEXT) */
     else if (source_p[1] >= LIT_CHAR_0
-             && source_p[1] <= LIT_CHAR_7)
+             && source_p[1] <= LIT_CHAR_9)
     {
       context_p->token.extra_value = LEXER_NUMBER_OCTAL;
 #if ENABLED (JERRY_BUILTIN_BIGINT)
@@ -1429,11 +1429,18 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
       }
 
       lexer_check_numbers (context_p, &source_p, source_end_p, LIT_CHAR_7, true);
-    }
-    else if (source_p[1] >= LIT_CHAR_8
-             && source_p[1] <= LIT_CHAR_9)
-    {
-      parser_raise_error (context_p, PARSER_ERR_INVALID_NUMBER);
+
+      if (source_p < source_end_p
+          && source_p[0] >= LIT_CHAR_8
+          && source_p[0] <= LIT_CHAR_9)
+      {
+#if ENABLED (JERRY_ESNEXT)
+        lexer_check_numbers (context_p, &source_p, source_end_p, LIT_CHAR_9, true);
+        context_p->token.extra_value = LEXER_NUMBER_DECIMAL;
+#else /* !ENABLED (JERRY_ESNEXT) */
+        parser_raise_error (context_p, PARSER_ERR_INVALID_NUMBER);
+#endif /* ENABLED (JERRY_ESNEXT) */
+      }
     }
 #if ENABLED (JERRY_ESNEXT)
     else if (LEXER_TO_ASCII_LOWERCASE (source_p[1]) == LIT_CHAR_LOWERCASE_B)

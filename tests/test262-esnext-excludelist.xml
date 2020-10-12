@@ -2897,7 +2897,6 @@
   <test id="language/expressions/arrow-function/dstr/obj-ptrn-rest-val-obj.js"><reason></reason></test>
   <test id="language/expressions/arrow-function/eval-var-scope-syntax-err.js"><reason></reason></test>
   <test id="language/expressions/arrow-function/length-dflt.js"><reason></reason></test>
-  <test id="language/expressions/arrow-function/lexical-super-call-from-within-constructor.js"><reason></reason></test>
   <test id="language/expressions/arrow-function/name.js"><reason></reason></test>
   <test id="language/expressions/arrow-function/param-dflt-yield-expr.js"><reason></reason></test>
   <test id="language/expressions/assignment/S11.13.1_A5_T1.js"><reason></reason></test>
@@ -5982,7 +5981,6 @@
   <test id="language/expressions/class/elements/direct-eval-err-contains-newtarget.js"><reason></reason></test>
   <test id="language/expressions/class/elements/fields-anonymous-function-length.js"><reason></reason></test>
   <test id="language/expressions/class/elements/fields-multiple-definitions-static-private-methods-proxy.js"><reason></reason></test>
-  <test id="language/expressions/class/elements/fields-run-once-on-double-super.js"><reason></reason></test>
   <test id="language/expressions/class/elements/gen-private-method-static/yield-spread-arr-multiple.js"><reason></reason></test>
   <test id="language/expressions/class/elements/gen-private-method-static/yield-spread-arr-single.js"><reason></reason></test>
   <test id="language/expressions/class/elements/gen-private-method-static/yield-spread-obj.js"><reason></reason></test>

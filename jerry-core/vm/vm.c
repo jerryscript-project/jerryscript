@@ -528,17 +528,17 @@ static const uint8_t vm_error_byte_code_p[] =
 static ecma_object_t *
 vm_get_class_function (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 {
-  while (true)
+  JERRY_ASSERT (frame_ctx_p != NULL);
+
+  if (frame_ctx_p->shared_p->status_flags & VM_FRAME_CTX_SHARED_NON_ARROW_FUNC)
   {
-    JERRY_ASSERT (frame_ctx_p != NULL);
-
-    if (frame_ctx_p->shared_p->status_flags & VM_FRAME_CTX_SHARED_NON_ARROW_FUNC)
-    {
-      return VM_FRAME_CTX_GET_FUNCTION_OBJECT (frame_ctx_p);
-    }
-
-    frame_ctx_p = frame_ctx_p->prev_context_p;
+    return VM_FRAME_CTX_GET_FUNCTION_OBJECT (frame_ctx_p);
   }
+
+  ecma_environment_record_t *environment_record_p = ecma_op_get_environment_record (frame_ctx_p->lex_env_p);
+
+  JERRY_ASSERT (environment_record_p != NULL);
+  return ecma_get_object_from_value (environment_record_p->function_object);
 } /* vm_get_class_function */
 
 /**
@@ -575,7 +575,7 @@ vm_super_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   ecma_value_t func_value = *(--frame_ctx_p->stack_top_p);
   ecma_value_t completion_value;
 
-  ecma_property_t *prop_p = ecma_op_get_this_property (frame_ctx_p->lex_env_p);
+  ecma_environment_record_t *environment_record_p = ecma_op_get_environment_record (frame_ctx_p->lex_env_p);
 
   if (!ecma_is_constructor (func_value))
   {
@@ -606,7 +606,7 @@ vm_super_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
       ecma_free_value (proto_value);
     }
 
-    if (!ECMA_IS_VALUE_ERROR (completion_value) && ecma_op_this_binding_is_initialized (prop_p))
+    if (!ECMA_IS_VALUE_ERROR (completion_value) && ecma_op_this_binding_is_initialized (environment_record_p))
     {
       ecma_free_value (completion_value);
       completion_value = ecma_raise_reference_error (ECMA_ERR_MSG ("Super constructor may only be called once"));
@@ -647,7 +647,7 @@ vm_super_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   }
   else
   {
-    ecma_op_bind_this_value (prop_p, completion_value);
+    ecma_op_bind_this_value (environment_record_p, completion_value);
     frame_ctx_p->this_binding = completion_value;
 
     frame_ctx_p->byte_code_p = byte_code_p;

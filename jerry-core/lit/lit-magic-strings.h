@@ -40,7 +40,6 @@ typedef enum
   LIT_INTERNAL_MAGIC_STRING_TYPEDARRAY_PROTOTYPE_VALUES, /**< %TypedArray%.prototype values and [@@iterator] routine */
   LIT_INTERNAL_MAGIC_STRING_SET_PROTOTYPE_VALUES, /**< Set.prototype values, keys and [@@iterator] routines */
   LIT_INTERNAL_MAGIC_STRING_MAP_PROTOTYPE_ENTRIES, /**< Map.prototype entries and [@@iterator] routines */
-  LIT_INTERNAL_MAGIC_THIS_BINDING_VALUE, /**< FunctionEnvironmentRecord [[ThisBindingValue]] internal slot */
   LIT_INTERNAL_MAGIC_PROMISE_CAPABILITY, /**< PromiseCapability record */
   /* List of well known symbols */
   LIT_GLOBAL_SYMBOL_HAS_INSTANCE, /**< @@hasInstance well known symbol */
@@ -65,8 +64,9 @@ typedef enum
   LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER, /**< native pointer info associated with an object */
   LIT_INTERNAL_MAGIC_STRING_FIRST_DATA = LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER, /**< first index of special
                                                                                     *   data properties */
-  LIT_INTERNAL_MAGIC_STRING_WEAK_REFS, /**< Weak references to the current object */
+  LIT_INTERNAL_MAGIC_STRING_ENVIRONMENT_RECORD, /**< dynamic environment record needed by class constructors */
   LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED, /**< computed class field name list */
+  LIT_INTERNAL_MAGIC_STRING_WEAK_REFS, /**< Weak references to the current object */
   LIT_MAGIC_STRING__COUNT /**< number of magic strings */
 } lit_magic_string_id_t;
 

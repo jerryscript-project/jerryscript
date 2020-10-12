@@ -319,6 +319,19 @@ typedef struct ecma_native_pointer_t
   struct ecma_native_pointer_t *next_p; /**< points to the next ecma_native_pointer_t element */
 } ecma_native_pointer_t;
 
+#if ENABLED (JERRY_ESNEXT)
+
+/**
+ * Representation for class constructor environment record.
+ */
+typedef struct
+{
+  ecma_value_t this_binding; /**< this binding */
+  ecma_value_t function_object; /**< function object */
+} ecma_environment_record_t;
+
+#endif /* ENABLED (JERRY_ESNEXT) */
+
 /**
  * Property list:
  *   The property list of an object is a chain list of various items.

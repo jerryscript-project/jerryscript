@@ -197,9 +197,7 @@ ecma_gc_mark_properties (ecma_property_pair_t *property_pair_p) /**< property pa
 
         if (ecma_is_value_object (value))
         {
-          ecma_object_t *value_obj_p = ecma_get_object_from_value (value);
-
-          ecma_gc_set_object_visited (value_obj_p);
+          ecma_gc_set_object_visited (ecma_get_object_from_value (value));
         }
         break;
       }
@@ -225,6 +223,24 @@ ecma_gc_mark_properties (ecma_property_pair_t *property_pair_p) /**< property pa
         JERRY_ASSERT (ECMA_PROPERTY_GET_NAME_TYPE (property) == ECMA_DIRECT_STRING_MAGIC
                       && property_pair_p->names_cp[index] >= LIT_INTERNAL_MAGIC_STRING_FIRST_DATA
                       && property_pair_p->names_cp[index] < LIT_MAGIC_STRING__COUNT);
+
+#if ENABLED (JERRY_ESNEXT)
+        if (property_pair_p->names_cp[index] == LIT_INTERNAL_MAGIC_STRING_ENVIRONMENT_RECORD)
+        {
+          ecma_environment_record_t *environment_record_p;
+          environment_record_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_environment_record_t,
+                                                                  property_pair_p->values[index].value);
+
+          if (environment_record_p->this_binding != ECMA_VALUE_UNINITIALIZED)
+          {
+            JERRY_ASSERT (ecma_is_value_object (environment_record_p->this_binding));
+            ecma_gc_set_object_visited (ecma_get_object_from_value (environment_record_p->this_binding));
+          }
+
+          JERRY_ASSERT (ecma_is_value_object (environment_record_p->function_object));
+          ecma_gc_set_object_visited (ecma_get_object_from_value (environment_record_p->function_object));
+        }
+#endif /* ENABLED (JERRY_ESNEXT) */
         break;
       }
       default:
@@ -1166,6 +1182,24 @@ ecma_gc_free_properties (ecma_object_t *object_p) /**< object */
         /* Call the native's free callback. */
         switch (name_cp)
         {
+#if ENABLED (JERRY_ESNEXT)
+          case LIT_INTERNAL_MAGIC_STRING_ENVIRONMENT_RECORD:
+          {
+            ecma_environment_record_t *environment_record_p;
+            environment_record_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_environment_record_t,
+                                                                    prop_pair_p->values[i].value);
+            jmem_heap_free_block (environment_record_p, sizeof (ecma_environment_record_t));
+            break;
+          }
+          case LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED:
+          {
+            ecma_value_t *compact_collection_p;
+            compact_collection_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_value_t,
+                                                                    prop_pair_p->values[i].value);
+            ecma_compact_collection_free (compact_collection_p);
+            break;
+          }
+#endif /* ENABLED (JERRY_ESNEXT) */
 #if ENABLED (JERRY_BUILTIN_WEAKMAP) || ENABLED (JERRY_BUILTIN_WEAKSET)
           case LIT_INTERNAL_MAGIC_STRING_WEAK_REFS:
           {
@@ -1187,16 +1221,6 @@ ecma_gc_free_properties (ecma_object_t *object_p) /**< object */
             break;
           }
 #endif /* ENABLED (JERRY_BUILTIN_WEAKMAP) || ENABLED (JERRY_BUILTIN_WEAKSET) */
-#if ENABLED (JERRY_ESNEXT)
-          case LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED:
-          {
-            ecma_value_t *compact_collection_p;
-            compact_collection_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_value_t,
-                                                                    prop_pair_p->values[i].value);
-            ecma_compact_collection_free (compact_collection_p);
-            break;
-          }
-#endif /* ENABLED (JERRY_ESNEXT) */
           default:
           {
             JERRY_ASSERT (name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);

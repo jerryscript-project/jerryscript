@@ -18,13 +18,11 @@
 #include "test-common.h"
 
 static jerry_value_t
-create_special_proxy_handler (const jerry_value_t function_obj, /**< function object */
-                              const jerry_value_t this_val, /**< this value */
+create_special_proxy_handler (const jerry_call_info_t *call_info_p, /**< call information */
                               const jerry_value_t args_p[], /**< argument list */
                               const jerry_length_t args_count) /**< argument count */
 {
-  JERRY_UNUSED (function_obj);
-  JERRY_UNUSED (this_val);
+  JERRY_UNUSED (call_info_p);
 
   if (args_count < 2)
   {

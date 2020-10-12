@@ -26,13 +26,11 @@
  *         - "<anonymous>", otherwise
  */
 jerry_value_t
-jerryx_handler_resource_name (const jerry_value_t func_obj_val, /**< function object */
-                              const jerry_value_t this_p, /**< this arg */
+jerryx_handler_resource_name (const jerry_call_info_t *call_info_p, /**< call information */
                               const jerry_value_t args_p[], /**< function arguments */
                               const jerry_length_t args_cnt) /**< number of function arguments */
 {
-  (void) func_obj_val; /* unused */
-  (void) this_p; /* unused */
+  (void) call_info_p; /* unused */
 
   jerry_value_t undefined_value = jerry_create_undefined ();
   jerry_value_t resource_name = jerry_get_resource_name (args_cnt > 0 ? args_p[0] : undefined_value);

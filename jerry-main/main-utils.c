@@ -45,13 +45,11 @@ main_register_global_function (const char *name_p, /**< name of the function */
 } /* main_register_global_function */
 
 static jerry_value_t
-main_create_realm (const jerry_value_t func_obj_val, /**< function object */
-                   const jerry_value_t this_p, /**< this arg */
+main_create_realm (const jerry_call_info_t *call_info_p, /**< call information */
                    const jerry_value_t args_p[], /**< function arguments */
                    const jerry_length_t args_cnt) /**< number of function arguments */
 {
-  (void) func_obj_val; /* unused */
-  (void) this_p; /* unused */
+  (void) call_info_p; /* unused */
   (void) args_p; /* unused */
   (void) args_cnt; /* unused */
   return jerry_create_realm ();
@@ -86,13 +84,11 @@ test262_register_function (jerry_value_t test262_obj, /** $262 object */
  *         value marked with error flag - otherwise
  */
 static jerry_value_t
-test262_detach_array_buffer (const jerry_value_t func_obj_val, /**< function object */
-                             const jerry_value_t this_p, /**< this arg */
+test262_detach_array_buffer (const jerry_call_info_t *call_info_p, /**< call information */
                              const jerry_value_t args_p[], /**< function arguments */
                              const jerry_length_t args_cnt) /**< number of function arguments */
 {
-  (void) func_obj_val; /* unused */
-  (void) this_p; /* unused */
+  (void) call_info_p; /* unused */
 
   if (args_cnt < 1 || !jerry_value_is_arraybuffer (args_p[0]))
   {
@@ -112,13 +108,11 @@ test262_detach_array_buffer (const jerry_value_t func_obj_val, /**< function obj
  * @return completion of the script parsing and execution.
  */
 static jerry_value_t
-test262_eval_script (const jerry_value_t func_obj_val, /**< function object */
-                     const jerry_value_t this_p, /**< this arg */
+test262_eval_script (const jerry_call_info_t *call_info_p, /**< call information */
                      const jerry_value_t args_p[], /**< function arguments */
                      const jerry_length_t args_cnt) /**< number of function arguments */
 {
-  (void) func_obj_val; /* unused */
-  (void) this_p; /* unused */
+  (void) call_info_p; /* unused */
 
   if (args_cnt < 1 || !jerry_value_is_string (args_p[0]))
   {
@@ -159,13 +153,11 @@ create_test262 (jerry_value_t global_obj);
  * @return a new $262 object
  */
 static jerry_value_t
-test262_create_realm (const jerry_value_t func_obj_val, /**< function object */
-                      const jerry_value_t this_p, /**< this arg */
+test262_create_realm (const jerry_call_info_t *call_info_p, /**< call information */
                       const jerry_value_t args_p[], /**< function arguments */
                       const jerry_length_t args_cnt) /**< number of function arguments */
 {
-  (void) func_obj_val; /* unused */
-  (void) this_p; /* unused */
+  (void) call_info_p; /* unused */
   (void) args_p; /* unused */
   (void) args_cnt; /* unused */
 

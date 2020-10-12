@@ -21,13 +21,11 @@
  * @return undefined.
  */
 jerry_value_t
-jerryx_handler_gc (const jerry_value_t func_obj_val, /**< function object */
-                   const jerry_value_t this_p, /**< this arg */
+jerryx_handler_gc (const jerry_call_info_t *call_info_p, /**< call information */
                    const jerry_value_t args_p[], /**< function arguments */
                    const jerry_length_t args_cnt) /**< number of function arguments */
 {
-  (void) func_obj_val; /* unused */
-  (void) this_p; /* unused */
+  (void) call_info_p; /* unused */
 
   jerry_gc_mode_t mode = ((args_cnt > 0 && jerry_value_to_boolean (args_p[0])) ? JERRY_GC_PRESSURE_HIGH
                                                                                : JERRY_GC_PRESSURE_LOW);

@@ -24,13 +24,11 @@
 #include <string.h>
 
 static jerry_value_t
-method_hello (const jerry_value_t jfunc,  /**< function object */
-              const jerry_value_t jthis,  /**< function this */
+method_hello (const jerry_call_info_t *call_info_p, /**< call information */
               const jerry_value_t jargv[], /**< arguments */
               const jerry_length_t jargc) /**< number of arguments */
 {
-  (void) jfunc;
-  (void) jthis;
+  (void) call_info_p;
   (void) jargv;
   return jerry_create_number (jargc);
 } /* method_hello */

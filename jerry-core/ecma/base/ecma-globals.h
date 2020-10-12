@@ -297,10 +297,14 @@ enum
 typedef ecma_value_t (*ecma_vm_exec_stop_callback_t) (void *user_p);
 
 /**
+ * Forward definition of jerry_call_info_t.
+ */
+struct jerry_call_info_t;
+
+/**
  * Type of an external function handler.
  */
-typedef ecma_value_t (*ecma_native_handler_t) (const ecma_value_t function_obj,
-                                               const ecma_value_t this_val,
+typedef ecma_value_t (*ecma_native_handler_t) (const struct jerry_call_info_t *call_info_p,
                                                const ecma_value_t args_p[],
                                                const uint32_t args_count);
 
@@ -880,6 +884,13 @@ typedef struct
   uint32_t continue_instantiated_bitset[1]; /**< bit set for instantiated properties */
 #endif /* JERRY_BUILTIN_REALMS */
 } ecma_built_in_props_t;
+
+/**
+ * Type of a built-in function handler.
+ */
+typedef ecma_value_t (*ecma_builtin_handler_t) (ecma_object_t *function_obj_p,
+                                                const ecma_value_t args_p[],
+                                                const uint32_t args_count);
 
 #if JERRY_BUILTIN_REALMS
 

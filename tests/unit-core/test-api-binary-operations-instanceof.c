@@ -28,13 +28,11 @@ typedef struct
 } test_entry_t;
 
 static jerry_value_t
-my_constructor (const jerry_value_t func_val, /**< function */
-                const jerry_value_t this_val, /**< this */
+my_constructor (const jerry_call_info_t *call_info_p, /**< call information */
                 const jerry_value_t argv[], /**< arguments */
                 const jerry_length_t argc) /**< number of arguments */
 {
-  (void) func_val;
-  (void) this_val;
+  (void) call_info_p;
   (void) argv;
   (void) argc;
   return jerry_create_undefined ();

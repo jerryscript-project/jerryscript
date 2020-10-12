@@ -36,13 +36,11 @@ static const jerry_char_t s1[] = "resolved";
 static const jerry_char_t s2[] = "rejected";
 
 static jerry_value_t
-create_promise1_handler (const jerry_value_t func_obj_val, /**< function object */
-                         const jerry_value_t this_val, /**< this value */
+create_promise1_handler (const jerry_call_info_t *call_info_p, /**< call information */
                          const jerry_value_t args_p[], /**< arguments list */
                          const jerry_length_t args_cnt) /**< arguments length */
 {
-  JERRY_UNUSED (func_obj_val);
-  JERRY_UNUSED (this_val);
+  JERRY_UNUSED (call_info_p);
   JERRY_UNUSED (args_p);
   JERRY_UNUSED (args_cnt);
 
@@ -53,13 +51,11 @@ create_promise1_handler (const jerry_value_t func_obj_val, /**< function object 
 } /* create_promise1_handler */
 
 static jerry_value_t
-create_promise2_handler (const jerry_value_t func_obj_val, /**< function object */
-                         const jerry_value_t this_val, /**< this value */
+create_promise2_handler (const jerry_call_info_t *call_info_p, /**< call information */
                          const jerry_value_t args_p[], /**< arguments list */
                          const jerry_length_t args_cnt) /**< arguments length */
 {
-  JERRY_UNUSED (func_obj_val);
-  JERRY_UNUSED (this_val);
+  JERRY_UNUSED (call_info_p);
   JERRY_UNUSED (args_p);
   JERRY_UNUSED (args_cnt);
 
@@ -70,13 +66,11 @@ create_promise2_handler (const jerry_value_t func_obj_val, /**< function object 
 } /* create_promise2_handler */
 
 static jerry_value_t
-assert_handler (const jerry_value_t func_obj_val, /**< function object */
-                const jerry_value_t this_val, /**< this arg */
+assert_handler (const jerry_call_info_t *call_info_p, /**< call information */
                 const jerry_value_t args_p[], /**< function arguments */
                 const jerry_length_t args_cnt) /**< number of function arguments */
 {
-  JERRY_UNUSED (func_obj_val);
-  JERRY_UNUSED (this_val);
+  JERRY_UNUSED (call_info_p);
 
   count_in_assert++;
 

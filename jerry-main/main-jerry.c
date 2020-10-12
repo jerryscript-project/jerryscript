@@ -273,10 +273,7 @@ restart:
       }
 
       const jerry_value_t args[] = { ret_value };
-      jerry_value_t ret_val_print = jerryx_handler_print (jerry_create_undefined (),
-                                                          jerry_create_undefined (),
-                                                          args,
-                                                          1);
+      jerry_value_t ret_val_print = jerryx_handler_print (NULL, args, 1);
       jerry_release_value (ret_val_print);
       jerry_release_value (ret_value);
       ret_value = jerry_run_all_enqueued_jobs ();

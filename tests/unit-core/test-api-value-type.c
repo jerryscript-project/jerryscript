@@ -27,13 +27,11 @@ typedef struct
 #define ENTRY(TYPE, VALUE) { TYPE, VALUE }
 
 static jerry_value_t
-test_ext_function (const jerry_value_t function_obj, /**< function object */
-                   const jerry_value_t this_val, /**< function this value */
+test_ext_function (const jerry_call_info_t *call_info_p, /**< call information */
                    const jerry_value_t args_p[], /**< array of arguments */
                    const jerry_length_t args_cnt) /**< number of arguments */
 {
-  (void) function_obj;
-  (void) this_val;
+  (void) call_info_p;
   (void) args_p;
   (void) args_cnt;
   return jerry_create_boolean (true);

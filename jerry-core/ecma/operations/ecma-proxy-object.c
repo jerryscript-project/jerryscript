@@ -104,17 +104,14 @@ ecma_proxy_create (ecma_value_t target, /**< proxy target */
  * @return ECMA_VALUE_UNDEFINED
  */
 ecma_value_t
-ecma_proxy_revoke_cb (const ecma_value_t function_obj, /**< the function itself */
-                      const ecma_value_t this_val, /**< this_arg of the function */
+ecma_proxy_revoke_cb (ecma_object_t *function_obj_p, /**< function object */
                       const ecma_value_t args_p[], /**< argument list */
                       const uint32_t args_count) /**< argument number */
 {
-  JERRY_UNUSED_3 (this_val, args_p, args_count);
-
-  ecma_object_t *func_obj_p = ecma_get_object_from_value (function_obj);
+  JERRY_UNUSED_2 (args_p, args_count);
 
   /* 1. */
-  ecma_revocable_proxy_object_t *rev_proxy_p = (ecma_revocable_proxy_object_t *) func_obj_p;
+  ecma_revocable_proxy_object_t *rev_proxy_p = (ecma_revocable_proxy_object_t *) function_obj_p;
 
   /* 2. */
   if (ecma_is_value_null (rev_proxy_p->proxy))

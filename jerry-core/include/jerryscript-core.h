@@ -34,12 +34,12 @@ extern "C"
 /**
  * Major version of JerryScript API.
  */
-#define JERRY_API_MAJOR_VERSION 2
+#define JERRY_API_MAJOR_VERSION 3
 
 /**
  * Minor version of JerryScript API.
  */
-#define JERRY_API_MINOR_VERSION 4
+#define JERRY_API_MINOR_VERSION 0
 
 /**
  * Patch version of JerryScript API.
@@ -248,10 +248,19 @@ typedef struct
 } jerry_heap_stats_t;
 
 /**
+ * Call related information passed to jerry_external_handler_t.
+ */
+typedef struct jerry_call_info_t
+{
+  jerry_value_t function; /**< invoked function object */
+  jerry_value_t this_value; /**< this value passed to the function  */
+  jerry_value_t new_target; /**< current new target value, undefined for non-constructor calls */
+} jerry_call_info_t;
+
+/**
  * Type of an external function handler.
  */
-typedef jerry_value_t (*jerry_external_handler_t) (const jerry_value_t function_obj,
-                                                   const jerry_value_t this_val,
+typedef jerry_value_t (*jerry_external_handler_t) (const jerry_call_info_t *call_info_p,
                                                    const jerry_value_t args_p[],
                                                    const jerry_length_t args_count);
 
@@ -814,7 +823,6 @@ bool jerry_backtrace_is_strict (jerry_backtrace_frame_t *frame_p);
  */
 void jerry_set_vm_exec_stop_callback (jerry_vm_exec_stop_callback_t stop_cb, void *user_p, uint32_t frequency);
 jerry_value_t jerry_get_resource_name (const jerry_value_t value);
-jerry_value_t jerry_get_new_target (void);
 
 /**
  * Array buffer components.

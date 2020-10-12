@@ -58,13 +58,11 @@ assert (pdemo.value === 13);
 static int demo_value = 0;
 
 static jerry_value_t
-handler_get (const jerry_value_t function_obj, /**< function object */
-                   const jerry_value_t this_val, /**< this arg */
-                   const jerry_value_t args_p[], /**< function arguments */
-                   const jerry_length_t args_count) /**< number of function arguments */
+handler_get (const jerry_call_info_t *call_info_p, /**< call information */
+             const jerry_value_t args_p[], /**< function arguments */
+             const jerry_length_t args_count) /**< number of function arguments */
 {
-  JERRY_UNUSED (function_obj);
-  JERRY_UNUSED (this_val);
+  JERRY_UNUSED (call_info_p);
 
   TEST_ASSERT (args_count == 3);
   TEST_ASSERT (jerry_value_is_object (args_p[0])); /* target */
@@ -84,13 +82,11 @@ handler_get (const jerry_value_t function_obj, /**< function object */
 } /* handler_get */
 
 static jerry_value_t
-handler_set (const jerry_value_t function_obj, /**< function object */
-                   const jerry_value_t this_val, /**< this arg */
-                   const jerry_value_t args_p[], /**< function arguments */
-                   const jerry_length_t args_count) /**< number of function arguments */
+handler_set (const jerry_call_info_t *call_info_p, /**< call information */
+             const jerry_value_t args_p[], /**< function arguments */
+             const jerry_length_t args_count) /**< number of function arguments */
 {
-  JERRY_UNUSED (function_obj);
-  JERRY_UNUSED (this_val);
+  JERRY_UNUSED (call_info_p);
   JERRY_UNUSED (args_p);
   JERRY_UNUSED (args_count);
 
@@ -167,13 +163,11 @@ static const jerry_object_native_info_t proxy_native_info =
 };
 
 static jerry_value_t
-proxy_native_handler_get (const jerry_value_t function_obj, /**< function object */
-                          const jerry_value_t this_val, /**< this arg */
+proxy_native_handler_get (const jerry_call_info_t *call_info_p, /**< call information */
                           const jerry_value_t args_p[], /**< function arguments */
                           const jerry_length_t args_count) /**< number of function arguments */
 {
-  JERRY_UNUSED (function_obj);
-  JERRY_UNUSED (this_val);
+  JERRY_UNUSED (call_info_p);
   TEST_ASSERT (args_count == 3);
 
   /* 3rd argument (Receiver) should be the Proxy here. */

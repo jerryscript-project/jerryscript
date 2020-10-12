@@ -19,13 +19,11 @@
 static const char instanceof_source[] = "var x = function(o, c) {return (o instanceof c);}; x";
 
 static jerry_value_t
-external_function (const jerry_value_t function_obj,
-                   const jerry_value_t this_arg,
+external_function (const jerry_call_info_t *call_info_p,
                    const jerry_value_t args_p[],
                    const jerry_size_t args_count)
 {
-  (void) function_obj;
-  (void) this_arg;
+  (void) call_info_p;
   (void) args_p;
   (void) args_count;
 

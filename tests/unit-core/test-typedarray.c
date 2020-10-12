@@ -50,13 +50,11 @@ register_js_value (const char *name_p, /**< name of the function */
 } /* register_js_value */
 
 static jerry_value_t
-assert_handler (const jerry_value_t func_obj_val, /**< function object */
-                const jerry_value_t this_val, /**< this arg */
+assert_handler (const jerry_call_info_t *call_info_p, /**< call information */
                 const jerry_value_t args_p[], /**< function arguments */
                 const jerry_length_t args_cnt) /**< number of function arguments */
 {
-  JERRY_UNUSED (func_obj_val);
-  JERRY_UNUSED (this_val);
+  JERRY_UNUSED (call_info_p);
 
   if (jerry_value_is_boolean (args_p[0])
       && jerry_get_boolean_value (args_p[0]))

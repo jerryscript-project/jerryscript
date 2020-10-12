@@ -75,7 +75,7 @@ main (void)
        i < sizeof (nums) / sizeof (nums[0]);
        i++)
   {
-    ecma_number_t num = ecma_utf8_string_to_number (strings[i], lit_zt_utf8_string_size (strings[i]));
+    ecma_number_t num = ecma_utf8_string_to_number (strings[i], lit_zt_utf8_string_size (strings[i]), 0);
 
     if (num != nums[i]
         && (!ecma_number_is_nan (num)

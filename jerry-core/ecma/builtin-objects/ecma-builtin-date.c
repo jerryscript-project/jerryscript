@@ -68,7 +68,7 @@ ecma_date_parse_date_chars (const lit_utf8_byte_t **str_p, /**< pointer to the c
     }
   }
 
-  ecma_number_t parsed_number = ecma_utf8_string_to_number (str_start_p, (lit_utf8_size_t) (*str_p - str_start_p));
+  ecma_number_t parsed_number = ecma_utf8_string_to_number (str_start_p, (lit_utf8_size_t) (*str_p - str_start_p), 0);
 
   if (parsed_number < min || parsed_number > max)
   {

@@ -97,6 +97,11 @@ typedef enum
 } ecma_string_flag_t;
 
 /**
+ * Underscore is ignored when this option is passed.
+ */
+ #define ECMA_CONVERSION_ALLOW_UNDERSCORE 0x1
+
+/**
  * Convert ecma-string's contents to a cesu-8 string and put it into a buffer.
  */
 #define ECMA_STRING_TO_UTF8_STRING(ecma_str_ptr, /**< ecma string pointer */ \
@@ -525,7 +530,8 @@ ecma_native_pointer_t *ecma_get_native_pointer_value (ecma_object_t *obj_p, void
 bool ecma_delete_native_pointer_property (ecma_object_t *obj_p, void *info_p);
 
 /* ecma-helpers-conversion.c */
-ecma_number_t ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, lit_utf8_size_t str_size);
+ecma_number_t ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, lit_utf8_size_t str_size,
+                                          uint32_t option);
 lit_utf8_size_t ecma_uint32_to_utf8_string (uint32_t value, lit_utf8_byte_t *out_buffer_p, lit_utf8_size_t buffer_size);
 uint32_t ecma_number_to_uint32 (ecma_number_t num);
 int32_t ecma_number_to_int32 (ecma_number_t num);

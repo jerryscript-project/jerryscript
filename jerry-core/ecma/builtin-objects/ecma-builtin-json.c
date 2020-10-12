@@ -287,7 +287,7 @@ ecma_builtin_json_parse_number (ecma_json_token_t *token_p) /**< token argument 
   }
 
   token_p->type = TOKEN_NUMBER;
-  token_p->u.number = ecma_utf8_string_to_number (start_p, (lit_utf8_size_t) (current_p - start_p));
+  token_p->u.number = ecma_utf8_string_to_number (start_p, (lit_utf8_size_t) (current_p - start_p), 0);
 
   token_p->current_p = current_p;
 } /* ecma_builtin_json_parse_number */

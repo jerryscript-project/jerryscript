@@ -295,7 +295,12 @@ ecma_utf8_string_to_number_by_radix (const lit_utf8_byte_t *str_p, /**< utf-8 st
                                      const lit_utf8_byte_t *end_p, /**< end of utf-8 string  */
                                      uint32_t radix) /**< radix */
 {
+#if ENABLED (JERRY_ESNEXT)
+  bool allow_underscore = (radix & ECMA_CONVERSION_ALLOW_UNDERSCORE);
+  radix &= (uint32_t) ~ECMA_CONVERSION_ALLOW_UNDERSCORE;
+#endif /* ENABLED (JERRY_ESNEXT) */
   JERRY_ASSERT (radix == 2 || radix == 8 || radix == 16);
+
   ecma_number_t num = ECMA_NUMBER_ZERO;
 
 #if ENABLED (JERRY_ESNEXT)
@@ -342,6 +347,12 @@ ecma_utf8_string_to_number_by_radix (const lit_utf8_byte_t *str_p, /**< utf-8 st
     {
       digit_value = 10 + (*iter_p - LIT_CHAR_UPPERCASE_A);
     }
+#if ENABLED (JERRY_ESNEXT)
+    else if (*iter_p == LIT_CHAR_UNDERSCORE && allow_underscore)
+    {
+      continue;
+    }
+#endif /* ENABLED (JERRY_ESNEXT) */
     else
     {
       return ecma_number_make_nan ();
@@ -364,7 +375,8 @@ ecma_utf8_string_to_number_by_radix (const lit_utf8_byte_t *str_p, /**< utf-8 st
  */
 ecma_number_t
 ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
-                            lit_utf8_size_t str_size) /**< string size */
+                            lit_utf8_size_t str_size, /**< string size */
+                            uint32_t options) /**< allowing underscore option bit */
 {
   /* TODO: Check license issues */
 
@@ -388,15 +400,15 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
     {
       case LIT_CHAR_LOWERCASE_X :
       {
-        return ecma_utf8_string_to_number_by_radix (str_p + 2, end_p, 16);
+        return ecma_utf8_string_to_number_by_radix (str_p + 2, end_p, 16 | options);
       }
       case LIT_CHAR_LOWERCASE_O :
       {
-        return ecma_utf8_string_to_number_by_radix (str_p + 2, end_p, 8);
+        return ecma_utf8_string_to_number_by_radix (str_p + 2, end_p, 8 | options);
       }
       case LIT_CHAR_LOWERCASE_B :
       {
-        return ecma_utf8_string_to_number_by_radix (str_p + 2, end_p, 2);
+        return ecma_utf8_string_to_number_by_radix (str_p + 2, end_p, 2 | options);
       }
       default:
       {
@@ -449,6 +461,13 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
       digit_seen = true;
       digit_value = (*str_p - LIT_CHAR_0);
     }
+#if ENABLED (JERRY_ESNEXT)
+    else if (*str_p == LIT_CHAR_UNDERSCORE && (options & ECMA_CONVERSION_ALLOW_UNDERSCORE))
+    {
+      str_p++;
+      continue;
+    }
+#endif /* ENABLED (JERRY_ESNEXT) */
     else
     {
       break;
@@ -490,6 +509,11 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
       {
         digit_seen = true;
         digit_value = (*str_p - LIT_CHAR_0);
+      }
+      else if (*str_p == LIT_CHAR_UNDERSCORE && (options & ECMA_CONVERSION_ALLOW_UNDERSCORE))
+      {
+        str_p++;
+        continue;
       }
       else
       {
@@ -550,6 +574,13 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
       {
         digit_value = (*str_p - LIT_CHAR_0);
       }
+#if ENABLED (JERRY_ESNEXT)
+      else if (*str_p == LIT_CHAR_UNDERSCORE && (options & ECMA_CONVERSION_ALLOW_UNDERSCORE))
+      {
+        str_p++;
+        continue;
+      }
+#endif /* ENABLED (JERRY_ESNEXT) */
       else
       {
         return ecma_number_make_nan ();

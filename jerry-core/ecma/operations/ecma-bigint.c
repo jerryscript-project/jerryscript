@@ -75,6 +75,7 @@ ecma_bigint_parse_string (const lit_utf8_byte_t *string_p, /**< string represena
 {
   ecma_bigint_digit_t radix = 10;
   uint32_t sign = (options & ECMA_BIGINT_PARSE_SET_NEGATIVE) ? ECMA_BIGINT_SIGN : 0;
+  bool allow_underscore = options & ECMA_BIGINT_PARSE_ALLOW_UNDERSCORE;
 
   const lit_utf8_byte_t *string_end_p = string_p + size;
   string_p = ecma_string_trim_front (string_p, string_p + size);
@@ -120,7 +121,7 @@ ecma_bigint_parse_string (const lit_utf8_byte_t *string_p, /**< string represena
     return ECMA_BIGINT_ZERO;
   }
 
-  while (string_p < string_end_p && *string_p == LIT_CHAR_0)
+  while (string_p < string_end_p && (*string_p == LIT_CHAR_0 || (*string_p == LIT_CHAR_UNDERSCORE && allow_underscore)))
   {
     string_p++;
   }
@@ -139,6 +140,10 @@ ecma_bigint_parse_string (const lit_utf8_byte_t *string_p, /**< string represena
     if (*string_p >= LIT_CHAR_0 && *string_p <= LIT_CHAR_9)
     {
       digit = (ecma_bigint_digit_t) (*string_p - LIT_CHAR_0);
+    }
+    else if (*string_p == LIT_CHAR_UNDERSCORE && allow_underscore)
+    {
+      continue;
     }
     else
     {

@@ -36,6 +36,7 @@ typedef enum
                                                        *   return with ECMA_VALUE_FALSE */
   ECMA_BIGINT_PARSE_DISALLOW_MEMORY_ERROR = (1 << 2), /**< don't throw out-of-memory error,
                                                        *   return with ECMA_VALUE_NULL instead */
+  ECMA_BIGINT_PARSE_ALLOW_UNDERSCORE = (1 << 3),      /** allow parse underscore characters */
 } ecma_bigint_parse_string_options_t;
 
 /**

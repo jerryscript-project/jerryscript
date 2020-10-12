@@ -1305,26 +1305,43 @@ lexer_parse_string (parser_context_t *context_p, /**< context */
 } /* lexer_parse_string */
 
 /**
- * Parse octal number.
+ * Check number
  */
-static inline void
-lexer_parse_octal_number (parser_context_t *context_p, /** context */
-                          const uint8_t **source_p) /**< current source position */
+static void
+lexer_check_numbers (parser_context_t *context_p, /**< context */
+                     const uint8_t **source_p, /**< source_pointer */
+                     const uint8_t *source_end_p, /**< end of the source */
+                     const ecma_char_t digit_max, /**< maximum of the number range */
+                     const bool is_legacy) /**< is legacy octal number  */
 {
-  do
+#if ENABLED (!JERRY_ESNEXT)
+  JERRY_UNUSED (context_p);
+  JERRY_UNUSED (is_legacy);
+#endif /* ENABLED (!JERRY_ESNEXT) */
+  while (true)
   {
-    (*source_p)++;
-  }
-  while (*source_p < context_p->source_end_p
-         && *source_p[0] >= LIT_CHAR_0
-         && *source_p[0] <= LIT_CHAR_7);
+    while (*source_p < source_end_p
+           && *source_p[0] >= LIT_CHAR_0
+           && *source_p[0] <= digit_max)
+    {
+      *source_p += 1;
+    }
+#if ENABLED (JERRY_ESNEXT)
+    if (*source_p != source_end_p && *source_p[0] == LIT_CHAR_UNDERSCORE)
+    {
+      *source_p += 1;
+      if (is_legacy || *source_p[0] == LIT_CHAR_UNDERSCORE
+          || *source_p[0] > digit_max || *source_p[0] < LIT_CHAR_0)
+      {
+        parser_raise_error (context_p, PARSER_ERR_INVALID_UNDERSCORE_IN_NUMBER);
+      }
+      continue;
+    }
+#endif /* ENABLED (JERRY_ESNEXT) */
 
-  if (*source_p < context_p->source_end_p
-      && (*source_p[0] == LIT_CHAR_8 || *source_p[0] == LIT_CHAR_9))
-  {
-    parser_raise_error (context_p, PARSER_ERR_INVALID_OCTAL_DIGIT);
+    break;
   }
-} /* lexer_parse_octal_number */
+} /* lexer_check_numbers */
 
 /**
  * Parse number.
@@ -1349,6 +1366,12 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
   if (source_p[0] == LIT_CHAR_0
       && source_p + 1 < source_end_p)
   {
+#if ENABLED (JERRY_ESNEXT)
+    if (source_p[1] == LIT_CHAR_UNDERSCORE)
+    {
+      parser_raise_error (context_p, PARSER_ERR_INVALID_UNDERSCORE_IN_NUMBER);
+    }
+#endif /* ENABLED (JERRY_ESNEXT) */
     if (LEXER_TO_ASCII_LOWERCASE (source_p[1]) == LIT_CHAR_LOWERCASE_X)
     {
       context_p->token.extra_value = LEXER_NUMBER_HEXADECIMAL;
@@ -1363,6 +1386,16 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
       do
       {
         source_p++;
+#if ENABLED (JERRY_ESNEXT)
+        if (source_p < source_end_p && source_p[0] == LIT_CHAR_UNDERSCORE)
+        {
+          source_p++;
+          if (!lit_char_is_hex_digit (source_p[0]) || source_p == source_end_p)
+          {
+            parser_raise_error (context_p, PARSER_ERR_INVALID_UNDERSCORE_IN_NUMBER);
+          }
+        }
+#endif /* ENABLED (JERRY_ESNEXT) */
       }
       while (source_p < source_end_p
              && lit_char_is_hex_digit (source_p[0]));
@@ -1379,7 +1412,7 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
         parser_raise_error (context_p, PARSER_ERR_INVALID_OCTAL_DIGIT);
       }
 
-      lexer_parse_octal_number (context_p, &source_p);
+      lexer_check_numbers (context_p, &source_p, source_end_p, LIT_CHAR_7, false);
     }
 #endif /* ENABLED (JERRY_ESNEXT) */
     else if (source_p[1] >= LIT_CHAR_0
@@ -1395,7 +1428,7 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
         parser_raise_error (context_p, PARSER_ERR_OCTAL_NUMBER_NOT_ALLOWED);
       }
 
-      lexer_parse_octal_number (context_p, &source_p);
+      lexer_check_numbers (context_p, &source_p, source_end_p, LIT_CHAR_7, true);
     }
     else if (source_p[1] >= LIT_CHAR_8
              && source_p[1] <= LIT_CHAR_9)
@@ -1417,6 +1450,16 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
       do
       {
         source_p++;
+        if (source_p < source_end_p && source_p[0] == LIT_CHAR_UNDERSCORE)
+        {
+          source_p++;
+          if (source_p == source_end_p
+              || source_p[0] > LIT_CHAR_9
+              || source_p[0] < LIT_CHAR_0)
+          {
+            parser_raise_error (context_p, PARSER_ERR_INVALID_UNDERSCORE_IN_NUMBER);
+          }
+        }
       }
       while (source_p < source_end_p
                && lit_char_is_binary_digit (source_p[0]));
@@ -1430,13 +1473,7 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
   }
   else
   {
-    while (source_p < source_end_p
-           && source_p[0] >= LIT_CHAR_0
-           && source_p[0] <= LIT_CHAR_9)
-    {
-      source_p++;
-    }
-
+    lexer_check_numbers (context_p, &source_p, source_end_p, LIT_CHAR_9, false);
     can_be_float = true;
   }
 
@@ -1450,12 +1487,13 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
       can_be_bigint = false;
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 
-      while (source_p < source_end_p
-             && source_p[0] >= LIT_CHAR_0
-             && source_p[0] <= LIT_CHAR_9)
+#if ENABLED (JERRY_ESNEXT)
+      if (source_p < source_end_p && source_p[0] == LIT_CHAR_UNDERSCORE)
       {
-        source_p++;
+        parser_raise_error (context_p, PARSER_ERR_INVALID_UNDERSCORE_IN_NUMBER);
       }
+#endif /* ENABLED (JERRY_ESNEXT) */
+      lexer_check_numbers (context_p, &source_p, source_end_p, LIT_CHAR_9, false);
     }
 
     if (source_p < source_end_p
@@ -1479,13 +1517,7 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
         parser_raise_error (context_p, PARSER_ERR_MISSING_EXPONENT);
       }
 
-      do
-      {
-        source_p++;
-      }
-      while (source_p < source_end_p
-             && source_p[0] >= LIT_CHAR_0
-             && source_p[0] <= LIT_CHAR_9);
+      lexer_check_numbers (context_p, &source_p, source_end_p, LIT_CHAR_9, false);
     }
   }
 
@@ -2627,8 +2659,13 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
     if (context_p->token.extra_value < LEXER_NUMBER_OCTAL)
     {
+#if ENABLED (JERRY_ESNEXT)
       num = ecma_utf8_string_to_number (context_p->token.lit_location.char_p,
-                                        length);
+                                        length,
+                                        ECMA_CONVERSION_ALLOW_UNDERSCORE);
+#else
+      num = ecma_utf8_string_to_number (context_p->token.lit_location.char_p, length, 0);
+#endif /* ENABLED (JERRY_ESNEXT) */
     }
     else
     {
@@ -2653,6 +2690,10 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
       num = 0;
       do
       {
+        if (src_p[1] == LIT_CHAR_UNDERSCORE)
+        {
+          src_p++;
+        }
         num = num * multiplier + (ecma_number_t) (*(++src_p) - LIT_CHAR_0);
       }
       while (src_p < src_end_p);
@@ -2681,7 +2722,9 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
   }
   else
   {
-    uint32_t options = ECMA_BIGINT_PARSE_DISALLOW_SYNTAX_ERROR | ECMA_BIGINT_PARSE_DISALLOW_MEMORY_ERROR;
+    uint32_t options = (ECMA_BIGINT_PARSE_DISALLOW_SYNTAX_ERROR
+                        | ECMA_BIGINT_PARSE_DISALLOW_MEMORY_ERROR
+                        | ECMA_BIGINT_PARSE_ALLOW_UNDERSCORE);
 
     if (is_negative_number)
     {

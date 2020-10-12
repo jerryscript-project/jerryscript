@@ -1253,15 +1253,25 @@ ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p, 
   }
 
   /* 3. */
-  if (ecma_is_value_object (value))
+  if (ecma_is_value_object (value) || ecma_is_value_bigint (value))
   {
-    ecma_object_t *value_obj_p = ecma_get_object_from_value (value);
+    ecma_value_t to_object_value = ecma_op_to_object (value);
 
-    ecma_value_t to_json = ecma_op_object_get_by_magic_id (value_obj_p, LIT_MAGIC_STRING_TO_JSON_UL);
+    if (ECMA_IS_VALUE_ERROR (to_object_value))
+    {
+      ecma_free_value (value);
+      return to_object_value;
+    }
+
+    ecma_object_t *value_obj_p = ecma_get_object_from_value (to_object_value);
+    ecma_value_t to_json = ecma_op_object_get_with_receiver (value_obj_p,
+                                                             ecma_get_magic_string (LIT_MAGIC_STRING_TO_JSON_UL),
+                                                             value);
+
+    ecma_deref_object (value_obj_p);
 
     if (ECMA_IS_VALUE_ERROR (to_json))
     {
-      ecma_deref_object (value_obj_p);
       return to_json;
     }
 
@@ -1273,14 +1283,13 @@ ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p, 
       ecma_object_t *to_json_obj_p = ecma_get_object_from_value (to_json);
 
       ecma_value_t result = ecma_op_function_call (to_json_obj_p, value, call_args, 1);
-      ecma_deref_object (value_obj_p);
+      ecma_free_value (value);
 
       if (ECMA_IS_VALUE_ERROR (result))
       {
         ecma_deref_object (to_json_obj_p);
         return result;
       }
-
       value = result;
     }
     ecma_free_value (to_json);
@@ -1344,6 +1353,15 @@ ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p, 
       value = ext_object_p->u.class_prop.u.value;
       ecma_deref_object (obj_p);
     }
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+    /* 5.d */
+    else if (class_name == LIT_MAGIC_STRING_BIGINT_UL)
+    {
+      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
+      value = ecma_copy_value (ext_object_p->u.class_prop.u.value);
+      ecma_deref_object (obj_p);
+    }
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
   }
 
   /* 6. - 8. */
@@ -1400,18 +1418,26 @@ ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p, 
     return ECMA_VALUE_EMPTY;
   }
 
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+  if (ecma_is_value_bigint (value))
+  {
+    ecma_free_value (value);
+    return ecma_raise_type_error (ECMA_ERR_MSG ("BigInt cannot be serialized"));
+  }
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+
   /* 11. */
   if (ecma_is_value_object (value) && !ecma_op_is_callable (value))
   {
     ecma_value_t is_array = ecma_is_value_array (value);
 
-#if ENABLED (JERRY_ESNEXT)
+#if ENABLED (JERRY_BUILTIN_BIGINT)
     if (ECMA_IS_VALUE_ERROR (is_array))
     {
       ecma_free_value (value);
       return is_array;
     }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 
     ecma_object_t *obj_p = ecma_get_object_from_value (value);
 

@@ -87,6 +87,18 @@ re_append_byte (re_compiler_ctx_t *re_ctx_p, /**< RegExp bytecode context */
 } /* re_append_byte */
 
 /**
+ * Append bytes
+ */
+void
+re_append_bytes (re_compiler_ctx_t *re_ctx_p, /**< RegExp bytecode context */
+                 const uint32_t number_of_bytes, /**< number of bytes */
+                 const uint8_t *bytes_p) /**< list of bytes */
+{
+  uint8_t *dest_p = re_bytecode_reserve (re_ctx_p, sizeof (uint8_t) * number_of_bytes);
+  memcpy (dest_p, bytes_p, number_of_bytes);
+} /* re_append_bytes */
+
+/**
  * Insert a byte value
  */
 void

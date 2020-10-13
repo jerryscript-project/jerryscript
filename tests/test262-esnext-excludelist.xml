@@ -6885,35 +6885,22 @@
   <test id="built-ins/RegExp/named-groups/functional-replace-non-global.js"><reason></reason></test>
   <test id="built-ins/RegExp/named-groups/groups-object-subclass-sans.js"><reason></reason></test>
   <test id="built-ins/RegExp/named-groups/groups-object-subclass.js"><reason></reason></test>
-  <test id="built-ins/RegExp/named-groups/groups-object-undefined.js"><reason></reason></test>
-  <test id="built-ins/RegExp/named-groups/groups-object-unmatched.js"><reason></reason></test>
-  <test id="built-ins/RegExp/named-groups/groups-object.js"><reason></reason></test>
-  <test id="built-ins/RegExp/named-groups/groups-properties.js"><reason></reason></test>
   <test id="built-ins/RegExp/named-groups/lookbehind.js"><reason></reason></test>
   <test id="built-ins/RegExp/named-groups/non-unicode-match.js"><reason></reason></test>
   <test id="built-ins/RegExp/named-groups/non-unicode-property-names-valid.js"><reason></reason></test>
   <test id="built-ins/RegExp/named-groups/non-unicode-property-names.js"><reason></reason></test>
-  <test id="built-ins/RegExp/named-groups/non-unicode-references.js"><reason></reason></test>
-  <test id="built-ins/RegExp/named-groups/string-replace-escaped.js"><reason></reason></test>
-  <test id="built-ins/RegExp/named-groups/string-replace-get.js"><reason></reason></test>
-  <test id="built-ins/RegExp/named-groups/string-replace-missing.js"><reason></reason></test>
-  <test id="built-ins/RegExp/named-groups/string-replace-numbered.js"><reason></reason></test>
   <test id="built-ins/RegExp/named-groups/string-replace-unclosed.js"><reason></reason></test>
-  <test id="built-ins/RegExp/named-groups/string-replace-undefined.js"><reason></reason></test>
   <test id="built-ins/RegExp/named-groups/unicode-match.js"><reason></reason></test>
   <test id="built-ins/RegExp/named-groups/unicode-property-names-valid.js"><reason></reason></test>
   <test id="built-ins/RegExp/named-groups/unicode-property-names.js"><reason></reason></test>
-  <test id="built-ins/RegExp/named-groups/unicode-references.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/Symbol.replace/named-groups-fn.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/Symbol.replace/named-groups.js"><reason></reason></test>
-  <test id="built-ins/RegExp/prototype/Symbol.replace/poisoned-stdlib.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/Symbol.replace/result-coerce-groups-err.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/Symbol.replace/result-coerce-groups-prop-err.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/Symbol.replace/result-coerce-groups-prop.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/Symbol.replace/result-coerce-groups.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/Symbol.replace/result-get-groups-err.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/Symbol.replace/result-get-groups-prop-err.js"><reason></reason></test>
-  <test id="language/literals/regexp/named-groups/forward-reference.js"><reason></reason></test>
   <test id="language/literals/regexp/named-groups/invalid-dangling-groupname-2-u.js"><reason></reason></test>
   <test id="language/literals/regexp/named-groups/invalid-dangling-groupname-2.js"><reason></reason></test>
   <test id="language/literals/regexp/named-groups/invalid-dangling-groupname-3-u.js"><reason></reason></test>
@@ -10627,5 +10614,4 @@
   <test id="built-ins/TypedArrayConstructors/internals/Set/detached-buffer.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/internals/Set/tonumber-value-detached-buffer.js"><reason></reason></test>
   <!-- END - Missing test262 support in JerryScript REPL - missing $262.detachArrayBuffer function -->
-
 </excludeList>

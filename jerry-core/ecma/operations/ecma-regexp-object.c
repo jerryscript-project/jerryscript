@@ -27,6 +27,7 @@
 #include "jrt-libc-includes.h"
 #include "lit-char-helpers.h"
 #include "re-compiler.h"
+#include "ecma-objects-general.h"
 
 #if ENABLED (JERRY_BUILTIN_REGEXP)
 
@@ -678,6 +679,18 @@ ecma_regexp_run (ecma_regexp_ctx_t *re_ctx_p, /**< RegExp matcher context */
       case RE_OP_EOF:
       {
         re_ctx_p->captures_p[RE_GLOBAL_CAPTURE].end_p = str_curr_p;
+#if ENABLED (JERRY_ESNEXT)
+        uint32_t group_idx = re_get_value (&bc_p);
+        uint32_t length;
+        while (group_idx != 0)
+        {
+          length = re_get_value (&bc_p);
+          re_ctx_p->captures_p[group_idx].named_group_length = length;
+          re_ctx_p->captures_p[group_idx].named_group_begin_p = bc_p;
+          bc_p += length;
+          group_idx = re_get_value (&bc_p);
+        }
+#endif /* ENABLED (JERRY_ESNEXT) */
         /* FALLTHRU */
       }
       case RE_OP_ASSERT_END:
@@ -1643,6 +1656,10 @@ ecma_regexp_create_result_object (ecma_regexp_ctx_t *re_ctx_p, /**< regexp conte
 {
   ecma_object_t *result_p = ecma_op_new_array_object (0);
 
+#if ENABLED (JERRY_ESNEXT)
+  bool needs_group_property = false;
+  ecma_object_t *groups_p = ecma_op_create_object_object_noarg ();
+#endif /* ENABLED (JERRY_ESNEXT) */
   for (uint32_t i = 0; i < re_ctx_p->captures_count; i++)
   {
     ecma_value_t capture_value = ecma_regexp_get_capture_value (re_ctx_p->captures_p + i);
@@ -1650,6 +1667,21 @@ ecma_regexp_create_result_object (ecma_regexp_ctx_t *re_ctx_p, /**< regexp conte
                                            i,
                                            capture_value,
                                            ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+#if ENABLED (JERRY_ESNEXT)
+    if (re_ctx_p->captures_p[i].named_group_begin_p)
+    {
+      lit_utf8_size_t length = (lit_utf8_size_t) re_ctx_p->captures_p[i].named_group_length;
+      ecma_string_t * capture_str_p = ecma_new_ecma_string_from_utf8 (re_ctx_p->captures_p[i].named_group_begin_p,
+                                                                      length);
+      ecma_builtin_helper_def_prop (groups_p,
+                                    capture_str_p,
+                                    capture_value,
+                                    ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+      ecma_deref_ecma_string (capture_str_p);
+      needs_group_property = true;
+
+    }
+#endif /* ENABLED (JERRY_ESNEXT) */
     ecma_free_value (capture_value);
   }
 
@@ -1662,7 +1694,23 @@ ecma_regexp_create_result_object (ecma_regexp_ctx_t *re_ctx_p, /**< regexp conte
                                 ecma_get_magic_string (LIT_MAGIC_STRING_INPUT),
                                 ecma_make_string_value (input_string_p),
                                 ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
-
+#if ENABLED (JERRY_ESNEXT)
+  if (needs_group_property)
+  {
+    ecma_builtin_helper_def_prop (result_p,
+                                  ecma_get_magic_string (LIT_MAGIC_STRING_GROUPS),
+                                  ecma_make_object_value (groups_p),
+                                  ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+  }
+  else
+  {
+    ecma_builtin_helper_def_prop (result_p,
+                                  ecma_get_magic_string (LIT_MAGIC_STRING_GROUPS),
+                                  ECMA_VALUE_UNDEFINED,
+                                  ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+  }
+  ecma_deref_object (groups_p);
+#endif /* ENABLED (JERRY_ESNEXT) */
   return ecma_make_object_value (result_p);
 } /* ecma_regexp_create_result_object */
 
@@ -1690,7 +1738,13 @@ ecma_regexp_initialize_context (ecma_regexp_ctx_t *ctx_p, /**< regexp context */
   ctx_p->non_captures_count = bc_p->non_captures_count;
 
   ctx_p->captures_p = jmem_heap_alloc_block (ctx_p->captures_count * sizeof (ecma_regexp_capture_t));
-
+#if ENABLED (JERRY_ESNEXT)
+  for (uint32_t i = 0 ; i < ctx_p->captures_count ; i++)
+  {
+    ctx_p->captures_p[i].named_group_begin_p = NULL;
+    ctx_p->captures_p[i].named_group_length = 0;
+  }
+#endif /* ENABLED (JERRY_ESNEXT) */
   if (ctx_p->non_captures_count > 0)
   {
     ctx_p->non_captures_p = jmem_heap_alloc_block (ctx_p->non_captures_count * sizeof (ecma_regexp_non_capture_t));
@@ -2885,7 +2939,6 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
 
   ecma_replace_context_t replace_ctx;
   replace_ctx.flags = RE_FLAG_EMPTY;
-
   /* 3. */
   ecma_string_t *string_p = ecma_op_to_string (string_arg);
   if (string_p == NULL)

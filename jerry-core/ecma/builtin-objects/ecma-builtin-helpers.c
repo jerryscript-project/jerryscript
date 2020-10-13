@@ -859,6 +859,17 @@ ecma_builtin_replace_substitute (ecma_replace_context_t *ctx_p) /**< replace con
                 || (ctx_p->matched_p >= ctx_p->string_p
                     && ctx_p->matched_p <= ctx_p->string_p + ctx_p->string_size));
 
+#if ENABLED (JERRY_ESNEXT)
+  bool has_captured_name_group = false;
+  for (uint32_t i = 1; i < ctx_p->capture_count; i++)
+  {
+    if (ctx_p->u.captures_p[i].named_group_begin_p != NULL)
+    {
+      has_captured_name_group = true;
+      break;
+    }
+  }
+#endif /* ENABLED (JERRY_ESNEXT) */
   lit_utf8_size_t replace_size;
   uint8_t replace_flags = ECMA_STRING_FLAG_IS_ASCII;
   const lit_utf8_byte_t *replace_buf_p = ecma_string_get_chars (ctx_p->replace_str_p,
@@ -918,6 +929,55 @@ ecma_builtin_replace_substitute (ecma_replace_context_t *ctx_p) /**< replace con
           ecma_stringbuilder_append_raw (&(ctx_p->builder), ctx_p->string_p, ctx_p->match_byte_pos);
           break;
         }
+#if ENABLED (JERRY_ESNEXT)
+        case LIT_CHAR_LESS_THAN:
+        {
+          if (!has_captured_name_group)
+          {
+            ecma_stringbuilder_append_raw (&(ctx_p->builder),
+                                           curr_p - 2,
+                                           2);
+            break;
+          }
+          const lit_utf8_byte_t *end_p = curr_p;
+          while (true)
+          {
+            if (end_p == replace_end_p)
+            {
+              ecma_stringbuilder_append_raw (&(ctx_p->builder),
+                                            curr_p - 2,
+                                            2);
+
+            }
+            else if (*end_p == LIT_CHAR_GREATER_THAN)
+            {
+              const lit_utf8_size_t capture_size = (lit_utf8_size_t) (end_p - curr_p);
+
+              for (uint32_t i = 1 ; i < ctx_p->capture_count ; i++)
+              {
+                uint32_t length = (uint32_t) ctx_p->u.captures_p[i].named_group_length;
+                if (capture_size == length && memcmp (curr_p, ctx_p->u.captures_p[i].named_group_begin_p, length) == 0
+                    && ctx_p->u.captures_p[i].begin_p != NULL)
+                {
+                  const lit_utf8_size_t captured_string_size = (lit_utf8_size_t) (ctx_p->u.captures_p[i].end_p
+                                                                                  - ctx_p->u.captures_p[i].begin_p);
+                  ecma_string_t *capture_string = ecma_new_ecma_string_from_utf8 (ctx_p->u.captures_p[i].begin_p,
+                                                                                  captured_string_size);
+                  ecma_stringbuilder_append (&(ctx_p->builder),
+                                             capture_string);
+                  ecma_deref_ecma_string (capture_string);
+                  break;
+                }
+              }
+              end_p++;
+              curr_p = end_p;
+              break;
+            }
+            end_p++;
+          }
+          break;
+        }
+#endif /* ENABLED (JERRY_ESNEXT) */
         case LIT_CHAR_SINGLE_QUOTE:
         {
 #if ENABLED (JERRY_ESNEXT)

@@ -116,7 +116,10 @@ re_compile_bytecode (ecma_string_t *pattern_str_p, /**< pattern */
   re_ctx.flags = flags;
   re_ctx.captures_count = 1;
   re_ctx.non_captures_count = 0;
-
+#if ENABLED (JERRY_ESNEXT)
+  re_ctx.group_names_p = NULL;
+  re_ctx.has_reference = false;
+#endif /* ENABLED (JERRY_ESNEXT) */
   re_initialize_regexp_bytecode (&re_ctx);
 
   ECMA_STRING_TO_UTF8_STRING (pattern_str_p, pattern_start_p, pattern_start_size);
@@ -129,6 +132,9 @@ re_compile_bytecode (ecma_string_t *pattern_str_p, /**< pattern */
   /* Parse RegExp pattern */
   ecma_value_t result = re_parse_alternative (&re_ctx, true);
 
+#if ENABLED (JERRY_ESNEXT)
+  re_parse_capture_named_group (&re_ctx);
+#endif /* ENABLED (JERRY_ESNEXT) */
   ECMA_FINALIZE_UTF8_STRING (pattern_start_p, pattern_start_size);
 
   if (ECMA_IS_VALUE_ERROR (result))

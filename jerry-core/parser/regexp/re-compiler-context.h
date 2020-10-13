@@ -29,25 +29,42 @@
  * \addtogroup regexparser_compiler Compiler
  * @{
  */
-
+#if ENABLED (JERRY_ESNEXT)
+ /**
+  * RegExp named group instance
+  */
+typedef struct re_group_name_t
+{
+  struct re_group_name_t *next_p; /**< next captured named groups*/
+  uint32_t capture_index; /**< number of capture groups*/
+  uint32_t name_length; /**< length of captured group name*/
+  const lit_utf8_byte_t *name_p; /**< name of the captured group*/
+} re_group_name_t;
+#endif /* ENABLED (JERRY_ESNEXT) */
 /**
  * RegExp compiler context
  */
 typedef struct
 {
-  const lit_utf8_byte_t *input_start_p; /**< start of input pattern */
-  const lit_utf8_byte_t *input_curr_p;  /**< current position in input pattern */
-  const lit_utf8_byte_t *input_end_p;   /**< end of input pattern */
+#if ENABLED (JERRY_ESNEXT)
+  re_group_name_t *group_names_p;                 /**< captured named groups */
+#endif /* ENABLED (JERRY_ESNEXT) */
+  const lit_utf8_byte_t *input_start_p;           /**< start of input pattern */
+  const lit_utf8_byte_t *input_curr_p;            /**< current position in input pattern */
+  const lit_utf8_byte_t *input_end_p;             /**< end of input pattern */
 
-  uint8_t *bytecode_start_p;            /**< start of bytecode block */
-  size_t bytecode_size;                 /**< size of bytecode */
+  uint8_t *bytecode_start_p;                      /**< start of bytecode block */
+  size_t bytecode_size;                           /**< size of bytecode */
 
-  uint32_t captures_count;              /**< number of capture groups */
-  uint32_t non_captures_count;          /**< number of non-capture groups */
+  uint32_t captures_count;                        /**< number of capture groups */
+  uint32_t non_captures_count;                    /**< number of non-capture groups */
 
-  int groups_count;                     /**< number of groups */
-  uint16_t flags;                       /**< RegExp flags */
-  re_token_t token;                     /**< current token */
+  int groups_count;                               /**< number of groups */
+#if ENABLED (JERRY_ESNEXT)
+  bool has_reference;                             /**< if had invalid named references  */
+#endif /* ENABLED (JERRY_ESNEXT) */
+  uint16_t flags;                                 /**< RegExp flags */
+  re_token_t token;                               /**< current token */
 } re_compiler_ctx_t;
 
 /**

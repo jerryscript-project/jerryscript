@@ -105,6 +105,7 @@ uint32_t re_bytecode_size (re_compiler_ctx_t *re_ctx_p);
 
 void re_append_opcode (re_compiler_ctx_t *re_ctx_p, const re_opcode_t opcode);
 void re_append_byte (re_compiler_ctx_t *re_ctx_p, const uint8_t byte);
+void re_append_bytes (re_compiler_ctx_t *re_ctx_p, const uint32_t number_of_bytes, const uint8_t *bytes_p);
 void re_append_char (re_compiler_ctx_t *re_ctx_p, const lit_code_point_t cp);
 void re_append_value (re_compiler_ctx_t *re_ctx_p, const uint32_t value);
 

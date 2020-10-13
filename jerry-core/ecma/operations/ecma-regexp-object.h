@@ -87,11 +87,15 @@ typedef enum
  */
 typedef struct
 {
-  const lit_utf8_byte_t *begin_p; /**< capture start pointer */
-  const lit_utf8_byte_t *end_p;   /**< capture end pointer */
-  const uint8_t *bc_p;            /**< group bytecode pointer */
-  uint32_t iterator;              /**< iteration counter */
-  uint32_t subcapture_count;      /**< number of nested capturing groups */
+  const lit_utf8_byte_t *begin_p;             /**< capture start pointer */
+  const lit_utf8_byte_t *end_p;               /**< capture end pointer */
+#if ENABLED (JERRY_ESNEXT)
+  const lit_utf8_byte_t *named_group_begin_p;  /**< name_of_the_group */
+  uint32_t named_group_length;           /**< name_of_the_group */
+#endif /* ENABLED (JERRY_ESNEXT) */
+  const uint8_t *bc_p;                        /**< group bytecode pointer */
+  uint32_t iterator;                          /**< iteration counter */
+  uint32_t subcapture_count;                  /**< number of nested capturing groups */
 } ecma_regexp_capture_t;
 
 /**

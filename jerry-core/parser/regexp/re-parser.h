@@ -49,6 +49,10 @@
 
 ecma_value_t re_parse_alternative (re_compiler_ctx_t *re_ctx_p, bool expect_eof);
 
+#if ENABLED (JERRY_ESNEXT)
+void re_parse_capture_named_group (re_compiler_ctx_t *re_ctx_p);
+#endif /* ENABLED (JERRY_ESNEXT) */
+
 /**
  * @}
  * @}

@@ -347,6 +347,47 @@ re_parse_quantifier (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
   return ECMA_VALUE_FALSE;
 } /* re_parse_quantifier */
 
+#if ENABLED (JERRY_ESNEXT)
+/**
+ * Find a unparsed named captured groups
+ */
+static void
+re_find_forward_named_group (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context */
+                             uint32_t *capture_group_count, /**< count of the capture group */
+                             uint32_t length, /**< length of the named reference */
+                             bool *has_named_group) /**< has a future named captured group */
+{
+  const lit_utf8_byte_t *curr_p = re_ctx_p->input_curr_p;
+  while (curr_p < re_ctx_p->input_end_p)
+  {
+    if (*curr_p++ == LIT_CHAR_LEFT_PAREN)
+    {
+      *capture_group_count += 1;
+      if (*curr_p++ == LIT_CHAR_QUESTION && *curr_p++ == LIT_CHAR_LESS_THAN)
+      {
+        uint32_t captured_name_length = 0;
+        while (curr_p < re_ctx_p->input_end_p)
+        {
+          if (*curr_p == LIT_CHAR_GREATER_THAN)
+          {
+            *has_named_group = true;
+            if (captured_name_length == length
+                && memcmp ((re_ctx_p->input_curr_p - length), (curr_p - captured_name_length) , length) == 0)
+            {
+              return;
+            }
+            break;
+          }
+          curr_p++;
+          captured_name_length++;
+        }
+      }
+    }
+  }
+  *capture_group_count = 0;
+} /* re_find_forward_named_group */
+#endif /* ENABLED (JERRY_ESNEXT) */
+
 /**
  * Count the number of groups in the current pattern.
  */
@@ -382,7 +423,6 @@ re_count_groups (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context */
       case LIT_CHAR_LEFT_PAREN:
       {
         if (curr_p < re_ctx_p->input_end_p
-            && *curr_p != LIT_CHAR_QUESTION
             && !is_char_class)
         {
           re_ctx_p->groups_count++;
@@ -746,7 +786,100 @@ re_parse_next_token (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
         re_ctx_p->token.type = RE_TOK_ASSERT_NOT_WORD_BOUNDARY;
         return ECMA_VALUE_EMPTY;
       }
+#if ENABLED (JERRY_ESNEXT)
+      else if (*re_ctx_p->input_curr_p == LIT_CHAR_LOWERCASE_K)
+      {
+        const lit_utf8_byte_t *saved_p = re_ctx_p->input_curr_p;
+        re_ctx_p->input_curr_p++;
 
+        if (re_ctx_p->input_curr_p >= re_ctx_p->input_end_p || *re_ctx_p->input_curr_p != LIT_CHAR_LESS_THAN)
+        {
+          re_ctx_p->has_reference = true;
+          if (re_ctx_p->flags & RE_FLAG_UNICODE || re_ctx_p->group_names_p != NULL)
+          {
+            return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid reference capture group"));
+          }
+
+          re_ctx_p->token.type = RE_TOK_CHAR;
+          re_ctx_p->token.value = ch;
+          re_ctx_p->input_curr_p = saved_p;
+          break;
+        }
+
+        re_ctx_p->input_curr_p++;
+        uint32_t length = 0;
+
+        while (true)
+        {
+          if (re_ctx_p->input_curr_p >= re_ctx_p->input_end_p || lit_char_is_white_space (ch))
+          {
+            return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid reference capture group"));
+          }
+          else if (*re_ctx_p->input_curr_p  == LIT_CHAR_GREATER_THAN)
+          {
+            uint32_t group_index = 0;
+            bool find_named_group = false;
+            if (length == 0)
+            {
+              return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid reference capture group"));
+            }
+            if (re_ctx_p->group_names_p != NULL)
+            {
+              re_group_name_t *group_name_p = re_ctx_p->group_names_p;
+              while (group_name_p != NULL)
+              {
+                if (length == group_name_p->name_length &&
+                    memcmp (group_name_p->name_p, (re_ctx_p->input_curr_p - length), length) == 0)
+                {
+                  group_index = group_name_p->capture_index;
+                  find_named_group = true;
+                  break;
+                }
+                group_index = group_name_p->capture_index;
+                group_name_p = group_name_p->next_p;
+              }
+            }
+            if (!find_named_group)
+            {
+              re_find_forward_named_group (re_ctx_p, &group_index, length, &find_named_group);
+            }
+            if (re_ctx_p->group_names_p == NULL && !find_named_group && !(re_ctx_p->flags & RE_FLAG_UNICODE))
+            {
+              re_ctx_p->token.type = RE_TOK_CHAR;
+              re_ctx_p->token.value = ch;
+              re_ctx_p->input_curr_p = saved_p;
+            }
+            else if (group_index == 0)
+            {
+              return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid indentifier"));
+            }
+
+            if (re_ctx_p->groups_count < 0)
+            {
+              re_count_groups (re_ctx_p);
+            }
+
+            if (group_index <= (uint32_t) re_ctx_p->groups_count)
+            {
+              /* Valid backreference */
+              re_ctx_p->token.type = RE_TOK_BACKREFERENCE;
+              re_ctx_p->token.value = group_index;
+            }
+            re_ctx_p->input_curr_p++;
+            return ECMA_VALUE_EMPTY;
+          }
+          else if (!lit_code_point_is_identifier_part ((uint32_t) *re_ctx_p->input_curr_p)
+                   || re_ctx_p->input_curr_p >= re_ctx_p->input_end_p
+                   || (*re_ctx_p->input_curr_p >= LIT_CHAR_0 && *re_ctx_p->input_curr_p <= LIT_CHAR_9))
+          {
+            return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid indentifier"));
+          }
+
+          re_ctx_p->input_curr_p++;
+          length++;
+        }
+      }
+#endif /* ENABLED (JERRY_ESNEXT) */
       const ecma_value_t parse_result = re_parse_char_escape (re_ctx_p);
 
       if (ECMA_IS_VALUE_ERROR (parse_result))
@@ -788,6 +921,61 @@ re_parse_next_token (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
         {
           re_ctx_p->token.type = RE_TOK_START_NON_CAPTURE_GROUP;
         }
+#if ENABLED (JERRY_ESNEXT)
+        else if (ch  == LIT_CHAR_LESS_THAN)
+        {
+          if (re_ctx_p->has_reference)
+          {
+            return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid reference group"));
+          }
+          uint32_t length = 0;
+          const lit_utf8_byte_t *current_p = re_ctx_p->input_curr_p;
+
+          while (true)
+          {
+            ch = *current_p++;
+            if (ch  == LIT_CHAR_GREATER_THAN)
+            {
+              if (length == 0)
+              {
+                return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid named capture group"));
+              }
+              re_group_name_t *capture_group_p = jmem_heap_alloc_block (sizeof (re_group_name_t));
+              capture_group_p->next_p = re_ctx_p->group_names_p;
+              capture_group_p->name_p = re_ctx_p->input_curr_p;
+              capture_group_p->name_length = length;
+              capture_group_p->capture_index = re_ctx_p->captures_count;
+
+              if (re_ctx_p->group_names_p != NULL)
+              {
+                re_group_name_t *stored_capture_group_p = re_ctx_p->group_names_p;
+                while (stored_capture_group_p != NULL)
+                {
+                  if (stored_capture_group_p->name_length == length &&
+                      memcmp (stored_capture_group_p->name_p, (re_ctx_p->input_curr_p - length), length) == 0)
+                  {
+                    return ecma_raise_syntax_error (ECMA_ERR_MSG ("named capture group already exist"));
+                  }
+                  stored_capture_group_p = stored_capture_group_p->next_p;
+                }
+              }
+
+              re_ctx_p->group_names_p = capture_group_p;
+              re_ctx_p->input_curr_p = current_p;
+              re_ctx_p->token.type = RE_TOK_START_CAPTURE_GROUP;
+              return ECMA_VALUE_EMPTY;
+            }
+            else if (!lit_code_point_is_identifier_part ((uint32_t) ch)
+                     || current_p >= re_ctx_p->input_end_p
+                     || (ch >= LIT_CHAR_0 && ch <= LIT_CHAR_9))
+            {
+              return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid indentifier"));
+            }
+
+            length++;
+          }
+        }
+#endif /* ENABLED (JERRY_ESNEXT) */
         else
         {
           return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid group"));
@@ -1163,7 +1351,6 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
       {
         const uint32_t idx = re_ctx_p->captures_count++;
         const uint32_t capture_start = idx;
-
         ecma_value_t result = re_parse_alternative (re_ctx_p, false);
         if (ECMA_IS_VALUE_ERROR (result))
         {
@@ -1372,6 +1559,28 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
 
   return ECMA_VALUE_EMPTY;
 } /* re_parse_alternative */
+
+#if ENABLED (JERRY_ESNEXT)
+/**
+ * Parse captured named groups
+ */
+void
+re_parse_capture_named_group (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context */
+{
+  while (re_ctx_p->group_names_p != NULL)
+  {
+    re_group_name_t *group_names_p = re_ctx_p->group_names_p->next_p;
+
+    re_append_value (re_ctx_p, re_ctx_p->group_names_p->capture_index);
+    re_append_value (re_ctx_p, re_ctx_p->group_names_p->name_length);
+    re_append_bytes (re_ctx_p, re_ctx_p->group_names_p->name_length, re_ctx_p->group_names_p->name_p);
+
+    jmem_heap_free_block (re_ctx_p->group_names_p, sizeof (re_group_name_t));
+    re_ctx_p->group_names_p = group_names_p;
+  }
+  re_append_value (re_ctx_p, 0);
+} /* re_parse_capture_named_group */
+#endif /* ENABLED (JERRY_ESNEXT)  */
 
 /**
  * @}

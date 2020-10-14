@@ -474,7 +474,7 @@ ecma_builtin_array_prototype_object_push (const ecma_value_t *argument_list_p, /
 
 #if ENABLED (JERRY_ESNEXT)
   /* 5. */
-  if (length + arguments_number > ECMA_NUMBER_MAX_SAFE_INTEGER)
+  if ((ecma_number_t) (length + arguments_number) > ECMA_NUMBER_MAX_SAFE_INTEGER)
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Pushing element over 2**53-1 length is disallowed"));
   }
@@ -1563,7 +1563,7 @@ ecma_builtin_array_prototype_object_unshift (const ecma_value_t args[], /**< arg
   {
 #if ENABLED (JERRY_ESNEXT)
     /* ES11:4.a. */
-    if (len + args_number > ECMA_NUMBER_MAX_SAFE_INTEGER)
+    if ((ecma_number_t) (len + args_number) > ECMA_NUMBER_MAX_SAFE_INTEGER)
     {
       return ecma_raise_type_error (ECMA_ERR_MSG ("Unshift elements over 2**53-1 length is disallowed"));
     }
@@ -1661,7 +1661,7 @@ ecma_builtin_array_prototype_object_index_of (const ecma_value_t args[], /**< ar
   }
 
   /* 6. */
-  if (idx >= len)
+  if (idx >= (ecma_number_t) len)
   {
     return ecma_make_number_value (-1);
   }

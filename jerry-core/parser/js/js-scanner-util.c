@@ -162,7 +162,8 @@ scanner_get_stream_size (scanner_info_t *info_p, /**< scanner info block */
       }
       default:
       {
-        JERRY_ASSERT ((data_p[0] & SCANNER_STREAM_TYPE_MASK) == SCANNER_STREAM_TYPE_HOLE);
+        JERRY_ASSERT ((data_p[0] & SCANNER_STREAM_TYPE_MASK) == SCANNER_STREAM_TYPE_HOLE
+                      || SCANNER_STREAM_TYPE_IS_ARGUMENTS (data_p[0] & SCANNER_STREAM_TYPE_MASK));
         data_p++;
         continue;
       }
@@ -466,6 +467,18 @@ scanner_literal_is_arguments (lexer_lit_location_t *literal_p) /**< literal */
 } /* scanner_literal_is_arguments */
 
 /**
+ * Current status of arguments.
+ */
+typedef enum
+{
+  SCANNER_ARGUMENTS_NOT_PRESENT, /**< arguments object must not be created */
+  SCANNER_ARGUMENTS_MAY_PRESENT, /**< arguments object can be created */
+  SCANNER_ARGUMENTS_MAY_PRESENT_IN_EVAL, /**< arguments object must be present unless otherwise declared */
+  SCANNER_ARGUMENTS_PRESENT, /**< arguments object must be created */
+  SCANNER_ARGUMENTS_PRESENT_NO_REG, /**< arguments object must be created and cannot be stored in registers */
+} scanner_arguments_type_t;
+
+/**
  * Pop the last literal pool from the end.
  */
 void
@@ -494,11 +507,30 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
     return;
   }
 
-  parser_list_iterator_t literal_iterator;
-  lexer_lit_location_t *literal_p;
   uint16_t status_flags = literal_pool_p->status_flags;
-  bool arguments_required = ((status_flags & (SCANNER_LITERAL_POOL_CAN_EVAL | SCANNER_LITERAL_POOL_NO_ARGUMENTS))
-                             == SCANNER_LITERAL_POOL_CAN_EVAL);
+  scanner_arguments_type_t arguments_type = SCANNER_ARGUMENTS_MAY_PRESENT;
+
+  if (status_flags & SCANNER_LITERAL_POOL_NO_ARGUMENTS)
+  {
+    arguments_type = SCANNER_ARGUMENTS_NOT_PRESENT;
+  }
+  else if (status_flags & SCANNER_LITERAL_POOL_CAN_EVAL)
+  {
+    arguments_type = SCANNER_ARGUMENTS_MAY_PRESENT_IN_EVAL;
+  }
+
+#if ENABLED (JERRY_ESNEXT)
+  if (status_flags & SCANNER_LITERAL_POOL_ARGUMENTS_IN_ARGS)
+  {
+    arguments_type = SCANNER_ARGUMENTS_PRESENT;
+
+    if (status_flags & (SCANNER_LITERAL_POOL_NO_ARGUMENTS | SCANNER_LITERAL_POOL_CAN_EVAL))
+    {
+      arguments_type = SCANNER_ARGUMENTS_PRESENT_NO_REG;
+      status_flags &= (uint16_t) ~SCANNER_LITERAL_POOL_NO_ARGUMENTS;
+    }
+  }
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   uint8_t can_eval_types = 0;
 #if ENABLED (JERRY_ESNEXT)
@@ -522,11 +554,11 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
   }
 #endif /* ENABLED (JERRY_DEBUGGER) */
 
-  parser_list_iterator_init (&literal_pool_p->literal_pool, &literal_iterator);
+  parser_list_iterator_t literal_iterator;
+  lexer_lit_location_t *literal_p;
+  int32_t no_declarations = literal_pool_p->no_declarations;
 
-  const uint8_t *prev_source_p = literal_pool_p->source_p - 1;
-  size_t compressed_size = 1;
-  uint32_t no_declarations = literal_pool_p->no_declarations;
+  parser_list_iterator_init (&literal_pool_p->literal_pool, &literal_iterator);
 
 #if ENABLED (JERRY_ESNEXT)
   if (JERRY_UNLIKELY (status_flags & SCANNER_LITERAL_POOL_CLASS_NAME))
@@ -541,6 +573,11 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
+  uint8_t arguments_stream_type = SCANNER_STREAM_TYPE_ARGUMENTS;
+  const uint8_t *prev_source_p = literal_pool_p->source_p - 1;
+  lexer_lit_location_t *last_argument_p = NULL;
+  size_t compressed_size = 1;
+
   while ((literal_p = (lexer_lit_location_t *) parser_list_iterator_next (&literal_iterator)) != NULL)
   {
     uint8_t type = literal_p->type;
@@ -552,23 +589,110 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
 
     if (!(status_flags & SCANNER_LITERAL_POOL_NO_ARGUMENTS) && scanner_literal_is_arguments (literal_p))
     {
+#if ENABLED (JERRY_ESNEXT)
+      JERRY_ASSERT (arguments_type != SCANNER_ARGUMENTS_NOT_PRESENT);
+#else /* !ENABLED (JERRY_ESNEXT) */
+      JERRY_ASSERT (arguments_type == SCANNER_ARGUMENTS_MAY_PRESENT
+                    || arguments_type == SCANNER_ARGUMENTS_MAY_PRESENT_IN_EVAL);
+#endif /* ENABLED (JERRY_ESNEXT) */
+
       status_flags |= SCANNER_LITERAL_POOL_NO_ARGUMENTS;
 
-      if (type & (SCANNER_LITERAL_IS_ARG | SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_LOCAL))
+      if (type & SCANNER_LITERAL_IS_ARG)
       {
-        arguments_required = false;
+        JERRY_ASSERT (arguments_type != SCANNER_ARGUMENTS_PRESENT
+                      && arguments_type != SCANNER_ARGUMENTS_PRESENT_NO_REG);
+        arguments_type = SCANNER_ARGUMENTS_NOT_PRESENT;
+        last_argument_p = literal_p;
       }
+#if ENABLED (JERRY_ESNEXT)
+      else if (type & SCANNER_LITERAL_IS_LOCAL)
+      {
+        if (arguments_type == SCANNER_ARGUMENTS_MAY_PRESENT || arguments_type == SCANNER_ARGUMENTS_MAY_PRESENT_IN_EVAL)
+        {
+          arguments_type = SCANNER_ARGUMENTS_NOT_PRESENT;
+        }
+        else
+        {
+          if (arguments_type == SCANNER_ARGUMENTS_PRESENT_NO_REG)
+          {
+            type |= SCANNER_LITERAL_NO_REG;
+          }
+          else if (type & (SCANNER_LITERAL_NO_REG | SCANNER_LITERAL_EARLY_CREATE))
+          {
+            arguments_type = SCANNER_ARGUMENTS_PRESENT_NO_REG;
+          }
+
+          if ((type & SCANNER_LITERAL_IS_LOCAL_FUNC) == SCANNER_LITERAL_IS_LOCAL_FUNC)
+          {
+            type |= SCANNER_LITERAL_IS_ARG;
+            literal_p->type = type;
+            no_declarations--;
+            arguments_stream_type = SCANNER_STREAM_TYPE_ARGUMENTS_FUNC;
+          }
+          else
+          {
+            arguments_stream_type |= SCANNER_STREAM_LOCAL_ARGUMENTS;
+          }
+        }
+      }
+#else /* !ENABLED (JERRY_ESNEXT) */
+      else if (type & SCANNER_LITERAL_IS_FUNC)
+      {
+        arguments_type = SCANNER_ARGUMENTS_NOT_PRESENT;
+      }
+#endif /* ENABLED (JERRY_ESNEXT) */
       else
       {
+#if ENABLED (JERRY_ESNEXT)
+        if ((type & SCANNER_LITERAL_IS_VAR)
+            && (arguments_type == SCANNER_ARGUMENTS_PRESENT || arguments_type == SCANNER_ARGUMENTS_PRESENT_NO_REG))
+        {
+          if (arguments_type == SCANNER_ARGUMENTS_PRESENT_NO_REG)
+          {
+            type |= SCANNER_LITERAL_NO_REG;
+          }
+          else if (type & (SCANNER_LITERAL_NO_REG | SCANNER_LITERAL_EARLY_CREATE))
+          {
+            arguments_type = SCANNER_ARGUMENTS_PRESENT_NO_REG;
+          }
+
+          type |= SCANNER_LITERAL_IS_ARG;
+          literal_p->type = type;
+          no_declarations--;
+        }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+        if ((type & SCANNER_LITERAL_NO_REG) || arguments_type == SCANNER_ARGUMENTS_MAY_PRESENT_IN_EVAL)
+        {
+          arguments_type = SCANNER_ARGUMENTS_PRESENT_NO_REG;
+        }
+        else if (arguments_type == SCANNER_ARGUMENTS_MAY_PRESENT)
+        {
+          arguments_type = SCANNER_ARGUMENTS_PRESENT;
+        }
+
+#if ENABLED (JERRY_ESNEXT)
+        /* The SCANNER_LITERAL_IS_ARG may be set above. */
+        if (!(type & SCANNER_LITERAL_IS_ARG))
+        {
+          literal_p->type = 0;
+          continue;
+        }
+#else /* !ENABLED (JERRY_ESNEXT) */
         literal_p->type = 0;
-        arguments_required = true;
         continue;
+#endif /* ENABLED (JERRY_ESNEXT) */
       }
+    }
+    else if (type & SCANNER_LITERAL_IS_ARG)
+    {
+      last_argument_p = literal_p;
     }
 
 #if ENABLED (JERRY_ESNEXT)
     if ((status_flags & SCANNER_LITERAL_POOL_FUNCTION)
-        && (type & (SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_FUNC_DECLARATION)) == SCANNER_LITERAL_IS_FUNC)
+        && (type & SCANNER_LITERAL_IS_LOCAL_FUNC) == SCANNER_LITERAL_IS_FUNC)
     {
       if (prev_literal_pool_p == NULL
           && (context_p->global_status_flags & ECMA_PARSE_DIRECT_EVAL)
@@ -707,6 +831,20 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
 
   if ((status_flags & SCANNER_LITERAL_POOL_FUNCTION) || (compressed_size > 1))
   {
+    if (arguments_type == SCANNER_ARGUMENTS_MAY_PRESENT)
+    {
+      arguments_type = SCANNER_ARGUMENTS_NOT_PRESENT;
+    }
+    else if (arguments_type == SCANNER_ARGUMENTS_MAY_PRESENT_IN_EVAL)
+    {
+      arguments_type = SCANNER_ARGUMENTS_PRESENT_NO_REG;
+    }
+
+    if (arguments_type != SCANNER_ARGUMENTS_NOT_PRESENT)
+    {
+      compressed_size++;
+    }
+
     compressed_size += sizeof (scanner_info_t);
 
     scanner_info_t *info_p;
@@ -727,6 +865,7 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
     }
 
     uint8_t *data_p = (uint8_t *) (info_p + 1);
+    bool mapped_arguments = false;
 
     if (status_flags & SCANNER_LITERAL_POOL_FUNCTION)
     {
@@ -734,7 +873,7 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
 
       uint8_t u8_arg = 0;
 
-      if (arguments_required)
+      if (arguments_type != SCANNER_ARGUMENTS_NOT_PRESENT)
       {
         u8_arg |= SCANNER_FUNCTION_ARGUMENTS_NEEDED;
 
@@ -749,10 +888,24 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
         const uint16_t is_unmapped = SCANNER_LITERAL_POOL_IS_STRICT;
 #endif /* ENABLED (JERRY_ESNEXT) */
 
-        if (status_flags & is_unmapped)
+        if (!(status_flags & is_unmapped))
         {
-          arguments_required = false;
+          mapped_arguments = true;
         }
+
+        if (arguments_type == SCANNER_ARGUMENTS_PRESENT_NO_REG)
+        {
+          arguments_stream_type |= SCANNER_STREAM_NO_REG;
+        }
+
+        if (last_argument_p == NULL)
+        {
+          *data_p++ = arguments_stream_type;
+        }
+      }
+      else
+      {
+        last_argument_p = NULL;
       }
 
 #if ENABLED (JERRY_ESNEXT)
@@ -809,6 +962,11 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
       if (literal_p->length == 0)
       {
         *data_p++ = SCANNER_STREAM_TYPE_HOLE;
+
+        if (literal_p == last_argument_p)
+        {
+          *data_p++ = arguments_stream_type;
+        }
         continue;
       }
 
@@ -897,7 +1055,7 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
       }
 
       if ((literal_p->type & SCANNER_LITERAL_NO_REG)
-          || (arguments_required && (literal_p->type & SCANNER_LITERAL_IS_ARG)))
+          || (mapped_arguments && (literal_p->type & SCANNER_LITERAL_IS_ARG)))
       {
         type |= SCANNER_STREAM_NO_REG;
       }
@@ -931,6 +1089,11 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
         data_p += sizeof (const uint8_t *);
       }
 
+      if (literal_p == last_argument_p)
+      {
+        *data_p++ = arguments_stream_type;
+      }
+
       prev_source_p = literal_p->char_p + literal_p->length;
     }
 
@@ -940,7 +1103,7 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
   }
 
   if (!(status_flags & SCANNER_LITERAL_POOL_FUNCTION)
-      && prev_literal_pool_p->no_declarations < no_declarations)
+      && (int32_t) prev_literal_pool_p->no_declarations < no_declarations)
   {
     prev_literal_pool_p->no_declarations = (uint16_t) no_declarations;
   }
@@ -983,6 +1146,8 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
   scanner_free (literal_pool_p, sizeof (scanner_literal_pool_t));
 } /* scanner_pop_literal_pool */
 
+#if ENABLED (JERRY_ESNEXT)
+
 /**
  * Filter out the arguments from a literal pool.
  */
@@ -1000,49 +1165,50 @@ scanner_filter_arguments (parser_context_t *context_p, /**< context */
 
   JERRY_ASSERT (SCANNER_LITERAL_POOL_MAY_HAVE_ARGUMENTS (literal_pool_p->status_flags));
 
-  if (can_eval && prev_literal_pool_p != NULL)
+  if (can_eval)
   {
-    prev_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_CAN_EVAL;
+    if (prev_literal_pool_p != NULL)
+    {
+      prev_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_CAN_EVAL;
+    }
+
+    if (has_arguments)
+    {
+      literal_pool_p->status_flags |= (SCANNER_LITERAL_POOL_ARGUMENTS_IN_ARGS | SCANNER_LITERAL_POOL_NO_ARGUMENTS);
+    }
   }
 
   literal_pool_p->status_flags &= (uint16_t) ~SCANNER_LITERAL_POOL_CAN_EVAL;
 
   parser_list_iterator_init (&literal_pool_p->literal_pool, &literal_iterator);
 
-  while ((literal_p = (lexer_lit_location_t *) parser_list_iterator_next (&literal_iterator)) != NULL)
+  while (true)
   {
-#if ENABLED (JERRY_ESNEXT)
+    literal_p = (lexer_lit_location_t *) parser_list_iterator_next (&literal_iterator);
+
+    if (literal_p == NULL)
+    {
+      return;
+    }
+
     if (can_eval || (literal_p->type & SCANNER_LITERAL_EARLY_CREATE))
     {
       literal_p->type |= SCANNER_LITERAL_NO_REG | SCANNER_LITERAL_EARLY_CREATE;
     }
-#else /* !ENABLED (JERRY_ESNEXT) */
-    if (can_eval)
-    {
-      literal_p->type |= SCANNER_LITERAL_NO_REG;
-    }
-#endif /* ENABLED (JERRY_ESNEXT) */
 
     uint8_t type = literal_p->type;
+    const uint8_t mask = (SCANNER_LITERAL_IS_ARG
+                          | SCANNER_LITERAL_IS_DESTRUCTURED_ARG
+                          | SCANNER_LITERAL_IS_ARROW_DESTRUCTURED_ARG);
 
-    if (!(type & SCANNER_LITERAL_IS_ARG) && !(has_arguments && scanner_literal_is_arguments (literal_p)))
+    if ((type & mask) != SCANNER_LITERAL_IS_ARG)
     {
       break;
     }
-
-#if ENABLED (JERRY_ESNEXT)
-    if (type & (SCANNER_LITERAL_IS_DESTRUCTURED_ARG | SCANNER_LITERAL_IS_ARROW_DESTRUCTURED_ARG))
-    {
-      break;
-    }
-#endif /* ENABLED (JERRY_ESNEXT) */
   }
 
-  if (literal_p == NULL)
-  {
-    return;
-  }
-
+  /* Destructured args are placed after the other arguments because of register assignments. */
+  bool has_destructured_arg = false;
   scanner_literal_pool_t *new_literal_pool_p;
 
   new_literal_pool_p = (scanner_literal_pool_t *) scanner_malloc (context_p, sizeof (scanner_literal_pool_t));
@@ -1057,18 +1223,12 @@ scanner_filter_arguments (parser_context_t *context_p, /**< context */
 
   parser_list_iterator_init (&literal_pool_p->literal_pool, &literal_iterator);
 
-#if ENABLED (JERRY_ESNEXT)
-  /* Destructured args are placed after the other arguments because of register assignments. */
-  bool has_destructured_arg = false;
-#endif /* ENABLED (JERRY_ESNEXT) */
-
   while ((literal_p = (lexer_lit_location_t *) parser_list_iterator_next (&literal_iterator)) != NULL)
   {
     uint8_t type = literal_p->type;
 
-    if ((type & SCANNER_LITERAL_IS_ARG) || (has_arguments && scanner_literal_is_arguments (literal_p)))
+    if (type & SCANNER_LITERAL_IS_ARG)
     {
-#if ENABLED (JERRY_ESNEXT)
       if (can_eval || (literal_p->type & SCANNER_LITERAL_EARLY_CREATE))
       {
         type |= SCANNER_LITERAL_NO_REG | SCANNER_LITERAL_EARLY_CREATE;
@@ -1090,16 +1250,19 @@ scanner_filter_arguments (parser_context_t *context_p, /**< context */
         literal_p->type = type;
         continue;
       }
-#else /* !ENABLED (JERRY_ESNEXT) */
-      if (can_eval)
-      {
-        literal_p->type |= SCANNER_LITERAL_NO_REG;
-      }
-#endif /* ENABLED (JERRY_ESNEXT) */
 
       lexer_lit_location_t *new_literal_p;
       new_literal_p = (lexer_lit_location_t *) parser_list_append (context_p, &new_literal_pool_p->literal_pool);
       *new_literal_p = *literal_p;
+    }
+    else if (has_arguments && scanner_literal_is_arguments (literal_p))
+    {
+      new_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_ARGUMENTS_IN_ARGS;
+
+      if (type & SCANNER_LITERAL_NO_REG)
+      {
+        new_literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_NO_ARGUMENTS;
+      }
     }
     else if (prev_literal_pool_p != NULL)
     {
@@ -1107,17 +1270,11 @@ scanner_filter_arguments (parser_context_t *context_p, /**< context */
       lexer_lit_location_t *literal_location_p = scanner_add_custom_literal (context_p,
                                                                              prev_literal_pool_p,
                                                                              literal_p);
-      type |= SCANNER_LITERAL_NO_REG;
-
-#if ENABLED (JERRY_ESNEXT)
-      type |= SCANNER_LITERAL_IS_USED;
-#endif /* ENABLED (JERRY_ESNEXT) */
-
+      type |= SCANNER_LITERAL_NO_REG | SCANNER_LITERAL_IS_USED;
       literal_location_p->type |= type;
     }
   }
 
-#if ENABLED (JERRY_ESNEXT)
   if (has_destructured_arg)
   {
     parser_list_iterator_init (&literal_pool_p->literal_pool, &literal_iterator);
@@ -1134,13 +1291,14 @@ scanner_filter_arguments (parser_context_t *context_p, /**< context */
       }
     }
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
 
   new_literal_pool_p->prev_p = prev_literal_pool_p;
 
   parser_list_free (&literal_pool_p->literal_pool);
   scanner_free (literal_pool_p, sizeof (scanner_literal_pool_t));
 } /* scanner_filter_arguments */
+
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Add any literal to the specified literal pool.
@@ -1423,8 +1581,7 @@ scanner_detect_invalid_var (parser_context_t *context_p, /**< context */
   scanner_literal_pool_t *literal_pool_p = scanner_context_p->active_literal_pool_p;
 
   if (!(literal_pool_p->status_flags & SCANNER_LITERAL_POOL_FUNCTION)
-      && (var_literal_p->type & (SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_FUNC_DECLARATION))
-          == (SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_FUNC_DECLARATION))
+      && ((var_literal_p->type & SCANNER_LITERAL_IS_LOCAL_FUNC) == SCANNER_LITERAL_IS_LOCAL_FUNC))
   {
     scanner_raise_redeclaration_error (context_p);
   }
@@ -1816,11 +1973,26 @@ scanner_is_context_needed (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ESNEXT)
     uint32_t type = data & SCANNER_STREAM_TYPE_MASK;
 
-    if (JERRY_UNLIKELY (type == SCANNER_STREAM_TYPE_HOLE))
+    if (JERRY_UNLIKELY (check_type == PARSER_CHECK_FUNCTION_CONTEXT))
     {
-      JERRY_ASSERT (check_type == PARSER_CHECK_FUNCTION_CONTEXT);
-      data_p++;
-      continue;
+      if (JERRY_UNLIKELY (type == SCANNER_STREAM_TYPE_HOLE))
+      {
+        data_p++;
+        continue;
+      }
+
+      if (JERRY_UNLIKELY (SCANNER_STREAM_TYPE_IS_ARGUMENTS (type)))
+      {
+        if ((data & SCANNER_STREAM_NO_REG)
+            || scope_stack_reg_top >= PARSER_MAXIMUM_NUMBER_OF_REGISTERS)
+        {
+          return true;
+        }
+
+        scope_stack_reg_top++;
+        data_p++;
+        continue;
+      }
     }
 
 #ifndef JERRY_NDEBUG
@@ -2161,8 +2333,9 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
     JERRY_ASSERT (type != SCANNER_STREAM_TYPE_IMPORT || (data_p[0] & SCANNER_STREAM_NO_REG));
 #endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
-    if (type == SCANNER_STREAM_TYPE_HOLE)
+    if (JERRY_UNLIKELY (type == SCANNER_STREAM_TYPE_HOLE))
     {
+      JERRY_ASSERT (info_type == SCANNER_TYPE_FUNCTION);
       next_data_p++;
 
       if (option_flags & SCANNER_CREATE_VARS_IS_FUNCTION_BODY)
@@ -2181,6 +2354,92 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
       if (scope_stack_reg_top < PARSER_MAXIMUM_NUMBER_OF_REGISTERS)
       {
         scope_stack_reg_top++;
+      }
+      continue;
+    }
+
+    if (JERRY_UNLIKELY (SCANNER_STREAM_TYPE_IS_ARGUMENTS (type)))
+    {
+      JERRY_ASSERT (info_type == SCANNER_TYPE_FUNCTION);
+      next_data_p++;
+
+      if (option_flags & SCANNER_CREATE_VARS_IS_FUNCTION_BODY)
+      {
+        continue;
+      }
+
+      context_p->status_flags |= PARSER_ARGUMENTS_NEEDED;
+
+      if (JERRY_UNLIKELY (scope_stack_p >= scope_stack_end_p))
+      {
+        JERRY_ASSERT (context_p->scope_stack_size == PARSER_MAXIMUM_DEPTH_OF_SCOPE_STACK);
+        parser_raise_error (context_p, PARSER_ERR_SCOPE_STACK_LIMIT_REACHED);
+      }
+
+      lexer_construct_literal_object (context_p, &lexer_arguments_literal, LEXER_NEW_IDENT_LITERAL);
+      scope_stack_p->map_from = context_p->lit_object.index;
+
+      uint16_t map_to;
+
+      if (!(data_p[0] & SCANNER_STREAM_NO_REG)
+          && scope_stack_reg_top < PARSER_MAXIMUM_NUMBER_OF_REGISTERS)
+      {
+        map_to = (uint16_t) (PARSER_REGISTER_START + scope_stack_reg_top);
+
+#if ENABLED (JERRY_ESNEXT)
+        scope_stack_p->map_to = (uint16_t) (scope_stack_reg_top + 1);
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+        scope_stack_reg_top++;
+      }
+      else
+      {
+        context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_USED;
+        map_to = context_p->lit_object.index;
+
+        context_p->status_flags |= PARSER_LEXICAL_ENV_NEEDED;
+
+#if ENABLED (JERRY_ESNEXT)
+        if (data_p[0] & SCANNER_STREAM_LOCAL_ARGUMENTS)
+        {
+          context_p->status_flags |= PARSER_LEXICAL_BLOCK_NEEDED;
+        }
+
+        scope_stack_p->map_to = 0;
+#endif /* ENABLED (JERRY_ESNEXT) */
+      }
+
+#if !ENABLED (JERRY_ESNEXT)
+      scope_stack_p->map_to = map_to;
+#endif /* !ENABLED (JERRY_ESNEXT) */
+      scope_stack_p++;
+
+#if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
+      context_p->scope_stack_top = (uint16_t) (scope_stack_p - context_p->scope_stack_p);
+#endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
+
+      parser_emit_cbc_ext_literal (context_p, CBC_EXT_CREATE_ARGUMENTS, map_to);
+
+#if ENABLED (JERRY_ESNEXT)
+      if (type == SCANNER_STREAM_TYPE_ARGUMENTS_FUNC)
+      {
+        if (JERRY_UNLIKELY (scope_stack_p >= scope_stack_end_p))
+        {
+          JERRY_ASSERT (context_p->scope_stack_size == PARSER_MAXIMUM_DEPTH_OF_SCOPE_STACK);
+          parser_raise_error (context_p, PARSER_ERR_SCOPE_STACK_LIMIT_REACHED);
+        }
+
+        scope_stack_p->map_from = PARSER_SCOPE_STACK_FUNC;
+        scope_stack_p->map_to = context_p->literal_count;
+        scope_stack_p++;
+
+        scanner_create_unused_literal (context_p, 0);
+      }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+      if (option_flags & SCANNER_CREATE_VARS_IS_FUNCTION_ARGS)
+      {
+        break;
       }
       continue;
     }
@@ -2533,31 +2792,6 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
     scope_stack_p++;
 
     scanner_create_unused_literal (context_p, 0);
-  }
-
-  if (info_type == SCANNER_TYPE_FUNCTION
-      && !(option_flags & SCANNER_CREATE_VARS_IS_FUNCTION_BODY)
-      && (info_u8_arg & SCANNER_FUNCTION_ARGUMENTS_NEEDED))
-  {
-    JERRY_ASSERT (info_type == SCANNER_TYPE_FUNCTION);
-
-    if (JERRY_UNLIKELY (scope_stack_p >= scope_stack_end_p))
-    {
-      JERRY_ASSERT (context_p->scope_stack_size == PARSER_MAXIMUM_DEPTH_OF_SCOPE_STACK);
-      parser_raise_error (context_p, PARSER_ERR_SCOPE_STACK_LIMIT_REACHED);
-    }
-
-    context_p->status_flags |= PARSER_ARGUMENTS_NEEDED | PARSER_LEXICAL_ENV_NEEDED;
-
-    lexer_construct_literal_object (context_p, &lexer_arguments_literal, lexer_arguments_literal.type);
-
-    scope_stack_p->map_from = context_p->lit_object.index;
-#if ENABLED (JERRY_ESNEXT)
-    scope_stack_p->map_to = 0;
-#else /* !ENABLED (JERRY_ESNEXT) */
-    scope_stack_p->map_to = context_p->lit_object.index;
-#endif /* ENABLED (JERRY_ESNEXT) */
-    scope_stack_p++;
   }
 
   context_p->scope_stack_top = (uint16_t) (scope_stack_p - context_p->scope_stack_p);

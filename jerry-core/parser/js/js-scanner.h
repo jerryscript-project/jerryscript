@@ -148,6 +148,10 @@ typedef enum
   SCANNER_STREAM_HAS_ESCAPE = (1 << 6), /**< binding has escape */
   SCANNER_STREAM_NO_REG = (1 << 5), /**< binding cannot be stored in register */
   SCANNER_STREAM_EARLY_CREATE = (1 << 4), /**< binding must be created with ECMA_VALUE_UNINITIALIZED */
+#if ENABLED (JERRY_ESNEXT)
+  SCANNER_STREAM_LOCAL_ARGUMENTS = SCANNER_STREAM_EARLY_CREATE, /**< arguments is redeclared
+                                                                 *   as let/const binding later */
+#endif /* ENABLED (JERRY_ESNEXT) */
   /* Update SCANNER_STREAM_TYPE_MASK macro if more bits are added. */
 } scanner_compressed_stream_flags_t;
 
@@ -158,6 +162,11 @@ typedef enum
 {
   SCANNER_STREAM_TYPE_END, /**< end of scanner data */
   SCANNER_STREAM_TYPE_HOLE, /**< no name is assigned to this argument */
+  SCANNER_STREAM_TYPE_ARGUMENTS, /**< arguments object should be created */
+#if ENABLED (JERRY_ESNEXT)
+  SCANNER_STREAM_TYPE_ARGUMENTS_FUNC, /**< arguments object should be created which
+                                       *   is later initialized with a function */
+#endif /* ENABLED (JERRY_ESNEXT) */
   SCANNER_STREAM_TYPE_VAR, /**< var declaration */
 #if ENABLED (JERRY_ESNEXT)
   SCANNER_STREAM_TYPE_LET, /**< let declaration */
@@ -210,6 +219,12 @@ typedef enum
 #define SCANNER_STREAM_TYPE_IS_ARG_FUNC(type) \
   ((type) == SCANNER_STREAM_TYPE_ARG_FUNC || (type) == SCANNER_STREAM_TYPE_DESTRUCTURED_ARG_FUNC)
 
+/**
+ * Checks whether the decoded type represents an arguments declaration
+ */
+#define SCANNER_STREAM_TYPE_IS_ARGUMENTS(type) \
+  ((type) == SCANNER_STREAM_TYPE_ARGUMENTS || (type) == SCANNER_STREAM_TYPE_ARGUMENTS_FUNC)
+
 #else /* !ENABLED (JERRY_ESNEXT) */
 
 /**
@@ -221,6 +236,12 @@ typedef enum
  * Checks whether the decoded type represents both a function argument and a function declaration.
  */
 #define SCANNER_STREAM_TYPE_IS_ARG_FUNC(type) ((type) == SCANNER_STREAM_TYPE_ARG_FUNC)
+
+/**
+ * Checks whether the decoded type represents an arguments declaration
+ */
+#define SCANNER_STREAM_TYPE_IS_ARGUMENTS(type) \
+  ((type) == SCANNER_STREAM_TYPE_ARGUMENTS)
 
 #endif /* ENABLED (JERRY_ESNEXT) */
 

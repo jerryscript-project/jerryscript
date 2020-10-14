@@ -582,6 +582,8 @@
                       VM_OC_BRANCH_IF_NULLISH) \
   \
   /* Basic opcodes. */ \
+  CBC_OPCODE (CBC_EXT_CREATE_ARGUMENTS, CBC_HAS_LITERAL_ARG, 0, \
+              VM_OC_CREATE_ARGUMENTS) \
   CBC_OPCODE (CBC_EXT_PUSH_LITERAL_PUSH_NUMBER_0, CBC_HAS_LITERAL_ARG, 2, \
               VM_OC_PUSH_LIT_0 | VM_OC_GET_LITERAL) \
   CBC_OPCODE (CBC_EXT_PUSH_LITERAL_PUSH_NUMBER_POS_BYTE, CBC_HAS_LITERAL_ARG | CBC_HAS_BYTE_ARG, 2, \
@@ -866,12 +868,11 @@ typedef enum
   CBC_CODE_FLAGS_UINT16_ARGUMENTS = (1u << 1), /**< compiled code data is cbc_uint16_arguments_t */
   CBC_CODE_FLAGS_STRICT_MODE = (1u << 2), /**< strict mode is enabled */
   CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED = (1u << 3), /**< mapped arguments object must be constructed */
-  CBC_CODE_FLAGS_UNMAPPED_ARGUMENTS_NEEDED = (1u << 4), /**< mapped arguments object must be constructed */
-  CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED = (1u << 5), /**< no need to create a lexical environment */
-  CBC_CODE_FLAGS_STATIC_FUNCTION = (1u << 6), /**< this function is a static snapshot function */
-  CBC_CODE_FLAGS_DEBUGGER_IGNORE = (1u << 7), /**< this function should be ignored by debugger */
-  CBC_CODE_FLAGS_HAS_TAGGED_LITERALS = (1u << 8), /**< this function has tagged template literal list */
-  CBC_CODE_FLAGS_LEXICAL_BLOCK_NEEDED = (1u << 9), /**< compiled code needs a lexical block */
+  CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED = (1u << 4), /**< no need to create a lexical environment */
+  CBC_CODE_FLAGS_STATIC_FUNCTION = (1u << 5), /**< this function is a static snapshot function */
+  CBC_CODE_FLAGS_DEBUGGER_IGNORE = (1u << 6), /**< this function should be ignored by debugger */
+  CBC_CODE_FLAGS_HAS_TAGGED_LITERALS = (1u << 7), /**< this function has tagged template literal list */
+  CBC_CODE_FLAGS_LEXICAL_BLOCK_NEEDED = (1u << 8), /**< compiled code needs a lexical block */
 
   /* Bits from bit 12 is reserved for function types (see CBC_FUNCTION_TYPE_SHIFT).
    * Note: the last bits are used for type flags because < and >= operators can be used to
@@ -942,12 +943,6 @@ typedef enum
  */
 #define CBC_FUNCTION_IS_ARROW(flags) \
   ((flags) >= (CBC_FUNCTION_ARROW << CBC_FUNCTION_TYPE_SHIFT))
-
-/**
- * Any arguments object is needed
- */
-#define CBC_CODE_FLAGS_IS_ARGUMENTS_NEEDED \
-  (CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED | CBC_CODE_FLAGS_UNMAPPED_ARGUMENTS_NEEDED)
 
 #define CBC_OPCODE(arg1, arg2, arg3, arg4) arg1,
 

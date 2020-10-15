@@ -1720,13 +1720,13 @@ ecma_proxy_object_call (ecma_object_t *obj_p, /**< proxy object */
   }
 
   /* 8. */
-  ecma_value_t args_array = ecma_op_create_array_object (args_p, argc, false);
+  ecma_value_t args_array = ecma_op_new_array_object_from_buffer (args_p, argc);
   ecma_value_t value_array[] = {target, this_argument, args_array};
   ecma_object_t *func_obj_p = ecma_get_object_from_value (trap);
   /* 9. */
   ecma_value_t ret_value = ecma_op_function_call (func_obj_p, handler, value_array, 3);
   ecma_deref_object (func_obj_p);
-  ecma_deref_object (ecma_get_object_from_value (args_array));
+  ecma_free_object (args_array);
 
   return ret_value;
 } /* ecma_proxy_object_call */
@@ -1776,16 +1776,16 @@ ecma_proxy_object_construct (ecma_object_t *obj_p, /**< proxy object */
   }
 
   /* 8. */
-  ecma_value_t arg_array = ecma_op_create_array_object (args_p, argc, false);
+  ecma_value_t args_array = ecma_op_new_array_object_from_buffer (args_p, argc);
 
   ecma_object_t *func_obj_p = ecma_get_object_from_value (trap);
   ecma_value_t new_target_value = ecma_make_object_value (new_target_p);
-  ecma_value_t function_call_args[] = {target, arg_array, new_target_value};
+  ecma_value_t function_call_args[] = {target, args_array, new_target_value};
 
   /* 9. */
   ecma_value_t new_obj = ecma_op_function_call (func_obj_p, handler, function_call_args, 3);
 
-  ecma_free_value (arg_array);
+  ecma_free_object (args_array);
   ecma_deref_object (func_obj_p);
 
   /* 10 .*/

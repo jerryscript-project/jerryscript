@@ -66,8 +66,8 @@
  *
  * @return pointer to the constructed array object
  */
-ecma_object_t *
-ecma_op_new_array_object (uint32_t length) /**< length of the new array */
+static ecma_object_t *
+ecma_op_alloc_array_object (uint32_t length) /**< length of the new array */
 {
 #if ENABLED (JERRY_BUILTIN_ARRAY)
   ecma_object_t *array_prototype_object_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY_PROTOTYPE);
@@ -91,7 +91,7 @@ ecma_op_new_array_object (uint32_t length) /**< length of the new array */
   ext_obj_p->u.array.u.length_prop = ECMA_PROPERTY_FLAG_WRITABLE | ECMA_PROPERTY_TYPE_VIRTUAL;
 
   return object_p;
-} /* ecma_op_new_array_object */
+} /* ecma_op_alloc_array_object */
 
 /**
  * Check whether the given object is fast-access mode array
@@ -121,43 +121,184 @@ ecma_op_array_is_fast_array (ecma_extended_object_t *array_p) /**< ecma-array-ob
 } /* ecma_op_array_is_fast_array */
 
 /**
- * Allocate a new fast access mode array object with the given length
+ * Allocate a new array object with the given length
  *
- * @return NULL - if the allocation of the underlying buffer failed
- *         pointer to the constructed fast access mode array object otherwise
+ * Note: The returned array can be normal of fast access mode
+ *
+ * @return pointer to the constructed array object
  */
 ecma_object_t *
-ecma_op_new_fast_array_object (uint32_t length) /**< length of the new fast access mode array */
+ecma_op_new_array_object (uint32_t length) /**< length of the new array */
 {
+  ecma_object_t *object_p = ecma_op_alloc_array_object (length);
+
   const uint32_t aligned_length = ECMA_FAST_ARRAY_ALIGN_LENGTH (length);
   ecma_value_t *values_p = NULL;
 
-  if (length != 0)
+  if (length > 0)
   {
+    if (length >= ECMA_FAST_ARRAY_MAX_INITIAL_LENGTH)
+    {
+      return object_p;
+    }
+
     values_p = (ecma_value_t *) jmem_heap_alloc_block_null_on_error (aligned_length * sizeof (ecma_value_t));
 
     if (JERRY_UNLIKELY (values_p == NULL))
     {
-      return NULL;
+      return object_p;
     }
   }
 
-  ecma_object_t *object_p = ecma_op_new_array_object (length);
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
-
   ext_obj_p->u.array.u.length_prop = (uint8_t) (ext_obj_p->u.array.u.length_prop | ECMA_FAST_ARRAY_FLAG);
   ext_obj_p->u.array.u.hole_count += length * ECMA_FAST_ARRAY_HOLE_ONE;
-
-  JERRY_ASSERT (object_p->u1.property_list_cp == JMEM_CP_NULL);
 
   for (uint32_t i = 0; i < aligned_length; i++)
   {
     values_p[i] = ECMA_VALUE_ARRAY_HOLE;
   }
 
+  JERRY_ASSERT (object_p->u1.property_list_cp == JMEM_CP_NULL);
   ECMA_SET_POINTER (object_p->u1.property_list_cp, values_p);
   return object_p;
-} /* ecma_op_new_fast_array_object */
+} /* ecma_op_new_array_object */
+
+/**
+ * Allocate a new array object from the given length
+ *
+ * Note: The returned array can be normal of fast access mode
+ *
+ * @return NULL - if the given length is invalid
+ *         pointer to the constructed array object - otherwise
+ */
+ecma_object_t *
+ecma_op_new_array_object_from_length (ecma_length_t length) /**< length of the new array */
+{
+#if ENABLED (JERRY_ESNEXT)
+  if (length > UINT32_MAX)
+  {
+    ecma_raise_range_error (ECMA_ERR_MSG ("Invalid array length"));
+    return NULL;
+  }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+  return ecma_op_new_array_object ((uint32_t) length);
+} /* ecma_op_new_array_object_from_length */
+
+/**
+ * Allocate a new array object from the given buffer
+ *
+ * Note: The returned array can be normal of fast access mode
+ *
+ * @return ecma_value - constructed array object
+ */
+ecma_value_t
+ecma_op_new_array_object_from_buffer (const ecma_value_t *args_p, /**< array element list */
+                                      uint32_t length) /**< number of array elements */
+{
+  if (length == 0)
+  {
+    return ecma_make_object_value (ecma_op_new_array_object (0));
+  }
+
+  ecma_object_t *object_p = ecma_op_alloc_array_object (length);
+  const uint32_t aligned_length = ECMA_FAST_ARRAY_ALIGN_LENGTH (length);
+  ecma_value_t *values_p;
+  values_p = (ecma_value_t *) jmem_heap_alloc_block_null_on_error (aligned_length * sizeof (ecma_value_t));
+
+  if (values_p != NULL)
+  {
+    ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
+    ext_obj_p->u.array.u.length_prop = (uint8_t) (ext_obj_p->u.array.u.length_prop | ECMA_FAST_ARRAY_FLAG);
+    JERRY_ASSERT (object_p->u1.property_list_cp == JMEM_CP_NULL);
+
+    for (uint32_t i = 0; i < length; i++)
+    {
+      JERRY_ASSERT (!ecma_is_value_array_hole (args_p[i]));
+      values_p[i] = ecma_copy_value_if_not_object (args_p[i]);
+    }
+
+    for (uint32_t i = length; i < aligned_length; i++)
+    {
+      values_p[i] = ECMA_VALUE_ARRAY_HOLE;
+    }
+
+    ECMA_SET_POINTER (object_p->u1.property_list_cp, values_p);
+  }
+  else
+  {
+    for (uint32_t i = 0; i < length; i++)
+    {
+      JERRY_ASSERT (!ecma_is_value_array_hole (args_p[i]));
+
+      ecma_string_t *prop_name_p = ecma_new_ecma_string_from_uint32 (i);
+      ecma_property_value_t *prop_value_p;
+      prop_value_p = ecma_create_named_data_property (object_p,
+                                                      prop_name_p,
+                                                      ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                      NULL);
+      ecma_deref_ecma_string (prop_name_p);
+      prop_value_p->value = ecma_copy_value_if_not_object (args_p[i]);
+    }
+  }
+
+  return ecma_make_object_value (object_p);
+} /* ecma_op_new_array_object_from_buffer */
+
+/**
+ * Allocate a new fast acces mode array object from the given collection
+ *
+ * Note: The given collection will be unavailable after and it's underlying buffer is reused
+ *
+ * @return ecma_value - constructed fast access mode array object
+ */
+ecma_value_t
+ecma_op_new_array_object_from_collection (ecma_collection_t *collection_p, /**< collection to create array from */
+                                          bool unref_objects) /**< true - if the collection potentially
+                                                                          containts objects
+                                                                   false - otherwise */
+{
+  const uint32_t item_count = collection_p->item_count;
+
+  if (item_count == 0)
+  {
+    ecma_collection_destroy (collection_p);
+    return ecma_make_object_value (ecma_op_new_array_object (0));
+  }
+
+  ecma_object_t *object_p;
+  ecma_value_t *buffer_p = collection_p->buffer_p;
+  const uint32_t old_size = ECMA_COLLECTION_ALLOCATED_SIZE (collection_p->capacity);
+  const uint32_t aligned_length = ECMA_FAST_ARRAY_ALIGN_LENGTH (collection_p->item_count);
+
+  jmem_heap_free_block (collection_p, sizeof (ecma_collection_t));
+  buffer_p = jmem_heap_realloc_block (buffer_p, old_size, aligned_length * sizeof (ecma_value_t));
+  object_p = ecma_op_alloc_array_object (item_count);
+
+  ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
+  ext_obj_p->u.array.u.length_prop = (uint8_t) (ext_obj_p->u.array.u.length_prop | ECMA_FAST_ARRAY_FLAG);
+  JERRY_ASSERT (object_p->u1.property_list_cp == JMEM_CP_NULL);
+  JERRY_ASSERT (ext_obj_p->u.array.u.hole_count < ECMA_FAST_ARRAY_HOLE_ONE);
+  ECMA_SET_POINTER (object_p->u1.property_list_cp, buffer_p);
+
+  if (JERRY_UNLIKELY (unref_objects))
+  {
+    for (uint32_t i = 0; i < item_count; i++)
+    {
+      /* Strong references from the collection are no longer needed
+         since GC will mark these object as a fast access mode array properties */
+      ecma_deref_if_object (buffer_p[i]);
+    }
+  }
+
+  for (uint32_t i = item_count; i < aligned_length; i++)
+  {
+    buffer_p[i] = ECMA_VALUE_ARRAY_HOLE;
+  }
+
+  return ecma_make_object_value (object_p);
+} /* ecma_op_new_array_object_from_collection */
 
 /**
  * Converts a fast access mode array back to a normal property list based array
@@ -541,105 +682,6 @@ ecma_fast_array_object_own_property_keys (ecma_object_t *object_p) /**< fast acc
   return ret_p;
 } /* ecma_fast_array_object_own_property_keys */
 
-/**
- * Array object creation operation.
- *
- * See also: ECMA-262 v5, 15.4.2.1
- *           ECMA-262 v5, 15.4.2.2
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
- */
-ecma_value_t
-ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of arguments that
-                                                                    *   are passed to Array constructor */
-                             uint32_t arguments_list_len, /**< length of the arguments' list */
-                             bool is_treat_single_arg_as_length) /**< if the value is true,
-                                                                  *   arguments_list_len is 1
-                                                                  *   and single argument is Number,
-                                                                  *   then treat the single argument
-                                                                  *   as new Array's length rather
-                                                                  *   than as single item of the Array */
-{
-  JERRY_ASSERT (arguments_list_len == 0
-                || arguments_list_p != NULL);
-
-  uint32_t length;
-  const ecma_value_t *array_items_p;
-  uint32_t array_items_count;
-
-  if (is_treat_single_arg_as_length
-      && arguments_list_len == 1
-      && ecma_is_value_number (arguments_list_p[0]))
-  {
-    ecma_number_t num = ecma_get_number_from_value (arguments_list_p[0]);
-    uint32_t num_uint32 = ecma_number_to_uint32 (num);
-
-    if (num != ((ecma_number_t) num_uint32))
-    {
-      return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid array length."));
-    }
-    else
-    {
-      length = num_uint32;
-      array_items_p = NULL;
-      array_items_count = 0;
-    }
-
-    if (length > ECMA_FAST_ARRAY_MAX_INITIAL_LENGTH)
-    {
-      return ecma_make_object_value (ecma_op_new_array_object (length));
-    }
-
-    ecma_object_t *object_p = ecma_op_new_fast_array_object (length);
-
-    if (object_p == NULL)
-    {
-      return ecma_make_object_value (ecma_op_new_array_object (length));
-    }
-
-    JERRY_ASSERT (ecma_op_object_is_fast_array (object_p));
-
-    return ecma_make_object_value (object_p);
-  }
-  else
-  {
-    length = arguments_list_len;
-    array_items_p = arguments_list_p;
-    array_items_count = arguments_list_len;
-  }
-
-  ecma_object_t *object_p = ecma_op_new_fast_array_object (length);
-
-  /* At this point we were not able to allocate a length * sizeof (ecma_value_t) amount of memory,
-     so we can terminate the engine since converting it into normal property list based array
-     would consume more memory. */
-  if (object_p == NULL)
-  {
-    jerry_fatal (ERR_OUT_OF_MEMORY);
-  }
-
-  if (length == 0)
-  {
-    return ecma_make_object_value (object_p);
-  }
-
-  ecma_value_t *values_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, object_p->u1.property_list_cp);
-  ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
-
-  for (uint32_t index = 0;
-       index < array_items_count;
-       index++)
-  {
-    JERRY_ASSERT (!ecma_is_value_array_hole (array_items_p[index]));
-    values_p[index] = ecma_copy_value_if_not_object (array_items_p[index]);
-  }
-
-  ext_obj_p->u.array.u.hole_count -= ECMA_FAST_ARRAY_HOLE_ONE * array_items_count;
-
-  return ecma_make_object_value (object_p);
-} /* ecma_op_create_array_object */
-
 #if ENABLED (JERRY_ESNEXT)
 /**
  * Array object creation with custom prototype.
@@ -649,7 +691,7 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
  * @return ecma value
  *         Returned value must be freed with ecma_free_value
  */
-ecma_value_t
+ecma_object_t *
 ecma_op_array_species_create (ecma_object_t *original_array_p, /**< The object from whom the new array object
                                                                 *   is being created */
                               ecma_length_t length) /**< length of the array */
@@ -661,7 +703,7 @@ ecma_op_array_species_create (ecma_object_t *original_array_p, /**< The object f
 
   if (ECMA_IS_VALUE_ERROR (is_array))
   {
-    return is_array;
+    return NULL;
   }
 
   if (ecma_is_value_true (is_array))
@@ -669,7 +711,7 @@ ecma_op_array_species_create (ecma_object_t *original_array_p, /**< The object f
     constructor = ecma_op_object_get_by_magic_id (original_array_p, LIT_MAGIC_STRING_CONSTRUCTOR);
     if (ECMA_IS_VALUE_ERROR (constructor))
     {
-      return constructor;
+      return NULL;
     }
 
     if (ecma_is_constructor (constructor)
@@ -686,7 +728,7 @@ ecma_op_array_species_create (ecma_object_t *original_array_p, /**< The object f
 
       if (ECMA_IS_VALUE_ERROR (constructor))
       {
-        return constructor;
+        return NULL;
       }
 
       if (ecma_is_value_null (constructor))
@@ -698,17 +740,14 @@ ecma_op_array_species_create (ecma_object_t *original_array_p, /**< The object f
 
   if (ecma_is_value_undefined (constructor))
   {
-    ecma_value_t length_val = ecma_make_length_value (length);
-    ecma_value_t new_array = ecma_op_create_array_object (&length_val, 1, true);
-    ecma_free_value (length_val);
-
-    return new_array;
+    return ecma_op_new_array_object_from_length (length);
   }
 
   if (!ecma_is_constructor (constructor))
   {
     ecma_free_value (constructor);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid species constructor"));
+    ecma_raise_type_error (ECMA_ERR_MSG ("Invalid species constructor"));
+    return NULL;
   }
 
   ecma_value_t len_val = ecma_make_length_value (length);
@@ -720,7 +759,13 @@ ecma_op_array_species_create (ecma_object_t *original_array_p, /**< The object f
 
   ecma_deref_object (ctor_object_p);
   ecma_free_value (len_val);
-  return ret_val;
+
+  if (ECMA_IS_VALUE_ERROR (ret_val))
+  {
+    return NULL;
+  }
+
+  return ecma_get_object_from_value (ret_val);
 } /* ecma_op_array_species_create */
 
 /**

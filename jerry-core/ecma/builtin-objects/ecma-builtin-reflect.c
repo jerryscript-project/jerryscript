@@ -176,10 +176,7 @@ ecma_builtin_reflect_dispatch_routine (uint16_t builtin_routine_id, /**< built-i
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
     /* 3. */
-    ecma_value_t new_array = ecma_op_create_array_object (prop_names->buffer_p, prop_names->item_count, false);
-    ecma_collection_free (prop_names);
-
-    return new_array;
+    return ecma_op_new_array_object_from_collection (prop_names, false);
   }
 
   if (builtin_routine_id == ECMA_REFLECT_OBJECT_CONSTRUCT)

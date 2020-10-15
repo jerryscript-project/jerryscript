@@ -1641,8 +1641,7 @@ ecma_regexp_create_result_object (ecma_regexp_ctx_t *re_ctx_p, /**< regexp conte
                                   ecma_string_t *input_string_p, /**< input ecma string */
                                   uint32_t index) /**< match index */
 {
-  ecma_value_t result_array = ecma_op_create_array_object (0, 0, false);
-  ecma_object_t *result_p = ecma_get_object_from_value (result_array);
+  ecma_object_t *result_p = ecma_op_new_array_object (0);
 
   for (uint32_t i = 0; i < re_ctx_p->captures_count; i++)
   {
@@ -1664,7 +1663,7 @@ ecma_regexp_create_result_object (ecma_regexp_ctx_t *re_ctx_p, /**< regexp conte
                                 ecma_make_string_value (input_string_p),
                                 ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
 
-  return result_array;
+  return ecma_make_object_value (result_p);
 } /* ecma_regexp_create_result_object */
 
 /**
@@ -2214,7 +2213,8 @@ ecma_regexp_split_helper (ecma_value_t this_arg, /**< this value */
   }
 
   /* 15. */
-  ecma_value_t array = ecma_op_create_array_object (NULL, 0, false);
+  ecma_object_t *const array_p = ecma_op_new_array_object (0);
+  ecma_value_t array = ecma_make_object_value (array_p);
 
   /* 21. */
   if (limit == 0)
@@ -2225,7 +2225,6 @@ ecma_regexp_split_helper (ecma_value_t this_arg, /**< this value */
 
   const lit_utf8_size_t string_length = ecma_string_get_length (string_p);
 
-  ecma_object_t *const array_p = ecma_get_object_from_value (array);
   uint32_t array_length = 0;
 
   /* 22. */
@@ -2440,7 +2439,8 @@ cleanup_string:
   }
 
   /* 15. */
-  ecma_value_t array = ecma_op_create_array_object (NULL, 0, false);
+  ecma_object_t *const array_p = ecma_op_new_array_object (0);
+  ecma_value_t array = ecma_make_object_value (array_p);
 
   /* 21. */
   if (limit == 0)
@@ -2449,7 +2449,6 @@ cleanup_string:
     goto cleanup_string;
   }
 
-  ecma_object_t *const array_p = ecma_get_object_from_value (array);
   uint32_t array_length = 0;
 
   ecma_object_t *const regexp_p = ecma_get_object_from_value (this_arg);
@@ -3425,8 +3424,7 @@ ecma_regexp_match_helper (ecma_value_t this_arg, /**< this argument */
   }
 
   ecma_value_t ret_value = ECMA_VALUE_ERROR;
-  ecma_value_t result_array = ecma_op_create_array_object (0, 0, false);
-  ecma_object_t *result_array_p = ecma_get_object_from_value (result_array);
+  ecma_object_t *result_array_p = ecma_op_new_array_object (0);
   uint32_t n = 0;
 
   while (true)
@@ -3447,7 +3445,7 @@ ecma_regexp_match_helper (ecma_value_t this_arg, /**< this argument */
       }
 
       ecma_deref_ecma_string (str_p);
-      return result_array;
+      return ecma_make_object_value (result_array_p);
     }
 
     ecma_object_t *result_value_p = ecma_get_object_from_value (result_value);

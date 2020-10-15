@@ -62,15 +62,13 @@ ecma_value_t
 vm_get_backtrace (uint32_t max_depth) /**< maximum backtrace depth, 0 = unlimited */
 {
 #if ENABLED (JERRY_LINE_INFO)
-  ecma_value_t result_array = ecma_op_create_array_object (NULL, 0, false);
-
   if (max_depth == 0)
   {
     max_depth = UINT32_MAX;
   }
 
   vm_frame_ctx_t *context_p = JERRY_CONTEXT (vm_top_context_p);
-  ecma_object_t *array_p = ecma_get_object_from_value (result_array);
+  ecma_object_t *array_p = ecma_op_new_array_object (0);
   JERRY_ASSERT (ecma_op_object_is_fast_array (array_p));
   uint32_t index = 0;
 
@@ -107,10 +105,10 @@ vm_get_backtrace (uint32_t max_depth) /**< maximum backtrace depth, 0 = unlimite
     }
   }
 
-  return result_array;
+  return ecma_make_object_value (array_p);
 #else /* !ENABLED (JERRY_LINE_INFO) */
   JERRY_UNUSED (max_depth);
 
-  return ecma_op_create_array_object (NULL, 0, false);
+  return ecma_make_object_value (ecma_op_new_array_object (0));
 #endif /* ENABLED (JERRY_LINE_INFO) */
 } /* vm_get_backtrace */

@@ -869,10 +869,11 @@ typedef enum
   CBC_CODE_FLAGS_STRICT_MODE = (1u << 2), /**< strict mode is enabled */
   CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED = (1u << 3), /**< mapped arguments object must be constructed */
   CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED = (1u << 4), /**< no need to create a lexical environment */
-  CBC_CODE_FLAGS_STATIC_FUNCTION = (1u << 5), /**< this function is a static snapshot function */
-  CBC_CODE_FLAGS_DEBUGGER_IGNORE = (1u << 6), /**< this function should be ignored by debugger */
-  CBC_CODE_FLAGS_HAS_TAGGED_LITERALS = (1u << 7), /**< this function has tagged template literal list */
-  CBC_CODE_FLAGS_LEXICAL_BLOCK_NEEDED = (1u << 8), /**< compiled code needs a lexical block */
+  CBC_CODE_FLAGS_HAS_EXTENDED_INFO = (1u << 5), /**< this function has extended info block */
+  CBC_CODE_FLAGS_HAS_TAGGED_LITERALS = (1u << 6), /**< this function has tagged template literal list */
+  CBC_CODE_FLAGS_STATIC_FUNCTION = (1u << 7), /**< this function is a static snapshot function */
+  CBC_CODE_FLAGS_DEBUGGER_IGNORE = (1u << 8), /**< this function should be ignored by debugger */
+  CBC_CODE_FLAGS_LEXICAL_BLOCK_NEEDED = (1u << 9), /**< compiled code needs a lexical block */
 
   /* Bits from bit 12 is reserved for function types (see CBC_FUNCTION_TYPE_SHIFT).
    * Note: the last bits are used for type flags because < and >= operators can be used to
@@ -943,6 +944,11 @@ typedef enum
  */
 #define CBC_FUNCTION_IS_ARROW(flags) \
   ((flags) >= (CBC_FUNCTION_ARROW << CBC_FUNCTION_TYPE_SHIFT))
+
+/**
+ * Get length property from extended info
+ */
+#define CBC_EXTENDED_INFO_GET_LENGTH(extended_info) (extended_info)
 
 #define CBC_OPCODE(arg1, arg2, arg3, arg4) arg1,
 

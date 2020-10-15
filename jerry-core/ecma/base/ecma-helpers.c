@@ -1499,27 +1499,6 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
 } /* ecma_bytecode_deref */
 
 /**
- * Get the number of formal parameters of the compiled code
- *
- * @return number of formal parameters
- */
-uint32_t
-ecma_compiled_code_get_formal_params (const ecma_compiled_code_t *bytecode_header_p) /**< compiled code */
-{
-  if (!(bytecode_header_p->status_flags & CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED))
-  {
-    return 0;
-  }
-
-  if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
-  {
-    return ((cbc_uint16_arguments_t *) bytecode_header_p)->argument_end;
-  }
-
-  return ((cbc_uint8_arguments_t *) bytecode_header_p)->argument_end;
-} /* ecma_compiled_code_get_formal_params */
-
-/**
  * Resolve the position of the arguments list start of the compiled code
  *
  * @return start position of the arguments list start of the compiled code
@@ -1532,25 +1511,20 @@ ecma_compiled_code_resolve_arguments_start (const ecma_compiled_code_t *bytecode
   uint8_t *byte_p = (uint8_t *) bytecode_header_p;
   byte_p += ((size_t) bytecode_header_p->size) << JMEM_ALIGNMENT_LOG;
 
-  return ((ecma_value_t *) byte_p) - ecma_compiled_code_get_formal_params (bytecode_header_p);
+  if (!(bytecode_header_p->status_flags & CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED))
+  {
+    return ((ecma_value_t *) byte_p);
+  }
+
+  if (JERRY_LIKELY (!(bytecode_header_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)))
+  {
+    return ((ecma_value_t *) byte_p) - ((cbc_uint8_arguments_t *) bytecode_header_p)->argument_end;
+  }
+
+  return ((ecma_value_t *) byte_p) - ((cbc_uint16_arguments_t *) bytecode_header_p)->argument_end;
 } /* ecma_compiled_code_resolve_arguments_start */
 
 #if ENABLED (JERRY_ESNEXT)
-/**
- * Get the tagged template collection of the compiled code
- *
- * @return pointer to the tagged template collection
- */
-ecma_collection_t *
-ecma_compiled_code_get_tagged_template_collection (const ecma_compiled_code_t *bytecode_header_p) /**< compiled code */
-{
-  JERRY_ASSERT (bytecode_header_p != NULL);
-  JERRY_ASSERT (bytecode_header_p->status_flags & CBC_CODE_FLAGS_HAS_TAGGED_LITERALS);
-
-  ecma_value_t *base_p = ecma_compiled_code_resolve_function_name (bytecode_header_p);
-
-  return ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, base_p[-1]);
-} /* ecma_compiled_code_get_tagged_template_collection */
 
 /**
  * Resolve the position of the function name of the compiled code
@@ -1563,15 +1537,46 @@ ecma_compiled_code_resolve_function_name (const ecma_compiled_code_t *bytecode_h
   JERRY_ASSERT (bytecode_header_p != NULL);
   ecma_value_t *base_p = ecma_compiled_code_resolve_arguments_start (bytecode_header_p);
 
-#if ENABLED (JERRY_ESNEXT)
   if (CBC_FUNCTION_GET_TYPE (bytecode_header_p->status_flags) != CBC_FUNCTION_CONSTRUCTOR)
   {
     base_p--;
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
 
   return base_p;
 } /* ecma_compiled_code_resolve_function_name */
+
+/**
+ * Get the extended info from a byte code
+ *
+ * @return extended info value
+ */
+uint32_t
+ecma_compiled_code_resolve_extended_info (const ecma_compiled_code_t *bytecode_header_p) /**< compiled code */
+{
+  JERRY_ASSERT (bytecode_header_p != NULL);
+  JERRY_ASSERT (bytecode_header_p->status_flags & CBC_CODE_FLAGS_HAS_EXTENDED_INFO);
+
+  ecma_value_t *base_p = ecma_compiled_code_resolve_function_name (bytecode_header_p);
+  return base_p[-1];
+} /* ecma_compiled_code_resolve_extended_info */
+
+/**
+ * Get the tagged template collection of the compiled code
+ *
+ * @return pointer to the tagged template collection
+ */
+ecma_collection_t *
+ecma_compiled_code_get_tagged_template_collection (const ecma_compiled_code_t *bytecode_header_p) /**< compiled code */
+{
+  JERRY_ASSERT (bytecode_header_p != NULL);
+  JERRY_ASSERT (bytecode_header_p->status_flags & CBC_CODE_FLAGS_HAS_TAGGED_LITERALS);
+
+  ecma_value_t *base_p = ecma_compiled_code_resolve_function_name (bytecode_header_p);
+  int offset = (bytecode_header_p->status_flags & CBC_CODE_FLAGS_HAS_EXTENDED_INFO) ? -2 : -1;
+
+  return ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, base_p[offset]);
+} /* ecma_compiled_code_get_tagged_template_collection */
+
 #endif /* ENABLED (JERRY_ESNEXT) */
 
 /**

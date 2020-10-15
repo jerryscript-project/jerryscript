@@ -243,7 +243,6 @@
   <test id="intl402/String/prototype/toLocaleUpperCase/special_casing_Turkish.js"><reason></reason></test>
   <test id="language/asi/S7.9_A5.7_T1.js"><reason></reason></test>
   <test id="language/block-scope/syntax/redeclaration-in-block/attempt-to-redeclare-function-declaration-with-function-declaration.js"><reason>No longer a SyntaxError in ES11</reason></test>
-  <test id="language/default-parameters/function-length.js"><reason></reason></test>
   <test id="language/expressions/assignment/S11.13.1_A5_T1.js"><reason></reason></test>
   <test id="language/expressions/assignment/S11.13.1_A5_T2.js"><reason></reason></test>
   <test id="language/expressions/assignment/S11.13.1_A5_T3.js"><reason></reason></test>

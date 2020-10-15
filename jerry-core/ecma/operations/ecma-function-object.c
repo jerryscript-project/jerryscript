@@ -1524,12 +1524,18 @@ ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**<
   if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_LENGTH))
   {
     ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
+
     if (!ECMA_GET_FIRST_BIT_FROM_POINTER_TAG (ext_func_p->u.function.scope_cp))
     {
       /* Initialize 'length' property */
       const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
       uint32_t len;
-      if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+
+      if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_HAS_EXTENDED_INFO)
+      {
+        len = CBC_EXTENDED_INFO_GET_LENGTH (ecma_compiled_code_resolve_extended_info (bytecode_data_p));
+      }
+      else if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
       {
         cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_data_p;
         len = args_p->argument_end;
@@ -1629,7 +1635,6 @@ ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**<
       return caller_prop_p;
     }
 #endif /* ENABLED (JERRY_ESNEXT) */
-
   }
 
   return NULL;

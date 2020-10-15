@@ -179,6 +179,7 @@ typedef enum
   PARSER_ERR_RIGHT_BRACE_COMMA_EXPECTED,              /**< right brace or comma expected */
   PARSER_ERR_DUPLICATED_EXPORT_IDENTIFIER,            /**< duplicated export identifier name */
   PARSER_ERR_DUPLICATED_IMPORT_BINDING,               /**< duplicated import binding name */
+  PARSER_ERR_EXPORT_NOT_DEFINED,                      /**< export is not defined in module */
 #endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
   PARSER_ERR_NON_STRICT_ARG_DEFINITION                /**< non-strict argument definition */

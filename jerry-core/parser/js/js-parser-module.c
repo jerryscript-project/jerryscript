@@ -353,6 +353,15 @@ parser_module_create_module_node (parser_context_t *context_p) /**< parser conte
 void
 parser_module_parse_export_clause (parser_context_t *context_p) /**< parser context */
 {
+  bool has_module_specifier = false;
+
+  if (context_p->source_p == context_p->next_scanner_info_p->source_p)
+  {
+    has_module_specifier = true;
+    JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_EXPORT_MODULE_SPECIFIER);
+    scanner_release_next (context_p, sizeof (scanner_info_t));
+  }
+
   JERRY_ASSERT (context_p->token.type == LEXER_LEFT_BRACE);
   lexer_next_token (context_p);
 
@@ -376,6 +385,12 @@ parser_module_parse_export_clause (parser_context_t *context_p) /**< parser cont
     ecma_string_t *local_name_p = NULL;
 
     lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_NEW_IDENT_LITERAL);
+
+    if (!has_module_specifier
+        && !scanner_literal_exists (context_p, context_p->lit_object.index))
+    {
+      parser_raise_error (context_p, PARSER_ERR_EXPORT_NOT_DEFINED);
+    }
 
     uint16_t local_name_index = context_p->lit_object.index;
     uint16_t export_name_index = PARSER_MAXIMUM_NUMBER_OF_LITERALS;

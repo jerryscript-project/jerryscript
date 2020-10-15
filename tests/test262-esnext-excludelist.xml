@@ -742,8 +742,6 @@
   <test id="language/identifiers/start-unicode-9.0.0.js"><reason></reason></test>
   <test id="language/literals/regexp/unicode-escape-nls-err.js"><reason></reason></test>
   <test id="language/literals/string/legacy-octal-escape-sequence-prologue-strict.js"><reason></reason></test>
-  <test id="language/module-code/early-export-global.js"><reason></reason></test>
-  <test id="language/module-code/early-export-unresolvable.js"><reason></reason></test>
   <test id="language/module-code/early-strict-mode.js"><reason></reason></test>
   <test id="language/module-code/eval-export-cls-semi.js"><reason></reason></test>
   <test id="language/module-code/eval-export-dflt-cls-anon-semi.js"><reason></reason></test>

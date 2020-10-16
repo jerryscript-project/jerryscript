@@ -220,6 +220,7 @@ typedef enum
   VM_OC_JUMP_AND_EXIT_CONTEXT,   /**< jump and exit context */
 
   VM_OC_CREATE_BINDING,          /**< create variables */
+  VM_OC_CREATE_ARGUMENTS,        /**< create arguments object */
   VM_OC_SET_BYTECODE_PTR,        /**< setting bytecode pointer */
   VM_OC_VAR_EVAL,                /**< variable and function evaluation */
 #if ENABLED (JERRY_ESNEXT)

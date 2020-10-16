@@ -37,13 +37,16 @@
  * Arguments object creation operation.
  *
  * See also: ECMA-262 v5, 10.6
+ *
+ * @return ecma value of arguments object
+ *         Returned value must be freed with ecma_free_value
  */
-void
-ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function */
-                                 ecma_object_t *lex_env_p, /**< lexical environment the Arguments
+ecma_value_t
+ecma_op_create_arguments_object (vm_frame_ctx_shared_args_t *shared_p, /**< shared context data */
+                                 ecma_object_t *lex_env_p) /**< lexical environment the Arguments
                                                             *   object is created for */
-                                 vm_frame_ctx_shared_args_t *shared_p) /**< shared context data */
 {
+  ecma_object_t *func_obj_p = shared_p->function_object_p;
   const ecma_compiled_code_t *bytecode_data_p = shared_p->header.bytecode_header_p;
   uint16_t formal_params_number;
 
@@ -136,17 +139,7 @@ ecma_op_create_arguments_object (ecma_object_t *func_obj_p, /**< callee function
     }
   }
 
-  uint8_t prop_flags = ((bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) ? ECMA_PROPERTY_FIXED
-                                                                                     : ECMA_PROPERTY_FLAG_WRITABLE);
-
-  ecma_property_value_t *prop_value_p;
-  prop_value_p = ecma_create_named_data_property (lex_env_p,
-                                                  ecma_get_magic_string (LIT_MAGIC_STRING_ARGUMENTS),
-                                                  prop_flags,
-                                                  NULL);
-
-  prop_value_p->value = ecma_make_object_value (obj_p);
-  ecma_deref_object (obj_p);
+  return ecma_make_object_value (obj_p);
 } /* ecma_op_create_arguments_object */
 
 /**

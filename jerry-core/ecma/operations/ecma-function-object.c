@@ -25,7 +25,6 @@
 #include "ecma-lex-env.h"
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
-#include "ecma-arguments-object.h"
 #include "ecma-proxy-object.h"
 #include "ecma-symbol-object.h"
 #include "jcontext.h"
@@ -879,11 +878,9 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
 
   vm_frame_ctx_shared_args_t shared_args;
   shared_args.header.status_flags = VM_FRAME_CTX_SHARED_HAS_ARG_LIST;
+  shared_args.function_object_p = func_obj_p;
   shared_args.arg_list_p = arguments_list_p;
   shared_args.arg_list_len = arguments_list_len;
-#if ENABLED (JERRY_ESNEXT)
-  shared_args.function_object_p = func_obj_p;
-#endif /* ENABLED (JERRY_ESNEXT) */
 
   /* Entering Function Code (ECMA-262 v5, 10.4.3) */
   ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) func_obj_p;
@@ -946,11 +943,6 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
   {
     shared_args.header.status_flags |= VM_FRAME_CTX_SHARED_FREE_LOCAL_ENV;
     scope_p = ecma_create_decl_lex_env (scope_p);
-
-    if (JERRY_UNLIKELY (status_flags & CBC_CODE_FLAGS_IS_ARGUMENTS_NEEDED))
-    {
-      ecma_op_create_arguments_object (func_obj_p, scope_p, &shared_args);
-    }
   }
 
   ecma_value_t ret_value;

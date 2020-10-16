@@ -16,6 +16,7 @@
 #include "common.h"
 
 #include "ecma-alloc.h"
+#include "ecma-arguments-object.h"
 #include "ecma-array-object.h"
 #include "ecma-bigint.h"
 #include "ecma-builtins.h"
@@ -1512,6 +1513,36 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           continue;
         }
 #endif /* ENABLED (JERRY_ESNEXT) */
+        case VM_OC_CREATE_ARGUMENTS:
+        {
+          uint32_t literal_index;
+          READ_LITERAL_INDEX (literal_index);
+
+          JERRY_ASSERT (frame_ctx_p->shared_p->status_flags & VM_FRAME_CTX_SHARED_HAS_ARG_LIST);
+
+          result = ecma_op_create_arguments_object ((vm_frame_ctx_shared_args_t *) (frame_ctx_p->shared_p),
+                                                    frame_ctx_p->lex_env_p);
+
+          if (literal_index < register_end)
+          {
+            JERRY_ASSERT (VM_GET_REGISTER (frame_ctx_p, literal_index) == ECMA_VALUE_UNDEFINED);
+            VM_GET_REGISTER (frame_ctx_p, literal_index) = result;
+            continue;
+          }
+
+          ecma_string_t *name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
+
+          JERRY_ASSERT (ecma_find_named_property (frame_ctx_p->lex_env_p, name_p) == NULL);
+
+          uint8_t prop_attributes = ECMA_PROPERTY_FLAG_WRITABLE;
+          ecma_property_value_t *property_value_p;
+
+          property_value_p = ecma_create_named_data_property (frame_ctx_p->lex_env_p, name_p, prop_attributes, NULL);
+          property_value_p->value = result;
+
+          ecma_deref_object (ecma_get_object_from_value (result));
+          continue;
+        }
 #if ENABLED (JERRY_SNAPSHOT_EXEC)
         case VM_OC_SET_BYTECODE_PTR:
         {

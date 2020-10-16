@@ -673,11 +673,6 @@ parse_print_final_cbc (ecma_compiled_code_t *compiled_code_p, /**< compiled code
     JERRY_DEBUG_MSG (",mapped_arguments_needed");
   }
 
-  if (compiled_code_p->status_flags & CBC_CODE_FLAGS_UNMAPPED_ARGUMENTS_NEEDED)
-  {
-    JERRY_DEBUG_MSG (",unmapped_arguments_needed");
-  }
-
   if (compiled_code_p->status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED)
   {
     JERRY_DEBUG_MSG (",no_lexical_env");
@@ -1364,19 +1359,10 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     compiled_code_p->status_flags |= CBC_CODE_FLAGS_STRICT_MODE;
   }
 
-  if (context_p->status_flags & PARSER_ARGUMENTS_NEEDED)
+  if ((context_p->status_flags & PARSER_ARGUMENTS_NEEDED)
+      && PARSER_NEEDS_MAPPED_ARGUMENTS (context_p->status_flags))
   {
-    if (PARSER_NEEDS_MAPPED_ARGUMENTS (context_p->status_flags))
-    {
-      compiled_code_p->status_flags |= CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED;
-    }
-    else
-    {
-      compiled_code_p->status_flags |= CBC_CODE_FLAGS_UNMAPPED_ARGUMENTS_NEEDED;
-    }
-
-    /* Arguments is stored in the lexical environment. */
-    JERRY_ASSERT (context_p->status_flags & PARSER_LEXICAL_ENV_NEEDED);
+    compiled_code_p->status_flags |= CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED;
   }
 
   if (!(context_p->status_flags & PARSER_LEXICAL_ENV_NEEDED))
@@ -1807,13 +1793,16 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
   if (context_p->token.type == end_type)
   {
 #if ENABLED (JERRY_ESNEXT)
+    context_p->status_flags &= (uint32_t) ~PARSER_DISALLOW_AWAIT_YIELD;
+
     if (context_p->status_flags & PARSER_IS_GENERATOR_FUNCTION)
     {
+      scanner_create_variables (context_p, SCANNER_CREATE_VARS_IS_FUNCTION_ARGS);
       parser_emit_cbc_ext (context_p, CBC_EXT_CREATE_GENERATOR);
       parser_emit_cbc (context_p, CBC_POP);
+      scanner_create_variables (context_p, SCANNER_CREATE_VARS_IS_FUNCTION_BODY);
+      return;
     }
-
-    context_p->status_flags &= (uint32_t) ~PARSER_DISALLOW_AWAIT_YIELD;
 #endif /* ENABLED (JERRY_ESNEXT) */
     scanner_create_variables (context_p, SCANNER_CREATE_VARS_NO_OPTS);
     return;

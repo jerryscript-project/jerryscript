@@ -66,9 +66,7 @@ typedef struct
 typedef struct
 {
   vm_frame_ctx_shared_t header;                       /**< shared data header */
-#if ENABLED (JERRY_ESNEXT)
   ecma_object_t *function_object_p;                   /**< function obj */
-#endif /* ENABLED (JERRY_ESNEXT) */
   const ecma_value_t *arg_list_p;                     /**< arguments list */
   uint32_t arg_list_len;                              /**< arguments list length */
 } vm_frame_ctx_shared_args_t;

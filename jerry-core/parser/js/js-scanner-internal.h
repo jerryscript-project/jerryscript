@@ -206,6 +206,11 @@ typedef enum
 #define SCANNER_LITERAL_IS_LOCAL (SCANNER_LITERAL_IS_LET | SCANNER_LITERAL_IS_CONST)
 
 /**
+ * Literal is a local function declaration
+ */
+#define SCANNER_LITERAL_IS_LOCAL_FUNC (SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_FUNC_DECLARATION)
+
+/**
  * For statement descriptor.
  */
 typedef struct
@@ -281,20 +286,23 @@ typedef enum
 #endif /* ENABLED (JERRY_ESNEXT) */
   SCANNER_LITERAL_POOL_IS_STRICT = (1 << 3), /**< literal pool represents a strict mode code block */
   SCANNER_LITERAL_POOL_CAN_EVAL = (1 << 4), /**< prepare for executing eval in this block */
-  SCANNER_LITERAL_POOL_NO_ARGUMENTS = (1 << 5), /**< arguments object must not be constructed */
+  SCANNER_LITERAL_POOL_NO_ARGUMENTS = (1 << 5), /**< arguments object must not be constructed,
+                                                 *   or arguments cannot be stored in registers if
+                                                 *   SCANNER_LITERAL_POOL_ARGUMENTS_IN_ARGS is set */
 #if ENABLED (JERRY_ESNEXT)
-  SCANNER_LITERAL_POOL_HAS_COMPLEX_ARGUMENT = (1 << 6), /**< function has complex (ES2015+) argument definition */
+  SCANNER_LITERAL_POOL_ARGUMENTS_IN_ARGS = (1 << 6), /**< arguments is referenced in function args */
+  SCANNER_LITERAL_POOL_HAS_COMPLEX_ARGUMENT = (1 << 7), /**< function has complex (ES2015+) argument definition */
 #endif /* ENABLED (JERRY_ESNEXT) */
-  SCANNER_LITERAL_POOL_IN_WITH = (1 << 7), /**< literal pool is in a with statement */
+  SCANNER_LITERAL_POOL_IN_WITH = (1 << 8), /**< literal pool is in a with statement */
 #if ENABLED (JERRY_ESNEXT)
-  SCANNER_LITERAL_POOL_FUNCTION_STATEMENT = (1 << 8), /**< function statement */
   SCANNER_LITERAL_POOL_ARROW = (1 << 9), /**< arrow function */
   SCANNER_LITERAL_POOL_GENERATOR = (1 << 10), /**< generator function */
   SCANNER_LITERAL_POOL_ASYNC = (1 << 11), /**< async function */
-  SCANNER_LITERAL_POOL_HAS_SUPER_REFERENCE = (1 << 12), /**< function body contains super reference */
+  SCANNER_LITERAL_POOL_FUNCTION_STATEMENT = (1 << 12), /**< function statement */
+  SCANNER_LITERAL_POOL_HAS_SUPER_REFERENCE = (1 << 13), /**< function body contains super reference */
 #endif /* ENABLED (JERRY_ESNEXT) */
 #if ENABLED (JERRY_MODULE_SYSTEM)
-  SCANNER_LITERAL_POOL_IN_EXPORT = (1 << 13), /**< the declared variables are exported by the module system */
+  SCANNER_LITERAL_POOL_IN_EXPORT = (1 << 14), /**< the declared variables are exported by the module system */
 #endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 } scanner_literal_pool_flags_t;
 
@@ -396,9 +404,9 @@ scanner_literal_pool_t *scanner_push_literal_pool (parser_context_t *context_p, 
                                                    uint16_t status_flags);
 void scanner_pop_literal_pool (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 #if ENABLED (JERRY_ESNEXT)
+void scanner_filter_arguments (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 void scanner_construct_global_block (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 #endif /* ENABLED (JERRY_ESNEXT) */
-void scanner_filter_arguments (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 lexer_lit_location_t *scanner_add_custom_literal (parser_context_t *context_p, scanner_literal_pool_t *literal_pool_p,
                                                   const lexer_lit_location_t *literal_location_p);
 lexer_lit_location_t *scanner_add_literal (parser_context_t *context_p, scanner_context_t *scanner_context_p);

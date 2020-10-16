@@ -1553,7 +1553,7 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
 
       if ((literal_p->type & SCANNER_LITERAL_IS_LOCAL)
           && (literal_p->type & mask) != (SCANNER_LITERAL_IS_ARG | SCANNER_LITERAL_IS_DESTRUCTURED_ARG)
-          && (literal_p->type & mask) != (SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_FUNC_DECLARATION))
+          && (literal_p->type & mask) != SCANNER_LITERAL_IS_LOCAL_FUNC)
       {
         scanner_raise_redeclaration_error (context_p);
       }
@@ -1566,7 +1566,7 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
         scanner_raise_redeclaration_error (context_p);
       }
 
-      literal_p->type |= SCANNER_LITERAL_IS_FUNC | SCANNER_LITERAL_IS_FUNC_DECLARATION;
+      literal_p->type |= SCANNER_LITERAL_IS_LOCAL_FUNC;
 
       scanner_context_p->status_flags &= (uint16_t) ~SCANNER_CONTEXT_THROW_ERR_ASYNC_FUNCTION;
 #else
@@ -3063,7 +3063,9 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
             context_p->line = 1;
             context_p->column = 1;
 
+#if ENABLED (JERRY_ESNEXT)
             scanner_filter_arguments (context_p, &scanner_context);
+#endif /* ENABLED (JERRY_ESNEXT) */
             lexer_next_token (context_p);
             scanner_check_directives (context_p, &scanner_context);
             continue;
@@ -3081,7 +3083,9 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
             scanner_raise_error (context_p);
           }
 
+#if ENABLED (JERRY_ESNEXT)
           scanner_filter_arguments (context_p, &scanner_context);
+#endif /* ENABLED (JERRY_ESNEXT) */
           lexer_next_token (context_p);
           scanner_check_directives (context_p, &scanner_context);
           continue;
@@ -3415,7 +3419,7 @@ scan_completed:
       /* The following code may allocate memory, so it is enclosed in a try/catch. */
       PARSER_TRY (context_p->try_buffer)
       {
-  #if ENABLED (JERRY_ESNEXT)
+#if ENABLED (JERRY_ESNEXT)
         if (scanner_context.status_flags & SCANNER_CONTEXT_THROW_ERR_ASYNC_FUNCTION)
         {
           JERRY_ASSERT (scanner_context.async_source_p != NULL);
@@ -3424,7 +3428,7 @@ scan_completed:
           info_p = scanner_insert_info (context_p, scanner_context.async_source_p, sizeof (scanner_info_t));
           info_p->type = SCANNER_TYPE_ERR_ASYNC_FUNCTION;
         }
-  #endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
         while (scanner_context.active_literal_pool_p != NULL)
         {
@@ -3510,6 +3514,38 @@ scan_completed:
           {
             switch (data_p[0] & SCANNER_STREAM_TYPE_MASK)
             {
+              case SCANNER_STREAM_TYPE_HOLE:
+              {
+                JERRY_DEBUG_MSG ("    HOLE\n");
+                data_p++;
+                continue;
+              }
+#if ENABLED (JERRY_ESNEXT)
+              case SCANNER_STREAM_TYPE_ARGUMENTS:
+              {
+                JERRY_DEBUG_MSG ("    ARGUMENTS%s%s\n",
+                                 (data_p[0] & SCANNER_STREAM_NO_REG) ? " *" : "",
+                                 (data_p[0] & SCANNER_STREAM_LOCAL_ARGUMENTS) ? " L" : "");
+                data_p++;
+                continue;
+              }
+              case SCANNER_STREAM_TYPE_ARGUMENTS_FUNC:
+              {
+                JERRY_DEBUG_MSG ("    ARGUMENTS_FUNC%s%s\n",
+                                 (data_p[0] & SCANNER_STREAM_NO_REG) ? " *" : "",
+                                 (data_p[0] & SCANNER_STREAM_LOCAL_ARGUMENTS) ? " L" : "");
+                data_p++;
+                continue;
+              }
+#else /* !ENABLED (JERRY_ESNEXT) */
+              case SCANNER_STREAM_TYPE_ARGUMENTS:
+              {
+                JERRY_DEBUG_MSG ("    ARGUMENTS%s\n",
+                                 (data_p[0] & SCANNER_STREAM_NO_REG) ? " *" : "");
+                data_p++;
+                continue;
+              }
+#endif /* ENABLED (JERRY_ESNEXT) */
               case SCANNER_STREAM_TYPE_VAR:
               {
                 JERRY_DEBUG_MSG ("    VAR ");
@@ -3580,8 +3616,7 @@ scan_completed:
               }
               default:
               {
-                JERRY_ASSERT ((data_p[0] & SCANNER_STREAM_TYPE_MASK) == SCANNER_STREAM_TYPE_HOLE);
-                JERRY_DEBUG_MSG ("    HOLE\n");
+                JERRY_UNREACHABLE ();
                 data_p++;
                 continue;
               }

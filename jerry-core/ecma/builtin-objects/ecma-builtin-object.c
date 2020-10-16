@@ -694,12 +694,8 @@ ecma_builtin_object_object_keys_values_helper (ecma_object_t *obj_p, /**< routin
     return ECMA_VALUE_ERROR;
   }
 
-  ecma_value_t *names_buffer_p = props_p->buffer_p;
   /* 3. */
-  ecma_value_t array_value = ecma_op_create_array_object (names_buffer_p, props_p->item_count, false);
-  ecma_collection_free (props_p);
-
-  return array_value;
+  return ecma_op_new_array_object_from_collection (props_p, option != ECMA_ENUMERABLE_PROPERTY_KEYS);
 } /* ecma_builtin_object_object_keys_values_helper */
 
 /**
@@ -1342,7 +1338,7 @@ ecma_op_object_get_own_property_keys (ecma_value_t this_arg, /**< this argument 
   }
 
   /* 3. */
-  ecma_collection_t *name_list = ecma_new_collection ();
+  ecma_collection_t *name_list_p = ecma_new_collection ();
 
   /* 4. */
   for (uint32_t i = 0; i < props_p->item_count; i++)
@@ -1354,23 +1350,22 @@ ecma_op_object_get_own_property_keys (ecma_value_t this_arg, /**< this argument 
         || (ecma_is_value_string (prop_name) && type == ECMA_OBJECT_ROUTINE_GET_OWN_PROPERTY_NAMES))
     {
       ecma_ref_ecma_string (name_p);
-      ecma_collection_push_back (name_list, prop_name);
+      ecma_collection_push_back (name_list_p, prop_name);
     }
   }
 
-  ecma_value_t result_array = ecma_op_create_array_object (name_list->buffer_p, name_list->item_count, false);
+  ecma_value_t result_array = ecma_op_new_array_object_from_collection (name_list_p, false);
 
   ecma_deref_object (obj_p);
-  ecma_collection_free (name_list);
+  ecma_collection_free (props_p);
+
+  return result_array;
 #else /* !ENABLED (JERRY_ESNEXT) */
   JERRY_UNUSED (type);
-  ecma_object_t  *obj_p = ecma_get_object_from_value (this_arg);
+  ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
   ecma_collection_t *props_p = ecma_op_object_own_property_keys (obj_p);
-  ecma_value_t result_array = ecma_op_create_array_object (props_p->buffer_p, props_p->item_count, false);
+  return ecma_op_new_array_object_from_collection (props_p, false);
 #endif /* ENABLED (JERRY_ESNEXT) */
-
-  ecma_collection_free (props_p);
-  return result_array;
 } /* ecma_op_object_get_own_property_keys */
 
 /**
@@ -1491,7 +1486,7 @@ ecma_builtin_object_dispatch_routine (uint16_t builtin_routine_id, /**< built-in
 
         const int option = builtin_routine_id - ECMA_OBJECT_ROUTINE_KEYS;
         result = ecma_builtin_object_object_keys_values_helper (obj_p,
-                                                               (ecma_enumerable_property_names_options_t) option);
+                                                                (ecma_enumerable_property_names_options_t) option);
         break;
       }
       case ECMA_OBJECT_ROUTINE_GET_OWN_PROPERTY_DESCRIPTOR:

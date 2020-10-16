@@ -543,11 +543,7 @@ ecma_builtin_json_parse_value (ecma_json_token_t *token_p) /**< token argument *
     case TOKEN_LEFT_SQUARE:
     {
       uint32_t length = 0;
-
-      ecma_value_t array_construction = ecma_op_create_array_object (NULL, 0, false);
-      JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (array_construction));
-
-      ecma_object_t *array_p = ecma_get_object_from_value (array_construction);
+      ecma_object_t *array_p = ecma_op_new_array_object (0);
 
       ecma_builtin_json_parse_next_token (token_p, true);
 

@@ -253,7 +253,7 @@ ecma_builtin_promise_perform_all (ecma_value_t iterator, /**< iteratorRecord */
   ecma_object_t *resolve_func_p = ecma_get_object_from_value (resolve);
 
   /* 3. */
-  ecma_object_t *values_array_obj_p = ecma_op_new_fast_array_object (0);
+  ecma_object_t *values_array_obj_p = ecma_op_new_array_object (0);
   ecma_value_t values_array = ecma_make_object_value (values_array_obj_p);
   /* 4. */
   ecma_value_t remaining = ecma_op_create_number_object (ecma_make_integer_value (1));

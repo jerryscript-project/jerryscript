@@ -2024,8 +2024,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_PUSH_ARRAY:
         {
-          // Note: this operation cannot throw an exception
-          *stack_top_p++ = ecma_make_object_value (ecma_op_new_fast_array_object (0));
+          /* Note: this operation cannot throw an exception */
+          *stack_top_p++ = ecma_make_object_value (ecma_op_new_array_object (0));
           continue;
         }
 #if ENABLED (JERRY_ESNEXT)
@@ -2329,9 +2329,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             arg_list_len = argument_end;
           }
 
-          result = ecma_op_create_array_object (arg_list_p + argument_end,
-                                                arg_list_len - argument_end,
-                                                false);
+          result = ecma_op_new_array_object_from_buffer (arg_list_p + argument_end,
+                                                         arg_list_len - argument_end);
 
           JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (result));
           *stack_top_p++ = result;
@@ -2401,7 +2400,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_REST_INITIALIZER:
         {
-          ecma_object_t *array_p = ecma_op_new_fast_array_object (0);
+          ecma_object_t *array_p = ecma_op_new_array_object (0);
+          JERRY_ASSERT (ecma_op_object_is_fast_array (array_p));
           ecma_value_t iterator = stack_top_p[-1];
           uint32_t index = 0;
 

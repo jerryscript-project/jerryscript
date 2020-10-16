@@ -1192,6 +1192,15 @@ ecma_free_value_if_not_object (ecma_value_t value) /**< value description */
 } /* ecma_free_value_if_not_object */
 
 /**
+ * Free an ecma-value object
+ */
+inline void JERRY_ATTR_ALWAYS_INLINE
+ecma_free_object (ecma_value_t value) /**< value description */
+{
+  ecma_deref_object (ecma_get_object_from_value (value));
+} /* ecma_free_object */
+
+/**
  * Free an ecma-value number
  */
 inline void JERRY_ATTR_ALWAYS_INLINE

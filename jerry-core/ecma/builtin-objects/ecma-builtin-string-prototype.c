@@ -909,7 +909,8 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_value, /**< this a
   }
 
   /* 6. */
-  result = ecma_op_create_array_object (NULL, 0, false);
+  ecma_object_t *array_p = ecma_op_new_array_object (0);
+  result = ecma_make_object_value (array_p);
 
   /* 14. */
   if (limit == 0)
@@ -917,7 +918,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_value, /**< this a
     goto cleanup_separator;
   }
 
-  ecma_object_t *array_p = ecma_get_object_from_value (result);
+  /* 6. */
   lit_utf8_size_t array_length = 0;
 
   /* 15. */

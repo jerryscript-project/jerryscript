@@ -1771,15 +1771,8 @@ jerry_create_array (uint32_t size) /**< size of array */
 {
   jerry_assert_api_available ();
 
-  ecma_value_t array_length = ecma_make_uint32_value (size);
-
-  const jerry_length_t argument_size = 1;
-  ecma_value_t array_value = ecma_op_create_array_object (&array_length, argument_size, true);
-  ecma_free_value (array_length);
-
-  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (array_value));
-
-  return array_value;
+  ecma_object_t *array_p = ecma_op_new_array_object (size);
+  return ecma_make_object_value (array_p);
 } /* jerry_create_array */
 
 /**
@@ -3329,11 +3322,7 @@ jerry_get_object_keys (const jerry_value_t obj_val) /**< object value */
   }
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
-  ecma_value_t result_array = ecma_op_create_array_object (prop_names->buffer_p, prop_names->item_count, false);
-
-  ecma_collection_free (prop_names);
-
-  return result_array;
+  return ecma_op_new_array_object_from_collection (prop_names, false);
 } /* jerry_get_object_keys */
 
 /**

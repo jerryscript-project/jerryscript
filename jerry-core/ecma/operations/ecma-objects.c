@@ -2052,9 +2052,16 @@ ecma_op_object_get_enumerable_property_names (ecma_object_t *obj_p, /**< routine
             JERRY_ASSERT (option == ECMA_ENUMERABLE_PROPERTY_ENTRIES);
 
             /* 4.a.ii.2.c.ii */
-            ecma_object_t *entry_p = ecma_op_new_fast_array_object (2);
-            ecma_fast_array_set_property (entry_p, 0, names_buffer_p[i]);
-            ecma_fast_array_set_property (entry_p, 1, value);
+            ecma_object_t *entry_p = ecma_op_new_array_object (2);
+
+            ecma_builtin_helper_def_prop_by_index (entry_p,
+                                                   0,
+                                                   names_buffer_p[i],
+                                                   ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+            ecma_builtin_helper_def_prop_by_index (entry_p,
+                                                   1,
+                                                   value,
+                                                   ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
             ecma_free_value (value);
 
             /* 4.a.ii.2.c.iii */

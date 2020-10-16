@@ -188,18 +188,16 @@ ecma_builtin_array_prototype_object_concat (const ecma_value_t args[], /**< argu
 {
   /* 2. */
 #if ENABLED (JERRY_ESNEXT)
-  ecma_value_t new_array = ecma_op_array_species_create (obj_p, 0);
+  ecma_object_t *new_array_p = ecma_op_array_species_create (obj_p, 0);
 
-  if (ECMA_IS_VALUE_ERROR (new_array))
+  if (JERRY_UNLIKELY (new_array_p == NULL))
   {
-    return new_array;
+    return ECMA_VALUE_ERROR;
   }
 #else /* !ENABLED (JERRY_ESNEXT) */
-  ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
-  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
+  ecma_object_t *new_array_p = ecma_op_new_array_object (0);
 #endif /* ENABLED (JERRY_ESNEXT) */
 
-  ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
   ecma_length_t new_length = 0;
 
   /* 5.b - 5.c for this_arg */
@@ -236,7 +234,7 @@ ecma_builtin_array_prototype_object_concat (const ecma_value_t args[], /**< argu
     return set_length_value;
   }
 
-  return new_array;
+  return ecma_make_object_value (new_array_p);
 } /* ecma_builtin_array_prototype_object_concat */
 
 /**
@@ -859,19 +857,17 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t arg1, /**< start */
   bool use_fast_path = ecma_op_object_is_fast_array (obj_p);
   ecma_length_t copied_length = (end > start) ? end - start : 0;
 #if ENABLED (JERRY_ESNEXT)
-  ecma_value_t new_array = ecma_op_array_species_create (obj_p, copied_length);
+  ecma_object_t *new_array_p = ecma_op_array_species_create (obj_p, copied_length);
 
-  if (ECMA_IS_VALUE_ERROR (new_array))
+  if (JERRY_UNLIKELY (new_array_p == NULL))
   {
-    return new_array;
+    return ECMA_VALUE_ERROR;
   }
-  use_fast_path &= ecma_op_object_is_fast_array (ecma_get_object_from_value (new_array));
-#else /* !ENABLED (JERRY_ESNEXT) */
-  ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
-  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
-#endif /* ENABLED (JERRY_ESNEXT) */
 
-  ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
+  use_fast_path &= ecma_op_object_is_fast_array (new_array_p);
+#else /* !ENABLED (JERRY_ESNEXT) */
+  ecma_object_t *new_array_p = ecma_op_new_array_object (0);
+#endif /* ENABLED (JERRY_ESNEXT) */
 
   if (use_fast_path && copied_length > 0)
   {
@@ -885,7 +881,7 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t arg1, /**< start */
          * Very unlikely case: the buffer copied from is a fast buffer and the property list was deleted.
          * There is no need to do any copy.
          */
-        return new_array;
+        return ecma_make_object_value (new_array_p);
       }
 
       ecma_extended_object_t *ext_to_obj_p = (ecma_extended_object_t *) new_array_p;
@@ -927,7 +923,7 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t arg1, /**< start */
 
       ext_to_obj_p->u.array.u.hole_count &= ECMA_FAST_ARRAY_HOLE_ONE - 1;
 
-      return new_array;
+      return ecma_make_object_value (new_array_p);
     }
   }
 
@@ -983,7 +979,7 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t arg1, /**< start */
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
-  return new_array;
+  return ecma_make_object_value (new_array_p);
 } /* ecma_builtin_array_prototype_object_slice */
 
 /**
@@ -1316,21 +1312,16 @@ ecma_builtin_array_prototype_object_splice (const ecma_value_t args[], /**< argu
   }
 
   /* ES11: 9. */
-  ecma_value_t new_array = ecma_op_array_species_create (obj_p, actual_delete_count);
+  ecma_object_t *new_array_p = ecma_op_array_species_create (obj_p, actual_delete_count);
 
-  if (ECMA_IS_VALUE_ERROR (new_array))
+  if (JERRY_UNLIKELY (new_array_p == NULL))
   {
-    return new_array;
+    return ECMA_VALUE_ERROR;
   }
 #else /* !ENABLED (JERRY_ESNEXT) */
   /* ES5.1: 2. */
-  ecma_value_t length = ecma_make_length_value (actual_delete_count);
-  ecma_value_t new_array = ecma_op_create_array_object (&length, 1, true);
-  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
-  ecma_free_value (length);
+  ecma_object_t *new_array_p = ecma_op_new_array_object (actual_delete_count);
 #endif /* ENABLED (JERRY_ESNEXT) */
-
-  ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
 
   /* ES5.1: 8, ES11: 10. */
   ecma_length_t k = 0;
@@ -1498,7 +1489,7 @@ ecma_builtin_array_prototype_object_splice (const ecma_value_t args[], /**< argu
   }
 
   /* ES5.1: 17, ES11: 20. */
-  return new_array;
+  return ecma_make_object_value (new_array_p);
 } /* ecma_builtin_array_prototype_object_splice */
 
 /**
@@ -1960,20 +1951,15 @@ ecma_builtin_array_prototype_object_map (ecma_value_t arg1, /**< callbackfn */
 
   /* 6. */
 #if ENABLED (JERRY_ESNEXT)
-  ecma_value_t new_array = ecma_op_array_species_create (obj_p, len);
+  ecma_object_t *new_array_p = ecma_op_array_species_create (obj_p, len);
 
-  if (ECMA_IS_VALUE_ERROR (new_array))
+  if (JERRY_UNLIKELY (new_array_p == NULL))
   {
-    return new_array;
+    return ECMA_VALUE_ERROR;
   }
 #else /* !ENABLED (JERRY_ESNEXT) */
-  ecma_value_t length_value = ecma_make_uint32_value (len);
-  ecma_value_t new_array = ecma_op_create_array_object (&length_value, 1, true);
-  ecma_free_value (length_value);
-  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
+  ecma_object_t *new_array_p = ecma_op_new_array_object (len);
 #endif /* ENABLED (JERRY_ESNEXT) */
-
-  ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
 
   JERRY_ASSERT (ecma_is_value_object (arg1));
   ecma_object_t *func_object_p = ecma_get_object_from_value (arg1);
@@ -2059,24 +2045,21 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t arg1, /**< callbackfn *
 
   /* 6. */
 #if ENABLED (JERRY_ESNEXT)
-  ecma_value_t new_array = ecma_op_array_species_create (obj_p, 0);
+  ecma_object_t *new_array_p = ecma_op_array_species_create (obj_p, 0);
 
-  if (ECMA_IS_VALUE_ERROR (new_array))
+  if (JERRY_UNLIKELY (new_array_p == NULL))
   {
-    return new_array;
+    return ECMA_VALUE_ERROR;
   }
 
   /* ES11: 22.1.3.7. 7.c.iii.1 */
   const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_IS_THROW;
 #else /* !ENABLED (JERRY_ESNEXT) */
-  ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
-  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
+  ecma_object_t *new_array_p = ecma_op_new_array_object (0);
 
   /* ES5.1: 15.4.4.20. 9.c.iii.1 */
   const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE;
 #endif /* ENABLED (JERRY_ESNEXT) */
-
-  ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
 
   /* We already checked that arg1 is callable, so it will always be an object. */
   JERRY_ASSERT (ecma_is_value_object (arg1));
@@ -2142,7 +2125,7 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t arg1, /**< callbackfn *
     }
   }
 
-  return new_array;
+  return ecma_make_object_value (new_array_p);
 } /* ecma_builtin_array_prototype_object_filter */
 
 /**
@@ -2825,15 +2808,15 @@ ecma_builtin_array_prototype_object_flat (const ecma_value_t args[], /**< argume
   }
 
   /* 5. */
-  ecma_value_t new_array = ecma_op_array_species_create (obj_p, 0);
+  ecma_object_t *new_array_p = ecma_op_array_species_create (obj_p, 0);
 
-  if (ECMA_IS_VALUE_ERROR (new_array))
+  if (JERRY_UNLIKELY (new_array_p == NULL))
   {
-    return new_array;
+    return ECMA_VALUE_ERROR;
   }
 
   /* 6. */
-  ecma_value_t flatten_val = ecma_builtin_array_flatten_into_array (new_array,
+  ecma_value_t flatten_val = ecma_builtin_array_flatten_into_array (ecma_make_object_value (new_array_p),
                                                                     obj_p,
                                                                     len,
                                                                     0,
@@ -2843,12 +2826,12 @@ ecma_builtin_array_prototype_object_flat (const ecma_value_t args[], /**< argume
 
   if (ECMA_IS_VALUE_ERROR (flatten_val))
   {
-    ecma_free_value (new_array);
+    ecma_deref_object (new_array_p);
     return flatten_val;
   }
 
   /* 7. */
-  return new_array;
+  return ecma_make_object_value (new_array_p);
 } /* ecma_builtin_array_prototype_object_flat */
 
 /**
@@ -2872,15 +2855,15 @@ ecma_builtin_array_prototype_object_flat_map (ecma_value_t callback, /**< callba
   }
 
   /* 4. */
-  ecma_value_t new_array = ecma_op_array_species_create (obj_p, 0);
+  ecma_object_t *new_array_p = ecma_op_array_species_create (obj_p, 0);
 
-  if (ECMA_IS_VALUE_ERROR (new_array))
+  if (JERRY_UNLIKELY (new_array_p == NULL))
   {
-    return new_array;
+    return ECMA_VALUE_ERROR;
   }
 
   /* 5. */
-  ecma_value_t flatten_val = ecma_builtin_array_flatten_into_array (new_array,
+  ecma_value_t flatten_val = ecma_builtin_array_flatten_into_array (ecma_make_object_value (new_array_p),
                                                                     obj_p,
                                                                     len,
                                                                     0,
@@ -2889,12 +2872,12 @@ ecma_builtin_array_prototype_object_flat_map (ecma_value_t callback, /**< callba
                                                                     this_arg);
   if (ECMA_IS_VALUE_ERROR (flatten_val))
   {
-    ecma_free_value (new_array);
+    ecma_deref_object (new_array_p);
     return flatten_val;
   }
 
   /* 6. */
-  return new_array;
+  return ecma_make_object_value (new_array_p);
 } /* ecma_builtin_array_prototype_object_flat_map */
 #endif /* ENABLED (JERRY_ESNEXT) */
 

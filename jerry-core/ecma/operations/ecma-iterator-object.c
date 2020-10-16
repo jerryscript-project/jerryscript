@@ -53,29 +53,26 @@ ecma_create_array_from_iter_element (ecma_value_t value, /**< value */
                                      ecma_value_t index_value) /**< iterator index */
 {
   /* 2. */
-  ecma_value_t new_array = ecma_op_create_array_object (NULL, 0, false);
-  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (new_array));
-  ecma_object_t *new_array_p = ecma_get_object_from_value (new_array);
+  ecma_object_t *new_array_p = ecma_op_new_array_object (0);
 
-  /* 3 - 4. */
-  for (uint32_t index = 0; index < 2; index++)
-  {
-    ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
+  /* 3-4. */
+  ecma_value_t completion;
+  completion = ecma_builtin_helper_def_prop_by_index (new_array_p,
+                                                      0,
+                                                      index_value,
+                                                      ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
 
-    /* 4.a */
-    ecma_value_t completion = ecma_builtin_helper_def_prop (new_array_p,
-                                                            index_string_p,
-                                                            (index == 0) ? index_value : value,
-                                                            ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+  /* 4.b */
+  JERRY_ASSERT (ecma_is_value_true (completion));
 
-    /* 4.b */
-    JERRY_ASSERT (ecma_is_value_true (completion));
-
-    ecma_deref_ecma_string (index_string_p);
-  }
+  completion = ecma_builtin_helper_def_prop_by_index (new_array_p,
+                                                      1,
+                                                      value,
+                                                      ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+  JERRY_ASSERT (ecma_is_value_true (completion));
 
   /* 5. */
-  return new_array;
+  return ecma_make_object_value (new_array_p);
 } /* ecma_create_array_from_iter_element */
 
 /**

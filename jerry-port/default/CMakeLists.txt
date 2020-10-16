@@ -54,7 +54,7 @@ INCLUDE (CheckStructHasMember)
 # CHECK_STRUCT_HAS_MEMBER works by trying to compile some C code that accesses the
 # given field of the given struct. However, our default compiler options break this
 # C code, so turn a couple of them off for this.
-set(CMAKE_REQUIRED_FLAGS "-Wno-error=strict-prototypes -Wno-error=old-style-definition")
+set(CMAKE_REQUIRED_FLAGS "-Wno-error=strict-prototypes -Wno-error=old-style-definition -Wno-error=unused-value")
 # tm.tm_gmtoff is non-standard, so glibc doesn't expose it in c99 mode
 # (our default). Define some macros to expose it anyway.
 set(CMAKE_REQUIRED_DEFINITIONS "-D_BSD_SOURCE -D_DEFAULT_SOURCE")

@@ -604,8 +604,6 @@
   <test id="language/expressions/class/dstr/meth-dflt-ary-init-iter-no-close.js"><reason></reason></test>
   <test id="language/expressions/class/dstr/meth-static-ary-init-iter-no-close.js"><reason></reason></test>
   <test id="language/expressions/class/dstr/meth-static-dflt-ary-init-iter-no-close.js"><reason></reason></test>
-  <test id="language/expressions/class/elements/syntax/early-errors/grammar-static-get-meth-prototype.js"><reason></reason></test>
-  <test id="language/expressions/class/elements/syntax/early-errors/grammar-static-set-meth-prototype.js"><reason></reason></test>
   <test id="language/expressions/class/gen-method-length-dflt.js"><reason></reason></test>
   <test id="language/expressions/class/gen-method-static/dflt-params-trailing-comma.js"><reason></reason></test>
   <test id="language/expressions/class/gen-method/dflt-params-trailing-comma.js"><reason></reason></test>
@@ -882,8 +880,6 @@
   <test id="language/statements/class/dstr/meth-dflt-ary-init-iter-no-close.js"><reason></reason></test>
   <test id="language/statements/class/dstr/meth-static-ary-init-iter-no-close.js"><reason></reason></test>
   <test id="language/statements/class/dstr/meth-static-dflt-ary-init-iter-no-close.js"><reason></reason></test>
-  <test id="language/statements/class/elements/syntax/early-errors/grammar-static-get-meth-prototype.js"><reason></reason></test>
-  <test id="language/statements/class/elements/syntax/early-errors/grammar-static-set-meth-prototype.js"><reason></reason></test>
   <test id="language/statements/class/gen-method-length-dflt.js"><reason></reason></test>
   <test id="language/statements/class/gen-method-static/dflt-params-trailing-comma.js"><reason></reason></test>
   <test id="language/statements/class/gen-method/dflt-params-trailing-comma.js"><reason></reason></test>

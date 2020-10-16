@@ -301,7 +301,6 @@
   <test id="language/expressions/tagged-template/cache-identical-source-new-function.js"><reason></reason></test>
   <test id="language/line-terminators/S7.3_A2.3.js"><reason>No longer a SyntaxError in ES11</reason></test>
   <test id="language/line-terminators/S7.3_A2.4.js"><reason>No longer a SyntaxError in ES11</reason></test>
-  <test id="language/statements/class/syntax/early-errors/class-body-static-method-get-propname-prototype.js"><reason></reason></test>
   <test id="language/statements/for-of/iterator-next-reference.js"><reason>ES2018 change: next method must be cached</reason></test>
   <test id="language/statements/for/S12.6.3_A9.1.js"><reason></reason></test>
   <test id="language/statements/for/S12.6.3_A9.js"><reason></reason></test>

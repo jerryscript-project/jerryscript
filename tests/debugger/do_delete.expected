@@ -6,8 +6,7 @@ Stopped at tests/debugger/do_delete.js:17
 (jerry-debugger) b do_delete.js:17
 Breakpoint 1 at tests/debugger/do_delete.js:17
 (jerry-debugger) b do_delete.js:21
-No breakpoint found, do you want to add a pending breakpoint? (y or [n])
-Pending breakpoint 2 at do_delete.js:21
+No breakpoint found, do you want to add a pending breakpoint? (y or [n]) Pending breakpoint 2 at do_delete.js:21
 (jerry-debugger) b do_delete.js:19
 Breakpoint 3 at tests/debugger/do_delete.js:19
 (jerry-debugger) b do_delete.js:18

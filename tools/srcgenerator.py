@@ -67,6 +67,7 @@ def generate_jerry_core(output_dir, verbose=False):
         'python', SRCMERGER,
         '--base-dir', JERRY_CORE,
         '--input={}/include/jerryscript.h'.format(JERRY_CORE),
+        '--input={}/include/jerryscript-debugger-transport.h'.format(JERRY_CORE),
         '--output={}/jerryscript.h'.format(output_dir),
         '--remove-include=config.h',
         '--push-include=jerryscript-config.h',

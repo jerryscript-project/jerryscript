@@ -175,12 +175,12 @@ class JerryPendingBreakpoint(object):
     def __init__(self, line=None, source_name=None, function=None):
         self.function = function
         self.line = line
-        self.source_name = source_name
+        self.source_name = source_name or ""
 
         self.index = -1
 
     def __str__(self):
-        result = self.source_name or ""
+        result = self.source_name
         if self.line:
             result += ":%d" % (self.line)
         else:
@@ -761,8 +761,8 @@ class JerryDebugger(object):
                     result += "Frame %d: %s\n" % (frame_index, breakpoint[0])
 
                     frame_index += 1
-                    buffer_pos += 6
-                    buffer_size -= 6
+                    buffer_pos += self.cp_size + 4
+                    buffer_size -= self.cp_size + 4
 
                 if buffer_type == JERRY_DEBUGGER_BACKTRACE_END:
                     self.prompt = True
@@ -992,7 +992,9 @@ class JerryDebugger(object):
             for breakpoint_index, breakpoint in bp_list.items():
                 source_lines = 0
                 for src in new_function_list.values():
-                    if src.source_name == breakpoint.source_name:
+                    if (src.source_name == breakpoint.source_name or
+                            src.source_name.endswith("/" + breakpoint.source_name) or
+                            src.source_name.endswith("\\" + breakpoint.source_name)):
                         source_lines = len(src.source)
                         break
 
@@ -1089,8 +1091,8 @@ class JerryDebugger(object):
                 result += self._enable_breakpoint(function.lines[function.first_breakpoint_line])
 
         if not result and not pending:
-            print("No breakpoint found, do you want to add a %spending breakpoint%s? (y or [n])" % \
-                  (self.yellow, self.nocolor))
+            print("No breakpoint found, do you want to add a %spending breakpoint%s? (y or [n]) " % \
+                  (self.yellow, self.nocolor), end='')
 
             ans = sys.stdin.readline()
             if ans in ['yes\n', 'y\n']:

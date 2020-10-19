@@ -504,6 +504,9 @@ typedef struct parser_saved_context_t
 
   /* Literal types */
   uint16_t argument_count;                    /**< number of function arguments */
+#if ENABLED (JERRY_ESNEXT)
+  uint16_t argument_length;                   /**< length property of arguments */
+#endif /* ENABLED (JERRY_ESNEXT) */
   uint16_t register_count;                    /**< number of registers */
   uint16_t literal_count;                     /**< number of literals */
 
@@ -574,6 +577,9 @@ typedef struct
 
   /* Literal types */
   uint16_t argument_count;                    /**< number of function arguments */
+#if ENABLED (JERRY_ESNEXT)
+  uint16_t argument_length;                   /**< length property of arguments */
+#endif /* ENABLED (JERRY_ESNEXT) */
   uint16_t register_count;                    /**< number of registers */
   uint16_t literal_count;                     /**< number of literals */
 

@@ -112,7 +112,10 @@ ecma_op_create_arguments_object (vm_frame_ctx_shared_args_t *shared_p, /**< shar
       ECMA_SET_INTERNAL_VALUE_POINTER (mapped_arguments_p->u.byte_code, bytecode_data_p);
     }
 
-    ecma_bytecode_ref ((ecma_compiled_code_t *) bytecode_data_p);
+    if (!(bytecode_data_p->status_flags & ECMA_ARGUMENTS_OBJECT_STATIC_BYTECODE))
+    {
+      ecma_bytecode_ref ((ecma_compiled_code_t *) bytecode_data_p);
+    }
 
     ecma_value_t *formal_parameter_start_p;
     formal_parameter_start_p = ecma_compiled_code_resolve_arguments_start ((ecma_compiled_code_t *) bytecode_data_p);

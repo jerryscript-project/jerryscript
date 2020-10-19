@@ -1306,7 +1306,7 @@ ecma_builtin_array_prototype_object_splice (const ecma_value_t args[], /**< argu
 
 #if ENABLED (JERRY_ESNEXT)
   /* ES11: 8. */
-  if (new_length > ECMA_NUMBER_MAX_SAFE_INTEGER)
+  if ((ecma_number_t) new_length > ECMA_NUMBER_MAX_SAFE_INTEGER)
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid new array length"));
   }

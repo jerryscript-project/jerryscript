@@ -168,6 +168,8 @@ class DebuggerPrompt(Cmd):
         self.debugger.eval(args)
         self.stop = True
     do_e = do_eval
+    do_print = do_eval
+    do_p = do_eval
 
     def do_eval_at(self, args):
         """ Evaluate JavaScript source code at a scope chain level """

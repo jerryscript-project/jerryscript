@@ -892,11 +892,13 @@ ecma_typedarray_create_object_with_typedarray (ecma_object_t *typedarray_p, /**<
   }
   else
   {
+#if ENABLED (JERRY_BUILTIN_BIGINT)
     if ((ECMA_TYPEDARRAY_IS_BIGINT_TYPE (src_id) ^ ECMA_TYPEDARRAY_IS_BIGINT_TYPE (typedarray_id)) == 1)
     {
       ecma_deref_object (new_typedarray_p);
       return ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible typedArray types."));
     }
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 
     uint32_t src_element_size = 1u << ecma_typedarray_get_element_size_shift (typedarray_p);
     uint32_t dst_element_size = 1u << element_size_shift;

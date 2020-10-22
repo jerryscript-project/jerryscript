@@ -851,6 +851,15 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
     case ECMA_BUILTIN_PROPERTY_SIMPLE:
     {
       value = curr_property_p->value;
+
+#if ENABLED (JERRY_ESNEXT)
+      if (value == ECMA_VALUE_GLOBAL_THIS)
+      {
+        ecma_object_t *global_object_p = ecma_builtin_get_global ();
+        ecma_ref_object (global_object_p);
+        value = ecma_make_object_value (global_object_p);
+      }
+#endif /* ENABLED (JERRY_ESNEXT) */
       break;
     }
     case ECMA_BUILTIN_PROPERTY_NUMBER:
@@ -919,15 +928,11 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 #if ENABLED (JERRY_ESNEXT)
     case ECMA_BUILTIN_PROPERTY_SYMBOL:
     {
-      ecma_stringbuilder_t builder = ecma_stringbuilder_create_raw ((lit_utf8_byte_t *) "Symbol.", 7);
+      ecma_string_t *symbol_dot_p = ecma_get_magic_string (LIT_MAGIC_STRING_SYMBOL_DOT_UL);
+      ecma_string_t *name_p = ecma_get_magic_string ((lit_magic_string_id_t) curr_property_p->value);
+      ecma_string_t *descriptor_p = ecma_concat_ecma_strings (symbol_dot_p, name_p);
 
-      lit_magic_string_id_t symbol_desc_id = (lit_magic_string_id_t) curr_property_p->value;
-
-      ecma_stringbuilder_append_magic (&builder, symbol_desc_id);
-
-      ecma_value_t symbol_desc_value = ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
-
-      ecma_string_t *symbol_p = ecma_new_symbol_from_descriptor_string (symbol_desc_value);
+      ecma_string_t *symbol_p = ecma_new_symbol_from_descriptor_string (ecma_make_string_value (descriptor_p));
       lit_magic_string_id_t symbol_id = (lit_magic_string_id_t) curr_property_p->magic_string_id;
       symbol_p->u.hash = (uint16_t) ((symbol_id << ECMA_GLOBAL_SYMBOL_SHIFT) | ECMA_GLOBAL_SYMBOL_FLAG);
 
@@ -1024,10 +1029,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
     prop_value_p->value = value;
 
     /* Reference count of objects must be decreased. */
-    if (ecma_is_value_object (value))
-    {
-      ecma_free_value (value);
-    }
+    ecma_deref_if_object (value);
   }
 
   return prop_p;

@@ -202,20 +202,25 @@ enum
   ECMA_VALUE_TRUE = ECMA_MAKE_VALUE (3), /**< boolean true */
   ECMA_VALUE_UNDEFINED = ECMA_MAKE_VALUE (4), /**< undefined value */
   ECMA_VALUE_NULL = ECMA_MAKE_VALUE (5), /**< null value */
-  ECMA_VALUE_ARRAY_HOLE = ECMA_MAKE_VALUE (6), /**< array hole, used for
-                                                *   initialization of an array literal */
+  ECMA_VALUE_UNINITIALIZED = ECMA_MAKE_VALUE (6), /**< a special value for uninitialized let/const declarations */
   ECMA_VALUE_NOT_FOUND = ECMA_MAKE_VALUE (7), /**< a special value returned by
                                                *   ecma_op_object_find */
-  ECMA_VALUE_REGISTER_REF = ECMA_MAKE_VALUE (8), /**< register reference,
+  /* Values for controlling the VM */
+  ECMA_VALUE_ARRAY_HOLE = ECMA_MAKE_VALUE (8), /**< array hole, used for
+                                                *   initialization of an array literal */
+  ECMA_VALUE_REGISTER_REF = ECMA_MAKE_VALUE (9), /**< register reference,
                                                   *   a special "base" value for vm */
-  ECMA_VALUE_RELEASE_LEX_ENV = ECMA_MAKE_VALUE (9), /**< if this error remains on the stack when an exception occours
+  ECMA_VALUE_RELEASE_LEX_ENV = ECMA_MAKE_VALUE (10), /**< if this error remains on the stack when an exception occurs
                                                          the top lexical environment of the VM frame should be popped */
-  ECMA_VALUE_UNINITIALIZED = ECMA_MAKE_VALUE (10), /**< a special value for uninitialized let/const declarations */
   ECMA_VALUE_SPREAD_ELEMENT = ECMA_MAKE_VALUE (11), /**< a special value for spread elements in array initialization
                                                      *   or function call argument list */
-  ECMA_VALUE_SYNC_ITERATOR = ECMA_MAKE_VALUE (12), /**< option for ecma_op_get_iterator: sync iterator is requested */
-  ECMA_VALUE_ASYNC_ITERATOR = ECMA_MAKE_VALUE (13), /**< option for ecma_op_get_iterator: async iterator is requested */
-  ECMA_VALUE_INITIALIZED = ECMA_MAKE_VALUE (14), /**< represents initialized mapped arguments formal parameter */
+  /* Other values */
+  ECMA_VALUE_INITIALIZED = ECMA_MAKE_VALUE (12), /**< represents initialized mapped arguments formal parameter */
+#if ENABLED (JERRY_ESNEXT)
+  ECMA_VALUE_SYNC_ITERATOR = ECMA_MAKE_VALUE (13), /**< option for ecma_op_get_iterator: sync iterator is requested */
+  ECMA_VALUE_ASYNC_ITERATOR = ECMA_MAKE_VALUE (14), /**< option for ecma_op_get_iterator: async iterator is requested */
+  ECMA_VALUE_GLOBAL_THIS = ECMA_MAKE_VALUE (15), /**< globalThis built-in */
+#endif /* ENABLED (JERRY_ESNEXT) */
 };
 
 #if !ENABLED (JERRY_NUMBER_TYPE_FLOAT64)

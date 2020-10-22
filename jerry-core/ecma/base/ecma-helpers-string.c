@@ -210,6 +210,9 @@ ecma_new_ecma_string_from_magic_string_ex_id (lit_magic_string_ex_id_t id) /**< 
 /**
  * Allocate new ecma-string and fill it with reference to the symbol descriptor
  *
+ * Note:
+ *     Takes the reference to the string_desc
+ *
  * @return pointer to ecma-string descriptor
  */
 ecma_string_t *

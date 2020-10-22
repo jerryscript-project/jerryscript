@@ -20,9 +20,14 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #include "jerryscript-port.h"
 #include "jerryscript-port-default.h"
+
+#ifndef S_ISDIR
+#define S_ISDIR(mode) (((mode) & S_IFMT) == S_IFDIR)
+#endif
 
 /**
  * Determines the size of the given file.
@@ -46,6 +51,13 @@ uint8_t *
 jerry_port_read_source (const char *file_name_p, /**< file name */
                         size_t *out_size_p) /**< [out] read bytes */
 {
+  struct stat stat_buffer;
+  if (stat (file_name_p, &stat_buffer) == -1 || S_ISDIR (stat_buffer.st_mode))
+  {
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: Failed to open file: %s\n", file_name_p);
+    return NULL;
+  }
+
   FILE *file_p = fopen (file_name_p, "rb");
 
   if (file_p == NULL)

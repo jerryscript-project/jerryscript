@@ -21,6 +21,22 @@
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
+/**
+ * This object has a custom dispatch function.
+ */
+#define BUILTIN_CUSTOM_DISPATCH
+
+/**
+ * List of built-in routine identifiers.
+ */
+enum
+{
+  ECMA_PROMISE_PROTOTYPE_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
+  ECMA_PROMISE_PROTOTYPE_ROUTINE_THEN,
+  ECMA_PROMISE_PROTOTYPE_ROUTINE_CATCH,
+  ECMA_PROMISE_PROTOTYPE_ROUTINE_FINALLY
+};
+
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-promise-prototype.inc.h"
 #define BUILTIN_UNDERSCORED_ID promise_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
@@ -36,54 +52,43 @@
  */
 
 /**
- * Promise routine: then.
+ * Dispatcher of the built-in's routines
  *
- * See also: 25.4.5.3
- *
- * @return ecma value of a new promise object.
+ * @return ecma value
  *         Returned value must be freed with ecma_free_value.
  */
-static ecma_value_t
-ecma_builtin_promise_prototype_then (ecma_value_t this_arg, /**< this argument */
-                                     ecma_value_t on_fulfilled, /**< on_fulfilled function */
-                                     ecma_value_t on_rejected) /**< on_rejected function */
+ecma_value_t
+ecma_builtin_promise_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide routine
+                                                                               *   identifier */
+                                                 ecma_value_t this_arg, /**< 'this' argument value */
+                                                 const ecma_value_t arguments_list_p[], /**< list of arguments
+                                                                                         *   passed to routine */
+                                                 uint32_t arguments_number) /**< length of arguments' list */
 {
-  return ecma_promise_then (this_arg,
-                            on_fulfilled,
-                            on_rejected);
-} /* ecma_builtin_promise_prototype_then */
+  ecma_value_t arg_1 = (arguments_number > 0) ? arguments_list_p[0] : ECMA_VALUE_UNDEFINED;
 
-/**
- * Promise routine: catch.
- *
- * See also: 25.4.5.1
- *
- * @return ecma value of a new promise object.
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_promise_prototype_catch (ecma_value_t this_arg, /**< this argument */
-                                      ecma_value_t on_rejected) /**< on_rejected function */
-{
-  ecma_value_t args[] = {ECMA_VALUE_UNDEFINED, on_rejected};
-  return ecma_op_invoke_by_magic_id (this_arg, LIT_MAGIC_STRING_THEN, args, 2);
-} /* ecma_builtin_promise_prototype_catch */
-
-/**
- * Promise routine: finally.
- *
- * See also:
- *          ECMA-262 v11, 25.6.5.3
- *
- * @return ecma value of a new promise object.
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_promise_prototype_finally (ecma_value_t this_arg, /**< this argument */
-                                        ecma_value_t on_finally) /**< on_finally function */
-{
-  return ecma_promise_finally (this_arg, on_finally);
-} /* ecma_builtin_promise_prototype_finally */
+  switch (builtin_routine_id)
+  {
+    case ECMA_PROMISE_PROTOTYPE_ROUTINE_THEN:
+    {
+      ecma_value_t arg_2 = (arguments_number > 1) ? arguments_list_p[1] : ECMA_VALUE_UNDEFINED;
+      return ecma_promise_then (this_arg, arg_1, arg_2);
+    }
+    case ECMA_PROMISE_PROTOTYPE_ROUTINE_CATCH:
+    {
+      ecma_value_t args[] = {ECMA_VALUE_UNDEFINED, arg_1};
+      return ecma_op_invoke_by_magic_id (this_arg, LIT_MAGIC_STRING_THEN, args, 2);
+    }
+    case ECMA_PROMISE_PROTOTYPE_ROUTINE_FINALLY:
+    {
+      return ecma_promise_finally (this_arg, arg_1);
+    }
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+} /* ecma_builtin_promise_prototype_dispatch_routine */
 
 /**
  * @}

@@ -41,14 +41,14 @@ STRING_VALUE (LIT_MAGIC_STRING_NAME,
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
-ROUTINE (LIT_MAGIC_STRING_REJECT, ecma_builtin_promise_reject, 1, 1)
-ROUTINE (LIT_MAGIC_STRING_RESOLVE, ecma_builtin_promise_resolve, 1, 1)
-ROUTINE (LIT_MAGIC_STRING_RACE, ecma_builtin_promise_race, 1, 1)
-ROUTINE (LIT_MAGIC_STRING_ALL, ecma_builtin_promise_all, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_REJECT, ECMA_PROMISE_ROUTINE_REJECT, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_RESOLVE, ECMA_PROMISE_ROUTINE_RESOLVE, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_RACE, ECMA_PROMISE_ROUTINE_RACE, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_ALL, ECMA_PROMISE_ROUTINE_ALL, 1, 1)
 
 /* ES2015 25.4.4.6 */
 ACCESSOR_READ_ONLY (LIT_GLOBAL_SYMBOL_SPECIES,
-                    ecma_builtin_promise_species_get,
+                    ECMA_PROMISE_ROUTINE_SPECIES_GET,
                     ECMA_PROPERTY_FLAG_CONFIGURABLE)
 
 #endif /* ENABLED (JERRY_BUILTIN_PROMISE) */

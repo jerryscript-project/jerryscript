@@ -31,6 +31,24 @@
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
+/**
+ * This object has a custom dispatch function.
+ */
+#define BUILTIN_CUSTOM_DISPATCH
+
+/**
+ * List of built-in routine identifiers.
+ */
+enum
+{
+  ECMA_PROMISE_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
+  ECMA_PROMISE_ROUTINE_REJECT,
+  ECMA_PROMISE_ROUTINE_RESOLVE,
+  ECMA_PROMISE_ROUTINE_RACE,
+  ECMA_PROMISE_ROUTINE_ALL,
+  ECMA_PROMISE_ROUTINE_SPECIES_GET
+};
+
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-promise.inc.h"
 #define BUILTIN_UNDERSCORED_ID promise
 #include "ecma-builtin-internal-routines-template.inc.h"
@@ -83,38 +101,6 @@ ecma_builtin_promise_reject_abrupt (ecma_value_t value, /**< value */
 
   return ecma_copy_value (capability_p->header.u.class_prop.u.promise);
 } /* ecma_builtin_promise_reject_abrupt */
-
-/**
- * The Promise.reject routine.
- *
- * See also:
- *         ES2015 25.4.4.4
- *
- * @return ecma value of the new promise.
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_promise_reject (ecma_value_t this_arg, /**< 'this' argument */
-                             ecma_value_t reason) /**< the reason for reject */
-{
-  return ecma_promise_reject_or_resolve (this_arg, reason, false);
-} /* ecma_builtin_promise_reject */
-
-/**
- * The Promise.resolve routine.
- *
- * See also:
- *         ES2015 25.4.4.5
- *
- * @return ecma value of the new promise.
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_promise_resolve (ecma_value_t this_arg, /**< 'this' argument */
-                              ecma_value_t argument) /**< the argument for resolve */
-{
-  return ecma_promise_reject_or_resolve (this_arg, argument, true);
-} /* ecma_builtin_promise_resolve */
 
 /**
  * Runtime Semantics: PerformPromiseRace.
@@ -436,38 +422,6 @@ ecma_builtin_promise_race_or_all (ecma_value_t this_arg, /**< 'this' argument */
 } /* ecma_builtin_promise_race_or_all */
 
 /**
- * The Promise.race routine.
- *
- * See also:
- *         ES2015 25.4.4.3
- *
- * @return ecma value of the new promise.
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_promise_race (ecma_value_t this_arg, /**< 'this' argument */
-                           ecma_value_t array) /**< the items to be resolved */
-{
-  return ecma_builtin_promise_race_or_all (this_arg, array, true);
-} /* ecma_builtin_promise_race */
-
-/**
- * The Promise.all routine.
- *
- * See also:
- *         ES2015 25.4.4.1
- *
- * @return ecma value of the new promise.
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_promise_all (ecma_value_t this_arg, /**< 'this' argument */
-                           ecma_value_t array) /**< the items to be resolved */
-{
-  return ecma_builtin_promise_race_or_all (this_arg, array, false);
-} /* ecma_builtin_promise_all */
-
-/**
  * Handle calling [[Call]] of built-in Promise object.
  *
  * ES2015 25.4.3 Promise is not intended to be called
@@ -505,16 +459,45 @@ ecma_builtin_promise_dispatch_construct (const ecma_value_t *arguments_list_p, /
 } /* ecma_builtin_promise_dispatch_construct */
 
 /**
- * 25.4.4.6 get Promise [ @@species ] accessor
+ * Dispatcher of the built-in's routines
  *
- * @return ecma_value
- *         returned value must be freed with ecma_free_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_builtin_promise_species_get (ecma_value_t this_value) /**< This Value */
+ecma_builtin_promise_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide routine
+                                                                     *   identifier */
+                                         ecma_value_t this_arg, /**< 'this' argument value */
+                                         const ecma_value_t arguments_list_p[], /**< list of arguments
+                                                                                 *   passed to routine */
+                                         uint32_t arguments_number) /**< length of arguments' list */
 {
-  return ecma_copy_value (this_value);
-} /* ecma_builtin_promise_species_get */
+  ecma_value_t argument = (arguments_number > 0) ? arguments_list_p[0] : ECMA_VALUE_UNDEFINED;
+
+  switch (builtin_routine_id)
+  {
+    case ECMA_PROMISE_ROUTINE_REJECT:
+    case ECMA_PROMISE_ROUTINE_RESOLVE:
+    {
+      bool is_resolve = (builtin_routine_id == ECMA_PROMISE_ROUTINE_RESOLVE);
+      return ecma_promise_reject_or_resolve (this_arg, argument, is_resolve);
+    }
+    case ECMA_PROMISE_ROUTINE_RACE:
+    case ECMA_PROMISE_ROUTINE_ALL:
+    {
+      bool is_race = (builtin_routine_id == ECMA_PROMISE_ROUTINE_RACE);
+      return ecma_builtin_promise_race_or_all (this_arg, argument, is_race);
+    }
+    case ECMA_PROMISE_ROUTINE_SPECIES_GET:
+    {
+      return ecma_copy_value (this_arg);
+    }
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+} /* ecma_builtin_promise_dispatch_routine */
 
 /**
  * @}

@@ -481,8 +481,6 @@
   <test id="built-ins/TypedArrayConstructors/of/custom-ctor-returns-other-instance.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/of/custom-ctor.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/of/new-instance-using-custom-ctor.js"><reason></reason></test>
-  <test id="built-ins/global/global-object.js"><reason></reason></test>
-  <test id="built-ins/global/property-descriptor.js"><reason></reason></test>
   <test id="harness/isConstructor.js"><reason></reason></test>
   <test id="language/block-scope/syntax/redeclaration/async-function-name-redeclaration-attempt-with-async-function.js"><reason></reason></test>
   <test id="language/block-scope/syntax/redeclaration/async-function-name-redeclaration-attempt-with-function.js"><reason></reason></test>

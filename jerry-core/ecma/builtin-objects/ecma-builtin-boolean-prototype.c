@@ -29,6 +29,21 @@
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
+/**
+ * This object has a custom dispatch function.
+ */
+#define BUILTIN_CUSTOM_DISPATCH
+
+/**
+ * List of built-in routine identifiers.
+ */
+enum
+{
+  ECMA_BOOLEAN_PROTOTYPE_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
+  ECMA_BOOLEAN_PROTOTYPE_ROUTINE_TO_STRING,
+  ECMA_BOOLEAN_PROTOTYPE_ROUTINE_VALUE_OF
+};
+
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-boolean-prototype.inc.h"
 #define BUILTIN_UNDERSCORED_ID boolean_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
@@ -42,35 +57,6 @@
  * \addtogroup booleanprototype ECMA Boolean.prototype object built-in
  * @{
  */
-
-/**
- * The Boolean.prototype object's 'toString' routine
- *
- * See also:
- *          ECMA-262 v5, 15.6.4.2
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_boolean_prototype_object_to_string (ecma_value_t this_arg) /**< this argument */
-{
-  ecma_value_t value_of_ret = ecma_builtin_boolean_prototype_object_value_of (this_arg);
-
-  if (ECMA_IS_VALUE_ERROR (value_of_ret))
-  {
-    return value_of_ret;
-  }
-
-  if (ecma_is_value_true (value_of_ret))
-  {
-    return ecma_make_magic_string_value (LIT_MAGIC_STRING_TRUE);
-  }
-
-  JERRY_ASSERT (ecma_is_value_boolean (value_of_ret));
-
-  return ecma_make_magic_string_value (LIT_MAGIC_STRING_FALSE);
-} /* ecma_builtin_boolean_prototype_object_to_string */
 
 /**
  * The Boolean.prototype object's 'valueOf' routine
@@ -104,6 +90,46 @@ ecma_builtin_boolean_prototype_object_value_of (ecma_value_t this_arg) /**< this
 
   return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a Boolean object."));
 } /* ecma_builtin_boolean_prototype_object_value_of */
+
+/**
+ * Dispatcher of the built-in's routines
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_builtin_boolean_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide routine
+                                                                               *   identifier */
+                                                 ecma_value_t this_arg, /**< 'this' argument value */
+                                                 const ecma_value_t arguments_list_p[], /**< list of arguments
+                                                                                         *   passed to routine */
+                                                 uint32_t arguments_number) /**< length of arguments' list */
+{
+  JERRY_UNUSED (arguments_number);
+  JERRY_UNUSED (arguments_list_p);
+
+  ecma_value_t value_of_ret = ecma_builtin_boolean_prototype_object_value_of (this_arg);
+  if (builtin_routine_id == ECMA_BOOLEAN_PROTOTYPE_ROUTINE_VALUE_OF)
+  {
+    return value_of_ret;
+  }
+
+  JERRY_ASSERT (builtin_routine_id == ECMA_BOOLEAN_PROTOTYPE_ROUTINE_TO_STRING);
+
+  if (ECMA_IS_VALUE_ERROR (value_of_ret))
+  {
+    return value_of_ret;
+  }
+
+  if (ecma_is_value_true (value_of_ret))
+  {
+    return ecma_make_magic_string_value (LIT_MAGIC_STRING_TRUE);
+  }
+
+  JERRY_ASSERT (ecma_is_value_false (value_of_ret));
+
+  return ecma_make_magic_string_value (LIT_MAGIC_STRING_FALSE);
+} /* ecma_builtin_boolean_prototype_dispatch_routine */
 
 /**
  * @}

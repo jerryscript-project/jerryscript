@@ -407,16 +407,7 @@
   <test id="built-ins/TypedArray/prototype/subarray/speciesctor-get-species-custom-ctor.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/subarray/speciesctor-get-species-returns-throws.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/subarray/speciesctor-get-species.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/toLocaleString/BigInt/calls-tolocalestring-from-each-value.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/toLocaleString/BigInt/calls-tostring-from-each-value.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/toLocaleString/BigInt/calls-valueof-from-each-value.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/toLocaleString/BigInt/get-length-uses-internal-arraylength.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-firstelement-tolocalestring.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-firstelement-tostring.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-firstelement-valueof.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-nextelement-tolocalestring.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-nextelement-tostring.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/toLocaleString/BigInt/return-abrupt-from-nextelement-valueof.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/toLocaleString/BigInt/return-result.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-is-negative-zero.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/custom-proto-access-throws.js"><reason></reason></test>

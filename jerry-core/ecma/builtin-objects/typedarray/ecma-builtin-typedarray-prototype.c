@@ -1557,63 +1557,26 @@ static ecma_value_t
 ecma_builtin_typedarray_prototype_to_locale_string_helper (ecma_typedarray_info_t *info_p, /**< object info */
                                                            uint32_t index) /** array index */
 {
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
   ecma_value_t element_value = ecma_get_typedarray_element (info_p->buffer_p + index, info_p->id);
-
-  ecma_value_t element_obj = ecma_op_create_number_object (element_value);
+  ecma_value_t call_value = ecma_op_invoke_by_magic_id (element_value, LIT_MAGIC_STRING_TO_LOCALE_STRING_UL, NULL, 0);
 
   ecma_free_value (element_value);
 
-  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (element_obj));
-
-  ecma_object_t *element_obj_p = ecma_get_object_from_value (element_obj);
-
-  ecma_value_t func_value = ecma_op_object_get_by_magic_id (element_obj_p,
-                                                            LIT_MAGIC_STRING_TO_LOCALE_STRING_UL);
-
-  if (ECMA_IS_VALUE_ERROR (func_value))
+  if (ECMA_IS_VALUE_ERROR (call_value))
   {
-    ecma_deref_object (element_obj_p);
-    return func_value;
+    return call_value;
   }
 
-  if (ecma_op_is_callable (func_value))
+  ecma_string_t *str_p = ecma_op_to_string (call_value);
+
+  ecma_free_value (call_value);
+
+  if (JERRY_UNLIKELY (str_p == NULL))
   {
-    ecma_object_t *func_obj = ecma_get_object_from_value (func_value);
-    ecma_value_t call_value = ecma_op_function_call (func_obj,
-                                                     element_obj,
-                                                     NULL,
-                                                     0);
-
-    ecma_deref_object (func_obj);
-
-    if (ECMA_IS_VALUE_ERROR (call_value))
-    {
-      ecma_deref_object (element_obj_p);
-      return call_value;
-    }
-
-    ecma_string_t *str_p = ecma_op_to_string (call_value);
-
-    ecma_free_value (call_value);
-
-    if (JERRY_UNLIKELY (str_p == NULL))
-    {
-      ecma_deref_object (element_obj_p);
-      return ECMA_VALUE_ERROR;
-    }
-
-    ret_value = ecma_make_string_value (str_p);
-  }
-  else
-  {
-    ecma_free_value (func_value);
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("'toLocaleString' is missing or not a function."));
+    return ECMA_VALUE_ERROR;
   }
 
-  ecma_deref_object (element_obj_p);
-
-  return ret_value;
+  return ecma_make_string_value (str_p);
 } /* ecma_builtin_typedarray_prototype_to_locale_string_helper */
 
 /**

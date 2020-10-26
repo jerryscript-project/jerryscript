@@ -258,6 +258,7 @@ ecma_builtin_intrinsic_dispatch_routine (uint16_t builtin_routine_id, /**< built
       ECMA_FINALIZE_UTF8_STRING (start_p, input_start_size);
       ecma_value_t result = ecma_make_string_value (ret_str_p);
       ecma_deref_ecma_string (to_str_p);
+      ecma_deref_ecma_string (ret_str_p);
       return result;
 
     }

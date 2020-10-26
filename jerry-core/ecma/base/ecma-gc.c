@@ -1319,6 +1319,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           case ECMA_NATIVE_HANDLER_VALUE_THUNK:
           case ECMA_NATIVE_HANDLER_VALUE_THROWER:
           {
+            ecma_free_value_if_not_object (((ecma_promise_value_thunk_t *) object_p)->value);
             ext_object_size = sizeof (ecma_promise_value_thunk_t);
             break;
           }

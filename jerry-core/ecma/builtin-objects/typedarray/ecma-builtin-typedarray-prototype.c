@@ -1300,28 +1300,20 @@ ecma_builtin_typedarray_prototype_index_of (ecma_typedarray_info_t *info_p, /**<
   }
   else
   {
-    /* 6. 7. */
-    ecma_number_t num_var;
-    if (ECMA_IS_VALUE_ERROR (ecma_op_to_integer (args[1], &num_var)))
+    if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_uint32_index_normalize (args[1],
+                                                                         info_p->length,
+                                                                         &from_index)))
     {
       return ECMA_VALUE_ERROR;
     }
-    /* 8. */
-    if (num_var >= info_p->length)
-    {
-      return ecma_make_integer_value (-1);
-    }
 
-    /* 9. 10. */
-    from_index = ((num_var >= 0) ? (uint32_t) num_var
-                                 : (uint32_t) (info_p->length + num_var));
   }
 
   ecma_typedarray_getter_fn_t getter_cb = ecma_get_typedarray_getter_fn (info_p->id);
 
   /* 11. */
-  for (int32_t position = (int32_t) from_index * info_p->element_size;
-       (uint32_t) position < limit;
+  for (uint32_t position = from_index * info_p->element_size;
+       position < limit;
        position += info_p->element_size)
   {
     ecma_value_t element = getter_cb (info_p->buffer_p + position);
@@ -1375,40 +1367,45 @@ ecma_builtin_typedarray_prototype_last_index_of (ecma_typedarray_info_t *info_p,
   }
   else
   {
-    /* 6. 7. */
-    ecma_number_t num_var;
-    if (ECMA_IS_VALUE_ERROR (ecma_op_to_integer (args[1], &num_var)))
+    if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_uint32_index_normalize (args[1],
+                                                                         info_p->length,
+                                                                         &from_index)))
     {
       return ECMA_VALUE_ERROR;
     }
 
-    if (!ecma_number_is_nan (num_var)
-        && -num_var > info_p->length)
+    ecma_number_t to_int;
+
+    if (ECMA_IS_VALUE_ERROR (ecma_op_to_integer (args[1], &to_int)))
+    {
+      return ECMA_VALUE_ERROR;
+    }
+
+    if (info_p->length + to_int < 0)
     {
       return ecma_make_integer_value (-1);
     }
 
-    /* 8. 9. */
-    from_index = ((num_var >= 0) ? (uint32_t) JERRY_MIN (num_var, info_p->length - 1)
-                                 : (uint32_t) (info_p->length + num_var));
+    from_index = JERRY_MIN (from_index, info_p->length - 1);
   }
 
   ecma_typedarray_getter_fn_t getter_cb = ecma_get_typedarray_getter_fn (info_p->id);
+  uint8_t *current_element_p = info_p->buffer_p + from_index * info_p->element_size;
 
   /* 10. */
-  for (int32_t position = (int32_t) from_index * info_p->element_size;
-       position >= 0;
-       position += -info_p->element_size)
+  while (current_element_p >= info_p->buffer_p)
   {
-    ecma_value_t element = getter_cb (info_p->buffer_p + position);
+    ecma_value_t element = getter_cb (info_p->buffer_p + from_index * info_p->element_size);
 
     if (ecma_op_same_value_zero (args[0], element, true))
     {
       ecma_free_value (element);
-      return ecma_make_number_value ((ecma_number_t) position / info_p->element_size);
+      return ecma_make_number_value ((ecma_number_t) from_index * info_p->element_size / info_p->element_size);
     }
 
     ecma_free_value (element);
+    current_element_p -= info_p->element_size;
+    from_index--;
   }
 
   /* 11. */

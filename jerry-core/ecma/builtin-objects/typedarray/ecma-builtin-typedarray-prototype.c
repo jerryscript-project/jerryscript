@@ -1708,7 +1708,8 @@ ecma_builtin_typedarray_prototype_dispatch_routine (uint16_t builtin_routine_id,
   }
 
   ecma_object_t *typedarray_p = ecma_get_object_from_value (this_arg);
-  ecma_typedarray_info_t info = { 0 };
+  ecma_typedarray_info_t info;
+  memset (&info, 0, sizeof (info));
 
   if (builtin_routine_id < ECMA_TYPEDARRAY_PROTOTYPE_ROUTINE_BUFFER_GETTER)
   {

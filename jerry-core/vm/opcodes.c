@@ -1314,8 +1314,7 @@ opfunc_init_class (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
   else if (!ecma_is_value_null (super_class))
   {
     /* 6.f, 6.g.i */
-    if (!ecma_is_constructor (super_class)
-        || ecma_op_function_is_generator (ecma_get_object_from_value (super_class)))
+    if (!ecma_is_constructor (super_class))
     {
       return ecma_raise_type_error ("Class extends value is not a constructor or null");
     }

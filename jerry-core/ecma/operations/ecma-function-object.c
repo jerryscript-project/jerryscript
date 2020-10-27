@@ -129,24 +129,25 @@ ecma_op_is_callable (ecma_value_t value) /**< ecma value */
 } /* ecma_op_is_callable */
 
 /**
- * Checks whether the given object implements [[Construct]].
+ * Implement IsConstructor abstract operation.
  *
- * @return true - if the given object is constructor;
- *         false - otherwise
+ *
+ * @return ECMA_IS_VALID_CONSTRUCTOR - if object is a valid for constructor call
+ *         any other value - if object is not a valid constructor, the pointer contains the error message.
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
-ecma_object_is_constructor (ecma_object_t *obj_p) /**< ecma object */
+char *
+ecma_object_check_constructor (ecma_object_t *obj_p) /**< ecma object */
 {
   JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
 
   ecma_object_type_t type = ecma_get_object_type (obj_p);
 
-  if (type < ECMA_OBJECT_TYPE_PROXY)
+  if (JERRY_UNLIKELY (type < ECMA_OBJECT_TYPE_PROXY))
   {
-    return false;
+    return ECMA_ERR_MSG ("Invalid type for constructor call.");
   }
 
-  while (type == ECMA_OBJECT_TYPE_BOUND_FUNCTION)
+  while (JERRY_UNLIKELY (type == ECMA_OBJECT_TYPE_BOUND_FUNCTION))
   {
     ecma_bound_function_t *bound_func_p = (ecma_bound_function_t *) obj_p;
 
@@ -156,20 +157,115 @@ ecma_object_is_constructor (ecma_object_t *obj_p) /**< ecma object */
     type = ecma_get_object_type (obj_p);
   }
 
+  if (JERRY_LIKELY (type == ECMA_OBJECT_TYPE_FUNCTION))
+  {
+    bool is_builtin = ecma_get_object_is_builtin (obj_p);
+
+    if (is_builtin)
+    {
+      if (ecma_builtin_function_is_routine (obj_p))
+      {
+        return ECMA_ERR_MSG ("Built-in routines are not constructors.");
+      }
+
+      return ECMA_IS_VALID_CONSTRUCTOR;
+    }
+
+#if ENABLED (JERRY_ESNEXT)
+    const ecma_compiled_code_t *byte_code_p = ecma_op_function_get_compiled_code ((ecma_extended_object_t *) obj_p);
+
+    if (!CBC_FUNCTION_IS_CONSTRUCTABLE (byte_code_p->status_flags))
+    {
+#if ENABLED (JERRY_ERROR_MESSAGES)
+      switch (CBC_FUNCTION_GET_TYPE (byte_code_p->status_flags))
+      {
+        case CBC_FUNCTION_GENERATOR:
+        {
+          return "Generator functions cannot be invoked with 'new'.";
+        }
+        case CBC_FUNCTION_ASYNC:
+        {
+          return "Async functions cannot be invoked with 'new'.";
+        }
+        case CBC_FUNCTION_ASYNC_GENERATOR:
+        {
+          return "Async generator functions cannot be invoked with 'new'.";
+        }
+        case CBC_FUNCTION_ACCESSOR:
+        {
+          return "Accessor functions cannot be invoked with 'new'.";
+        }
+        case CBC_FUNCTION_METHOD:
+        {
+          return "Methods cannot be invoked with 'new'.";
+        }
+        case CBC_FUNCTION_ARROW:
+        {
+          return "Arrow functions cannot be invoked with 'new'.";
+        }
+        default:
+        {
+          JERRY_ASSERT (CBC_FUNCTION_GET_TYPE (byte_code_p->status_flags) == CBC_FUNCTION_ASYNC_ARROW);
+          return "Async arrow functions cannot be invoked with 'new'.";
+        }
+      }
+#else /* !ENABLED (JERRY_ERROR_MESSAGES) */
+      return NULL;
+#endif /* ENABLED (JERRY_ERROR_MESSAGES) */
+    }
+#endif /* ENABLED (JERRY_NEXT) */
+
+    return ECMA_IS_VALID_CONSTRUCTOR;
+  }
+
 #if ENABLED (JERRY_BUILTIN_PROXY)
   if (ECMA_OBJECT_TYPE_IS_PROXY (type))
   {
-    return ECMA_GET_SECOND_BIT_FROM_POINTER_TAG (obj_p->u1.property_list_cp) != 0;
+    if (ECMA_GET_SECOND_BIT_FROM_POINTER_TAG (obj_p->u1.property_list_cp) == 0)
+    {
+      return ECMA_ERR_MSG ("Proxy target is not a constructor.");
+    }
+
+    return ECMA_IS_VALID_CONSTRUCTOR;
   }
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
-  if (type == ECMA_OBJECT_TYPE_FUNCTION)
+  JERRY_ASSERT (type == ECMA_OBJECT_TYPE_NATIVE_FUNCTION);
+  if (ecma_get_object_is_builtin (obj_p))
   {
-    return (!ecma_get_object_is_builtin (obj_p) || !ecma_builtin_function_is_routine (obj_p));
+    return ECMA_ERR_MSG ("Built-ins are not constructors.");
   }
 
-  JERRY_ASSERT (type == ECMA_OBJECT_TYPE_NATIVE_FUNCTION);
-  return !ecma_get_object_is_builtin (obj_p);
+  return ECMA_IS_VALID_CONSTRUCTOR;
+} /* ecma_object_check_constructor */
+
+/**
+ * Implement IsConstructor abstract operation.
+ *
+ * @return ECMA_IS_VALID_CONSTRUCTOR - if the input value is a constructor.
+ *         any other value - if the input value is not a valid constructor, the pointer contains the error message.
+ */
+inline char *JERRY_ATTR_ALWAYS_INLINE
+ecma_check_constructor (ecma_value_t value) /**< ecma object */
+{
+  if (!ecma_is_value_object (value))
+  {
+    return ECMA_ERR_MSG ("Invalid type for constructor call.");
+  }
+
+  return ecma_object_check_constructor (ecma_get_object_from_value (value));
+} /* ecma_check_constructor */
+
+/**
+ * Checks whether the given object implements [[Construct]].
+ *
+ * @return true - if the given object is constructor;
+ *         false - otherwise
+ */
+inline bool JERRY_ATTR_ALWAYS_INLINE
+ecma_object_is_constructor (ecma_object_t *obj_p) /**< ecma object */
+{
+  return ecma_object_check_constructor (obj_p) == ECMA_IS_VALID_CONSTRUCTOR;
 } /* ecma_object_is_constructor */
 
 /**
@@ -634,30 +730,6 @@ ecma_op_function_get_compiled_code (ecma_extended_object_t *function_p) /**< fun
 #endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 } /* ecma_op_function_get_compiled_code */
 
-#if ENABLED (JERRY_ESNEXT)
-/**
- * Check whether the given object [[FunctionKind]] internal slot value is "generator".
- *
- * @return true - if the given object is a generator function
- *         false - otherwise
- */
-bool
-ecma_op_function_is_generator (ecma_object_t *obj_p) /**< object */
-{
-  if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION
-      && !ecma_get_object_is_builtin (obj_p))
-  {
-    ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) obj_p;
-    const ecma_compiled_code_t *byte_code_p = ecma_op_function_get_compiled_code (ext_func_obj_p);
-
-    return CBC_FUNCTION_GET_TYPE (byte_code_p->status_flags) == CBC_FUNCTION_GENERATOR;
-  }
-
-  return false;
-} /* ecma_op_function_is_generator */
-
-#endif /* ENABLED (JERRY_ESNEXT) */
-
 /**
  * 15.3.5.3 implementation of [[HasInstance]] for Function objects
  *
@@ -821,7 +893,9 @@ ecma_op_function_get_super_constructor (ecma_object_t *func_obj_p) /**< function
 /**
  * Ordinary internal method: GetPrototypeFromConstructor (constructor, intrinsicDefaultProto)
  *
- * See also: ECMAScript v6, 9.1.15
+ * See also:
+ *   - ECMAScript v6, 9.1.15
+ *   - ECMAScript v10, 9.1.14
  *
  * @return NULL - if the operation fail (exception on the global context is raised)
  *         pointer to the prototype object - otherwise
@@ -830,7 +904,7 @@ ecma_object_t *
 ecma_op_get_prototype_from_constructor (ecma_object_t *ctor_obj_p, /**< constructor to get prototype from  */
                                         ecma_builtin_id_t default_proto_id) /**< intrinsicDefaultProto */
 {
-  JERRY_ASSERT (ecma_object_is_constructor (ctor_obj_p));
+  JERRY_ASSERT (ecma_op_object_is_callable (ctor_obj_p));
   JERRY_ASSERT (default_proto_id < ECMA_BUILTIN_ID__COUNT);
 
   ecma_value_t proto = ecma_op_object_get_by_magic_id (ctor_obj_p, LIT_MAGIC_STRING_PROTOTYPE);
@@ -1322,55 +1396,6 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
 
 #if ENABLED (JERRY_ESNEXT)
   ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) func_obj_p;
-  const ecma_compiled_code_t *byte_code_p = ecma_op_function_get_compiled_code (ext_func_obj_p);
-
-  if (!CBC_FUNCTION_IS_CONSTRUCTABLE (byte_code_p->status_flags))
-  {
-    const char *message_p;
-
-    switch (CBC_FUNCTION_GET_TYPE (byte_code_p->status_flags))
-    {
-      case CBC_FUNCTION_GENERATOR:
-      {
-        message_p = ECMA_ERR_MSG ("Generator functions cannot be invoked with 'new'.");
-        break;
-      }
-      case CBC_FUNCTION_ASYNC:
-      {
-        message_p = ECMA_ERR_MSG ("Async functions cannot be invoked with 'new'.");
-        break;
-      }
-      case CBC_FUNCTION_ASYNC_GENERATOR:
-      {
-        message_p = ECMA_ERR_MSG ("Async generator functions cannot be invoked with 'new'.");
-        break;
-      }
-      case CBC_FUNCTION_ARROW:
-      {
-        message_p = ECMA_ERR_MSG ("Arrow functions cannot be invoked with 'new'.");
-        break;
-      }
-      case CBC_FUNCTION_ASYNC_ARROW:
-      {
-        message_p = ECMA_ERR_MSG ("Async arrow functions cannot be invoked with 'new'.");
-        break;
-      }
-      case CBC_FUNCTION_METHOD:
-      {
-        message_p = ECMA_ERR_MSG ("Methods cannot be invoked with 'new'.");
-        break;
-      }
-      default:
-      {
-        JERRY_ASSERT (CBC_FUNCTION_GET_TYPE (byte_code_p->status_flags) == CBC_FUNCTION_ACCESSOR);
-
-        message_p = ECMA_ERR_MSG ("Accessor functions cannot be invoked with 'new'.");
-        break;
-      }
-    }
-
-    return ecma_raise_type_error (message_p);
-  }
 
   /* 5. */
   if (!ECMA_GET_THIRD_BIT_FROM_POINTER_TAG (ext_func_obj_p->u.function.scope_cp))

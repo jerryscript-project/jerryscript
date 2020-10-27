@@ -318,7 +318,6 @@
   <test id="built-ins/TypedArrayConstructors/ctors-bigint/object-arg/custom-proto-access-throws.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors-bigint/object-arg/use-custom-proto-if-object.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors-bigint/typedarray-arg/custom-proto-access-throws.js"><reason></reason></test>
-  <test id="built-ins/TypedArrayConstructors/ctors-bigint/typedarray-arg/other-ctor-buffer-ctor-species-not-ctor-throws.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors/buffer-arg/byteoffset-is-negative-zero.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors/buffer-arg/custom-proto-access-throws.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors/buffer-arg/defined-negative-length.js"><reason></reason></test>
@@ -333,7 +332,6 @@
   <test id="built-ins/TypedArrayConstructors/ctors/object-arg/returns.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors/object-arg/use-custom-proto-if-object.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors/typedarray-arg/custom-proto-access-throws.js"><reason></reason></test>
-  <test id="built-ins/TypedArrayConstructors/ctors/typedarray-arg/other-ctor-buffer-ctor-species-not-ctor-throws.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors/typedarray-arg/use-custom-proto-if-object.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/from/BigInt/custom-ctor-returns-other-instance.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/from/BigInt/custom-ctor.js"><reason></reason></test>
@@ -368,7 +366,6 @@
   <test id="built-ins/TypedArrayConstructors/of/custom-ctor-returns-other-instance.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/of/custom-ctor.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/of/new-instance-using-custom-ctor.js"><reason></reason></test>
-  <test id="harness/isConstructor.js"><reason></reason></test>
   <test id="language/block-scope/syntax/redeclaration/async-function-name-redeclaration-attempt-with-async-function.js"><reason></reason></test>
   <test id="language/block-scope/syntax/redeclaration/async-function-name-redeclaration-attempt-with-function.js"><reason></reason></test>
   <test id="language/block-scope/syntax/redeclaration/async-function-name-redeclaration-attempt-with-generator.js"><reason></reason></test>
@@ -730,9 +727,7 @@
   <test id="language/statements/class/dstr/meth-static-ary-init-iter-no-close.js"><reason></reason></test>
   <test id="language/statements/class/dstr/meth-static-dflt-ary-init-iter-no-close.js"><reason></reason></test>
   <test id="language/statements/class/subclass/default-constructor-spread-override.js"><reason></reason></test>
-  <test id="language/statements/class/subclass/superclass-arrow-function.js"><reason></reason></test>
   <test id="language/statements/class/subclass/superclass-async-function.js"><reason></reason></test>
-  <test id="language/statements/class/subclass/superclass-generator-function.js"><reason></reason></test>
   <test id="language/statements/class/super/in-constructor-superproperty-evaluation.js"><reason></reason></test>
   <test id="language/statements/const/dstr/ary-init-iter-no-close.js"><reason></reason></test>
   <test id="language/statements/do-while/cptn-abrupt-empty.js"><reason></reason></test>
@@ -9176,7 +9171,6 @@
   <test id="language/statements/class/elements/same-line-async-gen-static-private-methods-with-fields.js"><reason></reason></test>
   <test id="language/statements/class/elements/same-line-async-gen-static-private-methods.js"><reason></reason></test>
   <test id="language/statements/class/elements/syntax/valid/grammar-static-private-async-gen-meth-prototype.js"><reason></reason></test>
-  <test id="language/statements/class/subclass/superclass-async-generator-function.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-from-sync-iterator-continuation-abrupt-completion-get-constructor.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-decl-dstr-array-elem-init-simple-no-strict.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-decl-dstr-array-elem-init-yield-ident-invalid.js"><reason></reason></test>

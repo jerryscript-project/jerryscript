@@ -695,16 +695,16 @@ class TestSuite(object):
         self.unmarked_default = unmarked_default
         self.print_handle = print_handle
         self.include_cache = {}
-        self.exclude_list = []
+        self.exclude_list_path = exclude_list_path
         self.logf = None
 
-        if exclude_list_path:
-            if os.path.exists(exclude_list_path):
-                self.exclude_list = xml.dom.minidom.parse(exclude_list_path)
-                self.exclude_list = self.exclude_list.getElementsByTagName("test")
-                self.exclude_list = [x.getAttribute("id") for x in self.exclude_list]
-            else:
-                report_error("Couldn't find excludelist '%s'" % exclude_list_path)
+    def _load_excludes(self):
+        if self.exclude_list_path and os.path.exists(self.exclude_list_path):
+            xml_document = xml.dom.minidom.parse(self.exclude_list_path)
+            xml_tests = xml_document.getElementsByTagName("test")
+            return {x.getAttribute("id") for x in xml_tests}
+
+        return set()
 
     def validate(self):
         if not path.exists(self.test_root):
@@ -742,6 +742,8 @@ class TestSuite(object):
         return self.include_cache[name]
 
     def enumerate_tests(self, tests, command_template):
+        exclude_list = self._load_excludes()
+
         logging.info("Listing tests in %s", self.test_root)
         cases = []
         for root, dirs, files in os.walk(self.test_root):
@@ -758,7 +760,7 @@ class TestSuite(object):
                 if self.should_run(rel_path, tests):
                     basename = path.basename(full_path)[:-3]
                     name = rel_path.split(path.sep)[:-1] + [basename]
-                    if rel_path in self.exclude_list:
+                    if rel_path in exclude_list:
                         print('Excluded: ' + rel_path)
                     else:
                         if not self.non_strict_only:

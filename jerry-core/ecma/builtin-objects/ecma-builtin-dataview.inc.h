@@ -26,7 +26,7 @@
 
 /* ECMA-262 v6, 23.1.2 */
 NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
-              3,
+              1,
               ECMA_PROPERTY_FLAG_CONFIGURABLE)
 
 /* ECMA-262 v6, 23.1 */

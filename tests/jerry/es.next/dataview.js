@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-/* ES2015 24.2.2.1.1 */
+/* ES11 24.3.2.1.1 */
 try {
   DataView ();
   assert (false);
@@ -21,7 +21,7 @@ try {
   assert (e instanceof TypeError);
 }
 
-/* ES2015 24.2.2.1.2 */
+/* ES11 24.3.2.1.2 (not object) */
 try {
   new DataView (5);
   assert (false);
@@ -29,7 +29,7 @@ try {
   assert (e instanceof TypeError);
 }
 
-/* ES2015 24.2.2.1.3 */
+/* ES11 24.3.2.1.2 (no [[ArrayBufferData]] internal slot) */
 try {
   new DataView ({});
   assert (false);
@@ -39,7 +39,23 @@ try {
 
 var buffer = new ArrayBuffer (16);
 
-/* ES2015 24.2.2.1.6 */
+/* ES11 24.3.2.1.3 (offset < 0)*/
+try {
+  new DataView (buffer, -1);
+  assert (false);
+} catch (e) {
+  assert (e instanceof RangeError);
+}
+
+/* ES11 24.3.2.1.3 (offset > 2^53) */
+try {
+  new DataView (buffer, Number.MAX_SAFE_INTEGER + 1);
+  assert (false);
+} catch (e) {
+  assert (e instanceof RangeError);
+}
+
+/* ES11 24.3.2.1.3 (ToInteger throws ReferenceError) */
 try {
   new DataView (buffer, { toString: function () { throw new ReferenceError ('foo') } });
   assert (false);
@@ -48,24 +64,8 @@ try {
   assert (e.message === 'foo');
 }
 
-/* ES2015 24.2.2.1.7 (numberOffset != offset)*/
-try {
-  new DataView (buffer, 1.5);
-  assert (false);
-} catch (e) {
-  assert (e instanceof RangeError);
-}
 
-
-/* ES2015 24.2.2.1.7 (offset < 0) */
-try {
-  new DataView (buffer, -1);
-  assert (false);
-} catch (e) {
-  assert (e instanceof RangeError);
-}
-
-/* ES2015 24.2.2.1.10 */
+/* ES11 24.3.2.1.6 */
 try {
   new DataView (buffer, 17);
   assert (false);
@@ -73,7 +73,7 @@ try {
   assert (e instanceof RangeError);
 }
 
-/* ES2015 24.2.2.1.12.b */
+/* ES11 24.3.2.1.8.a */
 try {
   new DataView (buffer, 0, { toString: function () { throw new ReferenceError ('bar') } });
   assert (false);
@@ -82,7 +82,7 @@ try {
   assert (e.message === 'bar');
 }
 
-/* ES2015 24.2.2.1.12.b */
+/* ES11 24.3.2.1.8.a */
 try {
   new DataView (buffer, 0, Infinity);
   assert (false);
@@ -90,7 +90,7 @@ try {
   assert (e instanceof RangeError);
 }
 
-/* ES2015 24.2.2.1.12.c */
+/* ES11 24.3.2.1.8.b */
 try {
   new DataView (buffer, 4, 13);
   assert (false);
@@ -98,11 +98,10 @@ try {
   assert (e instanceof RangeError);
 }
 
-/* Tests accessors: ES2015 24.2.2.1 - 24.2.2.3 */
-var accessorList = ['buffer', 'byteOffset', 'byteLength'];
+/* Tests accessors: ES11 24.3.4.{1, 2, 3}.2 */
+var accessorList = ['buffer', 'byteLength', 'byteOffset'];
 
 accessorList.forEach (function (prop) {
-  /* ES2015 24.2.4.{1, 2, 3}.{2, 3} */
   try {
     var obj = {};
     Object.setPrototypeOf (obj, DataView.prototype);
@@ -136,7 +135,7 @@ var setters = ['setInt8', 'setUint8', 'setInt16', 'setUint16', 'setInt32', 'setU
 var gettersSetters = getters.concat (setters);
 
 gettersSetters.forEach (function (propName) {
-  /* ES2015 24.2.1.{1, 2}.1 */
+  /* ES11 24.3.1.{1, 2}.1 */
   var routine = DataView.prototype[propName];
   try {
     DataView.prototype[propName].call (5);
@@ -145,7 +144,7 @@ gettersSetters.forEach (function (propName) {
     assert (e instanceof TypeError);
   }
 
-  /* ES2015 24.2.1.{1, 2}.2 */
+  /* ES11 24.3.1.{1, 2}.1 */
   try {
     DataView.prototype[propName].call ({});
     assert (false);
@@ -153,7 +152,7 @@ gettersSetters.forEach (function (propName) {
     assert (e instanceof TypeError);
   }
 
-  /* ES2015 24.2.1.{1, 2}.5 */
+  /* ES11 24.3.1.{1, 2}.3 (ToInteger throws ReferenceError) */
   try {
     var buffer = new ArrayBuffer (16);
     var view = new DataView (buffer)
@@ -167,14 +166,7 @@ gettersSetters.forEach (function (propName) {
   var buffer = new ArrayBuffer (16);
   var view = new DataView (buffer)
 
-  /* ES2015 24.2.1.{1, 2}.6 (numberIndex != getIndex) */
-  if (propName.indexOf("get") !== -1) {
-    assert(view[propName] (1.5) === 0);
-  } else {
-    assert(view[propName] (1.5) === undefined);
-  }
-
-  /* ES2015 24.2.1.{1, 2}.6 (getIndex < 0) */
+  /* ES11 24.3.1.{1, 2}.3 (getIndex < 0) */
   try {
     view[propName] (-1);
     assert (false);
@@ -182,7 +174,7 @@ gettersSetters.forEach (function (propName) {
     assert (e instanceof RangeError);
   }
 
-  /* ES2015 24.2.1.{1, 2}.13 */
+  /* ES11 24.3.1.1.10, 24.3.1.2.12 */
   try {
     view[propName] (20);
     assert (false);
@@ -254,26 +246,6 @@ var dtviewF = new DataView (arrayBufferOk, null, 1);
 assert (dtviewF.byteLength === 1);
 assert (dtviewF.byteOffset === 0);
 
-/* In ES6 the second argument is processed with ToNumber and ToInteger calls.
- * A RangeError is reported if the values returned by the operations are different.
- * The "undefined" value converted with ToNumber will return "NaN" and the ToInteger
- * operation will return "0". Thus creating a RangeError.
- *
- * After ES6 the second argument should be converted via ToIndex.
- * Providing "undefined" value for the ToIndex operation will return "0".
- * Thus there is no error generated.
- */
-try {
-  var dtviewF = new DataView (arrayBufferOk, undefined, 1);
-
-  /* TODO: enable these tests after the DataView is updated for newer standard and
-   *       remove the try-catch.
-   */
-  /*
-   * assert(dtviewF.byteLength === 1);
-   * assert(dtviewF.byteOffset === 0);
-   */
-  assert (false);
-} catch (ex) {
-  assert (ex instanceof RangeError);
-}
+var dtviewF = new DataView (arrayBufferOk, undefined, 1);
+assert(dtviewF.byteLength === 1);
+assert(dtviewF.byteOffset === 0);

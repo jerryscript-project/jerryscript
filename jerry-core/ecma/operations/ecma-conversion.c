@@ -1012,6 +1012,46 @@ ecma_op_to_length (ecma_value_t value, /**< ecma value */
 
 #if ENABLED (JERRY_ESNEXT)
 /**
+ * ToIndex operation.
+ *
+ * See also:
+ *          ECMA-262 v11, 7.1.22
+ *
+ * @return ECMA_VALUE_EMPTY if successful
+ *         conversion error otherwise
+ */
+ecma_value_t
+ecma_op_to_index (ecma_value_t value, /**< ecma value */
+                  ecma_number_t *index) /**< [out] ecma number */
+{
+  /* 1. */
+  if (ecma_is_value_undefined (value))
+  {
+    *index = 0;
+    return ECMA_VALUE_EMPTY;
+  }
+
+  /* 2.a */
+  ecma_number_t integer_index;
+  ecma_value_t index_value = ecma_op_to_integer (value, &integer_index);
+
+  if (ECMA_IS_VALUE_ERROR (index_value))
+  {
+    return index_value;
+  }
+
+  /* 2.b - 2.d */
+  if (integer_index < 0.0f || integer_index > ECMA_NUMBER_MAX_SAFE_INTEGER)
+  {
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid or out-of-range index"));
+  }
+
+  /* 3. */
+  *index = integer_index;
+  return ECMA_VALUE_EMPTY;
+} /* ecma_op_to_index */
+
+/**
  * CreateListFromArrayLike operation.
  * Different types are not handled yet.
  *

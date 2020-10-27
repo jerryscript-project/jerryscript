@@ -194,6 +194,8 @@ buffer = new ArrayBuffer (24);
 view1 = new DataView (buffer);
 view2 = new DataView (buffer, 4, 12);
 view3 = new DataView (buffer, 6, 18);
+view4 = new DataView (buffer);
+view5 = new DataView (buffer);
 
 view1.setUint8 (0, 255);
 validateResult(view1, 0, false, [-1, 255, -256, 65280, -16777216, 4278190080, -1.7014118346046924e+38, -5.486124068793689e+303]);
@@ -218,6 +220,18 @@ validateResult(view3, 4, false, [65, 65, 16648, 16648, 1091043328, 1091043328, 8
 validateResult(view3, 4, true, [65, 65, 2113, 2113, 2113, 2113, 2.9609436551183385e-42, 1.044e-320]);
 validateResult(view2, 4, false, [-48, 208, -12110, 53426, -793624312, 3501342984, -23924850688, -5.411000515087672e+80]);
 validateResult(view2, 4, true, [-48, 208, -19760, 45776, 138523344, 138523344, 5.828901796903399e-34, 6.84396254e-316]);
+
+view4.setBigInt64 (0, 2n);
+assert(view4.getBigInt64(0) === 2n);
+view4.setBigInt64 (1, -2n);
+assert(view4.getBigInt64(1) === -2n);
+assert(view4.getBigUint64(1) === 18446744073709551614n);
+
+view5.setBigUint64 (0, 2n);
+assert(view5.getBigUint64(0) === 2n);
+view5.setBigUint64 (1, -2n);
+assert(view5.getBigUint64(1) === 18446744073709551614n);
+assert(view5.getBigInt64(1) === -2n);
 
 /* Second and third arguments can be "undefined" and there should be no error. */
 var arrayBufferOk = new ArrayBuffer (12);

@@ -16,6 +16,7 @@
 #include "jcontext.h"
 #include "ecma-function-object.h"
 #include "ecma-arraybuffer-object.h"
+#include "ecma-bigint.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
 #include "ecma-gc.h"
@@ -264,18 +265,31 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
     return number_index_value;
   }
 
-  /* TODO: Add BigInt support for SetViewValue 4 - 5. */
-
-  /* SetViewValue 5. */
-  ecma_number_t value_to_set_number = 0;
+  /* SetViewValue 4 - 5. */
   if (!ecma_is_value_empty (value_to_set))
   {
-    ecma_value_t value;
-    value = ecma_op_to_number (value_to_set, &value_to_set_number);
-
-    if (ECMA_IS_VALUE_ERROR (value))
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+    if (ECMA_TYPEDARRAY_IS_BIGINT_TYPE (id))
     {
-      return value;
+      value_to_set = ecma_bigint_to_bigint (value_to_set, true);
+
+      if (ECMA_IS_VALUE_ERROR (value_to_set))
+      {
+        return value_to_set;
+      }
+    }
+    else
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+    {
+      ecma_number_t value_to_set_number;
+      ecma_value_t value = ecma_op_to_number (value_to_set, &value_to_set_number);
+
+      if (ECMA_IS_VALUE_ERROR (value))
+      {
+        return value;
+      }
+
+      value_to_set = ecma_make_number_value (value_to_set_number);
     }
   }
 
@@ -285,6 +299,7 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
   /* GetViewValue 5 - 6., SetViewValue 7 - 8. */
   if (ecma_arraybuffer_is_detached (buffer_p))
   {
+    ecma_free_value (value_to_set);
     return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
   }
 
@@ -300,6 +315,7 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
   /* GetViewValue 10., SetViewValue 12. */
   if (get_index + element_size > (ecma_number_t) view_size)
   {
+    ecma_free_value (value_to_set);
     return ecma_raise_range_error (ECMA_ERR_MSG ("Start offset is outside the bounds of the buffer."));
   }
 
@@ -319,7 +335,6 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
   }
 
   /* SetViewValue 14. */
-  value_to_set = ecma_make_number_value (value_to_set_number);
   ecma_value_t set_element = ecma_set_typedarray_element (block_p, value_to_set, id);
   ecma_free_value (value_to_set);
 

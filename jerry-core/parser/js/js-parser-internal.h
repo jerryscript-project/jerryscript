@@ -110,12 +110,13 @@ typedef enum
   PARSER_PATTERN_BINDING = (1u << 0),          /**< parse BindingPattern */
   PARSER_PATTERN_TARGET_ON_STACK = (1u << 1),  /**< assignment target is the topmost element on the stack */
   PARSER_PATTERN_TARGET_DEFAULT = (1u << 2),   /**< perform default value comparison for assignment target */
-  PARSER_PATTERN_NESTED_PATTERN = (1u << 3),   /**< parse patter inside a pattern */
+  PARSER_PATTERN_NESTED_PATTERN = (1u << 3),   /**< parse pattern inside a pattern */
   PARSER_PATTERN_LET = (1u << 4),              /**< pattern is a let declaration */
   PARSER_PATTERN_CONST = (1u << 5),            /**< pattern is a const declaration */
   PARSER_PATTERN_LOCAL = (1u << 6),            /**< pattern is a local (catch parameter) declaration */
-  PARSER_PATTERN_REST_ELEMENT = (1u << 7),     /**< parse rest array initializer */
-  PARSER_PATTERN_ARGUMENTS = (1u << 8),        /**< parse arguments binding */
+  PARSER_PATTERN_REST_ELEMENT = (1u << 7),     /**< parse rest array / object element */
+  PARSER_PATTERN_HAS_REST_ELEMENT = (1u << 8), /**< object literal rest element will be present */
+  PARSER_PATTERN_ARGUMENTS = (1u << 9),        /**< parse arguments binding */
 } parser_pattern_flags_t;
 
 /**
@@ -668,6 +669,7 @@ void parser_stack_free (parser_context_t *context_p);
 void parser_stack_push_uint8 (parser_context_t *context_p, uint8_t uint8_value);
 void parser_stack_pop_uint8 (parser_context_t *context_p);
 void parser_stack_change_last_uint8 (parser_context_t *context_p, uint8_t new_value);
+uint8_t *parser_stack_get_prev_uint8 (parser_context_t *context_p);
 void parser_stack_push_uint16 (parser_context_t *context_p, uint16_t uint16_value);
 uint16_t parser_stack_pop_uint16 (parser_context_t *context_p);
 void parser_stack_push (parser_context_t *context_p, const void *data_p, uint32_t length);

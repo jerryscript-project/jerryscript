@@ -32,9 +32,6 @@ function mustThrow (str) {
 
 checkSyntax ("var {a}");
 checkSyntax ("var {a, o.a}");
-checkSyntax ("var {a, ...b}");
-checkSyntax ("var {a, ...b} = 4");
-checkSyntax ("var {a, ...[b] = 4}");
 checkSyntax ("var {a,,} = 4");
 checkSyntax ("var {a :} = 4");
 checkSyntax ("var {a : ,} = 4");

@@ -3334,7 +3334,7 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
       }
       case LIT_CHAR_DOT:
       {
-        if (ident_opts != LEXER_OBJ_IDENT_NO_OPTS
+        if ((ident_opts & ((uint32_t) ~LEXER_OBJ_IDENT_OBJECT_PATTERN))
             || context_p->source_p + 2 >= context_p->source_end_p
             || context_p->source_p[1] != LIT_CHAR_DOT
             || context_p->source_p[2] != LIT_CHAR_DOT)

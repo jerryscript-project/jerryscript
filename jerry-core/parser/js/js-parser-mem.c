@@ -453,6 +453,26 @@ parser_stack_change_last_uint8 (parser_context_t *context_p, /**< context */
 } /* parser_stack_change_last_uint8 */
 
 /**
+ * Get the uint8 value before the top of the stack.
+ *
+ * Pointer to the uint8 value
+ */
+uint8_t *
+parser_stack_get_prev_uint8 (parser_context_t *context_p) /**< context */
+{
+  parser_mem_page_t *page_p = context_p->stack.first_p;
+
+  JERRY_ASSERT (page_p != NULL && (context_p->stack.last_position >= 2 || page_p->next_p != NULL));
+
+  if (context_p->stack.last_position >= 2)
+  {
+    return page_p->bytes + (context_p->stack.last_position - 2);
+  }
+
+  return page_p->next_p->bytes + (PARSER_STACK_PAGE_SIZE - 1);
+} /* parser_stack_get_prev_uint8 */
+
+/**
  * Pushes an uint16_t value onto the stack.
  */
 void

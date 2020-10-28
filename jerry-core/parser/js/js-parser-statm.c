@@ -1430,13 +1430,21 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
       case LEXER_LEFT_SQUARE:
       {
         if (context_p->next_scanner_info_p->source_p == context_p->source_p
-            && context_p->next_scanner_info_p->type == SCANNER_TYPE_FOR_PATTERN)
+            && context_p->next_scanner_info_p->type == SCANNER_TYPE_LITERAL_FLAGS
+            && (context_p->next_scanner_info_p->u8_arg & SCANNER_LITERAL_DESTRUCTURING_FOR))
         {
           parser_emit_cbc_ext (context_p, is_for_in ? CBC_EXT_FOR_IN_GET_NEXT
                                                     : CBC_EXT_FOR_OF_GET_NEXT);
 
+          uint32_t flags = PARSER_PATTERN_TARGET_ON_STACK;
+
+          if (context_p->next_scanner_info_p->u8_arg & SCANNER_LITERAL_OBJECT_HAS_REST)
+          {
+            flags |= PARSER_PATTERN_HAS_REST_ELEMENT;
+          }
+
           scanner_release_next (context_p, sizeof (scanner_info_t));
-          parser_parse_initializer (context_p, PARSER_PATTERN_TARGET_ON_STACK);
+          parser_parse_initializer (context_p, flags);
           /* Pop the value returned by GET_NEXT. */
           parser_emit_cbc (context_p, CBC_POP);
           break;

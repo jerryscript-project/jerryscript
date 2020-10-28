@@ -601,10 +601,7 @@ opfunc_append_array (ecma_value_t *stack_top_p, /**< current stack top */
       {
         filled_holes++;
 
-        if (ecma_is_value_object (stack_top_p[i]))
-        {
-          ecma_deref_object (ecma_get_object_from_value (stack_top_p[i]));
-        }
+        ecma_deref_if_object (stack_top_p[i]);
       }
     }
 
@@ -632,16 +629,10 @@ opfunc_append_array (ecma_value_t *stack_top_p, /**< current stack top */
 
         ecma_deref_ecma_string (index_str_p);
         prop_value_p->value = stack_top_p[i];
-
-        if (ecma_is_value_object (stack_top_p[i]))
-        {
-          ecma_free_value (stack_top_p[i]);
-        }
-
+        ecma_deref_if_object (stack_top_p[i]);
       }
-
-      ext_array_obj_p->u.array.length = old_length + values_length;
     }
+    ext_array_obj_p->u.array.length = old_length + values_length;
   }
 
   return ECMA_VALUE_EMPTY;
@@ -1687,6 +1678,137 @@ opfunc_assign_super_reference (ecma_value_t **vm_stack_top_p, /**< vm stack top 
 
   return result;
 } /* opfunc_assign_super_reference */
+
+/**
+ * Copy data properties of an object
+ *
+ * @return ECMA_VALUE_ERROR - if the operation fails
+ *         ECMA_VALUE_EMPTY - otherwise
+ */
+ecma_value_t
+opfunc_copy_data_properties (ecma_value_t target_object, /**< target object */
+                             ecma_value_t source_object, /**< source object */
+                             ecma_value_t filter_array) /**< filter array */
+{
+  bool source_to_object = false;
+
+  if (!ecma_is_value_object (source_object))
+  {
+    source_object = ecma_op_to_object (source_object);
+
+    if (ECMA_IS_VALUE_ERROR (source_object))
+    {
+      return source_object;
+    }
+
+    source_to_object = true;
+  }
+
+  ecma_object_t *source_object_p = ecma_get_object_from_value (source_object);
+  ecma_collection_t *names_p = ecma_op_object_own_property_keys (source_object_p);
+
+#if ENABLED (JERRY_BUILTIN_PROXY)
+  if (names_p == NULL)
+  {
+    JERRY_ASSERT (!source_to_object);
+    return ECMA_VALUE_ERROR;
+  }
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+
+  ecma_object_t *target_object_p = ecma_get_object_from_value (target_object);
+  ecma_value_t *buffer_p = names_p->buffer_p;
+  ecma_value_t *buffer_end_p = buffer_p + names_p->item_count;
+  ecma_value_t *filter_start_p = NULL;
+  ecma_value_t *filter_end_p = NULL;
+  ecma_value_t result = ECMA_VALUE_EMPTY;
+
+  if (filter_array != ECMA_VALUE_UNDEFINED)
+  {
+    ecma_object_t *filter_array_p = ecma_get_object_from_value (filter_array);
+
+    JERRY_ASSERT (ecma_get_object_type (filter_array_p) == ECMA_OBJECT_TYPE_ARRAY);
+    JERRY_ASSERT (ecma_op_object_is_fast_array (filter_array_p));
+
+    if (filter_array_p->u1.property_list_cp != JMEM_CP_NULL)
+    {
+      filter_start_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, filter_array_p->u1.property_list_cp);
+      filter_end_p = filter_start_p + ((ecma_extended_object_t *) filter_array_p)->u.array.length;
+    }
+  }
+
+  while (buffer_p < buffer_end_p)
+  {
+    ecma_string_t *property_name_p = ecma_get_prop_name_from_value (*buffer_p++);
+
+    if (filter_start_p != NULL)
+    {
+      ecma_value_t *filter_p = filter_start_p;
+
+      do
+      {
+        if (ecma_compare_ecma_strings (property_name_p, ecma_get_prop_name_from_value (*filter_p)))
+        {
+          break;
+        }
+      }
+      while (++filter_p < filter_end_p);
+
+      if (filter_p != filter_end_p)
+      {
+        continue;
+      }
+    }
+
+    ecma_property_descriptor_t descriptor;
+    result = ecma_op_object_get_own_property_descriptor (source_object_p, property_name_p, &descriptor);
+
+    if (ECMA_IS_VALUE_ERROR (result))
+    {
+      break;
+    }
+
+    if (result == ECMA_VALUE_FALSE)
+    {
+      continue;
+    }
+
+    if (!(descriptor.flags & ECMA_PROP_IS_ENUMERABLE))
+    {
+      ecma_free_property_descriptor (&descriptor);
+      continue;
+    }
+
+    if ((descriptor.flags & ECMA_PROP_IS_VALUE_DEFINED) && !ECMA_OBJECT_IS_PROXY (source_object_p))
+    {
+      result = descriptor.value;
+    }
+    else
+    {
+      ecma_free_property_descriptor (&descriptor);
+
+      result = ecma_op_object_get (source_object_p, property_name_p);
+
+      if (ECMA_IS_VALUE_ERROR (result))
+      {
+        break;
+      }
+    }
+
+    opfunc_set_data_property (target_object_p, property_name_p, result);
+    ecma_free_value (result);
+
+    result = ECMA_VALUE_EMPTY;
+  }
+
+  if (JERRY_UNLIKELY (source_to_object))
+  {
+    ecma_deref_object (source_object_p);
+  }
+
+  ecma_collection_free (names_p);
+  return result;
+} /* opfunc_copy_data_properties */
+
 #endif /* ENABLED (JERRY_ESNEXT) */
 
 /**

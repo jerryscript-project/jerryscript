@@ -1887,61 +1887,21 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_COPY_DATA_PROPERTIES:
         {
-          result = *(--stack_top_p);
+          left_value = *(--stack_top_p);
 
-          if (ecma_is_value_undefined (result) || ecma_is_value_null (result))
+          if (ecma_is_value_undefined (left_value) || ecma_is_value_null (left_value))
           {
             continue;
           }
 
-          if (!ecma_is_value_object (result))
+          result = opfunc_copy_data_properties (stack_top_p[-1], left_value, ECMA_VALUE_UNDEFINED);
+
+          if (ECMA_IS_VALUE_ERROR (result))
           {
-            ecma_value_t value = result;
-            result = ecma_op_to_object (value);
-            ecma_free_value (value);
-
-            if (ECMA_IS_VALUE_ERROR (result))
-            {
-              goto error;
-            }
-          }
-
-          ecma_object_t *object_p = ecma_get_object_from_value (result);
-          ecma_collection_t *names_p = ecma_op_object_get_enumerable_property_names (object_p,
-                                                                                     ECMA_ENUMERABLE_PROPERTY_KEYS);
-
-#if ENABLED (JERRY_BUILTIN_PROXY)
-          if (names_p == NULL)
-          {
-            ecma_deref_object (object_p);
-            result = ECMA_VALUE_ERROR;
             goto error;
           }
-#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
-          ecma_object_t *target_object_p = ecma_get_object_from_value (stack_top_p[-1]);
-          ecma_value_t *buffer_p = names_p->buffer_p;
-          ecma_value_t *buffer_end_p = buffer_p + names_p->item_count;
-
-          while (buffer_p < buffer_end_p)
-          {
-            ecma_string_t *property_name_p = ecma_get_string_from_value (*buffer_p++);
-            result = ecma_op_object_get (object_p, property_name_p);
-
-            if (ECMA_IS_VALUE_ERROR (result))
-            {
-              ecma_collection_free (names_p);
-              ecma_deref_object (object_p);
-              goto error;
-            }
-
-            opfunc_set_data_property (target_object_p, property_name_p, result);
-            ecma_free_value (result);
-          }
-
-          ecma_collection_free (names_p);
-          ecma_deref_object (object_p);
-          continue;
+          goto free_left_value;
         }
         case VM_OC_SET_COMPUTED_PROPERTY:
         {
@@ -2437,6 +2397,60 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           *stack_top_p++ = ecma_make_object_value (array_p);
           continue;
+        }
+        case VM_OC_INITIALIZER_PUSH_LIST:
+        {
+          stack_top_p++;
+          stack_top_p[-1] = stack_top_p[-2];
+          stack_top_p[-2] = ecma_make_object_value (ecma_op_new_array_object (0));
+          continue;
+        }
+        case VM_OC_INITIALIZER_PUSH_REST:
+        {
+          if (!ecma_op_require_object_coercible (stack_top_p[-1]))
+          {
+            result = ECMA_VALUE_ERROR;
+            goto error;
+          }
+
+          ecma_object_t *prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
+          ecma_object_t *result_object_p = ecma_create_object (prototype_p, 0, ECMA_OBJECT_TYPE_GENERAL);
+
+          left_value = ecma_make_object_value (result_object_p);
+          result = opfunc_copy_data_properties (left_value, stack_top_p[-1], stack_top_p[-2]);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          ecma_free_value (stack_top_p[-2]);
+          stack_top_p[-2] = stack_top_p[-1];
+          stack_top_p[-1] = left_value;
+          continue;
+        }
+        case VM_OC_INITIALIZER_PUSH_NAME:
+        {
+          if (JERRY_UNLIKELY (!ecma_is_value_prop_name (left_value)))
+          {
+            ecma_string_t *property_key = ecma_op_to_property_key (left_value);
+
+            if (property_key == NULL)
+            {
+              result = ECMA_VALUE_ERROR;
+              goto error;
+            }
+
+            ecma_free_value (left_value);
+            left_value = ecma_make_string_value (property_key);
+          }
+
+          ecma_object_t *array_obj_p = ecma_get_object_from_value (stack_top_p[-2]);
+          JERRY_ASSERT (ecma_get_object_type (array_obj_p) == ECMA_OBJECT_TYPE_ARRAY);
+
+          ecma_extended_object_t *ext_array_obj_p = (ecma_extended_object_t *) array_obj_p;
+          ecma_fast_array_set_property (array_obj_p, ext_array_obj_p->u.array.length, left_value);
+          /* FALLTHRU */
         }
         case VM_OC_INITIALIZER_PUSH_PROP:
         {

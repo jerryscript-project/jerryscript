@@ -131,6 +131,7 @@ ecma_value_t
 opfunc_append_array (ecma_value_t *stack_top_p, uint16_t values_length);
 
 #if ENABLED (JERRY_ESNEXT)
+
 vm_executable_object_t *
 opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p, vm_create_executable_object_type_t type);
 
@@ -179,6 +180,10 @@ opfunc_form_super_reference (ecma_value_t **vm_stack_top_p, vm_frame_ctx_t *fram
 
 ecma_value_t
 opfunc_assign_super_reference (ecma_value_t **vm_stack_top_p, vm_frame_ctx_t *frame_ctx_p, uint32_t opcode_data);
+
+ecma_value_t
+opfunc_copy_data_properties (ecma_value_t target_object, ecma_value_t source_object, ecma_value_t filter_array);
+
 #endif /* ENABLED (JERRY_ESNEXT) */
 
 /**

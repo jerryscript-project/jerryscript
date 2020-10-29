@@ -46,13 +46,12 @@ typedef enum
   SCANNER_TYPE_CASE, /**< case statement */
 #if ENABLED (JERRY_ESNEXT)
   SCANNER_TYPE_INITIALIZER, /**< destructuring binding or assignment pattern with initializer */
-  SCANNER_TYPE_FOR_PATTERN, /**< assignment pattern for for-in or for-of interators */
+  SCANNER_TYPE_LITERAL_FLAGS, /**< object or array literal with non-zero flags (stored in u8_arg) */
   SCANNER_TYPE_CLASS_CONSTRUCTOR, /**< class constructor */
   SCANNER_TYPE_CLASS_FIELD_INITIALIZER_END, /**< class field initializer end */
   SCANNER_TYPE_LET_EXPRESSION, /**< let expression */
   SCANNER_TYPE_ERR_REDECLARED, /**< syntax error: a variable is redeclared */
   SCANNER_TYPE_ERR_ASYNC_FUNCTION, /**< an invalid async function follows */
-  SCANNER_TYPE_OBJECT_LITERAL_WITH_SUPER, /**< object literal with inner super reference */
   SCANNER_TYPE_EXPORT_MODULE_SPECIFIER, /**< export with module specifier */
 #endif /* ENABLED (JERRY_ESNEXT) */
 } scanner_info_type_t;
@@ -260,6 +259,23 @@ typedef enum
 #endif /* ENABLED (JERRY_ESNEXT) */
   SCANNER_FUNCTION_IS_STRICT = (1 << 5), /**< function is strict */
 } scanner_function_flags_t;
+
+#if ENABLED (JERRY_ESNEXT)
+
+/**
+ * Object or array literal constants for u8_arg flags in scanner_info_t.
+ */
+typedef enum
+{
+  /* These flags affects both array and object literals */
+  SCANNER_LITERAL_DESTRUCTURING_FOR = (1 << 0), /**< for loop with destructuring pattern */
+  SCANNER_LITERAL_NO_DESTRUCTURING = (1 << 1), /**< this literal cannot be a destructuring pattern */
+  /* These flags affects only object literals */
+  SCANNER_LITERAL_OBJECT_HAS_SUPER = (1 << 2), /**< super keyword is used in the object literal */
+  SCANNER_LITERAL_OBJECT_HAS_REST = (1 << 3), /**< the object literal has a member prefixed with three dots */
+} scanner_literal_flags_t;
+
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Option bits for scanner_create_variables function.

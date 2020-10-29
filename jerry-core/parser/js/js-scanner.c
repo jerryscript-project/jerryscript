@@ -147,6 +147,7 @@ scanner_scan_primary_expression (parser_context_t *context_p, /**< context */
     {
 #if ENABLED (JERRY_ESNEXT)
       scanner_push_destructuring_pattern (context_p, scanner_context_p, SCANNER_BINDING_NONE, false);
+      parser_stack_push_uint8 (context_p, 0);
 #endif /* ENABLED (JERRY_ESNEXT) */
 
       parser_stack_push_uint8 (context_p, SCAN_STACK_OBJECT_LITERAL);
@@ -452,7 +453,6 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
 
         return SCAN_NEXT_TOKEN;
       }
-      case SCAN_STACK_OBJECT_LITERAL_WITH_SUPER:
 #endif /* ENABLED (JERRY_ESNEXT) */
       case SCAN_STACK_OBJECT_LITERAL:
       {
@@ -566,7 +566,6 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
 
       JERRY_ASSERT (context_p->stack_top_uint8 == SCAN_STACK_ARRAY_LITERAL
                     || context_p->stack_top_uint8 == SCAN_STACK_OBJECT_LITERAL
-                    || context_p->stack_top_uint8 == SCAN_STACK_OBJECT_LITERAL_WITH_SUPER
                     || context_p->stack_top_uint8 == SCAN_STACK_LET
                     || context_p->stack_top_uint8 == SCAN_STACK_CONST
                     || context_p->stack_top_uint8 == SCAN_STACK_FOR_LET_START
@@ -598,7 +597,6 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
 
       JERRY_ASSERT (context_p->stack_top_uint8 == SCAN_STACK_ARRAY_LITERAL
                     || context_p->stack_top_uint8 == SCAN_STACK_OBJECT_LITERAL
-                    || context_p->stack_top_uint8 == SCAN_STACK_OBJECT_LITERAL_WITH_SUPER
                     || context_p->stack_top_uint8 == SCAN_STACK_LET
                     || context_p->stack_top_uint8 == SCAN_STACK_CONST
                     || context_p->stack_top_uint8 == SCAN_STACK_FOR_LET_START
@@ -607,9 +605,7 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
                     || context_p->stack_top_uint8 == SCAN_STACK_ARROW_ARGUMENTS);
 
       JERRY_ASSERT (SCANNER_NEEDS_BINDING_LIST (scanner_context_p->binding_type)
-                    || (stack_top != SCAN_STACK_ARRAY_LITERAL
-                        && stack_top != SCAN_STACK_OBJECT_LITERAL
-                        && stack_top != SCAN_STACK_OBJECT_LITERAL_WITH_SUPER));
+                    || (stack_top != SCAN_STACK_ARRAY_LITERAL && stack_top != SCAN_STACK_OBJECT_LITERAL));
 
       if (binding_literal.literal_p->type & SCANNER_LITERAL_IS_USED)
       {
@@ -838,29 +834,45 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
 #if ENABLED (JERRY_ESNEXT)
     case SCAN_STACK_ARRAY_LITERAL:
     case SCAN_STACK_OBJECT_LITERAL:
-    case SCAN_STACK_OBJECT_LITERAL_WITH_SUPER:
     {
-      bool is_array = stack_top == SCAN_STACK_ARRAY_LITERAL;
-
-      if ((is_array && (type != LEXER_RIGHT_SQUARE))
-          || (!is_array && (type != LEXER_RIGHT_BRACE)))
+      if ((stack_top == SCAN_STACK_ARRAY_LITERAL && type != LEXER_RIGHT_SQUARE)
+          || (stack_top == SCAN_STACK_OBJECT_LITERAL && type != LEXER_RIGHT_BRACE))
       {
         break;
       }
 
       scanner_source_start_t source_start;
       uint8_t binding_type = scanner_context_p->binding_type;
+      uint8_t object_literal_flags = 0;
 
       parser_stack_pop_uint8 (context_p);
+
+      if (stack_top == SCAN_STACK_OBJECT_LITERAL)
+      {
+        object_literal_flags = context_p->stack_top_uint8;
+        parser_stack_pop_uint8 (context_p);
+      }
+
       scanner_context_p->binding_type = context_p->stack_top_uint8;
       parser_stack_pop_uint8 (context_p);
       parser_stack_pop (context_p, &source_start, sizeof (scanner_source_start_t));
 
       lexer_next_token (context_p);
 
-      if (binding_type == SCANNER_BINDING_CATCH && context_p->stack_top_uint8 == SCAN_STACK_CATCH_STATEMENT)
+      stack_top = (scan_stack_modes_t) context_p->stack_top_uint8;
+
+      if (binding_type == SCANNER_BINDING_CATCH && stack_top == SCAN_STACK_CATCH_STATEMENT)
       {
         scanner_pop_binding_list (scanner_context_p);
+
+#if ENABLED (JERRY_ESNEXT)
+        if (object_literal_flags != 0)
+        {
+          scanner_info_t *info_p = scanner_insert_info (context_p, source_start.source_p, sizeof (scanner_info_t));
+          info_p->type = SCANNER_TYPE_LITERAL_FLAGS;
+          info_p->u8_arg = object_literal_flags;
+        }
+#endif /* ENABLED (JERRY_ESNEXT) */
 
         if (context_p->token.type != LEXER_RIGHT_PAREN)
         {
@@ -878,7 +890,7 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
         return SCAN_NEXT_TOKEN;
       }
 
-      if (context_p->stack_top_uint8 == SCAN_STACK_FOR_START_PATTERN)
+      if (stack_top == SCAN_STACK_FOR_START_PATTERN)
       {
         JERRY_ASSERT (binding_type == SCANNER_BINDING_NONE);
 
@@ -887,7 +899,8 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
         if (context_p->token.type == LEXER_KEYW_IN || SCANNER_IDENTIFIER_IS_OF ())
         {
           scanner_info_t *info_p = scanner_insert_info (context_p, source_start.source_p, sizeof (scanner_info_t));
-          info_p->type = SCANNER_TYPE_FOR_PATTERN;
+          info_p->type = SCANNER_TYPE_LITERAL_FLAGS;
+          info_p->u8_arg = object_literal_flags | SCANNER_LITERAL_DESTRUCTURING_FOR;
           return SCAN_KEEP_TOKEN;
         }
       }
@@ -900,12 +913,24 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
         }
 
 #if ENABLED (JERRY_ESNEXT)
-        if (stack_top == SCAN_STACK_OBJECT_LITERAL_WITH_SUPER)
+        if ((stack_top == SCAN_STACK_ARRAY_LITERAL || stack_top == SCAN_STACK_OBJECT_LITERAL)
+            && (binding_type == SCANNER_BINDING_NONE || binding_type == SCANNER_BINDING_ARROW_ARG)
+            && context_p->token.type != LEXER_EOS
+            && context_p->token.type != LEXER_COMMA
+            && context_p->token.type != LEXER_RIGHT_BRACE
+            && context_p->token.type != LEXER_RIGHT_SQUARE)
+        {
+          object_literal_flags |= SCANNER_LITERAL_NO_DESTRUCTURING;
+        }
+
+        if (object_literal_flags != 0)
         {
           scanner_info_t *info_p = scanner_insert_info (context_p, source_start.source_p, sizeof (scanner_info_t));
-          info_p->type = SCANNER_TYPE_OBJECT_LITERAL_WITH_SUPER;
+          info_p->type = SCANNER_TYPE_LITERAL_FLAGS;
+          info_p->u8_arg = object_literal_flags;
         }
 #endif /* ENABLED (JERRY_ESNEXT) */
+
         scanner_context_p->mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
         return SCAN_KEEP_TOKEN;
       }
@@ -915,6 +940,7 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
                                                                          source_start.source_p,
                                                                          sizeof (scanner_location_info_t));
       location_info_p->info.type = SCANNER_TYPE_INITIALIZER;
+      location_info_p->info.u8_arg = object_literal_flags;
       scanner_get_location (&location_info_p->location, context_p);
       scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
 
@@ -933,6 +959,17 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
       return SCAN_NEXT_TOKEN;
     }
 #else /* !ENABLED (JERRY_ESNEXT) */
+    case SCAN_STACK_OBJECT_LITERAL:
+    {
+      if (type != LEXER_RIGHT_BRACE)
+      {
+        break;
+      }
+
+      scanner_context_p->mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
+      parser_stack_pop_uint8 (context_p);
+      return SCAN_NEXT_TOKEN;
+    }
     case SCAN_STACK_ARRAY_LITERAL:
 #endif /* ENABLED (JERRY_ESNEXT) */
     case SCAN_STACK_PROPERTY_ACCESSOR:
@@ -946,19 +983,6 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
       parser_stack_pop_uint8 (context_p);
       return SCAN_NEXT_TOKEN;
     }
-#if !ENABLED (JERRY_ESNEXT)
-    case SCAN_STACK_OBJECT_LITERAL:
-    {
-      if (type != LEXER_RIGHT_BRACE)
-      {
-        break;
-      }
-
-      scanner_context_p->mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
-      parser_stack_pop_uint8 (context_p);
-      return SCAN_NEXT_TOKEN;
-    }
-#endif /* !ENABLED (JERRY_ESNEXT) */
 #if ENABLED (JERRY_ESNEXT)
     case SCAN_STACK_COMPUTED_PROPERTY:
     {
@@ -1004,8 +1028,7 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
         return SCAN_KEEP_TOKEN;
       }
 
-      JERRY_ASSERT (stack_top == SCAN_STACK_OBJECT_LITERAL
-                    || stack_top == SCAN_STACK_OBJECT_LITERAL_WITH_SUPER);
+      JERRY_ASSERT (stack_top == SCAN_STACK_OBJECT_LITERAL);
 
       if (context_p->token.type == LEXER_LEFT_PAREN)
       {
@@ -1042,7 +1065,6 @@ scanner_scan_primary_expression_end (parser_context_t *context_p, /**< context *
       parser_stack_pop_uint8 (context_p);
 
       JERRY_ASSERT (context_p->stack_top_uint8 == SCAN_STACK_OBJECT_LITERAL
-                    || context_p->stack_top_uint8 == SCAN_STACK_OBJECT_LITERAL_WITH_SUPER
                     || context_p->stack_top_uint8 == SCAN_STACK_FUNCTION_PROPERTY);
 
       uint16_t status_flags = (uint16_t) (SCANNER_LITERAL_POOL_FUNCTION
@@ -2149,7 +2171,7 @@ scanner_scan_statement_end (parser_context_t *context_p, /**< context */
 
         if (has_super_reference && context_p->stack_top_uint8 == SCAN_STACK_OBJECT_LITERAL)
         {
-          parser_stack_change_last_uint8 (context_p, SCAN_STACK_OBJECT_LITERAL_WITH_SUPER);
+          *parser_stack_get_prev_uint8 (context_p) |= SCANNER_LITERAL_OBJECT_HAS_SUPER;
         }
 #else /* ENABLED (JERRY_ESNEXT) */
         JERRY_ASSERT (context_p->stack_top_uint8 == SCAN_STACK_OBJECT_LITERAL);
@@ -2367,6 +2389,7 @@ scanner_scan_statement_end (parser_context_t *context_p, /**< context */
             return SCAN_NEXT_TOKEN;
           }
 
+          parser_stack_push_uint8 (context_p, 0);
           parser_stack_push_uint8 (context_p, SCAN_STACK_OBJECT_LITERAL);
           scanner_context_p->mode = SCAN_MODE_PROPERTY_NAME;
           return SCAN_KEEP_TOKEN;
@@ -2792,6 +2815,7 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
               break;
             }
 
+            parser_stack_push_uint8 (context_p, 0);
             parser_stack_push_uint8 (context_p, SCAN_STACK_OBJECT_LITERAL);
             scanner_context.mode = SCAN_MODE_PROPERTY_NAME;
             continue;
@@ -2998,6 +3022,7 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
                 break;
               }
 
+              parser_stack_push_uint8 (context_p, 0);
               parser_stack_push_uint8 (context_p, SCAN_STACK_OBJECT_LITERAL);
               scanner_context.mode = SCAN_MODE_PROPERTY_NAME;
               continue;
@@ -3092,12 +3117,7 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
         }
         case SCAN_MODE_PROPERTY_NAME:
         {
-#if ENABLED (JERRY_ESNEXT)
-          JERRY_ASSERT (stack_top == SCAN_STACK_OBJECT_LITERAL
-                        || stack_top == SCAN_STACK_OBJECT_LITERAL_WITH_SUPER);
-#else /* !ENABLED (JERRY_ESNEXT) */
           JERRY_ASSERT (stack_top == SCAN_STACK_OBJECT_LITERAL);
-#endif /* ENABLED (JERRY_ESNEXT) */
 
           if (lexer_scan_identifier (context_p))
           {
@@ -3114,6 +3134,7 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
 
           if (context_p->token.type == LEXER_THREE_DOTS)
           {
+            *parser_stack_get_prev_uint8 (context_p) |= SCANNER_LITERAL_OBJECT_HAS_REST;
             scanner_context.mode = SCAN_MODE_PRIMARY_EXPRESSION;
 
             if (scanner_context.binding_type != SCANNER_BINDING_NONE)
@@ -3281,6 +3302,7 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
               break;
             }
 
+            parser_stack_push_uint8 (context_p, 0);
             parser_stack_push_uint8 (context_p, SCAN_STACK_OBJECT_LITERAL);
             scanner_context.mode = SCAN_MODE_PROPERTY_NAME;
             continue;
@@ -3729,15 +3751,13 @@ scan_completed:
 #if ENABLED (JERRY_ESNEXT)
         case SCANNER_TYPE_INITIALIZER:
         {
-          name_p = "INITIALIZER";
-          print_location = true;
-          break;
-        }
-        case SCANNER_TYPE_FOR_PATTERN:
-        {
-          JERRY_DEBUG_MSG ("  SCANNER_TYPE_FOR_PATTERN: source:%d\n",
-                           (int) (info_p->source_p - source_start_p));
-          print_location = false;
+          scanner_location_info_t *location_info_p = (scanner_location_info_t *) info_p;
+          JERRY_DEBUG_MSG ("  INITIALIZER: flags: 0x%x source:%d location:%d[%d:%d]\n",
+                           (int) info_p->u8_arg,
+                           (int) (location_info_p->info.source_p - source_start_p),
+                           (int) (location_info_p->location.source_p - source_start_p),
+                           (int) location_info_p->location.line,
+                           (int) location_info_p->location.column);
           break;
         }
         case SCANNER_TYPE_CLASS_CONSTRUCTOR:
@@ -3771,9 +3791,10 @@ scan_completed:
                            (int) (info_p->source_p - source_start_p));
           break;
         }
-        case SCANNER_TYPE_OBJECT_LITERAL_WITH_SUPER:
+        case SCANNER_TYPE_LITERAL_FLAGS:
         {
-          JERRY_DEBUG_MSG ("  OBJECT_LITERAL_WITH_SUPER: source:%d\n",
+          JERRY_DEBUG_MSG ("  SCANNER_TYPE_LITERAL_FLAGS: flags: 0x%x source:%d\n",
+                           (int) info_p->u8_arg,
                            (int) (info_p->source_p - source_start_p));
           print_location = false;
           break;

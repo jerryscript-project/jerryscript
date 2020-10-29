@@ -245,6 +245,9 @@ scanner_check_arrow_arg (parser_context_t *context_p, /**< context */
 
       if (context_p->token.type == LEXER_LEFT_BRACE)
       {
+#if ENABLED (JERRY_ESNEXT)
+        parser_stack_push_uint8 (context_p, 0);
+#endif /* ENABLED (JERRY_ESNEXT) */
         parser_stack_push_uint8 (context_p, SCAN_STACK_OBJECT_LITERAL);
         scanner_context_p->mode = SCAN_MODE_PROPERTY_NAME;
         return;

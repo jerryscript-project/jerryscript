@@ -1884,22 +1884,37 @@ parser_parse_function_arguments (parser_context_t *context_p, /**< context */
 
       if (context_p->next_scanner_info_p->source_p == context_p->source_p)
       {
-        if (context_p->next_scanner_info_p->type != SCANNER_TYPE_INITIALIZER)
+        if (context_p->next_scanner_info_p->type == SCANNER_TYPE_INITIALIZER)
+        {
+          if (context_p->next_scanner_info_p->u8_arg & SCANNER_LITERAL_OBJECT_HAS_REST)
+          {
+            flags |= PARSER_PATTERN_HAS_REST_ELEMENT;
+          }
+
+          if (context_p->status_flags & PARSER_FUNCTION_HAS_REST_PARAM)
+          {
+            parser_raise_error (context_p, PARSER_ERR_REST_PARAMETER_DEFAULT_INITIALIZER);
+          }
+
+          if (context_p->argument_length == UINT16_MAX)
+          {
+            context_p->argument_length = context_p->argument_count;
+          }
+
+          flags |= PARSER_PATTERN_TARGET_DEFAULT;
+        }
+        else if (context_p->next_scanner_info_p->type == SCANNER_TYPE_LITERAL_FLAGS)
+        {
+          if (context_p->next_scanner_info_p->u8_arg & SCANNER_LITERAL_OBJECT_HAS_REST)
+          {
+            flags |= PARSER_PATTERN_HAS_REST_ELEMENT;
+          }
+          scanner_release_next (context_p, sizeof (scanner_info_t));
+        }
+        else
         {
           parser_raise_error (context_p, PARSER_ERR_INVALID_DESTRUCTURING_PATTERN);
         }
-
-        if (context_p->status_flags & PARSER_FUNCTION_HAS_REST_PARAM)
-        {
-          parser_raise_error (context_p, PARSER_ERR_REST_PARAMETER_DEFAULT_INITIALIZER);
-        }
-
-        if (context_p->argument_length == UINT16_MAX)
-        {
-          context_p->argument_length = context_p->argument_count;
-        }
-
-        flags |= PARSER_PATTERN_TARGET_DEFAULT;
       }
 
       parser_parse_initializer (context_p, flags);

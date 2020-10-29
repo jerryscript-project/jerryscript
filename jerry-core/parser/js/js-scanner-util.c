@@ -1916,10 +1916,9 @@ scanner_cleanup (parser_context_t *context_p) /**< context */
       {
 #if ENABLED (JERRY_ESNEXT)
         JERRY_ASSERT (scanner_info_p->type == SCANNER_TYPE_END_ARGUMENTS
-                      || scanner_info_p->type == SCANNER_TYPE_LET_EXPRESSION
-                      || scanner_info_p->type == SCANNER_TYPE_FOR_PATTERN
+                      || scanner_info_p->type == SCANNER_TYPE_LITERAL_FLAGS
                       || scanner_info_p->type == SCANNER_TYPE_CLASS_CONSTRUCTOR
-                      || scanner_info_p->type == SCANNER_TYPE_OBJECT_LITERAL_WITH_SUPER
+                      || scanner_info_p->type == SCANNER_TYPE_LET_EXPRESSION
                       || scanner_info_p->type == SCANNER_TYPE_ERR_REDECLARED
                       || scanner_info_p->type == SCANNER_TYPE_ERR_ASYNC_FUNCTION
                       || scanner_info_p->type == SCANNER_TYPE_EXPORT_MODULE_SPECIFIER);

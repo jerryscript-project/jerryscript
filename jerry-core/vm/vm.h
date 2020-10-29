@@ -278,6 +278,9 @@ typedef enum
   VM_OC_GET_ITERATOR,            /**< GetIterator abstract operation */
   VM_OC_ITERATOR_STEP,           /**< IteratorStep abstract operation */
   VM_OC_ITERATOR_CLOSE,          /**< IteratorClose abstract operation */
+  VM_OC_INITIALIZER_PUSH_LIST,   /**< push name list array */
+  VM_OC_INITIALIZER_PUSH_REST,   /**< push the object with the rest properties */
+  VM_OC_INITIALIZER_PUSH_NAME,   /**< append string to name list array and push the string */
   VM_OC_DEFAULT_INITIALIZER,     /**< default initializer inside a pattern */
   VM_OC_REST_INITIALIZER,        /**< create rest object inside an array pattern */
   VM_OC_INITIALIZER_PUSH_PROP,   /**< push property for object initializer */
@@ -363,6 +366,9 @@ typedef enum
   VM_OC_GET_ITERATOR = VM_OC_NONE,            /**< GetIterator abstract operation */
   VM_OC_ITERATOR_STEP = VM_OC_NONE,           /**< IteratorStep abstract operation */
   VM_OC_ITERATOR_CLOSE = VM_OC_NONE,          /**< IteratorClose abstract operation */
+  VM_OC_INITIALIZER_PUSH_LIST = VM_OC_NONE,   /**< push name list array */
+  VM_OC_INITIALIZER_PUSH_REST = VM_OC_NONE,   /**< push the object with the rest properties */
+  VM_OC_INITIALIZER_PUSH_NAME = VM_OC_NONE,   /**< append string to name list array and push the string */
   VM_OC_DEFAULT_INITIALIZER = VM_OC_NONE,     /**< default initializer inside a pattern */
   VM_OC_REST_INITIALIZER = VM_OC_NONE,        /**< create rest object inside an array pattern */
   VM_OC_INITIALIZER_PUSH_PROP = VM_OC_NONE,   /**< push property for object initializer */

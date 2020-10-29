@@ -63,6 +63,6 @@ var sym = Symbol('Any')
 s = [ { [sym]:5, a:6 } ]
 o = { ...((s))[0] }
 
-assert(o[sym] === undefined)
+assert(o[sym] === 5)
 assert(o.a === 6)
 checkOwnProperties(o, ["a"])

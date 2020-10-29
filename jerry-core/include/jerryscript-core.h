@@ -459,6 +459,30 @@ typedef enum
   JERRY_ITERATOR_TYPE_SET,          /**< Set iterator */
 } jerry_iterator_type_t;
 
+/**
+ * JerryScript object property filter options.
+ */
+typedef enum
+{
+  JERRY_PROPERTY_FILTER_ALL = 0,                               /**< List all property keys independently
+                                                                *   from key type or property value attributes
+                                                                *   (equivalent to Reflect.ownKeys call)  */
+  JERRY_PROPERTY_FILTER_TRAVERSE_PROTOTYPE_CHAIN = (1 << 0),   /**< Include keys from the objects's
+                                                                *   prototype chain as well */
+  JERRY_PROPERTY_FILTER_EXLCUDE_NON_CONFIGURABLE = (1 << 1),   /**< Exclude property key if
+                                                                *   the property is non-configurable */
+  JERRY_PROPERTY_FILTER_EXLCUDE_NON_ENUMERABLE = (1 << 2),     /**< Exclude property key if
+                                                                *   the property is non-enumerable */
+  JERRY_PROPERTY_FILTER_EXLCUDE_NON_WRITABLE = (1 << 3),       /**< Exclude property key if
+                                                                *   the property is non-writable */
+  JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS = (1 << 4),            /**< Exclude property key if it is a string */
+  JERRY_PROPERTY_FILTER_EXLCUDE_SYMBOLS = (1 << 5),            /**< Exclude property key if it is a symbol */
+  JERRY_PROPERTY_FILTER_EXLCUDE_INTEGER_INDICES = (1 << 6),    /**< Exclude property key if it is an integer index */
+  JERRY_PROPERTY_FILTER_INTEGER_INDICES_AS_NUMBER = (1 << 7),  /**< By default integer index property keys are
+                                                                *   converted to string. Enabling this flags keeps
+                                                                *   integer index property keys as numbers. */
+} jerry_property_filter_t;
+
 jerry_type_t jerry_value_get_type (const jerry_value_t value);
 jerry_object_type_t jerry_object_get_type (const jerry_value_t value);
 jerry_function_type_t jerry_function_get_type (const jerry_value_t value);
@@ -627,6 +651,8 @@ bool jerry_objects_foreach_by_native_info (const jerry_object_native_info_t *nat
 
 bool jerry_foreach_object_property (const jerry_value_t obj_val, jerry_object_property_foreach_t foreach_p,
                                     void *user_data_p);
+
+jerry_value_t jerry_object_get_property_names (const jerry_value_t obj_val, jerry_property_filter_t filter);
 
 /**
  * Promise functions.

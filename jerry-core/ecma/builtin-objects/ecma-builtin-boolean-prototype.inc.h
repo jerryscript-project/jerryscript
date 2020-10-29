@@ -31,8 +31,8 @@ OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
-ROUTINE (LIT_MAGIC_STRING_TO_STRING_UL, ecma_builtin_boolean_prototype_object_to_string, 0, 0)
-ROUTINE (LIT_MAGIC_STRING_VALUE_OF_UL,  ecma_builtin_boolean_prototype_object_value_of,  0, 0)
+ROUTINE (LIT_MAGIC_STRING_TO_STRING_UL, ECMA_BOOLEAN_PROTOTYPE_ROUTINE_TO_STRING, 0, 0)
+ROUTINE (LIT_MAGIC_STRING_VALUE_OF_UL,  ECMA_BOOLEAN_PROTOTYPE_ROUTINE_VALUE_OF,  0, 0)
 
 #endif /* ENABLED (JERRY_BUILTIN_BOOLEAN) */
 

@@ -33,6 +33,25 @@
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
+/**
+ * This object has a custom dispatch function.
+ */
+#define BUILTIN_CUSTOM_DISPATCH
+
+/**
+ * List of built-in routine identifiers.
+ */
+enum
+{
+  ECMA_ARRAY_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
+  ECMA_ARRAY_ROUTINE_IS_ARRAY,
+#if ENABLED (JERRY_ESNEXT)
+  ECMA_ARRAY_ROUTINE_FROM,
+  ECMA_ARRAY_ROUTINE_OF,
+  ECMA_ARRAY_ROUTINE_SPECIES_GET
+#endif /* ENABLED (JERRY_ESNEXT) */
+};
+
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-array.inc.h"
 #define BUILTIN_UNDERSCORED_ID array
 #include "ecma-builtin-internal-routines-template.inc.h"
@@ -46,24 +65,6 @@
  * \addtogroup array ECMA Array object built-in
  * @{
  */
-
-/**
- * The Array object's 'isArray' routine
- *
- * See also:
- *          ECMA-262 v5, 15.4.3.2
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-static ecma_value_t
-ecma_builtin_array_object_is_array (ecma_value_t this_arg, /**< 'this' argument */
-                                    ecma_value_t arg) /**< first argument */
-{
-  JERRY_UNUSED (this_arg);
-
-  return ecma_is_value_array (arg);
-} /* ecma_builtin_array_object_is_array */
 
 #if ENABLED (JERRY_ESNEXT)
 /**
@@ -467,17 +468,6 @@ ecma_builtin_array_object_of (ecma_value_t this_arg, /**< 'this' argument */
   return ecma_make_object_value (obj_p);
 } /* ecma_builtin_array_object_of */
 
-/**
- * 22.1.2.5 get Array [ @@species ] accessor
- *
- * @return ecma_value
- *         returned value must be freed with ecma_free_value
- */
-ecma_value_t
-ecma_builtin_array_species_get (ecma_value_t this_value) /**< This Value */
-{
-  return ecma_copy_value (this_value);
-} /* ecma_builtin_array_species_get */
 #endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
@@ -546,6 +536,49 @@ ecma_builtin_array_dispatch_construct (const ecma_value_t *arguments_list_p, /**
   return result;
 #endif /* ENABLED (JERRY_ESNEXT) */
 } /* ecma_builtin_array_dispatch_construct */
+
+/**
+ * Dispatcher of the built-in's routines
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_builtin_array_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide routine
+                                                                   *   identifier */
+                                     ecma_value_t this_arg, /**< 'this' argument value */
+                                     const ecma_value_t arguments_list_p[], /**< list of arguments
+                                                                             *   passed to routine */
+                                     uint32_t arguments_number) /**< length of arguments' list */
+{
+  switch (builtin_routine_id)
+  {
+    case ECMA_ARRAY_ROUTINE_IS_ARRAY:
+    {
+      JERRY_UNUSED (this_arg);
+
+      return arguments_number > 0 ? ecma_is_value_array (arguments_list_p[0]) : ECMA_VALUE_FALSE;
+    }
+#if ENABLED (JERRY_ESNEXT)
+    case ECMA_ARRAY_ROUTINE_FROM:
+    {
+      return ecma_builtin_array_object_from (this_arg, arguments_list_p, arguments_number);
+    }
+    case ECMA_ARRAY_ROUTINE_OF:
+    {
+      return ecma_builtin_array_object_of (this_arg, arguments_list_p, arguments_number);
+    }
+    case ECMA_ARRAY_ROUTINE_SPECIES_GET:
+    {
+      return ecma_copy_value (this_arg);
+    }
+#endif /* ENABLED (JERRY_ESNEXT) */
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+} /* ecma_builtin_array_dispatch_routine */
 
 /**
  * @}

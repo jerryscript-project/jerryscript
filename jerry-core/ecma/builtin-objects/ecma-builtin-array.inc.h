@@ -44,14 +44,14 @@ STRING_VALUE (LIT_MAGIC_STRING_NAME,
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
-ROUTINE (LIT_MAGIC_STRING_IS_ARRAY_UL, ecma_builtin_array_object_is_array, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_IS_ARRAY_UL, ECMA_ARRAY_ROUTINE_IS_ARRAY, 1, 1)
 #if ENABLED (JERRY_ESNEXT)
-ROUTINE (LIT_MAGIC_STRING_FROM, ecma_builtin_array_object_from, NON_FIXED, 1)
-ROUTINE (LIT_MAGIC_STRING_OF, ecma_builtin_array_object_of, NON_FIXED, 0)
+ROUTINE (LIT_MAGIC_STRING_FROM, ECMA_ARRAY_ROUTINE_FROM, NON_FIXED, 1)
+ROUTINE (LIT_MAGIC_STRING_OF, ECMA_ARRAY_ROUTINE_OF, NON_FIXED, 0)
 
 /* ECMA-262 v6, 22.1.2.5 */
 ACCESSOR_READ_ONLY (LIT_GLOBAL_SYMBOL_SPECIES,
-                    ecma_builtin_array_species_get,
+                    ECMA_ARRAY_ROUTINE_SPECIES_GET,
                     ECMA_PROPERTY_FLAG_CONFIGURABLE)
 #endif /* ENABLED (JERRY_ESNEXT) */
 

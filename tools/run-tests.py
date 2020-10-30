@@ -166,6 +166,8 @@ JERRY_BUILDOPTIONS = [
             ['--jerry-debugger=on']),
     Options('buildoption_test-module-off',
             ['--compile-flag=-DJERRY_MODULE_SYSTEM=0', '--lto=off']),
+    Options('buildoption_test-builtin-proxy-off',
+            ['--compile-flag=-DJERRY_BUILTIN_PROXY=0']),
 ]
 
 def get_arguments():

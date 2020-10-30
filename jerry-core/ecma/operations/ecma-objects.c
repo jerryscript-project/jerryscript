@@ -2318,12 +2318,12 @@ ecma_object_sort_property_names (ecma_collection_t *prop_names_p, /**< prop name
 ecma_collection_t *
 ecma_op_object_own_property_keys (ecma_object_t *obj_p) /**< object */
 {
-#if ENABLED (JERRY_ESNEXT)
+#if ENABLED (JERRY_BUILTIN_PROXY)
   if (ECMA_OBJECT_IS_PROXY (obj_p))
   {
     return ecma_proxy_object_own_property_keys (obj_p);
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
   if (ecma_op_object_is_fast_array (obj_p))
   {
@@ -2677,7 +2677,7 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
     {
       return LIT_MAGIC_STRING_FUNCTION_UL;
     }
-#if ENABLED (JERRY_ESNEXT)
+#if ENABLED (JERRY_BUILTIN_PROXY)
     case ECMA_OBJECT_TYPE_PROXY:
     {
       ecma_proxy_object_t *proxy_obj_p = (ecma_proxy_object_t *) obj_p;
@@ -2689,7 +2689,7 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
       }
       return LIT_MAGIC_STRING_OBJECT_UL;
     }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
     default:
     {
       JERRY_ASSERT (type == ECMA_OBJECT_TYPE_GENERAL || type == ECMA_OBJECT_TYPE_PROXY);

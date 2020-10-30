@@ -1220,7 +1220,6 @@
   <test id="annexB/language/eval-code/indirect/global-switch-dflt-eval-global-init.js"><reason></reason></test>
   <test id="annexB/language/function-code/block-decl-func-skip-arguments.js"><reason></reason></test>
   <test id="annexB/language/function-code/block-decl-nested-blocks-with-fun-decl.js"><reason></reason></test>
-  <test id="annexB/language/literals/numeric/non-octal-decimal-integer.js"><reason></reason></test>
   <test id="annexB/language/statements/for-in/nonstrict-initializer.js"><reason></reason></test>
   <!-- END AnnexB - Additional ECMAScript Features for Web Browsers -->
 
@@ -10172,5 +10171,4 @@
   <test id="built-ins/TypedArrayConstructors/internals/Set/detached-buffer.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/internals/Set/tonumber-value-detached-buffer.js"><reason></reason></test>
   <!-- END - Missing test262 support in JerryScript REPL - missing $262.detachArrayBuffer function -->
-
 </excludeList>

@@ -861,6 +861,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
               ecma_gc_set_object_visited (ecma_get_object_from_value (executor_p->remaining_elements));
               break;
             }
+#if ENABLED (JERRY_BUILTIN_PROXY)
             case ECMA_NATIVE_HANDLER_PROXY_REVOKE:
             {
               ecma_revocable_proxy_object_t *rev_proxy_p = (ecma_revocable_proxy_object_t *) object_p;
@@ -872,6 +873,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 
               break;
             }
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
             case ECMA_NATIVE_HANDLER_VALUE_THUNK:
             case ECMA_NATIVE_HANDLER_VALUE_THROWER:
             {
@@ -1311,11 +1313,13 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
             ext_object_size = sizeof (ecma_promise_all_executor_t);
             break;
           }
+#if ENABLED (JERRY_BUILTIN_PROXY)
           case ECMA_NATIVE_HANDLER_PROXY_REVOKE:
           {
             ext_object_size = sizeof (ecma_revocable_proxy_object_t);
             break;
           }
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
           case ECMA_NATIVE_HANDLER_VALUE_THUNK:
           case ECMA_NATIVE_HANDLER_VALUE_THROWER:
           {

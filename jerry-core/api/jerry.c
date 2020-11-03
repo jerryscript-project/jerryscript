@@ -14,6 +14,7 @@
  */
 
 #include <stdio.h>
+#include <math.h>
 
 #include "debugger.h"
 #include "ecma-alloc.h"
@@ -1718,6 +1719,83 @@ jerry_value_to_bigint (const jerry_value_t value) /**< input value */
   return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_bigint_not_supported_p)));
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 } /* jerry_value_to_bigint */
+
+/**
+ * Convert any number to integer number.
+ *
+ * Note:
+ *      For non-number values 0 is returned.
+ *
+ * @return integer representation of the number.
+ */
+double
+jerry_value_as_integer (const jerry_value_t value) /**< input value */
+{
+  jerry_assert_api_available ();
+
+  if (!ecma_is_value_number (value))
+  {
+    return 0;
+  }
+
+  double number = ecma_get_number_from_value (value);
+
+  if (ecma_number_is_nan (number))
+  {
+    return ECMA_NUMBER_ZERO;
+  }
+
+  if (ecma_number_is_zero (number) || ecma_number_is_infinity (number))
+  {
+    return number;
+  }
+
+  ecma_number_t floor_fabs = (ecma_number_t) floor (fabs (number));
+
+  return ecma_number_is_negative (number) ? -floor_fabs : floor_fabs;
+} /* jerry_value_as_integer */
+
+/**
+ * Convert any number to int32 number.
+ *
+ * Note:
+ *      For non-number values 0 is returned.
+ *
+ * @return int32 representation of the number.
+ */
+int32_t
+jerry_value_as_int32 (const jerry_value_t value) /**< input value */
+{
+  jerry_assert_api_available ();
+
+  if (!ecma_is_value_number (value))
+  {
+    return 0;
+  }
+
+  return ecma_number_to_int32 (ecma_get_number_from_value (value));
+} /* jerry_value_as_int32 */
+
+/**
+ * Convert any number to uint32 number.
+ *
+ * Note:
+ *      For non-number values 0 is returned.
+ *
+ * @return uint32 representation of the number.
+ */
+uint32_t
+jerry_value_as_uint32 (const jerry_value_t value) /**< input value */
+{
+  jerry_assert_api_available ();
+
+  if (!ecma_is_value_number (value))
+  {
+    return 0;
+  }
+
+  return ecma_number_to_uint32 (ecma_get_number_from_value (value));
+} /* jerry_value_as_uint32 */
 
 /**
  * Acquire specified Jerry API value.

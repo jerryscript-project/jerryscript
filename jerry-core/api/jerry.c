@@ -2953,6 +2953,161 @@ jerry_init_property_descriptor_fields (jerry_property_descriptor_t *prop_desc_p)
 } /* jerry_init_property_descriptor_fields */
 
 /**
+ * Convert a ecma_property_descriptor_t to a jerry_property_descriptor_t
+ *
+ * if error occurs the property descriptor's value field is filled with ECMA_VALUE_ERROR
+ *
+ * @return jerry_property_descriptor_t
+ */
+static jerry_property_descriptor_t
+jerry_property_descriptor_from_ecma (const ecma_property_descriptor_t *prop_desc_p) /**<[out] property_descriptor */
+{
+  jerry_property_descriptor_t prop_desc;
+  jerry_init_property_descriptor_fields (&prop_desc);
+
+  if (prop_desc_p->flags & (ECMA_PROP_IS_ENUMERABLE_DEFINED))
+  {
+    prop_desc.is_enumerable_defined = true;
+    prop_desc.is_enumerable = prop_desc_p->flags & (ECMA_PROP_IS_ENUMERABLE);
+  }
+
+  if (prop_desc_p->flags & (ECMA_PROP_IS_CONFIGURABLE_DEFINED))
+  {
+    prop_desc.is_configurable_defined = true;
+    prop_desc.is_configurable = prop_desc_p->flags & (ECMA_PROP_IS_CONFIGURABLE);
+  }
+
+  prop_desc.is_value_defined = prop_desc_p->flags & (ECMA_PROP_IS_VALUE_DEFINED);
+
+  if (prop_desc.is_value_defined)
+  {
+    prop_desc.value = prop_desc_p->value;
+  }
+
+  if (prop_desc_p->flags & (ECMA_PROP_IS_WRITABLE_DEFINED))
+  {
+    prop_desc.is_writable_defined = true;
+    prop_desc.is_writable = prop_desc_p->flags & (ECMA_PROP_IS_WRITABLE);
+  }
+
+  if (prop_desc_p->flags & (ECMA_PROP_IS_GET_DEFINED))
+  {
+    ecma_value_t getter = ecma_make_object_value (prop_desc_p->get_p);
+    prop_desc.is_get_defined = true;
+
+    if (ecma_op_is_callable (getter))
+    {
+      prop_desc.getter = getter;
+    }
+  }
+
+  if (prop_desc_p->flags & (ECMA_PROP_IS_SET_DEFINED))
+  {
+    ecma_value_t setter = ecma_make_object_value (prop_desc_p->set_p);
+    prop_desc.is_set_defined = true;
+    prop_desc.setter = setter;
+  }
+
+  return prop_desc;
+} /* jerry_property_descriptor_from_ecma */
+
+/**
+ * Convert a jerry_property_descriptor_t to a ecma_property_descriptor_t
+ *
+ * if error occurs the property descriptor's value field is filled with ECMA_VALUE_ERROR
+ *
+ * @return  ecma_property_descriptor_t
+ */
+static ecma_property_descriptor_t
+jerry_property_descriptor_to_ecma (const jerry_property_descriptor_t *prop_desc_p) /**< input property_descriptor */
+{
+  ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
+
+  uint32_t flags = ECMA_PROP_NO_OPTS;
+
+  if (prop_desc_p->is_enumerable_defined)
+  {
+    flags |= (uint32_t) (ECMA_PROP_IS_ENUMERABLE_DEFINED | (prop_desc_p->is_enumerable ? ECMA_PROP_IS_ENUMERABLE
+                                                                                       : ECMA_PROP_NO_OPTS));
+  }
+
+  if (prop_desc_p->is_configurable_defined)
+  {
+    flags |= (uint32_t) (ECMA_PROP_IS_CONFIGURABLE_DEFINED | (prop_desc_p->is_configurable ? ECMA_PROP_IS_CONFIGURABLE
+                                                                                           : ECMA_PROP_NO_OPTS));
+  }
+
+  /* Copy data property info. */
+  flags |= (prop_desc_p->is_value_defined ? ECMA_PROP_IS_VALUE_DEFINED : ECMA_PROP_NO_OPTS);
+
+  if (prop_desc_p->is_value_defined)
+  {
+    if (ecma_is_value_error_reference (prop_desc_p->value))
+    {
+      prop_desc.value = ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p));
+      return prop_desc;
+    }
+
+    prop_desc.value = prop_desc_p->value;
+  }
+
+  if (prop_desc_p->is_writable_defined)
+  {
+    flags |= (uint32_t) (ECMA_PROP_IS_WRITABLE_DEFINED | (prop_desc_p->is_writable ? ECMA_PROP_IS_WRITABLE
+                                                                                   : ECMA_PROP_NO_OPTS));
+  }
+
+  /* Copy accessor property info. */
+  if (prop_desc_p->is_get_defined)
+  {
+    ecma_value_t getter = prop_desc_p->getter;
+    flags |= ECMA_PROP_IS_GET_DEFINED;
+
+    if (ecma_is_value_error_reference (getter))
+    {
+      prop_desc.value = ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p));
+      return prop_desc;
+    }
+
+    if (ecma_op_is_callable (getter))
+    {
+      prop_desc.get_p = ecma_get_object_from_value (getter);
+    }
+    else if (!ecma_is_value_null (getter))
+    {
+      prop_desc.value = ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p));
+      return prop_desc;
+    }
+  }
+
+  if (prop_desc_p->is_set_defined)
+  {
+    ecma_value_t setter = prop_desc_p->setter;
+    flags |= ECMA_PROP_IS_SET_DEFINED;
+
+    if (ecma_is_value_error_reference (setter))
+    {
+      prop_desc.value = ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p));
+      return prop_desc;
+    }
+
+    if (ecma_op_is_callable (setter))
+    {
+      prop_desc.set_p = ecma_get_object_from_value (setter);
+    }
+    else if (!ecma_is_value_null (setter))
+    {
+      prop_desc.value = ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p));
+      return prop_desc;
+    }
+  }
+
+  prop_desc.flags |= (uint16_t) (flags | ECMA_PROP_IS_THROW);
+
+  return prop_desc;
+} /* jerry_property_descriptor_to_ecma */
+
+/**
  * Define a property to the specified object with the given name.
  *
  * Note:
@@ -2980,84 +3135,12 @@ jerry_define_own_property (const jerry_value_t obj_val, /**< object value */
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
   }
 
-  ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
+  ecma_property_descriptor_t prop_desc = jerry_property_descriptor_to_ecma (prop_desc_p);
 
-  uint32_t flags = ECMA_PROP_NO_OPTS;
-
-  if (prop_desc_p->is_enumerable_defined)
+  if (ECMA_IS_VALUE_ERROR (prop_desc.value))
   {
-    flags |= (uint32_t) (ECMA_PROP_IS_ENUMERABLE_DEFINED | (prop_desc_p->is_enumerable ? ECMA_PROP_IS_ENUMERABLE
-                                                                                       : ECMA_PROP_NO_OPTS));
+    return jerry_throw (prop_desc.value);
   }
-
-  if (prop_desc_p->is_configurable_defined)
-  {
-    flags |= (uint32_t) (ECMA_PROP_IS_CONFIGURABLE_DEFINED | (prop_desc_p->is_configurable ? ECMA_PROP_IS_CONFIGURABLE
-                                                                                           : ECMA_PROP_NO_OPTS));
-  }
-
-  /* Copy data property info. */
-  flags |= (prop_desc_p->is_value_defined ? ECMA_PROP_IS_VALUE_DEFINED : ECMA_PROP_NO_OPTS);
-
-  if (prop_desc_p->is_value_defined)
-  {
-    if (ecma_is_value_error_reference (prop_desc_p->value))
-    {
-      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
-    }
-
-    prop_desc.value = prop_desc_p->value;
-  }
-
-  if (prop_desc_p->is_writable_defined)
-  {
-    flags |= (uint32_t) (ECMA_PROP_IS_WRITABLE_DEFINED | (prop_desc_p->is_writable ? ECMA_PROP_IS_WRITABLE
-                                                                                   : ECMA_PROP_NO_OPTS));
-  }
-
-  /* Copy accessor property info. */
-  if (prop_desc_p->is_get_defined)
-  {
-    ecma_value_t getter = prop_desc_p->getter;
-    flags |= ECMA_PROP_IS_GET_DEFINED;
-
-    if (ecma_is_value_error_reference (getter))
-    {
-      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
-    }
-
-    if (ecma_op_is_callable (getter))
-    {
-      prop_desc.get_p = ecma_get_object_from_value (getter);
-    }
-    else if (!ecma_is_value_null (getter))
-    {
-      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
-    }
-  }
-
-  if (prop_desc_p->is_set_defined)
-  {
-    ecma_value_t setter = prop_desc_p->setter;
-    flags |= ECMA_PROP_IS_SET_DEFINED;
-
-    if (ecma_is_value_error_reference (setter))
-    {
-      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
-    }
-
-    if (ecma_op_is_callable (setter))
-    {
-      prop_desc.set_p = ecma_get_object_from_value (setter);
-    }
-    else if (!ecma_is_value_null (setter))
-    {
-      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
-    }
-  }
-
-  prop_desc.flags |= (uint16_t) (flags | ECMA_PROP_IS_THROW);
-
   return jerry_return (ecma_op_object_define_own_property (ecma_get_object_from_value (obj_val),
                                                            ecma_get_prop_name_from_value (prop_name_val),
                                                            &prop_desc));
@@ -3840,6 +3923,66 @@ jerry_object_get_property_names (const jerry_value_t obj_val, /**< object */
 
   return ecma_op_new_array_object_from_collection (result_p, false);
 } /* jerry_object_get_property_names */
+
+/** FromPropertyDescriptor abstract operation.
+ *
+ * @return new jerry_value_t - if success
+ *         value marked with error flag - otherwise
+ */
+jerry_value_t
+jerry_from_property_descriptor (const jerry_property_descriptor_t *src_prop_desc_p) /**< property descriptor */
+{
+  jerry_assert_api_available ();
+
+  ecma_property_descriptor_t prop_desc = jerry_property_descriptor_to_ecma (src_prop_desc_p);
+
+  if (ECMA_IS_VALUE_ERROR (prop_desc.value))
+  {
+    return jerry_throw (prop_desc.value);
+  }
+
+  ecma_object_t *desc_obj_p = ecma_op_from_property_descriptor (&prop_desc);
+
+  return ecma_make_object_value (desc_obj_p);
+} /* jerry_from_property_descriptor */
+
+/**
+* ToPropertyDescriptor abstract operation.
+*
+* @return thrown error - if any conversion error happens
+*        ECMA_VALUE_TRUE - otherwise.
+*/
+bool
+jerry_to_property_descriptor (jerry_value_t obj_value, /**< object value */
+                             jerry_property_descriptor_t *out_prop_desc_p) /**< [out] filled property descriptor
+                                                                               if return value is normal
+                                                                               empty completion value */
+{
+  jerry_assert_api_available ();
+
+  if (!ecma_is_value_object (obj_value))
+  {
+    jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
+  }
+
+  ecma_property_descriptor_t prop_desc;
+  jerry_value_t result = ecma_op_to_property_descriptor (obj_value, &prop_desc);
+
+  if (ECMA_IS_VALUE_ERROR (result))
+  {
+    return false;
+  }
+  *out_prop_desc_p = jerry_property_descriptor_from_ecma (&prop_desc);
+
+  if (ECMA_IS_VALUE_ERROR (out_prop_desc_p->value))
+  {
+    jerry_release_value (result);
+    return false;
+  }
+
+  jerry_release_value (result);
+  return true;
+} /* jerry_to_property_descriptor */
 
 /**
  * Resolve or reject the promise with an argument.

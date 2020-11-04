@@ -24,6 +24,7 @@
 #include "jerry-snapshot.h"
 #include "js-parser.h"
 #include "lit-char-helpers.h"
+#include "js-parser-internal.h"
 #include "re-compiler.h"
 
 #if ENABLED (JERRY_SNAPSHOT_SAVE) || ENABLED (JERRY_SNAPSHOT_EXEC)
@@ -990,6 +991,13 @@ jerry_snapshot_result (const uint32_t *snapshot_p, /**< snapshot */
       return ecma_raise_type_error (invalid_format_error_p);
     }
   }
+
+#if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
+  if (JERRY_CONTEXT (jerry_init_flags) & ECMA_INIT_SHOW_OPCODES)
+  {
+    util_print_cbc (bytecode_p);
+  }
+#endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
 
   ecma_value_t ret_val;
 

@@ -916,6 +916,10 @@ void parser_emit_line_info (parser_context_t *context_p, uint32_t line, bool flu
 
 #endif /* ENABLED (JERRY_LINE_INFO) */
 
+#if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
+void util_print_cbc (ecma_compiled_code_t *compiled_code_p);
+#endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
+
 /**
  * @}
  * @}

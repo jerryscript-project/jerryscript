@@ -20,7 +20,7 @@ project (${JERRY_EXT_NAME} C)
 set(FEATURE_INIT_FINI OFF CACHE BOOL "Enable library constructor/destructor support?")
 
 # Status messages
-message(STATUS "FEATURE_INIT_FINI           " ${FEATURE_INIT_FINI})
+message(STATUS "FEATURE_INIT_FINI              " ${FEATURE_INIT_FINI})
 
 # Include directories
 set(INCLUDE_EXT_PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")

@@ -1907,6 +1907,14 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ESNEXT)
       case LEXER_KEYW_AWAIT:
       {
+#if ENABLED (JERRY_MODULE_SYSTEM)
+        if ((context_p->global_status_flags & ECMA_PARSE_MODULE)
+            && !(context_p->status_flags & PARSER_IS_ASYNC_FUNCTION))
+        {
+          parser_raise_error (context_p, PARSER_ERR_AWAIT_NOT_ALLOWED);
+        }
+#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
+
         if (JERRY_UNLIKELY (context_p->token.lit_location.has_escape))
         {
           parser_raise_error (context_p, PARSER_ERR_INVALID_KEYWORD);

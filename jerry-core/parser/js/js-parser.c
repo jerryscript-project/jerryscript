@@ -3170,12 +3170,6 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
 
   if (JERRY_UNLIKELY (bytecode_p == NULL))
   {
-#if ENABLED (JERRY_MODULE_SYSTEM)
-    if (JERRY_CONTEXT (module_top_context_p) != NULL)
-    {
-      ecma_module_cleanup ();
-    }
-#endif
 #if ENABLED (JERRY_DEBUGGER)
     if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
     {
@@ -3222,6 +3216,12 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
                                            resource_name,
                                            line_str_val,
                                            col_str_val);
+#if ENABLED (JERRY_MODULE_SYSTEM)
+    if (JERRY_CONTEXT (module_top_context_p) != NULL)
+    {
+      ecma_module_cleanup ();
+    }
+#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
     ecma_free_value (col_str_val);
     ecma_free_value (line_str_val);

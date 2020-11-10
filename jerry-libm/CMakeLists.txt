@@ -64,4 +64,4 @@ configure_file(libjerry-libm.pc.in libjerry-libm.pc @ONLY)
 
 install(TARGETS ${JERRY_LIBM_NAME} DESTINATION lib)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libjerry-libm.pc DESTINATION lib/pkgconfig)
-install(DIRECTORY ${INCLUDE_LIBM}/ DESTINATION include/jerry-libm)
+install(DIRECTORY ${INCLUDE_LIBM}/ DESTINATION include/jerryscript-libm)

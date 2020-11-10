@@ -6,6 +6,5 @@ Name: libjerry-port-default
 Description: JerryScript: lightweight JavaScript engine (default port library)
 URL: https://github.com/jerryscript-project/jerryscript
 Version: 1.0
-Conflicts: libjerry-port-default-minimal
 Libs: -L${libdir} -ljerry-port-default
 Cflags: -I${includedir}

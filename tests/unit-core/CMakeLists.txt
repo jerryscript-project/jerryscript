@@ -42,7 +42,7 @@ foreach(SOURCE_UNIT_TEST_MAIN ${SOURCE_UNIT_TEST_MAIN_MODULES})
   target_include_directories(${TARGET_NAME} PRIVATE ${INCLUDE_CORE_PRIVATE})
   set_property(TARGET ${TARGET_NAME} PROPERTY LINK_FLAGS "${LINKER_FLAGS_COMMON}")
   set_property(TARGET ${TARGET_NAME} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
-  target_link_libraries(${TARGET_NAME} jerry-core jerry-port-default-minimal)
+  target_link_libraries(${TARGET_NAME} jerry-core jerry-port-default)
 
   add_dependencies(unittests-core ${TARGET_NAME})
 endforeach()

@@ -42,7 +42,7 @@ USEMODULE += shell
 USEMODULE += shell_commands
 
 # Add the jerry libs
-USEMODULE += libjerry-core libjerry-port-default-minimal libjerry-ext
+USEMODULE += libjerry-core libjerry-port-default libjerry-ext
 
 
 include $(RIOTBASE)/Makefile.include

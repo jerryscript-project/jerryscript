@@ -52,11 +52,11 @@ libjerry:
 	 -DJERRY_PROFILE="es5.1" \
 	 -DEXTERNAL_COMPILE_FLAGS="$(EXT_CFLAGS)" \
 	 -DJERRY_GLOBAL_HEAP_SIZE=$(JERRYHEAP)
-	make -C$(BUILD_DIR) jerry-core jerry-port-default-minimal jerry-ext
+	make -C$(BUILD_DIR) jerry-core jerry-port-default jerry-ext
 
 	mkdir -p $(COPYTARGET)
 	cp $(BUILD_DIR)/lib/libjerry-core.a $(COPYTARGET)
-	cp $(BUILD_DIR)/lib/libjerry-port-default-minimal.a $(COPYTARGET)
+	cp $(BUILD_DIR)/lib/libjerry-port-default.a $(COPYTARGET)
 	cp $(BUILD_DIR)/lib/libjerry-ext.a $(COPYTARGET)
 
 riot-jerry: libjerry

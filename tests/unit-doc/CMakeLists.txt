@@ -82,7 +82,7 @@ add_custom_target(all-doc-files DEPENDS ${DOCTEST_COMPILE} ${DOCTEST_LINK} ${DOC
 if(NOT ("${DOCTEST_COMPILE}" STREQUAL ""))
   add_library(compile-doc-tests ${DOCTEST_COMPILE})
   add_dependencies(compile-doc-tests all-doc-files)
-  target_link_libraries(compile-doc-tests jerry-ext jerry-core jerry-port-default-minimal)
+  target_link_libraries(compile-doc-tests jerry-ext jerry-core jerry-port-default)
   set_property(TARGET compile-doc-tests APPEND_STRING PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_DOCTEST}")
 endif()
 
@@ -97,7 +97,7 @@ macro(doctest_add_executables NAME_PREFIX)
     set_property(TARGET ${TARGET_NAME} APPEND_STRING PROPERTY COMPILE_FLAGS "${COMPILE_FLAGS_DOCTEST}")
     set_property(TARGET ${TARGET_NAME} PROPERTY LINK_FLAGS "${LINKER_FLAGS_COMMON}")
     set_property(TARGET ${TARGET_NAME} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
-    target_link_libraries(${TARGET_NAME} jerry-ext jerry-core jerry-port-default-minimal)
+    target_link_libraries(${TARGET_NAME} jerry-ext jerry-core jerry-port-default)
   endforeach()
 endmacro()
 

@@ -70,7 +70,7 @@ endif()
 
 if(JERRY_CMDLINE_TEST)
   jerry_create_executable("jerry-test" "main-unix-test.c" "benchmarking.c")
-  target_link_libraries("jerry-test" jerry-port-default-minimal)
+  target_link_libraries("jerry-test" jerry-port-default)
   if (JERRY_TEST_STACK_MEASURE)
     target_compile_definitions("jerry-test" PRIVATE -DJERRY_TEST_STACK_MEASURE=1)
   endif()

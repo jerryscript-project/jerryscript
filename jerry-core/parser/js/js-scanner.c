@@ -1649,8 +1649,6 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
         scanner_raise_error (context_p);
       }
 
-      context_p->global_status_flags |= ECMA_PARSE_MODULE;
-
       scanner_context_p->mode = SCAN_MODE_STATEMENT_END;
       lexer_next_token (context_p);
 
@@ -1800,8 +1798,6 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
       {
         scanner_raise_error (context_p);
       }
-
-      context_p->global_status_flags |= ECMA_PARSE_MODULE;
 
       lexer_next_token (context_p);
 

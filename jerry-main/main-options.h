@@ -38,6 +38,7 @@ typedef enum
 typedef enum
 {
   SOURCE_SNAPSHOT,
+  SOURCE_MODULE,
   SOURCE_SCRIPT,
 } main_source_type_t;
 

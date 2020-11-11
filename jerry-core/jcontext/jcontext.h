@@ -150,8 +150,8 @@ struct jerry_context_t
 #endif /* ENABLED (JERRY_ESNEXT) */
 
 #if ENABLED (JERRY_MODULE_SYSTEM)
-  ecma_module_t *ecma_modules_p; /**< list of referenced modules */
-  ecma_module_context_t *module_top_context_p; /**< top (current) module parser context */
+  ecma_module_t *module_list_p;         /**< current module context */
+  ecma_module_t *module_current_p;      /**< current module context */
 #endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
   vm_frame_ctx_t *vm_top_context_p; /**< top (current) interpreter context */

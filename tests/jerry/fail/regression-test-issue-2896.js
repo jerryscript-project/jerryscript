@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export {} from "dummy.js";
-export {} from "../es.next/module-export-04.js";
+export {} from "dummy.mjs";
+export {} from "../es.next/module-export-04.mjs";

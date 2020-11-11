@@ -860,8 +860,8 @@ void parser_free_jumps (parser_stack_iterator_t iterator);
  */
 
 extern const lexer_lit_location_t lexer_default_literal;
-void parser_module_add_export_node_to_context (parser_context_t *context_p);
-void parser_module_add_import_node_to_context (parser_context_t *context_p);
+void parser_module_finalize_export_node (parser_context_t *context_p);
+void parser_module_finalize_import_node (parser_context_t *context_p);
 void parser_module_check_request_place (parser_context_t *context_p);
 void parser_module_context_init (parser_context_t *context_p);
 void parser_module_handle_module_specifier (parser_context_t *context_p);

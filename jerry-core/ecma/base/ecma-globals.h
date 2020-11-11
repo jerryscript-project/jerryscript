@@ -1059,6 +1059,14 @@ typedef struct
 #endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 
 #if ENABLED (JERRY_ESNEXT)
+/**
+ * Flags for runnable objects.
+ */
+typedef enum
+{
+  ECMA_RUNNABLE_FLAGS_EMPTY = (0), /**< empty flags */
+  ECMA_RUNNABLE_FLAGS_MODULE = (1 << 0) /**< runnable is a module */
+} ecma_runnable_flags_t;
 
 /**
  * Description of arrow function objects.

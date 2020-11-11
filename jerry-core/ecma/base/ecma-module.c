@@ -37,8 +37,9 @@
  * @return pointer to ecma_string_t containing the normalized and zero terminated path
  */
 ecma_string_t *
-ecma_module_create_normalized_path (const uint8_t *char_p, /**< module specifier */
-                                    prop_length_t size) /**< size of module specifier */
+ecma_module_create_normalized_path (const lit_utf8_byte_t *char_p, /**< module path specifier */
+                                    lit_utf8_size_t size, /**< size of module specifier */
+                                    ecma_string_t *const base_path_p) /**< base path for the module specifier */
 {
   JERRY_ASSERT (size > 0);
   ecma_string_t *ret_p = NULL;
@@ -57,16 +58,13 @@ ecma_module_create_normalized_path (const uint8_t *char_p, /**< module specifier
   lit_utf8_byte_t *module_path_p = NULL;
   lit_utf8_size_t module_path_size = 0;
 
-  /* Check if we have a current module, and use its path as the base path. */
-  JERRY_ASSERT (JERRY_CONTEXT (module_top_context_p) != NULL);
-  if (JERRY_CONTEXT (module_top_context_p)->module_p != NULL)
+  if (base_path_p != NULL)
   {
-    JERRY_ASSERT (JERRY_CONTEXT (module_top_context_p)->module_p->path_p != NULL);
-    module_path_size = ecma_string_get_size (JERRY_CONTEXT (module_top_context_p)->module_p->path_p);
+    module_path_size = ecma_string_get_size (base_path_p);
     module_path_p = (lit_utf8_byte_t *) jmem_heap_alloc_block (module_path_size + 1);
 
     lit_utf8_size_t module_utf8_size;
-    module_utf8_size = ecma_string_copy_to_utf8_buffer (JERRY_CONTEXT (module_top_context_p)->module_p->path_p,
+    module_utf8_size = ecma_string_copy_to_utf8_buffer (base_path_p,
                                                         module_path_p,
                                                         module_path_size);
 
@@ -96,26 +94,39 @@ ecma_module_create_normalized_path (const uint8_t *char_p, /**< module specifier
 } /* ecma_module_create_normalized_path */
 
 /**
- * Find a module with a specific identifier
+ * Push a new module into the module list. New modules are inserted after the head module, this way in the end the
+ * root module remains the first in the list.
+ */
+static void
+ecma_module_list_push (ecma_module_t *module_p)
+{
+  ecma_module_t *head_p = JERRY_CONTEXT (module_list_p);
+  module_p->next_p = head_p->next_p;
+  head_p->next_p = module_p;
+} /* ecma_module_list_push */
+
+/**
+ * Lookup a module with a specific identifier.
  *
  * @return pointer to ecma_module_t, if found
  *         NULL, otherwise
  */
-ecma_module_t *
-ecma_module_find_module (ecma_string_t *const path_p) /**< module identifier */
+static ecma_module_t *
+ecma_module_list_lookup (ecma_string_t *const path_p) /**< module identifier */
 {
-  ecma_module_t *current_p = JERRY_CONTEXT (ecma_modules_p);
+  ecma_module_t *current_p = JERRY_CONTEXT (module_list_p);
   while (current_p != NULL)
   {
     if (ecma_compare_ecma_strings (path_p, current_p->path_p))
     {
       return current_p;
     }
+
     current_p = current_p->next_p;
   }
 
-  return current_p;
-} /* ecma_module_find_module */
+  return NULL;
+} /* ecma_module_list_lookup */
 
 /**
  * Create a new module
@@ -129,8 +140,7 @@ ecma_module_create_module (ecma_string_t *const path_p) /**< module identifier *
   memset (module_p, 0, sizeof (ecma_module_t));
 
   module_p->path_p = path_p;
-  module_p->next_p = JERRY_CONTEXT (ecma_modules_p);
-  JERRY_CONTEXT (ecma_modules_p) = module_p;
+  ecma_module_list_push (module_p);
   return module_p;
 } /* ecma_module_create_module */
 
@@ -140,9 +150,10 @@ ecma_module_create_module (ecma_string_t *const path_p) /**< module identifier *
  * @return pointer to found or newly created module structure
  */
 ecma_module_t *
-ecma_module_find_or_create_module (ecma_string_t *const path_p) /**< module path */
+ecma_module_find_module (ecma_string_t *const path_p) /**< module path */
 {
-  ecma_module_t *module_p = ecma_module_find_module (path_p);
+  ecma_module_t *module_p = ecma_module_list_lookup (path_p);
+
   if (module_p)
   {
     ecma_deref_ecma_string (path_p);
@@ -150,7 +161,7 @@ ecma_module_find_or_create_module (ecma_string_t *const path_p) /**< module path
   }
 
   return ecma_module_create_module (path_p);
-} /* ecma_module_find_or_create_module */
+} /* ecma_module_find_module */
 
 /**
  * Create a new native module
@@ -158,28 +169,83 @@ ecma_module_find_or_create_module (ecma_string_t *const path_p) /**< module path
  * @return pointer to created module
  */
 ecma_module_t *
-ecma_module_create_native_module (ecma_string_t *const path_p, /**< module identifier */
-                                  ecma_object_t *const namespace_p) /**< module namespace */
+ecma_module_find_native_module (ecma_string_t *const path_p)
 {
-  ecma_module_t *module_p = ecma_module_create_module (path_p);
-  module_p->state = ECMA_MODULE_STATE_NATIVE;
-  module_p->namespace_object_p = namespace_p;
-  return module_p;
-} /* ecma_module_create_native_module */
+  ecma_module_t *module_p = ecma_module_list_lookup (path_p);
+
+  if (module_p != NULL)
+  {
+    return module_p;
+  }
+
+  ecma_value_t native = jerry_port_get_native_module (ecma_make_string_value (path_p));
+
+  if (!ecma_is_value_undefined (native))
+  {
+    JERRY_ASSERT (ecma_is_value_object (native));
+
+    module_p = ecma_module_create_module (path_p);
+    module_p->state = ECMA_MODULE_STATE_NATIVE;
+    module_p->namespace_object_p = ecma_get_object_from_value (native);
+
+    return module_p;
+  }
+
+  return NULL;
+} /* ecma_module_find_native_module */
 
 /**
- * Creates a module context.
- *
- * @return pointer to created module context
+ * Initialize context variables for the root module.
  */
-static ecma_module_context_t *
-ecma_module_create_module_context (void)
+void
+ecma_module_initialize_context (ecma_string_t *root_path_p) /**< root module */
 {
-  ecma_module_context_t *context_p = (ecma_module_context_t *) jmem_heap_alloc_block (sizeof (ecma_module_context_t));
-  memset (context_p, 0, sizeof (ecma_module_context_t));
+  JERRY_ASSERT (JERRY_CONTEXT (module_current_p) == NULL);
+  JERRY_ASSERT (JERRY_CONTEXT (module_list_p) == NULL);
 
-  return context_p;
-} /* ecma_module_create_module_context */
+  lit_utf8_size_t path_str_size;
+  uint8_t flags = ECMA_STRING_FLAG_EMPTY;
+
+  const lit_utf8_byte_t *path_str_chars_p = ecma_string_get_chars (root_path_p,
+                                                                   &path_str_size,
+                                                                   NULL,
+                                                                   NULL,
+                                                                   &flags);
+
+  ecma_string_t *path_p = ecma_module_create_normalized_path (path_str_chars_p,
+                                                              path_str_size,
+                                                              NULL);
+
+  if (path_p == NULL)
+  {
+    ecma_ref_ecma_string (root_path_p);
+    path_p = root_path_p;
+  }
+
+  ecma_module_t *module_p = (ecma_module_t *) jmem_heap_alloc_block (sizeof (ecma_module_t));
+  memset (module_p, 0, sizeof (ecma_module_t));
+
+  module_p->path_p = path_p;
+  /* Root modules are handled differently then the rest of the referenced modules, as the scope and compiled code
+   * are handled separately. */
+  module_p->state = ECMA_MODULE_STATE_ROOT;
+
+  JERRY_CONTEXT (module_current_p) = module_p;
+  JERRY_CONTEXT (module_list_p) = module_p;
+} /* ecma_module_initialize_context */
+
+/**
+ * cleanup context variables for the root module.
+ */
+void
+ecma_module_cleanup_context (void)
+{
+  ecma_module_cleanup (JERRY_CONTEXT (module_current_p));
+#ifndef JERRY_NDEBUG
+  JERRY_CONTEXT (module_current_p) = NULL;
+  JERRY_CONTEXT (module_list_p) = NULL;
+#endif /* JERRY_NDEBUG */
+} /* ecma_module_cleanup_context */
 
 /**
  *  Inserts a {module, export_name} record into a resolve set.
@@ -190,8 +256,8 @@ ecma_module_create_module_context (void)
  */
 bool
 ecma_module_resolve_set_insert (ecma_module_resolve_set_t **set_p, /**< [in, out] resolve set */
-                                ecma_module_t * const module_p, /**< module */
-                                ecma_string_t * const export_name_p) /**< export name */
+                                ecma_module_t *const module_p, /**< module */
+                                ecma_string_t *const export_name_p) /**< export name */
 {
   JERRY_ASSERT (set_p != NULL);
   ecma_module_resolve_set_t *current_p = *set_p;
@@ -283,8 +349,8 @@ ecma_module_resolve_stack_pop (ecma_module_resolve_stack_t **stack_p) /**< [in, 
  *         ECMA_VALUE_EMPTY - otherwise
  */
 static ecma_value_t
-ecma_module_resolve_export (ecma_module_t * const module_p, /**< base module */
-                            ecma_string_t * const export_name_p, /**< export name */
+ecma_module_resolve_export (ecma_module_t *const module_p, /**< base module */
+                            ecma_string_t *const export_name_p, /**< export name */
                             ecma_module_record_t *out_record_p) /**< [out] found module record */
 {
   ecma_module_resolve_set_t *resolve_set_p = NULL;
@@ -302,7 +368,6 @@ ecma_module_resolve_export (ecma_module_t * const module_p, /**< base module */
 
     ecma_module_t *current_module_p = current_frame_p->module_p;
     JERRY_ASSERT (current_module_p->state >= ECMA_MODULE_STATE_PARSED);
-    ecma_module_context_t *context_p = current_module_p->context_p;
     ecma_string_t *current_export_name_p = current_frame_p->export_name_p;
 
     if (!current_frame_p->resolving)
@@ -341,11 +406,11 @@ ecma_module_resolve_export (ecma_module_t * const module_p, /**< base module */
         continue;
       }
 
-      if (context_p->local_exports_p != NULL)
+      if (current_module_p->local_exports_p != NULL)
       {
         /* 15.2.1.16.3 / 4 */
-        JERRY_ASSERT (context_p->local_exports_p->next_p == NULL);
-        ecma_module_names_t *export_names_p = context_p->local_exports_p->module_names_p;
+        JERRY_ASSERT (current_module_p->local_exports_p->next_p == NULL);
+        ecma_module_names_t *export_names_p = current_module_p->local_exports_p->module_names_p;
         while (export_names_p != NULL)
         {
           if (ecma_compare_ecma_strings (current_export_name_p, export_names_p->imex_name_p))
@@ -377,7 +442,7 @@ ecma_module_resolve_export (ecma_module_t * const module_p, /**< base module */
       }
 
       /* 15.2.1.16.3 / 5 */
-      ecma_module_node_t *indirect_export_p = context_p->indirect_exports_p;
+      ecma_module_node_t *indirect_export_p = current_module_p->indirect_exports_p;
       while (indirect_export_p != NULL)
       {
         ecma_module_names_t *export_names_p = indirect_export_p->module_names_p;
@@ -389,6 +454,7 @@ ecma_module_resolve_export (ecma_module_t * const module_p, /**< base module */
             ecma_module_resolve_stack_push (&stack_p,
                                             indirect_export_p->module_request_p,
                                             export_names_p->local_name_p);
+            break;
           }
 
           export_names_p = export_names_p->next_p;
@@ -432,7 +498,7 @@ ecma_module_resolve_export (ecma_module_t * const module_p, /**< base module */
     ecma_module_resolve_stack_pop (&stack_p);
 
     /* 15.2.1.16.3 / 10 */
-    ecma_module_node_t *star_export_p = context_p->star_exports_p;
+    ecma_module_node_t *star_export_p = current_module_p->star_exports_p;
     while (star_export_p != NULL)
     {
       JERRY_ASSERT (star_export_p->module_names_p == NULL);
@@ -493,12 +559,9 @@ ecma_module_evaluate (ecma_module_t *module_p) /**< module */
 
   module_p->state = ECMA_MODULE_STATE_EVALUATING;
   module_p->scope_p = ecma_create_decl_lex_env (ecma_get_global_environment (global_object_p));
-  module_p->context_p->parent_p = JERRY_CONTEXT (module_top_context_p);
-  JERRY_CONTEXT (module_top_context_p) = module_p->context_p;
 
   ecma_value_t ret_value;
-  ret_value = vm_run_module (module_p->compiled_code_p,
-                             module_p->scope_p);
+  ret_value = vm_run_module (module_p);
 
   if (!ECMA_IS_VALUE_ERROR (ret_value))
   {
@@ -506,10 +569,11 @@ ecma_module_evaluate (ecma_module_t *module_p) /**< module */
     ret_value = ECMA_VALUE_EMPTY;
   }
 
-  JERRY_CONTEXT (module_top_context_p) = module_p->context_p->parent_p;
-
-  ecma_bytecode_deref (module_p->compiled_code_p);
   module_p->state = ECMA_MODULE_STATE_EVALUATED;
+  ecma_bytecode_deref (module_p->compiled_code_p);
+#ifndef JERRY_NDEBUG
+  module_p->compiled_code_p = NULL;
+#endif /* JERRY_NDEBUG */
 
   return ret_value;
 } /* ecma_module_evaluate */
@@ -597,7 +661,6 @@ ecma_module_create_namespace_object (ecma_module_t *module_p) /**< module */
   {
     ecma_module_resolve_stack_t *current_frame_p = stack_p;
     ecma_module_t *current_module_p = current_frame_p->module_p;
-    ecma_module_context_t *context_p = current_module_p->context_p;
 
     ecma_module_resolve_stack_pop (&stack_p);
 
@@ -617,11 +680,11 @@ ecma_module_create_namespace_object (ecma_module_t *module_p) /**< module */
       break;
     }
 
-    if (context_p->local_exports_p != NULL)
+    if (current_module_p->local_exports_p != NULL)
     {
       /* 15.2.1.16.2 / 5 */
-      JERRY_ASSERT (context_p->local_exports_p->next_p == NULL);
-      ecma_module_names_t *export_names_p = context_p->local_exports_p->module_names_p;
+      JERRY_ASSERT (current_module_p->local_exports_p->next_p == NULL);
+      ecma_module_names_t *export_names_p = current_module_p->local_exports_p->module_names_p;
       while (export_names_p != NULL && ecma_is_value_empty (result))
       {
         result = ecma_module_namespace_object_add_export_if_needed (module_p,
@@ -631,7 +694,7 @@ ecma_module_create_namespace_object (ecma_module_t *module_p) /**< module */
     }
 
     /* 15.2.1.16.2 / 6 */
-    ecma_module_node_t *indirect_export_p = context_p->indirect_exports_p;
+    ecma_module_node_t *indirect_export_p = current_module_p->indirect_exports_p;
     while (indirect_export_p != NULL && ecma_is_value_empty (result))
     {
       ecma_module_names_t *export_names_p = indirect_export_p->module_names_p;
@@ -645,7 +708,7 @@ ecma_module_create_namespace_object (ecma_module_t *module_p) /**< module */
     }
 
     /* 15.2.1.16.2 / 7 */
-    ecma_module_node_t *star_export_p = context_p->star_exports_p;
+    ecma_module_node_t *star_export_p = current_module_p->star_exports_p;
     while (star_export_p != NULL && ecma_is_value_empty (result))
     {
       JERRY_ASSERT (star_export_p->module_names_p == NULL);
@@ -670,20 +733,18 @@ ecma_module_create_namespace_object (ecma_module_t *module_p) /**< module */
 } /* ecma_module_create_namespace_object */
 
 /**
- * Connects imported values to the current context.
+ * Connects imported values to the current module scope.
  *
  * @return ECMA_VALUE_ERROR - if an error occured
  *         ECMA_VALUE_EMPTY - otherwise
  */
 static ecma_value_t
-ecma_module_connect_imports (void)
+ecma_module_connect_imports (ecma_module_t *module_p)
 {
-  ecma_module_context_t *current_context_p = JERRY_CONTEXT (module_top_context_p);
-
-  ecma_object_t *local_env_p = current_context_p->module_p->scope_p;
+  ecma_object_t *local_env_p = module_p->scope_p;
   JERRY_ASSERT (ecma_is_lexical_environment (local_env_p));
 
-  ecma_module_node_t *import_node_p = current_context_p->imports_p;
+  ecma_module_node_t *import_node_p = module_p->imports_p;
 
   /* Check that the imported bindings don't exist yet. */
   while (import_node_p != NULL)
@@ -728,7 +789,7 @@ ecma_module_connect_imports (void)
     import_node_p = import_node_p->next_p;
   }
 
-  import_node_p = current_context_p->imports_p;
+  import_node_p = module_p->imports_p;
 
   /* Resolve imports and create local bindings. */
   while (import_node_p != NULL)
@@ -824,6 +885,48 @@ ecma_module_connect_imports (void)
 } /* ecma_module_connect_imports */
 
 /**
+ * Checks if indirect exports in the current context are resolvable.
+ * Note: See 15.2.1.16.4 / 9.
+ *
+ * @return ECMA_VALUE_ERROR - if an error occured
+ *         ECMA_VALUE_EMPTY - otherwise
+ */
+static ecma_value_t
+ecma_module_check_indirect_exports (ecma_module_t *module_p)
+{
+  ecma_module_node_t *indirect_export_p = module_p->indirect_exports_p;
+  while (indirect_export_p != NULL)
+  {
+    ecma_module_names_t *name_p = indirect_export_p->module_names_p;
+    while (name_p != NULL)
+    {
+      ecma_module_record_t record;
+      ecma_value_t result = ecma_module_resolve_export (indirect_export_p->module_request_p,
+                                                        name_p->local_name_p,
+                                                        &record);
+
+      if (ECMA_IS_VALUE_ERROR (result))
+      {
+        return result;
+      }
+
+      JERRY_ASSERT (ecma_is_value_empty (result));
+
+      if (record.module_p == NULL)
+      {
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Ambiguous indirect export request."));
+      }
+
+      name_p = name_p->next_p;
+    }
+
+    indirect_export_p = indirect_export_p->next_p;
+  }
+
+  return ECMA_VALUE_EMPTY;
+} /* ecma_module_check_indirect_exports */
+
+/**
  * Initialize the current module by creating the local binding for the imported variables
  * and verifying indirect exports.
  *
@@ -831,17 +934,42 @@ ecma_module_connect_imports (void)
  *         ECMA_VALUE_EMPTY - otherwise
  */
 ecma_value_t
-ecma_module_initialize_current (void)
+ecma_module_initialize (ecma_module_t *module_p) /**< module */
 {
-  ecma_value_t ret_value = ecma_module_connect_imports ();
+  ecma_value_t ret_value = ecma_module_connect_imports (module_p);
 
   if (ecma_is_value_empty (ret_value))
   {
-    ret_value = ecma_module_check_indirect_exports ();
+    ret_value = ecma_module_check_indirect_exports (module_p);
   }
 
   return ret_value;
-} /* ecma_module_initialize_current */
+} /* ecma_module_initialize */
+
+static ecma_value_t ecma_module_parse (ecma_module_t *module_p);
+
+/**
+ * Parses all referenced modules.
+ *
+ * @return ECMA_VALUE_ERROR - if an error occured
+ *         ECMA_VALUE_EMPTY - otherwise
+ */
+ecma_value_t
+ecma_module_parse_referenced_modules (void)
+{
+  ecma_module_t *current_p = JERRY_CONTEXT (module_list_p);
+  while (current_p != NULL)
+  {
+    if (ECMA_IS_VALUE_ERROR (ecma_module_parse (current_p)))
+    {
+      return ECMA_VALUE_ERROR;
+    }
+
+    current_p = current_p->next_p;
+  }
+
+  return ECMA_VALUE_EMPTY;
+} /* ecma_module_parse_referenced_modules */
 
 /**
  * Parses an EcmaScript module.
@@ -849,7 +977,7 @@ ecma_module_initialize_current (void)
  * @return ECMA_VALUE_ERROR - if an error occured
  *         ECMA_VALUE_EMPTY - otherwise
  */
-static jerry_value_t
+static ecma_value_t
 ecma_module_parse (ecma_module_t *module_p) /**< module */
 {
   if (module_p->state >= ECMA_MODULE_STATE_PARSING)
@@ -858,7 +986,6 @@ ecma_module_parse (ecma_module_t *module_p) /**< module */
   }
 
   module_p->state = ECMA_MODULE_STATE_PARSING;
-  module_p->context_p = ecma_module_create_module_context ();
 
   lit_utf8_size_t module_path_size = ecma_string_get_size (module_p->path_p);
   lit_utf8_byte_t *module_path_p = (lit_utf8_byte_t *) jmem_heap_alloc_block (module_path_size + 1);
@@ -878,9 +1005,8 @@ ecma_module_parse (ecma_module_t *module_p) /**< module */
     return ecma_raise_syntax_error (ECMA_ERR_MSG ("File not found."));
   }
 
-  module_p->context_p->module_p = module_p;
-  module_p->context_p->parent_p = JERRY_CONTEXT (module_top_context_p);
-  JERRY_CONTEXT (module_top_context_p) = module_p->context_p;
+  ecma_module_t *prev_module_p = JERRY_CONTEXT (module_current_p);
+  JERRY_CONTEXT (module_current_p) = module_p;
 
 #if ENABLED (JERRY_DEBUGGER) && ENABLED (JERRY_PARSER)
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
@@ -899,12 +1025,17 @@ ecma_module_parse (ecma_module_t *module_p) /**< module */
                                                           ecma_make_string_value (module_p->path_p),
                                                           ECMA_PARSE_STRICT_MODE | ECMA_PARSE_MODULE);
 
-  JERRY_CONTEXT (module_top_context_p) = module_p->context_p->parent_p;
-
+  JERRY_CONTEXT (module_current_p) = prev_module_p;
   jerry_port_release_source (source_p);
 
   if (JERRY_UNLIKELY (bytecode_p == NULL))
   {
+    return ECMA_VALUE_ERROR;
+  }
+
+  if (ECMA_IS_VALUE_ERROR (ecma_module_parse_referenced_modules ()))
+  {
+    ecma_bytecode_deref (bytecode_p);
     return ECMA_VALUE_ERROR;
   }
 
@@ -913,72 +1044,6 @@ ecma_module_parse (ecma_module_t *module_p) /**< module */
 
   return ECMA_VALUE_EMPTY;
 } /* ecma_module_parse */
-
-/**
- * Parses all referenced modules.
- *
- * @return ECMA_VALUE_ERROR - if an error occured
- *         ECMA_VALUE_EMPTY - otherwise
- */
-ecma_value_t
-ecma_module_parse_modules (void)
-{
-  ecma_module_t *current_p = JERRY_CONTEXT (ecma_modules_p);
-
-  while (current_p != NULL)
-  {
-    ecma_value_t ret_value = ecma_module_parse (current_p);
-    if (ECMA_IS_VALUE_ERROR (ret_value))
-    {
-      return ret_value;
-    }
-
-    JERRY_ASSERT (ecma_is_value_empty (ret_value));
-    current_p = current_p->next_p;
-  }
-
-  return ECMA_VALUE_EMPTY;
-} /* ecma_module_parse_modules */
-
-/**
- * Checks if indirect exports in the current context are resolvable.
- * Note: See 15.2.1.16.4 / 9.
- *
- * @return ECMA_VALUE_ERROR - if an error occured
- *         ECMA_VALUE_EMPTY - otherwise
- */
-ecma_value_t
-ecma_module_check_indirect_exports (void)
-{
-  ecma_module_node_t *indirect_export_p = JERRY_CONTEXT (module_top_context_p)->indirect_exports_p;
-  while (indirect_export_p != NULL)
-  {
-    ecma_module_names_t *name_p = indirect_export_p->module_names_p;
-    while (name_p != NULL)
-    {
-      ecma_module_record_t record;
-      ecma_value_t result = ecma_module_resolve_export (indirect_export_p->module_request_p,
-                                                        name_p->local_name_p,
-                                                        &record);
-
-      if (ECMA_IS_VALUE_ERROR (result))
-      {
-        return result;
-      }
-
-      if (record.module_p == NULL)
-      {
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Ambiguous indirect export request."));
-      }
-
-      name_p = name_p->next_p;
-    }
-
-    indirect_export_p = indirect_export_p->next_p;
-  }
-
-  return ECMA_VALUE_EMPTY;
-} /* ecma_module_check_indirect_exports */
 
 /**
  * Cleans up a list of module names.
@@ -1016,52 +1081,60 @@ ecma_module_release_module_nodes (ecma_module_node_t *module_node_p) /**< first 
 } /* ecma_module_release_module_nodes */
 
 /**
- * Cleans up a module context.
- */
-static void
-ecma_module_release_module_context (ecma_module_context_t *module_context_p) /**< modle context */
-{
-  ecma_module_release_module_nodes (module_context_p->imports_p);
-  ecma_module_release_module_nodes (module_context_p->local_exports_p);
-  ecma_module_release_module_nodes (module_context_p->indirect_exports_p);
-  ecma_module_release_module_nodes (module_context_p->star_exports_p);
-
-  jmem_heap_free_block (module_context_p, sizeof (ecma_module_context_t));
-} /* ecma_module_release_module_context */
-
-/**
- * Cleans up a module structure.
+ * Cleans up and releases a module structure including all referenced modules.
  */
 static void
 ecma_module_release_module (ecma_module_t *module_p) /**< module */
 {
+  ecma_module_state_t state = module_p->state;
+
   ecma_deref_ecma_string (module_p->path_p);
+#ifndef JERRY_NDEBUG
+  module_p->path_p = NULL;
+#endif /* JERRY_NDEBUG */
 
   if (module_p->namespace_object_p != NULL)
   {
+    /* The module structure keeps a strong reference to the namespace object, which will require an extra GC call. */
+    JERRY_CONTEXT (ecma_gc_new_objects)++;
     ecma_deref_object (module_p->namespace_object_p);
+#ifndef JERRY_NDEBUG
+    module_p->namespace_object_p = NULL;
+#endif /* JERRY_NDEBUG */
   }
 
-  if (module_p->state == ECMA_MODULE_STATE_NATIVE)
+  if (state == ECMA_MODULE_STATE_NATIVE)
   {
     goto finished;
   }
 
-  if (module_p->state >= ECMA_MODULE_STATE_PARSING)
+  if (state >= ECMA_MODULE_STATE_PARSING)
   {
-    ecma_module_release_module_context (module_p->context_p);
+    ecma_module_release_module_nodes (module_p->imports_p);
+    ecma_module_release_module_nodes (module_p->local_exports_p);
+    ecma_module_release_module_nodes (module_p->indirect_exports_p);
+    ecma_module_release_module_nodes (module_p->star_exports_p);
   }
 
-  if (module_p->state >= ECMA_MODULE_STATE_EVALUATING
-      && module_p->scope_p != NULL)
+  if (state == ECMA_MODULE_STATE_ROOT)
   {
+    goto finished;
+  }
+
+  if (state >= ECMA_MODULE_STATE_EVALUATING)
+  {
+    /* The module structure keeps a strong reference to the module scope, which will require an extra GC call. */
+    JERRY_CONTEXT (ecma_gc_new_objects)++;
     ecma_deref_object (module_p->scope_p);
   }
 
-  if (module_p->state >= ECMA_MODULE_STATE_PARSED
-      && module_p->state < ECMA_MODULE_STATE_EVALUATED)
+  if (state >= ECMA_MODULE_STATE_PARSED
+      && state < ECMA_MODULE_STATE_EVALUATED)
   {
     ecma_bytecode_deref (module_p->compiled_code_p);
+#ifndef JERRY_NDEBUG
+    module_p->compiled_code_p = NULL;
+#endif /* JERRY_NDEBUG */
   }
 
 finished:
@@ -1069,21 +1142,16 @@ finished:
 } /* ecma_module_release_module */
 
 /**
- * Cleans up all modules if the current context is the root context.
+ * Cleans up and releases a module list.
  */
 void
-ecma_module_cleanup (void)
+ecma_module_cleanup (ecma_module_t *head_p) /**< module */
 {
-  ecma_module_t *current_p = JERRY_CONTEXT (ecma_modules_p);
-  while (current_p != NULL)
+  while (head_p != NULL)
   {
-    ecma_module_t *next_p = current_p->next_p;
-    ecma_module_release_module (current_p);
-    current_p = next_p;
+    ecma_module_t *next_p = head_p->next_p;
+    ecma_module_release_module (head_p);
+    head_p = next_p;
   }
-
-  JERRY_CONTEXT (ecma_modules_p) = NULL;
-  JERRY_CONTEXT (module_top_context_p) = NULL;
 } /* ecma_module_cleanup */
-
 #endif /* ENABLED (JERRY_MODULE_SYSTEM) */

@@ -1630,6 +1630,20 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           break;
         }
 #endif /* ENABLED (JERRY_ESNEXT) */
+#if ENABLED (JERRY_MODULE_SYSTEM)
+        case LIT_MAGIC_STRING_RUNNABLE_UL:
+        {
+          ecma_extended_object_t *wrapper_p = (ecma_extended_object_t *) object_p;
+
+          JERRY_ASSERT (wrapper_p->u.class_prop.extra_info == ECMA_RUNNABLE_FLAGS_MODULE);
+          ecma_module_t *root_module_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_module_t,
+                                                                          wrapper_p->u.class_prop.u.value);
+
+          ecma_bytecode_deref (root_module_p->compiled_code_p);
+          ecma_module_cleanup (root_module_p);
+          break;
+        }
+#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
         default:
         {
           /* The undefined id represents an uninitialized class. */

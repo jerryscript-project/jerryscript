@@ -367,6 +367,8 @@ def build_options():
                       help="Command to print from console")
     result.add_option("--list-includes", default=False, action="store_true",
                       help="List includes required by tests")
+    result.add_option("--module-flag", default="-m",
+                      help="List includes required by tests")
     return result
 
 
@@ -481,7 +483,7 @@ class TestResult(object):
 
 class TestCase(object):
 
-    def __init__(self, suite, name, full_path, strict_mode, command_template):
+    def __init__(self, suite, name, full_path, strict_mode, command_template, module_flag):
         self.suite = suite
         self.name = name
         self.full_path = full_path
@@ -495,6 +497,7 @@ class TestCase(object):
         test_record.pop("commentary", None)    # do not throw if missing
         self.test_record = test_record
         self.command_template = command_template
+        self.module_flag = module_flag
 
         self.validate()
 
@@ -542,6 +545,9 @@ class TestCase(object):
 
     def is_async_test(self):
         return 'async' in self.test_record or '$DONE' in self.test
+
+    def is_module(self):
+        return 'module' in self.test_record
 
     def get_include_list(self):
         if self.test_record.get('includes'):
@@ -618,9 +624,16 @@ class TestCase(object):
     def run_test_in(self, tmp):
         tmp.write(self.get_source())
         tmp.close()
+
+        if self.is_module():
+            arg = self.module_flag + ' ' + tmp.name
+        else:
+            arg = tmp.name
+
         command = TestCase.instantiate_template(self.command_template, {
-            'path': tmp.name
+            'path': arg
         })
+
         (code, out, err) = TestCase.execute(command)
         return TestResult(code, out, err, self)
 
@@ -695,15 +708,16 @@ def percent_format(partial, total):
 
 class TestSuite(object):
 
-    def __init__(self, root, strict_only, non_strict_only, unmarked_default, print_handle, exclude_list_path):
-        self.test_root = path.join(root, 'test')
-        self.lib_root = path.join(root, 'harness')
-        self.strict_only = strict_only
-        self.non_strict_only = non_strict_only
-        self.unmarked_default = unmarked_default
-        self.print_handle = print_handle
+    def __init__(self, options):
+        self.test_root = path.join(options.tests, 'test')
+        self.lib_root = path.join(options.tests, 'harness')
+        self.strict_only = options.strict_only
+        self.non_strict_only = options.non_strict_only
+        self.unmarked_default = options.unmarked_default
+        self.print_handle = options.print_handle
         self.include_cache = {}
-        self.exclude_list_path = exclude_list_path
+        self.exclude_list_path = options.exclude_list
+        self.module_flag = options.module_flag
         self.logf = None
 
     def _load_excludes(self):
@@ -772,12 +786,12 @@ class TestSuite(object):
                         print('Excluded: ' + rel_path)
                     else:
                         if not self.non_strict_only:
-                            strict_case = TestCase(self, name, full_path, True, command_template)
+                            strict_case = TestCase(self, name, full_path, True, command_template, self.module_flag)
                             if not strict_case.is_no_strict():
                                 if strict_case.is_only_strict() or self.unmarked_default in ['both', 'strict']:
                                     cases.append(strict_case)
                         if not self.strict_only:
-                            non_strict_case = TestCase(self, name, full_path, False, command_template)
+                            non_strict_case = TestCase(self, name, full_path, False, command_template, self.module_flag)
                             if not non_strict_case.is_only_strict():
                                 if non_strict_case.is_no_strict() or self.unmarked_default in ['both', 'non_strict']:
                                     cases.append(non_strict_case)
@@ -901,12 +915,7 @@ def main():
     (options, args) = parser.parse_args()
     validate_options(options)
 
-    test_suite = TestSuite(options.tests,
-                           options.strict_only,
-                           options.non_strict_only,
-                           options.unmarked_default,
-                           options.print_handle,
-                           options.exclude_list)
+    test_suite = TestSuite(options)
 
     test_suite.validate()
     if options.loglevel == 'debug':

@@ -115,7 +115,8 @@ typedef enum
 typedef enum
 {
   JERRY_PARSE_NO_OPTS = 0, /**< no options passed */
-  JERRY_PARSE_STRICT_MODE = (1 << 0) /**< enable strict mode */
+  JERRY_PARSE_STRICT_MODE = (1 << 0), /**< enable strict mode */
+  JERRY_PARSE_MODULE = (1 << 1) /**< parse source as an ECMAScript module */
 } jerry_parse_opts_t;
 
 /**

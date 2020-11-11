@@ -1811,6 +1811,15 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   context.status_flags = parse_opts & PARSER_STRICT_MODE_MASK;
   context.global_status_flags = parse_opts;
 
+#if ENABLED (JERRY_MODULE_SYSTEM)
+  if (context.global_status_flags & ECMA_PARSE_MODULE)
+  {
+    context.status_flags |= PARSER_IS_STRICT;
+  }
+
+  context.module_current_node_p = NULL;
+#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
+
   if (arg_list_p != NULL)
   {
     context.status_flags |= PARSER_IS_FUNCTION;
@@ -1933,15 +1942,6 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
 #if ENABLED (JERRY_DEBUGGER)
   context.breakpoint_info_count = 0;
 #endif /* ENABLED (JERRY_DEBUGGER) */
-
-#if ENABLED (JERRY_MODULE_SYSTEM)
-  if (context.global_status_flags & ECMA_PARSE_MODULE)
-  {
-    context.status_flags |= PARSER_IS_STRICT;
-  }
-
-  context.module_current_node_p = NULL;
-#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
   JERRY_ASSERT (context.next_scanner_info_p->source_p == context.source_p);
   JERRY_ASSERT (context.next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
@@ -2859,12 +2859,6 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
                                            resource_name,
                                            line_str_val,
                                            col_str_val);
-#if ENABLED (JERRY_MODULE_SYSTEM)
-    if (JERRY_CONTEXT (module_top_context_p) != NULL)
-    {
-      ecma_module_cleanup ();
-    }
-#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
     ecma_free_value (col_str_val);
     ecma_free_value (line_str_val);
@@ -2880,16 +2874,6 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
 
     return NULL;
   }
-
-#if ENABLED (JERRY_MODULE_SYSTEM)
-  if (JERRY_CONTEXT (module_top_context_p) != NULL && ECMA_IS_VALUE_ERROR (ecma_module_parse_modules ()))
-  {
-    ecma_bytecode_deref (bytecode_p);
-    ecma_module_cleanup ();
-
-    return NULL;
-  }
-#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
 #if ENABLED (JERRY_DEBUGGER)
   if ((JERRY_CONTEXT (debugger_flags) & (JERRY_DEBUGGER_CONNECTED | JERRY_DEBUGGER_PARSER_WAIT))

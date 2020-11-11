@@ -272,10 +272,9 @@ static const uint16_t vm_decode_table[] JERRY_ATTR_CONST_DATA =
  * @return ecma value
  */
 ecma_value_t
-vm_run_module (const ecma_compiled_code_t *bytecode_p, /**< pointer to bytecode to run */
-               ecma_object_t *lex_env_p) /**< pointer to the specified lexenv to run in */
+vm_run_module (ecma_module_t *module_p) /**< module to be executed */
 {
-  const ecma_value_t module_init_result = ecma_module_initialize_current ();
+  const ecma_value_t module_init_result = ecma_module_initialize (module_p);
 
   if (ECMA_IS_VALUE_ERROR (module_init_result))
   {
@@ -283,10 +282,10 @@ vm_run_module (const ecma_compiled_code_t *bytecode_p, /**< pointer to bytecode 
   }
 
   vm_frame_ctx_shared_t shared;
-  shared.bytecode_header_p = bytecode_p;
+  shared.bytecode_header_p = module_p->compiled_code_p;
   shared.status_flags = 0;
 
-  return vm_run (&shared, ECMA_VALUE_UNDEFINED, lex_env_p);
+  return vm_run (&shared, ECMA_VALUE_UNDEFINED, module_p->scope_p);
 } /* vm_run_module */
 #endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
@@ -315,27 +314,6 @@ vm_run_global (const ecma_compiled_code_t *bytecode_p) /**< pointer to bytecode 
 #endif /* ENABLED (JERRY_ESNEXT) */
 
   ecma_object_t *const global_scope_p = ecma_get_global_scope (global_obj_p);
-
-#if ENABLED (JERRY_MODULE_SYSTEM)
-  if (JERRY_CONTEXT (module_top_context_p) != NULL)
-  {
-    JERRY_ASSERT (JERRY_CONTEXT (module_top_context_p)->parent_p == NULL);
-    ecma_module_t *module_p = JERRY_CONTEXT (module_top_context_p)->module_p;
-
-    JERRY_ASSERT (module_p->scope_p == NULL);
-    ecma_ref_object (global_scope_p);
-    module_p->scope_p = global_scope_p;
-
-    const ecma_value_t module_init_result = ecma_module_initialize_current ();
-    JERRY_CONTEXT (module_top_context_p) = NULL;
-
-    if (ECMA_IS_VALUE_ERROR (module_init_result))
-    {
-      ecma_module_cleanup ();
-      return module_init_result;
-    }
-  }
-#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
   vm_frame_ctx_shared_t shared;
   shared.bytecode_header_p = bytecode_p;

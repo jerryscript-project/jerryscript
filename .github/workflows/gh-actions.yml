@@ -92,6 +92,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v1
+      - name: Initializtaion
+        run: sudo apt-get install gcc-multilib
       - name: Test262 - ESNext (built-ins,annexB,harness,intl402)
         run: $RUNNER --test262-esnext update --test262-test-list built-ins,annexB,harness,intl402
       - uses: actions/upload-artifact@v2
@@ -104,6 +106,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v1
+      - name: Initializtaion
+        run: sudo apt-get install gcc-multilib
       - name: Test262 - ESNext (language)
         run: $RUNNER --test262-esnext update --test262-test-list language
       - uses: actions/upload-artifact@v2

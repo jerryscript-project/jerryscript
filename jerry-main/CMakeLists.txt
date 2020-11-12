@@ -20,8 +20,8 @@ set(ENABLE_LINK_MAP OFF CACHE BOOL "Enable generating a link map file?")
 set(JERRY_TEST_STACK_MEASURE OFF CACHE BOOL "Enable stack measurement for the jerry-test binary?")
 
 # Status messages
-message(STATUS "ENABLE_LINK_MAP             " ${ENABLE_LINK_MAP})
-message(STATUS "JERRY_TEST_STACK_MEASURE    " ${JERRY_TEST_STACK_MEASURE})
+message(STATUS "ENABLE_LINK_MAP                " ${ENABLE_LINK_MAP})
+message(STATUS "JERRY_TEST_STACK_MEASURE       " ${JERRY_TEST_STACK_MEASURE})
 
 # Generate map file
 if(ENABLE_LINK_MAP)

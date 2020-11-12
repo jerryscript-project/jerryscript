@@ -7499,31 +7499,6 @@
   <test id="language/statements/class/elements/async-gen-private-method/yield-spread-obj.js"><reason></reason></test>
   <test id="language/statements/class/elements/gen-private-method-static/yield-spread-obj.js"><reason></reason></test>
   <test id="language/statements/class/elements/gen-private-method/yield-spread-obj.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-func-dstr-const-async-obj-ptrn-rest-skip-non-enumerable.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-func-dstr-const-async-obj-ptrn-rest-val-obj.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-func-dstr-let-async-obj-ptrn-rest-skip-non-enumerable.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-func-dstr-let-async-obj-ptrn-rest-val-obj.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-dstr-const-async-obj-ptrn-rest-getter.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-dstr-const-async-obj-ptrn-rest-skip-non-enumerable.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-dstr-const-async-obj-ptrn-rest-val-obj.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-dstr-const-obj-ptrn-rest-getter.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-dstr-const-obj-ptrn-rest-skip-non-enumerable.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-dstr-const-obj-ptrn-rest-val-obj.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-dstr-let-async-obj-ptrn-rest-getter.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-dstr-let-async-obj-ptrn-rest-skip-non-enumerable.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-dstr-let-async-obj-ptrn-rest-val-obj.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-dstr-let-obj-ptrn-rest-getter.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-dstr-let-obj-ptrn-rest-skip-non-enumerable.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-dstr-let-obj-ptrn-rest-val-obj.js"><reason></reason></test>
-  <test id="language/statements/for-of/dstr/const-obj-ptrn-rest-getter.js"><reason></reason></test>
-  <test id="language/statements/for-of/dstr/const-obj-ptrn-rest-skip-non-enumerable.js"><reason></reason></test>
-  <test id="language/statements/for-of/dstr/const-obj-ptrn-rest-val-obj.js"><reason></reason></test>
-  <test id="language/statements/for-of/dstr/let-obj-ptrn-rest-getter.js"><reason></reason></test>
-  <test id="language/statements/for-of/dstr/let-obj-ptrn-rest-skip-non-enumerable.js"><reason></reason></test>
-  <test id="language/statements/for-of/dstr/let-obj-ptrn-rest-val-obj.js"><reason></reason></test>
-  <test id="language/statements/for-of/dstr/var-obj-ptrn-rest-getter.js"><reason></reason></test>
-  <test id="language/statements/for-of/dstr/var-obj-ptrn-rest-skip-non-enumerable.js"><reason></reason></test>
-  <test id="language/statements/for-of/dstr/var-obj-ptrn-rest-val-obj.js"><reason></reason></test>
   <!-- END - ES2018: Rest/Spread Properties -->
 
   <!-- ES2020: Dynamic Import
@@ -9252,8 +9227,6 @@
   <test id="language/statements/for-await-of/async-func-dstr-const-async-ary-ptrn-rest-not-final-ary.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-dstr-const-async-ary-ptrn-rest-not-final-id.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-dstr-const-async-ary-ptrn-rest-not-final-obj.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-func-dstr-const-async-obj-ptrn-rest-skip-non-enumerable.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-func-dstr-const-async-obj-ptrn-rest-val-obj.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-dstr-const-obj-ptrn-id-get-value-err.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-dstr-const-obj-ptrn-id-init-throws.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-dstr-const-obj-ptrn-id-init-unresolvable.js"><reason></reason></test>
@@ -9285,8 +9258,6 @@
   <test id="language/statements/for-await-of/async-func-dstr-let-async-ary-ptrn-rest-not-final-ary.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-dstr-let-async-ary-ptrn-rest-not-final-id.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-dstr-let-async-ary-ptrn-rest-not-final-obj.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-func-dstr-let-async-obj-ptrn-rest-skip-non-enumerable.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-func-dstr-let-async-obj-ptrn-rest-val-obj.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-dstr-let-obj-ptrn-id-get-value-err.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-dstr-let-obj-ptrn-id-init-throws.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-dstr-let-obj-ptrn-id-init-unresolvable.js"><reason></reason></test>
@@ -9378,9 +9349,6 @@
   <test id="language/statements/for-await-of/async-gen-dstr-const-async-ary-ptrn-rest-not-final-ary.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-dstr-const-async-ary-ptrn-rest-not-final-id.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-dstr-const-async-ary-ptrn-rest-not-final-obj.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-dstr-const-async-obj-ptrn-rest-getter.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-dstr-const-async-obj-ptrn-rest-skip-non-enumerable.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-dstr-const-async-obj-ptrn-rest-val-obj.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-dstr-const-obj-ptrn-id-get-value-err.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-dstr-const-obj-ptrn-id-init-throws.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-dstr-const-obj-ptrn-id-init-unresolvable.js"><reason></reason></test>
@@ -9389,9 +9357,6 @@
   <test id="language/statements/for-await-of/async-gen-dstr-const-obj-ptrn-prop-id-get-value-err.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-dstr-const-obj-ptrn-prop-id-init-throws.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-dstr-const-obj-ptrn-prop-id-init-unresolvable.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-dstr-const-obj-ptrn-rest-getter.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-dstr-const-obj-ptrn-rest-skip-non-enumerable.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-dstr-const-obj-ptrn-rest-val-obj.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-dstr-let-ary-init-iter-get-err.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-dstr-let-ary-ptrn-elem-id-init-throws.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-dstr-let-ary-ptrn-elem-id-init-unresolvable.js"><reason></reason></test>
@@ -9415,9 +9380,6 @@
   <test id="language/statements/for-await-of/async-gen-dstr-let-async-ary-ptrn-rest-not-final-ary.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-dstr-let-async-ary-ptrn-rest-not-final-id.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-dstr-let-async-ary-ptrn-rest-not-final-obj.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-dstr-let-async-obj-ptrn-rest-getter.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-dstr-let-async-obj-ptrn-rest-skip-non-enumerable.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-dstr-let-async-obj-ptrn-rest-val-obj.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-dstr-let-obj-ptrn-id-get-value-err.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-dstr-let-obj-ptrn-id-init-throws.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-dstr-let-obj-ptrn-id-init-unresolvable.js"><reason></reason></test>
@@ -9426,9 +9388,6 @@
   <test id="language/statements/for-await-of/async-gen-dstr-let-obj-ptrn-prop-id-get-value-err.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-dstr-let-obj-ptrn-prop-id-init-throws.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-dstr-let-obj-ptrn-prop-id-init-unresolvable.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-dstr-let-obj-ptrn-rest-getter.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-dstr-let-obj-ptrn-rest-skip-non-enumerable.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-dstr-let-obj-ptrn-rest-val-obj.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-dstr-var-ary-init-iter-get-err.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-dstr-var-ary-ptrn-elem-id-init-throws.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-dstr-var-ary-ptrn-elem-id-init-unresolvable.js"><reason></reason></test>

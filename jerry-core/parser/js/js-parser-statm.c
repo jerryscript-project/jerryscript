@@ -1350,14 +1350,25 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
           parser_emit_cbc_ext (context_p, is_for_in ? CBC_EXT_FOR_IN_GET_NEXT
                                                     : CBC_EXT_FOR_OF_GET_NEXT);
 
+          parser_pattern_flags_t flags = (PARSER_PATTERN_BINDING | PARSER_PATTERN_TARGET_ON_STACK);
+
           if (context_p->next_scanner_info_p->source_p == (context_p->source_p + 1))
           {
-            JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_INITIALIZER);
+            if (context_p->next_scanner_info_p->type == SCANNER_TYPE_INITIALIZER)
+            {
+              scanner_release_next (context_p, sizeof (scanner_location_info_t));
+            }
+            else
+            {
+              JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_LITERAL_FLAGS);
+              if (context_p->next_scanner_info_p->u8_arg & SCANNER_LITERAL_OBJECT_HAS_REST)
+              {
+                flags |= PARSER_PATTERN_HAS_REST_ELEMENT;
+              }
 
-            scanner_release_next (context_p, sizeof (scanner_location_info_t));
+              scanner_release_next (context_p, sizeof (scanner_info_t));
+            }
           }
-
-          parser_pattern_flags_t flags = (PARSER_PATTERN_BINDING | PARSER_PATTERN_TARGET_ON_STACK);
 
           if (token_type == LEXER_KEYW_LET)
           {

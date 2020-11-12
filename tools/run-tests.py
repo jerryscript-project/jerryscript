@@ -108,7 +108,7 @@ TEST262_ES2015_TEST_SUITE_OPTIONS = [
 
 # Test options for test262-esnext
 TEST262_ESNEXT_TEST_SUITE_OPTIONS = [
-    Options('test262_tests_esnext', OPTIONS_PROFILE_ESNEXT + ['--line-info=on', '--error-messages=on']),
+    Options('test262_tests_esnext', OPTIONS_PROFILE_ESNEXT + ['--line-info=on', '--error-messages=on', '--compile-flag=-m32', '--system-allocator=on']),
 ]
 
 # Test options for jerry-debugger

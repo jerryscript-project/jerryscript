@@ -113,14 +113,6 @@
   <test id="built-ins/Proxy/preventExtensions/trap-is-undefined-target-is-proxy.js"><reason></reason></test>
   <test id="built-ins/Proxy/revocable/target-is-revoked-function-proxy.js"><reason></reason></test>
   <test id="built-ins/Proxy/setPrototypeOf/toboolean-trap-result-false.js"><reason></reason></test>
-  <test id="built-ins/RegExp/CharacterClassEscapes/character-class-non-digit-class-escape-flags-u.js"><reason></reason></test>
-  <test id="built-ins/RegExp/CharacterClassEscapes/character-class-non-digit-class-escape-plus-quantifier-flags-u.js"><reason></reason></test>
-  <test id="built-ins/RegExp/CharacterClassEscapes/character-class-non-whitespace-class-escape-flags-u.js"><reason></reason></test>
-  <test id="built-ins/RegExp/CharacterClassEscapes/character-class-non-whitespace-class-escape-plus-quantifier-flags-u.js"><reason></reason></test>
-  <test id="built-ins/RegExp/CharacterClassEscapes/character-class-non-word-class-escape-flags-u.js"><reason></reason></test>
-  <test id="built-ins/RegExp/CharacterClassEscapes/character-class-non-word-class-escape-plus-quantifier-flags-u.js"><reason></reason></test>
-  <test id="built-ins/RegExp/CharacterClassEscapes/character-class-non-word-class-escape-plus-quantifier.js"><reason></reason></test>
-  <test id="built-ins/RegExp/CharacterClassEscapes/character-class-non-word-class-escape.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/Symbol.matchAll/isregexp-called-once.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/Symbol.matchAll/isregexp-this-throws.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/Symbol.matchAll/length.js"><reason></reason></test>
@@ -7499,10 +7491,6 @@
   <test id="language/statements/class/elements/async-gen-private-method/yield-spread-obj.js"><reason></reason></test>
   <test id="language/statements/class/elements/gen-private-method-static/yield-spread-obj.js"><reason></reason></test>
   <test id="language/statements/class/elements/gen-private-method/yield-spread-obj.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-func-dstr-const-async-obj-ptrn-rest-skip-non-enumerable.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-func-dstr-const-async-obj-ptrn-rest-val-obj.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-func-dstr-let-async-obj-ptrn-rest-skip-non-enumerable.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-func-dstr-let-async-obj-ptrn-rest-val-obj.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-dstr-const-async-obj-ptrn-rest-getter.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-dstr-const-async-obj-ptrn-rest-skip-non-enumerable.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-dstr-const-async-obj-ptrn-rest-val-obj.js"><reason></reason></test>
@@ -9252,8 +9240,6 @@
   <test id="language/statements/for-await-of/async-func-dstr-const-async-ary-ptrn-rest-not-final-ary.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-dstr-const-async-ary-ptrn-rest-not-final-id.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-dstr-const-async-ary-ptrn-rest-not-final-obj.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-func-dstr-const-async-obj-ptrn-rest-skip-non-enumerable.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-func-dstr-const-async-obj-ptrn-rest-val-obj.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-dstr-const-obj-ptrn-id-get-value-err.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-dstr-const-obj-ptrn-id-init-throws.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-dstr-const-obj-ptrn-id-init-unresolvable.js"><reason></reason></test>
@@ -9285,8 +9271,6 @@
   <test id="language/statements/for-await-of/async-func-dstr-let-async-ary-ptrn-rest-not-final-ary.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-dstr-let-async-ary-ptrn-rest-not-final-id.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-dstr-let-async-ary-ptrn-rest-not-final-obj.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-func-dstr-let-async-obj-ptrn-rest-skip-non-enumerable.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-func-dstr-let-async-obj-ptrn-rest-val-obj.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-dstr-let-obj-ptrn-id-get-value-err.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-dstr-let-obj-ptrn-id-init-throws.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-dstr-let-obj-ptrn-id-init-unresolvable.js"><reason></reason></test>
@@ -10171,4 +10155,11 @@
   <test id="built-ins/TypedArrayConstructors/internals/Set/detached-buffer.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/internals/Set/tonumber-value-detached-buffer.js"><reason></reason></test>
   <!-- END - Missing test262 support in JerryScript REPL - missing $262.detachArrayBuffer function -->
+
+  <!-- Number operations with big numbers are inaccurate on 32 bit
+       https://github.com/jerryscript-project/jerryscript/issues/4334
+  -->
+  <test id="language/types/number/S8.5_A2.1.js"><reason></reason></test>
+  <test id="language/types/number/S8.5_A2.2.js"><reason></reason></test>
+  <!-- END - Number operations with big numbers are inaccurate on 32 bit -->
 </excludeList>

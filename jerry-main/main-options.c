@@ -32,6 +32,7 @@ typedef enum
   OPT_HELP,
   OPT_VERSION,
   OPT_MEM_STATS,
+  OPT_TEST262_OBJECT,
   OPT_PARSE_ONLY,
   OPT_SHOW_OP,
   OPT_SHOW_RE_OP,
@@ -60,6 +61,8 @@ static const cli_opt_t main_opts[] =
                .help = "print tool and library version and exit"),
   CLI_OPT_DEF (.id = OPT_MEM_STATS, .longopt = "mem-stats",
                .help = "dump memory statistics"),
+  CLI_OPT_DEF (.id = OPT_TEST262_OBJECT, .longopt = "test262-object",
+               .help = "create test262 object"),
   CLI_OPT_DEF (.id = OPT_PARSE_ONLY, .longopt = "parse-only",
                .help = "don't execute JS input"),
   CLI_OPT_DEF (.id = OPT_SHOW_OP, .longopt = "show-opcodes",
@@ -178,6 +181,11 @@ main_parse_args (int argc, /**< argc */
           jerry_port_default_set_log_level (JERRY_LOG_LEVEL_DEBUG);
           arguments_p->init_flags |= JERRY_INIT_MEM_STATS;
         }
+        break;
+      }
+      case OPT_TEST262_OBJECT:
+      {
+        arguments_p->option_flags |= OPT_FLAG_TEST262_OBJECT;
         break;
       }
       case OPT_PARSE_ONLY:

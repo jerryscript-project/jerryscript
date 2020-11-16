@@ -113,14 +113,6 @@
   <test id="built-ins/Proxy/preventExtensions/trap-is-undefined-target-is-proxy.js"><reason></reason></test>
   <test id="built-ins/Proxy/revocable/target-is-revoked-function-proxy.js"><reason></reason></test>
   <test id="built-ins/Proxy/setPrototypeOf/toboolean-trap-result-false.js"><reason></reason></test>
-  <test id="built-ins/RegExp/CharacterClassEscapes/character-class-non-digit-class-escape-flags-u.js"><reason></reason></test>
-  <test id="built-ins/RegExp/CharacterClassEscapes/character-class-non-digit-class-escape-plus-quantifier-flags-u.js"><reason></reason></test>
-  <test id="built-ins/RegExp/CharacterClassEscapes/character-class-non-whitespace-class-escape-flags-u.js"><reason></reason></test>
-  <test id="built-ins/RegExp/CharacterClassEscapes/character-class-non-whitespace-class-escape-plus-quantifier-flags-u.js"><reason></reason></test>
-  <test id="built-ins/RegExp/CharacterClassEscapes/character-class-non-word-class-escape-flags-u.js"><reason></reason></test>
-  <test id="built-ins/RegExp/CharacterClassEscapes/character-class-non-word-class-escape-plus-quantifier-flags-u.js"><reason></reason></test>
-  <test id="built-ins/RegExp/CharacterClassEscapes/character-class-non-word-class-escape-plus-quantifier.js"><reason></reason></test>
-  <test id="built-ins/RegExp/CharacterClassEscapes/character-class-non-word-class-escape.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/Symbol.matchAll/isregexp-called-once.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/Symbol.matchAll/isregexp-this-throws.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/Symbol.matchAll/length.js"><reason></reason></test>

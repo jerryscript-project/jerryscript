@@ -220,8 +220,6 @@
   <test id="built-ins/TypedArray/prototype/filter/speciesctor-get-species-custom-ctor.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/filter/speciesctor-get-species-returns-throws.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/filter/speciesctor-get-species.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/indexOf/BigInt/search-found-returns-index.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/indexOf/search-found-returns-index.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/join/BigInt/get-length-uses-internal-arraylength.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/join/BigInt/return-abrupt-from-separator-symbol.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/join/BigInt/return-abrupt-from-separator.js"><reason></reason></test>

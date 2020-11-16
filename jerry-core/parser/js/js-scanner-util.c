@@ -2674,7 +2674,8 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
               {
                 opcode = CBC_CREATE_VAR_EVAL;
 
-                if (context_p->global_status_flags & ECMA_PARSE_FUNCTION_CONTEXT)
+                if ((context_p->global_status_flags & ECMA_PARSE_FUNCTION_CONTEXT)
+                    && !(context_p->status_flags & PARSER_IS_STRICT))
                 {
                   opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_CREATE_VAR_EVAL);
                 }

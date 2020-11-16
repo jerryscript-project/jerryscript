@@ -30,7 +30,7 @@ JERRY_STATIC_ASSERT (CBC_END == 238,
 JERRY_STATIC_ASSERT (CBC_EXT_END == 149,
                      number_of_cbc_ext_opcodes_changed);
 
-#if ENABLED (JERRY_PARSER)
+#if ENABLED (JERRY_PARSER) || ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
 
 /** \addtogroup parser Parser
  * @{
@@ -66,6 +66,8 @@ const uint8_t cbc_ext_flags[] =
 
 #undef CBC_OPCODE
 
+#endif /* ENABLED (JERRY_PARSER) || ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
+
 #if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
 
 #define CBC_OPCODE(arg1, arg2, arg3, arg4) #arg1,
@@ -95,5 +97,3 @@ const char * const cbc_ext_names[] =
  * @}
  * @}
  */
-
-#endif /* ENABLED (JERRY_PARSER) */

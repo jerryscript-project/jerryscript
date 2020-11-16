@@ -4864,7 +4864,7 @@ vm_init_exec (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
     argument_end = args_p->argument_end;
     register_end = args_p->register_end;
 
-    literal_p = (ecma_value_t *) ((uint8_t *) bytecode_header_p + sizeof (cbc_uint16_arguments_t));
+    literal_p = (ecma_value_t *) (args_p + 1);
     literal_p -= register_end;
     frame_ctx_p->literal_start_p = literal_p;
     literal_p += args_p->literal_end;
@@ -4876,7 +4876,7 @@ vm_init_exec (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
     argument_end = args_p->argument_end;
     register_end = args_p->register_end;
 
-    literal_p = (ecma_value_t *) ((uint8_t *) bytecode_header_p + sizeof (cbc_uint8_arguments_t));
+    literal_p = (ecma_value_t *) (args_p + 1);
     literal_p -= register_end;
     frame_ctx_p->literal_start_p = literal_p;
     literal_p += args_p->literal_end;

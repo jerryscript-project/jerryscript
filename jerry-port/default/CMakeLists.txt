@@ -73,24 +73,17 @@ elseif(HAVE_UNISTD_H)
   set(DEFINES_PORT_DEFAULT ${DEFINES_PORT_DEFAULT} HAVE_UNISTD_H)
 endif()
 
-# Default Jerry port implementation library variants:
-#   - default
-#   - default-minimal (no extra termination and log APIs)
-foreach(JERRY_PORT_LIBRARY_NAME ${JERRY_PORT_DEFAULT_NAME} ${JERRY_PORT_DEFAULT_NAME}-minimal)
-  add_library(${JERRY_PORT_LIBRARY_NAME} ${SOURCE_PORT_DEFAULT})
-  target_include_directories(${JERRY_PORT_LIBRARY_NAME} PUBLIC ${INCLUDE_PORT_DEFAULT})
-  target_include_directories(${JERRY_PORT_LIBRARY_NAME} PRIVATE ${INCLUDE_CORE_PUBLIC})
-  target_include_directories(${JERRY_PORT_LIBRARY_NAME} PRIVATE ${INCLUDE_EXT_PUBLIC})
-  target_compile_definitions(${JERRY_PORT_LIBRARY_NAME} PRIVATE ${DEFINES_PORT_DEFAULT})
-  target_link_libraries(${JERRY_PORT_LIBRARY_NAME} jerry-core) # FIXME: remove this dependency as soon as possible
-endforeach()
-
-target_compile_definitions(${JERRY_PORT_DEFAULT_NAME}-minimal PRIVATE DISABLE_EXTRA_API)
+# Default Jerry port implementation library
+add_library(${JERRY_PORT_DEFAULT_NAME} ${SOURCE_PORT_DEFAULT})
+target_include_directories(${JERRY_PORT_DEFAULT_NAME} PUBLIC ${INCLUDE_PORT_DEFAULT})
+target_include_directories(${JERRY_PORT_DEFAULT_NAME} PRIVATE ${INCLUDE_CORE_PUBLIC})
+target_include_directories(${JERRY_PORT_DEFAULT_NAME} PRIVATE ${INCLUDE_EXT_PUBLIC})
+target_compile_definitions(${JERRY_PORT_DEFAULT_NAME} PRIVATE ${DEFINES_PORT_DEFAULT})
+target_link_libraries(${JERRY_PORT_DEFAULT_NAME} jerry-core) # FIXME: remove this dependency as soon as possible
 
 # Installation
 configure_file(libjerry-port-default.pc.in libjerry-port-default.pc @ONLY)
-configure_file(libjerry-port-default-minimal.pc.in libjerry-port-default-minimal.pc @ONLY)
 
-install(TARGETS ${JERRY_PORT_DEFAULT_NAME} ${JERRY_PORT_DEFAULT_NAME}-minimal DESTINATION lib)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libjerry-port-default.pc ${CMAKE_CURRENT_BINARY_DIR}/libjerry-port-default-minimal.pc DESTINATION lib/pkgconfig)
+install(TARGETS ${JERRY_PORT_DEFAULT_NAME} DESTINATION lib)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libjerry-port-default.pc DESTINATION lib/pkgconfig)
 install(DIRECTORY ${INCLUDE_PORT_DEFAULT}/ DESTINATION include)

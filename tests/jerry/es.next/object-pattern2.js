@@ -135,3 +135,25 @@ function f8() {
   rest_compare(b, ["0", "C", "1", "D"])
 }
 f8()
+
+function f9() {
+  var counter = 0;
+
+  for (const { ...rest} in { B: "AA", C: 6.25 }) {
+    switch (counter) {
+      case 0: {
+        /* rest === { '0': 'B' } */
+        assert(rest['0'] === 'B');
+        break;
+        }
+      case 1: {
+        /* rest === { '0': 'C' } */
+        assert(rest['0'] == 'C');
+        break;
+      }
+    }
+    counter++;
+  }
+  assert(counter === 2);
+}
+f9()

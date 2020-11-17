@@ -786,7 +786,11 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
       case ECMA_OBJECT_TYPE_PROXY:
       {
         ecma_gc_mark_proxy_object (object_p);
-        break;
+        /* No need to free the properties of a proxy (there should be none).
+         * Aside from the tag bits every other bit should be zero,
+         */
+        JERRY_ASSERT ((object_p->u1.property_list_cp & ~JMEM_TAG_MASK) == 0);
+        return;
       }
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
       case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
@@ -1499,8 +1503,12 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 #if ENABLED (JERRY_BUILTIN_PROXY)
     case ECMA_OBJECT_TYPE_PROXY:
     {
-      ext_object_size = sizeof (ecma_proxy_object_t);
-      break;
+      /* No need to free the properties of a proxy (there should be none).
+       * Aside from the tag bits every other bit should be zero,
+       */
+      JERRY_ASSERT ((object_p->u1.property_list_cp & ~JMEM_TAG_MASK) == 0);
+      ecma_dealloc_extended_object (object_p, sizeof (ecma_proxy_object_t));
+      return;
     }
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
     case ECMA_OBJECT_TYPE_FUNCTION:

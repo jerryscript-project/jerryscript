@@ -5,6 +5,6 @@ includedir=${prefix}/include
 Name: libjerry-port-default
 Description: JerryScript: lightweight JavaScript engine (default port library)
 URL: https://github.com/jerryscript-project/jerryscript
-Version: 1.0
+Version: @JERRY_VERSION@
 Libs: -L${libdir} -ljerry-port-default
 Cflags: -I${includedir}

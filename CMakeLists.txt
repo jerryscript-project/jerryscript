@@ -15,6 +15,11 @@
 cmake_minimum_required (VERSION 2.8.12)
 project (Jerry C)
 
+# Determining version
+execute_process(COMMAND python ${CMAKE_SOURCE_DIR}/tools/version.py
+                OUTPUT_VARIABLE JERRY_VERSION
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+
 # Determining platform
 set(PLATFORM "${CMAKE_SYSTEM_NAME}")
 string(TOUPPER "${PLATFORM}" PLATFORM)
@@ -124,6 +129,7 @@ message(STATUS "CMAKE_SYSTEM_PROCESSOR         " ${CMAKE_SYSTEM_PROCESSOR})
 message(STATUS "BUILD_SHARED_LIBS              " ${BUILD_SHARED_LIBS})
 message(STATUS "ENABLE_LTO                     " ${ENABLE_LTO} ${ENABLE_LTO_MESSAGE})
 message(STATUS "ENABLE_STRIP                   " ${ENABLE_STRIP} ${ENABLE_STRIP_MESSAGE})
+message(STATUS "JERRY_VERSION                  " ${JERRY_VERSION})
 message(STATUS "JERRY_CMDLINE                  " ${JERRY_CMDLINE} ${JERRY_CMDLINE_MESSAGE})
 message(STATUS "JERRY_CMDLINE_TEST             " ${JERRY_CMDLINE_TEST} ${JERRY_CMDLINE_TEST_MESSAGE})
 message(STATUS "JERRY_CMDLINE_SNAPSHOT         " ${JERRY_CMDLINE_SNAPSHOT} ${JERRY_CMDLINE_SNAPSHOT_MESSAGE})

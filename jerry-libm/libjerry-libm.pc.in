@@ -5,6 +5,6 @@ includedir=${prefix}/include/jerry-libm
 Name: libjerry-libm
 Description: JerryScript: lightweight JavaScript engine (minimal math library)
 URL: https://github.com/jerryscript-project/jerryscript
-Version: 1.0
+Version: @JERRY_VERSION@
 Libs: -L${libdir} -ljerry-libm
 Cflags: -I${includedir}

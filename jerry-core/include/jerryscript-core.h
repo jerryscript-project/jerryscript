@@ -557,6 +557,9 @@ jerry_value_t jerry_value_to_object (const jerry_value_t value);
 jerry_value_t jerry_value_to_primitive (const jerry_value_t value);
 jerry_value_t jerry_value_to_string (const jerry_value_t value);
 jerry_value_t jerry_value_to_bigint (const jerry_value_t value);
+double jerry_value_as_integer (const jerry_value_t value);
+int32_t jerry_value_as_int32 (const jerry_value_t value);
+uint32_t jerry_value_as_uint32 (const jerry_value_t value);
 
 /**
  * Acquire types with reference counter (increase the references).

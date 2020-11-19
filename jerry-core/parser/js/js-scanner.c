@@ -278,8 +278,16 @@ scanner_scan_primary_expression (parser_context_t *context_p, /**< context */
     {
       if (stack_top == SCAN_STACK_PAREN_EXPRESSION)
       {
-        scanner_context_p->mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
         parser_stack_pop_uint8 (context_p);
+
+#if ENABLED (JERRY_ESNEXT)
+        if (context_p->stack_top_uint8 == SCAN_STACK_USE_ASYNC)
+        {
+          scanner_add_async_literal (context_p, scanner_context_p);
+        }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+        scanner_context_p->mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
         break;
       }
       /* FALLTHRU */

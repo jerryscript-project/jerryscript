@@ -158,6 +158,8 @@ ecma_gc_mark_arguments_object (ecma_extended_object_t *ext_object_p) /**< argume
   JERRY_ASSERT (ecma_get_object_type ((ecma_object_t *) ext_object_p) == ECMA_OBJECT_TYPE_PSEUDO_ARRAY);
 
   ecma_unmapped_arguments_t *arguments_p = (ecma_unmapped_arguments_t *) ext_object_p;
+  ecma_gc_set_object_visited (ecma_get_object_from_value (arguments_p->callee));
+
   ecma_value_t *argv_p = (ecma_value_t *) (arguments_p + 1);
 
   if (ext_object_p->u.pseudo_array.extra_info & ECMA_ARGUMENTS_OBJECT_MAPPED)

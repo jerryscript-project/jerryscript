@@ -24,6 +24,19 @@
 /**
  * This object has a custom dispatch function.
  */
+#define BUILTIN_CUSTOM_DISPATCH
+
+/**
+ * List of built-in routine identifiers.
+ */
+enum
+{
+  ECMA_BIGINT_PROTOTYPE_ROUTINE_START = 0,
+  ECMA_BIGINT_PROTOTYPE_VALUE_OF,
+  ECMA_BIGINT_PROTOTYPE_TO_STRING,
+  ECMA_BIGINT_PROTOTYPE_TO_LOCALE_STRING,
+};
+
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-bigint-prototype.inc.h"
 #define BUILTIN_UNDERSCORED_ID bigint_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
@@ -86,13 +99,6 @@ ecma_builtin_bigint_prototype_object_to_string (ecma_value_t this_arg, /**< this
                                                 const ecma_value_t *arguments_list_p, /**< arguments list */
                                                 uint32_t arguments_list_len) /**< number of arguments */
 {
-  ecma_value_t bigint = ecma_builtin_bigint_prototype_object_value_of (this_arg);
-
-  if (ECMA_IS_VALUE_ERROR (bigint))
-  {
-    return bigint;
-  }
-
   uint32_t radix = 10;
 
   if (arguments_list_len > 0 && !ecma_is_value_undefined (arguments_list_p[0]))
@@ -101,21 +107,18 @@ ecma_builtin_bigint_prototype_object_to_string (ecma_value_t this_arg, /**< this
 
     if (ECMA_IS_VALUE_ERROR (ecma_op_to_integer (arguments_list_p[0], &arg_num)))
     {
-      ecma_free_value (bigint);
       return ECMA_VALUE_ERROR;
     }
 
     if (arg_num < 2 || arg_num > 36)
     {
-      ecma_free_value (bigint);
       return ecma_raise_range_error (ECMA_ERR_MSG ("Radix must be between 2 and 36"));
     }
 
     radix = (uint32_t) arg_num;
   }
 
-  ecma_string_t *string_p = ecma_bigint_to_string (bigint, radix);
-  ecma_free_value (bigint);
+  ecma_string_t *string_p = ecma_bigint_to_string (this_arg, radix);
 
   if (string_p == NULL)
   {
@@ -124,6 +127,55 @@ ecma_builtin_bigint_prototype_object_to_string (ecma_value_t this_arg, /**< this
 
   return ecma_make_string_value (string_p);
 } /* ecma_builtin_bigint_prototype_object_to_string */
+
+/**
+ * Dispatcher of the built-in's routines
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_builtin_bigint_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wide routine
+                                                                             *   identifier */
+                                                ecma_value_t this_arg, /**< 'this' argument value */
+                                                const ecma_value_t arguments_list_p[], /**< list of arguments
+                                                                                        *   passed to routine */
+                                                uint32_t arguments_number) /**< length of arguments' list */
+{
+  ecma_value_t this_value = ecma_builtin_bigint_prototype_object_value_of (this_arg);
+  ecma_value_t ret_val;
+
+  if (ECMA_IS_VALUE_ERROR (this_value))
+  {
+    return this_value;
+  }
+
+  switch (builtin_routine_id)
+  {
+    case ECMA_BIGINT_PROTOTYPE_VALUE_OF:
+    {
+      ret_val = this_value;
+      break;
+    }
+    case ECMA_BIGINT_PROTOTYPE_TO_STRING:
+    {
+      ret_val = ecma_builtin_bigint_prototype_object_to_string (this_value, arguments_list_p, arguments_number);
+      ecma_free_value (this_value);
+      break;
+    }
+    case ECMA_BIGINT_PROTOTYPE_TO_LOCALE_STRING:
+    {
+      ret_val = ecma_builtin_bigint_prototype_object_to_string (this_value, 0, 0);
+      ecma_free_value (this_value);
+      break;
+    }
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+  return ret_val;
+} /* ecma_builtin_bigint_prototype_dispatch_routine */
 
 /**
  * @}

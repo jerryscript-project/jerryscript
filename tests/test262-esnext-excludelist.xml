@@ -135,8 +135,6 @@
   <test id="built-ins/TypedArray/prototype/join/return-abrupt-from-separator.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/slice/set-values-from-different-ctor-type.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/sort/sorted-values.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/toLocaleString/BigInt/get-length-uses-internal-arraylength.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/toLocaleString/BigInt/return-result.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/byteoffset-is-negative-zero.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/defined-negative-length.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/toindex-byteoffset.js"><reason></reason></test>
@@ -758,10 +756,8 @@
   <test id="intl402/BigInt/prototype/toLocaleString/de-DE.js"><reason></reason></test>
   <test id="intl402/BigInt/prototype/toLocaleString/default-options-object-prototype.js"><reason></reason></test>
   <test id="intl402/BigInt/prototype/toLocaleString/en-US.js"><reason></reason></test>
-  <test id="intl402/BigInt/prototype/toLocaleString/prop-desc.js"><reason></reason></test>
   <test id="intl402/BigInt/prototype/toLocaleString/returns-same-results-as-NumberFormat.js"><reason></reason></test>
   <test id="intl402/BigInt/prototype/toLocaleString/taint-Intl-NumberFormat.js"><reason></reason></test>
-  <test id="intl402/BigInt/prototype/toLocaleString/this-value-invalid.js"><reason></reason></test>
   <test id="intl402/BigInt/prototype/toLocaleString/throws-same-exceptions-as-NumberFormat.js"><reason></reason></test>
   <test id="intl402/Collator/builtin.js"><reason></reason></test>
   <test id="intl402/Collator/constructor-options-throwing-getters.js"><reason></reason></test>

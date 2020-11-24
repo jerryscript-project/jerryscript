@@ -691,10 +691,10 @@ vm_spread_operation (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
   if (frame_ctx_p->byte_code_p[1] == CBC_EXT_SPREAD_NEW)
   {
-    if (!ecma_is_value_object (func_value)
-        || !ecma_object_is_constructor (ecma_get_object_from_value (func_value)))
+    const char *constructor_message_p = ecma_check_constructor (func_value);
+    if (constructor_message_p != ECMA_IS_VALID_CONSTRUCTOR)
     {
-      completion_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a constructor."));
+      completion_value = ecma_raise_type_error (constructor_message_p);
     }
     else
     {
@@ -879,10 +879,10 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   ecma_value_t constructor_value = stack_top_p[-1];
   ecma_value_t completion_value;
 
-  if (!ecma_is_value_object (constructor_value)
-      || !ecma_object_is_constructor (ecma_get_object_from_value (constructor_value)))
+  const char *constructor_message_p = ecma_check_constructor (constructor_value);
+  if (constructor_message_p != ECMA_IS_VALID_CONSTRUCTOR)
   {
-    completion_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a constructor."));
+    completion_value = ecma_raise_type_error (constructor_message_p);
   }
   else
   {

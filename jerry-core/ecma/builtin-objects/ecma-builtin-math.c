@@ -47,7 +47,7 @@
  */
 enum
 {
-  ECMA_MATH_OBJECT_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
+  ECMA_MATH_OBJECT_ROUTINE_START = 0,
 
   ECMA_MATH_OBJECT_ABS, /* ECMA-262 v5, 15.8.2.1 */
   ECMA_MATH_OBJECT_ACOS, /* ECMA-262 v5, 15.8.2.2 */
@@ -328,8 +328,7 @@ ecma_builtin_math_object_random (void)
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_builtin_math_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide routine
-                                                                  *   identifier */
+ecma_builtin_math_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wide routine identifier */
                                     ecma_value_t this_arg, /**< 'this' argument value */
                                     const ecma_value_t arguments_list[], /**< list of arguments
                                                                           *   passed to routine */

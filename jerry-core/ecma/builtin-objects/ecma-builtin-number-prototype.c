@@ -43,7 +43,7 @@
  */
 enum
 {
-  ECMA_NUMBER_PROTOTYPE_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
+  ECMA_NUMBER_PROTOTYPE_ROUTINE_START = 0,
   ECMA_NUMBER_PROTOTYPE_VALUE_OF,
   ECMA_NUMBER_PROTOTYPE_TO_STRING,
   ECMA_NUMBER_PROTOTYPE_TO_LOCALE_STRING,
@@ -748,11 +748,10 @@ ecma_builtin_number_prototype_object_to_number_convert (ecma_number_t this_num, 
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_builtin_number_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide routine
-                                                                              *   identifier */
+ecma_builtin_number_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wide routine identifier */
                                                 ecma_value_t this_arg, /**< 'this' argument value */
                                                 const ecma_value_t arguments_list_p[], /**< list of arguments
-                                                                                      *   passed to routine */
+                                                                                        *   passed to routine */
                                                 uint32_t arguments_number) /**< length of arguments' list */
 {
   ecma_value_t this_value = ecma_builtin_number_prototype_object_value_of (this_arg);

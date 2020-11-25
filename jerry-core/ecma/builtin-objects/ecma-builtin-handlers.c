@@ -42,8 +42,8 @@ static const uint8_t  ecma_native_handler_lengths[] =
 ecma_native_handler_t
 ecma_builtin_handler_get (ecma_native_handler_id_t id) /**< handler id */
 {
-  JERRY_ASSERT (id < ECMA_NATIVE_HANDLER__COUNT);
-  return ecma_native_handlers[id];
+  JERRY_ASSERT (id != ECMA_NATIVE_HANDLER_START && id < ECMA_NATIVE_HANDLER__COUNT);
+  return ecma_native_handlers[id - 1];
 } /* ecma_builtin_handler_get */
 
 /**
@@ -54,8 +54,8 @@ ecma_builtin_handler_get (ecma_native_handler_id_t id) /**< handler id */
 uint8_t
 ecma_builtin_handler_get_length (ecma_native_handler_id_t id) /**< handler id */
 {
-  JERRY_ASSERT (id < ECMA_NATIVE_HANDLER__COUNT);
-  return ecma_native_handler_lengths[id];
+  JERRY_ASSERT (id != ECMA_NATIVE_HANDLER_START && id < ECMA_NATIVE_HANDLER__COUNT);
+  return ecma_native_handler_lengths[id - 1];
 } /* ecma_builtin_handler_get_length */
 
 #endif /* ENABLED (JERRY_ESNEXT) */

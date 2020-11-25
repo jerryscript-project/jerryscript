@@ -39,7 +39,7 @@
  */
 enum
 {
-  ECMA_SYMBOL_PROTOTYPE_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
+  ECMA_SYMBOL_PROTOTYPE_ROUTINE_START = 0,
   ECMA_SYMBOL_PROTOTYPE_VALUE_OF, /**< ECMA-262 v11, 19.4.3.4 */
   ECMA_SYMBOL_PROTOTYPE_TO_PRIMITIVE, /**< ECMA-262 v11, 19.4.3.5 */
   ECMA_SYMBOL_PROTOTYPE_TO_STRING, /**< ECMA-262 v11, 19.4.3.3 */
@@ -67,11 +67,10 @@ enum
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_builtin_symbol_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide routine
-                                                                     *   identifier */
+ecma_builtin_symbol_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wide routine identifier */
                                                 ecma_value_t this_arg, /**< 'this' argument value */
                                                 const ecma_value_t arguments_list[], /**< list of arguments
-                                                                             *   passed to routine */
+                                                                                      *   passed to routine */
                                                 uint32_t arguments_number) /**< length of arguments' list */
 {
   JERRY_UNUSED_2 (arguments_list, arguments_number);

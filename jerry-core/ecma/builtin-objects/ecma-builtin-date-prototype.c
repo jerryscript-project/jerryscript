@@ -46,7 +46,7 @@
  */
 enum
 {
-  ECMA_DATE_PROTOTYPE_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
+  ECMA_DATE_PROTOTYPE_ROUTINE_START = 0,
 
   ECMA_DATE_PROTOTYPE_GET_FULL_YEAR, /* ECMA-262 v5 15.9.5.10 */
   ECMA_DATE_PROTOTYPE_GET_UTC_FULL_YEAR, /* ECMA-262 v5 15.9.5.11 */
@@ -584,8 +584,8 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_builtin_date_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide routine
-                                                                            *   identifier */
+ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wide routine
+                                                                           *   identifier */
                                               ecma_value_t this_arg, /**< 'this' argument value */
                                               const ecma_value_t arguments_list[], /**< list of arguments
                                                                                     *   passed to routine */

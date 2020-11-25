@@ -802,41 +802,42 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
       }
       case ECMA_OBJECT_TYPE_FUNCTION:
       {
-        if (!ecma_get_object_is_builtin (object_p))
-        {
-          ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
-          ecma_gc_set_object_visited (ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
-                                                                                  ext_func_p->u.function.scope_cp));
+        JERRY_ASSERT (!ecma_get_object_is_builtin (object_p));
+
+        ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
+        ecma_gc_set_object_visited (ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
+                                                                                ext_func_p->u.function.scope_cp));
 
 #if ENABLED (JERRY_ESNEXT)
-          const ecma_compiled_code_t *byte_code_p = ecma_op_function_get_compiled_code (ext_func_p);
+        const ecma_compiled_code_t *byte_code_p = ecma_op_function_get_compiled_code (ext_func_p);
 
-          if (CBC_FUNCTION_IS_ARROW (byte_code_p->status_flags))
+        if (CBC_FUNCTION_IS_ARROW (byte_code_p->status_flags))
+        {
+          ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) object_p;
+
+          if (ecma_is_value_object (arrow_func_p->this_binding))
           {
-            ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) object_p;
-
-            if (ecma_is_value_object (arrow_func_p->this_binding))
-            {
-              ecma_gc_set_object_visited (ecma_get_object_from_value (arrow_func_p->this_binding));
-            }
-
-            if (ecma_is_value_object (arrow_func_p->new_target))
-            {
-              ecma_gc_set_object_visited (ecma_get_object_from_value (arrow_func_p->new_target));
-            }
+            ecma_gc_set_object_visited (ecma_get_object_from_value (arrow_func_p->this_binding));
           }
-#endif /* ENABLED (JERRY_ESNEXT) */
+
+          if (ecma_is_value_object (arrow_func_p->new_target))
+          {
+            ecma_gc_set_object_visited (ecma_get_object_from_value (arrow_func_p->new_target));
+          }
         }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
         break;
       }
 #if ENABLED (JERRY_ESNEXT)
       case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:
       {
-        if (ecma_get_object_is_builtin (object_p))
-        {
-          ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
+        ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
 
-          switch (ext_func_p->u.native_handler.id)
+        if (ecma_get_object_is_builtin (object_p)
+            && ext_func_p->u.built_in.id == ECMA_BUILTIN_ID_HANDLER)
+        {
+          switch (ext_func_p->u.built_in.routine_id)
           {
             case ECMA_NATIVE_HANDLER_PROMISE_RESOLVE:
             case ECMA_NATIVE_HANDLER_PROMISE_REJECT:
@@ -1282,68 +1283,72 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
   {
     uint8_t length_and_bitset_size;
 
-    if (object_type == ECMA_OBJECT_TYPE_CLASS
-        || object_type == ECMA_OBJECT_TYPE_ARRAY)
+    if (object_type == ECMA_OBJECT_TYPE_CLASS || object_type == ECMA_OBJECT_TYPE_ARRAY)
     {
       ext_object_size = sizeof (ecma_extended_built_in_object_t);
-      length_and_bitset_size = ((ecma_extended_built_in_object_t *) object_p)->built_in.length_and_bitset_size;
-      ext_object_size += (2 * sizeof (uint32_t)) * (length_and_bitset_size >> ECMA_BUILT_IN_BITSET_SHIFT);
+      length_and_bitset_size = ((ecma_extended_built_in_object_t *) object_p)->built_in.u.length_and_bitset_size;
+      ext_object_size += sizeof (uint64_t) * (length_and_bitset_size >> ECMA_BUILT_IN_BITSET_SHIFT);
     }
     else
     {
-#if ENABLED (JERRY_ESNEXT)
-      if (object_type == ECMA_OBJECT_TYPE_NATIVE_FUNCTION)
+      if (object_type == ECMA_OBJECT_TYPE_NATIVE_FUNCTION
+          && ecma_builtin_function_is_routine (object_p))
       {
+#if ENABLED (JERRY_ESNEXT)
         ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
-        switch (ext_obj_p->u.native_handler.id)
+
+        if (ext_obj_p->u.built_in.id == ECMA_BUILTIN_ID_HANDLER)
         {
-          case ECMA_NATIVE_HANDLER_PROMISE_RESOLVE:
-          case ECMA_NATIVE_HANDLER_PROMISE_REJECT:
+          switch (ext_obj_p->u.built_in.routine_id)
           {
-            ext_object_size = sizeof (ecma_promise_resolver_t);
-            break;
-          }
-          case ECMA_NATIVE_HANDLER_PROMISE_THEN_FINALLY:
-          case ECMA_NATIVE_HANDLER_PROMISE_CATCH_FINALLY:
-          {
-            ext_object_size = sizeof (ecma_promise_finally_function_t);
-            break;
-          }
-          case ECMA_NATIVE_HANDLER_PROMISE_CAPABILITY_EXECUTOR:
-          {
-            ext_object_size = sizeof (ecma_promise_capability_executor_t);
-            break;
-          }
-          case ECMA_NATIVE_HANDLER_PROMISE_ALL_HELPER:
-          {
-            ext_object_size = sizeof (ecma_promise_all_executor_t);
-            break;
-          }
+            case ECMA_NATIVE_HANDLER_PROMISE_RESOLVE:
+            case ECMA_NATIVE_HANDLER_PROMISE_REJECT:
+            {
+              ext_object_size = sizeof (ecma_promise_resolver_t);
+              break;
+            }
+            case ECMA_NATIVE_HANDLER_PROMISE_THEN_FINALLY:
+            case ECMA_NATIVE_HANDLER_PROMISE_CATCH_FINALLY:
+            {
+              ext_object_size = sizeof (ecma_promise_finally_function_t);
+              break;
+            }
+            case ECMA_NATIVE_HANDLER_PROMISE_CAPABILITY_EXECUTOR:
+            {
+              ext_object_size = sizeof (ecma_promise_capability_executor_t);
+              break;
+            }
+            case ECMA_NATIVE_HANDLER_PROMISE_ALL_HELPER:
+            {
+              ext_object_size = sizeof (ecma_promise_all_executor_t);
+              break;
+            }
 #if ENABLED (JERRY_BUILTIN_PROXY)
-          case ECMA_NATIVE_HANDLER_PROXY_REVOKE:
-          {
-            ext_object_size = sizeof (ecma_revocable_proxy_object_t);
-            break;
-          }
+            case ECMA_NATIVE_HANDLER_PROXY_REVOKE:
+            {
+              ext_object_size = sizeof (ecma_revocable_proxy_object_t);
+              break;
+            }
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
-          case ECMA_NATIVE_HANDLER_VALUE_THUNK:
-          case ECMA_NATIVE_HANDLER_VALUE_THROWER:
-          {
-            ecma_free_value_if_not_object (((ecma_promise_value_thunk_t *) object_p)->value);
-            ext_object_size = sizeof (ecma_promise_value_thunk_t);
-            break;
-          }
-          default:
-          {
-            JERRY_UNREACHABLE ();
+            case ECMA_NATIVE_HANDLER_VALUE_THUNK:
+            case ECMA_NATIVE_HANDLER_VALUE_THROWER:
+            {
+              ecma_free_value_if_not_object (((ecma_promise_value_thunk_t *) object_p)->value);
+              ext_object_size = sizeof (ecma_promise_value_thunk_t);
+              break;
+            }
+            default:
+            {
+              JERRY_UNREACHABLE ();
+            }
           }
         }
+#endif /* ENABLED (JERRY_ESNEXT) */
       }
       else
-#endif /* ENABLED (JERRY_ESNEXT) */
       {
-        length_and_bitset_size = ((ecma_extended_object_t *) object_p)->u.built_in.length_and_bitset_size;
-        ext_object_size += (2 * sizeof (uint32_t)) * (length_and_bitset_size >> ECMA_BUILT_IN_BITSET_SHIFT);
+        length_and_bitset_size = ((ecma_extended_object_t *) object_p)->u.built_in.u.length_and_bitset_size;
+        ext_object_size += sizeof (uint64_t) * (length_and_bitset_size >> ECMA_BUILT_IN_BITSET_SHIFT);
       }
 
       ecma_gc_free_properties (object_p);

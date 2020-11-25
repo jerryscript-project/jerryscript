@@ -42,7 +42,7 @@
 enum
 {
   /* Note: these 6 routines must be in this order */
-  ECMA_OBJECT_PROTOTYPE_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
+  ECMA_OBJECT_PROTOTYPE_ROUTINE_START = 0,
   ECMA_OBJECT_PROTOTYPE_TO_STRING,
   ECMA_OBJECT_PROTOTYPE_VALUE_OF,
   ECMA_OBJECT_PROTOTYPE_TO_LOCALE_STRING,
@@ -405,11 +405,11 @@ ecma_builtin_object_prototype_lookup_getter_setter (ecma_value_t this_arg, /**< 
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_builtin_object_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide routine
-                                                                              *   identifier */
+ecma_builtin_object_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wide routine
+                                                                             *   identifier */
                                                 ecma_value_t this_arg, /**< 'this' argument value */
                                                 const ecma_value_t arguments_list_p[], /**< list of arguments
-                                                                                      *   passed to routine */
+                                                                                        *   passed to routine */
                                                 uint32_t arguments_number) /**< length of arguments' list */
 {
   JERRY_UNUSED (arguments_number);

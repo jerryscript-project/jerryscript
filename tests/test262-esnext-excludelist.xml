@@ -247,10 +247,6 @@
   <test id="built-ins/TypedArray/prototype/map/speciesctor-get-species-custom-ctor.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/map/speciesctor-get-species-returns-throws.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/map/speciesctor-get-species.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/reduce/BigInt/callbackfn-not-called-on-empty.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/reduce/callbackfn-not-called-on-empty.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/reduceRight/BigInt/callbackfn-not-called-on-empty.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/reduceRight/callbackfn-not-called-on-empty.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/set/BigInt/number-tobigint.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/slice/BigInt/set-values-from-different-ctor-type.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/slice/BigInt/speciesctor-get-ctor-abrupt.js"><reason></reason></test>

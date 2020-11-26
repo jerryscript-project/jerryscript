@@ -262,8 +262,8 @@ ecma_builtin_typedarray_prototype_map (ecma_value_t this_arg, /**< this object *
 static ecma_value_t
 ecma_builtin_typedarray_prototype_reduce_with_direction (ecma_value_t this_arg, /**< this object */
                                                          ecma_typedarray_info_t *info_p, /**< object info */
-                                                         ecma_value_t cb_func_val, /**< callback function */
-                                                         ecma_value_t initial_val, /**< initial value */
+                                                         const ecma_value_t arguments_list_p[], /**arg_list*/
+                                                         uint32_t arguments_number, /**< length of arguments' list*/
                                                          bool is_right) /**< choose order, true is reduceRight */
 {
   ecma_typedarray_getter_fn_t getter_cb = ecma_get_typedarray_getter_fn (info_p->id);
@@ -271,12 +271,12 @@ ecma_builtin_typedarray_prototype_reduce_with_direction (ecma_value_t this_arg, 
 
   if (info_p->length == 0)
   {
-    if (ecma_is_value_undefined (initial_val))
+    if (arguments_number < 2)
     {
       return ecma_raise_type_error (ECMA_ERR_MSG ("Initial value cannot be undefined."));
     }
 
-    return ecma_copy_value (initial_val);
+    return arguments_list_p[1];
   }
 
   JERRY_ASSERT (info_p->length > 0);
@@ -284,7 +284,7 @@ ecma_builtin_typedarray_prototype_reduce_with_direction (ecma_value_t this_arg, 
   ecma_value_t accumulator = ECMA_VALUE_UNDEFINED;
   uint32_t index = is_right ? (info_p->length - 1) : 0;
 
-  if (ecma_is_value_undefined (initial_val))
+  if (ecma_is_value_undefined (arguments_list_p[1]))
   {
     byte_pos = index << info_p->shift;
     accumulator = getter_cb (info_p->buffer_p + byte_pos);
@@ -310,10 +310,10 @@ ecma_builtin_typedarray_prototype_reduce_with_direction (ecma_value_t this_arg, 
   }
   else
   {
-    accumulator = ecma_copy_value (initial_val);
+    accumulator = ecma_copy_value (arguments_list_p[1]);
   }
 
-  ecma_object_t *func_object_p = ecma_get_object_from_value (cb_func_val);
+  ecma_object_t *func_object_p = ecma_get_object_from_value (arguments_list_p[0]);
 
   while (true)
   {
@@ -1755,8 +1755,8 @@ ecma_builtin_typedarray_prototype_dispatch_routine (uint16_t builtin_routine_id,
       bool is_reduce =  builtin_routine_id == ECMA_TYPEDARRAY_PROTOTYPE_ROUTINE_REDUCE_RIGHT;
       return ecma_builtin_typedarray_prototype_reduce_with_direction (this_arg,
                                                                       &info,
-                                                                      arguments_list_p[0],
-                                                                      arguments_list_p[1],
+                                                                      arguments_list_p,
+                                                                      arguments_number,
                                                                       is_reduce);
     }
     case ECMA_TYPEDARRAY_PROTOTYPE_ROUTINE_FILTER:

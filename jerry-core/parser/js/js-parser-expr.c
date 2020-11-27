@@ -2630,8 +2630,7 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
             continue;
           }
         }
-
-        if (call_arguments == 2)
+        else if (call_arguments == 2)
         {
           if (opcode == CBC_CALL)
           {

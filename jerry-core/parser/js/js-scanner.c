@@ -2130,6 +2130,9 @@ scanner_scan_statement_end (parser_context_t *context_p, /**< context */
 
         terminator_found = true;
         parser_stack_pop_uint8 (context_p);
+#if ENABLED (JERRY_MODULE_SYSTEM)
+        scanner_context_p->active_literal_pool_p->status_flags &= (uint16_t) ~SCANNER_LITERAL_POOL_IN_EXPORT;
+#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
         lexer_next_token (context_p);
         continue;
       }

@@ -605,7 +605,7 @@ opfunc_append_array (ecma_value_t *stack_top_p, /**< current stack top */
       }
     }
 
-    ext_array_obj_p->u.array.u.hole_count -= filled_holes * ECMA_FAST_ARRAY_HOLE_ONE;
+    ext_array_obj_p->u.array.length_prop_and_hole_count -= filled_holes * ECMA_FAST_ARRAY_HOLE_ONE;
 
     if (JERRY_UNLIKELY ((values_length - filled_holes) > ECMA_FAST_ARRAY_MAX_NEW_HOLES_COUNT))
     {

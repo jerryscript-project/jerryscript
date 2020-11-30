@@ -114,7 +114,6 @@ parser_new_tagged_template_literal (ecma_object_t **raw_strings_p) /**< [out] ra
                                 ecma_get_magic_string (LIT_MAGIC_STRING_RAW),
                                 ecma_make_object_value (*raw_strings_p),
                                 ECMA_PROPERTY_FIXED);
-  ecma_deref_object (*raw_strings_p);
 
   return template_obj_p;
 } /* parser_new_tagged_template_literal */
@@ -129,8 +128,8 @@ parser_tagged_template_literal_freeze_array (ecma_object_t *obj_p)
 
   ecma_op_ordinary_object_prevent_extensions (obj_p);
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
-  uint8_t new_prop_value = (uint8_t) (ext_obj_p->u.array.u.length_prop & ~ECMA_PROPERTY_FLAG_WRITABLE);
-  ext_obj_p->u.array.u.length_prop = new_prop_value;
+  ext_obj_p->u.array.length_prop_and_hole_count &= (uint32_t) ~ECMA_PROPERTY_FLAG_WRITABLE;
+  ext_obj_p->u.array.length_prop_and_hole_count |= ECMA_ARRAY_TEMPLATE_LITERAL;
 } /* parser_tagged_template_literal_freeze_array */
 
 /**

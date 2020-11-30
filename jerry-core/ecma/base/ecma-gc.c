@@ -626,13 +626,6 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
   }
   else
   {
-    jmem_cpointer_t proto_cp = object_p->u2.prototype_cp;
-
-    if (proto_cp != JMEM_CP_NULL)
-    {
-      ecma_gc_set_object_visited (ECMA_GET_NON_NULL_POINTER (ecma_object_t, proto_cp));
-    }
-
     switch (ecma_get_object_type (object_p))
     {
       case ECMA_OBJECT_TYPE_CLASS:
@@ -765,6 +758,15 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
       {
         ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
+#if ENABLED (JERRY_ESNEXT)
+        if (JERRY_UNLIKELY (ext_object_p->u.array.length_prop_and_hole_count & ECMA_ARRAY_TEMPLATE_LITERAL))
+        {
+          /* Template objects are never marked. */
+          JERRY_ASSERT (object_p->type_flags_refs >= ECMA_OBJECT_REF_ONE);
+          return;
+        }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
         if (ecma_op_array_is_fast_array (ext_object_p))
         {
           if (object_p->u1.property_list_cp != JMEM_CP_NULL)
@@ -780,6 +782,12 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             }
           }
 
+          jmem_cpointer_t proto_cp = object_p->u2.prototype_cp;
+
+          if (proto_cp != JMEM_CP_NULL)
+          {
+            ecma_gc_set_object_visited (ECMA_GET_NON_NULL_POINTER (ecma_object_t, proto_cp));
+          }
           return;
         }
         break;
@@ -792,6 +800,13 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
          * Aside from the tag bits every other bit should be zero,
          */
         JERRY_ASSERT ((object_p->u1.property_list_cp & ~JMEM_TAG_MASK) == 0);
+
+        jmem_cpointer_t proto_cp = object_p->u2.prototype_cp;
+
+        if (proto_cp != JMEM_CP_NULL)
+        {
+          ecma_gc_set_object_visited (ECMA_GET_NON_NULL_POINTER (ecma_object_t, proto_cp));
+        }
         return;
       }
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
@@ -906,6 +921,13 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
       {
         break;
       }
+    }
+
+    jmem_cpointer_t proto_cp = object_p->u2.prototype_cp;
+
+    if (proto_cp != JMEM_CP_NULL)
+    {
+      ecma_gc_set_object_visited (ECMA_GET_NON_NULL_POINTER (ecma_object_t, proto_cp));
     }
   }
 

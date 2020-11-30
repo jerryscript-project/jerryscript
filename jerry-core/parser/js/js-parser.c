@@ -2732,8 +2732,9 @@ parser_raise_error (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ESNEXT)
     if (saved_context_p->tagged_template_literal_cp != JMEM_CP_NULL)
     {
-      ecma_collection_free (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t,
-                                                             saved_context_p->tagged_template_literal_cp));
+      ecma_collection_t *collection = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t,
+                                                                       saved_context_p->tagged_template_literal_cp);
+      ecma_collection_free_template_literal (collection);
     }
 #endif /* ENABLED (JERRY_ESNEXT)  */
 
@@ -2743,8 +2744,9 @@ parser_raise_error (parser_context_t *context_p, /**< context */
 #if ENABLED (JERRY_ESNEXT)
   if (context_p->tagged_template_literal_cp != JMEM_CP_NULL)
   {
-    ecma_collection_free (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t,
-                                                           context_p->tagged_template_literal_cp));
+    ecma_collection_t *collection = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t,
+                                                                     context_p->tagged_template_literal_cp);
+    ecma_collection_free_template_literal (collection);
   }
 #endif /* ENABLED (JERRY_ESNEXT)  */
 

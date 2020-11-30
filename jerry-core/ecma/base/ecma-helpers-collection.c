@@ -79,6 +79,46 @@ ecma_collection_free_objects (ecma_collection_t *collection_p) /**< value collec
   ecma_collection_destroy (collection_p);
 } /* ecma_collection_free_objects */
 
+#if ENABLED (JERRY_ESNEXT)
+
+/**
+ * Free the template literal objects and deallocate the collection
+ */
+void
+ecma_collection_free_template_literal (ecma_collection_t *collection_p) /**< value collection */
+{
+  for (uint32_t i = 0; i < collection_p->item_count; i++)
+  {
+    ecma_object_t *object_p = ecma_get_object_from_value (collection_p->buffer_p[i]);
+
+    JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_ARRAY);
+
+    ecma_extended_object_t *array_object_p = (ecma_extended_object_t *) object_p;
+
+    JERRY_ASSERT (array_object_p->u.array.length_prop_and_hole_count & ECMA_ARRAY_TEMPLATE_LITERAL);
+    array_object_p->u.array.length_prop_and_hole_count &= (uint32_t) ECMA_ARRAY_TEMPLATE_LITERAL;
+
+    ecma_property_value_t *property_value_p;
+
+    property_value_p = ecma_get_named_data_property (object_p, ecma_get_magic_string (LIT_MAGIC_STRING_RAW));
+    ecma_object_t *raw_object_p = ecma_get_object_from_value (property_value_p->value);
+
+    JERRY_ASSERT (ecma_get_object_type (raw_object_p) == ECMA_OBJECT_TYPE_ARRAY);
+
+    array_object_p = (ecma_extended_object_t *) raw_object_p;
+
+    JERRY_ASSERT (array_object_p->u.array.length_prop_and_hole_count & ECMA_ARRAY_TEMPLATE_LITERAL);
+    array_object_p->u.array.length_prop_and_hole_count &= (uint32_t) ECMA_ARRAY_TEMPLATE_LITERAL;
+
+    ecma_deref_object (raw_object_p);
+    ecma_deref_object (object_p);
+  }
+
+  ecma_collection_destroy (collection_p);
+} /* ecma_collection_free_template_literal */
+
+#endif /* ENABLED (JERRY_ESNEXT) */
+
 /**
  * Free the non-object collection elements and deallocate the collection
  */

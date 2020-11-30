@@ -1130,18 +1130,16 @@ ecma_proxy_object_get (ecma_object_t *obj_p, /**< proxy object */
     return trap;
   }
 
-  ecma_value_t target = proxy_obj_p->target;
-  ecma_object_t *target_obj_p = ecma_get_object_from_value (target);
-
   /* 8. */
   if (ecma_is_value_undefined (trap))
   {
+    ecma_object_t *target_obj_p = ecma_get_object_from_value (proxy_obj_p->target);
     return ecma_op_object_get_with_receiver (target_obj_p, prop_name_p, receiver);
   }
 
   ecma_object_t *func_obj_p = ecma_get_object_from_value (trap);
   ecma_value_t prop_value = ecma_make_prop_name_value (prop_name_p);
-  ecma_value_t args[] = { target, prop_value, receiver };
+  ecma_value_t args[] = { proxy_obj_p->target, prop_value, receiver };
 
   /* 9. */
   ecma_value_t trap_result = ecma_op_function_call (func_obj_p, handler, args, 3);
@@ -1156,8 +1154,7 @@ ecma_proxy_object_get (ecma_object_t *obj_p, /**< proxy object */
 
   /* 11. */
   ecma_property_descriptor_t target_desc;
-
-  ecma_value_t status = ecma_op_object_get_own_property_descriptor (target_obj_p, prop_name_p, &target_desc);
+  ecma_value_t status = ecma_op_get_own_property_descriptor (proxy_obj_p->target, prop_name_p, &target_desc);
 
   /* 12. */
   if (ECMA_IS_VALUE_ERROR (status))

@@ -1895,6 +1895,29 @@ ecma_op_object_get_own_property_descriptor (ecma_object_t *object_p, /**< the ob
   return ECMA_VALUE_TRUE;
 } /* ecma_op_object_get_own_property_descriptor */
 
+#if ENABLED (JERRY_BUILTIN_PROXY)
+/**
+ * Get property descriptor from a target value for a specified property.
+ *
+ * For more details see ecma_op_object_get_own_property_descriptor
+ *
+ * @return ECMA_VALUE_ERROR - if the Proxy.[[GetOwnProperty]] operation raises error
+ *         ECMA_VALUE_{TRUE, FALSE} - if property found or not
+ */
+ecma_value_t
+ecma_op_get_own_property_descriptor (ecma_value_t target, /**< target value */
+                                     ecma_string_t *property_name_p, /**< property name */
+                                     ecma_property_descriptor_t *prop_desc_p) /**< property descriptor */
+{
+  if (!ecma_is_value_object (target))
+  {
+    return ECMA_VALUE_FALSE;
+  }
+
+  return ecma_op_object_get_own_property_descriptor (ecma_get_object_from_value (target), property_name_p, prop_desc_p);
+} /* ecma_op_get_own_property_descriptor */
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+
 /**
  * [[HasInstance]] ecma object's operation
  *

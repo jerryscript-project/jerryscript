@@ -3109,7 +3109,6 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
     ecma_value_t error = jcontext_take_exception ();
     ecma_property_t *prop_p = ecma_find_named_property (ecma_get_object_from_value (error),
                                                         ecma_get_magic_string (LIT_MAGIC_STRING_MESSAGE));
-    ecma_free_value (error);
     const char default_msg[] = "Invalid regular expression";
     lit_utf8_byte_t *buffer_p = (lit_utf8_byte_t *) default_msg;
     lit_utf8_size_t size = sizeof (buffer_p) - 1;
@@ -3127,6 +3126,7 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
 
     if (literal_index != PARSER_INVALID_LITERAL_INDEX)
     {
+      ecma_free_value (error);
       context_p->lit_object.literal_p = literal_p;
       context_p->lit_object.index = literal_index;
       return;
@@ -3137,6 +3137,8 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
     memcpy ((uint8_t *) literal_p->u.char_p, buffer_p, size);
     literal_type = LEXER_STRING_LITERAL;
     length = size;
+
+    ecma_free_value (error);
 #else /* !ENABLED (JERRY_ESNEXT) */
     parser_raise_error (context_p, PARSER_ERR_INVALID_REGEXP);
 #endif /* ENABLED (JERRY_ESNEXT) */

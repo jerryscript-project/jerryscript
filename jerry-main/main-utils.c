@@ -174,15 +174,18 @@ main_print_unhandled_exception (jerry_value_t error_value) /**< error value */
           pos++;
         }
 
-        uint32_t char_count = 0;
-        uint8_t ch;
-
-        do
+        /* Print character if:
+         * - The max line length is not reached.
+         * - The current position is valid (it is not the end of the source).
+         * - The current character is not a newline.
+         **/
+        for (uint32_t char_count = 0;
+             (char_count < SYNTAX_ERROR_MAX_LINE_LENGTH) && (pos < source_size) && (source_p[pos] != '\n');
+             char_count++, pos++)
         {
-          ch = source_p[pos++];
-          jerry_port_log (JERRY_LOG_LEVEL_ERROR, "%c", ch);
+          jerry_port_log (JERRY_LOG_LEVEL_ERROR, "%c", source_p[pos]);
         }
-        while (ch != '\n' && char_count++ < SYNTAX_ERROR_MAX_LINE_LENGTH);
+        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "\n");
 
         jerry_port_release_source (source_p);
 

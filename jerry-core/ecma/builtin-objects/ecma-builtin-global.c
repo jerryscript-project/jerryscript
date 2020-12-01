@@ -43,7 +43,7 @@
  */
 enum
 {
-  ECMA_GLOBAL_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
+  ECMA_GLOBAL_ROUTINE_START = 0,
   /* Note: these 5 routine ids must be in this order */
   ECMA_GLOBAL_IS_NAN,
   ECMA_GLOBAL_IS_FINITE,
@@ -590,7 +590,7 @@ ecma_builtin_global_object_unescape (lit_utf8_byte_t *input_start_p, /**< routin
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_builtin_global_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide routine identifier */
+ecma_builtin_global_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wide routine identifier */
                                       ecma_value_t this_arg, /**< 'this' argument value */
                                       const ecma_value_t arguments_list_p[], /**< list of arguments
                                                                               *   passed to routine */

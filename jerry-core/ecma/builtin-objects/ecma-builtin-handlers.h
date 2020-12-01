@@ -27,6 +27,7 @@
 
 typedef enum
 {
+  ECMA_NATIVE_HANDLER_START = 0,
 #define ECMA_NATIVE_HANDLER(id, handler, length) id,
 #include "ecma-builtin-handlers.inc.h"
 #undef ECMA_NATIVE_HANDLER

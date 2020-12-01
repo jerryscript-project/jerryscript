@@ -851,19 +851,26 @@ typedef struct
 typedef struct
 {
   uint8_t id; /**< built-in id */
-  uint8_t length_and_bitset_size; /**< length for built-in functions and
-                                   *   bit set size for all built-ins */
-  uint16_t routine_id; /**< routine id for built-in functions */
+  uint8_t routine_id; /**< routine id for built-in functions */
+  /** built-in specific field */
   union
   {
-    uint32_t instantiated_bitset[1]; /**< bit set for instantiated properties */
-    struct
-    {
-      uint16_t name; /**< name of the built-in functions */
-      uint16_t bitset; /**< bit set for instantiated properties of builtin functions */
-    } builtin_routine;
+    uint8_t length_and_bitset_size; /**< length and bit set size for generic built-ins */
+    uint8_t routine_index; /**< property descriptor index for built-in routines */
   } u;
+  /** extra built-in info */
+  union
+  {
+    uint8_t instantiated_bitset[1]; /**< instantiated property bit set for generic built-ins */
+    uint8_t routine_flags; /**< flags for built-in routines */
+  } u2;
+  uint32_t continue_instantiated_bitset[1]; /**< bit set for instantiated properties */
 } ecma_built_in_props_t;
+
+/**
+ * Number of bits available in the instantiated bitset without allocation
+ */
+#define ECMA_BUILTIN_INSTANTIATED_BITSET_MIN_SIZE (8 + 32)
 
 /**
  * Builtin routine function object status flags
@@ -976,15 +983,6 @@ typedef struct
       jmem_cpointer_tag_t target_function; /**< target function */
       ecma_value_t args_len_or_this; /**< length of arguments or this value */
     } bound_function;
-
-    /**
-     * Description of a built-in native handler object.
-     */
-    struct
-    {
-      uint32_t id;    /**< handler id */
-      uint32_t flags; /**< handler flags */
-    } native_handler;
 
     ecma_native_handler_t external_handler_cb; /**< external function */
   } u;

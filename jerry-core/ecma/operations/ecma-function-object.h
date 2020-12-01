@@ -75,13 +75,6 @@ ecma_op_create_arrow_function_object (ecma_object_t *scope_p, const ecma_compile
 ecma_object_t *
 ecma_op_create_native_handler (ecma_native_handler_id_t id, size_t object_size);
 
-ecma_property_t *
-ecma_op_native_handler_try_to_lazy_instantiate_property (ecma_object_t *object_p, ecma_string_t *property_name_p);
-
-void
-ecma_op_native_handler_list_lazy_property_names (ecma_object_t *object_p,
-                                                 ecma_collection_t *prop_names_p,
-                                                 ecma_property_counter_t *prop_counter_p);
 #endif /* ENABLED (JERRY_ESNEXT) */
 
 ecma_object_t *

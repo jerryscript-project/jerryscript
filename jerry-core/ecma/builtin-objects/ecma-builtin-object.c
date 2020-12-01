@@ -46,7 +46,7 @@
  */
 enum
 {
-  ECMA_OBJECT_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
+  ECMA_OBJECT_ROUTINE_START = 0,
 
   ECMA_OBJECT_ROUTINE_CREATE,
   ECMA_OBJECT_ROUTINE_IS,
@@ -1375,8 +1375,7 @@ ecma_op_object_get_own_property_keys (ecma_value_t this_arg, /**< this argument 
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_builtin_object_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide routine
-                                                                    *   identifier */
+ecma_builtin_object_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wide routine identifier */
                                       ecma_value_t this_arg, /**< 'this' argument value */
                                       const ecma_value_t arguments_list_p[], /**< list of arguments
                                                                               *   passed to routine */

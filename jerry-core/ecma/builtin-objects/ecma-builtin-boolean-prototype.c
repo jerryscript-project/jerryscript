@@ -39,7 +39,7 @@
  */
 enum
 {
-  ECMA_BOOLEAN_PROTOTYPE_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
+  ECMA_BOOLEAN_PROTOTYPE_ROUTINE_START = 0,
   ECMA_BOOLEAN_PROTOTYPE_ROUTINE_TO_STRING,
   ECMA_BOOLEAN_PROTOTYPE_ROUTINE_VALUE_OF
 };
@@ -98,8 +98,8 @@ ecma_builtin_boolean_prototype_object_value_of (ecma_value_t this_arg) /**< this
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_builtin_boolean_prototype_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide routine
-                                                                               *   identifier */
+ecma_builtin_boolean_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wide routine
+                                                                              *   identifier */
                                                  ecma_value_t this_arg, /**< 'this' argument value */
                                                  const ecma_value_t arguments_list_p[], /**< list of arguments
                                                                                          *   passed to routine */

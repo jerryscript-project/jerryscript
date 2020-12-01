@@ -94,7 +94,7 @@ ecma_value_t \
 ecma_builtin_ ## lowercase_name ## _dispatch_construct (const ecma_value_t *, \
                                                         uint32_t); \
 ecma_value_t \
-ecma_builtin_ ## lowercase_name ## _dispatch_routine (uint16_t builtin_routine_id, \
+ecma_builtin_ ## lowercase_name ## _dispatch_routine (uint8_t builtin_routine_id, \
                                                       ecma_value_t this_arg_value, \
                                                       const ecma_value_t [], \
                                                       uint32_t);
@@ -106,7 +106,7 @@ ecma_builtin_ ## lowercase_name ## _dispatch_routine (uint16_t builtin_routine_i
 extern const ecma_builtin_property_descriptor_t \
 ecma_builtin_ ## lowercase_name ## _property_descriptor_list[]; \
 ecma_value_t \
-ecma_builtin_ ## lowercase_name ## _dispatch_routine (uint16_t builtin_routine_id, \
+ecma_builtin_ ## lowercase_name ## _dispatch_routine (uint8_t builtin_routine_id, \
                                                       ecma_value_t this_arg_value, \
                                                       const ecma_value_t [], \
                                                       uint32_t);

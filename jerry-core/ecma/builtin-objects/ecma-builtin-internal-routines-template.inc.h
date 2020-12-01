@@ -65,7 +65,7 @@
  */
 enum
 {
-  PASTE (ECMA_ROUTINE_START_, BUILTIN_UNDERSCORED_ID) = ECMA_BUILTIN_ID__COUNT - 1,
+  PASTE (ECMA_ROUTINE_START_, BUILTIN_UNDERSCORED_ID) = 0,
 #define ROUTINE(name, c_function_name, args_number, length_prop_value) \
   ECMA_ROUTINE_ ## name ## c_function_name,
 #define ROUTINE_CONFIGURABLE_ONLY(name, c_function_name, args_number, length_prop_value) \
@@ -230,8 +230,8 @@ const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] =
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-DISPATCH_ROUTINE_ROUTINE_NAME (uint16_t builtin_routine_id, /**< built-in wide routine
-                                                                 identifier */
+DISPATCH_ROUTINE_ROUTINE_NAME (uint8_t builtin_routine_id, /**< built-in wide routine
+                                                                identifier */
                                ecma_value_t this_arg_value, /**< 'this' argument
                                                                  value */
                                const ecma_value_t arguments_list[], /**< list of arguments

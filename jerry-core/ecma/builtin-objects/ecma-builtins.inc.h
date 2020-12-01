@@ -25,7 +25,7 @@ BUILTIN (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
 
 /* The Object object (15.2.1) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_OBJECT,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
                  true,
                  object)
@@ -40,7 +40,7 @@ BUILTIN (ECMA_BUILTIN_ID_ARRAY_PROTOTYPE,
 
 /* The Array object (15.4.1) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_ARRAY,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
                  true,
                  array)
@@ -94,7 +94,7 @@ BUILTIN (ECMA_BUILTIN_ID_STRING_PROTOTYPE,
 
 /* The String object (15.5.1) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_STRING,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
                  true,
                  string)
@@ -110,7 +110,7 @@ BUILTIN (ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE,
 
 /* The Boolean object (15.6.1) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_BOOLEAN,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
                  true,
                  boolean)
@@ -126,7 +126,7 @@ BUILTIN (ECMA_BUILTIN_ID_NUMBER_PROTOTYPE,
 
 /* The Number object (15.7.1) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_NUMBER,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
                  true,
                  number)
@@ -134,14 +134,14 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_NUMBER,
 
 /* The Function.prototype object (15.3.4) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
                  true,
                  function_prototype)
 
 /* The Function object (15.3.1) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_FUNCTION,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
                  true,
                  function)
@@ -177,7 +177,7 @@ BUILTIN (ECMA_BUILTIN_ID_JSON,
 #if ENABLED (JERRY_BUILTIN_DATE)
 /* The Date object (15.9.3) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_DATE,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
                  true,
                  date)
@@ -186,7 +186,7 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_DATE,
 #if ENABLED (JERRY_BUILTIN_REGEXP)
 /* The RegExp object (15.10) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_REGEXP,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
                  true,
                  regexp)
@@ -200,7 +200,7 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_REGEXP,
 
 /* The Error object (15.11.1) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_ERROR,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
                  true,
                  error)
@@ -222,7 +222,7 @@ BUILTIN (ECMA_BUILTIN_ID_EVAL_ERROR_PROTOTYPE,
 
 /* The EvalError object (15.11.6.1) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_EVAL_ERROR,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_NATIVE_ERROR_PROTOTYPE_ID,
                  true,
                  eval_error)
@@ -236,7 +236,7 @@ BUILTIN (ECMA_BUILTIN_ID_RANGE_ERROR_PROTOTYPE,
 
 /* The RangeError object (15.11.6.2) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_RANGE_ERROR,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_NATIVE_ERROR_PROTOTYPE_ID,
                  true,
                  range_error)
@@ -250,7 +250,7 @@ BUILTIN (ECMA_BUILTIN_ID_REFERENCE_ERROR_PROTOTYPE,
 
 /* The ReferenceError object (15.11.6.3) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_REFERENCE_ERROR,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_NATIVE_ERROR_PROTOTYPE_ID,
                  true,
                  reference_error)
@@ -264,7 +264,7 @@ BUILTIN (ECMA_BUILTIN_ID_SYNTAX_ERROR_PROTOTYPE,
 
 /* The SyntaxError object (15.11.6.4) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_SYNTAX_ERROR,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_NATIVE_ERROR_PROTOTYPE_ID,
                  true,
                  syntax_error)
@@ -278,7 +278,7 @@ BUILTIN (ECMA_BUILTIN_ID_TYPE_ERROR_PROTOTYPE,
 
 /* The TypeError object (15.11.6.5) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_TYPE_ERROR,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_NATIVE_ERROR_PROTOTYPE_ID,
                  true,
                  type_error)
@@ -292,7 +292,7 @@ BUILTIN (ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE,
 
 /* The URIError object (15.11.6.6) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_URI_ERROR,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_NATIVE_ERROR_PROTOTYPE_ID,
                  true,
                  uri_error)
@@ -300,7 +300,7 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_URI_ERROR,
 
 /**< The [[ThrowTypeError]] object (13.2.3) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_TYPE_ERROR_THROWER,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
                  false,
                  type_error_thrower)
@@ -316,7 +316,7 @@ BUILTIN (ECMA_BUILTIN_ID_ARRAYBUFFER_PROTOTYPE,
 
 /* The ArrayBuffer object (ES2015 24.1.2) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_ARRAYBUFFER,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
                  true,
                  arraybuffer)
@@ -331,62 +331,62 @@ BUILTIN (ECMA_BUILTIN_ID_TYPEDARRAY_PROTOTYPE,
 /* The %TypedArray% intrinsic object (ES2015 22.2.1)
    Note: The routines must be in this order. */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_TYPEDARRAY,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
                  true,
                  typedarray)
 
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_INT8ARRAY,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_TYPEDARRAY,
                  true,
                  int8array)
 
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_UINT8ARRAY,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_TYPEDARRAY,
                  true,
                  uint8array)
 
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_UINT8CLAMPEDARRAY,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_TYPEDARRAY,
                  true,
                  uint8clampedarray)
 
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_INT16ARRAY,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_TYPEDARRAY,
                  true,
                  int16array)
 
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_UINT16ARRAY,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_TYPEDARRAY,
                  true,
                  uint16array)
 
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_INT32ARRAY,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_TYPEDARRAY,
                  true,
                  int32array)
 
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_UINT32ARRAY,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_TYPEDARRAY,
                  true,
                  uint32array)
 
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_FLOAT32ARRAY,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_TYPEDARRAY,
                  true,
                  float32array)
 
 #if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_FLOAT64ARRAY,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_TYPEDARRAY,
                  true,
                  float64array)
@@ -394,13 +394,13 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_FLOAT64ARRAY,
 
 #if ENABLED (JERRY_BUILTIN_BIGINT)
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_BIGINT64ARRAY,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_TYPEDARRAY,
                  true,
                  bigint64array)
 
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_BIGUINT64ARRAY,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_TYPEDARRAY,
                  true,
                  biguint64array)
@@ -486,7 +486,7 @@ BUILTIN (ECMA_BUILTIN_ID_PROMISE_PROTOTYPE,
          promise_prototype)
 
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_PROMISE,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
                  true,
                  promise)
@@ -504,7 +504,7 @@ BUILTIN (ECMA_BUILTIN_ID_MAP_PROTOTYPE,
 
 /* The Map routine (ECMA-262 v6, 23.1.1.1) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_MAP,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
                  true,
                  map)
@@ -522,7 +522,7 @@ BUILTIN (ECMA_BUILTIN_ID_SET_PROTOTYPE,
 
 /* The Set routine (ECMA-262 v6, 23.1.1.1) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_SET,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
                  true,
                  set)
@@ -540,7 +540,7 @@ BUILTIN (ECMA_BUILTIN_ID_WEAKMAP_PROTOTYPE,
 
 /* The WeakMap routine (ECMA-262 v6, 23.1.1.1) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_WEAKMAP,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
                  true,
                  weakmap)
@@ -558,7 +558,7 @@ BUILTIN (ECMA_BUILTIN_ID_WEAKSET_PROTOTYPE,
 
 /* The WeakSet routine (ECMA-262 v6, 23.1.1.1) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_WEAKSET,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
                  true,
                  weakset)
@@ -568,7 +568,7 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_WEAKSET,
 #if ENABLED (JERRY_BUILTIN_PROXY)
 /* The Proxy routine (ECMA-262 v6, 26.2.1) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_PROXY,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
                  true,
                  proxy)
@@ -579,14 +579,14 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_PROXY,
 /* Intrinsic hidden builtin object  */
 BUILTIN (ECMA_BUILTIN_ID_INTRINSIC_OBJECT,
          ECMA_OBJECT_TYPE_GENERAL,
-         ECMA_BUILTIN_ID__COUNT,
+         ECMA_BUILTIN_ID__COUNT /* no prototype */,
          true,
          intrinsic)
 
 /* The Array.prototype[@@unscopables] object */
 BUILTIN (ECMA_BUILTIN_ID_ARRAY_PROTOTYPE_UNSCOPABLES,
          ECMA_OBJECT_TYPE_GENERAL,
-         ECMA_BUILTIN_ID__COUNT,
+         ECMA_BUILTIN_ID__COUNT /* no prototype */,
          true,
          array_prototype_unscopables)
 
@@ -599,14 +599,14 @@ BUILTIN (ECMA_BUILTIN_ID_SYMBOL_PROTOTYPE,
 
 /* The Symbol routine (ECMA-262 v6, 19.4.2.1) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_SYMBOL,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
                  true,
                  symbol)
 
 /* The %AsyncFunction% object (ECMA-262 v11, 25.7.2) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_ASYNC_FUNCTION,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_FUNCTION,
                  true,
                  async_function)
@@ -648,7 +648,7 @@ BUILTIN (ECMA_BUILTIN_ID_ASYNC_ITERATOR_PROTOTYPE,
 
 /* The %(GeneratorFunction)% object */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_GENERATOR_FUNCTION,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_FUNCTION,
                  true,
                  generator_function)
@@ -669,7 +669,7 @@ BUILTIN (ECMA_BUILTIN_ID_GENERATOR_PROTOTYPE,
 
 /* The %(AsyncGeneratorFunction)% object */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_ASYNC_GENERATOR_FUNCTION,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_FUNCTION,
                  true,
                  async_generator_function)
@@ -718,7 +718,7 @@ BUILTIN (ECMA_BUILTIN_ID_BIGINT_PROTOTYPE,
 
 /* The %BigInt% object */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_BIGINT,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
                  true,
                  bigint)
@@ -734,7 +734,7 @@ BUILTIN (ECMA_BUILTIN_ID_DATAVIEW_PROTOTYPE,
 
 /* The DataView routine (ECMA-262 v6, 24.2.2.1) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_DATAVIEW,
-                 ECMA_OBJECT_TYPE_FUNCTION,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
                  ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
                  true,
                  dataview)

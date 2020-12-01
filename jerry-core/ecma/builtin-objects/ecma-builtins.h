@@ -48,6 +48,16 @@ typedef enum
   ECMA_BUILTIN_ID__COUNT /**< number of built-in objects */
 } ecma_builtin_id_t;
 
+#if ENABLED (JERRY_ESNEXT)
+
+/**
+ * Special id for handlers (handlers are not regular built-ins, but
+ * they use the same ecma_built_in_props_t structure as other built-ins)
+ */
+#define ECMA_BUILTIN_ID_HANDLER ECMA_BUILTIN_ID__COUNT
+
+#endif /* ENABLED (JERRY_ESNEXT) */
+
 /**
  * Construct a routine value
  */
@@ -61,7 +71,7 @@ typedef enum
 /**
  * Get routine ID
  */
-#define ECMA_GET_ROUTINE_ID(value) ((uint16_t) ((value) >> 4))
+#define ECMA_GET_ROUTINE_ID(value) ((uint8_t) ((value) >> 4))
 
 /**
  * Construct a fully accessor value
@@ -71,12 +81,12 @@ typedef enum
 /**
  * Get accessor setter ID
  */
-#define ECMA_ACCESSOR_READ_WRITE_GET_SETTER_ID(value) ((uint16_t) ((value) & 0xff))
+#define ECMA_ACCESSOR_READ_WRITE_GET_SETTER_ID(value) ((uint8_t) ((value) & 0xff))
 
 /**
  * Get accessor getter ID
  */
-#define ECMA_ACCESSOR_READ_WRITE_GET_GETTER_ID(value) ((uint16_t) ((value) >> 8))
+#define ECMA_ACCESSOR_READ_WRITE_GET_GETTER_ID(value) ((uint8_t) ((value) >> 8))
 
 /* ecma-builtins.c */
 void ecma_finalize_builtins (void);

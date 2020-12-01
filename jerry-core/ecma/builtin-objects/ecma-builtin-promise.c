@@ -41,7 +41,7 @@
  */
 enum
 {
-  ECMA_PROMISE_ROUTINE_START = ECMA_BUILTIN_ID__COUNT - 1,
+  ECMA_PROMISE_ROUTINE_START = 0,
   ECMA_PROMISE_ROUTINE_REJECT,
   ECMA_PROMISE_ROUTINE_RESOLVE,
   ECMA_PROMISE_ROUTINE_RACE,
@@ -465,12 +465,12 @@ ecma_builtin_promise_dispatch_construct (const ecma_value_t *arguments_list_p, /
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_builtin_promise_dispatch_routine (uint16_t builtin_routine_id, /**< built-in wide routine
-                                                                     *   identifier */
-                                         ecma_value_t this_arg, /**< 'this' argument value */
-                                         const ecma_value_t arguments_list_p[], /**< list of arguments
-                                                                                 *   passed to routine */
-                                         uint32_t arguments_number) /**< length of arguments' list */
+ecma_builtin_promise_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wide routine
+                                                                    *   identifier */
+                                       ecma_value_t this_arg, /**< 'this' argument value */
+                                       const ecma_value_t arguments_list_p[], /**< list of arguments
+                                                                               *   passed to routine */
+                                       uint32_t arguments_number) /**< length of arguments' list */
 {
   ecma_value_t argument = (arguments_number > 0) ? arguments_list_p[0] : ECMA_VALUE_UNDEFINED;
 

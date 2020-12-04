@@ -39,6 +39,7 @@ OPTIONS_PROFILE_ES51 = ['--profile=es5.1']
 OPTIONS_PROFILE_ESNEXT = ['--profile=es.next']
 OPTIONS_STACK_LIMIT = ['--stack-limit=96']
 OPTIONS_GC_MARK_LIMIT = ['--gc-mark-limit=16']
+OPTIONS_MEM_STRESS = ['--mem-stress-test=on']
 OPTIONS_DEBUG = ['--debug']
 OPTIONS_SNAPSHOT = ['--snapshot-save=on', '--snapshot-exec=on', '--jerry-cmdline-snapshot=on']
 OPTIONS_UNITTESTS = ['--unittests=on', '--jerry-cmdline=off', '--error-messages=on',
@@ -76,14 +77,16 @@ JERRY_UNITTESTS_OPTIONS = [
 # Test options for jerry-tests
 JERRY_TESTS_OPTIONS = [
     Options('jerry_tests-es.next-debug',
-            OPTIONS_COMMON + OPTIONS_PROFILE_ESNEXT + OPTIONS_DEBUG + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT),
+            OPTIONS_COMMON + OPTIONS_PROFILE_ESNEXT + OPTIONS_DEBUG + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT
+            + OPTIONS_MEM_STRESS),
     Options('jerry_tests-es5.1',
             OPTIONS_COMMON + OPTIONS_PROFILE_ES51 + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT),
     Options('jerry_tests-es5.1-snapshot',
             OPTIONS_COMMON + OPTIONS_PROFILE_ES51 + OPTIONS_SNAPSHOT + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT,
             ['--snapshot']),
     Options('jerry_tests-es5.1-debug',
-            OPTIONS_COMMON + OPTIONS_PROFILE_ES51 + OPTIONS_DEBUG + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT),
+            OPTIONS_COMMON + OPTIONS_PROFILE_ES51 + OPTIONS_DEBUG + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT
+            + OPTIONS_MEM_STRESS),
     Options('jerry_tests-es5.1-debug-snapshot',
             OPTIONS_COMMON + OPTIONS_PROFILE_ES51 + OPTIONS_SNAPSHOT + OPTIONS_DEBUG + OPTIONS_STACK_LIMIT
             + OPTIONS_GC_MARK_LIMIT, ['--snapshot']),

@@ -439,6 +439,9 @@ void ecma_collection_destroy (ecma_collection_t *collection_p);
 void ecma_collection_free (ecma_collection_t *collection_p);
 void ecma_collection_free_if_not_object (ecma_collection_t *collection_p);
 void ecma_collection_free_objects (ecma_collection_t *collection_p);
+#if ENABLED (JERRY_ESNEXT)
+void ecma_collection_free_template_literal (ecma_collection_t *collection_p);
+#endif /* ENABLED (JERRY_ESNEXT) */
 bool ecma_collection_check_duplicated_entries (ecma_collection_t *collection_p);
 bool ecma_collection_has_string_value (ecma_collection_t *collection_p, ecma_string_t *string_p);
 

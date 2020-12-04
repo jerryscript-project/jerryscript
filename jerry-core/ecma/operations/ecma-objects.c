@@ -140,7 +140,8 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
           property_ref_p->virtual_value = ecma_make_uint32_value (ext_object_p->u.array.length);
         }
 
-        return ext_object_p->u.array.u.length_prop & (ECMA_PROPERTY_TYPE_VIRTUAL | ECMA_PROPERTY_FLAG_WRITABLE);
+        uint32_t length_prop = ext_object_p->u.array.length_prop_and_hole_count;
+        return length_prop & (ECMA_PROPERTY_TYPE_VIRTUAL | ECMA_PROPERTY_FLAG_WRITABLE);
       }
 
       if (ecma_op_array_is_fast_array (ext_object_p))
@@ -1210,7 +1211,7 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
 
       if (ecma_string_is_length (property_name_p))
       {
-        if (ecma_is_property_writable (ext_object_p->u.array.u.length_prop))
+        if (ecma_is_property_writable ((ecma_property_t) ext_object_p->u.array.length_prop_and_hole_count))
         {
           return ecma_op_array_object_set_length (object_p, value, 0);
         }
@@ -1509,7 +1510,7 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
         if (index < UINT32_MAX
             && index >= ext_object_p->u.array.length)
         {
-          if (!ecma_is_property_writable (ext_object_p->u.array.u.length_prop))
+          if (!ecma_is_property_writable ((ecma_property_t) ext_object_p->u.array.length_prop_and_hole_count))
           {
             return ecma_reject (is_throw);
           }
@@ -3034,16 +3035,6 @@ ecma_op_ordinary_object_set_prototype_of (ecma_object_t *obj_p, /**< base object
   /* 1. */
   JERRY_ASSERT (ecma_is_value_object (proto) || ecma_is_value_null (proto));
 
-  /**
-   * If the prototype of a fast array changes it is required to fall back to
-   * a "normal" array object. This ensures that all [[Get]]/[[Set]]/etc. calls
-   * works as expected.
-   */
-  if (ecma_op_object_is_fast_array (obj_p))
-  {
-    ecma_fast_array_convert_to_normal (obj_p);
-  }
-
   /* 3. */
   ecma_object_t *current_proto_p = ECMA_GET_POINTER (ecma_object_t, ecma_op_ordinary_object_get_prototype_of (obj_p));
   ecma_object_t *new_proto_p = ecma_is_value_null (proto) ? NULL : ecma_get_object_from_value (proto);
@@ -3058,6 +3049,16 @@ ecma_op_ordinary_object_set_prototype_of (ecma_object_t *obj_p, /**< base object
   if (!ecma_op_ordinary_object_is_extensible (obj_p))
   {
     return ECMA_VALUE_FALSE;
+  }
+
+  /**
+   * When the prototype of a fast array changes, it is required to convert the
+   * array to a "normal" array. This ensures that all [[Get]]/[[Set]]/etc.
+   * calls works as expected.
+   */
+  if (ecma_op_object_is_fast_array (obj_p))
+  {
+    ecma_fast_array_convert_to_normal (obj_p);
   }
 
   /* 6. */

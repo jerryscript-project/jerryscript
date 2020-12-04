@@ -1476,8 +1476,8 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
 
       /* Since the objects in the tagged template collection are not strong referenced anymore by the compiled code
          we can treat them as 'new' objects. */
-      JERRY_CONTEXT (ecma_gc_new_objects) += collection_p->item_count;
-      ecma_collection_free (collection_p);
+      JERRY_CONTEXT (ecma_gc_new_objects) += collection_p->item_count * 2;
+      ecma_collection_free_template_literal (collection_p);
     }
 #endif /* ENABLED (JERRY_ESNEXT) */
 

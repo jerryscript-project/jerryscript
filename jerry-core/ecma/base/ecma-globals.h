@@ -942,13 +942,8 @@ typedef struct
     struct
     {
       uint32_t length; /**< length property value */
-      union
-      {
-        ecma_property_t length_prop; /**< length property */
-        uint32_t hole_count; /**< number of array holes in a fast access mode array
-                              *   multiplied ECMA_FAST_ACCESS_HOLE_ONE */
-      } u;
-
+      uint32_t length_prop_and_hole_count; /**< length property attributes and number of array holes in
+                                            *   a fast access mode array multiplied ECMA_FAST_ACCESS_HOLE_ONE */
     } array;
 
     /**
@@ -996,6 +991,17 @@ typedef struct
   ecma_extended_object_t extended_object; /**< extended object part */
   ecma_built_in_props_t built_in; /**< built-in object part */
 } ecma_extended_built_in_object_t;
+
+/**
+ * Flags for array.length_prop_and_hole_count
+ */
+typedef enum
+{
+  ECMA_FAST_ARRAY_FLAG = 1u << (ECMA_PROPERTY_NAME_TYPE_SHIFT + 0),
+#if ENABLED (JERRY_ESNEXT)
+  ECMA_ARRAY_TEMPLATE_LITERAL = 1u << (ECMA_PROPERTY_NAME_TYPE_SHIFT + 1),
+#endif /* ENABLED (JERRY_ESNEXT) */
+} ecma_array_length_prop_and_hole_count_flags_t;
 
 /**
  * Alignment for the fast access mode array length.

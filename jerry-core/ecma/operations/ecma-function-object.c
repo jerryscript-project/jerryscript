@@ -920,6 +920,19 @@ ecma_op_get_prototype_from_constructor (ecma_object_t *ctor_obj_p, /**< construc
   if (!ecma_is_value_object (proto))
   {
     ecma_free_value (proto);
+
+#if ENABLED (JERRY_BUILTIN_PROXY)
+    if (ECMA_OBJECT_IS_PROXY (ctor_obj_p))
+    {
+      ecma_proxy_object_t *proxy_obj_p = (ecma_proxy_object_t *) ctor_obj_p;
+      if (ecma_is_value_null (proxy_obj_p->handler))
+      {
+        ecma_raise_type_error (ECMA_ERR_MSG ("Prototype from revoked Proxy is invalid."));
+        return NULL;
+      }
+    }
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+
     proto_obj_p = ecma_builtin_get (default_proto_id);
     ecma_ref_object (proto_obj_p);
   }

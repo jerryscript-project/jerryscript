@@ -88,6 +88,12 @@ ecma_value_t ecma_op_ordinary_object_set_prototype_of (ecma_object_t *base_p, ec
 bool JERRY_ATTR_PURE ecma_op_ordinary_object_is_extensible (ecma_object_t *object_p);
 void ecma_op_ordinary_object_prevent_extensions (ecma_object_t *object_p);
 
+#if ENABLED (JERRY_BUILTIN_PROXY)
+ecma_value_t ecma_op_get_own_property_descriptor (ecma_value_t target,
+                                                  ecma_string_t *property_name_p,
+                                                  ecma_property_descriptor_t *prop_desc_p);
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+
 /**
  * @}
  * @}

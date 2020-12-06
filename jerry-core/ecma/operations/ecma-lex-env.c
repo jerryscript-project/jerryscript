@@ -39,15 +39,7 @@
 void
 ecma_init_global_environment (void)
 {
-  ecma_object_t *glob_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
-
-  ecma_object_t *global_lex_env_p = ecma_create_object_lex_env (NULL,
-                                                                glob_obj_p,
-                                                                ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
-  ECMA_SET_NON_NULL_POINTER (JERRY_CONTEXT (ecma_global_env_cp), global_lex_env_p);
-#if ENABLED (JERRY_ESNEXT)
-  ECMA_SET_NON_NULL_POINTER (JERRY_CONTEXT (ecma_global_scope_cp), global_lex_env_p);
-#endif /* ENABLED (JERRY_ESNEXT) */
+  JERRY_CONTEXT (global_object_p) = ecma_builtin_create_global_object ();
 } /* ecma_init_global_environment */
 
 /**
@@ -56,15 +48,9 @@ ecma_init_global_environment (void)
 void
 ecma_finalize_global_environment (void)
 {
-#if ENABLED (JERRY_ESNEXT)
-  if (JERRY_CONTEXT (ecma_global_scope_cp) != JERRY_CONTEXT (ecma_global_env_cp))
-  {
-    ecma_deref_object (ECMA_GET_NON_NULL_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_global_scope_cp)));
-  }
-  JERRY_CONTEXT (ecma_global_scope_cp) = JMEM_CP_NULL;
-#endif /* ENABLED (JERRY_ESNEXT) */
-  ecma_deref_object (ECMA_GET_NON_NULL_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_global_env_cp)));
-  JERRY_CONTEXT (ecma_global_env_cp) = JMEM_CP_NULL;
+  /* After this point the gc can free the global object, but the global_object_p pointer
+   * is not set to NULL because the global object might still be used before the free. */
+  ecma_deref_object ((ecma_object_t *) JERRY_CONTEXT (global_object_p));
 } /* ecma_finalize_global_environment */
 
 /**
@@ -74,10 +60,10 @@ ecma_finalize_global_environment (void)
  * @return pointer to the object's instance
  */
 ecma_object_t *
-ecma_get_global_environment (void)
+ecma_get_global_environment (ecma_object_t *global_object_p) /**< global object */
 {
-  JERRY_ASSERT (JERRY_CONTEXT (ecma_global_env_cp) != JMEM_CP_NULL);
-  return ECMA_GET_NON_NULL_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_global_env_cp));
+  JERRY_ASSERT (global_object_p != NULL && ecma_builtin_is_global (global_object_p));
+  return ECMA_GET_NON_NULL_POINTER (ecma_object_t, ((ecma_global_object_t *) global_object_p)->global_env_cp);
 } /* ecma_get_global_environment */
 
 #if ENABLED (JERRY_ESNEXT)
@@ -85,13 +71,18 @@ ecma_get_global_environment (void)
  * Create the global lexical block on top of the global environment.
  */
 void
-ecma_create_global_lexical_block (void)
+ecma_create_global_lexical_block (ecma_object_t *global_object_p) /**< global object */
 {
-  if (JERRY_CONTEXT (ecma_global_scope_cp) == JERRY_CONTEXT (ecma_global_env_cp))
+  JERRY_ASSERT (global_object_p != NULL && ecma_builtin_is_global (global_object_p));
+
+  ecma_global_object_t *real_global_object_p = (ecma_global_object_t *) global_object_p;
+
+  if (real_global_object_p->global_scope_cp == real_global_object_p->global_env_cp)
   {
-    ecma_object_t *global_scope_p = ecma_create_decl_lex_env (ecma_get_global_environment ());
+    ecma_object_t *global_scope_p = ecma_create_decl_lex_env (ecma_get_global_environment (global_object_p));
     global_scope_p->type_flags_refs |= (uint16_t) ECMA_OBJECT_FLAG_BLOCK;
-    ECMA_SET_NON_NULL_POINTER (JERRY_CONTEXT (ecma_global_scope_cp), global_scope_p);
+    ECMA_SET_NON_NULL_POINTER (real_global_object_p->global_scope_cp, global_scope_p);
+    ecma_deref_object (global_scope_p);
   }
 } /* ecma_create_global_lexical_block */
 #endif /* ENABLED (JERRY_ESNEXT) */
@@ -103,13 +94,13 @@ ecma_create_global_lexical_block (void)
  * @return pointer to the object's instance
  */
 ecma_object_t *
-ecma_get_global_scope (void)
+ecma_get_global_scope (ecma_object_t *global_object_p) /**< global object */
 {
 #if ENABLED (JERRY_ESNEXT)
-  JERRY_ASSERT (JERRY_CONTEXT (ecma_global_scope_cp) != JMEM_CP_NULL);
-  return ECMA_GET_NON_NULL_POINTER (ecma_object_t, JERRY_CONTEXT (ecma_global_scope_cp));
+  JERRY_ASSERT (global_object_p != NULL && ecma_builtin_is_global (global_object_p));
+  return ECMA_GET_NON_NULL_POINTER (ecma_object_t, ((ecma_global_object_t *) global_object_p)->global_scope_cp);
 #else /* !ENABLED (JERRY_ESNEXT) */
-  return ecma_get_global_environment ();
+  return ecma_get_global_environment (global_object_p);
 #endif /* !ENABLED (JERRY_ESNEXT) */
 } /* ecma_get_global_scope */
 

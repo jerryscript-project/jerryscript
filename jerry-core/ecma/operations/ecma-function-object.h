@@ -56,6 +56,11 @@ ecma_op_create_external_function_object (ecma_native_handler_t handler_cb);
 const ecma_compiled_code_t *
 ecma_op_function_get_compiled_code (ecma_extended_object_t *function_p);
 
+#if ENABLED (JERRY_BUILTIN_REALMS)
+ecma_value_t
+ecma_op_function_get_realm (const ecma_compiled_code_t *bytecode_header_p);
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+
 ecma_value_t
 ecma_op_create_dynamic_function (const ecma_value_t *arguments_list_p,
                                  uint32_t arguments_list_len,

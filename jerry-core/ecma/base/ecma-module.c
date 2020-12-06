@@ -485,8 +485,15 @@ ecma_module_evaluate (ecma_module_t *module_p) /**< module */
     return ECMA_VALUE_EMPTY;
   }
 
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  ecma_object_t *global_object_p;
+  global_object_p = ecma_get_object_from_value (ecma_op_function_get_realm (module_p->compiled_code_p));
+#else /* !ENABLED (JERRY_BUILTIN_REALMS) */
+  ecma_object_t *global_object_p = ecma_builtin_get_global ();
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+
   module_p->state = ECMA_MODULE_STATE_EVALUATING;
-  module_p->scope_p = ecma_create_decl_lex_env (ecma_get_global_environment ());
+  module_p->scope_p = ecma_create_decl_lex_env (ecma_get_global_environment (global_object_p));
   module_p->context_p->parent_p = JERRY_CONTEXT (module_top_context_p);
   JERRY_CONTEXT (module_top_context_p) = module_p->context_p;
 

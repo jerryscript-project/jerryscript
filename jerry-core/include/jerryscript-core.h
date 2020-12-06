@@ -105,6 +105,7 @@ typedef enum
   JERRY_FEATURE_WEAKMAP, /**< WeakMap support */
   JERRY_FEATURE_WEAKSET, /**< WeakSet support */
   JERRY_FEATURE_BIGINT, /**< BigInt support */
+  JERRY_FEATURE_REALM, /**< realm support */
   JERRY_FEATURE__COUNT /**< number of features. NOTE: must be at the end of the list */
 } jerry_feature_t;
 
@@ -600,6 +601,7 @@ jerry_value_t jerry_create_external_string_sz (const jerry_char_t *str_p, jerry_
 jerry_value_t jerry_create_symbol (const jerry_value_t value);
 jerry_value_t jerry_create_bigint (const uint64_t *digits_p, uint32_t size, bool sign);
 jerry_value_t jerry_create_undefined (void);
+jerry_value_t jerry_create_realm (void);
 
 /**
  * General API functions of JS objects.

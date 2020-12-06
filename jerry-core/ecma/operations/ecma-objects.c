@@ -2514,7 +2514,7 @@ inline static bool
 ecma_object_check_class_name_is_object (ecma_object_t *obj_p) /**< object */
 {
 #ifndef JERRY_NDEBUG
-  return (ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_GLOBAL)
+  return (ecma_builtin_is_global (obj_p)
 #if ENABLED (JERRY_BUILTIN_PROMISE)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_PROMISE_PROTOTYPE)
 #endif /* ENABLED (JERRY_BUILTIN_PROMISE) */

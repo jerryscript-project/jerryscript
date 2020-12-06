@@ -106,7 +106,7 @@ typedef struct jerry_context_data_header
 /**
  * First non-external member of the jerry context
  */
-#define JERRY_CONTEXT_FIRST_MEMBER ecma_builtin_objects
+#define JERRY_CONTEXT_FIRST_MEMBER global_object_p
 
 /**
  * JerryScript context
@@ -125,18 +125,18 @@ struct jerry_context_t
 #endif /* ENABLED (JERRY_EXTERNAL_CONTEXT) */
 
   /* Update JERRY_CONTEXT_FIRST_MEMBER if the first non-external member changes */
-  jmem_cpointer_t ecma_builtin_objects[ECMA_BUILTIN_ID__COUNT]; /**< pointer to instances of built-in objects */
+  ecma_global_object_t *global_object_p; /**< current global object */
+  jmem_heap_free_t *jmem_heap_list_skip_p; /**< improves deallocation performance */
+  jmem_pools_chunk_t *jmem_free_8_byte_chunk_p; /**< list of free eight byte pool chunks */
 #if ENABLED (JERRY_BUILTIN_REGEXP)
   re_compiled_code_t *re_cache[RE_CACHE_SIZE]; /**< regex cache */
 #endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
-  jmem_cpointer_t ecma_gc_objects_cp; /**< List of currently alive objects. */
-  jmem_heap_free_t *jmem_heap_list_skip_p; /**< This is used to speed up deallocation. */
-  jmem_pools_chunk_t *jmem_free_8_byte_chunk_p; /**< list of free eight byte pool chunks */
 #if ENABLED (JERRY_CPOINTER_32_BIT)
   jmem_pools_chunk_t *jmem_free_16_byte_chunk_p; /**< list of free sixteen byte pool chunks */
 #endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
   const lit_utf8_byte_t * const *lit_magic_string_ex_array; /**< array of external magic strings */
   const lit_utf8_size_t *lit_magic_string_ex_sizes; /**< external magic string lengths */
+  jmem_cpointer_t ecma_gc_objects_cp; /**< List of currently alive objects. */
   jmem_cpointer_t string_list_first_cp; /**< first item of the literal string list */
 #if ENABLED (JERRY_ESNEXT)
   jmem_cpointer_t symbol_list_first_cp; /**< first item of the global symbol list */
@@ -145,10 +145,6 @@ struct jerry_context_t
 #if ENABLED (JERRY_BUILTIN_BIGINT)
   jmem_cpointer_t bigint_list_first_cp; /**< first item of the literal bigint list */
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
-  jmem_cpointer_t ecma_global_env_cp; /**< global lexical environment */
-#if ENABLED (JERRY_ESNEXT)
-  jmem_cpointer_t ecma_global_scope_cp; /**< global lexical scope */
-#endif /* ENABLED (JERRY_ESNEXT) */
 
 #if ENABLED (JERRY_MODULE_SYSTEM)
   ecma_module_t *ecma_modules_p; /**< list of referenced modules */

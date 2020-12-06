@@ -44,6 +44,19 @@ main_register_global_function (const char *name_p, /**< name of the function */
   jerry_release_value (result_val);
 } /* main_register_global_function */
 
+static jerry_value_t
+main_create_realm (const jerry_value_t func_obj_val, /**< function object */
+                   const jerry_value_t this_p, /**< this arg */
+                   const jerry_value_t args_p[], /**< function arguments */
+                   const jerry_length_t args_cnt) /**< number of function arguments */
+{
+  (void) func_obj_val; /* unused */
+  (void) this_p; /* unused */
+  (void) args_p; /* unused */
+  (void) args_cnt; /* unused */
+  return jerry_create_realm ();
+} /* main_create_realm */
+
 /**
  * Inits the engine and the debugger
  */
@@ -81,6 +94,7 @@ main_init_engine (main_args_t *arguments_p) /** main arguments */
   main_register_global_function ("gc", jerryx_handler_gc);
   main_register_global_function ("print", jerryx_handler_print);
   main_register_global_function ("resourceName", jerryx_handler_resource_name);
+  main_register_global_function ("createRealm", main_create_realm);
 } /* main_init_engine */
 
 /**

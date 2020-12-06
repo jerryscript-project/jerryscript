@@ -32,10 +32,10 @@
 
 void ecma_init_global_environment (void);
 void ecma_finalize_global_environment (void);
-ecma_object_t *ecma_get_global_environment (void);
-ecma_object_t *ecma_get_global_scope (void);
+ecma_object_t *ecma_get_global_environment (ecma_object_t *global_object_p);
+ecma_object_t *ecma_get_global_scope (ecma_object_t *global_object_p);
 #if ENABLED (JERRY_ESNEXT)
-void ecma_create_global_lexical_block (void);
+void ecma_create_global_lexical_block (ecma_object_t *global_object_p);
 #endif /* ENABLED (JERRY_ESNEXT) */
 
 #if ENABLED (JERRY_MODULE_SYSTEM)

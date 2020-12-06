@@ -304,6 +304,8 @@ ecma_op_put_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
     lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
   }
 
+  JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+
   if (is_strict)
   {
 #if ENABLED (JERRY_ERROR_MESSAGES)
@@ -315,7 +317,7 @@ ecma_op_put_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
 #endif /* ENABLED (JERRY_ERROR_MESSAGES) */
   }
 
-  ecma_value_t completion = ecma_op_object_put (ecma_builtin_get_global (),
+  ecma_value_t completion = ecma_op_object_put (ecma_get_lex_env_binding_object (lex_env_p),
                                                 name_p,
                                                 value,
                                                 false);

@@ -301,16 +301,22 @@ vm_run_module (const ecma_compiled_code_t *bytecode_p, /**< pointer to bytecode 
 ecma_value_t
 vm_run_global (const ecma_compiled_code_t *bytecode_p) /**< pointer to bytecode to run */
 {
-  ecma_object_t *glob_obj_p = ecma_builtin_get_global ();
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  ecma_value_t realm_value = ecma_op_function_get_realm (bytecode_p);
+  ecma_object_t *global_obj_p = ecma_get_object_from_value (realm_value);
+#else /* !ENABLED (JERRY_BUILTIN_REALMS) */
+  ecma_object_t *global_obj_p = ecma_builtin_get_global ();
+  ecma_value_t realm_value = ecma_make_object_value (global_obj_p);
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
 #if ENABLED (JERRY_ESNEXT)
   if (bytecode_p->status_flags & CBC_CODE_FLAGS_LEXICAL_BLOCK_NEEDED)
   {
-    ecma_create_global_lexical_block ();
+    ecma_create_global_lexical_block (global_obj_p);
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
-  ecma_object_t *const global_scope_p = ecma_get_global_scope ();
+  ecma_object_t *const global_scope_p = ecma_get_global_scope (global_obj_p);
 
 #if ENABLED (JERRY_MODULE_SYSTEM)
   if (JERRY_CONTEXT (module_top_context_p) != NULL)
@@ -337,7 +343,7 @@ vm_run_global (const ecma_compiled_code_t *bytecode_p) /**< pointer to bytecode 
   shared.bytecode_header_p = bytecode_p;
   shared.status_flags = 0;
 
-  return vm_run (&shared, ecma_make_object_value (glob_obj_p), global_scope_p);
+  return vm_run (&shared, realm_value, global_scope_p);
 } /* vm_run_global */
 
 /**
@@ -381,10 +387,16 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
   }
   else
   {
+#if ENABLED (JERRY_BUILTIN_REALMS)
+    ecma_value_t realm_value = ecma_op_function_get_realm (bytecode_data_p);
+    ecma_object_t *global_obj_p = ecma_get_object_from_value (realm_value);
+#else /* !ENABLED (JERRY_BUILTIN_REALMS) */
     ecma_object_t *global_obj_p = ecma_builtin_get_global ();
+    ecma_value_t realm_value = ecma_make_object_value (global_obj_p);
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+    this_binding = realm_value;
     ecma_ref_object (global_obj_p);
-    this_binding = ecma_make_object_value (global_obj_p);
-    lex_env_p = ecma_get_global_scope ();
+    lex_env_p = ecma_get_global_scope (global_obj_p);
   }
 
   ecma_ref_object (lex_env_p);
@@ -1604,7 +1616,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 #if ENABLED (JERRY_ESNEXT)
         case VM_OC_CHECK_VAR:
         {
-          JERRY_ASSERT (ecma_get_global_scope () == frame_ctx_p->lex_env_p);
+          JERRY_ASSERT (CBC_FUNCTION_GET_TYPE (frame_ctx_p->shared_p->bytecode_header_p->status_flags)
+                        == CBC_FUNCTION_SCRIPT);
 
           uint32_t literal_index;
           READ_LITERAL_INDEX (literal_index);
@@ -1627,7 +1640,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_CHECK_LET:
         {
-          JERRY_ASSERT (ecma_get_global_scope () == frame_ctx_p->lex_env_p);
+          JERRY_ASSERT (CBC_FUNCTION_GET_TYPE (frame_ctx_p->shared_p->bytecode_header_p->status_flags)
+                        == CBC_FUNCTION_SCRIPT);
 
           uint32_t literal_index;
           READ_LITERAL_INDEX (literal_index);

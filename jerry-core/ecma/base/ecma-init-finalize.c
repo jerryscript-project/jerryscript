@@ -77,9 +77,9 @@ ecma_finalize (void)
 
   ecma_finalize_global_environment ();
   uint8_t runs = 0;
+
   do
   {
-    ecma_finalize_builtins ();
     ecma_gc_run ();
     if (++runs >= JERRY_GC_LOOP_LIMIT)
     {
@@ -87,6 +87,7 @@ ecma_finalize (void)
     }
   }
   while (JERRY_CONTEXT (ecma_gc_new_objects) != 0);
+
   ecma_finalize_lit_storage ();
 } /* ecma_finalize */
 

@@ -56,6 +56,12 @@ typedef enum
  */
 #define ECMA_BUILTIN_ID_HANDLER ECMA_BUILTIN_ID__COUNT
 
+/**
+ * Number of global symbols
+ */
+#define ECMA_BUILTIN_GLOBAL_SYMBOL_COUNT \
+  (LIT_GLOBAL_SYMBOL__LAST - LIT_GLOBAL_SYMBOL__FIRST + 1)
+
 #endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
@@ -142,5 +148,10 @@ ecma_object_t *
 ecma_builtin_get_global (void);
 bool
 ecma_builtin_function_is_routine (ecma_object_t *func_obj_p);
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+ecma_object_t *
+ecma_builtin_get_from_realm (ecma_global_object_t *global_object_p, ecma_builtin_id_t builtin_id);
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
 #endif /* !ECMA_BUILTINS_H */

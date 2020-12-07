@@ -145,6 +145,9 @@ struct jerry_context_t
 #if ENABLED (JERRY_BUILTIN_BIGINT)
   jmem_cpointer_t bigint_list_first_cp; /**< first item of the literal bigint list */
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#if ENABLED (JERRY_ESNEXT)
+  jmem_cpointer_t global_symbols_cp[ECMA_BUILTIN_GLOBAL_SYMBOL_COUNT]; /**< global symbols */
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 #if ENABLED (JERRY_MODULE_SYSTEM)
   ecma_module_t *ecma_modules_p; /**< list of referenced modules */

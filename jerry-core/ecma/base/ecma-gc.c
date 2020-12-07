@@ -936,13 +936,25 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
         break;
       }
-#if ENABLED (JERRY_ESNEXT)
+#if ENABLED (JERRY_ESNEXT) || ENABLED (JERRY_BUILTIN_REALMS)
       case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:
       {
+#endif /* ENABLED (JERRY_ESNEXT) || ENABLED (JERRY_BUILTIN_REALMS) */
+
+        if (!ecma_get_object_is_builtin (object_p))
+        {
+#if ENABLED (JERRY_BUILTIN_REALMS)
+          ecma_native_function_t *native_function_p = (ecma_native_function_t *) object_p;
+          ecma_gc_set_object_visited (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                                       native_function_p->realm_value));
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+          break;
+        }
+
+#if ENABLED (JERRY_ESNEXT)
         ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
 
-        if (ecma_get_object_is_builtin (object_p)
-            && ext_func_p->u.built_in.id == ECMA_BUILTIN_ID_HANDLER)
+        if (ext_func_p->u.built_in.id == ECMA_BUILTIN_ID_HANDLER)
         {
           switch (ext_func_p->u.built_in.routine_id)
           {
@@ -1005,10 +1017,12 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             }
           }
         }
+#endif /* ENABLED (JERRY_ESNEXT) */
 
+#if ENABLED (JERRY_ESNEXT) || ENABLED (JERRY_BUILTIN_REALMS)
         break;
       }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* ENABLED (JERRY_ESNEXT) || ENABLED (JERRY_BUILTIN_REALMS) */
       default:
       {
         break;
@@ -1496,6 +1510,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
     }
     case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:
     {
+      ext_object_size = sizeof (ecma_native_function_t);
       break;
     }
     case ECMA_OBJECT_TYPE_CLASS:

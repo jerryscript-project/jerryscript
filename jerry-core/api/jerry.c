@@ -4204,7 +4204,7 @@ jerry_get_well_known_symbol (jerry_well_known_symbol_t symbol) /**< jerry_well_k
   jerry_assert_api_available ();
 
 #if ENABLED (JERRY_ESNEXT)
-  lit_magic_string_id_t id = (lit_magic_string_id_t) (LIT_GLOBAL_SYMBOL__FISRT + symbol);
+  lit_magic_string_id_t id = (lit_magic_string_id_t) (LIT_GLOBAL_SYMBOL__FIRST + symbol);
 
   if (!LIT_IS_GLOBAL_SYMBOL (id))
   {
@@ -4563,6 +4563,44 @@ jerry_get_new_target (void)
   return jerry_create_undefined ();
 #endif /* ENABLED (JERRY_ESNEXT) */
 } /* jerry_get_new_target */
+
+/**
+ * Replaces the currently active realm with another realm.
+ *
+ * The replacement should be temporary, and the original realm must be
+ * restored after the tasks are completed. During the replacement, the
+ * realm must be referenced by the application (i.e. the gc must not
+ * reclaim it). This is also true to the returned previously active
+ * realm, so there is no need to free the value after the restoration.
+ *
+ * @return previous realm value - if the passed value is a realm
+ *         exception - otherwise
+ */
+jerry_value_t
+jerry_set_realm (jerry_value_t realm_value) /**< jerry api value */
+{
+  jerry_assert_api_available ();
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  if (ecma_is_value_object (realm_value))
+  {
+    ecma_object_t *object_p = ecma_get_object_from_value (realm_value);
+
+    if (ecma_get_object_is_builtin (object_p)
+        && ecma_builtin_is_global (object_p))
+    {
+      ecma_global_object_t *previous_global_object_p = JERRY_CONTEXT (global_object_p);
+      JERRY_CONTEXT (global_object_p) = (ecma_global_object_t *) object_p;
+      return ecma_make_object_value ((ecma_object_t *) previous_global_object_p);
+    }
+  }
+
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Passed argument is not a realm")));
+#else /* !ENABLED (JERRY_BUILTIN_REALMS) */
+  JERRY_UNUSED (realm_value);
+  return jerry_throw (ecma_raise_reference_error (ECMA_ERR_MSG ("Realm is not available")));
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+} /* jerry_set_realm */
 
 /**
  * Check if the given value is an ArrayBuffer object.

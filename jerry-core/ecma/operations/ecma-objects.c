@@ -882,6 +882,29 @@ ecma_op_object_get_by_magic_id (ecma_object_t *object_p, /**< the object */
 } /* ecma_op_object_get_by_magic_id */
 
 #if ENABLED (JERRY_ESNEXT)
+
+/**
+ * Descriptor string for each global symbol
+ */
+static const uint16_t ecma_global_symbol_descriptions[] =
+{
+  LIT_MAGIC_STRING_ASYNC_ITERATOR,
+  LIT_MAGIC_STRING_HAS_INSTANCE,
+  LIT_MAGIC_STRING_IS_CONCAT_SPREADABLE,
+  LIT_MAGIC_STRING_ITERATOR,
+  LIT_MAGIC_STRING_MATCH,
+  LIT_MAGIC_STRING_REPLACE,
+  LIT_MAGIC_STRING_SEARCH,
+  LIT_MAGIC_STRING_SPECIES,
+  LIT_MAGIC_STRING_SPLIT,
+  LIT_MAGIC_STRING_TO_PRIMITIVE,
+  LIT_MAGIC_STRING_TO_STRING_TAG,
+  LIT_MAGIC_STRING_UNSCOPABLES
+};
+
+JERRY_STATIC_ASSERT (sizeof (ecma_global_symbol_descriptions) / sizeof (uint16_t) == ECMA_BUILTIN_GLOBAL_SYMBOL_COUNT,
+                     ecma_global_symbol_descriptions_must_have_global_symbol_count_elements);
+
 /**
  * [[Get]] a well-known symbol by the given property id
  *
@@ -890,11 +913,30 @@ ecma_op_object_get_by_magic_id (ecma_object_t *object_p, /**< the object */
 ecma_string_t *
 ecma_op_get_global_symbol (lit_magic_string_id_t property_id) /**< property symbol id */
 {
-  ecma_value_t symbol_value = ecma_op_object_get_by_magic_id (ecma_builtin_get (ECMA_BUILTIN_ID_INTRINSIC_OBJECT),
-                                                              property_id);
-  JERRY_ASSERT (ecma_is_value_symbol (symbol_value));
+  JERRY_ASSERT (LIT_IS_GLOBAL_SYMBOL (property_id));
 
-  return ecma_get_symbol_from_value (symbol_value);
+  uint32_t symbol_index = (uint32_t) property_id - (uint32_t) LIT_GLOBAL_SYMBOL__FIRST;
+  jmem_cpointer_t symbol_cp = JERRY_CONTEXT (global_symbols_cp)[symbol_index];
+
+  if (symbol_cp != JMEM_CP_NULL)
+  {
+    ecma_string_t *symbol_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, symbol_cp);
+    ecma_ref_ecma_string (symbol_p);
+    return symbol_p;
+  }
+
+  ecma_string_t *symbol_dot_p = ecma_get_magic_string (LIT_MAGIC_STRING_SYMBOL_DOT_UL);
+  uint16_t description = ecma_global_symbol_descriptions[symbol_index];
+  ecma_string_t *name_p = ecma_get_magic_string ((lit_magic_string_id_t) description);
+  ecma_string_t *descriptor_p = ecma_concat_ecma_strings (symbol_dot_p, name_p);
+
+  ecma_string_t *symbol_p = ecma_new_symbol_from_descriptor_string (ecma_make_string_value (descriptor_p));
+  symbol_p->u.hash = (uint16_t) ((property_id << ECMA_GLOBAL_SYMBOL_SHIFT) | ECMA_GLOBAL_SYMBOL_FLAG);
+
+  ECMA_SET_NON_NULL_POINTER (JERRY_CONTEXT (global_symbols_cp)[symbol_index], symbol_p);
+
+  ecma_ref_ecma_string (symbol_p);
+  return symbol_p;
 } /* ecma_op_get_global_symbol */
 
 /**

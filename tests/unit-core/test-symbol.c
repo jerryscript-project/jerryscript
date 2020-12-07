@@ -220,10 +220,10 @@ main (void)
 
   const jerry_char_t obj_src[] = ""
   "({"
-  "  [Symbol.hasInstance]: 1,"
-  "  [Symbol.isConcatSpreadable]: 2,"
-  "  [Symbol.iterator]: 3,"
-  "  [Symbol.asyncIterator]: 4,"
+  "  [Symbol.asyncIterator]: 1,"
+  "  [Symbol.hasInstance]: 2,"
+  "  [Symbol.isConcatSpreadable]: 3,"
+  "  [Symbol.iterator]: 4,"
   "  [Symbol.match]: 5,"
   "  [Symbol.replace]: 6,"
   "  [Symbol.search]: 7,"
@@ -236,10 +236,10 @@ main (void)
 
   const char *symbols[] =
   {
+    "asyncIterator",
     "hasInstance",
     "isConcatSpreadable",
     "iterator",
-    "asyncIterator",
     "match",
     "replace",
     "search",
@@ -261,7 +261,7 @@ main (void)
   double expected = 1.0;
   uint32_t prop_index = 0;
 
-  for (jerry_well_known_symbol_t id = JERRY_SYMBOL_HAS_INSTANCE;
+  for (jerry_well_known_symbol_t id = JERRY_SYMBOL_ASYNC_ITERATOR;
        id <= JERRY_SYMBOL_UNSCOPABLES;
        id++, expected++, prop_index++)
   {
@@ -315,7 +315,7 @@ main (void)
   expected = 1.0;
   prop_index = 0;
 
-  for (jerry_well_known_symbol_t id = JERRY_SYMBOL_HAS_INSTANCE;
+  for (jerry_well_known_symbol_t id = JERRY_SYMBOL_ASYNC_ITERATOR;
        id <= JERRY_SYMBOL_UNSCOPABLES;
        id++, expected++, prop_index++)
   {
@@ -335,7 +335,7 @@ main (void)
   TEST_ASSERT (jerry_value_is_undefined (invalid_well_known_symbol));
   jerry_release_value (invalid_well_known_symbol);
 
-  invalid_symbol = (jerry_well_known_symbol_t) (JERRY_SYMBOL_HAS_INSTANCE - 1);
+  invalid_symbol = (jerry_well_known_symbol_t) (JERRY_SYMBOL_ASYNC_ITERATOR - 1);
   invalid_well_known_symbol = jerry_get_well_known_symbol (invalid_symbol);
   TEST_ASSERT (jerry_value_is_undefined (invalid_well_known_symbol));
   jerry_release_value (invalid_well_known_symbol);

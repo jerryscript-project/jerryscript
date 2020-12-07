@@ -994,8 +994,6 @@ typedef struct
       jmem_cpointer_tag_t target_function; /**< target function */
       ecma_value_t args_len_or_this; /**< length of arguments or this value */
     } bound_function;
-
-    ecma_native_handler_t external_handler_cb; /**< external function */
   } u;
 } ecma_extended_object_t;
 
@@ -1013,6 +1011,18 @@ typedef struct
  */
 #define ECMA_BUILTIN_IS_EXTENDED_BUILT_IN(object_type) \
   ((object_type) == ECMA_OBJECT_TYPE_CLASS || (object_type) == ECMA_OBJECT_TYPE_ARRAY)
+
+/**
+ * Description of native functions
+ */
+typedef struct
+{
+  ecma_extended_object_t extended_object; /**< extended object part */
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  ecma_value_t realm_value; /**< realm value */
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+  ecma_native_handler_t native_handler_cb; /**< external function */
+} ecma_native_function_t;
 
 /**
  * Flags for array.length_prop_and_hole_count

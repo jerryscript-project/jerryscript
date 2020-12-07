@@ -42,11 +42,11 @@ typedef enum
   LIT_INTERNAL_MAGIC_STRING_MAP_PROTOTYPE_ENTRIES, /**< Map.prototype entries and [@@iterator] routines */
   LIT_INTERNAL_MAGIC_PROMISE_CAPABILITY, /**< PromiseCapability record */
   /* List of well known symbols */
+  LIT_GLOBAL_SYMBOL_ASYNC_ITERATOR, /**< @@asyncIterator well known symbol */
+  LIT_GLOBAL_SYMBOL__FIRST = LIT_GLOBAL_SYMBOL_ASYNC_ITERATOR, /**< first global symbol */
   LIT_GLOBAL_SYMBOL_HAS_INSTANCE, /**< @@hasInstance well known symbol */
-  LIT_GLOBAL_SYMBOL__FISRT = LIT_GLOBAL_SYMBOL_HAS_INSTANCE, /**< first global symbol */
   LIT_GLOBAL_SYMBOL_IS_CONCAT_SPREADABLE, /**< @@isConcatSpreadable well known symbol */
   LIT_GLOBAL_SYMBOL_ITERATOR, /**< @@iterator well known symbol */
-  LIT_GLOBAL_SYMBOL_ASYNC_ITERATOR, /**< @@asyncIterator well known symbol */
   LIT_GLOBAL_SYMBOL_MATCH, /**< @@match well known symbol */
   LIT_GLOBAL_SYMBOL_REPLACE, /**< @@replace well known symbol */
   LIT_GLOBAL_SYMBOL_SEARCH, /**< @@search well known symbol */
@@ -73,7 +73,7 @@ typedef enum
 /**
  * Checks whether the given id corresponds to a global symbol
  */
-#define LIT_IS_GLOBAL_SYMBOL(id) ((id) >= LIT_GLOBAL_SYMBOL__FISRT && (id) <= LIT_GLOBAL_SYMBOL__LAST)
+#define LIT_IS_GLOBAL_SYMBOL(id) ((id) >= LIT_GLOBAL_SYMBOL__FIRST && (id) <= LIT_GLOBAL_SYMBOL__LAST)
 
 /**
  * Identifiers of implementation-defined external magic string constants

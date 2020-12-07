@@ -435,7 +435,7 @@ def run_test262_test_suite(options):
 
         test_cmd = get_platform_cmd_prefix() + [
             settings.TEST262_RUNNER_SCRIPT,
-            '--engine', get_binary_path(build_dir_path),
+            '--engine', get_binary_path(build_dir_path) + " --test262-object",
             '--test-dir', settings.TEST262_TEST_SUITE_DIR
         ]
 

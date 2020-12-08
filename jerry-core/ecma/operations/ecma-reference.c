@@ -79,6 +79,23 @@ ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, /**< starting lexical 
 } /* ecma_op_resolve_reference_base */
 
 #if ENABLED (JERRY_ESNEXT)
+
+/**
+ * Check if the passed lexical environment is a global lexical environment
+ *
+ * @return true  - if the lexical environment is a global lexical environment
+ *         false - otherwise
+ */
+static inline bool JERRY_ATTR_ALWAYS_INLINE
+ecma_op_is_global_environment (ecma_object_t *lex_env_p) /**< lexical environment */
+{
+  JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+  JERRY_ASSERT (lex_env_p->u2.outer_reference_cp != JMEM_CP_NULL
+                || ecma_get_lex_env_binding_object (lex_env_p) == ecma_builtin_get_global ());
+
+  return lex_env_p->u2.outer_reference_cp == JMEM_CP_NULL;
+} /* ecma_op_is_global_environment */
+
 /**
  * Perform GetThisEnvironment and GetSuperBase operations
  *
@@ -173,6 +190,7 @@ ecma_op_is_prop_unscopable (ecma_object_t *binding_obj_p, /**< binding object */
 
   return ECMA_VALUE_FALSE;
 } /* ecma_op_is_prop_unscopable */
+
 #endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
@@ -226,7 +244,7 @@ ecma_op_object_bound_environment_resolve_reference_value (ecma_object_t *lex_env
     }
 
 #if ENABLED (JERRY_ESNEXT)
-    if (JERRY_LIKELY (lex_env_p == ecma_get_global_scope ()))
+    if (JERRY_LIKELY (ecma_op_is_global_environment (lex_env_p)))
 #endif /* ENABLED (JERRY_ESNEXT) */
     {
       return found_binding;
@@ -297,7 +315,7 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
     else if (lex_env_type == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND)
     {
 #if ENABLED (JERRY_ESNEXT)
-      bool lcache_lookup_allowed = (lex_env_p == ecma_get_global_environment ());
+      bool lcache_lookup_allowed = ecma_op_is_global_environment (lex_env_p);
 #else /* !ENABLED (JERRY_ESNEXT)*/
       bool lcache_lookup_allowed = true;
 #endif /* ENABLED (JERRY_ESNEXT) */

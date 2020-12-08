@@ -169,6 +169,10 @@ ecma_object_check_constructor (ecma_object_t *obj_p) /**< ecma object */
 #if ENABLED (JERRY_ERROR_MESSAGES)
       switch (CBC_FUNCTION_GET_TYPE (byte_code_p->status_flags))
       {
+        case CBC_FUNCTION_SCRIPT:
+        {
+          return "Script (global) functions cannot be invoked with 'new'.";
+        }
         case CBC_FUNCTION_GENERATOR:
         {
           return "Generator functions cannot be invoked with 'new'.";
@@ -387,7 +391,7 @@ ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
 #if ENABLED (JERRY_SNAPSHOT_EXEC)
   if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION)
   {
-    ext_func_p->u.function.bytecode_cp = ECMA_NULL_POINTER;
+    ext_func_p->u.function.bytecode_cp = JMEM_CP_NULL;
     ((ecma_static_function_t *) func_p)->bytecode_p = bytecode_data_p;
   }
   else
@@ -477,7 +481,13 @@ ecma_op_create_dynamic_function (const ecma_value_t *arguments_list_p, /**< argu
   *func_name_p = ecma_make_magic_string_value (LIT_MAGIC_STRING_ANONYMOUS);
 #endif /* ENABLED (JERRY_ESNEXT) */
 
-  ecma_object_t *global_env_p = ecma_get_global_environment ();
+  ecma_object_t *global_object_p = ecma_builtin_get_global ();
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  JERRY_ASSERT (global_object_p == ecma_get_object_from_value (ecma_op_function_get_realm (bytecode_p)));
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+
+  ecma_object_t *global_env_p = ecma_get_global_environment (global_object_p);
   ecma_builtin_id_t fallback_proto = ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE;
 
 #if ENABLED (JERRY_ESNEXT)
@@ -702,6 +712,11 @@ ecma_op_create_native_handler (ecma_native_handler_id_t id, /**< handler id */
   ext_func_obj_p->u.built_in.routine_id = (uint8_t) id;
   ext_func_obj_p->u.built_in.u2.routine_flags = ECMA_NATIVE_HANDLER_FLAGS_NONE;
 
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  ECMA_SET_INTERNAL_VALUE_POINTER (ext_func_obj_p->u.built_in.realm_value,
+                                   ecma_builtin_get_global ());
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+
   return function_obj_p;
 } /* ecma_op_create_native_handler */
 
@@ -716,20 +731,58 @@ inline const ecma_compiled_code_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_op_function_get_compiled_code (ecma_extended_object_t *function_p) /**< function pointer */
 {
 #if ENABLED (JERRY_SNAPSHOT_EXEC)
-  if (function_p->u.function.bytecode_cp != ECMA_NULL_POINTER)
+  if (JERRY_LIKELY (function_p->u.function.bytecode_cp != ECMA_NULL_POINTER))
   {
     return ECMA_GET_INTERNAL_VALUE_POINTER (const ecma_compiled_code_t,
                                             function_p->u.function.bytecode_cp);
   }
-  else
-  {
-    return ((ecma_static_function_t *) function_p)->bytecode_p;
-  }
+
+  return ((ecma_static_function_t *) function_p)->bytecode_p;
 #else /* !ENABLED (JERRY_SNAPSHOT_EXEC) */
   return ECMA_GET_INTERNAL_VALUE_POINTER (const ecma_compiled_code_t,
                                           function_p->u.function.bytecode_cp);
 #endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 } /* ecma_op_function_get_compiled_code */
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+
+/**
+ * Get realm from a byte code.
+ *
+ * Note:
+ *   Does not increase the reference counter.
+ *
+ * @return realm (global) object
+ */
+inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
+ecma_op_function_get_realm (const ecma_compiled_code_t *bytecode_header_p) /**< byte code header */
+{
+  ecma_value_t realm_value;
+
+  if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+  {
+    cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_header_p;
+    realm_value = args_p->realm_value;
+  }
+  else
+  {
+    cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_header_p;
+    realm_value = args_p->realm_value;
+  }
+
+#if ENABLED (JERRY_SNAPSHOT_EXEC)
+  if (JERRY_LIKELY (realm_value != ECMA_VALUE_UNDEFINED))
+  {
+    return realm_value;
+  }
+
+  return ecma_make_object_value (ecma_builtin_get_global ());
+#else /* !ENABLED (JERRY_SNAPSHOT_EXEC) */
+  return realm_value;
+#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
+} /* ecma_op_function_get_realm */
+
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
 /**
  * 15.3.5.3 implementation of [[HasInstance]] for Function objects
@@ -980,6 +1033,10 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
 
   shared_args.header.bytecode_header_p = bytecode_data_p;
 
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  ecma_value_t realm_value = ecma_op_function_get_realm (bytecode_data_p);
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+
   /* 1. */
 #if ENABLED (JERRY_ESNEXT)
   if (JERRY_UNLIKELY (CBC_FUNCTION_IS_ARROW (status_flags)))
@@ -1007,7 +1064,11 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
           || ecma_is_value_null (this_binding))
       {
         /* 2. */
+#if ENABLED (JERRY_BUILTIN_REALMS)
+        this_binding = realm_value;
+#else /* !ENABLED (JERRY_BUILTIN_REALMS) */
         this_binding = ecma_make_object_value (ecma_builtin_get_global ());
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
       }
       else if (!ecma_is_value_object (this_binding))
       {
@@ -1052,7 +1113,16 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  ecma_global_object_t *saved_global_object_p = JERRY_CONTEXT (global_object_p);
+  JERRY_CONTEXT (global_object_p) = (ecma_global_object_t *) ecma_get_object_from_value (realm_value);
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+
   ret_value = vm_run (&shared_args.header, this_binding, scope_p);
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  JERRY_CONTEXT (global_object_p) = saved_global_object_p;
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
 #if ENABLED (JERRY_ESNEXT)
   /* ECMAScript v6, 9.2.2.13 */
@@ -1105,7 +1175,21 @@ ecma_op_function_call_native (ecma_object_t *func_obj_p, /**< Function object */
 
   if (ecma_get_object_is_builtin (func_obj_p))
   {
-    return ecma_builtin_dispatch_call (func_obj_p, this_arg_value, arguments_list_p, arguments_list_len);
+#if ENABLED (JERRY_BUILTIN_REALMS)
+    ecma_global_object_t *saved_global_object_p = JERRY_CONTEXT (global_object_p);
+    ecma_value_t realm_value = ((ecma_extended_object_t *) func_obj_p)->u.built_in.realm_value;
+    JERRY_CONTEXT (global_object_p) = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_global_object_t, realm_value);
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+
+    ecma_value_t ret_value = ecma_builtin_dispatch_call (func_obj_p,
+                                                         this_arg_value,
+                                                         arguments_list_p,
+                                                         arguments_list_len);
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+    JERRY_CONTEXT (global_object_p) = saved_global_object_p;
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+    return ret_value;
   }
 
   JERRY_ASSERT (ext_func_obj_p->u.external_handler_cb != NULL);
@@ -1390,7 +1474,27 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
   {
     if (JERRY_UNLIKELY (ecma_get_object_is_builtin (func_obj_p)))
     {
-      return ecma_builtin_dispatch_construct (func_obj_p, new_target_p, arguments_list_p, arguments_list_len);
+#if ENABLED (JERRY_BUILTIN_REALMS)
+      ecma_global_object_t *saved_global_object_p = JERRY_CONTEXT (global_object_p);
+      ecma_value_t realm_value = ((ecma_extended_object_t *) func_obj_p)->u.built_in.realm_value;
+      JERRY_CONTEXT (global_object_p) = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_global_object_t, realm_value);
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+
+#if ENABLED (JERRY_ESNEXT)
+      ecma_object_t *old_new_target = JERRY_CONTEXT (current_new_target);
+      JERRY_CONTEXT (current_new_target) = new_target_p;
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+      ecma_value_t ret_value = ecma_builtin_dispatch_construct (func_obj_p, arguments_list_p, arguments_list_len);
+
+#if ENABLED (JERRY_ESNEXT)
+      JERRY_CONTEXT (current_new_target) = old_new_target;
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+      JERRY_CONTEXT (global_object_p) = saved_global_object_p;
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+      return ret_value;
     }
 
     return ecma_op_function_construct_native (func_obj_p, new_target_p, arguments_list_p, arguments_list_len);

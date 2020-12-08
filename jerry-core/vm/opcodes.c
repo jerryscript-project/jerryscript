@@ -842,7 +842,17 @@ opfunc_resume_executable_object (vm_executable_object_t *executable_object_p, /*
   ecma_object_t *old_new_target = JERRY_CONTEXT (current_new_target);
   JERRY_CONTEXT (current_new_target) = NULL;
 
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  ecma_global_object_t *saved_global_object_p = JERRY_CONTEXT (global_object_p);
+  ecma_value_t realm_value = ecma_op_function_get_realm (bytecode_header_p);
+  JERRY_CONTEXT (global_object_p) = (ecma_global_object_t *) ecma_get_object_from_value (realm_value);
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+
   ecma_value_t result = vm_execute (&executable_object_p->frame_ctx);
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  JERRY_CONTEXT (global_object_p) = saved_global_object_p;
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
   JERRY_CONTEXT (current_new_target) = old_new_target;
   executable_object_p->extended_object.u.class_prop.extra_info &= (uint16_t) ~ECMA_EXECUTABLE_OBJECT_RUNNING;

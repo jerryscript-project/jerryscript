@@ -150,6 +150,34 @@ ecma_deref_object (ecma_object_t *object_p) /**< object */
 } /* ecma_deref_object */
 
 /**
+ * Mark objects referenced by global object
+ */
+static void
+ecma_gc_mark_global_object (ecma_global_object_t *global_object_p) /**< global object */
+{
+  JERRY_ASSERT (global_object_p->extended_object.u.built_in.routine_id == 0);
+
+  ecma_gc_set_object_visited (ECMA_GET_NON_NULL_POINTER (ecma_object_t, global_object_p->global_env_cp));
+
+#if ENABLED (JERRY_ESNEXT)
+  if (global_object_p->global_scope_cp != global_object_p->global_env_cp)
+  {
+    ecma_gc_set_object_visited (ECMA_GET_NON_NULL_POINTER (ecma_object_t, global_object_p->global_scope_cp));
+  }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
+  jmem_cpointer_t *builtin_objects_p = global_object_p->builtin_objects;
+
+  for (int i = 0; i < ECMA_BUILTIN_OBJECTS_COUNT; i++)
+  {
+    if (builtin_objects_p[i] != JMEM_CP_NULL)
+    {
+      ecma_gc_set_object_visited (ECMA_GET_NON_NULL_POINTER (ecma_object_t, builtin_objects_p[i]));
+    }
+  }
+} /* ecma_gc_mark_global_object */
+
+/**
  * Mark objects referenced by arguments object
  */
 static void
@@ -620,14 +648,52 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
     {
       ecma_object_t *binding_object_p = ecma_get_lex_env_binding_object (object_p);
       ecma_gc_set_object_visited (binding_object_p);
-
       return;
     }
   }
   else
   {
-    switch (ecma_get_object_type (object_p))
+    ecma_object_type_t object_type = ecma_get_object_type (object_p);
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+    if (JERRY_UNLIKELY (ecma_get_object_is_builtin (object_p)))
     {
+      ecma_value_t realm_value;
+
+      if (ECMA_BUILTIN_IS_EXTENDED_BUILT_IN (object_type))
+      {
+        realm_value = ((ecma_extended_built_in_object_t *) object_p)->built_in.realm_value;
+      }
+      else
+      {
+        ecma_extended_object_t *extended_object_p = (ecma_extended_object_t *) object_p;
+
+        if (object_type == ECMA_OBJECT_TYPE_GENERAL
+            && extended_object_p->u.built_in.id == ECMA_BUILTIN_ID_GLOBAL)
+        {
+          ecma_gc_mark_global_object ((ecma_global_object_t *) object_p);
+        }
+
+        realm_value = extended_object_p->u.built_in.realm_value;
+      }
+
+      ecma_gc_set_object_visited (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, realm_value));
+    }
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+
+    switch (object_type)
+    {
+#if !ENABLED (JERRY_BUILTIN_REALMS)
+      case ECMA_OBJECT_TYPE_GENERAL:
+      {
+        if (JERRY_UNLIKELY (ecma_get_object_is_builtin (object_p))
+            && ((ecma_extended_object_t *) object_p)->u.built_in.id == ECMA_BUILTIN_ID_GLOBAL)
+        {
+          ecma_gc_mark_global_object ((ecma_global_object_t *) object_p);
+        }
+        break;
+      }
+#endif /* !ENABLED (JERRY_BUILTIN_REALMS) */
       case ECMA_OBJECT_TYPE_CLASS:
       {
         ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
@@ -823,9 +889,11 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
         ecma_gc_set_object_visited (ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
                                                                                 ext_func_p->u.function.scope_cp));
 
-#if ENABLED (JERRY_ESNEXT)
+#if ENABLED (JERRY_ESNEXT) || ENABLED (JERRY_BUILTIN_REALMS)
         const ecma_compiled_code_t *byte_code_p = ecma_op_function_get_compiled_code (ext_func_p);
+#endif /* ENABLED (JERRY_ESNEXT) || ENABLED (JERRY_BUILTIN_REALMS) */
 
+#if ENABLED (JERRY_ESNEXT)
         if (CBC_FUNCTION_IS_ARROW (byte_code_p->status_flags))
         {
           ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) object_p;
@@ -842,6 +910,30 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
         }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
+#if ENABLED (JERRY_BUILTIN_REALMS)
+#if ENABLED (JERRY_SNAPSHOT_EXEC)
+        if (ext_func_p->u.function.bytecode_cp == JMEM_CP_NULL)
+        {
+          /* Static snapshot functions have a global realm */
+          break;
+        }
+#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
+
+        ecma_value_t realm_value;
+
+        if (byte_code_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+        {
+          cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) byte_code_p;
+          realm_value = args_p->realm_value;
+        }
+        else
+        {
+          cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) byte_code_p;
+          realm_value = args_p->realm_value;
+        }
+
+        ecma_gc_set_object_visited (ecma_get_object_from_value (realm_value));
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
         break;
       }
 #if ENABLED (JERRY_ESNEXT)
@@ -1305,7 +1397,7 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
   {
     uint8_t length_and_bitset_size;
 
-    if (object_type == ECMA_OBJECT_TYPE_CLASS || object_type == ECMA_OBJECT_TYPE_ARRAY)
+    if (ECMA_BUILTIN_IS_EXTENDED_BUILT_IN (object_type))
     {
       ext_object_size = sizeof (ecma_extended_built_in_object_t);
       length_and_bitset_size = ((ecma_extended_built_in_object_t *) object_p)->built_in.u.length_and_bitset_size;
@@ -1313,15 +1405,16 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
     }
     else
     {
-      if (object_type == ECMA_OBJECT_TYPE_NATIVE_FUNCTION
-          && ecma_builtin_function_is_routine (object_p))
-      {
-#if ENABLED (JERRY_ESNEXT)
-        ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
+      ecma_extended_object_t *extended_object_p = (ecma_extended_object_t *) object_p;
 
-        if (ext_obj_p->u.built_in.id == ECMA_BUILTIN_ID_HANDLER)
+      if (extended_object_p->u.built_in.routine_id > 0)
+      {
+        JERRY_ASSERT (object_type == ECMA_OBJECT_TYPE_NATIVE_FUNCTION);
+
+#if ENABLED (JERRY_ESNEXT)
+        if (extended_object_p->u.built_in.id == ECMA_BUILTIN_ID_HANDLER)
         {
-          switch (ext_obj_p->u.built_in.routine_id)
+          switch (extended_object_p->u.built_in.routine_id)
           {
             case ECMA_NATIVE_HANDLER_PROMISE_RESOLVE:
             case ECMA_NATIVE_HANDLER_PROMISE_REJECT:
@@ -1366,6 +1459,11 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           }
         }
 #endif /* ENABLED (JERRY_ESNEXT) */
+      }
+      else if (extended_object_p->u.built_in.id == ECMA_BUILTIN_ID_GLOBAL)
+      {
+        JERRY_ASSERT (object_type == ECMA_OBJECT_TYPE_GENERAL);
+        ext_object_size = sizeof (ecma_global_object_t);
       }
       else
       {

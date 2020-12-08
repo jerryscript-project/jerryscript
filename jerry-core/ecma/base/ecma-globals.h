@@ -864,13 +864,29 @@ typedef struct
     uint8_t instantiated_bitset[1]; /**< instantiated property bit set for generic built-ins */
     uint8_t routine_flags; /**< flags for built-in routines */
   } u2;
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  ecma_value_t realm_value; /**< realm value */
+#else /* !ENABLED (JERRY_BUILTIN_REALMS) */
   uint32_t continue_instantiated_bitset[1]; /**< bit set for instantiated properties */
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 } ecma_built_in_props_t;
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+
+/**
+ * Number of bits available in the instantiated bitset without allocation
+ */
+#define ECMA_BUILTIN_INSTANTIATED_BITSET_MIN_SIZE (8)
+
+#else /* !ENABLED (JERRY_BUILTIN_REALMS) */
 
 /**
  * Number of bits available in the instantiated bitset without allocation
  */
 #define ECMA_BUILTIN_INSTANTIATED_BITSET_MIN_SIZE (8 + 32)
+
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
 /**
  * Builtin routine function object status flags
@@ -991,6 +1007,12 @@ typedef struct
   ecma_extended_object_t extended_object; /**< extended object part */
   ecma_built_in_props_t built_in; /**< built-in object part */
 } ecma_extended_built_in_object_t;
+
+/**
+ * Checks whether the built-in is an ecma_extended_built_in_object_t
+ */
+#define ECMA_BUILTIN_IS_EXTENDED_BUILT_IN(object_type) \
+  ((object_type) == ECMA_OBJECT_TYPE_CLASS || (object_type) == ECMA_OBJECT_TYPE_ARRAY)
 
 /**
  * Flags for array.length_prop_and_hole_count

@@ -79,6 +79,10 @@
 # define JERRY_ESNEXT 1
 #endif /* !defined (JERRY_ESNEXT) */
 
+#ifndef JERRY_BUILTIN_REALMS
+# define JERRY_BUILTIN_REALMS JERRY_ESNEXT
+#endif /* !defined (JERRY_BUILTIN_REALMS) */
+
 #ifndef JERRY_BUILTIN_DATAVIEW
 # define JERRY_BUILTIN_DATAVIEW JERRY_ESNEXT
 #endif /* !defined (JERRY_BUILTIN_DATAVIEW) */
@@ -522,6 +526,10 @@
 #if !defined (JERRY_ESNEXT) \
 || ((JERRY_ESNEXT != 0) && (JERRY_ESNEXT != 1))
 # error "Invalid value for JERRY_ESNEXT macro."
+#endif
+#if !defined (JERRY_BUILTIN_REALMS) \
+|| ((JERRY_BUILTIN_REALMS != 0) && (JERRY_BUILTIN_REALMS != 1))
+# error "Invalid value for JERRY_BUILTIN_REALMS macro."
 #endif
 #if !defined (JERRY_BUILTIN_DATAVIEW) \
 || ((JERRY_BUILTIN_DATAVIEW != 0) && (JERRY_BUILTIN_DATAVIEW != 1))

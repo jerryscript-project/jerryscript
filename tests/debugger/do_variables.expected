@@ -9,6 +9,7 @@ f            | Function  |
 addX         | Function  |           
 z            | undefined | undefined 
 c            | undefined | undefined 
+createRealm  | Function  |           
 resourceName | Function  |           
 print        | Function  |           
 gc           | Function  |           
@@ -21,6 +22,7 @@ f            | Function  |
 addX         | Function  |           
 z            | undefined | undefined 
 c            | undefined | undefined 
+createRealm  | Function  |           
 resourceName | Function  |           
 print        | Function  |           
 gc           | Function  |           
@@ -48,6 +50,7 @@ f            | Function |
 addX         | Function |       
 z            | Number   | 5     
 c            | Number   | 4     
+createRealm  | Function |       
 resourceName | Function |       
 print        | Function |       
 gc           | Function |       
@@ -68,6 +71,7 @@ f            | Function |
 addX         | Function |       
 z            | Number   | 5     
 c            | Number   | 4     
+createRealm  | Function |       
 resourceName | Function |       
 print        | Function |       
 gc           | Function |       

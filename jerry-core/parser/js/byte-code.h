@@ -852,6 +852,9 @@ typedef struct
   uint8_t ident_end;                /**< end position of the identifier group */
   uint8_t const_literal_end;        /**< end position of the const literal group */
   uint8_t literal_end;              /**< end position of the literal group */
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  ecma_value_t realm_value;         /**< realm value */
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 } cbc_uint8_arguments_t;
 
 /**
@@ -867,6 +870,9 @@ typedef struct
   uint16_t const_literal_end;       /**< end position of the const literal group */
   uint16_t literal_end;             /**< end position of the literal group */
   uint16_t padding;                 /**< an unused value */
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  ecma_value_t realm_value;         /**< realm value */
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 } cbc_uint16_arguments_t;
 
 /**
@@ -901,6 +907,7 @@ typedef enum
   CBC_FUNCTION_CONSTRUCTOR, /**< constructor function */
 
   /* The following functions cannot be constructed (see CBC_FUNCTION_IS_CONSTRUCTABLE) */
+  CBC_FUNCTION_SCRIPT, /**< script (global) function */
   CBC_FUNCTION_GENERATOR, /**< generator function */
   CBC_FUNCTION_ASYNC, /**< async function */
   CBC_FUNCTION_ASYNC_GENERATOR, /**< async generator function */

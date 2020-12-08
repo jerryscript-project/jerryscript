@@ -250,7 +250,7 @@ ecma_get_object_builtin_id (ecma_object_t *object_p) /**< object */
   ecma_built_in_props_t *built_in_props_p;
   ecma_object_type_t object_type = ecma_get_object_type (object_p);
 
-  if (object_type == ECMA_OBJECT_TYPE_CLASS || object_type == ECMA_OBJECT_TYPE_ARRAY)
+  if (ECMA_BUILTIN_IS_EXTENDED_BUILT_IN (object_type))
   {
     built_in_props_p = &((ecma_extended_built_in_object_t *) object_p)->built_in;
   }

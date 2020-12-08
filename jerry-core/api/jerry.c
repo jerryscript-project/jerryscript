@@ -468,7 +468,13 @@ jerry_parse (const jerry_char_t *resource_name_p, /**< resource name (usually a 
     return ecma_create_error_reference_from_context ();
   }
 
-  ecma_object_t *lex_env_p = ecma_get_global_environment ();
+  ecma_object_t *global_object_p = ecma_builtin_get_global ();
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  JERRY_ASSERT (global_object_p == ecma_get_object_from_value (ecma_op_function_get_realm (bytecode_data_p)));
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+
+  ecma_object_t *lex_env_p = ecma_get_global_environment (global_object_p);
   ecma_object_t *func_obj_p = ecma_op_create_simple_function_object (lex_env_p, bytecode_data_p);
   ecma_bytecode_deref (bytecode_data_p);
 
@@ -541,7 +547,13 @@ jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (u
     return ecma_create_error_reference_from_context ();
   }
 
-  ecma_object_t *lex_env_p = ecma_get_global_environment ();
+  ecma_object_t *global_object_p = ecma_builtin_get_global ();
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  JERRY_ASSERT (global_object_p == ecma_get_object_from_value (ecma_op_function_get_realm (bytecode_p)));
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+
+  ecma_object_t *lex_env_p = ecma_get_global_environment (global_object_p);
   ecma_object_t *func_obj_p = ecma_op_create_simple_function_object (lex_env_p, bytecode_p);
   ecma_bytecode_deref (bytecode_p);
 
@@ -586,10 +598,9 @@ jerry_run (const jerry_value_t func_val) /**< function to run */
 
   ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) func_obj_p;
 
-  ecma_object_t *scope_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
-                                                                       ext_func_p->u.function.scope_cp);
+  const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
 
-  if (scope_p != ecma_get_global_environment ())
+  if (CBC_FUNCTION_GET_TYPE (bytecode_data_p->status_flags) != CBC_FUNCTION_SCRIPT)
   {
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
   }
@@ -1341,6 +1352,9 @@ jerry_is_feature_enabled (const jerry_feature_t feature) /**< feature to check *
 #if ENABLED (JERRY_BUILTIN_BIGINT)
           || feature == JERRY_FEATURE_BIGINT
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#if ENABLED (JERRY_BUILTIN_REALMS)
+          || feature == JERRY_FEATURE_REALM
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
           );
 } /* jerry_is_feature_enabled */
 
@@ -2298,6 +2312,24 @@ jerry_create_regexp_sz (const jerry_char_t *pattern_p, /**< zero-terminated UTF-
   return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("RegExp is not supported.")));
 #endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
 } /* jerry_create_regexp_sz */
+
+/**
+ * Creates a new realm (global object).
+ *
+ * @return new realm object
+ */
+jerry_value_t
+jerry_create_realm (void)
+{
+  jerry_assert_api_available ();
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  ecma_global_object_t *global_object_p = ecma_builtin_create_global_object ();
+  return ecma_make_object_value ((ecma_object_t *) global_object_p);
+#else /* !ENABLED (JERRY_BUILTIN_REALMS) */
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Realms are disabled.")));
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+} /* jerry_create_realm */
 
 /**
  * Get length of an array object

@@ -88,15 +88,38 @@ typedef enum
  */
 #define ECMA_ACCESSOR_READ_WRITE_GET_GETTER_ID(value) ((uint8_t) ((value) >> 8))
 
+/**
+ * Number ob built-in objects excluding global object
+ */
+#define ECMA_BUILTIN_OBJECTS_COUNT (ECMA_BUILTIN_ID__COUNT - 1)
+
+/**
+ * Description of built-in global ECMA-object.
+ */
+typedef struct
+{
+  ecma_extended_object_t extended_object; /**< extended object part */
+  uint32_t extra_instantiated_bitset[1]; /**< extra bit set for instantiated properties */
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  uint32_t extra_realms_bitset; /**< extra bit set for instantiated properties when realms is enabled */
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+  jmem_cpointer_t global_env_cp; /**< global lexical environment */
+#if ENABLED (JERRY_ESNEXT)
+  jmem_cpointer_t global_scope_cp; /**< global lexical scope */
+#endif /* ENABLED (JERRY_ESNEXT) */
+  jmem_cpointer_t builtin_objects[ECMA_BUILTIN_OBJECTS_COUNT]; /**< pointer to instances of built-in objects */
+} ecma_global_object_t;
+
 /* ecma-builtins.c */
-void ecma_finalize_builtins (void);
+
+ecma_global_object_t *ecma_builtin_create_global_object (void);
 
 ecma_value_t
 ecma_builtin_dispatch_call (ecma_object_t *obj_p, ecma_value_t this_arg_value,
                             const ecma_value_t *arguments_list_p, uint32_t arguments_list_len);
 ecma_value_t
-ecma_builtin_dispatch_construct (ecma_object_t *obj_p, ecma_object_t *new_target_p,
-                                 const ecma_value_t *arguments_list_p, uint32_t arguments_list_len);
+ecma_builtin_dispatch_construct (ecma_object_t *obj_p, const ecma_value_t *arguments_list_p,
+                                 uint32_t arguments_list_len);
 ecma_property_t *
 ecma_builtin_routine_try_to_instantiate_property (ecma_object_t *object_p, ecma_string_t *string_p);
 ecma_property_t *
@@ -110,7 +133,9 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p,
                                        ecma_collection_t *prop_names_p,
                                        ecma_property_counter_t *prop_counter_p);
 bool
-ecma_builtin_is (ecma_object_t *obj_p, ecma_builtin_id_t builtin_id);
+ecma_builtin_is (ecma_object_t *object_p, ecma_builtin_id_t builtin_id);
+bool
+ecma_builtin_is_global (ecma_object_t *object_p);
 ecma_object_t *
 ecma_builtin_get (ecma_builtin_id_t builtin_id);
 ecma_object_t *

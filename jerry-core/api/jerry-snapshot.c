@@ -49,6 +49,9 @@ snapshot_get_global_flags (bool has_regex, /**< regex literal is present */
 #if ENABLED (JERRY_ESNEXT)
   flags |= (has_class ? JERRY_SNAPSHOT_HAS_CLASS_LITERAL : 0);
 #endif /* ENABLED (JERRY_ESNEXT) */
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  flags |= JERRY_SNAPSHOT_HAS_REALM_VALUE;
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
   return flags;
 } /* snapshot_get_global_flags */
@@ -67,6 +70,9 @@ snapshot_check_global_flags (uint32_t global_flags) /**< global flags */
 #if ENABLED (JERRY_ESNEXT)
   global_flags &= (uint32_t) ~JERRY_SNAPSHOT_HAS_CLASS_LITERAL;
 #endif /* ENABLED (JERRY_ESNEXT) */
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  global_flags |= JERRY_SNAPSHOT_HAS_REALM_VALUE;
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
   return global_flags == snapshot_get_global_flags (false, false);
 } /* snapshot_check_global_flags */
@@ -380,6 +386,10 @@ static_snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< c
     cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) buffer_p;
     literal_end = (uint32_t) (args_p->literal_end - args_p->register_end);
     const_literal_end = (uint32_t) (args_p->const_literal_end - args_p->register_end);
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+    args_p->realm_value = ECMA_VALUE_UNDEFINED;
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
   }
   else
   {
@@ -388,6 +398,10 @@ static_snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< c
     cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) buffer_p;
     literal_end = (uint32_t) (args_p->literal_end - args_p->register_end);
     const_literal_end = (uint32_t) (args_p->const_literal_end - args_p->register_end);
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+    args_p->realm_value = ECMA_VALUE_UNDEFINED;
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
   }
 
   for (uint32_t i = 0; i < const_literal_end; i++)
@@ -585,6 +599,10 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
     const_literal_end = (uint32_t) (args_p->const_literal_end - args_p->register_end);
     literal_end = (uint32_t) (args_p->literal_end - args_p->register_end);
     header_size = sizeof (cbc_uint16_arguments_t);
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+    args_p->realm_value = ecma_make_object_value (ecma_builtin_get_global ());
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
   }
   else
   {
@@ -595,6 +613,10 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
     const_literal_end = (uint32_t) (args_p->const_literal_end - args_p->register_end);
     literal_end = (uint32_t) (args_p->literal_end - args_p->register_end);
     header_size = sizeof (cbc_uint8_arguments_t);
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+    args_p->realm_value = ecma_make_object_value (ecma_builtin_get_global ());
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
   }
 
   if (copy_bytecode
@@ -1003,14 +1025,20 @@ jerry_snapshot_result (const uint32_t *snapshot_p, /**< snapshot */
 
   if (as_function)
   {
+    ecma_object_t *global_object_p = ecma_builtin_get_global ();
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+    JERRY_ASSERT (global_object_p == ecma_get_object_from_value (ecma_op_function_get_realm (bytecode_p)));
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+
 #if ENABLED (JERRY_ESNEXT)
     if (bytecode_p->status_flags & CBC_CODE_FLAGS_LEXICAL_BLOCK_NEEDED)
     {
-      ecma_create_global_lexical_block ();
+      ecma_create_global_lexical_block (global_object_p);
     }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
-    ecma_object_t *lex_env_p = ecma_get_global_scope ();
+    ecma_object_t *lex_env_p = ecma_get_global_scope (global_object_p);
     ecma_object_t *func_obj_p = ecma_op_create_simple_function_object (lex_env_p, bytecode_p);
 
     if (!(bytecode_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))

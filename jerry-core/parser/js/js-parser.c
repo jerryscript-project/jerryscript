@@ -977,6 +977,9 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     args_p->ident_end = ident_end;
     args_p->const_literal_end = const_literal_end;
     args_p->literal_end = context_p->literal_count;
+#if ENABLED (JERRY_BUILTIN_REALMS)
+    args_p->realm_value = ecma_make_object_value ((ecma_object_t *) JERRY_CONTEXT (global_object_p));
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
     compiled_code_p->status_flags |= CBC_CODE_FLAGS_UINT16_ARGUMENTS;
     byte_code_p += sizeof (cbc_uint16_arguments_t);
@@ -991,6 +994,9 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     args_p->ident_end = (uint8_t) ident_end;
     args_p->const_literal_end = (uint8_t) const_literal_end;
     args_p->literal_end = (uint8_t) context_p->literal_count;
+#if ENABLED (JERRY_BUILTIN_REALMS)
+    args_p->realm_value = ecma_make_object_value ((ecma_object_t *) JERRY_CONTEXT (global_object_p));
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
     byte_code_p += sizeof (cbc_uint8_arguments_t);
   }
@@ -1032,6 +1038,10 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   {
     function_type = CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_ACCESSOR);
   }
+  else if (!(context_p->status_flags & PARSER_IS_FUNCTION))
+  {
+    function_type = CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_SCRIPT);
+  }
 #if ENABLED (JERRY_ESNEXT)
   else if (context_p->status_flags & PARSER_IS_ARROW_FUNCTION)
   {
@@ -1066,10 +1076,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   else if (context_p->status_flags & PARSER_IS_METHOD)
   {
     function_type = CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_METHOD);
-  }
-  else
-  {
-    function_type = CBC_FUNCTION_TO_TYPE_BITS (CBC_FUNCTION_NORMAL);
   }
 
   if (context_p->status_flags & PARSER_LEXICAL_BLOCK_NEEDED)

@@ -148,17 +148,50 @@ test262_eval_script (const jerry_value_t func_obj_val, /**< function object */
   return ret_value;
 } /* test262_eval_script */
 
+static jerry_value_t
+create_test262 (jerry_value_t global_obj);
+
 /**
- * Init the $262 object
+ * $262.createRealm
+ *
+ * A function which creates a new realm object, and returns a newly created $262 object
+ *
+ * @return a new $262 object
  */
-static void
-register_test262 (void)
+static jerry_value_t
+test262_create_realm (const jerry_value_t func_obj_val, /**< function object */
+                      const jerry_value_t this_p, /**< this arg */
+                      const jerry_value_t args_p[], /**< function arguments */
+                      const jerry_length_t args_cnt) /**< number of function arguments */
 {
-  jerry_value_t global_obj = jerry_get_global_object ();
+  (void) func_obj_val; /* unused */
+  (void) this_p; /* unused */
+  (void) args_p; /* unused */
+  (void) args_cnt; /* unused */
+
+  jerry_value_t realm_object = jerry_create_realm ();
+  jerry_value_t previous_realm = jerry_set_realm (realm_object);
+  assert (!jerry_value_is_error (previous_realm));
+  jerry_value_t test262_object = create_test262 (realm_object);
+  jerry_set_realm (previous_realm);
+  jerry_release_value (realm_object);
+
+  return test262_object;
+} /* test262_create_realm */
+
+/**
+ * Create a new $262 object
+ *
+ * @return a new $262 object
+ */
+static jerry_value_t
+create_test262 (jerry_value_t global_obj) /**< global object */
+{
   jerry_value_t test262_object = jerry_create_object ();
 
   test262_register_function (test262_object, "detachArrayBuffer", test262_detach_array_buffer);
   test262_register_function (test262_object, "evalScript", test262_eval_script);
+  test262_register_function (test262_object, "createRealm", test262_create_realm);
   test262_register_function (test262_object, "gc", jerryx_handler_gc);
 
   jerry_value_t prop_name = jerry_create_string ((const jerry_char_t *) "global");
@@ -171,17 +204,16 @@ register_test262 (void)
 
   jerry_release_value (prop_name);
   assert (!jerry_value_is_error (result));
-
-  jerry_release_value (global_obj);
-  jerry_release_value (test262_object);
   jerry_release_value (result);
-} /* register_test262 */
+
+  return test262_object;
+} /* create_test262 */
 
 /**
  * Inits the engine and the debugger
  */
 void
-main_init_engine (main_args_t *arguments_p) /** main arguments */
+main_init_engine (main_args_t *arguments_p) /**< main arguments */
 {
   jerry_init (arguments_p->init_flags);
 
@@ -211,7 +243,10 @@ main_init_engine (main_args_t *arguments_p) /** main arguments */
   }
   if (arguments_p->option_flags & OPT_FLAG_TEST262_OBJECT)
   {
-    register_test262 ();
+    jerry_value_t global_obj = jerry_get_global_object ();
+    jerry_value_t test262_object = create_test262 (global_obj);
+    jerry_release_value (test262_object);
+    jerry_release_value (global_obj);
   }
   main_register_global_function ("assert", jerryx_handler_assert);
   main_register_global_function ("gc", jerryx_handler_gc);

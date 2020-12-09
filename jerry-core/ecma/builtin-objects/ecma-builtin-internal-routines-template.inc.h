@@ -190,12 +190,12 @@ const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] =
     magic_string_id \
   },
 #if ENABLED (JERRY_ESNEXT)
-#define SYMBOL_VALUE(symbol, desc_magic_string_id) \
+#define SYMBOL_VALUE(name, symbol) \
   { \
-    symbol, \
+    name, \
     ECMA_BUILTIN_PROPERTY_SYMBOL, \
     ECMA_PROPERTY_FIXED, \
-    desc_magic_string_id \
+    symbol \
   },
 #define INTRINSIC_PROPERTY(name, magic_string_id, prop_attributes) \
   { \

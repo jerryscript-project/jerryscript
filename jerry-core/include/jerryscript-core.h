@@ -691,10 +691,10 @@ jerry_promise_state_t jerry_get_promise_state (const jerry_value_t promise);
  */
 typedef enum
 {
+  JERRY_SYMBOL_ASYNC_ITERATOR,       /**< @@asyncIterator well-known symbol */
   JERRY_SYMBOL_HAS_INSTANCE,         /**< @@hasInstance well-known symbol */
   JERRY_SYMBOL_IS_CONCAT_SPREADABLE, /**< @@isConcatSpreadable well-known symbol */
   JERRY_SYMBOL_ITERATOR,             /**< @@iterator well-known symbol */
-  JERRY_SYMBOL_ASYNC_ITERATOR,       /**< @@asyncIterator well-known symbol */
   JERRY_SYMBOL_MATCH,                /**< @@match well-known symbol */
   JERRY_SYMBOL_REPLACE,              /**< @@replace well-known symbol */
   JERRY_SYMBOL_SEARCH,               /**< @@search well-known symbol */
@@ -739,6 +739,7 @@ void jerry_set_vm_exec_stop_callback (jerry_vm_exec_stop_callback_t stop_cb, voi
 jerry_value_t jerry_get_backtrace (uint32_t max_depth);
 jerry_value_t jerry_get_resource_name (const jerry_value_t value);
 jerry_value_t jerry_get_new_target (void);
+jerry_value_t jerry_set_realm (jerry_value_t realm_value);
 
 /**
  * Array buffer components.

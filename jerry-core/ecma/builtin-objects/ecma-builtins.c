@@ -668,6 +668,8 @@ ecma_builtin_get (ecma_builtin_id_t builtin_id) /**< id of built-in to check on 
   return ECMA_GET_NON_NULL_POINTER (ecma_object_t, *builtin_p);
 } /* ecma_builtin_get */
 
+#if ENABLED (JERRY_BUILTIN_REALMS)
+
 /**
  * Get reference to specified built-in object using the realm provided by another built-in object
  *
@@ -676,14 +678,12 @@ ecma_builtin_get (ecma_builtin_id_t builtin_id) /**< id of built-in to check on 
  *
  * @return pointer to the object's instance
  */
-static ecma_object_t *
-ecma_builtin_get_from_realm (ecma_object_t *builtin_object_p, /**< built-in object */
+ecma_object_t *
+ecma_builtin_get_from_realm (ecma_global_object_t *global_object_p, /**< global object */
                              ecma_builtin_id_t builtin_id) /**< id of built-in to check on */
 {
   JERRY_ASSERT (builtin_id < ECMA_BUILTIN_OBJECTS_COUNT);
 
-#if ENABLED (JERRY_BUILTIN_REALMS)
-  ecma_global_object_t *global_object_p = ecma_builtin_get_realm (builtin_object_p);
   jmem_cpointer_t *builtin_p = global_object_p->builtin_objects + builtin_id;
 
   if (JERRY_UNLIKELY (*builtin_p == JMEM_CP_NULL))
@@ -692,11 +692,31 @@ ecma_builtin_get_from_realm (ecma_object_t *builtin_object_p, /**< built-in obje
   }
 
   return ECMA_GET_NON_NULL_POINTER (ecma_object_t, *builtin_p);
+} /* ecma_builtin_get_from_realm */
+
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+
+/**
+ * Get reference to specified built-in object using the realm provided by another built-in object
+ *
+ * Note:
+ *   Does not increase the reference counter.
+ *
+ * @return pointer to the object's instance
+ */
+static inline ecma_object_t * JERRY_ATTR_ALWAYS_INLINE
+ecma_builtin_get_from_builtin (ecma_object_t *builtin_object_p, /**< built-in object */
+                               ecma_builtin_id_t builtin_id) /**< id of built-in to check on */
+{
+  JERRY_ASSERT (builtin_id < ECMA_BUILTIN_OBJECTS_COUNT);
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  return ecma_builtin_get_from_realm (ecma_builtin_get_realm (builtin_object_p), builtin_id);
 #else /* !ENABLED (JERRY_BUILTIN_REALMS) */
   JERRY_UNUSED (builtin_object_p);
   return ecma_builtin_get (builtin_id);
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
-} /* ecma_builtin_get_from_realm */
+} /* ecma_builtin_get_from_builtin */
 
 /**
  * Construct a Function object for specified built-in routine
@@ -712,8 +732,8 @@ ecma_builtin_make_function_object_for_routine (ecma_object_t *builtin_object_p, 
                                                uint32_t routine_index, /**< property descriptor index of routine */
                                                uint8_t flags) /**< see also: ecma_builtin_routine_flags */
 {
-  ecma_object_t *prototype_obj_p = ecma_builtin_get_from_realm (builtin_object_p,
-                                                                ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
+  ecma_object_t *prototype_obj_p = ecma_builtin_get_from_builtin (builtin_object_p,
+                                                                  ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE);
 
   size_t ext_object_size = sizeof (ecma_extended_object_t);
 
@@ -1169,20 +1189,14 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 #if ENABLED (JERRY_ESNEXT)
     case ECMA_BUILTIN_PROPERTY_SYMBOL:
     {
-      ecma_string_t *symbol_dot_p = ecma_get_magic_string (LIT_MAGIC_STRING_SYMBOL_DOT_UL);
-      ecma_string_t *name_p = ecma_get_magic_string ((lit_magic_string_id_t) curr_property_p->value);
-      ecma_string_t *descriptor_p = ecma_concat_ecma_strings (symbol_dot_p, name_p);
+      lit_magic_string_id_t symbol_id = (lit_magic_string_id_t) curr_property_p->value;
 
-      ecma_string_t *symbol_p = ecma_new_symbol_from_descriptor_string (ecma_make_string_value (descriptor_p));
-      lit_magic_string_id_t symbol_id = (lit_magic_string_id_t) curr_property_p->magic_string_id;
-      symbol_p->u.hash = (uint16_t) ((symbol_id << ECMA_GLOBAL_SYMBOL_SHIFT) | ECMA_GLOBAL_SYMBOL_FLAG);
-
-      value = ecma_make_symbol_value (symbol_p);
+      value = ecma_make_symbol_value (ecma_op_get_global_symbol (symbol_id));
       break;
     }
     case ECMA_BUILTIN_PROPERTY_INTRINSIC_PROPERTY:
     {
-      ecma_object_t *intrinsic_object_p = ecma_builtin_get_from_realm (object_p, ECMA_BUILTIN_ID_INTRINSIC_OBJECT);
+      ecma_object_t *intrinsic_object_p = ecma_builtin_get_from_builtin (object_p, ECMA_BUILTIN_ID_INTRINSIC_OBJECT);
       value = ecma_op_object_get_by_magic_id (intrinsic_object_p, (lit_magic_string_id_t) curr_property_p->value);
       break;
     }
@@ -1191,8 +1205,8 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
       is_accessor = true;
       uint16_t getter_id = ECMA_ACCESSOR_READ_WRITE_GET_GETTER_ID (curr_property_p->value);
       uint16_t setter_id = ECMA_ACCESSOR_READ_WRITE_GET_SETTER_ID (curr_property_p->value);
-      getter_p = ecma_builtin_get_from_realm (object_p, getter_id);
-      setter_p = ecma_builtin_get_from_realm (object_p, setter_id);
+      getter_p = ecma_builtin_get_from_builtin (object_p, getter_id);
+      setter_p = ecma_builtin_get_from_builtin (object_p, setter_id);
       ecma_ref_object (getter_p);
       ecma_ref_object (setter_p);
       break;
@@ -1201,7 +1215,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
     case ECMA_BUILTIN_PROPERTY_OBJECT:
     {
       ecma_object_t *builtin_object_p;
-      builtin_object_p = ecma_builtin_get_from_realm (object_p, (ecma_builtin_id_t) curr_property_p->value);
+      builtin_object_p = ecma_builtin_get_from_builtin (object_p, (ecma_builtin_id_t) curr_property_p->value);
       ecma_ref_object (builtin_object_p);
       value = ecma_make_object_value (builtin_object_p);
       break;

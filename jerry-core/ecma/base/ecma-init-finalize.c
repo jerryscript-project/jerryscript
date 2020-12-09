@@ -88,6 +88,18 @@ ecma_finalize (void)
   }
   while (JERRY_CONTEXT (ecma_gc_new_objects) != 0);
 
+#if ENABLED (JERRY_ESNEXT)
+  jmem_cpointer_t *global_symbols_cp = JERRY_CONTEXT (global_symbols_cp);
+
+  for (uint32_t i = 0; i < ECMA_BUILTIN_GLOBAL_SYMBOL_COUNT; i++)
+  {
+    if (global_symbols_cp[i] != JMEM_CP_NULL)
+    {
+      ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (ecma_string_t, global_symbols_cp[i]));
+    }
+  }
+#endif /* ENABLED (JERRY_ESNEXT) */
+
   ecma_finalize_lit_storage ();
 } /* ecma_finalize */
 

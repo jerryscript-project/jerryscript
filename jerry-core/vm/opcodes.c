@@ -1219,32 +1219,37 @@ ecma_value_t
 opfunc_create_implicit_class_constructor (uint8_t opcode) /**< current cbc opcode */
 {
   /* 8. */
-  ecma_object_t *func_obj_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE),
-                                                  sizeof (ecma_extended_object_t),
-                                                  ECMA_OBJECT_TYPE_NATIVE_FUNCTION);
+  ecma_object_t *function_obj_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE),
+                                                      sizeof (ecma_native_function_t),
+                                                      ECMA_OBJECT_TYPE_NATIVE_FUNCTION);
 
-  ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) func_obj_p;
+  ecma_native_function_t *native_function_p = (ecma_native_function_t *) function_obj_p;
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  ECMA_SET_INTERNAL_VALUE_POINTER (native_function_p->realm_value,
+                                   ecma_builtin_get_global ());
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
   /* 10.a.i */
   if (opcode == CBC_EXT_PUSH_IMPLICIT_CONSTRUCTOR_HERITAGE)
   {
-    ext_func_obj_p->u.external_handler_cb = ecma_op_implicit_constructor_handler_heritage_cb;
+    native_function_p->native_handler_cb = ecma_op_implicit_constructor_handler_heritage_cb;
   }
   /* 10.b.i */
   else
   {
-    ext_func_obj_p->u.external_handler_cb = ecma_op_implicit_constructor_handler_cb;
+    native_function_p->native_handler_cb = ecma_op_implicit_constructor_handler_cb;
   }
 
   ecma_property_value_t *prop_value_p;
-  prop_value_p = ecma_create_named_data_property (func_obj_p,
+  prop_value_p = ecma_create_named_data_property (function_obj_p,
                                                   ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH),
                                                   ECMA_PROPERTY_FLAG_CONFIGURABLE,
                                                   NULL);
 
   prop_value_p->value = ecma_make_uint32_value (0);
 
-  return ecma_make_object_value (func_obj_p);
+  return ecma_make_object_value (function_obj_p);
 } /* opfunc_create_implicit_class_constructor */
 
 /**

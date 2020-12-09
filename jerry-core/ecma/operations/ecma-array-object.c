@@ -708,13 +708,22 @@ ecma_op_array_species_create (ecma_object_t *original_array_p, /**< The object f
       return NULL;
     }
 
-    if (ecma_is_constructor (constructor)
-        && ecma_get_object_from_value (constructor) == ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY))
+#if ENABLED (JERRY_BUILTIN_REALMS)
+    if (ecma_is_constructor (constructor))
     {
-      ecma_free_value (constructor);
-      constructor = ECMA_VALUE_UNDEFINED;
+      ecma_object_t *constructor_p = ecma_get_object_from_value (constructor);
+      ecma_global_object_t *global_object_p = ecma_op_function_get_function_realm (constructor_p);
+
+      if ((ecma_object_t *) global_object_p != ecma_builtin_get_global ()
+          && constructor_p == ecma_builtin_get_from_realm (global_object_p, ECMA_BUILTIN_ID_ARRAY))
+      {
+        ecma_deref_object (constructor_p);
+        constructor = ECMA_VALUE_UNDEFINED;
+      }
     }
-    else if (ecma_is_value_object (constructor))
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+
+    if (ecma_is_value_object (constructor))
     {
       ecma_object_t *ctor_object_p = ecma_get_object_from_value (constructor);
       constructor = ecma_op_object_get_by_symbol_id (ctor_object_p, LIT_GLOBAL_SYMBOL_SPECIES);

@@ -978,7 +978,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     args_p->const_literal_end = const_literal_end;
     args_p->literal_end = context_p->literal_count;
 #if ENABLED (JERRY_BUILTIN_REALMS)
-    args_p->realm_value = ecma_make_object_value ((ecma_object_t *) JERRY_CONTEXT (global_object_p));
+    ECMA_SET_INTERNAL_VALUE_POINTER (args_p->realm_value, JERRY_CONTEXT (global_object_p));
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
     compiled_code_p->status_flags |= CBC_CODE_FLAGS_UINT16_ARGUMENTS;
@@ -995,7 +995,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     args_p->const_literal_end = (uint8_t) const_literal_end;
     args_p->literal_end = (uint8_t) context_p->literal_count;
 #if ENABLED (JERRY_BUILTIN_REALMS)
-    args_p->realm_value = ecma_make_object_value ((ecma_object_t *) JERRY_CONTEXT (global_object_p));
+    ECMA_SET_INTERNAL_VALUE_POINTER (args_p->realm_value, JERRY_CONTEXT (global_object_p));
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
     byte_code_p += sizeof (cbc_uint8_arguments_t);

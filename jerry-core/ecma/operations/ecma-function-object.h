@@ -57,7 +57,7 @@ const ecma_compiled_code_t *
 ecma_op_function_get_compiled_code (ecma_extended_object_t *function_p);
 
 #if ENABLED (JERRY_BUILTIN_REALMS)
-ecma_value_t
+ecma_global_object_t *
 ecma_op_function_get_realm (const ecma_compiled_code_t *bytecode_header_p);
 
 ecma_global_object_t *

@@ -486,8 +486,7 @@ ecma_module_evaluate (ecma_module_t *module_p) /**< module */
   }
 
 #if ENABLED (JERRY_BUILTIN_REALMS)
-  ecma_object_t *global_object_p;
-  global_object_p = ecma_get_object_from_value (ecma_op_function_get_realm (module_p->compiled_code_p));
+  ecma_object_t *global_object_p = (ecma_object_t *) ecma_op_function_get_realm (module_p->compiled_code_p);
 #else /* !ENABLED (JERRY_BUILTIN_REALMS) */
   ecma_object_t *global_object_p = ecma_builtin_get_global ();
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */

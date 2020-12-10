@@ -302,11 +302,9 @@ ecma_value_t
 vm_run_global (const ecma_compiled_code_t *bytecode_p) /**< pointer to bytecode to run */
 {
 #if ENABLED (JERRY_BUILTIN_REALMS)
-  ecma_value_t realm_value = ecma_op_function_get_realm (bytecode_p);
-  ecma_object_t *global_obj_p = ecma_get_object_from_value (realm_value);
+  ecma_object_t *global_obj_p = (ecma_object_t *) ecma_op_function_get_realm (bytecode_p);
 #else /* !ENABLED (JERRY_BUILTIN_REALMS) */
   ecma_object_t *global_obj_p = ecma_builtin_get_global ();
-  ecma_value_t realm_value = ecma_make_object_value (global_obj_p);
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
 #if ENABLED (JERRY_ESNEXT)
@@ -343,7 +341,13 @@ vm_run_global (const ecma_compiled_code_t *bytecode_p) /**< pointer to bytecode 
   shared.bytecode_header_p = bytecode_p;
   shared.status_flags = 0;
 
-  return vm_run (&shared, realm_value, global_scope_p);
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  ecma_value_t this_binding = ((ecma_global_object_t *) global_obj_p)->this_binding;
+#else /* !ENABLED (JERRY_BUILTIN_REALMS) */
+  ecma_value_t this_binding = ecma_make_object_value (global_obj_p);
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+
+  return vm_run (&shared, this_binding, global_scope_p);
 } /* vm_run_global */
 
 /**
@@ -388,14 +392,14 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
   else
   {
 #if ENABLED (JERRY_BUILTIN_REALMS)
-    ecma_value_t realm_value = ecma_op_function_get_realm (bytecode_data_p);
-    ecma_object_t *global_obj_p = ecma_get_object_from_value (realm_value);
+    ecma_object_t *global_obj_p = (ecma_object_t *) ecma_op_function_get_realm (bytecode_data_p);
+    this_binding = ((ecma_global_object_t *) global_obj_p)->this_binding;
+    ecma_ref_object (ecma_get_object_from_value (this_binding));
 #else /* !ENABLED (JERRY_BUILTIN_REALMS) */
     ecma_object_t *global_obj_p = ecma_builtin_get_global ();
-    ecma_value_t realm_value = ecma_make_object_value (global_obj_p);
-#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
-    this_binding = realm_value;
     ecma_ref_object (global_obj_p);
+    this_binding = ecma_make_object_value (global_obj_p);
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
     lex_env_p = ecma_get_global_scope (global_obj_p);
   }
 

@@ -388,7 +388,7 @@ static_snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< c
     const_literal_end = (uint32_t) (args_p->const_literal_end - args_p->register_end);
 
 #if ENABLED (JERRY_BUILTIN_REALMS)
-    args_p->realm_value = ECMA_VALUE_UNDEFINED;
+    args_p->realm_value = JMEM_CP_NULL;
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
   }
   else
@@ -400,7 +400,7 @@ static_snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< c
     const_literal_end = (uint32_t) (args_p->const_literal_end - args_p->register_end);
 
 #if ENABLED (JERRY_BUILTIN_REALMS)
-    args_p->realm_value = ECMA_VALUE_UNDEFINED;
+    args_p->realm_value = JMEM_CP_NULL;
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
   }
 
@@ -601,7 +601,7 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
     header_size = sizeof (cbc_uint16_arguments_t);
 
 #if ENABLED (JERRY_BUILTIN_REALMS)
-    args_p->realm_value = ecma_make_object_value (ecma_builtin_get_global ());
+    ECMA_SET_INTERNAL_VALUE_POINTER (args_p->realm_value, ecma_builtin_get_global ());
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
   }
   else
@@ -615,7 +615,7 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
     header_size = sizeof (cbc_uint8_arguments_t);
 
 #if ENABLED (JERRY_BUILTIN_REALMS)
-    args_p->realm_value = ecma_make_object_value (ecma_builtin_get_global ());
+    ECMA_SET_INTERNAL_VALUE_POINTER (args_p->realm_value, ecma_builtin_get_global ());
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
   }
 
@@ -1028,7 +1028,7 @@ jerry_snapshot_result (const uint32_t *snapshot_p, /**< snapshot */
     ecma_object_t *global_object_p = ecma_builtin_get_global ();
 
 #if ENABLED (JERRY_BUILTIN_REALMS)
-    JERRY_ASSERT (global_object_p == ecma_get_object_from_value (ecma_op_function_get_realm (bytecode_p)));
+    JERRY_ASSERT (global_object_p == (ecma_object_t *) ecma_op_function_get_realm (bytecode_p));
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
 #if ENABLED (JERRY_ESNEXT)

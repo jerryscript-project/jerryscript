@@ -844,8 +844,7 @@ opfunc_resume_executable_object (vm_executable_object_t *executable_object_p, /*
 
 #if ENABLED (JERRY_BUILTIN_REALMS)
   ecma_global_object_t *saved_global_object_p = JERRY_CONTEXT (global_object_p);
-  ecma_value_t realm_value = ecma_op_function_get_realm (bytecode_header_p);
-  JERRY_CONTEXT (global_object_p) = (ecma_global_object_t *) ecma_get_object_from_value (realm_value);
+  JERRY_CONTEXT (global_object_p) = ecma_op_function_get_realm (bytecode_header_p);
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
   ecma_value_t result = vm_execute (&executable_object_p->frame_ctx);

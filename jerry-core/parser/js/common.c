@@ -218,7 +218,7 @@ util_print_literal_value (ecma_compiled_code_t *compiled_code_p, /**< compiled c
     return;
   }
 
-  if (literal_index > const_literal_end)
+  if (literal_index >= const_literal_end)
   {
     JERRY_DEBUG_MSG (" lit:%d", literal_index);
     return;

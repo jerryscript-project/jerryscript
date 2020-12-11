@@ -390,7 +390,6 @@
   <test id="language/eval-code/indirect/non-definable-global-var.js"><reason></reason></test>
   <test id="language/eval-code/indirect/var-env-func-init-global-new.js"><reason></reason></test>
   <test id="language/eval-code/indirect/var-env-func-init-global-update-configurable.js"><reason></reason></test>
-  <test id="language/eval-code/indirect/var-env-global-lex-non-strict.js"><reason></reason></test>
   <test id="language/eval-code/indirect/var-env-var-init-global-new.js"><reason></reason></test>
   <test id="language/expressions/arrow-function/dstr/ary-init-iter-no-close.js"><reason></reason></test>
   <test id="language/expressions/arrow-function/dstr/dflt-ary-init-iter-no-close.js"><reason></reason></test>

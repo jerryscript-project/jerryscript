@@ -1992,7 +1992,7 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
         context.status_flags |= PARSER_LEXICAL_BLOCK_NEEDED;
       }
 
-      if ((parse_opts & ECMA_PARSE_EVAL) == 0)
+      if (!(parse_opts & ECMA_PARSE_EVAL))
       {
         scanner_check_variables (&context);
       }

@@ -190,7 +190,7 @@ def generate_build_options(arguments):
     build_options_append('JERRY_CMDLINE_SNAPSHOT', arguments.jerry_cmdline_snapshot)
     build_options_append('JERRY_CMDLINE_TEST', arguments.jerry_cmdline_test)
     build_options_append('JERRY_LIBFUZZER', arguments.libfuzzer)
-    build_options_append('OSS_FUZZ', arguments.oss_fuzz)
+    build_options_append('JERRY_OSS_FUZZ', arguments.oss_fuzz)
     build_options_append('JERRY_EXT', arguments.jerry_ext)
     build_options_append('JERRY_LIBM', arguments.jerry_libm)
     build_options_append('JERRY_PORT_DEFAULT', arguments.jerry_port_default)

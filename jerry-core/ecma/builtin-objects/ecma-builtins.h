@@ -108,6 +108,7 @@ typedef struct
   uint32_t extra_instantiated_bitset[1]; /**< extra bit set for instantiated properties */
 #if ENABLED (JERRY_BUILTIN_REALMS)
   uint32_t extra_realms_bitset; /**< extra bit set for instantiated properties when realms is enabled */
+  ecma_value_t this_binding; /**< 'this' binding of this global object */
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
   jmem_cpointer_t global_env_cp; /**< global lexical environment */
 #if ENABLED (JERRY_ESNEXT)

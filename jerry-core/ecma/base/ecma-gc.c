@@ -159,6 +159,10 @@ ecma_gc_mark_global_object (ecma_global_object_t *global_object_p) /**< global o
 
   ecma_gc_set_object_visited (ECMA_GET_NON_NULL_POINTER (ecma_object_t, global_object_p->global_env_cp));
 
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  ecma_gc_set_object_visited (ecma_get_object_from_value (global_object_p->this_binding));
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+
 #if ENABLED (JERRY_ESNEXT)
   if (global_object_p->global_scope_cp != global_object_p->global_env_cp)
   {
@@ -919,20 +923,20 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
         }
 #endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 
-        ecma_value_t realm_value;
+        ecma_object_t *realm_p;
 
         if (byte_code_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
         {
           cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) byte_code_p;
-          realm_value = args_p->realm_value;
+          realm_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, args_p->realm_value);
         }
         else
         {
           cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) byte_code_p;
-          realm_value = args_p->realm_value;
+          realm_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, args_p->realm_value);
         }
 
-        ecma_gc_set_object_visited (ecma_get_object_from_value (realm_value));
+        ecma_gc_set_object_visited (realm_p);
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
         break;
       }

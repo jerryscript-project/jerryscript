@@ -484,7 +484,7 @@ ecma_op_create_dynamic_function (const ecma_value_t *arguments_list_p, /**< argu
   ecma_object_t *global_object_p = ecma_builtin_get_global ();
 
 #if ENABLED (JERRY_BUILTIN_REALMS)
-  JERRY_ASSERT (global_object_p == ecma_get_object_from_value (ecma_op_function_get_realm (bytecode_p)));
+  JERRY_ASSERT (global_object_p == (ecma_object_t *) ecma_op_function_get_realm (bytecode_p));
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
   ecma_object_t *global_env_p = ecma_get_global_environment (global_object_p);
@@ -755,9 +755,9 @@ ecma_op_function_get_compiled_code (ecma_extended_object_t *function_p) /**< fun
  * Note:
  *   Does not increase the reference counter.
  *
- * @return realm (global) object
+ * @return pointer to realm (global) object
  */
-inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
+inline ecma_global_object_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_op_function_get_realm (const ecma_compiled_code_t *bytecode_header_p) /**< byte code header */
 {
   ecma_value_t realm_value;
@@ -774,14 +774,14 @@ ecma_op_function_get_realm (const ecma_compiled_code_t *bytecode_header_p) /**< 
   }
 
 #if ENABLED (JERRY_SNAPSHOT_EXEC)
-  if (JERRY_LIKELY (realm_value != ECMA_VALUE_UNDEFINED))
+  if (JERRY_LIKELY (realm_value != JMEM_CP_NULL))
   {
-    return realm_value;
+    return ECMA_GET_INTERNAL_VALUE_POINTER (ecma_global_object_t, realm_value);
   }
 
-  return ecma_make_object_value (ecma_builtin_get_global ());
+  return (ecma_global_object_t *) ecma_builtin_get_global ();
 #else /* !ENABLED (JERRY_SNAPSHOT_EXEC) */
-  return realm_value;
+  return ECMA_GET_INTERNAL_VALUE_POINTER (ecma_global_object_t, realm_value);
 #endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 } /* ecma_op_function_get_realm */
 
@@ -800,8 +800,7 @@ ecma_op_function_get_function_realm (ecma_object_t *func_obj_p) /**< function ob
   {
     ecma_extended_object_t *ext_function_obj_p = (ecma_extended_object_t *) func_obj_p;
     const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_function_obj_p);
-    ecma_value_t realm_value = ecma_op_function_get_realm (bytecode_data_p);
-    return (ecma_global_object_t *) ecma_get_object_from_value (realm_value);
+    return ecma_op_function_get_realm (bytecode_data_p);
   }
 
   JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_NATIVE_FUNCTION);
@@ -1074,7 +1073,7 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
   shared_args.header.bytecode_header_p = bytecode_data_p;
 
 #if ENABLED (JERRY_BUILTIN_REALMS)
-  ecma_value_t realm_value = ecma_op_function_get_realm (bytecode_data_p);
+  ecma_global_object_t *realm_p = ecma_op_function_get_realm (bytecode_data_p);
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
   /* 1. */
@@ -1105,7 +1104,7 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
       {
         /* 2. */
 #if ENABLED (JERRY_BUILTIN_REALMS)
-        this_binding = realm_value;
+        this_binding = realm_p->this_binding;
 #else /* !ENABLED (JERRY_BUILTIN_REALMS) */
         this_binding = ecma_make_object_value (ecma_builtin_get_global ());
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
@@ -1155,7 +1154,7 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
 
 #if ENABLED (JERRY_BUILTIN_REALMS)
   ecma_global_object_t *saved_global_object_p = JERRY_CONTEXT (global_object_p);
-  JERRY_CONTEXT (global_object_p) = (ecma_global_object_t *) ecma_get_object_from_value (realm_value);
+  JERRY_CONTEXT (global_object_p) = realm_p;
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
   ret_value = vm_run (&shared_args.header, this_binding, scope_p);
@@ -1634,8 +1633,7 @@ ecma_op_lazy_instantiate_prototype_object (ecma_object_t *object_p) /**< the fun
     const ecma_compiled_code_t *bytecode_data_p;
     bytecode_data_p = ecma_op_function_get_compiled_code ((ecma_extended_object_t *) object_p);
 
-    ecma_value_t realm_value = ecma_op_function_get_realm (bytecode_data_p);
-    global_object_p = (ecma_global_object_t *) ecma_get_object_from_value (realm_value);
+    global_object_p = ecma_op_function_get_realm (bytecode_data_p);
   }
   else
   {

@@ -90,8 +90,14 @@ static inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_op_is_global_environment (ecma_object_t *lex_env_p) /**< lexical environment */
 {
   JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  JERRY_ASSERT (lex_env_p->u2.outer_reference_cp != JMEM_CP_NULL
+                || (ecma_make_object_value (ecma_get_lex_env_binding_object (lex_env_p))
+                    == ((ecma_global_object_t *) ecma_builtin_get_global ())->this_binding));
+#else /* !ENABLED (JERRY_BUILTIN_REALMS) */
   JERRY_ASSERT (lex_env_p->u2.outer_reference_cp != JMEM_CP_NULL
                 || ecma_get_lex_env_binding_object (lex_env_p) == ecma_builtin_get_global ());
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
   return lex_env_p->u2.outer_reference_cp == JMEM_CP_NULL;
 } /* ecma_op_is_global_environment */

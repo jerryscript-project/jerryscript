@@ -614,6 +614,7 @@ ecma_builtin_create_global_object (void)
 #if ENABLED (JERRY_BUILTIN_REALMS)
   ECMA_SET_INTERNAL_VALUE_POINTER (global_object_p->extended_object.u.built_in.realm_value, global_object_p);
   global_object_p->extra_realms_bitset = 0;
+  global_object_p->this_binding = ecma_make_object_value (object_p);
 #else /* !ENABLED (JERRY_BUILTIN_REALMS) */
   global_object_p->extended_object.u.built_in.continue_instantiated_bitset[0] = 0;
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */

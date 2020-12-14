@@ -19,9 +19,9 @@
 #include "test-common.h"
 
 static void
-create_number_property (jerry_value_t object_value,
-                        char *name_p,
-                        double number)
+create_number_property (jerry_value_t object_value, /**< object value */
+                        char *name_p, /**< name */
+                        double number) /**< value */
 {
   jerry_value_t name_value = jerry_create_string ((const jerry_char_t *) name_p);
   jerry_value_t number_value = jerry_create_number (number);
@@ -34,7 +34,23 @@ create_number_property (jerry_value_t object_value,
 } /* create_number_property */
 
 static double
-eval_and_get_number (char *script_p)
+get_number_property (jerry_value_t object_value, /**< object value */
+                     char *name_p) /**< name */
+{
+  jerry_value_t name_value = jerry_create_string ((const jerry_char_t *) name_p);
+  jerry_value_t result_value = jerry_get_property (object_value, name_value);
+  TEST_ASSERT (!jerry_value_is_error (result_value));
+  TEST_ASSERT (jerry_value_is_number (result_value));
+
+  double result = jerry_get_number_value (result_value);
+
+  jerry_release_value (result_value);
+  jerry_release_value (name_value);
+  return result;
+} /* get_number_property */
+
+static double
+eval_and_get_number (char *script_p) /**< script source */
 {
   jerry_value_t result_value;
   result_value = jerry_eval ((const jerry_char_t *) script_p, strlen (script_p), JERRY_PARSE_NO_OPTS);
@@ -93,6 +109,30 @@ main (void)
   jerry_release_value (object_value);
 
   jerry_release_value (global_value);
+  jerry_release_value (realm_value);
+
+  realm_value = jerry_create_realm ();
+
+  result_value = jerry_set_realm (realm_value);
+  TEST_ASSERT (!jerry_value_is_error (result_value));
+  object_value = jerry_create_object ();
+  jerry_set_realm (result_value);
+
+  result_value = jerry_realm_set_this (realm_value, object_value);
+  TEST_ASSERT (jerry_value_is_boolean (result_value) && jerry_get_boolean_value (result_value));
+  jerry_release_value (result_value);
+
+  create_number_property (object_value, "x", 7.25);
+  create_number_property (object_value, "y", 1.25);
+
+  result_value = jerry_set_realm (realm_value);
+  TEST_ASSERT (!jerry_value_is_error (result_value));
+  TEST_ASSERT (eval_and_get_number ("var z = -5.5; x + this.y") == 8.5);
+  jerry_set_realm (result_value);
+
+  TEST_ASSERT (get_number_property (object_value, "z") == -5.5);
+
+  jerry_release_value (object_value);
   jerry_release_value (realm_value);
 
   jerry_cleanup ();

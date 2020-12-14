@@ -471,7 +471,7 @@ jerry_parse (const jerry_char_t *resource_name_p, /**< resource name (usually a 
   ecma_object_t *global_object_p = ecma_builtin_get_global ();
 
 #if ENABLED (JERRY_BUILTIN_REALMS)
-  JERRY_ASSERT (global_object_p == ecma_get_object_from_value (ecma_op_function_get_realm (bytecode_data_p)));
+  JERRY_ASSERT (global_object_p == (ecma_object_t *) ecma_op_function_get_realm (bytecode_data_p));
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
   ecma_object_t *lex_env_p = ecma_get_global_environment (global_object_p);
@@ -550,7 +550,7 @@ jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (u
   ecma_object_t *global_object_p = ecma_builtin_get_global ();
 
 #if ENABLED (JERRY_BUILTIN_REALMS)
-  JERRY_ASSERT (global_object_p == ecma_get_object_from_value (ecma_op_function_get_realm (bytecode_p)));
+  JERRY_ASSERT (global_object_p == (ecma_object_t *) ecma_op_function_get_realm (bytecode_p));
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
   ecma_object_t *lex_env_p = ecma_get_global_environment (global_object_p);
@@ -4601,6 +4601,58 @@ jerry_set_realm (jerry_value_t realm_value) /**< jerry api value */
   return jerry_throw (ecma_raise_reference_error (ECMA_ERR_MSG ("Realm is not available")));
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 } /* jerry_set_realm */
+
+/**
+ * Sets the 'this' binding of a realm
+ *
+ * This function must be called before executing any script on the realm.
+ * Otherwise the operation is undefined.
+ *
+ * @return thrown error - if any error is happened
+ *         true - otherwise
+ */
+jerry_value_t
+jerry_realm_set_this (jerry_value_t realm_value, /**< realm value */
+                      jerry_value_t this_value) /**< this value */
+{
+  jerry_assert_api_available ();
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  if (!ecma_is_value_object (this_value))
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Second argument must be an object")));
+  }
+
+  if (ecma_is_value_object (realm_value))
+  {
+    ecma_object_t *object_p = ecma_get_object_from_value (realm_value);
+
+    if (ecma_get_object_is_builtin (object_p)
+        && ecma_builtin_is_global (object_p))
+    {
+      ecma_global_object_t *global_object_p = (ecma_global_object_t *) object_p;
+      global_object_p->this_binding = this_value;
+
+      ecma_object_t *global_lex_env_p = ecma_create_object_lex_env (NULL,
+                                                                    ecma_get_object_from_value (this_value),
+                                                                    ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+
+      ECMA_SET_NON_NULL_POINTER (global_object_p->global_env_cp, global_lex_env_p);
+#if ENABLED (JERRY_ESNEXT)
+      global_object_p->global_scope_cp = global_object_p->global_env_cp;
+#endif /* ENABLED (JERRY_ESNEXT) */
+      ecma_deref_object (global_lex_env_p);
+      return ECMA_VALUE_TRUE;
+    }
+  }
+
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("First argument is not a realm")));
+#else /* !ENABLED (JERRY_BUILTIN_REALMS) */
+  JERRY_UNUSED (realm_value);
+  JERRY_UNUSED (this_value);
+  return jerry_throw (ecma_raise_reference_error (ECMA_ERR_MSG ("Realm is not available")));
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+} /* jerry_realm_set_this */
 
 /**
  * Check if the given value is an ArrayBuffer object.

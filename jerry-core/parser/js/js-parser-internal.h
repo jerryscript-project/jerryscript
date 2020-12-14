@@ -823,7 +823,6 @@ void scanner_cleanup (parser_context_t *context_p);
 
 bool scanner_is_context_needed (parser_context_t *context_p, parser_check_context_type_t check_type);
 #if ENABLED (JERRY_ESNEXT)
-bool scanner_scope_find_let_declaration (parser_context_t *context_p, lexer_lit_location_t *literal_p);
 bool scanner_try_scan_new_target (parser_context_t *context_p);
 void scanner_check_variables (parser_context_t *context_p);
 #endif /* ENABLED (JERRY_ESNEXT) */

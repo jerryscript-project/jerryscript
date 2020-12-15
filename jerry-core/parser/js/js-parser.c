@@ -2291,6 +2291,7 @@ parser_parse_function (parser_context_t *context_p, /**< context */
   if ((context_p->status_flags & (PARSER_CLASS_CONSTRUCTOR | PARSER_ALLOW_SUPER_CALL)) == PARSER_CLASS_CONSTRUCTOR)
   {
     parser_emit_cbc_ext (context_p, CBC_EXT_RUN_FIELD_INIT);
+    parser_flush_cbc (context_p);
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
 

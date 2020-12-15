@@ -99,6 +99,31 @@ main (void)
     jerry_release_value (symbol_desc_value);
   }
 
+  if (jerry_is_feature_enabled (JERRY_FEATURE_BIGINT))
+  {
+    /* Check simple bigint value type */
+    uint64_t digits_buffer[2] = { 1, 0 };
+    jerry_value_t value_bigint = jerry_create_bigint (digits_buffer, 2, false);
+    jerry_type_t value_type_info = jerry_value_get_type (value_bigint);
+
+    TEST_ASSERT (value_type_info != JERRY_TYPE_NONE);
+    TEST_ASSERT (value_type_info == JERRY_TYPE_BIGINT);
+
+    jerry_release_value (value_bigint);
+
+    /* Check bigint wrapped in object type */
+    jerry_char_t object_bigint_src[] = "Object(5n)";
+    jerry_value_t object_bigint = jerry_eval (object_bigint_src, sizeof (object_bigint_src) - 1, JERRY_PARSE_NO_OPTS);
+    TEST_ASSERT (!jerry_value_is_error (object_bigint));
+
+    jerry_type_t object_type_info = jerry_value_get_type (object_bigint);
+
+    TEST_ASSERT (object_type_info != JERRY_TYPE_NONE);
+    TEST_ASSERT (object_type_info == JERRY_TYPE_OBJECT);
+
+    jerry_release_value (object_bigint);
+  }
+
   jerry_cleanup ();
 
   return 0;

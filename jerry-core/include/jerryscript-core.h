@@ -411,6 +411,7 @@ typedef enum
   JERRY_TYPE_FUNCTION,  /**< function type */
   JERRY_TYPE_ERROR,     /**< error/abort type */
   JERRY_TYPE_SYMBOL,    /**< symbol type */
+  JERRY_TYPE_BIGINT,    /**< bigint type */
 } jerry_type_t;
 
 /**

@@ -985,6 +985,12 @@ jerry_value_get_type (const jerry_value_t value) /**< input value to check */
     {
       return JERRY_TYPE_FUNCTION;
     }
+#if ENABLED (JERRY_BUILTIN_BIGINT)
+    case LIT_MAGIC_STRING_BIGINT:
+    {
+      return JERRY_TYPE_BIGINT;
+    }
+#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
     default:
     {
       JERRY_ASSERT (lit_id == LIT_MAGIC_STRING_OBJECT);

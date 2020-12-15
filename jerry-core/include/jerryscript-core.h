@@ -711,6 +711,13 @@ jerry_value_t jerry_get_symbol_description (const jerry_value_t symbol);
 jerry_value_t jerry_get_symbol_descriptive_string (const jerry_value_t symbol);
 
 /**
+ * Realm functions.
+ */
+jerry_value_t jerry_set_realm (jerry_value_t realm_value);
+jerry_value_t jerry_realm_get_this (jerry_value_t realm_value);
+jerry_value_t jerry_realm_set_this (jerry_value_t realm_value, jerry_value_t this_value);
+
+/**
  * BigInt functions.
  */
 uint32_t jerry_get_bigint_size_in_digits (jerry_value_t value);
@@ -740,8 +747,6 @@ void jerry_set_vm_exec_stop_callback (jerry_vm_exec_stop_callback_t stop_cb, voi
 jerry_value_t jerry_get_backtrace (uint32_t max_depth);
 jerry_value_t jerry_get_resource_name (const jerry_value_t value);
 jerry_value_t jerry_get_new_target (void);
-jerry_value_t jerry_set_realm (jerry_value_t realm_value);
-jerry_value_t jerry_realm_set_this (jerry_value_t realm_value, jerry_value_t this_value);
 
 /**
  * Array buffer components.

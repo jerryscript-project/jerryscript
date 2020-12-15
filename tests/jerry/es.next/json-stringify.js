@@ -51,3 +51,14 @@ try {
 assert(JSON.stringify("ab𬄕c") === '"ab𬄕\\u001fc"');
 assert(JSON.stringify("ab\uDC01cd") === '"ab\\udc01c\\u001fd"');
 assert(JSON.stringify("ab\uDC01cd\uD8331e") === '"ab\\udc01c\\u001fd\\ud8331e"');
+
+// Test case where the proxy is already revoked
+var handle = Proxy.revocable([], {});
+handle.revoke();
+
+try {
+  JSON.stringify(handle.proxy);
+  assert(false);
+} catch (ex) {
+  assert(ex instanceof TypeError);
+}

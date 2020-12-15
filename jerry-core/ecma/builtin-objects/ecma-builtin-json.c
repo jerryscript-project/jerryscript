@@ -1268,6 +1268,7 @@ ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p, 
 
     if (ECMA_IS_VALUE_ERROR (to_json))
     {
+      ecma_free_value (value);
       return to_json;
     }
 

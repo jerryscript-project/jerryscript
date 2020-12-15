@@ -323,7 +323,7 @@ ecma_builtin_typedarray_prototype_reduce_with_direction (ecma_value_t this_arg, 
 
     ecma_value_t call_args[] = { accumulator, get_value, current_index, this_arg };
 
-    JERRY_ASSERT (ecma_is_value_number (get_value));
+    JERRY_ASSERT (ecma_is_value_number (get_value) || ecma_is_value_bigint (get_value));
 
     ecma_value_t call_value = ecma_op_function_call (func_object_p,
                                                      ECMA_VALUE_UNDEFINED,
@@ -400,7 +400,7 @@ ecma_builtin_typedarray_prototype_filter (ecma_value_t this_arg, /**< this objec
     ecma_value_t current_index = ecma_make_uint32_value (index);
     ecma_value_t get_value = getter_cb (info_p->buffer_p + byte_pos);
 
-    JERRY_ASSERT (ecma_is_value_number (get_value));
+    JERRY_ASSERT (ecma_is_value_number (get_value) || ecma_is_value_bigint (get_value));
 
     ecma_value_t call_args[] = { get_value, current_index, this_arg };
 

@@ -61,6 +61,15 @@ eval_and_get_number (char *script_p) /**< script source */
   return result;
 } /* eval_and_get_number */
 
+static void
+check_type_error (jerry_value_t result_value) /**< result value */
+{
+  TEST_ASSERT (jerry_value_is_error (result_value));
+  result_value = jerry_get_value_from_error (result_value, true);
+  TEST_ASSERT (jerry_get_error_type (result_value) == JERRY_ERROR_TYPE);
+  jerry_release_value (result_value);
+} /* check_type_error */
+
 /**
  * Unit test's main function.
  */
@@ -71,13 +80,21 @@ main (void)
 
   jerry_init (JERRY_INIT_EMPTY);
 
+  jerry_value_t global_value = jerry_get_global_object ();
+  jerry_value_t result_value = jerry_realm_get_this (global_value);
+  TEST_ASSERT (global_value == result_value);
+  jerry_release_value (global_value);
+
+  jerry_value_t number_value = jerry_create_number (3);
+  check_type_error (jerry_realm_get_this (number_value));
+  jerry_release_value (number_value);
+
   if (!jerry_is_feature_enabled (JERRY_FEATURE_REALM))
   {
     printf ("Skipping test, Realms not enabled\n");
     return 0;
   }
 
-  jerry_value_t global_value = jerry_get_global_object ();
   jerry_value_t realm_value = jerry_create_realm ();
 
   create_number_property (global_value, "a", 3.5);
@@ -87,7 +104,7 @@ main (void)
 
   TEST_ASSERT (eval_and_get_number ("a") == 3.5);
 
-  jerry_value_t result_value = jerry_set_realm (realm_value);
+  result_value = jerry_set_realm (realm_value);
   TEST_ASSERT (result_value == global_value);
   TEST_ASSERT (eval_and_get_number ("a") == -1.25);
 
@@ -103,20 +120,31 @@ main (void)
   TEST_ASSERT (result_value == realm_value);
 
   jerry_value_t object_value = jerry_create_object ();
-  result_value = jerry_set_realm (object_value);
-  TEST_ASSERT (jerry_value_is_error (result_value));
-  jerry_release_value (result_value);
+  check_type_error (jerry_set_realm (object_value));
   jerry_release_value (object_value);
+
+  number_value = jerry_create_number (5);
+  check_type_error (jerry_set_realm (number_value));
+  jerry_release_value (number_value);
 
   jerry_release_value (global_value);
   jerry_release_value (realm_value);
 
   realm_value = jerry_create_realm ();
 
+  result_value = jerry_realm_get_this (realm_value);
+  TEST_ASSERT (result_value == realm_value);
+  jerry_release_value (result_value);
+
   result_value = jerry_set_realm (realm_value);
   TEST_ASSERT (!jerry_value_is_error (result_value));
   object_value = jerry_create_object ();
   jerry_set_realm (result_value);
+
+  number_value = jerry_create_number (7);
+  check_type_error (jerry_realm_set_this (realm_value, number_value));
+  check_type_error (jerry_realm_set_this (number_value, object_value));
+  jerry_release_value (number_value);
 
   result_value = jerry_realm_set_this (realm_value, object_value);
   TEST_ASSERT (jerry_value_is_boolean (result_value) && jerry_get_boolean_value (result_value));
@@ -131,6 +159,10 @@ main (void)
   jerry_set_realm (result_value);
 
   TEST_ASSERT (get_number_property (object_value, "z") == -5.5);
+
+  result_value = jerry_realm_get_this (realm_value);
+  TEST_ASSERT (result_value == object_value);
+  jerry_release_value (result_value);
 
   jerry_release_value (object_value);
   jerry_release_value (realm_value);

@@ -4609,12 +4609,51 @@ jerry_set_realm (jerry_value_t realm_value) /**< jerry api value */
 } /* jerry_set_realm */
 
 /**
+ * Gets the 'this' binding of a realm
+ *
+ * @return type error - if realm_value is not a realm
+ *         this value - otherwise
+ */
+jerry_value_t
+jerry_realm_get_this (jerry_value_t realm_value) /**< realm value */
+{
+  jerry_assert_api_available ();
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  if (ecma_is_value_object (realm_value))
+  {
+    ecma_object_t *object_p = ecma_get_object_from_value (realm_value);
+
+    if (ecma_get_object_is_builtin (object_p)
+        && ecma_builtin_is_global (object_p))
+    {
+      ecma_global_object_t *global_object_p = (ecma_global_object_t *) object_p;
+
+      ecma_ref_object (ecma_get_object_from_value (global_object_p->this_binding));
+      return global_object_p->this_binding;
+    }
+  }
+
+#else /* !ENABLED (JERRY_BUILTIN_REALMS) */
+  ecma_object_t *global_object_p = ecma_builtin_get_global ();
+
+  if (realm_value == ecma_make_object_value (global_object_p))
+  {
+    ecma_ref_object (global_object_p);
+    return realm_value;
+  }
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Passed argument is not a realm")));
+} /* jerry_realm_get_this */
+
+/**
  * Sets the 'this' binding of a realm
  *
  * This function must be called before executing any script on the realm.
  * Otherwise the operation is undefined.
  *
- * @return thrown error - if any error is happened
+ * @return type error - if realm_value is not a realm or this_value is not object
  *         true - otherwise
  */
 jerry_value_t

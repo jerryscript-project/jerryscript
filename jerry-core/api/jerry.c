@@ -4338,6 +4338,40 @@ jerry_get_bigint_digits (jerry_value_t value, /**< BigInt value */
 } /* jerry_get_bigint_digits */
 
 /**
+ * Get the target object of a Proxy object
+ *
+ * @return type error - if proxy_value is not a Proxy object
+ *         target object - otherwise
+ */
+jerry_value_t
+jerry_get_proxy_target (jerry_value_t proxy_value) /**< proxy value */
+{
+  jerry_assert_api_available ();
+
+#if ENABLED (JERRY_BUILTIN_PROXY)
+  if (ecma_is_value_object (proxy_value))
+  {
+    ecma_object_t *object_p = ecma_get_object_from_value (proxy_value);
+
+    if (ECMA_OBJECT_IS_PROXY (object_p))
+    {
+      ecma_proxy_object_t *proxy_object_p = (ecma_proxy_object_t *) object_p;
+
+      if (!ecma_is_value_null (proxy_object_p->target))
+      {
+        ecma_ref_object (ecma_get_object_from_value (proxy_object_p->target));
+      }
+      return proxy_object_p->target;
+    }
+  }
+#else /* !ENABLED (JERRY_BUILTIN_PROXY) */
+  JERRY_UNUSED (proxy_value);
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Passed value is not a proxy object")));
+} /* jerry_get_proxy_target */
+
+/**
  * Validate UTF-8 string
  *
  * @return true - if UTF-8 string is well-formed

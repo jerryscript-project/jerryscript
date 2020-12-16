@@ -21,6 +21,8 @@
 #include "ecma-gc.h"
 #include "ecma-objects.h"
 #include "ecma-typedarray-object.h"
+#include "ecma-function-object.h"
+#include "jcontext.h"
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -37,13 +39,24 @@ ecma_typedarray_helper_dispatch_construct (const ecma_value_t *arguments_list_p,
                                            ecma_typedarray_type_t typedarray_id) /**< id of the typedarray */
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
+  ecma_builtin_id_t proto_id = ecma_typedarray_helper_get_prototype_id (typedarray_id);
+  ecma_object_t *prototype_obj_p = ecma_builtin_get (proto_id);
 
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (ecma_typedarray_helper_get_prototype_id (typedarray_id));
+  if (JERRY_CONTEXT (current_new_target))
+  {
+    prototype_obj_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_new_target), proto_id);
+  }
+
   ecma_value_t val = ecma_op_create_typedarray (arguments_list_p,
                                                 arguments_list_len,
                                                 prototype_obj_p,
                                                 ecma_typedarray_helper_get_shift_size (typedarray_id),
                                                 typedarray_id);
+
+  if (JERRY_CONTEXT (current_new_target))
+  {
+    ecma_deref_object (prototype_obj_p);
+  }
 
   return val;
 } /* ecma_typedarray_helper_dispatch_construct */

@@ -9641,7 +9641,6 @@
   <test id="built-ins/Atomics/waitAsync/value-not-equal-agent.js"><reason></reason></test>
   <test id="built-ins/Atomics/waitAsync/waiterlist-block-indexedposition-wake.js"><reason></reason></test>
   <test id="built-ins/Atomics/waitAsync/was-woken-before-timeout.js"><reason></reason></test>
-  <test id="built-ins/Boolean/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/DataView/proto-from-ctor-realm-sab.js"><reason></reason></test>
   <test id="built-ins/Error/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/FinalizationRegistry/gc-has-one-chance-to-call-cleanupCallback.js"><reason></reason></test>
@@ -9656,7 +9655,6 @@
   <test id="built-ins/NativeErrors/SyntaxError/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/NativeErrors/TypeError/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/NativeErrors/URIError/proto-from-ctor-realm.js"><reason></reason></test>
-  <test id="built-ins/Number/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/Proxy/defineProperty/targetdesc-undefined-target-is-not-extensible-realm.js"><reason></reason></test>
   <test id="built-ins/Proxy/get-fn-realm-recursive.js"><reason></reason></test>
   <test id="built-ins/Proxy/get-fn-realm.js"><reason></reason></test>
@@ -9668,7 +9666,6 @@
   <test id="built-ins/RegExp/prototype/sticky/cross-realm.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/unicode/cross-realm.js"><reason></reason></test>
   <test id="built-ins/SharedArrayBuffer/proto-from-ctor-realm.js"><reason></reason></test>
-  <test id="built-ins/String/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/proto-from-ctor-realm-sab.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors-bigint/length-arg/proto-from-ctor-realm.js"><reason></reason></test>

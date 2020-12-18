@@ -272,6 +272,26 @@ main (void)
     jerry_release_value (property);
   }
 
+  target = jerry_create_object ();
+  handler = jerry_create_object ();
+  proxy = jerry_create_proxy (target, handler);
+  jerry_release_value (handler);
+
+  {
+    jerry_value_t res = jerry_get_proxy_target (proxy);
+    TEST_ASSERT (res == target);
+    jerry_release_value (res);
+
+    res = jerry_get_proxy_target (target);
+    TEST_ASSERT (jerry_value_is_error (res));
+    res = jerry_get_value_from_error (res, true);
+    TEST_ASSERT (jerry_get_error_type (res) == JERRY_ERROR_TYPE);
+    jerry_release_value (res);
+  }
+
+  jerry_release_value (proxy);
+  jerry_release_value (target);
+
   jerry_cleanup ();
   return 0;
 } /* main */

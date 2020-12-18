@@ -724,6 +724,11 @@ uint32_t jerry_get_bigint_size_in_digits (jerry_value_t value);
 void jerry_get_bigint_digits (jerry_value_t value, uint64_t *digits_p, uint32_t size, bool *sign_p);
 
 /**
+ * Proxy functions.
+ */
+jerry_value_t jerry_get_proxy_target (jerry_value_t proxy_value);
+
+/**
  * Input validator functions.
  */
 bool jerry_is_valid_utf8_string (const jerry_char_t *utf8_buf_p, jerry_size_t buf_size);

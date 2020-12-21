@@ -21,6 +21,7 @@
 #include "ecma-helpers.h"
 #include "ecma-lex-env.h"
 #include "ecma-objects.h"
+#include "ecma-proxy-object.h"
 #include "jcontext.h"
 
 /** \addtogroup ecma ECMA
@@ -175,10 +176,31 @@ ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environme
 
     ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
+#if ENABLED (JERRY_BUILTIN_PROXY) && ENABLED (JERRY_BUILTIN_REALMS)
+    if (ECMA_OBJECT_IS_PROXY (binding_obj_p))
+    {
+      ecma_value_t result = ecma_proxy_object_is_extensible (binding_obj_p);
+
+      if (ECMA_IS_VALUE_ERROR (result))
+      {
+        return result;
+      }
+
+      if (result == ECMA_VALUE_FALSE)
+      {
+        return ECMA_VALUE_EMPTY;
+      }
+    }
+    else if (!ecma_op_ordinary_object_is_extensible (binding_obj_p))
+    {
+      return ECMA_VALUE_EMPTY;
+    }
+#else /* !ENABLED (JERRY_BUILTIN_PROXY) || !ENABLED (JERRY_BUILTIN_REALMS) */
     if (!ecma_op_ordinary_object_is_extensible (binding_obj_p))
     {
       return ECMA_VALUE_EMPTY;
     }
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) && ENABLED (JERRY_BUILTIN_REALMS) */
 
     const uint32_t flags = ECMA_PROPERTY_ENUMERABLE_WRITABLE | ECMA_IS_THROW;
 

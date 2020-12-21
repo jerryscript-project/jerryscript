@@ -167,6 +167,48 @@ main (void)
   jerry_release_value (object_value);
   jerry_release_value (realm_value);
 
+  if (jerry_is_feature_enabled (JERRY_FEATURE_PROXY))
+  {
+    /* Check property creation. */
+    jerry_value_t handler_value = jerry_create_object ();
+    jerry_value_t target_value = jerry_create_realm ();
+    jerry_value_t proxy_value = jerry_create_proxy (target_value, handler_value);
+
+    jerry_realm_set_this (target_value, proxy_value);
+    jerry_release_value (proxy_value);
+    jerry_release_value (handler_value);
+
+    jerry_value_t old_realm_value = jerry_set_realm (target_value);
+    TEST_ASSERT (!jerry_value_is_error (old_realm_value));
+    TEST_ASSERT (eval_and_get_number ("var z = 1.5; z") == 1.5);
+    jerry_set_realm (old_realm_value);
+
+    TEST_ASSERT (get_number_property (target_value, "z") == 1.5);
+    jerry_release_value (target_value);
+
+    /* Check isExtensible error. */
+
+    const char *script_p = "new Proxy({}, { isExtensible: function() { throw 42.5 } })";
+    proxy_value = jerry_eval ((const jerry_char_t *) script_p, strlen (script_p), JERRY_PARSE_NO_OPTS);
+    TEST_ASSERT (!jerry_value_is_error (proxy_value) && jerry_value_is_object (proxy_value));
+
+    target_value = jerry_create_realm ();
+    jerry_realm_set_this (target_value, proxy_value);
+    jerry_release_value (proxy_value);
+
+    old_realm_value = jerry_set_realm (target_value);
+    TEST_ASSERT (!jerry_value_is_error (old_realm_value));
+    script_p = "var z = 1.5";
+    result_value = jerry_eval ((const jerry_char_t *) script_p, strlen (script_p), JERRY_PARSE_NO_OPTS);
+    jerry_set_realm (old_realm_value);
+    jerry_release_value (target_value);
+
+    TEST_ASSERT (jerry_value_is_error (result_value));
+    result_value = jerry_get_value_from_error (result_value, true);
+    TEST_ASSERT (jerry_value_is_number (result_value) && jerry_get_number_value (result_value) == 42.5);
+    jerry_release_value (result_value);
+  }
+
   jerry_cleanup ();
   return 0;
 } /* main */

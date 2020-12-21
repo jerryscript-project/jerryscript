@@ -44,8 +44,9 @@ main (void)
   prop_name = jerry_create_string_from_utf8 ((jerry_char_t *) "configurable");
   TEST_ASSERT (jerry_set_property (object, prop_name, value));
 
-  bool result = jerry_to_property_descriptor (object, &prop_desc);
-  TEST_ASSERT (result);
+  jerry_value_t result = jerry_to_property_descriptor (object, &prop_desc);
+  TEST_ASSERT (jerry_value_is_boolean (result) && jerry_get_boolean_value (result));
+  jerry_release_value (result);
 
   prop_name = jerry_create_string_from_utf8 ((jerry_char_t *) "value");
   value = jerry_get_property (object, prop_name);
@@ -71,6 +72,13 @@ main (void)
   jerry_release_value (prop_name);
   jerry_release_value (value);
   jerry_free_property_descriptor_fields (&prop_desc);
+
+  object = jerry_create_null ();
+  result = jerry_to_property_descriptor (object, &prop_desc);
+  TEST_ASSERT (jerry_value_is_error (result));
+  jerry_release_value (result);
+  jerry_release_value (object);
+
   jerry_cleanup ();
   return 0;
 } /* main */

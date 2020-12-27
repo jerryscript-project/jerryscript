@@ -103,9 +103,9 @@ vm_op_get_value (ecma_value_t object, /**< base object */
 #if ENABLED (JERRY_LCACHE)
       ecma_property_t *property_p = ecma_lcache_lookup (object_p, property_name_p);
 
-      if (property_p != NULL &&
-          ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA)
+      if (property_p != NULL && (*property_p & ECMA_PROPERTY_FLAG_DATA))
       {
+        JERRY_ASSERT (!ECMA_PROPERTY_IS_INTERNAL (*property_p));
         return ecma_fast_copy_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
       }
 #endif /* ENABLED (JERRY_LCACHE) */
@@ -1696,8 +1696,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           ecma_string_t *name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
           ecma_property_t *property_p = ecma_find_named_property (frame_ctx_p->lex_env_p, name_p);
 
-          JERRY_ASSERT (property_p != NULL
-                        && ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA);
+          JERRY_ASSERT (property_p != NULL && ECMA_PROPERTY_IS_RAW_DATA (*property_p));
           JERRY_ASSERT (ECMA_PROPERTY_VALUE_PTR (property_p)->value == ECMA_VALUE_UNINITIALIZED);
 
           ECMA_PROPERTY_VALUE_PTR (property_p)->value = left_value;
@@ -2090,7 +2089,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                                                                                      NULL);
           property_value_p->value = left_value;
 
-          property_name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED);
+          property_name_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED);
           ecma_property_t *property_p = ecma_find_named_property (object_p, property_name_p);
 
           if (property_p != NULL)

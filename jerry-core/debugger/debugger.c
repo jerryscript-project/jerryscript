@@ -1482,8 +1482,7 @@ jerry_debugger_exception_object_to_string (ecma_value_t exception_obj_value) /**
   property_p = ecma_find_named_property (ecma_get_object_from_value (exception_obj_value),
                                          ecma_get_magic_string (LIT_MAGIC_STRING_MESSAGE));
 
-  if (property_p == NULL
-      || ECMA_PROPERTY_GET_TYPE (*property_p) != ECMA_PROPERTY_TYPE_NAMEDDATA)
+  if (property_p == NULL || !(*property_p & ECMA_PROPERTY_FLAG_DATA))
   {
     return ecma_stringbuilder_finalize (&builder);
   }

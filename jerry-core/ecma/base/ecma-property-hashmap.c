@@ -93,10 +93,9 @@ ecma_property_hashmap_create (ecma_object_t *object_p) /**< object */
 
     for (int i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
     {
-      ecma_property_types_t type = ECMA_PROPERTY_GET_TYPE (prop_iter_p->types[i]);
-
-      if (type != ECMA_PROPERTY_TYPE_SPECIAL)
+      if (prop_iter_p->types[i] != ECMA_PROPERTY_TYPE_DELETED)
       {
+        JERRY_ASSERT (ECMA_PROPERTY_IS_NAMED_PROPERTY (prop_iter_p->types[i]));
         named_property_count++;
       }
     }
@@ -148,10 +147,12 @@ ecma_property_hashmap_create (ecma_object_t *object_p) /**< object */
 
     for (int i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
     {
-      if (!ECMA_PROPERTY_IS_NAMED_PROPERTY (prop_iter_p->types[i]))
+      if (prop_iter_p->types[i] == ECMA_PROPERTY_TYPE_DELETED)
       {
         continue;
       }
+
+      JERRY_ASSERT (ECMA_PROPERTY_IS_NAMED_PROPERTY (prop_iter_p->types[i]));
 
       ecma_property_pair_t *property_pair_p = (ecma_property_pair_t *) prop_iter_p;
 

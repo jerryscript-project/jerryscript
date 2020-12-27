@@ -148,9 +148,11 @@ opfunc_set_data_property (ecma_object_t *object_p, /**< object */
   }
   else
   {
+    JERRY_ASSERT (ECMA_PROPERTY_IS_RAW (*property_p));
+
     prop_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
 
-    if (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR)
+    if (!(*property_p & ECMA_PROPERTY_FLAG_DATA))
     {
 #if ENABLED (JERRY_CPOINTER_32_BIT)
       ecma_getter_setter_pointers_t *getter_setter_pair_p;
@@ -159,8 +161,7 @@ opfunc_set_data_property (ecma_object_t *object_p, /**< object */
       jmem_pools_free (getter_setter_pair_p, sizeof (ecma_getter_setter_pointers_t));
 #endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
 
-      ECMA_CHANGE_PROPERTY_TYPE (property_p);
-      *property_p = (uint8_t) (*property_p | ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+      *property_p |= ECMA_PROPERTY_FLAG_DATA | ECMA_PROPERTY_FLAG_WRITABLE;
       prop_value_p->value = ecma_copy_value_if_not_object (value);
       return;
     }
@@ -208,9 +209,11 @@ opfunc_set_accessor (bool is_getter, /**< is getter accessor */
   }
   else
   {
+    JERRY_ASSERT (ECMA_PROPERTY_IS_RAW (*property_p));
+
     ecma_property_value_t *prop_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
 
-    if (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA)
+    if (*property_p & ECMA_PROPERTY_FLAG_DATA)
     {
 #if ENABLED (JERRY_CPOINTER_32_BIT)
       ecma_getter_setter_pointers_t *getter_setter_pair_p;
@@ -218,8 +221,7 @@ opfunc_set_accessor (bool is_getter, /**< is getter accessor */
 #endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
 
       ecma_free_value_if_not_object (prop_value_p->value);
-      ECMA_CHANGE_PROPERTY_TYPE (property_p);
-      *property_p = (uint8_t) (*property_p & ~ECMA_PROPERTY_FLAG_WRITABLE);
+      *property_p = (uint8_t) (*property_p & ~(ECMA_PROPERTY_FLAG_DATA | ECMA_PROPERTY_FLAG_WRITABLE));
 
 #if ENABLED (JERRY_CPOINTER_32_BIT)
       ECMA_SET_POINTER (getter_setter_pair_p->getter_cp, getter_func_p);
@@ -1006,7 +1008,7 @@ opfunc_init_class_fields (ecma_value_t class_object, /**< the function itself */
   shared_class_fields.header.status_flags = VM_FRAME_CTX_SHARED_HAS_CLASS_FIELDS;
   shared_class_fields.computed_class_fields_p = NULL;
 
-  name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED);
+  name_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED);
   ecma_property_t *class_field_property_p = ecma_find_named_property (class_object_p, name_p);
 
   if (class_field_property_p != NULL)
@@ -1048,7 +1050,7 @@ opfunc_init_static_class_fields (ecma_value_t function_object, /**< the function
   shared_class_fields.header.status_flags = VM_FRAME_CTX_SHARED_HAS_CLASS_FIELDS;
   shared_class_fields.computed_class_fields_p = NULL;
 
-  ecma_string_t *name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED);
+  ecma_string_t *name_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED);
   ecma_object_t *function_object_p = ecma_get_object_from_value (function_object);
   ecma_property_t *class_field_property_p = ecma_find_named_property (function_object_p, name_p);
 
@@ -1097,7 +1099,7 @@ opfunc_add_computed_field (ecma_value_t class_object, /**< class object */
     name = ecma_make_string_value (prop_name_p);
   }
 
-  ecma_string_t *name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED);
+  ecma_string_t *name_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED);
   ecma_object_t *class_object_p = ecma_get_object_from_value (class_object);
 
   ecma_property_t *property_p = ecma_find_named_property (class_object_p, name_p);
@@ -1106,8 +1108,7 @@ opfunc_add_computed_field (ecma_value_t class_object, /**< class object */
 
   if (property_p == NULL)
   {
-    property_value_p = ecma_create_named_data_property (class_object_p, name_p, ECMA_PROPERTY_FIXED, &property_p);
-    ECMA_CONVERT_DATA_PROPERTY_TO_INTERNAL_PROPERTY (property_p);
+    ECMA_CREATE_INTERNAL_PROPERTY (class_object_p, name_p, property_p, property_value_p);
     compact_collection_p = ecma_new_compact_collection ();
   }
   else
@@ -1452,7 +1453,15 @@ opfunc_set_class_attributes (ecma_object_t *obj_p, /**< object */
     {
       uint8_t property = property_pair_p->header.types[index];
 
-      if (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_NAMEDDATA)
+      if (!ECMA_PROPERTY_IS_RAW (property))
+      {
+        JERRY_ASSERT (property == ECMA_PROPERTY_TYPE_DELETED
+                      || (ECMA_PROPERTY_IS_INTERNAL (property)
+                          && property_pair_p->names_cp[index] == LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED));
+        continue;
+      }
+
+      if (property & ECMA_PROPERTY_FLAG_DATA)
       {
         if (ecma_is_value_object (property_pair_p->values[index].value)
             && ecma_is_property_enumerable (property))
@@ -1460,29 +1469,22 @@ opfunc_set_class_attributes (ecma_object_t *obj_p, /**< object */
           property_pair_p->header.types[index] = (uint8_t) (property & ~ECMA_PROPERTY_FLAG_ENUMERABLE);
           opfunc_set_home_object (ecma_get_object_from_value (property_pair_p->values[index].value), parent_env_p);
         }
+        continue;
       }
-      else if (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR)
+
+      property_pair_p->header.types[index] = (uint8_t) (property & ~ECMA_PROPERTY_FLAG_ENUMERABLE);
+      ecma_property_value_t *accessor_objs_p = property_pair_p->values + index;
+
+      ecma_getter_setter_pointers_t *get_set_pair_p = ecma_get_named_accessor_property (accessor_objs_p);
+
+      if (get_set_pair_p->getter_cp != JMEM_CP_NULL)
       {
-        property_pair_p->header.types[index] = (uint8_t) (property & ~ECMA_PROPERTY_FLAG_ENUMERABLE);
-        ecma_property_value_t *accessor_objs_p = property_pair_p->values + index;
-
-        ecma_getter_setter_pointers_t *get_set_pair_p = ecma_get_named_accessor_property (accessor_objs_p);
-
-        if (get_set_pair_p->getter_cp != JMEM_CP_NULL)
-        {
-          opfunc_set_home_object (ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->getter_cp), parent_env_p);
-        }
-
-        if (get_set_pair_p->setter_cp != JMEM_CP_NULL)
-        {
-          opfunc_set_home_object (ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->setter_cp), parent_env_p);
-        }
+        opfunc_set_home_object (ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->getter_cp), parent_env_p);
       }
-      else
+
+      if (get_set_pair_p->setter_cp != JMEM_CP_NULL)
       {
-        JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_SPECIAL
-                      || (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_INTERNAL
-                          && property_pair_p->names_cp[index] == LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED));
+        opfunc_set_home_object (ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->setter_cp), parent_env_p);
       }
     }
 

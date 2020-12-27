@@ -54,7 +54,8 @@
 /**
  * Property name type flag for array indices.
  */
-#define ECMA_FAST_ARRAY_UINT32_DIRECT_STRING_PROP_TYPE 0x80
+#define ECMA_FAST_ARRAY_UINT_DIRECT_STRING_PROP_TYPE \
+  (ECMA_DIRECT_STRING_UINT << ECMA_PROPERTY_NAME_TYPE_SHIFT)
 
 /**
  * Allocate a new array object with the given length
@@ -82,7 +83,7 @@ ecma_op_alloc_array_object (uint32_t length) /**< length of the new array */
 
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
   ext_obj_p->u.array.length = length;
-  ext_obj_p->u.array.length_prop_and_hole_count = ECMA_PROPERTY_FLAG_WRITABLE | ECMA_PROPERTY_TYPE_VIRTUAL;
+  ext_obj_p->u.array.length_prop_and_hole_count = ECMA_PROPERTY_FLAG_WRITABLE | ECMA_PROPERTY_VIRTUAL;
 
   return object_p;
 } /* ecma_op_alloc_array_object */
@@ -342,9 +343,9 @@ ecma_fast_array_convert_to_normal (ecma_object_t *object_p) /**< fast access mod
     JERRY_ASSERT (index <= ECMA_DIRECT_STRING_MAX_IMM);
 
     property_pair_p->names_cp[prop_index] = (jmem_cpointer_t) index;
-    property_pair_p->header.types[prop_index] = (ecma_property_t) (ECMA_PROPERTY_TYPE_NAMEDDATA
+    property_pair_p->header.types[prop_index] = (ecma_property_t) (ECMA_PROPERTY_FLAG_DATA
                                                                    | ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE
-                                                                   | ECMA_FAST_ARRAY_UINT32_DIRECT_STRING_PROP_TYPE);
+                                                                   | ECMA_FAST_ARRAY_UINT_DIRECT_STRING_PROP_TYPE);
 
     property_pair_p->values[prop_index].value = values_p[index];
 
@@ -849,7 +850,7 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
 
     for (int i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
     {
-      if (ECMA_PROPERTY_IS_NAMED_PROPERTY (current_prop_p->types[i])
+      if (current_prop_p->types[i] != ECMA_PROPERTY_TYPE_DELETED
           && !ecma_is_property_configurable (current_prop_p->types[i]))
       {
         uint32_t index = ecma_string_get_property_index (current_prop_p->types[i],
@@ -900,7 +901,7 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
 
     for (int i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
     {
-      if (ECMA_PROPERTY_IS_NAMED_PROPERTY (current_prop_p->types[i])
+      if (current_prop_p->types[i] != ECMA_PROPERTY_TYPE_DELETED
           && ecma_is_property_configurable (current_prop_p->types[i]))
       {
         uint32_t index = ecma_string_get_property_index (current_prop_p->types[i],

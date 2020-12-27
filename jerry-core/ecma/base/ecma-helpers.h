@@ -313,6 +313,7 @@ ecma_string_t *ecma_new_non_direct_string_from_uint32 (uint32_t uint32_number);
 ecma_string_t *ecma_get_ecma_string_from_uint32 (uint32_t uint32_number);
 ecma_string_t *ecma_new_ecma_string_from_number (ecma_number_t num);
 ecma_string_t *ecma_get_magic_string (lit_magic_string_id_t id);
+ecma_string_t *ecma_get_internal_string (lit_magic_string_id_t id);
 ecma_string_t *ecma_append_chars_to_string (ecma_string_t *string1_p,
                                             const lit_utf8_byte_t *cesu8_string2_p,
                                             lit_utf8_size_t cesu8_string2_size,

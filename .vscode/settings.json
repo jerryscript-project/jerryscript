@@ -1,0 +1,20 @@
+{
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "files.trimTrailingWhitespace": true,
+  "files.autoGuessEncoding": true,
+  "C_Cpp.autoAddFileAssociations": false,
+  "C_Cpp.formatting": "clangFormat",
+  "cmake.configureArgs": ["-DJERRY_LINE_INFO=ON", "-DJERRY_GLOBAL_HEAP_SIZE=2048", "-DJERRY_GC_MARK_LIMIT=16"],
+  "cmake.generator": "Ninja",
+  "cmake.buildDirectory": "${workspaceRoot}/build/${variant:buildType}",
+  "cmake.mingwSearchDirs":[
+    "C:/MentorGraphics/arm-2014.05",
+    "C:/MentorGraphics/linaro",
+    "C:/MentorGraphics/gcc-arm-none-eabi-9-2019-q4-major-win32",
+    "C:/CI-Tools/msys64/mingw64",
+    "C:/CI-Tools/msys64/usr",
+  ]
+}

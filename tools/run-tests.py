@@ -437,7 +437,7 @@ def run_test262_test_suite(options):
             test_cmd.append('--esnext')
             test_cmd.append(options.test262_esnext)
         else:
-            test_cmd.append('--es51')
+            test_cmd.append('--es5.1')
 
         if job.test_args:
             test_cmd.extend(job.test_args)

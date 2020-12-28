@@ -44,6 +44,7 @@ from __future__ import print_function
 
 import logging
 import optparse
+import io
 import os
 from os import path
 import platform
@@ -129,7 +130,7 @@ def my_maybe_list(value):
 def my_multiline_list(lines, value):
     # assume no explcit indentor (otherwise have to parse value)
     value = []
-    indent = None
+    indent = 0
     while lines:
         line = lines.pop(0)
         leading = my_leading_spaces(line)
@@ -395,13 +396,13 @@ class TempFile(object):
             text=self.text)
 
     def write(self, string):
-        os.write(self.file_desc, string)
+        os.write(self.file_desc, string.encode())
 
     def read(self):
-        file_desc = file(self.name)
+        file_desc = open(self.name, "rb")
         result = file_desc.read()
         file_desc.close()
-        return result
+        return result.decode()
 
     def close(self):
         if not self.is_closed:
@@ -927,6 +928,8 @@ def main():
 
 if __name__ == '__main__':
     try:
+        if (sys.stdout.encoding == "gbk"):
+            sys.stdout = io.TextIOWrapper(sys.stdout.buffer,encoding='gb18030')
         sys.exit(main())
     except Test262Error as exception:
         print("Error: %s" % exception.message)

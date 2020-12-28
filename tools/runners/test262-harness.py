@@ -823,7 +823,7 @@ class TestSuite(object):
             report_error("No tests to run")
         progress = ProgressIndicator(len(cases))
         if logname:
-            self.logf = open(logname, "w")
+            self.logf = open(logname, "w", encoding="utf8")
 
         if job_count == 1:
             for case in cases:

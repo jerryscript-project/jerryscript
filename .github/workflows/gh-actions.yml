@@ -17,7 +17,13 @@ jobs:
       - name: Updating packages
         run: sudo apt-get update
       - name: Initializtaion
-        run: sudo apt-get install doxygen vera++ cppcheck pylint pylint python-serial -q
+        run: |
+          sudo apt-get install doxygen vera++ cppcheck -q
+          sudo pip install pyserial pylint
+      - name: Display Python version
+        run: |
+          python -c "import sys; print(sys.version)"
+          /usr/bin/env python -c "import sys; print(sys.version)"
       - name: Signed-off
         run: $RUNNER --check-signed-off=gh-actions
       - name: Doxygen

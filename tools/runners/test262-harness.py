@@ -734,8 +734,8 @@ class TestSuite(object):
         if not name in self.include_cache:
             static = path.join(self.lib_root, name)
             if path.exists(static):
-                with open(static) as file_desc:
-                    contents = file_desc.read()
+                with open(static, "rb") as file_desc:
+                    contents = file_desc.read().decode("utf8")
                     contents = re.sub(r'\r\n', '\n', contents)
                     self.include_cache[name] = contents + "\n"
             else:

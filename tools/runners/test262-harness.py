@@ -44,6 +44,7 @@ from __future__ import print_function
 
 import logging
 import optparse
+import io
 import os
 from os import path
 import platform
@@ -379,10 +380,9 @@ def is_windows():
 
 class TempFile(object):
 
-    def __init__(self, suffix="", prefix="tmp", text=False):
+    def __init__(self, suffix="", prefix="tmp"):
         self.suffix = suffix
         self.prefix = prefix
-        self.text = text
         self.file_desc = None
         self.name = None
         self.is_closed = False
@@ -392,16 +392,16 @@ class TempFile(object):
         (self.file_desc, self.name) = tempfile.mkstemp(
             suffix=self.suffix,
             prefix=self.prefix,
-            text=self.text)
+            text=False)
 
     def write(self, string):
-        os.write(self.file_desc, string)
+        os.write(self.file_desc, string.encode("utf8"))
 
     def read(self):
-        file_desc = file(self.name)
+        file_desc = open(self.name, "rb")
         result = file_desc.read()
         file_desc.close()
-        return result
+        return result.decode("utf8", 'ignore')
 
     def close(self):
         if not self.is_closed:
@@ -481,8 +481,8 @@ class TestCase(object):
         self.name = name
         self.full_path = full_path
         self.strict_mode = strict_mode
-        with open(self.full_path) as file_desc:
-            self.contents = file_desc.read()
+        with open(self.full_path, "rb") as file_desc:
+            self.contents = file_desc.read().decode("utf8")
         test_record = parse_test_record(self.contents, name)
         self.test = test_record["test"]
         del test_record["test"]
@@ -617,7 +617,7 @@ class TestCase(object):
         return TestResult(code, out, err, self)
 
     def run(self):
-        tmp = TempFile(suffix=".js", prefix="test262-", text=True)
+        tmp = TempFile(suffix=".js", prefix="test262-")
         try:
             result = self.run_test_in(tmp)
         finally:
@@ -733,9 +733,8 @@ class TestSuite(object):
         if not name in self.include_cache:
             static = path.join(self.lib_root, name)
             if path.exists(static):
-                with open(static) as file_desc:
-                    contents = file_desc.read()
-                    contents = re.sub(r'\r\n', '\n', contents)
+                with open(static, "rb") as file_desc:
+                    contents = file_desc.read().decode("utf8")
                     self.include_cache[name] = contents + "\n"
             else:
                 report_error("Can't find: " + static)
@@ -822,7 +821,7 @@ class TestSuite(object):
             report_error("No tests to run")
         progress = ProgressIndicator(len(cases))
         if logname:
-            self.logf = open(logname, "w")
+            self.logf = open(logname, "w", encoding="utf8")
 
         if job_count == 1:
             for case in cases:
@@ -927,6 +926,7 @@ def main():
 
 if __name__ == '__main__':
     try:
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding=sys.stdout.encoding, errors="ignore")
         sys.exit(main())
     except Test262Error as exception:
         print("Error: %s" % exception.message)

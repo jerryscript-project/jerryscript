@@ -24,10 +24,12 @@ import sys
 
 import util
 
-def get_platform_cmd_prefix():
+def get_platform_cmd_prefix(is_python2):
     if sys.platform == 'win32':
         return ['cmd', '/S', '/C']
-    return ['python2']  # The official test262.py isn't python3 compatible, but has python shebang.
+    if is_python2:
+        return ['python2']  # The official test262.py isn't python3 compatible, but has python shebang.
+    return []
 
 
 def get_arguments():
@@ -185,13 +187,14 @@ def main(args):
         kwargs['errors'] = 'ignore'
 
     if args.es51:
-        test262_harness_path = os.path.join(args.test262_harness_dir, 'tools/packaging/test262.py')
+        test262_harness_cmd = get_platform_cmd_prefix(True) + \
+                              [os.path.join(args.test262_harness_dir, 'tools/packaging/test262.py')]
     else:
-        test262_harness_path = os.path.join(args.test262_harness_dir, 'test262-harness.py')
+        test262_harness_cmd = get_platform_cmd_prefix(False) + \
+                              [os.path.join(args.test262_harness_dir, 'test262-harness.py')]
 
-    test262_command = get_platform_cmd_prefix() + \
-                      [test262_harness_path,
-                       '--command', command,
+    test262_command = test262_harness_cmd + \
+                      ['--command', command,
                        '--tests', args.test_dir,
                        '--summary']
 

@@ -321,6 +321,53 @@ def parse_test_record(src, name, onerror=print):
     return test_record
 
 
+_STARS_ES51 = re.compile(r"\s*\n\s*\*\s?")
+
+
+def strip_stars_es51(text):
+    return _STARS_ES51.sub('\n', text).strip()
+
+
+def record_pattern_es51_create():
+    header_pattern_str = r"(?:(?:\s*\/\/.*)?\s*\n)*"
+    capture_comment_pattern_str = r"\/\*\*?((?:\s|\S)*?)\*\/\s*\n"
+    any_pattern_str = r"(?:\s|\S)*"
+
+    # Should match anything
+    return re.compile(r"^(" + header_pattern_str +
+                      r")(?:" + capture_comment_pattern_str +
+                      r")?(" + any_pattern_str +
+                      r")$")
+
+
+_AT_ATTRS_ES51 = re.compile(r"\s*\n\s*\*\s*@")
+_RECORD_PATTERN_ES51 = record_pattern_es51_create()
+
+
+def parse_test_record_es51(src, name, onerror=print):
+    test_record = {}
+    match = _RECORD_PATTERN_ES51.match(src)
+    if match is None:
+        onerror('unrecognized: ' + name)
+    test_record['header'] = match.group(1).strip()
+    test_record['test'] = match.group(3) # do not trim
+    if match.group(2):
+        prop_texts = _AT_ATTRS_ES51.split(match.group(2))
+        test_record['commentary'] = strip_stars_es51(prop_texts[0])
+        del prop_texts[0]
+        for prop_text in prop_texts:
+            prop_match = re.match(r"^\w+", prop_text)
+            if prop_match is None:
+                onerror('Malformed "@" attribute: ' + name)
+            prop_name = prop_match.group(0)
+            prop_val = strip_stars_es51(prop_text[len(prop_name):])
+
+            if prop_name in test_record:
+                onerror('duplicate: ' + prop_name)
+            test_record[prop_name] = prop_val
+    return test_record
+
+
 #######################################################################
 # based on test262.py
 #######################################################################
@@ -341,6 +388,8 @@ def build_options():
                       help="The command-line to run")
     result.add_option("--tests", default=path.abspath('.'),
                       help="Path to the tests")
+    result.add_option('--es51', default=False, action='store_true',
+                      help='Run test262 ES5.1 version')
     result.add_option("--exclude-list", default=None,
                       help="Path to the excludelist.xml file")
     result.add_option("--cat", default=False, action="store_true",
@@ -465,7 +514,9 @@ class TestResult(object):
         if self.case.is_async_test():
             return self.async_has_failed() or self.has_failed()
         elif self.case.is_negative():
-            return not (self.has_failed() and self.case.negative_match(self.get_error_output()))
+            if self.case.suite.es51:
+                return not self.has_failed()
+            return not(self.has_failed() and self.case.negative_match(self.get_error_output()))
 
         return self.has_failed()
 
@@ -484,7 +535,12 @@ class TestCase(object):
         self.strict_mode = strict_mode
         with open(self.full_path, "rb") as file_desc:
             self.contents = file_desc.read().decode("utf8")
-        test_record = parse_test_record(self.contents, name)
+        if self.suite.es51:
+            test_record = parse_test_record_es51(self.contents, name)
+            if 'negative' in test_record:
+                test_record['negative'] = None
+        else:
+            test_record = parse_test_record(self.contents, name)
         self.test = test_record["test"]
         del test_record["test"]
         del test_record["header"]
@@ -511,6 +567,8 @@ class TestCase(object):
 
     def get_negative_phase(self):
         negative = self.get_negative()
+        if self.suite.es51:
+            return negative
         return negative and "phase" in negative and negative["phase"]
 
     def get_name(self):
@@ -548,6 +606,25 @@ class TestCase(object):
         return '\n'.join([self.suite.get_include(include) for include in self.get_include_list()])
 
     def get_source(self):
+        if self.suite.es51:
+            return self.get_source_es51()
+        return self.get_source_esnext()
+
+    def get_source_es51(self):
+        source = self.suite.get_include("cth.js") + \
+            self.suite.get_include("sta.js") + \
+            self.suite.get_include("ed.js") + \
+            self.suite.get_include("testBuiltInObject.js") + \
+            self.suite.get_include("testIntl.js") + \
+            self.test + '\n'
+
+        if self.strict_mode:
+            source = '"use strict";\nvar strict_mode = true;\n' + source
+        else:
+            source = "var strict_mode = false; \n" + source
+        return source
+
+    def get_source_esnext(self):
         if self.is_raw():
             return self.test
 
@@ -621,7 +698,8 @@ class TestCase(object):
             'path': tmp.name
         })
         # Only es2015 or esnext need the timeout option.
-        (code, out, err) = TestCase.execute(command, 60)
+        timeout = None if self.suite.es51 else 60
+        (code, out, err) = TestCase.execute(command, timeout)
         return TestResult(code, out, err, self)
 
     def run(self):
@@ -695,9 +773,14 @@ def percent_format(partial, total):
 
 class TestSuite(object):
 
-    def __init__(self, root, strict_only, non_strict_only, unmarked_default, print_handle, exclude_list_path):
-        self.test_root = path.join(root, 'test')
-        self.lib_root = path.join(root, 'harness')
+    def __init__(self, root, es51, strict_only, non_strict_only, unmarked_default, print_handle, exclude_list_path):
+        self.es51 = es51
+        if es51:
+            self.test_root = path.join(root, 'test', "suite")
+            self.lib_root = path.join(root, 'test', 'harness')
+        else:
+            self.test_root = path.join(root, 'test')
+            self.lib_root = path.join(root, 'harness')
         self.strict_only = strict_only
         self.non_strict_only = non_strict_only
         self.unmarked_default = unmarked_default
@@ -901,6 +984,7 @@ def main():
     validate_options(options)
 
     test_suite = TestSuite(options.tests,
+                           options.es51,
                            options.strict_only,
                            options.non_strict_only,
                            options.unmarked_default,

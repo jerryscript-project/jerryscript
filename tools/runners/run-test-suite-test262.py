@@ -27,7 +27,7 @@ import util
 def get_platform_cmd_prefix():
     if sys.platform == 'win32':
         return ['cmd', '/S', '/C']
-    return ['python2']  # The official test262.py isn't python3 compatible, but has python shebang.
+    return ['python'] # test262-harness.py doesn't have execute permission
 
 
 def get_arguments():
@@ -57,17 +57,14 @@ def get_arguments():
 
     if args.es2015:
         args.test_dir = os.path.join(args.test_dir, 'es2015')
-        args.test262_harness_dir = os.path.abspath(os.path.dirname(__file__))
         args.test262_git_hash = 'fd44cd73dfbce0b515a2474b7cd505d6176a9eb5'
         args.excludelist_path = os.path.join('tests', 'test262-es6-excludelist.xml')
     elif args.esnext:
         args.test_dir = os.path.join(args.test_dir, 'esnext')
-        args.test262_harness_dir = os.path.abspath(os.path.dirname(__file__))
         args.test262_git_hash = '281eb10b2844929a7c0ac04527f5b42ce56509fd'
         args.excludelist_path = os.path.join('tests', 'test262-esnext-excludelist.xml')
     else:
         args.test_dir = os.path.join(args.test_dir, 'es51')
-        args.test262_harness_dir = args.test_dir
         args.test262_git_hash = 'es5-tests'
 
     args.mode = args.es2015 or args.esnext
@@ -178,16 +175,16 @@ def main(args):
     if sys.version_info.major >= 3:
         kwargs['errors'] = 'ignore'
 
-    if args.es51:
-        test262_harness_path = os.path.join(args.test262_harness_dir, 'tools/packaging/test262.py')
-    else:
-        test262_harness_path = os.path.join(args.test262_harness_dir, 'test262-harness.py')
-
+    test262_harness_dir = os.path.abspath(os.path.dirname(__file__))
+    test262_harness_path = os.path.join(test262_harness_dir, 'test262-harness.py')
     test262_command = get_platform_cmd_prefix() + \
                       [test262_harness_path,
                        '--command', command,
                        '--tests', args.test_dir,
                        '--summary']
+    if args.es51:
+        test262_command.extend(['--es51'])
+        test262_command.extend(['--unmarked_default', "non_strict"])
 
     if 'excludelist_path' in args and args.mode == 'default':
         test262_command.extend(['--exclude-list', args.excludelist_path])

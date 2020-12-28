@@ -482,8 +482,8 @@ class TestCase(object):
         self.name = name
         self.full_path = full_path
         self.strict_mode = strict_mode
-        with open(self.full_path) as file_desc:
-            self.contents = file_desc.read()
+        with open(self.full_path, "rb") as file_desc:
+            self.contents = file_desc.read().decode("utf8")
         test_record = parse_test_record(self.contents, name)
         self.test = test_record["test"]
         del test_record["test"]

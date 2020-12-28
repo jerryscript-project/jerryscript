@@ -137,13 +137,6 @@ void * __cdecl _alloca (size_t _Size);
 #endif /* !JERRY_ATTR_PURE */
 
 /**
- * Function attribute to place function in given section.
- */
-#ifndef JERRY_ATTR_SECTION
-#define JERRY_ATTR_SECTION(SECTION)
-#endif /* !JERRY_ATTR_SECTION */
-
-/**
  * Function attribute to trigger warning if function's caller doesn't use (e.g.,
  * check) the return value.
  */

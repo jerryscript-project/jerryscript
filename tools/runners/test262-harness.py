@@ -396,13 +396,13 @@ class TempFile(object):
             text=self.text)
 
     def write(self, string):
-        os.write(self.file_desc, string.encode())
+        os.write(self.file_desc, string.encode("utf8"))
 
     def read(self):
         file_desc = open(self.name, "rb")
         result = file_desc.read()
         file_desc.close()
-        return result.decode()
+        return result.decode("utf8")
 
     def close(self):
         if not self.is_closed:

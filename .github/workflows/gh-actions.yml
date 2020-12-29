@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
+      - name: Updating packages
+        run: sudo apt-get update
       - name: Initializtaion
         run: sudo apt-get install doxygen vera++ cppcheck pylint pylint python-serial -q
       - name: Signed-off
@@ -46,6 +48,8 @@ jobs:
       BUILD_OPTIONS: --buildoptions=--compile-flag=-m32,--cpointer-32bit=on -q
     steps:
       - uses: actions/checkout@v1
+      - name: Updating packages
+        run: sudo apt-get update
       - name: Initializtaion
         run: sudo apt-get install gcc-multilib
       - name: Correctness - jerry-tests
@@ -64,6 +68,8 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
+      - name: Updating packages
+        run: sudo apt-get update
       - name: Initializtaion
         run: sudo apt-get install gcc-multilib
       - name: Buildoption tests
@@ -127,6 +133,8 @@ jobs:
       BUILD_OPTIONS: --buildoptions=--stack-limit=0,--compile-flag=-fsanitize=address,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--compile-flag=-O2,--debug,--system-allocator=on,--linker-flag=-fuse-ld=gold
     steps:
       - uses: actions/checkout@v1
+      - name: Updating packages
+        run: sudo apt-get update
       - name: Initializtaion
         run: sudo apt-get install gcc-multilib
       - name: ASAN - jerry-tests
@@ -140,6 +148,8 @@ jobs:
       BUILD_OPTIONS: --buildoptions=--compile-flag=-fsanitize=undefined,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--debug,--system-allocator=on,--linker-flag=-fuse-ld=gold
     steps:
       - uses: actions/checkout@v1
+      - name: Updating packages
+        run: sudo apt-get update
       - name: Initializtaion
         run: sudo apt-get install gcc-multilib
       - name: UBSAN - jerry-tests

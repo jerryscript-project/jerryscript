@@ -173,12 +173,6 @@ def main(args):
         util.set_timezone('Pacific Standard Time')
 
     command = (args.runtime + ' ' + args.engine).strip()
-    if args.es2015 or args.esnext:
-        try:
-            subprocess.check_output(["timeout", "--version"])
-            command = "timeout 5 " + command
-        except subprocess.CalledProcessError:
-            pass
 
     kwargs = {}
     if sys.version_info.major >= 3:

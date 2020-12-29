@@ -56,6 +56,7 @@ import xml.dom.minidom
 from collections import Counter
 
 import signal
+import threading
 import multiprocessing
 
 #######################################################################
@@ -584,7 +585,7 @@ class TestCase(object):
         return re.sub(r"\{\{(\w+)\}\}", get_parameter, template)
 
     @staticmethod
-    def execute(command):
+    def execute(command, timeout):
         if is_windows():
             args = '%s' % command
         else:
@@ -595,11 +596,17 @@ class TestCase(object):
             logging.info("exec: %s", str(args))
             process = subprocess.Popen(
                 args,
-                shell=is_windows(),
+                shell=False,
                 stdout=stdout.file_desc,
                 stderr=stderr.file_desc
             )
-            code = process.wait()
+            if timeout is None:
+                code = process.wait()
+            else:
+                timer = threading.Timer(timeout, process.kill)
+                timer.start()
+                code = process.wait()
+                timer.cancel()
             out = stdout.read()
             err = stderr.read()
         finally:
@@ -613,7 +620,8 @@ class TestCase(object):
         command = TestCase.instantiate_template(self.command_template, {
             'path': tmp.name
         })
-        (code, out, err) = TestCase.execute(command)
+        # Only es2015 or esnext need the timeout option.
+        (code, out, err) = TestCase.execute(command, 60)
         return TestResult(code, out, err, self)
 
     def run(self):

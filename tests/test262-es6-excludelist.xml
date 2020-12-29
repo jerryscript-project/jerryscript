@@ -44,8 +44,6 @@
   <test id="annexB/B.2.3.7.js"><reason></reason></test>
   <test id="annexB/B.2.3.8.js"><reason></reason></test>
   <test id="annexB/B.2.3.9.js"><reason></reason></test>
-  <test id="built-ins/decodeURIComponent/S15.1.3.2_A2.5_T1.js"><reason></reason></test>
-  <test id="built-ins/decodeURI/S15.1.3.1_A2.5_T1.js"><reason></reason></test>
   <test id="built-ins/GeneratorPrototype/next/context-constructor-invocation.js"><reason></reason></test>
   <test id="built-ins/Promise/all/species-get-error.js"><reason>Promise.all no longer uses @@species</reason></test>
   <test id="built-ins/Promise/race/species-get-error.js"><reason>Promise.race no longer uses @@species</reason></test>

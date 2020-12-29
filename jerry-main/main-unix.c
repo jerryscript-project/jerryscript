@@ -30,7 +30,7 @@
 /**
  * Temporal buffer size.
  */
-#define JERRY_BUFFER_SIZE 256u
+#define JERRY_BUFFER_SIZE 1048576u
 
 #if defined (JERRY_EXTERNAL_CONTEXT) && (JERRY_EXTERNAL_CONTEXT == 1)
 /**
@@ -44,6 +44,8 @@ context_alloc (size_t size,
   return malloc (size);
 } /* context_alloc */
 #endif /* defined (JERRY_EXTERNAL_CONTEXT) && (JERRY_EXTERNAL_CONTEXT == 1) */
+
+static char buffer[JERRY_BUFFER_SIZE];
 
 int
 main (int argc,
@@ -181,7 +183,6 @@ restart:
   }
   else if (arguments.option_flags & OPT_FLAG_USE_STDIN)
   {
-    char buffer[JERRY_BUFFER_SIZE];
     char *source_p = NULL;
     size_t source_size = 0;
 
@@ -220,7 +221,6 @@ restart:
   else if (arguments.source_count == 0)
   {
     const char *prompt = (arguments.option_flags & OPT_FLAG_NO_PROMPT) ? "" : "jerry> ";
-    char buffer[JERRY_BUFFER_SIZE];
 
     while (true)
     {

@@ -175,8 +175,11 @@ def main(args):
     command = (args.runtime + ' ' + args.engine).strip()
     if args.es2015 or args.esnext:
         try:
-            subprocess.check_output(["timeout", "--version"])
-            command = "timeout 5 " + command
+            if sys.platform == 'win32':
+                subprocess.check_output(["timeout", "0"])
+            else:
+                subprocess.check_output(["timeout", "--version"])
+                command = "timeout 5 " + command
         except subprocess.CalledProcessError:
             pass
 

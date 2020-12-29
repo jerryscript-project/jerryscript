@@ -3065,6 +3065,7 @@ jerry_init_property_descriptor_fields (jerry_property_descriptor_t *prop_desc_p)
   prop_desc_p->is_enumerable = false;
   prop_desc_p->is_configurable_defined = false;
   prop_desc_p->is_configurable = false;
+  prop_desc_p->is_data_accessor = false;
   prop_desc_p->is_get_defined = false;
   prop_desc_p->getter = ECMA_VALUE_UNDEFINED;
   prop_desc_p->is_set_defined = false;
@@ -3084,30 +3085,32 @@ jerry_property_descriptor_from_ecma (const ecma_property_descriptor_t *prop_desc
   jerry_property_descriptor_t prop_desc;
   jerry_init_property_descriptor_fields (&prop_desc);
 
-  if (prop_desc_p->flags & (ECMA_PROP_IS_ENUMERABLE_DEFINED))
+  if (prop_desc_p->flags & ECMA_PROP_IS_ENUMERABLE_DEFINED)
   {
     prop_desc.is_enumerable_defined = true;
-    prop_desc.is_enumerable = prop_desc_p->flags & (ECMA_PROP_IS_ENUMERABLE);
+    prop_desc.is_enumerable = (prop_desc_p->flags & ECMA_PROP_IS_ENUMERABLE) != 0;
   }
 
-  if (prop_desc_p->flags & (ECMA_PROP_IS_CONFIGURABLE_DEFINED))
+  if (prop_desc_p->flags & ECMA_PROP_IS_CONFIGURABLE_DEFINED)
   {
     prop_desc.is_configurable_defined = true;
-    prop_desc.is_configurable = prop_desc_p->flags & (ECMA_PROP_IS_CONFIGURABLE);
+    prop_desc.is_configurable = (prop_desc_p->flags & ECMA_PROP_IS_CONFIGURABLE) != 0;
   }
 
-  prop_desc.is_value_defined = prop_desc_p->flags & (ECMA_PROP_IS_VALUE_DEFINED);
+  prop_desc.is_value_defined = (prop_desc_p->flags & ECMA_PROP_IS_VALUE_DEFINED) != 0;
 
   if (prop_desc.is_value_defined)
   {
     prop_desc.value = prop_desc_p->value;
   }
 
-  if (prop_desc_p->flags & (ECMA_PROP_IS_WRITABLE_DEFINED))
+  if (prop_desc_p->flags & ECMA_PROP_IS_WRITABLE_DEFINED)
   {
     prop_desc.is_writable_defined = true;
-    prop_desc.is_writable = prop_desc_p->flags & (ECMA_PROP_IS_WRITABLE);
+    prop_desc.is_writable = (prop_desc_p->flags & ECMA_PROP_IS_WRITABLE) != 0;
   }
+
+  prop_desc.is_data_accessor = (prop_desc_p->flags & ECMA_PROP_IS_DATA_ACCESSOR) != 0;
 
   if (prop_desc_p->flags & (ECMA_PROP_IS_GET_DEFINED))
   {
@@ -3174,6 +3177,11 @@ jerry_property_descriptor_to_ecma (const jerry_property_descriptor_t *prop_desc_
   {
     flags |= (uint32_t) (ECMA_PROP_IS_WRITABLE_DEFINED | (prop_desc_p->is_writable ? ECMA_PROP_IS_WRITABLE
                                                                                    : ECMA_PROP_NO_OPTS));
+  }
+
+  if (prop_desc_p->is_data_accessor)
+  {
+    flags |= ECMA_PROP_IS_DATA_ACCESSOR;
   }
 
   /* Copy accessor property info. */
@@ -3310,6 +3318,8 @@ jerry_get_own_property_descriptor (const jerry_value_t  obj_val, /**< object val
 
   prop_desc_p->is_writable_defined = (prop_desc.flags & ECMA_PROP_IS_WRITABLE_DEFINED) != 0;
   prop_desc_p->is_writable = prop_desc_p->is_writable_defined ? (prop_desc.flags & ECMA_PROP_IS_WRITABLE) != 0 : false;
+
+  prop_desc_p->is_data_accessor = (prop_desc.flags & ECMA_PROP_IS_DATA_ACCESSOR) != 0;
 
   prop_desc_p->is_value_defined = (prop_desc.flags & ECMA_PROP_IS_VALUE_DEFINED) != 0;
   prop_desc_p->is_get_defined = (prop_desc.flags & ECMA_PROP_IS_GET_DEFINED) != 0;

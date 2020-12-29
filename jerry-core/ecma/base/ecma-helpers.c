@@ -548,7 +548,7 @@ ecma_create_named_accessor_property (ecma_object_t *object_p, /**< object */
   JERRY_ASSERT (ecma_is_lexical_environment (object_p)
                 || !ecma_op_object_is_fast_array (object_p));
   JERRY_ASSERT (ecma_find_named_property (object_p, name_p) == NULL);
-  JERRY_ASSERT ((prop_attributes & ~ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE) == 0);
+  JERRY_ASSERT ((prop_attributes & ~(ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE | ECMA_PROPERTY_FLAG_DATA_ACCESSOR)) == 0);
 
   uint8_t type_and_flags = prop_attributes;
 

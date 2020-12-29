@@ -725,6 +725,17 @@ ecma_builtin_object_object_get_own_property_descriptor (ecma_object_t *obj_p, /*
 
   if (ecma_is_value_true (status))
   {
+    if (JERRY_UNLIKELY (prop_desc.flags & ECMA_PROP_IS_DATA_ACCESSOR))
+    {
+      status = ecma_op_to_data_property (obj_p, &prop_desc);
+
+      if (ECMA_IS_VALUE_ERROR (status))
+      {
+        ecma_free_property_descriptor (&prop_desc);
+        return status;
+      }
+    }
+
     /* 4. */
     ecma_object_t *desc_obj_p = ecma_op_from_property_descriptor (&prop_desc);
 
@@ -786,6 +797,20 @@ ecma_builtin_object_object_get_own_property_descriptors (ecma_object_t *obj_p) /
 
     if (ecma_is_value_true (status))
     {
+      if (JERRY_UNLIKELY (prop_desc.flags & ECMA_PROP_IS_DATA_ACCESSOR))
+      {
+        status = ecma_op_to_data_property (obj_p, &prop_desc);
+
+        if (ECMA_IS_VALUE_ERROR (status))
+        {
+          ecma_free_property_descriptor (&prop_desc);
+          ecma_deref_object (descriptors_p);
+          ecma_collection_free (prop_names_p);
+
+          return status;
+        }
+      }
+
       /* 4.b */
       ecma_object_t *desc_obj_p = ecma_op_from_property_descriptor (&prop_desc);
       /* 4.c */

@@ -51,6 +51,7 @@ set(SOURCE_UNIT_TEST_MAIN_MODULES
   test-external-string.c
   test-from-property-descriptor.c
   test-has-property.c
+  test-hide-accessor.c
   test-internal-properties.c
   test-jmem.c
   test-json.c

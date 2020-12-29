@@ -65,8 +65,8 @@
  * See also:
  *          ECMA-262 v5, 8.6.2; ECMA-262 v5, Table 8
  *
- * @return pointer to a property - if it exists,
- *         NULL (i.e. ecma-undefined) - otherwise.
+ * @return property descriptor - if it exists,
+ *         ECMA_PROPERTY_TYPE_NOT_FOUND / ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP - otherwise.
  */
 ecma_property_t
 ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
@@ -1934,6 +1934,11 @@ ecma_op_object_get_own_property_descriptor (ecma_object_t *object_p, /**< the ob
     {
       prop_desc_p->set_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->setter_cp);
       ecma_ref_object (prop_desc_p->set_p);
+    }
+
+    if (property & ECMA_PROPERTY_FLAG_DATA_ACCESSOR)
+    {
+      prop_desc_p->flags |= ECMA_PROP_IS_DATA_ACCESSOR;
     }
   }
 

@@ -908,6 +908,50 @@ free_desc:
 } /* ecma_op_to_property_descriptor */
 
 /**
+ * Convert accessor to data property.
+ *
+ * @return ECMA_VALUE_EMPTY - if the opertation is successful
+ *         error - otherwise
+ */
+ecma_value_t
+ecma_op_to_data_property (ecma_object_t *object_p, /**< base object */
+                          ecma_property_descriptor_t *prop_desc_p) /**< [in/out] property descriptor */
+{
+  JERRY_ASSERT (prop_desc_p->flags & ECMA_PROP_IS_DATA_ACCESSOR);
+
+  ecma_value_t result = ECMA_VALUE_UNDEFINED;
+  uint16_t flags = prop_desc_p->flags;
+
+  if ((flags & ECMA_PROP_IS_GET_DEFINED) && prop_desc_p->get_p != NULL)
+  {
+    result = ecma_op_function_call (prop_desc_p->get_p, ecma_make_object_value (object_p), NULL, 0);
+
+    if (ECMA_IS_VALUE_ERROR (result))
+    {
+      return result;
+    }
+
+    ecma_deref_object (prop_desc_p->get_p);
+    prop_desc_p->get_p = NULL;
+  }
+
+  if ((flags & ECMA_PROP_IS_SET_DEFINED) && prop_desc_p->set_p != NULL)
+  {
+    ecma_deref_object (prop_desc_p->set_p);
+    prop_desc_p->set_p = NULL;
+
+    flags |= ECMA_PROP_IS_WRITABLE;
+  }
+
+  flags |= ECMA_PROP_IS_WRITABLE_DEFINED | ECMA_PROP_IS_VALUE_DEFINED;
+  flags &= (uint16_t) ~(ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED | ECMA_PROP_IS_DATA_ACCESSOR);
+
+  prop_desc_p->value = result;
+  prop_desc_p->flags = flags;
+  return ECMA_VALUE_EMPTY;
+} /* ecma_op_to_data_property */
+
+/**
  * IsInteger operation.
  *
  * See also:

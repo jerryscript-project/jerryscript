@@ -398,6 +398,7 @@ typedef enum
   ECMA_PROPERTY_FLAG_CONFIGURABLE = 1u << 2, /**< property is configurable */
   ECMA_PROPERTY_FLAG_ENUMERABLE = 1u << 3, /**< property is enumerable */
   ECMA_PROPERTY_FLAG_WRITABLE = 1u << 4, /**< property is writable */
+  ECMA_PROPERTY_FLAG_DATA_ACCESSOR = 1u << 4, /**< property is data accessor */
   ECMA_PROPERTY_FLAG_DATA = 1u << 5, /**< property contains data */
 } ecma_property_flags_t;
 
@@ -1155,6 +1156,7 @@ typedef enum
   ECMA_PROP_IS_CONFIGURABLE_DEFINED = (1 << 7), /** Is [[Configurable]] defined? */
   ECMA_PROP_IS_ENUMERABLE_DEFINED = (1 << 8), /** Is [[Enumerable]] defined? */
   ECMA_PROP_IS_WRITABLE_DEFINED = (1 << 9), /** Is [[Writable]] defined? */
+  ECMA_PROP_IS_DATA_ACCESSOR = (1 << 10), /** Is data accessor */
 } ecma_property_descriptor_status_flags_t;
 
 /**
@@ -1169,7 +1171,6 @@ typedef enum
  */
 typedef struct
 {
-
   /** any combination of ecma_property_descriptor_status_flags_t bits */
   uint16_t flags;
 

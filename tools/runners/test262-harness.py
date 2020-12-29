@@ -47,7 +47,6 @@ import optparse
 import io
 import os
 from os import path
-import platform
 import re
 import subprocess
 import sys
@@ -423,11 +422,6 @@ def validate_options(options):
         report_error("Couldn't find test path '%s'" % options.tests)
 
 
-def is_windows():
-    actual_platform = platform.system()
-    return (actual_platform == 'Windows') or (actual_platform == 'Microsoft')
-
-
 class TempFile(object):
 
     def __init__(self, suffix="", prefix="tmp"):
@@ -663,10 +657,7 @@ class TestCase(object):
 
     @staticmethod
     def execute(command, timeout):
-        if is_windows():
-            args = '%s' % command
-        else:
-            args = command.split(" ")
+        args = command.split(" ")
         stdout = TempFile(prefix="test262-out-")
         stderr = TempFile(prefix="test262-err-")
         try:

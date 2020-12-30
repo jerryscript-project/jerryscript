@@ -467,6 +467,9 @@ class TestResult(object):
         self.stdout = stdout
         self.stderr = stderr
         self.case = case
+        if exit_code != 0:
+            logging.warning("%s negative:%s %s %s", case.name, case.is_negative(), stdout, stderr)
+            # logging.warning("source\n%s", case.get_source())
 
     def report_outcome(self, long_format):
         name = self.case.get_name()

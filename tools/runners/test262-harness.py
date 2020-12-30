@@ -129,7 +129,7 @@ def my_maybe_list(value):
 def my_multiline_list(lines, value):
     # assume no explcit indentor (otherwise have to parse value)
     value = []
-    indent = None
+    indent = 0
     while lines:
         line = lines.pop(0)
         leading = my_leading_spaces(line)

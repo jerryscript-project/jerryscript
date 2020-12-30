@@ -40,8 +40,10 @@ def get_arguments():
     parser.add_argument('--test-dir', metavar='DIR', required=True,
                         help='Directory contains test262 test suite')
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('--es51', action='store_true',
-                       help='Run test262 ES5.1 version')
+    group.add_argument('--es51', default=False, const='default',
+                       nargs='?', choices=['default', 'all', 'update'],
+                       help='Run test262 - ES5.1. default: all tests except excludelist, ' +
+                       'all: all tests, update: all tests and update excludelist')
     group.add_argument('--es2015', default=False, const='default',
                        nargs='?', choices=['default', 'all', 'update'],
                        help='Run test262 - ES2015. default: all tests except excludelist, ' +
@@ -66,8 +68,9 @@ def get_arguments():
     else:
         args.test_dir = os.path.join(args.test_dir, 'es51')
         args.test262_git_hash = 'es5-tests'
+        args.excludelist_path = os.path.join('tests', 'test262-es5.1-excludelist.xml')
 
-    args.mode = args.es2015 or args.esnext
+    args.mode = args.es2015 or args.esnext or args.es51
 
     return args
 

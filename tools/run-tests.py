@@ -100,7 +100,10 @@ JERRY_TESTS_OPTIONS = [
 
 # Test options for test262
 TEST262_TEST_SUITE_OPTIONS = [
-    Options('test262_tests', OPTIONS_PROFILE_ES51),
+    Options('test262_tests', OPTIONS_PROFILE_ES51 + ['--line-info=on']),
+]
+
+TEST262_TEST_SUITE_OPTIONS_DEBUG = [
     Options('test262_tests-debug', OPTIONS_PROFILE_ES51 + OPTIONS_DEBUG)
 ]
 

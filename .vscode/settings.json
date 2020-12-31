@@ -7,7 +7,7 @@
   "files.autoGuessEncoding": true,
   "C_Cpp.autoAddFileAssociations": false,
   "C_Cpp.formatting": "clangFormat",
-  "cmake.configureArgs": ["-DJERRY_LINE_INFO=ON", "-DJERRY_GLOBAL_HEAP_SIZE=2048", "-DJERRY_GC_MARK_LIMIT=16"],
+  "cmake.configureArgs": ["-DJERRY_LINE_INFO=ON", "-DJERRY_EXTERNAL_CONTEXT=OFF", "-DJERRY_SYSTEM_ALLOCATOR=OFF", "-DJERRY_GLOBAL_HEAP_SIZE=512000"],
   "cmake.generator": "Ninja",
   "cmake.buildDirectory": "${workspaceRoot}/build/${variant:buildType}",
   "cmake.mingwSearchDirs":[

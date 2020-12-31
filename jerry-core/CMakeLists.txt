@@ -44,12 +44,6 @@ set(JERRY_STACK_LIMIT               "(0)"        CACHE STRING "Maximum stack usa
 set(JERRY_GC_MARK_LIMIT             "(8)"        CACHE STRING "Maximum depth of recursion during GC mark phase")
 
 # Option overrides
-if(USING_MSVC)
-  set(ENABLE_ALL_IN_ONE ON) # FIXME: This should not be needed but right now it is. To be tracked down and followed up.
-
-  set(ENABLE_ALL_IN_ONE_MESSAGE " (FORCED BY COMPILER)")
-endif()
-
 if(JERRY_SYSTEM_ALLOCATOR)
   set(JERRY_CPOINTER_32_BIT ON)
 

@@ -1,6 +1,6 @@
 # Produced files
 .mbedignore
-build/*
+build*/*
 
 # IDE related files
 nbproject

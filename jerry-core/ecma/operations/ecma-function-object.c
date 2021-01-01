@@ -730,7 +730,7 @@ ecma_op_create_native_handler (ecma_native_handler_id_t id, /**< handler id */
  *
  * @return compiled code
  */
-inline const ecma_compiled_code_t * JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(const ecma_compiled_code_t *)
 ecma_op_function_get_compiled_code (ecma_extended_object_t *function_p) /**< function pointer */
 {
 #if ENABLED (JERRY_SNAPSHOT_EXEC)

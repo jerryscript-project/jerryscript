@@ -43,10 +43,15 @@ extern "C"
 
 #define JERRY_LIKELY(x) __builtin_expect(!!(x), 1)
 #define JERRY_UNLIKELY(x) __builtin_expect(!!(x), 0)
+#define JERRY_ALWAYS_INLINE_STATIC(x) static inline x __attribute__((always_inline))
+#define JERRY_ALWAYS_INLINE(x) extern inline x __attribute__((always_inline))
 
 #endif /* __GNUC__ */
 
 #ifdef _MSC_VER
+
+#define JERRY_ALWAYS_INLINE_STATIC(x) __forceinline x
+#define JERRY_ALWAYS_INLINE(x) x
 
 /*
  * Compiler-specific macros relevant for Microsoft Visual C/C++ Compiler.
@@ -157,6 +162,20 @@ void * __cdecl _alloca (size_t _Size);
 #ifndef JERRY_UNLIKELY
 #define JERRY_UNLIKELY(x) (x)
 #endif /* !JERRY_UNLIKELY */
+
+/**
+ * Macro to setup static function attributes to force inline function to all call sites.
+ */
+#ifndef JERRY_ALWAYS_INLINE_STATIC
+#define JERRY_ALWAYS_INLINE_STATIC(x) static inline
+#endif /* !JERRY_ALWAYS_INLINE_STATIC */
+
+/**
+ * Macro to setup extern function attributes to force inline function to all call sites.
+ */
+#ifndef JERRY_ALWAYS_INLINE
+#define JERRY_ALWAYS_INLINE(x) extern inline
+#endif /* !JERRY_ALWAYS_INLINE */
 
 /**
  * Helper to declare (or mimic) a C99 variable-length array.

@@ -196,7 +196,7 @@ re_decode_u32 (const uint8_t *src_p) /**< source */
  *
  * @return encoded value size
  */
-inline static size_t JERRY_ATTR_ALWAYS_INLINE
+static inline size_t JERRY_ATTR_ALWAYS_INLINE
 re_get_encoded_value_size (uint32_t value) /**< value */
 {
   if (JERRY_LIKELY (value <= RE_VALUE_1BYTE_MAX))

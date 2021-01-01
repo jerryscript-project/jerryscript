@@ -785,7 +785,7 @@ ecma_get_number_from_value (ecma_value_t value) /**< ecma value */
  *
  * @return the string pointer
  */
-inline ecma_string_t *JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
+inline ecma_string_t * JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_get_string_from_value (ecma_value_t value) /**< ecma value */
 {
   JERRY_ASSERT (ecma_is_value_string (value));
@@ -804,7 +804,7 @@ ecma_get_string_from_value (ecma_value_t value) /**< ecma value */
  *
  * @return the string pointer
  */
-inline ecma_string_t *JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
+inline ecma_string_t * JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_get_symbol_from_value (ecma_value_t value) /**< ecma value */
 {
   JERRY_ASSERT (ecma_is_value_symbol (value));
@@ -818,7 +818,7 @@ ecma_get_symbol_from_value (ecma_value_t value) /**< ecma value */
  *
  * @return the string pointer
  */
-inline ecma_string_t *JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
+inline ecma_string_t * JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_get_prop_name_from_value (ecma_value_t value) /**< ecma value */
 {
   JERRY_ASSERT (ecma_is_value_prop_name (value));
@@ -836,7 +836,7 @@ ecma_get_prop_name_from_value (ecma_value_t value) /**< ecma value */
  *
  * @return the pointer
  */
-inline ecma_object_t *JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
+inline ecma_object_t * JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_get_object_from_value (ecma_value_t value) /**< ecma value */
 {
   JERRY_ASSERT (ecma_is_value_object (value));
@@ -849,7 +849,7 @@ ecma_get_object_from_value (ecma_value_t value) /**< ecma value */
  *
  * @return the pointer
  */
-inline ecma_extended_primitive_t *JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
+inline ecma_extended_primitive_t * JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_get_extended_primitive_from_value (ecma_value_t value) /**< ecma value */
 {
 #if ENABLED (JERRY_BUILTIN_BIGINT)

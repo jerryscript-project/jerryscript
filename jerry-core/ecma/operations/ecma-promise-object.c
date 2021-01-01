@@ -44,7 +44,7 @@
  * @return true - if the object is a promise.
  *         false - otherwise.
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+extern inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_is_promise (ecma_object_t *obj_p) /**< points to object */
 {
   return ecma_object_class_is (obj_p, LIT_MAGIC_STRING_PROMISE_UL);

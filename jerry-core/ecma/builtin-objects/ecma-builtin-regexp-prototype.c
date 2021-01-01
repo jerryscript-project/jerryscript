@@ -506,7 +506,7 @@ ecma_builtin_regexp_prototype_to_string (ecma_object_t *object_p) /**< this obje
  * @return true, if function is the builtin exec method
  *         false, otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+extern inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_builtin_is_regexp_exec (ecma_extended_object_t *obj_p)
 {
   return (ecma_get_object_is_builtin ((ecma_object_t *) obj_p)

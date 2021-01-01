@@ -133,7 +133,7 @@ ecma_divide_high_prec_by_10 (ecma_high_prec_t *hp_data_p) /**< [in, out] high-pr
  *
  * @return number of generated digits
  */
-inline lit_utf8_size_t JERRY_ATTR_ALWAYS_INLINE
+extern inline lit_utf8_size_t JERRY_ATTR_ALWAYS_INLINE
 ecma_errol0_dtoa (double val, /**< ecma number */
                   lit_utf8_byte_t *buffer_p, /**< buffer to generate digits into */
                   int32_t *exp_p) /**< [out] exponent */

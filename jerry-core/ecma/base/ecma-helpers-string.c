@@ -1012,7 +1012,7 @@ ecma_string_to_number (const ecma_string_t *string_p) /**< ecma-string */
  * @return ECMA_STRING_NOT_ARRAY_INDEX if string is not array index
  *         the array index otherwise
  */
-inline uint32_t JERRY_ATTR_ALWAYS_INLINE
+extern inline uint32_t JERRY_ATTR_ALWAYS_INLINE
 ecma_string_get_array_index (const ecma_string_t *str_p) /**< ecma-string */
 {
   if (ECMA_IS_DIRECT_STRING (str_p))
@@ -1369,7 +1369,7 @@ ecma_substring_copy_to_utf8_buffer (const ecma_string_t *string_desc_p, /**< ecm
  * It is the caller's responsibility to make sure that the string fits in the buffer.
  * Check if the size of the string is equal with the size of the buffer.
  */
-inline void JERRY_ATTR_ALWAYS_INLINE
+extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_string_to_utf8_bytes (const ecma_string_t *string_desc_p, /**< ecma-string descriptor */
                            lit_utf8_byte_t *buffer_p, /**< destination buffer pointer
                                                        * (can be NULL if buffer_size == 0) */
@@ -1589,7 +1589,7 @@ ecma_string_get_chars (const ecma_string_t *string_p, /**< ecma-string */
  * @return true - if the string equals to the magic string id
  *         false - otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+extern inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_compare_ecma_string_to_magic_id (const ecma_string_t *string_p, /**< property name */
                                       lit_magic_string_id_t id) /**< magic string id */
 {
@@ -1602,7 +1602,7 @@ ecma_compare_ecma_string_to_magic_id (const ecma_string_t *string_p, /**< proper
  * @return true - if the string is an empty string
  *         false - otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+extern inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_string_is_empty (const ecma_string_t *string_p) /**< ecma-string */
 {
   return ecma_compare_ecma_string_to_magic_id (string_p, LIT_MAGIC_STRING__EMPTY);
@@ -1614,7 +1614,7 @@ ecma_string_is_empty (const ecma_string_t *string_p) /**< ecma-string */
  * @return true - if the string equals to "length"
  *         false - otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+extern inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_string_is_length (const ecma_string_t *string_p) /**< property name */
 {
   return ecma_compare_ecma_string_to_magic_id (string_p, LIT_MAGIC_STRING_LENGTH);
@@ -1639,7 +1639,7 @@ ecma_property_to_string (ecma_property_t property, /**< property name type */
  *
  * @return the compressed pointer part of the name
  */
-inline jmem_cpointer_t JERRY_ATTR_ALWAYS_INLINE
+extern inline jmem_cpointer_t JERRY_ATTR_ALWAYS_INLINE
 ecma_string_to_property_name (ecma_string_t *prop_name_p, /**< property name */
                               ecma_property_t *name_type_p) /**< [out] property name type */
 {
@@ -1683,7 +1683,7 @@ ecma_string_from_property_name (ecma_property_t property, /**< property name typ
  *
  * @return hash code of property name
  */
-inline lit_string_hash_t JERRY_ATTR_ALWAYS_INLINE
+extern inline lit_string_hash_t JERRY_ATTR_ALWAYS_INLINE
 ecma_string_get_property_name_hash (ecma_property_t property, /**< property name type */
                                     jmem_cpointer_t prop_name_cp) /**< property name compressed pointer */
 {
@@ -1730,7 +1730,7 @@ ecma_string_get_property_index (ecma_property_t property, /**< property name typ
  * @return true if they are equals
  *         false otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+extern inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_string_compare_to_property_name (ecma_property_t property, /**< property name type */
                                       jmem_cpointer_t prop_name_cp, /**< property name compressed pointer */
                                       const ecma_string_t *string_p) /**< other string */
@@ -1864,7 +1864,7 @@ ecma_compare_ecma_strings (const ecma_string_t *string1_p, /**< ecma-string */
  * @return true - if strings are equal;
  *         false - otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+extern inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_compare_ecma_non_direct_strings (const ecma_string_t *string1_p, /**< ecma-string */
                                       const ecma_string_t *string2_p) /**< ecma-string */
 {
@@ -2379,7 +2379,7 @@ ecma_get_string_magic (const ecma_string_t *string_p) /**< ecma-string */
  *
  * @return calculated hash
  */
-inline lit_string_hash_t JERRY_ATTR_ALWAYS_INLINE
+extern inline lit_string_hash_t JERRY_ATTR_ALWAYS_INLINE
 ecma_string_hash (const ecma_string_t *string_p) /**< ecma-string to calculate hash for */
 {
   if (ECMA_IS_DIRECT_STRING (string_p))
@@ -2507,7 +2507,7 @@ ecma_string_trim_back (const lit_utf8_byte_t *start_p, /**< current string's sta
  *        - ecma_string_trim
  *        - ecma_utf8_string_to_number
  */
-inline void JERRY_ATTR_ALWAYS_INLINE
+extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_string_trim_helper (const lit_utf8_byte_t **utf8_str_p, /**< [in, out] current string position */
                          lit_utf8_size_t *utf8_str_size)  /**< [in, out] size of the given string */
 {

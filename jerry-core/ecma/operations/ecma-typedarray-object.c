@@ -608,7 +608,7 @@ static const uint16_t ecma_typedarray_magic_string_list[] =
  *
  * @return ecma_typedarray_getter_fn_t: the getter function for the given builtin TypedArray id
  */
-inline ecma_typedarray_getter_fn_t JERRY_ATTR_ALWAYS_INLINE
+extern inline ecma_typedarray_getter_fn_t JERRY_ATTR_ALWAYS_INLINE
 ecma_get_typedarray_getter_fn (ecma_typedarray_type_t typedarray_id)
 {
   return ecma_typedarray_getters[typedarray_id];
@@ -619,7 +619,7 @@ ecma_get_typedarray_getter_fn (ecma_typedarray_type_t typedarray_id)
  *
  * @return ecma_number_t: the value of the element
  */
-inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
+extern inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_get_typedarray_element (lit_utf8_byte_t *src_p,
                              ecma_typedarray_type_t typedarray_id)
 {
@@ -631,7 +631,7 @@ ecma_get_typedarray_element (lit_utf8_byte_t *src_p,
  *
  * @return ecma_typedarray_setter_fn_t: the setter function for the given builtin TypedArray id
  */
-inline ecma_typedarray_setter_fn_t JERRY_ATTR_ALWAYS_INLINE
+extern inline ecma_typedarray_setter_fn_t JERRY_ATTR_ALWAYS_INLINE
 ecma_get_typedarray_setter_fn (ecma_typedarray_type_t typedarray_id)
 {
   return ecma_typedarray_setters[typedarray_id];
@@ -640,7 +640,7 @@ ecma_get_typedarray_setter_fn (ecma_typedarray_type_t typedarray_id)
 /**
  * set typedarray's element value
  */
-inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
+extern inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_set_typedarray_element (lit_utf8_byte_t *dst_p,
                              ecma_value_t value,
                              ecma_typedarray_type_t typedarray_id)
@@ -653,7 +653,7 @@ ecma_set_typedarray_element (lit_utf8_byte_t *dst_p,
  *
  * @return uint8_t
  */
-inline uint8_t JERRY_ATTR_ALWAYS_INLINE
+extern inline uint8_t JERRY_ATTR_ALWAYS_INLINE
 ecma_typedarray_helper_get_shift_size (ecma_typedarray_type_t typedarray_id)
 {
   return ecma_typedarray_element_shift_sizes[typedarray_id];
@@ -1215,7 +1215,7 @@ ecma_op_typedarray_from (ecma_value_t items_val, /**< the source array-like obje
  *
  * @return the pointer to the internal arraybuffer
  */
-inline ecma_object_t * JERRY_ATTR_ALWAYS_INLINE
+extern inline ecma_object_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_typedarray_get_arraybuffer (ecma_object_t *typedarray_p) /**< the pointer to the typedarray object */
 {
   JERRY_ASSERT (ecma_object_is_typedarray (typedarray_p));

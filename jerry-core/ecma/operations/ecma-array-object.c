@@ -94,7 +94,7 @@ ecma_op_alloc_array_object (uint32_t length) /**< length of the new array */
  * @return true - if the object is fast-access mode array
  *         false, otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+extern inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_op_object_is_fast_array (ecma_object_t *object_p) /**< ecma-object */
 {
   return (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_ARRAY &&
@@ -107,7 +107,7 @@ ecma_op_object_is_fast_array (ecma_object_t *object_p) /**< ecma-object */
  * @return true - if the array object is fast-access mode array
  *         false, otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+extern inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_op_array_is_fast_array (ecma_extended_object_t *array_p) /**< ecma-array-object */
 {
   JERRY_ASSERT (ecma_get_object_type ((ecma_object_t *) array_p) == ECMA_OBJECT_TYPE_ARRAY);
@@ -442,7 +442,7 @@ ecma_fast_array_set_property (ecma_object_t *object_p, /**< fast access mode arr
  *
  * @return number of array holes in a fast access array object
  */
-inline uint32_t JERRY_ATTR_ALWAYS_INLINE
+extern inline uint32_t JERRY_ATTR_ALWAYS_INLINE
 ecma_fast_array_get_hole_count (ecma_object_t *obj_p) /**< fast access mode array object */
 {
   JERRY_ASSERT (ecma_op_object_is_fast_array (obj_p));

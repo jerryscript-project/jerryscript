@@ -111,7 +111,7 @@ ecma_gc_set_object_visited (ecma_object_t *object_p) /**< object */
 /**
  * Initialize GC information for the object
  */
-inline void
+extern inline void
 ecma_init_gc_info (ecma_object_t *object_p) /**< object */
 {
   JERRY_CONTEXT (ecma_gc_objects_number)++;
@@ -143,7 +143,7 @@ ecma_ref_object (ecma_object_t *object_p) /**< object */
 /**
  * Decrease reference counter of an object
  */
-inline void JERRY_ATTR_ALWAYS_INLINE
+extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_deref_object (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p->type_flags_refs >= ECMA_OBJECT_REF_ONE);

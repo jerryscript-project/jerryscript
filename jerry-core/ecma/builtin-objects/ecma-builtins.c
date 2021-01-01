@@ -319,7 +319,7 @@ ecma_builtin_is_global (ecma_object_t *object_p) /**< pointer to an object */
  *
  * @return pointer to the global object
  */
-inline ecma_object_t * JERRY_ATTR_ALWAYS_INLINE
+extern inline ecma_object_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_builtin_get_global (void)
 {
   JERRY_ASSERT (JERRY_CONTEXT (global_object_p) != NULL);
@@ -333,7 +333,7 @@ ecma_builtin_get_global (void)
  * @return true - if the function object is a built-in routine
  *         false - otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+extern inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_builtin_function_is_routine (ecma_object_t *func_obj_p) /**< function object */
 {
   JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_NATIVE_FUNCTION);

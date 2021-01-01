@@ -215,7 +215,7 @@ ecma_round_high_to_uint64 (ecma_uint128_t *num_p)
  *
  * @return number of leading zeros.
  */
-static inline int JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(int)
 ecma_uint64_clz (uint64_t n) /**< integer to count leading zeros in */
 {
   JERRY_ASSERT (n != 0);

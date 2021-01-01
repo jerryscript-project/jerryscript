@@ -540,7 +540,7 @@ JERRY_STATIC_ASSERT (PARSER_MAXIMUM_IDENT_LENGTH <= UINT8_MAX,
 /**
  * Checks whether a literal is equal to "arguments".
  */
-static inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(bool)
 scanner_literal_is_arguments (lexer_lit_location_t *literal_p) /**< literal */
 {
   return lexer_compare_identifier_to_string (literal_p, (const uint8_t *) "arguments", 9);

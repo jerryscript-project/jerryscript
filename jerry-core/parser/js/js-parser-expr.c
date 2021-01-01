@@ -118,7 +118,7 @@ JERRY_STATIC_ASSERT (sizeof (parser_binary_precedence_table) == 36,
 /**
  * Generate byte code for operators with lvalue.
  */
-static inline void JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(void)
 parser_push_result (parser_context_t *context_p) /**< context */
 {
   if (CBC_NO_RESULT_OPERATION (context_p->last_cbc_opcode))
@@ -506,7 +506,7 @@ typedef enum
  *
  * @return true, if constructor and false otherwise
  */
-static inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(bool)
 parser_is_constructor_literal (parser_context_t *context_p) /**< context */
 {
   return (LEXER_IS_IDENT_OR_STRING (context_p->token.lit_location.type)
@@ -1844,7 +1844,7 @@ parser_parse_tagged_template_literal (parser_context_t *context_p) /**< context 
  *
  * @return true if the current expression can be an assignment expression, false otherwise
  */
-static inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(bool)
 parser_is_assignment_expr (parser_context_t *context_p)
 {
   return (context_p->stack_top_uint8 == LEXER_EXPRESSION_START
@@ -1856,7 +1856,7 @@ parser_is_assignment_expr (parser_context_t *context_p)
 /**
  * Throws an error if the current expression is not an assignment expression.
  */
-static inline void JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(void)
 parser_check_assignment_expr (parser_context_t *context_p)
 {
   if (!parser_is_assignment_expr (context_p))
@@ -1868,7 +1868,7 @@ parser_check_assignment_expr (parser_context_t *context_p)
 /**
  * Checks whether the next token is a valid continuation token after an AssignmentExpression.
  */
-static inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(bool)
 parser_abort_parsing_after_assignment_expression (parser_context_t *context_p)
 {
   return (context_p->token.type != LEXER_RIGHT_PAREN

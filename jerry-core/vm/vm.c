@@ -511,7 +511,7 @@ vm_construct_literal_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
  * @return true - if the implicit 'this' value is updated,
  *         false - otherwise
  */
-static inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(bool)
 vm_get_implicit_this_value (ecma_value_t *this_value_p) /**< [in,out] this value */
 {
   if (ecma_is_value_object (*this_value_p))

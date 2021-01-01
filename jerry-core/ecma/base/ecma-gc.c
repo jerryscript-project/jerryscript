@@ -64,7 +64,7 @@
  * @return true  - if visited
  *         false - otherwise
  */
-static inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(bool)
 ecma_gc_is_object_visited (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -216,7 +216,7 @@ ecma_gc_mark_arguments_object (ecma_extended_object_t *ext_object_p) /**< argume
 /**
  * Mark referenced object from property
  */
-static inline void JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(void)
 ecma_gc_mark_properties (ecma_property_pair_t *property_pair_p) /**< property pair */
 {
   for (uint32_t index = 0; index < ECMA_PROPERTY_PAIR_ITEM_COUNT; index++)

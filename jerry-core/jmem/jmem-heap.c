@@ -59,7 +59,7 @@
  *
  * @return pointer to the end of the region
  */
-static inline jmem_heap_free_t *  JERRY_ATTR_ALWAYS_INLINE JERRY_ATTR_PURE
+JERRY_ALWAYS_INLINE_STATIC(jmem_heap_free_t *) JERRY_ATTR_PURE
 jmem_heap_get_region_end (jmem_heap_free_t *curr_p) /**< current region */
 {
   return (jmem_heap_free_t *) ((uint8_t *) curr_p + curr_p->size);

@@ -79,7 +79,7 @@ typedef struct
 /**
  * Normalize the number by factoring in the error.
  */
-static inline void JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(void)
 ecma_normalize_high_prec_data (ecma_high_prec_t *hp_data_p) /**< [in, out] float pair */
 {
   double val = hp_data_p->value;
@@ -91,7 +91,7 @@ ecma_normalize_high_prec_data (ecma_high_prec_t *hp_data_p) /**< [in, out] float
 /**
  * Multiply the high-precision number by ten.
  */
-static inline void JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(void)
 ecma_multiply_high_prec_by_10 (ecma_high_prec_t *hp_data_p) /**< [in, out] high-precision number */
 {
   double value = hp_data_p->value;

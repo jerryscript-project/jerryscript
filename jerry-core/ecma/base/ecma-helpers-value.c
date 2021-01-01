@@ -86,7 +86,7 @@ ecma_get_value_type_field (ecma_value_t value) /**< ecma value */
  *
  * @return ecma value
  */
-static inline ecma_value_t JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(ecma_value_t) JERRY_ATTR_PURE
 ecma_pointer_to_ecma_value (const void *ptr) /**< pointer */
 {
 #ifdef ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
@@ -110,7 +110,7 @@ ecma_pointer_to_ecma_value (const void *ptr) /**< pointer */
  *
  * @return pointer
  */
-static inline void * JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(void *) JERRY_ATTR_PURE
 ecma_get_pointer_from_ecma_value (ecma_value_t value) /**< value */
 {
 #ifdef ECMA_VALUE_CAN_STORE_UINTPTR_VALUE_DIRECTLY
@@ -152,7 +152,7 @@ ecma_is_value_simple (ecma_value_t value) /**< ecma value */
  * @return true - if the value is equal to the given simple value,
  *         false - otherwise
  */
-static inline bool JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(bool) JERRY_ATTR_CONST
 ecma_is_value_equal_to_simple_value (ecma_value_t value, /**< ecma value */
                                      ecma_value_t simple_value) /**< simple value */
 {
@@ -546,7 +546,7 @@ ecma_make_nan_value (void)
  *
  * @return true, if it is +0.0, false otherwise
  */
-static inline bool JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(bool) JERRY_ATTR_CONST
 ecma_is_number_equal_to_positive_zero (ecma_number_t ecma_number) /**< number */
 {
   ecma_number_accessor_t u;

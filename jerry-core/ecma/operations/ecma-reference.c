@@ -86,7 +86,7 @@ ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, /**< starting lexical 
  * @return true  - if the lexical environment is a global lexical environment
  *         false - otherwise
  */
-static inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(bool)
 ecma_op_is_global_environment (ecma_object_t *lex_env_p) /**< lexical environment */
 {
   JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);

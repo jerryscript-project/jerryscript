@@ -145,7 +145,7 @@ static const char * const error_bigint_not_supported_p = "BigInt support is disa
  *           - before jerry_init and after jerry_cleanup
  *           - between enter to and return from a native free callback
  */
-static inline void JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(void)
 jerry_assert_api_available (void)
 {
   JERRY_ASSERT (JERRY_CONTEXT (status_flags) & ECMA_STATUS_API_AVAILABLE);
@@ -154,7 +154,7 @@ jerry_assert_api_available (void)
 /**
  * Turn on API availability
  */
-static inline void JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(void)
 jerry_make_api_available (void)
 {
   JERRY_CONTEXT (status_flags) |= ECMA_STATUS_API_AVAILABLE;
@@ -163,7 +163,7 @@ jerry_make_api_available (void)
 /**
  * Turn off API availability
  */
-static inline void JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(void)
 jerry_make_api_unavailable (void)
 {
   JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_API_AVAILABLE;
@@ -190,7 +190,7 @@ jerry_return (jerry_value_t value) /**< return value */
  *
  * @return return value for Jerry API functions
  */
-static inline jerry_value_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(jerry_value_t)
 jerry_throw (jerry_value_t value) /**< return value */
 {
   JERRY_ASSERT (ECMA_IS_VALUE_ERROR (value));

@@ -455,7 +455,7 @@ ecma_regexp_canonicalize_char (lit_code_point_t ch, /**< character */
  *
  * @return ecma_char_t canonicalized character
  */
-static inline lit_code_point_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(lit_code_point_t)
 ecma_regexp_canonicalize (lit_code_point_t ch, /**< character */
                           uint16_t flags) /**< flags */
 {

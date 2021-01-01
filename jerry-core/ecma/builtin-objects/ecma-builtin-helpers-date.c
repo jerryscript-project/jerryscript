@@ -107,7 +107,7 @@ ecma_date_day_from_year (ecma_number_t year) /**< year value */
  *
  * @return  time value of the start of a year
  */
-static inline ecma_number_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(ecma_number_t)
 ecma_date_time_from_year (ecma_number_t year) /**< year value */
 {
   JERRY_ASSERT (!ecma_number_is_nan (year));

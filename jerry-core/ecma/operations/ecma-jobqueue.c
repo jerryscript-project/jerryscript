@@ -93,7 +93,7 @@ void ecma_job_queue_init (void)
  *
  * @return type of the job
  */
-static inline ecma_job_queue_item_type_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(ecma_job_queue_item_type_t)
 ecma_job_queue_get_type (ecma_job_queue_item_t *job_p) /**< the job */
 {
   return (ecma_job_queue_item_type_t) (job_p->next_and_type & ECMA_JOB_QUEURE_TYPE_MASK);
@@ -104,7 +104,7 @@ ecma_job_queue_get_type (ecma_job_queue_item_t *job_p) /**< the job */
  *
  * @return next job
  */
-static inline ecma_job_queue_item_t *JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(ecma_job_queue_item_t *)
 ecma_job_queue_get_next (ecma_job_queue_item_t *job_p) /**< the job */
 {
   return (ecma_job_queue_item_t *) (job_p->next_and_type & ~ECMA_JOB_QUEURE_TYPE_MASK);

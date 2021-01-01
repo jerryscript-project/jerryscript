@@ -2575,7 +2575,7 @@ ecma_op_object_enumerate (ecma_object_t *obj_p) /**< object */
  * @return true  - if class name is an object
  *         false - otherwise
  */
-static inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(bool)
 ecma_object_check_class_name_is_object (ecma_object_t *obj_p) /**< object */
 {
 #ifndef JERRY_NDEBUG

@@ -71,7 +71,7 @@ enum
  *
  * @return rounded number
  */
-static inline lit_utf8_size_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(lit_utf8_size_t)
 ecma_builtin_number_prototype_helper_round (lit_utf8_byte_t *digits_p, /**< [in,out] number as a string in decimal
                                                                         *   form */
                                             lit_utf8_size_t num_digits, /**< length of the string representation */

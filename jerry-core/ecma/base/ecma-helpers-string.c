@@ -250,7 +250,7 @@ ecma_prop_name_is_symbol (ecma_string_t *string_p) /**< ecma-string */
  *
  * @return pointer to ecma-string descriptor
  */
-static inline ecma_string_t * JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(ecma_string_t *)
 ecma_new_ecma_string_from_utf8_buffer (lit_utf8_size_t length, /**< length of the buffer */
                                        lit_utf8_size_t size, /**< size of the buffer */
                                        lit_utf8_byte_t **data_p) /**< [out] pointer to the start of the string buffer */
@@ -1371,7 +1371,7 @@ ecma_string_to_utf8_bytes (const ecma_string_t *string_desc_p, /**< ecma-string 
  *
  * @return size in bytes
  */
-static inline lit_utf8_size_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(lit_utf8_size_t)
 ecma_string_get_uint32_size (const uint32_t uint32_number) /**< number in the string-descriptor */
 {
   uint32_t prev_number = 1;
@@ -1610,7 +1610,7 @@ ecma_string_is_length (const ecma_string_t *string_p) /**< property name */
  *
  * @return pointer to the converted ecma string
  */
-static inline ecma_string_t * JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(ecma_string_t *)
 ecma_property_to_string (ecma_property_t property, /**< property name type */
                          jmem_cpointer_t prop_name_cp) /**< property name compressed pointer */
 {

@@ -645,7 +645,7 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
  * @return true - if message is processed successfully
  *         false - otherwise
  */
-static inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(bool)
 jerry_debugger_process_message (const uint8_t *recv_buffer_p, /**< pointer to the received data */
                                 uint32_t message_size, /**< message size */
                                 bool *resume_exec_p, /**< pointer to the resume exec flag */

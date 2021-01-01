@@ -69,7 +69,7 @@ ecma_promise_get_result (ecma_object_t *obj_p) /**< points to promise object */
 /**
  * Set the PromiseResult of promise.
  */
-static inline void JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(void)
 ecma_promise_set_result (ecma_object_t *obj_p, /**< points to promise object */
                          ecma_value_t result) /**< the result value */
 {
@@ -98,7 +98,7 @@ ecma_promise_get_flags (ecma_object_t *obj_p) /**< points to promise object */
 /**
  * Set the PromiseState of promise.
  */
-static inline void JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(void)
 ecma_promise_set_state (ecma_object_t *obj_p, /**< points to promise object */
                         bool is_fulfilled) /**< new flags */
 {
@@ -175,7 +175,7 @@ ecma_promise_trigger_reactions (ecma_collection_t *reactions, /**< lists of reac
  *
  * @return true if it was called before, false otherwise
  */
-static inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE_STATIC(bool)
 ecma_is_resolver_already_called (ecma_object_t *promise_obj_p) /**< promise */
 {
   return (ecma_promise_get_flags (promise_obj_p) & ECMA_PROMISE_ALREADY_RESOLVED) != 0;

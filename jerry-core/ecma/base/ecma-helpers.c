@@ -169,7 +169,7 @@ ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< out
  * @return true  - if object is a lexical environment
  *         false - otherwise
  */
-inline bool JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(bool) JERRY_ATTR_PURE
 ecma_is_lexical_environment (const ecma_object_t *object_p) /**< object or lexical environment */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -182,7 +182,7 @@ ecma_is_lexical_environment (const ecma_object_t *object_p) /**< object or lexic
 /**
  * Set value of [[Extensible]] object's internal property.
  */
-inline void JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(void)
 ecma_op_ordinary_object_set_extensible (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -196,7 +196,7 @@ ecma_op_ordinary_object_set_extensible (ecma_object_t *object_p) /**< object */
  *
  * @return type of the object (ecma_object_type_t)
  */
-inline ecma_object_type_t JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(ecma_object_type_t) JERRY_ATTR_PURE
 ecma_get_object_type (const ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -211,7 +211,7 @@ ecma_get_object_type (const ecma_object_t *object_p) /**< object */
  * @return true  - if object is a built-in object
  *         false - otherwise
  */
-inline bool JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(bool) JERRY_ATTR_PURE
 ecma_get_object_is_builtin (const ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -223,7 +223,7 @@ ecma_get_object_is_builtin (const ecma_object_t *object_p) /**< object */
 /**
  * Set flag indicating whether the object is a built-in object
  */
-inline void JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(void)
 ecma_set_object_is_builtin (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -239,7 +239,7 @@ ecma_set_object_is_builtin (ecma_object_t *object_p) /**< object */
  *
  * @return the ID of the built-in
  */
-inline uint8_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(uint8_t)
 ecma_get_object_builtin_id (ecma_object_t *object_p) /**< object */
 {
   if (!ecma_get_object_is_builtin (object_p))
@@ -267,7 +267,7 @@ ecma_get_object_builtin_id (ecma_object_t *object_p) /**< object */
  *
  * @return type of the lexical environment (ecma_lexical_environment_type_t)
  */
-inline ecma_lexical_environment_type_t JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(ecma_lexical_environment_type_t) JERRY_ATTR_PURE
 ecma_get_lex_env_type (const ecma_object_t *object_p) /**< lexical environment */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -281,7 +281,7 @@ ecma_get_lex_env_type (const ecma_object_t *object_p) /**< lexical environment *
  *
  * @return pointer to ecma object
  */
-inline ecma_object_t * JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(ecma_object_t *) JERRY_ATTR_PURE
 ecma_get_lex_env_binding_object (const ecma_object_t *object_p) /**< object-bound lexical environment */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -957,7 +957,7 @@ ecma_assert_object_contains_the_property (const ecma_object_t *object_p, /**< ec
  * Note:
  *      value previously stored in the property is freed
  */
-inline void JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(void)
 ecma_named_data_property_assign_value (ecma_object_t *obj_p, /**< object */
                                        ecma_property_value_t *prop_value_p, /**< property value reference */
                                        ecma_value_t value) /**< value to assign */
@@ -1028,7 +1028,7 @@ ecma_set_named_accessor_property_setter (ecma_object_t *object_p, /**< the prope
  * @return true - property is writable,
  *         false - otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(bool)
 ecma_is_property_writable (ecma_property_t property) /**< property */
 {
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_NAMEDDATA
@@ -1062,7 +1062,7 @@ ecma_set_property_writable_attr (ecma_property_t *property_p, /**< [in,out] prop
  * @return true - property is enumerable,
  *         false - otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(bool)
 ecma_is_property_enumerable (ecma_property_t property) /**< property */
 {
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_NAMEDDATA
@@ -1098,7 +1098,7 @@ ecma_set_property_enumerable_attr (ecma_property_t *property_p, /**< [in,out] pr
  * @return true - property is configurable,
  *         false - otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(bool)
 ecma_is_property_configurable (ecma_property_t property) /**< property */
 {
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (property) == ECMA_PROPERTY_TYPE_NAMEDDATA
@@ -1135,7 +1135,7 @@ ecma_set_property_configurable_attr (ecma_property_t *property_p, /**< [in,out] 
  *
  * @return true / false
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(bool)
 ecma_is_property_lcached (ecma_property_t *property_p) /**< property */
 {
   JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA
@@ -1148,7 +1148,7 @@ ecma_is_property_lcached (ecma_property_t *property_p) /**< property */
 /**
  * Set value of flag indicating whether the property is registered in LCache
  */
-inline void JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(void)
 ecma_set_property_lcached (ecma_property_t *property_p, /**< property */
                            bool is_lcached) /**< new value for lcached flag */
 {
@@ -1326,7 +1326,7 @@ ecma_create_error_reference_from_context (void)
  *
  * @return error reference value
  */
-inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(ecma_value_t)
 ecma_create_error_object_reference (ecma_object_t *object_p) /**< referenced object */
 {
   return ecma_create_error_reference (ecma_make_object_value (object_p), true);
@@ -1531,7 +1531,7 @@ ecma_compiled_code_resolve_arguments_start (const ecma_compiled_code_t *bytecode
  *
  * @return position of the function name of the compiled code
  */
-inline ecma_value_t * JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(ecma_value_t *)
 ecma_compiled_code_resolve_function_name (const ecma_compiled_code_t *bytecode_header_p) /**< compiled code */
 {
   JERRY_ASSERT (bytecode_header_p != NULL);

@@ -50,7 +50,7 @@ const char month_names_p[12][3] =
  *
  * @return time value for day number
  */
-extern inline ecma_number_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(ecma_number_t)
 ecma_date_day (ecma_number_t time) /**< time value */
 {
   JERRY_ASSERT (!ecma_number_is_nan (time));
@@ -66,7 +66,7 @@ ecma_date_day (ecma_number_t time) /**< time value */
  *
  * @return time value within the day
  */
-extern inline ecma_number_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(ecma_number_t)
 ecma_date_time_within_day (ecma_number_t time) /**< time value */
 {
   JERRY_ASSERT (!ecma_number_is_nan (time));
@@ -325,7 +325,7 @@ ecma_date_week_day (ecma_number_t time) /**< time value */
  *
  * @return local time zone adjustment
  */
-inline ecma_number_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(ecma_number_t)
 ecma_date_local_time_zone_adjustment (ecma_number_t time) /**< time value */
 {
   return jerry_port_get_local_time_zone_adjustment (time, true);
@@ -574,7 +574,7 @@ ecma_date_time_clip (ecma_number_t time) /**< time value */
  *
  * @return timezone offset
  */
-inline ecma_number_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(ecma_number_t)
 ecma_date_timezone_offset (ecma_number_t time) /**< time value */
 {
   JERRY_ASSERT (!ecma_number_is_nan (time));

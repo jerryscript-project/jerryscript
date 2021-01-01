@@ -25,7 +25,7 @@
  * @return true - if the flag is set
  *         false - otherwise
  */
-extern inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(bool)
 jcontext_has_pending_exception (void)
 {
   return JERRY_CONTEXT (status_flags) & ECMA_STATUS_EXCEPTION;
@@ -37,7 +37,7 @@ jcontext_has_pending_exception (void)
  * @return true - if the flag is set
  *         false - otherwise
  */
-extern inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(bool)
 jcontext_has_pending_abort (void)
 {
   return JERRY_CONTEXT (status_flags) & ECMA_STATUS_ABORT;
@@ -46,7 +46,7 @@ jcontext_has_pending_abort (void)
 /**
  * Set the abort flag for the context.
  */
-extern inline void JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(void)
 jcontext_set_abort_flag (bool is_abort) /**< true - if the abort flag should be set
                                          *   false - if the abort flag should be removed */
 {
@@ -65,7 +65,7 @@ jcontext_set_abort_flag (bool is_abort) /**< true - if the abort flag should be 
 /**
  * Set the exception flag for the context.
  */
-extern inline void JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(void)
 jcontext_set_exception_flag (bool is_exception) /**< true - if the exception flag should be set
                                                  *   false - if the exception flag should be removed */
 {
@@ -82,7 +82,7 @@ jcontext_set_exception_flag (bool is_exception) /**< true - if the exception fla
 /**
  * Raise exception from the given error value.
  */
-extern inline void JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(void)
 jcontext_raise_exception (ecma_value_t error) /**< error to raise */
 {
   JERRY_ASSERT (!jcontext_has_pending_exception ());

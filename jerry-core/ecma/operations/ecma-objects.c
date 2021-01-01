@@ -387,7 +387,7 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
  * @return ECMA_VALUE_ERROR - if the operation fails
  *         ECMA_VALUE_{TRUE_FALSE} - whether the property is found
  */
-inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(ecma_value_t)
 ecma_op_object_has_property (ecma_object_t *object_p, /**< the object */
                              ecma_string_t *property_name_p) /**< property name */
 {
@@ -756,7 +756,7 @@ ecma_op_object_find (ecma_object_t *object_p, /**< the object */
  * @return ecma value
  *         Returned value must be freed with ecma_free_value
  */
-inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(ecma_value_t)
 ecma_op_object_get (ecma_object_t *object_p, /**< the object */
                     ecma_string_t *property_name_p) /**< property name */
 {
@@ -874,7 +874,7 @@ ecma_op_object_get_length (ecma_object_t *object_p, /**< the object */
  * @return ecma value
  *         Returned value must be freed with ecma_free_value
  */
-inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(ecma_value_t)
 ecma_op_object_get_by_magic_id (ecma_object_t *object_p, /**< the object */
                                 lit_magic_string_id_t property_id) /**< property magic string id */
 {
@@ -1096,7 +1096,7 @@ ecma_op_object_put_by_index (ecma_object_t *object_p, /**< the object */
  *         Note: even if is_throw is false, the setter can throw an
  *         error, and this function returns with that error.
  */
-inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(ecma_value_t)
 ecma_op_object_put (ecma_object_t *object_p, /**< the object */
                     ecma_string_t *property_name_p, /**< property name */
                     ecma_value_t value, /**< ecma value */
@@ -2818,7 +2818,7 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
  * @return value of the object if the class matches
  *         ECMA_VALUE_NOT_FOUND otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(bool)
 ecma_object_class_is (ecma_object_t *object_p, /**< object */
                       uint32_t class_id) /**< class id */
 {
@@ -2841,7 +2841,7 @@ ecma_object_class_is (ecma_object_t *object_p, /**< object */
  * @return true - if the given argument is a regexp
  *         false - otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(bool)
 ecma_object_is_regexp_object (ecma_value_t arg) /**< argument */
 {
   return (ecma_is_value_object (arg)
@@ -2983,7 +2983,7 @@ ecma_op_species_constructor (ecma_object_t *this_value, /**< This Value */
  * @return ecma_value result of the invoked function or raised error
  *         note: returned value must be freed with ecma_free_value
  */
-inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(ecma_value_t)
 ecma_op_invoke_by_symbol_id (ecma_value_t object, /**< Object value */
                              lit_magic_string_id_t symbol_id, /**< Symbol ID */
                              ecma_value_t *args_p, /**< Argument list */
@@ -3003,7 +3003,7 @@ ecma_op_invoke_by_symbol_id (ecma_value_t object, /**< Object value */
  * @return ecma_value result of the invoked function or raised error
  *         note: returned value must be freed with ecma_free_value
  */
-inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(ecma_value_t)
 ecma_op_invoke_by_magic_id (ecma_value_t object, /**< Object value */
                             lit_magic_string_id_t magic_string_id, /**< Magic string ID */
                             ecma_value_t *args_p, /**< Argument list */
@@ -3072,7 +3072,7 @@ ecma_op_invoke (ecma_value_t object, /**< Object value */
  *
  * @return the value of the [[Prototype]] internal slot of the given object.
  */
-inline jmem_cpointer_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(jmem_cpointer_t)
 ecma_op_ordinary_object_get_prototype_of (ecma_object_t *obj_p) /**< object */
 {
   JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
@@ -3090,7 +3090,7 @@ ecma_op_ordinary_object_get_prototype_of (ecma_object_t *obj_p) /**< object */
  * @return ECMA_VALUE_FALSE - if the operation fails
  *         ECMA_VALUE_TRUE - otherwise
  */
-inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(ecma_value_t)
 ecma_op_ordinary_object_set_prototype_of (ecma_object_t *obj_p, /**< base object */
                                           ecma_value_t proto) /**< prototype object */
 {
@@ -3172,7 +3172,7 @@ ecma_op_ordinary_object_set_prototype_of (ecma_object_t *obj_p, /**< base object
  * @return true  - if object is extensible
  *         false - otherwise
  */
-inline bool JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(bool) JERRY_ATTR_PURE
 ecma_op_ordinary_object_is_extensible (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (!ECMA_OBJECT_IS_PROXY (object_p));
@@ -3196,7 +3196,7 @@ ecma_op_ordinary_object_prevent_extensions (ecma_object_t *object_p) /**< object
  * @return true - if property is found
  *         false - otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(bool)
 ecma_op_ordinary_object_has_own_property (ecma_object_t *object_p, /**< the object */
                                           ecma_string_t *property_name_p) /**< property name */
 {

@@ -1973,7 +1973,7 @@ lexer_check_next_characters (parser_context_t *context_p, /**< context */
  *
  * @return consumed character
  */
-inline uint8_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(uint8_t)
 lexer_consume_next_character (parser_context_t *context_p) /**< context */
 {
   JERRY_ASSERT (context_p->source_p < context_p->source_end_p);
@@ -3658,7 +3658,7 @@ lexer_current_is_literal (parser_context_t *context_p, /**< context */
  *
  * @return true if "use strict" is found, false otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(bool)
 lexer_string_is_use_strict (parser_context_t *context_p) /**< context */
 {
   JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
@@ -3674,7 +3674,7 @@ lexer_string_is_use_strict (parser_context_t *context_p) /**< context */
  *
  * @return true if the string is a directive, false otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(bool)
 lexer_string_is_directive (parser_context_t *context_p) /**< context */
 {
   return (context_p->token.type == LEXER_SEMICOLON
@@ -3697,7 +3697,7 @@ lexer_string_is_directive (parser_context_t *context_p) /**< context */
  *
  * @return true if they are the same, false otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(bool)
 lexer_token_is_identifier (parser_context_t *context_p, /**< context */
                            const char *identifier_p, /**< identifier */
                            size_t identifier_length) /**< identifier length */
@@ -3717,7 +3717,7 @@ lexer_token_is_identifier (parser_context_t *context_p, /**< context */
  *
  * @return true if "let" is found, false otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(bool)
 lexer_token_is_let (parser_context_t *context_p) /**< context */
 {
   JERRY_ASSERT (context_p->token.type == LEXER_LITERAL);
@@ -3734,7 +3734,7 @@ lexer_token_is_let (parser_context_t *context_p) /**< context */
  *
  * @return true if "async" is found, false otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(bool)
 lexer_token_is_async (parser_context_t *context_p) /**< context */
 {
   JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
@@ -3754,7 +3754,7 @@ lexer_token_is_async (parser_context_t *context_p) /**< context */
  *
  * @return true if they are the same, false otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(bool)
 lexer_compare_literal_to_string (parser_context_t *context_p, /**< context */
                                  const char *string_p, /**< string */
                                  size_t string_length) /**< string length */

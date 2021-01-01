@@ -38,7 +38,7 @@ re_initialize_regexp_bytecode (re_compiler_ctx_t *re_ctx_p) /**< RegExp bytecode
   re_ctx_p->bytecode_size = initial_size;
 } /* re_initialize_regexp_bytecode */
 
-inline uint32_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(uint32_t)
 re_bytecode_size (re_compiler_ctx_t *re_ctx_p) /**< RegExp bytecode context */
 {
   return (uint32_t) re_ctx_p->bytecode_size;
@@ -101,7 +101,7 @@ re_insert_byte (re_compiler_ctx_t *re_ctx_p, /**< RegExp bytecode context */
 /**
  * Get a single byte and icnrease bytecode position.
  */
-inline uint8_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(uint8_t)
 re_get_byte (const uint8_t **bc_p) /**< pointer to bytecode start */
 {
   return *((*bc_p)++);
@@ -110,7 +110,7 @@ re_get_byte (const uint8_t **bc_p) /**< pointer to bytecode start */
 /**
  * Append a RegExp opcode
  */
-inline void JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(void)
 re_append_opcode (re_compiler_ctx_t *re_ctx_p, /**< RegExp bytecode context */
                   const re_opcode_t opcode) /**< input opcode */
 {
@@ -120,7 +120,7 @@ re_append_opcode (re_compiler_ctx_t *re_ctx_p, /**< RegExp bytecode context */
 /**
  * Insert a RegExp opcode
  */
-inline void JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(void)
 re_insert_opcode (re_compiler_ctx_t *re_ctx_p, /**< RegExp bytecode context */
                   const uint32_t offset, /**< distance from the start of the container */
                   const re_opcode_t opcode) /**< input opcode */
@@ -133,7 +133,7 @@ re_insert_opcode (re_compiler_ctx_t *re_ctx_p, /**< RegExp bytecode context */
  *
  * @return current RegExp opcode
  */
-inline re_opcode_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(re_opcode_t)
 re_get_opcode (const uint8_t **bc_p) /**< pointer to bytecode start */
 {
   return (re_opcode_t) re_get_byte (bc_p);
@@ -254,7 +254,7 @@ re_insert_value (re_compiler_ctx_t *re_ctx_p, /**< RegExp bytecode context */
  *
  * @return decoded value
  */
-inline uint32_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(uint32_t)
 re_get_value (const uint8_t **bc_p) /** refence to bytecode pointer */
 {
   uint32_t value = *(*bc_p)++;
@@ -330,7 +330,7 @@ re_insert_char (re_compiler_ctx_t *re_ctx_p, /**< RegExp bytecode context */
  *
  * @return decoded character
  */
-inline lit_code_point_t JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(lit_code_point_t)
 re_get_char (const uint8_t **bc_p, /**< reference to bytecode pointer */
              bool unicode) /**< full unicode mode */
 {

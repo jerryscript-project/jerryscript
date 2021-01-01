@@ -96,7 +96,7 @@ ecma_op_function_form_name (ecma_string_t *prop_name_p, /**< property name */
  * @return true - if the given object is callable;
  *         false - otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(bool)
 ecma_op_object_is_callable (ecma_object_t *obj_p) /**< ecma object */
 {
   JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
@@ -247,7 +247,7 @@ ecma_object_check_constructor (ecma_object_t *obj_p) /**< ecma object */
  * @return ECMA_IS_VALID_CONSTRUCTOR - if the input value is a constructor.
  *         any other value - if the input value is not a valid constructor, the pointer contains the error message.
  */
-inline char *JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(char *)
 ecma_check_constructor (ecma_value_t value) /**< ecma object */
 {
   if (!ecma_is_value_object (value))
@@ -264,7 +264,7 @@ ecma_check_constructor (ecma_value_t value) /**< ecma object */
  * @return true - if the given object is constructor;
  *         false - otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(bool)
 ecma_object_is_constructor (ecma_object_t *obj_p) /**< ecma object */
 {
   return ecma_object_check_constructor (obj_p) == ECMA_IS_VALID_CONSTRUCTOR;
@@ -757,7 +757,7 @@ ecma_op_function_get_compiled_code (ecma_extended_object_t *function_p) /**< fun
  *
  * @return pointer to realm (global) object
  */
-inline ecma_global_object_t * JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(ecma_global_object_t *)
 ecma_op_function_get_realm (const ecma_compiled_code_t *bytecode_header_p) /**< byte code header */
 {
   ecma_value_t realm_value;

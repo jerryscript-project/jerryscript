@@ -304,7 +304,7 @@ jmem_heap_gc_and_alloc_block (const size_t size, /**< required memory size */
 /**
  * Internal method for allocating a memory block.
  */
-inline void * JERRY_ATTR_HOT JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(void *) JERRY_ATTR_HOT
 jmem_heap_alloc_block_internal (const size_t size) /**< required memory size */
 {
   return jmem_heap_gc_and_alloc_block (size, JMEM_PRESSURE_FULL);
@@ -319,7 +319,7 @@ jmem_heap_alloc_block_internal (const size_t size) /**< required memory size */
  * @return NULL, if the required memory is 0
  *         pointer to allocated memory block, otherwise
  */
-extern inline void * JERRY_ATTR_HOT JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(void *) JERRY_ATTR_HOT
 jmem_heap_alloc_block (const size_t size) /**< required memory size */
 {
   void *block_p = jmem_heap_gc_and_alloc_block (size, JMEM_PRESSURE_FULL);
@@ -337,7 +337,7 @@ jmem_heap_alloc_block (const size_t size) /**< required memory size */
  *         also NULL, if the allocation has failed
  *         pointer to the allocated memory block, otherwise
  */
-inline void * JERRY_ATTR_HOT JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(void *) JERRY_ATTR_HOT
 jmem_heap_alloc_block_null_on_error (const size_t size) /**< required memory size */
 {
   void *block_p = jmem_heap_gc_and_alloc_block (size, JMEM_PRESSURE_HIGH);
@@ -685,7 +685,7 @@ jmem_heap_realloc_block (void *ptr, /**< memory region to reallocate */
 /**
  * Free memory block
  */
-extern inline void JERRY_ATTR_HOT JERRY_ATTR_ALWAYS_INLINE
+JERRY_ALWAYS_INLINE(void) JERRY_ATTR_HOT
 jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the block */
                       const size_t size) /**< size of allocated region */
 {

@@ -44,7 +44,7 @@
  *
  * @return pointer to the internal buffer
  */
-static inline ecma_collection_t *
+static inline ecma_collection_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_op_create_internal_buffer (void)
 {
   ecma_collection_t *collection_p = ecma_new_collection ();
@@ -80,7 +80,7 @@ ecma_op_internal_buffer_append (ecma_collection_t *container_p, /**< internal co
 /**
  * Update the value of a given entry.
  */
-static inline void
+static inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_op_internal_buffer_update (ecma_value_t *entry_p, /**< entry pointer */
                                 ecma_value_t value_arg, /**< value argument */
                                 lit_magic_string_id_t lit_id) /**< class id */

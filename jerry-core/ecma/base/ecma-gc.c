@@ -110,7 +110,7 @@ ecma_gc_set_object_visited (ecma_object_t *object_p) /**< object */
 /**
  * Initialize GC information for the object
  */
-inline void
+inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_init_gc_info (ecma_object_t *object_p) /**< object */
 {
   JERRY_CONTEXT (ecma_gc_objects_number)++;

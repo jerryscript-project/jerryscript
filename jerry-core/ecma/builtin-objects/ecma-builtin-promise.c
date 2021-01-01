@@ -72,7 +72,7 @@ enum
  * @return ecma value of the new promise.
  *         Returned value must be freed with ecma_free_value.
  */
-inline static ecma_value_t
+inline static ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_builtin_promise_reject_abrupt (ecma_value_t value, /**< value */
                                     ecma_object_t *capability_obj_p) /**< capability */
 {
@@ -111,7 +111,7 @@ ecma_builtin_promise_reject_abrupt (ecma_value_t value, /**< value */
  * @return ecma value of the new promise.
  *         Returned value must be freed with ecma_free_value.
  */
-inline static ecma_value_t
+inline static ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_builtin_promise_perform_race (ecma_value_t iterator, /**< the iterator for race */
                                    ecma_value_t next_method, /**< next method */
                                    ecma_object_t *capability_obj_p, /**< PromiseCapability record */
@@ -209,7 +209,7 @@ exit:
  * @return ecma value of the new promise.
  *         Returned value must be freed with ecma_free_value.
  */
-inline static ecma_value_t
+inline static ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_builtin_promise_perform_all (ecma_value_t iterator, /**< iteratorRecord */
                                   ecma_value_t next_method, /**< next method */
                                   ecma_object_t *capability_obj_p,  /**< PromiseCapability record */

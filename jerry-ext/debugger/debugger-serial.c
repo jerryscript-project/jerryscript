@@ -52,7 +52,7 @@ typedef struct
 /**
  * Correctly close a file descriptor.
  */
-static inline void
+static inline void JERRY_ATTR_ALWAYS_INLINE
 jerryx_debugger_serial_close_fd (int fd) /**< file descriptor to close */
 {
   if (close (fd) != 0)
@@ -102,7 +102,7 @@ jerryx_debugger_serial_set_blocking (int fd, bool blocking)
  * @return true if everything is ok
  *         false if there was an error
  */
-static inline bool
+static inline bool JERRY_ATTR_ALWAYS_INLINE
 jerryx_debugger_serial_configure_attributes (int fd, jerryx_debugger_transport_serial_config_t serial_config)
 {
   struct termios options;

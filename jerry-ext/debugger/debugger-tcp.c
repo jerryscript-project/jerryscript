@@ -71,7 +71,7 @@ typedef struct
  *
  * @return last error value.
  */
-static inline int
+static inline int JERRY_ATTR_ALWAYS_INLINE
 jerryx_debugger_tcp_get_errno (void)
 {
 #ifdef WIN32
@@ -84,7 +84,7 @@ jerryx_debugger_tcp_get_errno (void)
 /**
  * Correctly close a single socket.
  */
-static inline void
+static inline void JERRY_ATTR_ALWAYS_INLINE
 jerryx_debugger_tcp_close_socket (jerryx_socket socket_id) /**< socket to close */
 {
 #ifdef WIN32

@@ -169,7 +169,7 @@ ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< out
  * @return true  - if object is a lexical environment
  *         false - otherwise
  */
-inline bool JERRY_ATTR_PURE
+inline bool JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_is_lexical_environment (const ecma_object_t *object_p) /**< object or lexical environment */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -182,7 +182,7 @@ ecma_is_lexical_environment (const ecma_object_t *object_p) /**< object or lexic
 /**
  * Set value of [[Extensible]] object's internal property.
  */
-inline void
+inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_op_ordinary_object_set_extensible (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -196,7 +196,7 @@ ecma_op_ordinary_object_set_extensible (ecma_object_t *object_p) /**< object */
  *
  * @return type of the object (ecma_object_type_t)
  */
-inline ecma_object_type_t JERRY_ATTR_PURE
+inline ecma_object_type_t JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_get_object_type (const ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -211,7 +211,7 @@ ecma_get_object_type (const ecma_object_t *object_p) /**< object */
  * @return true  - if object is a built-in object
  *         false - otherwise
  */
-inline bool JERRY_ATTR_PURE
+inline bool JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_get_object_is_builtin (const ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -223,7 +223,7 @@ ecma_get_object_is_builtin (const ecma_object_t *object_p) /**< object */
 /**
  * Set flag indicating whether the object is a built-in object
  */
-inline void
+inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_set_object_is_builtin (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -239,7 +239,7 @@ ecma_set_object_is_builtin (ecma_object_t *object_p) /**< object */
  *
  * @return the ID of the built-in
  */
-inline uint8_t
+inline uint8_t JERRY_ATTR_ALWAYS_INLINE
 ecma_get_object_builtin_id (ecma_object_t *object_p) /**< object */
 {
   if (!ecma_get_object_is_builtin (object_p))
@@ -267,7 +267,7 @@ ecma_get_object_builtin_id (ecma_object_t *object_p) /**< object */
  *
  * @return type of the lexical environment (ecma_lexical_environment_type_t)
  */
-inline ecma_lexical_environment_type_t JERRY_ATTR_PURE
+inline ecma_lexical_environment_type_t JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_get_lex_env_type (const ecma_object_t *object_p) /**< lexical environment */
 {
   JERRY_ASSERT (object_p != NULL);
@@ -281,7 +281,7 @@ ecma_get_lex_env_type (const ecma_object_t *object_p) /**< lexical environment *
  *
  * @return pointer to ecma object
  */
-inline ecma_object_t *JERRY_ATTR_PURE
+inline ecma_object_t * JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_get_lex_env_binding_object (const ecma_object_t *object_p) /**< object-bound lexical environment */
 {
   JERRY_ASSERT (object_p != NULL);

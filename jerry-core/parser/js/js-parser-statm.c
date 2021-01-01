@@ -256,7 +256,7 @@ typedef struct
  *
  * @return size consumed by a statement.
  */
-static inline size_t
+static inline size_t JERRY_ATTR_ALWAYS_INLINE
 parser_statement_length (uint8_t type) /**< type of statement */
 {
   static const uint8_t statement_lengths[] =
@@ -310,7 +310,7 @@ parser_statement_length (uint8_t type) /**< type of statement */
 /**
  * Parse expression enclosed in parens.
  */
-static inline void
+static inline void JERRY_ATTR_ALWAYS_INLINE
 parser_parse_enclosed_expr (parser_context_t *context_p) /**< context */
 {
   lexer_next_token (context_p);

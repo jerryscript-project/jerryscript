@@ -2647,7 +2647,7 @@ ecma_builtin_is (ecma_object_t *object_p, /**< pointer to an object */
  * @return true  - if class name is an object
  *         false - otherwise
  */
-inline static bool
+static inline bool
 ecma_object_check_class_name_is_object (ecma_object_t *obj_p) /**< object */
 {
 #ifndef JERRY_NDEBUG

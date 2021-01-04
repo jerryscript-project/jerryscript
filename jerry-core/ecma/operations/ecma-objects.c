@@ -1523,6 +1523,15 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
       }
     }
 
+#if ENABLED (JERRY_BUILTIN_PROXY)
+    if (create_new_property
+        && ecma_is_value_object (receiver)
+        && ECMA_OBJECT_IS_PROXY (ecma_get_object_from_value (receiver)))
+    {
+      return ecma_op_object_put_apply_receiver (receiver, property_name_p, value, is_throw);
+    }
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+
     if (create_new_property
         && ecma_op_ordinary_object_is_extensible (object_p))
     {

@@ -9655,7 +9655,6 @@
   <test id="built-ins/NativeErrors/SyntaxError/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/NativeErrors/TypeError/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/NativeErrors/URIError/proto-from-ctor-realm.js"><reason></reason></test>
-  <test id="built-ins/Proxy/defineProperty/targetdesc-undefined-target-is-not-extensible-realm.js"><reason></reason></test>
   <test id="built-ins/Proxy/get-fn-realm-recursive.js"><reason></reason></test>
   <test id="built-ins/Proxy/get-fn-realm.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/dotAll/cross-realm.js"><reason></reason></test>

@@ -104,7 +104,7 @@ LINKFLAGS_eagle.app.v6 =				\
 	-lwps						\
 	-L./libs					\
 	-ljerry-core					\
-	-ljerry-libm					\
+	-ljerry-math					\
 	$(DEP_LIBS_eagle.app.v6)			\
 	-Wl,--end-group
 
@@ -113,7 +113,7 @@ DEPENDS_eagle.app.v6 =					\
 	$(LDDIR)/eagle.rom.addr.v6.ld			\
 	./include/jerry-targetjs.h			\
 	./libs/libjerry-core.a				\
-	./libs/libjerry-libm.a
+	./libs/libjerry-math.a
 
 
 #############################################################

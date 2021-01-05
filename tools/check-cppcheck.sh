@@ -25,11 +25,11 @@ fi
 JERRY_CORE_DIRS=`find jerry-core -type d`
 JERRY_EXT_DIRS=`find jerry-ext -type d`
 JERRY_PORT_DIRS=`find jerry-port -type d`
-JERRY_LIBM_DIRS=`find jerry-libm -type d`
+JERRY_MATH_DIRS=`find jerry-math -type d`
 
 
 INCLUDE_DIRS=()
-for DIR in $JERRY_CORE_DIRS $JERRY_EXT_DIRS $JERRY_PORT_DIRS $JERRY_LIBM_DIRS
+for DIR in $JERRY_CORE_DIRS $JERRY_EXT_DIRS $JERRY_PORT_DIRS $JERRY_MATH_DIRS
 do
   INCLUDE_DIRS=("${INCLUDE_DIRS[@]}" "-I$DIR")
 done
@@ -44,4 +44,4 @@ cppcheck -j$CPPCHECK_JOBS --force \
   --exitcode-suppressions=tools/cppcheck/suppressions-list \
   --suppressions-list=tools/cppcheck/suppressions-list \
   "${INCLUDE_DIRS[@]}" \
-  jerry-core jerry-ext jerry-port jerry-libm jerry-main tests/unit-*
+  jerry-core jerry-ext jerry-port jerry-math jerry-main tests/unit-*

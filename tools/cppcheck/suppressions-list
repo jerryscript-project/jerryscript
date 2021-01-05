@@ -1,6 +1,6 @@
-wrongmathcall:tests/unit-libm/test-libm.inc.h
-variableScope:jerry-libm/*.c
-invalidPointerCast:jerry-libm/*.c
+wrongmathcall:tests/unit-math/test-math.inc.h
+variableScope:jerry-math/*.c
+invalidPointerCast:jerry-math/*.c
 
 ConfigurationNotChecked:jerry-core/ecma/builtin-objects/ecma-builtin-global.inc.h
 ConfigurationNotChecked:jerry-core/ecma/builtin-objects/ecma-builtin-helpers-macro-defines.inc.h

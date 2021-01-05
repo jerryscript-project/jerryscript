@@ -53,7 +53,7 @@ set(JERRY_CMDLINE_SNAPSHOT  OFF CACHE BOOL "Build jerry snapshot command line to
 set(JERRY_LIBFUZZER         OFF CACHE BOOL "Build jerry with libfuzzer support?")
 set(JERRY_PORT_DEFAULT      ON  CACHE BOOL "Build default jerry port implementation?")
 set(JERRY_EXT               ON  CACHE BOOL "Build jerry-ext?")
-set(JERRY_LIBM              ON  CACHE BOOL "Build and use jerry-libm?")
+set(JERRY_MATH              ON  CACHE BOOL "Build and use jerry-math?")
 set(UNITTESTS               OFF CACHE BOOL "Build unit tests?")
 set(DOCTESTS                OFF CACHE BOOL "Build doc tests?")
 
@@ -82,21 +82,21 @@ if(JERRY_CMDLINE OR DOCTESTS)
 endif()
 
 if("${PLATFORM}" STREQUAL "DARWIN")
-  set(JERRY_LIBM         OFF)
+  set(JERRY_MATH         OFF)
   set(ENABLE_LTO         OFF)
   set(ENABLE_STRIP       OFF)
 
-  set(JERRY_LIBM_MESSAGE         " (FORCED BY PLATFORM)")
+  set(JERRY_MATH_MESSAGE         " (FORCED BY PLATFORM)")
   set(ENABLE_LTO_MESSAGE         " (FORCED BY PLATFORM)")
   set(ENABLE_STRIP_MESSAGE       " (FORCED BY PLATFORM)")
 endif()
 
 if("${PLATFORM}" STREQUAL "ESP-IDF")
-  set(JERRY_LIBM         OFF)
+  set(JERRY_MATH         OFF)
   set(ENABLE_LTO         OFF)
   set(ENABLE_STRIP       OFF)
 
-  set(JERRY_LIBM_MESSAGE         " (FORCED BY PLATFORM)")
+  set(JERRY_MATH_MESSAGE         " (FORCED BY PLATFORM)")
   set(ENABLE_LTO_MESSAGE         " (FORCED BY PLATFORM)")
   set(ENABLE_STRIP_MESSAGE       " (FORCED BY PLATFORM)")
 endif()
@@ -108,10 +108,10 @@ if(USING_TI)
 endif()
 
 if(USING_MSVC)
-  set(JERRY_LIBM         OFF)
+  set(JERRY_MATH         OFF)
   set(ENABLE_STRIP       OFF)
 
-  set(JERRY_LIBM_MESSAGE         " (FORCED BY COMPILER)")
+  set(JERRY_MATH_MESSAGE         " (FORCED BY COMPILER)")
   set(ENABLE_STRIP_MESSAGE       " (FORCED BY COMPILER)")
 endif()
 
@@ -136,7 +136,7 @@ message(STATUS "JERRY_CMDLINE_SNAPSHOT         " ${JERRY_CMDLINE_SNAPSHOT} ${JER
 message(STATUS "JERRY_LIBFUZZER                " ${JERRY_LIBFUZZER} ${JERRY_LIBFUZZER_MESSAGE})
 message(STATUS "JERRY_PORT_DEFAULT             " ${JERRY_PORT_DEFAULT} ${JERRY_PORT_DEFAULT_MESSAGE})
 message(STATUS "JERRY_EXT                      " ${JERRY_EXT} ${JERRY_EXT_MESSAGE})
-message(STATUS "JERRY_LIBM                     " ${JERRY_LIBM} ${JERRY_LIBM_MESSAGE})
+message(STATUS "JERRY_MATH                     " ${JERRY_MATH} ${JERRY_MATH_MESSAGE})
 message(STATUS "UNITTESTS                      " ${UNITTESTS})
 message(STATUS "DOCTESTS                       " ${DOCTESTS})
 
@@ -257,8 +257,8 @@ endif()
 add_custom_target(generate-single-source)
 
 # Jerry's libm
-if(JERRY_LIBM)
-  add_subdirectory(jerry-libm)
+if(JERRY_MATH)
+  add_subdirectory(jerry-math)
 endif()
 
 # Jerry's core
@@ -282,8 +282,8 @@ endif()
 # Unittests
 if(UNITTESTS)
   add_subdirectory(tests/unit-core)
-  if(JERRY_LIBM)
-    add_subdirectory(tests/unit-libm)
+  if(JERRY_MATH)
+    add_subdirectory(tests/unit-math)
   endif()
   if(JERRY_EXT)
     add_subdirectory(tests/unit-ext)

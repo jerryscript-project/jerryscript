@@ -55,9 +55,9 @@ jerry:
 	 -DEXTERNAL_COMPILE_FLAGS="$(ESP_CFLAGS)" \
 	 -DJERRY_GLOBAL_HEAP_SIZE=$(JERRYHEAP)
 
-	make -C$(BUILD_DIR) jerry-core jerry-libm
+	make -C$(BUILD_DIR) jerry-core jerry-math
 	cp $(BUILD_DIR)/lib/libjerry-core.a $(COPYTARGET)/
-	cp $(BUILD_DIR)/lib/libjerry-libm.a $(COPYTARGET)/
+	cp $(BUILD_DIR)/lib/libjerry-math.a $(COPYTARGET)/
 
 js2c:
 	tools/js2c.py --dest targets/esp8266/include --js-source targets/esp8266/js

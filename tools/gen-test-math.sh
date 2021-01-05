@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright JS Foundation and other contributors, http://js.foundation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,17 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CC=gcc
-LDFLAGS=-lm
-
-GENS=gen-test-math
-
-.PHONY: build
-build: $(GENS)
-
-.PHONY: clean
-clean:
-	rm -f $(GENS)
-
-gen-test-math: gen-test-math.c
-	$(CC) $< -o $@ $(LDFLAGS)
+make -C tools/unit-tests build
+tools/unit-tests/gen-test-math >tests/unit-math/test-math.inc.h
+make -C tools/unit-tests clean

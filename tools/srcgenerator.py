@@ -27,7 +27,7 @@ ROOT_DIR = os.path.dirname(TOOLS_DIR)
 SRCMERGER = os.path.join(TOOLS_DIR, 'srcmerger.py')
 JERRY_CORE = os.path.join(ROOT_DIR, 'jerry-core')
 JERRY_PORT = os.path.join(ROOT_DIR, 'jerry-port', 'default')
-JERRY_LIBM = os.path.join(ROOT_DIR, 'jerry-libm')
+JERRY_MATH = os.path.join(ROOT_DIR, 'jerry-math')
 
 
 def run_commands(*cmds, **kwargs):
@@ -105,17 +105,17 @@ def generate_jerry_port_default(output_dir, verbose=False):
     run_commands(cmd_port_c_gen, cmd_port_h_gen, verbose=verbose)
 
 
-def generate_jerry_libm(output_dir, verbose=False):
-    cmd_libm_c_gen = [
+def generate_jerry_math(output_dir, verbose=False):
+    cmd_math_c_gen = [
         'python', SRCMERGER,
-        '--base-dir', JERRY_LIBM,
-        '--output={}/jerryscript-libm.c'.format(output_dir),
+        '--base-dir', JERRY_MATH,
+        '--output={}/jerryscript-math.c'.format(output_dir),
         '--append-c-files',
     ]
 
-    run_commands(cmd_libm_c_gen, verbose=verbose)
+    run_commands(cmd_math_c_gen, verbose=verbose)
 
-    shutil.copyfile('{}/include/math.h'.format(JERRY_LIBM),
+    shutil.copyfile('{}/include/math.h'.format(JERRY_MATH),
                     '{}/math.h'.format(output_dir))
 
 def main():
@@ -124,8 +124,8 @@ def main():
                         help='Generate jerry-core files', default=False)
     parser.add_argument('--jerry-port-default', action='store_true', dest='jerry_port_default',
                         help='Generate jerry-port-default files', default=False)
-    parser.add_argument('--jerry-libm', action='store_true', dest='jerry_libm',
-                        help='Generate jerry-libm files', default=False)
+    parser.add_argument('--jerry-math', action='store_true', dest='jerry_math',
+                        help='Generate jerry-math files', default=False)
     parser.add_argument('--output-dir', metavar='DIR', type=str, dest='output_dir',
                         default='gen_src', help='Output dir')
     parser.add_argument('--verbose', '-v', action='store_true', default=False)
@@ -146,8 +146,8 @@ def main():
     if args.jerry_port_default:
         generate_jerry_port_default(args.output_dir, args.verbose)
 
-    if args.jerry_libm:
-        generate_jerry_libm(args.output_dir, args.verbose)
+    if args.jerry_math:
+        generate_jerry_math(args.output_dir, args.verbose)
 
 
 if __name__ == '__main__':

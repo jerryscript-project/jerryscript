@@ -22,28 +22,27 @@ set(INCLUDE_PORT_DEFAULT "${CMAKE_CURRENT_SOURCE_DIR}/include")
 # Source directories
 file(GLOB SOURCE_PORT_DEFAULT *.c)
 
-# "Single" JerryScript source/header build.
+# Amalgamated JerryScript source/header build.
 #  The process will create the following files:
 #   * jerryscript-port-default.c
 #   * jerryscript-port-default.h
-if(ENABLE_ALL_IN_ONE_SOURCE)
+if(ENABLE_AMALGAM)
   file(GLOB HEADER_PORT_DEFAULT *.h)
-  set(ALL_IN_FILE "${CMAKE_BINARY_DIR}/src/jerryscript-port-default.c")
-  set(ALL_IN_FILE_H "${CMAKE_BINARY_DIR}/src/jerryscript-port-default.h")
+  set(AMALGAM_PORT_C "${CMAKE_BINARY_DIR}/amalgam/jerryscript-port-default.c")
+  set(AMALGAM_PORT_H "${CMAKE_BINARY_DIR}/amalgam/jerryscript-port-default.h")
 
-  add_custom_command(OUTPUT ${ALL_IN_FILE} ${ALL_IN_FILE_H} ${JERRYSCRIPT_CONFIG_H}
-                     COMMAND python ${CMAKE_SOURCE_DIR}/tools/srcgenerator.py
+  add_custom_command(OUTPUT ${AMALGAM_PORT_C} ${AMALGAM_PORT_H}
+                     COMMAND python ${CMAKE_SOURCE_DIR}/tools/amalgam.py
                              --jerry-port-default
-                             --output-dir ${CMAKE_BINARY_DIR}/src
+                             --output-dir ${CMAKE_BINARY_DIR}/amalgam
                      DEPENDS ${SOURCE_PORT_DEFAULT}
                              ${HEADER_PORT_DEFAULT}
-                             ${CMAKE_SOURCE_DIR}/tools/srcgenerator.py
-                             ${CMAKE_SOURCE_DIR}/tools/srcmerger.py
+                             ${CMAKE_SOURCE_DIR}/tools/amalgam.py
   )
-  add_custom_target(generate-single-source-port DEPENDS ${ALL_IN_FILE} ${ALL_IN_FILE_H})
-  add_dependencies(generate-single-source generate-single-source-port)
+  add_custom_target(amalgam-port DEPENDS ${AMALGAM_PORT_C} ${AMALGAM_PORT_H})
+  add_dependencies(amalgam amalgam-port)
 
-  set(SOURCE_PORT_DEFAULT ${ALL_IN_FILE} ${ALL_IN_FILE_H})
+  set(SOURCE_PORT_DEFAULT ${AMALGAM_PORT_C} ${AMALGAM_PORT_H})
 endif()
 
 # Define _BSD_SOURCE and _DEFAULT_SOURCE

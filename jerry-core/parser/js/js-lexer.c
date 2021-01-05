@@ -2916,7 +2916,8 @@ lexer_construct_function_object (parser_context_t *context_p, /**< context */
  * Construct a regular expression object.
  *
  * Note: In ESNEXT the constructed literal's type can be LEXER_STRING_LITERAL which represents
- * invalid pattern. The string literal contains the thrown error message.
+ * invalid pattern. In this case the lit_object's index contains the thrown error message literal.
+ * Otherwise a new literal is appended to the end of the literal pool.
  */
 void
 lexer_construct_regexp_object (parser_context_t *context_p, /**< context */

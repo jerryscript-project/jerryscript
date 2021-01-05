@@ -63,8 +63,10 @@ def get_arguments():
                           help='add custom argument to CMake')
     buildgrp.add_argument('--compile-flag', metavar='OPT', action='append', default=[],
                           help='add custom compile flag')
-    buildgrp.add_argument('--debug', action='store_const', const='Debug', dest='build_type',
-                          default='MinSizeRel', help='debug build')
+    buildgrp.add_argument('--build-type', metavar='TYPE', default='MinSizeRel',
+                          help='set build type (default: %(default)s)')
+    buildgrp.add_argument('--debug', dest='build_type', action='store_const', const='Debug', default=argparse.SUPPRESS,
+                          help='debug build (alias for --build-type %(const)s)')
     buildgrp.add_argument('--install', metavar='DIR', nargs='?', default=None, const=False,
                           help='install after build (default: don\'t install; '
                                'default directory if install: OS-specific)')

@@ -1,10 +1,6 @@
 name: JerryScript CI
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: [push, pull_request]
 
 env:
   RUNNER: tools/run-tests.py
@@ -154,4 +150,3 @@ jobs:
         run: sudo apt-get install gcc-multilib
       - name: UBSAN - jerry-tests
         run: $RUNNER --jerry-tests $SKIP_LIST $BUILD_OPTIONS -q
-

@@ -1509,7 +1509,8 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
                                                                             &property_ref,
                                                                             ECMA_PROPERTY_GET_NO_OPTIONS);
 
-      if (inherited_property != ECMA_PROPERTY_TYPE_NOT_FOUND)
+      if (inherited_property != ECMA_PROPERTY_TYPE_NOT_FOUND
+          && inherited_property != ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP)
       {
         if (ECMA_PROPERTY_GET_TYPE (inherited_property) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR)
         {

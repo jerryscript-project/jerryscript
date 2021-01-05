@@ -276,7 +276,7 @@ ecma_builtin_typedarray_prototype_reduce_with_direction (ecma_value_t this_arg, 
       return ecma_raise_type_error (ECMA_ERR_MSG ("Initial value cannot be undefined."));
     }
 
-    return arguments_list_p[1];
+    return ecma_copy_value (arguments_list_p[1]);
   }
 
   JERRY_ASSERT (info_p->length > 0);

@@ -42,7 +42,7 @@ make -f ./targets/riot-stm32f4/Makefile.riot
 This will generate the following libraries:
 ```
 /build/bin/release.riotstm32f4/librelease.jerry-core.a
-/build/bin/release.riotstm32f4/librelease.jerry-libm.lib.a
+/build/bin/release.riotstm32f4/librelease.jerry-math.lib.a
 ```
 
 This will copy one library files to `targets/riot-stm32f4/bin` folder:

@@ -410,9 +410,9 @@ if(ENABLE_LTO)
   set(JERRY_CORE_PKGCONFIG_CFLAGS "${JERRY_CORE_PKGCONFIG_CFLAGS} -flto")
 endif()
 
-if(JERRY_LIBM)
-  target_link_libraries(${JERRY_CORE_NAME} jerry-libm)
-  set(JERRY_CORE_PKGCONFIG_REQUIRES libjerry-libm)
+if(JERRY_MATH)
+  target_link_libraries(${JERRY_CORE_NAME} jerry-math)
+  set(JERRY_CORE_PKGCONFIG_REQUIRES libjerry-math)
 endif()
 
 separate_arguments(EXTERNAL_LINK_LIBS)

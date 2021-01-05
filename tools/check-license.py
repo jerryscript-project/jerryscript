@@ -42,7 +42,7 @@ INCLUDE_DIRS = [
     'cmake',
     'jerry-core',
     'jerry-ext',
-    'jerry-libm',
+    'jerry-math',
     'jerry-main',
     'jerry-port',
     'targets',

@@ -75,7 +75,7 @@ make -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101
 This will generate the following libraries:
 ```
 ./build/arduino_101/librelease-cp_minimal.jerry-core.a
-./build/arduino_101/librelease-cp_minimal.jerry-libm.lib.a
+./build/arduino_101/librelease-cp_minimal.jerry-math.lib.a
 ./build/arduino_101/librelease.external-cp_minimal-entry.a
 ```
 

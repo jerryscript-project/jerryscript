@@ -41,7 +41,7 @@ jerryscript/tools/build.py \
     --clean \
     --lto=OFF \
     --jerry-cmdline=OFF \
-    --jerry-libm=ON \
+    --jerry-math=ON \
     --all-in-one=ON \
     --mem-heap=70 \
     --profile=es.next \

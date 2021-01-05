@@ -1,7 +1,7 @@
 cmake/*
 docs/*
-jerry-libm/*
 jerry-main/*
+jerry-math/*
 jerry-port/default/default-date.c
 jerry-port/default/default-io.c
 targets/*

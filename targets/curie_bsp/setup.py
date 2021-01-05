@@ -76,7 +76,7 @@ def build_jerry_data(jerry_path):
     """
     jerry_sources = []
     jerry_dirs = set()
-    for sub_dir in ['jerry-core', 'jerry-libm', os.path.join('targets', 'curie_bsp', 'source')]:
+    for sub_dir in ['jerry-core', 'jerry-math', os.path.join('targets', 'curie_bsp', 'source')]:
         for file in find_sources(os.path.normpath(jerry_path), sub_dir):
             path = os.path.join('jerryscript', file)
             jerry_sources.append(path)
@@ -198,7 +198,7 @@ def create_quark_kbuild(project_path, jerry_path):
     quark_include_paths = [
         'include',
         'jerryscript',
-        os.path.join('jerryscript', 'jerry-libm', 'include'),
+        os.path.join('jerryscript', 'jerry-math', 'include'),
         os.path.join('jerryscript', 'targets' ,'curie_bsp', 'include')
     ] + list(jerry_data['dirs'])
 

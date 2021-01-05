@@ -323,9 +323,6 @@ main_print_unhandled_exception (jerry_value_t error_value) /**< error value */
 
       if (err_line != 0 && err_col > 0 && err_col < SYNTAX_ERROR_MAX_LINE_LENGTH)
       {
-        uint32_t curr_line = 1;
-        uint32_t pos = 0;
-
         /* Temporarily modify the error message, so we can use the path. */
         *path_str_end_p = '\0';
 
@@ -335,38 +332,44 @@ main_print_unhandled_exception (jerry_value_t error_value) /**< error value */
         /* Revert the error message. */
         *path_str_end_p = ':';
 
-        /* 2. seek and print */
-        while (pos < source_size && curr_line < err_line)
+        if (source_p != NULL)
         {
-          if (source_p[pos] == '\n')
+          uint32_t curr_line = 1;
+          uint32_t pos = 0;
+
+          /* 2. seek and print */
+          while (pos < source_size && curr_line < err_line)
           {
-            curr_line++;
+            if (source_p[pos] == '\n')
+            {
+              curr_line++;
+            }
+
+            pos++;
           }
 
-          pos++;
+          /* Print character if:
+          * - The max line length is not reached.
+          * - The current position is valid (it is not the end of the source).
+          * - The current character is not a newline.
+          **/
+          for (uint32_t char_count = 0;
+              (char_count < SYNTAX_ERROR_MAX_LINE_LENGTH) && (pos < source_size) && (source_p[pos] != '\n');
+              char_count++, pos++)
+          {
+            jerry_port_log (JERRY_LOG_LEVEL_ERROR, "%c", source_p[pos]);
+          }
+          jerry_port_log (JERRY_LOG_LEVEL_ERROR, "\n");
+
+          jerry_port_release_source (source_p);
+
+          while (--err_col)
+          {
+            jerry_port_log (JERRY_LOG_LEVEL_ERROR, "~");
+          }
+
+          jerry_port_log (JERRY_LOG_LEVEL_ERROR, "^\n\n");
         }
-
-        /* Print character if:
-         * - The max line length is not reached.
-         * - The current position is valid (it is not the end of the source).
-         * - The current character is not a newline.
-         **/
-        for (uint32_t char_count = 0;
-             (char_count < SYNTAX_ERROR_MAX_LINE_LENGTH) && (pos < source_size) && (source_p[pos] != '\n');
-             char_count++, pos++)
-        {
-          jerry_port_log (JERRY_LOG_LEVEL_ERROR, "%c", source_p[pos]);
-        }
-        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "\n");
-
-        jerry_port_release_source (source_p);
-
-        while (--err_col)
-        {
-          jerry_port_log (JERRY_LOG_LEVEL_ERROR, "~");
-        }
-
-        jerry_port_log (JERRY_LOG_LEVEL_ERROR, "^\n\n");
       }
     }
   }

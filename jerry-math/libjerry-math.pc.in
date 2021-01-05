@@ -1,6 +1,6 @@
 prefix=@CMAKE_INSTALL_PREFIX@
 libdir=${prefix}/lib
-includedir=${prefix}/include/jerry-math
+includedir=${prefix}/include/jerryscript-math
 
 Name: libjerry-math
 Description: JerryScript: lightweight JavaScript engine (minimal math library)

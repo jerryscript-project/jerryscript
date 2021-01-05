@@ -685,6 +685,12 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
     }
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
+    /**
+     * Have the object's prototype here so the object could set it to JMEM_CP_NULL
+     * if the prototype should be ignored (like in case of PROXY).
+     */
+    jmem_cpointer_t proto_cp = object_p->u2.prototype_cp;
+
     switch (object_type)
     {
 #if !ENABLED (JERRY_BUILTIN_REALMS)
@@ -852,8 +858,6 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             }
           }
 
-          jmem_cpointer_t proto_cp = object_p->u2.prototype_cp;
-
           if (proto_cp != JMEM_CP_NULL)
           {
             ecma_gc_set_object_visited (ECMA_GET_NON_NULL_POINTER (ecma_object_t, proto_cp));
@@ -866,18 +870,11 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
       case ECMA_OBJECT_TYPE_PROXY:
       {
         ecma_gc_mark_proxy_object (object_p);
-        /* No need to free the properties of a proxy (there should be none).
-         * Aside from the tag bits every other bit should be zero,
-         */
-        JERRY_ASSERT ((object_p->u1.property_list_cp & ~JMEM_TAG_MASK) == 0);
-
-        jmem_cpointer_t proto_cp = object_p->u2.prototype_cp;
-
-        if (proto_cp != JMEM_CP_NULL)
-        {
-          ecma_gc_set_object_visited (ECMA_GET_NON_NULL_POINTER (ecma_object_t, proto_cp));
-        }
-        return;
+        /* The protoype of the proxy should be "empty" (aside from the tag bits every other bit should be zero). */
+        JERRY_ASSERT ((object_p->u2.prototype_cp & ~JMEM_TAG_MASK) == 0);
+        /* Make sure that the prototype is not checked below. */
+        proto_cp = JMEM_CP_NULL;
+        break;
       }
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
       case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
@@ -1032,8 +1029,6 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
         break;
       }
     }
-
-    jmem_cpointer_t proto_cp = object_p->u2.prototype_cp;
 
     if (proto_cp != JMEM_CP_NULL)
     {
@@ -1649,12 +1644,10 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 #if ENABLED (JERRY_BUILTIN_PROXY)
     case ECMA_OBJECT_TYPE_PROXY:
     {
-      /* No need to free the properties of a proxy (there should be none).
-       * Aside from the tag bits every other bit should be zero,
-       */
-      JERRY_ASSERT ((object_p->u1.property_list_cp & ~JMEM_TAG_MASK) == 0);
-      ecma_dealloc_extended_object (object_p, sizeof (ecma_proxy_object_t));
-      return;
+      /* The protoype of the proxy should be "empty" (aside from the tag bits every other bit should be zero). */
+      JERRY_ASSERT ((object_p->u2.prototype_cp & ~JMEM_TAG_MASK) == 0);
+      ext_object_size = sizeof (ecma_proxy_object_t);
+      break;
     }
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
     case ECMA_OBJECT_TYPE_FUNCTION:

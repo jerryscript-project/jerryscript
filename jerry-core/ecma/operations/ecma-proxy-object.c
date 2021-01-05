@@ -60,9 +60,8 @@ ecma_proxy_create (ecma_value_t target, /**< proxy target */
 
   /* ES2015: 5 - 6. */
   /* ES11+: 3 - 4. */
-  ecma_object_t *obj_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE),
-                                             sizeof (ecma_proxy_object_t),
-                                             ECMA_OBJECT_TYPE_PROXY);
+  /* A Proxy does not have [[Prototype]] value as per standard */
+  ecma_object_t *obj_p = ecma_create_object (NULL, sizeof (ecma_proxy_object_t), ECMA_OBJECT_TYPE_PROXY);
 
   ecma_proxy_object_t *proxy_obj_p = (ecma_proxy_object_t *) obj_p;
 
@@ -70,13 +69,13 @@ ecma_proxy_create (ecma_value_t target, /**< proxy target */
   /* ES11+: 5. */
   if (ecma_op_is_callable (target))
   {
-    ECMA_SET_FIRST_BIT_TO_POINTER_TAG (obj_p->u1.property_list_cp);
+    ECMA_SET_FIRST_BIT_TO_POINTER_TAG (obj_p->u2.prototype_cp);
 
     /* ES2015: 7.b. */
     /* ES11+: 5.b. */
     if (ecma_is_constructor (target))
     {
-      ECMA_SET_SECOND_BIT_TO_POINTER_TAG (obj_p->u1.property_list_cp);
+      ECMA_SET_SECOND_BIT_TO_POINTER_TAG (obj_p->u2.prototype_cp);
     }
   }
 

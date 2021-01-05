@@ -148,6 +148,79 @@ set_function (jerry_value_t target, /**< target object */
   jerry_release_value (function_val);
 } /* set_function */
 
+struct test_data
+{
+  int value;
+};
+
+static void
+proxy_native_freecb (void *user_p)
+{
+  TEST_ASSERT (user_p != NULL);
+  struct test_data *native_p = (struct test_data *) user_p;
+  native_p->value = -1;
+} /* proxy_native_freecb */
+
+static const jerry_object_native_info_t proxy_native_info =
+{
+  .free_cb = proxy_native_freecb,
+};
+
+static jerry_value_t
+proxy_native_handler_get (const jerry_value_t function_obj, /**< function object */
+                          const jerry_value_t this_val, /**< this arg */
+                          const jerry_value_t args_p[], /**< function arguments */
+                          const jerry_length_t args_count) /**< number of function arguments */
+{
+  JERRY_UNUSED (function_obj);
+  JERRY_UNUSED (this_val);
+  TEST_ASSERT (args_count == 3);
+
+  /* 3rd argument (Receiver) should be the Proxy here. */
+  jerry_value_t receiver = args_p[2];
+  TEST_ASSERT (jerry_value_is_proxy (receiver));
+
+  /* Check if proxy has the native ptr. */
+  struct test_data *native_p;
+  bool has_p = jerry_get_object_native_pointer (receiver, (void *) &native_p, &proxy_native_info);
+  TEST_ASSERT (has_p == true);
+
+  native_p->value <<= 1;
+  return jerry_create_number (native_p->value);
+} /* proxy_native_handler_get */
+
+/**
+ * Test Proxy with added native object.
+ */
+static void
+test_proxy_native (void)
+{
+  jerry_value_t handler = jerry_create_object ();
+  set_function (handler, "get", proxy_native_handler_get);
+
+  jerry_value_t target = jerry_create_object ();
+  jerry_value_t proxy = jerry_create_proxy (target, handler);
+
+  struct test_data *data = (struct test_data *) malloc (sizeof (struct test_data));
+  data->value = 2;
+  jerry_set_object_native_pointer (proxy, data, &proxy_native_info);
+
+  /* Call: proxy[10] */
+  jerry_value_t result_for_10 = jerry_get_property_by_index (proxy, 10);
+  TEST_ASSERT (jerry_value_is_number (result_for_10));
+  TEST_ASSERT (jerry_get_number_value (result_for_10) == 4.0);
+
+  /* Call: proxy[5] */
+  data->value = 8;
+  jerry_value_t result_for_5 = jerry_get_property_by_index (proxy, 5);
+  TEST_ASSERT (jerry_value_is_number (result_for_5));
+  TEST_ASSERT (jerry_get_number_value (result_for_5) == 16.0);
+
+  jerry_release_value (handler);
+  jerry_release_value (target);
+  jerry_release_value (proxy);
+} /* test_proxy_native */
+
 int
 main (void)
 {
@@ -291,6 +364,8 @@ main (void)
 
   jerry_release_value (proxy);
   jerry_release_value (target);
+
+  test_proxy_native ();
 
   jerry_cleanup ();
   return 0;

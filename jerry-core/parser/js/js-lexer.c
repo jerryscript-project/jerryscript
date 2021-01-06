@@ -1330,8 +1330,11 @@ lexer_check_numbers (parser_context_t *context_p, /**< context */
     if (*source_p != source_end_p && *source_p[0] == LIT_CHAR_UNDERSCORE)
     {
       *source_p += 1;
-      if (is_legacy || *source_p[0] == LIT_CHAR_UNDERSCORE
-          || *source_p[0] > digit_max || *source_p[0] < LIT_CHAR_0)
+      if (is_legacy
+          || *source_p == source_end_p
+          || *source_p[0] == LIT_CHAR_UNDERSCORE
+          || *source_p[0] > digit_max
+          || *source_p[0] < LIT_CHAR_0)
       {
         parser_raise_error (context_p, PARSER_ERR_INVALID_UNDERSCORE_IN_NUMBER);
       }

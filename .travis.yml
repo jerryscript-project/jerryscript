@@ -11,21 +11,6 @@ script: tools/run-tests.py $OPTS
 # All the job definitions in the matrix.
 matrix:
   include:
-    - name: "Linux/ARM Build & Correctness Tests"
-      env:
-        - OPTS="--quiet --jerry-tests --toolchain=cmake/toolchain_linux_armv7l.cmake --buildoptions=--linker-flag=-static"
-        - RUNTIME=qemu-arm-static
-        - TIMEOUT=300
-      addons:
-        apt:
-          packages: [gcc-arm-linux-gnueabihf, libc6-dev-armhf-cross, qemu-user-static]
-
-    - name: "Linux/AArch64 Native Build & Correctness Tests"
-      arch: arm64
-      env:
-        - OPTS="--quiet --jerry-tests --buildoptions=--linker-flag=-static"
-        - TIMEOUT=300
-
     - name: "Coverity Scan & SonarQube"
       env:
         # Declaration of the encrypted COVERITY_SCAN_TOKEN, created via the
@@ -46,50 +31,6 @@ matrix:
       cache:
         directories:
           - '${HOME}/.sonar/cache'
-
-    - name: "Mbed OS 5/K64F Build Test"
-      addons:
-        apt:
-          sources:
-            - sourceline: ppa:team-gcc-arm-embedded/ppa
-          packages: [gcc-arm-embedded]
-      language: python # NOTE: only way to ensure python>=2.7.10 on Trusty image
-      python: 3.6
-      install: make -f ./targets/mbedos5/Makefile.travis install
-      script: make -f ./targets/mbedos5/Makefile.travis script
-
-    - name: "Zephyr/Arduino 101 Build Test"
-      language: python # NOTE: only way to ensure python>=2.7.10 on Trusty image
-      python: 3.6
-      install: make -f ./targets/zephyr/Makefile.travis install-noapt
-      script: make -f ./targets/zephyr/Makefile.travis script
-      addons:
-        apt:
-          packages: [gperf, dfu-util, device-tree-compiler]
-
-    - name: "NuttX/STM32F4 Build Test"
-      install: make -f targets/nuttx-stm32f4/Makefile.travis install-noapt
-      script: make -f targets/nuttx-stm32f4/Makefile.travis script
-      addons:
-        apt:
-          packages: [gcc-arm-none-eabi, libnewlib-arm-none-eabi, gperf]
-
-    - name: "RIOT/STM32F4 Build Test"
-      install: make -f ./targets/riot-stm32f4/Makefile.travis install-noapt
-      script: make -f ./targets/riot-stm32f4/Makefile.travis script
-      compiler: clang-3.9
-      addons:
-        apt:
-          sources:
-            - sourceline: ppa:team-gcc-arm-embedded/ppa
-          packages: [clang-3.9, gcc-arm-embedded, gcc-multilib]
-
-    - name: "ESP8266 Build Test"
-      install: make -f ./targets/esp8266/Makefile.travis install-noapt
-      script: make -f ./targets/esp8266/Makefile.travis script
-      addons:
-        apt:
-          packages: [wget]
 
   fast_finish: true
 

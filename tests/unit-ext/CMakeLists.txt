@@ -18,7 +18,20 @@ project (unit-ext C)
 set(INCLUDE_UNIT_EXT ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Unit tests main modules
-file(GLOB SOURCE_UNIT_TEST_EXT_MODULES *.c)
+set(SOURCE_UNIT_TEST_EXT_MODULES
+  test-ext-arg.c
+  test-ext-handle-scope-handle-prelist.c
+  test-ext-module-empty.c
+  test-ext-autorelease.c
+  test-ext-handle-scope-nested.c
+  test-ext-handle-scope.c
+  test-ext-handle-scope-escape.c
+  test-ext-method-register.c
+  test-ext-handle-scope-handle-prelist-escape.c
+  test-ext-handle-scope-remove.c
+  test-ext-handle-scope-root.c
+  test-ext-module-canonical.c
+)
 
 # Disable test-ext-autorelease.c if compiler is MSVC, because MSVC doesn't support cleanup attribute.
 if(USING_MSVC)
@@ -41,9 +54,10 @@ foreach(SOURCE_UNIT_TEST_EXT ${SOURCE_UNIT_TEST_EXT_MODULES})
   add_dependencies(unittests-ext ${TARGET_NAME})
 endforeach()
 
-file(GLOB CONTENTS_UNIT_TEST_EXT *)
-foreach(CONTENT_UNIT_TEST_EXT ${CONTENTS_UNIT_TEST_EXT})
-  if(IS_DIRECTORY ${CONTENT_UNIT_TEST_EXT})
-    add_subdirectory(${CONTENT_UNIT_TEST_EXT})
-  endif()
+set(UNIT_TEST_EXT_DIRS
+  module
+)
+
+foreach(UNIT_TEST_EXT_DIR ${UNIT_TEST_EXT_DIRS})
+  add_subdirectory(${UNIT_TEST_EXT_DIR})
 endforeach()

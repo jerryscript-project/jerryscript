@@ -16,7 +16,11 @@ cmake_minimum_required (VERSION 2.8.12)
 set(JERRYX_MODULE_UNITTEST_NAME unit-test-jerry-module)
 project (${JERRYX_MODULE_UNITTEST_NAME} C)
 
-file(GLOB JERRYX_MODULE_UNIT_TEST_SOURCES *.c)
+set(JERRYX_MODULE_UNIT_TEST_SOURCES
+  jerry-module-test.c
+  my-broken-module.c
+  my-custom-module.c
+)
 
 if (FEATURE_INIT_FINI)
   set(DEFINES_JERRYX_MODULE_UNITTEST ${DEFINES_JERRYX_MODULE_UNITTEST} ENABLE_INIT_FINI)

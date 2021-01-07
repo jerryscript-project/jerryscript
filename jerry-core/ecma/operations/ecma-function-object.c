@@ -106,7 +106,7 @@ ecma_op_object_is_callable (ecma_object_t *obj_p) /**< ecma object */
 #if ENABLED (JERRY_BUILTIN_PROXY)
   if (ECMA_OBJECT_TYPE_IS_PROXY (type))
   {
-    return ECMA_GET_FIRST_BIT_FROM_POINTER_TAG (obj_p->u1.property_list_cp) != 0;
+    return ECMA_GET_FIRST_BIT_FROM_POINTER_TAG (obj_p->u2.prototype_cp) != 0;
   }
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
@@ -215,7 +215,7 @@ ecma_object_check_constructor (ecma_object_t *obj_p) /**< ecma object */
 #if ENABLED (JERRY_BUILTIN_PROXY)
   if (ECMA_OBJECT_TYPE_IS_PROXY (type))
   {
-    if (ECMA_GET_SECOND_BIT_FROM_POINTER_TAG (obj_p->u1.property_list_cp) == 0)
+    if (ECMA_GET_SECOND_BIT_FROM_POINTER_TAG (obj_p->u2.prototype_cp) == 0)
     {
       return ECMA_ERR_MSG ("Proxy target is not a constructor.");
     }

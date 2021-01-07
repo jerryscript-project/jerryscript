@@ -250,11 +250,16 @@ var handler = {
 };
 
 var p = new Proxy(r, handler);
-assert (search.call(p, "bba") === 2);
+try {
+  search.call(p, "bba");
+  assert (false);
+} catch (e) {
+  assert (e instanceof TypeError);
+}
 
-assert (get_calls.join(",") === "lastIndex,exec,lastIndex");
-assert (set_calls.join(",") === "lastIndex,lastIndex");
-assert (r.lastIndex === 3.14);
+assert (get_calls.join(",") === "lastIndex");
+assert (set_calls.join(",") === "lastIndex");
+assert (r.lastIndex === 0);
 
 var o = {
   get lastIndex() {

@@ -1263,6 +1263,11 @@ ecma_proxy_object_set (ecma_object_t *obj_p, /**< proxy object */
   /* 11. */
   if (!boolean_trap_result)
   {
+    if (is_strict)
+    {
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Proxy trap returned falsish"));
+    }
+
     return ECMA_VALUE_FALSE;
   }
 

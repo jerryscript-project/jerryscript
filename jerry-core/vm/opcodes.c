@@ -68,6 +68,13 @@ vm_var_decl (ecma_object_t *lex_env_p, /**< target lexical environment */
                                                                     var_name_str_p,
                                                                     is_configurable_bindings);
 
+#if ENABLED (JERRY_BUILTIN_PROXY)
+    if (ECMA_IS_VALUE_ERROR (completion_value))
+    {
+      return completion_value;
+    }
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+
     JERRY_ASSERT (ecma_is_value_empty (completion_value));
 
     /* Skipping SetMutableBinding as we have already checked that there were not

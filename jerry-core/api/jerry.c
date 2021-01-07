@@ -4043,7 +4043,8 @@ jerry_object_get_property_names (const jerry_value_t obj_val, /**< object */
   return ecma_op_new_array_object_from_collection (result_p, false);
 } /* jerry_object_get_property_names */
 
-/** FromPropertyDescriptor abstract operation.
+/**
+ * FromPropertyDescriptor abstract operation.
  *
  * @return new jerry_value_t - if success
  *         value marked with error flag - otherwise
@@ -4066,41 +4067,31 @@ jerry_from_property_descriptor (const jerry_property_descriptor_t *src_prop_desc
 } /* jerry_from_property_descriptor */
 
 /**
-* ToPropertyDescriptor abstract operation.
-*
-* @return thrown error - if any conversion error happens
-*        ECMA_VALUE_TRUE - otherwise.
-*/
-bool
+ * ToPropertyDescriptor abstract operation.
+ *
+ * @return true - if the conversion is successful
+ *         thrown error - otherwise
+ */
+jerry_value_t
 jerry_to_property_descriptor (jerry_value_t obj_value, /**< object value */
-                             jerry_property_descriptor_t *out_prop_desc_p) /**< [out] filled property descriptor
-                                                                               if return value is normal
-                                                                               empty completion value */
+                              jerry_property_descriptor_t *out_prop_desc_p) /**< [out] filled property descriptor
+                                                                             *   if return value is true,
+                                                                             *   unmodified otherwise */
 {
   jerry_assert_api_available ();
-
-  if (!ecma_is_value_object (obj_value))
-  {
-    jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
-  }
 
   ecma_property_descriptor_t prop_desc;
   jerry_value_t result = ecma_op_to_property_descriptor (obj_value, &prop_desc);
 
   if (ECMA_IS_VALUE_ERROR (result))
   {
-    return false;
+    return jerry_throw (result);
   }
+
+  JERRY_ASSERT (result == ECMA_VALUE_EMPTY);
+
   *out_prop_desc_p = jerry_property_descriptor_from_ecma (&prop_desc);
-
-  if (ECMA_IS_VALUE_ERROR (out_prop_desc_p->value))
-  {
-    jerry_release_value (result);
-    return false;
-  }
-
-  jerry_release_value (result);
-  return true;
+  return ECMA_VALUE_TRUE;
 } /* jerry_to_property_descriptor */
 
 /**

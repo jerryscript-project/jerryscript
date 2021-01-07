@@ -717,14 +717,13 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_des
  * See also:
  *          ECMA-262 v5, 8.10.5
  *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
+ * @return ECMA_VALUE_EMPTY if successful, ECMA_VALUE_ERROR otherwise
  */
 ecma_value_t
 ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
                                 ecma_property_descriptor_t *out_prop_desc_p) /**< [out] filled property descriptor
-                                                                                  if return value is normal
-                                                                                  empty completion value */
+                                                                              *   if the operation is successful,
+                                                                              *   unmodified otherwise */
 {
   /* 1. */
   if (!ecma_is_value_object (obj_value))

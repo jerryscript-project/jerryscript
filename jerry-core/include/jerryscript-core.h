@@ -663,7 +663,7 @@ bool jerry_foreach_object_property (const jerry_value_t obj_val, jerry_object_pr
 
 jerry_value_t jerry_object_get_property_names (const jerry_value_t obj_val, jerry_property_filter_t filter);
 jerry_value_t jerry_from_property_descriptor (const jerry_property_descriptor_t *src_prop_desc_p);
-bool jerry_to_property_descriptor (jerry_value_t obj_value, jerry_property_descriptor_t *out_prop_desc_p);
+jerry_value_t jerry_to_property_descriptor (jerry_value_t obj_value, jerry_property_descriptor_t *out_prop_desc_p);
 /**
  * Promise functions.
  */

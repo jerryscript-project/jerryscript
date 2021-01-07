@@ -1412,6 +1412,11 @@ ecma_bigint_shift (ecma_value_t left_value, /**< left BigInt value */
     {
       return ecma_bigint_raise_memory_error ();
     }
+    else if (left_p->u.bigint_sign_and_size & ECMA_BIGINT_SIGN)
+    {
+      /* Shifting a negative value with a very big number to the right should be -1. */
+      return ecma_bigint_create_from_digit (1, true);
+    }
 
     return ECMA_BIGINT_ZERO;
   }

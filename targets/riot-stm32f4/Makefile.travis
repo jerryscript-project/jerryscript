@@ -23,11 +23,11 @@ all:
 
 # Install cross-compiler via apt.
 install-apt-get-deps:
-	sudo apt-get install -q -y clang-3.9 gcc-arm-embedded gcc-multilib
+	sudo apt-get install -q -y clang gcc-arm-embedded gcc-multilib
 
 # Fetch RIOT OS repository.
 install-clone-riot:
-	git clone git://github.com/RIOT-OS/RIOT.git ../RIOT -b 2019.01
+	git clone git://github.com/RIOT-OS/RIOT.git ../RIOT -b 2020.01
 
 # Perform all the necessary (JerryScript-independent) installation steps.
 install-noapt: install-clone-riot

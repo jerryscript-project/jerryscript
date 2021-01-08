@@ -125,3 +125,85 @@ jobs:
           $RUNNER -q --jerry-tests
           --buildoptions=--compile-flag=-fsanitize=undefined,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--debug,--system-allocator=on,--linker-flag=-fuse-ld=gold
           --skip-list=parser-oom.js,parser-oom2.js
+
+  Linux_ARMv7l_Tests:
+    runs-on: ubuntu-latest
+    env:
+      RUNTIME: qemu-arm-static
+      TIMEOUT: 300
+    steps:
+      - uses: actions/checkout@v2
+      - run: sudo apt update
+      - run: sudo apt install gcc-arm-linux-gnueabihf libc6-dev-armhf-cross qemu-user-static
+      - run: >-
+          $RUNNER -q --jerry-tests
+          --buildoptions=--toolchain=cmake/toolchain_linux_armv7l.cmake,--linker-flag=-static
+
+  Linux_AArch64_Tests:
+    runs-on: ubuntu-latest
+    env:
+      RUNTIME: qemu-aarch64-static
+      TIMEOUT: 300
+    steps:
+      - uses: actions/checkout@v2
+      - run: sudo apt update
+      - run: sudo apt install gcc-aarch64-linux-gnu libc6-dev-armhf-cross qemu-user-static
+      - run: >-
+          $RUNNER -q --jerry-tests
+          --buildoptions=--toolchain=cmake/toolchain_linux_aarch64.cmake,--linker-flag=-static
+
+  MbedOS5_K64F_Build_Test:
+    runs-on: ubuntu-18.04 # needed due to ppa:team-gcc-arm-embedded/ppa
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8' # needed due to 'intelhex' module
+      - run: sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa
+      - run: sudo apt update
+      - run: sudo apt install gcc-arm-embedded python3-setuptools
+      - run: make -f ./targets/mbedos5/Makefile.travis install
+      - run: make -f ./targets/mbedos5/Makefile.travis script
+
+  Zephyr_Arduino_101_Build_Test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - run: sudo apt update
+      - run: sudo apt install gperf dfu-util device-tree-compiler
+      - run: make -f ./targets/zephyr/Makefile.travis install
+      - run: make -f ./targets/zephyr/Makefile.travis script
+
+  NuttX_STM32F4_Build_Test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: sudo apt update
+      - run: sudo apt install gcc-arm-none-eabi libnewlib-arm-none-eabi gperf
+      - run: make -f ./targets/nuttx-stm32f4/Makefile.travis install-noapt
+      - run: make -f ./targets/nuttx-stm32f4/Makefile.travis script
+
+  RIOT_STM32F4_Build_Test:
+    runs-on: ubuntu-18.04 # needed due to ppa:team-gcc-arm-embedded/ppa
+    env:
+      CC: clang
+    steps:
+      - uses: actions/checkout@v2
+      - run: sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa
+      - run: sudo apt update
+      - run: sudo apt install clang gcc-arm-embedded gcc-multilib
+      - run: make -f ./targets/riot-stm32f4/Makefile.travis install-noapt
+      - run: make -f ./targets/riot-stm32f4/Makefile.travis script
+
+  ESP8266_Build_Test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '2.7' # needed due to ESP8266_RTOS_SDK/tools/gen_appbin.py
+      - run: make -f ./targets/esp8266/Makefile.travis install-noapt
+      - run: make -f ./targets/esp8266/Makefile.travis script

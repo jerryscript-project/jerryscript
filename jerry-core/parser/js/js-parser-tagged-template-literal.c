@@ -110,6 +110,16 @@ parser_new_tagged_template_literal (ecma_object_t **raw_strings_p) /**< [out] ra
   ecma_object_t *template_obj_p = ecma_op_new_array_object (0);
   *raw_strings_p = ecma_op_new_array_object (0);
 
+  ecma_extended_object_t *template_ext_obj_p = (ecma_extended_object_t *) template_obj_p;
+  ecma_extended_object_t *raw_ext_obj_p = (ecma_extended_object_t *) *raw_strings_p;
+
+  const uint8_t flags = ECMA_PROPERTY_TYPE_VIRTUAL | ECMA_PROPERTY_FLAG_WRITABLE | ECMA_FAST_ARRAY_FLAG;
+  JERRY_ASSERT (template_ext_obj_p->u.array.length_prop_and_hole_count == flags);
+  JERRY_ASSERT (raw_ext_obj_p->u.array.length_prop_and_hole_count == flags);
+
+  template_ext_obj_p->u.array.length_prop_and_hole_count = flags | ECMA_ARRAY_TEMPLATE_LITERAL;
+  raw_ext_obj_p->u.array.length_prop_and_hole_count = flags | ECMA_ARRAY_TEMPLATE_LITERAL;
+
   ecma_builtin_helper_def_prop (template_obj_p,
                                 ecma_get_magic_string (LIT_MAGIC_STRING_RAW),
                                 ecma_make_object_value (*raw_strings_p),
@@ -125,11 +135,9 @@ static void
 parser_tagged_template_literal_freeze_array (ecma_object_t *obj_p)
 {
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY);
-
   ecma_op_ordinary_object_prevent_extensions (obj_p);
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
   ext_obj_p->u.array.length_prop_and_hole_count &= (uint32_t) ~ECMA_PROPERTY_FLAG_WRITABLE;
-  ext_obj_p->u.array.length_prop_and_hole_count |= ECMA_ARRAY_TEMPLATE_LITERAL;
 } /* parser_tagged_template_literal_freeze_array */
 
 /**

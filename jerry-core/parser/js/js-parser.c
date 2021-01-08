@@ -2533,6 +2533,13 @@ parser_parse_class_fields (parser_context_t *context_p) /**< context */
     if (class_field_type & PARSER_CLASS_FIELD_NORMAL)
     {
       parser_emit_cbc_literal (context_p, CBC_ASSIGN_PROP_THIS_LITERAL, literal_index);
+
+      /* Prepare stack slot for assignment property reference base. Needed by vm.c */
+      if (context_p->stack_limit == context_p->stack_depth)
+      {
+        context_p->stack_limit++;
+        JERRY_ASSERT (context_p->stack_limit <= PARSER_MAXIMUM_STACK_LIMIT);
+      }
     }
     else
     {

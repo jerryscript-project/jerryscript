@@ -156,6 +156,8 @@ def get_arguments():
     maingrp = parser.add_argument_group('jerry-main options')
     maingrp.add_argument('--link-map', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help=devhelp('enable the generation of link map for jerry command line tool (%(choices)s)'))
+    maingrp.add_argument('--compile-commands', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help=devhelp('enable the generation of compile_commands.json (%(choices)s)'))
 
     arguments = parser.parse_args(args)
     if arguments.devhelp:
@@ -222,6 +224,7 @@ def generate_build_options(arguments):
 
     # jerry-main options
     build_options_append('ENABLE_LINK_MAP', arguments.link_map)
+    build_options_append('ENABLE_COMPILE_COMMANDS', arguments.compile_commands)
 
     # general build options (final step)
     if arguments.cmake_param:

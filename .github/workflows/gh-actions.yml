@@ -7,83 +7,65 @@ env:
 
 jobs:
   Checks:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-18.04 # needed for checker version stability
     steps:
-      - uses: actions/checkout@v1
-      - name: Updating packages
-        run: sudo apt-get update
-      - name: Initializtaion
-        run: sudo apt-get install doxygen vera++ cppcheck pylint pylint python-serial -q
-      - name: Signed-off
-        run: $RUNNER --check-signed-off=gh-actions
-      - name: Doxygen
-        run: $RUNNER --check-doxygen
-      - name: Vera++
-        run: $RUNNER --check-vera
-      - name: License
-        run: $RUNNER --check-license
-      - name: Magic strings
-        run: $RUNNER --check-magic-strings
-      - name: Pylint
-        run: $RUNNER --check-pylint
-      - name: Cppcheck
-        run: $RUNNER --check-cppcheck
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - run: sudo apt update
+      - run: sudo apt install doxygen vera++ cppcheck pylint python-serial
+      - run: $RUNNER --check-signed-off=gh-actions
+      - run: $RUNNER --check-doxygen
+      - run: $RUNNER --check-vera
+      - run: $RUNNER --check-license
+      - run: $RUNNER --check-magic-strings
+      - run: $RUNNER --check-pylint
+      - run: $RUNNER --check-cppcheck
 
   Linux_x86-64_Build_Correctness_Debugger_Tests:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - name: Correctness - jerry-tests
-        run: $RUNNER --jerry-tests -q
-      - name: Debugger Tests
-        run: $RUNNER --jerry-debugger -q
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '2.7' # needed by jerry-debugger
+      - run: $RUNNER -q --jerry-tests
+      - run: $RUNNER -q --jerry-debugger
 
   Linux_x86_cpointer-32bit_Build_Correctness_Tests:
-    runs-on: ubuntu-18.04
-    env:
-      BUILD_OPTIONS: --buildoptions=--compile-flag=-m32,--cpointer-32bit=on -q
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - name: Updating packages
-        run: sudo apt-get update
-      - name: Initializtaion
-        run: sudo apt-get install gcc-multilib
-      - name: Correctness - jerry-tests
-        run: $RUNNER --jerry-tests $BUILD_OPTIONS -q
+      - uses: actions/checkout@v2
+      - run: sudo apt update
+      - run: sudo apt install gcc-multilib
+      - run: $RUNNER -q --jerry-tests --buildoptions=--compile-flag=-m32,--cpointer-32bit=on
 
   OSX_x86-64_Build_Correctness_Unit_Tests:
-    runs-on: macos-10.15
+    runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v1
-      - name: Correctness - jerry-tests
-        run: $RUNNER --jerry-tests -q
-      - name: Unit Tests
-        run: $RUNNER --unittests -q
+      - uses: actions/checkout@v2
+      - run: $RUNNER -q --jerry-tests
+      - run: $RUNNER -q --unittests
 
   Linux_x86-64_Build_Option_Tests:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - name: Updating packages
-        run: sudo apt-get update
-      - name: Initializtaion
-        run: sudo apt-get install gcc-multilib
-      - name: Buildoption tests
-        run: $RUNNER --buildoption-test
+      - uses: actions/checkout@v2
+      - run: sudo apt update
+      - run: sudo apt install gcc-multilib
+      - run: $RUNNER --buildoption-test
 
   Conformance_Tests_ES5_1:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - name: Test262 - ES5.1
-        run: $RUNNER --test262
+      - uses: actions/checkout@v2
+      - run: $RUNNER --test262
 
   Conformance_Tests_ES2015:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - name: Test262 - ES2015
-        run: $RUNNER --test262-es2015 update
+      - uses: actions/checkout@v2
+      - run: $RUNNER --test262-es2015=update
       - uses: actions/upload-artifact@v2
         if: success() || failure()
         with:
@@ -91,11 +73,10 @@ jobs:
           path: build/tests/test262_tests_es2015/local/bin/test262.report
 
   Conformance_Tests_ESNext_A:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - name: Test262 - ESNext (built-ins,annexB,harness,intl402)
-        run: $RUNNER --test262-esnext update --test262-test-list built-ins,annexB,harness,intl402
+      - uses: actions/checkout@v2
+      - run: $RUNNER --test262-esnext=update --test262-test-list=built-ins,annexB,harness,intl402
       - uses: actions/upload-artifact@v2
         if: success() || failure()
         with:
@@ -103,11 +84,10 @@ jobs:
           path: build/tests/test262_tests_esnext/local/bin/test262.report
 
   Conformance_Tests_ESNext_B:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - name: Test262 - ESNext (language)
-        run: $RUNNER --test262-esnext update --test262-test-list language
+      - uses: actions/checkout@v2
+      - run: $RUNNER --test262-esnext=update --test262-test-list=language
       - uses: actions/upload-artifact@v2
         if: success() || failure()
         with:
@@ -115,38 +95,33 @@ jobs:
           path: build/tests/test262_tests_esnext/local/bin/test262.report
 
   Unit_Tests:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - name: Unit Tests
-        run: $RUNNER --unittests -q
+      - uses: actions/checkout@v2
+      - run: $RUNNER -q --unittests
 
   ASAN_Tests:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     env:
       ASAN_OPTIONS: detect_stack_use_after_return=1:check_initialization_order=true:strict_init_order=true
-      SKIP_LIST: --skip-list=parser-oom.js,parser-oom2.js,stack-limit.js,regression-test-issue-2190.js,regression-test-issue-2258-2963.js,regression-test-issue-2448.js,regression-test-issue-2905.js,regression-test-issue-3785.js
-      BUILD_OPTIONS: --buildoptions=--stack-limit=0,--compile-flag=-fsanitize=address,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--compile-flag=-O2,--debug,--system-allocator=on,--linker-flag=-fuse-ld=gold
     steps:
-      - uses: actions/checkout@v1
-      - name: Updating packages
-        run: sudo apt-get update
-      - name: Initializtaion
-        run: sudo apt-get install gcc-multilib
-      - name: ASAN - jerry-tests
-        run: $RUNNER --jerry-tests $SKIP_LIST $BUILD_OPTIONS -q
+      - uses: actions/checkout@v2
+      - run: sudo apt update
+      - run: sudo apt install gcc-multilib
+      - run: >-
+          $RUNNER -q --jerry-tests
+          --buildoptions=--stack-limit=0,--compile-flag=-fsanitize=address,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--compile-flag=-O2,--debug,--system-allocator=on,--linker-flag=-fuse-ld=gold
+          --skip-list=parser-oom.js,parser-oom2.js,stack-limit.js,regression-test-issue-2190.js,regression-test-issue-2258-2963.js,regression-test-issue-2448.js,regression-test-issue-2905.js,regression-test-issue-3785.js
 
   UBSAN_Tests:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     env:
       UBSAN_OPTIONS: print_stacktrace=1
-      SKIP_LIST: --skip-list=parser-oom.js,parser-oom2.js
-      BUILD_OPTIONS: --buildoptions=--compile-flag=-fsanitize=undefined,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--debug,--system-allocator=on,--linker-flag=-fuse-ld=gold
     steps:
-      - uses: actions/checkout@v1
-      - name: Updating packages
-        run: sudo apt-get update
-      - name: Initializtaion
-        run: sudo apt-get install gcc-multilib
-      - name: UBSAN - jerry-tests
-        run: $RUNNER --jerry-tests $SKIP_LIST $BUILD_OPTIONS -q
+      - uses: actions/checkout@v2
+      - run: sudo apt update
+      - run: sudo apt install gcc-multilib
+      - run: >-
+          $RUNNER -q --jerry-tests
+          --buildoptions=--compile-flag=-fsanitize=undefined,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--debug,--system-allocator=on,--linker-flag=-fuse-ld=gold
+          --skip-list=parser-oom.js,parser-oom2.js

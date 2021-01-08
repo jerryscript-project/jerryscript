@@ -1220,6 +1220,12 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
         || context_p->token.type == LEXER_KEYW_LET
         || context_p->token.type == LEXER_KEYW_CONST)
     {
+      if (context_p->next_scanner_info_p->type == SCANNER_TYPE_LET_EXPRESSION)
+      {
+        JERRY_ASSERT (context_p->status_flags & PARSER_IS_STRICT);
+        parser_raise_error (context_p, PARSER_ERR_STRICT_IDENT_NOT_ALLOWED);
+      }
+
       token_type = context_p->token.type;
       has_context = context_p->next_scanner_info_p->source_p == context_p->source_p;
       JERRY_ASSERT (!has_context || context_p->next_scanner_info_p->type == SCANNER_TYPE_BLOCK);
@@ -1558,6 +1564,12 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
       {
         if (context_p->next_scanner_info_p->source_p == source_p)
         {
+          if (context_p->next_scanner_info_p->type == SCANNER_TYPE_LET_EXPRESSION)
+          {
+            JERRY_ASSERT (context_p->status_flags & PARSER_IS_STRICT);
+            parser_raise_error (context_p, PARSER_ERR_STRICT_IDENT_NOT_ALLOWED);
+          }
+
           parser_push_block_context (context_p, true);
         }
         /* FALLTHRU */

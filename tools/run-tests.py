@@ -145,9 +145,8 @@ JERRY_BUILDOPTIONS = [
                 platform.system() != 'Linux' or (platform.machine() != 'i386' and platform.machine() != 'x86_64'),
                 '-m32 is only supported on x86[-64]-linux')
            ),
-    Options('buildoption_test-no_jerry_math',
-            ['--jerry-math=off', '--link-lib=m'],
-            skip=skip_if((sys.platform == 'win32'), 'There is no separated libm on Windows')),
+    Options('buildoption_test-jerry_math',
+            ['--jerry-math=on']),
     Options('buildoption_test-no_lcache_prophashmap',
             ['--compile-flag=-DJERRY_LCACHE=0', '--compile-flag=-DJERRY_PROPRETY_HASHMAP=0']),
     Options('buildoption_test-external_context',

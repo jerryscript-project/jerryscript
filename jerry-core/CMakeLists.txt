@@ -16,6 +16,8 @@ cmake_minimum_required (VERSION 2.8.12)
 set(JERRY_CORE_NAME jerry-core)
 project (${JERRY_CORE_NAME} C)
 
+include(CheckLibraryExists)
+
 # Optional build settings
 set(ENABLE_ALL_IN_ONE               OFF          CACHE BOOL   "Enable all-in-one build?")
 
@@ -413,6 +415,12 @@ endif()
 if(JERRY_MATH)
   target_link_libraries(${JERRY_CORE_NAME} jerry-math)
   set(JERRY_CORE_PKGCONFIG_REQUIRES libjerry-math)
+else()
+  check_library_exists(m sin "" HAVE_M_LIB)
+  if(HAVE_M_LIB)
+    target_link_libraries(${JERRY_CORE_NAME} m)
+    set(JERRY_CORE_PKGCONFIG_LIBS "${JERRY_CORE_PKGCONFIG_LIBS} -lm")
+  endif()
 endif()
 
 separate_arguments(EXTERNAL_LINK_LIBS)

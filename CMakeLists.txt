@@ -53,7 +53,7 @@ set(JERRY_CMDLINE_SNAPSHOT  OFF CACHE BOOL "Build jerry snapshot command line to
 set(JERRY_LIBFUZZER         OFF CACHE BOOL "Build jerry with libfuzzer support?")
 set(JERRY_PORT_DEFAULT      ON  CACHE BOOL "Build default jerry port implementation?")
 set(JERRY_EXT               ON  CACHE BOOL "Build jerry-ext?")
-set(JERRY_MATH              ON  CACHE BOOL "Build and use jerry-math?")
+set(JERRY_MATH              OFF CACHE BOOL "Build and use jerry-math?")
 set(UNITTESTS               OFF CACHE BOOL "Build unit tests?")
 set(DOCTESTS                OFF CACHE BOOL "Build doc tests?")
 
@@ -82,21 +82,17 @@ if(JERRY_CMDLINE OR DOCTESTS)
 endif()
 
 if("${PLATFORM}" STREQUAL "DARWIN")
-  set(JERRY_MATH         OFF)
   set(ENABLE_LTO         OFF)
   set(ENABLE_STRIP       OFF)
 
-  set(JERRY_MATH_MESSAGE         " (FORCED BY PLATFORM)")
   set(ENABLE_LTO_MESSAGE         " (FORCED BY PLATFORM)")
   set(ENABLE_STRIP_MESSAGE       " (FORCED BY PLATFORM)")
 endif()
 
 if("${PLATFORM}" STREQUAL "ESP-IDF")
-  set(JERRY_MATH         OFF)
   set(ENABLE_LTO         OFF)
   set(ENABLE_STRIP       OFF)
 
-  set(JERRY_MATH_MESSAGE         " (FORCED BY PLATFORM)")
   set(ENABLE_LTO_MESSAGE         " (FORCED BY PLATFORM)")
   set(ENABLE_STRIP_MESSAGE       " (FORCED BY PLATFORM)")
 endif()
@@ -108,10 +104,8 @@ if(USING_TI)
 endif()
 
 if(USING_MSVC)
-  set(JERRY_MATH         OFF)
   set(ENABLE_STRIP       OFF)
 
-  set(JERRY_MATH_MESSAGE         " (FORCED BY COMPILER)")
   set(ENABLE_STRIP_MESSAGE       " (FORCED BY COMPILER)")
 endif()
 

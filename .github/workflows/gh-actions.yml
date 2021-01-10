@@ -207,3 +207,16 @@ jobs:
           python-version: '2.7' # needed due to ESP8266_RTOS_SDK/tools/gen_appbin.py
       - run: make -f ./targets/esp8266/Makefile.travis install-noapt
       - run: make -f ./targets/esp8266/Makefile.travis script
+
+  Notification:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: rectalogic/notify-irc@v1
+        if: github.event_name == 'push' && github.repository == 'jerryscript-project/jerryscript'
+        with:
+          channel: '#jerryscript'
+          nickname: jerryscript-notification
+          message: |
+            @${{ github.actor }}: ${{ github.repository }} (${{ github.ref }}#${{ github.sha }})
+            ${{ join(github.event.commits.*.message) }}
+            ${{ github.event.compare }}

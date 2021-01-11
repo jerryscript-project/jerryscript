@@ -42,7 +42,7 @@ jerryscript/tools/build.py \
     --lto=OFF \
     --jerry-cmdline=OFF \
     --jerry-math=ON \
-    --all-in-one=ON \
+    --amalgam=ON \
     --mem-heap=70 \
     --profile=es.next \
     --compile-flag="--sysroot=${PWD}/nuttx" \

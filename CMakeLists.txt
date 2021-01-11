@@ -59,6 +59,7 @@ set(DOCTESTS                OFF CACHE BOOL "Build doc tests?")
 
 # Optional build settings
 set(BUILD_SHARED_LIBS  OFF CACHE BOOL "Build shared libraries?")
+set(ENABLE_AMALGAM     OFF CACHE BOOL "Enable amalgamated build?")
 set(ENABLE_LTO         ON  CACHE BOOL "Enable LTO build?")
 set(ENABLE_STRIP       ON  CACHE BOOL "Enable stripping all symbols from release binary?")
 
@@ -104,8 +105,10 @@ if(USING_TI)
 endif()
 
 if(USING_MSVC)
+  set(ENABLE_AMALGAM     ON) # FIXME: This should not be needed but right now it is. To be tracked down and followed up.
   set(ENABLE_STRIP       OFF)
 
+  set(ENABLE_AMALGAM_MESSAGE     " (FORCED BY COMPILER)")
   set(ENABLE_STRIP_MESSAGE       " (FORCED BY COMPILER)")
 endif()
 
@@ -121,6 +124,7 @@ message(STATUS "CMAKE_C_COMPILER_ID            " ${CMAKE_C_COMPILER_ID})
 message(STATUS "CMAKE_SYSTEM_NAME              " ${CMAKE_SYSTEM_NAME})
 message(STATUS "CMAKE_SYSTEM_PROCESSOR         " ${CMAKE_SYSTEM_PROCESSOR})
 message(STATUS "BUILD_SHARED_LIBS              " ${BUILD_SHARED_LIBS})
+message(STATUS "ENABLE_AMALGAM                 " ${ENABLE_AMALGAM} ${ENABLE_AMALGAM_MESSAGE})
 message(STATUS "ENABLE_LTO                     " ${ENABLE_LTO} ${ENABLE_LTO_MESSAGE})
 message(STATUS "ENABLE_STRIP                   " ${ENABLE_STRIP} ${ENABLE_STRIP_MESSAGE})
 message(STATUS "JERRY_VERSION                  " ${JERRY_VERSION})
@@ -247,8 +251,8 @@ if(DEFINED EXTERNAL_LINKER_FLAGS)
   jerry_add_link_flags(${EXTERNAL_LINKER_FLAGS})
 endif()
 
-# Used for placeholder to attach single source build targets
-add_custom_target(generate-single-source)
+# Used as placeholder to attach amalgamated build targets to
+add_custom_target(amalgam)
 
 # Jerry's libm
 if(JERRY_MATH)

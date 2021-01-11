@@ -76,6 +76,8 @@ def get_arguments():
                           help='add custom library to be linked')
     buildgrp.add_argument('--linker-flag', metavar='OPT', action='append', default=[],
                           help='add custom linker flag')
+    buildgrp.add_argument('--amalgam', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                          help='enable amalgamated build (%(choices)s)')
     buildgrp.add_argument('--lto', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                           help='enable link-time optimizations (%(choices)s)')
     buildgrp.add_argument('--shared-libs', metavar='X', choices=['ON', 'OFF'], type=str.upper,
@@ -108,8 +110,6 @@ def get_arguments():
                          help=devhelp('build unittests (%(choices)s)'))
 
     coregrp = parser.add_argument_group('jerry-core options')
-    coregrp.add_argument('--all-in-one', metavar='X', choices=['ON', 'OFF'], type=str.upper,
-                         help='all-in-one build (%(choices)s)')
     coregrp.add_argument('--cpointer-32bit', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help='enable 32 bit compressed pointers (%(choices)s)')
     coregrp.add_argument('--error-messages', metavar='X', choices=['ON', 'OFF'], type=str.upper,
@@ -180,6 +180,7 @@ def generate_build_options(arguments):
     build_options_append('EXTERNAL_COMPILE_FLAGS', ' '.join(arguments.compile_flag))
     build_options_append('EXTERNAL_LINK_LIBS', ' '.join(arguments.link_lib))
     build_options_append('EXTERNAL_LINKER_FLAGS', ' '.join(arguments.linker_flag))
+    build_options_append('ENABLE_AMALGAM', arguments.amalgam)
     build_options_append('ENABLE_LTO', arguments.lto)
     build_options_append('BUILD_SHARED_LIBS', arguments.shared_libs)
     build_options_append('ENABLE_STRIP', arguments.strip)
@@ -198,7 +199,6 @@ def generate_build_options(arguments):
     build_options_append('UNITTESTS', arguments.unittests)
 
     # jerry-core options
-    build_options_append('ENABLE_ALL_IN_ONE', arguments.all_in_one)
     build_options_append('JERRY_CPOINTER_32_BIT', arguments.cpointer_32bit)
     build_options_append('JERRY_ERROR_MESSAGES', arguments.error_messages)
     build_options_append('JERRY_EXTERNAL_CONTEXT', arguments.external_context)

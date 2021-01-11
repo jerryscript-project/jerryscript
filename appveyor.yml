@@ -23,5 +23,5 @@ before_build:
   - if "%PLATFORM%"=="x64" cmake -G"Visual Studio 15 2017 Win64" -Bbuild -H. -DJERRY_DEBUGGER=ON
 build:
   project: build\Jerry.sln
-  parallel: true
+  parallel: false # FIXME: This should not be needed but right now it is: msbuild generates all amalgamated files twice, at the same time in parallel builds, leading to I/O errors.
   verbosity: minimal

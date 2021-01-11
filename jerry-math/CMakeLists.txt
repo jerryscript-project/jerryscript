@@ -30,28 +30,27 @@ set(INCLUDE_MATH "${CMAKE_CURRENT_SOURCE_DIR}/include")
 # Source directories
 file(GLOB SOURCE_MATH *.c)
 
-# "Single" JerryScript libm source/header build.
+# Amalgamated JerryScript source/header build.
 #  The process will create the following files:
 #   * jerryscript-math.c
 #   * math.h
-if(ENABLE_ALL_IN_ONE_SOURCE)
+if(ENABLE_AMALGAM)
   file(GLOB HEADER_MATH *.h)
-  set(ALL_IN_FILE "${CMAKE_BINARY_DIR}/src/jerryscript-math.c")
-  set(ALL_IN_FILE_H "${CMAKE_BINARY_DIR}/src/math.h")
+  set(AMALGAM_MATH_C "${CMAKE_BINARY_DIR}/amalgam/jerryscript-math.c")
+  set(AMALGAM_MATH_H "${CMAKE_BINARY_DIR}/amalgam/math.h")
 
-  add_custom_command(OUTPUT ${ALL_IN_FILE} ${ALL_IN_FILE_H} ${JERRYSCRIPT_CONFIG_H}
-                     COMMAND python ${CMAKE_SOURCE_DIR}/tools/srcgenerator.py
+  add_custom_command(OUTPUT ${AMALGAM_MATH_C} ${AMALGAM_MATH_H}
+                     COMMAND python ${CMAKE_SOURCE_DIR}/tools/amalgam.py
                              --jerry-math
-                             --output-dir ${CMAKE_BINARY_DIR}/src
+                             --output-dir ${CMAKE_BINARY_DIR}/amalgam
                      DEPENDS ${SOURCE_MATH}
                              ${HEADER_MATH}
-                             ${CMAKE_SOURCE_DIR}/tools/srcgenerator.py
-                             ${CMAKE_SOURCE_DIR}/tools/srcmerger.py
+                             ${CMAKE_SOURCE_DIR}/tools/amalgam.py
   )
-  add_custom_target(generate-single-source-math DEPENDS ${ALL_IN_FILE} ${ALL_IN_FILE_H})
-  add_dependencies(generate-single-source generate-single-source-math)
+  add_custom_target(amalgam-math DEPENDS ${AMALGAM_MATH_C} ${AMALGAM_MATH_H})
+  add_dependencies(amalgam amalgam-math)
 
-  set(SOURCE_MATH ${ALL_IN_FILE} ${ALL_IN_FILE_H})
+  set(SOURCE_MATH ${AMALGAM_MATH_C} ${AMALGAM_MATH_H})
 endif()
 
 add_library(${JERRY_MATH_NAME} ${SOURCE_MATH})

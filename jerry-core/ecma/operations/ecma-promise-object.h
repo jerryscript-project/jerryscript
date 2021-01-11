@@ -34,6 +34,7 @@ typedef enum
   ECMA_PROMISE_IS_PENDING = (1 << 0), /**< pending state */
   ECMA_PROMISE_IS_FULFILLED = (1 << 1), /**< fulfilled state */
   ECMA_PROMISE_ALREADY_RESOLVED = (1 << 2), /**< already resolved */
+  ECMA_PROMISE_HANDLED = (1 << 3), /**< ES11: 25.6.6 [[PromiseIsHandled]] internal slot */
 } ecma_promise_flags_t;
 
 /**

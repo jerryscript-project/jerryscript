@@ -22,6 +22,8 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "jmem.h"
+#include "jcontext.h"
+#include "ecma-function-object.h"
 
 #if ENABLED (JERRY_BUILTIN_TYPEDARRAY)
 
@@ -141,7 +143,19 @@ ecma_op_create_arraybuffer_object (const ecma_value_t *arguments_list_p, /**< li
 
   uint32_t length_uint32 = ecma_number_to_uint32 (length_num);
 
-  return ecma_make_object_value (ecma_arraybuffer_new_object (length_uint32));
+  ecma_object_t *proto_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_new_target),
+                                                                   ECMA_BUILTIN_ID_ARRAYBUFFER_PROTOTYPE);
+
+  if (proto_p == NULL)
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  ecma_object_t *array_buffer = ecma_arraybuffer_new_object (length_uint32);
+  ECMA_SET_NON_NULL_POINTER (array_buffer->u2.prototype_cp, proto_p);
+  ecma_deref_object (proto_p);
+
+  return ecma_make_object_value (array_buffer);
 } /* ecma_op_create_arraybuffer_object */
 
 /**

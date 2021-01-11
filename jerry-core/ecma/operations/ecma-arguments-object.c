@@ -137,7 +137,7 @@ ecma_op_create_arguments_object (vm_frame_ctx_shared_args_t *shared_p, /**< shar
 
         ecma_deref_ecma_string (prop_name_p);
 
-        prop_value_p->value = argv_p[i];
+        prop_value_p->value = argv_p[i] == ECMA_VALUE_INITIALIZED ? ECMA_VALUE_UNDEFINED : argv_p[i];
         argv_p[i] = ECMA_VALUE_EMPTY;
       }
     }

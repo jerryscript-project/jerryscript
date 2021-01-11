@@ -9631,17 +9631,10 @@
   <test id="built-ins/Atomics/waitAsync/waiterlist-block-indexedposition-wake.js"><reason></reason></test>
   <test id="built-ins/Atomics/waitAsync/was-woken-before-timeout.js"><reason></reason></test>
   <test id="built-ins/DataView/proto-from-ctor-realm-sab.js"><reason></reason></test>
-  <test id="built-ins/Error/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/FinalizationRegistry/gc-has-one-chance-to-call-cleanupCallback.js"><reason></reason></test>
   <test id="built-ins/FinalizationRegistry/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/Function/internals/Call/class-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/NativeErrors/AggregateError/proto-from-ctor-realm.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/EvalError/proto-from-ctor-realm.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/RangeError/proto-from-ctor-realm.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/ReferenceError/proto-from-ctor-realm.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/SyntaxError/proto-from-ctor-realm.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/TypeError/proto-from-ctor-realm.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/URIError/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/dotAll/cross-realm.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/global/cross-realm.js"><reason></reason></test>
   <test id="built-ins/RegExp/prototype/ignoreCase/cross-realm.js"><reason></reason></test>

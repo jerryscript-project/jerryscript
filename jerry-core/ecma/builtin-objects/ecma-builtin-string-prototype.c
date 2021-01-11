@@ -1209,9 +1209,14 @@ ecma_builtin_string_prototype_object_repeat (ecma_string_t *original_string_p, /
 
   lit_utf8_size_t total_size = size * (lit_utf8_size_t) repeat_count;
 
-  JMEM_DEFINE_LOCAL_ARRAY (str_buffer, total_size, lit_utf8_byte_t);
+  lit_utf8_byte_t *str_buffer_p = jmem_heap_alloc_block_null_on_error (total_size * sizeof (lit_utf8_byte_t));
 
-  lit_utf8_byte_t *buffer_ptr = str_buffer;
+  if (JERRY_UNLIKELY (str_buffer_p == NULL))
+  {
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid string length"));
+  }
+
+  lit_utf8_byte_t *buffer_ptr = str_buffer_p;
 
   for (int32_t n = 0; n < repeat_count; n++)
   {
@@ -1219,8 +1224,8 @@ ecma_builtin_string_prototype_object_repeat (ecma_string_t *original_string_p, /
                                                     (lit_utf8_size_t) (size));
   }
 
-  ret_string_p = ecma_new_ecma_string_from_utf8 (str_buffer, (lit_utf8_size_t) (buffer_ptr - str_buffer));
-  JMEM_FINALIZE_LOCAL_ARRAY (str_buffer);
+  ret_string_p = ecma_new_ecma_string_from_utf8 (str_buffer_p, (lit_utf8_size_t) (buffer_ptr - str_buffer_p));
+  jmem_heap_free_block (str_buffer_p, total_size * sizeof (lit_utf8_byte_t));
 
   return ecma_make_string_value (ret_string_p);
 } /* ecma_builtin_string_prototype_object_repeat */

@@ -1393,7 +1393,7 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
         if (source_p < source_end_p && source_p[0] == LIT_CHAR_UNDERSCORE)
         {
           source_p++;
-          if (!lit_char_is_hex_digit (source_p[0]) || source_p == source_end_p)
+          if (source_p == source_end_p || !lit_char_is_hex_digit (source_p[0]))
           {
             parser_raise_error (context_p, PARSER_ERR_INVALID_UNDERSCORE_IN_NUMBER);
           }

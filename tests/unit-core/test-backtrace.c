@@ -28,9 +28,14 @@ backtrace_handler (const jerry_value_t function_obj, /**< function object */
 
   uint32_t max_depth = 0;
 
-  if (args_count > 0 && jerry_value_is_number (args_p[0]))
+  if (args_count >= 1 && jerry_value_is_number (args_p[0]))
   {
     max_depth = (uint32_t) jerry_get_number_value (args_p[0]);
+  }
+
+  if (args_count >= 2)
+  {
+    return jerry_get_backtrace_from (max_depth, args_p[1]);
   }
 
   return jerry_get_backtrace (max_depth);
@@ -150,6 +155,95 @@ test_get_backtrace_api_call (void)
 
   compare (backtrace, 0, "something_else.js:2");
   compare (backtrace, 1, "something_else.js:6");
+
+  jerry_release_value (backtrace);
+
+  /* Ignore f and g this time. */
+
+  source = ("function f() {\n"
+            "  return backtrace(0, g);\n"
+            "}\n"
+            "\n"
+            "function g() {\n"
+            "  return f();\n"
+            "}\n"
+            "\n"
+            "function h() {\n"
+            "  return g();\n"
+            "}\n"
+            "\n"
+            "h();\n");
+
+  backtrace = run ("something_ignore.js", source);
+
+  TEST_ASSERT (!jerry_value_is_error (backtrace)
+               && jerry_value_is_array (backtrace));
+
+  TEST_ASSERT (jerry_get_array_length (backtrace) == 2);
+
+  compare (backtrace, 0, "something_ignore.js:10");
+  compare (backtrace, 1, "something_ignore.js:13");
+
+  jerry_release_value (backtrace);
+
+  /* Use bound function this time. */
+
+  source = ("function f() {\n"
+            "  return backtrace(0, i);\n"
+            "}\n"
+            "\n"
+            "function g(u, v) {\n"
+            "  return v();\n"
+            "}\n"
+            "\n"
+            "var h = g.bind(null, 0)\n"
+            "var i = h.bind(null, f)\n"
+            "\n"
+            "function j() {\n"
+            "  return i();\n"
+            "}\n"
+            "\n"
+            "j();\n");
+
+  backtrace = run ("something_bound.js", source);
+
+  TEST_ASSERT (!jerry_value_is_error (backtrace)
+               && jerry_value_is_array (backtrace));
+
+  TEST_ASSERT (jerry_get_array_length (backtrace) == 2);
+
+  compare (backtrace, 0, "something_bound.js:13");
+  compare (backtrace, 1, "something_bound.js:16");
+
+  jerry_release_value (backtrace);
+
+  /* Use invalid function this time. */
+
+  source = ("function f() {\n"
+            "  return backtrace(0, ':)');\n"
+            "}\n"
+            "\n"
+            "function g() {\n"
+            "  return f();\n"
+            "}\n"
+            "\n"
+            "function h() {\n"
+            "  return g();\n"
+            "}\n"
+            "\n"
+            "h();\n");
+
+  backtrace = run ("nothing_ignore.js", source);
+
+  TEST_ASSERT (!jerry_value_is_error (backtrace)
+               && jerry_value_is_array (backtrace));
+
+  TEST_ASSERT (jerry_get_array_length (backtrace) == 4);
+
+  compare (backtrace, 0, "nothing_ignore.js:2");
+  compare (backtrace, 1, "nothing_ignore.js:6");
+  compare (backtrace, 2, "nothing_ignore.js:10");
+  compare (backtrace, 3, "nothing_ignore.js:13");
 
   jerry_release_value (backtrace);
 

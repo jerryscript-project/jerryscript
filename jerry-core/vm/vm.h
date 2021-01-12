@@ -490,7 +490,7 @@ ecma_value_t vm_execute (vm_frame_ctx_t *frame_ctx_p);
 bool vm_is_strict_mode (void);
 bool vm_is_direct_eval_form_call (void);
 
-ecma_value_t vm_get_backtrace (uint32_t max_depth);
+ecma_value_t vm_get_backtrace (uint32_t max_depth, ecma_object_t *ignored_function_p);
 
 /**
  * @}

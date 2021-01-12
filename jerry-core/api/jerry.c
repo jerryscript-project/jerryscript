@@ -4523,8 +4523,51 @@ jerry_set_vm_exec_stop_callback (jerry_vm_exec_stop_callback_t stop_cb, /**< per
 jerry_value_t
 jerry_get_backtrace (uint32_t max_depth) /**< depth limit of the backtrace */
 {
-  return vm_get_backtrace (max_depth);
+  return vm_get_backtrace (max_depth, NULL);
 } /* jerry_get_backtrace */
+
+/**
+ * Get backtrace. The backtrace is an array of strings where
+ * each string contains the position of the corresponding frame.
+ * The array length is zero if the backtrace is not available.
+ *
+ * @return array value
+ */
+jerry_value_t
+jerry_get_backtrace_from (uint32_t max_depth, /**< depth limit of the backtrace */
+                          jerry_value_t ignored_function) /**< collect backtrace after this function */
+{
+  ecma_object_t *ignored_function_p = NULL;
+
+  if (ecma_is_value_object (ignored_function))
+  {
+    ignored_function_p = ecma_get_object_from_value (ignored_function);
+
+    while (true)
+    {
+      ecma_object_type_t type = ecma_get_object_type (ignored_function_p);
+
+      if (type == ECMA_OBJECT_TYPE_FUNCTION || type == ECMA_OBJECT_TYPE_NATIVE_FUNCTION)
+      {
+        break;
+      }
+
+      if (type == ECMA_OBJECT_TYPE_BOUND_FUNCTION)
+      {
+        ecma_bound_function_t *bound_func_p = (ecma_bound_function_t *) ignored_function_p;
+        jmem_cpointer_tag_t target_function = bound_func_p->header.u.bound_function.target_function;
+
+        ignored_function_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t, target_function);
+        continue;
+      }
+
+      ignored_function_p = NULL;
+      break;
+    }
+  }
+
+  return vm_get_backtrace (max_depth, ignored_function_p);
+} /* jerry_get_backtrace_from */
 
 /**
  * Get the resource name (usually a file name) of the currently executed script or the given function object

@@ -117,72 +117,74 @@ jerry_port_normalize_path (const char *in_path_p,   /**< input file path */
   size_t ret = 0;
 
 #if defined (WIN32)
-  char drive[_MAX_DRIVE];
-  char *dir_p = (char *) malloc (_MAX_DIR);
-
-  char *path_p = (char *) malloc (_MAX_PATH * 2);
-  *path_p = '\0';
+  size_t base_drive_dir_len;
+  const size_t in_path_len = strnlen (in_path_p, _MAX_PATH);
+  char *path_p;
 
   if (base_file_p != NULL)
   {
-    _splitpath_s (base_file_p,
-                  &drive,
-                  _MAX_DRIVE,
-                  dir_p,
-                  _MAX_DIR,
-                  NULL,
-                  0,
-                  NULL,
-                  0);
-    strncat (path_p, &drive, _MAX_DRIVE);
-    strncat (path_p, dir_p, _MAX_DIR);
+    char drive[_MAX_DRIVE];
+    char *dir_p = (char *) malloc (_MAX_DIR);
+
+    _splitpath_s (base_file_p, drive, _MAX_DRIVE, dir_p, _MAX_DIR, NULL, 0, NULL, 0);
+    const size_t drive_len = strnlen (&drive, _MAX_DRIVE);
+    const size_t dir_len = strnlen (dir_p, _MAX_DIR);
+    base_drive_dir_len = drive_len + dir_len;
+    path_p = (char *) malloc (base_drive_dir_len + in_path_len + 1);
+
+    memcpy (path_p, &drive, drive_len);
+    memcpy (path_p + drive_len, dir_p, dir_len);
+
+    free (dir_p);
+  }
+  else
+  {
+    base_drive_dir_len = 0;
+    path_p = (char *) malloc (in_path_len + 1);
   }
 
-  strncat (path_p, in_path_p, _MAX_PATH);
+  memcpy (path_p + base_drive_dir_len, in_path_p, in_path_len + 1);
 
   char *norm_p = _fullpath (out_buf_p, path_p, out_buf_size);
-
   free (path_p);
-  free (dir_p);
 
   if (norm_p != NULL)
   {
     ret = strnlen (norm_p, out_buf_size);
   }
 #elif defined (__unix__) || defined (__APPLE__)
-#define MAX_JERRY_PATH_SIZE 256
-  char *buffer_p = (char *) malloc (PATH_MAX);
-  char *path_p = (char *) malloc (PATH_MAX);
+  char *base_dir_p = dirname (base_file_p);
+  const size_t base_dir_len = strnlen (base_dir_p, PATH_MAX);
+  const size_t in_path_len = strnlen (in_path_p, PATH_MAX);
+  char *path_p = (char *) malloc (base_dir_len + 1 + in_path_len + 1);
 
-  char *base_p = dirname (base_file_p);
-  strncpy (path_p, base_p, MAX_JERRY_PATH_SIZE);
-  strncat (path_p, "/", 1);
-  strncat (path_p, in_path_p, MAX_JERRY_PATH_SIZE);
+  memcpy (path_p, base_dir_p, base_dir_len);
+  memcpy (path_p + base_dir_len, "/", 1);
+  memcpy (path_p + base_dir_len + 1, in_path_p, in_path_len + 1);
 
-  char *norm_p = realpath (path_p, buffer_p);
+  char *norm_p = realpath (path_p, NULL);
   free (path_p);
 
   if (norm_p != NULL)
   {
-    const size_t len = strnlen (norm_p, out_buf_size);
-    if (len < out_buf_size)
+    const size_t norm_len = strnlen (norm_p, out_buf_size);
+    if (norm_len < out_buf_size)
     {
-      strncpy (out_buf_p, norm_p, out_buf_size);
-      ret = len;
+      memcpy (out_buf_p, norm_p, norm_len + 1);
+      ret = norm_len;
     }
-  }
 
-  free (buffer_p);
-#undef MAX_JERRY_PATH_SIZE
+    free (norm_p);
+  }
 #else
-  (void) base_file_p;
+  (void) base_file_p; /* unused */
 
   /* Do nothing, just copy the input. */
-  const size_t len = strnlen (in_path_p, out_buf_size);
-  if (len < out_buf_size)
+  const size_t in_path_len = strnlen (in_path_p, out_buf_size);
+  if (in_path_len < out_buf_size)
   {
-    strncpy (out_buf_p, in_path_p, out_buf_size);
-    ret = len;
+    memcpy (out_buf_p, in_path_p, in_path_len + 1);
+    ret = in_path_len;
   }
 #endif
 

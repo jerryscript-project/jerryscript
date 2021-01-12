@@ -20,14 +20,23 @@ project (${JERRY_PORT_DEFAULT_NAME} C)
 set(INCLUDE_PORT_DEFAULT "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 # Source directories
-file(GLOB SOURCE_PORT_DEFAULT *.c)
+set(SOURCE_PORT_DEFAULT
+  default-date.c
+  default-debugger.c
+  default-external-context.c
+  default-fatal.c
+  default-io.c
+  default-module.c
+)
 
 # Amalgamated JerryScript source/header build.
 #  The process will create the following files:
 #   * jerryscript-port-default.c
 #   * jerryscript-port-default.h
 if(ENABLE_AMALGAM)
-  file(GLOB HEADER_PORT_DEFAULT *.h)
+  set(HEADER_PORT_DEFAULT
+    include/jerryscript-port-default.h
+  )
   set(AMALGAM_PORT_C "${CMAKE_BINARY_DIR}/amalgam/jerryscript-port-default.c")
   set(AMALGAM_PORT_H "${CMAKE_BINARY_DIR}/amalgam/jerryscript-port-default.h")
 

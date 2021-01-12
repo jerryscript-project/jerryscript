@@ -28,14 +28,47 @@ set(COMPILE_FLAGS_MATH "${COMPILE_FLAGS_MATH} -Wno-strict-aliasing")
 set(INCLUDE_MATH "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 # Source directories
-file(GLOB SOURCE_MATH *.c)
+set(SOURCE_MATH
+  acos.c
+  acosh.c
+  asin.c
+  asinh.c
+  atan.c
+  atan2.c
+  atanh.c
+  cbrt.c
+  ceil.c
+  copysign.c
+  cosh.c
+  exp.c
+  expm1.c
+  fabs.c
+  finite.c
+  floor.c
+  fmod.c
+  isnan.c
+  log.c
+  log10.c
+  log1p.c
+  log2.c
+  nextafter.c
+  pow.c
+  scalbn.c
+  sinh.c
+  sqrt.c
+  tanh.c
+  trig.c
+)
 
 # Amalgamated JerryScript source/header build.
 #  The process will create the following files:
 #   * jerryscript-math.c
 #   * math.h
 if(ENABLE_AMALGAM)
-  file(GLOB HEADER_MATH *.h)
+  set(HEADER_MATH
+    include/math.h
+    jerry-math-internal.h
+  )
   set(AMALGAM_MATH_C "${CMAKE_BINARY_DIR}/amalgam/jerryscript-math.c")
   set(AMALGAM_MATH_H "${CMAKE_BINARY_DIR}/amalgam/math.h")
 

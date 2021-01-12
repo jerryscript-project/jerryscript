@@ -33,13 +33,25 @@ if(FEATURE_INIT_FINI)
 endif()
 
 # Source directories
-file(GLOB SOURCE_EXT
-     arg/*.c
-     common/*.c
-     debugger/*.c
-     handle-scope/*.c
-     handler/*.c
-     module/*.c)
+set(SOURCE_EXT
+  arg/arg-js-iterator-helper.c
+  arg/arg-transform-functions.c
+  arg/arg.c
+  debugger/debugger-common.c
+  debugger/debugger-rp.c
+  debugger/debugger-serial.c
+  debugger/debugger-sha1.c
+  debugger/debugger-tcp.c
+  debugger/debugger-ws.c
+  handle-scope/handle-scope-allocator.c
+  handle-scope/handle-scope.c
+  handler/handler-assert.c
+  handler/handler-gc.c
+  handler/handler-print.c
+  handler/handler-register.c
+  handler/handler-resource-name.c
+  module/module.c
+)
 
 add_library(${JERRY_EXT_NAME} ${SOURCE_EXT})
 

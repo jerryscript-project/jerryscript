@@ -24,7 +24,65 @@ if(${FEATURE_PROFILE} STREQUAL "${CMAKE_SOURCE_DIR}/jerry-core/profiles/minimal.
 endif()
 
 # Unit tests main modules
-file(GLOB SOURCE_UNIT_TEST_MAIN_MODULES *.c)
+set(SOURCE_UNIT_TEST_MAIN_MODULES
+  test-has-property.c
+  test-api-objecttype.c
+  test-strings.c
+  test-exec-stop.c
+  test-api-functiontype.c
+  test-external-string.c
+  test-from-property-descriptor.c
+  test-dataview.c
+  test-api-errortype.c
+  test-arraybuffer.c
+  test-api-object-property-names.c
+  test-to-integer.c
+  test-regression-3588.c
+  test-number-converter.c
+  test-api-value-type.c
+  test-jmem.c
+  test-promise.c
+  test-realm.c
+  test-internal-properties.c
+  test-abort.c
+  test-api-promise.c
+  test-context-data.c
+  test-backtrace.c
+  test-objects-foreach.c
+  test-api-binary-operations-arithmetics.c
+  test-api-binary-operations-comparisons.c
+  test-to-length.c
+  test-api-strings.c
+  test-proxy.c
+  test-container.c
+  test-api-binary-operations-instanceof.c
+  test-snapshot.c
+  test-native-callback-nested.c
+  test-lit-char-helpers.c
+  test-resource-name.c
+  test-unicode.c
+  test-bigint.c
+  test-api-property.c
+  test-api-iteratortype.c
+  test-api.c
+  test-typedarray.c
+  test-api-set-and-clear-error-flag.c
+  test-json.c
+  test-native-instanceof.c
+  test-literal-storage.c
+  test-mem-stats.c
+  test-newtarget.c
+  test-number-to-int32.c
+  test-number-to-string.c
+  test-string-to-number.c
+  test-poolman.c
+  test-regexp-dotall-unicode.c
+  test-date-helpers.c
+  test-regexp.c
+  test-stringbuilder.c
+  test-symbol.c
+  test-to-property-descriptor.c
+)
 
 # jerry_heap_stats_t.size == 0 if system allocator is used.
 if(JERRY_SYSTEM_ALLOCATOR)

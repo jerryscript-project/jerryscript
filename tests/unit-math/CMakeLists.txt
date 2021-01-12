@@ -16,7 +16,9 @@ cmake_minimum_required (VERSION 2.8.12)
 project (unit-math C)
 
 # Unit tests main modules
-file(GLOB SOURCE_UNIT_TEST_MAIN_MODULES *.c)
+set(SOURCE_UNIT_TEST_MAIN_MODULES
+  test-math.c
+)
 
 # Unit tests declaration
 add_custom_target(unittests-math)

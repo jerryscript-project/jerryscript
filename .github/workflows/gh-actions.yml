@@ -210,9 +210,9 @@ jobs:
 
   Notification:
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.repository == 'jerryscript-project/jerryscript'
     steps:
       - uses: rectalogic/notify-irc@v1
-        if: github.event_name == 'push' && github.repository == 'jerryscript-project/jerryscript'
         with:
           channel: '#jerryscript'
           nickname: jerryscript-notification

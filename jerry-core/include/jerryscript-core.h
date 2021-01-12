@@ -415,6 +415,26 @@ typedef enum
 } jerry_type_t;
 
 /**
+ * JerryScript API builtin type.
+ */
+typedef enum
+{
+  JERRY_BUILTIN_GENERIC_OBJECT,            /**< Object builtin */
+  JERRY_BUILTIN_GENERIC_PROTOTYPE_OBJECT,  /**< Object prototype builtin */
+  JERRY_BUILTIN_ARRAY_OBJECT,              /**< Array builtin */
+  JERRY_BUILTIN_ARRAY_PROTOTYPE_OBJECT,    /**< Array prototype builtin */
+  JERRY_BUILTIN_ERROR_OBJECT,              /**< Error builtin */
+  JERRY_BUILTIN_ERROR_PROTOTYPE_OBJECT,    /**< Error prototype builtin */
+  JERRY_BUILTIN_REFLECT_OBJECT,            /**< Reflect builtin */
+  JERRY_BUILTIN_STRING_OBJECT,             /**< String builtin */
+  JERRY_BUILTIN_STRING_PROTOTYPE_OBJECT,   /**< String prototype builtin */
+  JERRY_BUILTIN_NUMBER_OBJECT,             /**< Number builtin */
+  JERRY_BUILTIN_NUMBER_PROTOTYPE_OBJECT,   /**< Number prototype builtin */
+  JERRY_BUILTIN_REGEXP_OBJECT,             /**< Regexp builtin */
+  JERRY_BUILTIN_REGEXP_PROTOTYPE_OBJECT,   /**< Regexp prototpye builtin */
+} jerry_builtins_id_t;
+
+/**
  * JerryScript object type information.
  */
 typedef enum
@@ -845,6 +865,7 @@ jerry_value_t jerry_create_container (jerry_container_type_t container_type,
                                       jerry_length_t arguments_list_len);
 jerry_container_type_t jerry_get_container_type (const jerry_value_t value);
 
+jerry_value_t jerry_get_builtin_object (uint8_t builtin_id);
 /**
  * @}
  */

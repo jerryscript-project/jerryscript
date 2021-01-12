@@ -124,6 +124,70 @@ static const char * const error_bigint_not_supported_p = "BigInt support is disa
 
 #endif /* ENABLED (JERRY_ERROR_MESSAGES) */
 
+/**
+ * JerryScript builtin id
+ */
+static const uint8_t jerry_builtin_id[13] =
+{
+  ECMA_BUILTIN_ID_OBJECT,
+  ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
+#if ENABLED (JERRY_BUILTIN_ARRAY)
+  ECMA_BUILTIN_ID_ARRAY,
+#else
+  ECMA_BUILTIN_ID__COUNT,
+#endif /* ENABLED (JERRY_BUILTIN_ARRAY) */
+#if ENABLED (JERRY_BUILTIN_ARRAY)
+  ECMA_BUILTIN_ID_ARRAY_PROTOTYPE,
+#else
+  ECMA_BUILTIN_ID__COUNT,
+#endif /* ENABLED (JERRY_BUILTIN_ARRAY) */
+#if ENABLED (JERRY_BUILTIN_ERRORS)
+  ECMA_BUILTIN_ID_ERROR,
+#else
+  ECMA_BUILTIN_ID__COUNT,
+#endif /* ENABLED (JERRY_BUILTIN_ERRORS) */
+#if ENABLED (JERRY_BUILTIN_ERRORS)
+  ECMA_BUILTIN_ID_ERROR_PROTOTYPE,
+#else
+  ECMA_BUILTIN_ID__COUNT,
+#endif /* ENABLED (JERRY_BUILTIN_ERRORS) */
+#if ENABLED (JERRY_BUILTIN_REFLECT)
+  ECMA_BUILTIN_ID_REFLECT,
+#else
+  ECMA_BUILTIN_ID__COUNT,
+#endif /* ENABLED (JERRY_BUILTIN_REFLECT) */
+#if ENABLED (JERRY_BUILTIN_STRING)
+  ECMA_BUILTIN_ID_STRING,
+#else
+  ECMA_BUILTIN_ID__COUNT,
+#endif /* ENABLED (JERRY_BUILTIN_STRING) */
+#if ENABLED (JERRY_BUILTIN_STRING)
+  ECMA_BUILTIN_ID_STRING_PROTOTYPE,
+#else
+  ECMA_BUILTIN_ID__COUNT,
+#endif /* ENABLED (JERRY_BUILTIN_STRING) */
+#if ENABLED (JERRY_BUILTIN_NUMBER)
+  ECMA_BUILTIN_ID_NUMBER,
+#else
+  ECMA_BUILTIN_ID__COUNT,
+#endif /* ENABLED (JERRY_BUILTIN_NUMBER) */
+#if ENABLED (JERRY_BUILTIN_NUMBER)
+  ECMA_BUILTIN_ID_NUMBER_PROTOTYPE,
+#else
+  ECMA_BUILTIN_ID__COUNT,
+#endif /* ENABLED (JERRY_BUILTIN_NUMBER) */
+#if ENABLED (JERRY_BUILTIN_REGEXP)
+  ECMA_BUILTIN_ID_REGEXP,
+#else
+  ECMA_BUILTIN_ID__COUNT,
+#endif /* ENABLED (JERRY_BUILTIN_NUMBER) */
+#if ENABLED (JERRY_BUILTIN_REGEXP)
+  ECMA_BUILTIN_ID_REGEXP_PROTOTYPE,
+#else
+  ECMA_BUILTIN_ID__COUNT,
+#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
+};
+
 /** \addtogroup jerry Jerry engine interface
  * @{
  */
@@ -5696,6 +5760,35 @@ jerry_get_container_type (const jerry_value_t value) /**< the container object *
 #endif /* ENABLED (JERRY_BUILTIN_CONTAINER) */
   return JERRY_CONTAINER_TYPE_INVALID;
 } /* jerry_get_container_type */
+
+/**
+ * Get builtin object
+ *
+ * Note:
+ *      The returned value must be freed with jerry_release_value
+ * @return - jerry_value_t referenced to specified built-in object
+ *         - Error value if builtin is disabled
+ */
+jerry_value_t jerry_get_builtin_object (uint8_t builtin_id)  /**< id of the  builtin */
+{
+  jerry_assert_api_available ();
+
+  // checking that builtin id is not greater than size of the jerry_builtin_id array
+  if (sizeof (jerry_builtin_id) / sizeof (uint8_t) < builtin_id)
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("unsupported builtin id.")));
+  }
+
+  if (jerry_builtin_id[builtin_id] == ECMA_BUILTIN_ID__COUNT)
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("disabled built-in.")));
+  }
+
+  ecma_object_t *builtin_obj =  (ecma_builtin_get (jerry_builtin_id[builtin_id]));
+  ecma_ref_object (builtin_obj);
+
+  return ecma_make_object_value (builtin_obj);
+} /* jerry_get_builtin_object */
 
 /**
  * @}

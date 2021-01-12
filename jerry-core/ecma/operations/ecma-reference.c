@@ -334,14 +334,14 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
 
         if (property_p != NULL)
         {
+          JERRY_ASSERT (ECMA_PROPERTY_IS_RAW (*property_p));
+
           ecma_property_value_t *prop_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
 
-          if (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA)
+          if (*property_p & ECMA_PROPERTY_FLAG_DATA)
           {
             return ecma_fast_copy_value (prop_value_p->value);
           }
-
-          JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDACCESSOR);
 
           ecma_getter_setter_pointers_t *get_set_pair_p = ecma_get_named_accessor_property (prop_value_p);
 

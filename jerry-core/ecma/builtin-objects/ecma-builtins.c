@@ -485,7 +485,7 @@ ecma_instantiate_builtin (ecma_global_object_t *global_object_p, /**< global obj
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
       ext_object_p->u.array.length = 0;
-      ext_object_p->u.array.length_prop_and_hole_count = ECMA_PROPERTY_FLAG_WRITABLE | ECMA_PROPERTY_TYPE_VIRTUAL;
+      ext_object_p->u.array.length_prop_and_hole_count = ECMA_PROPERTY_FLAG_WRITABLE | ECMA_PROPERTY_VIRTUAL;
       break;
     }
 #endif /* ENABLED (JERRY_BUILTIN_ARRAY) */

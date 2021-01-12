@@ -113,7 +113,7 @@ parser_new_tagged_template_literal (ecma_object_t **raw_strings_p) /**< [out] ra
   ecma_extended_object_t *template_ext_obj_p = (ecma_extended_object_t *) template_obj_p;
   ecma_extended_object_t *raw_ext_obj_p = (ecma_extended_object_t *) *raw_strings_p;
 
-  const uint8_t flags = ECMA_PROPERTY_TYPE_VIRTUAL | ECMA_PROPERTY_FLAG_WRITABLE | ECMA_FAST_ARRAY_FLAG;
+  const uint8_t flags = ECMA_PROPERTY_VIRTUAL | ECMA_PROPERTY_FLAG_WRITABLE | ECMA_FAST_ARRAY_FLAG;
   JERRY_ASSERT (template_ext_obj_p->u.array.length_prop_and_hole_count == flags);
   JERRY_ASSERT (raw_ext_obj_p->u.array.length_prop_and_hole_count == flags);
 

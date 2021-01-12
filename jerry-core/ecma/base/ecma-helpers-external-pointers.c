@@ -38,7 +38,7 @@ ecma_create_native_pointer_property (ecma_object_t *obj_p, /**< object to create
                                      void *native_p, /**< native pointer */
                                      void *info_p) /**< native pointer's type info */
 {
-  ecma_string_t *name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
+  ecma_string_t *name_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
 
   if (ecma_op_object_is_fast_array (obj_p))
   {
@@ -54,12 +54,9 @@ ecma_create_native_pointer_property (ecma_object_t *obj_p, /**< object to create
   if (property_p == NULL)
   {
     ecma_property_value_t *value_p;
-    value_p = ecma_create_named_data_property (obj_p, name_p, ECMA_PROPERTY_CONFIGURABLE_WRITABLE, &property_p);
-
-    ECMA_CONVERT_DATA_PROPERTY_TO_INTERNAL_PROPERTY (property_p);
+    ECMA_CREATE_INTERNAL_PROPERTY (obj_p, name_p, property_p, value_p);
 
     native_pointer_p = jmem_heap_alloc_block (sizeof (ecma_native_pointer_t));
-
     ECMA_SET_INTERNAL_VALUE_POINTER (value_p->value, native_pointer_p);
   }
   else
@@ -121,7 +118,7 @@ ecma_get_native_pointer_value (ecma_object_t *obj_p, /**< object to get property
     return NULL;
   }
 
-  ecma_string_t *name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
+  ecma_string_t *name_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
   ecma_property_t *property_p = ecma_find_named_property (obj_p, name_p);
 
   if (property_p == NULL)
@@ -169,7 +166,7 @@ ecma_delete_native_pointer_property (ecma_object_t *obj_p, /**< object to delete
     return false;
   }
 
-  ecma_string_t *name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
+  ecma_string_t *name_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
   ecma_property_t *property_p = ecma_find_named_property (obj_p, name_p);
 
   if (property_p == NULL)

@@ -245,8 +245,7 @@ ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment 
   {
     ecma_property_t *property_p = ecma_find_named_property (lex_env_p, name_p);
 
-    JERRY_ASSERT (property_p != NULL
-                  && ECMA_PROPERTY_GET_TYPE (*property_p) == ECMA_PROPERTY_TYPE_NAMEDDATA);
+    JERRY_ASSERT (property_p != NULL && ECMA_PROPERTY_IS_RAW_DATA (*property_p));
 
     if (ecma_is_property_writable (*property_p))
     {
@@ -365,7 +364,7 @@ ecma_op_delete_binding (ecma_object_t *lex_env_p, /**< lexical environment */
     }
     else
     {
-      JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA);
+      JERRY_ASSERT (ECMA_PROPERTY_IS_RAW_DATA (*prop_p));
 
       if (!ecma_is_property_configurable (*prop_p))
       {
@@ -462,8 +461,7 @@ ecma_op_initialize_binding (ecma_object_t *lex_env_p, /**< lexical environment *
   JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
 
   ecma_property_t *prop_p = ecma_find_named_property (lex_env_p, name_p);
-  JERRY_ASSERT (prop_p != NULL);
-  JERRY_ASSERT (ECMA_PROPERTY_GET_TYPE (*prop_p) == ECMA_PROPERTY_TYPE_NAMEDDATA);
+  JERRY_ASSERT (prop_p != NULL && ECMA_PROPERTY_IS_RAW_DATA (*prop_p));
 
   ecma_property_value_t *prop_value_p = ECMA_PROPERTY_VALUE_PTR (prop_p);
   JERRY_ASSERT (prop_value_p->value == ECMA_VALUE_UNINITIALIZED);
@@ -490,14 +488,12 @@ ecma_op_create_environment_record (ecma_object_t *lex_env_p, /**< lexical enviro
   environment_record_p->this_binding = this_binding;
   environment_record_p->function_object = ecma_make_object_value (func_obj_p);
 
-  ecma_string_t *property_name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ENVIRONMENT_RECORD);
+  ecma_string_t *property_name_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_ENVIRONMENT_RECORD);
 
   ecma_property_t *property_p;
-  ecma_property_value_t *prop_value_p = ecma_create_named_data_property (lex_env_p,
-                                                                         property_name_p,
-                                                                         ECMA_PROPERTY_FIXED,
-                                                                         &property_p);
-  ECMA_CONVERT_DATA_PROPERTY_TO_INTERNAL_PROPERTY (property_p);
+  ecma_property_value_t *prop_value_p;
+  ECMA_CREATE_INTERNAL_PROPERTY (lex_env_p, property_name_p, property_p, prop_value_p);
+
   ECMA_SET_INTERNAL_VALUE_POINTER (prop_value_p->value, environment_record_p);
 } /* ecma_op_create_environment_record */
 
@@ -513,7 +509,7 @@ ecma_op_get_environment_record (ecma_object_t *lex_env_p) /**< lexical environme
 {
   JERRY_ASSERT (lex_env_p != NULL);
 
-  ecma_string_t *property_name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ENVIRONMENT_RECORD);
+  ecma_string_t *property_name_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_ENVIRONMENT_RECORD);
   while (true)
   {
     if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)

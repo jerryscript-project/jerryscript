@@ -669,6 +669,21 @@ ecma_get_magic_string (lit_magic_string_id_t id) /**< identifier of magic string
 } /* ecma_get_magic_string */
 
 /**
+ * Returns the constant assigned to the internal magic string id.
+ *
+ * Note:
+ *   Calling ecma_deref_ecma_string on the returned pointer is optional.
+ *
+ * @return pointer to ecma-string descriptor
+ */
+extern inline ecma_string_t * JERRY_ATTR_ALWAYS_INLINE
+ecma_get_internal_string (lit_magic_string_id_t id) /**< identifier of magic string */
+{
+  JERRY_ASSERT (id >= LIT_NON_INTERNAL_MAGIC_STRING__COUNT && id < LIT_MAGIC_STRING__COUNT);
+  return (ecma_string_t *) ECMA_CREATE_DIRECT_STRING (ECMA_DIRECT_STRING_SPECIAL, (uintptr_t) id);
+} /* ecma_get_internal_string */
+
+/**
  * Append a cesu8 string after an ecma-string
  *
  * Note:

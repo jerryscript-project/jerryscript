@@ -350,20 +350,6 @@ typedef struct
  */
 
 /**
- * Property type list.
- */
-typedef enum
-{
-  ECMA_PROPERTY_TYPE_SPECIAL, /**< special purpose property (deleted / hashmap) */
-  ECMA_PROPERTY_TYPE_NAMEDDATA, /**< property is named data */
-  ECMA_PROPERTY_TYPE_NAMEDACCESSOR, /**< property is named accessor */
-  ECMA_PROPERTY_TYPE_INTERNAL, /**< internal property with custom data field */
-  ECMA_PROPERTY_TYPE_VIRTUAL = ECMA_PROPERTY_TYPE_INTERNAL, /**< property is virtual data property */
-
-  ECMA_PROPERTY_TYPE__MAX = ECMA_PROPERTY_TYPE_VIRTUAL, /**< highest value for property types. */
-} ecma_property_types_t;
-
-/**
  * Property name listing options.
  */
 typedef enum
@@ -399,25 +385,20 @@ typedef enum
 #define ECMA_LIST_ENUMERABLE_PROTOTYPE (ECMA_LIST_ENUMERABLE | ECMA_LIST_PROTOTYPE)
 
 /**
- * Property type mask.
- */
-#define ECMA_PROPERTY_TYPE_MASK 0x3
-
-/**
- * Property flags base shift.
- */
-#define ECMA_PROPERTY_FLAG_SHIFT 2
-
-/**
- * Property flag list (for ECMA_PROPERTY_TYPE_NAMEDDATA
- * and ECMA_PROPERTY_TYPE_NAMEDACCESSOR).
+ * Property flag list. Several flags are alias
  */
 typedef enum
 {
-  ECMA_PROPERTY_FLAG_CONFIGURABLE = 1u << (ECMA_PROPERTY_FLAG_SHIFT + 0), /**< property is configurable */
-  ECMA_PROPERTY_FLAG_ENUMERABLE = 1u << (ECMA_PROPERTY_FLAG_SHIFT + 1), /**< property is enumerable */
-  ECMA_PROPERTY_FLAG_WRITABLE = 1u << (ECMA_PROPERTY_FLAG_SHIFT + 2), /**< property is writable */
-  ECMA_PROPERTY_FLAG_LCACHED = 1u << (ECMA_PROPERTY_FLAG_SHIFT + 3), /**< property is lcached */
+  ECMA_PROPERTY_FLAG_DELETED = 1u << 0, /**< property is deleted */
+  ECMA_FAST_ARRAY_FLAG = 1u << 0, /**< array is fast array */
+  ECMA_PROPERTY_FLAG_LCACHED = 1u << 1, /**< property is lcached */
+#if ENABLED (JERRY_ESNEXT)
+  ECMA_ARRAY_TEMPLATE_LITERAL = 1u << 1, /**< array is a template literal constructed by the parser */
+#endif /* ENABLED (JERRY_ESNEXT) */
+  ECMA_PROPERTY_FLAG_CONFIGURABLE = 1u << 2, /**< property is configurable */
+  ECMA_PROPERTY_FLAG_ENUMERABLE = 1u << 3, /**< property is enumerable */
+  ECMA_PROPERTY_FLAG_WRITABLE = 1u << 4, /**< property is writable */
+  ECMA_PROPERTY_FLAG_DATA = 1u << 5, /**< property contains data */
 } ecma_property_flags_t;
 
 /**
@@ -461,54 +442,19 @@ typedef enum
 /**
  * Shift for property name part.
  */
-#define ECMA_PROPERTY_NAME_TYPE_SHIFT (ECMA_PROPERTY_FLAG_SHIFT + 4)
-
-/**
- * Convert data property to accessor property or accessor property to data property
- */
-#define ECMA_CHANGE_PROPERTY_TYPE(property_p) \
-  *(property_p) ^= ECMA_PROPERTY_TYPE_NAMEDACCESSOR ^ ECMA_PROPERTY_TYPE_NAMEDDATA;
-
-/**
- * Convert data property to internal property.
- */
-#define ECMA_CONVERT_DATA_PROPERTY_TO_INTERNAL_PROPERTY(property_p) \
-   *(property_p) = (uint8_t) (*(property_p) + (ECMA_PROPERTY_TYPE_INTERNAL - ECMA_PROPERTY_TYPE_NAMEDDATA))
-
-/**
- * Convert internal property to data property.
- */
-#define ECMA_CONVERT_INTERNAL_PROPERTY_TO_DATA_PROPERTY(property_p) \
-   *(property_p) = (uint8_t) (*(property_p) - (ECMA_PROPERTY_TYPE_INTERNAL - ECMA_PROPERTY_TYPE_NAMEDDATA))
-
-/**
- * Special property identifiers.
- */
-typedef enum
-{
-  /* Note: when new special types are added
-   * ECMA_PROPERTY_IS_PROPERTY_PAIR must be updated as well. */
-  ECMA_SPECIAL_PROPERTY_HASHMAP, /**< hashmap property */
-  ECMA_SPECIAL_PROPERTY_DELETED, /**< deleted property */
-
-  ECMA_SPECIAL_PROPERTY__COUNT /**< Number of special property types */
-} ecma_special_property_id_t;
-
-/**
- * Define special property type.
- */
-#define ECMA_SPECIAL_PROPERTY_VALUE(type) \
-  ((uint8_t) (ECMA_PROPERTY_TYPE_SPECIAL | ((type) << ECMA_PROPERTY_NAME_TYPE_SHIFT)))
-
-/**
- * Type of deleted property.
- */
-#define ECMA_PROPERTY_TYPE_DELETED ECMA_SPECIAL_PROPERTY_VALUE (ECMA_SPECIAL_PROPERTY_DELETED)
+#define ECMA_PROPERTY_NAME_TYPE_SHIFT 6
 
 /**
  * Type of hash-map property.
  */
-#define ECMA_PROPERTY_TYPE_HASHMAP ECMA_SPECIAL_PROPERTY_VALUE (ECMA_SPECIAL_PROPERTY_HASHMAP)
+#define ECMA_PROPERTY_TYPE_HASHMAP \
+  (ECMA_DIRECT_STRING_SPECIAL << ECMA_PROPERTY_NAME_TYPE_SHIFT)
+
+/**
+ * Type of deleted property.
+ */
+#define ECMA_PROPERTY_TYPE_DELETED \
+  (ECMA_PROPERTY_FLAG_DELETED | (ECMA_DIRECT_STRING_SPECIAL << ECMA_PROPERTY_NAME_TYPE_SHIFT))
 
 /**
  * Type of property not found.
@@ -597,12 +543,6 @@ typedef struct
 } ecma_property_pair_t;
 
 /**
- * Get property type.
- */
-#define ECMA_PROPERTY_GET_TYPE(property) \
-  ((ecma_property_types_t) ((property) & ECMA_PROPERTY_TYPE_MASK))
-
-/**
  * Get property name type.
  */
 #define ECMA_PROPERTY_GET_NAME_TYPE(property) \
@@ -615,10 +555,54 @@ typedef struct
   ((property_header_p)->types[0] != ECMA_PROPERTY_TYPE_HASHMAP)
 
 /**
+ * Property value of all internal properties
+ */
+#define ECMA_PROPERTY_INTERNAL \
+  (ECMA_PROPERTY_FLAG_DATA | (ECMA_DIRECT_STRING_SPECIAL << ECMA_PROPERTY_NAME_TYPE_SHIFT))
+
+/**
+ * Checks whether a property is internal property
+ */
+#define ECMA_PROPERTY_IS_INTERNAL(property) ((property) >= ECMA_PROPERTY_INTERNAL)
+
+/**
+ * Checks whether a property is raw data or accessor property
+ */
+#define ECMA_PROPERTY_IS_RAW(property) \
+  ((property) < (ECMA_DIRECT_STRING_SPECIAL << ECMA_PROPERTY_NAME_TYPE_SHIFT))
+
+/**
+ * Checks whether a property is raw data property (should only be used in assertions)
+ */
+#define ECMA_PROPERTY_IS_RAW_DATA(property) \
+  (((property) & ECMA_PROPERTY_FLAG_DATA) && (property) < ECMA_PROPERTY_INTERNAL)
+
+/**
+ * Create internal property.
+ */
+#define ECMA_CREATE_INTERNAL_PROPERTY(object_p, name_p, property_p, property_value_p) \
+  do \
+  { \
+    (property_value_p) = ecma_create_named_data_property ((object_p), (name_p), 0, &(property_p)); \
+    JERRY_ASSERT (*(property_p) == ECMA_PROPERTY_INTERNAL); \
+  } \
+  while (0)
+
+/**
+ * Property type of all virtual properties
+ */
+#define ECMA_PROPERTY_VIRTUAL ECMA_PROPERTY_INTERNAL
+
+/**
+ * Checks whether a property is virtual property
+ */
+#define ECMA_PROPERTY_IS_VIRTUAL(property) ECMA_PROPERTY_IS_INTERNAL(property)
+
+/**
  * Returns true if the property is named property.
  */
 #define ECMA_PROPERTY_IS_NAMED_PROPERTY(property) \
-  (ECMA_PROPERTY_GET_TYPE (property) != ECMA_PROPERTY_TYPE_SPECIAL)
+  ((property) < ECMA_PROPERTY_TYPE_HASHMAP || (property) >= ECMA_PROPERTY_INTERNAL)
 
 /**
  * Add the offset part to a property for computing its property data pointer.
@@ -1025,17 +1009,6 @@ typedef struct
 } ecma_native_function_t;
 
 /**
- * Flags for array.length_prop_and_hole_count
- */
-typedef enum
-{
-  ECMA_FAST_ARRAY_FLAG = 1u << (ECMA_PROPERTY_NAME_TYPE_SHIFT + 0),
-#if ENABLED (JERRY_ESNEXT)
-  ECMA_ARRAY_TEMPLATE_LITERAL = 1u << (ECMA_PROPERTY_NAME_TYPE_SHIFT + 1),
-#endif /* ENABLED (JERRY_ESNEXT) */
-} ecma_array_length_prop_and_hole_count_flags_t;
-
-/**
  * Alignment for the fast access mode array length.
  * The real length is aligned up for allocating the underlying buffer.
  */
@@ -1219,19 +1192,24 @@ typedef struct
  *  - is_value_defined : true
  *  - is_configurable_defined, is_writable_defined, is_enumerable_defined : true
  */
-#define ECMA_NAME_DATA_PROPERTY_DESCRIPTOR_BITS 0x3c0
+#define ECMA_NAME_DATA_PROPERTY_DESCRIPTOR_BITS ((uint16_t) (ECMA_PROP_IS_VALUE_DEFINED \
+                                                             | ECMA_PROP_IS_CONFIGURABLE_DEFINED \
+                                                             | ECMA_PROP_IS_ENUMERABLE_DEFINED \
+                                                             | ECMA_PROP_IS_WRITABLE_DEFINED))
 
 /**
  * Bitmask to get a the physical property flags from an ecma_property_descriptor
  */
-#define ECMA_PROPERTY_FLAGS_MASK 0x1c
+#define ECMA_PROPERTY_FLAGS_MASK ((uint16_t) (ECMA_PROP_IS_CONFIGURABLE \
+                                              | ECMA_PROP_IS_ENUMERABLE \
+                                              | ECMA_PROP_IS_WRITABLE))
 
 /**
  * Flag that controls failure handling during defining property
  *
  * Note: This flags represents the [[DefineOwnProperty]] (P, Desc, Throw) 3rd argument
  */
-#define ECMA_IS_THROW (1 << 5)
+#define ECMA_IS_THROW ((uint8_t) ECMA_PROP_IS_THROW)
 
 #if !ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
 /**
@@ -1525,7 +1503,7 @@ typedef enum
   ECMA_DIRECT_STRING_PTR = 0, /**< string is a string pointer, only used by property names */
   ECMA_DIRECT_STRING_MAGIC = 1, /**< string is a magic string */
   ECMA_DIRECT_STRING_UINT = 2, /**< string is an unsigned int */
-  ECMA_DIRECT_STRING_ECMA_INTEGER = 3, /**< string is an ecma-integer */
+  ECMA_DIRECT_STRING_SPECIAL = 3, /**< string is special */
 } ecma_direct_string_type_t;
 
 /**

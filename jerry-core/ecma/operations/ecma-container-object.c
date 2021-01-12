@@ -678,17 +678,15 @@ ecma_op_container_set_weak (ecma_object_t *const key_p, /**< key object */
     ecma_fast_array_convert_to_normal (key_p);
   }
 
-  ecma_string_t *weak_refs_string_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_WEAK_REFS);
+  ecma_string_t *weak_refs_string_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_WEAK_REFS);
   ecma_property_t *property_p = ecma_find_named_property (key_p, weak_refs_string_p);
   ecma_collection_t *refs_p;
 
   if (property_p == NULL)
   {
-    ecma_property_value_t *value_p = ecma_create_named_data_property (key_p,
-                                                                      weak_refs_string_p,
-                                                                      ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
-                                                                      &property_p);
-    ECMA_CONVERT_DATA_PROPERTY_TO_INTERNAL_PROPERTY (property_p);
+    ecma_property_value_t *value_p;
+    ECMA_CREATE_INTERNAL_PROPERTY (key_p, weak_refs_string_p, property_p, value_p);
+
     refs_p = ecma_new_collection ();
     ECMA_SET_INTERNAL_VALUE_POINTER (value_p->value, refs_p);
   }
@@ -923,7 +921,7 @@ void
 ecma_op_container_unref_weak (ecma_object_t *object_p, /**< this argument */
                               ecma_value_t ref_holder) /**< key argument */
 {
-  ecma_string_t *weak_refs_string_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_WEAK_REFS);
+  ecma_string_t *weak_refs_string_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_WEAK_REFS);
 
   ecma_property_t *property_p = ecma_find_named_property (object_p, weak_refs_string_p);
   JERRY_ASSERT (property_p != NULL);

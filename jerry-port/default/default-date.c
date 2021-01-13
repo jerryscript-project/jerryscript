@@ -17,12 +17,12 @@
 #include <time.h>
 #endif /* HAVE_TM_GMTOFF */
 
-#ifdef _WINDOWS
+#ifdef _WIN32
 #include <windows.h>
 #include <winbase.h>
 #include <winnt.h>
 #include <time.h>
-#endif /* _WINDOWS */
+#endif /* _WIN32 */
 
 #ifdef __GNUC__
 #include <sys/time.h>
@@ -31,15 +31,27 @@
 #include "jerryscript-port.h"
 #include "jerryscript-port-default.h"
 
-#ifdef _WINDOWS
+#ifdef _WIN32
+static const LONGLONG UnixEpochInTicks = 116444736000000000; /* difference between 1970 and 1601 */
+static const LONGLONG TicksPerMs = 10000; /* 1 tick is 100 nanoseconds */
+
 /* https://support.microsoft.com/en-us/help/167296/how-to-convert-a-unix-time-t-to-a-win32-filetime-or-systemtime */
-void UnixTimeToFileTime (LONGLONG t, LPFILETIME pft)
+static void UnixTimeMsToFileTime (double t, LPFILETIME pft)
 {
-  LONGLONG ll = t * 10000000 + 116444736000000000;
+  LONGLONG ll = (LONGLONG) t * TicksPerMs + UnixEpochInTicks;
   pft->dwLowDateTime = (DWORD) ll;
-  pft->dwHighDateTime = ll >> 32;
-} /* UnixTimeToFileTime */
-#endif /* _WINDOWS */
+  pft->dwHighDateTime = (DWORD) (ll >> 32);
+} /* UnixTimeMsToFileTime */
+
+static double FileTimeToUnixTimeMs (FILETIME ft)
+{
+  ULARGE_INTEGER date;
+  date.HighPart = ft.dwHighDateTime;
+  date.LowPart = ft.dwLowDateTime;
+  return (double) (((LONGLONG) date.QuadPart - UnixEpochInTicks) / TicksPerMs);
+} /* FileTimeToUnixTimeMs */
+
+#endif /* _WIN32 */
 
 /**
  * Default implementation of jerry_port_get_local_time_zone_adjustment. Uses the 'tm_gmtoff' field
@@ -65,13 +77,12 @@ double jerry_port_get_local_time_zone_adjustment (double unix_ms,  /**< ms since
 #else /* !HAVE_TM_GMTOFF */
   (void) unix_ms;
   (void) is_utc;
-#ifdef _WINDOWS
+#ifdef _WIN32
   FILETIME fileTime, localFileTime;
   SYSTEMTIME systemTime, localSystemTime;
   ULARGE_INTEGER time, localTime;
 
-  _tzset ();
-  UnixTimeToFileTime ((LONGLONG) (unix_ms / 1000), &fileTime);
+  UnixTimeMsToFileTime (unix_ms, &fileTime);
 
   if (FileTimeToSystemTime (&fileTime, &systemTime)
       && SystemTimeToTzSpecificLocalTime (0, &systemTime, &localSystemTime)
@@ -81,9 +92,9 @@ double jerry_port_get_local_time_zone_adjustment (double unix_ms,  /**< ms since
     time.HighPart = fileTime.dwHighDateTime;
     localTime.LowPart = localFileTime.dwLowDateTime;
     localTime.HighPart = localFileTime.dwHighDateTime;
-    return ((LONGLONG) localTime.QuadPart - (LONGLONG) time.QuadPart) / 10000;
+    return (double) (((LONGLONG) localTime.QuadPart - (LONGLONG) time.QuadPart) / TicksPerMs);
   }
-#endif /* _WINDOWS */
+#endif /* _WIN32 */
   return 0.0;
 #endif /* HAVE_TM_GMTOFF */
 } /* jerry_port_get_local_time_zone_adjustment */
@@ -98,20 +109,18 @@ double jerry_port_get_local_time_zone_adjustment (double unix_ms,  /**< ms since
  */
 double jerry_port_get_current_time (void)
 {
-#ifdef __GNUC__
+#ifdef _WIN32
+  FILETIME ft;
+  GetSystemTimeAsFileTime (&ft);
+  return FileTimeToUnixTimeMs (ft);
+#elif __GNUC__
   struct timeval tv;
 
   if (gettimeofday (&tv, NULL) == 0)
   {
     return ((double) tv.tv_sec) * 1000.0 + ((double) tv.tv_usec) / 1000.0;
   }
-#endif /* __GNUC__ */
-
-#ifdef _WINDOWS
-  time_t ltime;
-  time (&ltime);
-  return ltime * 1000;
-#endif /* _WINDOWS */
+#endif /* _WIN32 */
 
   return 0.0;
 } /* jerry_port_get_current_time */

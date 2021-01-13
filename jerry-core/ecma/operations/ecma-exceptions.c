@@ -170,7 +170,7 @@ ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error typ
 ecma_standard_error_t
 ecma_get_error_type (ecma_object_t *error_object) /**< possible error object */
 {
-  if (error_object->u2.prototype_cp == JMEM_CP_NULL)
+  if (error_object->u2.prototype_cp == JMEM_CP_NULL || ECMA_OBJECT_IS_PROXY (error_object))
   {
     return ECMA_ERROR_NONE;
   }

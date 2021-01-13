@@ -62,6 +62,8 @@ ecma_value_t ecma_op_object_define_own_property (ecma_object_t *obj_p, ecma_stri
 ecma_value_t ecma_op_object_get_own_property_descriptor (ecma_object_t *object_p, ecma_string_t *property_name_p,
                                                          ecma_property_descriptor_t *prop_desc_p);
 ecma_value_t ecma_op_object_has_instance (ecma_object_t *obj_p, ecma_value_t value);
+ecma_object_t *ecma_op_object_get_prototype_of (ecma_object_t *obj_p);
+
 ecma_value_t ecma_op_object_is_prototype_of (ecma_object_t *base_p, ecma_object_t *target_p);
 ecma_collection_t * ecma_op_object_get_enumerable_property_names (ecma_object_t *obj_p,
                                                                   ecma_enumerable_property_names_options_t option);

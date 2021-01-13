@@ -900,44 +900,34 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
   ecma_value_t result = ECMA_VALUE_FALSE;
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
+  ecma_ref_object (v_obj_p);
+
   while (true)
   {
-    jmem_cpointer_t v_obj_cp;
-#if ENABLED (JERRY_BUILTIN_PROXY)
-    if (ECMA_OBJECT_IS_PROXY (v_obj_p))
-    {
-      ecma_value_t parent = ecma_proxy_object_get_prototype_of (v_obj_p);
+    ecma_object_t *current_proto_p = ecma_op_object_get_prototype_of (v_obj_p);
+    ecma_deref_object (v_obj_p);
 
-      if (ECMA_IS_VALUE_ERROR (parent))
-      {
-        break;
-      }
-
-      v_obj_cp = ecma_proxy_object_prototype_to_cp (parent);
-    }
-    else
-    {
-#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
-      v_obj_cp = ecma_op_ordinary_object_get_prototype_of (v_obj_p);
-#if ENABLED (JERRY_BUILTIN_PROXY)
-    }
-#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
-
-    if (v_obj_cp == JMEM_CP_NULL)
+    if (current_proto_p == NULL)
     {
 #if ENABLED (JERRY_BUILTIN_PROXY)
       result = ECMA_VALUE_FALSE;
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
       break;
     }
-
-    v_obj_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, v_obj_cp);
-
-    if (v_obj_p == prototype_obj_p)
+    else if (current_proto_p == ECMA_OBJECT_POINTER_ERROR)
     {
+      break;
+    }
+
+    if (current_proto_p == prototype_obj_p)
+    {
+      ecma_deref_object (current_proto_p);
       result = ECMA_VALUE_TRUE;
       break;
     }
+
+    /* Advance up on prototype chain. */
+    v_obj_p = current_proto_p;
   }
 
   ecma_deref_object (prototype_obj_p);
@@ -957,38 +947,13 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
 ecma_value_t
 ecma_op_function_get_super_constructor (ecma_object_t *func_obj_p) /**< function object */
 {
-  ecma_object_t *super_ctor_p;
+  ecma_object_t *super_ctor_p = ecma_op_object_get_prototype_of (func_obj_p);
 
-#if ENABLED (JERRY_BUILTIN_PROXY)
-  if (ECMA_OBJECT_IS_PROXY (func_obj_p))
+  if (JERRY_UNLIKELY (super_ctor_p == ECMA_OBJECT_POINTER_ERROR))
   {
-    ecma_value_t super_ctor = ecma_proxy_object_get_prototype_of (func_obj_p);
-
-    if (ECMA_IS_VALUE_ERROR (super_ctor))
-    {
-      return super_ctor;
-    }
-
-    super_ctor_p = ecma_is_value_null (super_ctor) ? NULL : ecma_get_object_from_value (super_ctor);
+    return ECMA_VALUE_ERROR;
   }
-  else
-  {
-#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
-    jmem_cpointer_t proto_cp = ecma_op_ordinary_object_get_prototype_of (func_obj_p);
-    if (proto_cp == JMEM_CP_NULL)
-    {
-      super_ctor_p = NULL;
-    }
-    else
-    {
-      super_ctor_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, proto_cp);
-      ecma_ref_object (super_ctor_p);
-    }
-#if ENABLED (JERRY_BUILTIN_PROXY)
-  }
-#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
-
-  if (super_ctor_p == NULL || !ecma_object_is_constructor (super_ctor_p))
+  else if (super_ctor_p == NULL || !ecma_object_is_constructor (super_ctor_p))
   {
     if (super_ctor_p != NULL)
     {

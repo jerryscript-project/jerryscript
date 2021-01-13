@@ -93,10 +93,7 @@ static void
 test_internal_prop (void)
 {
   /* Make sure that the object is initialized in the engine. */
-  {
-    jerry_value_t object = jerry_create_object ();
-    jerry_release_value (object);
-  }
+  jerry_value_t object_dummy = jerry_create_object ();
 
   /* Get the number of iterable objects. */
   int before_object_count = 0;
@@ -130,6 +127,7 @@ test_internal_prop (void)
   }
 
   jerry_release_value (object);
+  jerry_release_value (object_dummy);
 } /* test_internal_prop */
 
 static int test_data = 1;

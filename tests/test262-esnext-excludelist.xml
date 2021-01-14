@@ -1168,9 +1168,6 @@
   <test id="annexB/built-ins/String/prototype/sup/name.js"><reason></reason></test>
   <test id="annexB/built-ins/String/prototype/sup/prop-desc.js"><reason></reason></test>
   <test id="annexB/built-ins/String/prototype/sup/this-val-tostring-err.js"><reason></reason></test>
-  <test id="annexB/built-ins/unescape/four-ignore-bad-u.js"><reason></reason></test>
-  <test id="annexB/built-ins/unescape/four.js"><reason></reason></test>
-  <test id="annexB/built-ins/unescape/two.js"><reason></reason></test>
   <test id="annexB/language/comments/multi-line-html-close.js"><reason></reason></test>
   <test id="annexB/language/comments/single-line-html-close-asi.js"><reason></reason></test>
   <test id="annexB/language/comments/single-line-html-close-unicode-separators.js"><reason></reason></test>

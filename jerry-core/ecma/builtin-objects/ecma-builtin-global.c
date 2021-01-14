@@ -495,10 +495,48 @@ ecma_builtin_global_object_escape (lit_utf8_byte_t *input_start_p, /**< routine'
 } /* ecma_builtin_global_object_escape */
 
 /**
+ * Utility method to resolve character sequences for the 'unescape' method.
+ *
+ * Expected formats: %uxxxx or %yy
+ *
+ * @return number of characters processed during the escape resolve
+ */
+static uint8_t
+ecma_builtin_global_object_unescape_resolve_escape (const lit_utf8_byte_t *buffer_p,  /**< character buffer */
+                                                    bool unicode_sequence, /**< true if unescaping unicode sequence */
+                                                    ecma_char_t *out_result_p) /**< [out] resolved character */
+{
+  JERRY_ASSERT (buffer_p != NULL);
+  JERRY_ASSERT (out_result_p != NULL);
+
+  ecma_char_t unescaped_chr = 0;
+  uint8_t sequence_length = unicode_sequence ? 5 : 2;
+  uint8_t start = unicode_sequence ? 1 : 0;
+
+  for (uint8_t i = start; i < sequence_length; i++)
+  {
+    const lit_utf8_byte_t current_char = buffer_p[i];
+
+    if (!lit_char_is_hex_digit (current_char))
+    {
+      /* This was not an escape sequence, skip processing */
+      return 0;
+    }
+
+    unescaped_chr = (ecma_char_t) ((unescaped_chr << 4) + (ecma_char_t) lit_char_hex_to_int (current_char));
+  }
+
+  *out_result_p = unescaped_chr;
+
+  return sequence_length;
+} /* ecma_builtin_global_object_unescape_resolve_escape */
+
+/**
  * The Global object's 'unescape' routine
  *
  * See also:
  *          ECMA-262 v5, B.2.2
+ *          ECMA-262 v11, B.2.1.2
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value.
@@ -509,76 +547,40 @@ ecma_builtin_global_object_unescape (lit_utf8_byte_t *input_start_p, /**< routin
                                      lit_utf8_size_t input_size) /**< routine's first argument's
                                                                   *   string buffer's size */
 {
-  const lit_utf8_byte_t *input_curr_p = input_start_p;
-  const lit_utf8_byte_t *input_end_p = input_start_p + input_size;
-  /* 4. */
-  /* The length of input string is always greater than output string
-   * so we re-use the input string buffer.
-   * The %xx is three byte long, and the maximum encoded value is 0xff,
-   * which maximum encoded length is two byte. Similar to this, the maximum
-   * encoded length of %uxxxx is four byte. */
-  lit_utf8_byte_t *output_char_p = input_start_p;
-
-  /* The state of parsing that tells us where we are in an escape pattern.
-   * 0    we are outside of pattern,
-   * 1    found '%', start of pattern,
-   * 2    found first hex digit of '%xy' pattern
-   * 3    found valid '%xy' pattern
-   * 4    found 'u', start of '%uwxyz' pattern
-   * 5-7  found hex digits of '%uwxyz' pattern
-   * 8    found valid '%uwxyz' pattern
-   */
-  uint8_t status = 0;
-  ecma_char_t hex_digits = 0;
-  /* 5. */
-  while (input_curr_p < input_end_p)
+  if (input_size == 0)
   {
-    /* 6. */
-    ecma_char_t chr = lit_cesu8_read_next (&input_curr_p);
-
-    /* 7-8. */
-    if (status == 0 && chr == LIT_CHAR_PERCENT)
-    {
-      /* Found '%' char, start of escape sequence. */
-      status = 1;
-    }
-    /* 9-10. */
-    else if (status == 1 && chr == LIT_CHAR_LOWERCASE_U)
-    {
-      /* Found 'u' char after '%'. */
-      status = 4;
-    }
-    else if (status > 0 && lit_char_is_hex_digit (chr))
-    {
-      /* Found hexadecimal digit in escape sequence. */
-      hex_digits = (ecma_char_t) (hex_digits * 16 + (ecma_char_t) lit_char_hex_to_int (chr));
-      status++;
-    }
-    else
-    {
-      /* Previously found hexadecimal digit in escape sequence but it's not valid '%xy' pattern
-       * so essentially it was only a simple character. */
-      status = 0;
-    }
-
-    /* 11-17. Found valid '%uwxyz' or '%xy' escape. */
-    if (status == 8 || status == 3)
-    {
-      output_char_p -= (status == 3) ? 2 : 5;
-      status = 0;
-      chr = hex_digits;
-      hex_digits = 0;
-    }
-
-    /* Copying character. */
-    lit_utf8_size_t lit_size = lit_code_unit_to_utf8 (chr, output_char_p);
-    output_char_p += lit_size;
-    JERRY_ASSERT (output_char_p <= input_curr_p);
+    return ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
   }
 
-  lit_utf8_size_t output_length = (lit_utf8_size_t) (output_char_p - input_start_p);
-  ecma_string_t *output_string_p = ecma_new_ecma_string_from_utf8 (input_start_p, output_length);
-  return ecma_make_string_value (output_string_p);
+  const lit_utf8_byte_t *input_curr_p = input_start_p;
+  const lit_utf8_byte_t *input_end_p = input_start_p + input_size;
+  ecma_stringbuilder_t builder = ecma_stringbuilder_create ();
+
+  while (input_curr_p < input_end_p)
+  {
+    ecma_char_t chr = lit_cesu8_read_next (&input_curr_p);
+
+    // potential pattern
+    if (chr == LIT_CHAR_PERCENT)
+    {
+      const lit_utf8_size_t chars_leftover = (lit_utf8_size_t) (input_end_p - input_curr_p);
+
+      // potential unicode sequence
+      if (chars_leftover >= 5 && input_curr_p[0] == LIT_CHAR_LOWERCASE_U)
+      {
+        input_curr_p += ecma_builtin_global_object_unescape_resolve_escape (input_curr_p, true, &chr);
+      }
+      // potential two hexa sequence
+      else if (chars_leftover >= 2)
+      {
+        input_curr_p += ecma_builtin_global_object_unescape_resolve_escape (input_curr_p, false, &chr);
+      }
+    }
+
+    ecma_stringbuilder_append_char (&builder, chr);
+  }
+
+  return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
 } /* ecma_builtin_global_object_unescape */
 
 #endif /* ENABLED (JERRY_BUILTIN_ANNEXB) */

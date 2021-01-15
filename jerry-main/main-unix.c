@@ -17,6 +17,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if defined (_WIN32)
+#include <crtdbg.h>
+#include <Windows.h>
+#endif
 
 #include "jerryscript.h"
 #include "jerryscript-ext/debugger.h"
@@ -60,7 +64,22 @@ main (int argc,
 
   main_args_t arguments;
   arguments.sources_p = sources_p;
-
+#if defined (_WIN32)
+  if (!IsDebuggerPresent ())
+  {
+    /* Disable all of the possible ways Windows conspires to make automated
+     testing impossible. */
+#if defined (_MSC_VER)
+    _set_error_mode (_OUT_TO_STDERR);
+    _CrtSetReportMode (_CRT_WARN, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
+    _CrtSetReportFile (_CRT_WARN, _CRTDBG_FILE_STDERR);
+    _CrtSetReportMode (_CRT_ERROR, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
+    _CrtSetReportFile (_CRT_ERROR, _CRTDBG_FILE_STDERR);
+    _CrtSetReportMode (_CRT_ASSERT, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
+    _CrtSetReportFile (_CRT_ASSERT, _CRTDBG_FILE_STDERR);
+#endif
+  }
+#endif
   main_parse_args (argc, argv, &arguments);
 
 #if defined (JERRY_EXTERNAL_CONTEXT) && (JERRY_EXTERNAL_CONTEXT == 1)

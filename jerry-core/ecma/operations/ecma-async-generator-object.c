@@ -55,10 +55,10 @@ ecma_async_generator_enqueue (vm_executable_object_t *async_generator_object_p, 
   task_p->operation_value = ecma_copy_value_if_not_object (value);
   task_p->operation_type = (uint8_t) operation;
 
-  ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target);
-  JERRY_CONTEXT (current_new_target) = ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE);
+  ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target_p);
+  JERRY_CONTEXT (current_new_target_p) = ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE);
   ecma_value_t result = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_PROMISE_EXECUTOR_EMPTY);
-  JERRY_CONTEXT (current_new_target) = old_new_target_p;
+  JERRY_CONTEXT (current_new_target_p) = old_new_target_p;
   task_p->promise = result;
 
   ecma_value_t head = async_generator_object_p->extended_object.u.class_prop.u.head;

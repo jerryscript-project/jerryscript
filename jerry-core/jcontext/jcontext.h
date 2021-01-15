@@ -228,7 +228,7 @@ struct jerry_context_t
    * * NULL (0x0): the current "new.target" is undefined, that is the execution is inside a normal method.
    * * Any other valid function object pointer: the current "new.target" is valid and it is constructor call.
    */
-  ecma_object_t *current_new_target;
+  ecma_object_t *current_new_target_p;
 #endif /* ENABLED (JERRY_ESNEXT) */
 };
 

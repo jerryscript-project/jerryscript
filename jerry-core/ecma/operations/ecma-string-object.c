@@ -70,7 +70,7 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
 #endif /* ENABLED (JERRY_BUILTIN_STRING) */
   ecma_object_t *prototype_obj_p = ecma_builtin_get (proto_id);
 #if ENABLED (JERRY_ESNEXT)
-  ecma_object_t *new_target = JERRY_CONTEXT (current_new_target);
+  ecma_object_t *new_target = JERRY_CONTEXT (current_new_target_p);
   if (new_target)
   {
     prototype_obj_p = ecma_op_get_prototype_from_constructor (new_target, proto_id);

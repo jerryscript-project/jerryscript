@@ -61,7 +61,7 @@ ecma_init (void)
 #endif /* ENABLED (JERRY_BUILTIN_PROMISE) */
 
 #if ENABLED (JERRY_ESNEXT)
-  JERRY_CONTEXT (current_new_target) = NULL;
+  JERRY_CONTEXT (current_new_target_p) = NULL;
 #endif /* ENABLED (JERRY_ESNEXT) */
 } /* ecma_init */
 
@@ -72,7 +72,7 @@ void
 ecma_finalize (void)
 {
 #if ENABLED (JERRY_ESNEXT)
-  JERRY_ASSERT (JERRY_CONTEXT (current_new_target) == NULL);
+  JERRY_ASSERT (JERRY_CONTEXT (current_new_target_p) == NULL);
 #endif /* ENABLED (JERRY_ESNEXT) */
 
   ecma_finalize_global_environment ();

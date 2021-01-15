@@ -390,9 +390,9 @@ ecma_value_t
 ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function or object */
                                ecma_promise_executor_type_t type) /**< indicates the type of executor */
 {
-  JERRY_ASSERT (JERRY_CONTEXT (current_new_target) != NULL);
+  JERRY_ASSERT (JERRY_CONTEXT (current_new_target_p) != NULL);
   /* 3. */
-  ecma_object_t *proto_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_new_target),
+  ecma_object_t *proto_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_new_target_p),
                                                                    ECMA_BUILTIN_ID_PROMISE_PROTOTYPE);
 
   if (JERRY_UNLIKELY (proto_p == NULL))

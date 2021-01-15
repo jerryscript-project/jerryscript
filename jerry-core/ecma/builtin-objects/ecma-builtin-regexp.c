@@ -51,7 +51,7 @@ ecma_builtin_regexp_dispatch_helper (const ecma_value_t *arguments_list_p, /**< 
 #if ENABLED (JERRY_ESNEXT)
   bool create_regexp_from_bc = false;
   bool free_arguments = false;
-  ecma_object_t *new_target_p = JERRY_CONTEXT (current_new_target);
+  ecma_object_t *new_target_p = JERRY_CONTEXT (current_new_target_p);
 #else /* !ENABLED (JERRY_ESNEXT) */
   ecma_object_t *new_target_p = NULL;
 #endif /* ENABLED (JERRY_ESNEXT) */

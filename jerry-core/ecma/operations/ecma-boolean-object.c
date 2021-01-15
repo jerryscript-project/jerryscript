@@ -55,7 +55,7 @@ ecma_op_create_boolean_object (ecma_value_t arg) /**< argument passed to the Boo
   ecma_object_t *prototype_obj_p = ecma_builtin_get (proto_id);
 
 #if ENABLED (JERRY_ESNEXT)
-  ecma_object_t *new_target = JERRY_CONTEXT (current_new_target);
+  ecma_object_t *new_target = JERRY_CONTEXT (current_new_target_p);
   if (new_target)
   {
     prototype_obj_p = ecma_op_get_prototype_from_constructor (new_target, proto_id);

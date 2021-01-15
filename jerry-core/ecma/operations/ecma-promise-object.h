@@ -129,12 +129,12 @@ ecma_value_t ecma_promise_catch_finally_cb (const ecma_value_t function_obj,
                                             const uint32_t args_count);
 ecma_value_t
 ecma_promise_reject_handler (const ecma_value_t function,
-                             const ecma_value_t this,
+                             const ecma_value_t this_arg,
                              const ecma_value_t argv[],
                              const uint32_t argc);
 ecma_value_t
 ecma_promise_resolve_handler (const ecma_value_t function,
-                              const ecma_value_t this,
+                              const ecma_value_t this_arg,
                               const ecma_value_t argv[],
                               const uint32_t argc);
 

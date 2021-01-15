@@ -279,11 +279,11 @@ ecma_fulfill_promise (ecma_value_t promise, /**< promise */
  */
 ecma_value_t
 ecma_promise_reject_handler (const ecma_value_t function, /**< the function itself */
-                             const ecma_value_t this, /**< this_arg of the function */
+                             const ecma_value_t this_arg, /**< this_arg of the function */
                              const ecma_value_t argv[], /**< argument list */
                              const uint32_t argc) /**< argument number */
 {
-  JERRY_UNUSED (this);
+  JERRY_UNUSED (this_arg);
   ecma_promise_resolver_t *function_p = (ecma_promise_resolver_t *) ecma_get_object_from_value (function);
 
   /* 1. */
@@ -313,11 +313,11 @@ ecma_promise_reject_handler (const ecma_value_t function, /**< the function itse
  */
 ecma_value_t
 ecma_promise_resolve_handler (const ecma_value_t function, /**< the function itself */
-                              const ecma_value_t this, /**< this_arg of the function */
+                              const ecma_value_t this_arg, /**< this_arg of the function */
                               const ecma_value_t argv[], /**< argument list */
                               const uint32_t argc) /**< argument number */
 {
-  JERRY_UNUSED (this);
+  JERRY_UNUSED (this_arg);
   ecma_promise_resolver_t *function_p = (ecma_promise_resolver_t *) ecma_get_object_from_value (function);
 
   /* 1. */

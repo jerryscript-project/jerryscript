@@ -156,6 +156,8 @@ struct jerry_context_t
 
   vm_frame_ctx_t *vm_top_context_p; /**< top (current) interpreter context */
   jerry_context_data_header_t *context_data_p; /**< linked list of user-provided context-specific pointers */
+  void *error_object_created_callback_user_p; /**< user pointer for error_object_update_callback_p */
+  jerry_error_object_created_callback_t error_object_created_callback_p; /**< decorator callback for Error objects */
   size_t ecma_gc_objects_number; /**< number of currently allocated objects */
   size_t ecma_gc_new_objects; /**< number of newly allocated objects since last GC session */
   size_t jmem_heap_allocated_size; /**< size of allocated regions */

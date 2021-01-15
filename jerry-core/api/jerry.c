@@ -1539,6 +1539,20 @@ jerry_get_value_from_error (jerry_value_t value, /**< api value */
 } /* jerry_get_value_from_error */
 
 /**
+ * Set new decorator callback for Error objects. The decorator can
+ * create or update any properties of the newly created Error object.
+ */
+void
+jerry_set_error_object_created_callback (jerry_error_object_created_callback_t callback, /**< new callback */
+                                         void *user_p) /**< user pointer passed to the callback */
+{
+  jerry_assert_api_available ();
+
+  JERRY_CONTEXT (error_object_created_callback_p) = callback;
+  JERRY_CONTEXT (error_object_created_callback_user_p) = user_p;
+} /* jerry_set_error_object_created_callback */
+
+/**
  * Return the type of the Error object if possible.
  *
  * @return one of the jerry_error_t value as the type of the Error object
@@ -1927,15 +1941,15 @@ jerry_create_error_sz (jerry_error_t error_type, /**< type of error */
 
   if (message_p == NULL || message_size == 0)
   {
-    return ecma_create_error_object_reference (ecma_new_standard_error ((ecma_standard_error_t) error_type));
+    return ecma_create_error_object_reference (ecma_new_standard_error ((ecma_standard_error_t) error_type, NULL));
   }
   else
   {
     ecma_string_t *message_string_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) message_p,
                                                                       (lit_utf8_size_t) message_size);
 
-    ecma_object_t *error_object_p = ecma_new_standard_error_with_message ((ecma_standard_error_t) error_type,
-                                                                          message_string_p);
+    ecma_object_t *error_object_p = ecma_new_standard_error ((ecma_standard_error_t) error_type,
+                                                             message_string_p);
 
     ecma_deref_ecma_string (message_string_p);
 

@@ -69,6 +69,9 @@ const ecma_error_mapping_t ecma_error_mappings[] =
  * Standard ecma-error object constructor.
  *
  * Note:
+ *    message_string_p can be NULL.
+ *
+ * Note:
  *    calling with ECMA_ERROR_NONE does not make sense thus it will
  *    cause a fault in the system.
  *
@@ -76,7 +79,8 @@ const ecma_error_mapping_t ecma_error_mappings[] =
  *         with reference counter set to one.
  */
 ecma_object_t *
-ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error type */
+ecma_new_standard_error (ecma_standard_error_t error_type, /**< native error type */
+                         ecma_string_t *message_string_p) /**< message string */
 {
 #if ENABLED (JERRY_BUILTIN_ERRORS)
   ecma_builtin_id_t prototype_id = ECMA_BUILTIN_ID__COUNT;
@@ -140,23 +144,45 @@ ecma_new_standard_error (ecma_standard_error_t error_type) /**< native error typ
 
   ((ecma_extended_object_t *) new_error_obj_p)->u.class_prop.class_id = LIT_MAGIC_STRING_ERROR_UL;
 
+  if (message_string_p != NULL)
+  {
+    ecma_property_value_t *prop_value_p;
+    prop_value_p = ecma_create_named_data_property (new_error_obj_p,
+                                                    ecma_get_magic_string (LIT_MAGIC_STRING_MESSAGE),
+                                                    ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
+                                                    NULL);
+
+    ecma_ref_ecma_string (message_string_p);
+    prop_value_p->value = ecma_make_string_value (message_string_p);
+  }
+
+  /* Avoid calling the decorator function recursively. */
+  if (JERRY_CONTEXT (error_object_created_callback_p) != NULL
+      && !(JERRY_CONTEXT (status_flags) & ECMA_STATUS_ERROR_UPDATE))
+  {
+    JERRY_CONTEXT (status_flags) |= ECMA_STATUS_ERROR_UPDATE;
+    JERRY_CONTEXT (error_object_created_callback_p) (ecma_make_object_value (new_error_obj_p),
+                                                     JERRY_CONTEXT (error_object_created_callback_user_p));
+    JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_ERROR_UPDATE;
+  }
+  else
+  {
 #if ENABLED (JERRY_LINE_INFO)
-  /* The "stack" identifier is not a magic string. */
-  const char * const stack_id_p = "stack";
+    /* Default decorator when line info is enabled. */
+    ecma_string_t *stack_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_STACK);
 
-  ecma_string_t *stack_str_p = ecma_new_ecma_string_from_utf8 ((const lit_utf8_byte_t *) stack_id_p, 5);
+    ecma_property_value_t *prop_value_p = ecma_create_named_data_property (new_error_obj_p,
+                                                                           stack_str_p,
+                                                                           ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
+                                                                           NULL);
+    ecma_deref_ecma_string (stack_str_p);
 
-  ecma_property_value_t *prop_value_p = ecma_create_named_data_property (new_error_obj_p,
-                                                                         stack_str_p,
-                                                                         ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
-                                                                         NULL);
-  ecma_deref_ecma_string (stack_str_p);
+    ecma_value_t backtrace_value = vm_get_backtrace (0, NULL);
 
-  ecma_value_t backtrace_value = vm_get_backtrace (0, NULL);
-
-  prop_value_p->value = backtrace_value;
-  ecma_deref_object (ecma_get_object_from_value (backtrace_value));
+    prop_value_p->value = backtrace_value;
+    ecma_deref_object (ecma_get_object_from_value (backtrace_value));
 #endif /* ENABLED (JERRY_LINE_INFO) */
+  }
 
   return new_error_obj_p;
 } /* ecma_new_standard_error */
@@ -191,30 +217,6 @@ ecma_get_error_type (ecma_object_t *error_object) /**< possible error object */
 } /* ecma_get_error_type */
 
 /**
- * Standard ecma-error object constructor.
- *
- * @return pointer to ecma-object representing specified error
- *         with reference counter set to one.
- */
-ecma_object_t *
-ecma_new_standard_error_with_message (ecma_standard_error_t error_type, /**< native error type */
-                                      ecma_string_t *message_string_p) /**< message string */
-{
-  ecma_object_t *new_error_obj_p = ecma_new_standard_error (error_type);
-
-  ecma_property_value_t *prop_value_p;
-  prop_value_p = ecma_create_named_data_property (new_error_obj_p,
-                                                  ecma_get_magic_string (LIT_MAGIC_STRING_MESSAGE),
-                                                  ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
-                                                  NULL);
-
-  ecma_ref_ecma_string (message_string_p);
-  prop_value_p->value = ecma_make_string_value (message_string_p);
-
-  return new_error_obj_p;
-} /* ecma_new_standard_error_with_message */
-
-/**
  * Raise a standard ecma-error with the given type and message.
  *
  * @return ecma value
@@ -230,12 +232,12 @@ ecma_raise_standard_error (ecma_standard_error_t error_type, /**< error type */
   {
     ecma_string_t *error_msg_p = ecma_new_ecma_string_from_utf8 (msg_p,
                                                                  lit_zt_utf8_string_size (msg_p));
-    error_obj_p = ecma_new_standard_error_with_message (error_type, error_msg_p);
+    error_obj_p = ecma_new_standard_error (error_type, error_msg_p);
     ecma_deref_ecma_string (error_msg_p);
   }
   else
   {
-    error_obj_p = ecma_new_standard_error (error_type);
+    error_obj_p = ecma_new_standard_error (error_type, NULL);
   }
 
   jcontext_raise_exception (ecma_make_object_value (error_obj_p));
@@ -320,7 +322,7 @@ ecma_raise_standard_error_with_format (ecma_standard_error_t error_type, /**< er
 
   ecma_string_t *builder_str_p = ecma_stringbuilder_finalize (&builder);
 
-  ecma_object_t *error_obj_p = ecma_new_standard_error_with_message (error_type, builder_str_p);
+  ecma_object_t *error_obj_p = ecma_new_standard_error (error_type, builder_str_p);
 
   ecma_deref_ecma_string (builder_str_p);
 

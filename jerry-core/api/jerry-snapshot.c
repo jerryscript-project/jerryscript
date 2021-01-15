@@ -314,8 +314,8 @@ static_snapshot_error_unsupported_literal (snapshot_globals_t *globals_p, /**< s
 
   ecma_deref_ecma_string (literal_string_p);
 
-  ecma_object_t *error_object_p = ecma_new_standard_error_with_message (ECMA_ERROR_RANGE,
-                                                                        ecma_stringbuilder_finalize (&builder));
+  ecma_object_t *error_object_p = ecma_new_standard_error (ECMA_ERROR_RANGE,
+                                                           ecma_stringbuilder_finalize (&builder));
 
   globals_p->snapshot_error = ecma_create_error_object_reference (error_object_p);
 } /* static_snapshot_error_unsupported_literal */

@@ -77,6 +77,11 @@ ecma_value_t ecma_typedarray_create_object_with_length (uint32_t array_length,
                                                         ecma_object_t *proto_p,
                                                         uint8_t element_size_shift,
                                                         ecma_typedarray_type_t typedarray_id);
+ecma_value_t ecma_typedarray_create (ecma_object_t *constructor_p, ecma_value_t *arguments_list_p,
+                                     uint32_t arguments_list_len);
+ecma_value_t ecma_typedarray_species_create (ecma_value_t this_arg,
+                                             ecma_value_t *length,
+                                             uint32_t arguments_list_len);
 
 /**
  * @}

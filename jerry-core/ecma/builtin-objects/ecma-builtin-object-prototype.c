@@ -324,10 +324,9 @@ ecma_builtin_object_prototype_lookup_getter_setter (ecma_value_t this_arg, /**< 
     return ECMA_VALUE_ERROR;
   }
 
-  jmem_cpointer_t obj_cp;
-  ECMA_SET_NON_NULL_POINTER (obj_cp, obj_p);
-
   ecma_value_t ret_value = ECMA_VALUE_UNDEFINED;
+
+  ecma_ref_object (obj_p);
 
   /* 3. */
   while (true)
@@ -339,6 +338,7 @@ ecma_builtin_object_prototype_lookup_getter_setter (ecma_value_t this_arg, /**< 
     if (ECMA_IS_VALUE_ERROR (get_desc))
     {
       ret_value = get_desc;
+      ecma_deref_object (obj_p);
       break;
     }
 
@@ -360,35 +360,26 @@ ecma_builtin_object_prototype_lookup_getter_setter (ecma_value_t this_arg, /**< 
       }
 
       ecma_free_property_descriptor (&desc);
+      ecma_deref_object (obj_p);
       break;
     }
 
     /* 3.c */
-#if ENABLED (JERRY_BUILTIN_PROXY)
-    if (ECMA_OBJECT_IS_PROXY (obj_p))
-    {
-      ecma_value_t parent = ecma_proxy_object_get_prototype_of (obj_p);
+    ecma_object_t *proto_p = ecma_op_object_get_prototype_of (obj_p);
+    ecma_deref_object (obj_p);
 
-      if (ECMA_IS_VALUE_ERROR (parent))
-      {
-        ret_value = parent;
-        break;
-      }
-
-      obj_cp = ecma_proxy_object_prototype_to_cp (parent);
-    }
-    else
-#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
-    {
-      obj_cp = ecma_op_ordinary_object_get_prototype_of (obj_p);
-    }
-
-    if (obj_cp == JMEM_CP_NULL)
+    if (proto_p == NULL)
     {
       break;
     }
+    else if (JERRY_UNLIKELY (proto_p == ECMA_OBJECT_POINTER_ERROR))
+    {
+      ret_value = ECMA_VALUE_ERROR;
+      break;
+    }
 
-    obj_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, obj_cp);
+    /* Advance up on prototype chain. */
+    obj_p = proto_p;
   }
 
   ecma_free_value (to_obj);

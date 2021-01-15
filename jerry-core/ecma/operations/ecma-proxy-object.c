@@ -229,31 +229,6 @@ ecma_proxy_object_find (ecma_object_t *obj_p, /**< proxy object */
 } /* ecma_proxy_object_find */
 
 /**
- * Convert the result of the ecma_proxy_object_get_prototype_of to compressed pointer
- *
- * Note: if `proto` is non-null, the reference from the object is released
- *
- * @return compressed pointer to the `proto` value
- */
-jmem_cpointer_t
-ecma_proxy_object_prototype_to_cp (ecma_value_t proto) /**< ECMA_VALUE_NULL or object */
-{
-  JERRY_ASSERT (ecma_is_value_null (proto) || ecma_is_value_object (proto));
-
-  if (ecma_is_value_null (proto))
-  {
-    return JMEM_CP_NULL;
-  }
-
-  jmem_cpointer_t proto_cp;
-  ecma_object_t *proto_obj_p = ecma_get_object_from_value (proto);
-  ECMA_SET_POINTER (proto_cp, proto_obj_p);
-  ecma_deref_object (proto_obj_p);
-
-  return proto_cp;
-} /* ecma_proxy_object_prototype_to_cp */
-
-/**
  * Helper method for validate the proxy object
  *
  * @return proxy trap - if the validation is successful

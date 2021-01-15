@@ -41,9 +41,6 @@ ecma_proxy_revoke_cb (const ecma_value_t function_obj,
                       const ecma_value_t args_p[],
                       const uint32_t args_count);
 
-jmem_cpointer_t
-ecma_proxy_object_prototype_to_cp (ecma_value_t proto);
-
 ecma_value_t
 ecma_proxy_object_find (ecma_object_t *obj_p,
                         ecma_string_t *prop_name_p);

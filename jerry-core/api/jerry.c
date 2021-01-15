@@ -3884,6 +3884,8 @@ jerry_object_get_property_names (const jerry_value_t obj_val, /**< object */
   ecma_object_t *obj_iter_p = obj_p;
   ecma_collection_t *result_p = ecma_new_collection ();
 
+  ecma_ref_object (obj_iter_p);
+
   while (true)
   {
     /* Step 1. Get Object.[[OwnKeys]] */
@@ -3892,6 +3894,7 @@ jerry_object_get_property_names (const jerry_value_t obj_val, /**< object */
 #if ENABLED (JERRY_BUILTIN_PROXY)
     if (prop_names_p == NULL)
     {
+      ecma_deref_object (obj_iter_p);
       return jerry_throw (ECMA_VALUE_ERROR);
     }
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
@@ -3942,6 +3945,7 @@ jerry_object_get_property_names (const jerry_value_t obj_val, /**< object */
         {
           ecma_collection_free (prop_names_p);
           ecma_collection_free (result_p);
+          ecma_deref_object (obj_iter_p);
           return jerry_throw (ECMA_VALUE_ERROR);
         }
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
@@ -4008,37 +4012,31 @@ jerry_object_get_property_names (const jerry_value_t obj_val, /**< object */
     ecma_collection_free (prop_names_p);
 
     /* Step 4: Traverse prototype chain */
-    jmem_cpointer_t parent_cp = JMEM_CP_NULL;
 
-    if (filter & JERRY_PROPERTY_FILTER_TRAVERSE_PROTOTYPE_CHAIN)
-    {
-#if ENABLED (JERRY_BUILTIN_PROXY)
-      if (ECMA_OBJECT_IS_PROXY (obj_iter_p))
-      {
-        ecma_value_t parent = ecma_proxy_object_get_prototype_of (obj_iter_p);
-
-        if (ECMA_IS_VALUE_ERROR (parent))
-        {
-          ecma_collection_free (result_p);
-          return jerry_throw (ECMA_VALUE_ERROR);
-        }
-
-        parent_cp = ecma_proxy_object_prototype_to_cp (parent);
-      }
-      else
-#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
-      {
-        parent_cp = ecma_op_ordinary_object_get_prototype_of (obj_iter_p);
-      }
-    }
-
-    if (parent_cp == JMEM_CP_NULL)
+    if ((filter & JERRY_PROPERTY_FILTER_TRAVERSE_PROTOTYPE_CHAIN) != JERRY_PROPERTY_FILTER_TRAVERSE_PROTOTYPE_CHAIN)
     {
       break;
     }
 
-    obj_iter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, parent_cp);
+    ecma_object_t *proto_p = ecma_op_object_get_prototype_of (obj_iter_p);
+
+    if (proto_p == NULL)
+    {
+      break;
+    }
+
+    ecma_deref_object (obj_iter_p);
+
+    if (JERRY_UNLIKELY (proto_p == ECMA_OBJECT_POINTER_ERROR))
+    {
+      ecma_collection_free (result_p);
+      return jerry_throw (ECMA_VALUE_ERROR);
+    }
+
+    obj_iter_p = proto_p;
   }
+
+  ecma_deref_object (obj_iter_p);
 
   return ecma_op_new_array_object_from_collection (result_p, false);
 } /* jerry_object_get_property_names */

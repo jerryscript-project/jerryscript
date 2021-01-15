@@ -2698,15 +2698,15 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_PUSH_NEW_TARGET:
         {
-          ecma_object_t *new_target_object = JERRY_CONTEXT (current_new_target_p);
-          if (new_target_object == NULL)
+          ecma_object_t *new_target_object_p = JERRY_CONTEXT (current_new_target_p);
+          if (new_target_object_p == NULL)
           {
             *stack_top_p++ = ECMA_VALUE_UNDEFINED;
           }
           else
           {
-            ecma_ref_object (new_target_object);
-            *stack_top_p++ = ecma_make_object_value (new_target_object);
+            ecma_ref_object (new_target_object_p);
+            *stack_top_p++ = ecma_make_object_value (new_target_object_p);
           }
           continue;
         }

@@ -1164,6 +1164,11 @@ ecma_op_object_put_apply_receiver (ecma_value_t receiver, /**< receiver */
 
       /* 5.e.iv */
       result = ecma_op_object_define_own_property (receiver_obj_p, property_name_p, &prop_desc);
+
+      if (JERRY_UNLIKELY (ecma_is_value_false (result)) && is_throw)
+      {
+        result = ecma_raise_type_error (ECMA_ERR_MSG ("Proxy trap returned falsish"));
+      }
     }
 
     ecma_free_property_descriptor (&prop_desc);
@@ -1184,7 +1189,14 @@ ecma_op_object_put_apply_receiver (ecma_value_t receiver, /**< receiver */
                   | ECMA_PROP_IS_WRITABLE_DEFINED
                   | ECMA_PROP_IS_VALUE_DEFINED);
     desc.value = value;
-    return ecma_proxy_object_define_own_property (receiver_obj_p, property_name_p, &desc);
+    ecma_value_t ret_value = ecma_proxy_object_define_own_property (receiver_obj_p, property_name_p, &desc);
+
+    if (JERRY_UNLIKELY (ecma_is_value_false (ret_value)) && is_throw)
+    {
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Proxy trap returned falsish"));
+    }
+
+    return ret_value;
   }
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 

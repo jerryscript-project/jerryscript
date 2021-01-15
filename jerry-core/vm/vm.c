@@ -4036,6 +4036,11 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
             result = ecma_op_object_has_property (object_p, prop_name_p);
 
+            if (ECMA_IS_VALUE_ERROR (result))
+            {
+              goto error;
+            }
+
             if (JERRY_LIKELY (ecma_is_value_true (result)))
             {
               byte_code_p = byte_code_start_p + branch_offset;

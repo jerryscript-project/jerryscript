@@ -1158,6 +1158,7 @@ ecma_proxy_object_get (ecma_object_t *obj_p, /**< proxy object */
   /* 12. */
   if (ECMA_IS_VALUE_ERROR (status))
   {
+    ecma_free_value (trap_result);
     return status;
   }
 

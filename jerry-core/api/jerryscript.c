@@ -172,6 +172,7 @@ jerry_return (const jerry_value_t value) /**< return value */
 void
 jerry_init (jerry_init_flag_t flags) /**< combination of Jerry flags */
 {
+  jerry_port_init ();
 #if JERRY_EXTERNAL_CONTEXT
   size_t total_size = jerry_port_context_alloc (sizeof (jerry_context_t));
   JERRY_UNUSED (total_size);

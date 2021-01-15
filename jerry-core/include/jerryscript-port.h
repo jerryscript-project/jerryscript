@@ -50,6 +50,11 @@ typedef enum
 } jerry_fatal_code_t;
 
 /**
+ * Init the program
+ */
+void jerry_port_init (void);
+
+/**
  * Signal the port that the process experienced a fatal failure from which it cannot
  * recover.
  *

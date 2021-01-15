@@ -1184,30 +1184,13 @@ ecma_op_implicit_constructor_handler_heritage_cb (const ecma_value_t function_ob
 
   if (ecma_is_value_object (result))
   {
-    ecma_value_t proto_value = ecma_op_object_get_by_magic_id (JERRY_CONTEXT (current_new_target),
-                                                               LIT_MAGIC_STRING_PROTOTYPE);
-    if (ECMA_IS_VALUE_ERROR (proto_value))
+    ecma_value_t fields_value = opfunc_init_class_fields (function_obj, result);
+
+    if (ECMA_IS_VALUE_ERROR (fields_value))
     {
       ecma_free_value (result);
       result = ECMA_VALUE_ERROR;
     }
-    else
-    {
-      if (ecma_is_value_object (proto_value))
-      {
-        ECMA_SET_POINTER (ecma_get_object_from_value (result)->u2.prototype_cp,
-                          ecma_get_object_from_value (proto_value));
-      }
-
-      ecma_value_t fields_value = opfunc_init_class_fields (function_obj, result);
-
-      if (ECMA_IS_VALUE_ERROR (fields_value))
-      {
-        ecma_free_value (result);
-        result = ECMA_VALUE_ERROR;
-      }
-    }
-    ecma_free_value (proto_value);
   }
 
   ecma_deref_object (super_ctor_p);

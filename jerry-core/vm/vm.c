@@ -606,23 +606,6 @@ vm_super_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                                                    arguments_p,
                                                    arguments_list_len);
 
-    if (ecma_is_value_object (completion_value))
-    {
-      ecma_value_t proto_value = ecma_op_object_get_by_magic_id (JERRY_CONTEXT (current_new_target),
-                                                                 LIT_MAGIC_STRING_PROTOTYPE);
-      if (ECMA_IS_VALUE_ERROR (proto_value))
-      {
-        ecma_free_value (completion_value);
-        completion_value = ECMA_VALUE_ERROR;
-      }
-      else if (ecma_is_value_object (proto_value))
-      {
-        ECMA_SET_POINTER (ecma_get_object_from_value (completion_value)->u2.prototype_cp,
-                          ecma_get_object_from_value (proto_value));
-      }
-      ecma_free_value (proto_value);
-    }
-
     if (!ECMA_IS_VALUE_ERROR (completion_value) && ecma_op_this_binding_is_initialized (environment_record_p))
     {
       ecma_free_value (completion_value);

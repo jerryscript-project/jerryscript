@@ -15,6 +15,9 @@
 
 #include <stdlib.h>
 #include "handle-scope-internal.h"
+#include "jext-common.h"
+
+JERRYX_STATIC_ASSERT (JERRYX_SCOPE_PRELIST_SIZE < 32, JERRYX_SCOPE_PRELIST_SIZE_MUST_BE_LESS_THAN_SIZE_OF_UINT8_T);
 
 /**
  * Opens a new handle scope and attach it to current global scope as a child scope.
@@ -339,7 +342,7 @@ jerryx_create_handle_in_scope (jerry_value_t jval, jerryx_handle_scope scope)
     return jval;
   }
   jerryx_handle_t *handle = malloc (sizeof (jerryx_handle_t));
-  JERRYX_HANDLE_SCOPE_ASSERT (handle != NULL);
+  JERRYX_ASSERT (handle != NULL);
   handle->jval = jval;
 
   handle->sibling = scope->handle_ptr;

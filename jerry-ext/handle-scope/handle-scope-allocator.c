@@ -15,6 +15,7 @@
 
 #include <stdlib.h>
 #include "handle-scope-internal.h"
+#include "jext-common.h"
 
 static jerryx_handle_scope_t jerryx_handle_scope_root =
 {
@@ -157,7 +158,7 @@ jerryx_handle_scope_alloc (void)
   else
   {
     jerryx_handle_scope_dynamic_t *dy_scope = malloc (sizeof (jerryx_handle_scope_dynamic_t));
-    JERRYX_HANDLE_SCOPE_ASSERT (dy_scope != NULL);
+    JERRYX_ASSERT (dy_scope != NULL);
     dy_scope->child = NULL;
 
     if (jerryx_handle_scope_pool.count != JERRYX_SCOPE_PRELIST_SIZE)

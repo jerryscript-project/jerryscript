@@ -20,17 +20,17 @@ set(INCLUDE_UNIT_EXT ${CMAKE_CURRENT_SOURCE_DIR})
 # Unit tests main modules
 set(SOURCE_UNIT_TEST_EXT_MODULES
   test-ext-arg.c
-  test-ext-handle-scope-handle-prelist.c
-  test-ext-module-empty.c
   test-ext-autorelease.c
-  test-ext-handle-scope-nested.c
-  test-ext-handle-scope.c
   test-ext-handle-scope-escape.c
-  test-ext-method-register.c
   test-ext-handle-scope-handle-prelist-escape.c
+  test-ext-handle-scope-handle-prelist.c
+  test-ext-handle-scope-nested.c
   test-ext-handle-scope-remove.c
   test-ext-handle-scope-root.c
+  test-ext-handle-scope.c
+  test-ext-method-register.c
   test-ext-module-canonical.c
+  test-ext-module-empty.c
 )
 
 # Disable test-ext-autorelease.c if compiler is MSVC, because MSVC doesn't support cleanup attribute.

@@ -274,7 +274,7 @@ ecma_op_to_boolean (ecma_value_t value) /**< ecma value */
  * @return ecma value
  *         Returned value must be freed with ecma_free_value
  */
-inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
+extern inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_op_to_number (ecma_value_t value, /**< ecma value */
                    ecma_number_t *number_p) /**< [out] ecma number */
 {

@@ -282,7 +282,7 @@ ecma_number_make_infinity (bool sign) /**< true - for negative Infinity,
  * @return true - if sign bit of ecma-number is set
  *         false - otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+extern inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_number_is_negative (ecma_number_t num) /**< ecma-number */
 {
   JERRY_ASSERT (!ecma_number_is_nan (num));
@@ -688,7 +688,7 @@ ecma_number_pow (ecma_number_t x, /**< left operand */
  *
  * @return number - result of multiplication.
  */
-inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
+extern inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_integer_multiply (ecma_integer_value_t left_integer, /**< left operand */
                        ecma_integer_value_t right_integer) /**< right operand */
 {

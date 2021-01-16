@@ -48,7 +48,7 @@
  * @return ECMA_VALUE_ERROR - if no the operation fails
  *         ECMA_VALUE_EMPTY - otherwise
  */
-inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
+extern inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 vm_var_decl (ecma_object_t *lex_env_p, /**< target lexical environment */
              ecma_string_t *var_name_str_p, /**< variable name */
              bool is_configurable_bindings) /**< true if the binding can be deleted */
@@ -94,7 +94,7 @@ vm_var_decl (ecma_object_t *lex_env_p, /**< target lexical environment */
  * @return ECMA_VALUE_ERROR - if no the operation fails
  *         ECMA_VALUE_EMPTY - otherwise
  */
-inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
+extern inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 vm_set_var (ecma_object_t *lex_env_p, /**< target lexical environment */
             ecma_string_t *var_name_str_p, /**< variable name */
             bool is_strict, /**< true, if the engine is in strict mode */
@@ -1245,7 +1245,7 @@ opfunc_create_implicit_class_constructor (uint8_t opcode) /**< current cbc opcod
 /**
  * Set the [[HomeObject]] attribute of the given functon object
  */
-inline void JERRY_ATTR_ALWAYS_INLINE
+extern inline void JERRY_ATTR_ALWAYS_INLINE
 opfunc_set_home_object (ecma_object_t *func_p, /**< function object */
                         ecma_object_t *parent_env_p) /**< parent environment */
 {

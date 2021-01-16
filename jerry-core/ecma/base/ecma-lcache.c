@@ -136,7 +136,7 @@ insert:
  * @return a pointer to an ecma_property_t if the lookup is successful
  *         NULL otherwise
  */
-inline ecma_property_t * JERRY_ATTR_ALWAYS_INLINE
+extern inline ecma_property_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_lcache_lookup (const ecma_object_t *object_p, /**< object */
                     const ecma_string_t *prop_name_p) /**< property's name */
 {

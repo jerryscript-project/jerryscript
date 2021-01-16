@@ -105,10 +105,8 @@ if(USING_TI)
 endif()
 
 if(USING_MSVC)
-  set(ENABLE_AMALGAM     ON) # FIXME: This should not be needed but right now it is. To be tracked down and followed up.
   set(ENABLE_STRIP       OFF)
 
-  set(ENABLE_AMALGAM_MESSAGE     " (FORCED BY COMPILER)")
   set(ENABLE_STRIP_MESSAGE       " (FORCED BY COMPILER)")
 endif()
 

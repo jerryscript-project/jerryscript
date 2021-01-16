@@ -45,7 +45,7 @@ vm_is_strict_mode (void)
  *                without 'this' argument,
  *         false - otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+extern inline bool JERRY_ATTR_ALWAYS_INLINE
 vm_is_direct_eval_form_call (void)
 {
   return (JERRY_CONTEXT (status_flags) & ECMA_STATUS_DIRECT_EVAL) != 0;

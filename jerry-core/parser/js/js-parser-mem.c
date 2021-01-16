@@ -52,7 +52,7 @@ parser_malloc (parser_context_t *context_p, /**< context */
 /**
  * Free memory allocated by parser_malloc.
  */
-inline void JERRY_ATTR_ALWAYS_INLINE
+extern inline void JERRY_ATTR_ALWAYS_INLINE
 parser_free (void *ptr, /**< pointer to free */
              size_t size) /**< size of the memory block */
 {
@@ -92,7 +92,7 @@ parser_free_local (void *ptr, /**< pointer to free */
 /**
  * Free the dynamically allocated buffer stored in the context
  */
-inline void JERRY_ATTR_ALWAYS_INLINE
+extern inline void JERRY_ATTR_ALWAYS_INLINE
 parser_free_allocated_buffer (parser_context_t *context_p) /**< context */
 {
   if (context_p->u.allocated_buffer_p != NULL)
@@ -644,7 +644,7 @@ parser_stack_pop (parser_context_t *context_p, /**< context */
 /**
  * Initialize stack iterator.
  */
-inline void
+extern inline void
 parser_stack_iterator_init (parser_context_t *context_p, /**< context */
                             parser_stack_iterator_t *iterator) /**< iterator */
 {
@@ -657,7 +657,7 @@ parser_stack_iterator_init (parser_context_t *context_p, /**< context */
  *
  * @return byte
  */
-inline uint8_t
+extern inline uint8_t
 parser_stack_iterator_read_uint8 (parser_stack_iterator_t *iterator) /**< iterator */
 {
   JERRY_ASSERT (iterator->current_position > 0 && iterator->current_position <= PARSER_STACK_PAGE_SIZE);

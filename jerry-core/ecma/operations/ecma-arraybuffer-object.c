@@ -194,7 +194,7 @@ ecma_arraybuffer_get_length (ecma_object_t *object_p) /**< pointer to the ArrayB
  *
  * @return pointer to the data buffer
  */
-inline lit_utf8_byte_t * JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
+extern inline lit_utf8_byte_t * JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_arraybuffer_get_buffer (ecma_object_t *object_p) /**< pointer to the ArrayBuffer object */
 {
   JERRY_ASSERT (ecma_object_class_is (object_p, LIT_MAGIC_STRING_ARRAY_BUFFER_UL));
@@ -221,7 +221,7 @@ ecma_arraybuffer_get_buffer (ecma_object_t *object_p) /**< pointer to the ArrayB
  * @return true - if value is an detached ArrayBuffer object
  *         false - otherwise
  */
-inline bool JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
+extern inline bool JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_arraybuffer_is_detached (ecma_object_t *object_p) /**< pointer to the ArrayBuffer object */
 {
   JERRY_ASSERT (ecma_object_class_is (object_p, LIT_MAGIC_STRING_ARRAY_BUFFER_UL));
@@ -237,7 +237,7 @@ ecma_arraybuffer_is_detached (ecma_object_t *object_p) /**< pointer to the Array
  * @return true - if detach op succeeded
  *         false - otherwise
  */
-inline bool JERRY_ATTR_ALWAYS_INLINE
+extern inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_arraybuffer_detach (ecma_object_t *object_p) /**< pointer to the ArrayBuffer object */
 {
   JERRY_ASSERT (ecma_object_class_is (object_p, LIT_MAGIC_STRING_ARRAY_BUFFER_UL));

@@ -55,6 +55,7 @@ import xml.dom.minidom
 from collections import Counter
 
 import signal
+import threading
 import multiprocessing
 
 #######################################################################
@@ -63,6 +64,10 @@ import multiprocessing
 
 M_YAML_LIST_PATTERN = re.compile(r"^\[(.*)\]$")
 M_YAML_MULTILINE_LIST = re.compile(r"^ *- (.*)$")
+
+
+# The timeout of each test case
+TEST262_CASE_TIMEOUT = 5
 
 
 def yaml_load(string):
@@ -595,11 +600,14 @@ class TestCase(object):
             logging.info("exec: %s", str(args))
             process = subprocess.Popen(
                 args,
-                shell=is_windows(),
+                shell=False,
                 stdout=stdout.file_desc,
                 stderr=stderr.file_desc
             )
+            timer = threading.Timer(TEST262_CASE_TIMEOUT, process.kill)
+            timer.start()
             code = process.wait()
+            timer.cancel()
             out = stdout.read()
             err = stderr.read()
         finally:

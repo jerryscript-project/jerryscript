@@ -28,7 +28,7 @@
 #include "jrt.h"
 #include "jrt-libc-includes.h"
 
-#if defined (WIN32)
+#if defined (_WIN32)
 #include <intrin.h>
 #endif
 
@@ -553,7 +553,7 @@ ecma_builtin_math_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wi
         uint32_t n = ecma_number_to_uint32 (x);
 #if defined (__GNUC__) || defined (__clang__)
         x = n ? __builtin_clz (n) : 32;
-#elif defined (WIN32)
+#elif defined (_WIN32)
         unsigned long ret;
         x = _BitScanReverse (&ret, n) ? 31 - ret : 32;
 #else

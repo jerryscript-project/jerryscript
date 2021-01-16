@@ -342,7 +342,7 @@ ecma_number_is_finite (ecma_number_t num) /**< ecma-number */
 {
 #if defined (__GNUC__) || defined (__clang__)
   return __builtin_isfinite (num);
-#elif defined (WIN32)
+#elif defined (_WIN32)
   return isfinite (num);
 #else
   return !ecma_number_is_nan (num) && !ecma_number_is_infinity (num);

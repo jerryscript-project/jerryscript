@@ -17,7 +17,7 @@
 #include "jerryscript-ext/debugger.h"
 #include "jext-common.h"
 
-#if (defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1)) && !defined WIN32
+#if (defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1)) && !defined _WIN32
 
 #include <errno.h>
 #include <fcntl.h>
@@ -393,7 +393,7 @@ jerryx_debugger_serial_create (const char *config) /**< specify the configuratio
   return true;
 } /* jerryx_debugger_serial_create */
 
-#else /* !(defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1)) || WIN32 */
+#else /* !(defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1)) || _WIN32 */
 /**
  * Dummy function when debugger is disabled.
  *
@@ -406,4 +406,4 @@ jerryx_debugger_serial_create (const char *config)
   return false;
 } /* jerryx_debugger_serial_create */
 
-#endif /* (defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1)) && !defined WIN32 */
+#endif /* (defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1)) && !defined _WIN32 */

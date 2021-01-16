@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#if !defined (WIN32)
+#if !defined (_WIN32)
 #include <libgen.h>
-#endif /* !defined (WIN32) */
+#endif /* !defined (_WIN32) */
 #include <limits.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -116,7 +116,7 @@ jerry_port_normalize_path (const char *in_path_p,   /**< input file path */
 {
   size_t ret = 0;
 
-#if defined (WIN32)
+#if defined (_WIN32)
   size_t base_drive_dir_len;
   const size_t in_path_len = strnlen (in_path_p, _MAX_PATH);
   char *path_p;

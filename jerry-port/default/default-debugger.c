@@ -19,13 +19,13 @@
 #define _XOPEN_SOURCE 500
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #elif defined (HAVE_TIME_H)
 #include <time.h>
 #elif defined (HAVE_UNISTD_H)
 #include <unistd.h>
-#endif /* WIN32 */
+#endif /* _WIN32 */
 
 #include "jerryscript-port.h"
 #include "jerryscript-port-default.h"
@@ -36,7 +36,7 @@
  */
 void jerry_port_sleep (uint32_t sleep_time) /**< milliseconds to sleep */
 {
-#ifdef WIN32
+#ifdef _WIN32
   Sleep (sleep_time);
 #elif defined (HAVE_TIME_H)
   struct timespec sleep_timespec;

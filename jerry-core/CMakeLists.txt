@@ -328,94 +328,94 @@ if(ENABLE_AMALGAM)
     ecma/base/ecma-literal-storage.h
     ecma/base/ecma-module.h
     ecma/base/ecma-property-hashmap.h
-    ecma/builtin-objects/ecma-builtin-arraybuffer.inc.h
-    ecma/builtin-objects/ecma-builtin-arraybuffer-prototype.inc.h
-    ecma/builtin-objects/ecma-builtin-array.inc.h
     ecma/builtin-objects/ecma-builtin-array-iterator-prototype.inc.h
-    ecma/builtin-objects/ecma-builtin-array-prototype.inc.h
     ecma/builtin-objects/ecma-builtin-array-prototype-unscopables.inc.h
-    ecma/builtin-objects/ecma-builtin-async-function.inc.h
+    ecma/builtin-objects/ecma-builtin-array-prototype.inc.h
+    ecma/builtin-objects/ecma-builtin-array.inc.h
+    ecma/builtin-objects/ecma-builtin-arraybuffer-prototype.inc.h
+    ecma/builtin-objects/ecma-builtin-arraybuffer.inc.h
     ecma/builtin-objects/ecma-builtin-async-function-prototype.inc.h
+    ecma/builtin-objects/ecma-builtin-async-function.inc.h
     ecma/builtin-objects/ecma-builtin-async-generator-function.inc.h
-    ecma/builtin-objects/ecma-builtin-async-generator.inc.h
     ecma/builtin-objects/ecma-builtin-async-generator-prototype.inc.h
+    ecma/builtin-objects/ecma-builtin-async-generator.inc.h
     ecma/builtin-objects/ecma-builtin-async-iterator-prototype.inc.h
-    ecma/builtin-objects/ecma-builtin-bigint.inc.h
     ecma/builtin-objects/ecma-builtin-bigint-prototype.inc.h
-    ecma/builtin-objects/ecma-builtin-boolean.inc.h
+    ecma/builtin-objects/ecma-builtin-bigint.inc.h
     ecma/builtin-objects/ecma-builtin-boolean-prototype.inc.h
-    ecma/builtin-objects/ecma-builtin-dataview.inc.h
+    ecma/builtin-objects/ecma-builtin-boolean.inc.h
     ecma/builtin-objects/ecma-builtin-dataview-prototype.inc.h
-    ecma/builtin-objects/ecma-builtin-date.inc.h
+    ecma/builtin-objects/ecma-builtin-dataview.inc.h
     ecma/builtin-objects/ecma-builtin-date-prototype.inc.h
-    ecma/builtin-objects/ecma-builtin-error.inc.h
+    ecma/builtin-objects/ecma-builtin-date.inc.h
     ecma/builtin-objects/ecma-builtin-error-prototype.inc.h
-    ecma/builtin-objects/ecma-builtin-evalerror.inc.h
+    ecma/builtin-objects/ecma-builtin-error.inc.h
     ecma/builtin-objects/ecma-builtin-evalerror-prototype.inc.h
-    ecma/builtin-objects/ecma-builtin-function.inc.h
+    ecma/builtin-objects/ecma-builtin-evalerror.inc.h
     ecma/builtin-objects/ecma-builtin-function-prototype.h
     ecma/builtin-objects/ecma-builtin-function-prototype.inc.h
+    ecma/builtin-objects/ecma-builtin-function.inc.h
     ecma/builtin-objects/ecma-builtin-generator-function.inc.h
-    ecma/builtin-objects/ecma-builtin-generator.inc.h
     ecma/builtin-objects/ecma-builtin-generator-prototype.inc.h
+    ecma/builtin-objects/ecma-builtin-generator.inc.h
     ecma/builtin-objects/ecma-builtin-global.inc.h
     ecma/builtin-objects/ecma-builtin-handlers.h
     ecma/builtin-objects/ecma-builtin-handlers.inc.h
-    ecma/builtin-objects/ecma-builtin-helpers.h
     ecma/builtin-objects/ecma-builtin-helpers-macro-defines.inc.h
     ecma/builtin-objects/ecma-builtin-helpers-macro-undefs.inc.h
+    ecma/builtin-objects/ecma-builtin-helpers.h
     ecma/builtin-objects/ecma-builtin-internal-routines-template.inc.h
     ecma/builtin-objects/ecma-builtin-intrinsic.inc.h
     ecma/builtin-objects/ecma-builtin-iterator-prototype.inc.h
     ecma/builtin-objects/ecma-builtin-json.inc.h
-    ecma/builtin-objects/ecma-builtin-map.inc.h
     ecma/builtin-objects/ecma-builtin-map-iterator-prototype.inc.h
     ecma/builtin-objects/ecma-builtin-map-prototype.inc.h
+    ecma/builtin-objects/ecma-builtin-map.inc.h
     ecma/builtin-objects/ecma-builtin-math.inc.h
-    ecma/builtin-objects/ecma-builtin-number.inc.h
     ecma/builtin-objects/ecma-builtin-number-prototype.inc.h
+    ecma/builtin-objects/ecma-builtin-number.inc.h
+    ecma/builtin-objects/ecma-builtin-object-prototype.inc.h
     ecma/builtin-objects/ecma-builtin-object.h
     ecma/builtin-objects/ecma-builtin-object.inc.h
-    ecma/builtin-objects/ecma-builtin-object-prototype.inc.h
-    ecma/builtin-objects/ecma-builtin-promise.inc.h
     ecma/builtin-objects/ecma-builtin-promise-prototype.inc.h
+    ecma/builtin-objects/ecma-builtin-promise.inc.h
     ecma/builtin-objects/ecma-builtin-proxy.inc.h
-    ecma/builtin-objects/ecma-builtin-rangeerror.inc.h
     ecma/builtin-objects/ecma-builtin-rangeerror-prototype.inc.h
-    ecma/builtin-objects/ecma-builtin-referenceerror.inc.h
+    ecma/builtin-objects/ecma-builtin-rangeerror.inc.h
     ecma/builtin-objects/ecma-builtin-referenceerror-prototype.inc.h
+    ecma/builtin-objects/ecma-builtin-referenceerror.inc.h
     ecma/builtin-objects/ecma-builtin-reflect.inc.h
-    ecma/builtin-objects/ecma-builtin-regexp.inc.h
     ecma/builtin-objects/ecma-builtin-regexp-prototype.inc.h
-    ecma/builtin-objects/ecma-builtin-set.inc.h
+    ecma/builtin-objects/ecma-builtin-regexp.inc.h
     ecma/builtin-objects/ecma-builtin-set-iterator-prototype.inc.h
     ecma/builtin-objects/ecma-builtin-set-prototype.inc.h
-    ecma/builtin-objects/ecma-builtins.h
-    ecma/builtin-objects/ecma-builtins.inc.h
-    ecma/builtin-objects/ecma-builtins-internal.h
-    ecma/builtin-objects/ecma-builtin-string.inc.h
+    ecma/builtin-objects/ecma-builtin-set.inc.h
     ecma/builtin-objects/ecma-builtin-string-iterator-prototype.inc.h
     ecma/builtin-objects/ecma-builtin-string-prototype.inc.h
-    ecma/builtin-objects/ecma-builtin-symbol.inc.h
+    ecma/builtin-objects/ecma-builtin-string.inc.h
     ecma/builtin-objects/ecma-builtin-symbol-prototype.inc.h
-    ecma/builtin-objects/ecma-builtin-syntaxerror.inc.h
+    ecma/builtin-objects/ecma-builtin-symbol.inc.h
     ecma/builtin-objects/ecma-builtin-syntaxerror-prototype.inc.h
-    ecma/builtin-objects/ecma-builtin-typeerror.inc.h
-    ecma/builtin-objects/ecma-builtin-typeerror-prototype.inc.h
+    ecma/builtin-objects/ecma-builtin-syntaxerror.inc.h
     ecma/builtin-objects/ecma-builtin-type-error-thrower.inc.h
-    ecma/builtin-objects/ecma-builtin-urierror.inc.h
+    ecma/builtin-objects/ecma-builtin-typeerror-prototype.inc.h
+    ecma/builtin-objects/ecma-builtin-typeerror.inc.h
     ecma/builtin-objects/ecma-builtin-urierror-prototype.inc.h
-    ecma/builtin-objects/ecma-builtin-weakmap.inc.h
+    ecma/builtin-objects/ecma-builtin-urierror.inc.h
     ecma/builtin-objects/ecma-builtin-weakmap-prototype.inc.h
-    ecma/builtin-objects/ecma-builtin-weakset.inc.h
+    ecma/builtin-objects/ecma-builtin-weakmap.inc.h
     ecma/builtin-objects/ecma-builtin-weakset-prototype.inc.h
+    ecma/builtin-objects/ecma-builtin-weakset.inc.h
+    ecma/builtin-objects/ecma-builtins-internal.h
+    ecma/builtin-objects/ecma-builtins.h
+    ecma/builtin-objects/ecma-builtins.inc.h
     ecma/operations/ecma-arguments-object.h
-    ecma/operations/ecma-arraybuffer-object.h
     ecma/operations/ecma-array-object.h
+    ecma/operations/ecma-arraybuffer-object.h
     ecma/operations/ecma-async-generator-object.h
-    ecma/operations/ecma-bigint.h
-    ecma/operations/ecma-bigint-object.h
     ecma/operations/ecma-big-uint.h
+    ecma/operations/ecma-bigint-object.h
+    ecma/operations/ecma-bigint.h
     ecma/operations/ecma-boolean-object.h
     ecma/operations/ecma-comparison.h
     ecma/operations/ecma-container-object.h
@@ -440,32 +440,32 @@ if(ENABLE_AMALGAM)
     ecma/operations/ecma-typedarray-object.h
     include/jerryscript-compiler.h
     include/jerryscript-core.h
-    include/jerryscript-debugger.h
     include/jerryscript-debugger-transport.h
-    include/jerryscript.h
+    include/jerryscript-debugger.h
     include/jerryscript-port.h
     include/jerryscript-snapshot.h
+    include/jerryscript.h
     jcontext/jcontext.h
     jmem/jmem-allocator-internal.h
     jmem/jmem.h
     jrt/jrt-bit-fields.h
-    jrt/jrt.h
     jrt/jrt-libc-includes.h
     jrt/jrt-types.h
+    jrt/jrt.h
     lit/lit-char-helpers.h
     lit/lit-globals.h
     lit/lit-magic-strings.h
     lit/lit-magic-strings.inc.h
     lit/lit-strings.h
-    lit/lit-unicode-conversions.inc.h
     lit/lit-unicode-conversions-sup.inc.h
+    lit/lit-unicode-conversions.inc.h
     lit/lit-unicode-folding.inc.h
-    lit/lit-unicode-ranges.inc.h
     lit/lit-unicode-ranges-sup.inc.h
+    lit/lit-unicode-ranges.inc.h
     vm/opcodes.h
     vm/vm-defines.h
-    vm/vm.h
     vm/vm-stack.h
+    vm/vm.h
   )
 
   # Generated files

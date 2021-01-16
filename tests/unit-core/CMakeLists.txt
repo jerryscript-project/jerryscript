@@ -25,63 +25,63 @@ endif()
 
 # Unit tests main modules
 set(SOURCE_UNIT_TEST_MAIN_MODULES
-  test-has-property.c
-  test-api-objecttype.c
-  test-strings.c
-  test-exec-stop.c
-  test-api-functiontype.c
-  test-external-string.c
-  test-from-property-descriptor.c
-  test-dataview.c
-  test-api-errortype.c
-  test-arraybuffer.c
-  test-api-object-property-names.c
-  test-to-integer.c
-  test-regression-3588.c
-  test-number-converter.c
-  test-api-value-type.c
-  test-jmem.c
-  test-promise.c
-  test-realm.c
-  test-internal-properties.c
   test-abort.c
-  test-api-promise.c
-  test-context-data.c
-  test-backtrace.c
-  test-objects-foreach.c
   test-api-binary-operations-arithmetics.c
   test-api-binary-operations-comparisons.c
-  test-to-length.c
-  test-api-strings.c
-  test-proxy.c
-  test-container.c
   test-api-binary-operations-instanceof.c
-  test-snapshot.c
-  test-native-callback-nested.c
-  test-lit-char-helpers.c
-  test-resource-name.c
-  test-unicode.c
-  test-bigint.c
-  test-api-property.c
+  test-api-errortype.c
+  test-api-functiontype.c
   test-api-iteratortype.c
-  test-api.c
-  test-typedarray.c
+  test-api-object-property-names.c
+  test-api-objecttype.c
+  test-api-promise.c
+  test-api-property.c
   test-api-set-and-clear-error-flag.c
+  test-api-strings.c
+  test-api-value-type.c
+  test-api.c
+  test-arraybuffer.c
+  test-backtrace.c
+  test-bigint.c
+  test-container.c
+  test-context-data.c
+  test-dataview.c
+  test-date-helpers.c
+  test-exec-stop.c
+  test-external-string.c
+  test-from-property-descriptor.c
+  test-has-property.c
+  test-internal-properties.c
+  test-jmem.c
   test-json.c
-  test-native-instanceof.c
+  test-lit-char-helpers.c
   test-literal-storage.c
   test-mem-stats.c
+  test-native-callback-nested.c
+  test-native-instanceof.c
   test-newtarget.c
+  test-number-converter.c
   test-number-to-int32.c
   test-number-to-string.c
-  test-string-to-number.c
+  test-objects-foreach.c
   test-poolman.c
+  test-promise.c
+  test-proxy.c
+  test-realm.c
   test-regexp-dotall-unicode.c
-  test-date-helpers.c
   test-regexp.c
+  test-regression-3588.c
+  test-resource-name.c
+  test-snapshot.c
+  test-string-to-number.c
   test-stringbuilder.c
+  test-strings.c
   test-symbol.c
+  test-to-integer.c
+  test-to-length.c
   test-to-property-descriptor.c
+  test-typedarray.c
+  test-unicode.c
 )
 
 # jerry_heap_stats_t.size == 0 if system allocator is used.

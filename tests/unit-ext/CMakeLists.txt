@@ -35,7 +35,7 @@ set(SOURCE_UNIT_TEST_EXT_MODULES
 
 # Disable test-ext-autorelease.c if compiler is MSVC, because MSVC doesn't support cleanup attribute.
 if(USING_MSVC)
-  list(REMOVE_ITEM SOURCE_UNIT_TEST_EXT_MODULES ${CMAKE_CURRENT_SOURCE_DIR}/test-ext-autorelease.c)
+  list(REMOVE_ITEM SOURCE_UNIT_TEST_EXT_MODULES test-ext-autorelease.c)
 endif()
 
 # Unit tests declaration

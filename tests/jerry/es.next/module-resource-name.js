@@ -14,14 +14,14 @@
 
 import { getName, getNamePromise } from "./module-resource-name-export.mjs"
 
-assert(getName().endsWith("/module-resource-name-export.mjs") === true);
+assert(getName().endsWith("module-resource-name-export.mjs"));
 
 var collector = {};
 getNamePromise(collector).then(() => { collector["end"] = resourceName(); });
 
 function __checkAsync() {
-  assert(collector["start"].endsWith("/module-resource-name-export.mjs") === true);
-  assert(collector["middle"].endsWith("/module-resource-name-export.mjs") === true);
-  assert(collector["end"].endsWith("/module-resource-name.js") === true);
+  assert(collector["start"].endsWith("module-resource-name-export.mjs"));
+  assert(collector["middle"].endsWith("module-resource-name-export.mjs"));
+  assert(collector["end"].endsWith("module-resource-name.js"));
   assert(Object.keys(collector).length === 3);
 }

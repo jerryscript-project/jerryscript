@@ -48,7 +48,7 @@ jerryx_handle_scope_release_handles (jerryx_handle_scope scope)
     {
       jerry_release_value (a_handle->jval);
       jerryx_handle_t *sibling = a_handle->sibling;
-      free (a_handle);
+      jerry_heap_free (a_handle, sizeof (jerryx_handle_t));
       a_handle = sibling;
     }
     scope->handle_ptr = NULL;
@@ -134,7 +134,7 @@ jerryx_hand_scope_escape_handle_from_prelist (jerryx_handle_scope scope, size_t 
     jerryx_handle_t *handle = scope->handle_ptr;
     scope->handle_ptr = handle->sibling;
     scope->handle_prelist[idx] = handle->jval;
-    free (handle);
+    jerry_heap_free (handle, sizeof (jerryx_handle_t));
     return jval;
   }
 
@@ -313,7 +313,7 @@ jerryx_handle_scope_add_handle_to (jerryx_handle_t *handle, jerryx_handle_scope 
   {
     ++scope->prelist_handle_count;
     jerry_value_t jval = handle->jval;
-    free (handle);
+    jerry_heap_free (handle, sizeof (jerryx_handle_t));
     scope->handle_prelist[prelist_handle_count] = jval;
     return jval;
   }
@@ -341,7 +341,7 @@ jerryx_create_handle_in_scope (jerry_value_t jval, jerryx_handle_scope scope)
     ++scope->prelist_handle_count;
     return jval;
   }
-  jerryx_handle_t *handle = malloc (sizeof (jerryx_handle_t));
+  jerryx_handle_t *handle = (jerryx_handle_t *) jerry_heap_alloc (sizeof (jerryx_handle_t));
   JERRYX_ASSERT (handle != NULL);
   handle->jval = jval;
 

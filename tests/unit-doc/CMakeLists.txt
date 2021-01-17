@@ -85,7 +85,7 @@ endif()
 # Add custom command to run doctest generator if any of the MarkDown sources
 # changes.
 add_custom_command(
-  COMMAND ${GEN_DOCTEST} -d ${CMAKE_CURRENT_BINARY_DIR} ${DOC_FILES}
+  COMMAND ${PYTHON_EXECUTABLE} ${GEN_DOCTEST} -d ${CMAKE_CURRENT_BINARY_DIR} ${DOC_FILES}
   DEPENDS ${GEN_DOCTEST} ${DOC_FILES}
   OUTPUT ${DOCTEST_COMPILE} ${DOCTEST_LINK} ${DOCTEST_RUN}
   COMMENT "Generating doctests"

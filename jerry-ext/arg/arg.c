@@ -13,17 +13,13 @@
  * limitations under the License.
  */
 
-#include "arg-internal.h"
 #include "jerryscript-ext/arg.h"
 #include "jerryscript.h"
-
-#define JERRYX_STATIC_ASSERT(x, msg) \
-  enum { static_assertion_failed_ ## msg = 1 / (!!(x)) }
+#include "arg-internal.h"
+#include "jext-common.h"
 
 JERRYX_STATIC_ASSERT (sizeof (jerryx_arg_int_option_t) <= sizeof (((jerryx_arg_t *) 0)->extra_info),
                       jerryx_arg_number_options_t_must_fit_into_extra_info);
-
-#undef JERRYX_STATIC_ASSERT
 
 /**
  * Validate the JS arguments and assign them to the native arguments.

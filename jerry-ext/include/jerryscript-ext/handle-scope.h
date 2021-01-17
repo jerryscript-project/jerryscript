@@ -31,12 +31,6 @@ extern "C"
 #define JERRYX_SCOPE_PRELIST_SIZE 20
 #endif
 
-#define STATIC_ASSERT(COND,MSG) typedef char static_assertion_##MSG[(COND)?1:-1]
-
-STATIC_ASSERT (JERRYX_SCOPE_PRELIST_SIZE < 32, JERRYX_SCOPE_PRELIST_SIZE_must_be_less_than_size_of_uint8_t);
-
-#undef STATIC_ASSERT
-
 typedef struct jerryx_handle_t jerryx_handle_t;
 /**
  * Dynamically allocated handle in the scopes.

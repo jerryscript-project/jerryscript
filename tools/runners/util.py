@@ -37,7 +37,7 @@ def set_timezone_and_exit(timezone):
 
 def get_timezone():
     assert sys.platform == 'win32', "get_timezone is Windows only function"
-    return subprocess.check_output(['cmd', '/S', '/C', 'tzutil', '/g'])
+    return subprocess.check_output(['cmd', '/S', '/C', 'tzutil', '/g'], universal_newlines=True)
 
 
 def set_sighdl_to_reset_timezone(timezone):

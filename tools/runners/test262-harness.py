@@ -382,6 +382,15 @@ def is_windows():
     return (actual_platform == 'Windows') or (actual_platform == 'Microsoft')
 
 
+def write_text_to(target, text):
+    if sys.version_info >= (3, 0):
+        target.buffer.write(text.encode(target.encoding or "utf8", "ignore"))
+        target.buffer.flush()
+    else:
+        target.write(text.encode("utf8", errors="ignore"))
+        target.flush()
+
+
 class TempFile(object):
 
     def __init__(self, suffix="", prefix="tmp", text=False):
@@ -452,12 +461,12 @@ class TestResult(object):
     def write_output(self, target):
         out = self.stdout.strip()
         if out:
-            target.write("--- output --- \n %s" % out)
+            write_text_to(target, u"--- output --- \n%s\n" % out)
         error = self.stderr.strip()
         if error:
-            target.write("--- errors ---  \n %s" % error)
+            write_text_to(target, u"--- errors ---  \n%s\n" % error)
 
-        target.write("\n--- exit code: %d ---\n" % self.exit_code)
+        write_text_to(target, u"\n--- exit code: %d ---\n" % self.exit_code)
 
     def has_failed(self):
         return self.exit_code != 0

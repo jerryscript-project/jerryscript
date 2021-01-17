@@ -2067,16 +2067,16 @@ jerry_create_promise (void)
   jerry_assert_api_available ();
 
 #if ENABLED (JERRY_BUILTIN_PROMISE)
-  ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target);
+  ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target_p);
 
   if (old_new_target_p == NULL)
   {
-    JERRY_CONTEXT (current_new_target) = ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE);
+    JERRY_CONTEXT (current_new_target_p) = ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE);
   }
 
   ecma_value_t promise_value = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_PROMISE_EXECUTOR_EMPTY);
 
-  JERRY_CONTEXT (current_new_target) = old_new_target_p;
+  JERRY_CONTEXT (current_new_target_p) = old_new_target_p;
   return promise_value;
 #else /* !ENABLED (JERRY_BUILTIN_PROMISE) */
   return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Promise not supported.")));
@@ -4622,15 +4622,15 @@ jerry_value_t
 jerry_get_new_target (void)
 {
 #if ENABLED (JERRY_ESNEXT)
-  ecma_object_t *current_new_target = JERRY_CONTEXT (current_new_target);
+  ecma_object_t *current_new_target_p = JERRY_CONTEXT (current_new_target_p);
 
-  if (current_new_target == NULL)
+  if (current_new_target_p == NULL)
   {
     return jerry_create_undefined ();
   }
 
-  ecma_ref_object (current_new_target);
-  return ecma_make_object_value (current_new_target);
+  ecma_ref_object (current_new_target_p);
+  return ecma_make_object_value (current_new_target_p);
 #else /* !ENABLED (JERRY_ESNEXT) */
   return jerry_create_undefined ();
 #endif /* ENABLED (JERRY_ESNEXT) */
@@ -5091,14 +5091,14 @@ jerry_create_dataview (const jerry_value_t array_buffer, /**< arraybuffer to cre
     ecma_make_uint32_value (byte_offset),
     ecma_make_uint32_value (byte_length)
   };
-  ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target);
+  ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target_p);
   if (old_new_target_p == NULL)
   {
-    JERRY_CONTEXT (current_new_target) = ecma_builtin_get (ECMA_BUILTIN_ID_DATAVIEW);
+    JERRY_CONTEXT (current_new_target_p) = ecma_builtin_get (ECMA_BUILTIN_ID_DATAVIEW);
   }
 
   ecma_value_t dataview_value = ecma_op_dataview_create (arguments_p, 3);
-  JERRY_CONTEXT (current_new_target) = old_new_target_p;
+  JERRY_CONTEXT (current_new_target_p) = old_new_target_p;
   return jerry_return (dataview_value);
 #else /* !ENABLED (JERRY_BUILTIN_DATAVIEW) */
   JERRY_UNUSED (array_buffer);
@@ -5657,11 +5657,11 @@ jerry_create_container (jerry_container_type_t container_type, /**< Type of the 
       return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Invalid container type.")));
     }
   }
-  ecma_object_t * old_new_target_p = JERRY_CONTEXT (current_new_target);
+  ecma_object_t * old_new_target_p = JERRY_CONTEXT (current_new_target_p);
 
   if (old_new_target_p == NULL)
   {
-    JERRY_CONTEXT (current_new_target) = ecma_builtin_get (ctor_id);
+    JERRY_CONTEXT (current_new_target_p) = ecma_builtin_get (ctor_id);
   }
 
   ecma_value_t container_value = ecma_op_container_create (arguments_list_p,
@@ -5669,7 +5669,7 @@ jerry_create_container (jerry_container_type_t container_type, /**< Type of the 
                                                            lit_id,
                                                            proto_id);
 
-  JERRY_CONTEXT (current_new_target) = old_new_target_p;
+  JERRY_CONTEXT (current_new_target_p) = old_new_target_p;
   return container_value;
 #else /* !ENABLED (JERRY_BUILTIN_CONTAINER) */
   JERRY_UNUSED (arguments_list_p);

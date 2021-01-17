@@ -602,7 +602,7 @@ vm_super_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   {
     ecma_object_t *func_obj_p = ecma_get_object_from_value (func_value);
     completion_value = ecma_op_function_construct (func_obj_p,
-                                                   JERRY_CONTEXT (current_new_target),
+                                                   JERRY_CONTEXT (current_new_target_p),
                                                    arguments_p,
                                                    arguments_list_len);
 
@@ -2626,12 +2626,12 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           if (result == ECMA_VALUE_UNDEFINED)
           {
-            ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target);
-            JERRY_CONTEXT (current_new_target) = ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE);
+            ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target_p);
+            JERRY_CONTEXT (current_new_target_p) = ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE);
 
             result = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_PROMISE_EXECUTOR_EMPTY);
 
-            JERRY_CONTEXT (current_new_target) = old_new_target_p;
+            JERRY_CONTEXT (current_new_target_p) = old_new_target_p;
           }
 
           vm_stack_context_type_t context_type = VM_GET_CONTEXT_TYPE (stack_top_p[-1]);
@@ -2698,7 +2698,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_PUSH_NEW_TARGET:
         {
-          ecma_object_t *new_target_object = JERRY_CONTEXT (current_new_target);
+          ecma_object_t *new_target_object = JERRY_CONTEXT (current_new_target_p);
           if (new_target_object == NULL)
           {
             *stack_top_p++ = ECMA_VALUE_UNDEFINED;

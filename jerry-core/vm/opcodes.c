@@ -848,8 +848,8 @@ opfunc_resume_executable_object (vm_executable_object_t *executable_object_p, /*
   JERRY_CONTEXT (vm_top_context_p) = &executable_object_p->frame_ctx;
 
   /* inside the generators the "new.target" is always "undefined" as it can't be invoked with "new" */
-  ecma_object_t *old_new_target = JERRY_CONTEXT (current_new_target);
-  JERRY_CONTEXT (current_new_target) = NULL;
+  ecma_object_t *old_new_target = JERRY_CONTEXT (current_new_target_p);
+  JERRY_CONTEXT (current_new_target_p) = NULL;
 
 #if ENABLED (JERRY_BUILTIN_REALMS)
   ecma_global_object_t *saved_global_object_p = JERRY_CONTEXT (global_object_p);
@@ -862,7 +862,7 @@ opfunc_resume_executable_object (vm_executable_object_t *executable_object_p, /*
   JERRY_CONTEXT (global_object_p) = saved_global_object_p;
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
-  JERRY_CONTEXT (current_new_target) = old_new_target;
+  JERRY_CONTEXT (current_new_target_p) = old_new_target;
   executable_object_p->extended_object.u.class_prop.extra_info &= (uint16_t) ~ECMA_EXECUTABLE_OBJECT_RUNNING;
 
   if (executable_object_p->frame_ctx.call_operation != VM_EXEC_RETURN)
@@ -970,15 +970,15 @@ opfunc_async_create_and_await (vm_frame_ctx_t *frame_ctx_p, /**< frame context *
   ecma_deref_object ((ecma_object_t *) executable_object_p);
   ecma_free_value (result);
 
-  ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target);
-  JERRY_CONTEXT (current_new_target) = promise_p;
+  ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target_p);
+  JERRY_CONTEXT (current_new_target_p) = promise_p;
 
   result = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_PROMISE_EXECUTOR_EMPTY);
 
   JERRY_ASSERT (ecma_is_value_object (result));
   executable_object_p->frame_ctx.block_result = result;
 
-  JERRY_CONTEXT (current_new_target) = old_new_target_p;
+  JERRY_CONTEXT (current_new_target_p) = old_new_target_p;
   return result;
 } /* opfunc_async_create_and_await */
 
@@ -1138,7 +1138,7 @@ ecma_op_implicit_constructor_handler_cb (const ecma_value_t function_obj, /**< t
 {
   JERRY_UNUSED_2 (args_p, args_count);
 
-  if (JERRY_CONTEXT (current_new_target) == NULL)
+  if (JERRY_CONTEXT (current_new_target_p) == NULL)
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor cannot be invoked without 'new'."));
   }
@@ -1162,7 +1162,7 @@ ecma_op_implicit_constructor_handler_heritage_cb (const ecma_value_t function_ob
 {
   JERRY_UNUSED (this_val);
 
-  if (JERRY_CONTEXT (current_new_target) == NULL)
+  if (JERRY_CONTEXT (current_new_target_p) == NULL)
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor cannot be invoked without 'new'."));
   }
@@ -1178,7 +1178,7 @@ ecma_op_implicit_constructor_handler_heritage_cb (const ecma_value_t function_ob
   ecma_object_t *super_ctor_p = ecma_get_object_from_value (super_ctor);
 
   ecma_value_t result = ecma_op_function_construct (super_ctor_p,
-                                                    JERRY_CONTEXT (current_new_target),
+                                                    JERRY_CONTEXT (current_new_target_p),
                                                     args_p,
                                                     args_count);
 

@@ -143,7 +143,7 @@ ecma_op_create_arraybuffer_object (const ecma_value_t *arguments_list_p, /**< li
 
   uint32_t length_uint32 = ecma_number_to_uint32 (length_num);
 
-  ecma_object_t *proto_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_new_target),
+  ecma_object_t *proto_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_new_target_p),
                                                                    ECMA_BUILTIN_ID_ARRAYBUFFER_PROTOTYPE);
 
   if (proto_p == NULL)

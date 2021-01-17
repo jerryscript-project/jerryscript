@@ -491,7 +491,7 @@ ecma_op_create_dynamic_function (const ecma_value_t *arguments_list_p, /**< argu
   ecma_builtin_id_t fallback_proto = ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE;
 
 #if ENABLED (JERRY_ESNEXT)
-  ecma_object_t *new_target_p = JERRY_CONTEXT (current_new_target);
+  ecma_object_t *new_target_p = JERRY_CONTEXT (current_new_target_p);
 
   if (JERRY_UNLIKELY (parse_opts & (ECMA_PARSE_GENERATOR_FUNCTION | ECMA_PARSE_ASYNC_FUNCTION)))
   {
@@ -649,9 +649,9 @@ ecma_op_create_arrow_function_object (ecma_object_t *scope_p, /**< function's sc
   arrow_func_p->this_binding = ecma_copy_value_if_not_object (this_binding);
   arrow_func_p->new_target = ECMA_VALUE_UNDEFINED;
 
-  if (JERRY_CONTEXT (current_new_target) != NULL)
+  if (JERRY_CONTEXT (current_new_target_p) != NULL)
   {
-    arrow_func_p->new_target = ecma_make_object_value (JERRY_CONTEXT (current_new_target));
+    arrow_func_p->new_target = ecma_make_object_value (JERRY_CONTEXT (current_new_target_p));
   }
   return func_p;
 } /* ecma_op_create_arrow_function_object */
@@ -1071,11 +1071,11 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
 
     if (ecma_is_value_undefined (arrow_func_p->new_target))
     {
-      JERRY_CONTEXT (current_new_target) = NULL;
+      JERRY_CONTEXT (current_new_target_p) = NULL;
     }
     else
     {
-      JERRY_CONTEXT (current_new_target) = ecma_get_object_from_value (arrow_func_p->new_target);
+      JERRY_CONTEXT (current_new_target_p) = ecma_get_object_from_value (arrow_func_p->new_target);
     }
     this_binding = arrow_func_p->this_binding;
   }
@@ -1121,7 +1121,7 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
 #if ENABLED (JERRY_ESNEXT)
   if (JERRY_UNLIKELY (CBC_FUNCTION_GET_TYPE (status_flags) == CBC_FUNCTION_CONSTRUCTOR))
   {
-    if (JERRY_CONTEXT (current_new_target) == NULL)
+    if (JERRY_CONTEXT (current_new_target_p) == NULL)
     {
       ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor cannot be invoked without 'new'."));
       goto exit;
@@ -1363,10 +1363,10 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
 #if ENABLED (JERRY_ESNEXT)
-  ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target);
+  ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target_p);
   if (JERRY_UNLIKELY (!(JERRY_CONTEXT (status_flags) & ECMA_STATUS_DIRECT_EVAL)))
   {
-    JERRY_CONTEXT (current_new_target) = NULL;
+    JERRY_CONTEXT (current_new_target_p) = NULL;
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
@@ -1386,7 +1386,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
   }
 
 #if ENABLED (JERRY_ESNEXT)
-  JERRY_CONTEXT (current_new_target) = old_new_target_p;
+  JERRY_CONTEXT (current_new_target_p) = old_new_target_p;
 #endif /* ENABLED (JERRY_ESNEXT) */
 
   return result;
@@ -1454,14 +1454,14 @@ ecma_op_function_construct_native (ecma_object_t *func_obj_p, /**< Function obje
   ecma_deref_object (proto_p);
 
 #if ENABLED (JERRY_ESNEXT)
-  ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target);
-  JERRY_CONTEXT (current_new_target) = new_target_p;
+  ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target_p);
+  JERRY_CONTEXT (current_new_target_p) = new_target_p;
 #endif /* ENABLED (JERRY_ESNEXT) */
 
   ecma_value_t ret_value = ecma_op_function_call_native (func_obj_p, this_arg, arguments_list_p, arguments_list_len);
 
 #if ENABLED (JERRY_ESNEXT)
-  JERRY_CONTEXT (current_new_target) = old_new_target_p;
+  JERRY_CONTEXT (current_new_target_p) = old_new_target_p;
 #endif /* ENABLED (JERRY_ESNEXT) */
 
   if (ECMA_IS_VALUE_ERROR (ret_value) || ecma_is_value_object (ret_value))
@@ -1520,14 +1520,14 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
 #if ENABLED (JERRY_ESNEXT)
-      ecma_object_t *old_new_target = JERRY_CONTEXT (current_new_target);
-      JERRY_CONTEXT (current_new_target) = new_target_p;
+      ecma_object_t *old_new_target = JERRY_CONTEXT (current_new_target_p);
+      JERRY_CONTEXT (current_new_target_p) = new_target_p;
 #endif /* ENABLED (JERRY_ESNEXT) */
 
       ecma_value_t ret_value = ecma_builtin_dispatch_construct (func_obj_p, arguments_list_p, arguments_list_len);
 
 #if ENABLED (JERRY_ESNEXT)
-      JERRY_CONTEXT (current_new_target) = old_new_target;
+      JERRY_CONTEXT (current_new_target_p) = old_new_target;
 #endif /* ENABLED (JERRY_ESNEXT) */
 
 #if ENABLED (JERRY_BUILTIN_REALMS)
@@ -1572,14 +1572,14 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
   }
 
   /* 6. */
-  ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target);
-  JERRY_CONTEXT (current_new_target) = new_target_p;
+  ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target_p);
+  JERRY_CONTEXT (current_new_target_p) = new_target_p;
 #endif /* ENABLED (JERRY_ESNEXT) */
 
   ecma_value_t ret_value = ecma_op_function_call_simple (func_obj_p, this_arg, arguments_list_p, arguments_list_len);
 
 #if ENABLED (JERRY_ESNEXT)
-  JERRY_CONTEXT (current_new_target) = old_new_target_p;
+  JERRY_CONTEXT (current_new_target_p) = old_new_target_p;
 #endif /* ENABLED (JERRY_ESNEXT) */
 
   /* 13.a */

@@ -373,9 +373,9 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
                 || lit_id == LIT_MAGIC_STRING_SET_UL
                 || lit_id == LIT_MAGIC_STRING_WEAKMAP_UL
                 || lit_id == LIT_MAGIC_STRING_WEAKSET_UL);
-  JERRY_ASSERT (JERRY_CONTEXT (current_new_target) != NULL);
+  JERRY_ASSERT (JERRY_CONTEXT (current_new_target_p) != NULL);
 
-  ecma_object_t *proto_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_new_target), proto_id);
+  ecma_object_t *proto_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_new_target_p), proto_id);
 
   if (JERRY_UNLIKELY (proto_p == NULL))
   {

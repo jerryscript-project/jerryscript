@@ -279,7 +279,7 @@ ecma_get_lex_env_type (const ecma_object_t *object_p) /**< lexical environment *
  *
  * @return pointer to ecma object
  */
-extern inline ecma_object_t *JERRY_ATTR_PURE
+extern inline ecma_object_t * JERRY_ATTR_PURE
 ecma_get_lex_env_binding_object (const ecma_object_t *object_p) /**< object-bound lexical environment */
 {
   JERRY_ASSERT (object_p != NULL);

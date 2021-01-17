@@ -18,17 +18,10 @@ from __future__ import print_function
 import argparse
 import os
 import re
-import shutil
 import subprocess
 import sys
 
 import util
-
-def get_platform_cmd_prefix():
-    if sys.platform == 'win32':
-        return ['cmd', '/S', '/C']
-    return ['python2']  # The official test262.py isn't python3 compatible, but has python shebang.
-
 
 def get_arguments():
     execution_runtime = os.environ.get('RUNTIME', '')
@@ -40,8 +33,10 @@ def get_arguments():
     parser.add_argument('--test-dir', metavar='DIR', required=True,
                         help='Directory contains test262 test suite')
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('--es5.1', dest='es5_1', action='store_true',
-                       help='Run test262 ES5.1 version')
+    group.add_argument('--es5.1', dest='es5_1', default=False, const='default',
+                       nargs='?', choices=['default', 'all', 'update'],
+                       help='Run test262 - ES5.1. default: all tests except excludelist, ' +
+                       'all: all tests, update: all tests and update excludelist')
     group.add_argument('--es2015', default=False, const='default',
                        nargs='?', choices=['default', 'all', 'update'],
                        help='Run test262 - ES2015. default: all tests except excludelist, ' +
@@ -66,8 +61,9 @@ def get_arguments():
     else:
         args.test_dir = os.path.join(args.test_dir, 'es5.1')
         args.test262_git_hash = 'es5-tests'
+        args.excludelist_path = os.path.join('tests', 'test262-es5.1-excludelist.xml')
 
-    args.mode = args.es2015 or args.esnext
+    args.mode = args.es2015 or args.esnext or args.es5_1
 
     return args
 
@@ -84,15 +80,6 @@ def prepare_test262_test_suite(args):
 
     return_code = subprocess.call(['git', 'checkout', args.test262_git_hash], cwd=args.test_dir)
     assert not return_code, 'Cloning test262 repository failed - invalid git revision.'
-
-    if args.es5_1:
-        path_to_remove = os.path.join(args.test_dir, 'test', 'suite', 'bestPractice')
-        if os.path.isdir(path_to_remove):
-            shutil.rmtree(path_to_remove)
-
-        path_to_remove = os.path.join(args.test_dir, 'test', 'suite', 'intl402')
-        if os.path.isdir(path_to_remove):
-            shutil.rmtree(path_to_remove)
 
     # Since ES2018 iterator's next method is called once during the prologue of iteration,
     # rather than during each step. The test is incorrect and stuck in an infinite loop.
@@ -186,7 +173,7 @@ def main(args):
 
     test262_harness_dir = os.path.abspath(os.path.dirname(__file__))
     test262_harness_path = os.path.join(test262_harness_dir, 'test262-harness.py')
-    test262_command = get_platform_cmd_prefix() + \
+    test262_command = util.get_python_cmd_prefix() + \
                       [test262_harness_path,
                        '--command', command,
                        '--tests', args.test_dir,

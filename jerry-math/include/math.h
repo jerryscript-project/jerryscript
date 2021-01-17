@@ -27,8 +27,8 @@ extern "C"
 #define HUGE_VAL    INFINITY
 
 #define isnan(x)    ((x) != (x))
-#define isinf(x)    (((x) == INFINITY) || ((x) == -INFINITY))
-#define isfinite(x) (!(isinf(x)) && (x != NAN))
+#define isinf(x)    ((x) == INFINITY ? 1 : (x) == -INFINITY ? -1 : 0)
+#define isfinite(x) (!isinf(x) && !isnan(x))
 
 /* Exponential and Logarithmic constants. */
 #define M_E        2.7182818284590452353602874713526625

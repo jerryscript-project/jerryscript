@@ -442,25 +442,6 @@ main (int argc, char **args)
   GEN_DBL_TEST (fabs (7.37e+19));
   GEN_DBL_TEST (fabs (-7.37e+19));
 
-  /* finite tests */
-  /* SKIPPED: not publicly declared in jerry-math
-  GEN_INT_TEST (finite (0.0));
-  GEN_INT_TEST (finite (-0.0));
-  GEN_INT_TEST (finite (1.0));
-  GEN_INT_TEST (finite (-1.0));
-  GEN_INT_TEST (finite (INFINITY));
-  GEN_INT_TEST (finite (-INFINITY));
-  GEN_INT_TEST (finite (NAN));
-  GEN_INT_TEST (finite (3.14));
-  GEN_INT_TEST (finite (-3.14));
-  GEN_INT_TEST (finite (0.7));
-  GEN_INT_TEST (finite (-0.7));
-  GEN_INT_TEST (finite (3.72e-09));
-  GEN_INT_TEST (finite (-3.72e-09));
-  GEN_INT_TEST (finite (7.37e+19));
-  GEN_INT_TEST (finite (-7.37e+19));
-  */
-
   /* floor tests */
   GEN_DBL_TEST (floor (0.0));
   GEN_DBL_TEST (floor (-0.0));
@@ -532,6 +513,40 @@ main (int argc, char **args)
   GEN_DBL_TEST (fmod (6.5, -2.3));
   GEN_DBL_TEST (fmod (-6.5, 2.3));
   GEN_DBL_TEST (fmod (-6.5, -2.3));
+
+  /* isfinite tests */
+  GEN_INT_TEST (isfinite (0.0));
+  GEN_INT_TEST (isfinite (-0.0));
+  GEN_INT_TEST (isfinite (1.0));
+  GEN_INT_TEST (isfinite (-1.0));
+  GEN_INT_TEST (isfinite (INFINITY));
+  GEN_INT_TEST (isfinite (-INFINITY));
+  GEN_INT_TEST (isfinite (NAN));
+  GEN_INT_TEST (isfinite (3.14));
+  GEN_INT_TEST (isfinite (-3.14));
+  GEN_INT_TEST (isfinite (0.7));
+  GEN_INT_TEST (isfinite (-0.7));
+  GEN_INT_TEST (isfinite (3.72e-09));
+  GEN_INT_TEST (isfinite (-3.72e-09));
+  GEN_INT_TEST (isfinite (7.37e+19));
+  GEN_INT_TEST (isfinite (-7.37e+19));
+
+  /* isinf tests */
+  GEN_INT_TEST (isinf (0.0));
+  GEN_INT_TEST (isinf (-0.0));
+  GEN_INT_TEST (isinf (1.0));
+  GEN_INT_TEST (isinf (-1.0));
+  GEN_INT_TEST (isinf (INFINITY));
+  GEN_INT_TEST (isinf (-INFINITY));
+  GEN_INT_TEST (isinf (NAN));
+  GEN_INT_TEST (isinf (3.14));
+  GEN_INT_TEST (isinf (-3.14));
+  GEN_INT_TEST (isinf (0.7));
+  GEN_INT_TEST (isinf (-0.7));
+  GEN_INT_TEST (isinf (3.72e-09));
+  GEN_INT_TEST (isinf (-3.72e-09));
+  GEN_INT_TEST (isinf (7.37e+19));
+  GEN_INT_TEST (isinf (-7.37e+19));
 
   /* isnan tests */
   GEN_INT_TEST (isnan (0.0));

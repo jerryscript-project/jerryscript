@@ -112,9 +112,6 @@ double fabs (double x);
 double floor (double x);
 double fmod (double x, double y);
 
-int isnan (double x);
-int finite (double x);
-
 double nextafter (double x, double y);
 
 /*

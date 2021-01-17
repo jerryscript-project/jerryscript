@@ -43,10 +43,8 @@ set(SOURCE_MATH
   exp.c
   expm1.c
   fabs.c
-  finite.c
   floor.c
   fmod.c
-  isnan.c
   log.c
   log10.c
   log1p.c

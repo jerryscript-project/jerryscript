@@ -65,3 +65,14 @@ def print_test_result(tested, total, is_passed, passed_string, test_path, is_sna
 
     color = TERM_GREEN if is_passed else TERM_RED
     print("[%4d/%4d] %s%s: %s%s%s" % (tested, total, color, passed_string, test_path, snapshot_string, TERM_NORMAL))
+
+
+def get_platform_cmd_prefix():
+    if sys.platform == 'win32':
+        return ['cmd', '/S', '/C']
+    return []
+
+
+def get_python_cmd_prefix():
+    # python script doesn't have execute permission on github actions windows runner
+    return get_platform_cmd_prefix() + [sys.executable or 'python']

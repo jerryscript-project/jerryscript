@@ -50,6 +50,12 @@ int gettimeofday (struct timeval *tv,
 } /* gettimeofday */
 #endif /* __GNUC__ */
 
+/*
+ * Even though rand can't be overriden on MSVC but we still can override
+ * it with gcc/mingw. So we just disable the override with MSVC and get
+ * it to be compiled
+ */
+#if !defined (_MSC_VER)
 int rand (void);
 
 /**
@@ -60,3 +66,4 @@ int rand (void)
 {
   return 4; /* Chosen by fair dice roll. Guaranteed to be random. */
 } /* rand */
+#endif /* !defined(_MSC_VER) */

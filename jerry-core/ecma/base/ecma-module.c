@@ -745,6 +745,8 @@ ecma_module_connect_imports (void)
       const bool is_namespace_import = ecma_compare_ecma_string_to_magic_id (import_names_p->imex_name_p,
                                                                              LIT_MAGIC_STRING_ASTERIX_CHAR);
 
+      ecma_value_t prop_value;
+
       if (is_namespace_import)
       {
         result = ecma_module_create_namespace_object (import_node_p->module_request_p);
@@ -753,11 +755,8 @@ ecma_module_connect_imports (void)
           return result;
         }
 
-        ecma_op_create_mutable_binding (local_env_p, import_names_p->local_name_p, true /* is_deletable */);
-        ecma_op_set_mutable_binding (local_env_p,
-                                     import_names_p->local_name_p,
-                                     ecma_make_object_value (import_node_p->module_request_p->namespace_object_p),
-                                     false /* is_strict */);
+        ecma_ref_object (import_node_p->module_request_p->namespace_object_p);
+        prop_value = ecma_make_object_value (import_node_p->module_request_p->namespace_object_p);
       }
       else /* !is_namespace_import */
       {
@@ -777,18 +776,8 @@ ecma_module_connect_imports (void)
         if (record.module_p->state == ECMA_MODULE_STATE_NATIVE)
         {
           ecma_object_t *object_p = record.module_p->namespace_object_p;
-          ecma_value_t prop_value = ecma_op_object_find_own (ecma_make_object_value (object_p),
-                                                             object_p,
-                                                             record.name_p);
+          prop_value = ecma_op_object_find_own (ecma_make_object_value (object_p), object_p, record.name_p);
           JERRY_ASSERT (ecma_is_value_found (prop_value));
-
-          ecma_op_create_mutable_binding (local_env_p, import_names_p->local_name_p, true /* is_deletable */);
-          ecma_op_set_mutable_binding (local_env_p,
-                                       import_names_p->local_name_p,
-                                       prop_value,
-                                       false /* is_strict */);
-
-          ecma_free_value (prop_value);
         }
         else
         {
@@ -800,18 +789,31 @@ ecma_module_connect_imports (void)
           }
 
           ecma_object_t *ref_base_lex_env_p;
-          ecma_value_t prop_value = ecma_op_get_value_lex_env_base (record.module_p->scope_p,
-                                                                    &ref_base_lex_env_p,
-                                                                    record.name_p);
+          prop_value = ecma_op_get_value_lex_env_base (record.module_p->scope_p,
+                                                       &ref_base_lex_env_p,
+                                                       record.name_p);
 
-          ecma_op_create_mutable_binding (local_env_p, import_names_p->local_name_p, true /* is_deletable */);
-          ecma_op_set_mutable_binding (local_env_p,
-                                       import_names_p->local_name_p,
-                                       prop_value,
-                                       false /* is_strict */);
-
-          ecma_free_value (prop_value);
         }
+      }
+
+      ecma_property_t *prop_p = ecma_op_create_mutable_binding (local_env_p,
+                                                                import_names_p->local_name_p,
+                                                                true /* is_deletable */);
+      JERRY_ASSERT (prop_p != ECMA_PROPERTY_POINTER_ERROR);
+
+      if (prop_p != NULL)
+      {
+        JERRY_ASSERT (ecma_is_value_undefined (ECMA_PROPERTY_VALUE_PTR (prop_p)->value));
+        ECMA_PROPERTY_VALUE_PTR (prop_p)->value = prop_value;
+        ecma_deref_if_object (prop_value);
+      }
+      else
+      {
+        ecma_op_set_mutable_binding (local_env_p,
+                                     import_names_p->local_name_p,
+                                     prop_value,
+                                     false /* is_strict */);
+        ecma_free_value (prop_value);
       }
 
       import_names_p = import_names_p->next_p;

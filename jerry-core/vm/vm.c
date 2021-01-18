@@ -1417,23 +1417,52 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
 #endif /* ENABLED (JERRY_ESNEXT) && !JERRY_NDEBUG */
 
-          result = vm_var_decl (lex_env_p, name_p, (frame_ctx_p->status_flags & VM_FRAME_CTX_DIRECT_EVAL) != 0);
+          /* 'Variable declaration' */
+          result = ecma_op_has_binding (lex_env_p, name_p);
 
+#if ENABLED (JERRY_BUILTIN_PROXY)
           if (ECMA_IS_VALUE_ERROR (result))
           {
             goto error;
           }
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
-          if (lit_value != ECMA_VALUE_UNDEFINED)
+          ecma_property_t *prop_p = NULL;
+
+          if (ecma_is_value_false (result))
           {
-            result = vm_set_var (lex_env_p, name_p, is_strict, lit_value);
+            bool is_configurable = (frame_ctx_p->status_flags & VM_FRAME_CTX_DIRECT_EVAL) != 0;
+            prop_p = ecma_op_create_mutable_binding (lex_env_p, name_p, is_configurable);
 
-            if (ECMA_IS_VALUE_ERROR (result))
+            if (JERRY_UNLIKELY (prop_p == ECMA_PROPERTY_POINTER_ERROR))
             {
+              result = ECMA_VALUE_ERROR;
               goto error;
             }
           }
 
+          if (lit_value != ECMA_VALUE_UNDEFINED)
+          {
+            JERRY_ASSERT (ecma_is_value_object (lit_value));
+
+            if (prop_p != NULL)
+            {
+              JERRY_ASSERT (ecma_is_value_undefined (ECMA_PROPERTY_VALUE_PTR (prop_p)->value));
+              JERRY_ASSERT (ecma_is_property_writable (*prop_p));
+              ECMA_PROPERTY_VALUE_PTR (prop_p)->value = lit_value;
+              ecma_free_object (lit_value);
+            }
+            else
+            {
+              result = ecma_op_put_value_lex_env_base (lex_env_p, name_p, is_strict, lit_value);
+              ecma_free_object (lit_value);
+
+              if (ECMA_IS_VALUE_ERROR (result))
+              {
+                goto error;
+              }
+            }
+          }
           continue;
         }
 #if ENABLED (JERRY_ESNEXT)

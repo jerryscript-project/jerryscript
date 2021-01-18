@@ -2139,6 +2139,11 @@ do \
  */
 #define ECMA_OBJECT_POINTER_ERROR ((ecma_object_t *) 0x01)
 
+/**
+ * Invalid property pointer which represents abrupt completion
+ */
+#define ECMA_PROPERTY_POINTER_ERROR ((ecma_property_t *) 0x01)
+
 #if ENABLED (JERRY_BUILTIN_PROXY)
 /**
  * Description of Proxy objects.

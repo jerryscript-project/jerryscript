@@ -144,10 +144,11 @@ ecma_op_has_binding (ecma_object_t *lex_env_p, /**< lexical environment */
  *
  * See also: ECMA-262 v5, 10.2.1
  *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value
+ * @return ECMA_PROPERTY_POINTER_ERROR - if the operation raises error
+ *         pointer to the created property - if the binding was created into a declerative environment
+ *         NULL - otherwise
  */
-ecma_value_t
+ecma_property_t *
 ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment */
                                 ecma_string_t *name_p, /**< argument N */
                                 bool is_deletable) /**< argument D */
@@ -165,10 +166,13 @@ ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environme
       prop_attributes = (uint8_t) (prop_attributes | ECMA_PROPERTY_FLAG_CONFIGURABLE);
     }
 
+    ecma_property_t *prop_p;
+
     ecma_create_named_data_property (lex_env_p,
                                      name_p,
                                      prop_attributes,
-                                     NULL);
+                                     &prop_p);
+    return prop_p;
   }
   else
   {
@@ -183,22 +187,22 @@ ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environme
 
       if (ECMA_IS_VALUE_ERROR (result))
       {
-        return result;
+        return ECMA_PROPERTY_POINTER_ERROR;
       }
 
       if (result == ECMA_VALUE_FALSE)
       {
-        return ECMA_VALUE_EMPTY;
+        return NULL;
       }
     }
     else if (!ecma_op_ordinary_object_is_extensible (binding_obj_p))
     {
-      return ECMA_VALUE_EMPTY;
+      return NULL;
     }
 #else /* !ENABLED (JERRY_BUILTIN_PROXY) || !ENABLED (JERRY_BUILTIN_REALMS) */
     if (!ecma_op_ordinary_object_is_extensible (binding_obj_p))
     {
-      return ECMA_VALUE_EMPTY;
+      return NULL;
     }
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) && ENABLED (JERRY_BUILTIN_REALMS) */
 
@@ -212,7 +216,7 @@ ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environme
 
     if (ECMA_IS_VALUE_ERROR (completion))
     {
-      return completion;
+      return ECMA_PROPERTY_POINTER_ERROR;
     }
     else
     {
@@ -220,7 +224,7 @@ ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environme
     }
   }
 
-  return ECMA_VALUE_EMPTY;
+  return NULL;
 } /* ecma_op_create_mutable_binding */
 
 /**
@@ -244,6 +248,12 @@ ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment 
   if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE)
   {
     ecma_property_t *property_p = ecma_find_named_property (lex_env_p, name_p);
+
+    if (JERRY_UNLIKELY (property_p == NULL))
+    {
+      property_p = ecma_op_create_mutable_binding (lex_env_p, name_p, is_strict);
+      JERRY_ASSERT (property_p != ECMA_PROPERTY_POINTER_ERROR);
+    }
 
     JERRY_ASSERT (property_p != NULL && ECMA_PROPERTY_IS_RAW_DATA (*property_p));
 

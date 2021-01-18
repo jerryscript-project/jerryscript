@@ -62,7 +62,7 @@ target_link_libraries(${JERRY_EXT_NAME} jerry-core)
 
 set(JERRY_EXT_PKGCONFIG_LIBS)
 
-if(USING_MSVC AND JERRY_DEBUGGER)
+if("${PLATFORM}" STREQUAL "WINDOWS" AND JERRY_DEBUGGER)
   target_link_libraries(${JERRY_EXT_NAME} ws2_32)
   set(JERRY_EXT_PKGCONFIG_LIBS -lws2_32)
 endif()

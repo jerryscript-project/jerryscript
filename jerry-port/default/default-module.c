@@ -127,7 +127,7 @@ jerry_port_normalize_path (const char *in_path_p,   /**< input file path */
     char *dir_p = (char *) malloc (_MAX_DIR);
 
     _splitpath_s (base_file_p, drive, _MAX_DRIVE, dir_p, _MAX_DIR, NULL, 0, NULL, 0);
-    const size_t drive_len = strnlen (&drive, _MAX_DRIVE);
+    const size_t drive_len = strnlen (drive, _MAX_DRIVE);
     const size_t dir_len = strnlen (dir_p, _MAX_DIR);
     base_drive_dir_len = drive_len + dir_len;
     path_p = (char *) malloc (base_drive_dir_len + in_path_len + 1);

@@ -121,7 +121,7 @@ log1p (double x)
       /* x <= -1.0 */
       if (x == -1.0)
       {
-        /* log1p(-1) = +inf */
+        /* log1p(-1) = -inf */
         return -two54 / zero;
       }
       else

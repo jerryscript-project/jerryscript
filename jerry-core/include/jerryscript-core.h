@@ -712,6 +712,7 @@ typedef enum
   JERRY_SYMBOL_TO_PRIMITIVE,         /**< @@toPrimitive well-known symbol */
   JERRY_SYMBOL_TO_STRING_TAG,        /**< @@toStringTag well-known symbol */
   JERRY_SYMBOL_UNSCOPABLES,          /**< @@unscopables well-known symbol */
+  JERRY_SYMBOL_MATCH_ALL,            /**< @@matchAll well-known symbol */
 } jerry_well_known_symbol_t;
 
 jerry_value_t jerry_get_well_known_symbol (jerry_well_known_symbol_t symbol);

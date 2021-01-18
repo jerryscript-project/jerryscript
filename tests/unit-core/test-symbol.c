@@ -232,6 +232,7 @@ main (void)
   "  [Symbol.toPrimitive]: 10,"
   "  [Symbol.toStringTag]: 11,"
   "  [Symbol.unscopables]: 12,"
+  "  [Symbol.matchAll]: 13,"
   "})";
 
   const char *symbols[] =
@@ -248,6 +249,7 @@ main (void)
     "toPrimitive",
     "toStringTag",
     "unscopables",
+    "matchAll",
   };
 
   jerry_value_t obj = jerry_eval (obj_src, sizeof (obj_src) - 1, JERRY_PARSE_NO_OPTS);
@@ -262,7 +264,7 @@ main (void)
   uint32_t prop_index = 0;
 
   for (jerry_well_known_symbol_t id = JERRY_SYMBOL_ASYNC_ITERATOR;
-       id <= JERRY_SYMBOL_UNSCOPABLES;
+       id <= JERRY_SYMBOL_MATCH_ALL;
        id++, expected++, prop_index++)
   {
     jerry_value_t well_known_symbol = jerry_get_well_known_symbol (id);
@@ -316,7 +318,7 @@ main (void)
   prop_index = 0;
 
   for (jerry_well_known_symbol_t id = JERRY_SYMBOL_ASYNC_ITERATOR;
-       id <= JERRY_SYMBOL_UNSCOPABLES;
+       id <= JERRY_SYMBOL_MATCH_ALL;
        id++, expected++, prop_index++)
   {
     jerry_value_t well_known_symbol = jerry_get_well_known_symbol (id);
@@ -330,7 +332,7 @@ main (void)
     jerry_release_value (well_known_symbol);
   }
 
-  jerry_well_known_symbol_t invalid_symbol = (jerry_well_known_symbol_t) (JERRY_SYMBOL_UNSCOPABLES + 1);
+  jerry_well_known_symbol_t invalid_symbol = (jerry_well_known_symbol_t) (JERRY_SYMBOL_MATCH_ALL + 1);
   jerry_value_t invalid_well_known_symbol = jerry_get_well_known_symbol (invalid_symbol);
   TEST_ASSERT (jerry_value_is_undefined (invalid_well_known_symbol));
   jerry_release_value (invalid_well_known_symbol);

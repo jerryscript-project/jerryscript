@@ -55,7 +55,8 @@ typedef enum
   LIT_GLOBAL_SYMBOL_TO_PRIMITIVE, /**< @@toPrimitive well known symbol */
   LIT_GLOBAL_SYMBOL_TO_STRING_TAG, /**< @@toStringTag well known symbol */
   LIT_GLOBAL_SYMBOL_UNSCOPABLES, /**< @@unscopables well known symbol */
-  LIT_GLOBAL_SYMBOL__LAST = LIT_GLOBAL_SYMBOL_UNSCOPABLES, /**< last global symbol */
+  LIT_GLOBAL_SYMBOL_MATCH_ALL, /**< @@matchAll well known symbol */
+  LIT_GLOBAL_SYMBOL__LAST = LIT_GLOBAL_SYMBOL_MATCH_ALL, /**< last global symbol */
 
   LIT_INTERNAL_MAGIC_STRING_DELETED, /**< special value for deleted properties */
   LIT_INTERNAL_MAGIC_STRING_INTERNAL_OBJECT, /**< Internal object ID for internal properties */

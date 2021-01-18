@@ -981,3 +981,36 @@ lit_char_fold_to_upper (lit_code_point_t cp) /**< code point */
 #endif /* ENABLED (JERRY_UNICODE_CASE_CONVERSION) */
 } /* lit_char_fold_to_upper */
 #endif /* ENABLED (JERRY_ESNEXT) */
+
+/**
+ * Helper method to find a specific character in a string
+ *
+ * Used by:
+ *         ecma_builtin_string_prototype_object_replace_helper
+ *
+ * @return true - if the given character is in the string
+ *         false - otherwise
+ */
+bool
+lit_find_char_in_string (ecma_string_t *str_p, /**< source string */
+                         lit_utf8_byte_t c) /**< character to find*/
+{
+  ECMA_STRING_TO_UTF8_STRING (str_p, start_p, start_size);
+
+  const lit_utf8_byte_t *str_curr_p = start_p;
+  const lit_utf8_byte_t *str_end_p = start_p + start_size;
+  bool have_char = false;
+
+  while (str_curr_p < str_end_p)
+  {
+    if (*str_curr_p++ == c)
+    {
+      have_char = true;
+      break;
+    }
+  }
+
+  ECMA_FINALIZE_UTF8_STRING (start_p, start_size);
+
+  return have_char;
+} /* lit_find_char_in_string */

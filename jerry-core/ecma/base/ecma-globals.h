@@ -685,6 +685,7 @@ typedef enum
   ECMA_PSEUDO_SET_ITERATOR = 4, /**< Set iterator object (ECMAScript v6, 23.2.5.1) */
   ECMA_PSEUDO_MAP_ITERATOR = 5, /**< Map iterator object (ECMAScript v6, 23.1.5.1) */
   ECMA_PSEUDO_STRING_ITERATOR = 6, /**< String iterator object (ECMAScript v6, 22.1.5.1) */
+  ECMA_PSEUDO_REGEXP_STRING_ITERATOR = 7, /** RegExp string iterator object (ECMAScript v11, 21.2.7) */
   ECMA_PSEUDO_ARRAY__MAX = ECMA_PSEUDO_STRING_ITERATOR /**< maximum value */
 } ecma_pseudo_array_type_t;
 

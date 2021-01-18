@@ -813,6 +813,13 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
           {
             break;
           }
+          case ECMA_PSEUDO_REGEXP_STRING_ITERATOR:
+          {
+            ecma_regexp_string_iterator_t *regexp_string_iterator_obj = (ecma_regexp_string_iterator_t *) object_p;
+            ecma_value_t regexp = regexp_string_iterator_obj->iterating_regexp;
+            ecma_gc_set_object_visited (ecma_get_object_from_value (regexp));
+            break;
+          }
 #endif /* ENABLED (JERRY_ESNEXT) */
           default:
           {
@@ -1726,6 +1733,19 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
             ecma_deref_ecma_string (ecma_get_string_from_value (iterated_value));
           }
 
+          break;
+        }
+        case ECMA_PSEUDO_REGEXP_STRING_ITERATOR:
+        {
+          ecma_regexp_string_iterator_t *regexp_string_iterator_obj = (ecma_regexp_string_iterator_t *) object_p;
+          ecma_value_t iterated_string = regexp_string_iterator_obj->iterated_string;
+
+          if (!ecma_is_value_empty (iterated_string))
+          {
+            ecma_deref_ecma_string (ecma_get_string_from_value (iterated_string));
+          }
+
+          ext_object_size = sizeof (ecma_regexp_string_iterator_t);
           break;
         }
 #endif /* ENABLED (JERRY_ESNEXT) */

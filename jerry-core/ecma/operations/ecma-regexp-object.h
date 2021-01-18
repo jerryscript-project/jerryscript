@@ -151,6 +151,19 @@ typedef struct
   uint8_t char_size;                           /**< size of encoded characters */
 } ecma_regexp_ctx_t;
 
+/**
+ * RegExpStringIterator object internal slots
+ *
+ * See also:
+ *          ECMA-262 v11, 21.2.7.2
+ */
+typedef struct
+{
+  ecma_extended_object_t header; /**< extended object part */
+  ecma_value_t iterating_regexp; /**< [[IteratingRegExp]] internal slot */
+  ecma_value_t iterated_string; /**< [[IteratedString]] internal slot */
+} ecma_regexp_string_iterator_t;
+
 #if ENABLED (JERRY_ESNEXT)
 lit_code_point_t ecma_regexp_unicode_advance (const lit_utf8_byte_t **str_p, const lit_utf8_byte_t *end_p);
 #endif /* ENABLED (JERRY_ESNEXT) */

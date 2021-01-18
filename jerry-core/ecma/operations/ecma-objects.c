@@ -899,7 +899,8 @@ static const uint16_t ecma_global_symbol_descriptions[] =
   LIT_MAGIC_STRING_SPLIT,
   LIT_MAGIC_STRING_TO_PRIMITIVE,
   LIT_MAGIC_STRING_TO_STRING_TAG,
-  LIT_MAGIC_STRING_UNSCOPABLES
+  LIT_MAGIC_STRING_UNSCOPABLES,
+  LIT_MAGIC_STRING_MATCH_ALL,
 };
 
 JERRY_STATIC_ASSERT (sizeof (ecma_global_symbol_descriptions) / sizeof (uint16_t) == ECMA_BUILTIN_GLOBAL_SYMBOL_COUNT,
@@ -2657,6 +2658,7 @@ ecma_object_check_class_name_is_object (ecma_object_t *obj_p) /**< object */
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_ARRAY_ITERATOR_PROTOTYPE)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_ITERATOR_PROTOTYPE)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_STRING_ITERATOR_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_REGEXP_STRING_ITERATOR_PROTOTYPE)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_EVAL_ERROR_PROTOTYPE)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_RANGE_ERROR_PROTOTYPE)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_REFERENCE_ERROR_PROTOTYPE)
@@ -2751,6 +2753,10 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
         case ECMA_PSEUDO_STRING_ITERATOR:
         {
           return LIT_MAGIC_STRING_STRING_ITERATOR_UL;
+        }
+        case ECMA_PSEUDO_REGEXP_STRING_ITERATOR:
+        {
+          return LIT_MAGIC_STRING_REGEXP_STRING_ITERATOR_UL;
         }
 #endif /* ENABLED (JERRY_ESNEXT) */
         default:

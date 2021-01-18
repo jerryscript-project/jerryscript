@@ -405,6 +405,7 @@ main (int argc, char **args)
   GEN_DBL_TEST (expm1 (-INFINITY));
   GEN_DBL_TEST (expm1 (NAN));
   GEN_DBL_TEST (expm1 (7.08e+02));
+  GEN_DBL_TEST (expm1 (7.095e+02));
   GEN_DBL_TEST (expm1 (7.10e+02));
   GEN_DBL_TEST (expm1 (-7.40e+02));
   GEN_DBL_TEST (expm1 (-7.50e+02));

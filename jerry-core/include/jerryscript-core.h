@@ -232,6 +232,12 @@ typedef jerry_value_t (*jerry_external_handler_t) (const jerry_value_t function_
 typedef void (*jerry_object_native_free_callback_t) (void *native_p);
 
 /**
+ * Decorator callback for Error objects. The decorator can create
+ * or update any properties of the newly created Error object.
+ */
+typedef void (*jerry_error_object_created_callback_t) (const jerry_value_t error_object, void *user_p);
+
+/**
  * Callback which tells whether the ECMAScript execution should be stopped.
  *
  * As long as the function returns with undefined the execution continues.
@@ -512,6 +518,7 @@ jerry_value_t jerry_binary_operation (jerry_binary_operation_t op,
 jerry_value_t jerry_create_abort_from_value (jerry_value_t value, bool release);
 jerry_value_t jerry_create_error_from_value (jerry_value_t value, bool release);
 jerry_value_t jerry_get_value_from_error (jerry_value_t value, bool release);
+void jerry_set_error_object_created_callback (jerry_error_object_created_callback_t callback, void *user_p);
 
 /**
  * Error object function(s).

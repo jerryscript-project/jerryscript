@@ -72,6 +72,7 @@ typedef enum
 #endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
   ECMA_STATUS_EXCEPTION         = (1u << 3), /**< last exception is a normal exception */
   ECMA_STATUS_ABORT             = (1u << 4), /**< last exception is an abort */
+  ECMA_STATUS_ERROR_UPDATE      = (1u << 5), /**< the error_object_created_callback_p is called */
 } ecma_status_flag_t;
 
 /**

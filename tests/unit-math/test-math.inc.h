@@ -294,6 +294,7 @@ check_double ("expm1 (INFINITY)", expm1 (INFINITY), INF);
 check_double ("expm1 (-INFINITY)", expm1 (-INFINITY), -1.00000000000000000000E+00);
 check_double ("expm1 (NAN)", expm1 (NAN), NAN);
 check_double ("expm1 (7.08e+02)", expm1 (7.08e+02), 3.02338314427605515848E+307);
+check_double ("expm1 (7.095e+02)", expm1 (7.095e+02), 1.35498631931463283283E+308);
 check_double ("expm1 (7.10e+02)", expm1 (7.10e+02), INF);
 check_double ("expm1 (-7.40e+02)", expm1 (-7.40e+02), -1.00000000000000000000E+00);
 check_double ("expm1 (-7.50e+02)", expm1 (-7.50e+02), -1.00000000000000000000E+00);

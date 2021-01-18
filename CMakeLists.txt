@@ -58,10 +58,11 @@ set(UNITTESTS               OFF CACHE BOOL "Build unit tests?")
 set(DOCTESTS                OFF CACHE BOOL "Build doc tests?")
 
 # Optional build settings
-set(BUILD_SHARED_LIBS  OFF CACHE BOOL "Build shared libraries?")
-set(ENABLE_AMALGAM     OFF CACHE BOOL "Enable amalgamated build?")
-set(ENABLE_LTO         ON  CACHE BOOL "Enable LTO build?")
-set(ENABLE_STRIP       ON  CACHE BOOL "Enable stripping all symbols from release binary?")
+set(BUILD_SHARED_LIBS         OFF CACHE BOOL "Build shared libraries?")
+set(ENABLE_AMALGAM            OFF CACHE BOOL "Enable amalgamated build?")
+set(ENABLE_LTO                ON  CACHE BOOL "Enable LTO build?")
+set(ENABLE_STRIP              ON  CACHE BOOL "Enable stripping all symbols from release binary?")
+set(ENABLE_COMPILE_COMMANDS   ON  CACHE BOOL "Enable generating compile_commands.json?")
 
 # Option overrides
 if(NOT USING_CLANG)
@@ -116,6 +117,9 @@ if(CYGWIN OR MINGW OR MSYS)
   set(ENABLE_LTO_MESSAGE         " (FORCED BY PLATFORM)")
 endif()
 
+# Generate compile_commands.json
+set(CMAKE_EXPORT_COMPILE_COMMANDS ${ENABLE_COMPILE_COMMANDS})
+
 # Status messages
 message(STATUS "CMAKE_BUILD_TYPE               " ${CMAKE_BUILD_TYPE})
 message(STATUS "CMAKE_C_COMPILER_ID            " ${CMAKE_C_COMPILER_ID})
@@ -125,6 +129,7 @@ message(STATUS "BUILD_SHARED_LIBS              " ${BUILD_SHARED_LIBS})
 message(STATUS "ENABLE_AMALGAM                 " ${ENABLE_AMALGAM} ${ENABLE_AMALGAM_MESSAGE})
 message(STATUS "ENABLE_LTO                     " ${ENABLE_LTO} ${ENABLE_LTO_MESSAGE})
 message(STATUS "ENABLE_STRIP                   " ${ENABLE_STRIP} ${ENABLE_STRIP_MESSAGE})
+message(STATUS "ENABLE_COMPILE_COMMANDS        " ${ENABLE_COMPILE_COMMANDS})
 message(STATUS "JERRY_VERSION                  " ${JERRY_VERSION})
 message(STATUS "JERRY_CMDLINE                  " ${JERRY_CMDLINE} ${JERRY_CMDLINE_MESSAGE})
 message(STATUS "JERRY_CMDLINE_TEST             " ${JERRY_CMDLINE_TEST} ${JERRY_CMDLINE_TEST_MESSAGE})

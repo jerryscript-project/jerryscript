@@ -14,9 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
 from cmd import Cmd
-from pprint import pprint
+import codecs
 import math
 import socket
 import sys
@@ -28,8 +27,7 @@ from jerry_client_websocket import WebSocket
 from jerry_client_rawpacket import RawPacket
 from jerry_client_tcp import Socket
 
-def write(string):
-    print(string, end='')
+from jerry_client_util import jerry_encode, write, writeln, jerry_pprint
 
 class DebuggerPrompt(Cmd):
     # pylint: disable=too-many-instance-attributes,too-many-arguments
@@ -42,7 +40,7 @@ class DebuggerPrompt(Cmd):
     def precmd(self, line):
         self.stop = False
         if self.debugger.non_interactive:
-            print("%s" % line)
+            writeln(jerry_encode(line))
         return line
 
     def postcmd(self, stop, line):
@@ -61,10 +59,11 @@ class DebuggerPrompt(Cmd):
             if line_num >= 0:
                 self.debugger.display = line_num
         else:
-            print("Non-negative integer number expected, 0 turns off this function")
+            writeln(b"Non-negative integer number expected, 0 turns off this function")
 
-    def do_break(self, args):
+    def do_break(self, args_text):
         """ Insert breakpoints on the given lines or functions """
+        args = jerry_encode(args_text)
         write(self.debugger.set_break(args))
     do_b = do_break
 
@@ -111,7 +110,7 @@ class DebuggerPrompt(Cmd):
 
                 args -= 1
         except ValueError as val_errno:
-            print("Error: expected a positive integer: %s" % val_errno)
+            writeln(jerry_encode("Error: expected a positive integer: %s" % val_errno))
     do_n = do_next
 
     def do_step(self, _):
@@ -125,7 +124,7 @@ class DebuggerPrompt(Cmd):
         self.debugger.do_continue()
         self.stop = True
         if not self.debugger.non_interactive:
-            print("Press enter to stop JavaScript execution.")
+            writeln(b"Press enter to stop JavaScript execution.")
     do_c = do_continue
 
     def do_finish(self, _):
@@ -161,7 +160,7 @@ class DebuggerPrompt(Cmd):
             elif key == 'q\n':
                 break
             else:
-                print("Invalid key")
+                writeln(b"Invalid key")
 
     def do_eval(self, args):
         """ Evaluate JavaScript source code """
@@ -188,7 +187,7 @@ class DebuggerPrompt(Cmd):
                 raise ValueError("Invalid scope chain index: %d (must be between 0 and 65535)" % index)
 
         except ValueError as val_errno:
-            print("Error: %s" % (val_errno))
+            writeln(jerry_encode("Error: %s" % (val_errno)))
             return
 
         self.debugger.eval_at(code, index)
@@ -229,14 +228,14 @@ class DebuggerPrompt(Cmd):
     def do_dump(self, args):
         """ Dump all of the debugger data """
         if args:
-            print("Error: No argument expected")
+            writeln(b"Error: No argument expected")
         else:
-            pprint(self.debugger.function_list)
+            jerry_pprint(self.debugger.function_list)
 
     # pylint: disable=invalid-name
     def do_EOF(self, _):
         """ Exit JerryScript debugger """
-        print("Unexpected end of input. Connection closed.")
+        writeln(b"Unexpected end of input. Connection closed.")
         self.debugger.quit()
         self.quit = True
         self.stop = True
@@ -248,22 +247,33 @@ def _scroll_direction(debugger, direction):
         debugger.src_offset -= debugger.src_offset_diff
     else:
         debugger.src_offset += debugger.src_offset_diff
-    print(debugger.print_source(debugger.display, debugger.src_offset)['value'])
+    writeln(debugger.print_source(debugger.display, debugger.src_offset)['value'])
 
 def src_check_args(args):
     try:
         line_num = int(args)
         if line_num < 0:
-            print("Error: Non-negative integer number expected")
+            writeln(b"Error: Non-negative integer number expected")
             return -1
 
         return line_num
     except ValueError as val_errno:
-        print("Error: Non-negative integer number expected: %s" % (val_errno))
+        writeln(jerry_encode("Error: Non-negative integer number expected: %s" % (val_errno)))
         return -1
+
+def setup_stdio():
+    (out_stream, err_stream) = (sys.stdout, sys.stderr)
+    if sys.version_info.major >= 3:
+        (out_stream, err_stream) = (sys.stdout.buffer, sys.stderr.buffer)
+    # For tty using native encoding, otherwise (pipe) use 'utf-8'
+    encoding = sys.stdout.encoding if sys.stdout.isatty() else 'utf-8'
+    # Always override it to anvoid encode error
+    sys.stdout = codecs.getwriter(encoding)(out_stream, 'xmlcharrefreplace')
+    sys.stderr = codecs.getwriter(encoding)(err_stream, 'xmlcharrefreplace')
 
 # pylint: disable=too-many-branches,too-many-locals,too-many-statements
 def main():
+    setup_stdio()
     args = jerry_client_main.arguments_parse()
 
     channel = None
@@ -282,7 +292,7 @@ def main():
         from jerry_client_serial import Serial
         protocol = Serial(args.serial_config)
     else:
-        print("Unsupported transmission protocol")
+        writeln(b"Unsupported transmission protocol")
         return -1
 
     if args.channel == "websocket":
@@ -290,7 +300,7 @@ def main():
     elif args.channel == "rawpacket":
         channel = RawPacket(protocol=protocol)
     else:
-        print("Unsupported communication channel")
+        writeln(b"Unsupported communication channel")
         return -1
 
     debugger = jerry_client_main.JerryDebugger(channel)
@@ -336,10 +346,11 @@ if __name__ == "__main__":
         main()
     except socket.error as error_msg:
         ERRNO = error_msg.errno
-        MSG = str(error_msg)
+        MSG = jerry_encode(str(error_msg))
         if ERRNO == 111:
-            sys.exit("Failed to connect to the JerryScript debugger.")
+            writeln(b"Failed to connect to the JerryScript debugger.")
         elif ERRNO == 32 or ERRNO == 104:
-            sys.exit("Connection closed.")
+            writeln(b"Connection closed.")
         else:
-            sys.exit("Failed to connect to the JerryScript debugger.\nError: %s" % (MSG))
+            writeln(b"Failed to connect to the JerryScript debugger.\nError: %s" % (MSG))
+        sys.exit(1)

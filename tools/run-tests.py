@@ -72,6 +72,9 @@ JERRY_UNITTESTS_OPTIONS = [
             skip=skip_if((sys.platform == 'win32'), 'FEATURE_INIT_FINI build flag isn\'t supported on Windows,' +
                          ' because Microsoft Visual C/C++ Compiler doesn\'t support' +
                          ' library constructors and destructors.')),
+    Options('unittests-es5.1-debug-math',
+            OPTIONS_COMMON + OPTIONS_UNITTESTS + OPTIONS_PROFILE_ES51 + OPTIONS_DEBUG
+            + ['--jerry-math=on']),
 ]
 
 # Test options for jerry-tests

@@ -42,6 +42,12 @@ typedef union
   uint32_t bits32[2];
 } double_bits_t;
 
+static uint8_t
+check_signbit (double_bits_t val)
+{
+  return (uint8_t) (val.bits64 >> 63);
+} /* check_signbit */
+
 static void
 check_double (const char *expr, double computed, double expected)
 {
@@ -58,7 +64,7 @@ check_double (const char *expr, double computed, double expected)
   bool result;
   if (isnan (computed) && isnan (expected))
   {
-    result = true;
+    result = check_signbit (computed_bits) == check_signbit (expected_bits);
   }
   else
   {

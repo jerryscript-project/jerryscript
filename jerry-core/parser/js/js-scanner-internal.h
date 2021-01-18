@@ -119,6 +119,9 @@ typedef enum
   SCAN_STACK_FOR_START_PATTERN,            /**< possible assignment pattern for "for" iterator */
   SCAN_STACK_USE_ASYNC,                    /**< an "async" identifier is used */
 #endif /* ENABLED (JERRY_ESNEXT) */
+#if ENABLED (JERRY_MODULE_SYSTEM)
+  SCAN_STACK_EXPORT_DEFAULT,               /**< scan primary expression after export default */
+#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 } scan_stack_modes_t;
 
 /**
@@ -336,11 +339,6 @@ typedef enum
  */
 #define SCANNER_LITERAL_POOL_MAY_HAVE_ARGUMENTS(status_flags) \
   (!((status_flags) & (SCANNER_LITERAL_POOL_CLASS_NAME | SCANNER_LITERAL_POOL_CLASS_FIELD)))
-
-/**
- * The class name is the *default* class name
- */
-#define SCANNER_LITERAL_POOL_DEFAULT_CLASS_NAME SCANNER_LITERAL_POOL_HAS_SUPER_REFERENCE
 
 #else /* !ENABLED (JERRY_ESNEXT) */
 

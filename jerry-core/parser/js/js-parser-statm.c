@@ -2535,8 +2535,11 @@ parser_parse_import_statement (parser_context_t *context_p) /**< parser context 
 
 /**
  * Parse export statement.
+ *
+ * @return true - if function of class statement was found
+ *         false - otherwise
  */
-static void
+static bool
 parser_parse_export_statement (parser_context_t *context_p) /**< context */
 {
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_EXPORT);
@@ -2544,6 +2547,8 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
   parser_module_check_request_place (context_p);
 
   context_p->module_current_node_p = parser_module_create_module_node (context_p);
+
+  bool consume_last_statement = false;
 
   lexer_next_token (context_p);
   switch (context_p->token.type)
@@ -2556,15 +2561,26 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
       context_p->status_flags |= PARSER_MODULE_STORE_IDENT;
 
       lexer_next_token (context_p);
+
+      if (context_p->token.type == LEXER_LITERAL
+          && lexer_token_is_async (context_p)
+          && context_p->next_scanner_info_p->source_p == context_p->source_p
+          && context_p->next_scanner_info_p->type == SCANNER_TYPE_FUNCTION)
+      {
+        lexer_next_token (context_p);
+      }
+
       if (context_p->token.type == LEXER_KEYW_CLASS)
       {
         context_p->status_flags |= PARSER_MODULE_DEFAULT_CLASS_OR_FUNC;
         parser_parse_class (context_p, true);
+        consume_last_statement = true;
       }
       else if (context_p->token.type == LEXER_KEYW_FUNCTION)
       {
         context_p->status_flags |= PARSER_MODULE_DEFAULT_CLASS_OR_FUNC;
         parser_parse_function_statement (context_p);
+        consume_last_statement = true;
       }
       else
       {
@@ -2627,12 +2643,14 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
     {
       context_p->status_flags |= PARSER_MODULE_STORE_IDENT;
       parser_parse_class (context_p, true);
+      consume_last_statement = true;
       break;
     }
     case LEXER_KEYW_FUNCTION:
     {
       context_p->status_flags |= PARSER_MODULE_STORE_IDENT;
       parser_parse_function_statement (context_p);
+      consume_last_statement = true;
       break;
     }
     case LEXER_LEFT_BRACE:
@@ -2656,6 +2674,8 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
   context_p->status_flags &= (uint32_t) ~(PARSER_MODULE_DEFAULT_CLASS_OR_FUNC | PARSER_MODULE_STORE_IDENT);
   parser_module_finalize_export_node (context_p);
   context_p->module_current_node_p = NULL;
+
+  return consume_last_statement;
 } /* parser_parse_export_statement */
 #endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
@@ -2948,7 +2968,10 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 
       case LEXER_KEYW_EXPORT:
       {
-        parser_parse_export_statement (context_p);
+        if (parser_parse_export_statement (context_p))
+        {
+          goto consume_last_statement;
+        }
         break;
       }
 #endif /* ENABLED (JERRY_MODULE_SYSTEM) */

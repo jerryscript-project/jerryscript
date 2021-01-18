@@ -17,8 +17,8 @@ export {};
 export {a as aa,};
 export {b as bb, c as cc};
 export {d};
-export var x = 42;
-export function f(a) {return a;};
+export var x = 40;
+export function f(a) {return a;} x++; /* test auto semicolon insertion */
 export class Dog {
   constructor (name) {
     this.name = name;
@@ -27,7 +27,7 @@ export class Dog {
   speak() {
     return this.name + " barks."
   }
-};
+} x++; /* test auto semicolon insertion */
 export default "default";
 
 var a = "a";

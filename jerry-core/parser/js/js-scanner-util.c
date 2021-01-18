@@ -640,19 +640,6 @@ scanner_pop_literal_pool (parser_context_t *context_p, /**< context */
 
   parser_list_iterator_init (&literal_pool_p->literal_pool, &literal_iterator);
 
-#if ENABLED (JERRY_ESNEXT)
-  if (JERRY_UNLIKELY (status_flags & SCANNER_LITERAL_POOL_CLASS_NAME))
-  {
-    literal_p = (lexer_lit_location_t *) parser_list_iterator_next (&literal_iterator);
-
-    if ((literal_p != NULL || (status_flags & SCANNER_LITERAL_POOL_DEFAULT_CLASS_NAME))
-        && no_declarations < PARSER_MAXIMUM_DEPTH_OF_SCOPE_STACK)
-    {
-      no_declarations++;
-    }
-  }
-#endif /* ENABLED (JERRY_ESNEXT) */
-
   uint8_t arguments_stream_type = SCANNER_STREAM_TYPE_ARGUMENTS;
   const uint8_t *prev_source_p = literal_pool_p->source_p - 1;
   lexer_lit_location_t *last_argument_p = NULL;
@@ -1702,15 +1689,40 @@ scanner_push_class_declaration (parser_context_t *context_p, /**< context */
   const uint8_t *source_p = context_p->source_p;
   lexer_lit_location_t *literal_p = NULL;
 
+#if ENABLED (JERRY_MODULE_SYSTEM)
+  bool is_export_default = context_p->stack_top_uint8 == SCAN_STACK_EXPORT_DEFAULT;
+  JERRY_ASSERT (!is_export_default || stack_mode == SCAN_STACK_CLASS_EXPRESSION);
+#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
+
   parser_stack_push_uint8 (context_p, stack_mode);
   lexer_next_token (context_p);
 
   bool class_has_name = (context_p->token.type == LEXER_LITERAL
                          && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
 
-  if (stack_mode == SCAN_STACK_CLASS_STATEMENT && class_has_name)
+  if (class_has_name)
   {
-    literal_p = scanner_add_literal (context_p, scanner_context_p);
+    if (stack_mode == SCAN_STACK_CLASS_STATEMENT)
+    {
+      literal_p = scanner_add_literal (context_p, scanner_context_p);
+      scanner_context_p->active_literal_pool_p->no_declarations++;
+    }
+#if ENABLED (JERRY_MODULE_SYSTEM)
+    else if (is_export_default)
+    {
+      literal_p = scanner_add_literal (context_p, scanner_context_p);
+      scanner_context_p->active_literal_pool_p->no_declarations++;
+
+      scanner_detect_invalid_let (context_p, literal_p);
+
+      if (literal_p->type & SCANNER_LITERAL_IS_USED)
+      {
+        literal_p->type |= SCANNER_LITERAL_EARLY_CREATE;
+      }
+
+      literal_p->type |= SCANNER_LITERAL_IS_LET | SCANNER_LITERAL_NO_REG;
+    }
+#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
   }
 
   scanner_literal_pool_t *literal_pool_p = scanner_push_literal_pool (context_p, scanner_context_p, 0);
@@ -1718,7 +1730,20 @@ scanner_push_class_declaration (parser_context_t *context_p, /**< context */
   if (class_has_name)
   {
     scanner_add_literal (context_p, scanner_context_p);
+    scanner_context_p->active_literal_pool_p->no_declarations++;
   }
+#if ENABLED (JERRY_MODULE_SYSTEM)
+  else if (is_export_default)
+  {
+    lexer_lit_location_t *name_literal_p;
+    name_literal_p = scanner_add_custom_literal (context_p,
+                                                 scanner_context_p->active_literal_pool_p->prev_p,
+                                                 &lexer_default_literal);
+
+    name_literal_p->type |= SCANNER_LITERAL_IS_LET | SCANNER_LITERAL_NO_REG;
+    scanner_context_p->active_literal_pool_p->no_declarations++;
+  }
+#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
   literal_pool_p->source_p = source_p;
   literal_pool_p->status_flags |= SCANNER_LITERAL_POOL_CLASS_NAME;

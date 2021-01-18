@@ -105,7 +105,6 @@
   <test id="built-ins/Promise/all/invoke-resolve-get-error.js"><reason>Test expects incorrect call order</reason></test>
   <test id="built-ins/Promise/all/resolve-non-callable.js"><reason>Test expects incorrect call order</reason></test>
   <test id="built-ins/Promise/race/invoke-resolve-get-error.js"><reason>Test expects incorrect call order</reason></test>
-  <test id="built-ins/Promise/race/resolve-element-function-name.js"><reason></reason></test>
   <test id="built-ins/Promise/race/resolve-non-callable.js"><reason>Test expects incorrect call order</reason></test>
   <test id="built-ins/Proxy/preventExtensions/trap-is-undefined-target-is-proxy.js"><reason></reason></test>
   <test id="built-ins/Proxy/setPrototypeOf/toboolean-trap-result-false.js"><reason></reason></test>
@@ -217,7 +216,6 @@
   <test id="language/expressions/arrow-function/dstr/ary-init-iter-no-close.js"><reason></reason></test>
   <test id="language/expressions/arrow-function/dstr/dflt-ary-init-iter-no-close.js"><reason></reason></test>
   <test id="language/expressions/arrow-function/eval-var-scope-syntax-err.js"><reason></reason></test>
-  <test id="language/expressions/arrow-function/name.js"><reason></reason></test>
   <test id="language/expressions/arrow-function/param-dflt-yield-expr.js"><reason></reason></test>
   <test id="language/expressions/assignment/S11.13.1_A5_T1.js"><reason></reason></test>
   <test id="language/expressions/assignment/S11.13.1_A5_T2.js"><reason></reason></test>
@@ -260,14 +258,9 @@
   <test id="language/expressions/assignment/dstr/array-rest-iter-thrw-close.js"><reason></reason></test>
   <test id="language/expressions/assignment/dstr/array-rest-lref-err.js"><reason></reason></test>
   <test id="language/expressions/assignment/dstr/array-rest-lref.js"><reason></reason></test>
-  <test id="language/expressions/assignment/fn-name-lhs-cover.js"><reason></reason></test>
-  <test id="language/expressions/assignment/fn-name-lhs-member.js"><reason></reason></test>
   <test id="language/expressions/async-arrow-function/await-as-param-nested-arrow-body-position.js"><reason></reason></test>
   <test id="language/expressions/async-arrow-function/await-as-param-nested-arrow-parameter-position.js"><reason></reason></test>
   <test id="language/expressions/async-arrow-function/await-as-param-rest-nested-arrow-parameter-position.js"><reason></reason></test>
-  <test id="language/expressions/async-arrow-function/name.js"><reason></reason></test>
-  <test id="language/expressions/async-function/name.js"><reason></reason></test>
-  <test id="language/expressions/async-generator/name.js"><reason></reason></test>
   <test id="language/expressions/call/eval-spread-empty-leading.js"><reason></reason></test>
   <test id="language/expressions/call/eval-spread-empty-trailing.js"><reason></reason></test>
   <test id="language/expressions/call/eval-spread.js"><reason></reason></test>
@@ -302,11 +295,9 @@
   <test id="language/expressions/function/dstr/ary-init-iter-no-close.js"><reason></reason></test>
   <test id="language/expressions/function/dstr/dflt-ary-init-iter-no-close.js"><reason></reason></test>
   <test id="language/expressions/function/eval-var-scope-syntax-err.js"><reason></reason></test>
-  <test id="language/expressions/function/name.js"><reason></reason></test>
   <test id="language/expressions/generators/dstr/ary-init-iter-no-close.js"><reason></reason></test>
   <test id="language/expressions/generators/dstr/dflt-ary-init-iter-no-close.js"><reason></reason></test>
   <test id="language/expressions/generators/eval-var-scope-syntax-err.js"><reason></reason></test>
-  <test id="language/expressions/generators/name.js"><reason></reason></test>
   <test id="language/expressions/import.meta/distinct-for-each-module.js"><reason></reason></test>
   <test id="language/expressions/import.meta/import-meta-is-an-ordinary-object.js"><reason></reason></test>
   <test id="language/expressions/import.meta/same-object-returned.js"><reason></reason></test>

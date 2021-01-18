@@ -234,6 +234,7 @@ bool JERRY_ATTR_CONST ecma_is_value_float_number (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_number (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_string (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_symbol (ecma_value_t value);
+bool JERRY_ATTR_CONST ecma_is_value_magic_string (ecma_value_t value, lit_magic_string_id_t id);
 bool JERRY_ATTR_CONST ecma_is_value_bigint (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_prop_name (ecma_value_t value);
 bool JERRY_ATTR_CONST ecma_is_value_direct_string (ecma_value_t value);

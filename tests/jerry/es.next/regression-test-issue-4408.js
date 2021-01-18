@@ -13,13 +13,13 @@
 // limitations under the License.
 
 try {
-  /(?<=^abc)def/;
+  eval('/(?<=^abc)def/');
 } catch(e) {
   assert(e instanceof SyntaxError);
 }
 
 try {
-  /(?a)/;
+  eval('/(?a)/;')
 } catch(e) {
   assert(e instanceof SyntaxError);
 }

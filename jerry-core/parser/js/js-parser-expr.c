@@ -2177,15 +2177,6 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
     case LEXER_ASSIGN_DIVIDE:
     {
       lexer_construct_regexp_object (context_p, false);
-
-#if ENABLED (JERRY_ESNEXT)
-      if (JERRY_UNLIKELY (context_p->lit_object.literal_p->type == LEXER_STRING_LITERAL))
-      {
-        parser_emit_cbc_ext_literal (context_p, CBC_EXT_THROW_SYNTAX_ERROR, context_p->lit_object.index);
-        break;
-      }
-#endif /* ENABLED (JERRY_ESNEXT) */
-
       uint16_t literal_index = (uint16_t) (context_p->literal_count - 1);
 
       if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)

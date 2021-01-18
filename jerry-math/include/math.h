@@ -22,9 +22,14 @@ extern "C"
 #endif /* __cplusplus */
 
 /* General Constants. */
-#define INFINITY    (1.0/0.0)
-#define NAN         (0.0/0.0)
-#define HUGE_VAL    INFINITY
+#ifdef _MSC_VER
+#define INFINITY    ((float) (1e+300 * 1e+300)) /* 1e+300*1e+300 must overflow */
+#define NAN         ((float) (INFINITY * 0.0f))
+#else /* !_MSC_VER */
+#define INFINITY    ((float) (1.0 / 0.0))
+#define NAN         ((float) (0.0 / 0.0))
+#endif /* _MSC_VER */
+#define HUGE_VAL    ((double) INFINITY)
 
 #define isnan(x)    ((x) != (x))
 #define isinf(x)    ((x) == INFINITY ? 1 : (x) == -INFINITY ? -1 : 0)

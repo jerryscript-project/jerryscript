@@ -157,7 +157,8 @@ jerryx_handle_scope_alloc (void)
   }
   else
   {
-    jerryx_handle_scope_dynamic_t *dy_scope = malloc (sizeof (jerryx_handle_scope_dynamic_t));
+    jerryx_handle_scope_dynamic_t *dy_scope;
+    dy_scope = (jerryx_handle_scope_dynamic_t *) jerry_heap_alloc (sizeof (jerryx_handle_scope_dynamic_t));
     JERRYX_ASSERT (dy_scope != NULL);
     dy_scope->child = NULL;
 
@@ -216,7 +217,7 @@ jerryx_handle_scope_free (jerryx_handle_scope_t *scope)
     {
       dy_scope->parent->child = dy_scope->child;
     }
-    free (dy_scope);
+    jerry_heap_free (dy_scope, sizeof (jerryx_handle_scope_dynamic_t));
     return;
   }
   /**

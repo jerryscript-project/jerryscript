@@ -17,12 +17,10 @@ project (jerry-main C)
 
 # Optional build settings
 set(ENABLE_LINK_MAP           OFF CACHE BOOL "Enable generating a link map file?")
-set(ENABLE_COMPILE_COMMANDS   ON  CACHE BOOL "Enable generating compile_commands.json?")
 set(JERRY_TEST_STACK_MEASURE  OFF CACHE BOOL "Enable stack measurement for the jerry-test binary?")
 
 # Status messages
 message(STATUS "ENABLE_LINK_MAP                " ${ENABLE_LINK_MAP})
-message(STATUS "ENABLE_COMPILE_COMMANDS        " ${ENABLE_COMPILE_COMMANDS})
 message(STATUS "JERRY_TEST_STACK_MEASURE       " ${JERRY_TEST_STACK_MEASURE})
 
 # Generate map file
@@ -33,9 +31,6 @@ if(ENABLE_LINK_MAP)
     set(LINKER_FLAGS_COMMON "${LINKER_FLAGS_COMMON} -Xlinker -Map -Xlinker jerry.map")
   endif()
 endif()
-
-# Generate compile_commands.json
-set(CMAKE_EXPORT_COMPILE_COMMANDS ${ENABLE_COMPILE_COMMANDS})
 
 # Get version information from git
 if(IS_DIRECTORY "${CMAKE_SOURCE_DIR}/.git")

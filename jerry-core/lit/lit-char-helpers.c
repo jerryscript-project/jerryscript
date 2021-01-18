@@ -16,14 +16,16 @@
 #include "config.h"
 #include "ecma-helpers.h"
 #include "lit-char-helpers.h"
-#include "lit-unicode-ranges.inc.h"
-#include "lit-unicode-ranges-sup.inc.h"
 #include "lit-strings.h"
+#include "lit-unicode-ranges.inc.h"
+#if ENABLED (JERRY_ESNEXT)
+#include "lit-unicode-ranges-sup.inc.h"
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 #if ENABLED (JERRY_UNICODE_CASE_CONVERSION)
 #include "lit-unicode-conversions.inc.h"
-#include "lit-unicode-conversions-sup.inc.h"
 #if ENABLED (JERRY_ESNEXT)
+#include "lit-unicode-conversions-sup.inc.h"
 #include "lit-unicode-folding.inc.h"
 #endif /* ENABLED (JERRY_ESNEXT) */
 #endif /* ENABLED (JERRY_UNICODE_CASE_CONVERSION) */

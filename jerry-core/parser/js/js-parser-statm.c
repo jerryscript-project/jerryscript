@@ -2427,7 +2427,6 @@ parser_parse_import_statement (parser_context_t *context_p) /**< parser context 
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_IMPORT);
 
   parser_module_check_request_place (context_p);
-  parser_module_context_init (context_p);
 
   context_p->module_current_node_p = parser_module_create_module_node (context_p);
 
@@ -2529,7 +2528,7 @@ parser_parse_import_statement (parser_context_t *context_p) /**< parser context 
   }
 
   parser_module_handle_module_specifier (context_p);
-  parser_module_add_import_node_to_context (context_p);
+  parser_module_finalize_import_node (context_p);
 
   context_p->module_current_node_p = NULL;
 } /* parser_parse_import_statement */
@@ -2543,7 +2542,6 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_EXPORT);
 
   parser_module_check_request_place (context_p);
-  parser_module_context_init (context_p);
 
   context_p->module_current_node_p = parser_module_create_module_node (context_p);
 
@@ -2656,7 +2654,7 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
   }
 
   context_p->status_flags &= (uint32_t) ~(PARSER_MODULE_DEFAULT_CLASS_OR_FUNC | PARSER_MODULE_STORE_IDENT);
-  parser_module_add_export_node_to_context (context_p);
+  parser_module_finalize_export_node (context_p);
   context_p->module_current_node_p = NULL;
 } /* parser_parse_export_statement */
 #endif /* ENABLED (JERRY_MODULE_SYSTEM) */

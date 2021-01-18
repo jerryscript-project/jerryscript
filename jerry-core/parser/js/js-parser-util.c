@@ -1396,7 +1396,7 @@ parser_error_to_string (parser_error_t error) /**< error code */
     }
     case PARSER_ERR_MODULE_UNEXPECTED:
     {
-      return "Import and export statements must be in the global context.";
+      return "Unexpected import or export statement.";
     }
     case PARSER_ERR_LEFT_BRACE_MULTIPLY_EXPECTED:
     {

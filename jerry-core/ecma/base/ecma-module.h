@@ -16,10 +16,10 @@
 #ifndef ECMA_MODULE_H
 #define ECMA_MODULE_H
 
-#if ENABLED (JERRY_MODULE_SYSTEM)
-
 #include "common.h"
 #include "ecma-globals.h"
+
+#if ENABLED (JERRY_MODULE_SYSTEM)
 
 #define ECMA_MODULE_MAX_PATH 255u
 
@@ -35,31 +35,6 @@ typedef struct ecma_module_names
   ecma_string_t *local_name_p;      /**< Local name of the item */
 } ecma_module_names_t;
 
-typedef struct ecma_module ecma_module_t;
-
-/**
- * Module node to store imports / exports.
- */
-typedef struct ecma_module_node
-{
-  struct ecma_module_node *next_p;     /**< next linked list node */
-  ecma_module_names_t *module_names_p; /**< names of the requested import/export node */
-  ecma_module_t *module_request_p;     /**< module structure of the requested module */
-} ecma_module_node_t;
-
-/**
- * Module context containing all import and export nodes.
- */
-typedef struct ecma_module_context
-{
-  struct ecma_module_context *parent_p;   /**< parent context */
-  ecma_module_node_t *imports_p;          /**< import item of the current context */
-  ecma_module_node_t *local_exports_p;    /**< export item of the current context */
-  ecma_module_node_t *indirect_exports_p; /**< export item of the current context */
-  ecma_module_node_t *star_exports_p;     /**< export item of the current context */
-  ecma_module_t *module_p;                /**< module request */
-} ecma_module_context_t;
-
 /**
  * An enum identifing the current state of the module
  */
@@ -71,21 +46,36 @@ typedef enum
   ECMA_MODULE_STATE_EVALUATING = 3, /**< module is currently being evaluated */
   ECMA_MODULE_STATE_EVALUATED = 4,  /**< module has been evaluated */
   ECMA_MODULE_STATE_NATIVE = 5,     /**< module is native */
+  ECMA_MODULE_STATE_ROOT = 6,       /**< module is a root module */
 } ecma_module_state_t;
 
 /**
  * Module structure storing an instance of a module
  */
-struct ecma_module
+typedef struct ecma_module
 {
-  struct ecma_module *next_p;            /**< next linked list node */
-  ecma_module_state_t state;             /**< state of the mode */
-  ecma_string_t *path_p;                 /**< path of the module */
-  ecma_module_context_t *context_p;      /**< module context of the module */
-  ecma_compiled_code_t *compiled_code_p; /**< compiled code of the module */
-  ecma_object_t *scope_p;                /**< lexica lenvironment of the module */
-  ecma_object_t *namespace_object_p;     /**< namespace import object of the module */
-};
+  /* TODO(dbatyai): These could be compressed pointers */
+  struct ecma_module *next_p;                      /**< next module in the list */
+  struct ecma_module_node *imports_p;              /**< import requests of the module */
+  struct ecma_module_node *local_exports_p;        /**< local exports of the module */
+  struct ecma_module_node *indirect_exports_p;     /**< indirect exports of the module */
+  struct ecma_module_node *star_exports_p;         /**< star exports of the module*/
+  ecma_string_t *path_p;                           /**< path of the module */
+  ecma_compiled_code_t *compiled_code_p;           /**< compiled code for the module */
+  ecma_object_t *scope_p;                          /**< lexical lenvironment of the module */
+  ecma_object_t *namespace_object_p;               /**< namespace object of the module */
+  ecma_module_state_t state;                       /**< evaluation state of the module */
+} ecma_module_t;
+
+/**
+ * Module node to store imports / exports.
+ */
+typedef struct ecma_module_node
+{
+  struct ecma_module_node *next_p;     /**< next linked list node */
+  ecma_module_names_t *module_names_p; /**< names of the requested import/export node */
+  ecma_module_t *module_request_p;     /**< module structure of the requested module */
+} ecma_module_node_t;
 
 /**
  *  A record that can be used to store {module, identifier} pairs
@@ -126,19 +116,21 @@ void ecma_module_resolve_stack_push (ecma_module_resolve_stack_t **stack_p,
                                      ecma_string_t *const export_name_p);
 void ecma_module_resolve_stack_pop (ecma_module_resolve_stack_t **stack_p);
 
-ecma_string_t *ecma_module_create_normalized_path (const uint8_t *char_p,
-                                                   prop_length_t size);
-ecma_module_t *ecma_module_find_module (ecma_string_t *const path_p);
-ecma_module_t *ecma_module_create_native_module (ecma_string_t *const path_p,
-                                                 ecma_object_t *const namespace_p);
-ecma_module_t *ecma_module_find_or_create_module (ecma_string_t *const path_p);
+ecma_string_t *ecma_module_create_normalized_path (const lit_utf8_byte_t *char_p,
+                                                   lit_utf8_size_t size,
+                                                   ecma_string_t *const base_path_p);
 
-ecma_value_t ecma_module_initialize_current (void);
-ecma_value_t ecma_module_parse_modules (void);
-ecma_value_t ecma_module_check_indirect_exports (void);
+ecma_module_t *ecma_module_find_module (ecma_string_t *const path_p);
+ecma_module_t *ecma_module_find_native_module (ecma_string_t *const path_p);
+
+ecma_value_t ecma_module_parse_referenced_modules (void);
+ecma_value_t ecma_module_initialize (ecma_module_t *module_p);
+
+void ecma_module_initialize_context (ecma_string_t *root_path_p);
+void ecma_module_cleanup_context (void);
 
 void ecma_module_release_module_nodes (ecma_module_node_t *module_node_p);
-void ecma_module_cleanup (void);
+void ecma_module_cleanup (ecma_module_t *head_p);
 #endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
 #endif /* !ECMA_MODULE_H */

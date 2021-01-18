@@ -328,8 +328,6 @@
   <test id="language/expressions/call/eval-spread.js"><reason></reason></test>
   <test id="language/expressions/class/accessor-name-inst/literal-numeric-leading-decimal.js"><reason></reason></test>
   <test id="language/expressions/class/accessor-name-static/literal-numeric-leading-decimal.js"><reason></reason></test>
-  <test id="language/expressions/class/class-name-ident-await-escaped-module.js"><reason></reason></test>
-  <test id="language/expressions/class/class-name-ident-await-module.js"><reason></reason></test>
   <test id="language/expressions/class/class-name-ident-let-escaped.js"><reason></reason></test>
   <test id="language/expressions/class/class-name-ident-let.js"><reason></reason></test>
   <test id="language/expressions/class/class-name-ident-static-escaped.js"><reason></reason></test>
@@ -414,7 +412,6 @@
   <test id="language/expressions/yield/star-return-is-null.js"><reason></reason></test>
   <test id="language/expressions/yield/star-throw-is-null.js"><reason></reason></test>
   <test id="language/global-code/decl-lex-configurable-global.js"><reason></reason></test>
-  <test id="language/global-code/export.js"><reason></reason></test>
   <test id="language/identifiers/part-unicode-10.0.0-escaped.js"><reason></reason></test>
   <test id="language/identifiers/part-unicode-10.0.0.js"><reason></reason></test>
   <test id="language/identifiers/part-unicode-11.0.0-escaped.js"><reason></reason></test>
@@ -457,7 +454,6 @@
   <test id="language/identifiers/start-unicode-9.0.0.js"><reason></reason></test>
   <test id="language/literals/regexp/unicode-escape-nls-err.js"><reason></reason></test>
   <test id="language/literals/string/legacy-octal-escape-sequence-prologue-strict.js"><reason></reason></test>
-  <test id="language/module-code/early-strict-mode.js"><reason></reason></test>
   <test id="language/module-code/eval-export-cls-semi.js"><reason></reason></test>
   <test id="language/module-code/eval-export-dflt-cls-anon-semi.js"><reason></reason></test>
   <test id="language/module-code/eval-export-dflt-cls-anon.js"><reason></reason></test>
@@ -487,7 +483,6 @@
   <test id="language/module-code/eval-rqstd-once.js"><reason></reason></test>
   <test id="language/module-code/eval-rqstd-order.js"><reason></reason></test>
   <test id="language/module-code/eval-self-once.js"><reason></reason></test>
-  <test id="language/module-code/eval-this.js"><reason></reason></test>
   <test id="language/module-code/export-star-as-dflt.js"><reason></reason></test>
   <test id="language/module-code/instn-iee-bndng-cls.js"><reason></reason></test>
   <test id="language/module-code/instn-iee-bndng-const.js"><reason></reason></test>
@@ -498,13 +493,6 @@
   <test id="language/module-code/instn-iee-iee-cycle.js"><reason></reason></test>
   <test id="language/module-code/instn-iee-star-cycle.js"><reason></reason></test>
   <test id="language/module-code/instn-iee-trlng-comma.js"><reason></reason></test>
-  <test id="language/module-code/instn-local-bndng-export-fun.js"><reason></reason></test>
-  <test id="language/module-code/instn-local-bndng-export-gen.js"><reason></reason></test>
-  <test id="language/module-code/instn-local-bndng-export-var.js"><reason></reason></test>
-  <test id="language/module-code/instn-local-bndng-for.js"><reason></reason></test>
-  <test id="language/module-code/instn-local-bndng-fun.js"><reason></reason></test>
-  <test id="language/module-code/instn-local-bndng-gen.js"><reason></reason></test>
-  <test id="language/module-code/instn-local-bndng-var.js"><reason></reason></test>
   <test id="language/module-code/instn-named-bndng-cls.js"><reason></reason></test>
   <test id="language/module-code/instn-named-bndng-const.js"><reason></reason></test>
   <test id="language/module-code/instn-named-bndng-dflt-cls.js"><reason></reason></test>
@@ -576,13 +564,9 @@
   <test id="language/module-code/namespace/internals/set.js"><reason></reason></test>
   <test id="language/module-code/parse-err-hoist-lex-fun.js"><reason></reason></test>
   <test id="language/module-code/parse-err-hoist-lex-gen.js"><reason></reason></test>
-  <test id="language/module-code/parse-err-yield.js"><reason></reason></test>
-  <test id="language/reserved-words/await-module.js"><reason></reason></test>
   <test id="language/statements/async-function/let-newline-await-in-async-function.js"><reason></reason></test>
   <test id="language/statements/class/accessor-name-inst/literal-numeric-leading-decimal.js"><reason></reason></test>
   <test id="language/statements/class/accessor-name-static/literal-numeric-leading-decimal.js"><reason></reason></test>
-  <test id="language/statements/class/class-name-ident-await-escaped-module.js"><reason></reason></test>
-  <test id="language/statements/class/class-name-ident-await-module.js"><reason></reason></test>
   <test id="language/statements/class/class-name-ident-let-escaped.js"><reason></reason></test>
   <test id="language/statements/class/class-name-ident-let.js"><reason></reason></test>
   <test id="language/statements/class/class-name-ident-static-escaped.js"><reason></reason></test>
@@ -699,8 +683,6 @@
   <test id="language/statements/labeled/decl-gen.js"><reason></reason></test>
   <test id="language/statements/labeled/let-block-with-newline.js"><reason></reason></test>
   <test id="language/statements/labeled/let-identifier-with-newline.js"><reason></reason></test>
-  <test id="language/statements/labeled/value-await-module-escaped.js"><reason></reason></test>
-  <test id="language/statements/labeled/value-await-module.js"><reason></reason></test>
   <test id="language/statements/let/dstr/ary-init-iter-no-close.js"><reason></reason></test>
   <test id="language/statements/let/syntax/let-newline-yield-in-generator-function.js"><reason></reason></test>
   <test id="language/statements/switch/cptn-a-abrupt-empty.js"><reason></reason></test>
@@ -5242,7 +5224,6 @@
   <test id="language/module-code/top-level-await/module-import-unwrapped.js"><reason></reason></test>
   <test id="language/module-code/top-level-await/module-self-import-async-resolution-ticks.js"><reason></reason></test>
   <test id="language/module-code/top-level-await/module-sync-import-async-resolution-ticks.js"><reason></reason></test>
-  <test id="language/module-code/top-level-await/no-operand.js"><reason></reason></test>
   <test id="language/module-code/top-level-await/syntax/await-expr-dyn-import.js"><reason></reason></test>
   <test id="language/module-code/top-level-await/syntax/block-await-expr-array-literal.js"><reason></reason></test>
   <test id="language/module-code/top-level-await/syntax/block-await-expr-func-expression.js"><reason></reason></test>

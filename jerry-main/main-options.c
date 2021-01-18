@@ -44,6 +44,7 @@ typedef enum
   OPT_DEBUGGER_WAIT_SOURCE,
   OPT_EXEC_SNAP,
   OPT_EXEC_SNAP_FUNC,
+  OPT_MODULE,
   OPT_LOG_LEVEL,
   OPT_NO_PROMPT,
   OPT_CALL_ON_EXIT,
@@ -85,6 +86,8 @@ static const cli_opt_t main_opts[] =
                .help = "execute input snapshot file(s)"),
   CLI_OPT_DEF (.id = OPT_EXEC_SNAP_FUNC, .longopt = "exec-snapshot-func", .meta = "FILE NUM",
                .help = "execute specific function from input snapshot file(s)"),
+  CLI_OPT_DEF (.id = OPT_MODULE, .opt = "m", .longopt = "module", .meta = "FILE",
+               .help = "execute module file"),
   CLI_OPT_DEF (.id = OPT_LOG_LEVEL, .longopt = "log-level", .meta = "NUM",
                .help = "set log level (0-3)"),
   CLI_OPT_DEF (.id = OPT_NO_PROMPT, .longopt = "no-prompt",
@@ -304,6 +307,19 @@ main_parse_args (int argc, /**< argc */
           source_p->path_index = path_index;
           source_p->snapshot_index = snapshot_index;
         }
+
+        break;
+      }
+      case OPT_MODULE:
+      {
+        const uint32_t path_index = cli_consume_path (&cli_state);
+
+        main_source_t *source_p = arguments_p->sources_p + arguments_p->source_count;
+        arguments_p->source_count++;
+
+        source_p->type = SOURCE_MODULE;
+        source_p->path_index = path_index;
+        source_p->snapshot_index = 0;
 
         break;
       }

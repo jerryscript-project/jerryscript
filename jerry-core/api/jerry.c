@@ -246,10 +246,6 @@ jerry_cleanup (void)
     }
   }
 
-#if ENABLED (JERRY_MODULE_SYSTEM)
-  ecma_module_cleanup ();
-#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
-
 #if ENABLED (JERRY_BUILTIN_PROMISE)
   ecma_free_all_enqueued_jobs ();
 #endif /* ENABLED (JERRY_BUILTIN_PROMISE) */
@@ -456,6 +452,15 @@ jerry_parse (const jerry_char_t *resource_name_p, /**< resource name (usually a 
   }
 #endif /* ENABLED (JERRY_RESOURCE_NAME) */
 
+  if ((parse_opts & JERRY_PARSE_MODULE) != 0)
+  {
+#if ENABLED (JERRY_MODULE_SYSTEM)
+    ecma_module_initialize_context (ecma_get_string_from_value (resource_name));
+#else /* !ENABLED (JERRY_MODULE_SYSTEM) */
+    return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("Module system has been disabled.")));
+#endif /* !ENABLED (JERRY_MODULE_SYSTEM) */
+  }
+
   ecma_compiled_code_t *bytecode_data_p = parser_parse_script (NULL,
                                                                0,
                                                                source_p,
@@ -465,8 +470,43 @@ jerry_parse (const jerry_char_t *resource_name_p, /**< resource name (usually a 
 
   if (JERRY_UNLIKELY (bytecode_data_p == NULL))
   {
+#if ENABLED (JERRY_MODULE_SYSTEM)
+    if ((parse_opts & JERRY_PARSE_MODULE) != 0)
+    {
+      ecma_module_cleanup_context ();
+    }
+#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
+
     return ecma_create_error_reference_from_context ();
   }
+
+#if ENABLED (JERRY_MODULE_SYSTEM)
+  if ((parse_opts & JERRY_PARSE_MODULE) != 0)
+  {
+    if (ECMA_IS_VALUE_ERROR (ecma_module_parse_referenced_modules ()))
+    {
+      ecma_bytecode_deref (bytecode_data_p);
+      ecma_module_cleanup_context ();
+
+      return ecma_create_error_reference_from_context ();
+    }
+
+    ecma_object_t *obj_p = ecma_create_object (NULL, sizeof (ecma_extended_object_t), ECMA_OBJECT_TYPE_CLASS);
+
+    ecma_extended_object_t *wrapper_p = (ecma_extended_object_t *) obj_p;
+    wrapper_p->u.class_prop.class_id = LIT_MAGIC_STRING_RUNNABLE_UL;
+    wrapper_p->u.class_prop.extra_info = ECMA_RUNNABLE_FLAGS_MODULE;
+
+    ecma_module_t *root_module_p = JERRY_CONTEXT (module_current_p);
+    root_module_p->compiled_code_p = bytecode_data_p;
+
+    ECMA_SET_INTERNAL_VALUE_POINTER (wrapper_p->u.class_prop.u.value, root_module_p);
+    JERRY_CONTEXT (module_current_p) = NULL;
+    JERRY_CONTEXT (module_list_p) = NULL;
+
+    return ecma_make_object_value (obj_p);
+  }
+#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
   ecma_object_t *global_object_p = ecma_builtin_get_global ();
 
@@ -475,6 +515,9 @@ jerry_parse (const jerry_char_t *resource_name_p, /**< resource name (usually a 
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
   ecma_object_t *lex_env_p = ecma_get_global_environment (global_object_p);
+
+  /* TODO(dbatyai): For now Scripts continue to return Function objects due to backwards compatibility. This should be
+   * changed to also return a Runnable object eventually. */
   ecma_object_t *func_obj_p = ecma_op_create_simple_function_object (lex_env_p, bytecode_data_p);
   ecma_bytecode_deref (bytecode_data_p);
 
@@ -588,15 +631,35 @@ jerry_run (const jerry_value_t func_val) /**< function to run */
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
   }
 
-  ecma_object_t *func_obj_p = ecma_get_object_from_value (func_val);
+  ecma_object_t *obj_p = ecma_get_object_from_value (func_val);
 
-  if (ecma_get_object_type (func_obj_p) != ECMA_OBJECT_TYPE_FUNCTION
-      || ecma_get_object_is_builtin (func_obj_p))
+#if ENABLED (JERRY_MODULE_SYSTEM)
+  if (ecma_object_class_is (obj_p, LIT_MAGIC_STRING_RUNNABLE_UL))
+  {
+    ecma_extended_object_t *wrapper_p = (ecma_extended_object_t *) obj_p;
+    JERRY_ASSERT (wrapper_p->u.class_prop.extra_info == ECMA_RUNNABLE_FLAGS_MODULE);
+    ecma_module_t *root_module_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_module_t, wrapper_p->u.class_prop.u.value);
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+    ecma_object_t *global_object_p = (ecma_object_t *) ecma_op_function_get_realm (root_module_p->compiled_code_p);
+#else /* !ENABLED (JERRY_BUILTIN_REALMS) */
+    ecma_object_t *global_object_p = ecma_builtin_get_global ();
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+
+    ecma_create_global_lexical_block (global_object_p);
+    root_module_p->scope_p = ecma_get_global_scope (global_object_p);
+
+    return jerry_return (vm_run_module (root_module_p));
+  }
+#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
+
+  if (ecma_get_object_type (obj_p) != ECMA_OBJECT_TYPE_FUNCTION
+      || ecma_get_object_is_builtin (obj_p))
   {
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
   }
 
-  ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) func_obj_p;
+  ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) obj_p;
 
   const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
 

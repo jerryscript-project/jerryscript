@@ -86,6 +86,8 @@ restart:
       goto exit;
     }
 
+    uint32_t parse_opts = JERRY_PARSE_NO_OPTS;
+
     switch (source_file_p->type)
     {
       case SOURCE_SNAPSHOT:
@@ -98,9 +100,15 @@ restart:
         jerry_port_release_source (source_p);
         break;
       }
+      case SOURCE_MODULE:
+      {
+        parse_opts = JERRY_PARSE_MODULE;
+        /* FALLTHRU */
+      }
       default:
       {
-        assert (source_file_p->type == SOURCE_SCRIPT);
+        assert (source_file_p->type == SOURCE_SCRIPT
+                || source_file_p->type == SOURCE_MODULE);
 
         if (!jerry_is_valid_utf8_string ((jerry_char_t *) source_p, (jerry_size_t) source_size))
         {
@@ -113,7 +121,7 @@ restart:
                                  strlen (file_path_p),
                                  source_p,
                                  source_size,
-                                 JERRY_PARSE_NO_OPTS);
+                                 parse_opts);
 
         jerry_port_release_source (source_p);
 

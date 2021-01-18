@@ -16,6 +16,8 @@
 #ifndef JS_LEXER_H
 #define JS_LEXER_H
 
+#include "ecma-globals.h"
+
 /** \addtogroup parser Parser
  * @{
  *

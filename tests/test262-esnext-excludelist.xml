@@ -2,10 +2,6 @@
 <excludeList>
   <!-- Uncategorized failing tests -->
   <test id="built-ins/Array/prototype/splice/property-traps-order-with-species.js"><reason></reason></test>
-  <test id="built-ins/AsyncFunction/AsyncFunction-is-subclass.js"><reason></reason></test>
-  <test id="built-ins/AsyncFunction/AsyncFunctionPrototype-prototype.js"><reason></reason></test>
-  <test id="built-ins/AsyncFunction/AsyncFunctionPrototype-to-string.js"><reason></reason></test>
-  <test id="built-ins/AsyncFunction/instance-prototype-property.js"><reason></reason></test>
   <test id="built-ins/BigInt/asIntN/arithmetic.js"><reason></reason></test>
   <test id="built-ins/BigInt/asIntN/asIntN.js"><reason></reason></test>
   <test id="built-ins/BigInt/asIntN/bigint-tobigint-errors.js"><reason></reason></test>
@@ -97,7 +93,6 @@
   <test id="built-ins/Number/prototype/toPrecision/exponential.js"><reason></reason></test>
   <test id="built-ins/Object/entries/order-after-define-property.js"><reason></reason></test>
   <test id="built-ins/Object/keys/order-after-define-property.js"><reason></reason></test>
-  <test id="built-ins/Object/prototype/toString/symbol-tag-non-str-proxy-function.js"><reason></reason></test>
   <test id="built-ins/Promise/all/invoke-resolve-get-error.js"><reason>Test expects incorrect call order</reason></test>
   <test id="built-ins/Promise/all/resolve-non-callable.js"><reason>Test expects incorrect call order</reason></test>
   <test id="built-ins/Promise/race/invoke-resolve-get-error.js"><reason>Test expects incorrect call order</reason></test>
@@ -504,7 +499,6 @@
   <test id="language/statements/class/dstr/meth-static-ary-init-iter-no-close.js"><reason></reason></test>
   <test id="language/statements/class/dstr/meth-static-dflt-ary-init-iter-no-close.js"><reason></reason></test>
   <test id="language/statements/class/subclass/default-constructor-spread-override.js"><reason></reason></test>
-  <test id="language/statements/class/subclass/superclass-async-function.js"><reason></reason></test>
   <test id="language/statements/class/super/in-constructor-superproperty-evaluation.js"><reason></reason></test>
   <test id="language/statements/const/dstr/ary-init-iter-no-close.js"><reason></reason></test>
   <test id="language/statements/do-while/cptn-abrupt-empty.js"><reason></reason></test>

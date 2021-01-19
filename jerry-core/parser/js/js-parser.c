@@ -2832,7 +2832,6 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
 #if ENABLED (JERRY_ERROR_MESSAGES)
     ecma_string_t *err_str_p;
 
-#if !ENABLED (JERRY_ESNEXT)
     if (parser_error.error == PARSER_ERR_INVALID_REGEXP)
     {
       ecma_value_t error = jcontext_take_exception ();
@@ -2844,7 +2843,6 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
       ecma_ref_ecma_string (err_str_p);
     }
     else
-#endif /* !ENABLED (JERRY_ESNEXT) */
     {
       const lit_utf8_byte_t *err_bytes_p = (const lit_utf8_byte_t *) parser_error_to_string (parser_error.error);
       lit_utf8_size_t err_bytes_size = lit_zt_utf8_string_size (err_bytes_p);
@@ -2865,12 +2863,12 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
     ecma_free_value (line_str_val);
     ecma_deref_ecma_string (err_str_p);
 #else /* !ENABLED (JERRY_ERROR_MESSAGES) */
-#if !ENABLED (JERRY_ESNEXT)
-    if (parser_error.error != PARSER_ERR_INVALID_REGEXP)
-#endif /* !ENABLED (JERRY_ESNEXT) */
+    if (parser_error.error == PARSER_ERR_INVALID_REGEXP)
     {
-      ecma_raise_syntax_error ("");
+      jcontext_release_exception ();
     }
+
+    ecma_raise_syntax_error ("");
 #endif /* ENABLED (JERRY_ERROR_MESSAGES) */
 
     return NULL;

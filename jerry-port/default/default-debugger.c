@@ -21,9 +21,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#elif defined (HAVE_TIME_H)
-#include <time.h>
-#elif defined (HAVE_UNISTD_H)
+#else /* !_WIN32 */
 #include <unistd.h>
 #endif /* _WIN32 */
 
@@ -31,22 +29,14 @@
 #include "jerryscript-port-default.h"
 
 /**
- * Default implementation of jerry_port_sleep. Uses 'nanosleep' or 'usleep' if
- * available on the system, does nothing otherwise.
+ * Default implementation of jerry_port_sleep. Uses 'usleep' if available on the
+ * system, does nothing otherwise.
  */
 void jerry_port_sleep (uint32_t sleep_time) /**< milliseconds to sleep */
 {
 #ifdef _WIN32
   Sleep (sleep_time);
-#elif defined (HAVE_TIME_H)
-  struct timespec sleep_timespec;
-  sleep_timespec.tv_sec = (time_t) sleep_time / 1000;
-  sleep_timespec.tv_nsec = ((long int) sleep_time % 1000) * 1000000L;
-
-  nanosleep (&sleep_timespec, NULL);
-#elif defined (HAVE_UNISTD_H)
+#else /* !_WIN32 */
   usleep ((useconds_t) sleep_time * 1000);
-#else
-  (void) sleep_time;
-#endif /* HAVE_TIME_H */
+#endif /* _WIN32 */
 } /* jerry_port_sleep */

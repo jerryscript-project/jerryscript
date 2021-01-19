@@ -389,11 +389,8 @@
   <test id="language/identifiers/start-unicode-9.0.0-escaped.js"><reason></reason></test>
   <test id="language/identifiers/start-unicode-9.0.0.js"><reason></reason></test>
   <test id="language/literals/string/legacy-octal-escape-sequence-prologue-strict.js"><reason></reason></test>
-  <test id="language/module-code/eval-export-cls-semi.js"><reason></reason></test>
-  <test id="language/module-code/eval-export-dflt-cls-anon-semi.js"><reason></reason></test>
   <test id="language/module-code/eval-export-dflt-cls-anon.js"><reason></reason></test>
   <test id="language/module-code/eval-export-dflt-cls-name-meth.js"><reason></reason></test>
-  <test id="language/module-code/eval-export-dflt-cls-named-semi.js"><reason></reason></test>
   <test id="language/module-code/eval-export-dflt-cls-named.js"><reason></reason></test>
   <test id="language/module-code/eval-export-dflt-expr-cls-anon.js"><reason></reason></test>
   <test id="language/module-code/eval-export-dflt-expr-cls-name-meth.js"><reason></reason></test>
@@ -404,12 +401,6 @@
   <test id="language/module-code/eval-export-dflt-expr-gen-anon.js"><reason></reason></test>
   <test id="language/module-code/eval-export-dflt-expr-gen-named.js"><reason></reason></test>
   <test id="language/module-code/eval-export-dflt-expr-in.js"><reason></reason></test>
-  <test id="language/module-code/eval-export-dflt-fun-anon-semi.js"><reason></reason></test>
-  <test id="language/module-code/eval-export-dflt-fun-named-semi.js"><reason></reason></test>
-  <test id="language/module-code/eval-export-dflt-gen-anon-semi.js"><reason></reason></test>
-  <test id="language/module-code/eval-export-dflt-gen-named-semi.js"><reason></reason></test>
-  <test id="language/module-code/eval-export-fun-semi.js"><reason></reason></test>
-  <test id="language/module-code/eval-export-gen-semi.js"><reason></reason></test>
   <test id="language/module-code/eval-gtbndng-indirect-trlng-comma.js"><reason></reason></test>
   <test id="language/module-code/eval-gtbndng-indirect-update-as.js"><reason></reason></test>
   <test id="language/module-code/eval-gtbndng-indirect-update-dflt.js"><reason></reason></test>

@@ -668,7 +668,7 @@ ecma_builtin_typedarray_prototype_set (ecma_value_t this_arg, /**< this argument
 #if ENABLED (JERRY_BUILTIN_BIGINT)
     if (ECMA_TYPEDARRAY_IS_BIGINT_TYPE (target_info.id))
     {
-      value_to_set = ecma_bigint_to_bigint (elem, true);
+      value_to_set = ecma_bigint_to_bigint (elem, false);
 
       if (ECMA_IS_VALUE_ERROR (value_to_set))
       {

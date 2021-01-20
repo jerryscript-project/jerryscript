@@ -15,7 +15,7 @@
 
 #include "js-parser-internal.h"
 
-#if ENABLED (JERRY_MODULE_SYSTEM)
+#if JERRY_MODULE_SYSTEM
 #include "jcontext.h"
 #include "jerryscript-port.h"
 
@@ -574,4 +574,4 @@ module_found:
   lexer_next_token (context_p);
 } /* parser_module_handle_module_specifier */
 
-#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
+#endif /* JERRY_MODULE_SYSTEM */

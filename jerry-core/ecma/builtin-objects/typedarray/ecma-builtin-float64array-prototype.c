@@ -15,8 +15,8 @@
 
 #include "ecma-builtins.h"
 
-#if ENABLED (JERRY_BUILTIN_TYPEDARRAY)
-#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#if JERRY_BUILTIN_TYPEDARRAY
+#if JERRY_NUMBER_TYPE_FLOAT64
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -41,5 +41,5 @@
  * @}
  */
 
-#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
-#endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
+#endif /* JERRY_NUMBER_TYPE_FLOAT64 */
+#endif /* JERRY_BUILTIN_TYPEDARRAY */

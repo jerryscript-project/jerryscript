@@ -28,7 +28,7 @@
  * @{
  * Valgrind-related options and headers
  */
-#if ENABLED (JERRY_VALGRIND)
+#if JERRY_VALGRIND
 # include "memcheck.h"
 
 # define JMEM_VALGRIND_NOACCESS_SPACE(p, s)   VALGRIND_MAKE_MEM_NOACCESS((p), (s))
@@ -37,14 +37,14 @@
 # define JMEM_VALGRIND_MALLOCLIKE_SPACE(p, s) VALGRIND_MALLOCLIKE_BLOCK((p), (s), 0, 0)
 # define JMEM_VALGRIND_RESIZE_SPACE(p, o, n)  VALGRIND_RESIZEINPLACE_BLOCK((p), (o), (n), 0)
 # define JMEM_VALGRIND_FREELIKE_SPACE(p)      VALGRIND_FREELIKE_BLOCK((p), 0)
-#else /* !ENABLED (JERRY_VALGRIND) */
+#else /* !JERRY_VALGRIND */
 # define JMEM_VALGRIND_NOACCESS_SPACE(p, s)
 # define JMEM_VALGRIND_UNDEFINED_SPACE(p, s)
 # define JMEM_VALGRIND_DEFINED_SPACE(p, s)
 # define JMEM_VALGRIND_MALLOCLIKE_SPACE(p, s)
 # define JMEM_VALGRIND_RESIZE_SPACE(p, o, n)
 # define JMEM_VALGRIND_FREELIKE_SPACE(p)
-#endif /* ENABLED (JERRY_VALGRIND) */
+#endif /* JERRY_VALGRIND */
 /** @} */
 
 void jmem_heap_init (void);
@@ -69,7 +69,7 @@ void jmem_pools_finalize (void);
  * @{
  * Jerry mem-stat definitions
  */
-#if ENABLED (JERRY_MEM_STATS)
+#if JERRY_MEM_STATS
 void jmem_heap_stat_init (void);
 void jmem_heap_stat_alloc (size_t num);
 void jmem_heap_stat_free (size_t num);
@@ -77,11 +77,11 @@ void jmem_heap_stat_free (size_t num);
 #define JMEM_HEAP_STAT_INIT() jmem_heap_stat_init ()
 #define JMEM_HEAP_STAT_ALLOC(v1) jmem_heap_stat_alloc (v1)
 #define JMEM_HEAP_STAT_FREE(v1) jmem_heap_stat_free (v1)
-#else /* !ENABLED (JERRY_MEM_STATS) */
+#else /* !JERRY_MEM_STATS */
 #define JMEM_HEAP_STAT_INIT()
 #define JMEM_HEAP_STAT_ALLOC(v1) JERRY_UNUSED (v1)
 #define JMEM_HEAP_STAT_FREE(v1) JERRY_UNUSED (v1)
-#endif /* ENABLED (JERRY_MEM_STATS) */
+#endif /* JERRY_MEM_STATS */
 
 /** @} */
 

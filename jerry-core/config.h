@@ -691,9 +691,6 @@
 # error "Invalid value for 'JERRY_VM_EXEC_STOP' macro."
 #endif
 
-#define ENABLED(FEATURE) ((FEATURE) == 1)
-#define DISABLED(FEATURE) ((FEATURE) != 1)
-
 /**
  * Cross component requirements check.
  */
@@ -701,15 +698,15 @@
  * The date module can only use the float 64 number types.
  * Do a check for this.
  */
-#if ENABLED (JERRY_BUILTIN_DATE) && !ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#if JERRY_BUILTIN_DATE && !JERRY_NUMBER_TYPE_FLOAT64
 #  error "Date does not support float32"
 #endif
 
 /**
  * Wrap container types into a single guard
  */
-#if ENABLED (JERRY_BUILTIN_MAP) || ENABLED (JERRY_BUILTIN_SET) \
-|| ENABLED (JERRY_BUILTIN_WEAKMAP) || ENABLED (JERRY_BUILTIN_WEAKSET)
+#if JERRY_BUILTIN_MAP || JERRY_BUILTIN_SET \
+|| JERRY_BUILTIN_WEAKMAP || JERRY_BUILTIN_WEAKSET
 # define JERRY_BUILTIN_CONTAINER 1
 #else
 # define JERRY_BUILTIN_CONTAINER 0
@@ -718,7 +715,7 @@
 /**
  * Resource name related types into a single guard
  */
-#if ENABLED (JERRY_LINE_INFO) || ENABLED (JERRY_ERROR_MESSAGES) || ENABLED (JERRY_MODULE_SYSTEM)
+#if JERRY_LINE_INFO || JERRY_ERROR_MESSAGES || JERRY_MODULE_SYSTEM
 # define JERRY_RESOURCE_NAME 1
 #else
 # define JERRY_RESOURCE_NAME 0

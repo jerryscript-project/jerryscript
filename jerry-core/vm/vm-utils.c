@@ -61,7 +61,7 @@ vm_is_direct_eval_form_call (void)
 ecma_value_t
 vm_get_backtrace (uint32_t max_depth) /**< maximum backtrace depth, 0 = unlimited */
 {
-#if ENABLED (JERRY_LINE_INFO)
+#if JERRY_LINE_INFO
   vm_frame_ctx_t *context_p = JERRY_CONTEXT (vm_top_context_p);
 
   if (max_depth == 0)
@@ -107,9 +107,9 @@ vm_get_backtrace (uint32_t max_depth) /**< maximum backtrace depth, 0 = unlimite
   }
 
   return ecma_make_object_value (array_p);
-#else /* !ENABLED (JERRY_LINE_INFO) */
+#else /* !JERRY_LINE_INFO */
   JERRY_UNUSED (max_depth);
 
   return ecma_make_object_value (ecma_op_new_array_object (0));
-#endif /* ENABLED (JERRY_LINE_INFO) */
+#endif /* JERRY_LINE_INFO */
 } /* vm_get_backtrace */

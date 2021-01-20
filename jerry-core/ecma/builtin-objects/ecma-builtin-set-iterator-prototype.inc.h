@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if ENABLED (JERRY_BUILTIN_SET)
+#if JERRY_BUILTIN_SET
 
 STRING_VALUE (LIT_GLOBAL_SYMBOL_TO_STRING_TAG,
               LIT_MAGIC_STRING_SET_ITERATOR_UL,
@@ -29,6 +29,6 @@ STRING_VALUE (LIT_GLOBAL_SYMBOL_TO_STRING_TAG,
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_MAGIC_STRING_NEXT, ecma_builtin_set_iterator_prototype_object_next, 0, 0)
 
-#endif /* ENABLED (JERRY_BUILTIN_SET) */
+#endif /* JERRY_BUILTIN_SET */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

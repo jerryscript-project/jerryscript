@@ -21,8 +21,8 @@
 #include "ecma-typedarray-object.h"
 #include "jrt.h"
 
-#if ENABLED (JERRY_BUILTIN_TYPEDARRAY)
-#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#if JERRY_BUILTIN_TYPEDARRAY
+#if JERRY_NUMBER_TYPE_FLOAT64
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -76,5 +76,5 @@ ecma_builtin_float64array_dispatch_construct (const ecma_value_t *arguments_list
   * @}
   */
 
-#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
-#endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
+#endif /* JERRY_NUMBER_TYPE_FLOAT64 */
+#endif /* JERRY_BUILTIN_TYPEDARRAY */

@@ -189,7 +189,7 @@ const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] =
     prop_attributes, \
     magic_string_id \
   },
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 #define SYMBOL_VALUE(name, symbol) \
   { \
     name, \
@@ -211,7 +211,7 @@ const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] =
     prop_attributes, \
     ECMA_ACCESSOR_READ_WRITE (getter_builtin_id, setter_builtin_id) \
   },
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 #include BUILTIN_INC_HEADER_NAME
   {
     LIT_MAGIC_STRING__COUNT,

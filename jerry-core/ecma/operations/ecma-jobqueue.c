@@ -24,7 +24,7 @@
 #include "opcodes.h"
 #include "vm-stack.h"
 
-#if ENABLED (JERRY_BUILTIN_PROMISE)
+#if JERRY_BUILTIN_PROMISE
 
 /**
  * Mask for job queue type.
@@ -586,4 +586,4 @@ ecma_free_all_enqueued_jobs (void)
  * @}
  * @}
  */
-#endif /* ENABLED (JERRY_BUILTIN_PROMISE) */
+#endif /* JERRY_BUILTIN_PROMISE */

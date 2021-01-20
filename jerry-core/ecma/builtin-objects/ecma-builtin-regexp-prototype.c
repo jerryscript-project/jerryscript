@@ -27,7 +27,7 @@
 #include "ecma-regexp-object.h"
 #include "lit-char-helpers.h"
 
-#if ENABLED (JERRY_BUILTIN_REGEXP)
+#if JERRY_BUILTIN_REGEXP
 #include "ecma-regexp-object.h"
 #include "re-compiler.h"
 
@@ -47,13 +47,13 @@ enum
   /** These routines must be in this order */
   ECMA_REGEXP_PROTOTYPE_ROUTINE_START = 0,
   ECMA_REGEXP_PROTOTYPE_ROUTINE_EXEC,
-#if ENABLED (JERRY_BUILTIN_ANNEXB)
+#if JERRY_BUILTIN_ANNEXB
   ECMA_REGEXP_PROTOTYPE_ROUTINE_COMPILE,
-#endif /* ENABLED (JERRY_BUILTIN_ANNEXB) */
+#endif /* JERRY_BUILTIN_ANNEXB */
 
   ECMA_REGEXP_PROTOTYPE_ROUTINE_TEST,
   ECMA_REGEXP_PROTOTYPE_ROUTINE_TO_STRING,
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_SOURCE,
   ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_FLAGS,
 
@@ -69,7 +69,7 @@ enum
   ECMA_REGEXP_PROTOTYPE_ROUTINE_SYMBOL_REPLACE,
   ECMA_REGEXP_PROTOTYPE_ROUTINE_SYMBOL_SPLIT,
   ECMA_REGEXP_PROTOTYPE_ROUTINE_SYMBOL_MATCH_ALL,
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-regexp-prototype.inc.h"
@@ -86,7 +86,7 @@ enum
  * @{
  */
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 /**
  * Helper function to retrieve the flags associated with a RegExp object
  *
@@ -258,9 +258,9 @@ ecma_builtin_regexp_prototype_get_source (ecma_extended_object_t *re_obj_p) /**<
 
   return ecma_op_escape_regexp_pattern (ecma_get_string_from_value (bc_p->source));
 } /* ecma_builtin_regexp_prototype_get_source */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
-#if ENABLED (JERRY_BUILTIN_ANNEXB)
+#if JERRY_BUILTIN_ANNEXB
 /**
  * The RegExp.prototype object's 'compile' routine
  *
@@ -277,12 +277,12 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this */
                                        ecma_value_t pattern_arg, /**< pattern or RegExp object */
                                        ecma_value_t flags_arg) /**< flags */
 {
-#if !ENABLED (JERRY_ESNEXT)
+#if !JERRY_ESNEXT
   if (ecma_get_object_from_value (this_arg) == ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a RegExp object"));
   }
-#endif /* !ENABLED (JERRY_ESNEXT) */
+#endif /* !JERRY_ESNEXT */
 
   ecma_object_t *this_obj_p = ecma_get_object_from_value (this_arg);
   ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) this_obj_p;
@@ -329,7 +329,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this */
   return ret_value;
 } /* ecma_builtin_regexp_prototype_compile */
 
-#endif /* ENABLED (JERRY_BUILTIN_ANNEXB) */
+#endif /* JERRY_BUILTIN_ANNEXB */
 
 /**
  * The RegExp.prototype object's 'exec' routine
@@ -383,7 +383,7 @@ static ecma_value_t
 ecma_builtin_regexp_prototype_test (ecma_value_t this_arg, /**< this argument */
                                     ecma_value_t arg) /**< routine's argument */
 {
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   ecma_string_t *arg_str_p = ecma_op_to_string (arg);
 
   if (JERRY_UNLIKELY (arg_str_p == NULL))
@@ -399,14 +399,14 @@ ecma_builtin_regexp_prototype_test (ecma_value_t this_arg, /**< this argument */
   {
     return result;
   }
-#else /* !ENABLED (JERRY_ESNEXT) */
+#else /* !JERRY_ESNEXT */
   ecma_value_t result = ecma_builtin_regexp_prototype_exec (this_arg, arg);
 
   if (ECMA_IS_VALUE_ERROR (result))
   {
     return result;
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
   ecma_value_t ret_value = ecma_make_boolean_value (!ecma_is_value_null (result));
   ecma_free_value (result);
@@ -426,7 +426,7 @@ ecma_builtin_regexp_prototype_test (ecma_value_t this_arg, /**< this argument */
 static ecma_value_t
 ecma_builtin_regexp_prototype_to_string (ecma_object_t *object_p) /**< this object */
 {
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   ecma_value_t result = ecma_op_object_get_by_magic_id (object_p, LIT_MAGIC_STRING_SOURCE);
   if (ECMA_IS_VALUE_ERROR (result))
   {
@@ -467,7 +467,7 @@ ecma_builtin_regexp_prototype_to_string (ecma_object_t *object_p) /**< this obje
   ecma_deref_ecma_string (flags_p);
 
   return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
-#else /* !ENABLED (JERRY_ESNEXT) */
+#else /* !JERRY_ESNEXT */
   ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) object_p;
 
   re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t,
@@ -497,10 +497,10 @@ ecma_builtin_regexp_prototype_to_string (ecma_object_t *object_p) /**< this obje
   }
 
   return ecma_make_string_value (ecma_stringbuilder_finalize (&result));
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 } /* ecma_builtin_regexp_prototype_to_string */
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 /**
  * Helper function to determine if method is the builtin exec method
  *
@@ -513,9 +513,9 @@ ecma_builtin_is_regexp_exec (ecma_extended_object_t *obj_p)
   return (ecma_get_object_is_builtin ((ecma_object_t *) obj_p)
           && obj_p->u.built_in.routine_id == ECMA_REGEXP_PROTOTYPE_ROUTINE_EXEC);
 } /* ecma_builtin_is_regexp_exec */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 /**
  * The RegExp.prototype object's 'matchAll' routine
  *
@@ -654,7 +654,7 @@ ecma_builtin_regexp_prototype_match_all (ecma_object_t *regexp_obj_p, /**< this 
 
   return ecma_make_object_value (result_obj);
 } /* ecma_builtin_regexp_prototype_match_all */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /**
  * Dispatcher of the Regexp built-in's routines
@@ -671,11 +671,11 @@ ecma_builtin_regexp_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
 {
   JERRY_UNUSED (arguments_number);
 
-#if !ENABLED (JERRY_ESNEXT)
+#if !JERRY_ESNEXT
   bool require_regexp = builtin_routine_id <= ECMA_REGEXP_PROTOTYPE_ROUTINE_TO_STRING;
-#else /* ENABLED (JERRY_ESNEXT) */
+#else /* JERRY_ESNEXT */
   bool require_regexp = builtin_routine_id < ECMA_REGEXP_PROTOTYPE_ROUTINE_TEST;
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
   ecma_object_t *obj_p = NULL;
 
@@ -697,12 +697,12 @@ ecma_builtin_regexp_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
 
   switch (builtin_routine_id)
   {
-#if ENABLED (JERRY_BUILTIN_ANNEXB)
+#if JERRY_BUILTIN_ANNEXB
     case ECMA_REGEXP_PROTOTYPE_ROUTINE_COMPILE:
     {
       return ecma_builtin_regexp_prototype_compile (this_arg, arguments_list_p[0], arguments_list_p[1]);
     }
-#endif /* ENABLED (JERRY_BUILTIN_ANNEXB) */
+#endif /* JERRY_BUILTIN_ANNEXB */
     case ECMA_REGEXP_PROTOTYPE_ROUTINE_TEST:
     {
       return ecma_builtin_regexp_prototype_test (this_arg, arguments_list_p[0]);
@@ -715,7 +715,7 @@ ecma_builtin_regexp_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
     {
       return ecma_builtin_regexp_prototype_to_string (obj_p);
     }
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
     case ECMA_REGEXP_PROTOTYPE_ROUTINE_SYMBOL_SEARCH:
     {
       return ecma_regexp_search_helper (this_arg, arguments_list_p[0]);
@@ -775,7 +775,7 @@ ecma_builtin_regexp_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
       ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) obj_p;
       return ecma_builtin_regexp_prototype_flags_helper (re_obj_p, builtin_routine_id);
     }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
     default:
     {
       JERRY_UNREACHABLE ();
@@ -788,4 +788,4 @@ ecma_builtin_regexp_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
+#endif /* JERRY_BUILTIN_REGEXP */

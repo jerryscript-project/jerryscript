@@ -24,7 +24,7 @@
 #include "ecma-helpers.h"
 #include "lit-char-helpers.h"
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -302,4 +302,4 @@ ecma_builtin_intrinsic_dispatch_routine (uint8_t builtin_routine_id, /**< built-
  * @}
  */
 
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */

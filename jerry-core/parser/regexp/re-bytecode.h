@@ -16,7 +16,7 @@
 #ifndef RE_BYTECODE_H
 #define RE_BYTECODE_H
 
-#if ENABLED (JERRY_BUILTIN_REGEXP)
+#if JERRY_BUILTIN_REGEXP
 
 #include "ecma-globals.h"
 #include "re-compiler-context.h"
@@ -81,9 +81,9 @@ typedef enum
 
   RE_OP_CLASS_ESCAPE,                             /**< class escape */
   RE_OP_CHAR_CLASS,                               /**< character class */
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   RE_OP_UNICODE_PERIOD,                           /**< period in full unicode mode */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
   RE_OP_PERIOD,                                   /**< period in non-unicode mode */
   RE_OP_CHAR,                                     /**< any code point */
   RE_OP_BYTE,                                     /**< 1-byte utf8 character */
@@ -118,9 +118,9 @@ uint8_t re_get_byte (const uint8_t **bc_p);
 lit_code_point_t re_get_char (const uint8_t **bc_p, bool unicode);
 uint32_t re_get_value (const uint8_t **bc_p);
 
-#if ENABLED (JERRY_REGEXP_DUMP_BYTE_CODE)
+#if JERRY_REGEXP_DUMP_BYTE_CODE
 void re_dump_bytecode (re_compiler_ctx_t *bc_ctx);
-#endif /* ENABLED (JERRY_REGEXP_DUMP_BYTE_CODE) */
+#endif /* JERRY_REGEXP_DUMP_BYTE_CODE */
 
 /**
  * @}
@@ -128,5 +128,5 @@ void re_dump_bytecode (re_compiler_ctx_t *bc_ctx);
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
+#endif /* JERRY_BUILTIN_REGEXP */
 #endif /* !RE_BYTECODE_H */

@@ -2,8 +2,4 @@ wrongmathcall:tests/unit-math/test-math.inc.h
 variableScope:jerry-math/*.c
 invalidPointerCast:jerry-math/*.c
 
-ConfigurationNotChecked:jerry-core/ecma/builtin-objects/ecma-builtin-global.inc.h
-ConfigurationNotChecked:jerry-core/ecma/builtin-objects/ecma-builtin-helpers-macro-defines.inc.h
-ConfigurationNotChecked:jerry-core/ecma/builtin-objects/ecma-builtin-function-prototype.inc.h
-ConfigurationNotChecked:jerry-core/ecma/builtin-objects/ecma-builtin-object.inc.h
-ConfigurationNotChecked:jerry-core/ecma/builtin-objects/ecma-builtin-helpers-macro-undefs.inc.h
+ConfigurationNotChecked:jerry-core/*.inc.h

@@ -25,7 +25,7 @@
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
 
-#if ENABLED (JERRY_BUILTIN_DATE)
+#if JERRY_BUILTIN_DATE
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -50,10 +50,10 @@ enum
 
   ECMA_DATE_PROTOTYPE_GET_FULL_YEAR, /* ECMA-262 v5 15.9.5.10 */
   ECMA_DATE_PROTOTYPE_GET_UTC_FULL_YEAR, /* ECMA-262 v5 15.9.5.11 */
-#if ENABLED (JERRY_BUILTIN_ANNEXB)
+#if JERRY_BUILTIN_ANNEXB
   ECMA_DATE_PROTOTYPE_GET_YEAR, /* ECMA-262 v5, AnnexB.B.2.4 */
   ECMA_DATE_PROTOTYPE_GET_UTC_YEAR, /* has no UTC variant */
-#endif /* ENABLED (JERRY_BUILTIN_ANNEXB) */
+#endif /* JERRY_BUILTIN_ANNEXB */
   ECMA_DATE_PROTOTYPE_GET_MONTH, /* ECMA-262 v5 15.9.5.12 */
   ECMA_DATE_PROTOTYPE_GET_UTC_MONTH, /* ECMA-262 v5 15.9.5.13 */
   ECMA_DATE_PROTOTYPE_GET_DATE, /* ECMA-262 v5 15.9.5.14 */
@@ -73,10 +73,10 @@ enum
 
   ECMA_DATE_PROTOTYPE_SET_FULL_YEAR, /* ECMA-262 v5, 15.9.5.40 */
   ECMA_DATE_PROTOTYPE_SET_UTC_FULL_YEAR, /* ECMA-262 v5, 15.9.5.41 */
-#if ENABLED (JERRY_BUILTIN_ANNEXB)
+#if JERRY_BUILTIN_ANNEXB
   ECMA_DATE_PROTOTYPE_SET_YEAR, /* ECMA-262 v5, ECMA-262 v5, AnnexB.B.2.5 */
   ECMA_DATE_PROTOTYPE_SET_UTC_YEAR, /* has no UTC variant */
-#endif /* ENABLED (JERRY_BUILTIN_ANNEXB) */
+#endif /* JERRY_BUILTIN_ANNEXB */
   ECMA_DATE_PROTOTYPE_SET_MONTH, /* ECMA-262 v5, 15.9.5.38 */
   ECMA_DATE_PROTOTYPE_SET_UTC_MONTH, /* ECMA-262 v5, 15.9.5.39 */
   ECMA_DATE_PROTOTYPE_SET_DATE, /* ECMA-262 v5, 15.9.5.36 */
@@ -92,9 +92,9 @@ enum
 
   ECMA_DATE_PROTOTYPE_TO_STRING, /* ECMA-262 v5, 15.9.5.2 */
   ECMA_DATE_PROTOTYPE_TO_DATE_STRING, /* ECMA-262 v5, 15.9.5.3 */
-#if !ENABLED (JERRY_ESNEXT)
+#if !JERRY_ESNEXT
   ECMA_DATE_PROTOTYPE_TO_UTC_STRING, /* ECMA-262 v5, 15.9.5.42 */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
   ECMA_DATE_PROTOTYPE_TO_TIME_STRING, /* ECMA-262 v5, 15.9.5.4 */
   ECMA_DATE_PROTOTYPE_TO_ISO_STRING, /* ECMA-262 v5, 15.9.5.43 */
 
@@ -102,9 +102,9 @@ enum
   ECMA_DATE_PROTOTYPE_SET_TIME, /* ECMA-262 v5, 15.9.5.27 */
   ECMA_DATE_PROTOTYPE_TO_JSON, /* ECMA-262 v5, 15.9.5.44 */
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   ECMA_DATE_PROTOTYPE_TO_PRIMITIVE, /*  ECMA-262 v6 20.3.4.45 */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-date-prototype.inc.h"
@@ -178,7 +178,7 @@ ecma_builtin_date_prototype_to_json (ecma_value_t this_arg) /**< this argument *
   return ret_value;
 } /* ecma_builtin_date_prototype_to_json */
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 /**
  * The Date.prototype object's toPrimitive routine
  *
@@ -216,7 +216,7 @@ ecma_builtin_date_prototype_to_primitive (ecma_value_t this_arg, /**< this argum
 
   return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type in toPrimitive"));
 } /* ecma_builtin_date_prototype_to_primitive */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /**
  * Dispatch get date functions
@@ -238,18 +238,18 @@ ecma_builtin_date_prototype_dispatch_get (uint16_t builtin_routine_id, /**< buil
   {
     case ECMA_DATE_PROTOTYPE_GET_FULL_YEAR:
     case ECMA_DATE_PROTOTYPE_GET_UTC_FULL_YEAR:
-#if ENABLED (JERRY_BUILTIN_ANNEXB)
+#if JERRY_BUILTIN_ANNEXB
     case ECMA_DATE_PROTOTYPE_GET_YEAR:
-#endif /* ENABLED (JERRY_BUILTIN_ANNEXB) */
+#endif /* JERRY_BUILTIN_ANNEXB */
     {
       date_num = ecma_date_year_from_time (date_num);
 
-#if ENABLED (JERRY_BUILTIN_ANNEXB)
+#if JERRY_BUILTIN_ANNEXB
       if (builtin_routine_id == ECMA_DATE_PROTOTYPE_GET_YEAR)
       {
         date_num -= 1900;
       }
-#endif /* ENABLED (JERRY_BUILTIN_ANNEXB) */
+#endif /* JERRY_BUILTIN_ANNEXB */
 
       break;
     }
@@ -307,7 +307,7 @@ ecma_builtin_date_prototype_dispatch_get (uint16_t builtin_routine_id, /**< buil
   return ecma_make_number_value (date_num);
 } /* ecma_builtin_date_prototype_dispatch_get */
 
-#if ENABLED (JERRY_BUILTIN_ANNEXB)
+#if JERRY_BUILTIN_ANNEXB
 
 /**
  * Returns true, if the built-in id sets a year.
@@ -317,7 +317,7 @@ ecma_builtin_date_prototype_dispatch_get (uint16_t builtin_routine_id, /**< buil
    || (builtin_routine_id) == ECMA_DATE_PROTOTYPE_SET_UTC_FULL_YEAR \
    || (builtin_routine_id) == ECMA_DATE_PROTOTYPE_SET_YEAR)
 
-#else /* !ENABLED (JERRY_BUILTIN_ANNEXB) */
+#else /* !JERRY_BUILTIN_ANNEXB */
 
 /**
  * Returns true, if the built-in id sets a year.
@@ -326,7 +326,7 @@ ecma_builtin_date_prototype_dispatch_get (uint16_t builtin_routine_id, /**< buil
   ((builtin_routine_id) == ECMA_DATE_PROTOTYPE_SET_FULL_YEAR \
    || (builtin_routine_id) == ECMA_DATE_PROTOTYPE_SET_UTC_FULL_YEAR)
 
-#endif /* ENABLED (JERRY_BUILTIN_ANNEXB) */
+#endif /* JERRY_BUILTIN_ANNEXB */
 
 /**
  * Dispatch set date functions
@@ -351,9 +351,9 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
 
   switch (builtin_routine_id)
   {
-#if ENABLED (JERRY_BUILTIN_ANNEXB)
+#if JERRY_BUILTIN_ANNEXB
     case ECMA_DATE_PROTOTYPE_SET_YEAR:
-#endif /* ENABLED (JERRY_BUILTIN_ANNEXB) */
+#endif /* JERRY_BUILTIN_ANNEXB */
     case ECMA_DATE_PROTOTYPE_SET_DATE:
     case ECMA_DATE_PROTOTYPE_SET_UTC_DATE:
     case ECMA_DATE_PROTOTYPE_SET_UTC_MILLISECONDS:
@@ -442,7 +442,7 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
         }
         break;
       }
-#if ENABLED (JERRY_BUILTIN_ANNEXB)
+#if JERRY_BUILTIN_ANNEXB
       case ECMA_DATE_PROTOTYPE_SET_YEAR:
       {
         year = converted_number[0];
@@ -452,7 +452,7 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
         }
         break;
       }
-#endif /* ENABLED (JERRY_BUILTIN_ANNEXB) */
+#endif /* JERRY_BUILTIN_ANNEXB */
       case ECMA_DATE_PROTOTYPE_SET_MONTH:
       case ECMA_DATE_PROTOTYPE_SET_UTC_MONTH:
       {
@@ -475,7 +475,7 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
 
     day_part = ecma_date_make_day (year, month, day);
 
-#if ENABLED (JERRY_BUILTIN_ANNEXB)
+#if JERRY_BUILTIN_ANNEXB
     if (builtin_routine_id == ECMA_DATE_PROTOTYPE_SET_YEAR)
     {
       builtin_routine_id = ECMA_DATE_PROTOTYPE_SET_UTC_YEAR;
@@ -486,7 +486,7 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
         time_part = converted_number[0];
       }
     }
-#endif /* ENABLED (JERRY_BUILTIN_ANNEXB) */
+#endif /* JERRY_BUILTIN_ANNEXB */
   }
   else
   {
@@ -596,13 +596,13 @@ ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< b
     return ecma_builtin_date_prototype_to_json (this_arg);
   }
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   if (JERRY_UNLIKELY (builtin_routine_id == ECMA_DATE_PROTOTYPE_TO_PRIMITIVE))
   {
     ecma_value_t argument = arguments_number > 0 ? arguments_list[0] : ECMA_VALUE_UNDEFINED;
     return ecma_builtin_date_prototype_to_primitive (this_arg, argument);
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
   if (!ecma_is_value_object (this_arg)
       || !ecma_object_class_is (ecma_get_object_from_value (this_arg), LIT_MAGIC_STRING_DATE_UL))
@@ -679,12 +679,12 @@ ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< b
     {
       return ecma_date_value_to_date_string (*prim_value_p);
     }
-#if !ENABLED (JERRY_ESNEXT)
+#if !JERRY_ESNEXT
     case ECMA_DATE_PROTOTYPE_TO_UTC_STRING:
     {
       return ecma_date_value_to_utc_string (*prim_value_p);
     }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
     default:
     {
       JERRY_ASSERT (builtin_routine_id == ECMA_DATE_PROTOTYPE_TO_TIME_STRING);
@@ -700,4 +700,4 @@ ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< b
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_DATE) */
+#endif /* JERRY_BUILTIN_DATE */

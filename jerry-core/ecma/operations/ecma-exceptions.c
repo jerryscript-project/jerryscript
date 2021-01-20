@@ -25,9 +25,9 @@
 #include "jcontext.h"
 #include "jrt.h"
 
-#if ENABLED (JERRY_LINE_INFO)
+#if JERRY_LINE_INFO
 #include "vm.h"
-#endif /* ENABLED (JERRY_LINE_INFO) */
+#endif /* JERRY_LINE_INFO */
 
 /** \addtogroup ecma ECMA
  * @{
@@ -53,14 +53,14 @@ const ecma_error_mapping_t ecma_error_mappings[] =
 #define ERROR_ELEMENT(TYPE, ID) { TYPE, ID }
   ERROR_ELEMENT (ECMA_ERROR_COMMON,      ECMA_BUILTIN_ID_ERROR_PROTOTYPE),
 
-#if ENABLED (JERRY_BUILTIN_ERRORS)
+#if JERRY_BUILTIN_ERRORS
   ERROR_ELEMENT (ECMA_ERROR_EVAL,        ECMA_BUILTIN_ID_EVAL_ERROR_PROTOTYPE),
   ERROR_ELEMENT (ECMA_ERROR_RANGE,       ECMA_BUILTIN_ID_RANGE_ERROR_PROTOTYPE),
   ERROR_ELEMENT (ECMA_ERROR_REFERENCE,   ECMA_BUILTIN_ID_REFERENCE_ERROR_PROTOTYPE),
   ERROR_ELEMENT (ECMA_ERROR_TYPE,        ECMA_BUILTIN_ID_TYPE_ERROR_PROTOTYPE),
   ERROR_ELEMENT (ECMA_ERROR_URI,         ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE),
   ERROR_ELEMENT (ECMA_ERROR_SYNTAX,      ECMA_BUILTIN_ID_SYNTAX_ERROR_PROTOTYPE),
-#endif /* ENABLED (JERRY_BUILTIN_ERRORS) */
+#endif /* JERRY_BUILTIN_ERRORS */
 
 #undef ERROR_ELEMENT
 };
@@ -82,7 +82,7 @@ ecma_object_t *
 ecma_new_standard_error (ecma_standard_error_t error_type, /**< native error type */
                          ecma_string_t *message_string_p) /**< message string */
 {
-#if ENABLED (JERRY_BUILTIN_ERRORS)
+#if JERRY_BUILTIN_ERRORS
   ecma_builtin_id_t prototype_id = ECMA_BUILTIN_ID__COUNT;
 
   switch (error_type)
@@ -134,7 +134,7 @@ ecma_new_standard_error (ecma_standard_error_t error_type, /**< native error typ
 #else
   JERRY_UNUSED (error_type);
   ecma_builtin_id_t prototype_id = ECMA_BUILTIN_ID_ERROR_PROTOTYPE;
-#endif /* ENABLED (JERRY_BUILTIN_ERRORS) */
+#endif /* JERRY_BUILTIN_ERRORS */
 
   ecma_object_t *prototype_obj_p = ecma_builtin_get (prototype_id);
 
@@ -167,7 +167,7 @@ ecma_new_standard_error (ecma_standard_error_t error_type, /**< native error typ
   }
   else
   {
-#if ENABLED (JERRY_LINE_INFO)
+#if JERRY_LINE_INFO
     /* Default decorator when line info is enabled. */
     ecma_string_t *stack_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_STACK);
 
@@ -181,7 +181,7 @@ ecma_new_standard_error (ecma_standard_error_t error_type, /**< native error typ
 
     prop_value_p->value = backtrace_value;
     ecma_deref_object (ecma_get_object_from_value (backtrace_value));
-#endif /* ENABLED (JERRY_LINE_INFO) */
+#endif /* JERRY_LINE_INFO */
   }
 
   return new_error_obj_p;
@@ -244,7 +244,7 @@ ecma_raise_standard_error (ecma_standard_error_t error_type, /**< error type */
   return ECMA_VALUE_ERROR;
 } /* ecma_raise_standard_error */
 
-#if ENABLED (JERRY_ERROR_MESSAGES)
+#if JERRY_ERROR_MESSAGES
 
 /**
  * Raise a standard ecma-error with the given format string and arguments.
@@ -288,13 +288,13 @@ ecma_raise_standard_error_with_format (ecma_standard_error_t error_type, /**< er
         lit_magic_string_id_t class_name = ecma_object_get_class_name (arg_object_p);
         arg_string_p = ecma_get_magic_string (class_name);
       }
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
       else if (ecma_is_value_symbol (arg_val))
       {
         ecma_value_t symbol_desc_value = ecma_get_symbol_descriptive_string (arg_val);
         arg_string_p = ecma_get_string_from_value (symbol_desc_value);
       }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
       else
       {
         arg_string_p = ecma_op_to_string (arg_val);
@@ -330,7 +330,7 @@ ecma_raise_standard_error_with_format (ecma_standard_error_t error_type, /**< er
   return ECMA_VALUE_ERROR;
 } /* ecma_raise_standard_error_with_format */
 
-#endif /* ENABLED (JERRY_ERROR_MESSAGES) */
+#endif /* JERRY_ERROR_MESSAGES */
 
 /**
  * Raise a common error with the given message.

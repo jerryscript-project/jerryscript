@@ -29,7 +29,7 @@
 #include "vm.h"
 #include "vm-stack.h"
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 
 /** \addtogroup ecma ECMA
  * @{
@@ -534,7 +534,7 @@ ecma_await_continue (vm_executable_object_t *executable_object_p, /**< executabl
   }
 } /* ecma_await_continue */
 
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /**
  * @}

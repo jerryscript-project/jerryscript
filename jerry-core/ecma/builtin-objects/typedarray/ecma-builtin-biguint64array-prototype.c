@@ -15,8 +15,8 @@
 
 #include "ecma-builtins.h"
 
-#if ENABLED (JERRY_BUILTIN_TYPEDARRAY)
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_TYPEDARRAY
+#if JERRY_BUILTIN_BIGINT
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -41,5 +41,5 @@
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
-#endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
+#endif /* JERRY_BUILTIN_BIGINT */
+#endif /* JERRY_BUILTIN_TYPEDARRAY */

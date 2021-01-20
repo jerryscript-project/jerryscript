@@ -28,7 +28,7 @@
 #include "jcontext.h"
 #include "jrt.h"
 
-#if ENABLED (JERRY_BUILTIN_ARRAY)
+#if JERRY_BUILTIN_ARRAY
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -45,11 +45,11 @@ enum
 {
   ECMA_ARRAY_ROUTINE_START = 0,
   ECMA_ARRAY_ROUTINE_IS_ARRAY,
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   ECMA_ARRAY_ROUTINE_FROM,
   ECMA_ARRAY_ROUTINE_OF,
   ECMA_ARRAY_ROUTINE_SPECIES_GET
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-array.inc.h"
@@ -66,7 +66,7 @@ enum
  * @{
  */
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 /**
  * The Array object's 'from' routine
  *
@@ -468,7 +468,7 @@ ecma_builtin_array_object_of (ecma_value_t this_arg, /**< 'this' argument */
   return ecma_make_object_value (obj_p);
 } /* ecma_builtin_array_object_of */
 
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /**
  * Handle calling [[Call]] of built-in Array object
@@ -511,9 +511,9 @@ ecma_builtin_array_dispatch_construct (const ecma_value_t *arguments_list_p, /**
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-#if !ENABLED (JERRY_ESNEXT)
+#if !JERRY_ESNEXT
   return ecma_builtin_array_dispatch_call (arguments_list_p, arguments_list_len);
-#else /* ENABLED (JERRY_ESNEXT) */
+#else /* JERRY_ESNEXT */
   ecma_object_t *proto_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_new_target_p),
                                                                    ECMA_BUILTIN_ID_ARRAY_PROTOTYPE);
 
@@ -534,7 +534,7 @@ ecma_builtin_array_dispatch_construct (const ecma_value_t *arguments_list_p, /**
   ECMA_SET_NON_NULL_POINTER (object_p->u2.prototype_cp, proto_p);
   ecma_deref_object (proto_p);
   return result;
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 } /* ecma_builtin_array_dispatch_construct */
 
 /**
@@ -558,7 +558,7 @@ ecma_builtin_array_dispatch_routine (uint8_t builtin_routine_id, /**< built-in w
 
       return arguments_number > 0 ? ecma_is_value_array (arguments_list_p[0]) : ECMA_VALUE_FALSE;
     }
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
     case ECMA_ARRAY_ROUTINE_FROM:
     {
       return ecma_builtin_array_object_from (this_arg, arguments_list_p, arguments_number);
@@ -571,7 +571,7 @@ ecma_builtin_array_dispatch_routine (uint8_t builtin_routine_id, /**< built-in w
     {
       return ecma_copy_value (this_arg);
     }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
     default:
     {
       JERRY_UNREACHABLE ();
@@ -585,4 +585,4 @@ ecma_builtin_array_dispatch_routine (uint8_t builtin_routine_id, /**< built-in w
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_ARRAY) */
+#endif /* JERRY_BUILTIN_ARRAY */

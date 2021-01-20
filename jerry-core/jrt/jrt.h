@@ -33,14 +33,17 @@
  */
 #define JERRY_UNUSED(x) ((void) (x))
 
-#define JERRY_UNUSED_1(_1)                 JERRY_UNUSED (_1)
-#define JERRY_UNUSED_2(_1, _2)             JERRY_UNUSED (_1), JERRY_UNUSED_1 (_2)
-#define JERRY_UNUSED_3(_1, _2, _3)         JERRY_UNUSED (_1), JERRY_UNUSED_2 (_2, _3)
-#define JERRY_UNUSED_4(_1, _2, _3, _4)     JERRY_UNUSED (_1), JERRY_UNUSED_3 (_2, _3, _4)
-#define JERRY_UNUSED_5(_1, _2, _3, _4, _5) JERRY_UNUSED (_1), JERRY_UNUSED_4 (_2, _3, _4, _5)
+#define JERRY_UNUSED_1(_1)                              JERRY_UNUSED (_1)
+#define JERRY_UNUSED_2(_1, _2)                          JERRY_UNUSED (_1), JERRY_UNUSED_1 (_2)
+#define JERRY_UNUSED_3(_1, _2, _3)                      JERRY_UNUSED (_1), JERRY_UNUSED_2 (_2, _3)
+#define JERRY_UNUSED_4(_1, _2, _3, _4)                  JERRY_UNUSED (_1), JERRY_UNUSED_3 (_2, _3, _4)
+#define JERRY_UNUSED_5(_1, _2, _3, _4, _5)              JERRY_UNUSED (_1), JERRY_UNUSED_4 (_2, _3, _4, _5)
+#define JERRY_UNUSED_6(_1, _2, _3, _4, _5, _6)          JERRY_UNUSED (_1), JERRY_UNUSED_5 (_2, _3, _4, _5, _6)
+#define JERRY_UNUSED_7(_1, _2, _3, _4, _5, _6, _7)      JERRY_UNUSED (_1), JERRY_UNUSED_6 (_2, _3, _4, _5, _6, _7)
+#define JERRY_UNUSED_8(_1, _2, _3, _4, _5, _6, _7, _8)  JERRY_UNUSED (_1), JERRY_UNUSED_7 (_2, _3, _4, _5, _6, _7, _8)
 
-#define JERRY_VA_ARGS_NUM_IMPL(_1, _2, _3, _4, _5, N, ...) N
-#define JERRY_VA_ARGS_NUM(...) JERRY_VA_ARGS_NUM_IMPL (__VA_ARGS__, 5, 4, 3, 2, 1, 0)
+#define JERRY_VA_ARGS_NUM_IMPL(_1, _2, _3, _4, _5, _6, _7, _8, N, ...) N
+#define JERRY_VA_ARGS_NUM(...) JERRY_VA_ARGS_NUM_IMPL (__VA_ARGS__, 8, 7, 6, 5, 4, 3, 2, 1, 0)
 
 #define JERRY_UNUSED_ALL_IMPL_(nargs) JERRY_UNUSED_ ## nargs
 #define JERRY_UNUSED_ALL_IMPL(nargs) JERRY_UNUSED_ALL_IMPL_ (nargs)
@@ -111,17 +114,17 @@ void JERRY_ATTR_NORETURN jerry_fatal (jerry_fatal_code_t code);
 /*
  * Logging
  */
-#if ENABLED (JERRY_LOGGING)
+#if JERRY_LOGGING
 #define JERRY_ERROR_MSG(...) jerry_port_log (JERRY_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define JERRY_WARNING_MSG(...) jerry_port_log (JERRY_LOG_LEVEL_WARNING, __VA_ARGS__)
 #define JERRY_DEBUG_MSG(...) jerry_port_log (JERRY_LOG_LEVEL_DEBUG, __VA_ARGS__)
 #define JERRY_TRACE_MSG(...) jerry_port_log (JERRY_LOG_LEVEL_TRACE, __VA_ARGS__)
-#else /* !ENABLED (JERRY_LOGGING) */
+#else /* !JERRY_LOGGING */
 #define JERRY_ERROR_MSG(...) do { if (false) { JERRY_UNUSED_ALL (__VA_ARGS__); } } while (0)
 #define JERRY_WARNING_MSG(...) do { if (false) { JERRY_UNUSED_ALL (__VA_ARGS__); } } while (0)
 #define JERRY_DEBUG_MSG(...) do { if (false) { JERRY_UNUSED_ALL (__VA_ARGS__); } } while (0)
 #define JERRY_TRACE_MSG(...) do { if (false) { JERRY_UNUSED_ALL (__VA_ARGS__); } } while (0)
-#endif /* ENABLED (JERRY_LOGGING) */
+#endif /* JERRY_LOGGING */
 
 /**
  * Size of struct member

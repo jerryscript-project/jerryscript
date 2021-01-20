@@ -39,7 +39,7 @@ JERRY_STATIC_ASSERT (((1 << (ECMA_DIRECT_SHIFT - 1)) | ECMA_TYPE_DIRECT) == ECMA
 #define ECMA_NUMBER_SIGN_POS (ECMA_NUMBER_FRACTION_WIDTH + \
                               ECMA_NUMBER_BIASED_EXP_WIDTH)
 
-#if !ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#if !JERRY_NUMBER_TYPE_FLOAT64
 JERRY_STATIC_ASSERT (sizeof (ecma_number_t) == sizeof (uint32_t),
                      size_of_ecma_number_t_must_be_equal_to_4_bytes);
 
@@ -102,7 +102,7 @@ ecma_number_unpack (ecma_number_t num, /**< ecma-number */
  */
 const int32_t ecma_number_exponent_bias = 127;
 
-#elif ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#elif JERRY_NUMBER_TYPE_FLOAT64
 JERRY_STATIC_ASSERT (sizeof (ecma_number_t) == sizeof (uint64_t),
                      size_of_ecma_number_t_must_be_equal_to_8_bytes);
 
@@ -165,7 +165,7 @@ ecma_number_unpack (ecma_number_t num, /**< ecma-number */
  */
 const int32_t ecma_number_exponent_bias = 1023;
 
-#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#endif /* JERRY_NUMBER_TYPE_FLOAT64 */
 
 /**
  * Get fraction of number
@@ -248,11 +248,11 @@ ecma_number_make_nan (void)
 {
   /* IEEE754 QNaN = sign bit: 0, exponent: all 1 bits, fraction: 1....0 */
   ecma_number_accessor_t f;
-#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#if JERRY_NUMBER_TYPE_FLOAT64
   f.as_uint64_t = 0x7ff8000000000000ull; /* double QNaN, same as the C99 nan("") returns. */
-#else /* !ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#else /* !JERRY_NUMBER_TYPE_FLOAT64 */
   f.as_uint32_t = 0x7fc00000u;  /* float QNaN, same as the C99 nanf("") returns. */
-#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#endif /* JERRY_NUMBER_TYPE_FLOAT64 */
   return f.as_ecma_number_t;
 } /* ecma_number_make_nan */
 
@@ -268,11 +268,11 @@ ecma_number_make_infinity (bool sign) /**< true - for negative Infinity,
 {
   /* IEEE754 INF = sign bit: sign, exponent: all 1 bits, fraction: 0....0 */
   ecma_number_accessor_t f;
-#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#if JERRY_NUMBER_TYPE_FLOAT64
   f.as_uint64_t = sign ? 0xfff0000000000000ull : 0x7ff0000000000000ull;
-#else /* !ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#else /* !JERRY_NUMBER_TYPE_FLOAT64 */
   f.as_uint32_t = sign ? 0xff800000u : 0x7f800000u;
-#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#endif /* JERRY_NUMBER_TYPE_FLOAT64 */
   return f.as_ecma_number_t;
 } /* ecma_number_make_infinity */
 

@@ -17,7 +17,7 @@
 #include "jcontext.h"
 #include "jerryscript.h"
 
-#if ENABLED (JERRY_DEBUGGER)
+#if JERRY_DEBUGGER
 
 /**
  * Minimum number of bytes transmitted or received.
@@ -247,4 +247,4 @@ jerry_debugger_transport_sleep (void)
   jerry_port_sleep (JERRY_DEBUGGER_TRANSPORT_TIMEOUT);
 } /* jerry_debugger_transport_sleep */
 
-#endif /* ENABLED (JERRY_DEBUGGER) */
+#endif /* JERRY_DEBUGGER */

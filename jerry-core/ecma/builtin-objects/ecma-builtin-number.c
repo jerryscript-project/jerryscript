@@ -27,12 +27,12 @@
 #include "ecma-objects.h"
 #include "jrt.h"
 
-#if ENABLED (JERRY_BUILTIN_NUMBER)
+#if JERRY_BUILTIN_NUMBER
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 /**
  * This object has a custom dispatch function.
  */
@@ -49,7 +49,7 @@ enum
   ECMA_NUMBER_OBJECT_ROUTINE_IS_INTEGER,
   ECMA_NUMBER_OBJECT_ROUTINE_IS_SAFE_INTEGER
 };
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-number.inc.h"
 #define BUILTIN_UNDERSCORED_ID number
@@ -92,7 +92,7 @@ ecma_builtin_number_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
       return ret_value;
     }
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
     if (ecma_is_value_bigint (ret_value))
     {
       ecma_value_t bigint = ret_value;
@@ -100,7 +100,7 @@ ecma_builtin_number_dispatch_call (const ecma_value_t *arguments_list_p, /**< ar
       ecma_free_value (bigint);
     }
     else
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
     {
       ret_value = ecma_make_number_value (num);
     }
@@ -125,7 +125,7 @@ ecma_builtin_number_dispatch_construct (const ecma_value_t *arguments_list_p, /*
     return ecma_op_create_number_object (ecma_make_integer_value (0));
   }
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
   ecma_number_t num;
   ecma_value_t value = ecma_op_to_numeric (arguments_list_p[0], &num, ECMA_TO_NUMERIC_ALLOW_BIGINT);
 
@@ -148,12 +148,12 @@ ecma_builtin_number_dispatch_construct (const ecma_value_t *arguments_list_p, /*
   ecma_value_t result = ecma_op_create_number_object (value);
   ecma_free_value (value);
   return result;
-#else /* !ENABLED (JERRY_BUILTIN_BIGINT) */
+#else /* !JERRY_BUILTIN_BIGINT */
   return ecma_op_create_number_object (arguments_list_p[0]);
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 } /* ecma_builtin_number_dispatch_construct */
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 /**
  * The Number object 'isInteger' and 'isSafeInteger' routine
  *
@@ -239,7 +239,7 @@ ecma_builtin_number_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
   }
 } /* ecma_builtin_number_dispatch_routine */
 
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /**
  * @}
@@ -247,4 +247,4 @@ ecma_builtin_number_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_NUMBER) */
+#endif /* JERRY_BUILTIN_NUMBER */

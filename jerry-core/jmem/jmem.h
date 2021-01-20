@@ -55,11 +55,11 @@
 /**
  * Shift for tag part in jmem_cpointer_tag_t
  */
-#if defined (JMEM_CAN_STORE_POINTER_VALUE_DIRECTLY) && ENABLED (JERRY_CPOINTER_32_BIT)
+#if defined (JMEM_CAN_STORE_POINTER_VALUE_DIRECTLY) && JERRY_CPOINTER_32_BIT
 #define JMEM_TAG_SHIFT 0
-#else /* !JMEM_CAN_STORE_POINTER_VALUE_DIRECTLY || !ENABLED (JERRY_CPOINTER_32_BIT) */
+#else /* !JMEM_CAN_STORE_POINTER_VALUE_DIRECTLY || !JERRY_CPOINTER_32_BIT */
 #define JMEM_TAG_SHIFT 3
-#endif /* JMEM_CAN_STORE_POINTER_VALUE_DIRECTLY && ENABLED (JERRY_CPOINTER_32_BIT) */
+#endif /* JMEM_CAN_STORE_POINTER_VALUE_DIRECTLY && JERRY_CPOINTER_32_BIT */
 
 /**
  * Bit mask for tag part in jmem_cpointer_tag_t
@@ -94,11 +94,11 @@ enum
 /**
  * Compressed pointer
  */
-#if ENABLED (JERRY_CPOINTER_32_BIT)
+#if JERRY_CPOINTER_32_BIT
 typedef uint32_t jmem_cpointer_t;
-#else /* !ENABLED (JERRY_CPOINTER_32_BIT) */
+#else /* !JERRY_CPOINTER_32_BIT */
 typedef uint16_t jmem_cpointer_t;
-#endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
+#endif /* JERRY_CPOINTER_32_BIT */
 
 /**
  * Compressed pointer with tag value
@@ -147,7 +147,7 @@ void *jmem_heap_alloc_block_null_on_error (const size_t size);
 void *jmem_heap_realloc_block (void *ptr, const size_t old_size, const size_t new_size);
 void jmem_heap_free_block (void *ptr, const size_t size);
 
-#if ENABLED (JERRY_MEM_STATS)
+#if JERRY_MEM_STATS
 /**
  * Heap memory usage statistics
  */
@@ -186,7 +186,7 @@ void jmem_stats_free_property_bytes (size_t property_size);
 void jmem_heap_get_stats (jmem_heap_stats_t *);
 void jmem_heap_stats_reset_peak (void);
 void jmem_heap_stats_print (void);
-#endif /* ENABLED (JERRY_MEM_STATS) */
+#endif /* JERRY_MEM_STATS */
 
 jmem_cpointer_t JERRY_ATTR_PURE jmem_compress_pointer (const void *pointer_p);
 void * JERRY_ATTR_PURE jmem_decompress_pointer (uintptr_t compressed_pointer);

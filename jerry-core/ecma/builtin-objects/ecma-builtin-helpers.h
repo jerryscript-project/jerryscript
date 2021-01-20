@@ -83,9 +83,9 @@ typedef struct
    */
   union
   {
-#if ENABLED (JERRY_BUILTIN_REGEXP)
+#if JERRY_BUILTIN_REGEXP
     const ecma_regexp_capture_t *captures_p; /**< array of regexp capturing groups */
-#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
+#endif /* JERRY_BUILTIN_REGEXP */
     const ecma_collection_t *collection_p;   /**< collection of captured substrings */
   } u;
 
@@ -96,12 +96,12 @@ typedef struct
 void
 ecma_builtin_replace_substitute (ecma_replace_context_t *ctx_p);
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 bool
 ecma_builtin_is_regexp_exec (ecma_extended_object_t *obj_p);
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
-#if ENABLED (JERRY_BUILTIN_DATE)
+#if JERRY_BUILTIN_DATE
 
 /**
  * Time range defines for helper functions.
@@ -174,9 +174,9 @@ ecma_value_t ecma_date_value_to_iso_string (ecma_number_t datetime_number);
 ecma_value_t ecma_date_value_to_date_string (ecma_number_t datetime_number);
 ecma_value_t ecma_date_value_to_time_string (ecma_number_t datetime_number);
 
-#endif /* ENABLED (JERRY_BUILTIN_DATE) */
+#endif /* JERRY_BUILTIN_DATE */
 
-#if ENABLED (JERRY_BUILTIN_JSON)
+#if JERRY_BUILTIN_JSON
 /* ecma-builtin-helper-json.c */
 
 /**
@@ -220,7 +220,7 @@ bool ecma_json_has_object_in_stack (ecma_json_occurence_stack_item_t *stack_p, e
 ecma_value_t
 ecma_builtin_helper_json_create_non_formatted_json (lit_utf8_byte_t left_bracket, lit_utf8_byte_t right_bracket,
                                                     ecma_collection_t *partial_p);
-#endif /* ENABLED (JERRY_BUILTIN_JSON) */
+#endif /* JERRY_BUILTIN_JSON */
 
 /* ecma-builtin-helper-error.c */
 

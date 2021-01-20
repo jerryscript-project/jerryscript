@@ -48,7 +48,7 @@ typedef enum
   ECMA_BUILTIN_ID__COUNT /**< number of built-in objects */
 } ecma_builtin_id_t;
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 
 /**
  * Special id for handlers (handlers are not regular built-ins, but
@@ -62,7 +62,7 @@ typedef enum
 #define ECMA_BUILTIN_GLOBAL_SYMBOL_COUNT \
   (LIT_GLOBAL_SYMBOL__LAST - LIT_GLOBAL_SYMBOL__FIRST + 1)
 
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /**
  * Construct a routine value
@@ -106,14 +106,14 @@ typedef struct
 {
   ecma_extended_object_t extended_object; /**< extended object part */
   uint32_t extra_instantiated_bitset[1]; /**< extra bit set for instantiated properties */
-#if ENABLED (JERRY_BUILTIN_REALMS)
+#if JERRY_BUILTIN_REALMS
   uint32_t extra_realms_bitset; /**< extra bit set for instantiated properties when realms is enabled */
   ecma_value_t this_binding; /**< 'this' binding of this global object */
-#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+#endif /* JERRY_BUILTIN_REALMS */
   jmem_cpointer_t global_env_cp; /**< global lexical environment */
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   jmem_cpointer_t global_scope_cp; /**< global lexical scope */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
   jmem_cpointer_t builtin_objects[ECMA_BUILTIN_OBJECTS_COUNT]; /**< pointer to instances of built-in objects */
 } ecma_global_object_t;
 
@@ -150,9 +150,9 @@ ecma_builtin_get_global (void);
 bool
 ecma_builtin_function_is_routine (ecma_object_t *func_obj_p);
 
-#if ENABLED (JERRY_BUILTIN_REALMS)
+#if JERRY_BUILTIN_REALMS
 ecma_object_t *
 ecma_builtin_get_from_realm (ecma_global_object_t *global_object_p, ecma_builtin_id_t builtin_id);
-#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+#endif /* JERRY_BUILTIN_REALMS */
 
 #endif /* !ECMA_BUILTINS_H */

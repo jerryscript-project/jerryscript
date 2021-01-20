@@ -64,19 +64,19 @@
 
 #define CBC_HAS_POP_STACK_BYTE_ARG (CBC_HAS_BYTE_ARG | CBC_POP_STACK_BYTE_ARG)
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 /**
  * CBC_NO_RESULT_OPERATION for ext opcodes
  */
 #define CBC_EXT_NO_RESULT_OPERATION(opcode) \
   ((opcode) >= PARSER_TO_EXT_OPCODE (CBC_EXT_SUPER_CALL) \
     && (opcode) <= PARSER_TO_EXT_OPCODE (CBC_EXT_SPREAD_CALL_PROP_BLOCK))
-#else /* !ENABLED (JERRY_ESNEXT) */
+#else /* !JERRY_ESNEXT */
 /**
  * CBC_NO_RESULT_OPERATION for ext opcodes
  */
 #define CBC_EXT_NO_RESULT_OPERATION(opcode) false
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /* Debug macro. */
 #define CBC_ARGS_EQ(op, types) \
@@ -854,9 +854,9 @@ typedef struct
   uint8_t ident_end;                /**< end position of the identifier group */
   uint8_t const_literal_end;        /**< end position of the const literal group */
   uint8_t literal_end;              /**< end position of the literal group */
-#if ENABLED (JERRY_BUILTIN_REALMS)
+#if JERRY_BUILTIN_REALMS
   ecma_value_t realm_value;         /**< realm value */
-#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+#endif /* JERRY_BUILTIN_REALMS */
 } cbc_uint8_arguments_t;
 
 /**
@@ -872,9 +872,9 @@ typedef struct
   uint16_t const_literal_end;       /**< end position of the const literal group */
   uint16_t literal_end;             /**< end position of the literal group */
   uint16_t padding;                 /**< an unused value */
-#if ENABLED (JERRY_BUILTIN_REALMS)
+#if JERRY_BUILTIN_REALMS
   ecma_value_t realm_value;         /**< realm value */
-#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+#endif /* JERRY_BUILTIN_REALMS */
 } cbc_uint16_arguments_t;
 
 /**
@@ -995,7 +995,7 @@ typedef enum
 extern const uint8_t cbc_flags[];
 extern const uint8_t cbc_ext_flags[];
 
-#if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
+#if JERRY_PARSER_DUMP_BYTE_CODE
 
 /**
  * Opcode names for debugging.
@@ -1003,7 +1003,7 @@ extern const uint8_t cbc_ext_flags[];
 extern const char * const cbc_names[];
 extern const char * const cbc_ext_names[];
 
-#endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
+#endif /* JERRY_PARSER_DUMP_BYTE_CODE */
 
 /**
  * @}

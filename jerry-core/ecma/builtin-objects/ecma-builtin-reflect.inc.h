@@ -15,7 +15,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if ENABLED (JERRY_BUILTIN_REFLECT)
+#if JERRY_BUILTIN_REFLECT
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
@@ -33,6 +33,6 @@ ROUTINE (LIT_MAGIC_STRING_IS_EXTENSIBLE, ECMA_REFLECT_OBJECT_IS_EXTENSIBLE, 1, 1
 ROUTINE (LIT_MAGIC_STRING_PREVENT_EXTENSIONS_UL, ECMA_REFLECT_OBJECT_PREVENT_EXTENSIONS, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_SET_PROTOTYPE_OF_UL, ECMA_REFLECT_OBJECT_SET_PROTOTYPE_OF, 2, 2)
 
-#endif /* ENABLED (JERRY_BUILTIN_REFLECT) */
+#endif /* JERRY_BUILTIN_REFLECT */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

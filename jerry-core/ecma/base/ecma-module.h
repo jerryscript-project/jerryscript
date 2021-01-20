@@ -19,7 +19,7 @@
 #include "common.h"
 #include "ecma-globals.h"
 
-#if ENABLED (JERRY_MODULE_SYSTEM)
+#if JERRY_MODULE_SYSTEM
 
 #define ECMA_MODULE_MAX_PATH 255u
 
@@ -131,6 +131,6 @@ void ecma_module_cleanup_context (void);
 
 void ecma_module_release_module_nodes (ecma_module_node_t *module_node_p);
 void ecma_module_cleanup (ecma_module_t *head_p);
-#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
+#endif /* JERRY_MODULE_SYSTEM */
 
 #endif /* !ECMA_MODULE_H */

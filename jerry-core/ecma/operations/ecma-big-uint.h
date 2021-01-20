@@ -18,7 +18,7 @@
 
 #include "ecma-globals.h"
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
 
 /**
  * Limit of BigUInt memory allocation in JerryScript.
@@ -127,14 +127,14 @@ ecma_extended_primitive_t *ecma_big_uint_shift_left (ecma_extended_primitive_t *
 ecma_extended_primitive_t *ecma_big_uint_shift_right (ecma_extended_primitive_t *left_value_p, uint32_t right_value,
                                                       bool increase_result);
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 ecma_extended_primitive_t *ecma_big_uint_pow (ecma_extended_primitive_t *left_value_p, uint32_t right_value);
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 ecma_extended_primitive_t *ecma_big_uint_bitwise_op (uint32_t operation_and_options,
                                                      ecma_extended_primitive_t *left_value_p,
                                                      ecma_extended_primitive_t *right_value_p);
 
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 
 #endif /* ECMA_BIG_UINT_H */

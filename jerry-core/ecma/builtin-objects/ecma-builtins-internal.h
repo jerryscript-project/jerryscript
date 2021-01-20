@@ -31,12 +31,12 @@ typedef enum
   ECMA_BUILTIN_PROPERTY_SIMPLE, /**< simple value property */
   ECMA_BUILTIN_PROPERTY_NUMBER, /**< number value property */
   ECMA_BUILTIN_PROPERTY_STRING, /**< string value property */
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   ECMA_BUILTIN_PROPERTY_SYMBOL, /**< symbol value property */
   ECMA_BUILTIN_PROPERTY_INTRINSIC_PROPERTY, /**< intrinsic routine property */
   ECMA_BUILTIN_PROPERTY_ACCESSOR_BUILTIN_FUNCTION, /**< full accessor property with builtin function object
                                                         getter/setter pair */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
   ECMA_BUILTIN_PROPERTY_OBJECT, /**< builtin object property */
   ECMA_BUILTIN_PROPERTY_ROUTINE, /**< routine property */
   ECMA_BUILTIN_PROPERTY_ACCESSOR_READ_WRITE, /**< full accessor property */
@@ -51,11 +51,11 @@ typedef enum
 {
   ECMA_BUILTIN_NUMBER_MAX = 256, /**< value of ECMA_NUMBER_MAX_VALUE */
   ECMA_BUILTIN_NUMBER_MIN, /**< value of ECMA_NUMBER_MIN_VALUE */
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   ECMA_BUILTIN_NUMBER_EPSILON, /**< value of ECMA_NUMBER_EPSILON */
   ECMA_BUILTIN_NUMBER_MAX_SAFE_INTEGER, /**< value of ECMA_NUMBER_MAX_SAFE_INTEGER */
   ECMA_BUILTIN_NUMBER_MIN_SAFE_INTEGER, /**< value of ECMA_NUMBER_MIN_SAFE_INTEGER */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
   ECMA_BUILTIN_NUMBER_E, /**< value of ECMA_NUMBER_E */
   ECMA_BUILTIN_NUMBER_PI, /**< value of ECMA_NUMBER_PI */
   ECMA_BUILTIN_NUMBER_LN10, /**< value of ECMA_NUMBER_LN10 */

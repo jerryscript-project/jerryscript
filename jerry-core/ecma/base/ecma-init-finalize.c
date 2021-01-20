@@ -46,23 +46,23 @@ ecma_init (void)
 
   ecma_init_global_environment ();
 
-#if ENABLED (JERRY_PROPRETY_HASHMAP)
+#if JERRY_PROPRETY_HASHMAP
   JERRY_CONTEXT (ecma_prop_hashmap_alloc_state) = ECMA_PROP_HASHMAP_ALLOC_ON;
   JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_HIGH_PRESSURE_GC;
-#endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
+#endif /* JERRY_PROPRETY_HASHMAP */
 
 #if (JERRY_STACK_LIMIT != 0)
   volatile int sp;
   JERRY_CONTEXT (stack_base) = (uintptr_t) &sp;
 #endif /* (JERRY_STACK_LIMIT != 0) */
 
-#if ENABLED (JERRY_BUILTIN_PROMISE)
+#if JERRY_BUILTIN_PROMISE
   ecma_job_queue_init ();
-#endif /* ENABLED (JERRY_BUILTIN_PROMISE) */
+#endif /* JERRY_BUILTIN_PROMISE */
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   JERRY_CONTEXT (current_new_target_p) = NULL;
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 } /* ecma_init */
 
 /**
@@ -71,9 +71,9 @@ ecma_init (void)
 void
 ecma_finalize (void)
 {
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   JERRY_ASSERT (JERRY_CONTEXT (current_new_target_p) == NULL);
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
   ecma_finalize_global_environment ();
   uint8_t runs = 0;
@@ -88,7 +88,7 @@ ecma_finalize (void)
   }
   while (JERRY_CONTEXT (ecma_gc_new_objects) != 0);
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   jmem_cpointer_t *global_symbols_cp = JERRY_CONTEXT (global_symbols_cp);
 
   for (uint32_t i = 0; i < ECMA_BUILTIN_GLOBAL_SYMBOL_COUNT; i++)
@@ -98,7 +98,7 @@ ecma_finalize (void)
       ecma_deref_ecma_string (ECMA_GET_NON_NULL_POINTER (ecma_string_t, global_symbols_cp[i]));
     }
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
   ecma_finalize_lit_storage ();
 } /* ecma_finalize */

@@ -35,7 +35,7 @@
  * @{
  */
 
-#if ENABLED (JERRY_BUILTIN_PROXY)
+#if JERRY_BUILTIN_PROXY
 /**
  * ProxyCreate operation for create a new proxy object
  *
@@ -1814,7 +1814,7 @@ ecma_proxy_object_construct (ecma_object_t *obj_p, /**< proxy object */
   return new_obj;
 } /* ecma_proxy_object_construct */
 
-#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+#endif /* JERRY_BUILTIN_PROXY */
 
 /**
  * @}

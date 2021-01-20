@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if ENABLED (JERRY_BUILTIN_BOOLEAN)
+#if JERRY_BUILTIN_BOOLEAN
 
 /* Object properties:
  *  (property name, object pointer getter) */
@@ -34,6 +34,6 @@ OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR,
 ROUTINE (LIT_MAGIC_STRING_TO_STRING_UL, ECMA_BOOLEAN_PROTOTYPE_ROUTINE_TO_STRING, 0, 0)
 ROUTINE (LIT_MAGIC_STRING_VALUE_OF_UL,  ECMA_BOOLEAN_PROTOTYPE_ROUTINE_VALUE_OF,  0, 0)
 
-#endif /* ENABLED (JERRY_BUILTIN_BOOLEAN) */
+#endif /* JERRY_BUILTIN_BOOLEAN */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

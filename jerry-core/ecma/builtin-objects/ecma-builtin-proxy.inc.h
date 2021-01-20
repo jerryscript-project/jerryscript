@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if ENABLED (JERRY_BUILTIN_PROXY)
+#if JERRY_BUILTIN_PROXY
 
 /* Number properties:
  *  (property name, number value, writable, enumerable, configurable) */
@@ -37,6 +37,6 @@ STRING_VALUE (LIT_MAGIC_STRING_NAME,
 
 ROUTINE (LIT_MAGIC_STRING_REVOCABLE, ecma_builtin_proxy_object_revocable, 2, 2)
 
-#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+#endif /* JERRY_BUILTIN_PROXY */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

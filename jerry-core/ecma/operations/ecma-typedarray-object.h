@@ -19,7 +19,7 @@
 #include "ecma-globals.h"
 #include "ecma-builtins.h"
 
-#if ENABLED (JERRY_BUILTIN_TYPEDARRAY)
+#if JERRY_BUILTIN_TYPEDARRAY
 
 /** \addtogroup ecma ECMA
  * @{
@@ -88,5 +88,5 @@ ecma_value_t ecma_typedarray_species_create (ecma_value_t this_arg,
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
+#endif /* JERRY_BUILTIN_TYPEDARRAY */
 #endif /* !ECMA_TYPEDARRAY_OBJECT_H */

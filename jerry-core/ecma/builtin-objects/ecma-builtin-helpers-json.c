@@ -18,7 +18,7 @@
 #include "ecma-builtin-helpers.h"
 #include "lit-char-helpers.h"
 
-#if ENABLED (JERRY_BUILTIN_JSON)
+#if JERRY_BUILTIN_JSON
 
 /** \addtogroup ecma ECMA
  * @{
@@ -54,7 +54,7 @@ ecma_json_has_object_in_stack (ecma_json_occurence_stack_item_t *stack_p, /**< s
   return false;
 } /* ecma_json_has_object_in_stack */
 
-#endif /* ENABLED (JERRY_BUILTIN_JSON) */
+#endif /* JERRY_BUILTIN_JSON */
 
 /**
  * @}

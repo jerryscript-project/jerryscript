@@ -74,9 +74,9 @@ ecma_dealloc_number (ecma_number_t *number_p) /**< number to be freed */
 extern inline ecma_object_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_alloc_object (void)
 {
-#if ENABLED (JERRY_MEM_STATS)
+#if JERRY_MEM_STATS
   jmem_stats_allocate_object_bytes (sizeof (ecma_object_t));
-#endif /* ENABLED (JERRY_MEM_STATS) */
+#endif /* JERRY_MEM_STATS */
 
   return (ecma_object_t *) jmem_pools_alloc (sizeof (ecma_object_t));
 } /* ecma_alloc_object */
@@ -87,9 +87,9 @@ ecma_alloc_object (void)
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_dealloc_object (ecma_object_t *object_p) /**< object to be freed */
 {
-#if ENABLED (JERRY_MEM_STATS)
+#if JERRY_MEM_STATS
   jmem_stats_free_object_bytes (sizeof (ecma_object_t));
-#endif /* ENABLED (JERRY_MEM_STATS) */
+#endif /* JERRY_MEM_STATS */
 
   jmem_pools_free (object_p, sizeof (ecma_object_t));
 } /* ecma_dealloc_object */
@@ -102,9 +102,9 @@ ecma_dealloc_object (ecma_object_t *object_p) /**< object to be freed */
 extern inline ecma_extended_object_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_alloc_extended_object (size_t size) /**< size of object */
 {
-#if ENABLED (JERRY_MEM_STATS)
+#if JERRY_MEM_STATS
   jmem_stats_allocate_object_bytes (size);
-#endif /* ENABLED (JERRY_MEM_STATS) */
+#endif /* JERRY_MEM_STATS */
 
   return jmem_heap_alloc_block (size);
 } /* ecma_alloc_extended_object */
@@ -116,9 +116,9 @@ extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_dealloc_extended_object (ecma_object_t *object_p, /**< extended object */
                               size_t size) /**< size of object */
 {
-#if ENABLED (JERRY_MEM_STATS)
+#if JERRY_MEM_STATS
   jmem_stats_free_object_bytes (size);
-#endif /* ENABLED (JERRY_MEM_STATS) */
+#endif /* JERRY_MEM_STATS */
 
   jmem_heap_free_block (object_p, size);
 } /* ecma_dealloc_extended_object */
@@ -131,9 +131,9 @@ ecma_dealloc_extended_object (ecma_object_t *object_p, /**< extended object */
 extern inline ecma_string_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_alloc_string (void)
 {
-#if ENABLED (JERRY_MEM_STATS)
+#if JERRY_MEM_STATS
   jmem_stats_allocate_string_bytes (sizeof (ecma_string_t));
-#endif /* ENABLED (JERRY_MEM_STATS) */
+#endif /* JERRY_MEM_STATS */
 
   return (ecma_string_t *) jmem_pools_alloc (sizeof (ecma_string_t));
 } /* ecma_alloc_string */
@@ -144,9 +144,9 @@ ecma_alloc_string (void)
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_dealloc_string (ecma_string_t *string_p) /**< string to be freed */
 {
-#if ENABLED (JERRY_MEM_STATS)
+#if JERRY_MEM_STATS
   jmem_stats_free_string_bytes (sizeof (ecma_string_t));
-#endif /* ENABLED (JERRY_MEM_STATS) */
+#endif /* JERRY_MEM_STATS */
 
   jmem_pools_free (string_p, sizeof (ecma_string_t));
 } /* ecma_dealloc_string */
@@ -159,9 +159,9 @@ ecma_dealloc_string (ecma_string_t *string_p) /**< string to be freed */
 extern inline ecma_extended_string_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_alloc_extended_string (void)
 {
-#if ENABLED (JERRY_MEM_STATS)
+#if JERRY_MEM_STATS
   jmem_stats_allocate_string_bytes (sizeof (ecma_extended_string_t));
-#endif /* ENABLED (JERRY_MEM_STATS) */
+#endif /* JERRY_MEM_STATS */
 
   return (ecma_extended_string_t *) jmem_heap_alloc_block (sizeof (ecma_extended_string_t));
 } /* ecma_alloc_extended_string */
@@ -172,9 +172,9 @@ ecma_alloc_extended_string (void)
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_dealloc_extended_string (ecma_extended_string_t *ext_string_p) /**< extended string to be freed */
 {
-#if ENABLED (JERRY_MEM_STATS)
+#if JERRY_MEM_STATS
   jmem_stats_free_string_bytes (sizeof (ecma_extended_string_t));
-#endif /* ENABLED (JERRY_MEM_STATS) */
+#endif /* JERRY_MEM_STATS */
 
   jmem_heap_free_block (ext_string_p, sizeof (ecma_extended_string_t));
 } /* ecma_dealloc_extended_string */
@@ -187,9 +187,9 @@ ecma_dealloc_extended_string (ecma_extended_string_t *ext_string_p) /**< extende
 extern inline ecma_external_string_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_alloc_external_string (void)
 {
-#if ENABLED (JERRY_MEM_STATS)
+#if JERRY_MEM_STATS
   jmem_stats_allocate_string_bytes (sizeof (ecma_external_string_t));
-#endif /* ENABLED (JERRY_MEM_STATS) */
+#endif /* JERRY_MEM_STATS */
 
   return (ecma_external_string_t *) jmem_heap_alloc_block (sizeof (ecma_external_string_t));
 } /* ecma_alloc_external_string */
@@ -200,9 +200,9 @@ ecma_alloc_external_string (void)
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_dealloc_external_string (ecma_external_string_t *ext_string_p) /**< external string to be freed */
 {
-#if ENABLED (JERRY_MEM_STATS)
+#if JERRY_MEM_STATS
   jmem_stats_free_string_bytes (sizeof (ecma_external_string_t));
-#endif /* ENABLED (JERRY_MEM_STATS) */
+#endif /* JERRY_MEM_STATS */
 
   jmem_heap_free_block (ext_string_p, sizeof (ecma_external_string_t));
 } /* ecma_dealloc_external_string */
@@ -215,9 +215,9 @@ ecma_dealloc_external_string (ecma_external_string_t *ext_string_p) /**< externa
 extern inline ecma_string_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_alloc_string_buffer (size_t size) /**< size of string */
 {
-#if ENABLED (JERRY_MEM_STATS)
+#if JERRY_MEM_STATS
   jmem_stats_allocate_string_bytes (size);
-#endif /* ENABLED (JERRY_MEM_STATS) */
+#endif /* JERRY_MEM_STATS */
 
   return jmem_heap_alloc_block (size);
 } /* ecma_alloc_string_buffer */
@@ -229,9 +229,9 @@ extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_dealloc_string_buffer (ecma_string_t *string_p, /**< string with data */
                             size_t size) /**< size of string */
 {
-#if ENABLED (JERRY_MEM_STATS)
+#if JERRY_MEM_STATS
   jmem_stats_free_string_bytes (size);
-#endif /* ENABLED (JERRY_MEM_STATS) */
+#endif /* JERRY_MEM_STATS */
 
   jmem_heap_free_block (string_p, size);
 } /* ecma_dealloc_string_buffer */
@@ -244,9 +244,9 @@ ecma_dealloc_string_buffer (ecma_string_t *string_p, /**< string with data */
 extern inline ecma_property_pair_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_alloc_property_pair (void)
 {
-#if ENABLED (JERRY_MEM_STATS)
+#if JERRY_MEM_STATS
   jmem_stats_allocate_property_bytes (sizeof (ecma_property_pair_t));
-#endif /* ENABLED (JERRY_MEM_STATS) */
+#endif /* JERRY_MEM_STATS */
 
   return jmem_heap_alloc_block (sizeof (ecma_property_pair_t));
 } /* ecma_alloc_property_pair */
@@ -257,9 +257,9 @@ ecma_alloc_property_pair (void)
 extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_dealloc_property_pair (ecma_property_pair_t *property_pair_p) /**< property pair to be freed */
 {
-#if ENABLED (JERRY_MEM_STATS)
+#if JERRY_MEM_STATS
   jmem_stats_free_property_bytes (sizeof (ecma_property_pair_t));
-#endif /* ENABLED (JERRY_MEM_STATS) */
+#endif /* JERRY_MEM_STATS */
 
   jmem_heap_free_block (property_pair_p, sizeof (ecma_property_pair_t));
 } /* ecma_dealloc_property_pair */

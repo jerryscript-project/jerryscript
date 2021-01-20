@@ -109,7 +109,7 @@ opfunc_instanceof (ecma_value_t left_value, /**< left value */
     return ecma_raise_type_error (ECMA_ERR_MSG ("Right value of 'instanceof' must be an object"));
   }
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   ecma_value_t has_instance_method = ecma_op_get_method_by_symbol_id (right_value, LIT_GLOBAL_SYMBOL_HAS_INSTANCE);
   if (ECMA_IS_VALUE_ERROR (has_instance_method))
   {
@@ -133,7 +133,7 @@ opfunc_instanceof (ecma_value_t left_value, /**< left value */
 
     return ecma_make_boolean_value (has_instance);
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
   ecma_object_t *right_value_obj_p = ecma_get_object_from_value (right_value);
   return ecma_op_object_has_instance (right_value_obj_p, left_value);

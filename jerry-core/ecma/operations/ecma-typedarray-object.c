@@ -30,7 +30,7 @@
 #include "ecma-helpers.h"
 #include "jcontext.h"
 
-#if ENABLED (JERRY_BUILTIN_TYPEDARRAY)
+#if JERRY_BUILTIN_TYPEDARRAY
 
 /** \addtogroup ecma ECMA
  * @{
@@ -47,11 +47,11 @@
     { \
       if (JERRY_LIKELY ((((uintptr_t) (src_p)) & (sizeof (type) - 1)) == 0)) \
       { \
-        num = *(type *) src_p; \
+        num = *(type *) ((void*) src_p); \
       } \
       else \
       { \
-        memcpy (&num, src_p, sizeof (type)); \
+        memcpy (&num, (void *) src_p, sizeof (type)); \
       } \
     } \
     while (0)
@@ -64,11 +64,11 @@
     { \
       if (JERRY_LIKELY ((((uintptr_t) (src_p)) & (sizeof (type) - 1)) == 0)) \
       { \
-        *(type *) src_p = num; \
+        *(type *) ((void*) src_p) = num; \
       } \
       else \
       { \
-        memcpy (src_p, &num, sizeof (type)); \
+        memcpy ((void*) src_p, &num, sizeof (type)); \
       } \
     } \
     while (0)
@@ -159,7 +159,7 @@ ecma_typedarray_get_double_element (lit_utf8_byte_t *src) /**< the location in t
   return ecma_make_number_value (num);
 } /* ecma_typedarray_get_double_element */
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
 /**
  * Read a bigint64 value from the given arraybuffer
  */
@@ -188,7 +188,7 @@ ecma_typedarray_get_biguint64_element (lit_utf8_byte_t *src) /**< the location i
   ECMA_TYPEDARRAY_GET_ELEMENT (src, num, uint64_t);
   return ecma_bigint_create_from_digits (&num, 1, false);
 } /* ecma_typedarray_get_biguint64_element */
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 
 /**
  * Normalize the given ecma_number_t to an uint32_t value
@@ -428,7 +428,7 @@ ecma_typedarray_set_float_element (lit_utf8_byte_t *dst_p, /**< the location in 
   return ECMA_VALUE_TRUE;
 } /* ecma_typedarray_set_float_element */
 
-#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#if JERRY_NUMBER_TYPE_FLOAT64
 /**
  * Write a double value into the given arraybuffer
  *
@@ -451,9 +451,9 @@ ecma_typedarray_set_double_element (lit_utf8_byte_t *dst_p, /**< the location in
   ECMA_TYPEDARRAY_SET_ELEMENT (dst_p, num, double);
   return ECMA_VALUE_TRUE;
 } /* ecma_typedarray_set_double_element */
-#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#endif /* JERRY_NUMBER_TYPE_FLOAT64 */
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
 /**
  * Write a bigint64/biguint64 value into the given arraybuffer
  *
@@ -486,29 +486,29 @@ ecma_typedarray_set_bigint_element (lit_utf8_byte_t *dst_p, /**< the location in
 
   return ECMA_VALUE_TRUE;
 } /* ecma_typedarray_set_bigint_element */
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 
 /**
  * Builtin id of the first %TypedArray% builtin routine intrinsic object
  */
 #define ECMA_FIRST_TYPEDARRAY_BUILTIN_ROUTINE_ID ECMA_BUILTIN_ID_INT8ARRAY
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
 /**
  * Builtin id of the last %TypedArray% builtin routine intrinsic object
  */
 #define ECMA_LAST_TYPEDARRAY_BUILTIN_ROUTINE_ID ECMA_BUILTIN_ID_BIGUINT64ARRAY
-#elif !ENABLED (JERRY_BUILTIN_BIGINT) && ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#elif !JERRY_BUILTIN_BIGINT && JERRY_NUMBER_TYPE_FLOAT64
 /**
  * Builtin id of the last %TypedArray% builtin routine intrinsic object
  */
 #define ECMA_LAST_TYPEDARRAY_BUILTIN_ROUTINE_ID ECMA_BUILTIN_ID_FLOAT64ARRAY
-#else /* !ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#else /* !JERRY_NUMBER_TYPE_FLOAT64 */
 /**
  * Builtin id of the last %TypedArray% builtin routine intrinsic object
  */
 #define ECMA_LAST_TYPEDARRAY_BUILTIN_ROUTINE_ID ECMA_BUILTIN_ID_FLOAT32ARRAY
-#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#endif /* JERRY_NUMBER_TYPE_FLOAT64 */
 
 /**
  * Builtin id of the first %TypedArray% builtin prototype intrinsic object
@@ -528,13 +528,13 @@ static const ecma_typedarray_getter_fn_t ecma_typedarray_getters[] =
   ecma_typedarray_get_int32_element,  /**< Uint32Array */
   ecma_typedarray_get_uint32_element, /**< Uint32Array */
   ecma_typedarray_get_float_element,  /**< Float32Array */
-#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#if JERRY_NUMBER_TYPE_FLOAT64
   ecma_typedarray_get_double_element, /**< Float64Array */
-#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#endif /* JERRY_NUMBER_TYPE_FLOAT64 */
+#if JERRY_BUILTIN_BIGINT
   ecma_typedarray_get_bigint64_element,  /**< BigInt64Array*/
   ecma_typedarray_get_biguint64_element, /**< BigUint64Array */
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 };
 
 /**
@@ -550,13 +550,13 @@ static const ecma_typedarray_setter_fn_t ecma_typedarray_setters[] =
   ecma_typedarray_set_int32_element,         /**< Uint32Array */
   ecma_typedarray_set_uint32_element,        /**< Uint32Array */
   ecma_typedarray_set_float_element,         /**< Float32Array */
-#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#if JERRY_NUMBER_TYPE_FLOAT64
   ecma_typedarray_set_double_element,        /**< Float64Array */
-#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#endif /* JERRY_NUMBER_TYPE_FLOAT64 */
+#if JERRY_BUILTIN_BIGINT
   ecma_typedarray_set_bigint_element,      /**< BigInt64Array */
   ecma_typedarray_set_bigint_element,     /**< BigUInt64Array */
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 };
 
 /**
@@ -572,13 +572,13 @@ static const uint8_t ecma_typedarray_element_shift_sizes[] =
   2, /**< Int32Array */
   2, /**< Uint32Array */
   2, /**< Float32Array */
-#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#if JERRY_NUMBER_TYPE_FLOAT64
   3, /**< Float64Array */
-#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#endif /* JERRY_NUMBER_TYPE_FLOAT64 */
+#if JERRY_BUILTIN_BIGINT
   3, /**< BigInt64Array */
   3, /**< BigUInt64Array */
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 };
 
 /**
@@ -594,13 +594,13 @@ static const uint16_t ecma_typedarray_magic_string_list[] =
   (uint16_t) LIT_MAGIC_STRING_INT32_ARRAY_UL,         /**< Int32Array */
   (uint16_t) LIT_MAGIC_STRING_UINT32_ARRAY_UL,        /**< Uint32Array */
   (uint16_t) LIT_MAGIC_STRING_FLOAT32_ARRAY_UL,       /**< Float32Array */
-#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#if JERRY_NUMBER_TYPE_FLOAT64
   (uint16_t) LIT_MAGIC_STRING_FLOAT64_ARRAY_UL,       /**< Float64Array */
-#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#endif /* JERRY_NUMBER_TYPE_FLOAT64 */
+#if JERRY_BUILTIN_BIGINT
   (uint16_t) LIT_MAGIC_STRING_BIGINT64_ARRAY_UL,      /**< BigInt64Array */
   (uint16_t) LIT_MAGIC_STRING_BIGUINT64_ARRAY_UL,     /**< BigUInt64Array */
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT */
+#endif /* JERRY_BUILTIN_BIGINT */
 };
 
 /**
@@ -892,13 +892,13 @@ ecma_typedarray_create_object_with_typedarray (ecma_object_t *typedarray_p, /**<
   }
   else
   {
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
     if ((ECMA_TYPEDARRAY_IS_BIGINT_TYPE (src_id) ^ ECMA_TYPEDARRAY_IS_BIGINT_TYPE (typedarray_id)) == 1)
     {
       ecma_deref_object (new_typedarray_p);
       return ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible TypedArray types"));
     }
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 
     uint32_t src_element_size = 1u << ecma_typedarray_get_element_size_shift (typedarray_p);
     uint32_t dst_element_size = 1u << element_size_shift;
@@ -1697,7 +1697,7 @@ ecma_typedarray_species_create (ecma_value_t this_arg, /**< this argument */
     return result;
   }
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
   ecma_object_t *result_p = ecma_get_object_from_value (result);
   ecma_typedarray_info_t result_info = ecma_typedarray_get_info (result_p);
   /*
@@ -1709,7 +1709,7 @@ ecma_typedarray_species_create (ecma_value_t this_arg, /**< this argument */
     ecma_free_value (result);
     return ecma_raise_type_error (ECMA_ERR_MSG ("TypedArray returned by [[ContentType]] does not match source"));
   }
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 
   return result;
 } /* ecma_typedarray_species_create */
@@ -1760,4 +1760,4 @@ ecma_typedarray_get_info (ecma_object_t *typedarray_p)
  * @}
  * @}
  */
-#endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
+#endif /* JERRY_BUILTIN_TYPEDARRAY */

@@ -67,12 +67,12 @@ typedef enum
   VM_CONTEXT_FINALLY_RETURN,                  /**< finally context with a return */
   VM_CONTEXT_TRY,                             /**< try context */
   VM_CONTEXT_CATCH,                           /**< catch context */
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   VM_CONTEXT_BLOCK,                           /**< block context */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
   VM_CONTEXT_WITH,                            /**< with context */
   VM_CONTEXT_FOR_IN,                          /**< for-in context */
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   VM_CONTEXT_FOR_OF,                          /**< for-of context */
   VM_CONTEXT_FOR_AWAIT_OF,                    /**< for-await-of context */
 
@@ -80,7 +80,7 @@ typedef enum
   VM_CONTEXT_ITERATOR,                        /**< iterator context */
   VM_CONTEXT_OBJ_INIT,                        /**< object-initializer context */
   VM_CONTEXT_OBJ_INIT_REST,                   /**< object-initializer-rest context */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 } vm_stack_context_type_t;
 
 /**
@@ -89,10 +89,10 @@ typedef enum
 typedef enum
 {
   VM_CONTEXT_FOUND_FINALLY,                   /**< found finally */
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   VM_CONTEXT_FOUND_ERROR,                     /**< found an error */
   VM_CONTEXT_FOUND_AWAIT,                     /**< found an await operation */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
   VM_CONTEXT_FOUND_EXPECTED,                  /**< found the type specified in finally_type */
 } vm_stack_found_type;
 
@@ -104,12 +104,12 @@ typedef enum
  * - [JS values belong to the context]
  * - [previous JS values stored by the VM stack]
  */
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 #define VM_CONTEXT_IS_VARIABLE_LENGTH(context_type) \
   ((context_type) >= VM_CONTEXT_ITERATOR)
-#else /* !ENABLED (JERRY_ESNEXT) */
+#else /* !JERRY_ESNEXT */
 #define VM_CONTEXT_IS_VARIABLE_LENGTH(context_type) false
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /**
  * Checks whether the context type is a finally type.
@@ -132,10 +132,10 @@ typedef enum
  */
 #define VM_CONTEXT_GET_NEXT_OFFSET(offsets) (-((int32_t) ((offsets) & ((1 << VM_CONTEXT_OFFSET_SHIFT) - 1))))
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 ecma_value_t *vm_stack_context_abort_variable_length (vm_frame_ctx_t *frame_ctx_p, ecma_value_t *vm_stack_top_p,
-                                              uint32_t context_stack_allocation);
-#endif /* ENABLED (JERRY_ESNEXT) */
+                                                      uint32_t context_stack_allocation);
+#endif /* JERRY_ESNEXT */
 ecma_value_t *vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, ecma_value_t *vm_stack_top_p);
 vm_stack_found_type vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, ecma_value_t *stack_top_p,
                                            vm_stack_context_type_t finally_type, uint32_t search_limit);

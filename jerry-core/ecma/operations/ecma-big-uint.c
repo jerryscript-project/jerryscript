@@ -18,7 +18,7 @@
 #include "jmem.h"
 #include "lit-char-helpers.h"
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
 
 JERRY_STATIC_ASSERT (sizeof (ecma_bigint_two_digits_t) == 2 * sizeof (ecma_bigint_digit_t),
                      ecma_big_int_two_digits_must_be_twice_as_long_as_ecma_big_int_digit);
@@ -925,13 +925,12 @@ ecma_big_uint_div_digit (ecma_extended_primitive_t *left_value_p, /**< left BigU
 
   last_digit = last_digit / divisor_digit;
 
-  ecma_bigint_digit_t result_size = 0;
   ecma_extended_primitive_t *result_p = NULL;
   ecma_bigint_digit_t *current_p = NULL;
 
   if (!is_mod)
   {
-    result_size = left_size;
+    ecma_bigint_digit_t result_size = left_size;
 
     if (last_digit == 0)
     {
@@ -1494,7 +1493,7 @@ ecma_big_uint_shift_right (ecma_extended_primitive_t *left_value_p,  /**< left B
   return ecma_big_uint_increase_result (result_value_p);
 } /* ecma_big_uint_shift_right */
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 
 /**
  * Compute the left value raised to the power of right value
@@ -1566,7 +1565,7 @@ ecma_big_uint_pow (ecma_extended_primitive_t *left_value_p, /**< left BigUInt va
   return result_p;
 } /* ecma_big_uint_pow */
 
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /**
  * Perform bitwise operations on two BigUInt numbers
@@ -1799,4 +1798,4 @@ ecma_big_uint_bitwise_op (uint32_t operation_and_options, /**< bitwise operation
   return result_value_p;
 } /* ecma_big_uint_bitwise_op */
 
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */

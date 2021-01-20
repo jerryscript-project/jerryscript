@@ -74,19 +74,19 @@ typedef enum
   LEXER_FLAG_SOURCE_PTR = (1 << 2), /**< the literal is directly referenced in the source code
                                      *   (no need to allocate memory) */
   LEXER_FLAG_LATE_INIT = (1 << 3), /**< initialize this variable after the byte code is freed */
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   LEXER_FLAG_GLOBAL = (1 << 4), /**< this local identifier is not a let or const declaration */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 } lexer_literal_status_flags_t;
 
 /**
  * Type of property length.
  */
-#if ENABLED (JERRY_CPOINTER_32_BIT)
+#if JERRY_CPOINTER_32_BIT
 typedef uint32_t prop_length_t;
-#else /* !ENABLED (JERRY_CPOINTER_32_BIT) */
+#else /* !JERRY_CPOINTER_32_BIT */
 typedef uint16_t prop_length_t;
-#endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
+#endif /* JERRY_CPOINTER_32_BIT */
 
 /**
  * Literal data.
@@ -101,11 +101,11 @@ typedef struct
     uint32_t source_data;                /**< encoded source literal */
   } u;
 
-#if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
+#if JERRY_PARSER_DUMP_BYTE_CODE
   struct
-#else /* !ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
+#else /* !JERRY_PARSER_DUMP_BYTE_CODE */
   union
-#endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
+#endif /* JERRY_PARSER_DUMP_BYTE_CODE */
   {
     prop_length_t length;                /**< length of ident / string literal */
     uint16_t index;                      /**< real index during post processing */
@@ -117,9 +117,9 @@ typedef struct
 
 void util_free_literal (lexer_literal_t *literal_p);
 
-#if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
+#if JERRY_PARSER_DUMP_BYTE_CODE
 void util_print_literal (lexer_literal_t *);
-#endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
+#endif /* JERRY_PARSER_DUMP_BYTE_CODE */
 
 /* TRY/CATCH block */
 

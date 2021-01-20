@@ -24,7 +24,7 @@
 #include "ecma-string-object.h"
 #include "jrt.h"
 
-#if ENABLED (JERRY_BUILTIN_ERRORS)
+#if JERRY_BUILTIN_ERRORS
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -33,4 +33,4 @@
 #define BUILTIN_UNDERSCORED_ID syntax_error_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
 
-#endif /* ENABLED (JERRY_BUILTIN_ERRORS) */
+#endif /* JERRY_BUILTIN_ERRORS */

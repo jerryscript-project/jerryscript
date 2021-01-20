@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if ENABLED (JERRY_BUILTIN_DATE)
+#if JERRY_BUILTIN_DATE
 
 /* ECMA-262 v5, 15.9.4.1 */
 OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
@@ -34,12 +34,12 @@ ROUTINE (LIT_MAGIC_STRING_PARSE, ecma_builtin_date_parse, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_UTC_U, ecma_builtin_date_utc, NON_FIXED, 7)
 ROUTINE (LIT_MAGIC_STRING_NOW, ecma_builtin_date_now, 0, 0)
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 STRING_VALUE (LIT_MAGIC_STRING_NAME,
               LIT_MAGIC_STRING_DATE_UL,
               ECMA_PROPERTY_FLAG_CONFIGURABLE)
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
-#endif /* ENABLED (JERRY_BUILTIN_DATE) */
+#endif /* JERRY_BUILTIN_DATE */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

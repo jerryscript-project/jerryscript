@@ -162,9 +162,9 @@ typedef enum
   VM_OC_ERROR,                   /**< error while the vm_loop is suspended */
 
   VM_OC_JUMP,                    /**< jump */
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   VM_OC_BRANCH_IF_NULLISH,       /** branch if undefined or null */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
   VM_OC_BRANCH_IF_STRICT_EQUAL,  /**< branch if strict equal */
 
   /* These four opcodes must be in this order. */
@@ -186,9 +186,9 @@ typedef enum
   VM_OC_MUL,                     /**< mul */
   VM_OC_DIV,                     /**< div */
   VM_OC_MOD,                     /**< mod */
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   VM_OC_EXP,                     /**< exponentiation */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
   VM_OC_EQUAL,                   /**< equal */
   VM_OC_NOT_EQUAL,               /**< not equal */
@@ -224,20 +224,20 @@ typedef enum
   VM_OC_CREATE_ARGUMENTS,        /**< create arguments object */
   VM_OC_SET_BYTECODE_PTR,        /**< setting bytecode pointer */
   VM_OC_VAR_EVAL,                /**< variable and function evaluation */
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   VM_OC_EXT_VAR_EVAL,            /**< variable and function evaluation for
                                   *   functions with separate argument context */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
   VM_OC_INIT_ARG_OR_FUNC,        /**< create and init a function or argument binding */
 
-#if ENABLED (JERRY_DEBUGGER)
+#if JERRY_DEBUGGER
   VM_OC_BREAKPOINT_ENABLED,      /**< enabled breakpoint for debugger */
   VM_OC_BREAKPOINT_DISABLED,     /**< disabled breakpoint for debugger */
-#endif /* ENABLED (JERRY_DEBUGGER) */
-#if ENABLED (JERRY_LINE_INFO)
+#endif /* JERRY_DEBUGGER */
+#if JERRY_LINE_INFO
   VM_OC_LINE,                    /**< line number of the next statement */
-#endif /* ENABLED (JERRY_LINE_INFO) */
-#if ENABLED (JERRY_ESNEXT)
+#endif /* JERRY_LINE_INFO */
+#if JERRY_ESNEXT
   VM_OC_CHECK_VAR,               /**< check redeclared vars in the global scope */
   VM_OC_CHECK_LET,               /**< check redeclared lets in the global scope */
   VM_OC_ASSIGN_LET_CONST,        /**< assign values to let/const declarations */
@@ -302,7 +302,7 @@ typedef enum
   VM_OC_SET__PROTO__,            /**< set prototype when __proto__: form is used */
   VM_OC_PUSH_STATIC_FIELD_FUNC,  /**< push static field initializer function */
   VM_OC_ADD_COMPUTED_FIELD,      /**< add computed field name */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
   VM_OC_NONE,                    /**< a special opcode for unsupported byte codes */
 } vm_oc_types;
 
@@ -311,18 +311,18 @@ typedef enum
  */
 typedef enum
 {
-#if !ENABLED (JERRY_ESNEXT)
+#if !JERRY_ESNEXT
   VM_OC_EXP = VM_OC_NONE,                     /**< exponentiation */
   VM_OC_BRANCH_IF_NULLISH = VM_OC_NONE,       /** branch if undefined or null */
-#endif /* !ENABLED (JERRY_ESNEXT) */
-#if !ENABLED (JERRY_DEBUGGER)
+#endif /* !JERRY_ESNEXT */
+#if !JERRY_DEBUGGER
   VM_OC_BREAKPOINT_ENABLED = VM_OC_NONE,      /**< enabled breakpoint for debugger is unused */
   VM_OC_BREAKPOINT_DISABLED = VM_OC_NONE,     /**< disabled breakpoint for debugger is unused */
-#endif /* !ENABLED (JERRY_DEBUGGER) */
-#if !ENABLED (JERRY_LINE_INFO)
+#endif /* !JERRY_DEBUGGER */
+#if !JERRY_LINE_INFO
   VM_OC_LINE = VM_OC_NONE,                    /**< line number of the next statement is unused */
-#endif /* !ENABLED (JERRY_LINE_INFO) */
-#if !ENABLED (JERRY_ESNEXT)
+#endif /* !JERRY_LINE_INFO */
+#if !JERRY_ESNEXT
   VM_OC_EXT_VAR_EVAL = VM_OC_NONE,            /**< variable and function evaluation for
                                                *   functions with separate argument context */
   VM_OC_CHECK_VAR = VM_OC_NONE,               /**< check redeclared vars in the global scope */
@@ -389,7 +389,7 @@ typedef enum
   VM_OC_SET__PROTO__ = VM_OC_NONE,            /**< set prototype when __proto__: form is used */
   VM_OC_PUSH_STATIC_FIELD_FUNC = VM_OC_NONE,  /**< push static field initializer function */
   VM_OC_ADD_COMPUTED_FIELD = VM_OC_NONE,      /**< add computed field name */
-#endif /* !ENABLED (JERRY_ESNEXT) */
+#endif /* !JERRY_ESNEXT */
 
   VM_OC_UNUSED = VM_OC_NONE                   /**< placeholder if the list is empty */
 } vm_oc_unused_types;
@@ -479,9 +479,9 @@ typedef enum
 ecma_value_t vm_run_global (const ecma_compiled_code_t *bytecode_p);
 ecma_value_t vm_run_eval (ecma_compiled_code_t *bytecode_data_p, uint32_t parse_opts);
 
-#if ENABLED (JERRY_MODULE_SYSTEM)
+#if JERRY_MODULE_SYSTEM
 ecma_value_t vm_run_module (ecma_module_t *module_p);
-#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
+#endif /* JERRY_MODULE_SYSTEM */
 
 ecma_value_t vm_run (vm_frame_ctx_shared_t *shared_p, ecma_value_t this_binding_value, ecma_object_t *lex_env_p);
 ecma_value_t vm_execute (vm_frame_ctx_t *frame_ctx_p);

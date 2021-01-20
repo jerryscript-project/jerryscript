@@ -15,11 +15,11 @@
 
 #include "js-parser-internal.h"
 
-#if ENABLED (JERRY_PARSER)
+#if JERRY_PARSER
 
-#if ENABLED (JERRY_LINE_INFO)
+#if JERRY_LINE_INFO
 #include "jcontext.h"
-#endif /* ENABLED (JERRY_LINE_INFO) */
+#endif /* JERRY_LINE_INFO */
 
 /** \addtogroup parser Parser
  * @{
@@ -85,7 +85,7 @@ parser_emit_two_bytes (parser_context_t *context_p, /**< context */
   } \
   (context_p)->byte_code.last_p->bytes[(context_p)->byte_code.last_position++] = (uint8_t) (byte)
 
-#if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
+#if JERRY_PARSER_DUMP_BYTE_CODE
 
 /**
  * Print literal corresponding to the current index
@@ -137,7 +137,7 @@ parser_print_literal (parser_context_t *context_p, /**< context */
   util_print_literal (literal_p);
 } /* parser_print_literal */
 
-#endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
+#endif /* JERRY_PARSER_DUMP_BYTE_CODE */
 
 /**
  * Append the current byte code to the stream
@@ -225,7 +225,7 @@ parser_flush_cbc (parser_context_t *context_p) /**< context */
     context_p->byte_code_size++;
   }
 
-#if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
+#if JERRY_PARSER_DUMP_BYTE_CODE
   if (context_p->is_show_opcodes)
   {
     JERRY_DEBUG_MSG ("  [%3d] %s",
@@ -268,7 +268,7 @@ parser_flush_cbc (parser_context_t *context_p) /**< context */
 
     JERRY_DEBUG_MSG ("\n");
   }
-#endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
+#endif /* JERRY_PARSER_DUMP_BYTE_CODE */
 
   if (context_p->stack_depth > context_p->stack_limit)
   {
@@ -453,7 +453,7 @@ parser_emit_cbc_push_number (parser_context_t *context_p, /**< context */
   context_p->last_cbc.value = (uint16_t) (value - 1);
 } /* parser_emit_cbc_push_number */
 
-#if ENABLED (JERRY_LINE_INFO)
+#if JERRY_LINE_INFO
 
 /**
  * Append a line info data
@@ -468,12 +468,12 @@ parser_emit_line_info (parser_context_t *context_p, /**< context */
     parser_flush_cbc (context_p);
   }
 
-#if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
+#if JERRY_PARSER_DUMP_BYTE_CODE
   if (context_p->is_show_opcodes)
   {
     JERRY_DEBUG_MSG ("  [%3d] CBC_EXT_LINE %d\n", (int) context_p->stack_depth, line);
   }
-#endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
+#endif /* JERRY_PARSER_DUMP_BYTE_CODE */
 
   parser_emit_two_bytes (context_p, CBC_EXT_OPCODE, CBC_EXT_LINE);
   context_p->byte_code_size += 2;
@@ -505,7 +505,7 @@ parser_emit_line_info (parser_context_t *context_p, /**< context */
   while (shift > 0);
 } /* parser_emit_line_info */
 
-#endif /* ENABLED (JERRY_LINE_INFO) */
+#endif /* JERRY_LINE_INFO */
 
 /**
  * Append a byte code with a branch argument
@@ -550,14 +550,14 @@ parser_emit_cbc_forward_branch (parser_context_t *context_p, /**< context */
                  || (CBC_STACK_ADJUST_BASE - (flags >> CBC_STACK_ADJUST_SHIFT)) <= context_p->stack_depth);
   PARSER_PLUS_EQUAL_U16 (context_p->stack_depth, CBC_STACK_ADJUST_VALUE (flags));
 
-#if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
+#if JERRY_PARSER_DUMP_BYTE_CODE
   if (context_p->is_show_opcodes)
   {
     JERRY_DEBUG_MSG ("  [%3d] %s\n",
                      (int) context_p->stack_depth,
                      extra_byte_code_increase == 0 ? cbc_names[opcode] : cbc_ext_names[opcode]);
   }
-#endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
+#endif /* JERRY_PARSER_DUMP_BYTE_CODE */
 
   PARSER_PLUS_EQUAL_U16 (opcode, PARSER_MAX_BRANCH_LENGTH - 1);
 
@@ -617,9 +617,9 @@ parser_emit_cbc_backward_branch (parser_context_t *context_p, /**< context */
                                  uint32_t offset) /**< destination offset */
 {
   uint8_t flags;
-#if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
+#if JERRY_PARSER_DUMP_BYTE_CODE
   const char *name;
-#endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
+#endif /* JERRY_PARSER_DUMP_BYTE_CODE */
 
   if (context_p->last_cbc_opcode != PARSER_CBC_UNAVAILABLE)
   {
@@ -634,9 +634,9 @@ parser_emit_cbc_backward_branch (parser_context_t *context_p, /**< context */
     JERRY_ASSERT (opcode < CBC_END);
     flags = cbc_flags[opcode];
 
-#if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
+#if JERRY_PARSER_DUMP_BYTE_CODE
     name = cbc_names[opcode];
-#endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
+#endif /* JERRY_PARSER_DUMP_BYTE_CODE */
   }
   else
   {
@@ -647,9 +647,9 @@ parser_emit_cbc_backward_branch (parser_context_t *context_p, /**< context */
     flags = cbc_ext_flags[opcode];
     context_p->byte_code_size++;
 
-#if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
+#if JERRY_PARSER_DUMP_BYTE_CODE
     name = cbc_ext_names[opcode];
-#endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
+#endif /* JERRY_PARSER_DUMP_BYTE_CODE */
   }
 
   JERRY_ASSERT (flags & CBC_HAS_BRANCH_ARG);
@@ -662,12 +662,12 @@ parser_emit_cbc_backward_branch (parser_context_t *context_p, /**< context */
                  || (CBC_STACK_ADJUST_BASE - (flags >> CBC_STACK_ADJUST_SHIFT)) <= context_p->stack_depth);
   PARSER_PLUS_EQUAL_U16 (context_p->stack_depth, CBC_STACK_ADJUST_VALUE (flags));
 
-#if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
+#if JERRY_PARSER_DUMP_BYTE_CODE
   if (context_p->is_show_opcodes)
   {
     JERRY_DEBUG_MSG ("  [%3d] %s\n", (int) context_p->stack_depth, name);
   }
-#endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
+#endif /* JERRY_PARSER_DUMP_BYTE_CODE */
 
   context_p->byte_code_size += 2;
 #if PARSER_MAXIMUM_CODE_SIZE > UINT16_MAX
@@ -790,7 +790,7 @@ parser_set_continues_to_current_position (parser_context_t *context_p, /**< cont
   }
 } /* parser_set_continues_to_current_position */
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 
 /**
  * Return the size of internal record corresponding to a class field
@@ -908,9 +908,9 @@ parser_reverse_class_fields (parser_context_t *context_p, /**< context */
   parser_free (data_p, fields_size);
 } /* parser_reverse_class_fields */
 
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
-#if ENABLED (JERRY_ERROR_MESSAGES)
+#if JERRY_ERROR_MESSAGES
 /**
  * Returns with the string representation of the error
  */
@@ -951,12 +951,12 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Invalid hexadecimal digit";
     }
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
     case PARSER_ERR_INVALID_BIN_DIGIT:
     {
       return "Invalid binary digit";
     }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
     case PARSER_ERR_INVALID_ESCAPE_SEQUENCE:
     {
       return "Invalid escape sequence";
@@ -993,12 +993,12 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Identifier cannot start after a number";
     }
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
     case PARSER_ERR_INVALID_BIGINT:
     {
       return "Number is not a valid BigInt";
     }
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
     case PARSER_ERR_INVALID_REGEXP:
     {
       return "Invalid regular expression";
@@ -1055,12 +1055,12 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Octal escape sequences are not allowed in strict mode";
     }
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
     case PARSER_ERR_TEMPLATE_STR_OCTAL_ESCAPE:
     {
       return "Octal escape sequences are not allowed in template strings";
     }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
     case PARSER_ERR_STRICT_IDENT_NOT_ALLOWED:
     {
       return "Identifier name is reserved in strict mode";
@@ -1073,7 +1073,7 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Arguments is not allowed to be used here in strict mode";
     }
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
     case PARSER_ERR_USE_STRICT_NOT_ALLOWED:
     {
       return "The 'use strict' directive is not allowed for functions with non-simple arguments";
@@ -1114,7 +1114,7 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Invalid left-hand-side in for-loop";
     }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
     case PARSER_ERR_DELETE_IDENT_NOT_ALLOWED:
     {
       return "Deleting identifier is not allowed in strict mode";
@@ -1271,7 +1271,7 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Non-strict argument definition";
     }
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
     case PARSER_ERR_VARIABLE_REDECLARED:
     {
       return "Local variable is redeclared";
@@ -1372,8 +1372,8 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "new.target expression is not allowed here";
     }
-#endif /* ENABLED (JERRY_ESNEXT) */
-#if ENABLED (JERRY_MODULE_SYSTEM)
+#endif /* JERRY_ESNEXT */
+#if JERRY_MODULE_SYSTEM
     case PARSER_ERR_FILE_NOT_FOUND:
     {
       return "Requested module not found";
@@ -1422,7 +1422,7 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Export not defined in module";
     }
-#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
+#endif /* JERRY_MODULE_SYSTEM */
 
     default:
     {
@@ -1431,7 +1431,7 @@ parser_error_to_string (parser_error_t error) /**< error code */
     }
   }
 } /* parser_error_to_string */
-#endif /* ENABLED (JERRY_ERROR_MESSAGES) */
+#endif /* JERRY_ERROR_MESSAGES */
 
 /**
  * @}
@@ -1439,4 +1439,4 @@ parser_error_to_string (parser_error_t error) /**< error code */
  * @}
  */
 
-#endif /* ENABLED (JERRY_PARSER) */
+#endif /* JERRY_PARSER */

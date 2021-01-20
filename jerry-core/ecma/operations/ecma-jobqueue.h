@@ -16,7 +16,7 @@
 #ifndef ECMA_JOB_QUEUE_H
 #define ECMA_JOB_QUEUE_H
 
-#if ENABLED (JERRY_BUILTIN_PROMISE)
+#if JERRY_BUILTIN_PROMISE
 
 /** \addtogroup ecma ECMA
  * @{
@@ -60,5 +60,5 @@ ecma_value_t ecma_process_all_enqueued_jobs (void);
  * @}
  * @}
  */
-#endif /* ENABLED (JERRY_BUILTIN_PROMISE) */
+#endif /* JERRY_BUILTIN_PROMISE */
 #endif /* !ECMA_JOB_QUEUE_H */

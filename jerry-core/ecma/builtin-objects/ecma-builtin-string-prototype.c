@@ -33,11 +33,11 @@
 #include "lit-char-helpers.h"
 #include "lit-strings.h"
 
-#if ENABLED (JERRY_BUILTIN_REGEXP)
+#if JERRY_BUILTIN_REGEXP
 #include "ecma-regexp-object.h"
-#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
+#endif /* JERRY_BUILTIN_REGEXP */
 
-#if ENABLED (JERRY_BUILTIN_STRING)
+#if JERRY_BUILTIN_STRING
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -276,7 +276,7 @@ ecma_builtin_string_prototype_object_locale_compare (ecma_string_t *this_string_
   return ecma_make_number_value (result);
 } /* ecma_builtin_string_prototype_object_locale_compare */
 
-#if ENABLED (JERRY_BUILTIN_REGEXP)
+#if JERRY_BUILTIN_REGEXP
 /**
  * The String.prototype object's 'match' routine
  *
@@ -290,7 +290,7 @@ static ecma_value_t
 ecma_builtin_string_prototype_object_match (ecma_value_t this_argument, /**< this argument */
                                             ecma_value_t regexp_arg) /**< routine's argument */
 {
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   /* 3. */
   if (!(ecma_is_value_undefined (regexp_arg) || ecma_is_value_null (regexp_arg)))
   {
@@ -352,7 +352,7 @@ ecma_builtin_string_prototype_object_match (ecma_value_t this_argument, /**< thi
 
   return ret_value;
 
-#else /* !ENABLED (JERRY_ESNEXT) */
+#else /* !JERRY_ESNEXT */
   if (ecma_object_is_regexp_object (regexp_arg))
   {
     return ecma_regexp_match_helper (regexp_arg, this_argument);
@@ -378,10 +378,10 @@ ecma_builtin_string_prototype_object_match (ecma_value_t this_argument, /**< thi
   ecma_free_value (new_regexp);
 
   return result;
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 } /* ecma_builtin_string_prototype_object_match */
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 /**
  * The String.prototype object's 'matchAll' routine
  *
@@ -505,7 +505,7 @@ ecma_builtin_string_prototype_object_match_all (ecma_value_t this_argument, /**<
 
   return ret_value;
 } /* ecma_builtin_string_prototype_object_match_all */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /**
  * The String.prototype object's 'replace' and 'replaceAll' routine
@@ -524,7 +524,7 @@ ecma_builtin_string_prototype_object_replace_helper (ecma_value_t this_value, /*
                                                      ecma_value_t replace_value, /**< routine's second argument */
                                                      bool replace_all)
 {
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   if (!(ecma_is_value_undefined (search_value) || ecma_is_value_null (search_value)))
   {
     if (replace_all)
@@ -598,12 +598,12 @@ ecma_builtin_string_prototype_object_replace_helper (ecma_value_t this_value, /*
       return replace_result;
     }
   }
-#else /* !ENABLED (JERRY_ESNEXT) */
+#else /* !JERRY_ESNEXT */
   if (ecma_object_is_regexp_object (search_value))
   {
     return ecma_regexp_replace_helper (search_value, this_value, replace_value);
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
   ecma_string_t *input_str_p = ecma_op_to_string (this_value);
 
@@ -785,7 +785,7 @@ static ecma_value_t
 ecma_builtin_string_prototype_object_search (ecma_value_t this_value, /**< this argument */
                                              ecma_value_t regexp_value) /**< routine's argument */
 {
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   if (!(ecma_is_value_undefined (regexp_value) || ecma_is_value_null (regexp_value)))
   {
     ecma_object_t *obj_p = ecma_get_object_from_value (ecma_op_to_object (regexp_value));
@@ -812,12 +812,12 @@ ecma_builtin_string_prototype_object_search (ecma_value_t this_value, /**< this 
       return search_result;
     }
   }
-#else /* !ENABLED (JERRY_ESNEXT) */
+#else /* !JERRY_ESNEXT */
   if (ecma_object_is_regexp_object (regexp_value))
   {
     return ecma_regexp_search_helper (regexp_value, this_value);
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
   ecma_value_t result = ECMA_VALUE_ERROR;
 
@@ -854,22 +854,22 @@ ecma_builtin_string_prototype_object_search (ecma_value_t this_value, /**< this 
     goto cleanup_string;
   }
 
-#if !ENABLED (JERRY_ESNEXT)
+#if !JERRY_ESNEXT
   result = ecma_regexp_search_helper (new_regexp, ecma_make_string_value (string_p));
   ecma_deref_object (ecma_get_object_from_value (new_regexp));
-#else /* ENABLED (JERRY_ESNEXT) */
+#else /* JERRY_ESNEXT */
   ecma_object_t *regexp_obj_p = ecma_get_object_from_value (new_regexp);
   ecma_value_t this_str_value = ecma_make_string_value (string_p);
   result = ecma_op_invoke_by_symbol_id (new_regexp, LIT_GLOBAL_SYMBOL_SEARCH, &this_str_value, 1);
   ecma_deref_object (regexp_obj_p);
-#endif /* !ENABLED (JERRY_ESNEXT) */
+#endif /* !JERRY_ESNEXT */
 
 cleanup_string:
   ecma_deref_ecma_string (string_p);
   return result;
 } /* ecma_builtin_string_prototype_object_search */
 
-#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
+#endif /* JERRY_BUILTIN_REGEXP */
 
 /**
  * The String.prototype object's 'slice' routine
@@ -934,7 +934,7 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_value, /**< this a
                                             ecma_value_t separator_value, /**< separator */
                                             ecma_value_t limit_value) /**< limit */
 {
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   if (!(ecma_is_value_undefined (separator_value) || ecma_is_value_null (separator_value)))
   {
     ecma_object_t *obj_p = ecma_get_object_from_value (ecma_op_to_object (separator_value));
@@ -963,12 +963,12 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_value, /**< this a
       return split_result;
     }
   }
-#else /* !ENABLED (JERRY_ESNEXT) */
+#else /* !JERRY_ESNEXT */
   if (ecma_object_is_regexp_object (separator_value))
   {
     return ecma_regexp_split_helper (separator_value, this_value, limit_value);
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
   ecma_value_t result = ECMA_VALUE_ERROR;
 
@@ -1205,7 +1205,7 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_string_t *input_str
   {
     lit_code_point_t cp = lit_cesu8_read_next (&input_curr_p);
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
     if (lit_is_code_point_utf16_high_surrogate (cp)
         && input_curr_p < input_str_end_p)
     {
@@ -1216,7 +1216,7 @@ ecma_builtin_string_prototype_object_conversion_helper (ecma_string_t *input_str
         input_curr_p += LIT_UTF8_MAX_BYTES_IN_CODE_UNIT;
       }
     }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
     if (lower_case)
     {
@@ -1250,7 +1250,7 @@ ecma_builtin_string_prototype_object_trim (ecma_string_t *original_string_p) /**
   return ecma_make_string_value (trimmed_string_p);
 } /* ecma_builtin_string_prototype_object_trim */
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 
 /**
  * The String.prototype object's 'repeat' routine
@@ -1366,9 +1366,9 @@ ecma_builtin_string_prototype_object_code_point_at (ecma_string_t *this_string_p
   return ecma_make_uint32_value (lit_convert_surrogate_pair_to_code_point (first, second));
 } /* ecma_builtin_string_prototype_object_code_point_at */
 
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
-#if ENABLED (JERRY_BUILTIN_ANNEXB)
+#if JERRY_BUILTIN_ANNEXB
 
 /**
  * The String.prototype object's 'substr' routine
@@ -1429,9 +1429,9 @@ ecma_builtin_string_prototype_object_substr (ecma_string_t *this_string_p, /**< 
   return ecma_make_string_value (new_str_p);
 } /* ecma_builtin_string_prototype_object_substr */
 
-#endif /* ENABLED (JERRY_BUILTIN_ANNEXB) */
+#endif /* JERRY_BUILTIN_ANNEXB */
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 
 /**
  * The String.prototype object's @@iterator routine
@@ -1451,7 +1451,7 @@ ecma_builtin_string_prototype_object_iterator (ecma_value_t to_string) /**< this
                                          ECMA_ITERATOR_VALUES);
 } /* ecma_builtin_string_prototype_object_iterator */
 
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /**
  * Dispatcher of the built-in's routines
@@ -1480,19 +1480,19 @@ ecma_builtin_string_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
   ecma_value_t arg1 = arguments_list_p[0];
   ecma_value_t arg2 = arguments_list_p[1];
 
-#if ENABLED (JERRY_BUILTIN_REGEXP)
+#if JERRY_BUILTIN_REGEXP
   if (builtin_routine_id == ECMA_STRING_PROTOTYPE_MATCH)
   {
     return ecma_builtin_string_prototype_object_match (this_arg, arg1);
   }
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   if (builtin_routine_id == ECMA_STRING_PROTOTYPE_MATCH_ALL)
   {
     return ecma_builtin_string_prototype_object_match_all (this_arg, arg1);
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
-#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
+#endif /* JERRY_ESNEXT */
+#endif /* JERRY_BUILTIN_REGEXP */
 
   if (builtin_routine_id <= ECMA_STRING_PROTOTYPE_CHAR_CODE_AT)
   {
@@ -1501,18 +1501,18 @@ ecma_builtin_string_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
                                                          builtin_routine_id == ECMA_STRING_PROTOTYPE_CHAR_CODE_AT);
   }
 
-#if ENABLED (JERRY_BUILTIN_REGEXP)
+#if JERRY_BUILTIN_REGEXP
   if (builtin_routine_id == ECMA_STRING_PROTOTYPE_REPLACE)
   {
     return ecma_builtin_string_prototype_object_replace_helper (this_arg, arg1, arg2, false);
   }
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   else if (builtin_routine_id == ECMA_STRING_PROTOTYPE_REPLACE_ALL)
   {
     return ecma_builtin_string_prototype_object_replace_helper (this_arg, arg1, arg2, true);
   }
-#endif /* ENABLED (JERRY_ESNEXT)  */
-#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
+#endif /* JERRY_ESNEXT  */
+#endif /* JERRY_BUILTIN_REGEXP */
 
   ecma_string_t *string_p = ecma_op_to_string (this_arg);
 
@@ -1538,11 +1538,11 @@ ecma_builtin_string_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
     }
     case ECMA_STRING_PROTOTYPE_LAST_INDEX_OF:
     case ECMA_STRING_PROTOTYPE_INDEX_OF:
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
     case ECMA_STRING_PROTOTYPE_STARTS_WITH:
     case ECMA_STRING_PROTOTYPE_INCLUDES:
     case ECMA_STRING_PROTOTYPE_ENDS_WITH:
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
     {
       ecma_string_index_of_mode_t mode;
       mode = (ecma_string_index_of_mode_t) (builtin_routine_id - ECMA_STRING_PROTOTYPE_LAST_INDEX_OF);
@@ -1554,13 +1554,13 @@ ecma_builtin_string_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
       ret_value = ecma_builtin_string_prototype_object_locale_compare (string_p, arg1);
       break;
     }
-#if ENABLED (JERRY_BUILTIN_REGEXP)
+#if JERRY_BUILTIN_REGEXP
     case ECMA_STRING_PROTOTYPE_SEARCH:
     {
       ret_value = ecma_builtin_string_prototype_object_search (to_string_val, arg1);
       break;
     }
-#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
+#endif /* JERRY_BUILTIN_REGEXP */
     case ECMA_STRING_PROTOTYPE_SPLIT:
     {
       ret_value = ecma_builtin_string_prototype_object_split (to_string_val, arg1, arg2);
@@ -1585,14 +1585,14 @@ ecma_builtin_string_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
       ret_value = ecma_builtin_string_prototype_object_trim (string_p);
       break;
     }
-#if ENABLED (JERRY_BUILTIN_ANNEXB)
+#if JERRY_BUILTIN_ANNEXB
     case ECMA_STRING_PROTOTYPE_SUBSTR:
     {
       ret_value = ecma_builtin_string_prototype_object_substr (string_p, arg1, arg2);
       break;
     }
-#endif /* ENABLED (JERRY_BUILTIN_ANNEXB) */
-#if ENABLED (JERRY_ESNEXT)
+#endif /* JERRY_BUILTIN_ANNEXB */
+#if JERRY_ESNEXT
     case ECMA_STRING_PROTOTYPE_REPEAT:
     {
       ret_value = ecma_builtin_string_prototype_object_repeat (string_p, arg1);
@@ -1614,7 +1614,7 @@ ecma_builtin_string_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
       ret_value = ecma_string_pad (to_string_val, arg1, arg2, builtin_routine_id == ECMA_STRING_PROTOTYPE_PAD_START);
       break;
     }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
     default:
     {
       JERRY_UNREACHABLE ();
@@ -1632,4 +1632,4 @@ ecma_builtin_string_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_STRING) */
+#endif /* JERRY_BUILTIN_STRING */

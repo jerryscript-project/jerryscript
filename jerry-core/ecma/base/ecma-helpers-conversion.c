@@ -28,7 +28,7 @@
  * @{
  */
 
-#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#if JERRY_NUMBER_TYPE_FLOAT64
 
 /**
  * \addtogroup ecmahelpersbigintegers Helpers for operations intermediate 128-bit integers
@@ -262,7 +262,7 @@ static const uint8_t ecma_uint4_clz[] = { 4, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0,
  */
 #define NUMBER_MIN_DECIMAL_EXPONENT -324
 
-#elif !ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#elif !JERRY_NUMBER_TYPE_FLOAT64
 
 /**
  * Number.MAX_VALUE exponent part when using 32 bit float representation.
@@ -273,7 +273,7 @@ static const uint8_t ecma_uint4_clz[] = { 4, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0,
  */
 #define NUMBER_MIN_DECIMAL_EXPONENT -45
 
-#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#endif /* JERRY_NUMBER_TYPE_FLOAT64 */
 
 /**
  * Value of epsilon
@@ -295,15 +295,15 @@ ecma_utf8_string_to_number_by_radix (const lit_utf8_byte_t *str_p, /**< utf-8 st
                                      const lit_utf8_byte_t *end_p, /**< end of utf-8 string  */
                                      uint32_t radix) /**< radix */
 {
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   bool allow_underscore = (radix & ECMA_CONVERSION_ALLOW_UNDERSCORE);
   radix &= (uint32_t) ~ECMA_CONVERSION_ALLOW_UNDERSCORE;
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
   JERRY_ASSERT (radix == 2 || radix == 8 || radix == 16);
 
   ecma_number_t num = ECMA_NUMBER_ZERO;
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   if (radix <= 8)
   {
     lit_code_point_t upper_limit = LIT_CHAR_0 + radix;
@@ -326,7 +326,7 @@ ecma_utf8_string_to_number_by_radix (const lit_utf8_byte_t *str_p, /**< utf-8 st
 
     return num;
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
   for (const lit_utf8_byte_t * iter_p = str_p; iter_p <= end_p; iter_p++)
   {
@@ -347,12 +347,12 @@ ecma_utf8_string_to_number_by_radix (const lit_utf8_byte_t *str_p, /**< utf-8 st
     {
       digit_value = 10 + (*iter_p - LIT_CHAR_UPPERCASE_A);
     }
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
     else if (*iter_p == LIT_CHAR_UNDERSCORE && allow_underscore)
     {
       continue;
     }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
     else
     {
       return ecma_number_make_nan ();
@@ -461,13 +461,13 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
       digit_seen = true;
       digit_value = (*str_p - LIT_CHAR_0);
     }
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
     else if (*str_p == LIT_CHAR_UNDERSCORE && (options & ECMA_CONVERSION_ALLOW_UNDERSCORE))
     {
       str_p++;
       continue;
     }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
     else
     {
       break;
@@ -574,13 +574,13 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
       {
         digit_value = (*str_p - LIT_CHAR_0);
       }
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
       else if (*str_p == LIT_CHAR_UNDERSCORE && (options & ECMA_CONVERSION_ALLOW_UNDERSCORE))
       {
         str_p++;
         continue;
       }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
       else
       {
         return ecma_number_make_nan ();
@@ -636,7 +636,7 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
     return sign ? -ECMA_NUMBER_ZERO : ECMA_NUMBER_ZERO;
   }
 
-#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#if JERRY_NUMBER_TYPE_FLOAT64
   /*
    * 128-bit mantissa storage
    *
@@ -721,7 +721,7 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
   fraction_uint64 = ecma_round_high_to_uint64 (&fraction_uint128);
 
   return ecma_number_make_from_sign_mantissa_and_exponent (sign, fraction_uint64, binary_exponent);
-#elif !ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#elif !JERRY_NUMBER_TYPE_FLOAT64
   /* Less precise conversion */
   ecma_number_t num = (ecma_number_t) (uint32_t) fraction_uint64;
 
@@ -739,7 +739,7 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
   }
 
   return num;
-#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#endif /* JERRY_NUMBER_TYPE_FLOAT64 */
 } /* ecma_utf8_string_to_number */
 
 /**

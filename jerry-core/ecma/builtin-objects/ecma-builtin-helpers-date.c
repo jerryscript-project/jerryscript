@@ -23,7 +23,7 @@
 #include "ecma-objects.h"
 #include "lit-char-helpers.h"
 
-#if ENABLED (JERRY_BUILTIN_DATE)
+#if JERRY_BUILTIN_DATE
 
 /** \addtogroup ecma ECMA
  * @{
@@ -860,4 +860,4 @@ ecma_date_value_to_time_string (ecma_number_t datetime_number) /**<datetime */
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_DATE) */
+#endif /* JERRY_BUILTIN_DATE */

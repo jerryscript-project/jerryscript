@@ -15,7 +15,7 @@
 
 #include "ecma-globals.h"
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -40,4 +40,4 @@
  * @}
  */
 
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */

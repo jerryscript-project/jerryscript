@@ -15,7 +15,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if ENABLED (JERRY_BUILTIN_PROMISE)
+#if JERRY_BUILTIN_PROMISE
 
 /* Object properties:
  *  (property name, object pointer getter) */
@@ -33,6 +33,6 @@ ROUTINE (LIT_MAGIC_STRING_THEN, ECMA_PROMISE_PROTOTYPE_ROUTINE_THEN, 2, 2)
 ROUTINE (LIT_MAGIC_STRING_CATCH, ECMA_PROMISE_PROTOTYPE_ROUTINE_CATCH, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_FINALLY, ECMA_PROMISE_PROTOTYPE_ROUTINE_FINALLY, 1, 1)
 
-#endif /* ENABLED (JERRY_BUILTIN_PROMISE) */
+#endif /* JERRY_BUILTIN_PROMISE */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

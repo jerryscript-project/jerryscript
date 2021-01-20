@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if ENABLED (JERRY_BUILTIN_ARRAY)
+#if JERRY_BUILTIN_ARRAY
 
 /* Object properties:
  *  (property name, object pointer getter) */
@@ -36,16 +36,16 @@ NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               1,
               ECMA_PROPERTY_FLAG_DEFAULT_LENGTH)
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 STRING_VALUE (LIT_MAGIC_STRING_NAME,
               LIT_MAGIC_STRING_ARRAY_UL,
               ECMA_PROPERTY_FLAG_CONFIGURABLE)
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_MAGIC_STRING_IS_ARRAY_UL, ECMA_ARRAY_ROUTINE_IS_ARRAY, 1, 1)
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 ROUTINE (LIT_MAGIC_STRING_FROM, ECMA_ARRAY_ROUTINE_FROM, NON_FIXED, 1)
 ROUTINE (LIT_MAGIC_STRING_OF, ECMA_ARRAY_ROUTINE_OF, NON_FIXED, 0)
 
@@ -53,8 +53,8 @@ ROUTINE (LIT_MAGIC_STRING_OF, ECMA_ARRAY_ROUTINE_OF, NON_FIXED, 0)
 ACCESSOR_READ_ONLY (LIT_GLOBAL_SYMBOL_SPECIES,
                     ECMA_ARRAY_ROUTINE_SPECIES_GET,
                     ECMA_PROPERTY_FLAG_CONFIGURABLE)
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
-#endif /* !(ENABLED (JERRY_BUILTIN_ARRAY)) */
+#endif /* !(JERRY_BUILTIN_ARRAY) */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

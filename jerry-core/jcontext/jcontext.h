@@ -75,7 +75,7 @@
  */
 #define CONFIG_ECMA_GC_NEW_OBJECTS_FRACTION (16)
 
-#if !ENABLED (JERRY_SYSTEM_ALLOCATOR)
+#if !JERRY_SYSTEM_ALLOCATOR
 /**
  * Heap structure
  *
@@ -89,7 +89,7 @@
  * there.
  */
 typedef struct jmem_heap_t jmem_heap_t;
-#endif /* !ENABLED (JERRY_SYSTEM_ALLOCATOR) */
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
 
 /**
  * User context item
@@ -117,42 +117,42 @@ typedef struct jerry_context_data_header
 struct jerry_context_t
 {
   /* The value of external context members must be preserved across initializations and cleanups. */
-#if ENABLED (JERRY_EXTERNAL_CONTEXT)
-#if !ENABLED (JERRY_SYSTEM_ALLOCATOR)
+#if JERRY_EXTERNAL_CONTEXT
+#if !JERRY_SYSTEM_ALLOCATOR
   jmem_heap_t *heap_p; /**< point to the heap aligned to JMEM_ALIGNMENT. */
   uint32_t heap_size; /**< size of the heap */
-#endif /* !ENABLED (JERRY_SYSTEM_ALLOCATOR) */
-#endif /* ENABLED (JERRY_EXTERNAL_CONTEXT) */
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
+#endif /* JERRY_EXTERNAL_CONTEXT */
 
   /* Update JERRY_CONTEXT_FIRST_MEMBER if the first non-external member changes */
   ecma_global_object_t *global_object_p; /**< current global object */
   jmem_heap_free_t *jmem_heap_list_skip_p; /**< improves deallocation performance */
   jmem_pools_chunk_t *jmem_free_8_byte_chunk_p; /**< list of free eight byte pool chunks */
-#if ENABLED (JERRY_BUILTIN_REGEXP)
+#if JERRY_BUILTIN_REGEXP
   re_compiled_code_t *re_cache[RE_CACHE_SIZE]; /**< regex cache */
-#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
-#if ENABLED (JERRY_CPOINTER_32_BIT)
+#endif /* JERRY_BUILTIN_REGEXP */
+#if JERRY_CPOINTER_32_BIT
   jmem_pools_chunk_t *jmem_free_16_byte_chunk_p; /**< list of free sixteen byte pool chunks */
-#endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
+#endif /* JERRY_CPOINTER_32_BIT */
   const lit_utf8_byte_t * const *lit_magic_string_ex_array; /**< array of external magic strings */
   const lit_utf8_size_t *lit_magic_string_ex_sizes; /**< external magic string lengths */
   jmem_cpointer_t ecma_gc_objects_cp; /**< List of currently alive objects. */
   jmem_cpointer_t string_list_first_cp; /**< first item of the literal string list */
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   jmem_cpointer_t symbol_list_first_cp; /**< first item of the global symbol list */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
   jmem_cpointer_t number_list_first_cp; /**< first item of the literal number list */
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
   jmem_cpointer_t bigint_list_first_cp; /**< first item of the literal bigint list */
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
-#if ENABLED (JERRY_ESNEXT)
+#endif /* JERRY_BUILTIN_BIGINT */
+#if JERRY_ESNEXT
   jmem_cpointer_t global_symbols_cp[ECMA_BUILTIN_GLOBAL_SYMBOL_COUNT]; /**< global symbols */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
-#if ENABLED (JERRY_MODULE_SYSTEM)
+#if JERRY_MODULE_SYSTEM
   ecma_module_t *module_list_p;         /**< current module context */
   ecma_module_t *module_current_p;      /**< current module context */
-#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
+#endif /* JERRY_MODULE_SYSTEM */
 
   vm_frame_ctx_t *vm_top_context_p; /**< top (current) interpreter context */
   jerry_context_data_header_t *context_data_p; /**< linked list of user-provided context-specific pointers */
@@ -171,33 +171,33 @@ struct jerry_context_t
   uint32_t ecma_gc_mark_recursion_limit; /**< GC mark recursion limit */
 #endif /* (JERRY_GC_MARK_LIMIT != 0) */
 
-#if ENABLED (JERRY_PROPRETY_HASHMAP)
+#if JERRY_PROPRETY_HASHMAP
   uint8_t ecma_prop_hashmap_alloc_state; /**< property hashmap allocation state: 0-4,
                                           *   if !0 property hashmap allocation is disabled */
-#endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
+#endif /* JERRY_PROPRETY_HASHMAP */
 
-#if ENABLED (JERRY_BUILTIN_REGEXP)
+#if JERRY_BUILTIN_REGEXP
   uint8_t re_cache_idx; /**< evicted item index when regex cache is full (round-robin) */
-#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
+#endif /* JERRY_BUILTIN_REGEXP */
 
-#if ENABLED (JERRY_BUILTIN_PROMISE)
+#if JERRY_BUILTIN_PROMISE
   ecma_job_queue_item_t *job_queue_head_p; /**< points to the head item of the job queue */
   ecma_job_queue_item_t *job_queue_tail_p; /**< points to the tail item of the job queue */
-#endif /* ENABLED (JERRY_BUILTIN_PROMISE) */
+#endif /* JERRY_BUILTIN_PROMISE */
 
-#if ENABLED (JERRY_VM_EXEC_STOP)
+#if JERRY_VM_EXEC_STOP
   uint32_t vm_exec_stop_frequency; /**< reset value for vm_exec_stop_counter */
   uint32_t vm_exec_stop_counter; /**< down counter for reducing the calls of vm_exec_stop_cb */
   void *vm_exec_stop_user_p; /**< user pointer for vm_exec_stop_cb */
   ecma_vm_exec_stop_callback_t vm_exec_stop_cb; /**< user function which returns whether the
                                                  *   ECMAScript execution should be stopped */
-#endif /* ENABLED (JERRY_VM_EXEC_STOP) */
+#endif /* JERRY_VM_EXEC_STOP */
 
 #if (JERRY_STACK_LIMIT != 0)
   uintptr_t stack_base;  /**< stack base marker */
 #endif /* (JERRY_STACK_LIMIT != 0) */
 
-#if ENABLED (JERRY_DEBUGGER)
+#if JERRY_DEBUGGER
   uint8_t debugger_send_buffer[JERRY_DEBUGGER_TRANSPORT_MAX_BUFFER_SIZE]; /**< buffer for sending messages */
   uint8_t debugger_receive_buffer[JERRY_DEBUGGER_TRANSPORT_MAX_BUFFER_SIZE]; /**< buffer for receiving messages */
   jerry_debugger_transport_header_t *debugger_transport_header_p; /**< head of transport protocol chain */
@@ -212,29 +212,29 @@ struct jerry_context_t
   uint8_t debugger_message_delay; /**< call receive message when reaches zero */
   uint8_t debugger_max_send_size; /**< maximum amount of data that can be sent */
   uint8_t debugger_max_receive_size; /**< maximum amount of data that can be received */
-#endif /* ENABLED (JERRY_DEBUGGER) */
+#endif /* JERRY_DEBUGGER */
 
-#if ENABLED (JERRY_MEM_STATS)
+#if JERRY_MEM_STATS
   jmem_heap_stats_t jmem_heap_stats; /**< heap's memory usage statistics */
-#endif /* ENABLED (JERRY_MEM_STATS) */
+#endif /* JERRY_MEM_STATS */
 
   /* This must be at the end of the context for performance reasons */
-#if ENABLED (JERRY_LCACHE)
+#if JERRY_LCACHE
   /** hash table for caching the last access of properties */
   ecma_lcache_hash_entry_t lcache[ECMA_LCACHE_HASH_ROWS_COUNT][ECMA_LCACHE_HASH_ROW_LENGTH];
-#endif /* ENABLED (JERRY_LCACHE) */
+#endif /* JERRY_LCACHE */
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   /**
    * Allowed values and it's meaning:
    * * NULL (0x0): the current "new.target" is undefined, that is the execution is inside a normal method.
    * * Any other valid function object pointer: the current "new.target" is valid and it is constructor call.
    */
   ecma_object_t *current_new_target_p;
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 };
 
-#if ENABLED (JERRY_EXTERNAL_CONTEXT)
+#if JERRY_EXTERNAL_CONTEXT
 
 /*
  * This part is for JerryScript which uses external context.
@@ -243,7 +243,7 @@ struct jerry_context_t
 #define JERRY_CONTEXT_STRUCT (*jerry_port_get_current_context ())
 #define JERRY_CONTEXT(field) (jerry_port_get_current_context ()->field)
 
-#if !ENABLED (JERRY_SYSTEM_ALLOCATOR)
+#if !JERRY_SYSTEM_ALLOCATOR
 
 #define JMEM_HEAP_SIZE (JERRY_CONTEXT (heap_size))
 
@@ -257,9 +257,9 @@ struct jmem_heap_t
 
 #define JERRY_HEAP_CONTEXT(field) (JERRY_CONTEXT (heap_p)->field)
 
-#endif /* !ENABLED (JERRY_SYSTEM_ALLOCATOR) */
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
 
-#else /* !ENABLED (JERRY_EXTERNAL_CONTEXT) */
+#else /* !JERRY_EXTERNAL_CONTEXT */
 
 /*
  * This part is for JerryScript which uses default context.
@@ -280,7 +280,7 @@ extern jerry_context_t jerry_global_context;
  */
 #define JERRY_CONTEXT(field) (jerry_global_context.field)
 
-#if !ENABLED (JERRY_SYSTEM_ALLOCATOR)
+#if !JERRY_SYSTEM_ALLOCATOR
 
 /**
 * Size of heap
@@ -308,9 +308,9 @@ extern jmem_heap_t jerry_global_heap;
  */
 #define JERRY_HEAP_CONTEXT(field) (jerry_global_heap.field)
 
-#endif /* !ENABLED (JERRY_SYSTEM_ALLOCATOR) */
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
 
-#endif /* ENABLED (JERRY_EXTERNAL_CONTEXT) */
+#endif /* JERRY_EXTERNAL_CONTEXT */
 
 void
 jcontext_set_exception_flag (bool is_exception);

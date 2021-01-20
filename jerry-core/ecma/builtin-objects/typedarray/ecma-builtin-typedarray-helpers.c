@@ -15,7 +15,7 @@
 
 #include "ecma-builtin-typedarray-helpers.h"
 
-#if ENABLED (JERRY_BUILTIN_TYPEDARRAY)
+#if JERRY_BUILTIN_TYPEDARRAY
 
 #include "ecma-builtins.h"
 #include "ecma-gc.h"
@@ -70,4 +70,4 @@ ecma_typedarray_helper_dispatch_construct (const ecma_value_t *arguments_list_p,
   return val;
 } /* ecma_typedarray_helper_dispatch_construct */
 
-#endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
+#endif /* JERRY_BUILTIN_TYPEDARRAY */

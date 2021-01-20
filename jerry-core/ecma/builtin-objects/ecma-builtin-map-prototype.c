@@ -15,7 +15,7 @@
 
 #include "ecma-container-object.h"
 
-#if ENABLED (JERRY_BUILTIN_MAP)
+#if JERRY_BUILTIN_MAP
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -63,4 +63,4 @@ ecma_builtin_map_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< bu
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_MAP) */
+#endif /* JERRY_BUILTIN_MAP */

@@ -79,7 +79,7 @@ ecma_op_eval_chars_buffer (const lit_utf8_byte_t *code_p, /**< code characters b
                            size_t code_buffer_size, /**< size of the buffer */
                            uint32_t parse_opts) /**< ecma_parse_opts_t option bits */
 {
-#if ENABLED (JERRY_PARSER)
+#if JERRY_PARSER
   JERRY_ASSERT (code_p != NULL);
 
   uint32_t is_strict_call = ECMA_PARSE_STRICT_MODE | ECMA_PARSE_DIRECT_EVAL;
@@ -91,9 +91,9 @@ ecma_op_eval_chars_buffer (const lit_utf8_byte_t *code_p, /**< code characters b
 
   parse_opts |= ECMA_PARSE_EVAL;
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   ECMA_CLEAR_LOCAL_PARSE_OPTS ();
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
   ecma_value_t resource_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_EVAL);
   ecma_compiled_code_t *bytecode_p = parser_parse_script (NULL,
@@ -109,13 +109,13 @@ ecma_op_eval_chars_buffer (const lit_utf8_byte_t *code_p, /**< code characters b
   }
 
   return vm_run_eval (bytecode_p, parse_opts);
-#else /* !ENABLED (JERRY_PARSER) */
+#else /* !JERRY_PARSER */
   JERRY_UNUSED (code_p);
   JERRY_UNUSED (code_buffer_size);
   JERRY_UNUSED (parse_opts);
 
   return ecma_raise_syntax_error (ECMA_ERR_MSG ("Source code parsing is disabled"));
-#endif /* ENABLED (JERRY_PARSER) */
+#endif /* JERRY_PARSER */
 } /* ecma_op_eval_chars_buffer */
 
 /**

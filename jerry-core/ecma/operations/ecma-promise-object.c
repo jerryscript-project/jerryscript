@@ -29,7 +29,7 @@
 #include "ecma-promise-object.h"
 #include "jcontext.h"
 
-#if ENABLED (JERRY_BUILTIN_PROMISE)
+#if JERRY_BUILTIN_PROMISE
 
 /** \addtogroup ecma ECMA
  * @{
@@ -1167,4 +1167,4 @@ ecma_promise_async_await (ecma_extended_object_t *async_generator_object_p, /**<
  * @}
  * @}
  */
-#endif /* ENABLED (JERRY_BUILTIN_PROMISE) */
+#endif /* JERRY_BUILTIN_PROMISE */

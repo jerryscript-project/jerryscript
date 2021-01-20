@@ -37,7 +37,7 @@
 #include "jrt.h"
 #include "lit-char-helpers.h"
 
-#if ENABLED (JERRY_BUILTIN_TYPEDARRAY)
+#if JERRY_BUILTIN_TYPEDARRAY
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -665,7 +665,7 @@ ecma_builtin_typedarray_prototype_set (ecma_value_t this_arg, /**< this argument
 
     ecma_value_t value_to_set;
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
     if (ECMA_TYPEDARRAY_IS_BIGINT_TYPE (target_info.id))
     {
       value_to_set = ecma_bigint_to_bigint (elem, false);
@@ -678,7 +678,7 @@ ecma_builtin_typedarray_prototype_set (ecma_value_t this_arg, /**< this argument
       }
     }
     else
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
     {
       ecma_number_t elem_num;
       if (ECMA_IS_VALUE_ERROR (ecma_op_to_numeric (elem, &elem_num, ECMA_TO_NUMERIC_NO_OPTS)))
@@ -948,7 +948,7 @@ ecma_builtin_typedarray_prototype_fill (ecma_value_t this_arg, /**< this object 
 {
   ecma_value_t value_to_set;
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
   if (ECMA_TYPEDARRAY_IS_BIGINT_TYPE (info_p->id))
   {
     value_to_set = ecma_bigint_to_bigint (value, true);
@@ -959,7 +959,7 @@ ecma_builtin_typedarray_prototype_fill (ecma_value_t this_arg, /**< this object 
     }
   }
   else
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
   {
     ecma_number_t value_num;
     ecma_value_t ret_value = ecma_op_to_numeric (value, &value_num, ECMA_TO_NUMERIC_NO_OPTS);
@@ -1043,12 +1043,12 @@ ecma_builtin_typedarray_prototype_sort_compare_helper (ecma_value_t lhs, /**< le
   if (ecma_is_value_undefined (compare_func))
   {
     /* Default comparison when no comparefn is passed. */
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
     if (ecma_is_value_bigint (lhs) && ecma_is_value_bigint (rhs))
     {
       return ecma_make_number_value (ecma_bigint_compare_to_bigint (lhs, rhs));
     }
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 
     ecma_number_t result = ECMA_NUMBER_ZERO;
 
@@ -1283,11 +1283,11 @@ ecma_builtin_typedarray_prototype_index_of (ecma_typedarray_info_t *info_p, /**<
                                             const ecma_value_t args[], /**< arguments list */
                                             uint32_t args_number) /**< number of arguments */
 {
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
   bool is_bigint = ECMA_TYPEDARRAY_IS_BIGINT_TYPE (info_p->id);
-#else /* !ENABLED (JERRY_BUILTIN_BIGINT) */
+#else /* !JERRY_BUILTIN_BIGINT */
   bool is_bigint = false;
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 
   uint32_t limit = info_p->length * info_p->element_size;
   uint32_t from_index;
@@ -1350,11 +1350,11 @@ ecma_builtin_typedarray_prototype_last_index_of (ecma_typedarray_info_t *info_p,
                                                 const ecma_value_t args[], /**< arguments list */
                                                 uint32_t args_number) /**< number of arguments */
 {
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
   bool is_bigint = ECMA_TYPEDARRAY_IS_BIGINT_TYPE (info_p->id);
-#else /* !ENABLED (JERRY_BUILTIN_BIGINT) */
+#else /* !JERRY_BUILTIN_BIGINT */
   bool is_bigint = false;
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 
   uint32_t from_index;
 
@@ -1646,11 +1646,11 @@ ecma_builtin_typedarray_prototype_includes (ecma_typedarray_info_t *info_p, /**<
 {
   uint32_t limit = info_p->length * info_p->element_size;
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
   bool is_bigint = ECMA_TYPEDARRAY_IS_BIGINT_TYPE (info_p->id);
-#else /* !ENABLED (JERRRY_BUILTIN_BIGINT) */
+#else /* !JERRRY_BUILTIN_BIGINT */
   bool is_bigint = false;
-#endif /* ENABLED (JERRRY_BUILTIN_BIGINT) */
+#endif /* JERRRY_BUILTIN_BIGINT */
 
   if (args_number == 0
       || (!ecma_is_value_number (args[0]) && !is_bigint)
@@ -1879,4 +1879,4 @@ ecma_builtin_typedarray_prototype_dispatch_routine (uint8_t builtin_routine_id, 
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
+#endif /* JERRY_BUILTIN_TYPEDARRAY */

@@ -26,7 +26,7 @@
 #include "ecma-helpers.h"
 #include "lit-char-helpers.h"
 
-#if ENABLED (JERRY_BUILTIN_DATE)
+#if JERRY_BUILTIN_DATE
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -629,11 +629,11 @@ ecma_builtin_date_utc (ecma_value_t this_arg, /**< this argument */
 {
   JERRY_UNUSED (this_arg);
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   const uint32_t required_args_number = 1;
-#else /* !ENABLED (JERRY_ESNEXT) */
+#else /* !JERRY_ESNEXT */
   const uint32_t required_args_number = 2;
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
   if (args_number < required_args_number)
   {
@@ -718,7 +718,7 @@ ecma_value_t
 ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
                                       uint32_t arguments_list_len) /**< number of arguments */
 {
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   JERRY_ASSERT (JERRY_CONTEXT (current_new_target_p));
 
   ecma_object_t *prototype_obj_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_new_target_p),
@@ -727,17 +727,17 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
   {
     return ECMA_VALUE_ERROR;
   }
-#else /* !ENABLED (JERRY_ESNEXT) */
+#else /* !JERRY_ESNEXT */
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_DATE_PROTOTYPE);
-#endif /* (ENABLED (JERRY_ESNEXT) */
+#endif /* (JERRY_ESNEXT */
 
   ecma_object_t *obj_p = ecma_create_object (prototype_obj_p,
                                              sizeof (ecma_extended_object_t),
                                              ECMA_OBJECT_TYPE_CLASS);
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   ecma_deref_object (prototype_obj_p);
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
   ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_UNDEFINED;
@@ -851,4 +851,4 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
 #undef BREAK_IF_FALSE
 #undef BREAK_IF_NAN
 
-#endif /* ENABLED (JERRY_BUILTIN_DATE) */
+#endif /* JERRY_BUILTIN_DATE */

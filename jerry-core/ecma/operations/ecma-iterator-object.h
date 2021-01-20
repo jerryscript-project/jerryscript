@@ -18,7 +18,7 @@
 
 #include "ecma-globals.h"
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 
 /** \addtogroup ecma ECMA
  * @{
@@ -74,7 +74,7 @@ ecma_value_t
 ecma_op_iterator_do (ecma_iterator_command_type_t command, ecma_value_t iterator,
                      ecma_value_t next_method, ecma_value_t value, bool *done_p);
 
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /**
  * @}

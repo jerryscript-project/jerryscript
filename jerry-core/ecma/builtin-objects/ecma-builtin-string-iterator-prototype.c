@@ -17,7 +17,7 @@
 #include "ecma-builtins.h"
 #include "ecma-iterator-object.h"
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -144,4 +144,4 @@ ecma_builtin_string_iterator_prototype_object_next (ecma_value_t this_val) /**< 
  * @}
  */
 
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */

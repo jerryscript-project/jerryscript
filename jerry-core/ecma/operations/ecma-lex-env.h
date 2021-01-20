@@ -34,14 +34,14 @@ void ecma_init_global_environment (void);
 void ecma_finalize_global_environment (void);
 ecma_object_t *ecma_get_global_environment (ecma_object_t *global_object_p);
 ecma_object_t *ecma_get_global_scope (ecma_object_t *global_object_p);
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 void ecma_create_global_lexical_block (ecma_object_t *global_object_p);
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
-#if ENABLED (JERRY_MODULE_SYSTEM)
+#if JERRY_MODULE_SYSTEM
 void ecma_module_add_lex_env (ecma_object_t *lex_env_p);
 void ecma_module_finalize_lex_envs (void);
-#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
+#endif /* JERRY_MODULE_SYSTEM */
 
 /**
  * @}
@@ -66,7 +66,7 @@ ecma_value_t ecma_op_implicit_this_value (ecma_object_t *lex_env_p);
 /* ECMA-262 v5, Table 18. Additional methods of Declarative Environment Records */
 void ecma_op_create_immutable_binding (ecma_object_t *lex_env_p, ecma_string_t *name_p, ecma_value_t value);
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 void ecma_op_initialize_binding (ecma_object_t *lex_env_p, ecma_string_t *name_p, ecma_value_t value);
 
 void ecma_op_create_environment_record (ecma_object_t *lex_env_p, ecma_value_t this_binding,
@@ -76,7 +76,7 @@ ecma_environment_record_t *ecma_op_get_environment_record (ecma_object_t *lex_en
 bool ecma_op_this_binding_is_initialized (ecma_environment_record_t *environment_record_p);
 void ecma_op_bind_this_value (ecma_environment_record_t *environment_record_p, ecma_value_t this_binding);
 ecma_value_t ecma_op_get_this_binding (ecma_object_t *lex_env_p);
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /**
  * @}

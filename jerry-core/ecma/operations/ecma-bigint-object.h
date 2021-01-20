@@ -18,7 +18,7 @@
 
 #include "ecma-globals.h"
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
 
 /** \addtogroup ecma ECMA
  * @{
@@ -34,6 +34,6 @@ ecma_value_t ecma_op_create_bigint_object (ecma_value_t arg);
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 
 #endif /* !ECMA_BIGINT_OBJECT_H */

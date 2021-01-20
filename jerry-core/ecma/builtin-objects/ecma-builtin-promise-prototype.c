@@ -16,7 +16,7 @@
 #include "ecma-globals.h"
 #include "ecma-promise-object.h"
 
-#if ENABLED (JERRY_BUILTIN_PROMISE)
+#if JERRY_BUILTIN_PROMISE
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -95,4 +95,4 @@ ecma_builtin_promise_prototype_dispatch_routine (uint8_t builtin_routine_id, /**
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_PROMISE) */
+#endif /* JERRY_BUILTIN_PROMISE */

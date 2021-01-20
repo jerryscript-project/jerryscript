@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if ENABLED (JERRY_BUILTIN_NUMBER)
+#if JERRY_BUILTIN_NUMBER
 
 /* Object properties:
  *  (property name, object pointer getter) */
@@ -38,6 +38,6 @@ ROUTINE (LIT_MAGIC_STRING_TO_FIXED_UL, ECMA_NUMBER_PROTOTYPE_TO_FIXED, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_TO_EXPONENTIAL_UL, ECMA_NUMBER_PROTOTYPE_TO_EXPONENTIAL, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_TO_PRECISION_UL, ECMA_NUMBER_PROTOTYPE_TO_PRECISION, 1, 1)
 
-#endif /* ENABLED (JERRY_BUILTIN_NUMBER) */
+#endif /* JERRY_BUILTIN_NUMBER */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

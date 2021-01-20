@@ -16,7 +16,7 @@
 #include "ecma-bigint.h"
 #include "ecma-exceptions.h"
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -131,4 +131,4 @@ ecma_builtin_bigint_prototype_object_to_string (ecma_value_t this_arg, /**< this
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */

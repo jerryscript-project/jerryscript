@@ -17,7 +17,7 @@
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -77,4 +77,4 @@ ecma_builtin_bigint_dispatch_construct (const ecma_value_t *arguments_list_p, /*
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */

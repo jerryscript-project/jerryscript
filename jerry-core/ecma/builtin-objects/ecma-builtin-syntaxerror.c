@@ -26,7 +26,7 @@
 #include "jrt.h"
 #include "jcontext.h"
 
-#if ENABLED (JERRY_BUILTIN_ERRORS)
+#if JERRY_BUILTIN_ERRORS
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -66,9 +66,9 @@ ecma_value_t
 ecma_builtin_syntax_error_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
                                               uint32_t arguments_list_len) /**< number of arguments */
 {
-#if !ENABLED (JERRY_ESNEXT)
+#if !JERRY_ESNEXT
   return ecma_builtin_syntax_error_dispatch_call (arguments_list_p, arguments_list_len);
-#else /* ENABLED (JERRY_ESNEXT) */
+#else /* JERRY_ESNEXT */
   ecma_object_t *proto_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_new_target_p),
                                                                    ECMA_BUILTIN_ID_SYNTAX_ERROR_PROTOTYPE);
 
@@ -88,7 +88,7 @@ ecma_builtin_syntax_error_dispatch_construct (const ecma_value_t *arguments_list
   ecma_deref_object (proto_p);
 
   return result;
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 } /* ecma_builtin_syntax_error_dispatch_construct */
 
 /**
@@ -97,4 +97,4 @@ ecma_builtin_syntax_error_dispatch_construct (const ecma_value_t *arguments_list
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_ERRORS) */
+#endif /* JERRY_BUILTIN_ERRORS */

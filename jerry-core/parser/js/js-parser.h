@@ -44,9 +44,9 @@ typedef enum
   PARSER_ERR_INVALID_CHARACTER,                       /**< unexpected character */
   PARSER_ERR_INVALID_OCTAL_DIGIT,                     /**< invalid octal digit */
   PARSER_ERR_INVALID_HEX_DIGIT,                       /**< invalid hexadecimal digit */
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   PARSER_ERR_INVALID_BIN_DIGIT,                       /**< invalid binary digit */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
   PARSER_ERR_INVALID_ESCAPE_SEQUENCE,                 /**< invalid escape sequence */
   PARSER_ERR_INVALID_UNICODE_ESCAPE_SEQUENCE,         /**< invalid unicode escape sequence */
   PARSER_ERR_INVALID_IDENTIFIER_START,                /**< character cannot be start of an identifier */
@@ -57,9 +57,9 @@ typedef enum
   PARSER_ERR_MISSING_EXPONENT,                        /**< missing exponent */
   PARSER_ERR_IDENTIFIER_AFTER_NUMBER,                 /**< identifier start after number */
   PARSER_ERR_INVALID_UNDERSCORE_IN_NUMBER,        /**< invalid use of underscore in number */
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
   PARSER_ERR_INVALID_BIGINT,                          /**< number is not a valid BigInt */
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 
   PARSER_ERR_INVALID_REGEXP,                          /**< invalid regular expression */
   PARSER_ERR_UNKNOWN_REGEXP_FLAG,                     /**< unknown regexp flag */
@@ -78,13 +78,13 @@ typedef enum
   PARSER_ERR_NEWLINE_NOT_ALLOWED,                     /**< newline is not allowed */
   PARSER_ERR_OCTAL_NUMBER_NOT_ALLOWED,                /**< octal numbers are not allowed in strict mode */
   PARSER_ERR_OCTAL_ESCAPE_NOT_ALLOWED,                /**< octal escape sequences are not allowed in strict mode */
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   PARSER_ERR_TEMPLATE_STR_OCTAL_ESCAPE,               /**< octal escape sequences are not allowed in template strings */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
   PARSER_ERR_STRICT_IDENT_NOT_ALLOWED,                /**< identifier name is reserved in strict mode */
   PARSER_ERR_EVAL_NOT_ALLOWED,                        /**< eval is not allowed here in strict mode */
   PARSER_ERR_ARGUMENTS_NOT_ALLOWED,                   /**< arguments is not allowed here in strict mode */
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   PARSER_ERR_USE_STRICT_NOT_ALLOWED,                  /**< use strict directive is not allowed */
   PARSER_ERR_YIELD_NOT_ALLOWED,                       /**< yield expression is not allowed */
   PARSER_ERR_AWAIT_NOT_ALLOWED,                       /**< await expression is not allowed */
@@ -95,7 +95,7 @@ typedef enum
   PARSER_ERR_INVALID_LHS_ASSIGNMENT,                  /**< invalid LeftHandSide in assignment */
   PARSER_ERR_INVALID_LHS_POSTFIX_OP,                  /**< invalid LeftHandSide expression in postfix operation */
   PARSER_ERR_INVALID_LHS_FOR_LOOP,                    /**< invalid LeftHandSide in for-loop */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
   PARSER_ERR_DELETE_IDENT_NOT_ALLOWED,                /**< identifier delete is not allowed in strict mode */
   PARSER_ERR_EVAL_CANNOT_ASSIGNED,                    /**< eval cannot be assigned in strict mode */
   PARSER_ERR_ARGUMENTS_CANNOT_ASSIGNED,               /**< arguments cannot be assigned in strict mode */
@@ -137,7 +137,7 @@ typedef enum
   PARSER_ERR_INVALID_RIGHT_SQUARE,                    /**< right square must terminate a block */
   PARSER_ERR_DUPLICATED_LABEL,                        /**< duplicated label */
   PARSER_ERR_OBJECT_PROPERTY_REDEFINED,               /**< property of object literal redefined */
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   PARSER_ERR_VARIABLE_REDECLARED,                     /**< a variable redeclared */
   PARSER_ERR_LEXICAL_SINGLE_STATEMENT,                /**< lexical declaration in single statement context */
   PARSER_ERR_LABELLED_FUNC_NOT_IN_BLOCK,              /**< labelled functions are only allowed inside blocks */
@@ -166,8 +166,8 @@ typedef enum
   PARSER_ERR_INVALID_NULLISH_COALESCING,              /**< Cannot chain nullish with logical AND or OR. */
   PARSER_ERR_NEW_TARGET_EXPECTED,                     /**< expected new.target expression */
   PARSER_ERR_NEW_TARGET_NOT_ALLOWED,                  /**< new.target is not allowed in the given context */
-#endif /* ENABLED (JERRY_ESNEXT) */
-#if ENABLED (JERRY_MODULE_SYSTEM)
+#endif /* JERRY_ESNEXT */
+#if JERRY_MODULE_SYSTEM
   PARSER_ERR_FILE_NOT_FOUND,                          /**< file not found*/
   PARSER_ERR_FROM_EXPECTED,                           /**< from expected */
   PARSER_ERR_FROM_COMMA_EXPECTED,                     /**< from or comma expected */
@@ -180,7 +180,7 @@ typedef enum
   PARSER_ERR_DUPLICATED_EXPORT_IDENTIFIER,            /**< duplicated export identifier name */
   PARSER_ERR_DUPLICATED_IMPORT_BINDING,               /**< duplicated import binding name */
   PARSER_ERR_EXPORT_NOT_DEFINED,                      /**< export is not defined in module */
-#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
+#endif /* JERRY_MODULE_SYSTEM */
 
   PARSER_ERR_NON_STRICT_ARG_DEFINITION                /**< non-strict argument definition */
 } parser_error_t;
@@ -209,9 +209,9 @@ parser_parse_script (const uint8_t *arg_list_p,
                      ecma_value_t resource_name,
                      uint32_t parse_opts);
 
-#if ENABLED (JERRY_ERROR_MESSAGES)
+#if JERRY_ERROR_MESSAGES
 const char *parser_error_to_string (parser_error_t);
-#endif /* ENABLED (JERRY_ERROR_MESSAGES) */
+#endif /* JERRY_ERROR_MESSAGES */
 
 /**
  * @}

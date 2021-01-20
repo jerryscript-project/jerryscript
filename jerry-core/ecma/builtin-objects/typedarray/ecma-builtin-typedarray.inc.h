@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if ENABLED (JERRY_BUILTIN_TYPEDARRAY)
+#if JERRY_BUILTIN_TYPEDARRAY
 
 /* ES2015 22.2.2 */
 /* ES11 22.2.1.1 - value of length changed to 0 */
@@ -51,6 +51,6 @@ ACCESSOR_READ_ONLY (LIT_GLOBAL_SYMBOL_SPECIES,
                     ecma_builtin_typedarray_species_get,
                     ECMA_PROPERTY_FLAG_CONFIGURABLE)
 
-#endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
+#endif /* JERRY_BUILTIN_TYPEDARRAY */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

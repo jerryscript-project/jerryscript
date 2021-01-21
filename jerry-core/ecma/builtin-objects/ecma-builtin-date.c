@@ -769,7 +769,7 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
     /* 4.b */
     else
     {
-      ecma_value_t prim_comp_value = ecma_op_to_primitive (argument, ECMA_PREFERRED_TYPE_NUMBER);
+      ecma_value_t prim_comp_value = ecma_op_to_primitive (argument, ECMA_PREFERRED_TYPE_NO);
 
       if (ECMA_IS_VALUE_ERROR (prim_comp_value))
       {
@@ -795,7 +795,7 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
       else
       {
         ecma_number_t arg;
-        ecma_value_t prim_value = ecma_op_to_number (argument, &arg);
+        ecma_value_t prim_value = ecma_op_to_number (prim_comp_value, &arg);
 
         if (ECMA_IS_VALUE_ERROR (prim_value))
         {

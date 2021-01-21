@@ -630,7 +630,7 @@ ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< b
 
     *prim_value_p = ecma_date_time_clip (time_num);
 
-    return ecma_make_number_value (time_num);
+    return ecma_make_number_value (*prim_value_p);
   }
 
   if (builtin_routine_id <= ECMA_DATE_PROTOTYPE_SET_UTC_MILLISECONDS)

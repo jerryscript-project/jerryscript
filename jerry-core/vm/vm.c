@@ -321,11 +321,20 @@ vm_run_global (const ecma_compiled_code_t *bytecode_p) /**< pointer to bytecode 
 
 #if ENABLED (JERRY_BUILTIN_REALMS)
   ecma_value_t this_binding = ((ecma_global_object_t *) global_obj_p)->this_binding;
+
+  ecma_global_object_t *saved_global_object_p = JERRY_CONTEXT (global_object_p);
+  JERRY_CONTEXT (global_object_p) = (ecma_global_object_t *) global_obj_p;
 #else /* !ENABLED (JERRY_BUILTIN_REALMS) */
   ecma_value_t this_binding = ecma_make_object_value (global_obj_p);
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 
-  return vm_run (&shared, this_binding, global_scope_p);
+  ecma_value_t result = vm_run (&shared, this_binding, global_scope_p);
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  JERRY_CONTEXT (global_object_p) = saved_global_object_p;
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+
+  return result;
 } /* vm_run_global */
 
 /**

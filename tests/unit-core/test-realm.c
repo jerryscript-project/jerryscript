@@ -70,6 +70,27 @@ check_type_error (jerry_value_t result_value) /**< result value */
   jerry_release_value (result_value);
 } /* check_type_error */
 
+static void
+check_array_prototype (jerry_value_t realm_value, jerry_value_t result_value)
+{
+  jerry_value_t name_value = jerry_create_string ((const jerry_char_t *) "Array");
+  jerry_value_t array_value = jerry_get_property (realm_value, name_value);
+  TEST_ASSERT (jerry_value_is_object (array_value));
+  jerry_release_value (name_value);
+
+  name_value = jerry_create_string ((const jerry_char_t *) "prototype");
+  jerry_value_t prototype_value = jerry_get_property (array_value, name_value);
+  TEST_ASSERT (jerry_value_is_object (prototype_value));
+  jerry_release_value (name_value);
+  jerry_release_value (array_value);
+
+  jerry_value_t compare_value = jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL, result_value, prototype_value);
+  jerry_release_value (prototype_value);
+
+  TEST_ASSERT (jerry_value_is_boolean (compare_value) && jerry_get_boolean_value (compare_value));
+  jerry_release_value (compare_value);
+} /* check_array_prototype */
+
 /**
  * Unit test's main function.
  */
@@ -208,6 +229,35 @@ main (void)
     TEST_ASSERT (jerry_value_is_number (result_value) && jerry_get_number_value (result_value) == 42.5);
     jerry_release_value (result_value);
   }
+
+  realm_value = jerry_create_realm ();
+
+  result_value = jerry_set_realm (realm_value);
+  TEST_ASSERT (!jerry_value_is_error (result_value));
+
+  const char *script_p = "global2 = global1 - 1; Object.getPrototypeOf([])";
+  jerry_value_t script_value = jerry_parse (NULL,
+                                            0,
+                                            (const jerry_char_t *) script_p,
+                                            strlen (script_p),
+                                            JERRY_PARSE_NO_OPTS);
+
+  TEST_ASSERT (!jerry_value_is_error (script_value));
+  jerry_set_realm (result_value);
+
+  /* Script is compiled in another realm. */
+  create_number_property (realm_value, "global1", 7.5);
+  result_value = jerry_run (script_value);
+  TEST_ASSERT (!jerry_value_is_error (result_value));
+
+  check_array_prototype (realm_value, result_value);
+
+  jerry_release_value (result_value);
+  jerry_release_value (script_value);
+
+  TEST_ASSERT (get_number_property (realm_value, "global2") == 6.5);
+
+  jerry_release_value (realm_value);
 
   jerry_cleanup ();
   return 0;

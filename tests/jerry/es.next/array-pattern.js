@@ -38,6 +38,14 @@ function mustThrow (str) {
   }
 }
 
+function mustNotThrow (str) {
+  try {
+    eval (str);
+  } catch (e) {
+    assert (false);
+  }
+}
+
 checkSyntax ("var [a]");
 checkSyntax ("var [a, o.a]");
 checkSyntax ("var [a, ...b,]");
@@ -329,32 +337,32 @@ function __createIterableObject (arr, methods) {
   assert (x.prop === "42");
 }) ();
 
-mustThrow ("var iter = __createIterableObject([], "
-           + "{ get 'return'() { throw new TypeError() }});"
-           + "var [a] = iter");
+mustThrow (`var iter = __createIterableObject([],
+           { get 'return'() { throw new TypeError() }});
+           var [a] = iter`);
 
-mustThrow ("var iter = __createIterableObject([], "
-           + "{ 'return': 5 });"
-           + "var [a] = iter");
+mustNotThrow (`var iter = __createIterableObject([],
+              { 'return': 5 });
+              var [a] = iter`);
 
-mustThrow ("var iter = __createIterableObject([], "
-           + "{ 'return': function() { return 5; }});"
-           + "var [a] = iter");
+mustNotThrow (`var iter = __createIterableObject([],
+              { 'return': function() { return 5; }});
+              var [a] = iter`);
 
-mustThrow ("try { throw 5 } catch (e) {"
-           + "var iter = __createIterableObject([], "
-           + "{ get 'return'() { throw new TypeError() }});"
-           + "var [a] = iter }");
+mustThrow (`try { throw 5 } catch (e) {
+            var iter = __createIterableObject([],
+            { get 'return'() { throw new TypeError() }});
+            var [a] = iter }`);
 
-mustThrow ("try { throw 5 } catch (e) {"
-           + "var iter = __createIterableObject([], "
-           + "{ 'return': 5 });"
-           + "var [a] = iter }");
+mustNotThrow (`try { throw 5 } catch (e) {
+              var iter = __createIterableObject([],
+              { 'return': 5 });
+              var [a] = iter }`);
 
-mustThrow ("try { throw 5 } catch (e) {"
-           + "var iter = __createIterableObject([], "
-           + "{ 'return': function() { return 5; }});"
-           + "var [a] = iter }");
+mustNotThrow (`try { throw 5 } catch (e) {
+              var iter = __createIterableObject([],
+              { 'return': function() { return 5; }});
+              var [a] = iter }`);
 
 try {
   eval ("var a = 0; 1 + [a] = [1]");

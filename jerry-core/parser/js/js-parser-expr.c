@@ -2755,7 +2755,7 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
  *
  * @return - pushed assignment opcode onto the parser stack
  */
-static uint8_t
+static void
 parser_append_binary_single_assignment_token (parser_context_t *context_p, /**< context */
                                               uint32_t pattern_flags) /**< pattern flags */
 {
@@ -2899,8 +2899,6 @@ parser_append_binary_single_assignment_token (parser_context_t *context_p, /**< 
 
   parser_stack_push_uint8 (context_p, assign_opcode);
   parser_stack_push_uint8 (context_p, LEXER_ASSIGN);
-
-  return assign_opcode;
 } /* parser_append_binary_single_assignment_token */
 
 #if ENABLED (JERRY_ESNEXT)
@@ -3326,13 +3324,7 @@ parser_pattern_form_assignment (parser_context_t *context_p, /**< context */
   }
 
   parser_stack_push_uint8 (context_p, LEXER_EXPRESSION_START);
-  uint8_t assign_opcode = parser_append_binary_single_assignment_token (context_p, flags);
-
-  int32_t stack_adjustment = (CBC_STACK_ADJUST_BASE - (cbc_flags[assign_opcode] >> CBC_STACK_ADJUST_SHIFT));
-  JERRY_ASSERT (stack_adjustment >= 1 && stack_adjustment <= 3);
-
-  rhs_opcode = (uint16_t) (rhs_opcode + stack_adjustment - 1);
-
+  parser_append_binary_single_assignment_token (context_p, flags);
   parser_pattern_emit_rhs (context_p, rhs_opcode, literal_index);
 
   if (context_p->token.type == LEXER_ASSIGN && !(flags & PARSER_PATTERN_REST_ELEMENT))
@@ -3518,19 +3510,12 @@ parser_pattern_process_assignment (parser_context_t *context_p, /**< context */
   }
   else
   {
-    /* RHS should be evaulated first */
-    parser_pattern_emit_rhs (context_p, rhs_opcode, literal_index);
-
-    parser_flush_cbc (context_p);
     parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA | PARSE_EXPR_LEFT_HAND_SIDE);
 
     if (!PARSER_IS_PUSH_LITERAL (context_p->last_cbc_opcode) && !PARSER_IS_PUSH_PROP (context_p->last_cbc_opcode))
     {
       parser_raise_error (context_p, PARSER_ERR_INVALID_DESTRUCTURING_PATTERN);
     }
-
-    rhs_opcode = CBC_EXT_MOVE;
-    literal_index = PARSER_PATTERN_RHS_NO_LIT;
   }
 
   parser_pattern_form_assignment (context_p, flags, rhs_opcode, literal_index, ident_line_counter);
@@ -3547,7 +3532,7 @@ parser_parse_array_initializer (parser_context_t *context_p, /**< context */
   parser_pattern_end_marker_t end_pos = parser_pattern_get_target (context_p, flags);
 
   lexer_next_token (context_p);
-  parser_emit_cbc_ext (context_p, CBC_EXT_GET_ITERATOR);
+  parser_emit_cbc_ext (context_p, CBC_EXT_ITERATOR_CONTEXT_CREATE);
 
   while (context_p->token.type != LEXER_RIGHT_SQUARE)
   {
@@ -3583,7 +3568,7 @@ parser_parse_array_initializer (parser_context_t *context_p, /**< context */
   }
 
   /* close the iterator */
-  parser_emit_cbc_ext (context_p, CBC_EXT_ITERATOR_CLOSE);
+  parser_emit_cbc_ext (context_p, CBC_EXT_ITERATOR_CONTEXT_END);
 
   parser_pattern_finalize (context_p, flags, &end_pos);
 } /* parser_parse_array_initializer */
@@ -3606,10 +3591,14 @@ parser_parse_object_initializer (parser_context_t *context_p, /**< context */
     return;
   }
 
+  cbc_ext_opcode_t context_opcode = CBC_EXT_OBJ_INIT_CONTEXT_CREATE;
+
   if (flags & PARSER_PATTERN_HAS_REST_ELEMENT)
   {
-    parser_emit_cbc_ext (context_p, CBC_EXT_INITIALIZER_PUSH_LIST);
+    context_opcode = CBC_EXT_OBJ_INIT_REST_CONTEXT_CREATE;
   }
+
+  parser_emit_cbc_ext (context_p, context_opcode);
 
   while (true)
   {
@@ -3633,7 +3622,7 @@ parser_parse_object_initializer (parser_context_t *context_p, /**< context */
 
       if (parser_pattern_process_assignment (context_p,
                                              flags,
-                                             CBC_EXT_INITIALIZER_PUSH_REST,
+                                             CBC_EXT_OBJ_INIT_PUSH_REST,
                                              PARSER_PATTERN_RHS_NO_LIT,
                                              LEXER_RIGHT_BRACE))
       {
@@ -3723,6 +3712,14 @@ parser_parse_object_initializer (parser_context_t *context_p, /**< context */
       parser_raise_error (context_p, PARSER_ERR_OBJECT_ITEM_SEPARATOR_EXPECTED);
     }
   }
+
+  if (flags & PARSER_PATTERN_HAS_REST_ELEMENT)
+  {
+    PARSER_MINUS_EQUAL_U16 (context_p->stack_depth, (PARSER_OBJ_INIT_REST_CONTEXT_STACK_ALLOCATION
+                                                     - PARSER_OBJ_INIT_CONTEXT_STACK_ALLOCATION));
+  }
+
+  parser_emit_cbc_ext (context_p, CBC_EXT_OBJ_INIT_CONTEXT_END);
 
   parser_pattern_finalize (context_p, flags, &end_pos);
 } /* parser_parse_object_initializer */

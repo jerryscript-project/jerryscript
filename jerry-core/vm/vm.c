@@ -1002,6 +1002,12 @@ opfunc_construct (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   }
 
 /**
+ * Get the end of the existing topmost context
+ */
+#define VM_LAST_CONTEXT_END() \
+  (VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth)
+
+/**
  * Run generic byte code.
  *
  * @return ecma value
@@ -2304,24 +2310,39 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           *stack_top_p++ = result;
           continue;
         }
-        case VM_OC_GET_ITERATOR:
+        case VM_OC_ITERATOR_CONTEXT_CREATE:
         {
-          result = ecma_op_get_iterator (stack_top_p[-1], ECMA_VALUE_SYNC_ITERATOR, NULL);
+          result = ecma_op_get_iterator (stack_top_p[-1], ECMA_VALUE_SYNC_ITERATOR, &left_value);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {
             goto error;
           }
 
-          *stack_top_p++ = result;
+          uint32_t context_size = (uint32_t) (stack_top_p
+                                              + PARSER_ITERATOR_CONTEXT_STACK_ALLOCATION
+                                              - VM_LAST_CONTEXT_END ());
+          stack_top_p += PARSER_ITERATOR_CONTEXT_STACK_ALLOCATION;
+          VM_PLUS_EQUAL_U16 (frame_ctx_p->context_depth, context_size);
+
+          stack_top_p[-1] = VM_CREATE_CONTEXT (VM_CONTEXT_ITERATOR, context_size) | VM_CONTEXT_CLOSE_ITERATOR;
+          stack_top_p[-2] = result;
+          stack_top_p[-3] = left_value;
+
           continue;
         }
         case VM_OC_ITERATOR_STEP:
         {
-          result = ecma_op_iterator_step (stack_top_p[-1], ECMA_VALUE_EMPTY);
+          ecma_value_t *last_context_end_p = VM_LAST_CONTEXT_END ();
+
+          ecma_value_t iterator = last_context_end_p[-2];
+          ecma_value_t next_method = last_context_end_p[-3];
+
+          result = ecma_op_iterator_step (iterator, next_method);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {
+            last_context_end_p[-1] &= (uint32_t) ~VM_CONTEXT_CLOSE_ITERATOR;
             goto error;
           }
 
@@ -2334,24 +2355,38 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
             if (ECMA_IS_VALUE_ERROR (value))
             {
+              last_context_end_p[-1] &= (uint32_t) ~VM_CONTEXT_CLOSE_ITERATOR;
               result = value;
               goto error;
             }
+          }
+          else
+          {
+            last_context_end_p[-1] &= (uint32_t) ~VM_CONTEXT_CLOSE_ITERATOR;
           }
 
           *stack_top_p++ = value;
           continue;
         }
-        case VM_OC_ITERATOR_CLOSE:
+        case VM_OC_ITERATOR_CONTEXT_END:
         {
-          result = ecma_op_iterator_close (left_value);
+          JERRY_ASSERT (VM_LAST_CONTEXT_END () == stack_top_p);
 
-          if (ECMA_IS_VALUE_ERROR (result))
+          if (stack_top_p[-1] & VM_CONTEXT_CLOSE_ITERATOR)
           {
-            goto error;
+            stack_top_p[-1] &= (uint32_t) ~VM_CONTEXT_CLOSE_ITERATOR;
+            result = ecma_op_iterator_close (stack_top_p[-2]);
+
+            if (ECMA_IS_VALUE_ERROR (result))
+            {
+              goto error;
+            }
           }
 
-          goto free_left_value;
+          stack_top_p = vm_stack_context_abort_variable_length (frame_ctx_p,
+                                                                stack_top_p,
+                                                                PARSER_ITERATOR_CONTEXT_STACK_ALLOCATION);
+          continue;
         }
         case VM_OC_DEFAULT_INITIALIZER:
         {
@@ -2370,21 +2405,26 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           ecma_object_t *array_p = ecma_op_new_array_object (0);
           JERRY_ASSERT (ecma_op_object_is_fast_array (array_p));
-          ecma_value_t iterator = stack_top_p[-1];
+
+          ecma_value_t *last_context_end_p = VM_LAST_CONTEXT_END ();
+          ecma_value_t iterator = last_context_end_p[-2];
+          ecma_value_t next_method = last_context_end_p[-3];
           uint32_t index = 0;
 
           while (true)
           {
-            result = ecma_op_iterator_step (iterator, ECMA_VALUE_EMPTY);
+            result = ecma_op_iterator_step (iterator, next_method);
 
             if (ECMA_IS_VALUE_ERROR (result))
             {
+              last_context_end_p[-1] &= (uint32_t) ~VM_CONTEXT_CLOSE_ITERATOR;
               ecma_deref_object (array_p);
               goto error;
             }
 
             if (ecma_is_value_false (result))
             {
+              last_context_end_p[-1] &= (uint32_t) ~VM_CONTEXT_CLOSE_ITERATOR;
               break;
             }
 
@@ -2406,16 +2446,51 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           *stack_top_p++ = ecma_make_object_value (array_p);
           continue;
         }
-        case VM_OC_INITIALIZER_PUSH_LIST:
+        case VM_OC_OBJ_INIT_CONTEXT_CREATE:
         {
-          stack_top_p++;
-          stack_top_p[-1] = stack_top_p[-2];
-          stack_top_p[-2] = ecma_make_object_value (ecma_op_new_array_object (0));
+          left_value = stack_top_p[-1];
+          vm_stack_context_type_t context_type = VM_CONTEXT_OBJ_INIT;
+          uint32_t context_stack_allocation = PARSER_OBJ_INIT_CONTEXT_STACK_ALLOCATION;
+
+          if (opcode == CBC_EXT_OBJ_INIT_REST_CONTEXT_CREATE)
+          {
+            context_type = VM_CONTEXT_OBJ_INIT_REST;
+            context_stack_allocation = PARSER_OBJ_INIT_REST_CONTEXT_STACK_ALLOCATION;
+          }
+
+          uint32_t context_size = (uint32_t) (stack_top_p + context_stack_allocation - VM_LAST_CONTEXT_END ());
+          stack_top_p += context_stack_allocation;
+          VM_PLUS_EQUAL_U16 (frame_ctx_p->context_depth, context_size);
+
+          stack_top_p[-1] = VM_CREATE_CONTEXT (context_type, context_size);
+          stack_top_p[-2] = left_value;
+
+          if (context_type == VM_CONTEXT_OBJ_INIT_REST)
+          {
+            stack_top_p[-3] = ecma_make_object_value (ecma_op_new_array_object (0));
+          }
           continue;
         }
-        case VM_OC_INITIALIZER_PUSH_REST:
+        case VM_OC_OBJ_INIT_CONTEXT_END:
         {
-          if (!ecma_op_require_object_coercible (stack_top_p[-1]))
+          JERRY_ASSERT (stack_top_p == VM_LAST_CONTEXT_END ());
+
+          uint32_t context_stack_allocation = PARSER_OBJ_INIT_CONTEXT_STACK_ALLOCATION;
+
+          if (VM_GET_CONTEXT_TYPE (stack_top_p[-1]) == VM_CONTEXT_OBJ_INIT_REST)
+          {
+            context_stack_allocation = PARSER_OBJ_INIT_REST_CONTEXT_STACK_ALLOCATION;
+          }
+
+          stack_top_p = vm_stack_context_abort_variable_length (frame_ctx_p,
+                                                                stack_top_p,
+                                                                context_stack_allocation);
+          continue;
+        }
+        case VM_OC_OBJ_INIT_PUSH_REST:
+        {
+          ecma_value_t *last_context_end_p = VM_LAST_CONTEXT_END ();
+          if (!ecma_op_require_object_coercible (last_context_end_p[-2]))
           {
             result = ECMA_VALUE_ERROR;
             goto error;
@@ -2425,16 +2500,18 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           ecma_object_t *result_object_p = ecma_create_object (prototype_p, 0, ECMA_OBJECT_TYPE_GENERAL);
 
           left_value = ecma_make_object_value (result_object_p);
-          result = opfunc_copy_data_properties (left_value, stack_top_p[-1], stack_top_p[-2]);
+          result = opfunc_copy_data_properties (left_value, last_context_end_p[-2], last_context_end_p[-3]);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {
             goto error;
           }
 
-          ecma_free_value (stack_top_p[-2]);
-          stack_top_p[-2] = stack_top_p[-1];
-          stack_top_p[-1] = left_value;
+          ecma_free_value (last_context_end_p[-3]);
+          last_context_end_p[-3] = last_context_end_p[-2];
+          last_context_end_p[-2] = ECMA_VALUE_UNDEFINED;
+
+          *stack_top_p++ = left_value;
           continue;
         }
         case VM_OC_INITIALIZER_PUSH_NAME:
@@ -2453,7 +2530,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             left_value = ecma_make_string_value (property_key);
           }
 
-          ecma_object_t *array_obj_p = ecma_get_object_from_value (stack_top_p[-2]);
+          ecma_value_t *last_context_end_p = VM_LAST_CONTEXT_END ();
+          ecma_object_t *array_obj_p = ecma_get_object_from_value (last_context_end_p[-3]);
           JERRY_ASSERT (ecma_get_object_type (array_obj_p) == ECMA_OBJECT_TYPE_ARRAY);
 
           ecma_extended_object_t *ext_array_obj_p = (ecma_extended_object_t *) array_obj_p;
@@ -2462,7 +2540,21 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_INITIALIZER_PUSH_PROP:
         {
-          result = vm_op_get_value (stack_top_p[-1], left_value);
+          ecma_value_t *last_context_end_p = VM_LAST_CONTEXT_END ();
+          right_value = last_context_end_p[-2];
+
+          if (opcode == CBC_EXT_INITIALIZER_PUSH_PROP)
+          {
+            left_value = *last_context_end_p++;
+            while (last_context_end_p < stack_top_p)
+            {
+              last_context_end_p[-1] = *last_context_end_p;
+              last_context_end_p++;
+            }
+            stack_top_p--;
+          }
+
+          result = vm_op_get_value (right_value, left_value);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {
@@ -2471,21 +2563,6 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           *stack_top_p++ = result;
           goto free_left_value;
-        }
-        case VM_OC_MOVE:
-        {
-          JERRY_ASSERT (opcode >= CBC_EXT_MOVE && opcode <= CBC_EXT_MOVE_3);
-          const uint8_t index = (uint8_t) (1 + (opcode - CBC_EXT_MOVE));
-
-          ecma_value_t element = stack_top_p[-index];
-
-          for (int32_t i = -index; i < -1; i++)
-          {
-            stack_top_p[i] = stack_top_p[i + 1];
-          }
-
-          stack_top_p[-1] = element;
-          continue;
         }
         case VM_OC_SPREAD_ARGUMENTS:
         {

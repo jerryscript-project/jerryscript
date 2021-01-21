@@ -562,6 +562,21 @@ ecma_gc_mark_executable_object (ecma_object_t *object_p) /**< object */
 
     do
     {
+      if (VM_CONTEXT_IS_VARIABLE_LENGTH (VM_GET_CONTEXT_TYPE (context_top_p[-1])))
+      {
+        ecma_value_t *last_item_p = context_top_p - VM_GET_CONTEXT_END (context_top_p[-1]);
+        JERRY_ASSERT (last_item_p >= context_end_p);
+        context_top_p--;
+
+        do
+        {
+          ecma_gc_set_object_visited (ecma_get_object_from_value (*(--context_top_p)));
+        }
+        while (context_top_p > last_item_p);
+
+        continue;
+      }
+
       uint32_t offsets = vm_get_context_value_offsets (context_top_p);
 
       while (VM_CONTEXT_HAS_NEXT_OFFSET (offsets))
@@ -1244,6 +1259,21 @@ ecma_gc_free_executable_object (ecma_object_t *object_p) /**< object */
     do
     {
       context_top_p[-1] &= (uint32_t) ~VM_CONTEXT_HAS_LEX_ENV;
+
+      if (VM_CONTEXT_IS_VARIABLE_LENGTH (VM_GET_CONTEXT_TYPE (context_top_p[-1])))
+      {
+        ecma_value_t *last_item_p = context_top_p - VM_GET_CONTEXT_END (context_top_p[-1]);
+        JERRY_ASSERT (last_item_p >= context_end_p);
+        context_top_p--;
+
+        do
+        {
+          ecma_free_value_if_not_object (*(--context_top_p));
+        }
+        while (context_top_p > last_item_p);
+
+        continue;
+      }
 
       uint32_t offsets = vm_get_context_value_offsets (context_top_p);
 

@@ -75,6 +75,11 @@ typedef enum
 #if ENABLED (JERRY_ESNEXT)
   VM_CONTEXT_FOR_OF,                          /**< for-of context */
   VM_CONTEXT_FOR_AWAIT_OF,                    /**< for-await-of context */
+
+  /* contexts with variable length */
+  VM_CONTEXT_ITERATOR,                        /**< iterator context */
+  VM_CONTEXT_OBJ_INIT,                        /**< object-initializer context */
+  VM_CONTEXT_OBJ_INIT_REST,                   /**< object-initializer-rest context */
 #endif /* ENABLED (JERRY_ESNEXT) */
 } vm_stack_context_type_t;
 
@@ -90,6 +95,21 @@ typedef enum
 #endif /* ENABLED (JERRY_ESNEXT) */
   VM_CONTEXT_FOUND_EXPECTED,                  /**< found the type specified in finally_type */
 } vm_stack_found_type;
+
+/**
+ * Checks whether the context has variable context size
+ *
+ * Layout:
+ * - [context descriptor]
+ * - [JS values belong to the context]
+ * - [previous JS values stored by the VM stack]
+ */
+#if ENABLED (JERRY_ESNEXT)
+#define VM_CONTEXT_IS_VARIABLE_LENGTH(context_type) \
+  ((context_type) >= VM_CONTEXT_ITERATOR)
+#else /* !ENABLED (JERRY_ESNEXT) */
+#define VM_CONTEXT_IS_VARIABLE_LENGTH(context_type) false
+#endif /* ENABLED (JERRY_ESNEXT) */
 
 /**
  * Checks whether the context type is a finally type.
@@ -112,6 +132,10 @@ typedef enum
  */
 #define VM_CONTEXT_GET_NEXT_OFFSET(offsets) (-((int32_t) ((offsets) & ((1 << VM_CONTEXT_OFFSET_SHIFT) - 1))))
 
+#if ENABLED (JERRY_ESNEXT)
+ecma_value_t *vm_stack_context_abort_variable_length (vm_frame_ctx_t *frame_ctx_p, ecma_value_t *vm_stack_top_p,
+                                              uint32_t context_stack_allocation);
+#endif /* ENABLED (JERRY_ESNEXT) */
 ecma_value_t *vm_stack_context_abort (vm_frame_ctx_t *frame_ctx_p, ecma_value_t *vm_stack_top_p);
 vm_stack_found_type vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, ecma_value_t *stack_top_p,
                                            vm_stack_context_type_t finally_type, uint32_t search_limit);

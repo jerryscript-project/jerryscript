@@ -275,16 +275,16 @@ typedef enum
 
   VM_OC_PUSH_SPREAD_ELEMENT,     /**< push spread element */
   VM_OC_PUSH_REST_OBJECT,        /**< push rest object */
-  VM_OC_GET_ITERATOR,            /**< GetIterator abstract operation */
+  VM_OC_ITERATOR_CONTEXT_CREATE, /**< create iterator conext */
+  VM_OC_ITERATOR_CONTEXT_END,    /**< finalize iterator cotnext */
   VM_OC_ITERATOR_STEP,           /**< IteratorStep abstract operation */
-  VM_OC_ITERATOR_CLOSE,          /**< IteratorClose abstract operation */
-  VM_OC_INITIALIZER_PUSH_LIST,   /**< push name list array */
-  VM_OC_INITIALIZER_PUSH_REST,   /**< push the object with the rest properties */
+  VM_OC_OBJ_INIT_CONTEXT_CREATE, /**< create object initializer context */
+  VM_OC_OBJ_INIT_CONTEXT_END,    /**< finalize object initializer context */
+  VM_OC_OBJ_INIT_PUSH_REST,      /**< push the object with the rest properties */
   VM_OC_INITIALIZER_PUSH_NAME,   /**< append string to name list array and push the string */
   VM_OC_DEFAULT_INITIALIZER,     /**< default initializer inside a pattern */
   VM_OC_REST_INITIALIZER,        /**< create rest object inside an array pattern */
   VM_OC_INITIALIZER_PUSH_PROP,   /**< push property for object initializer */
-  VM_OC_MOVE,                    /**< move element to the stack-top */
   VM_OC_SPREAD_ARGUMENTS,        /**< perform function call/construct with spreaded arguments */
   VM_OC_CREATE_GENERATOR,        /**< create a generator object */
   VM_OC_YIELD,                   /**< yield operation */
@@ -362,16 +362,16 @@ typedef enum
 
   VM_OC_PUSH_SPREAD_ELEMENT = VM_OC_NONE,     /**< push spread element */
   VM_OC_PUSH_REST_OBJECT = VM_OC_NONE,        /**< push rest object */
-  VM_OC_GET_ITERATOR = VM_OC_NONE,            /**< GetIterator abstract operation */
+  VM_OC_ITERATOR_CONTEXT_CREATE = VM_OC_NONE, /**< create iterator context */
   VM_OC_ITERATOR_STEP = VM_OC_NONE,           /**< IteratorStep abstract operation */
-  VM_OC_ITERATOR_CLOSE = VM_OC_NONE,          /**< IteratorClose abstract operation */
-  VM_OC_INITIALIZER_PUSH_LIST = VM_OC_NONE,   /**< push name list array */
-  VM_OC_INITIALIZER_PUSH_REST = VM_OC_NONE,   /**< push the object with the rest properties */
+  VM_OC_ITERATOR_CONTEXT_END = VM_OC_NONE,    /**< finalize iterator cotnext */
+  VM_OC_OBJ_INIT_CONTEXT_CREATE = VM_OC_NONE, /**< create object initializer context */
+  VM_OC_OBJ_INIT_CONTEXT_END = VM_OC_NONE,    /**< finalize object initializer context */
+  VM_OC_OBJ_INIT_PUSH_REST = VM_OC_NONE,      /**< push the object with the rest properties */
   VM_OC_INITIALIZER_PUSH_NAME = VM_OC_NONE,   /**< append string to name list array and push the string */
   VM_OC_DEFAULT_INITIALIZER = VM_OC_NONE,     /**< default initializer inside a pattern */
   VM_OC_REST_INITIALIZER = VM_OC_NONE,        /**< create rest object inside an array pattern */
   VM_OC_INITIALIZER_PUSH_PROP = VM_OC_NONE,   /**< push property for object initializer */
-  VM_OC_MOVE = VM_OC_NONE,                    /**< move element to the stack-top */
   VM_OC_SPREAD_ARGUMENTS = VM_OC_NONE,        /**< perform function call/construct with spreaded arguments */
   VM_OC_CREATE_GENERATOR = VM_OC_NONE,        /**< create a generator object */
   VM_OC_YIELD = VM_OC_NONE,                   /**< yield operation */

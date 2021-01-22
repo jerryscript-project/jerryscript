@@ -126,7 +126,7 @@ jerryx_handle_scope_get_child (jerryx_handle_scope_t *scope)
   {
     return (jerryx_handle_scope_t *) jerryx_handle_scope_pool.start;
   }
-  long idx = JERRYX_HANDLE_SCOPE_PRELIST_IDX (scope);
+  ptrdiff_t idx = JERRYX_HANDLE_SCOPE_PRELIST_IDX (scope);
   if (idx < 0)
   {
     return NULL;

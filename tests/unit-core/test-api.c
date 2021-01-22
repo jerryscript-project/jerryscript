@@ -851,7 +851,7 @@ main (void)
   if (jerry_is_feature_enabled (JERRY_FEATURE_SYMBOL))
   {
     jerry_init (JERRY_INIT_EMPTY);
-    const jerry_char_t scoped_src_p[] = "let a;";
+    const jerry_char_t scoped_src_p[] = "let a; this.b = 5";
     jerry_value_t parse_result = jerry_parse (NULL,
                                               0,
                                               scoped_src_p,
@@ -885,6 +885,128 @@ main (void)
                                 JERRY_PARSE_NO_OPTS);
     TEST_ASSERT (!jerry_value_is_error (parse_result));
     jerry_release_value (parse_result);
+
+    /* The already existing global binding should not affect a new lexical binding */
+    const jerry_char_t scoped_src2_p[] = "let b = 6; this.b + b";
+    parse_result = jerry_parse (NULL,
+                                0,
+                                scoped_src2_p,
+                                sizeof (scoped_src2_p) - 1,
+                                JERRY_PARSE_NO_OPTS);
+    TEST_ASSERT (!jerry_value_is_error (parse_result));
+    run_result = jerry_run (parse_result);
+    TEST_ASSERT (jerry_value_is_number (run_result));
+    TEST_ASSERT (jerry_get_number_value (run_result) == 11);
+    jerry_release_value (run_result);
+    jerry_release_value (parse_result);
+
+    /* Check restricted global property */
+    const jerry_char_t scoped_src3_p[] = "let undefined;";
+    parse_result = jerry_parse (NULL,
+                                0,
+                                scoped_src3_p,
+                                sizeof (scoped_src3_p) - 1,
+                                JERRY_PARSE_NO_OPTS);
+    TEST_ASSERT (!jerry_value_is_error (parse_result));
+    run_result = jerry_run (parse_result);
+    TEST_ASSERT (jerry_value_is_error (run_result));
+    TEST_ASSERT (jerry_get_error_type (run_result) == JERRY_ERROR_SYNTAX);
+    jerry_release_value (run_result);
+    jerry_release_value (parse_result);
+
+    jerry_value_t global_obj = jerry_get_global_object ();
+    jerry_value_t prop_name = jerry_create_string ((const jerry_char_t *) "foo");
+
+    jerry_property_descriptor_t prop_desc;
+    jerry_init_property_descriptor_fields (&prop_desc);
+    prop_desc.is_value_defined = true;
+    prop_desc.value = jerry_create_number (5.2);
+
+    jerry_value_t define_result = jerry_define_own_property (global_obj, prop_name, &prop_desc);
+    TEST_ASSERT (jerry_value_is_boolean (define_result) && jerry_get_boolean_value (define_result));
+    jerry_release_value (define_result);
+
+    jerry_free_property_descriptor_fields (&prop_desc);
+    jerry_release_value (prop_name);
+    jerry_release_value (global_obj);
+
+    const jerry_char_t scoped_src4_p[] = "let foo;";
+    parse_result = jerry_parse (NULL,
+                                0,
+                                scoped_src4_p,
+                                sizeof (scoped_src4_p) - 1,
+                                JERRY_PARSE_NO_OPTS);
+    TEST_ASSERT (!jerry_value_is_error (parse_result));
+    run_result = jerry_run (parse_result);
+    TEST_ASSERT (jerry_value_is_error (run_result));
+    TEST_ASSERT (jerry_get_error_type (run_result) == JERRY_ERROR_SYNTAX);
+    jerry_release_value (run_result);
+    jerry_release_value (parse_result);
+
+    if (jerry_is_feature_enabled (JERRY_FEATURE_REALM))
+    {
+      const jerry_char_t proxy_src_p[] = "new Proxy({}, { getOwnPropertyDescriptor() { throw 42.1 }})";
+      jerry_value_t proxy = jerry_eval (proxy_src_p, sizeof (proxy_src_p) - 1, JERRY_PARSE_NO_OPTS);
+      TEST_ASSERT (jerry_value_is_object (proxy));
+      jerry_value_t new_realm_value = jerry_create_realm ();
+
+      jerry_value_t set_realm_this_result = jerry_realm_set_this (new_realm_value, proxy);
+      TEST_ASSERT (jerry_value_is_boolean (set_realm_this_result) && jerry_get_boolean_value (set_realm_this_result));
+      jerry_release_value (set_realm_this_result);
+
+      jerry_value_t old_realm = jerry_set_realm (new_realm_value);
+
+      const jerry_char_t scoped_src5_p[] = "let a;";
+      parse_result = jerry_parse (NULL,
+                                  0,
+                                  scoped_src5_p,
+                                  sizeof (scoped_src5_p) - 1,
+                                  JERRY_PARSE_NO_OPTS);
+      TEST_ASSERT (!jerry_value_is_error (parse_result));
+      run_result = jerry_run (parse_result);
+      TEST_ASSERT (jerry_value_is_error (run_result));
+      jerry_value_t error_value = jerry_get_value_from_error (run_result, false);
+      TEST_ASSERT (jerry_value_is_number (error_value) && jerry_get_number_value (error_value) == 42.1);
+      jerry_release_value (error_value);
+      jerry_release_value (run_result);
+      jerry_release_value (parse_result);
+
+      jerry_set_realm (old_realm);
+
+      jerry_release_value (new_realm_value);
+      jerry_release_value (proxy);
+
+      const jerry_char_t proxy_src2_p[] = "new Proxy(Object.defineProperty({}, 'b', {value: 5.2}), {})";
+      proxy = jerry_eval (proxy_src2_p, sizeof (proxy_src2_p) - 1, JERRY_PARSE_NO_OPTS);
+      TEST_ASSERT (jerry_value_is_object (proxy));
+      new_realm_value = jerry_create_realm ();
+
+      set_realm_this_result = jerry_realm_set_this (new_realm_value, proxy);
+      TEST_ASSERT (jerry_value_is_boolean (set_realm_this_result) && jerry_get_boolean_value (set_realm_this_result));
+      jerry_release_value (set_realm_this_result);
+
+      old_realm = jerry_set_realm (new_realm_value);
+
+      const jerry_char_t scoped_src6_p[] = "let b;";
+      parse_result = jerry_parse (NULL,
+                                  0,
+                                  scoped_src6_p,
+                                  sizeof (scoped_src6_p) - 1,
+                                  JERRY_PARSE_NO_OPTS);
+      TEST_ASSERT (!jerry_value_is_error (parse_result));
+      run_result = jerry_run (parse_result);
+      TEST_ASSERT (jerry_value_is_error (run_result));
+      TEST_ASSERT (jerry_value_is_error (run_result));
+      TEST_ASSERT (jerry_get_error_type (run_result) == JERRY_ERROR_SYNTAX);
+      jerry_release_value (run_result);
+      jerry_release_value (parse_result);
+
+      jerry_set_realm (old_realm);
+
+      jerry_release_value (new_realm_value);
+      jerry_release_value (proxy);
+    }
+
     jerry_cleanup ();
   }
 

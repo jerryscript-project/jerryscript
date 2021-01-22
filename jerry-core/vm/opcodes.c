@@ -1745,6 +1745,73 @@ opfunc_copy_data_properties (ecma_value_t target_object, /**< target object */
   return result;
 } /* opfunc_copy_data_properties */
 
+/**
+ * Check whether the current lexical scope has restricted binding declaration with the given name
+ *
+ * Steps are include ES11: 8.1.1.4.14 HasRestrictedGlobalProperty abstract operation
+ *
+ * @return ECMA_VALUE_ERROR - if the operation fails
+ *         ECMA_VALUE_TRUE - if it has restricted property binding
+ *         ECMA_VALUE_FALSE - otherwise
+ */
+ecma_value_t
+opfunc_lexical_scope_has_restricted_binding (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
+                                             ecma_string_t *name_p) /**< binding name */
+{
+  JERRY_ASSERT (ecma_get_lex_env_type (frame_ctx_p->lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  JERRY_ASSERT (frame_ctx_p->this_binding == JERRY_CONTEXT (global_object_p)->this_binding);
+#else /* !ENABLED (JERRY_BUILTIN_REALMS) */
+  JERRY_ASSERT (frame_ctx_p->this_binding == ecma_builtin_get_global ());
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+
+  ecma_object_t *lex_env_p = frame_ctx_p->lex_env_p;
+  ecma_property_t *binding_p = ecma_find_named_property (lex_env_p, name_p);
+
+  if (binding_p != NULL)
+  {
+    return ECMA_VALUE_TRUE;
+  }
+
+#if ENABLED (JERRY_BUILTIN_REALMS)
+  ecma_object_t *const global_scope_p = ecma_get_global_scope ((ecma_object_t *) JERRY_CONTEXT (global_object_p));
+#else /* !ENABLED (JERRY_BUILTIN_REALMS) */
+  ecma_object_t *const global_scope_p = ecma_get_global_scope (global_obj_p);
+#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+
+  if (global_scope_p != lex_env_p)
+  {
+    return ECMA_VALUE_FALSE;
+  }
+
+  ecma_object_t *global_obj_p = ecma_get_object_from_value (frame_ctx_p->this_binding);
+
+#if ENABLED (JERRY_BUILTIN_PROXY)
+  if (ECMA_OBJECT_IS_PROXY (global_obj_p))
+  {
+    ecma_property_descriptor_t prop_desc;
+    ecma_value_t status = ecma_proxy_object_get_own_property_descriptor (global_obj_p, name_p, &prop_desc);
+
+    if (ecma_is_value_true (status))
+    {
+      status = ecma_make_boolean_value ((prop_desc.flags & ECMA_PROP_IS_CONFIGURABLE) == 0);
+      ecma_free_property_descriptor (&prop_desc);
+    }
+
+    return status;
+  }
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+
+  ecma_property_t property = ecma_op_object_get_own_property (global_obj_p,
+                                                              name_p,
+                                                              NULL,
+                                                              ECMA_PROPERTY_GET_NO_OPTIONS);
+
+  return ecma_make_boolean_value ((property != ECMA_PROPERTY_TYPE_NOT_FOUND
+                                   && !ecma_is_property_configurable (property)));
+} /* opfunc_lexical_scope_has_restricted_binding */
+
 #endif /* ENABLED (JERRY_ESNEXT) */
 
 /**

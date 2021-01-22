@@ -153,13 +153,13 @@ ecma_async_yield_throw (vm_executable_object_t *async_generator_object_p, /**< a
 
     if (result == ECMA_VALUE_UNDEFINED)
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator throw() is not available."));
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator 'throw' is not available"));
     }
 
     result = ecma_async_yield_call (result,
                                     async_generator_object_p,
                                     ECMA_VALUE_EMPTY,
-                                    ECMA_ERR_MSG ("Iterator return() is not callable."));
+                                    ECMA_ERR_MSG ("Iterator 'return' is not callable"));
 
     if (ECMA_IS_VALUE_ERROR (result))
     {
@@ -173,7 +173,7 @@ ecma_async_yield_throw (vm_executable_object_t *async_generator_object_p, /**< a
   result = ecma_async_yield_call (result,
                                   async_generator_object_p,
                                   value,
-                                  ECMA_ERR_MSG ("Iterator throw() is not callable."));
+                                  ECMA_ERR_MSG ("Iterator 'throw' is not callable"));
 
   if (ECMA_IS_VALUE_ERROR (result))
   {
@@ -366,7 +366,7 @@ ecma_await_continue (vm_executable_object_t *executable_object_p, /**< executabl
       if (!ecma_is_value_object (value))
       {
         ecma_free_value (value);
-        return ecma_raise_type_error (ECMA_ERR_MSG ("Value received by yield* is not Object."));
+        return ecma_raise_type_error (ECMA_ERR_MSG ("Value received by yield* is not object"));
       }
 
       ecma_object_t *result_obj_p = ecma_get_object_from_value (value);
@@ -423,7 +423,7 @@ ecma_await_continue (vm_executable_object_t *executable_object_p, /**< executabl
       result = ecma_async_yield_call (result,
                                       executable_object_p,
                                       value,
-                                      ECMA_ERR_MSG ("Iterator return() is not callable."));
+                                      ECMA_ERR_MSG ("Iterator 'return' is not callable"));
       ecma_free_value (value);
 
       if (ECMA_IS_VALUE_ERROR (result))
@@ -450,8 +450,8 @@ ecma_await_continue (vm_executable_object_t *executable_object_p, /**< executabl
     }
     case ECMA_AWAIT_YIELD_CLOSE:
     {
-      const char *msg_p = (ecma_is_value_object (value) ? ECMA_ERR_MSG ("Iterator throw() is not available.")
-                                                        : ECMA_ERR_MSG ("Value received by yield* is not Object."));
+      const char *msg_p = (ecma_is_value_object (value) ? ECMA_ERR_MSG ("Iterator 'throw' is not available")
+                                                        : ECMA_ERR_MSG ("Value received by yield* is not object"));
 
       ecma_free_value (value);
       return ecma_raise_type_error (msg_p);
@@ -465,7 +465,7 @@ ecma_await_continue (vm_executable_object_t *executable_object_p, /**< executabl
       if (!is_value_object
           && VM_GET_CONTEXT_TYPE (executable_object_p->frame_ctx.stack_top_p[-1]) != VM_CONTEXT_FINALLY_THROW)
       {
-        return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator return() result is not object"));
+        return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator 'return' result is not object"));
       }
       return ECMA_VALUE_EMPTY;
     }
@@ -478,7 +478,7 @@ ecma_await_continue (vm_executable_object_t *executable_object_p, /**< executabl
       if (!ecma_is_value_object (value))
       {
         ecma_free_value (value);
-        return ecma_raise_type_error (ECMA_ERR_MSG ("Value received by for-async-of is not Object."));
+        return ecma_raise_type_error (ECMA_ERR_MSG ("Value received by for-async-of is not object"));
       }
 
       ecma_object_t *result_obj_p = ecma_get_object_from_value (value);

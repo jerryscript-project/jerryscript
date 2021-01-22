@@ -239,7 +239,7 @@ ecma_op_get_iterator (ecma_value_t value, /**< value to get iterator from */
   if (!ecma_is_value_object (iterator))
   {
     ecma_free_value (iterator);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator is not an object."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator is not an object"));
   }
 
   if (next_method_p != NULL)
@@ -297,7 +297,7 @@ ecma_op_iterator_next_old (ecma_value_t iterator, /**< iterator value */
   if (!ecma_is_value_object (func_next) || !ecma_op_is_callable (func_next))
   {
     ecma_free_value (func_next);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator next() is not callable."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator 'next' is not callable"));
   }
 
   ecma_object_t *next_obj_p = ecma_get_object_from_value (func_next);
@@ -341,7 +341,7 @@ ecma_op_iterator_next (ecma_value_t iterator, /**< iterator value */
   /* 1 - 2. */
   if (next_method == ECMA_VALUE_UNDEFINED)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator next() is not callable."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator 'next' is not callable"));
   }
 
   ecma_object_t *next_method_obj_p = ecma_get_object_from_value (next_method);
@@ -389,7 +389,7 @@ ecma_op_iterator_return (ecma_value_t iterator, /**< iterator value */
   if (!ecma_is_value_object (func_return) || !ecma_op_is_callable (func_return))
   {
     ecma_free_value (func_return);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator return() is not callable."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator 'return' is not callable"));
   }
 
   ecma_object_t *return_obj_p = ecma_get_object_from_value (func_return);
@@ -435,13 +435,13 @@ ecma_op_iterator_throw (ecma_value_t iterator, /**< iterator value */
     }
 
     ecma_free_value (result);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator throw() is not available."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator 'throw' is not available"));
   }
 
   if (!ecma_is_value_object (func_throw) || !ecma_op_is_callable (func_throw))
   {
     ecma_free_value (func_throw);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator throw() is not callable."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator 'throw' is not callable"));
   }
 
   ecma_object_t *return_obj_p = ecma_get_object_from_value (func_throw);
@@ -553,7 +553,7 @@ ecma_op_iterator_close (ecma_value_t iterator) /**< iterator value */
   if (!is_object)
   {
     ecma_free_value (completion);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("method 'return' is not callable."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("method 'return' is not callable"));
   }
 
   /* 10. */
@@ -602,7 +602,7 @@ ecma_op_iterator_step (ecma_value_t iterator, /**< iterator value */
   if (!ecma_is_value_object (result))
   {
     ecma_free_value (result);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator result is not an object."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator result is not an object"));
   }
 
   /* 3. */
@@ -670,7 +670,7 @@ ecma_op_iterator_do (ecma_iterator_command_type_t command, /**< command to be ex
   if (!ecma_is_value_object (result))
   {
     ecma_free_value (result);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator result is not an object."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator result is not an object"));
   }
 
   ecma_object_t *obj_p = ecma_get_object_from_value (result);

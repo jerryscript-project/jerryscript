@@ -1002,7 +1002,7 @@ ecma_op_get_method (ecma_value_t value, /**< ecma value */
   if (!ecma_op_is_callable (func))
   {
     ecma_free_value (func);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator is not callable."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator is not callable"));
   }
 
   /* 6. */
@@ -1987,7 +1987,7 @@ ecma_op_object_has_instance (ecma_object_t *obj_p, /**< the object */
     return ecma_op_function_has_instance (obj_p, value);
   }
 
-  return ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function object."));
+  return ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function object"));
 } /* ecma_op_object_has_instance */
 
 /**
@@ -3006,7 +3006,7 @@ ecma_op_species_constructor (ecma_object_t *this_value, /**< This Value */
   if (!ecma_is_value_object (constructor))
   {
     ecma_free_value (constructor);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Constructor must be an Object"));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Constructor must be an object"));
   }
 
   ecma_object_t *ctor_object_p = ecma_get_object_from_value (constructor);
@@ -3027,7 +3027,7 @@ ecma_op_species_constructor (ecma_object_t *this_value, /**< This Value */
   if (!ecma_is_constructor (species))
   {
     ecma_free_value (species);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Species must be a Constructor"));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Species must be a constructor"));
   }
 
   return species;

@@ -583,7 +583,7 @@ vm_super_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
   if (!ecma_is_constructor (func_value))
   {
-    completion_value = ecma_raise_type_error (ECMA_ERR_MSG ("Class extends value is not a constructor."));
+    completion_value = ecma_raise_type_error (ECMA_ERR_MSG ("Value for class heritage is not a constructor"));
   }
   else
   {
@@ -699,7 +699,7 @@ vm_spread_operation (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
     if (!ecma_is_value_object (func_value)
         || !ecma_op_object_is_callable (ecma_get_object_from_value (func_value)))
     {
-      completion_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function."));
+      completion_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function"));
     }
     else
     {
@@ -783,7 +783,7 @@ opfunc_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   if (!ecma_is_value_object (func_value)
       || !ecma_op_object_is_callable (ecma_get_object_from_value (func_value)))
   {
-    completion_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function."));
+    completion_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function"));
   }
   else
   {
@@ -1635,7 +1635,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           if (binding_p != NULL)
           {
-            result = ecma_raise_syntax_error (ECMA_ERR_MSG ("Local variable is redeclared."));
+            result = ecma_raise_syntax_error (ECMA_ERR_MSG ("Local variable is redeclared"));
             goto error;
           }
 
@@ -1663,7 +1663,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           if (binding_p != NULL)
           {
-            result = ecma_raise_syntax_error (ECMA_ERR_MSG ("Local variable is redeclared."));
+            result = ecma_raise_syntax_error (ECMA_ERR_MSG ("Local variable is redeclared"));
             goto error;
           }
 
@@ -1678,7 +1678,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           if (ecma_is_value_true (result))
           {
-            result = ecma_raise_syntax_error (ECMA_ERR_MSG ("Local variable is redeclared."));
+            result = ecma_raise_syntax_error (ECMA_ERR_MSG ("Local variable is redeclared"));
             goto error;
           }
 
@@ -1746,7 +1746,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_THROW_CONST_ERROR:
         {
-          result = ecma_raise_type_error (ECMA_ERR_MSG ("Constant bindings cannot be reassigned."));
+          result = ecma_raise_type_error (ECMA_ERR_MSG ("Constant bindings cannot be reassigned"));
           goto error;
         }
         case VM_OC_COPY_TO_GLOBAL:
@@ -1939,7 +1939,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           if (JERRY_UNLIKELY (ecma_compare_ecma_string_to_magic_id (prop_name_p, LIT_MAGIC_STRING_PROTOTYPE))
               && !(opcode_data & VM_OC_NON_STATIC_FLAG))
           {
-            result = ecma_raise_type_error (ECMA_ERR_MSG ("prototype property of a class is non-configurable"));
+            result = ecma_raise_type_error (ECMA_ERR_MSG ("Prototype property of a class is non-configurable"));
             goto error;
           }
 
@@ -1972,7 +1972,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           if (JERRY_UNLIKELY (ecma_compare_ecma_string_to_magic_id (prop_name_p, LIT_MAGIC_STRING_PROTOTYPE))
               && !(opcode_data & VM_OC_NON_STATIC_FLAG))
           {
-            result = ecma_raise_type_error (ECMA_ERR_MSG ("prototype property of a class is non-configurable"));
+            result = ecma_raise_type_error (ECMA_ERR_MSG ("Prototype property of a class is non-configurable"));
             goto error;
           }
 
@@ -3051,7 +3051,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_THROW_REFERENCE_ERROR:
         {
-          result = ecma_raise_reference_error (ECMA_ERR_MSG ("Undefined reference."));
+          result = ecma_raise_reference_error (ECMA_ERR_MSG ("Undefined reference"));
           goto error;
         }
         case VM_OC_EVAL:

@@ -198,7 +198,7 @@ ecma_builtin_object_object_set_prototype_of (ecma_value_t arg1, /**< routine's f
   /* 3. */
   if (!ecma_is_value_object (arg2) && !ecma_is_value_null (arg2))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("proto is neither Object nor Null."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Prototype is neither object nor null"));
   }
 
   /* 4. */
@@ -231,7 +231,7 @@ ecma_builtin_object_object_set_prototype_of (ecma_value_t arg1, /**< routine's f
 
   if (ecma_is_value_false (status))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot set [[Prototype]]."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot set [[Prototype]]"));
   }
 
   JERRY_ASSERT (ecma_is_value_true (status));
@@ -295,7 +295,7 @@ ecma_builtin_object_object_set_proto (ecma_value_t arg1, /**< routine's first ar
 
   if (ecma_is_value_false (status))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot set [[Prototype]]."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot set [[Prototype]]"));
   }
 
   JERRY_ASSERT (ecma_is_value_true (status));
@@ -470,7 +470,7 @@ ecma_builtin_object_object_seal (ecma_object_t *obj_p) /**< routine's argument *
 #if ENABLED (JERRY_BUILTIN_PROXY)
   if (ecma_is_value_false (status))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Object cannot be sealed."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Object cannot be sealed"));
   }
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
@@ -501,7 +501,7 @@ ecma_builtin_object_object_freeze (ecma_object_t *obj_p) /**< routine's argument
 #if ENABLED (JERRY_BUILTIN_PROXY)
   if (ecma_is_value_false (status))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Object cannot be frozen."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Object cannot be frozen"));
   }
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 
@@ -534,7 +534,7 @@ ecma_builtin_object_object_prevent_extensions (ecma_object_t *obj_p) /**< routin
 
     if (ecma_is_value_false (status))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot set [[Extensible]] property of the object."));
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot set [[Extensible]] property of object"));
     }
 
     JERRY_ASSERT (ecma_is_value_true (status));
@@ -956,7 +956,7 @@ ecma_builtin_object_object_create (ecma_value_t arg1, /**< routine's first argum
   /* 1. */
   if (!ecma_is_value_object (arg1) && !ecma_is_value_null (arg1))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object"));
   }
 
   ecma_object_t *obj_p = NULL;
@@ -1025,7 +1025,7 @@ ecma_builtin_object_object_define_property (ecma_object_t *obj_p, /**< routine's
 
   if (ecma_is_value_false (define_own_prop_ret))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("The requested property update cannot be performed."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("The requested property update cannot be performed"));
   }
 
   JERRY_ASSERT (ecma_is_value_true (define_own_prop_ret));
@@ -1226,7 +1226,7 @@ ecma_builtin_object_from_entries (ecma_value_t iterator) /**< object's iterator 
     if (!ecma_is_value_object (result))
     {
       ecma_free_value (result);
-      ecma_raise_type_error (ECMA_ERR_MSG ("Iterator value is not an object."));
+      ecma_raise_type_error (ECMA_ERR_MSG ("Iterator value is not an object"));
       result = ecma_op_iterator_close (original_iterator);
       JERRY_ASSERT (ECMA_IS_VALUE_ERROR (result));
       goto cleanup_iterator;
@@ -1415,7 +1415,7 @@ ecma_builtin_object_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
 #if !ENABLED (JERRY_ESNEXT)
   if (!ecma_is_value_object (arg1))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object"));
   }
 #endif /* !ENABLED (JERRY_ESNEXT) */
 
@@ -1424,7 +1424,7 @@ ecma_builtin_object_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
 #if ENABLED (JERRY_ESNEXT)
     if (!ecma_is_value_object (arg1))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object."));
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object"));
     }
 #endif /* ENABLED (JERRY_ESNEXT) */
 

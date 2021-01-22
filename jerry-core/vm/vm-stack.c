@@ -331,7 +331,7 @@ vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
         if (!ecma_is_value_object (result) || !ecma_op_is_callable (result))
         {
           ecma_free_value (result);
-          result = ecma_raise_type_error (ECMA_ERR_MSG ("Iterator return() is not callable"));
+          result = ecma_raise_type_error (ECMA_ERR_MSG ("Iterator 'return' is not callable"));
         }
         else
         {
@@ -378,7 +378,7 @@ vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 
             if (!is_object)
             {
-              result = ecma_raise_type_error (ECMA_ERR_MSG ("Iterator return() result is not object"));
+              result = ecma_raise_type_error (ECMA_ERR_MSG ("Iterator 'return' result is not object"));
             }
           }
         }

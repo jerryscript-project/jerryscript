@@ -42,7 +42,7 @@ ecma_reject (bool is_throw) /**< Throw flag */
 {
   if (is_throw)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type"));
   }
   else
   {
@@ -145,7 +145,7 @@ ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
   /* 4. */
   if (is_throw)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Expected a configurable property."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Expected a configurable property"));
   }
 
   /* 5. */
@@ -230,7 +230,7 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
 
     ecma_free_value (result);
 
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type in [[DefaultValue]]."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Result of [[DefaultValue]] is invalid"));
   }
 
   ecma_free_value (exotic_to_prim);
@@ -306,7 +306,7 @@ ecma_op_general_object_ordinary_value (ecma_object_t *obj_p, /**< the object */
     ecma_free_value (call_completion);
   }
 
-  return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type in [[DefaultValue]]."));
+  return ecma_raise_type_error (ECMA_ERR_MSG ("Result of [[DefaultValue]] is invalid"));
 } /* ecma_op_general_object_ordinary_value */
 
 /**

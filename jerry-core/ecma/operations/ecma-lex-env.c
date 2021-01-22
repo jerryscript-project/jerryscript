@@ -264,12 +264,12 @@ ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment 
 #if ENABLED (JERRY_ESNEXT)
     else if (ecma_is_property_enumerable (*property_p))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Constant bindings cannot be reassigned."));
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Constant bindings cannot be reassigned"));
     }
 #endif /* ENABLED (JERRY_ESNEXT) */
     else if (is_strict)
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Binding cannot be set."));
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Binding cannot be set"));
     }
   }
   else
@@ -334,7 +334,7 @@ ecma_op_get_binding_value (ecma_object_t *lex_env_p, /**< lexical environment */
     {
       if (is_strict)
       {
-        result = ecma_raise_reference_error (ECMA_ERR_MSG ("Binding does not exist or is uninitialised."));
+        result = ecma_raise_reference_error (ECMA_ERR_MSG ("Binding does not exist or is uninitialised"));
       }
       else
       {
@@ -591,7 +591,7 @@ ecma_op_get_this_binding (ecma_object_t *lex_env_p) /**< lexical environment */
   if (this_value == ECMA_VALUE_UNINITIALIZED)
   {
     return ecma_raise_reference_error (ECMA_ERR_MSG ("Must call super constructor in derived class before "
-                                                     "accessing 'this' or returning from it."));
+                                                     "accessing 'this' or returning from it"));
   }
 
   ecma_ref_object (ecma_get_object_from_value (this_value));

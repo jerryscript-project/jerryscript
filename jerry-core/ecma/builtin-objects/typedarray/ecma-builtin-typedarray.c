@@ -62,7 +62,7 @@ ecma_builtin_typedarray_from (ecma_value_t this_arg, /**< 'this' argument */
 
   if (!ecma_is_constructor (this_arg))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not a constructor."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a constructor"));
   }
 
   ecma_value_t source;
@@ -71,7 +71,7 @@ ecma_builtin_typedarray_from (ecma_value_t this_arg, /**< 'this' argument */
 
   if (arguments_list_len == 0)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("no source argument"));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("No source argument"));
   }
 
   source = arguments_list_p[0];
@@ -82,7 +82,7 @@ ecma_builtin_typedarray_from (ecma_value_t this_arg, /**< 'this' argument */
 
     if (!ecma_op_is_callable (map_fn))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("mapfn argument is not callable"));
+      return ecma_raise_type_error (ECMA_ERR_MSG ("The 'mapfn' argument is not callable"));
     }
 
     if (arguments_list_len > 2)
@@ -96,7 +96,7 @@ ecma_builtin_typedarray_from (ecma_value_t this_arg, /**< 'this' argument */
   const uint8_t builtin_id = ecma_get_object_builtin_id (obj_p);
   if (!ecma_typedarray_helper_is_typedarray (builtin_id))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not a typedarray constructor"));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray constructor"));
   }
 
   ecma_typedarray_type_t typedarray_id = ecma_typedarray_helper_builtin_to_typedarray_id (builtin_id);
@@ -129,7 +129,7 @@ ecma_builtin_typedarray_of (ecma_value_t this_arg, /**< 'this' argument */
 {
   if (!ecma_is_constructor (this_arg))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not a constructor."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a constructor"));
   }
 
   ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
@@ -137,7 +137,7 @@ ecma_builtin_typedarray_of (ecma_value_t this_arg, /**< 'this' argument */
 
   if (!ecma_typedarray_helper_is_typedarray (builtin_id))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not a typedarray constructor"));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray constructor"));
   }
 
   ecma_typedarray_type_t typedarray_id = ecma_typedarray_helper_builtin_to_typedarray_id (builtin_id);

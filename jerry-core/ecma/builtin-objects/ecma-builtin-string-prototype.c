@@ -140,7 +140,7 @@ ecma_builtin_string_prototype_object_to_string (ecma_value_t this_arg) /**< this
     }
   }
 
-  return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a String or a String object."));
+  return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a string or a String object"));
 } /* ecma_builtin_string_prototype_object_to_string */
 
 /**
@@ -447,7 +447,7 @@ ecma_builtin_string_prototype_object_match_all (ecma_value_t this_argument, /**<
 
       if (!(parsed_flag & RE_FLAG_GLOBAL))
       {
-        return ecma_raise_type_error (ECMA_ERR_MSG ("RegExp argument should have global flag."));
+        return ecma_raise_type_error (ECMA_ERR_MSG ("RegExp argument should have global flag"));
       }
     }
 
@@ -567,7 +567,7 @@ ecma_builtin_string_prototype_object_replace_helper (ecma_value_t this_value, /*
 
         if (!have_global_flag)
         {
-          return ecma_raise_type_error (ECMA_ERR_MSG ("RegExp argument should have global flag."));
+          return ecma_raise_type_error (ECMA_ERR_MSG ("RegExp argument should have global flag"));
         }
       }
     }

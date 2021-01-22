@@ -275,7 +275,7 @@ ecma_builtin_typedarray_prototype_reduce_with_direction (ecma_value_t this_arg, 
   {
     if (arguments_number < 2)
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Initial value cannot be undefined."));
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Initial value cannot be undefined"));
     }
 
     return ecma_copy_value (arguments_list_p[1]);
@@ -511,7 +511,7 @@ ecma_op_typedarray_set_with_typedarray (ecma_value_t this_arg, /**< this argumen
   ecma_object_t *arraybuffer_p = ecma_typedarray_get_arraybuffer (target_typedarray_p);
   if (ecma_arraybuffer_is_detached (arraybuffer_p))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached"));
   }
 
   ecma_typedarray_info_t target_info = ecma_typedarray_get_info (target_typedarray_p);
@@ -520,7 +520,7 @@ ecma_op_typedarray_set_with_typedarray (ecma_value_t this_arg, /**< this argumen
   ecma_object_t *src_arraybuffer_p = ecma_typedarray_get_arraybuffer (src_typedarray_p);
   if (ecma_arraybuffer_is_detached (src_arraybuffer_p))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached"));
   }
 
   ecma_typedarray_info_t src_info = ecma_typedarray_get_info (src_typedarray_p);
@@ -614,7 +614,7 @@ ecma_builtin_typedarray_prototype_set (ecma_value_t this_arg, /**< this argument
   ecma_object_t *arraybuffer_p = ecma_typedarray_get_arraybuffer (typedarray_p);
   if (ecma_arraybuffer_is_detached (arraybuffer_p))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached"));
   }
 
   ecma_typedarray_info_t target_info = ecma_typedarray_get_info (typedarray_p);
@@ -1710,7 +1710,7 @@ ecma_builtin_typedarray_prototype_dispatch_routine (uint8_t builtin_routine_id, 
       return ECMA_VALUE_UNDEFINED;
     }
 
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray"));
   }
 
   ecma_object_t *typedarray_p = ecma_get_object_from_value (this_arg);
@@ -1723,13 +1723,13 @@ ecma_builtin_typedarray_prototype_dispatch_routine (uint8_t builtin_routine_id, 
     if (ecma_arraybuffer_is_detached (info.array_buffer_p)
         && builtin_routine_id != ECMA_TYPEDARRAY_PROTOTYPE_ROUTINE_SUBARRAY)
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+      return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached"));
     }
   }
 
   if (builtin_routine_id < ECMA_TYPEDARRAY_PROTOTYPE_ROUTINE_INDEX_OF && !ecma_op_is_callable (arguments_list_p[0]))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable"));
   }
 
   switch (builtin_routine_id)
@@ -1796,7 +1796,7 @@ ecma_builtin_typedarray_prototype_dispatch_routine (uint8_t builtin_routine_id, 
     {
       if (!ecma_is_value_undefined (arguments_list_p[0]) && !ecma_op_is_callable (arguments_list_p[0]))
       {
-        return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable."));
+        return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable"));
       }
 
       return ecma_builtin_typedarray_prototype_sort (this_arg, &info, arguments_list_p[0]);

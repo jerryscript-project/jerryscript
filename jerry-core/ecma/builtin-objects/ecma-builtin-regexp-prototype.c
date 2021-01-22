@@ -280,7 +280,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this */
 #if !ENABLED (JERRY_ESNEXT)
   if (ecma_get_object_from_value (this_arg) == ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not a RegExp object"));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a RegExp object"));
   }
 #endif /* !ENABLED (JERRY_ESNEXT) */
 
@@ -679,23 +679,21 @@ ecma_builtin_regexp_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
 
   ecma_object_t *obj_p = NULL;
 
+  /* 1. && 2. */
   if (ecma_is_value_object (this_arg))
   {
-    /* 2. */
     obj_p = ecma_get_object_from_value (this_arg);
 
     if (require_regexp && !ecma_object_class_is (obj_p, LIT_MAGIC_STRING_REGEXP_UL))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not a RegExp object"));
+      obj_p = NULL;
     }
   }
-  /* 1. */
-  else
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not an object"));
-  }
 
-  JERRY_ASSERT (obj_p != NULL);
+  if (obj_p == NULL)
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an object"));
+  }
 
   switch (builtin_routine_id)
   {
@@ -751,7 +749,7 @@ ecma_builtin_regexp_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
           return ecma_make_magic_string_value (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP);
         }
 
-        return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not a RegExp object"));
+        return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a RegExp object"));
       }
 
       ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) obj_p;
@@ -771,7 +769,7 @@ ecma_builtin_regexp_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
           return ECMA_VALUE_UNDEFINED;
         }
 
-        return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not a RegExp object"));
+        return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a RegExp object"));
       }
 
       ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) obj_p;

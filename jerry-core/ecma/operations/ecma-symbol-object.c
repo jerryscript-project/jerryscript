@@ -174,7 +174,7 @@ ecma_symbol_this_value (ecma_value_t this_arg) /**< this argument value */
   }
 
   /* 3. */
-  return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' must be a Symbol."));
+  return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' must be a Symbol"));
 } /* ecma_symbol_this_value */
 #endif /* ENABLED (JERRY_ESNEXT) */
 

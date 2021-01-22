@@ -311,7 +311,7 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
         if (JERRY_UNLIKELY (property_value_p->value == ECMA_VALUE_UNINITIALIZED))
         {
           return ecma_raise_reference_error (ECMA_ERR_MSG ("Variables declared by let/const must be"
-                                                           " initialized before reading their value."));
+                                                           " initialized before reading their value"));
         }
 #endif /* ENABLED (JERRY_ESNEXT) */
 

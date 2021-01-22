@@ -393,7 +393,7 @@ ecma_builtin_array_prototype_object_pop (ecma_object_t *obj_p, /**< object */
     if (!ecma_op_ordinary_object_is_extensible (obj_p))
     {
       ecma_free_value (get_value);
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type."));
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type"));
     }
 
     ecma_delete_fast_array_properties (obj_p, (uint32_t) len);
@@ -443,12 +443,12 @@ ecma_builtin_array_prototype_object_push (const ecma_value_t *argument_list_p, /
   {
     if (!ecma_op_ordinary_object_is_extensible (obj_p))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type."));
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type"));
     }
 
     if ((ecma_number_t) (length + arguments_number) > UINT32_MAX)
     {
-      return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid array length"));
+      return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid Array length"));
     }
 
     if (arguments_number == 0)
@@ -1109,7 +1109,7 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
   /* Check if the provided compare function is callable. */
   if (!ecma_is_value_undefined (arg1) && !ecma_op_is_callable (arg1))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Compare function is not callable."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Compare function is not callable"));
   }
 
   ecma_length_t len;
@@ -1308,7 +1308,7 @@ ecma_builtin_array_prototype_object_splice (const ecma_value_t args[], /**< argu
   /* ES11: 8. */
   if ((ecma_number_t) new_length > ECMA_NUMBER_MAX_SAFE_INTEGER)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid new array length"));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid new Array length"));
   }
 
   /* ES11: 9. */
@@ -1519,7 +1519,7 @@ ecma_builtin_array_prototype_object_unshift (const ecma_value_t args[], /**< arg
     {
       if (args_number > UINT32_MAX - len)
       {
-        return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid array length"));
+        return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid Array length"));
       }
 
       if (args_number == 0)
@@ -1863,7 +1863,7 @@ ecma_builtin_array_apply (ecma_value_t arg1, /**< callbackfn */
   /* 4. */
   if (!ecma_op_is_callable (arg1))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable"));
   }
 
   /* We already checked that arg1 is callable */
@@ -1946,7 +1946,7 @@ ecma_builtin_array_prototype_object_map (ecma_value_t arg1, /**< callbackfn */
   /* 4. */
   if (!ecma_op_is_callable (arg1))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable"));
   }
 
   /* 6. */
@@ -2040,7 +2040,7 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t arg1, /**< callbackfn *
   /* 4. */
   if (!ecma_op_is_callable (arg1))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable"));
   }
 
   /* 6. */
@@ -2148,13 +2148,13 @@ ecma_builtin_array_reduce_from (const ecma_value_t args_p[], /**< routine's argu
   /* 4. */
   if (!ecma_op_is_callable (args_p[0]))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable"));
   }
 
   /* 5. */
   if (len == 0 && args_number == 1)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Reduce of empty array with no initial value."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Reduce of empty Array with no initial value"));
   }
 
   JERRY_ASSERT (ecma_is_value_object (args_p[0]));
@@ -2207,7 +2207,7 @@ ecma_builtin_array_reduce_from (const ecma_value_t args_p[], /**< routine's argu
     /* 8.c */
     if (!k_present)
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Missing array element."));
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Missing Array element"));
     }
   }
   /* 9. */
@@ -2367,7 +2367,7 @@ ecma_builtin_array_prototype_object_find (ecma_value_t predicate, /**< callback 
   /* 5. */
   if (!ecma_op_is_callable (predicate))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable"));
   }
 
   /* We already checked that predicate is callable, so it will always be an object. */
@@ -2851,7 +2851,7 @@ ecma_builtin_array_prototype_object_flat_map (ecma_value_t callback, /**< callba
 {
   if (!ecma_op_is_callable (callback))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable"));
   }
 
   /* 4. */

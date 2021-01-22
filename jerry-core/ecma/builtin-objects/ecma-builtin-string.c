@@ -309,7 +309,7 @@ ecma_builtin_string_object_from_code_point (ecma_value_t this_arg, /**< 'this' a
     if (to_number_num < 0 || to_number_num > LIT_UNICODE_CODE_POINT_MAX)
     {
       ecma_stringbuilder_destroy (&builder);
-      return ecma_raise_range_error (ECMA_ERR_MSG ("Error: Invalid code point"));
+      return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid code point"));
     }
 
     lit_code_point_t code_point = (lit_code_point_t) to_number_num;

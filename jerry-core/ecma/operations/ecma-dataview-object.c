@@ -55,14 +55,14 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
   /* 2. */
   if (!ecma_is_value_object (buffer))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument buffer is not an object."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'buffer' is not an object"));
   }
 
   ecma_object_t *buffer_p = ecma_get_object_from_value (buffer);
 
   if (!ecma_object_class_is (buffer_p, LIT_MAGIC_STRING_ARRAY_BUFFER_UL))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument buffer is not an arraybuffer."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'buffer' is not an ArrayBuffer"));
   }
 
   /* 3. */
@@ -80,7 +80,7 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
   /* 4. */
   if (ecma_arraybuffer_is_detached (buffer_p))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached"));
   }
 
   /* 5. */
@@ -89,7 +89,7 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
   /* 6. */
   if (offset > buffer_byte_length)
   {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Start offset is outside the bounds of the buffer."));
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Start offset is outside the bounds of the buffer"));
   }
 
   /* 7. */
@@ -108,7 +108,7 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
     /* 8.b */
     if (offset + byte_length_to_index > buffer_byte_length)
     {
-      return ecma_raise_range_error (ECMA_ERR_MSG ("Start offset is outside the bounds of the buffer."));
+      return ecma_raise_range_error (ECMA_ERR_MSG ("Start offset is outside the bounds of the buffer"));
     }
 
     JERRY_ASSERT (byte_length_to_index <= UINT32_MAX);
@@ -132,7 +132,7 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
   if (ecma_arraybuffer_is_detached (buffer_p))
   {
     ecma_deref_object (prototype_obj_p);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached"));
   }
 
   /* 9. */
@@ -177,7 +177,7 @@ ecma_op_dataview_get_object (ecma_value_t this_arg) /**< this argument */
     }
   }
 
-  ecma_raise_type_error (ECMA_ERR_MSG ("Expected a DataView object."));
+  ecma_raise_type_error (ECMA_ERR_MSG ("Expected a DataView object"));
   return NULL;
 } /* ecma_op_dataview_get_object */
 
@@ -300,7 +300,7 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
   if (ecma_arraybuffer_is_detached (buffer_p))
   {
     ecma_free_value (value_to_set);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached"));
   }
 
   /* GetViewValue 7., SetViewValue 9. */
@@ -316,7 +316,7 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
   if (get_index + element_size > (ecma_number_t) view_size)
   {
     ecma_free_value (value_to_set);
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Start offset is outside the bounds of the buffer."));
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Start offset is outside the bounds of the buffer"));
   }
 
   /* GetViewValue 11., SetViewValue 13. */

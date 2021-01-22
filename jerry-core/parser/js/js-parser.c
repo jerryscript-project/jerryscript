@@ -2904,7 +2904,7 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
   JERRY_UNUSED (parse_opts);
   JERRY_UNUSED (resource_name);
 
-  ecma_raise_syntax_error (ECMA_ERR_MSG ("The parser has been disabled."));
+  ecma_raise_syntax_error (ECMA_ERR_MSG ("Source code parsing is disabled"));
   return NULL;
 #endif /* ENABLED (JERRY_PARSER) */
 } /* parser_parse_script */

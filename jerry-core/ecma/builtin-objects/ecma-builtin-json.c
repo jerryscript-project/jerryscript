@@ -818,7 +818,7 @@ ecma_builtin_json_parse_buffer (const lit_utf8_byte_t * str_start_p, /**< String
     ecma_free_value (result);
   }
 
-  return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid JSON format."));
+  return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid JSON format"));
 } /*ecma_builtin_json_parse_buffer*/
 
 /**
@@ -1000,7 +1000,7 @@ ecma_builtin_json_serialize_object (ecma_json_stringify_context_t *context_p, /*
   /* 1. */
   if (ecma_json_has_object_in_stack (context_p->occurence_stack_last_p, obj_p))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("The structure is cyclical."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("The structure is cyclical"));
   }
 
   /* 2. */
@@ -1137,7 +1137,7 @@ ecma_builtin_json_serialize_array (ecma_json_stringify_context_t *context_p, /**
   /* 1. */
   if (ecma_json_has_object_in_stack (context_p->occurence_stack_last_p, obj_p))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("The structure is cyclical."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("The structure is cyclical"));
   }
 
   /* 2. */

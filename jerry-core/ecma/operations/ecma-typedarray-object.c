@@ -739,14 +739,14 @@ ecma_typedarray_create_object_with_length (uint32_t array_length, /**< length of
 {
   if (array_length > (UINT32_MAX >> element_size_shift))
   {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Maximum typedarray size is reached."));
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Maximum TypedArray size is reached"));
   }
 
   uint32_t byte_length = array_length << element_size_shift;
 
   if (byte_length > UINT32_MAX - sizeof (ecma_extended_object_t) - JMEM_ALIGNMENT + 1)
   {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Maximum typedarray size is reached."));
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Maximum TypedArray size is reached"));
   }
 
   ecma_object_t *new_arraybuffer_p = NULL;
@@ -814,7 +814,7 @@ ecma_typedarray_create_object_with_buffer (ecma_object_t *arraybuffer_p, /**< th
 {
   if (ecma_arraybuffer_is_detached (arraybuffer_p))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached"));
   }
   uint32_t expected_length = (ecma_arraybuffer_get_length (arraybuffer_p) >> element_size_shift);
 
@@ -861,7 +861,7 @@ ecma_typedarray_create_object_with_typedarray (ecma_object_t *typedarray_p, /**<
   ecma_object_t *src_arraybuffer_p = ecma_typedarray_get_arraybuffer (typedarray_p);
   if (ecma_arraybuffer_is_detached (src_arraybuffer_p))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid detached ArrayBuffer."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid detached ArrayBuffer"));
   }
 
   ecma_value_t new_typedarray = ecma_typedarray_create_object_with_length (array_length,
@@ -896,7 +896,7 @@ ecma_typedarray_create_object_with_typedarray (ecma_object_t *typedarray_p, /**<
     if ((ECMA_TYPEDARRAY_IS_BIGINT_TYPE (src_id) ^ ECMA_TYPEDARRAY_IS_BIGINT_TYPE (typedarray_id)) == 1)
     {
       ecma_deref_object (new_typedarray_p);
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible typedArray types."));
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Incompatible TypedArray types"));
     }
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 
@@ -967,7 +967,7 @@ ecma_op_typedarray_from_helper (ecma_value_t this_val, /**< this_arg for the abo
 
   if (index >= info_p->length)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type"));
   }
 
   ecma_value_t set_element = setter_cb (info_p->buffer_p + (index << info_p->shift), mapped_value);
@@ -1343,7 +1343,7 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
     /* 22.2.1.2 */
     if (ecma_is_value_undefined (arguments_list_p[0]))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("length argument is undefined"));
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Length argument is undefined"));
     }
 
     ecma_number_t num;
@@ -1356,7 +1356,7 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
 
     if (num != ((ecma_number_t) length))
     {
-      ret = ecma_raise_range_error (ECMA_ERR_MSG ("Invalid typedarray length."));
+      ret = ecma_raise_range_error (ECMA_ERR_MSG ("Invalid TypedArray length"));
     }
     else
     {
@@ -1398,11 +1398,11 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
       if (ecma_number_is_negative (offset) || fmod (offset, (1 << element_size_shift)) != 0)
       {
         /* ES2015 22.2.1.5: 9 - 10. */
-        ret = ecma_raise_range_error (ECMA_ERR_MSG ("Invalid offset."));
+        ret = ecma_raise_range_error (ECMA_ERR_MSG ("Invalid offset"));
       }
       else if (ecma_arraybuffer_is_detached (arraybuffer_p))
       {
-        ret = ecma_raise_type_error (ECMA_ERR_MSG ("Invalid detached ArrayBuffer."));
+        ret = ecma_raise_type_error (ECMA_ERR_MSG ("Invalid detached ArrayBuffer"));
       }
       else
       {
@@ -1411,13 +1411,10 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
 
         if (ecma_is_value_undefined (arg3))
         {
-          if (buf_byte_length % (uint32_t) (1 << element_size_shift) != 0)
+          if ((buf_byte_length % (uint32_t) (1 << element_size_shift) != 0)
+              || (buf_byte_length < offset))
           {
-            ret = ecma_raise_range_error (ECMA_ERR_MSG ("Invalid length."));
-          }
-          else if (buf_byte_length < offset)
-          {
-            ret = ecma_raise_range_error (ECMA_ERR_MSG ("Invalid length."));
+            ret = ecma_raise_range_error (ECMA_ERR_MSG ("Invalid length"));
           }
           else
           {
@@ -1434,7 +1431,7 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
 
           if (new_length > (UINT32_MAX >> element_size_shift))
           {
-            ret = ecma_raise_range_error (ECMA_ERR_MSG ("Maximum typedarray size is reached."));
+            ret = ecma_raise_range_error (ECMA_ERR_MSG ("Maximum TypedArray size is reached"));
           }
           else
           {
@@ -1442,7 +1439,7 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
 
             if (((ecma_number_t) new_byte_length + offset) > buf_byte_length)
             {
-              ret = ecma_raise_range_error (ECMA_ERR_MSG ("Invalid length."));
+              ret = ecma_raise_range_error (ECMA_ERR_MSG ("Invalid length"));
             }
           }
         }
@@ -1645,7 +1642,7 @@ ecma_typedarray_create (ecma_object_t *constructor_p, /**< constructor function 
   if (!ecma_is_typedarray (ret_val))
   {
     ecma_free_value (ret_val);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Constructed object is not TypedArray."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Constructed object is not TypedArray"));
   }
 
   ecma_object_t *typedarray_p = ecma_get_object_from_value (ret_val);
@@ -1658,7 +1655,7 @@ ecma_typedarray_create (ecma_object_t *constructor_p, /**< constructor function 
     if (info.length < num)
     {
       ecma_free_value (ret_val);
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Constructed typedarray is smaller than filter call result"));
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Constructed TypedArray is smaller than filter call result"));
     }
   }
   return ret_val;
@@ -1710,7 +1707,7 @@ ecma_typedarray_species_create (ecma_value_t this_arg, /**< this argument */
   if (ECMA_TYPEDARRAY_IS_BIGINT_TYPE (info.id) ^ ECMA_TYPEDARRAY_IS_BIGINT_TYPE (result_info.id))
   {
     ecma_free_value (result);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Source and result array does not match in [[ContentType]]"));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("TypedArray returned by [[ContentType]] does not match source"));
   }
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
 

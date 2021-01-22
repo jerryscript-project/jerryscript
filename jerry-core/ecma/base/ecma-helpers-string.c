@@ -2603,7 +2603,7 @@ ecma_string_pad (ecma_value_t original_string_p, /**< Input ecma string */
   if (int_max_length >= UINT32_MAX)
   {
     ecma_deref_ecma_string (filler_p);
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Maximum string length is reached."));
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Maximum string length is reached"));
   }
 
   /* 9 */

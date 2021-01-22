@@ -144,7 +144,7 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
                             size_t snapshot_buffer_size, /**< snapshot buffer size */
                             snapshot_globals_t *globals_p) /**< snapshot globals */
 {
-  const jerry_char_t *error_buffer_too_small_p = (const jerry_char_t *) "Snapshot buffer too small.";
+  const jerry_char_t *error_buffer_too_small_p = (const jerry_char_t *) "Snapshot buffer too small";
 
   if (!ecma_is_value_empty (globals_p->snapshot_error))
   {
@@ -155,7 +155,7 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
 
   if (globals_p->snapshot_buffer_write_offset > JERRY_SNAPSHOT_MAXIMUM_WRITE_OFFSET)
   {
-    const char * const error_message_p = "Maximum snapshot size reached.";
+    const char * const error_message_p = "Maximum snapshot size reached";
     globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
     return 0;
   }
@@ -170,7 +170,7 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
 #if ENABLED (JERRY_ESNEXT)
   if (compiled_code_p->status_flags & CBC_CODE_FLAGS_HAS_TAGGED_LITERALS)
   {
-    const char * const error_message_p = "Unsupported feature: tagged template literals.";
+    const char * const error_message_p = "Unsupported feature: tagged template literals";
     globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
     return 0;
   }
@@ -340,7 +340,7 @@ static_snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< c
 
   if (globals_p->snapshot_buffer_write_offset >= JERRY_SNAPSHOT_MAXIMUM_WRITE_OFFSET)
   {
-    const char * const error_message_p = "Maximum snapshot size reached.";
+    const char * const error_message_p = "Maximum snapshot size reached";
     globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
     return 0;
   }
@@ -355,7 +355,7 @@ static_snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< c
   if (!CBC_IS_FUNCTION (compiled_code_p->status_flags))
   {
     /* Regular expression literals are not supported. */
-    const char * const error_message_p = "Regular expression literals are not supported.";
+    const char * const error_message_p = "Regular expression literals are not supported";
     globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
     return 0;
   }
@@ -366,7 +366,7 @@ static_snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< c
                                            compiled_code_p,
                                            ((size_t) compiled_code_p->size) << JMEM_ALIGNMENT_LOG))
   {
-    const char * const error_message_p = "Snapshot buffer too small.";
+    const char * const error_message_p = "Snapshot buffer too small";
     globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
     return 0;
   }
@@ -844,7 +844,7 @@ jerry_generate_snapshot_with_args (const jerry_char_t *resource_name_p, /**< scr
                                           &literals_num))
     {
       JERRY_ASSERT (lit_map_p == NULL);
-      const char * const error_message_p = "Cannot allocate memory for literals.";
+      const char * const error_message_p = "Cannot allocate memory for literals";
       ecma_bytecode_deref (bytecode_data_p);
       return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) error_message_p);
     }
@@ -896,7 +896,7 @@ jerry_generate_snapshot (const jerry_char_t *resource_name_p, /**< script resour
 
   if ((generate_snapshot_opts & ~(allowed_opts)) != 0)
   {
-    const char * const error_message_p = "Unsupported generate snapshot flags specified.";
+    const char * const error_message_p = "Unsupported generate snapshot flags specified";
     return jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
   }
 
@@ -918,7 +918,7 @@ jerry_generate_snapshot (const jerry_char_t *resource_name_p, /**< script resour
   JERRY_UNUSED (buffer_p);
   JERRY_UNUSED (buffer_size);
 
-  return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) "Snapshot save is not supported.");
+  return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) "Snapshot save is not supported");
 #endif /* ENABLED (JERRY_SNAPSHOT_SAVE) */
 } /* jerry_generate_snapshot */
 
@@ -945,7 +945,7 @@ jerry_snapshot_result (const uint32_t *snapshot_p, /**< snapshot */
 
   if ((exec_snapshot_opts & ~(allowed_opts)) != 0)
   {
-    ecma_raise_range_error (ECMA_ERR_MSG ("Unsupported exec snapshot flags specified."));
+    ecma_raise_range_error (ECMA_ERR_MSG ("Unsupported snapshot exec flags are specified"));
     return ecma_create_error_reference_from_context ();
   }
 
@@ -990,7 +990,7 @@ jerry_snapshot_result (const uint32_t *snapshot_p, /**< snapshot */
   {
     if (!(exec_snapshot_opts & JERRY_SNAPSHOT_EXEC_ALLOW_STATIC))
     {
-      ecma_raise_common_error (ECMA_ERR_MSG ("Static snapshots not allowed"));
+      ecma_raise_common_error (ECMA_ERR_MSG ("Static snapshots are not enabled"));
       return ecma_create_error_reference_from_context ();
     }
 
@@ -1088,7 +1088,7 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
   JERRY_UNUSED (func_index);
   JERRY_UNUSED (exec_snapshot_opts);
 
-  return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) "Snapshot execution is not supported.");
+  return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) "Snapshot execution is not supported");
 #endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 } /* jerry_exec_snapshot */
 
@@ -1821,7 +1821,7 @@ jerry_generate_function_snapshot (const jerry_char_t *resource_name_p, /**< scri
 
   if ((generate_snapshot_opts & ~(allowed_opts)) != 0)
   {
-    const char * const error_message_p = "Unsupported generate snapshot flags specified.";
+    const char * const error_message_p = "Unsupported generate snapshot flags specified";
     return jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
   }
 
@@ -1845,7 +1845,7 @@ jerry_generate_function_snapshot (const jerry_char_t *resource_name_p, /**< scri
   JERRY_UNUSED (buffer_p);
   JERRY_UNUSED (buffer_size);
 
-  return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) "Snapshot save is not supported.");
+  return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) "Snapshot save is not supported");
 #endif /* ENABLED (JERRY_SNAPSHOT_SAVE) */
 } /* jerry_generate_function_snapshot */
 
@@ -1872,6 +1872,6 @@ jerry_load_function_snapshot (const uint32_t *function_snapshot_p, /**< snapshot
   JERRY_UNUSED (func_index);
   JERRY_UNUSED (exec_snapshot_opts);
 
-  return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) "Snapshot execution is not supported.");
+  return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) "Snapshot execution is not supported");
 #endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
 } /* jerry_load_function_snapshot */

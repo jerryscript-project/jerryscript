@@ -921,69 +921,69 @@ parser_error_to_string (parser_error_t error) /**< error code */
   {
     case PARSER_ERR_OUT_OF_MEMORY:
     {
-      return "Out of memory.";
+      return "Out of memory";
     }
     case PARSER_ERR_LITERAL_LIMIT_REACHED:
     {
-      return "Maximum number of literals reached.";
+      return "Maximum number of literals reached";
     }
     case PARSER_ERR_SCOPE_STACK_LIMIT_REACHED:
     {
-      return "Maximum depth of scope stack reached.";
+      return "Maximum depth of scope stack reached";
     }
     case PARSER_ERR_ARGUMENT_LIMIT_REACHED:
     {
-      return "Maximum number of function arguments reached.";
+      return "Maximum number of function arguments reached";
     }
     case PARSER_ERR_STACK_LIMIT_REACHED:
     {
-      return "Maximum function stack size reached.";
+      return "Maximum function stack size reached";
     }
     case PARSER_ERR_INVALID_CHARACTER:
     {
-      return "Invalid (unexpected) character.";
+      return "Invalid (unexpected) character";
     }
     case PARSER_ERR_INVALID_OCTAL_DIGIT:
     {
-      return "Invalid octal digit.";
+      return "Invalid octal digit";
     }
     case PARSER_ERR_INVALID_HEX_DIGIT:
     {
-      return "Invalid hexadecimal digit.";
+      return "Invalid hexadecimal digit";
     }
 #if ENABLED (JERRY_ESNEXT)
     case PARSER_ERR_INVALID_BIN_DIGIT:
     {
-      return "Invalid binary digit.";
+      return "Invalid binary digit";
     }
 #endif /* ENABLED (JERRY_ESNEXT) */
     case PARSER_ERR_INVALID_ESCAPE_SEQUENCE:
     {
-      return "Invalid escape sequence.";
+      return "Invalid escape sequence";
     }
     case PARSER_ERR_INVALID_UNICODE_ESCAPE_SEQUENCE:
     {
-      return "Invalid unicode escape sequence.";
+      return "Invalid unicode escape sequence";
     }
     case PARSER_ERR_INVALID_IDENTIFIER_START:
     {
-      return "Character cannot be start of an identifier.";
+      return "Character cannot be start of an identifier";
     }
     case PARSER_ERR_INVALID_IDENTIFIER_PART:
     {
-      return "Character cannot be part of an identifier.";
+      return "Character cannot be part of an identifier";
     }
     case PARSER_ERR_INVALID_KEYWORD:
     {
-      return "Escape sequences are not allowed in keywords.";
+      return "Escape sequences are not allowed in keywords";
     }
     case PARSER_ERR_INVALID_NUMBER:
     {
-      return "Invalid number.";
+      return "Invalid number";
     }
     case PARSER_ERR_MISSING_EXPONENT:
     {
-      return "Missing exponent part.";
+      return "Missing exponent part";
     }
     case PARSER_ERR_INVALID_UNDERSCORE_IN_NUMBER:
     {
@@ -991,443 +991,443 @@ parser_error_to_string (parser_error_t error) /**< error code */
     }
     case PARSER_ERR_IDENTIFIER_AFTER_NUMBER:
     {
-      return "Identifier cannot start after a number.";
+      return "Identifier cannot start after a number";
     }
 #if ENABLED (JERRY_BUILTIN_BIGINT)
     case PARSER_ERR_INVALID_BIGINT:
     {
-      return "Number is not a valid BigInt.";
+      return "Number is not a valid BigInt";
     }
 #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
     case PARSER_ERR_INVALID_REGEXP:
     {
-      return "Invalid regular expression.";
+      return "Invalid regular expression";
     }
     case PARSER_ERR_UNKNOWN_REGEXP_FLAG:
     {
-      return "Unknown regexp flag.";
+      return "Unknown regexp flag";
     }
     case PARSER_ERR_DUPLICATED_REGEXP_FLAG:
     {
-      return "Duplicated regexp flag.";
+      return "Duplicated regexp flag";
     }
     case PARSER_ERR_UNSUPPORTED_REGEXP:
     {
-      return "Regexp is not supported in the selected profile.";
+      return "Regexp is not supported in the selected profile";
     }
     case PARSER_ERR_IDENTIFIER_TOO_LONG:
     {
-      return "Identifier is too long.";
+      return "Identifier is too long";
     }
     case PARSER_ERR_STRING_TOO_LONG:
     {
-      return "String is too long.";
+      return "String is too long";
     }
     case PARSER_ERR_NUMBER_TOO_LONG:
     {
-      return "Number is too long.";
+      return "Number is too long";
     }
     case PARSER_ERR_REGEXP_TOO_LONG:
     {
-      return "Regexp is too long.";
+      return "Regexp is too long";
     }
     case PARSER_ERR_UNTERMINATED_MULTILINE_COMMENT:
     {
-      return "Unterminated multiline comment.";
+      return "Unterminated multiline comment";
     }
     case PARSER_ERR_UNTERMINATED_STRING:
     {
-      return "Unterminated string literal.";
+      return "Unterminated string literal";
     }
     case PARSER_ERR_UNTERMINATED_REGEXP:
     {
-      return "Unterminated regexp literal.";
+      return "Unterminated regexp literal";
     }
     case PARSER_ERR_NEWLINE_NOT_ALLOWED:
     {
-      return "Newline is not allowed in strings or regexps.";
+      return "Newline is not allowed in strings or regexps";
     }
     case PARSER_ERR_OCTAL_NUMBER_NOT_ALLOWED:
     {
-      return "Octal numbers are not allowed in strict mode.";
+      return "Octal numbers are not allowed in strict mode";
     }
     case PARSER_ERR_OCTAL_ESCAPE_NOT_ALLOWED:
     {
-      return "Octal escape sequences are not allowed in strict mode.";
+      return "Octal escape sequences are not allowed in strict mode";
     }
 #if ENABLED (JERRY_ESNEXT)
     case PARSER_ERR_TEMPLATE_STR_OCTAL_ESCAPE:
     {
-      return "Octal escape sequences are not allowed in template strings.";
+      return "Octal escape sequences are not allowed in template strings";
     }
 #endif /* ENABLED (JERRY_ESNEXT) */
     case PARSER_ERR_STRICT_IDENT_NOT_ALLOWED:
     {
-      return "Identifier name is reserved in strict mode.";
+      return "Identifier name is reserved in strict mode";
     }
     case PARSER_ERR_EVAL_NOT_ALLOWED:
     {
-      return "Eval is not allowed to be used here in strict mode.";
+      return "Eval is not allowed to be used here in strict mode";
     }
     case PARSER_ERR_ARGUMENTS_NOT_ALLOWED:
     {
-      return "Arguments is not allowed to be used here in strict mode.";
+      return "Arguments is not allowed to be used here in strict mode";
     }
 #if ENABLED (JERRY_ESNEXT)
     case PARSER_ERR_USE_STRICT_NOT_ALLOWED:
     {
-      return "The 'use strict' directive is not allowed for functions with non-simple arguments.";
+      return "The 'use strict' directive is not allowed for functions with non-simple arguments";
     }
     case PARSER_ERR_YIELD_NOT_ALLOWED:
     {
-      return "Yield expression is not allowed here.";
+      return "Yield expression is not allowed here";
     }
     case PARSER_ERR_AWAIT_NOT_ALLOWED:
     {
-      return "Await expression is not allowed here.";
+      return "Await expression is not allowed here";
     }
     case PARSER_ERR_FOR_IN_OF_DECLARATION:
     {
-      return "for in-of loop variable declaration may not have an initializer.";
+      return "for in-of loop variable declaration may not have an initializer";
     }
     case PARSER_ERR_FOR_AWAIT_NO_ASYNC:
     {
-      return "for-await-of is only allowed inside async functions and generators.";
+      return "for-await-of is only allowed inside async functions and generators";
     }
     case PARSER_ERR_FOR_AWAIT_NO_OF:
     {
-      return "only 'of' form is allowed for for-await loops.";
+      return "only 'of' form is allowed for for-await loops";
     }
     case PARSER_ERR_DUPLICATED_PROTO:
     {
-      return "Duplicate __proto__ fields are not allowed in object literals.";
+      return "Duplicate __proto__ fields are not allowed in object literals";
     }
     case PARSER_ERR_INVALID_LHS_ASSIGNMENT:
     {
-      return "Invalid left-hand side in assignment.";
+      return "Invalid left-hand side in assignment";
     }
     case PARSER_ERR_INVALID_LHS_POSTFIX_OP:
     {
-      return "Invalid left-hand side expression in postfix operation.";
+      return "Invalid left-hand side expression in postfix operation";
     }
     case PARSER_ERR_INVALID_LHS_FOR_LOOP:
     {
-      return "Invalid left-hand-side in for-loop.";
+      return "Invalid left-hand-side in for-loop";
     }
 #endif /* ENABLED (JERRY_ESNEXT) */
     case PARSER_ERR_DELETE_IDENT_NOT_ALLOWED:
     {
-      return "Deleting identifier is not allowed in strict mode.";
+      return "Deleting identifier is not allowed in strict mode";
     }
     case PARSER_ERR_EVAL_CANNOT_ASSIGNED:
     {
-      return "Eval cannot be assigned to in strict mode.";
+      return "Eval cannot be assigned to in strict mode";
     }
     case PARSER_ERR_ARGUMENTS_CANNOT_ASSIGNED:
     {
-      return "Arguments cannot be assigned to in strict mode.";
+      return "Arguments cannot be assigned to in strict mode";
     }
     case PARSER_ERR_WITH_NOT_ALLOWED:
     {
-      return "With statement not allowed in strict mode.";
+      return "With statement not allowed in strict mode";
     }
     case PARSER_ERR_MULTIPLE_DEFAULTS_NOT_ALLOWED:
     {
-      return "Multiple default cases are not allowed.";
+      return "Multiple default cases are not allowed";
     }
     case PARSER_ERR_DEFAULT_NOT_IN_SWITCH:
     {
-      return "Default statement must be in a switch block.";
+      return "Default statement must be in a switch block";
     }
     case PARSER_ERR_CASE_NOT_IN_SWITCH:
     {
-      return "Case statement must be in a switch block.";
+      return "Case statement must be in a switch block";
     }
     case PARSER_ERR_LEFT_PAREN_EXPECTED:
     {
-      return "Expected '(' token.";
+      return "Expected '(' token";
     }
     case PARSER_ERR_LEFT_BRACE_EXPECTED:
     {
-      return "Expected '{' token.";
+      return "Expected '{' token";
     }
     case PARSER_ERR_RIGHT_PAREN_EXPECTED:
     {
-      return "Expected ')' token.";
+      return "Expected ')' token";
     }
     case PARSER_ERR_RIGHT_SQUARE_EXPECTED:
     {
-      return "Expected ']' token.";
+      return "Expected ']' token";
     }
     case PARSER_ERR_COLON_EXPECTED:
     {
-      return "Expected ':' token.";
+      return "Expected ':' token";
     }
     case PARSER_ERR_COLON_FOR_CONDITIONAL_EXPECTED:
     {
-      return "Expected ':' token for ?: conditional expression.";
+      return "Expected ':' token for ?: conditional expression";
     }
     case PARSER_ERR_SEMICOLON_EXPECTED:
     {
-      return "Expected ';' token.";
+      return "Expected ';' token";
     }
     case PARSER_ERR_IN_EXPECTED:
     {
-      return "Expected 'in' token.";
+      return "Expected 'in' token";
     }
     case PARSER_ERR_WHILE_EXPECTED:
     {
-      return "While expected for do-while loop.";
+      return "While expected for do-while loop";
     }
     case PARSER_ERR_CATCH_FINALLY_EXPECTED:
     {
-      return "Catch or finally block expected.";
+      return "Catch or finally block expected";
     }
     case PARSER_ERR_ARRAY_ITEM_SEPARATOR_EXPECTED:
     {
-      return "Expected ',' or ']' after an array item.";
+      return "Expected ',' or ']' after an array item";
     }
     case PARSER_ERR_OBJECT_ITEM_SEPARATOR_EXPECTED:
     {
-      return "Expected ',' or '}' after a property definition.";
+      return "Expected ',' or '}' after a property definition";
     }
     case PARSER_ERR_IDENTIFIER_EXPECTED:
     {
-      return "Identifier expected.";
+      return "Identifier expected";
     }
     case PARSER_ERR_EXPRESSION_EXPECTED:
     {
-      return "Expression expected.";
+      return "Expression expected";
     }
     case PARSER_ERR_PRIMARY_EXP_EXPECTED:
     {
-      return "Primary expression expected.";
+      return "Primary expression expected";
     }
     case PARSER_ERR_LEFT_HAND_SIDE_EXP_EXPECTED:
     {
-      return "Left-hand-side expression expected.";
+      return "Left-hand-side expression expected";
     }
     case PARSER_ERR_STATEMENT_EXPECTED:
     {
-      return "Statement expected.";
+      return "Statement expected";
     }
     case PARSER_ERR_PROPERTY_IDENTIFIER_EXPECTED:
     {
-      return "Property identifier expected.";
+      return "Property identifier expected";
     }
     case PARSER_ERR_ARGUMENT_LIST_EXPECTED:
     {
-      return "Expected argument list.";
+      return "Expected argument list";
     }
     case PARSER_ERR_NO_ARGUMENTS_EXPECTED:
     {
-      return "Property getters must have no arguments.";
+      return "Property getters must have no arguments";
     }
     case PARSER_ERR_ONE_ARGUMENT_EXPECTED:
     {
-      return "Property setters must have one argument.";
+      return "Property setters must have one argument";
     }
     case PARSER_ERR_INVALID_EXPRESSION:
     {
-      return "Invalid expression.";
+      return "Invalid expression";
     }
     case PARSER_ERR_INVALID_SWITCH:
     {
-      return "Invalid switch body.";
+      return "Invalid switch body";
     }
     case PARSER_ERR_INVALID_BREAK:
     {
-      return "Break statement must be inside a loop or switch.";
+      return "Break statement must be inside a loop or switch";
     }
     case PARSER_ERR_INVALID_BREAK_LABEL:
     {
-      return "Labeled statement targeted by a break not found.";
+      return "Labeled statement targeted by a break not found";
     }
     case PARSER_ERR_INVALID_CONTINUE:
     {
-      return "Continue statement must be inside a loop.";
+      return "Continue statement must be inside a loop";
     }
     case PARSER_ERR_INVALID_CONTINUE_LABEL:
     {
-      return "Labeled statement targeted by a continue not found.";
+      return "Labeled statement targeted by a continue not found";
     }
     case PARSER_ERR_INVALID_RETURN:
     {
-      return "Return statement must be inside a function body.";
+      return "Return statement must be inside a function body";
     }
     case PARSER_ERR_INVALID_RIGHT_SQUARE:
     {
-      return "Unexpected '}' token.";
+      return "Unexpected '}' token";
     }
     case PARSER_ERR_DUPLICATED_LABEL:
     {
-      return "Duplicated label.";
+      return "Duplicated label";
     }
     case PARSER_ERR_OBJECT_PROPERTY_REDEFINED:
     {
-      return "Property of object literal redefined.";
+      return "Property of object literal redefined";
     }
     case PARSER_ERR_NON_STRICT_ARG_DEFINITION:
     {
-      return "Non-strict argument definition.";
+      return "Non-strict argument definition";
     }
 #if ENABLED (JERRY_ESNEXT)
     case PARSER_ERR_VARIABLE_REDECLARED:
     {
-      return "Local variable is redeclared.";
+      return "Local variable is redeclared";
     }
     case PARSER_ERR_LEXICAL_SINGLE_STATEMENT:
     {
-      return "Lexical declaration cannot appear in a single-statement context.";
+      return "Lexical declaration cannot appear in a single-statement context";
     }
     case PARSER_ERR_LABELLED_FUNC_NOT_IN_BLOCK:
     {
-      return "Labelled functions are only allowed inside blocks.";
+      return "Labelled functions are only allowed inside blocks";
     }
     case PARSER_ERR_LEXICAL_LET_BINDING:
     {
-      return "Let binding cannot appear in let/const declarations.";
+      return "Let binding cannot appear in let/const declarations";
     }
     case PARSER_ERR_MISSING_ASSIGN_AFTER_CONST:
     {
-      return "Value assignment is expected after a const declaration.";
+      return "Value assignment is expected after a const declaration";
     }
     case PARSER_ERR_MULTIPLE_CLASS_CONSTRUCTORS:
     {
-      return "Multiple constructors are not allowed.";
+      return "Multiple constructors are not allowed";
     }
     case PARSER_ERR_CLASS_CONSTRUCTOR_AS_ACCESSOR:
     {
-      return "Class constructor may not be an accessor.";
+      return "Class constructor may not be an accessor";
     }
     case PARSER_ERR_INVALID_CLASS_CONSTRUCTOR:
     {
-      return "Class constructor may not be a generator or async function.";
+      return "Class constructor may not be a generator or async function";
     }
     case PARSER_ERR_CLASS_STATIC_PROTOTYPE:
     {
-      return "Classes may not have a static property called 'prototype'.";
+      return "Classes may not have a static property called 'prototype'";
     }
     case PARSER_ERR_UNEXPECTED_SUPER_KEYWORD:
     {
-      return "Super is not allowed to be used here.";
+      return "Super is not allowed to be used here";
     }
     case PARSER_ERR_TOO_MANY_CLASS_FIELDS:
     {
-      return "Too many computed class fields are declared.";
+      return "Too many computed class fields are declared";
     }
     case PARSER_ERR_ARGUMENTS_IN_CLASS_FIELD:
     {
-      return "In class field declarations 'arguments' is not allowed.";
+      return "In class field declarations 'arguments' is not allowed";
     }
     case PARSER_ERR_RIGHT_BRACE_EXPECTED:
     {
-      return "Expected '}' token.";
+      return "Expected '}' token";
     }
     case PARSER_ERR_OF_EXPECTED:
     {
-      return "Expected 'of' token.";
+      return "Expected 'of' token";
     }
     case PARSER_ERR_ASSIGNMENT_EXPECTED:
     {
-      return "Unexpected arrow function or yield expression (parentheses around the expression may help).";
+      return "Unexpected arrow function or yield expression (parentheses around the expression may help)";
     }
     case PARSER_ERR_DUPLICATED_ARGUMENT_NAMES:
     {
-      return "Duplicated function argument names are not allowed here.";
+      return "Duplicated function argument names are not allowed here";
     }
     case PARSER_ERR_INVALID_DESTRUCTURING_PATTERN:
     {
-      return "Invalid destructuring assignment target.";
+      return "Invalid destructuring assignment target";
     }
     case PARSER_ERR_ILLEGAL_PROPERTY_IN_DECLARATION:
     {
-      return "Illegal property in declaration context.";
+      return "Illegal property in declaration context";
     }
     case PARSER_ERR_INVALID_EXPONENTIATION:
     {
-      return "Left operand of ** operator cannot be unary expression.";
+      return "Left operand of ** operator cannot be unary expression";
     }
     case PARSER_ERR_INVALID_NULLISH_COALESCING:
     {
-      return "Cannot chain nullish with logical AND or OR.";
+      return "Cannot chain nullish with logical AND or OR";
     }
     case PARSER_ERR_FORMAL_PARAM_AFTER_REST_PARAMETER:
     {
-      return "Rest parameter must be the last formal parameter.";
+      return "Rest parameter must be the last formal parameter";
     }
     case PARSER_ERR_SETTER_REST_PARAMETER:
     {
-      return "Setter function argument must not be a rest parameter.";
+      return "Setter function argument must not be a rest parameter";
     }
     case PARSER_ERR_REST_PARAMETER_DEFAULT_INITIALIZER:
     {
-      return "Rest parameter may not have a default initializer.";
+      return "Rest parameter may not have a default initializer";
     }
     case PARSER_ERR_NEW_TARGET_EXPECTED:
     {
-      return "Expected new.target expression.";
+      return "Expected new.target expression";
     }
     case PARSER_ERR_NEW_TARGET_NOT_ALLOWED:
     {
-      return "new.target expression is not allowed here.";
+      return "new.target expression is not allowed here";
     }
 #endif /* ENABLED (JERRY_ESNEXT) */
 #if ENABLED (JERRY_MODULE_SYSTEM)
     case PARSER_ERR_FILE_NOT_FOUND:
     {
-      return "Requested module not found.";
+      return "Requested module not found";
     }
     case PARSER_ERR_FROM_EXPECTED:
     {
-      return "Expected 'from' token.";
+      return "Expected 'from' token";
     }
     case PARSER_ERR_FROM_COMMA_EXPECTED:
     {
-      return "Expected 'from' or ',' token.";
+      return "Expected 'from' or ',' token";
     }
     case PARSER_ERR_AS_EXPECTED:
     {
-      return "Expected 'as' token.";
+      return "Expected 'as' token";
     }
     case PARSER_ERR_STRING_EXPECTED:
     {
-      return "Expected a string literal.";
+      return "Expected a string literal";
     }
     case PARSER_ERR_MODULE_UNEXPECTED:
     {
-      return "Unexpected import or export statement.";
+      return "Unexpected import or export statement";
     }
     case PARSER_ERR_LEFT_BRACE_MULTIPLY_EXPECTED:
     {
-      return "Expected '{' or '*' token.";
+      return "Expected '{' or '*' token";
     }
     case PARSER_ERR_LEFT_BRACE_MULTIPLY_LITERAL_EXPECTED:
     {
-      return "Expected '{' or '*' or literal token.";
+      return "Expected '{' or '*' or literal token";
     }
     case PARSER_ERR_RIGHT_BRACE_COMMA_EXPECTED:
     {
-      return "Expected '}' or ',' token.";
+      return "Expected '}' or ',' token";
     }
     case PARSER_ERR_DUPLICATED_EXPORT_IDENTIFIER:
     {
-      return "Duplicate exported identifier.";
+      return "Duplicate exported identifier";
     }
     case PARSER_ERR_DUPLICATED_IMPORT_BINDING:
     {
-      return "Duplicated imported binding name.";
+      return "Duplicated imported binding name";
     }
     case PARSER_ERR_EXPORT_NOT_DEFINED:
     {
-      return "Export not defined in module.";
+      return "Export not defined in module";
     }
 #endif /* ENABLED (JERRY_MODULE_SYSTEM) */
 
     default:
     {
       JERRY_ASSERT (error == PARSER_ERR_NO_ERROR);
-      return "No error.";
+      return "No error";
     }
   }
 } /* parser_error_to_string */

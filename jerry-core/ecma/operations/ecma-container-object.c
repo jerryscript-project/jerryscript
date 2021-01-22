@@ -433,7 +433,7 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
   if (!ecma_op_is_callable (result))
   {
     ecma_free_value (result);
-    result = ecma_raise_type_error (ECMA_ERR_MSG ("add/set function is not callable."));
+    result = ecma_raise_type_error (ECMA_ERR_MSG ("Function add/set is not callable"));
     goto cleanup_object;
   }
 
@@ -486,7 +486,7 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
       if (!ecma_is_value_object (result))
       {
         ecma_free_value (result);
-        ecma_raise_type_error (ECMA_ERR_MSG ("Iterator value is not an object."));
+        ecma_raise_type_error (ECMA_ERR_MSG ("Iterator value is not an object"));
         result = ecma_op_iterator_close (iterator);
         JERRY_ASSERT (ECMA_IS_VALUE_ERROR (result));
         goto cleanup_iterator;
@@ -575,7 +575,7 @@ ecma_op_container_get_object (ecma_value_t this_arg, /**< this argument */
 
 #if ENABLED (JERRY_ERROR_MESSAGES)
   ecma_raise_standard_error_with_format (ECMA_ERROR_TYPE,
-                                         "Expected a % object.",
+                                         "Expected a % object",
                                          ecma_make_string_value (ecma_get_magic_string (lit_id)));
 #else /* !ENABLED (JERRY_ERROR_MESSAGES) */
   ecma_raise_type_error (NULL);
@@ -797,7 +797,7 @@ ecma_op_container_foreach (ecma_extended_object_t *map_object_p, /**< map object
 {
   if (!ecma_op_is_callable (predicate))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable"));
   }
 
   JERRY_ASSERT (ecma_is_value_object (predicate));
@@ -1057,7 +1057,7 @@ ecma_op_container_iterator_next (ecma_value_t this_val, /**< this argument */
 {
   if (!ecma_is_value_object (this_val))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an object."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an object"));
   }
 
   ecma_object_t *obj_p = ecma_get_object_from_value (this_val);
@@ -1066,7 +1066,7 @@ ecma_op_container_iterator_next (ecma_value_t this_val, /**< this argument */
   if (ecma_get_object_type (obj_p) != ECMA_OBJECT_TYPE_PSEUDO_ARRAY
       || ext_obj_p->u.pseudo_array.type != iterator_type)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an iterator."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an iterator"));
   }
 
   ecma_value_t iterated_value = ext_obj_p->u.pseudo_array.u2.iterated_value;

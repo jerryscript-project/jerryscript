@@ -240,7 +240,7 @@ ecma_builtin_object_prototype_define_getter_setter (ecma_value_t this_arg, /**< 
   if (!ecma_op_is_callable (accessor))
   {
     ecma_deref_object (obj_p);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Getter is not callable."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Getter is not callable"));
   }
 
   ecma_object_t *accessor_obj_p = ecma_get_object_from_value (accessor);

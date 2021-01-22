@@ -468,10 +468,11 @@ class TestResult(object):
         return 'Test262:AsyncTestComplete' not in self.stdout
 
     def has_unexpected_outcome(self):
+        if self.case.is_negative():
+            return not (self.has_failed() and self.case.negative_match(self.get_error_output()))
+
         if self.case.is_async_test():
             return self.async_has_failed() or self.has_failed()
-        elif self.case.is_negative():
-            return not (self.has_failed() and self.case.negative_match(self.get_error_output()))
 
         return self.has_failed()
 

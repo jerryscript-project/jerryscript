@@ -79,6 +79,9 @@ JERRY_UNITTESTS_OPTIONS = [
 
 # Test options for jerry-tests
 JERRY_TESTS_OPTIONS = [
+    Options('jerry_tests-es.next',
+            OPTIONS_COMMON + OPTIONS_PROFILE_ESNEXT + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT
+            + OPTIONS_MEM_STRESS),
     Options('jerry_tests-es.next-debug',
             OPTIONS_COMMON + OPTIONS_PROFILE_ESNEXT + OPTIONS_DEBUG + OPTIONS_STACK_LIMIT + OPTIONS_GC_MARK_LIMIT
             + OPTIONS_MEM_STRESS),

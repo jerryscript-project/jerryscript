@@ -213,6 +213,11 @@ if(USING_GCC OR USING_CLANG)
   endif()
   jerry_add_compile_warnings(all extra format-nonliteral init-self conversion sign-conversion format-security missing-declarations shadow strict-prototypes undef old-style-definition)
   jerry_add_compile_flags(-Wno-stack-protector -Wno-attributes -Werror)
+
+  # When clang do tail optimization calling to ecma_op_object_get_with_receiver,
+  # the stack size will not increase. Use -fno-optimize-sibling-calls
+  # to disable the tail optimization.
+  jerry_add_compile_flags(-fno-optimize-sibling-calls)
 endif()
 
 if(USING_GCC)

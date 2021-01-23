@@ -88,7 +88,7 @@ main (void)
 
   TEST_ASSERT (!ECMA_IS_VALUE_ERROR (result));
 #if ENABLED (JERRY_ESNEXT)
-  TEST_ASSERT (num == ECMA_NUMBER_MAX_SAFE_INTEGER);
+  TEST_ASSERT ((ecma_number_t) num == ECMA_NUMBER_MAX_SAFE_INTEGER);
 #else /* !ENABLED (JERRY_ESNEXT) */
   TEST_ASSERT (num == 0);
 #endif /* ENABLED (JERRY_ESNEXT) */

@@ -64,12 +64,12 @@ endif()
 
 # Jerry standalones
 if(JERRY_CMDLINE)
-  jerry_create_executable("jerry" "main-unix.c" "main-utils.c" "main-options.c" "cli.c")
+  jerry_create_executable("jerry" "main-jerry.c" "main-utils.c" "main-options.c" "cli.c")
   target_link_libraries("jerry" jerry-ext jerry-port-default)
 endif()
 
 if(JERRY_CMDLINE_TEST)
-  jerry_create_executable("jerry-test" "main-unix-test.c" "benchmarking.c")
+  jerry_create_executable("jerry-test" "main-jerry-test.c" "benchmarking.c")
   target_link_libraries("jerry-test" jerry-port-default)
   if (JERRY_TEST_STACK_MEASURE)
     target_compile_definitions("jerry-test" PRIVATE -DJERRY_TEST_STACK_MEASURE=1)
@@ -77,6 +77,6 @@ if(JERRY_CMDLINE_TEST)
 endif()
 
 if(JERRY_CMDLINE_SNAPSHOT)
-  jerry_create_executable("jerry-snapshot" "main-unix-snapshot.c" "cli.c")
+  jerry_create_executable("jerry-snapshot" "main-jerry-snapshot.c" "cli.c")
   target_link_libraries("jerry-snapshot" jerry-port-default)
 endif()

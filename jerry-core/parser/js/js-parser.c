@@ -1195,7 +1195,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
       {
         *dst_p++ = page_p->bytes[offset];
 
-        if (first_byte > encoding_limit)
+        if (first_byte >= encoding_limit)
         {
           first_byte = (uint16_t) (((first_byte << 8) | dst_p[-1]) - encoding_delta);
         }

@@ -136,7 +136,6 @@
   <test id="built-ins/TypedArray/prototype/join/get-length-uses-internal-arraylength.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/join/return-abrupt-from-separator-symbol.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/join/return-abrupt-from-separator.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/set/BigInt/number-tobigint.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/slice/set-values-from-different-ctor-type.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/sort/sorted-values.js"><reason></reason></test>
   <test id="built-ins/TypedArray/prototype/toLocaleString/BigInt/get-length-uses-internal-arraylength.js"><reason></reason></test>

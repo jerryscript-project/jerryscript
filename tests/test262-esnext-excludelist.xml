@@ -33,12 +33,9 @@
   <test id="built-ins/BigInt/asUintN/length.js"><reason></reason></test>
   <test id="built-ins/BigInt/asUintN/name.js"><reason></reason></test>
   <test id="built-ins/BigInt/asUintN/order-of-steps.js"><reason></reason></test>
-  <test id="built-ins/Date/prototype/setTime/new-value-time-clip.js"><reason></reason></test>
   <test id="built-ins/Date/prototype/toDateString/format.js"><reason></reason></test>
   <test id="built-ins/Date/prototype/toDateString/negative-year.js"><reason></reason></test>
   <test id="built-ins/Date/prototype/toTimeString/format.js"><reason></reason></test>
-  <test id="built-ins/Date/value-symbol-to-prim-invocation.js"><reason></reason></test>
-  <test id="built-ins/Date/value-to-primitive-call.js"><reason></reason></test>
   <test id="built-ins/Function/prototype/toString/AsyncFunction.js"><reason></reason></test>
   <test id="built-ins/Function/prototype/toString/Function.js"><reason></reason></test>
   <test id="built-ins/Function/prototype/toString/GeneratorFunction.js"><reason></reason></test>

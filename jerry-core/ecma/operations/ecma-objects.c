@@ -1531,11 +1531,11 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
         {
           setter_cp = ecma_get_named_accessor_property (property_ref.value_p)->setter_cp;
           create_new_property = false;
+          break;
         }
-        else
-        {
-          create_new_property = ecma_is_property_writable (inherited_property);
-        }
+
+        create_new_property = ecma_is_property_writable (inherited_property);
+        break;
       }
     }
 

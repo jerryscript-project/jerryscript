@@ -97,6 +97,15 @@ def prepare_test262_test_suite(args):
         if os.path.isdir(path_to_remove):
             shutil.rmtree(path_to_remove)
 
+    # Since ES2018 iterator's next method is called once during the prologue of iteration,
+    # rather than during each step. The test is incorrect and stuck in an infinite loop.
+    # https://github.com/tc39/test262/pull/1248 fixed the test and it passes on test262-esnext.
+    if args.es2015:
+        test_to_remove = 'test/language/statements/for-of/iterator-next-reference.js'
+        path_to_remove = os.path.join(args.test_dir, os.path.normpath(test_to_remove))
+        if os.path.isfile(path_to_remove):
+            os.remove(path_to_remove)
+
     return 0
 
 

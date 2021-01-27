@@ -207,7 +207,7 @@ ecma_op_container_free_weakset_entries (ecma_object_t *object_p, /**< object poi
       continue;
     }
 
-    ecma_op_container_unref_weak (ecma_get_object_from_value (*entry_p), ecma_make_object_value (object_p));
+    ecma_op_object_unref_weak (ecma_get_object_from_value (*entry_p), ecma_make_object_value (object_p));
     ecma_op_container_remove_weak_entry (object_p, *entry_p);
 
     *entry_p = ECMA_VALUE_EMPTY;
@@ -238,7 +238,7 @@ ecma_op_container_free_weakmap_entries (ecma_object_t *object_p, /**< object poi
       continue;
     }
 
-    ecma_op_container_unref_weak (ecma_get_object_from_value (entry_p->key), ecma_make_object_value (object_p));
+    ecma_op_object_unref_weak (ecma_get_object_from_value (entry_p->key), ecma_make_object_value (object_p));
     ecma_op_container_remove_weak_entry (object_p, entry_p->key);
 
     ecma_free_value_if_not_object (entry_p->value);
@@ -667,48 +667,6 @@ ecma_op_container_has (ecma_extended_object_t *map_object_p, /**< map object */
 } /* ecma_op_container_has */
 
 /**
- * Set a weak reference from a container to a key object
- */
-static void
-ecma_op_container_set_weak (ecma_object_t *const key_p, /**< key object */
-                            ecma_extended_object_t *const container_p) /**< container */
-{
-  if (JERRY_UNLIKELY (ecma_op_object_is_fast_array (key_p)))
-  {
-    ecma_fast_array_convert_to_normal (key_p);
-  }
-
-  ecma_string_t *weak_refs_string_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_WEAK_REFS);
-  ecma_property_t *property_p = ecma_find_named_property (key_p, weak_refs_string_p);
-  ecma_collection_t *refs_p;
-
-  if (property_p == NULL)
-  {
-    ecma_property_value_t *value_p;
-    ECMA_CREATE_INTERNAL_PROPERTY (key_p, weak_refs_string_p, property_p, value_p);
-
-    refs_p = ecma_new_collection ();
-    ECMA_SET_INTERNAL_VALUE_POINTER (value_p->value, refs_p);
-  }
-  else
-  {
-    refs_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, (ECMA_PROPERTY_VALUE_PTR (property_p)->value));
-  }
-
-  const ecma_value_t container_value = ecma_make_object_value ((ecma_object_t *) container_p);
-  for (uint32_t i = 0; i < refs_p->item_count; i++)
-  {
-    if (ecma_is_value_empty (refs_p->buffer_p[i]))
-    {
-      refs_p->buffer_p[i] = container_value;
-      return;
-    }
-  }
-
-  ecma_collection_push_back (refs_p, container_value);
-} /* ecma_op_container_set_weak */
-
-/**
  * Helper method for the Map.prototype.set and Set.prototype.add methods to swap the sign of the given value if needed
  *
  * See also:
@@ -769,7 +727,7 @@ ecma_op_container_set (ecma_extended_object_t *map_object_p, /**< map object */
     if ((map_object_p->u.class_prop.extra_info & ECMA_CONTAINER_FLAGS_WEAK) != 0)
     {
       ecma_object_t *key_p = ecma_get_object_from_value (key_arg);
-      ecma_op_container_set_weak (key_p, map_object_p);
+      ecma_op_object_set_weak (key_p, (ecma_object_t *) map_object_p);
     }
 #endif /* JERRY_BUILTIN_WEAKMAP ||  JERRY_BUILTIN_WEAKSET */
   }
@@ -906,37 +864,10 @@ ecma_op_container_delete_weak (ecma_extended_object_t *map_object_p, /**< map ob
   ecma_op_internal_buffer_delete (container_p, (ecma_container_pair_t *) entry_p, lit_id);
 
   ecma_object_t *key_object_p = ecma_get_object_from_value (key_arg);
-  ecma_op_container_unref_weak (key_object_p, ecma_make_object_value ((ecma_object_t *) map_object_p));
+  ecma_op_object_unref_weak (key_object_p, ecma_make_object_value ((ecma_object_t *) map_object_p));
 
   return ECMA_VALUE_TRUE;
 } /* ecma_op_container_delete_weak */
-
-/**
- * Helper function to remove a weak reference to an object.
- *
- * @return ecma value
- *         Returned value must be freed with ecma_free_value.
- */
-void
-ecma_op_container_unref_weak (ecma_object_t *object_p, /**< this argument */
-                              ecma_value_t ref_holder) /**< key argument */
-{
-  ecma_string_t *weak_refs_string_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_WEAK_REFS);
-
-  ecma_property_t *property_p = ecma_find_named_property (object_p, weak_refs_string_p);
-  JERRY_ASSERT (property_p != NULL);
-
-  ecma_collection_t *refs_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t,
-                                                               ECMA_PROPERTY_VALUE_PTR (property_p)->value);
-  for (uint32_t i = 0; i < refs_p->item_count; i++)
-  {
-    if (refs_p->buffer_p[i] == ref_holder)
-    {
-      refs_p->buffer_p[i] = ECMA_VALUE_EMPTY;
-      break;
-    }
-  }
-} /* ecma_op_container_unref_weak */
 
 /**
  * Helper function to remove a key/value pair from a weak container object

@@ -565,7 +565,25 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_WEAKSET,
 
 #endif /* JERRY_BUILTIN_WEAKSET */
 
-#if JERRY_BUILTIN_PROXY
+#if JERRY_BUILTIN_WEAKREF
+
+/* The WeakRef prototype object */
+BUILTIN (ECMA_BUILTIN_ID_WEAKREF_PROTOTYPE,
+         ECMA_OBJECT_TYPE_GENERAL,
+         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
+         true,
+         weakref_prototype)
+
+/* The WeakRef routine */
+BUILTIN_ROUTINE (ECMA_BUILTIN_ID_WEAKREF,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
+                 ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
+                 true,
+                 weakref)
+
+#endif /* JERRY_BUILTIN_WEAKREF */
+
+#if (JERRY_BUILTIN_PROXY)
 /* The Proxy routine (ECMA-262 v6, 26.2.1) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_PROXY,
                  ECMA_OBJECT_TYPE_NATIVE_FUNCTION,

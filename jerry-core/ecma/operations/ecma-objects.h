@@ -109,6 +109,10 @@ ecma_value_t ecma_op_species_constructor (ecma_object_t *this_value, ecma_builti
 ecma_value_t ecma_op_invoke_by_symbol_id (ecma_value_t object, lit_magic_string_id_t magic_string_id,
                                           ecma_value_t *args_p, uint32_t args_len);
 #endif /* JERRY_ESNEXT */
+#if JERRY_BUILTIN_WEAKREF || JERRY_BUILTIN_WEAKSET || JERRY_BUILTIN_WEAKMAP
+void ecma_op_object_set_weak (ecma_object_t *object_p, ecma_object_t *target_p);
+void ecma_op_object_unref_weak (ecma_object_t *object_p, ecma_value_t ref_holder);
+#endif /* JERRY_BUILTIN_WEAKREF || JERRY_BUILTIN_WEAKSET || JERRY_BUILTIN_WEAKMAP */
 ecma_value_t ecma_op_invoke (ecma_value_t object, ecma_string_t *property_name_p, ecma_value_t *args_p,
                              uint32_t args_len);
 ecma_value_t ecma_op_invoke_by_magic_id (ecma_value_t object, lit_magic_string_id_t magic_string_id,

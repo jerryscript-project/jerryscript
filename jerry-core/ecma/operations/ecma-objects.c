@@ -2650,6 +2650,9 @@ ecma_object_check_class_name_is_object (ecma_object_t *obj_p) /**< object */
 #if JERRY_BUILTIN_WEAKMAP
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_WEAKMAP_PROTOTYPE)
 #endif /* JERRY_BUILTIN_WEAKMAP */
+#if JERRY_BUILTIN_WEAKREF
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_WEAKREF_PROTOTYPE)
+#endif /* JERRY_BUILTIN_WEAKREF */
 #if JERRY_BUILTIN_WEAKSET
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_WEAKSET_PROTOTYPE)
 #endif /* JERRY_BUILTIN_WEAKSET */
@@ -3239,6 +3242,82 @@ ecma_op_ordinary_object_has_own_property (ecma_object_t *object_p, /**< the obje
   return property != ECMA_PROPERTY_TYPE_NOT_FOUND && property != ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP;
 } /* ecma_op_ordinary_object_has_own_property */
 
+#if JERRY_BUILTIN_WEAKREF || JERRY_BUILTIN_WEAKSET || JERRY_BUILTIN_WEAKMAP
+
+/**
+ * Set a weak reference from a container or WeakRefObject to a key object
+ */
+void
+ecma_op_object_set_weak (ecma_object_t *object_p, /**< key object */
+                         ecma_object_t *target_p) /**< target object */
+{
+  if (JERRY_UNLIKELY (ecma_op_object_is_fast_array (object_p)))
+  {
+    ecma_fast_array_convert_to_normal (object_p);
+  }
+
+  ecma_string_t *weak_refs_string_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_WEAK_REFS);
+  ecma_property_t *property_p = ecma_find_named_property (object_p, weak_refs_string_p);
+  ecma_collection_t *refs_p;
+
+  if (property_p == NULL)
+  {
+    ecma_property_value_t *value_p;
+    ECMA_CREATE_INTERNAL_PROPERTY (object_p, weak_refs_string_p, property_p, value_p);
+
+    refs_p = ecma_new_collection ();
+    ECMA_SET_INTERNAL_VALUE_POINTER (value_p->value, refs_p);
+  }
+  else
+  {
+    refs_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, (ECMA_PROPERTY_VALUE_PTR (property_p)->value));
+  }
+
+  const ecma_value_t target_value = ecma_make_object_value ((ecma_object_t *) target_p);
+  for (uint32_t i = 0; i < refs_p->item_count; i++)
+  {
+    if (ecma_is_value_empty (refs_p->buffer_p[i]))
+    {
+      refs_p->buffer_p[i] = target_value;
+      return;
+    }
+  }
+
+  ecma_collection_push_back (refs_p, target_value);
+} /* ecma_op_object_set_weak */
+
+/**
+ * Helper function to remove a weak reference to an object.
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+void
+ecma_op_object_unref_weak (ecma_object_t *object_p, /**< this argument */
+                           ecma_value_t ref_holder) /**< key argument */
+{
+  ecma_string_t *weak_refs_string_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_WEAK_REFS);
+
+  ecma_property_t *property_p = ecma_find_named_property (object_p, weak_refs_string_p);
+  JERRY_ASSERT (property_p != NULL);
+
+  ecma_collection_t *refs_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t,
+                                                               ECMA_PROPERTY_VALUE_PTR (property_p)->value);
+  ecma_value_t *buffer_p = refs_p->buffer_p;
+
+  while (true)
+  {
+    if (*buffer_p == ref_holder)
+    {
+      *buffer_p = ECMA_VALUE_EMPTY;
+      return;
+    }
+    JERRY_ASSERT (buffer_p < refs_p->buffer_p + refs_p->item_count);
+    buffer_p++;
+  }
+} /* ecma_op_object_unref_weak */
+
+#endif /* JERRY_BUILTIN_WEAKREF || JERRY_BUILTIN_WEAKSET || JERRY_BUILTIN_WEAKMAP */
 /**
  * Raise property redefinition error
  *

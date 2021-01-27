@@ -1237,6 +1237,12 @@ jerry_object_get_type (const jerry_value_t value) /**< input value to check */
           return JERRY_OBJECT_TYPE_CONTAINER;
         }
 #endif /* JERRY_BUILTIN_CONTAINER */
+#if JERRY_BUILTIN_WEAKREF
+        case LIT_MAGIC_STRING_WEAKREF_UL:
+        {
+          return JERRY_OBJECT_TYPE_WEAKREF;
+        }
+#endif /* JERRY_BUILTIN_WEAKREF */
         default:
         {
           break;
@@ -1460,6 +1466,9 @@ jerry_is_feature_enabled (const jerry_feature_t feature) /**< feature to check *
 #if JERRY_BUILTIN_WEAKMAP
           || feature == JERRY_FEATURE_WEAKMAP
 #endif /* JERRY_BUILTIN_WEAKMAP */
+#if JERRY_BUILTIN_WEAKREF
+          || feature == JERRY_FEATURE_WEAKREF
+#endif /* JERRY_BUILTIN_WEAKREF */
 #if JERRY_BUILTIN_WEAKSET
           || feature == JERRY_FEATURE_WEAKSET
 #endif /* JERRY_BUILTIN_WEAKSET */

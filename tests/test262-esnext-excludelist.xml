@@ -5295,32 +5295,8 @@
   <test id="built-ins/FinalizationRegistry/target-not-callable-throws.js"><reason></reason></test>
   <test id="built-ins/FinalizationRegistry/undefined-newtarget-throws.js"><reason></reason></test>
   <test id="built-ins/FinalizationRegistry/unnaffected-by-poisoned-cleanupCallback.js"><reason></reason></test>
-  <test id="built-ins/WeakRef/constructor.js"><reason></reason></test>
-  <test id="built-ins/WeakRef/instance-extensible.js"><reason></reason></test>
-  <test id="built-ins/WeakRef/length.js"><reason></reason></test>
-  <test id="built-ins/WeakRef/name.js"><reason></reason></test>
-  <test id="built-ins/WeakRef/newtarget-prototype-is-not-object.js"><reason></reason></test>
-  <test id="built-ins/WeakRef/prop-desc.js"><reason></reason></test>
-  <test id="built-ins/WeakRef/proto-from-ctor-realm.js"><reason></reason></test>
-  <test id="built-ins/WeakRef/proto.js"><reason></reason></test>
-  <test id="built-ins/WeakRef/prototype-from-newtarget-abrupt.js"><reason></reason></test>
-  <test id="built-ins/WeakRef/prototype-from-newtarget-custom.js"><reason></reason></test>
-  <test id="built-ins/WeakRef/prototype-from-newtarget.js"><reason></reason></test>
-  <test id="built-ins/WeakRef/prototype/Symbol.toStringTag.js"><reason></reason></test>
-  <test id="built-ins/WeakRef/prototype/constructor.js"><reason></reason></test>
-  <test id="built-ins/WeakRef/prototype/deref/custom-this.js"><reason></reason></test>
   <test id="built-ins/WeakRef/prototype/deref/gc-cleanup-not-prevented-with-wr-deref.js"><reason></reason></test>
-  <test id="built-ins/WeakRef/prototype/deref/length.js"><reason></reason></test>
-  <test id="built-ins/WeakRef/prototype/deref/name.js"><reason></reason></test>
-  <test id="built-ins/WeakRef/prototype/deref/prop-desc.js"><reason></reason></test>
-  <test id="built-ins/WeakRef/prototype/deref/return-target.js"><reason></reason></test>
   <test id="built-ins/WeakRef/prototype/deref/this-does-not-have-internal-target-throws.js"><reason></reason></test>
-  <test id="built-ins/WeakRef/prototype/deref/this-not-object-throws.js"><reason></reason></test>
-  <test id="built-ins/WeakRef/prototype/prop-desc.js"><reason></reason></test>
-  <test id="built-ins/WeakRef/prototype/proto.js"><reason></reason></test>
-  <test id="built-ins/WeakRef/returns-new-object-from-constructor.js"><reason></reason></test>
-  <test id="built-ins/WeakRef/target-not-object-throws.js"><reason></reason></test>
-  <test id="built-ins/WeakRef/undefined-newtarget-throws.js"><reason></reason></test>
   <!-- END - ESNext stage 4 proposal: WeakRefs -->
 
   <!-- ESNext stage 4 proposal: Logical Assignment Operators
@@ -8605,7 +8581,6 @@
   <test id="built-ins/TypedArrayConstructors/internals/HasProperty/detached-buffer-realm.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/internals/Set/BigInt/detached-buffer-realm.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/internals/Set/detached-buffer-realm.js"><reason></reason></test>
-  <test id="built-ins/WeakRef/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="intl402/Collator/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="intl402/DateTimeFormat/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="intl402/DisplayNames/proto-from-ctor-realm.js"><reason></reason></test>

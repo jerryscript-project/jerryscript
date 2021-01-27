@@ -109,6 +109,7 @@ typedef enum
   JERRY_FEATURE_GLOBAL_THIS, /**< GlobalThisValue support */
   JERRY_FEATURE_PROMISE_CALLBACK, /**< Promise callback support */
   JERRY_FEATURE_MODULE, /**< Module support */
+  JERRY_FEATURE_WEAKREF, /**< WeakRef support */
   JERRY_FEATURE__COUNT /**< number of features. NOTE: must be at the end of the list */
 } jerry_feature_t;
 
@@ -491,6 +492,7 @@ typedef enum
   JERRY_OBJECT_TYPE_SYMBOL,       /**< Symbol object */
   JERRY_OBJECT_TYPE_GENERATOR,    /**< Generator object */
   JERRY_OBJECT_TYPE_BIGINT,       /**< BigInt object */
+  JERRY_OBJECT_TYPE_WEAKREF,       /**< WeakRef object */
 } jerry_object_type_t;
 
 /**

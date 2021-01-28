@@ -96,7 +96,7 @@ ecma_builtin_array_object_from (ecma_value_t this_arg, /**< 'this' argument */
     /* 3.a */
     if (!ecma_op_is_callable (mapfn))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable."));
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable"));
     }
 
     /* 3.b */
@@ -493,7 +493,7 @@ ecma_builtin_array_dispatch_call (const ecma_value_t *arguments_list_p, /**< arg
 
   if (num != ((ecma_number_t) num_uint32))
   {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid array length."));
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid array length"));
   }
 
   return ecma_make_object_value (ecma_op_new_array_object (num_uint32));

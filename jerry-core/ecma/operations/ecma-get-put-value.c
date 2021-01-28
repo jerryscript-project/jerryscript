@@ -68,7 +68,7 @@ ecma_op_get_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
           if (JERRY_UNLIKELY (property_value_p->value == ECMA_VALUE_UNINITIALIZED))
           {
             return ecma_raise_reference_error (ECMA_ERR_MSG ("Variables declared by let/const must be"
-                                                             " initialized before reading their value."));
+                                                             " initialized before reading their value"));
           }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
@@ -229,7 +229,7 @@ ecma_op_put_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
             if (JERRY_UNLIKELY (property_value_p->value == ECMA_VALUE_UNINITIALIZED))
             {
               return ecma_raise_reference_error (ECMA_ERR_MSG ("Variables declared by let/const must be"
-                                                               " initialized before writing their value."));
+                                                               " initialized before writing their value"));
             }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
@@ -241,15 +241,15 @@ ecma_op_put_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
             if (JERRY_UNLIKELY (ECMA_PROPERTY_VALUE_PTR (property_p)->value == ECMA_VALUE_UNINITIALIZED))
             {
               return ecma_raise_reference_error (ECMA_ERR_MSG ("Variables declared by let/const must be"
-                                                               " initialized before writing their value."));
+                                                               " initialized before writing their value"));
             }
 
-            return ecma_raise_type_error (ECMA_ERR_MSG ("Constant bindings cannot be reassigned."));
+            return ecma_raise_type_error (ECMA_ERR_MSG ("Constant bindings cannot be reassigned"));
           }
 #endif /* ENABLED (JERRY_ESNEXT) */
           else if (is_strict)
           {
-            return ecma_raise_type_error (ECMA_ERR_MSG ("Binding cannot be set."));
+            return ecma_raise_type_error (ECMA_ERR_MSG ("Binding cannot be set"));
           }
           return ECMA_VALUE_EMPTY;
         }

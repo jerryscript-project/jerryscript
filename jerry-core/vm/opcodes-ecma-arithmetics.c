@@ -304,7 +304,7 @@ opfunc_unary_operation (ecma_value_t left_value, /**< left value */
 
   if (is_plus)
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Unary operation plus is not allowed for BigInt numbers"));
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Unary plus is not allowed for BigInts"));
   }
   else
   {

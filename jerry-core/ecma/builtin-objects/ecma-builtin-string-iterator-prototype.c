@@ -54,7 +54,7 @@ ecma_builtin_string_iterator_prototype_object_next (ecma_value_t this_val) /**< 
     /* 1 - 2. */
   if (!ecma_is_value_object (this_val))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an object."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an object"));
   }
 
   ecma_object_t *obj_p = ecma_get_object_from_value (this_val);
@@ -64,7 +64,7 @@ ecma_builtin_string_iterator_prototype_object_next (ecma_value_t this_val) /**< 
   if (ecma_get_object_type (obj_p) != ECMA_OBJECT_TYPE_PSEUDO_ARRAY
       || ext_obj_p->u.pseudo_array.type != ECMA_PSEUDO_STRING_ITERATOR)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an iterator."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an iterator"));
   }
 
   ecma_value_t iterated_value = ext_obj_p->u.pseudo_array.u2.iterated_value;
@@ -84,7 +84,7 @@ ecma_builtin_string_iterator_prototype_object_next (ecma_value_t this_val) /**< 
 
   if (JERRY_UNLIKELY (position == ECMA_ITERATOR_INDEX_LIMIT))
   {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("String iteration cannot be continued."));
+    return ecma_raise_range_error (ECMA_ERR_MSG ("String iteration cannot be continued"));
   }
 
   /* 7. */

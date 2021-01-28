@@ -218,7 +218,7 @@ vm_op_delete_prop (ecma_value_t object, /**< base object */
 #if ENABLED (JERRY_ESNEXT)
   if (is_strict && ecma_is_value_false (delete_op_ret))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("delete returned false in strict mode."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Operator delete returned false in strict mode"));
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
@@ -1068,7 +1068,7 @@ ecma_op_implicit_constructor_handler_cb (const ecma_value_t function_obj, /**< t
 
   if (JERRY_CONTEXT (current_new_target_p) == NULL)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor cannot be invoked without 'new'."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor cannot be invoked without 'new'"));
   }
 
   return opfunc_init_class_fields (function_obj, this_val);
@@ -1092,7 +1092,7 @@ ecma_op_implicit_constructor_handler_heritage_cb (const ecma_value_t function_ob
 
   if (JERRY_CONTEXT (current_new_target_p) == NULL)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor cannot be invoked without 'new'."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor cannot be invoked without 'new'"));
   }
 
   ecma_object_t *func_obj_p = ecma_get_object_from_value (function_obj);
@@ -1489,7 +1489,7 @@ opfunc_form_super_reference (ecma_value_t **vm_stack_top_p, /**< current vm stac
     if (!ecma_op_this_binding_is_initialized (environment_record_p))
     {
       return ecma_raise_reference_error (ECMA_ERR_MSG ("Must call super constructor in derived class before "
-                                                       "accessing 'this' or returning from it."));
+                                                       "accessing 'this' or returning from it"));
     }
   }
 
@@ -1497,7 +1497,7 @@ opfunc_form_super_reference (ecma_value_t **vm_stack_top_p, /**< current vm stac
 
   if (ECMA_IS_VALUE_ERROR (parent))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot invoke nullable super method."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot invoke nullable super method"));
   }
 
   if (!ecma_op_require_object_coercible (parent))

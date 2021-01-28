@@ -398,7 +398,7 @@ ecma_module_resolve_export (ecma_module_t *const module_p, /**< base module */
 
         if (ecma_compare_ecma_string_to_magic_id (current_export_name_p, LIT_MAGIC_STRING_DEFAULT))
         {
-          ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("No default export in native module."));
+          ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("No default export in native module"));
           break;
         }
 
@@ -480,7 +480,7 @@ ecma_module_resolve_export (ecma_module_t *const module_p, /**< base module */
     /* 15.2.1.16.3 / 6 */
     if (ecma_compare_ecma_string_to_magic_id (current_export_name_p, LIT_MAGIC_STRING_DEFAULT))
     {
-      ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("No explicitly defined default export in module."));
+      ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("No explicitly defined default export in module"));
       break;
     }
 
@@ -529,7 +529,7 @@ ecma_module_resolve_export (ecma_module_t *const module_p, /**< base module */
   }
   else
   {
-    ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("Unexported or circular import request."));
+    ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("Unexported or circular import request"));
   }
 
   return ret_value;
@@ -766,7 +766,7 @@ ecma_module_connect_imports (ecma_module_t *module_p)
 
       if (binding_p != NULL)
       {
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Imported binding shadows local variable."));
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Imported binding shadows local variable"));
       }
 
       ecma_value_t status = ecma_op_has_binding (lex_env_p, import_names_p->local_name_p);
@@ -780,7 +780,7 @@ ecma_module_connect_imports (ecma_module_t *module_p)
 
       if (ecma_is_value_true (status))
       {
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Imported binding shadows local variable."));
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Imported binding shadows local variable"));
       }
 
       import_names_p = import_names_p->next_p;
@@ -831,7 +831,7 @@ ecma_module_connect_imports (ecma_module_t *module_p)
 
         if (record.module_p == NULL)
         {
-          return ecma_raise_syntax_error (ECMA_ERR_MSG ("Ambiguous import request."));
+          return ecma_raise_syntax_error (ECMA_ERR_MSG ("Ambiguous import request"));
         }
 
         if (record.module_p->state == ECMA_MODULE_STATE_NATIVE)
@@ -916,7 +916,7 @@ ecma_module_check_indirect_exports (ecma_module_t *module_p)
 
       if (record.module_p == NULL)
       {
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Ambiguous indirect export request."));
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Ambiguous indirect export request"));
       }
 
       name_p = name_p->next_p;
@@ -1004,7 +1004,7 @@ ecma_module_parse (ecma_module_t *module_p) /**< module */
 
   if (source_p == NULL)
   {
-    return ecma_raise_syntax_error (ECMA_ERR_MSG ("File not found."));
+    return ecma_raise_syntax_error (ECMA_ERR_MSG ("File not found"));
   }
 
   ecma_module_t *prev_module_p = JERRY_CONTEXT (module_current_p);

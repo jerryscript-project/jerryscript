@@ -1545,7 +1545,7 @@ ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
 
   if (ecma_builtin_function_is_routine (obj_p))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Built-in routines have no constructor."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Built-in routines have no constructor"));
   }
 
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;

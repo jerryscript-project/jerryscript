@@ -47,7 +47,7 @@ ecma_builtin_map_dispatch_call (const ecma_value_t *arguments_list_p, /**< argum
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
-  return ecma_raise_type_error (ECMA_ERR_MSG ("Constructor Map requires 'new'."));
+  return ecma_raise_type_error (ECMA_ERR_MSG ("Constructor Map requires 'new'"));
 } /* ecma_builtin_map_dispatch_call */
 
 /**

@@ -2134,7 +2134,7 @@ do \
 { \
   if (ecma_get_current_stack_usage () > CONFIG_MEM_STACK_LIMIT) \
   { \
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Maximum call stack size exceeded.")); \
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Maximum call stack size exceeded")); \
   } \
 } while (0)
 #else /* JERRY_STACK_LIMIT == 0) */

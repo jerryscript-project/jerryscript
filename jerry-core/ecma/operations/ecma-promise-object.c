@@ -243,7 +243,7 @@ ecma_fulfill_promise (ecma_value_t promise, /**< promise */
 
   if (promise == value)
   {
-    ecma_raise_type_error (ECMA_ERR_MSG ("A promise cannot be resolved with itself."));
+    ecma_raise_type_error (ECMA_ERR_MSG ("A promise cannot be resolved with itself"));
     ecma_value_t exception = jcontext_take_exception ();
     ecma_reject_promise (promise, exception);
     ecma_free_value (exception);
@@ -673,7 +673,7 @@ ecma_promise_new_capability (ecma_value_t constructor)
   {
     ecma_free_value (promise);
     ecma_deref_object (capability_obj_p);
-    ecma_raise_type_error (ECMA_ERR_MSG ("'resolve' parameter must be callable."));
+    ecma_raise_type_error (ECMA_ERR_MSG ("'resolve' parameter must be callable"));
     return NULL;
   }
 
@@ -682,7 +682,7 @@ ecma_promise_new_capability (ecma_value_t constructor)
   {
     ecma_free_value (promise);
     ecma_deref_object (capability_obj_p);
-    ecma_raise_type_error (ECMA_ERR_MSG ("'reject' parameter must be callable."));
+    ecma_raise_type_error (ECMA_ERR_MSG ("'reject' parameter must be callable"));
     return NULL;
   }
 
@@ -708,7 +708,7 @@ ecma_promise_reject_or_resolve (ecma_value_t this_arg, /**< "this" argument */
 {
   if (!ecma_is_value_object (this_arg))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not an object."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an object"));
   }
 
   if (is_resolve
@@ -862,14 +862,14 @@ ecma_promise_then (ecma_value_t promise, /**< the promise which call 'then' */
 {
   if (!ecma_is_value_object (promise))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not an object."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an object"));
   }
 
   ecma_object_t *obj = ecma_get_object_from_value (promise);
 
   if (!ecma_is_promise (obj))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not a Promise."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a Promise"));
   }
 
   ecma_value_t species = ecma_op_species_constructor (obj, ECMA_BUILTIN_ID_PROMISE);
@@ -1053,7 +1053,7 @@ ecma_promise_finally (ecma_value_t promise, /**< the promise which call 'finally
   /* 2. */
   if (!ecma_is_value_object (promise))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not an object."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an object"));
   }
 
   ecma_object_t *obj = ecma_get_object_from_value (promise);

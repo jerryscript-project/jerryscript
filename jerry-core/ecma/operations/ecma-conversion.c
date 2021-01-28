@@ -59,7 +59,7 @@ ecma_op_require_object_coercible (ecma_value_t value) /**< ecma value */
 
   if (ecma_is_value_undefined (value) || ecma_is_value_null (value))
   {
-    ecma_raise_type_error (ECMA_ERR_MSG ("Argument cannot be converted to an object."));
+    ecma_raise_type_error (ECMA_ERR_MSG ("Argument cannot be converted to an object"));
     return false;
   }
 
@@ -344,7 +344,7 @@ ecma_op_to_numeric (ecma_value_t value, /**< ecma value */
 #if ENABLED (JERRY_ESNEXT)
   if (ecma_is_value_symbol (value))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a Symbol value to a number."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a Symbol value to a number"));
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
@@ -441,7 +441,7 @@ ecma_op_to_string (ecma_value_t value) /**< ecma value */
 #if ENABLED (JERRY_ESNEXT)
   if (ecma_is_value_symbol (value))
   {
-    ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a Symbol value to a string."));
+    ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a Symbol value to a string"));
     return NULL;
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
@@ -570,7 +570,7 @@ ecma_op_to_object (ecma_value_t value) /**< ecma value */
     if (ecma_is_value_undefined (value)
         || ecma_is_value_null (value))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Argument cannot be converted to an object."));
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Argument cannot be converted to an object"));
     }
     else
     {
@@ -728,7 +728,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
   /* 1. */
   if (!ecma_is_value_object (obj_value))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Expected an object."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Expected an object"));
   }
 
   ecma_object_t *obj_p = ecma_get_object_from_value (obj_value);
@@ -825,7 +825,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
         && !ecma_is_value_undefined (get_prop_value))
     {
       ecma_free_value (get_prop_value);
-      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function."));
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function"));
       goto free_desc;
     }
 
@@ -863,7 +863,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
         && !ecma_is_value_undefined (set_prop_value))
     {
       ecma_free_value (set_prop_value);
-      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function."));
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function"));
       goto free_desc;
     }
 
@@ -890,7 +890,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
   if ((prop_desc.flags & (ECMA_PROP_IS_VALUE_DEFINED | ECMA_PROP_IS_WRITABLE_DEFINED))
         && (prop_desc.flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED)))
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Accessors cannot be writable."));
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Accessors cannot be writable"));
   }
   else
   {
@@ -1105,7 +1105,7 @@ ecma_op_create_list_from_array_like (ecma_value_t arr,  /**< array value */
   /* 3. */
   if (!ecma_is_value_object (arr))
   {
-    ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an Object."));
+    ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object"));
     return NULL;
   }
   ecma_object_t *obj_p = ecma_get_object_from_value (arr);
@@ -1135,7 +1135,7 @@ ecma_op_create_list_from_array_like (ecma_value_t arr,  /**< array value */
     {
       ecma_free_value (next);
       ecma_collection_free (list_ptr);
-      ecma_raise_type_error (ECMA_ERR_MSG ("Property name is neither Symbol nor String."));
+      ecma_raise_type_error (ECMA_ERR_MSG ("Property name is neither Symbol nor string"));
       return NULL;
     }
 

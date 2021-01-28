@@ -173,7 +173,7 @@ ecma_op_new_array_object_from_length (ecma_length_t length) /**< length of the n
 #if ENABLED (JERRY_ESNEXT)
   if (length > UINT32_MAX)
   {
-    ecma_raise_range_error (ECMA_ERR_MSG ("Invalid array length"));
+    ecma_raise_range_error (ECMA_ERR_MSG ("Invalid Array length"));
     return NULL;
   }
 #endif /* ENABLED (JERRY_ESNEXT) */
@@ -997,7 +997,7 @@ ecma_op_array_object_set_length (ecma_object_t *object_p, /**< the array object 
 
   if (((ecma_number_t) new_len_uint32) != new_len_num)
   {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid array length."));
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid Array length"));
   }
 
   if (flags & ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_REJECT)

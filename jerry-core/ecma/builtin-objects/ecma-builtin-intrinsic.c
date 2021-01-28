@@ -171,12 +171,12 @@ ecma_builtin_intrinsic_dispatch_routine (uint8_t builtin_routine_id, /**< built-
     {
       if (!ecma_is_typedarray (this_arg))
       {
-        return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray."));
+        return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray"));
       }
 
       if (ecma_arraybuffer_is_detached (ecma_typedarray_get_arraybuffer (ecma_get_object_from_value (this_arg))))
       {
-        return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached."));
+        return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached"));
       }
 
       return ecma_typedarray_iterators_helper (this_arg, ECMA_ITERATOR_VALUES);
@@ -207,7 +207,7 @@ ecma_builtin_intrinsic_dispatch_routine (uint8_t builtin_routine_id, /**< built-
       if (!ecma_is_value_object (this_arg)
           || !ecma_object_class_is (ecma_get_object_from_value (this_arg), LIT_MAGIC_STRING_DATE_UL))
       {
-        return ecma_raise_type_error (ECMA_ERR_MSG ("'this' is not a Date object"));
+        return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a Date object"));
       }
 
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) ecma_get_object_from_value (this_arg);

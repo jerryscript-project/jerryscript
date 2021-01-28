@@ -910,7 +910,7 @@ main (void)
     jerry_release_value (err_str_val);
     jerry_release_value (parsed_code_val);
     TEST_ASSERT (!strcmp ((char *) err_str_buf,
-                          "SyntaxError: Primary expression expected. [<anonymous>:2:10]"));
+                          "SyntaxError: Primary expression expected [<anonymous>:2:10]"));
 
     const jerry_char_t file_str[] = "filename.js";
     parsed_code_val = jerry_parse (file_str,
@@ -929,7 +929,7 @@ main (void)
     jerry_release_value (err_str_val);
     jerry_release_value (parsed_code_val);
     TEST_ASSERT (!strcmp ((char *) err_str_buf,
-                          "SyntaxError: Primary expression expected. [filename.js:2:10]"));
+                          "SyntaxError: Primary expression expected [filename.js:2:10]"));
 
     const jerry_char_t eval_err_src[] = "eval(\"var b;\\nfor (,); \");";
     parsed_code_val = jerry_parse (file_str,
@@ -952,7 +952,7 @@ main (void)
     jerry_release_value (parsed_code_val);
     jerry_release_value (res);
     TEST_ASSERT (!strcmp ((char *) err_str_buf,
-                          "SyntaxError: Primary expression expected. [<eval>:2:6]"));
+                          "SyntaxError: Primary expression expected [<eval>:2:6]"));
 
     jerry_cleanup ();
   }

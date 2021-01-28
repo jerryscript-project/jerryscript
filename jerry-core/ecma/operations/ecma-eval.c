@@ -114,7 +114,7 @@ ecma_op_eval_chars_buffer (const lit_utf8_byte_t *code_p, /**< code characters b
   JERRY_UNUSED (code_buffer_size);
   JERRY_UNUSED (parse_opts);
 
-  return ecma_raise_syntax_error (ECMA_ERR_MSG ("The parser has been disabled."));
+  return ecma_raise_syntax_error (ECMA_ERR_MSG ("Source code parsing is disabled"));
 #endif /* ENABLED (JERRY_PARSER) */
 } /* ecma_op_eval_chars_buffer */
 

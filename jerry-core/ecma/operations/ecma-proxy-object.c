@@ -54,7 +54,7 @@ ecma_proxy_create (ecma_value_t target, /**< proxy target */
   /* ES11+: 1 - 2. */
   if (!ecma_is_value_object (target) || !ecma_is_value_object (handler))
   {
-    ecma_raise_type_error (ECMA_ERR_MSG ("Cannot create proxy with a non-object target or handler"));
+    ecma_raise_type_error (ECMA_ERR_MSG ("Cannot create Proxy with a non-object target or handler"));
     return NULL;
   }
 
@@ -240,7 +240,7 @@ ecma_validate_proxy_object (ecma_value_t handler, /**< proxy handler */
 {
   if (ecma_is_value_null (handler))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Handler can not be null"));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Handler cannot be null"));
   }
 
   JERRY_ASSERT (ecma_is_value_object (handler));
@@ -305,7 +305,7 @@ ecma_proxy_object_get_prototype_of (ecma_object_t *obj_p) /**< proxy object */
   {
     ecma_free_value (handler_proto);
 
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned neither object nor null."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned neither object nor null"));
   }
 
   /* 11. */
@@ -342,7 +342,7 @@ ecma_proxy_object_get_prototype_of (ecma_object_t *obj_p) /**< proxy object */
     ecma_free_value (handler_proto);
 
     ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Proxy target is non-extensible, but the trap did not "
-                                                     "return its actual prototype."));
+                                                     "return its actual prototype"));
   }
 
   ecma_free_value (target_proto);
@@ -447,7 +447,7 @@ ecma_proxy_object_set_prototype_of (ecma_object_t *obj_p, /**< proxy object */
   if (boolean_trap_result && (target_proto != proto))
   {
     ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Target object is non-extensible and trap "
-                                                     "returned different prototype."));
+                                                     "returned different prototype"));
   }
 
   ecma_free_value (target_proto);
@@ -534,7 +534,7 @@ ecma_proxy_object_is_extensible (ecma_object_t *obj_p) /**< proxy object */
   /* 12. */
   if (boolean_trap_result != target_result)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Trap result does not reflect extensibility of proxy target"));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Trap result does not reflect extensibility of Proxy target"));
   }
 
   return ecma_make_boolean_value (boolean_trap_result);
@@ -617,7 +617,7 @@ ecma_proxy_object_prevent_extensions (ecma_object_t *obj_p) /**< proxy object */
 
     if (ecma_is_value_true (target_is_ext))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Trap result does not reflect inextensibility of proxy target"));
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Trap result does not reflect inextensibility of Proxy target"));
     }
   }
 
@@ -685,7 +685,7 @@ ecma_proxy_object_get_own_property_descriptor (ecma_object_t *obj_p, /**< proxy 
   if (!ecma_is_value_object (trap_result) && !ecma_is_value_undefined (trap_result))
   {
     ecma_free_value (trap_result);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Trap is not object nor undefined."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Trap is neither an object nor undefined"));
   }
 
   /* 12. */
@@ -731,7 +731,7 @@ ecma_proxy_object_get_own_property_descriptor (ecma_object_t *obj_p, /**< proxy 
     /* .f */
     if (ecma_is_value_false (extensible_target))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Target not extensible."));
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Target not extensible"));
     }
 
     /* .g */
@@ -789,24 +789,21 @@ ecma_proxy_object_get_own_property_descriptor (ecma_object_t *obj_p, /**< proxy 
   if (!is_valid)
   {
     ecma_free_property_descriptor (prop_desc_p);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("The two descriptors are not compatible."));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("The two descriptors are incompatible"));
   }
 
   /* 22. */
   else if (!(prop_desc_p->flags & ECMA_PROP_IS_CONFIGURABLE))
   {
-    if (!target_has_desc || target_is_configurable)
-    {
-      ecma_free_property_descriptor (prop_desc_p);
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Not compatible."));
-    }
+    const uint16_t mask = (ECMA_PROP_IS_WRITABLE_DEFINED | ECMA_PROP_IS_WRITABLE);
 
-    /* ES11: 17.b */
-    if ((prop_desc_p->flags & (ECMA_PROP_IS_WRITABLE_DEFINED | ECMA_PROP_IS_WRITABLE)) == ECMA_PROP_IS_WRITABLE_DEFINED
-        && target_is_writable)
+    if (!target_has_desc
+        || target_is_configurable
+        || ((prop_desc_p->flags & mask) == ECMA_PROP_IS_WRITABLE_DEFINED
+            && target_is_writable))
     {
       ecma_free_property_descriptor (prop_desc_p);
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Not compatible."));
+      return ecma_raise_type_error (ECMA_ERR_MSG ("The two descriptors are incompatible"));
     }
   }
   return ECMA_VALUE_TRUE;
@@ -1147,16 +1144,15 @@ ecma_proxy_object_get (ecma_object_t *obj_p, /**< proxy object */
         && !(target_desc.flags & ECMA_PROP_IS_WRITABLE)
         && !ecma_op_same_value (trap_result, target_desc.value))
     {
-      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("given property is a read-only and non-configurable"
-                                                       " data property on the proxy target"));
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Incorrect value is returned by a Proxy 'get' trap"));
     }
     else if (!(target_desc.flags & ECMA_PROP_IS_CONFIGURABLE)
             && (target_desc.flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED))
             && target_desc.get_p == NULL
             && !ecma_is_value_undefined (trap_result))
     {
-      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("given property is a non-configurable property and"
-                                                       " does not have a getter function"));
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Property of a Proxy is non-configurable and "
+                                                       "does not have a getter function"));
     }
 
     ecma_free_property_descriptor (&target_desc);
@@ -1268,16 +1264,14 @@ ecma_proxy_object_set (ecma_object_t *obj_p, /**< proxy object */
         && !(target_desc.flags & ECMA_PROP_IS_WRITABLE)
         && !ecma_op_same_value (value, target_desc.value))
     {
-      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("The property exists in the proxy target as a"
-                                                       " non-configurable and non-writable data property"
-                                                       " with a different value."));
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Incorrect value is returned by a Proxy 'set' trap"));
     }
     else if (!(target_desc.flags & ECMA_PROP_IS_CONFIGURABLE)
-            && (target_desc.flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED))
-            && target_desc.set_p == NULL)
+             && (target_desc.flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED))
+             && target_desc.set_p == NULL)
     {
-      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("The property exists in the proxy target as a"
-                                                       " non-configurable accessor property whitout a setter."));
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("The property of a Proxy target is a non "
+                                                       "configurable accessor without a setter"));
     }
 
     ecma_free_property_descriptor (&target_desc);
@@ -1381,7 +1375,7 @@ ecma_proxy_object_delete_property (ecma_object_t *obj_p, /**< proxy object */
   if (!(target_desc.flags & ECMA_PROP_IS_CONFIGURABLE))
   {
     ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned truish for property which is "
-                                                     "non-configurable in the proxy target."));
+                                                     "non-configurable in the proxy target"));
   }
   /* ES11: 13-14 */
   ecma_value_t extensible_target = ecma_builtin_object_object_is_extensible (target_obj_p);
@@ -1480,7 +1474,7 @@ ecma_proxy_check_invariants_for_own_prop_keys (ecma_collection_t *trap_result,
                                                                        unchecked_result_keys,
                                                                        &unchecked_prop_name_counter)))
   {
-    ecma_raise_type_error (ECMA_ERR_MSG ("Trap result did not include all non-configurable keys."));
+    ecma_raise_type_error (ECMA_ERR_MSG ("Trap result did not include all non-configurable keys"));
   }
   /* 22. */
   else if (ecma_is_value_true (extensible_target))
@@ -1492,12 +1486,12 @@ ecma_proxy_check_invariants_for_own_prop_keys (ecma_collection_t *trap_result,
                                                                             unchecked_result_keys,
                                                                             &unchecked_prop_name_counter)))
   {
-    ecma_raise_type_error (ECMA_ERR_MSG ("Trap result did not include all configurable keys."));
+    ecma_raise_type_error (ECMA_ERR_MSG ("Trap result did not include all configurable keys"));
   }
   /* 24. */
   else if (unchecked_result_keys->item_count != unchecked_prop_name_counter)
   {
-    ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned extra keys but proxy target is non-extensible"));
+    ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned extra keys for a non-extensible Proxy target"));
   }
   /* 25. */
   else
@@ -1575,7 +1569,7 @@ ecma_proxy_object_own_property_keys (ecma_object_t *obj_p) /**< proxy object */
   if (ecma_collection_check_duplicated_entries (trap_result))
   {
     ecma_collection_free (trap_result);
-    ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned duplicate entries"));
+    ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned with duplicated entries"));
     return NULL;
   }
 
@@ -1790,7 +1784,7 @@ ecma_proxy_object_construct (ecma_object_t *obj_p, /**< proxy object */
   {
     ecma_free_value (new_obj);
 
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned non-object"));
+    return ecma_raise_type_error (ECMA_ERR_MSG ("Trap must return with an object"));
   }
 
   /* 12. */

@@ -106,20 +106,60 @@ JERRY_STATIC_ASSERT (((NUMBER_ARITHMETIC_SUBTRACTION + ECMA_NUMBER_ARITHMETIC_OP
 /**
  * Error message, if an argument is has an error flag
  */
-static const char * const error_value_msg_p = "argument cannot have an error flag";
+static const char * const error_value_msg_p = "Argument cannot be marked as error";
 
 /**
- * Error message, if types of arguments are incorrect
+ * Error message, if an argument has a wrong type
  */
-static const char * const wrong_args_msg_p = "wrong type of argument";
+static const char * const wrong_args_msg_p = "This type of argument is not allowed";
+
+#if !ENABLED (JERRY_PARSER)
+/**
+ * Error message, if parsing is disabled
+ */
+static const char * const error_parser_not_supported_p = "Source code parsing is disabled";
+#endif /* !ENABLED (JERRY_PARSER) */
+
+#if !ENABLED (JERRY_BUILTIN_JSON)
+/**
+ * Error message, if JSON support is disabled
+ */
+static const char * const error_json_not_supported_p = "JSON support is disabled";
+#endif /* !ENABLED (JERRY_BUILTIN_JSON) */
+
+#if !ENABLED (JERRY_ESNEXT)
+/**
+ * Error message, if Symbol support is disabled
+ */
+static const char * const error_symbol_not_supported_p = "Symbol support is disabled";
+#endif /* !ENABLED (JERRY_ESNEXT) */
+
+#if !ENABLED (JERRY_BUILTIN_PROMISE)
+/**
+ * Error message, if Promise support is disabled
+ */
+static const char * const error_promise_not_supported_p = "Promise support is disabled";
+#endif /* !ENABLED (JERRY_BUILTIN_PROMISE) */
+
+#if !ENABLED (JERRY_BUILTIN_TYPEDARRAY)
+/**
+ * Error message, if TypedArray support is disabled
+ */
+static const char * const error_typed_array_not_supported_p = "TypedArray support is disabled";
+#endif /* !ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
+
+#if !ENABLED (JERRY_BUILTIN_DATAVIEW)
+/**
+ * Error message, if DataView support is disabled
+ */
+static const char * const error_data_view_not_supported_p = "DataView support is disabled";
+#endif /* !ENABLED (JERRY_BUILTIN_DATAVIEW) */
 
 #if !ENABLED (JERRY_BUILTIN_BIGINT)
-
 /**
  * Error message, if BigInt support is disabled
  */
 static const char * const error_bigint_not_supported_p = "BigInt support is disabled";
-
 #endif /* !ENABLED (JERRY_BUILTIN_BIGINT) */
 
 #endif /* ENABLED (JERRY_ERROR_MESSAGES) */
@@ -457,7 +497,7 @@ jerry_parse (const jerry_char_t *resource_name_p, /**< resource name (usually a 
 #if ENABLED (JERRY_MODULE_SYSTEM)
     ecma_module_initialize_context (ecma_get_string_from_value (resource_name));
 #else /* !ENABLED (JERRY_MODULE_SYSTEM) */
-    return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("Module system has been disabled.")));
+    return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("Module system has been disabled")));
 #endif /* !ENABLED (JERRY_MODULE_SYSTEM) */
   }
 
@@ -527,7 +567,7 @@ jerry_parse (const jerry_char_t *resource_name_p, /**< resource name (usually a 
   JERRY_UNUSED (source_size);
   JERRY_UNUSED (parse_opts);
 
-  return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("The parser has been disabled.")));
+  return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG (error_parser_not_supported_p)));
 #endif /* ENABLED (JERRY_PARSER) */
 } /* jerry_parse */
 
@@ -608,7 +648,7 @@ jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (u
   JERRY_UNUSED (source_size);
   JERRY_UNUSED (parse_opts);
 
-  return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("The parser has been disabled.")));
+  return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG (error_parser_not_supported_p)));
 #endif /* ENABLED (JERRY_PARSER) */
 } /* jerry_parse_function */
 
@@ -2156,7 +2196,7 @@ jerry_create_promise (void)
   JERRY_CONTEXT (current_new_target_p) = old_new_target_p;
   return promise_value;
 #else /* !ENABLED (JERRY_BUILTIN_PROMISE) */
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Promise not supported.")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_promise_not_supported_p)));
 #endif /* ENABLED (JERRY_BUILTIN_PROMISE) */
 } /* jerry_create_promise */
 
@@ -2184,7 +2224,7 @@ jerry_create_proxy (const jerry_value_t target, /**< target argument */
   ecma_object_t *proxy_p = ecma_proxy_create (target, handler);
   return jerry_return (proxy_p == NULL ? ECMA_VALUE_ERROR : ecma_make_object_value (proxy_p));
 #else /* !ENABLED (JERRY_BUILTIN_PROXY) */
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Proxy is not supported.")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Proxy is not supported")));
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 } /* jerry_create_proxy */
 
@@ -2314,7 +2354,7 @@ jerry_create_symbol (const jerry_value_t value) /**< api value */
 #if ENABLED (JERRY_ESNEXT)
   return jerry_return (ecma_op_create_symbol (&value, 1));
 #else /* !ENABLED (JERRY_ESNEXT) */
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Symbol is not supported.")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_symbol_not_supported_p)));
 #endif /* ENABLED (JERRY_ESNEXT) */
 } /* jerry_create_symbol */
 
@@ -2392,7 +2432,7 @@ jerry_create_regexp_sz (const jerry_char_t *pattern_p, /**< zero-terminated UTF-
   JERRY_UNUSED (pattern_size);
   JERRY_UNUSED (flags);
 
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("RegExp is not supported.")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("RegExp is not supported")));
 #endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
 } /* jerry_create_regexp_sz */
 
@@ -2410,7 +2450,7 @@ jerry_create_realm (void)
   ecma_global_object_t *global_object_p = ecma_builtin_create_global_object ();
   return ecma_make_object_value ((ecma_object_t *) global_object_p);
 #else /* !ENABLED (JERRY_BUILTIN_REALMS) */
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Realms are disabled.")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Realms are disabled")));
 #endif /* ENABLED (JERRY_BUILTIN_REALMS) */
 } /* jerry_create_realm */
 
@@ -4205,7 +4245,7 @@ jerry_resolve_or_reject_promise (jerry_value_t promise, /**< the promise value *
   JERRY_UNUSED (argument);
   JERRY_UNUSED (is_resolve);
 
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Promise not supported.")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_promise_not_supported_p)));
 #endif /* ENABLED (JERRY_BUILTIN_PROMISE) */
 } /* jerry_resolve_or_reject_promise */
 
@@ -4229,7 +4269,7 @@ jerry_get_promise_result (const jerry_value_t promise) /**< promise object to ge
   return ecma_promise_get_result (ecma_get_object_from_value (promise));
 #else /* !ENABLED (JERRY_BUILTIN_PROMISE) */
   JERRY_UNUSED (promise);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Promise not supported.")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_promise_not_supported_p)));
 #endif /* ENABLED (JERRY_BUILTIN_PROMISE) */
 } /* jerry_get_promise_result */
 
@@ -4316,7 +4356,7 @@ jerry_get_symbol_description (const jerry_value_t symbol) /**< symbol value */
 #else /* !ENABLED (JERRY_ESNEXT) */
   JERRY_UNUSED (symbol);
 
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Symbol is not supported.")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_symbol_not_supported_p)));
 #endif /* ENABLED (JERRY_ESNEXT) */
 } /* jerry_get_symbol_description */
 
@@ -4345,7 +4385,7 @@ jerry_get_symbol_descriptive_string (const jerry_value_t symbol) /**< symbol val
 #else /* !ENABLED (JERRY_ESNEXT) */
   JERRY_UNUSED (symbol);
 
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Symbol is not supported.")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_symbol_not_supported_p)));
 #endif /* ENABLED (JERRY_ESNEXT) */
 } /** jerry_get_symbol_descriptive_string */
 
@@ -4880,7 +4920,7 @@ jerry_create_arraybuffer (const jerry_length_t size) /**< size of the ArrayBuffe
   return jerry_return (ecma_make_object_value (ecma_arraybuffer_new_object (size)));
 #else /* !ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
   JERRY_UNUSED (size);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer not supported.")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_typed_array_not_supported_p)));
 #endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
 } /* jerry_create_arraybuffer */
 
@@ -4921,7 +4961,7 @@ jerry_create_arraybuffer_external (const jerry_length_t size, /**< size of the b
   JERRY_UNUSED (size);
   JERRY_UNUSED (buffer_p);
   JERRY_UNUSED (free_cb);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer not supported.")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_typed_array_not_supported_p)));
 #endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
 } /* jerry_create_arraybuffer_external */
 
@@ -5127,7 +5167,7 @@ jerry_detach_arraybuffer (const jerry_value_t value) /**< ArrayBuffer */
     {
       return ECMA_VALUE_NULL;
     }
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has already been detached.")));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has already been detached")));
   }
 #else /* !ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
   JERRY_UNUSED (value);
@@ -5181,8 +5221,8 @@ jerry_create_dataview (const jerry_value_t array_buffer, /**< arraybuffer to cre
   JERRY_UNUSED (array_buffer);
   JERRY_UNUSED (byte_offset);
   JERRY_UNUSED (byte_length);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("DataView is not supported.")));
-#endif /* ENABLED (JERRY_BUILTIN_DATAVIEW */
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_data_view_not_supported_p)));
+#endif /* ENABLED (JERRY_BUILTIN_DATAVIEW) */
 } /* jerry_create_dataview */
 
 /**
@@ -5201,7 +5241,7 @@ jerry_value_is_dataview (const jerry_value_t value) /**< value to check if it is
 #else /* !ENABLED (JERRY_BUILTIN_DATAVIEW) */
   JERRY_UNUSED (value);
   return false;
-#endif /* ENABLED (JERRY_BUILTIN_DATAVIEW */
+#endif /* ENABLED (JERRY_BUILTIN_DATAVIEW) */
 } /* jerry_value_is_dataview */
 
 /**
@@ -5254,8 +5294,8 @@ jerry_get_dataview_buffer (const jerry_value_t value, /**< DataView to get the a
   JERRY_UNUSED (value);
   JERRY_UNUSED (byte_offset);
   JERRY_UNUSED (byte_length);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("DataView is not supported.")));
-#endif /* ENABLED (JERRY_BUILTIN_DATAVIEW */
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_data_view_not_supported_p)));
+#endif /* ENABLED (JERRY_BUILTIN_DATAVIEW) */
 } /* jerry_get_dataview_buffer */
 
 /**
@@ -5376,7 +5416,7 @@ jerry_create_typedarray (jerry_typedarray_type_t type_name, /**< type of TypedAr
 
   if (!jerry_typedarray_find_by_type (type_name, &prototype_id, &id, &element_size_shift))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("incorrect type for TypedArray.")));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Incorrect type for TypedArray")));
   }
 
   ecma_object_t *prototype_obj_p = ecma_builtin_get (prototype_id);
@@ -5393,7 +5433,7 @@ jerry_create_typedarray (jerry_typedarray_type_t type_name, /**< type of TypedAr
 #else /* !ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
   JERRY_UNUSED (type_name);
   JERRY_UNUSED (length);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("TypedArray not supported.")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_typed_array_not_supported_p)));
 #endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
 } /* jerry_create_typedarray */
 
@@ -5426,7 +5466,7 @@ jerry_create_typedarray_for_arraybuffer_sz (jerry_typedarray_type_t type_name, /
 
   if (!jerry_typedarray_find_by_type (type_name, &prototype_id, &id, &element_size_shift))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("incorrect type for TypedArray.")));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Incorrect type for TypedArray")));
   }
 
   if (!ecma_is_arraybuffer (arraybuffer))
@@ -5452,7 +5492,7 @@ jerry_create_typedarray_for_arraybuffer_sz (jerry_typedarray_type_t type_name, /
   JERRY_UNUSED (arraybuffer);
   JERRY_UNUSED (byte_offset);
   JERRY_UNUSED (length);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("TypedArray not supported.")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_typed_array_not_supported_p)));
 #endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
 } /* jerry_create_typedarray_for_arraybuffer_sz */
 
@@ -5482,7 +5522,7 @@ jerry_create_typedarray_for_arraybuffer (jerry_typedarray_type_t type_name, /**<
 #else /* !ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
   JERRY_UNUSED (type_name);
   JERRY_UNUSED (arraybuffer);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("TypedArray not supported.")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_typed_array_not_supported_p)));
 #endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
 } /* jerry_create_typedarray_for_arraybuffer */
 
@@ -5565,7 +5605,7 @@ jerry_get_typedarray_buffer (jerry_value_t value, /**< TypedArray to get the arr
 #if ENABLED (JERRY_BUILTIN_TYPEDARRAY)
   if (!ecma_is_typedarray (value))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Object is not a TypedArray.")));
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Object is not a TypedArray")));
   }
 
   ecma_object_t *array_p = ecma_get_object_from_value (value);
@@ -5588,7 +5628,7 @@ jerry_get_typedarray_buffer (jerry_value_t value, /**< TypedArray to get the arr
   JERRY_UNUSED (value);
   JERRY_UNUSED (byte_length);
   JERRY_UNUSED (byte_offset);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("TypedArray is not supported.")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_typed_array_not_supported_p)));
 #endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
 } /* jerry_get_typedarray_buffer */
 
@@ -5614,7 +5654,7 @@ jerry_json_parse (const jerry_char_t *string_p, /**< json string */
 
   if (ecma_is_value_undefined (ret_value))
   {
-    ret_value = jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("JSON string parse error.")));
+    ret_value = jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("JSON string parse error")));
   }
 
   return jerry_return (ret_value);
@@ -5622,7 +5662,7 @@ jerry_json_parse (const jerry_char_t *string_p, /**< json string */
   JERRY_UNUSED (string_p);
   JERRY_UNUSED (string_size);
 
-  return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("The JSON has been disabled.")));
+  return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG (error_json_not_supported_p)));
 #endif /* ENABLED (JERRY_BUILTIN_JSON) */
 } /* jerry_json_parse */
 
@@ -5651,14 +5691,14 @@ jerry_json_stringify (const jerry_value_t input_value) /**< a value to stringify
 
   if (ecma_is_value_undefined (ret_value))
   {
-    ret_value = jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("JSON stringify error.")));
+    ret_value = jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("JSON stringify error")));
   }
 
   return jerry_return (ret_value);
 #else /* ENABLED (JERRY_BUILTIN_JSON) */
   JERRY_UNUSED (input_value);
 
-  return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("The JSON has been disabled.")));
+  return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG (error_json_not_supported_p)));
 #endif /* ENABLED (JERRY_BUILTIN_JSON) */
 } /* jerry_json_stringify */
 
@@ -5731,7 +5771,7 @@ jerry_create_container (jerry_container_type_t container_type, /**< Type of the 
 #endif /* ENABLED (JERRY_BUILTIN_WEAKSET) */
     default:
     {
-      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Invalid container type.")));
+      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Invalid container type")));
     }
   }
   ecma_object_t * old_new_target_p = JERRY_CONTEXT (current_new_target_p);
@@ -5752,7 +5792,7 @@ jerry_create_container (jerry_container_type_t container_type, /**< Type of the 
   JERRY_UNUSED (arguments_list_p);
   JERRY_UNUSED (arguments_list_len);
   JERRY_UNUSED (container_type);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Containers are disabled.")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Containers are disabled")));
 #endif /* ENABLED (JERRY_BUILTIN_CONTAINER) */
 } /* jerry_create_container */
 

@@ -231,7 +231,7 @@ re_check_quantifier (re_compiler_ctx_t *re_ctx_p)
   if (re_ctx_p->token.qmin > re_ctx_p->token.qmax)
   {
     /* ECMA-262 v5.1 15.10.2.5 */
-    return ecma_raise_syntax_error (ECMA_ERR_MSG ("quantifier error: min > max."));
+    return ecma_raise_syntax_error (ECMA_ERR_MSG ("Quantifier error: min > max"));
   }
 
   return ECMA_VALUE_EMPTY;
@@ -812,7 +812,7 @@ re_parse_next_token (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
 
       if (re_ctx_p->input_curr_p >= re_ctx_p->input_end_p)
       {
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Unterminated character class."));
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Unterminated character class"));
       }
 
       return ECMA_VALUE_EMPTY;
@@ -821,20 +821,20 @@ re_parse_next_token (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
     case LIT_CHAR_ASTERISK:
     case LIT_CHAR_PLUS:
     {
-      return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid quantifier."));
+      return ecma_raise_syntax_error (ECMA_ERR_MSG ("Invalid quantifier"));
     }
     case LIT_CHAR_LEFT_BRACE:
     {
       re_ctx_p->input_curr_p--;
       if (ecma_is_value_true (re_parse_quantifier (re_ctx_p)))
       {
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Nothing to repeat."));
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Nothing to repeat"));
       }
 
 #if ENABLED (JERRY_ESNEXT)
       if (re_ctx_p->flags & RE_FLAG_UNICODE)
       {
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Lone quantifier bracket."));
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Lone quantifier bracket"));
       }
 #endif /* ENABLED (JERRY_ESNEXT) */
 
@@ -851,7 +851,7 @@ re_parse_next_token (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
     {
       if (re_ctx_p->flags & RE_FLAG_UNICODE)
       {
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Lone quantifier bracket."));
+        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Lone quantifier bracket"));
       }
 
       /* FALLTHRU */
@@ -958,7 +958,7 @@ re_parse_char_class (re_compiler_ctx_t *re_ctx_p) /**< RegExp compiler context *
   {
     if (re_ctx_p->input_curr_p >= re_ctx_p->input_end_p)
     {
-      return ecma_raise_syntax_error (ECMA_ERR_MSG ("Unterminated character class."));
+      return ecma_raise_syntax_error (ECMA_ERR_MSG ("Unterminated character class"));
     }
 
     if (*re_ctx_p->input_curr_p == LIT_CHAR_RIGHT_SQUARE)
@@ -1314,7 +1314,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
       {
         if (expect_eof)
         {
-          return ecma_raise_syntax_error (ECMA_ERR_MSG ("Unmatched ')'"));
+          return ecma_raise_syntax_error (ECMA_ERR_MSG ("Unmatched close bracket"));
         }
 
         if (!first_alternative)
@@ -1329,7 +1329,7 @@ re_parse_alternative (re_compiler_ctx_t *re_ctx_p, /**< RegExp compiler context 
       {
         if (!expect_eof)
         {
-          return ecma_raise_syntax_error (ECMA_ERR_MSG ("Unexpected end of pattern."));
+          return ecma_raise_syntax_error (ECMA_ERR_MSG ("Unexpected end of pattern"));
         }
 
         if (!first_alternative)

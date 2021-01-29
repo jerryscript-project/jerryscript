@@ -3243,7 +3243,7 @@ void JERRY_ATTR_NOINLINE
 ecma_op_ordinary_object_prevent_extensions (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (!ECMA_OBJECT_IS_PROXY (object_p));
-  object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs & ~ECMA_OBJECT_FLAG_EXTENSIBLE);
+  object_p->type_flags_refs &= (ecma_object_descriptor_t) ~ECMA_OBJECT_FLAG_EXTENSIBLE;
 } /* ecma_op_ordinary_object_prevent_extensions */
 
 /**

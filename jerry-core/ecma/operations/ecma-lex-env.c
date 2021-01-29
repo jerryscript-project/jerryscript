@@ -81,7 +81,7 @@ ecma_create_global_lexical_block (ecma_object_t *global_object_p) /**< global ob
   if (real_global_object_p->global_scope_cp == real_global_object_p->global_env_cp)
   {
     ecma_object_t *global_scope_p = ecma_create_decl_lex_env (ecma_get_global_environment (global_object_p));
-    global_scope_p->type_flags_refs |= (uint16_t) ECMA_OBJECT_FLAG_BLOCK;
+    global_scope_p->type_flags_refs |= ECMA_OBJECT_FLAG_BLOCK;
     ECMA_SET_NON_NULL_POINTER (real_global_object_p->global_scope_cp, global_scope_p);
     ecma_deref_object (global_scope_p);
   }

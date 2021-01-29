@@ -403,7 +403,7 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
   if ((bytecode_data_p->status_flags & CBC_CODE_FLAGS_LEXICAL_BLOCK_NEEDED) != 0)
   {
     ecma_object_t *lex_block_p = ecma_create_decl_lex_env (lex_env_p);
-    lex_block_p->type_flags_refs |= (uint16_t) ECMA_OBJECT_FLAG_BLOCK;
+    lex_block_p->type_flags_refs |= ECMA_OBJECT_FLAG_BLOCK;
 
     ecma_deref_object (lex_env_p);
     lex_env_p = lex_block_p;
@@ -3928,7 +3928,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 #endif /* ENABLED (JERRY_ESNEXT) */
 
           frame_ctx_p->lex_env_p = ecma_create_decl_lex_env (frame_ctx_p->lex_env_p);
-          frame_ctx_p->lex_env_p->type_flags_refs |= (uint16_t) ECMA_OBJECT_FLAG_BLOCK;
+          frame_ctx_p->lex_env_p->type_flags_refs |= ECMA_OBJECT_FLAG_BLOCK;
 
           continue;
         }
@@ -3962,7 +3962,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           stack_top_p[-1] = VM_CREATE_CONTEXT_WITH_ENV (VM_CONTEXT_WITH, branch_offset);
 
-          with_env_p->type_flags_refs |= (uint16_t) ECMA_OBJECT_FLAG_BLOCK;
+          with_env_p->type_flags_refs |= ECMA_OBJECT_FLAG_BLOCK;
           frame_ctx_p->lex_env_p = with_env_p;
           continue;
         }

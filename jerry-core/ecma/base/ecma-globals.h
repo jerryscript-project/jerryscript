@@ -769,7 +769,7 @@ typedef enum
 #define ECMA_OBJECT_FLAG_EXTENSIBLE 0x20
 
 /**
- * Non closure flag for debugger.
+ * Lexical environments created for non-closure code blocks
  */
 #define ECMA_OBJECT_FLAG_BLOCK ECMA_OBJECT_FLAG_EXTENSIBLE
 
@@ -779,22 +779,43 @@ typedef enum
 #define ECMA_OBJECT_REF_SHIFT 6
 
 /**
+ * Value for increasing or decreasing the object reference counter.
+ */
+#define ECMA_OBJECT_REF_ONE (1u << ECMA_OBJECT_REF_SHIFT)
+
+#if ENABLED (JERRY_CPOINTER_32_BIT)
+
+/**
+ * Bitmask for an ecma-object reference count field
+ */
+#define ECMA_OBJECT_REF_MASK (((1u << 26) - 1) << ECMA_OBJECT_REF_SHIFT)
+
+/**
+ * Type of the descriptor field of an object
+ */
+typedef uint32_t ecma_object_descriptor_t;
+
+#else /* !ENABLED (JERRY_CPOINTER_32_BIT) */
+
+/**
  * Bitmask for an ecma-object reference count field
  */
 #define ECMA_OBJECT_REF_MASK (((1u << 10) - 1) << ECMA_OBJECT_REF_SHIFT)
 
 /**
- * Value for increasing or decreasing the object reference counter.
+ * Type of the descriptor field of an object
  */
-#define ECMA_OBJECT_REF_ONE (1u << ECMA_OBJECT_REF_SHIFT)
+typedef uint16_t ecma_object_descriptor_t;
+
+#endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
 
 /**
  * Represents non-visited white object
  */
-#define ECMA_OBJECT_NON_VISITED (0x3ffu << ECMA_OBJECT_REF_SHIFT)
+#define ECMA_OBJECT_NON_VISITED ECMA_OBJECT_REF_MASK
 
 /**
- * Maximum value of the object reference counter (1022).
+ * Maximum value of the object reference counter (1022 / 67108862).
  */
 #define ECMA_OBJECT_MAX_REF (ECMA_OBJECT_NON_VISITED - ECMA_OBJECT_REF_ONE)
 
@@ -808,8 +829,8 @@ typedef struct
                      depending on ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV
       flags : 2 bit : ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV,
                       ECMA_OBJECT_FLAG_EXTENSIBLE or ECMA_OBJECT_FLAG_BLOCK
-      refs : 10 bit (max 1022) */
-  uint16_t type_flags_refs;
+      refs : 10 / 26 bit (max 1022 / 67108862) */
+  ecma_object_descriptor_t type_flags_refs;
 
   /** next in the object chain maintained by the garbage collector */
   jmem_cpointer_t gc_next_cp;

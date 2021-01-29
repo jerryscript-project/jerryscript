@@ -91,19 +91,19 @@ ecma_gc_set_object_visited (ecma_object_t *object_p) /**< object */
     {
       JERRY_CONTEXT (ecma_gc_mark_recursion_limit)--;
       /* Set the reference count of gray object to 0 */
-      object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs & (ECMA_OBJECT_REF_ONE - 1));
+      object_p->type_flags_refs &= (ecma_object_descriptor_t) (ECMA_OBJECT_REF_ONE - 1);
       ecma_gc_mark (object_p);
       JERRY_CONTEXT (ecma_gc_mark_recursion_limit)++;
     }
     else
     {
       /* Set the reference count of the non-marked gray object to 1 */
-      object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs & ((ECMA_OBJECT_REF_ONE << 1) - 1));
+      object_p->type_flags_refs &= (ecma_object_descriptor_t) ((ECMA_OBJECT_REF_ONE << 1) - 1);
       JERRY_ASSERT (object_p->type_flags_refs >= ECMA_OBJECT_REF_ONE);
     }
 #else /* (JERRY_GC_MARK_LIMIT == 0) */
     /* Set the reference count of gray object to 0 */
-    object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs & (ECMA_OBJECT_REF_ONE - 1));
+    object_p->type_flags_refs &= (ecma_object_descriptor_t) (ECMA_OBJECT_REF_ONE - 1);
 #endif /* (JERRY_GC_MARK_LIMIT != 0) */
   }
 } /* ecma_gc_set_object_visited */
@@ -118,7 +118,7 @@ ecma_init_gc_info (ecma_object_t *object_p) /**< object */
   JERRY_CONTEXT (ecma_gc_new_objects)++;
 
   JERRY_ASSERT (object_p->type_flags_refs < ECMA_OBJECT_REF_ONE);
-  object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs | ECMA_OBJECT_REF_ONE);
+  object_p->type_flags_refs |= ECMA_OBJECT_REF_ONE;
 
   object_p->gc_next_cp = JERRY_CONTEXT (ecma_gc_objects_cp);
   ECMA_SET_NON_NULL_POINTER (JERRY_CONTEXT (ecma_gc_objects_cp), object_p);
@@ -132,7 +132,7 @@ ecma_ref_object (ecma_object_t *object_p) /**< object */
 {
   if (JERRY_LIKELY (object_p->type_flags_refs < ECMA_OBJECT_MAX_REF))
   {
-    object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs + ECMA_OBJECT_REF_ONE);
+    object_p->type_flags_refs = (ecma_object_descriptor_t) (object_p->type_flags_refs + ECMA_OBJECT_REF_ONE);
   }
   else
   {
@@ -147,7 +147,7 @@ extern inline void JERRY_ATTR_ALWAYS_INLINE
 ecma_deref_object (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (object_p->type_flags_refs >= ECMA_OBJECT_REF_ONE);
-  object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs - ECMA_OBJECT_REF_ONE);
+  object_p->type_flags_refs = (ecma_object_descriptor_t) (object_p->type_flags_refs - ECMA_OBJECT_REF_ONE);
 } /* ecma_deref_object */
 
 /**
@@ -1394,9 +1394,7 @@ ecma_gc_free_properties (ecma_object_t *object_p) /**< object */
 static void
 ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 {
-  JERRY_ASSERT (object_p != NULL
-                && !ecma_gc_is_object_visited (object_p)
-                && ((object_p->type_flags_refs & ECMA_OBJECT_REF_MASK) == ECMA_OBJECT_NON_VISITED));
+  JERRY_ASSERT (object_p != NULL && !ecma_gc_is_object_visited (object_p));
 
   JERRY_ASSERT (JERRY_CONTEXT (ecma_gc_objects_number) > 0);
   JERRY_CONTEXT (ecma_gc_objects_number)--;
@@ -1894,7 +1892,7 @@ ecma_gc_run (void)
         if (obj_iter_p->type_flags_refs >= ECMA_OBJECT_REF_ONE)
         {
           /* Set the reference count of non-marked gray object to 0 */
-          obj_iter_p->type_flags_refs = (uint16_t) (obj_iter_p->type_flags_refs & (ECMA_OBJECT_REF_ONE - 1));
+          obj_iter_p->type_flags_refs &= (ecma_object_descriptor_t) (ECMA_OBJECT_REF_ONE - 1);
           ecma_gc_mark (obj_iter_p);
           marked_anything_during_current_iteration = true;
         }

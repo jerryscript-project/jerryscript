@@ -52,7 +52,7 @@ JERRY_STATIC_ASSERT (ECMA_OBJECT_FLAG_EXTENSIBLE == (ECMA_OBJECT_FLAG_BUILT_IN_O
 JERRY_STATIC_ASSERT (ECMA_OBJECT_REF_ONE == (ECMA_OBJECT_FLAG_EXTENSIBLE << 1),
                      ecma_object_ref_one_must_follow_the_extensible_flag);
 
-JERRY_STATIC_ASSERT (((ECMA_OBJECT_MAX_REF + ECMA_OBJECT_REF_ONE) | (ECMA_OBJECT_REF_ONE - 1)) == UINT16_MAX,
+JERRY_STATIC_ASSERT ((ECMA_OBJECT_MAX_REF + ECMA_OBJECT_REF_ONE) == ECMA_OBJECT_REF_MASK,
                       ecma_object_max_ref_does_not_fill_the_remaining_bits);
 
 JERRY_STATIC_ASSERT (ECMA_PROPERTY_FLAGS_MASK == ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
@@ -83,7 +83,7 @@ ecma_create_object (ecma_object_t *prototype_object_p, /**< pointer to prototybe
     new_object_p = ecma_alloc_object ();
   }
 
-  new_object_p->type_flags_refs = (uint16_t) (type | ECMA_OBJECT_FLAG_EXTENSIBLE);
+  new_object_p->type_flags_refs = (ecma_object_descriptor_t) (type | ECMA_OBJECT_FLAG_EXTENSIBLE);
 
   ecma_init_gc_info (new_object_p);
 
@@ -109,8 +109,8 @@ ecma_create_decl_lex_env (ecma_object_t *outer_lexical_environment_p) /**< outer
 {
   ecma_object_t *new_lexical_environment_p = ecma_alloc_object ();
 
-  uint16_t type = ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV | ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE;
-  new_lexical_environment_p->type_flags_refs = type;
+  new_lexical_environment_p->type_flags_refs = (ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV
+                                                | ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
 
   ecma_init_gc_info (new_lexical_environment_p);
 
@@ -148,7 +148,8 @@ ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< out
 
   ecma_object_t *new_lexical_environment_p = ecma_alloc_object ();
 
-  new_lexical_environment_p->type_flags_refs = (uint16_t) (ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV | type);
+  const ecma_object_descriptor_t lexical_env_flag = ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV;
+  new_lexical_environment_p->type_flags_refs = (ecma_object_descriptor_t) (type | lexical_env_flag);
 
   ecma_init_gc_info (new_lexical_environment_p);
 
@@ -185,7 +186,7 @@ ecma_op_ordinary_object_set_extensible (ecma_object_t *object_p) /**< object */
   JERRY_ASSERT (object_p != NULL);
   JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
 
-  object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs | ECMA_OBJECT_FLAG_EXTENSIBLE);
+  object_p->type_flags_refs |= ECMA_OBJECT_FLAG_EXTENSIBLE;
 } /* ecma_op_ordinary_object_set_extensible */
 
 /**
@@ -227,7 +228,7 @@ ecma_set_object_is_builtin (ecma_object_t *object_p) /**< object */
   JERRY_ASSERT (!(object_p->type_flags_refs & ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV));
   JERRY_ASSERT ((object_p->type_flags_refs & ECMA_OBJECT_TYPE_MASK) < ECMA_LEXICAL_ENVIRONMENT_TYPE_START);
 
-  object_p->type_flags_refs = (uint16_t) (object_p->type_flags_refs | ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV);
+  object_p->type_flags_refs |= ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV;
 } /* ecma_set_object_is_builtin */
 
 /**

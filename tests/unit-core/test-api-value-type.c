@@ -124,6 +124,33 @@ main (void)
     jerry_release_value (object_bigint);
   }
 
+  if (jerry_is_feature_enabled (JERRY_FEATURE_REALM))
+  {
+    jerry_value_t new_realm = jerry_create_realm ();
+    jerry_value_t old_realm = jerry_set_realm (new_realm);
+
+    jerry_type_t new_realm_type = jerry_value_get_type (new_realm);
+    TEST_ASSERT (new_realm_type == JERRY_TYPE_OBJECT);
+
+    jerry_value_t new_realm_this = jerry_realm_get_this (new_realm);
+    jerry_type_t new_realm_this_type = jerry_value_get_type (new_realm_this);
+    TEST_ASSERT (new_realm_this_type == JERRY_TYPE_OBJECT);
+    jerry_release_value (new_realm_this);
+
+    jerry_type_t old_realm_type = jerry_value_get_type (old_realm);
+    TEST_ASSERT (old_realm_type == JERRY_TYPE_OBJECT);
+
+    jerry_release_value (new_realm);
+
+    jerry_value_t old_realm_this = jerry_realm_get_this (old_realm);
+    jerry_type_t old_realm_this_type = jerry_value_get_type (old_realm_this);
+    TEST_ASSERT (old_realm_this_type == JERRY_TYPE_OBJECT);
+    jerry_release_value (old_realm_this);
+
+    /* Restore the old realm as per docs */
+    jerry_set_realm (old_realm);
+  }
+
   jerry_cleanup ();
 
   return 0;

@@ -13,20 +13,17 @@
  * limitations under the License.
  */
 
-#ifdef HAVE_TM_GMTOFF
 #include <time.h>
-#endif /* HAVE_TM_GMTOFF */
 
 #ifdef _WIN32
 #include <windows.h>
 #include <winbase.h>
 #include <winnt.h>
-#include <time.h>
 #endif /* _WIN32 */
 
-#ifdef __GNUC__
+#if defined (__GNUC__) || defined (__clang__)
 #include <sys/time.h>
-#endif /* __GNUC__ */
+#endif /* __GNUC__ || __clang__ */
 
 #include "jerryscript-port.h"
 #include "jerryscript-port-default.h"
@@ -54,9 +51,7 @@ static double FileTimeToUnixTimeMs (FILETIME ft)
 #endif /* _WIN32 */
 
 /**
- * Default implementation of jerry_port_get_local_time_zone_adjustment. Uses the 'tm_gmtoff' field
- * of 'struct tm' (a GNU extension) filled by 'localtime_r' if available on the
- * system, does nothing otherwise.
+ * Default implementation of jerry_port_get_local_time_zone_adjustment.
  *
  * @return offset between UTC and local time at the given unix timestamp, if
  *         available. Otherwise, returns 0, assuming UTC time.
@@ -64,19 +59,6 @@ static double FileTimeToUnixTimeMs (FILETIME ft)
 double jerry_port_get_local_time_zone_adjustment (double unix_ms,  /**< ms since unix epoch */
                                                   bool is_utc)  /**< is the time above in UTC? */
 {
-#ifdef HAVE_TM_GMTOFF
-  struct tm tm;
-  time_t now = (time_t) (unix_ms / 1000);
-  localtime_r (&now, &tm);
-  if (!is_utc)
-  {
-    now -= tm.tm_gmtoff;
-    localtime_r (&now, &tm);
-  }
-  return ((double) tm.tm_gmtoff) * 1000;
-#else /* !HAVE_TM_GMTOFF */
-  (void) unix_ms;
-  (void) is_utc;
 #ifdef _WIN32
   FILETIME fileTime, localFileTime;
   SYSTEMTIME systemTime, localSystemTime;
@@ -94,9 +76,39 @@ double jerry_port_get_local_time_zone_adjustment (double unix_ms,  /**< ms since
     localTime.HighPart = localFileTime.dwHighDateTime;
     return (double) (((LONGLONG) localTime.QuadPart - (LONGLONG) time.QuadPart) / TicksPerMs);
   }
-#endif /* _WIN32 */
+#elif defined (__GNUC__) || defined (__clang__)
+  time_t now_time = (time_t) (unix_ms / 1000);
+  double tza_s = 0.0;
+
+  while (true)
+  {
+    struct tm now_tm;
+    if (!gmtime_r (&now_time, &now_tm))
+    {
+      break;
+    }
+    now_tm.tm_isdst = -1; /* if not overridden, DST will not be taken into account */
+    time_t local_time = mktime (&now_tm);
+    if (local_time == (time_t) -1)
+    {
+      break;
+    }
+    tza_s = difftime (now_time, local_time);
+
+    if (is_utc)
+    {
+      break;
+    }
+    now_time -= (time_t) tza_s;
+    is_utc = true;
+  }
+
+  return tza_s * 1000;
+#else /* !_WIN32 && !__GNUC__ && !__clang__ */
+  (void) unix_ms; /* unused */
+  (void) is_utc; /* unused */
   return 0.0;
-#endif /* HAVE_TM_GMTOFF */
+#endif /* _WIN32 */
 } /* jerry_port_get_local_time_zone_adjustment */
 
 /**
@@ -113,14 +125,15 @@ double jerry_port_get_current_time (void)
   FILETIME ft;
   GetSystemTimeAsFileTime (&ft);
   return FileTimeToUnixTimeMs (ft);
-#elif __GNUC__
+#elif defined (__GNUC__) || defined (__clang__)
   struct timeval tv;
 
   if (gettimeofday (&tv, NULL) == 0)
   {
     return ((double) tv.tv_sec) * 1000.0 + ((double) tv.tv_usec) / 1000.0;
   }
-#endif /* _WIN32 */
-
   return 0.0;
+#else /* !_WIN32 && !__GNUC__ && !__clang__ */
+  return 0.0;
+#endif /* _WIN32 */
 } /* jerry_port_get_current_time */

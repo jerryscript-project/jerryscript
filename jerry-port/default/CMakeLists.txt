@@ -59,31 +59,6 @@ endif()
 # (should only be necessary if we used compiler default libc but not checking that)
 set(DEFINES_PORT_DEFAULT _BSD_SOURCE _DEFAULT_SOURCE)
 
-INCLUDE (CheckStructHasMember)
-# CHECK_STRUCT_HAS_MEMBER works by trying to compile some C code that accesses the
-# given field of the given struct. However, our default compiler options break this
-# C code, so turn a couple of them off for this.
-if(USING_GCC OR USING_CLANG)
-  set(CMAKE_REQUIRED_FLAGS "-Wno-error=strict-prototypes -Wno-error=old-style-definition -Wno-error=unused-value")
-endif()
-# tm.tm_gmtoff is non-standard, so glibc doesn't expose it in c99 mode
-# (our default). Define some macros to expose it anyway.
-set(CMAKE_REQUIRED_DEFINITIONS "-D_BSD_SOURCE -D_DEFAULT_SOURCE")
-CHECK_STRUCT_HAS_MEMBER ("struct tm" tm_gmtoff time.h HAVE_TM_GMTOFF)
-if(HAVE_TM_GMTOFF)
-  set(DEFINES_PORT_DEFAULT ${DEFINES_PORT_DEFAULT} HAVE_TM_GMTOFF)
-endif()
-
-# Sleep function availability check
-INCLUDE (CheckIncludeFiles)
-CHECK_INCLUDE_FILES (time.h HAVE_TIME_H)
-CHECK_INCLUDE_FILES (unistd.h HAVE_UNISTD_H)
-if(HAVE_TIME_H)
-  set(DEFINES_PORT_DEFAULT ${DEFINES_PORT_DEFAULT} HAVE_TIME_H)
-elseif(HAVE_UNISTD_H)
-  set(DEFINES_PORT_DEFAULT ${DEFINES_PORT_DEFAULT} HAVE_UNISTD_H)
-endif()
-
 # Default Jerry port implementation library
 add_library(${JERRY_PORT_DEFAULT_NAME} ${SOURCE_PORT_DEFAULT})
 target_include_directories(${JERRY_PORT_DEFAULT_NAME} PUBLIC ${INCLUDE_PORT_DEFAULT})

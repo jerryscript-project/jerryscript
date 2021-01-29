@@ -123,6 +123,21 @@ main (void)
     jerry_release_value (entries[idx].value);
   }
 
+  if (jerry_is_feature_enabled (JERRY_FEATURE_REALM))
+  {
+    jerry_value_t new_realm = jerry_create_realm ();
+    jerry_object_type_t new_realm_object_type = jerry_object_get_type (new_realm);
+    TEST_ASSERT (new_realm_object_type == JERRY_OBJECT_TYPE_GENERIC);
+
+    jerry_value_t old_realm = jerry_set_realm (new_realm);
+    jerry_object_type_t old_realm_object_type = jerry_object_get_type (old_realm);
+    TEST_ASSERT (old_realm_object_type == JERRY_OBJECT_TYPE_GENERIC);
+
+    jerry_set_realm (old_realm);
+
+    jerry_release_value (new_realm);
+  }
+
   jerry_cleanup ();
 
   return 0;

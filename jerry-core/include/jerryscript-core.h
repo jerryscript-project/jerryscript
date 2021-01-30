@@ -206,6 +206,34 @@ typedef struct
 } jerry_property_descriptor_t;
 
 /**
+ * List of backtrace frame types returned by jerry_backtrace_get_frame_type.
+ */
+typedef enum
+{
+  JERRY_BACKTRACE_FRAME_JS, /**< indicates that the frame is created for a JavaScript function/method */
+} jerry_backtrace_frame_types_t;
+
+/**
+ * Location info retreived by jerry_backtrace_get_location.
+ */
+typedef struct
+{
+  jerry_value_t resource_name; /**< resource name */
+  jerry_size_t line; /**< line index */
+  jerry_size_t column; /**< column index */
+} jerry_backtrace_location_t;
+
+/**
+ * Internal data structure for jerry_backtrace_frame_t definition.
+ */
+struct jerry_backtrace_frame_internal_t;
+
+/**
+ * Backtrace frame data passed to the jerry_backtrace_callback_t handler.
+ */
+typedef struct jerry_backtrace_frame_internal_t jerry_backtrace_frame_t;
+
+/**
  * Description of JerryScript heap memory stats.
  * It is for memory profiling.
  */
@@ -236,6 +264,11 @@ typedef void (*jerry_object_native_free_callback_t) (void *native_p);
  * or update any properties of the newly created Error object.
  */
 typedef void (*jerry_error_object_created_callback_t) (const jerry_value_t error_object, void *user_p);
+
+/**
+ * Callback function which is called by jerry_backtrace_capture for each stack frame.
+ */
+typedef bool (*jerry_backtrace_callback_t) (jerry_backtrace_frame_t *frame_p, void *user_p);
 
 /**
  * Callback which tells whether the ECMAScript execution should be stopped.
@@ -766,11 +799,19 @@ void jerry_heap_free (void *mem_p, size_t size);
 jerry_context_t *jerry_create_context (uint32_t heap_size, jerry_context_alloc_t alloc, void *cb_data_p);
 
 /**
+ * Backtrace functions.
+ */
+jerry_value_t jerry_get_backtrace (uint32_t max_depth);
+void jerry_backtrace_capture (jerry_backtrace_callback_t callback, void *user_p);
+jerry_backtrace_frame_types_t jerry_backtrace_get_frame_type (jerry_backtrace_frame_t *frame_p);
+const jerry_backtrace_location_t *jerry_backtrace_get_location (jerry_backtrace_frame_t *frame_p);
+const jerry_value_t *jerry_backtrace_get_function (jerry_backtrace_frame_t *frame_p);
+bool jerry_backtrace_is_strict (jerry_backtrace_frame_t *frame_p);
+
+/**
  * Miscellaneous functions.
  */
 void jerry_set_vm_exec_stop_callback (jerry_vm_exec_stop_callback_t stop_cb, void *user_p, uint32_t frequency);
-jerry_value_t jerry_get_backtrace (uint32_t max_depth);
-jerry_value_t jerry_get_backtrace_from (uint32_t max_depth, jerry_value_t ignored_function);
 jerry_value_t jerry_get_resource_name (const jerry_value_t value);
 jerry_value_t jerry_get_new_target (void);
 

@@ -59,39 +59,10 @@ vm_is_direct_eval_form_call (void)
  * @return array ecma value
  */
 ecma_value_t
-vm_get_backtrace (uint32_t max_depth, /**< maximum backtrace depth, 0 = unlimited */
-                  ecma_object_t *ignored_function_p) /**< ignore functions up to this function */
+vm_get_backtrace (uint32_t max_depth) /**< maximum backtrace depth, 0 = unlimited */
 {
 #if ENABLED (JERRY_LINE_INFO)
   vm_frame_ctx_t *context_p = JERRY_CONTEXT (vm_top_context_p);
-
-  if (ignored_function_p != NULL)
-  {
-    JERRY_ASSERT (ecma_get_object_type (ignored_function_p) == ECMA_OBJECT_TYPE_FUNCTION
-                  || ecma_get_object_type (ignored_function_p) == ECMA_OBJECT_TYPE_NATIVE_FUNCTION);
-
-    while (true)
-    {
-      if (context_p == NULL)
-      {
-        context_p = JERRY_CONTEXT (vm_top_context_p);
-        break;
-      }
-
-      if (context_p->shared_p->status_flags & VM_FRAME_CTX_SHARED_HAS_ARG_LIST)
-      {
-        vm_frame_ctx_shared_args_t *shared_args_p = (vm_frame_ctx_shared_args_t *) context_p->shared_p;
-
-        if (shared_args_p->function_object_p == ignored_function_p)
-        {
-          context_p = context_p->prev_context_p;
-          break;
-        }
-      }
-
-      context_p = context_p->prev_context_p;
-    }
-  }
 
   if (max_depth == 0)
   {
@@ -138,7 +109,6 @@ vm_get_backtrace (uint32_t max_depth, /**< maximum backtrace depth, 0 = unlimite
   return ecma_make_object_value (array_p);
 #else /* !ENABLED (JERRY_LINE_INFO) */
   JERRY_UNUSED (max_depth);
-  JERRY_UNUSED (ignored_function_p);
 
   return ecma_make_object_value (ecma_op_new_array_object (0));
 #endif /* ENABLED (JERRY_LINE_INFO) */

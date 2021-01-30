@@ -4681,51 +4681,109 @@ jerry_set_vm_exec_stop_callback (jerry_vm_exec_stop_callback_t stop_cb, /**< per
 jerry_value_t
 jerry_get_backtrace (uint32_t max_depth) /**< depth limit of the backtrace */
 {
-  return vm_get_backtrace (max_depth, NULL);
+  return vm_get_backtrace (max_depth);
 } /* jerry_get_backtrace */
 
 /**
- * Get backtrace. The backtrace is an array of strings where
- * each string contains the position of the corresponding frame.
- * The array length is zero if the backtrace is not available.
- *
- * @return array value
+ * Low-level function to capture each backtrace frame.
+ * The captured frame data is passed to a callback function.
  */
-jerry_value_t
-jerry_get_backtrace_from (uint32_t max_depth, /**< depth limit of the backtrace */
-                          jerry_value_t ignored_function) /**< collect backtrace after this function */
+void
+jerry_backtrace_capture (jerry_backtrace_callback_t callback, /**< callback function */
+                         void *user_p) /**< user pointer passed to the callback function */
 {
-  ecma_object_t *ignored_function_p = NULL;
+  jerry_backtrace_frame_t frame;
+  vm_frame_ctx_t *context_p = JERRY_CONTEXT (vm_top_context_p);
 
-  if (ecma_is_value_object (ignored_function))
+  while (context_p != NULL)
   {
-    ignored_function_p = ecma_get_object_from_value (ignored_function);
+    frame.context_p = context_p;
+    frame.frame_type = JERRY_BACKTRACE_FRAME_JS;
 
-    while (true)
+    if (!callback (&frame, user_p))
     {
-      ecma_object_type_t type = ecma_get_object_type (ignored_function_p);
+      return;
+    }
 
-      if (type == ECMA_OBJECT_TYPE_FUNCTION || type == ECMA_OBJECT_TYPE_NATIVE_FUNCTION)
-      {
-        break;
-      }
+    context_p = context_p->prev_context_p;
+  }
+} /* jerry_backtrace_capture */
 
-      if (type == ECMA_OBJECT_TYPE_BOUND_FUNCTION)
-      {
-        ecma_bound_function_t *bound_func_p = (ecma_bound_function_t *) ignored_function_p;
-        jmem_cpointer_tag_t target_function = bound_func_p->header.u.bound_function.target_function;
+/**
+ * Returns with the type of the backtrace frame.
+ *
+ * @return frame type listed in jerry_backtrace_frame_types_t
+ */
+jerry_backtrace_frame_types_t
+jerry_backtrace_get_frame_type (jerry_backtrace_frame_t *frame_p) /**< frame pointer */
+{
+  return (jerry_backtrace_frame_types_t) frame_p->frame_type;
+} /* jerry_backtrace_get_frame_type */
 
-        ignored_function_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t, target_function);
-        continue;
-      }
+/**
+ * Initialize and return with the location private field of a backtrace frame.
+ *
+ * @return pointer to the location private field - if the location is available,
+ *         NULL - otherwise
+ */
+const jerry_backtrace_location_t *
+jerry_backtrace_get_location (jerry_backtrace_frame_t *frame_p) /**< frame pointer */
+{
+  JERRY_UNUSED (frame_p);
 
-      ignored_function_p = NULL;
-      break;
+#if ENABLED (JERRY_LINE_INFO)
+  if (frame_p->frame_type == JERRY_BACKTRACE_FRAME_JS)
+  {
+    vm_frame_ctx_t *context_p = frame_p->context_p;
+
+    frame_p->location.resource_name = ecma_get_resource_name (context_p->shared_p->bytecode_header_p);
+    frame_p->location.line = context_p->current_line;
+    frame_p->location.column = 1;
+    return &frame_p->location;
+  }
+#endif /* ENABLED (JERRY_LINE_INFO) */
+
+  return NULL;
+} /* jerry_backtrace_get_location */
+
+/**
+ * Initialize and return with the called function private field of a backtrace frame.
+ * The backtrace frame is created for running the code bound to this function.
+ *
+ * @return pointer to the called function - if the function is available,
+ *         NULL - otherwise
+ */
+const jerry_value_t *
+jerry_backtrace_get_function (jerry_backtrace_frame_t *frame_p) /**< frame pointer */
+{
+  if (frame_p->frame_type == JERRY_BACKTRACE_FRAME_JS)
+  {
+    vm_frame_ctx_t *context_p = frame_p->context_p;
+
+    if (context_p->shared_p->status_flags & VM_FRAME_CTX_SHARED_HAS_ARG_LIST)
+    {
+      vm_frame_ctx_shared_args_t *shared_args_p = (vm_frame_ctx_shared_args_t *) context_p->shared_p;
+
+      frame_p->function = ecma_make_object_value (shared_args_p->function_object_p);
+      return &frame_p->function;
     }
   }
 
-  return vm_get_backtrace (max_depth, ignored_function_p);
-} /* jerry_get_backtrace_from */
+  return NULL;
+} /* jerry_backtrace_get_function */
+
+/**
+ * Returns true, if the code bound to the backtrace frame is strict mode code.
+ *
+ * @return true - if strict mode code is bound to the frame,
+ *         false - otherwise
+ */
+bool
+jerry_backtrace_is_strict (jerry_backtrace_frame_t *frame_p) /**< frame pointer */
+{
+  return (frame_p->frame_type == JERRY_BACKTRACE_FRAME_JS
+          && (frame_p->context_p->status_flags & VM_FRAME_CTX_IS_STRICT) != 0);
+} /* jerry_backtrace_is_strict */
 
 /**
  * Get the resource name (usually a file name) of the currently executed script or the given function object

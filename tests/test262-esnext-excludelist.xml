@@ -2,7 +2,6 @@
 <excludeList>
   <!-- Uncategorized failing tests -->
   <test id="built-ins/Array/prototype/splice/property-traps-order-with-species.js"><reason></reason></test>
-  <test id="built-ins/ArrayBuffer/data-allocation-after-object-creation.js"><reason></reason></test>
   <test id="built-ins/AsyncFunction/AsyncFunction-is-subclass.js"><reason></reason></test>
   <test id="built-ins/AsyncFunction/AsyncFunctionPrototype-prototype.js"><reason></reason></test>
   <test id="built-ins/AsyncFunction/AsyncFunctionPrototype-to-string.js"><reason></reason></test>

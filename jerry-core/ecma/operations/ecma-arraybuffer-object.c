@@ -109,6 +109,14 @@ ecma_op_create_arraybuffer_object (const ecma_value_t *arguments_list_p, /**< li
 {
   JERRY_ASSERT (arguments_list_len == 0 || arguments_list_p != NULL);
 
+  ecma_object_t *proto_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_new_target_p),
+                                                                   ECMA_BUILTIN_ID_ARRAYBUFFER_PROTOTYPE);
+
+  if (proto_p == NULL)
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
   ecma_number_t length_num = 0;
 
   if (arguments_list_len > 0)
@@ -124,6 +132,7 @@ ecma_op_create_arraybuffer_object (const ecma_value_t *arguments_list_p, /**< li
 
       if (ECMA_IS_VALUE_ERROR (to_number_value))
       {
+        ecma_deref_object (proto_p);
         return to_number_value;
       }
     }
@@ -137,19 +146,12 @@ ecma_op_create_arraybuffer_object (const ecma_value_t *arguments_list_p, /**< li
 
     if (length_num <= -1.0 || length_num > (ecma_number_t) maximum_size_in_byte + 0.5)
     {
+      ecma_deref_object (proto_p);
       return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid ArrayBuffer length"));
     }
   }
 
   uint32_t length_uint32 = ecma_number_to_uint32 (length_num);
-
-  ecma_object_t *proto_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_new_target_p),
-                                                                   ECMA_BUILTIN_ID_ARRAYBUFFER_PROTOTYPE);
-
-  if (proto_p == NULL)
-  {
-    return ECMA_VALUE_ERROR;
-  }
 
   ecma_object_t *array_buffer = ecma_arraybuffer_new_object (length_uint32);
   ECMA_SET_NON_NULL_POINTER (array_buffer->u2.prototype_cp, proto_p);

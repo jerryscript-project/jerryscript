@@ -445,7 +445,13 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
 #if ENABLED (JERRY_BUILTIN_ANNEXB)
       case ECMA_DATE_PROTOTYPE_SET_YEAR:
       {
-        year = converted_number[0];
+        if (ecma_number_is_nan (converted_number[0]))
+        {
+          *ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, ext_object_p->u.class_prop.u.value) = converted_number[0];
+          return ecma_make_number_value (converted_number[0]);
+        }
+
+        year = ecma_number_trunc (converted_number[0]);
         if (year >= 0 && year <= 99)
         {
           year += 1900;
@@ -478,8 +484,6 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
 #if ENABLED (JERRY_BUILTIN_ANNEXB)
     if (builtin_routine_id == ECMA_DATE_PROTOTYPE_SET_YEAR)
     {
-      builtin_routine_id = ECMA_DATE_PROTOTYPE_SET_UTC_YEAR;
-
       if (ecma_number_is_nan (converted_number[0]))
       {
         day_part = 0;

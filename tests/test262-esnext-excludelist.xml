@@ -32,9 +32,6 @@
   <test id="built-ins/BigInt/asUintN/length.js"><reason></reason></test>
   <test id="built-ins/BigInt/asUintN/name.js"><reason></reason></test>
   <test id="built-ins/BigInt/asUintN/order-of-steps.js"><reason></reason></test>
-  <test id="built-ins/Date/prototype/toDateString/format.js"><reason></reason></test>
-  <test id="built-ins/Date/prototype/toDateString/negative-year.js"><reason></reason></test>
-  <test id="built-ins/Date/prototype/toTimeString/format.js"><reason></reason></test>
   <test id="built-ins/Function/prototype/toString/AsyncFunction.js"><reason></reason></test>
   <test id="built-ins/Function/prototype/toString/Function.js"><reason></reason></test>
   <test id="built-ins/Function/prototype/toString/GeneratorFunction.js"><reason></reason></test>
@@ -655,10 +652,6 @@
   <!-- AnnexB - Additional ECMAScript Features for Web Browsers
        https://www.ecma-international.org/ecma-262/11.0/#sec-additional-ecmascript-features-for-web-browsers
   -->
-  <test id="annexB/built-ins/Date/prototype/setYear/this-time-nan.js"><reason></reason></test>
-  <test id="annexB/built-ins/Date/prototype/setYear/this-time-valid.js"><reason></reason></test>
-  <test id="annexB/built-ins/Date/prototype/setYear/year-number-absolute.js"><reason></reason></test>
-  <test id="annexB/built-ins/Date/prototype/setYear/year-number-relative.js"><reason></reason></test>
   <test id="annexB/built-ins/Function/createdynfn-html-close-comment-body.js"><reason></reason></test>
   <test id="annexB/built-ins/Function/createdynfn-html-close-comment-params.js"><reason></reason></test>
   <test id="annexB/built-ins/Function/createdynfn-html-open-comment-body.js"><reason></reason></test>

@@ -907,11 +907,11 @@ typedef enum
   /* The following functions cannot be constructed (see CBC_FUNCTION_IS_CONSTRUCTABLE) */
   CBC_FUNCTION_SCRIPT, /**< script (global) function */
   CBC_FUNCTION_GENERATOR, /**< generator function */
-  CBC_FUNCTION_ASYNC, /**< async function */
   CBC_FUNCTION_ASYNC_GENERATOR, /**< async generator function */
 
   /* The following functions has no prototype (see CBC_FUNCTION_HAS_PROTOTYPE) */
   CBC_FUNCTION_ACCESSOR, /**< property accessor function */
+  CBC_FUNCTION_ASYNC, /**< async function */
   CBC_FUNCTION_METHOD, /**< method */
 
   /* The following functions are arrow function (see CBC_FUNCTION_IS_ARROW) */

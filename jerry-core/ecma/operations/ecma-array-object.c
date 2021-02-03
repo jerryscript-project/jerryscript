@@ -970,9 +970,8 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
 ecma_value_t
 ecma_op_array_object_set_length (ecma_object_t *object_p, /**< the array object */
                                  ecma_value_t new_value, /**< new length value */
-                                 uint32_t flags) /**< configuration options */
+                                 uint16_t flags) /**< property descriptor flags */
 {
-  bool is_throw = (flags & ECMA_PROP_IS_THROW) != 0;
   ecma_number_t new_len_num;
   ecma_value_t completion = ecma_op_to_number (new_value, &new_len_num);
 
@@ -1006,7 +1005,7 @@ ecma_op_array_object_set_length (ecma_object_t *object_p, /**< the array object 
                | ECMA_PROP_IS_GET_DEFINED
                | ECMA_PROP_IS_SET_DEFINED))
   {
-    return ecma_reject (is_throw);
+    return ecma_raise_property_redefinition (ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH), flags);
   }
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
@@ -1029,14 +1028,14 @@ ecma_op_array_object_set_length (ecma_object_t *object_p, /**< the array object 
       }
       else if (!ecma_is_property_writable ((ecma_property_t) ext_object_p->u.array.length_prop_and_hole_count))
       {
-        return ecma_reject (is_throw);
+        return ecma_raise_property_redefinition (ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH), flags);
       }
     }
     return ECMA_VALUE_TRUE;
   }
   else if (!ecma_is_property_writable ((ecma_property_t) ext_object_p->u.array.length_prop_and_hole_count))
   {
-    return ecma_reject (is_throw);
+    return ecma_raise_property_redefinition (ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH), flags);
   }
 
   uint32_t current_len_uint32 = new_len_uint32;
@@ -1067,7 +1066,8 @@ ecma_op_array_object_set_length (ecma_object_t *object_p, /**< the array object 
   {
     return ECMA_VALUE_TRUE;
   }
-  return ecma_reject (is_throw);
+
+  return ecma_raise_property_redefinition (ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH), flags);
 } /* ecma_op_array_object_set_length */
 
 /**
@@ -1159,7 +1159,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *object_p, /**< the arra
   if (update_length
       && !ecma_is_property_writable ((ecma_property_t) ext_object_p->u.array.length_prop_and_hole_count))
   {
-    return ecma_reject (property_desc_p->flags & ECMA_PROP_IS_THROW);
+    return ecma_raise_property_redefinition (property_name_p, property_desc_p->flags);
   }
 
   ecma_property_descriptor_t prop_desc;
@@ -1174,7 +1174,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *object_p, /**< the arra
 
   if (ecma_is_value_false (completition))
   {
-    return ecma_reject (property_desc_p->flags & ECMA_PROP_IS_THROW);
+    return ecma_raise_property_redefinition (property_name_p, property_desc_p->flags);
   }
 
   if (update_length)

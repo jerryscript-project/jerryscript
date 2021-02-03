@@ -27,6 +27,35 @@
  * @{
  */
 
+#if JERRY_ERROR_MESSAGES
+/**
+ * Reject with TypeError depending on 'is_throw' with the given format
+ */
+#define ECMA_REJECT_WITH_FORMAT(is_throw, msg, ...) \
+  ((is_throw) ? ecma_raise_standard_error_with_format (ECMA_ERROR_TYPE, (msg), __VA_ARGS__) : ECMA_VALUE_FALSE)
+
+/**
+ * Reject with TypeError depending on 'is_throw' with the given message
+ */
+#define ECMA_REJECT(is_throw, msg) \
+  ((is_throw) ? ecma_raise_type_error (msg) : ECMA_VALUE_FALSE)
+#else /* !JERRY_ERROR_MESSAGES */
+/**
+ * Reject with TypeError depending on is_throw flags wit the given format
+ */
+#define ECMA_REJECT_WITH_FORMAT(is_throw, msg, ...) \
+  ECMA_REJECT((is_throw), (msg))
+
+/**
+ * Reject with TypeError depending on is_throw flags wit the given message
+ */
+#define ECMA_REJECT(is_throw, msg) \
+  ((is_throw) ? ecma_raise_type_error (NULL) : ECMA_VALUE_FALSE)
+#endif /* JERRY_ERROR_MESSAGES */
+
+ecma_value_t ecma_raise_property_redefinition (ecma_string_t *property_name_p, uint16_t flags);
+ecma_value_t ecma_raise_readonly_assignment (ecma_string_t *property_name_p, bool is_throw);
+
 ecma_property_t ecma_op_object_get_own_property (ecma_object_t *object_p, ecma_string_t *property_name_p,
                                                  ecma_property_ref_t *property_ref_p, uint32_t options);
 bool ecma_op_ordinary_object_has_own_property (ecma_object_t *object_p, ecma_string_t *property_name_p);

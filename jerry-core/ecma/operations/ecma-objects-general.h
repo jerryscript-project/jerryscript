@@ -26,7 +26,6 @@
  * @{
  */
 
-ecma_value_t ecma_reject (bool is_throw);
 ecma_object_t *ecma_op_create_object_object_noarg (void);
 ecma_object_t *ecma_op_create_object_object_noarg_and_set_prototype (ecma_object_t *object_prototype_p);
 

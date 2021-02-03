@@ -23,6 +23,7 @@
 #include "ecma-big-uint.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-objects.h"
+#include "ecma-objects-general.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
 #include "ecma-gc.h"
@@ -1564,54 +1565,72 @@ ecma_op_typedarray_list_lazy_property_names (ecma_object_t *obj_p, /**< a TypedA
 } /* ecma_op_typedarray_list_lazy_property_names */
 
 /**
- * Define the integer number property value of the typedarray
+ * [[DefineOwnProperty]] operation for TypedArray objects
  *
- * See also: ES2015 9.4.5.3: 3.c
+ * See also: ES2015 9.4.5.3
  *
- * @return ecma value,
+ * @return ECMA_VALUE_TRUE - if the property is successfully defined
+ *         ECMA_VALUE_FALSE - if is ECMA_IS_THROW is not set
+ *         raised TypeError - otherwise
  */
 ecma_value_t
-ecma_op_typedarray_define_index_prop (ecma_object_t *obj_p, /**< a TypedArray object */
-                                      uint32_t index, /**< the index number */
-                                      const ecma_property_descriptor_t *property_desc_p) /**< the description of
-                                                                                               the prop */
+ecma_op_typedarray_define_own_property (ecma_object_t *obj_p, /**< TypedArray object */
+                                        ecma_string_t *prop_name_p, /**< property name */
+                                        const ecma_property_descriptor_t *property_desc_p) /**< property descriptor */
 {
   JERRY_ASSERT (ecma_object_is_typedarray (obj_p));
 
-  uint32_t array_length = ecma_typedarray_get_length (obj_p);
-
-  if ((index >= array_length)
-      || (property_desc_p->flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED))
-      || ((property_desc_p->flags & (ECMA_PROP_IS_CONFIGURABLE_DEFINED | ECMA_PROP_IS_CONFIGURABLE))
-           == (ECMA_PROP_IS_CONFIGURABLE_DEFINED | ECMA_PROP_IS_CONFIGURABLE))
-      || ((property_desc_p->flags & ECMA_PROP_IS_ENUMERABLE_DEFINED)
-          && !(property_desc_p->flags & ECMA_PROP_IS_ENUMERABLE))
-      || ((property_desc_p->flags & ECMA_PROP_IS_WRITABLE_DEFINED)
-          && !(property_desc_p->flags & ECMA_PROP_IS_WRITABLE)))
+  if (!ecma_prop_name_is_symbol (prop_name_p))
   {
-    return ECMA_VALUE_FALSE;
-  }
+    uint32_t array_index = ecma_string_get_array_index (prop_name_p);
 
-  if (property_desc_p->flags & ECMA_PROP_IS_VALUE_DEFINED)
-  {
-    ecma_typedarray_info_t info = ecma_typedarray_get_info (obj_p);
-
-    if (index >= info.length)
+    if (array_index != ECMA_STRING_NOT_ARRAY_INDEX)
     {
-      return ECMA_VALUE_FALSE;
+      if ((property_desc_p->flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED))
+          || ((property_desc_p->flags & (ECMA_PROP_IS_CONFIGURABLE_DEFINED | ECMA_PROP_IS_CONFIGURABLE))
+              == (ECMA_PROP_IS_CONFIGURABLE_DEFINED | ECMA_PROP_IS_CONFIGURABLE))
+          || ((property_desc_p->flags & ECMA_PROP_IS_ENUMERABLE_DEFINED)
+              && !(property_desc_p->flags & ECMA_PROP_IS_ENUMERABLE))
+          || ((property_desc_p->flags & ECMA_PROP_IS_WRITABLE_DEFINED)
+              && !(property_desc_p->flags & ECMA_PROP_IS_WRITABLE)))
+      {
+        return ecma_raise_property_redefinition (prop_name_p, property_desc_p->flags);
+      }
+
+      ecma_typedarray_info_t info = ecma_typedarray_get_info (obj_p);
+
+      if (array_index >= info.length)
+      {
+        return ECMA_REJECT ((property_desc_p->flags & ECMA_PROP_IS_THROW), "Invalid typed array index");
+      }
+
+      if (property_desc_p->flags & ECMA_PROP_IS_VALUE_DEFINED)
+      {
+        lit_utf8_byte_t *src_buffer = info.buffer_p + (array_index << info.shift);
+        ecma_value_t set_element = ecma_set_typedarray_element (src_buffer, property_desc_p->value, info.id);
+
+        if (ECMA_IS_VALUE_ERROR (set_element))
+        {
+          return set_element;
+        }
+      }
+
+      return ECMA_VALUE_TRUE;
     }
 
-    lit_utf8_byte_t *src_buffer = info.buffer_p + (index << info.shift);
-    ecma_value_t set_element = ecma_set_typedarray_element (src_buffer, property_desc_p->value, info.id);
+    ecma_number_t num = ecma_string_to_number (prop_name_p);
+    ecma_string_t *num_to_str = ecma_new_ecma_string_from_number (num);
+    bool is_same = ecma_compare_ecma_strings (prop_name_p, num_to_str);
+    ecma_deref_ecma_string (num_to_str);
 
-    if (ECMA_IS_VALUE_ERROR (set_element))
+    if (is_same)
     {
-      return set_element;
+      return ECMA_REJECT ((property_desc_p->flags & ECMA_PROP_IS_THROW), "Invalid typed array index");
     }
   }
 
-  return ECMA_VALUE_TRUE;
-} /* ecma_op_typedarray_define_index_prop */
+  return ecma_op_general_object_define_own_property (obj_p, prop_name_p, property_desc_p);
+} /* ecma_op_typedarray_define_own_property */
 
 /**
  * Specify the creation of a new TypedArray

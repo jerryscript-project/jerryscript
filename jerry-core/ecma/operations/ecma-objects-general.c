@@ -411,6 +411,11 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
     else
     {
       /* b. */
+      if (property_desc_p->flags & ECMA_PROP_IS_DATA_ACCESSOR)
+      {
+        prop_attributes |= ECMA_PROPERTY_FLAG_DATA_ACCESSOR;
+      }
+
       ecma_create_named_accessor_property (object_p,
                                            property_name_p,
                                            property_desc_p->get_p,
@@ -503,15 +508,9 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
       }
     }
   }
-  else
+  else if (is_current_configurable)
   {
     /* 9. */
-    if (!is_current_configurable)
-    {
-      /* a. */
-      return ecma_reject (property_desc_p->flags & ECMA_PROP_IS_THROW);
-    }
-
     ecma_property_value_t *value_p = ext_property_ref.property_ref.value_p;
 
     if (property_desc_type == ECMA_OP_OBJECT_DEFINE_ACCESSOR)
@@ -548,6 +547,81 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
     prop_flags ^= ECMA_PROPERTY_FLAG_DATA;
     *(ext_property_ref.property_p) = prop_flags;
   }
+  else
+  {
+    /* Property is non-configurable. */
+    if ((current_prop & ECMA_PROPERTY_FLAG_DATA)
+        || !(current_prop & ECMA_PROPERTY_FLAG_DATA_ACCESSOR))
+    {
+      /* a. */
+      return ecma_reject (property_desc_p->flags & ECMA_PROP_IS_THROW);
+    }
+
+    /* Non-standard extension. */
+    ecma_getter_setter_pointers_t *getter_setter_pair_p;
+    getter_setter_pair_p = ecma_get_named_accessor_property (ext_property_ref.property_ref.value_p);
+
+    if (getter_setter_pair_p->setter_cp == JMEM_CP_NULL)
+    {
+      const uint16_t mask = ECMA_PROP_IS_WRITABLE_DEFINED | ECMA_PROP_IS_WRITABLE;
+
+      if ((property_desc_p->flags & mask) == mask)
+      {
+        return ecma_reject (property_desc_p->flags & ECMA_PROP_IS_THROW);
+      }
+
+      if (!(property_desc_p->flags & ECMA_PROP_IS_VALUE_DEFINED))
+      {
+        return ECMA_VALUE_TRUE;
+      }
+
+      ecma_value_t result = ECMA_VALUE_UNDEFINED;
+
+      if (getter_setter_pair_p->getter_cp != JMEM_CP_NULL)
+      {
+        ecma_object_t *getter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, getter_setter_pair_p->getter_cp);
+        result = ecma_op_function_call (getter_p, ecma_make_object_value (object_p), NULL, 0);
+
+        if (ECMA_IS_VALUE_ERROR (result))
+        {
+          return result;
+        }
+      }
+
+      bool same_value = ecma_op_same_value (property_desc_p->value, result);
+      ecma_free_value (result);
+
+      if (!same_value)
+      {
+        return ecma_reject (property_desc_p->flags & ECMA_PROP_IS_THROW);
+      }
+      return ECMA_VALUE_TRUE;
+    }
+
+    if (property_desc_p->flags & ECMA_PROP_IS_VALUE_DEFINED)
+    {
+      ecma_object_t *setter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, getter_setter_pair_p->setter_cp);
+
+      ecma_value_t result;
+      result = ecma_op_function_call (setter_p, ecma_make_object_value (object_p), &property_desc_p->value, 1);
+
+      if (ECMA_IS_VALUE_ERROR (result))
+      {
+        return result;
+      }
+
+      ecma_free_value (result);
+    }
+
+    /* Because the property is non-configurable, it cannot be modified. */
+    if ((property_desc_p->flags & ECMA_PROP_IS_WRITABLE_DEFINED)
+        && !(property_desc_p->flags & ECMA_PROP_IS_WRITABLE))
+    {
+      getter_setter_pair_p->setter_cp = JMEM_CP_NULL;
+    }
+
+    return ECMA_VALUE_TRUE;
+  }
 
   /* 12. */
   if (property_desc_type == ECMA_OP_OBJECT_DEFINE_DATA)
@@ -582,6 +656,15 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
       ecma_set_named_accessor_property_setter (object_p,
                                                ext_property_ref.property_ref.value_p,
                                                property_desc_p->set_p);
+    }
+
+    if (property_desc_p->flags & ECMA_PROP_IS_DATA_ACCESSOR)
+    {
+      *ext_property_ref.property_p |= ECMA_PROPERTY_FLAG_DATA_ACCESSOR;
+    }
+    else
+    {
+      *ext_property_ref.property_p &= (uint8_t) ~ECMA_PROPERTY_FLAG_DATA_ACCESSOR;
     }
   }
 

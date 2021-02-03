@@ -195,6 +195,9 @@ typedef struct
   /** [[Configurable]] */
   bool is_configurable;
 
+  /** Is data accessor property */
+  bool is_data_accessor;
+
   /** [[Value]] */
   jerry_value_t value;
 

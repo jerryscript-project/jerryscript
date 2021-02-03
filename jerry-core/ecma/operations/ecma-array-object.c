@@ -972,7 +972,7 @@ ecma_op_array_object_set_length (ecma_object_t *object_p, /**< the array object 
                                  ecma_value_t new_value, /**< new length value */
                                  uint32_t flags) /**< configuration options */
 {
-  bool is_throw = (flags & ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_IS_THROW);
+  bool is_throw = (flags & ECMA_PROP_IS_THROW) != 0;
   ecma_number_t new_len_num;
   ecma_value_t completion = ecma_op_to_number (new_value, &new_len_num);
 
@@ -1000,7 +1000,11 @@ ecma_op_array_object_set_length (ecma_object_t *object_p, /**< the array object 
     return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid Array length"));
   }
 
-  if (flags & ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_REJECT)
+  /* Only the writable and data properties can be modified. */
+  if (flags & (ECMA_PROP_IS_CONFIGURABLE
+               | ECMA_PROP_IS_ENUMERABLE
+               | ECMA_PROP_IS_GET_DEFINED
+               | ECMA_PROP_IS_SET_DEFINED))
   {
     return ecma_reject (is_throw);
   }
@@ -1012,10 +1016,15 @@ ecma_op_array_object_set_length (ecma_object_t *object_p, /**< the array object 
   if (new_len_num == old_len_uint32)
   {
     /* Only the writable flag must be updated. */
-    if (flags & ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_WRITABLE_DEFINED)
+    if (flags & ECMA_PROP_IS_WRITABLE_DEFINED)
     {
-      if (!(flags & ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_WRITABLE))
+      if (!(flags & ECMA_PROP_IS_WRITABLE))
       {
+        if (ecma_op_array_is_fast_array (ext_object_p))
+        {
+          ecma_fast_array_convert_to_normal (object_p);
+        }
+
         ext_object_p->u.array.length_prop_and_hole_count &= (uint32_t) ~ECMA_PROPERTY_FLAG_WRITABLE;
       }
       else if (!ecma_is_property_writable ((ecma_property_t) ext_object_p->u.array.length_prop_and_hole_count))
@@ -1043,9 +1052,14 @@ ecma_op_array_object_set_length (ecma_object_t *object_p, /**< the array object 
 
   ext_object_p->u.array.length = current_len_uint32;
 
-  if ((flags & ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_WRITABLE_DEFINED)
-      && !(flags & ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_WRITABLE))
+  if ((flags & ECMA_PROP_IS_WRITABLE_DEFINED)
+      && !(flags & ECMA_PROP_IS_WRITABLE))
   {
+    if (ecma_op_array_is_fast_array (ext_object_p))
+    {
+      ecma_fast_array_convert_to_normal (object_p);
+    }
+
     ext_object_p->u.array.length_prop_and_hole_count &= (uint32_t) ~ECMA_PROPERTY_FLAG_WRITABLE;
   }
 
@@ -1093,41 +1107,15 @@ ecma_op_array_object_define_own_property (ecma_object_t *object_p, /**< the arra
     JERRY_ASSERT ((property_desc_p->flags & ECMA_PROP_IS_WRITABLE_DEFINED)
                   || !(property_desc_p->flags & ECMA_PROP_IS_WRITABLE));
 
-    uint32_t flags = 0;
-
-    if (property_desc_p->flags & ECMA_PROP_IS_THROW)
-    {
-      flags |= ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_IS_THROW;
-    }
-
-    /* Only the writable and data properties can be modified. */
-    if (property_desc_p->flags & (ECMA_PROP_IS_CONFIGURABLE
-                                  | ECMA_PROP_IS_ENUMERABLE
-                                  | ECMA_PROP_IS_GET_DEFINED
-                                  | ECMA_PROP_IS_SET_DEFINED))
-    {
-      flags |= ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_REJECT;
-    }
-
-    if (property_desc_p->flags & ECMA_PROP_IS_WRITABLE_DEFINED)
-    {
-      flags |= ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_WRITABLE_DEFINED;
-    }
-
-    if (property_desc_p->flags & ECMA_PROP_IS_WRITABLE)
-    {
-      flags |= ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_WRITABLE;
-    }
-
     if (property_desc_p->flags & ECMA_PROP_IS_VALUE_DEFINED)
     {
-      return ecma_op_array_object_set_length (object_p, property_desc_p->value, flags);
+      return ecma_op_array_object_set_length (object_p, property_desc_p->value, property_desc_p->flags);
     }
 
     ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
     ecma_value_t length_value = ecma_make_uint32_value (ext_object_p->u.array.length);
 
-    ecma_value_t result = ecma_op_array_object_set_length (object_p, length_value, flags);
+    ecma_value_t result = ecma_op_array_object_set_length (object_p, length_value, property_desc_p->flags);
 
     ecma_fast_free_value (length_value);
     return result;

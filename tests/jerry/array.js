@@ -155,3 +155,16 @@ for (i = 0; i < 1024; i++)
 
 var elision = [0,,2 ,3];
 assert (elision.hasOwnProperty(1) == false);
+
+(function () {
+  "use strict";
+  var arr = [1];
+  Object.defineProperty (arr, "length", {value: 1, writable: false});
+
+  try {
+    arr[2] = 5;
+    assert (false);
+  } catch (e) {
+    assert (e instanceof TypeError);
+  }
+}) ();

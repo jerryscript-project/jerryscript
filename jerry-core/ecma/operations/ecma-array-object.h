@@ -26,6 +26,21 @@
  */
 
 /**
+ * Attributes of fast access mode arrays:
+ *
+ * - The internal property is replaced with a buffer which directly stores the values
+ * - Whenever any operation would change the following attributes of the array it should be converted back to normal
+ *  - All properties must be enumerable configurable writable data properties
+ *  - The prototype must be Array.prototype
+ *  - [[Extensible]] internal property must be true
+ *  - 'length' property of the array must be writable
+ *
+ * - The conversion is also required when a property is set if:
+ *  - The property name is not an array index
+ *  - The new hole count of the array would reach ECMA_FAST_ARRAY_MAX_NEW_HOLES_COUNT
+ */
+
+/**
  * Maximum number of new array holes in a fast mode access array.
  * If the number of new holes exceeds this limit, the array is converted back
  * to normal property list based array.
@@ -46,20 +61,6 @@
  * Maximum number of array holes in a fast access mode array
  */
 #define ECMA_FAST_ARRAY_MAX_HOLE_COUNT (1 << 24)
-
-/**
- * Flags for ecma_op_array_object_set_length
- */
-typedef enum
-{
-  ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_IS_THROW = 1u << 0, /**< is_throw flag is set */
-  ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_REJECT = 1u << 1, /**< reject later because the descriptor flags
-                                                       *   contains an unallowed combination */
-  ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_WRITABLE_DEFINED = 1u << 2, /**< writable flag defined
-                                                                 *   in the property descriptor */
-  ECMA_ARRAY_OBJECT_SET_LENGTH_FLAG_WRITABLE = 1u << 3, /**< writable flag enabled
-                                                         *   in the property descriptor */
-} ecma_array_object_set_length_flags_t;
 
 ecma_object_t *
 ecma_op_new_array_object (uint32_t length);

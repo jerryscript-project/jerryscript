@@ -1276,11 +1276,6 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
 
       if (JERRY_LIKELY (ecma_op_array_is_fast_array (ext_object_p)))
       {
-        if (JERRY_UNLIKELY (!ecma_op_ordinary_object_is_extensible (object_p)))
-        {
-          return ecma_reject (is_throw);
-        }
-
         uint32_t index = ecma_string_get_array_index (property_name_p);
 
         if (JERRY_UNLIKELY (index == ECMA_STRING_NOT_ARRAY_INDEX))
@@ -3233,7 +3228,11 @@ ecma_op_ordinary_object_is_extensible (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (!ECMA_OBJECT_IS_PROXY (object_p));
 
-  return (object_p->type_flags_refs & ECMA_OBJECT_FLAG_EXTENSIBLE) != 0;
+  bool is_extensible = (object_p->type_flags_refs & ECMA_OBJECT_FLAG_EXTENSIBLE) != 0;
+
+  JERRY_ASSERT (!ecma_op_object_is_fast_array (object_p) || is_extensible);
+
+  return is_extensible;
 } /* ecma_op_ordinary_object_is_extensible */
 
 /**
@@ -3243,6 +3242,12 @@ void JERRY_ATTR_NOINLINE
 ecma_op_ordinary_object_prevent_extensions (ecma_object_t *object_p) /**< object */
 {
   JERRY_ASSERT (!ECMA_OBJECT_IS_PROXY (object_p));
+
+  if (JERRY_UNLIKELY (ecma_op_object_is_fast_array (object_p)))
+  {
+    ecma_fast_array_convert_to_normal (object_p);
+  }
+
   object_p->type_flags_refs &= (ecma_object_descriptor_t) ~ECMA_OBJECT_FLAG_EXTENSIBLE;
 } /* ecma_op_ordinary_object_prevent_extensions */
 

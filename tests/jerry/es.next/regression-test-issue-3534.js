@@ -12,12 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var array = [$, Infinity]
+var array = [5.1, Infinity]
 Reflect.preventExtensions(array);
 
-try {
-  var $ = array.pop()
-  assert(false);
-} catch (e) {
-  assert(e instanceof TypeError);
-}
+assert(array.pop() == Infinity);

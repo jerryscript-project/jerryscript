@@ -390,12 +390,6 @@ ecma_builtin_array_prototype_object_pop (ecma_object_t *obj_p, /**< object */
 
   if (ecma_op_object_is_fast_array (obj_p))
   {
-    if (!ecma_op_ordinary_object_is_extensible (obj_p))
-    {
-      ecma_free_value (get_value);
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type"));
-    }
-
     ecma_delete_fast_array_properties (obj_p, (uint32_t) len);
 
     return get_value;
@@ -441,11 +435,6 @@ ecma_builtin_array_prototype_object_push (const ecma_value_t *argument_list_p, /
 {
   if (ecma_op_object_is_fast_array (obj_p))
   {
-    if (!ecma_op_ordinary_object_is_extensible (obj_p))
-    {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid argument type"));
-    }
-
     if ((ecma_number_t) (length + arguments_number) > UINT32_MAX)
     {
       return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid Array length"));
@@ -540,8 +529,7 @@ ecma_builtin_array_prototype_object_reverse (ecma_value_t this_arg, /**< this ar
     ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
 
     if (ext_obj_p->u.array.length_prop_and_hole_count < ECMA_FAST_ARRAY_HOLE_ONE
-        && len != 0
-        && ecma_op_ordinary_object_is_extensible (obj_p))
+        && len != 0)
     {
       ecma_value_t *buffer_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, obj_p->u1.property_list_cp);
 
@@ -726,8 +714,7 @@ ecma_builtin_array_prototype_object_shift (ecma_object_t *obj_p, /**< object */
     ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
 
     if (ext_obj_p->u.array.length_prop_and_hole_count < ECMA_FAST_ARRAY_HOLE_ONE
-        && len != 0
-        && ecma_op_ordinary_object_is_extensible (obj_p))
+        && len != 0)
     {
       ecma_value_t *buffer_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, obj_p->u1.property_list_cp);
       ecma_value_t ret_value = buffer_p[0];
@@ -1514,8 +1501,7 @@ ecma_builtin_array_prototype_object_unshift (const ecma_value_t args[], /**< arg
     ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
 
     if (ext_obj_p->u.array.length_prop_and_hole_count < ECMA_FAST_ARRAY_HOLE_ONE
-        && len != 0
-        && ecma_op_ordinary_object_is_extensible (obj_p))
+        && len != 0)
     {
       if (args_number > UINT32_MAX - len)
       {
@@ -2302,8 +2288,7 @@ ecma_builtin_array_prototype_fill (ecma_value_t value, /**< value */
   {
     ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
 
-    if (ext_obj_p->u.array.length_prop_and_hole_count < ECMA_FAST_ARRAY_HOLE_ONE
-        && ecma_op_ordinary_object_is_extensible (obj_p))
+    if (ext_obj_p->u.array.length_prop_and_hole_count < ECMA_FAST_ARRAY_HOLE_ONE)
     {
       if (JERRY_UNLIKELY (obj_p->u1.property_list_cp == JMEM_CP_NULL))
       {

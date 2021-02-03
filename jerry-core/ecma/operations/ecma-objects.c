@@ -531,12 +531,10 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
       /* ES2015 9.4.5.4 */
       if (ecma_object_is_typedarray (object_p))
       {
-#if ENABLED (JERRY_ESNEXT)
         if (ecma_prop_name_is_symbol (property_name_p))
         {
           break;
         }
-#endif /* ENABLED (JERRY_ESNEXT) */
 
         uint32_t array_index = ecma_string_get_array_index (property_name_p);
 
@@ -1320,12 +1318,10 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
       /* ES2015 9.4.5.5 */
       if (ecma_object_is_typedarray (object_p))
       {
-#if ENABLED (JERRY_ESNEXT)
         if (ecma_prop_name_is_symbol (property_name_p))
         {
           break;
         }
-#endif /* ENABLED (JERRY_ESNEXT) */
 
         uint32_t array_index = ecma_string_get_array_index (property_name_p);
 
@@ -1335,7 +1331,7 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
 
           if (array_index >= info.length)
           {
-            return ecma_reject (is_throw);
+            return ECMA_VALUE_FALSE;
           }
 
           uint32_t byte_pos = array_index << info.shift;
@@ -1344,15 +1340,13 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
 
         ecma_number_t num = ecma_string_to_number (property_name_p);
         ecma_string_t *num_to_str = ecma_new_ecma_string_from_number (num);
-
-        if (ecma_compare_ecma_strings (property_name_p, num_to_str))
-        {
-          ecma_deref_ecma_string (num_to_str);
-
-          return ecma_reject (is_throw);
-        }
-
+        bool is_same = ecma_compare_ecma_strings (property_name_p, num_to_str);
         ecma_deref_ecma_string (num_to_str);
+
+        if (is_same)
+        {
+          return ECMA_VALUE_FALSE;
+        }
       }
 #endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
       break;
@@ -1794,14 +1788,12 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
       /* ES2015 9.4.5.3 */
       if (ecma_object_is_typedarray (obj_p))
       {
-#if ENABLED (JERRY_ESNEXT)
         if (ecma_prop_name_is_symbol (property_name_p))
         {
           return ecma_op_general_object_define_own_property (obj_p,
                                                              property_name_p,
                                                              property_desc_p);
         }
-#endif /* ENABLED (JERRY_ESNEXT) */
         uint32_t array_index = ecma_string_get_array_index (property_name_p);
 
         if (array_index != ECMA_STRING_NOT_ARRAY_INDEX)
@@ -1825,15 +1817,13 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
 
         ecma_number_t num = ecma_string_to_number (property_name_p);
         ecma_string_t *num_to_str = ecma_new_ecma_string_from_number (num);
+        bool is_same = ecma_compare_ecma_strings (property_name_p, num_to_str);
+        ecma_deref_ecma_string (num_to_str);
 
-        if (ecma_compare_ecma_strings (property_name_p, num_to_str))
+        if (is_same)
         {
-          ecma_deref_ecma_string (num_to_str);
-
           return ecma_reject (property_desc_p->flags & ECMA_PROP_IS_THROW);
         }
-
-        ecma_deref_ecma_string (num_to_str);
       }
 
       return ecma_op_general_object_define_own_property (obj_p,

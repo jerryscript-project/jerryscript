@@ -67,7 +67,7 @@ M_YAML_MULTILINE_LIST = re.compile(r"^ *- (.*)$")
 
 
 # The timeout of each test case
-TEST262_CASE_TIMEOUT = 5
+TEST262_CASE_TIMEOUT = 180
 
 
 def yaml_load(string):

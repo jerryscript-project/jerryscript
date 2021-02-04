@@ -30,7 +30,9 @@ jobs:
         with:
           python-version: '2.7' # needed by jerry-debugger
       - run: $RUNNER -q --jerry-tests
+      - run: $RUNNER -q --jerry-tests --build-debug
       - run: $RUNNER -q --jerry-debugger
+      - run: $RUNNER -q --jerry-debugger --build-debug
 
   Linux_x86_cpointer-32bit_Build_Correctness_Tests:
     runs-on: ubuntu-latest
@@ -39,13 +41,22 @@ jobs:
       - run: sudo apt update
       - run: sudo apt install gcc-multilib
       - run: $RUNNER -q --jerry-tests --buildoptions=--compile-flag=-m32,--cpointer-32bit=on
+      - run: $RUNNER -q --jerry-tests --buildoptions=--compile-flag=-m32,--cpointer-32bit=on --build-debug
 
   OSX_x86-64_Build_Correctness_Unit_Tests:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
-      - run: $RUNNER -q --jerry-tests
+        # FIXME: regression-test-issue-3785.js currently are deadloop on OSX.
+      - run: $RUNNER -q --jerry-tests --skip-list=regression-test-issue-3785.js
       - run: $RUNNER -q --unittests
+
+  OSX_x86-64_Build_Correctness_Unit_Tests_Debug:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: $RUNNER -q --jerry-tests --build-debug
+      - run: $RUNNER -q --unittests --build-debug
 
   Linux_x86-64_Build_Option_Tests:
     runs-on: ubuntu-latest
@@ -60,45 +71,56 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: $RUNNER --test262
+      - run: $RUNNER --test262 --build-debug
 
   Conformance_Tests_ES2015:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - run: $RUNNER --test262-es2015=update
+      - run: $RUNNER --test262-es2015=update --build-debug
       - uses: actions/upload-artifact@v2
         if: success() || failure()
         with:
           name: Test262-ES2015-results
-          path: build/tests/test262_tests_es2015/local/bin/test262.report
+          path: |
+            build/tests/test262_tests_es2015/local/bin/test262.report
+            build/tests/test262_tests_es2015-debug/local/bin/test262.report
 
   Conformance_Tests_ESNext_A:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - run: $RUNNER --test262-esnext=update --test262-test-list=built-ins,annexB,harness,intl402
+      - run: $RUNNER --test262-esnext=update --test262-test-list=built-ins,annexB,harness,intl402 --build-debug
       - uses: actions/upload-artifact@v2
         if: success() || failure()
         with:
           name: Test262-ESNext-results-A
-          path: build/tests/test262_tests_esnext/local/bin/test262.report
+          path:  |
+            build/tests/test262_tests_esnext/local/bin/test262.report
+            build/tests/test262_tests_esnext-debug/local/bin/test262.report
 
   Conformance_Tests_ESNext_B:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - run: $RUNNER --test262-esnext=update --test262-test-list=language
+      - run: $RUNNER --test262-esnext=update --test262-test-list=language --build-debug
       - uses: actions/upload-artifact@v2
         if: success() || failure()
         with:
           name: Test262-ESNext-results-B
-          path: build/tests/test262_tests_esnext/local/bin/test262.report
+          path: |
+            build/tests/test262_tests_esnext/local/bin/test262.report
+            build/tests/test262_tests_esnext-debug/local/bin/test262.report
 
   Unit_Tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - run: $RUNNER -q --unittests
+      - run: $RUNNER -q --unittests --build-debug
 
   ASAN_Tests:
     runs-on: ubuntu-latest
@@ -113,6 +135,19 @@ jobs:
           --buildoptions=--stack-limit=0,--compile-flag=-fsanitize=address,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--compile-flag=-O2,--debug,--system-allocator=on,--linker-flag=-fuse-ld=gold
           --skip-list=parser-oom.js,parser-oom2.js,stack-limit.js,regression-test-issue-2190.js,regression-test-issue-2258-2963.js,regression-test-issue-2448.js,regression-test-issue-2905.js,regression-test-issue-3785.js
 
+  ASAN_Tests_Debug:
+    runs-on: ubuntu-latest
+    env:
+      ASAN_OPTIONS: detect_stack_use_after_return=1:check_initialization_order=true:strict_init_order=true
+    steps:
+      - uses: actions/checkout@v2
+      - run: sudo apt update
+      - run: sudo apt install gcc-multilib
+      - run: >-
+          $RUNNER -q --jerry-tests --build-debug
+          --buildoptions=--stack-limit=0,--compile-flag=-fsanitize=address,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--compile-flag=-O2,--debug,--system-allocator=on,--linker-flag=-fuse-ld=gold
+          --skip-list=parser-oom.js,parser-oom2.js,stack-limit.js,regression-test-issue-2190.js,regression-test-issue-2258-2963.js,regression-test-issue-2448.js,regression-test-issue-2905.js,regression-test-issue-3785.js
+
   UBSAN_Tests:
     runs-on: ubuntu-latest
     env:
@@ -123,6 +158,10 @@ jobs:
       - run: sudo apt install gcc-multilib
       - run: >-
           $RUNNER -q --jerry-tests
+          --buildoptions=--compile-flag=-fsanitize=undefined,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--debug,--system-allocator=on,--linker-flag=-fuse-ld=gold
+          --skip-list=parser-oom.js,parser-oom2.js
+      - run: >-
+          $RUNNER -q --jerry-tests --build-debug
           --buildoptions=--compile-flag=-fsanitize=undefined,--compile-flag=-m32,--compile-flag=-fno-omit-frame-pointer,--compile-flag=-fno-common,--debug,--system-allocator=on,--linker-flag=-fuse-ld=gold
           --skip-list=parser-oom.js,parser-oom2.js
 
@@ -139,6 +178,19 @@ jobs:
           $RUNNER -q --jerry-tests
           --buildoptions=--toolchain=cmake/toolchain_linux_armv7l.cmake,--linker-flag=-static
 
+  Linux_ARMv7l_Tests_Debug:
+    runs-on: ubuntu-latest
+    env:
+      RUNTIME: qemu-arm-static
+      TIMEOUT: 300
+    steps:
+      - uses: actions/checkout@v2
+      - run: sudo apt update
+      - run: sudo apt install gcc-arm-linux-gnueabihf libc6-dev-armhf-cross qemu-user-static
+      - run: >-
+          $RUNNER -q --jerry-tests --build-debug
+          --buildoptions=--toolchain=cmake/toolchain_linux_armv7l.cmake,--linker-flag=-static
+
   Linux_AArch64_Tests:
     runs-on: ubuntu-latest
     env:
@@ -150,6 +202,19 @@ jobs:
       - run: sudo apt install gcc-aarch64-linux-gnu libc6-dev-armhf-cross qemu-user-static
       - run: >-
           $RUNNER -q --jerry-tests
+          --buildoptions=--toolchain=cmake/toolchain_linux_aarch64.cmake,--linker-flag=-static
+
+  Linux_AArch64_Tests_Debug:
+    runs-on: ubuntu-latest
+    env:
+      RUNTIME: qemu-aarch64-static
+      TIMEOUT: 300
+    steps:
+      - uses: actions/checkout@v2
+      - run: sudo apt update
+      - run: sudo apt install gcc-aarch64-linux-gnu libc6-dev-armhf-cross qemu-user-static
+      - run: >-
+          $RUNNER -q --jerry-tests --build-debug
           --buildoptions=--toolchain=cmake/toolchain_linux_aarch64.cmake,--linker-flag=-static
 
   MbedOS5_K64F_Build_Test:

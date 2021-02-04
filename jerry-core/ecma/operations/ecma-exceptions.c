@@ -177,7 +177,7 @@ ecma_new_standard_error (ecma_standard_error_t error_type, /**< native error typ
                                                                            NULL);
     ecma_deref_ecma_string (stack_str_p);
 
-    ecma_value_t backtrace_value = vm_get_backtrace (0, NULL);
+    ecma_value_t backtrace_value = vm_get_backtrace (0);
 
     prop_value_p->value = backtrace_value;
     ecma_deref_object (ecma_get_object_from_value (backtrace_value));

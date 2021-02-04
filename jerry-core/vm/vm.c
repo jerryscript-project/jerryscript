@@ -2544,7 +2544,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_INITIALIZER_PUSH_PROP:
         {
           ecma_value_t *last_context_end_p = VM_LAST_CONTEXT_END ();
-          right_value = last_context_end_p[-2];
+          ecma_value_t base = last_context_end_p[-2];
 
           if (opcode == CBC_EXT_INITIALIZER_PUSH_PROP)
           {
@@ -2557,7 +2557,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             stack_top_p--;
           }
 
-          result = vm_op_get_value (right_value, left_value);
+          result = vm_op_get_value (base, left_value);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {

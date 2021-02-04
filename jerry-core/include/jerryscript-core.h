@@ -472,6 +472,15 @@ typedef enum
 } jerry_iterator_type_t;
 
 /**
+ * JerryScript special Proxy object options.
+ */
+typedef enum
+{
+  JERRY_PROXY_SKIP_GET_CHECKS = (1u << 0), /**< skip [[Get]] result checks */
+  JERRY_PROXY_SKIP_GET_OWN_PROPERTY_CHECKS = (1u << 1), /**< skip [[GetOwnProperty]] result checks */
+} jerry_proxy_object_options_t;
+
+/**
  * JerryScript object property filter options.
  */
 typedef enum
@@ -597,6 +606,8 @@ jerry_value_t jerry_create_null (void);
 jerry_value_t jerry_create_object (void);
 jerry_value_t jerry_create_promise (void);
 jerry_value_t jerry_create_proxy (const jerry_value_t target, const jerry_value_t handler);
+jerry_value_t jerry_create_special_proxy (const jerry_value_t target, const jerry_value_t handler,
+                                          uint32_t options);
 jerry_value_t jerry_create_regexp (const jerry_char_t *pattern, uint16_t flags);
 jerry_value_t jerry_create_regexp_sz (const jerry_char_t *pattern, jerry_size_t pattern_size, uint16_t flags);
 jerry_value_t jerry_create_string_from_utf8 (const jerry_char_t *str_p);

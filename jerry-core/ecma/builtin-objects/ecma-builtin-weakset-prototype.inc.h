@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if ENABLED (JERRY_BUILTIN_WEAKSET)
+#if JERRY_BUILTIN_WEAKSET
 
 /* Object properties:
  *  (property name, object pointer getter) */
@@ -40,6 +40,6 @@ ROUTINE (LIT_MAGIC_STRING_ADD, ECMA_CONTAINER_ROUTINE_ADD, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_DELETE, ECMA_CONTAINER_ROUTINE_DELETE_WEAK, 1, 1)
 ROUTINE (LIT_MAGIC_STRING_HAS, ECMA_CONTAINER_ROUTINE_HAS, 1, 1)
 
-#endif /* ENABLED (JERRY_BUILTIN_WEAKSET) */
+#endif /* JERRY_BUILTIN_WEAKSET */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

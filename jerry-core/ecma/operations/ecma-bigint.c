@@ -20,7 +20,7 @@
 #include "ecma-objects.h"
 #include "lit-char-helpers.h"
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
 
 /**
  * Raise a not enough memory error
@@ -325,18 +325,18 @@ ecma_bigint_number_to_digits (ecma_number_t number, /**< ecma number */
     fraction >>= ECMA_NUMBER_FRACTION_WIDTH - biased_exp;
     digits_p[0] = (ecma_bigint_digit_t) fraction;
 
-#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#if JERRY_NUMBER_TYPE_FLOAT64
     digits_p[1] = (ecma_bigint_digit_t) (fraction >> (8 * sizeof (ecma_bigint_digit_t)));
     return ECMA_BIGINT_NUMBER_TO_DIGITS_SET_DIGITS (digits_p[1] == 0 ? 1 : 2) | has_fraction;
-#else /* !ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#else /* !JERRY_NUMBER_TYPE_FLOAT64 */
     return ECMA_BIGINT_NUMBER_TO_DIGITS_SET_DIGITS (1) | has_fraction;
-#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#endif /* JERRY_NUMBER_TYPE_FLOAT64 */
   }
 
   digits_p[0] = (ecma_bigint_digit_t) fraction;
-#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#if JERRY_NUMBER_TYPE_FLOAT64
   digits_p[1] = (ecma_bigint_digit_t) (fraction >> (8 * sizeof (ecma_bigint_digit_t)));
-#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#endif /* JERRY_NUMBER_TYPE_FLOAT64 */
 
   biased_exp -= ECMA_NUMBER_FRACTION_WIDTH;
 
@@ -345,27 +345,27 @@ ecma_bigint_number_to_digits (ecma_number_t number, /**< ecma number */
 
   if (shift_left == 0)
   {
-#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#if JERRY_NUMBER_TYPE_FLOAT64
     return biased_exp | ECMA_BIGINT_NUMBER_TO_DIGITS_SET_DIGITS (2);
-#else /* !ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#else /* !JERRY_NUMBER_TYPE_FLOAT64 */
     return biased_exp | ECMA_BIGINT_NUMBER_TO_DIGITS_SET_DIGITS (1);
-#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#endif /* JERRY_NUMBER_TYPE_FLOAT64 */
   }
 
   uint32_t shift_right = (1 << ECMA_BIGINT_DIGIT_SHIFT) - shift_left;
 
-#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#if JERRY_NUMBER_TYPE_FLOAT64
   digits_p[2] = digits_p[1] >> shift_right;
   digits_p[1] = (digits_p[1] << shift_left) | (digits_p[0] >> shift_right);
   digits_p[0] <<= shift_left;
 
   return biased_exp | ECMA_BIGINT_NUMBER_TO_DIGITS_SET_DIGITS (digits_p[2] == 0 ? 2 : 3);
-#else /* !ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#else /* !JERRY_NUMBER_TYPE_FLOAT64 */
   digits_p[1] = digits_p[0] >> shift_right;
   digits_p[0] <<= shift_left;
 
   return biased_exp | ECMA_BIGINT_NUMBER_TO_DIGITS_SET_DIGITS (digits_p[1] == 0 ? 1 : 2);
-#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#endif /* JERRY_NUMBER_TYPE_FLOAT64 */
 } /* ecma_bigint_number_to_digits */
 
 /**
@@ -1451,7 +1451,7 @@ ecma_bigint_shift (ecma_value_t left_value, /**< left BigInt value */
   return ecma_make_extended_primitive_value (result_p, ECMA_TYPE_BIGINT);
 } /* ecma_bigint_shift */
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 
 /**
  * Compute the left value raised to the power of right value
@@ -1541,7 +1541,7 @@ ecma_bigint_pow (ecma_value_t left_value, /**< left BigInt value */
   return ecma_make_extended_primitive_value (result_p, ECMA_TYPE_BIGINT);
 } /* ecma_bigint_pow */
 
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /**
  * Convert the result to an ecma value
@@ -1723,4 +1723,4 @@ ecma_bigint_xor (ecma_value_t left_value, /**< left BigInt value */
   return ecma_bigint_bitwise_op (operation_and_options, left_p, right_p);
 } /* ecma_bigint_xor */
 
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */

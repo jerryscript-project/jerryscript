@@ -35,21 +35,21 @@
  * @{
  */
 
-#if ENABLED (JERRY_CPOINTER_32_BIT)
+#if JERRY_CPOINTER_32_BIT
 /**
  * Maximum length of the array length to allocate fast mode access for it
  * e.g. new Array(5000) is constructed as fast mode access array,
  * but new Array(50000000) is consturcted as normal property list based array
  */
 #define ECMA_FAST_ARRAY_MAX_INITIAL_LENGTH (1 << 17)
-#else /* ENABLED (JERRY_CPOINTER_32_BIT) */
+#else /* JERRY_CPOINTER_32_BIT */
 /**
  * Maximum length of the array length to allocate fast mode access for it
  * e.g. new Array(5000) is constructed as fast mode access array,
  * but new Array(50000000) is consturcted as normal property list based array
  */
 #define ECMA_FAST_ARRAY_MAX_INITIAL_LENGTH (1 << 13)
-#endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
+#endif /* JERRY_CPOINTER_32_BIT */
 
 /**
  * Property name type flag for array indices.
@@ -65,11 +65,11 @@
 static ecma_object_t *
 ecma_op_alloc_array_object (uint32_t length) /**< length of the new array */
 {
-#if ENABLED (JERRY_BUILTIN_ARRAY)
+#if JERRY_BUILTIN_ARRAY
   ecma_object_t *array_prototype_object_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAY_PROTOTYPE);
-#else /* !ENABLED (JERRY_BUILTIN_ARRAY) */
+#else /* !JERRY_BUILTIN_ARRAY */
   ecma_object_t *array_prototype_object_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
-#endif /* ENABLED (JERRY_BUILTIN_ARRAY) */
+#endif /* JERRY_BUILTIN_ARRAY */
 
   ecma_object_t *object_p = ecma_create_object (array_prototype_object_p,
                                                 sizeof (ecma_extended_object_t),
@@ -170,13 +170,13 @@ ecma_op_new_array_object (uint32_t length) /**< length of the new array */
 ecma_object_t *
 ecma_op_new_array_object_from_length (ecma_length_t length) /**< length of the new array */
 {
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   if (length > UINT32_MAX)
   {
     ecma_raise_range_error (ECMA_ERR_MSG ("Invalid Array length"));
     return NULL;
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
   return ecma_op_new_array_object ((uint32_t) length);
 } /* ecma_op_new_array_object_from_length */
@@ -677,7 +677,7 @@ ecma_fast_array_object_own_property_keys (ecma_object_t *object_p) /**< fast acc
   return ret_p;
 } /* ecma_fast_array_object_own_property_keys */
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 /**
  * Array object creation with custom prototype.
  *
@@ -709,7 +709,7 @@ ecma_op_array_species_create (ecma_object_t *original_array_p, /**< The object f
       return NULL;
     }
 
-#if ENABLED (JERRY_BUILTIN_REALMS)
+#if JERRY_BUILTIN_REALMS
     if (ecma_is_constructor (constructor))
     {
       ecma_object_t *constructor_p = ecma_get_object_from_value (constructor);
@@ -722,7 +722,7 @@ ecma_op_array_species_create (ecma_object_t *original_array_p, /**< The object f
         constructor = ECMA_VALUE_UNDEFINED;
       }
     }
-#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+#endif /* JERRY_BUILTIN_REALMS */
 
     if (ecma_is_value_object (constructor))
     {
@@ -800,7 +800,7 @@ ecma_op_create_array_iterator (ecma_object_t *obj_p, /**< array object */
                                          ECMA_PSEUDO_ARRAY_ITERATOR,
                                          kind);
 } /* ecma_op_create_array_iterator */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /**
  * Low level delete of array items from new_length to old_length
@@ -832,14 +832,14 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
 
   ecma_property_header_t *current_prop_p;
 
-#if ENABLED (JERRY_PROPRETY_HASHMAP)
+#if JERRY_PROPRETY_HASHMAP
   current_prop_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t, current_prop_cp);
 
   if (current_prop_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP)
   {
     current_prop_cp = current_prop_p->next_property_cp;
   }
-#endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
+#endif /* JERRY_PROPRETY_HASHMAP */
 
   while (current_prop_cp != JMEM_CP_NULL)
   {
@@ -878,7 +878,7 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
   current_prop_cp = object_p->u1.property_list_cp;
   ecma_property_header_t *prev_prop_p = NULL;
 
-#if ENABLED (JERRY_PROPRETY_HASHMAP)
+#if JERRY_PROPRETY_HASHMAP
   JERRY_ASSERT (current_prop_cp != JMEM_CP_NULL);
 
   ecma_property_hashmap_delete_status hashmap_status = ECMA_PROPERTY_HASHMAP_DELETE_NO_HASHMAP;
@@ -890,7 +890,7 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
     current_prop_cp = current_prop_p->next_property_cp;
     hashmap_status = ECMA_PROPERTY_HASHMAP_DELETE_HAS_HASHMAP;
   }
-#endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
+#endif /* JERRY_PROPRETY_HASHMAP */
 
   while (current_prop_cp != JMEM_CP_NULL)
   {
@@ -911,14 +911,14 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
         {
           JERRY_ASSERT (index != ECMA_STRING_NOT_ARRAY_INDEX);
 
-#if ENABLED (JERRY_PROPRETY_HASHMAP)
+#if JERRY_PROPRETY_HASHMAP
           if (hashmap_status == ECMA_PROPERTY_HASHMAP_DELETE_HAS_HASHMAP)
           {
             hashmap_status = ecma_property_hashmap_delete (object_p,
                                                            prop_pair_p->names_cp[i],
                                                            current_prop_p->types + i);
           }
-#endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
+#endif /* JERRY_PROPRETY_HASHMAP */
 
           ecma_free_property (object_p, prop_pair_p->names_cp[i], current_prop_p->types + i);
           current_prop_p->types[i] = ECMA_PROPERTY_TYPE_DELETED;
@@ -950,13 +950,13 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
     }
   }
 
-#if ENABLED (JERRY_PROPRETY_HASHMAP)
+#if JERRY_PROPRETY_HASHMAP
   if (hashmap_status == ECMA_PROPERTY_HASHMAP_DELETE_RECREATE_HASHMAP)
   {
     ecma_property_hashmap_free (object_p);
     ecma_property_hashmap_create (object_p);
   }
-#endif /* ENABLED (JERRY_PROPRETY_HASHMAP) */
+#endif /* JERRY_PROPRETY_HASHMAP */
 
   return new_length;
 } /* ecma_delete_array_properties */

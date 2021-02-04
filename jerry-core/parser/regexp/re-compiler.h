@@ -16,7 +16,7 @@
 #ifndef RE_COMPILER_H
 #define RE_COMPILER_H
 
-#if ENABLED (JERRY_BUILTIN_REGEXP)
+#if JERRY_BUILTIN_REGEXP
 
 #include "ecma-globals.h"
 #include "re-bytecode.h"
@@ -42,5 +42,5 @@ void re_cache_gc (void);
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
+#endif /* JERRY_BUILTIN_REGEXP */
 #endif /* !RE_COMPILER_H */

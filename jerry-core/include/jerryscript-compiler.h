@@ -41,8 +41,13 @@ extern "C"
 #define JERRY_ATTR_PURE __attribute__((pure))
 #define JERRY_ATTR_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
 
+#ifndef JERRY_LIKELY
 #define JERRY_LIKELY(x) __builtin_expect(!!(x), 1)
+#endif /* !JERRY_LIKELY */
+
+#ifndef JERRY_UNLIKELY
 #define JERRY_UNLIKELY(x) __builtin_expect(!!(x), 0)
+#endif /* !JERRY_UNLIKELY */
 
 #endif /* __GNUC__ */
 

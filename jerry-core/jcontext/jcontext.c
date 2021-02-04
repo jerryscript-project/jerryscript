@@ -118,14 +118,14 @@ jcontext_take_exception (void)
   return JERRY_CONTEXT (error_value);
 } /* jcontext_take_exception */
 
-#if !ENABLED (JERRY_EXTERNAL_CONTEXT)
+#if !JERRY_EXTERNAL_CONTEXT
 
 /**
  * Global context.
  */
 jerry_context_t jerry_global_context;
 
-#if !ENABLED (JERRY_SYSTEM_ALLOCATOR)
+#if !JERRY_SYSTEM_ALLOCATOR
 
 /**
  * Check size of heap is corresponding to configuration
@@ -138,9 +138,9 @@ JERRY_STATIC_ASSERT (sizeof (jmem_heap_t) <= JMEM_HEAP_SIZE,
  */
 jmem_heap_t jerry_global_heap JERRY_ATTR_ALIGNED (JMEM_ALIGNMENT) JERRY_ATTR_GLOBAL_HEAP;
 
-#endif /* !ENABLED (JERRY_SYSTEM_ALLOCATOR) */
+#endif /* !JERRY_SYSTEM_ALLOCATOR */
 
-#endif /* !ENABLED (JERRY_EXTERNAL_CONTEXT) */
+#endif /* !JERRY_EXTERNAL_CONTEXT */
 
 /**
  * @}

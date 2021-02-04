@@ -21,8 +21,8 @@
 #include "ecma-typedarray-object.h"
 #include "jrt.h"
 
-#if ENABLED (JERRY_BUILTIN_TYPEDARRAY)
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_TYPEDARRAY
+#if JERRY_BUILTIN_BIGINT
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -76,5 +76,5 @@ ecma_builtin_biguint64array_dispatch_construct (const ecma_value_t *arguments_li
   * @}
   */
 
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
-#endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
+#endif /* JERRY_BUILTIN_BIGINT */
+#endif /* JERRY_BUILTIN_TYPEDARRAY */

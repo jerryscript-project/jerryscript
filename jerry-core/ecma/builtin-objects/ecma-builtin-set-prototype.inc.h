@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if ENABLED (JERRY_BUILTIN_SET)
+#if JERRY_BUILTIN_SET
 
 /* Object properties:
  *  (property name, object pointer getter) */
@@ -53,6 +53,6 @@ ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_SIZE,
                     ECMA_CONTAINER_ROUTINE_SIZE_GETTER,
                     ECMA_PROPERTY_FLAG_CONFIGURABLE)
 
-#endif /* ENABLED (JERRY_BUILTIN_SET) */
+#endif /* JERRY_BUILTIN_SET */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

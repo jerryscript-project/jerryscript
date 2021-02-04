@@ -63,13 +63,13 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
   }
 
   ecma_builtin_id_t proto_id;
-#if ENABLED (JERRY_BUILTIN_STRING)
+#if JERRY_BUILTIN_STRING
   proto_id = ECMA_BUILTIN_ID_STRING_PROTOTYPE;
-#else /* !ENABLED (JERRY_BUILTIN_STRING) */
+#else /* !JERRY_BUILTIN_STRING */
   proto_id = ECMA_BUILTIN_ID_OBJECT_PROTOTYPE;
-#endif /* ENABLED (JERRY_BUILTIN_STRING) */
+#endif /* JERRY_BUILTIN_STRING */
   ecma_object_t *prototype_obj_p = ecma_builtin_get (proto_id);
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   ecma_object_t *new_target = JERRY_CONTEXT (current_new_target_p);
   if (new_target)
   {
@@ -79,7 +79,7 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
       return ECMA_VALUE_ERROR;
     }
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
   ecma_object_t *object_p = ecma_create_object (prototype_obj_p,
                                                 sizeof (ecma_extended_object_t),
                                                 ECMA_OBJECT_TYPE_CLASS);
@@ -88,12 +88,12 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
   ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_STRING_UL;
   ext_object_p->u.class_prop.u.value = prim_value;
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   if (new_target)
   {
     ecma_deref_object (prototype_obj_p);
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
   return ecma_make_object_value (object_p);
 } /* ecma_op_create_string_object */
 

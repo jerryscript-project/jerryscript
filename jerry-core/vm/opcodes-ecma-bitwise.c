@@ -57,10 +57,10 @@ do_number_bitwise_logic (number_bitwise_logic_op op, /**< number bitwise logic o
 
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
   if (JERRY_LIKELY (!ecma_is_value_bigint (left_value)))
   {
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
     ecma_number_t right_number;
 
     if (ECMA_IS_VALUE_ERROR (ecma_op_to_number (right_value, &right_number)))
@@ -113,7 +113,7 @@ do_number_bitwise_logic (number_bitwise_logic_op op, /**< number bitwise logic o
 
     ret_value = ecma_make_number_value (result);
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
   }
   else
   {
@@ -168,7 +168,7 @@ do_number_bitwise_logic (number_bitwise_logic_op op, /**< number bitwise logic o
       ecma_free_value (right_value);
     }
   }
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 
   return ret_value;
 } /* do_number_bitwise_logic */
@@ -192,18 +192,18 @@ do_number_bitwise_not (ecma_value_t value) /**< value */
     return value;
   }
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
   if (JERRY_LIKELY (!ecma_is_value_bigint (value)))
   {
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
     return ecma_make_number_value ((ecma_number_t) ((int32_t) ~ecma_number_to_uint32 (number)));
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
   }
 
   ecma_value_t ret_value = ecma_bigint_unary (value, ECMA_BIGINT_UNARY_BITWISE_NOT);
   ecma_free_value (value);
   return ret_value;
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 } /* do_number_bitwise_not */
 
 /**

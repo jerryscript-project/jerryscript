@@ -26,16 +26,16 @@
  * @{
  */
 
-#if ENABLED (JERRY_LCACHE)
+#if JERRY_LCACHE
 
 /**
  * Bitshift index for calculating hash.
  */
-#if ENABLED (JERRY_CPOINTER_32_BIT)
+#if JERRY_CPOINTER_32_BIT
 #define ECMA_LCACHE_HASH_BITSHIFT_INDEX (2 * JMEM_ALIGNMENT_LOG)
-#else /* !ENABLED (JERRY_CPOINTER_32_BIT) */
+#else /* !JERRY_CPOINTER_32_BIT */
 #define ECMA_LCACHE_HASH_BITSHIFT_INDEX 0
-#endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
+#endif /* JERRY_CPOINTER_32_BIT */
 
 /**
  * Mask for hash bits
@@ -213,7 +213,7 @@ ecma_lcache_invalidate (const ecma_object_t *object_p, /**< object */
   }
 } /* ecma_lcache_invalidate */
 
-#endif /* ENABLED (JERRY_LCACHE) */
+#endif /* JERRY_LCACHE */
 
 /**
  * @}

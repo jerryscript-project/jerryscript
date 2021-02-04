@@ -25,7 +25,7 @@
 #include "jcontext.h"
 #include "ecma-function-object.h"
 
-#if ENABLED (JERRY_BUILTIN_TYPEDARRAY)
+#if JERRY_BUILTIN_TYPEDARRAY
 
 /** \addtogroup ecma ECMA
  * @{
@@ -273,4 +273,4 @@ ecma_arraybuffer_detach (ecma_object_t *object_p) /**< pointer to the ArrayBuffe
  * @}
  * @}
  */
-#endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
+#endif /* JERRY_BUILTIN_TYPEDARRAY */

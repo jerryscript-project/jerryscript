@@ -37,6 +37,8 @@ done
 cppcheck -j$CPPCHECK_JOBS --force \
   --language=c --std=c99 \
   --quiet \
+  -D'JERRY_LIKELY(x)=(x)' \
+  -D'JERRY_UNLIKELY(x)=(x)' \
   --enable=warning,style,performance,portability,information \
   --template="{file}:{line}: {severity}({id}): {message}" \
   --error-exitcode=1 \

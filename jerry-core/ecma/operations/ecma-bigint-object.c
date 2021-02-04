@@ -23,7 +23,7 @@
 #include "ecma-objects.h"
 #include "ecma-objects-general.h"
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
 
 /** \addtogroup ecma ECMA
  * @{
@@ -63,4 +63,4 @@ ecma_op_create_bigint_object (ecma_value_t arg) /**< argument passed to the toOb
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */

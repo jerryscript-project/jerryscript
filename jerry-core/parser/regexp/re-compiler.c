@@ -25,7 +25,7 @@
 #include "re-compiler-context.h"
 #include "re-parser.h"
 
-#if ENABLED (JERRY_BUILTIN_REGEXP)
+#if JERRY_BUILTIN_REGEXP
 
 /** \addtogroup parser Parser
  * @{
@@ -154,12 +154,12 @@ re_compile_bytecode (ecma_string_t *pattern_str_p, /**< pattern */
   re_compiled_code_p->captures_count = re_ctx.captures_count;
   re_compiled_code_p->non_captures_count = re_ctx.non_captures_count;
 
-#if ENABLED (JERRY_REGEXP_DUMP_BYTE_CODE)
+#if JERRY_REGEXP_DUMP_BYTE_CODE
   if (JERRY_CONTEXT (jerry_init_flags) & ECMA_INIT_SHOW_REGEXP_OPCODES)
   {
     re_dump_bytecode (&re_ctx);
   }
-#endif /* ENABLED (JERRY_REGEXP_DUMP_BYTE_CODE) */
+#endif /* JERRY_REGEXP_DUMP_BYTE_CODE */
 
   uint8_t cache_idx = JERRY_CONTEXT (re_cache_idx);
 
@@ -180,4 +180,4 @@ re_compile_bytecode (ecma_string_t *pattern_str_p, /**< pattern */
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
+#endif /* JERRY_BUILTIN_REGEXP */

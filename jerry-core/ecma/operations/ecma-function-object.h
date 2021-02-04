@@ -28,9 +28,9 @@
  * @{
  */
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 ecma_value_t ecma_op_function_form_name (ecma_string_t *prop_name_p, char *prefix_p, lit_utf8_size_t prefix_size);
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 bool ecma_op_is_callable (ecma_value_t value);
 bool ecma_op_object_is_callable (ecma_object_t *obj_p);
@@ -56,20 +56,20 @@ ecma_op_create_external_function_object (ecma_native_handler_t handler_cb);
 const ecma_compiled_code_t *
 ecma_op_function_get_compiled_code (ecma_extended_object_t *function_p);
 
-#if ENABLED (JERRY_BUILTIN_REALMS)
+#if JERRY_BUILTIN_REALMS
 ecma_global_object_t *
 ecma_op_function_get_realm (const ecma_compiled_code_t *bytecode_header_p);
 
 ecma_global_object_t *
 ecma_op_function_get_function_realm (ecma_object_t *func_obj_p);
-#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+#endif /* JERRY_BUILTIN_REALMS */
 
 ecma_value_t
 ecma_op_create_dynamic_function (const ecma_value_t *arguments_list_p,
                                  uint32_t arguments_list_len,
                                  ecma_parse_opts_t opts);
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 ecma_value_t
 ecma_op_function_get_super_constructor (ecma_object_t *func_obj_p);
 
@@ -83,7 +83,7 @@ ecma_op_create_arrow_function_object (ecma_object_t *scope_p, const ecma_compile
 ecma_object_t *
 ecma_op_create_native_handler (ecma_native_handler_id_t id, size_t object_size);
 
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 ecma_object_t *
 ecma_op_get_prototype_from_constructor (ecma_object_t *ctor_obj_p, ecma_builtin_id_t default_proto_id);

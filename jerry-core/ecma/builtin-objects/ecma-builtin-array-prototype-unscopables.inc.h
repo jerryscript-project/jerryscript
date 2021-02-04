@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 
 SIMPLE_VALUE (LIT_MAGIC_STRING_COPY_WITHIN,
               ECMA_VALUE_TRUE,
@@ -61,6 +61,6 @@ SIMPLE_VALUE (LIT_MAGIC_STRING_VALUES,
               ECMA_VALUE_TRUE,
               ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE)
 
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

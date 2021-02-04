@@ -21,7 +21,7 @@
 #include "ecma-proxy-object.h"
 #include "jrt.h"
 
-#if ENABLED (JERRY_BUILTIN_PROXY)
+#if JERRY_BUILTIN_PROXY
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -118,4 +118,4 @@ ecma_builtin_proxy_dispatch_construct (const ecma_value_t *arguments_list_p, /**
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+#endif /* JERRY_BUILTIN_PROXY */

@@ -99,12 +99,12 @@ ecma_builtin_global_object_eval (ecma_value_t x) /**< routine's first argument *
     parse_opts |= ECMA_PARSE_STRICT_MODE;
   }
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   if (vm_is_direct_eval_form_call ())
   {
     parse_opts |= ECMA_GET_LOCAL_PARSE_OPTS ();
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
   /* steps 2 to 8 */
   return ecma_op_eval (ecma_get_string_from_value (x), parse_opts);
@@ -413,7 +413,7 @@ ecma_builtin_global_object_encode_uri_helper (lit_utf8_byte_t *input_start_p, /*
   return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
 } /* ecma_builtin_global_object_encode_uri_helper */
 
-#if ENABLED (JERRY_BUILTIN_ANNEXB)
+#if JERRY_BUILTIN_ANNEXB
 
 /**
  * Maximum value of a byte.
@@ -583,7 +583,7 @@ ecma_builtin_global_object_unescape (lit_utf8_byte_t *input_start_p, /**< routin
   return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
 } /* ecma_builtin_global_object_unescape */
 
-#endif /* ENABLED (JERRY_BUILTIN_ANNEXB) */
+#endif /* JERRY_BUILTIN_ANNEXB */
 
 /**
  * Dispatcher of the built-in's routines
@@ -673,7 +673,7 @@ ecma_builtin_global_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
 
   switch (builtin_routine_id)
   {
-#if ENABLED (JERRY_BUILTIN_ANNEXB)
+#if JERRY_BUILTIN_ANNEXB
     case ECMA_GLOBAL_ESCAPE:
     {
       ret_value = ecma_builtin_global_object_escape (input_start_p, input_size);
@@ -684,7 +684,7 @@ ecma_builtin_global_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
       ret_value = ecma_builtin_global_object_unescape (input_start_p, input_size);
       break;
     }
-#endif /* ENABLED (JERRY_BUILTIN_ANNEXB) */
+#endif /* JERRY_BUILTIN_ANNEXB */
     case ECMA_GLOBAL_DECODE_URI:
     case ECMA_GLOBAL_DECODE_URI_COMPONENT:
     {

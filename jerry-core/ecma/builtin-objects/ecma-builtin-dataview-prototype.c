@@ -18,11 +18,11 @@
 #include "ecma-dataview-object.h"
 #include "ecma-gc.h"
 
-#if ENABLED (JERRY_BUILTIN_DATAVIEW)
+#if JERRY_BUILTIN_DATAVIEW
 
-#if !ENABLED (JERRY_BUILTIN_TYPEDARRAY)
+#if !JERRY_BUILTIN_TYPEDARRAY
 #error "DataView builtin requires ES2015 TypedArray builtin"
-#endif /* !ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
+#endif /* !JERRY_BUILTIN_TYPEDARRAY */
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -49,13 +49,13 @@ enum
   ECMA_DATAVIEW_PROTOTYPE_GET_INT32,
   ECMA_DATAVIEW_PROTOTYPE_GET_UINT32,
   ECMA_DATAVIEW_PROTOTYPE_GET_FLOAT32,
-#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#if JERRY_NUMBER_TYPE_FLOAT64
   ECMA_DATAVIEW_PROTOTYPE_GET_FLOAT64,
-#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#endif /* JERRY_NUMBER_TYPE_FLOAT64 */
+#if JERRY_BUILTIN_BIGINT
   ECMA_DATAVIEW_PROTOTYPE_GET_BIGINT64,
   ECMA_DATAVIEW_PROTOTYPE_GET_BIGUINT64,
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
   ECMA_DATAVIEW_PROTOTYPE_SET_INT8,
   ECMA_DATAVIEW_PROTOTYPE_SET_UINT8,
   ECMA_DATAVIEW_PROTOTYPE_SET_UINT8_CLAMPED, /* unused value */
@@ -64,13 +64,13 @@ enum
   ECMA_DATAVIEW_PROTOTYPE_SET_INT32,
   ECMA_DATAVIEW_PROTOTYPE_SET_UINT32,
   ECMA_DATAVIEW_PROTOTYPE_SET_FLOAT32,
-#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#if JERRY_NUMBER_TYPE_FLOAT64
   ECMA_DATAVIEW_PROTOTYPE_SET_FLOAT64,
-#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#endif /* JERRY_NUMBER_TYPE_FLOAT64 */
+#if JERRY_BUILTIN_BIGINT
   ECMA_DATAVIEW_PROTOTYPE_SET_BIGINT64,
   ECMA_DATAVIEW_PROTOTYPE_SET_BIGUINT64,
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-dataview-prototype.inc.h"
@@ -163,17 +163,17 @@ ecma_builtin_dataview_prototype_dispatch_routine (uint8_t builtin_routine_id, /*
       return ecma_builtin_dataview_prototype_object_getters (this_arg, builtin_routine_id);
     }
     case ECMA_DATAVIEW_PROTOTYPE_GET_FLOAT32:
-#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#if JERRY_NUMBER_TYPE_FLOAT64
     case ECMA_DATAVIEW_PROTOTYPE_GET_FLOAT64:
-#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#endif /* JERRY_NUMBER_TYPE_FLOAT64 */
     case ECMA_DATAVIEW_PROTOTYPE_GET_INT16:
     case ECMA_DATAVIEW_PROTOTYPE_GET_INT32:
     case ECMA_DATAVIEW_PROTOTYPE_GET_UINT16:
     case ECMA_DATAVIEW_PROTOTYPE_GET_UINT32:
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
     case ECMA_DATAVIEW_PROTOTYPE_GET_BIGINT64:
     case ECMA_DATAVIEW_PROTOTYPE_GET_BIGUINT64:
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
     {
       ecma_value_t little_endian = arguments_number > 1 ? arguments_list_p[1] : ECMA_VALUE_FALSE;
       ecma_typedarray_type_t id = (ecma_typedarray_type_t) (builtin_routine_id - ECMA_DATAVIEW_PROTOTYPE_GET_INT8);
@@ -181,17 +181,17 @@ ecma_builtin_dataview_prototype_dispatch_routine (uint8_t builtin_routine_id, /*
       return ecma_op_dataview_get_set_view_value (this_arg, byte_offset, little_endian, ECMA_VALUE_EMPTY, id);
     }
     case ECMA_DATAVIEW_PROTOTYPE_SET_FLOAT32:
-#if ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#if JERRY_NUMBER_TYPE_FLOAT64
     case ECMA_DATAVIEW_PROTOTYPE_SET_FLOAT64:
-#endif /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#endif /* JERRY_NUMBER_TYPE_FLOAT64 */
     case ECMA_DATAVIEW_PROTOTYPE_SET_INT16:
     case ECMA_DATAVIEW_PROTOTYPE_SET_INT32:
     case ECMA_DATAVIEW_PROTOTYPE_SET_UINT16:
     case ECMA_DATAVIEW_PROTOTYPE_SET_UINT32:
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
     case ECMA_DATAVIEW_PROTOTYPE_SET_BIGINT64:
     case ECMA_DATAVIEW_PROTOTYPE_SET_BIGUINT64:
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
     {
       ecma_value_t value_to_set = arguments_number > 1 ? arguments_list_p[1] : ECMA_VALUE_UNDEFINED;
       ecma_value_t little_endian = arguments_number > 2 ? arguments_list_p[2] : ECMA_VALUE_FALSE;
@@ -224,4 +224,4 @@ ecma_builtin_dataview_prototype_dispatch_routine (uint8_t builtin_routine_id, /*
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_DATAVIEW */
+#endif /* JERRY_BUILTIN_DATAVIEW */

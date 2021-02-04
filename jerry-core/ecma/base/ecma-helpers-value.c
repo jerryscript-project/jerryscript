@@ -56,12 +56,12 @@ JERRY_STATIC_ASSERT ((ECMA_VALUE_FALSE | (1 << ECMA_DIRECT_SHIFT)) == ECMA_VALUE
                      && ECMA_VALUE_FALSE != ECMA_VALUE_TRUE,
                      only_the_lowest_bit_must_be_different_for_simple_value_true_and_false);
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
 
 JERRY_STATIC_ASSERT (ECMA_NULL_POINTER == (ECMA_BIGINT_ZERO & ~(ecma_value_t) ECMA_VALUE_TYPE_MASK),
                      ecma_bigint_zero_must_be_encoded_as_null_pointer);
 
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 
 /** \addtogroup ecma ECMA
  * @{
@@ -332,12 +332,12 @@ ecma_is_value_string (ecma_value_t value) /**< ecma value */
 extern inline bool JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
 ecma_is_value_symbol (ecma_value_t value) /**< ecma value */
 {
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   return (ecma_get_value_type_field (value) == ECMA_TYPE_SYMBOL);
-#else /* ENABLED (JERRY_ESNEXT) */
+#else /* JERRY_ESNEXT */
   JERRY_UNUSED (value);
   return false;
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 } /* ecma_is_value_symbol */
 
 /**
@@ -362,12 +362,12 @@ ecma_is_value_magic_string (ecma_value_t value, /**< ecma value */
 extern inline bool JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
 ecma_is_value_bigint (ecma_value_t value) /**< ecma value */
 {
-  #if ENABLED (JERRY_BUILTIN_BIGINT)
+  #if JERRY_BUILTIN_BIGINT
   return (ecma_get_value_type_field (value) == ECMA_TYPE_BIGINT);
-  #else /* !ENABLED (JERRY_BUILTIN_BIGINT) */
+  #else /* !JERRY_BUILTIN_BIGINT */
   JERRY_UNUSED (value);
   return false;
-  #endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+  #endif /* JERRY_BUILTIN_BIGINT */
 } /* ecma_is_value_bigint */
 
 /**
@@ -379,11 +379,11 @@ ecma_is_value_bigint (ecma_value_t value) /**< ecma value */
 extern inline bool JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
 ecma_is_value_prop_name (ecma_value_t value) /**< ecma value */
 {
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   return ecma_is_value_string (value) || ecma_is_value_symbol (value);
-#else /* !ENABLED (JERRY_ESNEXT) */
+#else /* !JERRY_ESNEXT */
   return ecma_is_value_string (value);
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 } /* ecma_is_value_prop_name */
 
 /**
@@ -472,7 +472,7 @@ ecma_is_value_array (ecma_value_t arg) /**< argument */
     return ECMA_VALUE_TRUE;
   }
 
-#if ENABLED (JERRY_BUILTIN_PROXY)
+#if JERRY_BUILTIN_PROXY
   if (ECMA_OBJECT_IS_PROXY (arg_obj_p))
   {
     ecma_proxy_object_t *proxy_obj_p = (ecma_proxy_object_t *) arg_obj_p;
@@ -484,7 +484,7 @@ ecma_is_value_array (ecma_value_t arg) /**< argument */
 
     return ecma_is_value_array (proxy_obj_p->target);
   }
-#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+#endif /* JERRY_BUILTIN_PROXY */
 
   return ECMA_VALUE_FALSE;
 } /* ecma_is_value_array */
@@ -563,11 +563,11 @@ ecma_is_number_equal_to_positive_zero (ecma_number_t ecma_number) /**< number */
 {
   ecma_number_accessor_t u;
   u.as_ecma_number_t = ecma_number;
-#if !ENABLED (JERRY_NUMBER_TYPE_FLOAT64)
+#if !JERRY_NUMBER_TYPE_FLOAT64
   return u.as_uint32_t == 0;
-#else /* ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#else /* JERRY_NUMBER_TYPE_FLOAT64 */
   return u.as_uint64_t == 0;
-#endif /* !ENABLED (JERRY_NUMBER_TYPE_FLOAT64) */
+#endif /* !JERRY_NUMBER_TYPE_FLOAT64 */
 } /* ecma_is_number_equal_to_positive_zero */
 
 /**
@@ -647,9 +647,9 @@ extern inline ecma_value_t JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_make_string_value (const ecma_string_t *ecma_string_p) /**< string to reference in value */
 {
   JERRY_ASSERT (ecma_string_p != NULL);
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   JERRY_ASSERT (!ecma_prop_name_is_symbol ((ecma_string_t *) ecma_string_p));
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
   if ((((uintptr_t) ecma_string_p) & ECMA_VALUE_TYPE_MASK) != 0)
   {
@@ -659,7 +659,7 @@ ecma_make_string_value (const ecma_string_t *ecma_string_p) /**< string to refer
   return ecma_pointer_to_ecma_value (ecma_string_p) | ECMA_TYPE_STRING;
 } /* ecma_make_string_value */
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 /**
  * Symbol value constructor
  *
@@ -673,7 +673,7 @@ ecma_make_symbol_value (const ecma_string_t *ecma_symbol_p) /**< symbol to refer
 
   return ecma_pointer_to_ecma_value (ecma_symbol_p) | ECMA_TYPE_SYMBOL;
 } /* ecma_make_symbol_value */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /**
  * Property-name value constructor
@@ -685,12 +685,12 @@ ecma_make_prop_name_value (const ecma_string_t *ecma_prop_name_p) /**< property 
 {
   JERRY_ASSERT (ecma_prop_name_p != NULL);
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   if (ecma_prop_name_is_symbol ((ecma_string_t *) ecma_prop_name_p))
   {
     return ecma_make_symbol_value (ecma_prop_name_p);
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
   return ecma_make_string_value (ecma_prop_name_p);
 } /* ecma_make_prop_name_value */
@@ -729,9 +729,9 @@ ecma_make_extended_primitive_value (const ecma_extended_primitive_t *primitve_p,
                                     uint32_t type) /**< ecma type of extended primitve value */
 {
   JERRY_ASSERT (primitve_p != NULL);
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
   JERRY_ASSERT (primitve_p != ECMA_BIGINT_POINTER_TO_ZERO);
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
   JERRY_ASSERT (type == ECMA_TYPE_BIGINT || type == ECMA_TYPE_ERROR);
 
   return ecma_pointer_to_ecma_value (primitve_p) | type;
@@ -810,7 +810,7 @@ ecma_get_string_from_value (ecma_value_t value) /**< ecma value */
   return (ecma_string_t *) ecma_get_pointer_from_ecma_value (value);
 } /* ecma_get_string_from_value */
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 /**
  * Get pointer to ecma-string from ecma value
  *
@@ -823,7 +823,7 @@ ecma_get_symbol_from_value (ecma_value_t value) /**< ecma value */
 
   return (ecma_string_t *) ecma_get_pointer_from_ecma_value (value);
 } /* ecma_get_symbol_from_value */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /**
  * Get pointer to a property name from ecma value
@@ -864,9 +864,9 @@ ecma_get_object_from_value (ecma_value_t value) /**< ecma value */
 extern inline ecma_extended_primitive_t * JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_get_extended_primitive_from_value (ecma_value_t value) /**< ecma value */
 {
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
   JERRY_ASSERT (value != ECMA_BIGINT_ZERO);
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
   JERRY_ASSERT (ecma_get_value_type_field (value) == ECMA_TYPE_BIGINT
                 || ecma_get_value_type_field (value) == ECMA_TYPE_ERROR);
 
@@ -907,14 +907,14 @@ ecma_copy_value (ecma_value_t value)  /**< value description */
       ecma_ref_ecma_string (ecma_get_string_from_value (value));
       return value;
     }
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
     case ECMA_TYPE_SYMBOL:
     {
       ecma_ref_ecma_string (ecma_get_symbol_from_value (value));
       return value;
     }
-#endif /* ENABLED (JERRY_ESNEXT) */
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#endif /* JERRY_ESNEXT */
+#if JERRY_BUILTIN_BIGINT
     case ECMA_TYPE_BIGINT:
     {
       if (value != ECMA_BIGINT_ZERO)
@@ -923,7 +923,7 @@ ecma_copy_value (ecma_value_t value)  /**< value description */
       }
       return value;
     }
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
     case ECMA_TYPE_OBJECT:
     {
       ecma_ref_object (ecma_get_object_from_value (value));
@@ -1138,20 +1138,20 @@ ecma_free_value (ecma_value_t value) /**< value description */
       ecma_deref_ecma_string (string_p);
       break;
     }
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
     case ECMA_TYPE_SYMBOL:
     {
       ecma_deref_ecma_string (ecma_get_symbol_from_value (value));
       break;
     }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
     case ECMA_TYPE_OBJECT:
     {
       ecma_deref_object (ecma_get_object_from_value (value));
       break;
     }
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
     case ECMA_TYPE_BIGINT:
     {
       if (value != ECMA_BIGINT_ZERO)
@@ -1160,7 +1160,7 @@ ecma_free_value (ecma_value_t value) /**< value description */
       }
       break;
     }
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 
     default:
     {
@@ -1264,18 +1264,18 @@ ecma_get_typeof_lit_id (ecma_value_t value) /**< input ecma value */
   {
     ret_value = LIT_MAGIC_STRING_STRING;
   }
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   else if (ecma_is_value_symbol (value))
   {
     ret_value = LIT_MAGIC_STRING_SYMBOL;
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#endif /* JERRY_ESNEXT */
+#if JERRY_BUILTIN_BIGINT
   else if (ecma_is_value_bigint (value))
   {
     ret_value = LIT_MAGIC_STRING_BIGINT;
   }
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
   else
   {
     JERRY_ASSERT (ecma_is_value_object (value));

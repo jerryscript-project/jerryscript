@@ -25,7 +25,7 @@
 #include "ecma-typedarray-object.h"
 #include "ecma-objects.h"
 
-#if ENABLED (JERRY_BUILTIN_DATAVIEW)
+#if JERRY_BUILTIN_DATAVIEW
 
 /** \addtogroup ecma ECMA
  * @{
@@ -268,7 +268,7 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
   /* SetViewValue 4 - 5. */
   if (!ecma_is_value_empty (value_to_set))
   {
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
     if (ECMA_TYPEDARRAY_IS_BIGINT_TYPE (id))
     {
       value_to_set = ecma_bigint_to_bigint (value_to_set, true);
@@ -279,7 +279,7 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
       }
     }
     else
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
     {
       ecma_number_t value_to_set_number;
       ecma_value_t value = ecma_op_to_number (value_to_set, &value_to_set_number);
@@ -373,4 +373,4 @@ ecma_is_dataview (ecma_value_t value) /**< the target need to be checked */
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_DATAVIEW */
+#endif /* JERRY_BUILTIN_DATAVIEW */

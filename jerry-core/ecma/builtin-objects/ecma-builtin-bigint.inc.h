@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
 
 /* Number properties:
  *  (property name, number value, writable, enumerable, configurable) */
@@ -42,6 +42,6 @@ OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
               ECMA_BUILTIN_ID_BIGINT_PROTOTYPE,
               ECMA_PROPERTY_FIXED)
 
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

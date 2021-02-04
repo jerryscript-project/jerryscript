@@ -16,7 +16,7 @@
 #ifndef ECMA_PROMISE_OBJECT_H
 #define ECMA_PROMISE_OBJECT_H
 
-#if ENABLED (JERRY_BUILTIN_PROMISE)
+#if JERRY_BUILTIN_PROMISE
 #include "ecma-globals.h"
 
 /** \addtogroup ecma ECMA
@@ -156,5 +156,5 @@ ecma_value_t ecma_op_get_capabilities_executor_cb (const ecma_value_t function_o
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_PROMISE) */
+#endif /* JERRY_BUILTIN_PROMISE */
 #endif /* !ECMA_PROMISE_OBJECT_H */

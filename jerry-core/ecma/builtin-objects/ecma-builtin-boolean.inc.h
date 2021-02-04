@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if ENABLED (JERRY_BUILTIN_BOOLEAN)
+#if JERRY_BUILTIN_BOOLEAN
 
 /* Object properties:
  *  (property name, object pointer getter) */
@@ -36,12 +36,12 @@ NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               1,
               ECMA_PROPERTY_FLAG_DEFAULT_LENGTH)
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 STRING_VALUE (LIT_MAGIC_STRING_NAME,
               LIT_MAGIC_STRING_BOOLEAN_UL,
               ECMA_PROPERTY_FLAG_CONFIGURABLE)
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
-#endif /* ENABLED (JERRY_BUILTIN_BOOLEAN) */
+#endif /* JERRY_BUILTIN_BOOLEAN */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

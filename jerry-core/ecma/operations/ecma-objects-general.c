@@ -170,7 +170,7 @@ static const lit_magic_string_id_t to_primitive_non_string_hint_method_names[2] 
   LIT_MAGIC_STRING_TO_STRING_UL, /**< toString operation */
 };
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 /**
  * Hints for the ecma general object's toPrimitve operation
  */
@@ -180,7 +180,7 @@ static const lit_magic_string_id_t hints[3] =
   LIT_MAGIC_STRING_NUMBER, /**< "number" hint */
   LIT_MAGIC_STRING_STRING, /**< "string" hint */
 };
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /**
  * [[DefaultValue]] ecma general object's operation
@@ -199,7 +199,7 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
   JERRY_ASSERT (obj_p != NULL
                 && !ecma_is_lexical_environment (obj_p));
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   ecma_value_t obj_value = ecma_make_object_value (obj_p);
 
   ecma_value_t exotic_to_prim = ecma_op_get_method_by_symbol_id (obj_value,
@@ -239,7 +239,7 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
   {
     hint = ECMA_PREFERRED_TYPE_NUMBER;
   }
-#else /* !ENABLED (JERRY_ESNEXT) */
+#else /* !JERRY_ESNEXT */
   if (hint == ECMA_PREFERRED_TYPE_NO)
   {
     if (ecma_object_class_is (obj_p, LIT_MAGIC_STRING_DATE_UL))
@@ -251,7 +251,7 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
       hint = ECMA_PREFERRED_TYPE_NUMBER;
     }
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
   return ecma_op_general_object_ordinary_value (obj_p, hint);
 } /* ecma_op_general_object_default_value */
@@ -335,12 +335,12 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
                                             const ecma_property_descriptor_t *property_desc_p) /**< property
                                                                                                 *   descriptor */
 {
-#if ENABLED (JERRY_BUILTIN_PROXY)
+#if JERRY_BUILTIN_PROXY
   if (ECMA_OBJECT_IS_PROXY (object_p))
   {
     return ecma_proxy_object_define_own_property (object_p, property_name_p, property_desc_p);
   }
-#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+#endif /* JERRY_BUILTIN_PROXY */
 
   JERRY_ASSERT (object_p != NULL
                 && !ecma_is_lexical_environment (object_p));
@@ -519,26 +519,26 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
       JERRY_ASSERT (current_prop & ECMA_PROPERTY_FLAG_DATA);
       ecma_free_value_if_not_object (value_p->value);
 
-#if ENABLED (JERRY_CPOINTER_32_BIT)
+#if JERRY_CPOINTER_32_BIT
       ecma_getter_setter_pointers_t *getter_setter_pair_p;
       getter_setter_pair_p = jmem_pools_alloc (sizeof (ecma_getter_setter_pointers_t));
       getter_setter_pair_p->getter_cp = JMEM_CP_NULL;
       getter_setter_pair_p->setter_cp = JMEM_CP_NULL;
       ECMA_SET_NON_NULL_POINTER (value_p->getter_setter_pair_cp, getter_setter_pair_p);
-#else /* !ENABLED (JERRY_CPOINTER_32_BIT) */
+#else /* !JERRY_CPOINTER_32_BIT */
       value_p->getter_setter_pair.getter_cp = JMEM_CP_NULL;
       value_p->getter_setter_pair.setter_cp = JMEM_CP_NULL;
-#endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
+#endif /* JERRY_CPOINTER_32_BIT */
     }
     else
     {
       JERRY_ASSERT (!(current_prop & ECMA_PROPERTY_FLAG_DATA));
-#if ENABLED (JERRY_CPOINTER_32_BIT)
+#if JERRY_CPOINTER_32_BIT
       ecma_getter_setter_pointers_t *getter_setter_pair_p;
       getter_setter_pair_p = ECMA_GET_NON_NULL_POINTER (ecma_getter_setter_pointers_t,
                                                         value_p->getter_setter_pair_cp);
       jmem_pools_free (getter_setter_pair_p, sizeof (ecma_getter_setter_pointers_t));
-#endif /* ENABLED (JERRY_CPOINTER_32_BIT) */
+#endif /* JERRY_CPOINTER_32_BIT */
       value_p->value = ECMA_VALUE_UNDEFINED;
     }
 
@@ -600,7 +600,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
   return ECMA_VALUE_TRUE;
 } /* ecma_op_general_object_define_own_property */
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 /**
  * The IsCompatiblePropertyDescriptor method for Proxy object internal methods
  *
@@ -744,7 +744,7 @@ ecma_op_to_complete_property_descriptor (ecma_property_descriptor_t *desc_p) /**
     desc_p->flags |= (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED);
   }
 } /* ecma_op_to_complete_property_descriptor */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /**
  * @}

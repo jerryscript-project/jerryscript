@@ -25,7 +25,7 @@
  * @{
  */
 
-#if ENABLED (JERRY_BUILTIN_PROXY)
+#if JERRY_BUILTIN_PROXY
 
 ecma_object_t *
 ecma_proxy_create (ecma_value_t target,
@@ -107,7 +107,7 @@ ecma_proxy_object_construct (ecma_object_t *obj_p,
                              const ecma_value_t *args_p,
                              uint32_t argc);
 
-#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+#endif /* JERRY_BUILTIN_PROXY */
 
 /**
  * @}

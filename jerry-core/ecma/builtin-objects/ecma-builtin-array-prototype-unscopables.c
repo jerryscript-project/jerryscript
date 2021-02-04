@@ -16,7 +16,7 @@
 #include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -25,4 +25,4 @@
 #define BUILTIN_UNDERSCORED_ID array_prototype_unscopables
 #include "ecma-builtin-internal-routines-template.inc.h"
 
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */

@@ -19,7 +19,7 @@
 #include "ecma-globals.h"
 #include "ecma-builtins.h"
 
-#if ENABLED (JERRY_BUILTIN_CONTAINER)
+#if JERRY_BUILTIN_CONTAINER
 
 /** \addtogroup ecma ECMA
  * @{
@@ -84,6 +84,6 @@ ecma_value_t ecma_builtin_container_dispatch_routine (uint16_t builtin_routine_i
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_CONTAINER) */
+#endif /* JERRY_BUILTIN_CONTAINER */
 
 #endif /* !ECMA_CONTAINER_OBJECT_H */

@@ -15,7 +15,7 @@
 
 #include "ecma-globals.h"
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 
 #include "ecma-builtin-handlers.h"
 #include "ecma-promise-object.h"
@@ -58,4 +58,4 @@ ecma_builtin_handler_get_length (ecma_native_handler_id_t id) /**< handler id */
   return ecma_native_handler_lengths[id - 1];
 } /* ecma_builtin_handler_get_length */
 
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */

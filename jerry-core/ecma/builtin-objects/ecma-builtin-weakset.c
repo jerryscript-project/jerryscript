@@ -17,7 +17,7 @@
 #include "ecma-exceptions.h"
 #include "ecma-container-object.h"
 
-#if ENABLED (JERRY_BUILTIN_WEAKSET)
+#if JERRY_BUILTIN_WEAKSET
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -71,4 +71,4 @@ ecma_builtin_weakset_dispatch_construct (const ecma_value_t *arguments_list_p, /
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_WEAKSET) */
+#endif /* JERRY_BUILTIN_WEAKSET */

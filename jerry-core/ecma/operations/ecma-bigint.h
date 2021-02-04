@@ -18,7 +18,7 @@
 
 #include "ecma-globals.h"
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
 
 /**
  * Sign bit of a BigInt value. The number is negative, if this bit is set.
@@ -71,14 +71,14 @@ ecma_value_t ecma_bigint_add_sub (ecma_value_t left_value, ecma_value_t right_va
 ecma_value_t ecma_bigint_mul (ecma_value_t left_value, ecma_value_t right_value);
 ecma_value_t ecma_bigint_div_mod (ecma_value_t left_value, ecma_value_t right_value, bool is_mod);
 ecma_value_t ecma_bigint_shift (ecma_value_t left_value, ecma_value_t right_value, bool is_left);
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 ecma_value_t ecma_bigint_pow (ecma_value_t left_value, ecma_value_t right_value);
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 ecma_value_t ecma_bigint_and (ecma_value_t left_value, ecma_value_t right_value);
 ecma_value_t ecma_bigint_or (ecma_value_t left_value, ecma_value_t right_value);
 ecma_value_t ecma_bigint_xor (ecma_value_t left_value, ecma_value_t right_value);
 
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 
 #endif /* ECMA_BIG_INT_H */

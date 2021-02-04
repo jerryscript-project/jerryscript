@@ -15,7 +15,7 @@
 
 #include "js-parser-internal.h"
 
-#if ENABLED (JERRY_PARSER)
+#if JERRY_PARSER
 
 /** \addtogroup mem Memory allocation
  * @{
@@ -753,4 +753,4 @@ parser_stack_iterator_write (parser_stack_iterator_t *iterator, /**< iterator */
  * @}
  */
 
-#endif /* ENABLED (JERRY_PARSER) */
+#endif /* JERRY_PARSER */

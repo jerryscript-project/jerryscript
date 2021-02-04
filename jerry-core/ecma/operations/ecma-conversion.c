@@ -123,19 +123,19 @@ ecma_op_same_value (ecma_value_t x, /**< ecma value */
     return ecma_compare_ecma_strings (x_str_p, y_str_p);
   }
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
   if (ecma_is_value_bigint (x))
   {
     return (ecma_is_value_bigint (y) && ecma_bigint_compare_to_bigint (x, y) == 0);
   }
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 
   JERRY_ASSERT (ecma_is_value_object (x) || ecma_is_value_symbol (x));
 
   return false;
 } /* ecma_op_same_value */
 
-#if ENABLED (JERRY_BUILTIN_MAP)
+#if JERRY_BUILTIN_MAP
 /**
  * SameValueZero operation.
  *
@@ -182,7 +182,7 @@ ecma_op_same_value_zero (ecma_value_t x, /**< ecma value */
 
   return ecma_op_same_value (x, y);
 } /* ecma_op_same_value_zero */
-#endif /* ENABLED (JERRY_BUILTIN_MAP) */
+#endif /* JERRY_BUILTIN_MAP */
 
 /**
  * ToPrimitive operation.
@@ -253,12 +253,12 @@ ecma_op_to_boolean (ecma_value_t value) /**< ecma value */
     return !ecma_string_is_empty (str_p);
   }
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
   if (ecma_is_value_bigint (value))
   {
     return value != ECMA_BIGINT_ZERO;
   }
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 
   JERRY_ASSERT (ecma_is_value_object (value) || ecma_is_value_symbol (value));
 
@@ -341,14 +341,14 @@ ecma_op_to_numeric (ecma_value_t value, /**< ecma value */
     return ECMA_VALUE_EMPTY;
   }
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   if (ecma_is_value_symbol (value))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a Symbol value to a number"));
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
   if (ecma_is_value_bigint (value))
   {
     if (options & ECMA_TO_NUMERIC_ALLOW_BIGINT)
@@ -357,7 +357,7 @@ ecma_op_to_numeric (ecma_value_t value, /**< ecma value */
     }
     return ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a BigInt value to a number"));
   }
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 
   JERRY_ASSERT (ecma_is_value_object (value));
 
@@ -438,20 +438,20 @@ ecma_op_to_string (ecma_value_t value) /**< ecma value */
     return ecma_get_magic_string (LIT_MAGIC_STRING_FALSE);
   }
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   if (ecma_is_value_symbol (value))
   {
     ecma_raise_type_error (ECMA_ERR_MSG ("Cannot convert a Symbol value to a string"));
     return NULL;
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
   if (ecma_is_value_bigint (value))
   {
     return ecma_bigint_to_string (value, 10);
   }
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 
   JERRY_ASSERT (ecma_is_value_object (value));
 
@@ -493,7 +493,7 @@ ecma_op_to_property_key (ecma_value_t value) /**< ecma value */
     return key_p;
   }
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   ecma_value_t key = ecma_op_to_primitive (value, ECMA_PREFERRED_TYPE_STRING);
 
   if (ECMA_IS_VALUE_ERROR (key))
@@ -511,11 +511,11 @@ ecma_op_to_property_key (ecma_value_t value) /**< ecma value */
   ecma_free_value (key);
 
   return result;
-#else /* !ENABLED (JERRY_ESNEXT) */
+#else /* !JERRY_ESNEXT */
   ecma_check_value_type_is_spec_defined (value);
 
   return ecma_op_to_string (value);
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 } /* ecma_op_to_property_key */
 
 /**
@@ -536,35 +536,35 @@ ecma_op_to_object (ecma_value_t value) /**< ecma value */
 
   if (ecma_is_value_number (value))
   {
-#if ENABLED (JERRY_BUILTIN_NUMBER)
+#if JERRY_BUILTIN_NUMBER
     proto_id =  ECMA_BUILTIN_ID_NUMBER_PROTOTYPE;
-#endif /* ENABLED (JERRY_BUILTIN_NUMBER) */
+#endif /* JERRY_BUILTIN_NUMBER */
     lit_id = LIT_MAGIC_STRING_NUMBER_UL;
   }
   else if (ecma_is_value_string (value))
   {
-#if ENABLED (JERRY_BUILTIN_STRING)
+#if JERRY_BUILTIN_STRING
     proto_id = ECMA_BUILTIN_ID_STRING_PROTOTYPE;
-#endif /* ENABLED (JERRY_BUILTIN_STRING) */
+#endif /* JERRY_BUILTIN_STRING */
     lit_id = LIT_MAGIC_STRING_STRING_UL;
   }
   else if (ecma_is_value_object (value))
   {
     return ecma_copy_value (value);
   }
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   else if (ecma_is_value_symbol (value))
   {
     proto_id = ECMA_BUILTIN_ID_SYMBOL_PROTOTYPE;
     lit_id = LIT_MAGIC_STRING_SYMBOL_UL;
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#endif /* JERRY_ESNEXT */
+#if JERRY_BUILTIN_BIGINT
   else if (ecma_is_value_bigint (value))
   {
     return ecma_op_create_bigint_object (value);
   }
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
   else
   {
     if (ecma_is_value_undefined (value)
@@ -575,9 +575,9 @@ ecma_op_to_object (ecma_value_t value) /**< ecma value */
     else
     {
       JERRY_ASSERT (ecma_is_value_boolean (value));
-#if ENABLED (JERRY_BUILTIN_BOOLEAN)
+#if JERRY_BUILTIN_BOOLEAN
       proto_id = ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE;
-#endif /* ENABLED (JERRY_BUILTIN_BOOLEAN) */
+#endif /* JERRY_BUILTIN_BOOLEAN */
       lit_id = LIT_MAGIC_STRING_BOOLEAN_UL;
     }
   }
@@ -656,11 +656,11 @@ ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_des
   }
   else
   {
-#if !ENABLED (JERRY_ESNEXT)
+#if !JERRY_ESNEXT
     JERRY_ASSERT (src_prop_desc_p->flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED));
-#else /* ENABLED (JERRY_ESNEXT) */
+#else /* JERRY_ESNEXT */
     if (src_prop_desc_p->flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED))
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
     {
       /* a. */
       if (src_prop_desc_p->get_p == NULL)
@@ -999,7 +999,7 @@ ecma_op_to_length (ecma_value_t value, /**< ecma value */
     return value;
   }
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   /* 2 */
   ecma_number_t num;
   ecma_value_t length_num = ecma_op_to_integer (value, &num);
@@ -1027,7 +1027,7 @@ ecma_op_to_length (ecma_value_t value, /**< ecma value */
   /* 6 */
   *length = (ecma_length_t) num;
   return ECMA_VALUE_EMPTY;
-#else /* !ENABLED (JERRY_ESNEXT) */
+#else /* !JERRY_ESNEXT */
   /* In the case of ES5, ToLength(ES6) operation is the same as ToUint32(ES5) */
   ecma_number_t num;
   ecma_value_t to_number = ecma_op_to_number (value, &num);
@@ -1040,10 +1040,10 @@ ecma_op_to_length (ecma_value_t value, /**< ecma value */
 
   *length = ecma_number_to_uint32 (num);
   return ECMA_VALUE_EMPTY;
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 } /* ecma_op_to_length */
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 /**
  * ToIndex operation.
  *
@@ -1145,7 +1145,7 @@ ecma_op_create_list_from_array_like (ecma_value_t arr,  /**< array value */
   /* 9. */
   return list_ptr;
 } /* ecma_op_create_list_from_array_like */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /**
  * @}

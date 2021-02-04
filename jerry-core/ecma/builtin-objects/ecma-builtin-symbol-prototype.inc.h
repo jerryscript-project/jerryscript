@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 
 /* Object properties:
  *  (property name, object pointer getter) */
@@ -44,6 +44,6 @@ STRING_VALUE (LIT_GLOBAL_SYMBOL_TO_STRING_TAG,
 ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_DESCRIPTION,
                     ECMA_SYMBOL_PROTOTYPE_DESCRIPTION,
                     ECMA_PROPERTY_FLAG_CONFIGURABLE)
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

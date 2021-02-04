@@ -30,7 +30,7 @@
  * @{
  */
 
-#if ENABLED (JERRY_PARSER)
+#if JERRY_PARSER
 
 /**
  * Free literal.
@@ -53,9 +53,9 @@ util_free_literal (lexer_literal_t *literal_p) /**< literal */
   }
 } /* util_free_literal */
 
-#endif /* ENABLED (JERRY_PARSER) */
+#endif /* JERRY_PARSER */
 
-#if ENABLED (JERRY_PARSER_DUMP_BYTE_CODE)
+#if JERRY_PARSER_DUMP_BYTE_CODE
 
 /**
  * Debug utility to print a character sequence.
@@ -83,7 +83,7 @@ util_print_number (ecma_number_t num_p) /**< number to print */
   JERRY_DEBUG_MSG ("%s", str_buf);
 } /* util_print_number */
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
 
 /**
  * Debug utility to print a bigint.
@@ -118,7 +118,7 @@ util_print_bigint (ecma_value_t bigint) /**< bigint to print */
   jmem_heap_free_block (string_buffer_p, char_size_p);
 } /* util_print_bigint */
 
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 
 /**
  * Print literal
@@ -147,14 +147,14 @@ util_print_literal (lexer_literal_t *literal_p) /**< literal */
     }
     case LEXER_NUMBER_LITERAL:
     {
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
       if (ecma_is_value_bigint (literal_p->u.value))
       {
         JERRY_DEBUG_MSG ("bigint(");
         util_print_bigint (literal_p->u.value);
         break;
       }
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
       JERRY_DEBUG_MSG ("number(");
       util_print_number (ecma_get_number_from_value (literal_p->u.value));
       break;
@@ -240,13 +240,13 @@ util_print_literal_value (ecma_compiled_code_t *compiled_code_p, /**< compiled c
     JERRY_DEBUG_MSG ("number(");
     util_print_number (ecma_get_number_from_value (value));
   }
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
   else if (ecma_is_value_bigint (value))
   {
     JERRY_DEBUG_MSG ("bigint(");
     util_print_bigint (value);
   }
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
   else
   {
     ecma_string_t *literal_p = ecma_get_string_from_value (value);
@@ -347,7 +347,7 @@ util_print_cbc (ecma_compiled_code_t *compiled_code_p) /**< compiled code */
     JERRY_DEBUG_MSG (",no_lexical_env");
   }
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   switch (CBC_FUNCTION_GET_TYPE (compiled_code_p->status_flags))
   {
     case CBC_FUNCTION_CONSTRUCTOR:
@@ -386,7 +386,7 @@ util_print_cbc (ecma_compiled_code_t *compiled_code_p) /**< compiled code */
       break;
     }
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
   JERRY_DEBUG_MSG ("]\n");
 
@@ -396,7 +396,7 @@ util_print_cbc (ecma_compiled_code_t *compiled_code_p) /**< compiled code */
   JERRY_DEBUG_MSG ("  Const literal range end: %d\n", (int) const_literal_end);
   JERRY_DEBUG_MSG ("  Literal range end: %d\n\n", (int) literal_end);
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   if (compiled_code_p->status_flags & CBC_CODE_FLAGS_HAS_EXTENDED_INFO)
   {
     uint32_t extended_info = ecma_compiled_code_resolve_extended_info (compiled_code_p);
@@ -405,7 +405,7 @@ util_print_cbc (ecma_compiled_code_t *compiled_code_p) /**< compiled code */
 
     size -= sizeof (ecma_value_t);
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
   byte_code_start_p = (uint8_t *) compiled_code_p;
 
@@ -463,7 +463,7 @@ util_print_cbc (ecma_compiled_code_t *compiled_code_p) /**< compiled code */
       JERRY_DEBUG_MSG (" %3d : %s", (int) cbc_offset, cbc_ext_names[ext_opcode]);
       byte_code_p += 2;
 
-#if ENABLED (JERRY_LINE_INFO)
+#if JERRY_LINE_INFO
       if (ext_opcode == CBC_EXT_LINE)
       {
         uint32_t value = 0;
@@ -479,7 +479,7 @@ util_print_cbc (ecma_compiled_code_t *compiled_code_p) /**< compiled code */
         JERRY_DEBUG_MSG (" %d\n", (int) value);
         continue;
       }
-#endif /* ENABLED (JERRY_LINE_INFO) */
+#endif /* JERRY_LINE_INFO */
     }
 
     if (flags & (CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2))
@@ -546,7 +546,7 @@ util_print_cbc (ecma_compiled_code_t *compiled_code_p) /**< compiled code */
 
 #undef PARSER_READ_IDENTIFIER_INDEX
 
-#endif /* ENABLED (JERRY_PARSER_DUMP_BYTE_CODE) */
+#endif /* JERRY_PARSER_DUMP_BYTE_CODE */
 
 /**
  * @}

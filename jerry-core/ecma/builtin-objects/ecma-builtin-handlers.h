@@ -18,7 +18,7 @@
 
 #include "ecma-globals.h"
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 
 #include "ecma-helpers.h"
 #include "ecma-builtins.h"
@@ -47,6 +47,6 @@ ecma_builtin_handler_get (ecma_native_handler_id_t id);
 uint8_t
 ecma_builtin_handler_get_length (ecma_native_handler_id_t id);
 
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 #endif /* !ECMA_BUILTIN_HANDLERS_H */

@@ -67,7 +67,7 @@ ecma_get_global_environment (ecma_object_t *global_object_p) /**< global object 
   return ECMA_GET_NON_NULL_POINTER (ecma_object_t, ((ecma_global_object_t *) global_object_p)->global_env_cp);
 } /* ecma_get_global_environment */
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 /**
  * Create the global lexical block on top of the global environment.
  */
@@ -86,7 +86,7 @@ ecma_create_global_lexical_block (ecma_object_t *global_object_p) /**< global ob
     ecma_deref_object (global_scope_p);
   }
 } /* ecma_create_global_lexical_block */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /**
  * Get reference to Global lexical scope
@@ -97,12 +97,12 @@ ecma_create_global_lexical_block (ecma_object_t *global_object_p) /**< global ob
 ecma_object_t *
 ecma_get_global_scope (ecma_object_t *global_object_p) /**< global object */
 {
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   JERRY_ASSERT (global_object_p != NULL && ecma_builtin_is_global (global_object_p));
   return ECMA_GET_NON_NULL_POINTER (ecma_object_t, ((ecma_global_object_t *) global_object_p)->global_scope_cp);
-#else /* !ENABLED (JERRY_ESNEXT) */
+#else /* !JERRY_ESNEXT */
   return ecma_get_global_environment (global_object_p);
-#endif /* !ENABLED (JERRY_ESNEXT) */
+#endif /* !JERRY_ESNEXT */
 } /* ecma_get_global_scope */
 
 /**
@@ -180,7 +180,7 @@ ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environme
 
     ecma_object_t *binding_obj_p = ecma_get_lex_env_binding_object (lex_env_p);
 
-#if ENABLED (JERRY_BUILTIN_PROXY) && ENABLED (JERRY_BUILTIN_REALMS)
+#if JERRY_BUILTIN_PROXY && JERRY_BUILTIN_REALMS
     if (ECMA_OBJECT_IS_PROXY (binding_obj_p))
     {
       ecma_value_t result = ecma_proxy_object_is_extensible (binding_obj_p);
@@ -199,12 +199,12 @@ ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environme
     {
       return NULL;
     }
-#else /* !ENABLED (JERRY_BUILTIN_PROXY) || !ENABLED (JERRY_BUILTIN_REALMS) */
+#else /* !JERRY_BUILTIN_PROXY || !JERRY_BUILTIN_REALMS */
     if (!ecma_op_ordinary_object_is_extensible (binding_obj_p))
     {
       return NULL;
     }
-#endif /* ENABLED (JERRY_BUILTIN_PROXY) && ENABLED (JERRY_BUILTIN_REALMS) */
+#endif /* JERRY_BUILTIN_PROXY && JERRY_BUILTIN_REALMS */
 
     const uint32_t flags = ECMA_PROPERTY_ENUMERABLE_WRITABLE | ECMA_IS_THROW;
 
@@ -261,12 +261,12 @@ ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment 
     {
       ecma_named_data_property_assign_value (lex_env_p, ECMA_PROPERTY_VALUE_PTR (property_p), value);
     }
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
     else if (ecma_is_property_enumerable (*property_p))
     {
       return ecma_raise_type_error (ECMA_ERR_MSG ("Constant bindings cannot be reassigned"));
     }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
     else if (is_strict)
     {
       return ecma_raise_type_error (ECMA_ERR_MSG ("Binding cannot be set"));
@@ -455,7 +455,7 @@ ecma_op_create_immutable_binding (ecma_object_t *lex_env_p, /**< lexical environ
   prop_value_p->value = ecma_copy_value_if_not_object (value);
 } /* ecma_op_create_immutable_binding */
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 /**
  * InitializeBinding operation.
  *
@@ -599,7 +599,7 @@ ecma_op_get_this_binding (ecma_object_t *lex_env_p) /**< lexical environment */
   return this_value;
 } /* ecma_op_get_this_binding */
 
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /**
  * @}

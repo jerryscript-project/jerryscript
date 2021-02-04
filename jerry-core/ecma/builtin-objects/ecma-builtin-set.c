@@ -17,7 +17,7 @@
 #include "ecma-exceptions.h"
 #include "ecma-container-object.h"
 
-#if ENABLED (JERRY_BUILTIN_SET)
+#if JERRY_BUILTIN_SET
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -83,4 +83,4 @@ ecma_builtin_set_species_get (ecma_value_t this_value) /**< This Value */
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_SET) */
+#endif /* JERRY_BUILTIN_SET */

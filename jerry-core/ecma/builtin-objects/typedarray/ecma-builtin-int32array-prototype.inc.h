@@ -17,10 +17,10 @@
  * Int32Array prototype description
  */
 
-#if ENABLED (JERRY_BUILTIN_TYPEDARRAY)
+#if JERRY_BUILTIN_TYPEDARRAY
 
 #define TYPEDARRAY_BYTES_PER_ELEMENT 4
 #define TYPEDARRAY_BUILTIN_ID ECMA_BUILTIN_ID_INT32ARRAY
 #include "ecma-builtin-typedarray-prototype-template.inc.h"
 
-#endif /* ENABLED (JERRY_BUILTIN_TYPEDARRAY) */
+#endif /* JERRY_BUILTIN_TYPEDARRAY */

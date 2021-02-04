@@ -24,7 +24,7 @@
 #include "ecma-string-object.h"
 #include "jrt.h"
 
-#if ENABLED (JERRY_BUILTIN_BOOLEAN)
+#if JERRY_BUILTIN_BOOLEAN
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -137,4 +137,4 @@ ecma_builtin_boolean_prototype_dispatch_routine (uint8_t builtin_routine_id, /**
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_BOOLEAN) */
+#endif /* JERRY_BUILTIN_BOOLEAN */

@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if ENABLED (JERRY_BUILTIN_ERRORS)
+#if JERRY_BUILTIN_ERRORS
 
 /* Number properties:
  *  (property name, number value, writable, enumerable, configurable) */
@@ -36,12 +36,12 @@ OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
               ECMA_BUILTIN_ID_REFERENCE_ERROR_PROTOTYPE,
               ECMA_PROPERTY_FIXED)
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 STRING_VALUE (LIT_MAGIC_STRING_NAME,
               LIT_MAGIC_STRING_REFERENCE_ERROR_UL,
               ECMA_PROPERTY_FLAG_CONFIGURABLE)
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
-#endif /* ENABLED (JERRY_BUILTIN_ERRORS) */
+#endif /* JERRY_BUILTIN_ERRORS */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

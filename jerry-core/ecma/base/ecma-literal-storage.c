@@ -27,7 +27,7 @@
  * @{
  */
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 /**
  * Free symbol list
  */
@@ -55,7 +55,7 @@ ecma_free_symbol_list (jmem_cpointer_t symbol_list_cp) /**< symbol list */
     symbol_list_cp = next_item_cp;
   }
 } /* ecma_free_symbol_list */
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /**
  * Free string list
@@ -110,7 +110,7 @@ ecma_free_number_list (jmem_cpointer_t number_list_cp) /**< number list */
   }
 } /* ecma_free_number_list */
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
 
 /**
  * Free bigint list
@@ -140,7 +140,7 @@ ecma_free_bigint_list (jmem_cpointer_t bigint_list_cp) /**< bigint list */
   }
 } /* ecma_free_bigint_list */
 
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 
 /**
  * Finalize literal storage
@@ -148,14 +148,14 @@ ecma_free_bigint_list (jmem_cpointer_t bigint_list_cp) /**< bigint list */
 void
 ecma_finalize_lit_storage (void)
 {
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   ecma_free_symbol_list (JERRY_CONTEXT (symbol_list_first_cp));
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
   ecma_free_string_list (JERRY_CONTEXT (string_list_first_cp));
   ecma_free_number_list (JERRY_CONTEXT (number_list_first_cp));
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
   ecma_free_bigint_list (JERRY_CONTEXT (bigint_list_first_cp));
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 } /* ecma_finalize_lit_storage */
 
 /**
@@ -306,7 +306,7 @@ ecma_find_or_create_literal_number (ecma_number_t number_arg) /**< number to be 
   return num;
 } /* ecma_find_or_create_literal_number */
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
 
 /**
  * Find or create a literal BigInt.
@@ -381,7 +381,7 @@ ecma_find_or_create_literal_bigint (ecma_value_t bigint) /**< bigint to be searc
   return bigint;
 } /* ecma_find_or_create_literal_bigint */
 
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 
 /**
  * Log2 of snapshot literal alignment.
@@ -403,14 +403,14 @@ ecma_find_or_create_literal_bigint (ecma_value_t bigint) /**< bigint to be searc
  */
 #define JERRY_SNAPSHOT_LITERAL_IS_NUMBER (1u << ECMA_VALUE_SHIFT)
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
 /**
  * Literal value is BigInt.
  */
 #define JERRY_SNAPSHOT_LITERAL_IS_BIGINT (2u << ECMA_VALUE_SHIFT)
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 
-#if ENABLED (JERRY_SNAPSHOT_SAVE)
+#if JERRY_SNAPSHOT_SAVE
 
 /**
  * Append the value at the end of the appropriate list if it is not present there.
@@ -420,9 +420,9 @@ void ecma_save_literals_append_value (ecma_value_t value, /**< value to be appen
 {
   /* Unlike direct numbers, direct strings are converted to character literals. */
   if (!ecma_is_value_string (value)
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
       && (!ecma_is_value_bigint (value) || value == ECMA_BIGINT_ZERO)
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
       && !ecma_is_value_float_number (value))
   {
     return;
@@ -558,7 +558,7 @@ ecma_save_literals_for_snapshot (ecma_collection_t *lit_pool_p, /**< list of kno
     {
       lit_table_size += (uint32_t) sizeof (ecma_number_t);
     }
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
     else if (ecma_is_value_bigint (lit_buffer_p[i]))
     {
       ecma_extended_primitive_t *bigint_p = ecma_get_extended_primitive_from_value (lit_buffer_p[i]);
@@ -566,7 +566,7 @@ ecma_save_literals_for_snapshot (ecma_collection_t *lit_pool_p, /**< list of kno
       lit_table_size += (uint32_t) JERRY_ALIGNUP (sizeof (uint32_t) + ECMA_BIGINT_GET_SIZE (bigint_p),
                                                   JERRY_SNAPSHOT_LITERAL_ALIGNMENT);
     }
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
     else
     {
       ecma_string_t *string_p = ecma_get_string_from_value (lit_buffer_p[i]);
@@ -617,7 +617,7 @@ ecma_save_literals_for_snapshot (ecma_collection_t *lit_pool_p, /**< list of kno
 
       length = JERRY_ALIGNUP (sizeof (ecma_number_t), JERRY_SNAPSHOT_LITERAL_ALIGNMENT);
     }
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
     else if (ecma_is_value_bigint (lit_buffer_p[i]))
     {
       map_p->literal_offset |= JERRY_SNAPSHOT_LITERAL_IS_BIGINT;
@@ -630,7 +630,7 @@ ecma_save_literals_for_snapshot (ecma_collection_t *lit_pool_p, /**< list of kno
 
       length = JERRY_ALIGNUP (sizeof (uint32_t) + size, JERRY_SNAPSHOT_LITERAL_ALIGNMENT);
     }
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
     else
     {
       ecma_string_t *string_p = ecma_get_string_from_value (lit_buffer_p[i]);
@@ -654,9 +654,9 @@ ecma_save_literals_for_snapshot (ecma_collection_t *lit_pool_p, /**< list of kno
   return true;
 } /* ecma_save_literals_for_snapshot */
 
-#endif /* ENABLED (JERRY_SNAPSHOT_SAVE) */
+#endif /* JERRY_SNAPSHOT_SAVE */
 
-#if ENABLED (JERRY_SNAPSHOT_EXEC) || ENABLED (JERRY_SNAPSHOT_SAVE)
+#if JERRY_SNAPSHOT_EXEC || JERRY_SNAPSHOT_SAVE
 
 /**
  * Get the compressed pointer of a given literal.
@@ -678,7 +678,7 @@ ecma_snapshot_get_literal (const uint8_t *literal_base_p, /**< literal start */
     return ecma_find_or_create_literal_number (num);
   }
 
-#if ENABLED (JERRY_BUILTIN_BIGINT)
+#if JERRY_BUILTIN_BIGINT
   if (literal_value & JERRY_SNAPSHOT_LITERAL_IS_BIGINT)
   {
     uint32_t bigint_sign_and_size = *(uint32_t *) literal_p;
@@ -698,7 +698,7 @@ ecma_snapshot_get_literal (const uint8_t *literal_base_p, /**< literal start */
     memcpy (ECMA_BIGINT_GET_DIGITS (bigint_p, 0), literal_p + sizeof (uint32_t), size);
     return ecma_find_or_create_literal_bigint (ecma_make_extended_primitive_value (bigint_p, ECMA_TYPE_BIGINT));
   }
-#endif /* ENABLED (JERRY_BUILTIN_BIGINT) */
+#endif /* JERRY_BUILTIN_BIGINT */
 
   uint16_t length = *(const uint16_t *) literal_p;
 
@@ -734,17 +734,17 @@ ecma_snapshot_resolve_serializable_values (ecma_compiled_code_t *compiled_code_p
     base_p -= argument_end;
   }
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
   /* function name */
   if (CBC_FUNCTION_GET_TYPE (compiled_code_p->status_flags) != CBC_FUNCTION_CONSTRUCTOR)
   {
     base_p--;
   }
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
   return base_p;
 } /* ecma_snapshot_resolve_serializable_values */
-#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) || ENABLED (JERRY_SNAPSHOT_SAVE) */
+#endif /* JERRY_SNAPSHOT_EXEC || JERRY_SNAPSHOT_SAVE */
 
 /**
  * @}

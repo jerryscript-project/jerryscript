@@ -27,7 +27,7 @@
 #include "lit-char-helpers.h"
 #include "vm.h"
 
-#if ENABLED (JERRY_MODULE_SYSTEM)
+#if JERRY_MODULE_SYSTEM
 
 /**
  * Takes a ModuleSpecifier and applies path normalization to it.
@@ -551,11 +551,11 @@ ecma_module_evaluate (ecma_module_t *module_p) /**< module */
     return ECMA_VALUE_EMPTY;
   }
 
-#if ENABLED (JERRY_BUILTIN_REALMS)
+#if JERRY_BUILTIN_REALMS
   ecma_object_t *global_object_p = (ecma_object_t *) ecma_op_function_get_realm (module_p->compiled_code_p);
-#else /* !ENABLED (JERRY_BUILTIN_REALMS) */
+#else /* !JERRY_BUILTIN_REALMS */
   ecma_object_t *global_object_p = ecma_builtin_get_global ();
-#endif /* ENABLED (JERRY_BUILTIN_REALMS) */
+#endif /* JERRY_BUILTIN_REALMS */
 
   module_p->state = ECMA_MODULE_STATE_EVALUATING;
   module_p->scope_p = ecma_create_decl_lex_env (ecma_get_global_environment (global_object_p));
@@ -771,12 +771,12 @@ ecma_module_connect_imports (ecma_module_t *module_p)
 
       ecma_value_t status = ecma_op_has_binding (lex_env_p, import_names_p->local_name_p);
 
-#if ENABLED (JERRY_BUILTIN_PROXY)
+#if JERRY_BUILTIN_PROXY
       if (ECMA_IS_VALUE_ERROR (status))
       {
         return status;
       }
-#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+#endif /* JERRY_BUILTIN_PROXY */
 
       if (ecma_is_value_true (status))
       {
@@ -1010,7 +1010,7 @@ ecma_module_parse (ecma_module_t *module_p) /**< module */
   ecma_module_t *prev_module_p = JERRY_CONTEXT (module_current_p);
   JERRY_CONTEXT (module_current_p) = module_p;
 
-#if ENABLED (JERRY_DEBUGGER) && ENABLED (JERRY_PARSER)
+#if JERRY_DEBUGGER && JERRY_PARSER
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
     jerry_debugger_send_string (JERRY_DEBUGGER_SOURCE_CODE_NAME,
@@ -1018,7 +1018,7 @@ ecma_module_parse (ecma_module_t *module_p) /**< module */
                                 module_path_p,
                                 module_path_size - 1);
   }
-#endif /* ENABLED (JERRY_DEBUGGER) && ENABLED (JERRY_PARSER) */
+#endif /* JERRY_DEBUGGER && JERRY_PARSER */
 
   ecma_compiled_code_t *bytecode_p = parser_parse_script (NULL,
                                                           0,
@@ -1156,4 +1156,4 @@ ecma_module_cleanup (ecma_module_t *head_p) /**< module */
     head_p = next_p;
   }
 } /* ecma_module_cleanup */
-#endif /* ENABLED (JERRY_MODULE_SYSTEM) */
+#endif /* JERRY_MODULE_SYSTEM */

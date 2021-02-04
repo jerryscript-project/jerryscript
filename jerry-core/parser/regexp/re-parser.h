@@ -16,7 +16,7 @@
 #ifndef RE_PARSER_H
 #define RE_PARSER_H
 
-#if ENABLED (JERRY_BUILTIN_REGEXP)
+#if JERRY_BUILTIN_REGEXP
 
 #include "re-compiler-context.h"
 
@@ -55,5 +55,5 @@ ecma_value_t re_parse_alternative (re_compiler_ctx_t *re_ctx_p, bool expect_eof)
  * @}
  */
 
-#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
+#endif /* JERRY_BUILTIN_REGEXP */
 #endif /* !RE_PARSER_H */

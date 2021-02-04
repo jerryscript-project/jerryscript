@@ -100,14 +100,14 @@ ecma_op_create_arguments_object (vm_frame_ctx_shared_args_t *shared_p, /**< shar
     ECMA_SET_INTERNAL_VALUE_POINTER (mapped_arguments_p->lex_env, lex_env_p);
     arguments_p->header.u.pseudo_array.extra_info |= ECMA_ARGUMENTS_OBJECT_MAPPED;
 
-#if ENABLED (JERRY_SNAPSHOT_EXEC)
+#if JERRY_SNAPSHOT_EXEC
     if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION)
     {
       arguments_p->header.u.pseudo_array.extra_info |= ECMA_ARGUMENTS_OBJECT_STATIC_BYTECODE;
       mapped_arguments_p->u.byte_code_p = (ecma_compiled_code_t *) bytecode_data_p;
     }
     else
-#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
+#endif /* JERRY_SNAPSHOT_EXEC */
     {
       ECMA_SET_INTERNAL_VALUE_POINTER (mapped_arguments_p->u.byte_code, bytecode_data_p);
     }
@@ -343,17 +343,17 @@ ecma_op_arguments_object_try_to_lazy_instantiate_property (ecma_object_t *object
     {
       ecma_object_t *thrower_p = ecma_builtin_get (ECMA_BUILTIN_ID_TYPE_ERROR_THROWER);
 
-      prop_value_p = ecma_create_named_accessor_property (object_p,
-                                                          ecma_get_magic_string (LIT_MAGIC_STRING_CALLEE),
-                                                          thrower_p,
-                                                          thrower_p,
-                                                          ECMA_PROPERTY_FIXED,
-                                                          &prop_p);
+      ecma_create_named_accessor_property (object_p,
+                                           ecma_get_magic_string (LIT_MAGIC_STRING_CALLEE),
+                                           thrower_p,
+                                           thrower_p,
+                                           ECMA_PROPERTY_FIXED,
+                                           &prop_p);
     }
     return prop_p;
   }
 
-#if !ENABLED (JERRY_ESNEXT)
+#if !JERRY_ESNEXT
   if (property_name_p == ecma_get_magic_string (LIT_MAGIC_STRING_CALLER)
       && !(arguments_p->header.u.pseudo_array.extra_info & ECMA_ARGUMENTS_OBJECT_CALLER_INITIALIZED))
   {
@@ -366,15 +366,15 @@ ecma_op_arguments_object_try_to_lazy_instantiate_property (ecma_object_t *object
 
     ecma_object_t *thrower_p = ecma_builtin_get (ECMA_BUILTIN_ID_TYPE_ERROR_THROWER);
 
-    prop_value_p = ecma_create_named_accessor_property (object_p,
-                                                        ecma_get_magic_string (LIT_MAGIC_STRING_CALLER),
-                                                        thrower_p,
-                                                        thrower_p,
-                                                        ECMA_PROPERTY_FIXED,
-                                                        &prop_p);
+    ecma_create_named_accessor_property (object_p,
+                                         ecma_get_magic_string (LIT_MAGIC_STRING_CALLER),
+                                         thrower_p,
+                                         thrower_p,
+                                         ECMA_PROPERTY_FIXED,
+                                         &prop_p);
     return prop_p;
   }
-#else /* ENABLED (JERRY_ESNEXT) */
+#else /* JERRY_ESNEXT */
   ecma_string_t *symbol_p = ecma_op_get_global_symbol (LIT_GLOBAL_SYMBOL_ITERATOR);
 
   if (property_name_p == symbol_p
@@ -395,7 +395,7 @@ ecma_op_arguments_object_try_to_lazy_instantiate_property (ecma_object_t *object
   }
 
   ecma_deref_ecma_string (symbol_p);
-#endif /* !ENABLED (JERRY_ESNEXT) */
+#endif /* !JERRY_ESNEXT */
 
   return prop_p;
 } /* ecma_op_arguments_object_try_to_lazy_instantiate_property */
@@ -444,20 +444,20 @@ ecma_op_arguments_object_list_lazy_property_names (ecma_object_t *obj_p, /**< ar
     prop_counter_p->string_named_props++;
   }
 
-#if !ENABLED (JERRY_ESNEXT)
+#if !JERRY_ESNEXT
   if (!(flags & (ECMA_ARGUMENTS_OBJECT_CALLER_INITIALIZED | ECMA_ARGUMENTS_OBJECT_MAPPED)))
   {
     ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_CALLER));
     prop_counter_p->string_named_props++;
   }
-#else /* ENABLED (JERRY_ESNEXT) */
+#else /* JERRY_ESNEXT */
   if (!(flags & ECMA_ARGUMENTS_OBJECT_ITERATOR_INITIALIZED))
   {
     ecma_string_t *symbol_p = ecma_op_get_global_symbol (LIT_GLOBAL_SYMBOL_ITERATOR);
     ecma_collection_push_back (prop_names_p, ecma_make_symbol_value (symbol_p));
     prop_counter_p->symbol_named_props++;
   }
-#endif /* !ENABLED (JERRY_ESNEXT) */
+#endif /* !JERRY_ESNEXT */
 } /* ecma_op_arguments_object_list_lazy_property_names */
 
 /**
@@ -475,13 +475,13 @@ ecma_op_arguments_object_get_formal_parameter (ecma_mapped_arguments_t *mapped_a
 
   ecma_compiled_code_t *byte_code_p;
 
-#if ENABLED (JERRY_SNAPSHOT_EXEC)
+#if JERRY_SNAPSHOT_EXEC
   if (mapped_arguments_p->unmapped.header.u.pseudo_array.extra_info & ECMA_ARGUMENTS_OBJECT_STATIC_BYTECODE)
   {
     byte_code_p = mapped_arguments_p->u.byte_code_p;
   }
   else
-#endif /* ENABLED (JERRY_SNAPSHOT_EXEC) */
+#endif /* JERRY_SNAPSHOT_EXEC */
   {
     byte_code_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t, mapped_arguments_p->u.byte_code);
   }

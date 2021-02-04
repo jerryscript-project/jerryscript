@@ -16,7 +16,7 @@
 #ifndef ECMA_SYMBOL_H
 #define ECMA_SYMBOL_H
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 #include "ecma-globals.h"
 
 /** \addtogroup ecma ECMA
@@ -44,7 +44,7 @@ ecma_symbol_this_value (ecma_value_t this_arg);
 ecma_value_t
 ecma_get_symbol_descriptive_string (ecma_value_t symbol_value);
 
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 /**
  * @}
  * @}

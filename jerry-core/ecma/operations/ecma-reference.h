@@ -29,9 +29,9 @@
 ecma_object_t *ecma_op_resolve_reference_base (ecma_object_t *lex_env_p, ecma_string_t *name_p);
 ecma_value_t ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, ecma_string_t *name_p);
 ecma_value_t ecma_op_object_bound_environment_resolve_reference_value (ecma_object_t *lex_env_p, ecma_string_t *name_p);
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 ecma_value_t ecma_op_resolve_super_base (ecma_object_t *lex_env_p);
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /**
  * @}

@@ -30,7 +30,7 @@
 #include "ecma-globals.h"
 #include "js-parser-internal.h"
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 ecma_object_t *
 parser_new_tagged_template_literal (ecma_object_t **raw_strings_p);
 
@@ -40,7 +40,7 @@ parser_tagged_template_literal_append_strings (parser_context_t *context_p, ecma
 
 void
 parser_tagged_template_literal_finalize (ecma_object_t *template_obj_p, ecma_object_t *raw_strings_p);
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 #endif /* ECMA_TAGGED_TEMPLATE_LITERAL_H */
 

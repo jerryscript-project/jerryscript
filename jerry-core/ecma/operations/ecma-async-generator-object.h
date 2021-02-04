@@ -19,7 +19,7 @@
 #include "ecma-globals.h"
 #include "vm-defines.h"
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 
 /** \addtogroup ecma ECMA
  * @{
@@ -83,7 +83,7 @@ void ecma_async_generator_finalize (vm_executable_object_t *async_generator_obje
 
 ecma_value_t ecma_await_continue (vm_executable_object_t *async_generator_object_p, ecma_value_t value);
 
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
 /**
  * @}

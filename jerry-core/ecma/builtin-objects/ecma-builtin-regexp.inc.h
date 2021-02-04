@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if ENABLED (JERRY_BUILTIN_REGEXP)
+#if JERRY_BUILTIN_REGEXP
 
 NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
               2,
@@ -30,7 +30,7 @@ OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
               ECMA_BUILTIN_ID_REGEXP_PROTOTYPE,
               ECMA_PROPERTY_FIXED)
 
-#if ENABLED (JERRY_ESNEXT)
+#if JERRY_ESNEXT
 STRING_VALUE (LIT_MAGIC_STRING_NAME,
               LIT_MAGIC_STRING_REGEXP_UL,
               ECMA_PROPERTY_FLAG_CONFIGURABLE)
@@ -39,8 +39,8 @@ STRING_VALUE (LIT_MAGIC_STRING_NAME,
 ACCESSOR_READ_ONLY (LIT_GLOBAL_SYMBOL_SPECIES,
                     ecma_builtin_regexp_species_get,
                     ECMA_PROPERTY_FLAG_CONFIGURABLE)
-#endif /* ENABLED (JERRY_ESNEXT) */
+#endif /* JERRY_ESNEXT */
 
-#endif /* ENABLED (JERRY_BUILTIN_REGEXP) */
+#endif /* JERRY_BUILTIN_REGEXP */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

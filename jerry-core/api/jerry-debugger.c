@@ -26,11 +26,11 @@
 bool
 jerry_debugger_is_connected (void)
 {
-#if ENABLED (JERRY_DEBUGGER)
+#if JERRY_DEBUGGER
   return JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED;
-#else /* !ENABLED (JERRY_DEBUGGER) */
+#else /* !JERRY_DEBUGGER */
   return false;
-#endif /* ENABLED (JERRY_DEBUGGER) */
+#endif /* JERRY_DEBUGGER */
 } /* jerry_debugger_is_connected */
 
 /**
@@ -39,14 +39,14 @@ jerry_debugger_is_connected (void)
 void
 jerry_debugger_stop (void)
 {
-#if ENABLED (JERRY_DEBUGGER)
+#if JERRY_DEBUGGER
   if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       && !(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_BREAKPOINT_MODE))
   {
     JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_VM_STOP);
     JERRY_CONTEXT (debugger_stop_context) = NULL;
   }
-#endif /* ENABLED (JERRY_DEBUGGER) */
+#endif /* JERRY_DEBUGGER */
 } /* jerry_debugger_stop */
 
 /**
@@ -55,14 +55,14 @@ jerry_debugger_stop (void)
 void
 jerry_debugger_continue (void)
 {
-#if ENABLED (JERRY_DEBUGGER)
+#if JERRY_DEBUGGER
   if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       && !(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_BREAKPOINT_MODE))
   {
     JERRY_DEBUGGER_CLEAR_FLAGS (JERRY_DEBUGGER_VM_STOP);
     JERRY_CONTEXT (debugger_stop_context) = NULL;
   }
-#endif /* ENABLED (JERRY_DEBUGGER) */
+#endif /* JERRY_DEBUGGER */
 } /* jerry_debugger_continue */
 
 /**
@@ -71,7 +71,7 @@ jerry_debugger_continue (void)
 void
 jerry_debugger_stop_at_breakpoint (bool enable_stop_at_breakpoint) /**< enable/disable stop at breakpoint */
 {
-#if ENABLED (JERRY_DEBUGGER)
+#if JERRY_DEBUGGER
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED
       && !(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_BREAKPOINT_MODE))
   {
@@ -84,9 +84,9 @@ jerry_debugger_stop_at_breakpoint (bool enable_stop_at_breakpoint) /**< enable/d
       JERRY_DEBUGGER_CLEAR_FLAGS (JERRY_DEBUGGER_VM_IGNORE);
     }
   }
-#else /* !ENABLED (JERRY_DEBUGGER) */
+#else /* !JERRY_DEBUGGER */
   JERRY_UNUSED (enable_stop_at_breakpoint);
-#endif /* ENABLED (JERRY_DEBUGGER) */
+#endif /* JERRY_DEBUGGER */
 } /* jerry_debugger_stop_at_breakpoint */
 
 /**
@@ -104,7 +104,7 @@ jerry_debugger_wait_for_client_source (jerry_debugger_wait_for_source_callback_t
 {
   *return_value = jerry_create_undefined ();
 
-#if ENABLED (JERRY_DEBUGGER)
+#if JERRY_DEBUGGER
   if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       && !(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_BREAKPOINT_MODE))
   {
@@ -176,12 +176,12 @@ jerry_debugger_wait_for_client_source (jerry_debugger_wait_for_source_callback_t
   }
 
   return JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED;
-#else /* !ENABLED (JERRY_DEBUGGER) */
+#else /* !JERRY_DEBUGGER */
   JERRY_UNUSED (callback_p);
   JERRY_UNUSED (user_p);
 
   return JERRY_DEBUGGER_SOURCE_RECEIVE_FAILED;
-#endif /* ENABLED (JERRY_DEBUGGER) */
+#endif /* JERRY_DEBUGGER */
 } /* jerry_debugger_wait_for_client_source */
 
 /**
@@ -192,7 +192,7 @@ void
 jerry_debugger_send_output (const jerry_char_t *buffer, /**< buffer */
                             jerry_size_t str_size) /**< string size */
 {
-#if ENABLED (JERRY_DEBUGGER)
+#if JERRY_DEBUGGER
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
     jerry_debugger_send_string (JERRY_DEBUGGER_OUTPUT_RESULT,
@@ -200,10 +200,10 @@ jerry_debugger_send_output (const jerry_char_t *buffer, /**< buffer */
                                 (const uint8_t *) buffer,
                                 sizeof (uint8_t) * str_size);
   }
-#else /* !ENABLED (JERRY_DEBUGGER) */
+#else /* !JERRY_DEBUGGER */
   JERRY_UNUSED (buffer);
   JERRY_UNUSED (str_size);
-#endif /* ENABLED (JERRY_DEBUGGER) */
+#endif /* JERRY_DEBUGGER */
 } /* jerry_debugger_send_output */
 
 /**
@@ -214,7 +214,7 @@ jerry_debugger_send_log (jerry_log_level_t level, /**< level of the diagnostics 
                          const jerry_char_t *buffer, /**< buffer */
                          jerry_size_t str_size) /**< string size */
 {
-#if ENABLED (JERRY_DEBUGGER)
+#if JERRY_DEBUGGER
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
   {
     jerry_debugger_send_string (JERRY_DEBUGGER_OUTPUT_RESULT,
@@ -222,9 +222,9 @@ jerry_debugger_send_log (jerry_log_level_t level, /**< level of the diagnostics 
                                 (const uint8_t *) buffer,
                                 sizeof (uint8_t) * str_size);
   }
-#else /* !ENABLED (JERRY_DEBUGGER) */
+#else /* !JERRY_DEBUGGER */
   JERRY_UNUSED (level);
   JERRY_UNUSED (buffer);
   JERRY_UNUSED (str_size);
-#endif /* ENABLED (JERRY_DEBUGGER) */
+#endif /* JERRY_DEBUGGER */
 } /* jerry_debugger_send_log */

@@ -25,6 +25,12 @@ import subprocess
 import sys
 import settings
 
+if sys.version_info.major >= 3:
+    import runners.util as util  # pylint: disable=import-error
+else:
+    sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/runners')
+    import util
+
 OUTPUT_DIR = os.path.join(settings.PROJECT_DIR, 'build', 'tests')
 
 Options = collections.namedtuple('Options', ['name', 'build_args', 'test_args', 'skip'])
@@ -258,11 +264,6 @@ def report_skip(job):
         sys.stderr.write(' (%s)' % job.skip)
     sys.stderr.write('%s\n' % TERM_NORMAL)
 
-def get_platform_cmd_prefix():
-    if sys.platform == 'win32':
-        return ['cmd', '/S', '/C']
-    return []
-
 def create_binary(job, options):
     build_args = job.build_args[:]
     if options.buildoptions:
@@ -270,7 +271,7 @@ def create_binary(job, options):
             if option not in build_args:
                 build_args.append(option)
 
-    build_cmd = get_platform_cmd_prefix()
+    build_cmd = util.get_python_cmd_prefix()
     build_cmd.append(settings.BUILD_SCRIPT)
     build_cmd.extend(build_args)
 
@@ -339,7 +340,7 @@ def iterate_test_runner_jobs(jobs, options):
         else:
             tested_hashes[bin_hash] = build_dir_path
 
-        test_cmd = get_platform_cmd_prefix()
+        test_cmd = util.get_python_cmd_prefix()
         test_cmd.extend([settings.TEST_RUNNER_SCRIPT, '--engine', bin_path])
 
         yield job, ret_build, test_cmd
@@ -433,7 +434,7 @@ def run_test262_test_suite(options):
             print("\n%sBuild failed%s\n" % (TERM_RED, TERM_NORMAL))
             break
 
-        test_cmd = get_platform_cmd_prefix() + [
+        test_cmd = util.get_python_cmd_prefix() + [
             settings.TEST262_RUNNER_SCRIPT,
             '--engine', get_binary_path(build_dir_path) + " --test262-object",
             '--test-dir', settings.TEST262_TEST_SUITE_DIR
@@ -480,7 +481,7 @@ def run_unittests(options):
 
 
         ret_test |= run_check(
-            get_platform_cmd_prefix() +
+            util.get_python_cmd_prefix() +
             [settings.UNITTEST_RUNNER_SCRIPT] +
             [os.path.join(build_dir_path, 'tests', build_config)] +
             (["-q"] if options.quiet else [])

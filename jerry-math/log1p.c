@@ -122,7 +122,7 @@ log1p (double x)
       if (x == -1.0)
       {
         /* log1p(-1) = -inf */
-        return -two54 / zero;
+        return -INFINITY;
       }
       else
       {

@@ -265,7 +265,12 @@ expm1 (double x)
       y = one - (e - x);
       if (k == 1024)
       {
-        y = y * 2.0 * 0x1p1023;
+        const double twop1023 = ((double_accessor)
+          {
+            .as_int = { .hi = 0x7fe00000, .lo = 0 }
+          }
+        ).dbl; /* 0x1p1023 */
+        y = y * 2.0 * twop1023;
       }
       else
       {

@@ -8487,7 +8487,6 @@
   <test id="annexB/language/statements/const/dstr/object-pattern-emulates-undefined.js"><reason></reason></test>
   <test id="annexB/language/statements/for-of/iterator-close-return-emulates-undefined-throws-when-called.js"><reason></reason></test>
   <test id="annexB/language/statements/function/default-parameters-emulates-undefined.js"><reason></reason></test>
-  <test id="built-ins/AsyncFunction/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/Atomics/notify/bigint/notify-all-on-loc.js"><reason></reason></test>
   <test id="built-ins/Atomics/notify/count-defaults-to-infinity-missing.js"><reason></reason></test>
   <test id="built-ins/Atomics/notify/count-defaults-to-infinity-undefined.js"><reason></reason></test>
@@ -8738,5 +8737,4 @@
   <test id="built-ins/TypedArrayConstructors/internals/Set/detached-buffer.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/internals/Set/tonumber-value-detached-buffer.js"><reason></reason></test>
   <!-- END - Missing test262 support in JerryScript REPL - missing $262.detachArrayBuffer function -->
-
 </excludeList>

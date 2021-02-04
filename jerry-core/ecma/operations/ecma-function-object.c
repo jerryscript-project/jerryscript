@@ -492,28 +492,28 @@ ecma_op_create_dynamic_function (const ecma_value_t *arguments_list_p, /**< argu
 
 #if ENABLED (JERRY_ESNEXT)
   ecma_object_t *new_target_p = JERRY_CONTEXT (current_new_target_p);
+  ecma_builtin_id_t fallback_ctor = ECMA_BUILTIN_ID_FUNCTION;
 
   if (JERRY_UNLIKELY (parse_opts & (ECMA_PARSE_GENERATOR_FUNCTION | ECMA_PARSE_ASYNC_FUNCTION)))
   {
-    fallback_proto = ECMA_BUILTIN_ID_GENERATOR;
+    fallback_proto = ECMA_BUILTIN_ID_ASYNC_GENERATOR;
+    fallback_ctor = ECMA_BUILTIN_ID_ASYNC_GENERATOR_FUNCTION;
 
-    if (parse_opts & ECMA_PARSE_ASYNC_FUNCTION)
+    if (!(parse_opts & ECMA_PARSE_GENERATOR_FUNCTION))
     {
-      fallback_proto = ECMA_BUILTIN_ID_ASYNC_GENERATOR;
-
-      if (new_target_p == NULL)
-      {
-        new_target_p = ecma_builtin_get (ECMA_BUILTIN_ID_ASYNC_GENERATOR_FUNCTION);
-      }
+      fallback_proto = ECMA_BUILTIN_ID_ASYNC_FUNCTION_PROTOTYPE;
+      fallback_ctor = ECMA_BUILTIN_ID_ASYNC_FUNCTION;
     }
-    else if (new_target_p == NULL)
+    else if (!(parse_opts & ECMA_PARSE_ASYNC_FUNCTION))
     {
-      new_target_p = ecma_builtin_get (ECMA_BUILTIN_ID_GENERATOR_FUNCTION);
+      fallback_proto = ECMA_BUILTIN_ID_GENERATOR;
+      fallback_ctor = ECMA_BUILTIN_ID_GENERATOR_FUNCTION;
     }
   }
-  else if (new_target_p == NULL)
+
+  if (new_target_p == NULL)
   {
-    new_target_p = ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION);
+    new_target_p = ecma_builtin_get (fallback_ctor);
   }
 
   ecma_object_t *proto = ecma_op_get_prototype_from_constructor (new_target_p, fallback_proto);

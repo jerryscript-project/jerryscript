@@ -1651,20 +1651,23 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           ecma_string_t *literal_name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
           ecma_object_t *lex_env_p = frame_ctx_p->lex_env_p;
-          ecma_property_t *binding_p = NULL;
 
           if (lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_BLOCK)
           {
-            binding_p = ecma_find_named_property (lex_env_p, literal_name_p);
+            result = opfunc_lexical_scope_has_restricted_binding (frame_ctx_p, literal_name_p);
 
-            JERRY_ASSERT (lex_env_p->u2.outer_reference_cp != JMEM_CP_NULL);
-            lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
-          }
+            if (!ecma_is_value_false (result))
+            {
+              if (ecma_is_value_true (result))
+              {
+                result = ecma_raise_syntax_error (ECMA_ERR_MSG ("Local variable is redeclared"));
+              }
 
-          if (binding_p != NULL)
-          {
-            result = ecma_raise_syntax_error (ECMA_ERR_MSG ("Local variable is redeclared"));
-            goto error;
+              JERRY_ASSERT (ECMA_IS_VALUE_ERROR (result));
+              goto error;
+            }
+
+            continue;
           }
 
           result = ecma_op_has_binding (lex_env_p, literal_name_p);

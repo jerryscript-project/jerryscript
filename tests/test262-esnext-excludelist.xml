@@ -8319,12 +8319,9 @@
   <test id="language/statements/class/elements/same-line-async-gen-static-private-methods.js"><reason></reason></test>
   <test id="language/statements/class/elements/syntax/valid/grammar-static-private-async-gen-meth-prototype.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-from-sync-iterator-continuation-abrupt-completion-get-constructor.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-func-decl-dstr-array-elem-init-simple-no-strict.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-decl-dstr-array-elem-put-prop-ref-user-err.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-decl-dstr-array-elem-put-unresolvable-strict.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-decl-dstr-array-elem-trlg-iter-elision-iter-nrml-close-null.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-func-decl-dstr-obj-id-init-simple-no-strict.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-func-decl-dstr-obj-id-simple-no-strict.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-dstr-const-ary-init-iter-get-err.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-dstr-const-ary-ptrn-elem-id-init-throws.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-dstr-const-ary-ptrn-elem-id-init-unresolvable.js"><reason></reason></test>
@@ -8382,7 +8379,6 @@
   <test id="language/statements/for-await-of/async-func-dstr-var-obj-ptrn-prop-id-get-value-err.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-dstr-var-obj-ptrn-prop-id-init-throws.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-func-dstr-var-obj-ptrn-prop-id-init-unresolvable.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-decl-dstr-array-elem-init-simple-no-strict.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-decl-dstr-array-elem-init-yield-expr.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-decl-dstr-array-elem-iter-get-err.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-decl-dstr-array-elem-iter-nrml-close-err.js"><reason></reason></test>
@@ -8394,7 +8390,6 @@
   <test id="language/statements/for-await-of/async-gen-decl-dstr-array-elem-nested-obj-yield-expr.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-decl-dstr-array-elem-put-prop-ref-user-err.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-decl-dstr-array-elem-put-unresolvable-strict.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-decl-dstr-array-elem-target-simple-no-strict.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-decl-dstr-array-elem-target-yield-expr.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-decl-dstr-array-elem-trlg-iter-elision-iter-nrml-close-err.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-decl-dstr-array-elem-trlg-iter-elision-iter-nrml-close-null.js"><reason></reason></test>
@@ -8404,9 +8399,7 @@
   <test id="language/statements/for-await-of/async-gen-decl-dstr-array-rest-nested-array-yield-expr.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-decl-dstr-array-rest-nested-obj-yield-expr.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-decl-dstr-array-rest-yield-expr.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-simple-no-strict.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-decl-dstr-obj-id-init-yield-expr.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/async-gen-decl-dstr-obj-id-simple-no-strict.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-decl-dstr-obj-prop-elem-init-yield-expr.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-decl-dstr-obj-prop-elem-target-yield-expr.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-decl-dstr-obj-prop-nested-array-yield-expr.js"><reason></reason></test>
@@ -8772,7 +8765,6 @@
   <test id="language/global-code/script-decl-func-err-non-extensible.js"><reason></reason></test>
   <test id="language/global-code/script-decl-func.js"><reason></reason></test>
   <test id="language/global-code/script-decl-lex-deletion.js"><reason></reason></test>
-  <test id="language/global-code/script-decl-lex-restricted-global.js"><reason></reason></test>
   <test id="language/global-code/script-decl-lex.js"><reason></reason></test>
   <test id="language/global-code/script-decl-var-err.js"><reason></reason></test>
   <!-- Missing test262 support in JerryScript REPL - missing $262 object -->

@@ -178,6 +178,8 @@ opfunc_assign_super_reference (ecma_value_t **vm_stack_top_p, vm_frame_ctx_t *fr
 ecma_value_t
 opfunc_copy_data_properties (ecma_value_t target_object, ecma_value_t source_object, ecma_value_t filter_array);
 
+ecma_value_t
+opfunc_lexical_scope_has_restricted_binding (vm_frame_ctx_t *vm_frame_ctx_p, ecma_string_t *name_p);
 #endif /* ENABLED (JERRY_ESNEXT) */
 
 /**

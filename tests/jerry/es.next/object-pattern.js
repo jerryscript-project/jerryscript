@@ -237,3 +237,14 @@ try {
 } catch (e) {
   assert (e instanceof SyntaxError);
 }
+
+var abruptObj = Object.defineProperty({}, 'a', {
+  get() { throw 5.2; }
+});
+
+try {
+  const { a } = abruptObj;
+  assert (false);
+} catch (e) {
+  assert (e === 5.2);
+}

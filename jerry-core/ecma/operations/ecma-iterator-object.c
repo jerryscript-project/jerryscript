@@ -175,11 +175,8 @@ ecma_op_get_iterator (ecma_value_t value, /**< value to get iterator from */
                       ecma_value_t method, /**< provided method argument */
                       ecma_value_t *next_method_p) /**< [out] next method */
 {
-  if (next_method_p != NULL)
-  {
-    /* TODO: NULL support should be removed after all functions support next method caching. */
-    *next_method_p = ECMA_VALUE_UNDEFINED;
-  }
+  JERRY_ASSERT (next_method_p != NULL);
+  *next_method_p = ECMA_VALUE_UNDEFINED;
 
   /* 1. */
   if (ECMA_IS_VALUE_ERROR (value))
@@ -215,7 +212,7 @@ ecma_op_get_iterator (ecma_value_t value, /**< value to get iterator from */
   }
 
   /* 3. */
-  if (!ecma_is_value_object (method) || !ecma_op_is_callable (method))
+  if (!ecma_op_is_callable (method))
   {
     ecma_free_value (method);
     return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator is not function"));
@@ -242,83 +239,27 @@ ecma_op_get_iterator (ecma_value_t value, /**< value to get iterator from */
     return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator is not an object"));
   }
 
-  if (next_method_p != NULL)
+  ecma_object_t *obj_p = ecma_get_object_from_value (iterator);
+  ecma_value_t next_method = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_NEXT);
+
+  if (ECMA_IS_VALUE_ERROR (next_method))
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (iterator);
-    ecma_value_t next_method = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_NEXT);
+    ecma_free_value (iterator);
+    return next_method;
+  }
 
-    if (ECMA_IS_VALUE_ERROR (next_method))
-    {
-      ecma_free_value (iterator);
-      return next_method;
-    }
-
-    if (ecma_is_value_object (next_method) && ecma_op_is_callable (next_method))
-    {
-      *next_method_p = next_method;
-    }
-    else
-    {
-      ecma_free_value (next_method);
-    }
+  if (ecma_is_value_object (next_method) && ecma_op_is_callable (next_method))
+  {
+    *next_method_p = next_method;
+  }
+  else
+  {
+    ecma_free_value (next_method);
   }
 
   /* 6. */
   return iterator;
 } /* ecma_op_get_iterator */
-
-/**
- * IteratorNext operation
- *
- * See also: ECMA-262 v6, 7.4.2
- *
- * Note:
- *      Returned value must be freed with ecma_free_value.
- *
- * @return iterator result object - if success
- *         raised error - otherwise
- */
-static ecma_value_t
-ecma_op_iterator_next_old (ecma_value_t iterator, /**< iterator value */
-                           ecma_value_t value) /**< the routines's value argument */
-{
-  JERRY_ASSERT (ecma_is_value_object (iterator));
-
-  /* 1 - 2. */
-  ecma_object_t *obj_p = ecma_get_object_from_value (iterator);
-
-  ecma_value_t func_next = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_NEXT);
-
-  if (ECMA_IS_VALUE_ERROR (func_next))
-  {
-    return func_next;
-  }
-
-  if (!ecma_is_value_object (func_next) || !ecma_op_is_callable (func_next))
-  {
-    ecma_free_value (func_next);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator 'next' is not callable"));
-  }
-
-  ecma_object_t *next_obj_p = ecma_get_object_from_value (func_next);
-
-  bool has_value = !ecma_is_value_empty (value);
-
-  ecma_value_t result;
-  if (has_value)
-  {
-    result = ecma_op_function_call (next_obj_p, iterator, &value, 1);
-  }
-  else
-  {
-    result = ecma_op_function_call (next_obj_p, iterator, NULL, 0);
-  }
-
-  ecma_free_value (func_next);
-
-  /* 5. */
-  return result;
-} /* ecma_op_iterator_next_old */
 
 /**
  * IteratorNext operation
@@ -386,7 +327,7 @@ ecma_op_iterator_return (ecma_value_t iterator, /**< iterator value */
     return ecma_create_iter_result_object (value, ECMA_VALUE_TRUE);
   }
 
-  if (!ecma_is_value_object (func_return) || !ecma_op_is_callable (func_return))
+  if (!ecma_op_is_callable (func_return))
   {
     ecma_free_value (func_return);
     return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator 'return' is not callable"));
@@ -582,16 +523,7 @@ ecma_op_iterator_step (ecma_value_t iterator, /**< iterator value */
                        ecma_value_t next_method) /**< next method */
 {
   /* 1. */
-  ecma_value_t result;
-  if (next_method == ECMA_VALUE_EMPTY)
-  {
-    /* TODO: EMPTY support should be removed after all functions support next method caching. */
-    result = ecma_op_iterator_next_old (iterator, ECMA_VALUE_EMPTY);
-  }
-  else
-  {
-    result = ecma_op_iterator_next (iterator, next_method, ECMA_VALUE_EMPTY);
-  }
+  ecma_value_t result = ecma_op_iterator_next (iterator, next_method, ECMA_VALUE_EMPTY);
 
   /* 2. */
   if (ECMA_IS_VALUE_ERROR (result))

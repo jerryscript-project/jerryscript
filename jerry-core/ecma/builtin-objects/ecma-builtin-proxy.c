@@ -101,7 +101,8 @@ ecma_builtin_proxy_dispatch_construct (const ecma_value_t *arguments_list_p, /**
 
   /* 2. */
   ecma_object_t *proxy_p = ecma_proxy_create (arguments_list_len > 0 ? arguments_list_p[0] : ECMA_VALUE_UNDEFINED,
-                                              arguments_list_len > 1 ? arguments_list_p[1] : ECMA_VALUE_UNDEFINED);
+                                              arguments_list_len > 1 ? arguments_list_p[1] : ECMA_VALUE_UNDEFINED,
+                                              0);
 
   if (JERRY_UNLIKELY (proxy_p == NULL))
   {

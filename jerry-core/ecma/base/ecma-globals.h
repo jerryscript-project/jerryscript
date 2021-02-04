@@ -2176,6 +2176,18 @@ do \
 #define ECMA_PROPERTY_POINTER_ERROR ((ecma_property_t *) 0x01)
 
 #if ENABLED (JERRY_BUILTIN_PROXY)
+
+/**
+ * Proxy object flags.
+ */
+typedef enum
+{
+  ECMA_PROXY_SKIP_GET_CHECKS = (1u << 0), /**< skip [[Get]] result checks */
+  ECMA_PROXY_SKIP_GET_OWN_PROPERTY_CHECKS = (1u << 1), /**< skip [[GetOwnProperty]] result checks */
+  ECMA_PROXY_IS_CALLABLE = (1u << 2), /**< proxy is callable */
+  ECMA_PROXY_IS_CONSTRUCTABLE = (1u << 3), /**< proxy is constructable */
+} ecma_proxy_flag_types_t;
+
 /**
  * Description of Proxy objects.
  *

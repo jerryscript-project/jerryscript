@@ -2221,12 +2221,55 @@ jerry_create_proxy (const jerry_value_t target, /**< target argument */
   }
 
 #if ENABLED (JERRY_BUILTIN_PROXY)
-  ecma_object_t *proxy_p = ecma_proxy_create (target, handler);
+  ecma_object_t *proxy_p = ecma_proxy_create (target, handler, 0);
   return jerry_return (proxy_p == NULL ? ECMA_VALUE_ERROR : ecma_make_object_value (proxy_p));
 #else /* !ENABLED (JERRY_BUILTIN_PROXY) */
   return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Proxy is not supported")));
 #endif /* ENABLED (JERRY_BUILTIN_PROXY) */
 } /* jerry_create_proxy */
+
+#if ENABLED (JERRY_BUILTIN_PROXY)
+
+JERRY_STATIC_ASSERT ((int) JERRY_PROXY_SKIP_GET_CHECKS == (int) ECMA_PROXY_SKIP_GET_CHECKS,
+                     jerry_and_ecma_proxy_skip_get_checks_must_be_equal);
+JERRY_STATIC_ASSERT ((int) JERRY_PROXY_SKIP_GET_OWN_PROPERTY_CHECKS == (int) ECMA_PROXY_SKIP_GET_OWN_PROPERTY_CHECKS,
+                     jerry_and_ecma_proxy_skip_get_own_property_checks_must_be_equal);
+
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+
+/**
+ * Create a new Proxy object with the given target, handler, and special options
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return value of the created Proxy object
+ */
+jerry_value_t
+jerry_create_special_proxy (const jerry_value_t target, /**< target argument */
+                            const jerry_value_t handler, /**< handler argument */
+                            uint32_t options) /**< jerry_proxy_object_options_t option bits */
+{
+  jerry_assert_api_available ();
+
+  if (ecma_is_value_error_reference (target)
+      || ecma_is_value_error_reference (handler))
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
+  }
+
+#if ENABLED (JERRY_BUILTIN_PROXY)
+  const uint32_t options_mask = (JERRY_PROXY_SKIP_GET_CHECKS
+                                 | JERRY_PROXY_SKIP_GET_OWN_PROPERTY_CHECKS);
+  options &= options_mask;
+
+  ecma_object_t *proxy_p = ecma_proxy_create (target, handler, options);
+  return jerry_return (proxy_p == NULL ? ECMA_VALUE_ERROR : ecma_make_object_value (proxy_p));
+#else /* !ENABLED (JERRY_BUILTIN_PROXY) */
+  JERRY_UNUSED (options);
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Proxy is not supported")));
+#endif /* ENABLED (JERRY_BUILTIN_PROXY) */
+} /* jerry_create_special_proxy */
 
 /**
  * Create string from a valid UTF-8 string

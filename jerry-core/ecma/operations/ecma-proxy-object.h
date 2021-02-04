@@ -29,7 +29,8 @@
 
 ecma_object_t *
 ecma_proxy_create (ecma_value_t target,
-                   ecma_value_t handler);
+                   ecma_value_t handler,
+                   uint32_t options);
 
 ecma_object_t *
 ecma_proxy_create_revocable (ecma_value_t target,

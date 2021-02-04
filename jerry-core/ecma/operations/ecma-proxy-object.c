@@ -48,7 +48,8 @@
  */
 ecma_object_t *
 ecma_proxy_create (ecma_value_t target, /**< proxy target */
-                   ecma_value_t handler) /**< proxy handler */
+                   ecma_value_t handler, /**< proxy handler */
+                   uint32_t options) /**< ecma_proxy_flag_types_t option bits */
 {
   /* ES2015: 1, 3. */
   /* ES11+: 1 - 2. */
@@ -65,17 +66,19 @@ ecma_proxy_create (ecma_value_t target, /**< proxy target */
 
   ecma_proxy_object_t *proxy_obj_p = (ecma_proxy_object_t *) obj_p;
 
+  obj_p->u2.prototype_cp = (jmem_cpointer_t) options;
+
   /* ES2015: 7. */
   /* ES11+: 5. */
   if (ecma_op_is_callable (target))
   {
-    ECMA_SET_FIRST_BIT_TO_POINTER_TAG (obj_p->u2.prototype_cp);
+    obj_p->u2.prototype_cp |= ECMA_PROXY_IS_CALLABLE;
 
     /* ES2015: 7.b. */
     /* ES11+: 5.b. */
     if (ecma_is_constructor (target))
     {
-      ECMA_SET_SECOND_BIT_TO_POINTER_TAG (obj_p->u2.prototype_cp);
+      obj_p->u2.prototype_cp |= ECMA_PROXY_IS_CONSTRUCTABLE;
     }
   }
 
@@ -150,7 +153,7 @@ ecma_proxy_create_revocable (ecma_value_t target, /**< target argument */
                              ecma_value_t handler) /**< handler argument */
 {
   /* 1. */
-  ecma_object_t *proxy_p = ecma_proxy_create (target, handler);
+  ecma_object_t *proxy_p = ecma_proxy_create (target, handler, 0);
 
   /* 2. */
   if (proxy_p == NULL)
@@ -688,6 +691,25 @@ ecma_proxy_object_get_own_property_descriptor (ecma_object_t *obj_p, /**< proxy 
     return ecma_raise_type_error (ECMA_ERR_MSG ("Trap is neither an object nor undefined"));
   }
 
+  if (obj_p->u2.prototype_cp & ECMA_PROXY_SKIP_GET_OWN_PROPERTY_CHECKS)
+  {
+    if (ecma_is_value_undefined (trap_result))
+    {
+      return ECMA_VALUE_FALSE;
+    }
+
+    ecma_value_t result_val = ecma_op_to_property_descriptor (trap_result, prop_desc_p);
+    ecma_free_value (trap_result);
+
+    if (ECMA_IS_VALUE_ERROR (result_val))
+    {
+      return result_val;
+    }
+
+    ecma_op_to_complete_property_descriptor (prop_desc_p);
+    return ECMA_VALUE_TRUE;
+  }
+
   /* 12. */
   ecma_property_descriptor_t target_desc;
   ecma_value_t target_status = ecma_op_object_get_own_property_descriptor (target_obj_p, prop_name_p, &target_desc);
@@ -1118,7 +1140,8 @@ ecma_proxy_object_get (ecma_object_t *obj_p, /**< proxy object */
   ecma_deref_object (func_obj_p);
 
   /* 10. */
-  if (ECMA_IS_VALUE_ERROR (trap_result))
+  if (ECMA_IS_VALUE_ERROR (trap_result)
+      || (obj_p->u2.prototype_cp & ECMA_PROXY_SKIP_GET_CHECKS))
   {
     return trap_result;
   }
@@ -1147,9 +1170,9 @@ ecma_proxy_object_get (ecma_object_t *obj_p, /**< proxy object */
       ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Incorrect value is returned by a Proxy 'get' trap"));
     }
     else if (!(target_desc.flags & ECMA_PROP_IS_CONFIGURABLE)
-            && (target_desc.flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED))
-            && target_desc.get_p == NULL
-            && !ecma_is_value_undefined (trap_result))
+             && (target_desc.flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED))
+             && target_desc.get_p == NULL
+             && !ecma_is_value_undefined (trap_result))
     {
       ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Property of a Proxy is non-configurable and "
                                                        "does not have a getter function"));

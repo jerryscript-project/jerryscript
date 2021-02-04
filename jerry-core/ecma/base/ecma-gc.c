@@ -887,9 +887,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
       case ECMA_OBJECT_TYPE_PROXY:
       {
         ecma_gc_mark_proxy_object (object_p);
-        /* The protoype of the proxy should be "empty" (aside from the tag bits every other bit should be zero). */
-        JERRY_ASSERT ((object_p->u2.prototype_cp & ~JMEM_TAG_MASK) == 0);
-        /* Make sure that the prototype is not checked below. */
+        /* Prototype of proxy object is a bit set. */
         proto_cp = JMEM_CP_NULL;
         break;
       }
@@ -1696,8 +1694,6 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 #if ENABLED (JERRY_BUILTIN_PROXY)
     case ECMA_OBJECT_TYPE_PROXY:
     {
-      /* The protoype of the proxy should be "empty" (aside from the tag bits every other bit should be zero). */
-      JERRY_ASSERT ((object_p->u2.prototype_cp & ~JMEM_TAG_MASK) == 0);
       ext_object_size = sizeof (ecma_proxy_object_t);
       break;
     }

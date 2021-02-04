@@ -74,6 +74,7 @@ set(SOURCE_UNIT_TEST_MAIN_MODULES
   test-regression-3588.c
   test-resource-name.c
   test-snapshot.c
+  test-special-proxy.c
   test-string-to-number.c
   test-stringbuilder.c
   test-strings.c

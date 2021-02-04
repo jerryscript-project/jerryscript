@@ -269,7 +269,7 @@ def make_jerry(arguments):
     return proc.returncode
 
 def install_jerry(arguments):
-    install_target = 'INSTALL' if sys.platform == 'win32' else 'install'
+    install_target = 'INSTALL' if os.path.exists(os.path.join(arguments.builddir, 'Jerry.sln')) else 'install'
     make_cmd = ['cmake', '--build', arguments.builddir, '--config', arguments.build_type, '--target', install_target]
     return subprocess.call(make_cmd)
 

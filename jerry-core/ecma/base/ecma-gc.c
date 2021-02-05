@@ -1084,12 +1084,19 @@ ecma_gc_free_native_pointer (ecma_property_t *property_p) /**< property */
   JERRY_ASSERT (property_p != NULL);
 
   ecma_property_value_t *value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+
+  if (value_p->value == JMEM_CP_NULL)
+  {
+    return;
+  }
+
   ecma_native_pointer_t *native_pointer_p;
 
   native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t,
                                                       value_p->value);
+  JERRY_ASSERT (native_pointer_p != NULL);
 
-  while (native_pointer_p != NULL)
+  do
   {
     if (native_pointer_p->info_p != NULL)
     {
@@ -1107,6 +1114,7 @@ ecma_gc_free_native_pointer (ecma_property_t *property_p) /**< property */
 
     native_pointer_p = next_p;
   }
+  while (native_pointer_p != NULL);
 } /* ecma_gc_free_native_pointer */
 
 /**

@@ -3370,7 +3370,7 @@ void
 lexer_check_property_modifier (parser_context_t *context_p) /**< context */
 {
   JERRY_ASSERT (!(context_p->token.flags & LEXER_NO_SKIP_SPACES));
-  JERRY_ASSERT (context_p->token.type = LEXER_LITERAL
+  JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
                 && context_p->token.lit_location.type == LEXER_IDENT_LITERAL);
 
   lexer_skip_spaces (context_p);

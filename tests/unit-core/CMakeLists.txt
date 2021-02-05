@@ -59,6 +59,7 @@ set(SOURCE_UNIT_TEST_MAIN_MODULES
   test-mem-stats.c
   test-native-callback-nested.c
   test-native-instanceof.c
+  test-native-pointer.c
   test-newtarget.c
   test-number-converter.c
   test-number-to-int32.c

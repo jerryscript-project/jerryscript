@@ -63,32 +63,39 @@ ecma_create_native_pointer_property (ecma_object_t *obj_p, /**< object to create
   {
     ecma_property_value_t *value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
 
-    ecma_native_pointer_t *iter_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t, value_p->value);
-
-    /* There should be at least 1 native pointer in the chain */
-    JERRY_ASSERT (iter_p != NULL);
-
-    while (true)
+    if (value_p->value == JMEM_CP_NULL)
     {
-      if (iter_p->info_p == info_p)
-      {
-        /* The native info already exists -> update the corresponding data */
-        iter_p->data_p = native_p;
-        return false;
-      }
-
-      if (iter_p->next_p == NULL)
-      {
-        /* The native info does not exist -> append a new element to the chain */
-        break;
-      }
-
-      iter_p = iter_p->next_p;
+      native_pointer_p = jmem_heap_alloc_block (sizeof (ecma_native_pointer_t));
+      ECMA_SET_INTERNAL_VALUE_POINTER (value_p->value, native_pointer_p);
     }
+    else
+    {
+      ecma_native_pointer_t *iter_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t, value_p->value);
 
-    native_pointer_p = jmem_heap_alloc_block (sizeof (ecma_native_pointer_t));
+      /* There should be at least 1 native pointer in the chain */
+      JERRY_ASSERT (iter_p != NULL);
 
-    iter_p->next_p = native_pointer_p;
+      while (true)
+      {
+        if (iter_p->info_p == info_p)
+        {
+          /* The native info already exists -> update the corresponding data */
+          iter_p->data_p = native_p;
+          return false;
+        }
+
+        if (iter_p->next_p == NULL)
+        {
+          /* The native info does not exist -> append a new element to the chain */
+          break;
+        }
+
+        iter_p = iter_p->next_p;
+      }
+
+      native_pointer_p = jmem_heap_alloc_block (sizeof (ecma_native_pointer_t));
+      iter_p->next_p = native_pointer_p;
+    }
   }
 
   native_pointer_p->data_p = native_p;
@@ -128,12 +135,16 @@ ecma_get_native_pointer_value (ecma_object_t *obj_p, /**< object to get property
 
   ecma_property_value_t *value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
 
+  if (value_p->value == JMEM_CP_NULL)
+  {
+    return NULL;
+  }
+
   ecma_native_pointer_t *native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t,
                                                                              value_p->value);
-
   JERRY_ASSERT (native_pointer_p != NULL);
 
-  while (native_pointer_p != NULL)
+  do
   {
     if (native_pointer_p->info_p == info_p)
     {
@@ -142,6 +153,7 @@ ecma_get_native_pointer_value (ecma_object_t *obj_p, /**< object to get property
 
     native_pointer_p = native_pointer_p->next_p;
   }
+  while (native_pointer_p != NULL);
 
   return NULL;
 } /* ecma_get_native_pointer_value */
@@ -176,49 +188,40 @@ ecma_delete_native_pointer_property (ecma_object_t *obj_p, /**< object to delete
 
   ecma_property_value_t *value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
 
+  if (value_p->value == JMEM_CP_NULL)
+  {
+    return false;
+  }
+
   ecma_native_pointer_t *native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t,
                                                                              value_p->value);
-  ecma_native_pointer_t *prev_p = NULL;
-
   JERRY_ASSERT (native_pointer_p != NULL);
 
-  while (native_pointer_p != NULL)
+  ecma_native_pointer_t *prev_p = NULL;
+
+  do
   {
     if (native_pointer_p->info_p == info_p)
     {
       if (prev_p == NULL)
       {
-        if (native_pointer_p->next_p == NULL)
-        {
-          /* Only one native pointer property exists, so the property can be deleted as well. */
-          ecma_op_general_object_delete (obj_p, name_p, false);
-
-          jmem_heap_free_block (native_pointer_p, sizeof (ecma_native_pointer_t));
-          return true;
-        }
-        else
-        {
-          /* There are at least two native pointers and the first one should be deleted.
-             In this case the second element's data is copied to the head of the chain, and freed as well. */
-          ecma_native_pointer_t *next_p = native_pointer_p->next_p;
-          memcpy (native_pointer_p, next_p, sizeof (ecma_native_pointer_t));
-          jmem_heap_free_block (next_p, sizeof (ecma_native_pointer_t));
-          return true;
-        }
+        /* The first element is deleted from the chain: change the property value. */
+        ECMA_SET_INTERNAL_VALUE_ANY_POINTER (value_p->value, native_pointer_p->next_p);
       }
       else
       {
-        /* There are at least two native pointers and not the first element should be deleted.
-           In this case the current element's next element reference is copied to the previous element. */
+        /* A non-first element is deleted from the chain: update the previous pointer. */
         prev_p->next_p = native_pointer_p->next_p;
-        jmem_heap_free_block (native_pointer_p, sizeof (ecma_native_pointer_t));
-        return true;
       }
+
+      jmem_heap_free_block (native_pointer_p, sizeof (ecma_native_pointer_t));
+      return true;
     }
 
     prev_p = native_pointer_p;
     native_pointer_p = native_pointer_p->next_p;
   }
+  while (native_pointer_p != NULL);
 
   return false;
 } /* ecma_delete_native_pointer_property */

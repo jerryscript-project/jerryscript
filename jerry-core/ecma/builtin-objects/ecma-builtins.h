@@ -140,8 +140,6 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p,
                                        ecma_collection_t *prop_names_p,
                                        ecma_property_counter_t *prop_counter_p);
 bool
-ecma_builtin_is (ecma_object_t *object_p, ecma_builtin_id_t builtin_id);
-bool
 ecma_builtin_is_global (ecma_object_t *object_p);
 ecma_object_t *
 ecma_builtin_get (ecma_builtin_id_t builtin_id);

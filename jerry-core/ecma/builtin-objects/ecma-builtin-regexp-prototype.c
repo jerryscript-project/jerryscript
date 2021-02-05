@@ -744,7 +744,7 @@ ecma_builtin_regexp_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
     {
       if (!ecma_object_class_is (obj_p, LIT_MAGIC_STRING_REGEXP_UL))
       {
-        if (ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_REGEXP_PROTOTYPE))
+        if (obj_p == ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE))
         {
           return ecma_make_magic_string_value (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP);
         }
@@ -764,7 +764,7 @@ ecma_builtin_regexp_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
     {
       if (!ecma_object_class_is (obj_p, LIT_MAGIC_STRING_REGEXP_UL))
       {
-        if (ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_REGEXP_PROTOTYPE))
+        if (obj_p == ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE))
         {
           return ECMA_VALUE_UNDEFINED;
         }

@@ -8603,13 +8603,6 @@
   <test id="built-ins/FinalizationRegistry/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/Function/internals/Call/class-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/NativeErrors/AggregateError/proto-from-ctor-realm.js"><reason></reason></test>
-  <test id="built-ins/RegExp/prototype/dotAll/cross-realm.js"><reason></reason></test>
-  <test id="built-ins/RegExp/prototype/global/cross-realm.js"><reason></reason></test>
-  <test id="built-ins/RegExp/prototype/ignoreCase/cross-realm.js"><reason></reason></test>
-  <test id="built-ins/RegExp/prototype/multiline/cross-realm.js"><reason></reason></test>
-  <test id="built-ins/RegExp/prototype/source/cross-realm.js"><reason></reason></test>
-  <test id="built-ins/RegExp/prototype/sticky/cross-realm.js"><reason></reason></test>
-  <test id="built-ins/RegExp/prototype/unicode/cross-realm.js"><reason></reason></test>
   <test id="built-ins/SharedArrayBuffer/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/proto-from-ctor-realm-sab.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors/buffer-arg/proto-from-ctor-realm-sab.js"><reason></reason></test>

@@ -3244,47 +3244,53 @@ jerry_property_descriptor_from_ecma (const ecma_property_descriptor_t *prop_desc
   jerry_property_descriptor_t prop_desc;
   jerry_init_property_descriptor_fields (&prop_desc);
 
-  if (prop_desc_p->flags & (ECMA_PROP_IS_ENUMERABLE_DEFINED))
+  if (prop_desc_p->flags & ECMA_PROP_IS_ENUMERABLE_DEFINED)
   {
     prop_desc.is_enumerable_defined = true;
-    prop_desc.is_enumerable = prop_desc_p->flags & (ECMA_PROP_IS_ENUMERABLE);
+    prop_desc.is_enumerable = prop_desc_p->flags & ECMA_PROP_IS_ENUMERABLE;
   }
 
-  if (prop_desc_p->flags & (ECMA_PROP_IS_CONFIGURABLE_DEFINED))
+  if (prop_desc_p->flags & ECMA_PROP_IS_CONFIGURABLE_DEFINED)
   {
     prop_desc.is_configurable_defined = true;
-    prop_desc.is_configurable = prop_desc_p->flags & (ECMA_PROP_IS_CONFIGURABLE);
+    prop_desc.is_configurable = prop_desc_p->flags & ECMA_PROP_IS_CONFIGURABLE;
   }
 
-  prop_desc.is_value_defined = prop_desc_p->flags & (ECMA_PROP_IS_VALUE_DEFINED);
+  prop_desc.is_value_defined = prop_desc_p->flags & ECMA_PROP_IS_VALUE_DEFINED;
 
   if (prop_desc.is_value_defined)
   {
     prop_desc.value = prop_desc_p->value;
   }
 
-  if (prop_desc_p->flags & (ECMA_PROP_IS_WRITABLE_DEFINED))
+  if (prop_desc_p->flags & ECMA_PROP_IS_WRITABLE_DEFINED)
   {
     prop_desc.is_writable_defined = true;
-    prop_desc.is_writable = prop_desc_p->flags & (ECMA_PROP_IS_WRITABLE);
+    prop_desc.is_writable = prop_desc_p->flags & ECMA_PROP_IS_WRITABLE;
   }
 
-  if (prop_desc_p->flags & (ECMA_PROP_IS_GET_DEFINED))
+  if (prop_desc_p->flags & ECMA_PROP_IS_GET_DEFINED)
   {
-    ecma_value_t getter = ecma_make_object_value (prop_desc_p->get_p);
+    prop_desc.getter = ECMA_VALUE_NULL;
     prop_desc.is_get_defined = true;
 
-    if (ecma_op_is_callable (getter))
+    if (prop_desc_p->get_p != NULL)
     {
-      prop_desc.getter = getter;
+      prop_desc.getter = ecma_make_object_value (prop_desc_p->get_p);
+      JERRY_ASSERT (ecma_op_is_callable (prop_desc.getter));
     }
   }
 
-  if (prop_desc_p->flags & (ECMA_PROP_IS_SET_DEFINED))
+  if (prop_desc_p->flags & ECMA_PROP_IS_SET_DEFINED)
   {
-    ecma_value_t setter = ecma_make_object_value (prop_desc_p->set_p);
+    prop_desc.setter = ECMA_VALUE_NULL;
     prop_desc.is_set_defined = true;
-    prop_desc.setter = setter;
+
+    if (prop_desc_p->set_p != NULL)
+    {
+      prop_desc.setter = ecma_make_object_value (prop_desc_p->set_p);
+      JERRY_ASSERT (ecma_op_is_callable (prop_desc.setter));
+    }
   }
 
   return prop_desc;

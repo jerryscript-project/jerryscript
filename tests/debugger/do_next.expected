@@ -2,8 +2,19 @@ Connecting to: localhost:5001
 Stopped at tests/debugger/do_next.js:15
 (jerry-debugger) next
 out: next test
-Stopped at tests/debugger/do_next.js:17
+Stopped at tests/debugger/do_next.js:28
 (jerry-debugger) next
-out: var cat
-Stopped at tests/debugger/do_next.js:18
+out: Func
+Stopped at tests/debugger/do_next.js:30
+(jerry-debugger) n
+Stopped at tests/debugger/do_next.js:33
+(jerry-debugger) n
+out: Func
+Stopped at tests/debugger/do_next.js:35
+(jerry-debugger) next
+Stopped at tests/debugger/do_next.js:39
+(jerry-debugger) n
+Stopped at tests/debugger/do_next.js:40
+(jerry-debugger) next
+Stopped at tests/debugger/do_next.js:42
 (jerry-debugger) c

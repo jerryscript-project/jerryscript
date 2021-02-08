@@ -86,7 +86,7 @@ ecma_date_parse_date_chars (const lit_utf8_byte_t **str_p, /**< pointer to the c
 static bool
 ecma_date_parse_special_char (const lit_utf8_byte_t **str_p, /**< pointer to the cesu8 string */
                               const lit_utf8_byte_t *str_end_p, /**< pointer to the end of the string */
-                              const lit_utf8_byte_t expected_char) /**< expected character */
+                              ecma_char_t expected_char) /**< expected character */
 {
   if ((*str_p < str_end_p) && (**str_p == expected_char))
   {
@@ -96,6 +96,16 @@ ecma_date_parse_special_char (const lit_utf8_byte_t **str_p, /**< pointer to the
 
   return false;
 } /* ecma_date_parse_special_char */
+
+static inline bool JERRY_ATTR_ALWAYS_INLINE
+ecma_date_check_two_chars (const lit_utf8_byte_t *str_p, /**< pointer to the cesu8 string */
+                           const lit_utf8_byte_t *str_end_p, /**< pointer to the end of the string */
+                           ecma_char_t expected_char1, /**< first expected character */
+                           ecma_char_t expected_char2) /**< second expected character */
+{
+  return (str_p < str_end_p
+          && (*str_p == expected_char1 || *str_p == expected_char2));
+} /* ecma_date_check_two_chars */
 
 /**
  * Helper function to try to parse a 4-5-6 digit year with optional negative sign in a date string
@@ -109,7 +119,7 @@ static ecma_number_t
 ecma_date_parse_year (const lit_utf8_byte_t **str_p, /**< pointer to the cesu8 string */
                       const lit_utf8_byte_t *str_end_p) /**< pointer to the end of the string */
 {
-  bool is_year_sign_negative = ecma_date_parse_special_char (str_p, str_end_p, '-');
+  bool is_year_sign_negative = ecma_date_parse_special_char (str_p, str_end_p, LIT_CHAR_MINUS);
   const lit_utf8_byte_t *str_start_p = *str_p;
   int32_t parsed_year = 0;
 
@@ -255,16 +265,18 @@ ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to t
  * @return the parsed date as ecma_number_t or NaN otherwise
  */
 static ecma_number_t
-ecma_builtin_date_parse_ISO_string_format (const lit_utf8_byte_t *date_str_curr_p,
-                                           const lit_utf8_byte_t *date_str_end_p)
+ecma_builtin_date_parse_basic (const lit_utf8_byte_t *date_str_curr_p,
+                               const lit_utf8_byte_t *date_str_end_p)
 {
   /* 1. read year */
 
   uint32_t year_digits = 4;
 
-  bool is_year_sign_negative = ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, '-');
-  if (is_year_sign_negative || ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, '+'))
+  bool is_year_sign_negative = false;
+
+  if (ecma_date_check_two_chars (date_str_curr_p, date_str_end_p, LIT_CHAR_MINUS, LIT_CHAR_PLUS))
   {
+    is_year_sign_negative = (*date_str_curr_p++ == LIT_CHAR_MINUS);
     year_digits = 6;
   }
 
@@ -282,21 +294,24 @@ ecma_builtin_date_parse_ISO_string_format (const lit_utf8_byte_t *date_str_curr_
     ecma_number_t time = ECMA_NUMBER_ZERO;
 
     /* 2. read month if any */
-    if (ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, '-'))
+    if (ecma_date_check_two_chars (date_str_curr_p, date_str_end_p, LIT_CHAR_MINUS, LIT_CHAR_SLASH))
     {
+      lit_utf8_byte_t separator = *date_str_curr_p++;
       month = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2, 1, 12);
-    }
 
-    /* 3. read day if any */
-    if (ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, '-'))
-    {
-      day = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2, 1, 31);
+      /* 3. read day if any */
+      if (ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, separator))
+      {
+        day = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2, 1, 31);
+      }
     }
 
     bool is_utc = true;
     /* 4. read time if any */
-    if (ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, 'T'))
+    if (ecma_date_check_two_chars (date_str_curr_p, date_str_end_p, LIT_CHAR_UPPERCASE_T, LIT_CHAR_SP))
     {
+      date_str_curr_p++;
+
       ecma_number_t hours = ECMA_NUMBER_ZERO;
       ecma_number_t minutes = ECMA_NUMBER_ZERO;
       ecma_number_t seconds = ECMA_NUMBER_ZERO;
@@ -310,17 +325,17 @@ ecma_builtin_date_parse_ISO_string_format (const lit_utf8_byte_t *date_str_curr_
         /* 4.1 read hours and minutes */
         hours = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2, 0, 24);
 
-        if (ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, ':'))
+        if (ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, LIT_CHAR_COLON))
         {
           minutes = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2, 0, 59);
 
           /* 4.2 read seconds if any */
-          if (ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, ':'))
+          if (ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, LIT_CHAR_COLON))
           {
             seconds = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2, 0, 59);
 
             /* 4.3 read milliseconds if any */
-            if (ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, '.'))
+            if (ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, LIT_CHAR_DOT))
             {
               milliseconds = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 3, 0, 999);
             }
@@ -344,17 +359,17 @@ ecma_builtin_date_parse_ISO_string_format (const lit_utf8_byte_t *date_str_curr_
       }
 
       /* 4.4 read timezone if any */
-      if (ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, 'Z') && !ecma_number_is_nan (time))
+      if (ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, LIT_CHAR_UPPERCASE_Z)
+          && !ecma_number_is_nan (time))
       {
         time = ecma_date_make_time (hours, minutes, seconds, milliseconds);
       }
       else
       {
-        bool is_timezone_sign_negative;
-        if ((lit_utf8_string_length (date_str_curr_p, (lit_utf8_size_t) (date_str_end_p - date_str_curr_p)) == 6)
-            && ((is_timezone_sign_negative = ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, '-'))
-            || ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, '+')))
+        if (lit_utf8_string_length (date_str_curr_p, (lit_utf8_size_t) (date_str_end_p - date_str_curr_p)) == 6
+            && ecma_date_check_two_chars (date_str_curr_p, date_str_end_p, LIT_CHAR_MINUS, LIT_CHAR_PLUS))
         {
+          bool is_timezone_sign_negative = (*date_str_curr_p++ == LIT_CHAR_MINUS);
           /* read hours and minutes */
           hours = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2, 0, 24);
 
@@ -363,7 +378,7 @@ ecma_builtin_date_parse_ISO_string_format (const lit_utf8_byte_t *date_str_curr_
             hours = ECMA_NUMBER_ZERO;
           }
 
-          ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, ':');
+          ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, LIT_CHAR_COLON);
           minutes = ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, 2, 0, 59);
           ecma_number_t timezone_offset = ecma_date_make_time (hours, minutes, ECMA_NUMBER_ZERO, ECMA_NUMBER_ZERO);
           time += is_timezone_sign_negative ? timezone_offset : -timezone_offset;
@@ -389,7 +404,7 @@ ecma_builtin_date_parse_ISO_string_format (const lit_utf8_byte_t *date_str_curr_
     }
   }
   return ecma_number_make_nan ();
-} /* ecma_builtin_date_parse_ISO_string_format */
+} /* ecma_builtin_date_parse_basic */
 
 /**
  * Helper function used by ecma_builtin_date_parse
@@ -414,9 +429,9 @@ ecma_builtin_date_parse_toString_formats (const lit_utf8_byte_t *date_str_curr_p
     return nan;
   }
 
-  const bool is_toUTCString_format = ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, ',');
+  const bool is_toUTCString_format = ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, LIT_CHAR_COMMA);
 
-  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, ' '))
+  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, LIT_CHAR_SP))
   {
     return nan;
   }
@@ -431,7 +446,7 @@ ecma_builtin_date_parse_toString_formats (const lit_utf8_byte_t *date_str_curr_p
       return nan;
     }
 
-    if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, ' '))
+    if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, LIT_CHAR_SP))
     {
       return nan;
     }
@@ -450,7 +465,7 @@ ecma_builtin_date_parse_toString_formats (const lit_utf8_byte_t *date_str_curr_p
       return nan;
     }
 
-    if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, ' '))
+    if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, LIT_CHAR_SP))
     {
       return nan;
     }
@@ -462,7 +477,7 @@ ecma_builtin_date_parse_toString_formats (const lit_utf8_byte_t *date_str_curr_p
     }
   }
 
-  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, ' '))
+  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, LIT_CHAR_SP))
   {
     return nan;
   }
@@ -473,7 +488,7 @@ ecma_builtin_date_parse_toString_formats (const lit_utf8_byte_t *date_str_curr_p
     return nan;
   }
 
-  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, ' '))
+  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, LIT_CHAR_SP))
   {
     return nan;
   }
@@ -484,7 +499,7 @@ ecma_builtin_date_parse_toString_formats (const lit_utf8_byte_t *date_str_curr_p
     return nan;
   }
 
-  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, ':'))
+  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, LIT_CHAR_COLON))
   {
     return nan;
   }
@@ -495,7 +510,7 @@ ecma_builtin_date_parse_toString_formats (const lit_utf8_byte_t *date_str_curr_p
     return nan;
   }
 
-  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, ':'))
+  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, LIT_CHAR_COLON))
   {
     return nan;
   }
@@ -511,22 +526,22 @@ ecma_builtin_date_parse_toString_formats (const lit_utf8_byte_t *date_str_curr_p
     return nan;
   }
 
-  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, ' '))
+  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, LIT_CHAR_SP))
   {
     return nan;
   }
 
-  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, 'G'))
+  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, LIT_CHAR_UPPERCASE_G))
   {
     return nan;
   }
 
-  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, 'M'))
+  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, LIT_CHAR_UPPERCASE_M))
   {
     return nan;
   }
 
-  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, 'T'))
+  if (!ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, LIT_CHAR_UPPERCASE_T))
   {
     return nan;
   }
@@ -535,8 +550,8 @@ ecma_builtin_date_parse_toString_formats (const lit_utf8_byte_t *date_str_curr_p
 
   if (!is_toUTCString_format)
   {
-    bool is_timezone_sign_negative = ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, '-');
-    if (!is_timezone_sign_negative && !ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, '+'))
+    bool is_timezone_sign_negative = ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, LIT_CHAR_MINUS);
+    if (!is_timezone_sign_negative && !ecma_date_parse_special_char (&date_str_curr_p, date_str_end_p, LIT_CHAR_PLUS))
     {
       return nan;
     }
@@ -599,8 +614,8 @@ ecma_builtin_date_parse (ecma_value_t this_arg, /**< this argument */
   const lit_utf8_byte_t *date_str_curr_p = date_start_p;
   const lit_utf8_byte_t *date_str_end_p = date_start_p + date_start_size;
 
-  // try to parse date string as ISO string - ECMA-262 v5, 15.9.1.15
-  ecma_number_t ret_value = ecma_builtin_date_parse_ISO_string_format (date_str_curr_p, date_str_end_p);
+  // try to parse date string as ISO string and allow some variants - ECMA-262 v5, 15.9.1.15
+  ecma_number_t ret_value = ecma_builtin_date_parse_basic (date_str_curr_p, date_str_end_p);
 
   if (ecma_number_is_nan (ret_value))
   {

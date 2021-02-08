@@ -302,7 +302,14 @@ parser_emit_unary_lvalue_opcode (parser_context_t *context_p, /**< context */
 
 #if JERRY_ESNEXT
     parser_check_invalid_new_target (context_p, opcode);
-    parser_raise_error (context_p, PARSER_ERR_INVALID_LHS_POSTFIX_OP);
+    if (opcode == CBC_PRE_INCR || opcode == CBC_PRE_DECR)
+    {
+      parser_raise_error (context_p, PARSER_ERR_INVALID_LHS_PREFIX_OP);
+    }
+    else
+    {
+      parser_raise_error (context_p, PARSER_ERR_INVALID_LHS_POSTFIX_OP);
+    }
 #else /* JERRY_ESNEXT */
     parser_emit_cbc_ext (context_p, CBC_EXT_THROW_REFERENCE_ERROR);
 #endif /* JERRY_ESNEXT */

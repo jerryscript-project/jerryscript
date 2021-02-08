@@ -1110,6 +1110,10 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Invalid left-hand side expression in postfix operation";
     }
+    case PARSER_ERR_INVALID_LHS_PREFIX_OP:
+    {
+      return "Invalid left-hand side expression in prefix operation";
+    }
     case PARSER_ERR_INVALID_LHS_FOR_LOOP:
     {
       return "Invalid left-hand-side in for-loop";

@@ -94,6 +94,7 @@ typedef enum
   PARSER_ERR_DUPLICATED_PROTO,                        /**< duplicated __proto__ fields are not allowed */
   PARSER_ERR_INVALID_LHS_ASSIGNMENT,                  /**< invalid LeftHandSide in assignment */
   PARSER_ERR_INVALID_LHS_POSTFIX_OP,                  /**< invalid LeftHandSide expression in postfix operation */
+  PARSER_ERR_INVALID_LHS_PREFIX_OP,                   /**< invalid LeftHandSide expression in prefix operation */
   PARSER_ERR_INVALID_LHS_FOR_LOOP,                    /**< invalid LeftHandSide in for-loop */
 #endif /* JERRY_ESNEXT */
   PARSER_ERR_DELETE_IDENT_NOT_ALLOWED,                /**< identifier delete is not allowed in strict mode */

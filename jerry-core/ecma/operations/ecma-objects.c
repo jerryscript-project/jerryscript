@@ -2605,6 +2605,42 @@ ecma_op_object_enumerate (ecma_object_t *obj_p) /**< object */
   return return_names_p;
 } /* ecma_op_object_enumerate */
 
+#ifndef JERRY_NDEBUG
+
+/**
+ * Check if passed object is the instance of specified built-in.
+ *
+ * @return true  - if the object is instance of the specified built-in
+ *         false - otherwise
+ */
+static bool
+ecma_builtin_is (ecma_object_t *object_p, /**< pointer to an object */
+                 ecma_builtin_id_t builtin_id) /**< id of built-in to check on */
+{
+  JERRY_ASSERT (object_p != NULL && !ecma_is_lexical_environment (object_p));
+  JERRY_ASSERT (builtin_id < ECMA_BUILTIN_ID__COUNT);
+
+  if (!ecma_get_object_is_builtin (object_p))
+  {
+    return false;
+  }
+
+  if (ECMA_BUILTIN_IS_EXTENDED_BUILT_IN (ecma_get_object_type (object_p)))
+  {
+    ecma_extended_built_in_object_t *extended_built_in_object_p = (ecma_extended_built_in_object_t *) object_p;
+
+    return (extended_built_in_object_p->built_in.id == builtin_id
+            && extended_built_in_object_p->built_in.routine_id == 0);
+  }
+
+  ecma_extended_object_t *built_in_object_p = (ecma_extended_object_t *) object_p;
+
+  return (built_in_object_p->u.built_in.id == builtin_id
+          && built_in_object_p->u.built_in.routine_id == 0);
+} /* ecma_builtin_is */
+
+#endif /* !JERRY_NDEBUG */
+
 /**
  * The function is used in the assert of ecma_object_get_class_name
  *

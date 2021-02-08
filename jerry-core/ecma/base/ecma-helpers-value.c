@@ -277,10 +277,10 @@ extern inline bool JERRY_ATTR_CONST JERRY_ATTR_ALWAYS_INLINE
 ecma_are_values_integer_numbers (ecma_value_t first_value, /**< first ecma value */
                                  ecma_value_t second_value) /**< second ecma value */
 {
-  JERRY_STATIC_ASSERT (ECMA_DIRECT_TYPE_INTEGER_VALUE == 0,
-                       ecma_direct_type_integer_value_must_be_zero);
+  JERRY_STATIC_ASSERT (ECMA_DIRECT_TYPE_INTEGER_VALUE == 8,
+                       ecma_direct_type_integer_value_must_be_8);
 
-  return ((first_value | second_value) & ECMA_DIRECT_TYPE_MASK) == ECMA_DIRECT_TYPE_INTEGER_VALUE;
+  return (((first_value ^ 8) | (second_value ^ 8)) & ECMA_DIRECT_TYPE_MASK) == 0;
 } /* ecma_are_values_integer_numbers */
 
 /**

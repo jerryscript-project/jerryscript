@@ -31,8 +31,8 @@ JERRY_STATIC_ASSERT (sizeof (ecma_value_t) == sizeof (ecma_integer_value_t),
 JERRY_STATIC_ASSERT (ECMA_DIRECT_SHIFT == ECMA_VALUE_SHIFT + 1,
                      currently_directly_encoded_values_has_one_extra_flag);
 
-JERRY_STATIC_ASSERT (((1 << (ECMA_DIRECT_SHIFT - 1)) | ECMA_TYPE_DIRECT) == ECMA_DIRECT_TYPE_SIMPLE_VALUE,
-                     currently_directly_encoded_values_start_after_direct_type_simple_value);
+JERRY_STATIC_ASSERT (0 == ECMA_DIRECT_TYPE_SIMPLE_VALUE,
+                     ecma_direct_type_simple_value_must_be_0);
 /**
  * Position of the sign bit in ecma-numbers
  */

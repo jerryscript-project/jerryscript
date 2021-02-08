@@ -166,14 +166,14 @@ typedef int32_t ecma_integer_value_t;
 #define ECMA_DIRECT_TYPE_MASK ((1u << ECMA_VALUE_SHIFT) | ECMA_VALUE_TYPE_MASK)
 
 /**
- * Ecma integer value type
+ * Ecma direct integer value type
  */
-#define ECMA_DIRECT_TYPE_INTEGER_VALUE ((0u << ECMA_VALUE_SHIFT) | ECMA_TYPE_DIRECT)
+#define ECMA_DIRECT_TYPE_INTEGER_VALUE ((1u << ECMA_VALUE_SHIFT) | ECMA_TYPE_DIRECT)
 
 /**
- * Ecma simple value type
+ * Ecma direct simple value type
  */
-#define ECMA_DIRECT_TYPE_SIMPLE_VALUE ((1u << ECMA_VALUE_SHIFT) | ECMA_TYPE_DIRECT)
+#define ECMA_DIRECT_TYPE_SIMPLE_VALUE ((0u << ECMA_VALUE_SHIFT) | ECMA_TYPE_DIRECT)
 
 /**
  * Shift for directly encoded values in ecma_value_t

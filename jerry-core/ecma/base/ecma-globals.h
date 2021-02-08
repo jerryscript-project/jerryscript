@@ -220,8 +220,10 @@ enum
 #if JERRY_ESNEXT
   ECMA_VALUE_SYNC_ITERATOR = ECMA_MAKE_VALUE (13), /**< option for ecma_op_get_iterator: sync iterator is requested */
   ECMA_VALUE_ASYNC_ITERATOR = ECMA_MAKE_VALUE (14), /**< option for ecma_op_get_iterator: async iterator is requested */
-  ECMA_VALUE_GLOBAL_THIS = ECMA_MAKE_VALUE (15), /**< globalThis built-in */
 #endif /* JERRY_ESNEXT */
+#if JERRY_BUILTIN_GLOBAL_THIS
+  ECMA_VALUE_GLOBAL_THIS = ECMA_MAKE_VALUE (15), /**< globalThis built-in */
+#endif /* JERRY_BUILTIN_GLOBAL_THIS */
 };
 
 #if !JERRY_NUMBER_TYPE_FLOAT64

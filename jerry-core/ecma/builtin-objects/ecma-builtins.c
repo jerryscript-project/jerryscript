@@ -1080,7 +1080,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
     {
       value = curr_property_p->value;
 
-#if JERRY_ESNEXT
+#if JERRY_BUILTIN_GLOBAL_THIS
       if (value == ECMA_VALUE_GLOBAL_THIS)
       {
         /* Only the global object has globalThis property. */
@@ -1088,7 +1088,7 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
         ecma_ref_object (object_p);
         value = ecma_make_object_value (object_p);
       }
-#endif /* JERRY_ESNEXT */
+#endif /* JERRY_BUILTIN_GLOBAL_THIS */
       break;
     }
     case ECMA_BUILTIN_PROPERTY_NUMBER:

@@ -106,6 +106,7 @@ typedef enum
   JERRY_FEATURE_WEAKSET, /**< WeakSet support */
   JERRY_FEATURE_BIGINT, /**< BigInt support */
   JERRY_FEATURE_REALM, /**< realm support */
+  JERRY_FEATURE_GLOBAL_THIS, /**< GlobalThisValue support */
   JERRY_FEATURE__COUNT /**< number of features. NOTE: must be at the end of the list */
 } jerry_feature_t;
 

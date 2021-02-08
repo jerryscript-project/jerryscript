@@ -1446,6 +1446,9 @@ jerry_is_feature_enabled (const jerry_feature_t feature) /**< feature to check *
 #if JERRY_LOGGING
           || feature == JERRY_FEATURE_LOGGING
 #endif /* JERRY_LOGGING */
+#if JERRY_BUILTIN_GLOBAL_THIS
+          || feature == JERRY_FEATURE_GLOBAL_THIS
+#endif /* JERRY_BUILTIN_GLOBAL_THIS */
 #if JERRY_BUILTIN_MAP
           || feature == JERRY_FEATURE_MAP
 #endif /* JERRY_BUILTIN_MAP */

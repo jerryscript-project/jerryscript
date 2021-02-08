@@ -87,6 +87,10 @@
 # define JERRY_BUILTIN_DATAVIEW JERRY_ESNEXT
 #endif /* !defined (JERRY_BUILTIN_DATAVIEW) */
 
+#ifndef JERRY_BUILTIN_GLOBAL_THIS
+# define JERRY_BUILTIN_GLOBAL_THIS JERRY_ESNEXT
+#endif /* !defined (JERRY_BUILTIN_GLOBAL_THIS) */
+
 #ifndef JERRY_BUILTIN_MAP
 # define JERRY_BUILTIN_MAP JERRY_ESNEXT
 #endif /* !defined (JERRY_BUILTIN_MAP) */
@@ -535,6 +539,10 @@
 || ((JERRY_BUILTIN_DATAVIEW != 0) && (JERRY_BUILTIN_DATAVIEW != 1))
 # error "Invalid value for JERRY_BUILTIN_DATAVIEW macro."
 #endif
+#if !defined (JERRY_BUILTIN_GLOBAL_THIS) \
+|| ((JERRY_BUILTIN_GLOBAL_THIS != 0) && (JERRY_BUILTIN_GLOBAL_THIS != 1))
+# error "Invalid value for JERRY_BUILTIN_GLOBAL_THIS macro."
+#endif /* !defined (JERRY_BUILTIN_GLOBAL_THIS) */
 #if !defined (JERRY_BUILTIN_MAP) \
 || ((JERRY_BUILTIN_MAP != 0) && (JERRY_BUILTIN_MAP != 1))
 # error "Invalid value for JERRY_BUILTIN_MAP macro."

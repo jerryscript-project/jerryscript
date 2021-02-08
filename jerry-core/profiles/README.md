@@ -102,6 +102,8 @@ defined to `1`.
   Enables or disables the [BigInt](https://262.ecma-international.org/11.0/#sec-ecmascript-language-types-bigint-type) syntax and built-in.
 * `JERRY_BUILTIN_DATAVIEW`:
   Enables or disables the [DataView](https://www.ecma-international.org/ecma-262/6.0/#sec-dataview-objects) built-in.
+* `JERRY_BUILTIN_GLOBAL_THIS`:
+  Enables or disables the [GlobalThisValue](https://262.ecma-international.org/11.0/#sec-globalthis) built-in.
 * `JERRY_BUILTIN_MAP`:
   Enables or disables the [Map](http://www.ecma-international.org/ecma-262/6.0/#sec-keyed-collection) built-ins.
 * `JERRY_BUILTIN_PROMISE`:
@@ -147,6 +149,7 @@ defined to `1`.
   Equivalent with setting the following defines to the `JERRY_ESNEXT` value:
     * `JERRY_BUILTIN_BIGINT`
     * `JERRY_BUILTIN_DATAVIEW`
+    * `JERRY_BUILTIN_GLOBAL_THIS`
     * `JERRY_BUILTIN_MAP`
     * `JERRY_BUILTIN_PROMISE`
     * `JERRY_BUILTIN_PROXY`

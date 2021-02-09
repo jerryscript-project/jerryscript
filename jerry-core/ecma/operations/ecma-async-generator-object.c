@@ -57,7 +57,7 @@ ecma_async_generator_enqueue (vm_executable_object_t *async_generator_object_p, 
 
   ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target_p);
   JERRY_CONTEXT (current_new_target_p) = ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE);
-  ecma_value_t result = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_PROMISE_EXECUTOR_EMPTY);
+  ecma_value_t result = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_VALUE_UNDEFINED);
   JERRY_CONTEXT (current_new_target_p) = old_new_target_p;
   task_p->promise = result;
 

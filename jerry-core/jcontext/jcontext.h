@@ -183,6 +183,10 @@ struct jerry_context_t
 #if JERRY_BUILTIN_PROMISE
   ecma_job_queue_item_t *job_queue_head_p; /**< points to the head item of the job queue */
   ecma_job_queue_item_t *job_queue_tail_p; /**< points to the tail item of the job queue */
+#if JERRY_PROMISE_CALLBACK
+  void *promise_callback_user_p; /**< user pointer for promise callback */
+  jerry_promise_callback_t promise_callback; /**< user function for tracking Promise object operations */
+#endif /* JERRY_PROMISE_CALLBACK */
 #endif /* JERRY_BUILTIN_PROMISE */
 
 #if JERRY_VM_EXEC_STOP

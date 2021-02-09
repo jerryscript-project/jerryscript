@@ -107,6 +107,7 @@ typedef enum
   JERRY_FEATURE_BIGINT, /**< BigInt support */
   JERRY_FEATURE_REALM, /**< realm support */
   JERRY_FEATURE_GLOBAL_THIS, /**< GlobalThisValue support */
+  JERRY_FEATURE_PROMISE_CALLBACK, /**< Promise callback support */
   JERRY_FEATURE__COUNT /**< number of features. NOTE: must be at the end of the list */
 } jerry_feature_t;
 
@@ -726,9 +727,11 @@ bool jerry_foreach_object_property (const jerry_value_t obj_val, jerry_object_pr
 jerry_value_t jerry_object_get_property_names (const jerry_value_t obj_val, jerry_property_filter_t filter);
 jerry_value_t jerry_from_property_descriptor (const jerry_property_descriptor_t *src_prop_desc_p);
 jerry_value_t jerry_to_property_descriptor (jerry_value_t obj_value, jerry_property_descriptor_t *out_prop_desc_p);
+
 /**
  * Promise functions.
  */
+
 jerry_value_t jerry_resolve_or_reject_promise (jerry_value_t promise, jerry_value_t argument, bool is_resolve);
 
 /**
@@ -744,6 +747,53 @@ typedef enum
 
 jerry_value_t jerry_get_promise_result (const jerry_value_t promise);
 jerry_promise_state_t jerry_get_promise_state (const jerry_value_t promise);
+
+/**
+ * Event types for jerry_promise_callback_t callback function.
+ * The description of the 'object' and 'value' arguments are provided for each type.
+ */
+typedef enum
+{
+  JERRY_PROMISE_EVENT_CREATE = 0u, /**< a new Promise object is created
+                                    *   object: the new Promise object
+                                    *   value: parent Promise for `then` chains, undefined otherwise */
+  JERRY_PROMISE_EVENT_RESOLVE, /**< called when a Promise is about to be resolved
+                                *   object: the Promise object
+                                *   value: value for resolving */
+  JERRY_PROMISE_EVENT_REJECT, /**< called when a Promise is about to be rejected
+                               *   object: the Promise object
+                               *   value: value for rejecting */
+  JERRY_PROMISE_EVENT_BEFORE_REACTION_JOB, /**< called before executing a Promise reaction job
+                                            *   object: the Promise object
+                                            *   value: undefined */
+  JERRY_PROMISE_EVENT_AFTER_REACTION_JOB, /**< called after a Promise reaction job is completed
+                                           *   object: the Promise object
+                                           *   value: undefined */
+  JERRY_PROMISE_EVENT_ASYNC_AWAIT, /**< called when an async function awaits the result of a Promise object
+                                    *   object: internal object representing the execution status
+                                    *   value: the Promise object */
+  JERRY_PROMISE_EVENT_ASYNC_BEFORE_RESOLVE, /**< called when an async function is continued with resolve
+                                             *   object: internal object representing the execution status
+                                             *   value: value for resolving */
+  JERRY_PROMISE_EVENT_ASYNC_BEFORE_REJECT, /**< called when an async function is continued with reject
+                                            *   object: internal object representing the execution status
+                                            *   value: value for rejecting */
+  JERRY_PROMISE_EVENT_ASYNC_AFTER_RESOLVE, /**< called when an async function resolve is completed
+                                            *   object: internal object representing the execution status
+                                            *   value: value for resolving */
+  JERRY_PROMISE_EVENT_ASYNC_AFTER_REJECT, /**< called when an async function reject is completed
+                                           *   object: internal object representing the execution status
+                                           *   value: value for rejecting */
+} jerry_promise_event_type_t;
+
+/**
+ * Notification callback for tracking Promise and async function operations.
+ */
+typedef void (*jerry_promise_callback_t) (jerry_promise_event_type_t event_type,
+                                          const jerry_value_t object, const jerry_value_t value,
+                                          void *user_p);
+
+void jerry_promise_set_callback (jerry_promise_callback_t callback, void *user_p);
 
 /**
  * Symbol functions.

@@ -65,6 +65,12 @@ double jerry_port_get_local_time_zone_adjustment (double unix_ms,  /**< ms since
   ULARGE_INTEGER time, localTime;
 
   UnixTimeMsToFileTime (unix_ms, &fileTime);
+  /* If time is earlier than year 1601, then always using year 1601 to query time zone adjustment */
+  if (fileTime.dwHighDateTime >= 0x80000000)
+  {
+    fileTime.dwHighDateTime = 0;
+    fileTime.dwLowDateTime = 0;
+  }
 
   if (FileTimeToSystemTime (&fileTime, &systemTime)
       && SystemTimeToTzSpecificLocalTime (0, &systemTime, &localSystemTime)
@@ -76,6 +82,7 @@ double jerry_port_get_local_time_zone_adjustment (double unix_ms,  /**< ms since
     localTime.HighPart = localFileTime.dwHighDateTime;
     return (double) (((LONGLONG) localTime.QuadPart - (LONGLONG) time.QuadPart) / TicksPerMs);
   }
+  return 0.0;
 #elif defined (__GNUC__) || defined (__clang__)
   time_t now_time = (time_t) (unix_ms / 1000);
   double tza_s = 0.0;

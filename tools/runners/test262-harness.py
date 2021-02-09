@@ -58,6 +58,8 @@ import signal
 import threading
 import multiprocessing
 
+import util
+
 #######################################################################
 # based on _monkeyYaml.py
 #######################################################################
@@ -917,6 +919,7 @@ class TestSuite(object):
 
 
 def main():
+    util.setup_stdio()
     code = 0
     parser = build_options()
     (options, args) = parser.parse_args()

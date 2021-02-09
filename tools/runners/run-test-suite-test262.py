@@ -174,6 +174,7 @@ def update_exclude_list(args):
 
 
 def main(args):
+    util.setup_stdio()
     return_code = prepare_test262_test_suite(args)
     if return_code:
         return return_code

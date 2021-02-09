@@ -177,6 +177,6 @@ assert (Date.parse("Sat, 01 Jan 10000 00:00:00 GMT") == 253402300800000)
 assert (Date.parse("Sat, 13 Sep 275760 00:00:00 GMT") == 8640000000000000)
 assert (isNaN(Date.parse("Sat, 13 Sep 275760 00:00:01 GMT"))) // 8640000000001000 - out of range
 
-// Non standard date formats
+// Date formats compatible with Firefox and Chrome.
 assert (Date.parse("2000/01/01 12:12Z") == 946728720000)
 assert (Date.parse("1991-07-13 16:04Z") == 679421040000)

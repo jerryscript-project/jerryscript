@@ -37,6 +37,8 @@ def get_arguments():
                         help='Execution runtime (e.g. qemu)')
     parser.add_argument('--engine', metavar='FILE', required=True,
                         help='JerryScript binary to run tests with')
+    parser.add_argument('--test262-object', action='store_true', default=False,
+                        help='JerryScript engine create test262 object')
     parser.add_argument('--test-dir', metavar='DIR', required=True,
                         help='Directory contains test262 test suite')
     group = parser.add_mutually_exclusive_group(required=True)
@@ -182,6 +184,8 @@ def main(args):
         util.set_timezone('Pacific Standard Time')
 
     command = (args.runtime + ' ' + args.engine).strip()
+    if args.test262_object:
+        command += ' --test262-object'
 
     kwargs = {}
     if sys.version_info.major >= 3:

@@ -1410,6 +1410,18 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
       }
     }
 
+#if JERRY_ESNEXT
+    if (bytecode_p->status_flags & CBC_CODE_FLAGS_HAS_TAGGED_LITERALS)
+    {
+      ecma_collection_t *collection_p = ecma_compiled_code_get_tagged_template_collection (bytecode_p);
+
+      /* Since the objects in the tagged template collection are not strong referenced anymore by the compiled code
+         we can treat them as 'new' objects. */
+      JERRY_CONTEXT (ecma_gc_new_objects) += collection_p->item_count * 2;
+      ecma_collection_free_template_literal (collection_p);
+    }
+#endif /* JERRY_ESNEXT */
+
 #if JERRY_DEBUGGER
     if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
         && !(bytecode_p->status_flags & CBC_CODE_FLAGS_DEBUGGER_IGNORE)
@@ -1443,18 +1455,6 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
       return;
     }
 #endif /* JERRY_DEBUGGER */
-
-#if JERRY_ESNEXT
-    if (bytecode_p->status_flags & CBC_CODE_FLAGS_HAS_TAGGED_LITERALS)
-    {
-      ecma_collection_t *collection_p = ecma_compiled_code_get_tagged_template_collection (bytecode_p);
-
-      /* Since the objects in the tagged template collection are not strong referenced anymore by the compiled code
-         we can treat them as 'new' objects. */
-      JERRY_CONTEXT (ecma_gc_new_objects) += collection_p->item_count * 2;
-      ecma_collection_free_template_literal (collection_p);
-    }
-#endif /* JERRY_ESNEXT */
 
 #if JERRY_MEM_STATS
     jmem_stats_free_byte_code_bytes (((size_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG);

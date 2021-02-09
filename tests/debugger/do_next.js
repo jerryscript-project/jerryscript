@@ -14,15 +14,29 @@
 
 print("next test");
 
-print ("var cat");
-var cat = 'cat';
-
 function test()
 {
   function f()
   {
     return 0;
   }
+
+  print("Func");
+  return f;
 }
 
-test();
+var f = test(),
+    g,
+    h = f();
+
+{
+  let a = test(),
+      b,
+      c = a();
+}
+
+
+eval("(function () {} `a`)")
+gc();
+
+f();

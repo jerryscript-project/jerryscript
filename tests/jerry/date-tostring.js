@@ -43,8 +43,8 @@ assert (date.toUTCString() === "Wed, 12 Aug 2015 09:40:20 GMT");
 assert (date.toISOString() === "2015-08-12T09:40:20.000Z");
 
 assert (new Date (NaN).toDateString () == "Invalid Date");
-assert (new Date ("2015-02-13").toDateString () == "2015-02-13");
-assert (new Date ("2015-07-08T11:29:05.023").toDateString () == "2015-07-08");
+assert (new Date ("2015-02-13").toDateString () == "Fri Feb 13 2015");
+assert (new Date ("2015-07-08T11:29:05.023").toDateString () == "Wed Jul 08 2015");
 
 try
 {
@@ -58,8 +58,8 @@ catch (e)
 
 assert (new Date (NaN).toTimeString () == "Invalid Date");
 assert (new Date (Number.POSITIVE_INFINITY).toString () === "Invalid Date");
-assert (new Date ("2015-02-13").toTimeString () == "00:00:00.000");
-assert (new Date ("2015-07-08T11:29:05.023").toTimeString () == "11:29:05.023");
+assert (new Date ("2015-02-13").toTimeString () == "00:00:00 GMT+0000");
+assert (new Date ("2015-07-08T11:29:05.023").toTimeString () == "11:29:05 GMT+0000");
 
 try
 {

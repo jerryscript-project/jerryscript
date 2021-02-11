@@ -837,7 +837,7 @@ ecma_date_value_to_iso_string (ecma_number_t datetime_number) /**<datetime */
 ecma_value_t
 ecma_date_value_to_date_string (ecma_number_t datetime_number) /**<datetime */
 {
-  return ecma_date_to_string_format (datetime_number, "$Y-$O-$D");
+  return ecma_date_to_string_format (datetime_number, "$W $M $D $Y");
 } /* ecma_date_value_to_date_string */
 
 /**
@@ -852,7 +852,7 @@ ecma_date_value_to_date_string (ecma_number_t datetime_number) /**<datetime */
 ecma_value_t
 ecma_date_value_to_time_string (ecma_number_t datetime_number) /**<datetime */
 {
-  return ecma_date_to_string_format (datetime_number, "$h:$m:$s.$i");
+  return ecma_date_to_string_format (datetime_number, "$h:$m:$s GMT$z$Z");
 } /* ecma_date_value_to_time_string */
 
 /**

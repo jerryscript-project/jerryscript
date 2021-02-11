@@ -330,7 +330,7 @@ typedef struct
 typedef struct parser_mem_page_t
 {
   struct parser_mem_page_t *next_p;           /**< next page */
-  uint8_t bytes[1];                           /**< memory bytes */
+  uint8_t bytes[];                            /**< memory bytes, C99 flexible array member */
 } parser_mem_page_t;
 
 /**

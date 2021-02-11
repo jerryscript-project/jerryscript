@@ -111,16 +111,16 @@ ecma_builtin_is_regexp_exec (ecma_extended_object_t *obj_p);
  */
 
 /** Hours in a day. */
-#define ECMA_DATE_HOURS_PER_DAY         ((ecma_number_t) 24)
+#define ECMA_DATE_HOURS_PER_DAY         (24)
 
 /** Minutes in an hour. */
-#define ECMA_DATE_MINUTES_PER_HOUR      ((ecma_number_t) 60)
+#define ECMA_DATE_MINUTES_PER_HOUR      (60)
 
 /** Seconds in a minute. */
-#define ECMA_DATE_SECONDS_PER_MINUTE    ((ecma_number_t) 60)
+#define ECMA_DATE_SECONDS_PER_MINUTE    (60)
 
 /** Milliseconds in a second. */
-#define ECMA_DATE_MS_PER_SECOND         ((ecma_number_t) 1000)
+#define ECMA_DATE_MS_PER_SECOND         (1000)
 
 /** ECMA_DATE_MS_PER_MINUTE == 60000 */
 #define ECMA_DATE_MS_PER_MINUTE         (ECMA_DATE_MS_PER_SECOND * ECMA_DATE_SECONDS_PER_MINUTE)
@@ -129,7 +129,11 @@ ecma_builtin_is_regexp_exec (ecma_extended_object_t *obj_p);
 #define ECMA_DATE_MS_PER_HOUR           (ECMA_DATE_MS_PER_MINUTE * ECMA_DATE_MINUTES_PER_HOUR)
 
 /** ECMA_DATE_MS_PER_DAY == 86400000 */
-#define ECMA_DATE_MS_PER_DAY            (ECMA_DATE_MS_PER_HOUR * ECMA_DATE_HOURS_PER_DAY)
+#define ECMA_DATE_MS_PER_DAY            ((ECMA_DATE_MS_PER_HOUR * ECMA_DATE_HOURS_PER_DAY))
+
+#define ECMA_DATE_DAYS_IN_YEAR          (365)
+
+#define ECMA_DATE_DAYS_IN_LEAP_YEAR     (366)
 
 /**
  * This gives a range of 8,640,000,000,000,000 milliseconds
@@ -150,23 +154,23 @@ typedef enum
 extern const char day_names_p[7][3];
 extern const char month_names_p[12][3];
 
-ecma_number_t ecma_date_day (ecma_number_t time);
-ecma_number_t ecma_date_time_within_day (ecma_number_t time);
-ecma_number_t ecma_date_year_from_time (ecma_number_t time);
-ecma_number_t ecma_date_month_from_time (ecma_number_t time);
-ecma_number_t ecma_date_date_from_time (ecma_number_t time);
-ecma_number_t ecma_date_week_day (ecma_number_t time);
+int32_t ecma_date_day_from_time (ecma_number_t time);
+int32_t ecma_date_year_from_time (ecma_number_t time);
+int32_t ecma_date_month_from_time (ecma_number_t time);
+int32_t ecma_date_date_from_time (ecma_number_t time);
+int32_t ecma_date_week_day (ecma_number_t time);
+int32_t ecma_date_hour_from_time (ecma_number_t time);
+int32_t ecma_date_min_from_time (ecma_number_t time);
+int32_t ecma_date_sec_from_time (ecma_number_t time);
+int32_t ecma_date_ms_from_time (ecma_number_t time);
+int32_t ecma_date_time_in_day_from_time (ecma_number_t time);
+
 ecma_number_t ecma_date_local_time_zone_adjustment (ecma_number_t time);
 ecma_number_t ecma_date_utc (ecma_number_t time);
-ecma_number_t ecma_date_hour_from_time (ecma_number_t time);
-ecma_number_t ecma_date_min_from_time (ecma_number_t time);
-ecma_number_t ecma_date_sec_from_time (ecma_number_t time);
-ecma_number_t ecma_date_ms_from_time (ecma_number_t time);
 ecma_number_t ecma_date_make_time (ecma_number_t hour, ecma_number_t min, ecma_number_t sec, ecma_number_t ms);
 ecma_number_t ecma_date_make_day (ecma_number_t year, ecma_number_t month, ecma_number_t date);
 ecma_number_t ecma_date_make_date (ecma_number_t day, ecma_number_t time);
 ecma_number_t ecma_date_time_clip (ecma_number_t time);
-ecma_number_t ecma_date_timezone_offset (ecma_number_t time);
 
 ecma_value_t ecma_date_value_to_string (ecma_number_t datetime_number);
 ecma_value_t ecma_date_value_to_utc_string (ecma_number_t datetime_number);

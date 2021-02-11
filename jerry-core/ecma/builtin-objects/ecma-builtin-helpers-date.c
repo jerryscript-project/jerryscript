@@ -32,211 +32,168 @@
  * @{
  */
 
+/**
+ * Day names
+ */
 const char day_names_p[7][3] =
 {
   "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
 };
 
+/**
+ * Month names
+ */
 const char month_names_p[12][3] =
 {
   "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
 
 /**
- * Helper function to get day number from time value.
+ * Calculate the elapsed days since Unix Epoch
  *
- * See also:
- *          ECMA-262 v5, 15.9.1.2
- *
- * @return time value for day number
+ * @return elapsed days since Unix Epoch
  */
-extern inline ecma_number_t JERRY_ATTR_ALWAYS_INLINE
-ecma_date_day (ecma_number_t time) /**< time value */
+extern inline int32_t JERRY_ATTR_ALWAYS_INLINE
+ecma_date_day_from_time (ecma_number_t time) /**< time value */
 {
   JERRY_ASSERT (!ecma_number_is_nan (time));
 
-  return (ecma_number_t) floor (time / ECMA_DATE_MS_PER_DAY);
-} /* ecma_date_day */
-
-/**
- * Helper function to get time within day from time value.
- *
- * See also:
- *          ECMA-262 v5, 15.9.1.2
- *
- * @return time value within the day
- */
-extern inline ecma_number_t JERRY_ATTR_ALWAYS_INLINE
-ecma_date_time_within_day (ecma_number_t time) /**< time value */
-{
-  JERRY_ASSERT (!ecma_number_is_nan (time));
-
-  ecma_number_t modulo = fmod (time, ECMA_DATE_MS_PER_DAY);
-  if (modulo < 0)
+  if (time < 0)
   {
-    modulo += ECMA_DATE_MS_PER_DAY;
+    time -= ECMA_DATE_MS_PER_DAY - 1;
   }
 
-  return modulo;
-} /* ecma_date_time_within_day */
+  return (int32_t) (time / ECMA_DATE_MS_PER_DAY);
+} /* ecma_date_day_from_time */
 
 /**
- * Helper function to get the day number of the first day of a year.
+ * Abstract operation: DayFromYear
  *
- * See also:
- *          ECMA-262 v5, 15.9.1.3
+ *  See also:
+ *          ECMA-262 v11, 20.4.1.3
  *
- * @return day number of the first day of a year
+ * @return first of day in the given year
  */
-static ecma_number_t
-ecma_date_day_from_year (ecma_number_t year) /**< year value */
+static int32_t
+ecma_date_day_from_year (int32_t year) /**< year value */
 {
-  JERRY_ASSERT (!ecma_number_is_nan (year));
+  if (JERRY_LIKELY (year >= 1970))
+  {
+    return (int32_t) (365 * (year - 1970)
+                      + ((year - 1969) / 4)
+                      - ((year - 1901) / 100)
+                      + ((year - 1601) / 400));
+  }
 
-  return (ecma_number_t) (365 * (year - 1970)
-                          + floor ((year - 1969) / 4)
-                          - floor ((year - 1901) / 100)
-                          + floor ((year - 1601) / 400));
+  return (int32_t) (365 * (year - 1970)
+                    + floor ((year - 1969) / 4.0)
+                    - floor ((year - 1901) / 100.0)
+                    + floor ((year - 1601) / 400.0));
 } /* ecma_date_day_from_year */
 
 /**
- * Helper function to get the time value of the start of a year.
+ * Abstract operation: DaysInYear
  *
- * See also:
- *          ECMA-262 v5, 15.9.1.3
+ *  See also:
+ *          ECMA-262 v11, 20.4.1.3
  *
- * @return  time value of the start of a year
+ * @return number of days in the given year
  */
-static inline ecma_number_t JERRY_ATTR_ALWAYS_INLINE
-ecma_date_time_from_year (ecma_number_t year) /**< year value */
+static int
+ecma_date_days_in_year (int32_t year) /**< year */
 {
-  JERRY_ASSERT (!ecma_number_is_nan (year));
+  if (year % 4 != 0
+      || (year % 100 == 0 && (year % 400 != 0)))
+  {
+    return ECMA_DATE_DAYS_IN_YEAR;
+  }
 
-  return ECMA_DATE_MS_PER_DAY * ecma_date_day_from_year (year);
-} /* ecma_date_time_from_year */
+  return ECMA_DATE_DAYS_IN_LEAP_YEAR;
+} /* ecma_date_days_in_year */
 
 /**
- * Helper function to determine a year value from the time value.
+ * Abstract operation: InLeapYear
  *
- * See also:
- *          ECMA-262 v5, 15.9.1.3
+ *  See also:
+ *          ECMA-262 v11, 20.4.1.3
  *
- * @return year value
+ * @return 1 - if the year is leap
+ *         0 - otherwise
  */
-ecma_number_t
+static int32_t
+ecma_date_in_leap_year (int32_t year) /**< time value */
+{
+  return ecma_date_days_in_year (year) - ECMA_DATE_DAYS_IN_YEAR;
+} /* ecma_date_in_leap_year */
+
+/**
+ * First days of months in normal and leap years
+ */
+static const uint16_t first_day_in_month[2][12] =
+{
+  {
+    0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, /* normal year */
+  }
+  ,
+  {
+    0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335  /* leap year */
+  }
+};
+
+/**
+ * Abstract operation: YearFromTime
+ *
+ *  See also:
+ *          ECMA-262 v11, 20.4.1.3
+ *
+ * @return year corresponds to the given time
+ */
+int32_t
 ecma_date_year_from_time (ecma_number_t time) /**< time value */
 {
   JERRY_ASSERT (!ecma_number_is_nan (time));
 
-  /* ECMA-262 v5, 15.9.1.1 define the largest year that is
-   * representable (285616) forward from 01 January, 1970 UTC.
-   */
-  ecma_number_t year = (ecma_number_t) (1970 + 285616);
-  ecma_number_t lower_year_boundary = (ecma_number_t) (1970 - 285616);
+  int32_t approx = (int32_t) (floor (time / ECMA_DATE_MS_PER_DAY / 365.2425) + 1970);
+  int64_t year_ms = ecma_date_day_from_year (approx) * ((int64_t) ECMA_DATE_MS_PER_DAY);
 
-  if (ecma_date_time_from_year (year) < time || ecma_date_time_from_year (lower_year_boundary) > time)
+  if (year_ms > time)
   {
-    return ecma_number_make_nan ();
+    approx--;
   }
 
-  while (ecma_date_time_from_year (year) > time)
+  if (year_ms + ecma_date_days_in_year (approx) * ((int64_t) ECMA_DATE_MS_PER_DAY) <= time)
   {
-    ecma_number_t year_boundary = (ecma_number_t) floor (lower_year_boundary + (year - lower_year_boundary) / 2);
-    if (ecma_date_time_from_year (year_boundary) > time)
-    {
-      year = year_boundary;
-    }
-    else
-    {
-      lower_year_boundary = year_boundary;
-    }
-
-    year--;
+    approx++;
   }
 
-  return year;
+  return approx;
 } /* ecma_date_year_from_time */
 
 /**
- * Helper function to decide if time value is in a leap-year.
+ * Abstract operation: MonthFromTime
  *
- * See also:
- *          ECMA-262 v5, 15.9.1.3
+ *  See also:
+ *          ECMA-262 v11, 20.4.1.4
  *
- * @return 1 if time within a leap year
- *         0 otherwise
+ * @return month corresponds to the given time
  */
-static int
-ecma_date_in_leap_year (ecma_number_t year) /**< time value */
-{
-  int mod_400 = (int) fmod (floor (year), 400);
-
-  JERRY_ASSERT (mod_400 >= -399 && mod_400 <= 399);
-
-  if ((mod_400 % 4) != 0)
-  {
-    return 0;
-  }
-
-  if ((mod_400 % 100) != 0)
-  {
-    return 1;
-  }
-
-  if (mod_400 != 0)
-  {
-    return 0;
-  }
-
-  return 1;
-} /* ecma_date_in_leap_year */
-
-/**
- * End day for the first 11 months.
- */
-static const int16_t ecma_date_month_end_day[10] =
-{
-  58, 89, 119, 150, 180, 211, 242, 272, 303, 333
-};
-
-/**
- * Helper function to get month from time value.
- *
- * See also:
- *          ECMA-262 v5, 15.9.1.4
- *
- * @return month number
- */
-ecma_number_t
+int32_t
 ecma_date_month_from_time (ecma_number_t time) /**< time value */
 {
   JERRY_ASSERT (!ecma_number_is_nan (time));
 
-  ecma_number_t year = ecma_date_year_from_time (time);
+  int32_t year = ecma_date_year_from_time (time);
+  int32_t day_within_year = ecma_date_day_from_time (time) - ecma_date_day_from_year (year);
 
-  if (ecma_number_is_nan (year))
+  JERRY_ASSERT (day_within_year >= 0 && day_within_year < ECMA_DATE_DAYS_IN_LEAP_YEAR);
+
+  int32_t in_leap_year = ecma_date_in_leap_year (year);
+
+  for (int i = 1; i < 12; i++)
   {
-    return ecma_number_make_nan ();
-  }
-
-  int day_within_year = (int) (ecma_date_day (time) - ecma_date_day_from_year (year));
-
-  JERRY_ASSERT (day_within_year >= 0);
-
-  if (day_within_year <= 30)
-  {
-    return 0;
-  }
-
-  day_within_year -= ecma_date_in_leap_year (year);
-
-  JERRY_ASSERT (day_within_year < 365);
-
-  for (int i = 0; i < 10; i++)
-  {
-    if (day_within_year <= ecma_date_month_end_day[i])
+    if (day_within_year < first_day_in_month[in_leap_year][i])
     {
-      return i + 1;
+      return i - 1;
     }
   }
 
@@ -244,84 +201,64 @@ ecma_date_month_from_time (ecma_number_t time) /**< time value */
 } /* ecma_date_month_from_time */
 
 /**
- * Helper function to get date number from time value.
+ * Abstract operation: DateFromTime
  *
- * See also:
- *          ECMA-262 v5, 15.9.1.5
+ *  See also:
+ *          ECMA-262 v11, 20.4.1.4
  *
- * @return date number
+ * @return date corresponds to the given time
  */
-ecma_number_t
+int32_t
 ecma_date_date_from_time (ecma_number_t time) /**< time value */
 {
   JERRY_ASSERT (!ecma_number_is_nan (time));
 
-  ecma_number_t year = ecma_date_year_from_time (time);
+  int32_t year = ecma_date_year_from_time (time);
+  int32_t day_within_year = ecma_date_day_from_time (time) - ecma_date_day_from_year (year);
 
-  if (ecma_number_is_nan (year))
+  JERRY_ASSERT (day_within_year >= 0 && day_within_year < ECMA_DATE_DAYS_IN_LEAP_YEAR);
+
+  int32_t in_leap_year = ecma_date_in_leap_year (year);
+
+  int32_t month = 11;
+
+  for (int i = 1; i < 12; i++)
   {
-    return ecma_number_make_nan ();
-  }
-
-  int day_within_year = (int) (ecma_date_day (time) - ecma_date_day_from_year (year));
-
-  JERRY_ASSERT (day_within_year >= 0);
-
-  if (day_within_year <= 30)
-  {
-    return day_within_year + 1;
-  }
-
-  int leap_year = ecma_date_in_leap_year (year);
-
-  if (day_within_year <= 58 + leap_year)
-  {
-    return day_within_year - 30;
-  }
-
-  day_within_year -= leap_year;
-
-  JERRY_ASSERT (day_within_year < 365);
-
-  for (int i = 1; i < 10; i++)
-  {
-    if (day_within_year <= ecma_date_month_end_day[i])
+    if (day_within_year < first_day_in_month[in_leap_year][i])
     {
-      return day_within_year - ecma_date_month_end_day[i - 1];
+      month = i - 1;
+      break;
     }
   }
 
-  return day_within_year - 333;
+  return day_within_year + 1 - first_day_in_month[in_leap_year][month];
 } /* ecma_date_date_from_time */
 
 /**
- * Helper function to get weekday from time value.
+ * Abstract operation: WeekDay
  *
- * See also:
- *          ECMA-262 v5, 15.9.1.6
+ *  See also:
+ *          ECMA-262 v11, 20.4.1.4
  *
- * Used by:
- *         - The Date.prototype.getDay routine. (Generated.)
- *         - The Date.prototype.getUTCDay routine. (Generated.)
- *
- * @return  weekday number
+ * @return weekday corresponds to the given time
  */
-ecma_number_t
+int32_t
 ecma_date_week_day (ecma_number_t time) /**< time value */
 {
   JERRY_ASSERT (!ecma_number_is_nan (time));
 
-  ecma_number_t week_day = (ecma_number_t) fmod ((ecma_date_day (time) + 4), 7);
+  int32_t day = ecma_date_day_from_time (time);
 
-  return (week_day < 0) ? (7 + week_day) : week_day;
+  int week_day = (day + 4) % 7;
+
+  return week_day >= 0 ? week_day : week_day + 7;
 } /* ecma_date_week_day */
 
 /**
- * Helper function to get the local time zone offset at a given UTC timestamp.
- * You can add this number to the given UTC timestamp to get local time.
+ * Abstract operation: LocalTZA
  *
- * See also:
- *          ECMA-262 v5, 15.9.1.9
+ *  See also:
+ *          ECMA-262 v11, 20.4.1.7
  *
  * @return local time zone adjustment
  */
@@ -332,10 +269,10 @@ ecma_date_local_time_zone_adjustment (ecma_number_t time) /**< time value */
 } /* ecma_date_local_time_zone_adjustment */
 
 /**
- * Helper function to get UTC time from local time.
+ * Abstract operation: UTC
  *
- * See also:
- *          ECMA-262 v5, 15.9.1.9
+ *  See also:
+ *          ECMA-262 v11, 20.4.1.9
  *
  * @return UTC time
  */
@@ -346,83 +283,99 @@ ecma_date_utc (ecma_number_t time) /**< time value */
 } /* ecma_date_utc */
 
 /**
- * Helper function to get hour from time value.
+ * Calculate the time component from the given time
  *
- * See also:
- *          ECMA-262 v5, 15.9.1.10
- *
- * @return hour value
+ * @return time component of the given time
  */
-ecma_number_t
+int32_t
+ecma_date_time_in_day_from_time (ecma_number_t time) /**< time value */
+{
+  JERRY_ASSERT (!ecma_number_is_nan (time));
+
+  ecma_number_t day = ecma_date_day_from_time (time);
+
+  return (int32_t) (time - (day * ECMA_DATE_MS_PER_DAY));
+} /* ecma_date_time_in_day_from_time */
+
+/**
+ * Abstract operation: HourFromTime
+ *
+ *  See also:
+ *          ECMA-262 v11, 20.4.1.10
+ *
+ * @return hours component of the given time
+ */
+int32_t
 ecma_date_hour_from_time (ecma_number_t time) /**< time value */
 {
   JERRY_ASSERT (!ecma_number_is_nan (time));
 
-  ecma_number_t hour = (ecma_number_t) fmod (floor (time / ECMA_DATE_MS_PER_HOUR),
-                                             ECMA_DATE_HOURS_PER_DAY);
-  return (hour < 0) ? ECMA_DATE_HOURS_PER_DAY + hour : hour;
+  int32_t time_in_day = ecma_date_time_in_day_from_time (time);
+
+  return (int32_t) (time_in_day / ECMA_DATE_MS_PER_HOUR);
 } /* ecma_date_hour_from_time */
 
 /**
- * Helper function to get minute from time value.
+ * Abstract operation: HourFromTime
  *
- * See also:
- *          ECMA-262 v5, 15.9.1.10
+ *  See also:
+ *          ECMA-262 v11, 20.4.1.10
  *
- * @return minute value
+ * @return minutes component of the given time
  */
-ecma_number_t
+int32_t
 ecma_date_min_from_time (ecma_number_t time) /**< time value */
 {
   JERRY_ASSERT (!ecma_number_is_nan (time));
 
-  ecma_number_t min = (ecma_number_t) fmod (floor (time / ECMA_DATE_MS_PER_MINUTE),
-                                            ECMA_DATE_MINUTES_PER_HOUR);
-  return (min < 0) ? ECMA_DATE_MINUTES_PER_HOUR + min : min;
+  int32_t time_in_day = ecma_date_time_in_day_from_time (time);
+
+  return ((int32_t) (time_in_day / ECMA_DATE_MS_PER_MINUTE)) % ECMA_DATE_MINUTES_PER_HOUR;
 } /* ecma_date_min_from_time */
 
 /**
- * Helper function to get second from time value.
+ * Abstract operation: HourFromTime
  *
- * See also:
- *          ECMA-262 v5, 15.9.1.10
+ *  See also:
+ *          ECMA-262 v11, 20.4.1.10
  *
- * @return second value
+ * @return seconds component of the given time
  */
-ecma_number_t
+int32_t
 ecma_date_sec_from_time (ecma_number_t time) /**< time value */
 {
   JERRY_ASSERT (!ecma_number_is_nan (time));
 
-  ecma_number_t sec = (ecma_number_t) fmod (floor (time / ECMA_DATE_MS_PER_SECOND),
-                                            ECMA_DATE_SECONDS_PER_MINUTE);
-  return (sec < 0) ? ECMA_DATE_SECONDS_PER_MINUTE + sec : sec;
+  int32_t time_in_day = ecma_date_time_in_day_from_time (time);
+
+  return ((int32_t) (time_in_day / ECMA_DATE_MS_PER_SECOND)) % ECMA_DATE_SECONDS_PER_MINUTE;
 } /* ecma_date_sec_from_time */
 
 /**
- * Helper function to get millisecond from time value.
+ * Abstract operation: HourFromTime
  *
- * See also:
- *          ECMA-262 v5, 15.9.1.10
+ *  See also:
+ *          ECMA-262 v11, 20.4.1.10
  *
- * @return millisecond value
+ * @return milliseconds component of the given time
  */
-ecma_number_t
+int32_t
 ecma_date_ms_from_time (ecma_number_t time) /**< time value */
 {
   JERRY_ASSERT (!ecma_number_is_nan (time));
 
-  ecma_number_t milli = (ecma_number_t) fmod (time, ECMA_DATE_MS_PER_SECOND);
-  return (milli < 0) ? ECMA_DATE_MS_PER_SECOND + milli : milli;
+  int32_t time_in_day = ecma_date_time_in_day_from_time (time);
+
+  return (int32_t) (time_in_day % ECMA_DATE_MS_PER_SECOND);
 } /* ecma_date_ms_from_time */
 
 /**
- * Helper function to make time value from hour, min, sec and ms.
+ * Abstract operation: MakeTime
  *
- * See also:
- *          ECMA-262 v5, 15.9.1.11
+ *  See also:
+ *          ECMA-262 v11, 20.4.1.11
  *
- * @return time value
+ * @return constructed time in milliseconds
  */
 ecma_number_t
 ecma_date_make_time (ecma_number_t hour, /**< hour value */
@@ -430,37 +383,32 @@ ecma_date_make_time (ecma_number_t hour, /**< hour value */
                      ecma_number_t sec, /**< second value */
                      ecma_number_t ms) /**< millisecond value */
 {
-  if (ecma_number_is_nan (hour)
-      || ecma_number_is_nan (min)
-      || ecma_number_is_nan (sec)
-      || ecma_number_is_nan (ms)
-      || ecma_number_is_infinity (hour)
-      || ecma_number_is_infinity (min)
-      || ecma_number_is_infinity (sec)
-      || ecma_number_is_infinity (ms))
+  if (!ecma_number_is_finite (hour)
+      || !ecma_number_is_finite (min)
+      || !ecma_number_is_finite (sec)
+      || !ecma_number_is_finite (ms))
   {
     return ecma_number_make_nan ();
   }
 
-  /* Replaced toInteger to ecma_number_trunc because it does the same thing. */
   ecma_number_t h = ecma_number_trunc (hour);
   ecma_number_t m = ecma_number_trunc (min);
   ecma_number_t s = ecma_number_trunc (sec);
   ecma_number_t milli = ecma_number_trunc (ms);
 
-  return (h * ECMA_DATE_MS_PER_HOUR
-          + m * ECMA_DATE_MS_PER_MINUTE
-          + s * ECMA_DATE_MS_PER_SECOND
-          + milli);
+  return (ecma_number_t) ((h * ECMA_DATE_MS_PER_HOUR
+                          + m * ECMA_DATE_MS_PER_MINUTE
+                          + s * ECMA_DATE_MS_PER_SECOND
+                          + milli));
 } /* ecma_date_make_time */
 
 /**
- * Helper function to make day value from year, month and date.
+ * Abstract operation: MakeDay
  *
- * See also:
- *          ECMA-262 v5, 15.9.1.12
+ *  See also:
+ *          ECMA-262 v11, 20.4.1.12
  *
- * @return day value
+ * @return elpased number of days since Unix Epoch
  */
 ecma_number_t
 ecma_date_make_day (ecma_number_t year, /**< year value */
@@ -468,96 +416,70 @@ ecma_date_make_day (ecma_number_t year, /**< year value */
                     ecma_number_t date) /**< date value */
 {
   /* 1. */
-  if (ecma_number_is_nan (year)
-      || ecma_number_is_nan (month)
-      || ecma_number_is_nan (date)
-      || ecma_number_is_infinity (year)
-      || ecma_number_is_infinity (month)
-      || ecma_number_is_infinity (date))
+  if (!ecma_number_is_finite (year)
+      || !ecma_number_is_finite (month)
+      || !ecma_number_is_finite (date)
+      || fabs (year) > INT32_MAX)
   {
     return ecma_number_make_nan ();
   }
 
   /* 2., 3., 4. */
-  ecma_number_t y = ecma_number_trunc (year);
+  int32_t y = (int32_t) (year);
   ecma_number_t m = ecma_number_trunc (month);
   ecma_number_t dt = ecma_number_trunc (date);
+
   /* 5. */
-  ecma_number_t ym = y + (ecma_number_t) floor (m / 12);
+  int32_t ym = y + (int32_t) (floor (m / 12));
+
   /* 6. */
-  ecma_number_t mn = (ecma_number_t) fmod (m, 12);
-  mn = (mn < 0) ? 12 + mn : mn;
+  int32_t mn = (int32_t) fmod (m, 12);
 
-  /* 7. */
-  ecma_number_t time = ecma_date_time_from_year (ym);
-
-  /**
-   * The algorithm below searches the following date: ym-mn-1
-   * To find this time it starts from the beginning of the year (ym)
-   * then find the first day of the month.
-   */
-  if (!ecma_number_is_nan (time)
-      && ecma_date_year_from_time (time) == ym)
+  if (mn < 0)
   {
-    /* Get the month */
-    time += 31 * mn * ECMA_DATE_MS_PER_DAY;
-
-    /* Get the month's first day */
-    time += ((ecma_number_t) 1.0 - ecma_date_date_from_time (time)) * ECMA_DATE_MS_PER_DAY;
-
-    if (!ecma_number_is_nan (time)
-        && ecma_date_month_from_time (time) == mn
-        && ecma_date_date_from_time (time) == 1)
-    {
-      /* 8. */
-      return ecma_date_day (time) + dt - ((ecma_number_t) 1.0);
-    }
+    mn += 12;
   }
 
-  return ecma_number_make_nan ();
+  /* 7. */
+  ecma_number_t days = (ecma_date_day_from_year (ym)
+                        + first_day_in_month[ecma_date_in_leap_year (ym)][mn]
+                        + (dt - 1));
+  return days * ECMA_DATE_MS_PER_DAY;
 } /* ecma_date_make_day */
 
 /**
- * Helper function to make date value from day and time.
+ * Abstract operation: MakeTime
  *
- * See also:
- *          ECMA-262 v5, 15.9.1.13
+ *  See also:
+ *          ECMA-262 v11, 20.4.1.13
  *
- * @return date value
+ * @return elpased number of milliceconds since Unix Epoch
  */
 ecma_number_t
 ecma_date_make_date (ecma_number_t day, /**< day value */
                      ecma_number_t time) /**< time value */
 {
-  if (ecma_number_is_nan (day)
-      || ecma_number_is_nan (time))
+  if (!ecma_number_is_finite (day)
+      || !ecma_number_is_finite (time))
   {
     return ecma_number_make_nan ();
   }
 
-  ecma_number_t result = day * ECMA_DATE_MS_PER_DAY + time;
-
-  if (ecma_number_is_infinity (result))
-  {
-    return ecma_number_make_nan ();
-  }
-
-  return result;
+  return day + time;
 } /* ecma_date_make_date */
 
 /**
- * Helper function to calculate number of milliseconds from time value.
+ * Abstract operation: TimeClip
  *
- * See also:
- *          ECMA-262 v5, 15.9.1.14
+ *  See also:
+ *          ECMA-262 v11, 20.4.1.14
  *
- * @return number of milliseconds
+ * @return elpased number of milliceconds since Unix Epoch
  */
 ecma_number_t
 ecma_date_time_clip (ecma_number_t time) /**< time value */
 {
-  if (ecma_number_is_nan (time)
-      || ecma_number_is_infinity (time)
+  if (!ecma_number_is_finite (time)
       || fabs (time) > ECMA_DATE_MAX_VALUE)
   {
     return ecma_number_make_nan ();
@@ -565,22 +487,6 @@ ecma_date_time_clip (ecma_number_t time) /**< time value */
 
   return ecma_number_trunc (time);
 } /* ecma_date_time_clip */
-
-/**
- * Helper function to calculate timezone offset.
- *
- * See also:
- *          ECMA-262 v5, 15.9.5.26
- *
- * @return timezone offset
- */
-extern inline ecma_number_t JERRY_ATTR_ALWAYS_INLINE
-ecma_date_timezone_offset (ecma_number_t time) /**< time value */
-{
-  JERRY_ASSERT (!ecma_number_is_nan (time));
-
-  return (-ecma_date_local_time_zone_adjustment (time)) / ECMA_DATE_MS_PER_MINUTE;
-} /* ecma_date_timezone_offset */
 
 /**
  * Common function to convert date to string.
@@ -615,7 +521,7 @@ ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
     {
       case LIT_CHAR_UPPERCASE_Y: /* Year. */
       {
-        number = (int32_t) ecma_date_year_from_time (datetime_number);
+        number = ecma_date_year_from_time (datetime_number);
 
         if (number >= 100000 || number <= -100000)
         {
@@ -633,7 +539,7 @@ ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
       }
       case LIT_CHAR_LOWERCASE_Y: /* ISO Year: -000001, 0000, 0001, 9999, +012345 */
       {
-        number = (int32_t) ecma_date_year_from_time (datetime_number);
+        number = ecma_date_year_from_time (datetime_number);
         if (0 <= number && number <= 9999)
         {
           number_length = 4;
@@ -646,7 +552,7 @@ ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
       }
       case LIT_CHAR_UPPERCASE_M: /* Month. */
       {
-        int32_t month = (int32_t) ecma_date_month_from_time (datetime_number);
+        int32_t month = ecma_date_month_from_time (datetime_number);
 
         JERRY_ASSERT (month >= 0 && month <= 11);
 
@@ -658,19 +564,19 @@ ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
         /* The 'ecma_date_month_from_time' (ECMA 262 v5, 15.9.1.4) returns a
          * number from 0 to 11, but we have to print the month from 1 to 12
          * for ISO 8601 standard (ECMA 262 v5, 15.9.1.15). */
-        number = ((int32_t) ecma_date_month_from_time (datetime_number)) + 1;
+        number = ecma_date_month_from_time (datetime_number) + 1;
         number_length = 2;
         break;
       }
       case LIT_CHAR_UPPERCASE_D: /* Day. */
       {
-        number = (int32_t) ecma_date_date_from_time (datetime_number);
+        number = ecma_date_date_from_time (datetime_number);
         number_length = 2;
         break;
       }
       case LIT_CHAR_UPPERCASE_W: /* Day of week. */
       {
-        int32_t day = (int32_t) ecma_date_week_day (datetime_number);
+        int32_t day = ecma_date_week_day (datetime_number);
 
         JERRY_ASSERT (day >= 0 && day <= 6);
 
@@ -679,25 +585,25 @@ ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
       }
       case LIT_CHAR_LOWERCASE_H: /* Hour. */
       {
-        number = (int32_t) ecma_date_hour_from_time (datetime_number);
+        number = ecma_date_hour_from_time (datetime_number);
         number_length = 2;
         break;
       }
       case LIT_CHAR_LOWERCASE_M: /* Minutes. */
       {
-        number = (int32_t) ecma_date_min_from_time (datetime_number);
+        number = ecma_date_min_from_time (datetime_number);
         number_length = 2;
         break;
       }
       case LIT_CHAR_LOWERCASE_S: /* Seconds. */
       {
-        number = (int32_t) ecma_date_sec_from_time (datetime_number);
+        number = ecma_date_sec_from_time (datetime_number);
         number_length = 2;
         break;
       }
       case LIT_CHAR_LOWERCASE_I: /* Milliseconds. */
       {
-        number = (int32_t) ecma_date_ms_from_time (datetime_number);
+        number = ecma_date_ms_from_time (datetime_number);
         number_length = 3;
         break;
       }
@@ -715,7 +621,7 @@ ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
           time_zone = -time_zone;
         }
 
-        number = time_zone / (int32_t) ECMA_DATE_MS_PER_HOUR;
+        number = time_zone / ECMA_DATE_MS_PER_HOUR;
         number_length = 2;
         break;
       }
@@ -730,7 +636,7 @@ ecma_date_to_string_format (ecma_number_t datetime_number, /**< datetime */
           time_zone = -time_zone;
         }
 
-        number = time_zone % (int32_t) ECMA_DATE_MS_PER_HOUR / (int32_t) ECMA_DATE_MS_PER_MINUTE;
+        number = (time_zone % ECMA_DATE_MS_PER_HOUR) / ECMA_DATE_MS_PER_MINUTE;
         number_length = 2;
         break;
       }

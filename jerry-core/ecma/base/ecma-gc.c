@@ -1577,9 +1577,12 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 
         case LIT_MAGIC_STRING_DATE_UL:
         {
-          ecma_number_t *num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
-                                                                  ext_object_p->u.class_prop.u.value);
+#if JERRY_ESNEXT
+          ext_object_size = sizeof (ecma_date_object_t);
+#else /* !JERRY_ESNEXT */
+          ecma_number_t *num_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, ext_object_p->u.class_prop.u.date);
           ecma_dealloc_number (num_p);
+#endif /* JERRY_ESNEXT */
           break;
         }
         case LIT_MAGIC_STRING_REGEXP_UL:

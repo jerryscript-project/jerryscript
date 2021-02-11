@@ -227,84 +227,82 @@ ecma_builtin_date_prototype_to_primitive (ecma_value_t this_arg, /**< this argum
 static ecma_value_t
 ecma_builtin_date_prototype_dispatch_get (uint16_t builtin_routine_id, /**< built-in wide routine
                                                                         *   identifier */
-                                          ecma_number_t date_num) /**< date converted to number */
+                                          ecma_number_t date_value) /**< date converted to number */
 {
-  if (ecma_number_is_nan (date_num))
+  if (ecma_number_is_nan (date_value))
   {
     return ecma_make_nan_value ();
   }
+
+  int32_t result;
 
   switch (builtin_routine_id)
   {
     case ECMA_DATE_PROTOTYPE_GET_FULL_YEAR:
     case ECMA_DATE_PROTOTYPE_GET_UTC_FULL_YEAR:
-#if JERRY_BUILTIN_ANNEXB
-    case ECMA_DATE_PROTOTYPE_GET_YEAR:
-#endif /* JERRY_BUILTIN_ANNEXB */
     {
-      date_num = ecma_date_year_from_time (date_num);
-
-#if JERRY_BUILTIN_ANNEXB
-      if (builtin_routine_id == ECMA_DATE_PROTOTYPE_GET_YEAR)
-      {
-        date_num -= 1900;
-      }
-#endif /* JERRY_BUILTIN_ANNEXB */
-
+      result = ecma_date_year_from_time (date_value);
       break;
     }
+#if JERRY_BUILTIN_ANNEXB
+    case ECMA_DATE_PROTOTYPE_GET_YEAR:
+    {
+      result = (ecma_date_year_from_time (date_value) - 1900);
+      break;
+    }
+#endif /* JERRY_BUILTIN_ANNEXB */
     case ECMA_DATE_PROTOTYPE_GET_MONTH:
     case ECMA_DATE_PROTOTYPE_GET_UTC_MONTH:
     {
-      date_num = ecma_date_month_from_time (date_num);
+      result = ecma_date_month_from_time (date_value);
       break;
     }
     case ECMA_DATE_PROTOTYPE_GET_DATE:
     case ECMA_DATE_PROTOTYPE_GET_UTC_DATE:
     {
-      date_num = ecma_date_date_from_time (date_num);
+      result = ecma_date_date_from_time (date_value);
       break;
     }
     case ECMA_DATE_PROTOTYPE_GET_DAY:
     case ECMA_DATE_PROTOTYPE_GET_UTC_DAY:
     {
-      date_num = ecma_date_week_day (date_num);
+      result = ecma_date_week_day (date_value);
       break;
     }
     case ECMA_DATE_PROTOTYPE_GET_HOURS:
     case ECMA_DATE_PROTOTYPE_GET_UTC_HOURS:
     {
-      date_num = ecma_date_hour_from_time (date_num);
+      result = ecma_date_hour_from_time (date_value);
       break;
     }
     case ECMA_DATE_PROTOTYPE_GET_MINUTES:
     case ECMA_DATE_PROTOTYPE_GET_UTC_MINUTES:
     {
-      date_num = ecma_date_min_from_time (date_num);
+      result = ecma_date_min_from_time (date_value);
       break;
     }
     case ECMA_DATE_PROTOTYPE_GET_SECONDS:
     case ECMA_DATE_PROTOTYPE_GET_UTC_SECONDS:
     {
-      date_num = ecma_date_sec_from_time (date_num);
+      result = ecma_date_sec_from_time (date_value);
       break;
     }
     case ECMA_DATE_PROTOTYPE_GET_MILLISECONDS:
     case ECMA_DATE_PROTOTYPE_GET_UTC_MILLISECONDS:
     {
-      date_num = ecma_date_ms_from_time (date_num);
+      result = ecma_date_ms_from_time (date_value);
       break;
     }
     default:
     {
       JERRY_ASSERT (builtin_routine_id == ECMA_DATE_PROTOTYPE_GET_UTC_TIMEZONE_OFFSET);
 
-      date_num = ecma_date_timezone_offset (date_num);
+      result = (int32_t) ((-ecma_date_local_time_zone_adjustment (date_value)) / ECMA_DATE_MS_PER_MINUTE);
       break;
     }
   }
 
-  return ecma_make_number_value (date_num);
+  return ecma_make_int32_value (result);
 } /* ecma_builtin_date_prototype_dispatch_get */
 
 #if JERRY_BUILTIN_ANNEXB
@@ -337,8 +335,7 @@ ecma_builtin_date_prototype_dispatch_get (uint16_t builtin_routine_id, /**< buil
 static ecma_value_t
 ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< built-in wide routine
                                                                         *   identifier */
-                                          ecma_extended_object_t *ext_object_p, /**< date extended object */
-                                          ecma_number_t date_num, /**< date converted to number */
+                                          ecma_object_t *object_p, /**< date object */
                                           const ecma_value_t arguments_list[], /**< list of arguments
                                                                                 *   passed to routine */
                                           uint32_t arguments_number) /**< length of arguments' list */
@@ -403,28 +400,55 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
     }
   }
 
+#if JERRY_ESNEXT
+  ecma_date_object_t *date_object_p = (ecma_date_object_t *) object_p;
+  ecma_number_t *date_value_p = &date_object_p->date_value;
+#else /* !JERRY_ESNEXT */
+  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+  ecma_number_t *date_value_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, ext_object_p->u.class_prop.u.date);
+#endif /* JERRY_ESNEXT */
+
+  ecma_number_t date_value = *date_value_p;
+
+  if (!BUILTIN_DATE_FUNCTION_IS_UTC (builtin_routine_id))
+  {
+    ecma_number_t local_tza;
+
+#if JERRY_ESNEXT
+    if (date_object_p->header.u.class_prop.extra_info & ECMA_DATE_TZA_SET)
+    {
+      local_tza = date_object_p->header.u.class_prop.u.tza;
+      JERRY_ASSERT (local_tza == ecma_date_local_time_zone_adjustment (date_value));
+    }
+    else
+#endif /* JERRY_ESNEXT */
+    {
+      local_tza = ecma_date_local_time_zone_adjustment (date_value);
+    }
+
+    date_value += local_tza;
+  }
+
   ecma_number_t day_part;
   ecma_number_t time_part;
 
   if (builtin_routine_id <= ECMA_DATE_PROTOTYPE_SET_UTC_DATE)
   {
-    if (ecma_number_is_nan (date_num))
+    if (ecma_number_is_nan (date_value))
     {
-      if (ECMA_DATE_PROTOTYPE_IS_SET_YEAR_ROUTINE (builtin_routine_id))
+      if (!ECMA_DATE_PROTOTYPE_IS_SET_YEAR_ROUTINE (builtin_routine_id))
       {
-        date_num = ECMA_NUMBER_ZERO;
+        return ecma_make_number_value (date_value);
       }
-      else
-      {
-        return ecma_make_number_value (date_num);
-      }
+
+      date_value = ECMA_NUMBER_ZERO;
     }
 
-    time_part = ecma_date_time_within_day (date_num);
+    time_part = ecma_date_time_in_day_from_time (date_value);
 
-    ecma_number_t year = ecma_date_year_from_time (date_num);
-    ecma_number_t month = ecma_date_month_from_time (date_num);
-    ecma_number_t day = ecma_date_date_from_time (date_num);
+    ecma_number_t year = ecma_date_year_from_time (date_value);
+    ecma_number_t month = ecma_date_month_from_time (date_value);
+    ecma_number_t day = ecma_date_date_from_time (date_value);
 
     switch (builtin_routine_id)
     {
@@ -447,7 +471,7 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
       {
         if (ecma_number_is_nan (converted_number[0]))
         {
-          *ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, ext_object_p->u.class_prop.u.value) = converted_number[0];
+          *date_value_p = converted_number[0];
           return ecma_make_number_value (converted_number[0]);
         }
 
@@ -494,17 +518,17 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
   }
   else
   {
-    if (ecma_number_is_nan (date_num))
+    if (ecma_number_is_nan (date_value))
     {
-      return ecma_make_number_value (date_num);
+      return ecma_make_number_value (date_value);
     }
 
-    day_part = ecma_date_day (date_num);
+    day_part = ecma_date_day_from_time (date_value) * (ecma_number_t) ECMA_DATE_MS_PER_DAY;
 
-    ecma_number_t hour = ecma_date_hour_from_time (date_num);
-    ecma_number_t min = ecma_date_min_from_time (date_num);
-    ecma_number_t sec = ecma_date_sec_from_time (date_num);
-    ecma_number_t ms = ecma_date_ms_from_time (date_num);
+    ecma_number_t hour = ecma_date_hour_from_time (date_value);
+    ecma_number_t min = ecma_date_min_from_time (date_value);
+    ecma_number_t sec = ecma_date_sec_from_time (date_value);
+    ecma_number_t ms = ecma_date_ms_from_time (date_value);
 
     switch (builtin_routine_id)
     {
@@ -574,7 +598,11 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
 
   full_date = ecma_date_time_clip (full_date);
 
-  *ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, ext_object_p->u.class_prop.u.value) = full_date;
+  *date_value_p = full_date;
+
+#if JERRY_ESNEXT
+  date_object_p->header.u.class_prop.extra_info &= (uint16_t) ~ECMA_DATE_TZA_SET;
+#endif /* JERRY_ESNEXT */
 
   return ecma_make_number_value (full_date);
 } /* ecma_builtin_date_prototype_dispatch_set */
@@ -614,13 +642,22 @@ ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< b
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a Date object"));
   }
 
-  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) ecma_get_object_from_value (this_arg);
-  ecma_number_t *prim_value_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
-                                                                 ext_object_p->u.class_prop.u.value);
+  ecma_object_t *this_obj_p = ecma_get_object_from_value (this_arg);
+
+#if JERRY_ESNEXT
+  ecma_date_object_t *date_object_p = (ecma_date_object_t *) this_obj_p;
+  ecma_number_t *date_value_p = &date_object_p->date_value;
+#else
+  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) this_obj_p;
+  ecma_number_t *date_value_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
+                                                                 ext_object_p->u.class_prop.u.date);
+#endif
+
+  ecma_number_t date_value = *date_value_p;
 
   if (builtin_routine_id == ECMA_DATE_PROTOTYPE_GET_TIME)
   {
-    return ecma_make_number_value (*prim_value_p);
+    return ecma_make_number_value (date_value);
   }
 
   if (builtin_routine_id == ECMA_DATE_PROTOTYPE_SET_TIME)
@@ -632,43 +669,59 @@ ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< b
       return ECMA_VALUE_ERROR;
     }
 
-    *prim_value_p = ecma_date_time_clip (time_num);
+    *date_value_p = ecma_date_time_clip (time_num);
 
-    return ecma_make_number_value (*prim_value_p);
+    return ecma_make_number_value (*date_value_p);
   }
 
   if (builtin_routine_id <= ECMA_DATE_PROTOTYPE_SET_UTC_MILLISECONDS)
   {
-    ecma_number_t this_num = *prim_value_p;
-
-    if (!BUILTIN_DATE_FUNCTION_IS_UTC (builtin_routine_id))
-    {
-      this_num += ecma_date_local_time_zone_adjustment (this_num);
-    }
 
     if (builtin_routine_id <= ECMA_DATE_PROTOTYPE_GET_UTC_TIMEZONE_OFFSET)
     {
-      return ecma_builtin_date_prototype_dispatch_get (builtin_routine_id, this_num);
+      if (!BUILTIN_DATE_FUNCTION_IS_UTC (builtin_routine_id))
+      {
+        ecma_number_t local_tza;
+#if JERRY_ESNEXT
+        if (date_object_p->header.u.class_prop.extra_info & ECMA_DATE_TZA_SET)
+        {
+          local_tza = date_object_p->header.u.class_prop.u.tza;
+          JERRY_ASSERT (local_tza == ecma_date_local_time_zone_adjustment (date_value));
+        }
+        else
+        {
+#endif /* JERRY_ESNEXT */
+          local_tza = ecma_date_local_time_zone_adjustment (date_value);
+#if JERRY_ESNEXT
+          JERRY_ASSERT (local_tza <= INT32_MAX && local_tza >= INT32_MIN);
+          date_object_p->header.u.class_prop.u.tza = (int32_t) local_tza;
+          date_object_p->header.u.class_prop.extra_info |= ECMA_DATE_TZA_SET;
+        }
+#endif /* JERRY_ESNEXT */
+
+        date_value += local_tza;
+      }
+
+      return ecma_builtin_date_prototype_dispatch_get (builtin_routine_id, date_value);
     }
 
     return ecma_builtin_date_prototype_dispatch_set (builtin_routine_id,
-                                                     ext_object_p,
-                                                     this_num,
+                                                     this_obj_p,
                                                      arguments_list,
                                                      arguments_number);
   }
 
   if (builtin_routine_id == ECMA_DATE_PROTOTYPE_TO_ISO_STRING)
   {
-    if (ecma_number_is_nan (*prim_value_p) || ecma_number_is_infinity (*prim_value_p))
+    if (ecma_number_is_nan (date_value))
     {
       return ecma_raise_range_error (ECMA_ERR_MSG ("Date must be a finite number"));
     }
 
-    return ecma_date_value_to_iso_string (*prim_value_p);
+    return ecma_date_value_to_iso_string (date_value);
   }
 
-  if (ecma_number_is_nan (*prim_value_p))
+  if (ecma_number_is_nan (date_value))
   {
     return ecma_make_magic_string_value (LIT_MAGIC_STRING_INVALID_DATE_UL);
   }
@@ -677,23 +730,23 @@ ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< b
   {
     case ECMA_DATE_PROTOTYPE_TO_STRING:
     {
-      return ecma_date_value_to_string (*prim_value_p);
+      return ecma_date_value_to_string (date_value);
     }
     case ECMA_DATE_PROTOTYPE_TO_DATE_STRING:
     {
-      return ecma_date_value_to_date_string (*prim_value_p);
+      return ecma_date_value_to_date_string (date_value);
     }
 #if !JERRY_ESNEXT
     case ECMA_DATE_PROTOTYPE_TO_UTC_STRING:
     {
-      return ecma_date_value_to_utc_string (*prim_value_p);
+      return ecma_date_value_to_utc_string (date_value);
     }
 #endif /* JERRY_ESNEXT */
     default:
     {
       JERRY_ASSERT (builtin_routine_id == ECMA_DATE_PROTOTYPE_TO_TIME_STRING);
 
-      return ecma_date_value_to_time_string (*prim_value_p);
+      return ecma_date_value_to_time_string (date_value);
     }
   }
 } /* ecma_builtin_date_prototype_dispatch_routine */

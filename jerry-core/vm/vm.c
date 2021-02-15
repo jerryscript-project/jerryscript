@@ -363,6 +363,8 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
     {
       if (JERRY_UNLIKELY (lex_env_p->u2.outer_reference_cp == JMEM_CP_NULL))
       {
+        ecma_bytecode_deref (bytecode_data_p);
+        ecma_free_value (this_binding);
         return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid scope chain index for eval"));
       }
 

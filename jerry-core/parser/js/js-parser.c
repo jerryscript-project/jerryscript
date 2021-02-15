@@ -2804,6 +2804,11 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
   }
 #endif /* JERRY_DEBUGGER */
 
+  if (JERRY_UNLIKELY (source_size == 0))
+  {
+    source_p = (const uint8_t *) 0x1;
+  }
+
   ecma_compiled_code_t *bytecode_p = parser_parse_source (arg_list_p,
                                                           arg_list_size,
                                                           source_p,

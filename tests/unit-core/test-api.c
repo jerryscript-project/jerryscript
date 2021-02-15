@@ -372,6 +372,14 @@ main (void)
   jerry_release_value (res);
   jerry_release_value (parsed_code_val);
 
+  /* Parse nothing */
+  parsed_code_val = jerry_parse (NULL, 0, NULL, 0, JERRY_PARSE_NO_OPTS);
+  TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
+  res = jerry_run (parsed_code_val);
+  TEST_ASSERT (!jerry_value_is_error (res));
+  jerry_release_value (res);
+  jerry_release_value (parsed_code_val);
+
   global_obj_val = jerry_get_global_object ();
 
   /* Get global.boo (non-existing field) */

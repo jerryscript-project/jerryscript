@@ -48,15 +48,16 @@ check_attribute (jerry_value_t attribute, /**< attribute to be checked */
   jerry_release_value (prop_name);
 } /* check_attribute */
 
-static void
-to_property_descriptor (jerry_value_t object, /**< object */
-                        jerry_property_descriptor_t *prop_desc_p) /**< property descriptor */
+static jerry_property_descriptor_t
+to_property_descriptor (jerry_value_t object /**< object */)
 {
-  jerry_init_property_descriptor_fields (prop_desc_p);
+  jerry_property_descriptor_t prop_desc = jerry_property_descriptor_create ();
 
-  jerry_value_t result = jerry_to_property_descriptor (object, prop_desc_p);
+  jerry_value_t result = jerry_to_property_descriptor (object, &prop_desc);
   TEST_ASSERT (jerry_value_is_boolean (result) && jerry_get_boolean_value (result));
   jerry_release_value (result);
+
+  return prop_desc;
 } /* to_property_descriptor */
 
 int
@@ -66,39 +67,44 @@ main (void)
 
   jerry_init (JERRY_INIT_EMPTY);
 
-  jerry_property_descriptor_t prop_desc;
-
   /* Next test. */
   const char *source_p = "({ value:'X', writable:true, enumerable:true, configurable:true })";
   jerry_value_t object = create_property_descriptor (source_p);
 
-  to_property_descriptor (object, &prop_desc);
+  jerry_property_descriptor_t prop_desc = to_property_descriptor (object);
 
   check_attribute (prop_desc.value, object, "value");
 
-  TEST_ASSERT (prop_desc.is_value_defined);
-  TEST_ASSERT (!prop_desc.is_get_defined && !prop_desc.is_set_defined);
-  TEST_ASSERT (prop_desc.is_writable_defined && prop_desc.is_writable);
-  TEST_ASSERT (prop_desc.is_enumerable_defined && prop_desc.is_enumerable);
-  TEST_ASSERT (prop_desc.is_configurable_defined && prop_desc.is_configurable);
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_VALUE_DEFINED);
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_GET_DEFINED));
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_SET_DEFINED));
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_WRITABLE_DEFINED);
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_WRITABLE);
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_ENUMERABLE_DEFINED);
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_ENUMERABLE);
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_CONFIGURABLE_DEFINED);
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_CONFIGURABLE);
 
   jerry_release_value (object);
-  jerry_free_property_descriptor_fields (&prop_desc);
+  jerry_property_descriptor_free (&prop_desc);
 
   /* Next test. */
   source_p = "({ writable:false, configurable:true })";
   object = create_property_descriptor (source_p);
 
-  to_property_descriptor (object, &prop_desc);
+  prop_desc = to_property_descriptor (object);
 
-  TEST_ASSERT (!prop_desc.is_value_defined);
-  TEST_ASSERT (!prop_desc.is_get_defined && !prop_desc.is_set_defined);
-  TEST_ASSERT (prop_desc.is_writable_defined && !prop_desc.is_writable);
-  TEST_ASSERT (!prop_desc.is_enumerable_defined);
-  TEST_ASSERT (prop_desc.is_configurable_defined && prop_desc.is_configurable);
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_VALUE_DEFINED));
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_GET_DEFINED));
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_SET_DEFINED));
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_WRITABLE_DEFINED);
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_WRITABLE));
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_ENUMERABLE_DEFINED));
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_CONFIGURABLE_DEFINED);
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_CONFIGURABLE);
 
   jerry_release_value (object);
-  jerry_free_property_descriptor_fields (&prop_desc);
+  jerry_property_descriptor_free (&prop_desc);
 
   /* Next test. */
   /* Note: the 'set' property is defined, and it has a value of undefined.
@@ -106,50 +112,60 @@ main (void)
   source_p = "({ get: function() {}, set:undefined, configurable:true })";
   object = create_property_descriptor (source_p);
 
-  to_property_descriptor (object, &prop_desc);
+  prop_desc = to_property_descriptor (object);
 
   check_attribute (prop_desc.getter, object, "get");
   check_attribute (prop_desc.setter, object, "set");
 
-  TEST_ASSERT (!prop_desc.is_value_defined && !prop_desc.is_writable_defined);
-  TEST_ASSERT (prop_desc.is_get_defined && prop_desc.is_set_defined);
-  TEST_ASSERT (!prop_desc.is_enumerable_defined);
-  TEST_ASSERT (prop_desc.is_configurable_defined && prop_desc.is_configurable);
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_VALUE_DEFINED));
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_WRITABLE_DEFINED));
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_GET_DEFINED);
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_SET_DEFINED);
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_ENUMERABLE_DEFINED));
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_CONFIGURABLE_DEFINED);
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_CONFIGURABLE);
 
   jerry_release_value (object);
-  jerry_free_property_descriptor_fields (&prop_desc);
+  jerry_property_descriptor_free (&prop_desc);
 
   /* Next test. */
   source_p = "({ get: undefined, enumerable:false })";
   object = create_property_descriptor (source_p);
 
-  to_property_descriptor (object, &prop_desc);
+  prop_desc = to_property_descriptor (object);
 
   check_attribute (prop_desc.getter, object, "get");
 
-  TEST_ASSERT (!prop_desc.is_value_defined && !prop_desc.is_writable_defined);
-  TEST_ASSERT (prop_desc.is_get_defined && !prop_desc.is_set_defined);
-  TEST_ASSERT (prop_desc.is_enumerable_defined && !prop_desc.is_enumerable);
-  TEST_ASSERT (!prop_desc.is_configurable_defined);
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_VALUE_DEFINED));
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_WRITABLE_DEFINED));
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_GET_DEFINED);
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_SET_DEFINED));
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_ENUMERABLE_DEFINED);
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_ENUMERABLE));
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_CONFIGURABLE_DEFINED));
 
   jerry_release_value (object);
-  jerry_free_property_descriptor_fields (&prop_desc);
+  jerry_property_descriptor_free (&prop_desc);
 
   /* Next test. */
   source_p = "({ set: function(v) {}, enumerable:true, configurable:false })";
   object = create_property_descriptor (source_p);
 
-  to_property_descriptor (object, &prop_desc);
+  prop_desc = to_property_descriptor (object);
 
   check_attribute (prop_desc.setter, object, "set");
 
-  TEST_ASSERT (!prop_desc.is_value_defined && !prop_desc.is_writable_defined);
-  TEST_ASSERT (!prop_desc.is_get_defined && prop_desc.is_set_defined);
-  TEST_ASSERT (prop_desc.is_enumerable_defined && prop_desc.is_enumerable);
-  TEST_ASSERT (prop_desc.is_configurable_defined && !prop_desc.is_configurable);
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_VALUE_DEFINED));
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_WRITABLE_DEFINED));
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_GET_DEFINED));
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_SET_DEFINED);
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_ENUMERABLE_DEFINED);
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_ENUMERABLE);
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_CONFIGURABLE_DEFINED);
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_CONFIGURABLE));
 
   jerry_release_value (object);
-  jerry_free_property_descriptor_fields (&prop_desc);
+  jerry_property_descriptor_free (&prop_desc);
 
   /* Next test. */
   source_p = "({ get: function(v) {}, writable:true })";

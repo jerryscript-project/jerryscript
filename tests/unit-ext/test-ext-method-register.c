@@ -43,10 +43,8 @@ freeze_property (jerry_value_t target_obj, /**< target object */
                  const char *target_prop) /**< target property name */
 {
   // "freeze" property
-  jerry_property_descriptor_t prop_desc;
-  jerry_init_property_descriptor_fields (&prop_desc);
-  prop_desc.is_configurable_defined = true;
-  prop_desc.is_configurable = false;
+  jerry_property_descriptor_t prop_desc = jerry_property_descriptor_create ();
+  prop_desc.flags |= JERRY_PROP_IS_CONFIGURABLE_DEFINED;
 
   jerry_value_t prop_name = jerry_create_string ((const jerry_char_t *) target_prop);
   jerry_value_t return_value = jerry_define_own_property (target_obj, prop_name, &prop_desc);
@@ -54,7 +52,7 @@ freeze_property (jerry_value_t target_obj, /**< target object */
   jerry_release_value (return_value);
   jerry_release_value (prop_name);
 
-  jerry_free_property_descriptor_fields (&prop_desc);
+  jerry_property_descriptor_free (&prop_desc);
 } /* freeze_property */
 
 /**

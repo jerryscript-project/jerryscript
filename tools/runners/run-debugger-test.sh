@@ -37,6 +37,7 @@ fi
 
 echo "$START_DEBUG_SERVER"
 eval "$START_DEBUG_SERVER"
+JERRY_PID=$!
 sleep 1s
 
 RESULT_TEMP=`mktemp ${TEST_CASE}.out.XXXXXXXXXX`
@@ -53,7 +54,9 @@ STATUS_CODE=$?
 
 rm -f ${RESULT_TEMP}
 
-if [ ${STATUS_CODE} -ne 0 ]
+wait $JERRY_PID
+JERRY_EXIT_CODE=$?
+if [ ${STATUS_CODE} -ne 0 ] || [ ${JERRY_EXIT_CODE} -gt 1 ]
 then
   echo -e "${TERM_RED}FAIL: ${TEST_CASE}${TERM_NORMAL}\n"
 else

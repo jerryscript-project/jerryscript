@@ -3314,7 +3314,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           if (ecma_is_value_integer_number (left_value))
           {
-            *stack_top_p++ = (~left_value) & (ecma_value_t) (~ECMA_DIRECT_TYPE_MASK);
+            *stack_top_p++ = (~ECMA_DIRECT_TYPE_MASK) ^ left_value;
             goto free_left_value;
           }
 
@@ -3490,8 +3490,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                 && left_integer <= ECMA_INTEGER_MULTIPLY_MAX
                 && -ECMA_INTEGER_MULTIPLY_MAX <= right_integer
                 && right_integer <= ECMA_INTEGER_MULTIPLY_MAX
-                && left_value != 0
-                && right_value != 0)
+                && left_integer != 0
+                && right_integer != 0)
             {
               *stack_top_p++ = ecma_integer_multiply (left_integer, right_integer);
               continue;
@@ -3674,7 +3674,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           if (ecma_are_values_integer_numbers (left_value, right_value))
           {
-            *stack_top_p++ = (left_value ^ right_value) & (ecma_value_t) (~ECMA_DIRECT_TYPE_MASK);
+            *stack_top_p++ = left_value ^ right_value;
             continue;
           }
 

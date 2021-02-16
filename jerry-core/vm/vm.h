@@ -152,6 +152,7 @@ typedef enum
   VM_OC_ASSIGN_PROP_THIS,        /**< assign prop this */
 
   VM_OC_RETURN,                  /**< return */
+  VM_OC_RETURN_FUNCTION_END,     /**< return at the end of a function/script */
   VM_OC_THROW,                   /**< throw */
   VM_OC_THROW_REFERENCE_ERROR,   /**< throw reference error */
 

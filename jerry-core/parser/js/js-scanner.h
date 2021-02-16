@@ -284,8 +284,9 @@ typedef enum
 {
   SCANNER_CREATE_VARS_NO_OPTS = 0, /**< no options */
   SCANNER_CREATE_VARS_IS_SCRIPT = (1 << 0), /**< create variables for script or direct eval */
-  SCANNER_CREATE_VARS_IS_FUNCTION_ARGS = (1 << 1), /**< create variables for function arguments */
-  SCANNER_CREATE_VARS_IS_FUNCTION_BODY = (1 << 2), /**< create variables for function body */
+  SCANNER_CREATE_VARS_IS_MODULE = (1 << 1), /**< create variables for module */
+  SCANNER_CREATE_VARS_IS_FUNCTION_ARGS = (1 << 2), /**< create variables for function arguments */
+  SCANNER_CREATE_VARS_IS_FUNCTION_BODY = (1 << 3), /**< create variables for function body */
 } scanner_create_variables_flags_t;
 
 /**

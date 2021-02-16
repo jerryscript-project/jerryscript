@@ -3169,7 +3169,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
           }
 #endif /* JERRY_ESNEXT */
 
-          parser_emit_cbc (context_p, CBC_RETURN_WITH_BLOCK);
+          parser_emit_cbc (context_p, CBC_RETURN_FUNCTION_END);
           break;
         }
 

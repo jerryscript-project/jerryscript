@@ -93,7 +93,7 @@ ecma_builtin_generator_prototype_object_do (vm_executable_object_t *generator_ob
   {
     if (generator_object_p->extended_object.u.cls.u2.executable_obj_flags & ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD)
     {
-      ecma_value_t iterator = generator_object_p->frame_ctx.block_result;
+      ecma_value_t iterator = generator_object_p->iterator;
       ecma_value_t next_method = generator_object_p->frame_ctx.stack_top_p[-1];
 
       bool done = false;
@@ -120,7 +120,7 @@ ecma_builtin_generator_prototype_object_do (vm_executable_object_t *generator_ob
       }
 
       ECMA_EXECUTABLE_OBJECT_RESUME_EXEC (generator_object_p);
-      generator_object_p->frame_ctx.block_result = ECMA_VALUE_UNDEFINED;
+      generator_object_p->iterator = ECMA_VALUE_UNDEFINED;
 
       JERRY_ASSERT (generator_object_p->frame_ctx.stack_top_p[-1] == ECMA_VALUE_UNDEFINED
                     || ecma_is_value_object (generator_object_p->frame_ctx.stack_top_p[-1]));
@@ -175,7 +175,7 @@ ecma_builtin_generator_prototype_object_do (vm_executable_object_t *generator_ob
 
         ecma_deref_object (ecma_get_object_from_value (iterator));
         generator_object_p->extended_object.u.cls.u2.executable_obj_flags |= ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD;
-        generator_object_p->frame_ctx.block_result = iterator;
+        generator_object_p->iterator = iterator;
 
         if (generator_object_p->frame_ctx.stack_top_p[0] != ECMA_VALUE_UNDEFINED)
         {

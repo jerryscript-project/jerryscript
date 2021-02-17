@@ -108,6 +108,7 @@ typedef enum
   JERRY_FEATURE_REALM, /**< realm support */
   JERRY_FEATURE_GLOBAL_THIS, /**< GlobalThisValue support */
   JERRY_FEATURE_PROMISE_CALLBACK, /**< Promise callback support */
+  JERRY_FEATURE_MODULE, /**< Module support */
   JERRY_FEATURE__COUNT /**< number of features. NOTE: must be at the end of the list */
 } jerry_feature_t;
 
@@ -474,6 +475,8 @@ typedef enum
   JERRY_OBJECT_TYPE_GENERIC,      /**< Generic JavaScript object without any internal property */
   JERRY_OBJECT_TYPE_ARRAY,        /**< Array object */
   JERRY_OBJECT_TYPE_PROXY,        /**< Proxy object */
+  JERRY_OBJECT_TYPE_SCRIPT,       /**< Script object (see jerry_parse) */
+  JERRY_OBJECT_TYPE_MODULE,       /**< Module object (see jerry_parse) */
   JERRY_OBJECT_TYPE_FUNCTION,     /**< Function object (see jerry_function_get_type) */
   JERRY_OBJECT_TYPE_TYPEDARRAY,   /**< %TypedArray% object (see jerry_get_typedarray_type) */
   JERRY_OBJECT_TYPE_ITERATOR,     /**< Iterator object (see jerry_iterator_get_type) */

@@ -1571,6 +1571,15 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 
       switch (ext_object_p->u.class_prop.class_id)
       {
+        case LIT_MAGIC_STRING_SCRIPT_UL:
+        {
+          ecma_compiled_code_t *compiled_code_p;
+          compiled_code_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
+                                                             ext_object_p->u.class_prop.u.value);
+
+          ecma_bytecode_deref (compiled_code_p);
+          break;
+        }
         case LIT_MAGIC_STRING_STRING_UL:
         case LIT_MAGIC_STRING_NUMBER_UL:
 #if JERRY_ESNEXT
@@ -1684,13 +1693,10 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
         }
 #endif /* JERRY_ESNEXT */
 #if JERRY_MODULE_SYSTEM
-        case LIT_MAGIC_STRING_RUNNABLE_UL:
+        case LIT_MAGIC_STRING_MODULE_UL:
         {
-          ecma_extended_object_t *wrapper_p = (ecma_extended_object_t *) object_p;
-
-          JERRY_ASSERT (wrapper_p->u.class_prop.extra_info == ECMA_RUNNABLE_FLAGS_MODULE);
           ecma_module_t *root_module_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_module_t,
-                                                                          wrapper_p->u.class_prop.u.value);
+                                                                          ext_object_p->u.class_prop.u.value);
 
           ecma_bytecode_deref (root_module_p->compiled_code_p);
           ecma_module_cleanup (root_module_p);

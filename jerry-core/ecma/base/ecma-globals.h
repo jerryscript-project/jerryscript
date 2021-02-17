@@ -945,6 +945,8 @@ typedef struct
       union
       {
         ecma_value_t value; /**< value of the object (e.g. boolean, number, string, etc.) */
+        ecma_value_t date; /**< Date object [[DateValue]] internal property */
+        int32_t tza; /**< TimeZone adjustment for date objects */
         uint32_t length; /**< length related property (e.g. length of ArrayBuffer) */
         ecma_value_t target; /**< [[ProxyTarget]] internal property */
         ecma_value_t head; /**< points to the async generator task queue head item */
@@ -2312,6 +2314,28 @@ typedef struct
 #endif /* JERRY_SNAPSHOT_EXEC */
   } u;
 } ecma_mapped_arguments_t;
+
+#if JERRY_ESNEXT
+
+/**
+ * Date object descriptor flags
+ */
+typedef enum
+{
+  ECMA_DATE_TZA_NONE = 0,
+  ECMA_DATE_TZA_SET = 1 << 0,
+} ecma_date_object_flags_t;
+
+/**
+ * Definition of date object
+ */
+typedef struct
+{
+  ecma_extended_object_t header; /**< object header */
+  ecma_number_t date_value; /**< [[DateValue]] internal property */
+} ecma_date_object_t;
+
+#endif /* JERRY_ESNEXT */
 
 /**
  * @}

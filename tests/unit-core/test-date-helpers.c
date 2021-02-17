@@ -33,18 +33,6 @@
 int
 main (void)
 {
-  /* int ecma_date_day (time)*/
-
-  TEST_ASSERT (ecma_date_day (0) == 0);
-  TEST_ASSERT (ecma_date_day (MS_PER_DAY) == 1);
-
-  /* ecma_number_t ecma_date_time_within_day (time) */
-
-  TEST_ASSERT (ecma_date_time_within_day (0) == 0);
-  TEST_ASSERT (ecma_date_time_within_day (42) == 42);
-  TEST_ASSERT (ecma_date_time_within_day (42.51) == 42.51);
-  TEST_ASSERT (ecma_date_time_within_day (MS_PER_DAY + 42) == 42);
-
   /* int ecma_date_year_from_time (time) */
 
   TEST_ASSERT (ecma_date_year_from_time (0) == 1970);
@@ -119,13 +107,13 @@ main (void)
   /* ecma_number_t ecma_date_make_day (year, month, date) */
 
   TEST_ASSERT (ecma_date_make_day (1970, 0, 1) == 0);
-  TEST_ASSERT (ecma_date_make_day (1970, -1, 1) == -31);
-  TEST_ASSERT (ecma_date_make_day (1970, 0, 2.5) == 1);
-  TEST_ASSERT (ecma_date_make_day (1970, 1, 35) == 65);
-  TEST_ASSERT (ecma_date_make_day (1970, 13, 35) == 430);
-  TEST_ASSERT (ecma_date_make_day (2016, 2, 1) == 16861);
-  TEST_ASSERT (ecma_date_make_day (2016, 8, 31) == 17075);
-  TEST_ASSERT (ecma_date_make_day (2016, 9, 1) == 17075);
+  TEST_ASSERT (ecma_date_make_day (1970, -1, 1) == -2678400000);
+  TEST_ASSERT (ecma_date_make_day (1970, 0, 2.5) == 86400000);
+  TEST_ASSERT (ecma_date_make_day (1970, 1, 35) == 5616000000);
+  TEST_ASSERT (ecma_date_make_day (1970, 13, 35) == 37152000000);
+  TEST_ASSERT (ecma_date_make_day (2016, 2, 1) == 1456790400000);
+  TEST_ASSERT (ecma_date_make_day (2016, 8, 31) == 1475280000000);
+  TEST_ASSERT (ecma_date_make_day (2016, 9, 1) == 1475280000000);
 
   /* ecma_number_t ecma_date_make_date (day, time) */
 

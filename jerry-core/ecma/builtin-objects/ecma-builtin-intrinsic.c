@@ -210,16 +210,20 @@ ecma_builtin_intrinsic_dispatch_routine (uint8_t builtin_routine_id, /**< built-
         return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a Date object"));
       }
 
-      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) ecma_get_object_from_value (this_arg);
-      ecma_number_t *prim_value_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
-                                                                     ext_object_p->u.class_prop.u.value);
+#if JERRY_ESNEXT
+      ecma_number_t *date_value_p = &((ecma_date_object_t *) ecma_get_object_from_value (this_arg))->date_value;
+#else /* !JERRY_ESNEXT */
+      ecma_extended_object_t *arg_ext_object_p = (ecma_extended_object_t *) ecma_get_object_from_value (argument);
+      ecma_number_t *date_value_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
+                                                                     arg_ext_object_p->u.class_prop.u.date);
+#endif /* JERRY_ESNEXT */
 
-      if (ecma_number_is_nan (*prim_value_p))
+      if (ecma_number_is_nan (*date_value_p))
       {
         return ecma_make_magic_string_value (LIT_MAGIC_STRING_INVALID_DATE_UL);
       }
 
-      return ecma_date_value_to_utc_string (*prim_value_p);
+      return ecma_date_value_to_utc_string (*date_value_p);
     }
     case ECMA_INTRINSIC_STRING_TRIM_START:
     case ECMA_INTRINSIC_STRING_TRIM_END:

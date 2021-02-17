@@ -29,8 +29,7 @@
 // Global functions
 #define DECLARE_GLOBAL_FUNCTION(NAME) \
 jerry_value_t \
-NAME_FOR_GLOBAL_FUNCTION(NAME) (const jerry_value_t function_obj_p, \
-                  const jerry_value_t  this_obj, \
+NAME_FOR_GLOBAL_FUNCTION(NAME) (const jerry_call_info_t *call_info_p, \
                   const jerry_value_t    args[], \
                   const jerry_length_t   args_count)
 
@@ -43,8 +42,7 @@ NAME_FOR_GLOBAL_FUNCTION(NAME) (const jerry_value_t function_obj_p, \
 // Class constructors
 #define DECLARE_CLASS_CONSTRUCTOR(CLASS) \
 jerry_value_t \
-NAME_FOR_CLASS_CONSTRUCTOR(CLASS) (const jerry_value_t function_obj, \
-                  const jerry_value_t    this_obj, \
+NAME_FOR_CLASS_CONSTRUCTOR(CLASS) (const jerry_call_info_t *call_info_p, \
                   const jerry_value_t    args[], \
                   const jerry_length_t   args_count)
 
@@ -54,8 +52,7 @@ NAME_FOR_CLASS_CONSTRUCTOR(CLASS) (const jerry_value_t function_obj, \
 // Class functions
 #define DECLARE_CLASS_FUNCTION(CLASS, NAME) \
 jerry_value_t \
-NAME_FOR_CLASS_FUNCTION(CLASS, NAME) (const jerry_value_t function_obj, \
-                  const jerry_value_t  this_obj, \
+NAME_FOR_CLASS_FUNCTION(CLASS, NAME) (const jerry_call_info_t *call_info_p, \
                   const jerry_value_t    args[], \
                   const jerry_length_t   args_count)
 

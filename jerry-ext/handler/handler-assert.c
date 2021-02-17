@@ -29,13 +29,11 @@
  *         Note that the function does not return otherwise.
  */
 jerry_value_t
-jerryx_handler_assert_fatal (const jerry_value_t func_obj_val, /**< function object */
-                             const jerry_value_t this_p, /**< this arg */
+jerryx_handler_assert_fatal (const jerry_call_info_t *call_info_p, /**< call information */
                              const jerry_value_t args_p[], /**< function arguments */
                              const jerry_length_t args_cnt) /**< number of function arguments */
 {
-  (void) func_obj_val; /* unused */
-  (void) this_p; /* unused */
+  (void) call_info_p; /* unused */
 
   if (args_cnt == 1
       && jerry_value_is_boolean (args_p[0])
@@ -100,13 +98,11 @@ jerryx_handler_assert_fatal (const jerry_value_t func_obj_val, /**< function obj
  *         error - otherwise.
  */
 jerry_value_t
-jerryx_handler_assert_throw (const jerry_value_t func_obj_val, /**< function object */
-                             const jerry_value_t this_p, /**< this arg */
+jerryx_handler_assert_throw (const jerry_call_info_t *call_info_p, /**< call information */
                              const jerry_value_t args_p[], /**< function arguments */
                              const jerry_length_t args_cnt) /**< number of function arguments */
 {
-  (void) func_obj_val; /* unused */
-  (void) this_p; /* unused */
+  (void) call_info_p; /* unused */
 
   if (args_cnt == 1
       && jerry_value_is_boolean (args_p[0])
@@ -125,10 +121,9 @@ jerryx_handler_assert_throw (const jerry_value_t func_obj_val, /**< function obj
  *         Note that the function does not return otherwise.
  */
 jerry_value_t
-jerryx_handler_assert (const jerry_value_t func_obj_val, /**< function object */
-                       const jerry_value_t this_p, /**< this arg */
+jerryx_handler_assert (const jerry_call_info_t *call_info_p, /**< call information */
                        const jerry_value_t args_p[], /**< function arguments */
                        const jerry_length_t args_cnt) /**< number of function arguments */
 {
-  return jerryx_handler_assert_fatal (func_obj_val, this_p, args_p, args_cnt);
+  return jerryx_handler_assert_fatal (call_info_p, args_p, args_cnt);
 } /* jerryx_handler_assert */

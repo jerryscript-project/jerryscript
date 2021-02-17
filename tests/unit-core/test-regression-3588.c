@@ -22,13 +22,11 @@
  * Empty constructor
  */
 static jerry_value_t
-construct_handler (const jerry_value_t func_obj_val, /**< function object */
-                   const jerry_value_t this_val, /**< this arg */
+construct_handler (const jerry_call_info_t *call_info_p, /**< call information */
                    const jerry_value_t args_p[], /**< function arguments */
                    const jerry_length_t args_cnt) /**< number of function arguments */
 {
-  JERRY_UNUSED (func_obj_val);
-  JERRY_UNUSED (this_val);
+  JERRY_UNUSED (call_info_p);
 
   TEST_ASSERT (args_cnt == 1);
   TEST_ASSERT (jerry_get_number_value (args_p[0]) == 1.0);

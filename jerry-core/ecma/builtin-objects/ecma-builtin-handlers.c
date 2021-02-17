@@ -20,14 +20,14 @@
 #include "ecma-builtin-handlers.h"
 #include "ecma-promise-object.h"
 
-static const ecma_native_handler_t ecma_native_handlers[] =
+static const ecma_builtin_handler_t ecma_native_handlers[] =
 {
 #define ECMA_NATIVE_HANDLER(id, handler, length) handler,
 #include "ecma-builtin-handlers.inc.h"
 #undef ECMA_NATIVE_HANDLER
 };
 
-static const uint8_t  ecma_native_handler_lengths[] =
+static const uint8_t ecma_native_handler_lengths[] =
 {
 #define ECMA_NATIVE_HANDLER(id, handler, length) length,
 #include "ecma-builtin-handlers.inc.h"
@@ -39,7 +39,7 @@ static const uint8_t  ecma_native_handler_lengths[] =
  *
  * return Function pointer of the handler
  */
-ecma_native_handler_t
+ecma_builtin_handler_t
 ecma_builtin_handler_get (ecma_native_handler_id_t id) /**< handler id */
 {
   JERRY_ASSERT (id != ECMA_NATIVE_HANDLER_START && id < ECMA_NATIVE_HANDLER__COUNT);

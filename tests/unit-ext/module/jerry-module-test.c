@@ -138,13 +138,11 @@ static const jerryx_module_resolver_t *resolvers[3] =
 };
 
 static jerry_value_t
-handle_clear_require_cache (const jerry_value_t js_function,
-                            const jerry_value_t this_val,
+handle_clear_require_cache (const jerry_call_info_t *call_info_p,
                             const jerry_value_t args_p[],
                             const jerry_length_t args_count)
 {
-  (void) js_function;
-  (void) this_val;
+  (void) call_info_p;
   (void) args_count;
 
   TEST_ASSERT (args_count == 1);
@@ -154,13 +152,11 @@ handle_clear_require_cache (const jerry_value_t js_function,
 } /* handle_clear_require_cache */
 
 static jerry_value_t
-handle_require (const jerry_value_t js_function,
-                const jerry_value_t this_val,
+handle_require (const jerry_call_info_t *call_info_p,
                 const jerry_value_t args_p[],
                 const jerry_length_t args_count)
 {
-  (void) js_function;
-  (void) this_val;
+  (void) call_info_p;
   (void) args_count;
 
   jerry_value_t return_value = 0;

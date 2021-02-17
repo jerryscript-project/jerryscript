@@ -52,7 +52,7 @@ DECLARE_CLASS_FUNCTION(PwmOut, write) {
 
     // Extract native PwmOut pointer
     void* void_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
+    bool has_ptr = jerry_get_object_native_pointer(call_info_p->this_value, &void_ptr, &native_obj_type_info);
 
     if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,
@@ -85,7 +85,7 @@ DECLARE_CLASS_FUNCTION(PwmOut, read) {
 
     // Extract native PwmOut pointer
     void* void_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
+    bool has_ptr = jerry_get_object_native_pointer(call_info_p->this_value, &void_ptr, &native_obj_type_info);
 
     if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,
@@ -113,7 +113,7 @@ DECLARE_CLASS_FUNCTION(PwmOut, period) {
 
     // Extract native PwmOut pointer
     void* void_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
+    bool has_ptr = jerry_get_object_native_pointer(call_info_p->this_value, &void_ptr, &native_obj_type_info);
 
     if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,
@@ -139,7 +139,7 @@ DECLARE_CLASS_FUNCTION(PwmOut, period_ms) {
 
     // Extract native PwmOut pointer
     void* void_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
+    bool has_ptr = jerry_get_object_native_pointer(call_info_p->this_value, &void_ptr, &native_obj_type_info);
 
     if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,
@@ -165,7 +165,7 @@ DECLARE_CLASS_FUNCTION(PwmOut, period_us) {
 
     // Extract native PwmOut pointer
     void* void_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
+    bool has_ptr = jerry_get_object_native_pointer(call_info_p->this_value, &void_ptr, &native_obj_type_info);
 
     if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,
@@ -191,7 +191,7 @@ DECLARE_CLASS_FUNCTION(PwmOut, pulsewidth) {
 
     // Extract native PwmOut pointer
     void* void_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
+    bool has_ptr = jerry_get_object_native_pointer(call_info_p->this_value, &void_ptr, &native_obj_type_info);
 
     if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,
@@ -217,7 +217,7 @@ DECLARE_CLASS_FUNCTION(PwmOut, pulsewidth_ms) {
 
     // Extract native PwmOut pointer
     void* void_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
+    bool has_ptr = jerry_get_object_native_pointer(call_info_p->this_value, &void_ptr, &native_obj_type_info);
 
     if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,
@@ -243,7 +243,7 @@ DECLARE_CLASS_FUNCTION(PwmOut, pulsewidth_us) {
 
     // Extract native PwmOut pointer
     void* void_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
+    bool has_ptr = jerry_get_object_native_pointer(call_info_p->this_value, &void_ptr, &native_obj_type_info);
 
     if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,

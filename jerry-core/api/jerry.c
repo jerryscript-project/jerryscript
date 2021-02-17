@@ -4836,34 +4836,6 @@ jerry_get_resource_name (const jerry_value_t value) /**< jerry api value */
 } /* jerry_get_resource_name */
 
 /**
- * Access the "new.target" value.
- *
- * The "new.target" value depends on the current call site. That is
- * this method will only have a function object result if, at the call site
- * it was called inside a constructor method invoked with "new".
- *
- * @return "undefined" - if at the call site it was not a constructor call.
- *         function object - if the current call site is in a constructor call.
- */
-jerry_value_t
-jerry_get_new_target (void)
-{
-#if JERRY_ESNEXT
-  ecma_object_t *current_new_target_p = JERRY_CONTEXT (current_new_target_p);
-
-  if (current_new_target_p == NULL)
-  {
-    return jerry_create_undefined ();
-  }
-
-  ecma_ref_object (current_new_target_p);
-  return ecma_make_object_value (current_new_target_p);
-#else /* !JERRY_ESNEXT */
-  return jerry_create_undefined ();
-#endif /* JERRY_ESNEXT */
-} /* jerry_get_new_target */
-
-/**
  * Replaces the currently active realm with another realm.
  *
  * The replacement should be temporary, and the original realm must be

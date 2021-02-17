@@ -1059,8 +1059,7 @@ opfunc_add_computed_field (ecma_value_t class_object, /**< class object */
  *         ECMA_VALUE_UNDEFINED - otherwise
  */
 static ecma_value_t
-ecma_op_implicit_constructor_handler_cb (const ecma_value_t function_obj, /**< the function itself */
-                                         const ecma_value_t this_val, /**< this_arg of the function */
+ecma_op_implicit_constructor_handler_cb (const jerry_call_info_t *call_info_p, /**< call information */
                                          const ecma_value_t args_p[], /**< argument list */
                                          const uint32_t args_count) /**< argument number */
 {
@@ -1071,7 +1070,7 @@ ecma_op_implicit_constructor_handler_cb (const ecma_value_t function_obj, /**< t
     return ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor cannot be invoked without 'new'"));
   }
 
-  return opfunc_init_class_fields (function_obj, this_val);
+  return opfunc_init_class_fields (call_info_p->function, call_info_p->this_value);
 } /* ecma_op_implicit_constructor_handler_cb */
 
 /**
@@ -1083,19 +1082,16 @@ ecma_op_implicit_constructor_handler_cb (const ecma_value_t function_obj, /**< t
  *         result of the super call - otherwise
  */
 static ecma_value_t
-ecma_op_implicit_constructor_handler_heritage_cb (const ecma_value_t function_obj, /**< the function itself */
-                                                  const ecma_value_t this_val, /**< this_arg of the function */
+ecma_op_implicit_constructor_handler_heritage_cb (const jerry_call_info_t *call_info_p, /**< call information */
                                                   const ecma_value_t args_p[], /**< argument list */
                                                   const uint32_t args_count) /**< argument number */
 {
-  JERRY_UNUSED (this_val);
-
   if (JERRY_CONTEXT (current_new_target_p) == NULL)
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor cannot be invoked without 'new'"));
   }
 
-  ecma_object_t *func_obj_p = ecma_get_object_from_value (function_obj);
+  ecma_object_t *func_obj_p = ecma_get_object_from_value (call_info_p->function);
   ecma_value_t super_ctor = ecma_op_function_get_super_constructor (func_obj_p);
 
   if (ECMA_IS_VALUE_ERROR (super_ctor))
@@ -1112,7 +1108,7 @@ ecma_op_implicit_constructor_handler_heritage_cb (const ecma_value_t function_ob
 
   if (ecma_is_value_object (result))
   {
-    ecma_value_t fields_value = opfunc_init_class_fields (function_obj, result);
+    ecma_value_t fields_value = opfunc_init_class_fields (call_info_p->function, result);
 
     if (ECMA_IS_VALUE_ERROR (fields_value))
     {

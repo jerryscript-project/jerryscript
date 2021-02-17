@@ -53,7 +53,7 @@ DECLARE_CLASS_FUNCTION(InterruptIn, rise) {
     // Detach the rise callback when InterruptIn::rise(null) is called
     if (jerry_value_is_null(args[0])) {
         void *void_ptr;
-        bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
+        bool has_ptr = jerry_get_object_native_pointer(call_info_p->this_value, &void_ptr, &native_obj_type_info);
 
         if (!has_ptr) {
             return jerry_create_error(JERRY_ERROR_TYPE,
@@ -63,7 +63,7 @@ DECLARE_CLASS_FUNCTION(InterruptIn, rise) {
         InterruptIn *native_ptr = static_cast<InterruptIn*>(void_ptr);
 
         jerry_value_t property_name = jerry_create_string((const jerry_char_t*)"cb_rise");
-        jerry_value_t cb_func = jerry_get_property(this_obj, property_name);
+        jerry_value_t cb_func = jerry_get_property(call_info_p->this_value, property_name);
         jerry_release_value(property_name);
 
         // Only drop the callback if it exists
@@ -82,7 +82,7 @@ DECLARE_CLASS_FUNCTION(InterruptIn, rise) {
     CHECK_ARGUMENT_TYPE_ALWAYS(InterruptIn, rise, 0, function);
 
     void *void_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
+    bool has_ptr = jerry_get_object_native_pointer(call_info_p->this_value, &void_ptr, &native_obj_type_info);
 
     if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,
@@ -99,7 +99,7 @@ DECLARE_CLASS_FUNCTION(InterruptIn, rise) {
 
     // Keep track of our callback internally.
     jerry_value_t property_name = jerry_create_string((const jerry_char_t*)"cb_rise");
-    jerry_release_value(jerry_set_property(this_obj, property_name, f));
+    jerry_release_value(jerry_set_property(call_info_p->this_value, property_name, f));
     jerry_release_value(property_name);
 
     return jerry_create_undefined();
@@ -118,7 +118,7 @@ DECLARE_CLASS_FUNCTION(InterruptIn, fall) {
     // Detach the fall callback when InterruptIn::fall(null) is called
     if (jerry_value_is_null(args[0])) {
         void *void_ptr;
-        bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
+        bool has_ptr = jerry_get_object_native_pointer(call_info_p->this_value, &void_ptr, &native_obj_type_info);
 
         if (!has_ptr) {
             return jerry_create_error(JERRY_ERROR_TYPE,
@@ -128,7 +128,7 @@ DECLARE_CLASS_FUNCTION(InterruptIn, fall) {
         InterruptIn *native_ptr = static_cast<InterruptIn*>(void_ptr);
 
         jerry_value_t property_name = jerry_create_string((const jerry_char_t*)"cb_fall");
-        jerry_value_t cb_func = jerry_get_property(this_obj, property_name);
+        jerry_value_t cb_func = jerry_get_property(call_info_p->this_value, property_name);
         jerry_release_value(property_name);
 
         // Only drop the callback if it exists
@@ -147,7 +147,7 @@ DECLARE_CLASS_FUNCTION(InterruptIn, fall) {
     CHECK_ARGUMENT_TYPE_ALWAYS(InterruptIn, fall, 0, function);
 
     void *void_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
+    bool has_ptr = jerry_get_object_native_pointer(call_info_p->this_value, &void_ptr, &native_obj_type_info);
 
     if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,
@@ -164,7 +164,7 @@ DECLARE_CLASS_FUNCTION(InterruptIn, fall) {
 
     // Keep track of our callback internally.
     jerry_value_t property_name = jerry_create_string((const jerry_char_t*)"cb_fall");
-    jerry_release_value(jerry_set_property(this_obj, property_name, f));
+    jerry_release_value(jerry_set_property(call_info_p->this_value, property_name, f));
     jerry_release_value(property_name);
 
     return jerry_create_undefined();
@@ -182,7 +182,7 @@ DECLARE_CLASS_FUNCTION(InterruptIn, mode) {
     CHECK_ARGUMENT_TYPE_ALWAYS(InterruptIn, mode, 0, number);
 
     void *void_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
+    bool has_ptr = jerry_get_object_native_pointer(call_info_p->this_value, &void_ptr, &native_obj_type_info);
 
     if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,
@@ -206,7 +206,7 @@ DECLARE_CLASS_FUNCTION(InterruptIn, disable_irq) {
     CHECK_ARGUMENT_COUNT(InterruptIn, disable_irq, (args_count == 0));
 
     void *void_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
+    bool has_ptr = jerry_get_object_native_pointer(call_info_p->this_value, &void_ptr, &native_obj_type_info);
 
     if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,
@@ -228,7 +228,7 @@ DECLARE_CLASS_FUNCTION(InterruptIn, enable_irq) {
     CHECK_ARGUMENT_COUNT(InterruptIn, enable_irq, (args_count == 0));
 
     void *void_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
+    bool has_ptr = jerry_get_object_native_pointer(call_info_p->this_value, &void_ptr, &native_obj_type_info);
 
     if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,

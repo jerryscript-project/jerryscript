@@ -18,13 +18,11 @@
 #include "test-common.h"
 
 static jerry_value_t
-backtrace_handler (const jerry_value_t function_obj, /**< function object */
-                   const jerry_value_t this_val, /**< this value */
+backtrace_handler (const jerry_call_info_t *call_info_p, /**< call information */
                    const jerry_value_t args_p[], /**< argument list */
                    const jerry_length_t args_count) /**< argument count */
 {
-  JERRY_UNUSED (function_obj);
-  JERRY_UNUSED (this_val);
+  JERRY_UNUSED (call_info_p);
 
   uint32_t max_depth = 0;
 
@@ -98,13 +96,11 @@ backtrace_callback (jerry_backtrace_frame_t *frame_p, /* frame information */
 } /* backtrace_callback */
 
 static jerry_value_t
-capture_handler (const jerry_value_t function_obj, /**< function object */
-                 const jerry_value_t this_val, /**< this value */
+capture_handler (const jerry_call_info_t *call_info_p, /**< call information */
                  const jerry_value_t args_p[], /**< argument list */
                  const jerry_length_t args_count) /**< argument count */
 {
-  JERRY_UNUSED (function_obj);
-  JERRY_UNUSED (this_val);
+  JERRY_UNUSED (call_info_p);
   JERRY_UNUSED (args_p);
   JERRY_UNUSED (args_count);
 

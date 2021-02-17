@@ -47,13 +47,10 @@ enum
 };
 
 static jerry_value_t
-construct_handler (const jerry_value_t func_obj_val, /**< function object */
-                   const jerry_value_t this_val, /**< this arg */
+construct_handler (const jerry_call_info_t *call_info_p, /**< call information */
                    const jerry_value_t args_p[], /**< function arguments */
                    const jerry_length_t args_cnt) /**< number of function arguments */
 {
-  JERRY_UNUSED (func_obj_val);
-  JERRY_UNUSED (this_val);
   JERRY_UNUSED (args_p);
 
   if (args_cnt != 1 || !jerry_value_is_number (args_p[0]))
@@ -68,32 +65,31 @@ construct_handler (const jerry_value_t func_obj_val, /**< function object */
     case TEST_ID_SIMPLE_CONSTRUCT:
     {
       /* Method was called with "new": new.target should be equal to the function object. */
-      jerry_value_t target = jerry_get_new_target ();
+      jerry_value_t target = call_info_p->new_target;
       TEST_ASSERT (!jerry_value_is_undefined (target));
-      TEST_ASSERT (target == func_obj_val);
-      jerry_release_value (target);
+      TEST_ASSERT (target == call_info_p->function);
       break;
     }
     case TEST_ID_SIMPLE_CALL:
     {
       /* Method was called directly without "new": new.target should be equal undefined. */
-      jerry_value_t target = jerry_get_new_target ();
+      jerry_value_t target = call_info_p->new_target;
       TEST_ASSERT (jerry_value_is_undefined (target));
-      TEST_ASSERT (target != func_obj_val);
-      jerry_release_value (target);
+      TEST_ASSERT (target != call_info_p->function);
       break;
     }
     case TEST_ID_CONSTRUCT_AND_CALL_SUB:
     {
       /* Method was called with "new": new.target should be equal to the function object. */
-      jerry_value_t target = jerry_get_new_target ();
+      jerry_value_t target = call_info_p->new_target;
       TEST_ASSERT (!jerry_value_is_undefined (target));
-      TEST_ASSERT (target == func_obj_val);
-      jerry_release_value (target);
+      TEST_ASSERT (target == call_info_p->function);
 
       /* Calling a function should hide the old "new.target". */
       jerry_value_t sub_arg = jerry_create_number (TEST_ID_SIMPLE_CALL);
-      jerry_value_t func_call_result = jerry_call_function (func_obj_val, this_val, &sub_arg, 1);
+      jerry_value_t func_call_result;
+
+      func_call_result = jerry_call_function (call_info_p->function, call_info_p->this_value, &sub_arg, 1);
       TEST_ASSERT (!jerry_value_is_error (func_call_result));
       TEST_ASSERT (jerry_value_is_undefined (func_call_result));
       break;

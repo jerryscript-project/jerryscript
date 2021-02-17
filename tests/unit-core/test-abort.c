@@ -19,13 +19,11 @@
 #include "test-common.h"
 
 static jerry_value_t
-callback_func (const jerry_value_t function_obj,
-               const jerry_value_t this_val,
+callback_func (const jerry_call_info_t *call_info_p,
                const jerry_value_t args_p[],
                const jerry_length_t args_count)
 {
-  JERRY_UNUSED (function_obj);
-  JERRY_UNUSED (this_val);
+  JERRY_UNUSED (call_info_p);
   JERRY_UNUSED (args_p);
   JERRY_UNUSED (args_count);
 

@@ -1481,8 +1481,8 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
 #if JERRY_ESNEXT
     if (JERRY_UNLIKELY (ext_obj_p->u.built_in.id == ECMA_BUILTIN_ID_HANDLER))
     {
-      ecma_native_handler_t handler = ecma_builtin_handler_get (ext_obj_p->u.built_in.routine_id);
-      return handler (ecma_make_object_value (obj_p), this_arg_value, arguments_list_p, arguments_list_len);
+      ecma_builtin_handler_t handler = ecma_builtin_handler_get (ext_obj_p->u.built_in.routine_id);
+      return handler (obj_p, arguments_list_p, arguments_list_len);
     }
 #endif /* !JERRY_ESNEXT */
 

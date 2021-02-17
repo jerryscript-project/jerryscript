@@ -32,7 +32,7 @@ DECLARE_GLOBAL_FUNCTION(setTimeout) {
 
     int id = mbed::js::EventLoop::getInstance().getQueue().call_in(interval, jerry_call_function, args[0], jerry_create_null(), (jerry_value_t*)NULL, 0);
 
-    jerry_value_t result = jerry_set_property_by_index(function_obj_p, id, args[0]);
+    jerry_value_t result = jerry_set_property_by_index(call_info_p->function, id, args[0]);
 
     if (jerry_value_is_error(result)) {
         jerry_release_value(result);

@@ -49,7 +49,7 @@ DECLARE_CLASS_FUNCTION(I2C, frequency) {
 
     // Unwrap native I2C object
     void *void_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
+    bool has_ptr = jerry_get_object_native_pointer(call_info_p->this_value, &void_ptr, &native_obj_type_info);
 
     if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,
@@ -91,7 +91,7 @@ DECLARE_CLASS_FUNCTION(I2C, read) {
     if (args_count == 1) {
         CHECK_ARGUMENT_TYPE_ALWAYS(I2C, read, 0, number);
         void *void_ptr;
-        bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
+        bool has_ptr = jerry_get_object_native_pointer(call_info_p->this_value, &void_ptr, &native_obj_type_info);
 
         if (!has_ptr) {
             return jerry_create_error(JERRY_ERROR_TYPE,
@@ -112,7 +112,7 @@ DECLARE_CLASS_FUNCTION(I2C, read) {
         CHECK_ARGUMENT_TYPE_ON_CONDITION(I2C, read, 3, boolean, (args_count == 4));
 
         void *void_ptr;
-        bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
+        bool has_ptr = jerry_get_object_native_pointer(call_info_p->this_value, &void_ptr, &native_obj_type_info);
 
         if (!has_ptr) {
             return jerry_create_error(JERRY_ERROR_TYPE,
@@ -186,7 +186,7 @@ DECLARE_CLASS_FUNCTION(I2C, write) {
 
         // Extract native I2C object
         void *void_ptr;
-        bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
+        bool has_ptr = jerry_get_object_native_pointer(call_info_p->this_value, &void_ptr, &native_obj_type_info);
 
         if (!has_ptr) {
             return jerry_create_error(JERRY_ERROR_TYPE,
@@ -209,7 +209,7 @@ DECLARE_CLASS_FUNCTION(I2C, write) {
 
         // Extract native I2C object
         void *void_ptr;
-        bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
+        bool has_ptr = jerry_get_object_native_pointer(call_info_p->this_value, &void_ptr, &native_obj_type_info);
 
         if (!has_ptr) {
             return jerry_create_error(JERRY_ERROR_TYPE,
@@ -249,7 +249,7 @@ DECLARE_CLASS_FUNCTION(I2C, start) {
 
     // Extract native I2C object
     void *void_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
+    bool has_ptr = jerry_get_object_native_pointer(call_info_p->this_value, &void_ptr, &native_obj_type_info);
 
     if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,
@@ -272,7 +272,7 @@ DECLARE_CLASS_FUNCTION(I2C, stop) {
 
     // Extract native I2C object
     void *void_ptr;
-    bool has_ptr = jerry_get_object_native_pointer(this_obj, &void_ptr, &native_obj_type_info);
+    bool has_ptr = jerry_get_object_native_pointer(call_info_p->this_value, &void_ptr, &native_obj_type_info);
 
     if (!has_ptr) {
         return jerry_create_error(JERRY_ERROR_TYPE,

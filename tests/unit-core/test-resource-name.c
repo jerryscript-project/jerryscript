@@ -18,13 +18,11 @@
 #include "test-common.h"
 
 static jerry_value_t
-resource_name_handler (const jerry_value_t function_obj, /**< function object */
-                       const jerry_value_t this_val, /**< this value */
+resource_name_handler (const jerry_call_info_t *call_info_p, /**< call information */
                        const jerry_value_t args_p[], /**< argument list */
                        const jerry_length_t args_count) /**< argument count */
 {
-  (void) function_obj;
-  (void) this_val;
+  (void) call_info_p;
 
   jerry_value_t undefined_value = jerry_create_undefined ();
   jerry_value_t resource_name = jerry_get_resource_name (args_count > 0 ? args_p[0] : undefined_value);

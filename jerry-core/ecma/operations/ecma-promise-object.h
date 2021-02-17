@@ -112,32 +112,23 @@ void ecma_fulfill_promise (ecma_value_t promise, ecma_value_t value);
 ecma_object_t *ecma_promise_new_capability (ecma_value_t constructor);
 ecma_value_t ecma_promise_reject_or_resolve (ecma_value_t this_arg, ecma_value_t value, bool is_resolve);
 ecma_value_t ecma_promise_then (ecma_value_t promise, ecma_value_t on_fulfilled, ecma_value_t on_rejected);
-ecma_value_t ecma_value_thunk_helper_cb (const ecma_value_t function_obj,
-                                         const ecma_value_t this_val,
-                                         const ecma_value_t args_p[],
-                                         const uint32_t args_count);
-ecma_value_t ecma_value_thunk_thrower_cb (const ecma_value_t function_obj,
-                                          const ecma_value_t this_val,
-                                          const ecma_value_t args_p[],
-                                          const uint32_t args_count);
-ecma_value_t ecma_promise_then_finally_cb (const ecma_value_t function_obj,
-                                           const ecma_value_t this_val,
-                                           const ecma_value_t args_p[],
-                                           const uint32_t args_count);
-ecma_value_t ecma_promise_catch_finally_cb (const ecma_value_t function_obj,
-                                            const ecma_value_t this_val,
-                                            const ecma_value_t args_p[],
-                                            const uint32_t args_count);
-ecma_value_t
-ecma_promise_reject_handler (const ecma_value_t function,
-                             const ecma_value_t this_arg,
-                             const ecma_value_t argv[],
-                             const uint32_t argc);
-ecma_value_t
-ecma_promise_resolve_handler (const ecma_value_t function,
-                              const ecma_value_t this_arg,
-                              const ecma_value_t argv[],
-                              const uint32_t argc);
+
+ecma_value_t ecma_value_thunk_helper_cb (ecma_object_t *function_obj_p,
+                                         const ecma_value_t args_p[], const uint32_t args_count);
+ecma_value_t ecma_value_thunk_thrower_cb (ecma_object_t *function_obj_p,
+                                          const ecma_value_t args_p[], const uint32_t args_count);
+ecma_value_t ecma_promise_then_finally_cb (ecma_object_t *function_obj_p,
+                                           const ecma_value_t args_p[], const uint32_t args_count);
+ecma_value_t ecma_promise_catch_finally_cb (ecma_object_t *function_obj_p,
+                                            const ecma_value_t args_p[], const uint32_t args_count);
+ecma_value_t ecma_promise_reject_handler (ecma_object_t *function_obj_p,
+                                          const ecma_value_t argv[], const uint32_t args_count);
+ecma_value_t ecma_promise_resolve_handler (ecma_object_t *function_obj_p,
+                                           const ecma_value_t argv[], const uint32_t args_count);
+ecma_value_t ecma_promise_all_handler_cb (ecma_object_t *function_obj_p,
+                                          const ecma_value_t args_p[], const uint32_t args_count);
+ecma_value_t ecma_op_get_capabilities_executor_cb (ecma_object_t *function_obj_p,
+                                                   const ecma_value_t args_p[], const uint32_t args_count);
 
 ecma_value_t ecma_promise_finally (ecma_value_t promise, ecma_value_t on_finally);
 void ecma_promise_async_then (ecma_value_t promise, ecma_value_t executable_object);
@@ -145,11 +136,6 @@ ecma_value_t ecma_promise_async_await (ecma_extended_object_t *async_generator_o
 void ecma_promise_create_resolving_functions (ecma_promise_object_t *object_p);
 
 uint32_t ecma_promise_remaining_inc_or_dec (ecma_value_t remaining, bool is_inc);
-ecma_value_t ecma_promise_all_handler_cb (const ecma_value_t function_obj, const ecma_value_t this_val,
-                                          const ecma_value_t args_p[], const uint32_t args_count);
-
-ecma_value_t ecma_op_get_capabilities_executor_cb (const ecma_value_t function_obj, const ecma_value_t this_val,
-                                                   const ecma_value_t args_p[], const uint32_t args_count);
 
 /**
  * @}

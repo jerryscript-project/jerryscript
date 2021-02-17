@@ -106,13 +106,10 @@ static int validator_restore_count = 0;
  *
  */
 static jerry_value_t
-test_validator1_handler (const jerry_value_t func_obj_val, /**< function object */
-                         const jerry_value_t this_val, /**< this value */
+test_validator1_handler (const jerry_call_info_t *call_info_p, /**< call information */
                          const jerry_value_t args_p[], /**< arguments list */
                          const jerry_length_t args_cnt) /**< arguments length */
 {
-  JERRY_UNUSED (func_obj_val);
-
   bool arg1;
   double arg2 = 0.0;
   char arg3[5] = "1234";
@@ -132,7 +129,7 @@ test_validator1_handler (const jerry_value_t func_obj_val, /**< function object 
     jerryx_arg_function (&arg4, JERRYX_ARG_OPTIONAL)
   };
 
-  jerry_value_t is_ok = jerryx_arg_transform_this_and_args (this_val,
+  jerry_value_t is_ok = jerryx_arg_transform_this_and_args (call_info_p->this_value,
                                                             args_p,
                                                             args_cnt,
                                                             mapping,
@@ -210,13 +207,10 @@ my_custom_transform (jerryx_arg_js_iterator_t *js_arg_iter_p, /**< available JS 
  *   arg1: should pass the custom tranform function.
  */
 static jerry_value_t
-test_validator2_handler (const jerry_value_t func_obj_val, /**< function object */
-                         const jerry_value_t this_val, /**< this value */
+test_validator2_handler (const jerry_call_info_t *call_info_p, /**< call information */
                          const jerry_value_t args_p[], /**< arguments list */
                          const jerry_length_t args_cnt) /**< arguments length */
 {
-  JERRY_UNUSED (func_obj_val);
-
   my_type_a_t *thing_p;
 
   jerryx_arg_t mapping[] =
@@ -227,7 +221,7 @@ test_validator2_handler (const jerry_value_t func_obj_val, /**< function object 
     jerryx_arg_custom (NULL, 5, my_custom_transform)
   };
 
-  jerry_value_t is_ok = jerryx_arg_transform_this_and_args (this_val,
+  jerry_value_t is_ok = jerryx_arg_transform_this_and_args (call_info_p->this_value,
                                                             args_p,
                                                             args_cnt,
                                                             mapping,
@@ -256,14 +250,10 @@ test_validator2_handler (const jerry_value_t func_obj_val, /**< function object 
  *
  */
 static jerry_value_t
-test_validator3_handler (const jerry_value_t func_obj_val, /**< function object */
-                         const jerry_value_t this_val, /**< this value */
+test_validator3_handler (const jerry_call_info_t *call_info_p, /**< call information */
                          const jerry_value_t args_p[], /**< arguments list */
                          const jerry_length_t args_cnt) /**< arguments length */
 {
-
-  JERRY_UNUSED (func_obj_val);
-
   bool arg1 = false;
   bool arg2 = false;
 
@@ -277,7 +267,7 @@ test_validator3_handler (const jerry_value_t func_obj_val, /**< function object 
     jerryx_arg_boolean (&arg2, JERRYX_ARG_COERCE, JERRYX_ARG_OPTIONAL),
   };
 
-  jerry_value_t is_ok = jerryx_arg_transform_this_and_args (this_val,
+  jerry_value_t is_ok = jerryx_arg_transform_this_and_args (call_info_p->this_value,
                                                             args_p,
                                                             args_cnt,
                                                             mapping,
@@ -323,13 +313,11 @@ test_validator3_handler (const jerry_value_t func_obj_val, /**< function object 
  * Calling jerryx_arg_transform_object_properties directly.
  */
 static jerry_value_t
-test_validator_prop1_handler (const jerry_value_t func_obj_val, /**< function object */
-                              const jerry_value_t this_val, /**< this value */
+test_validator_prop1_handler (const jerry_call_info_t *call_info_p, /**< call information */
                               const jerry_value_t args_p[], /**< arguments list */
                               const jerry_length_t args_cnt) /**< arguments length */
 {
-  JERRY_UNUSED (func_obj_val);
-  JERRY_UNUSED (this_val);
+  JERRY_UNUSED (call_info_p);
   JERRY_UNUSED (args_cnt);
 
   bool native1 = false;
@@ -366,13 +354,11 @@ test_validator_prop1_handler (const jerry_value_t func_obj_val, /**< function ob
  * using jerryx_arg_object_properties.
  */
 static jerry_value_t
-test_validator_prop2_handler (const jerry_value_t func_obj_val, /**< function object */
-                              const jerry_value_t this_val, /**< this value */
+test_validator_prop2_handler (const jerry_call_info_t *call_info_p, /**< call information */
                               const jerry_value_t args_p[], /**< arguments list */
                               const jerry_length_t args_cnt) /**< arguments length */
 {
-  JERRY_UNUSED (func_obj_val);
-  JERRY_UNUSED (this_val);
+  JERRY_UNUSED (call_info_p);
 
   bool native1 = false;
   double native2 = 0;
@@ -416,13 +402,11 @@ test_validator_prop2_handler (const jerry_value_t func_obj_val, /**< function ob
 } /* test_validator_prop2_handler */
 
 static jerry_value_t
-test_validator_prop3_handler (const jerry_value_t func_obj_val, /**< function object */
-                              const jerry_value_t this_val, /**< this value */
+test_validator_prop3_handler (const jerry_call_info_t *call_info_p, /**< call information */
                               const jerry_value_t args_p[], /**< arguments list */
                               const jerry_length_t args_cnt) /**< arguments length */
 {
-  JERRY_UNUSED (func_obj_val);
-  JERRY_UNUSED (this_val);
+  JERRY_UNUSED (call_info_p);
   JERRY_UNUSED (args_cnt);
 
   bool native1 = false;
@@ -456,13 +440,11 @@ test_validator_prop3_handler (const jerry_value_t func_obj_val, /**< function ob
  * args_p[0-2] are uint8, args_p[3-5] are int8, args_p[6-8] are uint32, args_p[9-11] are int32.
  */
 static jerry_value_t
-test_validator_int1_handler (const jerry_value_t func_obj_val, /**< function object */
-                             const jerry_value_t this_val, /**< this value */
+test_validator_int1_handler (const jerry_call_info_t *call_info_p, /**< call information */
                              const jerry_value_t args_p[], /**< arguments list */
                              const jerry_length_t args_cnt) /**< arguments length */
 {
-  JERRY_UNUSED (func_obj_val);
-  JERRY_UNUSED (this_val);
+  JERRY_UNUSED (call_info_p);
 
   uint8_t num0, num1, num2;
   int8_t num3, num4, num5;
@@ -511,13 +493,11 @@ test_validator_int1_handler (const jerry_value_t func_obj_val, /**< function obj
 } /* test_validator_int1_handler */
 
 static jerry_value_t
-test_validator_int2_handler (const jerry_value_t func_obj_val, /**< function object */
-                             const jerry_value_t this_val, /**< this value */
+test_validator_int2_handler (const jerry_call_info_t *call_info_p, /**< call information */
                              const jerry_value_t args_p[], /**< arguments list */
                              const jerry_length_t args_cnt) /**< arguments length */
 {
-  JERRY_UNUSED (func_obj_val);
-  JERRY_UNUSED (this_val);
+  JERRY_UNUSED (call_info_p);
 
   int8_t num0, num1, num2, num3, num4, num5, num6, num7, num8, num9;
   num8 = 123;
@@ -561,13 +541,11 @@ test_validator_int2_handler (const jerry_value_t func_obj_val, /**< function obj
 } /* test_validator_int2_handler */
 
 static jerry_value_t
-test_validator_int3_handler (const jerry_value_t func_obj_val, /**< function object */
-                             const jerry_value_t this_val, /**< this value */
+test_validator_int3_handler (const jerry_call_info_t *call_info_p, /**< call information */
                              const jerry_value_t args_p[], /**< arguments list */
                              const jerry_length_t args_cnt) /**< arguments length */
 {
-  JERRY_UNUSED (func_obj_val);
-  JERRY_UNUSED (this_val);
+  JERRY_UNUSED (call_info_p);
 
   int8_t num0;
 
@@ -590,13 +568,11 @@ test_validator_int3_handler (const jerry_value_t func_obj_val, /**< function obj
 } /* test_validator_int3_handler */
 
 static jerry_value_t
-test_validator_array1_handler (const jerry_value_t func_obj_val, /**< function object */
-                               const jerry_value_t this_val, /**< this value */
+test_validator_array1_handler (const jerry_call_info_t *call_info_p, /**< call information */
                                const jerry_value_t args_p[], /**< arguments list */
                                const jerry_length_t args_cnt) /**< arguments length */
 {
-  JERRY_UNUSED (func_obj_val);
-  JERRY_UNUSED (this_val);
+  JERRY_UNUSED (call_info_p);
 
   double native1 = 0;
   double native2 = 0;
@@ -636,13 +612,11 @@ test_validator_array1_handler (const jerry_value_t func_obj_val, /**< function o
 } /* test_validator_array1_handler */
 
 static jerry_value_t
-test_validator_array2_handler (const jerry_value_t func_obj_val, /**< function object */
-                               const jerry_value_t this_val, /**< this value */
+test_validator_array2_handler (const jerry_call_info_t *call_info_p, /**< call information */
                                const jerry_value_t args_p[], /**< arguments list */
                                const jerry_length_t args_cnt) /**< arguments length */
 {
-  JERRY_UNUSED (func_obj_val);
-  JERRY_UNUSED (this_val);
+  JERRY_UNUSED (call_info_p);
   JERRY_UNUSED (args_cnt);
 
   double native1 = 0;
@@ -794,13 +768,11 @@ jerry_arg_to_double_or_bool_t (jerryx_arg_js_iterator_t *js_arg_iter_p,
  * order doesn't matter (so we'll call it twice with the orders reversed).
 */
 static jerry_value_t
-test_validator_restore_handler (const jerry_value_t func_obj_val, /**< function object */
-                                const jerry_value_t this_val, /**< this value */
+test_validator_restore_handler (const jerry_call_info_t *call_info_p, /**< call information */
                                 const jerry_value_t args_p[], /**< arguments list */
                                 const jerry_length_t args_cnt) /**< arguments length */
 {
-  JERRY_UNUSED (func_obj_val);
-  JERRY_UNUSED (this_val);
+  JERRY_UNUSED (call_info_p);
 
   double_or_bool_t arg1;
   double_or_bool_t arg2;
@@ -853,19 +825,17 @@ test_utf8_string (void)
 } /* test_utf8_string */
 
 static jerry_value_t
-create_object_a_handler (const jerry_value_t func_obj_val, /**< function object */
-                         const jerry_value_t this_val, /**< this value */
+create_object_a_handler (const jerry_call_info_t *call_info_p, /**< call information */
                          const jerry_value_t args_p[], /**< arguments list */
                          const jerry_length_t args_cnt) /**< arguments length */
 {
-  JERRY_UNUSED (func_obj_val);
   JERRY_UNUSED (args_p);
   JERRY_UNUSED (args_cnt);
 
-  TEST_ASSERT (jerry_value_is_object (this_val));
+  TEST_ASSERT (jerry_value_is_object (call_info_p->this_value));
 
   my_thing_a.x = 1;
-  jerry_set_object_native_pointer (this_val,
+  jerry_set_object_native_pointer (call_info_p->this_value,
                                    &my_thing_a,
                                    &thing_a_info);
 
@@ -873,19 +843,17 @@ create_object_a_handler (const jerry_value_t func_obj_val, /**< function object 
 } /* create_object_a_handler */
 
 static jerry_value_t
-create_object_b_handler (const jerry_value_t func_obj_val, /**< function object */
-                         const jerry_value_t this_val, /**< this value */
+create_object_b_handler (const jerry_call_info_t *call_info_p, /**< call information */
                          const jerry_value_t args_p[], /**< arguments list */
                          const jerry_length_t args_cnt) /**< arguments length */
 {
-  JERRY_UNUSED (func_obj_val);
   JERRY_UNUSED (args_p);
   JERRY_UNUSED (args_cnt);
 
-  TEST_ASSERT (jerry_value_is_object (this_val));
+  TEST_ASSERT (jerry_value_is_object (call_info_p->this_value));
 
   my_thing_b.x = false;
-  jerry_set_object_native_pointer (this_val,
+  jerry_set_object_native_pointer (call_info_p->this_value,
                                    &my_thing_b,
                                    &thing_b_info);
 

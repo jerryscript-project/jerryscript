@@ -37,8 +37,7 @@ ecma_proxy_create_revocable (ecma_value_t target,
                              ecma_value_t handler);
 
 ecma_value_t
-ecma_proxy_revoke_cb (const ecma_value_t function_obj,
-                      const ecma_value_t this_val,
+ecma_proxy_revoke_cb (ecma_object_t *function_obj_p,
                       const ecma_value_t args_p[],
                       const uint32_t args_count);
 

@@ -15,12 +15,19 @@ jobs:
       - run: sudo apt update
       - run: sudo apt install doxygen vera++ cppcheck pylint python-serial
       - run: $RUNNER --check-signed-off=gh-actions
+        if: ${{ always() }}
       - run: $RUNNER --check-doxygen
+        if: ${{ always() }}
       - run: $RUNNER --check-vera
+        if: ${{ always() }}
       - run: $RUNNER --check-license
+        if: ${{ always() }}
       - run: $RUNNER --check-magic-strings
+        if: ${{ always() }}
       - run: $RUNNER --check-pylint
+        if: ${{ always() }}
       - run: $RUNNER --check-cppcheck
+        if: ${{ always() }}
 
   Linux_x86-64_Build_Correctness_Debugger_Tests:
     runs-on: ubuntu-latest

@@ -349,6 +349,15 @@
 #endif /* !defined (JERRY_PROPRETY_HASHMAP) */
 
 /**
+ * Enables/disables the Promise event callbacks
+ *
+ * Default value: 0
+ */
+#ifndef JERRY_PROMISE_CALLBACK
+# define JERRY_PROMISE_CALLBACK 0
+#endif /* !defined (JERRY_PROMISE_CALLBACK) */
+
+/**
  * Enable/Disable byte code dump functions for RegExp objects.
  * To dump the RegExp byte code the engine must be initialized with
  * regexp opcodes display flag. This option does not influence the
@@ -666,6 +675,10 @@
 || ((JERRY_PROPRETY_HASHMAP != 0) && (JERRY_PROPRETY_HASHMAP != 1))
 # error "Invalid value for 'JERRY_PROPRETY_HASHMAP' macro."
 #endif
+#if !defined (JERRY_PROMISE_CALLBACK) \
+|| ((JERRY_PROMISE_CALLBACK != 0) && (JERRY_PROMISE_CALLBACK != 1))
+# error "Invalid value for 'JERRY_PROMISE_CALLBACK' macro."
+#endif
 #if !defined (JERRY_REGEXP_DUMP_BYTE_CODE) \
 || ((JERRY_REGEXP_DUMP_BYTE_CODE != 0) && (JERRY_REGEXP_DUMP_BYTE_CODE != 1))
 # error "Invalid value for 'JERRY_REGEXP_DUMP_BYTE_CODE' macro."
@@ -702,13 +715,20 @@
 /**
  * Cross component requirements check.
  */
+
 /**
  * The date module can only use the float 64 number types.
- * Do a check for this.
  */
 #if JERRY_BUILTIN_DATE && !JERRY_NUMBER_TYPE_FLOAT64
 #  error "Date does not support float32"
 #endif
+
+/**
+ * Promise support must be enabled if Promise callback support is enabled.
+ */
+#if JERRY_PROMISE_CALLBACK && !JERRY_BUILTIN_PROMISE
+#  error "Promise callback support depends on Promise support"
+#endif /* JERRY_PROMISE_CALLBACK && !JERRY_BUILTIN_PROMISE */
 
 /**
  * Wrap container types into a single guard

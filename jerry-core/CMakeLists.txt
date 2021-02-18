@@ -30,6 +30,7 @@ set(JERRY_MEM_STATS                 OFF          CACHE BOOL   "Enable memory sta
 set(JERRY_MEM_GC_BEFORE_EACH_ALLOC  OFF          CACHE BOOL   "Enable mem-stress test?")
 set(JERRY_PARSER_DUMP_BYTE_CODE     OFF          CACHE BOOL   "Enable parser byte-code dumps?")
 set(JERRY_PROFILE                   "es.next"    CACHE STRING "Use default or other profile?")
+set(JERRY_PROMISE_CALLBACK          OFF          CACHE BOOL   "Enable Promise callbacks?")
 set(JERRY_REGEXP_STRICT_MODE        OFF          CACHE BOOL   "Enable regexp strict mode?")
 set(JERRY_REGEXP_DUMP_BYTE_CODE     OFF          CACHE BOOL   "Enable regexp byte-code dumps?")
 set(JERRY_SNAPSHOT_EXEC             OFF          CACHE BOOL   "Enable executing snapshot files?")
@@ -87,6 +88,7 @@ message(STATUS "JERRY_MEM_STATS                " ${JERRY_MEM_STATS})
 message(STATUS "JERRY_MEM_GC_BEFORE_EACH_ALLOC " ${JERRY_MEM_GC_BEFORE_EACH_ALLOC})
 message(STATUS "JERRY_PARSER_DUMP_BYTE_CODE    " ${JERRY_PARSER_DUMP_BYTE_CODE} ${JERRY_PARSER_DUMP_MESSAGE})
 message(STATUS "JERRY_PROFILE                  " ${JERRY_PROFILE})
+message(STATUS "JERRY_PROMISE_CALLBACK         " ${JERRY_PROMISE_CALLBACK})
 message(STATUS "JERRY_REGEXP_STRICT_MODE       " ${JERRY_REGEXP_STRICT_MODE})
 message(STATUS "JERRY_REGEXP_DUMP_BYTE_CODE    " ${JERRY_REGEXP_DUMP_BYTE_CODE})
 message(STATUS "JERRY_SNAPSHOT_EXEC            " ${JERRY_SNAPSHOT_EXEC} ${JERRY_SNAPSHOT_EXEC_MESSAGE})
@@ -581,6 +583,9 @@ if(EXISTS ${JERRY_PROFILE})
 else()
   message(FATAL_ERROR "Profile file: '${JERRY_PROFILE}' doesn't exist!")
 endif()
+
+# Promise callback
+jerry_add_define01(JERRY_PROMISE_CALLBACK)
 
 # RegExp strict mode
 jerry_add_define01(JERRY_REGEXP_STRICT_MODE)

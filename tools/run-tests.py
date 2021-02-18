@@ -57,9 +57,11 @@ OPTIONS_DOCTESTS = ['--doctests=on', '--jerry-cmdline=off', '--error-messages=on
 # Test options for unittests
 JERRY_UNITTESTS_OPTIONS = [
     Options('unittests-es.next',
-            OPTIONS_COMMON + OPTIONS_UNITTESTS + OPTIONS_PROFILE_ESNEXT),
+            OPTIONS_COMMON + OPTIONS_UNITTESTS + OPTIONS_PROFILE_ESNEXT
+            + ['--promise-callback=on']),
     Options('doctests-es.next',
-            OPTIONS_COMMON + OPTIONS_DOCTESTS + OPTIONS_PROFILE_ESNEXT),
+            OPTIONS_COMMON + OPTIONS_DOCTESTS + OPTIONS_PROFILE_ESNEXT
+            + ['--promise-callback=on']),
     Options('unittests-es5.1',
             OPTIONS_COMMON + OPTIONS_UNITTESTS + OPTIONS_PROFILE_ES51),
     Options('doctests-es5.1',

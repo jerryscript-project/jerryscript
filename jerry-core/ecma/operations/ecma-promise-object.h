@@ -38,15 +38,6 @@ typedef enum
 } ecma_promise_flags_t;
 
 /**
- * Indicates the type of the executor in promise construct.
- */
-typedef enum
-{
-  ECMA_PROMISE_EXECUTOR_FUNCTION, /**< the executor is a function, it is for the usual constructor */
-  ECMA_PROMISE_EXECUTOR_EMPTY /**< the executor is empty, it is for external C API */
-} ecma_promise_executor_type_t;
-
-/**
  * Description of a promise resolving function.
  */
 typedef struct
@@ -104,12 +95,12 @@ typedef struct
  */
 
 bool ecma_is_promise (ecma_object_t *obj_p);
-ecma_value_t ecma_op_create_promise_object (ecma_value_t executor, ecma_promise_executor_type_t type);
+ecma_value_t ecma_op_create_promise_object (ecma_value_t executor, ecma_value_t parent);
 uint16_t ecma_promise_get_flags (ecma_object_t *promise_p);
 ecma_value_t ecma_promise_get_result (ecma_object_t *promise_p);
 void ecma_reject_promise (ecma_value_t promise, ecma_value_t reason);
 void ecma_fulfill_promise (ecma_value_t promise, ecma_value_t value);
-ecma_object_t *ecma_promise_new_capability (ecma_value_t constructor);
+ecma_object_t *ecma_promise_new_capability (ecma_value_t constructor, ecma_value_t parent);
 ecma_value_t ecma_promise_reject_or_resolve (ecma_value_t this_arg, ecma_value_t value, bool is_resolve);
 ecma_value_t ecma_promise_then (ecma_value_t promise, ecma_value_t on_fulfilled, ecma_value_t on_rejected);
 

@@ -2719,7 +2719,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target_p);
             JERRY_CONTEXT (current_new_target_p) = ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE);
 
-            result = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_PROMISE_EXECUTOR_EMPTY);
+            result = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_VALUE_UNDEFINED);
 
             JERRY_CONTEXT (current_new_target_p) = old_new_target_p;
           }

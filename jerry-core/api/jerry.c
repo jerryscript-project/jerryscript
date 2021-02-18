@@ -1467,6 +1467,9 @@ jerry_is_feature_enabled (const jerry_feature_t feature) /**< feature to check *
 #if JERRY_BUILTIN_REALMS
           || feature == JERRY_FEATURE_REALM
 #endif /* JERRY_BUILTIN_REALMS */
+#if JERRY_PROMISE_CALLBACK
+          || feature == JERRY_FEATURE_PROMISE_CALLBACK
+#endif /* JERRY_PROMISE_CALLBACK */
           );
 } /* jerry_is_feature_enabled */
 
@@ -2194,7 +2197,7 @@ jerry_create_promise (void)
     JERRY_CONTEXT (current_new_target_p) = ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE);
   }
 
-  ecma_value_t promise_value = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_PROMISE_EXECUTOR_EMPTY);
+  ecma_value_t promise_value = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_VALUE_UNDEFINED);
 
   JERRY_CONTEXT (current_new_target_p) = old_new_target_p;
   return promise_value;
@@ -4352,6 +4355,26 @@ jerry_get_promise_state (const jerry_value_t promise) /**< promise object to get
   return JERRY_PROMISE_STATE_NONE;
 #endif /* JERRY_BUILTIN_PROMISE */
 } /* jerry_get_promise_state */
+
+/**
+ * Sets a callback for tracking Promise and async operations.
+ *
+ * Note:
+ *     the previous callback is overwritten
+ */
+void jerry_promise_set_callback (jerry_promise_callback_t callback,  /**< notification callback */
+                                 void *user_p) /**< user pointer passed to the callback */
+{
+  jerry_assert_api_available ();
+
+#if JERRY_BUILTIN_PROMISE && JERRY_PROMISE_CALLBACK
+  JERRY_CONTEXT (promise_callback) = callback;
+  JERRY_CONTEXT (promise_callback_user_p) = user_p;
+#else /* !JERRY_BUILTIN_PROMISE && !JERRY_PROMISE_CALLBACK */
+  JERRY_UNUSED (callback);
+  JERRY_UNUSED (user_p);
+#endif /* JERRY_BUILTIN_PROMISE && JERRY_PROMISE_CALLBACK */
+} /* jerry_promise_set_callback */
 
 /**
  * Get the well-knwon symbol represented by the given `symbol` enum value.

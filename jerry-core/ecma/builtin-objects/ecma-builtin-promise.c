@@ -375,7 +375,7 @@ ecma_builtin_promise_race_or_all (ecma_value_t this_arg, /**< 'this' argument */
                                   ecma_value_t iterable, /**< the items to be resolved */
                                   bool is_race) /**< indicates whether it is race function */
 {
-  ecma_object_t *capability_obj_p = ecma_promise_new_capability (this_arg);
+  ecma_object_t *capability_obj_p = ecma_promise_new_capability (this_arg, ECMA_VALUE_UNDEFINED);
 
   if (JERRY_UNLIKELY (capability_obj_p == NULL))
   {
@@ -455,7 +455,7 @@ ecma_builtin_promise_dispatch_construct (const ecma_value_t *arguments_list_p, /
     return ecma_raise_type_error (ECMA_ERR_MSG ("First parameter must be callable"));
   }
 
-  return ecma_op_create_promise_object (arguments_list_p[0], ECMA_PROMISE_EXECUTOR_FUNCTION);
+  return ecma_op_create_promise_object (arguments_list_p[0], ECMA_VALUE_UNDEFINED);
 } /* ecma_builtin_promise_dispatch_construct */
 
 /**

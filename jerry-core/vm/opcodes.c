@@ -901,7 +901,7 @@ opfunc_async_create_and_await (vm_frame_ctx_t *frame_ctx_p, /**< frame context *
   ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target_p);
   JERRY_CONTEXT (current_new_target_p) = promise_p;
 
-  result = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_PROMISE_EXECUTOR_EMPTY);
+  result = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_VALUE_UNDEFINED);
 
   JERRY_ASSERT (ecma_is_value_object (result));
   executable_object_p->frame_ctx.block_result = result;

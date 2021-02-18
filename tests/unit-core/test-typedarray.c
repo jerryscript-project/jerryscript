@@ -67,7 +67,8 @@ assert_handler (const jerry_call_info_t *call_info_p, /**< call information */
         && jerry_value_is_string (args_p[1]))
     {
       jerry_length_t utf8_sz = jerry_get_string_size (args_p[1]);
-      JERRY_VLA (char, string_from_utf8, utf8_sz);
+      TEST_ASSERT (utf8_sz <= 127); /* 127 is the expected max assert fail message size. */
+      JERRY_VLA (char, string_from_utf8, utf8_sz + 1);
       string_from_utf8[utf8_sz] = 0;
 
       jerry_string_to_char_buffer (args_p[1], (jerry_char_t *) string_from_utf8, utf8_sz);

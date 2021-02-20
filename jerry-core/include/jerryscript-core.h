@@ -766,6 +766,19 @@ typedef enum
   JERRY_PROMISE_EVENT_REJECT, /**< called when a Promise is about to be rejected
                                *   object: the Promise object
                                *   value: value for rejecting */
+  JERRY_PROMISE_EVENT_RESOLVE_FULFILLED, /**< called when a resolve is called on a fulfilled Promise
+                                          *   object: the Promise object
+                                          *   value: value for resolving */
+  JERRY_PROMISE_EVENT_REJECT_FULFILLED, /**< called when a reject is called on a fulfilled Promise
+                                          *  object: the Promise object
+                                          *  value: value for rejecting */
+  JERRY_PROMISE_EVENT_REJECT_WITHOUT_HANDLER, /**< called when a Promise is rejected without a handler
+                                               *   object: the Promise object
+                                               *   value: value for rejecting */
+  JERRY_PROMISE_EVENT_CATCH_HANDLER_ADDED, /**< called when a catch handler is added to a rejected
+                                            *   Promise which did not have a catch handler before
+                                            *   object: the Promise object
+                                            *   value: undefined */
   JERRY_PROMISE_EVENT_BEFORE_REACTION_JOB, /**< called before executing a Promise reaction job
                                             *   object: the Promise object
                                             *   value: undefined */
@@ -790,13 +803,42 @@ typedef enum
 } jerry_promise_event_type_t;
 
 /**
+ * Filter types for jerry_promise_set_callback callback function.
+ * The callback is only called for those events which are enabled by the filters.
+ */
+typedef enum
+{
+  JERRY_PROMISE_EVENT_FILTER_DISABLE = 0, /**< disable reporting of all events */
+  JERRY_PROMISE_EVENT_FILTER_MAIN = (1 << 0), /**< enables the following events:
+                                               *   JERRY_PROMISE_EVENT_CREATE
+                                               *   JERRY_PROMISE_EVENT_RESOLVE
+                                               *   JERRY_PROMISE_EVENT_REJECT */
+  JERRY_PROMISE_EVENT_FILTER_ERROR = (1 << 1), /**< enables the following events:
+                                                *   JERRY_PROMISE_EVENT_RESOLVE_FULFILLED
+                                                *   JERRY_PROMISE_EVENT_REJECT_FULFILLED
+                                                *   JERRY_PROMISE_EVENT_REJECT_WITHOUT_HANDLER
+                                                *   JERRY_PROMISE_EVENT_CATCH_HANDLER_ADDED */
+  JERRY_PROMISE_EVENT_FILTER_REACTION_JOB = (1 << 2), /**< enables the following events:
+                                                       *   JERRY_PROMISE_EVENT_BEFORE_REACTION_JOB
+                                                       *   JERRY_PROMISE_EVENT_AFTER_REACTION_JOB */
+  JERRY_PROMISE_EVENT_FILTER_ASYNC_MAIN = (1 << 3), /**< enables the following events:
+                                                     *   JERRY_PROMISE_EVENT_ASYNC_AWAIT */
+  JERRY_PROMISE_EVENT_FILTER_ASYNC_REACTION_JOB = (1 << 4), /**< enables the following events:
+                                                             *   JERRY_PROMISE_EVENT_ASYNC_BEFORE_RESOLVE
+                                                             *   JERRY_PROMISE_EVENT_ASYNC_BEFORE_REJECT
+                                                             *   JERRY_PROMISE_EVENT_ASYNC_AFTER_RESOLVE
+                                                             *   JERRY_PROMISE_EVENT_ASYNC_AFTER_REJECT */
+} jerry_promise_event_filter_t;
+
+/**
  * Notification callback for tracking Promise and async function operations.
  */
 typedef void (*jerry_promise_callback_t) (jerry_promise_event_type_t event_type,
                                           const jerry_value_t object, const jerry_value_t value,
                                           void *user_p);
 
-void jerry_promise_set_callback (jerry_promise_callback_t callback, void *user_p);
+void jerry_promise_set_callback (jerry_promise_event_filter_t filters, jerry_promise_callback_t callback,
+                                 void *user_p);
 
 /**
  * Symbol functions.

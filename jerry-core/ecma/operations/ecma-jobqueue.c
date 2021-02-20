@@ -188,8 +188,9 @@ ecma_process_promise_reaction_job (ecma_job_promise_reaction_t *job_p) /**< the 
   capability_p = (ecma_promise_capabality_t *) ecma_get_object_from_value (job_p->capability);
 
 #if JERRY_PROMISE_CALLBACK
-  if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback) != NULL))
+  if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback_filters) & JERRY_PROMISE_EVENT_FILTER_REACTION_JOB))
   {
+    JERRY_ASSERT (JERRY_CONTEXT (promise_callback) != NULL);
     JERRY_CONTEXT (promise_callback) (JERRY_PROMISE_EVENT_BEFORE_REACTION_JOB,
                                       capability_p->header.u.class_prop.u.promise,
                                       ECMA_VALUE_UNDEFINED,
@@ -245,8 +246,9 @@ ecma_process_promise_reaction_job (ecma_job_promise_reaction_t *job_p) /**< the 
   ecma_free_value (handler_result);
 
 #if JERRY_PROMISE_CALLBACK
-  if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback) != NULL))
+  if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback_filters) & JERRY_PROMISE_EVENT_FILTER_REACTION_JOB))
   {
+    JERRY_ASSERT (JERRY_CONTEXT (promise_callback) != NULL);
     JERRY_CONTEXT (promise_callback) (JERRY_PROMISE_EVENT_AFTER_REACTION_JOB,
                                       capability_p->header.u.class_prop.u.promise,
                                       ECMA_VALUE_UNDEFINED,
@@ -269,7 +271,7 @@ static ecma_value_t
 ecma_process_promise_async_reaction_job (ecma_job_promise_async_reaction_t *job_p) /**< the job to be operated */
 {
 #if JERRY_PROMISE_CALLBACK
-  if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback) != NULL))
+  if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback_filters) & JERRY_PROMISE_EVENT_FILTER_ASYNC_REACTION_JOB))
   {
     jerry_promise_event_type_t type = JERRY_PROMISE_EVENT_ASYNC_BEFORE_RESOLVE;
 
@@ -278,6 +280,7 @@ ecma_process_promise_async_reaction_job (ecma_job_promise_async_reaction_t *job_
       type = JERRY_PROMISE_EVENT_ASYNC_BEFORE_REJECT;
     }
 
+    JERRY_ASSERT (JERRY_CONTEXT (promise_callback) != NULL);
     JERRY_CONTEXT (promise_callback) (type,
                                       job_p->executable_object,
                                       job_p->argument,
@@ -370,7 +373,7 @@ ecma_process_promise_async_reaction_job (ecma_job_promise_async_reaction_t *job_
 free_job:
 
 #if JERRY_PROMISE_CALLBACK
-  if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback) != NULL))
+  if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback_filters) & JERRY_PROMISE_EVENT_FILTER_ASYNC_REACTION_JOB))
   {
     jerry_promise_event_type_t type = JERRY_PROMISE_EVENT_ASYNC_AFTER_RESOLVE;
 
@@ -379,6 +382,7 @@ free_job:
       type = JERRY_PROMISE_EVENT_ASYNC_AFTER_REJECT;
     }
 
+    JERRY_ASSERT (JERRY_CONTEXT (promise_callback) != NULL);
     JERRY_CONTEXT (promise_callback) (type,
                                       job_p->executable_object,
                                       job_p->argument,

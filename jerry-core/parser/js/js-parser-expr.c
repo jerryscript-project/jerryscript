@@ -2885,12 +2885,14 @@ parser_append_binary_single_assignment_token (parser_context_t *context_p, /**< 
   else if (context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_SUPER_PROP_LITERAL))
   {
     context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_SUPER_PROP_LITERAL_ASSIGNMENT_REFERENCE);
-    assign_opcode = CBC_ASSIGN_SUPER;
+    parser_stack_push_uint8 (context_p, CBC_EXT_ASSIGN_SUPER);
+    assign_opcode = CBC_EXT_OPCODE;
   }
   else if (context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_SUPER_PROP))
   {
     context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_SUPER_PROP_ASSIGNMENT_REFERENCE);
-    assign_opcode = CBC_ASSIGN_SUPER;
+    parser_stack_push_uint8 (context_p, CBC_EXT_ASSIGN_SUPER);
+    assign_opcode = CBC_EXT_OPCODE;
   }
 #endif /* JERRY_ESNEXT */
   else
@@ -2982,9 +2984,9 @@ parser_append_binary_token (parser_context_t *context_p) /**< context */
 #if JERRY_ESNEXT
       parser_check_invalid_new_target (context_p, CBC_ASSIGN);
       parser_raise_error (context_p, PARSER_ERR_INVALID_LHS_ASSIGNMENT);
-#else /* !JERRY_ES2015 */
+#else /* !JERRY_ESNEXT */
       parser_emit_cbc_ext (context_p, CBC_EXT_THROW_REFERENCE_ERROR);
-#endif /* JERRY_ES2015 */
+#endif /* JERRY_ESNEXT */
 
       parser_emit_cbc (context_p, CBC_PUSH_PROP_REFERENCE);
     }
@@ -3035,7 +3037,7 @@ parser_process_binary_opcodes (parser_context_t *context_p, /**< context */
   while (true)
   {
     uint8_t token = context_p->stack_top_uint8;
-    cbc_opcode_t opcode;
+    uint16_t opcode;
 
     /* For left-to-right operators (all binary operators except assignment
      * and logical operators), the byte code is flushed if the precedence
@@ -3054,22 +3056,34 @@ parser_process_binary_opcodes (parser_context_t *context_p, /**< context */
 
     if (token == LEXER_ASSIGN)
     {
-      opcode = (cbc_opcode_t) context_p->stack_top_uint8;
-      parser_stack_pop_uint8 (context_p);
-
       uint16_t index = PARSER_INVALID_LITERAL_INDEX;
+      opcode = context_p->stack_top_uint8;
 
-      if (cbc_flags[opcode] & CBC_HAS_LITERAL_ARG)
+#if JERRY_ESNEXT
+      if (JERRY_UNLIKELY (opcode == CBC_EXT_OPCODE))
       {
-        JERRY_ASSERT (opcode == CBC_ASSIGN_SET_IDENT
-                      || opcode == CBC_ASSIGN_PROP_LITERAL
-                      || opcode == CBC_ASSIGN_PROP_THIS_LITERAL
-                      || opcode == CBC_ASSIGN_LET_CONST
-                      || opcode == CBC_INIT_ARG_OR_CATCH
-                      || opcode == CBC_INIT_LET
-                      || opcode == CBC_INIT_CONST);
+        parser_stack_pop_uint8 (context_p);
+        JERRY_ASSERT (context_p->stack_top_uint8 == CBC_EXT_ASSIGN_SUPER);
+        opcode = PARSER_TO_EXT_OPCODE (context_p->stack_top_uint8);
+        parser_stack_pop_uint8 (context_p);
+      }
+      else
+#endif /* JERRY_ESNEXT */
+      {
+        parser_stack_pop_uint8 (context_p);
 
-        index = parser_stack_pop_uint16 (context_p);
+        if (cbc_flags[opcode] & CBC_HAS_LITERAL_ARG)
+        {
+          JERRY_ASSERT (opcode == CBC_ASSIGN_SET_IDENT
+                        || opcode == CBC_ASSIGN_PROP_LITERAL
+                        || opcode == CBC_ASSIGN_PROP_THIS_LITERAL
+                        || opcode == CBC_ASSIGN_LET_CONST
+                        || opcode == CBC_INIT_ARG_OR_CATCH
+                        || opcode == CBC_INIT_LET
+                        || opcode == CBC_INIT_CONST);
+
+          index = parser_stack_pop_uint16 (context_p);
+        }
       }
 
 #if JERRY_ESNEXT
@@ -3182,7 +3196,7 @@ parser_process_binary_opcodes (parser_context_t *context_p, /**< context */
         continue;
       }
     }
-    parser_emit_cbc (context_p, (uint16_t) opcode);
+    parser_emit_cbc (context_p, opcode);
   }
 } /* parser_process_binary_opcodes */
 

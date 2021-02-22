@@ -28,6 +28,7 @@
 
 void ecma_init_gc_info (ecma_object_t *object_p);
 void ecma_ref_object (ecma_object_t *object_p);
+void ecma_ref_object_inline (ecma_object_t *object_p);
 void ecma_deref_object (ecma_object_t *object_p);
 void ecma_gc_free_properties (ecma_object_t *object_p);
 void ecma_gc_run (void);

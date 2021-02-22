@@ -843,17 +843,13 @@ ecma_concat_ecma_strings (ecma_string_t *string1_p, /**< first ecma-string */
 } /* ecma_concat_ecma_strings */
 
 /**
- * Increase reference counter of ecma-string.
+ * Increase reference counter of non-direct ecma-string.
  */
-void
-ecma_ref_ecma_string (ecma_string_t *string_p) /**< string descriptor */
+extern inline void JERRY_ATTR_ALWAYS_INLINE
+ecma_ref_ecma_string_non_direct (ecma_string_t *string_p) /**< string descriptor */
 {
   JERRY_ASSERT (string_p != NULL);
-
-  if (ECMA_IS_DIRECT_STRING (string_p))
-  {
-    return;
-  }
+  JERRY_ASSERT (!ECMA_IS_DIRECT_STRING (string_p));
 
 #ifdef JERRY_NDEBUG
   if (ECMA_STRING_IS_STATIC (string_p))
@@ -873,14 +869,13 @@ ecma_ref_ecma_string (ecma_string_t *string_p) /**< string descriptor */
   {
     jerry_fatal (ERR_REF_COUNT_LIMIT);
   }
-} /* ecma_ref_ecma_string */
+} /* ecma_ref_ecma_string_non_direct */
 
 /**
- * Decrease reference counter and deallocate ecma-string
- * if the counter becomes zero.
+ * Increase reference counter of ecma-string.
  */
 void
-ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
+ecma_ref_ecma_string (ecma_string_t *string_p) /**< string descriptor */
 {
   JERRY_ASSERT (string_p != NULL);
 
@@ -888,6 +883,18 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
   {
     return;
   }
+
+  ecma_ref_ecma_string_non_direct (string_p);
+} /* ecma_ref_ecma_string */
+
+/**
+ * Decrease reference counter and deallocate a non-direct ecma-string
+ * if the counter becomes zero.
+ */
+extern inline void JERRY_ATTR_ALWAYS_INLINE
+ecma_deref_ecma_string_non_direct (ecma_string_t *string_p) /**< ecma-string */
+{
+  JERRY_ASSERT (!ECMA_IS_DIRECT_STRING (string_p));
 
 #ifdef JERRY_NDEBUG
   if (ECMA_STRING_IS_STATIC (string_p))
@@ -907,6 +914,23 @@ ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
   }
 
   ecma_destroy_ecma_string (string_p);
+} /* ecma_deref_ecma_string_non_direct */
+
+/**
+ * Decrease reference counter and deallocate ecma-string
+ * if the counter becomes zero.
+ */
+void
+ecma_deref_ecma_string (ecma_string_t *string_p) /**< ecma-string */
+{
+  JERRY_ASSERT (string_p != NULL);
+
+  if (ECMA_IS_DIRECT_STRING (string_p))
+  {
+    return;
+  }
+
+  ecma_deref_ecma_string_non_direct (string_p);
 } /* ecma_deref_ecma_string */
 
 /**

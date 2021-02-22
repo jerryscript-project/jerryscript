@@ -321,7 +321,9 @@ ecma_string_t *ecma_append_chars_to_string (ecma_string_t *string1_p,
                                             lit_utf8_size_t cesu8_string2_length);
 ecma_string_t *ecma_concat_ecma_strings (ecma_string_t *string1_p, ecma_string_t *string2_p);
 void ecma_ref_ecma_string (ecma_string_t *string_p);
+void ecma_ref_ecma_string_non_direct (ecma_string_t *string_p);
 void ecma_deref_ecma_string (ecma_string_t *string_p);
+void ecma_deref_ecma_string_non_direct (ecma_string_t *string_p);
 void ecma_destroy_ecma_string (ecma_string_t *string_p);
 ecma_number_t ecma_string_to_number (const ecma_string_t *str_p);
 uint32_t ecma_string_get_array_index (const ecma_string_t *str_p);

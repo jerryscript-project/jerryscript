@@ -2716,12 +2716,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           if (result == ECMA_VALUE_UNDEFINED)
           {
-            ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target_p);
-            JERRY_CONTEXT (current_new_target_p) = ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE);
-
-            result = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_VALUE_UNDEFINED);
-
-            JERRY_CONTEXT (current_new_target_p) = old_new_target_p;
+            result = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_VALUE_UNDEFINED, NULL);
           }
 
           vm_stack_context_type_t context_type = VM_GET_CONTEXT_TYPE (stack_top_p[-1]);

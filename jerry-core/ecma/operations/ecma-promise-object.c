@@ -424,13 +424,18 @@ ecma_promise_create_resolving_functions (ecma_promise_object_t *promise_p) /**< 
  */
 ecma_value_t
 ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function or ECMA_VALUE_EMPTY */
-                               ecma_value_t parent) /**< parent promise if available */
+                               ecma_value_t parent, /**< parent promise if available */
+                               ecma_object_t *new_target_p) /**< new.target value */
 {
   JERRY_UNUSED (parent);
-  JERRY_ASSERT (JERRY_CONTEXT (current_new_target_p) != NULL);
+
+  if (new_target_p == NULL)
+  {
+    new_target_p = ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE);
+  }
 
   /* 3. */
-  ecma_object_t *proto_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_new_target_p),
+  ecma_object_t *proto_p = ecma_op_get_prototype_from_constructor (new_target_p,
                                                                    ECMA_BUILTIN_ID_PROMISE_PROTOTYPE);
 
   if (JERRY_UNLIKELY (proto_p == NULL))
@@ -679,12 +684,7 @@ ecma_promise_new_capability (ecma_value_t constructor, /**< constructor function
 
   if (constructor_obj_p == ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE))
   {
-    ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target_p);
-    JERRY_CONTEXT (current_new_target_p) = constructor_obj_p;
-
-    promise = ecma_op_create_promise_object (executor, parent);
-
-    JERRY_CONTEXT (current_new_target_p) = old_new_target_p;
+    promise = ecma_op_create_promise_object (executor, parent, constructor_obj_p);
   }
   else
   {

@@ -95,7 +95,8 @@ typedef struct
  */
 
 bool ecma_is_promise (ecma_object_t *obj_p);
-ecma_value_t ecma_op_create_promise_object (ecma_value_t executor, ecma_value_t parent);
+ecma_value_t ecma_op_create_promise_object (ecma_value_t executor, ecma_value_t parent,
+                                            ecma_object_t *new_target_p);
 uint16_t ecma_promise_get_flags (ecma_object_t *promise_p);
 ecma_value_t ecma_promise_get_result (ecma_object_t *promise_p);
 void ecma_reject_promise (ecma_value_t promise, ecma_value_t reason);

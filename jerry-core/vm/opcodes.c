@@ -898,15 +898,11 @@ opfunc_async_create_and_await (vm_frame_ctx_t *frame_ctx_p, /**< frame context *
   ecma_deref_object ((ecma_object_t *) executable_object_p);
   ecma_free_value (result);
 
-  ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target_p);
-  JERRY_CONTEXT (current_new_target_p) = promise_p;
-
-  result = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_VALUE_UNDEFINED);
+  result = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_VALUE_UNDEFINED, promise_p);
 
   JERRY_ASSERT (ecma_is_value_object (result));
   executable_object_p->frame_ctx.block_result = result;
 
-  JERRY_CONTEXT (current_new_target_p) = old_new_target_p;
   return result;
 } /* opfunc_async_create_and_await */
 

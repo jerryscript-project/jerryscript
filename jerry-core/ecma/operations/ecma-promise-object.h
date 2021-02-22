@@ -54,8 +54,6 @@ typedef struct
 {
   ecma_extended_object_t header; /**< extended object part */
   ecma_collection_t *reactions; /**< list of promise reactions */
-  ecma_value_t resolve; /**< resolve function */
-  ecma_value_t reject; /**< reject function */
 } ecma_promise_object_t;
 
 /**
@@ -100,6 +98,8 @@ uint16_t ecma_promise_get_flags (ecma_object_t *promise_p);
 ecma_value_t ecma_promise_get_result (ecma_object_t *promise_p);
 void ecma_reject_promise (ecma_value_t promise, ecma_value_t reason);
 void ecma_fulfill_promise (ecma_value_t promise, ecma_value_t value);
+ecma_value_t ecma_reject_promise_with_checks (ecma_value_t promise, ecma_value_t reason);
+ecma_value_t ecma_fulfill_promise_with_checks (ecma_value_t promise, ecma_value_t value);
 ecma_object_t *ecma_promise_new_capability (ecma_value_t constructor, ecma_value_t parent);
 ecma_value_t ecma_promise_reject_or_resolve (ecma_value_t this_arg, ecma_value_t value, bool is_resolve);
 ecma_value_t ecma_promise_then (ecma_value_t promise, ecma_value_t on_fulfilled, ecma_value_t on_rejected);
@@ -124,7 +124,7 @@ ecma_value_t ecma_op_get_capabilities_executor_cb (ecma_object_t *function_obj_p
 ecma_value_t ecma_promise_finally (ecma_value_t promise, ecma_value_t on_finally);
 void ecma_promise_async_then (ecma_value_t promise, ecma_value_t executable_object);
 ecma_value_t ecma_promise_async_await (ecma_extended_object_t *async_generator_object_p, ecma_value_t value);
-void ecma_promise_create_resolving_functions (ecma_promise_object_t *object_p);
+ecma_value_t ecma_promise_run_executor (ecma_object_t *promise_p, ecma_value_t executor, ecma_value_t this_value);
 
 uint32_t ecma_promise_remaining_inc_or_dec (ecma_value_t remaining, bool is_inc);
 

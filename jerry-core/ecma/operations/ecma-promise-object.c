@@ -309,20 +309,16 @@ ecma_fulfill_promise (ecma_value_t promise, /**< promise */
 } /* ecma_fulfill_promise */
 
 /**
- * Native handler for Promise Reject Function.
+ * Reject a Promise with a reason. Sanity checks are performed before the reject.
  *
  * See also: ES2015 25.4.1.3.1
  *
  * @return ecma value of undefined.
  */
 ecma_value_t
-ecma_promise_reject_handler (ecma_object_t *function_obj_p, /**< function object */
-                             const ecma_value_t args_p[], /**< argument list */
-                             const uint32_t args_count) /**< argument number */
+ecma_reject_promise_with_checks (ecma_value_t promise, /**< promise */
+                                 ecma_value_t reason) /**< reason for reject */
 {
-  ecma_promise_resolver_t *function_p = (ecma_promise_resolver_t *) function_obj_p;
-  ecma_value_t promise = function_p->promise;
-
   /* 1. */
   ecma_object_t *promise_obj_p = ecma_get_object_from_value (promise);
   JERRY_ASSERT (ecma_is_promise (promise_obj_p));
@@ -334,28 +330,23 @@ ecma_promise_reject_handler (ecma_object_t *function_obj_p, /**< function object
     ((ecma_extended_object_t *) promise_obj_p)->u.class_prop.extra_info |= ECMA_PROMISE_ALREADY_RESOLVED;
 
     /* 6. */
-    ecma_value_t reject_value = (args_count == 0) ? ECMA_VALUE_UNDEFINED : args_p[0];
-    ecma_reject_promise (promise, reject_value);
+    ecma_reject_promise (promise, reason);
   }
 
   return ECMA_VALUE_UNDEFINED;
-} /* ecma_promise_reject_handler */
+} /* ecma_reject_promise_with_checks */
 
 /**
- * Native handler for Promise Resolve Function.
+ * Fulfill a Promise with a value. Sanity checks are performed before the resolve.
  *
  * See also: ES2015 25.4.1.3.2
  *
  * @return ecma value of undefined.
  */
 ecma_value_t
-ecma_promise_resolve_handler (ecma_object_t *function_obj_p, /**< function object */
-                              const ecma_value_t args_p[], /**< argument list */
-                              const uint32_t args_count) /**< argument number */
+ecma_fulfill_promise_with_checks (ecma_value_t promise, /**< promise */
+                                  ecma_value_t value) /**< fulfilled value */
 {
-  ecma_promise_resolver_t *function_p = (ecma_promise_resolver_t *) function_obj_p;
-  ecma_value_t promise = function_p->promise;
-
   /* 1. */
   ecma_object_t *promise_obj_p = ecma_get_object_from_value (promise);
   JERRY_ASSERT (ecma_is_promise (promise_obj_p));
@@ -366,10 +357,42 @@ ecma_promise_resolve_handler (ecma_object_t *function_obj_p, /**< function objec
     /* 5. */
     ((ecma_extended_object_t *) promise_obj_p)->u.class_prop.extra_info |= ECMA_PROMISE_ALREADY_RESOLVED;
 
-    ecma_fulfill_promise (promise, (args_count == 0) ? ECMA_VALUE_UNDEFINED : args_p[0]);
+    ecma_fulfill_promise (promise, value);
   }
 
   return ECMA_VALUE_UNDEFINED;
+} /* ecma_fulfill_promise_with_checks */
+
+/**
+ * Native handler for Promise Reject Function.
+ *
+ * @return ecma value of undefined.
+ */
+ecma_value_t
+ecma_promise_reject_handler (ecma_object_t *function_obj_p, /**< function object */
+                             const ecma_value_t args_p[], /**< argument list */
+                             const uint32_t args_count) /**< argument number */
+{
+  ecma_promise_resolver_t *function_p = (ecma_promise_resolver_t *) function_obj_p;
+
+  ecma_value_t reject_value = (args_count == 0) ? ECMA_VALUE_UNDEFINED : args_p[0];
+  return ecma_reject_promise_with_checks (function_p->promise, reject_value);
+} /* ecma_promise_reject_handler */
+
+/**
+ * Native handler for Promise Resolve Function.
+ *
+ * @return ecma value of undefined.
+ */
+ecma_value_t
+ecma_promise_resolve_handler (ecma_object_t *function_obj_p, /**< function object */
+                              const ecma_value_t args_p[], /**< argument list */
+                              const uint32_t args_count) /**< argument number */
+{
+  ecma_promise_resolver_t *function_p = (ecma_promise_resolver_t *) function_obj_p;
+
+  ecma_value_t fulfilled_value = (args_count == 0) ? ECMA_VALUE_UNDEFINED : args_p[0];
+  return ecma_fulfill_promise_with_checks (function_p->promise, fulfilled_value);
 } /* ecma_promise_resolve_handler */
 
 /**
@@ -380,8 +403,8 @@ ecma_promise_resolve_handler (ecma_object_t *function_obj_p, /**< function objec
  * @return pointer to the resolving function
  */
 static ecma_object_t *
-ecma_promise_create_resolving_functions_helper (ecma_object_t *promise_p, /**< Promise Object */
-                                                ecma_native_handler_id_t id) /**< Callback handler */
+ecma_promise_create_resolving_function (ecma_object_t *promise_p, /**< Promise Object */
+                                        ecma_native_handler_id_t id) /**< Callback handler */
 {
   ecma_object_t *func_obj_p = ecma_op_create_native_handler (id, sizeof (ecma_promise_resolver_t));
 
@@ -389,30 +412,35 @@ ecma_promise_create_resolving_functions_helper (ecma_object_t *promise_p, /**< P
   resolver_p->promise = ecma_make_object_value (promise_p);
 
   return func_obj_p;
-} /* ecma_promise_create_resolving_functions_helper */
+} /* ecma_promise_create_resolving_function */
 
 /**
- * Perform PromiseCreateResolvingFunctions.
+ * Helper function for running an executor.
  *
- * See also: ES2015 25.4.1.3
- *
- * @return pointer to the resolving functions
+ * @return ecma value of the executor callable
+ *         Returned value must be freed with ecma_free_value
  */
-void
-ecma_promise_create_resolving_functions (ecma_promise_object_t *promise_p) /**< the promise object */
+ecma_value_t
+ecma_promise_run_executor (ecma_object_t *promise_p, /**< Promise Object */
+                           ecma_value_t executor, /**< executor function */
+                           ecma_value_t this_value) /**< this value */
 {
-  /* 2. - 7. */
-  ecma_object_t *resolve_func_p = ecma_promise_create_resolving_functions_helper ((ecma_object_t *) promise_p,
-                                                                                  ECMA_NATIVE_HANDLER_PROMISE_RESOLVE);
-  ecma_object_t *reject_func_p = ecma_promise_create_resolving_functions_helper ((ecma_object_t *) promise_p,
-                                                                                 ECMA_NATIVE_HANDLER_PROMISE_REJECT);
+  ecma_object_t *resolve_func_p, *reject_func_p;
+  resolve_func_p = ecma_promise_create_resolving_function (promise_p,
+                                                           ECMA_NATIVE_HANDLER_PROMISE_RESOLVE);
+  reject_func_p = ecma_promise_create_resolving_function (promise_p,
+                                                          ECMA_NATIVE_HANDLER_PROMISE_REJECT);
 
-  promise_p->resolve = ecma_make_object_value (resolve_func_p);
-  promise_p->reject = ecma_make_object_value (reject_func_p);
-
+  ecma_value_t argv[] = { ecma_make_object_value (resolve_func_p), ecma_make_object_value (reject_func_p) };
+  ecma_value_t result = ecma_op_function_call (ecma_get_object_from_value (executor),
+                                               this_value,
+                                               argv,
+                                               2);
   ecma_deref_object (resolve_func_p);
   ecma_deref_object (reject_func_p);
-} /* ecma_promise_create_resolving_functions */
+
+  return result;
+} /* ecma_promise_run_executor */
 
 /**
  * Create a promise object.
@@ -455,11 +483,6 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
   /* 6-8. */
   ecma_promise_object_t *promise_object_p = (ecma_promise_object_t *) object_p;
   promise_object_p->reactions = reactions;
-  /* Creating the resolving function may trigger a GC, so these need to be initialized. */
-  promise_object_p->resolve = ECMA_VALUE_EMPTY;
-  promise_object_p->reject = ECMA_VALUE_EMPTY;
-
-  ecma_promise_create_resolving_functions (promise_object_p);
 
 #if JERRY_PROMISE_CALLBACK
   if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback) != NULL))
@@ -478,11 +501,7 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
   {
     JERRY_ASSERT (ecma_op_is_callable (executor));
 
-    ecma_value_t argv[] = { promise_object_p->resolve, promise_object_p->reject };
-    completion = ecma_op_function_call (ecma_get_object_from_value (executor),
-                                        ECMA_VALUE_UNDEFINED,
-                                        argv,
-                                        2);
+    completion = ecma_promise_run_executor (object_p, executor, ECMA_VALUE_UNDEFINED);
   }
 
   ecma_value_t status = ECMA_VALUE_EMPTY;
@@ -491,10 +510,7 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
   {
     /* 10.a. */
     completion = jcontext_take_exception ();
-    status = ecma_op_function_call (ecma_get_object_from_value (promise_object_p->reject),
-                                    ECMA_VALUE_UNDEFINED,
-                                    &completion,
-                                    1);
+    ecma_reject_promise_with_checks (ecma_make_object_value (object_p), completion);
   }
 
   ecma_free_value (completion);

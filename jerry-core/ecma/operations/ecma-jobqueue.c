@@ -420,30 +420,17 @@ static ecma_value_t
 ecma_process_promise_resolve_thenable_job (ecma_job_promise_resolve_thenable_t *job_p) /**< the job to be operated */
 {
   ecma_promise_object_t *promise_p = (ecma_promise_object_t *) ecma_get_object_from_value (job_p->promise);
-  ecma_promise_create_resolving_functions (promise_p);
 
-  uint16_t new_flags = (uint16_t) (promise_p->header.u.class_prop.extra_info & ~ECMA_PROMISE_ALREADY_RESOLVED);
-  promise_p->header.u.class_prop.extra_info = new_flags;
+  promise_p->header.u.class_prop.extra_info &= (uint16_t) ~ECMA_PROMISE_ALREADY_RESOLVED;
 
-  ecma_value_t argv[] = { promise_p->resolve, promise_p->reject };
-  ecma_value_t ret;
-  ecma_value_t then_call_result = ecma_op_function_call (ecma_get_object_from_value (job_p->then),
-                                                         job_p->thenable,
-                                                         argv,
-                                                         2);
+  ecma_value_t ret = ecma_promise_run_executor ((ecma_object_t *) promise_p, job_p->then, job_p->thenable);
 
-  ret = then_call_result;
-
-  if (ECMA_IS_VALUE_ERROR (then_call_result))
+  if (ECMA_IS_VALUE_ERROR (ret))
   {
-    then_call_result = jcontext_take_exception ();
-
-    ret = ecma_op_function_call (ecma_get_object_from_value (promise_p->reject),
-                                 ECMA_VALUE_UNDEFINED,
-                                 &then_call_result,
-                                 1);
-
-    ecma_free_value (then_call_result);
+    ret = jcontext_take_exception ();
+    ecma_reject_promise_with_checks (job_p->promise, ret);
+    ecma_free_value (ret);
+    ret = ECMA_VALUE_UNDEFINED;
   }
 
   ecma_free_promise_resolve_thenable_job (job_p);

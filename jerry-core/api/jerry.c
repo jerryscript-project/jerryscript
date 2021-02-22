@@ -4288,13 +4288,12 @@ jerry_resolve_or_reject_promise (jerry_value_t promise, /**< the promise value *
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_value_msg_p)));
   }
 
-  ecma_promise_object_t *promise_p = (ecma_promise_object_t *) ecma_get_object_from_value (promise);
-  ecma_value_t function = is_resolve ? promise_p->resolve : promise_p->reject;
+  if (is_resolve)
+  {
+    return ecma_fulfill_promise_with_checks (promise, argument);
+  }
 
-  return ecma_op_function_call (ecma_get_object_from_value (function),
-                                ECMA_VALUE_UNDEFINED,
-                                &argument,
-                                1);
+  return ecma_reject_promise_with_checks (promise, argument);
 #else /* !JERRY_BUILTIN_PROMISE */
   JERRY_UNUSED (promise);
   JERRY_UNUSED (argument);

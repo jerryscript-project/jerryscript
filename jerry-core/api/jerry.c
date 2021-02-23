@@ -521,7 +521,7 @@ jerry_parse (const jerry_char_t *resource_name_p, /**< resource name (usually a 
   }
 
 #if JERRY_MODULE_SYSTEM
-  if ((parse_opts & JERRY_PARSE_MODULE) != 0)
+  if (JERRY_UNLIKELY (parse_opts & JERRY_PARSE_MODULE))
   {
     if (ECMA_IS_VALUE_ERROR (ecma_module_parse_referenced_modules ()))
     {
@@ -531,16 +531,15 @@ jerry_parse (const jerry_char_t *resource_name_p, /**< resource name (usually a 
       return ecma_create_error_reference_from_context ();
     }
 
-    ecma_object_t *obj_p = ecma_create_object (NULL, sizeof (ecma_extended_object_t), ECMA_OBJECT_TYPE_CLASS);
-
-    ecma_extended_object_t *wrapper_p = (ecma_extended_object_t *) obj_p;
-    wrapper_p->u.class_prop.class_id = LIT_MAGIC_STRING_RUNNABLE_UL;
-    wrapper_p->u.class_prop.extra_info = ECMA_RUNNABLE_FLAGS_MODULE;
-
     ecma_module_t *root_module_p = JERRY_CONTEXT (module_current_p);
     root_module_p->compiled_code_p = bytecode_data_p;
 
-    ECMA_SET_INTERNAL_VALUE_POINTER (wrapper_p->u.class_prop.u.value, root_module_p);
+    ecma_object_t *obj_p = ecma_create_object (NULL, sizeof (ecma_extended_object_t), ECMA_OBJECT_TYPE_CLASS);
+
+    ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
+    ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_MODULE_UL;
+    ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.class_prop.u.value, root_module_p);
+
     JERRY_CONTEXT (module_current_p) = NULL;
     JERRY_CONTEXT (module_list_p) = NULL;
 
@@ -548,20 +547,13 @@ jerry_parse (const jerry_char_t *resource_name_p, /**< resource name (usually a 
   }
 #endif /* JERRY_MODULE_SYSTEM */
 
-  ecma_object_t *global_object_p = ecma_builtin_get_global ();
+  ecma_object_t *object_p = ecma_create_object (NULL, sizeof (ecma_extended_object_t), ECMA_OBJECT_TYPE_CLASS);
 
-#if JERRY_BUILTIN_REALMS
-  JERRY_ASSERT (global_object_p == (ecma_object_t *) ecma_op_function_get_realm (bytecode_data_p));
-#endif /* JERRY_BUILTIN_REALMS */
+  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+  ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_SCRIPT_UL;
+  ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.class_prop.u.value, bytecode_data_p);
 
-  ecma_object_t *lex_env_p = ecma_get_global_environment (global_object_p);
-
-  /* TODO(dbatyai): For now Scripts continue to return Function objects due to backwards compatibility. This should be
-   * changed to also return a Runnable object eventually. */
-  ecma_object_t *func_obj_p = ecma_op_create_simple_function_object (lex_env_p, bytecode_data_p);
-  ecma_bytecode_deref (bytecode_data_p);
-
-  return ecma_make_object_value (func_obj_p);
+  return ecma_make_object_value (object_p);
 #else /* !JERRY_PARSER */
   JERRY_UNUSED (source_p);
   JERRY_UNUSED (source_size);
@@ -653,7 +645,7 @@ jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (u
 } /* jerry_parse_function */
 
 /**
- * Run an EcmaScript function created by jerry_parse.
+ * Run a Script or Module created by jerry_parse.
  *
  * Note:
  *      returned value must be freed with jerry_release_value, when it is no longer needed.
@@ -671,14 +663,19 @@ jerry_run (const jerry_value_t func_val) /**< function to run */
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
   }
 
-  ecma_object_t *obj_p = ecma_get_object_from_value (func_val);
+  ecma_object_t *object_p = ecma_get_object_from_value (func_val);
+
+  if (ecma_get_object_type (object_p) != ECMA_OBJECT_TYPE_CLASS)
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
+  }
+
+  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
 #if JERRY_MODULE_SYSTEM
-  if (ecma_object_class_is (obj_p, LIT_MAGIC_STRING_RUNNABLE_UL))
+  if (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_MODULE_UL)
   {
-    ecma_extended_object_t *wrapper_p = (ecma_extended_object_t *) obj_p;
-    JERRY_ASSERT (wrapper_p->u.class_prop.extra_info == ECMA_RUNNABLE_FLAGS_MODULE);
-    ecma_module_t *root_module_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_module_t, wrapper_p->u.class_prop.u.value);
+    ecma_module_t *root_module_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_module_t, ext_object_p->u.class_prop.u.value);
 
 #if JERRY_BUILTIN_REALMS
     ecma_object_t *global_object_p = (ecma_object_t *) ecma_op_function_get_realm (root_module_p->compiled_code_p);
@@ -693,22 +690,17 @@ jerry_run (const jerry_value_t func_val) /**< function to run */
   }
 #endif /* JERRY_MODULE_SYSTEM */
 
-  if (ecma_get_object_type (obj_p) != ECMA_OBJECT_TYPE_FUNCTION
-      || ecma_get_object_is_builtin (obj_p))
+  if (ext_object_p->u.class_prop.class_id != LIT_MAGIC_STRING_SCRIPT_UL)
   {
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
   }
 
-  ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) obj_p;
+  const ecma_compiled_code_t *bytecode_data_p;
+  bytecode_data_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t, ext_object_p->u.class_prop.u.value);
 
-  const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
+  JERRY_ASSERT (CBC_FUNCTION_GET_TYPE (bytecode_data_p->status_flags) == CBC_FUNCTION_SCRIPT);
 
-  if (CBC_FUNCTION_GET_TYPE (bytecode_data_p->status_flags) != CBC_FUNCTION_SCRIPT)
-  {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
-  }
-
-  return jerry_return (vm_run_global (ecma_op_function_get_compiled_code (ext_func_p)));
+  return jerry_return (vm_run_global (bytecode_data_p));
 } /* jerry_run */
 
 /**
@@ -1178,6 +1170,16 @@ jerry_object_get_type (const jerry_value_t value) /**< input value to check */
     {
       switch (ext_obj_p->u.class_prop.class_id)
       {
+        case LIT_MAGIC_STRING_SCRIPT_UL:
+        {
+          return JERRY_OBJECT_TYPE_SCRIPT;
+        }
+#if JERRY_MODULE_SYSTEM
+        case LIT_MAGIC_STRING_MODULE_UL:
+        {
+          return JERRY_OBJECT_TYPE_MODULE;
+        }
+#endif /* JERRY_MODULE_SYSTEM */
         case LIT_MAGIC_STRING_ARGUMENTS_UL:
         {
           return JERRY_OBJECT_TYPE_ARGUMENTS;
@@ -1470,6 +1472,9 @@ jerry_is_feature_enabled (const jerry_feature_t feature) /**< feature to check *
 #if JERRY_PROMISE_CALLBACK
           || feature == JERRY_FEATURE_PROMISE_CALLBACK
 #endif /* JERRY_PROMISE_CALLBACK */
+#if JERRY_MODULE_SYSTEM
+          || feature == JERRY_FEATURE_MODULE
+#endif /* JERRY_MODULE_SYSTEM */
           );
 } /* jerry_is_feature_enabled */
 

@@ -274,12 +274,8 @@ typedef struct
    || (opcode) == CBC_PUSH_TWO_LITERALS \
    || (opcode) == CBC_PUSH_THREE_LITERALS)
 #define PARSER_IS_PUSH_NUMBER(opcode) \
-  ((opcode) == CBC_PUSH_NUMBER_0 \
-   || (opcode) == CBC_PUSH_NUMBER_POS_BYTE \
-   || (opcode) == CBC_PUSH_NUMBER_NEG_BYTE \
-   || (opcode) == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_LITERAL_PUSH_NUMBER_0) \
-   || (opcode) == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_LITERAL_PUSH_NUMBER_POS_BYTE) \
-   || (opcode) == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_LITERAL_PUSH_NUMBER_NEG_BYTE))
+  ((opcode) >= CBC_PUSH_NUMBER_0 \
+   && (opcode) <= CBC_PUSH_LITERAL_PUSH_NUMBER_NEG_BYTE)
 
 #define PARSER_IS_MUTABLE_PUSH_LITERAL(opcode) \
   ((opcode) >= CBC_PUSH_LITERAL && (opcode) <= CBC_PUSH_THIS_LITERAL)

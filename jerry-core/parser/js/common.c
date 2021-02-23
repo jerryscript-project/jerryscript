@@ -507,12 +507,12 @@ util_print_cbc (ecma_compiled_code_t *compiled_code_p) /**< compiled code */
     if (flags & CBC_HAS_BYTE_ARG)
     {
       if (opcode == CBC_PUSH_NUMBER_POS_BYTE
-          || ext_opcode == CBC_EXT_PUSH_LITERAL_PUSH_NUMBER_POS_BYTE)
+          || opcode == CBC_PUSH_LITERAL_PUSH_NUMBER_POS_BYTE)
       {
         JERRY_DEBUG_MSG (" number:%d", (int) *byte_code_p + 1);
       }
       else if (opcode == CBC_PUSH_NUMBER_NEG_BYTE
-               || ext_opcode == CBC_EXT_PUSH_LITERAL_PUSH_NUMBER_NEG_BYTE)
+               || opcode == CBC_PUSH_LITERAL_PUSH_NUMBER_NEG_BYTE)
       {
         JERRY_DEBUG_MSG (" number:%d", -((int) *byte_code_p + 1));
       }

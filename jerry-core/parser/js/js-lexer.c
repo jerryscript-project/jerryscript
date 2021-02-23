@@ -2764,22 +2764,22 @@ void
 lexer_convert_push_number_to_push_literal (parser_context_t *context_p) /**< context */
 {
   ecma_integer_value_t value;
-  bool two_literals = !PARSER_IS_BASIC_OPCODE (context_p->last_cbc_opcode);
+  bool two_literals = context_p->last_cbc_opcode >= CBC_PUSH_LITERAL_PUSH_NUMBER_0;
 
   if (context_p->last_cbc_opcode == CBC_PUSH_NUMBER_0
-      || context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_LITERAL_PUSH_NUMBER_0))
+      || context_p->last_cbc_opcode == CBC_PUSH_LITERAL_PUSH_NUMBER_0)
   {
     value = 0;
   }
   else if (context_p->last_cbc_opcode == CBC_PUSH_NUMBER_POS_BYTE
-           || context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_LITERAL_PUSH_NUMBER_POS_BYTE))
+           || context_p->last_cbc_opcode == CBC_PUSH_LITERAL_PUSH_NUMBER_POS_BYTE)
   {
     value = ((ecma_integer_value_t) context_p->last_cbc.value) + 1;
   }
   else
   {
     JERRY_ASSERT (context_p->last_cbc_opcode == CBC_PUSH_NUMBER_NEG_BYTE
-                  || context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_LITERAL_PUSH_NUMBER_NEG_BYTE));
+                  || context_p->last_cbc_opcode == CBC_PUSH_LITERAL_PUSH_NUMBER_NEG_BYTE);
     value = -((ecma_integer_value_t) context_p->last_cbc.value) - 1;
   }
 

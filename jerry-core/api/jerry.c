@@ -2195,16 +2195,8 @@ jerry_create_promise (void)
   jerry_assert_api_available ();
 
 #if JERRY_BUILTIN_PROMISE
-  ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target_p);
+  ecma_value_t promise_value = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_VALUE_UNDEFINED, NULL);
 
-  if (old_new_target_p == NULL)
-  {
-    JERRY_CONTEXT (current_new_target_p) = ecma_builtin_get (ECMA_BUILTIN_ID_PROMISE);
-  }
-
-  ecma_value_t promise_value = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_VALUE_UNDEFINED);
-
-  JERRY_CONTEXT (current_new_target_p) = old_new_target_p;
   return promise_value;
 #else /* !JERRY_BUILTIN_PROMISE */
   return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_promise_not_supported_p)));

@@ -113,7 +113,7 @@ ecma_op_create_array_iterator (ecma_object_t *obj_p,
 #endif /* JERRY_ESNEXT */
 
 ecma_value_t
-ecma_op_array_object_set_length (ecma_object_t *object_p, ecma_value_t new_value, uint32_t flags);
+ecma_op_array_object_set_length (ecma_object_t *object_p, ecma_value_t new_value, uint16_t flags);
 
 ecma_value_t
 ecma_op_array_object_define_own_property (ecma_object_t *object_p, ecma_string_t *property_name_p,

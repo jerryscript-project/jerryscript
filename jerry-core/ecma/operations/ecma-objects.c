@@ -1126,7 +1126,7 @@ ecma_op_object_put_apply_receiver (ecma_value_t receiver, /**< receiver */
   /* 5.b */
   if (!ecma_is_value_object (receiver))
   {
-    return ecma_reject (is_throw);
+    return ECMA_REJECT (is_throw, "Receiver must be an object");
   }
 
   ecma_object_t *receiver_obj_p = ecma_get_object_from_value (receiver);
@@ -1152,7 +1152,7 @@ ecma_op_object_put_apply_receiver (ecma_value_t receiver, /**< receiver */
     if (prop_desc.flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED)
         || !(prop_desc.flags & ECMA_PROP_IS_WRITABLE))
     {
-      result = ecma_reject (is_throw);
+      result = ecma_raise_property_redefinition (property_name_p, prop_desc.flags);
     }
     else
     {
@@ -1164,9 +1164,9 @@ ecma_op_object_put_apply_receiver (ecma_value_t receiver, /**< receiver */
       /* 5.e.iv */
       result = ecma_op_object_define_own_property (receiver_obj_p, property_name_p, &prop_desc);
 
-      if (JERRY_UNLIKELY (ecma_is_value_false (result)) && is_throw)
+      if (JERRY_UNLIKELY (ecma_is_value_false (result)))
       {
-        result = ecma_raise_type_error (ECMA_ERR_MSG ("Proxy trap returned falsish"));
+        result = ECMA_REJECT (is_throw, "Proxy trap returned falsish");
       }
     }
 
@@ -1190,9 +1190,9 @@ ecma_op_object_put_apply_receiver (ecma_value_t receiver, /**< receiver */
     desc.value = value;
     ecma_value_t ret_value = ecma_proxy_object_define_own_property (receiver_obj_p, property_name_p, &desc);
 
-    if (JERRY_UNLIKELY (ecma_is_value_false (ret_value)) && is_throw)
+    if (JERRY_UNLIKELY (ecma_is_value_false (ret_value)))
     {
-      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Proxy trap returned falsish"));
+      ret_value = ECMA_REJECT (is_throw, "Proxy trap returned falsish");
     }
 
     return ret_value;
@@ -1269,7 +1269,7 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
           return ecma_op_array_object_set_length (object_p, value, 0);
         }
 
-        return ecma_reject (is_throw);
+        return ecma_raise_readonly_assignment (property_name_p, is_throw);
       }
 
       if (JERRY_LIKELY (ecma_op_array_is_fast_array (ext_object_p)))
@@ -1391,7 +1391,7 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
 
               if (index < ecma_string_get_length (prim_value_str_p))
               {
-                return ecma_reject (is_throw);
+                return ecma_raise_readonly_assignment (property_name_p, is_throw);
               }
             }
           }
@@ -1399,19 +1399,16 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
         }
         case ECMA_OBJECT_TYPE_FUNCTION:
         {
-  #if JERRY_ESNEXT
-          /* Uninitialized 'length' property is non-writable (ECMA-262 v6, 19.2.4.1) */
-          if ((ecma_string_is_length (property_name_p))
-              && (!ECMA_GET_FIRST_BIT_FROM_POINTER_TAG (((ecma_extended_object_t *) object_p)->u.function.scope_cp)))
-          {
-            return ecma_reject (is_throw);
-          }
-  #else /* !JERRY_ESNEXT */
           if (ecma_string_is_length (property_name_p))
           {
-            return ecma_reject (is_throw);
-          }
+          /* Uninitialized 'length' property is non-writable (ECMA-262 v6, 19.2.4.1) */
+  #if JERRY_ESNEXT
+            if (!ECMA_GET_FIRST_BIT_FROM_POINTER_TAG (((ecma_extended_object_t *) object_p)->u.function.scope_cp))
   #endif /* JERRY_ESNEXT */
+            {
+              return ecma_raise_readonly_assignment (property_name_p, is_throw);
+            }
+          }
 
           /* Get prototype physical property. */
           property_p = ecma_op_function_try_to_lazy_instantiate_property (object_p, property_name_p);
@@ -1568,7 +1565,7 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
         {
           if (!ecma_is_property_writable ((ecma_property_t) ext_object_p->u.array.length_prop_and_hole_count))
           {
-            return ecma_reject (is_throw);
+            return ecma_raise_readonly_assignment (property_name_p, is_throw);
           }
 
           ext_object_p->u.array.length = index + 1;
@@ -1593,7 +1590,7 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
 
   if (setter_cp == JMEM_CP_NULL)
   {
-    return ecma_reject (is_throw);
+    return ecma_raise_readonly_assignment (property_name_p, is_throw);
   }
 
   ecma_value_t ret_value = ecma_op_function_call (ECMA_GET_NON_NULL_POINTER (ecma_object_t, setter_cp),
@@ -1741,99 +1738,44 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
 
   const ecma_object_type_t type = ecma_get_object_type (obj_p);
 
-#if JERRY_BUILTIN_PROXY
-  if (ECMA_OBJECT_IS_PROXY (obj_p))
-  {
-    return ecma_proxy_object_define_own_property (obj_p, property_name_p, property_desc_p);
-  }
-#endif /* JERRY_BUILTIN_PROXY */
-
   switch (type)
   {
-    case ECMA_OBJECT_TYPE_GENERAL:
-    case ECMA_OBJECT_TYPE_CLASS:
-    case ECMA_OBJECT_TYPE_FUNCTION:
-    case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:
-    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+#if JERRY_BUILTIN_PROXY
+    case ECMA_OBJECT_TYPE_PROXY:
     {
-      return ecma_op_general_object_define_own_property (obj_p,
-                                                         property_name_p,
-                                                         property_desc_p);
+      return ecma_proxy_object_define_own_property (obj_p, property_name_p, property_desc_p);
     }
-
+#endif /* JERRY_BUILTIN_PROXY */
     case ECMA_OBJECT_TYPE_ARRAY:
     {
-      return ecma_op_array_object_define_own_property (obj_p,
-                                                       property_name_p,
-                                                       property_desc_p);
+      return ecma_op_array_object_define_own_property (obj_p, property_name_p, property_desc_p);
     }
-
-    default:
+    case ECMA_OBJECT_TYPE_PSEUDO_ARRAY:
     {
-      JERRY_ASSERT (type == ECMA_OBJECT_TYPE_PSEUDO_ARRAY);
-
-      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
-
 #if JERRY_BUILTIN_TYPEDARRAY
-      if (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS)
-      {
-#else /* !JERRY_BUILTIN_TYPEDARRAY */
-        JERRY_ASSERT (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS);
-#endif /* JERRY_BUILTIN_TYPEDARRAY */
-        return ecma_op_arguments_object_define_own_property (obj_p,
-                                                             property_name_p,
-                                                             property_desc_p);
-#if JERRY_BUILTIN_TYPEDARRAY
-      }
-      /* ES2015 9.4.5.3 */
       if (ecma_object_is_typedarray (obj_p))
       {
-        if (ecma_prop_name_is_symbol (property_name_p))
-        {
-          return ecma_op_general_object_define_own_property (obj_p,
-                                                             property_name_p,
-                                                             property_desc_p);
-        }
-        uint32_t array_index = ecma_string_get_array_index (property_name_p);
-
-        if (array_index != ECMA_STRING_NOT_ARRAY_INDEX)
-        {
-          ecma_value_t define_status = ecma_op_typedarray_define_index_prop (obj_p,
-                                                                             array_index,
-                                                                             property_desc_p);
-
-          if (ECMA_IS_VALUE_ERROR (define_status))
-          {
-            return define_status;
-          }
-
-          if (ecma_is_value_true (define_status))
-          {
-            return ECMA_VALUE_TRUE;
-          }
-
-          return ecma_reject (property_desc_p->flags & ECMA_PROP_IS_THROW);
-        }
-
-        ecma_number_t num = ecma_string_to_number (property_name_p);
-        ecma_string_t *num_to_str = ecma_new_ecma_string_from_number (num);
-        bool is_same = ecma_compare_ecma_strings (property_name_p, num_to_str);
-        ecma_deref_ecma_string (num_to_str);
-
-        if (is_same)
-        {
-          return ecma_reject (property_desc_p->flags & ECMA_PROP_IS_THROW);
-        }
+        return ecma_op_typedarray_define_own_property (obj_p, property_name_p, property_desc_p);
       }
-
-      return ecma_op_general_object_define_own_property (obj_p,
-                                                         property_name_p,
-                                                         property_desc_p);
-#else /* !JERRY_BUILTIN_TYPEDARRAY */
-      break;
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
+
+#if JERRY_ESNEXT
+      /* All iterators are pseudo arrays */
+      if (((ecma_extended_object_t *) obj_p)->u.pseudo_array.type != ECMA_PSEUDO_ARRAY_ARGUMENTS)
+      {
+        break;
+      }
+#endif /* JERRY_ESNEXT */
+
+      return ecma_op_arguments_object_define_own_property (obj_p, property_name_p, property_desc_p);
+    }
+    default:
+    {
+      break;
     }
   }
+
+  return ecma_op_general_object_define_own_property (obj_p, property_name_p, property_desc_p);
 } /* ecma_op_object_define_own_property */
 
 /**
@@ -3296,6 +3238,40 @@ ecma_op_ordinary_object_has_own_property (ecma_object_t *object_p, /**< the obje
 
   return property != ECMA_PROPERTY_TYPE_NOT_FOUND && property != ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP;
 } /* ecma_op_ordinary_object_has_own_property */
+
+/**
+ * Raise property redefinition error
+ *
+ * @return ECMA_VALUE_FALSE - if ECMA_IS_THROW is not set
+ *         raised TypeError - otherwise
+ */
+ecma_value_t
+ecma_raise_property_redefinition (ecma_string_t *property_name_p, /**< property name */
+                                  uint16_t flags) /**< property descriptor flags */
+{
+  JERRY_UNUSED (property_name_p);
+
+  return ECMA_REJECT_WITH_FORMAT (flags & ECMA_PROP_IS_THROW,
+                                  "Cannot redefine property '%'",
+                                  ecma_make_prop_name_value (property_name_p));
+} /* ecma_raise_property_redefinition */
+
+/**
+ * Raise readonly assignment error
+ *
+ * @return ECMA_VALUE_FALSE - if is_throw is true
+ *         raised TypeError - otherwise
+ */
+ecma_value_t
+ecma_raise_readonly_assignment (ecma_string_t *property_name_p, /**< property name */
+                                bool is_throw) /**< is throw flag */
+{
+  JERRY_UNUSED (property_name_p);
+
+  return ECMA_REJECT_WITH_FORMAT (is_throw,
+                                  "Cannot assign to read only property '%'",
+                                  ecma_make_prop_name_value (property_name_p));
+} /* ecma_raise_readonly_assignment */
 
 /**
  * @}

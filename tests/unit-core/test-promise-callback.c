@@ -335,12 +335,20 @@ main (void)
             "async function f(p) { try { await p; } catch(e) { await p; } }"
             "f(Promise.reject(4))\n");
 
+  /* Test chained then. */
+  static uint8_t events23[] = { C, RJ, RWH, CP, CHA, CP, BR, RJ, AR, BR, RS, AR, E };
+
+  run_eval (events23,
+            "'use strict'\n"
+            "var p = Promise.reject(0)\n"
+            "p.then(() => {}).catch(() => {})\n");
+
   /* Test disabled filters. */
   jerry_promise_set_callback (JERRY_PROMISE_EVENT_FILTER_DISABLE, promise_callback, (void *) &user);
 
-  static uint8_t events23[] = { E };
+  static uint8_t events24[] = { E };
 
-  run_eval (events23,
+  run_eval (events24,
             "'use strict'\n"
             "async function f(p) { await p }"
             "f(Promise.resolve(1))\n");
@@ -349,9 +357,9 @@ main (void)
   filters = JERRY_PROMISE_EVENT_FILTER_REACTION_JOB | JERRY_PROMISE_EVENT_FILTER_ASYNC_REACTION_JOB;
   jerry_promise_set_callback (filters, promise_callback, (void *) &user);
 
-  static uint8_t events24[] = { BR, AR, BRS, ARS, E };
+  static uint8_t events25[] = { BR, AR, BRS, ARS, E };
 
-  run_eval (events24,
+  run_eval (events25,
             "'use strict'\n"
             "async function f(p) { await p }"
             "f(Promise.resolve(1).then(() => {}))\n");

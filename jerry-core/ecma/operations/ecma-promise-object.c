@@ -115,14 +115,18 @@ ecma_promise_set_state (ecma_object_t *obj_p, /**< points to promise object */
  * Take a collection of Reactions and enqueue a new PromiseReactionJob for each Reaction.
  *
  * See also: ES2015 25.4.1.8
+ *
+ * @return true - if JERRY_PROMISE_CALLBACK define is 1, and at least one handler is found
+ *         false - otherwise
  */
-static void
+static bool
 ecma_promise_trigger_reactions (ecma_collection_t *reactions, /**< lists of reactions */
                                 ecma_value_t value, /**< value for resolve or reject */
                                 bool is_reject) /**< true if promise is rejected, false otherwise */
 {
   ecma_value_t *buffer_p = reactions->buffer_p;
   ecma_value_t *buffer_end_p = buffer_p + reactions->item_count;
+  bool handler_found = false;
 
   while (buffer_p < buffer_end_p)
   {
@@ -133,6 +137,9 @@ ecma_promise_trigger_reactions (ecma_collection_t *reactions, /**< lists of reac
     if (JMEM_CP_GET_THIRD_BIT_FROM_POINTER_TAG (object_with_tag))
     {
       ecma_enqueue_promise_async_reaction_job (object, value, is_reject);
+#if JERRY_PROMISE_CALLBACK
+      handler_found = true;
+#endif /* JERRY_PROMISE_CALLBACK */
       continue;
     }
 
@@ -143,6 +150,9 @@ ecma_promise_trigger_reactions (ecma_collection_t *reactions, /**< lists of reac
       if (JMEM_CP_GET_FIRST_BIT_FROM_POINTER_TAG (object_with_tag))
       {
         handler = *buffer_p++;
+#if JERRY_PROMISE_CALLBACK
+        handler_found = true;
+#endif /* JERRY_PROMISE_CALLBACK */
       }
 
       ecma_enqueue_promise_reaction_job (object, handler, value);
@@ -159,6 +169,9 @@ ecma_promise_trigger_reactions (ecma_collection_t *reactions, /**< lists of reac
       if (JMEM_CP_GET_SECOND_BIT_FROM_POINTER_TAG (object_with_tag))
       {
         handler = *buffer_p++;
+#if JERRY_PROMISE_CALLBACK
+        handler_found = true;
+#endif /* JERRY_PROMISE_CALLBACK */
       }
 
       ecma_enqueue_promise_reaction_job (object, handler, value);
@@ -168,6 +181,8 @@ ecma_promise_trigger_reactions (ecma_collection_t *reactions, /**< lists of reac
       buffer_p++;
     }
   }
+
+  return handler_found;
 } /* ecma_promise_trigger_reactions */
 
 /**
@@ -212,8 +227,9 @@ ecma_reject_promise (ecma_value_t promise, /**< promise */
   JERRY_ASSERT (ecma_promise_get_flags (obj_p) & ECMA_PROMISE_IS_PENDING);
 
 #if JERRY_PROMISE_CALLBACK
-  if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback) != NULL))
+  if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback_filters) & JERRY_PROMISE_EVENT_FILTER_MAIN))
   {
+    JERRY_ASSERT (JERRY_CONTEXT (promise_callback) != NULL);
     JERRY_CONTEXT (promise_callback) (JERRY_PROMISE_EVENT_REJECT,
                                       promise,
                                       reason,
@@ -230,7 +246,23 @@ ecma_reject_promise (ecma_value_t promise, /**< promise */
   ecma_collection_t *reactions = promise_p->reactions;
 
   /* Fulfill reactions will never be triggered. */
+#if JERRY_PROMISE_CALLBACK
+  if (!ecma_promise_trigger_reactions (reactions, reason, true))
+  {
+    ((ecma_extended_object_t *) obj_p)->u.class_prop.extra_info |= ECMA_PROMISE_UNHANDLED_REJECT;
+
+    if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback_filters) & JERRY_PROMISE_EVENT_FILTER_ERROR))
+    {
+      JERRY_ASSERT (JERRY_CONTEXT (promise_callback) != NULL);
+      JERRY_CONTEXT (promise_callback) (JERRY_PROMISE_EVENT_REJECT_WITHOUT_HANDLER,
+                                        promise,
+                                        reason,
+                                        JERRY_CONTEXT (promise_callback_user_p));
+    }
+  }
+#else /* !JERRY_PROMISE_CALLBACK */
   ecma_promise_trigger_reactions (reactions, reason, true);
+#endif /* JERRY_PROMISE_CALLBACK */
 
   promise_p->reactions = ecma_new_collection ();
 
@@ -283,8 +315,9 @@ ecma_fulfill_promise (ecma_value_t promise, /**< promise */
   }
 
 #if JERRY_PROMISE_CALLBACK
-  if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback) != NULL))
+  if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback_filters) & JERRY_PROMISE_EVENT_FILTER_MAIN))
   {
+    JERRY_ASSERT (JERRY_CONTEXT (promise_callback) != NULL);
     JERRY_CONTEXT (promise_callback) (JERRY_PROMISE_EVENT_RESOLVE,
                                       promise,
                                       value,
@@ -324,15 +357,27 @@ ecma_reject_promise_with_checks (ecma_value_t promise, /**< promise */
   JERRY_ASSERT (ecma_is_promise (promise_obj_p));
 
   /* 3., 4. */
-  if (!ecma_is_resolver_already_called (promise_obj_p))
+  if (JERRY_UNLIKELY (ecma_is_resolver_already_called (promise_obj_p)))
   {
-    /* 5. */
-    ((ecma_extended_object_t *) promise_obj_p)->u.class_prop.extra_info |= ECMA_PROMISE_ALREADY_RESOLVED;
+#if JERRY_PROMISE_CALLBACK
+    if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback_filters) & JERRY_PROMISE_EVENT_FILTER_ERROR))
+    {
+      JERRY_ASSERT (JERRY_CONTEXT (promise_callback) != NULL);
+      JERRY_CONTEXT (promise_callback) (JERRY_PROMISE_EVENT_REJECT_FULFILLED,
+                                        promise,
+                                        reason,
+                                        JERRY_CONTEXT (promise_callback_user_p));
+    }
+#endif /* JERRY_PROMISE_CALLBACK */
 
-    /* 6. */
-    ecma_reject_promise (promise, reason);
+    return ECMA_VALUE_UNDEFINED;
   }
 
+  /* 5. */
+  ((ecma_extended_object_t *) promise_obj_p)->u.class_prop.extra_info |= ECMA_PROMISE_ALREADY_RESOLVED;
+
+  /* 6. */
+  ecma_reject_promise (promise, reason);
   return ECMA_VALUE_UNDEFINED;
 } /* ecma_reject_promise_with_checks */
 
@@ -352,14 +397,26 @@ ecma_fulfill_promise_with_checks (ecma_value_t promise, /**< promise */
   JERRY_ASSERT (ecma_is_promise (promise_obj_p));
 
   /* 3., 4. */
-  if (!ecma_is_resolver_already_called (promise_obj_p))
+  if (JERRY_UNLIKELY (ecma_is_resolver_already_called (promise_obj_p)))
   {
-    /* 5. */
-    ((ecma_extended_object_t *) promise_obj_p)->u.class_prop.extra_info |= ECMA_PROMISE_ALREADY_RESOLVED;
+#if JERRY_PROMISE_CALLBACK
+    if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback_filters) & JERRY_PROMISE_EVENT_FILTER_ERROR))
+    {
+      JERRY_ASSERT (JERRY_CONTEXT (promise_callback) != NULL);
+      JERRY_CONTEXT (promise_callback) (JERRY_PROMISE_EVENT_RESOLVE_FULFILLED,
+                                        promise,
+                                        value,
+                                        JERRY_CONTEXT (promise_callback_user_p));
+    }
+#endif /* JERRY_PROMISE_CALLBACK */
 
-    ecma_fulfill_promise (promise, value);
+    return ECMA_VALUE_UNDEFINED;
   }
 
+  /* 5. */
+  ((ecma_extended_object_t *) promise_obj_p)->u.class_prop.extra_info |= ECMA_PROMISE_ALREADY_RESOLVED;
+
+  ecma_fulfill_promise (promise, value);
   return ECMA_VALUE_UNDEFINED;
 } /* ecma_fulfill_promise_with_checks */
 
@@ -490,8 +547,9 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
   promise_object_p->reactions = reactions;
 
 #if JERRY_PROMISE_CALLBACK
-  if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback) != NULL))
+  if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback_filters) & JERRY_PROMISE_EVENT_FILTER_MAIN))
   {
+    JERRY_ASSERT (JERRY_CONTEXT (promise_callback) != NULL);
     JERRY_CONTEXT (promise_callback) (JERRY_PROMISE_EVENT_CREATE,
                                       ecma_make_object_value (object_p),
                                       parent,
@@ -886,6 +944,23 @@ ecma_promise_do_then (ecma_value_t promise, /**< the promise which call 'then' *
     ecma_track_promise_rejection (promise_obj_p, JERRY_PROMISE_REJECTION_OPERATION_HANDLE);
     ecma_enqueue_promise_reaction_job (ecma_make_object_value (result_capability_obj_p), on_rejected, reason);
     ecma_free_value (reason);
+
+#if JERRY_PROMISE_CALLBACK
+    if (on_rejected != ECMA_VALUE_FALSE
+        && ecma_promise_get_flags (promise_obj_p) & ECMA_PROMISE_UNHANDLED_REJECT)
+    {
+      promise_p->header.u.class_prop.extra_info &= (uint16_t) ~ECMA_PROMISE_UNHANDLED_REJECT;
+
+      if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback_filters) & JERRY_PROMISE_EVENT_FILTER_ERROR))
+      {
+        JERRY_ASSERT (JERRY_CONTEXT (promise_callback) != NULL);
+        JERRY_CONTEXT (promise_callback) (JERRY_PROMISE_EVENT_CATCH_HANDLER_ADDED,
+                                          promise,
+                                          ECMA_VALUE_UNDEFINED,
+                                          JERRY_CONTEXT (promise_callback_user_p));
+      }
+    }
+#endif /* JERRY_PROMISE_CALLBACK */
   }
 
   /* ES11: 11. */
@@ -1162,8 +1237,9 @@ ecma_promise_async_then (ecma_value_t promise, /**< promise object */
                          ecma_value_t executable_object) /**< executable object of the async function */
 {
 #if JERRY_PROMISE_CALLBACK
-  if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback) != NULL))
+  if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback_filters) & JERRY_PROMISE_EVENT_FILTER_ASYNC_MAIN))
   {
+    JERRY_ASSERT (JERRY_CONTEXT (promise_callback) != NULL);
     JERRY_CONTEXT (promise_callback) (JERRY_PROMISE_EVENT_ASYNC_AWAIT,
                                       executable_object,
                                       promise,
@@ -1187,6 +1263,22 @@ ecma_promise_async_then (ecma_value_t promise, /**< promise object */
   ecma_value_t value = ecma_promise_get_result (promise_obj_p);
   ecma_enqueue_promise_async_reaction_job (executable_object, value, !(flags & ECMA_PROMISE_IS_FULFILLED));
   ecma_free_value (value);
+
+#if JERRY_PROMISE_CALLBACK
+  if (ecma_promise_get_flags (promise_obj_p) & ECMA_PROMISE_UNHANDLED_REJECT)
+  {
+    ((ecma_extended_object_t *) promise_obj_p)->u.class_prop.extra_info &= (uint16_t) ~ECMA_PROMISE_UNHANDLED_REJECT;
+
+    if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback_filters) & JERRY_PROMISE_EVENT_FILTER_ERROR))
+    {
+      JERRY_ASSERT (JERRY_CONTEXT (promise_callback) != NULL);
+      JERRY_CONTEXT (promise_callback) (JERRY_PROMISE_EVENT_CATCH_HANDLER_ADDED,
+                                        promise,
+                                        ECMA_VALUE_UNDEFINED,
+                                        JERRY_CONTEXT (promise_callback_user_p));
+    }
+  }
+#endif /* JERRY_PROMISE_CALLBACK */
 } /* ecma_promise_async_then */
 
 /**

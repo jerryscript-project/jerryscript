@@ -23,6 +23,10 @@ typedef enum
   C = JERRY_PROMISE_EVENT_CREATE, /**< same as JERRY_PROMISE_CALLBACK_CREATE with undefined value */
   RS = JERRY_PROMISE_EVENT_RESOLVE, /**< same as JERRY_PROMISE_CALLBACK_RESOLVE */
   RJ = JERRY_PROMISE_EVENT_REJECT, /**< same as JERRY_PROMISE_CALLBACK_REJECT */
+  RSF = JERRY_PROMISE_EVENT_RESOLVE_FULFILLED, /**< same as JERRY_PROMISE_EVENT_RESOLVE_FULFILLED */
+  RJF = JERRY_PROMISE_EVENT_REJECT_FULFILLED, /**< same as JERRY_PROMISE_EVENT_REJECT_FULFILLED */
+  RWH = JERRY_PROMISE_EVENT_REJECT_WITHOUT_HANDLER, /**< same as JERRY_PROMISE_EVENT_REJECT_WITHOUT_HANDLER */
+  CHA = JERRY_PROMISE_EVENT_CATCH_HANDLER_ADDED, /**< same as JERRY_PROMISE_EVENT_CATCH_HANDLER_ADDED */
   BR = JERRY_PROMISE_EVENT_BEFORE_REACTION_JOB, /**< same as JERRY_PROMISE_CALLBACK_BEFORE_REACTION_JOB */
   AR = JERRY_PROMISE_EVENT_AFTER_REACTION_JOB, /**< same as JERRY_PROMISE_CALLBACK_AFTER_REACTION_JOB */
   A = JERRY_PROMISE_EVENT_ASYNC_AWAIT, /**< same as JERRY_PROMISE_CALLBACK_ASYNC_AWAIT */
@@ -61,10 +65,14 @@ promise_callback (jerry_promise_event_type_t event_type, /**< event type */
     }
     case JERRY_PROMISE_EVENT_RESOLVE:
     case JERRY_PROMISE_EVENT_REJECT:
+    case JERRY_PROMISE_EVENT_RESOLVE_FULFILLED:
+    case JERRY_PROMISE_EVENT_REJECT_FULFILLED:
+    case JERRY_PROMISE_EVENT_REJECT_WITHOUT_HANDLER:
     {
       TEST_ASSERT (jerry_value_is_promise (object));
       break;
     }
+    case JERRY_PROMISE_EVENT_CATCH_HANDLER_ADDED:
     case JERRY_PROMISE_EVENT_BEFORE_REACTION_JOB:
     case JERRY_PROMISE_EVENT_AFTER_REACTION_JOB:
     {
@@ -126,7 +134,13 @@ main (void)
 
   jerry_init (JERRY_INIT_EMPTY);
 
-  jerry_promise_set_callback (promise_callback, (void *) &user);
+  jerry_promise_event_filter_t filters = (JERRY_PROMISE_EVENT_FILTER_MAIN
+                                          | JERRY_PROMISE_EVENT_FILTER_ERROR
+                                          | JERRY_PROMISE_EVENT_FILTER_REACTION_JOB
+                                          | JERRY_PROMISE_EVENT_FILTER_ASYNC_MAIN
+                                          | JERRY_PROMISE_EVENT_FILTER_ASYNC_REACTION_JOB);
+
+  jerry_promise_set_callback (filters, promise_callback, (void *) &user);
 
   /* Test promise creation. */
   static uint8_t events1[] = { C, C, C, E };
@@ -155,7 +169,7 @@ main (void)
             "promise.then(() => {})\n");
 
   /* Test resolve and reject calls. */
-  static uint8_t events4[] = { C, C, RS, RJ, E };
+  static uint8_t events4[] = { C, C, RS, RJ, RWH, E };
 
   run_eval (events4,
             "'use strict'\n"
@@ -191,10 +205,10 @@ main (void)
             "Promise.resolve(4).then(() => {})\n");
 
   /* Test Promise.reject. */
-  static uint8_t events8[] = { C, RJ, CP, BR, RJ, AR, E };
+  static uint8_t events8[] = { C, RJ, RWH, CP, CHA, BR, RJ, RWH, AR, E };
 
   run_eval (events8,
-            "Promise.reject(4).then(() => {})\n");
+            "Promise.reject(4).catch(() => { throw 'Error' })\n");
 
   /* Test Promise.race without resolve */
   static uint8_t events9[] = { C, C, C, CP, CP, E };
@@ -206,7 +220,7 @@ main (void)
             "Promise.race([p1,p2])\n");
 
   /* Test Promise.race with resolve. */
-  static uint8_t events10[] = { C, RS, C, RJ, C, CP, CP, BR, RS, RS, AR, BR, RS, AR, E };
+  static uint8_t events10[] = { C, RS, C, RJ, RWH, C, CP, CP, CHA, BR, RS, RS, AR, BR, RJF, RS, AR, E };
 
   run_eval (events10,
             "'use strict'\n"
@@ -224,7 +238,7 @@ main (void)
             "Promise.all([p1,p2])\n");
 
   /* Test Promise.all with resolve. */
-  static uint8_t events12[] = { C, RS, C, RJ, C, CP, CP, BR, RS, AR, BR, RJ, RS, AR, E };
+  static uint8_t events12[] = { C, RS, C, RJ, RWH, C, CP, CP, CHA, BR, RS, AR, BR, RJ, RWH, RS, AR, E };
 
   run_eval (events12,
             "'use strict'\n"
@@ -257,7 +271,7 @@ main (void)
             "f(Promise.resolve(1))\n");
 
   /* Test await with rejected Promise. */
-  static uint8_t events16[] = { C, RJ, A, C, BRJ, C, RS, RS, ARJ, E };
+  static uint8_t events16[] = { C, RJ, RWH, A, CHA, C, BRJ, C, RS, RS, ARJ, E };
 
   run_eval (events16,
             "'use strict'\n"
@@ -280,6 +294,67 @@ main (void)
             "async function *f(p) { yield 1 }\n"
             "async function *g() { yield* f() }\n"
             "g().next()\n");
+
+  /* Test multiple fulfill operations. */
+  static uint8_t events19[] = { C, RS, RSF, RJF, E };
+
+  run_eval (events19,
+            "'use strict'\n"
+            "var resolve, reject\n"
+            "var p1 = new Promise((res, rej) => { resolve = res, reject = rej })\n"
+            "resolve(1)\n"
+            "resolve(2)\n"
+            "reject(3)\n");
+
+  /* Test multiple fulfill operations. */
+  static uint8_t events20[] = { C, RJ, RWH, RSF, RJF, E };
+
+  run_eval (events20,
+            "'use strict'\n"
+            "var resolve, reject\n"
+            "var p1 = new Promise((res, rej) => { resolve = res, reject = rej })\n"
+            "reject(1)\n"
+            "resolve(2)\n"
+            "reject(3)\n");
+
+  /* Test catch handler added later is reported only once. */
+  static uint8_t events21[] = { C, RJ, RWH, CP, CHA, CP, CP, BR, RS, AR, BR, RS, AR, BR, RS, AR, E };
+
+  run_eval (events21,
+            "'use strict'\n"
+            "var rej = Promise.reject(4)\n"
+            "rej.catch(() => {})\n"
+            "rej.catch(() => {})\n"
+            "rej.catch(() => {})\n");
+
+  /* Test catch handler added later is reported only once. */
+  static uint8_t events22[] = { C, RJ, RWH, A, CHA, C, BRJ, A, ARJ, BRJ, RJ, RWH, ARJ, E };
+
+  run_eval (events22,
+            "'use strict'\n"
+            "async function f(p) { try { await p; } catch(e) { await p; } }"
+            "f(Promise.reject(4))\n");
+
+  /* Test disabled filters. */
+  jerry_promise_set_callback (JERRY_PROMISE_EVENT_FILTER_DISABLE, promise_callback, (void *) &user);
+
+  static uint8_t events23[] = { E };
+
+  run_eval (events23,
+            "'use strict'\n"
+            "async function f(p) { await p }"
+            "f(Promise.resolve(1))\n");
+
+  /* Test filtered events. */
+  filters = JERRY_PROMISE_EVENT_FILTER_REACTION_JOB | JERRY_PROMISE_EVENT_FILTER_ASYNC_REACTION_JOB;
+  jerry_promise_set_callback (filters, promise_callback, (void *) &user);
+
+  static uint8_t events24[] = { BR, AR, BRS, ARS, E };
+
+  run_eval (events24,
+            "'use strict'\n"
+            "async function f(p) { await p }"
+            "f(Promise.resolve(1).then(() => {}))\n");
 
   jerry_cleanup ();
   return 0;

@@ -4358,15 +4358,24 @@ jerry_get_promise_state (const jerry_value_t promise) /**< promise object to get
  * Note:
  *     the previous callback is overwritten
  */
-void jerry_promise_set_callback (jerry_promise_callback_t callback,  /**< notification callback */
+void jerry_promise_set_callback (jerry_promise_event_filter_t filters, /**< combination of event filters */
+                                 jerry_promise_callback_t callback, /**< notification callback */
                                  void *user_p) /**< user pointer passed to the callback */
 {
   jerry_assert_api_available ();
 
 #if JERRY_BUILTIN_PROMISE && JERRY_PROMISE_CALLBACK
+  if (filters == JERRY_PROMISE_EVENT_FILTER_DISABLE || callback == NULL)
+  {
+    JERRY_CONTEXT (promise_callback_filters) = JERRY_PROMISE_EVENT_FILTER_DISABLE;
+    return;
+  }
+
+  JERRY_CONTEXT (promise_callback_filters) = (uint32_t) filters;
   JERRY_CONTEXT (promise_callback) = callback;
   JERRY_CONTEXT (promise_callback_user_p) = user_p;
 #else /* !JERRY_BUILTIN_PROMISE && !JERRY_PROMISE_CALLBACK */
+  JERRY_UNUSED (filters);
   JERRY_UNUSED (callback);
   JERRY_UNUSED (user_p);
 #endif /* JERRY_BUILTIN_PROMISE && JERRY_PROMISE_CALLBACK */

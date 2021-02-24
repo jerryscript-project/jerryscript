@@ -184,6 +184,7 @@ struct jerry_context_t
   ecma_job_queue_item_t *job_queue_head_p; /**< points to the head item of the job queue */
   ecma_job_queue_item_t *job_queue_tail_p; /**< points to the tail item of the job queue */
 #if JERRY_PROMISE_CALLBACK
+  uint32_t promise_callback_filters; /**< reported event types for promise callback */
   void *promise_callback_user_p; /**< user pointer for promise callback */
   jerry_promise_callback_t promise_callback; /**< user function for tracking Promise object operations */
 #endif /* JERRY_PROMISE_CALLBACK */

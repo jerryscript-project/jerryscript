@@ -35,6 +35,9 @@ typedef enum
   ECMA_PROMISE_IS_FULFILLED = (1 << 1), /**< fulfilled state */
   ECMA_PROMISE_ALREADY_RESOLVED = (1 << 2), /**< already resolved */
   ECMA_PROMISE_HANDLED = (1 << 3), /**< ES11: 25.6.6 [[PromiseIsHandled]] internal slot */
+#if JERRY_PROMISE_CALLBACK
+  ECMA_PROMISE_UNHANDLED_REJECT = (1 << 4), /**< a Promise is rejected without a catch handler */
+#endif /* JERRY_PROMISE_CALLBACK */
 } ecma_promise_flags_t;
 
 /**

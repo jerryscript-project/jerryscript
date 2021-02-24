@@ -353,14 +353,6 @@ ecma_gc_mark_promise_object (ecma_extended_object_t *ext_object_p) /**< extended
   /* Mark all reactions. */
   ecma_promise_object_t *promise_object_p = (ecma_promise_object_t *) ext_object_p;
 
-  if (!ecma_is_value_empty (promise_object_p->resolve))
-  {
-    JERRY_ASSERT (ecma_is_value_object (promise_object_p->resolve)
-                  && ecma_is_value_object (promise_object_p->reject));
-    ecma_gc_set_object_visited (ecma_get_object_from_value (promise_object_p->resolve));
-    ecma_gc_set_object_visited (ecma_get_object_from_value (promise_object_p->reject));
-  }
-
   ecma_collection_t *collection_p = promise_object_p->reactions;
 
   if (collection_p != NULL)

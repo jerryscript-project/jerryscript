@@ -24,16 +24,25 @@ jerry_port_track_promise_rejection (const jerry_value_t promise, /**< rejected p
                                     const jerry_promise_rejection_operation_t operation) /**< operation */
 {
   (void) operation; /* unused */
+  const jerry_size_t max_allowed_size = 5 * 1024 - 1;
 
   jerry_value_t reason = jerry_get_promise_result (promise);
   jerry_value_t reason_to_string = jerry_value_to_string (reason);
-  jerry_size_t req_sz = jerry_get_utf8_string_size (reason_to_string);
-  JERRY_VLA (jerry_char_t, str_buf_p, req_sz + 1);
-  jerry_string_to_utf8_char_buffer (reason_to_string, str_buf_p, req_sz);
-  str_buf_p[req_sz] = '\0';
+  jerry_release_value (reason);
+
+  jerry_length_t end_pos = jerry_get_utf8_string_length (reason_to_string);
+  jerry_size_t string_size = jerry_get_utf8_string_size (reason_to_string);
+  jerry_size_t buffer_size = (string_size < max_allowed_size) ? string_size : max_allowed_size;
+
+  JERRY_VLA (jerry_char_t, str_buf_p, buffer_size + 1);
+  jerry_size_t copied = jerry_substring_to_utf8_char_buffer (reason_to_string,
+                                                             0,
+                                                             end_pos,
+                                                             str_buf_p,
+                                                             buffer_size);
+  str_buf_p[copied] = '\0';
 
   jerry_release_value (reason_to_string);
-  jerry_release_value (reason);
 
   jerry_port_log (JERRY_LOG_LEVEL_WARNING, "Uncaught (in promise) %s\n", str_buf_p);
 } /* jerry_port_track_promise_rejection */

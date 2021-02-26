@@ -308,6 +308,11 @@ ecma_proxy_object_get_prototype_of (ecma_object_t *obj_p) /**< proxy object */
     return ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned neither object nor null"));
   }
 
+  if (obj_p->u2.prototype_cp & JERRY_PROXY_SKIP_RESULT_VALIDATION)
+  {
+    return handler_proto;
+  }
+
   /* 11. */
   ecma_value_t extensible_target = ecma_builtin_object_object_is_extensible (target_obj_p);
 
@@ -417,6 +422,11 @@ ecma_proxy_object_set_prototype_of (ecma_object_t *obj_p, /**< proxy object */
 
   ecma_free_value (trap_result);
 
+  if (obj_p->u2.prototype_cp & JERRY_PROXY_SKIP_RESULT_VALIDATION)
+  {
+    return ecma_make_boolean_value (boolean_trap_result);
+  }
+
   /* 11. */
   ecma_value_t extensible_target = ecma_builtin_object_object_is_extensible (target_obj_p);
 
@@ -512,6 +522,11 @@ ecma_proxy_object_is_extensible (ecma_object_t *obj_p) /**< proxy object */
 
   ecma_free_value (trap_result);
 
+  if (obj_p->u2.prototype_cp & JERRY_PROXY_SKIP_RESULT_VALIDATION)
+  {
+    return ecma_make_boolean_value (boolean_trap_result);
+  }
+
   bool target_result;
 
   /* 10. */
@@ -606,7 +621,8 @@ ecma_proxy_object_prevent_extensions (ecma_object_t *obj_p) /**< proxy object */
   ecma_free_value (trap_result);
 
   /* 10. */
-  if (boolean_trap_result)
+  if (boolean_trap_result
+      && !(obj_p->u2.prototype_cp & JERRY_PROXY_SKIP_RESULT_VALIDATION))
   {
     ecma_value_t target_is_ext = ecma_builtin_object_object_is_extensible (target_obj_p);
 
@@ -688,7 +704,7 @@ ecma_proxy_object_get_own_property_descriptor (ecma_object_t *obj_p, /**< proxy 
     return ecma_raise_type_error (ECMA_ERR_MSG ("Trap is neither an object nor undefined"));
   }
 
-  if (obj_p->u2.prototype_cp & ECMA_PROXY_SKIP_GET_OWN_PROPERTY_CHECKS)
+  if (obj_p->u2.prototype_cp & JERRY_PROXY_SKIP_RESULT_VALIDATION)
   {
     if (ecma_is_value_undefined (trap_result))
     {
@@ -899,6 +915,11 @@ ecma_proxy_object_define_own_property (ecma_object_t *obj_p, /**< proxy object *
     return ECMA_VALUE_FALSE;
   }
 
+  if (obj_p->u2.prototype_cp & JERRY_PROXY_SKIP_RESULT_VALIDATION)
+  {
+    return ECMA_VALUE_TRUE;
+  }
+
   /* 13. */
   ecma_property_descriptor_t target_desc;
 
@@ -1045,7 +1066,8 @@ ecma_proxy_object_has (ecma_object_t *obj_p, /**< proxy object */
   ecma_free_value (trap_result);
 
   /* 11. */
-  if (!boolean_trap_result)
+  if (!boolean_trap_result
+      && !(obj_p->u2.prototype_cp & JERRY_PROXY_SKIP_RESULT_VALIDATION))
   {
     ecma_property_descriptor_t target_desc;
 
@@ -1138,7 +1160,7 @@ ecma_proxy_object_get (ecma_object_t *obj_p, /**< proxy object */
 
   /* 10. */
   if (ECMA_IS_VALUE_ERROR (trap_result)
-      || (obj_p->u2.prototype_cp & ECMA_PROXY_SKIP_GET_CHECKS))
+      || (obj_p->u2.prototype_cp & JERRY_PROXY_SKIP_RESULT_VALIDATION))
   {
     return trap_result;
   }
@@ -1263,6 +1285,11 @@ ecma_proxy_object_set (ecma_object_t *obj_p, /**< proxy object */
     return ECMA_VALUE_FALSE;
   }
 
+  if (obj_p->u2.prototype_cp & JERRY_PROXY_SKIP_RESULT_VALIDATION)
+  {
+    return ECMA_VALUE_TRUE;
+  }
+
   /* 12. */
   ecma_property_descriptor_t target_desc;
 
@@ -1370,6 +1397,11 @@ ecma_proxy_object_delete_property (ecma_object_t *obj_p, /**< proxy object */
   if (!boolean_trap_result)
   {
     return ECMA_VALUE_FALSE;
+  }
+
+  if (obj_p->u2.prototype_cp & JERRY_PROXY_SKIP_RESULT_VALIDATION)
+  {
+    return ECMA_VALUE_TRUE;
   }
 
   /* 12. */
@@ -1580,7 +1612,8 @@ ecma_proxy_object_own_property_keys (ecma_object_t *obj_p) /**< proxy object */
 
   ecma_free_value (trap_result_array);
 
-  if (trap_result == NULL)
+  if (trap_result == NULL
+      || (obj_p->u2.prototype_cp & JERRY_PROXY_SKIP_RESULT_VALIDATION))
   {
     return trap_result;
   }

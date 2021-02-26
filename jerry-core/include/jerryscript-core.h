@@ -525,8 +525,11 @@ typedef enum
  */
 typedef enum
 {
-  JERRY_PROXY_SKIP_GET_CHECKS = (1u << 0), /**< skip [[Get]] result checks */
-  JERRY_PROXY_SKIP_GET_OWN_PROPERTY_CHECKS = (1u << 1), /**< skip [[GetOwnProperty]] result checks */
+  JERRY_PROXY_SKIP_RESULT_VALIDATION = (1u << 0), /**< skip result validation for [[GetPrototypeOf]],
+                                                   *   [[SetPrototypeOf]], [[IsExtensible]],
+                                                   *   [[PreventExtensions]], [[GetOwnProperty]],
+                                                   *   [[DefineOwnProperty]], [[HasProperty]], [[Get]],
+                                                   *   [[Set]], [[Delete]] and [[OwnPropertyKeys]] */
 } jerry_proxy_object_options_t;
 
 /**

@@ -253,28 +253,6 @@ size_t jerry_port_normalize_path (const char *in_path_p,
 jerry_value_t jerry_port_get_native_module (jerry_value_t name);
 
 /**
- * HostPromiseRejectionTracker operations
- */
-typedef enum
-{
-  JERRY_PROMISE_REJECTION_OPERATION_REJECT, /**< promise is rejected without any handlers */
-  JERRY_PROMISE_REJECTION_OPERATION_HANDLE, /**< handler is added to a rejected promise for the first time */
-} jerry_promise_rejection_operation_t;
-
-/**
- * Track unhandled promise rejections.
- *
- * Note:
- *      This port function is called by jerry-core when JERRY_BUILTIN_PROMISE
- *      is enabled.
- *
- * @param promise rejected promise
- * @param operation HostPromiseRejectionTracker operation
- */
-void jerry_port_track_promise_rejection (const jerry_value_t promise,
-                                         const jerry_promise_rejection_operation_t operation);
-
-/**
  * @}
  */
 

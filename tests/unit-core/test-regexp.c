@@ -47,12 +47,14 @@ main (void)
   jerry_value_t is_multiline = jerry_get_property_by_index (res, 1);
   jerry_value_t is_global = jerry_get_property_by_index (res, 2);
 
+  const char expected_result[] = "something";
   jerry_size_t str_size = jerry_get_string_size (regex_res_str);
+  TEST_ASSERT (str_size == (sizeof (expected_result) - 1));
+
   JERRY_VLA (jerry_char_t, res_buff, str_size);
   jerry_size_t res_size = jerry_string_to_char_buffer (regex_res_str, res_buff, str_size);
 
-  const char expected_result[] = "something";
-  TEST_ASSERT (res_size == (sizeof (expected_result) - 1));
+  TEST_ASSERT (res_size == str_size);
   TEST_ASSERT (strncmp (expected_result, (const char *) res_buff, res_size) == 0);
   TEST_ASSERT (jerry_get_boolean_value (is_multiline));
   TEST_ASSERT (jerry_get_boolean_value (is_global));

@@ -90,10 +90,6 @@
   <test id="built-ins/Number/prototype/toPrecision/exponential.js"><reason></reason></test>
   <test id="built-ins/Object/entries/order-after-define-property.js"><reason></reason></test>
   <test id="built-ins/Object/keys/order-after-define-property.js"><reason></reason></test>
-  <test id="built-ins/Promise/all/invoke-resolve-get-error.js"><reason>Test expects incorrect call order</reason></test>
-  <test id="built-ins/Promise/all/resolve-non-callable.js"><reason>Test expects incorrect call order</reason></test>
-  <test id="built-ins/Promise/race/invoke-resolve-get-error.js"><reason>Test expects incorrect call order</reason></test>
-  <test id="built-ins/Promise/race/resolve-non-callable.js"><reason>Test expects incorrect call order</reason></test>
   <test id="built-ins/Proxy/preventExtensions/trap-is-undefined-target-is-proxy.js"><reason></reason></test>
   <test id="built-ins/Proxy/setPrototypeOf/toboolean-trap-result-false.js"><reason></reason></test>
   <test id="built-ins/RegExpStringIteratorPrototype/next/custom-regexpexec-match-get-0-tostring-throws.js"><reason></reason></test>
@@ -8352,109 +8348,6 @@
   <test id="language/statements/switch/syntax/redeclaration/function-name-redeclaration-attempt-with-async-generator.js"><reason></reason></test>
   <test id="language/statements/switch/syntax/redeclaration/generator-name-redeclaration-attempt-with-async-generator.js"><reason></reason></test>
   <!-- END - ES2018: Asynchronous Iteration -->
-
-  <!-- ES2020 - Promise.allSettled
-       features: [Promise.allSettled]
-       https://github.com/tc39/proposal-promise-allSettled
-  -->
-  <test id="built-ins/Promise/allSettled/call-resolve-element-after-return.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/call-resolve-element-items.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/call-resolve-element.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/capability-executor-called-twice.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/capability-executor-not-callable.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/capability-resolve-throws-no-close.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/capability-resolve-throws-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/ctx-ctor-throws.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/ctx-ctor.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/does-not-invoke-array-setters.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/invoke-resolve-error-close.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/invoke-resolve-error-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/invoke-resolve-get-error-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/invoke-resolve-get-error.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/invoke-resolve-get-once-multiple-calls.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/invoke-resolve-get-once-no-calls.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/invoke-resolve-on-promises-every-iteration-of-custom.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/invoke-resolve-on-promises-every-iteration-of-promise.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/invoke-resolve-on-values-every-iteration-of-promise.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/invoke-resolve-return.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/invoke-resolve.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/invoke-then-error-close.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/invoke-then-error-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/invoke-then-get-error-close.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/invoke-then-get-error-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/invoke-then.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/is-function.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-arg-is-false-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-arg-is-null-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-arg-is-number-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-arg-is-poisoned.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-arg-is-string-resolve.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-arg-is-symbol-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-arg-is-true-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-arg-is-undefined-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-assigned-false-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-assigned-null-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-assigned-number-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-assigned-string-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-assigned-symbol-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-assigned-true-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-assigned-undefined-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-next-err-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-next-val-err-no-close.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-next-val-err-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-returns-false-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-returns-null-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-returns-number-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-returns-string-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-returns-symbol-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-returns-true-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-returns-undefined-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-step-err-no-close.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/iter-step-err-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/length.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/name.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/new-reject-function.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/new-resolve-function.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/prop-desc.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/reject-deferred.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/reject-element-function-extensible.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/reject-element-function-length.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/reject-element-function-multiple-calls.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/reject-element-function-name.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/reject-element-function-nonconstructor.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/reject-element-function-prototype.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/reject-ignored-deferred.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/reject-ignored-immed.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/reject-immed.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolve-before-loop-exit-from-same.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolve-before-loop-exit.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolve-element-function-extensible.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolve-element-function-length.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolve-element-function-name.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolve-element-function-nonconstructor.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolve-element-function-prototype.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolve-from-same-thenable.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolve-ignores-late-rejection-deferred.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolve-ignores-late-rejection.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolve-non-callable.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolve-non-thenable.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolve-not-callable-reject-with-typeerror.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolve-poisoned-then.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolve-thenable.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolved-all-fulfilled.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolved-all-mixed.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolved-all-rejected.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolved-immed.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolved-sequence-extra-ticks.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolved-sequence-mixed.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolved-sequence-with-rejections.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolved-sequence.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolved-then-catch-finally.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolves-empty-array.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/resolves-to-array.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/returns-promise.js"><reason></reason></test>
-  <test id="built-ins/Promise/allSettled/species-get-error.js"><reason></reason></test>
-  <!-- END - ES2020 - Promise.allSettled -->
 
   <!-- Missing test262 support in JerryScript REPL - missing $262 object
        https://github.com/tc39/test262/blob/main/INTERPRETING.md#host-defined-functions

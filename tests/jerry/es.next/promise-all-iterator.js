@@ -75,9 +75,9 @@ var rejects = Promise.all(createIterable([
 fulfills.then(result => { assert (result + "" === "foo,bar"); });
 rejects.catch(result => { assert (result === "baz"); });
 
-var closed = false;
+var closed = true;
 delete Promise.resolve;
-Promise.all(createIterable([1,2,3], {'return': function () { closed = true; }}));
+Promise.all(createIterable([1,2,3], {'return': function () { closed = false; }}));
 assert (closed);
 
 var arr = [];

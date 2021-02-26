@@ -3031,6 +3031,66 @@ jerry_get_property_by_index (const jerry_value_t obj_val, /**< object value */
 } /* jerry_get_property_by_index */
 
 /**
+ * Get the own property value of an object with the given name.
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return value of the property - if success
+ *         value marked with error flag - otherwise
+ */
+jerry_value_t
+jerry_get_own_property (const jerry_value_t obj_val, /**< object value */
+                        const jerry_value_t prop_name_val, /**< property name (string value) */
+                        const jerry_value_t receiver_val, /**< receiver object value */
+                        bool *found_p) /**< [out] true, if the property is found
+                                        *   or obj_val is a Proxy object, false otherwise */
+{
+  jerry_assert_api_available ();
+
+  if (found_p != NULL)
+  {
+    *found_p = false;
+  }
+
+  if (!ecma_is_value_object (obj_val)
+      || !ecma_is_value_prop_name (prop_name_val)
+      || !ecma_is_value_object (receiver_val))
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
+  }
+
+  ecma_object_t *object_p = ecma_get_object_from_value (obj_val);
+  ecma_string_t *property_name_p = ecma_get_prop_name_from_value (prop_name_val);
+
+#if JERRY_BUILTIN_PROXY
+  if (ECMA_OBJECT_IS_PROXY (object_p))
+  {
+    if (found_p != NULL)
+    {
+      *found_p = true;
+    }
+
+    return jerry_return (ecma_proxy_object_get (object_p, property_name_p, receiver_val));
+  }
+#endif /* JERRY_BUILTIN_PROXY */
+
+  ecma_value_t ret_value = ecma_op_object_find_own (receiver_val, object_p, property_name_p);
+
+  if (ecma_is_value_found (ret_value))
+  {
+    if (found_p != NULL)
+    {
+      *found_p = true;
+    }
+
+    return jerry_return (ret_value);
+  }
+
+  return ECMA_VALUE_UNDEFINED;
+} /* jerry_get_own_property */
+
+/**
  * Get value of an internal property to the specified object with the given name.
  *
  * Note:

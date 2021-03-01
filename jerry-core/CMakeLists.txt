@@ -220,6 +220,8 @@ set(SOURCE_CORE_FILES
   ecma/builtin-objects/ecma-builtin-urierror.c
   ecma/builtin-objects/ecma-builtin-weakmap-prototype.c
   ecma/builtin-objects/ecma-builtin-weakmap.c
+  ecma/builtin-objects/ecma-builtin-weakref-prototype.c
+  ecma/builtin-objects/ecma-builtin-weakref.c
   ecma/builtin-objects/ecma-builtin-weakset-prototype.c
   ecma/builtin-objects/ecma-builtin-weakset.c
   ecma/builtin-objects/ecma-builtins.c
@@ -408,6 +410,8 @@ if(ENABLE_AMALGAM)
     ecma/builtin-objects/ecma-builtin-urierror.inc.h
     ecma/builtin-objects/ecma-builtin-weakmap-prototype.inc.h
     ecma/builtin-objects/ecma-builtin-weakmap.inc.h
+    ecma/builtin-objects/ecma-builtin-weakref-prototype.inc.h
+    ecma/builtin-objects/ecma-builtin-weakref.inc.h
     ecma/builtin-objects/ecma-builtin-weakset-prototype.inc.h
     ecma/builtin-objects/ecma-builtin-weakset.inc.h
     ecma/builtin-objects/ecma-builtins-internal.h

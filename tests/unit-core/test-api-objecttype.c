@@ -73,6 +73,7 @@ main (void)
   const jerry_char_t number_object[] = "new Number(5)";
   const jerry_char_t regexp_object[] = "new RegExp()";
   const jerry_char_t string_object[] = "new String('foo')";
+  const jerry_char_t weak_ref_object[] = "new WeakRef({})";
 
   test_entry_t entries[] =
   {
@@ -115,6 +116,7 @@ main (void)
     ENTRY_IF (JERRY_OBJECT_TYPE_SYMBOL, EVALUATE (symbol_object), JERRY_FEATURE_SYMBOL),
     ENTRY_IF (JERRY_OBJECT_TYPE_GENERATOR, EVALUATE (generator_object), JERRY_FEATURE_SYMBOL),
     ENTRY_IF (JERRY_OBJECT_TYPE_BIGINT, EVALUATE (bigint_object), JERRY_FEATURE_BIGINT),
+    ENTRY_IF (JERRY_OBJECT_TYPE_WEAKREF, EVALUATE (weak_ref_object), JERRY_FEATURE_WEAKREF),
   };
 
   for (size_t idx = 0; idx < sizeof (entries) / sizeof (entries[0]); idx++)

@@ -122,6 +122,8 @@ defined to `1`.
   Enables or disables the [WeakMap](https://262.ecma-international.org/11.0/#sec-weakmap-objects) built-in.
 * `JERRY_BUILTIN_WEAKSET`:
   Enables or disables the [WeakSet](https://262.ecma-international.org/11.0/#sec-weakmap-objects) built-in.
+* `JERRY_BUILTIN_WEAKREF`:
+  Enables or disables the [WeakRef](https://tc39.es/ecma262/#sec-weak-ref-constructor) built-in.
 * `JERRY_MODULE_SYSTEM`:
   Enables or disable the [module system](http://www.ecma-international.org/ecma-262/6.0/#sec-modules) language element.
 * `JERRY_ESNEXT`: Enables or disables all of the implemented [ECMAScript2015+ features](http://www.ecma-international.org/ecma-262/10.0/) above.

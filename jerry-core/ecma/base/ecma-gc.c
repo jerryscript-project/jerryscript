@@ -1382,7 +1382,7 @@ ecma_gc_free_properties (ecma_object_t *object_p) /**< object */
           break;
         }
 #endif /* JERRY_ESNEXT */
-#if JERRY_BUILTIN_WEAKMAP || JERRY_BUILTIN_WEAKSET
+#if JERRY_BUILTIN_WEAKMAP || JERRY_BUILTIN_WEAKSET || JERRY_BUILTIN_WEAKREF
         case LIT_INTERNAL_MAGIC_STRING_WEAK_REFS:
         {
           ecma_collection_t *refs_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t,
@@ -1392,17 +1392,23 @@ ecma_gc_free_properties (ecma_object_t *object_p) /**< object */
             const ecma_value_t value = refs_p->buffer_p[j];
             if (!ecma_is_value_empty (value))
             {
-              ecma_object_t *container_p = ecma_get_object_from_value (value);
+              ecma_object_t *obj_p = ecma_get_object_from_value (value);
 
-              ecma_op_container_remove_weak_entry (container_p,
-                                                   ecma_make_object_value (object_p));
+              if (ecma_object_class_is (obj_p, LIT_MAGIC_STRING_WEAKREF_UL))
+              {
+                JERRY_ASSERT (ecma_object_class_is (obj_p, LIT_MAGIC_STRING_WEAKREF_UL));
+                ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
+                ext_obj_p->u.class_prop.u.target = ECMA_VALUE_UNDEFINED;
+                continue;
+              }
+              ecma_op_container_remove_weak_entry (obj_p, ecma_make_object_value (object_p));
             }
           }
 
           ecma_collection_destroy (refs_p);
           break;
         }
-#endif /* JERRY_BUILTIN_WEAKMAP || JERRY_BUILTIN_WEAKSET */
+#endif /* JERRY_BUILTIN_WEAKMAP || JERRY_BUILTIN_WEAKSET || JERRY_BUILTIN_WEAKREF */
         default:
         {
           JERRY_ASSERT (name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
@@ -1641,6 +1647,18 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           break;
         }
 #endif /* JERRY_BUILTIN_PROMISE */
+#if JERRY_BUILTIN_WEAKREF
+        case LIT_MAGIC_STRING_WEAKREF_UL:
+        {
+          ecma_value_t target = ext_object_p->u.class_prop.u.target;
+
+          if (!ecma_is_value_undefined (target))
+          {
+            ecma_op_object_unref_weak (ecma_get_object_from_value (target), ecma_make_object_value (object_p));
+          }
+          break;
+        }
+#endif /* JERRY_BUILTIN_WEAKREF */
 #if JERRY_BUILTIN_CONTAINER
 #if JERRY_BUILTIN_MAP
         case LIT_MAGIC_STRING_MAP_UL:

@@ -959,7 +959,7 @@ typedef struct
         ecma_value_t date; /**< Date object [[DateValue]] internal property */
         int32_t tza; /**< TimeZone adjustment for date objects */
         uint32_t length; /**< length related property (e.g. length of ArrayBuffer) */
-        ecma_value_t target; /**< [[ProxyTarget]] internal property */
+        ecma_value_t target; /**< [[ProxyTarget]] or [[WeakRefTarget]] internal property */
         ecma_value_t head; /**< points to the async generator task queue head item */
         ecma_value_t promise; /**< PromiseCapability[[Promise]] internal slot */
       } u;

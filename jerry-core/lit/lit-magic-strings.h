@@ -67,6 +67,7 @@ typedef enum
                                                                                     *   data properties */
   LIT_INTERNAL_MAGIC_STRING_ENVIRONMENT_RECORD, /**< dynamic environment record needed by class constructors */
   LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED, /**< computed class field name list */
+  LIT_INTERNAL_MAGIC_STRING_CONTAINER_WEAK_REFS, /**< Weak references to the current container object */
   LIT_INTERNAL_MAGIC_STRING_WEAK_REFS, /**< Weak references to the current object */
   LIT_MAGIC_STRING__COUNT /**< number of magic strings */
 } lit_magic_string_id_t;

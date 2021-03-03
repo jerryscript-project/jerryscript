@@ -29,10 +29,7 @@ create_special_proxy_handler (const jerry_call_info_t *call_info_p, /**< call in
     return jerry_create_undefined ();
   }
 
-  const uint32_t options = (JERRY_PROXY_SKIP_GET_CHECKS
-                            | JERRY_PROXY_SKIP_GET_OWN_PROPERTY_CHECKS);
-
-  return jerry_create_special_proxy (args_p[0], args_p[1], options);
+  return jerry_create_special_proxy (args_p[0], args_p[1], JERRY_PROXY_SKIP_RESULT_VALIDATION);
 } /* create_special_proxy_handler */
 
 static void
@@ -78,15 +75,34 @@ main (void)
             "     throw 'Assertion failed!'\n"
             "}");
 
-  /* This test fails unless JERRY_PROXY_SKIP_GET_CHECKS is set. */
-  run_eval ("var o = {}\n"
-            "Object.defineProperty(o, 'prop', { value:4 })\n"
-            "var proxy = create_special_proxy(o, {\n"
-            "  get(target, key) { return 5 }\n"
-            "})\n"
-            "assert(proxy.prop === 5)");
+  /* These tests fail unless JERRY_PROXY_SKIP_RESULT_VALIDATION is set. */
 
-  /* This test fails unless JERRY_PROXY_SKIP_GET_OWN_PROPERTY_CHECKS is set. */
+  run_eval ("var o = {}\n"
+            "Object.preventExtensions(o)\n"
+            "var proxy = create_special_proxy(o, {\n"
+            "  getPrototypeOf(target) { return Array.prototype }\n"
+            "})\n"
+            "assert(Object.getPrototypeOf(proxy) === Array.prototype)");
+
+  run_eval ("var o = {}\n"
+            "Object.preventExtensions(o)\n"
+            "var proxy = create_special_proxy(o, {\n"
+            "  setPrototypeOf(target, proto) { return true }\n"
+            "})\n"
+            "Object.setPrototypeOf(proxy, Array.prototype)");
+
+  run_eval ("var o = {}\n"
+            "var proxy = create_special_proxy(o, {\n"
+            "  isExtensible(target) { return false }\n"
+            "})\n"
+            "assert(Object.isExtensible(proxy) === false)");
+
+  run_eval ("var o = {}\n"
+            "var proxy = create_special_proxy(o, {\n"
+            "  preventExtensions(target) { return true }\n"
+            "})\n"
+            "Object.preventExtensions(proxy)");
+
   run_eval ("var o = {}\n"
             "Object.defineProperty(o, 'prop', { value:4, enumerable:true })\n"
             "var proxy = create_special_proxy(o, {\n"
@@ -99,6 +115,48 @@ main (void)
             "assert(desc.configurable === true)\n"
             "assert(desc.enumerable === false)\n"
             "assert(desc.writable === true)\n");
+
+  run_eval ("var o = {}\n"
+            "Object.defineProperty(o, 'prop', { get() {} })\n"
+            "var proxy = create_special_proxy(o, {\n"
+            "  defineProperty(target, key, descriptor) { return true }\n"
+            "})\n"
+            "Object.defineProperty(proxy, 'prop', { value:5 })");
+
+  run_eval ("var o = {}\n"
+            "Object.defineProperty(o, 'prop', { value:4 })\n"
+            "var proxy = create_special_proxy(o, {\n"
+            "  has(target, key) { return false }\n"
+            "})\n"
+            "assert(!Reflect.has(proxy, 'prop'))");
+
+  run_eval ("var o = {}\n"
+            "Object.defineProperty(o, 'prop', { value:4 })\n"
+            "var proxy = create_special_proxy(o, {\n"
+            "  get(target, key) { return 5 }\n"
+            "})\n"
+            "assert(proxy.prop === 5)");
+
+  run_eval ("var o = {}\n"
+            "Object.defineProperty(o, 'prop', { value:4 })\n"
+            "var proxy = create_special_proxy(o, {\n"
+            "  set(target, key, value) { return true }\n"
+            "})\n"
+            "proxy.prop = 8");
+
+  run_eval ("var o = {}\n"
+            "Object.defineProperty(o, 'prop', { value:4 })\n"
+            "var proxy = create_special_proxy(o, {\n"
+            "  deleteProperty(target, key) { return true }\n"
+            "})\n"
+            "assert(delete proxy.prop)");
+
+  run_eval ("var o = {}\n"
+            "Object.defineProperty(o, 'prop', { value:4 })\n"
+            "var proxy = create_special_proxy(o, {\n"
+            "  ownKeys(target) { return [] }\n"
+            "})\n"
+            "Object.keys(proxy)");
 
   jerry_cleanup ();
   return 0;

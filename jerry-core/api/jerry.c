@@ -2242,10 +2242,8 @@ jerry_create_proxy (const jerry_value_t target, /**< target argument */
 
 #if JERRY_BUILTIN_PROXY
 
-JERRY_STATIC_ASSERT ((int) JERRY_PROXY_SKIP_GET_CHECKS == (int) ECMA_PROXY_SKIP_GET_CHECKS,
-                     jerry_and_ecma_proxy_skip_get_checks_must_be_equal);
-JERRY_STATIC_ASSERT ((int) JERRY_PROXY_SKIP_GET_OWN_PROPERTY_CHECKS == (int) ECMA_PROXY_SKIP_GET_OWN_PROPERTY_CHECKS,
-                     jerry_and_ecma_proxy_skip_get_own_property_checks_must_be_equal);
+JERRY_STATIC_ASSERT ((int) JERRY_PROXY_SKIP_RESULT_VALIDATION == (int) ECMA_PROXY_SKIP_RESULT_VALIDATION,
+                     jerry_and_ecma_proxy_skip_result_validation_must_be_equal);
 
 #endif /* JERRY_BUILTIN_PROXY */
 
@@ -2271,9 +2269,7 @@ jerry_create_special_proxy (const jerry_value_t target, /**< target argument */
   }
 
 #if JERRY_BUILTIN_PROXY
-  const uint32_t options_mask = (JERRY_PROXY_SKIP_GET_CHECKS
-                                 | JERRY_PROXY_SKIP_GET_OWN_PROPERTY_CHECKS);
-  options &= options_mask;
+  options &= JERRY_PROXY_SKIP_RESULT_VALIDATION;
 
   ecma_object_t *proxy_p = ecma_proxy_create (target, handler, options);
   return jerry_return (proxy_p == NULL ? ECMA_VALUE_ERROR : ecma_make_object_value (proxy_p));

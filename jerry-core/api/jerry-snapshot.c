@@ -757,28 +757,27 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
  *         error object otherwise
  */
 static jerry_value_t
-jerry_generate_snapshot_with_args (const jerry_char_t *resource_name_p, /**< script resource name */
-                                   size_t resource_name_length, /**< script resource name length */
-                                   const jerry_char_t *source_p, /**< script source */
+jerry_generate_snapshot_with_args (const jerry_char_t *source_p, /**< script source */
                                    size_t source_size, /**< script source size */
                                    const jerry_char_t *args_p, /**< arguments string */
                                    size_t args_size, /**< arguments string size */
+                                   const jerry_parse_options_t *options_p, /**< parsing options,
+                                                                            *   can be NULL if not used */
                                    uint32_t generate_snapshot_opts, /**< jerry_generate_snapshot_opts_t option bits */
                                    uint32_t *buffer_p, /**< buffer to save snapshot to */
                                    size_t buffer_size) /**< the buffer's size */
 {
-  /* Currently unused arguments. */
-  JERRY_UNUSED (resource_name_p);
-  JERRY_UNUSED (resource_name_length);
+  uint32_t allowed_options = JERRY_SNAPSHOT_SAVE_STATIC;
+  uint32_t allowed_parse_options = (JERRY_PARSE_STRICT_MODE
+                                    | JERRY_PARSE_HAS_RESOURCE
+                                    | JERRY_PARSE_HAS_START);
 
-  ecma_value_t resource_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
-
-#if JERRY_RESOURCE_NAME
-  if (resource_name_length > 0)
+  if ((generate_snapshot_opts & ~allowed_options) != 0
+      || (options_p != NULL && (options_p->options & ~allowed_parse_options) != 0))
   {
-    resource_name = ecma_find_or_create_literal_string (resource_name_p, (lit_utf8_size_t) resource_name_length);
+    const char * const error_message_p = "Unsupported generate snapshot flags specified";
+    return jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
   }
-#endif /* JERRY_RESOURCE_NAME */
 
   snapshot_globals_t globals;
   const uint32_t aligned_header_size = JERRY_ALIGNUP (sizeof (jerry_snapshot_header_t),
@@ -789,15 +788,19 @@ jerry_generate_snapshot_with_args (const jerry_char_t *resource_name_p, /**< scr
   globals.regex_found = false;
   globals.class_found = false;
 
-  uint32_t status_flags = ((generate_snapshot_opts & JERRY_SNAPSHOT_SAVE_STRICT) ? ECMA_PARSE_STRICT_MODE
-                                                                                 : ECMA_PARSE_NO_OPTS);
+  uint32_t status_flags = ECMA_PARSE_NO_OPTS;
+
+  if (options_p != NULL)
+  {
+    status_flags |= (options_p->options & ECMA_PARSE_STRICT_MODE);
+  }
 
   ecma_compiled_code_t *bytecode_data_p = parser_parse_script (args_p,
                                                                args_size,
                                                                source_p,
                                                                source_size,
-                                                               resource_name,
-                                                               status_flags);
+                                                               status_flags,
+                                                               (const ecma_parse_options_t *) options_p);
 
   if (JERRY_UNLIKELY (bytecode_data_p == NULL))
   {
@@ -883,37 +886,27 @@ jerry_generate_snapshot_with_args (const jerry_char_t *resource_name_p, /**< scr
  *         error object otherwise
  */
 jerry_value_t
-jerry_generate_snapshot (const jerry_char_t *resource_name_p, /**< script resource name */
-                         size_t resource_name_length, /**< script resource name length */
-                         const jerry_char_t *source_p, /**< script source */
+jerry_generate_snapshot (const jerry_char_t *source_p, /**< script source */
                          size_t source_size, /**< script source size */
+                         const jerry_parse_options_t *options_p, /**< parsing options,
+                                                                  *   can be NULL if not used */
                          uint32_t generate_snapshot_opts, /**< jerry_generate_snapshot_opts_t option bits */
                          uint32_t *buffer_p, /**< buffer to save snapshot to */
                          size_t buffer_size) /**< the buffer's size */
 {
 #if JERRY_SNAPSHOT_SAVE
-  uint32_t allowed_opts = (JERRY_SNAPSHOT_SAVE_STATIC | JERRY_SNAPSHOT_SAVE_STRICT);
-
-  if ((generate_snapshot_opts & ~(allowed_opts)) != 0)
-  {
-    const char * const error_message_p = "Unsupported generate snapshot flags specified";
-    return jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
-  }
-
-  return jerry_generate_snapshot_with_args (resource_name_p,
-                                            resource_name_length,
-                                            source_p,
+  return jerry_generate_snapshot_with_args (source_p,
                                             source_size,
                                             NULL,
                                             0,
+                                            options_p,
                                             generate_snapshot_opts,
                                             buffer_p,
                                             buffer_size);
 #else /* !JERRY_SNAPSHOT_SAVE */
-  JERRY_UNUSED (resource_name_p);
-  JERRY_UNUSED (resource_name_length);
   JERRY_UNUSED (source_p);
   JERRY_UNUSED (source_size);
+  JERRY_UNUSED (options_p);
   JERRY_UNUSED (generate_snapshot_opts);
   JERRY_UNUSED (buffer_p);
   JERRY_UNUSED (buffer_size);
@@ -1806,41 +1799,31 @@ jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, /**< input snapsho
  *         error object otherwise
  */
 jerry_value_t
-jerry_generate_function_snapshot (const jerry_char_t *resource_name_p, /**< script resource name */
-                                  size_t resource_name_length, /**< script resource name length */
-                                  const jerry_char_t *source_p, /**< script source */
+jerry_generate_function_snapshot (const jerry_char_t *source_p, /**< script source */
                                   size_t source_size, /**< script source size */
                                   const jerry_char_t *args_p, /**< arguments string */
                                   size_t args_size, /**< arguments string size */
+                                  const jerry_parse_options_t *options_p, /**< parsing options,
+                                                                           *   can be NULL if not used */
                                   uint32_t generate_snapshot_opts, /**< jerry_generate_snapshot_opts_t option bits */
                                   uint32_t *buffer_p, /**< buffer to save snapshot to */
                                   size_t buffer_size) /**< the buffer's size */
 {
 #if JERRY_SNAPSHOT_SAVE
-  uint32_t allowed_opts = (JERRY_SNAPSHOT_SAVE_STATIC | JERRY_SNAPSHOT_SAVE_STRICT);
-
-  if ((generate_snapshot_opts & ~(allowed_opts)) != 0)
-  {
-    const char * const error_message_p = "Unsupported generate snapshot flags specified";
-    return jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
-  }
-
-  return jerry_generate_snapshot_with_args (resource_name_p,
-                                            resource_name_length,
-                                            source_p,
+  return jerry_generate_snapshot_with_args (source_p,
                                             source_size,
                                             args_p,
                                             args_size,
+                                            options_p,
                                             generate_snapshot_opts,
                                             buffer_p,
                                             buffer_size);
 #else /* !JERRY_SNAPSHOT_SAVE */
-  JERRY_UNUSED (resource_name_p);
-  JERRY_UNUSED (resource_name_length);
   JERRY_UNUSED (source_p);
   JERRY_UNUSED (source_size);
   JERRY_UNUSED (args_p);
   JERRY_UNUSED (args_size);
+  JERRY_UNUSED (options_p);
   JERRY_UNUSED (generate_snapshot_opts);
   JERRY_UNUSED (buffer_p);
   JERRY_UNUSED (buffer_size);

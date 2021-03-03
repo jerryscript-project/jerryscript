@@ -457,13 +457,12 @@ ecma_op_create_dynamic_function (const ecma_value_t *arguments_list_p, /**< argu
   ECMA_STRING_TO_UTF8_STRING (arguments_str_p, arguments_buffer_p, arguments_buffer_size);
   ECMA_STRING_TO_UTF8_STRING (function_body_str_p, function_body_buffer_p, function_body_buffer_size);
 
-  ecma_value_t resource_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
   ecma_compiled_code_t *bytecode_p = parser_parse_script (arguments_buffer_p,
                                                           arguments_buffer_size,
                                                           function_body_buffer_p,
                                                           function_body_buffer_size,
-                                                          resource_name,
-                                                          parse_opts);
+                                                          parse_opts,
+                                                          NULL);
 
   ECMA_FINALIZE_UTF8_STRING (function_body_buffer_p, function_body_buffer_size);
   ECMA_FINALIZE_UTF8_STRING (arguments_buffer_p, arguments_buffer_size);

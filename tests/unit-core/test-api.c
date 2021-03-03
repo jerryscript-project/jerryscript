@@ -344,6 +344,42 @@ test_run_simple (const char *script_p) /**< source code to run */
   return jerry_run_simple ((const jerry_char_t *) script_p, script_size, JERRY_INIT_EMPTY);
 } /* test_run_simple */
 
+static void
+test_syntax_error (const char *script_p, /**< source code to run */
+                   const jerry_parse_options_t *options_p, /**< additional parsing options */
+                   const char *error_message_p, /**< error message */
+                   bool run_script) /**< run script before checking the error message */
+{
+  jerry_value_t result_val = jerry_parse ((const jerry_char_t *) script_p,
+                                          strlen (script_p),
+                                          options_p);
+
+  if (run_script)
+  {
+    TEST_ASSERT (!jerry_value_is_error (result_val));
+    jerry_value_t script_val = result_val;
+
+    result_val = jerry_run (script_val);
+    jerry_release_value (script_val);
+  }
+
+  TEST_ASSERT (jerry_value_is_error (result_val));
+  result_val = jerry_get_value_from_error (result_val, true);
+
+  jerry_value_t err_str_val = jerry_value_to_string (result_val);
+  jerry_size_t err_str_size = jerry_get_string_size (err_str_val);
+  jerry_char_t err_str_buf[256];
+
+  TEST_ASSERT (err_str_size <= sizeof (err_str_buf));
+  TEST_ASSERT (err_str_size == strlen (error_message_p));
+
+  TEST_ASSERT (jerry_string_to_char_buffer (err_str_val, err_str_buf, err_str_size) == err_str_size);
+
+  jerry_release_value (err_str_val);
+  jerry_release_value (result_val);
+  TEST_ASSERT (memcmp ((char *) err_str_buf, error_message_p, err_str_size) == 0);
+} /* test_syntax_error */
+
 int
 main (void)
 {
@@ -367,11 +403,9 @@ main (void)
 
   jerry_init (JERRY_INIT_EMPTY);
 
-  parsed_code_val = jerry_parse (NULL,
-                                 0,
-                                 test_source,
+  parsed_code_val = jerry_parse (test_source,
                                  sizeof (test_source) - 1,
-                                 JERRY_PARSE_NO_OPTS);
+                                 NULL);
   TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
 
   res = jerry_run (parsed_code_val);
@@ -803,17 +837,14 @@ main (void)
   jerry_release_value (val_t);
 
   /* Test: create function */
-  const jerry_char_t func_resource[] = "unknown";
   const jerry_char_t func_arg_list[] = "a , b,c";
   const jerry_char_t func_src[] = "  return 5 +  a+\nb+c";
 
-  jerry_value_t func_val = jerry_parse_function (func_resource,
-                                                 sizeof (func_resource) - 1,
-                                                 func_arg_list,
+  jerry_value_t func_val = jerry_parse_function (func_arg_list,
                                                  sizeof (func_arg_list) - 1,
                                                  func_src,
                                                  sizeof (func_src) - 1,
-                                                 JERRY_PARSE_NO_OPTS);
+                                                 NULL);
 
   TEST_ASSERT (!jerry_value_is_error (func_val));
 
@@ -859,19 +890,15 @@ main (void)
   {
     jerry_init (JERRY_INIT_EMPTY);
     const jerry_char_t scoped_src_p[] = "let a; this.b = 5";
-    jerry_value_t parse_result = jerry_parse (NULL,
-                                              0,
-                                              scoped_src_p,
+    jerry_value_t parse_result = jerry_parse (scoped_src_p,
                                               sizeof (scoped_src_p) - 1,
-                                              JERRY_PARSE_NO_OPTS);
+                                              NULL);
     TEST_ASSERT (!jerry_value_is_error (parse_result));
     jerry_release_value (parse_result);
 
-    parse_result = jerry_parse (NULL,
-                                0,
-                                scoped_src_p,
+    parse_result = jerry_parse (scoped_src_p,
                                 sizeof (scoped_src_p) - 1,
-                                JERRY_PARSE_NO_OPTS);
+                                NULL);
     TEST_ASSERT (!jerry_value_is_error (parse_result));
 
     jerry_value_t run_result = jerry_run (parse_result);
@@ -885,21 +912,17 @@ main (void)
     jerry_release_value (parse_result);
 
     /* The variable should have no effect on parsing. */
-    parse_result = jerry_parse (NULL,
-                                0,
-                                scoped_src_p,
+    parse_result = jerry_parse (scoped_src_p,
                                 sizeof (scoped_src_p) - 1,
-                                JERRY_PARSE_NO_OPTS);
+                                NULL);
     TEST_ASSERT (!jerry_value_is_error (parse_result));
     jerry_release_value (parse_result);
 
     /* The already existing global binding should not affect a new lexical binding */
     const jerry_char_t scoped_src2_p[] = "let b = 6; this.b + b";
-    parse_result = jerry_parse (NULL,
-                                0,
-                                scoped_src2_p,
+    parse_result = jerry_parse (scoped_src2_p,
                                 sizeof (scoped_src2_p) - 1,
-                                JERRY_PARSE_NO_OPTS);
+                                NULL);
     TEST_ASSERT (!jerry_value_is_error (parse_result));
     run_result = jerry_run (parse_result);
     TEST_ASSERT (jerry_value_is_number (run_result));
@@ -909,11 +932,9 @@ main (void)
 
     /* Check restricted global property */
     const jerry_char_t scoped_src3_p[] = "let undefined;";
-    parse_result = jerry_parse (NULL,
-                                0,
-                                scoped_src3_p,
+    parse_result = jerry_parse (scoped_src3_p,
                                 sizeof (scoped_src3_p) - 1,
-                                JERRY_PARSE_NO_OPTS);
+                                NULL);
     TEST_ASSERT (!jerry_value_is_error (parse_result));
     run_result = jerry_run (parse_result);
     TEST_ASSERT (jerry_value_is_error (run_result));
@@ -937,11 +958,9 @@ main (void)
     jerry_release_value (global_obj);
 
     const jerry_char_t scoped_src4_p[] = "let foo;";
-    parse_result = jerry_parse (NULL,
-                                0,
-                                scoped_src4_p,
+    parse_result = jerry_parse (scoped_src4_p,
                                 sizeof (scoped_src4_p) - 1,
-                                JERRY_PARSE_NO_OPTS);
+                                NULL);
     TEST_ASSERT (!jerry_value_is_error (parse_result));
     run_result = jerry_run (parse_result);
     TEST_ASSERT (jerry_value_is_error (run_result));
@@ -963,11 +982,9 @@ main (void)
       jerry_value_t old_realm = jerry_set_realm (new_realm_value);
 
       const jerry_char_t scoped_src5_p[] = "let a;";
-      parse_result = jerry_parse (NULL,
-                                  0,
-                                  scoped_src5_p,
+      parse_result = jerry_parse (scoped_src5_p,
                                   sizeof (scoped_src5_p) - 1,
-                                  JERRY_PARSE_NO_OPTS);
+                                  NULL);
       TEST_ASSERT (!jerry_value_is_error (parse_result));
       run_result = jerry_run (parse_result);
       TEST_ASSERT (jerry_value_is_error (run_result));
@@ -994,11 +1011,9 @@ main (void)
       old_realm = jerry_set_realm (new_realm_value);
 
       const jerry_char_t scoped_src6_p[] = "let b;";
-      parse_result = jerry_parse (NULL,
-                                  0,
-                                  scoped_src6_p,
+      parse_result = jerry_parse (scoped_src6_p,
                                   sizeof (scoped_src6_p) - 1,
-                                  JERRY_PARSE_NO_OPTS);
+                                  NULL);
       TEST_ASSERT (!jerry_value_is_error (parse_result));
       run_result = jerry_run (parse_result);
       TEST_ASSERT (jerry_value_is_error (run_result));
@@ -1021,66 +1036,35 @@ main (void)
   {
     jerry_init (JERRY_INIT_SHOW_OPCODES);
 
-    const jerry_char_t parser_err_src[] = "b = 'hello';\nvar a = (;";
-    parsed_code_val = jerry_parse (NULL,
-                                   0,
-                                   parser_err_src,
-                                   sizeof (parser_err_src) - 1,
-                                   JERRY_PARSE_NO_OPTS);
-    TEST_ASSERT (jerry_value_is_error (parsed_code_val));
-    parsed_code_val = jerry_get_value_from_error (parsed_code_val, true);
-    jerry_value_t err_str_val = jerry_value_to_string (parsed_code_val);
-    jerry_size_t err_str_size = jerry_get_string_size (err_str_val);
-    jerry_char_t err_str_buf[256];
-    sz = jerry_string_to_char_buffer (err_str_val, err_str_buf, err_str_size);
-    err_str_buf[sz] = 0;
-
-    jerry_release_value (err_str_val);
-    jerry_release_value (parsed_code_val);
-    TEST_ASSERT (!strcmp ((char *) err_str_buf,
-                          "SyntaxError: Primary expression expected [<anonymous>:2:10]"));
+    test_syntax_error ("b = 'hello';\nvar a = (;",
+                       NULL,
+                       "SyntaxError: Primary expression expected [<anonymous>:2:10]",
+                       false);
 
     const jerry_char_t file_str[] = "filename.js";
-    parsed_code_val = jerry_parse (file_str,
-                                   sizeof (file_str) - 1,
-                                   parser_err_src,
-                                   sizeof (parser_err_src) - 1,
-                                   JERRY_PARSE_NO_OPTS);
-    TEST_ASSERT (jerry_value_is_error (parsed_code_val));
-    parsed_code_val = jerry_get_value_from_error (parsed_code_val, true);
-    err_str_val = jerry_value_to_string (parsed_code_val);
-    err_str_size = jerry_get_string_size (err_str_val);
+    jerry_parse_options_t parse_options;
+    parse_options.options = JERRY_PARSE_HAS_RESOURCE;
+    parse_options.resource_name_p = file_str;
+    parse_options.resource_name_length = sizeof (file_str) - 1;
 
-    sz = jerry_string_to_char_buffer (err_str_val, err_str_buf, err_str_size);
-    err_str_buf[sz] = 0;
+    test_syntax_error ("b = 'hello';\nvar a = (;",
+                       &parse_options,
+                       "SyntaxError: Primary expression expected [filename.js:2:10]",
+                       false);
 
-    jerry_release_value (err_str_val);
-    jerry_release_value (parsed_code_val);
-    TEST_ASSERT (!strcmp ((char *) err_str_buf,
-                          "SyntaxError: Primary expression expected [filename.js:2:10]"));
+    test_syntax_error ("eval(\"var b;\\nfor (,); \");",
+                       &parse_options,
+                       "SyntaxError: Primary expression expected [<eval>:2:6]",
+                       true);
 
-    const jerry_char_t eval_err_src[] = "eval(\"var b;\\nfor (,); \");";
-    parsed_code_val = jerry_parse (file_str,
-                                   sizeof (file_str),
-                                   eval_err_src,
-                                   sizeof (eval_err_src) - 1,
-                                   JERRY_PARSE_NO_OPTS);
-    TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
+    parse_options.options |= JERRY_PARSE_HAS_START;
+    parse_options.start_line = 10;
+    parse_options.start_column = 20;
 
-    res = jerry_run (parsed_code_val);
-    TEST_ASSERT (jerry_value_is_error (res));
-    res = jerry_get_value_from_error (res, true);
-    err_str_val = jerry_value_to_string (res);
-    err_str_size = jerry_get_string_size (err_str_val);
-
-    sz = jerry_string_to_char_buffer (err_str_val, err_str_buf, err_str_size);
-    err_str_buf[sz] = 0;
-
-    jerry_release_value (err_str_val);
-    jerry_release_value (parsed_code_val);
-    jerry_release_value (res);
-    TEST_ASSERT (!strcmp ((char *) err_str_buf,
-                          "SyntaxError: Primary expression expected [<eval>:2:6]"));
+    test_syntax_error ("for (var a in []",
+                       &parse_options,
+                       "SyntaxError: Expected ')' token [filename.js:10:36]",
+                       false);
 
     jerry_cleanup ();
   }
@@ -1094,11 +1078,9 @@ main (void)
                                 magic_string_lengths);
 
   const jerry_char_t ms_code_src[] = "var global = {}; var console = [1]; var process = 1;";
-  parsed_code_val = jerry_parse (NULL,
-                                 0,
-                                 ms_code_src,
+  parsed_code_val = jerry_parse (ms_code_src,
                                  sizeof (ms_code_src) - 1,
-                                 JERRY_PARSE_NO_OPTS);
+                                 NULL);
   TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
 
   res = jerry_run (parsed_code_val);

@@ -122,11 +122,9 @@ main (void)
   register_js_function ("create_promise2", create_promise2_handler);
   register_js_function ("assert", assert_handler);
 
-  jerry_value_t parsed_code_val = jerry_parse (NULL,
-                                               0,
-                                               test_source,
+  jerry_value_t parsed_code_val = jerry_parse (test_source,
                                                sizeof (test_source) - 1,
-                                               JERRY_PARSE_NO_OPTS);
+                                               NULL);
   TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
 
   jerry_value_t res = jerry_run (parsed_code_val);

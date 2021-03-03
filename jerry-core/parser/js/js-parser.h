@@ -191,24 +191,11 @@ typedef enum
  */
 typedef uint32_t parser_line_counter_t;
 
-/**
- * Error code location.
- */
-typedef struct
-{
-  parser_error_t error;                               /**< error code */
-  parser_line_counter_t line;                         /**< line where the error occured */
-  parser_line_counter_t column;                       /**< column where the error occured */
-} parser_error_location_t;
-
 /* Note: source must be a valid UTF-8 string */
 ecma_compiled_code_t *
-parser_parse_script (const uint8_t *arg_list_p,
-                     size_t arg_list_size,
-                     const uint8_t *source_p,
-                     size_t source_size,
-                     ecma_value_t resource_name,
-                     uint32_t parse_opts);
+parser_parse_script (const uint8_t *arg_list_p, size_t arg_list_size,
+                     const uint8_t *source_p, size_t source_size,
+                     uint32_t parse_opts, const ecma_parse_options_t *options_p);
 
 #if JERRY_ERROR_MESSAGES
 const char *parser_error_to_string (parser_error_t);

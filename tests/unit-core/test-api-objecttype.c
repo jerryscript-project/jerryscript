@@ -28,7 +28,7 @@ typedef struct
 #define ENTRY(TYPE, VALUE) { TYPE, VALUE, true }
 #define ENTRY_IF(TYPE, VALUE, FEATURE) { TYPE, VALUE, jerry_is_feature_enabled (FEATURE) }
 #define EVALUATE(BUFF) (jerry_eval ((BUFF), sizeof ((BUFF)) - 1, JERRY_PARSE_NO_OPTS))
-#define PARSE(OPTS) (jerry_parse (NULL, 0, (const jerry_char_t *) "", 0, (OPTS)))
+#define PARSE(OPTS) (jerry_parse ((const jerry_char_t *) "", 0, (OPTS)))
 static jerry_value_t
 test_ext_function (const jerry_call_info_t *call_info_p, /**< call information */
                    const jerry_value_t args_p[], /**< array of arguments */
@@ -75,6 +75,9 @@ main (void)
   const jerry_char_t string_object[] = "new String('foo')";
   const jerry_char_t weak_ref_object[] = "new WeakRef({})";
 
+  jerry_parse_options_t module_parse_options;
+  module_parse_options.options = JERRY_PARSE_MODULE;
+
   test_entry_t entries[] =
   {
     ENTRY (JERRY_OBJECT_TYPE_NONE, jerry_create_number (-33.0)),
@@ -92,8 +95,8 @@ main (void)
     ENTRY_IF (JERRY_OBJECT_TYPE_CONTAINER, EVALUATE (container_object), JERRY_FEATURE_MAP),
     ENTRY_IF (JERRY_OBJECT_TYPE_ITERATOR, EVALUATE (iterator_object), JERRY_FEATURE_SYMBOL),
 
-    ENTRY (JERRY_OBJECT_TYPE_SCRIPT, PARSE (JERRY_PARSE_NO_OPTS)),
-    ENTRY_IF (JERRY_OBJECT_TYPE_MODULE, PARSE (JERRY_PARSE_MODULE), JERRY_FEATURE_MODULE),
+    ENTRY (JERRY_OBJECT_TYPE_SCRIPT, PARSE (NULL)),
+    ENTRY_IF (JERRY_OBJECT_TYPE_MODULE, PARSE (&module_parse_options), JERRY_FEATURE_MODULE),
     ENTRY_IF (JERRY_OBJECT_TYPE_FUNCTION, EVALUATE (arrow_function), JERRY_FEATURE_SYMBOL),
     ENTRY_IF (JERRY_OBJECT_TYPE_FUNCTION, EVALUATE (async_arrow_function), JERRY_FEATURE_SYMBOL),
     ENTRY_IF (JERRY_OBJECT_TYPE_FUNCTION, EVALUATE (generator_function), JERRY_FEATURE_SYMBOL),

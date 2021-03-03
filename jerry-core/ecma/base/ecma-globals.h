@@ -331,6 +331,32 @@ typedef struct ecma_native_pointer_t
   struct ecma_native_pointer_t *next_p; /**< points to the next ecma_native_pointer_t element */
 } ecma_native_pointer_t;
 
+/**
+ * Option bits for ecma_parse_options_t.
+ */
+typedef enum
+{
+  /* bit 0: ECMA_PARSE_STRICT_MODE */
+  /* bit 1: ECMA_PARSE_MODULE */
+  ECMA_PARSE_HAS_RESOURCE = (1 << 2), /**< resource_name_p and resource_name_length fields are valid */
+  ECMA_PARSE_HAS_START = (1 << 3), /**< start_line and start_column fields are valid */
+} ecma_parse_option_feature_t;
+
+/**
+ * Variable configuration options for parsing functions such as ecma_parse or ecma_parse_function.
+ */
+typedef struct
+{
+  uint32_t options; /**< combination of ecma_parse_option_feature_t values
+                     *   which enables parsing features */
+  const lit_utf8_byte_t *resource_name_p; /**< resource name (usually a file name)
+                                           *   if ECMA_PARSE_HAS_RESOURCE is set in options */
+  size_t resource_name_length; /**< length of resource name
+                                *   if ECMA_PARSE_HAS_RESOURCE is set in options */
+  uint32_t start_line; /**< start line of the source code if ECMA_PARSE_HAS_START is set in options */
+  uint32_t start_column; /**< start column of the source code if ECMA_PARSE_HAS_START is set in options */
+} ecma_parse_options_t;
+
 #if JERRY_ESNEXT
 
 /**

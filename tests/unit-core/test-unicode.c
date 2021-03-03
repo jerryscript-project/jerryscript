@@ -19,11 +19,9 @@
 static bool
 test_syntax_error (char *script_p) /**< script */
 {
-  jerry_value_t parse_result = jerry_parse (NULL,
-                                            0,
-                                            (const jerry_char_t *) script_p,
+  jerry_value_t parse_result = jerry_parse ((const jerry_char_t *) script_p,
                                             strlen (script_p),
-                                            JERRY_PARSE_NO_OPTS);
+                                            NULL);
 
   bool result = false;
 

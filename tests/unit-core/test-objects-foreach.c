@@ -183,12 +183,13 @@ main (void)
 {
   jerry_init (JERRY_INIT_EMPTY);
 
+  jerry_parse_options_t parse_options;
+  parse_options.options = JERRY_PARSE_STRICT_MODE;
+
   /* Render strict-equal as a function. */
-  jerry_value_t parse_result = jerry_parse (NULL,
-                                            0,
-                                            strict_equal_source,
+  jerry_value_t parse_result = jerry_parse (strict_equal_source,
                                             sizeof (strict_equal_source) - 1,
-                                            JERRY_PARSE_STRICT_MODE);
+                                            &parse_options);
   TEST_ASSERT (!jerry_value_is_error (parse_result));
   jerry_value_t strict_equal = jerry_run (parse_result);
   TEST_ASSERT (!jerry_value_is_error (strict_equal));

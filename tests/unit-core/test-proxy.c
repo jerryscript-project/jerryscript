@@ -243,11 +243,9 @@ main (void)
   }
 
   const jerry_char_t get_value_src[] = TEST_STRING_LITERAL ("pdemo.value");
-  jerry_value_t parsed_get_code_val = jerry_parse (NULL,
-                                               0,
-                                               get_value_src,
-                                               sizeof (get_value_src) - 1,
-                                               JERRY_PARSE_NO_OPTS);
+  jerry_value_t parsed_get_code_val = jerry_parse (get_value_src,
+                                                   sizeof (get_value_src) - 1,
+                                                   NULL);
   TEST_ASSERT (!jerry_value_is_error (parsed_get_code_val));
 
   {
@@ -272,11 +270,9 @@ main (void)
   }
 
   const jerry_char_t set_value_src[] = TEST_STRING_LITERAL ("pdemo.value = 55");
-  jerry_value_t parsed_set_code_val = jerry_parse (NULL,
-                                                   0,
-                                                   set_value_src,
+  jerry_value_t parsed_set_code_val = jerry_parse (set_value_src,
                                                    sizeof (set_value_src) - 1,
-                                                   JERRY_PARSE_NO_OPTS);
+                                                   NULL);
   TEST_ASSERT (!jerry_value_is_error (parsed_set_code_val));
 
   {
@@ -316,11 +312,9 @@ main (void)
     const jerry_char_t has_value_src[] = TEST_STRING_LITERAL ("new Proxy({}, {\n"
                                                               "  has: function(target, key) { throw 33 }\n"
                                                               "})");
-    jerry_value_t parsed_has_code_val = jerry_parse (NULL,
-                                                     0,
-                                                     has_value_src,
+    jerry_value_t parsed_has_code_val = jerry_parse (has_value_src,
                                                      sizeof (has_value_src) - 1,
-                                                     JERRY_PARSE_NO_OPTS);
+                                                     NULL);
     TEST_ASSERT (!jerry_value_is_error (parsed_has_code_val));
 
     jerry_value_t res = jerry_run (parsed_has_code_val);

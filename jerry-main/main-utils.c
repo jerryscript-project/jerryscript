@@ -128,7 +128,7 @@ test262_eval_script (const jerry_call_info_t *call_info_p, /**< call information
     return jerry_create_error (JERRY_ERROR_RANGE, (jerry_char_t *) "Internal error");
   }
 
-  jerry_value_t ret_value = jerry_parse (NULL, 0, str_buf_p, str_size, JERRY_PARSE_NO_OPTS);
+  jerry_value_t ret_value = jerry_parse (str_buf_p, str_size, NULL);
 
   if (!jerry_value_is_error (ret_value))
   {
@@ -430,11 +430,15 @@ main_wait_for_source_callback (const jerry_char_t *resource_name_p, /**< resourc
                                void *user_p) /**< user pointer */
 {
   (void) user_p; /* unused */
-  jerry_value_t ret_val = jerry_parse (resource_name_p,
-                                       resource_name_size,
-                                       source_p,
+
+  jerry_parse_options_t parse_options;
+  parse_options.options = JERRY_PARSE_HAS_RESOURCE;
+  parse_options.resource_name_p = resource_name_p;
+  parse_options.resource_name_length = resource_name_size;
+
+  jerry_value_t ret_val = jerry_parse (source_p,
                                        source_size,
-                                       JERRY_PARSE_NO_OPTS);
+                                       &parse_options);
 
   if (!jerry_value_is_error (ret_val))
   {

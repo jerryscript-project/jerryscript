@@ -58,6 +58,9 @@ main (void)
 
   jerry_release_value (global);
 
+  jerry_parse_options_t parse_options;
+  parse_options.options = JERRY_PARSE_HAS_RESOURCE;
+
   const char *source_1 = ("function f1 () {\n"
                           "  if (resourceName() !== 'demo1.js') return false; \n"
                           "  if (resourceName(f1) !== 'demo1.js') return false; \n"
@@ -67,11 +70,12 @@ main (void)
                           "f1();");
   const char *resource_1 = "demo1.js";
 
-  jerry_value_t program = jerry_parse ((const jerry_char_t *) resource_1,
-                                       strlen (resource_1),
-                                       (const jerry_char_t *) source_1,
+  parse_options.resource_name_p = (const jerry_char_t *) resource_1;
+  parse_options.resource_name_length = strlen (resource_1);
+
+  jerry_value_t program = jerry_parse ((const jerry_char_t *) source_1,
                                        strlen (source_1),
-                                       JERRY_PARSE_NO_OPTS);
+                                       &parse_options);
   TEST_ASSERT (!jerry_value_is_error (program));
 
   jerry_value_t run_result = jerry_run (program);
@@ -98,11 +102,12 @@ main (void)
                           "f2(); \n");
   const char *resource_2 = "demo2.js";
 
-  program = jerry_parse ((const jerry_char_t *) resource_2,
-                         strlen (resource_2),
-                         (const jerry_char_t *) source_2,
+  parse_options.resource_name_p = (const jerry_char_t *) resource_2;
+  parse_options.resource_name_length = strlen (resource_2);
+
+  program = jerry_parse ((const jerry_char_t *) source_2,
                          strlen (source_2),
-                         JERRY_PARSE_NO_OPTS);
+                         &parse_options);
   TEST_ASSERT (!jerry_value_is_error (program));
 
   run_result = jerry_run (program);

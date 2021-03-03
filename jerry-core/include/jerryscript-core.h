@@ -687,6 +687,8 @@ bool jerry_delete_internal_property (const jerry_value_t obj_val, const jerry_va
 
 jerry_value_t jerry_get_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val);
 jerry_value_t jerry_get_property_by_index (const jerry_value_t obj_val, uint32_t index);
+jerry_value_t jerry_get_own_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val,
+                                      const jerry_value_t receiver_val, bool *found_p);
 jerry_value_t jerry_get_internal_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val);
 jerry_value_t jerry_set_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val,
                                   const jerry_value_t value_to_set);

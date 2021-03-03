@@ -50,6 +50,7 @@ set(SOURCE_UNIT_TEST_MAIN_MODULES
   test-exec-stop.c
   test-external-string.c
   test-from-property-descriptor.c
+  test-get-own-property.c
   test-has-property.c
   test-internal-properties.c
   test-jmem.c

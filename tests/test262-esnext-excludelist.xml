@@ -111,7 +111,6 @@
   <test id="built-ins/String/prototype/toLocaleLowerCase/special_casing_conditional.js"><reason></reason></test>
   <test id="built-ins/String/prototype/toLowerCase/Final_Sigma_U180E.js"><reason></reason></test>
   <test id="built-ins/String/prototype/toLowerCase/special_casing_conditional.js"><reason></reason></test>
-  <test id="built-ins/ThrowTypeError/name.js"><reason></reason></test>
   <test id="built-ins/TypedArray/from/arylk-get-length-error.js"><reason></reason></test>
   <test id="built-ins/TypedArray/from/arylk-to-length-error.js"><reason></reason></test>
   <test id="built-ins/TypedArray/from/iter-access-error.js"><reason></reason></test>

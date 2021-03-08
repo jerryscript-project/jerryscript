@@ -2120,6 +2120,16 @@ typedef struct
                    *   real index + 1 in the [[Values]] list - otherwise */
 } ecma_promise_all_executor_t;
 
+/**
+ * Promise prototype methods helper.
+ */
+typedef enum
+{
+  ECMA_PROMISE_ALL_RESOLVE, /**< promise.all resolve */
+  ECMA_PROMISE_ALLSETTLED_RESOLVE, /**< promise.allSettled resolve */
+  ECMA_PROMISE_ALLSETTLED_REJECT, /**< promise.allSettled reject */
+} ecma_promise_helper;
+
 #endif /* JERRY_ESNEXT */
 
 #if JERRY_BUILTIN_DATAVIEW

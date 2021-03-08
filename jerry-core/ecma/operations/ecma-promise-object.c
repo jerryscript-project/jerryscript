@@ -609,7 +609,7 @@ ecma_promise_remaining_inc_or_dec (ecma_value_t remaining, /**< the remaining co
 } /* ecma_promise_remaining_inc_or_dec */
 
 /**
- * Native handler for Promise.all Resolve Element Function.
+ * Native handler for Promise.all and Promise.allSettled Resolve Element Function.
  *
  * See also:
  *         ES2015 25.4.4.1.2
@@ -617,12 +617,13 @@ ecma_promise_remaining_inc_or_dec (ecma_value_t remaining, /**< the remaining co
  * @return ecma value of undefined.
  */
 ecma_value_t
-ecma_promise_all_handler_cb (ecma_object_t *function_obj_p, /**< function object */
+ecma_promise_all_or_all_settled_handler_cb (ecma_object_t *function_obj_p, /**< function object */
                              const ecma_value_t args_p[], /**< argument list */
                              const uint32_t args_count) /**< argument number */
 {
   JERRY_UNUSED (args_count);
   ecma_promise_all_executor_t *executor_p = (ecma_promise_all_executor_t *) function_obj_p;
+  uint16_t promise_type = executor_p->header.u.class_prop.extra_info;
 
   /* 1 - 2. */
   if (executor_p->index == 0)
@@ -630,11 +631,53 @@ ecma_promise_all_handler_cb (ecma_object_t *function_obj_p, /**< function object
     return ECMA_VALUE_UNDEFINED;
   }
 
-  /* 8. */
-  ecma_op_object_put_by_index (ecma_get_object_from_value (executor_p->values),
-                               (uint32_t) (executor_p->index - 1),
-                               args_p[0],
-                               false);
+  if (promise_type == ECMA_PROMISE_ALL_RESOLVE)
+  {
+    /* 8. */
+    ecma_op_object_put_by_index (ecma_get_object_from_value (executor_p->values),
+                                 (uint32_t) (executor_p->index - 1),
+                                 args_p[0],
+                                 false);
+  }
+  else
+  {
+    lit_magic_string_id_t status_property_val = LIT_MAGIC_STRING_REJECTED;
+    lit_magic_string_id_t data_propery_name = LIT_MAGIC_STRING_REASON;
+
+    if (promise_type == ECMA_PROMISE_ALLSETTLED_RESOLVE)
+    {
+      status_property_val =  LIT_MAGIC_STRING_FULFILLED;
+      data_propery_name = LIT_MAGIC_STRING_VALUE;
+    }
+
+    ecma_object_t *obj_p = ecma_create_object (NULL, 0, ECMA_OBJECT_TYPE_GENERAL);
+    ecma_property_value_t *prop_value_p;
+    prop_value_p = ecma_create_named_data_property (obj_p,
+                                                    ecma_get_magic_string (LIT_MAGIC_STRING_STATUS),
+                                                    ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                    NULL);
+
+    prop_value_p->value = ecma_make_magic_string_value (status_property_val);
+
+    prop_value_p = ecma_create_named_data_property (obj_p,
+                                                    ecma_get_magic_string (data_propery_name),
+                                                    ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
+                                                    NULL);
+    prop_value_p->value = ECMA_VALUE_UNDEFINED;
+
+    if (args_count != 0)
+    {
+      prop_value_p->value = ecma_copy_value_if_not_object (args_p[0]);
+    }
+
+    ecma_value_t obj_val = ecma_make_object_value (obj_p);
+    /* 12. */
+    ecma_op_object_put_by_index (ecma_get_object_from_value (executor_p->values),
+                                (uint32_t) (executor_p->index - 1),
+                                 obj_val,
+                                 false);
+    ecma_deref_object (obj_p);
+  }
   /* 3. */
   executor_p->index = 0;
 
@@ -651,7 +694,7 @@ ecma_promise_all_handler_cb (ecma_object_t *function_obj_p, /**< function object
   }
 
   return ret;
-} /* ecma_promise_all_handler_cb */
+} /* ecma_promise_all_or_all_settled_handler_cb */
 
 /**
  * GetCapabilitiesExecutor Functions

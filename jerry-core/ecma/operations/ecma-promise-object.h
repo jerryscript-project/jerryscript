@@ -120,8 +120,8 @@ ecma_value_t ecma_promise_reject_handler (ecma_object_t *function_obj_p,
                                           const ecma_value_t argv[], const uint32_t args_count);
 ecma_value_t ecma_promise_resolve_handler (ecma_object_t *function_obj_p,
                                            const ecma_value_t argv[], const uint32_t args_count);
-ecma_value_t ecma_promise_all_handler_cb (ecma_object_t *function_obj_p,
-                                          const ecma_value_t args_p[], const uint32_t args_count);
+ecma_value_t ecma_promise_all_or_all_settled_handler_cb (ecma_object_t *function_obj_p,
+                                                         const ecma_value_t args_p[], const uint32_t args_count);
 ecma_value_t ecma_op_get_capabilities_executor_cb (ecma_object_t *function_obj_p,
                                                    const ecma_value_t args_p[], const uint32_t args_count);
 

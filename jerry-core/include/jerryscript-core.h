@@ -168,36 +168,32 @@ typedef uint32_t jerry_length_t;
 typedef uint32_t jerry_value_t;
 
 /**
+ * Flags of ECMA property descriptor.
+ */
+typedef enum
+{
+  JERRY_PROP_NO_OPTS = (0), /** empty property descriptor */
+  JERRY_PROP_IS_GET_DEFINED = (1 << 0), /** Is [[Get]] defined? */
+  JERRY_PROP_IS_SET_DEFINED = (1 << 1), /** Is [[Set]] defined? */
+
+  JERRY_PROP_IS_CONFIGURABLE = (1 << 2), /** [[Configurable]] */
+  JERRY_PROP_IS_ENUMERABLE = (1 << 3), /** [[Enumerable]] */
+  JERRY_PROP_IS_WRITABLE = (1 << 4), /** [[Writable]] */
+  JERRY_PROP_IS_THROW = (1 << 5), /** Flag that controls failure handling */
+
+  JERRY_PROP_IS_VALUE_DEFINED = (1 << 6), /** Is [[Value]] defined? */
+  JERRY_PROP_IS_CONFIGURABLE_DEFINED = (1 << 7), /** Is [[Configurable]] defined? */
+  JERRY_PROP_IS_ENUMERABLE_DEFINED = (1 << 8), /** Is [[Enumerable]] defined? */
+  JERRY_PROP_IS_WRITABLE_DEFINED = (1 << 9), /** Is [[Writable]] defined? */
+} jerry_property_descriptor_flags_t;
+
+/**
  * Description of ECMA property descriptor.
  */
 typedef struct
 {
-  /** Is [[Value]] defined? */
-  bool is_value_defined;
-
-  /** Is [[Get]] defined? */
-  bool is_get_defined;
-
-  /** Is [[Set]] defined? */
-  bool is_set_defined;
-
-  /** Is [[Writable]] defined? */
-  bool is_writable_defined;
-
-  /** [[Writable]] */
-  bool is_writable;
-
-  /** Is [[Enumerable]] defined? */
-  bool is_enumerable_defined;
-
-  /** [[Enumerable]] */
-  bool is_enumerable;
-
-  /** Is [[Configurable]] defined? */
-  bool is_configurable_defined;
-
-  /** [[Configurable]] */
-  bool is_configurable;
+  /** any combination of jerry_property_descriptor_flags_t bits */
+  uint16_t flags;
 
   /** [[Value]] */
   jerry_value_t value;
@@ -697,7 +693,7 @@ jerry_value_t jerry_set_property_by_index (const jerry_value_t obj_val, uint32_t
 bool jerry_set_internal_property (const jerry_value_t obj_val, const jerry_value_t prop_name_val,
                                   const jerry_value_t value_to_set);
 
-void jerry_init_property_descriptor_fields (jerry_property_descriptor_t *prop_desc_p);
+jerry_property_descriptor_t jerry_property_descriptor_create (void);
 jerry_value_t jerry_define_own_property (const jerry_value_t obj_val,
                                          const jerry_value_t prop_name_val,
                                          const jerry_property_descriptor_t *prop_desc_p);
@@ -705,7 +701,7 @@ jerry_value_t jerry_define_own_property (const jerry_value_t obj_val,
 bool jerry_get_own_property_descriptor (const jerry_value_t obj_val,
                                         const jerry_value_t prop_name_val,
                                         jerry_property_descriptor_t *prop_desc_p);
-void jerry_free_property_descriptor_fields (const jerry_property_descriptor_t *prop_desc_p);
+void jerry_property_descriptor_free (const jerry_property_descriptor_t *prop_desc_p);
 
 jerry_value_t jerry_call_function (const jerry_value_t func_obj_val, const jerry_value_t this_val,
                                    const jerry_value_t args_p[], jerry_size_t args_count);

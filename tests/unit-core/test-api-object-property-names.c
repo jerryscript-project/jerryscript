@@ -104,16 +104,14 @@ main (void)
 
   jerry_value_t names;
 
-  jerry_property_descriptor_t prop_desc;
-  jerry_init_property_descriptor_fields (&prop_desc);
-  prop_desc.is_configurable_defined = true;
-  prop_desc.is_configurable = true;
-  prop_desc.is_writable_defined = true;
-  prop_desc.is_writable = true;
-  prop_desc.is_enumerable_defined = true;
+  jerry_property_descriptor_t prop_desc = jerry_property_descriptor_create ();
+  prop_desc.flags |= (JERRY_PROP_IS_CONFIGURABLE_DEFINED
+                      | JERRY_PROP_IS_CONFIGURABLE
+                      | JERRY_PROP_IS_WRITABLE_DEFINED
+                      | JERRY_PROP_IS_WRITABLE
+                      | JERRY_PROP_IS_ENUMERABLE_DEFINED);
 
   // Test enumerable - non-enumerable filter
-  prop_desc.is_enumerable = false;
   define_property (test_object, prop_names[2], &prop_desc, false);
   names = jerry_object_get_property_names (test_object,
                                            JERRY_PROPERTY_FILTER_ALL | JERRY_PROPERTY_FILTER_EXLCUDE_NON_ENUMERABLE);
@@ -123,10 +121,10 @@ main (void)
   TEST_ASSERT (jerry_get_array_length (names) == (uint32_t) 3);
   compare_prop_name (names, prop_names[2], 2);
   jerry_release_value (names);
-  prop_desc.is_enumerable = true;
+  prop_desc.flags |= JERRY_PROP_IS_ENUMERABLE;
 
   // Test configurable - non-configurable filter
-  prop_desc.is_configurable = false;
+  prop_desc.flags &= (uint16_t) ~JERRY_PROP_IS_CONFIGURABLE;
   define_property (test_object, prop_names[3], &prop_desc, false);
   names = jerry_object_get_property_names (test_object,
                                            JERRY_PROPERTY_FILTER_ALL | JERRY_PROPERTY_FILTER_EXLCUDE_NON_CONFIGURABLE);
@@ -136,10 +134,10 @@ main (void)
   TEST_ASSERT (jerry_get_array_length (names) == (uint32_t) 4);
   compare_prop_name (names, prop_names[3], 3);
   jerry_release_value (names);
-  prop_desc.is_configurable = true;
+  prop_desc.flags |= JERRY_PROP_IS_CONFIGURABLE;
 
   // Test writable - non-writable filter
-  prop_desc.is_writable = false;
+  prop_desc.flags &= (uint16_t) ~JERRY_PROP_IS_WRITABLE;
   define_property (test_object, prop_names[4], &prop_desc, false);
   names = jerry_object_get_property_names (test_object,
                                            JERRY_PROPERTY_FILTER_ALL | JERRY_PROPERTY_FILTER_EXLCUDE_NON_WRITABLE);
@@ -149,7 +147,7 @@ main (void)
   TEST_ASSERT (jerry_get_array_length (names) == (uint32_t) 5);
   compare_prop_name (names, prop_names[4], 4);
   jerry_release_value (names);
-  prop_desc.is_writable = true;
+  prop_desc.flags |= JERRY_PROP_IS_WRITABLE;
 
   // Test all property filter
   names = jerry_object_get_property_names (test_object, JERRY_PROPERTY_FILTER_ALL);
@@ -195,7 +193,7 @@ main (void)
   TEST_ASSERT (jerry_get_array_length (names) == (uint32_t) 7);
   jerry_release_value (names);
 
-  jerry_free_property_descriptor_fields (&prop_desc);
+  jerry_property_descriptor_free (&prop_desc);
   jerry_release_value (test_object);
   jerry_cleanup ();
   return 0;

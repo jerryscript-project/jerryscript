@@ -91,49 +91,46 @@ main (void)
   /* Test {get, define}_own_property_descriptor */
   jerry_property_descriptor_t prop_desc;
   TEST_ASSERT (jerry_get_own_property_descriptor (object, symbol_2, &prop_desc));
-  TEST_ASSERT (prop_desc.is_value_defined == true);
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_VALUE_DEFINED);
   TEST_ASSERT (value_2 == prop_desc.value);
   TEST_ASSERT (jerry_get_number_value (value_2) == jerry_get_number_value (prop_desc.value));
-  TEST_ASSERT (prop_desc.is_writable == true);
-  TEST_ASSERT (prop_desc.is_enumerable == true);
-  TEST_ASSERT (prop_desc.is_configurable == true);
-  TEST_ASSERT (prop_desc.is_get_defined == false);
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_WRITABLE);
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_ENUMERABLE);
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_CONFIGURABLE);
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_GET_DEFINED));
   TEST_ASSERT (jerry_value_is_undefined (prop_desc.getter));
-  TEST_ASSERT (prop_desc.is_set_defined == false);
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_SET_DEFINED));
   TEST_ASSERT (jerry_value_is_undefined (prop_desc.setter));
-  jerry_free_property_descriptor_fields (&prop_desc);
+  jerry_property_descriptor_free (&prop_desc);
 
   /* Modify the descriptor fields */
-  jerry_init_property_descriptor_fields (&prop_desc);
+  prop_desc = jerry_property_descriptor_create ();
   jerry_value_t value_3 = jerry_create_string (STRING_BAR);
 
-  prop_desc.is_value_defined = true;
+  prop_desc.flags |= JERRY_PROP_IS_VALUE_DEFINED
+  | JERRY_PROP_IS_WRITABLE_DEFINED
+  | JERRY_PROP_IS_ENUMERABLE_DEFINED
+  | JERRY_PROP_IS_CONFIGURABLE_DEFINED;
   prop_desc.value = jerry_acquire_value (value_3);
-  prop_desc.is_writable_defined = true;
-  prop_desc.is_writable = false;
-  prop_desc.is_enumerable_defined = true;
-  prop_desc.is_enumerable = false;
-  prop_desc.is_configurable_defined = true;
-  prop_desc.is_configurable = false;
   TEST_ASSERT (jerry_get_boolean_value (jerry_define_own_property (object, symbol_2, &prop_desc)));
-  jerry_free_property_descriptor_fields (&prop_desc);
+  jerry_property_descriptor_free (&prop_desc);
 
   /* Check the modified fields */
   TEST_ASSERT (jerry_get_own_property_descriptor (object, symbol_2, &prop_desc));
-  TEST_ASSERT (prop_desc.is_value_defined == true);
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_VALUE_DEFINED);
   TEST_ASSERT (value_3 == prop_desc.value);
   TEST_ASSERT (jerry_value_is_string (prop_desc.value));
-  TEST_ASSERT (prop_desc.is_writable_defined == true);
-  TEST_ASSERT (prop_desc.is_writable == false);
-  TEST_ASSERT (prop_desc.is_enumerable_defined == true);
-  TEST_ASSERT (prop_desc.is_enumerable == false);
-  TEST_ASSERT (prop_desc.is_configurable_defined == true);
-  TEST_ASSERT (prop_desc.is_configurable == false);
-  TEST_ASSERT (prop_desc.is_get_defined == false);
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_WRITABLE_DEFINED);
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_WRITABLE));
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_ENUMERABLE_DEFINED);
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_ENUMERABLE));
+  TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_CONFIGURABLE_DEFINED);
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_CONFIGURABLE));
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_GET_DEFINED));
   TEST_ASSERT (jerry_value_is_undefined (prop_desc.getter));
-  TEST_ASSERT (prop_desc.is_set_defined == false);
+  TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_SET_DEFINED));
   TEST_ASSERT (jerry_value_is_undefined (prop_desc.setter));
-  jerry_free_property_descriptor_fields (&prop_desc);
+  jerry_property_descriptor_free (&prop_desc);
 
   jerry_release_value (value_3);
   jerry_release_value (value_2);

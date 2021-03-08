@@ -69,6 +69,19 @@ JERRY_STATIC_ASSERT ((int) ECMA_INIT_EMPTY == (int) JERRY_INIT_EMPTY
                      && (int) ECMA_INIT_MEM_STATS == (int) JERRY_INIT_MEM_STATS,
                      ecma_init_flag_t_must_be_equal_to_jerry_init_flag_t);
 
+JERRY_STATIC_ASSERT ((int) JERRY_PROP_NO_OPTS == (int) ECMA_PROP_NO_OPTS
+                     && (int) JERRY_PROP_IS_GET_DEFINED == (int) ECMA_PROP_IS_GET_DEFINED
+                     && (int) JERRY_PROP_IS_SET_DEFINED == (int) ECMA_PROP_IS_SET_DEFINED
+                     && (int) JERRY_PROP_IS_CONFIGURABLE == (int) ECMA_PROP_IS_CONFIGURABLE
+                     && (int) JERRY_PROP_IS_ENUMERABLE == (int) ECMA_PROP_IS_ENUMERABLE
+                     && (int) JERRY_PROP_IS_WRITABLE == (int) ECMA_PROP_IS_WRITABLE
+                     && (int) JERRY_PROP_IS_THROW == (int) ECMA_PROP_IS_THROW
+                     && (int) JERRY_PROP_IS_VALUE_DEFINED == (int) ECMA_PROP_IS_VALUE_DEFINED
+                     && (int) JERRY_PROP_IS_CONFIGURABLE_DEFINED == (int) ECMA_PROP_IS_CONFIGURABLE_DEFINED
+                     && (int) JERRY_PROP_IS_ENUMERABLE_DEFINED == (int) ECMA_PROP_IS_ENUMERABLE_DEFINED
+                     && (int) JERRY_PROP_IS_WRITABLE_DEFINED == (int) ECMA_PROP_IS_WRITABLE_DEFINED,
+                     jerry_prop_desc_flags_must_be_equal_to_ecma_prop_desc_flags);
+
 #if JERRY_BUILTIN_REGEXP
 JERRY_STATIC_ASSERT ((int) RE_FLAG_GLOBAL == (int) JERRY_REGEXP_FLAG_GLOBAL
                      && (int) RE_FLAG_MULTILINE == (int) JERRY_REGEXP_FLAG_MULTILINE
@@ -3280,24 +3293,23 @@ jerry_set_internal_property (const jerry_value_t obj_val, /**< object value */
 } /* jerry_set_internal_property */
 
 /**
- * Initialize property descriptor.
+ * Construct empty property descriptor, i.e.:
+ *  property descriptor with all is_defined flags set to false and the rest - to default value.
+ *
+ * @return empty property descriptor
  */
-void
-jerry_init_property_descriptor_fields (jerry_property_descriptor_t *prop_desc_p) /**< [out] property descriptor */
+jerry_property_descriptor_t
+jerry_property_descriptor_create (void)
 {
-  prop_desc_p->is_value_defined = false;
-  prop_desc_p->value = ECMA_VALUE_UNDEFINED;
-  prop_desc_p->is_writable_defined = false;
-  prop_desc_p->is_writable = false;
-  prop_desc_p->is_enumerable_defined = false;
-  prop_desc_p->is_enumerable = false;
-  prop_desc_p->is_configurable_defined = false;
-  prop_desc_p->is_configurable = false;
-  prop_desc_p->is_get_defined = false;
-  prop_desc_p->getter = ECMA_VALUE_UNDEFINED;
-  prop_desc_p->is_set_defined = false;
-  prop_desc_p->setter = ECMA_VALUE_UNDEFINED;
-} /* jerry_init_property_descriptor_fields */
+  jerry_property_descriptor_t prop_desc;
+
+  prop_desc.flags = JERRY_PROP_NO_OPTS;
+  prop_desc.value = ECMA_VALUE_UNDEFINED;
+  prop_desc.getter = ECMA_VALUE_UNDEFINED;
+  prop_desc.setter = ECMA_VALUE_UNDEFINED;
+
+  return prop_desc;
+} /* jerry_property_descriptor_create */
 
 /**
  * Convert a ecma_property_descriptor_t to a jerry_property_descriptor_t
@@ -3309,38 +3321,18 @@ jerry_init_property_descriptor_fields (jerry_property_descriptor_t *prop_desc_p)
 static jerry_property_descriptor_t
 jerry_property_descriptor_from_ecma (const ecma_property_descriptor_t *prop_desc_p) /**<[out] property_descriptor */
 {
-  jerry_property_descriptor_t prop_desc;
-  jerry_init_property_descriptor_fields (&prop_desc);
+  jerry_property_descriptor_t prop_desc = jerry_property_descriptor_create ();
 
-  if (prop_desc_p->flags & ECMA_PROP_IS_ENUMERABLE_DEFINED)
-  {
-    prop_desc.is_enumerable_defined = true;
-    prop_desc.is_enumerable = prop_desc_p->flags & ECMA_PROP_IS_ENUMERABLE;
-  }
+  prop_desc.flags = prop_desc_p->flags;
 
-  if (prop_desc_p->flags & ECMA_PROP_IS_CONFIGURABLE_DEFINED)
-  {
-    prop_desc.is_configurable_defined = true;
-    prop_desc.is_configurable = prop_desc_p->flags & ECMA_PROP_IS_CONFIGURABLE;
-  }
-
-  prop_desc.is_value_defined = prop_desc_p->flags & ECMA_PROP_IS_VALUE_DEFINED;
-
-  if (prop_desc.is_value_defined)
+  if (prop_desc.flags & (JERRY_PROP_IS_VALUE_DEFINED))
   {
     prop_desc.value = prop_desc_p->value;
-  }
-
-  if (prop_desc_p->flags & ECMA_PROP_IS_WRITABLE_DEFINED)
-  {
-    prop_desc.is_writable_defined = true;
-    prop_desc.is_writable = prop_desc_p->flags & ECMA_PROP_IS_WRITABLE;
   }
 
   if (prop_desc_p->flags & ECMA_PROP_IS_GET_DEFINED)
   {
     prop_desc.getter = ECMA_VALUE_NULL;
-    prop_desc.is_get_defined = true;
 
     if (prop_desc_p->get_p != NULL)
     {
@@ -3352,7 +3344,6 @@ jerry_property_descriptor_from_ecma (const ecma_property_descriptor_t *prop_desc
   if (prop_desc_p->flags & ECMA_PROP_IS_SET_DEFINED)
   {
     prop_desc.setter = ECMA_VALUE_NULL;
-    prop_desc.is_set_defined = true;
 
     if (prop_desc_p->set_p != NULL)
     {
@@ -3376,24 +3367,10 @@ jerry_property_descriptor_to_ecma (const jerry_property_descriptor_t *prop_desc_
 {
   ecma_property_descriptor_t prop_desc = ecma_make_empty_property_descriptor ();
 
-  uint32_t flags = ECMA_PROP_NO_OPTS;
-
-  if (prop_desc_p->is_enumerable_defined)
-  {
-    flags |= (uint32_t) (ECMA_PROP_IS_ENUMERABLE_DEFINED | (prop_desc_p->is_enumerable ? ECMA_PROP_IS_ENUMERABLE
-                                                                                       : ECMA_PROP_NO_OPTS));
-  }
-
-  if (prop_desc_p->is_configurable_defined)
-  {
-    flags |= (uint32_t) (ECMA_PROP_IS_CONFIGURABLE_DEFINED | (prop_desc_p->is_configurable ? ECMA_PROP_IS_CONFIGURABLE
-                                                                                           : ECMA_PROP_NO_OPTS));
-  }
+  prop_desc.flags = prop_desc_p->flags;
 
   /* Copy data property info. */
-  flags |= (prop_desc_p->is_value_defined ? ECMA_PROP_IS_VALUE_DEFINED : ECMA_PROP_NO_OPTS);
-
-  if (prop_desc_p->is_value_defined)
+  if (prop_desc_p->flags & (JERRY_PROP_IS_VALUE_DEFINED))
   {
     if (ecma_is_value_error_reference (prop_desc_p->value))
     {
@@ -3404,17 +3381,10 @@ jerry_property_descriptor_to_ecma (const jerry_property_descriptor_t *prop_desc_
     prop_desc.value = prop_desc_p->value;
   }
 
-  if (prop_desc_p->is_writable_defined)
-  {
-    flags |= (uint32_t) (ECMA_PROP_IS_WRITABLE_DEFINED | (prop_desc_p->is_writable ? ECMA_PROP_IS_WRITABLE
-                                                                                   : ECMA_PROP_NO_OPTS));
-  }
-
   /* Copy accessor property info. */
-  if (prop_desc_p->is_get_defined)
+  if (prop_desc_p->flags & (JERRY_PROP_IS_GET_DEFINED))
   {
     ecma_value_t getter = prop_desc_p->getter;
-    flags |= ECMA_PROP_IS_GET_DEFINED;
 
     if (ecma_is_value_error_reference (getter))
     {
@@ -3433,10 +3403,9 @@ jerry_property_descriptor_to_ecma (const jerry_property_descriptor_t *prop_desc_
     }
   }
 
-  if (prop_desc_p->is_set_defined)
+  if (prop_desc_p->flags & (JERRY_PROP_IS_SET_DEFINED))
   {
     ecma_value_t setter = prop_desc_p->setter;
-    flags |= ECMA_PROP_IS_SET_DEFINED;
 
     if (ecma_is_value_error_reference (setter))
     {
@@ -3455,10 +3424,22 @@ jerry_property_descriptor_to_ecma (const jerry_property_descriptor_t *prop_desc_
     }
   }
 
-  prop_desc.flags |= (uint16_t) (flags | ECMA_PROP_IS_THROW);
+  prop_desc.flags |= (uint16_t) (prop_desc_p->flags | ECMA_PROP_IS_THROW);
 
   return prop_desc;
 } /* jerry_property_descriptor_to_ecma */
+
+/** Helper function to return false value or error depending on the given flag.
+ *
+ * @return value marked with error flag - if is_throw is true
+ *         false value - otherwise
+ */
+static jerry_value_t
+jerry_error_or_false (const jerry_value_t err_val, /**< error value */
+                      bool is_throw) /**< throw flag */
+{
+  return is_throw ? jerry_throw (err_val) : jerry_create_boolean (false);
+} /* jerry_error_or_false */
 
 /**
  * Define a property to the specified object with the given name.
@@ -3467,6 +3448,7 @@ jerry_property_descriptor_to_ecma (const jerry_property_descriptor_t *prop_desc_
  *      returned value must be freed with jerry_release_value, when it is no longer needed.
  *
  * @return true value - if the operation was successful
+ *         false value - if the property cannot be defined and JERRY_PROP_IS_THROW is not set
  *         value marked with error flag - otherwise
  */
 jerry_value_t
@@ -3479,20 +3461,23 @@ jerry_define_own_property (const jerry_value_t obj_val, /**< object value */
   if (!ecma_is_value_object (obj_val)
       || !ecma_is_value_prop_name (prop_name_val))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
+    return jerry_error_or_false (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)),
+                                 prop_desc_p->flags & JERRY_PROP_IS_THROW);
   }
 
-  if ((prop_desc_p->is_writable_defined || prop_desc_p->is_value_defined)
-      && (prop_desc_p->is_get_defined || prop_desc_p->is_set_defined))
+  if (prop_desc_p->flags & (JERRY_PROP_IS_WRITABLE_DEFINED | JERRY_PROP_IS_VALUE_DEFINED)
+      && prop_desc_p->flags & (JERRY_PROP_IS_GET_DEFINED | JERRY_PROP_IS_SET_DEFINED))
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
+    return jerry_error_or_false (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)),
+                                 prop_desc_p->flags & JERRY_PROP_IS_THROW);
   }
 
   ecma_property_descriptor_t prop_desc = jerry_property_descriptor_to_ecma (prop_desc_p);
 
   if (ECMA_IS_VALUE_ERROR (prop_desc.value))
   {
-    return jerry_throw (prop_desc.value);
+    return jerry_error_or_false (prop_desc.value, prop_desc_p->flags & JERRY_PROP_IS_THROW);
+
   }
   return jerry_return (ecma_op_object_define_own_property (ecma_get_object_from_value (obj_val),
                                                            ecma_get_prop_name_from_value (prop_name_val),
@@ -3537,28 +3522,30 @@ jerry_get_own_property_descriptor (const jerry_value_t  obj_val, /**< object val
     return false;
   }
 
-  prop_desc_p->is_configurable_defined = true;
-  prop_desc_p->is_configurable = (prop_desc.flags & ECMA_PROP_IS_CONFIGURABLE) != 0;
-  prop_desc_p->is_enumerable_defined = true;
-  prop_desc_p->is_enumerable = (prop_desc.flags & ECMA_PROP_IS_ENUMERABLE) != 0;
-
-  prop_desc_p->is_writable_defined = (prop_desc.flags & ECMA_PROP_IS_WRITABLE_DEFINED) != 0;
-  prop_desc_p->is_writable = prop_desc_p->is_writable_defined ? (prop_desc.flags & ECMA_PROP_IS_WRITABLE) != 0 : false;
-
-  prop_desc_p->is_value_defined = (prop_desc.flags & ECMA_PROP_IS_VALUE_DEFINED) != 0;
-  prop_desc_p->is_get_defined = (prop_desc.flags & ECMA_PROP_IS_GET_DEFINED) != 0;
-  prop_desc_p->is_set_defined = (prop_desc.flags & ECMA_PROP_IS_SET_DEFINED) != 0;
+  prop_desc_p->flags = prop_desc.flags;
+  if (!(prop_desc_p->flags & JERRY_PROP_IS_WRITABLE_DEFINED))
+  {
+    prop_desc_p->flags &= (uint16_t) ~JERRY_PROP_IS_WRITABLE;
+  }
+  if (!(prop_desc_p->flags & JERRY_PROP_IS_CONFIGURABLE_DEFINED))
+  {
+    prop_desc_p->flags &= (uint16_t) ~JERRY_PROP_IS_CONFIGURABLE;
+  }
+  if (!(prop_desc_p->flags & JERRY_PROP_IS_ENUMERABLE_DEFINED))
+  {
+    prop_desc_p->flags &= (uint16_t) ~JERRY_PROP_IS_ENUMERABLE;
+  }
 
   prop_desc_p->value = ECMA_VALUE_UNDEFINED;
   prop_desc_p->getter = ECMA_VALUE_UNDEFINED;
   prop_desc_p->setter = ECMA_VALUE_UNDEFINED;
 
-  if (prop_desc_p->is_value_defined)
+  if (prop_desc_p->flags & JERRY_PROP_IS_VALUE_DEFINED)
   {
     prop_desc_p->value = prop_desc.value;
   }
 
-  if (prop_desc_p->is_get_defined)
+  if (prop_desc_p->flags & JERRY_PROP_IS_GET_DEFINED)
   {
     if (prop_desc.get_p != NULL)
     {
@@ -3570,7 +3557,7 @@ jerry_get_own_property_descriptor (const jerry_value_t  obj_val, /**< object val
     }
   }
 
-  if (prop_desc_p->is_set_defined)
+  if (prop_desc_p->flags & JERRY_PROP_IS_SET_DEFINED)
   {
     if (prop_desc.set_p != NULL)
     {
@@ -3589,23 +3576,23 @@ jerry_get_own_property_descriptor (const jerry_value_t  obj_val, /**< object val
  * Free fields of property descriptor (setter, getter and value).
  */
 void
-jerry_free_property_descriptor_fields (const jerry_property_descriptor_t *prop_desc_p) /**< property descriptor */
+jerry_property_descriptor_free (const jerry_property_descriptor_t *prop_desc_p) /**< property descriptor */
 {
-  if (prop_desc_p->is_value_defined)
+  if (prop_desc_p->flags & JERRY_PROP_IS_VALUE_DEFINED)
   {
     jerry_release_value (prop_desc_p->value);
   }
 
-  if (prop_desc_p->is_get_defined)
+  if (prop_desc_p->flags & JERRY_PROP_IS_GET_DEFINED)
   {
     jerry_release_value (prop_desc_p->getter);
   }
 
-  if (prop_desc_p->is_set_defined)
+  if (prop_desc_p->flags & JERRY_PROP_IS_SET_DEFINED)
   {
     jerry_release_value (prop_desc_p->setter);
   }
-} /* jerry_free_property_descriptor_fields */
+} /* jerry_property_descriptor_free */
 
 /**
  * Invoke function specified by a function value

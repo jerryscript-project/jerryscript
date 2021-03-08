@@ -924,16 +924,15 @@ main (void)
     jerry_value_t global_obj = jerry_get_global_object ();
     jerry_value_t prop_name = jerry_create_string ((const jerry_char_t *) "foo");
 
-    jerry_property_descriptor_t prop_desc;
-    jerry_init_property_descriptor_fields (&prop_desc);
-    prop_desc.is_value_defined = true;
+    jerry_property_descriptor_t prop_desc = jerry_property_descriptor_create ();
+    prop_desc.flags |= JERRY_PROP_IS_VALUE_DEFINED;
     prop_desc.value = jerry_create_number (5.2);
 
     jerry_value_t define_result = jerry_define_own_property (global_obj, prop_name, &prop_desc);
     TEST_ASSERT (jerry_value_is_boolean (define_result) && jerry_get_boolean_value (define_result));
     jerry_release_value (define_result);
 
-    jerry_free_property_descriptor_fields (&prop_desc);
+    jerry_property_descriptor_free (&prop_desc);
     jerry_release_value (prop_name);
     jerry_release_value (global_obj);
 

@@ -206,7 +206,7 @@ ecma_op_create_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environme
     }
 #endif /* JERRY_BUILTIN_PROXY && JERRY_BUILTIN_REALMS */
 
-    const uint32_t flags = ECMA_PROPERTY_ENUMERABLE_WRITABLE | ECMA_IS_THROW;
+    const uint32_t flags = ECMA_PROPERTY_ENUMERABLE_WRITABLE | ECMA_PROP_SHOULD_THROW;
 
     ecma_value_t completion = ecma_builtin_helper_def_prop (binding_obj_p,
                                                             name_p,

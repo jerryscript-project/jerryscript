@@ -239,7 +239,7 @@ ecma_builtin_array_object_from (ecma_value_t this_arg, /**< 'this' argument */
       }
 
       /* 6.g.ix */
-      const uint32_t flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_IS_THROW;
+      const uint32_t flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_PROP_SHOULD_THROW;
       ecma_value_t set_status = ecma_builtin_helper_def_prop_by_index (array_obj_p, k, mapped_value, flags);
 
       ecma_free_value (mapped_value);
@@ -359,7 +359,7 @@ iterator_cleanup:
     }
 
     /* 16.f */
-    const uint32_t flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_IS_THROW;
+    const uint32_t flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_PROP_SHOULD_THROW;
     ecma_value_t set_status = ecma_builtin_helper_def_prop_by_index (array_obj_p, k, mapped_value, flags);
 
     ecma_free_value (mapped_value);
@@ -433,7 +433,7 @@ ecma_builtin_array_object_of (ecma_value_t this_arg, /**< 'this' argument */
 
   uint32_t k = 0;
   ecma_object_t *obj_p = ecma_get_object_from_value (ret_val);
-  const uint32_t prop_status_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_IS_THROW;
+  const uint32_t prop_status_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_PROP_SHOULD_THROW;
 
   while (k < arguments_list_len)
   {

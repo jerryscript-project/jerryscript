@@ -314,7 +314,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this */
     ecma_value_t status = ecma_builtin_helper_def_prop (this_obj_p,
                                                         ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
                                                         ecma_make_uint32_value (0),
-                                                        ECMA_PROPERTY_FLAG_WRITABLE | ECMA_PROP_IS_THROW);
+                                                        ECMA_PROPERTY_FLAG_WRITABLE | ECMA_PROP_SHOULD_THROW);
 
     ecma_bytecode_deref ((ecma_compiled_code_t *) old_bc_p);
 

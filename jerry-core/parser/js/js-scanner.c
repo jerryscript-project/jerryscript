@@ -2472,9 +2472,6 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
 
   PARSER_TRY (context_p->try_buffer)
   {
-    context_p->line = 1;
-    context_p->column = 1;
-
     if (arg_list_p == NULL)
     {
       context_p->source_p = source_p;
@@ -3085,8 +3082,7 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
             context_p->next_scanner_info_p = scanner_info_p;
             context_p->source_p = source_p;
             context_p->source_end_p = source_end_p;
-            context_p->line = 1;
-            context_p->column = 1;
+            lexer_init_line_info (context_p);
 
 #if JERRY_ESNEXT
             scanner_filter_arguments (context_p, &scanner_context);

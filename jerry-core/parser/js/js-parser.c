@@ -1794,20 +1794,13 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
                      size_t arg_list_size, /**< size of function argument list */
                      const uint8_t *source_p, /**< valid UTF-8 source code */
                      size_t source_size, /**< size of the source code */
-                     ecma_value_t resource_name, /**< resource name */
                      uint32_t parse_opts, /**< ecma_parse_opts_t option bits */
-                     parser_error_location_t *error_location_p) /**< error location */
+                     const ecma_parse_options_t *options_p) /**< additional configuration options */
 {
   parser_context_t context;
   ecma_compiled_code_t *compiled_code_p;
 
   context.error = PARSER_ERR_NO_ERROR;
-
-  if (error_location_p != NULL)
-  {
-    error_location_p->error = PARSER_ERR_NO_ERROR;
-  }
-
   context.status_flags = parse_opts & PARSER_STRICT_MODE_MASK;
   context.global_status_flags = parse_opts;
 
@@ -1842,16 +1835,29 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
 
   context.stack_depth = 0;
   context.stack_limit = 0;
+  context.options_p = options_p;
   context.last_context_p = NULL;
   context.last_statement.current_p = NULL;
-
   context.token.flags = 0;
-  context.line = 1;
-  context.column = 1;
+  lexer_init_line_info (&context);
+
 #if JERRY_RESOURCE_NAME
+  ecma_value_t resource_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
+
+  if (context.global_status_flags & ECMA_PARSE_EVAL)
+  {
+    resource_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_EVAL);
+  }
+
+  if (context.options_p != NULL
+      && (context.options_p->options & JERRY_PARSE_HAS_RESOURCE)
+      && context.options_p->resource_name_length > 0)
+  {
+    resource_name = ecma_find_or_create_literal_string (context.options_p->resource_name_p,
+                                                        (lit_utf8_size_t) context.options_p->resource_name_length);
+  }
+
   context.resource_name = resource_name;
-#else /* !JERRY_RESOURCE_NAME */
-  JERRY_UNUSED (resource_name);
 #endif /* !JERRY_RESOURCE_NAME */
 
   scanner_info_t scanner_info_end;
@@ -1912,12 +1918,9 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   {
     JERRY_ASSERT (context.error == PARSER_ERR_OUT_OF_MEMORY);
 
-    if (error_location_p != NULL)
-    {
-      error_location_p->error = context.error;
-      error_location_p->line = context.token.line;
-      error_location_p->column = context.token.column;
-    }
+    /* It is unlikely that memory can be allocated in an out-of-memory
+     * situation. However, a simple value can still be thrown. */
+    jcontext_raise_exception (ECMA_VALUE_NULL);
     return NULL;
   }
 
@@ -1933,9 +1936,8 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   }
 
   context.u.allocated_buffer_p = NULL;
-  context.line = 1;
-  context.column = 1;
   context.token.flags = 0;
+  lexer_init_line_info (&context);
 
   parser_stack_init (&context);
 
@@ -1970,8 +1972,7 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
 
       context.source_p = source_p;
       context.source_end_p = source_p + source_size;
-      context.line = 1;
-      context.column = 1;
+      lexer_init_line_info (&context);
 
       lexer_next_token (&context);
     }
@@ -2056,13 +2057,6 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
     }
 #endif
 
-    if (error_location_p != NULL)
-    {
-      error_location_p->error = context.error;
-      error_location_p->line = context.token.line;
-      error_location_p->column = context.token.column;
-    }
-
     compiled_code_p = NULL;
     parser_free_literals (&context.literal_pool);
     parser_cbc_stream_free (&context.byte_code);
@@ -2085,7 +2079,69 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
 
   parser_stack_free (&context);
 
-  return compiled_code_p;
+  if (compiled_code_p != NULL)
+  {
+    return compiled_code_p;
+  }
+
+#if JERRY_DEBUGGER
+  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
+  {
+    jerry_debugger_send_type (JERRY_DEBUGGER_PARSE_ERROR);
+  }
+#endif /* JERRY_DEBUGGER */
+
+  if (context.error == PARSER_ERR_OUT_OF_MEMORY)
+  {
+    /* It is unlikely that memory can be allocated in an out-of-memory
+     * situation. However, a simple value can still be thrown. */
+    jcontext_raise_exception (ECMA_VALUE_NULL);
+    return NULL;
+  }
+
+#if JERRY_ERROR_MESSAGES
+  ecma_string_t *err_str_p;
+
+  if (context.error == PARSER_ERR_INVALID_REGEXP)
+  {
+    ecma_value_t error = jcontext_take_exception ();
+    ecma_property_t *prop_p = ecma_find_named_property (ecma_get_object_from_value (error),
+                                                        ecma_get_magic_string (LIT_MAGIC_STRING_MESSAGE));
+    ecma_free_value (error);
+    JERRY_ASSERT (prop_p);
+    err_str_p = ecma_get_string_from_value (ECMA_PROPERTY_VALUE_PTR (prop_p)->value);
+    ecma_ref_ecma_string (err_str_p);
+  }
+  else
+  {
+    const lit_utf8_byte_t *err_bytes_p = (const lit_utf8_byte_t *) parser_error_to_string (context.error);
+    lit_utf8_size_t err_bytes_size = lit_zt_utf8_string_size (err_bytes_p);
+    err_str_p = ecma_new_ecma_string_from_utf8 (err_bytes_p, err_bytes_size);
+  }
+  ecma_value_t err_str_val = ecma_make_string_value (err_str_p);
+  ecma_value_t line_str_val = ecma_make_uint32_value (context.token.line);
+  ecma_value_t col_str_val = ecma_make_uint32_value (context.token.column);
+
+  ecma_raise_standard_error_with_format (ECMA_ERROR_SYNTAX,
+                                         "% [%:%:%]",
+                                         err_str_val,
+                                         context.resource_name,
+                                         line_str_val,
+                                         col_str_val);
+
+  ecma_free_value (col_str_val);
+  ecma_free_value (line_str_val);
+  ecma_deref_ecma_string (err_str_p);
+#else /* !JERRY_ERROR_MESSAGES */
+  if (context.error == PARSER_ERR_INVALID_REGEXP)
+  {
+    jcontext_release_exception ();
+  }
+
+  ecma_raise_syntax_error ("");
+#endif /* JERRY_ERROR_MESSAGES */
+
+  return NULL;
 } /* parser_parse_source */
 
 /**
@@ -2788,11 +2844,10 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
                      size_t arg_list_size, /**< size of function argument list */
                      const uint8_t *source_p, /**< source code */
                      size_t source_size, /**< size of the source code */
-                     ecma_value_t resource_name, /**< resource name */
-                     uint32_t parse_opts) /**< ecma_parse_opts_t option bits */
+                     uint32_t parse_opts, /**< ecma_parse_opts_t option bits */
+                     const ecma_parse_options_t *options_p) /**< additional configuration options */
 {
 #if JERRY_PARSER
-  parser_error_location_t parser_error;
 
 #if JERRY_DEBUGGER
   if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
@@ -2808,69 +2863,12 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
                                                           arg_list_size,
                                                           source_p,
                                                           source_size,
-                                                          resource_name,
                                                           parse_opts,
-                                                          &parser_error);
+                                                          options_p);
 
   if (JERRY_UNLIKELY (bytecode_p == NULL))
   {
-#if JERRY_DEBUGGER
-    if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
-    {
-      jerry_debugger_send_type (JERRY_DEBUGGER_PARSE_ERROR);
-    }
-#endif /* JERRY_DEBUGGER */
-
-    if (parser_error.error == PARSER_ERR_OUT_OF_MEMORY)
-    {
-      /* It is unlikely that memory can be allocated in an out-of-memory
-       * situation. However, a simple value can still be thrown. */
-      jcontext_raise_exception (ECMA_VALUE_NULL);
-      return NULL;
-    }
-
-#if JERRY_ERROR_MESSAGES
-    ecma_string_t *err_str_p;
-
-    if (parser_error.error == PARSER_ERR_INVALID_REGEXP)
-    {
-      ecma_value_t error = jcontext_take_exception ();
-      ecma_property_t *prop_p = ecma_find_named_property (ecma_get_object_from_value (error),
-                                                          ecma_get_magic_string (LIT_MAGIC_STRING_MESSAGE));
-      ecma_free_value (error);
-      JERRY_ASSERT (prop_p);
-      err_str_p = ecma_get_string_from_value (ECMA_PROPERTY_VALUE_PTR (prop_p)->value);
-      ecma_ref_ecma_string (err_str_p);
-    }
-    else
-    {
-      const lit_utf8_byte_t *err_bytes_p = (const lit_utf8_byte_t *) parser_error_to_string (parser_error.error);
-      lit_utf8_size_t err_bytes_size = lit_zt_utf8_string_size (err_bytes_p);
-      err_str_p = ecma_new_ecma_string_from_utf8 (err_bytes_p, err_bytes_size);
-    }
-    ecma_value_t err_str_val = ecma_make_string_value (err_str_p);
-    ecma_value_t line_str_val = ecma_make_uint32_value (parser_error.line);
-    ecma_value_t col_str_val = ecma_make_uint32_value (parser_error.column);
-
-    ecma_raise_standard_error_with_format (ECMA_ERROR_SYNTAX,
-                                           "% [%:%:%]",
-                                           err_str_val,
-                                           resource_name,
-                                           line_str_val,
-                                           col_str_val);
-
-    ecma_free_value (col_str_val);
-    ecma_free_value (line_str_val);
-    ecma_deref_ecma_string (err_str_p);
-#else /* !JERRY_ERROR_MESSAGES */
-    if (parser_error.error == PARSER_ERR_INVALID_REGEXP)
-    {
-      jcontext_release_exception ();
-    }
-
-    ecma_raise_syntax_error ("");
-#endif /* JERRY_ERROR_MESSAGES */
-
+    /* Exception has already thrown. */
     return NULL;
   }
 

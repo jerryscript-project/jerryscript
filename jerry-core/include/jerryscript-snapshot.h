@@ -38,7 +38,6 @@ extern "C"
 typedef enum
 {
   JERRY_SNAPSHOT_SAVE_STATIC = (1u << 0), /**< static snapshot */
-  JERRY_SNAPSHOT_SAVE_STRICT = (1u << 1), /**< strict mode code */
 } jerry_generate_snapshot_opts_t;
 
 /**
@@ -53,14 +52,14 @@ typedef enum
 /**
  * Snapshot functions.
  */
-jerry_value_t jerry_generate_snapshot (const jerry_char_t *resource_name_p, size_t resource_name_length,
-                                       const jerry_char_t *source_p, size_t source_size,
-                                       uint32_t generate_snapshot_opts, uint32_t *buffer_p, size_t buffer_size);
-jerry_value_t jerry_generate_function_snapshot (const jerry_char_t *resource_name_p, size_t resource_name_length,
-                                                const jerry_char_t *source_p, size_t source_size,
+jerry_value_t jerry_generate_snapshot (const jerry_char_t *source_p, size_t source_size,
+                                       const jerry_parse_options_t *options_p, uint32_t generate_snapshot_opts,
+                                       uint32_t *buffer_p, size_t buffer_size);
+jerry_value_t jerry_generate_function_snapshot (const jerry_char_t *source_p, size_t source_size,
                                                 const jerry_char_t *args_p, size_t args_size,
-                                                uint32_t generate_snapshot_opts, uint32_t *buffer_p,
-                                                size_t buffer_size);
+                                                const jerry_parse_options_t *options_p,
+                                                uint32_t generate_snapshot_opts,
+                                                uint32_t *buffer_p, size_t buffer_size);
 
 jerry_value_t jerry_exec_snapshot (const uint32_t *snapshot_p, size_t snapshot_size,
                                    size_t func_index, uint32_t exec_snapshot_opts);

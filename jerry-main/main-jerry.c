@@ -117,11 +117,14 @@ restart:
           goto exit;
         }
 
-        ret_value = jerry_parse ((jerry_char_t *) file_path_p,
-                                 strlen (file_path_p),
-                                 source_p,
+        jerry_parse_options_t parse_options;
+        parse_options.options = parse_opts | JERRY_PARSE_HAS_RESOURCE;
+        parse_options.resource_name_p = (jerry_char_t *) file_path_p;
+        parse_options.resource_name_length = (size_t) strlen (file_path_p);
+
+        ret_value = jerry_parse (source_p,
                                  source_size,
-                                 parse_opts);
+                                 &parse_options);
 
         jerry_port_release_source (source_p);
 
@@ -204,7 +207,7 @@ restart:
       source_size = new_size;
     }
 
-    ret_value = jerry_parse (NULL, 0, (jerry_char_t *) source_p, source_size, JERRY_PARSE_NO_OPTS);
+    ret_value = jerry_parse ((jerry_char_t *) source_p, source_size, NULL);
     free (source_p);
 
     if (jerry_value_is_error (ret_value))
@@ -254,7 +257,7 @@ restart:
         continue;
       }
 
-      ret_value = jerry_parse (NULL, 0, (jerry_char_t *) str_p, len, JERRY_PARSE_NO_OPTS);
+      ret_value = jerry_parse ((jerry_char_t *) str_p, len, NULL);
 
       if (jerry_value_is_error (ret_value))
       {

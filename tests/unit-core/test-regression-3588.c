@@ -66,11 +66,9 @@ main (void)
         "new Sub1 ()"
     );
 
-    jerry_value_t parsed_code_val = jerry_parse (NULL,
-                                                 0,
-                                                 test_source,
+    jerry_value_t parsed_code_val = jerry_parse (test_source,
                                                  sizeof (test_source) - 1,
-                                                 JERRY_PARSE_NO_OPTS);
+                                                 NULL);
     TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
 
     jerry_value_t result = jerry_run (parsed_code_val);
@@ -86,11 +84,9 @@ main (void)
       "new Sub2 (1)"
     );
 
-    jerry_value_t parsed_code_val = jerry_parse (NULL,
-                                                 0,
-                                                 test_source,
+    jerry_value_t parsed_code_val = jerry_parse (test_source,
                                                  sizeof (test_source) - 1,
-                                                 JERRY_PARSE_NO_OPTS);
+                                                 NULL);
     TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
 
     jerry_value_t result = jerry_run (parsed_code_val);

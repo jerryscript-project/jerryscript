@@ -397,7 +397,7 @@ int jerry_main (int argc, char *argv[])
     printf ("No input files, running a hello world demo:\n");
     const jerry_char_t script[] = "var str = 'Hello World'; print(str + ' from JerryScript')";
 
-    ret_value = jerry_parse (NULL, 0, script, sizeof (script) - 1, JERRY_PARSE_NO_OPTS);
+    ret_value = jerry_parse (script, sizeof (script) - 1, NULL);
 
     if (!jerry_value_is_error (ret_value))
     {
@@ -417,11 +417,14 @@ int jerry_main (int argc, char *argv[])
         return JERRY_STANDALONE_EXIT_CODE_FAIL;
       }
 
-      ret_value = jerry_parse ((jerry_char_t *) file_names[i],
-                               strlen (file_names[i]),
-                               source_p,
+      jerry_parse_options_t parse_options;
+      parse_options.options = JERRY_PARSE_HAS_RESOURCE;
+      parse_options.resource_name_p = (const jerry_char_t *) file_names[i];
+      parse_options.resource_name_length = strlen (file_names[i]);
+
+      ret_value = jerry_parse (source_p,
                                source_size,
-                               JERRY_PARSE_NO_OPTS);
+                               &parse_options);
       free ((void*) source_p);
 
       if (!jerry_value_is_error (ret_value))

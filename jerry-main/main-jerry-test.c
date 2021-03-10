@@ -92,7 +92,7 @@ run (void)
     }
     else
     {
-      ret_value = jerry_parse (NULL, 0, source_p, source_size, JERRY_PARSE_NO_OPTS);
+      ret_value = jerry_parse (source_p, source_size, NULL);
 
       if (!jerry_value_is_error (ret_value))
       {

@@ -114,16 +114,6 @@ typedef enum
 } jerry_feature_t;
 
 /**
- * Option flags for jerry_parse and jerry_parse_function functions.
- */
-typedef enum
-{
-  JERRY_PARSE_NO_OPTS = 0, /**< no options passed */
-  JERRY_PARSE_STRICT_MODE = (1 << 0), /**< enable strict mode */
-  JERRY_PARSE_MODULE = (1 << 1) /**< parse source as an ECMAScript module */
-} jerry_parse_opts_t;
-
-/**
  * GC operational modes.
  */
 typedef enum
@@ -168,7 +158,33 @@ typedef uint32_t jerry_length_t;
 typedef uint32_t jerry_value_t;
 
 /**
- * Flags of ECMA property descriptor.
+ * Option bits for jerry_parse_options_t.
+ */
+typedef enum
+{
+  JERRY_PARSE_NO_OPTS = 0, /**< no options passed */
+  JERRY_PARSE_STRICT_MODE = (1 << 0), /**< enable strict mode */
+  JERRY_PARSE_MODULE = (1 << 1), /**< parse source as an ECMAScript module */
+  JERRY_PARSE_HAS_RESOURCE = (1 << 2), /**< resource_name_p and resource_name_length fields are valid */
+  JERRY_PARSE_HAS_START = (1 << 3), /**< start_line and start_column fields are valid */
+} jerry_parse_option_enable_feature_t;
+
+/**
+ * Various configuration options for parsing functions such as jerry_parse or jerry_parse_function.
+ */
+typedef struct
+{
+  uint32_t options; /**< combination of jerry_parse_option_enable_feature_t values */
+  const jerry_char_t *resource_name_p; /**< resource name (usually a file name)
+                                        *   if JERRY_PARSE_HAS_RESOURCE is set in options */
+  size_t resource_name_length; /**< length of resource name
+                                *   if JERRY_PARSE_HAS_RESOURCE is set in options */
+  uint32_t start_line; /**< start line of the source code if JERRY_PARSE_HAS_START is set in options */
+  uint32_t start_column; /**< start column of the source code if JERRY_PARSE_HAS_START is set in options */
+} jerry_parse_options_t;
+
+/**
+ * Description of ECMA property descriptor.
  */
 typedef enum
 {
@@ -411,11 +427,11 @@ bool jerry_get_memory_stats (jerry_heap_stats_t *out_stats_p);
  * Parser and executor functions.
  */
 bool jerry_run_simple (const jerry_char_t *script_source_p, size_t script_source_size, jerry_init_flag_t flags);
-jerry_value_t jerry_parse (const jerry_char_t *resource_name_p, size_t resource_name_length,
-                           const jerry_char_t *source_p, size_t source_size, uint32_t parse_opts);
-jerry_value_t jerry_parse_function (const jerry_char_t *resource_name_p, size_t resource_name_length,
-                                    const jerry_char_t *arg_list_p, size_t arg_list_size,
-                                    const jerry_char_t *source_p, size_t source_size, uint32_t parse_opts);
+jerry_value_t jerry_parse (const jerry_char_t *source_p, size_t source_size,
+                           const jerry_parse_options_t *options_p);
+jerry_value_t jerry_parse_function (const jerry_char_t *arg_list_p, size_t arg_list_size,
+                                    const jerry_char_t *source_p, size_t source_size,
+                                    const jerry_parse_options_t *options_p);
 jerry_value_t jerry_run (const jerry_value_t func_val);
 jerry_value_t jerry_eval (const jerry_char_t *source_p, size_t source_size, uint32_t parse_opts);
 

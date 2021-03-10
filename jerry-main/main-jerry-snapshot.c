@@ -376,24 +376,27 @@ process_generate (cli_state_t *cli_state_p, /**< cli state */
 
   jerry_value_t snapshot_result;
 
+  jerry_parse_options_t parse_options;
+  parse_options.options = JERRY_PARSE_HAS_RESOURCE;
+  parse_options.resource_name_p = (jerry_char_t *) file_name_p;
+  parse_options.resource_name_length = (size_t) strlen (file_name_p);
+
   if (function_args_p != NULL)
   {
-    snapshot_result = jerry_generate_function_snapshot ((jerry_char_t *) file_name_p,
-                                                        (size_t) strlen (file_name_p),
-                                                        (jerry_char_t *) source_p,
+    snapshot_result = jerry_generate_function_snapshot ((jerry_char_t *) source_p,
                                                         source_length,
                                                         (const jerry_char_t *) function_args_p,
                                                         strlen (function_args_p),
+                                                        &parse_options,
                                                         snapshot_flags,
                                                         output_buffer,
                                                         sizeof (output_buffer) / sizeof (uint32_t));
   }
   else
   {
-    snapshot_result = jerry_generate_snapshot ((jerry_char_t *) file_name_p,
-                                               (size_t) strlen (file_name_p),
-                                               (jerry_char_t *) source_p,
+    snapshot_result = jerry_generate_snapshot ((jerry_char_t *) source_p,
                                                source_length,
+                                               &parse_options,
                                                snapshot_flags,
                                                output_buffer,
                                                sizeof (output_buffer) / sizeof (uint32_t));

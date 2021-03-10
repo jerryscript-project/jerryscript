@@ -95,13 +95,12 @@ ecma_op_eval_chars_buffer (const lit_utf8_byte_t *code_p, /**< code characters b
   ECMA_CLEAR_LOCAL_PARSE_OPTS ();
 #endif /* JERRY_ESNEXT */
 
-  ecma_value_t resource_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_EVAL);
   ecma_compiled_code_t *bytecode_p = parser_parse_script (NULL,
                                                           0,
                                                           code_p,
                                                           code_buffer_size,
-                                                          resource_name,
-                                                          parse_opts);
+                                                          parse_opts,
+                                                          NULL);
 
   if (JERRY_UNLIKELY (bytecode_p == NULL))
   {

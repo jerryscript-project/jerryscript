@@ -68,12 +68,11 @@ static void test_function_snapshot (void)
 
   jerry_init (flags);
   jerry_value_t generate_result;
-  generate_result = jerry_generate_function_snapshot (NULL,
-                                                      0,
-                                                      code_to_snapshot,
+  generate_result = jerry_generate_function_snapshot (code_to_snapshot,
                                                       sizeof (code_to_snapshot) - 1,
                                                       func_args,
                                                       sizeof (func_args) - 1,
+                                                      NULL,
                                                       0,
                                                       function_snapshot_buffer,
                                                       SNAPSHOT_BUFFER_SIZE);
@@ -147,10 +146,9 @@ static void test_function_arguments_snapshot (void)
     jerry_init (JERRY_INIT_EMPTY);
 
     jerry_value_t generate_result;
-    generate_result = jerry_generate_snapshot (NULL,
-                                               0,
-                                               code_to_snapshot,
+    generate_result = jerry_generate_snapshot (code_to_snapshot,
                                                sizeof (code_to_snapshot) - 1,
+                                               NULL,
                                                0,
                                                arguments_snapshot_buffer,
                                                SNAPSHOT_BUFFER_SIZE);
@@ -216,10 +214,9 @@ main (void)
                                   magic_string_lengths);
 
     jerry_value_t generate_result;
-    generate_result = jerry_generate_snapshot (NULL,
-                                               0,
-                                               code_to_snapshot,
+    generate_result = jerry_generate_snapshot (code_to_snapshot,
                                                sizeof (code_to_snapshot) - 1,
+                                               NULL,
                                                JERRY_SNAPSHOT_SAVE_STATIC,
                                                snapshot_buffer,
                                                SNAPSHOT_BUFFER_SIZE);
@@ -252,10 +249,9 @@ main (void)
 
     jerry_init (JERRY_INIT_EMPTY);
     jerry_value_t generate_result;
-    generate_result = jerry_generate_snapshot (NULL,
-                                               0,
-                                               code_to_snapshot1,
+    generate_result = jerry_generate_snapshot (code_to_snapshot1,
                                                sizeof (code_to_snapshot1) - 1,
+                                               NULL,
                                                0,
                                                snapshot_buffer_0,
                                                SNAPSHOT_BUFFER_SIZE);
@@ -270,10 +266,9 @@ main (void)
     const jerry_char_t code_to_snapshot2[] = "var b = 'hello'; 456";
 
     jerry_init (JERRY_INIT_EMPTY);
-    generate_result = jerry_generate_snapshot (NULL,
-                                               0,
-                                               code_to_snapshot2,
+    generate_result = jerry_generate_snapshot (code_to_snapshot2,
                                                sizeof (code_to_snapshot2) - 1,
+                                               NULL,
                                                0,
                                                snapshot_buffer_1,
                                                SNAPSHOT_BUFFER_SIZE);
@@ -337,10 +332,9 @@ main (void)
     static const jerry_char_t code_for_c_format[] = "var object = { aa:'fo\" o\\n \\\\', Bb:'max', aaa:'xzy0' };";
 
     jerry_value_t generate_result;
-    generate_result = jerry_generate_snapshot (NULL,
-                                               0,
-                                               code_for_c_format,
+    generate_result = jerry_generate_snapshot (code_for_c_format,
                                                sizeof (code_for_c_format) - 1,
+                                               NULL,
                                                0,
                                                literal_snapshot_buffer,
                                                SNAPSHOT_BUFFER_SIZE);

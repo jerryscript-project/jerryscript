@@ -3695,6 +3695,24 @@ lexer_compare_literal_to_string (parser_context_t *context_p, /**< context */
 } /* lexer_compare_literal_to_string */
 
 /**
+ * Initialize line info to its default value
+ */
+void
+lexer_init_line_info (parser_context_t *context_p) /**< context */
+{
+  context_p->line = 1;
+  context_p->column = 1;
+
+  const ecma_parse_options_t *options_p = context_p->options_p;
+
+  if (options_p != NULL && (options_p->options & ECMA_PARSE_HAS_START))
+  {
+    context_p->line = (options_p->start_line > 0) ? options_p->start_line : 1;
+    context_p->column = (options_p->start_column > 0) ? options_p->start_column : 1;
+  }
+} /* lexer_init_line_info */
+
+/**
  * Convert binary lvalue token to binary token
  * e.g. += -> +
  *      ^= -> ^

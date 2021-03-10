@@ -126,7 +126,7 @@ ecma_module_t *ecma_module_find_native_module (ecma_string_t *const path_p);
 ecma_value_t ecma_module_parse_referenced_modules (void);
 ecma_value_t ecma_module_initialize (ecma_module_t *module_p);
 
-void ecma_module_initialize_context (ecma_string_t *root_path_p);
+void ecma_module_initialize_context (const ecma_parse_options_t *options_p);
 void ecma_module_cleanup_context (void);
 
 void ecma_module_release_module_nodes (ecma_module_node_t *module_node_p);

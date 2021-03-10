@@ -82,6 +82,15 @@ JERRY_STATIC_ASSERT ((int) JERRY_PROP_NO_OPTS == (int) ECMA_PROP_NO_OPTS
                      && (int) JERRY_PROP_SHOULD_THROW == (int) ECMA_PROP_SHOULD_THROW,
                      jerry_prop_desc_flags_must_be_equal_to_ecma_prop_desc_flags);
 
+JERRY_STATIC_ASSERT ((int) ECMA_PARSE_STRICT_MODE == (int) JERRY_PARSE_STRICT_MODE
+                     && (int) ECMA_PARSE_MODULE == (int) JERRY_PARSE_MODULE
+                     && (int) ECMA_PARSE_HAS_RESOURCE == (int) JERRY_PARSE_HAS_RESOURCE
+                     && (int) ECMA_PARSE_HAS_START == (int) JERRY_PARSE_HAS_START,
+                     ecma_parse_config_options_t_must_be_equal_to_jerry_parse_config_options_t);
+
+JERRY_STATIC_ASSERT (sizeof (jerry_parse_options_t) == sizeof (ecma_parse_options_t),
+                     ecma_parse_options_t_and_jerry_parse_options_t_must_be_the_same);
+
 #if JERRY_BUILTIN_REGEXP
 JERRY_STATIC_ASSERT ((int) RE_FLAG_GLOBAL == (int) JERRY_REGEXP_FLAG_GLOBAL
                      && (int) RE_FLAG_MULTILINE == (int) JERRY_REGEXP_FLAG_MULTILINE
@@ -445,7 +454,7 @@ jerry_run_simple (const jerry_char_t *script_source_p, /**< script source */
 
   jerry_init (flags);
 
-  jerry_value_t parse_ret_val = jerry_parse (NULL, 0, script_source_p, script_source_size, JERRY_PARSE_NO_OPTS);
+  jerry_value_t parse_ret_val = jerry_parse (script_source_p, script_source_size, NULL);
 
   if (!ecma_is_value_error_reference (parse_ret_val))
   {
@@ -473,42 +482,49 @@ jerry_run_simple (const jerry_char_t *script_source_p, /**< script source */
  *         thrown error - otherwise
  */
 jerry_value_t
-jerry_parse (const jerry_char_t *resource_name_p, /**< resource name (usually a file name) */
-             size_t resource_name_length, /**< length of resource name */
-             const jerry_char_t *source_p, /**< script source */
+jerry_parse (const jerry_char_t *source_p, /**< script source */
              size_t source_size, /**< script source size */
-             uint32_t parse_opts) /**< jerry_parse_opts_t option bits */
+             const jerry_parse_options_t *options_p) /**< parsing options, can be NULL if not used */
 {
-#if JERRY_DEBUGGER && JERRY_PARSER
-  if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
-      && resource_name_length > 0)
-  {
-    jerry_debugger_send_string (JERRY_DEBUGGER_SOURCE_CODE_NAME,
-                                JERRY_DEBUGGER_NO_SUBTYPE,
-                                resource_name_p,
-                                resource_name_length);
-  }
-#else /* !(JERRY_DEBUGGER && JERRY_PARSER) */
-  JERRY_UNUSED (resource_name_p);
-  JERRY_UNUSED (resource_name_length);
-#endif /* JERRY_DEBUGGER && JERRY_PARSER */
-
 #if JERRY_PARSER
   jerry_assert_api_available ();
 
-  ecma_value_t resource_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
+  uint32_t allowed_parse_options = (JERRY_PARSE_STRICT_MODE
+                                    | JERRY_PARSE_MODULE
+                                    | JERRY_PARSE_HAS_RESOURCE
+                                    | JERRY_PARSE_HAS_START);
 
-#if JERRY_RESOURCE_NAME
-  if (resource_name_length > 0)
+  if (options_p != NULL && (options_p->options & ~allowed_parse_options) != 0)
   {
-    resource_name = ecma_find_or_create_literal_string (resource_name_p, (lit_utf8_size_t) resource_name_length);
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
   }
-#endif /* JERRY_RESOURCE_NAME */
+#endif /* JERRY_PARSER */
+
+#if JERRY_DEBUGGER && JERRY_PARSER
+  if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
+      && options_p != NULL
+      && (options_p->options & JERRY_PARSE_HAS_RESOURCE)
+      && options_p->resource_name_length > 0)
+  {
+    jerry_debugger_send_string (JERRY_DEBUGGER_SOURCE_CODE_NAME,
+                                JERRY_DEBUGGER_NO_SUBTYPE,
+                                options_p->resource_name_p,
+                                options_p->resource_name_length);
+  }
+#endif /* JERRY_DEBUGGER && JERRY_PARSER */
+
+#if JERRY_PARSER
+  uint32_t parse_opts = 0;
+
+  if (options_p != NULL)
+  {
+    parse_opts |= options_p->options & (JERRY_PARSE_STRICT_MODE | JERRY_PARSE_MODULE);
+  }
 
   if ((parse_opts & JERRY_PARSE_MODULE) != 0)
   {
 #if JERRY_MODULE_SYSTEM
-    ecma_module_initialize_context (ecma_get_string_from_value (resource_name));
+    ecma_module_initialize_context ((const ecma_parse_options_t *) options_p);
 #else /* !JERRY_MODULE_SYSTEM */
     return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("Module system has been disabled")));
 #endif /* JERRY_MODULE_SYSTEM */
@@ -518,8 +534,8 @@ jerry_parse (const jerry_char_t *resource_name_p, /**< resource name (usually a 
                                                                0,
                                                                source_p,
                                                                source_size,
-                                                               resource_name,
-                                                               parse_opts);
+                                                               parse_opts,
+                                                               (const ecma_parse_options_t *) options_p);
 
   if (JERRY_UNLIKELY (bytecode_data_p == NULL))
   {
@@ -570,7 +586,7 @@ jerry_parse (const jerry_char_t *resource_name_p, /**< resource name (usually a 
 #else /* !JERRY_PARSER */
   JERRY_UNUSED (source_p);
   JERRY_UNUSED (source_size);
-  JERRY_UNUSED (parse_opts);
+  JERRY_UNUSED (options_p);
 
   return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG (error_parser_not_supported_p)));
 #endif /* JERRY_PARSER */
@@ -584,38 +600,45 @@ jerry_parse (const jerry_char_t *resource_name_p, /**< resource name (usually a 
  *         thrown error - otherwise
  */
 jerry_value_t
-jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (usually a file name) */
-                      size_t resource_name_length, /**< length of resource name */
-                      const jerry_char_t *arg_list_p, /**< script source */
+jerry_parse_function (const jerry_char_t *arg_list_p, /**< script source */
                       size_t arg_list_size, /**< script source size */
                       const jerry_char_t *source_p, /**< script source */
                       size_t source_size, /**< script source size */
-                      uint32_t parse_opts) /**< jerry_parse_opts_t option bits */
+                      const jerry_parse_options_t *options_p) /**< parsing options, can be NULL if not used */
 {
-#if JERRY_DEBUGGER && JERRY_PARSER
-  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
-  {
-    jerry_debugger_send_string (JERRY_DEBUGGER_SOURCE_CODE_NAME,
-                                JERRY_DEBUGGER_NO_SUBTYPE,
-                                resource_name_p,
-                                resource_name_length);
-  }
-#else /* !(JERRY_DEBUGGER && JERRY_PARSER) */
-  JERRY_UNUSED (resource_name_p);
-  JERRY_UNUSED (resource_name_length);
-#endif /* JERRY_DEBUGGER && JERRY_PARSER */
-
 #if JERRY_PARSER
   jerry_assert_api_available ();
 
-  ecma_value_t resource_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
+  uint32_t allowed_parse_options = (JERRY_PARSE_STRICT_MODE
+                                    | JERRY_PARSE_HAS_RESOURCE
+                                    | JERRY_PARSE_HAS_START);
 
-#if JERRY_RESOURCE_NAME
-  if (resource_name_length > 0)
+  if (options_p != NULL && (options_p->options & ~allowed_parse_options) != 0)
   {
-    resource_name = ecma_find_or_create_literal_string (resource_name_p, (lit_utf8_size_t) resource_name_length);
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
   }
-#endif /* JERRY_RESOURCE_NAME */
+#endif /* JERRY_PARSER */
+
+#if JERRY_DEBUGGER && JERRY_PARSER
+  if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
+      && options_p != NULL
+      && (options_p->options & JERRY_PARSE_HAS_RESOURCE)
+      && options_p->resource_name_length > 0)
+  {
+    jerry_debugger_send_string (JERRY_DEBUGGER_SOURCE_CODE_NAME,
+                                JERRY_DEBUGGER_NO_SUBTYPE,
+                                options_p->resource_name_p,
+                                options_p->resource_name_length);
+  }
+#endif /* JERRY_DEBUGGER && JERRY_PARSER */
+
+#if JERRY_PARSER
+  uint32_t parse_opts = 0;
+
+  if (options_p != NULL)
+  {
+    parse_opts |= options_p->options & JERRY_PARSE_STRICT_MODE;
+  }
 
   if (arg_list_p == NULL)
   {
@@ -627,8 +650,8 @@ jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (u
                                                           arg_list_size,
                                                           source_p,
                                                           source_size,
-                                                          resource_name,
-                                                          parse_opts);
+                                                          parse_opts,
+                                                          (const ecma_parse_options_t *) options_p);
 
   if (JERRY_UNLIKELY (bytecode_p == NULL))
   {
@@ -651,7 +674,7 @@ jerry_parse_function (const jerry_char_t *resource_name_p, /**< resource name (u
   JERRY_UNUSED (arg_list_size);
   JERRY_UNUSED (source_p);
   JERRY_UNUSED (source_size);
-  JERRY_UNUSED (parse_opts);
+  JERRY_UNUSED (options_p);
 
   return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG (error_parser_not_supported_p)));
 #endif /* JERRY_PARSER */
@@ -730,6 +753,13 @@ jerry_eval (const jerry_char_t *source_p, /**< source code */
             uint32_t parse_opts) /**< jerry_parse_opts_t option bits */
 {
   jerry_assert_api_available ();
+
+  uint32_t allowed_parse_options = JERRY_PARSE_STRICT_MODE;
+
+  if ((parse_opts & ~allowed_parse_options) != 0)
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
+  }
 
   return jerry_return (ecma_op_eval_chars_buffer ((const lit_utf8_byte_t *) source_p,
                                                   source_size,

@@ -50,11 +50,9 @@ main (void)
   jerry_set_vm_exec_stop_callback (vm_exec_stop_callback, &countdown, 16);
 
   const jerry_char_t inf_loop_code_src1[] = "while(true) {}";
-  jerry_value_t parsed_code_val = jerry_parse (NULL,
-                                               0,
-                                               inf_loop_code_src1,
+  jerry_value_t parsed_code_val = jerry_parse (inf_loop_code_src1,
                                                sizeof (inf_loop_code_src1) - 1,
-                                               JERRY_PARSE_NO_OPTS);
+                                               NULL);
 
   TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
   jerry_value_t res = jerry_run (parsed_code_val);
@@ -76,11 +74,9 @@ main (void)
     "try { f(); } catch(e) {}"
   );
 
-  parsed_code_val = jerry_parse (NULL,
-                                 0,
-                                 inf_loop_code_src2,
+  parsed_code_val = jerry_parse (inf_loop_code_src2,
                                  sizeof (inf_loop_code_src2) - 1,
-                                 JERRY_PARSE_NO_OPTS);
+                                 NULL);
 
   TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
   res = jerry_run (parsed_code_val);

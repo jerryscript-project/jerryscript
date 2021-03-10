@@ -198,28 +198,27 @@ ecma_module_find_native_module (ecma_string_t *const path_p)
  * Initialize context variables for the root module.
  */
 void
-ecma_module_initialize_context (ecma_string_t *root_path_p) /**< root module */
+ecma_module_initialize_context (const ecma_parse_options_t *options_p) /**< configuration options */
 {
   JERRY_ASSERT (JERRY_CONTEXT (module_current_p) == NULL);
   JERRY_ASSERT (JERRY_CONTEXT (module_list_p) == NULL);
 
-  lit_utf8_size_t path_str_size;
-  uint8_t flags = ECMA_STRING_FLAG_EMPTY;
+  ecma_string_t *path_p = ecma_get_magic_string (LIT_MAGIC_STRING_RESOURCE_ANON);
 
-  const lit_utf8_byte_t *path_str_chars_p = ecma_string_get_chars (root_path_p,
-                                                                   &path_str_size,
-                                                                   NULL,
-                                                                   NULL,
-                                                                   &flags);
-
-  ecma_string_t *path_p = ecma_module_create_normalized_path (path_str_chars_p,
-                                                              path_str_size,
-                                                              NULL);
-
-  if (path_p == NULL)
+  if (options_p != NULL
+      && (options_p->options & JERRY_PARSE_HAS_RESOURCE)
+      && options_p->resource_name_length > 0)
   {
-    ecma_ref_ecma_string (root_path_p);
-    path_p = root_path_p;
+    const lit_utf8_byte_t *path_str_chars_p = options_p->resource_name_p;
+    lit_utf8_size_t path_str_size = (lit_utf8_size_t) options_p->resource_name_length;
+
+    path_p = ecma_module_create_normalized_path (path_str_chars_p,
+                                                 path_str_size,
+                                                 NULL);
+    if (path_p == NULL)
+    {
+      path_p = ecma_new_ecma_string_from_utf8_converted_to_cesu8 (path_str_chars_p, path_str_size);
+    }
   }
 
   ecma_module_t *module_p = (ecma_module_t *) jmem_heap_alloc_block (sizeof (ecma_module_t));
@@ -1000,10 +999,10 @@ ecma_module_parse (ecma_module_t *module_p) /**< module */
 
   size_t source_size = 0;
   uint8_t *source_p = jerry_port_read_source ((const char *) module_path_p, &source_size);
-  jmem_heap_free_block (module_path_p, module_path_size + 1);
 
   if (source_p == NULL)
   {
+    jmem_heap_free_block (module_path_p, module_path_size + 1);
     return ecma_raise_syntax_error (ECMA_ERR_MSG ("File not found"));
   }
 
@@ -1020,14 +1019,21 @@ ecma_module_parse (ecma_module_t *module_p) /**< module */
   }
 #endif /* JERRY_DEBUGGER && JERRY_PARSER */
 
+  /* TODO: Improve this code in the future. */
+  ecma_parse_options_t parse_options;
+  parse_options.options = ECMA_PARSE_STRICT_MODE | ECMA_PARSE_MODULE | ECMA_PARSE_HAS_RESOURCE;
+  parse_options.resource_name_p = module_path_p;
+  parse_options.resource_name_length = module_path_size;
+
   ecma_compiled_code_t *bytecode_p = parser_parse_script (NULL,
                                                           0,
                                                           (jerry_char_t *) source_p,
                                                           source_size,
-                                                          ecma_make_string_value (module_p->path_p),
-                                                          ECMA_PARSE_STRICT_MODE | ECMA_PARSE_MODULE);
+                                                          ECMA_PARSE_STRICT_MODE | ECMA_PARSE_MODULE,
+                                                          &parse_options);
 
   JERRY_CONTEXT (module_current_p) = prev_module_p;
+  jmem_heap_free_block (module_path_p, module_path_size + 1);
   jerry_port_release_source (source_p);
 
   if (JERRY_UNLIKELY (bytecode_p == NULL))

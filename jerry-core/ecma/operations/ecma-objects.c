@@ -1546,10 +1546,8 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
         if (ext_object_p->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS
             && ext_object_p->u.pseudo_array.extra_info & ECMA_ARGUMENTS_OBJECT_MAPPED)
         {
-          return ecma_builtin_helper_def_prop (object_p,
-                                               property_name_p,
-                                               value,
-                                               ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_IS_THROW);
+          const uint32_t flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_PROP_SHOULD_THROW;
+          return ecma_builtin_helper_def_prop (object_p, property_name_p, value, flags);
         }
       }
 
@@ -3321,7 +3319,7 @@ ecma_op_object_unref_weak (ecma_object_t *object_p, /**< this argument */
 /**
  * Raise property redefinition error
  *
- * @return ECMA_VALUE_FALSE - if ECMA_IS_THROW is not set
+ * @return ECMA_VALUE_FALSE - if ECMA_PROP_SHOULD_THROW is not set
  *         raised TypeError - otherwise
  */
 ecma_value_t
@@ -3330,7 +3328,7 @@ ecma_raise_property_redefinition (ecma_string_t *property_name_p, /**< property 
 {
   JERRY_UNUSED (property_name_p);
 
-  return ECMA_REJECT_WITH_FORMAT (flags & ECMA_PROP_IS_THROW,
+  return ECMA_REJECT_WITH_FORMAT (flags & ECMA_PROP_SHOULD_THROW,
                                   "Cannot redefine property '%'",
                                   ecma_make_prop_name_value (property_name_p));
 } /* ecma_raise_property_redefinition */

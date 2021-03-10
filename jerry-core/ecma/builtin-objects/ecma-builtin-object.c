@@ -371,7 +371,7 @@ ecma_builtin_object_set_integrity_level (ecma_object_t *obj_p, /**< object */
       }
 
       prop_desc.flags &= (uint16_t) ~ECMA_PROP_IS_CONFIGURABLE;
-      prop_desc.flags |= ECMA_PROP_IS_THROW;
+      prop_desc.flags |= ECMA_PROP_SHOULD_THROW;
 
       /* 8.a.i */
       ecma_value_t define_own_prop_ret = ecma_op_object_define_own_property (obj_p,
@@ -422,7 +422,7 @@ ecma_builtin_object_set_integrity_level (ecma_object_t *obj_p, /**< object */
       }
 
       prop_desc.flags &= (uint16_t) ~ECMA_PROP_IS_CONFIGURABLE;
-      prop_desc.flags |= ECMA_PROP_IS_THROW;
+      prop_desc.flags |= ECMA_PROP_SHOULD_THROW;
 
       /* 9.3 */
       ecma_value_t define_own_prop_ret = ecma_op_object_define_own_property (obj_p,
@@ -881,7 +881,7 @@ ecma_builtin_object_object_define_properties (ecma_object_t *obj_p, /**< routine
         ecma_value_t conv_result = ecma_op_to_property_descriptor (desc_obj,
                                                                    &property_descriptors[property_descriptor_number]);
 
-        property_descriptors[property_descriptor_number].flags |= ECMA_PROP_IS_THROW;
+        property_descriptors[property_descriptor_number].flags |= ECMA_PROP_SHOULD_THROW;
 
         ecma_free_value (desc_obj);
 
@@ -1009,7 +1009,7 @@ ecma_builtin_object_object_define_property (ecma_object_t *obj_p, /**< routine's
     return conv_result;
   }
 
-  prop_desc.flags |= ECMA_PROP_IS_THROW;
+  prop_desc.flags |= ECMA_PROP_SHOULD_THROW;
 
   ecma_value_t define_own_prop_ret = ecma_op_object_define_own_property (obj_p,
                                                                          name_str_p,

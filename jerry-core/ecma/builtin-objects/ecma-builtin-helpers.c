@@ -346,7 +346,7 @@ ecma_builtin_helper_array_concat_value (ecma_object_t *array_obj_p, /**< array *
 
   bool spread_object = is_spreadable == ECMA_VALUE_TRUE;
   /* ES11: 22.1.3.1.5.c.iv.3.b */
-  const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_IS_THROW;
+  const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_PROP_SHOULD_THROW;
 #else /* !JERRY_ESNEXT */
   /* ES5.1: 15.4.4.4.5.b.iii.3.b */
   const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE;
@@ -831,8 +831,7 @@ ecma_value_t
 ecma_builtin_helper_def_prop (ecma_object_t *obj_p, /**< object */
                               ecma_string_t *name_p, /**< name string */
                               ecma_value_t value, /**< value */
-                              uint32_t opts) /**< any combination of ecma_property_flag_t bits
-                                              *   with the optional ECMA_IS_THROW flag */
+                              uint32_t opts) /**< any combination of ecma_property_descriptor_status_flags_t bits */
 {
   ecma_property_descriptor_t prop_desc;
 

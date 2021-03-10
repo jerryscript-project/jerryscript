@@ -58,6 +58,22 @@ main (void)
   jerry_release_value (value);
   jerry_release_value (from_object);
   jerry_property_descriptor_free (&prop_desc);
+
+  prop_desc.flags = JERRY_PROP_IS_CONFIGURABLE;
+  from_object = jerry_from_property_descriptor (&prop_desc);
+  TEST_ASSERT (jerry_value_is_error (from_object));
+  jerry_release_value (from_object);
+
+  prop_desc.flags = JERRY_PROP_IS_ENUMERABLE;
+  from_object = jerry_from_property_descriptor (&prop_desc);
+  TEST_ASSERT (jerry_value_is_error (from_object));
+  jerry_release_value (from_object);
+
+  prop_desc.flags = JERRY_PROP_IS_WRITABLE;
+  from_object = jerry_from_property_descriptor (&prop_desc);
+  TEST_ASSERT (jerry_value_is_error (from_object));
+  jerry_release_value (from_object);
+
   jerry_cleanup ();
   return 0;
 } /* main */

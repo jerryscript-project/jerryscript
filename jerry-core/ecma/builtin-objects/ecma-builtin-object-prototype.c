@@ -251,7 +251,7 @@ ecma_builtin_object_prototype_define_getter_setter (ecma_value_t this_arg, /**< 
                  | ECMA_PROP_IS_CONFIGURABLE
                  | ECMA_PROP_IS_ENUMERABLE_DEFINED
                  | ECMA_PROP_IS_CONFIGURABLE_DEFINED
-                 | ECMA_PROP_IS_THROW);
+                 | ECMA_PROP_SHOULD_THROW);
 
   if (define_getter)
   {

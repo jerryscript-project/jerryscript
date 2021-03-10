@@ -396,16 +396,18 @@ typedef enum
  */
 typedef enum
 {
-  ECMA_PROPERTY_FLAG_DELETED = 1u << 0, /**< property is deleted */
-  ECMA_FAST_ARRAY_FLAG = 1u << 0, /**< array is fast array */
-  ECMA_PROPERTY_FLAG_LCACHED = 1u << 1, /**< property is lcached */
+  ECMA_PROPERTY_FLAG_CONFIGURABLE = (1u << 0), /**< property is configurable */
+  ECMA_PROPERTY_FLAG_ENUMERABLE = (1u << 1), /**< property is enumerable */
+  ECMA_PROPERTY_FLAG_WRITABLE = (1u << 2), /**< property is writable */
+
+  ECMA_PROPERTY_FLAG_DELETED = (1u << 3), /**< property is deleted */
+  ECMA_FAST_ARRAY_FLAG = (1u << 3), /**< array is fast array */
+  ECMA_PROPERTY_FLAG_LCACHED = (1u << 4), /**< property is lcached */
 #if JERRY_ESNEXT
-  ECMA_ARRAY_TEMPLATE_LITERAL = 1u << 1, /**< array is a template literal constructed by the parser */
+  ECMA_ARRAY_TEMPLATE_LITERAL = (1u << 4), /**< array is a template literal constructed by the parser */
 #endif /* JERRY_ESNEXT */
-  ECMA_PROPERTY_FLAG_CONFIGURABLE = 1u << 2, /**< property is configurable */
-  ECMA_PROPERTY_FLAG_ENUMERABLE = 1u << 3, /**< property is enumerable */
-  ECMA_PROPERTY_FLAG_WRITABLE = 1u << 4, /**< property is writable */
-  ECMA_PROPERTY_FLAG_DATA = 1u << 5, /**< property contains data */
+  ECMA_PROPERTY_FLAG_DATA = (1u << 5), /**< property contains data */
+  /* The last two bits contains an ECMA_DIRECT_STRING value. */
 } ecma_property_flags_t;
 
 /**
@@ -1181,18 +1183,19 @@ typedef struct
 typedef enum
 {
   ECMA_PROP_NO_OPTS = (0), /** empty property descriptor */
-  ECMA_PROP_IS_GET_DEFINED = (1 << 0), /** Is [[Get]] defined? */
-  ECMA_PROP_IS_SET_DEFINED = (1 << 1), /** Is [[Set]] defined? */
+  ECMA_PROP_IS_CONFIGURABLE = (1 << 0), /** [[Configurable]] */
+  ECMA_PROP_IS_ENUMERABLE = (1 << 1), /** [[Enumerable]] */
+  ECMA_PROP_IS_WRITABLE = (1 << 2), /** [[Writable]] */
 
-  ECMA_PROP_IS_CONFIGURABLE = (1 << 2), /** [[Configurable]] */
-  ECMA_PROP_IS_ENUMERABLE = (1 << 3), /** [[Enumerable]] */
-  ECMA_PROP_IS_WRITABLE = (1 << 4), /** [[Writable]] */
-  ECMA_PROP_IS_THROW = (1 << 5), /** Flag that controls failure handling */
+  ECMA_PROP_IS_CONFIGURABLE_DEFINED = (1 << 3), /** is [[Configurable]] defined? */
+  ECMA_PROP_IS_ENUMERABLE_DEFINED = (1 << 4), /** is [[Enumerable]] defined? */
+  ECMA_PROP_IS_WRITABLE_DEFINED = (1 << 5), /** is [[Writable]] defined? */
 
-  ECMA_PROP_IS_VALUE_DEFINED = (1 << 6), /** Is [[Value]] defined? */
-  ECMA_PROP_IS_CONFIGURABLE_DEFINED = (1 << 7), /** Is [[Configurable]] defined? */
-  ECMA_PROP_IS_ENUMERABLE_DEFINED = (1 << 8), /** Is [[Enumerable]] defined? */
-  ECMA_PROP_IS_WRITABLE_DEFINED = (1 << 9), /** Is [[Writable]] defined? */
+  ECMA_PROP_IS_VALUE_DEFINED = (1 << 6), /** is [[Value]] defined? */
+  ECMA_PROP_IS_GET_DEFINED = (1 << 7), /** is [[Get]] defined? */
+  ECMA_PROP_IS_SET_DEFINED = (1 << 8), /** is [[Set]] defined? */
+
+  ECMA_PROP_SHOULD_THROW = (1 << 9), /** should throw on error, instead of returning with false */
 } ecma_property_descriptor_status_flags_t;
 
 /**
@@ -1203,7 +1206,7 @@ typedef enum
  * Note:
  *      If a component of descriptor is undefined then corresponding
  *      field should contain it's default value.
- *      The struct members must be in this order or keep in sync with ecma_property_flags_t and ECMA_IS_THROW flag.
+ *      The struct members must be in this order or keep in sync with ecma_property_descriptor_status_flags_t.
  */
 typedef struct
 {
@@ -1241,13 +1244,6 @@ typedef struct
 #define ECMA_PROPERTY_FLAGS_MASK ((uint16_t) (ECMA_PROP_IS_CONFIGURABLE \
                                               | ECMA_PROP_IS_ENUMERABLE \
                                               | ECMA_PROP_IS_WRITABLE))
-
-/**
- * Flag that controls failure handling during defining property
- *
- * Note: This flags represents the [[DefineOwnProperty]] (P, Desc, Throw) 3rd argument
- */
-#define ECMA_IS_THROW ((uint8_t) ECMA_PROP_IS_THROW)
 
 #if !JERRY_NUMBER_TYPE_FLOAT64
 /**

@@ -367,7 +367,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
     if (!ecma_op_ordinary_object_is_extensible (object_p))
     {
       /* 2. */
-      return ECMA_REJECT_WITH_FORMAT (property_desc_p->flags & ECMA_PROP_IS_THROW,
+      return ECMA_REJECT_WITH_FORMAT (property_desc_p->flags & ECMA_PROP_SHOULD_THROW,
                                       "Cannot define property '%', object is not extensible",
                                       ecma_make_prop_name_value (property_name_p));
     }

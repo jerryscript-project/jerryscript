@@ -45,7 +45,7 @@ main (void)
 
   /* Test: define own property with error */
   prop_desc = jerry_property_descriptor_create ();
-  prop_desc.flags |= JERRY_PROP_IS_VALUE_DEFINED | JERRY_PROP_IS_THROW;
+  prop_desc.flags |= JERRY_PROP_IS_VALUE_DEFINED | JERRY_PROP_SHOULD_THROW;
   prop_desc.value = jerry_create_number (3.14);
   res = jerry_define_own_property (global_obj_val, prop_name, &prop_desc);
   TEST_ASSERT (jerry_value_is_error (res));

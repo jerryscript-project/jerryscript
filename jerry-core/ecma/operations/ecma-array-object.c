@@ -1165,7 +1165,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *object_p, /**< the arra
   ecma_property_descriptor_t prop_desc;
 
   prop_desc = *property_desc_p;
-  prop_desc.flags &= (uint16_t) ~ECMA_PROP_IS_THROW;
+  prop_desc.flags &= (uint16_t) ~ECMA_PROP_SHOULD_THROW;
 
   ecma_value_t completition = ecma_op_general_object_define_own_property (object_p,
                                                                           property_name_p,

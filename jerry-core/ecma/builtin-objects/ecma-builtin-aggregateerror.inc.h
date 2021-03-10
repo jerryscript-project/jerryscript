@@ -14,7 +14,7 @@
  */
 
 /*
- * Promose built-in description
+ * AggregateError built-in description
  */
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
@@ -25,33 +25,20 @@
  *  (property name, number value, writable, enumerable, configurable) */
 
 NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
-              1,
-              ECMA_PROPERTY_FLAG_CONFIGURABLE)
+              2,
+              ECMA_PROPERTY_FLAG_DEFAULT_LENGTH)
 
 /* Object properties:
  *  (property name, object pointer getter) */
 
+/* ECMA-262 v5, 15.11.3.1 */
 OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
-              ECMA_BUILTIN_ID_PROMISE_PROTOTYPE,
+              ECMA_BUILTIN_ID_AGGREGATE_ERROR_PROTOTYPE,
               ECMA_PROPERTY_FIXED)
 
 STRING_VALUE (LIT_MAGIC_STRING_NAME,
-              LIT_MAGIC_STRING_PROMISE_UL,
+              LIT_MAGIC_STRING_AGGREGATE_ERROR_UL,
               ECMA_PROPERTY_FLAG_CONFIGURABLE)
-
-/* Routine properties:
- *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
-ROUTINE (LIT_MAGIC_STRING_REJECT, ECMA_PROMISE_ROUTINE_REJECT, 1, 1)
-ROUTINE (LIT_MAGIC_STRING_RESOLVE, ECMA_PROMISE_ROUTINE_RESOLVE, 1, 1)
-ROUTINE (LIT_MAGIC_STRING_RACE, ECMA_PROMISE_ROUTINE_RACE, 1, 1)
-ROUTINE (LIT_MAGIC_STRING_ALL, ECMA_PROMISE_ROUTINE_ALL, 1, 1)
-ROUTINE (LIT_MAGIC_STRING_ALLSETTLED, ECMA_PROMISE_ROUTINE_ALLSETTLED, 1, 1)
-ROUTINE (LIT_MAGIC_STRING_ANY, ECMA_PROMISE_ROUTINE_ANY, 1, 1)
-
-/* ES2015 25.4.4.6 */
-ACCESSOR_READ_ONLY (LIT_GLOBAL_SYMBOL_SPECIES,
-                    ECMA_PROMISE_ROUTINE_SPECIES_GET,
-                    ECMA_PROPERTY_FLAG_CONFIGURABLE)
 
 #endif /* JERRY_BUILTIN_PROMISE */
 

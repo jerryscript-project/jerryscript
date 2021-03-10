@@ -283,6 +283,22 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_TYPE_ERROR,
                  true,
                  type_error)
 
+#if JERRY_BUILTIN_PROMISE
+/* The AggregateError.prototype object (15.11.6.5) */
+BUILTIN (ECMA_BUILTIN_ID_AGGREGATE_ERROR_PROTOTYPE,
+         ECMA_OBJECT_TYPE_GENERAL,
+         ECMA_BUILTIN_ID_ERROR_PROTOTYPE,
+         true,
+         aggregate_error_prototype)
+
+/* The AggregateError object (15.11.6.5) */
+BUILTIN_ROUTINE (ECMA_BUILTIN_ID_AGGREGATE_ERROR,
+                 ECMA_OBJECT_TYPE_NATIVE_FUNCTION,
+                 ECMA_BUILTIN_NATIVE_ERROR_PROTOTYPE_ID,
+                 true,
+                 aggregate_error)
+#endif /* JERRY_BUILTIN_PROMISE */
+
 /* The URIError.prototype object (15.11.6.6) */
 BUILTIN (ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,

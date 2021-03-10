@@ -72,7 +72,8 @@ typedef enum
   JERRY_ERROR_REFERENCE, /**< ReferenceError */
   JERRY_ERROR_SYNTAX,    /**< SyntaxError */
   JERRY_ERROR_TYPE,      /**< TypeError */
-  JERRY_ERROR_URI        /**< URIError */
+  JERRY_ERROR_URI,       /**< URIError */
+  JERRY_ERROR_AGGREGATE  /**< AggregateError */
 } jerry_error_t;
 
 /**

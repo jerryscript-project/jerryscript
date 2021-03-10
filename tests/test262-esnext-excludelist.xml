@@ -5113,122 +5113,6 @@
   <test id="built-ins/String/prototype/replaceAll/searchValue-replacer-RegExp-call.js"><reason></reason></test>
   <!-- END - ESNext stage 4 proposal: String.prototype.replaceAll -->
 
-  <!-- ESNext stage 4 proposal: Promise.any
-       features: [Promise.any, AggregateError]
-       https://github.com/tc39/proposal-promise-any
-  -->
-  <test id="built-ins/NativeErrors/AggregateError/errors-iterabletolist-failures.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/AggregateError/errors-iterabletolist.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/AggregateError/length.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/AggregateError/message-method-prop-cast.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/AggregateError/message-method-prop.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/AggregateError/message-tostring-abrupt-symbol.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/AggregateError/message-tostring-abrupt.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/AggregateError/message-undefined-no-prop.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/AggregateError/name.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/AggregateError/newtarget-is-undefined.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/AggregateError/newtarget-proto-custom.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/AggregateError/newtarget-proto-fallback.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/AggregateError/newtarget-proto.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/AggregateError/prop-desc.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/AggregateError/proto-from-ctor-realm.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/AggregateError/proto.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/AggregateError/prototype/constructor.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/AggregateError/prototype/errors-absent-on-prototype.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/AggregateError/prototype/message.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/AggregateError/prototype/name.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/AggregateError/prototype/prop-desc.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/AggregateError/prototype/proto.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/call-reject-element-after-return.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/call-reject-element-items.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/capability-executor-called-twice.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/capability-executor-not-callable.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/capability-reject-throws-no-close.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/capability-resolve-throws-no-close.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/capability-resolve-throws-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/ctx-ctor-throws.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/ctx-ctor.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/ctx-non-ctor.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/invoke-resolve-error-close.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/invoke-resolve-error-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/invoke-resolve-get-error-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/invoke-resolve-get-error.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/invoke-resolve-get-once-multiple-calls.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/invoke-resolve-get-once-no-calls.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/invoke-resolve-on-promises-every-iteration-of-custom.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/invoke-resolve-on-promises-every-iteration-of-promise.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/invoke-resolve-on-values-every-iteration-of-custom.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/invoke-resolve-on-values-every-iteration-of-promise.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/invoke-resolve-return.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/invoke-resolve.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/invoke-then-error-close.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/invoke-then-error-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/invoke-then-get-error-close.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/invoke-then-get-error-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/invoke-then-on-promises-every-iteration.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/invoke-then.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/is-function.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-arg-is-empty-iterable-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-arg-is-empty-string-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-arg-is-error-object-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-arg-is-false-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-arg-is-null-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-arg-is-number-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-arg-is-poisoned.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-arg-is-string-resolve.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-arg-is-symbol-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-arg-is-true-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-arg-is-undefined-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-assigned-false-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-assigned-null-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-assigned-number-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-assigned-string-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-assigned-symbol-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-assigned-true-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-assigned-undefined-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-next-val-err-no-close.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-next-val-err-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-returns-false-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-returns-null-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-returns-number-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-returns-string-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-returns-symbol-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-returns-true-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-returns-undefined-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-step-err-no-close.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/iter-step-err-reject.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/length.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/name.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/new-reject-function.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/prop-desc.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/reject-all-mixed.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/reject-deferred.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/reject-element-function-extensible.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/reject-element-function-length.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/reject-element-function-name.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/reject-element-function-nonconstructor.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/reject-element-function-prototype.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/reject-from-same-thenable.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/reject-ignored-immed.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/reject-immed.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/resolve-before-loop-exit-from-same.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/resolve-before-loop-exit.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/resolve-from-reject-catch.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/resolve-from-resolve-reject-catch.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/resolve-from-same-thenable.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/resolve-ignores-late-rejection-deferred.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/resolve-ignores-late-rejection.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/resolve-non-callable.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/resolve-non-thenable.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/resolve-not-callable-reject-with-typeerror.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/resolved-sequence-extra-ticks.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/resolved-sequence-mixed.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/resolved-sequence-with-rejections.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/resolved-sequence.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/returns-promise.js"><reason></reason></test>
-  <test id="built-ins/Promise/any/species-get-error.js"><reason></reason></test>
-  <!-- END - ESNext stage 4 proposal: Promise.any -->
-
   <!-- ESNext stage 4 proposal: WeakRefs
        features: [WeakRef, FinalizationRegistry]
        https://github.com/tc39/proposal-weakrefs
@@ -8459,7 +8343,6 @@
   <test id="built-ins/FinalizationRegistry/gc-has-one-chance-to-call-cleanupCallback.js"><reason></reason></test>
   <test id="built-ins/FinalizationRegistry/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/Function/internals/Call/class-ctor-realm.js"><reason></reason></test>
-  <test id="built-ins/NativeErrors/AggregateError/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/SharedArrayBuffer/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/proto-from-ctor-realm-sab.js"><reason></reason></test>
   <test id="built-ins/TypedArrayConstructors/ctors/buffer-arg/proto-from-ctor-realm-sab.js"><reason></reason></test>

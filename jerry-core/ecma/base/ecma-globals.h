@@ -2114,7 +2114,7 @@ typedef struct
   ecma_extended_object_t header; /**< object header */
   ecma_value_t remaining_elements; /**< [[Remaining elements]] internal slot */
   ecma_value_t capability; /**< [[Capabilities]] internal slot */
-  ecma_value_t values; /**< [[Values]] internal slot */
+  ecma_value_t values; /**< [[Values]] or [[Errors]] internal slot */
   uint32_t index; /**< [[Index]] and [[AlreadyCalled]] internal slot
                    *   0 - if the element has been resolved
                    *   real index + 1 in the [[Values]] list - otherwise */
@@ -2128,7 +2128,8 @@ typedef enum
   ECMA_PROMISE_ALL_RESOLVE, /**< promise.all resolve */
   ECMA_PROMISE_ALLSETTLED_RESOLVE, /**< promise.allSettled resolve */
   ECMA_PROMISE_ALLSETTLED_REJECT, /**< promise.allSettled reject */
-} ecma_promise_helper;
+  ECMA_PROMISE_ANY_REJECT, /**< promise.any reject */
+} ecma_promise_all_exector_type_t;
 
 #endif /* JERRY_ESNEXT */
 

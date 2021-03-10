@@ -145,6 +145,8 @@ set(SOURCE_CORE_FILES
   ecma/base/ecma-literal-storage.c
   ecma/base/ecma-module.c
   ecma/base/ecma-property-hashmap.c
+  ecma/builtin-objects/ecma-builtin-aggregateerror.c
+  ecma/builtin-objects/ecma-builtin-aggregateerror-prototype.c
   ecma/builtin-objects/ecma-builtin-array-iterator-prototype.c
   ecma/builtin-objects/ecma-builtin-array-prototype-unscopables.c
   ecma/builtin-objects/ecma-builtin-array-prototype.c
@@ -333,6 +335,8 @@ if(ENABLE_AMALGAM)
     ecma/base/ecma-literal-storage.h
     ecma/base/ecma-module.h
     ecma/base/ecma-property-hashmap.h
+    ecma/builtin-objects/ecma-builtin-aggregateerror-prototype.inc.h
+    ecma/builtin-objects/ecma-builtin-aggregateerror.inc.h
     ecma/builtin-objects/ecma-builtin-array-iterator-prototype.inc.h
     ecma/builtin-objects/ecma-builtin-array-prototype-unscopables.inc.h
     ecma/builtin-objects/ecma-builtin-array-prototype.inc.h

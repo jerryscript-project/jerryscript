@@ -47,7 +47,10 @@ typedef enum
   ECMA_ERROR_REFERENCE, /**< ReferenceError */
   ECMA_ERROR_SYNTAX,    /**< SyntaxError */
   ECMA_ERROR_TYPE,      /**< TypeError */
-  ECMA_ERROR_URI        /**< URIError */
+  ECMA_ERROR_URI,        /**< URIError */
+#if JERRY_BUILTIN_PROMISE
+  ECMA_ERROR_AGGREGATE, /**< AggregateError */
+#endif /* JERRY_BUILTIN_PROMISE */
 } ecma_standard_error_t;
 
 ecma_standard_error_t ecma_get_error_type (ecma_object_t *error_object);
@@ -61,6 +64,10 @@ ecma_value_t ecma_raise_reference_error (const char *msg_p);
 ecma_value_t ecma_raise_syntax_error (const char *msg_p);
 ecma_value_t ecma_raise_type_error (const char *msg_p);
 ecma_value_t ecma_raise_uri_error (const char *msg_p);
+#if JERRY_BUILTIN_PROMISE
+ecma_value_t ecma_new_aggregate_error (ecma_value_t error_list_val, ecma_value_t message_val);
+ecma_value_t ecma_raise_aggregate_error (ecma_value_t error_list_val, ecma_value_t message_val);
+#endif /* JERRY_BUILTIN_PROMISE */
 
 /**
  * @}

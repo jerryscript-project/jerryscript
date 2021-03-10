@@ -19,3 +19,4 @@ assert(Object.getPrototypeOf(ReferenceError) === Error);
 assert(Object.getPrototypeOf(SyntaxError) === Error);
 assert(Object.getPrototypeOf(TypeError) === Error);
 assert(Object.getPrototypeOf(URIError) === Error);
+assert(Object.getPrototypeOf(AggregateError) === Error);

@@ -22,6 +22,8 @@
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
 #include "ecma-symbol-object.h"
+#include "ecma-iterator-object.h"
+#include "ecma-array-object.h"
 #include "jcontext.h"
 #include "jrt.h"
 
@@ -60,6 +62,9 @@ const ecma_error_mapping_t ecma_error_mappings[] =
   ERROR_ELEMENT (ECMA_ERROR_TYPE,        ECMA_BUILTIN_ID_TYPE_ERROR_PROTOTYPE),
   ERROR_ELEMENT (ECMA_ERROR_URI,         ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE),
   ERROR_ELEMENT (ECMA_ERROR_SYNTAX,      ECMA_BUILTIN_ID_SYNTAX_ERROR_PROTOTYPE),
+#if JERRY_BUILTIN_PROMISE
+  ERROR_ELEMENT (ECMA_ERROR_AGGREGATE,   ECMA_BUILTIN_ID_AGGREGATE_ERROR_PROTOTYPE),
+#endif /* JERRY_BUILTIN_PROMISE */
 #endif /* JERRY_BUILTIN_ERRORS */
 
 #undef ERROR_ELEMENT
@@ -111,6 +116,13 @@ ecma_new_standard_error (ecma_standard_error_t error_type, /**< native error typ
       break;
     }
 
+#if JERRY_BUILTIN_PROMISE
+    case ECMA_ERROR_AGGREGATE:
+    {
+      prototype_id = ECMA_BUILTIN_ID_AGGREGATE_ERROR_PROTOTYPE;
+      break;
+    }
+#endif /* JERRY_BUILTIN_PROMISE */
     case ECMA_ERROR_URI:
     {
       prototype_id = ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE;
@@ -186,6 +198,112 @@ ecma_new_standard_error (ecma_standard_error_t error_type, /**< native error typ
 
   return new_error_obj_p;
 } /* ecma_new_standard_error */
+
+#if JERRY_BUILTIN_PROMISE
+/**
+ * aggregate-error object constructor.
+ *
+ * @return newly constructed aggregate errors
+ */
+ecma_value_t
+ecma_new_aggregate_error (ecma_value_t error_list_val, /**< errors list */
+                          ecma_value_t message_val) /**< message string */
+{
+  ecma_object_t *new_error_object_p;
+
+  if (!ecma_is_value_undefined (message_val))
+  {
+    ecma_string_t *message_string_p = ecma_op_to_string (message_val);
+
+    if (JERRY_UNLIKELY (message_string_p == NULL))
+    {
+      return ECMA_VALUE_ERROR;
+    }
+
+    new_error_object_p = ecma_new_standard_error (ECMA_ERROR_AGGREGATE, message_string_p);
+    ecma_deref_ecma_string (message_string_p);
+  }
+  else
+  {
+    new_error_object_p = ecma_new_standard_error (ECMA_ERROR_AGGREGATE, NULL);
+  }
+
+  ecma_value_t using_iterator = ecma_op_get_method_by_symbol_id (error_list_val, LIT_GLOBAL_SYMBOL_ITERATOR);
+
+  if (ECMA_IS_VALUE_ERROR (using_iterator))
+  {
+    ecma_deref_object (new_error_object_p);
+    return using_iterator;
+  }
+
+  if (!ecma_is_value_undefined (using_iterator))
+  {
+    ecma_value_t next_method;
+    ecma_value_t iterator = ecma_op_get_iterator (error_list_val, using_iterator, &next_method);
+    ecma_free_value (using_iterator);
+
+    if (ECMA_IS_VALUE_ERROR (iterator))
+    {
+      ecma_deref_object (new_error_object_p);
+      return iterator;
+    }
+
+    ecma_collection_t *error_list_p = ecma_new_collection ();
+    ecma_value_t result = ECMA_VALUE_ERROR;
+
+    while (true)
+    {
+      ecma_value_t next = ecma_op_iterator_step (iterator, next_method);
+
+      if (ECMA_IS_VALUE_ERROR (next))
+      {
+        break;
+      }
+
+      if (next == ECMA_VALUE_FALSE)
+      {
+        result = ECMA_VALUE_UNDEFINED;
+        break;
+      }
+
+      /* 8.e.iii */
+      ecma_value_t next_error = ecma_op_iterator_value (next);
+      ecma_free_value (next);
+
+      if (ECMA_IS_VALUE_ERROR (next_error))
+      {
+        break;
+      }
+
+      ecma_collection_push_back (error_list_p, next_error);
+    }
+
+    ecma_free_value (iterator);
+    ecma_free_value (next_method);
+
+    if (ECMA_IS_VALUE_ERROR (result))
+    {
+      ecma_collection_free (error_list_p);
+      ecma_deref_object (new_error_object_p);
+      return result;
+    }
+
+    JERRY_ASSERT (ecma_is_value_undefined (result));
+
+    ecma_value_t error_list_arr = ecma_op_new_array_object_from_collection (error_list_p, true);
+    ecma_property_value_t *prop_value_p;
+    prop_value_p = ecma_create_named_data_property (new_error_object_p,
+                                                    ecma_get_magic_string (LIT_MAGIC_STRING_ERRORS_UL),
+                                                    ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
+                                                    NULL);
+    prop_value_p->value = error_list_arr;
+    ecma_free_value (error_list_arr);
+  }
+
+  return ecma_make_object_value (new_error_object_p);
+} /* ecma_new_aggregate_error */
+
+#endif /* JERRY_BUILTIN_PROMISE */
 
 /**
  * Return the error type for an Error object.
@@ -413,6 +531,26 @@ ecma_raise_uri_error (const char *msg_p) /**< error message */
 {
   return ecma_raise_standard_error (ECMA_ERROR_URI, (const lit_utf8_byte_t *) msg_p);
 } /* ecma_raise_uri_error */
+
+#if JERRY_BUILTIN_PROMISE
+
+/**
+ * Raise a AggregateError with the given errors and message.
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
+ */
+ecma_value_t
+ecma_raise_aggregate_error (ecma_value_t error_list_val, /**< errors list */
+                            ecma_value_t message_val) /**< error message */
+{
+  ecma_value_t aggre_val = ecma_new_aggregate_error (error_list_val, message_val);
+  jcontext_raise_exception (aggre_val);
+
+  return ECMA_VALUE_ERROR;
+} /* ecma_raise_aggregate_error */
+
+#endif /* JERRY_BUILTIN_PROMISE */
 
 /**
  * @}

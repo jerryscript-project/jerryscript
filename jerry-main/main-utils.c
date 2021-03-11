@@ -201,6 +201,48 @@ create_test262 (jerry_value_t global_obj) /**< global object */
   return test262_object;
 } /* create_test262 */
 
+static void
+promise_callback (jerry_promise_event_type_t event_type, /**< event type */
+                  const jerry_value_t object, /**< target object */
+                  const jerry_value_t value, /**< optional argument */
+                  void *user_p) /**< user pointer passed to the callback */
+{
+  (void) value; /* unused */
+  (void) user_p; /* unused */
+  const jerry_size_t max_allowed_size = 5 * 1024 - 1;
+
+  if (event_type != JERRY_PROMISE_EVENT_REJECT_WITHOUT_HANDLER)
+  {
+    return;
+  }
+
+  jerry_value_t reason = jerry_get_promise_result (object);
+  jerry_value_t reason_to_string = jerry_value_to_string (reason);
+
+  if (!jerry_value_is_error (reason_to_string))
+  {
+    jerry_size_t buffer_size = jerry_get_utf8_string_size (reason_to_string);
+
+    if (buffer_size > max_allowed_size)
+    {
+      buffer_size = max_allowed_size;
+    }
+
+    JERRY_VLA (jerry_char_t, str_buf_p, buffer_size + 1);
+    jerry_string_to_utf8_char_buffer (reason_to_string, str_buf_p, buffer_size);
+    str_buf_p[buffer_size] = '\0';
+
+    jerry_port_log (JERRY_LOG_LEVEL_WARNING, "Uncaught Promise rejection: %s\n", str_buf_p);
+  }
+  else
+  {
+    jerry_port_log (JERRY_LOG_LEVEL_WARNING, "Uncaught Promise rejection (reason cannot be converted to string)\n");
+  }
+
+  jerry_release_value (reason_to_string);
+  jerry_release_value (reason);
+} /* promise_callback */
+
 /**
  * Inits the engine and the debugger
  */
@@ -208,6 +250,8 @@ void
 main_init_engine (main_args_t *arguments_p) /**< main arguments */
 {
   jerry_init (arguments_p->init_flags);
+
+  jerry_promise_set_callback (JERRY_PROMISE_EVENT_FILTER_ERROR, promise_callback, NULL);
 
   if (arguments_p->option_flags & OPT_FLAG_DEBUG_SERVER)
   {

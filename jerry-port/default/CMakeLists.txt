@@ -27,7 +27,6 @@ set(SOURCE_PORT_DEFAULT
   default-fatal.c
   default-io.c
   default-module.c
-  default-promise.c
 )
 
 # Amalgamated JerryScript source/header build.

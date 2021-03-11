@@ -2937,6 +2937,13 @@ parser_check_invalid_logical_op (parser_context_t *context_p, /**< context */
       parser_raise_error (context_p, PARSER_ERR_INVALID_NULLISH_COALESCING);
     }
 
+    /* If a logical operator is found, and there is no SyntaxError, the scan can be terminated
+     * since there was no SyntaxError when the logical operator was pushed onto the stack. */
+    if (token == LEXER_LOGICAL_OR || token == LEXER_LOGICAL_AND || token == LEXER_NULLISH_COALESCING)
+    {
+      return;
+    }
+
     parser_stack_iterator_skip (&iterator, sizeof (uint8_t));
   }
 } /* parser_check_invalid_logical_op */

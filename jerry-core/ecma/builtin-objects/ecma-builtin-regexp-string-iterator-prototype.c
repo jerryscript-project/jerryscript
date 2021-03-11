@@ -121,7 +121,6 @@ ecma_builtin_regexp_string_iterator_prototype_object_next (ecma_value_t this_val
 
     if (JERRY_UNLIKELY (matched_str_p == NULL))
     {
-      ecma_deref_ecma_string (matched_str_p);
       goto free_variables;
     }
 

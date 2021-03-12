@@ -14,8 +14,8 @@
  */
 
 #include "jcontext.h"
-#include "jerryscript.h"
 
+#include "jerryscript-port.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
@@ -206,7 +206,7 @@ ecma_module_initialize_context (const ecma_parse_options_t *options_p) /**< conf
   ecma_string_t *path_p = ecma_get_magic_string (LIT_MAGIC_STRING_RESOURCE_ANON);
 
   if (options_p != NULL
-      && (options_p->options & JERRY_PARSE_HAS_RESOURCE)
+      && (options_p->options & ECMA_PARSE_HAS_RESOURCE)
       && options_p->resource_name_length > 0)
   {
     const lit_utf8_byte_t *path_str_chars_p = options_p->resource_name_p;
@@ -1027,7 +1027,7 @@ ecma_module_parse (ecma_module_t *module_p) /**< module */
 
   ecma_compiled_code_t *bytecode_p = parser_parse_script (NULL,
                                                           0,
-                                                          (jerry_char_t *) source_p,
+                                                          (const uint8_t *) source_p,
                                                           source_size,
                                                           ECMA_PARSE_STRICT_MODE | ECMA_PARSE_MODULE,
                                                           &parse_options);

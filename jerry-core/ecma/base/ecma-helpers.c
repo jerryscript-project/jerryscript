@@ -1207,7 +1207,7 @@ ecma_ref_extended_primitive (ecma_extended_primitive_t *primitve_p) /**< extende
   }
   else
   {
-    jerry_fatal (ERR_REF_COUNT_LIMIT);
+    jerry_fatal (JERRY_ERR_REF_COUNT_LIMIT);
   }
 } /* ecma_ref_extended_primitive */
 
@@ -1348,7 +1348,7 @@ ecma_bytecode_ref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
   /* Abort program if maximum reference number is reached. */
   if (bytecode_p->refs >= UINT16_MAX)
   {
-    jerry_fatal (ERR_REF_COUNT_LIMIT);
+    jerry_fatal (JERRY_ERR_REF_COUNT_LIMIT);
   }
 
   bytecode_p->refs++;

@@ -83,7 +83,7 @@ ecma_finalize (void)
     ecma_gc_run ();
     if (++runs >= JERRY_GC_LOOP_LIMIT)
     {
-      jerry_fatal (ERR_UNTERMINATED_GC_LOOPS);
+      jerry_fatal (JERRY_ERR_UNTERMINATED_GC_LOOPS);
     }
   }
   while (JERRY_CONTEXT (ecma_gc_new_objects) != 0);

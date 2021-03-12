@@ -53,6 +53,9 @@
 JERRY_STATIC_ASSERT (sizeof (jerry_value_t) == sizeof (ecma_value_t),
                      size_of_jerry_value_t_must_be_equal_to_size_of_ecma_value_t);
 
+JERRY_STATIC_ASSERT (sizeof (jerry_call_info_t) == sizeof (ecma_call_info_t),
+                     size_of_jerry_call_info_t_must_be_equal_to_size_of_ecma_call_info_t);
+
 JERRY_STATIC_ASSERT ((int) ECMA_ERROR_NONE == (int) JERRY_ERROR_NONE
                      && (int) ECMA_ERROR_COMMON == (int) JERRY_ERROR_COMMON
                      && (int) ECMA_ERROR_EVAL == (int) JERRY_ERROR_EVAL
@@ -106,6 +109,33 @@ JERRY_STATIC_ASSERT ((int) RE_FLAG_GLOBAL == (int) JERRY_REGEXP_FLAG_GLOBAL
 JERRY_STATIC_ASSERT ((int) ECMA_PROMISE_IS_PENDING == (int) JERRY_PROMISE_STATE_PENDING
                      && (int) ECMA_PROMISE_IS_FULFILLED == (int) JERRY_PROMISE_STATE_FULFILLED,
                      promise_internal_state_matches_external);
+
+JERRY_STATIC_ASSERT((int) ECMA_PROMISE_EVENT_CREATE == (int) JERRY_PROMISE_EVENT_CREATE
+                    && (int) ECMA_PROMISE_EVENT_RESOLVE == (int) JERRY_PROMISE_EVENT_RESOLVE
+                    && (int) ECMA_PROMISE_EVENT_REJECT == (int) JERRY_PROMISE_EVENT_REJECT
+                    && (int) ECMA_PROMISE_EVENT_RESOLVE_FULFILLED == (int) JERRY_PROMISE_EVENT_RESOLVE_FULFILLED
+                    && (int) ECMA_PROMISE_EVENT_REJECT_FULFILLED == (int) JERRY_PROMISE_EVENT_REJECT_FULFILLED
+                    && ((int) ECMA_PROMISE_EVENT_REJECT_WITHOUT_HANDLER
+                        == (int) JERRY_PROMISE_EVENT_REJECT_WITHOUT_HANDLER)
+                    && (int) ECMA_PROMISE_EVENT_CATCH_HANDLER_ADDED == (int) JERRY_PROMISE_EVENT_CATCH_HANDLER_ADDED
+                    && (int) ECMA_PROMISE_EVENT_BEFORE_REACTION_JOB == (int) JERRY_PROMISE_EVENT_BEFORE_REACTION_JOB
+                    && (int) ECMA_PROMISE_EVENT_AFTER_REACTION_JOB == (int) JERRY_PROMISE_EVENT_AFTER_REACTION_JOB
+                    && (int) ECMA_PROMISE_EVENT_ASYNC_AWAIT == (int) JERRY_PROMISE_EVENT_ASYNC_AWAIT
+                    && (int) ECMA_PROMISE_EVENT_ASYNC_BEFORE_RESOLVE == (int) JERRY_PROMISE_EVENT_ASYNC_BEFORE_RESOLVE
+                    && (int) ECMA_PROMISE_EVENT_ASYNC_BEFORE_REJECT == (int) JERRY_PROMISE_EVENT_ASYNC_BEFORE_REJECT
+                    && (int) ECMA_PROMISE_EVENT_ASYNC_AFTER_RESOLVE == (int) JERRY_PROMISE_EVENT_ASYNC_AFTER_RESOLVE
+                    && (int) ECMA_PROMISE_EVENT_ASYNC_AFTER_REJECT == (int) JERRY_PROMISE_EVENT_ASYNC_AFTER_REJECT,
+                    ecma_promise_event_type_t_must_be_equal_to_jerry_promise_event_type_t);
+
+JERRY_STATIC_ASSERT ((int) ECMA_PROMISE_EVENT_FILTER_DISABLE == (int) JERRY_PROMISE_EVENT_FILTER_DISABLE
+                     && (int) ECMA_PROMISE_EVENT_FILTER_MAIN == (int) JERRY_PROMISE_EVENT_FILTER_MAIN
+                     && (int) ECMA_PROMISE_EVENT_FILTER_ERROR == (int) JERRY_PROMISE_EVENT_FILTER_ERROR
+                     && (int) ECMA_PROMISE_EVENT_FILTER_REACTION_JOB == (int) JERRY_PROMISE_EVENT_FILTER_REACTION_JOB
+                     && (int) ECMA_PROMISE_EVENT_FILTER_ASYNC_MAIN == (int) JERRY_PROMISE_EVENT_FILTER_ASYNC_MAIN
+                     && ((int) ECMA_PROMISE_EVENT_FILTER_ASYNC_REACTION_JOB
+                         == (int) JERRY_PROMISE_EVENT_FILTER_ASYNC_REACTION_JOB),
+                     ecma_promise_event_filter_t_must_be_equal_to_jerry_promise_event_filter_t);
+
 #endif /* JERRY_BUILTIN_PROMISE */
 
 /**
@@ -2137,7 +2167,7 @@ jerry_create_external_function (jerry_external_handler_t handler_p) /**< pointer
 {
   jerry_assert_api_available ();
 
-  ecma_object_t *func_obj_p = ecma_op_create_external_function_object (handler_p);
+  ecma_object_t *func_obj_p = ecma_op_create_external_function_object ((ecma_native_handler_t) handler_p);
   return ecma_make_object_value (func_obj_p);
 } /* jerry_create_external_function */
 
@@ -4863,7 +4893,7 @@ jerry_backtrace_get_location (jerry_backtrace_frame_t *frame_p) /**< frame point
     frame_p->location.resource_name = ecma_get_resource_name (context_p->shared_p->bytecode_header_p);
     frame_p->location.line = context_p->current_line;
     frame_p->location.column = 1;
-    return &frame_p->location;
+    return (jerry_backtrace_location_t *) &frame_p->location;
   }
 #endif /* JERRY_LINE_INFO */
 

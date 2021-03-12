@@ -123,7 +123,7 @@ jcontext_take_exception (void)
 /**
  * Global context.
  */
-jerry_context_t jerry_global_context;
+struct jerry_context_t jerry_global_context;
 
 #if !JERRY_SYSTEM_ALLOCATOR
 

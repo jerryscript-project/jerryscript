@@ -688,7 +688,7 @@ ecma_snapshot_get_literal (const uint8_t *literal_base_p, /**< literal start */
 
     if (bigint_p == NULL)
     {
-      jerry_fatal (ERR_OUT_OF_MEMORY);
+      jerry_fatal (JERRY_ERR_OUT_OF_MEMORY);
     }
 
     /* Only the sign bit can differ. */

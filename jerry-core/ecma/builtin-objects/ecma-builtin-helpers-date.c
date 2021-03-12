@@ -15,6 +15,7 @@
 
 #include <math.h>
 
+#include "jerryscript-port.h"
 #include "ecma-alloc.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-exceptions.h"

@@ -16,6 +16,7 @@
 #include <math.h>
 
 #include "jcontext.h"
+#include "jerryscript-port.h"
 #include "ecma-function-object.h"
 #include "ecma-alloc.h"
 #include "ecma-builtin-helpers.h"

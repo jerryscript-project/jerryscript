@@ -261,8 +261,8 @@ jmem_heap_alloc (const size_t size) /**< size of requested block */
  * Note:
  *    Each failed allocation attempt tries to reclaim memory with an increasing pressure,
  *    up to 'max_pressure', or until a sufficient memory block is found. When JMEM_PRESSURE_FULL
- *    is reached, the engine is terminated with ERR_OUT_OF_MEMORY. The `max_pressure` argument
- *    can be used to limit the maximum pressure, and prevent the engine from terminating.
+ *    is reached, the engine is terminated with JERRY_ERR_OUT_OF_MEMORY. The `max_pressure`
+ *    argument can be used to limit the maximum pressure, and prevent the engine from terminating.
  *
  * @return NULL, if the required memory size is 0 or not enough memory
  *         pointer to the allocated memory block, if allocation is successful
@@ -313,7 +313,7 @@ jmem_heap_alloc_block_internal (const size_t size) /**< required memory size */
  * Allocation of memory block, reclaiming unused memory if there is not enough.
  *
  * Note:
- *      If a sufficiently sized block can't be found, the engine will be terminated with ERR_OUT_OF_MEMORY.
+ *      If a sufficiently sized block can't be found, the engine will be terminated with JERRY_ERR_OUT_OF_MEMORY.
  *
  * @return NULL, if the required memory is 0
  *         pointer to allocated memory block, otherwise

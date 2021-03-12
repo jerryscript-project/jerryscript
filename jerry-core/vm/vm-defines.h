@@ -158,7 +158,9 @@ struct jerry_backtrace_frame_internal_t
 {
   vm_frame_ctx_t *context_p; /**< context pointer */
   uint8_t frame_type; /**< frame type */
-  jerry_backtrace_location_t location; /**< location information */
+#if JERRY_LINE_INFO
+  ecma_backtrace_location_t location; /**< location information */
+#endif /* JERRY_LINE_INFO */
   ecma_value_t function; /**< function reference */
 };
 

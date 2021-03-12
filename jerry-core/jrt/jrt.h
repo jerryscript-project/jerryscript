@@ -20,7 +20,7 @@
 #include <string.h>
 
 #include "config.h"
-#include "jerryscript-port.h"
+#include "jerryscript-compiler.h"
 #include "jrt-types.h"
 
 /*
@@ -107,9 +107,21 @@ jerry_unreachable (const char *file, const char *function, const uint32_t line);
 #endif /* !JERRY_NDEBUG */
 
 /**
+ * Error codes
+ */
+typedef enum
+{
+  JERRY_ERR_OUT_OF_MEMORY = 10,
+  JERRY_ERR_REF_COUNT_LIMIT = 12,
+  JERRY_ERR_DISABLED_BYTE_CODE = 13,
+  JERRY_ERR_UNTERMINATED_GC_LOOPS = 14,
+  JERRY_ERR_FAILED_INTERNAL_ASSERTION = 120
+} jerry_fatal_error_t;
+
+/**
  * Exit on fatal error
  */
-void JERRY_ATTR_NORETURN jerry_fatal (jerry_fatal_code_t code);
+void JERRY_ATTR_NORETURN jerry_fatal (jerry_fatal_error_t code);
 
 /*
  * Logging

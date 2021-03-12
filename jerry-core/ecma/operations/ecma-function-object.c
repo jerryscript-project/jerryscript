@@ -1226,7 +1226,7 @@ ecma_op_function_call_native (ecma_object_t *func_obj_p, /**< Function object */
                                                                      native_function_p->realm_value);
 #endif /* JERRY_BUILTIN_REALMS */
 
-  jerry_call_info_t call_info;
+  ecma_call_info_t call_info;
   call_info.function = ecma_make_object_value (func_obj_p);
   call_info.this_value = this_arg_value;
 

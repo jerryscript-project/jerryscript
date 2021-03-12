@@ -112,7 +112,7 @@ typedef uint32_t jmem_cpointer_tag_t;
  * until enough memory is freed to fulfill the allocation request.
  *
  * If not enough memory is freed and JMEM_PRESSURE_FULL is reached,
- * then the engine is shut down with ERR_OUT_OF_MEMORY.
+ * then the engine is shut down with JERRY_ERR_OUT_OF_MEMORY.
  */
 typedef enum
 {
@@ -197,7 +197,7 @@ void * JERRY_ATTR_PURE jmem_decompress_pointer (uintptr_t compressed_pointer);
  * If requested number of elements is zero, assign NULL to the variable.
  *
  * Warning:
- *         if there is not enough memory on the heap, shutdown engine with ERR_OUT_OF_MEMORY.
+ *         if there is not enough memory on the heap, shutdown engine with JERRY_ERR_OUT_OF_MEMORY.
  */
 #define JMEM_DEFINE_LOCAL_ARRAY(var_name, number, type) \
 { \

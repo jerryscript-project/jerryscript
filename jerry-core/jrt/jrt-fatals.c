@@ -17,6 +17,7 @@
  * Implementation of exit with specified status code.
  */
 
+#include "jerryscript-port.h"
 #include "jrt.h"
 #include "jrt-libc-includes.h"
 
@@ -27,32 +28,32 @@
  * and call assertion fail handler.
  */
 void JERRY_ATTR_NORETURN
-jerry_fatal (jerry_fatal_code_t code) /**< status code */
+jerry_fatal (jerry_fatal_error_t code) /**< status code */
 {
 #ifndef JERRY_NDEBUG
   switch (code)
   {
-    case ERR_OUT_OF_MEMORY:
+    case JERRY_ERR_OUT_OF_MEMORY:
     {
       JERRY_ERROR_MSG ("Error: ERR_OUT_OF_MEMORY\n");
       break;
     }
-    case ERR_REF_COUNT_LIMIT:
+    case JERRY_ERR_REF_COUNT_LIMIT:
     {
       JERRY_ERROR_MSG ("Error: ERR_REF_COUNT_LIMIT\n");
       break;
     }
-    case ERR_UNTERMINATED_GC_LOOPS:
+    case JERRY_ERR_UNTERMINATED_GC_LOOPS:
     {
       JERRY_ERROR_MSG ("Error: ERR_UNTERMINATED_GC_LOOPS\n");
       break;
     }
-    case ERR_DISABLED_BYTE_CODE:
+    case JERRY_ERR_DISABLED_BYTE_CODE:
     {
       JERRY_ERROR_MSG ("Error: ERR_DISABLED_BYTE_CODE\n");
       break;
     }
-    case ERR_FAILED_INTERNAL_ASSERTION:
+    case JERRY_ERR_FAILED_INTERNAL_ASSERTION:
     {
       JERRY_ERROR_MSG ("Error: ERR_FAILED_INTERNAL_ASSERTION\n");
       break;
@@ -60,7 +61,7 @@ jerry_fatal (jerry_fatal_code_t code) /**< status code */
   }
 #endif /* !JERRY_NDEBUG */
 
-  jerry_port_fatal (code);
+  jerry_port_fatal ((jerry_fatal_code_t) code);
 
   /* to make compiler happy for some RTOS: 'control reaches end of non-void function' */
   while (true)
@@ -84,7 +85,7 @@ jerry_assert_fail (const char *assertion, /**< assertion condition string */
                    function,
                    (unsigned long) line);
 
-  jerry_fatal (ERR_FAILED_INTERNAL_ASSERTION);
+  jerry_fatal (JERRY_ERR_FAILED_INTERNAL_ASSERTION);
 } /* jerry_assert_fail */
 
 /**
@@ -100,6 +101,6 @@ jerry_unreachable (const char *file, /**< file name */
                    function,
                    (unsigned long) line);
 
-  jerry_fatal (ERR_FAILED_INTERNAL_ASSERTION);
+  jerry_fatal (JERRY_ERR_FAILED_INTERNAL_ASSERTION);
 } /* jerry_unreachable */
 #endif /* !JERRY_NDEBUG */

@@ -297,14 +297,19 @@ enum
 typedef ecma_value_t (*ecma_vm_exec_stop_callback_t) (void *user_p);
 
 /**
- * Forward definition of jerry_call_info_t.
+ * Call related information passed to jerry_external_handler_t.
  */
-struct jerry_call_info_t;
+typedef struct
+{
+  ecma_value_t function; /**< invoked function object */
+  ecma_value_t this_value; /**< this value passed to the function  */
+  ecma_value_t new_target; /**< current new target value, undefined for non-constructor calls */
+} ecma_call_info_t;
 
 /**
  * Type of an external function handler.
  */
-typedef ecma_value_t (*ecma_native_handler_t) (const struct jerry_call_info_t *call_info_p,
+typedef ecma_value_t (*ecma_native_handler_t) (const ecma_call_info_t *call_info_p,
                                                const ecma_value_t args_p[],
                                                const uint32_t args_count);
 
@@ -2152,6 +2157,94 @@ typedef enum
   ECMA_PROMISE_ALLSETTLED_REJECT, /**< promise.allSettled reject */
 } ecma_promise_helper;
 
+/**
+ * Event types for jerry_promise_callback_t callback function.
+ * The description of the 'object' and 'value' arguments are provided for each type.
+ */
+typedef enum
+{
+  ECMA_PROMISE_EVENT_CREATE = 0u, /**< a new Promise object is created
+                                   *   object: the new Promise object
+                                   *   value: parent Promise for `then` chains, undefined otherwise */
+  ECMA_PROMISE_EVENT_RESOLVE, /**< called when a Promise is about to be resolved
+                               *   object: the Promise object
+                               *   value: value for resolving */
+  ECMA_PROMISE_EVENT_REJECT, /**< called when a Promise is about to be rejected
+                              *   object: the Promise object
+                              *   value: value for rejecting */
+  ECMA_PROMISE_EVENT_RESOLVE_FULFILLED, /**< called when a resolve is called on a fulfilled Promise
+                                         *   object: the Promise object
+                                         *   value: value for resolving */
+  ECMA_PROMISE_EVENT_REJECT_FULFILLED, /**< called when a reject is called on a fulfilled Promise
+                                        *  object: the Promise object
+                                        *  value: value for rejecting */
+  ECMA_PROMISE_EVENT_REJECT_WITHOUT_HANDLER, /**< called when a Promise is rejected without a handler
+                                              *   object: the Promise object
+                                              *   value: value for rejecting */
+  ECMA_PROMISE_EVENT_CATCH_HANDLER_ADDED, /**< called when a catch handler is added to a rejected
+                                           *   Promise which did not have a catch handler before
+                                           *   object: the Promise object
+                                           *   value: undefined */
+  ECMA_PROMISE_EVENT_BEFORE_REACTION_JOB, /**< called before executing a Promise reaction job
+                                           *   object: the Promise object
+                                           *   value: undefined */
+  ECMA_PROMISE_EVENT_AFTER_REACTION_JOB, /**< called after a Promise reaction job is completed
+                                          *   object: the Promise object
+                                          *   value: undefined */
+  ECMA_PROMISE_EVENT_ASYNC_AWAIT, /**< called when an async function awaits the result of a Promise object
+                                   *   object: internal object representing the execution status
+                                   *   value: the Promise object */
+  ECMA_PROMISE_EVENT_ASYNC_BEFORE_RESOLVE, /**< called when an async function is continued with resolve
+                                            *   object: internal object representing the execution status
+                                            *   value: value for resolving */
+  ECMA_PROMISE_EVENT_ASYNC_BEFORE_REJECT, /**< called when an async function is continued with reject
+                                           *   object: internal object representing the execution status
+                                           *   value: value for rejecting */
+  ECMA_PROMISE_EVENT_ASYNC_AFTER_RESOLVE, /**< called when an async function resolve is completed
+                                           *   object: internal object representing the execution status
+                                           *   value: value for resolving */
+  ECMA_PROMISE_EVENT_ASYNC_AFTER_REJECT, /**< called when an async function reject is completed
+                                          *   object: internal object representing the execution status
+                                          *   value: value for rejecting */
+} ecma_promise_event_type_t;
+
+/**
+ * Filter types for jerry_promise_set_callback callback function.
+ * The callback is only called for those events which are enabled by the filters.
+ */
+typedef enum
+{
+  ECMA_PROMISE_EVENT_FILTER_DISABLE = 0, /**< disable reporting of all events */
+  ECMA_PROMISE_EVENT_FILTER_MAIN = (1 << 0), /**< enables the following events:
+                                              *   ECMA_PROMISE_EVENT_CREATE
+                                              *   ECMA_PROMISE_EVENT_RESOLVE
+                                              *   ECMA_PROMISE_EVENT_REJECT */
+  ECMA_PROMISE_EVENT_FILTER_ERROR = (1 << 1), /**< enables the following events:
+                                               *   ECMA_PROMISE_EVENT_RESOLVE_FULFILLED
+                                               *   ECMA_PROMISE_EVENT_REJECT_FULFILLED
+                                               *   ECMA_PROMISE_EVENT_REJECT_WITHOUT_HANDLER
+                                               *   ECMA_PROMISE_EVENT_CATCH_HANDLER_ADDED */
+  ECMA_PROMISE_EVENT_FILTER_REACTION_JOB = (1 << 2), /**< enables the following events:
+                                                      *   ECMA_PROMISE_EVENT_BEFORE_REACTION_JOB
+                                                      *   ECMA_PROMISE_EVENT_AFTER_REACTION_JOB */
+  ECMA_PROMISE_EVENT_FILTER_ASYNC_MAIN = (1 << 3), /**< enables the following events:
+                                                    *   ECMA_PROMISE_EVENT_ASYNC_AWAIT */
+  ECMA_PROMISE_EVENT_FILTER_ASYNC_REACTION_JOB = (1 << 4), /**< enables the following events:
+                                                            *   ECMA_PROMISE_EVENT_ASYNC_BEFORE_RESOLVE
+                                                            *   ECMA_PROMISE_EVENT_ASYNC_BEFORE_REJECT
+                                                            *   ECMA_PROMISE_EVENT_ASYNC_AFTER_RESOLVE
+                                                            *   ECMA_PROMISE_EVENT_ASYNC_AFTER_REJECT */
+} ecma_promise_event_filter_t;
+
+/**
+ * Notification callback for tracking Promise and async function operations.
+ */
+typedef void (*ecma_promise_callback_t) (uint32_t event_type,
+                                         const ecma_value_t object, const ecma_value_t value,
+                                         void *user_p);
+
+
+
 #endif /* JERRY_ESNEXT */
 
 #if JERRY_BUILTIN_DATAVIEW
@@ -2374,6 +2467,26 @@ typedef struct
 } ecma_date_object_t;
 
 #endif /* JERRY_ESNEXT */
+
+#if JERRY_LINE_INFO
+
+/**
+ * Location info retreived by jerry_backtrace_get_location.
+ */
+typedef struct
+{
+  ecma_value_t resource_name; /**< resource name */
+  uint32_t line; /**< line index */
+  uint32_t column; /**< column index */
+} ecma_backtrace_location_t;
+
+#endif /* JERRY_LINE_INFO */
+
+/**
+ * Decorator callback for Error objects. The decorator can create
+ * or update any properties of the newly created Error object.
+ */
+typedef void (*ecma_error_object_created_callback_t) (const ecma_value_t error_object, void *user_p);
 
 /**
  * @}

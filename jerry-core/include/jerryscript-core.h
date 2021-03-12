@@ -331,7 +331,7 @@ typedef bool (*jerry_objects_foreach_by_native_info_t) (const jerry_value_t obje
 /**
  * User context item manager
  */
-typedef struct
+typedef struct jerry_context_data_manager_t
 {
   /**
    * Callback responsible for initializing a context item, or NULL to zero out the memory. This is called lazily, the
@@ -853,7 +853,7 @@ typedef enum
 /**
  * Notification callback for tracking Promise and async function operations.
  */
-typedef void (*jerry_promise_callback_t) (jerry_promise_event_type_t event_type,
+typedef void (*jerry_promise_callback_t) (uint32_t event_type,
                                           const jerry_value_t object, const jerry_value_t value,
                                           void *user_p);
 

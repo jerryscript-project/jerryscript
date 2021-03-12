@@ -23,12 +23,9 @@
 #include "ecma-builtins.h"
 #include "ecma-helpers.h"
 #include "ecma-jobqueue.h"
-#include "jerryscript-port.h"
 #include "jmem.h"
 #include "re-bytecode.h"
 #include "vm-defines.h"
-#include "jerryscript.h"
-#include "jerryscript-debugger-transport.h"
 #include "js-parser-internal.h"
 
 /** \addtogroup context Context
@@ -97,7 +94,7 @@ typedef struct jmem_heap_t jmem_heap_t;
 typedef struct jerry_context_data_header
 {
   struct jerry_context_data_header *next_p; /**< pointer to next context item */
-  const jerry_context_data_manager_t *manager_p; /**< manager responsible for deleting this item */
+  const struct jerry_context_data_manager_t *manager_p; /**< manager responsible for deleting this item */
 } jerry_context_data_header_t;
 
 #define JERRY_CONTEXT_DATA_HEADER_USER_DATA(item_p) \
@@ -157,7 +154,7 @@ struct jerry_context_t
   vm_frame_ctx_t *vm_top_context_p; /**< top (current) interpreter context */
   jerry_context_data_header_t *context_data_p; /**< linked list of user-provided context-specific pointers */
   void *error_object_created_callback_user_p; /**< user pointer for error_object_update_callback_p */
-  jerry_error_object_created_callback_t error_object_created_callback_p; /**< decorator callback for Error objects */
+  ecma_error_object_created_callback_t error_object_created_callback_p; /**< decorator callback for Error objects */
   size_t ecma_gc_objects_number; /**< number of currently allocated objects */
   size_t ecma_gc_new_objects; /**< number of newly allocated objects since last GC session */
   size_t jmem_heap_allocated_size; /**< size of allocated regions */
@@ -186,7 +183,7 @@ struct jerry_context_t
 #if JERRY_PROMISE_CALLBACK
   uint32_t promise_callback_filters; /**< reported event types for promise callback */
   void *promise_callback_user_p; /**< user pointer for promise callback */
-  jerry_promise_callback_t promise_callback; /**< user function for tracking Promise object operations */
+  ecma_promise_callback_t promise_callback; /**< user function for tracking Promise object operations */
 #endif /* JERRY_PROMISE_CALLBACK */
 #endif /* JERRY_BUILTIN_PROMISE */
 
@@ -273,7 +270,7 @@ struct jmem_heap_t
 /**
  * Global context.
  */
-extern jerry_context_t jerry_global_context;
+extern struct jerry_context_t jerry_global_context;
 
 /**
  * Config-independent name for context.

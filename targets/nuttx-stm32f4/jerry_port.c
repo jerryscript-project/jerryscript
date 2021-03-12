@@ -127,42 +127,6 @@ jerry_port_release_source (uint8_t *buffer_p) /**< buffer to free */
 } /* jerry_port_release_source */
 
 /**
- * Normalize a file path
- *
- * @return length of the path written to the output buffer
- */
-size_t
-jerry_port_normalize_path (const char *in_path_p,   /**< input file path */
-                           char *out_buf_p,         /**< output buffer */
-                           size_t out_buf_size,     /**< size of output buffer */
-                           char *base_file_p) /**< base file path */
-{
-  (void) base_file_p;
-
-  size_t len = strlen (in_path_p);
-  if (len + 1 > out_buf_size)
-  {
-    return 0;
-  }
-
-  /* Return the original string. */
-  strcpy (out_buf_p, in_path_p);
-  return len;
-} /* jerry_port_normalize_path */
-
-/**
- * Get the module object of a native module.
- *
- * @return undefined
- */
-jerry_value_t
-jerry_port_get_native_module (jerry_value_t name) /**< module specifier */
-{
-  (void) name;
-  return jerry_create_undefined ();
-} /* jerry_port_get_native_module */
-
-/**
  * Dummy function to get the time zone adjustment.
  *
  * @return 0

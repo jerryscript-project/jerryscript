@@ -289,6 +289,13 @@ typedef void (*jerry_object_native_free_callback_t) (void *native_p);
 typedef void (*jerry_error_object_created_callback_t) (const jerry_value_t error_object, void *user_p);
 
 /**
+ * Callback which is called by jerry_module_link to get the referenced module.
+ */
+typedef jerry_value_t (*jerry_module_resolve_callback_t) (const jerry_value_t specifier,
+                                                          const jerry_value_t referrer,
+                                                          void *user_p);
+
+/**
  * Callback which tells whether the ECMAScript execution should be stopped.
  *
  * As long as the function returns with undefined the execution continues.
@@ -307,6 +314,7 @@ typedef jerry_value_t (*jerry_vm_exec_stop_callback_t) (void *user_p);
 typedef bool (*jerry_object_property_foreach_t) (const jerry_value_t property_name,
                                                  const jerry_value_t property_value,
                                                  void *user_data_p);
+
 /**
  * Function type applied for each object in the engine.
  */

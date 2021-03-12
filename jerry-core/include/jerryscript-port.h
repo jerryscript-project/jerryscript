@@ -217,39 +217,33 @@ uint8_t *jerry_port_read_source (const char *file_name_p, size_t *out_size_p);
 void jerry_port_release_source (uint8_t *buffer_p);
 
 /**
- * Normalize a file path string.
+ * Default module resolver.
  *
  * Note:
- *      This port function is called by jerry-core when JERRY_MODULE_SYSTEM
- *      is enabled. The normalized path is used to uniquely identify modules.
+ *      This port function is only used when JERRY_MODULE_SYSTEM is enabled.
  *
- * @param in_path_p Input path as a zero terminated string.
- * @param out_buf_p Pointer to the output buffer where the normalized path should be written.
- * @param out_buf_size Size of the output buffer.
- * @param base_file_p A file path that 'in_path_p' is relative to, usually the current module file.
- *                    A NULL value represents that 'in_path_p' is relative to the current working directory.
+ * @param specifier Module specifier string.
+ * @param referrer Parent module.
+ * @param user_p An unused pointer.
  *
- * @return length of the string written to the output buffer
- *         zero, if the buffer was not sufficient or an error occured
+ * @return A module object if resolving is successful, an error otherwise.
  */
-size_t jerry_port_normalize_path (const char *in_path_p,
-                                  char *out_buf_p,
-                                  size_t out_buf_size,
-                                  char *base_file_p);
+jerry_value_t
+jerry_port_module_resolve (const jerry_value_t specifier,
+                           const jerry_value_t referrer,
+                           void *user_p);
 
 /**
- * Get the module object of a native module.
+ * Release known modules.
  *
  * Note:
- *      This port function is called by jerry-core when JERRY_MODULE_SYSTEM
- *      is enabled.
+ *      This port function should be called by the user application when
+ *      the module database is no longer needed.
  *
- * @param name String value of the module specifier.
- *
- * @return Undefined, if 'name' is not a native module
- *         jerry_value_t containing the module object, otherwise
+ * @param realm If this argument is object, release only those modules,
+ *              which realm value is equal to this argument.
  */
-jerry_value_t jerry_port_get_native_module (jerry_value_t name);
+void jerry_port_module_release (const jerry_value_t realm);
 
 /**
  * @}

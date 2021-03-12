@@ -721,6 +721,24 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 
         switch (ext_object_p->u.class_prop.class_id)
         {
+#if JERRY_MODULE_SYSTEM
+          case LIT_MAGIC_STRING_MODULE_UL:
+          {
+            ecma_module_node_t *node_p = ((ecma_module_t *) ext_object_p)->imports_p;
+
+            while (node_p != NULL)
+            {
+              if (ecma_is_value_object (node_p->u.path_or_module))
+              {
+                ecma_gc_set_object_visited (ecma_get_object_from_value (node_p->u.path_or_module));
+              }
+
+              node_p = node_p->next_p;
+            }
+            break;
+          }
+#endif /* JERRY_MODULE_SYSTEM */
+
 #if JERRY_BUILTIN_PROMISE
           case LIT_MAGIC_STRING_PROMISE_UL:
           {
@@ -1705,11 +1723,8 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 #if JERRY_MODULE_SYSTEM
         case LIT_MAGIC_STRING_MODULE_UL:
         {
-          ecma_module_t *root_module_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_module_t,
-                                                                          ext_object_p->u.class_prop.u.value);
-
-          ecma_bytecode_deref (root_module_p->compiled_code_p);
-          ecma_module_cleanup (root_module_p);
+          ecma_module_release_module ((ecma_module_t *) ext_object_p);
+          ext_object_size = sizeof (ecma_module_t);
           break;
         }
 #endif /* JERRY_MODULE_SYSTEM */

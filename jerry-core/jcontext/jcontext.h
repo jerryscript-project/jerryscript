@@ -148,7 +148,6 @@ struct jerry_context_t
 #endif /* JERRY_ESNEXT */
 
 #if JERRY_MODULE_SYSTEM
-  ecma_module_t *module_list_p;         /**< current module context */
   ecma_module_t *module_current_p;      /**< current module context */
 #endif /* JERRY_MODULE_SYSTEM */
 

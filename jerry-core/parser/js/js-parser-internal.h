@@ -551,7 +551,7 @@ typedef struct
   parser_stack_iterator_t last_statement;     /**< last statement position */
 
 #if JERRY_MODULE_SYSTEM
-  ecma_module_node_t *module_current_node_p;  /**< import / export node that is being processed */
+  ecma_module_names_t *module_names_p;        /**< import / export names that is being processed */
   lexer_literal_t *module_identifier_lit_p;   /**< the literal for the identifier of the current element */
 #endif /* JERRY_MODULE_SYSTEM */
 
@@ -858,16 +858,14 @@ void parser_free_jumps (parser_stack_iterator_t iterator);
  */
 
 extern const lexer_lit_location_t lexer_default_literal;
-void parser_module_finalize_export_node (parser_context_t *context_p);
-void parser_module_finalize_import_node (parser_context_t *context_p);
 void parser_module_check_request_place (parser_context_t *context_p);
 void parser_module_context_init (parser_context_t *context_p);
-void parser_module_handle_module_specifier (parser_context_t *context_p);
+void parser_module_append_names (parser_context_t *context_p, ecma_module_names_t **module_names_p);
+void parser_module_handle_module_specifier (parser_context_t *context_p, ecma_module_node_t **node_list_p);
 void parser_module_handle_requests (parser_context_t *context_p);
 void parser_module_parse_export_clause (parser_context_t *context_p);
 void parser_module_parse_import_clause (parser_context_t *context_p);
 void parser_module_set_default (parser_context_t *context_p);
-ecma_module_node_t *parser_module_create_module_node (parser_context_t *context_p);
 bool parser_module_check_duplicate_import (parser_context_t *context_p, ecma_string_t *local_name_p);
 bool parser_module_check_duplicate_export (parser_context_t *context_p, ecma_string_t *export_name_p);
 void parser_module_append_export_name (parser_context_t *context_p);

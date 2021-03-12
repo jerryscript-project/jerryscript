@@ -262,6 +262,13 @@ jerry_value_t jerry_from_property_descriptor (const jerry_property_descriptor_t 
 jerry_value_t jerry_to_property_descriptor (jerry_value_t obj_value, jerry_property_descriptor_t *out_prop_desc_p);
 
 /**
+ * Module functions.
+ */
+
+jerry_value_t jerry_module_link (const jerry_value_t module_val,
+                                 jerry_module_resolve_callback_t callback_p, void *user_p);
+
+/**
  * Promise functions.
  */
 

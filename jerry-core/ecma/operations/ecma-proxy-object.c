@@ -361,6 +361,7 @@ ecma_proxy_object_get_prototype_of (ecma_object_t *obj_p) /**< proxy object */
  *
  * See also:
  *          ECMAScript v6, 9.5.2
+ *          ECMAScript v11: 9.5.2
  *
  * Note: Returned value is always a simple value so freeing it is unnecessary.
  *
@@ -421,6 +422,12 @@ ecma_proxy_object_set_prototype_of (ecma_object_t *obj_p, /**< proxy object */
   bool boolean_trap_result = ecma_op_to_boolean (trap_result);
 
   ecma_free_value (trap_result);
+
+  /* ES11: 9 */
+  if (!boolean_trap_result)
+  {
+    return ecma_make_boolean_value (false);
+  }
 
   if (obj_p->u2.prototype_cp & JERRY_PROXY_SKIP_RESULT_VALIDATION)
   {

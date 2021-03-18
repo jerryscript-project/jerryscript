@@ -91,25 +91,10 @@ ecma_builtin_typedarray_from (ecma_value_t this_arg, /**< 'this' argument */
     }
   }
 
-  ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
-
-  const uint8_t builtin_id = ecma_get_object_builtin_id (obj_p);
-  if (!ecma_typedarray_helper_is_typedarray (builtin_id))
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray constructor"));
-  }
-
-  ecma_typedarray_type_t typedarray_id = ecma_typedarray_helper_builtin_to_typedarray_id (builtin_id);
-
-  ecma_object_t *proto_p = ecma_builtin_get (ecma_typedarray_helper_get_prototype_id (typedarray_id));
-  const uint8_t element_size_shift = ecma_typedarray_helper_get_shift_size (typedarray_id);
-
-  return ecma_op_typedarray_from (source,
+  return ecma_op_typedarray_from (this_arg,
+                                  source,
                                   map_fn,
-                                  this_in_fn,
-                                  proto_p,
-                                  element_size_shift,
-                                  typedarray_id);
+                                  this_in_fn);
 
 } /* ecma_builtin_typedarray_from */
 

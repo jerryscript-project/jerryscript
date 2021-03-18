@@ -981,8 +981,10 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t arg1, /**< start */
 static ecma_value_t
 ecma_builtin_array_prototype_object_sort_compare_helper (ecma_value_t lhs, /**< left value */
                                                          ecma_value_t rhs, /**< right value */
-                                                         ecma_value_t compare_func) /**< compare function */
+                                                         ecma_value_t compare_func, /**< compare function */
+                                                         ecma_object_t *array_buffer_p) /**< arrayBuffer */
 {
+  JERRY_UNUSED (array_buffer_p);
   /*
    * ECMA-262 v5, 15.4.4.11 NOTE1: Because non-existent property values always
    * compare greater than undefined property values, and undefined always
@@ -1171,7 +1173,8 @@ ecma_builtin_array_prototype_object_sort (ecma_value_t this_arg, /**< this argum
     ecma_value_t sort_value = ecma_builtin_helper_array_merge_sort_helper (values_buffer,
                                                                            (uint32_t) (copied_num),
                                                                            arg1,
-                                                                           sort_cb);
+                                                                           sort_cb,
+                                                                           NULL);
     if (ECMA_IS_VALUE_ERROR (sort_value))
     {
       goto clean_up;

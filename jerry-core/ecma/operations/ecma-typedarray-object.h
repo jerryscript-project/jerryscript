@@ -42,12 +42,10 @@ ecma_builtin_id_t ecma_typedarray_helper_get_prototype_id (ecma_typedarray_type_
 ecma_builtin_id_t ecma_typedarray_helper_get_constructor_id (ecma_typedarray_type_t typedarray_id);
 ecma_typedarray_type_t ecma_typedarray_helper_builtin_to_typedarray_id (ecma_builtin_id_t builtin_id);
 
-ecma_value_t ecma_op_typedarray_from (ecma_value_t items_val,
-                                      ecma_value_t map_fn_val,
-                                      ecma_value_t this_val,
-                                      ecma_object_t *proto_p,
-                                      uint8_t element_size_shift,
-                                      ecma_typedarray_type_t typedarray_id);
+ecma_value_t ecma_op_typedarray_from (ecma_value_t this_val,
+                                      ecma_value_t source_val,
+                                      ecma_value_t mapfn_val,
+                                      ecma_value_t this_arg);
 uint32_t ecma_typedarray_get_length (ecma_object_t *typedarray_p);
 uint32_t ecma_typedarray_get_offset (ecma_object_t *typedarray_p);
 lit_utf8_byte_t *ecma_typedarray_get_buffer (ecma_object_t *typedarray_p);
@@ -74,6 +72,10 @@ ecma_value_t ecma_op_create_typedarray_with_type_and_length (ecma_typedarray_typ
 ecma_typedarray_info_t ecma_typedarray_get_info (ecma_object_t *typedarray_p);
 ecma_value_t ecma_typedarray_create_object_with_length (uint32_t array_length,
                                                         ecma_object_t *src_arraybuffer_p,
+                                                        ecma_object_t *proto_p,
+                                                        uint8_t element_size_shift,
+                                                        ecma_typedarray_type_t typedarray_id);
+ecma_value_t ecma_typedarray_create_object_with_object (ecma_value_t items_val,
                                                         ecma_object_t *proto_p,
                                                         uint8_t element_size_shift,
                                                         ecma_typedarray_type_t typedarray_id);

@@ -33,7 +33,8 @@ ecma_builtin_helper_array_merge_sort_bottom_up (ecma_value_t *source_array_p, /*
                                                 uint32_t end_idx, /**< second array end */
                                                 ecma_value_t *output_array_p, /**< output array */
                                                 ecma_value_t compare_func, /**< compare function */
-                                                const ecma_builtin_helper_sort_compare_fn_t sort_cb) /**< sorting cb */
+                                                const ecma_builtin_helper_sort_compare_fn_t sort_cb, /**< sorting cb */
+                                                ecma_object_t *array_buffer_p) /* array_buffer_p */
 {
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
   uint32_t i = left_idx, j = right_idx;
@@ -44,7 +45,7 @@ ecma_builtin_helper_array_merge_sort_bottom_up (ecma_value_t *source_array_p, /*
 
     if (i < right_idx && j < end_idx)
     {
-      compare_value = sort_cb (source_array_p[i], source_array_p[j], compare_func);
+      compare_value = sort_cb (source_array_p[i], source_array_p[j], compare_func, array_buffer_p);
       if (ECMA_IS_VALUE_ERROR (compare_value))
       {
         ret_value = ECMA_VALUE_ERROR;
@@ -78,7 +79,8 @@ ecma_value_t
 ecma_builtin_helper_array_merge_sort_helper (ecma_value_t *array_p, /**< array to sort */
                                              uint32_t length, /**< length */
                                              ecma_value_t compare_func, /**< compare function */
-                                             const ecma_builtin_helper_sort_compare_fn_t sort_cb) /**< sorting cb */
+                                             const ecma_builtin_helper_sort_compare_fn_t sort_cb, /**< sorting cb */
+                                             ecma_object_t *array_buffer_p) /**< arrayBuffer */
 {
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
   JMEM_DEFINE_LOCAL_ARRAY (dest_array_p, length, ecma_value_t);
@@ -112,7 +114,8 @@ ecma_builtin_helper_array_merge_sort_helper (ecma_value_t *array_p, /**< array t
                                                                   e,
                                                                   dest_array_p,
                                                                   compare_func,
-                                                                  sort_cb);
+                                                                  sort_cb,
+                                                                  array_buffer_p);
       if (ECMA_IS_VALUE_ERROR (ret_value))
       {
         break;

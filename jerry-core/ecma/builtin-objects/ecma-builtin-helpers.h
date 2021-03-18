@@ -239,12 +239,14 @@ ecma_builtin_helper_error_dispatch_call (jerry_error_t error_type, const ecma_va
  */
 typedef ecma_value_t (*ecma_builtin_helper_sort_compare_fn_t) (ecma_value_t lhs, /**< left value */
                                                                ecma_value_t rhs, /**< right value */
-                                                               ecma_value_t compare_func); /**< compare function */
+                                                               ecma_value_t compare_func, /**< compare function */
+                                                               ecma_object_t *array_buffer_p); /**< arrayBuffer */
 
 ecma_value_t ecma_builtin_helper_array_merge_sort_helper (ecma_value_t *array_p,
                                                           uint32_t length,
                                                           ecma_value_t compare_func,
-                                                          const ecma_builtin_helper_sort_compare_fn_t sort_cb);
+                                                          const ecma_builtin_helper_sort_compare_fn_t sort_cb,
+                                                          ecma_object_t *array_buffer_p);
 
 /**
  * @}

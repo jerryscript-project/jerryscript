@@ -600,8 +600,8 @@ ecma_promise_remaining_inc_or_dec (ecma_value_t remaining, /**< the remaining co
  */
 ecma_value_t
 ecma_promise_all_or_all_settled_handler_cb (ecma_object_t *function_obj_p, /**< function object */
-                             const ecma_value_t args_p[], /**< argument list */
-                             const uint32_t args_count) /**< argument number */
+                                            const ecma_value_t args_p[], /**< argument list */
+                                            const uint32_t args_count) /**< argument number */
 {
   JERRY_UNUSED (args_count);
   ecma_promise_all_executor_t *executor_p = (ecma_promise_all_executor_t *) function_obj_p;
@@ -613,7 +613,7 @@ ecma_promise_all_or_all_settled_handler_cb (ecma_object_t *function_obj_p, /**< 
     return ECMA_VALUE_UNDEFINED;
   }
 
-  if (promise_type == ECMA_PROMISE_ALL_RESOLVE)
+  if (promise_type == ECMA_PROMISE_ALL_RESOLVE || promise_type == ECMA_PROMISE_ANY_REJECT)
   {
     /* 8. */
     ecma_op_object_put_by_index (ecma_get_object_from_value (executor_p->values),
@@ -669,10 +669,22 @@ ecma_promise_all_or_all_settled_handler_cb (ecma_object_t *function_obj_p, /**< 
   {
     ecma_value_t capability = executor_p->capability;
     ecma_promise_capabality_t *capability_p = (ecma_promise_capabality_t *) ecma_get_object_from_value (capability);
-    ret = ecma_op_function_call (ecma_get_object_from_value (capability_p->resolve),
-                                 ECMA_VALUE_UNDEFINED,
-                                 &executor_p->values,
-                                 1);
+    if (promise_type == ECMA_PROMISE_ANY_REJECT)
+    {
+      ecma_value_t error_val = ecma_new_aggregate_error (executor_p->values, ECMA_VALUE_UNDEFINED);
+      ret = ecma_op_function_call (ecma_get_object_from_value (capability_p->reject),
+                                   ECMA_VALUE_UNDEFINED,
+                                   &error_val,
+                                   1);
+      ecma_free_value (error_val);
+    }
+    else
+    {
+      ret = ecma_op_function_call (ecma_get_object_from_value (capability_p->resolve),
+                                   ECMA_VALUE_UNDEFINED,
+                                   &executor_p->values,
+                                   1);
+    }
   }
 
   return ret;

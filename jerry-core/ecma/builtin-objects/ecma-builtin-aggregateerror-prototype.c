@@ -13,31 +13,24 @@
  * limitations under the License.
  */
 
-var items = [
-  [TypeError, "TypeError"],
-  [SyntaxError, "SyntaxError"],
-  [URIError, "URIError"],
-  [EvalError, "EvalError"],
-  [RangeError, "RangeError"],
-  [ReferenceError, "ReferenceError"],
-];
+#include "ecma-alloc.h"
+#include "ecma-builtins.h"
+#include "ecma-conversion.h"
+#include "ecma-exceptions.h"
+#include "ecma-gc.h"
+#include "ecma-globals.h"
+#include "ecma-helpers.h"
+#include "ecma-objects.h"
+#include "ecma-string-object.h"
+#include "jrt.h"
 
-for (var idx = 0; idx < items.length; idx++) {
-  var type = items[idx][0];
-  var expected_name = items[idx][1];
-  assert (type.name === expected_name);
+#if JERRY_BUILTIN_PROMISE
 
-  assert ((new type).name === expected_name);
-}
+#define ECMA_BUILTINS_INTERNAL
+#include "ecma-builtins-internal.h"
 
-assert (AggregateError.name === "AggregateError");
-assert (new AggregateError([]).name === "AggregateError")
+#define BUILTIN_INC_HEADER_NAME "ecma-builtin-aggregateerror-prototype.inc.h"
+#define BUILTIN_UNDERSCORED_ID aggregate_error_prototype
+#include "ecma-builtin-internal-routines-template.inc.h"
 
-try
-{
-  new AggregateError.name === "TypeError";
-}
-catch(e)
-{
-  assert (e instanceof TypeError)
-}
+#endif /* JERRY_BUILTIN_PROMISE */

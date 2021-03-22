@@ -610,6 +610,7 @@
 || (JERRY_BUILTIN_PROMISE == 1) \
 || (JERRY_BUILTIN_PROXY == 1) \
 || (JERRY_BUILTIN_REFLECT == 1) \
+|| (JERRY_BUILTIN_PROMISE == 1) \
 || (JERRY_BUILTIN_TYPEDARRAY == 1))
 # error "JERRY_ESNEXT should be enabled too to enable JERRY_BUILTIN_xxxxx macro."
 #endif

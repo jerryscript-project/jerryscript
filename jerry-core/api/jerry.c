@@ -62,6 +62,10 @@ JERRY_STATIC_ASSERT ((int) ECMA_ERROR_NONE == (int) JERRY_ERROR_NONE
                      && (int) ECMA_ERROR_TYPE == (int) JERRY_ERROR_TYPE
                      && (int) ECMA_ERROR_URI == (int) JERRY_ERROR_URI,
                      ecma_standard_error_t_must_be_equal_to_jerry_error_t);
+#if JERRY_BUILTIN_PROMISE
+JERRY_STATIC_ASSERT ((int) ECMA_ERROR_AGGREGATE == (int) JERRY_ERROR_AGGREGATE,
+                     ecma_standard_error_t_must_be_equal_to_jerry_error_t);
+#endif /* JERRY_BUILTIN_PROMISE */
 
 JERRY_STATIC_ASSERT ((int) ECMA_INIT_EMPTY == (int) JERRY_INIT_EMPTY
                      && (int) ECMA_INIT_SHOW_OPCODES == (int) JERRY_INIT_SHOW_OPCODES

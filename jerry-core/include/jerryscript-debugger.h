@@ -16,7 +16,6 @@
 #ifndef JERRYSCRIPT_DEBUGGER_H
 #define JERRYSCRIPT_DEBUGGER_H
 
-#include "jerryscript-core.h"
 #include "jerryscript-port.h"
 
 #ifdef __cplusplus

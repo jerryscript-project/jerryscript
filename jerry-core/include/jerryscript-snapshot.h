@@ -16,7 +16,7 @@
 #ifndef JERRYSCRIPT_SNAPSHOT_H
 #define JERRYSCRIPT_SNAPSHOT_H
 
-#include "jerryscript-core.h"
+#include "jerryscript-types.h"
 
 #ifdef __cplusplus
 extern "C"

@@ -32,7 +32,7 @@ def main():
     )
     _ = parser.parse_args()
 
-    with open(os.path.join(settings.PROJECT_DIR, 'jerry-core', 'include', 'jerryscript-core.h'), 'r') as header:
+    with open(os.path.join(settings.PROJECT_DIR, 'jerry-core', 'include', 'jerryscript-types.h'), 'r') as header:
         version = {}
         version_re = re.compile(r'\s*#define\s+JERRY_API_(?P<key>MAJOR|MINOR|PATCH)_VERSION\s+(?P<value>\S+)')
         for line in header:

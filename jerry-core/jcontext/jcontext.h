@@ -23,11 +23,9 @@
 #include "ecma-builtins.h"
 #include "ecma-helpers.h"
 #include "ecma-jobqueue.h"
-#include "jerryscript-port.h"
 #include "jmem.h"
 #include "re-bytecode.h"
 #include "vm-defines.h"
-#include "jerryscript.h"
 #include "jerryscript-debugger-transport.h"
 #include "js-parser-internal.h"
 

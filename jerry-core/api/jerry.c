@@ -32,6 +32,7 @@
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
 #include "ecma-init-finalize.h"
+#include "ecma-iterator-object.h"
 #include "ecma-lex-env.h"
 #include "lit-char-helpers.h"
 #include "ecma-literal-storage.h"
@@ -6446,7 +6447,7 @@ jerry_create_container (jerry_container_type_t container_type, /**< Type of the 
   JERRY_UNUSED (arguments_list_p);
   JERRY_UNUSED (arguments_list_len);
   JERRY_UNUSED (container_type);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Containers are disabled")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_container_not_supported_p)));
 #endif /* JERRY_BUILTIN_CONTAINER */
 } /* jerry_create_container */
 
@@ -6506,6 +6507,119 @@ jerry_get_container_type (const jerry_value_t value) /**< the container object *
 #endif /* JERRY_BUILTIN_CONTAINER */
   return JERRY_CONTAINER_TYPE_INVALID;
 } /* jerry_get_container_type */
+
+/**
+ * Return a new array containing elements from a Container or a Container Iterator.
+ * Sets the boolean input value to `true` if the container object has key/value pairs.
+ *
+ * Note:
+ *     the returned value must be freed with a jerry_release_value call
+ *
+ * @return an array of items for maps/sets or their iterators, error otherwise
+ */
+jerry_value_t
+jerry_get_array_from_container (jerry_value_t value, /**< the container or iterator object */
+                                bool *is_key_value_p) /**< [out] is key-value structure */
+{
+  jerry_assert_api_available ();
+
+#if JERRY_BUILTIN_CONTAINER
+  const char *container_needed = ECMA_ERR_MSG ("Value is not a Container or Iterator");
+
+  if (!ecma_is_value_object (value))
+  {
+    return jerry_throw (ecma_raise_type_error (container_needed));
+  }
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (value);
+
+  if (ecma_get_object_type (obj_p) != ECMA_OBJECT_TYPE_CLASS)
+  {
+    return jerry_throw (ecma_raise_type_error (container_needed));
+  }
+
+  ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
+
+  uint32_t entry_count;
+  uint8_t entry_size;
+
+  uint32_t index = 0;
+  uint8_t iterator_kind = ECMA_ITERATOR__COUNT;
+  ecma_value_t *start_p;
+
+  *is_key_value_p = false;
+
+  if (ext_obj_p->u.cls.type == ECMA_OBJECT_CLASS_MAP_ITERATOR
+      || ext_obj_p->u.cls.type == ECMA_OBJECT_CLASS_SET_ITERATOR)
+  {
+    ecma_value_t iterated_value = ext_obj_p->u.cls.u3.iterated_value;
+
+    if (ecma_is_value_empty (iterated_value))
+    {
+      return ecma_op_new_array_object_from_collection (ecma_new_collection (), false);
+    }
+
+    ecma_extended_object_t *map_object_p = (ecma_extended_object_t *) (ecma_get_object_from_value (iterated_value));
+
+    ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, map_object_p->u.cls.u3.value);
+    entry_count = ECMA_CONTAINER_ENTRY_COUNT (container_p);
+    index = ext_obj_p->u.cls.u2.iterator_index;
+
+    entry_size = ecma_op_container_entry_size (map_object_p->u.cls.u2.container_id);
+    start_p = ECMA_CONTAINER_START (container_p);
+
+    iterator_kind = ext_obj_p->u.cls.u1.iterator_kind;
+  }
+  else if (jerry_get_container_type (value) != JERRY_CONTAINER_TYPE_INVALID)
+  {
+    ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, ext_obj_p->u.cls.u3.value);
+    entry_count = ECMA_CONTAINER_ENTRY_COUNT (container_p);
+    entry_size = ecma_op_container_entry_size (ext_obj_p->u.cls.u2.container_id);
+
+    index = 0;
+    iterator_kind = ECMA_ITERATOR_KEYS;
+    start_p = ECMA_CONTAINER_START (container_p);
+
+    if (ext_obj_p->u.cls.u2.container_id == LIT_MAGIC_STRING_MAP_UL
+        || ext_obj_p->u.cls.u2.container_id == LIT_MAGIC_STRING_WEAKMAP_UL)
+    {
+      iterator_kind = ECMA_ITERATOR_ENTRIES;
+    }
+  }
+  else
+  {
+    return jerry_throw (ecma_raise_type_error (container_needed));
+  }
+
+  *is_key_value_p = (iterator_kind == ECMA_ITERATOR_ENTRIES);
+  ecma_collection_t *collection_buffer = ecma_new_collection ();
+
+  for (uint32_t i = index; i < entry_count; i += entry_size)
+  {
+    ecma_value_t *entry_p = start_p + i;
+
+    if (ecma_is_value_empty (*entry_p))
+    {
+      continue;
+    }
+
+    if (iterator_kind != ECMA_ITERATOR_VALUES)
+    {
+      ecma_collection_push_back (collection_buffer, ecma_copy_value_if_not_object (entry_p[0]));
+    }
+
+    if (iterator_kind != ECMA_ITERATOR_KEYS)
+    {
+      ecma_collection_push_back (collection_buffer, ecma_copy_value_if_not_object (entry_p[1]));
+    }
+  }
+  return ecma_op_new_array_object_from_collection (collection_buffer, false);
+#else /* JERRY_BUILTIN_CONTAINER */
+  JERRY_UNUSED (value);
+  JERRY_UNUSED (is_key_value_p);
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_container_not_supported_p)));
+#endif
+} /* jerry_get_array_from_container */
 
 /**
  * @}

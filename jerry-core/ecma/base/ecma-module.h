@@ -36,20 +36,6 @@ typedef struct ecma_module_names
 } ecma_module_names_t;
 
 /**
- * An enum identifing the current state of the module
- */
-typedef enum
-{
-  ECMA_MODULE_STATE_UNLINKED = 0, /**< module is currently unlinked */
-  ECMA_MODULE_STATE_LINKING = 1, /**< module is currently being linked */
-  ECMA_MODULE_STATE_LINKED = 2, /**< module has been linked */
-  ECMA_MODULE_STATE_EVALUATING = 3, /**< module is currently being evaluated */
-  ECMA_MODULE_STATE_EVALUATED = 4,  /**< module has been evaluated */
-  ECMA_MODULE_STATE_ERROR = 5,  /**< error is encountered during module init */
-  ECMA_MODULE_STATE_NATIVE = 6,  /**< module is native */
-} ecma_module_state_t;
-
-/**
  * Module structure storing an instance of a module
  *
  * Note:
@@ -130,6 +116,7 @@ ecma_value_t ecma_module_evaluate (ecma_module_t *module_p);
 
 void ecma_module_initialize_context (void);
 void ecma_module_cleanup_context (void);
+ecma_value_t ecma_module_create_namespace_object (ecma_module_t *module_p);
 
 void ecma_module_release_module_names (ecma_module_names_t *module_name_p);
 void ecma_module_release_module (ecma_module_t *module_p);

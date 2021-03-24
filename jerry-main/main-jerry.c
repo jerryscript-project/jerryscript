@@ -88,6 +88,13 @@ restart:
 
       if (!jerry_value_is_error (ret_value))
       {
+        if (jerry_module_get_state (ret_value) != JERRY_MODULE_STATE_UNLINKED)
+        {
+          /* A module can be evaluated only once. */
+          jerry_release_value (ret_value);
+          continue;
+        }
+
         jerry_value_t link_val = jerry_module_link (ret_value, NULL, NULL);
 
         if (jerry_value_is_error (link_val))
@@ -99,9 +106,9 @@ restart:
         {
           jerry_release_value (link_val);
 
-          jerry_value_t func_val = ret_value;
-          ret_value = jerry_run (func_val);
-          jerry_release_value (func_val);
+          jerry_value_t module_val = ret_value;
+          ret_value = jerry_module_evaluate (module_val);
+          jerry_release_value (module_val);
         }
       }
 

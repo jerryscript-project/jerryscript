@@ -267,6 +267,11 @@ jerry_value_t jerry_to_property_descriptor (jerry_value_t obj_value, jerry_prope
 
 jerry_value_t jerry_module_link (const jerry_value_t module_val,
                                  jerry_module_resolve_callback_t callback_p, void *user_p);
+jerry_value_t jerry_module_evaluate (const jerry_value_t module_val);
+jerry_module_state_t jerry_module_get_state (const jerry_value_t module_val);
+size_t jerry_module_get_number_of_requests (const jerry_value_t module_val);
+jerry_value_t jerry_module_get_request (const jerry_value_t module_val, size_t request_index);
+jerry_value_t jerry_module_get_namespace (const jerry_value_t module_val);
 
 /**
  * Promise functions.

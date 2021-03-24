@@ -709,20 +709,6 @@ jerry_run (const jerry_value_t func_val) /**< function to run */
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-#if JERRY_MODULE_SYSTEM
-  if (JERRY_UNLIKELY (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_MODULE_UL))
-  {
-    ecma_module_t *root_module_p = (ecma_module_t *) ext_object_p;
-
-    if (root_module_p->header.u.class_prop.extra_info != ECMA_MODULE_STATE_LINKED)
-    {
-      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Module must be in linked state")));
-    }
-
-    return jerry_return (ecma_module_evaluate (root_module_p));
-  }
-#endif /* JERRY_MODULE_SYSTEM */
-
   if (ext_object_p->u.class_prop.class_id != LIT_MAGIC_STRING_SCRIPT_UL)
   {
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (wrong_args_msg_p)));
@@ -777,6 +763,8 @@ jerry_module_link (const jerry_value_t module_val, /**< root module */
                                                               *   jerry_port_module_resolve when NULL is passed */
                    void *user_p) /**< pointer passed to the resolve callback */
 {
+  jerry_assert_api_available ();
+
 #if JERRY_MODULE_SYSTEM
   if (callback == NULL)
   {
@@ -799,6 +787,191 @@ jerry_module_link (const jerry_value_t module_val, /**< root module */
   return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_module_not_supported_p)));
 #endif /* JERRY_MODULE_SYSTEM */
 } /* jerry_module_link */
+
+/**
+ * Evaluate a module and its dependencies. The module must be in linked state.
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return result of module bytecode execution - if evaluation was successful
+ *         error - otherwise
+ */
+jerry_value_t
+jerry_module_evaluate (const jerry_value_t module_val) /**< root module */
+{
+  jerry_assert_api_available ();
+
+#if JERRY_MODULE_SYSTEM
+  ecma_module_t *module_p = ecma_module_get_resolved_module (module_val);
+
+  if (module_p == NULL)
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_not_module_p)));
+  }
+
+  if (module_p->header.u.class_prop.extra_info != JERRY_MODULE_STATE_LINKED)
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Module must be in linked state")));
+  }
+
+  return jerry_return (ecma_module_evaluate (module_p));
+#else /* !JERRY_MODULE_SYSTEM */
+  JERRY_UNUSED (module_val);
+
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_module_not_supported_p)));
+#endif /* JERRY_MODULE_SYSTEM */
+} /* jerry_module_evaluate */
+
+/**
+ * Returns the current status of a module
+ *
+ * @return current status - if module_val is a module,
+ *         JERRY_MODULE_STATE_INVALID - otherwise
+ */
+jerry_module_state_t
+jerry_module_get_state (const jerry_value_t module_val) /**< module object */
+{
+  jerry_assert_api_available ();
+
+#if JERRY_MODULE_SYSTEM
+  ecma_module_t *module_p = ecma_module_get_resolved_module (module_val);
+
+  if (module_p == NULL)
+  {
+    return JERRY_MODULE_STATE_INVALID;
+  }
+
+  return (jerry_module_state_t) module_p->header.u.class_prop.extra_info;
+#else /* !JERRY_MODULE_SYSTEM */
+  JERRY_UNUSED (module_val);
+
+  return JERRY_MODULE_STATE_INVALID;
+#endif /* JERRY_MODULE_SYSTEM */
+} /* jerry_module_get_state */
+
+/**
+ * Returns the number of import/export requests of a module
+ *
+ * @return number of import/export requests of a module
+ */
+size_t
+jerry_module_get_number_of_requests (const jerry_value_t module_val) /**< module */
+{
+  jerry_assert_api_available ();
+
+#if JERRY_MODULE_SYSTEM
+  ecma_module_t *module_p = ecma_module_get_resolved_module (module_val);
+
+  if (module_p == NULL)
+  {
+    return 0;
+  }
+
+  size_t number_of_requests = 0;
+
+  ecma_module_node_t *node_p = module_p->imports_p;
+
+  while (node_p != NULL)
+  {
+    number_of_requests++;
+    node_p = node_p->next_p;
+  }
+
+  return number_of_requests;
+#else /* !JERRY_MODULE_SYSTEM */
+  JERRY_UNUSED (module_val);
+
+  return 0;
+#endif /* JERRY_MODULE_SYSTEM */
+} /* jerry_module_get_number_of_requests */
+
+/**
+ * Returns the module request specified by the request_index argument
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return string - if the request has not been resolved yet,
+ *         module object - if the request has been resolved successfully,
+ *         error - otherwise
+ */
+jerry_value_t
+jerry_module_get_request (const jerry_value_t module_val, /**< module */
+                          size_t request_index) /**< request index */
+{
+  jerry_assert_api_available ();
+
+#if JERRY_MODULE_SYSTEM
+  ecma_module_t *module_p = ecma_module_get_resolved_module (module_val);
+
+  if (module_p == NULL)
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_not_module_p)));
+  }
+
+  ecma_module_node_t *node_p = module_p->imports_p;
+
+  while (node_p != NULL)
+  {
+    if (request_index == 0)
+    {
+      return ecma_copy_value (node_p->u.path_or_module);
+    }
+
+    --request_index;
+    node_p = node_p->next_p;
+  }
+
+  return jerry_throw (ecma_raise_range_error (ECMA_ERR_MSG ("Request is not available")));
+#else /* !JERRY_MODULE_SYSTEM */
+  JERRY_UNUSED (module_val);
+  JERRY_UNUSED (request_index);
+
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_module_not_supported_p)));
+#endif /* JERRY_MODULE_SYSTEM */
+} /* jerry_module_get_request */
+
+/**
+ * Returns the namespace object of a module
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return object - if namespace object is available,
+ *                  error - otherwise
+ */
+jerry_value_t
+jerry_module_get_namespace (const jerry_value_t module_val) /**< module */
+{
+  jerry_assert_api_available ();
+
+#if JERRY_MODULE_SYSTEM
+  ecma_module_t *module_p = ecma_module_get_resolved_module (module_val);
+
+  if (module_p == NULL)
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_not_module_p)));
+  }
+
+  if (module_p->namespace_object_p == NULL)
+  {
+    if (module_p->header.u.class_prop.extra_info != JERRY_MODULE_STATE_EVALUATED)
+    {
+      return jerry_throw (ecma_raise_range_error (ECMA_ERR_MSG ("Namespace object has not been created yet")));
+    }
+
+    ecma_module_create_namespace_object (module_p);
+  }
+
+  ecma_ref_object (module_p->namespace_object_p);
+  return ecma_make_object_value (module_p->namespace_object_p);
+#else /* !JERRY_MODULE_SYSTEM */
+  JERRY_UNUSED (module_val);
+
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_module_not_supported_p)));
+#endif /* JERRY_MODULE_SYSTEM */
+} /* jerry_module_get_namespace */
 
 /**
  * Run enqueued Promise jobs until the first thrown error or until all get executed.

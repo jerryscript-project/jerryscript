@@ -14,7 +14,6 @@
  */
 
 #include "jcontext.h"
-#include "jerryscript.h"
 
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"

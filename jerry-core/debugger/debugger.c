@@ -22,7 +22,7 @@
 #include "ecma-function-object.h"
 #include "ecma-objects.h"
 #include "jcontext.h"
-#include "jerryscript-port.h"
+#include "jerryscript-debugger.h"
 #include "lit-char-helpers.h"
 
 #if JERRY_DEBUGGER

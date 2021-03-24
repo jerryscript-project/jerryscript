@@ -17,7 +17,6 @@
 
 #if JERRY_MODULE_SYSTEM
 #include "jcontext.h"
-#include "jerryscript-port.h"
 
 #include "ecma-function-object.h"
 #include "ecma-gc.h"

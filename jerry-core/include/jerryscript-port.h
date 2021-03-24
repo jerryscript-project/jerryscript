@@ -20,8 +20,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "jerryscript-compiler.h"
-#include "jerryscript-core.h"
+#include "jerryscript-types.h"
 
 #ifdef __cplusplus
 extern "C"

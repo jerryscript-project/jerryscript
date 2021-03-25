@@ -21,6 +21,15 @@
 
 #if JERRY_BUILTIN_DATE
 
+ecma_number_t
+ecma_builtin_date_parse (ecma_string_t *string_p);
+
+ecma_number_t
+ecma_builtin_date_now_helper (void);
+
+ecma_value_t
+ecma_builtin_date_create (ecma_number_t tv);
+
 /* ECMA-262 v5, 15.9.4.1 */
 OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
               ECMA_BUILTIN_ID_DATE_PROTOTYPE,

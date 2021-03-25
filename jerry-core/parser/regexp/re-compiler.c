@@ -155,7 +155,7 @@ re_compile_bytecode (ecma_string_t *pattern_str_p, /**< pattern */
   re_compiled_code_p->non_captures_count = re_ctx.non_captures_count;
 
 #if JERRY_REGEXP_DUMP_BYTE_CODE
-  if (JERRY_CONTEXT (jerry_init_flags) & ECMA_INIT_SHOW_REGEXP_OPCODES)
+  if (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_SHOW_REGEXP_OPCODES)
   {
     re_dump_bytecode (&re_ctx);
   }

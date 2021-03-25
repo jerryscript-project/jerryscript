@@ -50,17 +50,6 @@
  */
 
 /**
- * JerryScript init flags.
- */
-typedef enum
-{
-  ECMA_INIT_EMPTY               = (0u),      /**< empty flag set */
-  ECMA_INIT_SHOW_OPCODES        = (1u << 0), /**< dump byte-code to log after parse */
-  ECMA_INIT_SHOW_REGEXP_OPCODES = (1u << 1), /**< dump regexp byte-code to log after compilation */
-  ECMA_INIT_MEM_STATS           = (1u << 2), /**< dump memory statistics */
-} ecma_init_flag_t;
-
-/**
  * JerryScript status flags.
  */
 typedef enum

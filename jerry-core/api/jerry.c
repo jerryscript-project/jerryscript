@@ -53,26 +53,6 @@
 JERRY_STATIC_ASSERT (sizeof (jerry_value_t) == sizeof (ecma_value_t),
                      size_of_jerry_value_t_must_be_equal_to_size_of_ecma_value_t);
 
-JERRY_STATIC_ASSERT ((int) ECMA_ERROR_NONE == (int) JERRY_ERROR_NONE
-                     && (int) ECMA_ERROR_COMMON == (int) JERRY_ERROR_COMMON
-                     && (int) ECMA_ERROR_EVAL == (int) JERRY_ERROR_EVAL
-                     && (int) ECMA_ERROR_RANGE == (int) JERRY_ERROR_RANGE
-                     && (int) ECMA_ERROR_REFERENCE == (int) JERRY_ERROR_REFERENCE
-                     && (int) ECMA_ERROR_SYNTAX == (int) JERRY_ERROR_SYNTAX
-                     && (int) ECMA_ERROR_TYPE == (int) JERRY_ERROR_TYPE
-                     && (int) ECMA_ERROR_URI == (int) JERRY_ERROR_URI,
-                     ecma_standard_error_t_must_be_equal_to_jerry_error_t);
-#if JERRY_BUILTIN_PROMISE
-JERRY_STATIC_ASSERT ((int) ECMA_ERROR_AGGREGATE == (int) JERRY_ERROR_AGGREGATE,
-                     ecma_standard_error_t_must_be_equal_to_jerry_error_t);
-#endif /* JERRY_BUILTIN_PROMISE */
-
-JERRY_STATIC_ASSERT ((int) ECMA_INIT_EMPTY == (int) JERRY_INIT_EMPTY
-                     && (int) ECMA_INIT_SHOW_OPCODES == (int) JERRY_INIT_SHOW_OPCODES
-                     && (int) ECMA_INIT_SHOW_REGEXP_OPCODES == (int) JERRY_INIT_SHOW_REGEXP_OPCODES
-                     && (int) ECMA_INIT_MEM_STATS == (int) JERRY_INIT_MEM_STATS,
-                     ecma_init_flag_t_must_be_equal_to_jerry_init_flag_t);
-
 JERRY_STATIC_ASSERT ((int) JERRY_PROP_NO_OPTS == (int) ECMA_PROP_NO_OPTS
                      && (int) JERRY_PROP_IS_CONFIGURABLE == (int) ECMA_PROP_IS_CONFIGURABLE
                      && (int) JERRY_PROP_IS_ENUMERABLE == (int) ECMA_PROP_IS_ENUMERABLE
@@ -1742,7 +1722,7 @@ jerry_get_error_type (jerry_value_t value) /**< api value */
   }
 
   ecma_object_t *object_p = ecma_get_object_from_value (value);
-  ecma_standard_error_t error_type = ecma_get_error_type (object_p);
+  jerry_error_t error_type = ecma_get_error_type (object_p);
 
   return (jerry_error_t) error_type;
 } /* jerry_get_error_type */
@@ -2111,14 +2091,14 @@ jerry_create_error_sz (jerry_error_t error_type, /**< type of error */
 
   if (message_p == NULL || message_size == 0)
   {
-    return ecma_create_error_object_reference (ecma_new_standard_error ((ecma_standard_error_t) error_type, NULL));
+    return ecma_create_error_object_reference (ecma_new_standard_error ((jerry_error_t) error_type, NULL));
   }
   else
   {
     ecma_string_t *message_string_p = ecma_new_ecma_string_from_utf8 ((lit_utf8_byte_t *) message_p,
                                                                       (lit_utf8_size_t) message_size);
 
-    ecma_object_t *error_object_p = ecma_new_standard_error ((ecma_standard_error_t) error_type,
+    ecma_object_t *error_object_p = ecma_new_standard_error ((jerry_error_t) error_type,
                                                              message_string_p);
 
     ecma_deref_ecma_string (message_string_p);

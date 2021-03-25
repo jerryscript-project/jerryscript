@@ -32,7 +32,7 @@
  * Reject with TypeError depending on 'is_throw' with the given format
  */
 #define ECMA_REJECT_WITH_FORMAT(is_throw, msg, ...) \
-  ((is_throw) ? ecma_raise_standard_error_with_format (ECMA_ERROR_TYPE, (msg), __VA_ARGS__) : ECMA_VALUE_FALSE)
+  ((is_throw) ? ecma_raise_standard_error_with_format (JERRY_ERROR_TYPE, (msg), __VA_ARGS__) : ECMA_VALUE_FALSE)
 
 /**
  * Reject with TypeError depending on 'is_throw' with the given message

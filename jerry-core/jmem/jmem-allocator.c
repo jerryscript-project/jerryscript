@@ -161,7 +161,7 @@ jmem_finalize (void)
   jmem_pools_finalize ();
 
 #if JERRY_MEM_STATS
-  if (JERRY_CONTEXT (jerry_init_flags) & ECMA_INIT_MEM_STATS)
+  if (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_MEM_STATS)
   {
     jmem_heap_stats_print ();
   }

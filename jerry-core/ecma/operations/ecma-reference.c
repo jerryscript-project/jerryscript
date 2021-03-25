@@ -385,7 +385,7 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
 
 #if JERRY_ERROR_MESSAGES
   ecma_value_t name_val = ecma_make_string_value (name_p);
-  ecma_value_t error_value = ecma_raise_standard_error_with_format (ECMA_ERROR_REFERENCE,
+  ecma_value_t error_value = ecma_raise_standard_error_with_format (JERRY_ERROR_REFERENCE,
                                                                     "% is not defined",
                                                                     name_val);
 #else /* JERRY_ERROR_MESSAGES */

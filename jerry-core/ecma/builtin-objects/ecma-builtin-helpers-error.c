@@ -37,7 +37,7 @@
  * @return ecma value
  */
 ecma_value_t
-ecma_builtin_helper_error_dispatch_call (ecma_standard_error_t error_type, /**< native error type */
+ecma_builtin_helper_error_dispatch_call (jerry_error_t error_type, /**< native error type */
                                          const ecma_value_t *arguments_list_p, /**< arguments list */
                                          uint32_t arguments_list_len) /**< number of arguments */
 {

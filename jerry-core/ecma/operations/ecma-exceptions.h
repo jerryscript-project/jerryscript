@@ -32,31 +32,10 @@
 #define ECMA_ERR_MSG(msg) NULL
 #endif /* JERRY_ERROR_MESSAGES */
 
-/**
- * Native errors.
- *
- * See also: 15.11.1, 15.11.6
- */
-typedef enum
-{
-  ECMA_ERROR_NONE,      /**< Not an Error */
-
-  ECMA_ERROR_COMMON,    /**< Error */
-  ECMA_ERROR_EVAL,      /**< EvalError */
-  ECMA_ERROR_RANGE,     /**< RangeError */
-  ECMA_ERROR_REFERENCE, /**< ReferenceError */
-  ECMA_ERROR_SYNTAX,    /**< SyntaxError */
-  ECMA_ERROR_TYPE,      /**< TypeError */
-  ECMA_ERROR_URI,        /**< URIError */
-#if JERRY_BUILTIN_PROMISE
-  ECMA_ERROR_AGGREGATE, /**< AggregateError */
-#endif /* JERRY_BUILTIN_PROMISE */
-} ecma_standard_error_t;
-
-ecma_standard_error_t ecma_get_error_type (ecma_object_t *error_object);
-ecma_object_t *ecma_new_standard_error (ecma_standard_error_t error_type, ecma_string_t *message_string_p);
+jerry_error_t ecma_get_error_type (ecma_object_t *error_object);
+ecma_object_t *ecma_new_standard_error (jerry_error_t error_type, ecma_string_t *message_string_p);
 #if JERRY_ERROR_MESSAGES
-ecma_value_t ecma_raise_standard_error_with_format (ecma_standard_error_t error_type, const char *msg_p, ...);
+ecma_value_t ecma_raise_standard_error_with_format (jerry_error_t error_type, const char *msg_p, ...);
 #endif /* JERRY_ERROR_MESSAGES */
 ecma_value_t ecma_raise_common_error (const char *msg_p);
 ecma_value_t ecma_raise_range_error (const char *msg_p);

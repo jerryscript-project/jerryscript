@@ -7,6 +7,7 @@ nbproject
 *.sublime-project
 *.sublime-workspace
 .idea
+.cache
 
 # Random Trash
 *.swp

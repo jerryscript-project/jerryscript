@@ -280,7 +280,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this */
 #if !JERRY_ESNEXT
   if (ecma_get_object_from_value (this_arg) == ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a RegExp object"));
+    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_argument_is_not_an_regexp));
   }
 #endif /* !JERRY_ESNEXT */
 
@@ -749,7 +749,7 @@ ecma_builtin_regexp_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
           return ecma_make_magic_string_value (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP);
         }
 
-        return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a RegExp object"));
+        return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_argument_is_not_an_regexp));
       }
 
       ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) obj_p;
@@ -769,7 +769,7 @@ ecma_builtin_regexp_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
           return ECMA_VALUE_UNDEFINED;
         }
 
-        return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a RegExp object"));
+        return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_argument_is_not_an_regexp));
       }
 
       ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) obj_p;

@@ -815,7 +815,7 @@ ecma_typedarray_create_object_with_buffer (ecma_object_t *arraybuffer_p, /**< th
 {
   if (ecma_arraybuffer_is_detached (arraybuffer_p))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached"));
+    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_arraybuffer_is_detached));
   }
   uint32_t expected_length = (ecma_arraybuffer_get_length (arraybuffer_p) >> element_size_shift);
 

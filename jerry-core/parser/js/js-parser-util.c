@@ -1278,7 +1278,7 @@ parser_error_to_string (parser_error_t error) /**< error code */
 #if JERRY_ESNEXT
     case PARSER_ERR_VARIABLE_REDECLARED:
     {
-      return "Local variable is redeclared";
+      return ecma_error_local_variable_is_redeclared;
     }
     case PARSER_ERR_LEXICAL_SINGLE_STATEMENT:
     {

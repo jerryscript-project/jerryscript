@@ -87,7 +87,7 @@ ecma_builtin_array_iterator_prototype_object_next (ecma_value_t this_val) /**< t
     ecma_object_t *arraybuffer_p = ecma_typedarray_get_arraybuffer (array_object_p);
     if (ecma_arraybuffer_is_detached (arraybuffer_p))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached"));
+      return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_arraybuffer_is_detached));
     }
 
     /* b. */

@@ -956,7 +956,7 @@ ecma_builtin_object_object_create (ecma_value_t arg1, /**< routine's first argum
   /* 1. */
   if (!ecma_is_value_object (arg1) && !ecma_is_value_null (arg1))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object"));
+    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_argument_is_not_an_object));
   }
 
   ecma_object_t *obj_p = NULL;
@@ -1415,7 +1415,7 @@ ecma_builtin_object_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
 #if !JERRY_ESNEXT
   if (!ecma_is_value_object (arg1))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object"));
+    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_argument_is_not_an_object));
   }
 #endif /* !JERRY_ESNEXT */
 
@@ -1424,7 +1424,7 @@ ecma_builtin_object_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
 #if JERRY_ESNEXT
     if (!ecma_is_value_object (arg1))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object"));
+      return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_argument_is_not_an_object));
     }
 #endif /* JERRY_ESNEXT */
 

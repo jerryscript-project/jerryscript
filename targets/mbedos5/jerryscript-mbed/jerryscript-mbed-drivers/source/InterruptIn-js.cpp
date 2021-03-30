@@ -23,7 +23,8 @@
  *
  * Called if/when the InterruptIn object is GC'ed.
  */
-void NAME_FOR_CLASS_NATIVE_DESTRUCTOR(InterruptIn) (void *void_ptr) {
+void NAME_FOR_CLASS_NATIVE_DESTRUCTOR(InterruptIn) (void *void_ptr, jerry_object_native_info_t *info_p) {
+    (void) info_p;
     InterruptIn *native_ptr = static_cast<InterruptIn*>(void_ptr);
 
     native_ptr->rise(0);

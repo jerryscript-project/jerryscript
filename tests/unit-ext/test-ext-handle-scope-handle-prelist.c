@@ -27,10 +27,12 @@ static size_t native_free_cb_call_count;
 static const size_t handle_count = JERRYX_HANDLE_PRELIST_SIZE * 2;
 
 static void
-native_free_cb (void *native_p)
+native_free_cb (void *native_p, /**< native pointer */
+                jerry_object_native_info_t *info_p) /**< native info */
 {
-  ++native_free_cb_call_count;
   (void) native_p;
+  (void) info_p;
+  ++native_free_cb_call_count;
 } /* native_free_cb */
 
 static const jerry_object_native_info_t native_info =

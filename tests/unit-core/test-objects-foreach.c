@@ -132,9 +132,11 @@ test_internal_prop (void)
 
 static int test_data = 1;
 
-static void free_test_data (void *data_p)
+static void free_test_data (void *native_p, /**< native pointer */
+                            jerry_object_native_info_t *info_p) /**< native info */
 {
-  TEST_ASSERT ((int *) data_p == &test_data);
+  TEST_ASSERT ((int *) native_p == &test_data);
+  TEST_ASSERT (info_p->free_cb == free_test_data);
 } /* free_test_data */
 
 static const jerry_object_native_info_t test_info =

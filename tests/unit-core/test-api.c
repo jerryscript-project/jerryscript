@@ -106,18 +106,22 @@ handler_throw_test (const jerry_call_info_t *call_info_p, /**< call information 
 } /* handler_throw_test */
 
 static void
-handler_construct_1_freecb (void *native_p)
+handler_construct_1_freecb (void *native_p, /**< native pointer */
+                            jerry_object_native_info_t *info_p) /**< native info */
 {
   TEST_ASSERT ((uintptr_t) native_p == (uintptr_t) 0x0000000000000000ull);
+  TEST_ASSERT (info_p->free_cb == handler_construct_1_freecb);
   printf ("ok object free callback\n");
 
   test_api_is_free_callback_was_called = true;
 } /* handler_construct_1_freecb */
 
 static void
-handler_construct_2_freecb (void *native_p)
+handler_construct_2_freecb (void *native_p, /**< native pointer */
+                            jerry_object_native_info_t *info_p) /**< native info */
 {
   TEST_ASSERT ((uintptr_t) native_p == (uintptr_t) 0x0012345678abcdefull);
+  TEST_ASSERT (info_p->free_cb == handler_construct_2_freecb);
   printf ("ok object free callback\n");
 
   test_api_is_free_callback_was_called = true;

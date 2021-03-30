@@ -2474,7 +2474,7 @@ jerry_create_string_sz (const jerry_char_t *str_p, /**< pointer to string */
  */
 jerry_value_t
 jerry_create_external_string (const jerry_char_t *str_p, /**< pointer to string */
-                              jerry_object_native_free_callback_t free_cb) /**< free callback */
+                              jerry_value_free_callback_t free_cb) /**< free callback */
 {
   return jerry_create_external_string_sz (str_p, lit_zt_utf8_string_size ((lit_utf8_byte_t *) str_p), free_cb);
 } /* jerry_create_external_string */
@@ -2490,7 +2490,7 @@ jerry_create_external_string (const jerry_char_t *str_p, /**< pointer to string 
 jerry_value_t
 jerry_create_external_string_sz (const jerry_char_t *str_p, /**< pointer to string */
                                  jerry_size_t str_size, /**< string size */
-                                 jerry_object_native_free_callback_t free_cb) /**< free callback */
+                                 jerry_value_free_callback_t free_cb) /**< free callback */
 {
   jerry_assert_api_available ();
 
@@ -4022,7 +4022,7 @@ jerry_objects_foreach_by_native_info (const jerry_object_native_info_t *native_i
     {
       native_pointer_p = ecma_get_native_pointer_value (iter_p, (void *) native_info_p);
       if (native_pointer_p
-          && !foreach_p (ecma_make_object_value (iter_p), native_pointer_p->data_p, user_data_p))
+          && !foreach_p (ecma_make_object_value (iter_p), native_pointer_p->native_p, user_data_p))
       {
         return true;
       }
@@ -4066,7 +4066,7 @@ jerry_get_object_native_pointer (const jerry_value_t obj_val, /**< object to get
 
   if (out_native_pointer_p != NULL)
   {
-    *out_native_pointer_p = native_pointer_p->data_p;
+    *out_native_pointer_p = native_pointer_p->native_p;
   }
 
   return true;
@@ -5209,7 +5209,7 @@ jerry_create_arraybuffer (const jerry_length_t size) /**< size of the ArrayBuffe
 jerry_value_t
 jerry_create_arraybuffer_external (const jerry_length_t size, /**< size of the buffer to used */
                                    uint8_t *buffer_p, /**< buffer to use as the ArrayBuffer's backing */
-                                   jerry_object_native_free_callback_t free_cb) /**< buffer free callback */
+                                   jerry_value_free_callback_t free_cb) /**< buffer free callback */
 {
   jerry_assert_api_available ();
 
@@ -5222,9 +5222,7 @@ jerry_create_arraybuffer_external (const jerry_length_t size, /**< size of the b
   }
   else
   {
-    arraybuffer = ecma_arraybuffer_new_object_external (size,
-                                                        buffer_p,
-                                                        (ecma_object_native_free_callback_t) free_cb);
+    arraybuffer = ecma_arraybuffer_new_object_external (size, buffer_p, free_cb);
   }
 
   return jerry_return (ecma_make_object_value (arraybuffer));

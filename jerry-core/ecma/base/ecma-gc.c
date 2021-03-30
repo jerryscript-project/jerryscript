@@ -1175,37 +1175,54 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
  * Free the native handle/pointer by calling its free callback.
  */
 static void
-ecma_gc_free_native_pointer (ecma_value_t value) /**< property value */
+ecma_gc_free_native_pointer (ecma_property_t property, /**< property descriptor */
+                             ecma_value_t value) /**< property value */
 {
+  if (JERRY_LIKELY (property & ECMA_PROPERTY_FLAG_SINGLE_EXTERNAL))
+  {
+    JERRY_ASSERT (value != JMEM_CP_NULL);
+
+    ecma_native_pointer_t *native_pointer_p;
+    native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t, value);
+
+    jerry_object_native_free_callback_t free_cb = native_pointer_p->info_p->free_cb;
+
+    if (free_cb != NULL)
+    {
+      free_cb (native_pointer_p->native_p, native_pointer_p->info_p);
+    }
+
+    jmem_heap_free_block (native_pointer_p, sizeof (ecma_native_pointer_t));
+    return;
+  }
+
   if (value == JMEM_CP_NULL)
   {
     return;
   }
 
-  ecma_native_pointer_t *native_pointer_p;
-
-  native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t, value);
-  JERRY_ASSERT (native_pointer_p != NULL);
+  ecma_native_pointer_chain_t *item_p;
+  item_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_chain_t, value);
 
   do
   {
-    if (native_pointer_p->info_p != NULL)
+    if (item_p->data.info_p != NULL)
     {
-      ecma_object_native_free_callback_t free_cb = native_pointer_p->info_p->free_cb;
+      jerry_object_native_free_callback_t free_cb = item_p->data.info_p->free_cb;
 
       if (free_cb != NULL)
       {
-        free_cb (native_pointer_p->data_p);
+        free_cb (item_p->data.native_p, item_p->data.info_p);
       }
     }
 
-    ecma_native_pointer_t *next_p = native_pointer_p->next_p;
+    ecma_native_pointer_chain_t *next_p = item_p->next_p;
 
-    jmem_heap_free_block (native_pointer_p, sizeof (ecma_native_pointer_t));
+    jmem_heap_free_block (item_p, sizeof (ecma_native_pointer_chain_t));
 
-    native_pointer_p = next_p;
+    item_p = next_p;
   }
-  while (native_pointer_p != NULL);
+  while (item_p != NULL);
 } /* ecma_gc_free_native_pointer */
 
 /**
@@ -1518,7 +1535,7 @@ ecma_gc_free_property (ecma_object_t *object_p, /**< object */
     default:
     {
       JERRY_ASSERT (name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
-      ecma_gc_free_native_pointer (value);
+      ecma_gc_free_native_pointer (property, value);
       break;
     }
   }

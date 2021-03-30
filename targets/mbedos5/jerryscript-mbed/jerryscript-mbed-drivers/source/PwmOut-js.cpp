@@ -22,7 +22,8 @@
  *
  * Called if/when the PwmOut is GC'ed.
  */
-void NAME_FOR_CLASS_NATIVE_DESTRUCTOR(PwmOut)(void* void_ptr) {
+void NAME_FOR_CLASS_NATIVE_DESTRUCTOR(PwmOut)(void* void_ptr, jerry_object_native_info_t *info_p) {
+    (void) info_p;
     delete static_cast<PwmOut*>(void_ptr);
 }
 

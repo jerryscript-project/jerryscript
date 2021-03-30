@@ -37,7 +37,7 @@ LIBS = libjerry-core.a libjerry-ext.a libjerry-math.a
 
 APPNAME = jerry
 ASRCS = setjmp.S
-CSRCS = jerry_port.c
+CSRCS = jerry_port.c jerry_module.c
 MAINSRC = jerry_main.c
 
 .PHONY: copylibs

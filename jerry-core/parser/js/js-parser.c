@@ -1810,7 +1810,7 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
     context.status_flags |= PARSER_IS_STRICT;
   }
 
-  context.module_current_node_p = NULL;
+  context.module_names_p = NULL;
 #endif /* JERRY_MODULE_SYSTEM */
 
   if (arg_list_p != NULL)
@@ -2051,9 +2051,9 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
     scanner_cleanup (&context);
 
 #if JERRY_MODULE_SYSTEM
-    if (context.module_current_node_p != NULL)
+    if (context.module_names_p != NULL)
     {
-      ecma_module_release_module_nodes (context.module_current_node_p);
+      ecma_module_release_module_names (context.module_names_p);
     }
 #endif
 

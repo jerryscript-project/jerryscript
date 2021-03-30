@@ -13,92 +13,13 @@
  * limitations under the License.
  */
 
-#include <limits.h>
-#include <stdarg.h>
-#include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
-#include <sys/stat.h>
+#include <stdlib.h>
+#include <unistd.h>
 
+#include "jerryscript.h"
 #include "jerryscript-port.h"
-#include "jerryscript-port-default.h"
-
-#ifndef S_ISDIR
-#define S_ISDIR(mode) (((mode) & S_IFMT) == S_IFDIR)
-#endif
-
-/**
- * Determines the size of the given file.
- * @return size of the file
- */
-static size_t
-jerry_port_get_file_size (FILE *file_p) /**< opened file */
-{
-  fseek (file_p, 0, SEEK_END);
-  long size = ftell (file_p);
-  fseek (file_p, 0, SEEK_SET);
-
-  return (size_t) size;
-} /* jerry_port_get_file_size */
-
-/**
- * Opens file with the given path and reads its source.
- * @return the source of the file
- */
-uint8_t *
-jerry_port_read_source (const char *file_name_p, /**< file name */
-                        size_t *out_size_p) /**< [out] read bytes */
-{
-  struct stat stat_buffer;
-  if (stat (file_name_p, &stat_buffer) == -1 || S_ISDIR (stat_buffer.st_mode))
-  {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: Failed to open file: %s\n", file_name_p);
-    return NULL;
-  }
-
-  FILE *file_p = fopen (file_name_p, "rb");
-
-  if (file_p == NULL)
-  {
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: Failed to open file: %s\n", file_name_p);
-    return NULL;
-  }
-
-  size_t file_size = jerry_port_get_file_size (file_p);
-  uint8_t *buffer_p = (uint8_t *) malloc (file_size);
-
-  if (buffer_p == NULL)
-  {
-    fclose (file_p);
-
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: Failed to allocate memory for file: %s\n", file_name_p);
-    return NULL;
-  }
-
-  size_t bytes_read = fread (buffer_p, 1u, file_size, file_p);
-
-  if (bytes_read != file_size)
-  {
-    fclose (file_p);
-    free (buffer_p);
-
-    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error: Failed to read file: %s\n", file_name_p);
-    return NULL;
-  }
-
-  fclose (file_p);
-  *out_size_p = bytes_read;
-
-  return buffer_p;
-} /* jerry_port_read_source */
-
-/**
- * Release the previously opened file's content.
- */
-void
-jerry_port_release_source (uint8_t *buffer_p) /**< buffer to free */
-{
-  free (buffer_p);
-} /* jerry_port_release_source */
 
 /**
  * Computes the end of the directory part of a path.
@@ -112,17 +33,10 @@ jerry_port_get_directory_end (const jerry_char_t *path_p) /**< path */
 
   while (end_p > path_p)
   {
-#if defined (_WIN32)
-    if (end_p[-1] == '/' || end_p[-1] == '\\')
-    {
-      return (size_t) (end_p - path_p);
-    }
-#else /* !_WIN32 */
     if (end_p[-1] == '/')
     {
       return (size_t) (end_p - path_p);
     }
-#endif /* _WIN32 */
 
     end_p--;
   }
@@ -169,34 +83,6 @@ jerry_port_normalize_path (const jerry_char_t *in_path_p, /**< path to the refer
     memcpy (path_p, in_path_p, in_path_length);
     path_p[in_path_length] = '\0';
   }
-
-#if defined (_WIN32)
-  char full_path[_MAX_PATH];
-
-  if (_fullpath (full_path, path_p, _MAX_PATH) != NULL)
-  {
-    free (path_p);
-
-    size_t full_path_len = strlen (full_path);
-
-    path_p = (char *) malloc (full_path_len + 1);
-
-    if (path_p == NULL)
-    {
-      return NULL;
-    }
-
-    memcpy (path_p, full_path, full_path_len + 1);
-  }
-#elif defined (__unix__) || defined (__APPLE__)
-  char *norm_p = realpath (path_p, NULL);
-
-  if (norm_p != NULL)
-  {
-    free (path_p);
-    path_p = norm_p;
-  }
-#endif /* _WIN32 */
 
   return (jerry_char_t *) path_p;
 } /* jerry_port_normalize_path */

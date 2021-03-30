@@ -987,6 +987,9 @@ typedef struct
         ecma_value_t date; /**< Date object [[DateValue]] internal property */
         int32_t tza; /**< TimeZone adjustment for date objects */
         uint32_t length; /**< length related property (e.g. length of ArrayBuffer) */
+#if JERRY_MODULE_SYSTEM
+        uint32_t dfs_ancestor_index; /**< module dfs ancestor index (ES2020 15.2.1.16) */
+#endif /* JERRY_MODULE_SYSTEM */
         ecma_value_t target; /**< [[ProxyTarget]] or [[WeakRefTarget]] internal property */
         ecma_value_t head; /**< points to the async generator task queue head item */
         ecma_value_t promise; /**< PromiseCapability[[Promise]] internal slot */

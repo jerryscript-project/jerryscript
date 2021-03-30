@@ -160,6 +160,18 @@ static const char * const error_json_not_supported_p = "JSON support is disabled
 static const char * const error_symbol_not_supported_p = "Symbol support is disabled";
 #endif /* !JERRY_ESNEXT */
 
+#if JERRY_MODULE_SYSTEM
+/**
+ * Error message, if argument is not a module
+ */
+static const char * const error_not_module_p = "Argument is not a module";
+#else /* !JERRY_MODULE_SYSTEM */
+/**
+ * Error message, if Module support is disabled
+ */
+static const char * const error_module_not_supported_p = "Module support is disabled";
+#endif /* JERRY_MODULE_SYSTEM */
+
 #if !JERRY_BUILTIN_PROMISE
 /**
  * Error message, if Promise support is disabled
@@ -528,9 +540,9 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
   if ((parse_opts & JERRY_PARSE_MODULE) != 0)
   {
 #if JERRY_MODULE_SYSTEM
-    ecma_module_initialize_context ((const ecma_parse_options_t *) options_p);
+    ecma_module_initialize_context ();
 #else /* !JERRY_MODULE_SYSTEM */
-    return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG ("Module system has been disabled")));
+    return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG (error_module_not_supported_p)));
 #endif /* JERRY_MODULE_SYSTEM */
   }
 
@@ -556,27 +568,12 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
 #if JERRY_MODULE_SYSTEM
   if (JERRY_UNLIKELY (parse_opts & JERRY_PARSE_MODULE))
   {
-    if (ECMA_IS_VALUE_ERROR (ecma_module_parse_referenced_modules ()))
-    {
-      ecma_bytecode_deref (bytecode_data_p);
-      ecma_module_cleanup_context ();
-
-      return ecma_create_error_reference_from_context ();
-    }
-
-    ecma_module_t *root_module_p = JERRY_CONTEXT (module_current_p);
-    root_module_p->compiled_code_p = bytecode_data_p;
-
-    ecma_object_t *obj_p = ecma_create_object (NULL, sizeof (ecma_extended_object_t), ECMA_OBJECT_TYPE_CLASS);
-
-    ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
-    ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_MODULE_UL;
-    ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.class_prop.u.value, root_module_p);
+    ecma_module_t *module_p = JERRY_CONTEXT (module_current_p);
+    module_p->compiled_code_p = bytecode_data_p;
 
     JERRY_CONTEXT (module_current_p) = NULL;
-    JERRY_CONTEXT (module_list_p) = NULL;
 
-    return ecma_make_object_value (obj_p);
+    return ecma_make_object_value ((ecma_object_t *) module_p);
   }
 #endif /* JERRY_MODULE_SYSTEM */
 
@@ -713,20 +710,16 @@ jerry_run (const jerry_value_t func_val) /**< function to run */
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
 #if JERRY_MODULE_SYSTEM
-  if (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_MODULE_UL)
+  if (JERRY_UNLIKELY (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_MODULE_UL))
   {
-    ecma_module_t *root_module_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_module_t, ext_object_p->u.class_prop.u.value);
+    ecma_module_t *root_module_p = (ecma_module_t *) ext_object_p;
 
-#if JERRY_BUILTIN_REALMS
-    ecma_object_t *global_object_p = (ecma_object_t *) ecma_op_function_get_realm (root_module_p->compiled_code_p);
-#else /* !JERRY_BUILTIN_REALMS */
-    ecma_object_t *global_object_p = ecma_builtin_get_global ();
-#endif /* JERRY_BUILTIN_REALMS */
+    if (root_module_p->header.u.class_prop.extra_info != ECMA_MODULE_STATE_LINKED)
+    {
+      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Module must be in linked state")));
+    }
 
-    ecma_create_global_lexical_block (global_object_p);
-    root_module_p->scope_p = ecma_get_global_scope (global_object_p);
-
-    return jerry_return (vm_run_module (root_module_p));
+    return jerry_return (ecma_module_evaluate (root_module_p));
   }
 #endif /* JERRY_MODULE_SYSTEM */
 
@@ -769,6 +762,43 @@ jerry_eval (const jerry_char_t *source_p, /**< source code */
                                                   source_size,
                                                   parse_opts));
 } /* jerry_eval */
+
+/**
+ * Link modules to their dependencies. The dependencies are resolved by a user callback.
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return true - if linking is successful, error - otherwise
+ */
+jerry_value_t
+jerry_module_link (const jerry_value_t module_val, /**< root module */
+                   jerry_module_resolve_callback_t callback, /**< resolve module callback, uses
+                                                              *   jerry_port_module_resolve when NULL is passed */
+                   void *user_p) /**< pointer passed to the resolve callback */
+{
+#if JERRY_MODULE_SYSTEM
+  if (callback == NULL)
+  {
+    callback = jerry_port_module_resolve;
+  }
+
+  ecma_module_t *module_p = ecma_module_get_resolved_module (module_val);
+
+  if (module_p == NULL)
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_not_module_p)));
+  }
+
+  return jerry_return (ecma_module_link (module_p, callback, user_p));
+#else /* !JERRY_MODULE_SYSTEM */
+  JERRY_UNUSED (module_val);
+  JERRY_UNUSED (callback);
+  JERRY_UNUSED (user_p);
+
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (error_module_not_supported_p)));
+#endif /* JERRY_MODULE_SYSTEM */
+} /* jerry_module_link */
 
 /**
  * Run enqueued Promise jobs until the first thrown error or until all get executed.

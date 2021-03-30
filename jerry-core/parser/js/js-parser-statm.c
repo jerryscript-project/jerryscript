@@ -2425,11 +2425,9 @@ static void
 parser_parse_import_statement (parser_context_t *context_p) /**< parser context */
 {
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_IMPORT);
+  JERRY_ASSERT (context_p->module_names_p == NULL);
 
   parser_module_check_request_place (context_p);
-
-  context_p->module_current_node_p = parser_module_create_module_node (context_p);
-
   lexer_next_token (context_p);
 
   /* Check for a ModuleSpecifier*/
@@ -2482,7 +2480,7 @@ parser_parse_import_statement (parser_context_t *context_p) /**< parser context 
 
     if (context_p->token.type == LEXER_MULTIPLY)
     {
-      /* NameSpaceImport*/
+      /* NameSpaceImport */
       lexer_next_token (context_p);
       if (!lexer_token_is_identifier (context_p, "as", 2))
       {
@@ -2527,10 +2525,7 @@ parser_parse_import_statement (parser_context_t *context_p) /**< parser context 
     lexer_next_token (context_p);
   }
 
-  parser_module_handle_module_specifier (context_p);
-  parser_module_finalize_import_node (context_p);
-
-  context_p->module_current_node_p = NULL;
+  parser_module_handle_module_specifier (context_p, NULL);
 } /* parser_parse_import_statement */
 
 /**
@@ -2543,10 +2538,9 @@ static bool
 parser_parse_export_statement (parser_context_t *context_p) /**< context */
 {
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_EXPORT);
+  JERRY_ASSERT (context_p->module_names_p == NULL);
 
   parser_module_check_request_place (context_p);
-
-  context_p->module_current_node_p = parser_module_create_module_node (context_p);
 
   bool consume_last_statement = false;
 
@@ -2628,8 +2622,8 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
       }
 
       lexer_next_token (context_p);
-      parser_module_handle_module_specifier (context_p);
-      break;
+      parser_module_handle_module_specifier (context_p, &(JERRY_CONTEXT (module_current_p)->star_exports_p));
+      return false;
     }
     case LEXER_KEYW_VAR:
     case LEXER_KEYW_LET:
@@ -2660,7 +2654,8 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
       if (lexer_token_is_identifier (context_p, "from", 4))
       {
         lexer_next_token (context_p);
-        parser_module_handle_module_specifier (context_p);
+        parser_module_handle_module_specifier (context_p, &(JERRY_CONTEXT (module_current_p)->indirect_exports_p));
+        return false;
       }
       break;
     }
@@ -2672,8 +2667,7 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
   }
 
   context_p->status_flags &= (uint32_t) ~(PARSER_MODULE_DEFAULT_CLASS_OR_FUNC | PARSER_MODULE_STORE_IDENT);
-  parser_module_finalize_export_node (context_p);
-  context_p->module_current_node_p = NULL;
+  parser_module_append_names (context_p, &(JERRY_CONTEXT (module_current_p)->local_exports_p));
 
   return consume_last_statement;
 } /* parser_parse_export_statement */

@@ -39,6 +39,21 @@ compare_specifier (jerry_value_t specifier, /* string value */
   TEST_ASSERT (memcmp (buffer, string, length) == 0);
 } /* compare_specifier */
 
+static void
+compare_property (jerry_value_t namespace_object, /**< namespace object */
+                  const char *name_p, /**< property name */
+                  double expected_value) /**< property value (number for simplicity) */
+{
+  jerry_value_t name = jerry_create_string ((const jerry_char_t *) name_p);
+  jerry_value_t result = jerry_get_property (namespace_object, name);
+
+  TEST_ASSERT (jerry_value_is_number (result));
+  TEST_ASSERT (jerry_get_number_value (result) == expected_value);
+
+  jerry_release_value (result);
+  jerry_release_value (name);
+} /* compare_property */
+
 static jerry_value_t
 create_module (int id) /**< module id */
 {
@@ -110,6 +125,18 @@ resolve_callback2 (const jerry_value_t specifier, /**< module specifier */
   return prev_module;
 } /* resolve_callback2 */
 
+static jerry_value_t
+resolve_callback3 (const jerry_value_t specifier, /**< module specifier */
+                   const jerry_value_t referrer, /**< parent module */
+                   void *user_p) /**< user data */
+{
+  (void) specifier;
+  (void) referrer;
+  (void) user_p;
+
+  TEST_ASSERT (false);
+} /* resolve_callback3 */
+
 int
 main (void)
 {
@@ -163,6 +190,13 @@ main (void)
   TEST_ASSERT (jerry_value_is_boolean (result) && jerry_get_boolean_value (result));
   TEST_ASSERT (counter == 32);
   jerry_release_value (result);
+
+  TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_LINKED);
+  TEST_ASSERT (jerry_module_get_number_of_requests (module) == 1);
+  result = jerry_module_get_request (module, 0);
+  TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_LINKED);
+  jerry_release_value (result);
+
   jerry_release_value (module);
 
   module = create_module (1);
@@ -174,6 +208,82 @@ main (void)
   TEST_ASSERT (jerry_value_is_boolean (result) && jerry_get_boolean_value (result));
   TEST_ASSERT (counter == 32);
   jerry_release_value (result);
+  jerry_release_value (module);
+
+  TEST_ASSERT (jerry_module_get_state (number) == JERRY_MODULE_STATE_INVALID);
+
+  jerry_parse_options_t module_parse_options;
+  module_parse_options.options = JERRY_PARSE_MODULE;
+
+  jerry_char_t source1[] = TEST_STRING_LITERAL (
+    "import a from '16_module.mjs'\n"
+    "export * from '07_module.mjs'\n"
+    "export * from '44_module.mjs'\n"
+    "import * as b from '36_module.mjs'\n"
+  );
+  module = jerry_parse (source1, sizeof (source1) - 1, &module_parse_options);
+  TEST_ASSERT (!jerry_value_is_error (module));
+  TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_UNLINKED);
+
+  TEST_ASSERT (jerry_module_get_number_of_requests (number) == 0);
+  TEST_ASSERT (jerry_module_get_number_of_requests (module) == 4);
+
+  result = jerry_module_get_request (object, 0);
+  TEST_ASSERT (jerry_value_is_error (result));
+  jerry_release_value (result);
+
+  result = jerry_module_get_request (module, 0);
+  compare_specifier (result, 16);
+  jerry_release_value (result);
+
+  result = jerry_module_get_request (module, 1);
+  compare_specifier (result, 7);
+  jerry_release_value (result);
+
+  result = jerry_module_get_request (module, 2);
+  compare_specifier (result, 44);
+  jerry_release_value (result);
+
+  result = jerry_module_get_request (module, 3);
+  compare_specifier (result, 36);
+  jerry_release_value (result);
+
+  result = jerry_module_get_request (module, 4);
+  TEST_ASSERT (jerry_value_is_error (result));
+  jerry_release_value (result);
+
+  jerry_release_value (module);
+
+  result = jerry_module_get_namespace (number);
+  TEST_ASSERT (jerry_value_is_error (result));
+  jerry_release_value (result);
+
+  jerry_char_t source2[] = TEST_STRING_LITERAL (
+    "export let a = 6\n"
+    "export let b = 8.5\n"
+  );
+  module = jerry_parse (source2, sizeof (source2) - 1, &module_parse_options);
+  TEST_ASSERT (!jerry_value_is_error (module));
+  TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_UNLINKED);
+
+  result = jerry_module_link (module, resolve_callback3, NULL);
+  TEST_ASSERT (!jerry_value_is_error (result));
+  jerry_release_value (result);
+
+  TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_LINKED);
+
+  result = jerry_module_evaluate (module);
+  TEST_ASSERT (!jerry_value_is_error (result));
+  jerry_release_value (result);
+
+  TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_EVALUATED);
+
+  result = jerry_module_get_namespace (module);
+  TEST_ASSERT (jerry_value_is_object (result));
+  compare_property (result, "a", 6);
+  compare_property (result, "b", 8.5);
+  jerry_release_value (result);
+
   jerry_release_value (module);
 
   jerry_release_value (object);

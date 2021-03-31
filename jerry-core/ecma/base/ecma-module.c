@@ -40,7 +40,7 @@ ecma_module_initialize_context (void)
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
   ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_MODULE_UL;
-  ext_object_p->u.class_prop.extra_info = ECMA_MODULE_STATE_UNLINKED;
+  ext_object_p->u.class_prop.extra_info = JERRY_MODULE_STATE_UNLINKED;
 
   ecma_module_t *module_p = (ecma_module_t *) obj_p;
 
@@ -219,7 +219,7 @@ ecma_module_resolve_export (ecma_module_t *const module_p, /**< base module */
         continue;
       }
 
-      if (current_module_p->header.u.class_prop.extra_info == ECMA_MODULE_STATE_NATIVE)
+      if (current_module_p->header.u.class_prop.extra_info == JERRY_MODULE_STATE_NATIVE)
       {
         ecma_object_t *object_p = current_module_p->namespace_object_p;
         ecma_value_t prop_value = ecma_op_object_find_own (ecma_make_object_value (object_p),
@@ -382,17 +382,17 @@ ecma_module_resolve_export (ecma_module_t *const module_p, /**< base module */
 ecma_value_t
 ecma_module_evaluate (ecma_module_t *module_p) /**< module */
 {
-  if (module_p->header.u.class_prop.extra_info == ECMA_MODULE_STATE_ERROR)
+  if (module_p->header.u.class_prop.extra_info == JERRY_MODULE_STATE_ERROR)
   {
     return ecma_raise_range_error (ECMA_ERR_MSG ("Module is in error state"));
   }
 
-  if (module_p->header.u.class_prop.extra_info >= ECMA_MODULE_STATE_EVALUATING)
+  if (module_p->header.u.class_prop.extra_info >= JERRY_MODULE_STATE_EVALUATING)
   {
     return ECMA_VALUE_EMPTY;
   }
 
-  JERRY_ASSERT (module_p->header.u.class_prop.extra_info == ECMA_MODULE_STATE_LINKED);
+  JERRY_ASSERT (module_p->header.u.class_prop.extra_info == JERRY_MODULE_STATE_LINKED);
 
 #if JERRY_BUILTIN_REALMS
   ecma_object_t *global_object_p = (ecma_object_t *) ecma_op_function_get_realm (module_p->compiled_code_p);
@@ -400,18 +400,18 @@ ecma_module_evaluate (ecma_module_t *module_p) /**< module */
   ecma_object_t *global_object_p = ecma_builtin_get_global ();
 #endif /* JERRY_BUILTIN_REALMS */
 
-  module_p->header.u.class_prop.extra_info = ECMA_MODULE_STATE_EVALUATING;
+  module_p->header.u.class_prop.extra_info = JERRY_MODULE_STATE_EVALUATING;
   module_p->scope_p = ecma_create_decl_lex_env (ecma_get_global_environment (global_object_p));
 
   ecma_value_t ret_value;
   ret_value = vm_run_module (module_p);
 
-  module_p->header.u.class_prop.extra_info = ECMA_MODULE_STATE_ERROR;
+  module_p->header.u.class_prop.extra_info = JERRY_MODULE_STATE_ERROR;
 
   if (!ECMA_IS_VALUE_ERROR (ret_value))
   {
     ecma_free_value (ret_value);
-    module_p->header.u.class_prop.extra_info = ECMA_MODULE_STATE_EVALUATED;
+    module_p->header.u.class_prop.extra_info = JERRY_MODULE_STATE_EVALUATED;
     ret_value = ECMA_VALUE_EMPTY;
   }
 
@@ -482,7 +482,7 @@ ecma_module_namespace_object_add_export_if_needed (ecma_module_t *module_p, /**<
  * @return ECMA_VALUE_ERROR - if an error occured
  *         ECMA_VALUE_EMPTY - otherwise
  */
-static ecma_value_t
+ecma_value_t
 ecma_module_create_namespace_object (ecma_module_t *module_p) /**< module */
 {
   ecma_value_t result = ECMA_VALUE_EMPTY;
@@ -491,7 +491,7 @@ ecma_module_create_namespace_object (ecma_module_t *module_p) /**< module */
     return result;
   }
 
-  JERRY_ASSERT (module_p->header.u.class_prop.extra_info == ECMA_MODULE_STATE_EVALUATED);
+  JERRY_ASSERT (module_p->header.u.class_prop.extra_info == JERRY_MODULE_STATE_EVALUATED);
   ecma_module_resolve_set_t *resolve_set_p = NULL;
   ecma_module_resolve_stack_t *stack_p = NULL;
 
@@ -688,7 +688,7 @@ ecma_module_connect_imports (ecma_module_t *module_p)
           return ecma_raise_syntax_error (ECMA_ERR_MSG ("Ambiguous import request"));
         }
 
-        if (record.module_p->header.u.class_prop.extra_info == ECMA_MODULE_STATE_NATIVE)
+        if (record.module_p->header.u.class_prop.extra_info == JERRY_MODULE_STATE_NATIVE)
         {
           ecma_object_t *object_p = record.module_p->namespace_object_p;
           prop_value = ecma_op_object_find_own (ecma_make_object_value (object_p), object_p, record.name_p);
@@ -858,12 +858,12 @@ ecma_module_link (ecma_module_t *module_p, /**< root module */
                   jerry_module_resolve_callback_t callback, /**< resolve module callback */
                   void *user_p) /**< pointer passed to the resolve callback */
 {
-  if (module_p->header.u.class_prop.extra_info != ECMA_MODULE_STATE_UNLINKED)
+  if (module_p->header.u.class_prop.extra_info != JERRY_MODULE_STATE_UNLINKED)
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Module must be in unlinked state"));
   }
 
-  module_p->header.u.class_prop.extra_info = ECMA_MODULE_STATE_LINKING;
+  module_p->header.u.class_prop.extra_info = JERRY_MODULE_STATE_LINKING;
 
   uint32_t dfs_index = 0;
   ecma_module_stack_item_t *last_p;
@@ -919,7 +919,7 @@ restart:
     node_p->u.path_or_module = resolve_result;
     ecma_deref_object (ecma_get_object_from_value (resolve_result));
 
-    if (resolved_module_p->header.u.class_prop.extra_info == ECMA_MODULE_STATE_ERROR)
+    if (resolved_module_p->header.u.class_prop.extra_info == JERRY_MODULE_STATE_ERROR)
     {
       ecma_raise_type_error (ECMA_ERR_MSG ("Cannot link to a module which is in error state"));
       goto error;
@@ -938,10 +938,10 @@ restart:
     {
       module_p = ecma_module_get_from_object (node_p->u.path_or_module);
 
-      if (module_p->header.u.class_prop.extra_info == ECMA_MODULE_STATE_UNLINKED)
+      if (module_p->header.u.class_prop.extra_info == JERRY_MODULE_STATE_UNLINKED)
       {
         current_p->node_p = node_p->next_p;
-        module_p->header.u.class_prop.extra_info = ECMA_MODULE_STATE_LINKING;
+        module_p->header.u.class_prop.extra_info = JERRY_MODULE_STATE_LINKING;
 
         ecma_module_stack_item_t *item_p;
         item_p = (ecma_module_stack_item_t *) jmem_heap_alloc_block (sizeof (ecma_module_stack_item_t));
@@ -962,7 +962,7 @@ restart:
         goto restart;
       }
 
-      if (module_p->header.u.class_prop.extra_info == ECMA_MODULE_STATE_LINKING)
+      if (module_p->header.u.class_prop.extra_info == JERRY_MODULE_STATE_LINKING)
       {
         uint32_t dfs_ancestor_index = module_p->header.u.class_prop.u.dfs_ancestor_index;
 
@@ -996,8 +996,8 @@ restart:
     {
       ecma_module_stack_item_t *prev_p = last_p->prev_p;
 
-      JERRY_ASSERT (last_p->module_p->header.u.class_prop.extra_info == ECMA_MODULE_STATE_LINKING);
-      last_p->module_p->header.u.class_prop.extra_info = ECMA_MODULE_STATE_LINKED;
+      JERRY_ASSERT (last_p->module_p->header.u.class_prop.extra_info == JERRY_MODULE_STATE_LINKING);
+      last_p->module_p->header.u.class_prop.extra_info = JERRY_MODULE_STATE_LINKED;
 
       jmem_heap_free_block (last_p, sizeof (ecma_module_stack_item_t));
       last_p = prev_p;
@@ -1017,8 +1017,8 @@ error:
   {
     ecma_module_stack_item_t *prev_p = last_p->prev_p;
 
-    JERRY_ASSERT (last_p->module_p->header.u.class_prop.extra_info == ECMA_MODULE_STATE_LINKING);
-    last_p->module_p->header.u.class_prop.extra_info = ECMA_MODULE_STATE_UNLINKED;
+    JERRY_ASSERT (last_p->module_p->header.u.class_prop.extra_info == JERRY_MODULE_STATE_LINKING);
+    last_p->module_p->header.u.class_prop.extra_info = JERRY_MODULE_STATE_UNLINKED;
 
     jmem_heap_free_block (last_p, sizeof (ecma_module_stack_item_t));
     last_p = prev_p;
@@ -1075,7 +1075,9 @@ ecma_module_release_module_nodes (ecma_module_node_t *module_node_p, /**< first 
 void
 ecma_module_release_module (ecma_module_t *module_p) /**< module */
 {
-  ecma_module_state_t state = (ecma_module_state_t) module_p->header.u.class_prop.extra_info;
+  jerry_module_state_t state = (jerry_module_state_t) module_p->header.u.class_prop.extra_info;
+
+  JERRY_ASSERT (state != JERRY_MODULE_STATE_INVALID);
 
   if (module_p->namespace_object_p != NULL)
   {
@@ -1087,7 +1089,7 @@ ecma_module_release_module (ecma_module_t *module_p) /**< module */
 #endif /* JERRY_NDEBUG */
   }
 
-  if (state == ECMA_MODULE_STATE_NATIVE)
+  if (state == JERRY_MODULE_STATE_NATIVE)
   {
     return;
   }
@@ -1097,7 +1099,7 @@ ecma_module_release_module (ecma_module_t *module_p) /**< module */
   ecma_module_release_module_nodes (module_p->indirect_exports_p, false);
   ecma_module_release_module_nodes (module_p->star_exports_p, false);
 
-  if (state >= ECMA_MODULE_STATE_EVALUATING)
+  if (state >= JERRY_MODULE_STATE_EVALUATING)
   {
     /* The module structure keeps a strong reference to the module scope, which will require an extra GC call. */
     JERRY_CONTEXT (ecma_gc_new_objects)++;

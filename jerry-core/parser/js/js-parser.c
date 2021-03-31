@@ -1897,7 +1897,7 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
 #endif /* !JERRY_NDEBUG */
 
 #if JERRY_PARSER_DUMP_BYTE_CODE
-  context.is_show_opcodes = (JERRY_CONTEXT (jerry_init_flags) & ECMA_INIT_SHOW_OPCODES);
+  context.is_show_opcodes = (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_SHOW_OPCODES);
   context.total_byte_code_size = 0;
 
   if (context.is_show_opcodes)
@@ -2122,7 +2122,7 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   ecma_value_t line_str_val = ecma_make_uint32_value (context.token.line);
   ecma_value_t col_str_val = ecma_make_uint32_value (context.token.column);
 
-  ecma_raise_standard_error_with_format (ECMA_ERROR_SYNTAX,
+  ecma_raise_standard_error_with_format (JERRY_ERROR_SYNTAX,
                                          "% [%:%:%]",
                                          err_str_val,
                                          context.resource_name,

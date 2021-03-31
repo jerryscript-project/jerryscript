@@ -118,7 +118,7 @@ vm_op_get_value (ecma_value_t object, /**< base object */
   if (JERRY_UNLIKELY (ecma_is_value_undefined (object) || ecma_is_value_null (object)))
   {
 #if JERRY_ERROR_MESSAGES
-    ecma_value_t error_value = ecma_raise_standard_error_with_format (ECMA_ERROR_TYPE,
+    ecma_value_t error_value = ecma_raise_standard_error_with_format (JERRY_ERROR_TYPE,
                                                                       "Cannot read property '%' of %",
                                                                       property,
                                                                       object);
@@ -165,7 +165,7 @@ vm_op_set_value (ecma_value_t base, /**< base object */
     if (JERRY_UNLIKELY (ecma_is_value_null (base) || ecma_is_value_undefined (base)))
     {
 #if JERRY_ERROR_MESSAGES
-      result = ecma_raise_standard_error_with_format (ECMA_ERROR_TYPE,
+      result = ecma_raise_standard_error_with_format (JERRY_ERROR_TYPE,
                                                       "Cannot set property '%' of %",
                                                       property,
                                                       base);

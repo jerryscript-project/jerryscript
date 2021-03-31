@@ -574,7 +574,7 @@ ecma_op_container_get_object (ecma_value_t this_arg, /**< this argument */
   }
 
 #if JERRY_ERROR_MESSAGES
-  ecma_raise_standard_error_with_format (ECMA_ERROR_TYPE,
+  ecma_raise_standard_error_with_format (JERRY_ERROR_TYPE,
                                          "Expected a % object",
                                          ecma_make_string_value (ecma_get_magic_string (lit_id)));
 #else /* !JERRY_ERROR_MESSAGES */

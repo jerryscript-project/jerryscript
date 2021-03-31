@@ -229,7 +229,7 @@ ecma_builtin_helper_json_create_non_formatted_json (lit_utf8_byte_t left_bracket
 /* ecma-builtin-helper-error.c */
 
 ecma_value_t
-ecma_builtin_helper_error_dispatch_call (ecma_standard_error_t error_type, const ecma_value_t *arguments_list_p,
+ecma_builtin_helper_error_dispatch_call (jerry_error_t error_type, const ecma_value_t *arguments_list_p,
                                          uint32_t arguments_list_len);
 
 /* ecma-builtin-helpers-sort.c */

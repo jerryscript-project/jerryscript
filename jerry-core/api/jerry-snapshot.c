@@ -314,7 +314,7 @@ static_snapshot_error_unsupported_literal (snapshot_globals_t *globals_p, /**< s
 
   ecma_deref_ecma_string (literal_string_p);
 
-  ecma_object_t *error_object_p = ecma_new_standard_error (ECMA_ERROR_RANGE,
+  ecma_object_t *error_object_p = ecma_new_standard_error (JERRY_ERROR_RANGE,
                                                            ecma_stringbuilder_finalize (&builder));
 
   globals_p->snapshot_error = ecma_create_error_object_reference (error_object_p);
@@ -1008,7 +1008,7 @@ jerry_snapshot_result (const uint32_t *snapshot_p, /**< snapshot */
   }
 
 #if JERRY_PARSER_DUMP_BYTE_CODE
-  if (JERRY_CONTEXT (jerry_init_flags) & ECMA_INIT_SHOW_OPCODES)
+  if (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_SHOW_OPCODES)
   {
     util_print_cbc (bytecode_p);
   }

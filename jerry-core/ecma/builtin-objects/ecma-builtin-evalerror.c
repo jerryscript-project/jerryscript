@@ -54,7 +54,7 @@ ecma_value_t
 ecma_builtin_eval_error_dispatch_call (const ecma_value_t *arguments_list_p, /**< arguments list */
                                        uint32_t arguments_list_len) /**< number of arguments */
 {
-  return ecma_builtin_helper_error_dispatch_call (ECMA_ERROR_EVAL, arguments_list_p, arguments_list_len);
+  return ecma_builtin_helper_error_dispatch_call (JERRY_ERROR_EVAL, arguments_list_p, arguments_list_len);
 } /* ecma_builtin_eval_error_dispatch_call */
 
 /**

@@ -1190,12 +1190,6 @@ ecma_free_property_descriptor (ecma_property_descriptor_t *prop_desc_p) /**< pro
 } /* ecma_free_property_descriptor */
 
 /**
- * The size of error reference must be 8 bytes to use jmem_pools_alloc().
- */
-JERRY_STATIC_ASSERT (sizeof (ecma_extended_primitive_t) == 8,
-                     ecma_error_reference_size_must_be_8_bytes);
-
-/**
  * Increase ref count of an extended primitve value.
  */
 void

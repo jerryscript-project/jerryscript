@@ -109,7 +109,7 @@ ecma_op_get_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
 
   *ref_base_lex_env_p = NULL;
 #if JERRY_ERROR_MESSAGES
-  return ecma_raise_standard_error_with_format (ECMA_ERROR_REFERENCE,
+  return ecma_raise_standard_error_with_format (JERRY_ERROR_REFERENCE,
                                                 "% is not defined",
                                                 ecma_make_string_value (name_p));
 #else /* JERRY_ERROR_MESSAGES */
@@ -309,7 +309,7 @@ ecma_op_put_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
   if (is_strict)
   {
 #if JERRY_ERROR_MESSAGES
-    return ecma_raise_standard_error_with_format (ECMA_ERROR_REFERENCE,
+    return ecma_raise_standard_error_with_format (JERRY_ERROR_REFERENCE,
                                                   "% is not defined",
                                                   ecma_make_string_value (name_p));
 #else /* !JERRY_ERROR_MESSAGES */

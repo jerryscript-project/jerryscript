@@ -47,7 +47,7 @@
 extern inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_is_promise (ecma_object_t *obj_p) /**< points to object */
 {
-  return ecma_object_class_is (obj_p, LIT_MAGIC_STRING_PROMISE_UL);
+  return ecma_object_class_is (obj_p, ECMA_OBJECT_CLASS_PROMISE);
 } /* ecma_is_promise */
 
 /**
@@ -63,7 +63,7 @@ ecma_promise_get_result (ecma_object_t *obj_p) /**< points to promise object */
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
-  return ecma_copy_value (ext_object_p->u.class_prop.u.value);
+  return ecma_copy_value (ext_object_p->u.cls.u3.value);
 } /* ecma_promise_get_result */
 
 /**
@@ -77,9 +77,9 @@ ecma_promise_set_result (ecma_object_t *obj_p, /**< points to promise object */
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
-  JERRY_ASSERT (ext_object_p->u.class_prop.u.value == ECMA_VALUE_UNDEFINED);
+  JERRY_ASSERT (ext_object_p->u.cls.u3.value == ECMA_VALUE_UNDEFINED);
 
-  ext_object_p->u.class_prop.u.value = result;
+  ext_object_p->u.cls.u3.value = result;
 } /* ecma_promise_set_result */
 
 /**
@@ -87,12 +87,12 @@ ecma_promise_set_result (ecma_object_t *obj_p, /**< points to promise object */
  *
  * @return the state's enum value
  */
-uint16_t
+uint8_t
 ecma_promise_get_flags (ecma_object_t *obj_p) /**< points to promise object */
 {
   JERRY_ASSERT (ecma_is_promise (obj_p));
 
-  return ((ecma_extended_object_t *) obj_p)->u.class_prop.extra_info;
+  return ((ecma_extended_object_t *) obj_p)->u.cls.u1.promise_flags;
 } /* ecma_promise_get_flags */
 
 /**
@@ -105,10 +105,10 @@ ecma_promise_set_state (ecma_object_t *obj_p, /**< points to promise object */
   JERRY_ASSERT (ecma_is_promise (obj_p));
   JERRY_ASSERT (ecma_promise_get_flags (obj_p) & ECMA_PROMISE_IS_PENDING);
 
-  uint16_t flags_to_invert = (is_fulfilled ? (ECMA_PROMISE_IS_PENDING | ECMA_PROMISE_IS_FULFILLED)
-                                           : ECMA_PROMISE_IS_PENDING);
+  uint8_t flags_to_invert = (is_fulfilled ? (ECMA_PROMISE_IS_PENDING | ECMA_PROMISE_IS_FULFILLED)
+                                          : ECMA_PROMISE_IS_PENDING);
 
-  ((ecma_extended_object_t *) obj_p)->u.class_prop.extra_info ^= flags_to_invert;
+  ((ecma_extended_object_t *) obj_p)->u.cls.u1.promise_flags ^= flags_to_invert;
 } /* ecma_promise_set_state */
 
 /**
@@ -219,7 +219,7 @@ ecma_reject_promise (ecma_value_t promise, /**< promise */
 #if JERRY_PROMISE_CALLBACK
   if (reactions->item_count == 0)
   {
-    ((ecma_extended_object_t *) obj_p)->u.class_prop.extra_info |= ECMA_PROMISE_UNHANDLED_REJECT;
+    ((ecma_extended_object_t *) obj_p)->u.cls.u1.promise_flags |= ECMA_PROMISE_UNHANDLED_REJECT;
 
     if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback_filters) & JERRY_PROMISE_EVENT_FILTER_ERROR))
     {
@@ -341,7 +341,7 @@ ecma_reject_promise_with_checks (ecma_value_t promise, /**< promise */
   }
 
   /* 5. */
-  ((ecma_extended_object_t *) promise_obj_p)->u.class_prop.extra_info |= ECMA_PROMISE_ALREADY_RESOLVED;
+  ((ecma_extended_object_t *) promise_obj_p)->u.cls.u1.promise_flags |= ECMA_PROMISE_ALREADY_RESOLVED;
 
   /* 6. */
   ecma_reject_promise (promise, reason);
@@ -381,7 +381,7 @@ ecma_fulfill_promise_with_checks (ecma_value_t promise, /**< promise */
   }
 
   /* 5. */
-  ((ecma_extended_object_t *) promise_obj_p)->u.class_prop.extra_info |= ECMA_PROMISE_ALREADY_RESOLVED;
+  ((ecma_extended_object_t *) promise_obj_p)->u.cls.u1.promise_flags |= ECMA_PROMISE_ALREADY_RESOLVED;
 
   ecma_fulfill_promise (promise, value);
   return ECMA_VALUE_UNDEFINED;
@@ -504,10 +504,11 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
                                                 ECMA_OBJECT_TYPE_CLASS);
   ecma_deref_object (proto_p);
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-  ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_PROMISE_UL;
+  ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_PROMISE;
   /* 5 */
-  ext_object_p->u.class_prop.extra_info = ECMA_PROMISE_IS_PENDING;
-  ext_object_p->u.class_prop.u.value = ECMA_VALUE_UNDEFINED;
+  ext_object_p->u.cls.u1.promise_flags = ECMA_PROMISE_IS_PENDING;
+  ext_object_p->u.cls.u2.id = LIT_MAGIC_STRING_PROMISE_UL;
+  ext_object_p->u.cls.u3.value = ECMA_VALUE_UNDEFINED;
 
   /* 6-8. */
   ecma_promise_object_t *promise_object_p = (ecma_promise_object_t *) object_p;
@@ -571,11 +572,11 @@ ecma_promise_remaining_inc_or_dec (ecma_value_t remaining, /**< the remaining co
   ecma_object_t *remaining_p = ecma_get_object_from_value (remaining);
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) remaining_p;
 
-  JERRY_ASSERT (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_NUMBER_UL);
+  JERRY_ASSERT (ext_object_p->u.cls.type == ECMA_OBJECT_CLASS_NUMBER);
 
-  JERRY_ASSERT (ecma_is_value_integer_number (ext_object_p->u.class_prop.u.value));
+  JERRY_ASSERT (ecma_is_value_integer_number (ext_object_p->u.cls.u3.value));
 
-  uint32_t current = (uint32_t) ecma_get_integer_from_value (ext_object_p->u.class_prop.u.value);
+  uint32_t current = (uint32_t) ecma_get_integer_from_value (ext_object_p->u.cls.u3.value);
 
   if (is_inc)
   {
@@ -585,7 +586,7 @@ ecma_promise_remaining_inc_or_dec (ecma_value_t remaining, /**< the remaining co
   {
     current--;
   }
-  ext_object_p->u.class_prop.u.value = ecma_make_uint32_value (current);
+  ext_object_p->u.cls.u3.value = ecma_make_uint32_value (current);
 
   return current;
 } /* ecma_promise_remaining_inc_or_dec */
@@ -605,7 +606,9 @@ ecma_promise_all_or_all_settled_handler_cb (ecma_object_t *function_obj_p, /**< 
 {
   JERRY_UNUSED (args_count);
   ecma_promise_all_executor_t *executor_p = (ecma_promise_all_executor_t *) function_obj_p;
-  uint16_t promise_type = executor_p->header.u.class_prop.extra_info;
+  uint8_t promise_type = executor_p->header.u.built_in.u2.routine_flags;
+
+  promise_type = (uint8_t) (promise_type >> ECMA_NATIVE_HANDLER_FLAGS_PROMISE_HELPER_SHIFT);
 
   /* 1 - 2. */
   if (executor_p->index == 0)
@@ -710,7 +713,7 @@ ecma_op_get_capabilities_executor_cb (ecma_object_t *function_obj_p, /**< functi
 
   /* 2-3. */
   ecma_object_t *capability_obj_p = ecma_get_object_from_value (executor_p->capability);
-  JERRY_ASSERT (ecma_object_class_is (capability_obj_p, LIT_INTERNAL_MAGIC_PROMISE_CAPABILITY));
+  JERRY_ASSERT (ecma_object_class_is (capability_obj_p, ECMA_OBJECT_CLASS_PROMISE_CAPABILITY));
   ecma_promise_capabality_t *capability_p = (ecma_promise_capabality_t *) capability_obj_p;
 
   /* 4. */
@@ -761,8 +764,9 @@ ecma_promise_new_capability (ecma_value_t constructor, /**< constructor function
                                                         ECMA_OBJECT_TYPE_CLASS);
 
   ecma_promise_capabality_t *capability_p = (ecma_promise_capabality_t *) capability_obj_p;
-  capability_p->header.u.class_prop.class_id = LIT_INTERNAL_MAGIC_PROMISE_CAPABILITY;
-  capability_p->header.u.class_prop.u.promise = ECMA_VALUE_UNDEFINED;
+  capability_p->header.u.cls.type = ECMA_OBJECT_CLASS_PROMISE_CAPABILITY;
+  capability_p->header.u.cls.u2.id = LIT_MAGIC_STRING_OBJECT_UL;
+  capability_p->header.u.cls.u3.promise = ECMA_VALUE_UNDEFINED;
   capability_p->resolve = ECMA_VALUE_UNDEFINED;
   capability_p->reject = ECMA_VALUE_UNDEFINED;
 
@@ -814,7 +818,7 @@ ecma_promise_new_capability (ecma_value_t constructor, /**< constructor function
   }
 
   /* 10. */
-  capability_p->header.u.class_prop.u.promise = promise;
+  capability_p->header.u.cls.u3.promise = promise;
 
   ecma_free_value (promise);
 
@@ -884,7 +888,7 @@ ecma_promise_reject_or_resolve (ecma_value_t this_arg, /**< "this" argument */
 
   ecma_free_value (call_ret);
 
-  ecma_value_t promise = ecma_copy_value (capability_p->header.u.class_prop.u.promise);
+  ecma_value_t promise = ecma_copy_value (capability_p->header.u.cls.u3.promise);
   ecma_deref_object (capability_obj_p);
 
   return promise;
@@ -905,7 +909,7 @@ ecma_promise_do_then (ecma_value_t promise, /**< the promise which call 'then' *
                       ecma_value_t on_rejected, /**< on_rejected function */
                       ecma_object_t *result_capability_obj_p) /**< promise capability */
 {
-  JERRY_ASSERT (ecma_object_class_is (result_capability_obj_p, LIT_INTERNAL_MAGIC_PROMISE_CAPABILITY));
+  JERRY_ASSERT (ecma_object_class_is (result_capability_obj_p, ECMA_OBJECT_CLASS_PROMISE_CAPABILITY));
 
   ecma_promise_capabality_t *capability_p = (ecma_promise_capabality_t *) result_capability_obj_p;
 
@@ -969,7 +973,7 @@ ecma_promise_do_then (ecma_value_t promise, /**< the promise which call 'then' *
 #if JERRY_PROMISE_CALLBACK
     if (ecma_promise_get_flags (promise_obj_p) & ECMA_PROMISE_UNHANDLED_REJECT)
     {
-      promise_p->header.u.class_prop.extra_info &= (uint16_t) ~ECMA_PROMISE_UNHANDLED_REJECT;
+      promise_p->header.u.cls.u1.promise_flags &= (uint8_t) ~ECMA_PROMISE_UNHANDLED_REJECT;
 
       if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback_filters) & JERRY_PROMISE_EVENT_FILTER_ERROR))
       {
@@ -984,7 +988,7 @@ ecma_promise_do_then (ecma_value_t promise, /**< the promise which call 'then' *
   }
 
   /* 10. */
-  return ecma_copy_value (capability_p->header.u.class_prop.u.promise);
+  return ecma_copy_value (capability_p->header.u.cls.u3.promise);
 } /* ecma_promise_do_then */
 
 /**
@@ -1284,7 +1288,7 @@ ecma_promise_async_then (ecma_value_t promise, /**< promise object */
 #if JERRY_PROMISE_CALLBACK
   if (ecma_promise_get_flags (promise_obj_p) & ECMA_PROMISE_UNHANDLED_REJECT)
   {
-    ((ecma_extended_object_t *) promise_obj_p)->u.class_prop.extra_info &= (uint16_t) ~ECMA_PROMISE_UNHANDLED_REJECT;
+    ((ecma_extended_object_t *) promise_obj_p)->u.cls.u1.promise_flags &= (uint8_t) ~ECMA_PROMISE_UNHANDLED_REJECT;
 
     if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback_filters) & JERRY_PROMISE_EVENT_FILTER_ERROR))
     {

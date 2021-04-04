@@ -685,7 +685,6 @@ typedef enum
   ECMA_OBJECT_TYPE_GENERAL = 0, /**< all objects that are not belongs to the sub-types below. */
   ECMA_OBJECT_TYPE_CLASS = 1, /**< Objects with class property */
   ECMA_OBJECT_TYPE_ARRAY = 2, /**< Array object (15.4) */
-  ECMA_OBJECT_TYPE_PSEUDO_ARRAY  = 3, /**< Array-like object, such as Arguments object (10.6) */
   ECMA_OBJECT_TYPE_PROXY  = 4, /**< Proxy object ECMAScript v6 26.2 */
   /* Note: these 4 types must be in this order. See IsCallable operation.  */
   ECMA_OBJECT_TYPE_FUNCTION = 5, /**< Function objects (15.3), created through 13.2 routine */
@@ -701,16 +700,69 @@ typedef enum
  */
 typedef enum
 {
-  ECMA_PSEUDO_ARRAY_ARGUMENTS = 0, /**< Arguments object (10.6) */
-  ECMA_PSEUDO_ARRAY_TYPEDARRAY = 1, /**< TypedArray which does NOT need extra space to store length and offset */
-  ECMA_PSEUDO_ARRAY_TYPEDARRAY_WITH_INFO = 2, /**< TypedArray which NEEDS extra space to store length and offset */
-  ECMA_PSEUDO_ARRAY_ITERATOR = 3, /**< Array iterator object (ECMAScript v6, 22.1.5.1) */
-  ECMA_PSEUDO_SET_ITERATOR = 4, /**< Set iterator object (ECMAScript v6, 23.2.5.1) */
-  ECMA_PSEUDO_MAP_ITERATOR = 5, /**< Map iterator object (ECMAScript v6, 23.1.5.1) */
-  ECMA_PSEUDO_STRING_ITERATOR = 6, /**< String iterator object (ECMAScript v6, 22.1.5.1) */
-  ECMA_PSEUDO_REGEXP_STRING_ITERATOR = 7, /** RegExp string iterator object (ECMAScript v11, 21.2.7) */
-  ECMA_PSEUDO_ARRAY__MAX = ECMA_PSEUDO_STRING_ITERATOR /**< maximum value */
-} ecma_pseudo_array_type_t;
+  /* These objects require custom property resolving. */
+  ECMA_OBJECT_CLASS_STRING, /**< String Object (ECMAScript v5.1, 4.3.18) */
+  ECMA_OBJECT_CLASS_ARGUMENTS, /**< Arguments object (10.6) */
+#if JERRY_BUILTIN_TYPEDARRAY
+  ECMA_OBJECT_CLASS_TYPEDARRAY, /**< TypedArray which does NOT need extra space to store length and offset */
+  ECMA_OBJECT_CLASS_TYPEDARRAY_WITH_INFO, /**< TypedArray which NEEDS extra space to store length and offset */
+#endif /* JERRY_BUILTIN_TYPEDARRAY */
+
+  /* These objects are marked by Garbage Collector. */
+#if JERRY_ESNEXT
+  ECMA_OBJECT_CLASS_GENERATOR, /**< Generator object (ECMAScript v6, 25.2) */
+  ECMA_OBJECT_CLASS_ASYNC_GENERATOR, /**< Async generator object (ECMAScript v11, 25.3) */
+  ECMA_OBJECT_CLASS_ARRAY_ITERATOR, /**< Array iterator object (ECMAScript v6, 22.1.5.1) */
+  ECMA_OBJECT_CLASS_SET_ITERATOR, /**< Set iterator object (ECMAScript v6, 23.2.5.1) */
+  ECMA_OBJECT_CLASS_MAP_ITERATOR, /**< Map iterator object (ECMAScript v6, 23.1.5.1) */
+#if JERRY_BUILTIN_REGEXP
+  ECMA_OBJECT_CLASS_REGEXP_STRING_ITERATOR, /** RegExp string iterator object (ECMAScript v11, 21.2.7) */
+#endif /* JERRY_BUILTIN_REGEXP */
+#endif /* JERRY_ESNEXT */
+#if JERRY_MODULE_SYSTEM
+  ECMA_OBJECT_CLASS_MODULE, /**< Module (ECMAScript v6, 15.2) */
+#endif
+#if JERRY_BUILTIN_PROMISE
+  ECMA_OBJECT_CLASS_PROMISE, /**< Promise (ECMAScript v6, 25.4) */
+  ECMA_OBJECT_CLASS_PROMISE_CAPABILITY, /**< Promise capability (ECMAScript v6, 25.4.1.1) */
+#endif /* JERRY_BUILTIN_PROMISE */
+#if JERRY_BUILTIN_DATAVIEW
+  ECMA_OBJECT_CLASS_DATAVIEW, /**< DataView (ECMAScript v6, 24.2) */
+#endif /* JERRY_BUILTIN_DATAVIEW */
+#if JERRY_BUILTIN_CONTAINER
+  ECMA_OBJECT_CLASS_CONTAINER, /**< Container (Map, WeakMap, Set, WeakSet) */
+#endif /* JERRY_BUILTIN_CONTAINER */
+
+  /* Normal objects. */
+  ECMA_OBJECT_CLASS_BOOLEAN, /**< Boolean Object (ECMAScript v5.1, 4.3.15) */
+  ECMA_OBJECT_CLASS_NUMBER, /**< Number Object (ECMAScript v5.1, 4.3.21) */
+  ECMA_OBJECT_CLASS_ERROR, /**< Error Object (ECMAScript v5.1, 15.11) */
+  ECMA_OBJECT_CLASS_INTERNAL_OBJECT, /**< object for internal properties */
+#if JERRY_PARSER
+  ECMA_OBJECT_CLASS_SCRIPT, /**< Compiled ECMAScript byte code */
+#endif /* JERRY_PARSER */
+#if JERRY_BUILTIN_DATE
+  ECMA_OBJECT_CLASS_DATE, /**< Date Object (ECMAScript v5.1, 15.9) */
+#endif /* JERRY_BUILTIN_DATE */
+#if JERRY_BUILTIN_REGEXP
+  ECMA_OBJECT_CLASS_REGEXP, /**< RegExp Object (ECMAScript v5.1, 15.10) */
+#endif /* JERRY_BUILTIN_REGEXP */
+#if JERRY_ESNEXT
+  ECMA_OBJECT_CLASS_SYMBOL, /**< Symbol object (ECMAScript v6, 4.3.27) */
+  ECMA_OBJECT_CLASS_STRING_ITERATOR, /**< String iterator object (ECMAScript v6, 22.1.5.1) */
+#endif /* JERRY_ESNEXT */
+#if JERRY_BUILTIN_TYPEDARRAY
+  ECMA_OBJECT_CLASS_ARRAY_BUFFER, /**< Array Buffer (ECMAScript v6, 24.1) */
+#endif /* JERRY_BUILTIN_TYPEDARRAY */
+#if JERRY_BUILTIN_BIGINT
+  ECMA_OBJECT_CLASS_BIGINT, /**< Bigint (ECMAScript v11, 4.3.27) */
+#endif /* JERRY_BUILTIN_BIGINT */
+#if JERRY_BUILTIN_WEAKREF
+  ECMA_OBJECT_CLASS_WEAKREF, /**< WeakRef (Not standardized yet) */
+#endif /* JERRY_BUILTIN_WEAKREF */
+
+  ECMA_OBJECT_CLASS__MAX /**< maximum value */
+} ecma_object_class_type_t;
 
 /**
  * Types of lexical environments.
@@ -960,30 +1012,72 @@ typedef struct
 
     /**
      * Description of objects with class.
+     *
+     * Note:
+     *     class is a reserved word in c++, so cls is used instead
      */
     struct
     {
-      uint16_t class_id; /**< class id of the object */
-      uint16_t extra_info; /**< extra information for the object
-                            *   e.g. array buffer type info (external/internal) */
-
+      uint8_t type; /**< class type of the object */
       /**
-       * Description of extra fields. These extra fields depend on the class_id.
+       * Description of 8 bit extra fields. These extra fields depend on the type.
+       */
+      union
+      {
+        uint8_t arguments_flags; /**< arguments object flags */
+#if JERRY_BUILTIN_DATE
+        uint8_t date_flags; /**< flags for date objects */
+#endif /* JERRY_BUILTIN_DATE */
+#if JERRY_MODULE_SYSTEM
+        uint8_t module_state; /**< Module state */
+#endif /* JERRY_MODULE_SYSTEM */
+#if JERRY_ESNEXT
+        uint8_t iterator_kind; /**< type of iterator */
+        uint8_t regexp_string_iterator_flags; /**< flags for RegExp string iterator */
+#endif /* JERRY_ESNEXT */
+#if JERRY_BUILTIN_PROMISE
+        uint8_t promise_flags; /**< flags for Promise objects */
+#endif /* JERRY_BUILTIN_PROMISE */
+#if JERRY_BUILTIN_CONTAINER
+        uint8_t container_flags; /**< flags for container objects */
+#endif /* JERRY_BUILTIN_CONTAINER */
+#if JERRY_BUILTIN_TYPEDARRAY
+        uint8_t array_buffer_flags; /**< ArrayBuffer flags */
+        uint8_t typedarray_type; /**< type of typed array */
+#endif /* JERRY_BUILTIN_TYPEDARRAY */
+      } u1;
+      /**
+       * Description of 16 bit extra fields. These extra fields depend on the type.
+       */
+      union
+      {
+        /* The ecma_object_get_class_name must handle those types which does not use id. */
+        uint16_t id; /**< magic string id of the class */
+        uint16_t formal_params_number; /**< for arguments: formal parameters number */
+        uint16_t iterator_index; /**< for %Iterator%: [[%Iterator%NextIndex]] property */
+        uint16_t executable_obj_flags; /**< executable object flags */
+      } u2;
+      /**
+       * Description of 32 bit / value. These extra fields depend on the type.
        */
       union
       {
         ecma_value_t value; /**< value of the object (e.g. boolean, number, string, etc.) */
         ecma_value_t date; /**< Date object [[DateValue]] internal property */
-        int32_t tza; /**< TimeZone adjustment for date objects */
-        uint32_t length; /**< length related property (e.g. length of ArrayBuffer) */
-#if JERRY_MODULE_SYSTEM
-        uint32_t dfs_ancestor_index; /**< module dfs ancestor index (ES2020 15.2.1.16) */
-#endif /* JERRY_MODULE_SYSTEM */
         ecma_value_t target; /**< [[ProxyTarget]] or [[WeakRefTarget]] internal property */
         ecma_value_t head; /**< points to the async generator task queue head item */
         ecma_value_t promise; /**< PromiseCapability[[Promise]] internal slot */
-      } u;
-    } class_prop;
+        ecma_value_t arraybuffer; /**< for typedarray: internal arraybuffer */
+        ecma_value_t iterated_value; /**< for %Iterator%: [[IteratedObject]] property */
+        ecma_value_t spread_value; /**< for spread object: spreaded element */
+        int32_t tza; /**< TimeZone adjustment for date objects */
+        uint32_t length; /**< length related property (e.g. length of ArrayBuffer) */
+        uint32_t arguments_number; /**< for arguments: arguments number */
+#if JERRY_MODULE_SYSTEM
+        uint32_t dfs_ancestor_index; /**< module dfs ancestor index (ES2020 15.2.1.16) */
+#endif /* JERRY_MODULE_SYSTEM */
+      } u3;
+    } cls;
 
     /**
      * Description of function objects.
@@ -1003,30 +1097,6 @@ typedef struct
       uint32_t length_prop_and_hole_count; /**< length property attributes and number of array holes in
                                             *   a fast access mode array multiplied ECMA_FAST_ACCESS_HOLE_ONE */
     } array;
-
-    /**
-     * Description of pseudo array objects.
-     */
-    struct
-    {
-      uint8_t type; /**< pseudo array type, e.g. Arguments, TypedArray, ArrayIterator */
-      uint8_t extra_info; /**< extra information about the object.
-                           *   e.g. the specific builtin id for typed arrays,
-                           *        [[IterationKind]] property for %Iterator% */
-      union
-      {
-        uint16_t formal_params_number; /**< for arguments: formal parameters number */
-        uint16_t class_id; /**< for typedarray: the specific class name id */
-        uint16_t iterator_index; /**< for %Iterator%: [[%Iterator%NextIndex]] property */
-      } u1;
-      union
-      {
-        uint32_t arguments_number; /**< for arguments: arguments number */
-        ecma_value_t arraybuffer; /**< for typedarray: internal arraybuffer */
-        ecma_value_t iterated_value; /**< for %Iterator%: [[IteratedObject]] property */
-        ecma_value_t spread_value; /**< for spread object: spreaded element */
-      } u2;
-    } pseudo_array;
 
     /**
      * Description of bound function object.
@@ -1973,7 +2043,7 @@ typedef enum
  * Check whether the ArrayBuffer has external underlying buffer
  */
 #define ECMA_ARRAYBUFFER_HAS_EXTERNAL_MEMORY(object_p) \
-    ((((ecma_extended_object_t *) object_p)->u.class_prop.extra_info & ECMA_ARRAYBUFFER_EXTERNAL_MEMORY) != 0)
+    ((((ecma_extended_object_t *) object_p)->u.cls.u1.array_buffer_flags & ECMA_ARRAYBUFFER_EXTERNAL_MEMORY) != 0)
 
 /**
  * Struct to store information for ArrayBuffers with external memory.
@@ -2065,8 +2135,9 @@ typedef enum
 /**
  * Checks whether the executable object is waiting for resuming.
  */
-#define ECMA_EXECUTABLE_OBJECT_IS_SUSPENDED(extra_info) \
-  (!((extra_info) & (ECMA_EXECUTABLE_OBJECT_COMPLETED | ECMA_EXECUTABLE_OBJECT_RUNNING)))
+#define ECMA_EXECUTABLE_OBJECT_IS_SUSPENDED(executable_object_p) \
+  (!((executable_object_p)->extended_object.u.cls.u2.executable_obj_flags \
+     & (ECMA_EXECUTABLE_OBJECT_COMPLETED | ECMA_EXECUTABLE_OBJECT_RUNNING)))
 
 /**
  * Last item of yield* related await states.
@@ -2082,7 +2153,7 @@ typedef enum
  * Resume execution of the byte code.
  */
 #define ECMA_EXECUTABLE_OBJECT_RESUME_EXEC(executable_object_p) \
-  ((executable_object_p)->extended_object.u.class_prop.extra_info &= ECMA_EXECUTABLE_OBJECT_RESUME_EXEC_MASK)
+  ((executable_object_p)->extended_object.u.cls.u2.executable_obj_flags &= ECMA_EXECUTABLE_OBJECT_RESUME_EXEC_MASK)
 
 /**
  * Enqueued task of an AsyncGenerator.
@@ -2143,7 +2214,7 @@ typedef enum
   ECMA_PROMISE_ALLSETTLED_RESOLVE, /**< promise.allSettled resolve */
   ECMA_PROMISE_ALLSETTLED_REJECT, /**< promise.allSettled reject */
   ECMA_PROMISE_ANY_REJECT, /**< promise.any reject */
-} ecma_promise_all_exector_type_t;
+} ecma_promise_executor_type_t;
 
 #endif /* JERRY_ESNEXT */
 

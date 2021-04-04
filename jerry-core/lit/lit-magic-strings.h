@@ -40,7 +40,6 @@ typedef enum
   LIT_INTERNAL_MAGIC_STRING_TYPEDARRAY_PROTOTYPE_VALUES, /**< %TypedArray%.prototype values and [@@iterator] routine */
   LIT_INTERNAL_MAGIC_STRING_SET_PROTOTYPE_VALUES, /**< Set.prototype values, keys and [@@iterator] routines */
   LIT_INTERNAL_MAGIC_STRING_MAP_PROTOTYPE_ENTRIES, /**< Map.prototype entries and [@@iterator] routines */
-  LIT_INTERNAL_MAGIC_PROMISE_CAPABILITY, /**< PromiseCapability record */
   /* List of well known symbols */
   LIT_GLOBAL_SYMBOL_ASYNC_ITERATOR, /**< @@asyncIterator well known symbol */
   LIT_GLOBAL_SYMBOL__FIRST = LIT_GLOBAL_SYMBOL_ASYNC_ITERATOR, /**< first global symbol */
@@ -59,7 +58,6 @@ typedef enum
   LIT_GLOBAL_SYMBOL__LAST = LIT_GLOBAL_SYMBOL_MATCH_ALL, /**< last global symbol */
 
   LIT_INTERNAL_MAGIC_STRING_DELETED, /**< special value for deleted properties */
-  LIT_INTERNAL_MAGIC_STRING_INTERNAL_OBJECT, /**< Internal object ID for internal properties */
   LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_INIT, /**< function which initializes properties */
 
   LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER, /**< native pointer info associated with an object */

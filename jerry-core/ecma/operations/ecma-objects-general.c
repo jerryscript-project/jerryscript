@@ -223,14 +223,14 @@ ecma_op_general_object_default_value (ecma_object_t *obj_p, /**< the object */
 #else /* !JERRY_ESNEXT */
   if (hint == ECMA_PREFERRED_TYPE_NO)
   {
-    if (ecma_object_class_is (obj_p, LIT_MAGIC_STRING_DATE_UL))
+    hint = ECMA_PREFERRED_TYPE_NUMBER;
+
+#if JERRY_BUILTIN_DATE
+    if (ecma_object_class_is (obj_p, ECMA_OBJECT_CLASS_DATE))
     {
       hint = ECMA_PREFERRED_TYPE_STRING;
     }
-    else
-    {
-      hint = ECMA_PREFERRED_TYPE_NUMBER;
-    }
+#endif /* JERRY_BUILTIN_DATE */
   }
 #endif /* JERRY_ESNEXT */
 

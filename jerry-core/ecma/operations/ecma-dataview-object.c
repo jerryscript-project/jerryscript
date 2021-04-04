@@ -60,7 +60,7 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
 
   ecma_object_t *buffer_p = ecma_get_object_from_value (buffer);
 
-  if (!ecma_object_class_is (buffer_p, LIT_MAGIC_STRING_ARRAY_BUFFER_UL))
+  if (!ecma_object_class_is (buffer_p, ECMA_OBJECT_CLASS_ARRAY_BUFFER))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'buffer' is not an ArrayBuffer"));
   }
@@ -145,8 +145,9 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
 
   /* 11 - 14. */
   ecma_dataview_object_t *dataview_obj_p = (ecma_dataview_object_t *) object_p;
-  dataview_obj_p->header.u.class_prop.class_id = LIT_MAGIC_STRING_DATAVIEW_UL;
-  dataview_obj_p->header.u.class_prop.u.length = view_byte_length;
+  dataview_obj_p->header.u.cls.type = ECMA_OBJECT_CLASS_DATAVIEW;
+  dataview_obj_p->header.u.cls.u2.id = LIT_MAGIC_STRING_DATAVIEW_UL;
+  dataview_obj_p->header.u.cls.u3.length = view_byte_length;
   dataview_obj_p->buffer_p = buffer_p;
   dataview_obj_p->byte_offset = (uint32_t) offset;
 
@@ -168,12 +169,11 @@ ecma_op_dataview_get_object (ecma_value_t this_arg) /**< this argument */
 {
   if (ecma_is_value_object (this_arg))
   {
-    ecma_dataview_object_t *dataview_object_p = (ecma_dataview_object_t *) ecma_get_object_from_value (this_arg);
+    ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
 
-    if (ecma_get_object_type (&dataview_object_p->header.object) == ECMA_OBJECT_TYPE_CLASS
-        && dataview_object_p->header.u.class_prop.class_id == LIT_MAGIC_STRING_DATAVIEW_UL)
+    if (ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_DATAVIEW))
     {
-      return dataview_object_p;
+      return (ecma_dataview_object_t *) object_p;
     }
   }
 
@@ -254,7 +254,7 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
   }
 
   ecma_object_t *buffer_p = view_p->buffer_p;
-  JERRY_ASSERT (ecma_object_class_is (buffer_p, LIT_MAGIC_STRING_ARRAY_BUFFER_UL));
+  JERRY_ASSERT (ecma_object_class_is (buffer_p, ECMA_OBJECT_CLASS_ARRAY_BUFFER));
 
   /* 3. */
   ecma_number_t get_index;
@@ -307,7 +307,7 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
   uint32_t view_offset = view_p->byte_offset;
 
   /* GetViewValue 8., SetViewValue 10. */
-  uint32_t view_size = view_p->header.u.class_prop.u.length;
+  uint32_t view_size = view_p->header.u.cls.u3.length;
 
   /* GetViewValue 9., SetViewValue 11. */
   uint8_t element_size = (uint8_t) (1 << (ecma_typedarray_helper_get_shift_size (id)));
@@ -362,10 +362,7 @@ ecma_is_dataview (ecma_value_t value) /**< the target need to be checked */
     return false;
   }
 
-  ecma_dataview_object_t *dataview_object_p = (ecma_dataview_object_t *) ecma_get_object_from_value (value);
-
-  return (ecma_get_object_type (&dataview_object_p->header.object) == ECMA_OBJECT_TYPE_CLASS
-          && dataview_object_p->header.u.class_prop.class_id == LIT_MAGIC_STRING_DATAVIEW_UL);
+  return ecma_object_class_is (ecma_get_object_from_value (value), ECMA_OBJECT_CLASS_DATAVIEW);
 } /* ecma_is_dataview */
 
 /**

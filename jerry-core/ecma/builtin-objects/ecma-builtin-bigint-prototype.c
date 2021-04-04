@@ -72,13 +72,13 @@ ecma_builtin_bigint_prototype_object_value_of (ecma_value_t this_arg) /**< this 
   {
     ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
 
-    if (ecma_object_class_is (object_p, LIT_MAGIC_STRING_BIGINT_UL))
+    if (ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_BIGINT))
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-      JERRY_ASSERT (ecma_is_value_bigint (ext_object_p->u.class_prop.u.value));
+      JERRY_ASSERT (ecma_is_value_bigint (ext_object_p->u.cls.u3.value));
 
-      return ecma_copy_value (ext_object_p->u.class_prop.u.value);
+      return ecma_copy_value (ext_object_p->u.cls.u3.value);
     }
   }
 

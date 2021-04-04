@@ -2623,7 +2623,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           ecma_extended_object_t *async_generator_object_p = VM_GET_EXECUTABLE_OBJECT (frame_ctx_p);
 
-          JERRY_ASSERT (!(async_generator_object_p->u.class_prop.extra_info
+          JERRY_ASSERT (!(async_generator_object_p->u.cls.u2.executable_obj_flags
                           & ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD));
 
           /* Byte code is executed at the first time. */
@@ -2651,7 +2651,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             goto error;
           }
 
-          async_generator_object_p->u.class_prop.extra_info |= ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD;
+          async_generator_object_p->u.cls.u2.executable_obj_flags |= ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD;
           frame_ctx_p->block_result = left_value;
 
           frame_ctx_p->call_operation = VM_EXEC_RETURN;
@@ -4307,7 +4307,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           frame_ctx_p->stack_top_p = stack_top_p;
 
           uint16_t extra_flags = (ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD
-                                 | (ECMA_AWAIT_FOR_NEXT << ECMA_AWAIT_STATE_SHIFT));
+                                  | (ECMA_AWAIT_FOR_NEXT << ECMA_AWAIT_STATE_SHIFT));
 
           if (CBC_FUNCTION_GET_TYPE (bytecode_header_p->status_flags) == CBC_FUNCTION_ASYNC_GENERATOR
               || frame_ctx_p->block_result != ECMA_VALUE_UNDEFINED)
@@ -4320,7 +4320,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
               goto error;
             }
 
-            executable_object_p->u.class_prop.extra_info |= extra_flags;
+            executable_object_p->u.cls.u2.executable_obj_flags |= extra_flags;
             return ECMA_VALUE_UNDEFINED;
           }
 
@@ -4356,7 +4356,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           uint16_t extra_flags = (ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD
                                  | (ECMA_AWAIT_FOR_NEXT << ECMA_AWAIT_STATE_SHIFT));
-          executable_object_p->u.class_prop.extra_info |= extra_flags;
+          executable_object_p->u.cls.u2.executable_obj_flags |= extra_flags;
 
           frame_ctx_p->call_operation = VM_EXEC_RETURN;
           frame_ctx_p->byte_code_p = byte_code_start_p + branch_offset;

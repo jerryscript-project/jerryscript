@@ -100,8 +100,10 @@ ecma_collection_t *ecma_op_object_own_property_keys (ecma_object_t *obj_p);
 ecma_collection_t *ecma_op_object_enumerate (ecma_object_t *obj_p);
 
 lit_magic_string_id_t ecma_object_get_class_name (ecma_object_t *obj_p);
-bool ecma_object_class_is (ecma_object_t *object_p, uint32_t class_id);
+bool ecma_object_class_is (ecma_object_t *object_p, ecma_object_class_type_t class_id);
+#if JERRY_BUILTIN_REGEXP
 bool ecma_object_is_regexp_object (ecma_value_t arg);
+#endif /* JERRY_BUILTIN_REGEXP */
 #if JERRY_ESNEXT
 ecma_value_t ecma_op_is_concat_spreadable (ecma_value_t arg);
 ecma_value_t ecma_op_is_regexp (ecma_value_t arg);

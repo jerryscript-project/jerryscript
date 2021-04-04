@@ -61,11 +61,9 @@ ecma_builtin_regexp_string_iterator_prototype_object_next (ecma_value_t this_val
   }
 
   ecma_object_t *obj_p = ecma_get_object_from_value (this_val);
-  ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
 
   /* 3. */
-  if (ecma_get_object_type (obj_p) != ECMA_OBJECT_TYPE_PSEUDO_ARRAY
-      || ext_obj_p->u.pseudo_array.type != ECMA_PSEUDO_REGEXP_STRING_ITERATOR)
+  if (!ecma_object_class_is (obj_p, ECMA_OBJECT_CLASS_REGEXP_STRING_ITERATOR))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an iterator"));
   }
@@ -106,7 +104,7 @@ ecma_builtin_regexp_string_iterator_prototype_object_next (ecma_value_t this_val
   ecma_value_t result = ECMA_VALUE_ERROR;
 
   /* 11. */
-  if (regexp_string_iterator_obj->header.u.pseudo_array.extra_info & RE_FLAG_GLOBAL)
+  if (regexp_string_iterator_obj->header.u.cls.u1.regexp_string_iterator_flags & RE_FLAG_GLOBAL)
   {
     ecma_value_t matched_str_value = ecma_op_object_get_by_index (match_result_array_p, 0);
 
@@ -145,10 +143,10 @@ ecma_builtin_regexp_string_iterator_prototype_object_next (ecma_value_t this_val
         goto free_variables;
       }
 
-      bool full_unciode = (regexp_string_iterator_obj->header.u.pseudo_array.extra_info & RE_FLAG_UNICODE) != 0;
+      uint8_t flags = regexp_string_iterator_obj->header.u.cls.u1.regexp_string_iterator_flags;
       ecma_length_t next_index = ecma_op_advance_string_index (matcher_str_p,
                                                                this_index,
-                                                               full_unciode);
+                                                               (flags & RE_FLAG_UNICODE) != 0);
 
       ecma_value_t next_index_value = ecma_make_length_value (next_index);
       ecma_value_t set = ecma_op_object_put (regexp_obj_p,

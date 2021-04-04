@@ -46,7 +46,7 @@ typedef enum
 ecma_value_t
 ecma_op_create_iterator_object (ecma_value_t iterated_value,
                                 ecma_object_t *prototype_obj_p,
-                                ecma_pseudo_array_type_t iterator_type,
+                                ecma_object_class_type_t iterator_type,
                                 ecma_iterator_kind_t kind);
 
 ecma_value_t

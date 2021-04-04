@@ -463,8 +463,9 @@ ecma_instantiate_builtin (ecma_global_object_t *global_object_p, /**< global obj
       JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_CLASS);
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
-      ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_STRING_UL;
-      ext_object_p->u.class_prop.u.value = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
+      ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_STRING;
+      ext_object_p->u.cls.u2.id = LIT_MAGIC_STRING_STRING_UL;
+      ext_object_p->u.cls.u3.value = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
       break;
     }
 #endif /* JERRY_BUILTIN_STRING */
@@ -475,8 +476,9 @@ ecma_instantiate_builtin (ecma_global_object_t *global_object_p, /**< global obj
       JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_CLASS);
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
-      ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_NUMBER_UL;
-      ext_object_p->u.class_prop.u.value = ecma_make_integer_value (0);
+      ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_NUMBER;
+      ext_object_p->u.cls.u2.id = LIT_MAGIC_STRING_NUMBER_UL;
+      ext_object_p->u.cls.u3.value = ecma_make_integer_value (0);
       break;
     }
 #endif /* JERRY_BUILTIN_NUMBER */
@@ -487,8 +489,9 @@ ecma_instantiate_builtin (ecma_global_object_t *global_object_p, /**< global obj
       JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_CLASS);
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
-      ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_BOOLEAN_UL;
-      ext_object_p->u.class_prop.u.value = ECMA_VALUE_FALSE;
+      ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_BOOLEAN;
+      ext_object_p->u.cls.u2.id = LIT_MAGIC_STRING_BOOLEAN_UL;
+      ext_object_p->u.cls.u3.value = ECMA_VALUE_FALSE;
       break;
     }
 #endif /* JERRY_BUILTIN_BOOLEAN */
@@ -500,11 +503,12 @@ ecma_instantiate_builtin (ecma_global_object_t *global_object_p, /**< global obj
       JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_CLASS);
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
-      ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_DATE_UL;
+      ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_DATE;
+      ext_object_p->u.cls.u2.id = LIT_MAGIC_STRING_DATE_UL;
 
       ecma_number_t *prim_prop_num_value_p = ecma_alloc_number ();
       *prim_prop_num_value_p = ecma_number_make_nan ();
-      ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.class_prop.u.value, prim_prop_num_value_p);
+      ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.cls.u3.value, prim_prop_num_value_p);
       break;
     }
 #endif /* JERRY_BUILTIN_DATE */
@@ -515,15 +519,15 @@ ecma_instantiate_builtin (ecma_global_object_t *global_object_p, /**< global obj
       JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_CLASS);
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
-      ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_REGEXP_UL;
+      ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_REGEXP;
+      ext_object_p->u.cls.u2.id = LIT_MAGIC_STRING_REGEXP_UL;
 
       re_compiled_code_t *bc_p = re_compile_bytecode (ecma_get_magic_string (LIT_MAGIC_STRING_EMPTY_NON_CAPTURE_GROUP),
                                                       RE_FLAG_EMPTY);
 
       JERRY_ASSERT (bc_p != NULL);
 
-      ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.class_prop.u.value, bc_p);
-
+      ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.cls.u3.value, bc_p);
       break;
     }
 #endif /* JERRY_BUILTIN_REGEXP */

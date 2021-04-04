@@ -61,7 +61,7 @@ ecma_builtin_arraybuffer_prototype_bytelength_getter (ecma_value_t this_arg) /**
   {
     ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
 
-    if (ecma_object_class_is (object_p, LIT_MAGIC_STRING_ARRAY_BUFFER_UL))
+    if (ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_ARRAY_BUFFER))
     {
       if (ecma_arraybuffer_is_detached (object_p))
       {
@@ -98,7 +98,7 @@ ecma_builtin_arraybuffer_prototype_object_slice (ecma_value_t this_arg, /**< thi
   ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
 
   /* 2. */
-  if (!ecma_object_class_is (object_p, LIT_MAGIC_STRING_ARRAY_BUFFER_UL))
+  if (!ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_ARRAY_BUFFER))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an ArrayBuffer object"));
   }
@@ -168,7 +168,7 @@ ecma_builtin_arraybuffer_prototype_object_slice (ecma_value_t this_arg, /**< thi
   ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
   /* 13. */
-  if (!ecma_object_class_is (new_arraybuffer_p, LIT_MAGIC_STRING_ARRAY_BUFFER_UL))
+  if (!ecma_object_class_is (new_arraybuffer_p, ECMA_OBJECT_CLASS_ARRAY_BUFFER))
   {
     ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Return value is not an ArrayBuffer object"));
     goto free_new_arraybuffer;

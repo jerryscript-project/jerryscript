@@ -405,7 +405,7 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
   ecma_number_t *date_value_p = &date_object_p->date_value;
 #else /* !JERRY_ESNEXT */
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-  ecma_number_t *date_value_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, ext_object_p->u.class_prop.u.date);
+  ecma_number_t *date_value_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, ext_object_p->u.cls.u3.date);
 #endif /* JERRY_ESNEXT */
 
   ecma_number_t date_value = *date_value_p;
@@ -415,9 +415,9 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
     ecma_number_t local_tza;
 
 #if JERRY_ESNEXT
-    if (date_object_p->header.u.class_prop.extra_info & ECMA_DATE_TZA_SET)
+    if (date_object_p->header.u.cls.u1.date_flags & ECMA_DATE_TZA_SET)
     {
-      local_tza = date_object_p->header.u.class_prop.u.tza;
+      local_tza = date_object_p->header.u.cls.u3.tza;
       JERRY_ASSERT (local_tza == ecma_date_local_time_zone_adjustment (date_value));
     }
     else
@@ -601,7 +601,7 @@ ecma_builtin_date_prototype_dispatch_set (uint16_t builtin_routine_id, /**< buil
   *date_value_p = full_date;
 
 #if JERRY_ESNEXT
-  date_object_p->header.u.class_prop.extra_info &= (uint16_t) ~ECMA_DATE_TZA_SET;
+  date_object_p->header.u.cls.u1.date_flags &= (uint8_t) ~ECMA_DATE_TZA_SET;
 #endif /* JERRY_ESNEXT */
 
   return ecma_make_number_value (full_date);
@@ -637,7 +637,7 @@ ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< b
 #endif /* JERRY_ESNEXT */
 
   if (!ecma_is_value_object (this_arg)
-      || !ecma_object_class_is (ecma_get_object_from_value (this_arg), LIT_MAGIC_STRING_DATE_UL))
+      || !ecma_object_class_is (ecma_get_object_from_value (this_arg), ECMA_OBJECT_CLASS_DATE))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a Date object"));
   }
@@ -647,11 +647,10 @@ ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< b
 #if JERRY_ESNEXT
   ecma_date_object_t *date_object_p = (ecma_date_object_t *) this_obj_p;
   ecma_number_t *date_value_p = &date_object_p->date_value;
-#else
+#else /* JERRY_ESNEXT */
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) this_obj_p;
-  ecma_number_t *date_value_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t,
-                                                                 ext_object_p->u.class_prop.u.date);
-#endif
+  ecma_number_t *date_value_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, ext_object_p->u.cls.u3.date);
+#endif /* JERRY_ESNEXT */
 
   ecma_number_t date_value = *date_value_p;
 
@@ -683,9 +682,9 @@ ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< b
       {
         ecma_number_t local_tza;
 #if JERRY_ESNEXT
-        if (date_object_p->header.u.class_prop.extra_info & ECMA_DATE_TZA_SET)
+        if (date_object_p->header.u.cls.u1.date_flags & ECMA_DATE_TZA_SET)
         {
-          local_tza = date_object_p->header.u.class_prop.u.tza;
+          local_tza = date_object_p->header.u.cls.u3.tza;
           JERRY_ASSERT (local_tza == ecma_date_local_time_zone_adjustment (date_value));
         }
         else
@@ -694,8 +693,8 @@ ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< b
           local_tza = ecma_date_local_time_zone_adjustment (date_value);
 #if JERRY_ESNEXT
           JERRY_ASSERT (local_tza <= INT32_MAX && local_tza >= INT32_MIN);
-          date_object_p->header.u.class_prop.u.tza = (int32_t) local_tza;
-          date_object_p->header.u.class_prop.extra_info |= ECMA_DATE_TZA_SET;
+          date_object_p->header.u.cls.u3.tza = (int32_t) local_tza;
+          date_object_p->header.u.cls.u1.date_flags |= ECMA_DATE_TZA_SET;
         }
 #endif /* JERRY_ESNEXT */
 

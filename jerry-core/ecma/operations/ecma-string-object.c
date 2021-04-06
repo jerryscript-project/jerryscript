@@ -85,8 +85,9 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
                                                 ECMA_OBJECT_TYPE_CLASS);
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-  ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_STRING_UL;
-  ext_object_p->u.class_prop.u.value = prim_value;
+  ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_STRING;
+  ext_object_p->u.cls.u2.id = LIT_MAGIC_STRING_STRING_UL;
+  ext_object_p->u.cls.u3.value = prim_value;
 
 #if JERRY_ESNEXT
   if (new_target)
@@ -110,9 +111,9 @@ ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p, /**< a String obj
   JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_CLASS);
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
-  JERRY_ASSERT (ext_object_p->u.class_prop.class_id == LIT_MAGIC_STRING_STRING_UL);
+  JERRY_ASSERT (ext_object_p->u.cls.type == ECMA_OBJECT_CLASS_STRING);
 
-  ecma_string_t *prim_value_str_p = ecma_get_string_from_value (ext_object_p->u.class_prop.u.value);
+  ecma_string_t *prim_value_str_p = ecma_get_string_from_value (ext_object_p->u.cls.u3.value);
 
   lit_utf8_size_t length = ecma_string_get_length (prim_value_str_p);
 

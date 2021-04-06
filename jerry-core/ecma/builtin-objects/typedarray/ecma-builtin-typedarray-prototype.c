@@ -1864,7 +1864,7 @@ ecma_builtin_typedarray_prototype_dispatch_routine (uint8_t builtin_routine_id, 
     case ECMA_TYPEDARRAY_PROTOTYPE_ROUTINE_TO_STRING_TAG_GETTER:
     {
       ecma_extended_object_t *obj_p = (ecma_extended_object_t *) typedarray_p;
-      return ecma_make_magic_string_value (obj_p->u.pseudo_array.u1.class_id);
+      return ecma_make_magic_string_value (obj_p->u.cls.u2.id);
     }
     default:
     {

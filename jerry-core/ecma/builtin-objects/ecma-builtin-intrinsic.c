@@ -116,7 +116,7 @@ ecma_builtin_intrinsic_map_prototype_entries (ecma_value_t this_value)
 
   return ecma_op_container_create_iterator (this_value,
                                             ECMA_BUILTIN_ID_MAP_ITERATOR_PROTOTYPE,
-                                            ECMA_PSEUDO_MAP_ITERATOR,
+                                            ECMA_OBJECT_CLASS_MAP_ITERATOR,
                                             ECMA_ITERATOR_ENTRIES);
 } /* ecma_builtin_intrinsic_map_prototype_entries */
 
@@ -142,7 +142,7 @@ ecma_builtin_intrinsic_set_prototype_values (ecma_value_t this_value)
 
   return ecma_op_container_create_iterator (this_value,
                                             ECMA_BUILTIN_ID_SET_ITERATOR_PROTOTYPE,
-                                            ECMA_PSEUDO_SET_ITERATOR,
+                                            ECMA_OBJECT_CLASS_SET_ITERATOR,
                                             ECMA_ITERATOR_VALUES);
 } /* ecma_builtin_intrinsic_set_prototype_values */
 
@@ -205,7 +205,7 @@ ecma_builtin_intrinsic_dispatch_routine (uint8_t builtin_routine_id, /**< built-
     case ECMA_INTRINSIC_DATE_TO_UTC_STRING:
     {
       if (!ecma_is_value_object (this_arg)
-          || !ecma_object_class_is (ecma_get_object_from_value (this_arg), LIT_MAGIC_STRING_DATE_UL))
+          || !ecma_object_class_is (ecma_get_object_from_value (this_arg), ECMA_OBJECT_CLASS_DATE))
       {
         return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a Date object"));
       }

@@ -401,7 +401,7 @@ vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
               {
                 uint16_t extra_flags = (ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD
                                         | (ECMA_AWAIT_FOR_CLOSE << ECMA_AWAIT_STATE_SHIFT));
-                async_generator_object_p->u.class_prop.extra_info |= extra_flags;
+                async_generator_object_p->u.cls.u2.executable_obj_flags |= extra_flags;
 
                 stack_top_p = vm_stack_context_abort (frame_ctx_p, stack_top_p);
 

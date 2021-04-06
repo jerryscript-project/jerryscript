@@ -797,7 +797,7 @@ ecma_op_create_array_iterator (ecma_object_t *obj_p, /**< array object */
 
   return ecma_op_create_iterator_object (ecma_make_object_value (obj_p),
                                          prototype_obj_p,
-                                         ECMA_PSEUDO_ARRAY_ITERATOR,
+                                         ECMA_OBJECT_CLASS_ARRAY_ITERATOR,
                                          kind);
 } /* ecma_op_create_array_iterator */
 #endif /* JERRY_ESNEXT */

@@ -96,8 +96,7 @@ static ecma_value_t
 ecma_builtin_regexp_prototype_flags_helper (ecma_extended_object_t *re_obj_p, /**< this object */
                                             uint16_t builtin_routine_id) /**< id of the flag */
 {
-  re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t,
-                                                              re_obj_p->u.class_prop.u.value);
+  re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t, re_obj_p->u.cls.u3.value);
 
   uint16_t flags = bc_p->header.status_flags;
 
@@ -253,8 +252,7 @@ ecma_op_escape_regexp_pattern (ecma_string_t *pattern_str_p) /**< RegExp pattern
 static ecma_value_t
 ecma_builtin_regexp_prototype_get_source (ecma_extended_object_t *re_obj_p) /**< this argument */
 {
-  re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t,
-                                                              re_obj_p->u.class_prop.u.value);
+  re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t, re_obj_p->u.cls.u3.value);
 
   return ecma_op_escape_regexp_pattern (ecma_get_string_from_value (bc_p->source));
 } /* ecma_builtin_regexp_prototype_get_source */
@@ -286,8 +284,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this */
 
   ecma_object_t *this_obj_p = ecma_get_object_from_value (this_arg);
   ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) this_obj_p;
-  re_compiled_code_t *old_bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t,
-                                                                  re_obj_p->u.class_prop.u.value);
+  re_compiled_code_t *old_bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t, re_obj_p->u.cls.u3.value);
 
   ecma_value_t ret_value;
 
@@ -299,8 +296,7 @@ ecma_builtin_regexp_prototype_compile (ecma_value_t this_arg, /**< this */
     }
 
     ecma_extended_object_t *pattern_obj_p = (ecma_extended_object_t *) ecma_get_object_from_value (pattern_arg);
-    re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t,
-                                                                pattern_obj_p->u.class_prop.u.value);
+    re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t, pattern_obj_p->u.cls.u3.value);
 
     ret_value = ecma_op_create_regexp_from_bytecode (this_obj_p, bc_p);
   }
@@ -471,7 +467,7 @@ ecma_builtin_regexp_prototype_to_string (ecma_object_t *object_p) /**< this obje
   ecma_extended_object_t *re_obj_p = (ecma_extended_object_t *) object_p;
 
   re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t,
-                                                              re_obj_p->u.class_prop.u.value);
+                                                              re_obj_p->u.cls.u3.value);
 
   ecma_string_t *source_p = ecma_get_string_from_value (bc_p->source);
   uint16_t flags = bc_p->header.status_flags;
@@ -639,11 +635,11 @@ ecma_builtin_regexp_prototype_match_all (ecma_object_t *regexp_obj_p, /**< this 
   ecma_object_t *proto_p = ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_STRING_ITERATOR_PROTOTYPE);
   result_obj = ecma_create_object (proto_p,
                                    sizeof (ecma_regexp_string_iterator_t),
-                                   ECMA_OBJECT_TYPE_PSEUDO_ARRAY);
+                                   ECMA_OBJECT_TYPE_CLASS);
 
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) result_obj;
-  ext_obj_p->u.pseudo_array.type = (uint8_t) ECMA_PSEUDO_REGEXP_STRING_ITERATOR;
-  ext_obj_p->u.pseudo_array.extra_info = (uint8_t) (parsed_flag & (RE_FLAG_GLOBAL | RE_FLAG_UNICODE));
+  ext_obj_p->u.cls.type = ECMA_OBJECT_CLASS_REGEXP_STRING_ITERATOR;
+  ext_obj_p->u.cls.u1.regexp_string_iterator_flags = (uint8_t) (parsed_flag & (RE_FLAG_GLOBAL | RE_FLAG_UNICODE));
 
   ecma_regexp_string_iterator_t *regexp_string_iterator_obj = (ecma_regexp_string_iterator_t *) result_obj;
 
@@ -684,7 +680,7 @@ ecma_builtin_regexp_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
   {
     obj_p = ecma_get_object_from_value (this_arg);
 
-    if (require_regexp && !ecma_object_class_is (obj_p, LIT_MAGIC_STRING_REGEXP_UL))
+    if (require_regexp && !ecma_object_class_is (obj_p, ECMA_OBJECT_CLASS_REGEXP))
     {
       obj_p = NULL;
     }
@@ -742,7 +738,7 @@ ecma_builtin_regexp_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
     }
     case ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_SOURCE:
     {
-      if (!ecma_object_class_is (obj_p, LIT_MAGIC_STRING_REGEXP_UL))
+      if (!ecma_object_class_is (obj_p, ECMA_OBJECT_CLASS_REGEXP))
       {
         if (obj_p == ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE))
         {
@@ -762,7 +758,7 @@ ecma_builtin_regexp_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
     case ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_UNICODE:
     case ECMA_REGEXP_PROTOTYPE_ROUTINE_GET_DOT_ALL:
     {
-      if (!ecma_object_class_is (obj_p, LIT_MAGIC_STRING_REGEXP_UL))
+      if (!ecma_object_class_is (obj_p, ECMA_OBJECT_CLASS_REGEXP))
       {
         if (obj_p == ecma_builtin_get (ECMA_BUILTIN_ID_REGEXP_PROTOTYPE))
         {

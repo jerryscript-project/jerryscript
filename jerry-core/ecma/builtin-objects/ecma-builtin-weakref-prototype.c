@@ -55,12 +55,12 @@ ecma_builtin_weakref_prototype_object_deref (ecma_value_t this_arg) /**< this ar
   ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
   ecma_extended_object_t *this_ext_obj = (ecma_extended_object_t *) object_p;
 
-  if (!ecma_object_class_is (object_p, LIT_MAGIC_STRING_WEAKREF_UL))
+  if (!ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_WEAKREF))
   {
     return ecma_raise_type_error ("Target is not weakRef");
   }
 
-  return ecma_copy_value (this_ext_obj->u.class_prop.u.target);
+  return ecma_copy_value (this_ext_obj->u.cls.u3.target);
 } /* ecma_builtin_weakref_prototype_object_deref */
 
 /**

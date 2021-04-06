@@ -1314,51 +1314,60 @@ ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p, 
   if (ecma_is_value_object (value))
   {
     ecma_object_t *obj_p = ecma_get_object_from_value (value);
-    lit_magic_string_id_t class_name = ecma_object_get_class_name (obj_p);
 
-    /* 5.a */
-    if (class_name == LIT_MAGIC_STRING_NUMBER_UL)
+    if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_CLASS)
     {
-      ecma_number_t num;
-      value = ecma_op_to_number (value, &num);
-      ecma_deref_object (obj_p);
-
-      if (ECMA_IS_VALUE_ERROR (value))
+      switch (((ecma_extended_object_t *) obj_p)->u.cls.type)
       {
-        return value;
-      }
+        /* 5.a */
+        case ECMA_OBJECT_CLASS_NUMBER:
+        {
+          ecma_number_t num;
+          value = ecma_op_to_number (value, &num);
+          ecma_deref_object (obj_p);
 
-      value = ecma_make_number_value (num);
-    }
-    /* 5.b */
-    else if (class_name == LIT_MAGIC_STRING_STRING_UL)
-    {
-      ecma_string_t *str_p = ecma_op_to_string (value);
-      ecma_deref_object (obj_p);
+          if (ECMA_IS_VALUE_ERROR (value))
+          {
+            return value;
+          }
 
-      if (JERRY_UNLIKELY (str_p == NULL))
-      {
-        return ECMA_VALUE_ERROR;
-      }
+          value = ecma_make_number_value (num);
+          break;
+        }
+        /* 5.b */
+        case ECMA_OBJECT_CLASS_STRING:
+        {
+          ecma_string_t *str_p = ecma_op_to_string (value);
+          ecma_deref_object (obj_p);
 
-      value = ecma_make_string_value (str_p);
-    }
-    /* 5.c */
-    else if (class_name == LIT_MAGIC_STRING_BOOLEAN_UL)
-    {
-      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
-      value = ext_object_p->u.class_prop.u.value;
-      ecma_deref_object (obj_p);
-    }
+          if (JERRY_UNLIKELY (str_p == NULL))
+          {
+            return ECMA_VALUE_ERROR;
+          }
+
+          value = ecma_make_string_value (str_p);
+          break;
+        }
+        /* 5.c */
+        case ECMA_OBJECT_CLASS_BOOLEAN:
+        {
+          ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
+          value = ext_object_p->u.cls.u3.value;
+          ecma_deref_object (obj_p);
+          break;
+        }
 #if JERRY_BUILTIN_BIGINT
-    /* 5.d */
-    else if (class_name == LIT_MAGIC_STRING_BIGINT_UL)
-    {
-      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
-      value = ecma_copy_value (ext_object_p->u.class_prop.u.value);
-      ecma_deref_object (obj_p);
-    }
+        /* 5.d */
+        case ECMA_OBJECT_CLASS_BIGINT:
+        {
+          ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
+          value = ecma_copy_value (ext_object_p->u.cls.u3.value);
+          ecma_deref_object (obj_p);
+          break;
+        }
 #endif /* JERRY_BUILTIN_BIGINT */
+      }
+    }
   }
 
   /* 6. - 8. */
@@ -1616,20 +1625,24 @@ ecma_builtin_json_stringify (ecma_value_t this_arg, /**< 'this' argument */
           else if (ecma_is_value_object (value))
           {
             ecma_object_t *value_obj_p = ecma_get_object_from_value (value);
-            lit_magic_string_id_t class_id = ecma_object_get_class_name (value_obj_p);
 
-            if (class_id == LIT_MAGIC_STRING_NUMBER_UL || class_id == LIT_MAGIC_STRING_STRING_UL)
+            if (ecma_get_object_type (value_obj_p) == ECMA_OBJECT_TYPE_CLASS)
             {
-              ecma_string_t *str_p = ecma_op_to_string (value);
+              uint8_t class_type = ((ecma_extended_object_t *) value_obj_p)->u.cls.type;
 
-              if (JERRY_UNLIKELY (str_p == NULL))
+              if (class_type == ECMA_OBJECT_CLASS_NUMBER || class_type == ECMA_OBJECT_CLASS_STRING)
               {
-                ecma_collection_free (context.property_list_p);
-                ecma_free_value (value);
-                return ECMA_VALUE_ERROR;
-              }
+                ecma_string_t *str_p = ecma_op_to_string (value);
 
-              item = ecma_make_string_value (str_p);
+                if (JERRY_UNLIKELY (str_p == NULL))
+                {
+                  ecma_collection_free (context.property_list_p);
+                  ecma_free_value (value);
+                  return ECMA_VALUE_ERROR;
+                }
+
+                item = ecma_make_string_value (str_p);
+              }
             }
           }
 
@@ -1657,52 +1670,54 @@ ecma_builtin_json_stringify (ecma_value_t this_arg, /**< 'this' argument */
     }
   }
 
-  ecma_value_t space;
+  ecma_value_t space = ECMA_VALUE_EMPTY;
 
   /* 5. */
   if (ecma_is_value_object (arg3))
   {
     ecma_object_t *obj_p = ecma_get_object_from_value (arg3);
-    lit_magic_string_id_t class_name = ecma_object_get_class_name (obj_p);
 
-    /* 5.a */
-    if (class_name == LIT_MAGIC_STRING_NUMBER_UL)
+    if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_CLASS)
     {
-      ecma_number_t num;
-      ecma_value_t value = ecma_op_to_number (arg3, &num);
+      uint8_t class_type = ((ecma_extended_object_t *) obj_p)->u.cls.type;
 
-      if (ECMA_IS_VALUE_ERROR (value))
+      /* 5.a */
+      if (class_type == ECMA_OBJECT_CLASS_NUMBER)
       {
-        if (context.property_list_p != NULL)
-        {
-          ecma_collection_free (context.property_list_p);
-        }
-        return value;
-      }
-      space = ecma_make_number_value (num);
-    }
-    /* 5.b */
-    else if (class_name == LIT_MAGIC_STRING_STRING_UL)
-    {
-      ecma_string_t *value_str_p = ecma_op_to_string (arg3);
+        ecma_number_t num;
+        ecma_value_t value = ecma_op_to_number (arg3, &num);
 
-      if (JERRY_UNLIKELY (value_str_p == NULL))
+        if (ECMA_IS_VALUE_ERROR (value))
+        {
+          if (context.property_list_p != NULL)
+          {
+            ecma_collection_free (context.property_list_p);
+          }
+          return value;
+        }
+
+        space = ecma_make_number_value (num);
+      }
+      /* 5.b */
+      else if (class_type == ECMA_OBJECT_CLASS_STRING)
       {
-        if (context.property_list_p != NULL)
-        {
-          ecma_collection_free (context.property_list_p);
-        }
-        return ECMA_VALUE_ERROR;
-      }
+        ecma_string_t *value_str_p = ecma_op_to_string (arg3);
 
-      space = ecma_make_string_value (value_str_p);
-    }
-    else
-    {
-      space = ecma_copy_value (arg3);
+        if (JERRY_UNLIKELY (value_str_p == NULL))
+        {
+          if (context.property_list_p != NULL)
+          {
+            ecma_collection_free (context.property_list_p);
+          }
+          return ECMA_VALUE_ERROR;
+        }
+
+        space = ecma_make_string_value (value_str_p);
+      }
     }
   }
-  else
+
+  if (space == ECMA_VALUE_EMPTY)
   {
     space = ecma_copy_value (arg3);
   }

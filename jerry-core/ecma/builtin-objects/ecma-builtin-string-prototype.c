@@ -130,13 +130,13 @@ ecma_builtin_string_prototype_object_to_string (ecma_value_t this_arg) /**< this
   {
     ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
 
-    if (ecma_object_class_is (object_p, LIT_MAGIC_STRING_STRING_UL))
+    if (ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_STRING))
     {
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-      JERRY_ASSERT (ecma_is_value_string (ext_object_p->u.class_prop.u.value));
+      JERRY_ASSERT (ecma_is_value_string (ext_object_p->u.cls.u3.value));
 
-      return ecma_copy_value (ext_object_p->u.class_prop.u.value);
+      return ecma_copy_value (ext_object_p->u.cls.u3.value);
     }
   }
 
@@ -1447,7 +1447,7 @@ ecma_builtin_string_prototype_object_iterator (ecma_value_t to_string) /**< this
 {
   return ecma_op_create_iterator_object (ecma_copy_value (to_string),
                                          ecma_builtin_get (ECMA_BUILTIN_ID_STRING_ITERATOR_PROTOTYPE),
-                                         ECMA_PSEUDO_STRING_ITERATOR,
+                                         ECMA_OBJECT_CLASS_STRING_ITERATOR,
                                          ECMA_ITERATOR_VALUES);
 } /* ecma_builtin_string_prototype_object_iterator */
 

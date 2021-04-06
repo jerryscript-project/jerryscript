@@ -81,8 +81,9 @@ ecma_builtin_weakref_dispatch_construct (const ecma_value_t *arguments_list_p, /
                                                  ECMA_OBJECT_TYPE_CLASS);
   ecma_deref_object (proto_p);
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
-  ext_obj_p->u.class_prop.class_id = (uint16_t) LIT_MAGIC_STRING_WEAKREF_UL;
-  ext_obj_p->u.class_prop.u.target = arguments_list_p[0];
+  ext_obj_p->u.cls.type = ECMA_OBJECT_CLASS_WEAKREF;
+  ext_obj_p->u.cls.u2.id = LIT_MAGIC_STRING_WEAKREF_UL;
+  ext_obj_p->u.cls.u3.target = arguments_list_p[0];
   ecma_op_object_set_weak (ecma_get_object_from_value (arguments_list_p[0]), object_p);
 
   return ecma_make_object_value (object_p);

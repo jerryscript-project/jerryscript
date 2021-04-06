@@ -737,9 +737,10 @@ ecma_builtin_date_create (ecma_number_t tv)
   ecma_deref_object (prototype_obj_p);
 
   ecma_date_object_t *date_object_p = (ecma_date_object_t *) obj_p;
-  date_object_p->header.u.class_prop.class_id = LIT_MAGIC_STRING_DATE_UL;
-  date_object_p->header.u.class_prop.u.tza = 0;
-  date_object_p->header.u.class_prop.extra_info = ECMA_DATE_TZA_NONE;
+  date_object_p->header.u.cls.type = ECMA_OBJECT_CLASS_DATE;
+  date_object_p->header.u.cls.u1.date_flags = ECMA_DATE_TZA_NONE;
+  date_object_p->header.u.cls.u2.id = LIT_MAGIC_STRING_DATE_UL;
+  date_object_p->header.u.cls.u3.tza = 0;
   date_object_p->date_value = tv;
 #else /* !JERRY_ESNEXT */
   ecma_number_t *date_value_p = ecma_alloc_number ();
@@ -749,8 +750,9 @@ ecma_builtin_date_create (ecma_number_t tv)
   ecma_object_t *obj_p = ecma_create_object (prototype_obj_p, sizeof (ecma_extended_object_t), ECMA_OBJECT_TYPE_CLASS);
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
-  ext_object_p->u.class_prop.class_id = LIT_MAGIC_STRING_DATE_UL;
-  ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.class_prop.u.date, date_value_p);
+  ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_DATE;
+  ext_object_p->u.cls.u2.id = LIT_MAGIC_STRING_DATE_UL;
+  ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.cls.u3.date, date_value_p);
 #endif /* JERRY_ESNEXT */
 
   return ecma_make_object_value (obj_p);
@@ -802,14 +804,14 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
 
     /* 4.a */
     if (ecma_is_value_object (argument)
-        && ecma_object_class_is (ecma_get_object_from_value (argument), LIT_MAGIC_STRING_DATE_UL))
+        && ecma_object_class_is (ecma_get_object_from_value (argument), ECMA_OBJECT_CLASS_DATE))
     {
 
 #if JERRY_ESNEXT
       tv = ((ecma_date_object_t *) ecma_get_object_from_value (argument))->date_value;
 #else /* !JERRY_ESNEXT */
       ecma_extended_object_t *arg_ext_object_p = (ecma_extended_object_t *) ecma_get_object_from_value (argument);
-      tv = *ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, arg_ext_object_p->u.class_prop.u.date);
+      tv = *ECMA_GET_INTERNAL_VALUE_POINTER (ecma_number_t, arg_ext_object_p->u.cls.u3.date);
 #endif /* JERRY_ESNEXT */
 
       return ecma_builtin_date_create (tv);

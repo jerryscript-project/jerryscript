@@ -39,8 +39,12 @@ typedef enum
   ECMA_NATIVE_HANDLER_FLAGS_NONE = 0,
   ECMA_NATIVE_HANDLER_FLAGS_NAME_INITIALIZED = (1 << 0),
   ECMA_NATIVE_HANDLER_FLAGS_LENGTH_INITIALIZED = (1 << 1),
-  ECMA_NATIVE_HANDLER_FLAGS_PROMISE_ALREADY_RESOLVED = (1 << 2),
 } ecma_native_handler_flags_t;
+
+/**
+ * Shift for Promise helper handler function.
+ */
+#define ECMA_NATIVE_HANDLER_FLAGS_PROMISE_HELPER_SHIFT 2
 
 ecma_builtin_handler_t
 ecma_builtin_handler_get (ecma_native_handler_id_t id);

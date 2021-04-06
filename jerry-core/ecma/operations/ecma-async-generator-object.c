@@ -58,20 +58,20 @@ ecma_async_generator_enqueue (vm_executable_object_t *async_generator_object_p, 
   ecma_value_t result = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_VALUE_UNDEFINED, NULL);
   task_p->promise = result;
 
-  ecma_value_t head = async_generator_object_p->extended_object.u.class_prop.u.head;
+  ecma_value_t head = async_generator_object_p->extended_object.u.cls.u3.head;
 
   if (ECMA_IS_INTERNAL_VALUE_NULL (head))
   {
-    ECMA_SET_INTERNAL_VALUE_POINTER (async_generator_object_p->extended_object.u.class_prop.u.head, task_p);
+    ECMA_SET_INTERNAL_VALUE_POINTER (async_generator_object_p->extended_object.u.cls.u3.head, task_p);
 
-    if (async_generator_object_p->extended_object.u.class_prop.extra_info & ECMA_ASYNC_GENERATOR_CALLED)
+    if (async_generator_object_p->extended_object.u.cls.u2.executable_obj_flags & ECMA_ASYNC_GENERATOR_CALLED)
     {
       ecma_value_t executable_object = ecma_make_object_value ((ecma_object_t *) async_generator_object_p);
       ecma_enqueue_promise_async_generator_job (executable_object);
       return result;
     }
 
-    async_generator_object_p->extended_object.u.class_prop.extra_info |= ECMA_ASYNC_GENERATOR_CALLED;
+    async_generator_object_p->extended_object.u.cls.u2.executable_obj_flags |= ECMA_ASYNC_GENERATOR_CALLED;
     ecma_async_generator_run (async_generator_object_p);
     return result;
   }
@@ -190,15 +190,15 @@ ecma_async_yield_throw (vm_executable_object_t *async_generator_object_p, /**< a
 ecma_value_t
 ecma_async_generator_run (vm_executable_object_t *async_generator_object_p) /**< async generator */
 {
-  JERRY_ASSERT (async_generator_object_p->extended_object.u.class_prop.class_id
-                == LIT_MAGIC_STRING_ASYNC_GENERATOR_UL);
-  JERRY_ASSERT (!ECMA_IS_INTERNAL_VALUE_NULL (async_generator_object_p->extended_object.u.class_prop.u.head));
+  JERRY_ASSERT (async_generator_object_p->extended_object.u.cls.type == ECMA_OBJECT_CLASS_ASYNC_GENERATOR);
+  JERRY_ASSERT (!ECMA_IS_INTERNAL_VALUE_NULL (async_generator_object_p->extended_object.u.cls.u3.head));
 
-  ecma_value_t head = async_generator_object_p->extended_object.u.class_prop.u.head;
+  ecma_value_t head = async_generator_object_p->extended_object.u.cls.u3.head;
   ecma_async_generator_task_t *task_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_async_generator_task_t, head);
   ecma_value_t result;
 
-  if (async_generator_object_p->extended_object.u.class_prop.extra_info & ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD)
+  if (async_generator_object_p->extended_object.u.cls.u2.executable_obj_flags
+      & ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD)
   {
     switch (task_p->operation_type)
     {
@@ -255,7 +255,7 @@ ecma_async_generator_run (vm_executable_object_t *async_generator_object_p) /**<
 
     JERRY_ASSERT (ECMA_IS_VALUE_ERROR (result));
 
-    async_generator_object_p->extended_object.u.class_prop.extra_info &= ECMA_AWAIT_CLEAR_MASK;
+    async_generator_object_p->extended_object.u.cls.u2.executable_obj_flags &= ECMA_AWAIT_CLEAR_MASK;
     async_generator_object_p->frame_ctx.block_result = ECMA_VALUE_UNDEFINED;
     async_generator_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_throw;
 
@@ -283,9 +283,9 @@ ecma_async_generator_run (vm_executable_object_t *async_generator_object_p) /**<
 
   result = opfunc_resume_executable_object (async_generator_object_p, result);
 
-  if (async_generator_object_p->extended_object.u.class_prop.extra_info & ECMA_EXECUTABLE_OBJECT_COMPLETED)
+  if (async_generator_object_p->extended_object.u.cls.u2.executable_obj_flags & ECMA_EXECUTABLE_OBJECT_COMPLETED)
   {
-    JERRY_ASSERT (head == async_generator_object_p->extended_object.u.class_prop.u.head);
+    JERRY_ASSERT (head == async_generator_object_p->extended_object.u.cls.u3.head);
     ecma_async_generator_finalize (async_generator_object_p, result);
     result = ECMA_VALUE_UNDEFINED;
   }
@@ -300,7 +300,7 @@ void
 ecma_async_generator_finalize (vm_executable_object_t *async_generator_object_p, /**< async generator */
                                ecma_value_t value) /**< final value (takes reference) */
 {
-  ecma_value_t next = async_generator_object_p->extended_object.u.class_prop.u.head;
+  ecma_value_t next = async_generator_object_p->extended_object.u.cls.u3.head;
   ecma_async_generator_task_t *task_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_async_generator_task_t, next);
 
   if (ECMA_IS_VALUE_ERROR (value))
@@ -318,7 +318,7 @@ ecma_async_generator_finalize (vm_executable_object_t *async_generator_object_p,
   ecma_free_value (value);
 
   next = task_p->next;
-  async_generator_object_p->extended_object.u.class_prop.u.head = next;
+  async_generator_object_p->extended_object.u.cls.u3.head = next;
   jmem_heap_free_block (task_p, sizeof (ecma_async_generator_task_t));
 
   while (!ECMA_IS_INTERNAL_VALUE_NULL (next))
@@ -339,7 +339,7 @@ ecma_async_generator_finalize (vm_executable_object_t *async_generator_object_p,
     ecma_free_value_if_not_object (task_p->operation_value);
 
     next = task_p->next;
-    async_generator_object_p->extended_object.u.class_prop.u.head = next;
+    async_generator_object_p->extended_object.u.cls.u3.head = next;
     jmem_heap_free_block (task_p, sizeof (ecma_async_generator_task_t));
   }
 } /* ecma_async_generator_finalize */

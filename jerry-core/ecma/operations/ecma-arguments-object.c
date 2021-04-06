@@ -69,14 +69,14 @@ ecma_op_create_arguments_object (vm_frame_ctx_shared_args_t *shared_p, /**< shar
 
   ecma_object_t *obj_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE),
                                              object_size + (saved_arg_count * sizeof (ecma_value_t)),
-                                             ECMA_OBJECT_TYPE_PSEUDO_ARRAY);
+                                             ECMA_OBJECT_TYPE_CLASS);
 
   ecma_unmapped_arguments_t *arguments_p = (ecma_unmapped_arguments_t *) obj_p;
 
-  arguments_p->header.u.pseudo_array.type = ECMA_PSEUDO_ARRAY_ARGUMENTS;
-  arguments_p->header.u.pseudo_array.extra_info = ECMA_ARGUMENTS_OBJECT_NO_FLAGS;
-  arguments_p->header.u.pseudo_array.u1.formal_params_number = formal_params_number;
-  arguments_p->header.u.pseudo_array.u2.arguments_number = 0;
+  arguments_p->header.u.cls.type = ECMA_OBJECT_CLASS_ARGUMENTS;
+  arguments_p->header.u.cls.u1.arguments_flags = ECMA_ARGUMENTS_OBJECT_NO_FLAGS;
+  arguments_p->header.u.cls.u2.formal_params_number = formal_params_number;
+  arguments_p->header.u.cls.u3.arguments_number = 0;
   arguments_p->callee = ecma_make_object_value (func_obj_p);
 
   ecma_value_t *argv_p = (ecma_value_t *) (((uint8_t *) obj_p) + object_size);
@@ -91,19 +91,19 @@ ecma_op_create_arguments_object (vm_frame_ctx_shared_args_t *shared_p, /**< shar
     argv_p[i] = ECMA_VALUE_INITIALIZED;
   }
 
-  arguments_p->header.u.pseudo_array.u2.arguments_number = shared_p->arg_list_len;
+  arguments_p->header.u.cls.u3.arguments_number = shared_p->arg_list_len;
 
   if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED)
   {
     ecma_mapped_arguments_t *mapped_arguments_p = (ecma_mapped_arguments_t *) obj_p;
 
     ECMA_SET_INTERNAL_VALUE_POINTER (mapped_arguments_p->lex_env, lex_env_p);
-    arguments_p->header.u.pseudo_array.extra_info |= ECMA_ARGUMENTS_OBJECT_MAPPED;
+    arguments_p->header.u.cls.u1.arguments_flags |= ECMA_ARGUMENTS_OBJECT_MAPPED;
 
 #if JERRY_SNAPSHOT_EXEC
     if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION)
     {
-      arguments_p->header.u.pseudo_array.extra_info |= ECMA_ARGUMENTS_OBJECT_STATIC_BYTECODE;
+      arguments_p->header.u.cls.u1.arguments_flags |= ECMA_ARGUMENTS_OBJECT_STATIC_BYTECODE;
       mapped_arguments_p->u.byte_code_p = (ecma_compiled_code_t *) bytecode_data_p;
     }
     else
@@ -168,7 +168,7 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *object_p, /**< the 
                                                                        property_desc_p);
 
   if (ECMA_IS_VALUE_ERROR (ret_value)
-      || !(((ecma_extended_object_t *) object_p)->u.pseudo_array.extra_info & ECMA_ARGUMENTS_OBJECT_MAPPED))
+      || !(((ecma_extended_object_t *) object_p)->u.cls.u1.arguments_flags & ECMA_ARGUMENTS_OBJECT_MAPPED))
   {
     return ret_value;
   }
@@ -176,7 +176,7 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *object_p, /**< the 
   ecma_mapped_arguments_t *mapped_arguments_p = (ecma_mapped_arguments_t *) object_p;
   uint32_t index = ecma_string_get_array_index (property_name_p);
 
-  if (index >= mapped_arguments_p->unmapped.header.u.pseudo_array.u1.formal_params_number)
+  if (index >= mapped_arguments_p->unmapped.header.u.cls.u2.formal_params_number)
   {
     return ret_value;
   }
@@ -236,7 +236,7 @@ ecma_op_arguments_object_delete (ecma_object_t *object_p, /**< the object */
   ecma_value_t ret_value = ecma_op_general_object_delete (object_p, property_name_p, is_throw);
 
   if (!ecma_is_value_true (ret_value)
-      || !(((ecma_extended_object_t *) object_p)->u.pseudo_array.extra_info & ECMA_ARGUMENTS_OBJECT_MAPPED))
+      || !(((ecma_extended_object_t *) object_p)->u.cls.u1.arguments_flags & ECMA_ARGUMENTS_OBJECT_MAPPED))
   {
     return ret_value;
   }
@@ -245,7 +245,7 @@ ecma_op_arguments_object_delete (ecma_object_t *object_p, /**< the object */
   ecma_value_t *argv_p = (ecma_value_t *) (mapped_arguments_p + 1);
   uint32_t index = ecma_string_get_array_index (property_name_p);
 
-  if (index < mapped_arguments_p->unmapped.header.u.pseudo_array.u1.formal_params_number)
+  if (index < mapped_arguments_p->unmapped.header.u.cls.u2.formal_params_number)
   {
     ecma_free_value_if_not_object (argv_p[index]);
     argv_p[index] = ECMA_VALUE_EMPTY;
@@ -264,15 +264,14 @@ ecma_property_t *
 ecma_op_arguments_object_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**< object */
                                                            ecma_string_t *property_name_p) /**< property's name */
 {
-  JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_PSEUDO_ARRAY);
-  JERRY_ASSERT (((ecma_extended_object_t *) object_p)->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS);
+  JERRY_ASSERT (ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_ARGUMENTS));
 
   ecma_unmapped_arguments_t *arguments_p = (ecma_unmapped_arguments_t *) object_p;
   ecma_value_t *argv_p = (ecma_value_t *) (arguments_p + 1);
   ecma_property_value_t *prop_value_p;
   ecma_property_t *prop_p = NULL;
-  uint32_t arguments_number = arguments_p->header.u.pseudo_array.u2.arguments_number;
-  uint8_t flags = arguments_p->header.u.pseudo_array.extra_info;
+  uint32_t arguments_number = arguments_p->header.u.cls.u3.arguments_number;
+  uint8_t flags = arguments_p->header.u.cls.u1.arguments_flags;
 
   if (flags & ECMA_ARGUMENTS_OBJECT_MAPPED)
   {
@@ -300,7 +299,7 @@ ecma_op_arguments_object_try_to_lazy_instantiate_property (ecma_object_t *object
 
     /* Pevent reinitialization */
     if ((flags & ECMA_ARGUMENTS_OBJECT_MAPPED)
-         && index < arguments_p->header.u.pseudo_array.u1.formal_params_number)
+         && index < arguments_p->header.u.cls.u2.formal_params_number)
     {
       argv_p[index] = ECMA_VALUE_INITIALIZED;
     }
@@ -315,7 +314,7 @@ ecma_op_arguments_object_try_to_lazy_instantiate_property (ecma_object_t *object
   if (property_name_p == ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH)
       && !(flags & ECMA_ARGUMENTS_OBJECT_LENGTH_INITIALIZED))
   {
-    arguments_p->header.u.pseudo_array.extra_info |= ECMA_ARGUMENTS_OBJECT_LENGTH_INITIALIZED;
+    arguments_p->header.u.cls.u1.arguments_flags |= ECMA_ARGUMENTS_OBJECT_LENGTH_INITIALIZED;
 
     prop_value_p = ecma_create_named_data_property (object_p,
                                                     ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH),
@@ -328,7 +327,7 @@ ecma_op_arguments_object_try_to_lazy_instantiate_property (ecma_object_t *object
   if (property_name_p == ecma_get_magic_string (LIT_MAGIC_STRING_CALLEE)
       && !(flags & ECMA_ARGUMENTS_OBJECT_CALLEE_INITIALIZED))
   {
-    arguments_p->header.u.pseudo_array.extra_info |= ECMA_ARGUMENTS_OBJECT_CALLEE_INITIALIZED;
+    arguments_p->header.u.cls.u1.arguments_flags |= ECMA_ARGUMENTS_OBJECT_CALLEE_INITIALIZED;
 
     if (flags & ECMA_ARGUMENTS_OBJECT_MAPPED)
     {
@@ -355,14 +354,14 @@ ecma_op_arguments_object_try_to_lazy_instantiate_property (ecma_object_t *object
 
 #if !JERRY_ESNEXT
   if (property_name_p == ecma_get_magic_string (LIT_MAGIC_STRING_CALLER)
-      && !(arguments_p->header.u.pseudo_array.extra_info & ECMA_ARGUMENTS_OBJECT_CALLER_INITIALIZED))
+      && !(arguments_p->header.u.cls.u1.arguments_flags & ECMA_ARGUMENTS_OBJECT_CALLER_INITIALIZED))
   {
-    if (arguments_p->header.u.pseudo_array.extra_info & ECMA_ARGUMENTS_OBJECT_MAPPED)
+    if (arguments_p->header.u.cls.u1.arguments_flags & ECMA_ARGUMENTS_OBJECT_MAPPED)
     {
       return NULL;
     }
 
-    arguments_p->header.u.pseudo_array.extra_info |= ECMA_ARGUMENTS_OBJECT_CALLER_INITIALIZED;
+    arguments_p->header.u.cls.u1.arguments_flags |= ECMA_ARGUMENTS_OBJECT_CALLER_INITIALIZED;
 
     ecma_object_t *thrower_p = ecma_builtin_get (ECMA_BUILTIN_ID_TYPE_ERROR_THROWER);
 
@@ -380,7 +379,7 @@ ecma_op_arguments_object_try_to_lazy_instantiate_property (ecma_object_t *object
   if (property_name_p == symbol_p
       && !(flags & ECMA_ARGUMENTS_OBJECT_ITERATOR_INITIALIZED))
   {
-    arguments_p->header.u.pseudo_array.extra_info |= ECMA_ARGUMENTS_OBJECT_ITERATOR_INITIALIZED;
+    arguments_p->header.u.cls.u1.arguments_flags |= ECMA_ARGUMENTS_OBJECT_ITERATOR_INITIALIZED;
 
     prop_value_p = ecma_create_named_data_property (object_p,
                                                     symbol_p,
@@ -408,14 +407,13 @@ ecma_op_arguments_object_list_lazy_property_names (ecma_object_t *obj_p, /**< ar
                                                    ecma_collection_t *prop_names_p, /**< prop name collection */
                                                    ecma_property_counter_t *prop_counter_p) /**< prop counter */
 {
-  JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_PSEUDO_ARRAY);
-  JERRY_ASSERT (((ecma_extended_object_t *) obj_p)->u.pseudo_array.type == ECMA_PSEUDO_ARRAY_ARGUMENTS);
+  JERRY_ASSERT (ecma_object_class_is (obj_p, ECMA_OBJECT_CLASS_ARGUMENTS));
 
   ecma_unmapped_arguments_t *arguments_p = (ecma_unmapped_arguments_t *) obj_p;
 
   ecma_value_t *argv_p = (ecma_value_t *) (arguments_p + 1);
-  uint32_t arguments_number = arguments_p->header.u.pseudo_array.u2.arguments_number;
-  uint8_t flags = arguments_p->header.u.pseudo_array.extra_info;
+  uint32_t arguments_number = arguments_p->header.u.cls.u3.arguments_number;
+  uint8_t flags = arguments_p->header.u.cls.u1.arguments_flags;
 
   if (flags & ECMA_ARGUMENTS_OBJECT_MAPPED)
   {
@@ -470,13 +468,13 @@ ecma_op_arguments_object_get_formal_parameter (ecma_mapped_arguments_t *mapped_a
                                                                                              *   object */
                                                uint32_t index) /**< formal parameter index */
 {
-  JERRY_ASSERT (mapped_arguments_p->unmapped.header.u.pseudo_array.extra_info & ECMA_ARGUMENTS_OBJECT_MAPPED);
-  JERRY_ASSERT (index < mapped_arguments_p->unmapped.header.u.pseudo_array.u1.formal_params_number);
+  JERRY_ASSERT (mapped_arguments_p->unmapped.header.u.cls.u1.arguments_flags & ECMA_ARGUMENTS_OBJECT_MAPPED);
+  JERRY_ASSERT (index < mapped_arguments_p->unmapped.header.u.cls.u2.formal_params_number);
 
   ecma_compiled_code_t *byte_code_p;
 
 #if JERRY_SNAPSHOT_EXEC
-  if (mapped_arguments_p->unmapped.header.u.pseudo_array.extra_info & ECMA_ARGUMENTS_OBJECT_STATIC_BYTECODE)
+  if (mapped_arguments_p->unmapped.header.u.cls.u1.arguments_flags & ECMA_ARGUMENTS_OBJECT_STATIC_BYTECODE)
   {
     byte_code_p = mapped_arguments_p->u.byte_code_p;
   }

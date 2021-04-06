@@ -154,7 +154,8 @@ ecma_new_standard_error (jerry_error_t error_type, /**< native error type */
                                                        sizeof (ecma_extended_object_t),
                                                        ECMA_OBJECT_TYPE_CLASS);
 
-  ((ecma_extended_object_t *) new_error_obj_p)->u.class_prop.class_id = LIT_MAGIC_STRING_ERROR_UL;
+  ((ecma_extended_object_t *) new_error_obj_p)->u.cls.type = ECMA_OBJECT_CLASS_ERROR;
+  ((ecma_extended_object_t *) new_error_obj_p)->u.cls.u2.id = LIT_MAGIC_STRING_ERROR_UL;
 
   if (message_string_p != NULL)
   {

@@ -244,7 +244,7 @@ ecma_op_regexp_alloc (ecma_object_t *ctr_obj_p) /**< constructor object pointer 
   ecma_extended_object_t *regexp_obj_p = (ecma_extended_object_t *) new_object_p;
 
   /* Class id will be initialized after the bytecode is compiled. */
-  regexp_obj_p->u.class_prop.class_id = LIT_MAGIC_STRING_UNDEFINED;
+  regexp_obj_p->u.cls.type = ECMA_OBJECT_CLASS__MAX;
 
   ecma_value_t status = ecma_builtin_helper_def_prop (new_object_p,
                                                       ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
@@ -268,7 +268,7 @@ ecma_op_regexp_initialize (ecma_object_t *regexp_obj_p, /**< RegExp object */
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) regexp_obj_p;
 
 #if !JERRY_ESNEXT
-  if (ext_obj_p->u.class_prop.class_id == LIT_MAGIC_STRING_UNDEFINED)
+  if (ext_obj_p->u.cls.type == ECMA_OBJECT_CLASS__MAX)
   {
     /* This instance has not been initialized before. */
     ecma_regexp_create_props (regexp_obj_p, pattern_str_p, flags);
@@ -284,8 +284,9 @@ ecma_op_regexp_initialize (ecma_object_t *regexp_obj_p, /**< RegExp object */
   JERRY_UNUSED (flags);
 #endif /* JERRY_ESNEXT */
 
-  ext_obj_p->u.class_prop.class_id = LIT_MAGIC_STRING_REGEXP_UL;
-  ECMA_SET_INTERNAL_VALUE_POINTER (ext_obj_p->u.class_prop.u.value, bc_p);
+  ext_obj_p->u.cls.type = ECMA_OBJECT_CLASS_REGEXP;
+  ext_obj_p->u.cls.u2.id = LIT_MAGIC_STRING_REGEXP_UL;
+  ECMA_SET_INTERNAL_VALUE_POINTER (ext_obj_p->u.cls.u3.value, bc_p);
 } /* ecma_op_regexp_initialize */
 
 /**
@@ -1736,8 +1737,7 @@ ecma_regexp_exec_helper (ecma_object_t *regexp_object_p, /**< RegExp object */
 
   /* 9. */
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) regexp_object_p;
-  re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_ANY_POINTER (re_compiled_code_t,
-                                                                  ext_object_p->u.class_prop.u.value);
+  re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t, ext_object_p->u.cls.u3.value);
 
   /* 3. */
   lit_utf8_size_t input_size;
@@ -2452,8 +2452,7 @@ cleanup_string:
 
   ecma_object_t *const regexp_p = ecma_get_object_from_value (this_arg);
   ecma_extended_object_t *const ext_object_p = (ecma_extended_object_t *) regexp_p;
-  re_compiled_code_t *const bc_p = ECMA_GET_INTERNAL_VALUE_ANY_POINTER (re_compiled_code_t,
-                                                                        ext_object_p->u.class_prop.u.value);
+  re_compiled_code_t *const bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t, ext_object_p->u.cls.u3.value);
 
   lit_utf8_size_t string_size;
   lit_utf8_size_t string_length;
@@ -2611,8 +2610,7 @@ ecma_regexp_replace_helper_fast (ecma_replace_context_t *ctx_p, /**<replace cont
                                  ecma_string_t *string_p, /**< source string */
                                  ecma_value_t replace_arg) /**< replace argument */
 {
-  const re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t,
-                                                                    re_obj_p->u.class_prop.u.value);
+  const re_compiled_code_t *bc_p = ECMA_GET_INTERNAL_VALUE_POINTER (re_compiled_code_t, re_obj_p->u.cls.u3.value);
   ecma_bytecode_ref ((ecma_compiled_code_t *) bc_p);
 
   JERRY_ASSERT (bc_p != NULL);
@@ -2972,7 +2970,7 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
   if (ecma_op_is_callable (result))
   {
     ecma_extended_object_t *function_p = (ecma_extended_object_t *) ecma_get_object_from_value (result);
-    if (ecma_object_class_is (this_obj_p, LIT_MAGIC_STRING_REGEXP_UL)
+    if (ecma_object_class_is (this_obj_p, ECMA_OBJECT_CLASS_REGEXP)
         && ecma_builtin_is_regexp_exec (function_p))
     {
       ecma_deref_object ((ecma_object_t *) function_p);
@@ -3016,7 +3014,7 @@ ecma_regexp_replace_helper (ecma_value_t this_arg, /**< this argument */
     {
       ecma_free_value (result);
 
-      if (!ecma_object_class_is (this_obj_p, LIT_MAGIC_STRING_REGEXP_UL))
+      if (!ecma_object_class_is (this_obj_p, ECMA_OBJECT_CLASS_REGEXP))
       {
         result = ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a valid RegExp object"));
         goto cleanup_results;

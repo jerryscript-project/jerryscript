@@ -78,7 +78,7 @@ static inline ecma_value_t
 ecma_builtin_promise_reject_abrupt (ecma_value_t value, /**< value */
                                     ecma_object_t *capability_obj_p) /**< capability */
 {
-  JERRY_ASSERT (ecma_object_class_is (capability_obj_p, LIT_INTERNAL_MAGIC_PROMISE_CAPABILITY));
+  JERRY_ASSERT (ecma_object_class_is (capability_obj_p, ECMA_OBJECT_CLASS_PROMISE_CAPABILITY));
 
   if (!ECMA_IS_VALUE_ERROR (value))
   {
@@ -101,7 +101,7 @@ ecma_builtin_promise_reject_abrupt (ecma_value_t value, /**< value */
 
   ecma_free_value (call_ret);
 
-  return ecma_copy_value (capability_p->header.u.class_prop.u.promise);
+  return ecma_copy_value (capability_p->header.u.cls.u3.promise);
 } /* ecma_builtin_promise_reject_abrupt */
 
 /**
@@ -122,7 +122,7 @@ ecma_builtin_promise_perform_race (ecma_value_t iterator, /**< the iterator for 
                                    bool *done_p) /**< [out] iteratorRecord[[done]] */
 {
   JERRY_ASSERT (ecma_is_value_object (iterator));
-  JERRY_ASSERT (ecma_object_class_is (capability_obj_p, LIT_INTERNAL_MAGIC_PROMISE_CAPABILITY));
+  JERRY_ASSERT (ecma_object_class_is (capability_obj_p, ECMA_OBJECT_CLASS_PROMISE_CAPABILITY));
   JERRY_ASSERT (ecma_is_constructor (ctor));
 
   ecma_promise_capabality_t *capability_p = (ecma_promise_capabality_t *) capability_obj_p;
@@ -145,7 +145,7 @@ ecma_builtin_promise_perform_race (ecma_value_t iterator, /**< the iterator for 
     if (ecma_is_value_false (next))
     {
       /* ii. */
-      ret_value = ecma_copy_value (capability_p->header.u.class_prop.u.promise);
+      ret_value = ecma_copy_value (capability_p->header.u.cls.u3.promise);
       goto done;
     }
 
@@ -206,7 +206,7 @@ ecma_builtin_promise_perform (ecma_value_t iterator, /**< iteratorRecord */
                               bool *done_p) /**< [out] iteratorRecord[[done]] */
 {
   /* 1. - 2. */
-  JERRY_ASSERT (ecma_object_class_is (capability_obj_p, LIT_INTERNAL_MAGIC_PROMISE_CAPABILITY));
+  JERRY_ASSERT (ecma_object_class_is (capability_obj_p, ECMA_OBJECT_CLASS_PROMISE_CAPABILITY));
   JERRY_ASSERT (ecma_is_constructor (ctor));
 
   ecma_promise_capabality_t *capability_p = (ecma_promise_capabality_t *) capability_obj_p;
@@ -261,7 +261,7 @@ ecma_builtin_promise_perform (ecma_value_t iterator, /**< iteratorRecord */
       }
 
       /* iv. */
-      ret_value = ecma_copy_value (capability_p->header.u.class_prop.u.promise);
+      ret_value = ecma_copy_value (capability_p->header.u.cls.u3.promise);
       goto done;
     }
 
@@ -320,12 +320,15 @@ ecma_builtin_promise_perform (ecma_value_t iterator, /**< iteratorRecord */
 
       /* p. */
       executor_p->remaining_elements = remaining;
-      executor_p->header.u.class_prop.extra_info = ECMA_PROMISE_ALL_RESOLVE;
+
+      uint8_t executor_type = ECMA_PROMISE_ALL_RESOLVE << ECMA_NATIVE_HANDLER_FLAGS_PROMISE_HELPER_SHIFT;
 
       if (builtin_routine_id == ECMA_PROMISE_ROUTINE_ALLSETTLED)
       {
-        executor_p->header.u.class_prop.extra_info = ECMA_PROMISE_ALLSETTLED_RESOLVE;
+        executor_type = ECMA_PROMISE_ALLSETTLED_RESOLVE << ECMA_NATIVE_HANDLER_FLAGS_PROMISE_HELPER_SHIFT;
       }
+
+      executor_p->header.u.built_in.u2.routine_flags |= executor_type;
 
       args[0] = ecma_make_object_value (executor_func_p);
     }
@@ -340,22 +343,22 @@ ecma_builtin_promise_perform (ecma_value_t iterator, /**< iteratorRecord */
 
     if (builtin_routine_id != ECMA_PROMISE_ROUTINE_ALL)
     {
-      ecma_promise_all_exector_type_t type = ECMA_PROMISE_ALLSETTLED_REJECT;
+      uint8_t executor_type = ECMA_PROMISE_ALLSETTLED_REJECT << ECMA_NATIVE_HANDLER_FLAGS_PROMISE_HELPER_SHIFT;
 
       if (builtin_routine_id == ECMA_PROMISE_ROUTINE_ANY)
       {
-        type = ECMA_PROMISE_ANY_REJECT;
+        executor_type = ECMA_PROMISE_ANY_REJECT << ECMA_NATIVE_HANDLER_FLAGS_PROMISE_HELPER_SHIFT;
       }
 
       ecma_object_t *reject_func_p = ecma_op_create_native_handler (ECMA_NATIVE_HANDLER_PROMISE_ALL_HELPER,
-                                                     sizeof (ecma_promise_all_executor_t));
+                                                                    sizeof (ecma_promise_all_executor_t));
 
       ecma_promise_all_executor_t *reject_p = (ecma_promise_all_executor_t *) reject_func_p;
       reject_p->index = idx;
       reject_p->values = values_array;
       reject_p->capability = ecma_make_object_value (capability_obj_p);
       reject_p->remaining_elements = remaining;
-      reject_p->header.u.class_prop.extra_info = (uint16_t) type;
+      reject_p->header.u.built_in.u2.routine_flags |= executor_type;
       args[1] = ecma_make_object_value (reject_func_p);
       result = ecma_op_invoke_by_magic_id (next_promise, LIT_MAGIC_STRING_THEN, args, 2);
       ecma_deref_object (reject_func_p);

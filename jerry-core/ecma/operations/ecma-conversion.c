@@ -532,21 +532,24 @@ ecma_op_to_object (ecma_value_t value) /**< ecma value */
 {
   ecma_check_value_type_is_spec_defined (value);
   ecma_builtin_id_t proto_id = ECMA_BUILTIN_ID_OBJECT_PROTOTYPE;
-  uint16_t lit_id;
+  uint8_t class_type;
+  uint16_t class_id;
 
   if (ecma_is_value_number (value))
   {
 #if JERRY_BUILTIN_NUMBER
     proto_id =  ECMA_BUILTIN_ID_NUMBER_PROTOTYPE;
 #endif /* JERRY_BUILTIN_NUMBER */
-    lit_id = LIT_MAGIC_STRING_NUMBER_UL;
+    class_type = ECMA_OBJECT_CLASS_NUMBER;
+    class_id = LIT_MAGIC_STRING_NUMBER_UL;
   }
   else if (ecma_is_value_string (value))
   {
 #if JERRY_BUILTIN_STRING
     proto_id = ECMA_BUILTIN_ID_STRING_PROTOTYPE;
 #endif /* JERRY_BUILTIN_STRING */
-    lit_id = LIT_MAGIC_STRING_STRING_UL;
+    class_type = ECMA_OBJECT_CLASS_STRING;
+    class_id = LIT_MAGIC_STRING_STRING_UL;
   }
   else if (ecma_is_value_object (value))
   {
@@ -556,7 +559,8 @@ ecma_op_to_object (ecma_value_t value) /**< ecma value */
   else if (ecma_is_value_symbol (value))
   {
     proto_id = ECMA_BUILTIN_ID_SYMBOL_PROTOTYPE;
-    lit_id = LIT_MAGIC_STRING_SYMBOL_UL;
+    class_type = ECMA_OBJECT_CLASS_SYMBOL;
+    class_id = LIT_MAGIC_STRING_SYMBOL_UL;
   }
 #endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_BIGINT
@@ -578,33 +582,22 @@ ecma_op_to_object (ecma_value_t value) /**< ecma value */
 #if JERRY_BUILTIN_BOOLEAN
       proto_id = ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE;
 #endif /* JERRY_BUILTIN_BOOLEAN */
-      lit_id = LIT_MAGIC_STRING_BOOLEAN_UL;
+      class_type = ECMA_OBJECT_CLASS_BOOLEAN;
+      class_id = LIT_MAGIC_STRING_BOOLEAN_UL;
     }
   }
 
-  return ecma_op_create_class_object (proto_id, value, lit_id);
-} /* ecma_op_to_object */
-
-/**
- * Create a ECMA_OBJECT_TYPE_CLASS object from the given arguments.
- *
- * @return ecma_value - constructed object
- */
-ecma_value_t
-ecma_op_create_class_object (ecma_builtin_id_t proto_id, /**< prototype id */
-                             ecma_value_t value, /**< ecma value */
-                             uint16_t class_id) /**< magic string id */
-{
   ecma_object_t *object_p = ecma_create_object (ecma_builtin_get (proto_id),
                                                 sizeof (ecma_extended_object_t),
                                                 ECMA_OBJECT_TYPE_CLASS);
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-  ext_object_p->u.class_prop.class_id = class_id;
-  ext_object_p->u.class_prop.u.value = ecma_copy_value_if_not_object (value);
+  ext_object_p->u.cls.type = class_type;
+  ext_object_p->u.cls.u2.id = class_id;
+  ext_object_p->u.cls.u3.value = ecma_copy_value_if_not_object (value);
 
   return ecma_make_object_value (object_p);
-} /* ecma_op_create_class_object */
+} /* ecma_op_to_object */
 
 /**
  * FromPropertyDescriptor operation.

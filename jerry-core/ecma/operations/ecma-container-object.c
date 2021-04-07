@@ -756,7 +756,7 @@ ecma_op_container_foreach (ecma_extended_object_t *map_object_p, /**< map object
 {
   if (!ecma_op_is_callable (predicate))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable"));
+    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_callback_is_not_callable));
   }
 
   JERRY_ASSERT (ecma_is_value_object (predicate));

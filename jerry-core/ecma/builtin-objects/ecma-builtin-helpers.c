@@ -369,7 +369,7 @@ ecma_builtin_helper_array_concat_value (ecma_object_t *array_obj_p, /**< array *
     /* 4 . */
     if ((ecma_number_t) (*length_p + arg_len) > ECMA_NUMBER_MAX_SAFE_INTEGER)
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Invalid array length"));
+      return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_invalid_array_length));
     }
 #else /* !JERRY_ESNEXT */
     /* 5.b.ii */

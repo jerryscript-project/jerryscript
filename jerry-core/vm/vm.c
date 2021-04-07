@@ -701,7 +701,7 @@ vm_spread_operation (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
     if (!ecma_is_value_object (func_value)
         || !ecma_op_object_is_callable (ecma_get_object_from_value (func_value)))
     {
-      completion_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function"));
+      completion_value = ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_expected_a_function));
     }
     else
     {
@@ -785,7 +785,7 @@ opfunc_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   if (!ecma_is_value_object (func_value)
       || !ecma_op_object_is_callable (ecma_get_object_from_value (func_value)))
   {
-    completion_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function"));
+    completion_value = ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_expected_a_function));
   }
   else
   {
@@ -1643,7 +1643,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           if (binding_p != NULL)
           {
-            result = ecma_raise_syntax_error (ECMA_ERR_MSG ("Local variable is redeclared"));
+            result = ecma_raise_syntax_error (ECMA_ERR_MSG (ecma_error_local_variable_is_redeclared));
             goto error;
           }
 
@@ -1668,7 +1668,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
             {
               if (ecma_is_value_true (result))
               {
-                result = ecma_raise_syntax_error (ECMA_ERR_MSG ("Local variable is redeclared"));
+                result = ecma_raise_syntax_error (ECMA_ERR_MSG (ecma_error_local_variable_is_redeclared));
               }
 
               JERRY_ASSERT (ECMA_IS_VALUE_ERROR (result));
@@ -1689,7 +1689,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           if (ecma_is_value_true (result))
           {
-            result = ecma_raise_syntax_error (ECMA_ERR_MSG ("Local variable is redeclared"));
+            result = ecma_raise_syntax_error (ECMA_ERR_MSG (ecma_error_local_variable_is_redeclared));
             goto error;
           }
 
@@ -1950,7 +1950,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           if (JERRY_UNLIKELY (ecma_compare_ecma_string_to_magic_id (prop_name_p, LIT_MAGIC_STRING_PROTOTYPE))
               && !(opcode_data & VM_OC_NON_STATIC_FLAG))
           {
-            result = ecma_raise_type_error (ECMA_ERR_MSG ("Prototype property of a class is non-configurable"));
+            result = ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_class_is_non_configurable));
             goto error;
           }
 
@@ -1983,7 +1983,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           if (JERRY_UNLIKELY (ecma_compare_ecma_string_to_magic_id (prop_name_p, LIT_MAGIC_STRING_PROTOTYPE))
               && !(opcode_data & VM_OC_NON_STATIC_FLAG))
           {
-            result = ecma_raise_type_error (ECMA_ERR_MSG ("Prototype property of a class is non-configurable"));
+            result = ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_class_is_non_configurable));
             goto error;
           }
 

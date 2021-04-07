@@ -132,6 +132,7 @@ set(SOURCE_CORE_FILES
   debugger/debugger.c
   ecma/base/ecma-alloc.c
   ecma/base/ecma-gc.c
+  ecma/base/ecma-errors.c
   ecma/base/ecma-helpers-collection.c
   ecma/base/ecma-helpers-conversion.c
   ecma/base/ecma-helpers-errol.c
@@ -327,6 +328,7 @@ if(ENABLE_AMALGAM)
     api/jerry-snapshot.h
     debugger/debugger.h
     ecma/base/ecma-alloc.h
+    ecma/base/ecma-errors.h
     ecma/base/ecma-gc.h
     ecma/base/ecma-globals.h
     ecma/base/ecma-helpers.h

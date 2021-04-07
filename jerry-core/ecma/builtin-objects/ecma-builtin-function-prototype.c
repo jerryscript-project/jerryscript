@@ -107,7 +107,7 @@ ecma_builtin_function_prototype_object_apply (ecma_object_t *func_obj_p, /**< th
   /* 3. */
   if (!ecma_is_value_object (arg2))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object"));
+    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_argument_is_not_an_object));
   }
 
   ecma_object_t *obj_p = ecma_get_object_from_value (arg2);

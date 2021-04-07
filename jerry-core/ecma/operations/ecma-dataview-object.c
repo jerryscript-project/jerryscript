@@ -80,7 +80,7 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
   /* 4. */
   if (ecma_arraybuffer_is_detached (buffer_p))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached"));
+    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_arraybuffer_is_detached));
   }
 
   /* 5. */
@@ -132,7 +132,7 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
   if (ecma_arraybuffer_is_detached (buffer_p))
   {
     ecma_deref_object (prototype_obj_p);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached"));
+    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_arraybuffer_is_detached));
   }
 
   /* 9. */
@@ -300,7 +300,7 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
   if (ecma_arraybuffer_is_detached (buffer_p))
   {
     ecma_free_value (value_to_set);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached"));
+    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_arraybuffer_is_detached));
   }
 
   /* GetViewValue 7., SetViewValue 9. */

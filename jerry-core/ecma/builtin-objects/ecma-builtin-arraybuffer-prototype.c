@@ -65,7 +65,7 @@ ecma_builtin_arraybuffer_prototype_bytelength_getter (ecma_value_t this_arg) /**
     {
       if (ecma_arraybuffer_is_detached (object_p))
       {
-        return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached"));
+        return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_arraybuffer_is_detached));
       }
       uint32_t len = ecma_arraybuffer_get_length (object_p);
 
@@ -108,7 +108,7 @@ ecma_builtin_arraybuffer_prototype_object_slice (ecma_value_t this_arg, /**< thi
   /* 4. */
   if (ecma_arraybuffer_is_detached (object_p))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached"));
+    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_arraybuffer_is_detached));
   }
 
   /* 5. */

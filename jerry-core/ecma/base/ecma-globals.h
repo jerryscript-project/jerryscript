@@ -16,6 +16,7 @@
 #ifndef ECMA_GLOBALS_H
 #define ECMA_GLOBALS_H
 
+#include "ecma-errors.h"
 #include "config.h"
 #include "jrt.h"
 #include "lit-magic-strings.h"

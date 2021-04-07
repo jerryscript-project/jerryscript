@@ -91,7 +91,7 @@ ecma_builtin_reflect_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
     /* 1. */
     if (arguments_number == 0 || !ecma_is_value_object (arguments_list[0]))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object"));
+      return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_argument_is_not_an_object));
     }
 
     /* 2. */
@@ -159,7 +159,7 @@ ecma_builtin_reflect_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
     /* 1. */
     if (arguments_number == 0 || !ecma_is_value_object (arguments_list[0]))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object"));
+      return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_argument_is_not_an_object));
     }
 
     ecma_object_t *target_p = ecma_get_object_from_value (arguments_list[0]);
@@ -183,7 +183,7 @@ ecma_builtin_reflect_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
     /* 1. */
     if (arguments_number < 1 || !ecma_is_constructor (arguments_list[0]))
     {
-      return ecma_raise_type_error (ECMA_ERR_MSG ("Target is not a constructor"));
+      return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_target_is_not_a_constructor));
     }
 
     ecma_object_t *target_p = ecma_get_object_from_value (arguments_list[0]);
@@ -196,7 +196,7 @@ ecma_builtin_reflect_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
       /* 3. */
       if (!ecma_is_constructor (arguments_list[2]))
       {
-        return ecma_raise_type_error (ECMA_ERR_MSG ("Target is not a constructor"));
+        return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_target_is_not_a_constructor));
       }
 
       new_target_p = ecma_get_object_from_value (arguments_list[2]);
@@ -226,7 +226,7 @@ ecma_builtin_reflect_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
 
   if (!ecma_is_value_object (arguments_list[0]))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object"));
+    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_argument_is_not_an_object));
   }
 
   switch (builtin_routine_id)

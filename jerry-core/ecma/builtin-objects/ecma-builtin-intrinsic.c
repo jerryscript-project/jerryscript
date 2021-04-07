@@ -176,7 +176,7 @@ ecma_builtin_intrinsic_dispatch_routine (uint8_t builtin_routine_id, /**< built-
 
       if (ecma_arraybuffer_is_detached (ecma_typedarray_get_arraybuffer (ecma_get_object_from_value (this_arg))))
       {
-        return ecma_raise_type_error (ECMA_ERR_MSG ("ArrayBuffer has been detached"));
+        return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_arraybuffer_is_detached));
       }
 
       return ecma_typedarray_iterators_helper (this_arg, ECMA_ITERATOR_VALUES);

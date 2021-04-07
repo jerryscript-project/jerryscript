@@ -818,7 +818,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
         && !ecma_is_value_undefined (get_prop_value))
     {
       ecma_free_value (get_prop_value);
-      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function"));
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_expected_a_function));
       goto free_desc;
     }
 
@@ -856,7 +856,7 @@ ecma_op_to_property_descriptor (ecma_value_t obj_value, /**< object value */
         && !ecma_is_value_undefined (set_prop_value))
     {
       ecma_free_value (set_prop_value);
-      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Expected a function"));
+      ret_value = ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_expected_a_function));
       goto free_desc;
     }
 
@@ -1098,7 +1098,7 @@ ecma_op_create_list_from_array_like (ecma_value_t arr,  /**< array value */
   /* 3. */
   if (!ecma_is_value_object (arr))
   {
-    ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not an object"));
+    ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_argument_is_not_an_object));
     return NULL;
   }
   ecma_object_t *obj_p = ecma_get_object_from_value (arr);

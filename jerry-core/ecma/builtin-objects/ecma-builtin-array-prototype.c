@@ -437,7 +437,7 @@ ecma_builtin_array_prototype_object_push (const ecma_value_t *argument_list_p, /
   {
     if ((ecma_number_t) (length + arguments_number) > UINT32_MAX)
     {
-      return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid Array length"));
+      return ecma_raise_range_error (ECMA_ERR_MSG (ecma_error_invalid_array_length));
     }
 
     if (arguments_number == 0)
@@ -1505,7 +1505,7 @@ ecma_builtin_array_prototype_object_unshift (const ecma_value_t args[], /**< arg
     {
       if (args_number > UINT32_MAX - len)
       {
-        return ecma_raise_range_error (ECMA_ERR_MSG ("Invalid Array length"));
+        return ecma_raise_range_error (ECMA_ERR_MSG (ecma_error_invalid_array_length));
       }
 
       if (args_number == 0)
@@ -1849,7 +1849,7 @@ ecma_builtin_array_apply (ecma_value_t arg1, /**< callbackfn */
   /* 4. */
   if (!ecma_op_is_callable (arg1))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable"));
+    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_callback_is_not_callable));
   }
 
   /* We already checked that arg1 is callable */
@@ -1932,7 +1932,7 @@ ecma_builtin_array_prototype_object_map (ecma_value_t arg1, /**< callbackfn */
   /* 4. */
   if (!ecma_op_is_callable (arg1))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable"));
+    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_callback_is_not_callable));
   }
 
   /* 6. */
@@ -2026,7 +2026,7 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t arg1, /**< callbackfn *
   /* 4. */
   if (!ecma_op_is_callable (arg1))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable"));
+    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_callback_is_not_callable));
   }
 
   /* 6. */
@@ -2134,7 +2134,7 @@ ecma_builtin_array_reduce_from (const ecma_value_t args_p[], /**< routine's argu
   /* 4. */
   if (!ecma_op_is_callable (args_p[0]))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable"));
+    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_callback_is_not_callable));
   }
 
   /* 5. */
@@ -2352,7 +2352,7 @@ ecma_builtin_array_prototype_object_find (ecma_value_t predicate, /**< callback 
   /* 5. */
   if (!ecma_op_is_callable (predicate))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable"));
+    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_callback_is_not_callable));
   }
 
   /* We already checked that predicate is callable, so it will always be an object. */
@@ -2836,7 +2836,7 @@ ecma_builtin_array_prototype_object_flat_map (ecma_value_t callback, /**< callba
 {
   if (!ecma_op_is_callable (callback))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Callback function is not callable"));
+    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_callback_is_not_callable));
   }
 
   /* 4. */

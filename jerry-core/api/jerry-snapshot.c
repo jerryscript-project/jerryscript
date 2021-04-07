@@ -14,6 +14,7 @@
  */
 
 #include "ecma-conversion.h"
+#include "ecma-errors.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
 #include "ecma-helpers.h"
@@ -155,8 +156,8 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
 
   if (globals_p->snapshot_buffer_write_offset > JERRY_SNAPSHOT_MAXIMUM_WRITE_OFFSET)
   {
-    const char * const error_message_p = "Maximum snapshot size reached";
-    globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
+    globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE,
+                                                    (const jerry_char_t *) ecma_error_maximum_snapshot_size);
     return 0;
   }
 
@@ -170,8 +171,8 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
 #if JERRY_ESNEXT
   if (compiled_code_p->status_flags & CBC_CODE_FLAGS_HAS_TAGGED_LITERALS)
   {
-    const char * const error_message_p = "Unsupported feature: tagged template literals";
-    globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
+    globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE,
+                                                    (const jerry_char_t *) ecma_error_tagged_template_literals);
     return 0;
   }
 
@@ -187,7 +188,8 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
     /* Regular expression. */
     if (globals_p->snapshot_buffer_write_offset + sizeof (ecma_compiled_code_t) > snapshot_buffer_size)
     {
-      globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE, error_buffer_too_small_p);
+      globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE,
+                                                      (const jerry_char_t *) error_buffer_too_small_p);
       return 0;
     }
 
@@ -208,7 +210,8 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
                                              buffer_p,
                                              buffer_size))
     {
-      globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE, error_buffer_too_small_p);
+      globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE,
+                                                      (const jerry_char_t *) error_buffer_too_small_p);
       /* cannot return inside ECMA_FINALIZE_UTF8_STRING */
     }
 
@@ -243,7 +246,7 @@ snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< compiled
                                            compiled_code_p,
                                            ((size_t) compiled_code_p->size) << JMEM_ALIGNMENT_LOG))
   {
-    globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE, error_buffer_too_small_p);
+    globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_buffer_too_small_p);
     return 0;
   }
 
@@ -340,8 +343,8 @@ static_snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< c
 
   if (globals_p->snapshot_buffer_write_offset >= JERRY_SNAPSHOT_MAXIMUM_WRITE_OFFSET)
   {
-    const char * const error_message_p = "Maximum snapshot size reached";
-    globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
+    globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE,
+                                                    (const jerry_char_t *) ecma_error_maximum_snapshot_size);
     return 0;
   }
 
@@ -355,8 +358,8 @@ static_snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< c
   if (!CBC_IS_FUNCTION (compiled_code_p->status_flags))
   {
     /* Regular expression literals are not supported. */
-    const char * const error_message_p = "Regular expression literals are not supported";
-    globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
+    globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE,
+                                                    (const jerry_char_t *) ecma_error_regular_expression_not_supported);
     return 0;
   }
 
@@ -366,8 +369,8 @@ static_snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< c
                                            compiled_code_p,
                                            ((size_t) compiled_code_p->size) << JMEM_ALIGNMENT_LOG))
   {
-    const char * const error_message_p = "Snapshot buffer too small";
-    globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
+    globals_p->snapshot_error = jerry_create_error (JERRY_ERROR_RANGE,
+                                                    (const jerry_char_t *) ecma_error_snapshot_buffer_small);
     return 0;
   }
 
@@ -775,8 +778,7 @@ jerry_generate_snapshot_with_args (const jerry_char_t *source_p, /**< script sou
   if ((generate_snapshot_opts & ~allowed_options) != 0
       || (options_p != NULL && (options_p->options & ~allowed_parse_options) != 0))
   {
-    const char * const error_message_p = "Unsupported generate snapshot flags specified";
-    return jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) error_message_p);
+    return jerry_create_error (JERRY_ERROR_RANGE, (const jerry_char_t *) ecma_error_snapshot_flag_not_supported);
   }
 
   snapshot_globals_t globals;
@@ -847,9 +849,8 @@ jerry_generate_snapshot_with_args (const jerry_char_t *source_p, /**< script sou
                                           &literals_num))
     {
       JERRY_ASSERT (lit_map_p == NULL);
-      const char * const error_message_p = "Cannot allocate memory for literals";
       ecma_bytecode_deref (bytecode_data_p);
-      return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) error_message_p);
+      return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) ecma_error_cannot_allocate_memory_literals);
     }
 
     jerry_snapshot_set_offsets (buffer_p + (aligned_header_size / sizeof (uint32_t)),

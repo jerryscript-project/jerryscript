@@ -698,6 +698,10 @@ typedef enum
 
 /**
  * Types of objects with class property.
+ *
+ * Note:
+ *     when this type is changed, both ecma_class_object_magic_string_id
+ *     and jerry_class_object_type must be updated as well
  */
 typedef enum
 {
@@ -706,7 +710,6 @@ typedef enum
   ECMA_OBJECT_CLASS_ARGUMENTS, /**< Arguments object (10.6) */
 #if JERRY_BUILTIN_TYPEDARRAY
   ECMA_OBJECT_CLASS_TYPEDARRAY, /**< TypedArray which does NOT need extra space to store length and offset */
-  ECMA_OBJECT_CLASS_TYPEDARRAY_WITH_INFO, /**< TypedArray which NEEDS extra space to store length and offset */
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
 
   /* These objects are marked by Garbage Collector. */
@@ -1037,10 +1040,10 @@ typedef struct
         uint8_t regexp_string_iterator_flags; /**< flags for RegExp string iterator */
 #endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_PROMISE
-        uint8_t promise_flags; /**< flags for Promise objects */
+        uint8_t promise_flags; /**< Promise object flags */
 #endif /* JERRY_BUILTIN_PROMISE */
 #if JERRY_BUILTIN_CONTAINER
-        uint8_t container_flags; /**< flags for container objects */
+        uint8_t container_flags; /**< container object flags */
 #endif /* JERRY_BUILTIN_CONTAINER */
 #if JERRY_BUILTIN_TYPEDARRAY
         uint8_t array_buffer_flags; /**< ArrayBuffer flags */
@@ -1052,11 +1055,17 @@ typedef struct
        */
       union
       {
-        /* The ecma_object_get_class_name must handle those types which does not use id. */
-        uint16_t id; /**< magic string id of the class */
         uint16_t formal_params_number; /**< for arguments: formal parameters number */
+#if JERRY_ESNEXT
         uint16_t iterator_index; /**< for %Iterator%: [[%Iterator%NextIndex]] property */
         uint16_t executable_obj_flags; /**< executable object flags */
+#endif /* JERRY_ESNEXT */
+#if JERRY_BUILTIN_CONTAINER
+        uint16_t container_id; /**< magic string id of a container */
+#endif /* JERRY_BUILTIN_CONTAINER */
+#if JERRY_BUILTIN_TYPEDARRAY
+        uint16_t typedarray_flags; /**< typed array object flags */
+#endif /* JERRY_BUILTIN_TYPEDARRAY */
       } u2;
       /**
        * Description of 32 bit / value. These extra fields depend on the type.
@@ -1064,14 +1073,22 @@ typedef struct
       union
       {
         ecma_value_t value; /**< value of the object (e.g. boolean, number, string, etc.) */
+#if !JERRY_ESNEXT
         ecma_value_t date; /**< Date object [[DateValue]] internal property */
+#endif /* !JERRY_ESNEXT */
         ecma_value_t target; /**< [[ProxyTarget]] or [[WeakRefTarget]] internal property */
-        ecma_value_t head; /**< points to the async generator task queue head item */
+#if JERRY_BUILTIN_PROMISE
         ecma_value_t promise; /**< PromiseCapability[[Promise]] internal slot */
-        ecma_value_t arraybuffer; /**< for typedarray: internal arraybuffer */
+#endif /* JERRY_BUILTIN_PROMISE */
+#if JERRY_BUILTIN_TYPEDARRAY
+        ecma_value_t arraybuffer; /**< for typedarray: ArrayBuffer reference */
+#endif /* JERRY_BUILTIN_TYPEDARRAY */
+#if JERRY_ESNEXT
+        ecma_value_t head; /**< points to the async generator task queue head item */
         ecma_value_t iterated_value; /**< for %Iterator%: [[IteratedObject]] property */
         ecma_value_t spread_value; /**< for spread object: spreaded element */
         int32_t tza; /**< TimeZone adjustment for date objects */
+#endif /* JERRY_ESNEXT */
         uint32_t length; /**< length related property (e.g. length of ArrayBuffer) */
         uint32_t arguments_number; /**< for arguments: arguments number */
 #if JERRY_MODULE_SYSTEM
@@ -2031,14 +2048,22 @@ typedef enum
 } ecma_typedarray_type_t;
 
 /**
- * Extra information for ArrayBuffers.
+ * TypedArray flags.
  */
 typedef enum
 {
-  ECMA_ARRAYBUFFER_INTERNAL_MEMORY = 0u,        /* ArrayBuffer memory is handled internally. */
+  ECMA_TYPEDARRAY_IS_EXTENDED = (1u << 0), /* an ecma_extended_typedarray_object_t is allocated for the TypedArray */
+} ecma_typedarray_flag_t;
+
+/**
+ * ArrayBuffers flags.
+ */
+typedef enum
+{
+  ECMA_ARRAYBUFFER_INTERNAL_MEMORY = 0u, /* ArrayBuffer memory is handled internally. */
   ECMA_ARRAYBUFFER_EXTERNAL_MEMORY = (1u << 0), /* ArrayBuffer created via jerry_create_arraybuffer_external. */
-  ECMA_ARRAYBUFFER_DETACHED = (1u << 1),        /* ArrayBuffer has been detached */
-} ecma_arraybuffer_extra_flag_t;
+  ECMA_ARRAYBUFFER_DETACHED = (1u << 1), /* ArrayBuffer has been detached */
+} ecma_arraybuffer_flag_t;
 
 /**
  * Check whether the ArrayBuffer has external underlying buffer
@@ -2058,7 +2083,7 @@ typedef struct
 {
   ecma_extended_object_t extended_object; /**< extended object part */
   void *buffer_p; /**< external buffer pointer */
-  ecma_object_native_free_callback_t free_cb; /**<  the free callback for the above buffer pointer */
+  ecma_object_native_free_callback_t free_cb; /**< the free callback for the above buffer pointer */
 } ecma_arraybuffer_external_info;
 
 /**

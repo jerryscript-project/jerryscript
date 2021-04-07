@@ -55,7 +55,6 @@ ecma_arraybuffer_new_object (uint32_t length) /**< length of the arraybuffer */
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
   ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_ARRAY_BUFFER;
   ext_object_p->u.cls.u1.array_buffer_flags = ECMA_ARRAYBUFFER_INTERNAL_MEMORY;
-  ext_object_p->u.cls.u2.id = LIT_MAGIC_STRING_ARRAY_BUFFER_UL;
   ext_object_p->u.cls.u3.length = length;
 
   lit_utf8_byte_t *buf = (lit_utf8_byte_t *) (ext_object_p + 1);
@@ -87,7 +86,6 @@ ecma_arraybuffer_new_object_external (uint32_t length, /**< length of the buffer
   ecma_arraybuffer_external_info *array_object_p = (ecma_arraybuffer_external_info *) object_p;
   array_object_p->extended_object.u.cls.type = ECMA_OBJECT_CLASS_ARRAY_BUFFER;
   array_object_p->extended_object.u.cls.u1.array_buffer_flags = ECMA_ARRAYBUFFER_EXTERNAL_MEMORY;
-  array_object_p->extended_object.u.cls.u2.id = LIT_MAGIC_STRING_ARRAY_BUFFER_UL;
   array_object_p->extended_object.u.cls.u3.length = length;
 
   array_object_p->buffer_p = buffer_p;

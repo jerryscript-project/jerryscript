@@ -133,7 +133,6 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
 #if JERRY_BUILTIN_TYPEDARRAY
         /* ES2015 9.4.5.1 */
         case ECMA_OBJECT_CLASS_TYPEDARRAY:
-        case ECMA_OBJECT_CLASS_TYPEDARRAY_WITH_INFO:
         {
           if (ecma_prop_name_is_symbol (property_name_p))
           {
@@ -504,7 +503,6 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
 #if JERRY_BUILTIN_TYPEDARRAY
         /* ES2015 9.4.5.4 */
         case ECMA_OBJECT_CLASS_TYPEDARRAY:
-        case ECMA_OBJECT_CLASS_TYPEDARRAY_WITH_INFO:
         {
           if (ecma_prop_name_is_symbol (property_name_p))
           {
@@ -1296,7 +1294,6 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
 #if JERRY_BUILTIN_TYPEDARRAY
         /* ES2015 9.4.5.5 */
         case ECMA_OBJECT_CLASS_TYPEDARRAY:
-        case ECMA_OBJECT_CLASS_TYPEDARRAY_WITH_INFO:
         {
           if (ecma_prop_name_is_symbol (property_name_p))
           {
@@ -1760,7 +1757,6 @@ ecma_op_object_define_own_property (ecma_object_t *obj_p, /**< the object */
 #if JERRY_BUILTIN_TYPEDARRAY
         /* ES2015 9.4.5.1 */
         case ECMA_OBJECT_CLASS_TYPEDARRAY:
-        case ECMA_OBJECT_CLASS_TYPEDARRAY_WITH_INFO:
         {
           return ecma_op_typedarray_define_own_property (obj_p, property_name_p, property_desc_p);
         }
@@ -2188,7 +2184,6 @@ ecma_object_list_lazy_property_names (ecma_object_t *obj_p, /**< object */
 #if JERRY_BUILTIN_TYPEDARRAY
           /* ES2015 9.4.5.1 */
           case ECMA_OBJECT_CLASS_TYPEDARRAY:
-          case ECMA_OBJECT_CLASS_TYPEDARRAY_WITH_INFO:
           {
             ecma_op_typedarray_list_lazy_property_names (obj_p, prop_names_p, prop_counter_p);
             break;
@@ -2680,6 +2675,75 @@ ecma_object_check_class_name_is_object (ecma_object_t *obj_p) /**< object */
 } /* ecma_object_check_class_name_is_object */
 
 /**
+ * Used by ecma_object_get_class_name to get the magic string id of class objects
+ */
+static const uint16_t ecma_class_object_magic_string_id[] =
+{
+  /* These objects require custom property resolving. */
+  LIT_MAGIC_STRING_STRING_UL, /**< magic string id of ECMA_OBJECT_CLASS_STRING */
+  LIT_MAGIC_STRING_ARGUMENTS_UL, /**< magic string id of ECMA_OBJECT_CLASS_ARGUMENTS */
+#if JERRY_BUILTIN_TYPEDARRAY
+  LIT_MAGIC_STRING__EMPTY, /**< ECMA_OBJECT_CLASS_TYPEDARRAY needs special resolver */
+#endif /* JERRY_BUILTIN_TYPEDARRAY */
+
+  /* These objects are marked by Garbage Collector. */
+#if JERRY_ESNEXT
+  LIT_MAGIC_STRING_GENERATOR_UL, /**< magic string id of ECMA_OBJECT_CLASS_GENERATOR */
+  LIT_MAGIC_STRING_ASYNC_GENERATOR_UL, /**< magic string id of ECMA_OBJECT_CLASS_ASYNC_GENERATOR */
+  LIT_MAGIC_STRING_ARRAY_ITERATOR_UL, /**< magic string id of ECMA_OBJECT_CLASS_ARRAY_ITERATOR */
+  LIT_MAGIC_STRING_SET_ITERATOR_UL, /**< magic string id of ECMA_OBJECT_CLASS_SET_ITERATOR */
+  LIT_MAGIC_STRING_MAP_ITERATOR_UL, /**< magic string id of ECMA_OBJECT_CLASS_MAP_ITERATOR */
+#if JERRY_BUILTIN_REGEXP
+  LIT_MAGIC_STRING_REGEXP_STRING_ITERATOR_UL, /**< magic string id of ECMA_OBJECT_CLASS_REGEXP_STRING_ITERATOR */
+#endif /* JERRY_BUILTIN_REGEXP */
+#endif /* JERRY_ESNEXT */
+#if JERRY_MODULE_SYSTEM
+  LIT_MAGIC_STRING_MODULE_UL, /**< magic string id of ECMA_OBJECT_CLASS_MODULE */
+#endif
+#if JERRY_BUILTIN_PROMISE
+  LIT_MAGIC_STRING_PROMISE_UL, /**< magic string id of ECMA_OBJECT_CLASS_PROMISE */
+  LIT_MAGIC_STRING_OBJECT_UL, /**< magic string id of ECMA_OBJECT_CLASS_PROMISE_CAPABILITY */
+#endif /* JERRY_BUILTIN_PROMISE */
+#if JERRY_BUILTIN_DATAVIEW
+  LIT_MAGIC_STRING_DATAVIEW_UL, /**< magic string id of ECMA_OBJECT_CLASS_DATAVIEW */
+#endif /* JERRY_BUILTIN_DATAVIEW */
+#if JERRY_BUILTIN_CONTAINER
+  LIT_MAGIC_STRING__EMPTY, /**< magic string id of ECMA_OBJECT_CLASS_CONTAINER needs special resolver */
+#endif /* JERRY_BUILTIN_CONTAINER */
+
+  /* Normal objects. */
+  LIT_MAGIC_STRING_BOOLEAN_UL, /**< magic string id of ECMA_OBJECT_CLASS_BOOLEAN */
+  LIT_MAGIC_STRING_NUMBER_UL, /**< magic string id of ECMA_OBJECT_CLASS_NUMBER */
+  LIT_MAGIC_STRING_ERROR_UL, /**< magic string id of ECMA_OBJECT_CLASS_ERROR */
+  LIT_MAGIC_STRING_OBJECT_UL, /**< magic string id of ECMA_OBJECT_CLASS_INTERNAL_OBJECT */
+#if JERRY_PARSER
+  LIT_MAGIC_STRING_SCRIPT_UL, /**< magic string id of ECMA_OBJECT_CLASS_SCRIPT */
+#endif /* JERRY_PARSER */
+#if JERRY_BUILTIN_DATE
+  LIT_MAGIC_STRING_DATE_UL, /**< magic string id of ECMA_OBJECT_CLASS_DATE */
+#endif /* JERRY_BUILTIN_DATE */
+#if JERRY_BUILTIN_REGEXP
+  LIT_MAGIC_STRING_REGEXP_UL, /**< magic string id of ECMA_OBJECT_CLASS_REGEXP */
+#endif /* JERRY_BUILTIN_REGEXP */
+#if JERRY_ESNEXT
+  LIT_MAGIC_STRING_SYMBOL_UL, /**< magic string id of ECMA_OBJECT_CLASS_SYMBOL */
+  LIT_MAGIC_STRING_STRING_ITERATOR_UL, /**< magic string id of ECMA_OBJECT_CLASS_STRING_ITERATOR */
+#endif /* JERRY_ESNEXT */
+#if JERRY_BUILTIN_TYPEDARRAY
+  LIT_MAGIC_STRING_ARRAY_BUFFER_UL, /**< magic string id of ECMA_OBJECT_CLASS_ARRAY_BUFFER */
+#endif /* JERRY_BUILTIN_TYPEDARRAY */
+#if JERRY_BUILTIN_BIGINT
+  LIT_MAGIC_STRING_BIGINT_UL, /**< magic string id of ECMA_OBJECT_CLASS_BIGINT */
+#endif /* JERRY_BUILTIN_BIGINT */
+#if JERRY_BUILTIN_WEAKREF
+  LIT_MAGIC_STRING_WEAKREF_UL, /**< magic string id of ECMA_OBJECT_CLASS_WEAKREF */
+#endif /* JERRY_BUILTIN_WEAKREF */
+};
+
+JERRY_STATIC_ASSERT (sizeof (ecma_class_object_magic_string_id) == ECMA_OBJECT_CLASS__MAX * sizeof (uint16_t),
+                     ecma_class_object_magic_string_id_must_have_object_class_max_elements);
+
+/**
  * Get [[Class]] string of specified object
  *
  * @return class name magic string
@@ -2701,51 +2765,28 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
 
       switch (ext_object_p->u.cls.type)
       {
-        case ECMA_OBJECT_CLASS_ARGUMENTS:
+#if JERRY_BUILTIN_TYPEDARRAY
+        case ECMA_OBJECT_CLASS_TYPEDARRAY:
         {
-          return LIT_MAGIC_STRING_ARGUMENTS_UL;
+          return ecma_get_typedarray_magic_string_id (ext_object_p->u.cls.u1.typedarray_type);
         }
-#if JERRY_ESNEXT
-        case ECMA_OBJECT_CLASS_GENERATOR:
+#endif /* JERRY_BUILTIN_TYPEDARRAY */
+#if JERRY_BUILTIN_CONTAINER
+        case ECMA_OBJECT_CLASS_CONTAINER:
         {
-          return LIT_MAGIC_STRING_GENERATOR_UL;
+          return (lit_magic_string_id_t) ext_object_p->u.cls.u2.container_id;
         }
-        case ECMA_OBJECT_CLASS_ASYNC_GENERATOR:
+#endif /* JERRY_BUILTIN_CONTAINER */
+        default:
         {
-          return LIT_MAGIC_STRING_ASYNC_GENERATOR_UL;
+          break;
         }
-        case ECMA_OBJECT_CLASS_ARRAY_ITERATOR:
-        {
-          return LIT_MAGIC_STRING_ARRAY_ITERATOR_UL;
-        }
-        case ECMA_OBJECT_CLASS_SET_ITERATOR:
-        {
-          return LIT_MAGIC_STRING_SET_ITERATOR_UL;
-        }
-        case ECMA_OBJECT_CLASS_MAP_ITERATOR:
-        {
-          return LIT_MAGIC_STRING_MAP_ITERATOR_UL;
-        }
-#if JERRY_BUILTIN_REGEXP
-        case ECMA_OBJECT_CLASS_REGEXP_STRING_ITERATOR:
-        {
-          return LIT_MAGIC_STRING_REGEXP_STRING_ITERATOR_UL;
-        }
-#endif /* JERRY_BUILTIN_REGEXP */
-        case ECMA_OBJECT_CLASS_STRING_ITERATOR:
-        {
-          return LIT_MAGIC_STRING_STRING_ITERATOR_UL;
-        }
-#endif /* JERRY_ESNEXT */
-#if JERRY_MODULE_SYSTEM
-        case ECMA_OBJECT_CLASS_MODULE:
-        {
-          return LIT_MAGIC_STRING_MODULE_UL;
-        }
-#endif /* JERRY_MODULE_SYSTEM */
       }
 
-      return (lit_magic_string_id_t) ext_object_p->u.cls.u2.id;
+      JERRY_ASSERT (ext_object_p->u.cls.type < ECMA_OBJECT_CLASS__MAX);
+      JERRY_ASSERT (ecma_class_object_magic_string_id[ext_object_p->u.cls.type] != LIT_MAGIC_STRING__EMPTY);
+
+      return (lit_magic_string_id_t) ecma_class_object_magic_string_id[ext_object_p->u.cls.type];
     }
     case ECMA_OBJECT_TYPE_FUNCTION:
     case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:

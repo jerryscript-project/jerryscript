@@ -507,7 +507,6 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
   ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_PROMISE;
   /* 5 */
   ext_object_p->u.cls.u1.promise_flags = ECMA_PROMISE_IS_PENDING;
-  ext_object_p->u.cls.u2.id = LIT_MAGIC_STRING_PROMISE_UL;
   ext_object_p->u.cls.u3.value = ECMA_VALUE_UNDEFINED;
 
   /* 6-8. */
@@ -765,7 +764,6 @@ ecma_promise_new_capability (ecma_value_t constructor, /**< constructor function
 
   ecma_promise_capabality_t *capability_p = (ecma_promise_capabality_t *) capability_obj_p;
   capability_p->header.u.cls.type = ECMA_OBJECT_CLASS_PROMISE_CAPABILITY;
-  capability_p->header.u.cls.u2.id = LIT_MAGIC_STRING_OBJECT_UL;
   capability_p->header.u.cls.u3.promise = ECMA_VALUE_UNDEFINED;
   capability_p->resolve = ECMA_VALUE_UNDEFINED;
   capability_p->reject = ECMA_VALUE_UNDEFINED;

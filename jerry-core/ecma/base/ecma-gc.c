@@ -728,7 +728,6 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
           }
 #if JERRY_BUILTIN_TYPEDARRAY
           case ECMA_OBJECT_CLASS_TYPEDARRAY:
-          case ECMA_OBJECT_CLASS_TYPEDARRAY_WITH_INFO:
           {
             ecma_gc_set_object_visited (ecma_typedarray_get_arraybuffer (object_p));
             break;
@@ -770,28 +769,28 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
           case ECMA_OBJECT_CLASS_CONTAINER:
           {
 #if JERRY_BUILTIN_MAP
-            if (ext_object_p->u.cls.u2.id == LIT_MAGIC_STRING_MAP_UL)
+            if (ext_object_p->u.cls.u2.container_id == LIT_MAGIC_STRING_MAP_UL)
             {
               ecma_gc_mark_map_object (object_p);
               break;
             }
 #endif /* JERRY_BUILTIN_MAP */
 #if JERRY_BUILTIN_WEAKMAP
-            if (ext_object_p->u.cls.u2.id == LIT_MAGIC_STRING_WEAKMAP_UL)
+            if (ext_object_p->u.cls.u2.container_id == LIT_MAGIC_STRING_WEAKMAP_UL)
             {
               ecma_gc_mark_weakmap_object (object_p);
               break;
             }
 #endif /* JERRY_BUILTIN_WEAKMAP */
 #if JERRY_BUILTIN_SET
-            if (ext_object_p->u.cls.u2.id == LIT_MAGIC_STRING_SET_UL)
+            if (ext_object_p->u.cls.u2.container_id == LIT_MAGIC_STRING_SET_UL)
             {
               ecma_gc_mark_set_object (object_p);
               break;
             }
 #endif /* JERRY_BUILTIN_SET */
 #if JERRY_BUILTIN_WEAKSET
-            JERRY_ASSERT (ext_object_p->u.cls.u2.id == LIT_MAGIC_STRING_WEAKSET_UL);
+            JERRY_ASSERT (ext_object_p->u.cls.u2.container_id == LIT_MAGIC_STRING_WEAKSET_UL);
 #endif /* JERRY_BUILTIN_WEAKSET */
             break;
           }
@@ -1591,9 +1590,12 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           break;
         }
 #if JERRY_BUILTIN_TYPEDARRAY
-        case ECMA_OBJECT_CLASS_TYPEDARRAY_WITH_INFO:
+        case ECMA_OBJECT_CLASS_TYPEDARRAY:
         {
-          ext_object_size = sizeof (ecma_extended_typedarray_object_t);
+          if (ext_object_p->u.cls.u2.typedarray_flags & ECMA_TYPEDARRAY_IS_EXTENDED)
+          {
+            ext_object_size = sizeof (ecma_extended_typedarray_object_t);
+          }
           break;
         }
 #endif /* JERRY_BUILTIN_TYPEDARRAY */

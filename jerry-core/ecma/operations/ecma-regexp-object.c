@@ -285,7 +285,6 @@ ecma_op_regexp_initialize (ecma_object_t *regexp_obj_p, /**< RegExp object */
 #endif /* JERRY_ESNEXT */
 
   ext_obj_p->u.cls.type = ECMA_OBJECT_CLASS_REGEXP;
-  ext_obj_p->u.cls.u2.id = LIT_MAGIC_STRING_REGEXP_UL;
   ECMA_SET_INTERNAL_VALUE_POINTER (ext_obj_p->u.cls.u3.value, bc_p);
 } /* ecma_op_regexp_initialize */
 

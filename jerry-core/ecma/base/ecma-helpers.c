@@ -1257,18 +1257,18 @@ ecma_make_empty_property_descriptor (void)
 void
 ecma_free_property_descriptor (ecma_property_descriptor_t *prop_desc_p) /**< property descriptor */
 {
-  if (prop_desc_p->flags & ECMA_PROP_IS_VALUE_DEFINED)
+  if (prop_desc_p->flags & JERRY_PROP_IS_VALUE_DEFINED)
   {
     ecma_free_value (prop_desc_p->value);
   }
 
-  if ((prop_desc_p->flags & ECMA_PROP_IS_GET_DEFINED)
+  if ((prop_desc_p->flags & JERRY_PROP_IS_GET_DEFINED)
       && prop_desc_p->get_p != NULL)
   {
     ecma_deref_object (prop_desc_p->get_p);
   }
 
-  if ((prop_desc_p->flags & ECMA_PROP_IS_SET_DEFINED)
+  if ((prop_desc_p->flags & JERRY_PROP_IS_SET_DEFINED)
       && prop_desc_p->set_p != NULL)
   {
     ecma_deref_object (prop_desc_p->set_p);

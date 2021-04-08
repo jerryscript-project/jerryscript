@@ -1697,13 +1697,13 @@ opfunc_copy_data_properties (ecma_value_t target_object, /**< target object */
       continue;
     }
 
-    if (!(descriptor.flags & ECMA_PROP_IS_ENUMERABLE))
+    if (!(descriptor.flags & JERRY_PROP_IS_ENUMERABLE))
     {
       ecma_free_property_descriptor (&descriptor);
       continue;
     }
 
-    if ((descriptor.flags & ECMA_PROP_IS_VALUE_DEFINED) && !ECMA_OBJECT_IS_PROXY (source_object_p))
+    if ((descriptor.flags & JERRY_PROP_IS_VALUE_DEFINED) && !ECMA_OBJECT_IS_PROXY (source_object_p))
     {
       result = descriptor.value;
     }
@@ -1784,7 +1784,7 @@ opfunc_lexical_scope_has_restricted_binding (vm_frame_ctx_t *frame_ctx_p, /**< f
 
     if (ecma_is_value_true (status))
     {
-      status = ecma_make_boolean_value ((prop_desc.flags & ECMA_PROP_IS_CONFIGURABLE) == 0);
+      status = ecma_make_boolean_value ((prop_desc.flags & JERRY_PROP_IS_CONFIGURABLE) == 0);
       ecma_free_property_descriptor (&prop_desc);
     }
 

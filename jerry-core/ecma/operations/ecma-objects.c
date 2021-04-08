@@ -1261,15 +1261,15 @@ ecma_op_object_put_apply_receiver (ecma_value_t receiver, /**< receiver */
     ecma_value_t result;
 
     /* 5.e.i - 5.e.ii */
-    if (prop_desc.flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED)
-        || !(prop_desc.flags & ECMA_PROP_IS_WRITABLE))
+    if (prop_desc.flags & (JERRY_PROP_IS_GET_DEFINED | JERRY_PROP_IS_SET_DEFINED)
+        || !(prop_desc.flags & JERRY_PROP_IS_WRITABLE))
     {
       result = ecma_raise_property_redefinition (property_name_p, prop_desc.flags);
     }
     else
     {
       /* 5.e.iii */
-      JERRY_ASSERT (prop_desc.flags & ECMA_PROP_IS_VALUE_DEFINED);
+      JERRY_ASSERT (prop_desc.flags & JERRY_PROP_IS_VALUE_DEFINED);
       ecma_free_value (prop_desc.value);
       prop_desc.value = ecma_copy_value (value);
 
@@ -1292,13 +1292,13 @@ ecma_op_object_put_apply_receiver (ecma_value_t receiver, /**< receiver */
   {
     ecma_property_descriptor_t desc;
     /* Based on: ES6 9.1.9 [[Set]] 4.d.i. / ES11 9.1.9.2 OrdinarySetWithOwnDescriptor 2.c.i. */
-    desc.flags = (ECMA_PROP_IS_CONFIGURABLE
-                  | ECMA_PROP_IS_CONFIGURABLE_DEFINED
-                  | ECMA_PROP_IS_ENUMERABLE
-                  | ECMA_PROP_IS_ENUMERABLE_DEFINED
-                  | ECMA_PROP_IS_WRITABLE
-                  | ECMA_PROP_IS_WRITABLE_DEFINED
-                  | ECMA_PROP_IS_VALUE_DEFINED);
+    desc.flags = (JERRY_PROP_IS_CONFIGURABLE
+                  | JERRY_PROP_IS_CONFIGURABLE_DEFINED
+                  | JERRY_PROP_IS_ENUMERABLE
+                  | JERRY_PROP_IS_ENUMERABLE_DEFINED
+                  | JERRY_PROP_IS_WRITABLE
+                  | JERRY_PROP_IS_WRITABLE_DEFINED
+                  | JERRY_PROP_IS_VALUE_DEFINED);
     desc.value = value;
     ecma_value_t ret_value = ecma_proxy_object_define_own_property (receiver_obj_p, property_name_p, &desc);
 
@@ -1673,7 +1673,7 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
         if (ext_object_p->u.cls.type == ECMA_OBJECT_CLASS_ARGUMENTS
             && ext_object_p->u.cls.u1.arguments_flags & ECMA_ARGUMENTS_OBJECT_MAPPED)
         {
-          const uint32_t flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_PROP_SHOULD_THROW;
+          const uint32_t flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | JERRY_PROP_SHOULD_THROW;
           return ecma_builtin_helper_def_prop (object_p, property_name_p, value, flags);
         }
       }
@@ -1940,10 +1940,10 @@ ecma_op_object_get_own_property_descriptor (ecma_object_t *object_p, /**< the ob
     return ECMA_VALUE_FALSE;
   }
 
-  uint32_t flags = ecma_is_property_enumerable (property) ? ECMA_PROP_IS_ENUMERABLE : ECMA_PROP_NO_OPTS;
-  flags |= ecma_is_property_configurable (property) ? ECMA_PROP_IS_CONFIGURABLE: ECMA_PROP_NO_OPTS;
+  uint32_t flags = ecma_is_property_enumerable (property) ? JERRY_PROP_IS_ENUMERABLE : JERRY_PROP_NO_OPTS;
+  flags |= ecma_is_property_configurable (property) ? JERRY_PROP_IS_CONFIGURABLE: JERRY_PROP_NO_OPTS;
 
-  prop_desc_p->flags = (uint16_t) (ECMA_PROP_IS_ENUMERABLE_DEFINED | ECMA_PROP_IS_CONFIGURABLE_DEFINED | flags);
+  prop_desc_p->flags = (uint16_t) (JERRY_PROP_IS_ENUMERABLE_DEFINED | JERRY_PROP_IS_CONFIGURABLE_DEFINED | flags);
 
   if (property & ECMA_PROPERTY_FLAG_DATA)
   {
@@ -1962,14 +1962,14 @@ ecma_op_object_get_own_property_descriptor (ecma_object_t *object_p, /**< the ob
       prop_desc_p->value = property_ref.virtual_value;
     }
 
-    prop_desc_p->flags |= (ECMA_PROP_IS_VALUE_DEFINED | ECMA_PROP_IS_WRITABLE_DEFINED);
-    prop_desc_p->flags = (uint16_t) (prop_desc_p->flags | (ecma_is_property_writable (property) ? ECMA_PROP_IS_WRITABLE
-                                                                                                : ECMA_PROP_NO_OPTS));
+    prop_desc_p->flags |= (JERRY_PROP_IS_VALUE_DEFINED | JERRY_PROP_IS_WRITABLE_DEFINED);
+    prop_desc_p->flags = (uint16_t) (prop_desc_p->flags | (ecma_is_property_writable (property) ? JERRY_PROP_IS_WRITABLE
+                                                                                                : JERRY_PROP_NO_OPTS));
   }
   else
   {
     ecma_getter_setter_pointers_t *get_set_pair_p = ecma_get_named_accessor_property (property_ref.value_p);
-    prop_desc_p->flags |= (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED);
+    prop_desc_p->flags |= (JERRY_PROP_IS_GET_DEFINED | JERRY_PROP_IS_SET_DEFINED);
 
     if (get_set_pair_p->getter_cp == JMEM_CP_NULL)
     {
@@ -2181,7 +2181,7 @@ ecma_op_object_get_enumerable_property_names (ecma_object_t *obj_p, /**< routine
         return NULL;
       }
 
-      const bool is_enumerable = (prop_desc.flags & ECMA_PROP_IS_ENUMERABLE) != 0;
+      const bool is_enumerable = (prop_desc.flags & JERRY_PROP_IS_ENUMERABLE) != 0;
       ecma_free_property_descriptor (&prop_desc);
       /* 4.a.ii */
       if (is_enumerable)
@@ -2628,7 +2628,7 @@ ecma_op_object_enumerate (ecma_object_t *obj_p) /**< object */
 
       if (ecma_is_value_true (get_desc))
       {
-        bool is_enumerable = (prop_desc.flags & ECMA_PROP_IS_ENUMERABLE) != 0;
+        bool is_enumerable = (prop_desc.flags & JERRY_PROP_IS_ENUMERABLE) != 0;
         ecma_free_property_descriptor (&prop_desc);
 
         if (ecma_collection_has_string_value (visited_names_p, name_p)
@@ -3478,7 +3478,7 @@ ecma_op_object_unref_weak (ecma_object_t *object_p, /**< this argument */
 /**
  * Raise property redefinition error
  *
- * @return ECMA_VALUE_FALSE - if ECMA_PROP_SHOULD_THROW is not set
+ * @return ECMA_VALUE_FALSE - if JERRY_PROP_SHOULD_THROW is not set
  *         raised TypeError - otherwise
  */
 ecma_value_t
@@ -3487,7 +3487,7 @@ ecma_raise_property_redefinition (ecma_string_t *property_name_p, /**< property 
 {
   JERRY_UNUSED (property_name_p);
 
-  return ECMA_REJECT_WITH_FORMAT (flags & ECMA_PROP_SHOULD_THROW,
+  return ECMA_REJECT_WITH_FORMAT (flags & JERRY_PROP_SHOULD_THROW,
                                   "Cannot redefine property '%'",
                                   ecma_make_prop_name_value (property_name_p));
 } /* ecma_raise_property_redefinition */

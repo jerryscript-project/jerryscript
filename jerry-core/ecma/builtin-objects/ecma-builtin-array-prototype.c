@@ -934,7 +934,7 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t arg1, /**< start */
       /* 10.c.ii */
       ecma_value_t put_comp;
 #if JERRY_ESNEXT
-      const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_PROP_SHOULD_THROW;
+      const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | JERRY_PROP_SHOULD_THROW;
 #else /* !JERRY_ESNEXT */
       const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE;
 #endif /* JERRY_ESNEXT */
@@ -1331,7 +1331,7 @@ ecma_builtin_array_prototype_object_splice (const ecma_value_t args[], /**< argu
     if (ecma_is_value_found (from_present))
     {
 #if JERRY_ESNEXT
-      const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_PROP_SHOULD_THROW;
+      const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | JERRY_PROP_SHOULD_THROW;
 #else /* !JERRY_ESNEXT */
       const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE;
 #endif /* JERRY_ESNEXT */
@@ -1985,7 +1985,7 @@ ecma_builtin_array_prototype_object_map (ecma_value_t arg1, /**< callbackfn */
       /* 8.c.iii */
       ecma_value_t put_comp;
 #if JERRY_ESNEXT
-      const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_PROP_SHOULD_THROW;
+      const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | JERRY_PROP_SHOULD_THROW;
 #else /* !JERRY_ESNEXT */
       const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE;
 #endif /* JERRY_ESNEXT */
@@ -2042,7 +2042,7 @@ ecma_builtin_array_prototype_object_filter (ecma_value_t arg1, /**< callbackfn *
   }
 
   /* ES11: 22.1.3.7. 7.c.iii.1 */
-  const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_PROP_SHOULD_THROW;
+  const uint32_t prop_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | JERRY_PROP_SHOULD_THROW;
 #else /* !JERRY_ESNEXT */
   ecma_object_t *new_array_p = ecma_op_new_array_object (0);
 
@@ -2752,7 +2752,7 @@ ecma_builtin_array_flatten_into_array (ecma_value_t target, /**< target will con
     }
 
     /* vi. */
-    const uint32_t flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | ECMA_PROP_SHOULD_THROW;
+    const uint32_t flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE | JERRY_PROP_SHOULD_THROW;
     ecma_value_t element_temp = ecma_builtin_helper_def_prop_by_index (ecma_get_object_from_value (target),
                                                                        target_index,
                                                                        element,

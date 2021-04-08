@@ -53,19 +53,6 @@
 JERRY_STATIC_ASSERT (sizeof (jerry_value_t) == sizeof (ecma_value_t),
                      size_of_jerry_value_t_must_be_equal_to_size_of_ecma_value_t);
 
-JERRY_STATIC_ASSERT ((int) JERRY_PROP_NO_OPTS == (int) ECMA_PROP_NO_OPTS
-                     && (int) JERRY_PROP_IS_CONFIGURABLE == (int) ECMA_PROP_IS_CONFIGURABLE
-                     && (int) JERRY_PROP_IS_ENUMERABLE == (int) ECMA_PROP_IS_ENUMERABLE
-                     && (int) JERRY_PROP_IS_WRITABLE == (int) ECMA_PROP_IS_WRITABLE
-                     && (int) JERRY_PROP_IS_CONFIGURABLE_DEFINED == (int) ECMA_PROP_IS_CONFIGURABLE_DEFINED
-                     && (int) JERRY_PROP_IS_ENUMERABLE_DEFINED == (int) ECMA_PROP_IS_ENUMERABLE_DEFINED
-                     && (int) JERRY_PROP_IS_WRITABLE_DEFINED == (int) ECMA_PROP_IS_WRITABLE_DEFINED
-                     && (int) JERRY_PROP_IS_VALUE_DEFINED == (int) ECMA_PROP_IS_VALUE_DEFINED
-                     && (int) JERRY_PROP_IS_GET_DEFINED == (int) ECMA_PROP_IS_GET_DEFINED
-                     && (int) JERRY_PROP_IS_SET_DEFINED == (int) ECMA_PROP_IS_SET_DEFINED
-                     && (int) JERRY_PROP_SHOULD_THROW == (int) ECMA_PROP_SHOULD_THROW,
-                     jerry_prop_desc_flags_must_be_equal_to_ecma_prop_desc_flags);
-
 JERRY_STATIC_ASSERT ((int) ECMA_PARSE_STRICT_MODE == (int) JERRY_PARSE_STRICT_MODE
                      && (int) ECMA_PARSE_MODULE == (int) JERRY_PARSE_MODULE
                      && (int) ECMA_PARSE_HAS_RESOURCE == (int) JERRY_PARSE_HAS_RESOURCE
@@ -3648,7 +3635,7 @@ jerry_property_descriptor_from_ecma (const ecma_property_descriptor_t *prop_desc
     prop_desc.value = prop_desc_p->value;
   }
 
-  if (prop_desc_p->flags & ECMA_PROP_IS_GET_DEFINED)
+  if (prop_desc_p->flags & JERRY_PROP_IS_GET_DEFINED)
   {
     prop_desc.getter = ECMA_VALUE_NULL;
 
@@ -3659,7 +3646,7 @@ jerry_property_descriptor_from_ecma (const ecma_property_descriptor_t *prop_desc
     }
   }
 
-  if (prop_desc_p->flags & ECMA_PROP_IS_SET_DEFINED)
+  if (prop_desc_p->flags & JERRY_PROP_IS_SET_DEFINED)
   {
     prop_desc.setter = ECMA_VALUE_NULL;
 
@@ -3754,7 +3741,7 @@ jerry_property_descriptor_to_ecma (const jerry_property_descriptor_t *prop_desc_
     return prop_desc;
   }
 
-  prop_desc.flags |= (uint16_t) (prop_desc_p->flags | ECMA_PROP_SHOULD_THROW);
+  prop_desc.flags |= (uint16_t) (prop_desc_p->flags | JERRY_PROP_SHOULD_THROW);
 
   return prop_desc;
 } /* jerry_property_descriptor_to_ecma */
@@ -3853,10 +3840,10 @@ jerry_get_own_property_descriptor (const jerry_value_t  obj_val, /**< object val
   }
 
   /* The flags are always filled in the returned descriptor. */
-  JERRY_ASSERT ((prop_desc.flags & ECMA_PROP_IS_CONFIGURABLE_DEFINED)
-                && (prop_desc.flags & ECMA_PROP_IS_ENUMERABLE_DEFINED)
-                && ((prop_desc.flags & ECMA_PROP_IS_WRITABLE_DEFINED)
-                    || !(prop_desc.flags & ECMA_PROP_IS_VALUE_DEFINED)));
+  JERRY_ASSERT ((prop_desc.flags & JERRY_PROP_IS_CONFIGURABLE_DEFINED)
+                && (prop_desc.flags & JERRY_PROP_IS_ENUMERABLE_DEFINED)
+                && ((prop_desc.flags & JERRY_PROP_IS_WRITABLE_DEFINED)
+                    || !(prop_desc.flags & JERRY_PROP_IS_VALUE_DEFINED)));
 
   prop_desc_p->flags = prop_desc.flags;
   prop_desc_p->value = ECMA_VALUE_UNDEFINED;
@@ -4501,11 +4488,11 @@ jerry_object_get_property_names (const jerry_value_t obj_val, /**< object */
         uint16_t flags = prop_desc.flags;
         ecma_free_property_descriptor (&prop_desc);
 
-        if ((!(flags & ECMA_PROP_IS_CONFIGURABLE)
+        if ((!(flags & JERRY_PROP_IS_CONFIGURABLE)
              && (filter & JERRY_PROPERTY_FILTER_EXLCUDE_NON_CONFIGURABLE))
-            || (!(flags & ECMA_PROP_IS_ENUMERABLE)
+            || (!(flags & JERRY_PROP_IS_ENUMERABLE)
                 && (filter & JERRY_PROPERTY_FILTER_EXLCUDE_NON_ENUMERABLE))
-            || (!(flags & ECMA_PROP_IS_WRITABLE)
+            || (!(flags & JERRY_PROP_IS_WRITABLE)
                 && (filter & JERRY_PROPERTY_FILTER_EXLCUDE_NON_WRITABLE)))
         {
           continue;

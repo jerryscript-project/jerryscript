@@ -739,7 +739,6 @@ ecma_builtin_date_create (ecma_number_t tv)
   ecma_date_object_t *date_object_p = (ecma_date_object_t *) obj_p;
   date_object_p->header.u.cls.type = ECMA_OBJECT_CLASS_DATE;
   date_object_p->header.u.cls.u1.date_flags = ECMA_DATE_TZA_NONE;
-  date_object_p->header.u.cls.u2.id = LIT_MAGIC_STRING_DATE_UL;
   date_object_p->header.u.cls.u3.tza = 0;
   date_object_p->date_value = tv;
 #else /* !JERRY_ESNEXT */
@@ -751,7 +750,6 @@ ecma_builtin_date_create (ecma_number_t tv)
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
   ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_DATE;
-  ext_object_p->u.cls.u2.id = LIT_MAGIC_STRING_DATE_UL;
   ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.cls.u3.date, date_value_p);
 #endif /* JERRY_ESNEXT */
 

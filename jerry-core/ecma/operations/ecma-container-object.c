@@ -318,7 +318,7 @@ ecma_op_container_free_entries (ecma_object_t *object_p) /**< collection object 
   ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t,
                                                                     map_object_p->u.cls.u3.value);
 
-  switch (map_object_p->u.cls.u2.id)
+  switch (map_object_p->u.cls.u2.container_id)
   {
 #if JERRY_BUILTIN_WEAKSET
     case LIT_MAGIC_STRING_WEAKSET_UL:
@@ -390,7 +390,7 @@ ecma_op_container_create (const ecma_value_t *arguments_list_p, /**< arguments l
   ecma_extended_object_t *map_obj_p = (ecma_extended_object_t *) object_p;
   map_obj_p->u.cls.type = ECMA_OBJECT_CLASS_CONTAINER;
   map_obj_p->u.cls.u1.container_flags = ECMA_CONTAINER_FLAGS_EMPTY;
-  map_obj_p->u.cls.u2.id = (uint16_t) lit_id;
+  map_obj_p->u.cls.u2.container_id = (uint16_t) lit_id;
 
   if (lit_id == LIT_MAGIC_STRING_WEAKMAP_UL || lit_id == LIT_MAGIC_STRING_WEAKSET_UL)
   {
@@ -568,7 +568,7 @@ ecma_op_container_get_object (ecma_value_t this_arg, /**< this argument */
     ecma_object_t *map_object_p = ecma_get_object_from_value (this_arg);
 
     if (ecma_object_class_is (map_object_p, ECMA_OBJECT_CLASS_CONTAINER)
-        && ((ecma_extended_object_t *) map_object_p)->u.cls.u2.id == lit_id)
+        && ((ecma_extended_object_t *) map_object_p)->u.cls.u2.container_id == lit_id)
     {
       return (ecma_extended_object_t *) map_object_p;
     }
@@ -882,11 +882,11 @@ ecma_op_container_remove_weak_entry (ecma_object_t *object_p, /**< internal cont
   ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t,
                                                                     map_object_p->u.cls.u3.value);
 
-  ecma_value_t *entry_p = ecma_op_internal_buffer_find (container_p, key_arg, map_object_p->u.cls.u2.id);
+  ecma_value_t *entry_p = ecma_op_internal_buffer_find (container_p, key_arg, map_object_p->u.cls.u2.container_id);
 
   JERRY_ASSERT (entry_p != NULL);
 
-  ecma_op_internal_buffer_delete (container_p, (ecma_container_pair_t *) entry_p, map_object_p->u.cls.u2.id);
+  ecma_op_internal_buffer_delete (container_p, (ecma_container_pair_t *) entry_p, map_object_p->u.cls.u2.container_id);
 } /* ecma_op_container_remove_weak_entry */
 
 #if JERRY_ESNEXT
@@ -1008,7 +1008,7 @@ ecma_op_container_iterator_next (ecma_value_t this_val, /**< this argument */
   }
 
   ecma_extended_object_t *map_object_p = (ecma_extended_object_t *) (ecma_get_object_from_value (iterated_value));
-  lit_magic_string_id_t lit_id = map_object_p->u.cls.u2.id;
+  lit_magic_string_id_t lit_id = map_object_p->u.cls.u2.container_id;
 
   ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t,
                                                                     map_object_p->u.cls.u3.value);

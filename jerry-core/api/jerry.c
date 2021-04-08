@@ -486,7 +486,6 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
   ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_SCRIPT;
-  ext_object_p->u.cls.u2.id = LIT_MAGIC_STRING_SCRIPT_UL;
   ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.cls.u3.value, bytecode_data_p);
 
   return ecma_make_object_value (object_p);
@@ -1255,6 +1254,75 @@ jerry_value_get_type (const jerry_value_t value) /**< input value to check */
 } /* jerry_value_get_type */
 
 /**
+ * Used by jerry_object_get_type to get the type of class objects
+ */
+static const uint8_t jerry_class_object_type[] =
+{
+  /* These objects require custom property resolving. */
+  JERRY_OBJECT_TYPE_STRING, /**< type of ECMA_OBJECT_CLASS_STRING */
+  JERRY_OBJECT_TYPE_ARGUMENTS, /**< type of ECMA_OBJECT_CLASS_ARGUMENTS */
+#if JERRY_BUILTIN_TYPEDARRAY
+  JERRY_OBJECT_TYPE_TYPEDARRAY, /**< type of ECMA_OBJECT_CLASS_TYPEDARRAY */
+#endif /* JERRY_BUILTIN_TYPEDARRAY */
+
+  /* These objects are marked by Garbage Collector. */
+#if JERRY_ESNEXT
+  JERRY_OBJECT_TYPE_GENERATOR, /**< type of ECMA_OBJECT_CLASS_GENERATOR */
+  JERRY_OBJECT_TYPE_GENERATOR, /**< type of ECMA_OBJECT_CLASS_ASYNC_GENERATOR */
+  JERRY_OBJECT_TYPE_ITERATOR, /**< type of ECMA_OBJECT_CLASS_ARRAY_ITERATOR */
+  JERRY_OBJECT_TYPE_ITERATOR, /**< type of ECMA_OBJECT_CLASS_SET_ITERATOR */
+  JERRY_OBJECT_TYPE_ITERATOR, /**< type of ECMA_OBJECT_CLASS_MAP_ITERATOR */
+#if JERRY_BUILTIN_REGEXP
+  JERRY_OBJECT_TYPE_GENERIC, /**< type of ECMA_OBJECT_CLASS_REGEXP_STRING_ITERATOR */
+#endif /* JERRY_BUILTIN_REGEXP */
+#endif /* JERRY_ESNEXT */
+#if JERRY_MODULE_SYSTEM
+  JERRY_OBJECT_TYPE_MODULE, /**< type of ECMA_OBJECT_CLASS_MODULE */
+#endif
+#if JERRY_BUILTIN_PROMISE
+  JERRY_OBJECT_TYPE_GENERIC, /**< type of ECMA_OBJECT_CLASS_PROMISE */
+  JERRY_OBJECT_TYPE_GENERIC, /**< type of ECMA_OBJECT_CLASS_PROMISE_CAPABILITY */
+#endif /* JERRY_BUILTIN_PROMISE */
+#if JERRY_BUILTIN_DATAVIEW
+  JERRY_OBJECT_TYPE_GENERIC, /**< type of ECMA_OBJECT_CLASS_DATAVIEW */
+#endif /* JERRY_BUILTIN_DATAVIEW */
+#if JERRY_BUILTIN_CONTAINER
+  JERRY_OBJECT_TYPE_CONTAINER, /**< type of ECMA_OBJECT_CLASS_CONTAINER */
+#endif /* JERRY_BUILTIN_CONTAINER */
+
+  /* Normal objects. */
+  JERRY_OBJECT_TYPE_BOOLEAN, /**< type of ECMA_OBJECT_CLASS_BOOLEAN */
+  JERRY_OBJECT_TYPE_NUMBER, /**< type of ECMA_OBJECT_CLASS_NUMBER */
+  JERRY_OBJECT_TYPE_GENERIC, /**< type of ECMA_OBJECT_CLASS_ERROR */
+  JERRY_OBJECT_TYPE_GENERIC, /**< type of ECMA_OBJECT_CLASS_INTERNAL_OBJECT */
+#if JERRY_PARSER
+  JERRY_OBJECT_TYPE_SCRIPT, /**< type of ECMA_OBJECT_CLASS_SCRIPT */
+#endif /* JERRY_PARSER */
+#if JERRY_BUILTIN_DATE
+  JERRY_OBJECT_TYPE_DATE, /**< type of ECMA_OBJECT_CLASS_DATE */
+#endif /* JERRY_BUILTIN_DATE */
+#if JERRY_BUILTIN_REGEXP
+  JERRY_OBJECT_TYPE_REGEXP, /**< type of ECMA_OBJECT_CLASS_REGEXP */
+#endif /* JERRY_BUILTIN_REGEXP */
+#if JERRY_ESNEXT
+  JERRY_OBJECT_TYPE_SYMBOL, /**< type of ECMA_OBJECT_CLASS_SYMBOL */
+  JERRY_OBJECT_TYPE_ITERATOR, /**< type of ECMA_OBJECT_CLASS_STRING_ITERATOR */
+#endif /* JERRY_ESNEXT */
+#if JERRY_BUILTIN_TYPEDARRAY
+  JERRY_OBJECT_TYPE_GENERIC, /**< type of ECMA_OBJECT_CLASS_ARRAY_BUFFER */
+#endif /* JERRY_BUILTIN_TYPEDARRAY */
+#if JERRY_BUILTIN_BIGINT
+  JERRY_OBJECT_TYPE_BIGINT, /**< type of ECMA_OBJECT_CLASS_BIGINT */
+#endif /* JERRY_BUILTIN_BIGINT */
+#if JERRY_BUILTIN_WEAKREF
+  JERRY_OBJECT_TYPE_WEAKREF, /**< type of ECMA_OBJECT_CLASS_WEAKREF */
+#endif /* JERRY_BUILTIN_WEAKREF */
+};
+
+JERRY_STATIC_ASSERT (sizeof (jerry_class_object_type) == ECMA_OBJECT_CLASS__MAX,
+                     jerry_class_object_type_must_have_object_class_max_elements);
+
+/**
  * Get the object type of the given value
  *
  * @return JERRY_OBJECT_TYPE_NONE - if the given value is not an object
@@ -1293,101 +1361,8 @@ jerry_object_get_type (const jerry_value_t value) /**< input value to check */
 #endif /* JERRY_ESNEXT */
     case ECMA_OBJECT_TYPE_CLASS:
     {
-      switch (ext_obj_p->u.cls.type)
-      {
-        case ECMA_OBJECT_CLASS_ARGUMENTS:
-        {
-          return JERRY_OBJECT_TYPE_ARGUMENTS;
-        }
-#if JERRY_BUILTIN_TYPEDARRAY
-        case ECMA_OBJECT_CLASS_TYPEDARRAY:
-        case ECMA_OBJECT_CLASS_TYPEDARRAY_WITH_INFO:
-        {
-          return JERRY_OBJECT_TYPE_TYPEDARRAY;
-        }
-#endif /* JERRY_BUILTIN_TYPEDARRAY */
-#if JERRY_PARSER
-        case ECMA_OBJECT_CLASS_SCRIPT:
-        {
-          return JERRY_OBJECT_TYPE_SCRIPT;
-        }
-#endif /* JERRY_PARSER */
-        case ECMA_OBJECT_CLASS_BOOLEAN:
-        {
-          return JERRY_OBJECT_TYPE_BOOLEAN;
-        }
-        case ECMA_OBJECT_CLASS_STRING:
-        {
-          return JERRY_OBJECT_TYPE_STRING;
-        }
-        case ECMA_OBJECT_CLASS_NUMBER:
-        {
-          return JERRY_OBJECT_TYPE_NUMBER;
-        }
-#if JERRY_BUILTIN_DATE
-        case ECMA_OBJECT_CLASS_DATE:
-        {
-          return JERRY_OBJECT_TYPE_DATE;
-        }
-#endif /* JERRY_BUILTIN_DATE */
-#if JERRY_BUILTIN_REGEXP
-        case ECMA_OBJECT_CLASS_REGEXP:
-        {
-          return JERRY_OBJECT_TYPE_REGEXP;
-        }
-#endif /* JERRY_BUILTIN_REGEXP */
-#if JERRY_ESNEXT
-        case ECMA_OBJECT_CLASS_SYMBOL:
-        {
-          return JERRY_OBJECT_TYPE_SYMBOL;
-        }
-        case ECMA_OBJECT_CLASS_GENERATOR:
-        case ECMA_OBJECT_CLASS_ASYNC_GENERATOR:
-        {
-          return JERRY_OBJECT_TYPE_GENERATOR;
-        }
-        case ECMA_OBJECT_CLASS_ARRAY_ITERATOR:
-#if JERRY_BUILTIN_SET
-        case ECMA_OBJECT_CLASS_SET_ITERATOR:
-#endif /* JERRY_BUILTIN_SET */
-#if JERRY_BUILTIN_MAP
-        case ECMA_OBJECT_CLASS_MAP_ITERATOR:
-#endif /* JERRY_BUILTIN_MAP */
-        case ECMA_OBJECT_CLASS_STRING_ITERATOR:
-        {
-          return JERRY_OBJECT_TYPE_ITERATOR;
-        }
-#endif /* JERRY_ESNEXT */
-#if JERRY_MODULE_SYSTEM
-        case ECMA_OBJECT_CLASS_MODULE:
-        {
-          return JERRY_OBJECT_TYPE_MODULE;
-        }
-#endif /* JERRY_MODULE_SYSTEM */
-#if JERRY_BUILTIN_CONTAINER
-        case ECMA_OBJECT_CLASS_CONTAINER:
-        {
-          return JERRY_OBJECT_TYPE_CONTAINER;
-        }
-#endif /* JERRY_BUILTIN_CONTAINER */
-#if JERRY_BUILTIN_BIGINT
-        case ECMA_OBJECT_CLASS_BIGINT:
-        {
-          return JERRY_OBJECT_TYPE_BIGINT;
-        }
-#endif /* JERRY_BUILTIN_BIGINT */
-#if JERRY_BUILTIN_WEAKREF
-        case ECMA_OBJECT_CLASS_WEAKREF:
-        {
-          return JERRY_OBJECT_TYPE_WEAKREF;
-        }
-#endif /* JERRY_BUILTIN_WEAKREF */
-        default:
-        {
-          break;
-        }
-      }
-      break;
+      JERRY_ASSERT (ext_obj_p->u.cls.type < ECMA_OBJECT_CLASS__MAX);
+      return jerry_class_object_type[ext_obj_p->u.cls.type];
     }
     default:
     {
@@ -3386,7 +3361,6 @@ jerry_set_internal_property (const jerry_value_t obj_val, /**< object value */
     {
       ecma_extended_object_t *container_p = (ecma_extended_object_t *) internal_object_p;
       container_p->u.cls.type = ECMA_OBJECT_CLASS_INTERNAL_OBJECT;
-      container_p->u.cls.u2.id = LIT_MAGIC_STRING_OBJECT_UL;
     }
 
     value_p->value = ecma_make_object_value (internal_object_p);
@@ -6108,7 +6082,7 @@ jerry_get_container_type (const jerry_value_t value) /**< the container object *
 
     if (ecma_object_class_is (obj_p, ECMA_OBJECT_CLASS_CONTAINER))
     {
-      switch (((ecma_extended_object_t *) obj_p)->u.cls.u2.id)
+      switch (((ecma_extended_object_t *) obj_p)->u.cls.u2.container_id)
       {
 #if JERRY_BUILTIN_MAP
         case LIT_MAGIC_STRING_MAP_UL:

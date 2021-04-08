@@ -146,7 +146,6 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
   /* 11 - 14. */
   ecma_dataview_object_t *dataview_obj_p = (ecma_dataview_object_t *) object_p;
   dataview_obj_p->header.u.cls.type = ECMA_OBJECT_CLASS_DATAVIEW;
-  dataview_obj_p->header.u.cls.u2.id = LIT_MAGIC_STRING_DATAVIEW_UL;
   dataview_obj_p->header.u.cls.u3.length = view_byte_length;
   dataview_obj_p->buffer_p = buffer_p;
   dataview_obj_p->byte_offset = (uint32_t) offset;

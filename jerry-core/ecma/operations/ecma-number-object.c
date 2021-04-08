@@ -76,7 +76,6 @@ ecma_op_create_number_object (ecma_value_t arg) /**< argument passed to the Numb
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
   ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_NUMBER;
-  ext_object_p->u.cls.u2.id = LIT_MAGIC_STRING_NUMBER_UL;
 
   /* Pass reference (no need to free conv_to_num_completion). */
   ext_object_p->u.cls.u3.value = conv_to_num_completion;

@@ -533,7 +533,6 @@ ecma_op_to_object (ecma_value_t value) /**< ecma value */
   ecma_check_value_type_is_spec_defined (value);
   ecma_builtin_id_t proto_id = ECMA_BUILTIN_ID_OBJECT_PROTOTYPE;
   uint8_t class_type;
-  uint16_t class_id;
 
   if (ecma_is_value_number (value))
   {
@@ -541,7 +540,6 @@ ecma_op_to_object (ecma_value_t value) /**< ecma value */
     proto_id =  ECMA_BUILTIN_ID_NUMBER_PROTOTYPE;
 #endif /* JERRY_BUILTIN_NUMBER */
     class_type = ECMA_OBJECT_CLASS_NUMBER;
-    class_id = LIT_MAGIC_STRING_NUMBER_UL;
   }
   else if (ecma_is_value_string (value))
   {
@@ -549,7 +547,6 @@ ecma_op_to_object (ecma_value_t value) /**< ecma value */
     proto_id = ECMA_BUILTIN_ID_STRING_PROTOTYPE;
 #endif /* JERRY_BUILTIN_STRING */
     class_type = ECMA_OBJECT_CLASS_STRING;
-    class_id = LIT_MAGIC_STRING_STRING_UL;
   }
   else if (ecma_is_value_object (value))
   {
@@ -560,7 +557,6 @@ ecma_op_to_object (ecma_value_t value) /**< ecma value */
   {
     proto_id = ECMA_BUILTIN_ID_SYMBOL_PROTOTYPE;
     class_type = ECMA_OBJECT_CLASS_SYMBOL;
-    class_id = LIT_MAGIC_STRING_SYMBOL_UL;
   }
 #endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_BIGINT
@@ -583,7 +579,6 @@ ecma_op_to_object (ecma_value_t value) /**< ecma value */
       proto_id = ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE;
 #endif /* JERRY_BUILTIN_BOOLEAN */
       class_type = ECMA_OBJECT_CLASS_BOOLEAN;
-      class_id = LIT_MAGIC_STRING_BOOLEAN_UL;
     }
   }
 
@@ -593,7 +588,6 @@ ecma_op_to_object (ecma_value_t value) /**< ecma value */
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
   ext_object_p->u.cls.type = class_type;
-  ext_object_p->u.cls.u2.id = class_id;
   ext_object_p->u.cls.u3.value = ecma_copy_value_if_not_object (value);
 
   return ecma_make_object_value (object_p);

@@ -86,7 +86,6 @@ ecma_op_create_string_object (const ecma_value_t *arguments_list_p, /**< list of
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
   ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_STRING;
-  ext_object_p->u.cls.u2.id = LIT_MAGIC_STRING_STRING_UL;
   ext_object_p->u.cls.u3.value = prim_value;
 
 #if JERRY_ESNEXT

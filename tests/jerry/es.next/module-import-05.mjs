@@ -17,4 +17,20 @@ import * as f from "./module-export-08.mjs";
 
 assert (f.c === 5)
 assert (f.x === 41)
-assert (!Object.hasOwnProperty(f, "default"));
+assert (Object.getPrototypeOf(f) === null)
+
+try {
+  Object.hasOwnProperty(f, "default")
+  assert (false);
+} catch (e) {
+  assert (e instanceof TypeError)
+}
+
+Object.setPrototypeOf(f, null)
+
+try {
+  Object.setPrototypeOf(f, {})
+  assert (false);
+} catch (e) {
+  assert (e instanceof TypeError)
+}

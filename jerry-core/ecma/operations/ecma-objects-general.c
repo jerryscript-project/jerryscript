@@ -425,12 +425,33 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
 
   if (ECMA_PROPERTY_IS_VIRTUAL (current_prop))
   {
+    bool writable_check_failed = (property_desc_p->flags & ECMA_PROP_IS_WRITABLE);
+
+#if JERRY_MODULE_SYSTEM
+    if (ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_MODULE_NAMESPACE))
+    {
+      if (JERRY_UNLIKELY (ext_property_ref.property_ref.virtual_value == ECMA_VALUE_UNINITIALIZED))
+      {
+        return ecma_raise_reference_error (ECMA_ERR_MSG (ecma_error_let_const_not_initialized));
+      }
+
+      if (property_desc_p->flags & ECMA_PROP_IS_WRITABLE_DEFINED)
+      {
+        writable_check_failed = ((property_desc_p->flags ^ current_prop) & ECMA_PROP_IS_WRITABLE) != 0;
+      }
+    }
+    else
+    {
+      JERRY_ASSERT (!is_current_configurable && !ecma_is_property_writable (current_prop));
+    }
+#else /* !JERRY_MODULE_SYSTEM */
     JERRY_ASSERT (!is_current_configurable && !ecma_is_property_writable (current_prop));
+#endif /* JERRY_MODULE_SYSTEM */
 
     ecma_value_t result = ECMA_VALUE_TRUE;
 
     if (property_desc_type == ECMA_OP_OBJECT_DEFINE_ACCESSOR
-        || (property_desc_p->flags & ECMA_PROP_IS_WRITABLE)
+        || writable_check_failed
         || ((property_desc_p->flags & ECMA_PROP_IS_VALUE_DEFINED)
             && !ecma_op_same_value (property_desc_p->value,
                                     ext_property_ref.property_ref.virtual_value)))

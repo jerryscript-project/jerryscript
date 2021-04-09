@@ -1979,7 +1979,13 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
 #if JERRY_MODULE_SYSTEM
     else if (parse_opts & ECMA_PARSE_MODULE)
     {
+      parser_branch_t branch;
+      parser_emit_cbc_forward_branch (&context, CBC_JUMP_FORWARD, &branch);
+
       scanner_create_variables (&context, SCANNER_CREATE_VARS_NO_OPTS);
+      parser_emit_cbc (&context, CBC_RETURN_WITH_BLOCK);
+
+      parser_set_branch_to_current_position (&context, &branch);
     }
 #endif /* JERRY_MODULE_SYSTEM */
     else

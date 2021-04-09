@@ -123,7 +123,7 @@ ecma_create_decl_lex_env (ecma_object_t *outer_lexical_environment_p) /**< outer
 
 /**
  * Create a object lexical environment with specified outer lexical environment
- * (or NULL if the environment is not nested), binding object and provided type flag.
+ * (or NULL if the environment is not nested), and binding object.
  *
  * See also: ECMA-262 v5, 10.2.1.2
  *
@@ -133,23 +133,15 @@ ecma_create_decl_lex_env (ecma_object_t *outer_lexical_environment_p) /**< outer
  */
 ecma_object_t *
 ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< outer lexical environment */
-                            ecma_object_t *binding_obj_p, /**< binding object */
-                            ecma_lexical_environment_type_t type) /**< type of the new lexical environment */
+                            ecma_object_t *binding_obj_p) /**< binding object */
 {
-#if JERRY_ESNEXT
-  JERRY_ASSERT (type == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND
-                || type == ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND);
-#else /* !JERRY_ESNEXT */
-  JERRY_ASSERT (type == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
-#endif /* JERRY_ESNEXT */
-
   JERRY_ASSERT (binding_obj_p != NULL
                 && !ecma_is_lexical_environment (binding_obj_p));
 
   ecma_object_t *new_lexical_environment_p = ecma_alloc_object ();
 
-  const ecma_object_descriptor_t lexical_env_flag = ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV;
-  new_lexical_environment_p->type_flags_refs = (ecma_object_descriptor_t) (type | lexical_env_flag);
+  new_lexical_environment_p->type_flags_refs = (ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV
+                                                | ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
 
   ecma_init_gc_info (new_lexical_environment_p);
 
@@ -160,6 +152,45 @@ ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< out
 
   return new_lexical_environment_p;
 } /* ecma_create_object_lex_env */
+
+#if JERRY_ESNEXT
+
+/**
+ * Create a lexical environment with a specified size.
+ *
+ * @return pointer to the descriptor of the lexical environment
+ */
+ecma_object_t *
+ecma_create_lex_env_class (ecma_object_t *outer_lexical_environment_p, /**< outer lexical environment */
+                           size_t lexical_env_size) /**< size of the lexical environment */
+{
+  ecma_object_t *new_lexical_environment_p;
+
+  ecma_object_descriptor_t type_flags_refs = (ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV
+                                              | ECMA_LEXICAL_ENVIRONMENT_CLASS);
+
+  if (lexical_env_size > 0)
+  {
+    new_lexical_environment_p = (ecma_object_t *) ecma_alloc_extended_object (lexical_env_size);
+    type_flags_refs |= ECMA_OBJECT_FLAG_LEXICAL_ENV_HAS_DATA;
+  }
+  else
+  {
+    new_lexical_environment_p = ecma_alloc_object ();
+  }
+
+  new_lexical_environment_p->type_flags_refs = type_flags_refs;
+
+  ecma_init_gc_info (new_lexical_environment_p);
+
+  new_lexical_environment_p->u1.property_list_cp = JMEM_CP_NULL;
+
+  ECMA_SET_POINTER (new_lexical_environment_p->u2.outer_reference_cp, outer_lexical_environment_p);
+
+  return new_lexical_environment_p;
+} /* ecma_create_lex_env_class */
+
+#endif /* JERRY_ESNEXT */
 
 /**
  * Check if the object is lexical environment.
@@ -202,6 +233,29 @@ ecma_get_object_type (const ecma_object_t *object_p) /**< object */
 
   return (ecma_object_type_t) (object_p->type_flags_refs & ECMA_OBJECT_TYPE_MASK);
 } /* ecma_get_object_type */
+
+/**
+ * Get value of an object if the class matches
+ *
+ * @return value of the object if the class matches
+ *         ECMA_VALUE_NOT_FOUND otherwise
+ */
+extern inline bool JERRY_ATTR_ALWAYS_INLINE
+ecma_object_class_is (ecma_object_t *object_p, /**< object */
+                      ecma_object_class_type_t class_id) /**< class id */
+{
+  if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_CLASS)
+  {
+    ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+
+    if (ext_object_p->u.cls.type == (uint8_t) class_id)
+    {
+      return true;
+    }
+  }
+
+  return false;
+} /* ecma_object_class_is */
 
 /**
  * Check if the object is a built-in object
@@ -286,7 +340,8 @@ ecma_get_lex_env_binding_object (const ecma_object_t *object_p) /**< object-boun
   JERRY_ASSERT (ecma_is_lexical_environment (object_p));
 #if JERRY_ESNEXT
   JERRY_ASSERT (ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND
-                || ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND);
+                || (ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_CLASS
+                    && (object_p->type_flags_refs & ECMA_OBJECT_FLAG_LEXICAL_ENV_HAS_DATA) == 0));
 #else /* !JERRY_ESNEXT */
   JERRY_ASSERT (ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
 #endif /* JERRY_ESNEXT */
@@ -568,6 +623,51 @@ ecma_create_named_accessor_property (ecma_object_t *object_p, /**< object */
   return ecma_create_property (object_p, name_p, type_and_flags, value, out_prop_p);
 } /* ecma_create_named_accessor_property */
 
+#if JERRY_MODULE_SYSTEM
+/**
+ * Create property reference
+ */
+void
+ecma_create_named_reference_property (ecma_object_t *object_p, /**< object */
+                                      ecma_string_t *name_p, /**< property name */
+                                      ecma_property_t *property_p) /**< referenced property */
+{
+  JERRY_ASSERT (object_p != NULL && name_p != NULL && property_p != NULL);
+  JERRY_ASSERT (*property_p & ECMA_PROPERTY_FLAG_DATA);
+  JERRY_ASSERT (ecma_find_named_property (object_p, name_p) == NULL);
+  JERRY_ASSERT ((ecma_is_lexical_environment (object_p)
+                 && ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_CLASS
+                 && (object_p->type_flags_refs & ECMA_OBJECT_FLAG_LEXICAL_ENV_HAS_DATA))
+                || ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_MODULE_NAMESPACE));
+
+  uint8_t type_and_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE;
+
+  ecma_property_value_t *value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+
+  jmem_cpointer_tag_t offset = (jmem_cpointer_tag_t) (((uintptr_t) property_p) & 0x1);
+
+#if JERRY_CPOINTER_32_BIT
+  if (offset != 0)
+  {
+    --value_p;
+  }
+#else /* !JERRY_CPOINTER_32_BIT */
+  if (offset == 0)
+  {
+    ++value_p;
+  }
+#endif /* JERRY_CPOINTER_32_BIT */
+
+  JERRY_ASSERT ((((uintptr_t) value_p) & (((uintptr_t) 1 << JMEM_ALIGNMENT_LOG) - 1)) == 0);
+
+  ecma_property_value_t value;
+  ECMA_SET_NON_NULL_POINTER_TAG (value.value, value_p, offset);
+
+  ecma_create_property (object_p, name_p, type_and_flags, value, NULL);
+} /* ecma_create_named_reference_property */
+
+#endif /* JERRY_MODULE_SYSTEM */
+
 /**
  * Find named data property or named accessor property in a specified object.
  *
@@ -749,48 +849,6 @@ ecma_get_named_data_property (ecma_object_t *obj_p, /**< object to find property
 } /* ecma_get_named_data_property */
 
 /**
- * Free property values and change their type to deleted.
- *
- * Note:
- *     internal properties are not supported
- */
-void
-ecma_free_property (ecma_object_t *object_p, /**< object the property belongs to */
-                    jmem_cpointer_t name_cp, /**< name of the property or ECMA_NULL_POINTER */
-                    ecma_property_t *property_p) /**< property */
-{
-  JERRY_ASSERT (object_p != NULL && property_p != NULL);
-  JERRY_ASSERT (ECMA_PROPERTY_IS_RAW (*property_p));
-
-  if (*property_p & ECMA_PROPERTY_FLAG_DATA)
-  {
-    ecma_free_value_if_not_object (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
-  }
-  else
-  {
-#if JERRY_CPOINTER_32_BIT
-    ecma_getter_setter_pointers_t *getter_setter_pair_p;
-    getter_setter_pair_p = ECMA_GET_NON_NULL_POINTER (ecma_getter_setter_pointers_t,
-                                                      ECMA_PROPERTY_VALUE_PTR (property_p)->getter_setter_pair_cp);
-    jmem_pools_free (getter_setter_pair_p, sizeof (ecma_getter_setter_pointers_t));
-#endif /* JERRY_CPOINTER_32_BIT */
-  }
-
-#if JERRY_LCACHE
-  if (ecma_is_property_lcached (property_p))
-  {
-    ecma_lcache_invalidate (object_p, name_cp, property_p);
-  }
-#endif /* JERRY_LCACHE */
-
-  if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_DIRECT_STRING_PTR)
-  {
-    ecma_string_t *prop_name_p = ECMA_GET_NON_NULL_POINTER (ecma_string_t, name_cp);
-    ecma_deref_ecma_string (prop_name_p);
-  }
-} /* ecma_free_property */
-
-/**
  * Delete the object's property referenced by its value pointer.
  *
  * Note: specified property must be owned by specified object.
@@ -829,7 +887,7 @@ ecma_delete_property (ecma_object_t *object_p, /**< object */
 
     ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) cur_prop_p;
 
-    for (int i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
+    for (uint32_t i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
     {
       if ((prop_pair_p->values + i) == prop_value_p)
       {
@@ -844,7 +902,7 @@ ecma_delete_property (ecma_object_t *object_p, /**< object */
         }
 #endif /* JERRY_PROPRETY_HASHMAP */
 
-        ecma_free_property (object_p, prop_pair_p->names_cp[i], cur_prop_p->types + i);
+        ecma_gc_free_property (object_p, prop_pair_p, i);
         cur_prop_p->types[i] = ECMA_PROPERTY_TYPE_DELETED;
         prop_pair_p->names_cp[i] = LIT_INTERNAL_MAGIC_STRING_DELETED;
 
@@ -1007,6 +1065,36 @@ ecma_set_named_accessor_property_setter (ecma_object_t *object_p, /**< the prope
   ECMA_SET_POINTER (prop_value_p->getter_setter_pair.setter_cp, setter_p);
 #endif /* JERRY_CPOINTER_32_BIT */
 } /* ecma_set_named_accessor_property_setter */
+
+#if JERRY_MODULE_SYSTEM
+
+/**
+ * Gets the referenced property value
+ *
+ * @return pointer to the value
+ */
+extern inline ecma_property_value_t * JERRY_ATTR_ALWAYS_INLINE
+ecma_get_property_value_from_named_reference (ecma_property_value_t *reference_p) /**< data property reference */
+{
+  ecma_value_t value = reference_p->value;
+  reference_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_property_value_t, value);
+
+#if JERRY_CPOINTER_32_BIT
+  if (ECMA_GET_FIRST_BIT_FROM_POINTER_TAG (value))
+  {
+    ++reference_p;
+  }
+#else /* !JERRY_CPOINTER_32_BIT */
+  if (!ECMA_GET_FIRST_BIT_FROM_POINTER_TAG (value))
+  {
+    --reference_p;
+  }
+#endif /* JERRY_CPOINTER_32_BIT */
+
+  return reference_p;
+} /* ecma_get_property_value_from_named_reference */
+
+#endif /* JERRY_MODULE_SYSTEM */
 
 /**
  * Get property's 'Writable' attribute value

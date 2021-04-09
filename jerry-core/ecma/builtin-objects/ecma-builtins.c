@@ -593,9 +593,7 @@ ecma_builtin_create_global_object (void)
   global_object_p->global_scope_cp = global_object_p->global_env_cp;
 #endif /* JERRY_ESNEXT */
 
-  ecma_object_t *global_lex_env_p = ecma_create_object_lex_env (NULL,
-                                                                object_p,
-                                                                ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+  ecma_object_t *global_lex_env_p = ecma_create_object_lex_env (NULL, object_p);
   ECMA_SET_NON_NULL_POINTER (global_object_p->global_env_cp, global_lex_env_p);
 #if JERRY_ESNEXT
   global_object_p->global_scope_cp = global_object_p->global_env_cp;

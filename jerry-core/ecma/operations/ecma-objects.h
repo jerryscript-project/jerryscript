@@ -71,6 +71,7 @@ ecma_value_t ecma_op_object_get_by_index (ecma_object_t *object_p, ecma_length_t
 ecma_value_t ecma_op_object_get_by_magic_id (ecma_object_t *object_p, lit_magic_string_id_t property_id);
 #if JERRY_ESNEXT
 ecma_string_t *ecma_op_get_global_symbol (lit_magic_string_id_t property_id);
+bool ecma_op_compare_string_to_global_symbol (ecma_string_t *string_p, lit_magic_string_id_t property_id);
 ecma_value_t ecma_op_object_get_by_symbol_id (ecma_object_t *object_p, lit_magic_string_id_t property_id);
 ecma_value_t ecma_op_get_method_by_symbol_id (ecma_value_t value, lit_magic_string_id_t symbol_id);
 ecma_value_t ecma_op_get_method_by_magic_id (ecma_value_t value, lit_magic_string_id_t magic_id);
@@ -100,7 +101,6 @@ ecma_collection_t *ecma_op_object_own_property_keys (ecma_object_t *obj_p);
 ecma_collection_t *ecma_op_object_enumerate (ecma_object_t *obj_p);
 
 lit_magic_string_id_t ecma_object_get_class_name (ecma_object_t *obj_p);
-bool ecma_object_class_is (ecma_object_t *object_p, ecma_object_class_type_t class_id);
 #if JERRY_BUILTIN_REGEXP
 bool ecma_object_is_regexp_object (ecma_value_t arg);
 #endif /* JERRY_BUILTIN_REGEXP */

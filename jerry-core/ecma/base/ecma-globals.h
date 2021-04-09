@@ -711,6 +711,9 @@ typedef enum
 #if JERRY_BUILTIN_TYPEDARRAY
   ECMA_OBJECT_CLASS_TYPEDARRAY, /**< TypedArray which does NOT need extra space to store length and offset */
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
+#if JERRY_MODULE_SYSTEM
+  ECMA_OBJECT_CLASS_MODULE_NAMESPACE, /**< Module Namespace (ECMAScript v11, 9.4.6) */
+#endif /* JERRY_MODULE_SYSTEM */
 
   /* These objects are marked by Garbage Collector. */
 #if JERRY_ESNEXT
@@ -776,14 +779,14 @@ typedef enum
   /* Types between 0 - 12 are ecma_object_type_t which can have a built-in flag. */
 
   ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE = 13, /**< declarative lexical environment */
-  ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND = 14, /**< object-bound lexical environment
-                                                    *   with provideThis flag */
-  ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND = 15, /**< object-bound lexical environment
-                                                     *  with provided home object reference */
+#if JERRY_ESNEXT
+  ECMA_LEXICAL_ENVIRONMENT_CLASS = 14, /**< lexical environment with class */
+#endif /* JERRY_ESNEXT */
+  ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND = 15, /**< object-bound lexical environment */
 
   ECMA_LEXICAL_ENVIRONMENT_TYPE_START = ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE, /**< first lexical
                                                                                *   environment type */
-  ECMA_LEXICAL_ENVIRONMENT_TYPE__MAX = ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND /**< maximum value */
+  ECMA_LEXICAL_ENVIRONMENT_TYPE__MAX = ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND /**< maximum value */
 } ecma_lexical_environment_type_t;
 
 #if JERRY_ESNEXT
@@ -848,9 +851,14 @@ typedef enum
 #define ECMA_OBJECT_FLAG_EXTENSIBLE 0x20
 
 /**
- * Lexical environments created for non-closure code blocks
+ * Declarative lexical environments created for non-closure code blocks
  */
 #define ECMA_OBJECT_FLAG_BLOCK ECMA_OBJECT_FLAG_EXTENSIBLE
+
+/**
+ * Lexical environments with class has extra data
+ */
+#define ECMA_OBJECT_FLAG_LEXICAL_ENV_HAS_DATA ECMA_OBJECT_FLAG_EXTENSIBLE
 
 /**
  * Bitshift index for an ecma-object reference count field
@@ -1141,6 +1149,16 @@ typedef struct
  */
 #define ECMA_BUILTIN_IS_EXTENDED_BUILT_IN(object_type) \
   ((object_type) == ECMA_OBJECT_TYPE_CLASS || (object_type) == ECMA_OBJECT_TYPE_ARRAY)
+
+/**
+ * Description of lexical environment with class
+ */
+typedef struct
+{
+  ecma_object_t lexical_env; /**< lexical environment header */
+
+  ecma_object_t *module_p; /**< module reference */
+} ecma_lexical_environment_class_t;
 
 /**
  * Description of native functions

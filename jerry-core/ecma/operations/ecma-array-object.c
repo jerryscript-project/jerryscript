@@ -899,7 +899,7 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
     JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (current_prop_p));
     ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) current_prop_p;
 
-    for (int i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
+    for (uint32_t i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
     {
       if (current_prop_p->types[i] != ECMA_PROPERTY_TYPE_DELETED
           && ecma_is_property_configurable (current_prop_p->types[i]))
@@ -920,7 +920,7 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
           }
 #endif /* JERRY_PROPRETY_HASHMAP */
 
-          ecma_free_property (object_p, prop_pair_p->names_cp[i], current_prop_p->types + i);
+          ecma_gc_free_property (object_p, prop_pair_p, i);
           current_prop_p->types[i] = ECMA_PROPERTY_TYPE_DELETED;
           prop_pair_p->names_cp[i] = LIT_INTERNAL_MAGIC_STRING_DELETED;
         }

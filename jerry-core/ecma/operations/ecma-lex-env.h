@@ -37,6 +37,7 @@ ecma_object_t *ecma_get_global_scope (ecma_object_t *global_object_p);
 #if JERRY_ESNEXT
 void ecma_create_global_lexical_block (ecma_object_t *global_object_p);
 #endif /* JERRY_ESNEXT */
+ecma_value_t ecma_op_raise_set_binding_error (ecma_property_t *property_p, bool is_strict);
 
 #if JERRY_MODULE_SYSTEM
 void ecma_module_add_lex_env (ecma_object_t *lex_env_p);

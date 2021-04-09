@@ -183,6 +183,59 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
           break;
         }
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
+#if JERRY_MODULE_SYSTEM
+        case ECMA_OBJECT_CLASS_MODULE_NAMESPACE:
+        {
+          if (JERRY_UNLIKELY (ecma_prop_name_is_symbol (property_name_p)))
+          {
+            if (!ecma_op_compare_string_to_global_symbol (property_name_p, LIT_GLOBAL_SYMBOL_TO_STRING_TAG))
+            {
+              return ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP;
+            }
+
+            /* ECMA-262 v11, 26.3.1 */
+            if (options & ECMA_PROPERTY_GET_VALUE)
+            {
+              property_ref_p->virtual_value = ecma_make_magic_string_value (LIT_MAGIC_STRING_MODULE_UL);
+            }
+
+            return ECMA_PROPERTY_VIRTUAL;
+          }
+
+          ecma_property_t *property_p = ecma_find_named_property (object_p, property_name_p);
+
+          if (property_p == NULL)
+          {
+            return ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP;
+          }
+
+          JERRY_ASSERT (ECMA_PROPERTY_IS_RAW (*property_p));
+
+          if (*property_p & ECMA_PROPERTY_FLAG_DATA)
+          {
+            if (options & ECMA_PROPERTY_GET_EXT_REFERENCE)
+            {
+              ((ecma_extended_property_ref_t *) property_ref_p)->property_p = property_p;
+            }
+
+            if (property_ref_p != NULL)
+            {
+              property_ref_p->value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+            }
+
+            return *property_p;
+          }
+
+          if (options & ECMA_PROPERTY_GET_VALUE)
+          {
+            ecma_property_value_t *prop_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+            prop_value_p = ecma_get_property_value_from_named_reference (prop_value_p);
+            property_ref_p->virtual_value = ecma_fast_copy_value (prop_value_p->value);
+          }
+
+          return ECMA_PROPERTY_ENUMERABLE_WRITABLE | ECMA_PROPERTY_VIRTUAL;
+        }
+#endif /* JERRY_MODULE_SYSTEM */
       }
       break;
     }
@@ -538,6 +591,44 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
           break;
         }
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
+#if JERRY_MODULE_SYSTEM
+        case ECMA_OBJECT_CLASS_MODULE_NAMESPACE:
+        {
+          if (JERRY_UNLIKELY (ecma_prop_name_is_symbol (property_name_p)))
+          {
+            /* ECMA-262 v11, 26.3.1 */
+            if (ecma_op_compare_string_to_global_symbol (property_name_p, LIT_GLOBAL_SYMBOL_TO_STRING_TAG))
+            {
+              return ecma_make_magic_string_value (LIT_MAGIC_STRING_MODULE_UL);
+            }
+
+            return ECMA_VALUE_NOT_FOUND;
+          }
+
+          ecma_property_t *property_p = ecma_find_named_property (object_p, property_name_p);
+
+          if (property_p == NULL)
+          {
+            return ECMA_VALUE_NOT_FOUND;
+          }
+
+          JERRY_ASSERT (ECMA_PROPERTY_IS_RAW (*property_p));
+
+          ecma_property_value_t *prop_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+
+          if (!(*property_p & ECMA_PROPERTY_FLAG_DATA))
+          {
+            prop_value_p = ecma_get_property_value_from_named_reference (prop_value_p);
+
+            if (JERRY_UNLIKELY (prop_value_p->value == ECMA_VALUE_UNINITIALIZED))
+            {
+              return ecma_raise_reference_error (ECMA_ERR_MSG (ecma_error_let_const_not_initialized));
+            }
+          }
+
+          return ecma_fast_copy_value (prop_value_p->value);
+        }
+#endif /* JERRY_MODULE_SYSTEM */
       }
       break;
     }
@@ -941,6 +1032,25 @@ ecma_op_get_global_symbol (lit_magic_string_id_t property_id) /**< property symb
 } /* ecma_op_get_global_symbol */
 
 /**
+ * Checks whether the string equals to the global symbol.
+ *
+ * @return true - if the string equals to the global symbol
+ *         false - otherwise
+ */
+bool
+ecma_op_compare_string_to_global_symbol (ecma_string_t *string_p, /**< string to compare */
+                                         lit_magic_string_id_t property_id) /**< property symbol id */
+{
+  JERRY_ASSERT (LIT_IS_GLOBAL_SYMBOL (property_id));
+
+  uint32_t symbol_index = (uint32_t) property_id - (uint32_t) LIT_GLOBAL_SYMBOL__FIRST;
+  jmem_cpointer_t symbol_cp = JERRY_CONTEXT (global_symbols_cp)[symbol_index];
+
+  return (symbol_cp != JMEM_CP_NULL
+          && string_p == ECMA_GET_NON_NULL_POINTER (ecma_string_t, symbol_cp));
+} /* ecma_op_compare_string_to_global_symbol */
+
+/**
  * [[Get]] operation of ecma object where the property is a well-known symbol
  *
  * @return ecma value
@@ -1327,6 +1437,12 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
           break;
         }
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
+#if JERRY_MODULE_SYSTEM
+        case ECMA_OBJECT_CLASS_MODULE_NAMESPACE:
+        {
+          return ecma_raise_readonly_assignment (property_name_p, is_throw);
+        }
+#endif /* JERRY_MODULE_SYSTEM */
       }
       break;
     }
@@ -1837,6 +1953,12 @@ ecma_op_object_get_own_property_descriptor (ecma_object_t *object_p, /**< the ob
     }
     else
     {
+#if JERRY_MODULE_SYSTEM
+      if (JERRY_UNLIKELY (property_ref.virtual_value == ECMA_VALUE_UNINITIALIZED))
+      {
+        return ecma_raise_reference_error (ECMA_ERR_MSG (ecma_error_let_const_not_initialized));
+      }
+#endif /* JERRY_MODULE_SYSTEM */
       prop_desc_p->value = property_ref.virtual_value;
     }
 
@@ -2685,6 +2807,9 @@ static const uint16_t ecma_class_object_magic_string_id[] =
 #if JERRY_BUILTIN_TYPEDARRAY
   LIT_MAGIC_STRING__EMPTY, /**< ECMA_OBJECT_CLASS_TYPEDARRAY needs special resolver */
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
+#if JERRY_MODULE_SYSTEM
+  LIT_MAGIC_STRING_MODULE_UL, /**< magic string id of ECMA_OBJECT_CLASS_MODULE_NAMESPACE */
+#endif
 
   /* These objects are marked by Garbage Collector. */
 #if JERRY_ESNEXT
@@ -2886,29 +3011,6 @@ ecma_object_get_class_name (ecma_object_t *obj_p) /**< object */
     }
   }
 } /* ecma_object_get_class_name */
-
-/**
- * Get value of an object if the class matches
- *
- * @return value of the object if the class matches
- *         ECMA_VALUE_NOT_FOUND otherwise
- */
-extern inline bool JERRY_ATTR_ALWAYS_INLINE
-ecma_object_class_is (ecma_object_t *object_p, /**< object */
-                      ecma_object_class_type_t class_id) /**< class id */
-{
-  if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_CLASS)
-  {
-    ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-
-    if (ext_object_p->u.cls.type == (uint8_t) class_id)
-    {
-      return true;
-    }
-  }
-
-  return false;
-} /* ecma_object_class_is */
 
 #if JERRY_BUILTIN_REGEXP
 /**

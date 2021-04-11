@@ -32,6 +32,21 @@
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
+/**
+ * This object has a custom dispatch function.
+ */
+#define BUILTIN_CUSTOM_DISPATCH
+
+/**
+ * List of built-in routine identifiers.
+ */
+enum
+{
+  ECMA_BUILTIN_ARRAYBUFFER_PROTOTYPE_ROUTINE_START = 0,
+  ECMA_BUILTIN_ARRAYBUFFER_PROTOTYPE_BYTELENGTH_GETTER,
+  ECMA_BUILTIN_ARRAYBUFFER_PROTOTYPE_OBJECT_SLICE,
+};
+
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-arraybuffer-prototype.inc.h"
 #define BUILTIN_UNDERSCORED_ID  arraybuffer_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
@@ -56,25 +71,18 @@
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_arraybuffer_prototype_bytelength_getter (ecma_value_t this_arg) /**< this argument */
+ecma_builtin_arraybuffer_prototype_bytelength_getter (ecma_value_t this_arg, /**< this argument */
+                                                      ecma_object_t *object_p) /**< object value*/
 {
-  if (ecma_is_value_object (this_arg))
+  JERRY_UNUSED (this_arg);
+  if (ecma_arraybuffer_is_detached (object_p))
   {
-    ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
-
-    if (ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_ARRAY_BUFFER))
-    {
-      if (ecma_arraybuffer_is_detached (object_p))
-      {
-        return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_arraybuffer_is_detached));
-      }
-      uint32_t len = ecma_arraybuffer_get_length (object_p);
-
-      return ecma_make_uint32_value (len);
-    }
+    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_arraybuffer_is_detached));
   }
+  uint32_t len = ecma_arraybuffer_get_length (object_p);
 
-  return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a ArrayBuffer object"));
+  return ecma_make_uint32_value (len);
+
 } /* ecma_builtin_arraybuffer_prototype_bytelength_getter */
 
 /**
@@ -91,6 +99,22 @@ ecma_builtin_arraybuffer_prototype_object_slice (ecma_value_t this_arg, /**< thi
                                                  const ecma_value_t *argument_list_p, /**< arguments list */
                                                  uint32_t arguments_number) /**< number of arguments */
 {
+  return ecma_builtin_arraybuffer_slice (this_arg, argument_list_p, arguments_number);
+} /* ecma_builtin_arraybuffer_prototype_object_slice */
+
+/**
+ * Dispatcher of the built-in's routines
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_builtin_arraybuffer_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< built-in routine identifier */
+                                                     ecma_value_t this_arg, /**< 'this' argument value */
+                                                     const ecma_value_t arguments_list_p[], /**< list of arguments
+                                                                                             *   passed to routine */
+                                                     uint32_t arguments_number) /**< length of arguments' list */
+{
   if (!ecma_is_value_object (this_arg))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an object"));
@@ -104,8 +128,22 @@ ecma_builtin_arraybuffer_prototype_object_slice (ecma_value_t this_arg, /**< thi
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an ArrayBuffer object"));
   }
 
-  return ecma_builtin_arraybuffer_slice (this_arg, argument_list_p, arguments_number);
-} /* ecma_builtin_arraybuffer_prototype_object_slice */
+  switch (builtin_routine_id)
+  {
+    case ECMA_BUILTIN_ARRAYBUFFER_PROTOTYPE_BYTELENGTH_GETTER:
+    {
+      return ecma_builtin_arraybuffer_prototype_bytelength_getter (this_arg, object_p);
+    }
+    case ECMA_BUILTIN_ARRAYBUFFER_PROTOTYPE_OBJECT_SLICE:
+    {
+      return ecma_builtin_arraybuffer_prototype_object_slice (this_arg, arguments_list_p, arguments_number);
+    }
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+} /* ecma_builtin_arraybuffer_prototype_dispatch_routine */
 
 /**
  * @}

@@ -24,6 +24,14 @@
 #define ECMA_MODULE_MAX_PATH 255u
 
 /**
+ * Module status flags.
+ */
+typedef enum
+{
+  ECMA_MODULE_IS_NATIVE = (1 << 0), /**< native module */
+} ecma_module_flags_t;
+
+/**
  * Imported or exported names, such as "a as b"
  * Note: See https://www.ecma-international.org/ecma-262/6.0/#table-39
  *       and https://www.ecma-international.org/ecma-262/6.0/#table-41
@@ -47,13 +55,19 @@ typedef struct ecma_module
   /* Note: state is stored in header.u.class_prop.extra_info */
   ecma_extended_object_t header;                   /**< header part */
   /* TODO(dbatyai): These could be compressed pointers */
+  ecma_object_t *scope_p;                          /**< lexical lenvironment of the module */
+  ecma_object_t *namespace_object_p;               /**< namespace object of the module */
   struct ecma_module_node *imports_p;              /**< import requests of the module */
   ecma_module_names_t *local_exports_p;            /**< local exports of the module */
   struct ecma_module_node *indirect_exports_p;     /**< indirect exports of the module */
   struct ecma_module_node *star_exports_p;         /**< star exports of the module */
-  ecma_compiled_code_t *compiled_code_p;           /**< compiled code for the module */
-  ecma_object_t *scope_p;                          /**< lexical lenvironment of the module */
-  ecma_object_t *namespace_object_p;               /**< namespace object of the module */
+
+  /* Code used for evaluating a module */
+  union
+  {
+    ecma_compiled_code_t *compiled_code_p;         /**< compiled code for the module */
+    jerry_native_module_evaluate_callback_t callback; /**< callback for evaluating native modules */
+  } u;
 } ecma_module_t;
 
 /**
@@ -114,7 +128,7 @@ ecma_value_t ecma_module_link (ecma_module_t *module_p,
                                void *user_p);
 ecma_value_t ecma_module_evaluate (ecma_module_t *module_p);
 
-void ecma_module_initialize_context (void);
+ecma_module_t *ecma_module_create (void);
 void ecma_module_cleanup_context (void);
 ecma_value_t ecma_module_create_namespace_object (ecma_module_t *module_p);
 

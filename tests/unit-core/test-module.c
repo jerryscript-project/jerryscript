@@ -137,6 +137,93 @@ resolve_callback3 (const jerry_value_t specifier, /**< module specifier */
   TEST_ASSERT (false);
 } /* resolve_callback3 */
 
+static jerry_value_t
+native_module_evaluate (const jerry_value_t native_module) /**< native module */
+{
+  ++counter;
+
+  TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_EVALUATING);
+
+  jerry_value_t exp_val = jerry_create_string ((const jerry_char_t *) "exp");
+  jerry_value_t other_exp_val = jerry_create_string ((const jerry_char_t *) "other_exp");
+  /* The native module has no such export. */
+  jerry_value_t no_exp_val = jerry_create_string ((const jerry_char_t *) "no_exp");
+
+  jerry_value_t result = jerry_native_module_get_export (native_module, exp_val);
+  TEST_ASSERT (jerry_value_is_undefined (result));
+  jerry_release_value (result);
+
+  result = jerry_native_module_get_export (native_module, other_exp_val);
+  TEST_ASSERT (jerry_value_is_undefined (result));
+  jerry_release_value (result);
+
+  result = jerry_native_module_get_export (native_module, no_exp_val);
+  TEST_ASSERT (jerry_value_is_error (result));
+  jerry_release_value (result);
+
+  jerry_value_t export = jerry_create_number (3.5);
+  result = jerry_native_module_set_export (native_module, exp_val, export);
+  TEST_ASSERT (jerry_value_is_boolean (result) && jerry_get_boolean_value (result));
+  jerry_release_value (result);
+  jerry_release_value (export);
+
+  export = jerry_create_string ((const jerry_char_t *) "str");
+  result = jerry_native_module_set_export (native_module, other_exp_val, export);
+  TEST_ASSERT (jerry_value_is_boolean (result) && jerry_get_boolean_value (result));
+  jerry_release_value (result);
+  jerry_release_value (export);
+
+  result = jerry_native_module_set_export (native_module, no_exp_val, no_exp_val);
+  TEST_ASSERT (jerry_value_is_error (result));
+  jerry_release_value (result);
+
+  result = jerry_native_module_get_export (native_module, exp_val);
+  TEST_ASSERT (jerry_value_is_number (result) && jerry_get_number_value (result) == 3.5);
+  jerry_release_value (result);
+
+  result = jerry_native_module_get_export (native_module, other_exp_val);
+  TEST_ASSERT (jerry_value_is_string (result));
+  jerry_release_value (result);
+
+  jerry_release_value (exp_val);
+  jerry_release_value (other_exp_val);
+  jerry_release_value (no_exp_val);
+
+  if (counter == 4)
+  {
+    ++counter;
+    return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) "Ooops!");
+  }
+
+  return jerry_create_undefined ();
+} /* native_module_evaluate */
+
+static jerry_value_t
+resolve_callback4 (const jerry_value_t specifier, /**< module specifier */
+                   const jerry_value_t referrer, /**< parent module */
+                   void *user_p) /**< user data */
+{
+  (void) specifier;
+  (void) referrer;
+
+  ++counter;
+
+  jerry_value_t exports[2] =
+  {
+    jerry_create_string ((const jerry_char_t *) "exp"),
+    jerry_create_string ((const jerry_char_t *) "other_exp")
+  };
+
+  jerry_value_t native_module = jerry_native_module_create (native_module_evaluate, exports, 2);
+  TEST_ASSERT (!jerry_value_is_error (native_module));
+
+  jerry_release_value (exports[0]);
+  jerry_release_value (exports[1]);
+
+  *((jerry_value_t *) user_p) = jerry_acquire_value (native_module);
+  return native_module;
+} /* resolve_callback4 */
+
 int
 main (void)
 {
@@ -285,6 +372,97 @@ main (void)
   jerry_release_value (result);
 
   jerry_release_value (module);
+
+  module = jerry_native_module_create (NULL, &object, 1);
+  TEST_ASSERT (jerry_value_is_error (module));
+  jerry_release_value (module);
+
+  module = jerry_native_module_create (NULL, NULL, 0);
+  TEST_ASSERT (!jerry_value_is_error (module));
+  TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_LINKED);
+
+  result = jerry_native_module_get_export (object, number);
+  TEST_ASSERT (jerry_value_is_error (result));
+  jerry_release_value (result);
+
+  result = jerry_native_module_set_export (module, number, number);
+  TEST_ASSERT (jerry_value_is_error (result));
+  jerry_release_value (result);
+
+  jerry_release_value (module);
+
+  /* Valid identifier. */
+  jerry_value_t export = jerry_create_string ((const jerry_char_t *) "\xed\xa0\x83\xed\xb2\x80");
+
+  module = jerry_native_module_create (NULL, &export, 1);
+  TEST_ASSERT (!jerry_value_is_error (module));
+  TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_LINKED);
+
+  result = jerry_module_evaluate (module);
+  TEST_ASSERT (jerry_value_is_undefined (result));
+  jerry_release_value (result);
+
+  jerry_release_value (module);
+  jerry_release_value (export);
+
+  /* Invalid identifiers. */
+  export = jerry_create_string ((const jerry_char_t *) "a+");
+  module = jerry_native_module_create (NULL, &export, 1);
+  TEST_ASSERT (jerry_value_is_error (module));
+  jerry_release_value (module);
+  jerry_release_value (export);
+
+  export = jerry_create_string ((const jerry_char_t *) "\xed\xa0\x80");
+  module = jerry_native_module_create (NULL, &export, 1);
+  TEST_ASSERT (jerry_value_is_error (module));
+  jerry_release_value (module);
+  jerry_release_value (export);
+
+  counter = 0;
+
+  for (int i = 0; i < 2; i++)
+  {
+    jerry_char_t source3[] = TEST_STRING_LITERAL (
+      "import {exp, other_exp as other} from 'native.js'\n"
+      "import * as namespace from 'native.js'\n"
+      "if (exp !== 3.5 || other !== 'str') { throw 'Assertion failed!' }\n"
+      "if (namespace.exp !== 3.5 || namespace.other_exp !== 'str') { throw 'Assertion failed!' }\n"
+    );
+    module = jerry_parse (source3, sizeof (source3) - 1, &module_parse_options);
+    TEST_ASSERT (!jerry_value_is_error (module));
+    TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_UNLINKED);
+
+    jerry_value_t native_module;
+
+    result = jerry_module_link (module, resolve_callback4, (void *) &native_module);
+    TEST_ASSERT (!jerry_value_is_error (result));
+    jerry_release_value (result);
+
+    TEST_ASSERT (counter == i * 2 + 1);
+    TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_LINKED);
+    TEST_ASSERT (jerry_module_get_state (native_module) == JERRY_MODULE_STATE_LINKED);
+
+    result = jerry_module_evaluate (module);
+
+    if (i == 0)
+    {
+      TEST_ASSERT (!jerry_value_is_error (result));
+      TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_EVALUATED);
+      TEST_ASSERT (jerry_module_get_state (native_module) == JERRY_MODULE_STATE_EVALUATED);
+      TEST_ASSERT (counter == 2);
+    }
+    else
+    {
+      TEST_ASSERT (jerry_value_is_error (result));
+      TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_ERROR);
+      TEST_ASSERT (jerry_module_get_state (native_module) == JERRY_MODULE_STATE_ERROR);
+      TEST_ASSERT (counter == 5);
+    }
+
+    jerry_release_value (result);
+    jerry_release_value (module);
+    jerry_release_value (native_module);
+  }
 
   jerry_release_value (object);
   jerry_release_value (number);

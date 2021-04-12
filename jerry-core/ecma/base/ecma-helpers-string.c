@@ -1313,13 +1313,13 @@ ecma_substring_copy_to_utf8_buffer (const ecma_string_t *string_desc_p, /**< ecm
     while (start_pos--)
     {
       ecma_char_t ch;
-      lit_utf8_size_t code_unit_size = lit_read_code_unit_from_utf8 (cesu8_str_p, &ch);
+      lit_utf8_size_t code_unit_size = lit_read_code_unit_from_cesu8 (cesu8_str_p, &ch);
 
       cesu8_str_p += code_unit_size;
       if ((cesu8_str_p != cesu8_end_pos) && lit_is_code_point_utf16_high_surrogate (ch))
       {
         ecma_char_t next_ch;
-        lit_utf8_size_t next_ch_size = lit_read_code_unit_from_utf8 (cesu8_str_p, &next_ch);
+        lit_utf8_size_t next_ch_size = lit_read_code_unit_from_cesu8 (cesu8_str_p, &next_ch);
         if (lit_is_code_point_utf16_low_surrogate (next_ch))
         {
           JERRY_ASSERT (code_unit_size == next_ch_size);
@@ -1336,7 +1336,7 @@ ecma_substring_copy_to_utf8_buffer (const ecma_string_t *string_desc_p, /**< ecm
     while (end_pos--)
     {
       ecma_char_t ch;
-      lit_utf8_size_t code_unit_size = lit_read_code_unit_from_utf8 (cesu8_pos, &ch);
+      lit_utf8_size_t code_unit_size = lit_read_code_unit_from_cesu8 (cesu8_pos, &ch);
 
       if ((size + code_unit_size) > buffer_size)
       {
@@ -1346,7 +1346,7 @@ ecma_substring_copy_to_utf8_buffer (const ecma_string_t *string_desc_p, /**< ecm
       if (((cesu8_pos + code_unit_size) != cesu8_end_pos) && lit_is_code_point_utf16_high_surrogate (ch))
       {
         ecma_char_t next_ch;
-        lit_utf8_size_t next_ch_size = lit_read_code_unit_from_utf8 (cesu8_pos + code_unit_size, &next_ch);
+        lit_utf8_size_t next_ch_size = lit_read_code_unit_from_cesu8 (cesu8_pos + code_unit_size, &next_ch);
 
         if (lit_is_code_point_utf16_low_surrogate (next_ch))
         {
@@ -2482,7 +2482,7 @@ ecma_string_trim_front (const lit_utf8_byte_t *start_p, /**< current string's st
 
   while (start_p < end_p)
   {
-    lit_utf8_size_t read_size = lit_read_code_unit_from_utf8 (start_p, &ch);
+    lit_utf8_size_t read_size = lit_read_code_unit_from_cesu8 (start_p, &ch);
 
     if (!lit_char_is_white_space (ch))
     {
@@ -2655,7 +2655,7 @@ ecma_string_pad (ecma_value_t original_string_p, /**< Input ecma string */
   while (remaining > 0)
   {
     ecma_char_t ch;
-    lit_utf8_size_t read_size = lit_read_code_unit_from_utf8 (temp_start_p, &ch);
+    lit_utf8_size_t read_size = lit_read_code_unit_from_cesu8 (temp_start_p, &ch);
     ecma_stringbuilder_append_char (&builder, ch);
     temp_start_p += read_size;
     remaining--;

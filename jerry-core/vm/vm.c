@@ -426,7 +426,7 @@ vm_run_module (ecma_module_t *module_p) /**< module to be executed */
   }
 
   vm_frame_ctx_shared_t shared;
-  shared.bytecode_header_p = module_p->compiled_code_p;
+  shared.bytecode_header_p = module_p->u.compiled_code_p;
   shared.status_flags = 0;
 
   return vm_run (&shared, ECMA_VALUE_UNDEFINED, module_p->scope_p);
@@ -4933,14 +4933,14 @@ vm_init_module_scope (ecma_module_t *module_p) /**< module without scope */
 {
   ecma_object_t *global_object_p;
 #if JERRY_BUILTIN_REALMS
-  global_object_p = (ecma_object_t *) ecma_op_function_get_realm (module_p->compiled_code_p);
+  global_object_p = (ecma_object_t *) ecma_op_function_get_realm (module_p->u.compiled_code_p);
 #else /* !JERRY_BUILTIN_REALMS */
   global_object_p = ecma_builtin_get_global ();
 #endif /* JERRY_BUILTIN_REALMS */
 
   ecma_object_t *scope_p = ecma_create_lex_env_class (ecma_get_global_environment (global_object_p),
                                                       sizeof (ecma_lexical_environment_class_t));
-  const ecma_compiled_code_t *compiled_code_p = module_p->compiled_code_p;
+  const ecma_compiled_code_t *compiled_code_p = module_p->u.compiled_code_p;
   ecma_value_t *literal_start_p;
   uint8_t *byte_code_p;
   uint16_t encoding_limit;

@@ -273,6 +273,14 @@ size_t jerry_module_get_number_of_requests (const jerry_value_t module_val);
 jerry_value_t jerry_module_get_request (const jerry_value_t module_val, size_t request_index);
 jerry_value_t jerry_module_get_namespace (const jerry_value_t module_val);
 
+jerry_value_t jerry_native_module_create (jerry_native_module_evaluate_callback_t callback,
+                                          const jerry_value_t * const exports_p, size_t number_of_exports);
+jerry_value_t jerry_native_module_get_export (const jerry_value_t native_mmodule_val,
+                                              const jerry_value_t export_name_val);
+jerry_value_t jerry_native_module_set_export (const jerry_value_t native_mmodule_val,
+                                              const jerry_value_t export_name_val,
+                                              const jerry_value_t value_to_set);
+
 /**
  * Promise functions.
  */

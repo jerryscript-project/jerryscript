@@ -541,7 +541,6 @@ typedef enum
   JERRY_MODULE_STATE_EVALUATING = 4, /**< module is currently being evaluated */
   JERRY_MODULE_STATE_EVALUATED = 5, /**< module has been evaluated (its source code has been executed) */
   JERRY_MODULE_STATE_ERROR = 6, /**< an error has been encountered before the evaluated state is reached */
-  JERRY_MODULE_STATE_NATIVE = 7, /**< module is native module */
 } jerry_module_state_t;
 
 /**
@@ -550,6 +549,11 @@ typedef enum
 typedef jerry_value_t (*jerry_module_resolve_callback_t) (const jerry_value_t specifier,
                                                           const jerry_value_t referrer,
                                                           void *user_p);
+
+/**
+ * Callback which is called by jerry_module_evaluate to evaluate the native module.
+ */
+typedef jerry_value_t (*jerry_native_module_evaluate_callback_t) (const jerry_value_t native_module);
 
 /**
  * Proxy related types.

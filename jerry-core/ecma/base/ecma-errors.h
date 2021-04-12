@@ -53,6 +53,7 @@ extern const char * const ecma_error_bigint_not_supported_p;
 
 #if JERRY_MODULE_SYSTEM
 extern const char * const ecma_error_not_module_p;
+extern const char * const ecma_error_unknown_export_p;
 #else /* !JERRY_MODULE_SYSTEM */
 extern const char * const ecma_error_module_not_supported_p;
 #endif /* JERRY_MODULE_SYSTEM */

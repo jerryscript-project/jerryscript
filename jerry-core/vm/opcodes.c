@@ -1307,9 +1307,8 @@ opfunc_init_class (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 
   if (ecma_get_object_type (ctor_p) == ECMA_OBJECT_TYPE_FUNCTION)
   {
-    ecma_object_t *proto_env_p = ecma_create_object_lex_env (frame_ctx_p->lex_env_p,
-                                                             proto_p,
-                                                             ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND);
+    ecma_object_t *proto_env_p = ecma_create_lex_env_class (frame_ctx_p->lex_env_p, 0);
+    ECMA_SET_NON_NULL_POINTER (proto_env_p->u1.bound_object_cp, proto_p);
 
     ECMA_SET_NON_NULL_POINTER_TAG (((ecma_extended_object_t *) ctor_p)->u.function.scope_cp, proto_env_p, 0);
 
@@ -1433,12 +1432,10 @@ opfunc_finalize_class (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
     ecma_op_initialize_binding (class_env_p, ecma_get_string_from_value (class_name), stack_top_p[-2]);
   }
 
-  ecma_object_t *ctor_env_p = ecma_create_object_lex_env (class_env_p,
-                                                          ctor_p,
-                                                          ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND);
-  ecma_object_t *proto_env_p = ecma_create_object_lex_env (class_env_p,
-                                                           proto_p,
-                                                           ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND);
+  ecma_object_t *ctor_env_p = ecma_create_lex_env_class (class_env_p, 0);
+  ECMA_SET_NON_NULL_POINTER (ctor_env_p->u1.bound_object_cp, ctor_p);
+  ecma_object_t *proto_env_p = ecma_create_lex_env_class (class_env_p, 0);
+  ECMA_SET_NON_NULL_POINTER (proto_env_p->u1.bound_object_cp, proto_p);
 
   opfunc_set_class_attributes (ctor_p, ctor_env_p);
   opfunc_set_class_attributes (proto_p, proto_env_p);

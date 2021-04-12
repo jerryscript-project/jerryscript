@@ -67,8 +67,7 @@ ecma_op_get_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
 #if JERRY_ESNEXT
           if (JERRY_UNLIKELY (property_value_p->value == ECMA_VALUE_UNINITIALIZED))
           {
-            return ecma_raise_reference_error (ECMA_ERR_MSG ("Variables declared by let/const must be"
-                                                             " initialized before reading their value"));
+            return ecma_raise_reference_error (ECMA_ERR_MSG (ecma_error_let_const_not_initialized));
           }
 #endif /* JERRY_ESNEXT */
 
@@ -77,8 +76,32 @@ ecma_op_get_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
         break;
       }
 #if JERRY_ESNEXT
-      case ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND:
+      case ECMA_LEXICAL_ENVIRONMENT_CLASS:
       {
+#if JERRY_MODULE_SYSTEM
+        if (lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_LEXICAL_ENV_HAS_DATA)
+        {
+          ecma_property_t *property_p = ecma_find_named_property (lex_env_p, name_p);
+
+          if (property_p != NULL)
+          {
+            *ref_base_lex_env_p = lex_env_p;
+            ecma_property_value_t *property_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+
+            if (!(*property_p & ECMA_PROPERTY_FLAG_DATA))
+            {
+              property_value_p = ecma_get_property_value_from_named_reference (property_value_p);
+            }
+
+            if (JERRY_UNLIKELY (property_value_p->value == ECMA_VALUE_UNINITIALIZED))
+            {
+              return ecma_raise_reference_error (ECMA_ERR_MSG (ecma_error_let_const_not_initialized));
+            }
+
+            return ecma_fast_copy_value (property_value_p->value);
+          }
+        }
+#endif /* JERRY_MODULE_SYSTEM */
         break;
       }
 #endif /* JERRY_ESNEXT */
@@ -215,52 +238,47 @@ ecma_op_put_value_lex_env_base (ecma_object_t *lex_env_p, /**< lexical environme
   {
     switch (ecma_get_lex_env_type (lex_env_p))
     {
+#if JERRY_ESNEXT
+      case ECMA_LEXICAL_ENVIRONMENT_CLASS:
+      {
+        if ((lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_LEXICAL_ENV_HAS_DATA) == 0)
+        {
+          break;
+        }
+        /* FALLTHRU */
+      }
+#endif /* JERRY_ESNEXT */
       case ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE:
       {
         ecma_property_t *property_p = ecma_find_named_property (lex_env_p, name_p);
 
         if (property_p != NULL)
         {
+#if JERRY_ESNEXT
+          ecma_property_value_t *property_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+
+          JERRY_ASSERT (!(*property_p & ECMA_PROPERTY_FLAG_WRITABLE)
+                        || (*property_p & ECMA_PROPERTY_FLAG_DATA));
+
+          if ((*property_p & ECMA_PROPERTY_FLAG_WRITABLE)
+              && property_value_p->value != ECMA_VALUE_UNINITIALIZED)
+          {
+            ecma_named_data_property_assign_value (lex_env_p, property_value_p, value);
+            return ECMA_VALUE_EMPTY;
+          }
+#else /* JERRY_ESNEXT */
           if (ecma_is_property_writable (*property_p))
           {
             ecma_property_value_t *property_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
-
-#if JERRY_ESNEXT
-            if (JERRY_UNLIKELY (property_value_p->value == ECMA_VALUE_UNINITIALIZED))
-            {
-              return ecma_raise_reference_error (ECMA_ERR_MSG ("Variables declared by let/const must be"
-                                                               " initialized before writing their value"));
-            }
-#endif /* JERRY_ESNEXT */
-
             ecma_named_data_property_assign_value (lex_env_p, property_value_p, value);
-          }
-#if JERRY_ESNEXT
-          else if (ecma_is_property_enumerable (*property_p))
-          {
-            if (JERRY_UNLIKELY (ECMA_PROPERTY_VALUE_PTR (property_p)->value == ECMA_VALUE_UNINITIALIZED))
-            {
-              return ecma_raise_reference_error (ECMA_ERR_MSG ("Variables declared by let/const must be"
-                                                               " initialized before writing their value"));
-            }
-
-            return ecma_raise_type_error (ECMA_ERR_MSG ("Constant bindings cannot be reassigned"));
+            return ECMA_VALUE_EMPTY;
           }
 #endif /* JERRY_ESNEXT */
-          else if (is_strict)
-          {
-            return ecma_raise_type_error (ECMA_ERR_MSG ("Binding cannot be set"));
-          }
-          return ECMA_VALUE_EMPTY;
+
+          return ecma_op_raise_set_binding_error (property_p, is_strict);
         }
         break;
       }
-#if JERRY_ESNEXT
-      case ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND:
-      {
-        break;
-      }
-#endif /* JERRY_ESNEXT */
       default:
       {
         JERRY_ASSERT (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);

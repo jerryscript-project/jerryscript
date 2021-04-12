@@ -138,12 +138,22 @@ const char * const ecma_error_local_variable_is_redeclared = "Local variable is 
  */
 const char * const ecma_error_expected_a_function = "Expected a function";
 
+#if JERRY_ESNEXT
+
 /**
  * Error message, class constructor invoked without new keyword
  */
 const char * const ecma_error_class_constructor_new = "Class constructor cannot be invoked without 'new'";
 
-#endif /* JERRY_ERROR_MESSAGES  */
+/**
+ * Error message, variables declared by let/const must be initialized before reading their value
+ */
+const char * const ecma_error_let_const_not_initialized = ("Variables declared by let/const must be"
+                                                           " initialized before reading their value");
+
+#endif /* JERRY_ESNEXT */
+
+#endif /* JERRY_ERROR_MESSAGES */
 
 #if JERRY_SNAPSHOT_SAVE || JERRY_SNAPSHOT_EXEC
 

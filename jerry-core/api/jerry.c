@@ -861,9 +861,10 @@ jerry_module_get_namespace (const jerry_value_t module_val) /**< module */
 
   if (module_p->namespace_object_p == NULL)
   {
-    if (module_p->header.u.cls.u1.module_state != JERRY_MODULE_STATE_EVALUATED)
+    if (module_p->header.u.cls.u1.module_state < JERRY_MODULE_STATE_LINKED
+        || module_p->header.u.cls.u1.module_state > JERRY_MODULE_STATE_EVALUATED)
     {
-      return jerry_throw (ecma_raise_range_error (ECMA_ERR_MSG ("Namespace object has not been created yet")));
+      return jerry_throw (ecma_raise_range_error (ECMA_ERR_MSG ("Namespace object cannot be created")));
     }
 
     ecma_module_create_namespace_object (module_p);
@@ -1264,6 +1265,9 @@ static const uint8_t jerry_class_object_type[] =
 #if JERRY_BUILTIN_TYPEDARRAY
   JERRY_OBJECT_TYPE_TYPEDARRAY, /**< type of ECMA_OBJECT_CLASS_TYPEDARRAY */
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
+#if JERRY_MODULE_SYSTEM
+  JERRY_OBJECT_TYPE_GENERIC, /**< type of ECMA_OBJECT_CLASS_MODULE_NAMESPACE */
+#endif
 
   /* These objects are marked by Garbage Collector. */
 #if JERRY_ESNEXT
@@ -5130,9 +5134,7 @@ jerry_realm_set_this (jerry_value_t realm_value, /**< realm value */
       ecma_global_object_t *global_object_p = (ecma_global_object_t *) object_p;
       global_object_p->this_binding = this_value;
 
-      ecma_object_t *global_lex_env_p = ecma_create_object_lex_env (NULL,
-                                                                    ecma_get_object_from_value (this_value),
-                                                                    ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+      ecma_object_t *global_lex_env_p = ecma_create_object_lex_env (NULL, ecma_get_object_from_value (this_value));
 
       ECMA_SET_NON_NULL_POINTER (global_object_p->global_env_cp, global_lex_env_p);
 #if JERRY_ESNEXT

@@ -262,33 +262,6 @@ static const uint16_t vm_decode_table[] JERRY_ATTR_CONST_DATA =
 
 #undef CBC_OPCODE
 
-#if JERRY_MODULE_SYSTEM
-/**
- * Run module code
- *
- * Note:
- *      returned value must be freed with ecma_free_value, when it is no longer needed.
- *
- * @return ecma value
- */
-ecma_value_t
-vm_run_module (ecma_module_t *module_p) /**< module to be executed */
-{
-  const ecma_value_t module_init_result = ecma_module_initialize (module_p);
-
-  if (ECMA_IS_VALUE_ERROR (module_init_result))
-  {
-    return module_init_result;
-  }
-
-  vm_frame_ctx_shared_t shared;
-  shared.bytecode_header_p = module_p->compiled_code_p;
-  shared.status_flags = 0;
-
-  return vm_run (&shared, ECMA_VALUE_UNDEFINED, module_p->scope_p);
-} /* vm_run_module */
-#endif /* JERRY_MODULE_SYSTEM */
-
 /**
  * Run global code
  *
@@ -431,6 +404,35 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
 
   return completion_value;
 } /* vm_run_eval */
+
+#if JERRY_MODULE_SYSTEM
+
+/**
+ * Run module code
+ *
+ * Note:
+ *      returned value must be freed with ecma_free_value, when it is no longer needed.
+ *
+ * @return ecma value
+ */
+ecma_value_t
+vm_run_module (ecma_module_t *module_p) /**< module to be executed */
+{
+  const ecma_value_t module_init_result = ecma_module_initialize (module_p);
+
+  if (ECMA_IS_VALUE_ERROR (module_init_result))
+  {
+    return module_init_result;
+  }
+
+  vm_frame_ctx_shared_t shared;
+  shared.bytecode_header_p = module_p->compiled_code_p;
+  shared.status_flags = 0;
+
+  return vm_run (&shared, ECMA_VALUE_UNDEFINED, module_p->scope_p);
+} /* vm_run_module */
+
+#endif /* JERRY_MODULE_SYSTEM */
 
 /**
  * Construct object
@@ -1578,12 +1580,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         {
           uint32_t literal_index, value_index;
           ecma_value_t lit_value;
+          bool release = false;
 
           READ_LITERAL_INDEX (value_index);
-          READ_LITERAL_INDEX (literal_index);
-
-          JERRY_ASSERT (value_index != literal_index);
-          JERRY_ASSERT (value_index >= register_end || literal_index >= register_end);
 
           if (value_index < register_end)
           {
@@ -1594,11 +1593,18 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           {
             lit_value = vm_construct_literal_object (frame_ctx_p,
                                                      literal_start_p[value_index]);
+            release = true;
           }
+
+          READ_LITERAL_INDEX (literal_index);
+
+          JERRY_ASSERT (value_index != literal_index);
+          JERRY_ASSERT (value_index >= register_end || literal_index >= register_end);
 
           if (literal_index < register_end)
           {
             ecma_fast_free_value (VM_GET_REGISTER (frame_ctx_p, literal_index));
+            JERRY_ASSERT (release);
             VM_GET_REGISTER (frame_ctx_p, literal_index) = lit_value;
             continue;
           }
@@ -1617,11 +1623,10 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           JERRY_ASSERT (property_value_p->value == ECMA_VALUE_UNDEFINED);
           property_value_p->value = lit_value;
 
-          if (value_index >= register_end)
+          if (release)
           {
-            ecma_free_value (lit_value);
+            ecma_deref_object (ecma_get_object_from_value (lit_value));
           }
-
           continue;
         }
 #if JERRY_ESNEXT
@@ -1701,12 +1706,16 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           READ_LITERAL_INDEX (literal_index);
 
           JERRY_ASSERT (literal_index >= register_end);
-          JERRY_ASSERT (ecma_get_lex_env_type (frame_ctx_p->lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
+          JERRY_ASSERT (ecma_get_lex_env_type (frame_ctx_p->lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE
+                        || (ecma_get_lex_env_type (frame_ctx_p->lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_CLASS
+                            && (frame_ctx_p->lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_LEXICAL_ENV_HAS_DATA)));
 
           ecma_string_t *name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
           ecma_property_t *property_p = ecma_find_named_property (frame_ctx_p->lex_env_p, name_p);
 
-          JERRY_ASSERT (property_p != NULL && ECMA_PROPERTY_IS_RAW_DATA (*property_p));
+          JERRY_ASSERT (property_p != NULL
+                        && ECMA_PROPERTY_IS_RAW_DATA (*property_p)
+                        && (*property_p & ECMA_PROPERTY_FLAG_DATA));
           JERRY_ASSERT (ECMA_PROPERTY_VALUE_PTR (property_p)->value == ECMA_VALUE_UNINITIALIZED);
 
           ECMA_PROPERTY_VALUE_PTR (property_p)->value = left_value;
@@ -2176,10 +2185,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           if (opcode == CBC_EXT_PUSH_OBJECT_SUPER_ENVIRONMENT)
           {
             ecma_value_t obj_value = stack_top_p[-1];
-            ecma_object_t *obj_env_p = ecma_create_object_lex_env (frame_ctx_p->lex_env_p,
-                                                                  ecma_get_object_from_value (obj_value),
-                                                                  ECMA_LEXICAL_ENVIRONMENT_HOME_OBJECT_BOUND);
+            ecma_object_t *obj_env_p = ecma_create_lex_env_class (frame_ctx_p->lex_env_p, 0);
 
+            ECMA_SET_NON_NULL_POINTER (obj_env_p->u1.bound_object_cp, ecma_get_object_from_value (obj_value));
             stack_top_p[-1] = ecma_make_object_value (obj_env_p);
             *stack_top_p++ = obj_value;
           }
@@ -4029,9 +4037,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
           object_p = ecma_get_object_from_value (result);
 
-          with_env_p = ecma_create_object_lex_env (frame_ctx_p->lex_env_p,
-                                                   object_p,
-                                                   ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+          with_env_p = ecma_create_object_lex_env (frame_ctx_p->lex_env_p, object_p);
           ecma_deref_object (object_p);
 
           VM_PLUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_WITH_CONTEXT_STACK_ALLOCATION);
@@ -4913,6 +4919,172 @@ finish:
     return result;
   }
 } /* vm_loop */
+
+#if JERRY_MODULE_SYSTEM
+
+/**
+ * Create and initialize module scope with all data properties
+ *
+ * @return ECMA_VALUE_EMPTY on success,
+ *         ECMA_VALUE_ERROR on failure
+ */
+ecma_value_t
+vm_init_module_scope (ecma_module_t *module_p) /**< module without scope */
+{
+  ecma_object_t *global_object_p;
+#if JERRY_BUILTIN_REALMS
+  global_object_p = (ecma_object_t *) ecma_op_function_get_realm (module_p->compiled_code_p);
+#else /* !JERRY_BUILTIN_REALMS */
+  global_object_p = ecma_builtin_get_global ();
+#endif /* JERRY_BUILTIN_REALMS */
+
+  ecma_object_t *scope_p = ecma_create_lex_env_class (ecma_get_global_environment (global_object_p),
+                                                      sizeof (ecma_lexical_environment_class_t));
+  const ecma_compiled_code_t *compiled_code_p = module_p->compiled_code_p;
+  ecma_value_t *literal_start_p;
+  uint8_t *byte_code_p;
+  uint16_t encoding_limit;
+  uint16_t encoding_delta;
+
+  ((ecma_lexical_environment_class_t *) scope_p)->module_p = (ecma_object_t *) module_p;
+
+  module_p->scope_p = scope_p;
+  ecma_deref_object (scope_p);
+
+  if (compiled_code_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+  {
+    cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) compiled_code_p;
+
+    literal_start_p = (ecma_value_t *) (args_p + 1);
+    literal_start_p -= args_p->register_end;
+    byte_code_p = (uint8_t *) (literal_start_p + args_p->literal_end);
+  }
+  else
+  {
+    cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) compiled_code_p;
+
+    literal_start_p = (ecma_value_t *) (args_p + 1);
+    literal_start_p -= args_p->register_end;
+    byte_code_p = (uint8_t *) (literal_start_p + args_p->literal_end);
+  }
+
+  /* Prepare for byte code execution. */
+  if (!(compiled_code_p->status_flags & CBC_CODE_FLAGS_FULL_LITERAL_ENCODING))
+  {
+    encoding_limit = CBC_SMALL_LITERAL_ENCODING_LIMIT;
+    encoding_delta = CBC_SMALL_LITERAL_ENCODING_DELTA;
+  }
+  else
+  {
+    encoding_limit = CBC_FULL_LITERAL_ENCODING_LIMIT;
+    encoding_delta = CBC_FULL_LITERAL_ENCODING_DELTA;
+  }
+
+  JERRY_ASSERT (*byte_code_p >= CBC_JUMP_FORWARD && *byte_code_p <= CBC_JUMP_FORWARD_3);
+
+  byte_code_p += 1 + CBC_BRANCH_OFFSET_LENGTH (*byte_code_p);
+
+  while (true)
+  {
+    uint8_t opcode = *byte_code_p++;
+
+    switch (opcode)
+    {
+      case CBC_CREATE_VAR:
+      case CBC_CREATE_LET:
+      case CBC_CREATE_CONST:
+      {
+        uint32_t literal_index;
+
+        READ_LITERAL_INDEX (literal_index);
+
+        ecma_string_t *name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
+
+        JERRY_ASSERT (ecma_find_named_property (scope_p, name_p) == NULL);
+
+        uint8_t prop_attributes = ECMA_PROPERTY_FLAG_WRITABLE;
+
+        if (opcode == CBC_CREATE_LET)
+        {
+          prop_attributes = ECMA_PROPERTY_ENUMERABLE_WRITABLE;
+        }
+        else if (opcode == CBC_CREATE_CONST)
+        {
+          prop_attributes = ECMA_PROPERTY_FLAG_ENUMERABLE;
+        }
+
+        ecma_property_value_t *property_value_p;
+        property_value_p = ecma_create_named_data_property (scope_p, name_p, prop_attributes, NULL);
+
+        if (opcode != CBC_CREATE_VAR)
+        {
+          property_value_p->value = ECMA_VALUE_UNINITIALIZED;
+        }
+        break;
+      }
+      case CBC_INIT_ARG_OR_FUNC:
+      {
+        uint32_t literal_index;
+
+        READ_LITERAL_INDEX (literal_index);
+
+        ecma_compiled_code_t *function_bytecode_p;
+#if JERRY_SNAPSHOT_EXEC
+        if (JERRY_LIKELY (!(compiled_code_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION)))
+        {
+#endif /* JERRY_SNAPSHOT_EXEC */
+          function_bytecode_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
+                                                                 literal_start_p[literal_index]);
+#if JERRY_SNAPSHOT_EXEC
+        }
+        else
+        {
+          uint8_t *byte_p = ((uint8_t *) compiled_code_p) + literal_start_p[literal_index];
+          function_bytecode_p = (ecma_compiled_code_t *) byte_p;
+        }
+#endif /* JERRY_SNAPSHOT_EXEC */
+
+        JERRY_ASSERT (CBC_IS_FUNCTION (function_bytecode_p->status_flags));
+
+        ecma_object_t *function_obj_p;
+
+        if (JERRY_UNLIKELY (CBC_FUNCTION_IS_ARROW (function_bytecode_p->status_flags)))
+        {
+          function_obj_p = ecma_op_create_arrow_function_object (scope_p,
+                                                                 function_bytecode_p,
+                                                                 ECMA_VALUE_UNDEFINED);
+        }
+        else
+        {
+          function_obj_p = ecma_op_create_any_function_object (scope_p, function_bytecode_p);
+        }
+
+        READ_LITERAL_INDEX (literal_index);
+        ecma_string_t *name_p = ecma_get_string_from_value (literal_start_p[literal_index]);
+
+        JERRY_ASSERT (ecma_find_named_property (scope_p, name_p) == NULL);
+
+        ecma_property_value_t *property_value_p;
+        property_value_p = ecma_create_named_data_property (scope_p,
+                                                            name_p,
+                                                            ECMA_PROPERTY_FLAG_WRITABLE,
+                                                            NULL);
+
+        JERRY_ASSERT (property_value_p->value == ECMA_VALUE_UNDEFINED);
+        property_value_p->value = ecma_make_object_value (function_obj_p);
+        ecma_deref_object (function_obj_p);
+        break;
+      }
+      default:
+      {
+        JERRY_ASSERT (opcode == CBC_RETURN_WITH_BLOCK);
+        return ECMA_VALUE_EMPTY;
+      }
+    }
+  }
+} /* vm_init_module_scope */
+
+#endif /* JERRY_MODULE_SYSTEM */
 
 #undef READ_LITERAL
 #undef READ_LITERAL_INDEX

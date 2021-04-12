@@ -393,15 +393,9 @@ ecma_module_evaluate (ecma_module_t *module_p) /**< module */
   }
 
   JERRY_ASSERT (module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_LINKED);
-
-#if JERRY_BUILTIN_REALMS
-  ecma_object_t *global_object_p = (ecma_object_t *) ecma_op_function_get_realm (module_p->compiled_code_p);
-#else /* !JERRY_BUILTIN_REALMS */
-  ecma_object_t *global_object_p = ecma_builtin_get_global ();
-#endif /* JERRY_BUILTIN_REALMS */
+  JERRY_ASSERT (module_p->scope_p != NULL);
 
   module_p->header.u.cls.u1.module_state = JERRY_MODULE_STATE_EVALUATING;
-  module_p->scope_p = ecma_create_decl_lex_env (ecma_get_global_environment (global_object_p));
 
   ecma_value_t ret_value;
   ret_value = vm_run_module (module_p);
@@ -457,21 +451,11 @@ ecma_module_namespace_object_add_export_if_needed (ecma_module_t *module_p, /**<
     return result;
   }
 
-  ecma_object_t *ref_base_lex_env_p;
-  ecma_value_t prop_value = ecma_op_get_value_lex_env_base (record.module_p->scope_p,
-                                                            &ref_base_lex_env_p,
-                                                            record.name_p);
-  ecma_property_t *new_property_p;
-  ecma_create_named_data_property (module_p->namespace_object_p,
-                                   export_name_p,
-                                   ECMA_PROPERTY_FIXED,
-                                   &new_property_p);
+  ecma_property_t *property_p = ecma_find_named_property (record.module_p->scope_p, record.name_p);
 
-  ecma_named_data_property_assign_value (module_p->namespace_object_p,
-                                         ECMA_PROPERTY_VALUE_PTR (new_property_p),
-                                         prop_value);
-
-  ecma_free_value (prop_value);
+  ecma_create_named_reference_property (module_p->namespace_object_p,
+                                        export_name_p,
+                                        property_p);
   return result;
 } /* ecma_module_namespace_object_add_export_if_needed */
 
@@ -491,13 +475,23 @@ ecma_module_create_namespace_object (ecma_module_t *module_p) /**< module */
     return result;
   }
 
-  JERRY_ASSERT (module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_EVALUATED);
+  JERRY_ASSERT (module_p->header.u.cls.u1.module_state >= JERRY_MODULE_STATE_LINKED
+                && module_p->header.u.cls.u1.module_state <= JERRY_MODULE_STATE_EVALUATED);
   ecma_module_resolve_set_t *resolve_set_p = NULL;
   ecma_module_resolve_stack_t *stack_p = NULL;
 
-  module_p->namespace_object_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE),
-                                                     0,
-                                                     ECMA_OBJECT_TYPE_GENERAL);
+  ecma_object_t *namespace_object_p = ecma_create_object (NULL,
+                                                          sizeof (ecma_extended_object_t),
+                                                          ECMA_OBJECT_TYPE_CLASS);
+
+  namespace_object_p->type_flags_refs &= (ecma_object_descriptor_t) ~ECMA_OBJECT_FLAG_EXTENSIBLE;
+
+  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) namespace_object_p;
+  ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_MODULE_NAMESPACE;
+  ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.cls.u3.value, module_p);
+
+  module_p->namespace_object_p = namespace_object_p;
+  ecma_deref_object (namespace_object_p);
 
   ecma_module_resolve_stack_push (&stack_p, module_p, ecma_get_magic_string (LIT_MAGIC_STRING_ASTERIX_CHAR));
   while (stack_p != NULL)
@@ -514,13 +508,6 @@ ecma_module_create_namespace_object (ecma_module_t *module_p) /**< module */
     {
       /* Circular import. */
       continue;
-    }
-
-    result = ecma_module_evaluate (current_module_p);
-
-    if (ECMA_IS_VALUE_ERROR (result))
-    {
-      break;
     }
 
     ecma_module_names_t *export_names_p = current_module_p->local_exports_p;
@@ -568,6 +555,11 @@ ecma_module_create_namespace_object (ecma_module_t *module_p) /**< module */
                                       ecma_get_magic_string (LIT_MAGIC_STRING_ASTERIX_CHAR));
 
       star_export_p = star_export_p->next_p;
+    }
+
+    if (ECMA_IS_VALUE_ERROR (result))
+    {
+      break;
     }
   }
 
@@ -659,8 +651,6 @@ ecma_module_connect_imports (ecma_module_t *module_p)
       const bool is_namespace_import = ecma_compare_ecma_string_to_magic_id (import_names_p->imex_name_p,
                                                                              LIT_MAGIC_STRING_ASTERIX_CHAR);
 
-      ecma_value_t prop_value;
-
       if (is_namespace_import)
       {
         result = ecma_module_create_namespace_object (imported_module_p);
@@ -670,8 +660,12 @@ ecma_module_connect_imports (ecma_module_t *module_p)
           return result;
         }
 
-        ecma_ref_object (imported_module_p->namespace_object_p);
-        prop_value = ecma_make_object_value (imported_module_p->namespace_object_p);
+        ecma_property_value_t *value_p;
+        value_p = ecma_create_named_data_property (module_p->scope_p,
+                                                   import_names_p->local_name_p,
+                                                   ECMA_PROPERTY_FLAG_WRITABLE,
+                                                   NULL);
+        value_p->value = ecma_make_object_value (imported_module_p->namespace_object_p);
       }
       else /* !is_namespace_import */
       {
@@ -691,44 +685,26 @@ ecma_module_connect_imports (ecma_module_t *module_p)
         if (record.module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_NATIVE)
         {
           ecma_object_t *object_p = record.module_p->namespace_object_p;
+          ecma_value_t prop_value;
+
           prop_value = ecma_op_object_find_own (ecma_make_object_value (object_p), object_p, record.name_p);
           JERRY_ASSERT (ecma_is_value_found (prop_value));
+
+          ecma_property_value_t *value_p;
+          value_p = ecma_create_named_data_property (module_p->scope_p,
+                                                     import_names_p->local_name_p,
+                                                     ECMA_PROPERTY_FLAG_WRITABLE,
+                                                     NULL);
+          value_p->value = ecma_copy_value_if_not_object (prop_value);
         }
         else
         {
-          result = ecma_module_evaluate (record.module_p);
+          ecma_property_t *property_p = ecma_find_named_property (record.module_p->scope_p, record.name_p);
 
-          if (ECMA_IS_VALUE_ERROR (result))
-          {
-            return result;
-          }
-
-          ecma_object_t *ref_base_lex_env_p;
-          prop_value = ecma_op_get_value_lex_env_base (record.module_p->scope_p,
-                                                       &ref_base_lex_env_p,
-                                                       record.name_p);
-
+          ecma_create_named_reference_property (module_p->scope_p,
+                                                import_names_p->local_name_p,
+                                                property_p);
         }
-      }
-
-      ecma_property_t *prop_p = ecma_op_create_mutable_binding (local_env_p,
-                                                                import_names_p->local_name_p,
-                                                                true /* is_deletable */);
-      JERRY_ASSERT (prop_p != ECMA_PROPERTY_POINTER_ERROR);
-
-      if (prop_p != NULL)
-      {
-        JERRY_ASSERT (ecma_is_value_undefined (ECMA_PROPERTY_VALUE_PTR (prop_p)->value));
-        ECMA_PROPERTY_VALUE_PTR (prop_p)->value = prop_value;
-        ecma_deref_if_object (prop_value);
-      }
-      else
-      {
-        ecma_op_set_mutable_binding (local_env_p,
-                                     import_names_p->local_name_p,
-                                     prop_value,
-                                     false /* is_strict */);
-        ecma_free_value (prop_value);
       }
 
       import_names_p = import_names_p->next_p;
@@ -975,6 +951,20 @@ restart:
       node_p = node_p->next_p;
     }
 
+    if (current_module_p->scope_p == NULL)
+    {
+      /* Initialize scope for handling circular references. */
+      ecma_value_t result = vm_init_module_scope (current_module_p);
+
+      if (ECMA_IS_VALUE_ERROR (result))
+      {
+        module_p->header.u.cls.u1.module_state = JERRY_MODULE_STATE_ERROR;
+        goto error;
+      }
+
+      JERRY_ASSERT (result == ECMA_VALUE_EMPTY);
+    }
+
     if (current_module_p->header.u.cls.u3.dfs_ancestor_index != current_p->dfs_index)
     {
       current_p = current_p->parent_p;
@@ -1079,15 +1069,10 @@ ecma_module_release_module (ecma_module_t *module_p) /**< module */
 
   JERRY_ASSERT (state != JERRY_MODULE_STATE_INVALID);
 
-  if (module_p->namespace_object_p != NULL)
-  {
-    /* The module structure keeps a strong reference to the namespace object, which will require an extra GC call. */
-    JERRY_CONTEXT (ecma_gc_new_objects)++;
-    ecma_deref_object (module_p->namespace_object_p);
 #ifndef JERRY_NDEBUG
-    module_p->namespace_object_p = NULL;
+  module_p->scope_p = NULL;
+  module_p->namespace_object_p = NULL;
 #endif /* JERRY_NDEBUG */
-  }
 
   if (state == JERRY_MODULE_STATE_NATIVE)
   {
@@ -1098,13 +1083,6 @@ ecma_module_release_module (ecma_module_t *module_p) /**< module */
   ecma_module_release_module_names (module_p->local_exports_p);
   ecma_module_release_module_nodes (module_p->indirect_exports_p, false);
   ecma_module_release_module_nodes (module_p->star_exports_p, false);
-
-  if (state >= JERRY_MODULE_STATE_EVALUATING)
-  {
-    /* The module structure keeps a strong reference to the module scope, which will require an extra GC call. */
-    JERRY_CONTEXT (ecma_gc_new_objects)++;
-    ecma_deref_object (module_p->scope_p);
-  }
 
   if (module_p->compiled_code_p != NULL)
   {

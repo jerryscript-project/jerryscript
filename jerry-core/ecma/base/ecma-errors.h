@@ -18,6 +18,8 @@
 #ifndef ECMA_ERRORS_H
 #define ECMA_ERRORS_H
 
+#if JERRY_ERROR_MESSAGES
+
 extern const char * const ecma_error_value_msg_p;
 extern const char * const ecma_error_wrong_args_msg_p;
 
@@ -65,7 +67,13 @@ extern const char * const ecma_error_argument_is_not_an_regexp;
 extern const char * const ecma_error_invalid_array_length;
 extern const char * const ecma_error_local_variable_is_redeclared;
 extern const char * const ecma_error_expected_a_function;
+
+#if JERRY_ESNEXT
 extern const char * const ecma_error_class_constructor_new;
+extern const char * const ecma_error_let_const_not_initialized;
+#endif /* JERRY_ESNEXT */
+
+#endif /* JERRY_ERROR_MESSAGES */
 
 /* snapshot errors */
 extern const char * const ecma_error_maximum_snapshot_size;

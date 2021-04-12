@@ -26,11 +26,22 @@
  * @{
  */
 
+/**
+ * Free option flags
+ */
+typedef enum
+{
+  ECMA_GC_FREE_NO_OPTIONS = 0, /**< no options */
+  ECMA_GC_FREE_SECOND_PROPERTY = (1 << 0), /**< free second property of a property pair */
+  ECMA_GC_FREE_REFERENCES = (1 << 1), /**< free references */
+} ecma_gc_free_options_t;
+
 void ecma_init_gc_info (ecma_object_t *object_p);
 void ecma_ref_object (ecma_object_t *object_p);
 void ecma_ref_object_inline (ecma_object_t *object_p);
 void ecma_deref_object (ecma_object_t *object_p);
-void ecma_gc_free_properties (ecma_object_t *object_p);
+void ecma_gc_free_property (ecma_object_t *object_p, ecma_property_pair_t *prop_pair_p, uint32_t options);
+void ecma_gc_free_properties (ecma_object_t *object_p, uint32_t options);
 void ecma_gc_run (void);
 void ecma_free_unused_memory (jmem_pressure_t pressure);
 

@@ -299,27 +299,22 @@ typedef ecma_value_t (*ecma_native_handler_t) (const struct jerry_call_info_t *c
                                                const uint32_t args_count);
 
 /**
- * Native free callback of an object.
- */
-typedef void (*ecma_object_native_free_callback_t) (void *native_p);
-
-/**
- * Type information of a native pointer.
+ * Representation of native pointer data.
  */
 typedef struct
 {
-  ecma_object_native_free_callback_t free_cb; /**< the free callback of the native pointer */
-} ecma_object_native_info_t;
+  void *native_p; /**< points to the data of the object */
+  jerry_object_native_info_t *info_p; /**< native info */
+} ecma_native_pointer_t;
 
 /**
- * Representation for native pointer data.
+ * Representation of native pointer data chain.
  */
-typedef struct ecma_native_pointer_t
+typedef struct ecma_native_pointer_chain_t
 {
-  void *data_p; /**< points to the data of the object */
-  ecma_object_native_info_t *info_p; /**< native info */
-  struct ecma_native_pointer_t *next_p; /**< points to the next ecma_native_pointer_t element */
-} ecma_native_pointer_t;
+  ecma_native_pointer_t data; /**< pointer data */
+  struct ecma_native_pointer_chain_t *next_p; /**< next in the list */
+} ecma_native_pointer_chain_t;
 
 /**
  * Option bits for ecma_parse_options_t.
@@ -415,7 +410,7 @@ typedef enum
   ECMA_PROPERTY_FLAG_CONFIGURABLE = (1u << 0), /**< property is configurable */
   ECMA_PROPERTY_FLAG_ENUMERABLE = (1u << 1), /**< property is enumerable */
   ECMA_PROPERTY_FLAG_WRITABLE = (1u << 2), /**< property is writable */
-
+  ECMA_PROPERTY_FLAG_SINGLE_EXTERNAL = (1u << 2), /**< only one external pointer is assigned to this object */
   ECMA_PROPERTY_FLAG_DELETED = (1u << 3), /**< property is deleted */
   ECMA_FAST_ARRAY_FLAG = (1u << 3), /**< array is fast array */
   ECMA_PROPERTY_FLAG_LCACHED = (1u << 4), /**< property is lcached */
@@ -1849,7 +1844,7 @@ typedef struct
 typedef struct
 {
   ecma_long_string_t header;
-  ecma_object_native_free_callback_t free_cb; /**< free callback */
+  jerry_value_free_callback_t free_cb; /**< free callback */
 } ecma_external_string_t;
 
 /**
@@ -2101,7 +2096,7 @@ typedef struct
 {
   ecma_extended_object_t extended_object; /**< extended object part */
   void *buffer_p; /**< external buffer pointer */
-  ecma_object_native_free_callback_t free_cb; /**< the free callback for the above buffer pointer */
+  jerry_value_free_callback_t free_cb; /**<  the free callback for the above buffer pointer */
 } ecma_arraybuffer_external_info;
 
 /**

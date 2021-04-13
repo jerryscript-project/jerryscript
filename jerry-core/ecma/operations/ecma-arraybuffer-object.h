@@ -38,7 +38,7 @@ ecma_arraybuffer_new_object (uint32_t lengh);
 ecma_object_t *
 ecma_arraybuffer_new_object_external (uint32_t length,
                                       void *buffer_p,
-                                      ecma_object_native_free_callback_t free_cb);
+                                      jerry_value_free_callback_t free_cb);
 lit_utf8_byte_t * JERRY_ATTR_PURE
 ecma_arraybuffer_get_buffer (ecma_object_t *obj_p);
 uint32_t JERRY_ATTR_PURE

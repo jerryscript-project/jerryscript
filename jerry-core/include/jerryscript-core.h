@@ -190,9 +190,9 @@ jerry_value_t jerry_create_string_sz_from_utf8 (const jerry_char_t *str_p, jerry
 jerry_value_t jerry_create_string (const jerry_char_t *str_p);
 jerry_value_t jerry_create_string_sz (const jerry_char_t *str_p, jerry_size_t str_size);
 jerry_value_t jerry_create_external_string (const jerry_char_t *str_p,
-                                            jerry_object_native_free_callback_t free_cb);
+                                            jerry_value_free_callback_t free_cb);
 jerry_value_t jerry_create_external_string_sz (const jerry_char_t *str_p, jerry_size_t str_size,
-                                               jerry_object_native_free_callback_t free_cb);
+                                               jerry_value_free_callback_t free_cb);
 jerry_value_t jerry_create_symbol (const jerry_value_t value);
 jerry_value_t jerry_create_bigint (const uint64_t *digits_p, uint32_t size, bool sign);
 jerry_value_t jerry_create_undefined (void);
@@ -351,7 +351,7 @@ bool jerry_value_is_arraybuffer (const jerry_value_t value);
 jerry_value_t jerry_create_arraybuffer (const jerry_length_t size);
 jerry_value_t jerry_create_arraybuffer_external (const jerry_length_t size,
                                                  uint8_t *buffer_p,
-                                                 jerry_object_native_free_callback_t free_cb);
+                                                 jerry_value_free_callback_t free_cb);
 jerry_length_t jerry_arraybuffer_write (const jerry_value_t value,
                                         jerry_length_t offset,
                                         const uint8_t *buf_p,

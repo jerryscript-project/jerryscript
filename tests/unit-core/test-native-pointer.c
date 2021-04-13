@@ -22,9 +22,11 @@ static void *global_p = (void *) &global_int;
 static int global_counter = 0;
 
 static void
-native_free_callback (void *native_p) /**< native pointer */
+native_free_callback (void *native_p, /**< native pointer */
+                      jerry_object_native_info_t *info_p) /**< native info */
 {
   (void) native_p;
+  TEST_ASSERT (info_p->free_cb == native_free_callback);
   global_counter++;
 } /* native_free_callback */
 

@@ -23,7 +23,8 @@
  *
  * Called if/when the I2C object is GC'ed.
  */
-void NAME_FOR_CLASS_NATIVE_DESTRUCTOR(I2C) (void *void_ptr) {
+void NAME_FOR_CLASS_NATIVE_DESTRUCTOR(I2C) (void *void_ptr, jerry_object_native_info_t *info_p) {
+    (void) info_p;
     delete static_cast<I2C*>(void_ptr);
 }
 

@@ -455,7 +455,7 @@ ecma_new_ecma_string_from_utf8_converted_to_cesu8 (const lit_utf8_byte_t *string
 ecma_string_t *
 ecma_new_ecma_external_string_from_cesu8 (const lit_utf8_byte_t *string_p, /**< cesu-8 string */
                                           lit_utf8_size_t string_size, /**< string size */
-                                          ecma_object_native_free_callback_t free_cb) /**< free callback */
+                                          jerry_value_free_callback_t free_cb) /**< free callback */
 {
   JERRY_ASSERT (string_p != NULL || string_size == 0);
   JERRY_ASSERT (lit_is_valid_cesu8_string (string_p, string_size));

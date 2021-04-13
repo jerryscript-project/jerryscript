@@ -56,8 +56,35 @@ ecma_create_native_pointer_property (ecma_object_t *obj_p, /**< object to create
     ecma_property_value_t *value_p;
     ECMA_CREATE_INTERNAL_PROPERTY (obj_p, name_p, property_p, value_p);
 
-    native_pointer_p = jmem_heap_alloc_block (sizeof (ecma_native_pointer_t));
+    native_pointer_p = (ecma_native_pointer_t *) jmem_heap_alloc_block (sizeof (ecma_native_pointer_t));
     ECMA_SET_INTERNAL_VALUE_POINTER (value_p->value, native_pointer_p);
+
+    *property_p |= ECMA_PROPERTY_FLAG_SINGLE_EXTERNAL;
+  }
+  else if (*property_p & ECMA_PROPERTY_FLAG_SINGLE_EXTERNAL)
+  {
+    ecma_property_value_t *value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+
+    native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t, value_p->value);
+
+    if (native_pointer_p->info_p == info_p)
+    {
+      native_pointer_p->native_p = native_p;
+      return false;
+    }
+
+    ecma_native_pointer_chain_t *item_p;
+    item_p = (ecma_native_pointer_chain_t *) jmem_heap_alloc_block (sizeof (ecma_native_pointer_chain_t));
+    item_p->data = *native_pointer_p;
+
+    jmem_heap_free_block (native_pointer_p, sizeof (ecma_native_pointer_t));
+
+    item_p->next_p = (ecma_native_pointer_chain_t *) jmem_heap_alloc_block (sizeof (ecma_native_pointer_chain_t));
+    item_p->next_p->next_p = NULL;
+
+    native_pointer_p = &item_p->next_p->data;
+    *property_p &= (ecma_property_t) ~ECMA_PROPERTY_FLAG_SINGLE_EXTERNAL;
+    ECMA_SET_INTERNAL_VALUE_POINTER (value_p->value, item_p);
   }
   else
   {
@@ -65,42 +92,48 @@ ecma_create_native_pointer_property (ecma_object_t *obj_p, /**< object to create
 
     if (value_p->value == JMEM_CP_NULL)
     {
-      native_pointer_p = jmem_heap_alloc_block (sizeof (ecma_native_pointer_t));
+      native_pointer_p = (ecma_native_pointer_t *) jmem_heap_alloc_block (sizeof (ecma_native_pointer_t));
       ECMA_SET_INTERNAL_VALUE_POINTER (value_p->value, native_pointer_p);
+
+      *property_p |= ECMA_PROPERTY_FLAG_SINGLE_EXTERNAL;
     }
     else
     {
-      ecma_native_pointer_t *iter_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t, value_p->value);
+      ecma_native_pointer_chain_t *item_p;
+      item_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_chain_t, value_p->value);
 
-      /* There should be at least 1 native pointer in the chain */
-      JERRY_ASSERT (iter_p != NULL);
+      /* There should be at least 2 native pointers in the chain */
+      JERRY_ASSERT (item_p != NULL && item_p->next_p != NULL);
 
       while (true)
       {
-        if (iter_p->info_p == info_p)
+        if (item_p->data.info_p == info_p)
         {
           /* The native info already exists -> update the corresponding data */
-          iter_p->data_p = native_p;
+          item_p->data.native_p = native_p;
           return false;
         }
 
-        if (iter_p->next_p == NULL)
+        if (item_p->next_p == NULL)
         {
           /* The native info does not exist -> append a new element to the chain */
           break;
         }
 
-        iter_p = iter_p->next_p;
+        item_p = item_p->next_p;
       }
 
-      native_pointer_p = jmem_heap_alloc_block (sizeof (ecma_native_pointer_t));
-      iter_p->next_p = native_pointer_p;
+      ecma_native_pointer_chain_t *new_item_p;
+
+      new_item_p = (ecma_native_pointer_chain_t *) jmem_heap_alloc_block (sizeof (ecma_native_pointer_chain_t));
+      item_p->next_p = new_item_p;
+
+      native_pointer_p = &new_item_p->data;
     }
   }
 
-  native_pointer_p->data_p = native_p;
+  native_pointer_p->native_p = native_p;
   native_pointer_p->info_p = info_p;
-  native_pointer_p->next_p = NULL;
 
   return is_new;
 } /* ecma_create_native_pointer_property */
@@ -135,25 +168,40 @@ ecma_get_native_pointer_value (ecma_object_t *obj_p, /**< object to get property
 
   ecma_property_value_t *value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
 
-  if (value_p->value == JMEM_CP_NULL)
+  if (JERRY_LIKELY (*property_p & ECMA_PROPERTY_FLAG_SINGLE_EXTERNAL))
   {
-    return NULL;
-  }
+    ecma_native_pointer_t *native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t,
+                                                                               value_p->value);
 
-  ecma_native_pointer_t *native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t,
-                                                                             value_p->value);
-  JERRY_ASSERT (native_pointer_p != NULL);
-
-  do
-  {
     if (native_pointer_p->info_p == info_p)
     {
       return native_pointer_p;
     }
 
-    native_pointer_p = native_pointer_p->next_p;
+    return NULL;
   }
-  while (native_pointer_p != NULL);
+
+  if (value_p->value == JMEM_CP_NULL)
+  {
+    return NULL;
+  }
+
+  ecma_native_pointer_chain_t *item_p;
+  item_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_chain_t, value_p->value);
+
+  /* There should be at least 2 native pointers in the chain */
+  JERRY_ASSERT (item_p != NULL && item_p->next_p != NULL);
+
+  do
+  {
+    if (item_p->data.info_p == info_p)
+    {
+      return &item_p->data;
+    }
+
+    item_p = item_p->next_p;
+  }
+  while (item_p != NULL);
 
   return NULL;
 } /* ecma_get_native_pointer_value */
@@ -188,40 +236,75 @@ ecma_delete_native_pointer_property (ecma_object_t *obj_p, /**< object to delete
 
   ecma_property_value_t *value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
 
+  if (JERRY_LIKELY (*property_p & ECMA_PROPERTY_FLAG_SINGLE_EXTERNAL))
+  {
+    ecma_native_pointer_t *native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t,
+                                                                               value_p->value);
+
+    if (native_pointer_p->info_p != info_p)
+    {
+      return false;
+    }
+
+    value_p->value = JMEM_CP_NULL;
+    *property_p &= (ecma_property_t) ~ECMA_PROPERTY_FLAG_SINGLE_EXTERNAL;
+    jmem_heap_free_block (native_pointer_p, sizeof (ecma_native_pointer_t));
+    return true;
+  }
+
   if (value_p->value == JMEM_CP_NULL)
   {
     return false;
   }
 
-  ecma_native_pointer_t *native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t,
-                                                                             value_p->value);
-  JERRY_ASSERT (native_pointer_p != NULL);
+  ecma_native_pointer_chain_t *first_p;
+  first_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_chain_t, value_p->value);
 
-  ecma_native_pointer_t *prev_p = NULL;
+  /* There should be at least 2 native pointers in the chain */
+  JERRY_ASSERT (first_p != NULL && first_p->next_p != NULL);
+
+  ecma_native_pointer_chain_t *item_p = first_p;
+  ecma_native_pointer_chain_t *prev_p = NULL;
 
   do
   {
-    if (native_pointer_p->info_p == info_p)
+    if (item_p->data.info_p == info_p)
     {
       if (prev_p == NULL)
       {
         /* The first element is deleted from the chain: change the property value. */
-        ECMA_SET_INTERNAL_VALUE_ANY_POINTER (value_p->value, native_pointer_p->next_p);
+        first_p = item_p->next_p;
+        ECMA_SET_INTERNAL_VALUE_POINTER (value_p->value, first_p);
       }
       else
       {
         /* A non-first element is deleted from the chain: update the previous pointer. */
-        prev_p->next_p = native_pointer_p->next_p;
+        prev_p->next_p = item_p->next_p;
       }
 
-      jmem_heap_free_block (native_pointer_p, sizeof (ecma_native_pointer_t));
+      jmem_heap_free_block (item_p, sizeof (ecma_native_pointer_chain_t));
+
+      if (first_p->next_p != NULL)
+      {
+        return true;
+      }
+
+      /* Only one item remained. */
+      ecma_native_pointer_t *native_pointer_p;
+      native_pointer_p = (ecma_native_pointer_t *) jmem_heap_alloc_block (sizeof (ecma_native_pointer_t));
+      *native_pointer_p = first_p->data;
+
+      jmem_heap_free_block (first_p, sizeof (ecma_native_pointer_chain_t));
+
+      ECMA_SET_INTERNAL_VALUE_POINTER (value_p->value, native_pointer_p);
+      *property_p |= ECMA_PROPERTY_FLAG_SINGLE_EXTERNAL;
       return true;
     }
 
-    prev_p = native_pointer_p;
-    native_pointer_p = native_pointer_p->next_p;
+    prev_p = item_p;
+    item_p = item_p->next_p;
   }
-  while (native_pointer_p != NULL);
+  while (item_p != NULL);
 
   return false;
 } /* ecma_delete_native_pointer_property */

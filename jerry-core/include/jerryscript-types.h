@@ -278,9 +278,19 @@ typedef jerry_value_t (*jerry_external_handler_t) (const jerry_call_info_t *call
                                                    const jerry_length_t args_count);
 
 /**
+ * Native free callback of generic value types.
+ */
+typedef void (*jerry_value_free_callback_t) (void *native_p);
+
+/**
+ * Forward definition of jerry_object_native_info_t.
+ */
+struct jerry_object_native_info_t;
+
+/**
  * Native free callback of an object.
  */
-typedef void (*jerry_object_native_free_callback_t) (void *native_p);
+typedef void (*jerry_object_native_free_callback_t) (void *native_p, struct jerry_object_native_info_t *info_p);
 
 /**
  * Decorator callback for Error objects. The decorator can create
@@ -374,7 +384,7 @@ typedef void *(*jerry_context_alloc_t) (size_t size, void *cb_data_p);
 /**
  * Type information of a native pointer.
  */
-typedef struct
+typedef struct jerry_object_native_info_t
 {
   jerry_object_native_free_callback_t free_cb; /**< the free callback of the native pointer */
 } jerry_object_native_info_t;

@@ -351,7 +351,7 @@ ecma_builtin_global_object_encode_uri_helper (lit_utf8_byte_t *input_start_p, /*
 
   while (input_char_p < input_end_p)
   {
-    input_char_p += lit_read_code_unit_from_utf8 (input_char_p, &ch);
+    input_char_p += lit_read_code_unit_from_cesu8 (input_char_p, &ch);
 
     if (lit_is_code_point_utf16_low_surrogate (ch))
     {
@@ -370,7 +370,7 @@ ecma_builtin_global_object_encode_uri_helper (lit_utf8_byte_t *input_start_p, /*
       }
 
       ecma_char_t next_ch;
-      lit_utf8_size_t read_size = lit_read_code_unit_from_utf8 (input_char_p, &next_ch);
+      lit_utf8_size_t read_size = lit_read_code_unit_from_cesu8 (input_char_p, &next_ch);
 
       if (lit_is_code_point_utf16_low_surrogate (next_ch))
       {

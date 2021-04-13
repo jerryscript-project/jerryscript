@@ -445,7 +445,7 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
   if ((parse_opts & JERRY_PARSE_MODULE) != 0)
   {
 #if JERRY_MODULE_SYSTEM
-    ecma_module_initialize_context ();
+    JERRY_CONTEXT (module_current_p) = ecma_module_create ();
 #else /* !JERRY_MODULE_SYSTEM */
     return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG (ecma_error_module_not_supported_p)));
 #endif /* JERRY_MODULE_SYSTEM */
@@ -474,7 +474,7 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
   if (JERRY_UNLIKELY (parse_opts & JERRY_PARSE_MODULE))
   {
     ecma_module_t *module_p = JERRY_CONTEXT (module_current_p);
-    module_p->compiled_code_p = bytecode_data_p;
+    module_p->u.compiled_code_p = bytecode_data_p;
 
     JERRY_CONTEXT (module_current_p) = NULL;
 
@@ -844,7 +844,7 @@ jerry_module_get_request (const jerry_value_t module_val, /**< module */
  *      returned value must be freed with jerry_release_value, when it is no longer needed.
  *
  * @return object - if namespace object is available,
- *                  error - otherwise
+ *         error - otherwise
  */
 jerry_value_t
 jerry_module_get_namespace (const jerry_value_t module_val) /**< module */
@@ -878,6 +878,221 @@ jerry_module_get_namespace (const jerry_value_t module_val) /**< module */
   return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_module_not_supported_p)));
 #endif /* JERRY_MODULE_SYSTEM */
 } /* jerry_module_get_namespace */
+
+/**
+ * Creates a native module with a list of exports. The initial state of the module is linked.
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return native module - if the module is successfully created,
+ *         error - otherwise
+ */
+jerry_value_t
+jerry_native_module_create (jerry_native_module_evaluate_callback_t callback, /**< evaluation callback for
+                                                                               *   native modules */
+                            const jerry_value_t * const exports_p, /**< list of the exported bindings of the module,
+                                                                    *   must be valid string identifiers */
+                            size_t number_of_exports) /**< number of exports in the exports_p list */
+{
+  jerry_assert_api_available ();
+
+#if JERRY_MODULE_SYSTEM
+  ecma_object_t *global_object_p = ecma_builtin_get_global ();
+  ecma_object_t *scope_p = ecma_create_decl_lex_env (ecma_get_global_environment (global_object_p));
+  ecma_module_names_t *local_exports_p = NULL;
+
+  for (size_t i = 0; i < number_of_exports; i++)
+  {
+    if (!ecma_is_value_string (exports_p[i]))
+    {
+      ecma_deref_object (scope_p);
+      ecma_module_release_module_names (local_exports_p);
+      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Module exports must be string values")));
+    }
+
+    ecma_string_t *name_str_p = ecma_get_string_from_value (exports_p[i]);
+
+    bool valid_identifier = false;
+
+    ECMA_STRING_TO_UTF8_STRING (name_str_p, name_start_p, name_size);
+
+    if (name_size > 0)
+    {
+      const lit_utf8_byte_t *name_p = name_start_p;
+      const lit_utf8_byte_t *name_end_p = name_start_p + name_size;
+      lit_code_point_t code_point;
+
+      lit_utf8_size_t size = lit_read_code_point_from_cesu8 (name_p, name_end_p, &code_point);
+
+      if (lit_code_point_is_identifier_start (code_point))
+      {
+        name_p += size;
+
+        valid_identifier = true;
+
+        while (name_p < name_end_p)
+        {
+          size = lit_read_code_point_from_cesu8 (name_p, name_end_p, &code_point);
+
+          if (!lit_code_point_is_identifier_part (code_point))
+          {
+            valid_identifier = false;
+            break;
+          }
+
+          name_p += size;
+        }
+      }
+    }
+
+    ECMA_FINALIZE_UTF8_STRING (name_start_p, name_size);
+
+    if (!valid_identifier)
+    {
+      ecma_deref_object (scope_p);
+      ecma_module_release_module_names (local_exports_p);
+      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Module exports must be valid identifiers")));
+    }
+
+    if (ecma_find_named_property (scope_p, name_str_p) != NULL)
+    {
+      continue;
+    }
+
+    ecma_create_named_data_property (scope_p, name_str_p, ECMA_PROPERTY_FLAG_WRITABLE, NULL);
+
+    ecma_module_names_t *new_export_p;
+    new_export_p = (ecma_module_names_t *) jmem_heap_alloc_block (sizeof (ecma_module_names_t));
+
+    new_export_p->next_p = local_exports_p;
+    local_exports_p = new_export_p;
+
+    ecma_ref_ecma_string (name_str_p);
+    new_export_p->imex_name_p = name_str_p;
+
+    ecma_ref_ecma_string (name_str_p);
+    new_export_p->local_name_p = name_str_p;
+  }
+
+  ecma_module_t *module_p = ecma_module_create ();
+
+  module_p->header.u.cls.u1.module_state = JERRY_MODULE_STATE_LINKED;
+  module_p->header.u.cls.u2.module_flags |= ECMA_MODULE_IS_NATIVE;
+  module_p->scope_p = scope_p;
+  module_p->local_exports_p = local_exports_p;
+  module_p->u.callback = callback;
+
+  ecma_deref_object (scope_p);
+
+  return ecma_make_object_value (&module_p->header.object);
+
+#else /* !JERRY_MODULE_SYSTEM */
+  JERRY_UNUSED (callback);
+  JERRY_UNUSED (exports_p);
+  JERRY_UNUSED (number_of_exports);
+
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_module_not_supported_p)));
+#endif /* JERRY_MODULE_SYSTEM */
+} /* jerry_native_module_create */
+
+/**
+ * Gets the value of an export which belongs to a native module.
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return value of the export - if success
+ *         error - otherwise
+ */
+jerry_value_t
+jerry_native_module_get_export (const jerry_value_t native_module_val, /**< a native module object */
+                                const jerry_value_t export_name_val) /**< string identifier of the export */
+{
+  jerry_assert_api_available ();
+
+#if JERRY_MODULE_SYSTEM
+  ecma_module_t *module_p = ecma_module_get_resolved_module (native_module_val);
+
+  if (module_p == NULL)
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_not_module_p)));
+  }
+
+  if (!(module_p->header.u.cls.u2.module_flags & ECMA_MODULE_IS_NATIVE)
+      || !ecma_is_value_string (export_name_val))
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+  }
+
+  ecma_property_t *property_p = ecma_find_named_property (module_p->scope_p,
+                                                          ecma_get_string_from_value (export_name_val));
+
+  if (property_p == NULL)
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_unknown_export_p)));
+  }
+
+  return ecma_copy_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
+#else /* !JERRY_MODULE_SYSTEM */
+  JERRY_UNUSED (native_module_val);
+  JERRY_UNUSED (export_name_val);
+
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_module_not_supported_p)));
+#endif /* JERRY_MODULE_SYSTEM */
+} /* jerry_native_module_get_export */
+
+/**
+ * Sets the value of an export which belongs to a native module.
+ *
+ * Note:
+ *      returned value must be freed with jerry_release_value, when it is no longer needed.
+ *
+ * @return true value - if the operation was successful
+ *         error - otherwise
+ */
+jerry_value_t
+jerry_native_module_set_export (const jerry_value_t native_module_val, /**< a native module object */
+                                const jerry_value_t export_name_val, /**< string identifier of the export */
+                                const jerry_value_t value_to_set) /**< new value of the export */
+{
+  jerry_assert_api_available ();
+
+#if JERRY_MODULE_SYSTEM
+  ecma_module_t *module_p = ecma_module_get_resolved_module (native_module_val);
+
+  if (module_p == NULL)
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_not_module_p)));
+  }
+
+  if (!(module_p->header.u.cls.u2.module_flags & ECMA_MODULE_IS_NATIVE)
+      || !ecma_is_value_string (export_name_val)
+      || ecma_is_value_error_reference (value_to_set))
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+  }
+
+  ecma_property_t *property_p = ecma_find_named_property (module_p->scope_p,
+                                                          ecma_get_string_from_value (export_name_val));
+
+  if (property_p == NULL)
+  {
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_unknown_export_p)));
+  }
+
+  ecma_named_data_property_assign_value (module_p->scope_p,
+                                         ECMA_PROPERTY_VALUE_PTR (property_p),
+                                         value_to_set);
+  return ECMA_VALUE_TRUE;
+#else /* !JERRY_MODULE_SYSTEM */
+  JERRY_UNUSED (native_module_val);
+  JERRY_UNUSED (export_name_val);
+  JERRY_UNUSED (value_to_set);
+
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_module_not_supported_p)));
+#endif /* JERRY_MODULE_SYSTEM */
+} /* jerry_native_module_set_export */
 
 /**
  * Run enqueued Promise jobs until the first thrown error or until all get executed.

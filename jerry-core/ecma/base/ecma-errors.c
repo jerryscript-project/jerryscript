@@ -81,6 +81,11 @@ const char * const ecma_error_bigint_not_supported_p = "BigInt support is disabl
  * Error message, if argument is not a module
  */
 const char * const ecma_error_not_module_p = "Argument is not a module";
+
+/**
+ * Error message, if a native module export is not found
+ */
+const char * const ecma_error_unknown_export_p = "Native module export not found";
 #else /* !JERRY_MODULE_SYSTEM */
 /**
  * Error message, if Module support is disabled

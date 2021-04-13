@@ -30,9 +30,11 @@
 
 /**
  * Initialize context variables for the root module.
+ *
+ * @return new module
  */
-void
-ecma_module_initialize_context (void)
+ecma_module_t *
+ecma_module_create (void)
 {
   JERRY_ASSERT (JERRY_CONTEXT (module_current_p) == NULL);
 
@@ -41,19 +43,20 @@ ecma_module_initialize_context (void)
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
   ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_MODULE;
   ext_object_p->u.cls.u1.module_state = JERRY_MODULE_STATE_UNLINKED;
+  ext_object_p->u.cls.u2.module_flags = 0;
 
   ecma_module_t *module_p = (ecma_module_t *) obj_p;
 
+  module_p->scope_p = NULL;
+  module_p->namespace_object_p = NULL;
   module_p->imports_p = NULL;
   module_p->local_exports_p = NULL;
   module_p->indirect_exports_p = NULL;
   module_p->star_exports_p = NULL;
-  module_p->compiled_code_p = NULL;
-  module_p->scope_p = NULL;
-  module_p->namespace_object_p = NULL;
+  module_p->u.compiled_code_p = NULL;
 
-  JERRY_CONTEXT (module_current_p) = module_p;
-} /* ecma_module_initialize_context */
+  return module_p;
+} /* ecma_module_create */
 
 /**
  * cleanup context variables for the root module.
@@ -219,30 +222,6 @@ ecma_module_resolve_export (ecma_module_t *const module_p, /**< base module */
         continue;
       }
 
-      if (current_module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_NATIVE)
-      {
-        ecma_object_t *object_p = current_module_p->namespace_object_p;
-        ecma_value_t prop_value = ecma_op_object_find_own (ecma_make_object_value (object_p),
-                                                           object_p,
-                                                           current_export_name_p);
-        if (ecma_is_value_found (prop_value))
-        {
-          found = true;
-          found_record.module_p = current_module_p;
-          found_record.name_p = current_export_name_p;
-          ecma_free_value (prop_value);
-        }
-
-        if (ecma_compare_ecma_string_to_magic_id (current_export_name_p, LIT_MAGIC_STRING_DEFAULT))
-        {
-          ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("No default export in native module"));
-          break;
-        }
-
-        ecma_module_resolve_stack_pop (&stack_p);
-        continue;
-      }
-
       if (current_module_p->local_exports_p != NULL)
       {
         /* 15.2.1.16.3 / 4 */
@@ -398,20 +377,40 @@ ecma_module_evaluate (ecma_module_t *module_p) /**< module */
   module_p->header.u.cls.u1.module_state = JERRY_MODULE_STATE_EVALUATING;
 
   ecma_value_t ret_value;
-  ret_value = vm_run_module (module_p);
+
+  if (module_p->header.u.cls.u2.module_flags & ECMA_MODULE_IS_NATIVE)
+  {
+    ret_value = ECMA_VALUE_UNDEFINED;
+
+    if (module_p->u.callback)
+    {
+      ret_value = module_p->u.callback (ecma_make_object_value (&module_p->header.object));
+
+      if (JERRY_UNLIKELY (ecma_is_value_error_reference (ret_value)))
+      {
+        ecma_raise_error_from_error_reference (ret_value);
+        ret_value = ECMA_VALUE_ERROR;
+      }
+    }
+  }
+  else
+  {
+    ret_value = vm_run_module (module_p);
+  }
 
   module_p->header.u.cls.u1.module_state = JERRY_MODULE_STATE_ERROR;
 
   if (!ECMA_IS_VALUE_ERROR (ret_value))
   {
-    ecma_free_value (ret_value);
     module_p->header.u.cls.u1.module_state = JERRY_MODULE_STATE_EVALUATED;
-    ret_value = ECMA_VALUE_EMPTY;
   }
 
-  ecma_bytecode_deref (module_p->compiled_code_p);
-  module_p->compiled_code_p = NULL;
+  if (!(module_p->header.u.cls.u2.module_flags & ECMA_MODULE_IS_NATIVE))
+  {
+    ecma_bytecode_deref (module_p->u.compiled_code_p);
+  }
 
+  module_p->u.compiled_code_p = NULL;
   return ret_value;
 } /* ecma_module_evaluate */
 
@@ -646,6 +645,8 @@ ecma_module_connect_imports (ecma_module_t *module_p)
       return result;
     }
 
+    ecma_free_value (result);
+
     while (import_names_p != NULL)
     {
       const bool is_namespace_import = ecma_compare_ecma_string_to_magic_id (import_names_p->imex_name_p,
@@ -682,29 +683,11 @@ ecma_module_connect_imports (ecma_module_t *module_p)
           return ecma_raise_syntax_error (ECMA_ERR_MSG ("Ambiguous import request"));
         }
 
-        if (record.module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_NATIVE)
-        {
-          ecma_object_t *object_p = record.module_p->namespace_object_p;
-          ecma_value_t prop_value;
+        ecma_property_t *property_p = ecma_find_named_property (record.module_p->scope_p, record.name_p);
 
-          prop_value = ecma_op_object_find_own (ecma_make_object_value (object_p), object_p, record.name_p);
-          JERRY_ASSERT (ecma_is_value_found (prop_value));
-
-          ecma_property_value_t *value_p;
-          value_p = ecma_create_named_data_property (module_p->scope_p,
-                                                     import_names_p->local_name_p,
-                                                     ECMA_PROPERTY_FLAG_WRITABLE,
-                                                     NULL);
-          value_p->value = ecma_copy_value_if_not_object (prop_value);
-        }
-        else
-        {
-          ecma_property_t *property_p = ecma_find_named_property (record.module_p->scope_p, record.name_p);
-
-          ecma_create_named_reference_property (module_p->scope_p,
-                                                import_names_p->local_name_p,
-                                                property_p);
-        }
+        ecma_create_named_reference_property (module_p->scope_p,
+                                              import_names_p->local_name_p,
+                                              property_p);
       }
 
       import_names_p = import_names_p->next_p;
@@ -1074,21 +1057,22 @@ ecma_module_release_module (ecma_module_t *module_p) /**< module */
   module_p->namespace_object_p = NULL;
 #endif /* JERRY_NDEBUG */
 
-  if (state == JERRY_MODULE_STATE_NATIVE)
+  ecma_module_release_module_names (module_p->local_exports_p);
+
+  if (module_p->header.u.cls.u2.module_flags & ECMA_MODULE_IS_NATIVE)
   {
     return;
   }
 
   ecma_module_release_module_nodes (module_p->imports_p, true);
-  ecma_module_release_module_names (module_p->local_exports_p);
   ecma_module_release_module_nodes (module_p->indirect_exports_p, false);
   ecma_module_release_module_nodes (module_p->star_exports_p, false);
 
-  if (module_p->compiled_code_p != NULL)
+  if (module_p->u.compiled_code_p != NULL)
   {
-    ecma_bytecode_deref (module_p->compiled_code_p);
+    ecma_bytecode_deref (module_p->u.compiled_code_p);
 #ifndef JERRY_NDEBUG
-    module_p->compiled_code_p = NULL;
+    module_p->u.compiled_code_p = NULL;
 #endif /* JERRY_NDEBUG */
   }
 } /* ecma_module_release_module */

@@ -40,6 +40,11 @@ static const jerry_object_native_info_t native_info_2 =
   .free_cb = NULL,
 };
 
+static const jerry_object_native_info_t native_info_3 =
+{
+  .free_cb = NULL,
+};
+
 static void
 check_native_info (jerry_value_t object_value, /**< object value */
                    const jerry_object_native_info_t *native_info_p, /**< native info */
@@ -110,6 +115,39 @@ main (void)
 
   TEST_ASSERT (!jerry_get_object_native_pointer (object_value, NULL, &native_info_1));
   TEST_ASSERT (!jerry_get_object_native_pointer (object_value, NULL, &native_info_2));
+
+  jerry_set_object_native_pointer (object_value, global_p, &native_info_1);
+  jerry_set_object_native_pointer (object_value, NULL, &native_info_2);
+  jerry_set_object_native_pointer (object_value, global_p, &native_info_3);
+
+  check_native_info (object_value, &native_info_1, global_p);
+  check_native_info (object_value, &native_info_2, NULL);
+  check_native_info (object_value, &native_info_3, global_p);
+
+  TEST_ASSERT (jerry_delete_object_native_pointer (object_value, &native_info_1));
+  TEST_ASSERT (jerry_delete_object_native_pointer (object_value, &native_info_2));
+  TEST_ASSERT (jerry_delete_object_native_pointer (object_value, &native_info_3));
+
+  TEST_ASSERT (!jerry_get_object_native_pointer (object_value, NULL, &native_info_1));
+  TEST_ASSERT (!jerry_get_object_native_pointer (object_value, NULL, &native_info_2));
+  TEST_ASSERT (!jerry_get_object_native_pointer (object_value, NULL, &native_info_3));
+
+  jerry_set_object_native_pointer (object_value, NULL, &native_info_1);
+  jerry_set_object_native_pointer (object_value, global_p, &native_info_2);
+  jerry_set_object_native_pointer (object_value, NULL, &native_info_3);
+
+  check_native_info (object_value, &native_info_1, NULL);
+  check_native_info (object_value, &native_info_2, global_p);
+  check_native_info (object_value, &native_info_3, NULL);
+
+  /* Reversed delete order. */
+  TEST_ASSERT (jerry_delete_object_native_pointer (object_value, &native_info_3));
+  TEST_ASSERT (jerry_delete_object_native_pointer (object_value, &native_info_2));
+  TEST_ASSERT (jerry_delete_object_native_pointer (object_value, &native_info_1));
+
+  TEST_ASSERT (!jerry_get_object_native_pointer (object_value, NULL, &native_info_1));
+  TEST_ASSERT (!jerry_get_object_native_pointer (object_value, NULL, &native_info_2));
+  TEST_ASSERT (!jerry_get_object_native_pointer (object_value, NULL, &native_info_3));
 
   jerry_release_value (object_value);
 

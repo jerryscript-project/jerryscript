@@ -127,6 +127,7 @@ ecma_create_native_pointer_property (ecma_object_t *obj_p, /**< object to create
 
       new_item_p = (ecma_native_pointer_chain_t *) jmem_heap_alloc_block (sizeof (ecma_native_pointer_chain_t));
       item_p->next_p = new_item_p;
+      new_item_p->next_p = NULL;
 
       native_pointer_p = &new_item_p->data;
     }

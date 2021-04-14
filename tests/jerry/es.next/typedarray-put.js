@@ -28,7 +28,13 @@ var typedarrays = [
 
 for (let ta of typedarrays) {
   for (let prop_name of [2, 5.1]) {
-    let set_value = 4.2;
+    var set_value = 4.2;
+
+    if (ta.constructor === BigInt64Array || ta.constructor === BigUint64Array)
+    {
+      set_value = 4n;
+    }
+
     (function () {
       "use strict";
       let set_result = ta[prop_name] = set_value;

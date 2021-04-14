@@ -457,10 +457,28 @@ static void test_property_by_index (test_entry_t test_entries[])
     }
 
     jerry_value_t set_undefined = jerry_set_property_by_index (typedarray, 100, jerry_create_number (50));
-    TEST_ASSERT (jerry_value_is_boolean (set_undefined) && !jerry_get_boolean_value (set_undefined));
-    jerry_value_t get_undefined = jerry_get_property_by_index (typedarray, 100);
-    TEST_ASSERT (jerry_value_is_undefined (get_undefined));
 
+    if (type == JERRY_TYPEDARRAY_BIGINT64 || type == JERRY_TYPEDARRAY_BIGUINT64)
+    {
+      TEST_ASSERT (jerry_value_is_error (set_undefined));
+    }
+    else
+    {
+      TEST_ASSERT (jerry_value_is_boolean (set_undefined) && !jerry_get_boolean_value (set_undefined));
+    }
+
+    jerry_value_t get_undefined = jerry_get_property_by_index (typedarray, 100);
+
+    if (type == JERRY_TYPEDARRAY_BIGINT64 || type == JERRY_TYPEDARRAY_BIGUINT64)
+    {
+      TEST_ASSERT (jerry_value_is_error (set_undefined));
+    }
+    else
+    {
+      TEST_ASSERT (jerry_value_is_undefined (get_undefined));
+    }
+
+    TEST_ASSERT (jerry_value_is_undefined (get_undefined));
     jerry_release_value (set_undefined);
     jerry_release_value (get_undefined);
     jerry_release_value (typedarray);

@@ -32,11 +32,11 @@ uint8_t ecma_typedarray_helper_get_shift_size (ecma_typedarray_type_t typedarray
 lit_magic_string_id_t ecma_get_typedarray_magic_string_id (ecma_typedarray_type_t typedarray_id);
 ecma_typedarray_getter_fn_t ecma_get_typedarray_getter_fn (ecma_typedarray_type_t typedarray_id);
 ecma_typedarray_setter_fn_t ecma_get_typedarray_setter_fn (ecma_typedarray_type_t typedarray_id);
-ecma_value_t ecma_get_typedarray_element (lit_utf8_byte_t *src_p,
-                                          ecma_typedarray_type_t typedarray_id);
-ecma_value_t ecma_set_typedarray_element (lit_utf8_byte_t *dst_p,
+ecma_value_t ecma_get_typedarray_element (ecma_typedarray_info_t *info_p,
+                                          ecma_number_t num);
+ecma_value_t ecma_set_typedarray_element (ecma_typedarray_info_t *info_p,
                                           ecma_value_t value,
-                                          ecma_typedarray_type_t typedarray_id);
+                                          ecma_number_t num);
 bool ecma_typedarray_helper_is_typedarray (ecma_builtin_id_t builtin_id);
 ecma_typedarray_type_t ecma_get_typedarray_id (ecma_object_t *obj_p);
 ecma_builtin_id_t ecma_typedarray_helper_get_prototype_id (ecma_typedarray_type_t typedarray_id);

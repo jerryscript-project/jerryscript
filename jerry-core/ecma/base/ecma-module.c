@@ -936,12 +936,14 @@ restart:
 
     if (current_module_p->scope_p == NULL)
     {
+      JERRY_ASSERT (!(current_module_p->header.u.cls.u2.module_flags & ECMA_MODULE_IS_NATIVE));
+
       /* Initialize scope for handling circular references. */
       ecma_value_t result = vm_init_module_scope (current_module_p);
 
       if (ECMA_IS_VALUE_ERROR (result))
       {
-        module_p->header.u.cls.u1.module_state = JERRY_MODULE_STATE_ERROR;
+        current_module_p->header.u.cls.u1.module_state = JERRY_MODULE_STATE_ERROR;
         goto error;
       }
 

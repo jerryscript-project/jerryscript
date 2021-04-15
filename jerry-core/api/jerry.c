@@ -977,7 +977,6 @@ jerry_native_module_create (jerry_native_module_evaluate_callback_t callback, /*
 
   ecma_module_t *module_p = ecma_module_create ();
 
-  module_p->header.u.cls.u1.module_state = JERRY_MODULE_STATE_LINKED;
   module_p->header.u.cls.u2.module_flags |= ECMA_MODULE_IS_NATIVE;
   module_p->scope_p = scope_p;
   module_p->local_exports_p = local_exports_p;

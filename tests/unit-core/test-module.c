@@ -379,7 +379,7 @@ main (void)
 
   module = jerry_native_module_create (NULL, NULL, 0);
   TEST_ASSERT (!jerry_value_is_error (module));
-  TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_LINKED);
+  TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_UNLINKED);
 
   result = jerry_native_module_get_export (object, number);
   TEST_ASSERT (jerry_value_is_error (result));
@@ -396,7 +396,11 @@ main (void)
 
   module = jerry_native_module_create (NULL, &export, 1);
   TEST_ASSERT (!jerry_value_is_error (module));
-  TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_LINKED);
+  TEST_ASSERT (jerry_module_get_state (module) == JERRY_MODULE_STATE_UNLINKED);
+
+  result = jerry_module_link (module, NULL, NULL);
+  TEST_ASSERT (jerry_value_is_boolean (result) && jerry_get_boolean_value (result));
+  jerry_release_value (result);
 
   result = jerry_module_evaluate (module);
   TEST_ASSERT (jerry_value_is_undefined (result));

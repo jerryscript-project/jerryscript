@@ -545,9 +545,11 @@ uintptr_t ecma_get_current_stack_usage (void);
 #endif /* (JERRY_STACK_LIMIT != 0) */
 
 /* ecma-helpers-external-pointers.c */
-bool ecma_create_native_pointer_property (ecma_object_t *obj_p, void *native_p, void *info_p);
-ecma_native_pointer_t *ecma_get_native_pointer_value (ecma_object_t *obj_p, void *info_p);
-bool ecma_delete_native_pointer_property (ecma_object_t *obj_p, void *info_p);
+bool ecma_create_native_pointer_property (ecma_object_t *obj_p, void *native_p,
+                                          const jerry_object_native_info_t *native_info_p);
+ecma_native_pointer_t *ecma_get_native_pointer_value (ecma_object_t *obj_p,
+                                                      const jerry_object_native_info_t *native_info_p);
+bool ecma_delete_native_pointer_property (ecma_object_t *obj_p, const jerry_object_native_info_t *native_info_p);
 
 /* ecma-helpers-conversion.c */
 ecma_number_t ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, lit_utf8_size_t str_size,

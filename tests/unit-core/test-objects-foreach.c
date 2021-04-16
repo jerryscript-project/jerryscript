@@ -141,7 +141,9 @@ static void free_test_data (void *native_p, /**< native pointer */
 
 static const jerry_object_native_info_t test_info =
 {
-  .free_cb = free_test_data
+  .free_cb = free_test_data,
+  .number_of_references = 0,
+  .offset_of_references = 0,
 };
 
 static const jerry_char_t strict_equal_source[] = "var x = function(a, b) {return a === b;}; x";

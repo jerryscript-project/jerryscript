@@ -26,7 +26,9 @@ static void native_cb2 (void)
 
 static const jerry_object_native_info_t native_info2 =
 {
-  .free_cb = (jerry_object_native_free_callback_t) native_cb2
+  .free_cb = (jerry_object_native_free_callback_t) native_cb2,
+  .number_of_references = 0,
+  .offset_of_references = 0,
 };
 
 static void native_cb (void)
@@ -40,7 +42,9 @@ static void native_cb (void)
 
 static const jerry_object_native_info_t native_info =
 {
-  .free_cb = (jerry_object_native_free_callback_t) native_cb
+  .free_cb = (jerry_object_native_free_callback_t) native_cb,
+  .number_of_references = 0,
+  .offset_of_references = 0,
 };
 
 static void *

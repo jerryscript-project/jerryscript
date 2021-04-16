@@ -67,12 +67,16 @@ static const jerry_char_t test_source[] = TEST_STRING_LITERAL (
 
 static const jerry_object_native_info_t thing_a_info =
 {
-  .free_cb = NULL
+  .free_cb = NULL,
+  .number_of_references = 0,
+  .offset_of_references = 0,
 };
 
 static const jerry_object_native_info_t thing_b_info =
 {
-  .free_cb = NULL
+  .free_cb = NULL,
+  .number_of_references = 0,
+  .offset_of_references = 0,
 };
 
 typedef struct

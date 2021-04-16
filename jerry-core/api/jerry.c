@@ -756,6 +756,24 @@ jerry_module_get_state (const jerry_value_t module_val) /**< module object */
 } /* jerry_module_get_state */
 
 /**
+ * Sets a callback which is called after a module state is changed to linked, evaluated, or error.
+ */
+void
+jerry_module_set_state_changed_callback (jerry_module_state_changed_callback_t callback, /**< callback */
+                                         void *user_p) /**< pointer passed to the callback */
+{
+  jerry_assert_api_available ();
+
+#if JERRY_MODULE_SYSTEM
+  JERRY_CONTEXT (module_state_changed_callback_p) = callback;
+  JERRY_CONTEXT (module_state_changed_callback_user_p) = user_p;
+#else /* !JERRY_MODULE_SYSTEM */
+  JERRY_UNUSED (callback);
+  JERRY_UNUSED (user_p);
+#endif /* JERRY_MODULE_SYSTEM */
+} /* jerry_module_set_state_changed_callback */
+
+/**
  * Returns the number of import/export requests of a module
  *
  * @return number of import/export requests of a module

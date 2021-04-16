@@ -224,6 +224,43 @@ resolve_callback4 (const jerry_value_t specifier, /**< module specifier */
   return native_module;
 } /* resolve_callback4 */
 
+static void
+module_state_changed (jerry_module_state_t new_state, /**< new state of the module */
+                      const jerry_value_t module_val, /**< a module whose state is changed */
+                      const jerry_value_t value, /**< value argument */
+                      void *user_p) /**< user pointer */
+{
+  TEST_ASSERT (jerry_module_get_state (module_val) == new_state);
+  TEST_ASSERT (module_val == module);
+  TEST_ASSERT (user_p == (void *) &counter);
+
+  ++counter;
+
+  switch (counter)
+  {
+    case 1:
+    case 3:
+    {
+      TEST_ASSERT (new_state == JERRY_MODULE_STATE_LINKED);
+      TEST_ASSERT (jerry_value_is_undefined (value));
+      break;
+    }
+    case 2:
+    {
+      TEST_ASSERT (new_state == JERRY_MODULE_STATE_EVALUATED);
+      TEST_ASSERT (jerry_value_is_number (value) && jerry_get_number_value (value) == 33.5);
+      break;
+    }
+    default:
+    {
+      TEST_ASSERT (counter == 4);
+      TEST_ASSERT (new_state == JERRY_MODULE_STATE_ERROR);
+      TEST_ASSERT (jerry_value_is_number (value) && jerry_get_number_value (value) == -5.5);
+      break;
+    }
+  }
+} /* module_state_changed */
+
 int
 main (void)
 {
@@ -470,6 +507,43 @@ main (void)
 
   jerry_release_value (object);
   jerry_release_value (number);
+
+  counter = 0;
+  jerry_module_set_state_changed_callback (module_state_changed, (void *) &counter);
+
+  jerry_char_t source4[] = TEST_STRING_LITERAL (
+    "33.5\n"
+  );
+  module = jerry_parse (source4, sizeof (source4) - 1, &module_parse_options);
+
+  result = jerry_module_link (module, NULL, NULL);
+  TEST_ASSERT (!jerry_value_is_error (result));
+  jerry_release_value (result);
+
+  result = jerry_module_evaluate (module);
+  TEST_ASSERT (!jerry_value_is_error (result));
+  jerry_release_value (result);
+
+  jerry_release_value (module);
+
+  jerry_char_t source5[] = TEST_STRING_LITERAL (
+    "throw -5.5\n"
+  );
+  module = jerry_parse (source5, sizeof (source5) - 1, &module_parse_options);
+
+  result = jerry_module_link (module, NULL, NULL);
+  TEST_ASSERT (!jerry_value_is_error (result));
+  jerry_release_value (result);
+
+  result = jerry_module_evaluate (module);
+  TEST_ASSERT (jerry_value_is_error (result));
+  jerry_release_value (result);
+
+  jerry_release_value (module);
+
+  jerry_module_set_state_changed_callback (NULL, NULL);
+
+  TEST_ASSERT (counter == 4);
 
   jerry_cleanup ();
 

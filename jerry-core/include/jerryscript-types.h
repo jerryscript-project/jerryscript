@@ -551,6 +551,12 @@ typedef jerry_value_t (*jerry_module_resolve_callback_t) (const jerry_value_t sp
                                                           void *user_p);
 
 /**
+ * Callback which is called after the module enters into linked, evaluated or error state.
+ */
+typedef void (*jerry_module_state_changed_callback_t) (jerry_module_state_t new_state, const jerry_value_t module,
+                                                       const jerry_value_t value, void *user_p);
+
+/**
  * Callback which is called by jerry_module_evaluate to evaluate the native module.
  */
 typedef jerry_value_t (*jerry_native_module_evaluate_callback_t) (const jerry_value_t native_module);

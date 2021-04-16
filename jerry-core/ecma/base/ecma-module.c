@@ -59,7 +59,7 @@ ecma_module_create (void)
 } /* ecma_module_create */
 
 /**
- * cleanup context variables for the root module.
+ * Cleanup context variables for the root module.
  */
 void
 ecma_module_cleanup_context (void)
@@ -69,6 +69,27 @@ ecma_module_cleanup_context (void)
   JERRY_CONTEXT (module_current_p) = NULL;
 #endif /* JERRY_NDEBUG */
 } /* ecma_module_cleanup_context */
+
+/**
+ * Sets module state to error.
+ */
+static void
+ecma_module_set_error_state (ecma_module_t *module_p) /**< module */
+{
+  module_p->header.u.cls.u1.module_state = JERRY_MODULE_STATE_ERROR;
+
+  if (JERRY_CONTEXT (module_state_changed_callback_p) != NULL
+      && !jcontext_has_pending_abort ())
+  {
+    jerry_value_t exception = jcontext_take_exception ();
+
+    JERRY_CONTEXT (module_state_changed_callback_p) (JERRY_MODULE_STATE_ERROR,
+                                                     ecma_make_object_value (&module_p->header.object),
+                                                     exception,
+                                                     JERRY_CONTEXT (module_state_changed_callback_user_p));
+    jcontext_raise_exception (exception);
+  }
+} /* ecma_module_set_error_state */
 
 /**
  * Gets the internal module pointer of a module
@@ -398,11 +419,21 @@ ecma_module_evaluate (ecma_module_t *module_p) /**< module */
     ret_value = vm_run_module (module_p);
   }
 
-  module_p->header.u.cls.u1.module_state = JERRY_MODULE_STATE_ERROR;
-
-  if (!ECMA_IS_VALUE_ERROR (ret_value))
+  if (JERRY_LIKELY (!ECMA_IS_VALUE_ERROR (ret_value)))
   {
     module_p->header.u.cls.u1.module_state = JERRY_MODULE_STATE_EVALUATED;
+
+    if (JERRY_CONTEXT (module_state_changed_callback_p) != NULL)
+    {
+      JERRY_CONTEXT (module_state_changed_callback_p) (JERRY_MODULE_STATE_EVALUATED,
+                                                       ecma_make_object_value (&module_p->header.object),
+                                                       ret_value,
+                                                       JERRY_CONTEXT (module_state_changed_callback_user_p));
+    }
+  }
+  else
+  {
+    ecma_module_set_error_state (module_p);
   }
 
   if (!(module_p->header.u.cls.u2.module_flags & ECMA_MODULE_IS_NATIVE))
@@ -943,7 +974,7 @@ restart:
 
       if (ECMA_IS_VALUE_ERROR (result))
       {
-        current_module_p->header.u.cls.u1.module_state = JERRY_MODULE_STATE_ERROR;
+        ecma_module_set_error_state (current_module_p);
         goto error;
       }
 
@@ -973,6 +1004,14 @@ restart:
 
       JERRY_ASSERT (last_p->module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_LINKING);
       last_p->module_p->header.u.cls.u1.module_state = JERRY_MODULE_STATE_LINKED;
+
+      if (JERRY_CONTEXT (module_state_changed_callback_p) != NULL)
+      {
+        JERRY_CONTEXT (module_state_changed_callback_p) (JERRY_MODULE_STATE_LINKED,
+                                                         ecma_make_object_value (&last_p->module_p->header.object),
+                                                         ECMA_VALUE_UNDEFINED,
+                                                         JERRY_CONTEXT (module_state_changed_callback_user_p));
+      }
 
       jmem_heap_free_block (last_p, sizeof (ecma_module_stack_item_t));
       last_p = prev_p;

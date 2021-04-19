@@ -387,6 +387,9 @@ typedef void *(*jerry_context_alloc_t) (size_t size, void *cb_data_p);
 typedef struct jerry_object_native_info_t
 {
   jerry_object_native_free_callback_t free_cb; /**< the free callback of the native pointer */
+  uint16_t number_of_references; /**< the number of value references which are marked by the garbage collector */
+  uint16_t offset_of_references; /**< byte offset indicating the start offset of value
+                                  *   references in the user allocated buffer */
 } jerry_object_native_info_t;
 
 /**

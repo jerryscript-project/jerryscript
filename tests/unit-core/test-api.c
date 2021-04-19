@@ -138,7 +138,9 @@ handler_construct_2_freecb (void *native_p, /**< native pointer */
 #define JERRY_DEFINE_NATIVE_HANDLE_INFO(c_type, native_free_cb) \
   static const jerry_object_native_info_t JERRY_NATIVE_HANDLE_INFO_FOR_CTYPE (c_type) = \
   { \
-    .free_cb = (jerry_object_native_free_callback_t) native_free_cb \
+    .free_cb = (jerry_object_native_free_callback_t) native_free_cb, \
+    .number_of_references = 0, \
+    .offset_of_references = 0, \
   }
 
 JERRY_DEFINE_NATIVE_HANDLE_INFO (bind1, handler_construct_1_freecb);

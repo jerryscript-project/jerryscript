@@ -4316,7 +4316,7 @@ jerry_set_object_native_pointer (const jerry_value_t obj_val, /**< object to set
   {
     ecma_object_t *object_p = ecma_get_object_from_value (obj_val);
 
-    ecma_create_native_pointer_property (object_p, native_pointer_p, (void *) native_info_p);
+    ecma_create_native_pointer_property (object_p, native_pointer_p, native_info_p);
   }
 } /* jerry_set_object_native_pointer */
 
@@ -4348,6 +4348,87 @@ jerry_delete_object_native_pointer (const jerry_value_t obj_val, /**< object to 
 
   return false;
 } /* jerry_delete_object_native_pointer */
+
+/**
+ * Initialize the references stored in a buffer pointed by a native pointer.
+ * The references are initialized to undefined.
+ */
+void
+jerry_native_pointer_init_references (void *native_pointer_p, /**< a valid non-NULL pointer to a native buffer */
+                                      const jerry_object_native_info_t *native_info_p) /**< the type info of
+                                                                                        *   the native pointer */
+{
+  jerry_assert_api_available ();
+
+  if (native_pointer_p == NULL || native_info_p == NULL)
+  {
+    return;
+  }
+
+  ecma_value_t *value_p = (ecma_value_t *) (((uint8_t *) native_pointer_p) + native_info_p->offset_of_references);
+  ecma_value_t *end_p = value_p + native_info_p->number_of_references;
+
+  while (value_p < end_p)
+  {
+    *value_p++ = ECMA_VALUE_UNDEFINED;
+  }
+} /* jerry_native_pointer_init_references */
+
+/**
+ * Release the value references after a buffer pointed by a native pointer
+ * is not attached to an object anymore. All references are set to undefined
+ * similar to jerry_native_pointer_init_references.
+ */
+void
+jerry_native_pointer_release_references (void *native_pointer_p, /**< a valid non-NULL pointer to a native buffer */
+                                         const jerry_object_native_info_t *native_info_p) /**< the type info of
+                                                                                           *   the native pointer */
+{
+  jerry_assert_api_available ();
+
+  if (native_pointer_p == NULL || native_info_p == NULL)
+  {
+    return;
+  }
+
+  ecma_value_t *value_p = (ecma_value_t *) (((uint8_t *) native_pointer_p) + native_info_p->offset_of_references);
+  ecma_value_t *end_p = value_p + native_info_p->number_of_references;
+
+  while (value_p < end_p)
+  {
+    ecma_free_value_if_not_object (*value_p);
+    *value_p++ = ECMA_VALUE_UNDEFINED;
+  }
+} /* jerry_native_pointer_release_references */
+
+/**
+ * Updates a value reference inside the area specified by the number_of_references and
+ * offset_of_references fields in its corresponding jerry_object_native_info_t data.
+ * The area must be part of a buffer which is currently assigned to an object.
+ *
+ * Note:
+ *      Error references are not supported, they are replaced by undefined values.
+ */
+void
+jerry_native_pointer_set_reference (jerry_value_t *reference_p, /**< a valid non-NULL pointer to
+                                                                 *   a reference in a native buffer. */
+                                    jerry_value_t value) /**< new value of the reference */
+{
+  jerry_assert_api_available ();
+
+  if (reference_p == NULL)
+  {
+    return;
+  }
+
+  if (ecma_is_value_error_reference (value))
+  {
+    value = ECMA_VALUE_UNDEFINED;
+  }
+
+  ecma_free_value_if_not_object (*reference_p);
+  *reference_p = ecma_copy_value_if_not_object (value);
+} /* jerry_native_pointer_set_reference */
 
 /**
  * Applies the given function to the every property in the object.

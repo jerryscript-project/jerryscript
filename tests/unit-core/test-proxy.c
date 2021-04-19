@@ -162,6 +162,8 @@ proxy_native_freecb (void *native_p, /**< native pointer */
 static const jerry_object_native_info_t proxy_native_info =
 {
   .free_cb = proxy_native_freecb,
+  .number_of_references = 0,
+  .offset_of_references = 0,
 };
 
 static jerry_value_t

@@ -304,7 +304,7 @@ typedef ecma_value_t (*ecma_native_handler_t) (const struct jerry_call_info_t *c
 typedef struct
 {
   void *native_p; /**< points to the data of the object */
-  jerry_object_native_info_t *info_p; /**< native info */
+  jerry_object_native_info_t *native_info_p; /**< native info */
 } ecma_native_pointer_t;
 
 /**

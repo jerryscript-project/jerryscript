@@ -36,9 +36,14 @@
 bool
 ecma_create_native_pointer_property (ecma_object_t *obj_p, /**< object to create property in */
                                      void *native_p, /**< native pointer */
-                                     void *info_p) /**< native pointer's type info */
+                                     const jerry_object_native_info_t *native_info_p) /**< native type info */
 {
   ecma_string_t *name_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
+
+  if (native_info_p != NULL && native_info_p->number_of_references > 0)
+  {
+    name_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER_WITH_REFERENCES);
+  }
 
   if (ecma_op_object_is_fast_array (obj_p))
   {
@@ -67,7 +72,7 @@ ecma_create_native_pointer_property (ecma_object_t *obj_p, /**< object to create
 
     native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t, value_p->value);
 
-    if (native_pointer_p->info_p == info_p)
+    if (native_pointer_p->native_info_p == native_info_p)
     {
       native_pointer_p->native_p = native_p;
       return false;
@@ -107,7 +112,7 @@ ecma_create_native_pointer_property (ecma_object_t *obj_p, /**< object to create
 
       while (true)
       {
-        if (item_p->data.info_p == info_p)
+        if (item_p->data.native_info_p == native_info_p)
         {
           /* The native info already exists -> update the corresponding data */
           item_p->data.native_p = native_p;
@@ -134,7 +139,7 @@ ecma_create_native_pointer_property (ecma_object_t *obj_p, /**< object to create
   }
 
   native_pointer_p->native_p = native_p;
-  native_pointer_p->info_p = info_p;
+  native_pointer_p->native_info_p = (jerry_object_native_info_t *) native_info_p;
 
   return is_new;
 } /* ecma_create_native_pointer_property */
@@ -151,7 +156,7 @@ ecma_create_native_pointer_property (ecma_object_t *obj_p, /**< object to create
  */
 ecma_native_pointer_t *
 ecma_get_native_pointer_value (ecma_object_t *obj_p, /**< object to get property value from */
-                               void *info_p) /**< native pointer's type info */
+                               const jerry_object_native_info_t *native_info_p) /**< native type info */
 {
   if (ecma_op_object_is_fast_array (obj_p))
   {
@@ -160,6 +165,12 @@ ecma_get_native_pointer_value (ecma_object_t *obj_p, /**< object to get property
   }
 
   ecma_string_t *name_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
+
+  if (native_info_p != NULL && native_info_p->number_of_references > 0)
+  {
+    name_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER_WITH_REFERENCES);
+  }
+
   ecma_property_t *property_p = ecma_find_named_property (obj_p, name_p);
 
   if (property_p == NULL)
@@ -174,7 +185,7 @@ ecma_get_native_pointer_value (ecma_object_t *obj_p, /**< object to get property
     ecma_native_pointer_t *native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t,
                                                                                value_p->value);
 
-    if (native_pointer_p->info_p == info_p)
+    if (native_pointer_p->native_info_p == native_info_p)
     {
       return native_pointer_p;
     }
@@ -195,7 +206,7 @@ ecma_get_native_pointer_value (ecma_object_t *obj_p, /**< object to get property
 
   do
   {
-    if (item_p->data.info_p == info_p)
+    if (item_p->data.native_info_p == native_info_p)
     {
       return &item_p->data;
     }
@@ -219,7 +230,7 @@ ecma_get_native_pointer_value (ecma_object_t *obj_p, /**< object to get property
  */
 bool
 ecma_delete_native_pointer_property (ecma_object_t *obj_p, /**< object to delete property from */
-                                     void *info_p) /**< native pointer's type info */
+                                     const jerry_object_native_info_t *native_info_p) /**< native type info */
 {
   if (ecma_op_object_is_fast_array (obj_p))
   {
@@ -228,6 +239,12 @@ ecma_delete_native_pointer_property (ecma_object_t *obj_p, /**< object to delete
   }
 
   ecma_string_t *name_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER);
+
+  if (native_info_p != NULL && native_info_p->number_of_references > 0)
+  {
+    name_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER_WITH_REFERENCES);
+  }
+
   ecma_property_t *property_p = ecma_find_named_property (obj_p, name_p);
 
   if (property_p == NULL)
@@ -242,7 +259,7 @@ ecma_delete_native_pointer_property (ecma_object_t *obj_p, /**< object to delete
     ecma_native_pointer_t *native_pointer_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_native_pointer_t,
                                                                                value_p->value);
 
-    if (native_pointer_p->info_p != info_p)
+    if (native_pointer_p->native_info_p != native_info_p)
     {
       return false;
     }
@@ -269,7 +286,7 @@ ecma_delete_native_pointer_property (ecma_object_t *obj_p, /**< object to delete
 
   do
   {
-    if (item_p->data.info_p == info_p)
+    if (item_p->data.native_info_p == native_info_p)
     {
       if (prev_p == NULL)
       {

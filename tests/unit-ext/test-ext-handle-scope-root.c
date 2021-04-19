@@ -36,6 +36,8 @@ native_free_cb (void *native_p, /**< native pointer */
 static const jerry_object_native_info_t native_info =
 {
   .free_cb = native_free_cb,
+  .number_of_references = 0,
+  .offset_of_references = 0,
 };
 
 static jerry_value_t

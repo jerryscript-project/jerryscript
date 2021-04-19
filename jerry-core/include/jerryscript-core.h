@@ -247,6 +247,11 @@ void jerry_set_object_native_pointer (const jerry_value_t obj_val,
                                       const jerry_object_native_info_t *native_info_p);
 bool jerry_delete_object_native_pointer (const jerry_value_t obj_val,
                                          const jerry_object_native_info_t *native_info_p);
+void jerry_native_pointer_init_references (void *native_pointer_p,
+                                           const jerry_object_native_info_t *native_info_p);
+void jerry_native_pointer_release_references (void *native_pointer_p,
+                                              const jerry_object_native_info_t *native_info_p);
+void jerry_native_pointer_set_reference (jerry_value_t *reference_p, jerry_value_t value);
 
 bool jerry_objects_foreach (jerry_objects_foreach_t foreach_p,
                             void *user_data);

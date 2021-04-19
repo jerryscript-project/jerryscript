@@ -63,6 +63,8 @@ typedef enum
   LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER, /**< native pointer info associated with an object */
   LIT_INTERNAL_MAGIC_STRING_FIRST_DATA = LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER, /**< first index of special
                                                                                     *   data properties */
+  LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER_WITH_REFERENCES, /**< native pointer info associated with an object
+                                                             *   which contains references to other values */
   LIT_INTERNAL_MAGIC_STRING_ENVIRONMENT_RECORD, /**< dynamic environment record needed by class constructors */
   LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED, /**< computed class field name list */
   LIT_INTERNAL_MAGIC_STRING_CONTAINER_WEAK_REFS, /**< Weak references to the current container object */

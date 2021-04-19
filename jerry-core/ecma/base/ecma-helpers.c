@@ -633,7 +633,6 @@ ecma_create_named_reference_property (ecma_object_t *object_p, /**< object */
                                       ecma_property_t *property_p) /**< referenced property */
 {
   JERRY_ASSERT (object_p != NULL && name_p != NULL && property_p != NULL);
-  JERRY_ASSERT (*property_p & ECMA_PROPERTY_FLAG_DATA);
   JERRY_ASSERT (ecma_find_named_property (object_p, name_p) == NULL);
   JERRY_ASSERT ((ecma_is_lexical_environment (object_p)
                  && ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_CLASS
@@ -642,26 +641,33 @@ ecma_create_named_reference_property (ecma_object_t *object_p, /**< object */
 
   uint8_t type_and_flags = ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE;
 
-  ecma_property_value_t *value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+  ecma_property_value_t *referenced_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+  ecma_property_value_t value;
 
-  jmem_cpointer_tag_t offset = (jmem_cpointer_tag_t) (((uintptr_t) property_p) & 0x1);
+  if (*property_p & ECMA_PROPERTY_FLAG_DATA)
+  {
+    jmem_cpointer_tag_t offset = (jmem_cpointer_tag_t) (((uintptr_t) property_p) & 0x1);
 
 #if JERRY_CPOINTER_32_BIT
-  if (offset != 0)
-  {
-    --value_p;
-  }
+    if (offset != 0)
+    {
+      --referenced_value_p;
+    }
 #else /* !JERRY_CPOINTER_32_BIT */
-  if (offset == 0)
-  {
-    ++value_p;
-  }
+    if (offset == 0)
+    {
+      ++referenced_value_p;
+    }
 #endif /* JERRY_CPOINTER_32_BIT */
 
-  JERRY_ASSERT ((((uintptr_t) value_p) & (((uintptr_t) 1 << JMEM_ALIGNMENT_LOG) - 1)) == 0);
+    JERRY_ASSERT ((((uintptr_t) referenced_value_p) & (((uintptr_t) 1 << JMEM_ALIGNMENT_LOG) - 1)) == 0);
 
-  ecma_property_value_t value;
-  ECMA_SET_NON_NULL_POINTER_TAG (value.value, value_p, offset);
+    ECMA_SET_NON_NULL_POINTER_TAG (value.value, referenced_value_p, offset);
+  }
+  else
+  {
+    value.value = referenced_value_p->value;
+  }
 
   ecma_create_property (object_p, name_p, type_and_flags, value, NULL);
 } /* ecma_create_named_reference_property */

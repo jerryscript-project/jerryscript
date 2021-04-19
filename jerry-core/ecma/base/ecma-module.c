@@ -367,7 +367,7 @@ ecma_module_resolve_export (ecma_module_t *const module_p, /**< base module */
   }
   else
   {
-    ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("Unexported or circular import request"));
+    ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("Export not found"));
   }
 
   return ret_value;
@@ -454,13 +454,14 @@ ecma_module_evaluate (ecma_module_t *module_p) /**< module */
  */
 static ecma_value_t
 ecma_module_namespace_object_add_export_if_needed (ecma_module_t *module_p, /**< module */
-                                                   ecma_string_t *export_name_p) /**< export name */
+                                                   ecma_string_t *export_name_p, /**< export name */
+                                                   bool allow_default) /**< allow default export */
 {
   JERRY_ASSERT (module_p->namespace_object_p != NULL);
   ecma_value_t result = ECMA_VALUE_EMPTY;
 
   /* Default exports should not be added to the namespace object. */
-  if (ecma_compare_ecma_string_to_magic_id (export_name_p, LIT_MAGIC_STRING_DEFAULT)
+  if ((!allow_default && ecma_compare_ecma_string_to_magic_id (export_name_p, LIT_MAGIC_STRING_DEFAULT))
       || ecma_find_named_property (module_p->namespace_object_p, export_name_p) != NULL)
   {
     /* This export name has already been handled. */
@@ -524,7 +525,10 @@ ecma_module_create_namespace_object (ecma_module_t *module_p) /**< module */
   ecma_deref_object (namespace_object_p);
 
   ecma_module_resolve_stack_push (&stack_p, module_p, ecma_get_magic_string (LIT_MAGIC_STRING_ASTERIX_CHAR));
-  while (stack_p != NULL)
+
+  bool allow_default = true;
+
+  do
   {
     ecma_module_resolve_stack_t *current_frame_p = stack_p;
     ecma_module_t *current_module_p = current_frame_p->module_p;
@@ -537,6 +541,7 @@ ecma_module_create_namespace_object (ecma_module_t *module_p) /**< module */
                                          ecma_get_magic_string (LIT_MAGIC_STRING_ASTERIX_CHAR)))
     {
       /* Circular import. */
+      JERRY_ASSERT (!allow_default);
       continue;
     }
 
@@ -548,7 +553,8 @@ ecma_module_create_namespace_object (ecma_module_t *module_p) /**< module */
       do
       {
         result = ecma_module_namespace_object_add_export_if_needed (module_p,
-                                                                    export_names_p->imex_name_p);
+                                                                    export_names_p->imex_name_p,
+                                                                    allow_default);
         export_names_p = export_names_p->next_p;
       }
       while (export_names_p != NULL && ecma_is_value_empty (result));
@@ -565,13 +571,16 @@ ecma_module_create_namespace_object (ecma_module_t *module_p) /**< module */
       do
       {
         result = ecma_module_namespace_object_add_export_if_needed (module_p,
-                                                                    export_names_p->imex_name_p);
+                                                                    export_names_p->imex_name_p,
+                                                                    allow_default);
         export_names_p = export_names_p->next_p;
       }
       while (export_names_p != NULL && ecma_is_value_empty (result));
 
       indirect_export_p = indirect_export_p->next_p;
     }
+
+    allow_default = false;
 
     /* 15.2.1.16.2 / 7 */
     ecma_module_node_t *star_export_p = current_module_p->star_exports_p;
@@ -592,6 +601,7 @@ ecma_module_create_namespace_object (ecma_module_t *module_p) /**< module */
       break;
     }
   }
+  while (stack_p != NULL);
 
   /* Clean up. */
   ecma_module_resolve_set_cleanup (resolve_set_p);

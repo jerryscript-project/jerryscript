@@ -330,27 +330,27 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
 
   uint8_t property_desc_type = ECMA_OP_OBJECT_DEFINE_GENERIC;
 
-  if (property_desc_p->flags & (ECMA_PROP_IS_VALUE_DEFINED | ECMA_PROP_IS_WRITABLE_DEFINED))
+  if (property_desc_p->flags & (JERRY_PROP_IS_VALUE_DEFINED | JERRY_PROP_IS_WRITABLE_DEFINED))
   {
     /* A property descriptor cannot be both named data and named accessor. */
-    JERRY_ASSERT ((property_desc_p->flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED))
-                   != (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED));
+    JERRY_ASSERT ((property_desc_p->flags & (JERRY_PROP_IS_GET_DEFINED | JERRY_PROP_IS_SET_DEFINED))
+                   != (JERRY_PROP_IS_GET_DEFINED | JERRY_PROP_IS_SET_DEFINED));
     property_desc_type = ECMA_OP_OBJECT_DEFINE_DATA;
   }
-  else if (property_desc_p->flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED))
+  else if (property_desc_p->flags & (JERRY_PROP_IS_GET_DEFINED | JERRY_PROP_IS_SET_DEFINED))
   {
-    JERRY_ASSERT (!(property_desc_p->flags & ECMA_PROP_IS_WRITABLE_DEFINED));
+    JERRY_ASSERT (!(property_desc_p->flags & JERRY_PROP_IS_WRITABLE_DEFINED));
     property_desc_type = ECMA_OP_OBJECT_DEFINE_ACCESSOR;
   }
 
   /* These three asserts ensures that a new property is created with the appropriate default flags.
-   * E.g. if ECMA_PROP_IS_CONFIGURABLE_DEFINED is false, the newly created property must be non-configurable. */
-  JERRY_ASSERT ((property_desc_p->flags & ECMA_PROP_IS_CONFIGURABLE_DEFINED)
-                || !(property_desc_p->flags & ECMA_PROP_IS_CONFIGURABLE));
-  JERRY_ASSERT ((property_desc_p->flags & ECMA_PROP_IS_ENUMERABLE_DEFINED)
-                || !(property_desc_p->flags & ECMA_PROP_IS_ENUMERABLE));
-  JERRY_ASSERT ((property_desc_p->flags & ECMA_PROP_IS_WRITABLE_DEFINED)
-                || !(property_desc_p->flags & ECMA_PROP_IS_WRITABLE));
+   * E.g. if JERRY_PROP_IS_CONFIGURABLE_DEFINED is false, the newly created property must be non-configurable. */
+  JERRY_ASSERT ((property_desc_p->flags & JERRY_PROP_IS_CONFIGURABLE_DEFINED)
+                || !(property_desc_p->flags & JERRY_PROP_IS_CONFIGURABLE));
+  JERRY_ASSERT ((property_desc_p->flags & JERRY_PROP_IS_ENUMERABLE_DEFINED)
+                || !(property_desc_p->flags & JERRY_PROP_IS_ENUMERABLE));
+  JERRY_ASSERT ((property_desc_p->flags & JERRY_PROP_IS_WRITABLE_DEFINED)
+                || !(property_desc_p->flags & JERRY_PROP_IS_WRITABLE));
 
   /* 1. */
   ecma_extended_property_ref_t ext_property_ref = { .property_ref.value_p = NULL, .property_p = NULL };
@@ -367,7 +367,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
     if (!ecma_op_ordinary_object_is_extensible (object_p))
     {
       /* 2. */
-      return ECMA_REJECT_WITH_FORMAT (property_desc_p->flags & ECMA_PROP_SHOULD_THROW,
+      return ECMA_REJECT_WITH_FORMAT (property_desc_p->flags & JERRY_PROP_SHOULD_THROW,
                                       "Cannot define property '%', object is not extensible",
                                       ecma_make_prop_name_value (property_name_p));
     }
@@ -386,7 +386,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
                                                                                  prop_attributes,
                                                                                  NULL);
 
-      JERRY_ASSERT ((property_desc_p->flags & ECMA_PROP_IS_VALUE_DEFINED)
+      JERRY_ASSERT ((property_desc_p->flags & JERRY_PROP_IS_VALUE_DEFINED)
                     || ecma_is_value_undefined (property_desc_p->value));
 
       new_prop_value_p->value = ecma_copy_value_if_not_object (property_desc_p->value);
@@ -409,10 +409,10 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
   const bool is_current_configurable = ecma_is_property_configurable (current_prop);
 
   /* 7. a., b. */
-  bool is_enumerable = (property_desc_p->flags & ECMA_PROP_IS_ENUMERABLE) != 0;
+  bool is_enumerable = (property_desc_p->flags & JERRY_PROP_IS_ENUMERABLE) != 0;
   if (!is_current_configurable
-      && ((property_desc_p->flags & ECMA_PROP_IS_CONFIGURABLE)
-          || ((property_desc_p->flags & ECMA_PROP_IS_ENUMERABLE_DEFINED)
+      && ((property_desc_p->flags & JERRY_PROP_IS_CONFIGURABLE)
+          || ((property_desc_p->flags & JERRY_PROP_IS_ENUMERABLE_DEFINED)
               && (is_enumerable != ecma_is_property_enumerable (current_prop)))))
   {
     if (ECMA_PROPERTY_IS_VIRTUAL (current_prop))
@@ -425,7 +425,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
 
   if (ECMA_PROPERTY_IS_VIRTUAL (current_prop))
   {
-    bool writable_check_failed = (property_desc_p->flags & ECMA_PROP_IS_WRITABLE);
+    bool writable_check_failed = (property_desc_p->flags & JERRY_PROP_IS_WRITABLE);
 
 #if JERRY_MODULE_SYSTEM
     if (ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_MODULE_NAMESPACE))
@@ -435,9 +435,9 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
         return ecma_raise_reference_error (ECMA_ERR_MSG (ecma_error_let_const_not_initialized));
       }
 
-      if (property_desc_p->flags & ECMA_PROP_IS_WRITABLE_DEFINED)
+      if (property_desc_p->flags & JERRY_PROP_IS_WRITABLE_DEFINED)
       {
-        writable_check_failed = ((property_desc_p->flags ^ current_prop) & ECMA_PROP_IS_WRITABLE) != 0;
+        writable_check_failed = ((property_desc_p->flags ^ current_prop) & JERRY_PROP_IS_WRITABLE) != 0;
       }
     }
     else
@@ -452,7 +452,7 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
 
     if (property_desc_type == ECMA_OP_OBJECT_DEFINE_ACCESSOR
         || writable_check_failed
-        || ((property_desc_p->flags & ECMA_PROP_IS_VALUE_DEFINED)
+        || ((property_desc_p->flags & JERRY_PROP_IS_VALUE_DEFINED)
             && !ecma_op_same_value (property_desc_p->value,
                                     ext_property_ref.property_ref.virtual_value)))
     {
@@ -477,8 +477,8 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
       {
         /* 10. a. i. & ii. */
         if (!ecma_is_property_writable (current_prop)
-            && ((property_desc_p->flags & ECMA_PROP_IS_WRITABLE)
-                || ((property_desc_p->flags & ECMA_PROP_IS_VALUE_DEFINED)
+            && ((property_desc_p->flags & JERRY_PROP_IS_WRITABLE)
+                || ((property_desc_p->flags & JERRY_PROP_IS_VALUE_DEFINED)
                     && !ecma_op_same_value (property_desc_p->value,
                                             ext_property_ref.property_ref.value_p->value))))
         {
@@ -497,9 +497,9 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
         ECMA_SET_POINTER (prop_desc_getter_cp, property_desc_p->get_p);
         ECMA_SET_POINTER (prop_desc_setter_cp, property_desc_p->set_p);
 
-        if (((property_desc_p->flags & ECMA_PROP_IS_GET_DEFINED)
+        if (((property_desc_p->flags & JERRY_PROP_IS_GET_DEFINED)
              && prop_desc_getter_cp != get_set_pair_p->getter_cp)
-            || ((property_desc_p->flags & ECMA_PROP_IS_SET_DEFINED)
+            || ((property_desc_p->flags & JERRY_PROP_IS_SET_DEFINED)
                 && prop_desc_setter_cp != get_set_pair_p->setter_cp))
         {
           /* i., ii. */
@@ -559,30 +559,30 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
   {
     JERRY_ASSERT (ECMA_PROPERTY_IS_RAW_DATA (*ext_property_ref.property_p));
 
-    if (property_desc_p->flags & ECMA_PROP_IS_VALUE_DEFINED)
+    if (property_desc_p->flags & JERRY_PROP_IS_VALUE_DEFINED)
     {
       ecma_named_data_property_assign_value (object_p,
                                              ext_property_ref.property_ref.value_p,
                                              property_desc_p->value);
     }
 
-    if (property_desc_p->flags & ECMA_PROP_IS_WRITABLE_DEFINED)
+    if (property_desc_p->flags & JERRY_PROP_IS_WRITABLE_DEFINED)
     {
-      ecma_set_property_writable_attr (ext_property_ref.property_p, (property_desc_p->flags & ECMA_PROP_IS_WRITABLE));
+      ecma_set_property_writable_attr (ext_property_ref.property_p, (property_desc_p->flags & JERRY_PROP_IS_WRITABLE));
     }
   }
   else if (property_desc_type == ECMA_OP_OBJECT_DEFINE_ACCESSOR)
   {
     JERRY_ASSERT (!(*ext_property_ref.property_p & ECMA_PROPERTY_FLAG_DATA));
 
-    if (property_desc_p->flags & ECMA_PROP_IS_GET_DEFINED)
+    if (property_desc_p->flags & JERRY_PROP_IS_GET_DEFINED)
     {
       ecma_set_named_accessor_property_getter (object_p,
                                                ext_property_ref.property_ref.value_p,
                                                property_desc_p->get_p);
     }
 
-    if (property_desc_p->flags & ECMA_PROP_IS_SET_DEFINED)
+    if (property_desc_p->flags & JERRY_PROP_IS_SET_DEFINED)
     {
       ecma_set_named_accessor_property_setter (object_p,
                                                ext_property_ref.property_ref.value_p,
@@ -590,16 +590,16 @@ ecma_op_general_object_define_own_property (ecma_object_t *object_p, /**< the ob
     }
   }
 
-  if (property_desc_p->flags & ECMA_PROP_IS_ENUMERABLE_DEFINED)
+  if (property_desc_p->flags & JERRY_PROP_IS_ENUMERABLE_DEFINED)
   {
     ecma_set_property_enumerable_attr (ext_property_ref.property_p,
-                                       (property_desc_p->flags & ECMA_PROP_IS_ENUMERABLE));
+                                       (property_desc_p->flags & JERRY_PROP_IS_ENUMERABLE));
   }
 
-  if (property_desc_p->flags & ECMA_PROP_IS_CONFIGURABLE_DEFINED)
+  if (property_desc_p->flags & JERRY_PROP_IS_CONFIGURABLE_DEFINED)
   {
     ecma_set_property_configurable_attr (ext_property_ref.property_p,
-                                         (property_desc_p->flags & ECMA_PROP_IS_CONFIGURABLE));
+                                         (property_desc_p->flags & JERRY_PROP_IS_CONFIGURABLE));
   }
 
   return ECMA_VALUE_TRUE;
@@ -637,13 +637,13 @@ ecma_op_is_compatible_property_descriptor (const ecma_property_descriptor_t *des
   /* 4. */
   if ((current_p->flags & desc_p->flags) == desc_p->flags)
   {
-    if ((current_p->flags & ECMA_PROP_IS_VALUE_DEFINED)
+    if ((current_p->flags & JERRY_PROP_IS_VALUE_DEFINED)
          && ecma_op_same_value (current_p->value, desc_p->value))
     {
       return true;
     }
 
-    if ((current_p->flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED)
+    if ((current_p->flags & (JERRY_PROP_IS_GET_DEFINED | JERRY_PROP_IS_SET_DEFINED)
          && current_p->get_p == desc_p->get_p
          && current_p->set_p == desc_p->set_p))
     {
@@ -652,21 +652,21 @@ ecma_op_is_compatible_property_descriptor (const ecma_property_descriptor_t *des
   }
 
   /* 5. */
-  if (!(current_p->flags & ECMA_PROP_IS_CONFIGURABLE))
+  if (!(current_p->flags & JERRY_PROP_IS_CONFIGURABLE))
   {
-    if (desc_p->flags & ECMA_PROP_IS_CONFIGURABLE)
+    if (desc_p->flags & JERRY_PROP_IS_CONFIGURABLE)
     {
       return false;
     }
-    if ((desc_p->flags & ECMA_PROP_IS_ENUMERABLE_DEFINED)
-        && ((current_p->flags & ECMA_PROP_IS_ENUMERABLE) != (desc_p->flags & ECMA_PROP_IS_ENUMERABLE)))
+    if ((desc_p->flags & JERRY_PROP_IS_ENUMERABLE_DEFINED)
+        && ((current_p->flags & JERRY_PROP_IS_ENUMERABLE) != (desc_p->flags & JERRY_PROP_IS_ENUMERABLE)))
     {
       return false;
     }
   }
 
-  const uint32_t accessor_desc_flags = (ECMA_PROP_IS_SET_DEFINED | ECMA_PROP_IS_GET_DEFINED);
-  const uint32_t data_desc_flags = (ECMA_PROP_IS_VALUE_DEFINED | ECMA_PROP_IS_WRITABLE_DEFINED);
+  const uint32_t accessor_desc_flags = (JERRY_PROP_IS_SET_DEFINED | JERRY_PROP_IS_GET_DEFINED);
+  const uint32_t data_desc_flags = (JERRY_PROP_IS_VALUE_DEFINED | JERRY_PROP_IS_WRITABLE_DEFINED);
 
   bool desc_is_accessor = (desc_p->flags & accessor_desc_flags) != 0;
   bool desc_is_data = (desc_p->flags & data_desc_flags) != 0;
@@ -681,22 +681,22 @@ ecma_op_is_compatible_property_descriptor (const ecma_property_descriptor_t *des
   /* 7. */
   if (current_is_data != desc_is_data)
   {
-    return (current_p->flags & ECMA_PROP_IS_CONFIGURABLE) != 0;
+    return (current_p->flags & JERRY_PROP_IS_CONFIGURABLE) != 0;
   }
 
   /* 8. */
   if (current_is_data)
   {
-    if (!(current_p->flags & ECMA_PROP_IS_CONFIGURABLE))
+    if (!(current_p->flags & JERRY_PROP_IS_CONFIGURABLE))
     {
-      if (!(current_p->flags & ECMA_PROP_IS_WRITABLE)
-           && (desc_p->flags & ECMA_PROP_IS_WRITABLE))
+      if (!(current_p->flags & JERRY_PROP_IS_WRITABLE)
+           && (desc_p->flags & JERRY_PROP_IS_WRITABLE))
       {
         return false;
       }
 
-      if (!(current_p->flags & ECMA_PROP_IS_WRITABLE)
-           && (desc_p->flags & ECMA_PROP_IS_VALUE_DEFINED)
+      if (!(current_p->flags & JERRY_PROP_IS_WRITABLE)
+           && (desc_p->flags & JERRY_PROP_IS_VALUE_DEFINED)
            && !ecma_op_same_value (desc_p->value, current_p->value))
       {
         return false;
@@ -706,19 +706,19 @@ ecma_op_is_compatible_property_descriptor (const ecma_property_descriptor_t *des
     return true;
   }
 
-  JERRY_ASSERT ((current_p->flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED)) != 0);
-  JERRY_ASSERT ((desc_p->flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED)) != 0);
+  JERRY_ASSERT ((current_p->flags & (JERRY_PROP_IS_GET_DEFINED | JERRY_PROP_IS_SET_DEFINED)) != 0);
+  JERRY_ASSERT ((desc_p->flags & (JERRY_PROP_IS_GET_DEFINED | JERRY_PROP_IS_SET_DEFINED)) != 0);
 
   /* 9. */
-  if (!(current_p->flags & ECMA_PROP_IS_CONFIGURABLE))
+  if (!(current_p->flags & JERRY_PROP_IS_CONFIGURABLE))
   {
-    if ((desc_p->flags & ECMA_PROP_IS_SET_DEFINED)
+    if ((desc_p->flags & JERRY_PROP_IS_SET_DEFINED)
          && desc_p->set_p != current_p->set_p)
     {
       return false;
     }
 
-    if ((desc_p->flags & ECMA_PROP_IS_GET_DEFINED)
+    if ((desc_p->flags & JERRY_PROP_IS_GET_DEFINED)
          && desc_p->get_p != current_p->get_p)
     {
       return false;
@@ -738,15 +738,15 @@ void
 ecma_op_to_complete_property_descriptor (ecma_property_descriptor_t *desc_p) /**< target descriptor */
 {
   /* 4. */
-  if (!(desc_p->flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED)))
+  if (!(desc_p->flags & (JERRY_PROP_IS_GET_DEFINED | JERRY_PROP_IS_SET_DEFINED)))
   {
     /* a. */
-    desc_p->flags |= ECMA_PROP_IS_VALUE_DEFINED;
+    desc_p->flags |= JERRY_PROP_IS_VALUE_DEFINED;
   }
   /* 5. */
   else
   {
-    desc_p->flags |= (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED);
+    desc_p->flags |= (JERRY_PROP_IS_GET_DEFINED | JERRY_PROP_IS_SET_DEFINED);
   }
 } /* ecma_op_to_complete_property_descriptor */
 #endif /* JERRY_ESNEXT */

@@ -185,14 +185,14 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *object_p, /**< the 
 
   if (!ecma_is_value_empty (argv_p[index]))
   {
-    if (property_desc_p->flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED))
+    if (property_desc_p->flags & (JERRY_PROP_IS_GET_DEFINED | JERRY_PROP_IS_SET_DEFINED))
     {
       ecma_free_value_if_not_object (argv_p[index]);
       argv_p[index] = ECMA_VALUE_EMPTY;
     }
     else
     {
-      if (property_desc_p->flags & ECMA_PROP_IS_VALUE_DEFINED)
+      if (property_desc_p->flags & JERRY_PROP_IS_VALUE_DEFINED)
       {
         ecma_string_t *name_p = ecma_op_arguments_object_get_formal_parameter (mapped_arguments_p, index);
         ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, mapped_arguments_p->lex_env);
@@ -205,8 +205,8 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *object_p, /**< the 
         JERRY_ASSERT (ecma_is_value_empty (completion));
       }
 
-      if ((property_desc_p->flags & ECMA_PROP_IS_WRITABLE_DEFINED)
-          && !(property_desc_p->flags & ECMA_PROP_IS_WRITABLE))
+      if ((property_desc_p->flags & JERRY_PROP_IS_WRITABLE_DEFINED)
+          && !(property_desc_p->flags & JERRY_PROP_IS_WRITABLE))
       {
         ecma_free_value_if_not_object (argv_p[index]);
         argv_p[index] = ECMA_VALUE_EMPTY;

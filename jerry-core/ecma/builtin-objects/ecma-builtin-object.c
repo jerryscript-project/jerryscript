@@ -370,8 +370,8 @@ ecma_builtin_object_set_integrity_level (ecma_object_t *obj_p, /**< object */
         continue;
       }
 
-      prop_desc.flags &= (uint16_t) ~ECMA_PROP_IS_CONFIGURABLE;
-      prop_desc.flags |= ECMA_PROP_SHOULD_THROW;
+      prop_desc.flags &= (uint16_t) ~JERRY_PROP_IS_CONFIGURABLE;
+      prop_desc.flags |= JERRY_PROP_SHOULD_THROW;
 
       /* 8.a.i */
       ecma_value_t define_own_prop_ret = ecma_op_object_define_own_property (obj_p,
@@ -415,14 +415,14 @@ ecma_builtin_object_set_integrity_level (ecma_object_t *obj_p, /**< object */
       }
 
       /* 9.2 */
-      if ((prop_desc.flags & (ECMA_PROP_IS_WRITABLE_DEFINED | ECMA_PROP_IS_WRITABLE))
-          == (ECMA_PROP_IS_WRITABLE_DEFINED | ECMA_PROP_IS_WRITABLE))
+      if ((prop_desc.flags & (JERRY_PROP_IS_WRITABLE_DEFINED | JERRY_PROP_IS_WRITABLE))
+          == (JERRY_PROP_IS_WRITABLE_DEFINED | JERRY_PROP_IS_WRITABLE))
       {
-        prop_desc.flags &= (uint16_t) ~ECMA_PROP_IS_WRITABLE;
+        prop_desc.flags &= (uint16_t) ~JERRY_PROP_IS_WRITABLE;
       }
 
-      prop_desc.flags &= (uint16_t) ~ECMA_PROP_IS_CONFIGURABLE;
-      prop_desc.flags |= ECMA_PROP_SHOULD_THROW;
+      prop_desc.flags &= (uint16_t) ~JERRY_PROP_IS_CONFIGURABLE;
+      prop_desc.flags |= JERRY_PROP_SHOULD_THROW;
 
       /* 9.3 */
       ecma_value_t define_own_prop_ret = ecma_op_object_define_own_property (obj_p,
@@ -628,9 +628,9 @@ ecma_builtin_object_test_integrity_level (ecma_object_t *obj_p, /**< routine's a
       continue;
     }
 
-    bool is_writable_data = ((prop_desc.flags & (ECMA_PROP_IS_VALUE_DEFINED | ECMA_PROP_IS_WRITABLE))
-                             == (ECMA_PROP_IS_VALUE_DEFINED | ECMA_PROP_IS_WRITABLE));
-    bool is_configurable = (prop_desc.flags & ECMA_PROP_IS_CONFIGURABLE);
+    bool is_writable_data = ((prop_desc.flags & (JERRY_PROP_IS_VALUE_DEFINED | JERRY_PROP_IS_WRITABLE))
+                             == (JERRY_PROP_IS_VALUE_DEFINED | JERRY_PROP_IS_WRITABLE));
+    bool is_configurable = (prop_desc.flags & JERRY_PROP_IS_CONFIGURABLE);
 
     ecma_free_property_descriptor (&prop_desc);
 
@@ -868,7 +868,7 @@ ecma_builtin_object_object_define_properties (ecma_object_t *obj_p, /**< routine
 
     if (ecma_is_value_true (get_desc))
     {
-      if (prop_desc.flags & ECMA_PROP_IS_ENUMERABLE)
+      if (prop_desc.flags & JERRY_PROP_IS_ENUMERABLE)
       {
         ecma_value_t desc_obj = ecma_op_object_get (props_p, prop_name_p);
 
@@ -881,7 +881,7 @@ ecma_builtin_object_object_define_properties (ecma_object_t *obj_p, /**< routine
         ecma_value_t conv_result = ecma_op_to_property_descriptor (desc_obj,
                                                                    &property_descriptors[property_descriptor_number]);
 
-        property_descriptors[property_descriptor_number].flags |= ECMA_PROP_SHOULD_THROW;
+        property_descriptors[property_descriptor_number].flags |= JERRY_PROP_SHOULD_THROW;
 
         ecma_free_value (desc_obj);
 
@@ -1009,7 +1009,7 @@ ecma_builtin_object_object_define_property (ecma_object_t *obj_p, /**< routine's
     return conv_result;
   }
 
-  prop_desc.flags |= ECMA_PROP_SHOULD_THROW;
+  prop_desc.flags |= JERRY_PROP_SHOULD_THROW;
 
   ecma_value_t define_own_prop_ret = ecma_op_object_define_own_property (obj_p,
                                                                          name_str_p,
@@ -1107,9 +1107,9 @@ ecma_builtin_object_object_assign (ecma_object_t *target_p, /**< target object *
       }
 
       /* 5.c.iii */
-      if ((prop_desc.flags & ECMA_PROP_IS_ENUMERABLE)
-          && (((prop_desc.flags & ECMA_PROP_IS_VALUE_DEFINED) && !ecma_is_value_undefined (prop_desc.value))
-              || (prop_desc.flags & ECMA_PROP_IS_GET_DEFINED)))
+      if ((prop_desc.flags & JERRY_PROP_IS_ENUMERABLE)
+          && (((prop_desc.flags & JERRY_PROP_IS_VALUE_DEFINED) && !ecma_is_value_undefined (prop_desc.value))
+              || (prop_desc.flags & JERRY_PROP_IS_GET_DEFINED)))
       {
         /* 5.c.iii.1 */
         ecma_value_t prop_value = ecma_op_object_get (from_obj_p, property_name_p);

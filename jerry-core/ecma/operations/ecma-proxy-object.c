@@ -743,7 +743,7 @@ ecma_proxy_object_get_own_property_descriptor (ecma_object_t *obj_p, /**< proxy 
       return ECMA_VALUE_FALSE;
     }
     /* .b */
-    if (!(target_desc.flags & ECMA_PROP_IS_CONFIGURABLE))
+    if (!(target_desc.flags & JERRY_PROP_IS_CONFIGURABLE))
     {
       ecma_free_property_descriptor (&target_desc);
       return ecma_raise_type_error (ECMA_ERR_MSG ("Given property is a non-configurable"
@@ -811,12 +811,12 @@ ecma_proxy_object_get_own_property_descriptor (ecma_object_t *obj_p, /**< proxy 
                                                              is_extensible);
 
   bool target_has_desc = ecma_is_value_true (target_status);
-  bool target_is_writable = (target_desc.flags & ECMA_PROP_IS_WRITABLE) ;
+  bool target_is_writable = (target_desc.flags & JERRY_PROP_IS_WRITABLE) ;
   bool target_is_configurable = false;
 
   if (target_has_desc)
   {
-    target_is_configurable = ((target_desc.flags & ECMA_PROP_IS_CONFIGURABLE) != 0);
+    target_is_configurable = ((target_desc.flags & JERRY_PROP_IS_CONFIGURABLE) != 0);
     ecma_free_property_descriptor (&target_desc);
   }
 
@@ -828,13 +828,13 @@ ecma_proxy_object_get_own_property_descriptor (ecma_object_t *obj_p, /**< proxy 
   }
 
   /* 22. */
-  else if (!(prop_desc_p->flags & ECMA_PROP_IS_CONFIGURABLE))
+  else if (!(prop_desc_p->flags & JERRY_PROP_IS_CONFIGURABLE))
   {
-    const uint16_t mask = (ECMA_PROP_IS_WRITABLE_DEFINED | ECMA_PROP_IS_WRITABLE);
+    const uint16_t mask = (JERRY_PROP_IS_WRITABLE_DEFINED | JERRY_PROP_IS_WRITABLE);
 
     if (!target_has_desc
         || target_is_configurable
-        || ((prop_desc_p->flags & mask) == ECMA_PROP_IS_WRITABLE_DEFINED
+        || ((prop_desc_p->flags & mask) == JERRY_PROP_IS_WRITABLE_DEFINED
             && target_is_writable))
     {
       ecma_free_property_descriptor (prop_desc_p);
@@ -950,8 +950,8 @@ ecma_proxy_object_define_own_property (ecma_object_t *obj_p, /**< proxy object *
   }
 
   /* 17. */
-  bool setting_config_false = ((prop_desc_p->flags & ECMA_PROP_IS_CONFIGURABLE_DEFINED)
-                                && !(prop_desc_p->flags & ECMA_PROP_IS_CONFIGURABLE));
+  bool setting_config_false = ((prop_desc_p->flags & JERRY_PROP_IS_CONFIGURABLE_DEFINED)
+                                && !(prop_desc_p->flags & JERRY_PROP_IS_CONFIGURABLE));
 
   /* 19. */
   if (!target_prop_found)
@@ -978,16 +978,16 @@ ecma_proxy_object_define_own_property (ecma_object_t *obj_p, /**< proxy object *
       ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned truish for adding property that is "
                                                        "incompatible with the existing property in the target"));
     }
-    else if (setting_config_false && (target_desc.flags & ECMA_PROP_IS_CONFIGURABLE))
+    else if (setting_config_false && (target_desc.flags & JERRY_PROP_IS_CONFIGURABLE))
     {
       ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned truish for defining non-configurable property "
                                                        "which is configurable in the target"));
     }
     /* ES11: 16.c */
-    else if ((target_desc.flags & (ECMA_PROP_IS_VALUE_DEFINED | ECMA_PROP_IS_WRITABLE_DEFINED)) != 0
-             && (prop_desc_p->flags & (ECMA_PROP_IS_WRITABLE_DEFINED | ECMA_PROP_IS_WRITABLE))
-                 == ECMA_PROP_IS_WRITABLE_DEFINED
-             && (target_desc.flags & (ECMA_PROP_IS_WRITABLE | ECMA_PROP_IS_CONFIGURABLE)) == ECMA_PROP_IS_WRITABLE)
+    else if ((target_desc.flags & (JERRY_PROP_IS_VALUE_DEFINED | JERRY_PROP_IS_WRITABLE_DEFINED)) != 0
+             && (prop_desc_p->flags & (JERRY_PROP_IS_WRITABLE_DEFINED | JERRY_PROP_IS_WRITABLE))
+                 == JERRY_PROP_IS_WRITABLE_DEFINED
+             && (target_desc.flags & (JERRY_PROP_IS_WRITABLE | JERRY_PROP_IS_CONFIGURABLE)) == JERRY_PROP_IS_WRITABLE)
 
     {
       ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned truish for defining non-configurable property "
@@ -1080,7 +1080,7 @@ ecma_proxy_object_has (ecma_object_t *obj_p, /**< proxy object */
 
     if (ecma_is_value_true (status))
     {
-      bool prop_is_configurable = target_desc.flags & ECMA_PROP_IS_CONFIGURABLE;
+      bool prop_is_configurable = target_desc.flags & JERRY_PROP_IS_CONFIGURABLE;
 
       ecma_free_property_descriptor (&target_desc);
 
@@ -1181,15 +1181,15 @@ ecma_proxy_object_get (ecma_object_t *obj_p, /**< proxy object */
   {
     ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
-    if ((target_desc.flags & ECMA_PROP_IS_VALUE_DEFINED)
-        && !(target_desc.flags & ECMA_PROP_IS_CONFIGURABLE)
-        && !(target_desc.flags & ECMA_PROP_IS_WRITABLE)
+    if ((target_desc.flags & JERRY_PROP_IS_VALUE_DEFINED)
+        && !(target_desc.flags & JERRY_PROP_IS_CONFIGURABLE)
+        && !(target_desc.flags & JERRY_PROP_IS_WRITABLE)
         && !ecma_op_same_value (trap_result, target_desc.value))
     {
       ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Incorrect value is returned by a Proxy 'get' trap"));
     }
-    else if (!(target_desc.flags & ECMA_PROP_IS_CONFIGURABLE)
-             && (target_desc.flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED))
+    else if (!(target_desc.flags & JERRY_PROP_IS_CONFIGURABLE)
+             && (target_desc.flags & (JERRY_PROP_IS_GET_DEFINED | JERRY_PROP_IS_SET_DEFINED))
              && target_desc.get_p == NULL
              && !ecma_is_value_undefined (trap_result))
     {
@@ -1306,15 +1306,15 @@ ecma_proxy_object_set (ecma_object_t *obj_p, /**< proxy object */
   {
     ecma_value_t ret_value = ECMA_VALUE_EMPTY;
 
-    if ((target_desc.flags & ECMA_PROP_IS_VALUE_DEFINED)
-        && !(target_desc.flags & ECMA_PROP_IS_CONFIGURABLE)
-        && !(target_desc.flags & ECMA_PROP_IS_WRITABLE)
+    if ((target_desc.flags & JERRY_PROP_IS_VALUE_DEFINED)
+        && !(target_desc.flags & JERRY_PROP_IS_CONFIGURABLE)
+        && !(target_desc.flags & JERRY_PROP_IS_WRITABLE)
         && !ecma_op_same_value (value, target_desc.value))
     {
       ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Incorrect value is returned by a Proxy 'set' trap"));
     }
-    else if (!(target_desc.flags & ECMA_PROP_IS_CONFIGURABLE)
-             && (target_desc.flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED))
+    else if (!(target_desc.flags & JERRY_PROP_IS_CONFIGURABLE)
+             && (target_desc.flags & (JERRY_PROP_IS_GET_DEFINED | JERRY_PROP_IS_SET_DEFINED))
              && target_desc.set_p == NULL)
     {
       ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("The property of a Proxy target is a non "
@@ -1424,7 +1424,7 @@ ecma_proxy_object_delete_property (ecma_object_t *obj_p, /**< proxy object */
   ecma_value_t ret_value = ECMA_VALUE_TRUE;
 
   /* 15. */
-  if (!(target_desc.flags & ECMA_PROP_IS_CONFIGURABLE))
+  if (!(target_desc.flags & JERRY_PROP_IS_CONFIGURABLE))
   {
     ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Trap returned truish for property which is "
                                                      "non-configurable in the proxy target"));
@@ -1672,7 +1672,7 @@ ecma_proxy_object_own_property_keys (ecma_object_t *obj_p) /**< proxy object */
     ecma_value_t prop_value = ecma_make_prop_name_value (prop_name_p);
 
     if (ecma_is_value_true (status)
-        && !(target_desc.flags & ECMA_PROP_IS_CONFIGURABLE))
+        && !(target_desc.flags & JERRY_PROP_IS_CONFIGURABLE))
     {
       ecma_collection_push_back (target_non_configurable_keys, prop_value);
     }

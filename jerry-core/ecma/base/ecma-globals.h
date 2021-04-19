@@ -1302,24 +1302,6 @@ typedef struct
 
 #endif /* JERRY_BUILTIN_CONTAINER */
 
-typedef enum
-{
-  ECMA_PROP_NO_OPTS = (0), /** empty property descriptor */
-  ECMA_PROP_IS_CONFIGURABLE = (1 << 0), /** [[Configurable]] */
-  ECMA_PROP_IS_ENUMERABLE = (1 << 1), /** [[Enumerable]] */
-  ECMA_PROP_IS_WRITABLE = (1 << 2), /** [[Writable]] */
-
-  ECMA_PROP_IS_CONFIGURABLE_DEFINED = (1 << 3), /** is [[Configurable]] defined? */
-  ECMA_PROP_IS_ENUMERABLE_DEFINED = (1 << 4), /** is [[Enumerable]] defined? */
-  ECMA_PROP_IS_WRITABLE_DEFINED = (1 << 5), /** is [[Writable]] defined? */
-
-  ECMA_PROP_IS_VALUE_DEFINED = (1 << 6), /** is [[Value]] defined? */
-  ECMA_PROP_IS_GET_DEFINED = (1 << 7), /** is [[Get]] defined? */
-  ECMA_PROP_IS_SET_DEFINED = (1 << 8), /** is [[Set]] defined? */
-
-  ECMA_PROP_SHOULD_THROW = (1 << 9), /** should throw on error, instead of returning with false */
-} ecma_property_descriptor_status_flags_t;
-
 /**
  * Description of ECMA property descriptor
  *
@@ -1355,17 +1337,17 @@ typedef struct
  *  - is_value_defined : true
  *  - is_configurable_defined, is_writable_defined, is_enumerable_defined : true
  */
-#define ECMA_NAME_DATA_PROPERTY_DESCRIPTOR_BITS ((uint16_t) (ECMA_PROP_IS_VALUE_DEFINED \
-                                                             | ECMA_PROP_IS_CONFIGURABLE_DEFINED \
-                                                             | ECMA_PROP_IS_ENUMERABLE_DEFINED \
-                                                             | ECMA_PROP_IS_WRITABLE_DEFINED))
+#define ECMA_NAME_DATA_PROPERTY_DESCRIPTOR_BITS ((uint16_t) (JERRY_PROP_IS_VALUE_DEFINED \
+                                                             | JERRY_PROP_IS_CONFIGURABLE_DEFINED \
+                                                             | JERRY_PROP_IS_ENUMERABLE_DEFINED \
+                                                             | JERRY_PROP_IS_WRITABLE_DEFINED))
 
 /**
  * Bitmask to get a the physical property flags from an ecma_property_descriptor
  */
-#define ECMA_PROPERTY_FLAGS_MASK ((uint16_t) (ECMA_PROP_IS_CONFIGURABLE \
-                                              | ECMA_PROP_IS_ENUMERABLE \
-                                              | ECMA_PROP_IS_WRITABLE))
+#define ECMA_PROPERTY_FLAGS_MASK ((uint16_t) (JERRY_PROP_IS_CONFIGURABLE \
+                                              | JERRY_PROP_IS_ENUMERABLE \
+                                              | JERRY_PROP_IS_WRITABLE))
 
 #if !JERRY_NUMBER_TYPE_FLOAT64
 /**

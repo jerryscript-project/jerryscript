@@ -1773,7 +1773,7 @@ ecma_op_typedarray_list_lazy_property_names (ecma_object_t *obj_p, /**< a TypedA
  * See also: ES2015 9.4.5.3
  *
  * @return ECMA_VALUE_TRUE - if the property is successfully defined
- *         ECMA_VALUE_FALSE - if is ECMA_PROP_SHOULD_THROW is not set
+ *         ECMA_VALUE_FALSE - if is JERRY_PROP_SHOULD_THROW is not set
  *         raised TypeError - otherwise
  */
 ecma_value_t
@@ -1789,13 +1789,13 @@ ecma_op_typedarray_define_own_property (ecma_object_t *obj_p, /**< TypedArray ob
 
     if (array_index != ECMA_STRING_NOT_ARRAY_INDEX)
     {
-      if ((property_desc_p->flags & (ECMA_PROP_IS_GET_DEFINED | ECMA_PROP_IS_SET_DEFINED))
-          || ((property_desc_p->flags & (ECMA_PROP_IS_CONFIGURABLE_DEFINED | ECMA_PROP_IS_CONFIGURABLE))
-              == (ECMA_PROP_IS_CONFIGURABLE_DEFINED | ECMA_PROP_IS_CONFIGURABLE))
-          || ((property_desc_p->flags & ECMA_PROP_IS_ENUMERABLE_DEFINED)
-              && !(property_desc_p->flags & ECMA_PROP_IS_ENUMERABLE))
-          || ((property_desc_p->flags & ECMA_PROP_IS_WRITABLE_DEFINED)
-              && !(property_desc_p->flags & ECMA_PROP_IS_WRITABLE)))
+      if ((property_desc_p->flags & (JERRY_PROP_IS_GET_DEFINED | JERRY_PROP_IS_SET_DEFINED))
+          || ((property_desc_p->flags & (JERRY_PROP_IS_CONFIGURABLE_DEFINED | JERRY_PROP_IS_CONFIGURABLE))
+              == (JERRY_PROP_IS_CONFIGURABLE_DEFINED | JERRY_PROP_IS_CONFIGURABLE))
+          || ((property_desc_p->flags & JERRY_PROP_IS_ENUMERABLE_DEFINED)
+              && !(property_desc_p->flags & JERRY_PROP_IS_ENUMERABLE))
+          || ((property_desc_p->flags & JERRY_PROP_IS_WRITABLE_DEFINED)
+              && !(property_desc_p->flags & JERRY_PROP_IS_WRITABLE)))
       {
         return ecma_raise_property_redefinition (prop_name_p, property_desc_p->flags);
       }
@@ -1804,10 +1804,10 @@ ecma_op_typedarray_define_own_property (ecma_object_t *obj_p, /**< TypedArray ob
 
       if (array_index >= info.length)
       {
-        return ECMA_REJECT ((property_desc_p->flags & ECMA_PROP_SHOULD_THROW), "Invalid typed array index");
+        return ECMA_REJECT ((property_desc_p->flags & JERRY_PROP_SHOULD_THROW), "Invalid typed array index");
       }
 
-      if (property_desc_p->flags & ECMA_PROP_IS_VALUE_DEFINED)
+      if (property_desc_p->flags & JERRY_PROP_IS_VALUE_DEFINED)
       {
         lit_utf8_byte_t *src_buffer = info.buffer_p + (array_index << info.shift);
         ecma_value_t set_element = ecma_set_typedarray_element (src_buffer, property_desc_p->value, info.id);
@@ -1828,7 +1828,7 @@ ecma_op_typedarray_define_own_property (ecma_object_t *obj_p, /**< TypedArray ob
 
     if (is_same)
     {
-      return ECMA_REJECT ((property_desc_p->flags & ECMA_PROP_SHOULD_THROW), "Invalid typed array index");
+      return ECMA_REJECT ((property_desc_p->flags & JERRY_PROP_SHOULD_THROW), "Invalid typed array index");
     }
   }
 

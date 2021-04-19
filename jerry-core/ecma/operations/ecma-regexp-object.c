@@ -249,7 +249,7 @@ ecma_op_regexp_alloc (ecma_object_t *ctr_obj_p) /**< constructor object pointer 
   ecma_value_t status = ecma_builtin_helper_def_prop (new_object_p,
                                                       ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
                                                       ecma_make_uint32_value (0),
-                                                      ECMA_PROPERTY_FLAG_WRITABLE | ECMA_PROP_SHOULD_THROW);
+                                                      ECMA_PROPERTY_FLAG_WRITABLE | JERRY_PROP_SHOULD_THROW);
 
   JERRY_ASSERT (ecma_is_value_true (status));
 

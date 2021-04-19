@@ -201,7 +201,7 @@ ecma_builtin_object_prototype_object_property_is_enumerable (ecma_object_t *obj_
     return status;
   }
 
-  bool is_enumerable = (prop_desc.flags & ECMA_PROP_IS_ENUMERABLE);
+  bool is_enumerable = (prop_desc.flags & JERRY_PROP_IS_ENUMERABLE);
 
   ecma_free_property_descriptor (&prop_desc);
 
@@ -247,21 +247,21 @@ ecma_builtin_object_prototype_define_getter_setter (ecma_value_t this_arg, /**< 
 
   /* 3. */
   ecma_property_descriptor_t desc = ecma_make_empty_property_descriptor ();
-  desc.flags |= (ECMA_PROP_IS_ENUMERABLE
-                 | ECMA_PROP_IS_CONFIGURABLE
-                 | ECMA_PROP_IS_ENUMERABLE_DEFINED
-                 | ECMA_PROP_IS_CONFIGURABLE_DEFINED
-                 | ECMA_PROP_SHOULD_THROW);
+  desc.flags |= (JERRY_PROP_IS_ENUMERABLE
+                 | JERRY_PROP_IS_CONFIGURABLE
+                 | JERRY_PROP_IS_ENUMERABLE_DEFINED
+                 | JERRY_PROP_IS_CONFIGURABLE_DEFINED
+                 | JERRY_PROP_SHOULD_THROW);
 
   if (define_getter)
   {
     desc.get_p = accessor_obj_p;
-    desc.flags |= ECMA_PROP_IS_GET_DEFINED;
+    desc.flags |= JERRY_PROP_IS_GET_DEFINED;
   }
   else
   {
     desc.set_p = accessor_obj_p;
-    desc.flags |= ECMA_PROP_IS_SET_DEFINED;
+    desc.flags |= JERRY_PROP_IS_SET_DEFINED;
   }
 
   /* 4. */
@@ -345,7 +345,7 @@ ecma_builtin_object_prototype_lookup_getter_setter (ecma_value_t this_arg, /**< 
     /* 3.b */
     if (ecma_is_value_true (get_desc))
     {
-      if ((desc.flags & ECMA_PROP_IS_SET_DEFINED) || (desc.flags & ECMA_PROP_IS_GET_DEFINED))
+      if ((desc.flags & JERRY_PROP_IS_SET_DEFINED) || (desc.flags & JERRY_PROP_IS_GET_DEFINED))
       {
         if (lookup_getter && desc.get_p != NULL)
         {

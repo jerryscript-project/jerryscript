@@ -26,5 +26,6 @@ assert(o.b === undefined);
 assert(o.c(val) === "c")
 assert(o.d === "d")
 
-assert(o.default === val)
-assert(def === val)
+assert(o.a === val);
+assert(o.default === 8.5)
+assert(def === 8.5)

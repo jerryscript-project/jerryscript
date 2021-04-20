@@ -159,6 +159,7 @@ native_module_evaluate (const jerry_value_t native_module) /**< native module */
 
   result = jerry_native_module_get_export (native_module, no_exp_val);
   TEST_ASSERT (jerry_value_is_error (result));
+  TEST_ASSERT (jerry_get_error_type (result) == JERRY_ERROR_REFERENCE);
   jerry_release_value (result);
 
   jerry_value_t export = jerry_create_number (3.5);
@@ -175,6 +176,7 @@ native_module_evaluate (const jerry_value_t native_module) /**< native module */
 
   result = jerry_native_module_set_export (native_module, no_exp_val, no_exp_val);
   TEST_ASSERT (jerry_value_is_error (result));
+  TEST_ASSERT (jerry_get_error_type (result) == JERRY_ERROR_REFERENCE);
   jerry_release_value (result);
 
   result = jerry_native_module_get_export (native_module, exp_val);

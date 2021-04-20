@@ -58,12 +58,12 @@ ecma_create_native_pointer_property (ecma_object_t *obj_p, /**< object to create
 
   if (property_p == NULL)
   {
+    native_pointer_p = (ecma_native_pointer_t *) jmem_heap_alloc_block (sizeof (ecma_native_pointer_t));
+
     ecma_property_value_t *value_p;
     ECMA_CREATE_INTERNAL_PROPERTY (obj_p, name_p, property_p, value_p);
 
-    native_pointer_p = (ecma_native_pointer_t *) jmem_heap_alloc_block (sizeof (ecma_native_pointer_t));
     ECMA_SET_INTERNAL_VALUE_POINTER (value_p->value, native_pointer_p);
-
     *property_p |= ECMA_PROPERTY_FLAG_SINGLE_EXTERNAL;
   }
   else if (*property_p & ECMA_PROPERTY_FLAG_SINGLE_EXTERNAL)
@@ -78,6 +78,10 @@ ecma_create_native_pointer_property (ecma_object_t *obj_p, /**< object to create
       return false;
     }
 
+    value_p->value = JMEM_CP_NULL;
+    (void) value_p->value; /* Make cppcheck happy. */
+    *property_p &= (ecma_property_t) ~ECMA_PROPERTY_FLAG_SINGLE_EXTERNAL;
+
     ecma_native_pointer_chain_t *item_p;
     item_p = (ecma_native_pointer_chain_t *) jmem_heap_alloc_block (sizeof (ecma_native_pointer_chain_t));
     item_p->data = *native_pointer_p;
@@ -88,7 +92,6 @@ ecma_create_native_pointer_property (ecma_object_t *obj_p, /**< object to create
     item_p->next_p->next_p = NULL;
 
     native_pointer_p = &item_p->next_p->data;
-    *property_p &= (ecma_property_t) ~ECMA_PROPERTY_FLAG_SINGLE_EXTERNAL;
     ECMA_SET_INTERNAL_VALUE_POINTER (value_p->value, item_p);
   }
   else
@@ -307,15 +310,17 @@ ecma_delete_native_pointer_property (ecma_object_t *obj_p, /**< object to delete
         return true;
       }
 
-      /* Only one item remained. */
+      /* Only one item remained. The ECMA_PROPERTY_FLAG_SINGLE_EXTERNAL flag is
+       * set early to avoid using the chain if the allocation below triggers a GC. */
+      *property_p |= ECMA_PROPERTY_FLAG_SINGLE_EXTERNAL;
+
       ecma_native_pointer_t *native_pointer_p;
       native_pointer_p = (ecma_native_pointer_t *) jmem_heap_alloc_block (sizeof (ecma_native_pointer_t));
       *native_pointer_p = first_p->data;
 
-      jmem_heap_free_block (first_p, sizeof (ecma_native_pointer_chain_t));
-
       ECMA_SET_INTERNAL_VALUE_POINTER (value_p->value, native_pointer_p);
-      *property_p |= ECMA_PROPERTY_FLAG_SINGLE_EXTERNAL;
+
+      jmem_heap_free_block (first_p, sizeof (ecma_native_pointer_chain_t));
       return true;
     }
 

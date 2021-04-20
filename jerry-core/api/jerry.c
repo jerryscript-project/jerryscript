@@ -1034,7 +1034,7 @@ jerry_native_module_get_export (const jerry_value_t native_module_val, /**< a na
 
   if (property_p == NULL)
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_unknown_export_p)));
+    return jerry_throw (ecma_raise_reference_error (ECMA_ERR_MSG (ecma_error_unknown_export_p)));
   }
 
   return ecma_copy_value (ECMA_PROPERTY_VALUE_PTR (property_p)->value);
@@ -1082,7 +1082,7 @@ jerry_native_module_set_export (const jerry_value_t native_module_val, /**< a na
 
   if (property_p == NULL)
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_unknown_export_p)));
+    return jerry_throw (ecma_raise_reference_error (ECMA_ERR_MSG (ecma_error_unknown_export_p)));
   }
 
   ecma_named_data_property_assign_value (module_p->scope_p,

@@ -15,7 +15,13 @@
 
 export var a = 2.5
 export var b = 4
-export var c = function(v) { def = v; return "c" }
+export var c = function(v) {
+  assert(def === 0);
+  a = v;
+  return "c"
+}
 
 var def = 8.5
+/* Nothing is tracked, only the result value is exported. */
 export default def
+def = 0

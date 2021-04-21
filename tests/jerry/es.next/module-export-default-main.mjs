@@ -21,6 +21,7 @@ import foo6 from "./module-export-default-6.mjs"
 import foo7 from "./module-export-default-7.mjs"
 import foo8, { counter as bar8 } from "./module-export-default-8.mjs"
 import foo9, { counter as bar9 } from "./module-export-default-9.mjs"
+import foo10, { g as bar10 } from "./module-export-default-10.mjs"
 
 let async_queue_expected = ["foo2", "foo3", "foo6", "foo7"];
 let async_queue = [];
@@ -64,6 +65,13 @@ let async_queue = [];
 (function() {
   assert(foo9.x === "foo9");
   assert(bar9 === 9.1);
+})();
+
+(function() {
+  var o = {}
+  assert(foo10() === 1.5);
+  assert(bar10(o) === "X");
+  assert(foo10 === o);
 })();
 
 Array.prototype.assertArrayEqual = function(expected) {

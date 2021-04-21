@@ -2587,6 +2587,8 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
         context_p->token.lit_location.type = LEXER_IDENT_LITERAL;
         parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);
 
+        /* Do not overwrite this identifier. */
+        context_p->status_flags &= (uint32_t) ~PARSER_MODULE_STORE_IDENT;
         context_p->module_identifier_lit_p = context_p->lit_object.literal_p;
 
         /* Fake an assignment to the default identifier */

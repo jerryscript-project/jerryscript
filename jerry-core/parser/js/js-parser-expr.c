@@ -967,7 +967,7 @@ parser_parse_class (parser_context_t *context_p, /**< context */
 
 #if JERRY_MODULE_SYSTEM
     parser_module_append_export_name (context_p);
-    context_p->status_flags &= (uint32_t) ~(PARSER_MODULE_STORE_IDENT);
+    context_p->status_flags &= (uint32_t) ~PARSER_MODULE_STORE_IDENT;
 #endif /* JERRY_MODULE_SYSTEM */
 
     lexer_next_token (context_p);
@@ -2045,15 +2045,6 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
         lexer_construct_literal_object (context_p,
                                         &context_p->token.lit_location,
                                         context_p->token.lit_location.type);
-
-#if JERRY_MODULE_SYSTEM
-        if ((context_p->status_flags & PARSER_MODULE_STORE_IDENT)
-            && type == LEXER_IDENT_LITERAL)
-        {
-          context_p->module_identifier_lit_p = context_p->lit_object.literal_p;
-          context_p->status_flags &= (uint32_t) ~(PARSER_MODULE_STORE_IDENT);
-        }
-#endif /* JERRY_MODULE_SYSTEM */
       }
       else if (type == LEXER_NUMBER_LITERAL)
       {

@@ -91,7 +91,6 @@
   <test id="built-ins/Object/entries/order-after-define-property.js"><reason></reason></test>
   <test id="built-ins/Object/keys/order-after-define-property.js"><reason></reason></test>
   <test id="built-ins/Proxy/preventExtensions/trap-is-undefined-target-is-proxy.js"><reason></reason></test>
-  <test id="built-ins/Proxy/setPrototypeOf/toboolean-trap-result-false.js"><reason></reason></test>
   <test id="built-ins/String/prototype/matchAll/regexp-is-undefined.js"><reason></reason></test>
   <test id="built-ins/String/prototype/normalize/form-is-not-valid-throws.js"><reason></reason></test>
   <test id="built-ins/String/prototype/normalize/length.js"><reason></reason></test>

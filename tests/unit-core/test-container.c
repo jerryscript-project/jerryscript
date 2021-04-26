@@ -16,6 +16,24 @@
 #include "jerryscript.h"
 #include "test-common.h"
 
+static int global_counter;
+
+static void
+native_free_callback (void *native_p, /**< native pointer */
+                      jerry_object_native_info_t *info_p) /**< native info */
+{
+  TEST_ASSERT (native_p == (void *) &global_counter);
+  TEST_ASSERT (info_p->free_cb == native_free_callback);
+  global_counter++;
+} /* native_free_callback */
+
+static const jerry_object_native_info_t native_info =
+{
+  .free_cb = native_free_callback,
+  .number_of_references = 0,
+  .offset_of_references = 0,
+};
+
 int
 main (void)
 {
@@ -80,6 +98,29 @@ main (void)
   jerry_release_value (instance_check);
   jerry_release_value (global_weakset);
   jerry_release_value (empty_weakset);
+
+  const jerry_char_t source[] = TEST_STRING_LITERAL (
+    "(function () {\n"
+    "  var o1 = {}\n"
+    "  var o2 = {}\n"
+    "  var o3 = {}\n"
+    "  var wm = new WeakMap()\n"
+    "  wm.set(o1, o2)\n"
+    "  wm.set(o2, o3)\n"
+    "  return o3\n"
+    "})()\n"
+  );
+  jerry_value_t result = jerry_eval (source,
+                                     sizeof (source) - 1,
+                                     JERRY_PARSE_NO_OPTS);
+  TEST_ASSERT (jerry_value_is_object (result));
+
+  jerry_set_object_native_pointer (result, (void *) &global_counter, &native_info);
+  jerry_release_value (result);
+
+  global_counter = 0;
+  jerry_gc (JERRY_GC_PRESSURE_LOW);
+  TEST_ASSERT (global_counter == 1);
 
   jerry_cleanup ();
   return 0;

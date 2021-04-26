@@ -871,6 +871,30 @@ ecma_op_container_delete_weak (ecma_extended_object_t *map_object_p, /**< map ob
 } /* ecma_op_container_delete_weak */
 
 /**
+ * Helper function to get the value from a weak container object
+ *
+ * @return value property
+ */
+ecma_value_t
+ecma_op_container_find_weak_value (ecma_object_t *object_p, /**< internal container object */
+                                   ecma_value_t key_arg) /**< key */
+{
+  ecma_extended_object_t *map_object_p = (ecma_extended_object_t *) object_p;
+
+  JERRY_ASSERT (map_object_p->u.cls.type == ECMA_OBJECT_CLASS_CONTAINER
+                && map_object_p->u.cls.u2.container_id == LIT_MAGIC_STRING_WEAKMAP_UL);
+
+  ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t,
+                                                                    map_object_p->u.cls.u3.value);
+
+  ecma_value_t *entry_p = ecma_op_internal_buffer_find (container_p, key_arg, map_object_p->u.cls.u2.container_id);
+
+  JERRY_ASSERT (entry_p != NULL);
+
+  return entry_p[1];
+} /* ecma_op_container_find_weak_value */
+
+/**
  * Helper function to remove a key/value pair from a weak container object
  */
 void
@@ -878,6 +902,10 @@ ecma_op_container_remove_weak_entry (ecma_object_t *object_p, /**< internal cont
                                      ecma_value_t key_arg) /**< key */
 {
   ecma_extended_object_t *map_object_p = (ecma_extended_object_t *) object_p;
+
+  JERRY_ASSERT (map_object_p->u.cls.type == ECMA_OBJECT_CLASS_CONTAINER
+                && (map_object_p->u.cls.u2.container_id == LIT_MAGIC_STRING_WEAKSET_UL
+                    || map_object_p->u.cls.u2.container_id == LIT_MAGIC_STRING_WEAKMAP_UL));
 
   ecma_collection_t *container_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t,
                                                                     map_object_p->u.cls.u3.value);

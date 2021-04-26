@@ -327,6 +327,46 @@ ecma_gc_mark_properties (ecma_object_t *object_p, /**< object */
           break;
         }
 #endif /* JERRY_ESNEXT */
+#if JERRY_BUILTIN_WEAKMAP
+        case LIT_INTERNAL_MAGIC_STRING_WEAK_REFS:
+        {
+          ecma_value_t key_arg = ecma_make_object_value (object_p);
+          ecma_collection_t *refs_p;
+
+          refs_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, property_pair_p->values[index].value);
+
+          for (uint32_t j = 0; j < refs_p->item_count; j++)
+          {
+            const ecma_value_t reference_value = refs_p->buffer_p[j];
+
+            if (ecma_is_value_empty (reference_value))
+            {
+              continue;
+            }
+
+            ecma_object_t *reference_object_p = ecma_get_object_from_value (reference_value);
+
+            JERRY_ASSERT (ecma_get_object_type (reference_object_p) == ECMA_OBJECT_TYPE_CLASS);
+
+            ecma_extended_object_t *map_object_p = (ecma_extended_object_t *) reference_object_p;
+
+            if (map_object_p->u.cls.type != ECMA_OBJECT_CLASS_CONTAINER
+                || map_object_p->u.cls.u2.container_id != LIT_MAGIC_STRING_WEAKMAP_UL
+                || !ecma_gc_is_object_visited (reference_object_p))
+            {
+              continue;
+            }
+
+            ecma_value_t value = ecma_op_container_find_weak_value (reference_object_p, key_arg);
+
+            if (ecma_is_value_object (value))
+            {
+              ecma_gc_set_object_visited (ecma_get_object_from_value (value));
+            }
+          }
+          break;
+        }
+#endif /* JERRY_BUILTIN_WEAKMAP */
         case LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER_WITH_REFERENCES:
         {
           jerry_value_t value = property_pair_p->values[index].value;
@@ -526,7 +566,10 @@ ecma_gc_mark_weakmap_object (ecma_object_t *object_p) /**< object */
       continue;
     }
 
-    if (ecma_is_value_object (entry_p->value))
+    JERRY_ASSERT (ecma_is_value_object (entry_p->key));
+
+    if (ecma_is_value_object (entry_p->value)
+        && ecma_gc_is_object_visited (ecma_get_object_from_value (entry_p->key)))
     {
       ecma_gc_set_object_visited (ecma_get_object_from_value (entry_p->value));
     }

@@ -189,20 +189,20 @@ typedef struct
  */
 typedef enum
 {
-  JERRY_PROP_NO_OPTS = (0), /** empty property descriptor */
-  JERRY_PROP_IS_CONFIGURABLE = (1 << 0), /** [[Configurable]] */
-  JERRY_PROP_IS_ENUMERABLE = (1 << 1), /** [[Enumerable]] */
-  JERRY_PROP_IS_WRITABLE = (1 << 2), /** [[Writable]] */
+  JERRY_PROP_NO_OPTS = (0), /**< empty property descriptor */
+  JERRY_PROP_IS_CONFIGURABLE = (1 << 0), /**< [[Configurable]] */
+  JERRY_PROP_IS_ENUMERABLE = (1 << 1), /**< [[Enumerable]] */
+  JERRY_PROP_IS_WRITABLE = (1 << 2), /**< [[Writable]] */
 
-  JERRY_PROP_IS_CONFIGURABLE_DEFINED = (1 << 3), /** is [[Configurable]] defined? */
-  JERRY_PROP_IS_ENUMERABLE_DEFINED = (1 << 4), /** is [[Enumerable]] defined? */
-  JERRY_PROP_IS_WRITABLE_DEFINED = (1 << 5), /** is [[Writable]] defined? */
+  JERRY_PROP_IS_CONFIGURABLE_DEFINED = (1 << 3), /**< is [[Configurable]] defined? */
+  JERRY_PROP_IS_ENUMERABLE_DEFINED = (1 << 4), /**< is [[Enumerable]] defined? */
+  JERRY_PROP_IS_WRITABLE_DEFINED = (1 << 5), /**< is [[Writable]] defined? */
 
-  JERRY_PROP_IS_VALUE_DEFINED = (1 << 6), /** is [[Value]] defined? */
-  JERRY_PROP_IS_GET_DEFINED = (1 << 7), /** is [[Get]] defined? */
-  JERRY_PROP_IS_SET_DEFINED = (1 << 8), /** is [[Set]] defined? */
+  JERRY_PROP_IS_VALUE_DEFINED = (1 << 6), /**< is [[Value]] defined? */
+  JERRY_PROP_IS_GET_DEFINED = (1 << 7), /**< is [[Get]] defined? */
+  JERRY_PROP_IS_SET_DEFINED = (1 << 8), /**< is [[Set]] defined? */
 
-  JERRY_PROP_SHOULD_THROW = (1 << 9), /** should throw on error, instead of returning with false */
+  JERRY_PROP_SHOULD_THROW = (1 << 9), /**< should throw on error, instead of returning with false */
 } jerry_property_descriptor_flags_t;
 
 /**
@@ -210,17 +210,10 @@ typedef enum
  */
 typedef struct
 {
-  /** any combination of jerry_property_descriptor_flags_t bits */
-  uint16_t flags;
-
-  /** [[Value]] */
-  jerry_value_t value;
-
-  /** [[Get]] */
-  jerry_value_t getter;
-
-  /** [[Set]] */
-  jerry_value_t setter;
+  uint16_t flags; /**< any combination of jerry_property_descriptor_flags_t bits */
+  jerry_value_t value; /**< [[Value]] */
+  jerry_value_t getter; /**< [[Get]] */
+  jerry_value_t setter; /**< [[Set]] */
 } jerry_property_descriptor_t;
 
 /**

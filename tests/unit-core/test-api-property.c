@@ -37,9 +37,7 @@ main (void)
   prop_desc.flags |= JERRY_PROP_IS_VALUE_DEFINED;
   prop_desc.value = jerry_acquire_value (prop_name);
   jerry_value_t res = jerry_define_own_property (global_obj_val, prop_name, &prop_desc);
-  TEST_ASSERT (!jerry_value_is_error (res));
-  TEST_ASSERT (jerry_value_is_boolean (res));
-  TEST_ASSERT (jerry_get_boolean_value (res));
+  TEST_ASSERT (jerry_value_is_boolean (res) && jerry_get_boolean_value (res));
   jerry_release_value (res);
   jerry_property_descriptor_free (&prop_desc);
 
@@ -49,7 +47,17 @@ main (void)
   prop_desc.value = jerry_create_number (3.14);
   res = jerry_define_own_property (global_obj_val, prop_name, &prop_desc);
   TEST_ASSERT (jerry_value_is_error (res));
-  TEST_ASSERT (!jerry_value_is_boolean (res));
+  jerry_release_value (res);
+  jerry_property_descriptor_free (&prop_desc);
+
+  /* Test: test define own property failure without throw twice */
+  prop_desc = jerry_property_descriptor_create ();
+  prop_desc.flags |= JERRY_PROP_IS_VALUE_DEFINED | JERRY_PROP_IS_GET_DEFINED;
+  res = jerry_define_own_property (prop_name, prop_name, &prop_desc);
+  TEST_ASSERT (jerry_value_is_boolean (res) && !jerry_get_boolean_value (res));
+  jerry_release_value (res);
+  res = jerry_define_own_property (global_obj_val, prop_name, &prop_desc);
+  TEST_ASSERT (jerry_value_is_boolean (res) && !jerry_get_boolean_value (res));
   jerry_release_value (res);
   jerry_property_descriptor_free (&prop_desc);
 

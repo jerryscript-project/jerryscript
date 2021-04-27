@@ -1310,22 +1310,13 @@ typedef struct
  * Note:
  *      If a component of descriptor is undefined then corresponding
  *      field should contain it's default value.
- *      The struct members must be in this order or keep in sync with ecma_property_descriptor_status_flags_t.
  */
 typedef struct
 {
-
-  /** any combination of ecma_property_descriptor_status_flags_t bits */
-  uint16_t flags;
-
-  /** [[Value]] */
-  ecma_value_t value;
-
-  /** [[Get]] */
-  ecma_object_t *get_p;
-
-  /** [[Set]] */
-  ecma_object_t *set_p;
+  uint16_t flags; /**< any combination of jerry_property_descriptor_flags_t bits */
+  ecma_value_t value; /**< [[Value]] */
+  ecma_object_t *get_p; /**< [[Get]] */
+  ecma_object_t *set_p; /**< [[Set]] */
 } ecma_property_descriptor_t;
 
 /**

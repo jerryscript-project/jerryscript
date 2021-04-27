@@ -3680,9 +3680,11 @@ jerry_property_descriptor_from_ecma (const ecma_property_descriptor_t *prop_desc
 /**
  * Convert a jerry_property_descriptor_t to a ecma_property_descriptor_t
  *
- * if error occurs the property descriptor's value field is filled with ECMA_VALUE_ERROR
+ * Note:
+ *     if error occurs the property descriptor's value field
+ *     is set to ECMA_VALUE_ERROR, but no error is thrown
  *
- * @return  ecma_property_descriptor_t
+ * @return ecma_property_descriptor_t
  */
 static ecma_property_descriptor_t
 jerry_property_descriptor_to_ecma (const jerry_property_descriptor_t *prop_desc_p) /**< input property_descriptor */
@@ -3694,9 +3696,10 @@ jerry_property_descriptor_to_ecma (const jerry_property_descriptor_t *prop_desc_
   /* Copy data property info. */
   if (prop_desc_p->flags & JERRY_PROP_IS_VALUE_DEFINED)
   {
-    if (ecma_is_value_error_reference (prop_desc_p->value))
+    if (ecma_is_value_error_reference (prop_desc_p->value)
+        || (prop_desc_p->flags & (JERRY_PROP_IS_GET_DEFINED | JERRY_PROP_IS_SET_DEFINED)))
     {
-      prop_desc.value = ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p));
+      prop_desc.value = ECMA_VALUE_ERROR;
       return prop_desc;
     }
 
@@ -3710,7 +3713,7 @@ jerry_property_descriptor_to_ecma (const jerry_property_descriptor_t *prop_desc_
 
     if (ecma_is_value_error_reference (getter))
     {
-      prop_desc.value = ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p));
+      prop_desc.value = ECMA_VALUE_ERROR;
       return prop_desc;
     }
 
@@ -3720,7 +3723,7 @@ jerry_property_descriptor_to_ecma (const jerry_property_descriptor_t *prop_desc_
     }
     else if (!ecma_is_value_null (getter))
     {
-      prop_desc.value = ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p));
+      prop_desc.value = ECMA_VALUE_ERROR;
       return prop_desc;
     }
   }
@@ -3731,7 +3734,7 @@ jerry_property_descriptor_to_ecma (const jerry_property_descriptor_t *prop_desc_
 
     if (ecma_is_value_error_reference (setter))
     {
-      prop_desc.value = ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p));
+      prop_desc.value = ECMA_VALUE_ERROR;
       return prop_desc;
     }
 
@@ -3741,7 +3744,7 @@ jerry_property_descriptor_to_ecma (const jerry_property_descriptor_t *prop_desc_
     }
     else if (!ecma_is_value_null (setter))
     {
-      prop_desc.value = ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p));
+      prop_desc.value = ECMA_VALUE_ERROR;
       return prop_desc;
     }
   }
@@ -3754,7 +3757,7 @@ jerry_property_descriptor_to_ecma (const jerry_property_descriptor_t *prop_desc_
       || (prop_desc_p->flags & enumerable_mask) == JERRY_PROP_IS_ENUMERABLE
       || (prop_desc_p->flags & writable_mask) == JERRY_PROP_IS_WRITABLE)
   {
-    prop_desc.value = ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p));
+    prop_desc.value = ECMA_VALUE_ERROR;
     return prop_desc;
   }
 
@@ -3769,11 +3772,16 @@ jerry_property_descriptor_to_ecma (const jerry_property_descriptor_t *prop_desc_
  *         false value - otherwise
  */
 static jerry_value_t
-jerry_error_or_false (const jerry_value_t err_val, /**< error value */
-                      bool is_throw) /**< throw flag */
+jerry_type_error_or_false (const char *msg_p, /**< message */
+                           uint16_t flags) /**< property descriptor flags */
 {
-  return is_throw ? jerry_throw (err_val) : jerry_create_boolean (false);
-} /* jerry_error_or_false */
+  if (!(flags & JERRY_PROP_SHOULD_THROW))
+  {
+    return ECMA_VALUE_FALSE;
+  }
+
+  return jerry_throw (ecma_raise_type_error (msg_p));
+} /* jerry_type_error_or_false */
 
 /**
  * Define a property to the specified object with the given name.
@@ -3795,24 +3803,22 @@ jerry_define_own_property (const jerry_value_t obj_val, /**< object value */
   if (!ecma_is_value_object (obj_val)
       || !ecma_is_value_prop_name (prop_name_val))
   {
-    return jerry_error_or_false (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)),
-                                 prop_desc_p->flags & JERRY_PROP_SHOULD_THROW);
+    return jerry_type_error_or_false (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p), prop_desc_p->flags);
   }
 
   if (prop_desc_p->flags & (JERRY_PROP_IS_WRITABLE_DEFINED | JERRY_PROP_IS_VALUE_DEFINED)
       && prop_desc_p->flags & (JERRY_PROP_IS_GET_DEFINED | JERRY_PROP_IS_SET_DEFINED))
   {
-    return jerry_error_or_false (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)),
-                                 prop_desc_p->flags & JERRY_PROP_SHOULD_THROW);
+    return jerry_type_error_or_false (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p), prop_desc_p->flags);
   }
 
   ecma_property_descriptor_t prop_desc = jerry_property_descriptor_to_ecma (prop_desc_p);
 
   if (ECMA_IS_VALUE_ERROR (prop_desc.value))
   {
-    return jerry_error_or_false (prop_desc.value, prop_desc_p->flags & JERRY_PROP_SHOULD_THROW);
-
+    return jerry_type_error_or_false (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p), prop_desc_p->flags);
   }
+
   return jerry_return (ecma_op_object_define_own_property (ecma_get_object_from_value (obj_val),
                                                            ecma_get_prop_name_from_value (prop_name_val),
                                                            &prop_desc));
@@ -4688,7 +4694,7 @@ jerry_from_property_descriptor (const jerry_property_descriptor_t *src_prop_desc
 
   if (ECMA_IS_VALUE_ERROR (prop_desc.value))
   {
-    return jerry_throw (prop_desc.value);
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
   }
 
   ecma_object_t *desc_obj_p = ecma_op_from_property_descriptor (&prop_desc);

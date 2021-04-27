@@ -324,17 +324,30 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
 
   bool system_is_little_endian = ecma_dataview_check_little_endian ();
 
+  ecma_typedarray_info_t info;
+  info.id = id;
+  info.length = view_size;
+  info.shift = ecma_typedarray_helper_get_shift_size (id);
+  info.element_size = element_size;
+  info.offset = view_p->byte_offset;
+  info.array_buffer_p = buffer_p;
+
   /* GetViewValue 12. */
   if (ecma_is_value_empty (value_to_set))
   {
     JERRY_VLA (lit_utf8_byte_t, swap_block_p, element_size);
     memcpy (swap_block_p, block_p, element_size * sizeof (lit_utf8_byte_t));
     ecma_dataview_swap_order (system_is_little_endian, is_little_endian, element_size, swap_block_p);
-    return ecma_get_typedarray_element (swap_block_p, id);
+    info.buffer_p = swap_block_p;
+    return ecma_get_typedarray_element (&info, 0);
   }
-
+  if (!ecma_number_is_nan (get_index) && get_index <= 0)
+  {
+    get_index = 0;
+  }
   /* SetViewValue 14. */
-  ecma_value_t set_element = ecma_set_typedarray_element (block_p, value_to_set, id);
+  info.buffer_p = block_p;
+  ecma_value_t set_element = ecma_set_typedarray_element (&info, value_to_set, 0);
   ecma_free_value (value_to_set);
 
   if (ECMA_IS_VALUE_ERROR (set_element))

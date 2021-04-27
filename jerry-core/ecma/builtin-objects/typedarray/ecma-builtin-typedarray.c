@@ -117,24 +117,10 @@ ecma_builtin_typedarray_of (ecma_value_t this_arg, /**< 'this' argument */
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a constructor"));
   }
 
-  ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
-  const uint8_t builtin_id = ecma_get_object_builtin_id (obj_p);
-
-  if (!ecma_typedarray_helper_is_typedarray (builtin_id))
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not a TypedArray constructor"));
-  }
-
-  ecma_typedarray_type_t typedarray_id = ecma_typedarray_helper_builtin_to_typedarray_id (builtin_id);
-
-  ecma_object_t *proto_p = ecma_builtin_get (ecma_typedarray_helper_get_prototype_id (typedarray_id));
-  const uint8_t element_size_shift = ecma_typedarray_helper_get_shift_size (typedarray_id);
-
-  ecma_value_t ret_val = ecma_typedarray_create_object_with_length (arguments_list_len,
-                                                                    NULL,
-                                                                    proto_p,
-                                                                    element_size_shift,
-                                                                    typedarray_id);
+  ecma_object_t *constructor_obj_p = ecma_get_object_from_value (this_arg);
+  ecma_value_t len_val = ecma_make_uint32_value (arguments_list_len);
+  ecma_value_t ret_val = ecma_typedarray_create (constructor_obj_p, &len_val, 1);
+  ecma_free_value (len_val);
 
   if (ECMA_IS_VALUE_ERROR (ret_val))
   {

@@ -67,7 +67,8 @@ ecma_value_t ecma_op_container_delete (ecma_extended_object_t *map_object_p, ecm
                                        lit_magic_string_id_t lit_id);
 ecma_value_t ecma_op_container_delete_weak (ecma_extended_object_t *map_object_p, ecma_value_t key_arg,
                                             lit_magic_string_id_t lit_id);
-void ecma_op_container_remove_weak_entry (ecma_object_t *container_p, ecma_value_t key_arg);
+ecma_value_t ecma_op_container_find_weak_value (ecma_object_t *object_p, ecma_value_t key_arg);
+void ecma_op_container_remove_weak_entry (ecma_object_t *object_p, ecma_value_t key_arg);
 void ecma_op_container_free_entries (ecma_object_t *object_p);
 ecma_value_t ecma_op_container_create_iterator (ecma_value_t this_arg,
                                                 ecma_builtin_id_t proto_id,

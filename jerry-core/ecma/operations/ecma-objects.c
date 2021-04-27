@@ -3419,10 +3419,10 @@ ecma_op_object_set_weak (ecma_object_t *object_p, /**< key object */
 
   if (property_p == NULL)
   {
+    refs_p = ecma_new_collection ();
+
     ecma_property_value_t *value_p;
     ECMA_CREATE_INTERNAL_PROPERTY (object_p, weak_refs_string_p, property_p, value_p);
-
-    refs_p = ecma_new_collection ();
     ECMA_SET_INTERNAL_VALUE_POINTER (value_p->value, refs_p);
   }
   else

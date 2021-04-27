@@ -144,7 +144,7 @@ JERRY_BUILDOPTIONS = [
     Options('buildoption_test-jerry_math',
             ['--jerry-math=on']),
     Options('buildoption_test-no_lcache_prophashmap',
-            ['--compile-flag=-DJERRY_LCACHE=0', '--compile-flag=-DJERRY_PROPRETY_HASHMAP=0']),
+            ['--compile-flag=-DJERRY_LCACHE=0', '--compile-flag=-DJERRY_PROPERTY_HASHMAP=0']),
     Options('buildoption_test-external_context',
             ['--external-context=on']),
     Options('buildoption_test-shared_libs',

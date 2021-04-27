@@ -26,7 +26,7 @@
  * @{
  */
 
-#if JERRY_PROPRETY_HASHMAP
+#if JERRY_PROPERTY_HASHMAP
 
 /**
  * Compute the total size of the property hashmap.
@@ -528,7 +528,7 @@ ecma_property_hashmap_find (ecma_property_hashmap_t *hashmap_p, /**< hashmap */
 #endif /* !JERRY_NDEBUG */
   }
 } /* ecma_property_hashmap_find */
-#endif /* JERRY_PROPRETY_HASHMAP */
+#endif /* JERRY_PROPERTY_HASHMAP */
 
 /**
  * @}

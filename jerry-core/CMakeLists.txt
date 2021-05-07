@@ -488,7 +488,7 @@ if(ENABLE_AMALGAM)
   set(AMALGAM_CONFIG_H "${CMAKE_BINARY_DIR}/amalgam/jerryscript-config.h")
 
   add_custom_command(OUTPUT ${AMALGAM_CORE_C} ${AMALGAM_CORE_H}
-                     COMMAND python ${CMAKE_SOURCE_DIR}/tools/amalgam.py
+                     COMMAND ${PYTHON} ${CMAKE_SOURCE_DIR}/tools/amalgam.py
                              --jerry-core
                              --output-dir ${CMAKE_BINARY_DIR}/amalgam
                      DEPENDS ${SOURCE_CORE_FILES}

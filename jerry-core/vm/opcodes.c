@@ -621,7 +621,7 @@ opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context
     }
 
     JERRY_ASSERT (frame_ctx_p->shared_p->status_flags & VM_FRAME_CTX_SHARED_NON_ARROW_FUNC);
-    proto_p = ecma_op_get_prototype_from_constructor (VM_FRAME_CTX_GET_FUNCTION_OBJECT (frame_ctx_p),
+    proto_p = ecma_op_get_prototype_from_constructor (frame_ctx_p->shared_p->function_object_p,
                                                       default_proto_id);
   }
 
@@ -645,6 +645,7 @@ opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context
   /* Copy shared data and frame context. */
   vm_frame_ctx_shared_t *new_shared_p = &(executable_object_p->shared);
   *new_shared_p = *(frame_ctx_p->shared_p);
+  new_shared_p->status_flags &= (uint32_t) ~VM_FRAME_CTX_SHARED_HAS_ARG_LIST;
 
   vm_frame_ctx_t *new_frame_ctx_p = &(executable_object_p->frame_ctx);
   *new_frame_ctx_p = *frame_ctx_p;

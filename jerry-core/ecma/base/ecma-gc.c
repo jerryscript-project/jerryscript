@@ -640,6 +640,7 @@ ecma_gc_mark_executable_object (ecma_object_t *object_p) /**< object */
   }
 
   ecma_gc_set_object_visited (executable_object_p->frame_ctx.lex_env_p);
+  ecma_gc_set_object_visited (executable_object_p->shared.function_object_p);
 
   if (!ECMA_EXECUTABLE_OBJECT_IS_SUSPENDED (executable_object_p))
   {

@@ -157,6 +157,7 @@ struct jerry_backtrace_frame_internal_t
   uint8_t frame_type; /**< frame type */
   jerry_backtrace_location_t location; /**< location information */
   ecma_value_t function; /**< function reference */
+  ecma_value_t this_binding; /**< this binding passed to the function */
 };
 
 /**

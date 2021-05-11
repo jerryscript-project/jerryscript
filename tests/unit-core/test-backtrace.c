@@ -61,9 +61,11 @@ backtrace_callback (jerry_backtrace_frame_t *frame_p, /* frame information */
 
   const jerry_backtrace_location_t *location_p = jerry_backtrace_get_location (frame_p);
   const jerry_value_t *function_p = jerry_backtrace_get_function (frame_p);
+  const jerry_value_t *this_p = jerry_backtrace_get_this (frame_p);
 
   TEST_ASSERT (location_p != NULL);
   TEST_ASSERT (function_p != NULL);
+  TEST_ASSERT (this_p != NULL);
 
   compare_string (location_p->resource_name, "capture_test.js");
 
@@ -75,6 +77,7 @@ backtrace_callback (jerry_backtrace_frame_t *frame_p, /* frame information */
     TEST_ASSERT (location_p->line == 2);
     TEST_ASSERT (location_p->column == 1);
     TEST_ASSERT (handler_args_p[0] == *function_p);
+    TEST_ASSERT (handler_args_p[1] == *this_p);
     return true;
   }
 
@@ -83,15 +86,21 @@ backtrace_callback (jerry_backtrace_frame_t *frame_p, /* frame information */
     TEST_ASSERT (jerry_backtrace_is_strict (frame_p));
     TEST_ASSERT (location_p->line == 7);
     TEST_ASSERT (location_p->column == 1);
-    TEST_ASSERT (handler_args_p[1] == *function_p);
+    TEST_ASSERT (handler_args_p[2] == *function_p);
+    TEST_ASSERT (jerry_value_is_undefined (*this_p));
     return true;
   }
+
+  jerry_value_t global = jerry_get_global_object ();
 
   TEST_ASSERT (frame_index == 3);
   TEST_ASSERT (!jerry_backtrace_is_strict (frame_p));
   TEST_ASSERT (location_p->line == 11);
   TEST_ASSERT (location_p->column == 1);
-  TEST_ASSERT (handler_args_p[2] == *function_p);
+  TEST_ASSERT (handler_args_p[3] == *function_p);
+  TEST_ASSERT (global == *this_p);
+
+  jerry_release_value (global);
   return false;
 } /* backtrace_callback */
 
@@ -170,7 +179,7 @@ capture_handler (const jerry_call_info_t *call_info_p, /**< call information */
   JERRY_UNUSED (args_p);
   JERRY_UNUSED (args_count);
 
-  TEST_ASSERT (args_count == 0 || args_count == 2 || args_count == 3);
+  TEST_ASSERT (args_count == 0 || args_count == 2 || args_count == 4);
   TEST_ASSERT (args_count == 0 || frame_index == 0);
 
   jerry_backtrace_callback_t callback = backtrace_callback;
@@ -187,7 +196,7 @@ capture_handler (const jerry_call_info_t *call_info_p, /**< call information */
   handler_args_p = args_p;
   jerry_backtrace_capture (callback, (void *) args_p);
 
-  TEST_ASSERT (args_count == 0 || frame_index == (int) args_count);
+  TEST_ASSERT (args_count == 0 || frame_index == (args_count == 4 ? 3 : 2));
 
   return jerry_create_undefined ();
 } /* capture_handler */
@@ -323,13 +332,13 @@ test_get_backtrace_api_call (void)
   /* Test frame capturing. */
 
   frame_index = 0;
-  source_p = ("function f() {\n"
-              "  return capture(f, g, h);\n"
-              "}\n"
+  source_p = ("var o = { f:function() {\n"
+              "  return capture(o.f, o, g, h);\n"
+              "} }\n"
               "\n"
               "function g() {\n"
               "  'use strict';\n"
-              "  return f();\n"
+              "  return o.f();\n"
               "}\n"
               "\n"
               "function h() {\n"

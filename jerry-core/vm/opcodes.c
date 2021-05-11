@@ -948,6 +948,7 @@ opfunc_init_class_fields (ecma_value_t class_object, /**< the function itself */
   ecma_extended_object_t *ext_function_p;
   ext_function_p = (ecma_extended_object_t *) ecma_get_object_from_value (property_value_p->value);
   shared_class_fields.header.bytecode_header_p = ecma_op_function_get_compiled_code (ext_function_p);
+  shared_class_fields.header.function_object_p = &ext_function_p->object;
 
   ecma_object_t *scope_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
                                                                        ext_function_p->u.function.scope_cp);
@@ -971,13 +972,14 @@ opfunc_init_static_class_fields (ecma_value_t function_object, /**< the function
   JERRY_ASSERT (ecma_op_is_callable (function_object));
   JERRY_ASSERT (ecma_is_value_object (this_val));
 
-  vm_frame_ctx_shared_class_fields_t shared_class_fields;
-  shared_class_fields.header.status_flags = VM_FRAME_CTX_SHARED_HAS_CLASS_FIELDS;
-  shared_class_fields.computed_class_fields_p = NULL;
-
   ecma_string_t *name_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED);
   ecma_object_t *function_object_p = ecma_get_object_from_value (function_object);
   ecma_property_t *class_field_property_p = ecma_find_named_property (function_object_p, name_p);
+
+  vm_frame_ctx_shared_class_fields_t shared_class_fields;
+  shared_class_fields.header.function_object_p = function_object_p;
+  shared_class_fields.header.status_flags = VM_FRAME_CTX_SHARED_HAS_CLASS_FIELDS;
+  shared_class_fields.computed_class_fields_p = NULL;
 
   if (class_field_property_p != NULL)
   {
@@ -985,8 +987,7 @@ opfunc_init_static_class_fields (ecma_value_t function_object, /**< the function
     shared_class_fields.computed_class_fields_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_value_t, value);
   }
 
-  ecma_extended_object_t *ext_function_p;
-  ext_function_p = (ecma_extended_object_t *) ecma_get_object_from_value (function_object);
+  ecma_extended_object_t *ext_function_p = (ecma_extended_object_t *) function_object_p;
   shared_class_fields.header.bytecode_header_p = ecma_op_function_get_compiled_code (ext_function_p);
 
   ecma_object_t *scope_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,

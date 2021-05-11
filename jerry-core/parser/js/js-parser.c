@@ -2578,6 +2578,13 @@ parser_parse_class_fields (parser_context_t *context_p) /**< context */
         scanner_seek (context_p);
       }
 
+#if JERRY_LINE_INFO
+      if (context_p->token.line != context_p->last_line_info_line)
+      {
+        parser_emit_line_info (context_p, context_p->token.line, true);
+      }
+#endif /* JERRY_LINE_INFO */
+
       context_p->source_end_p = range.source_end_p;
       lexer_next_token (context_p);
       parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);

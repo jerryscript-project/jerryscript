@@ -5266,11 +5266,9 @@ jerry_backtrace_get_function (jerry_backtrace_frame_t *frame_p) /**< frame point
   {
     vm_frame_ctx_t *context_p = frame_p->context_p;
 
-    if (context_p->shared_p->status_flags & VM_FRAME_CTX_SHARED_HAS_ARG_LIST)
+    if (context_p->shared_p->function_object_p != NULL)
     {
-      vm_frame_ctx_shared_args_t *shared_args_p = (vm_frame_ctx_shared_args_t *) context_p->shared_p;
-
-      frame_p->function = ecma_make_object_value (shared_args_p->function_object_p);
+      frame_p->function = ecma_make_object_value (context_p->shared_p->function_object_p);
       return &frame_p->function;
     }
   }

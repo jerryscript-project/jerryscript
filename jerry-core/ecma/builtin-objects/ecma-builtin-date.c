@@ -18,6 +18,7 @@
 #include "jcontext.h"
 #include "ecma-function-object.h"
 #include "ecma-alloc.h"
+#include "ecma-builtin-date.inc.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
@@ -645,7 +646,7 @@ ecma_builtin_date_parse_toString_formats (const lit_utf8_byte_t *date_str_curr_p
  *
  * @return parsed time
  */
-static ecma_number_t
+ecma_number_t
 ecma_builtin_date_parse (ecma_string_t *string_p) /**< string */
 {
   ECMA_STRING_TO_UTF8_STRING (string_p, str_p, str_size);
@@ -705,7 +706,7 @@ ecma_builtin_date_utc (const ecma_value_t args[], /**< arguments list */
  *
  * @return ecma_number_t
  */
-static ecma_number_t
+ecma_number_t
 ecma_builtin_date_now_helper (void)
 {
   return floor (DOUBLE_TO_ECMA_NUMBER_T (jerry_port_get_current_time ()));
@@ -719,7 +720,7 @@ ecma_builtin_date_now_helper (void)
  * @return ECMA_VALUE_ERROR - if the operation fails
  *         constructed date object - otherwise
  */
-static ecma_value_t
+ecma_value_t
 ecma_builtin_date_create (ecma_number_t tv)
 {
 #if JERRY_ESNEXT

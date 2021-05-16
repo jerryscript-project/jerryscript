@@ -26,6 +26,7 @@
 #include "ecma-comparison.h"
 #include "ecma-container-object.h"
 #include "ecma-dataview-object.h"
+#include "ecma-date-object.h"
 #include "ecma-exceptions.h"
 #include "ecma-eval.h"
 #include "ecma-function-object.h"
@@ -2362,6 +2363,22 @@ jerry_create_boolean (bool value) /**< bool value from which a jerry_value_t wil
 
   return jerry_return (ecma_make_boolean_value (value));
 } /* jerry_create_boolean */
+
+/**
+ * Create a jerry_value_t representing a date value from the given numerical parameter.
+ *
+ * @return value of the created date
+ */
+jerry_value_t
+jerry_create_date (double value) /**< numeric value from which a jerry_value_t will be created */
+{
+  jerry_assert_api_available ();
+
+  ecma_number_t date = (ecma_number_t) ecma_date_date_from_time (value);
+  ecma_number_t time = (ecma_number_t) ecma_date_time_in_day_from_time (value);
+
+  return jerry_return (ecma_date_create (ecma_date_make_date (date, time)));
+}
 
 /**
  * Create an error object
@@ -6425,6 +6442,222 @@ jerry_get_container_type (const jerry_value_t value) /**< the container object *
 #endif /* JERRY_BUILTIN_CONTAINER */
   return JERRY_CONTAINER_TYPE_INVALID;
 } /* jerry_get_container_type */
+
+/**
+ * Get the current date.
+ *
+ * @return numeric value of the present date.
+ */
+double
+jerry_date_now (void)
+{
+  jerry_assert_api_available ();
+
+  return ecma_date_now ();
+} /* jerry_date_now */
+
+/**
+ * Create a string representation of the given Date object based on the "kind" enum value.
+ *
+ * @return String object representing the specified Date.
+ */
+jerry_value_t
+jerry_date_to_string (const double date_value, /**< the Date value */
+                      const jerry_date_to_string_kind_t kind /**< the enum value specifying which kind of toString to call */)
+{
+  jerry_assert_api_available ();
+
+  jerry_value_t ret_val = jerry_create_undefined ();
+  switch (kind)
+  {
+    case JERRY_DATE_TO_STRING_SIMPLE:
+    {
+      ret_val = ecma_date_value_to_string (date_value);
+      break;
+    }
+    case JERRY_DATE_TO_STRING_UTC:
+    {
+      ret_val = ecma_date_value_to_utc_string (date_value);
+      break;
+    }
+    case JERRY_DATE_TO_STRING_ISO:
+    {
+      ret_val = ecma_date_value_to_iso_string (date_value);
+      break;
+    }
+    case JERRY_DATE_TO_STRING_DATE:
+    {
+      ret_val = ecma_date_value_to_date_string (date_value);
+      break;
+    }
+    case JERRY_DATE_TO_STRING_TIME:
+    {
+      ret_val = ecma_date_value_to_time_string (date_value);
+      break;
+    }
+    default:
+    {
+      break;
+    }
+  }
+
+  return ret_val;
+}
+
+/**
+ * Create a Date object from a specified date string.
+ *
+ * @return Date object representing the specified date.
+ */
+double
+jerry_date_parse (jerry_char_t *str_p) /**< the string representing the date */
+{
+  jerry_assert_api_available ();
+
+  return ecma_date_parse (ecma_get_string_from_value (jerry_create_string (str_p)));
+} /* jerry_date_parse */
+
+/**
+ * Return the given date as a number, interpreted in UTC rather than local time.
+ *
+ * @return the date in a numeric format.
+ */
+double
+jerry_date_utc (const double value) /**< the date in numeric format */
+{
+  jerry_assert_api_available ();
+
+  return ecma_date_utc (value);
+} /* jerry_date_utc */
+
+/**
+ * Get the component of the date specified by the "which" argument.
+ *
+ * @return the specified date component as a number.
+ */
+uint16_t
+jerry_date_get (const double date_value, /**< the date object */
+                const jerry_date_component_t which /**< one of the jerry_date_component_t values */)
+{
+  jerry_assert_api_available ();
+
+  uint16_t ret_val;
+
+  switch (which)
+  {
+    case JERRY_DATE_MILLISECOND:
+    {
+      ret_val = (uint16_t) ecma_date_ms_from_time (date_value);
+      break;
+    }
+    case JERRY_DATE_SECOND:
+    {
+      ret_val = (uint16_t) ecma_date_sec_from_time (date_value);
+      break;
+    }
+    case JERRY_DATE_MINUTE:
+    {
+      ret_val = (uint16_t) ecma_date_min_from_time (date_value);
+      break;
+    }
+    case JERRY_DATE_HOUR:
+    {
+      ret_val = (uint16_t) ecma_date_hour_from_time (date_value);
+      break;
+    }
+    case JERRY_DATE_DAY:
+    {
+      ret_val = (uint16_t) ecma_date_day_from_time (date_value);
+      break;
+    }
+    case JERRY_DATE_MONTH:
+    {
+      ret_val = (uint16_t) ecma_date_month_from_time (date_value);
+      break;
+    }
+    case JERRY_DATE_YEAR:
+    {
+      ret_val = (uint16_t) ecma_date_year_from_time (date_value);
+      break;
+    }
+    default:
+    {
+      ret_val = 0;
+      break;
+    }
+  }
+
+  return ret_val;
+} /** jerry_date_get */
+
+/**
+ * Set the component of the date specified by the "which" argument.
+ *
+ * @return the numerical representation of the changed date value.
+ */
+double
+jerry_date_set (const double date_value, /**< the date object */
+                const double value, /**< the value to set */
+                const jerry_date_component_t which /**< one of the jerry_date_component_t values */)
+{
+  jerry_assert_api_available ();
+
+  ecma_number_t year = (ecma_number_t) ecma_date_year_from_time (date_value);
+  ecma_number_t month = (ecma_number_t) ecma_date_month_from_time (date_value);
+  ecma_number_t day = (ecma_number_t) ecma_date_day_from_time (date_value);
+  ecma_number_t hour = (ecma_number_t) ecma_date_hour_from_time (date_value);
+  ecma_number_t min = (ecma_number_t) ecma_date_min_from_time (date_value);
+  ecma_number_t sec = (ecma_number_t) ecma_date_sec_from_time (date_value);
+  ecma_number_t ms = (ecma_number_t) ecma_date_ms_from_time (date_value);
+
+  switch (which)
+  {
+    case JERRY_DATE_MILLISECOND:
+    {
+      ms = value;
+      break;
+    }
+    case JERRY_DATE_SECOND:
+    {
+      sec = value;
+      break;
+    }
+    case JERRY_DATE_MINUTE:
+    {
+      min = value;
+      break;
+    }
+    case JERRY_DATE_HOUR:
+    {
+      hour = value;
+      break;
+    }
+    case JERRY_DATE_DAY:
+    {
+      day = value;
+      break;
+    }
+    case JERRY_DATE_MONTH:
+    {
+      month = value;
+      break;
+    }
+    case JERRY_DATE_YEAR:
+    {
+      year = value;
+      break;
+    }
+    default:
+    {
+      break;
+    }
+  }
+
+  ecma_number_t time_component = ecma_date_make_time (hour, min, sec, ms);
+  ecma_number_t day_component = ecma_date_make_day (year, month, day);
+
+  return ecma_date_make_date (day_component, time_component);
+} /** jerry_date_set */
 
 /**
  * @}

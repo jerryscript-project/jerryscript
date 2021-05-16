@@ -170,6 +170,7 @@ void jerry_release_value (jerry_value_t value);
  */
 jerry_value_t jerry_create_array (uint32_t size);
 jerry_value_t jerry_create_boolean (bool value);
+jerry_value_t jerry_create_date (double value);
 jerry_value_t jerry_create_error (jerry_error_t error_type, const jerry_char_t *message_p);
 jerry_value_t jerry_create_error_sz (jerry_error_t error_type, const jerry_char_t *message_p,
                                      jerry_size_t message_size);
@@ -394,6 +395,58 @@ jerry_value_t
 jerry_get_dataview_buffer (const jerry_value_t dataview,
                            jerry_length_t *byte_offset,
                            jerry_length_t *byte_length);
+
+/**
+ * Date functions.
+ */
+
+/**
+ * Components of the date to be handled by get/set operations.
+ */
+typedef enum {
+  JERRY_DATE_NONE = 0,
+  JERRY_DATE_MILLISECOND,
+  JERRY_DATE_SECOND,
+  JERRY_DATE_MINUTE,
+  JERRY_DATE_HOUR,
+  JERRY_DATE_DAY,
+  JERRY_DATE_MONTH,
+  JERRY_DATE_YEAR,
+} jerry_date_component_t;
+
+/**
+ * Type of Date.toString operation to be carried out.
+ */
+typedef enum {
+  JERRY_DATE_TO_STRING_NONE = 0,
+  JERRY_DATE_TO_STRING_SIMPLE,
+  JERRY_DATE_TO_STRING_UTC,
+  JERRY_DATE_TO_STRING_ISO,
+  JERRY_DATE_TO_STRING_DATE,
+  JERRY_DATE_TO_STRING_TIME
+} jerry_date_to_string_kind_t;
+
+double
+jerry_date_now (void);
+
+jerry_value_t
+jerry_date_to_string (const double date_value,
+                      const jerry_date_to_string_kind_t kind);
+
+double
+jerry_date_parse (jerry_char_t *str_p);
+
+double
+jerry_date_utc (const double value);
+
+uint16_t
+jerry_date_get (const double date_value,
+                const jerry_date_component_t flags);
+
+double
+jerry_date_set (const double date_value,
+                const double value,
+                const jerry_date_component_t which);
 
 /**
  * TypedArray functions.

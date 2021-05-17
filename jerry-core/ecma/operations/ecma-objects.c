@@ -3519,7 +3519,7 @@ ecma_raise_property_redefinition (ecma_string_t *property_name_p, /**< property 
   JERRY_UNUSED (property_name_p);
 
   return ECMA_REJECT_WITH_FORMAT (flags & JERRY_PROP_SHOULD_THROW,
-                                  "Cannot redefine property '%'",
+                                  "Cannot redefine property: %",
                                   ecma_make_prop_name_value (property_name_p));
 } /* ecma_raise_property_redefinition */
 

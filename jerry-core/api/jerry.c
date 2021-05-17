@@ -5277,6 +5277,26 @@ jerry_backtrace_get_function (jerry_backtrace_frame_t *frame_p) /**< frame point
 } /* jerry_backtrace_get_function */
 
 /**
+ * Initialize and return with the 'this' binding private field of a backtrace frame.
+ * The 'this' binding is a hidden value passed to the called function. As for arrow
+ * functions, the 'this' binding is assigned at function creation.
+ *
+ * @return pointer to the 'this' binding - if the binding is available,
+ *         NULL - otherwise
+ */
+const jerry_value_t *
+jerry_backtrace_get_this (jerry_backtrace_frame_t *frame_p) /**< frame pointer */
+{
+  if (frame_p->frame_type == JERRY_BACKTRACE_FRAME_JS)
+  {
+    frame_p->this_binding = frame_p->context_p->this_binding;
+    return &frame_p->this_binding;
+  }
+
+  return NULL;
+} /* jerry_backtrace_get_this */
+
+/**
  * Returns true, if the code bound to the backtrace frame is strict mode code.
  *
  * @return true - if strict mode code is bound to the frame,

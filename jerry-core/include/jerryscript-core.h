@@ -350,6 +350,7 @@ void jerry_backtrace_capture (jerry_backtrace_callback_t callback, void *user_p)
 jerry_backtrace_frame_types_t jerry_backtrace_get_frame_type (jerry_backtrace_frame_t *frame_p);
 const jerry_backtrace_location_t *jerry_backtrace_get_location (jerry_backtrace_frame_t *frame_p);
 const jerry_value_t *jerry_backtrace_get_function (jerry_backtrace_frame_t *frame_p);
+const jerry_value_t *jerry_backtrace_get_this (jerry_backtrace_frame_t *frame_p);
 bool jerry_backtrace_is_strict (jerry_backtrace_frame_t *frame_p);
 
 /**

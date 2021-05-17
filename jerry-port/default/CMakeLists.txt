@@ -41,7 +41,7 @@ if(ENABLE_AMALGAM)
   set(AMALGAM_PORT_H "${CMAKE_BINARY_DIR}/amalgam/jerryscript-port-default.h")
 
   add_custom_command(OUTPUT ${AMALGAM_PORT_C} ${AMALGAM_PORT_H}
-                     COMMAND python ${CMAKE_SOURCE_DIR}/tools/amalgam.py
+                     COMMAND ${PYTHON} ${CMAKE_SOURCE_DIR}/tools/amalgam.py
                              --jerry-port-default
                              --output-dir ${CMAKE_BINARY_DIR}/amalgam
                      DEPENDS ${SOURCE_PORT_DEFAULT}

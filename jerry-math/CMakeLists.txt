@@ -71,7 +71,7 @@ if(ENABLE_AMALGAM)
   set(AMALGAM_MATH_H "${CMAKE_BINARY_DIR}/amalgam/math.h")
 
   add_custom_command(OUTPUT ${AMALGAM_MATH_C} ${AMALGAM_MATH_H}
-                     COMMAND python ${CMAKE_SOURCE_DIR}/tools/amalgam.py
+                     COMMAND ${PYTHON} ${CMAKE_SOURCE_DIR}/tools/amalgam.py
                              --jerry-math
                              --output-dir ${CMAKE_BINARY_DIR}/amalgam
                      DEPENDS ${SOURCE_MATH}

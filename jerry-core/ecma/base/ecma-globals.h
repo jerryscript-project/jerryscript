@@ -1032,6 +1032,7 @@ typedef struct
       union
       {
         uint8_t arguments_flags; /**< arguments object flags */
+        uint8_t error_type; /**< jerry_error_t type of native error objects */
 #if JERRY_BUILTIN_DATE
         uint8_t date_flags; /**< flags for date objects */
 #endif /* JERRY_BUILTIN_DATE */

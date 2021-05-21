@@ -39,38 +39,6 @@
  */
 
 /**
- * Map error type to error prototype.
- */
-typedef struct
-{
-  jerry_error_t error_type; /**< Native error type */
-  ecma_builtin_id_t error_prototype_id; /**< ID of the error prototype */
-} ecma_error_mapping_t;
-
-/**
- * List of error type mappings
- */
-const ecma_error_mapping_t ecma_error_mappings[] =
-{
-#define ERROR_ELEMENT(TYPE, ID) { TYPE, ID }
-  ERROR_ELEMENT (JERRY_ERROR_COMMON,      ECMA_BUILTIN_ID_ERROR_PROTOTYPE),
-
-#if JERRY_BUILTIN_ERRORS
-  ERROR_ELEMENT (JERRY_ERROR_EVAL,        ECMA_BUILTIN_ID_EVAL_ERROR_PROTOTYPE),
-  ERROR_ELEMENT (JERRY_ERROR_RANGE,       ECMA_BUILTIN_ID_RANGE_ERROR_PROTOTYPE),
-  ERROR_ELEMENT (JERRY_ERROR_REFERENCE,   ECMA_BUILTIN_ID_REFERENCE_ERROR_PROTOTYPE),
-  ERROR_ELEMENT (JERRY_ERROR_TYPE,        ECMA_BUILTIN_ID_TYPE_ERROR_PROTOTYPE),
-  ERROR_ELEMENT (JERRY_ERROR_URI,         ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE),
-  ERROR_ELEMENT (JERRY_ERROR_SYNTAX,      ECMA_BUILTIN_ID_SYNTAX_ERROR_PROTOTYPE),
-#if JERRY_BUILTIN_PROMISE
-  ERROR_ELEMENT (JERRY_ERROR_AGGREGATE,   ECMA_BUILTIN_ID_AGGREGATE_ERROR_PROTOTYPE),
-#endif /* JERRY_BUILTIN_PROMISE */
-#endif /* JERRY_BUILTIN_ERRORS */
-
-#undef ERROR_ELEMENT
-};
-
-/**
  * Standard ecma-error object constructor.
  *
  * Note:
@@ -150,16 +118,18 @@ ecma_new_standard_error (jerry_error_t error_type, /**< native error type */
 
   ecma_object_t *prototype_obj_p = ecma_builtin_get (prototype_id);
 
-  ecma_object_t *new_error_obj_p = ecma_create_object (prototype_obj_p,
-                                                       sizeof (ecma_extended_object_t),
-                                                       ECMA_OBJECT_TYPE_CLASS);
+  ecma_object_t *error_object_p = ecma_create_object (prototype_obj_p,
+                                                      sizeof (ecma_extended_object_t),
+                                                      ECMA_OBJECT_TYPE_CLASS);
 
-  ((ecma_extended_object_t *) new_error_obj_p)->u.cls.type = ECMA_OBJECT_CLASS_ERROR;
+  ecma_extended_object_t *extended_object_p = (ecma_extended_object_t *) error_object_p;
+  extended_object_p->u.cls.type = ECMA_OBJECT_CLASS_ERROR;
+  extended_object_p->u.cls.u1.error_type = (uint8_t) error_type;
 
   if (message_string_p != NULL)
   {
     ecma_property_value_t *prop_value_p;
-    prop_value_p = ecma_create_named_data_property (new_error_obj_p,
+    prop_value_p = ecma_create_named_data_property (error_object_p,
                                                     ecma_get_magic_string (LIT_MAGIC_STRING_MESSAGE),
                                                     ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
                                                     NULL);
@@ -173,7 +143,7 @@ ecma_new_standard_error (jerry_error_t error_type, /**< native error type */
       && !(JERRY_CONTEXT (status_flags) & ECMA_STATUS_ERROR_UPDATE))
   {
     JERRY_CONTEXT (status_flags) |= ECMA_STATUS_ERROR_UPDATE;
-    JERRY_CONTEXT (error_object_created_callback_p) (ecma_make_object_value (new_error_obj_p),
+    JERRY_CONTEXT (error_object_created_callback_p) (ecma_make_object_value (error_object_p),
                                                      JERRY_CONTEXT (error_object_created_callback_user_p));
     JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_ERROR_UPDATE;
   }
@@ -183,7 +153,7 @@ ecma_new_standard_error (jerry_error_t error_type, /**< native error type */
     /* Default decorator when line info is enabled. */
     ecma_string_t *stack_str_p = ecma_get_magic_string (LIT_MAGIC_STRING_STACK);
 
-    ecma_property_value_t *prop_value_p = ecma_create_named_data_property (new_error_obj_p,
+    ecma_property_value_t *prop_value_p = ecma_create_named_data_property (error_object_p,
                                                                            stack_str_p,
                                                                            ECMA_PROPERTY_CONFIGURABLE_WRITABLE,
                                                                            NULL);
@@ -196,7 +166,7 @@ ecma_new_standard_error (jerry_error_t error_type, /**< native error type */
 #endif /* JERRY_LINE_INFO */
   }
 
-  return new_error_obj_p;
+  return error_object_p;
 } /* ecma_new_standard_error */
 
 #if JERRY_BUILTIN_PROMISE
@@ -312,26 +282,14 @@ ecma_new_aggregate_error (ecma_value_t error_list_val, /**< errors list */
  *         if it is not an Error object then JERRY_ERROR_NONE will be returned
  */
 jerry_error_t
-ecma_get_error_type (ecma_object_t *error_object) /**< possible error object */
+ecma_get_error_type (ecma_object_t *error_object_p) /**< possible error object */
 {
-  if (error_object->u2.prototype_cp == JMEM_CP_NULL || ECMA_OBJECT_IS_PROXY (error_object))
+  if (!ecma_object_class_is (error_object_p, ECMA_OBJECT_CLASS_ERROR))
   {
     return JERRY_ERROR_NONE;
   }
 
-  ecma_object_t *prototype_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, error_object->u2.prototype_cp);
-
-  uint8_t builtin_id = ecma_get_object_builtin_id (prototype_p);
-
-  for (uint8_t idx = 0; idx < sizeof (ecma_error_mappings) / sizeof (ecma_error_mappings[0]); idx++)
-  {
-    if (ecma_error_mappings[idx].error_prototype_id == builtin_id)
-    {
-      return ecma_error_mappings[idx].error_type;
-    }
-  }
-
-  return JERRY_ERROR_NONE;
+  return (jerry_error_t) ((ecma_extended_object_t *) error_object_p)->u.cls.u1.error_type;
 } /* ecma_get_error_type */
 
 /**

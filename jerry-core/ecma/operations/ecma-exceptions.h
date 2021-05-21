@@ -32,7 +32,7 @@
 #define ECMA_ERR_MSG(msg) NULL
 #endif /* JERRY_ERROR_MESSAGES */
 
-jerry_error_t ecma_get_error_type (ecma_object_t *error_object);
+jerry_error_t ecma_get_error_type (ecma_object_t *error_object_p);
 ecma_object_t *ecma_new_standard_error (jerry_error_t error_type, ecma_string_t *message_string_p);
 #if JERRY_ERROR_MESSAGES
 ecma_value_t ecma_raise_standard_error_with_format (jerry_error_t error_type, const char *msg_p, ...);

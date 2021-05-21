@@ -72,5 +72,14 @@ main (void)
 
   jerry_release_value (result);
 
+  char test_invalid_error[] = "Object.create(Error.prototype)";
+  result = jerry_eval ((const jerry_char_t *) test_invalid_error,
+                       sizeof (test_invalid_error) - 1,
+                       JERRY_PARSE_NO_OPTS);
+  TEST_ASSERT (!jerry_value_is_error (result) && jerry_value_is_object (result));
+  TEST_ASSERT (jerry_get_error_type (result) == JERRY_ERROR_NONE);
+
+  jerry_release_value (result);
+
   jerry_cleanup ();
 } /* main */

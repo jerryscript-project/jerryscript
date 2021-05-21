@@ -5023,8 +5023,42 @@ jerry_get_proxy_target (jerry_value_t proxy_value) /**< proxy value */
   JERRY_UNUSED (proxy_value);
 #endif /* JERRY_BUILTIN_PROXY */
 
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Passed value is not a proxy object")));
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_argument_is_not_a_proxy)));
 } /* jerry_get_proxy_target */
+
+/**
+ * Get the handler object of a Proxy object
+ *
+ * @return type error - if proxy_value is not a Proxy object
+ *         handler object - otherwise
+ */
+jerry_value_t
+jerry_get_proxy_handler (jerry_value_t proxy_value) /**< proxy value */
+{
+  jerry_assert_api_available ();
+
+#if JERRY_BUILTIN_PROXY
+  if (ecma_is_value_object (proxy_value))
+  {
+    ecma_object_t *object_p = ecma_get_object_from_value (proxy_value);
+
+    if (ECMA_OBJECT_IS_PROXY (object_p))
+    {
+      ecma_proxy_object_t *proxy_object_p = (ecma_proxy_object_t *) object_p;
+
+      if (!ecma_is_value_null (proxy_object_p->handler))
+      {
+        ecma_ref_object (ecma_get_object_from_value (proxy_object_p->handler));
+      }
+      return proxy_object_p->handler;
+    }
+  }
+#else /* !JERRY_BUILTIN_PROXY */
+  JERRY_UNUSED (proxy_value);
+#endif /* JERRY_BUILTIN_PROXY */
+
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_argument_is_not_a_proxy)));
+} /* jerry_get_proxy_handler */
 
 /**
  * Validate UTF-8 string

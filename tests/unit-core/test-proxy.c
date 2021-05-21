@@ -340,11 +340,14 @@ main (void)
   target = jerry_create_object ();
   handler = jerry_create_object ();
   proxy = jerry_create_proxy (target, handler);
-  jerry_release_value (handler);
 
   {
     jerry_value_t res = jerry_get_proxy_target (proxy);
     TEST_ASSERT (res == target);
+    jerry_release_value (res);
+
+    res = jerry_get_proxy_handler (proxy);
+    TEST_ASSERT (res == handler);
     jerry_release_value (res);
 
     res = jerry_get_proxy_target (target);
@@ -352,9 +355,16 @@ main (void)
     res = jerry_get_value_from_error (res, true);
     TEST_ASSERT (jerry_get_error_type (res) == JERRY_ERROR_TYPE);
     jerry_release_value (res);
+
+    res = jerry_get_proxy_handler (handler);
+    TEST_ASSERT (jerry_value_is_error (res));
+    res = jerry_get_value_from_error (res, true);
+    TEST_ASSERT (jerry_get_error_type (res) == JERRY_ERROR_TYPE);
+    jerry_release_value (res);
   }
 
   jerry_release_value (proxy);
+  jerry_release_value (handler);
   jerry_release_value (target);
 
   test_proxy_native ();

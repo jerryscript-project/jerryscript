@@ -324,6 +324,7 @@ void jerry_get_bigint_digits (jerry_value_t value, uint64_t *digits_p, uint32_t 
  * Proxy functions.
  */
 jerry_value_t jerry_get_proxy_target (jerry_value_t proxy_value);
+jerry_value_t jerry_get_proxy_handler (jerry_value_t proxy_value);
 
 /**
  * Input validator functions.

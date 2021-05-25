@@ -63,8 +63,9 @@ main (void)
 
   /* Test: get own property descriptor */
   prop_desc = jerry_property_descriptor_create ();
-  bool is_ok = jerry_get_own_property_descriptor (global_obj_val, prop_name, &prop_desc);
-  TEST_ASSERT (is_ok);
+  jerry_value_t is_ok = jerry_get_own_property_descriptor (global_obj_val, prop_name, &prop_desc);
+  TEST_ASSERT (jerry_value_is_boolean (is_ok) && jerry_get_boolean_value (is_ok));
+  jerry_release_value (is_ok);
   TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_VALUE_DEFINED);
   TEST_ASSERT (jerry_value_is_string (prop_desc.value));
   TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_WRITABLE));
@@ -86,7 +87,8 @@ main (void)
     jerry_release_value (target);
     jerry_release_value (handler);
     is_ok = jerry_get_own_property_descriptor (proxy, prop_name, &prop_desc);
-    TEST_ASSERT (!is_ok);
+    TEST_ASSERT (jerry_value_is_boolean (is_ok) && !jerry_get_boolean_value (is_ok));
+    jerry_release_value (is_ok);
     jerry_release_value (proxy);
   }
 
@@ -102,7 +104,8 @@ main (void)
   jerry_release_value (res);
   jerry_property_descriptor_free (&prop_desc);
   is_ok = jerry_get_own_property_descriptor (global_obj_val, prop_name, &prop_desc);
-  TEST_ASSERT (is_ok);
+  TEST_ASSERT (jerry_value_is_boolean (is_ok) && jerry_get_boolean_value (is_ok));
+  jerry_release_value (is_ok);
   TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_WRITABLE));
   TEST_ASSERT (prop_desc.flags & JERRY_PROP_IS_ENUMERABLE);
   TEST_ASSERT (!(prop_desc.flags & JERRY_PROP_IS_CONFIGURABLE));

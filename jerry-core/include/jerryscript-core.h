@@ -78,6 +78,8 @@ bool jerry_value_is_string (const jerry_value_t value);
 bool jerry_value_is_symbol (const jerry_value_t value);
 bool jerry_value_is_bigint (const jerry_value_t value);
 bool jerry_value_is_undefined (const jerry_value_t value);
+bool jerry_value_is_true (const jerry_value_t value);
+bool jerry_value_is_false (const jerry_value_t value);
 
 jerry_type_t jerry_value_get_type (const jerry_value_t value);
 jerry_object_type_t jerry_object_get_type (const jerry_value_t value);

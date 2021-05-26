@@ -164,6 +164,8 @@ handler_construct (const jerry_call_info_t *call_info_p, /**< call information *
   TEST_ASSERT (jerry_value_is_boolean (args_p[0]));
   TEST_ASSERT (jerry_get_boolean_value (args_p[0]) == true);
 
+  TEST_ASSERT (jerry_value_is_true (args_p[0]));
+
   jerry_value_t this_value = call_info_p->this_value;
   jerry_value_t field_name = jerry_create_string ((jerry_char_t *) "value_field");
   jerry_value_t res = jerry_set_property (this_value, field_name, args_p[0]);
@@ -257,6 +259,7 @@ foreach (const jerry_value_t name, /**< field name */
   {
     TEST_ASSERT (jerry_value_is_boolean (value));
     TEST_ASSERT (jerry_get_boolean_value (value) == false);
+    TEST_ASSERT (jerry_value_is_false (value));
     return true;
   }
   else if (!strncmp (str_buf_p, "charlie", (size_t) sz))
@@ -1116,6 +1119,7 @@ main (void)
                     JERRY_PARSE_NO_OPTS);
   TEST_ASSERT (jerry_value_is_boolean (res));
   TEST_ASSERT (jerry_get_boolean_value (res) == true);
+  TEST_ASSERT (jerry_value_is_true (res));
 
   jerry_release_value (res);
 

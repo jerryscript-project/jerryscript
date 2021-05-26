@@ -1186,6 +1186,34 @@ jerry_value_is_boolean (const jerry_value_t value) /**< api value */
 } /* jerry_value_is_boolean */
 
 /**
+ * Check if the specified value is true.
+ *
+ * @return true  - if the specified value is true
+ *         false - otherwise
+ */
+bool
+jerry_value_is_true (const jerry_value_t value) /**< api value */
+{
+  jerry_assert_api_available ();
+
+  return ecma_is_value_true (value);
+} /* jerry_value_is_true */
+
+/**
+ * Check if the specified value is false.
+ *
+ * @return true  - if the specified value is false
+ *         false - otherwise
+ */
+bool
+jerry_value_is_false (const jerry_value_t value) /**< api value */
+{
+  jerry_assert_api_available ();
+
+  return ecma_is_value_false (value);
+} /* jerry_value_is_false */
+
+/**
  * Check if the specified value is a constructor function object value.
  *
  * @return true - if the specified value is a function value that implements [[Construct]],

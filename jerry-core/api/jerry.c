@@ -3830,7 +3830,7 @@ jerry_define_own_property (const jerry_value_t obj_val, /**< object value */
  * @return true - if success, the prop_desc_p fields contains the property info
  *         false - otherwise, the prop_desc_p is unchanged
  */
-bool
+jerry_value_t
 jerry_get_own_property_descriptor (const jerry_value_t  obj_val, /**< object value */
                                    const jerry_value_t prop_name_val, /**< property name (string value) */
                                    jerry_property_descriptor_t *prop_desc_p) /**< property descriptor */
@@ -3840,7 +3840,7 @@ jerry_get_own_property_descriptor (const jerry_value_t  obj_val, /**< object val
   if (!ecma_is_value_object (obj_val)
       || !ecma_is_value_prop_name (prop_name_val))
   {
-    return false;
+    return ECMA_VALUE_FALSE;
   }
 
   ecma_property_descriptor_t prop_desc;
@@ -3852,14 +3852,13 @@ jerry_get_own_property_descriptor (const jerry_value_t  obj_val, /**< object val
 #if JERRY_BUILTIN_PROXY
   if (ECMA_IS_VALUE_ERROR (status))
   {
-    // TODO: Due to Proxies the return value must be changed to jerry_value_t on next release
-    jcontext_release_exception ();
+    return jerry_throw (status);
   }
 #endif /* JERRY_BUILTIN_PROXY */
 
   if (!ecma_is_value_true (status))
   {
-    return false;
+    return ECMA_VALUE_FALSE;
   }
 
   /* The flags are always filled in the returned descriptor. */
@@ -3902,7 +3901,7 @@ jerry_get_own_property_descriptor (const jerry_value_t  obj_val, /**< object val
     }
   }
 
-  return true;
+  return ECMA_VALUE_TRUE;
 } /* jerry_get_own_property_descriptor */
 
 /**

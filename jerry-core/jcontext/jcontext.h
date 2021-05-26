@@ -171,10 +171,10 @@ struct jerry_context_t
   uint32_t ecma_gc_mark_recursion_limit; /**< GC mark recursion limit */
 #endif /* (JERRY_GC_MARK_LIMIT != 0) */
 
-#if JERRY_PROPRETY_HASHMAP
+#if JERRY_PROPERTY_HASHMAP
   uint8_t ecma_prop_hashmap_alloc_state; /**< property hashmap allocation state: 0-4,
                                           *   if !0 property hashmap allocation is disabled */
-#endif /* JERRY_PROPRETY_HASHMAP */
+#endif /* JERRY_PROPERTY_HASHMAP */
 
 #if JERRY_BUILTIN_REGEXP
   uint8_t re_cache_idx; /**< evicted item index when regex cache is full (round-robin) */

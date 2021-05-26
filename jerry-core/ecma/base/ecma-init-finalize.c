@@ -46,10 +46,10 @@ ecma_init (void)
 
   ecma_init_global_environment ();
 
-#if JERRY_PROPRETY_HASHMAP
+#if JERRY_PROPERTY_HASHMAP
   JERRY_CONTEXT (ecma_prop_hashmap_alloc_state) = ECMA_PROP_HASHMAP_ALLOC_ON;
   JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_HIGH_PRESSURE_GC;
-#endif /* JERRY_PROPRETY_HASHMAP */
+#endif /* JERRY_PROPERTY_HASHMAP */
 
 #if (JERRY_STACK_LIMIT != 0)
   volatile int sp;

@@ -348,9 +348,9 @@
  *
  * Default value: 1
  */
-#ifndef JERRY_PROPRETY_HASHMAP
-# define JERRY_PROPRETY_HASHMAP 1
-#endif /* !defined (JERRY_PROPRETY_HASHMAP) */
+#ifndef JERRY_PROPERTY_HASHMAP
+# define JERRY_PROPERTY_HASHMAP 1
+#endif /* !defined (JERRY_PROPERTY_HASHMAP) */
 
 /**
  * Enables/disables the Promise event callbacks
@@ -681,9 +681,9 @@
 || ((JERRY_PARSER_DUMP_BYTE_CODE != 0) && (JERRY_PARSER_DUMP_BYTE_CODE != 1))
 # error "Invalid value for 'JERRY_PARSER_DUMP_BYTE_CODE' macro."
 #endif
-#if !defined (JERRY_PROPRETY_HASHMAP) \
-|| ((JERRY_PROPRETY_HASHMAP != 0) && (JERRY_PROPRETY_HASHMAP != 1))
-# error "Invalid value for 'JERRY_PROPRETY_HASHMAP' macro."
+#if !defined (JERRY_PROPERTY_HASHMAP) \
+|| ((JERRY_PROPERTY_HASHMAP != 0) && (JERRY_PROPERTY_HASHMAP != 1))
+# error "Invalid value for 'JERRY_PROPERTY_HASHMAP' macro."
 #endif
 #if !defined (JERRY_PROMISE_CALLBACK) \
 || ((JERRY_PROMISE_CALLBACK != 0) && (JERRY_PROMISE_CALLBACK != 1))

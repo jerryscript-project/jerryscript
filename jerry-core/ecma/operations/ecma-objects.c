@@ -2530,7 +2530,7 @@ ecma_op_object_own_property_keys (ecma_object_t *obj_p) /**< object */
 
   jmem_cpointer_t prop_iter_cp = obj_p->u1.property_list_cp;
 
-#if JERRY_PROPRETY_HASHMAP
+#if JERRY_PROPERTY_HASHMAP
   if (prop_iter_cp != JMEM_CP_NULL)
   {
     ecma_property_header_t *prop_iter_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t, prop_iter_cp);
@@ -2540,7 +2540,7 @@ ecma_op_object_own_property_keys (ecma_object_t *obj_p) /**< object */
       prop_iter_cp = prop_iter_p->next_property_cp;
     }
   }
-#endif /* JERRY_PROPRETY_HASHMAP */
+#endif /* JERRY_PROPERTY_HASHMAP */
 
   while (prop_iter_cp != JMEM_CP_NULL)
   {

@@ -238,7 +238,7 @@ ecma_gc_mark_properties (ecma_object_t *object_p, /**< object */
 
   jmem_cpointer_t prop_iter_cp = object_p->u1.property_list_cp;
 
-#if JERRY_PROPRETY_HASHMAP
+#if JERRY_PROPERTY_HASHMAP
   if (prop_iter_cp != JMEM_CP_NULL)
   {
     ecma_property_header_t *prop_iter_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t, prop_iter_cp);
@@ -247,7 +247,7 @@ ecma_gc_mark_properties (ecma_object_t *object_p, /**< object */
       prop_iter_cp = prop_iter_p->next_property_cp;
     }
   }
-#endif /* JERRY_PROPRETY_HASHMAP */
+#endif /* JERRY_PROPERTY_HASHMAP */
 
   while (prop_iter_cp != JMEM_CP_NULL)
   {
@@ -1612,7 +1612,7 @@ ecma_gc_free_properties (ecma_object_t *object_p, /**< object */
 {
   jmem_cpointer_t prop_iter_cp = object_p->u1.property_list_cp;
 
-#if JERRY_PROPRETY_HASHMAP
+#if JERRY_PROPERTY_HASHMAP
   if (prop_iter_cp != JMEM_CP_NULL)
   {
     ecma_property_header_t *prop_iter_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t,
@@ -1623,7 +1623,7 @@ ecma_gc_free_properties (ecma_object_t *object_p, /**< object */
       prop_iter_cp = object_p->u1.property_list_cp;
     }
   }
-#endif /* JERRY_PROPRETY_HASHMAP */
+#endif /* JERRY_PROPERTY_HASHMAP */
 
   while (prop_iter_cp != JMEM_CP_NULL)
   {
@@ -2216,13 +2216,13 @@ ecma_free_unused_memory (jmem_pressure_t pressure) /**< current pressure */
 
   if (JERRY_LIKELY (pressure == JMEM_PRESSURE_LOW))
   {
-#if JERRY_PROPRETY_HASHMAP
+#if JERRY_PROPERTY_HASHMAP
     if (JERRY_CONTEXT (ecma_prop_hashmap_alloc_state) > ECMA_PROP_HASHMAP_ALLOC_ON)
     {
       --JERRY_CONTEXT (ecma_prop_hashmap_alloc_state);
     }
     JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_HIGH_PRESSURE_GC;
-#endif /* JERRY_PROPRETY_HASHMAP */
+#endif /* JERRY_PROPERTY_HASHMAP */
     /*
      * If there is enough newly allocated objects since last GC, probably it is worthwhile to start GC now.
      * Otherwise, probability to free sufficient space is considered to be low.
@@ -2239,7 +2239,7 @@ ecma_free_unused_memory (jmem_pressure_t pressure) /**< current pressure */
   else if (pressure == JMEM_PRESSURE_HIGH)
   {
     /* Freeing as much memory as we currently can */
-#if JERRY_PROPRETY_HASHMAP
+#if JERRY_PROPERTY_HASHMAP
     if (JERRY_CONTEXT (status_flags) & ECMA_STATUS_HIGH_PRESSURE_GC)
     {
       JERRY_CONTEXT (ecma_prop_hashmap_alloc_state) = ECMA_PROP_HASHMAP_ALLOC_MAX;
@@ -2249,11 +2249,11 @@ ecma_free_unused_memory (jmem_pressure_t pressure) /**< current pressure */
       ++JERRY_CONTEXT (ecma_prop_hashmap_alloc_state);
       JERRY_CONTEXT (status_flags) |= ECMA_STATUS_HIGH_PRESSURE_GC;
     }
-#endif /* JERRY_PROPRETY_HASHMAP */
+#endif /* JERRY_PROPERTY_HASHMAP */
 
     ecma_gc_run ();
 
-#if JERRY_PROPRETY_HASHMAP
+#if JERRY_PROPERTY_HASHMAP
     /* Free hashmaps of remaining objects. */
     jmem_cpointer_t obj_iter_cp = JERRY_CONTEXT (ecma_gc_objects_cp);
 
@@ -2287,7 +2287,7 @@ ecma_free_unused_memory (jmem_pressure_t pressure) /**< current pressure */
 
       obj_iter_cp = obj_iter_p->gc_next_cp;
     }
-#endif /* JERRY_PROPRETY_HASHMAP */
+#endif /* JERRY_PROPERTY_HASHMAP */
 
     jmem_pools_collect_empty ();
     return;

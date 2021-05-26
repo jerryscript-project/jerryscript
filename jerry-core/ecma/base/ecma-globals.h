@@ -57,9 +57,9 @@ typedef enum
 {
   ECMA_STATUS_API_AVAILABLE     = (1u << 0), /**< api available */
   ECMA_STATUS_DIRECT_EVAL       = (1u << 1), /**< eval is called directly */
-#if JERRY_PROPRETY_HASHMAP
+#if JERRY_PROPERTY_HASHMAP
   ECMA_STATUS_HIGH_PRESSURE_GC  = (1u << 2), /**< last gc was under high pressure */
-#endif /* JERRY_PROPRETY_HASHMAP */
+#endif /* JERRY_PROPERTY_HASHMAP */
   ECMA_STATUS_EXCEPTION         = (1u << 3), /**< last exception is a normal exception */
   ECMA_STATUS_ABORT             = (1u << 4), /**< last exception is an abort */
   ECMA_STATUS_ERROR_UPDATE      = (1u << 5), /**< the error_object_created_callback_p is called */
@@ -1942,7 +1942,7 @@ typedef struct
  */
 #define ECMA_EXTENDED_PRIMITIVE_MAX_REF (UINT32_MAX - (ECMA_EXTENDED_PRIMITIVE_REF_ONE - 1))
 
-#if JERRY_PROPRETY_HASHMAP
+#if JERRY_PROPERTY_HASHMAP
 
 /**
  * The lowest state of the ecma_prop_hashmap_alloc_state counter.
@@ -1956,7 +1956,7 @@ typedef struct
  */
 #define ECMA_PROP_HASHMAP_ALLOC_MAX 4
 
-#endif /* JERRY_PROPRETY_HASHMAP */
+#endif /* JERRY_PROPERTY_HASHMAP */
 
 /**
  * Number of values in a literal storage item

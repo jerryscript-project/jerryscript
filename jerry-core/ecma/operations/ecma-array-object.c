@@ -832,14 +832,14 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
 
   ecma_property_header_t *current_prop_p;
 
-#if JERRY_PROPRETY_HASHMAP
+#if JERRY_PROPERTY_HASHMAP
   current_prop_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t, current_prop_cp);
 
   if (current_prop_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP)
   {
     current_prop_cp = current_prop_p->next_property_cp;
   }
-#endif /* JERRY_PROPRETY_HASHMAP */
+#endif /* JERRY_PROPERTY_HASHMAP */
 
   while (current_prop_cp != JMEM_CP_NULL)
   {
@@ -878,7 +878,7 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
   current_prop_cp = object_p->u1.property_list_cp;
   ecma_property_header_t *prev_prop_p = NULL;
 
-#if JERRY_PROPRETY_HASHMAP
+#if JERRY_PROPERTY_HASHMAP
   JERRY_ASSERT (current_prop_cp != JMEM_CP_NULL);
 
   ecma_property_hashmap_delete_status hashmap_status = ECMA_PROPERTY_HASHMAP_DELETE_NO_HASHMAP;
@@ -890,7 +890,7 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
     current_prop_cp = current_prop_p->next_property_cp;
     hashmap_status = ECMA_PROPERTY_HASHMAP_DELETE_HAS_HASHMAP;
   }
-#endif /* JERRY_PROPRETY_HASHMAP */
+#endif /* JERRY_PROPERTY_HASHMAP */
 
   while (current_prop_cp != JMEM_CP_NULL)
   {
@@ -911,14 +911,14 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
         {
           JERRY_ASSERT (index != ECMA_STRING_NOT_ARRAY_INDEX);
 
-#if JERRY_PROPRETY_HASHMAP
+#if JERRY_PROPERTY_HASHMAP
           if (hashmap_status == ECMA_PROPERTY_HASHMAP_DELETE_HAS_HASHMAP)
           {
             hashmap_status = ecma_property_hashmap_delete (object_p,
                                                            prop_pair_p->names_cp[i],
                                                            current_prop_p->types + i);
           }
-#endif /* JERRY_PROPRETY_HASHMAP */
+#endif /* JERRY_PROPERTY_HASHMAP */
 
           ecma_gc_free_property (object_p, prop_pair_p, i);
           current_prop_p->types[i] = ECMA_PROPERTY_TYPE_DELETED;
@@ -950,13 +950,13 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
     }
   }
 
-#if JERRY_PROPRETY_HASHMAP
+#if JERRY_PROPERTY_HASHMAP
   if (hashmap_status == ECMA_PROPERTY_HASHMAP_DELETE_RECREATE_HASHMAP)
   {
     ecma_property_hashmap_free (object_p);
     ecma_property_hashmap_create (object_p);
   }
-#endif /* JERRY_PROPRETY_HASHMAP */
+#endif /* JERRY_PROPERTY_HASHMAP */
 
   return new_length;
 } /* ecma_delete_array_properties */

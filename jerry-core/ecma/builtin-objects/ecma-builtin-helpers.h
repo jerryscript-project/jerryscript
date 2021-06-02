@@ -65,6 +65,9 @@ ecma_builtin_helper_def_prop (ecma_object_t *obj_p, ecma_string_t *name_p, ecma_
 ecma_value_t
 ecma_builtin_helper_def_prop_by_index (ecma_object_t *obj_p, ecma_length_t index, ecma_value_t value,
                                        uint32_t opts);
+ecma_value_t
+ecma_builtin_helper_calculate_index (ecma_value_t index, ecma_length_t length, ecma_length_t *out_index);
+
 /**
  * Context for replace substitutions
  */

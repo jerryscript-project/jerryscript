@@ -2067,19 +2067,6 @@ jerry_get_error_type (jerry_value_t value) /**< api value */
 } /* jerry_get_error_type */
 
 /**
- * Get boolean from the specified value.
- *
- * @return true or false.
- */
-bool
-jerry_get_boolean_value (const jerry_value_t value) /**< api value */
-{
-  jerry_assert_api_available ();
-
-  return ecma_is_value_true (value);
-} /* jerry_get_boolean_value */
-
-/**
  * Get number from the specified value as a double.
  *
  * @return stored number as double

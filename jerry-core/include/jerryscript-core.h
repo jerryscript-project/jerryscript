@@ -114,7 +114,6 @@ jerry_error_t jerry_get_error_type (jerry_value_t value);
 /**
  * Getter functions of 'jerry_value_t'.
  */
-bool jerry_get_boolean_value (const jerry_value_t value);
 double jerry_get_number_value (const jerry_value_t value);
 
 /**

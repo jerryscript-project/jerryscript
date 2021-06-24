@@ -114,7 +114,7 @@ main (void)
   jerry_value_t empty_map = jerry_create_container (JERRY_CONTAINER_TYPE_MAP, NULL, 0);
   TEST_ASSERT (jerry_get_container_type (empty_map) == JERRY_CONTAINER_TYPE_MAP);
   instance_check = jerry_binary_operation (JERRY_BIN_OP_INSTANCEOF, empty_map, global_map);
-  TEST_ASSERT (jerry_get_boolean_value (instance_check));
+  TEST_ASSERT (jerry_value_is_true (instance_check));
   jerry_release_value (instance_check);
   jerry_release_value (global_map);
   jerry_release_value (empty_map);
@@ -122,7 +122,7 @@ main (void)
   jerry_value_t empty_set = jerry_create_container (JERRY_CONTAINER_TYPE_SET, NULL, 0);
   TEST_ASSERT (jerry_get_container_type (empty_set) == JERRY_CONTAINER_TYPE_SET);
   instance_check = jerry_binary_operation (JERRY_BIN_OP_INSTANCEOF, empty_set, global_set);
-  TEST_ASSERT (jerry_get_boolean_value (instance_check));
+  TEST_ASSERT (jerry_value_is_true (instance_check));
   jerry_release_value (instance_check);
   jerry_release_value (global_set);
   jerry_release_value (empty_set);
@@ -130,7 +130,7 @@ main (void)
   jerry_value_t empty_weakmap = jerry_create_container (JERRY_CONTAINER_TYPE_WEAKMAP, NULL, 0);
   TEST_ASSERT (jerry_get_container_type (empty_weakmap) == JERRY_CONTAINER_TYPE_WEAKMAP);
   instance_check = jerry_binary_operation (JERRY_BIN_OP_INSTANCEOF, empty_weakmap, global_weakmap);
-  TEST_ASSERT (jerry_get_boolean_value (instance_check));
+  TEST_ASSERT (jerry_value_is_true (instance_check));
   jerry_release_value (instance_check);
   jerry_release_value (global_weakmap);
   jerry_release_value (empty_weakmap);
@@ -138,7 +138,7 @@ main (void)
   jerry_value_t empty_weakset = jerry_create_container (JERRY_CONTAINER_TYPE_WEAKSET, NULL, 0);
   TEST_ASSERT (jerry_get_container_type (empty_weakset) == JERRY_CONTAINER_TYPE_WEAKSET);
   instance_check = jerry_binary_operation (JERRY_BIN_OP_INSTANCEOF, empty_weakset, global_weakset);
-  TEST_ASSERT (jerry_get_boolean_value (instance_check));
+  TEST_ASSERT (jerry_value_is_true (instance_check));
   jerry_release_value (instance_check);
   jerry_release_value (global_weakset);
   jerry_release_value (empty_weakset);

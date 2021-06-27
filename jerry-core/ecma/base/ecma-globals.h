@@ -1061,7 +1061,7 @@ typedef struct
       {
         uint16_t formal_params_number; /**< for arguments: formal parameters number */
 #if JERRY_MODULE_SYSTEM
-        uint8_t module_flags; /**< Module flags */
+        uint16_t module_flags; /**< Module flags */
 #endif /* JERRY_MODULE_SYSTEM */
 #if JERRY_ESNEXT
         uint16_t iterator_index; /**< for %Iterator%: [[%Iterator%NextIndex]] property */

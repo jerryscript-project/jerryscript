@@ -865,16 +865,13 @@ jerry_module_get_namespace (const jerry_value_t module_val) /**< module */
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_not_module_p)));
   }
 
-  if (module_p->namespace_object_p == NULL)
+  if (module_p->header.u.cls.u1.module_state < JERRY_MODULE_STATE_LINKED
+      || module_p->header.u.cls.u1.module_state > JERRY_MODULE_STATE_EVALUATED)
   {
-    if (module_p->header.u.cls.u1.module_state < JERRY_MODULE_STATE_LINKED
-        || module_p->header.u.cls.u1.module_state > JERRY_MODULE_STATE_EVALUATED)
-    {
-      return jerry_throw (ecma_raise_range_error (ECMA_ERR_MSG ("Namespace object cannot be created")));
-    }
-
-    ecma_module_create_namespace_object (module_p);
+    return jerry_throw (ecma_raise_range_error (ECMA_ERR_MSG ("Namespace object is not available")));
   }
+
+  JERRY_ASSERT (module_p->namespace_object_p != NULL);
 
   ecma_ref_object (module_p->namespace_object_p);
   return ecma_make_object_value (module_p->namespace_object_p);

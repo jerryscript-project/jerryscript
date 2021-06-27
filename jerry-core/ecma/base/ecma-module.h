@@ -29,6 +29,7 @@
 typedef enum
 {
   ECMA_MODULE_IS_NATIVE = (1 << 0), /**< native module */
+  ECMA_MODULE_HAS_NAMESPACE = (1 << 1), /**< namespace object has been initialized */
 } ecma_module_flags_t;
 
 /**
@@ -92,21 +93,13 @@ typedef struct ecma_module_node
 } ecma_module_node_t;
 
 /**
- *  A record that can be used to store {module, identifier} pairs
- */
-typedef struct ecma_module_record
-{
-  ecma_module_t *module_p;  /**< module */
-  ecma_string_t *name_p;    /**< identifier name */
-} ecma_module_record_t;
-
-/**
  *  A list of module records that can be used to identify circular imports during resolution
  */
 typedef struct ecma_module_resolve_set
 {
   struct ecma_module_resolve_set *next_p; /**< next in linked list */
-  ecma_module_record_t record;            /**< module record */
+  ecma_module_t *module_p;  /**< module */
+  ecma_string_t *name_p;    /**< identifier name */
 } ecma_module_resolve_set_t;
 
 /**
@@ -130,7 +123,6 @@ ecma_value_t ecma_module_evaluate (ecma_module_t *module_p);
 
 ecma_module_t *ecma_module_create (void);
 void ecma_module_cleanup_context (void);
-ecma_value_t ecma_module_create_namespace_object (ecma_module_t *module_p);
 
 void ecma_module_release_module_names (ecma_module_names_t *module_name_p);
 void ecma_module_release_module (ecma_module_t *module_p);

@@ -482,8 +482,7 @@ ecma_property_value_t *
 ecma_create_named_accessor_property (ecma_object_t *object_p, ecma_string_t *name_p, ecma_object_t *get_p,
                                      ecma_object_t *set_p, uint8_t prop_attributes, ecma_property_t **out_prop_p);
 #if JERRY_MODULE_SYSTEM
-void ecma_create_named_reference_property (ecma_object_t *object_p, ecma_string_t *name_p,
-                                           ecma_property_t *property_p);
+void ecma_create_named_reference_property (ecma_object_t *object_p, ecma_string_t *name_p, ecma_value_t reference);
 #endif /* JERRY_MODULE_SYSTEM */
 ecma_property_t *
 ecma_find_named_property (ecma_object_t *obj_p, ecma_string_t *name_p);
@@ -502,8 +501,8 @@ void ecma_set_named_accessor_property_getter (ecma_object_t *object_p, ecma_prop
 void ecma_set_named_accessor_property_setter (ecma_object_t *object_p, ecma_property_value_t *prop_value_p,
                                               ecma_object_t *setter_p);
 #if JERRY_MODULE_SYSTEM
-ecma_property_value_t *
-ecma_get_property_value_from_named_reference (ecma_property_value_t *reference_p);
+ecma_value_t ecma_property_to_reference (ecma_property_t *property_p);
+ecma_property_value_t *ecma_get_property_value_from_named_reference (ecma_property_value_t *reference_p);
 #endif /* JERRY_MODULE_SYSTEM */
 bool ecma_is_property_writable (ecma_property_t property);
 void ecma_set_property_writable_attr (ecma_property_t *property_p, bool is_writable);

@@ -49,7 +49,7 @@ create_array_from_container_handler (const jerry_call_info_t *call_info_p,
   bool is_key_value_pairs = false;
   jerry_value_t result = jerry_get_array_from_container (args_p[0], &is_key_value_pairs);
 
-  TEST_ASSERT (is_key_value_pairs == jerry_get_boolean_value (args_p[1]));
+  TEST_ASSERT (is_key_value_pairs == jerry_value_is_true (args_p[1]));
   return result;
 } /* create_array_from_container_handler */
 

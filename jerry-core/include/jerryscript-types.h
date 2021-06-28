@@ -739,6 +739,20 @@ typedef enum
 } jerry_container_type_t;
 
 /**
+ * Container operations
+ */
+typedef enum
+{
+  JERRY_CONTAINER_OP_ADD, /**< Set/WeakSet add operation */
+  JERRY_CONTAINER_OP_GET, /**< Map/WeakMap get operation */
+  JERRY_CONTAINER_OP_SET, /**< Map/WeakMap set operation */
+  JERRY_CONTAINER_OP_HAS, /**< Set/WeakSet/Map/WeakMap has operation */
+  JERRY_CONTAINER_OP_DELETE, /**< Set/WeakSet/Map/WeakMap delete operation */
+  JERRY_CONTAINER_OP_SIZE, /**< Set/WeakSet/Map/WeakMap size operation */
+  JERRY_CONTAINER_OP_CLEAR, /**< Set/Map clear operation */
+} jerry_container_operation_t;
+
+/**
  * @}
  */
 

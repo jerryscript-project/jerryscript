@@ -422,6 +422,10 @@ jerry_value_t jerry_create_container (jerry_container_type_t container_type,
                                       jerry_length_t arguments_list_len);
 jerry_container_type_t jerry_get_container_type (const jerry_value_t value);
 jerry_value_t jerry_get_array_from_container (jerry_value_t value, bool *is_key_value_p);
+jerry_value_t jerry_container_operation (jerry_container_operation_t operation,
+                                         jerry_value_t container,
+                                         jerry_value_t *arguments,
+                                         uint32_t arguments_number);
 
 /**
  * @}

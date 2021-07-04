@@ -129,6 +129,18 @@ jobs:
       - run: $RUNNER -q --unittests
       - run: $RUNNER -q --unittests --build-debug
 
+  Clang_Unit_Build_Option_Tests:
+    runs-on: ubuntu-latest
+    env:
+      CC: clang
+    steps:
+      - uses: actions/checkout@v2
+      - run: sudo apt update
+      - run: sudo apt install gcc-multilib
+      - run: $RUNNER -q --unittests
+      # clang has bug in supporting lto 
+      - run: $RUNNER -q --buildoption-test --buildoptions=--lto=off
+
   ASAN_Tests:
     runs-on: ubuntu-latest
     env:

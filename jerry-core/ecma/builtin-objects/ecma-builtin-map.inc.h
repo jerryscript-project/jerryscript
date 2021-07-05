@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if JERRY_BUILTIN_MAP
+#if JERRY_BUILTIN_CONTAINER
 
 /* Number properties:
  *  (property name, number value, writable, enumerable, configurable) */
@@ -47,6 +47,6 @@ ACCESSOR_READ_ONLY (LIT_GLOBAL_SYMBOL_SPECIES,
                     ecma_builtin_map_species_get,
                     ECMA_PROPERTY_FLAG_CONFIGURABLE)
 
-#endif /* JERRY_BUILTIN_MAP */
+#endif /* JERRY_BUILTIN_CONTAINER */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

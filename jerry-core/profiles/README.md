@@ -30,10 +30,9 @@ Alternatively, if you want to use a custom profile at
 
 ```
 # Disable not needed features
+JERRY_BUILTIN_CONTAINER=0
 JERRY_BUILTIN_DATAVIEW=0
-JERRY_BUILTIN_MAP=0
 JERRY_BUILTIN_PROMISE=0
-JERRY_BUILTIN_SET=0
 JERRY_BUILTIN_TYPEDARRAY=0
 ```
 
@@ -100,12 +99,16 @@ defined to `1`.
 
 * `JERRY_BUILTIN_BIGINT`:
   Enables or disables the [BigInt](https://262.ecma-international.org/11.0/#sec-ecmascript-language-types-bigint-type) syntax and built-in.
+* `JERRY_BUILTIN_CONTAINER`:
+  Enables or disables the following built-ins:
+    * [Set](https://www.ecma-international.org/ecma-262/6.0/#sec-set-objects) built-in.
+    * [WeakSet](https://262.ecma-international.org/11.0/#sec-weakmap-objects) built-in.
+    * [Map](http://www.ecma-international.org/ecma-262/6.0/#sec-keyed-collection) built-ins.
+    * [WeakMap](https://262.ecma-international.org/11.0/#sec-weakmap-objects) built-in.
 * `JERRY_BUILTIN_DATAVIEW`:
   Enables or disables the [DataView](https://www.ecma-international.org/ecma-262/6.0/#sec-dataview-objects) built-in.
 * `JERRY_BUILTIN_GLOBAL_THIS`:
   Enables or disables the [GlobalThisValue](https://262.ecma-international.org/11.0/#sec-globalthis) built-in.
-* `JERRY_BUILTIN_MAP`:
-  Enables or disables the [Map](http://www.ecma-international.org/ecma-262/6.0/#sec-keyed-collection) built-ins.
 * `JERRY_BUILTIN_PROMISE`:
   Enables or disables the [Promise](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-objects) built-in.
 * `JERRY_BUILTIN_PROXY`:
@@ -114,14 +117,8 @@ defined to `1`.
   Enables or disables the [Realms](https://262.ecma-international.org/11.0/#sec-code-realms) support in the engine.
 * `JERRY_BUILTIN_REFLECT`:
   Enables or disables the [Reflext](https://262.ecma-international.org/11.0/#sec-reflect-object) built-in.
-* `JERRY_BUILTIN_SET`:
-  Enables or disables the [Set](https://www.ecma-international.org/ecma-262/6.0/#sec-set-objects) built-in.
 * `JERRY_BUILTIN_TYPEDARRAY`:
   Enables or disables the [ArrayBuffer](http://www.ecma-international.org/ecma-262/6.0/#sec-arraybuffer-objects) and [TypedArray](http://www.ecma-international.org/ecma-262/6.0/#sec-typedarray-objects) built-ins.
-* `JERRY_BUILTIN_WEAKMAP`:
-  Enables or disables the [WeakMap](https://262.ecma-international.org/11.0/#sec-weakmap-objects) built-in.
-* `JERRY_BUILTIN_WEAKSET`:
-  Enables or disables the [WeakSet](https://262.ecma-international.org/11.0/#sec-weakmap-objects) built-in.
 * `JERRY_BUILTIN_WEAKREF`:
   Enables or disables the [WeakRef](https://tc39.es/ecma262/#sec-weak-ref-constructor) built-in.
 * `JERRY_MODULE_SYSTEM`:
@@ -150,15 +147,12 @@ defined to `1`.
   This option is evaulated first, any other `JERRY_<name>` defines will override that specific entry.
   Equivalent with setting the following defines to the `JERRY_ESNEXT` value:
     * `JERRY_BUILTIN_BIGINT`
+    * `JERRY_BUILTIN_CONTAINER`
     * `JERRY_BUILTIN_DATAVIEW`
     * `JERRY_BUILTIN_GLOBAL_THIS`
-    * `JERRY_BUILTIN_MAP`
     * `JERRY_BUILTIN_PROMISE`
     * `JERRY_BUILTIN_PROXY`
     * `JERRY_BUILTIN_REALMS`
     * `JERRY_BUILTIN_REFLECT`
-    * `JERRY_BUILTIN_SET`
     * `JERRY_BUILTIN_TYPEDARRAY`
-    * `JERRY_BUILTIN_WEAKMAP`
-    * `JERRY_BUILTIN_WEAKSET`
     * `JERRY_MODULE_SYSTEM`

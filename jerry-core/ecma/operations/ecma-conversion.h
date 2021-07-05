@@ -49,9 +49,9 @@ typedef enum
 
 bool ecma_op_require_object_coercible (ecma_value_t value);
 bool ecma_op_same_value (ecma_value_t x, ecma_value_t y);
-#if JERRY_BUILTIN_MAP
+#if JERRY_BUILTIN_CONTAINER
 bool ecma_op_same_value_zero (ecma_value_t x, ecma_value_t y, bool strict_equality);
-#endif /* JERRY_BUILTIN_MAP */
+#endif /* JERRY_BUILTIN_CONTAINER */
 ecma_value_t ecma_op_to_primitive (ecma_value_t value, ecma_preferred_type_hint_t preferred_type);
 bool ecma_op_to_boolean (ecma_value_t value);
 ecma_value_t ecma_op_to_number (ecma_value_t value, ecma_number_t *number_p);

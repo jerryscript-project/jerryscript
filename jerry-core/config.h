@@ -83,6 +83,10 @@
 # define JERRY_BUILTIN_BIGINT JERRY_ESNEXT
 #endif /* !defined (JERRY_BUILTIN_BIGINT) */
 
+#ifndef JERRY_BUILTIN_CONTAINER
+# define JERRY_BUILTIN_CONTAINER JERRY_ESNEXT
+#endif /* !defined (JERRY_BUILTIN_CONTAINER) */
+
 #ifndef JERRY_BUILTIN_DATAVIEW
 # define JERRY_BUILTIN_DATAVIEW JERRY_ESNEXT
 #endif /* !defined (JERRY_BUILTIN_DATAVIEW) */
@@ -90,10 +94,6 @@
 #ifndef JERRY_BUILTIN_GLOBAL_THIS
 # define JERRY_BUILTIN_GLOBAL_THIS JERRY_ESNEXT
 #endif /* !defined (JERRY_BUILTIN_GLOBAL_THIS) */
-
-#ifndef JERRY_BUILTIN_MAP
-# define JERRY_BUILTIN_MAP JERRY_ESNEXT
-#endif /* !defined (JERRY_BUILTIN_MAP) */
 
 #ifndef JERRY_BUILTIN_PROMISE
 # define JERRY_BUILTIN_PROMISE JERRY_ESNEXT
@@ -111,25 +111,13 @@
 # define JERRY_BUILTIN_REFLECT JERRY_ESNEXT
 #endif /* !defined (JERRY_BUILTIN_REFLECT) */
 
-#ifndef JERRY_BUILTIN_SET
-# define JERRY_BUILTIN_SET JERRY_ESNEXT
-#endif /* !defined (JERRY_BUILTIN_SET) */
-
 #ifndef JERRY_BUILTIN_TYPEDARRAY
 # define JERRY_BUILTIN_TYPEDARRAY JERRY_ESNEXT
 #endif /* !defined (JERRY_BUILTIN_TYPEDARRAY) */
 
-#ifndef JERRY_BUILTIN_WEAKMAP
-# define JERRY_BUILTIN_WEAKMAP JERRY_ESNEXT
-#endif /* !defined (JERRY_BUILTIN_WEAKMAP) */
-
 #ifndef JERRY_BUILTIN_WEAKREF
 # define JERRY_BUILTIN_WEAKREF JERRY_ESNEXT
 #endif /* !defined (JERRY_BUILTIN_WEAKREF) */
-
-#ifndef JERRY_BUILTIN_WEAKSET
-# define JERRY_BUILTIN_WEAKSET JERRY_ESNEXT
-#endif /* !defined (JERRY_BUILTIN_WEAKSET) */
 
 #ifndef JERRY_MODULE_SYSTEM
 # define JERRY_MODULE_SYSTEM JERRY_ESNEXT
@@ -556,29 +544,13 @@
 || ((JERRY_BUILTIN_GLOBAL_THIS != 0) && (JERRY_BUILTIN_GLOBAL_THIS != 1))
 # error "Invalid value for JERRY_BUILTIN_GLOBAL_THIS macro."
 #endif /* !defined (JERRY_BUILTIN_GLOBAL_THIS) */
-#if !defined (JERRY_BUILTIN_MAP) \
-|| ((JERRY_BUILTIN_MAP != 0) && (JERRY_BUILTIN_MAP != 1))
-# error "Invalid value for JERRY_BUILTIN_MAP macro."
-#endif
 #if !defined (JERRY_BUILTIN_REFLECT) \
 || ((JERRY_BUILTIN_REFLECT != 0) && (JERRY_BUILTIN_REFLECT != 1))
 # error "Invalid value for JERRY_BUILTIN_REFLECT macro."
 #endif
-#if !defined (JERRY_BUILTIN_SET) \
-|| ((JERRY_BUILTIN_SET != 0) && (JERRY_BUILTIN_SET != 1))
-# error "Invalid value for JERRY_BUILTIN_SET macro."
-#endif
-#if !defined (JERRY_BUILTIN_WEAKMAP) \
-|| ((JERRY_BUILTIN_WEAKMAP != 0) && (JERRY_BUILTIN_WEAKMAP != 1))
-# error "Invalid value for JERRY_BUILTIN_WEAKMAP macro."
-#endif
 #if !defined (JERRY_BUILTIN_WEAKREF) \
 || ((JERRY_BUILTIN_WEAKREF != 0) && (JERRY_BUILTIN_WEAKREF != 1))
 # error "Invalid value for JERRY_BUILTIN_WEAKREF macro."
-#endif
-#if !defined (JERRY_BUILTIN_WEAKSET) \
-|| ((JERRY_BUILTIN_WEAKSET != 0) && (JERRY_BUILTIN_WEAKSET != 1))
-# error "Invalid value for JERRY_BUILTIN_WEAKSET macro."
 #endif
 #if !defined (JERRY_BUILTIN_PROMISE) \
 || ((JERRY_BUILTIN_PROMISE != 0) && (JERRY_BUILTIN_PROMISE != 1))
@@ -602,16 +574,13 @@
 #endif
 #if (JERRY_ESNEXT == 0) \
 && ((JERRY_BUILTIN_DATAVIEW == 1) \
-|| (JERRY_BUILTIN_MAP == 1) \
-|| (JERRY_BUILTIN_SET == 1) \
-|| (JERRY_BUILTIN_WEAKMAP == 1) \
-|| (JERRY_BUILTIN_WEAKREF == 1) \
-|| (JERRY_BUILTIN_WEAKSET == 1) \
+|| (JERRY_BUILTIN_CONTAINER == 1) \
 || (JERRY_BUILTIN_PROMISE == 1) \
 || (JERRY_BUILTIN_PROXY == 1) \
 || (JERRY_BUILTIN_REFLECT == 1) \
 || (JERRY_BUILTIN_PROMISE == 1) \
-|| (JERRY_BUILTIN_TYPEDARRAY == 1))
+|| (JERRY_BUILTIN_TYPEDARRAY == 1) \
+|| (JERRY_BUILTIN_WEAKREF == 1))
 # error "JERRY_ESNEXT should be enabled too to enable JERRY_BUILTIN_xxxxx macro."
 #endif
 #if (JERRY_ESNEXT == 0) && (JERRY_MODULE_SYSTEM == 1)
@@ -739,16 +708,6 @@
 #if JERRY_PROMISE_CALLBACK && !JERRY_BUILTIN_PROMISE
 #  error "Promise callback support depends on Promise support"
 #endif /* JERRY_PROMISE_CALLBACK && !JERRY_BUILTIN_PROMISE */
-
-/**
- * Wrap container types into a single guard
- */
-#if JERRY_BUILTIN_MAP || JERRY_BUILTIN_SET \
-|| JERRY_BUILTIN_WEAKMAP || JERRY_BUILTIN_WEAKSET
-# define JERRY_BUILTIN_CONTAINER 1
-#else
-# define JERRY_BUILTIN_CONTAINER 0
-#endif
 
 /**
  * Resource name related types into a single guard

@@ -327,7 +327,7 @@ ecma_gc_mark_properties (ecma_object_t *object_p, /**< object */
           break;
         }
 #endif /* JERRY_ESNEXT */
-#if JERRY_BUILTIN_WEAKMAP
+#if JERRY_BUILTIN_CONTAINER
         case LIT_INTERNAL_MAGIC_STRING_WEAK_REFS:
         {
           ecma_value_t key_arg = ecma_make_object_value (object_p);
@@ -366,7 +366,7 @@ ecma_gc_mark_properties (ecma_object_t *object_p, /**< object */
           }
           break;
         }
-#endif /* JERRY_BUILTIN_WEAKMAP */
+#endif /* JERRY_BUILTIN_CONTAINER */
         case LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER_WITH_REFERENCES:
         {
           jerry_value_t value = property_pair_p->values[index].value;
@@ -505,7 +505,7 @@ ecma_gc_mark_promise_object (ecma_extended_object_t *ext_object_p) /**< extended
 
 #endif /* JERRY_BUILTIN_PROMISE */
 
-#if JERRY_BUILTIN_MAP
+#if JERRY_BUILTIN_CONTAINER
 /**
  * Mark objects referenced by Map built-in.
  */
@@ -540,9 +540,7 @@ ecma_gc_mark_map_object (ecma_object_t *object_p) /**< object */
     }
   }
 } /* ecma_gc_mark_map_object */
-#endif /* JERRY_BUILTIN_MAP */
 
-#if JERRY_BUILTIN_WEAKMAP
 /**
  * Mark objects referenced by WeakMap built-in.
  */
@@ -575,9 +573,7 @@ ecma_gc_mark_weakmap_object (ecma_object_t *object_p) /**< object */
     }
   }
 } /* ecma_gc_mark_weakmap_object */
-#endif /* JERRY_BUILTIN_WEAKMAP */
 
-#if JERRY_BUILTIN_SET
 /**
  * Mark objects referenced by Set built-in.
  */
@@ -607,7 +603,7 @@ ecma_gc_mark_set_object (ecma_object_t *object_p) /**< object */
     }
   }
 } /* ecma_gc_mark_set_object */
-#endif /* JERRY_BUILTIN_SET */
+#endif /* JERRY_BUILTIN_CONTAINER */
 
 #if JERRY_ESNEXT
 /**
@@ -939,30 +935,22 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 #if JERRY_BUILTIN_CONTAINER
           case ECMA_OBJECT_CLASS_CONTAINER:
           {
-#if JERRY_BUILTIN_MAP
             if (ext_object_p->u.cls.u2.container_id == LIT_MAGIC_STRING_MAP_UL)
             {
               ecma_gc_mark_map_object (object_p);
               break;
             }
-#endif /* JERRY_BUILTIN_MAP */
-#if JERRY_BUILTIN_WEAKMAP
             if (ext_object_p->u.cls.u2.container_id == LIT_MAGIC_STRING_WEAKMAP_UL)
             {
               ecma_gc_mark_weakmap_object (object_p);
               break;
             }
-#endif /* JERRY_BUILTIN_WEAKMAP */
-#if JERRY_BUILTIN_SET
             if (ext_object_p->u.cls.u2.container_id == LIT_MAGIC_STRING_SET_UL)
             {
               ecma_gc_mark_set_object (object_p);
               break;
             }
-#endif /* JERRY_BUILTIN_SET */
-#if JERRY_BUILTIN_WEAKSET
             JERRY_ASSERT (ext_object_p->u.cls.u2.container_id == LIT_MAGIC_STRING_WEAKSET_UL);
-#endif /* JERRY_BUILTIN_WEAKSET */
             break;
           }
 #endif /* JERRY_BUILTIN_CONTAINER */
@@ -1567,7 +1555,7 @@ ecma_gc_free_property (ecma_object_t *object_p, /**< object */
       break;
     }
 #endif /* JERRY_ESNEXT */
-#if JERRY_BUILTIN_WEAKMAP || JERRY_BUILTIN_WEAKSET || JERRY_BUILTIN_WEAKREF
+#if JERRY_BUILTIN_WEAKREF || JERRY_BUILTIN_CONTAINER
     case LIT_INTERNAL_MAGIC_STRING_WEAK_REFS:
     {
       ecma_collection_t *refs_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, value);
@@ -1592,7 +1580,7 @@ ecma_gc_free_property (ecma_object_t *object_p, /**< object */
       ecma_collection_destroy (refs_p);
       break;
     }
-#endif /* JERRY_BUILTIN_WEAKMAP || JERRY_BUILTIN_WEAKSET || JERRY_BUILTIN_WEAKREF */
+#endif /* JERRY_BUILTIN_CONTAINER */
     default:
     {
       JERRY_ASSERT (name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER

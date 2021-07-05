@@ -17,7 +17,7 @@
 #include "ecma-builtins.h"
 #include "ecma-container-object.h"
 
-#if JERRY_BUILTIN_MAP
+#if JERRY_BUILTIN_CONTAINER
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -60,4 +60,4 @@ ecma_builtin_map_iterator_prototype_object_next (ecma_value_t this_val) /**< thi
  * @}
  */
 
-#endif /* JERRY_BUILTIN_MAP */
+#endif /* JERRY_BUILTIN_CONTAINER */

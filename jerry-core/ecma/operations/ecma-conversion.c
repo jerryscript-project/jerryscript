@@ -135,7 +135,7 @@ ecma_op_same_value (ecma_value_t x, /**< ecma value */
   return false;
 } /* ecma_op_same_value */
 
-#if JERRY_BUILTIN_MAP
+#if JERRY_BUILTIN_CONTAINER
 /**
  * SameValueZero operation.
  *
@@ -182,7 +182,7 @@ ecma_op_same_value_zero (ecma_value_t x, /**< ecma value */
 
   return ecma_op_same_value (x, y);
 } /* ecma_op_same_value_zero */
-#endif /* JERRY_BUILTIN_MAP */
+#endif /* JERRY_BUILTIN_CONTAINER */
 
 /**
  * ToPrimitive operation.

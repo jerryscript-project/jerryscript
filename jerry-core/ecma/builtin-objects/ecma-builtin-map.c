@@ -17,7 +17,7 @@
 #include "ecma-exceptions.h"
 #include "ecma-container-object.h"
 
-#if JERRY_BUILTIN_MAP
+#if JERRY_BUILTIN_CONTAINER
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -83,4 +83,4 @@ ecma_builtin_map_species_get (ecma_value_t this_value) /**< This Value */
  * @}
  */
 
-#endif /* JERRY_BUILTIN_MAP */
+#endif /* JERRY_BUILTIN_CONTAINER */

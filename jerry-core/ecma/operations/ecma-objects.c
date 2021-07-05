@@ -2796,27 +2796,19 @@ ecma_object_check_class_name_is_object (ecma_object_t *obj_p) /**< object */
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_SYMBOL_PROTOTYPE)
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_ASYNC_FUNCTION_PROTOTYPE)
 #endif /* JERRY_ESNEXT */
-#if JERRY_BUILTIN_MAP
+#if JERRY_BUILTIN_CONTAINER
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_MAP_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_SET_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_WEAKMAP_PROTOTYPE)
+          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_WEAKSET_PROTOTYPE)
 #if JERRY_ESNEXT
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_MAP_ITERATOR_PROTOTYPE)
-#endif /* JERRY_ESNEXT */
-#endif /* JERRY_BUILTIN_MAP */
-#if JERRY_BUILTIN_SET
-          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_SET_PROTOTYPE)
-#if JERRY_ESNEXT
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_SET_ITERATOR_PROTOTYPE)
 #endif /* JERRY_ESNEXT */
-#endif /* JERRY_BUILTIN_SET */
-#if JERRY_BUILTIN_WEAKMAP
-          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_WEAKMAP_PROTOTYPE)
-#endif /* JERRY_BUILTIN_WEAKMAP */
+#endif /* JERRY_BUILTIN_CONTAINER */
 #if JERRY_BUILTIN_WEAKREF
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_WEAKREF_PROTOTYPE)
 #endif /* JERRY_BUILTIN_WEAKREF */
-#if JERRY_BUILTIN_WEAKSET
-          || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_WEAKSET_PROTOTYPE)
-#endif /* JERRY_BUILTIN_WEAKSET */
 #if JERRY_BUILTIN_DATAVIEW
           || ecma_builtin_is (obj_p, ECMA_BUILTIN_ID_DATAVIEW_PROTOTYPE)
 #endif /* JERRY_BUILTIN_DATAVIEW */
@@ -3430,7 +3422,7 @@ ecma_op_ordinary_object_has_own_property (ecma_object_t *object_p, /**< the obje
   return property != ECMA_PROPERTY_TYPE_NOT_FOUND && property != ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP;
 } /* ecma_op_ordinary_object_has_own_property */
 
-#if JERRY_BUILTIN_WEAKREF || JERRY_BUILTIN_WEAKSET || JERRY_BUILTIN_WEAKMAP
+#if JERRY_BUILTIN_WEAKREF || JERRY_BUILTIN_CONTAINER
 
 /**
  * Set a weak reference from a container or WeakRefObject to a key object
@@ -3505,7 +3497,7 @@ ecma_op_object_unref_weak (ecma_object_t *object_p, /**< this argument */
   }
 } /* ecma_op_object_unref_weak */
 
-#endif /* JERRY_BUILTIN_WEAKREF || JERRY_BUILTIN_WEAKSET || JERRY_BUILTIN_WEAKMAP */
+#endif /* JERRY_BUILTIN_WEAKREF || JERRY_BUILTIN_CONTAINER */
 /**
  * Raise property redefinition error
  *

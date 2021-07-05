@@ -1715,18 +1715,16 @@ jerry_iterator_get_type (const jerry_value_t value) /**< input value to check */
         {
           return JERRY_ITERATOR_TYPE_ARRAY;
         }
-#if JERRY_BUILTIN_SET
+#if JERRY_BUILTIN_CONTAINER
         case ECMA_OBJECT_CLASS_SET_ITERATOR:
         {
           return JERRY_ITERATOR_TYPE_SET;
         }
-#endif /* JERRY_BUILTIN_SET */
-#if JERRY_BUILTIN_MAP
         case ECMA_OBJECT_CLASS_MAP_ITERATOR:
         {
           return JERRY_ITERATOR_TYPE_MAP;
         }
-#endif /* JERRY_BUILTIN_MAP */
+#endif /* JERRY_BUILTIN_CONTAINER */
         case ECMA_OBJECT_CLASS_STRING_ITERATOR:
         {
           return JERRY_ITERATOR_TYPE_STRING;
@@ -1820,21 +1818,15 @@ jerry_is_feature_enabled (const jerry_feature_t feature) /**< feature to check *
 #if JERRY_BUILTIN_GLOBAL_THIS
           || feature == JERRY_FEATURE_GLOBAL_THIS
 #endif /* JERRY_BUILTIN_GLOBAL_THIS */
-#if JERRY_BUILTIN_MAP
+#if JERRY_BUILTIN_CONTAINER
           || feature == JERRY_FEATURE_MAP
-#endif /* JERRY_BUILTIN_MAP */
-#if JERRY_BUILTIN_SET
           || feature == JERRY_FEATURE_SET
-#endif /* JERRY_BUILTIN_SET */
-#if JERRY_BUILTIN_WEAKMAP
           || feature == JERRY_FEATURE_WEAKMAP
-#endif /* JERRY_BUILTIN_WEAKMAP */
+          || feature == JERRY_FEATURE_WEAKSET
+#endif /* JERRY_BUILTIN_CONTAINER */
 #if JERRY_BUILTIN_WEAKREF
           || feature == JERRY_FEATURE_WEAKREF
 #endif /* JERRY_BUILTIN_WEAKREF */
-#if JERRY_BUILTIN_WEAKSET
-          || feature == JERRY_FEATURE_WEAKSET
-#endif /* JERRY_BUILTIN_WEAKSET */
 #if JERRY_BUILTIN_BIGINT
           || feature == JERRY_FEATURE_BIGINT
 #endif /* JERRY_BUILTIN_BIGINT */
@@ -6372,7 +6364,6 @@ jerry_create_container (jerry_container_type_t container_type, /**< Type of the 
 
   switch (container_type)
   {
-#if JERRY_BUILTIN_MAP
     case JERRY_CONTAINER_TYPE_MAP:
     {
       lit_id = LIT_MAGIC_STRING_MAP_UL;
@@ -6380,8 +6371,6 @@ jerry_create_container (jerry_container_type_t container_type, /**< Type of the 
       ctor_id = ECMA_BUILTIN_ID_MAP;
       break;
     }
-#endif /* JERRY_BUILTIN_MAP */
-#if JERRY_BUILTIN_SET
     case JERRY_CONTAINER_TYPE_SET:
     {
       lit_id = LIT_MAGIC_STRING_SET_UL;
@@ -6389,8 +6378,6 @@ jerry_create_container (jerry_container_type_t container_type, /**< Type of the 
       ctor_id = ECMA_BUILTIN_ID_SET;
       break;
     }
-#endif /* JERRY_BUILTIN_SET */
-#if JERRY_BUILTIN_WEAKMAP
     case JERRY_CONTAINER_TYPE_WEAKMAP:
     {
       lit_id = LIT_MAGIC_STRING_WEAKMAP_UL;
@@ -6398,8 +6385,6 @@ jerry_create_container (jerry_container_type_t container_type, /**< Type of the 
       ctor_id = ECMA_BUILTIN_ID_WEAKMAP;
       break;
     }
-#endif /* JERRY_BUILTIN_WEAKMAP */
-#if JERRY_BUILTIN_WEAKSET
     case JERRY_CONTAINER_TYPE_WEAKSET:
     {
       lit_id = LIT_MAGIC_STRING_WEAKSET_UL;
@@ -6407,7 +6392,6 @@ jerry_create_container (jerry_container_type_t container_type, /**< Type of the 
       ctor_id = ECMA_BUILTIN_ID_WEAKSET;
       break;
     }
-#endif /* JERRY_BUILTIN_WEAKSET */
     default:
     {
       return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Invalid container type")));
@@ -6454,30 +6438,22 @@ jerry_get_container_type (const jerry_value_t value) /**< the container object *
     {
       switch (((ecma_extended_object_t *) obj_p)->u.cls.u2.container_id)
       {
-#if JERRY_BUILTIN_MAP
         case LIT_MAGIC_STRING_MAP_UL:
         {
           return JERRY_CONTAINER_TYPE_MAP;
         }
-#endif /* JERRY_BUILTIN_MAP */
-#if JERRY_BUILTIN_SET
         case LIT_MAGIC_STRING_SET_UL:
         {
           return JERRY_CONTAINER_TYPE_SET;
         }
-#endif /* JERRY_BUILTIN_SET */
-#if JERRY_BUILTIN_WEAKMAP
         case LIT_MAGIC_STRING_WEAKMAP_UL:
         {
           return JERRY_CONTAINER_TYPE_WEAKMAP;
         }
-#endif /* JERRY_BUILTIN_WEAKMAP */
-#if JERRY_BUILTIN_WEAKSET
         case LIT_MAGIC_STRING_WEAKSET_UL:
         {
           return JERRY_CONTAINER_TYPE_WEAKSET;
         }
-#endif /* JERRY_BUILTIN_WEAKSET */
         default:
         {
           return JERRY_CONTAINER_TYPE_INVALID;

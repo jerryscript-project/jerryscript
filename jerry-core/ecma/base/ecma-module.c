@@ -29,6 +29,32 @@
 #if JERRY_MODULE_SYSTEM
 
 /**
+ * Type of the result returned by ecma_module_resolve_export.
+ */
+typedef enum
+{
+  ECMA_MODULE_RESOLVE_NOT_FOUND, /**< reference not found */
+  ECMA_MODULE_RESOLVE_CIRCULAR, /**< only circular references are found */
+  ECMA_MODULE_RESOLVE_ERROR, /**< module in error state is encountered */
+  ECMA_MODULE_RESOLVE_AMBIGUOUS, /**< reference is ambiguous */
+  ECMA_MODULE_RESOLVE_FOUND, /**< reference found */
+} ecma_module_resolve_result_type_t;
+
+/**
+ *  A record that stores the result of ecma_module_resolve_export.
+ */
+typedef struct
+{
+  ecma_module_resolve_result_type_t result_type; /**< result type */
+  ecma_value_t result; /**< result value */
+} ecma_module_resolve_result_t;
+
+/**
+ * This flag is set in the result if the value is a namespace object.
+ */
+#define ECMA_MODULE_NAMESPACE_RESULT_FLAG 0x2
+
+/**
  * Initialize context variables for the root module.
  *
  * @return new module
@@ -110,42 +136,98 @@ ecma_module_get_from_object (ecma_value_t module_val) /**< module */
 } /* ecma_module_get_from_object */
 
 /**
- *  Inserts a {module, export_name} record into a resolve set.
- *  Note: See 15.2.1.16.3 - resolveSet and exportStarSet
+ * Cleans up a list of module names.
+ */
+void
+ecma_module_release_module_names (ecma_module_names_t *module_name_p) /**< first module name */
+{
+  while (module_name_p != NULL)
+  {
+    ecma_module_names_t *next_p = module_name_p->next_p;
+
+    ecma_deref_ecma_string (module_name_p->imex_name_p);
+    ecma_deref_ecma_string (module_name_p->local_name_p);
+    jmem_heap_free_block (module_name_p, sizeof (ecma_module_names_t));
+
+    module_name_p = next_p;
+  }
+} /* ecma_module_release_module_names */
+
+/**
+ * Cleans up a list of module nodes.
+ */
+static void
+ecma_module_release_module_nodes (ecma_module_node_t *module_node_p, /**< first module node */
+                                  bool is_import) /**< free path variable */
+{
+  while (module_node_p != NULL)
+  {
+    ecma_module_node_t *next_p = module_node_p->next_p;
+
+    ecma_module_release_module_names (module_node_p->module_names_p);
+
+    if (is_import && ecma_is_value_string (module_node_p->u.path_or_module))
+    {
+      ecma_deref_ecma_string (ecma_get_string_from_value (module_node_p->u.path_or_module));
+    }
+
+    jmem_heap_free_block (module_node_p, sizeof (ecma_module_node_t));
+    module_node_p = next_p;
+  }
+} /* ecma_module_release_module_nodes */
+
+/**
+ *  Creates a new resolve set item from a {module, export_name} pair.
  *
- *  @return true - if the set already contains the record
+ *  @return new resolve set item
+ */
+static ecma_module_resolve_set_t *
+ecma_module_resolve_set_create (ecma_module_t *const module_p, /**< module */
+                                ecma_string_t *const export_name_p) /**< export name */
+{
+  ecma_module_resolve_set_t *new_p;
+  new_p = (ecma_module_resolve_set_t *) jmem_heap_alloc_block (sizeof (ecma_module_resolve_set_t));
+
+  new_p->next_p = NULL;
+  new_p->module_p = module_p;
+  new_p->name_p = export_name_p;
+
+  return new_p;
+} /* ecma_module_resolve_set_create */
+
+/**
+ *  Appends a {module, export_name} record into a resolve set.
+ *
+ *  @return true - if the record is appended successfully
  *          false - otherwise
  */
 static bool
-ecma_module_resolve_set_insert (ecma_module_resolve_set_t **set_p, /**< [in, out] resolve set */
+ecma_module_resolve_set_append (ecma_module_resolve_set_t *set_p, /**< resolve set */
                                 ecma_module_t *const module_p, /**< module */
                                 ecma_string_t *const export_name_p) /**< export name */
 {
   JERRY_ASSERT (set_p != NULL);
-  ecma_module_resolve_set_t *current_p = *set_p;
+  ecma_module_resolve_set_t *current_p = set_p;
 
-  while (current_p != NULL)
+  while (true)
   {
-    if (current_p->record.module_p == module_p
-        && ecma_compare_ecma_strings (current_p->record.name_p, export_name_p))
+    if (current_p->module_p == module_p
+        && ecma_compare_ecma_strings (current_p->name_p, export_name_p))
     {
       return false;
     }
 
-    current_p = current_p->next_p;
+    ecma_module_resolve_set_t *next_p = current_p->next_p;
+
+    if (next_p == NULL)
+    {
+      current_p->next_p = ecma_module_resolve_set_create (module_p, export_name_p);
+      return true;
+    }
+
+    current_p = next_p;
   }
-
-  ecma_module_resolve_set_t *new_p;
-  new_p = (ecma_module_resolve_set_t *) jmem_heap_alloc_block (sizeof (ecma_module_resolve_set_t));
-
-  new_p->next_p = *set_p;
-  new_p->record.module_p = module_p;
-  ecma_ref_ecma_string (export_name_p);
-  new_p->record.name_p = export_name_p;
-
-  *set_p = new_p;
-  return true;
-} /* ecma_module_resolve_set_insert */
+} /* ecma_module_resolve_set_append */
 
 /**
  * Cleans up contents of a resolve set.
@@ -156,141 +238,249 @@ ecma_module_resolve_set_cleanup (ecma_module_resolve_set_t *set_p) /**< resolve 
   while (set_p != NULL)
   {
     ecma_module_resolve_set_t *next_p = set_p->next_p;
-    ecma_deref_ecma_string (set_p->record.name_p);
     jmem_heap_free_block (set_p, sizeof (ecma_module_resolve_set_t));
     set_p = next_p;
   }
 } /* ecma_module_resolve_set_cleanup */
 
 /**
- * Pushes a new resolve frame on top of a resolve stack and initializes it
- * to begin resolving the specified exported name in the base module.
+ * Throws the appropriate error based on the resolve result
+ *
+ * @return error value
  */
-static void
-ecma_module_resolve_stack_push (ecma_module_resolve_stack_t **stack_p, /**< [in, out] resolve stack */
-                                ecma_module_t * const module_p, /**< base module */
-                                ecma_string_t * const export_name_p) /**< exported name */
+static ecma_value_t
+ecma_module_resolve_throw (ecma_module_resolve_result_t *resolve_result_p, /**< resolve result */
+                           ecma_string_t *name_p) /**< referenced value */
 {
-  JERRY_ASSERT (stack_p != NULL);
-  ecma_module_resolve_stack_t *new_frame_p;
-  new_frame_p = (ecma_module_resolve_stack_t *) jmem_heap_alloc_block (sizeof (ecma_module_resolve_stack_t));
+#if JERRY_ERROR_MESSAGES
+  ecma_value_t name_val = ecma_make_string_value (name_p);
+  const char *msg_p;
 
-  ecma_ref_ecma_string (export_name_p);
-  new_frame_p->export_name_p = export_name_p;
-  new_frame_p->module_p = module_p;
-  new_frame_p->resolving = false;
+  switch (resolve_result_p->result_type)
+  {
+    case ECMA_MODULE_RESOLVE_CIRCULAR:
+    {
+      msg_p = "Detected cycle while resolving name '%' (module)";
+      break;
+    }
+    case ECMA_MODULE_RESOLVE_AMBIGUOUS:
+    {
+      msg_p = "Name '%' is ambiguous (module)";
+      break;
+    }
+    default:
+    {
+      JERRY_ASSERT (resolve_result_p->result_type == ECMA_MODULE_RESOLVE_NOT_FOUND
+                    || resolve_result_p->result_type == ECMA_MODULE_RESOLVE_ERROR);
 
-  new_frame_p->next_p = *stack_p;
-  *stack_p = new_frame_p;
-} /* ecma_module_resolve_stack_push */
+      msg_p = "Name '%' is not found (module)";
+      break;
+    }
+  }
+
+  return ecma_raise_standard_error_with_format (JERRY_ERROR_REFERENCE, msg_p, name_val);
+#else /* JERRY_ERROR_MESSAGES */
+  JERRY_UNUSED (resolve_result_p);
+  JERRY_UNUSED (name_p);
+
+  return ecma_raise_reference_error (NULL);
+#endif /* !JERRY_ERROR_MESSAGES */
+} /* ecma_module_resolve_throw */
 
 /**
- * Pops the topmost frame from a resolve stack.
+ * Updates the resolve record with the passed type/value pair
+ *
+ * @return true - if the record is updated successfully
+ *         false - otherwise
  */
-static void
-ecma_module_resolve_stack_pop (ecma_module_resolve_stack_t **stack_p) /**< [in, out] resolve stack */
+static bool
+ecma_module_resolve_update (ecma_module_resolve_result_t *resolve_result_p, /**< [in,out] resolve result */
+                            ecma_value_t result) /**< result value */
 {
-  JERRY_ASSERT (stack_p != NULL);
-  ecma_module_resolve_stack_t *current_p = *stack_p;
+  JERRY_ASSERT (resolve_result_p->result_type != ECMA_MODULE_RESOLVE_AMBIGUOUS
+                && resolve_result_p->result_type != ECMA_MODULE_RESOLVE_ERROR);
 
-  if (current_p != NULL)
+  if (resolve_result_p->result_type == ECMA_MODULE_RESOLVE_NOT_FOUND
+      || resolve_result_p->result_type == ECMA_MODULE_RESOLVE_CIRCULAR)
   {
-    *stack_p = current_p->next_p;
-    ecma_deref_ecma_string (current_p->export_name_p);
-    jmem_heap_free_block (current_p, sizeof (ecma_module_resolve_stack_t));
+    resolve_result_p->result_type = ECMA_MODULE_RESOLVE_FOUND;
+    resolve_result_p->result = result;
+    return true;
   }
-} /* ecma_module_resolve_stack_pop */
+
+  JERRY_ASSERT (resolve_result_p->result_type == ECMA_MODULE_RESOLVE_FOUND);
+
+  if (resolve_result_p->result == result)
+  {
+    return true;
+  }
+
+  resolve_result_p->result_type = ECMA_MODULE_RESOLVE_AMBIGUOUS;
+  return false;
+} /* ecma_module_resolve_update */
+
+/**
+ * Finds the reference in the imported bindings.
+ *
+ * Note:
+ *     This function is needed because the namespace object is created before the imports are connected
+ *
+ * @return true - if the record is updated successfully
+ *         false - otherwise
+ */
+static bool
+ecma_module_resolve_import (ecma_module_resolve_result_t *resolve_result_p, /**< [in,out] resolve result */
+                            ecma_module_resolve_set_t *resolve_set_p, /**< resolve set */
+                            ecma_module_t *module_p, /**< base module */
+                            ecma_string_t *local_name_p) /**< local name */
+{
+  ecma_module_node_t *import_node_p = module_p->imports_p;
+
+  while (true)
+  {
+    JERRY_ASSERT (import_node_p != NULL);
+
+    for (ecma_module_names_t *import_names_p = import_node_p->module_names_p;
+         import_names_p != NULL;
+         import_names_p = import_names_p->next_p)
+    {
+      if (ecma_compare_ecma_strings (local_name_p, import_names_p->local_name_p))
+      {
+        ecma_module_t *imported_module_p = ecma_module_get_from_object (import_node_p->u.path_or_module);
+
+        if (ecma_compare_ecma_string_to_magic_id (import_names_p->imex_name_p,
+                                                  LIT_MAGIC_STRING_ASTERIX_CHAR))
+        {
+          /* Namespace import. */
+          ecma_value_t namespace = ecma_make_object_value (imported_module_p->namespace_object_p);
+
+          JERRY_ASSERT (namespace & ECMA_MODULE_NAMESPACE_RESULT_FLAG);
+
+          return ecma_module_resolve_update (resolve_result_p, namespace);
+        }
+
+        if (!ecma_module_resolve_set_append (resolve_set_p, imported_module_p, import_names_p->imex_name_p)
+            && resolve_result_p->result_type == ECMA_MODULE_RESOLVE_NOT_FOUND)
+        {
+          resolve_result_p->result_type = ECMA_MODULE_RESOLVE_CIRCULAR;
+        }
+
+        return true;
+      }
+    }
+
+    import_node_p = import_node_p->next_p;
+  }
+} /* ecma_module_resolve_import */
 
 /**
  * Resolves which module satisfies an export based from a specific module in the import tree.
- * If no error occurs, out_record_p will contain a {module, local_name} record, which satisfies
- * the export, or {NULL, NULL} if the export is ambiguous.
- * Note: See 15.2.1.16.3
  *
- * @return ECMA_VALUE_ERROR - if an error occured
- *         ECMA_VALUE_EMPTY - otherwise
+ * Note: See ES11 15.2.1.17.3
  */
-static ecma_value_t
+static void
 ecma_module_resolve_export (ecma_module_t *const module_p, /**< base module */
                             ecma_string_t *const export_name_p, /**< export name */
-                            ecma_module_record_t *out_record_p) /**< [out] found module record */
+                            ecma_module_resolve_result_t *resolve_result_p) /**< [out] resolve result */
 {
-  ecma_module_resolve_set_t *resolve_set_p = NULL;
-  ecma_module_resolve_stack_t *stack_p = NULL;
+  ecma_module_resolve_set_t *resolve_set_p = ecma_module_resolve_set_create (module_p, export_name_p);
+  ecma_module_resolve_set_t *current_set_p = resolve_set_p;
 
-  bool found = false;
-  ecma_module_record_t found_record = { NULL, NULL };
-  ecma_value_t ret_value = ECMA_VALUE_EMPTY;
+  resolve_result_p->result_type = ECMA_MODULE_RESOLVE_NOT_FOUND;
+  resolve_result_p->result = ECMA_VALUE_UNDEFINED;
 
-  ecma_module_resolve_stack_push (&stack_p, module_p, export_name_p);
-
-  while (stack_p != NULL)
+  do
   {
-    ecma_module_resolve_stack_t *current_frame_p = stack_p;
+    ecma_module_t *current_module_p = current_set_p->module_p;
+    ecma_string_t *current_export_name_p = current_set_p->name_p;
 
-    ecma_module_t *current_module_p = current_frame_p->module_p;
-    ecma_string_t *current_export_name_p = current_frame_p->export_name_p;
-
-    if (!current_frame_p->resolving)
+    if (current_module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_ERROR)
     {
-      current_frame_p->resolving = true;
+      resolve_result_p->result_type = ECMA_MODULE_RESOLVE_ERROR;
+      goto exit;
+    }
 
-      /* 15.2.1.16.3 / 2-3 */
-      if (!ecma_module_resolve_set_insert (&resolve_set_p, current_module_p, current_export_name_p))
-      {
-        /* This is a circular import request. */
-        ecma_module_resolve_stack_pop (&stack_p);
-        continue;
-      }
+    if (current_module_p->header.u.cls.u2.module_flags & ECMA_MODULE_HAS_NAMESPACE)
+    {
+      ecma_property_t *property_p = ecma_find_named_property (current_module_p->namespace_object_p,
+                                                              current_export_name_p);
 
-      if (current_module_p->local_exports_p != NULL)
+      if (property_p != NULL)
       {
-        /* 15.2.1.16.3 / 4 */
-        ecma_module_names_t *export_names_p = current_module_p->local_exports_p;
-        while (export_names_p != NULL)
+        ecma_property_value_t *property_value_p = ECMA_PROPERTY_VALUE_PTR (property_p);
+
+        JERRY_ASSERT ((!(*property_p & ECMA_PROPERTY_FLAG_DATA)
+                       && !(property_value_p->value & ECMA_MODULE_NAMESPACE_RESULT_FLAG))
+                      || ((*property_p & ECMA_PROPERTY_FLAG_DATA)
+                          && ecma_is_value_object (property_value_p->value)
+                          && ecma_object_class_is (ecma_get_object_from_value (property_value_p->value),
+                                                   ECMA_OBJECT_CLASS_MODULE_NAMESPACE)));
+
+        if (!ecma_module_resolve_update (resolve_result_p, property_value_p->value))
         {
-          if (ecma_compare_ecma_strings (current_export_name_p, export_names_p->imex_name_p))
-          {
-            if (found)
-            {
-              /* This is an ambigous export. */
-              found_record.module_p = NULL;
-              found_record.name_p = NULL;
-              break;
-            }
+          goto exit;
+        }
 
-            /* The current module provides a direct binding for this export. */
-            found = true;
-            found_record.module_p = current_module_p;
-            found_record.name_p = export_names_p->local_name_p;
-            break;
+        goto next_iteration;
+      }
+    }
+    else
+    {
+      /* 6. */
+      ecma_module_names_t *export_names_p = current_module_p->local_exports_p;
+
+      while (export_names_p != NULL)
+      {
+        if (ecma_compare_ecma_strings (current_export_name_p, export_names_p->imex_name_p))
+        {
+          ecma_property_t *property_p = ecma_find_named_property (current_module_p->scope_p,
+                                                                  export_names_p->local_name_p);
+
+          if (property_p != NULL)
+          {
+            ecma_value_t reference = ecma_property_to_reference (property_p);
+
+            JERRY_ASSERT (!(reference & ECMA_MODULE_NAMESPACE_RESULT_FLAG));
+
+            if (!ecma_module_resolve_update (resolve_result_p, reference))
+            {
+              goto exit;
+            }
+          }
+          else if (!ecma_module_resolve_import (resolve_result_p,
+                                                resolve_set_p,
+                                                current_module_p,
+                                                export_names_p->local_name_p))
+          {
+            goto exit;
           }
 
-          export_names_p = export_names_p->next_p;
+          goto next_iteration;
         }
+
+        export_names_p = export_names_p->next_p;
       }
 
-      if (found)
-      {
-        /* We found a resolution for the current frame, return to the previous. */
-        ecma_module_resolve_stack_pop (&stack_p);
-        continue;
-      }
-
-      /* 15.2.1.16.3 / 5 */
+      /* 7. */
       ecma_module_node_t *indirect_export_p = current_module_p->indirect_exports_p;
+
       while (indirect_export_p != NULL)
       {
-        ecma_module_names_t *export_names_p = indirect_export_p->module_names_p;
+        export_names_p = indirect_export_p->module_names_p;
+
         while (export_names_p != NULL)
         {
           if (ecma_compare_ecma_strings (current_export_name_p, export_names_p->imex_name_p))
           {
-            /* 5.2.1.16.3 / 5.a.iv */
-            ecma_module_resolve_stack_push (&stack_p,
-                                            ecma_module_get_from_object (*indirect_export_p->u.module_object_p),
-                                            export_names_p->local_name_p);
-            break;
+            ecma_module_t *target_module_p = ecma_module_get_from_object (*indirect_export_p->u.module_object_p);
+
+            if (!ecma_module_resolve_set_append (resolve_set_p, target_module_p, export_names_p->local_name_p)
+                && resolve_result_p->result_type == ECMA_MODULE_RESOLVE_NOT_FOUND)
+            {
+              resolve_result_p->result_type = ECMA_MODULE_RESOLVE_CIRCULAR;
+            }
+
+            goto next_iteration;
           }
 
           export_names_p = export_names_p->next_p;
@@ -298,79 +488,38 @@ ecma_module_resolve_export (ecma_module_t *const module_p, /**< base module */
 
         indirect_export_p = indirect_export_p->next_p;
       }
-
-      /* We need to check whether the newly pushed indirect exports resolve to anything.
-       * Keep current frame in the stack, and continue from the topmost frame. */
-      continue;
-    } /* if (!current_frame_p->resolving) */
-
-    /* By the time we return to the current frame, the indirect exports will have finished resolving. */
-    if (found)
-    {
-      /* We found at least one export that satisfies the current request.
-       * Pop current frame, and return to the previous. */
-      ecma_module_resolve_stack_pop (&stack_p);
-      continue;
     }
 
-    /* 15.2.1.16.3 / 6 */
+    /* 8. */
     if (ecma_compare_ecma_string_to_magic_id (current_export_name_p, LIT_MAGIC_STRING_DEFAULT))
     {
-      ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("No explicitly defined default export in module"));
-      break;
+      goto exit;
     }
 
-    /* 15.2.1.16.3 / 7-8 */
-    if (!ecma_module_resolve_set_insert (&resolve_set_p,
-                                         current_module_p,
-                                         ecma_get_magic_string (LIT_MAGIC_STRING_ASTERIX_CHAR)))
-    {
-      /* This is a circular import request. */
-      ecma_module_resolve_stack_pop (&stack_p);
-      continue;
-    }
-
-    /* Pop the current frame, we have nothing else to do here after the star export resolutions are queued. */
-    ecma_module_resolve_stack_pop (&stack_p);
-
-    /* 15.2.1.16.3 / 10 */
+    /* 10. */
     ecma_module_node_t *star_export_p = current_module_p->star_exports_p;
     while (star_export_p != NULL)
     {
       JERRY_ASSERT (star_export_p->module_names_p == NULL);
 
-      /* 15.2.1.16.3 / 10.c */
-      ecma_module_resolve_stack_push (&stack_p,
-                                      ecma_module_get_from_object (*star_export_p->u.module_object_p),
-                                      export_name_p);
+      ecma_module_t *target_module_p = ecma_module_get_from_object (*star_export_p->u.module_object_p);
+
+      if (!ecma_module_resolve_set_append (resolve_set_p, target_module_p, current_export_name_p)
+          && resolve_result_p->result_type == ECMA_MODULE_RESOLVE_NOT_FOUND)
+      {
+        resolve_result_p->result_type = ECMA_MODULE_RESOLVE_CIRCULAR;
+      }
 
       star_export_p = star_export_p->next_p;
     }
-  }
 
-  /* Clean up. */
+next_iteration:
+    current_set_p = current_set_p->next_p;
+  }
+  while (current_set_p != NULL);
+
+exit:
   ecma_module_resolve_set_cleanup (resolve_set_p);
-  while (stack_p)
-  {
-    ecma_module_resolve_stack_pop (&stack_p);
-  }
-
-  if (ECMA_IS_VALUE_ERROR (ret_value))
-  {
-    /* No default export was found */
-    return ret_value;
-  }
-
-  if (found)
-  {
-    *out_record_p = found_record;
-  }
-  else
-  {
-    ret_value = ecma_raise_syntax_error (ECMA_ERR_MSG ("Export not found"));
-  }
-
-  return ret_value;
 } /* ecma_module_resolve_export */
 
 /**
@@ -453,42 +602,100 @@ ecma_module_evaluate (ecma_module_t *module_p) /**< module */
  *         ECMA_VALUE_EMPTY - otherwise
  */
 static ecma_value_t
-ecma_module_namespace_object_add_export_if_needed (ecma_module_t *module_p, /**< module */
+ecma_module_namespace_object_add_export_if_needed (ecma_collection_t *properties_p, /**< collection of properties */
+                                                   ecma_module_t *module_p, /**< module */
                                                    ecma_string_t *export_name_p, /**< export name */
                                                    bool allow_default) /**< allow default export */
 {
-  JERRY_ASSERT (module_p->namespace_object_p != NULL);
-  ecma_value_t result = ECMA_VALUE_EMPTY;
-
-  /* Default exports should not be added to the namespace object. */
-  if ((!allow_default && ecma_compare_ecma_string_to_magic_id (export_name_p, LIT_MAGIC_STRING_DEFAULT))
-      || ecma_find_named_property (module_p->namespace_object_p, export_name_p) != NULL)
+  if (!allow_default)
   {
-    /* This export name has already been handled. */
-    return result;
+    if (ecma_compare_ecma_string_to_magic_id (export_name_p, LIT_MAGIC_STRING_DEFAULT))
+    {
+      return ECMA_VALUE_EMPTY;
+    }
+
+    /* No need to check duplications before star exports are processed. */
+    ecma_value_t *buffer_p = properties_p->buffer_p;
+    ecma_value_t *buffer_end_p = properties_p->buffer_p + properties_p->item_count;
+
+    while (buffer_p < buffer_end_p)
+    {
+      if (ecma_compare_ecma_strings (ecma_get_string_from_value (*buffer_p), export_name_p))
+      {
+        return ECMA_VALUE_EMPTY;
+      }
+
+      buffer_p += 2;
+    }
   }
 
-  ecma_module_record_t record;
-  result = ecma_module_resolve_export (module_p, export_name_p, &record);
+  ecma_module_resolve_result_t resolve_result;
+  ecma_module_resolve_export (module_p, export_name_p, &resolve_result);
 
-  if (ECMA_IS_VALUE_ERROR (result))
+  if (resolve_result.result_type == ECMA_MODULE_RESOLVE_AMBIGUOUS)
   {
-    return result;
+    return ECMA_VALUE_EMPTY;
   }
 
-  if (record.module_p == NULL)
+  if (resolve_result.result_type != ECMA_MODULE_RESOLVE_FOUND)
   {
-    /* 15.2.1.18 / 3.d.iv Skip ambiguous names. */
-    return result;
+    return ecma_module_resolve_throw (&resolve_result, export_name_p);
   }
 
-  ecma_property_t *property_p = ecma_find_named_property (record.module_p->scope_p, record.name_p);
-
-  ecma_create_named_reference_property (module_p->namespace_object_p,
-                                        export_name_p,
-                                        property_p);
-  return result;
+  ecma_collection_push_back (properties_p, ecma_make_string_value (export_name_p));
+  ecma_collection_push_back (properties_p, resolve_result.result);
+  return ECMA_VALUE_EMPTY;
 } /* ecma_module_namespace_object_add_export_if_needed */
+
+/**
+ * Helper routine for heapsort algorithm.
+ */
+static void
+ecma_module_heap_sort_shift_down (ecma_value_t *buffer_p, /**< array of items */
+                                  uint32_t item_count, /**< number of items */
+                                  uint32_t item_index) /**< index of updated item */
+{
+  while (true)
+  {
+    uint32_t highest_index = item_index;
+    uint32_t current_index = item_index * 2 + 2;
+
+    if (current_index >= item_count)
+    {
+      return;
+    }
+
+    if (ecma_compare_ecma_strings_relational (ecma_get_string_from_value (buffer_p[highest_index]),
+                                              ecma_get_string_from_value (buffer_p[current_index])))
+    {
+      highest_index = current_index;
+    }
+
+    current_index += 2;
+
+    if (current_index < item_count
+        && ecma_compare_ecma_strings_relational (ecma_get_string_from_value (buffer_p[highest_index]),
+                                                 ecma_get_string_from_value (buffer_p[current_index])))
+    {
+      highest_index = current_index;
+    }
+
+    if (highest_index == item_index)
+    {
+      return;
+    }
+
+    ecma_value_t tmp = buffer_p[highest_index];
+    buffer_p[highest_index] = buffer_p[item_index];
+    buffer_p[item_index] = tmp;
+
+    tmp = buffer_p[highest_index + 1];
+    buffer_p[highest_index + 1] = buffer_p[item_index + 1];
+    buffer_p[item_index + 1] = tmp;
+
+    item_index = highest_index;
+  }
+} /* ecma_module_heap_sort_shift_down */
 
 /**
  * Creates a namespace object for a module.
@@ -497,119 +704,209 @@ ecma_module_namespace_object_add_export_if_needed (ecma_module_t *module_p, /**<
  * @return ECMA_VALUE_ERROR - if an error occured
  *         ECMA_VALUE_EMPTY - otherwise
  */
-ecma_value_t
+static ecma_value_t
 ecma_module_create_namespace_object (ecma_module_t *module_p) /**< module */
 {
+  JERRY_ASSERT (module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_LINKING);
+  JERRY_ASSERT (module_p->namespace_object_p != NULL);
+  JERRY_ASSERT (!(module_p->header.u.cls.u2.module_flags & ECMA_MODULE_HAS_NAMESPACE));
+
+  ecma_module_resolve_set_t *resolve_set_p;
+  resolve_set_p = ecma_module_resolve_set_create (module_p, ecma_get_magic_string (LIT_MAGIC_STRING_ASTERIX_CHAR));
+
+  /* The properties collection stores name / result item pairs. Name is always
+   * a string, and result can be a property reference or namespace object. */
+  ecma_module_resolve_set_t *current_set_p = resolve_set_p;
+  ecma_collection_t *properties_p = ecma_new_collection ();
   ecma_value_t result = ECMA_VALUE_EMPTY;
-  if (module_p->namespace_object_p != NULL)
-  {
-    return result;
-  }
-
-  JERRY_ASSERT (module_p->header.u.cls.u1.module_state >= JERRY_MODULE_STATE_LINKED
-                && module_p->header.u.cls.u1.module_state <= JERRY_MODULE_STATE_EVALUATED);
-  ecma_module_resolve_set_t *resolve_set_p = NULL;
-  ecma_module_resolve_stack_t *stack_p = NULL;
-
-  ecma_object_t *namespace_object_p = ecma_create_object (NULL,
-                                                          sizeof (ecma_extended_object_t),
-                                                          ECMA_OBJECT_TYPE_CLASS);
-
-  namespace_object_p->type_flags_refs &= (ecma_object_descriptor_t) ~ECMA_OBJECT_FLAG_EXTENSIBLE;
-
-  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) namespace_object_p;
-  ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_MODULE_NAMESPACE;
-  ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.cls.u3.value, module_p);
-
-  module_p->namespace_object_p = namespace_object_p;
-  ecma_deref_object (namespace_object_p);
-
-  ecma_module_resolve_stack_push (&stack_p, module_p, ecma_get_magic_string (LIT_MAGIC_STRING_ASTERIX_CHAR));
-
   bool allow_default = true;
 
   do
   {
-    ecma_module_resolve_stack_t *current_frame_p = stack_p;
-    ecma_module_t *current_module_p = current_frame_p->module_p;
+    ecma_module_t *current_module_p = current_set_p->module_p;
 
-    ecma_module_resolve_stack_pop (&stack_p);
-
-    /* 15.2.1.16.2 / 2-3 */
-    if (!ecma_module_resolve_set_insert (&resolve_set_p,
-                                         current_module_p,
-                                         ecma_get_magic_string (LIT_MAGIC_STRING_ASTERIX_CHAR)))
+    if (current_module_p->header.u.cls.u2.module_flags & ECMA_MODULE_HAS_NAMESPACE)
     {
-      /* Circular import. */
       JERRY_ASSERT (!allow_default);
-      continue;
-    }
 
-    ecma_module_names_t *export_names_p = current_module_p->local_exports_p;
+      jmem_cpointer_t prop_iter_cp = current_module_p->namespace_object_p->u1.property_list_cp;
 
-    if (export_names_p != NULL)
-    {
-      /* 15.2.1.16.2 / 5 */
-      do
+#if JERRY_PROPERTY_HASHMAP
+      if (prop_iter_cp != JMEM_CP_NULL)
       {
-        result = ecma_module_namespace_object_add_export_if_needed (module_p,
-                                                                    export_names_p->imex_name_p,
-                                                                    allow_default);
-        export_names_p = export_names_p->next_p;
+        ecma_property_header_t *prop_iter_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t,
+                                                                         prop_iter_cp);
+        if (prop_iter_p->types[0] == ECMA_PROPERTY_TYPE_HASHMAP)
+        {
+          prop_iter_cp = prop_iter_p->next_property_cp;
+        }
       }
-      while (export_names_p != NULL && ecma_is_value_empty (result));
-    }
+#endif /* JERRY_PROPERTY_HASHMAP */
 
-    /* 15.2.1.16.2 / 6 */
-    ecma_module_node_t *indirect_export_p = current_module_p->indirect_exports_p;
-    while (indirect_export_p != NULL && ecma_is_value_empty (result))
-    {
-      export_names_p = indirect_export_p->module_names_p;
-
-      JERRY_ASSERT (export_names_p != NULL);
-
-      do
+      while (prop_iter_cp != JMEM_CP_NULL)
       {
-        result = ecma_module_namespace_object_add_export_if_needed (module_p,
-                                                                    export_names_p->imex_name_p,
-                                                                    allow_default);
-        export_names_p = export_names_p->next_p;
-      }
-      while (export_names_p != NULL && ecma_is_value_empty (result));
+        ecma_property_header_t *prop_iter_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t, prop_iter_cp);
 
-      indirect_export_p = indirect_export_p->next_p;
+        JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
+
+        ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) prop_iter_p;
+
+        for (int i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
+        {
+          if (!ECMA_PROPERTY_IS_RAW (prop_iter_p->types[i]))
+          {
+            continue;
+          }
+
+          ecma_string_t *name_p = ecma_string_from_property_name (prop_iter_p->types[i], prop_pair_p->names_cp[i]);
+          result = ecma_module_namespace_object_add_export_if_needed (properties_p, module_p, name_p, false);
+          ecma_deref_ecma_string (name_p);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto exit;
+          }
+        }
+
+        prop_iter_cp = prop_iter_p->next_property_cp;
+      }
+    }
+    else
+    {
+      ecma_module_names_t *export_names_p = current_module_p->local_exports_p;
+
+      if (export_names_p != NULL)
+      {
+        do
+        {
+          result = ecma_module_namespace_object_add_export_if_needed (properties_p,
+                                                                      module_p,
+                                                                      export_names_p->imex_name_p,
+                                                                      allow_default);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto exit;
+          }
+
+          export_names_p = export_names_p->next_p;
+        }
+        while (export_names_p != NULL);
+      }
+
+      ecma_module_node_t *indirect_export_p = current_module_p->indirect_exports_p;
+
+      while (indirect_export_p != NULL)
+      {
+        export_names_p = indirect_export_p->module_names_p;
+
+        while (export_names_p != NULL)
+        {
+          result = ecma_module_namespace_object_add_export_if_needed (properties_p,
+                                                                      module_p,
+                                                                      export_names_p->imex_name_p,
+                                                                      allow_default);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto exit;
+          }
+
+          export_names_p = export_names_p->next_p;
+        }
+
+        indirect_export_p = indirect_export_p->next_p;
+      }
     }
 
     allow_default = false;
 
-    /* 15.2.1.16.2 / 7 */
     ecma_module_node_t *star_export_p = current_module_p->star_exports_p;
-    while (star_export_p != NULL && ecma_is_value_empty (result))
+
+    while (star_export_p != NULL)
     {
       JERRY_ASSERT (star_export_p->module_names_p == NULL);
 
-      /* 15.2.1.16.3/10.c */
-      ecma_module_resolve_stack_push (&stack_p,
+      /* Circular imports are ignored */
+      ecma_module_resolve_set_append (resolve_set_p,
                                       ecma_module_get_from_object (*star_export_p->u.module_object_p),
                                       ecma_get_magic_string (LIT_MAGIC_STRING_ASTERIX_CHAR));
 
       star_export_p = star_export_p->next_p;
     }
 
-    if (ECMA_IS_VALUE_ERROR (result))
-    {
-      break;
-    }
+    current_set_p = current_set_p->next_p;
   }
-  while (stack_p != NULL);
+  while (current_set_p != NULL);
 
+  ecma_value_t *buffer_p = properties_p->buffer_p;
+  uint32_t item_count = properties_p->item_count;
+
+  if (item_count >= 4)
+  {
+    /* Sort items with heapsort if at least two items are stored in the buffer. */
+    uint32_t end = (item_count >> 1) & ~(uint32_t) 0x1;
+
+    do
+    {
+      end -= 2;
+      ecma_module_heap_sort_shift_down (buffer_p, item_count, end);
+    }
+    while (end > 0);
+
+    end = item_count - 2;
+
+    do
+    {
+      ecma_value_t tmp = buffer_p[end];
+      buffer_p[end] = buffer_p[0];
+      buffer_p[0] = tmp;
+
+      tmp = buffer_p[end + 1];
+      buffer_p[end + 1] = buffer_p[1];
+      buffer_p[1] = tmp;
+
+      ecma_module_heap_sort_shift_down (buffer_p, end, 0);
+      end -= 2;
+    }
+    while (end > 0);
+  }
+
+  ecma_value_t *buffer_end_p = properties_p->buffer_p + item_count;
+
+  while (buffer_p < buffer_end_p)
+  {
+    if (buffer_p[1] & ECMA_MODULE_NAMESPACE_RESULT_FLAG)
+    {
+      ecma_property_value_t *property_value_p;
+      property_value_p = ecma_create_named_data_property (module_p->namespace_object_p,
+                                                          ecma_get_string_from_value (buffer_p[0]),
+                                                          ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE,
+                                                          NULL);
+      property_value_p->value = buffer_p[1];
+    }
+    else
+    {
+      ecma_create_named_reference_property (module_p->namespace_object_p,
+                                            ecma_get_string_from_value (buffer_p[0]),
+                                            buffer_p[1]);
+    }
+
+    buffer_p += 2;
+  }
+
+  module_p->header.u.cls.u2.module_flags |= ECMA_MODULE_HAS_NAMESPACE;
+
+  ecma_module_release_module_names (module_p->local_exports_p);
+  module_p->local_exports_p = NULL;
+
+  ecma_module_release_module_nodes (module_p->indirect_exports_p, false);
+  module_p->indirect_exports_p = NULL;
+
+exit:
   /* Clean up. */
   ecma_module_resolve_set_cleanup (resolve_set_p);
-  while (stack_p)
-  {
-    ecma_module_resolve_stack_pop (&stack_p);
-  }
-
+  ecma_collection_destroy (properties_p);
   return result;
 } /* ecma_module_create_namespace_object */
 
@@ -678,111 +975,57 @@ ecma_module_connect_imports (ecma_module_t *module_p)
     ecma_module_names_t *import_names_p = import_node_p->module_names_p;
     ecma_module_t *imported_module_p = ecma_module_get_from_object (import_node_p->u.path_or_module);
 
-    /* Module is evaluated even if it is used only in export-from statements. */
-    ecma_value_t result = ecma_module_evaluate (imported_module_p);
-
-    if (ECMA_IS_VALUE_ERROR (result))
-    {
-      return result;
-    }
-
-    ecma_free_value (result);
-
     while (import_names_p != NULL)
     {
-      const bool is_namespace_import = ecma_compare_ecma_string_to_magic_id (import_names_p->imex_name_p,
-                                                                             LIT_MAGIC_STRING_ASTERIX_CHAR);
-
-      if (is_namespace_import)
+      if (ecma_compare_ecma_string_to_magic_id (import_names_p->imex_name_p,
+                                                LIT_MAGIC_STRING_ASTERIX_CHAR))
       {
-        result = ecma_module_create_namespace_object (imported_module_p);
-
-        if (ECMA_IS_VALUE_ERROR (result))
-        {
-          return result;
-        }
-
+        /* Namespace import. */
         ecma_property_value_t *value_p;
         value_p = ecma_create_named_data_property (module_p->scope_p,
                                                    import_names_p->local_name_p,
-                                                   ECMA_PROPERTY_FLAG_WRITABLE,
+                                                   ECMA_PROPERTY_FIXED,
                                                    NULL);
         value_p->value = ecma_make_object_value (imported_module_p->namespace_object_p);
       }
-      else /* !is_namespace_import */
+      else
       {
-        ecma_module_record_t record;
-        result = ecma_module_resolve_export (imported_module_p, import_names_p->imex_name_p, &record);
+        ecma_module_resolve_result_t resolve_result;
+        ecma_module_resolve_export (imported_module_p, import_names_p->imex_name_p, &resolve_result);
 
-        if (ECMA_IS_VALUE_ERROR (result))
+        if (resolve_result.result_type != ECMA_MODULE_RESOLVE_FOUND)
         {
-          return result;
+          return ecma_module_resolve_throw (&resolve_result, import_names_p->imex_name_p);
         }
 
-        if (record.module_p == NULL)
+        if (resolve_result.result & ECMA_MODULE_NAMESPACE_RESULT_FLAG)
         {
-          return ecma_raise_syntax_error (ECMA_ERR_MSG ("Ambiguous import request"));
+          ecma_property_value_t *property_value_p;
+          property_value_p = ecma_create_named_data_property (module_p->scope_p,
+                                                              import_names_p->local_name_p,
+                                                              ECMA_PROPERTY_FIXED,
+                                                              NULL);
+          property_value_p->value = resolve_result.result;
         }
-
-        ecma_property_t *property_p = ecma_find_named_property (record.module_p->scope_p, record.name_p);
-
-        ecma_create_named_reference_property (module_p->scope_p,
-                                              import_names_p->local_name_p,
-                                              property_p);
+        else
+        {
+          ecma_create_named_reference_property (module_p->scope_p,
+                                                import_names_p->local_name_p,
+                                                resolve_result.result);
+        }
       }
 
       import_names_p = import_names_p->next_p;
     }
+
+    ecma_module_release_module_names (import_node_p->module_names_p);
+    import_node_p->module_names_p = NULL;
 
     import_node_p = import_node_p->next_p;
   }
 
   return ECMA_VALUE_EMPTY;
 } /* ecma_module_connect_imports */
-
-/**
- * Checks if indirect exports in the current context are resolvable.
- * Note: See 15.2.1.16.4 / 9.
- *
- * @return ECMA_VALUE_ERROR - if an error occured
- *         ECMA_VALUE_EMPTY - otherwise
- */
-static ecma_value_t
-ecma_module_check_indirect_exports (ecma_module_t *module_p)
-{
-  ecma_module_node_t *indirect_export_p = module_p->indirect_exports_p;
-  while (indirect_export_p != NULL)
-  {
-    ecma_module_names_t *name_p = indirect_export_p->module_names_p;
-    while (name_p != NULL)
-    {
-      ecma_module_record_t record;
-      ecma_value_t result;
-
-      result = ecma_module_resolve_export (ecma_module_get_from_object (*indirect_export_p->u.module_object_p),
-                                           name_p->local_name_p,
-                                           &record);
-
-      if (ECMA_IS_VALUE_ERROR (result))
-      {
-        return result;
-      }
-
-      JERRY_ASSERT (ecma_is_value_empty (result));
-
-      if (record.module_p == NULL)
-      {
-        return ecma_raise_syntax_error (ECMA_ERR_MSG ("Ambiguous indirect export request"));
-      }
-
-      name_p = name_p->next_p;
-    }
-
-    indirect_export_p = indirect_export_p->next_p;
-  }
-
-  return ECMA_VALUE_EMPTY;
-} /* ecma_module_check_indirect_exports */
 
 /**
  * Initialize the current module by creating the local binding for the imported variables
@@ -794,14 +1037,24 @@ ecma_module_check_indirect_exports (ecma_module_t *module_p)
 ecma_value_t
 ecma_module_initialize (ecma_module_t *module_p) /**< module */
 {
-  ecma_value_t ret_value = ecma_module_connect_imports (module_p);
+  ecma_module_node_t *import_node_p = module_p->imports_p;
 
-  if (ecma_is_value_empty (ret_value))
+  while (import_node_p != NULL)
   {
-    ret_value = ecma_module_check_indirect_exports (module_p);
+    /* Module is evaluated even if it is used only in export-from statements. */
+    ecma_value_t result = ecma_module_evaluate (ecma_module_get_from_object (import_node_p->u.path_or_module));
+
+    if (ECMA_IS_VALUE_ERROR (result))
+    {
+      return result;
+    }
+
+    ecma_free_value (result);
+
+    import_node_p = import_node_p->next_p;
   }
 
-  return ret_value;
+  return ECMA_VALUE_EMPTY;
 } /* ecma_module_initialize */
 
 /**
@@ -889,35 +1142,37 @@ restart:
 
   while (node_p != NULL)
   {
-    if (ecma_is_value_object (node_p->u.path_or_module))
+    ecma_module_t *resolved_module_p;
+
+    if (!ecma_is_value_object (node_p->u.path_or_module))
     {
-      /* Already linked. */
-      node_p = node_p->next_p;
-      continue;
+      JERRY_ASSERT (ecma_is_value_string (node_p->u.path_or_module));
+
+      ecma_value_t resolve_result = callback (node_p->u.path_or_module, module_val, user_p);
+
+      if (JERRY_UNLIKELY (ecma_is_value_error_reference (resolve_result)))
+      {
+        ecma_raise_error_from_error_reference (resolve_result);
+        goto error;
+      }
+
+      resolved_module_p = ecma_module_get_resolved_module (resolve_result);
+
+      if (resolved_module_p == NULL)
+      {
+        ecma_free_value (resolve_result);
+        ecma_raise_type_error (ECMA_ERR_MSG ("Callback result must be a module"));
+        goto error;
+      }
+
+      ecma_deref_ecma_string (ecma_get_string_from_value (node_p->u.path_or_module));
+      node_p->u.path_or_module = resolve_result;
+      ecma_deref_object (ecma_get_object_from_value (resolve_result));
     }
-
-    JERRY_ASSERT (ecma_is_value_string (node_p->u.path_or_module));
-
-    ecma_value_t resolve_result = callback (node_p->u.path_or_module, module_val, user_p);
-
-    if (JERRY_UNLIKELY (ecma_is_value_error_reference (resolve_result)))
+    else
     {
-      ecma_raise_error_from_error_reference (resolve_result);
-      goto error;
+      resolved_module_p = ecma_module_get_from_object (node_p->u.path_or_module);
     }
-
-    ecma_module_t *resolved_module_p = ecma_module_get_resolved_module (resolve_result);
-
-    if (resolved_module_p == NULL)
-    {
-      ecma_free_value (resolve_result);
-      ecma_raise_type_error (ECMA_ERR_MSG ("Callback result must be a module"));
-      goto error;
-    }
-
-    ecma_deref_ecma_string (ecma_get_string_from_value (node_p->u.path_or_module));
-    node_p->u.path_or_module = resolve_result;
-    ecma_deref_object (ecma_get_object_from_value (resolve_result));
 
     if (resolved_module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_ERROR)
     {
@@ -991,6 +1246,22 @@ restart:
       JERRY_ASSERT (result == ECMA_VALUE_EMPTY);
     }
 
+    if (current_module_p->namespace_object_p == NULL)
+    {
+      ecma_object_t *namespace_object_p = ecma_create_object (NULL,
+                                                              sizeof (ecma_extended_object_t),
+                                                              ECMA_OBJECT_TYPE_CLASS);
+
+      namespace_object_p->type_flags_refs &= (ecma_object_descriptor_t) ~ECMA_OBJECT_FLAG_EXTENSIBLE;
+
+      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) namespace_object_p;
+      ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_MODULE_NAMESPACE;
+      ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.cls.u3.value, module_p);
+
+      current_module_p->namespace_object_p = namespace_object_p;
+      ecma_deref_object (namespace_object_p);
+    }
+
     if (current_module_p->header.u.cls.u3.dfs_ancestor_index != current_p->dfs_index)
     {
       current_p = current_p->parent_p;
@@ -1007,6 +1278,38 @@ restart:
 
     ecma_module_stack_item_t *end_p = current_p->prev_p;
     current_p = current_p->parent_p;
+
+    ecma_module_stack_item_t *iterator_p = last_p;
+
+    do
+    {
+      JERRY_ASSERT (iterator_p->module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_LINKING);
+
+      if (ECMA_IS_VALUE_ERROR (ecma_module_create_namespace_object (iterator_p->module_p)))
+      {
+        ecma_module_set_error_state (iterator_p->module_p);
+        goto error;
+      }
+
+      iterator_p = iterator_p->prev_p;
+    }
+    while (iterator_p != end_p);
+
+    iterator_p = last_p;
+
+    do
+    {
+      JERRY_ASSERT (iterator_p->module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_LINKING);
+
+      if (ECMA_IS_VALUE_ERROR (ecma_module_connect_imports (iterator_p->module_p)))
+      {
+        ecma_module_set_error_state (iterator_p->module_p);
+        goto error;
+      }
+
+      iterator_p = iterator_p->prev_p;
+    }
+    while (iterator_p != end_p);
 
     do
     {
@@ -1041,8 +1344,11 @@ error:
   {
     ecma_module_stack_item_t *prev_p = last_p->prev_p;
 
-    JERRY_ASSERT (last_p->module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_LINKING);
-    last_p->module_p->header.u.cls.u1.module_state = JERRY_MODULE_STATE_UNLINKED;
+    if (last_p->module_p->header.u.cls.u1.module_state != JERRY_MODULE_STATE_ERROR)
+    {
+      JERRY_ASSERT (last_p->module_p->header.u.cls.u1.module_state == JERRY_MODULE_STATE_LINKING);
+      last_p->module_p->header.u.cls.u1.module_state = JERRY_MODULE_STATE_UNLINKED;
+    }
 
     jmem_heap_free_block (last_p, sizeof (ecma_module_stack_item_t));
     last_p = prev_p;
@@ -1051,47 +1357,6 @@ error:
 
   return ECMA_VALUE_ERROR;
 } /* ecma_module_link */
-
-/**
- * Cleans up a list of module names.
- */
-void
-ecma_module_release_module_names (ecma_module_names_t *module_name_p) /**< first module name */
-{
-  while (module_name_p != NULL)
-  {
-    ecma_module_names_t *next_p = module_name_p->next_p;
-
-    ecma_deref_ecma_string (module_name_p->imex_name_p);
-    ecma_deref_ecma_string (module_name_p->local_name_p);
-    jmem_heap_free_block (module_name_p, sizeof (ecma_module_names_t));
-
-    module_name_p = next_p;
-  }
-} /* ecma_module_release_module_names */
-
-/**
- * Cleans up a list of module nodes.
- */
-static void
-ecma_module_release_module_nodes (ecma_module_node_t *module_node_p, /**< first module node */
-                                  bool is_import) /**< free path variable */
-{
-  while (module_node_p != NULL)
-  {
-    ecma_module_node_t *next_p = module_node_p->next_p;
-
-    ecma_module_release_module_names (module_node_p->module_names_p);
-
-    if (is_import && ecma_is_value_string (module_node_p->u.path_or_module))
-    {
-      ecma_deref_ecma_string (ecma_get_string_from_value (module_node_p->u.path_or_module));
-    }
-
-    jmem_heap_free_block (module_node_p, sizeof (ecma_module_node_t));
-    module_node_p = next_p;
-  }
-} /* ecma_module_release_module_nodes */
 
 /**
  * Cleans up and releases a module structure including all referenced modules.

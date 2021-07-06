@@ -64,16 +64,18 @@ create_module (int id) /**< module id */
 
   if (id == 0)
   {
-    result = jerry_parse ((jerry_char_t *) "", 0, &module_parse_options);
+    jerry_char_t source[] = "export var a = 7";
+
+    result = jerry_parse (source, sizeof (source) - 1, &module_parse_options);
   }
   else
   {
-    jerry_char_t source[] = "import a from 'XX_module.mjs'";
+    jerry_char_t source[] = "export {a} from 'XX_module.mjs'";
 
-    TEST_ASSERT (id >= 1 && id <= 99 && source[15] == 'X' && source[16] == 'X');
+    TEST_ASSERT (id >= 1 && id <= 99 && source[17] == 'X' && source[18] == 'X');
 
-    source[15] = (jerry_char_t) ((id / 10) + '0');
-    source[16] = (jerry_char_t) ((id % 10) + '0');
+    source[17] = (jerry_char_t) ((id / 10) + '0');
+    source[18] = (jerry_char_t) ((id % 10) + '0');
 
     result = jerry_parse (source, sizeof (source) - 1, &module_parse_options);
   }

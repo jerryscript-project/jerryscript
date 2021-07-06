@@ -13,6 +13,21 @@
  * limitations under the License.
  */
 
-export function ns() {}
-/* Duplicated export. */
-export * as ns from "../es.next/module-export-fail-test.mjs"
+/* Export the same namespace using two names */
+export
+  * as ns1 from
+  "./module-export-04.mjs"
+export * as
+  ns2
+  from "./module-export-04.mjs"
+export *
+  as ns3 from "./module-export-04.mjs"
+
+/* Local bindings can have the same names as exports. */
+import ns1, {x as ns2}
+  from "./module-export-04.mjs"
+let ns3 = 9.5
+
+assert(ns1 === "str")
+assert(ns2 === 41)
+assert(ns3 === 9.5)

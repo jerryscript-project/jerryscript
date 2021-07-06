@@ -474,8 +474,21 @@ ecma_module_resolve_export (ecma_module_t *const module_p, /**< base module */
           {
             ecma_module_t *target_module_p = ecma_module_get_from_object (*indirect_export_p->u.module_object_p);
 
-            if (!ecma_module_resolve_set_append (resolve_set_p, target_module_p, export_names_p->local_name_p)
-                && resolve_result_p->result_type == ECMA_MODULE_RESOLVE_NOT_FOUND)
+            if (ecma_compare_ecma_string_to_magic_id (export_names_p->local_name_p,
+                                                      LIT_MAGIC_STRING_ASTERIX_CHAR))
+            {
+              /* Namespace export. */
+              ecma_value_t namespace = ecma_make_object_value (target_module_p->namespace_object_p);
+
+              JERRY_ASSERT (namespace & ECMA_MODULE_NAMESPACE_RESULT_FLAG);
+
+              if (!ecma_module_resolve_update (resolve_result_p, namespace))
+              {
+                goto exit;
+              }
+            }
+            else if (!ecma_module_resolve_set_append (resolve_set_p, target_module_p, export_names_p->local_name_p)
+                     && resolve_result_p->result_type == ECMA_MODULE_RESOLVE_NOT_FOUND)
             {
               resolve_result_p->result_type = ECMA_MODULE_RESOLVE_CIRCULAR;
             }

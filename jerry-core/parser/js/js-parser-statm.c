@@ -2618,13 +2618,47 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
     case LEXER_MULTIPLY:
     {
       lexer_next_token (context_p);
+
+      ecma_module_node_t **target_node_list_p = &(JERRY_CONTEXT (module_current_p)->star_exports_p);
+
+      if (lexer_token_is_identifier (context_p, "as", 2))
+      {
+        target_node_list_p = &(JERRY_CONTEXT (module_current_p)->indirect_exports_p);
+
+        lexer_next_token (context_p);
+
+        if (context_p->token.type != LEXER_LITERAL
+            || context_p->token.lit_location.type != LEXER_IDENT_LITERAL)
+        {
+          parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
+        }
+
+        lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_NEW_IDENT_LITERAL);
+
+        lexer_literal_t *literal_p = PARSER_GET_LITERAL (context_p->lit_object.index);
+        ecma_string_t *export_name_p = ecma_new_ecma_string_from_utf8 (literal_p->u.char_p,
+                                                                       literal_p->prop.length);
+
+        if (parser_module_check_duplicate_export (context_p, export_name_p))
+        {
+          ecma_deref_ecma_string (export_name_p);
+          parser_raise_error (context_p, PARSER_ERR_DUPLICATED_EXPORT_IDENTIFIER);
+        }
+
+        ecma_string_t *local_name_p = ecma_get_magic_string (LIT_MAGIC_STRING_ASTERIX_CHAR);
+        parser_module_add_names_to_node (context_p, export_name_p, local_name_p);
+        ecma_deref_ecma_string (export_name_p);
+
+        lexer_next_token (context_p);
+      }
+
       if (!lexer_token_is_identifier (context_p, "from", 4))
       {
         parser_raise_error (context_p, PARSER_ERR_FROM_EXPECTED);
       }
 
       lexer_next_token (context_p);
-      parser_module_handle_module_specifier (context_p, &(JERRY_CONTEXT (module_current_p)->star_exports_p));
+      parser_module_handle_module_specifier (context_p, target_node_list_p);
       return false;
     }
     case LEXER_KEYW_VAR:

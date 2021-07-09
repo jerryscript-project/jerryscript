@@ -1851,6 +1851,20 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
       if (context_p->token.type == LEXER_MULTIPLY)
       {
         lexer_next_token (context_p);
+
+        if (lexer_token_is_identifier (context_p, "as", 2))
+        {
+          lexer_next_token (context_p);
+
+          if (context_p->token.type != LEXER_LITERAL
+              && context_p->token.lit_location.type == LEXER_IDENT_LITERAL)
+          {
+            scanner_raise_error (context_p);
+          }
+
+          lexer_next_token (context_p);
+        }
+
         if (!lexer_token_is_identifier (context_p, "from", 4))
         {
           scanner_raise_error (context_p);

@@ -13,6 +13,18 @@
  * limitations under the License.
  */
 
-export function ns() {}
-/* Duplicated export. */
-export * as ns from "../es.next/module-export-fail-test.mjs"
+import {ns1 as obj, ns2} from "module-export-10.mjs"
+import {ns3} from "module-export-10.mjs"
+
+assert(typeof obj === "object")
+assert(obj === ns2)
+assert(obj === ns3)
+
+assert(obj.x === 41)
+try {
+  obj.x = 42
+  assert(false)
+} catch (e) {
+  assert(e instanceof TypeError)
+}
+assert(obj.x === 41)

@@ -137,7 +137,8 @@ restart:
         ret_value = jerry_exec_snapshot ((uint32_t *) source_p,
                                          source_size,
                                          source_file_p->snapshot_index,
-                                         JERRY_SNAPSHOT_EXEC_COPY_DATA);
+                                         JERRY_SNAPSHOT_EXEC_COPY_DATA,
+                                         NULL);
 
         jerry_port_release_source (source_p);
         break;

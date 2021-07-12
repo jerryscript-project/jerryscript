@@ -168,6 +168,7 @@ typedef enum
   JERRY_PARSE_MODULE = (1 << 1), /**< parse source as an ECMAScript module */
   JERRY_PARSE_HAS_RESOURCE = (1 << 2), /**< resource_name_p and resource_name_length fields are valid */
   JERRY_PARSE_HAS_START = (1 << 3), /**< start_line and start_column fields are valid */
+  JERRY_PARSE_HAS_USER_VALUE = (1 << 4), /**< user_value field is valid */
 } jerry_parse_option_enable_feature_t;
 
 /**
@@ -182,6 +183,8 @@ typedef struct
                                 *   if JERRY_PARSE_HAS_RESOURCE is set in options */
   uint32_t start_line; /**< start line of the source code if JERRY_PARSE_HAS_START is set in options */
   uint32_t start_column; /**< start column of the source code if JERRY_PARSE_HAS_START is set in options */
+  jerry_value_t user_value; /**< user value assigned to all functions created by this script including eval
+                             *   calls executed by the script if JERRY_PARSE_HAS_USER_VALUE is set in options */
 } jerry_parse_options_t;
 
 /**

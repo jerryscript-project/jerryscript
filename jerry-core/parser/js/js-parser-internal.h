@@ -549,6 +549,9 @@ typedef struct
   const ecma_parse_options_t *options_p;      /**< parse options */
   parser_saved_context_t *last_context_p;     /**< last saved context */
   parser_stack_iterator_t last_statement;     /**< last statement position */
+  cbc_script_t *script_p;                     /**< current script */
+  ecma_value_t script_value;                  /**< current script as value */
+  ecma_value_t user_value;                    /**< current user value */
 
 #if JERRY_MODULE_SYSTEM
   ecma_module_names_t *module_names_p;        /**< import / export names that is being processed */
@@ -612,10 +615,6 @@ typedef struct
   uint16_t breakpoint_info_count;             /**< current breakpoint index */
   parser_line_counter_t last_breakpoint_line; /**< last line where breakpoint has been inserted */
 #endif /* JERRY_DEBUGGER */
-
-#if JERRY_RESOURCE_NAME
-  ecma_value_t resource_name;                 /**< resource name */
-#endif /* JERRY_RESOURCE_NAME */
 
 #if JERRY_LINE_INFO
   parser_line_counter_t last_line_info_line;  /**< last line where line info has been inserted */

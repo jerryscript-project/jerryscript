@@ -509,7 +509,7 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_PROMISE,
 
 #endif /* JERRY_BUILTIN_PROMISE */
 
-#if JERRY_BUILTIN_MAP
+#if JERRY_BUILTIN_CONTAINER
 
 /* The Map prototype object (23.1.3) */
 BUILTIN (ECMA_BUILTIN_ID_MAP_PROTOTYPE,
@@ -525,10 +525,6 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_MAP,
                  true,
                  map)
 
-#endif /* JERRY_BUILTIN_MAP */
-
-#if JERRY_BUILTIN_SET
-
 /* The Set prototype object (23.1.3) */
 BUILTIN (ECMA_BUILTIN_ID_SET_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
@@ -542,10 +538,6 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_SET,
                  ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE,
                  true,
                  set)
-
-#endif /* JERRY_BUILTIN_SET */
-
-#if JERRY_BUILTIN_WEAKMAP
 
 /* The WeakMap prototype object (23.1.3) */
 BUILTIN (ECMA_BUILTIN_ID_WEAKMAP_PROTOTYPE,
@@ -561,10 +553,6 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_WEAKMAP,
                  true,
                  weakmap)
 
-#endif /* JERRY_BUILTIN_WEAKMAP */
-
-#if JERRY_BUILTIN_WEAKSET
-
 /* The WeakSet prototype object (23.1.3) */
 BUILTIN (ECMA_BUILTIN_ID_WEAKSET_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
@@ -579,7 +567,7 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_WEAKSET,
                  true,
                  weakset)
 
-#endif /* JERRY_BUILTIN_WEAKSET */
+#endif /* JERRY_BUILTIN_CONTAINER */
 
 #if JERRY_BUILTIN_WEAKREF
 
@@ -729,23 +717,21 @@ BUILTIN (ECMA_BUILTIN_ID_ASYNC_GENERATOR_PROTOTYPE,
          true,
          async_generator_prototype)
 
-#if JERRY_BUILTIN_SET
+#if JERRY_BUILTIN_CONTAINER
 /* The %SetIteratorPrototype% object (ECMA-262 v6, 23.2.5.2) */
 BUILTIN (ECMA_BUILTIN_ID_SET_ITERATOR_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID_ITERATOR_PROTOTYPE,
          true,
          set_iterator_prototype)
-#endif /* JERRY_BUILTIN_SET */
 
-#if JERRY_BUILTIN_MAP
 /* The %MapIteratorPrototype% object (ECMA-262 v6, 23.1.5.2) */
 BUILTIN (ECMA_BUILTIN_ID_MAP_ITERATOR_PROTOTYPE,
          ECMA_OBJECT_TYPE_GENERAL,
          ECMA_BUILTIN_ID_ITERATOR_PROTOTYPE,
          true,
          map_iterator_prototype)
-#endif /* JERRY_BUILTIN_SET */
+#endif /* JERRY_BUILTIN_CONTAINER */
 
 #endif /* JERRY_ESNEXT */
 

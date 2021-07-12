@@ -15,7 +15,7 @@
 
 #include "ecma-container-object.h"
 
-#if JERRY_BUILTIN_WEAKSET
+#if JERRY_BUILTIN_CONTAINER
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -64,4 +64,4 @@ ecma_builtin_weakset_prototype_dispatch_routine (uint8_t builtin_routine_id, /**
  * @}
  */
 
-#endif /* JERRY_BUILTIN_WEAKSET */
+#endif /* JERRY_BUILTIN_CONTAINER */

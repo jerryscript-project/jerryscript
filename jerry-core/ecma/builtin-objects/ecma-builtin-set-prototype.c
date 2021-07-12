@@ -15,7 +15,7 @@
 
 #include "ecma-container-object.h"
 
-#if JERRY_BUILTIN_SET
+#if JERRY_BUILTIN_CONTAINER
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -62,4 +62,4 @@ ecma_builtin_set_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< bu
  * @}
  */
 
-#endif /* JERRY_BUILTIN_SET */
+#endif /* JERRY_BUILTIN_CONTAINER */

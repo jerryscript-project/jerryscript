@@ -15,6 +15,7 @@
 
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
+#include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
@@ -1514,6 +1515,32 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
       }
     }
 
+    ecma_value_t script_value = ((cbc_uint8_arguments_t *) bytecode_p)->script_value;
+    cbc_script_t *script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
+    script_p->refs_and_type -= CBC_SCRIPT_REF_ONE;
+
+    if (script_p->refs_and_type < CBC_SCRIPT_REF_ONE)
+    {
+      size_t script_size = sizeof (cbc_script_t);
+
+      uint32_t type = CBC_SCRIPT_GET_TYPE (script_p);
+
+      if (type != CBC_SCRIPT_GENERIC)
+      {
+        script_size = sizeof (cbc_script_user_t);
+
+        if (type == CBC_SCRIPT_USER_VALUE)
+        {
+          cbc_script_user_t *script_user_p = (cbc_script_user_t *) script_p;
+
+          JERRY_ASSERT (!ecma_is_value_object (script_user_p->user_value));
+          ecma_free_value (script_user_p->user_value);
+        }
+      }
+
+      jmem_heap_free_block (script_p, script_size);
+    }
+
 #if JERRY_ESNEXT
     if (bytecode_p->status_flags & CBC_CODE_FLAGS_HAS_TAGGED_LITERALS)
     {
@@ -1583,6 +1610,72 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
   jmem_heap_free_block (bytecode_p,
                         ((size_t) bytecode_p->size) << JMEM_ALIGNMENT_LOG);
 } /* ecma_bytecode_deref */
+
+/**
+ * Gets the byte code asigned to a script / module / function
+ *
+ * @return byte code - if available, NULL - otherwise
+ */
+const ecma_compiled_code_t *
+ecma_bytecode_get_from_value (ecma_value_t value) /**< compiled code */
+{
+  if (!ecma_is_value_object (value))
+  {
+    return NULL;
+  }
+
+  ecma_object_t *object_p = ecma_get_object_from_value (value);
+
+  while (true)
+  {
+    switch (ecma_get_object_type (object_p))
+    {
+      case ECMA_OBJECT_TYPE_CLASS:
+      {
+        ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+
+        if (ext_object_p->u.cls.type == ECMA_OBJECT_CLASS_SCRIPT)
+        {
+          return ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
+                                                  ext_object_p->u.cls.u3.value);
+        }
+
+#if JERRY_MODULE_SYSTEM
+        if (ext_object_p->u.cls.type == ECMA_OBJECT_CLASS_MODULE)
+        {
+          ecma_module_t *module_p = (ecma_module_t *) object_p;
+
+          if (!(module_p->header.u.cls.u2.module_flags & ECMA_MODULE_IS_NATIVE))
+          {
+            return module_p->u.compiled_code_p;
+          }
+        }
+#endif /* JERRY_MODULE_SYSTEM */
+        return NULL;
+      }
+      case ECMA_OBJECT_TYPE_FUNCTION:
+      {
+        if (!ecma_get_object_is_builtin (object_p))
+        {
+          return ecma_op_function_get_compiled_code ((ecma_extended_object_t *) object_p);
+        }
+        return NULL;
+      }
+      case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+      {
+        ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+
+        object_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
+                                                               ext_object_p->u.bound_function.target_function);
+        break;
+      }
+      default:
+      {
+        return NULL;
+      }
+    }
+  }
+} /* ecma_bytecode_get_from_value */
 
 /**
  * Resolve the position of the arguments list start of the compiled code
@@ -1711,16 +1804,15 @@ ecma_value_t
 ecma_get_resource_name (const ecma_compiled_code_t *bytecode_p) /**< compiled code */
 {
 #if JERRY_RESOURCE_NAME
-  if (bytecode_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+#if JERRY_SNAPSHOT_EXEC
+  if (JERRY_UNLIKELY (bytecode_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))
   {
-    cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_p;
-    ecma_value_t *lit_pool_p = (ecma_value_t *) ((uint8_t *) bytecode_p + sizeof (cbc_uint16_arguments_t));
-    return lit_pool_p[args_p->const_literal_end - args_p->register_end - 1];
+    return ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
   }
+#endif /* JERRY_SNAPSHOT_EXEC */
 
-  cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_p;
-  ecma_value_t *lit_pool_p = (ecma_value_t *) ((uint8_t *) bytecode_p + sizeof (cbc_uint8_arguments_t));
-  return lit_pool_p[args_p->const_literal_end - args_p->register_end - 1];
+  ecma_value_t script_value = ((cbc_uint8_arguments_t *) bytecode_p)->script_value;
+  return ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value)->resource_name;
 #else /* !JERRY_RESOURCE_NAME */
   JERRY_UNUSED (bytecode_p);
   return ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);

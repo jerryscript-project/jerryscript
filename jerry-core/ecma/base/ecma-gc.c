@@ -1068,9 +1068,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
         ecma_gc_set_object_visited (ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
                                                                                 ext_func_p->u.function.scope_cp));
 
-#if JERRY_ESNEXT || JERRY_BUILTIN_REALMS
         const ecma_compiled_code_t *byte_code_p = ecma_op_function_get_compiled_code (ext_func_p);
-#endif /* JERRY_ESNEXT || JERRY_BUILTIN_REALMS */
 
 #if JERRY_ESNEXT
         if (CBC_FUNCTION_IS_ARROW (byte_code_p->status_flags))
@@ -1089,29 +1087,27 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
         }
 #endif /* JERRY_ESNEXT */
 
-#if JERRY_BUILTIN_REALMS
 #if JERRY_SNAPSHOT_EXEC
-        if (ext_func_p->u.function.bytecode_cp == JMEM_CP_NULL)
+        if (JERRY_UNLIKELY (byte_code_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))
         {
           /* Static snapshot functions have a global realm */
           break;
         }
 #endif /* JERRY_SNAPSHOT_EXEC */
 
-        ecma_object_t *realm_p;
+        ecma_value_t script_value = ((cbc_uint8_arguments_t *) byte_code_p)->script_value;
+        cbc_script_t *script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
 
-        if (byte_code_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+        if (CBC_SCRIPT_GET_TYPE (script_p) == CBC_SCRIPT_USER_OBJECT)
         {
-          cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) byte_code_p;
-          realm_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, args_p->realm_value);
-        }
-        else
-        {
-          cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) byte_code_p;
-          realm_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, args_p->realm_value);
+          cbc_script_user_t *script_user_p = (cbc_script_user_t *) script_p;
+
+          JERRY_ASSERT (ecma_is_value_object (script_user_p->user_value));
+          ecma_gc_set_object_visited (ecma_get_object_from_value (script_user_p->user_value));
         }
 
-        ecma_gc_set_object_visited (realm_p);
+#if JERRY_BUILTIN_REALMS
+        ecma_gc_set_object_visited (script_p->realm_p);
 #endif /* JERRY_BUILTIN_REALMS */
         break;
       }

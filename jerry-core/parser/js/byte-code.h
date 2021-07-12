@@ -848,13 +848,11 @@ typedef struct
   ecma_compiled_code_t header;      /**< compiled code header */
   uint8_t stack_limit;              /**< maximum number of values stored on the stack */
   uint8_t argument_end;             /**< number of arguments expected by the function */
+  ecma_value_t script_value;        /**< script value */
   uint8_t register_end;             /**< end position of the register group */
   uint8_t ident_end;                /**< end position of the identifier group */
   uint8_t const_literal_end;        /**< end position of the const literal group */
   uint8_t literal_end;              /**< end position of the literal group */
-#if JERRY_BUILTIN_REALMS
-  ecma_value_t realm_value;         /**< realm value */
-#endif /* JERRY_BUILTIN_REALMS */
 } cbc_uint8_arguments_t;
 
 /**
@@ -864,15 +862,13 @@ typedef struct
 {
   ecma_compiled_code_t header;      /**< compiled code header */
   uint16_t stack_limit;             /**< maximum number of values stored on the stack */
+  ecma_value_t script_value;        /**< script value */
   uint16_t argument_end;            /**< number of arguments expected by the function */
   uint16_t register_end;            /**< end position of the register group */
   uint16_t ident_end;               /**< end position of the identifier group */
   uint16_t const_literal_end;       /**< end position of the const literal group */
   uint16_t literal_end;             /**< end position of the literal group */
   uint16_t padding;                 /**< an unused value */
-#if JERRY_BUILTIN_REALMS
-  ecma_value_t realm_value;         /**< realm value */
-#endif /* JERRY_BUILTIN_REALMS */
 } cbc_uint16_arguments_t;
 
 /**
@@ -967,6 +963,69 @@ typedef enum
  * Get length property from extended info
  */
 #define CBC_EXTENDED_INFO_GET_LENGTH(extended_info) (extended_info)
+
+/**
+ * Shared script data.
+ */
+typedef enum
+{
+  CBC_SCRIPT_GENERIC, /**< script without user specific data */
+  CBC_SCRIPT_USER_OBJECT, /**< script with a user object */
+  CBC_SCRIPT_USER_VALUE, /**< script with a non-object user value */
+} cbc_script_type;
+
+/**
+ * Value for increasing or decreasing the script reference counter.
+ */
+#define CBC_SCRIPT_REF_ONE 0x4
+
+/**
+ * Get the type of a script.
+ */
+#define CBC_SCRIPT_GET_TYPE(script_p) ((script_p)->refs_and_type & (CBC_SCRIPT_REF_ONE - 1))
+
+/**
+ * Maximum value of script reference counter.
+ */
+#define CBC_SCRIPT_REF_MAX (UINT32_MAX - CBC_SCRIPT_REF_ONE + 1)
+
+/**
+ * Sets the type of a script using the user_value.
+ */
+#define CBC_SCRIPT_SET_TYPE(script_p, user_value, ref_count) \
+  do \
+  { \
+    (script_p)->refs_and_type = ((ref_count) | CBC_SCRIPT_GENERIC); \
+    if ((user_value) != ECMA_VALUE_EMPTY) \
+    { \
+      (script_p)->refs_and_type = (ecma_is_value_object (user_value) ? ((ref_count) | CBC_SCRIPT_USER_OBJECT) \
+                                                                     : ((ref_count) | CBC_SCRIPT_USER_VALUE)); \
+    } \
+  } \
+  while (false)
+
+/**
+ * Shared script data.
+ */
+typedef struct
+{
+#if JERRY_BUILTIN_REALMS
+  ecma_object_t *realm_p; /**< realm object */
+#endif /* JERRY_BUILTIN_REALMS */
+  uint32_t refs_and_type; /**< reference counter and type of the function */
+#if JERRY_RESOURCE_NAME
+  ecma_value_t resource_name; /**< resource name */
+#endif /* JERRY_RESOURCE_NAME */
+} cbc_script_t;
+
+/**
+ * Script data with user value.
+ */
+typedef struct
+{
+  cbc_script_t header; /**< script header */
+  ecma_value_t user_value; /**< user value */
+} cbc_script_user_t;
 
 #define CBC_OPCODE(arg1, arg2, arg3, arg4) arg1,
 

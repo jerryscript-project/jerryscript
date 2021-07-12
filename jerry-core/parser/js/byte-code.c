@@ -15,11 +15,15 @@
 
 #include "js-parser-internal.h"
 
-JERRY_STATIC_ASSERT ((sizeof (cbc_uint8_arguments_t) % sizeof (jmem_cpointer_t)) == 0,
-                     sizeof_cbc_uint8_arguments_t_must_be_divisible_by_sizeof_jmem_cpointer_t);
+/* These two checks only checks the compiler, they have no effect on the code. */
+JERRY_STATIC_ASSERT (sizeof (cbc_uint8_arguments_t) == 16,
+                     sizeof_cbc_uint8_arguments_t_must_be_16_byte_long);
 
-JERRY_STATIC_ASSERT ((sizeof (cbc_uint16_arguments_t) % sizeof (jmem_cpointer_t)) == 0,
-                     sizeof_cbc_uint16_arguments_t_must_be_divisible_by_sizeof_jmem_cpointer_t);
+JERRY_STATIC_ASSERT (sizeof (cbc_uint16_arguments_t) == 24,
+                     sizeof_cbc_uint16_arguments_t_must_be_24_byte_long);
+
+JERRY_STATIC_ASSERT (offsetof (cbc_uint8_arguments_t, script_value) == offsetof (cbc_uint16_arguments_t, script_value),
+                     script_value_in_cbc_uint8_arguments_and_cbc_uint16_arguments_must_be_in_the_same_offset);
 
 /**
  * The reason of these two static asserts to notify the developer to increase the JERRY_SNAPSHOT_VERSION

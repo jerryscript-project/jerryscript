@@ -22,6 +22,20 @@
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
+/**
+ * This object has a custom dispatch function.
+ */
+#define BUILTIN_CUSTOM_DISPATCH
+
+/**
+ * List of built-in routine identifiers.
+ */
+enum
+{
+  ECMA_BUILTIN_ASYNC_ITERATOR_PROTOTYPE_ROUTINE_START = 0,
+  ECMA_BUILTIN_ASYNC_ITERATOR_PROTOTYPE_OBJECT_ASYNC_ITERATOR,
+};
+
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-async-iterator-prototype.inc.h"
 #define BUILTIN_UNDERSCORED_ID async_iterator_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
@@ -53,6 +67,37 @@ ecma_builtin_async_iterator_prototype_object_async_iterator (ecma_value_t this_v
   /* 1. */
   return ecma_copy_value (this_val);
 } /* ecma_builtin_async_iterator_prototype_object_async_iterator */
+
+/**
+ * Dispatcher of the built-in's routines
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
+ecma_value_t
+ecma_builtin_async_iterator_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wide
+                                                                                     *   routine identifier */
+                                                        ecma_value_t this_arg, /**< 'this' argument value */
+                                                        const ecma_value_t arguments_list_p[], /**<
+                                                                                                * list of arguments
+                                                                                                * passed to routine */
+                                                        uint32_t arguments_number) /**< length of arguments' list */
+{
+  JERRY_UNUSED (arguments_list_p);
+  JERRY_UNUSED (arguments_number);
+
+  switch (builtin_routine_id)
+  {
+    case ECMA_BUILTIN_ASYNC_ITERATOR_PROTOTYPE_OBJECT_ASYNC_ITERATOR:
+    {
+      return ecma_builtin_async_iterator_prototype_object_async_iterator (this_arg);
+    }
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+} /* ecma_builtin_async_iterator_prototype_dispatch_routine */
 
 /**
  * @}

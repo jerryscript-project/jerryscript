@@ -45,8 +45,7 @@ typedef enum
 {
   /* 8 bits are reserved for dynamic features */
   JERRY_SNAPSHOT_HAS_REGEX_LITERAL = (1u << 0), /**< byte code has regex literal */
-  JERRY_SNAPSHOT_HAS_REALM_VALUE = (1u << 1), /**< byte code has realm value */
-  JERRY_SNAPSHOT_HAS_CLASS_LITERAL = (1u << 2), /**< byte code has class literal */
+  JERRY_SNAPSHOT_HAS_CLASS_LITERAL = (1u << 1), /**< byte code has class literal */
   /* 24 bits are reserved for compile time features */
   JERRY_SNAPSHOT_FOUR_BYTE_CPOINTER = (1u << 8) /**< deprecated, an unused placeholder now */
 } jerry_snapshot_global_flags_t;

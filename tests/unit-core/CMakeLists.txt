@@ -77,6 +77,7 @@ set(SOURCE_UNIT_TEST_MAIN_MODULES
   test-regexp.c
   test-regression-3588.c
   test-resource-name.c
+  test-script-user-value.c
   test-snapshot.c
   test-special-proxy.c
   test-string-to-number.c

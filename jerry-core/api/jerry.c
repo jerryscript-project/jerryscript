@@ -57,7 +57,8 @@ JERRY_STATIC_ASSERT (sizeof (jerry_value_t) == sizeof (ecma_value_t),
 JERRY_STATIC_ASSERT ((int) ECMA_PARSE_STRICT_MODE == (int) JERRY_PARSE_STRICT_MODE
                      && (int) ECMA_PARSE_MODULE == (int) JERRY_PARSE_MODULE
                      && (int) ECMA_PARSE_HAS_RESOURCE == (int) JERRY_PARSE_HAS_RESOURCE
-                     && (int) ECMA_PARSE_HAS_START == (int) JERRY_PARSE_HAS_START,
+                     && (int) ECMA_PARSE_HAS_START == (int) JERRY_PARSE_HAS_START
+                     && (int) ECMA_PARSE_HAS_USER_VALUE == (int) JERRY_PARSE_HAS_USER_VALUE,
                      ecma_parse_config_options_t_must_be_equal_to_jerry_parse_config_options_t);
 
 JERRY_STATIC_ASSERT (sizeof (jerry_parse_options_t) == sizeof (ecma_parse_options_t),
@@ -401,7 +402,8 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
   uint32_t allowed_parse_options = (JERRY_PARSE_STRICT_MODE
                                     | JERRY_PARSE_MODULE
                                     | JERRY_PARSE_HAS_RESOURCE
-                                    | JERRY_PARSE_HAS_START);
+                                    | JERRY_PARSE_HAS_START
+                                    | JERRY_PARSE_HAS_USER_VALUE);
 
   if (options_p != NULL && (options_p->options & ~allowed_parse_options) != 0)
   {
@@ -505,7 +507,8 @@ jerry_parse_function (const jerry_char_t *arg_list_p, /**< script source */
 
   uint32_t allowed_parse_options = (JERRY_PARSE_STRICT_MODE
                                     | JERRY_PARSE_HAS_RESOURCE
-                                    | JERRY_PARSE_HAS_START);
+                                    | JERRY_PARSE_HAS_START
+                                    | JERRY_PARSE_HAS_USER_VALUE);
 
   if (options_p != NULL && (options_p->options & ~allowed_parse_options) != 0)
   {
@@ -5387,6 +5390,36 @@ jerry_get_resource_name (const jerry_value_t value) /**< jerry api value */
   JERRY_UNUSED (value);
   return ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
 } /* jerry_get_resource_name */
+
+/**
+ * Returns the user value assigned to a script / module / function.
+ *
+ * Note:
+ *    This value is usually set by the parser when
+ *    the JERRY_PARSE_HAS_USER_VALUE flag is passed.
+ *
+ * @return user value
+ */
+jerry_value_t
+jerry_get_user_value (const jerry_value_t value) /**< jerry api value */
+{
+  const ecma_compiled_code_t *bytecode_p = ecma_bytecode_get_from_value (value);
+
+  if (bytecode_p == NULL)
+  {
+    return ECMA_VALUE_UNDEFINED;
+  }
+
+  ecma_value_t script_value = ((cbc_uint8_arguments_t *) bytecode_p)->script_value;
+  cbc_script_t *script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
+
+  if (CBC_SCRIPT_GET_TYPE (script_p) == CBC_SCRIPT_GENERIC)
+  {
+    return ECMA_VALUE_UNDEFINED;
+  }
+
+  return ecma_copy_value (((cbc_script_user_t *) script_p)->user_value);
+} /* jerry_get_user_value */
 
 /**
  * Replaces the currently active realm with another realm.

@@ -759,29 +759,17 @@ ecma_op_function_get_compiled_code (ecma_extended_object_t *function_p) /**< fun
 extern inline ecma_global_object_t * JERRY_ATTR_ALWAYS_INLINE
 ecma_op_function_get_realm (const ecma_compiled_code_t *bytecode_header_p) /**< byte code header */
 {
-  ecma_value_t realm_value;
-
-  if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
-  {
-    cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_header_p;
-    realm_value = args_p->realm_value;
-  }
-  else
-  {
-    cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_header_p;
-    realm_value = args_p->realm_value;
-  }
-
 #if JERRY_SNAPSHOT_EXEC
-  if (JERRY_LIKELY (realm_value != JMEM_CP_NULL))
+  if (JERRY_UNLIKELY (bytecode_header_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))
   {
-    return ECMA_GET_INTERNAL_VALUE_POINTER (ecma_global_object_t, realm_value);
+    return (ecma_global_object_t *) ecma_builtin_get_global ();
   }
-
-  return (ecma_global_object_t *) ecma_builtin_get_global ();
-#else /* !JERRY_SNAPSHOT_EXEC */
-  return ECMA_GET_INTERNAL_VALUE_POINTER (ecma_global_object_t, realm_value);
 #endif /* JERRY_SNAPSHOT_EXEC */
+
+  ecma_value_t script_value = ((cbc_uint8_arguments_t *) bytecode_header_p)->script_value;
+  cbc_script_t *script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
+
+  return (ecma_global_object_t *) script_p->realm_p;
 } /* ecma_op_function_get_realm */
 
 /**

@@ -3703,9 +3703,9 @@ lexer_init_line_info (parser_context_t *context_p) /**< context */
   context_p->line = 1;
   context_p->column = 1;
 
-  const ecma_parse_options_t *options_p = context_p->options_p;
+  const jerry_parse_options_t *options_p = context_p->options_p;
 
-  if (options_p != NULL && (options_p->options & ECMA_PARSE_HAS_START))
+  if (options_p != NULL && (options_p->options & JERRY_PARSE_HAS_START))
   {
     context_p->line = (options_p->start_line > 0) ? options_p->start_line : 1;
     context_p->column = (options_p->start_column > 0) ? options_p->start_column : 1;

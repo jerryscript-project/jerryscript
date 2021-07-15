@@ -546,7 +546,7 @@ typedef struct
   uint32_t global_status_flags;               /**< global status flags */
   uint16_t stack_depth;                       /**< current stack depth */
   uint16_t stack_limit;                       /**< maximum stack depth */
-  const ecma_parse_options_t *options_p;      /**< parse options */
+  const jerry_parse_options_t *options_p;      /**< parse options */
   parser_saved_context_t *last_context_p;     /**< last saved context */
   parser_stack_iterator_t last_statement;     /**< last statement position */
 

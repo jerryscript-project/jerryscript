@@ -797,12 +797,8 @@ jerry_generate_snapshot_with_args (const jerry_char_t *source_p, /**< script sou
     status_flags |= (options_p->options & ECMA_PARSE_STRICT_MODE);
   }
 
-  ecma_compiled_code_t *bytecode_data_p = parser_parse_script (args_p,
-                                                               args_size,
-                                                               source_p,
-                                                               source_size,
-                                                               status_flags,
-                                                               (const ecma_parse_options_t *) options_p);
+  ecma_compiled_code_t *bytecode_data_p;
+  bytecode_data_p = parser_parse_script (args_p, args_size, source_p, source_size, status_flags, options_p);
 
   if (JERRY_UNLIKELY (bytecode_data_p == NULL))
   {

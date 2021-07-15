@@ -54,15 +54,6 @@
 JERRY_STATIC_ASSERT (sizeof (jerry_value_t) == sizeof (ecma_value_t),
                      size_of_jerry_value_t_must_be_equal_to_size_of_ecma_value_t);
 
-JERRY_STATIC_ASSERT ((int) ECMA_PARSE_STRICT_MODE == (int) JERRY_PARSE_STRICT_MODE
-                     && (int) ECMA_PARSE_MODULE == (int) JERRY_PARSE_MODULE
-                     && (int) ECMA_PARSE_HAS_RESOURCE == (int) JERRY_PARSE_HAS_RESOURCE
-                     && (int) ECMA_PARSE_HAS_START == (int) JERRY_PARSE_HAS_START,
-                     ecma_parse_config_options_t_must_be_equal_to_jerry_parse_config_options_t);
-
-JERRY_STATIC_ASSERT (sizeof (jerry_parse_options_t) == sizeof (ecma_parse_options_t),
-                     ecma_parse_options_t_and_jerry_parse_options_t_must_be_the_same);
-
 #if JERRY_BUILTIN_REGEXP
 JERRY_STATIC_ASSERT ((int) RE_FLAG_GLOBAL == (int) JERRY_REGEXP_FLAG_GLOBAL
                      && (int) RE_FLAG_MULTILINE == (int) JERRY_REGEXP_FLAG_MULTILINE
@@ -439,12 +430,8 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
 #endif /* JERRY_MODULE_SYSTEM */
   }
 
-  ecma_compiled_code_t *bytecode_data_p = parser_parse_script (NULL,
-                                                               0,
-                                                               source_p,
-                                                               source_size,
-                                                               parse_opts,
-                                                               (const ecma_parse_options_t *) options_p);
+  ecma_compiled_code_t *bytecode_data_p;
+  bytecode_data_p = parser_parse_script (NULL, 0, source_p, source_size, parse_opts, options_p);
 
   if (JERRY_UNLIKELY (bytecode_data_p == NULL))
   {
@@ -540,12 +527,8 @@ jerry_parse_function (const jerry_char_t *arg_list_p, /**< script source */
     arg_list_p = (const jerry_char_t *) "";
   }
 
-  ecma_compiled_code_t *bytecode_p = parser_parse_script (arg_list_p,
-                                                          arg_list_size,
-                                                          source_p,
-                                                          source_size,
-                                                          parse_opts,
-                                                          (const ecma_parse_options_t *) options_p);
+  ecma_compiled_code_t *bytecode_p;
+  bytecode_p = parser_parse_script (arg_list_p, arg_list_size, source_p, source_size, parse_opts, options_p);
 
   if (JERRY_UNLIKELY (bytecode_p == NULL))
   {

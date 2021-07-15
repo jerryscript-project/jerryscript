@@ -1795,7 +1795,7 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
                      const uint8_t *source_p, /**< valid UTF-8 source code */
                      size_t source_size, /**< size of the source code */
                      uint32_t parse_opts, /**< ecma_parse_opts_t option bits */
-                     const ecma_parse_options_t *options_p) /**< additional configuration options */
+                     const jerry_parse_options_t *options_p) /**< additional configuration options */
 {
   parser_context_t context;
   ecma_compiled_code_t *compiled_code_p;
@@ -2858,7 +2858,7 @@ parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
                      const uint8_t *source_p, /**< source code */
                      size_t source_size, /**< size of the source code */
                      uint32_t parse_opts, /**< ecma_parse_opts_t option bits */
-                     const ecma_parse_options_t *options_p) /**< additional configuration options */
+                     const jerry_parse_options_t *options_p) /**< additional configuration options */
 {
 #if JERRY_PARSER
 

@@ -650,10 +650,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 #endif /* JERRY_ESNEXT */
 
 #if JERRY_LINE_INFO
-  if (context_p->line_info.first_page_p == NULL)
-  {
-    parser_line_info_append (context_p, context_p->token.line, context_p->token.column);
-  }
+  JERRY_ASSERT (context_p->line_info.first_page_p != NULL);
 #endif /* JERRY_LINE_INFO */
 
   JERRY_ASSERT (context_p->stack_depth == 0);
@@ -2484,6 +2481,10 @@ parser_parse_arrow_function (parser_context_t *context_p, /**< context */
       parser_raise_error (context_p, PARSER_ERR_NON_STRICT_ARG_DEFINITION);
     }
 
+#if JERRY_LINE_INFO
+    parser_line_info_append (context_p, context_p->token.line, context_p->token.column);
+#endif /* JERRY_LINE_INFO */
+
     parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
 
     if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
@@ -2600,12 +2601,13 @@ parser_parse_class_fields (parser_context_t *context_p) /**< context */
         scanner_seek (context_p);
       }
 
+      context_p->source_end_p = range.source_end_p;
+      lexer_next_token (context_p);
+
 #if JERRY_LINE_INFO
       parser_line_info_append (context_p, context_p->token.line, context_p->token.column);
 #endif /* JERRY_LINE_INFO */
 
-      context_p->source_end_p = range.source_end_p;
-      lexer_next_token (context_p);
       parser_parse_expression (context_p, PARSE_EXPR_NO_COMMA);
 
       if (context_p->token.type != LEXER_EOS)
@@ -2656,6 +2658,13 @@ parser_parse_class_fields (parser_context_t *context_p) /**< context */
   parser_flush_cbc (context_p);
   context_p->source_end_p = source_end_p;
   scanner_set_location (context_p, &end_location);
+
+#if JERRY_LINE_INFO
+  if (context_p->line_info.first_page_p == NULL)
+  {
+    parser_line_info_append (context_p, context_p->token.line, context_p->token.column);
+  }
+#endif /* JERRY_LINE_INFO */
 
   compiled_code_p = parser_post_processing (context_p);
 

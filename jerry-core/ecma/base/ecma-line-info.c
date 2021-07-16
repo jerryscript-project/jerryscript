@@ -62,35 +62,23 @@ static uint32_t
 ecma_line_info_decode_small (uint8_t **buffer_p) /**< [in/out] target buffer */
 {
   uint8_t *source_p = *buffer_p;
-
   uint32_t type = source_p[0];
+
+  *buffer_p = source_p + 1;
 
   if (type < ECMA_LINE_INFO_ENCODE_TWO_BYTE_MIN)
   {
-    *buffer_p = source_p + 1;
     return type;
   }
-
-  uint32_t value = source_p[1];
 
   if (type == ECMA_LINE_INFO_ENCODE_TWO_BYTE)
   {
     *buffer_p = source_p + 2;
-    return (uint32_t) (value + ECMA_LINE_INFO_ENCODE_TWO_BYTE_MIN);
+    return ((uint32_t) source_p[1]) + ECMA_LINE_INFO_ENCODE_TWO_BYTE_MIN;
   }
 
-  value |= ((uint32_t) source_p[2]) << 8;
-
-  if (type == ECMA_LINE_INFO_ENCODE_THREE_BYTE)
-  {
-    *buffer_p = source_p + 3;
-    return (uint32_t) (value + ECMA_LINE_INFO_ENCODE_THREE_BYTE_MIN);
-  }
-
-  JERRY_ASSERT (type == ECMA_LINE_INFO_ENCODE_FIVE_BYTE);
-
-  *buffer_p = source_p + 5;
-  return value | (((uint32_t) source_p[3]) << 8) | (((uint32_t) source_p[4]) << 8);
+  JERRY_ASSERT (type == ECMA_LINE_INFO_ENCODE_VLQ);
+  return ecma_line_info_decode_vlq (buffer_p) + ECMA_LINE_INFO_ENCODE_VLQ_MIN;
 } /* ecma_line_info_decode_small */
 
 /**

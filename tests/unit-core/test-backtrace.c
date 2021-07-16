@@ -159,14 +159,14 @@ class_backtrace_callback (jerry_backtrace_frame_t *frame_p, /* frame information
   {
     TEST_ASSERT (jerry_backtrace_is_strict (frame_p));
     TEST_ASSERT (location_p->line == 3);
-    TEST_ASSERT (location_p->column == 12);
+    TEST_ASSERT (location_p->column == 14);
     return false;
   }
 
   TEST_ASSERT (frame_index == 2);
   TEST_ASSERT (jerry_backtrace_is_strict (frame_p));
   TEST_ASSERT (location_p->line == 2);
-  TEST_ASSERT (location_p->column == 5);
+  TEST_ASSERT (location_p->column == 7);
   return false;
 } /* class_backtrace_callback */
 

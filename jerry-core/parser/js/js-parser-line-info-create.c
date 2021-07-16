@@ -38,8 +38,9 @@
  *    The format is big endian.
  *
  * Small:
- *    First byte can encode signed values between 127 and -125 in 1 byte.
- *    Large values requires more bytes than vlq.
+ *    One byte can encode signed values between 127 and -126.
+ *    Two byte can encode signed values between 319 and -318.
+ *    Large values are encoded with vlq with a prefix byte.
  *
  * The line-info data structure is a sequence of chunks:
  *
@@ -87,7 +88,7 @@
 /**
  * Maximum number of bytes requires to encode a number.
  */
-#define PARSER_LINE_INFO_BUFFER_MAX_SIZE 5
+#define PARSER_LINE_INFO_BUFFER_MAX_SIZE 6
 
 /**
  * Stream generation ends after this size is reached,
@@ -160,41 +161,21 @@ static uint32_t
 parser_line_info_encode_small (uint8_t *buffer_p, /**< target buffer */
                                uint32_t value) /**< encoded value */
 {
-  if (value < ECMA_LINE_INFO_ENCODE_TWO_BYTE_MIN)
+  if (JERRY_LIKELY (value < ECMA_LINE_INFO_ENCODE_TWO_BYTE_MIN))
   {
     buffer_p[0] = (uint8_t) value;
     return 1;
   }
 
-  uint32_t length;
-
-  if (JERRY_LIKELY (value < ECMA_LINE_INFO_ENCODE_THREE_BYTE_MIN))
+  if (JERRY_LIKELY (value < ECMA_LINE_INFO_ENCODE_VLQ_MIN))
   {
-    value -= ECMA_LINE_INFO_ENCODE_TWO_BYTE_MIN;
     buffer_p[0] = ECMA_LINE_INFO_ENCODE_TWO_BYTE;
-    length = 2;
-  }
-  else
-  {
-    if (value <= (ECMA_LINE_INFO_ENCODE_THREE_BYTE_MIN + UINT16_MAX))
-    {
-      value -= ECMA_LINE_INFO_ENCODE_THREE_BYTE_MIN;
-      buffer_p[0] = ECMA_LINE_INFO_ENCODE_THREE_BYTE;
-      length = 3;
-    }
-    else
-    {
-      buffer_p[0] = ECMA_LINE_INFO_ENCODE_FIVE_BYTE;
-      buffer_p[3] = (uint8_t) (value >> 16);
-      buffer_p[4] = (uint8_t) (value >> 24);
-      length = 5;
-    }
-
-    buffer_p[2] = (uint8_t) (value >> 8);
+    buffer_p[1] = (uint8_t) (value - ECMA_LINE_INFO_ENCODE_TWO_BYTE_MIN);
+    return 2;
   }
 
-  buffer_p[1] = (uint8_t) value;
-  return length;
+  *buffer_p++ = ECMA_LINE_INFO_ENCODE_VLQ;
+  return parser_line_info_encode_vlq (buffer_p, value - ECMA_LINE_INFO_ENCODE_VLQ_MIN) + 1;
 } /* parser_line_info_encode_small */
 
 /**

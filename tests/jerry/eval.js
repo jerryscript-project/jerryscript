@@ -159,3 +159,13 @@ function f7() {
   eval("assert(x()() === 5); function y() { return 5 } assert(x()() === 5)");
 }
 f7()
+
+eval(" ");
+eval("(function () {})")
+
+try {
+  /* Only fails in ES5.1 */
+  eval("()=>0")
+} catch (e) {
+  assert(e instanceof SyntaxError)
+}

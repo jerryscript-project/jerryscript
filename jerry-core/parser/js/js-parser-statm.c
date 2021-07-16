@@ -3339,6 +3339,13 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
       {
         if (context_p->status_flags & PARSER_IS_CLOSURE)
         {
+#if JERRY_LINE_INFO
+          if (context_p->line_info.first_page_p == NULL)
+          {
+            parser_line_info_append (context_p, context_p->token.line, context_p->token.column);
+          }
+#endif /* JERRY_LINE_INFO */
+
           parser_stack_pop_uint8 (context_p);
           context_p->last_statement.current_p = NULL;
           /* There is no lexer_next_token here, since the
@@ -3501,6 +3508,13 @@ consume_last_statement:
   {
     parser_raise_error (context_p, PARSER_ERR_STATEMENT_EXPECTED);
   }
+
+#if JERRY_LINE_INFO
+  if (context_p->line_info.first_page_p == NULL)
+  {
+    parser_line_info_append (context_p, context_p->token.line, context_p->token.column);
+  }
+#endif /* JERRY_LINE_INFO */
 } /* parser_parse_statements */
 
 /**

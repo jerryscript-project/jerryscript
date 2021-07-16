@@ -45,7 +45,7 @@
 /**
  * A default value for columns after a line update.
  */
-#define ECMA_LINE_INFO_COLUMN_DEFAULT 126
+#define ECMA_LINE_INFO_COLUMN_DEFAULT 127
 
 /**
  * Vlq encoding: flag which is set for all bytes except the last one.
@@ -65,27 +65,22 @@
 /**
  * Small encoding: a value which represents a two byte long number.
  */
-#define ECMA_LINE_INFO_ENCODE_TWO_BYTE (UINT8_MAX - 2)
+#define ECMA_LINE_INFO_ENCODE_TWO_BYTE (UINT8_MAX - 1)
 
 /**
  * Small encoding: minimum value of an encoded two byte long number.
  */
-#define ECMA_LINE_INFO_ENCODE_TWO_BYTE_MIN (UINT8_MAX - 2)
+#define ECMA_LINE_INFO_ENCODE_TWO_BYTE_MIN (UINT8_MAX - 1)
 
 /**
  * Small encoding: a value which represents a three byte long number.
  */
-#define ECMA_LINE_INFO_ENCODE_THREE_BYTE (UINT8_MAX - 1)
+#define ECMA_LINE_INFO_ENCODE_VLQ UINT8_MAX
 
 /**
  * Small encoding: minimum value of an encoded three byte long number.
  */
-#define ECMA_LINE_INFO_ENCODE_THREE_BYTE_MIN (ECMA_LINE_INFO_ENCODE_TWO_BYTE_MIN + UINT8_MAX + 1)
-
-/**
- * Small encoding: a value which represents a five byte long number.
- */
-#define ECMA_LINE_INFO_ENCODE_FIVE_BYTE UINT8_MAX
+#define ECMA_LINE_INFO_ENCODE_VLQ_MIN (ECMA_LINE_INFO_ENCODE_TWO_BYTE_MIN + UINT8_MAX + 1)
 
 /**
  * Maximum number of line/column entries stored in a stream.

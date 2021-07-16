@@ -917,7 +917,6 @@ jerry_generate_snapshot (const jerry_char_t *source_p, /**< script source */
 #endif /* JERRY_SNAPSHOT_SAVE */
 } /* jerry_generate_snapshot */
 
-#if JERRY_SNAPSHOT_EXEC
 /**
  * Execute/load snapshot from specified buffer
  *
@@ -927,16 +926,18 @@ jerry_generate_snapshot (const jerry_char_t *source_p, /**< script source */
  * @return result of bytecode - if run was successful
  *         thrown error - otherwise
  */
-static jerry_value_t
-jerry_snapshot_result (const uint32_t *snapshot_p, /**< snapshot */
-                       size_t snapshot_size, /**< size of snapshot */
-                       size_t func_index, /**< index of primary function */
-                       uint32_t exec_snapshot_opts, /**< jerry_exec_snapshot_opts_t option bits */
-                       bool as_function) /** < specify if the loaded snapshot should be returned as a function */
+jerry_value_t
+jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
+                     size_t snapshot_size, /**< size of snapshot */
+                     size_t func_index, /**< index of primary function */
+                     uint32_t exec_snapshot_opts) /**< jerry_exec_snapshot_opts_t option bits */
 {
+#if JERRY_SNAPSHOT_EXEC
   JERRY_ASSERT (snapshot_p != NULL);
 
-  uint32_t allowed_opts = (JERRY_SNAPSHOT_EXEC_COPY_DATA | JERRY_SNAPSHOT_EXEC_ALLOW_STATIC);
+  uint32_t allowed_opts = (JERRY_SNAPSHOT_EXEC_COPY_DATA
+                           | JERRY_SNAPSHOT_EXEC_ALLOW_STATIC
+                           | JERRY_SNAPSHOT_EXEC_LOAD_AS_FUNCTION);
 
   if ((exec_snapshot_opts & ~(allowed_opts)) != 0)
   {
@@ -1018,7 +1019,7 @@ jerry_snapshot_result (const uint32_t *snapshot_p, /**< snapshot */
 
   ecma_value_t ret_val;
 
-  if (as_function)
+  if (exec_snapshot_opts & JERRY_SNAPSHOT_EXEC_LOAD_AS_FUNCTION)
   {
     ecma_object_t *global_object_p = ecma_builtin_get_global ();
 
@@ -1057,26 +1058,6 @@ jerry_snapshot_result (const uint32_t *snapshot_p, /**< snapshot */
   }
 
   return ret_val;
-} /* jerry_snapshot_result */
-#endif /* JERRY_SNAPSHOT_EXEC */
-
-/**
- * Execute snapshot from specified buffer
- *
- * Note:
- *      returned value must be freed with jerry_release_value, when it is no longer needed.
- *
- * @return result of bytecode - if run was successful
- *         thrown error - otherwise
- */
-jerry_value_t
-jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
-                     size_t snapshot_size, /**< size of snapshot */
-                     size_t func_index, /**< index of primary function */
-                     uint32_t exec_snapshot_opts) /**< jerry_exec_snapshot_opts_t option bits */
-{
-#if JERRY_SNAPSHOT_EXEC
-  return jerry_snapshot_result (snapshot_p, snapshot_size, func_index, exec_snapshot_opts, false);
 #else /* !JERRY_SNAPSHOT_EXEC */
   JERRY_UNUSED (snapshot_p);
   JERRY_UNUSED (snapshot_size);
@@ -1833,30 +1814,3 @@ jerry_generate_function_snapshot (const jerry_char_t *source_p, /**< script sour
   return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) "Snapshot save is not supported");
 #endif /* JERRY_SNAPSHOT_SAVE */
 } /* jerry_generate_function_snapshot */
-
-/**
- * Load function from specified snapshot buffer
- *
- * Note:
- *      returned value must be freed with jerry_release_value, when it is no longer needed.
- *
- * @return result of bytecode - if run was successful
- *         thrown error - otherwise
- */
-jerry_value_t
-jerry_load_function_snapshot (const uint32_t *function_snapshot_p, /**< snapshot of the function(s) */
-                              const size_t function_snapshot_size, /**< size of the snapshot */
-                              size_t func_index, /**< index of the function to load */
-                              uint32_t exec_snapshot_opts) /**< jerry_exec_snapshot_opts_t option bits */
-{
-#if JERRY_SNAPSHOT_EXEC
-  return jerry_snapshot_result (function_snapshot_p, function_snapshot_size, func_index, exec_snapshot_opts, true);
-#else /* !JERRY_SNAPSHOT_EXEC */
-  JERRY_UNUSED (function_snapshot_p);
-  JERRY_UNUSED (function_snapshot_size);
-  JERRY_UNUSED (func_index);
-  JERRY_UNUSED (exec_snapshot_opts);
-
-  return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) "Snapshot execution is not supported");
-#endif /* JERRY_SNAPSHOT_EXEC */
-} /* jerry_load_function_snapshot */

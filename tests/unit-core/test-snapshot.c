@@ -86,10 +86,10 @@ static void test_function_snapshot (void)
 
   jerry_init (flags);
 
-  jerry_value_t function_obj = jerry_load_function_snapshot (function_snapshot_buffer,
-                                                             function_snapshot_size,
-                                                             0,
-                                                             0);
+  jerry_value_t function_obj = jerry_exec_snapshot (function_snapshot_buffer,
+                                                    function_snapshot_size,
+                                                    0,
+                                                    JERRY_SNAPSHOT_EXEC_LOAD_AS_FUNCTION);
 
   TEST_ASSERT (!jerry_value_is_error (function_obj));
   TEST_ASSERT (jerry_value_is_function (function_obj));

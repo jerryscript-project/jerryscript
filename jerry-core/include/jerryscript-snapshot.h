@@ -47,6 +47,7 @@ typedef enum
 {
   JERRY_SNAPSHOT_EXEC_COPY_DATA = (1u << 0), /**< copy snashot data */
   JERRY_SNAPSHOT_EXEC_ALLOW_STATIC = (1u << 1), /**< static snapshots allowed */
+  JERRY_SNAPSHOT_EXEC_LOAD_AS_FUNCTION = (1u << 2), /**< load snapshot as function instead of executing it */
 } jerry_exec_snapshot_opts_t;
 
 /**
@@ -63,9 +64,6 @@ jerry_value_t jerry_generate_function_snapshot (const jerry_char_t *source_p, si
 
 jerry_value_t jerry_exec_snapshot (const uint32_t *snapshot_p, size_t snapshot_size,
                                    size_t func_index, uint32_t exec_snapshot_opts);
-jerry_value_t jerry_load_function_snapshot (const uint32_t *function_snapshot_p,
-                                            const size_t function_snapshot_size,
-                                            size_t func_index, uint32_t exec_snapshot_opts);
 
 size_t jerry_merge_snapshots (const uint32_t **inp_buffers_p, size_t *inp_buffer_sizes_p, size_t number_of_snapshots,
                               uint32_t *out_buffer_p, size_t out_buffer_size, const char **error_p);

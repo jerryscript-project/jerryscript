@@ -23,7 +23,7 @@
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
-ROUTINE (LIT_GLOBAL_SYMBOL_ASYNC_ITERATOR, ecma_builtin_async_iterator_prototype_object_async_iterator, 0, 0)
+ROUTINE (LIT_GLOBAL_SYMBOL_ASYNC_ITERATOR, ECMA_BUILTIN_ASYNC_ITERATOR_PROTOTYPE_OBJECT_ASYNC_ITERATOR, 0, 0)
 
 #endif /* JERRY_ESNEXT */
 

@@ -555,6 +555,13 @@ typedef jerry_value_t (*jerry_module_resolve_callback_t) (const jerry_value_t sp
                                                           void *user_p);
 
 /**
+ * Callback which is called when an import is resolved dynamically to get the referenced module.
+ */
+typedef jerry_value_t (*jerry_module_import_callback_t) (const jerry_value_t specifier,
+                                                         const jerry_value_t user_value,
+                                                         void *user_p);
+
+/**
  * Callback which is called after the module enters into linked, evaluated or error state.
  */
 typedef void (*jerry_module_state_changed_callback_t) (jerry_module_state_t new_state, const jerry_value_t module,

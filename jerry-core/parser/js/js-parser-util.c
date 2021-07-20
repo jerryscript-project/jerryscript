@@ -1372,8 +1372,11 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Export not defined in module";
     }
+    case PARSER_ERR_IMPORT_AFTER_NEW:
+    {
+      return "Module import call is not allowed after new";
+    }
 #endif /* JERRY_MODULE_SYSTEM */
-
     default:
     {
       JERRY_ASSERT (error == PARSER_ERR_NO_ERROR);

@@ -869,6 +869,25 @@ jerry_module_get_namespace (const jerry_value_t module_val) /**< module */
 } /* jerry_module_get_namespace */
 
 /**
+ * Sets the callback which is called when dynamic imports are resolved
+ */
+void
+jerry_module_set_import_callback (jerry_module_import_callback_t callback_p, /**< callback which handles
+                                                                              *   dynamic import calls */
+                                  void *user_p) /**< user pointer passed to the callback */
+{
+  jerry_assert_api_available ();
+
+#if JERRY_MODULE_SYSTEM
+  JERRY_CONTEXT (module_import_callback_p) = callback_p;
+  JERRY_CONTEXT (module_import_callback_user_p) = user_p;
+#else /* !JERRY_MODULE_SYSTEM */
+  JERRY_UNUSED (callback_p);
+  JERRY_UNUSED (user_p);
+#endif /* JERRY_MODULE_SYSTEM */
+} /* jerry_module_set_import_callback */
+
+/**
  * Creates a native module with a list of exports. The initial state of the module is linked.
  *
  * Note:

@@ -4554,6 +4554,40 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           JERRY_ASSERT (VM_GET_REGISTERS (frame_ctx_p) + register_end + frame_ctx_p->context_depth == stack_top_p);
           continue;
         }
+#if JERRY_MODULE_SYSTEM
+        case VM_OC_MODULE_IMPORT:
+        {
+          left_value = *(--stack_top_p);
+
+          ecma_value_t user_value = ECMA_VALUE_UNDEFINED;
+          ecma_value_t script_value = ((cbc_uint8_arguments_t *) bytecode_header_p)->script_value;
+
+#if JERRY_SNAPSHOT_EXEC
+          if (JERRY_UNLIKELY (!(bytecode_header_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION)))
+          {
+#endif /* JERRY_SNAPSHOT_EXEC */
+            cbc_script_t *script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
+
+            if (CBC_SCRIPT_GET_TYPE (script_p) != CBC_SCRIPT_GENERIC)
+            {
+              user_value = ((cbc_script_user_t *) script_p)->user_value;
+            }
+#if JERRY_SNAPSHOT_EXEC
+          }
+#endif /* JERRY_SNAPSHOT_EXEC */
+
+          result = ecma_module_import (left_value, user_value);
+          ecma_free_value (left_value);
+
+          if (ECMA_IS_VALUE_ERROR (result))
+          {
+            goto error;
+          }
+
+          *stack_top_p++ = result;
+          continue;
+        }
+#endif /* JERRY_MODULE_SYSTEM */
 #if JERRY_DEBUGGER
         case VM_OC_BREAKPOINT_ENABLED:
         {

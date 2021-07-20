@@ -1372,6 +1372,82 @@ error:
 } /* ecma_module_link */
 
 /**
+ * Compute the result of 'import()' calls
+ *
+ * @return promise object representing the result of the operation
+ */
+ecma_value_t
+ecma_module_import (ecma_value_t specifier, /**< module specifier */
+                    ecma_value_t user_value) /**< user value assigned to the script */
+{
+  ecma_string_t *specifier_p = ecma_op_to_string (specifier);
+
+  if (JERRY_UNLIKELY (specifier_p == NULL))
+  {
+    goto error;
+  }
+
+  if (JERRY_CONTEXT (module_import_callback_p) == NULL)
+  {
+    ecma_deref_ecma_string (specifier_p);
+    goto error_module_instantiate;
+  }
+
+  jerry_value_t result;
+  result = JERRY_CONTEXT (module_import_callback_p) (ecma_make_string_value (specifier_p),
+                                                     user_value,
+                                                     JERRY_CONTEXT (module_import_callback_user_p));
+  ecma_deref_ecma_string (specifier_p);
+
+  if (JERRY_UNLIKELY (ecma_is_value_error_reference (result)))
+  {
+    ecma_raise_error_from_error_reference (result);
+    goto error;
+  }
+
+  if (ecma_is_value_object (result)
+      && ecma_is_promise (ecma_get_object_from_value (result)))
+  {
+    return result;
+  }
+
+  ecma_module_t *module_p = ecma_module_get_resolved_module (result);
+
+  if (module_p == NULL)
+  {
+    ecma_free_value (result);
+    goto error_module_instantiate;
+  }
+
+  if (module_p->header.u.cls.u1.module_state != JERRY_MODULE_STATE_EVALUATED)
+  {
+    ecma_deref_object (&module_p->header.object);
+    goto error_module_instantiate;
+  }
+
+  result = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_VALUE_UNDEFINED, NULL);
+  ecma_fulfill_promise (result, ecma_make_object_value (module_p->namespace_object_p));
+  ecma_deref_object (&module_p->header.object);
+  return result;
+
+error_module_instantiate:
+  ecma_raise_range_error (ECMA_ERR_MSG ("Module cannot be instantiated"));
+
+error:
+  if (jcontext_has_pending_abort ())
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  ecma_value_t exception = jcontext_take_exception ();
+
+  ecma_value_t promise = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_VALUE_UNDEFINED, NULL);
+  ecma_reject_promise (promise, exception);
+  ecma_free_value (exception);
+  return promise;
+} /* ecma_module_import */
+
+/**
  * Cleans up and releases a module structure including all referenced modules.
  */
 void

@@ -41,14 +41,32 @@ typedef enum
 } jerry_generate_snapshot_opts_t;
 
 /**
- * Flags for jerry_exec_snapshot_at and jerry_load_function_snapshot_at.
+ * Flags for jerry_exec_snapshot.
  */
 typedef enum
 {
   JERRY_SNAPSHOT_EXEC_COPY_DATA = (1u << 0), /**< copy snashot data */
   JERRY_SNAPSHOT_EXEC_ALLOW_STATIC = (1u << 1), /**< static snapshots allowed */
   JERRY_SNAPSHOT_EXEC_LOAD_AS_FUNCTION = (1u << 2), /**< load snapshot as function instead of executing it */
+  JERRY_SNAPSHOT_EXEC_HAS_RESOURCE = (1u << 3), /**< resource_name_p and resource_name_length fields are valid
+                                                 *   in jerry_exec_snapshot_option_values_t */
+  JERRY_SNAPSHOT_EXEC_HAS_USER_VALUE = (1u << 4), /**< user_value field is valid
+                                                   *   in jerry_exec_snapshot_option_values_t */
 } jerry_exec_snapshot_opts_t;
+
+/**
+ * Various configuration options for jerry_exec_snapshot.
+ */
+typedef struct
+{
+  const jerry_char_t *resource_name_p; /**< resource name (usually a file name)
+                                        *   if JERRY_SNAPSHOT_EXEC_HAS_RESOURCE is set in exec_snapshot_opts */
+  size_t resource_name_length; /**< length of resource name
+                                *   if JERRY_SNAPSHOT_EXEC_HAS_RESOURCE is set in exec_snapshot_opts */
+  jerry_value_t user_value; /**< user value assigned to all functions created by this script including
+                             *   eval calls executed by the script if JERRY_SNAPSHOT_EXEC_HAS_USER_VALUE
+                             *   is set in exec_snapshot_opts */
+} jerry_exec_snapshot_option_values_t;
 
 /**
  * Snapshot functions.
@@ -63,7 +81,8 @@ jerry_value_t jerry_generate_function_snapshot (const jerry_char_t *source_p, si
                                                 uint32_t *buffer_p, size_t buffer_size);
 
 jerry_value_t jerry_exec_snapshot (const uint32_t *snapshot_p, size_t snapshot_size,
-                                   size_t func_index, uint32_t exec_snapshot_opts);
+                                   size_t func_index, uint32_t exec_snapshot_opts,
+                                   const jerry_exec_snapshot_option_values_t *options_values_p);
 
 size_t jerry_merge_snapshots (const uint32_t **inp_buffers_p, size_t *inp_buffer_sizes_p, size_t number_of_snapshots,
                               uint32_t *out_buffer_p, size_t out_buffer_size, const char **error_p);

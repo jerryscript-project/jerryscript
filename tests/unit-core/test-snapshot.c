@@ -89,7 +89,8 @@ static void test_function_snapshot (void)
   jerry_value_t function_obj = jerry_exec_snapshot (function_snapshot_buffer,
                                                     function_snapshot_size,
                                                     0,
-                                                    JERRY_SNAPSHOT_EXEC_LOAD_AS_FUNCTION);
+                                                    JERRY_SNAPSHOT_EXEC_LOAD_AS_FUNCTION,
+                                                    NULL);
 
   TEST_ASSERT (!jerry_value_is_error (function_obj));
   TEST_ASSERT (jerry_value_is_function (function_obj));
@@ -117,7 +118,7 @@ static void test_function_snapshot (void)
 static void arguments_test_exec_snapshot (uint32_t *snapshot_p, size_t snapshot_size, uint32_t exec_snapshot_flags)
 {
   jerry_init (JERRY_INIT_EMPTY);
-  jerry_value_t res = jerry_exec_snapshot (snapshot_p, snapshot_size, 0, exec_snapshot_flags);
+  jerry_value_t res = jerry_exec_snapshot (snapshot_p, snapshot_size, 0, exec_snapshot_flags, NULL);
   TEST_ASSERT (!jerry_value_is_error (res));
   TEST_ASSERT (jerry_value_is_number (res));
   double raw_value = jerry_get_number_value (res);
@@ -176,7 +177,7 @@ static void test_exec_snapshot (uint32_t *snapshot_p, size_t snapshot_size, uint
                                 sizeof (magic_string_lengths) / sizeof (jerry_length_t),
                                 magic_string_lengths);
 
-  jerry_value_t res = jerry_exec_snapshot (snapshot_p, snapshot_size, 0, exec_snapshot_flags);
+  jerry_value_t res = jerry_exec_snapshot (snapshot_p, snapshot_size, 0, exec_snapshot_flags, NULL);
 
   TEST_ASSERT (!jerry_value_is_error (res));
   TEST_ASSERT (jerry_value_is_string (res));
@@ -189,6 +190,76 @@ static void test_exec_snapshot (uint32_t *snapshot_p, size_t snapshot_size, uint
 
   jerry_cleanup ();
 } /* test_exec_snapshot */
+
+static void test_snapshot_with_user (void)
+{
+  if (jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_SAVE)
+      && jerry_is_feature_enabled (JERRY_FEATURE_SNAPSHOT_EXEC))
+  {
+    static uint32_t snapshot_buffer[SNAPSHOT_BUFFER_SIZE];
+
+    const jerry_char_t code_to_snapshot[] = TEST_STRING_LITERAL (
+      "function f() {}\n"
+      "f"
+    );
+    jerry_init (JERRY_INIT_EMPTY);
+
+    jerry_value_t result = jerry_generate_snapshot (code_to_snapshot,
+                                                    sizeof (code_to_snapshot) - 1,
+                                                    NULL,
+                                                    0,
+                                                    snapshot_buffer,
+                                                    SNAPSHOT_BUFFER_SIZE);
+
+    TEST_ASSERT (!jerry_value_is_error (result)
+                 && jerry_value_is_number (result));
+
+    size_t snapshot_size = (size_t) jerry_get_number_value (result);
+    jerry_release_value (result);
+
+    for (int i = 0; i < 3; i++)
+    {
+      jerry_exec_snapshot_option_values_t snapshot_exec_options;
+
+      if (i == 0)
+      {
+        snapshot_exec_options.user_value = jerry_create_object ();
+      }
+      else if (i == 1)
+      {
+        snapshot_exec_options.user_value = jerry_create_number (-3.5);
+      }
+      else
+      {
+        snapshot_exec_options.user_value = jerry_create_string ((const jerry_char_t *) "AnyString...");
+      }
+
+      result = jerry_exec_snapshot (snapshot_buffer,
+                                    snapshot_size,
+                                    0,
+                                    JERRY_SNAPSHOT_EXEC_HAS_USER_VALUE,
+                                    &snapshot_exec_options);
+
+      TEST_ASSERT (!jerry_value_is_error (result)
+                   && jerry_value_is_function (result));
+
+      jerry_value_t user_value = jerry_get_user_value (result);
+      jerry_release_value (result);
+
+      result = jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL,
+                                       user_value,
+                                       snapshot_exec_options.user_value);
+
+      TEST_ASSERT (jerry_value_is_true (result));
+
+      jerry_release_value (result);
+      jerry_release_value (user_value);
+      jerry_release_value (snapshot_exec_options.user_value);
+    }
+
+    jerry_cleanup ();
+  }
+} /* test_snapshot_with_user */
 
 int
 main (void)
@@ -227,7 +298,7 @@ main (void)
     jerry_release_value (generate_result);
 
     /* Static snapshots are not supported by default. */
-    jerry_value_t exec_result = jerry_exec_snapshot (snapshot_buffer, snapshot_size, 0, 0);
+    jerry_value_t exec_result = jerry_exec_snapshot (snapshot_buffer, snapshot_size, 0, 0, NULL);
     TEST_ASSERT (jerry_value_is_error (exec_result));
     jerry_release_value (exec_result);
 
@@ -308,12 +379,12 @@ main (void)
 
     jerry_init (JERRY_INIT_EMPTY);
 
-    jerry_value_t res = jerry_exec_snapshot (merged_snapshot_buffer, merged_size, 0, 0);
+    jerry_value_t res = jerry_exec_snapshot (merged_snapshot_buffer, merged_size, 0, 0, NULL);
     TEST_ASSERT (!jerry_value_is_error (res));
     TEST_ASSERT (jerry_get_number_value (res) == 123);
     jerry_release_value (res);
 
-    res = jerry_exec_snapshot (merged_snapshot_buffer, merged_size, 1, 0);
+    res = jerry_exec_snapshot (merged_snapshot_buffer, merged_size, 1, 0, NULL);
     TEST_ASSERT (!jerry_value_is_error (res));
     TEST_ASSERT (jerry_get_number_value (res) == 456);
     jerry_release_value (res);
@@ -392,6 +463,8 @@ main (void)
   test_function_snapshot ();
 
   test_function_arguments_snapshot ();
+
+  test_snapshot_with_user ();
 
   return 0;
 } /* main */

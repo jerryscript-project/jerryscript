@@ -62,17 +62,6 @@ parser_compute_indicies (parser_context_t *context_p, /**< context */
   uint16_t ident_count = 0;
   uint16_t const_literal_count = 0;
 
-#if JERRY_RESOURCE_NAME
-  /* Resource name will be stored as the last const literal. */
-  if (JERRY_UNLIKELY (context_p->literal_count >= PARSER_MAXIMUM_NUMBER_OF_LITERALS))
-  {
-    parser_raise_error (context_p, PARSER_ERR_LITERAL_LIMIT_REACHED);
-  }
-
-  const_literal_count++;
-  context_p->literal_count++;
-#endif /* JERRY_RESOURCE_NAME */
-
   uint16_t ident_index;
   uint16_t const_literal_index;
   uint16_t literal_index;
@@ -197,11 +186,6 @@ parser_compute_indicies (parser_context_t *context_p, /**< context */
       }
     }
   }
-
-#if JERRY_RESOURCE_NAME
-  /* Resource name will be stored as the last const literal. */
-  const_literal_index++;
-#endif /* JERRY_RESOURCE_NAME */
 
   JERRY_ASSERT (ident_index == context_p->register_count + ident_count);
   JERRY_ASSERT (const_literal_index == ident_index + const_literal_count);
@@ -663,6 +647,14 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     parser_raise_error (context_p, PARSER_ERR_STACK_LIMIT_REACHED);
   }
 
+  if (JERRY_UNLIKELY (context_p->script_p->refs_and_type >= CBC_SCRIPT_REF_MAX))
+  {
+    /* This is probably never happens in practice. */
+    jerry_fatal (ERR_REF_COUNT_LIMIT);
+  }
+
+  context_p->script_p->refs_and_type += CBC_SCRIPT_REF_ONE;
+
   JERRY_ASSERT (context_p->literal_count <= PARSER_MAXIMUM_NUMBER_OF_LITERALS);
 
 #if JERRY_DEBUGGER
@@ -963,14 +955,12 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) compiled_code_p;
 
     args_p->stack_limit = context_p->stack_limit;
+    args_p->script_value = context_p->script_value;
     args_p->argument_end = context_p->argument_count;
     args_p->register_end = context_p->register_count;
     args_p->ident_end = ident_end;
     args_p->const_literal_end = const_literal_end;
     args_p->literal_end = context_p->literal_count;
-#if JERRY_BUILTIN_REALMS
-    ECMA_SET_INTERNAL_VALUE_POINTER (args_p->realm_value, JERRY_CONTEXT (global_object_p));
-#endif /* JERRY_BUILTIN_REALMS */
 
     compiled_code_p->status_flags |= CBC_CODE_FLAGS_UINT16_ARGUMENTS;
     byte_code_p += sizeof (cbc_uint16_arguments_t);
@@ -981,13 +971,11 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 
     args_p->stack_limit = (uint8_t) context_p->stack_limit;
     args_p->argument_end = (uint8_t) context_p->argument_count;
+    args_p->script_value = context_p->script_value;
     args_p->register_end = (uint8_t) context_p->register_count;
     args_p->ident_end = (uint8_t) ident_end;
     args_p->const_literal_end = (uint8_t) const_literal_end;
     args_p->literal_end = (uint8_t) context_p->literal_count;
-#if JERRY_BUILTIN_REALMS
-    ECMA_SET_INTERNAL_VALUE_POINTER (args_p->realm_value, JERRY_CONTEXT (global_object_p));
-#endif /* JERRY_BUILTIN_REALMS */
 
     byte_code_p += sizeof (cbc_uint8_arguments_t);
   }
@@ -1087,10 +1075,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
   dst_p = byte_code_p;
 
   parser_init_literal_pool (context_p, literal_pool_p);
-
-#if JERRY_RESOURCE_NAME
-  literal_pool_p[const_literal_end - 1] = context_p->resource_name;
-#endif /* JERRY_RESOURCE_NAME */
 
   page_p = context_p->byte_code.first_p;
   offset = 0;
@@ -1828,13 +1812,54 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   context.token.flags = 0;
   lexer_init_line_info (&context);
 
+  context.user_value = ECMA_VALUE_EMPTY;
+
+  if ((context.global_status_flags & ECMA_PARSE_EVAL)
+      && JERRY_CONTEXT (vm_top_context_p) != NULL)
+  {
+    const ecma_compiled_code_t *bytecode_header_p = JERRY_CONTEXT (vm_top_context_p)->shared_p->bytecode_header_p;
+
+#if JERRY_SNAPSHOT_EXEC
+    if (JERRY_LIKELY (!(bytecode_header_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION)))
+    {
+#endif /* JERRY_SNAPSHOT_EXEC */
+      ecma_value_t parent_script_value = ((cbc_uint8_arguments_t *) bytecode_header_p)->script_value;;
+      cbc_script_t *parent_script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, parent_script_value);
+
+      if (CBC_SCRIPT_GET_TYPE (parent_script_p) != CBC_SCRIPT_GENERIC)
+      {
+        context.user_value = ((cbc_script_user_t *) parent_script_p)->user_value;
+      }
+#if JERRY_SNAPSHOT_EXEC
+    }
+#endif /* JERRY_SNAPSHOT_EXEC */
+  }
+  else if (context.options_p != NULL
+           && (context.options_p->options & JERRY_PARSE_HAS_USER_VALUE))
+  {
+    context.user_value = context.options_p->user_value;
+  }
+
+  uint32_t script_size = (context.user_value != ECMA_VALUE_EMPTY ? sizeof (cbc_script_user_t)
+                                                                 : sizeof (cbc_script_t));
+  context.script_p = jmem_heap_alloc_block_null_on_error (script_size);
+
+  if (JERRY_UNLIKELY (context.script_p == NULL))
+  {
+    /* It is unlikely that memory can be allocated in an out-of-memory
+     * situation. However, a simple value can still be thrown. */
+    jcontext_raise_exception (ECMA_VALUE_NULL);
+    return NULL;
+  }
+
+  CBC_SCRIPT_SET_TYPE (context.script_p, context.user_value, CBC_SCRIPT_REF_ONE);
+
+#if JERRY_BUILTIN_REALMS
+  context.script_p->realm_p = (ecma_object_t *) JERRY_CONTEXT (global_object_p);
+#endif /* JERRY_BUILTIN_REALMS */
+
 #if JERRY_RESOURCE_NAME
   ecma_value_t resource_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
-
-  if (context.global_status_flags & ECMA_PARSE_EVAL)
-  {
-    resource_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_EVAL);
-  }
 
   if (context.options_p != NULL
       && (context.options_p->options & JERRY_PARSE_HAS_RESOURCE)
@@ -1843,9 +1868,15 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
     resource_name = ecma_find_or_create_literal_string (context.options_p->resource_name_p,
                                                         (lit_utf8_size_t) context.options_p->resource_name_length);
   }
+  else if (context.global_status_flags & ECMA_PARSE_EVAL)
+  {
+    resource_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_EVAL);
+  }
 
-  context.resource_name = resource_name;
-#endif /* !JERRY_RESOURCE_NAME */
+  context.script_p->resource_name = resource_name;
+#endif /* JERRY_RESOURCE_NAME */
+
+  ECMA_SET_INTERNAL_VALUE_POINTER (context.script_value, context.script_p);
 
   scanner_info_t scanner_info_end;
   scanner_info_end.next_p = NULL;
@@ -2030,6 +2061,13 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
 
     JERRY_ASSERT (arg_list_p != NULL || !(context.status_flags & PARSER_ARGUMENTS_NEEDED));
 
+    context.script_p->refs_and_type -= CBC_SCRIPT_REF_ONE;
+
+    if (context.user_value != ECMA_VALUE_EMPTY)
+    {
+      ((cbc_script_user_t *) context.script_p)->user_value = ecma_copy_value_if_not_object (context.user_value);
+    }
+
 #if JERRY_PARSER_DUMP_BYTE_CODE
     if (context.is_show_opcodes)
     {
@@ -2061,6 +2099,9 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
     compiled_code_p = NULL;
     parser_free_literals (&context.literal_pool);
     parser_cbc_stream_free (&context.byte_code);
+
+    JERRY_ASSERT (context.script_p->refs_and_type >= CBC_SCRIPT_REF_ONE);
+    jmem_heap_free_block (context.script_p, script_size);
   }
   PARSER_TRY_END
 
@@ -2130,7 +2171,7 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   ecma_raise_standard_error_with_format (JERRY_ERROR_SYNTAX,
                                          "% [%:%:%]",
                                          err_str_val,
-                                         context.resource_name,
+                                         resource_name,
                                          line_str_val,
                                          col_str_val);
 

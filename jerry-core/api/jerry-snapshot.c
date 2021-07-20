@@ -50,9 +50,6 @@ snapshot_get_global_flags (bool has_regex, /**< regex literal is present */
 #if JERRY_ESNEXT
   flags |= (has_class ? JERRY_SNAPSHOT_HAS_CLASS_LITERAL : 0);
 #endif /* JERRY_ESNEXT */
-#if JERRY_BUILTIN_REALMS
-  flags |= JERRY_SNAPSHOT_HAS_REALM_VALUE;
-#endif /* JERRY_BUILTIN_REALMS */
 
   return flags;
 } /* snapshot_get_global_flags */
@@ -71,9 +68,6 @@ snapshot_check_global_flags (uint32_t global_flags) /**< global flags */
 #if JERRY_ESNEXT
   global_flags &= (uint32_t) ~JERRY_SNAPSHOT_HAS_CLASS_LITERAL;
 #endif /* JERRY_ESNEXT */
-#if JERRY_BUILTIN_REALMS
-  global_flags |= JERRY_SNAPSHOT_HAS_REALM_VALUE;
-#endif /* JERRY_BUILTIN_REALMS */
 
   return global_flags == snapshot_get_global_flags (false, false);
 } /* snapshot_check_global_flags */
@@ -395,9 +389,7 @@ static_snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< c
     literal_end = (uint32_t) (args_p->literal_end - args_p->register_end);
     const_literal_end = (uint32_t) (args_p->const_literal_end - args_p->register_end);
 
-#if JERRY_BUILTIN_REALMS
-    args_p->realm_value = JMEM_CP_NULL;
-#endif /* JERRY_BUILTIN_REALMS */
+    args_p->script_value = JMEM_CP_NULL;
   }
   else
   {
@@ -407,9 +399,7 @@ static_snapshot_add_compiled_code (ecma_compiled_code_t *compiled_code_p, /**< c
     literal_end = (uint32_t) (args_p->literal_end - args_p->register_end);
     const_literal_end = (uint32_t) (args_p->const_literal_end - args_p->register_end);
 
-#if JERRY_BUILTIN_REALMS
-    args_p->realm_value = JMEM_CP_NULL;
-#endif /* JERRY_BUILTIN_REALMS */
+    args_p->script_value = JMEM_CP_NULL;
   }
 
   for (uint32_t i = 0; i < const_literal_end; i++)
@@ -569,6 +559,7 @@ static ecma_compiled_code_t *
 snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of the
                                                           *   current primary function */
                              const uint8_t *literal_base_p, /**< literal start */
+                             cbc_script_t *script_p, /**< script */
                              bool copy_bytecode) /**< byte code should be copied to memory */
 {
   ecma_compiled_code_t *bytecode_p = (ecma_compiled_code_t *) base_addr_p;
@@ -598,6 +589,14 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
   uint32_t const_literal_end;
   uint32_t literal_end;
 
+  if (JERRY_UNLIKELY (script_p->refs_and_type >= CBC_SCRIPT_REF_MAX))
+  {
+    /* This is probably never happens in practice. */
+    jerry_fatal (ERR_REF_COUNT_LIMIT);
+  }
+
+  script_p->refs_and_type += CBC_SCRIPT_REF_ONE;
+
   if (bytecode_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
   {
     uint8_t *byte_p = (uint8_t *) bytecode_p;
@@ -608,9 +607,7 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
     literal_end = (uint32_t) (args_p->literal_end - args_p->register_end);
     header_size = sizeof (cbc_uint16_arguments_t);
 
-#if JERRY_BUILTIN_REALMS
-    ECMA_SET_INTERNAL_VALUE_POINTER (args_p->realm_value, ecma_builtin_get_global ());
-#endif /* JERRY_BUILTIN_REALMS */
+    ECMA_SET_INTERNAL_VALUE_POINTER (args_p->script_value, script_p);
   }
   else
   {
@@ -622,9 +619,7 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
     literal_end = (uint32_t) (args_p->literal_end - args_p->register_end);
     header_size = sizeof (cbc_uint8_arguments_t);
 
-#if JERRY_BUILTIN_REALMS
-    ECMA_SET_INTERNAL_VALUE_POINTER (args_p->realm_value, ecma_builtin_get_global ());
-#endif /* JERRY_BUILTIN_REALMS */
+    ECMA_SET_INTERNAL_VALUE_POINTER (args_p->script_value, script_p);
   }
 
   if (copy_bytecode
@@ -729,6 +724,7 @@ snapshot_load_compiled_code (const uint8_t *base_addr_p, /**< base address of th
       ecma_compiled_code_t *literal_bytecode_p;
       literal_bytecode_p = snapshot_load_compiled_code (base_addr_p + literal_offset,
                                                         literal_base_p,
+                                                        script_p,
                                                         copy_bytecode);
 
       ECMA_SET_INTERNAL_VALUE_POINTER (literal_start_p[i],
@@ -930,14 +926,18 @@ jerry_value_t
 jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
                      size_t snapshot_size, /**< size of snapshot */
                      size_t func_index, /**< index of primary function */
-                     uint32_t exec_snapshot_opts) /**< jerry_exec_snapshot_opts_t option bits */
+                     uint32_t exec_snapshot_opts, /**< jerry_exec_snapshot_opts_t option bits */
+                     const jerry_exec_snapshot_option_values_t *option_values_p) /**< additional option values,
+                                                                                  *   can be NULL if not used */
 {
 #if JERRY_SNAPSHOT_EXEC
   JERRY_ASSERT (snapshot_p != NULL);
 
   uint32_t allowed_opts = (JERRY_SNAPSHOT_EXEC_COPY_DATA
                            | JERRY_SNAPSHOT_EXEC_ALLOW_STATIC
-                           | JERRY_SNAPSHOT_EXEC_LOAD_AS_FUNCTION);
+                           | JERRY_SNAPSHOT_EXEC_LOAD_AS_FUNCTION
+                           | JERRY_SNAPSHOT_EXEC_HAS_RESOURCE
+                           | JERRY_SNAPSHOT_EXEC_HAS_USER_VALUE);
 
   if ((exec_snapshot_opts & ~(allowed_opts)) != 0)
   {
@@ -998,15 +998,57 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
   }
   else
   {
+    ecma_value_t user_value = ECMA_VALUE_EMPTY;
+
+    if ((exec_snapshot_opts & JERRY_SNAPSHOT_EXEC_HAS_USER_VALUE)
+        && option_values_p != NULL)
+    {
+      user_value = option_values_p->user_value;
+    }
+
+    uint32_t script_size = (user_value != ECMA_VALUE_EMPTY ? sizeof (cbc_script_user_t)
+                                                           : sizeof (cbc_script_t));
+    cbc_script_t *script_p = jmem_heap_alloc_block (script_size);
+
+    CBC_SCRIPT_SET_TYPE (script_p, user_value, CBC_SCRIPT_REF_ONE);
+
+#if JERRY_BUILTIN_REALMS
+    script_p->realm_p = (ecma_object_t *) JERRY_CONTEXT (global_object_p);
+#endif /* JERRY_BUILTIN_REALMS */
+
+#if JERRY_RESOURCE_NAME
+    ecma_value_t resource_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
+
+    if ((exec_snapshot_opts & JERRY_SNAPSHOT_EXEC_HAS_RESOURCE)
+        && option_values_p != NULL
+        && option_values_p->resource_name_length > 0)
+    {
+      resource_name = ecma_find_or_create_literal_string (option_values_p->resource_name_p,
+                                                          (lit_utf8_size_t) option_values_p->resource_name_length);
+    }
+
+    script_p->resource_name = resource_name;
+#endif /* JERRY_RESOURCE_NAME */
+
     const uint8_t *literal_base_p = snapshot_data_p + header_p->lit_table_offset;
 
     bytecode_p = snapshot_load_compiled_code ((const uint8_t *) bytecode_p,
                                               literal_base_p,
+                                              script_p,
                                               (exec_snapshot_opts & JERRY_SNAPSHOT_EXEC_COPY_DATA) != 0);
 
     if (bytecode_p == NULL)
     {
+      JERRY_ASSERT (script_p->refs_and_type >= CBC_SCRIPT_REF_ONE);
+      jmem_heap_free_block (script_p, script_size);
       return ecma_raise_type_error (invalid_format_error_p);
+    }
+
+    script_p->refs_and_type -= CBC_SCRIPT_REF_ONE;
+
+    if (user_value != ECMA_VALUE_EMPTY)
+    {
+      ((cbc_script_user_t *) script_p)->user_value = ecma_copy_value_if_not_object (user_value);
     }
   }
 
@@ -1063,6 +1105,7 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
   JERRY_UNUSED (snapshot_size);
   JERRY_UNUSED (func_index);
   JERRY_UNUSED (exec_snapshot_opts);
+  JERRY_UNUSED (option_values_p);
 
   return jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) "Snapshot execution is not supported");
 #endif /* JERRY_SNAPSHOT_EXEC */

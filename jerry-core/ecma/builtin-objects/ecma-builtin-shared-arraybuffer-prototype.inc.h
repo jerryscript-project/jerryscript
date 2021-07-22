@@ -28,7 +28,7 @@ OBJECT_VALUE (LIT_MAGIC_STRING_CONSTRUCTOR, ECMA_BUILTIN_ID_SHARED_ARRAYBUFFER, 
 
 /* Readonly accessor properties */
 ACCESSOR_READ_ONLY (LIT_MAGIC_STRING_BYTE_LENGTH_UL,
-                    ecma_builtin_shared_arraybuffer_prototype_bytelength_getter,
+                    ECMA_BUILTIN_SHARED_ARRYBUFFER_PROTOTYPE_BYTELENGTH_GETTER,
                     ECMA_PROPERTY_FLAG_CONFIGURABLE)
 
 /* ECMA-262 v11, 24.2.4.4 */
@@ -36,7 +36,7 @@ STRING_VALUE (LIT_GLOBAL_SYMBOL_TO_STRING_TAG, LIT_MAGIC_STRING_SHARED_ARRAY_BUF
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
-ROUTINE (LIT_MAGIC_STRING_SLICE, ecma_builtin_shared_arraybuffer_prototype_object_slice, NON_FIXED, 2)
+ROUTINE (LIT_MAGIC_STRING_SLICE, ECMA_BUILTIN_SHARED_ARRYBUFFER_PROTOTYPE_OBJECT_SLICE, NON_FIXED, 2)
 
 #endif /* JERRY_BUILTIN_SHAREDARRAYBUFFER */
 

@@ -23,11 +23,6 @@
 #include "ecma-builtins-internal.h"
 
 /**
- * This object has a custom dispatch function.
- */
-#define BUILTIN_CUSTOM_DISPATCH
-
-/**
  * List of built-in routine identifiers.
  */
 enum

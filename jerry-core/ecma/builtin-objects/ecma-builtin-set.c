@@ -22,6 +22,15 @@
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
+/**
+ * List of built-in routine identifiers.
+ */
+enum
+{
+  ECMA_BUILTIN_SET_ROUTINE_START = 0,
+  ECMA_BUILTIN_SET_SPECIES_GET,
+};
+
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-set.inc.h"
 #define BUILTIN_UNDERSCORED_ID  set
 #include "ecma-builtin-internal-routines-template.inc.h"
@@ -66,16 +75,33 @@ ecma_builtin_set_dispatch_construct (const ecma_value_t *arguments_list_p, /**< 
 } /* ecma_builtin_set_dispatch_construct */
 
 /**
- * 23.2.2.2 get Set [ @@species ] accessor
+ * Dispatcher of the built-in's routines
  *
- * @return ecma_value
- *         returned value must be freed with ecma_free_value
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_builtin_set_species_get (ecma_value_t this_value) /**< This Value */
+ecma_builtin_set_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wide routine identifier */
+                                   ecma_value_t this_arg, /**< 'this' argument value */
+                                   const ecma_value_t arguments_list_p[], /**< list of arguments
+                                                                           *   passed to routine */
+                                   uint32_t arguments_number) /**< length of arguments' list */
 {
-  return ecma_copy_value (this_value);
-} /* ecma_builtin_set_species_get */
+  JERRY_UNUSED (arguments_number);
+  JERRY_UNUSED (arguments_list_p);
+
+  switch (builtin_routine_id)
+  {
+    case ECMA_BUILTIN_SET_SPECIES_GET:
+    {
+      return ecma_copy_value (this_arg);
+    }
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
+} /* ecma_builtin_set_dispatch_routine */
 
 /**
  * @}

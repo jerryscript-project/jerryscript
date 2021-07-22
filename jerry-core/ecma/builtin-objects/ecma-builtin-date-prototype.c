@@ -31,11 +31,6 @@
 #include "ecma-builtins-internal.h"
 
 /**
- * This object has a custom dispatch function.
- */
-#define BUILTIN_CUSTOM_DISPATCH
-
-/**
  * Checks whether the function uses UTC time zone.
  */
 #define BUILTIN_DATE_FUNCTION_IS_UTC(builtin_routine_id) \

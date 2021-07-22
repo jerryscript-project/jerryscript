@@ -20,10 +20,6 @@
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
-/**
- * This object has a custom dispatch function.
- */
-#define BUILTIN_CUSTOM_DISPATCH
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-map-prototype.inc.h"
 #define BUILTIN_UNDERSCORED_ID  map_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"

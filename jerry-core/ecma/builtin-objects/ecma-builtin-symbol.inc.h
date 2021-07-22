@@ -76,8 +76,8 @@ SYMBOL_VALUE (LIT_MAGIC_STRING_MATCH_ALL, LIT_GLOBAL_SYMBOL_MATCH_ALL)
 
 /* Routine properties:
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
-ROUTINE (LIT_MAGIC_STRING_FOR, ecma_builtin_symbol_for, 1, 1)
-ROUTINE (LIT_MAGIC_STRING_KEY_FOR, ecma_builtin_symbol_key_for, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_FOR, ECMA_BUILTIN_SYMBOL_FOR, 1, 1)
+ROUTINE (LIT_MAGIC_STRING_KEY_FOR, ECMA_BUILTIN_SYMBOL_KEY_FOR, 1, 1)
 
 #endif /* JERRY_ESNEXT */
 

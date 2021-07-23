@@ -210,6 +210,8 @@ set(SOURCE_CORE_FILES
   ecma/builtin-objects/ecma-builtin-set-iterator-prototype.c
   ecma/builtin-objects/ecma-builtin-set-prototype.c
   ecma/builtin-objects/ecma-builtin-set.c
+  ecma/builtin-objects/ecma-builtin-shared-arraybuffer-prototype.c
+  ecma/builtin-objects/ecma-builtin-shared-arraybuffer.c
   ecma/builtin-objects/ecma-builtin-string-iterator-prototype.c
   ecma/builtin-objects/ecma-builtin-string-prototype.c
   ecma/builtin-objects/ecma-builtin-string.c
@@ -281,6 +283,7 @@ set(SOURCE_CORE_FILES
   ecma/operations/ecma-proxy-object.c
   ecma/operations/ecma-reference.c
   ecma/operations/ecma-regexp-object.c
+  ecma/operations/ecma-shared-arraybuffer-object.c
   ecma/operations/ecma-string-object.c
   ecma/operations/ecma-symbol-object.c
   ecma/operations/ecma-typedarray-object.c
@@ -405,6 +408,8 @@ if(ENABLE_AMALGAM)
     ecma/builtin-objects/ecma-builtin-set-iterator-prototype.inc.h
     ecma/builtin-objects/ecma-builtin-set-prototype.inc.h
     ecma/builtin-objects/ecma-builtin-set.inc.h
+    ecma/builtin-objects/ecma-builtin-shared-arraybuffer-prototype.inc.h
+    ecma/builtin-objects/ecma-builtin-shared-arraybuffer.inc.h
     ecma/builtin-objects/ecma-builtin-string-iterator-prototype.inc.h
     ecma/builtin-objects/ecma-builtin-string-prototype.inc.h
     ecma/builtin-objects/ecma-builtin-string.inc.h
@@ -452,6 +457,7 @@ if(ENABLE_AMALGAM)
     ecma/operations/ecma-proxy-object.h
     ecma/operations/ecma-reference.h
     ecma/operations/ecma-regexp-object.h
+    ecma/operations/ecma-shared-arraybuffer-object.h
     ecma/operations/ecma-string-object.h
     ecma/operations/ecma-symbol-object.h
     ecma/operations/ecma-typedarray-object.h

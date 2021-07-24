@@ -31,7 +31,7 @@ JERRY_STATIC_ASSERT (offsetof (cbc_uint8_arguments_t, script_value) == offsetof 
  */
 JERRY_STATIC_ASSERT (CBC_END == 238,
                      number_of_cbc_opcodes_changed);
-JERRY_STATIC_ASSERT (CBC_EXT_END == 146,
+JERRY_STATIC_ASSERT (CBC_EXT_END == 147,
                      number_of_cbc_ext_opcodes_changed);
 
 #if JERRY_PARSER || JERRY_PARSER_DUMP_BYTE_CODE

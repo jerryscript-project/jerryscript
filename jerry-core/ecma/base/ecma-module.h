@@ -120,6 +120,7 @@ ecma_value_t ecma_module_link (ecma_module_t *module_p,
                                jerry_module_resolve_callback_t callback_p,
                                void *user_p);
 ecma_value_t ecma_module_evaluate (ecma_module_t *module_p);
+ecma_value_t ecma_module_import (ecma_value_t specifier, ecma_value_t user_value);
 
 ecma_module_t *ecma_module_create (void);
 void ecma_module_cleanup_context (void);

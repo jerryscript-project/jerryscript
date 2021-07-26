@@ -418,6 +418,30 @@ ecma_gc_mark_properties (ecma_object_t *object_p, /**< object */
 } /* ecma_gc_mark_properties */
 
 /**
+ * Mark compiled code.
+ */
+static void
+ecma_gc_mark_compiled_code (const ecma_compiled_code_t *compiled_code_p) /**< compiled code */
+{
+  JERRY_ASSERT (!(compiled_code_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION));
+
+  ecma_value_t script_value = ((cbc_uint8_arguments_t *) compiled_code_p)->script_value;
+  cbc_script_t *script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
+
+  if (CBC_SCRIPT_GET_TYPE (script_p) == CBC_SCRIPT_USER_OBJECT)
+  {
+    cbc_script_user_t *script_user_p = (cbc_script_user_t *) script_p;
+
+    JERRY_ASSERT (ecma_is_value_object (script_user_p->user_value));
+    ecma_gc_set_object_visited (ecma_get_object_from_value (script_user_p->user_value));
+  }
+
+#if JERRY_BUILTIN_REALMS
+  ecma_gc_set_object_visited (script_p->realm_p);
+#endif /* JERRY_BUILTIN_REALMS */
+} /* ecma_gc_mark_compiled_code */
+
+/**
  * Mark objects referenced by bound function object.
  */
 static void JERRY_ATTR_NOINLINE
@@ -871,6 +895,16 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             ecma_gc_mark_arguments_object (ext_object_p);
             break;
           }
+#if JERRY_PARSER
+          case ECMA_OBJECT_CLASS_SCRIPT:
+          {
+            const ecma_compiled_code_t *compiled_code_p;
+            compiled_code_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
+                                                               ext_object_p->u.cls.u3.value);
+            ecma_gc_mark_compiled_code (compiled_code_p);
+            break;
+          }
+#endif /* JERRY_PARSER */
 #if JERRY_BUILTIN_TYPEDARRAY
           case ECMA_OBJECT_CLASS_TYPEDARRAY:
           {
@@ -901,6 +935,12 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             if (module_p->namespace_object_p != NULL)
             {
               ecma_gc_set_object_visited (((ecma_module_t *) ext_object_p)->namespace_object_p);
+            }
+
+            if (!(module_p->header.u.cls.u2.module_flags & ECMA_MODULE_IS_NATIVE)
+                && module_p->u.compiled_code_p != NULL)
+            {
+              ecma_gc_mark_compiled_code (module_p->u.compiled_code_p);
             }
 
             ecma_module_node_t *node_p = module_p->imports_p;
@@ -1095,20 +1135,7 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
         }
 #endif /* JERRY_SNAPSHOT_EXEC */
 
-        ecma_value_t script_value = ((cbc_uint8_arguments_t *) byte_code_p)->script_value;
-        cbc_script_t *script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
-
-        if (CBC_SCRIPT_GET_TYPE (script_p) == CBC_SCRIPT_USER_OBJECT)
-        {
-          cbc_script_user_t *script_user_p = (cbc_script_user_t *) script_p;
-
-          JERRY_ASSERT (ecma_is_value_object (script_user_p->user_value));
-          ecma_gc_set_object_visited (ecma_get_object_from_value (script_user_p->user_value));
-        }
-
-#if JERRY_BUILTIN_REALMS
-        ecma_gc_set_object_visited (script_p->realm_p);
-#endif /* JERRY_BUILTIN_REALMS */
+        ecma_gc_mark_compiled_code (byte_code_p);
         break;
       }
 #if JERRY_ESNEXT || JERRY_BUILTIN_REALMS

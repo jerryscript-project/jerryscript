@@ -77,12 +77,15 @@ module_import_callback (const jerry_value_t specifier, /* string value */
 {
   TEST_ASSERT (user_p == (void *) &mode);
 
-  jerry_value_t compare_value = jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL,
-                                                        user_value,
-                                                        global_user_value);
+  if (mode != 3)
+  {
+    jerry_value_t compare_value = jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL,
+                                                          user_value,
+                                                          global_user_value);
 
-  TEST_ASSERT (jerry_value_is_true (compare_value));
-  jerry_release_value (compare_value);
+    TEST_ASSERT (jerry_value_is_true (compare_value));
+    jerry_release_value (compare_value);
+  }
 
   switch (mode)
   {
@@ -107,9 +110,21 @@ module_import_callback (const jerry_value_t specifier, /* string value */
       jerry_release_value (object_value);
       return promise_value;
     }
+    case 3:
+    {
+      compare_specifier (specifier, 28);
+
+      TEST_ASSERT (jerry_value_is_object (user_value));
+      jerry_value_t property_name = jerry_create_string ((const jerry_char_t *) "MyProp1");
+      jerry_value_t result = jerry_get_property (user_value, property_name);
+      TEST_ASSERT (jerry_value_is_number (result) && jerry_get_number_value (result) == 3.5);
+      jerry_release_value (result);
+      jerry_release_value (property_name);
+      return jerry_create_undefined ();
+    }
   }
 
-  TEST_ASSERT (mode == 3 || mode == 4);
+  TEST_ASSERT (mode == 4 || mode == 5);
 
   jerry_parse_options_t parse_options;
   parse_options.options = JERRY_PARSE_MODULE;
@@ -121,7 +136,7 @@ module_import_callback (const jerry_value_t specifier, /* string value */
   TEST_ASSERT (!jerry_value_is_error (result_value));
   jerry_release_value (result_value);
 
-  if (mode == 3)
+  if (mode == 4)
   {
     result_value = jerry_module_evaluate (parse_result_value);
     TEST_ASSERT (!jerry_value_is_error (result_value));
@@ -133,12 +148,19 @@ module_import_callback (const jerry_value_t specifier, /* string value */
 
 static void
 run_script (const char *source_p, /* source code */
-            jerry_parse_options_t *parse_options_p) /* parse options */
+            jerry_parse_options_t *parse_options_p, /* parse options */
+            bool release_user_value) /* release user value */
 {
   jerry_value_t parse_result_value;
 
   parse_result_value = jerry_parse ((const jerry_char_t *) source_p, strlen (source_p), parse_options_p);
   TEST_ASSERT (!jerry_value_is_error (parse_result_value));
+
+  if (release_user_value)
+  {
+    jerry_release_value (parse_options_p->user_value);
+    jerry_gc (JERRY_GC_PRESSURE_HIGH);
+  }
 
   jerry_value_t result_value;
   if (parse_options_p->options & JERRY_PARSE_MODULE)
@@ -184,11 +206,11 @@ main (void)
 
   if (jerry_is_feature_enabled (JERRY_FEATURE_ERROR_MESSAGES))
   {
-    run_script ("var expected_message = 'Module cannot be instantiated'", &parse_options);
+    run_script ("var expected_message = 'Module cannot be instantiated'", &parse_options, false);
   }
   else
   {
-    run_script ("var expected_message = ''", &parse_options);
+    run_script ("var expected_message = ''", &parse_options, false);
   }
 
   global_user_value = jerry_create_object ();
@@ -203,7 +225,7 @@ main (void)
   mode = 0;
   parse_options.options = JERRY_PARSE_HAS_USER_VALUE;
   parse_options.user_value = global_user_value;
-  run_script (source_p, &parse_options);
+  run_script (source_p, &parse_options, false);
   jerry_release_value (global_user_value);
 
   global_user_value = jerry_create_null ();
@@ -219,7 +241,7 @@ main (void)
   mode = 1;
   parse_options.options = JERRY_PARSE_HAS_USER_VALUE;
   parse_options.user_value = global_user_value;
-  run_script (source_p, &parse_options);
+  run_script (source_p, &parse_options, false);
   jerry_release_value (global_user_value);
 
   global_user_value = jerry_create_number (5.6);
@@ -236,7 +258,7 @@ main (void)
   mode = 2;
   parse_options.options = JERRY_PARSE_HAS_USER_VALUE | JERRY_PARSE_MODULE;
   parse_options.user_value = global_user_value;
-  run_script (source_p, &parse_options);
+  run_script (source_p, &parse_options, false);
   jerry_release_value (global_user_value);
 
   global_user_value = jerry_create_string ((const jerry_char_t *) "Any string...");
@@ -249,10 +271,27 @@ main (void)
                                   "}\n"
                                   "f()\n");
 
-  mode = 3;
+  for (int i = 0; i < 2; i++)
+  {
+    mode = 3;
+    parse_options.options = JERRY_PARSE_HAS_USER_VALUE | (i == 1 ? JERRY_PARSE_MODULE : 0);
+    parse_options.user_value = jerry_create_object ();
+    jerry_value_t property_name = jerry_create_string ((const jerry_char_t *) "MyProp1");
+    jerry_value_t property_value = jerry_create_number (3.5);
+    jerry_value_t result = jerry_set_property (parse_options.user_value, property_name, property_value);
+    TEST_ASSERT (jerry_value_is_true (result));
+    jerry_release_value (result);
+    jerry_release_value (property_value);
+    jerry_release_value (property_name);
+
+    source_p = TEST_STRING_LITERAL ("import('28_module.mjs')");
+    run_script (source_p, &parse_options, true);
+  }
+
+  mode = 4;
   parse_options.options = JERRY_PARSE_HAS_USER_VALUE;
   parse_options.user_value = global_user_value;
-  run_script (source_p, &parse_options);
+  run_script (source_p, &parse_options, false);
   jerry_release_value (global_user_value);
 
   global_user_value = jerry_create_external_function (global_assert);
@@ -268,10 +307,10 @@ main (void)
                                   "}\n"
                                   "f()\n");
 
-  mode = 4;
+  mode = 5;
   parse_options.options = JERRY_PARSE_HAS_USER_VALUE | JERRY_PARSE_MODULE;
   parse_options.user_value = global_user_value;
-  run_script (source_p, &parse_options);
+  run_script (source_p, &parse_options, false);
   jerry_release_value (global_user_value);
 
   jerry_cleanup ();

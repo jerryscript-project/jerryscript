@@ -1538,6 +1538,10 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
         }
       }
 
+#if JERRY_RESOURCE_NAME
+      ecma_deref_ecma_string (ecma_get_string_from_value (script_p->resource_name));
+#endif /* JERRY_RESOURCE_NAME */
+
       jmem_heap_free_block (script_p, script_size);
     }
 

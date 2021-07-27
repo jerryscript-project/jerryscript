@@ -68,10 +68,8 @@ main (void)
                           "  return f1; \n"
                           "} \n"
                           "f1();");
-  const char *resource_1 = "demo1.js";
 
-  parse_options.resource_name_p = (const jerry_char_t *) resource_1;
-  parse_options.resource_name_length = strlen (resource_1);
+  parse_options.resource_name = jerry_create_string ((jerry_char_t *) "demo1.js");
 
   jerry_value_t program = jerry_parse ((const jerry_char_t *) source_1,
                                        strlen (source_1),
@@ -83,10 +81,9 @@ main (void)
   TEST_ASSERT (jerry_value_is_object (run_result));
 
   jerry_value_t resource_value = jerry_get_resource_name (run_result);
-  jerry_value_t resource1_name_value = jerry_create_string ((const jerry_char_t *) resource_1);
-  TEST_ASSERT (jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL, resource_value, resource1_name_value));
-  jerry_release_value (resource1_name_value);
+  TEST_ASSERT (jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL, resource_value, parse_options.resource_name));
   jerry_release_value (resource_value);
+  jerry_release_value (parse_options.resource_name);
 
   jerry_release_value (run_result);
   jerry_release_value (program);
@@ -100,10 +97,8 @@ main (void)
                           "  return f2; \n"
                           "} \n"
                           "f2(); \n");
-  const char *resource_2 = "demo2.js";
 
-  parse_options.resource_name_p = (const jerry_char_t *) resource_2;
-  parse_options.resource_name_length = strlen (resource_2);
+  parse_options.resource_name = jerry_create_string ((const jerry_char_t *) "demo2.js");
 
   program = jerry_parse ((const jerry_char_t *) source_2,
                          strlen (source_2),
@@ -115,10 +110,9 @@ main (void)
   TEST_ASSERT (jerry_value_is_object (run_result));
 
   resource_value = jerry_get_resource_name (run_result);
-  jerry_value_t resource2_name_value = jerry_create_string ((const jerry_char_t *) resource_2);
-  TEST_ASSERT (jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL, resource_value, resource2_name_value));
-  jerry_release_value (resource2_name_value);
+  TEST_ASSERT (jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL, resource_value, parse_options.resource_name));
   jerry_release_value (resource_value);
+  jerry_release_value (parse_options.resource_name);
 
   jerry_release_value (run_result);
   jerry_release_value (program);

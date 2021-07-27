@@ -1863,10 +1863,10 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
 
   if (context.options_p != NULL
       && (context.options_p->options & JERRY_PARSE_HAS_RESOURCE)
-      && context.options_p->resource_name_length > 0)
+      && ecma_is_value_string (context.options_p->resource_name))
   {
-    resource_name = ecma_find_or_create_literal_string (context.options_p->resource_name_p,
-                                                        (lit_utf8_size_t) context.options_p->resource_name_length);
+    ecma_ref_ecma_string (ecma_get_string_from_value (context.options_p->resource_name));
+    resource_name = context.options_p->resource_name;
   }
   else if (context.global_status_flags & ECMA_PARSE_EVAL)
   {
@@ -2099,6 +2099,10 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
     compiled_code_p = NULL;
     parser_free_literals (&context.literal_pool);
     parser_cbc_stream_free (&context.byte_code);
+
+#if JERRY_RESOURCE_NAME
+    ecma_deref_ecma_string (ecma_get_string_from_value (context.script_p->resource_name));
+#endif /* JERRY_RESOURCE_NAME */
 
     JERRY_ASSERT (context.script_p->refs_and_type >= CBC_SCRIPT_REF_ONE);
     jmem_heap_free_block (context.script_p, script_size);

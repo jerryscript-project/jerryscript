@@ -225,12 +225,12 @@ run (const char *resource_name_p, /**< resource name */
 {
   jerry_parse_options_t parse_options;
   parse_options.options = JERRY_PARSE_HAS_RESOURCE;
-  parse_options.resource_name_p = (const jerry_char_t *) resource_name_p;
-  parse_options.resource_name_length = strlen (resource_name_p);
+  parse_options.resource_name = jerry_create_string ((const jerry_char_t *) resource_name_p);
 
   jerry_value_t code = jerry_parse ((const jerry_char_t *) source_p,
                                     strlen (source_p),
                                     &parse_options);
+  jerry_release_value (parse_options.resource_name);
   TEST_ASSERT (!jerry_value_is_error (code));
 
   jerry_value_t result = jerry_run (code);

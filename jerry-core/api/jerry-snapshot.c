@@ -1021,10 +1021,10 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
 
     if ((exec_snapshot_opts & JERRY_SNAPSHOT_EXEC_HAS_RESOURCE)
         && option_values_p != NULL
-        && option_values_p->resource_name_length > 0)
+        && ecma_is_value_string (option_values_p->resource_name) > 0)
     {
-      resource_name = ecma_find_or_create_literal_string (option_values_p->resource_name_p,
-                                                          (lit_utf8_size_t) option_values_p->resource_name_length);
+      ecma_ref_ecma_string (ecma_get_string_from_value (option_values_p->resource_name));
+      resource_name = option_values_p->resource_name;
     }
 
     script_p->resource_name = resource_name;

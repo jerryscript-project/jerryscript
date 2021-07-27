@@ -66,12 +66,12 @@ JERRY_STATIC_ASSERT ((int) RE_FLAG_GLOBAL == (int) JERRY_REGEXP_FLAG_GLOBAL
                      re_flags_t_must_be_equal_to_jerry_regexp_flags_t);
 #endif /* JERRY_BUILTIN_REGEXP */
 
-#if JERRY_BUILTIN_PROMISE
+#if JERRY_ESNEXT
 /* The internal ECMA_PROMISE_STATE_* values are "one byte away" from the API values */
 JERRY_STATIC_ASSERT ((int) ECMA_PROMISE_IS_PENDING == (int) JERRY_PROMISE_STATE_PENDING
                      && (int) ECMA_PROMISE_IS_FULFILLED == (int) JERRY_PROMISE_STATE_FULFILLED,
                      promise_internal_state_matches_external);
-#endif /* JERRY_BUILTIN_PROMISE */
+#endif /* JERRY_ESNEXT */
 
 /**
  * Offset between internal and external arithmetic operator types
@@ -210,9 +210,9 @@ jerry_cleanup (void)
     }
   }
 
-#if JERRY_BUILTIN_PROMISE
+#if JERRY_ESNEXT
   ecma_free_all_enqueued_jobs ();
-#endif /* JERRY_BUILTIN_PROMISE */
+#endif /* JERRY_ESNEXT */
   ecma_finalize ();
   jerry_make_api_unavailable ();
 
@@ -1123,11 +1123,11 @@ jerry_run_all_enqueued_jobs (void)
 {
   jerry_assert_api_available ();
 
-#if JERRY_BUILTIN_PROMISE
+#if JERRY_ESNEXT
   return ecma_process_all_enqueued_jobs ();
-#else /* !JERRY_BUILTIN_PROMISE */
+#else /* !JERRY_ESNEXT */
   return ECMA_VALUE_UNDEFINED;
-#endif /* JERRY_BUILTIN_PROMISE */
+#endif /* JERRY_ESNEXT */
 } /* jerry_run_all_enqueued_jobs */
 
 /**
@@ -1354,13 +1354,13 @@ bool
 jerry_value_is_promise (const jerry_value_t value) /**< api value */
 {
   jerry_assert_api_available ();
-#if JERRY_BUILTIN_PROMISE
+#if JERRY_ESNEXT
   return (ecma_is_value_object (value)
           && ecma_is_promise (ecma_get_object_from_value (value)));
-#else /* !JERRY_BUILTIN_PROMISE */
+#else /* !JERRY_ESNEXT */
   JERRY_UNUSED (value);
   return false;
-#endif /* JERRY_BUILTIN_PROMISE */
+#endif /* JERRY_ESNEXT */
 } /* jerry_value_is_promise */
 
 /**
@@ -1542,10 +1542,10 @@ static const uint8_t jerry_class_object_type[] =
 #if JERRY_MODULE_SYSTEM
   JERRY_OBJECT_TYPE_MODULE, /**< type of ECMA_OBJECT_CLASS_MODULE */
 #endif
-#if JERRY_BUILTIN_PROMISE
+#if JERRY_ESNEXT
   JERRY_OBJECT_TYPE_PROMISE, /**< type of ECMA_OBJECT_CLASS_PROMISE */
   JERRY_OBJECT_TYPE_GENERIC, /**< type of ECMA_OBJECT_CLASS_PROMISE_CAPABILITY */
-#endif /* JERRY_BUILTIN_PROMISE */
+#endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_DATAVIEW
   JERRY_OBJECT_TYPE_DATAVIEW, /**< type of ECMA_OBJECT_CLASS_DATAVIEW */
 #endif /* JERRY_BUILTIN_DATAVIEW */
@@ -1803,10 +1803,8 @@ jerry_is_feature_enabled (const jerry_feature_t feature) /**< feature to check *
 #if JERRY_BUILTIN_JSON
           || feature == JERRY_FEATURE_JSON
 #endif /* JERRY_BUILTIN_JSON */
-#if JERRY_BUILTIN_PROMISE
-          || feature == JERRY_FEATURE_PROMISE
-#endif /* JERRY_BUILTIN_PROMISE */
 #if JERRY_ESNEXT
+          || feature == JERRY_FEATURE_PROMISE
           || feature == JERRY_FEATURE_SYMBOL
 #endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_TYPEDARRAY
@@ -2560,13 +2558,13 @@ jerry_create_promise (void)
 {
   jerry_assert_api_available ();
 
-#if JERRY_BUILTIN_PROMISE
+#if JERRY_ESNEXT
   ecma_value_t promise_value = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_VALUE_UNDEFINED, NULL);
 
   return promise_value;
-#else /* !JERRY_BUILTIN_PROMISE */
+#else /* !JERRY_ESNEXT */
   return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_promise_not_supported_p)));
-#endif /* JERRY_BUILTIN_PROMISE */
+#endif /* JERRY_ESNEXT */
 } /* jerry_create_promise */
 
 /**
@@ -4762,7 +4760,7 @@ jerry_resolve_or_reject_promise (jerry_value_t promise, /**< the promise value *
 {
   jerry_assert_api_available ();
 
-#if JERRY_BUILTIN_PROMISE
+#if JERRY_ESNEXT
   if (!ecma_is_value_object (promise) || !ecma_is_promise (ecma_get_object_from_value (promise)))
   {
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
@@ -4779,13 +4777,13 @@ jerry_resolve_or_reject_promise (jerry_value_t promise, /**< the promise value *
   }
 
   return ecma_reject_promise_with_checks (promise, argument);
-#else /* !JERRY_BUILTIN_PROMISE */
+#else /* !JERRY_ESNEXT */
   JERRY_UNUSED (promise);
   JERRY_UNUSED (argument);
   JERRY_UNUSED (is_resolve);
 
   return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_promise_not_supported_p)));
-#endif /* JERRY_BUILTIN_PROMISE */
+#endif /* JERRY_ESNEXT */
 } /* jerry_resolve_or_reject_promise */
 
 /**
@@ -4799,17 +4797,17 @@ jerry_get_promise_result (const jerry_value_t promise) /**< promise object to ge
 {
   jerry_assert_api_available ();
 
-#if JERRY_BUILTIN_PROMISE
+#if JERRY_ESNEXT
   if (!jerry_value_is_promise (promise))
   {
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
   }
 
   return ecma_promise_get_result (ecma_get_object_from_value (promise));
-#else /* !JERRY_BUILTIN_PROMISE */
+#else /* !JERRY_ESNEXT */
   JERRY_UNUSED (promise);
   return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_promise_not_supported_p)));
-#endif /* JERRY_BUILTIN_PROMISE */
+#endif /* JERRY_ESNEXT */
 } /* jerry_get_promise_result */
 
 /**
@@ -4824,7 +4822,7 @@ jerry_get_promise_state (const jerry_value_t promise) /**< promise object to get
 {
   jerry_assert_api_available ();
 
-#if JERRY_BUILTIN_PROMISE
+#if JERRY_ESNEXT
   if (!jerry_value_is_promise (promise))
   {
     return JERRY_PROMISE_STATE_NONE;
@@ -4834,10 +4832,10 @@ jerry_get_promise_state (const jerry_value_t promise) /**< promise object to get
   flags &= (ECMA_PROMISE_IS_PENDING | ECMA_PROMISE_IS_FULFILLED);
 
   return (flags ? flags : JERRY_PROMISE_STATE_REJECTED);
-#else /* !JERRY_BUILTIN_PROMISE */
+#else /* !JERRY_ESNEXT */
   JERRY_UNUSED (promise);
   return JERRY_PROMISE_STATE_NONE;
-#endif /* JERRY_BUILTIN_PROMISE */
+#endif /* JERRY_ESNEXT */
 } /* jerry_get_promise_state */
 
 /**
@@ -4852,7 +4850,7 @@ void jerry_promise_set_callback (jerry_promise_event_filter_t filters, /**< comb
 {
   jerry_assert_api_available ();
 
-#if JERRY_BUILTIN_PROMISE && JERRY_PROMISE_CALLBACK
+#if JERRY_ESNEXT && JERRY_PROMISE_CALLBACK
   if (filters == JERRY_PROMISE_EVENT_FILTER_DISABLE || callback == NULL)
   {
     JERRY_CONTEXT (promise_callback_filters) = JERRY_PROMISE_EVENT_FILTER_DISABLE;
@@ -4862,11 +4860,11 @@ void jerry_promise_set_callback (jerry_promise_event_filter_t filters, /**< comb
   JERRY_CONTEXT (promise_callback_filters) = (uint32_t) filters;
   JERRY_CONTEXT (promise_callback) = callback;
   JERRY_CONTEXT (promise_callback_user_p) = user_p;
-#else /* !JERRY_BUILTIN_PROMISE && !JERRY_PROMISE_CALLBACK */
+#else /* !JERRY_ESNEXT && !JERRY_PROMISE_CALLBACK */
   JERRY_UNUSED (filters);
   JERRY_UNUSED (callback);
   JERRY_UNUSED (user_p);
-#endif /* JERRY_BUILTIN_PROMISE && JERRY_PROMISE_CALLBACK */
+#endif /* JERRY_ESNEXT && JERRY_PROMISE_CALLBACK */
 } /* jerry_promise_set_callback */
 
 /**

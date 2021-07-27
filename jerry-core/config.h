@@ -95,10 +95,6 @@
 # define JERRY_BUILTIN_GLOBAL_THIS JERRY_ESNEXT
 #endif /* !defined (JERRY_BUILTIN_GLOBAL_THIS) */
 
-#ifndef JERRY_BUILTIN_PROMISE
-# define JERRY_BUILTIN_PROMISE JERRY_ESNEXT
-#endif /* !defined (JERRY_BUILTIN_PROMISE) */
-
 #ifndef JERRY_BUILTIN_PROXY
 # define JERRY_BUILTIN_PROXY JERRY_ESNEXT
 #endif /* !defined (JERRY_BUILTIN_PROXY) */
@@ -552,10 +548,6 @@
 || ((JERRY_BUILTIN_WEAKREF != 0) && (JERRY_BUILTIN_WEAKREF != 1))
 # error "Invalid value for JERRY_BUILTIN_WEAKREF macro."
 #endif
-#if !defined (JERRY_BUILTIN_PROMISE) \
-|| ((JERRY_BUILTIN_PROMISE != 0) && (JERRY_BUILTIN_PROMISE != 1))
-# error "Invalid value for JERRY_BUILTIN_PROMISE macro."
-#endif
 #if !defined (JERRY_BUILTIN_PROXY) \
 || ((JERRY_BUILTIN_PROXY != 0) && (JERRY_BUILTIN_PROXY != 1))
 # error "Invalid value for JERRY_BUILTIN_PROXY macro."
@@ -575,10 +567,8 @@
 #if (JERRY_ESNEXT == 0) \
 && ((JERRY_BUILTIN_DATAVIEW == 1) \
 || (JERRY_BUILTIN_CONTAINER == 1) \
-|| (JERRY_BUILTIN_PROMISE == 1) \
 || (JERRY_BUILTIN_PROXY == 1) \
 || (JERRY_BUILTIN_REFLECT == 1) \
-|| (JERRY_BUILTIN_PROMISE == 1) \
 || (JERRY_BUILTIN_TYPEDARRAY == 1) \
 || (JERRY_BUILTIN_WEAKREF == 1))
 # error "JERRY_ESNEXT should be enabled too to enable JERRY_BUILTIN_xxxxx macro."
@@ -705,9 +695,9 @@
 /**
  * Promise support must be enabled if Promise callback support is enabled.
  */
-#if JERRY_PROMISE_CALLBACK && !JERRY_BUILTIN_PROMISE
-#  error "Promise callback support depends on Promise support"
-#endif /* JERRY_PROMISE_CALLBACK && !JERRY_BUILTIN_PROMISE */
+#if JERRY_PROMISE_CALLBACK && !JERRY_ESNEXT
+#  error "Promise callback support depends on ESNext support"
+#endif /* JERRY_PROMISE_CALLBACK && !JERRY_ESNEXT */
 
 /**
  * Resource name related types into a single guard

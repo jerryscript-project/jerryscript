@@ -32,7 +32,6 @@ Alternatively, if you want to use a custom profile at
 # Disable not needed features
 JERRY_BUILTIN_CONTAINER=0
 JERRY_BUILTIN_DATAVIEW=0
-JERRY_BUILTIN_PROMISE=0
 JERRY_BUILTIN_TYPEDARRAY=0
 ```
 
@@ -109,8 +108,6 @@ defined to `1`.
   Enables or disables the [DataView](https://www.ecma-international.org/ecma-262/6.0/#sec-dataview-objects) built-in.
 * `JERRY_BUILTIN_GLOBAL_THIS`:
   Enables or disables the [GlobalThisValue](https://262.ecma-international.org/11.0/#sec-globalthis) built-in.
-* `JERRY_BUILTIN_PROMISE`:
-  Enables or disables the [Promise](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-objects) built-in.
 * `JERRY_BUILTIN_PROXY`:
   Enables or disables the [Proxy](https://262.ecma-international.org/11.0/#sec-proxy-object-internal-methods-and-internal-slots) related internal workings and built-in.
 * `JERRY_BUILTIN_REALMS`:
@@ -137,6 +134,7 @@ defined to `1`.
   * [iterator](https://www.ecma-international.org/ecma-262/6.0/#sec-iterator-interface) built-in.
   * [nullish coalescing](https://262.ecma-international.org/11.0/#prod-CoalesceExpression) built-in.
   * [numeric separator](https://github.com/tc39/proposal-numeric-separator) language element.
+  * [Promise](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-objects) built-in.
   * [rest parameter](http://www.ecma-international.org/ecma-262/6.0/#sec-function-definitions) language element.
   * [rest operator with object destructuring](https://262.ecma-international.org/11.0/#prod-ObjectBindingPattern) language element.
   * [spread](https://262.ecma-international.org/11.0/#prod-SpreadElement) syntax.
@@ -150,7 +148,6 @@ defined to `1`.
     * `JERRY_BUILTIN_CONTAINER`
     * `JERRY_BUILTIN_DATAVIEW`
     * `JERRY_BUILTIN_GLOBAL_THIS`
-    * `JERRY_BUILTIN_PROMISE`
     * `JERRY_BUILTIN_PROXY`
     * `JERRY_BUILTIN_REALMS`
     * `JERRY_BUILTIN_REFLECT`

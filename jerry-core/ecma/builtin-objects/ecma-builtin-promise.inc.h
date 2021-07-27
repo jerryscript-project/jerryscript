@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if JERRY_BUILTIN_PROMISE
+#if JERRY_ESNEXT
 
 /* Number properties:
  *  (property name, number value, writable, enumerable, configurable) */
@@ -53,6 +53,6 @@ ACCESSOR_READ_ONLY (LIT_GLOBAL_SYMBOL_SPECIES,
                     ECMA_PROMISE_ROUTINE_SPECIES_GET,
                     ECMA_PROPERTY_FLAG_CONFIGURABLE)
 
-#endif /* JERRY_BUILTIN_PROMISE */
+#endif /* JERRY_ESNEXT */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

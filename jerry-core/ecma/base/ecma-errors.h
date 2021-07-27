@@ -33,11 +33,9 @@ extern const char * const ecma_error_json_not_supported_p;
 
 #if !JERRY_ESNEXT
 extern const char * const ecma_error_symbol_not_supported_p;
-#endif /* !JERRY_ESNEXT */
 
-#if !JERRY_BUILTIN_PROMISE
 extern const char * const ecma_error_promise_not_supported_p;
-#endif /* !JERRY_BUILTIN_PROMISE */
+#endif /* !JERRY_ESNEXT */
 
 #if !JERRY_BUILTIN_TYPEDARRAY
 extern const char * const ecma_error_typed_array_not_supported_p;

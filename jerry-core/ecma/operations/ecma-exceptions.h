@@ -43,10 +43,10 @@ ecma_value_t ecma_raise_reference_error (const char *msg_p);
 ecma_value_t ecma_raise_syntax_error (const char *msg_p);
 ecma_value_t ecma_raise_type_error (const char *msg_p);
 ecma_value_t ecma_raise_uri_error (const char *msg_p);
-#if JERRY_BUILTIN_PROMISE
+#if JERRY_ESNEXT
 ecma_value_t ecma_new_aggregate_error (ecma_value_t error_list_val, ecma_value_t message_val);
 ecma_value_t ecma_raise_aggregate_error (ecma_value_t error_list_val, ecma_value_t message_val);
-#endif /* JERRY_BUILTIN_PROMISE */
+#endif /* JERRY_ESNEXT */
 
 /**
  * @}

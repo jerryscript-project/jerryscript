@@ -56,9 +56,9 @@ ecma_init (void)
   JERRY_CONTEXT (stack_base) = (uintptr_t) &sp;
 #endif /* (JERRY_STACK_LIMIT != 0) */
 
-#if JERRY_BUILTIN_PROMISE
+#if JERRY_ESNEXT
   ecma_job_queue_init ();
-#endif /* JERRY_BUILTIN_PROMISE */
+#endif /* JERRY_ESNEXT */
 
 #if JERRY_ESNEXT
   JERRY_CONTEXT (current_new_target_p) = NULL;

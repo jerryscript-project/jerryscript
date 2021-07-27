@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if JERRY_BUILTIN_PROMISE
+#if JERRY_ESNEXT
 
 /* Number properties:
  *  (property name, number value, writable, enumerable, configurable) */
@@ -40,6 +40,6 @@ STRING_VALUE (LIT_MAGIC_STRING_NAME,
               LIT_MAGIC_STRING_AGGREGATE_ERROR_UL,
               ECMA_PROPERTY_FLAG_CONFIGURABLE)
 
-#endif /* JERRY_BUILTIN_PROMISE */
+#endif /* JERRY_ESNEXT */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

@@ -419,12 +419,12 @@ int jerry_main (int argc, char *argv[])
 
       jerry_parse_options_t parse_options;
       parse_options.options = JERRY_PARSE_HAS_RESOURCE;
-      parse_options.resource_name_p = (const jerry_char_t *) file_names[i];
-      parse_options.resource_name_length = strlen (file_names[i]);
+      parse_options.resource_name = jerry_create_string ((const jerry_char_t *) file_names[i]);
 
       ret_value = jerry_parse (source_p,
                                source_size,
                                &parse_options);
+      jerry_release_value (parse_options.resource_name);
       free ((void*) source_p);
 
       if (!jerry_value_is_error (ret_value))

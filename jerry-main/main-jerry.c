@@ -157,13 +157,14 @@ restart:
 
         jerry_parse_options_t parse_options;
         parse_options.options = JERRY_PARSE_HAS_RESOURCE;
-        parse_options.resource_name_p = (jerry_char_t *) file_path_p;
-        parse_options.resource_name_length = (size_t) strlen (file_path_p);
+        parse_options.resource_name = jerry_create_string_sz ((const jerry_char_t *) file_path_p,
+                                                              (jerry_size_t) strlen (file_path_p));
 
         ret_value = jerry_parse (source_p,
                                  source_size,
                                  &parse_options);
 
+        jerry_release_value (parse_options.resource_name);
         jerry_port_release_source (source_p);
 
         if (!jerry_value_is_error (ret_value) && !(arguments.option_flags & OPT_FLAG_PARSE_ONLY))

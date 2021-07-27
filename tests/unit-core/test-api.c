@@ -1048,11 +1048,9 @@ main (void)
                        "SyntaxError: Primary expression expected [<anonymous>:2:10]",
                        false);
 
-    const jerry_char_t file_str[] = "filename.js";
     jerry_parse_options_t parse_options;
     parse_options.options = JERRY_PARSE_HAS_RESOURCE;
-    parse_options.resource_name_p = file_str;
-    parse_options.resource_name_length = sizeof (file_str) - 1;
+    parse_options.resource_name = jerry_create_string ((const jerry_char_t *) "filename.js");
 
     test_syntax_error ("b = 'hello';\nvar a = (;",
                        &parse_options,
@@ -1073,6 +1071,7 @@ main (void)
                        "SyntaxError: Expected ')' token [filename.js:10:36]",
                        false);
 
+    jerry_release_value (parse_options.resource_name);
     jerry_cleanup ();
   }
 

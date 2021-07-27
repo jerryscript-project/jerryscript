@@ -407,12 +407,16 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
   if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       && options_p != NULL
       && (options_p->options & JERRY_PARSE_HAS_RESOURCE)
-      && options_p->resource_name_length > 0)
+      && ecma_is_value_string (options_p->resource_name))
   {
+    ECMA_STRING_TO_UTF8_STRING (ecma_get_string_from_value (options_p->resource_name),
+                                resource_name_start_p,
+                                resource_name_size);
     jerry_debugger_send_string (JERRY_DEBUGGER_SOURCE_CODE_NAME,
                                 JERRY_DEBUGGER_NO_SUBTYPE,
-                                options_p->resource_name_p,
-                                options_p->resource_name_length);
+                                resource_name_start_p,
+                                resource_name_size);
+    ECMA_FINALIZE_UTF8_STRING (resource_name_start_p, resource_name_size);
   }
 #endif /* JERRY_DEBUGGER && JERRY_PARSER */
 
@@ -508,12 +512,16 @@ jerry_parse_function (const jerry_char_t *arg_list_p, /**< script source */
   if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       && options_p != NULL
       && (options_p->options & JERRY_PARSE_HAS_RESOURCE)
-      && options_p->resource_name_length > 0)
+      && ecma_is_value_string (options_p->resource_name))
   {
+    ECMA_STRING_TO_UTF8_STRING (ecma_get_string_from_value (options_p->resource_name),
+                                resource_name_start_p,
+                                resource_name_size);
     jerry_debugger_send_string (JERRY_DEBUGGER_SOURCE_CODE_NAME,
                                 JERRY_DEBUGGER_NO_SUBTYPE,
-                                options_p->resource_name_p,
-                                options_p->resource_name_length);
+                                resource_name_start_p,
+                                resource_name_size);
+    ECMA_FINALIZE_UTF8_STRING (resource_name_start_p, resource_name_size);
   }
 #endif /* JERRY_DEBUGGER && JERRY_PARSER */
 

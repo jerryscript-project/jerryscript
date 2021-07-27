@@ -477,12 +477,13 @@ main_wait_for_source_callback (const jerry_char_t *resource_name_p, /**< resourc
 
   jerry_parse_options_t parse_options;
   parse_options.options = JERRY_PARSE_HAS_RESOURCE;
-  parse_options.resource_name_p = resource_name_p;
-  parse_options.resource_name_length = resource_name_size;
+  parse_options.resource_name = jerry_create_string_sz (resource_name_p, (jerry_size_t) resource_name_size);
 
   jerry_value_t ret_val = jerry_parse (source_p,
                                        source_size,
                                        &parse_options);
+
+  jerry_release_value (parse_options.resource_name);
 
   if (!jerry_value_is_error (ret_val))
   {

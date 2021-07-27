@@ -166,7 +166,7 @@ typedef enum
   JERRY_PARSE_NO_OPTS = 0, /**< no options passed */
   JERRY_PARSE_STRICT_MODE = (1 << 0), /**< enable strict mode */
   JERRY_PARSE_MODULE = (1 << 1), /**< parse source as an ECMAScript module */
-  JERRY_PARSE_HAS_RESOURCE = (1 << 2), /**< resource_name_p and resource_name_length fields are valid */
+  JERRY_PARSE_HAS_RESOURCE = (1 << 2), /**< resource_name field is valid */
   JERRY_PARSE_HAS_START = (1 << 3), /**< start_line and start_column fields are valid */
   JERRY_PARSE_HAS_USER_VALUE = (1 << 4), /**< user_value field is valid */
 } jerry_parse_option_enable_feature_t;
@@ -177,10 +177,9 @@ typedef enum
 typedef struct
 {
   uint32_t options; /**< combination of jerry_parse_option_enable_feature_t values */
-  const jerry_char_t *resource_name_p; /**< resource name (usually a file name)
-                                        *   if JERRY_PARSE_HAS_RESOURCE is set in options */
-  size_t resource_name_length; /**< length of resource name
-                                *   if JERRY_PARSE_HAS_RESOURCE is set in options */
+  jerry_value_t resource_name; /**< resource name string (usually a file name)
+                                *   if JERRY_PARSE_HAS_RESOURCE is set in options
+                                *   Note: non-string values are ignored */
   uint32_t start_line; /**< start line of the source code if JERRY_PARSE_HAS_START is set in options */
   uint32_t start_column; /**< start column of the source code if JERRY_PARSE_HAS_START is set in options */
   jerry_value_t user_value; /**< user value assigned to all functions created by this script including eval

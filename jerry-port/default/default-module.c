@@ -373,12 +373,12 @@ jerry_port_module_resolve (const jerry_value_t specifier, /**< module specifier 
 
   jerry_parse_options_t parse_options;
   parse_options.options = JERRY_PARSE_MODULE | JERRY_PARSE_HAS_RESOURCE;
-  parse_options.resource_name_p = (jerry_char_t *) in_path_p;
-  parse_options.resource_name_length = (size_t) in_path_length;
+  parse_options.resource_name = jerry_create_string_sz ((const jerry_char_t *) in_path_p, in_path_length);
 
   jerry_value_t ret_value = jerry_parse (source_p,
                                          source_size,
                                          &parse_options);
+  jerry_release_value (parse_options.resource_name);
 
   jerry_port_release_source (source_p);
   free (in_path_p);

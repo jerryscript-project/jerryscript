@@ -91,6 +91,7 @@ typedef enum
   JERRY_FEATURE_SNAPSHOT_EXEC, /**< executing snapshot files */
   JERRY_FEATURE_DEBUGGER, /**< debugging */
   JERRY_FEATURE_VM_EXEC_STOP, /**< stopping ECMAScript execution */
+  JERRY_FEATURE_VM_THROW, /**< capturing ECMAScript throws */
   JERRY_FEATURE_JSON, /**< JSON support */
   JERRY_FEATURE_PROMISE, /**< promise support */
   JERRY_FEATURE_TYPEDARRAY, /**< Typedarray support */
@@ -305,6 +306,15 @@ typedef void (*jerry_error_object_created_callback_t) (const jerry_value_t error
  *       must return with the same value for future calls.
  */
 typedef jerry_value_t (*jerry_vm_exec_stop_callback_t) (void *user_p);
+
+/**
+ * Callback function which is called when an error is thrown in an ECMAScript code.
+ * The callback should not change the error_value. The callback is not called again
+ * until the value is caught.
+ *
+ * Note: the engine considers errors thrown by external functions as never caught.
+ */
+typedef void (*jerry_vm_throw_callback_t) (const jerry_value_t error_value, void *user_p);
 
 /**
  * Function type applied for each data property of an object.

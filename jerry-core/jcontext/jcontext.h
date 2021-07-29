@@ -200,6 +200,11 @@ struct jerry_context_t
                                                  *   ECMAScript execution should be stopped */
 #endif /* JERRY_VM_EXEC_STOP */
 
+#if JERRY_VM_THROW
+  void *vm_throw_callback_user_p; /**< user pointer for vm_throw_callback_p */
+  jerry_vm_throw_callback_t vm_throw_callback_p; /**< callback for capturing throws */
+#endif /* JERRY_VM_THROW */
+
 #if (JERRY_STACK_LIMIT != 0)
   uintptr_t stack_base;  /**< stack base marker */
 #endif /* (JERRY_STACK_LIMIT != 0) */

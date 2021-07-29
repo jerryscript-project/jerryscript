@@ -430,12 +430,23 @@
  * Enable/Disable the vm execution stop callback function.
  *
  * Allowed values:
- *  0: Disable vm exec stop callbacks.
- *  1: Enable vm exec stop callback functionality.
+ *  0: Disable vm exec stop callback support.
+ *  1: Enable vm exec stop callback support.
  */
 #ifndef JERRY_VM_EXEC_STOP
 # define JERRY_VM_EXEC_STOP 0
 #endif /* !defined (JERRY_VM_EXEC_STOP) */
+
+/**
+ * Enable/Disable the vm throw callback function.
+ *
+ * Allowed values:
+ *  0: Disable vm throw callback support.
+ *  1: Enable vm throw callback support.
+ */
+#ifndef JERRY_VM_THROW
+# define JERRY_VM_THROW 0
+#endif /* !defined (JERRY_VM_THROW) */
 
 /**
  * Advanced section configurations.
@@ -679,6 +690,10 @@
 #if !defined (JERRY_VM_EXEC_STOP) \
 || ((JERRY_VM_EXEC_STOP != 0) && (JERRY_VM_EXEC_STOP != 1))
 # error "Invalid value for 'JERRY_VM_EXEC_STOP' macro."
+#endif
+#if !defined (JERRY_VM_THROW) \
+|| ((JERRY_VM_THROW != 0) && (JERRY_VM_THROW != 1))
+# error "Invalid value for 'JERRY_VM_THROW' macro."
 #endif
 
 /**

@@ -37,7 +37,8 @@ set(JERRY_SNAPSHOT_EXEC             OFF          CACHE BOOL   "Enable executing 
 set(JERRY_SNAPSHOT_SAVE             OFF          CACHE BOOL   "Enable saving snapshot files?")
 set(JERRY_SYSTEM_ALLOCATOR          OFF          CACHE BOOL   "Enable system allocator?")
 set(JERRY_VALGRIND                  OFF          CACHE BOOL   "Enable Valgrind support?")
-set(JERRY_VM_EXEC_STOP              OFF          CACHE BOOL   "Enable VM execution stopping?")
+set(JERRY_VM_EXEC_STOP              OFF          CACHE BOOL   "Enable VM execution stop callback?")
+set(JERRY_VM_THROW                  OFF          CACHE BOOL   "Enable VM throw callback?")
 set(JERRY_GLOBAL_HEAP_SIZE          "(512)"      CACHE STRING "Size of memory heap, in kilobytes")
 set(JERRY_GC_LIMIT                  "(0)"        CACHE STRING "Heap usage limit to trigger garbage collection")
 set(JERRY_STACK_LIMIT               "(0)"        CACHE STRING "Maximum stack usage size, in kilobytes")
@@ -96,6 +97,7 @@ message(STATUS "JERRY_SNAPSHOT_SAVE            " ${JERRY_SNAPSHOT_SAVE} ${JERRY_
 message(STATUS "JERRY_SYSTEM_ALLOCATOR         " ${JERRY_SYSTEM_ALLOCATOR})
 message(STATUS "JERRY_VALGRIND                 " ${JERRY_VALGRIND})
 message(STATUS "JERRY_VM_EXEC_STOP             " ${JERRY_VM_EXEC_STOP})
+message(STATUS "JERRY_VM_THROW                 " ${JERRY_VM_THROW})
 message(STATUS "JERRY_GLOBAL_HEAP_SIZE         " ${JERRY_GLOBAL_HEAP_SIZE})
 message(STATUS "JERRY_GC_LIMIT                 " ${JERRY_GC_LIMIT})
 message(STATUS "JERRY_STACK_LIMIT              " ${JERRY_STACK_LIMIT})
@@ -627,8 +629,11 @@ if(JERRY_VALGRIND)
   set(INCLUDE_CORE_PRIVATE ${INCLUDE_CORE_PRIVATE} ${INCLUDE_THIRD_PARTY_VALGRIND})
 endif()
 
-# Enable VM execution stopping
+# Enable VM execution stop callback
 jerry_add_define01(JERRY_VM_EXEC_STOP)
+
+# Enable VM throw callback
+jerry_add_define01(JERRY_VM_THROW)
 
 # Size of heap
 set(DEFINES_JERRY ${DEFINES_JERRY} JERRY_GLOBAL_HEAP_SIZE=${JERRY_GLOBAL_HEAP_SIZE})

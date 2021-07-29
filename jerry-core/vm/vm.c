@@ -4457,6 +4457,9 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           if (context_type == VM_CONTEXT_FINALLY_THROW)
           {
             jcontext_raise_exception (*stack_top_p);
+#if JERRY_VM_THROW
+            JERRY_CONTEXT (status_flags) |= ECMA_STATUS_ERROR_THROWN;
+#endif /* JERRY_VM_THROW */
             result = ECMA_VALUE_ERROR;
 
 #if JERRY_DEBUGGER
@@ -4788,6 +4791,20 @@ error:
 #endif /* JERRY_ESNEXT */
         ecma_fast_free_value (stack_item);
       }
+
+#if JERRY_VM_THROW
+      if (!(JERRY_CONTEXT (status_flags) & ECMA_STATUS_ERROR_THROWN))
+      {
+        JERRY_CONTEXT (status_flags) |= ECMA_STATUS_ERROR_THROWN;
+
+        jerry_vm_throw_callback_t vm_throw_callback_p = JERRY_CONTEXT (vm_throw_callback_p);
+
+        if (vm_throw_callback_p != NULL)
+        {
+          vm_throw_callback_p (JERRY_CONTEXT (error_value), JERRY_CONTEXT (vm_throw_callback_user_p));
+        }
+      }
+#endif /* JERRY_VM_THROW */
 
 #if JERRY_DEBUGGER
       const uint32_t dont_stop = (JERRY_DEBUGGER_VM_IGNORE_EXCEPTION

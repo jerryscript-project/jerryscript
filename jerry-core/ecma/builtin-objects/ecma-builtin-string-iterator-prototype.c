@@ -65,7 +65,7 @@ enum
 static ecma_value_t
 ecma_builtin_string_iterator_prototype_object_next (ecma_value_t this_val) /**< this argument */
 {
-    /* 1 - 2. */
+  /* 1 - 2. */
   if (!ecma_is_value_object (this_val))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an object"));
@@ -97,7 +97,13 @@ ecma_builtin_string_iterator_prototype_object_next (ecma_value_t this_val) /**< 
 
   if (JERRY_UNLIKELY (position == ECMA_ITERATOR_INDEX_LIMIT))
   {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("String iteration cannot be continued"));
+    /* After the ECMA_ITERATOR_INDEX_LIMIT limit is reached the [[%Iterator%NextIndex]]
+       property is stored as an internal property */
+    ecma_string_t *prop_name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ITERATOR_NEXT_INDEX);
+    ecma_value_t position_value = ecma_op_object_get (obj_p, prop_name_p);
+
+    position = (lit_utf8_size_t) (ecma_get_number_from_value (position_value));
+    ecma_free_value (position_value);
   }
 
   /* 7. */
@@ -142,7 +148,22 @@ ecma_builtin_string_iterator_prototype_object_next (ecma_value_t this_val) /**< 
   }
 
   /* 13. */
-  ext_obj_p->u.cls.u2.iterator_index = (uint16_t) (position + result_size);
+  if (position + result_size < ECMA_ITERATOR_INDEX_LIMIT)
+  {
+    ext_obj_p->u.cls.u2.iterator_index = (uint16_t) (position + result_size);
+  }
+  else
+  {
+    ext_obj_p->u.cls.u2.iterator_index = ECMA_ITERATOR_INDEX_LIMIT;
+
+    ecma_string_t *prop_name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ITERATOR_NEXT_INDEX);
+    ecma_value_t put_result = ecma_op_object_put (obj_p,
+                                                  prop_name_p,
+                                                  ecma_make_length_value (position + result_size),
+                                                  true);
+
+    JERRY_ASSERT (ecma_is_value_true (put_result));
+  }
 
   /* 14. */
   ecma_value_t result = ecma_create_iter_result_object (ecma_make_string_value (result_str_p), ECMA_VALUE_FALSE);

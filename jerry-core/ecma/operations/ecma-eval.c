@@ -41,28 +41,18 @@
  * @return ecma value
  */
 ecma_value_t
-ecma_op_eval (ecma_string_t *code_p, /**< code string */
+ecma_op_eval (ecma_value_t source_code, /**< source code */
               uint32_t parse_opts) /**< ecma_parse_opts_t option bits */
 {
-  ecma_value_t ret_value;
+  JERRY_ASSERT (ecma_is_value_string (source_code));
 
-  lit_utf8_size_t chars_num = ecma_string_get_size (code_p);
-  if (chars_num == 0)
+  if (ecma_is_value_magic_string (source_code, LIT_MAGIC_STRING__EMPTY))
   {
-    ret_value = ECMA_VALUE_UNDEFINED;
-  }
-  else
-  {
-    ECMA_STRING_TO_UTF8_STRING (code_p, code_utf8_buffer_p, code_utf8_buffer_size);
-
-    ret_value = ecma_op_eval_chars_buffer (code_utf8_buffer_p,
-                                           chars_num,
-                                           parse_opts);
-
-    ECMA_FINALIZE_UTF8_STRING (code_utf8_buffer_p, code_utf8_buffer_size);
+    return ECMA_VALUE_UNDEFINED;
   }
 
-  return ret_value;
+  return ecma_op_eval_chars_buffer ((void *) &source_code,
+                                    parse_opts | ECMA_PARSE_HAS_SOURCE_VALUE);
 } /* ecma_op_eval */
 
 /**
@@ -75,12 +65,11 @@ ecma_op_eval (ecma_string_t *code_p, /**< code string */
  * @return ecma value
  */
 ecma_value_t
-ecma_op_eval_chars_buffer (const lit_utf8_byte_t *code_p, /**< code characters buffer */
-                           size_t code_buffer_size, /**< size of the buffer */
+ecma_op_eval_chars_buffer (void *source_p, /**< source code */
                            uint32_t parse_opts) /**< ecma_parse_opts_t option bits */
 {
 #if JERRY_PARSER
-  JERRY_ASSERT (code_p != NULL);
+  JERRY_ASSERT (source_p != NULL);
 
   uint32_t is_strict_call = ECMA_PARSE_STRICT_MODE | ECMA_PARSE_DIRECT_EVAL;
 
@@ -95,12 +84,7 @@ ecma_op_eval_chars_buffer (const lit_utf8_byte_t *code_p, /**< code characters b
   ECMA_CLEAR_LOCAL_PARSE_OPTS ();
 #endif /* JERRY_ESNEXT */
 
-  ecma_compiled_code_t *bytecode_p = parser_parse_script (NULL,
-                                                          0,
-                                                          code_p,
-                                                          code_buffer_size,
-                                                          parse_opts,
-                                                          NULL);
+  ecma_compiled_code_t *bytecode_p = parser_parse_script (source_p, parse_opts, NULL);
 
   if (JERRY_UNLIKELY (bytecode_p == NULL))
   {

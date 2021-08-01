@@ -374,32 +374,36 @@ process_generate (cli_state_t *cli_state_p, /**< cli state */
     }
   }
 
-  jerry_value_t snapshot_result;
-
   jerry_parse_options_t parse_options;
   parse_options.options = JERRY_PARSE_HAS_RESOURCE;
+  /* To avoid cppcheck warning. */
+  parse_options.argument_list = 0;
   parse_options.resource_name = jerry_create_string_sz ((const jerry_char_t *) file_name_p,
                                                         (jerry_size_t) strlen (file_name_p));
 
   if (function_args_p != NULL)
   {
-    snapshot_result = jerry_generate_function_snapshot ((jerry_char_t *) source_p,
-                                                        source_length,
-                                                        (const jerry_char_t *) function_args_p,
-                                                        strlen (function_args_p),
-                                                        &parse_options,
-                                                        snapshot_flags,
-                                                        output_buffer,
-                                                        sizeof (output_buffer) / sizeof (uint32_t));
+    parse_options.options |= JERRY_PARSE_HAS_ARGUMENT_LIST;
+    parse_options.argument_list = jerry_create_string_from_utf8 ((const jerry_char_t *) function_args_p);
   }
-  else
-  {
-    snapshot_result = jerry_generate_snapshot ((jerry_char_t *) source_p,
+
+  jerry_value_t snapshot_result = jerry_parse ((jerry_char_t *) source_p,
                                                source_length,
-                                               &parse_options,
+                                               &parse_options);
+
+  if (!jerry_value_is_error (snapshot_result))
+  {
+    jerry_value_t parse_result = snapshot_result;
+    snapshot_result = jerry_generate_snapshot (parse_result,
                                                snapshot_flags,
                                                output_buffer,
                                                sizeof (output_buffer) / sizeof (uint32_t));
+    jerry_release_value (parse_result);
+  }
+
+  if (parse_options.options & JERRY_PARSE_HAS_ARGUMENT_LIST)
+  {
+    jerry_release_value (parse_options.argument_list);
   }
 
   jerry_release_value (parse_options.resource_name);

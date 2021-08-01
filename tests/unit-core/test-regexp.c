@@ -30,13 +30,14 @@ main (void)
   jerry_value_t regex_obj = jerry_create_regexp (pattern, flags);
   TEST_ASSERT (jerry_value_is_object (regex_obj));
 
-  const jerry_char_t func_arg_list[] = "regex";
   const jerry_char_t func_src[] = "return [regex.exec('something.domain.com'), regex.multiline, regex.global];";
-  jerry_value_t func_val = jerry_parse_function (func_arg_list,
-                                                 sizeof (func_arg_list) - 1,
-                                                 func_src,
-                                                 sizeof (func_src) - 1,
-                                                 NULL);
+
+  jerry_parse_options_t parse_options;
+  parse_options.options = JERRY_PARSE_HAS_ARGUMENT_LIST;
+  parse_options.argument_list = jerry_create_string ((const jerry_char_t *) "regex");
+
+  jerry_value_t func_val = jerry_parse (func_src, sizeof (func_src) - 1, &parse_options);
+  jerry_release_value (parse_options.argument_list);
 
   jerry_value_t res = jerry_call_function (func_val, global_obj_val, &regex_obj, 1);
   jerry_value_t regex_res = jerry_get_property_by_index (res, 0);

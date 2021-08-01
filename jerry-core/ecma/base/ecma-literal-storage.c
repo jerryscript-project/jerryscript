@@ -714,7 +714,7 @@ ecma_snapshot_get_literal (const uint8_t *literal_base_p, /**< literal start */
  * @return pointer to the beginning of the serializable ecma-values
  */
 ecma_value_t *
-ecma_snapshot_resolve_serializable_values (ecma_compiled_code_t *compiled_code_p, /**< compiled code */
+ecma_snapshot_resolve_serializable_values (const ecma_compiled_code_t *compiled_code_p, /**< compiled code */
                                            uint8_t *bytecode_end_p) /**< end of the bytecode */
 {
   ecma_value_t *base_p = (ecma_value_t *) bytecode_end_p;

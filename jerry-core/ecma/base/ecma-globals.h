@@ -115,12 +115,20 @@ typedef enum
   ECMA_PARSE_ALLOW_NEW_TARGET = (1u << 8), /**< allow new.target access */
   ECMA_PARSE_FUNCTION_CONTEXT = (1u << 9), /**< function context is present (ECMA_PARSE_DIRECT_EVAL must be set) */
 
-  ECMA_PARSE_GENERATOR_FUNCTION = (1u << 10), /**< generator function is parsed */
-  ECMA_PARSE_ASYNC_FUNCTION = (1u << 11), /**< async function is parsed */
+  ECMA_PARSE_HAS_SOURCE_VALUE = (1u << 10), /**< source_p points to a value list
+                                             *   and the first value is the source code */
+  ECMA_PARSE_HAS_ARGUMENT_LIST_VALUE = (1u << 11), /**< source_p points to a value list
+                                                    *   and the second value is the argument list */
+#if JERRY_ESNEXT
+  ECMA_PARSE_GENERATOR_FUNCTION = (1u << 12), /**< generator function is parsed */
+  ECMA_PARSE_ASYNC_FUNCTION = (1u << 13), /**< async function is parsed */
+#endif /* JERRY_ESNEXT */
 
   /* These flags are internally used by the parser. */
+  ECMA_PARSE_INTERNAL_FREE_SOURCE = (1u << 14), /**< free source_p data */
+  ECMA_PARSE_INTERNAL_FREE_ARG_LIST = (1u << 15), /**< free arg_list_p data */
 #if JERRY_ESNEXT
-  ECMA_PARSE_INTERNAL_PRE_SCANNING = (1u << 12),
+  ECMA_PARSE_INTERNAL_PRE_SCANNING = (1u << 16), /**< the parser is in pre-scanning mode */
 #endif /* JERRY_ESNEXT */
 #ifndef JERRY_NDEBUG
   /**

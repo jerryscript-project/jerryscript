@@ -62,15 +62,16 @@ test_parse_function (const char *source_p, /**< source code */
                      jerry_parse_options_t *options_p, /**< options passed to jerry_parse */
                      bool run_code) /**< run the code after parsing */
 {
+  options_p->options |= JERRY_PARSE_HAS_ARGUMENT_LIST;
+  options_p->argument_list = jerry_create_string ((const jerry_char_t *) "");
+
   for (size_t i = 0; i < USER_VALUES_SIZE; i++)
   {
     options_p->user_value = user_values[i];
 
-    jerry_value_t result = jerry_parse_function ((const jerry_char_t *) "",
-                                                 0,
-                                                 (const jerry_char_t *) source_p,
-                                                 strlen (source_p),
-                                                 options_p);
+    jerry_value_t result = jerry_parse ((const jerry_char_t *) source_p,
+                                        strlen (source_p),
+                                        options_p);
     TEST_ASSERT (!jerry_value_is_error (result));
 
     if (run_code)
@@ -94,6 +95,8 @@ test_parse_function (const char *source_p, /**< source code */
     jerry_release_value (user_value);
     jerry_release_value (result);
   }
+
+  jerry_release_value (options_p->argument_list);
 } /* test_parse_function */
 
 int

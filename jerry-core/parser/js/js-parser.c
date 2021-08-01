@@ -1761,10 +1761,7 @@ JERRY_STATIC_ASSERT (PARSER_SCANNING_SUCCESSFUL == PARSER_HAS_LATE_LIT_INIT,
  * @return compiled code
  */
 static ecma_compiled_code_t *
-parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
-                     size_t arg_list_size, /**< size of function argument list */
-                     const uint8_t *source_p, /**< valid UTF-8 source code */
-                     size_t source_size, /**< size of the source code */
+parser_parse_source (void *source_p, /**< source code */
                      uint32_t parse_opts, /**< ecma_parse_opts_t option bits */
                      const jerry_parse_options_t *options_p) /**< additional configuration options */
 {
@@ -1775,6 +1772,16 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   context.status_flags = parse_opts & PARSER_STRICT_MODE_MASK;
   context.global_status_flags = parse_opts;
 
+#if JERRY_ESNEXT
+  context.status_flags |= PARSER_RESTORE_STATUS_FLAGS (parse_opts);
+  context.tagged_template_literal_cp = JMEM_CP_NULL;
+#endif /* JERRY_ESNEXT */
+
+  context.stack_depth = 0;
+  context.stack_limit = 0;
+  context.options_p = options_p;
+  context.arguments_start_p = NULL;
+  context.arguments_size = 0;
 #if JERRY_MODULE_SYSTEM
   if (context.global_status_flags & ECMA_PARSE_MODULE)
   {
@@ -1784,8 +1791,23 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   context.module_names_p = NULL;
 #endif /* JERRY_MODULE_SYSTEM */
 
-  if (arg_list_p != NULL)
+  ecma_value_t argument_list = ECMA_VALUE_EMPTY;
+
+  if (context.options_p != NULL
+      && (context.options_p->options & JERRY_PARSE_HAS_ARGUMENT_LIST))
   {
+    argument_list = context.options_p->argument_list;
+  }
+  else if (context.global_status_flags & ECMA_PARSE_HAS_ARGUMENT_LIST_VALUE)
+  {
+    JERRY_ASSERT (context.global_status_flags & ECMA_PARSE_HAS_SOURCE_VALUE);
+    argument_list = ((ecma_value_t *) source_p)[1];
+  }
+
+  if (argument_list != ECMA_VALUE_EMPTY)
+  {
+    JERRY_ASSERT (ecma_is_value_string (argument_list));
+
     context.status_flags |= PARSER_IS_FUNCTION;
 #if JERRY_ESNEXT
     if (parse_opts & ECMA_PARSE_GENERATOR_FUNCTION)
@@ -1797,20 +1819,49 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
       context.status_flags |= PARSER_IS_ASYNC_FUNCTION;
     }
 #endif /* JERRY_ESNEXT */
+
+    ecma_string_t *string_p = ecma_get_string_from_value (argument_list);
+    uint8_t flags = ECMA_STRING_FLAG_EMPTY;
+
+    context.arguments_start_p = ecma_string_get_chars (string_p, &context.arguments_size, NULL, NULL, &flags);
+
+    if (flags & ECMA_STRING_FLAG_MUST_BE_FREED)
+    {
+      context.global_status_flags |= ECMA_PARSE_INTERNAL_FREE_ARG_LIST;
+    }
   }
 
-#if JERRY_ESNEXT
-  context.status_flags |= PARSER_RESTORE_STATUS_FLAGS (parse_opts);
-  context.tagged_template_literal_cp = JMEM_CP_NULL;
-#endif /* JERRY_ESNEXT */
+  if (!(context.global_status_flags & ECMA_PARSE_HAS_SOURCE_VALUE))
+  {
+    context.source_start_p = ((parser_source_char_t *) source_p)->source_p;
+    context.source_size = (lit_utf8_size_t) ((parser_source_char_t *) source_p)->source_size;
+  }
+  else
+  {
+    ecma_value_t source = ((ecma_value_t *) source_p)[0];
 
-  context.stack_depth = 0;
-  context.stack_limit = 0;
-  context.options_p = options_p;
-  context.last_context_p = NULL;
-  context.last_statement.current_p = NULL;
-  context.token.flags = 0;
-  lexer_init_line_info (&context);
+    JERRY_ASSERT (ecma_is_value_string (source));
+
+    ecma_string_t *string_p = ecma_get_string_from_value (source);
+    uint8_t flags = ECMA_STRING_FLAG_EMPTY;
+
+    context.source_start_p = ecma_string_get_chars (string_p, &context.source_size, NULL, NULL, &flags);
+
+    if (flags & ECMA_STRING_FLAG_MUST_BE_FREED)
+    {
+      context.global_status_flags |= ECMA_PARSE_INTERNAL_FREE_SOURCE;
+    }
+  }
+
+#if JERRY_DEBUGGER
+  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
+  {
+    jerry_debugger_send_string (JERRY_DEBUGGER_SOURCE_CODE,
+                                JERRY_DEBUGGER_NO_SUBTYPE,
+                                context.source_start_p,
+                                context.source_size);
+  }
+#endif /* JERRY_DEBUGGER */
 
   context.user_value = ECMA_VALUE_EMPTY;
 
@@ -1862,9 +1913,10 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   ecma_value_t resource_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
 
   if (context.options_p != NULL
-      && (context.options_p->options & JERRY_PARSE_HAS_RESOURCE)
-      && ecma_is_value_string (context.options_p->resource_name))
+      && (context.options_p->options & JERRY_PARSE_HAS_RESOURCE))
   {
+    JERRY_ASSERT (ecma_is_value_string (context.options_p->resource_name));
+
     ecma_ref_ecma_string (ecma_get_string_from_value (context.options_p->resource_name));
     resource_name = context.options_p->resource_name;
   }
@@ -1877,6 +1929,11 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
 #endif /* JERRY_RESOURCE_NAME */
 
   ECMA_SET_INTERNAL_VALUE_POINTER (context.script_value, context.script_p);
+
+  context.last_context_p = NULL;
+  context.last_statement.current_p = NULL;
+  context.token.flags = 0;
+  lexer_init_line_info (&context);
 
   scanner_info_t scanner_info_end;
   scanner_info_end.next_p = NULL;
@@ -1929,16 +1986,12 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   if (context.is_show_opcodes)
   {
     JERRY_DEBUG_MSG ("\n--- %s parsing start ---\n\n",
-                     (arg_list_p == NULL) ? "Script"
-                                          : "Function");
+                     (context.arguments_start_p == NULL) ? "Script"
+                                                         : "Function");
   }
 #endif /* JERRY_PARSER_DUMP_BYTE_CODE */
 
-  scanner_scan_all (&context,
-                    arg_list_p,
-                    arg_list_p + arg_list_size,
-                    source_p,
-                    source_p + source_size);
+  scanner_scan_all (&context);
 
   if (JERRY_UNLIKELY (context.error != PARSER_ERR_NO_ERROR))
   {
@@ -1950,15 +2003,15 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
     return NULL;
   }
 
-  if (arg_list_p == NULL)
+  if (context.arguments_start_p == NULL)
   {
-    context.source_p = source_p;
-    context.source_end_p = source_p + source_size;
+    context.source_p = context.source_start_p;
+    context.source_end_p = context.source_start_p + context.source_size;
   }
   else
   {
-    context.source_p = arg_list_p;
-    context.source_end_p = arg_list_p + arg_list_size;
+    context.source_p = context.arguments_start_p;
+    context.source_end_p = context.arguments_start_p + context.arguments_size;
   }
 
   context.u.allocated_buffer_p = NULL;
@@ -1989,15 +2042,15 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
      * lexer_next_token() must be immediately called. */
     lexer_next_token (&context);
 
-    if (arg_list_p != NULL)
+    if (context.arguments_start_p != NULL)
     {
       parser_parse_function_arguments (&context, LEXER_EOS);
 
       JERRY_ASSERT (context.next_scanner_info_p->type == SCANNER_TYPE_END_ARGUMENTS);
       scanner_release_next (&context, sizeof (scanner_info_t));
 
-      context.source_p = source_p;
-      context.source_end_p = source_p + source_size;
+      context.source_p = context.source_start_p;
+      context.source_end_p = context.source_start_p + context.source_size;
       lexer_init_line_info (&context);
 
       lexer_next_token (&context);
@@ -2016,7 +2069,7 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
 #endif /* JERRY_MODULE_SYSTEM */
     else
     {
-      JERRY_ASSERT (context.next_scanner_info_p->source_p == source_p
+      JERRY_ASSERT (context.next_scanner_info_p->source_p == context.source_start_p
                     && context.next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
 
 #if JERRY_ESNEXT
@@ -2059,7 +2112,7 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
                   && context.stack.first_p->next_p == NULL
                   && context.stack.last_p == NULL);
 
-    JERRY_ASSERT (arg_list_p != NULL || !(context.status_flags & PARSER_ARGUMENTS_NEEDED));
+    JERRY_ASSERT (context.arguments_start_p != NULL || !(context.status_flags & PARSER_ARGUMENTS_NEEDED));
 
     context.script_p->refs_and_type -= CBC_SCRIPT_REF_ONE;
 
@@ -2072,8 +2125,8 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
     if (context.is_show_opcodes)
     {
       JERRY_DEBUG_MSG ("\n%s parsing successfully completed. Total byte code size: %d bytes\n",
-                       (arg_list_p == NULL) ? "Script"
-                                            : "Function",
+                       (context.arguments_start_p == NULL) ? "Script"
+                                                           : "Function",
                        (int) context.total_byte_code_size);
     }
 #endif /* JERRY_PARSER_DUMP_BYTE_CODE */
@@ -2122,12 +2175,22 @@ parser_parse_source (const uint8_t *arg_list_p, /**< function argument list */
   if (context.is_show_opcodes)
   {
     JERRY_DEBUG_MSG ("\n--- %s parsing end ---\n\n",
-                     (arg_list_p == NULL) ? "Script"
-                                          : "Function");
+                     (context.arguments_start_p == NULL) ? "Script"
+                                                         : "Function");
   }
 #endif /* JERRY_PARSER_DUMP_BYTE_CODE */
 
   parser_stack_free (&context);
+
+  if (context.global_status_flags & ECMA_PARSE_INTERNAL_FREE_SOURCE)
+  {
+    jmem_heap_free_block ((void *) context.source_start_p, context.source_size);
+  }
+
+  if (context.global_status_flags & ECMA_PARSE_INTERNAL_FREE_ARG_LIST)
+  {
+    jmem_heap_free_block ((void *) context.arguments_start_p, context.arguments_size);
+  }
 
   if (compiled_code_p != NULL)
   {
@@ -2930,29 +2993,12 @@ parser_raise_error (parser_context_t *context_p, /**< context */
  *         NULL - otherwise
  */
 ecma_compiled_code_t *
-parser_parse_script (const uint8_t *arg_list_p, /**< function argument list */
-                     size_t arg_list_size, /**< size of function argument list */
-                     const uint8_t *source_p, /**< source code */
-                     size_t source_size, /**< size of the source code */
+parser_parse_script (void *source_p, /**< source code */
                      uint32_t parse_opts, /**< ecma_parse_opts_t option bits */
                      const jerry_parse_options_t *options_p) /**< additional configuration options */
 {
 #if JERRY_PARSER
-
-#if JERRY_DEBUGGER
-  if (JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
-  {
-    jerry_debugger_send_string (JERRY_DEBUGGER_SOURCE_CODE,
-                                JERRY_DEBUGGER_NO_SUBTYPE,
-                                source_p,
-                                source_size);
-  }
-#endif /* JERRY_DEBUGGER */
-
-  ecma_compiled_code_t *bytecode_p = parser_parse_source (arg_list_p,
-                                                          arg_list_size,
-                                                          source_p,
-                                                          source_size,
+  ecma_compiled_code_t *bytecode_p = parser_parse_source (source_p,
                                                           parse_opts,
                                                           options_p);
 

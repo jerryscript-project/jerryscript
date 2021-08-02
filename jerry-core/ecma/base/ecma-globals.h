@@ -698,10 +698,10 @@ typedef enum
 #if JERRY_MODULE_SYSTEM
   ECMA_OBJECT_CLASS_MODULE, /**< Module (ECMAScript v6, 15.2) */
 #endif
-#if JERRY_BUILTIN_PROMISE
+#if JERRY_ESNEXT
   ECMA_OBJECT_CLASS_PROMISE, /**< Promise (ECMAScript v6, 25.4) */
   ECMA_OBJECT_CLASS_PROMISE_CAPABILITY, /**< Promise capability (ECMAScript v6, 25.4.1.1) */
-#endif /* JERRY_BUILTIN_PROMISE */
+#endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_DATAVIEW
   ECMA_OBJECT_CLASS_DATAVIEW, /**< DataView (ECMAScript v6, 24.2) */
 #endif /* JERRY_BUILTIN_DATAVIEW */
@@ -1017,10 +1017,8 @@ typedef struct
 #if JERRY_ESNEXT
         uint8_t iterator_kind; /**< type of iterator */
         uint8_t regexp_string_iterator_flags; /**< flags for RegExp string iterator */
-#endif /* JERRY_ESNEXT */
-#if JERRY_BUILTIN_PROMISE
         uint8_t promise_flags; /**< Promise object flags */
-#endif /* JERRY_BUILTIN_PROMISE */
+#endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_CONTAINER
         uint8_t container_flags; /**< container object flags */
 #endif /* JERRY_BUILTIN_CONTAINER */
@@ -1059,15 +1057,13 @@ typedef struct
         ecma_value_t date; /**< Date object [[DateValue]] internal property */
 #endif /* !JERRY_ESNEXT */
         ecma_value_t target; /**< [[ProxyTarget]] or [[WeakRefTarget]] internal property */
-#if JERRY_BUILTIN_PROMISE
-        ecma_value_t promise; /**< PromiseCapability[[Promise]] internal slot */
-#endif /* JERRY_BUILTIN_PROMISE */
 #if JERRY_BUILTIN_TYPEDARRAY
         ecma_value_t arraybuffer; /**< for typedarray: ArrayBuffer reference */
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
 #if JERRY_ESNEXT
         ecma_value_t head; /**< points to the async generator task queue head item */
         ecma_value_t iterated_value; /**< for %Iterator%: [[IteratedObject]] property */
+        ecma_value_t promise; /**< PromiseCapability[[Promise]] internal slot */
         ecma_value_t spread_value; /**< for spread object: spreaded element */
         int32_t tza; /**< TimeZone adjustment for date objects */
 #endif /* JERRY_ESNEXT */

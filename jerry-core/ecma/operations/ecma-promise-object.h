@@ -16,7 +16,7 @@
 #ifndef ECMA_PROMISE_OBJECT_H
 #define ECMA_PROMISE_OBJECT_H
 
-#if JERRY_BUILTIN_PROMISE
+#if JERRY_ESNEXT
 #include "ecma-globals.h"
 
 /** \addtogroup ecma ECMA
@@ -137,5 +137,5 @@ uint32_t ecma_promise_remaining_inc_or_dec (ecma_value_t remaining, bool is_inc)
  * @}
  */
 
-#endif /* JERRY_BUILTIN_PROMISE */
+#endif /* JERRY_ESNEXT */
 #endif /* !ECMA_PROMISE_OBJECT_H */

@@ -46,14 +46,11 @@ const char * const ecma_error_json_not_supported_p = "JSON support is disabled";
  * Error message, if Symbol support is disabled
  */
 const char * const ecma_error_symbol_not_supported_p = "Symbol support is disabled";
-#endif /* !JERRY_ESNEXT  */
-
-#if !JERRY_BUILTIN_PROMISE
 /**
  * Error message, if Promise support is disabled
  */
 const char * const ecma_error_promise_not_supported_p = "Promise support is disabled";
-#endif /* !JERRY_BUILTIN_PROMISE  */
+#endif /* !JERRY_ESNEXT  */
 
 #if !JERRY_BUILTIN_TYPEDARRAY
 /**

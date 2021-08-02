@@ -28,7 +28,7 @@
 #include "jrt.h"
 #include "jcontext.h"
 
-#if JERRY_BUILTIN_PROMISE
+#if JERRY_ESNEXT
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -109,4 +109,4 @@ ecma_builtin_aggregate_error_dispatch_construct (const ecma_value_t *arguments_l
  * @}
  */
 
-#endif /* JERRY_BUILTIN_PROMISE */
+#endif /* JERRY_ESNEXT */

@@ -40,9 +40,9 @@
 #if JERRY_BUILTIN_TYPEDARRAY
 #include "ecma-typedarray-object.h"
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
-#if JERRY_BUILTIN_PROMISE
+#if JERRY_ESNEXT
 #include "ecma-promise-object.h"
-#endif /* JERRY_BUILTIN_PROMISE */
+#endif /* JERRY_ESNEXT */
 
 /* TODO: Extract GC to a separate component */
 
@@ -483,7 +483,7 @@ ecma_gc_mark_bound_function_object (ecma_object_t *object_p) /**< bound function
   }
 } /* ecma_gc_mark_bound_function_object */
 
-#if JERRY_BUILTIN_PROMISE
+#if JERRY_ESNEXT
 /**
  * Mark objects referenced by Promise built-in.
  */
@@ -527,7 +527,7 @@ ecma_gc_mark_promise_object (ecma_extended_object_t *ext_object_p) /**< extended
   }
 } /* ecma_gc_mark_promise_object */
 
-#endif /* JERRY_BUILTIN_PROMISE */
+#endif /* JERRY_ESNEXT */
 
 #if JERRY_BUILTIN_CONTAINER
 /**
@@ -957,13 +957,6 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             break;
           }
 #endif /* JERRY_MODULE_SYSTEM */
-#if JERRY_BUILTIN_PROMISE
-          case ECMA_OBJECT_CLASS_PROMISE:
-          {
-            ecma_gc_mark_promise_object (ext_object_p);
-            break;
-          }
-#endif /* JERRY_BUILTIN_PROMISE */
 #if JERRY_BUILTIN_DATAVIEW
           case ECMA_OBJECT_CLASS_DATAVIEW:
           {
@@ -999,6 +992,11 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
           case ECMA_OBJECT_CLASS_ASYNC_GENERATOR:
           {
             ecma_gc_mark_executable_object (object_p);
+            break;
+          }
+          case ECMA_OBJECT_CLASS_PROMISE:
+          {
+            ecma_gc_mark_promise_object (ext_object_p);
             break;
           }
           case ECMA_OBJECT_CLASS_PROMISE_CAPABILITY:
@@ -1923,18 +1921,6 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           break;
         }
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
-#if JERRY_BUILTIN_PROMISE
-        case ECMA_OBJECT_CLASS_PROMISE:
-        {
-          ecma_free_value_if_not_object (ext_object_p->u.cls.u3.value);
-
-          /* Reactions only contains objects. */
-          ecma_collection_destroy (((ecma_promise_object_t *) object_p)->reactions);
-
-          ext_object_size = sizeof (ecma_promise_object_t);
-          break;
-        }
-#endif /* JERRY_BUILTIN_PROMISE */
 #if JERRY_BUILTIN_WEAKREF
         case ECMA_OBJECT_CLASS_WEAKREF:
         {
@@ -1970,6 +1956,16 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
         case ECMA_OBJECT_CLASS_ASYNC_GENERATOR:
         {
           ext_object_size = ecma_gc_free_executable_object (object_p);
+          break;
+        }
+        case ECMA_OBJECT_CLASS_PROMISE:
+        {
+          ecma_free_value_if_not_object (ext_object_p->u.cls.u3.value);
+
+          /* Reactions only contains objects. */
+          ecma_collection_destroy (((ecma_promise_object_t *) object_p)->reactions);
+
+          ext_object_size = sizeof (ecma_promise_object_t);
           break;
         }
         case ECMA_OBJECT_CLASS_PROMISE_CAPABILITY:

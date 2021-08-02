@@ -84,13 +84,13 @@ ecma_new_standard_error (jerry_error_t error_type, /**< native error type */
       break;
     }
 
-#if JERRY_BUILTIN_PROMISE
+#if JERRY_ESNEXT
     case JERRY_ERROR_AGGREGATE:
     {
       prototype_id = ECMA_BUILTIN_ID_AGGREGATE_ERROR_PROTOTYPE;
       break;
     }
-#endif /* JERRY_BUILTIN_PROMISE */
+#endif /* JERRY_ESNEXT */
     case JERRY_ERROR_URI:
     {
       prototype_id = ECMA_BUILTIN_ID_URI_ERROR_PROTOTYPE;
@@ -169,7 +169,7 @@ ecma_new_standard_error (jerry_error_t error_type, /**< native error type */
   return error_object_p;
 } /* ecma_new_standard_error */
 
-#if JERRY_BUILTIN_PROMISE
+#if JERRY_ESNEXT
 /**
  * aggregate-error object constructor.
  *
@@ -273,7 +273,7 @@ ecma_new_aggregate_error (ecma_value_t error_list_val, /**< errors list */
   return ecma_make_object_value (new_error_object_p);
 } /* ecma_new_aggregate_error */
 
-#endif /* JERRY_BUILTIN_PROMISE */
+#endif /* JERRY_ESNEXT */
 
 /**
  * Return the error type for an Error object.
@@ -490,7 +490,7 @@ ecma_raise_uri_error (const char *msg_p) /**< error message */
   return ecma_raise_standard_error (JERRY_ERROR_URI, (const lit_utf8_byte_t *) msg_p);
 } /* ecma_raise_uri_error */
 
-#if JERRY_BUILTIN_PROMISE
+#if JERRY_ESNEXT
 
 /**
  * Raise a AggregateError with the given errors and message.
@@ -508,7 +508,7 @@ ecma_raise_aggregate_error (ecma_value_t error_list_val, /**< errors list */
   return ECMA_VALUE_ERROR;
 } /* ecma_raise_aggregate_error */
 
-#endif /* JERRY_BUILTIN_PROMISE */
+#endif /* JERRY_ESNEXT */
 
 /**
  * @}

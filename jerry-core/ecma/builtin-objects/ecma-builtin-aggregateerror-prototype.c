@@ -24,7 +24,7 @@
 #include "ecma-string-object.h"
 #include "jrt.h"
 
-#if JERRY_BUILTIN_PROMISE
+#if JERRY_ESNEXT
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -33,4 +33,4 @@
 #define BUILTIN_UNDERSCORED_ID aggregate_error_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
 
-#endif /* JERRY_BUILTIN_PROMISE */
+#endif /* JERRY_ESNEXT */

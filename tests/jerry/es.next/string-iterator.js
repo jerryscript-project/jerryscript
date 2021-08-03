@@ -75,3 +75,15 @@ assert(next.value === undefined);
 
 assert(iterator.toString() === '[object String Iterator]');
 assert(iterator[Symbol.toStringTag] === 'String Iterator');
+
+iterator = (' '.repeat(80000))[Symbol.iterator]();
+next = iterator.next();
+idx = 0;
+
+while (!next.done) {
+  assert(next.value === ' ');
+  assert(next.done === false);
+  next = iterator.next();
+  idx++;
+}
+assert(idx == 80000);

@@ -178,16 +178,17 @@ struct jerry_context_t *jerry_port_get_current_context (void);
 void jerry_port_sleep (uint32_t sleep_time);
 
 /**
- * Print a single character.
+ * Print a zero-terminated UTF-8 string with length to standard output.
  *
  * Note:
  *      This port function is here so the jerry-ext components would have
  *      a common way to print out information.
  *      If possible do not use from the jerry-core.
  *
- * @param c the character to print.
+ * @param s The zero-terminated UTF-8 string to print
+ * @param len The length of the UTF-8 string.
  */
-void jerry_port_print_char (char c);
+void jerry_port_string_print (const char *s, size_t len);
 
 /**
  * Open a source file and read its contents into a buffer.

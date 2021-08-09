@@ -149,14 +149,18 @@ jerry_port_get_current_time (void)
 } /* jerry_port_get_current_time */
 
 /**
- * Provide the implementation of jerry_port_print_char.
- * Uses 'printf' to print a single character to standard output.
+ * Provide implementation of jerry_port_string_print.
+ * Uses 'printf' to print a zero-terminated UTF-8 string to standard output.
+ *
+ * @param s The zero-terminated UTF-8 string to print
+ * @param len The length of the UTF-8 string.
  */
 void
-jerry_port_print_char (char c) /**< the character to print */
+jerry_port_string_print (const char *s, size_t len)
 {
-  printf ("%c", c);
-} /* jerry_port_print_char */
+  (void) len;
+  printf ("%s", s);
+} /* jerry_port_string_print */
 
 /**
  * Provide implementation of jerry_port_sleep.

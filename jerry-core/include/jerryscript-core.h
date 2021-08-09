@@ -458,6 +458,10 @@ void jerry_string_iterate (const jerry_value_t value,
                            jerry_encoding_t encoding,
                            jerry_string_iterate_cb_t callback,
                            void *user_p);
+void jerry_string_iterate_code_point (const jerry_value_t value,
+                                      jerry_string_iterate_code_point_cb_t callback,
+                                      void *user_p);
+void jerry_code_point_print (uint32_t code_point);
 void jerry_string_print (const jerry_value_t value);
 /**
  * jerry-api-string-op @}

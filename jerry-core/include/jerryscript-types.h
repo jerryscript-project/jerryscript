@@ -321,6 +321,11 @@ typedef void (*jerry_throw_cb_t) (const jerry_value_t exception_value, void *use
 typedef void (*jerry_string_iterate_cb_t) (uint8_t byte, void *user_p);
 
 /**
+ * Function type applied each unicode code point of a string
+ */
+typedef void (*jerry_string_iterate_code_point_cb_t) (uint32_t code_point, void *user_p);
+
+/**
  * Function type applied for each data property of an object.
  */
 typedef bool (*jerry_object_property_foreach_cb_t) (const jerry_value_t property_name,

@@ -114,24 +114,24 @@ static int debug_buffer_index = 0;
 #endif /* defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1) */
 
 /**
- * Default implementation of jerry_port_print_char. Uses 'putchar' to
- * print a single character to standard output.
+ * Provide implementation of jerry_port_string_print.
+ * Uses 'putchar' to print each utf8 string characters to standard output one by one.
+ *
+ * @param s The zero-terminated UTF-8 string to print
+ * @param len The length of the UTF-8 string.
  */
 void
-jerry_port_print_char (char c) /**< the character to print */
+jerry_port_string_print (const char *s, size_t len)
 {
-  putchar(c);
+  for (size_t i = 0; i < len; ++i)
+  {
+    putchar (s[i]);
+  }
 
 #if defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1)
-  debug_buffer[debug_buffer_index++] = c;
-
-  if ((debug_buffer_index == DEBUG_BUFFER_SIZE) || (c == '\n'))
-  {
-    jerry_debugger_send_output ((jerry_char_t *) debug_buffer, (jerry_size_t) debug_buffer_index);
-    debug_buffer_index = 0;
-  }
+  jerry_debugger_send_output ((const jerry_char_t *) s, (jerry_size_t) len);
 #endif /* defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1) */
-} /* jerry_port_print_char */
+} /* jerry_port_string_print */
 
 /**
  * Default implementation of jerry_port_fatal. Calls 'abort' if exit code is

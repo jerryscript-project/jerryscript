@@ -3080,34 +3080,79 @@ jerry_string_iterate (const jerry_value_t value,
 } /* jerry_string_iterate */
 
 /**
- * Print char wrapper that casts the argument to an unsigned type
+ * Iterate over the input string value, visiting each code point of the string once. If
+ * the input value is not a string, the function will do nothing.
  *
- * @param byte    encoded byte value
- * @param user_p  user pointer
+ * @param value     the input string value
+ * @param callback  callback function called for each code point of the string.
+ * @param user_p    User pointer passed to the callback function
  */
-static void
-jerry_print_char_wrapper (uint8_t byte, void *user_p)
+void
+jerry_string_iterate_code_point (const jerry_value_t value, jerry_string_iterate_code_point_cb_t callback, void *user_p)
 {
-  JERRY_UNUSED (user_p);
-  static const char *const null_str_p = "\\u0000";
-
-  if (JERRY_UNLIKELY (byte == '\0'))
+  if (!ecma_is_value_string (value))
   {
-    const char *curr_p = null_str_p;
-
-    while (*curr_p != '\0')
-    {
-      jerry_port_print_char (*curr_p++);
-    }
-
     return;
   }
 
-  jerry_port_print_char ((char) byte);
-} /* jerry_print_char_wrapper */
+  ecma_string_t *str_p = ecma_get_string_from_value (value);
+  ECMA_STRING_TO_UTF8_STRING (str_p, buffer_p, buffer_size);
+
+  const lit_utf8_byte_t *current_p = buffer_p;
+  const lit_utf8_byte_t *end_p = buffer_p + buffer_size;
+
+  while (current_p < end_p)
+  {
+    if (JERRY_UNLIKELY (*current_p >= LIT_UTF8_2_BYTE_MARKER))
+    {
+      lit_code_point_t cp;
+      lit_utf8_size_t read_size = lit_read_code_point_from_cesu8 (current_p, end_p, &cp);
+      callback (cp, user_p);
+      current_p += read_size;
+      continue;
+    }
+
+    callback (*current_p++, user_p);
+  }
+} /* jerry_string_iterate_code_point */
 
 /**
- * Print the argument string in utf8 encoding using jerry_port_print_char.
+ * Print unicode code point to console
+ *
+ * @param code_point unicode code point
+ */
+void
+jerry_code_point_print (uint32_t code_point)
+{
+  if (JERRY_UNLIKELY (code_point == 0))
+  {
+    static const char null_str_p[] = "\\u0000";
+    jerry_port_string_print (null_str_p, sizeof (null_str_p) - 1);
+  }
+  else
+  {
+    lit_utf8_byte_t bytes[LIT_UTF8_MAX_BYTES_IN_CODE_POINT + 1];
+    lit_utf8_size_t encoded_size = lit_code_point_to_utf8 (code_point, bytes);
+    bytes[encoded_size] = 0;
+    jerry_port_string_print ((const char *) bytes, encoded_size);
+  }
+} /* jerry_code_point_print */
+
+/**
+ * Print code point to console wrapper
+ *
+ * @param code_point unicode code point
+ * @param user_p  user pointer
+ */
+static void
+jerry_print_codepoint_wrapper (uint32_t code_point, void *user_p)
+{
+  JERRY_UNUSED (user_p);
+  jerry_code_point_print (code_point);
+} /* jerry_print_codepoint_wrapper */
+
+/**
+ * Print the argument string in utf8 encoding using jerry_port_string_print.
  * If the argument is not a string, the function does nothing.
  *
  * @param value  the input string value
@@ -3115,7 +3160,7 @@ jerry_print_char_wrapper (uint8_t byte, void *user_p)
 void
 jerry_string_print (const jerry_value_t value)
 {
-  jerry_string_iterate (value, JERRY_ENCODING_UTF8, &jerry_print_char_wrapper, NULL);
+  jerry_string_iterate_code_point (value, &jerry_print_codepoint_wrapper, NULL);
 } /* jerry_string_print */
 
 /**

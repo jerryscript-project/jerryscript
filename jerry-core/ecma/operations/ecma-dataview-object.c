@@ -62,7 +62,7 @@ ecma_op_dataview_create (const ecma_value_t *arguments_list_p, /**< arguments li
   ecma_object_t *buffer_p = ecma_get_object_from_value (buffer);
 
   if (!(ecma_object_class_is (buffer_p, ECMA_OBJECT_CLASS_ARRAY_BUFFER)
-        || ecma_object_class_is (buffer_p, ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER)))
+        || ecma_object_is_shared_arraybuffer (buffer_p)))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'buffer' is not an ArrayBuffer or SharedArrayBuffer"));
   }
@@ -256,7 +256,7 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
 
   ecma_object_t *buffer_p = view_p->buffer_p;
   JERRY_ASSERT (ecma_object_class_is (buffer_p, ECMA_OBJECT_CLASS_ARRAY_BUFFER)
-                || ecma_object_class_is (buffer_p, ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER));
+                || ecma_object_is_shared_arraybuffer (buffer_p));
 
   /* 3. */
   ecma_number_t get_index;

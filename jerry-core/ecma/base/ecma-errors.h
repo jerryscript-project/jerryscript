@@ -41,6 +41,10 @@ extern const char * const ecma_error_promise_not_supported_p;
 extern const char * const ecma_error_typed_array_not_supported_p;
 #endif /* !JERRY_BUILTIN_TYPEDARRAY */
 
+#if !JERRY_BUILTIN_SHAREDARRAYBUFFER
+extern const char * const ecma_error_shared_arraybuffer_not_supported_p;
+#endif /* !JERRY_BUILTIN_SHAREDARRAYBUFFER */
+
 #if !JERRY_BUILTIN_DATAVIEW
 extern const char * const ecma_error_data_view_not_supported_p;
 #endif /* !JERRY_BUILTIN_DATAVIEW */

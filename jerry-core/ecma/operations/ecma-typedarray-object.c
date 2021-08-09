@@ -1648,7 +1648,7 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
                                                            typedarray_id);
     }
     else if (ecma_object_class_is (obj_p, ECMA_OBJECT_CLASS_ARRAY_BUFFER)
-             || ecma_object_class_is (obj_p, ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER))
+             || ecma_object_is_shared_arraybuffer (obj_p))
     {
       /* 22.2.1.5 */
       ecma_object_t *arraybuffer_p = obj_p;

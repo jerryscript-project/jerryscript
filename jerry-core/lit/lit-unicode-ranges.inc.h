@@ -162,9 +162,9 @@ static const uint16_t lit_unicode_id_continue_chars[] JERRY_ATTR_CONST_DATA = {
 static const uint16_t lit_unicode_white_space_interval_starts[] JERRY_ATTR_CONST_DATA = { 0x2000 };
 
 /**
- * Character interval lengths for White_Space.
+ * Character interval ending points for White_Space.
  */
-static const uint8_t lit_unicode_white_space_interval_lengths[] JERRY_ATTR_CONST_DATA = { 0x000a };
+static const uint16_t lit_unicode_white_space_interval_ends[] JERRY_ATTR_CONST_DATA = { 0x2000 + 0x000a };
 
 /**
  * Non-interval characters for White_Space.

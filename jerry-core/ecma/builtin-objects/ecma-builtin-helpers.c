@@ -818,6 +818,60 @@ ecma_builtin_helper_def_prop_by_index (ecma_object_t *obj_p, /**< object */
 } /* ecma_builtin_helper_def_prop_by_index */
 
 /**
+ * Helper function for at() functions.
+ *
+ * See also:
+ *          ECMA-262 Stage 3 Draft Relative Indexing Method proposal 3. 4. 5. 6.
+ *
+ * Used by:
+ *         - The Array.prototype.at routine.
+ *         - The String.prototype.at routine.
+ *         - The TypedArray.prototype.at routine.
+ *
+ * @return ECMA_VALUE_ERROR - on conversion error
+ *         ECMA_VALUE_UNDEFINED - if the requested index is not exist
+ *         ECMA_VALUE_EMPTY - otherwise
+ */
+ecma_value_t
+ecma_builtin_helper_calculate_index (ecma_value_t index, /**< relative index argument */
+                                     ecma_length_t length, /**< object's length */
+                                     ecma_length_t *out_index) /**< calculated index */
+{
+  JERRY_ASSERT (out_index != NULL);
+
+  ecma_number_t relative_index;
+  ecma_value_t conversion_result = ecma_op_to_integer (index, &relative_index);
+
+   /* 4. */
+  if (ECMA_IS_VALUE_ERROR (conversion_result))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+
+  /* 5. 6. */
+  ecma_number_t k;
+
+  if (relative_index >= 0)
+  {
+    k = relative_index;
+  }
+  else
+  {
+    k = ((ecma_number_t) length + relative_index);
+  }
+
+  /* 7. */
+  if (k < 0 || k >= ((ecma_number_t) length))
+  {
+    return ECMA_VALUE_UNDEFINED;
+  }
+
+  *out_index = (ecma_length_t) k;
+
+  return ECMA_VALUE_EMPTY;
+} /* ecma_builtin_helper_calculate_index */
+
+/**
  * Helper function for using [[DefineOwnProperty]].
  *
  * See also:

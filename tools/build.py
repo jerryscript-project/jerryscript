@@ -155,7 +155,9 @@ def get_arguments():
     coregrp.add_argument('--valgrind', metavar='X', choices=['ON', 'OFF'], type=str.upper,
                          help=devhelp('enable Valgrind support (%(choices)s)'))
     coregrp.add_argument('--vm-exec-stop', metavar='X', choices=['ON', 'OFF'], type=str.upper,
-                         help='enable VM execution stopping (%(choices)s)')
+                         help='enable VM execution stop callback (%(choices)s)')
+    coregrp.add_argument('--vm-throw', metavar='X', choices=['ON', 'OFF'], type=str.upper,
+                         help='enable VM throw callback (%(choices)s)')
 
     maingrp = parser.add_argument_group('jerry-main options')
     maingrp.add_argument('--link-map', metavar='X', choices=['ON', 'OFF'], type=str.upper,
@@ -223,6 +225,7 @@ def generate_build_options(arguments):
     build_options_append('JERRY_SYSTEM_ALLOCATOR', arguments.system_allocator)
     build_options_append('JERRY_VALGRIND', arguments.valgrind)
     build_options_append('JERRY_VM_EXEC_STOP', arguments.vm_exec_stop)
+    build_options_append('JERRY_VM_THROW', arguments.vm_throw)
 
     if arguments.gc_mark_limit is not None:
         build_options.append('-D%s=%s' % ('JERRY_GC_MARK_LIMIT', arguments.gc_mark_limit))

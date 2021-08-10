@@ -48,7 +48,6 @@ set(SOURCE_UNIT_TEST_MAIN_MODULES
   test-context-data.c
   test-dataview.c
   test-date-helpers.c
-  test-exec-stop.c
   test-external-string.c
   test-from-property-descriptor.c
   test-get-own-property.c
@@ -91,6 +90,8 @@ set(SOURCE_UNIT_TEST_MAIN_MODULES
   test-to-property-descriptor.c
   test-typedarray.c
   test-unicode.c
+  test-vm-exec-stop.c
+  test-vm-throw.c
 )
 
 # jerry_heap_stats_t.size == 0 if system allocator is used.

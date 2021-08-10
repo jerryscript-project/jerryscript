@@ -1800,6 +1800,9 @@ jerry_is_feature_enabled (const jerry_feature_t feature) /**< feature to check *
 #if JERRY_VM_EXEC_STOP
           || feature == JERRY_FEATURE_VM_EXEC_STOP
 #endif /* JERRY_VM_EXEC_STOP */
+#if JERRY_VM_THROW
+          || feature == JERRY_FEATURE_VM_THROW
+#endif /* JERRY_VM_THROW */
 #if JERRY_BUILTIN_JSON
           || feature == JERRY_FEATURE_JSON
 #endif /* JERRY_BUILTIN_JSON */
@@ -5202,8 +5205,8 @@ jerry_create_context (uint32_t heap_size, /**< the size of heap */
 } /* jerry_create_context */
 
 /**
- * If JERRY_VM_EXEC_STOP is enabled the callback passed to this function is
- * periodically called with the user_p argument. If frequency is greater
+ * When JERRY_VM_EXEC_STOP is enabled, the callback passed to this function
+ * is periodically called with the user_p argument. If frequency is greater
  * than 1, the callback is only called at every frequency ticks.
  */
 void
@@ -5219,14 +5222,30 @@ jerry_set_vm_exec_stop_callback (jerry_vm_exec_stop_callback_t stop_cb, /**< per
 
   JERRY_CONTEXT (vm_exec_stop_frequency) = frequency;
   JERRY_CONTEXT (vm_exec_stop_counter) = frequency;
-  JERRY_CONTEXT (vm_exec_stop_user_p) = user_p;
   JERRY_CONTEXT (vm_exec_stop_cb) = stop_cb;
+  JERRY_CONTEXT (vm_exec_stop_user_p) = user_p;
 #else /* !JERRY_VM_EXEC_STOP */
   JERRY_UNUSED (stop_cb);
   JERRY_UNUSED (user_p);
   JERRY_UNUSED (frequency);
 #endif /* JERRY_VM_EXEC_STOP */
 } /* jerry_set_vm_exec_stop_callback */
+
+/**
+ * When JERRY_VM_THROW is enabled, the callback passed to this
+ * function is called when an error is thrown in ECMAScript code.
+ */
+void jerry_set_vm_throw_callback (jerry_vm_throw_callback_t throw_cb, /**< callback which is called on throws */
+                                  void *user_p) /**< pointer passed to the function */
+{
+#if JERRY_VM_THROW
+  JERRY_CONTEXT (vm_throw_callback_p) = throw_cb;
+  JERRY_CONTEXT (vm_throw_callback_user_p) = user_p;
+#else /* !JERRY_VM_THROW */
+  JERRY_UNUSED (throw_cb);
+  JERRY_UNUSED (user_p);
+#endif /* JERRY_VM_THROW */
+} /* jerry_set_vm_throw_callback */
 
 /**
  * Get backtrace. The backtrace is an array of strings where

@@ -63,6 +63,9 @@ typedef enum
   ECMA_STATUS_EXCEPTION         = (1u << 3), /**< last exception is a normal exception */
   ECMA_STATUS_ABORT             = (1u << 4), /**< last exception is an abort */
   ECMA_STATUS_ERROR_UPDATE      = (1u << 5), /**< the error_object_created_callback_p is called */
+#if JERRY_VM_THROW
+  ECMA_STATUS_ERROR_THROWN      = (1u << 6), /**< the vm_throw_callback_p is called */
+#endif /* JERRY_VM_THROW */
 } ecma_status_flag_t;
 
 /**

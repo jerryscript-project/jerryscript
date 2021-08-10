@@ -360,6 +360,7 @@ bool jerry_backtrace_is_strict (jerry_backtrace_frame_t *frame_p);
  * Miscellaneous functions.
  */
 void jerry_set_vm_exec_stop_callback (jerry_vm_exec_stop_callback_t stop_cb, void *user_p, uint32_t frequency);
+void jerry_set_vm_throw_callback (jerry_vm_throw_callback_t throw_cb, void *user_p);
 jerry_value_t jerry_get_resource_name (const jerry_value_t value);
 jerry_value_t jerry_get_user_value (const jerry_value_t value);
 

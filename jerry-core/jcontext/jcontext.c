@@ -113,8 +113,11 @@ jcontext_take_exception (void)
 {
   JERRY_ASSERT (jcontext_has_pending_exception ());
 
-  jcontext_set_abort_flag (false);
-  jcontext_set_exception_flag (false);
+  JERRY_CONTEXT (status_flags) &= (uint32_t) ~(ECMA_STATUS_EXCEPTION
+#if JERRY_VM_THROW
+                                               | ECMA_STATUS_ERROR_THROWN
+#endif /* JERRY_VM_THROW */
+                                               | ECMA_STATUS_ABORT);
   return JERRY_CONTEXT (error_value);
 } /* jcontext_take_exception */
 

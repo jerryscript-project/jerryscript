@@ -23,7 +23,7 @@
 #include "ecma-typedarray-object.h"
 #include "jrt.h"
 
-#if JERRY_BUILTIN_TYPEDARRAY
+#if JERRY_BUILTIN_SHAREDARRAYBUFFER
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -92,4 +92,4 @@ ecma_builtin_shared_arraybuffer_species_get (ecma_value_t this_value) /**< This 
  * @}
  */
 
-#endif /* JERRY_BUILTIN_TYPEDARRAY */
+#endif /* JERRY_BUILTIN_SHAREDARRAYBUFFER */

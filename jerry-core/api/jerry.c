@@ -1573,7 +1573,9 @@ static const uint8_t jerry_class_object_type[] =
 #endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_TYPEDARRAY
   JERRY_OBJECT_TYPE_ARRAYBUFFER, /**< type of ECMA_OBJECT_CLASS_ARRAY_BUFFER */
+#if JERRY_BUILTIN_SHAREDARRAYBUFFER
   JERRY_OBJECT_TYPE_SHARED_ARRAY_BUFFER, /**< type of ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER */
+#endif /* JERRY_BUILTIN_SHAREDARRAYBUFFER */
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
 #if JERRY_BUILTIN_BIGINT
   JERRY_OBJECT_TYPE_BIGINT, /**< type of ECMA_OBJECT_CLASS_BIGINT */
@@ -5678,12 +5680,7 @@ jerry_value_is_shared_arraybuffer (const jerry_value_t value) /**< value to chec
 {
   jerry_assert_api_available ();
 
-#if JERRY_BUILTIN_TYPEDARRAY
   return ecma_is_shared_arraybuffer (value);
-#else /* !JERRY_BUILTIN_TYPEDARRAY */
-  JERRY_UNUSED (value);
-  return false;
-#endif /* JERRY_BUILTIN_TYPEDARRAY */
 } /* jerry_value_is_shared_arraybuffer */
 
 /**
@@ -5701,12 +5698,12 @@ jerry_create_shared_arraybuffer (const jerry_length_t size) /**< size of the Sha
 {
   jerry_assert_api_available ();
 
-#if JERRY_BUILTIN_TYPEDARRAY
+#if JERRY_BUILTIN_SHAREDARRAYBUFFER
   return jerry_return (ecma_make_object_value (ecma_shared_arraybuffer_new_object (size)));
-#else /* !JERRY_BUILTIN_TYPEDARRAY */
+#else /* !JERRY_BUILTIN_SHAREDARRAYBUFFER */
   JERRY_UNUSED (size);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_typed_array_not_supported_p)));
-#endif /* JERRY_BUILTIN_TYPEDARRAY */
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_shared_arraybuffer_not_supported_p)));
+#endif /* JERRY_BUILTIN_SHAREDARRAYBUFFER */
 } /* jerry_create_shared_arraybuffer */
 
 /**
@@ -5727,7 +5724,7 @@ jerry_create_shared_arraybuffer_external (const jerry_length_t size, /**< size o
 {
   jerry_assert_api_available ();
 
-#if JERRY_BUILTIN_TYPEDARRAY
+#if JERRY_BUILTIN_SHAREDARRAYBUFFER
   ecma_object_t *shared_arraybuffer;
 
   if (JERRY_UNLIKELY (size == 0 || buffer_p == NULL))
@@ -5740,12 +5737,12 @@ jerry_create_shared_arraybuffer_external (const jerry_length_t size, /**< size o
   }
 
   return jerry_return (ecma_make_object_value (shared_arraybuffer));
-#else /* !JERRY_BUILTIN_TYPEDARRAY */
+#else /* !JERRY_BUILTIN_SHAREDARRAYBUFFER */
   JERRY_UNUSED (size);
   JERRY_UNUSED (buffer_p);
   JERRY_UNUSED (free_cb);
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_typed_array_not_supported_p)));
-#endif /* JERRY_BUILTIN_TYPEDARRAY */
+  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_shared_arraybuffer_not_supported_p)));
+#endif /* JERRY_BUILTIN_SHAREDARRAYBUFFER */
 } /* jerry_create_shared_arraybuffer_external */
 
 /**

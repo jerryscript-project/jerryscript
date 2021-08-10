@@ -187,7 +187,7 @@ uint32_t JERRY_ATTR_PURE
 ecma_arraybuffer_get_length (ecma_object_t *object_p) /**< pointer to the ArrayBuffer object */
 {
   JERRY_ASSERT (ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_ARRAY_BUFFER)
-                || ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER));
+                || ecma_object_is_shared_arraybuffer (object_p));
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
   return ecma_arraybuffer_is_detached (object_p) ? 0 : ext_object_p->u.cls.u3.length;
@@ -202,7 +202,7 @@ extern inline lit_utf8_byte_t * JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_arraybuffer_get_buffer (ecma_object_t *object_p) /**< pointer to the ArrayBuffer object */
 {
   JERRY_ASSERT (ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_ARRAY_BUFFER)
-                || ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER));
+                || ecma_object_is_shared_arraybuffer (object_p));
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
@@ -230,7 +230,7 @@ extern inline bool JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_arraybuffer_is_detached (ecma_object_t *object_p) /**< pointer to the ArrayBuffer object */
 {
   JERRY_ASSERT (ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_ARRAY_BUFFER)
-                || ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER));
+                || ecma_object_is_shared_arraybuffer (object_p));
 
   return (((ecma_extended_object_t *) object_p)->u.cls.u1.array_buffer_flags & ECMA_ARRAYBUFFER_DETACHED) != 0;
 } /* ecma_arraybuffer_is_detached */
@@ -318,15 +318,14 @@ ecma_builtin_arraybuffer_slice (ecma_value_t this_arg,
   uint32_t new_len = (end >= start) ? (end - start) : 0;
 
   /* 11. */
-  ecma_value_t ctor;
+  ecma_builtin_id_t buffer_builtin_id = ECMA_BUILTIN_ID_ARRAYBUFFER;
+
   if (ecma_is_shared_arraybuffer (this_arg))
   {
-    ctor = ecma_op_species_constructor (object_p, ECMA_BUILTIN_ID_SHARED_ARRAYBUFFER);
+    buffer_builtin_id = ECMA_BUILTIN_ID_SHARED_ARRAYBUFFER;
   }
-  else
-  {
-    ctor = ecma_op_species_constructor (object_p, ECMA_BUILTIN_ID_ARRAYBUFFER);
-  }
+
+  ecma_value_t ctor = ecma_op_species_constructor (object_p, buffer_builtin_id);
 
   if (ECMA_IS_VALUE_ERROR (ctor))
   {
@@ -352,7 +351,7 @@ ecma_builtin_arraybuffer_slice (ecma_value_t this_arg,
 
   /* 13. */
   if (!(ecma_object_class_is (new_arraybuffer_p, ECMA_OBJECT_CLASS_ARRAY_BUFFER)
-        || ecma_object_class_is (new_arraybuffer_p, ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER)))
+        || ecma_object_is_shared_arraybuffer (new_arraybuffer_p)))
   {
     ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Return value is not an ArrayBuffer object"));
     goto free_new_arraybuffer;

@@ -1897,7 +1897,9 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 #endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_TYPEDARRAY
         case ECMA_OBJECT_CLASS_ARRAY_BUFFER:
+#if JERRY_BUILTIN_SHAREDARRAYBUFFER
         case ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER:
+#endif /* JERRY_BUILTIN_SHAREDARRAYBUFFER */
         {
           uint32_t arraybuffer_length = ext_object_p->u.cls.u3.length;
 

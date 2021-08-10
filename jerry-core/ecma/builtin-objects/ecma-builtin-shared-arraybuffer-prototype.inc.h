@@ -19,7 +19,7 @@
 
 #include "ecma-builtin-helpers-macro-defines.inc.h"
 
-#if JERRY_BUILTIN_TYPEDARRAY
+#if JERRY_BUILTIN_SHAREDARRAYBUFFER
 
 /* Object properties:
  *  (property name, object pointer getter) */
@@ -42,6 +42,6 @@ STRING_VALUE (LIT_GLOBAL_SYMBOL_TO_STRING_TAG,
  *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
 ROUTINE (LIT_MAGIC_STRING_SLICE, ecma_builtin_shared_arraybuffer_prototype_object_slice, NON_FIXED, 2)
 
-#endif /* JERRY_BUILTIN_TYPEDARRAY */
+#endif /* JERRY_BUILTIN_SHAREDARRAYBUFFER */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

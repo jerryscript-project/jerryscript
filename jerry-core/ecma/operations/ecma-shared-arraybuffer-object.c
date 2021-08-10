@@ -25,14 +25,14 @@
 #include "jcontext.h"
 #include "ecma-function-object.h"
 
-#if JERRY_BUILTIN_TYPEDARRAY
-
 /** \addtogroup ecma ECMA
  * @{
  *
  * \addtogroup ecmasharedarraybufferobject ECMA SharedArrayBuffer object related routines
  * @{
  */
+
+#if JERRY_BUILTIN_SHAREDARRAYBUFFER
 
 /**
  * Helper function: create SharedArrayBuffer object based on the array length
@@ -158,6 +158,8 @@ ecma_op_create_shared_arraybuffer_object (const ecma_value_t *arguments_list_p, 
   return ecma_make_object_value (shared_array_buffer);
 } /* ecma_op_create_shared_arraybuffer_object */
 
+#endif /* JERRY_BUILTIN_SHAREDARRAYBUFFER */
+
 /**
  * Helper function: check if the target is SharedArrayBuffer
  *
@@ -166,15 +168,36 @@ ecma_op_create_shared_arraybuffer_object (const ecma_value_t *arguments_list_p, 
  * @return true - if value is a SharedArrayBuffer object
  *         false - otherwise
  */
-bool
+extern inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_is_shared_arraybuffer (ecma_value_t target) /**< the target value */
 {
+#if JERRY_BUILTIN_SHAREDARRAYBUFFER
   return (ecma_is_value_object (target)
           && ecma_object_class_is (ecma_get_object_from_value (target), ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER));
+#else /* !JERRY_BUILTIN_SHAREDARRAYBUFFER */
+  JERRY_UNUSED (target);
+  return false;
+#endif /* JERRY_BUILTIN_SHAREDARRAYBUFFER */
 } /* ecma_is_shared_arraybuffer */
+
+/**
+ * Helper function: check if the target is SharedArrayBuffer Object
+ *
+ * @return true - if value is a SharedArrayBuffer object
+ *         false - otherwise
+ */
+extern inline bool JERRY_ATTR_ALWAYS_INLINE
+ecma_object_is_shared_arraybuffer (ecma_object_t *object_p) /**< the target object */
+{
+#if JERRY_BUILTIN_SHAREDARRAYBUFFER
+  return ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER);
+#else /* !JERRY_BUILTIN_SHAREDARRAYBUFFER */
+  JERRY_UNUSED (object_p);
+  return false;
+#endif /* JERRY_BUILTIN_SHAREDARRAYBUFFER */
+} /* ecma_object_is_shared_arraybuffer */
 
 /**
  * @}
  * @}
  */
-#endif /* JERRY_BUILTIN_TYPEDARRAY */

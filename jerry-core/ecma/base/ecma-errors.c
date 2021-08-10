@@ -59,6 +59,13 @@ const char * const ecma_error_promise_not_supported_p = "Promise support is disa
 const char * const ecma_error_typed_array_not_supported_p = "TypedArray support is disabled";
 #endif /* !JERRY_BUILTIN_TYPEDARRAY  */
 
+#if !JERRY_BUILTIN_SHAREDARRAYBUFFER
+/**
+ * Error message, if SharedArrayBuffer support is disabled
+ */
+const char * const ecma_error_shared_arraybuffer_not_supported_p = "SharedArrayBuffer support is disabled";
+#endif /* !JERRY_BUILTIN_SHAREDARRAYBUFFER  */
+
 #if !JERRY_BUILTIN_DATAVIEW
 /**
  * Error message, if DataView support is disabled

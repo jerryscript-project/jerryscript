@@ -27,7 +27,7 @@
 #include "jrt.h"
 #include "jrt-libc-includes.h"
 
-#if JERRY_BUILTIN_TYPEDARRAY
+#if JERRY_BUILTIN_SHAREDARRAYBUFFER
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
@@ -109,4 +109,4 @@ ecma_builtin_shared_arraybuffer_prototype_object_slice (ecma_value_t this_arg, /
  * @}
  */
 
-#endif /* JERRY_BUILTIN_TYPEDARRAY */
+#endif /* JERRY_BUILTIN_SHAREDARRAYBUFFER */

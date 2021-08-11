@@ -107,7 +107,7 @@ ecma_builtin_global_object_eval (ecma_value_t x) /**< routine's first argument *
 #endif /* JERRY_ESNEXT */
 
   /* steps 2 to 8 */
-  return ecma_op_eval (ecma_get_string_from_value (x), parse_opts);
+  return ecma_op_eval (x, parse_opts);
 } /* ecma_builtin_global_object_eval */
 
 /**

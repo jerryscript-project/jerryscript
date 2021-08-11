@@ -46,9 +46,7 @@ bool jerry_get_memory_stats (jerry_heap_stats_t *out_stats_p);
 bool jerry_run_simple (const jerry_char_t *script_source_p, size_t script_source_size, jerry_init_flag_t flags);
 jerry_value_t jerry_parse (const jerry_char_t *source_p, size_t source_size,
                            const jerry_parse_options_t *options_p);
-jerry_value_t jerry_parse_function (const jerry_char_t *arg_list_p, size_t arg_list_size,
-                                    const jerry_char_t *source_p, size_t source_size,
-                                    const jerry_parse_options_t *options_p);
+jerry_value_t jerry_parse_value (const jerry_value_t source_value, const jerry_parse_options_t *options_p);
 jerry_value_t jerry_run (const jerry_value_t func_val);
 jerry_value_t jerry_eval (const jerry_char_t *source_p, size_t source_size, uint32_t parse_opts);
 

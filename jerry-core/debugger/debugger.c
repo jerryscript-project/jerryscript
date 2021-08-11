@@ -548,7 +548,11 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
   memcpy (&chain_index, eval_string_p, sizeof (uint32_t));
   uint32_t parse_opts = ECMA_PARSE_DIRECT_EVAL | (chain_index << ECMA_PARSE_CHAIN_INDEX_SHIFT);
 
-  ecma_value_t result = ecma_op_eval_chars_buffer (eval_string_p + 5, eval_string_size - 5, parse_opts);
+  parser_source_char_t source_char;
+  source_char.source_p = eval_string_p + 5;
+  source_char.source_size = eval_string_size - 5;
+
+  ecma_value_t result = ecma_op_eval_chars_buffer ((void *) &source_char, parse_opts);
   JERRY_DEBUGGER_CLEAR_FLAGS (JERRY_DEBUGGER_VM_IGNORE);
 
   if (!ECMA_IS_VALUE_ERROR (result))

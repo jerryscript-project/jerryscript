@@ -2463,11 +2463,7 @@ scanner_scan_statement_end (parser_context_t *context_p, /**< context */
  * Scan the whole source code.
  */
 void JERRY_ATTR_NOINLINE
-scanner_scan_all (parser_context_t *context_p, /**< context */
-                  const uint8_t *arg_list_p, /**< function argument list */
-                  const uint8_t *arg_list_end_p, /**< end of argument list */
-                  const uint8_t *source_p, /**< valid UTF-8 source code */
-                  const uint8_t *source_end_p) /**< end of source code */
+scanner_scan_all (parser_context_t *context_p) /**< context */
 {
   scanner_context_t scanner_context;
 
@@ -2507,10 +2503,10 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
 
   PARSER_TRY (context_p->try_buffer)
   {
-    if (arg_list_p == NULL)
+    if (context_p->arguments_start_p == NULL)
     {
-      context_p->source_p = source_p;
-      context_p->source_end_p = source_end_p;
+      context_p->source_p = context_p->source_start_p;
+      context_p->source_end_p = context_p->source_start_p + context_p->source_size;
 
       uint16_t status_flags = (SCANNER_LITERAL_POOL_FUNCTION
                                | SCANNER_LITERAL_POOL_NO_ARGUMENTS
@@ -2522,7 +2518,7 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
       }
 
       scanner_literal_pool_t *literal_pool_p = scanner_push_literal_pool (context_p, &scanner_context, status_flags);
-      literal_pool_p->source_p = source_p;
+      literal_pool_p->source_p = context_p->source_start_p;
 
       parser_stack_push_uint8 (context_p, SCAN_STACK_SCRIPT);
 
@@ -2531,8 +2527,8 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
     }
     else
     {
-      context_p->source_p = arg_list_p;
-      context_p->source_end_p = arg_list_end_p;
+      context_p->source_p = context_p->arguments_start_p;
+      context_p->source_end_p = context_p->arguments_start_p + context_p->arguments_size;
 
       uint16_t status_flags = SCANNER_LITERAL_POOL_FUNCTION;
 
@@ -3115,8 +3111,8 @@ scanner_scan_all (parser_context_t *context_p, /**< context */
             scanner_context.end_arguments_p = scanner_info_p;
 
             context_p->next_scanner_info_p = scanner_info_p;
-            context_p->source_p = source_p;
-            context_p->source_end_p = source_end_p;
+            context_p->source_p = context_p->source_start_p;
+            context_p->source_end_p = context_p->source_start_p + context_p->source_size;
             lexer_init_line_info (context_p);
 
 #if JERRY_ESNEXT
@@ -3525,7 +3521,8 @@ scan_completed:
   if (context_p->is_show_opcodes)
   {
     scanner_info_t *info_p = context_p->next_scanner_info_p;
-    const uint8_t *source_start_p = (arg_list_p == NULL) ? source_p : arg_list_p;
+    const uint8_t *source_start_p = (context_p->arguments_start_p == NULL ? context_p->source_start_p
+                                                                          : context_p->arguments_start_p);
 
     while (info_p->type != SCANNER_TYPE_END)
     {
@@ -3537,7 +3534,7 @@ scan_completed:
         case SCANNER_TYPE_END_ARGUMENTS:
         {
           JERRY_DEBUG_MSG ("  END_ARGUMENTS\n");
-          source_start_p = source_p;
+          source_start_p = context_p->source_start_p;
           break;
         }
         case SCANNER_TYPE_FUNCTION:

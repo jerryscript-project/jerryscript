@@ -844,16 +844,18 @@ main (void)
   jerry_release_value (val_t);
 
   /* Test: create function */
-  const jerry_char_t func_arg_list[] = "a , b,c";
-  const jerry_char_t func_src[] = "  return 5 +  a+\nb+c";
+  jerry_value_t script_source = jerry_create_string ((const jerry_char_t *) "  return 5 +  a+\nb+c");
 
-  jerry_value_t func_val = jerry_parse_function (func_arg_list,
-                                                 sizeof (func_arg_list) - 1,
-                                                 func_src,
-                                                 sizeof (func_src) - 1,
-                                                 NULL);
+  jerry_parse_options_t parse_options;
+  parse_options.options = JERRY_PARSE_HAS_ARGUMENT_LIST;
+  parse_options.argument_list = jerry_create_string ((const jerry_char_t *) "a , b,c");
+
+  jerry_value_t func_val = jerry_parse_value (script_source, &parse_options);
 
   TEST_ASSERT (!jerry_value_is_error (func_val));
+
+  jerry_release_value (parse_options.argument_list);
+  jerry_release_value (script_source);
 
   jerry_value_t func_args[3] =
   {
@@ -867,6 +869,24 @@ main (void)
   TEST_ASSERT (number_val == 13.0);
 
   jerry_release_value (val_t);
+  jerry_release_value (func_val);
+
+  parse_options.options = JERRY_PARSE_HAS_ARGUMENT_LIST;
+  parse_options.argument_list = jerry_create_null ();
+
+  func_val = jerry_parse ((const jerry_char_t *) "", 0, &parse_options);
+  jerry_release_value (parse_options.argument_list);
+
+  TEST_ASSERT (jerry_value_is_error (func_val)
+               && jerry_get_error_type (func_val) == JERRY_ERROR_TYPE);
+  jerry_release_value (func_val);
+
+  script_source = jerry_create_number (4.5);
+  func_val = jerry_parse_value (script_source, NULL);
+  jerry_release_value (script_source);
+
+  TEST_ASSERT (jerry_value_is_error (func_val)
+               && jerry_get_error_type (func_val) == JERRY_ERROR_TYPE);
   jerry_release_value (func_val);
 
   jerry_cleanup ();
@@ -1048,7 +1068,6 @@ main (void)
                        "SyntaxError: Primary expression expected [<anonymous>:2:10]",
                        false);
 
-    jerry_parse_options_t parse_options;
     parse_options.options = JERRY_PARSE_HAS_RESOURCE;
     parse_options.resource_name = jerry_create_string ((const jerry_char_t *) "filename.js");
 

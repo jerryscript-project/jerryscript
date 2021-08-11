@@ -376,34 +376,43 @@ jerry_run_simple (const jerry_char_t *script_source_p, /**< script source */
   return result;
 } /* jerry_run_simple */
 
+#if JERRY_PARSER
+
 /**
- * Parse script and construct an EcmaScript function. The lexical
- * environment is set to the global lexical environment.
+ * Common code for parsing a script, module, or function.
  *
  * @return function object value - if script was parsed successfully,
  *         thrown error - otherwise
  */
-jerry_value_t
-jerry_parse (const jerry_char_t *source_p, /**< script source */
-             size_t source_size, /**< script source size */
-             const jerry_parse_options_t *options_p) /**< parsing options, can be NULL if not used */
+static jerry_value_t
+jerry_parse_common (void *source_p, /**< script source */
+                    const jerry_parse_options_t *options_p, /**< parsing options, can be NULL if not used */
+                    uint32_t parse_opts) /**< internal parsing options */
 {
-#if JERRY_PARSER
   jerry_assert_api_available ();
 
-  uint32_t allowed_parse_options = (JERRY_PARSE_STRICT_MODE
-                                    | JERRY_PARSE_MODULE
-                                    | JERRY_PARSE_HAS_RESOURCE
-                                    | JERRY_PARSE_HAS_START
-                                    | JERRY_PARSE_HAS_USER_VALUE);
-
-  if (options_p != NULL && (options_p->options & ~allowed_parse_options) != 0)
+  if (options_p != NULL)
   {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
-  }
-#endif /* JERRY_PARSER */
+    const uint32_t allowed_options = (JERRY_PARSE_STRICT_MODE
+                                      | JERRY_PARSE_MODULE
+                                      | JERRY_PARSE_HAS_ARGUMENT_LIST
+                                      | JERRY_PARSE_HAS_RESOURCE
+                                      | JERRY_PARSE_HAS_START
+                                      | JERRY_PARSE_HAS_USER_VALUE);
+    uint32_t options = options_p->options;
 
-#if JERRY_DEBUGGER && JERRY_PARSER
+    if ((options & ~allowed_options) != 0
+        || ((options_p->options & JERRY_PARSE_HAS_ARGUMENT_LIST)
+            && ((options_p->options & JERRY_PARSE_MODULE)
+                || !ecma_is_value_string (options_p->argument_list)))
+        || ((options_p->options & JERRY_PARSE_HAS_RESOURCE)
+            && !ecma_is_value_string (options_p->resource_name)))
+    {
+      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+    }
+  }
+
+#if JERRY_DEBUGGER
   if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
       && options_p != NULL
       && (options_p->options & JERRY_PARSE_HAS_RESOURCE)
@@ -418,10 +427,7 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
                                 resource_name_size);
     ECMA_FINALIZE_UTF8_STRING (resource_name_start_p, resource_name_size);
   }
-#endif /* JERRY_DEBUGGER && JERRY_PARSER */
-
-#if JERRY_PARSER
-  uint32_t parse_opts = 0;
+#endif /* JERRY_DEBUGGER */
 
   if (options_p != NULL)
   {
@@ -438,7 +444,7 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
   }
 
   ecma_compiled_code_t *bytecode_data_p;
-  bytecode_data_p = parser_parse_script (NULL, 0, source_p, source_size, parse_opts, options_p);
+  bytecode_data_p = parser_parse_script (source_p, parse_opts, options_p);
 
   if (JERRY_UNLIKELY (bytecode_data_p == NULL))
   {
@@ -464,6 +470,22 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
   }
 #endif /* JERRY_MODULE_SYSTEM */
 
+  if (JERRY_UNLIKELY (options_p != NULL
+                      && (options_p->options & JERRY_PARSE_HAS_ARGUMENT_LIST)))
+  {
+    ecma_object_t *global_object_p = ecma_builtin_get_global ();
+
+#if JERRY_BUILTIN_REALMS
+    JERRY_ASSERT (global_object_p == (ecma_object_t *) ecma_op_function_get_realm (bytecode_data_p));
+#endif /* JERRY_BUILTIN_REALMS */
+
+    ecma_object_t *lex_env_p = ecma_get_global_environment (global_object_p);
+    ecma_object_t *func_obj_p = ecma_op_create_simple_function_object (lex_env_p, bytecode_data_p);
+    ecma_bytecode_deref (bytecode_data_p);
+
+    return ecma_make_object_value (func_obj_p);
+  }
+
   ecma_object_t *object_p = ecma_create_object (NULL, sizeof (ecma_extended_object_t), ECMA_OBJECT_TYPE_CLASS);
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
@@ -471,6 +493,27 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
   ECMA_SET_INTERNAL_VALUE_POINTER (ext_object_p->u.cls.u3.value, bytecode_data_p);
 
   return ecma_make_object_value (object_p);
+} /* jerry_parse_common */
+
+#endif /* JERRY_PARSER */
+
+/**
+ * Parse a script, module, or function and create a compiled code using a character string
+ *
+ * @return function object value - if script was parsed successfully,
+ *         thrown error - otherwise
+ */
+jerry_value_t
+jerry_parse (const jerry_char_t *source_p, /**< script source */
+             size_t source_size, /**< script source size */
+             const jerry_parse_options_t *options_p) /**< parsing options, can be NULL if not used */
+{
+#if JERRY_PARSER
+  parser_source_char_t source_char;
+  source_char.source_p = source_p;
+  source_char.source_size = source_size;
+
+  return jerry_parse_common ((void *) &source_char, options_p, JERRY_PARSE_NO_OPTS);
 #else /* !JERRY_PARSER */
   JERRY_UNUSED (source_p);
   JERRY_UNUSED (source_size);
@@ -481,93 +524,32 @@ jerry_parse (const jerry_char_t *source_p, /**< script source */
 } /* jerry_parse */
 
 /**
- * Parse function and construct an EcmaScript function. The lexical
- * environment is set to the global lexical environment.
+ * Parse a script, module, or function and create a compiled code using a string value
  *
  * @return function object value - if script was parsed successfully,
  *         thrown error - otherwise
  */
 jerry_value_t
-jerry_parse_function (const jerry_char_t *arg_list_p, /**< script source */
-                      size_t arg_list_size, /**< script source size */
-                      const jerry_char_t *source_p, /**< script source */
-                      size_t source_size, /**< script source size */
-                      const jerry_parse_options_t *options_p) /**< parsing options, can be NULL if not used */
+jerry_parse_value (const jerry_value_t source_value, /**< script source */
+                   const jerry_parse_options_t *options_p) /**< parsing options, can be NULL if not used */
 {
 #if JERRY_PARSER
-  jerry_assert_api_available ();
-
-  uint32_t allowed_parse_options = (JERRY_PARSE_STRICT_MODE
-                                    | JERRY_PARSE_HAS_RESOURCE
-                                    | JERRY_PARSE_HAS_START
-                                    | JERRY_PARSE_HAS_USER_VALUE);
-
-  if (options_p != NULL && (options_p->options & ~allowed_parse_options) != 0)
+  if (!ecma_is_value_string (source_value))
   {
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
   }
-#endif /* JERRY_PARSER */
 
-#if JERRY_DEBUGGER && JERRY_PARSER
-  if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
-      && options_p != NULL
-      && (options_p->options & JERRY_PARSE_HAS_RESOURCE)
-      && ecma_is_value_string (options_p->resource_name))
-  {
-    ECMA_STRING_TO_UTF8_STRING (ecma_get_string_from_value (options_p->resource_name),
-                                resource_name_start_p,
-                                resource_name_size);
-    jerry_debugger_send_string (JERRY_DEBUGGER_SOURCE_CODE_NAME,
-                                JERRY_DEBUGGER_NO_SUBTYPE,
-                                resource_name_start_p,
-                                resource_name_size);
-    ECMA_FINALIZE_UTF8_STRING (resource_name_start_p, resource_name_size);
-  }
-#endif /* JERRY_DEBUGGER && JERRY_PARSER */
+  ecma_value_t source[1];
+  source[0] = source_value;
 
-#if JERRY_PARSER
-  uint32_t parse_opts = 0;
-
-  if (options_p != NULL)
-  {
-    parse_opts |= options_p->options & JERRY_PARSE_STRICT_MODE;
-  }
-
-  if (arg_list_p == NULL)
-  {
-    /* Must not be a NULL value. */
-    arg_list_p = (const jerry_char_t *) "";
-  }
-
-  ecma_compiled_code_t *bytecode_p;
-  bytecode_p = parser_parse_script (arg_list_p, arg_list_size, source_p, source_size, parse_opts, options_p);
-
-  if (JERRY_UNLIKELY (bytecode_p == NULL))
-  {
-    return ecma_create_error_reference_from_context ();
-  }
-
-  ecma_object_t *global_object_p = ecma_builtin_get_global ();
-
-#if JERRY_BUILTIN_REALMS
-  JERRY_ASSERT (global_object_p == (ecma_object_t *) ecma_op_function_get_realm (bytecode_p));
-#endif /* JERRY_BUILTIN_REALMS */
-
-  ecma_object_t *lex_env_p = ecma_get_global_environment (global_object_p);
-  ecma_object_t *func_obj_p = ecma_op_create_simple_function_object (lex_env_p, bytecode_p);
-  ecma_bytecode_deref (bytecode_p);
-
-  return ecma_make_object_value (func_obj_p);
+  return jerry_parse_common ((void *) source, options_p, ECMA_PARSE_HAS_SOURCE_VALUE);
 #else /* !JERRY_PARSER */
-  JERRY_UNUSED (arg_list_p);
-  JERRY_UNUSED (arg_list_size);
-  JERRY_UNUSED (source_p);
-  JERRY_UNUSED (source_size);
+  JERRY_UNUSED (source_value);
   JERRY_UNUSED (options_p);
 
   return jerry_throw (ecma_raise_syntax_error (ECMA_ERR_MSG (ecma_error_parser_not_supported_p)));
 #endif /* JERRY_PARSER */
-} /* jerry_parse_function */
+} /* jerry_parse_value */
 
 /**
  * Run a Script or Module created by jerry_parse.
@@ -632,9 +614,11 @@ jerry_eval (const jerry_char_t *source_p, /**< source code */
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
   }
 
-  return jerry_return (ecma_op_eval_chars_buffer ((const lit_utf8_byte_t *) source_p,
-                                                  source_size,
-                                                  parse_opts));
+  parser_source_char_t source_char;
+  source_char.source_p = source_p;
+  source_char.source_size = source_size;
+
+  return jerry_return (ecma_op_eval_chars_buffer ((void *) &source_char, parse_opts));
 } /* jerry_eval */
 
 /**

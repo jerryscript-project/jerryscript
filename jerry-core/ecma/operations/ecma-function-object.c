@@ -454,18 +454,14 @@ ecma_op_create_dynamic_function (const ecma_value_t *arguments_list_p, /**< argu
     function_body_str_p = ecma_get_magic_string (LIT_MAGIC_STRING__EMPTY);
   }
 
-  ECMA_STRING_TO_UTF8_STRING (arguments_str_p, arguments_buffer_p, arguments_buffer_size);
-  ECMA_STRING_TO_UTF8_STRING (function_body_str_p, function_body_buffer_p, function_body_buffer_size);
+  ecma_value_t source[2];
+  source[0] = ecma_make_string_value (function_body_str_p);
+  source[1] = ecma_make_string_value (arguments_str_p);
 
-  ecma_compiled_code_t *bytecode_p = parser_parse_script (arguments_buffer_p,
-                                                          arguments_buffer_size,
-                                                          function_body_buffer_p,
-                                                          function_body_buffer_size,
-                                                          parse_opts,
-                                                          NULL);
+  parse_opts |= ECMA_PARSE_HAS_SOURCE_VALUE | ECMA_PARSE_HAS_ARGUMENT_LIST_VALUE;
 
-  ECMA_FINALIZE_UTF8_STRING (function_body_buffer_p, function_body_buffer_size);
-  ECMA_FINALIZE_UTF8_STRING (arguments_buffer_p, arguments_buffer_size);
+  ecma_compiled_code_t *bytecode_p = parser_parse_script ((void *) source, parse_opts, NULL);
+
   ecma_deref_ecma_string (arguments_str_p);
   ecma_deref_ecma_string (function_body_str_p);
 

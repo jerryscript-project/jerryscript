@@ -70,14 +70,8 @@ typedef struct
 /**
  * Snapshot functions.
  */
-jerry_value_t jerry_generate_snapshot (const jerry_char_t *source_p, size_t source_size,
-                                       const jerry_parse_options_t *options_p, uint32_t generate_snapshot_opts,
+jerry_value_t jerry_generate_snapshot (jerry_value_t compiled_code, uint32_t generate_snapshot_opts,
                                        uint32_t *buffer_p, size_t buffer_size);
-jerry_value_t jerry_generate_function_snapshot (const jerry_char_t *source_p, size_t source_size,
-                                                const jerry_char_t *args_p, size_t args_size,
-                                                const jerry_parse_options_t *options_p,
-                                                uint32_t generate_snapshot_opts,
-                                                uint32_t *buffer_p, size_t buffer_size);
 
 jerry_value_t jerry_exec_snapshot (const uint32_t *snapshot_p, size_t snapshot_size,
                                    size_t func_index, uint32_t exec_snapshot_opts,

@@ -5388,26 +5388,24 @@ jerry_value_t
 jerry_get_resource_name (const jerry_value_t value) /**< jerry api value */
 {
 #if JERRY_RESOURCE_NAME
-  if (ecma_is_value_undefined (value))
+  if (ecma_is_value_undefined (value) && JERRY_CONTEXT (vm_top_context_p) != NULL)
   {
-    if (JERRY_CONTEXT (vm_top_context_p) != NULL)
-    {
-      return ecma_copy_value (ecma_get_resource_name (JERRY_CONTEXT (vm_top_context_p)->shared_p->bytecode_header_p));
-    }
+    return ecma_copy_value (ecma_get_resource_name (JERRY_CONTEXT (vm_top_context_p)->shared_p->bytecode_header_p));
   }
-  else if (ecma_is_value_object (value))
+
+  const ecma_compiled_code_t *bytecode_p = ecma_bytecode_get_from_value (value);
+
+  if (bytecode_p == NULL)
   {
-    ecma_object_t *obj_p = ecma_get_object_from_value (value);
+    return ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
+  }
 
-    if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION
-        && !ecma_get_object_is_builtin (obj_p))
-    {
-      ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) obj_p;
+  ecma_value_t script_value = ((cbc_uint8_arguments_t *) bytecode_p)->script_value;
+  cbc_script_t *script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
 
-      const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
-
-      return ecma_copy_value (ecma_get_resource_name (bytecode_data_p));
-    }
+  if (CBC_SCRIPT_GET_TYPE (script_p) == CBC_SCRIPT_GENERIC)
+  {
+    return ecma_copy_value (script_p->resource_name);
   }
 #endif /* JERRY_RESOURCE_NAME */
 

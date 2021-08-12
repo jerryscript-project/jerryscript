@@ -116,6 +116,62 @@ main (void)
 
   jerry_release_value (run_result);
   jerry_release_value (program);
+  if (jerry_is_feature_enabled (JERRY_FEATURE_MODULE))
+  {
+    const char *source_3 = "";
+
+    parse_options.options = JERRY_PARSE_MODULE | JERRY_PARSE_HAS_RESOURCE;
+    parse_options.resource_name = jerry_create_string ((const jerry_char_t *) "demo3.js");
+
+    program = jerry_parse ((const jerry_char_t *) source_3,
+                           strlen (source_3),
+                           &parse_options);
+    TEST_ASSERT (!jerry_value_is_error (program));
+
+    resource_value = jerry_get_resource_name (program);
+    TEST_ASSERT (jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL, resource_value, parse_options.resource_name));
+    jerry_release_value (resource_value);
+
+    run_result = jerry_module_link (program, NULL, NULL);
+    TEST_ASSERT (!jerry_value_is_error (run_result));
+
+    resource_value = jerry_get_resource_name (run_result);
+    TEST_ASSERT (jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL, resource_value, parse_options.resource_name));
+    jerry_release_value (resource_value);
+    jerry_release_value (run_result);
+
+    run_result = jerry_module_evaluate (program);
+    TEST_ASSERT (!jerry_value_is_error (run_result));
+
+    resource_value = jerry_get_resource_name (run_result);
+    TEST_ASSERT (jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL, resource_value, parse_options.resource_name));
+    jerry_release_value (resource_value);
+    jerry_release_value (run_result);
+    jerry_release_value (program);
+    jerry_release_value (parse_options.resource_name);
+  }
+  const char *source_4 = ("function f(){} \n"
+                          "f.bind().bind();");
+
+  parse_options.options = JERRY_PARSE_HAS_RESOURCE;
+  parse_options.resource_name = jerry_create_string ((jerry_char_t *) "demo4.js");
+
+  program = jerry_parse ((const jerry_char_t *) source_4,
+                         strlen (source_4),
+                         &parse_options);
+  TEST_ASSERT (!jerry_value_is_error (program));
+
+  run_result = jerry_run (program);
+  TEST_ASSERT (!jerry_value_is_error (run_result));
+  TEST_ASSERT (jerry_value_is_object (run_result));
+
+  resource_value = jerry_get_resource_name (run_result);
+  TEST_ASSERT (jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL, resource_value, parse_options.resource_name));
+
+  jerry_release_value (resource_value);
+  jerry_release_value (parse_options.resource_name);
+  jerry_release_value (run_result);
+  jerry_release_value (program);
 
   jerry_cleanup ();
 

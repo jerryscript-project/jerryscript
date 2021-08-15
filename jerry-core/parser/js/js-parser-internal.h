@@ -490,7 +490,6 @@ typedef struct
 
 typedef struct
 {
-  parser_mem_page_t *first_page_p;            /**< first page of line info data */
   parser_mem_page_t *last_page_p;             /**< last page of line info data */
   uint32_t byte_code_position;                /**< last byte code position */
   parser_line_counter_t line;                 /**< last line */
@@ -538,7 +537,7 @@ typedef struct parser_saved_context_t
 #endif /* !JERRY_NDEBUG */
 
 #if JERRY_LINE_INFO
-  parser_line_info_data_t line_info;          /**< line info data */
+  parser_line_info_data_t *line_info_p;       /**< line info data */
 #endif /* JERRY_LINE_INFO */
 } parser_saved_context_t;
 
@@ -638,8 +637,7 @@ typedef struct
 #endif /* JERRY_DEBUGGER */
 
 #if JERRY_LINE_INFO
-  parser_line_info_data_t line_info;          /**< line info data */
-  parser_line_counter_t last_line_info_line;  /**< last line where line info has been inserted */
+  parser_line_info_data_t *line_info_p;       /**< line info data */
 #endif /* JERRY_LINE_INFO */
 } parser_context_t;
 

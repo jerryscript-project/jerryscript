@@ -634,7 +634,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 #endif /* JERRY_ESNEXT */
 
 #if JERRY_LINE_INFO
-  JERRY_ASSERT (context_p->line_info.first_page_p != NULL);
+  JERRY_ASSERT (context_p->line_info_p != NULL);
 #endif /* JERRY_LINE_INFO */
 
   JERRY_ASSERT (context_p->stack_depth == 0);
@@ -1972,11 +1972,7 @@ parser_parse_source (void *source_p, /**< source code */
 #endif /* !JERRY_NDEBUG */
 
 #if JERRY_LINE_INFO
-  context.line_info.first_page_p = NULL;
-  context.line_info.last_page_p = NULL;
-  context.line_info.byte_code_position = 0;
-  context.line_info.line = 1;
-  context.line_info.column = 1;
+  context.line_info_p = NULL;
 #endif /* JERRY_LINE_INFO */
 
 #if JERRY_PARSER_DUMP_BYTE_CODE
@@ -2168,7 +2164,7 @@ parser_parse_source (void *source_p, /**< source code */
   }
 
 #if JERRY_LINE_INFO
-  parser_line_info_free (&context.line_info);
+  parser_line_info_free (context.line_info_p);
 #endif /* JERRY_LINE_INFO */
 
 #if JERRY_PARSER_DUMP_BYTE_CODE
@@ -2314,7 +2310,7 @@ parser_save_context (parser_context_t *context_p, /**< context */
 #endif /* !JERRY_NDEBUG */
 
 #if JERRY_LINE_INFO
-  saved_context_p->line_info = context_p->line_info;
+  saved_context_p->line_info_p = context_p->line_info_p;
 #endif /* JERRY_LINE_INFO */
 
   /* Reset private part of the context. */
@@ -2349,11 +2345,7 @@ parser_save_context (parser_context_t *context_p, /**< context */
 #endif /* !JERRY_NDEBUG */
 
 #if JERRY_LINE_INFO
-  context_p->line_info.first_page_p = NULL;
-  context_p->line_info.last_page_p = NULL;
-  context_p->line_info.byte_code_position = 0;
-  context_p->line_info.line = 1;
-  context_p->line_info.column = 1;
+  context_p->line_info_p = NULL;
 #endif /* JERRY_LINE_INFO */
 } /* parser_save_context */
 
@@ -2372,7 +2364,7 @@ parser_restore_context (parser_context_t *context_p, /**< context */
   }
 
 #if JERRY_LINE_INFO
-  parser_line_info_free (&context_p->line_info);
+  parser_line_info_free (context_p->line_info_p);
 #endif /* JERRY_LINE_INFO */
 
   /* Restore private part of the context. */
@@ -2409,7 +2401,7 @@ parser_restore_context (parser_context_t *context_p, /**< context */
 #endif /* !JERRY_NDEBUG */
 
 #if JERRY_LINE_INFO
-  context_p->line_info = saved_context_p->line_info;
+  context_p->line_info_p = saved_context_p->line_info_p;
 #endif /* JERRY_LINE_INFO */
 } /* parser_restore_context */
 
@@ -2768,7 +2760,7 @@ parser_parse_class_fields (parser_context_t *context_p) /**< context */
   scanner_set_location (context_p, &end_location);
 
 #if JERRY_LINE_INFO
-  if (context_p->line_info.first_page_p == NULL)
+  if (context_p->line_info_p == NULL)
   {
     parser_line_info_append (context_p, context_p->token.line, context_p->token.column);
   }
@@ -2959,7 +2951,7 @@ parser_raise_error (parser_context_t *context_p, /**< context */
 #endif /* JERRY_ESNEXT  */
 
 #if JERRY_LINE_INFO
-    parser_line_info_free (&saved_context_p->line_info);
+    parser_line_info_free (saved_context_p->line_info_p);
 #endif /* JERRY_LINE_INFO */
 
     saved_context_p = saved_context_p->prev_context_p;

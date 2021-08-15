@@ -42,6 +42,11 @@ OBJECT_VALUE (LIT_MAGIC_STRING_PROTOTYPE,
               ECMA_BUILTIN_ID_BIGINT_PROTOTYPE,
               ECMA_PROPERTY_FIXED)
 
+ /* Routine properties:
+ *  (property name, C routine name, arguments number or NON_FIXED, value of the routine's length property) */
+
+ROUTINE (LIT_MAGIC_STRING_AS_INT_N, ECMA_BUILTIN_BIGINT_AS_INT_N, 3, 1)
+ROUTINE (LIT_MAGIC_STRING_AS_U_INT_N, ECMA_BUILTIN_BIGINT_AS_U_INT_N, 3, 1)
 #endif /* JERRY_BUILTIN_BIGINT */
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

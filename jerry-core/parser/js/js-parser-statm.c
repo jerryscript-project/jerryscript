@@ -1830,10 +1830,6 @@ parser_parse_switch_statement_start (parser_context_t *context_p) /**< context *
   switch_case_was_found = false;
   default_case_was_found = false;
 
-#if JERRY_LINE_INFO
-  uint32_t last_line_info_line = context_p->last_line_info_line;
-#endif /* JERRY_LINE_INFO */
-
   do
   {
     scanner_set_location (context_p, &case_info_p->location);
@@ -1903,10 +1899,6 @@ parser_parse_switch_statement_start (parser_context_t *context_p) /**< context *
   while (case_info_p != NULL);
 
   JERRY_ASSERT (switch_case_was_found || default_case_was_found);
-
-#if JERRY_LINE_INFO
-  context_p->last_line_info_line = last_line_info_line;
-#endif /* JERRY_LINE_INFO */
 
   if (!switch_case_was_found)
   {
@@ -2791,10 +2783,6 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
   }
 #endif /* JERRY_DEBUGGER */
 
-#if JERRY_LINE_INFO
-  context_p->last_line_info_line = 0;
-#endif /* JERRY_LINE_INFO */
-
   while (context_p->token.type == LEXER_LITERAL
          && context_p->token.lit_location.type == LEXER_STRING_LITERAL)
   {
@@ -3352,7 +3340,7 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
         if (context_p->status_flags & PARSER_IS_CLOSURE)
         {
 #if JERRY_LINE_INFO
-          if (context_p->line_info.first_page_p == NULL)
+          if (context_p->line_info_p == NULL)
           {
             parser_line_info_append (context_p, context_p->token.line, context_p->token.column);
           }
@@ -3522,7 +3510,7 @@ consume_last_statement:
   }
 
 #if JERRY_LINE_INFO
-  if (context_p->line_info.first_page_p == NULL)
+  if (context_p->line_info_p == NULL)
   {
     parser_line_info_append (context_p, context_p->token.line, context_p->token.column);
   }

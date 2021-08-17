@@ -98,18 +98,42 @@
   (ECMA_LINE_INFO_STREAM_SIZE_MIN + UINT8_MAX - ((2 * PARSER_LINE_INFO_BUFFER_MAX_SIZE) + 1))
 
 /**
+ * Page size of line info pages excluding the first one.
+ */
+#define PARSER_LINE_INFO_PAGE_SIZE \
+  (sizeof (parser_mem_page_t *) + PARSER_STACK_PAGE_SIZE)
+
+/**
+ * Page size of the first line info page.
+ */
+#define PARSER_LINE_INFO_FIRST_PAGE_SIZE \
+  (sizeof (parser_line_info_data_t) + PARSER_LINE_INFO_PAGE_SIZE)
+
+/**
+ * Get memory data of the first page.
+ */
+#define PARSER_LINE_INFO_GET_FIRST_PAGE(line_info_p) \
+  (((parser_mem_page_t *) ((line_info_p) + 1)))
+
+/**
  * Free line info temporary data collected during parsing.
  */
 void
 parser_line_info_free (parser_line_info_data_t *line_info_p)
 {
-  parser_mem_page_t *current_page_p = line_info_p->first_page_p;
+  if (line_info_p == NULL)
+  {
+    return;
+  }
+
+  parser_mem_page_t *current_page_p = PARSER_LINE_INFO_GET_FIRST_PAGE (line_info_p)->next_p;
+  parser_free (line_info_p, PARSER_LINE_INFO_FIRST_PAGE_SIZE);
 
   while (current_page_p != NULL)
   {
     parser_mem_page_t *next_p = current_page_p->next_p;
 
-    parser_free (current_page_p, sizeof (parser_mem_page_t *) + PARSER_STACK_PAGE_SIZE);
+    parser_free (current_page_p, PARSER_LINE_INFO_PAGE_SIZE);
     current_page_p = next_p;
   }
 } /* parser_line_info_free */
@@ -204,39 +228,31 @@ static void
 parser_line_info_append_number (parser_context_t *context_p, /**< context */
                                 uint32_t value) /**< value to be encoded */
 {
+  parser_line_info_data_t *line_info_p = context_p->line_info_p;
   uint8_t buffer[PARSER_LINE_INFO_BUFFER_MAX_SIZE];
 
+  JERRY_ASSERT (line_info_p != NULL);
+
   uint32_t length = parser_line_info_encode_vlq (buffer, value);
+  uint8_t offset = line_info_p->last_page_p->bytes[0];
 
-  if (context_p->line_info.last_page_p != NULL
-      && context_p->line_info.last_page_p->bytes[0] + length <= PARSER_STACK_PAGE_SIZE)
+  if (offset + length <= PARSER_STACK_PAGE_SIZE)
   {
-    memcpy (context_p->line_info.last_page_p->bytes + context_p->line_info.last_page_p->bytes[0],
-            buffer,
-            length);
+    memcpy (line_info_p->last_page_p->bytes + offset, buffer, length);
 
-    length += context_p->line_info.last_page_p->bytes[0];
-    context_p->line_info.last_page_p->bytes[0] = (uint8_t) length;
+    line_info_p->last_page_p->bytes[0] = (uint8_t) (length + offset);
     return;
   }
 
-  size_t size = sizeof (parser_mem_page_t *) + PARSER_STACK_PAGE_SIZE;
-  parser_mem_page_t *new_page_p = (parser_mem_page_t *) parser_malloc (context_p, size);
+  parser_mem_page_t *new_page_p;
+  new_page_p = (parser_mem_page_t *) parser_malloc (context_p, PARSER_LINE_INFO_PAGE_SIZE);
 
   new_page_p->next_p = NULL;
 
-  if (context_p->line_info.first_page_p == NULL)
-  {
-    context_p->line_info.first_page_p = new_page_p;
-    context_p->line_info.last_page_p = new_page_p;
-  }
-  else
-  {
-    context_p->line_info.last_page_p->next_p = new_page_p;
-    context_p->line_info.last_page_p = new_page_p;
-  }
+  line_info_p->last_page_p->next_p = new_page_p;
+  line_info_p->last_page_p = new_page_p;
 
-  context_p->line_info.last_page_p->bytes[0] = (uint8_t) (length + 1);
+  new_page_p->bytes[0] = (uint8_t) (length + 1);
   memcpy (new_page_p->bytes + 1, buffer, length);
 } /* parser_line_info_append_number */
 
@@ -248,31 +264,53 @@ parser_line_info_append (parser_context_t *context_p, /**< context */
                          parser_line_counter_t line, /**< line */
                          parser_line_counter_t column) /**< column */
 {
-  if (context_p->line_info.first_page_p != NULL
-      && (context_p->byte_code_size == context_p->line_info.byte_code_position
-          || (context_p->line_info.line == line
-              && context_p->line_info.column == column)))
+  parser_line_info_data_t *line_info_p = context_p->line_info_p;
+  uint32_t value;
+
+  if (line_info_p != NULL)
   {
-    return;
+    if (line_info_p->byte_code_position == context_p->byte_code_size
+        || (line_info_p->line == line && line_info_p->column == column))
+    {
+      return;
+    }
+
+    /* Sets ECMA_LINE_INFO_HAS_LINE bit. */
+    value = (uint32_t) (line != line_info_p->line);
+  }
+  else
+  {
+    line_info_p = (parser_line_info_data_t *) parser_malloc (context_p, PARSER_LINE_INFO_FIRST_PAGE_SIZE);
+    context_p->line_info_p = line_info_p;
+
+    parser_mem_page_t *page_p = PARSER_LINE_INFO_GET_FIRST_PAGE (line_info_p);
+    page_p->next_p = NULL;
+    page_p->bytes[0] = 1;
+
+    line_info_p->last_page_p = page_p;
+    line_info_p->byte_code_position = 0;
+    line_info_p->line = 1;
+    line_info_p->column = 1;
+
+    /* Sets ECMA_LINE_INFO_HAS_LINE bit. */
+    value = (uint32_t) (line != 1);
   }
 
-  /* Sets ECMA_LINE_INFO_HAS_LINE bit. */
-  uint32_t value = (((context_p->byte_code_size - context_p->line_info.byte_code_position) << 1)
-                    | (uint32_t) (context_p->line_info.line != line));
+  value |= ((context_p->byte_code_size - line_info_p->byte_code_position) << 1);
 
   parser_line_info_append_number (context_p, value);
-  context_p->line_info.byte_code_position = context_p->byte_code_size;
+  line_info_p->byte_code_position = context_p->byte_code_size;
 
   if (value & ECMA_LINE_INFO_HAS_LINE)
   {
-    value = parser_line_info_difference_get (line, context_p->line_info.line);
+    value = parser_line_info_difference_get (line, line_info_p->line);
     parser_line_info_append_number (context_p, value);
-    context_p->line_info.line = line;
+    line_info_p->line = line;
   }
 
-  value = parser_line_info_difference_get (column, context_p->line_info.column);
+  value = parser_line_info_difference_get (column, line_info_p->column);
   parser_line_info_append_number (context_p, value);
-  context_p->line_info.column = column;
+  line_info_p->column = column;
 } /* parser_line_info_append */
 
 /**
@@ -348,7 +386,7 @@ parser_line_info_generate (parser_context_t *context_p) /**< context */
     uint32_t stream_value_count = 0;
     uint32_t value;
 
-    iterator.current_page_p = context_p->line_info.first_page_p;
+    iterator.current_page_p = PARSER_LINE_INFO_GET_FIRST_PAGE (context_p->line_info_p);
     iterator.offset = 1;
 
     do

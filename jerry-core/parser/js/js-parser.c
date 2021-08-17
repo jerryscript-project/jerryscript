@@ -130,7 +130,8 @@ parser_compute_indicies (parser_context_t *context_p, /**< context */
     if (char_p != NULL)
     {
       literal_p->u.value = ecma_find_or_create_literal_string (char_p,
-                                                               literal_p->prop.length);
+                                                               literal_p->prop.length,
+                                                               (literal_p->status_flags & LEXER_FLAG_ASCII) != 0);
 
       if (!(literal_p->status_flags & LEXER_FLAG_SOURCE_PTR))
       {
@@ -1274,7 +1275,8 @@ parser_post_processing (parser_context_t *context_p) /**< context */
         uint32_t source_data = literal_p->u.source_data;
         const uint8_t *char_p = context_p->source_end_p - (source_data & 0xfffff);
         ecma_value_t lit_value = ecma_find_or_create_literal_string (char_p,
-                                                                     source_data >> 20);
+                                                                     source_data >> 20,
+                                                                     (literal_p->status_flags & LEXER_FLAG_ASCII) != 0);
         literal_pool_p[literal_p->prop.index] = lit_value;
       }
     }
@@ -2896,7 +2898,9 @@ parser_compiled_code_set_function_name (parser_context_t *context_p, /**< contex
     memcpy (name_buffer_p + 4, name_lit_p->u.char_p, name_lit_p->prop.length);
   }
 
-  *func_name_start_p = ecma_find_or_create_literal_string (name_buffer_p, name_length);
+  *func_name_start_p = ecma_find_or_create_literal_string (name_buffer_p,
+                                                           name_length,
+                                                           (status_flags & LEXER_FLAG_ASCII) != 0);
 
   if (name_buffer_p != name_lit_p->u.char_p)
   {

@@ -5403,14 +5403,11 @@ jerry_get_resource_name (const jerry_value_t value) /**< jerry api value */
   ecma_value_t script_value = ((cbc_uint8_arguments_t *) bytecode_p)->script_value;
   cbc_script_t *script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
 
-  if (CBC_SCRIPT_GET_TYPE (script_p) == CBC_SCRIPT_GENERIC)
-  {
-    return ecma_copy_value (script_p->resource_name);
-  }
-#endif /* JERRY_RESOURCE_NAME */
-
+  return ecma_copy_value (script_p->resource_name);
+#else /* !JERRY_RESOURCE_NAME */
   JERRY_UNUSED (value);
   return ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
+#endif /* JERRY_RESOURCE_NAME */
 } /* jerry_get_resource_name */
 
 /**

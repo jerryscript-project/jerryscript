@@ -84,7 +84,6 @@ ecma_builtin_reflect_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
                                        uint32_t arguments_number) /**< length of arguments' list */
 {
   JERRY_UNUSED (this_arg);
-  JERRY_UNUSED (arguments_number);
 
   if (builtin_routine_id < ECMA_REFLECT_OBJECT_CONSTRUCT)
   {
@@ -95,8 +94,7 @@ ecma_builtin_reflect_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
     }
 
     /* 2. */
-    ecma_string_t *name_str_p = ecma_op_to_property_key (((arguments_number > 1) ? arguments_list[1]
-                                                                                 : ECMA_VALUE_UNDEFINED));
+    ecma_string_t *name_str_p = ecma_op_to_property_key (arguments_list[1]);
 
     /* 3. */
     if (name_str_p == NULL)

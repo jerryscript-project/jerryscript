@@ -550,13 +550,15 @@ ecma_builtin_array_dispatch_routine (uint8_t builtin_routine_id, /**< built-in w
                                                                              *   passed to routine */
                                      uint32_t arguments_number) /**< length of arguments' list */
 {
+  JERRY_UNUSED (arguments_number);
+
   switch (builtin_routine_id)
   {
     case ECMA_ARRAY_ROUTINE_IS_ARRAY:
     {
       JERRY_UNUSED (this_arg);
 
-      return arguments_number > 0 ? ecma_is_value_array (arguments_list_p[0]) : ECMA_VALUE_FALSE;
+      return ecma_is_value_array (arguments_list_p[0]);
     }
 #if JERRY_ESNEXT
     case ECMA_ARRAY_ROUTINE_FROM:

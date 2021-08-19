@@ -82,8 +82,7 @@ ecma_builtin_map_iterator_prototype_dispatch_routine (uint8_t builtin_routine_id
                                                                                               *   passed to routine */
                                                       uint32_t arguments_number) /**< length of arguments' list */
 {
-  JERRY_UNUSED (arguments_list_p);
-  JERRY_UNUSED (arguments_number);
+  JERRY_UNUSED_2 (arguments_list_p, arguments_number);
 
   switch (builtin_routine_id)
   {

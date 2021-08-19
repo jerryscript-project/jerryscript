@@ -174,6 +174,15 @@ BUILTIN (ECMA_BUILTIN_ID_JSON,
          json)
 #endif /* JERRY_BUILTIN_JSON */
 
+#if JERRY_BUILTIN_ATOMICS
+/* The Atomics object (24.4) */
+BUILTIN (ECMA_BUILTIN_ID_ATOMICS,
+         ECMA_OBJECT_TYPE_BUILT_IN_GENERAL,
+         ECMA_BUILTIN_ID_OBJECT_PROTOTYPE,
+         true,
+         atomics)
+#endif /* JERRY_BUILTIN_ATOMICS */
+
 #if JERRY_BUILTIN_DATE
 /* The Date object (15.9.3) */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_DATE,

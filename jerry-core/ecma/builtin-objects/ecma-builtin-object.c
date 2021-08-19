@@ -1380,8 +1380,6 @@ ecma_builtin_object_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
                                       uint32_t arguments_number) /**< length of arguments' list */
 {
   JERRY_UNUSED (this_arg);
-  JERRY_UNUSED (arguments_list_p);
-  JERRY_UNUSED (arguments_number);
 
   ecma_value_t arg1 = arguments_list_p[0];
   ecma_value_t arg2 = arguments_list_p[1];

@@ -768,8 +768,6 @@ ecma_builtin_number_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
 
   ecma_number_t this_arg_number = ecma_get_number_from_value (this_value);
 
-  ecma_value_t routine_arg_1 = arguments_list_p[0];
-
   switch (builtin_routine_id)
   {
     case ECMA_NUMBER_PROTOTYPE_TO_STRING:
@@ -786,7 +784,7 @@ ecma_builtin_number_prototype_dispatch_routine (uint8_t builtin_routine_id, /**<
     {
       const int option = NUMBER_ROUTINE_TO_FIXED + (builtin_routine_id - ECMA_NUMBER_PROTOTYPE_TO_FIXED);
       return ecma_builtin_number_prototype_object_to_number_convert (this_arg_number,
-                                                                     routine_arg_1,
+                                                                     arguments_list_p[0],
                                                                      (number_routine_mode_t) option);
     }
     default:

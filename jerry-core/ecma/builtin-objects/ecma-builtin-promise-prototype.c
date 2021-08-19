@@ -64,23 +64,22 @@ ecma_builtin_promise_prototype_dispatch_routine (uint8_t builtin_routine_id, /**
                                                                                          *   passed to routine */
                                                  uint32_t arguments_number) /**< length of arguments' list */
 {
-  ecma_value_t arg_1 = (arguments_number > 0) ? arguments_list_p[0] : ECMA_VALUE_UNDEFINED;
+  JERRY_UNUSED (arguments_number);
 
   switch (builtin_routine_id)
   {
     case ECMA_PROMISE_PROTOTYPE_ROUTINE_THEN:
     {
-      ecma_value_t arg_2 = (arguments_number > 1) ? arguments_list_p[1] : ECMA_VALUE_UNDEFINED;
-      return ecma_promise_then (this_arg, arg_1, arg_2);
+      return ecma_promise_then (this_arg, arguments_list_p[0], arguments_list_p[1]);
     }
     case ECMA_PROMISE_PROTOTYPE_ROUTINE_CATCH:
     {
-      ecma_value_t args[] = {ECMA_VALUE_UNDEFINED, arg_1};
+      ecma_value_t args[] = {ECMA_VALUE_UNDEFINED, arguments_list_p[0]};
       return ecma_op_invoke_by_magic_id (this_arg, LIT_MAGIC_STRING_THEN, args, 2);
     }
     case ECMA_PROMISE_PROTOTYPE_ROUTINE_FINALLY:
     {
-      return ecma_promise_finally (this_arg, arg_1);
+      return ecma_promise_finally (this_arg, arguments_list_p[0]);
     }
     default:
     {

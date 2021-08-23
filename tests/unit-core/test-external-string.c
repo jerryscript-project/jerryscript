@@ -64,40 +64,56 @@ main (void)
 
   jerry_init (JERRY_INIT_EMPTY);
 
+  bool is_external;
+
   /* Test external callback calls. */
   jerry_string_set_external_free_callback (external_string_free_callback_1);
   jerry_value_t external_string = jerry_create_external_string ((jerry_char_t *) external_1, NULL);
   TEST_ASSERT (free_count == 0);
+  TEST_ASSERT (jerry_string_get_external_user_pointer (external_string, &is_external) == NULL);
+  TEST_ASSERT (is_external);
+  TEST_ASSERT (jerry_string_get_external_user_pointer (external_string, NULL) == NULL);
   jerry_release_value (external_string);
   TEST_ASSERT (free_count == 1);
 
   jerry_string_set_external_free_callback (NULL);
-  external_string = jerry_create_external_string ((jerry_char_t *) external_1, NULL);
+  external_string = jerry_create_external_string ((jerry_char_t *) external_1, (void *) &free_count);
   TEST_ASSERT (free_count == 1);
+  TEST_ASSERT (jerry_string_get_external_user_pointer (external_string, &is_external) == (void *) &free_count);
+  TEST_ASSERT (is_external);
+  TEST_ASSERT (jerry_string_get_external_user_pointer (external_string, NULL) == (void *) &free_count);
   jerry_release_value (external_string);
   TEST_ASSERT (free_count == 1);
 
   jerry_string_set_external_free_callback (external_string_free_callback_2);
   external_string = jerry_create_external_string ((jerry_char_t *) external_2, (void *) &free_count);
   TEST_ASSERT (free_count == 2);
+  TEST_ASSERT (jerry_string_get_external_user_pointer (external_string, &is_external) == NULL);
+  TEST_ASSERT (!is_external);
   jerry_release_value (external_string);
   TEST_ASSERT (free_count == 2);
 
   jerry_string_set_external_free_callback (NULL);
   external_string = jerry_create_external_string ((jerry_char_t *) external_2, (void *) &free_count);
   TEST_ASSERT (free_count == 2);
+  TEST_ASSERT (jerry_string_get_external_user_pointer (external_string, &is_external) == NULL);
+  TEST_ASSERT (!is_external);
   jerry_release_value (external_string);
   TEST_ASSERT (free_count == 2);
 
   jerry_string_set_external_free_callback (external_string_free_callback_3);
   external_string = jerry_create_external_string ((jerry_char_t *) external_3, (void *) external_3);
   TEST_ASSERT (free_count == 3);
+  TEST_ASSERT (jerry_string_get_external_user_pointer (external_string, &is_external) == NULL);
+  TEST_ASSERT (!is_external);
   jerry_release_value (external_string);
   TEST_ASSERT (free_count == 3);
 
   jerry_string_set_external_free_callback (NULL);
   external_string = jerry_create_external_string ((jerry_char_t *) external_3, (void *) external_3);
   TEST_ASSERT (free_count == 3);
+  TEST_ASSERT (jerry_string_get_external_user_pointer (external_string, &is_external) == NULL);
+  TEST_ASSERT (!is_external);
   jerry_release_value (external_string);
   TEST_ASSERT (free_count == 3);
 
@@ -175,6 +191,16 @@ main (void)
   jerry_release_value (obj);
   jerry_release_value (external_string);
   jerry_release_value (other_string);
+
+  external_string = jerry_create_boolean (true);
+  TEST_ASSERT (jerry_string_get_external_user_pointer (external_string, &is_external) == NULL);
+  TEST_ASSERT (!is_external);
+  jerry_release_value (external_string);
+
+  external_string = jerry_create_object ();
+  TEST_ASSERT (jerry_string_get_external_user_pointer (external_string, &is_external) == NULL);
+  TEST_ASSERT (!is_external);
+  jerry_release_value (external_string);
 
   jerry_cleanup ();
   return 0;

@@ -3117,6 +3117,50 @@ jerry_string_set_external_free_callback (jerry_external_string_free_callback_t c
 } /* jerry_string_set_external_free_callback */
 
 /**
+ * Returns the user pointer assigned to an external string.
+ *
+ * @return user pointer, if value is an external string
+ *         NULL, otherwise
+ */
+void *
+jerry_string_get_external_user_pointer (const jerry_value_t value, /**< string value */
+                                        bool *is_external) /**< [out] true - if value is an external string,
+                                                            *         false - otherwise */
+{
+  if (is_external != NULL)
+  {
+    *is_external = false;
+  }
+
+  if (!ecma_is_value_string (value))
+  {
+    return NULL;
+  }
+
+  ecma_string_t *string_p = ecma_get_string_from_value (value);
+
+  if (ECMA_IS_DIRECT_STRING (string_p)
+      || ECMA_STRING_GET_CONTAINER (string_p) != ECMA_STRING_CONTAINER_LONG_OR_EXTERNAL_STRING)
+  {
+    return NULL;
+  }
+
+  ecma_long_string_t *long_string_p = (ecma_long_string_t *) string_p;
+
+  if (long_string_p->string_p == ECMA_LONG_STRING_BUFFER_START (long_string_p))
+  {
+    return NULL;
+  }
+
+  if (is_external != NULL)
+  {
+    *is_external = true;
+  }
+
+  return ((ecma_external_string_t *) string_p)->user_p;
+} /* jerry_string_get_external_user_pointer */
+
+/**
  * Checks whether the object or it's prototype objects have the given property.
  *
  * @return raised error - if the operation fail

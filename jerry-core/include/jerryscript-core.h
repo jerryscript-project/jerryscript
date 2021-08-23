@@ -135,7 +135,7 @@ jerry_size_t jerry_substring_to_utf8_char_buffer (const jerry_value_t value,
                                                   jerry_length_t end_pos,
                                                   jerry_char_t *buffer_p,
                                                   jerry_size_t buffer_size);
-void jerry_string_set_external_string_free_callback (jerry_external_string_free_callback_t callback_p);
+void jerry_string_set_external_free_callback (jerry_external_string_free_callback_t callback_p);
 
 /**
  * Functions for array object values.

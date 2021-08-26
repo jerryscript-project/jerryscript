@@ -27,12 +27,12 @@ install-apt-get-deps:
 
 # Install Zephyr SDK.
 install-zephyr-sdk:
-	wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.10.0/zephyr-sdk-0.10.0-setup.run -O ../zephyr-sdk-0.10.0-setup.run
-	sh ../zephyr-sdk-0.10.0-setup.run -- -y -d $(CURDIR)/../zephyr-sdk-0.10.0
+	wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.13.0/zephyr-sdk-0.13.0-linux-x86_64-setup.run -O ../zephyr-sdk-0.13.0-linux-x86_64-setup.run
+	sh ../zephyr-sdk-0.13.0-linux-x86_64-setup.run -- -y -d $(CURDIR)/../zephyr-sdk-0.13.0
 
 # Fetch Zephyr Project repository and install python dependencies.
 install-zephyr:
-	git clone https://github.com/zephyrproject-rtos/zephyr.git ../zephyr -b v1.14-branch
+	git clone https://github.com/zephyrproject-rtos/zephyr.git ../zephyr -b v2.5-branch
 	pip3 install -U pip
 	pip3 install -U setuptools
 	pip3 install -r ../zephyr/scripts/requirements.txt
@@ -53,6 +53,6 @@ install: install-apt-get-deps install-noapt
 SHELL=bash
 script:
 	export ZEPHYR_TOOLCHAIN_VARIANT=zephyr && \
-	export ZEPHYR_SDK_INSTALL_DIR=$(CURDIR)/../zephyr-sdk-0.10.0 && \
+	export ZEPHYR_SDK_INSTALL_DIR=$(CURDIR)/../zephyr-sdk-0.13.0 && \
 	source ../zephyr/zephyr-env.sh && \
-	$(MAKE) -f ./targets/zephyr/Makefile.zephyr BOARD=arduino_101
+	$(MAKE) -f ./targets/zephyr/Makefile.zephyr BOARD=qemu_x86

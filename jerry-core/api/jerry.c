@@ -3111,11 +3111,10 @@ jerry_substring_to_utf8_char_buffer (const jerry_value_t value, /**< input strin
  * Sets the global callback which is called when an external string is freed.
  */
 void
-jerry_string_set_external_string_free_callback (jerry_external_string_free_callback_t callback_p) /**< free
-                                                                                                   *   callback */
+jerry_string_set_external_free_callback (jerry_external_string_free_callback_t callback_p) /**< free callback */
 {
   JERRY_CONTEXT (external_string_free_callback_p) = callback_p;
-} /* jerry_string_set_external_string_free_callback */
+} /* jerry_string_set_external_free_callback */
 
 /**
  * Checks whether the object or it's prototype objects have the given property.

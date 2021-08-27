@@ -78,7 +78,8 @@ ecma_arraybuffer_new_object (uint32_t length) /**< length of the arraybuffer */
 ecma_object_t *
 ecma_arraybuffer_new_object_external (uint32_t length, /**< length of the buffer_p to use */
                                       void *buffer_p, /**< pointer for ArrayBuffer's buffer backing */
-                                      jerry_value_free_callback_t free_cb) /**< buffer free callback */
+                                      void *user_p) /**< user pointer passed to the callback
+                                                     *   when the arraybuffer is freed */
 {
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAYBUFFER_PROTOTYPE);
   ecma_object_t *object_p = ecma_create_object (prototype_obj_p,
@@ -91,7 +92,7 @@ ecma_arraybuffer_new_object_external (uint32_t length, /**< length of the buffer
   array_object_p->extended_object.u.cls.u3.length = length;
 
   array_object_p->buffer_p = buffer_p;
-  array_object_p->free_cb = free_cb;
+  array_object_p->user_p = user_p;
 
   return object_p;
 } /* ecma_arraybuffer_new_object_external */
@@ -260,13 +261,15 @@ ecma_arraybuffer_detach (ecma_object_t *object_p) /**< pointer to the ArrayBuffe
   {
     ecma_arraybuffer_external_info *array_p = (ecma_arraybuffer_external_info *) ext_object_p;
 
-    if (array_p->free_cb != NULL)
+    jerry_external_arraybuffer_free_callback_t free_cb = JERRY_CONTEXT (external_arraybuffer_free_callback_p);
+
+    if (free_cb != NULL)
     {
-      array_p->free_cb (array_p->buffer_p);
-      array_p->free_cb = NULL;
+      free_cb (array_p->extended_object.u.cls.u3.length, array_p->buffer_p, array_p->user_p);
     }
 
     ext_object_p->u.cls.u3.length = 0;
+    array_p->user_p = NULL;
     array_p->buffer_p = NULL;
   }
 

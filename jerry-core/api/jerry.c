@@ -5676,7 +5676,7 @@ jerry_create_arraybuffer (const jerry_length_t size) /**< size of the ArrayBuffe
 jerry_value_t
 jerry_create_arraybuffer_external (const jerry_length_t size, /**< size of the buffer to used */
                                    uint8_t *buffer_p, /**< buffer to use as the ArrayBuffer's backing */
-                                   jerry_value_free_callback_t free_cb) /**< buffer free callback */
+                                   void *user_p) /**< buffer free callback */
 {
   jerry_assert_api_available ();
 
@@ -5689,17 +5689,31 @@ jerry_create_arraybuffer_external (const jerry_length_t size, /**< size of the b
   }
   else
   {
-    arraybuffer = ecma_arraybuffer_new_object_external (size, buffer_p, free_cb);
+    arraybuffer = ecma_arraybuffer_new_object_external (size, buffer_p, user_p);
   }
 
   return jerry_return (ecma_make_object_value (arraybuffer));
 #else /* !JERRY_BUILTIN_TYPEDARRAY */
   JERRY_UNUSED (size);
   JERRY_UNUSED (buffer_p);
-  JERRY_UNUSED (free_cb);
+  JERRY_UNUSED (user_p);
   return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_typed_array_not_supported_p)));
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
 } /* jerry_create_arraybuffer_external */
+
+/**
+ * Sets the global callback which is called when an external arraybuffer is freed.
+ */
+void
+jerry_arraybuffer_set_external_free_callback (jerry_external_arraybuffer_free_callback_t callback_p) /**< free
+                                                                                                      *   callback */
+{
+#if JERRY_BUILTIN_TYPEDARRAY
+  JERRY_CONTEXT (external_arraybuffer_free_callback_p) = callback_p;
+#else /* !JERRY_BUILTIN_TYPEDARRAY */
+  JERRY_UNUSED (callback_p);
+#endif /* JERRY_BUILTIN_TYPEDARRAY */
+} /* jerry_arraybuffer_set_external_free_callback */
 
 /**
  * Check if the given value is a SharedArrayBuffer object.
@@ -5752,7 +5766,7 @@ jerry_create_shared_arraybuffer (const jerry_length_t size) /**< size of the Sha
 jerry_value_t
 jerry_create_shared_arraybuffer_external (const jerry_length_t size, /**< size of the buffer to used */
                                           uint8_t *buffer_p, /**< buffer to use as the SharedArrayBuffer's backing */
-                                          jerry_value_free_callback_t free_cb) /**< buffer free callback */
+                                          void *user_p) /**< buffer free callback */
 {
   jerry_assert_api_available ();
 
@@ -5765,14 +5779,14 @@ jerry_create_shared_arraybuffer_external (const jerry_length_t size, /**< size o
   }
   else
   {
-    shared_arraybuffer = ecma_shared_arraybuffer_new_object_external (size, buffer_p, free_cb);
+    shared_arraybuffer = ecma_shared_arraybuffer_new_object_external (size, buffer_p, user_p);
   }
 
   return jerry_return (ecma_make_object_value (shared_arraybuffer));
 #else /* !JERRY_BUILTIN_SHAREDARRAYBUFFER */
   JERRY_UNUSED (size);
   JERRY_UNUSED (buffer_p);
-  JERRY_UNUSED (free_cb);
+  JERRY_UNUSED (user_p);
   return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_shared_arraybuffer_not_supported_p)));
 #endif /* JERRY_BUILTIN_SHAREDARRAYBUFFER */
 } /* jerry_create_shared_arraybuffer_external */

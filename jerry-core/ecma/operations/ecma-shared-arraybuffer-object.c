@@ -76,7 +76,8 @@ ecma_shared_arraybuffer_new_object (uint32_t length) /**< length of the SharedAr
 ecma_object_t *
 ecma_shared_arraybuffer_new_object_external (uint32_t length, /**< length of the buffer_p to use */
                                              void *buffer_p, /**< pointer for SharedArrayBuffer's buffer backing */
-                                             jerry_value_free_callback_t free_cb) /**< buffer free callback */
+                                             void *user_p) /**< user pointer passed to the callback
+                                                            *   when the arraybuffer is freed */
 {
   ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_SHARED_ARRAYBUFFER_PROTOTYPE);
   ecma_object_t *object_p = ecma_create_object (prototype_obj_p,
@@ -89,7 +90,7 @@ ecma_shared_arraybuffer_new_object_external (uint32_t length, /**< length of the
   array_object_p->extended_object.u.cls.u3.length = length;
 
   array_object_p->buffer_p = buffer_p;
-  array_object_p->free_cb = free_cb;
+  array_object_p->user_p = user_p;
 
   return object_p;
 } /* ecma_shared_arraybuffer_new_object_external */

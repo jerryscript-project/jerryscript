@@ -38,7 +38,7 @@ ecma_shared_arraybuffer_new_object (uint32_t lengh);
 ecma_object_t *
 ecma_shared_arraybuffer_new_object_external (uint32_t length,
                                              void *buffer_p,
-                                             jerry_value_free_callback_t free_cb);
+                                             void *user_p);
 #endif /* JERRY_BUILTIN_SHAREDARRAYBUFFER */
 bool
 ecma_is_shared_arraybuffer (ecma_value_t val);

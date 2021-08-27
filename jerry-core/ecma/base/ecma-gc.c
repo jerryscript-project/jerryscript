@@ -1910,9 +1910,11 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
             /* Call external free callback if any. */
             ecma_arraybuffer_external_info *array_p = (ecma_arraybuffer_external_info *) ext_object_p;
 
-            if (array_p->free_cb != NULL)
+            jerry_external_arraybuffer_free_callback_t free_cb = JERRY_CONTEXT (external_arraybuffer_free_callback_p);
+
+            if (free_cb != NULL && (ext_object_p->u.cls.u1.array_buffer_flags & ECMA_ARRAYBUFFER_DETACHED) == 0)
             {
-              array_p->free_cb (array_p->buffer_p);
+              free_cb (array_p->extended_object.u.cls.u3.length, array_p->buffer_p, array_p->user_p);
             }
           }
           else

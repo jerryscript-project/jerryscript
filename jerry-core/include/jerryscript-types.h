@@ -299,6 +299,11 @@ typedef void (*jerry_external_string_free_callback_t) (jerry_char_t *string_p, j
                                                        void *user_p);
 
 /**
+ * Free callback for external arraybuffer.
+ */
+typedef void (*jerry_external_arraybuffer_free_callback_t) (uint32_t length, void *buffer_p, void *user_p);
+
+/**
  * Decorator callback for Error objects. The decorator can create
  * or update any properties of the newly created Error object.
  */

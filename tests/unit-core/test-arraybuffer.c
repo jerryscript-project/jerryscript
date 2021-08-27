@@ -151,19 +151,29 @@ static void test_write_with_offset (uint8_t offset) /**< offset for buffer write
   jerry_release_value (arraybuffer);
 } /* test_write_with_offset */
 
-static bool callback_called = false;
-static bool detach_free_callback_called = false;
+static int callback_called = 0;
 
-static void test_free_cb (void *buffer) /**< buffer to free (if needed) */
+static uint32_t external_buffer_size = 15;
+
+static void
+test_free_cb (uint32_t length, /**< length of buffer */
+              void *buffer, /**< buffer to free (if needed) */
+              void *user_p) /**< user pointer */
 {
+  TEST_ASSERT (length == external_buffer_size);
+  TEST_ASSERT (user_p == (void *) &external_buffer_size);
   (void) buffer;
-  callback_called = true;
+  callback_called++;
 } /* test_free_cb */
 
-static void test_detach_free_cb (void *buffer) /**< buffer to free */
+static void test_detach_free_cb (uint32_t length, /**< length of buffer */
+                                 void *buffer, /**< buffer to free (if needed) */
+                                 void *user_p) /**< user pointer */
 {
+  TEST_ASSERT (length == external_buffer_size);
+  TEST_ASSERT (user_p == (void *) &external_buffer_size);
   free (buffer);
-  detach_free_callback_called = true;
+  callback_called++;
 } /* test_detach_free_cb */
 
 int
@@ -275,46 +285,52 @@ main (void)
 
   /* Test ArrayBuffer with buffer allocated externally */
   {
-    const uint32_t buffer_size = 15;
     const uint8_t base_value = 51;
 
-    JERRY_VLA (uint8_t, buffer_p, buffer_size);
-    memset (buffer_p, base_value, buffer_size);
+    JERRY_VLA (uint8_t, buffer_p, external_buffer_size);
+    memset (buffer_p, base_value, external_buffer_size);
 
-    jerry_value_t arrayb = jerry_create_arraybuffer_external (buffer_size, buffer_p, test_free_cb);
+    jerry_arraybuffer_set_external_free_callback (test_free_cb);
+    jerry_value_t arrayb = jerry_create_arraybuffer_external (external_buffer_size,
+                                                              buffer_p,
+                                                              (void *) &external_buffer_size);
     uint8_t new_value = 123;
     jerry_length_t copied = jerry_arraybuffer_write (arrayb, 0, &new_value, 1);
     TEST_ASSERT (copied == 1);
     TEST_ASSERT (buffer_p[0] == new_value);
-    TEST_ASSERT (jerry_get_arraybuffer_byte_length (arrayb) == buffer_size);
+    TEST_ASSERT (jerry_get_arraybuffer_byte_length (arrayb) == external_buffer_size);
 
-    for (uint32_t i = 1; i < buffer_size; i++)
+    for (uint32_t i = 1; i < external_buffer_size; i++)
     {
       TEST_ASSERT (buffer_p[i] == base_value);
     }
 
-    JERRY_VLA (uint8_t, test_buffer, buffer_size);
-    jerry_length_t read = jerry_arraybuffer_read (arrayb, 0, test_buffer, buffer_size);
-    TEST_ASSERT (read == buffer_size);
+    JERRY_VLA (uint8_t, test_buffer, external_buffer_size);
+    jerry_length_t read = jerry_arraybuffer_read (arrayb, 0, test_buffer, external_buffer_size);
+    TEST_ASSERT (read == external_buffer_size);
     TEST_ASSERT (test_buffer[0] == new_value);
 
-    for (uint32_t i = 1; i < buffer_size; i++)
+    for (uint32_t i = 1; i < external_buffer_size; i++)
     {
       TEST_ASSERT (test_buffer[i] == base_value);
     }
 
     TEST_ASSERT (jerry_value_is_arraybuffer (arrayb));
     jerry_release_value (arrayb);
+    jerry_gc (JERRY_GC_PRESSURE_HIGH);
+
+    TEST_ASSERT (callback_called == 1);
   }
 
   /* Test ArrayBuffer external memory map/unmap */
   {
-    const uint32_t buffer_size = 20;
-    JERRY_VLA (uint8_t, buffer_p, buffer_size);
+    external_buffer_size = 20;
+    JERRY_VLA (uint8_t, buffer_p, external_buffer_size);
 
-    jerry_value_t input_buffer = jerry_create_arraybuffer_external (buffer_size, buffer_p, NULL);
+    jerry_value_t input_buffer = jerry_create_arraybuffer_external (external_buffer_size,
+                                                                    buffer_p,
+                                                                    (void *) &external_buffer_size);
     register_js_value ("input_buffer", input_buffer);
-    jerry_release_value (input_buffer);
 
     const jerry_char_t eval_arraybuffer_src[] = TEST_STRING_LITERAL (
       "var array = new Uint8Array(input_buffer);"
@@ -363,9 +379,16 @@ main (void)
                                     JERRY_PARSE_STRICT_MODE);
     TEST_ASSERT (jerry_value_is_number (res));
     TEST_ASSERT (jerry_get_number_value (res) == sum);
-    jerry_release_value (res);
 
+    jerry_detach_arraybuffer (input_buffer);
+
+    jerry_release_value (res);
     jerry_release_value (buffer);
+    jerry_release_value (input_buffer);
+
+    jerry_gc (JERRY_GC_PRESSURE_HIGH);
+
+    TEST_ASSERT (callback_called == 2);
   }
 
   /* Test internal ArrayBuffer detach */
@@ -394,16 +417,18 @@ main (void)
   /* Test external ArrayBuffer detach */
   {
     uint8_t buf[1];
-    const uint32_t length = 1;
-    jerry_value_t arraybuffer = jerry_create_arraybuffer_external (length, buf, NULL);
+    external_buffer_size = 1;
+    jerry_value_t arraybuffer = jerry_create_arraybuffer_external (external_buffer_size,
+                                                                   buf,
+                                                                   (void *) &external_buffer_size);
     TEST_ASSERT (!jerry_value_is_error (arraybuffer));
     TEST_ASSERT (jerry_value_is_arraybuffer (arraybuffer));
-    TEST_ASSERT (jerry_get_arraybuffer_byte_length (arraybuffer) == length);
+    TEST_ASSERT (jerry_get_arraybuffer_byte_length (arraybuffer) == external_buffer_size);
 
     jerry_value_t is_detachable = jerry_is_arraybuffer_detachable (arraybuffer);
     TEST_ASSERT (!jerry_value_is_error (is_detachable));
     TEST_ASSERT (jerry_value_is_true (is_detachable));
-    TEST_ASSERT (jerry_get_arraybuffer_byte_length (arraybuffer) == length);
+    TEST_ASSERT (jerry_get_arraybuffer_byte_length (arraybuffer) == external_buffer_size);
     jerry_release_value (is_detachable);
 
     jerry_value_t res = jerry_detach_arraybuffer (arraybuffer);
@@ -418,28 +443,35 @@ main (void)
 
     jerry_release_value (res);
     jerry_release_value (arraybuffer);
+    jerry_gc (JERRY_GC_PRESSURE_HIGH);
+
+    TEST_ASSERT (callback_called == 3);
   }
 
   /* Test external ArrayBuffer with callback detach */
   {
-    const uint32_t length = 8;
-    uint8_t *buf = (uint8_t *) malloc (length);
-    jerry_value_t arraybuffer = jerry_create_arraybuffer_external (length, buf, test_detach_free_cb);
+    callback_called = 0;
+    external_buffer_size = 8;
+    uint8_t *buf = (uint8_t *) malloc (external_buffer_size);
+
+    jerry_arraybuffer_set_external_free_callback (test_detach_free_cb);
+    jerry_value_t arraybuffer = jerry_create_arraybuffer_external (external_buffer_size,
+                                                                   buf,
+                                                                   (void *) &external_buffer_size);
     TEST_ASSERT (!jerry_value_is_error (arraybuffer));
     TEST_ASSERT (jerry_value_is_arraybuffer (arraybuffer));
-    TEST_ASSERT (jerry_get_arraybuffer_byte_length (arraybuffer) == length);
+    TEST_ASSERT (jerry_get_arraybuffer_byte_length (arraybuffer) == external_buffer_size);
 
     jerry_value_t is_detachable = jerry_is_arraybuffer_detachable (arraybuffer);
     TEST_ASSERT (!jerry_value_is_error (is_detachable));
     TEST_ASSERT (jerry_value_is_true (is_detachable));
-    TEST_ASSERT (jerry_get_arraybuffer_byte_length (arraybuffer) == length);
+    TEST_ASSERT (jerry_get_arraybuffer_byte_length (arraybuffer) == external_buffer_size);
     jerry_release_value (is_detachable);
 
     jerry_value_t res = jerry_detach_arraybuffer (arraybuffer);
     TEST_ASSERT (!jerry_value_is_error (res));
     TEST_ASSERT (jerry_get_arraybuffer_pointer (arraybuffer) == NULL);
     TEST_ASSERT (jerry_get_arraybuffer_byte_length (arraybuffer) == 0);
-    TEST_ASSERT (detach_free_callback_called);
 
     is_detachable = jerry_is_arraybuffer_detachable (arraybuffer);
     TEST_ASSERT (!jerry_value_is_error (is_detachable));
@@ -448,11 +480,11 @@ main (void)
 
     jerry_release_value (res);
     jerry_release_value (arraybuffer);
+
+    TEST_ASSERT (callback_called == 1);
   }
 
   jerry_cleanup ();
-
-  TEST_ASSERT (callback_called == true);
 
   return 0;
 } /* main */

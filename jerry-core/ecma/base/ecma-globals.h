@@ -2057,7 +2057,7 @@ typedef struct
 {
   ecma_extended_object_t extended_object; /**< extended object part */
   void *buffer_p; /**< external buffer pointer */
-  jerry_value_free_callback_t free_cb; /**<  the free callback for the above buffer pointer */
+  void *user_p; /**< user pointer passed to the callback when the arraybuffer is freed */
 } ecma_arraybuffer_external_info;
 
 /**

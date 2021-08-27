@@ -366,10 +366,11 @@ jerry_value_t jerry_get_user_value (const jerry_value_t value);
  * Array buffer components.
  */
 bool jerry_value_is_arraybuffer (const jerry_value_t value);
+void jerry_arraybuffer_set_external_free_callback (jerry_external_arraybuffer_free_callback_t callback_p);
 jerry_value_t jerry_create_arraybuffer (const jerry_length_t size);
 jerry_value_t jerry_create_arraybuffer_external (const jerry_length_t size,
                                                  uint8_t *buffer_p,
-                                                 jerry_value_free_callback_t free_cb);
+                                                 void *user_p);
 jerry_length_t jerry_arraybuffer_write (const jerry_value_t value,
                                         jerry_length_t offset,
                                         const uint8_t *buf_p,
@@ -391,7 +392,7 @@ bool jerry_value_is_shared_arraybuffer (const jerry_value_t value);
 jerry_value_t jerry_create_shared_arraybuffer (const jerry_length_t size);
 jerry_value_t jerry_create_shared_arraybuffer_external (const jerry_length_t size,
                                                         uint8_t *buffer_p,
-                                                        jerry_value_free_callback_t free_cb);
+                                                        void *user_p);
 
 /**
  * DataView functions.

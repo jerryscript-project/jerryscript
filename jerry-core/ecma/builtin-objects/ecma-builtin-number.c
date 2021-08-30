@@ -206,8 +206,7 @@ ecma_builtin_number_dispatch_routine (uint8_t builtin_routine_id, /**< built-in 
                                                                               *   passed to routine */
                                       uint32_t arguments_number) /**< length of arguments' list */
 {
-  JERRY_UNUSED (this_arg);
-  JERRY_UNUSED (arguments_number);
+  JERRY_UNUSED_2 (this_arg, arguments_number);
 
   if (!ecma_is_value_number (arguments_list_p[0]))
   {

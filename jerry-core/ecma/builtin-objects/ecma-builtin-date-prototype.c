@@ -631,8 +631,7 @@ ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< b
 #if JERRY_ESNEXT
   if (JERRY_UNLIKELY (builtin_routine_id == ECMA_DATE_PROTOTYPE_TO_PRIMITIVE))
   {
-    ecma_value_t argument = arguments_number > 0 ? arguments_list[0] : ECMA_VALUE_UNDEFINED;
-    return ecma_builtin_date_prototype_to_primitive (this_arg, argument);
+    return ecma_builtin_date_prototype_to_primitive (this_arg, arguments_list[0]);
   }
 #endif /* JERRY_ESNEXT */
 

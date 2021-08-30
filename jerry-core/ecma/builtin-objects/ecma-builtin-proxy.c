@@ -136,16 +136,13 @@ ecma_builtin_proxy_dispatch_routine (uint8_t builtin_routine_id, /**< built-in w
                                                                              *   passed to routine */
                                      uint32_t arguments_number) /**< length of arguments' list */
 {
-  JERRY_UNUSED (this_arg);
-
-  ecma_value_t arg0 = (arguments_number > 0) ? arguments_list_p[0] : ECMA_VALUE_UNDEFINED;
-  ecma_value_t arg1 = (arguments_number > 1) ? arguments_list_p[1] : ECMA_VALUE_UNDEFINED;
+  JERRY_UNUSED_2 (this_arg, arguments_number);
 
   switch (builtin_routine_id)
   {
     case ECMA_BUILTIN_PROXY_OBJECT_REVOCABLE:
     {
-      return ecma_builtin_proxy_object_revocable (arg0, arg1);
+      return ecma_builtin_proxy_object_revocable (arguments_list_p[0], arguments_list_p[1]);
     }
     default:
     {

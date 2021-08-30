@@ -105,8 +105,7 @@ ecma_builtin_boolean_prototype_dispatch_routine (uint8_t builtin_routine_id, /**
                                                                                          *   passed to routine */
                                                  uint32_t arguments_number) /**< length of arguments' list */
 {
-  JERRY_UNUSED (arguments_number);
-  JERRY_UNUSED (arguments_list_p);
+  JERRY_UNUSED_2 (arguments_number, arguments_list_p);
 
   ecma_value_t value_of_ret = ecma_builtin_boolean_prototype_object_value_of (this_arg);
   if (builtin_routine_id == ECMA_BOOLEAN_PROTOTYPE_ROUTINE_VALUE_OF)

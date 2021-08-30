@@ -1811,20 +1811,17 @@ ecma_builtin_json_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wi
                                                                             *   passed to routine */
                                     uint32_t arguments_number) /**< length of arguments' list */
 {
-  JERRY_UNUSED (this_arg);
-  ecma_value_t arg1 = (arguments_number > 0) ? arguments_list_p[0] : ECMA_VALUE_UNDEFINED;
-  ecma_value_t arg2 = (arguments_number > 1) ? arguments_list_p[1] : ECMA_VALUE_UNDEFINED;
-  ecma_value_t arg3 = (arguments_number > 2) ? arguments_list_p[2] : ECMA_VALUE_UNDEFINED;
+  JERRY_UNUSED_2 (this_arg, arguments_number);
 
   switch (builtin_routine_id)
   {
     case ECMA_BUILTIN_JSON_PARSE:
     {
-      return ecma_builtin_json_parse (arg1, arg2);
+      return ecma_builtin_json_parse (arguments_list_p[0], arguments_list_p[1]);
     }
     case ECMA_BUILTIN_JSON_STRINGIFY:
     {
-      return ecma_builtin_json_stringify (arg1, arg2, arg3);
+      return ecma_builtin_json_stringify (arguments_list_p[0], arguments_list_p[1], arguments_list_p[2]);
     }
     default:
     {

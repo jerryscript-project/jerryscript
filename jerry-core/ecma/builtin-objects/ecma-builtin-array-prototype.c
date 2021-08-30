@@ -2977,8 +2977,6 @@ ecma_builtin_array_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< 
   }
 
   ecma_value_t ret_value;
-  ecma_value_t routine_arg_1 = arguments_list_p[0];
-  ecma_value_t routine_arg_2 = arguments_list_p[1];
 
   switch (builtin_routine_id)
   {
@@ -2989,7 +2987,7 @@ ecma_builtin_array_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< 
     }
     case ECMA_ARRAY_PROTOTYPE_JOIN:
     {
-      ret_value = ecma_builtin_array_prototype_join (routine_arg_1, obj_p, length);
+      ret_value = ecma_builtin_array_prototype_join (arguments_list_p[0], obj_p, length);
       break;
     }
     case ECMA_ARRAY_PROTOTYPE_POP:
@@ -3017,8 +3015,8 @@ ecma_builtin_array_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< 
     }
     case ECMA_ARRAY_PROTOTYPE_SLICE:
     {
-      ret_value = ecma_builtin_array_prototype_object_slice (routine_arg_1,
-                                                             routine_arg_2,
+      ret_value = ecma_builtin_array_prototype_object_slice (arguments_list_p[0],
+                                                             arguments_list_p[1],
                                                              obj_p,
                                                              length);
       break;
@@ -3041,7 +3039,7 @@ ecma_builtin_array_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< 
     }
     case ECMA_ARRAY_PROTOTYPE_AT:
     {
-      ret_value = ecma_builtin_array_prototype_object_at (routine_arg_1,
+      ret_value = ecma_builtin_array_prototype_object_at (arguments_list_p[0],
                                                           obj_p,
                                                           length);
       break;
@@ -3066,8 +3064,8 @@ ecma_builtin_array_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< 
     case ECMA_ARRAY_PROTOTYPE_SOME:
     case ECMA_ARRAY_PROTOTYPE_FOR_EACH:
     {
-      ret_value = ecma_builtin_array_apply (routine_arg_1,
-                                            routine_arg_2,
+      ret_value = ecma_builtin_array_apply (arguments_list_p[0],
+                                            arguments_list_p[1],
                                             (array_routine_mode) builtin_routine_id - ECMA_ARRAY_PROTOTYPE_EVERY,
                                             obj_p,
                                             length);
@@ -3075,8 +3073,8 @@ ecma_builtin_array_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< 
     }
     case ECMA_ARRAY_PROTOTYPE_MAP:
     {
-      ret_value = ecma_builtin_array_prototype_object_map (routine_arg_1,
-                                                           routine_arg_2,
+      ret_value = ecma_builtin_array_prototype_object_map (arguments_list_p[0],
+                                                           arguments_list_p[1],
                                                            obj_p,
                                                            length);
       break;
@@ -3103,8 +3101,8 @@ ecma_builtin_array_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< 
     case ECMA_ARRAY_PROTOTYPE_FIND:
     case ECMA_ARRAY_PROTOTYPE_FIND_INDEX:
     {
-      ret_value = ecma_builtin_array_prototype_object_find (routine_arg_1,
-                                                            routine_arg_2,
+      ret_value = ecma_builtin_array_prototype_object_find (arguments_list_p[0],
+                                                            arguments_list_p[1],
                                                             builtin_routine_id == ECMA_ARRAY_PROTOTYPE_FIND,
                                                             obj_p,
                                                             length);
@@ -3112,8 +3110,8 @@ ecma_builtin_array_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< 
     }
     case ECMA_ARRAY_PROTOTYPE_FILL:
     {
-      ret_value = ecma_builtin_array_prototype_fill (routine_arg_1,
-                                                     routine_arg_2,
+      ret_value = ecma_builtin_array_prototype_fill (arguments_list_p[0],
+                                                     arguments_list_p[1],
                                                      arguments_list_p[2],
                                                      obj_p,
                                                      length);
@@ -3137,8 +3135,8 @@ ecma_builtin_array_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< 
     }
     case ECMA_ARRAY_PROTOTYPE_FLATMAP:
     {
-      ret_value = ecma_builtin_array_prototype_object_flat_map (routine_arg_1,
-                                                                routine_arg_2,
+      ret_value = ecma_builtin_array_prototype_object_flat_map (arguments_list_p[0],
+                                                                arguments_list_p[1],
                                                                 obj_p,
                                                                 length);
       break;
@@ -3148,8 +3146,8 @@ ecma_builtin_array_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< 
     {
       JERRY_ASSERT (builtin_routine_id == ECMA_ARRAY_PROTOTYPE_FILTER);
 
-      ret_value = ecma_builtin_array_prototype_object_filter (routine_arg_1,
-                                                              routine_arg_2,
+      ret_value = ecma_builtin_array_prototype_object_filter (arguments_list_p[0],
+                                                              arguments_list_p[1],
                                                               obj_p,
                                                               length);
       break;

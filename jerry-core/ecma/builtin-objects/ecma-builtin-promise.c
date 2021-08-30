@@ -529,7 +529,7 @@ ecma_builtin_promise_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
                                                                                *   passed to routine */
                                        uint32_t arguments_number) /**< length of arguments' list */
 {
-  ecma_value_t argument = (arguments_number > 0) ? arguments_list_p[0] : ECMA_VALUE_UNDEFINED;
+  JERRY_UNUSED (arguments_number);
 
   switch (builtin_routine_id)
   {
@@ -537,14 +537,14 @@ ecma_builtin_promise_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
     case ECMA_PROMISE_ROUTINE_RESOLVE:
     {
       bool is_resolve = (builtin_routine_id == ECMA_PROMISE_ROUTINE_RESOLVE);
-      return ecma_promise_reject_or_resolve (this_arg, argument, is_resolve);
+      return ecma_promise_reject_or_resolve (this_arg, arguments_list_p[0], is_resolve);
     }
     case ECMA_PROMISE_ROUTINE_RACE:
     case ECMA_PROMISE_ROUTINE_ALL:
     case ECMA_PROMISE_ROUTINE_ALLSETTLED:
     case ECMA_PROMISE_ROUTINE_ANY:
     {
-      return ecma_builtin_promise_helper (this_arg, argument, builtin_routine_id);
+      return ecma_builtin_promise_helper (this_arg, arguments_list_p[0], builtin_routine_id);
     }
     case ECMA_PROMISE_ROUTINE_SPECIES_GET:
     {

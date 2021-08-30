@@ -24,6 +24,7 @@ set(JERRY_DEBUGGER                  OFF          CACHE BOOL   "Enable JerryScrip
 set(JERRY_ERROR_MESSAGES            OFF          CACHE BOOL   "Enable error messages?")
 set(JERRY_EXTERNAL_CONTEXT          OFF          CACHE BOOL   "Enable external context?")
 set(JERRY_PARSER                    ON           CACHE BOOL   "Enable javascript-parser?")
+set(JERRY_FUNCTION_TO_STRING        OFF          CACHE BOOL   "Enable function toString operation?")
 set(JERRY_LINE_INFO                 OFF          CACHE BOOL   "Enable line info?")
 set(JERRY_LOGGING                   OFF          CACHE BOOL   "Enable logging?")
 set(JERRY_MEM_STATS                 OFF          CACHE BOOL   "Enable memory statistics?")
@@ -83,6 +84,7 @@ message(STATUS "JERRY_DEBUGGER                 " ${JERRY_DEBUGGER})
 message(STATUS "JERRY_ERROR_MESSAGES           " ${JERRY_ERROR_MESSAGES})
 message(STATUS "JERRY_EXTERNAL_CONTEXT         " ${JERRY_EXTERNAL_CONTEXT})
 message(STATUS "JERRY_PARSER                   " ${JERRY_PARSER})
+message(STATUS "JERRY_FUNCTION_TO_STRING       " ${JERRY_FUNCTION_TO_STRING})
 message(STATUS "JERRY_LINE_INFO                " ${JERRY_LINE_INFO})
 message(STATUS "JERRY_LOGGING                  " ${JERRY_LOGGING} ${JERRY_LOGGING_MESSAGE})
 message(STATUS "JERRY_MEM_STATS                " ${JERRY_MEM_STATS})
@@ -135,6 +137,7 @@ set(SOURCE_CORE_FILES
   ecma/base/ecma-alloc.c
   ecma/base/ecma-gc.c
   ecma/base/ecma-errors.c
+  ecma/base/ecma-extended-info.c
   ecma/base/ecma-helpers-collection.c
   ecma/base/ecma-helpers-conversion.c
   ecma/base/ecma-helpers-errol.c
@@ -558,6 +561,9 @@ jerry_add_define01(JERRY_EXTERNAL_CONTEXT)
 
 # JS-Parser
 jerry_add_define01(JERRY_PARSER)
+
+# JS function toString
+jerry_add_define01(JERRY_FUNCTION_TO_STRING)
 
 # JS line info
 jerry_add_define01(JERRY_LINE_INFO)

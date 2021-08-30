@@ -149,7 +149,9 @@ new delete_test ();
 
 function binary_test_1 () {
     /*/ new.target is converted to string */
-    assert ((new.target + 1) === "function(){/* ecmascript */}1");
+    var str = (new.target + 1);
+    assert (str.substring(0, 8) === "function"
+            && str.substring(str.length - 2, str.length) === "}1");
 }
 function binary_test_2 () { assert (isNaN (new.target - 3)); }
 function binary_test_3 () { assert (isNaN (new.target * 2)); }

@@ -18,6 +18,7 @@
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
+#include "ecma-extended-info.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
@@ -79,9 +80,116 @@ enum
  *         Returned value must be freed with ecma_free_value.
  */
 static ecma_value_t
-ecma_builtin_function_prototype_object_to_string (void)
+ecma_builtin_function_prototype_object_to_string (ecma_object_t *func_obj_p) /**< this argument object */
 {
-  return ecma_make_magic_string_value (LIT_MAGIC_STRING__FUNCTION_TO_STRING);
+  if (ecma_get_object_type (func_obj_p) != ECMA_OBJECT_TYPE_FUNCTION)
+  {
+    return ecma_make_magic_string_value (LIT_MAGIC_STRING_FUNCTION_TO_STRING_NATIVE);
+  }
+
+#if JERRY_FUNCTION_TO_STRING
+  const ecma_compiled_code_t *bytecode_p;
+  bytecode_p = ecma_op_function_get_compiled_code ((ecma_extended_object_t *) func_obj_p);
+
+  ecma_value_t script_value = ((cbc_uint8_arguments_t *) bytecode_p)->script_value;
+  cbc_script_t *script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
+
+  if (bytecode_p->status_flags & CBC_CODE_FLAGS_HAS_EXTENDED_INFO)
+  {
+    uint8_t *extended_info_p = ecma_compiled_code_resolve_extended_info (bytecode_p);
+    uint8_t extended_info = *extended_info_p;
+
+    if (extended_info & CBC_EXTENDED_CODE_FLAGS_HAS_SOURCE_CODE_RANGE)
+    {
+#if JERRY_ESNEXT
+      if (extended_info & CBC_EXTENDED_CODE_FLAGS_HAS_ARGUMENT_LENGTH)
+      {
+        ecma_extended_info_decode_vlq (&extended_info_p);
+      }
+#endif /* JERRY_ESNEXT */
+
+      uint32_t range_start = ecma_extended_info_decode_vlq (&extended_info_p);
+      uint32_t range_size = ecma_extended_info_decode_vlq (&extended_info_p);
+      ecma_value_t source_code;
+
+      if (!(extended_info & CBC_EXTENDED_CODE_FLAGS_SOURCE_CODE_IN_ARGUMENTS))
+      {
+        source_code = script_p->source_code;
+#if JERRY_SNAPSHOT_EXEC
+        if (ecma_is_value_magic_string (source_code, LIT_MAGIC_STRING__EMPTY))
+        {
+          return ecma_make_magic_string_value (LIT_MAGIC_STRING_FUNCTION_TO_STRING_ECMA);
+        }
+#endif /* JERRY_SNAPSHOT_EXEC */
+      }
+      else
+      {
+#if JERRY_SNAPSHOT_EXEC
+        if (!(script_p->refs_and_type & CBC_SCRIPT_HAS_FUNCTION_ARGUMENTS))
+        {
+          return ecma_make_magic_string_value (LIT_MAGIC_STRING_FUNCTION_TO_STRING_ECMA);
+        }
+#else /* !JERRY_SNAPSHOT_EXEC */
+        JERRY_ASSERT (script_p->refs_and_type & CBC_SCRIPT_HAS_FUNCTION_ARGUMENTS);
+#endif /* JERRY_SNAPSHOT_EXEC */
+
+        source_code = CBC_SCRIPT_GET_FUNCTION_ARGUMENTS (script_p, CBC_SCRIPT_GET_TYPE (script_p));
+      }
+
+      ecma_string_t *result_string_p;
+
+      ECMA_STRING_TO_UTF8_STRING (ecma_get_string_from_value (source_code), source_p, source_size);
+      result_string_p = ecma_new_ecma_string_from_utf8 (source_p + range_start, range_size);
+      ECMA_FINALIZE_UTF8_STRING (source_p, source_size);
+
+      return ecma_make_string_value (result_string_p);
+    }
+  }
+
+#if JERRY_SNAPSHOT_EXEC
+  if (!(script_p->refs_and_type & CBC_SCRIPT_HAS_FUNCTION_ARGUMENTS))
+  {
+    return ecma_make_magic_string_value (LIT_MAGIC_STRING_FUNCTION_TO_STRING_ECMA);
+  }
+#else /* !JERRY_SNAPSHOT_EXEC */
+  JERRY_ASSERT (script_p->refs_and_type & CBC_SCRIPT_HAS_FUNCTION_ARGUMENTS);
+#endif /* JERRY_SNAPSHOT_EXEC */
+
+  lit_magic_string_id_t header_id = LIT_MAGIC_STRING_FUNCTION_TO_STRING_ANON;
+
+#if JERRY_ESNEXT
+  switch (CBC_FUNCTION_GET_TYPE (bytecode_p->status_flags))
+  {
+    case CBC_FUNCTION_GENERATOR:
+    {
+      header_id = LIT_MAGIC_STRING_FUNCTION_TO_STRING_ANON_GENERATOR;
+      break;
+    }
+    case CBC_FUNCTION_ASYNC_GENERATOR:
+    {
+      header_id = LIT_MAGIC_STRING_FUNCTION_TO_STRING_ANON_ASYNC_GENERATOR;
+      break;
+    }
+    case CBC_FUNCTION_ASYNC:
+    {
+      header_id = LIT_MAGIC_STRING_FUNCTION_TO_STRING_ANON_ASYNC;
+      break;
+    }
+  }
+#endif /* JERRY_ESNEXT */
+
+  ecma_stringbuilder_t builder = ecma_stringbuilder_create_from (ecma_get_magic_string (header_id));
+  ecma_value_t function_arguments = CBC_SCRIPT_GET_FUNCTION_ARGUMENTS (script_p, CBC_SCRIPT_GET_TYPE (script_p));
+
+  ecma_stringbuilder_append (&builder, ecma_get_string_from_value (function_arguments));
+  ecma_stringbuilder_append_raw (&builder, (const lit_utf8_byte_t *) "\n) {\n", 5);
+  ecma_stringbuilder_append (&builder, ecma_get_string_from_value (script_p->source_code));
+  ecma_stringbuilder_append_raw (&builder, (const lit_utf8_byte_t *) "\n}", 2);
+
+  return ecma_make_string_value (ecma_stringbuilder_finalize (&builder));
+#else /* !JERRY_FUNCTION_TO_STRING */
+  return ecma_make_magic_string_value (LIT_MAGIC_STRING_FUNCTION_TO_STRING_ECMA);
+#endif /* JERRY_FUNCTION_TO_STRING */
 } /* ecma_builtin_function_prototype_object_to_string */
 
 /**
@@ -440,7 +548,7 @@ ecma_builtin_function_prototype_dispatch_routine (uint8_t builtin_routine_id, /*
   {
     case ECMA_FUNCTION_PROTOTYPE_TO_STRING:
     {
-      return ecma_builtin_function_prototype_object_to_string ();
+      return ecma_builtin_function_prototype_object_to_string (func_obj_p);
     }
     case ECMA_FUNCTION_PROTOTYPE_APPLY:
     {

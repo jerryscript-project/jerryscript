@@ -4573,7 +4573,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
             if (CBC_SCRIPT_GET_TYPE (script_p) != CBC_SCRIPT_GENERIC)
             {
-              user_value = ((cbc_script_user_t *) script_p)->user_value;
+              user_value = CBC_SCRIPT_GET_USER_VALUE (script_p);
             }
 #if JERRY_SNAPSHOT_EXEC
           }

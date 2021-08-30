@@ -656,6 +656,17 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
   }
 #endif /* JERRY_ESNEXT */
 
+#if JERRY_FUNCTION_TO_STRING
+#if JERRY_ESNEXT
+  if (!(context_p->next_scanner_info_p->u8_arg & SCANNER_FUNCTION_ASYNC))
+  {
+    context_p->function_start_p = context_p->token.lit_location.char_p;
+  }
+#else /* !JERRY_ESNEXT */
+  context_p->function_start_p = context_p->token.lit_location.char_p;
+#endif /* JERRY_ESNEXT */
+#endif /* JERRY_FUNCTION_TO_STRING */
+
 #if JERRY_DEBUGGER
   parser_line_counter_t debugger_line = context_p->token.line;
   parser_line_counter_t debugger_column = context_p->token.column;
@@ -2560,6 +2571,9 @@ parser_parse_export_statement (parser_context_t *context_p) /**< context */
           && context_p->next_scanner_info_p->source_p == context_p->source_p
           && context_p->next_scanner_info_p->type == SCANNER_TYPE_FUNCTION)
       {
+#if JERRY_FUNCTION_TO_STRING
+        context_p->function_start_p = context_p->token.lit_location.char_p;
+#endif /* JERRY_FUNCTION_TO_STRING */
         lexer_next_token (context_p);
       }
 
@@ -3246,6 +3260,9 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
                 parser_raise_error (context_p, PARSER_ERR_LEXICAL_SINGLE_STATEMENT);
               }
 
+#if JERRY_FUNCTION_TO_STRING
+              context_p->function_start_p = context_p->token.lit_location.char_p;
+#endif /* JERRY_FUNCTION_TO_STRING */
               lexer_next_token (context_p);
               JERRY_ASSERT (context_p->token.type == LEXER_KEYW_FUNCTION);
               continue;
@@ -3342,6 +3359,10 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
             parser_line_info_append (context_p, context_p->token.line, context_p->token.column);
           }
 #endif /* JERRY_LINE_INFO */
+
+#if JERRY_FUNCTION_TO_STRING
+          context_p->function_end_p = context_p->source_p;
+#endif /* JERRY_FUNCTION_TO_STRING */
 
           parser_stack_pop_uint8 (context_p);
           context_p->last_statement.current_p = NULL;

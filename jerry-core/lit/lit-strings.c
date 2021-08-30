@@ -22,14 +22,14 @@
  *
  * NOTE:
  *   Isolated surrogates are allowed.
- *   Correct pair of surrogates is not allowed, it should be represented as 4-byte utf-8 character.
  *
  * @return true if utf-8 string is well-formed
  *         false otherwise
  */
 bool
 lit_is_valid_utf8_string (const lit_utf8_byte_t *utf8_buf_p, /**< utf-8 string */
-                          lit_utf8_size_t buf_size) /**< string size */
+                          lit_utf8_size_t buf_size, /**< string size */
+                          bool is_strict) /**< true if surrogate pairs are not allowed */
 {
   lit_utf8_size_t idx = 0;
 
@@ -95,21 +95,22 @@ lit_is_valid_utf8_string (const lit_utf8_byte_t *utf8_buf_p, /**< utf-8 string *
       return false;
     }
 
-    if (code_point >= LIT_UTF16_HIGH_SURROGATE_MIN
-        && code_point <= LIT_UTF16_HIGH_SURROGATE_MAX)
-    {
-      is_prev_code_point_high_surrogate = true;
-    }
-    else if (code_point >= LIT_UTF16_LOW_SURROGATE_MIN
-             && code_point <= LIT_UTF16_LOW_SURROGATE_MAX
-             && is_prev_code_point_high_surrogate)
-    {
-      /* sequence of high and low surrogate is not allowed */
-      return false;
-    }
-    else
+    if (is_strict)
     {
       is_prev_code_point_high_surrogate = false;
+
+      if (code_point >= LIT_UTF16_HIGH_SURROGATE_MIN
+          && code_point <= LIT_UTF16_HIGH_SURROGATE_MAX)
+      {
+        is_prev_code_point_high_surrogate = true;
+      }
+      else if (code_point >= LIT_UTF16_LOW_SURROGATE_MIN
+               && code_point <= LIT_UTF16_LOW_SURROGATE_MAX
+               && is_prev_code_point_high_surrogate)
+      {
+        /* sequence of high and low surrogate is not allowed */
+        return false;
+      }
     }
 
     idx += extra_bytes_count;

@@ -17,6 +17,7 @@
 #include "ecma-builtin-helpers.h"
 #include "ecma-builtin-handlers.h"
 #include "ecma-exceptions.h"
+#include "ecma-extended-info.h"
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
@@ -1739,11 +1740,7 @@ ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**<
       const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
       uint32_t len;
 
-      if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_HAS_EXTENDED_INFO)
-      {
-        len = CBC_EXTENDED_INFO_GET_LENGTH (ecma_compiled_code_resolve_extended_info (bytecode_data_p));
-      }
-      else if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+      if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
       {
         cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_data_p;
         len = args_p->argument_end;
@@ -1752,6 +1749,16 @@ ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**<
       {
         cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_data_p;
         len = args_p->argument_end;
+      }
+
+      if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_HAS_EXTENDED_INFO)
+      {
+        uint8_t *extended_info_p = ecma_compiled_code_resolve_extended_info (bytecode_data_p);
+
+        if (*extended_info_p & CBC_EXTENDED_CODE_FLAGS_HAS_ARGUMENT_LENGTH)
+        {
+          len = ecma_extended_info_decode_vlq (&extended_info_p);
+        }
       }
 
       /* Set tag bit to represent initialized 'length' property */

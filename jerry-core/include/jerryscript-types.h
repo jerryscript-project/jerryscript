@@ -167,7 +167,8 @@ typedef enum
   JERRY_PARSE_NO_OPTS = 0, /**< no options passed */
   JERRY_PARSE_STRICT_MODE = (1 << 0), /**< enable strict mode */
   JERRY_PARSE_MODULE = (1 << 1), /**< parse source as an ECMAScript module */
-  JERRY_PARSE_HAS_ARGUMENT_LIST = (1 << 2), /**< argument_list field is valid */
+  JERRY_PARSE_HAS_ARGUMENT_LIST = (1 << 2), /**< argument_list field is valid,
+                                             * this also means that function parsing will be done */
   JERRY_PARSE_HAS_RESOURCE = (1 << 3), /**< resource_name field is valid */
   JERRY_PARSE_HAS_START = (1 << 4), /**< start_line and start_column fields are valid */
   JERRY_PARSE_HAS_USER_VALUE = (1 << 5), /**< user_value field is valid */

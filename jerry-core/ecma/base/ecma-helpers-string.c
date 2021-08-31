@@ -443,7 +443,7 @@ ecma_new_ecma_string_from_utf8_converted_to_cesu8 (const lit_utf8_byte_t *string
 
   converted_string_size += string_size;
 
-  JERRY_ASSERT (lit_is_valid_utf8_string (string_p, string_size));
+  JERRY_ASSERT (lit_is_valid_utf8_string (string_p, string_size, false));
 
   lit_utf8_byte_t *data_p;
   ecma_string_t *string_desc_p = ecma_new_ecma_string_from_utf8_buffer (converted_string_length,

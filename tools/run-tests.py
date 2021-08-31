@@ -42,7 +42,7 @@ def skip_if(condition, desc):
 OPTIONS_COMMON = ['--lto=off']
 OPTIONS_PROFILE_MIN = ['--profile=minimal']
 OPTIONS_PROFILE_ES51 = ['--profile=es5.1']
-OPTIONS_PROFILE_ESNEXT = ['--profile=es.next']
+OPTIONS_PROFILE_ESNEXT = ['--profile=es.next', '--function-to-string=on']
 OPTIONS_STACK_LIMIT = ['--stack-limit=96']
 OPTIONS_GC_MARK_LIMIT = ['--gc-mark-limit=16']
 OPTIONS_MEM_STRESS = ['--mem-stress-test=on']

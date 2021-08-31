@@ -284,7 +284,7 @@ ecma_builtin_global_object_decode_uri_helper (lit_utf8_byte_t *input_start_p, /*
       }
 
       if (!is_valid
-          || !lit_is_valid_utf8_string (octets, bytes_count))
+          || !lit_is_valid_utf8_string (octets, bytes_count, true))
       {
         ecma_stringbuilder_destroy (&builder);
         return ecma_raise_uri_error (ECMA_ERR_MSG ("Invalid UTF8 string"));

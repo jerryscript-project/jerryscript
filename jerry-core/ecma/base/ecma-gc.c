@@ -430,10 +430,10 @@ ecma_gc_mark_compiled_code (const ecma_compiled_code_t *compiled_code_p) /**< co
 
   if (CBC_SCRIPT_GET_TYPE (script_p) == CBC_SCRIPT_USER_OBJECT)
   {
-    cbc_script_user_t *script_user_p = (cbc_script_user_t *) script_p;
+    ecma_value_t user_value = CBC_SCRIPT_GET_USER_VALUE (script_p);
 
-    JERRY_ASSERT (ecma_is_value_object (script_user_p->user_value));
-    ecma_gc_set_object_visited (ecma_get_object_from_value (script_user_p->user_value));
+    JERRY_ASSERT (ecma_is_value_object (user_value));
+    ecma_gc_set_object_visited (ecma_get_object_from_value (user_value));
   }
 
 #if JERRY_BUILTIN_REALMS

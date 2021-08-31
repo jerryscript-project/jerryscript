@@ -1841,6 +1841,9 @@ jerry_is_feature_enabled (const jerry_feature_t feature) /**< feature to check *
 #if JERRY_MODULE_SYSTEM
           || feature == JERRY_FEATURE_MODULE
 #endif /* JERRY_MODULE_SYSTEM */
+#if JERRY_FUNCTION_TO_STRING
+          || feature == JERRY_FEATURE_FUNCTION_TO_STRING
+#endif /* JERRY_FUNCTION_TO_STRING */
           );
 } /* jerry_is_feature_enabled */
 
@@ -2801,7 +2804,7 @@ jerry_create_regexp_sz (const jerry_char_t *pattern_p, /**< zero-terminated UTF-
   jerry_assert_api_available ();
 
 #if JERRY_BUILTIN_REGEXP
-  if (!lit_is_valid_utf8_string (pattern_p, pattern_size))
+  if (!lit_is_valid_utf8_string (pattern_p, pattern_size, true))
   {
     return jerry_throw (ecma_raise_common_error (ECMA_ERR_MSG ("Input must be a valid utf8 string")));
   }
@@ -5130,7 +5133,8 @@ jerry_is_valid_utf8_string (const jerry_char_t *utf8_buf_p, /**< UTF-8 string */
                             jerry_size_t buf_size) /**< string size */
 {
   return lit_is_valid_utf8_string ((lit_utf8_byte_t *) utf8_buf_p,
-                                   (lit_utf8_size_t) buf_size);
+                                   (lit_utf8_size_t) buf_size,
+                                   true);
 } /* jerry_is_valid_utf8_string */
 
 /**
@@ -5490,7 +5494,7 @@ jerry_get_user_value (const jerry_value_t value) /**< jerry api value */
     return ECMA_VALUE_UNDEFINED;
   }
 
-  return ecma_copy_value (((cbc_script_user_t *) script_p)->user_value);
+  return ecma_copy_value (CBC_SCRIPT_GET_USER_VALUE (script_p));
 } /* jerry_get_user_value */
 
 /**

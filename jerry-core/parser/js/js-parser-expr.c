@@ -562,6 +562,7 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
     }
 
     lexer_expect_object_literal_id (context_p, (LEXER_OBJ_IDENT_CLASS_IDENTIFIER
+                                                | LEXER_OBJ_IDENT_SET_FUNCTION_START
                                                 | (is_static ? 0 : LEXER_OBJ_IDENT_CLASS_NO_STATIC)));
 
     if (context_p->token.type == LEXER_RIGHT_BRACE)
@@ -1167,7 +1168,7 @@ parser_parse_object_literal (parser_context_t *context_p) /**< context */
 
   while (true)
   {
-    lexer_expect_object_literal_id (context_p, LEXER_OBJ_IDENT_NO_OPTS);
+    lexer_expect_object_literal_id (context_p, LEXER_OBJ_IDENT_SET_FUNCTION_START);
 
     switch (context_p->token.type)
     {
@@ -2011,6 +2012,10 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
       {
         JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
 
+#if JERRY_FUNCTION_TO_STRING
+        context_p->function_start_p = context_p->token.lit_location.char_p;
+#endif /* JERRY_FUNCTION_TO_STRING */
+
         uint32_t arrow_status_flags = (PARSER_IS_FUNCTION
                                        | PARSER_IS_ARROW_FUNCTION
                                        | (context_p->status_flags & PARSER_INSIDE_CLASS_FIELD));
@@ -2124,6 +2129,9 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
     }
     case LEXER_KEYW_FUNCTION:
     {
+#if JERRY_FUNCTION_TO_STRING
+      context_p->function_start_p = context_p->token.lit_location.char_p;
+#endif /* JERRY_FUNCTION_TO_STRING */
       parser_parse_function_expression (context_p, PARSER_FUNCTION_CLOSURE | PARSER_IS_FUNC_EXPRESSION);
       break;
     }
@@ -2269,6 +2277,10 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
                     && context_p->next_scanner_info_p->type == SCANNER_TYPE_FUNCTION);
 
       parser_check_assignment_expr (context_p);
+
+#if JERRY_FUNCTION_TO_STRING
+      context_p->function_start_p = context_p->source_p - 1;
+#endif /* JERRY_FUNCTION_TO_STRING */
 
       uint32_t arrow_status_flags = (PARSER_IS_FUNCTION
                                      | PARSER_IS_ARROW_FUNCTION

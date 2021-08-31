@@ -232,6 +232,19 @@
 #endif /* !defined (JERRY_LCACHE) */
 
 /**
+ * Enable/Disable function toString operation.
+ *
+ * Allowed values:
+ *  0: Disable function toString operation.
+ *  1: Enable function toString operation.
+ *
+ * Default value: 0
+ */
+#ifndef JERRY_FUNCTION_TO_STRING
+# define JERRY_FUNCTION_TO_STRING 0
+#endif /* !defined (JERRY_FUNCTION_TO_STRING) */
+
+/**
  * Enable/Disable line-info management inside the engine.
  *
  * Allowed values:
@@ -633,6 +646,10 @@
 #if !defined (JERRY_LCACHE) \
 || ((JERRY_LCACHE != 0) && (JERRY_LCACHE != 1))
 # error "Invalid value for 'JERRY_LCACHE' macro."
+#endif
+#if !defined (JERRY_FUNCTION_TO_STRING) \
+|| ((JERRY_FUNCTION_TO_STRING != 0) && (JERRY_FUNCTION_TO_STRING != 1))
+# error "Invalid value for 'JERRY_FUNCTION_TO_STRING' macro."
 #endif
 #if !defined (JERRY_LINE_INFO) \
 || ((JERRY_LINE_INFO != 0) && (JERRY_LINE_INFO != 1))

@@ -14,4 +14,6 @@
 
 var str = 'for (let i=0; i<(eval("1; function x() { }; 2;")); x - i++) { x += delete x;}'
 
-assert(eval(str) === 'function(){/* ecmascript */}true');
+var e = eval(str)
+assert(e === 'function x() { }true'
+       || e === 'function () { /* ecmascript */ }true');

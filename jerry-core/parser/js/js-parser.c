@@ -15,6 +15,7 @@
 
 #include "debugger.h"
 #include "ecma-exceptions.h"
+#include "ecma-extended-info.h"
 #include "ecma-helpers.h"
 #include "ecma-literal-storage.h"
 #include "ecma-module.h"
@@ -910,11 +911,6 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     total_size += sizeof (ecma_value_t);
   }
 
-  if (context_p->argument_length != UINT16_MAX)
-  {
-    total_size += sizeof (ecma_value_t);
-  }
-
   if (context_p->tagged_template_literal_cp != JMEM_CP_NULL)
   {
     total_size += sizeof (ecma_value_t);
@@ -924,6 +920,48 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 #if JERRY_LINE_INFO
   total_size += sizeof (ecma_value_t);
 #endif /* JERRY_LINE_INFO */
+
+#if JERRY_ESNEXT || JERRY_FUNCTION_TO_STRING
+  uint8_t extended_info = 0;
+#endif /* JERRY_ESNEXT || JERRY_FUNCTION_TO_STRING */
+
+#if JERRY_ESNEXT
+  if (context_p->argument_length != UINT16_MAX)
+  {
+    extended_info |= CBC_EXTENDED_CODE_FLAGS_HAS_ARGUMENT_LENGTH;
+    total_size += ecma_extended_info_get_encoded_length (context_p->argument_length);
+  }
+#endif /* JERRY_ESNEXT */
+
+#if JERRY_FUNCTION_TO_STRING
+  if (context_p->last_context_p != NULL)
+  {
+    extended_info |= CBC_EXTENDED_CODE_FLAGS_HAS_SOURCE_CODE_RANGE;
+
+    const uint8_t *start_p = context_p->source_start_p;
+    const uint8_t *function_start_p = context_p->last_context_p->function_start_p;
+
+    if (function_start_p < start_p || function_start_p >= start_p + context_p->source_size)
+    {
+      JERRY_ASSERT (context_p->arguments_start_p != NULL
+                    && function_start_p >= context_p->arguments_start_p
+                    && function_start_p < context_p->arguments_start_p + context_p->arguments_size);
+
+      start_p = context_p->arguments_start_p;
+      extended_info |= CBC_EXTENDED_CODE_FLAGS_SOURCE_CODE_IN_ARGUMENTS;
+    }
+
+    total_size += ecma_extended_info_get_encoded_length ((uint32_t) (function_start_p - start_p));
+    total_size += ecma_extended_info_get_encoded_length ((uint32_t) (context_p->function_end_p - function_start_p));
+  }
+#endif /* JERRY_FUNCTION_TO_STRING */
+
+#if JERRY_ESNEXT || JERRY_FUNCTION_TO_STRING
+  if (extended_info != 0)
+  {
+    total_size += sizeof (uint8_t);
+  }
+#endif /* JERRY_ESNEXT || JERRY_FUNCTION_TO_STRING */
 
   total_size = JERRY_ALIGNUP (total_size, JMEM_ALIGNMENT);
 
@@ -1327,25 +1365,54 @@ parser_post_processing (parser_context_t *context_p) /**< context */
     *(--base_p) = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
   }
 
-  if (context_p->argument_length != UINT16_MAX)
-  {
-    compiled_code_p->status_flags |= CBC_CODE_FLAGS_HAS_EXTENDED_INFO;
-    *(--base_p) = context_p->argument_length;
-  }
-
   if (context_p->tagged_template_literal_cp != JMEM_CP_NULL)
   {
     compiled_code_p->status_flags |= CBC_CODE_FLAGS_HAS_TAGGED_LITERALS;
-    base_p[-1] = (ecma_value_t) context_p->tagged_template_literal_cp;
-#if JERRY_LINE_INFO
-    --base_p;
-#endif /* JERRY_LINE_INFO */
+    *(--base_p) = (ecma_value_t) context_p->tagged_template_literal_cp;
   }
 #endif /* JERRY_ESNEXT */
 
 #if JERRY_LINE_INFO
   ECMA_SET_INTERNAL_VALUE_POINTER (base_p[-1], line_info_p);
 #endif /* JERRY_LINE_INFO */
+
+#if JERRY_ESNEXT || JERRY_FUNCTION_TO_STRING
+  if (extended_info != 0)
+  {
+#if JERRY_LINE_INFO
+    base_p--;
+#endif /* JERRY_LINE_INFO */
+
+    uint8_t *extended_info_p = ((uint8_t *) base_p) - 1;
+
+    compiled_code_p->status_flags |= CBC_CODE_FLAGS_HAS_EXTENDED_INFO;
+    *extended_info_p = extended_info;
+
+#if JERRY_ESNEXT
+    if (context_p->argument_length != UINT16_MAX)
+    {
+      ecma_extended_info_encode_vlq (&extended_info_p, context_p->argument_length);
+    }
+#endif /* JERRY_ESNEXT */
+
+#if JERRY_FUNCTION_TO_STRING
+    if (context_p->last_context_p != NULL)
+    {
+      const uint8_t *start_p = context_p->source_start_p;
+
+      if (extended_info & CBC_EXTENDED_CODE_FLAGS_SOURCE_CODE_IN_ARGUMENTS)
+      {
+        start_p = context_p->arguments_start_p;
+      }
+
+      const uint8_t *function_start_p = context_p->last_context_p->function_start_p;
+
+      ecma_extended_info_encode_vlq (&extended_info_p, (uint32_t) (function_start_p - start_p));
+      ecma_extended_info_encode_vlq (&extended_info_p, (uint32_t) (context_p->function_end_p - function_start_p));
+    }
+#endif /* JERRY_FUNCTION_TO_STRING */
+  }
+#endif /* JERRY_ESNEXT || JERRY_FUNCTION_TO_STRING */
 
 #if JERRY_PARSER_DUMP_BYTE_CODE
   if (context_p->is_show_opcodes)
@@ -1793,22 +1860,22 @@ parser_parse_source (void *source_p, /**< source code */
   context.module_names_p = NULL;
 #endif /* JERRY_MODULE_SYSTEM */
 
-  ecma_value_t argument_list = ECMA_VALUE_EMPTY;
+  context.argument_list = ECMA_VALUE_EMPTY;
 
   if (context.options_p != NULL
       && (context.options_p->options & JERRY_PARSE_HAS_ARGUMENT_LIST))
   {
-    argument_list = context.options_p->argument_list;
+    context.argument_list = context.options_p->argument_list;
   }
   else if (context.global_status_flags & ECMA_PARSE_HAS_ARGUMENT_LIST_VALUE)
   {
     JERRY_ASSERT (context.global_status_flags & ECMA_PARSE_HAS_SOURCE_VALUE);
-    argument_list = ((ecma_value_t *) source_p)[1];
+    context.argument_list = ((ecma_value_t *) source_p)[1];
   }
 
-  if (argument_list != ECMA_VALUE_EMPTY)
+  if (context.argument_list != ECMA_VALUE_EMPTY)
   {
-    JERRY_ASSERT (ecma_is_value_string (argument_list));
+    JERRY_ASSERT (ecma_is_value_string (context.argument_list));
 
     context.status_flags |= PARSER_IS_FUNCTION;
 #if JERRY_ESNEXT
@@ -1822,7 +1889,7 @@ parser_parse_source (void *source_p, /**< source code */
     }
 #endif /* JERRY_ESNEXT */
 
-    ecma_string_t *string_p = ecma_get_string_from_value (argument_list);
+    ecma_string_t *string_p = ecma_get_string_from_value (context.argument_list);
     uint8_t flags = ECMA_STRING_FLAG_EMPTY;
 
     context.arguments_start_p = ecma_string_get_chars (string_p, &context.arguments_size, NULL, NULL, &flags);
@@ -1881,7 +1948,7 @@ parser_parse_source (void *source_p, /**< source code */
 
       if (CBC_SCRIPT_GET_TYPE (parent_script_p) != CBC_SCRIPT_GENERIC)
       {
-        context.user_value = ((cbc_script_user_t *) parent_script_p)->user_value;
+        context.user_value = CBC_SCRIPT_GET_USER_VALUE (parent_script_p);
       }
 #if JERRY_SNAPSHOT_EXEC
     }
@@ -1893,8 +1960,20 @@ parser_parse_source (void *source_p, /**< source code */
     context.user_value = context.options_p->user_value;
   }
 
-  uint32_t script_size = (context.user_value != ECMA_VALUE_EMPTY ? sizeof (cbc_script_user_t)
-                                                                 : sizeof (cbc_script_t));
+  size_t script_size = sizeof (cbc_script_t);
+
+  if (context.user_value != ECMA_VALUE_EMPTY)
+  {
+    script_size += sizeof (ecma_value_t);
+  }
+
+#if JERRY_FUNCTION_TO_STRING
+  if (context.argument_list != ECMA_VALUE_EMPTY)
+  {
+    script_size += sizeof (ecma_value_t);
+  }
+#endif /* JERRY_FUNCTION_TO_STRING */
+
   context.script_p = jmem_heap_alloc_block_null_on_error (script_size);
 
   if (JERRY_UNLIKELY (context.script_p == NULL))
@@ -1976,6 +2055,11 @@ parser_parse_source (void *source_p, /**< source code */
 #if JERRY_LINE_INFO
   context.line_info_p = NULL;
 #endif /* JERRY_LINE_INFO */
+
+#if JERRY_FUNCTION_TO_STRING
+  context.function_start_p = NULL;
+  context.function_end_p = NULL;
+#endif /* JERRY_FUNCTION_TO_STRING */
 
 #if JERRY_PARSER_DUMP_BYTE_CODE
   context.is_show_opcodes = (JERRY_CONTEXT (jerry_init_flags) & JERRY_INIT_SHOW_OPCODES);
@@ -2116,8 +2200,43 @@ parser_parse_source (void *source_p, /**< source code */
 
     if (context.user_value != ECMA_VALUE_EMPTY)
     {
-      ((cbc_script_user_t *) context.script_p)->user_value = ecma_copy_value_if_not_object (context.user_value);
+      CBC_SCRIPT_GET_USER_VALUE (context.script_p) = ecma_copy_value_if_not_object (context.user_value);
     }
+
+#if JERRY_FUNCTION_TO_STRING
+    if (!(context.global_status_flags & ECMA_PARSE_HAS_SOURCE_VALUE))
+    {
+      ecma_string_t *string_p;
+
+      if (context.global_status_flags & ECMA_PARSE_INTERNAL_HAS_4_BYTE_MARKER)
+      {
+        string_p = ecma_new_ecma_string_from_utf8_converted_to_cesu8 (context.source_start_p, context.source_size);
+      }
+      else
+      {
+        string_p = ecma_new_ecma_string_from_utf8 (context.source_start_p, context.source_size);
+      }
+
+      context.script_p->source_code = ecma_make_string_value (string_p);
+    }
+    else
+    {
+      ecma_value_t source = ((ecma_value_t *) source_p)[0];
+
+      ecma_ref_ecma_string (ecma_get_string_from_value (source));
+      context.script_p->source_code = source;
+    }
+
+    if (context.argument_list != ECMA_VALUE_EMPTY)
+    {
+      int idx = (context.user_value != ECMA_VALUE_EMPTY) ? 1 : 0;
+
+      CBC_SCRIPT_GET_OPTIONAL_VALUES (context.script_p)[idx] = context.argument_list;
+
+      ecma_ref_ecma_string (ecma_get_string_from_value (context.argument_list));
+      context.script_p->refs_and_type |= CBC_SCRIPT_HAS_FUNCTION_ARGUMENTS;
+    }
+#endif /* JERRY_FUNCTION_TO_STRING */
 
 #if JERRY_PARSER_DUMP_BYTE_CODE
     if (context.is_show_opcodes)
@@ -2314,6 +2433,10 @@ parser_save_context (parser_context_t *context_p, /**< context */
 #if JERRY_LINE_INFO
   saved_context_p->line_info_p = context_p->line_info_p;
 #endif /* JERRY_LINE_INFO */
+
+#if JERRY_FUNCTION_TO_STRING
+  saved_context_p->function_start_p = context_p->function_start_p;
+#endif /* JERRY_FUNCTION_TO_STRING */
 
   /* Reset private part of the context. */
 

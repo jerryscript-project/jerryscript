@@ -979,8 +979,13 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
       user_value = option_values_p->user_value;
     }
 
-    uint32_t script_size = (user_value != ECMA_VALUE_EMPTY ? sizeof (cbc_script_user_t)
-                                                           : sizeof (cbc_script_t));
+    size_t script_size = sizeof (cbc_script_t);
+
+    if (user_value != ECMA_VALUE_EMPTY)
+    {
+      script_size += sizeof (ecma_value_t);
+    }
+
     cbc_script_t *script_p = jmem_heap_alloc_block (script_size);
 
     CBC_SCRIPT_SET_TYPE (script_p, user_value, CBC_SCRIPT_REF_ONE);
@@ -1003,6 +1008,10 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
     script_p->resource_name = resource_name;
 #endif /* JERRY_RESOURCE_NAME */
 
+#if JERRY_FUNCTION_TO_STRING
+    script_p->source_code = ecma_make_magic_string_value (LIT_MAGIC_STRING__EMPTY);
+#endif /* JERRY_FUNCTION_TO_STRING */
+
     const uint8_t *literal_base_p = snapshot_data_p + header_p->lit_table_offset;
 
     bytecode_p = snapshot_load_compiled_code ((const uint8_t *) bytecode_p,
@@ -1021,7 +1030,7 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
 
     if (user_value != ECMA_VALUE_EMPTY)
     {
-      ((cbc_script_user_t *) script_p)->user_value = ecma_copy_value_if_not_object (user_value);
+      CBC_SCRIPT_GET_USER_VALUE (script_p) = ecma_copy_value_if_not_object (user_value);
     }
   }
 

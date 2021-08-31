@@ -539,6 +539,10 @@ typedef struct parser_saved_context_t
 #if JERRY_LINE_INFO
   parser_line_info_data_t *line_info_p;       /**< line info data */
 #endif /* JERRY_LINE_INFO */
+
+#if JERRY_FUNCTION_TO_STRING
+  const uint8_t *function_start_p;            /**< start position of the current function */
+#endif /* JERRY_FUNCTION_TO_STRING */
 } parser_saved_context_t;
 
 /**
@@ -571,6 +575,7 @@ typedef struct
   const uint8_t *arguments_start_p;           /**< function argument list start */
   lit_utf8_size_t arguments_size;             /**< function argument list size */
   ecma_value_t script_value;                  /**< current script as value */
+  ecma_value_t argument_list;                 /**< current argument list as value */
   ecma_value_t user_value;                    /**< current user value */
 
 #if JERRY_MODULE_SYSTEM
@@ -639,6 +644,11 @@ typedef struct
 #if JERRY_LINE_INFO
   parser_line_info_data_t *line_info_p;       /**< line info data */
 #endif /* JERRY_LINE_INFO */
+
+#if JERRY_FUNCTION_TO_STRING
+  const uint8_t *function_start_p;            /**< start position of the function which will be parsed */
+  const uint8_t *function_end_p;              /**< end position of the current function */
+#endif /* JERRY_FUNCTION_TO_STRING */
 } parser_context_t;
 
 /**

@@ -1527,20 +1527,30 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
 
       if (type != CBC_SCRIPT_GENERIC)
       {
-        script_size = sizeof (cbc_script_user_t);
+        script_size += sizeof (ecma_value_t);
 
         if (type == CBC_SCRIPT_USER_VALUE)
         {
-          cbc_script_user_t *script_user_p = (cbc_script_user_t *) script_p;
+          ecma_value_t user_value = CBC_SCRIPT_GET_USER_VALUE (script_p);
 
-          JERRY_ASSERT (!ecma_is_value_object (script_user_p->user_value));
-          ecma_free_value (script_user_p->user_value);
+          JERRY_ASSERT (!ecma_is_value_object (user_value));
+          ecma_free_value (user_value);
         }
       }
 
 #if JERRY_RESOURCE_NAME
       ecma_deref_ecma_string (ecma_get_string_from_value (script_p->resource_name));
 #endif /* JERRY_RESOURCE_NAME */
+
+#if JERRY_FUNCTION_TO_STRING
+      ecma_deref_ecma_string (ecma_get_string_from_value (script_p->source_code));
+
+      if (script_p->refs_and_type & CBC_SCRIPT_HAS_FUNCTION_ARGUMENTS)
+      {
+        ecma_deref_ecma_string (ecma_get_string_from_value (CBC_SCRIPT_GET_FUNCTION_ARGUMENTS (script_p, type)));
+        script_size += sizeof (ecma_value_t);
+      }
+#endif /* JERRY_FUNCTION_TO_STRING */
 
       jmem_heap_free_block (script_p, script_size);
     }
@@ -1729,21 +1739,6 @@ ecma_compiled_code_resolve_function_name (const ecma_compiled_code_t *bytecode_h
 } /* ecma_compiled_code_resolve_function_name */
 
 /**
- * Get the extended info from a byte code
- *
- * @return extended info value
- */
-uint32_t
-ecma_compiled_code_resolve_extended_info (const ecma_compiled_code_t *bytecode_header_p) /**< compiled code */
-{
-  JERRY_ASSERT (bytecode_header_p != NULL);
-  JERRY_ASSERT (bytecode_header_p->status_flags & CBC_CODE_FLAGS_HAS_EXTENDED_INFO);
-
-  ecma_value_t *base_p = ecma_compiled_code_resolve_function_name (bytecode_header_p);
-  return base_p[-1];
-} /* ecma_compiled_code_resolve_extended_info */
-
-/**
  * Get the tagged template collection of the compiled code
  *
  * @return pointer to the tagged template collection
@@ -1755,9 +1750,7 @@ ecma_compiled_code_get_tagged_template_collection (const ecma_compiled_code_t *b
   JERRY_ASSERT (bytecode_header_p->status_flags & CBC_CODE_FLAGS_HAS_TAGGED_LITERALS);
 
   ecma_value_t *base_p = ecma_compiled_code_resolve_function_name (bytecode_header_p);
-  int offset = (bytecode_header_p->status_flags & CBC_CODE_FLAGS_HAS_EXTENDED_INFO) ? -2 : -1;
-
-  return ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, base_p[offset]);
+  return ECMA_GET_INTERNAL_VALUE_POINTER (ecma_collection_t, base_p[-1]);
 } /* ecma_compiled_code_get_tagged_template_collection */
 
 #endif /* JERRY_ESNEXT */
@@ -1779,11 +1772,6 @@ ecma_compiled_code_get_line_info (const ecma_compiled_code_t *bytecode_header_p)
 
 #if JERRY_ESNEXT
   if (CBC_FUNCTION_GET_TYPE (bytecode_header_p->status_flags) != CBC_FUNCTION_CONSTRUCTOR)
-  {
-    base_p--;
-  }
-
-  if (bytecode_header_p->status_flags & CBC_CODE_FLAGS_HAS_EXTENDED_INFO)
   {
     base_p--;
   }

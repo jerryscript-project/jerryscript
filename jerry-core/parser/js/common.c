@@ -15,6 +15,7 @@
 
 #include "common.h"
 #include "ecma-helpers.h"
+#include "ecma-extended-info.h"
 #include "ecma-big-uint.h"
 #include "ecma-bigint.h"
 #include "js-parser-internal.h"
@@ -396,16 +397,31 @@ util_print_cbc (ecma_compiled_code_t *compiled_code_p) /**< compiled code */
   JERRY_DEBUG_MSG ("  Const literal range end: %d\n", (int) const_literal_end);
   JERRY_DEBUG_MSG ("  Literal range end: %d\n\n", (int) literal_end);
 
-#if JERRY_ESNEXT
+#if JERRY_ESNEXT || JERRY_FUNCTION_TO_STRING
   if (compiled_code_p->status_flags & CBC_CODE_FLAGS_HAS_EXTENDED_INFO)
   {
-    uint32_t extended_info = ecma_compiled_code_resolve_extended_info (compiled_code_p);
+    uint8_t *extended_info_p = ecma_compiled_code_resolve_extended_info (compiled_code_p);
+    uint8_t *extended_info_start_p = extended_info_p + sizeof (uint8_t);
+    uint8_t extended_info = *extended_info_p;
 
-    JERRY_DEBUG_MSG ("  [Extended] Argument length: %d\n\n", (int) CBC_EXTENDED_INFO_GET_LENGTH (extended_info));
+    if (extended_info & CBC_EXTENDED_CODE_FLAGS_HAS_ARGUMENT_LENGTH)
+    {
+      uint32_t argument_length = ecma_extended_info_decode_vlq (&extended_info_p);
+      JERRY_DEBUG_MSG ("  [Extended] Argument length: %d\n", (int) argument_length);
+    }
 
-    size -= sizeof (ecma_value_t);
+    if (extended_info & CBC_EXTENDED_CODE_FLAGS_HAS_SOURCE_CODE_RANGE)
+    {
+      uint32_t range_start = ecma_extended_info_decode_vlq (&extended_info_p);
+      uint32_t range_end = ecma_extended_info_decode_vlq (&extended_info_p) + range_start;
+      JERRY_DEBUG_MSG ("  [Extended] Source code range: %d - %d\n", (int) range_start, (int) range_end);
+    }
+
+    JERRY_DEBUG_MSG ("\n");
+
+    size -= (size_t) (extended_info_start_p - extended_info_p);
   }
-#endif /* JERRY_ESNEXT */
+#endif /* JERRY_ESNEXT || JERRY_FUNCTION_TO_STRING */
 
   byte_code_start_p = (uint8_t *) compiled_code_p;
 

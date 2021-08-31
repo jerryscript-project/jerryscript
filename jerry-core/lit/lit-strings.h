@@ -84,7 +84,7 @@
 #define LIT_UTF8_FIRST_BYTE_MAX (0xF8)
 
 /* validation */
-bool lit_is_valid_utf8_string (const lit_utf8_byte_t *utf8_buf_p, lit_utf8_size_t buf_size);
+bool lit_is_valid_utf8_string (const lit_utf8_byte_t *utf8_buf_p, lit_utf8_size_t buf_size, bool strict);
 bool lit_is_valid_cesu8_string (const lit_utf8_byte_t *cesu8_buf_p, lit_utf8_size_t buf_size);
 
 /* checks */

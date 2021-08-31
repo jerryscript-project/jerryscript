@@ -539,7 +539,6 @@ const ecma_compiled_code_t *ecma_bytecode_get_from_value (ecma_value_t value);
 ecma_value_t *ecma_compiled_code_resolve_arguments_start (const ecma_compiled_code_t *bytecode_header_p);
 #if JERRY_ESNEXT
 ecma_value_t *ecma_compiled_code_resolve_function_name (const ecma_compiled_code_t *bytecode_header_p);
-uint32_t ecma_compiled_code_resolve_extended_info (const ecma_compiled_code_t *bytecode_header_p);
 ecma_collection_t *ecma_compiled_code_get_tagged_template_collection (const ecma_compiled_code_t *bytecode_header_p);
 #endif /* JERRY_ESNEXT */
 #if JERRY_LINE_INFO

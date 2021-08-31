@@ -896,6 +896,27 @@ typedef enum
 } cbc_code_flags_t;
 
 /**
+ * Optional byte code fields. These fields are stored in a reversed
+ * order from the end of the byte code data.
+ *
+ * Value fields:
+ *   - when CBC_CODE_FLAGS_MAPPED_ARGUMENTS_NEEDED is set:
+ *     argument_end number of argument names encoded as strings
+ *   - when function type is not CBC_FUNCTION_CONSTRUCTOR:
+ *     function name encoded as string
+ *   - when CBC_CODE_FLAGS_HAS_TAGGED_LITERALS is set:
+ *     pointer to the tagged template collection encoded as value
+ *
+ * Byte fields when CBC_CODE_FLAGS_HAS_EXTENDED_INFO is set:
+ *   - always available:
+ *     a byte which contains a combination of CBC_EXTENDED_CODE_FLAGS bits
+ *   - when CBC_EXTENDED_CODE_FLAGS_HAS_ARGUMENT_LENGTH is set:
+ *     a vlq encoded default value for function length
+ *   - when CBC_EXTENDED_CODE_FLAGS_HAS_SOURCE_CODE_RANGE is set:
+ *     a pair of vlq encoded values, representing the start and size of the range
+ */
+
+/**
  * Compact byte code function types.
  */
 typedef enum
@@ -962,9 +983,15 @@ typedef enum
   ((flags) >= (CBC_FUNCTION_ARROW << CBC_FUNCTION_TYPE_SHIFT))
 
 /**
- * Get length property from extended info
+ * Compact byte code extended status flags.
  */
-#define CBC_EXTENDED_INFO_GET_LENGTH(extended_info) (extended_info)
+typedef enum
+{
+  CBC_EXTENDED_CODE_FLAGS_HAS_ARGUMENT_LENGTH = (1u << 0), /**< has argument length */
+  CBC_EXTENDED_CODE_FLAGS_HAS_SOURCE_CODE_RANGE = (1u << 1), /**< has source code range (start, end) */
+  CBC_EXTENDED_CODE_FLAGS_SOURCE_CODE_IN_ARGUMENTS = (1u << 2), /**< source code range is inside
+                                                                 *   the function arguments */
+} cbc_extended_code_flags_t;
 
 /**
  * Shared script data.
@@ -977,19 +1004,24 @@ typedef enum
 } cbc_script_type;
 
 /**
- * Value for increasing or decreasing the script reference counter.
+ * Script is a function with arguments source code.
  */
-#define CBC_SCRIPT_REF_ONE 0x4
+#define CBC_SCRIPT_HAS_FUNCTION_ARGUMENTS 0x4
 
 /**
- * Get the type of a script.
+ * Value for increasing or decreasing the script reference counter.
  */
-#define CBC_SCRIPT_GET_TYPE(script_p) ((script_p)->refs_and_type & (CBC_SCRIPT_REF_ONE - 1))
+#define CBC_SCRIPT_REF_ONE 0x8
 
 /**
  * Maximum value of script reference counter.
  */
 #define CBC_SCRIPT_REF_MAX (UINT32_MAX - CBC_SCRIPT_REF_ONE + 1)
+
+/**
+ * Get the type of a script.
+ */
+#define CBC_SCRIPT_GET_TYPE(script_p) ((script_p)->refs_and_type & 0x3)
 
 /**
  * Sets the type of a script using the user_value.
@@ -1018,16 +1050,30 @@ typedef struct
 #if JERRY_RESOURCE_NAME
   ecma_value_t resource_name; /**< resource name */
 #endif /* JERRY_RESOURCE_NAME */
+#if JERRY_FUNCTION_TO_STRING
+  ecma_value_t source_code; /**< source code */
+#endif /* JERRY_FUNCTION_TO_STRING */
 } cbc_script_t;
 
 /**
- * Script data with user value.
+ * Get the array of optional values assigned to a script.
+ *
+ * First value: user value
+ * Second value: function arguments value
  */
-typedef struct
-{
-  cbc_script_t header; /**< script header */
-  ecma_value_t user_value; /**< user value */
-} cbc_script_user_t;
+#define CBC_SCRIPT_GET_OPTIONAL_VALUES(script_p) ((ecma_value_t *) ((script_p) + 1))
+
+/**
+ * Get user value.
+ */
+#define CBC_SCRIPT_GET_USER_VALUE(script_p) \
+  (CBC_SCRIPT_GET_OPTIONAL_VALUES (script_p)[0])
+
+/**
+ * Get function arguments.
+ */
+#define CBC_SCRIPT_GET_FUNCTION_ARGUMENTS(script_p, type) \
+  (CBC_SCRIPT_GET_OPTIONAL_VALUES (script_p)[(type) != CBC_SCRIPT_GENERIC ? 1 : 0])
 
 #define CBC_OPCODE(arg1, arg2, arg3, arg4) arg1,
 

@@ -800,16 +800,26 @@ ecma_typedarray_create_object_with_length (uint32_t array_length, /**< length of
                                            uint8_t element_size_shift, /**< the size shift of the element length */
                                            ecma_typedarray_type_t typedarray_id) /**< id of the typedarray */
 {
-  if (array_length > (UINT32_MAX >> element_size_shift))
-  {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Maximum TypedArray size is reached"));
-  }
+  uint32_t byte_length = UINT32_MAX;
 
-  uint32_t byte_length = array_length << element_size_shift;
+  if (array_length <= (UINT32_MAX >> element_size_shift))
+  {
+    byte_length = array_length << element_size_shift;
+  }
 
   if (byte_length > UINT32_MAX - sizeof (ecma_extended_object_t) - JMEM_ALIGNMENT + 1)
   {
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Maximum TypedArray size is reached"));
+#if JERRY_ERROR_MESSAGES
+    ecma_value_t array_length_value = ecma_make_number_value (array_length);
+
+    ecma_value_t result = ecma_raise_standard_error_with_format (JERRY_ERROR_RANGE,
+                                                                 "Invalid typed array length: %",
+                                                                 array_length_value);
+    ecma_free_value (array_length_value);
+    return result;
+#else /* !JERRY_ERROR_MESSAGES */
+    return ecma_raise_range_error (NULL);
+#endif /* JERRY_ERROR_MESSAGES */
   }
 
   ecma_object_t *new_arraybuffer_p = NULL;
@@ -1616,19 +1626,26 @@ ecma_op_create_typedarray (const ecma_value_t *arguments_list_p, /**< the arg li
     ecma_number_t num = 0;
 
     if (!ecma_is_value_undefined (arguments_list_p[0])
-        && ECMA_IS_VALUE_ERROR (ecma_op_to_number (arguments_list_p[0], &num)))
+        && ECMA_IS_VALUE_ERROR (ecma_op_to_index (arguments_list_p[0], &num)))
     {
       return ECMA_VALUE_ERROR;
     }
-    uint32_t length = ecma_number_to_uint32 (num);
 
-    if (ecma_number_is_infinity (num))
+    JERRY_ASSERT (num >= 0 && num <= ECMA_NUMBER_MAX_SAFE_INTEGER);
+
+    if (num > UINT32_MAX)
     {
-      ret = ecma_raise_range_error (ECMA_ERR_MSG ("Invalid TypedArray length"));
+#if JERRY_ERROR_MESSAGES
+      ret = ecma_raise_standard_error_with_format (JERRY_ERROR_RANGE,
+                                                   "Invalid typed array length: %",
+                                                   arguments_list_p[0]);
+#else /* !JERRY_ERROR_MESSAGES */
+      ret = ecma_raise_range_error (NULL);
+#endif /* JERRY_ERROR_MESSAGES */
     }
     else
     {
-      ret = ecma_typedarray_create_object_with_length (length,
+      ret = ecma_typedarray_create_object_with_length ((uint32_t) num,
                                                        NULL,
                                                        proto_p,
                                                        element_size_shift,

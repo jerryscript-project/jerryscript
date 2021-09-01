@@ -407,7 +407,8 @@ parser_line_info_generate (parser_context_t *context_p) /**< context */
 
       while (iterator_byte_code_page_offset >= PARSER_CBC_STREAM_PAGE_SIZE)
       {
-        iterator_byte_code_base += iterator_byte_code_page_p->bytes[PARSER_CBC_STREAM_PAGE_SIZE - 1];
+        uint8_t relative_offset = iterator_byte_code_page_p->bytes[PARSER_CBC_STREAM_PAGE_SIZE - 1];
+        iterator_byte_code_base += relative_offset & CBC_LOWER_SEVEN_BIT_MASK;
         iterator_byte_code_page_offset -= PARSER_CBC_STREAM_PAGE_SIZE;
         iterator_byte_code_page_p = iterator_byte_code_page_p->next_p;
       }

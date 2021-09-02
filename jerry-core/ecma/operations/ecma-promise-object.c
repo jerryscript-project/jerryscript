@@ -630,11 +630,13 @@ ecma_promise_all_or_all_settled_handler_cb (ecma_object_t *function_obj_p, /**< 
 
     if (promise_type == ECMA_PROMISE_ALLSETTLED_RESOLVE)
     {
-      status_property_val =  LIT_MAGIC_STRING_FULFILLED;
+      status_property_val = LIT_MAGIC_STRING_FULFILLED;
       data_propery_name = LIT_MAGIC_STRING_VALUE;
     }
 
-    ecma_object_t *obj_p = ecma_create_object (NULL, 0, ECMA_OBJECT_TYPE_GENERAL);
+    ecma_object_t *obj_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE),
+                                               0,
+                                               ECMA_OBJECT_TYPE_GENERAL);
     ecma_property_value_t *prop_value_p;
     prop_value_p = ecma_create_named_data_property (obj_p,
                                                     ecma_get_magic_string (LIT_MAGIC_STRING_STATUS),

@@ -1981,12 +1981,37 @@ ecma_op_function_list_lazy_property_names (ecma_object_t *object_p, /**< functio
                                            ecma_collection_t *prop_names_p, /**< prop name collection */
                                            ecma_property_counter_t *prop_counter_p)  /**< prop counter */
 {
+  const ecma_compiled_code_t *bytecode_data_p;
+  bytecode_data_p = ecma_op_function_get_compiled_code ((ecma_extended_object_t *) object_p);
+
+#if JERRY_ESNEXT
+  bool append_prototype = CBC_FUNCTION_HAS_PROTOTYPE (bytecode_data_p->status_flags);
+#else /* !JERRY_ESNEXT */
+  bool append_prototype = true;
+#endif /* JERRY_ESNEXT */
+
+  if (append_prototype)
+  {
+    /* 'prototype' property is non-enumerable (ECMA-262 v5, 13.2.18) */
+    ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_PROTOTYPE));
+    prop_counter_p->string_named_props++;
+  }
+
 #if JERRY_ESNEXT
   ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
+
   if (!ECMA_GET_FIRST_BIT_FROM_POINTER_TAG (ext_func_p->u.function.scope_cp))
   {
     /* Unintialized 'length' property is non-enumerable (ECMA-262 v6, 19.2.4.1) */
     ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
+    prop_counter_p->string_named_props++;
+  }
+
+  if (CBC_FUNCTION_GET_TYPE (bytecode_data_p->status_flags) != CBC_FUNCTION_CONSTRUCTOR
+      && !ECMA_GET_SECOND_BIT_FROM_POINTER_TAG (ext_func_p->u.function.scope_cp))
+  {
+    /* Unintialized 'name' property is non-enumerable (ECMA-262 v6, 19.2.4.2) */
+    ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_NAME));
     prop_counter_p->string_named_props++;
   }
 #else /* !JERRY_ESNEXT */
@@ -1995,21 +2020,12 @@ ecma_op_function_list_lazy_property_names (ecma_object_t *object_p, /**< functio
   prop_counter_p->string_named_props++;
 #endif /* JERRY_ESNEXT */
 
-  const ecma_compiled_code_t *bytecode_data_p;
-  bytecode_data_p = ecma_op_function_get_compiled_code ((ecma_extended_object_t *) object_p);
-
 #if JERRY_ESNEXT
-  if (!CBC_FUNCTION_HAS_PROTOTYPE (bytecode_data_p->status_flags))
+  if (!append_prototype)
   {
     return;
   }
-#endif /* JERRY_ESNEXT */
 
-  /* 'prototype' property is non-enumerable (ECMA-262 v5, 13.2.18) */
-  ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_PROTOTYPE));
-  prop_counter_p->string_named_props++;
-
-#if JERRY_ESNEXT
   bool append_caller_and_arguments = !(bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE);
 #else /* !JERRY_ESNEXT */
   bool append_caller_and_arguments = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE);

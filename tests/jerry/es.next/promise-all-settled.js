@@ -76,8 +76,26 @@ var rejects = Promise.allSettled(createIterable([
   new Promise((_, reject) => { reject("qux"); }),
 ]));
 
-fulfills.then(result => { assert (result + "" === "foo,bar"); });
-rejects.catch(result => { assert (result === "baz"); });
+fulfills.then(result => {
+  assert(Object.getPrototypeOf(result) === Array.prototype);
+  assert(result.length === 2)
+  assert(Object.getPrototypeOf(result[0]) === Object.prototype);
+  assert(result[0].status === "fulfilled");
+  assert(result[0].value === "foo");
+  assert(Object.getPrototypeOf(result[1]) === Object.prototype);
+  assert(result[1].status === "fulfilled");
+  assert(result[1].value === "bar");
+});
+rejects.then(result => {
+  assert(Object.getPrototypeOf(result) === Array.prototype);
+  assert(result.length === 2)
+  assert(Object.getPrototypeOf(result[0]) === Object.prototype);
+  assert(result[0].status === "rejected");
+  assert(result[0].reason === "baz");
+  assert(Object.getPrototypeOf(result[1]) === Object.prototype);
+  assert(result[1].status === "rejected");
+  assert(result[1].reason === "qux");
+});
 
 var closed = true;
 delete Promise.resolve;

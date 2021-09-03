@@ -44,3 +44,9 @@ assert(getProperties(bound_func) == "dummy caller arguments prototype");
 // 'print' is an external function
 Object.setPrototypeOf(print, prototype_obj);
 assert(getProperties(print) == "dummy length caller arguments");
+
+function f1() {}
+assert(Reflect.ownKeys(f1).toString() === "prototype,length,name,caller,arguments")
+
+async function f2() {}
+assert(Reflect.ownKeys(f2).toString() === "length,name")

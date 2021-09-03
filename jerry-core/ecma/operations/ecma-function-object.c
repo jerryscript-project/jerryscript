@@ -1702,7 +1702,7 @@ ecma_op_lazy_instantiate_prototype_object (ecma_object_t *object_p) /**< the fun
   ecma_property_value_t *prototype_prop_value_p;
   prototype_prop_value_p = ecma_create_named_data_property (object_p,
                                                             ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE),
-                                                            ECMA_PROPERTY_FLAG_WRITABLE,
+                                                            ECMA_PROPERTY_BUILT_IN_WRITABLE,
                                                             &prototype_prop_p);
 
   prototype_prop_value_p->value = ecma_make_object_value (proto_object_p);
@@ -1734,73 +1734,72 @@ ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**<
   {
     ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
 
-    if (!ECMA_GET_FIRST_BIT_FROM_POINTER_TAG (ext_func_p->u.function.scope_cp))
+    if (ECMA_GET_FIRST_BIT_FROM_POINTER_TAG (ext_func_p->u.function.scope_cp))
     {
-      /* Initialize 'length' property */
-      const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
-      uint32_t len;
-
-      if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
-      {
-        cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_data_p;
-        len = args_p->argument_end;
-      }
-      else
-      {
-        cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_data_p;
-        len = args_p->argument_end;
-      }
-
-      if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_HAS_EXTENDED_INFO)
-      {
-        uint8_t *extended_info_p = ecma_compiled_code_resolve_extended_info (bytecode_data_p);
-
-        if (*extended_info_p & CBC_EXTENDED_CODE_FLAGS_HAS_ARGUMENT_LENGTH)
-        {
-          len = ecma_extended_info_decode_vlq (&extended_info_p);
-        }
-      }
-
-      /* Set tag bit to represent initialized 'length' property */
-      ECMA_SET_FIRST_BIT_TO_POINTER_TAG (ext_func_p->u.function.scope_cp);
-      ecma_property_t *value_prop_p;
-      ecma_property_value_t *value_p = ecma_create_named_data_property (object_p,
-                                                                        property_name_p,
-                                                                        ECMA_PROPERTY_FLAG_CONFIGURABLE,
-                                                                        &value_prop_p);
-      value_p->value = ecma_make_uint32_value (len);
-      return value_prop_p;
+      return NULL;
     }
 
-    return NULL;
+    /* Initialize 'length' property */
+    const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
+    uint32_t len;
+
+    if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_UINT16_ARGUMENTS)
+    {
+      cbc_uint16_arguments_t *args_p = (cbc_uint16_arguments_t *) bytecode_data_p;
+      len = args_p->argument_end;
+    }
+    else
+    {
+      cbc_uint8_arguments_t *args_p = (cbc_uint8_arguments_t *) bytecode_data_p;
+      len = args_p->argument_end;
+    }
+
+    if (bytecode_data_p->status_flags & CBC_CODE_FLAGS_HAS_EXTENDED_INFO)
+    {
+      uint8_t *extended_info_p = ecma_compiled_code_resolve_extended_info (bytecode_data_p);
+
+      if (*extended_info_p & CBC_EXTENDED_CODE_FLAGS_HAS_ARGUMENT_LENGTH)
+      {
+        len = ecma_extended_info_decode_vlq (&extended_info_p);
+      }
+    }
+
+    ecma_property_t *value_prop_p;
+    ecma_property_value_t *value_p = ecma_create_named_data_property (object_p,
+                                                                      property_name_p,
+                                                                      ECMA_PROPERTY_BUILT_IN_CONFIGURABLE,
+                                                                      &value_prop_p);
+    value_p->value = ecma_make_uint32_value (len);
+    return value_prop_p;
   }
 
   if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_NAME))
   {
     ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
-    if (!ECMA_GET_SECOND_BIT_FROM_POINTER_TAG (ext_func_p->u.function.scope_cp))
+
+    if (ECMA_GET_SECOND_BIT_FROM_POINTER_TAG (ext_func_p->u.function.scope_cp))
     {
-      /* Set tag bit to represent initialized 'name' property */
-      ECMA_SET_SECOND_BIT_TO_POINTER_TAG (ext_func_p->u.function.scope_cp);
-      const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
-
-      if (CBC_FUNCTION_GET_TYPE (bytecode_data_p->status_flags) != CBC_FUNCTION_CONSTRUCTOR)
-      {
-        ecma_value_t value = *ecma_compiled_code_resolve_function_name (bytecode_data_p);
-        JERRY_ASSERT (ecma_is_value_string (value));
-
-        /* Initialize 'name' property */
-        ecma_property_t *value_prop_p;
-        ecma_property_value_t *value_p = ecma_create_named_data_property (object_p,
-                                                                          property_name_p,
-                                                                          ECMA_PROPERTY_FLAG_CONFIGURABLE,
-                                                                          &value_prop_p);
-        value_p->value = ecma_copy_value (value);
-        return value_prop_p;
-      }
+      return NULL;
     }
 
-    return NULL;
+    const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
+
+    if (CBC_FUNCTION_GET_TYPE (bytecode_data_p->status_flags) == CBC_FUNCTION_CONSTRUCTOR)
+    {
+      return NULL;
+    }
+
+    ecma_value_t value = *ecma_compiled_code_resolve_function_name (bytecode_data_p);
+    JERRY_ASSERT (ecma_is_value_string (value));
+
+    /* Initialize 'name' property */
+    ecma_property_t *value_prop_p;
+    ecma_property_value_t *value_p = ecma_create_named_data_property (object_p,
+                                                                      property_name_p,
+                                                                      ECMA_PROPERTY_BUILT_IN_CONFIGURABLE,
+                                                                      &value_prop_p);
+    value_p->value = ecma_copy_value (value);
+    return value_prop_p;
   }
 #endif /* JERRY_ESNEXT */
 
@@ -1826,7 +1825,7 @@ ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**<
       /* The property_name_p argument contains the name. */
       ecma_property_value_t *value_p = ecma_create_named_data_property (object_p,
                                                                         property_name_p,
-                                                                        ECMA_PROPERTY_FIXED,
+                                                                        ECMA_PROPERTY_BUILT_IN_FIXED,
                                                                         &value_prop_p);
       value_p->value = is_arguments ? ECMA_VALUE_NULL : ECMA_VALUE_UNDEFINED;
       return value_prop_p;
@@ -1842,7 +1841,7 @@ ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**<
                                            property_name_p,
                                            thrower_p,
                                            thrower_p,
-                                           ECMA_PROPERTY_FIXED,
+                                           ECMA_PROPERTY_BUILT_IN_FIXED,
                                            &caller_prop_p);
       return caller_prop_p;
     }
@@ -1909,13 +1908,10 @@ ecma_op_bound_function_try_to_lazy_instantiate_property (ecma_object_t *object_p
       return NULL;
     }
 
-    length_attributes = ECMA_PROPERTY_FLAG_CONFIGURABLE;
+    length_attributes = ECMA_PROPERTY_BUILT_IN_CONFIGURABLE;
     length = ecma_get_number_from_value (bound_func_p->target_length) - (args_length - 1);
-
-    /* Set tag bit to represent initialized 'length' property */
-    ECMA_SET_FIRST_BIT_TO_POINTER_TAG (bound_func_p->header.u.bound_function.target_function);
 #else /* !JERRY_ESNEXT */
-    length_attributes = ECMA_PROPERTY_FIXED;
+    length_attributes = ECMA_PROPERTY_BUILT_IN_FIXED;
 
     ecma_object_t *target_func_p;
     target_func_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
@@ -1960,7 +1956,7 @@ ecma_op_bound_function_try_to_lazy_instantiate_property (ecma_object_t *object_p
                                          property_name_p,
                                          thrower_p,
                                          thrower_p,
-                                         ECMA_PROPERTY_FIXED,
+                                         ECMA_PROPERTY_BUILT_IN_FIXED,
                                          &caller_prop_p);
     return caller_prop_p;
   }
@@ -1968,6 +1964,49 @@ ecma_op_bound_function_try_to_lazy_instantiate_property (ecma_object_t *object_p
 
   return NULL;
 } /* ecma_op_bound_function_try_to_lazy_instantiate_property */
+
+#if JERRY_ESNEXT
+
+/**
+ * Delete configurable properties of functions.
+ */
+void
+ecma_op_function_delete_built_in_property (ecma_object_t *object_p, /**< object */
+                                           ecma_string_t *property_name_p) /**< property name */
+{
+  ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
+
+  if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_LENGTH))
+  {
+    JERRY_ASSERT (!ECMA_GET_FIRST_BIT_FROM_POINTER_TAG (ext_func_p->u.function.scope_cp));
+    ECMA_SET_FIRST_BIT_TO_POINTER_TAG (ext_func_p->u.function.scope_cp);
+    return;
+  }
+
+  JERRY_ASSERT (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_NAME));
+  JERRY_ASSERT (!ECMA_GET_SECOND_BIT_FROM_POINTER_TAG (ext_func_p->u.function.scope_cp));
+
+  ECMA_SET_SECOND_BIT_TO_POINTER_TAG (ext_func_p->u.function.scope_cp);
+} /* ecma_op_function_delete_built_in_property */
+
+/**
+ * Delete configurable properties of bound functions.
+ */
+void
+ecma_op_bound_function_delete_built_in_property (ecma_object_t *object_p, /**< object */
+                                                 ecma_string_t *property_name_p) /**< property name */
+{
+  JERRY_UNUSED (property_name_p);
+
+  ecma_bound_function_t *bound_func_p = (ecma_bound_function_t *) object_p;
+
+  JERRY_ASSERT (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_LENGTH));
+  JERRY_ASSERT (!ECMA_GET_FIRST_BIT_FROM_POINTER_TAG (bound_func_p->header.u.bound_function.target_function));
+
+  ECMA_SET_FIRST_BIT_TO_POINTER_TAG (bound_func_p->header.u.bound_function.target_function);
+} /* ecma_op_bound_function_delete_built_in_property */
+
+#endif /* JERRY_ESNEXT */
 
 /**
  * List names of a Function object's lazy instantiated properties,
@@ -2058,7 +2097,10 @@ ecma_op_external_function_list_lazy_property_names (ecma_object_t *object_p, /**
 #if !JERRY_ESNEXT
   JERRY_UNUSED (object_p);
 #else /* JERRY_ESNEXT */
-  if (!ecma_op_ordinary_object_has_own_property (object_p, ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE)))
+  /* TODO: implicit class constructors need rework, and this code should be updated afterwards. */
+  ecma_property_t *property_p = ecma_find_named_property (object_p, ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE));
+
+  if (property_p == NULL || (*property_p & ECMA_PROPERTY_FLAG_BUILT_IN))
 #endif /* !JERRY_ESNEXT */
   {
     /* 'prototype' property is non-enumerable (ECMA-262 v5, 13.2.18) */

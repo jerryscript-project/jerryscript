@@ -501,19 +501,20 @@ ecma_fast_array_extend (ecma_object_t *object_p, /**< fast access mode array obj
  * Delete the array object's property referenced by its value pointer.
  *
  * Note: specified property must be owned by specified object.
+ *
+ * @return true, if the property is deleted
+ *         false, otherwise
  */
-void
+bool
 ecma_array_object_delete_property (ecma_object_t *object_p, /**< object */
-                                   ecma_string_t *property_name_p, /**< property name */
-                                   ecma_property_value_t *prop_value_p) /**< property value reference */
+                                   ecma_string_t *property_name_p) /**< property name */
 {
   JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_ARRAY);
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
 
   if (!ecma_op_object_is_fast_array (object_p))
   {
-    ecma_delete_property (object_p, prop_value_p);
-    return;
+    return false;
   }
 
   JERRY_ASSERT (object_p->u1.property_list_cp != JMEM_CP_NULL);
@@ -527,13 +528,14 @@ ecma_array_object_delete_property (ecma_object_t *object_p, /**< object */
 
   if (ecma_is_value_array_hole (values_p[index]))
   {
-    return;
+    return true;
   }
 
   ecma_free_value_if_not_object (values_p[index]);
 
   values_p[index] = ECMA_VALUE_ARRAY_HOLE;
   ext_obj_p->u.array.length_prop_and_hole_count += ECMA_FAST_ARRAY_HOLE_ONE;
+  return true;
 } /* ecma_array_object_delete_property */
 
 /**

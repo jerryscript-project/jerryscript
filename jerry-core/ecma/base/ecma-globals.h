@@ -400,6 +400,7 @@ typedef enum
   ECMA_PROPERTY_FLAG_WRITABLE = (1u << 2), /**< property is writable */
   ECMA_PROPERTY_FLAG_SINGLE_EXTERNAL = (1u << 2), /**< only one external pointer is assigned to this object */
   ECMA_PROPERTY_FLAG_DELETED = (1u << 3), /**< property is deleted */
+  ECMA_PROPERTY_FLAG_BUILT_IN = (1u << 3), /**< property is defined by the ECMAScript standard */
   ECMA_FAST_ARRAY_FLAG = (1u << 3), /**< array is fast array */
   ECMA_PROPERTY_FLAG_LCACHED = (1u << 4), /**< property is lcached */
 #if JERRY_ESNEXT
@@ -428,10 +429,46 @@ typedef enum
   (ECMA_PROPERTY_FLAG_CONFIGURABLE | ECMA_PROPERTY_FLAG_WRITABLE)
 
 /**
+ * Property flag built-in.
+ */
+#define ECMA_PROPERTY_BUILT_IN_FIXED \
+  (ECMA_PROPERTY_FLAG_BUILT_IN)
+
+/**
  * Property flags enumerable, writable.
  */
 #define ECMA_PROPERTY_ENUMERABLE_WRITABLE \
   (ECMA_PROPERTY_FLAG_ENUMERABLE | ECMA_PROPERTY_FLAG_WRITABLE)
+
+/**
+ * Property flags built-in, configurable.
+ */
+#define ECMA_PROPERTY_BUILT_IN_CONFIGURABLE \
+  (ECMA_PROPERTY_FLAG_BUILT_IN | ECMA_PROPERTY_FLAG_CONFIGURABLE)
+
+/**
+ * Property flags built-in, configurable, enumerable.
+ */
+#define ECMA_PROPERTY_BUILT_IN_CONFIGURABLE_ENUMERABLE \
+  (ECMA_PROPERTY_FLAG_BUILT_IN | ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE)
+
+/**
+ * Property flags built-in, configurable, writable.
+ */
+#define ECMA_PROPERTY_BUILT_IN_CONFIGURABLE_WRITABLE \
+  (ECMA_PROPERTY_FLAG_BUILT_IN | ECMA_PROPERTY_CONFIGURABLE_WRITABLE)
+
+/**
+ * Property flags built-in, writable.
+ */
+#define ECMA_PROPERTY_BUILT_IN_WRITABLE \
+  (ECMA_PROPERTY_FLAG_BUILT_IN | ECMA_PROPERTY_FLAG_WRITABLE)
+
+/**
+ * Property flags built-in, configurable, enumerable, writable.
+ */
+#define ECMA_PROPERTY_BUILT_IN_CONFIGURABLE_ENUMERABLE_WRITABLE \
+  (ECMA_PROPERTY_FLAG_BUILT_IN | ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE)
 
 /**
  * No attributes can be changed for this property.

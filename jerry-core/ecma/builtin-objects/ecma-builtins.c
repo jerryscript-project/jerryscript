@@ -38,6 +38,12 @@ JERRY_STATIC_ASSERT (ECMA_BUILTIN_ID_GLOBAL == ECMA_BUILTIN_OBJECTS_COUNT,
                      ecma_builtin_id_global_must_be_the_last_builtin_id);
 
 /**
+ * Checks whether the built-in is an ecma_extended_built_in_object_t
+ */
+#define ECMA_BUILTIN_IS_EXTENDED_BUILT_IN(object_type) \
+  ((object_type) == ECMA_OBJECT_TYPE_BUILT_IN_CLASS || (object_type) == ECMA_OBJECT_TYPE_BUILT_IN_ARRAY)
+
+/**
  * Helper definition for ecma_builtin_property_list_references.
  */
 typedef const ecma_builtin_property_descriptor_t *ecma_builtin_property_list_reference_t;
@@ -62,14 +68,14 @@ typedef ecma_value_t (*ecma_builtin_dispatch_call_t) (const ecma_value_t argumen
  * Layout:
  *
  * |----------------------|---------------|
- *     prototype_id(13)      obj_type(3)
+ *     prototype_id(12)      obj_type(4)
  */
 typedef uint16_t ecma_builtin_descriptor_t;
 
 /**
  * Bitshift index for get the prototype object's id from a builtin descriptor
  */
-#define ECMA_BUILTIN_PROTOTYPE_ID_SHIFT 3
+#define ECMA_BUILTIN_PROTOTYPE_ID_SHIFT 4
 
 /**
  * Bitmask for get the object's type from a builtin descriptor
@@ -273,9 +279,7 @@ ecma_builtin_get_property_count (ecma_builtin_id_t builtin_id) /**< built-in ID 
 bool
 ecma_builtin_is_global (ecma_object_t *object_p) /**< pointer to an object */
 {
-  JERRY_ASSERT (ecma_get_object_is_builtin (object_p));
-
-  return (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_GENERAL
+  return (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_BUILT_IN_GENERAL
           && ((ecma_extended_object_t *) object_p)->u.built_in.id == ECMA_BUILTIN_ID_GLOBAL);
 } /* ecma_builtin_is_global */
 
@@ -304,8 +308,7 @@ ecma_builtin_get_global (void)
 extern inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_builtin_function_is_routine (ecma_object_t *func_obj_p) /**< function object */
 {
-  JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_NATIVE_FUNCTION);
-  JERRY_ASSERT (ecma_get_object_is_builtin (func_obj_p));
+  JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
 
   ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) func_obj_p;
   return (ext_func_obj_p->u.built_in.routine_id != 0);
@@ -324,10 +327,13 @@ ecma_builtin_function_is_routine (ecma_object_t *func_obj_p) /**< function objec
 static ecma_global_object_t *
 ecma_builtin_get_realm (ecma_object_t *builtin_object_p) /**< built-in object */
 {
-  JERRY_ASSERT (ecma_get_object_is_builtin (builtin_object_p));
-
   ecma_object_type_t object_type = ecma_get_object_type (builtin_object_p);
   ecma_value_t realm_value;
+
+  JERRY_ASSERT (object_type == ECMA_OBJECT_TYPE_BUILT_IN_GENERAL
+                || object_type == ECMA_OBJECT_TYPE_BUILT_IN_CLASS
+                || object_type == ECMA_OBJECT_TYPE_BUILT_IN_ARRAY
+                || object_type == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
 
   if (ECMA_BUILTIN_IS_EXTENDED_BUILT_IN (object_type))
   {
@@ -378,6 +384,18 @@ ecma_instantiate_builtin (ecma_global_object_t *global_object_p, /**< global obj
 
   ecma_object_type_t obj_type = (ecma_object_type_t) (builtin_desc & ECMA_BUILTIN_OBJECT_TYPE_MASK);
 
+  JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_GENERAL
+                || obj_type == ECMA_OBJECT_TYPE_CLASS
+                || obj_type == ECMA_OBJECT_TYPE_ARRAY
+                || obj_type == ECMA_OBJECT_TYPE_NATIVE_FUNCTION);
+  /* TODO: Remove this increase by setting the correct values in the defines. */
+  obj_type = (ecma_object_type_t) ((int) obj_type + 1);
+
+  JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_BUILT_IN_GENERAL
+                || obj_type == ECMA_OBJECT_TYPE_BUILT_IN_CLASS
+                || obj_type == ECMA_OBJECT_TYPE_BUILT_IN_ARRAY
+                || obj_type == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
+
   bool is_extended_built_in = ECMA_BUILTIN_IS_EXTENDED_BUILT_IN (obj_type);
 
   size_t ext_object_size = (is_extended_built_in ? sizeof (ecma_extended_built_in_object_t)
@@ -411,7 +429,6 @@ ecma_instantiate_builtin (ecma_global_object_t *global_object_p, /**< global obj
    * See also: ecma_object_get_class_name
    */
 
-  ecma_set_object_is_builtin (obj_p);
   ecma_built_in_props_t *built_in_props_p;
 
   if (is_extended_built_in)
@@ -448,7 +465,7 @@ ecma_instantiate_builtin (ecma_global_object_t *global_object_p, /**< global obj
 #if JERRY_BUILTIN_ARRAY
     case ECMA_BUILTIN_ID_ARRAY_PROTOTYPE:
     {
-      JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_ARRAY);
+      JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_BUILT_IN_ARRAY);
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
       ext_object_p->u.array.length = 0;
@@ -460,7 +477,7 @@ ecma_instantiate_builtin (ecma_global_object_t *global_object_p, /**< global obj
 #if JERRY_BUILTIN_STRING
     case ECMA_BUILTIN_ID_STRING_PROTOTYPE:
     {
-      JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_CLASS);
+      JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_BUILT_IN_CLASS);
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
       ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_STRING;
@@ -472,7 +489,7 @@ ecma_instantiate_builtin (ecma_global_object_t *global_object_p, /**< global obj
 #if JERRY_BUILTIN_NUMBER
     case ECMA_BUILTIN_ID_NUMBER_PROTOTYPE:
     {
-      JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_CLASS);
+      JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_BUILT_IN_CLASS);
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
       ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_NUMBER;
@@ -484,7 +501,7 @@ ecma_instantiate_builtin (ecma_global_object_t *global_object_p, /**< global obj
 #if JERRY_BUILTIN_BOOLEAN
     case ECMA_BUILTIN_ID_BOOLEAN_PROTOTYPE:
     {
-      JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_CLASS);
+      JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_BUILT_IN_CLASS);
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
       ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_BOOLEAN;
@@ -497,7 +514,7 @@ ecma_instantiate_builtin (ecma_global_object_t *global_object_p, /**< global obj
 #if JERRY_BUILTIN_DATE
     case ECMA_BUILTIN_ID_DATE_PROTOTYPE:
     {
-      JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_CLASS);
+      JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_BUILT_IN_CLASS);
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
       ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_DATE;
@@ -512,7 +529,7 @@ ecma_instantiate_builtin (ecma_global_object_t *global_object_p, /**< global obj
 #if JERRY_BUILTIN_REGEXP
     case ECMA_BUILTIN_ID_REGEXP_PROTOTYPE:
     {
-      JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_CLASS);
+      JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_BUILT_IN_CLASS);
       ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
 
       ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_REGEXP;
@@ -529,7 +546,7 @@ ecma_instantiate_builtin (ecma_global_object_t *global_object_p, /**< global obj
 #endif /* !JERRY_ESNEXT */
     default:
     {
-      JERRY_ASSERT (obj_type != ECMA_OBJECT_TYPE_CLASS);
+      JERRY_ASSERT (obj_type != ECMA_OBJECT_TYPE_BUILT_IN_CLASS);
       break;
     }
   }
@@ -553,7 +570,7 @@ ecma_builtin_create_global_object (void)
   size_t property_count = ecma_builtin_get_property_count (ECMA_BUILTIN_ID_GLOBAL);
 
   JERRY_ASSERT (prototype_builtin_id != ECMA_BUILTIN_ID__COUNT);
-  JERRY_ASSERT (obj_type != ECMA_OBJECT_TYPE_CLASS && obj_type != ECMA_OBJECT_TYPE_ARRAY);
+  JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_BUILT_IN_GENERAL);
 
   /* Whenever this assertion fails, the size of extra_instantiated_bitset in ecma_global_object_t
    * must be increased and 32 must be added to these constants. Furthermore the new uint32 item
@@ -567,7 +584,6 @@ ecma_builtin_create_global_object (void)
   ecma_object_t *object_p = ecma_create_object (NULL, sizeof (ecma_global_object_t), obj_type);
 
   ecma_op_ordinary_object_set_extensible (object_p);
-  ecma_set_object_is_builtin (object_p);
 
   ecma_global_object_t *global_object_p = (ecma_global_object_t *) object_p;
 
@@ -704,9 +720,7 @@ ecma_builtin_make_function_object_for_routine (ecma_object_t *builtin_object_p, 
 
   ecma_object_t *func_obj_p = ecma_create_object (prototype_obj_p,
                                                   ext_object_size,
-                                                  ECMA_OBJECT_TYPE_NATIVE_FUNCTION);
-
-  ecma_set_object_is_builtin (func_obj_p);
+                                                  ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
 
   JERRY_ASSERT (routine_id > 0);
   JERRY_ASSERT (routine_index <= UINT8_MAX);
@@ -783,8 +797,7 @@ static ecma_property_t *
 ecma_builtin_native_handler_try_to_instantiate_property (ecma_object_t *object_p, /**< object */
                                                          ecma_string_t *property_name_p) /**< property's name */
 {
-  JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_NATIVE_FUNCTION
-                && ecma_get_object_is_builtin (object_p));
+  JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
 
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
   ecma_property_t *prop_p = NULL;
@@ -833,8 +846,7 @@ ecma_property_t *
 ecma_builtin_routine_try_to_instantiate_property (ecma_object_t *object_p, /**< object */
                                                   ecma_string_t *property_name_p) /**< property name */
 {
-  JERRY_ASSERT (ecma_get_object_is_builtin (object_p));
-  JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_NATIVE_FUNCTION
+  JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION
                 && ecma_builtin_function_is_routine (object_p));
 
   ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
@@ -991,17 +1003,13 @@ ecma_property_t *
 ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object */
                                           ecma_string_t *property_name_p) /**< property's name */
 {
-  JERRY_ASSERT (ecma_get_object_is_builtin (object_p));
-
   lit_magic_string_id_t magic_string_id = ecma_get_string_magic (property_name_p);
 
 #if JERRY_ESNEXT
-  if (JERRY_UNLIKELY (ecma_prop_name_is_symbol (property_name_p)))
+  if (JERRY_UNLIKELY (ecma_prop_name_is_symbol (property_name_p))
+      && property_name_p->u.hash & ECMA_GLOBAL_SYMBOL_FLAG)
   {
-    if (property_name_p->u.hash & ECMA_GLOBAL_SYMBOL_FLAG)
-    {
-      magic_string_id = (property_name_p->u.hash >> ECMA_GLOBAL_SYMBOL_SHIFT);
-    }
+    magic_string_id = (property_name_p->u.hash >> ECMA_GLOBAL_SYMBOL_SHIFT);
   }
 #endif /* JERRY_ESNEXT */
 
@@ -1012,7 +1020,12 @@ ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, /**< object *
 
   ecma_built_in_props_t *built_in_props_p;
   ecma_object_type_t object_type = ecma_get_object_type (object_p);
-  JERRY_ASSERT (object_type != ECMA_OBJECT_TYPE_FUNCTION || !ecma_builtin_function_is_routine (object_p));
+
+  JERRY_ASSERT (object_type == ECMA_OBJECT_TYPE_BUILT_IN_GENERAL
+                || object_type == ECMA_OBJECT_TYPE_BUILT_IN_CLASS
+                || object_type == ECMA_OBJECT_TYPE_BUILT_IN_ARRAY
+                || (object_type == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION
+                    && !ecma_builtin_function_is_routine (object_p)));
 
   if (ECMA_BUILTIN_IS_EXTENDED_BUILT_IN (object_type))
   {
@@ -1275,8 +1288,7 @@ void
 ecma_builtin_routine_delete_built_in_property (ecma_object_t *object_p, /**< object */
                                                ecma_string_t *property_name_p) /**< property name */
 {
-  JERRY_ASSERT (ecma_get_object_is_builtin (object_p));
-  JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_NATIVE_FUNCTION
+  JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION
                 && ecma_builtin_function_is_routine (object_p));
 
   ecma_extended_object_t *extended_obj_p = (ecma_extended_object_t *) object_p;
@@ -1312,10 +1324,6 @@ void
 ecma_builtin_delete_built_in_property (ecma_object_t *object_p, /**< object */
                                        ecma_string_t *property_name_p) /**< property name */
 {
-  JERRY_ASSERT (ecma_get_object_is_builtin (object_p));
-  JERRY_ASSERT (ecma_get_object_type (object_p) != ECMA_OBJECT_TYPE_NATIVE_FUNCTION
-                || !ecma_builtin_function_is_routine (object_p));
-
   lit_magic_string_id_t magic_string_id = ecma_get_string_magic (property_name_p);
 
 #if JERRY_ESNEXT
@@ -1330,7 +1338,12 @@ ecma_builtin_delete_built_in_property (ecma_object_t *object_p, /**< object */
 
   ecma_built_in_props_t *built_in_props_p;
   ecma_object_type_t object_type = ecma_get_object_type (object_p);
-  JERRY_ASSERT (object_type != ECMA_OBJECT_TYPE_FUNCTION || !ecma_builtin_function_is_routine (object_p));
+
+  JERRY_ASSERT (object_type == ECMA_OBJECT_TYPE_BUILT_IN_GENERAL
+                || object_type == ECMA_OBJECT_TYPE_BUILT_IN_CLASS
+                || object_type == ECMA_OBJECT_TYPE_BUILT_IN_ARRAY
+                || (object_type == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION
+                    && !ecma_builtin_function_is_routine (object_p)));
 
   if (ECMA_BUILTIN_IS_EXTENDED_BUILT_IN (object_type))
   {
@@ -1381,8 +1394,7 @@ ecma_builtin_native_handler_list_lazy_property_names (ecma_object_t *object_p, /
                                                       ecma_collection_t *prop_names_p, /**< prop name collection */
                                                       ecma_property_counter_t *prop_counter_p)  /**< prop counter */
 {
-  JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_NATIVE_FUNCTION
-                && ecma_get_object_is_builtin (object_p));
+  JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
 
   if ((ext_obj_p->u.built_in.u2.routine_flags & ECMA_NATIVE_HANDLER_FLAGS_NAME_INITIALIZED) == 0)
@@ -1411,9 +1423,8 @@ ecma_builtin_routine_list_lazy_property_names (ecma_object_t *object_p, /**< a b
                                                ecma_collection_t *prop_names_p,  /**< prop name collection */
                                                ecma_property_counter_t *prop_counter_p)  /**< prop counter */
 {
-  JERRY_ASSERT (ecma_get_object_is_builtin (object_p));
-  JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_NATIVE_FUNCTION
-                && ecma_builtin_function_is_routine (object_p));
+  JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
+  JERRY_ASSERT (ecma_builtin_function_is_routine (object_p));
 
 #if JERRY_ESNEXT
   ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
@@ -1454,8 +1465,7 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
                                        ecma_collection_t *prop_names_p, /**< prop name collection */
                                        ecma_property_counter_t *prop_counter_p)  /**< prop counter */
 {
-  JERRY_ASSERT (ecma_get_object_is_builtin (object_p));
-  JERRY_ASSERT (ecma_get_object_type (object_p) != ECMA_OBJECT_TYPE_NATIVE_FUNCTION
+  JERRY_ASSERT (ecma_get_object_type (object_p) != ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION
                 || !ecma_builtin_function_is_routine (object_p));
 
   ecma_built_in_props_t *built_in_props_p;
@@ -1583,8 +1593,7 @@ ecma_builtin_dispatch_call (ecma_object_t *obj_p, /**< built-in object */
                             const ecma_value_t *arguments_list_p, /**< arguments list */
                             uint32_t arguments_list_len) /**< arguments list length */
 {
-  JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_NATIVE_FUNCTION);
-  JERRY_ASSERT (ecma_get_object_is_builtin (obj_p));
+  JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
 
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
 
@@ -1619,8 +1628,7 @@ ecma_builtin_dispatch_construct (ecma_object_t *obj_p, /**< built-in object */
                                  const ecma_value_t *arguments_list_p, /**< arguments list */
                                  uint32_t arguments_list_len) /**< arguments list length */
 {
-  JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_NATIVE_FUNCTION);
-  JERRY_ASSERT (ecma_get_object_is_builtin (obj_p));
+  JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
 
   if (ecma_builtin_function_is_routine (obj_p))
   {

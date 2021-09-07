@@ -97,7 +97,7 @@ ecma_op_alloc_array_object (uint32_t length) /**< length of the new array */
 extern inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_op_object_is_fast_array (ecma_object_t *object_p) /**< ecma-object */
 {
-  return (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_ARRAY &&
+  return (ecma_get_object_base_type (object_p) == ECMA_OBJECT_BASE_TYPE_ARRAY &&
           ecma_op_array_is_fast_array ((ecma_extended_object_t *) object_p));
 } /* ecma_op_object_is_fast_array */
 
@@ -110,7 +110,7 @@ ecma_op_object_is_fast_array (ecma_object_t *object_p) /**< ecma-object */
 extern inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_op_array_is_fast_array (ecma_extended_object_t *array_p) /**< ecma-array-object */
 {
-  JERRY_ASSERT (ecma_get_object_type ((ecma_object_t *) array_p) == ECMA_OBJECT_TYPE_ARRAY);
+  JERRY_ASSERT (ecma_get_object_base_type ((ecma_object_t *) array_p) == ECMA_OBJECT_BASE_TYPE_ARRAY);
 
   return array_p->u.array.length_prop_and_hole_count & ECMA_FAST_ARRAY_FLAG;
 } /* ecma_op_array_is_fast_array */
@@ -509,7 +509,7 @@ bool
 ecma_array_object_delete_property (ecma_object_t *object_p, /**< object */
                                    ecma_string_t *property_name_p) /**< property name */
 {
-  JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_ARRAY);
+  JERRY_ASSERT (ecma_get_object_base_type (object_p) == ECMA_OBJECT_BASE_TYPE_ARRAY);
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
 
   if (!ecma_op_object_is_fast_array (object_p))
@@ -817,7 +817,7 @@ ecma_delete_array_properties (ecma_object_t *object_p, /**< object */
                               uint32_t old_length) /**< old length */
 {
   JERRY_ASSERT (new_length < old_length);
-  JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_ARRAY);
+  JERRY_ASSERT (ecma_get_object_base_type (object_p) == ECMA_OBJECT_BASE_TYPE_ARRAY);
 
   if (ecma_op_object_is_fast_array (object_p))
   {
@@ -1195,7 +1195,7 @@ ecma_op_array_object_define_own_property (ecma_object_t *object_p, /**< the arra
 extern inline uint32_t JERRY_ATTR_ALWAYS_INLINE
 ecma_array_get_length (ecma_object_t *array_p) /**< array object */
 {
-  JERRY_ASSERT (ecma_get_object_type (array_p) == ECMA_OBJECT_TYPE_ARRAY);
+  JERRY_ASSERT (ecma_get_object_base_type (array_p) == ECMA_OBJECT_BASE_TYPE_ARRAY);
 
   return ((ecma_extended_object_t *) array_p)->u.array.length;
 } /* ecma_array_get_length */

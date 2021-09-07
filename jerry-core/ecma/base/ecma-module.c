@@ -129,8 +129,7 @@ ecma_module_get_from_object (ecma_value_t module_val) /**< module */
 
   ecma_object_t *object_p = ecma_get_object_from_value (module_val);
 
-  JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_CLASS);
-  JERRY_ASSERT (((ecma_extended_object_t *) object_p)->u.cls.type == ECMA_OBJECT_CLASS_MODULE);
+  JERRY_ASSERT (ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_MODULE));
 
   return (ecma_module_t *) object_p;
 } /* ecma_module_get_from_object */
@@ -1086,14 +1085,7 @@ ecma_module_get_resolved_module (ecma_value_t module_val) /**< module */
 
   ecma_object_t *object_p = ecma_get_object_from_value (module_val);
 
-  if (ecma_get_object_type (object_p) != ECMA_OBJECT_TYPE_CLASS)
-  {
-    return NULL;
-  }
-
-  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-
-  if (ext_object_p->u.cls.type != ECMA_OBJECT_CLASS_MODULE)
+  if (!ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_MODULE))
   {
     return NULL;
   }

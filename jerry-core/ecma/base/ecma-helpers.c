@@ -45,11 +45,8 @@ JERRY_STATIC_ASSERT (ECMA_OBJECT_TYPE_MASK >= ECMA_OBJECT_TYPE__MAX - 1,
 JERRY_STATIC_ASSERT (ECMA_OBJECT_TYPE_MASK >= ECMA_LEXICAL_ENVIRONMENT_TYPE__MAX,
                      ecma_lexical_environment_types_must_be_lower_than_the_container_mask);
 
-JERRY_STATIC_ASSERT (ECMA_OBJECT_TYPE_MASK + 1 == ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV,
-                     ecma_built_in_flag_must_follow_the_object_type);
-
-JERRY_STATIC_ASSERT (ECMA_OBJECT_FLAG_EXTENSIBLE == (ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV << 1),
-                     ecma_extensible_flag_must_follow_the_built_in_flag);
+JERRY_STATIC_ASSERT (ECMA_OBJECT_FLAG_EXTENSIBLE == ECMA_OBJECT_TYPE_MASK + 1,
+                     ecma_extensible_flag_must_follow_the_object_type);
 
 JERRY_STATIC_ASSERT (ECMA_OBJECT_REF_ONE == (ECMA_OBJECT_FLAG_EXTENSIBLE << 1),
                      ecma_object_ref_one_must_follow_the_extensible_flag);
@@ -59,6 +56,17 @@ JERRY_STATIC_ASSERT ((ECMA_OBJECT_MAX_REF + ECMA_OBJECT_REF_ONE) == ECMA_OBJECT_
 
 JERRY_STATIC_ASSERT (ECMA_PROPERTY_FLAGS_MASK == ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
                      ecma_property_flags_mask_must_use_the_configurable_enumerable_writable_flags);
+
+/* These checks are needed by ecma_get_object_base_type. */
+JERRY_STATIC_ASSERT ((int) ECMA_OBJECT_TYPE_BUILT_IN_GENERAL == ((int) ECMA_OBJECT_TYPE_GENERAL | 0x1)
+                     && ((int) ECMA_OBJECT_TYPE_GENERAL & 0x1) == 0,
+                     ecma_object_type_built_in_general_has_unexpected_value);
+JERRY_STATIC_ASSERT ((int) ECMA_OBJECT_TYPE_BUILT_IN_CLASS == ((int) ECMA_OBJECT_TYPE_CLASS | 0x1)
+                     && ((int) ECMA_OBJECT_TYPE_CLASS & 0x1) == 0,
+                     ecma_object_type_built_in_class_has_unexpected_value);
+JERRY_STATIC_ASSERT ((int) ECMA_OBJECT_TYPE_BUILT_IN_ARRAY == ((int) ECMA_OBJECT_TYPE_ARRAY | 0x1)
+                     && ((int) ECMA_OBJECT_TYPE_ARRAY & 0x1) == 0,
+                     ecma_object_type_built_in_array_has_unexpected_value);
 
 /**
  * Create an object with specified prototype object
@@ -111,8 +119,7 @@ ecma_create_decl_lex_env (ecma_object_t *outer_lexical_environment_p) /**< outer
 {
   ecma_object_t *new_lexical_environment_p = ecma_alloc_object ();
 
-  new_lexical_environment_p->type_flags_refs = (ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV
-                                                | ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE);
+  new_lexical_environment_p->type_flags_refs = ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE;
 
   ecma_init_gc_info (new_lexical_environment_p);
 
@@ -142,8 +149,7 @@ ecma_create_object_lex_env (ecma_object_t *outer_lexical_environment_p, /**< out
 
   ecma_object_t *new_lexical_environment_p = ecma_alloc_object ();
 
-  new_lexical_environment_p->type_flags_refs = (ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV
-                                                | ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND);
+  new_lexical_environment_p->type_flags_refs = ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND;
 
   ecma_init_gc_info (new_lexical_environment_p);
 
@@ -168,8 +174,7 @@ ecma_create_lex_env_class (ecma_object_t *outer_lexical_environment_p, /**< oute
 {
   ecma_object_t *new_lexical_environment_p;
 
-  ecma_object_descriptor_t type_flags_refs = (ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV
-                                              | ECMA_LEXICAL_ENVIRONMENT_CLASS);
+  ecma_object_descriptor_t type_flags_refs = ECMA_LEXICAL_ENVIRONMENT_CLASS;
 
   if (lexical_env_size > 0)
   {
@@ -205,9 +210,7 @@ ecma_is_lexical_environment (const ecma_object_t *object_p) /**< object or lexic
 {
   JERRY_ASSERT (object_p != NULL);
 
-  uint32_t full_type = object_p->type_flags_refs & (ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV | ECMA_OBJECT_TYPE_MASK);
-
-  return full_type >= (ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV | ECMA_LEXICAL_ENVIRONMENT_TYPE_START);
+  return (object_p->type_flags_refs & ECMA_OBJECT_TYPE_MASK) >= ECMA_LEXICAL_ENVIRONMENT_TYPE_START;
 } /* ecma_is_lexical_environment */
 
 /**
@@ -223,7 +226,7 @@ ecma_op_ordinary_object_set_extensible (ecma_object_t *object_p) /**< object */
 } /* ecma_op_ordinary_object_set_extensible */
 
 /**
- * Get object's internal implementation-defined type.
+ * Get the internal type of an object.
  *
  * @return type of the object (ecma_object_type_t)
  */
@@ -237,6 +240,20 @@ ecma_get_object_type (const ecma_object_t *object_p) /**< object */
 } /* ecma_get_object_type */
 
 /**
+ * Get the internal base type of an object.
+ *
+ * @return base type of the object (ecma_object_base_type_t)
+ */
+extern inline ecma_object_base_type_t JERRY_ATTR_PURE
+ecma_get_object_base_type (const ecma_object_t *object_p) /**< object */
+{
+  JERRY_ASSERT (object_p != NULL);
+  JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
+
+  return (ecma_object_base_type_t) (object_p->type_flags_refs & (ECMA_OBJECT_TYPE_MASK - 0x1));
+} /* ecma_get_object_base_type */
+
+/**
  * Get value of an object if the class matches
  *
  * @return value of the object if the class matches
@@ -246,7 +263,7 @@ extern inline bool JERRY_ATTR_ALWAYS_INLINE
 ecma_object_class_is (ecma_object_t *object_p, /**< object */
                       ecma_object_class_type_t class_id) /**< class id */
 {
-  if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_CLASS)
+  if (ecma_get_object_base_type (object_p) == ECMA_OBJECT_BASE_TYPE_CLASS)
   {
     ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
@@ -258,63 +275,6 @@ ecma_object_class_is (ecma_object_t *object_p, /**< object */
 
   return false;
 } /* ecma_object_class_is */
-
-/**
- * Check if the object is a built-in object
- *
- * @return true  - if object is a built-in object
- *         false - otherwise
- */
-extern inline bool JERRY_ATTR_PURE
-ecma_get_object_is_builtin (const ecma_object_t *object_p) /**< object */
-{
-  JERRY_ASSERT (object_p != NULL);
-  JERRY_ASSERT (!ecma_is_lexical_environment (object_p));
-
-  return (object_p->type_flags_refs & ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV) != 0;
-} /* ecma_get_object_is_builtin */
-
-/**
- * Set flag indicating whether the object is a built-in object
- */
-extern inline void
-ecma_set_object_is_builtin (ecma_object_t *object_p) /**< object */
-{
-  JERRY_ASSERT (object_p != NULL);
-  JERRY_ASSERT (!(object_p->type_flags_refs & ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV));
-  JERRY_ASSERT ((object_p->type_flags_refs & ECMA_OBJECT_TYPE_MASK) < ECMA_LEXICAL_ENVIRONMENT_TYPE_START);
-
-  object_p->type_flags_refs |= ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV;
-} /* ecma_set_object_is_builtin */
-
-/**
- * Get the built-in ID of the object.
- * If the object is not builtin, return ECMA_BUILTIN_ID__COUNT
- *
- * @return the ID of the built-in
- */
-extern inline uint8_t
-ecma_get_object_builtin_id (ecma_object_t *object_p) /**< object */
-{
-  if (!ecma_get_object_is_builtin (object_p))
-  {
-    return ECMA_BUILTIN_ID__COUNT;
-  }
-
-  ecma_built_in_props_t *built_in_props_p;
-  ecma_object_type_t object_type = ecma_get_object_type (object_p);
-
-  if (ECMA_BUILTIN_IS_EXTENDED_BUILT_IN (object_type))
-  {
-    built_in_props_p = &((ecma_extended_built_in_object_t *) object_p)->built_in;
-  }
-  else
-  {
-    built_in_props_p = &((ecma_extended_object_t *) object_p)->u.built_in;
-  }
-
-  return built_in_props_p->id;
-} /* ecma_get_object_builtin_id */
 
 /**
  * Get type of lexical environment.
@@ -1669,11 +1629,7 @@ ecma_bytecode_get_from_value (ecma_value_t value) /**< compiled code */
       }
       case ECMA_OBJECT_TYPE_FUNCTION:
       {
-        if (!ecma_get_object_is_builtin (object_p))
-        {
-          return ecma_op_function_get_compiled_code ((ecma_extended_object_t *) object_p);
-        }
-        return NULL;
+        return ecma_op_function_get_compiled_code ((ecma_extended_object_t *) object_p);
       }
       case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
       {

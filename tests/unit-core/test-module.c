@@ -265,6 +265,19 @@ module_state_changed (jerry_module_state_t new_state, /**< new state of the modu
   }
 } /* module_state_changed */
 
+static jerry_value_t
+resolve_callback5 (const jerry_value_t specifier, /**< module specifier */
+                   const jerry_value_t referrer, /**< parent module */
+                   void *user_p) /**< user data */
+{
+  (void) specifier;
+  (void) user_p;
+
+  /* This circular reference is valid. However, import resolving triggers
+   * a SyntaxError, because the module does not export a default binding. */
+  return referrer;
+} /* resolve_callback5 */
+
 int
 main (void)
 {
@@ -548,6 +561,16 @@ main (void)
   jerry_module_set_state_changed_callback (NULL, NULL);
 
   TEST_ASSERT (counter == 4);
+
+  jerry_char_t source6[] = TEST_STRING_LITERAL (
+    "import a from 'self'\n"
+  );
+  module = jerry_parse (source6, sizeof (source6) - 1, &module_parse_options);
+
+  result = jerry_module_link (module, resolve_callback5, NULL);
+  TEST_ASSERT (jerry_value_is_error (result)
+               && jerry_get_error_type (result) == JERRY_ERROR_SYNTAX);
+  jerry_release_value (result);
 
   jerry_cleanup ();
 

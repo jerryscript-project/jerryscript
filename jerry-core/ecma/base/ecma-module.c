@@ -278,12 +278,12 @@ ecma_module_resolve_throw (ecma_module_resolve_result_t *resolve_result_p, /**< 
     }
   }
 
-  return ecma_raise_standard_error_with_format (JERRY_ERROR_REFERENCE, msg_p, name_val);
+  return ecma_raise_standard_error_with_format (JERRY_ERROR_SYNTAX, msg_p, name_val);
 #else /* JERRY_ERROR_MESSAGES */
   JERRY_UNUSED (resolve_result_p);
   JERRY_UNUSED (name_p);
 
-  return ecma_raise_reference_error (NULL);
+  return ecma_raise_syntax_error (NULL);
 #endif /* !JERRY_ERROR_MESSAGES */
 } /* ecma_module_resolve_throw */
 

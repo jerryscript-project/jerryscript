@@ -470,10 +470,8 @@ ecma_object_t *ecma_create_lex_env_class (ecma_object_t *outer_lexical_environme
 bool JERRY_ATTR_PURE ecma_is_lexical_environment (const ecma_object_t *object_p);
 void ecma_op_ordinary_object_set_extensible (ecma_object_t *object_p);
 ecma_object_type_t JERRY_ATTR_PURE ecma_get_object_type (const ecma_object_t *object_p);
+ecma_object_base_type_t JERRY_ATTR_PURE ecma_get_object_base_type (const ecma_object_t *object_p);
 bool JERRY_ATTR_PURE ecma_object_class_is (ecma_object_t *object_p, ecma_object_class_type_t class_id);
-bool JERRY_ATTR_PURE ecma_get_object_is_builtin (const ecma_object_t *object_p);
-void ecma_set_object_is_builtin (ecma_object_t *object_p);
-uint8_t ecma_get_object_builtin_id (ecma_object_t *object_p);
 ecma_lexical_environment_type_t JERRY_ATTR_PURE ecma_get_lex_env_type (const ecma_object_t *object_p);
 ecma_object_t JERRY_ATTR_PURE *ecma_get_lex_env_binding_object (const ecma_object_t *object_p);
 ecma_object_t *ecma_clone_decl_lexical_environment (ecma_object_t *lex_env_p, bool copy_values);

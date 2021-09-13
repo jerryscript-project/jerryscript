@@ -107,7 +107,7 @@ ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p, /**< a String obj
                                          ecma_collection_t *prop_names_p, /**< prop name collection */
                                          ecma_property_counter_t *prop_counter_p)  /**< prop counter */
 {
-  JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_CLASS);
+  JERRY_ASSERT (ecma_get_object_base_type (obj_p) == ECMA_OBJECT_BASE_TYPE_CLASS);
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
   JERRY_ASSERT (ext_object_p->u.cls.type == ECMA_OBJECT_CLASS_STRING);

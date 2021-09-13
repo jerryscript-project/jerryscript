@@ -1164,7 +1164,7 @@ jerry_value_is_array (const jerry_value_t value) /**< jerry api value */
   jerry_assert_api_available ();
 
   return (ecma_is_value_object (value)
-          && ecma_get_object_type (ecma_get_object_from_value (value)) == ECMA_OBJECT_TYPE_ARRAY);
+          && ecma_get_object_base_type (ecma_get_object_from_value (value)) == ECMA_OBJECT_BASE_TYPE_ARRAY);
 } /* jerry_value_is_array */
 
 /**
@@ -1267,8 +1267,7 @@ jerry_value_is_async_function (const jerry_value_t value) /**< api value */
   {
     ecma_object_t *obj_p = ecma_get_object_from_value (value);
 
-    if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION
-        && !ecma_get_object_is_builtin (obj_p))
+    if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
     {
       const ecma_compiled_code_t *bytecode_data_p;
       bytecode_data_p = ecma_op_function_get_compiled_code ((ecma_extended_object_t *) obj_p);
@@ -1593,13 +1592,14 @@ jerry_object_get_type (const jerry_value_t value) /**< input value to check */
 
   switch (ecma_get_object_type (obj_p))
   {
-    case ECMA_OBJECT_TYPE_FUNCTION:
-    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
-    case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:
+    case ECMA_OBJECT_TYPE_CLASS:
+    case ECMA_OBJECT_TYPE_BUILT_IN_CLASS:
     {
-      return JERRY_OBJECT_TYPE_FUNCTION;
+      JERRY_ASSERT (ext_obj_p->u.cls.type < ECMA_OBJECT_CLASS__MAX);
+      return jerry_class_object_type[ext_obj_p->u.cls.type];
     }
     case ECMA_OBJECT_TYPE_ARRAY:
+    case ECMA_OBJECT_TYPE_BUILT_IN_ARRAY:
     {
       return JERRY_OBJECT_TYPE_ARRAY;
     }
@@ -1609,10 +1609,12 @@ jerry_object_get_type (const jerry_value_t value) /**< input value to check */
       return JERRY_OBJECT_TYPE_PROXY;
     }
 #endif /* JERRY_ESNEXT */
-    case ECMA_OBJECT_TYPE_CLASS:
+    case ECMA_OBJECT_TYPE_FUNCTION:
+    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+    case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:
+    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
     {
-      JERRY_ASSERT (ext_obj_p->u.cls.type < ECMA_OBJECT_CLASS__MAX);
-      return jerry_class_object_type[ext_obj_p->u.cls.type];
+      return JERRY_OBJECT_TYPE_FUNCTION;
     }
     default:
     {
@@ -1646,37 +1648,35 @@ jerry_function_get_type (const jerry_value_t value) /**< input value to check */
         return JERRY_FUNCTION_TYPE_BOUND;
       }
       case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:
+      case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
       {
         return JERRY_FUNCTION_TYPE_GENERIC;
       }
       case ECMA_OBJECT_TYPE_FUNCTION:
       {
-        if (!ecma_get_object_is_builtin (obj_p))
-        {
-          const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_obj_p);
+        const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_obj_p);
 
-          switch (CBC_FUNCTION_GET_TYPE (bytecode_data_p->status_flags))
-          {
+        switch (CBC_FUNCTION_GET_TYPE (bytecode_data_p->status_flags))
+        {
 #if JERRY_ESNEXT
-            case CBC_FUNCTION_ARROW:
-            case CBC_FUNCTION_ASYNC_ARROW:
-            {
-              return JERRY_FUNCTION_TYPE_ARROW;
-            }
-            case CBC_FUNCTION_GENERATOR:
-            case CBC_FUNCTION_ASYNC_GENERATOR:
-            {
-              return JERRY_FUNCTION_TYPE_GENERATOR;
-            }
+          case CBC_FUNCTION_ARROW:
+          case CBC_FUNCTION_ASYNC_ARROW:
+          {
+            return JERRY_FUNCTION_TYPE_ARROW;
+          }
+          case CBC_FUNCTION_GENERATOR:
+          case CBC_FUNCTION_ASYNC_GENERATOR:
+          {
+            return JERRY_FUNCTION_TYPE_GENERATOR;
+          }
 #endif /* JERRY_ESNEXT */
-            case CBC_FUNCTION_ACCESSOR:
-            {
-              return JERRY_FUNCTION_TYPE_ACCESSOR;
-            }
-            default:
-            {
-              break;
-            }
+          case CBC_FUNCTION_ACCESSOR:
+          {
+            return JERRY_FUNCTION_TYPE_ACCESSOR;
+          }
+          default:
+          {
+            break;
           }
         }
         return JERRY_FUNCTION_TYPE_GENERIC;
@@ -2872,7 +2872,7 @@ jerry_get_array_length (const jerry_value_t value) /**< api value */
 
   ecma_object_t *object_p = ecma_get_object_from_value (value);
 
-  if (JERRY_LIKELY (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_ARRAY))
+  if (JERRY_LIKELY (ecma_get_object_base_type (object_p) == ECMA_OBJECT_BASE_TYPE_ARRAY))
   {
     return ecma_array_get_length (object_p);
   }
@@ -5519,8 +5519,7 @@ jerry_set_realm (jerry_value_t realm_value) /**< jerry api value */
   {
     ecma_object_t *object_p = ecma_get_object_from_value (realm_value);
 
-    if (ecma_get_object_is_builtin (object_p)
-        && ecma_builtin_is_global (object_p))
+    if (ecma_builtin_is_global (object_p))
     {
       ecma_global_object_t *previous_global_object_p = JERRY_CONTEXT (global_object_p);
       JERRY_CONTEXT (global_object_p) = (ecma_global_object_t *) object_p;
@@ -5551,8 +5550,7 @@ jerry_realm_get_this (jerry_value_t realm_value) /**< realm value */
   {
     ecma_object_t *object_p = ecma_get_object_from_value (realm_value);
 
-    if (ecma_get_object_is_builtin (object_p)
-        && ecma_builtin_is_global (object_p))
+    if (ecma_builtin_is_global (object_p))
     {
       ecma_global_object_t *global_object_p = (ecma_global_object_t *) object_p;
 
@@ -5599,8 +5597,7 @@ jerry_realm_set_this (jerry_value_t realm_value, /**< realm value */
   {
     ecma_object_t *object_p = ecma_get_object_from_value (realm_value);
 
-    if (ecma_get_object_is_builtin (object_p)
-        && ecma_builtin_is_global (object_p))
+    if (ecma_builtin_is_global (object_p))
     {
       ecma_global_object_t *global_object_p = (ecma_global_object_t *) object_p;
       global_object_p->this_binding = this_value;

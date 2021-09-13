@@ -1425,8 +1425,7 @@ jerry_debugger_exception_object_to_string (ecma_value_t exception_obj_value) /**
 
   ecma_object_t *prototype_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, prototype_cp);
 
-  if (ecma_get_object_type (prototype_p) != ECMA_OBJECT_TYPE_GENERAL
-      || !ecma_get_object_is_builtin (prototype_p))
+  if (ecma_get_object_type (prototype_p) != ECMA_OBJECT_TYPE_BUILT_IN_GENERAL)
   {
     return NULL;
   }

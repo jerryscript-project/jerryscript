@@ -703,18 +703,34 @@ typedef enum
  */
 typedef enum
 {
-  ECMA_OBJECT_TYPE_GENERAL = 0, /**< all objects that are not belongs to the sub-types below. */
-  ECMA_OBJECT_TYPE_CLASS = 1, /**< Objects with class property */
-  ECMA_OBJECT_TYPE_ARRAY = 2, /**< Array object (15.4) */
-  ECMA_OBJECT_TYPE_PROXY  = 4, /**< Proxy object ECMAScript v6 26.2 */
+  ECMA_OBJECT_TYPE_GENERAL = 0, /**< all objects that are not belongs to the sub-types below */
+  ECMA_OBJECT_TYPE_BUILT_IN_GENERAL = 1, /**< built-in general object */
+  ECMA_OBJECT_TYPE_CLASS = 2, /**< Objects with class property */
+  ECMA_OBJECT_TYPE_BUILT_IN_CLASS = 3, /**< built-in object with class property */
+  ECMA_OBJECT_TYPE_ARRAY = 4, /**< Array object (15.4) */
+  ECMA_OBJECT_TYPE_BUILT_IN_ARRAY = 5, /**< Built-in array object */
+  ECMA_OBJECT_TYPE_PROXY = 6, /**< Proxy object ECMAScript v6 26.2 */
   /* Note: these 4 types must be in this order. See IsCallable operation.  */
-  ECMA_OBJECT_TYPE_FUNCTION = 5, /**< Function objects (15.3), created through 13.2 routine */
-  ECMA_OBJECT_TYPE_BOUND_FUNCTION = 6, /**< Function objects (15.3), created through 15.3.4.5 routine */
-  ECMA_OBJECT_TYPE_NATIVE_FUNCTION = 7, /**< Native function object */
-  /* Types between 13-15 cannot have a built-in flag. See ecma_lexical_environment_type_t. */
+  ECMA_OBJECT_TYPE_FUNCTION = 7, /**< Function objects (15.3), created through 13.2 routine */
+  ECMA_OBJECT_TYPE_BOUND_FUNCTION = 8, /**< Function objects (15.3), created through 15.3.4.5 routine */
+  ECMA_OBJECT_TYPE_NATIVE_FUNCTION = 9, /**< Native function object */
+  ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION = 10, /**< Native built-in function object */
 
   ECMA_OBJECT_TYPE__MAX /**< maximum value */
 } ecma_object_type_t;
+
+/**
+ * Base object types without built-in flag.
+ *
+ * Note:
+ *     only these types can be checked with ecma_get_object_base_type.
+ */
+typedef enum
+{
+  ECMA_OBJECT_BASE_TYPE_GENERAL = ECMA_OBJECT_TYPE_GENERAL, /**< generic objects */
+  ECMA_OBJECT_BASE_TYPE_CLASS = ECMA_OBJECT_TYPE_CLASS, /**< Objects with class property */
+  ECMA_OBJECT_BASE_TYPE_ARRAY = ECMA_OBJECT_TYPE_ARRAY, /**< Array object (15.4) */
+} ecma_object_base_type_t;
 
 /**
  * Types of objects with class property.
@@ -801,11 +817,11 @@ typedef enum
 {
   /* Types between 0 - 12 are ecma_object_type_t which can have a built-in flag. */
 
-  ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE = 13, /**< declarative lexical environment */
+  ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE = 29, /**< declarative lexical environment */
 #if JERRY_ESNEXT
-  ECMA_LEXICAL_ENVIRONMENT_CLASS = 14, /**< lexical environment with class */
+  ECMA_LEXICAL_ENVIRONMENT_CLASS = 30, /**< lexical environment with class */
 #endif /* JERRY_ESNEXT */
-  ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND = 15, /**< object-bound lexical environment */
+  ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND = 31, /**< object-bound lexical environment */
 
   ECMA_LEXICAL_ENVIRONMENT_TYPE_START = ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE, /**< first lexical
                                                                                *   environment type */
@@ -859,14 +875,7 @@ typedef enum
 /**
  * Ecma object type mask for getting the object type.
  */
-#define ECMA_OBJECT_TYPE_MASK 0x0fu
-
-/**
- * Ecma object is built-in or lexical environment. When this flag is set, the object is a
- *   - built-in, if object type is less than ECMA_LEXICAL_ENVIRONMENT_TYPES_START
- *   - lexical environment, if object type is greater or equal than ECMA_LEXICAL_ENVIRONMENT_TYPES_START
- */
-#define ECMA_OBJECT_FLAG_BUILT_IN_OR_LEXICAL_ENV 0x10
+#define ECMA_OBJECT_TYPE_MASK 0x01fu
 
 /**
  * Extensible object.
@@ -1166,12 +1175,6 @@ typedef struct
   ecma_extended_object_t extended_object; /**< extended object part */
   ecma_built_in_props_t built_in; /**< built-in object part */
 } ecma_extended_built_in_object_t;
-
-/**
- * Checks whether the built-in is an ecma_extended_built_in_object_t
- */
-#define ECMA_BUILTIN_IS_EXTENDED_BUILT_IN(object_type) \
-  ((object_type) == ECMA_OBJECT_TYPE_CLASS || (object_type) == ECMA_OBJECT_TYPE_ARRAY)
 
 /**
  * Description of lexical environment with class

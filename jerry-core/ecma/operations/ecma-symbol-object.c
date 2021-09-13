@@ -162,14 +162,9 @@ ecma_symbol_this_value (ecma_value_t this_arg) /**< this argument value */
   {
     ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
 
-    if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_CLASS)
+    if (ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_SYMBOL))
     {
-      ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
-
-      if (ext_obj_p->u.cls.type == ECMA_OBJECT_CLASS_SYMBOL)
-      {
-        return ext_obj_p->u.cls.u3.value;
-      }
+      return ((ecma_extended_object_t *) object_p)->u.cls.u3.value;
     }
   }
 

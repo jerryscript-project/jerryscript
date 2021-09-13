@@ -133,40 +133,41 @@ ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
   if (property & ECMA_PROPERTY_FLAG_BUILT_IN)
   {
 #if JERRY_ESNEXT
-    if (ecma_get_object_is_builtin (obj_p))
+    switch (type)
     {
-      if (type == ECMA_OBJECT_TYPE_NATIVE_FUNCTION && ecma_builtin_function_is_routine (obj_p))
+      case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
       {
-        ecma_builtin_routine_delete_built_in_property (obj_p, property_name_p);
+        if (ecma_builtin_function_is_routine (obj_p))
+        {
+          ecma_builtin_routine_delete_built_in_property (obj_p, property_name_p);
+          break;
+        }
+        /* FALLTHRU */
       }
-      else
+      case ECMA_OBJECT_TYPE_BUILT_IN_GENERAL:
+      case ECMA_OBJECT_TYPE_BUILT_IN_CLASS:
+      case ECMA_OBJECT_TYPE_BUILT_IN_ARRAY:
       {
         ecma_builtin_delete_built_in_property (obj_p, property_name_p);
+        break;
       }
-    }
-    else
-    {
-      switch (type)
+      case ECMA_OBJECT_TYPE_FUNCTION:
       {
-        case ECMA_OBJECT_TYPE_FUNCTION:
-        {
-          ecma_op_function_delete_built_in_property (obj_p, property_name_p);
-          break;
-        }
-        case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
-        {
-          ecma_op_bound_function_delete_built_in_property (obj_p, property_name_p);
-          break;
-        }
-        default:
-        {
-          break;
-        }
+        ecma_op_function_delete_built_in_property (obj_p, property_name_p);
+        break;
+      }
+      case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+      {
+        ecma_op_bound_function_delete_built_in_property (obj_p, property_name_p);
+        break;
+      }
+      default:
+      {
+        JERRY_UNREACHABLE ();
+        break;
       }
     }
 #else /* !JERRY_ESNEXT */
-    JERRY_ASSERT (ecma_get_object_is_builtin (obj_p));
-
     ecma_builtin_delete_built_in_property (obj_p, property_name_p);
 #endif /* JERRY_ESNEXT */
   }

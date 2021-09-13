@@ -77,8 +77,7 @@ ecma_builtin_array_iterator_prototype_object_next (ecma_value_t this_val) /**< t
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) obj_p;
 
   /* 3. */
-  if (ecma_get_object_type (obj_p) != ECMA_OBJECT_TYPE_CLASS
-      || ext_obj_p->u.cls.type != ECMA_OBJECT_CLASS_ARRAY_ITERATOR)
+  if (!ecma_object_class_is (obj_p, ECMA_OBJECT_CLASS_ARRAY_ITERATOR))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("Argument 'this' is not an iterator"));
   }

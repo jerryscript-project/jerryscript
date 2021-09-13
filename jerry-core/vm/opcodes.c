@@ -1175,8 +1175,6 @@ opfunc_set_home_object (ecma_object_t *func_p, /**< function object */
 
   if (ecma_get_object_type (func_p) == ECMA_OBJECT_TYPE_FUNCTION)
   {
-    JERRY_ASSERT (!ecma_get_object_is_builtin (func_p));
-
     ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) func_p;
     ECMA_SET_NON_NULL_POINTER_TAG (ext_func_p->u.function.scope_cp,
                                    parent_env_p,

@@ -786,7 +786,7 @@ BUILTIN_ROUTINE (ECMA_BUILTIN_ID_DATAVIEW,
 
 /* The Global object (15.1) */
 BUILTIN (ECMA_BUILTIN_ID_GLOBAL,
-         ECMA_OBJECT_TYPE_GENERAL,
+         ECMA_OBJECT_TYPE_BUILT_IN_GENERAL,
          ECMA_BUILTIN_ID_OBJECT_PROTOTYPE, /* Implementation-dependent */
          true,
          global)

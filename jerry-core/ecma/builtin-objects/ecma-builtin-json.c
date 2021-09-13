@@ -1327,7 +1327,7 @@ ecma_builtin_json_serialize_property (ecma_json_stringify_context_t *context_p, 
   {
     ecma_object_t *obj_p = ecma_get_object_from_value (value);
 
-    if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_CLASS)
+    if (ecma_get_object_base_type (obj_p) == ECMA_OBJECT_BASE_TYPE_CLASS)
     {
       switch (((ecma_extended_object_t *) obj_p)->u.cls.type)
       {
@@ -1635,7 +1635,7 @@ ecma_builtin_json_stringify (ecma_value_t arg1,  /**< value */
           {
             ecma_object_t *value_obj_p = ecma_get_object_from_value (value);
 
-            if (ecma_get_object_type (value_obj_p) == ECMA_OBJECT_TYPE_CLASS)
+            if (ecma_get_object_base_type (value_obj_p) == ECMA_OBJECT_BASE_TYPE_CLASS)
             {
               uint8_t class_type = ((ecma_extended_object_t *) value_obj_p)->u.cls.type;
 
@@ -1686,7 +1686,7 @@ ecma_builtin_json_stringify (ecma_value_t arg1,  /**< value */
   {
     ecma_object_t *obj_p = ecma_get_object_from_value (arg3);
 
-    if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_CLASS)
+    if (ecma_get_object_base_type (obj_p) == ECMA_OBJECT_BASE_TYPE_CLASS)
     {
       uint8_t class_type = ((ecma_extended_object_t *) obj_p)->u.cls.type;
 

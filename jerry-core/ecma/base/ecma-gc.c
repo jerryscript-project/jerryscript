@@ -837,53 +837,37 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
   }
   else
   {
-    ecma_object_type_t object_type = ecma_get_object_type (object_p);
-
-#if JERRY_BUILTIN_REALMS
-    if (JERRY_UNLIKELY (ecma_get_object_is_builtin (object_p)))
-    {
-      ecma_value_t realm_value;
-
-      if (ECMA_BUILTIN_IS_EXTENDED_BUILT_IN (object_type))
-      {
-        realm_value = ((ecma_extended_built_in_object_t *) object_p)->built_in.realm_value;
-      }
-      else
-      {
-        ecma_extended_object_t *extended_object_p = (ecma_extended_object_t *) object_p;
-
-        if (object_type == ECMA_OBJECT_TYPE_GENERAL
-            && extended_object_p->u.built_in.id == ECMA_BUILTIN_ID_GLOBAL)
-        {
-          ecma_gc_mark_global_object ((ecma_global_object_t *) object_p);
-        }
-
-        realm_value = extended_object_p->u.built_in.realm_value;
-      }
-
-      ecma_gc_set_object_visited (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, realm_value));
-    }
-#endif /* JERRY_BUILTIN_REALMS */
-
     /**
      * Have the object's prototype here so the object could set it to JMEM_CP_NULL
      * if the prototype should be ignored (like in case of PROXY).
      */
     jmem_cpointer_t proto_cp = object_p->u2.prototype_cp;
 
-    switch (object_type)
+    switch (ecma_get_object_type (object_p))
     {
-#if !JERRY_BUILTIN_REALMS
-      case ECMA_OBJECT_TYPE_GENERAL:
+      case ECMA_OBJECT_TYPE_BUILT_IN_GENERAL:
       {
-        if (JERRY_UNLIKELY (ecma_get_object_is_builtin (object_p))
-            && ((ecma_extended_object_t *) object_p)->u.built_in.id == ECMA_BUILTIN_ID_GLOBAL)
+        ecma_extended_object_t *extended_object_p = (ecma_extended_object_t *) object_p;
+
+        if (extended_object_p->u.built_in.id == ECMA_BUILTIN_ID_GLOBAL)
         {
           ecma_gc_mark_global_object ((ecma_global_object_t *) object_p);
         }
+
+#if JERRY_BUILTIN_REALMS
+        ecma_value_t realm_value = extended_object_p->u.built_in.realm_value;
+        ecma_gc_set_object_visited (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, realm_value));
+#endif /* JERRY_BUILTIN_REALMS */
         break;
       }
-#endif /* !JERRY_BUILTIN_REALMS */
+      case ECMA_OBJECT_TYPE_BUILT_IN_CLASS:
+      {
+#if JERRY_BUILTIN_REALMS
+        ecma_value_t realm_value = ((ecma_extended_built_in_object_t *) object_p)->built_in.realm_value;
+        ecma_gc_set_object_visited (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, realm_value));
+#endif /* JERRY_BUILTIN_REALMS */
+        /* FALLTHRU */
+      }
       case ECMA_OBJECT_TYPE_CLASS:
       {
         ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
@@ -1048,6 +1032,14 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 
         break;
       }
+      case ECMA_OBJECT_TYPE_BUILT_IN_ARRAY:
+      {
+#if JERRY_BUILTIN_REALMS
+        ecma_value_t realm_value = ((ecma_extended_built_in_object_t *) object_p)->built_in.realm_value;
+        ecma_gc_set_object_visited (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, realm_value));
+#endif /* JERRY_BUILTIN_REALMS */
+        /* FALLTHRU */
+      }
       case ECMA_OBJECT_TYPE_ARRAY:
       {
         ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
@@ -1100,8 +1092,6 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
       }
       case ECMA_OBJECT_TYPE_FUNCTION:
       {
-        JERRY_ASSERT (!ecma_get_object_is_builtin (object_p));
-
         ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
         ecma_gc_set_object_visited (ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
                                                                                 ext_func_p->u.function.scope_cp));
@@ -1136,24 +1126,27 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
         ecma_gc_mark_compiled_code (byte_code_p);
         break;
       }
-#if JERRY_ESNEXT || JERRY_BUILTIN_REALMS
+#if JERRY_BUILTIN_REALMS
       case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:
       {
+        ecma_native_function_t *native_function_p = (ecma_native_function_t *) object_p;
+        ecma_gc_set_object_visited (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                                     native_function_p->realm_value));
+        break;
+      }
+#endif /* JERRY_BUILTIN_REALMS */
+#if JERRY_ESNEXT || JERRY_BUILTIN_REALMS
+      case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
+      {
+        ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
 #endif /* JERRY_ESNEXT || JERRY_BUILTIN_REALMS */
 
-        if (!ecma_get_object_is_builtin (object_p))
-        {
 #if JERRY_BUILTIN_REALMS
-          ecma_native_function_t *native_function_p = (ecma_native_function_t *) object_p;
-          ecma_gc_set_object_visited (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                                       native_function_p->realm_value));
+        ecma_value_t realm_value = ext_func_p->u.built_in.realm_value;
+        ecma_gc_set_object_visited (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, realm_value));
 #endif /* JERRY_BUILTIN_REALMS */
-          break;
-        }
 
 #if JERRY_ESNEXT
-        ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
-
         if (ext_func_p->u.built_in.id == ECMA_BUILTIN_ID_HANDLER)
         {
           switch (ext_func_p->u.built_in.routine_id)
@@ -1688,88 +1681,6 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 
   size_t ext_object_size = sizeof (ecma_extended_object_t);
 
-  if (JERRY_UNLIKELY (ecma_get_object_is_builtin (object_p)))
-  {
-    uint8_t length_and_bitset_size;
-
-    if (ECMA_BUILTIN_IS_EXTENDED_BUILT_IN (object_type))
-    {
-      ext_object_size = sizeof (ecma_extended_built_in_object_t);
-      length_and_bitset_size = ((ecma_extended_built_in_object_t *) object_p)->built_in.u.length_and_bitset_size;
-      ext_object_size += sizeof (uint64_t) * (length_and_bitset_size >> ECMA_BUILT_IN_BITSET_SHIFT);
-    }
-    else
-    {
-      ecma_extended_object_t *extended_object_p = (ecma_extended_object_t *) object_p;
-
-      if (extended_object_p->u.built_in.routine_id > 0)
-      {
-        JERRY_ASSERT (object_type == ECMA_OBJECT_TYPE_NATIVE_FUNCTION);
-
-#if JERRY_ESNEXT
-        if (extended_object_p->u.built_in.id == ECMA_BUILTIN_ID_HANDLER)
-        {
-          switch (extended_object_p->u.built_in.routine_id)
-          {
-            case ECMA_NATIVE_HANDLER_PROMISE_RESOLVE:
-            case ECMA_NATIVE_HANDLER_PROMISE_REJECT:
-            {
-              ext_object_size = sizeof (ecma_promise_resolver_t);
-              break;
-            }
-            case ECMA_NATIVE_HANDLER_PROMISE_THEN_FINALLY:
-            case ECMA_NATIVE_HANDLER_PROMISE_CATCH_FINALLY:
-            {
-              ext_object_size = sizeof (ecma_promise_finally_function_t);
-              break;
-            }
-            case ECMA_NATIVE_HANDLER_PROMISE_CAPABILITY_EXECUTOR:
-            {
-              ext_object_size = sizeof (ecma_promise_capability_executor_t);
-              break;
-            }
-            case ECMA_NATIVE_HANDLER_PROMISE_ALL_HELPER:
-            {
-              ext_object_size = sizeof (ecma_promise_all_executor_t);
-              break;
-            }
-#if JERRY_BUILTIN_PROXY
-            case ECMA_NATIVE_HANDLER_PROXY_REVOKE:
-            {
-              ext_object_size = sizeof (ecma_revocable_proxy_object_t);
-              break;
-            }
-#endif /* JERRY_BUILTIN_PROXY */
-            case ECMA_NATIVE_HANDLER_VALUE_THUNK:
-            case ECMA_NATIVE_HANDLER_VALUE_THROWER:
-            {
-              ecma_free_value_if_not_object (((ecma_promise_value_thunk_t *) object_p)->value);
-              ext_object_size = sizeof (ecma_promise_value_thunk_t);
-              break;
-            }
-            default:
-            {
-              JERRY_UNREACHABLE ();
-            }
-          }
-        }
-#endif /* JERRY_ESNEXT */
-      }
-      else if (extended_object_p->u.built_in.id == ECMA_BUILTIN_ID_GLOBAL)
-      {
-        JERRY_ASSERT (object_type == ECMA_OBJECT_TYPE_GENERAL);
-        ext_object_size = sizeof (ecma_global_object_t);
-      }
-      else
-      {
-        length_and_bitset_size = ((ecma_extended_object_t *) object_p)->u.built_in.u.length_and_bitset_size;
-        ext_object_size += sizeof (uint64_t) * (length_and_bitset_size >> ECMA_BUILT_IN_BITSET_SHIFT);
-      }
-
-      goto free_properties;
-    }
-  }
-
   switch (object_type)
   {
     case ECMA_OBJECT_TYPE_GENERAL:
@@ -1778,19 +1689,24 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
       ecma_dealloc_object (object_p);
       return;
     }
-    case ECMA_OBJECT_TYPE_ARRAY:
+    case ECMA_OBJECT_TYPE_BUILT_IN_GENERAL:
     {
-      if (ecma_op_array_is_fast_array ((ecma_extended_object_t *) object_p))
+      if (((ecma_extended_object_t *) object_p)->u.built_in.id == ECMA_BUILTIN_ID_GLOBAL)
       {
-        ecma_free_fast_access_array (object_p);
-        return;
+        ext_object_size = sizeof (ecma_global_object_t);
+        break;
       }
+
+      uint8_t bitset_size = ((ecma_extended_object_t *) object_p)->u.built_in.u.length_and_bitset_size;
+      ext_object_size += sizeof (uint64_t) * (bitset_size >> ECMA_BUILT_IN_BITSET_SHIFT);
       break;
     }
-    case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:
+    case ECMA_OBJECT_TYPE_BUILT_IN_CLASS:
     {
-      ext_object_size = sizeof (ecma_native_function_t);
-      break;
+      ext_object_size = sizeof (ecma_extended_built_in_object_t);
+      uint8_t bitset_size = ((ecma_extended_built_in_object_t *) object_p)->built_in.u.length_and_bitset_size;
+      ext_object_size += sizeof (uint64_t) * (bitset_size >> ECMA_BUILT_IN_BITSET_SHIFT);
+      /* FALLTHRU */
     }
     case ECMA_OBJECT_TYPE_CLASS:
     {
@@ -1994,6 +1910,22 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 
       break;
     }
+    case ECMA_OBJECT_TYPE_BUILT_IN_ARRAY:
+    {
+      ext_object_size = sizeof (ecma_extended_built_in_object_t);
+      uint8_t bitset_size = ((ecma_extended_built_in_object_t *) object_p)->built_in.u.length_and_bitset_size;
+      ext_object_size += sizeof (uint64_t) * (bitset_size >> ECMA_BUILT_IN_BITSET_SHIFT);
+      /* FALLTHRU */
+    }
+    case ECMA_OBJECT_TYPE_ARRAY:
+    {
+      if (ecma_op_array_is_fast_array ((ecma_extended_object_t *) object_p))
+      {
+        ecma_free_fast_access_array (object_p);
+        return;
+      }
+      break;
+    }
 #if JERRY_BUILTIN_PROXY
     case ECMA_OBJECT_TYPE_PROXY:
     {
@@ -2061,13 +1993,80 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
       ext_object_size += args_size;
       break;
     }
+    case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:
+    {
+      ext_object_size = sizeof (ecma_native_function_t);
+      break;
+    }
+    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
+    {
+      ecma_extended_object_t *extended_func_p = (ecma_extended_object_t *) object_p;
+
+      if (!ecma_builtin_function_is_routine (object_p))
+      {
+        uint8_t bitset_size = extended_func_p->u.built_in.u.length_and_bitset_size;
+        ext_object_size += sizeof (uint64_t) * (bitset_size >> ECMA_BUILT_IN_BITSET_SHIFT);
+        break;
+      }
+
+#if JERRY_ESNEXT
+      if (extended_func_p->u.built_in.id != ECMA_BUILTIN_ID_HANDLER)
+      {
+        break;
+      }
+
+      switch (extended_func_p->u.built_in.routine_id)
+      {
+        case ECMA_NATIVE_HANDLER_PROMISE_RESOLVE:
+        case ECMA_NATIVE_HANDLER_PROMISE_REJECT:
+        {
+          ext_object_size = sizeof (ecma_promise_resolver_t);
+          break;
+        }
+        case ECMA_NATIVE_HANDLER_PROMISE_THEN_FINALLY:
+        case ECMA_NATIVE_HANDLER_PROMISE_CATCH_FINALLY:
+        {
+          ext_object_size = sizeof (ecma_promise_finally_function_t);
+          break;
+        }
+        case ECMA_NATIVE_HANDLER_PROMISE_CAPABILITY_EXECUTOR:
+        {
+          ext_object_size = sizeof (ecma_promise_capability_executor_t);
+          break;
+        }
+        case ECMA_NATIVE_HANDLER_PROMISE_ALL_HELPER:
+        {
+          ext_object_size = sizeof (ecma_promise_all_executor_t);
+          break;
+        }
+#if JERRY_BUILTIN_PROXY
+        case ECMA_NATIVE_HANDLER_PROXY_REVOKE:
+        {
+          ext_object_size = sizeof (ecma_revocable_proxy_object_t);
+          break;
+        }
+#endif /* JERRY_BUILTIN_PROXY */
+        case ECMA_NATIVE_HANDLER_VALUE_THUNK:
+        case ECMA_NATIVE_HANDLER_VALUE_THROWER:
+        {
+          ecma_free_value_if_not_object (((ecma_promise_value_thunk_t *) object_p)->value);
+          ext_object_size = sizeof (ecma_promise_value_thunk_t);
+          break;
+        }
+        default:
+        {
+          JERRY_UNREACHABLE ();
+        }
+      }
+#endif /* JERRY_ESNEXT */
+      break;
+    }
     default:
     {
       JERRY_UNREACHABLE ();
     }
   }
 
-free_properties:
   ecma_gc_free_properties (object_p, ECMA_GC_FREE_NO_OPTIONS);
   ecma_dealloc_extended_object (object_p, ext_object_size);
 } /* ecma_gc_free_object */

@@ -467,7 +467,7 @@ ecma_is_value_array (ecma_value_t arg) /**< argument */
 
   ecma_object_t *arg_obj_p = ecma_get_object_from_value (arg);
 
-  if (ecma_get_object_type (arg_obj_p) == ECMA_OBJECT_TYPE_ARRAY)
+  if (ecma_get_object_base_type (arg_obj_p) == ECMA_OBJECT_BASE_TYPE_ARRAY)
   {
     return ECMA_VALUE_TRUE;
   }

@@ -102,14 +102,9 @@ ecma_builtin_async_generator_prototype_dispatch_routine (uint8_t builtin_routine
   {
     ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
 
-    if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_CLASS)
+    if (ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_ASYNC_GENERATOR))
     {
-      ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-
-      if (ext_object_p->u.cls.type == ECMA_OBJECT_CLASS_ASYNC_GENERATOR)
-      {
-        executable_object_p = (vm_executable_object_t *) ext_object_p;
-      }
+      executable_object_p = (vm_executable_object_t *) object_p;
     }
   }
 

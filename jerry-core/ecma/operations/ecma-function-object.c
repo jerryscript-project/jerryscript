@@ -160,8 +160,6 @@ ecma_object_check_constructor (ecma_object_t *obj_p) /**< ecma object */
 
   if (JERRY_LIKELY (type == ECMA_OBJECT_TYPE_FUNCTION))
   {
-    JERRY_ASSERT (!ecma_get_object_is_builtin (obj_p));
-
 #if JERRY_ESNEXT
     const ecma_compiled_code_t *byte_code_p = ecma_op_function_get_compiled_code ((ecma_extended_object_t *) obj_p);
 
@@ -225,9 +223,10 @@ ecma_object_check_constructor (ecma_object_t *obj_p) /**< ecma object */
   }
 #endif /* JERRY_BUILTIN_PROXY */
 
-  JERRY_ASSERT (type == ECMA_OBJECT_TYPE_NATIVE_FUNCTION);
+  JERRY_ASSERT (type == ECMA_OBJECT_TYPE_NATIVE_FUNCTION
+                || type == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
 
-  if (ecma_get_object_is_builtin (obj_p))
+  if (type == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
   {
     if (ecma_builtin_function_is_routine (obj_p))
     {
@@ -703,8 +702,7 @@ ecma_op_create_native_handler (ecma_native_handler_id_t id, /**< handler id */
 
   ecma_object_t *function_obj_p = ecma_create_object (prototype_obj_p,
                                                       object_size,
-                                                      ECMA_OBJECT_TYPE_NATIVE_FUNCTION);
-  ecma_set_object_is_builtin (function_obj_p);
+                                                      ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
 
   ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) function_obj_p;
   ext_func_obj_p->u.built_in.id = ECMA_BUILTIN_ID_HANDLER;
@@ -782,21 +780,24 @@ ecma_op_function_get_function_realm (ecma_object_t *func_obj_p) /**< function ob
 {
   while (true)
   {
-    if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
+    ecma_object_type_t type = ecma_get_object_type (func_obj_p);
+
+    if (type == ECMA_OBJECT_TYPE_FUNCTION)
     {
       ecma_extended_object_t *ext_function_obj_p = (ecma_extended_object_t *) func_obj_p;
       const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_function_obj_p);
       return ecma_op_function_get_realm (bytecode_data_p);
     }
 
-    if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_NATIVE_FUNCTION)
+    if (type == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
     {
-      if (ecma_get_object_is_builtin (func_obj_p))
-      {
-        ecma_extended_object_t *ext_function_obj_p = (ecma_extended_object_t *) func_obj_p;
-        return ECMA_GET_INTERNAL_VALUE_POINTER (ecma_global_object_t,
-                                                ext_function_obj_p->u.built_in.realm_value);
-      }
+      ecma_extended_object_t *ext_function_obj_p = (ecma_extended_object_t *) func_obj_p;
+      return ECMA_GET_INTERNAL_VALUE_POINTER (ecma_global_object_t,
+                                              ext_function_obj_p->u.built_in.realm_value);
+    }
+
+    if (type == ECMA_OBJECT_TYPE_NATIVE_FUNCTION)
+    {
       ecma_native_function_t *native_function_p = (ecma_native_function_t *) func_obj_p;
       return ECMA_GET_INTERNAL_VALUE_POINTER (ecma_global_object_t,
                                               native_function_p->realm_value);
@@ -816,7 +817,7 @@ ecma_op_function_get_function_realm (ecma_object_t *func_obj_p) /**< function ob
     }
   #endif /* JERRY_BUILTIN_PROXY */
 
-    JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
+    JERRY_ASSERT (type == ECMA_OBJECT_TYPE_BOUND_FUNCTION);
     ecma_bound_function_t *bound_func_p = (ecma_bound_function_t *) func_obj_p;
     func_obj_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
                                                              bound_func_p->header.u.bound_function.target_function);
@@ -857,6 +858,7 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
 
   JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION
                 || ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_NATIVE_FUNCTION
+                || ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION
                 || ECMA_OBJECT_IS_PROXY (func_obj_p));
 
   ecma_object_t *v_obj_p = ecma_get_object_from_value (value);
@@ -1021,7 +1023,6 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
                               uint32_t arguments_list_len) /**< length of arguments list */
 {
   JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION);
-  JERRY_ASSERT (!ecma_get_object_is_builtin (func_obj_p));
 
   vm_frame_ctx_shared_args_t shared_args;
   shared_args.header.status_flags = VM_FRAME_CTX_SHARED_HAS_ARG_LIST;
@@ -1169,6 +1170,38 @@ exit:
 } /* ecma_op_function_call_simple */
 
 /**
+ * Perform a built-in method call.
+ *
+ * @return the result of the function call.
+ */
+static ecma_value_t JERRY_ATTR_NOINLINE
+ecma_op_function_call_native_built_in (ecma_object_t *func_obj_p, /**< Function object */
+                                       ecma_value_t this_arg_value, /**< 'this' argument's value */
+                                       const ecma_value_t *arguments_list_p, /**< arguments list */
+                                       uint32_t arguments_list_len) /**< length of arguments list */
+{
+  JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
+
+#if JERRY_BUILTIN_REALMS
+  ecma_global_object_t *saved_global_object_p = JERRY_CONTEXT (global_object_p);
+
+  ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) func_obj_p;
+  JERRY_CONTEXT (global_object_p) = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_global_object_t,
+                                                                     ext_func_obj_p->u.built_in.realm_value);
+#endif /* JERRY_BUILTIN_REALMS */
+
+  ecma_value_t ret_value = ecma_builtin_dispatch_call (func_obj_p,
+                                                       this_arg_value,
+                                                       arguments_list_p,
+                                                       arguments_list_len);
+
+#if JERRY_BUILTIN_REALMS
+  JERRY_CONTEXT (global_object_p) = saved_global_object_p;
+#endif /* JERRY_BUILTIN_REALMS */
+  return ret_value;
+} /* ecma_op_function_call_native_built_in */
+
+/**
  * Perform a native C method call which was registered via the API.
  *
  * @return the result of the function call.
@@ -1178,30 +1211,8 @@ ecma_op_function_call_native (ecma_object_t *func_obj_p, /**< Function object */
                               ecma_value_t this_arg_value, /**< 'this' argument's value */
                               const ecma_value_t *arguments_list_p, /**< arguments list */
                               uint32_t arguments_list_len) /**< length of arguments list */
-
 {
   JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_NATIVE_FUNCTION);
-
-  if (ecma_get_object_is_builtin (func_obj_p))
-  {
-#if JERRY_BUILTIN_REALMS
-    ecma_global_object_t *saved_global_object_p = JERRY_CONTEXT (global_object_p);
-
-    ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) func_obj_p;
-    JERRY_CONTEXT (global_object_p) = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_global_object_t,
-                                                                       ext_func_obj_p->u.built_in.realm_value);
-#endif /* JERRY_BUILTIN_REALMS */
-
-    ecma_value_t ret_value = ecma_builtin_dispatch_call (func_obj_p,
-                                                         this_arg_value,
-                                                         arguments_list_p,
-                                                         arguments_list_len);
-
-#if JERRY_BUILTIN_REALMS
-    JERRY_CONTEXT (global_object_p) = saved_global_object_p;
-#endif /* JERRY_BUILTIN_REALMS */
-    return ret_value;
-  }
 
   ecma_native_function_t *native_function_p = (ecma_native_function_t *) func_obj_p;
 
@@ -1370,6 +1381,10 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
   {
     result = ecma_op_function_call_simple (func_obj_p, this_arg_value, arguments_list_p, arguments_list_len);
   }
+  else if (type == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
+  {
+    result = ecma_op_function_call_native_built_in (func_obj_p, this_arg_value, arguments_list_p, arguments_list_len);
+  }
   else if (type == ECMA_OBJECT_TYPE_NATIVE_FUNCTION)
   {
     result = ecma_op_function_call_native (func_obj_p, this_arg_value, arguments_list_p, arguments_list_len);
@@ -1503,38 +1518,37 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
     return ecma_op_function_construct_bound (func_obj_p, new_target_p, arguments_list_p, arguments_list_len);
   }
 
+  if (JERRY_UNLIKELY (type == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION))
+  {
+#if JERRY_BUILTIN_REALMS
+    ecma_global_object_t *saved_global_object_p = JERRY_CONTEXT (global_object_p);
+    ecma_value_t realm_value = ((ecma_extended_object_t *) func_obj_p)->u.built_in.realm_value;
+    JERRY_CONTEXT (global_object_p) = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_global_object_t, realm_value);
+#endif /* JERRY_BUILTIN_REALMS */
+
+#if JERRY_ESNEXT
+    ecma_object_t *old_new_target = JERRY_CONTEXT (current_new_target_p);
+    JERRY_CONTEXT (current_new_target_p) = new_target_p;
+#endif /* JERRY_ESNEXT */
+
+    ecma_value_t ret_value = ecma_builtin_dispatch_construct (func_obj_p, arguments_list_p, arguments_list_len);
+
+#if JERRY_ESNEXT
+    JERRY_CONTEXT (current_new_target_p) = old_new_target;
+#endif /* JERRY_ESNEXT */
+
+#if JERRY_BUILTIN_REALMS
+    JERRY_CONTEXT (global_object_p) = saved_global_object_p;
+#endif /* JERRY_BUILTIN_REALMS */
+    return ret_value;
+  }
+
   if (JERRY_UNLIKELY (type == ECMA_OBJECT_TYPE_NATIVE_FUNCTION))
   {
-    if (JERRY_UNLIKELY (ecma_get_object_is_builtin (func_obj_p)))
-    {
-#if JERRY_BUILTIN_REALMS
-      ecma_global_object_t *saved_global_object_p = JERRY_CONTEXT (global_object_p);
-      ecma_value_t realm_value = ((ecma_extended_object_t *) func_obj_p)->u.built_in.realm_value;
-      JERRY_CONTEXT (global_object_p) = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_global_object_t, realm_value);
-#endif /* JERRY_BUILTIN_REALMS */
-
-#if JERRY_ESNEXT
-      ecma_object_t *old_new_target = JERRY_CONTEXT (current_new_target_p);
-      JERRY_CONTEXT (current_new_target_p) = new_target_p;
-#endif /* JERRY_ESNEXT */
-
-      ecma_value_t ret_value = ecma_builtin_dispatch_construct (func_obj_p, arguments_list_p, arguments_list_len);
-
-#if JERRY_ESNEXT
-      JERRY_CONTEXT (current_new_target_p) = old_new_target;
-#endif /* JERRY_ESNEXT */
-
-#if JERRY_BUILTIN_REALMS
-      JERRY_CONTEXT (global_object_p) = saved_global_object_p;
-#endif /* JERRY_BUILTIN_REALMS */
-      return ret_value;
-    }
-
     return ecma_op_function_construct_native (func_obj_p, new_target_p, arguments_list_p, arguments_list_len);
   }
 
   JERRY_ASSERT (type == ECMA_OBJECT_TYPE_FUNCTION);
-  JERRY_ASSERT (!ecma_get_object_is_builtin (func_obj_p));
 
   ecma_object_t *new_this_obj_p = NULL;
   ecma_value_t this_arg;
@@ -1727,7 +1741,7 @@ ecma_property_t *
 ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**< the function object */
                                                    ecma_string_t *property_name_p) /**< property name */
 {
-  JERRY_ASSERT (!ecma_get_object_is_builtin (object_p));
+  JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION);
 
 #if JERRY_ESNEXT
   if (ecma_compare_ecma_string_to_magic_id (property_name_p, LIT_MAGIC_STRING_LENGTH))

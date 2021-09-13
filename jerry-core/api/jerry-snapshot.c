@@ -786,8 +786,6 @@ jerry_generate_snapshot (jerry_value_t compiled_code, /**< parsed script or func
     }
     else if (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_FUNCTION)
     {
-      JERRY_ASSERT (!ecma_get_object_is_builtin (object_p));
-
       ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
 
       bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);

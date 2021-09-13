@@ -2551,7 +2551,8 @@ ecma_op_object_own_property_keys (ecma_object_t *obj_p) /**< object */
     {
       ecma_property_t *property_p = prop_iter_p->types + i;
 
-      if (ECMA_PROPERTY_IS_RAW (*property_p))
+      if (ECMA_PROPERTY_IS_RAW (*property_p)
+          && !(*property_p & ECMA_PROPERTY_FLAG_BUILT_IN))
       {
         ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) prop_iter_p;
 

@@ -107,30 +107,72 @@ ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
   }
 
   /* 3. */
-  if (ecma_is_property_configurable (property))
+  if (!ecma_is_property_configurable (property))
   {
-    if (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_ARRAY)
+    /* 4. */
+    if (is_throw)
     {
-      ecma_array_object_delete_property (obj_p, property_name_p, property_ref.value_p);
-    }
-    else
-    {
-      /* a. */
-      ecma_delete_property (obj_p, property_ref.value_p);
+      return ecma_raise_type_error (ECMA_ERR_MSG ("Expected a configurable property"));
     }
 
-    /* b. */
+    /* 5. */
+    return ECMA_VALUE_FALSE;
+  }
+
+  ecma_object_type_t type = ecma_get_object_type (obj_p);
+
+  if (type == ECMA_OBJECT_TYPE_ARRAY
+      && ecma_array_object_delete_property (obj_p, property_name_p))
+  {
     return ECMA_VALUE_TRUE;
   }
 
-  /* 4. */
-  if (is_throw)
+  /* a. */
+  ecma_delete_property (obj_p, property_ref.value_p);
+
+  if (property & ECMA_PROPERTY_FLAG_BUILT_IN)
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Expected a configurable property"));
+#if JERRY_ESNEXT
+    if (ecma_get_object_is_builtin (obj_p))
+    {
+      if (type == ECMA_OBJECT_TYPE_NATIVE_FUNCTION && ecma_builtin_function_is_routine (obj_p))
+      {
+        ecma_builtin_routine_delete_built_in_property (obj_p, property_name_p);
+      }
+      else
+      {
+        ecma_builtin_delete_built_in_property (obj_p, property_name_p);
+      }
+    }
+    else
+    {
+      switch (type)
+      {
+        case ECMA_OBJECT_TYPE_FUNCTION:
+        {
+          ecma_op_function_delete_built_in_property (obj_p, property_name_p);
+          break;
+        }
+        case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+        {
+          ecma_op_bound_function_delete_built_in_property (obj_p, property_name_p);
+          break;
+        }
+        default:
+        {
+          break;
+        }
+      }
+    }
+#else /* !JERRY_ESNEXT */
+    JERRY_ASSERT (ecma_get_object_is_builtin (obj_p));
+
+    ecma_builtin_delete_built_in_property (obj_p, property_name_p);
+#endif /* JERRY_ESNEXT */
   }
 
-  /* 5. */
-  return ECMA_VALUE_FALSE;
+  /* b. */
+  return ECMA_VALUE_TRUE;
 } /* ecma_op_general_object_delete */
 
 /**

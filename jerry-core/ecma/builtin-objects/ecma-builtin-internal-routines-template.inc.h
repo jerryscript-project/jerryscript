@@ -92,35 +92,35 @@ const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] =
   { \
     name, \
     ECMA_BUILTIN_PROPERTY_ROUTINE, \
-    ECMA_PROPERTY_CONFIGURABLE_WRITABLE, \
+    ECMA_PROPERTY_BUILT_IN_CONFIGURABLE_WRITABLE, \
     ECMA_ROUTINE_VALUE (ECMA_ROUTINE_ ## name ## c_function_name, length_prop_value) \
   },
 #define ROUTINE_CONFIGURABLE_ONLY(name, c_function_name, args_number, length_prop_value) \
   { \
     name, \
     ECMA_BUILTIN_PROPERTY_ROUTINE, \
-    ECMA_PROPERTY_FLAG_CONFIGURABLE, \
+    ECMA_PROPERTY_BUILT_IN_CONFIGURABLE, \
     ECMA_ROUTINE_VALUE (ECMA_ROUTINE_ ## name ## c_function_name, length_prop_value) \
   },
-#define ROUTINE_WITH_FLAGS(name, c_function_name, args_number, length_prop_value, flags) \
+#define ROUTINE_WITH_FLAGS(name, c_function_name, args_number, length_prop_value, prop_attributes) \
   { \
     name, \
     ECMA_BUILTIN_PROPERTY_ROUTINE, \
-    flags, \
+    (prop_attributes) | ECMA_PROPERTY_FLAG_BUILT_IN, \
     ECMA_ROUTINE_VALUE (ECMA_ROUTINE_ ## name ## c_function_name, length_prop_value) \
   },
 #define ACCESSOR_READ_ONLY(name, c_getter_func_name, prop_attributes) \
   { \
     name, \
     ECMA_BUILTIN_PROPERTY_ACCESSOR_READ_ONLY, \
-    prop_attributes, \
+    (prop_attributes) | ECMA_PROPERTY_FLAG_BUILT_IN, \
     ECMA_ACCESSOR_ ## name ## c_getter_func_name \
   },
 #define ACCESSOR_READ_WRITE(name, c_getter_func_name, c_setter_func_name, prop_attributes) \
   { \
     name, \
     ECMA_BUILTIN_PROPERTY_ACCESSOR_READ_WRITE, \
-    prop_attributes, \
+    (prop_attributes) | ECMA_PROPERTY_FLAG_BUILT_IN, \
     ECMA_ACCESSOR_READ_WRITE (ECMA_ACCESSOR_ ## name ## c_getter_func_name, \
                               ECMA_ACCESSOR_ ## name ## c_setter_func_name) \
   },
@@ -129,35 +129,35 @@ const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] =
   { \
     name, \
     ECMA_BUILTIN_PROPERTY_ROUTINE, \
-    ECMA_PROPERTY_CONFIGURABLE_WRITABLE, \
+    ECMA_PROPERTY_BUILT_IN_CONFIGURABLE_WRITABLE, \
     ECMA_ROUTINE_VALUE (c_function_name, length_prop_value) \
   },
 #define ROUTINE_CONFIGURABLE_ONLY(name, c_function_name, args_number, length_prop_value) \
   { \
     name, \
     ECMA_BUILTIN_PROPERTY_ROUTINE, \
-    ECMA_PROPERTY_FLAG_CONFIGURABLE, \
+    ECMA_PROPERTY_BUILT_IN_CONFIGURABLE, \
     ECMA_ROUTINE_VALUE (c_function_name, length_prop_value) \
   },
-#define ROUTINE_WITH_FLAGS(name, c_function_name, args_number, length_prop_value, flags) \
+#define ROUTINE_WITH_FLAGS(name, c_function_name, args_number, length_prop_value, prop_attributes) \
   { \
     name, \
     ECMA_BUILTIN_PROPERTY_ROUTINE, \
-    flags, \
+    (prop_attributes) | ECMA_PROPERTY_FLAG_BUILT_IN, \
     ECMA_ROUTINE_VALUE (c_function_name, length_prop_value) \
   },
 #define ACCESSOR_READ_ONLY(name, c_getter_func_name, prop_attributes) \
   { \
     name, \
     ECMA_BUILTIN_PROPERTY_ACCESSOR_READ_ONLY, \
-    prop_attributes, \
+    (prop_attributes) | ECMA_PROPERTY_FLAG_BUILT_IN, \
     c_getter_func_name \
   },
 #define ACCESSOR_READ_WRITE(name, c_getter_func_name, c_setter_func_name, prop_attributes) \
   { \
     name, \
     ECMA_BUILTIN_PROPERTY_ACCESSOR_READ_WRITE, \
-    prop_attributes, \
+    (prop_attributes) | ECMA_PROPERTY_FLAG_BUILT_IN, \
     ECMA_ACCESSOR_READ_WRITE (c_getter_func_name, c_setter_func_name) \
   },
 #endif /* !BUILTIN_CUSTOM_DISPATCH */
@@ -165,28 +165,28 @@ const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] =
   { \
     name, \
     ECMA_BUILTIN_PROPERTY_OBJECT, \
-    prop_attributes, \
+    (prop_attributes) | ECMA_PROPERTY_FLAG_BUILT_IN, \
     obj_builtin_id \
   },
 #define SIMPLE_VALUE(name, simple_value, prop_attributes) \
   { \
     name, \
     ECMA_BUILTIN_PROPERTY_SIMPLE, \
-    prop_attributes, \
+    (prop_attributes) | ECMA_PROPERTY_FLAG_BUILT_IN, \
     simple_value \
   },
 #define NUMBER_VALUE(name, number_value, prop_attributes) \
   { \
     name, \
     ECMA_BUILTIN_PROPERTY_NUMBER, \
-    prop_attributes, \
+    (prop_attributes) | ECMA_PROPERTY_FLAG_BUILT_IN, \
     number_value \
   },
 #define STRING_VALUE(name, magic_string_id, prop_attributes) \
   { \
     name, \
     ECMA_BUILTIN_PROPERTY_STRING, \
-    prop_attributes, \
+    (prop_attributes) | ECMA_PROPERTY_FLAG_BUILT_IN, \
     magic_string_id \
   },
 #if JERRY_ESNEXT
@@ -194,21 +194,21 @@ const ecma_builtin_property_descriptor_t PROPERTY_DESCRIPTOR_LIST_NAME[] =
   { \
     name, \
     ECMA_BUILTIN_PROPERTY_SYMBOL, \
-    ECMA_PROPERTY_FIXED, \
+    ECMA_PROPERTY_BUILT_IN_FIXED, \
     symbol \
   },
 #define INTRINSIC_PROPERTY(name, magic_string_id, prop_attributes) \
   { \
     name, \
     ECMA_BUILTIN_PROPERTY_INTRINSIC_PROPERTY, \
-    prop_attributes, \
+    (prop_attributes) | ECMA_PROPERTY_FLAG_BUILT_IN, \
     magic_string_id \
   },
 #define ACCESSOR_BUILTIN_FUNCTION(name, getter_builtin_id, setter_builtin_id, prop_attributes) \
   { \
     name, \
     ECMA_BUILTIN_PROPERTY_ACCESSOR_BUILTIN_FUNCTION, \
-    prop_attributes, \
+    (prop_attributes) | ECMA_PROPERTY_FLAG_BUILT_IN, \
     ECMA_ACCESSOR_READ_WRITE (getter_builtin_id, setter_builtin_id) \
   },
 #endif /* JERRY_ESNEXT */

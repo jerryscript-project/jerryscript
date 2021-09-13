@@ -128,9 +128,15 @@ ecma_value_t
 ecma_builtin_dispatch_construct (ecma_object_t *obj_p, const ecma_value_t *arguments_list_p,
                                  uint32_t arguments_list_len);
 ecma_property_t *
-ecma_builtin_routine_try_to_instantiate_property (ecma_object_t *object_p, ecma_string_t *string_p);
+ecma_builtin_routine_try_to_instantiate_property (ecma_object_t *object_p, ecma_string_t *property_name_p);
 ecma_property_t *
-ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, ecma_string_t *string_p);
+ecma_builtin_try_to_instantiate_property (ecma_object_t *object_p, ecma_string_t *property_name_p);
+#if JERRY_ESNEXT
+void
+ecma_builtin_routine_delete_built_in_property (ecma_object_t *object_p, ecma_string_t *property_name_p);
+#endif /* JERRY_ESNEXT */
+void
+ecma_builtin_delete_built_in_property (ecma_object_t *object_p, ecma_string_t *property_name_p);
 void
 ecma_builtin_routine_list_lazy_property_names (ecma_object_t *object_p,
                                                ecma_collection_t *prop_names_p,

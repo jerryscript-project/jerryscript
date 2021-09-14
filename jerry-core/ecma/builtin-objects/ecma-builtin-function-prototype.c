@@ -133,7 +133,7 @@ ecma_builtin_function_prototype_object_to_string (ecma_object_t *func_obj_p) /**
         JERRY_ASSERT (script_p->refs_and_type & CBC_SCRIPT_HAS_FUNCTION_ARGUMENTS);
 #endif /* JERRY_SNAPSHOT_EXEC */
 
-        source_code = CBC_SCRIPT_GET_FUNCTION_ARGUMENTS (script_p, CBC_SCRIPT_GET_TYPE (script_p));
+        source_code = CBC_SCRIPT_GET_FUNCTION_ARGUMENTS (script_p, script_p->refs_and_type);
       }
 
       ecma_string_t *result_string_p;
@@ -179,7 +179,7 @@ ecma_builtin_function_prototype_object_to_string (ecma_object_t *func_obj_p) /**
 #endif /* JERRY_ESNEXT */
 
   ecma_stringbuilder_t builder = ecma_stringbuilder_create_from (ecma_get_magic_string (header_id));
-  ecma_value_t function_arguments = CBC_SCRIPT_GET_FUNCTION_ARGUMENTS (script_p, CBC_SCRIPT_GET_TYPE (script_p));
+  ecma_value_t function_arguments = CBC_SCRIPT_GET_FUNCTION_ARGUMENTS (script_p, script_p->refs_and_type);
 
   ecma_stringbuilder_append (&builder, ecma_get_string_from_value (function_arguments));
   ecma_stringbuilder_append_raw (&builder, (const lit_utf8_byte_t *) "\n) {\n", 5);

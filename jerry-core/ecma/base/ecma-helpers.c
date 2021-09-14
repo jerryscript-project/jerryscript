@@ -1485,14 +1485,13 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
     if (script_p->refs_and_type < CBC_SCRIPT_REF_ONE)
     {
       size_t script_size = sizeof (cbc_script_t);
+      uint32_t type = script_p->refs_and_type;
 
-      uint32_t type = CBC_SCRIPT_GET_TYPE (script_p);
-
-      if (type != CBC_SCRIPT_GENERIC)
+      if (type & CBC_SCRIPT_HAS_USER_VALUE)
       {
         script_size += sizeof (ecma_value_t);
 
-        if (type == CBC_SCRIPT_USER_VALUE)
+        if (!(type & CBC_SCRIPT_USER_VALUE_IS_OBJECT))
         {
           ecma_value_t user_value = CBC_SCRIPT_GET_USER_VALUE (script_p);
 
@@ -1505,10 +1504,19 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
       ecma_deref_ecma_string (ecma_get_string_from_value (script_p->resource_name));
 #endif /* JERRY_RESOURCE_NAME */
 
+#if JERRY_MODULE_SYSTEM
+      if (type & CBC_SCRIPT_HAS_IMPORT_META)
+      {
+        JERRY_ASSERT (ecma_is_value_object (CBC_SCRIPT_GET_IMPORT_META (script_p, type)));
+
+        script_size += sizeof (ecma_value_t);
+      }
+#endif /* JERRY_MODULE_SYSTEM */
+
 #if JERRY_FUNCTION_TO_STRING
       ecma_deref_ecma_string (ecma_get_string_from_value (script_p->source_code));
 
-      if (script_p->refs_and_type & CBC_SCRIPT_HAS_FUNCTION_ARGUMENTS)
+      if (type & CBC_SCRIPT_HAS_FUNCTION_ARGUMENTS)
       {
         ecma_deref_ecma_string (ecma_get_string_from_value (CBC_SCRIPT_GET_FUNCTION_ARGUMENTS (script_p, type)));
         script_size += sizeof (ecma_value_t);

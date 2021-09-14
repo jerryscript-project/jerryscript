@@ -357,6 +357,35 @@ scanner_check_function_after_if (parser_context_t *context_p, /**< context */
   }
 } /* scanner_check_function_after_if */
 
+#endif /* JERRY_ESNEXT */
+
+#if JERRY_MODULE_SYSTEM
+
+/**
+ * Check whether the next token is meta.
+ */
+void
+scanner_check_import_meta (parser_context_t *context_p) /**< context */
+{
+  lexer_next_token (context_p);
+
+  if (context_p->token.type != LEXER_LITERAL
+      || context_p->token.lit_location.type != LEXER_IDENT_LITERAL
+      || context_p->token.keyword_type != LEXER_KEYW_META
+      || (context_p->token.lit_location.status_flags & LEXER_LIT_LOCATION_HAS_ESCAPE))
+  {
+    scanner_raise_error (context_p);
+  }
+
+  lexer_next_token (context_p);
+
+  context_p->global_status_flags |= ECMA_PARSE_INTERNAL_HAS_IMPORT_META;
+} /* scanner_check_import_meta */
+
+#endif /* JERRY_MODULE_SYSTEM */
+
+#if JERRY_ESNEXT
+
 /**
  * Arrow types for scanner_scan_bracket() function.
  */

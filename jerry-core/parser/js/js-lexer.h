@@ -192,6 +192,8 @@ typedef enum
   LEXER_KEYW_IMPORT,             /**< import */
   LEXER_KEYW_ENUM,               /**< enum */
 
+#define LEXER_FIRST_NON_RESERVED_KEYWORD LEXER_EXPRESSION_START
+
   /* These are virtual tokens. */
   LEXER_EXPRESSION_START,        /**< expression start */
   LEXER_PROPERTY_GETTER,         /**< property getter function */
@@ -203,14 +205,13 @@ typedef enum
   LEXER_INVALID_PATTERN,         /**< special value for invalid destructuring pattern */
 #endif /* JERRY_ESNEXT */
 
+  /* Keywords which are not keyword tokens. */
 #if JERRY_ESNEXT
-  /* Keywords which are not keyword tokens. */
-#define LEXER_FIRST_NON_RESERVED_KEYWORD LEXER_KEYW_ASYNC
   LEXER_KEYW_ASYNC,              /**< async */
-#else /* !JERRY_ESNEXT */
-  /* Keywords which are not keyword tokens. */
-#define LEXER_FIRST_NON_RESERVED_KEYWORD LEXER_KEYW_EVAL
 #endif /* JERRY_ESNEXT */
+#if JERRY_MODULE_SYSTEM
+  LEXER_KEYW_META,               /**< meta */
+#endif /* JERRY_MODULE_SYSTEM */
 
   /* Keywords which cannot be assigned in strict mode. */
 #define LEXER_FIRST_NON_STRICT_ARGUMENTS LEXER_KEYW_EVAL

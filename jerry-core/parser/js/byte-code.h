@@ -600,6 +600,8 @@
               VM_OC_PUSH_REST_OBJECT) \
   CBC_OPCODE (CBC_EXT_MODULE_IMPORT, CBC_NO_FLAG, 0, \
               VM_OC_MODULE_IMPORT) \
+  CBC_OPCODE (CBC_EXT_MODULE_IMPORT_META, CBC_NO_FLAG, 1, \
+              VM_OC_MODULE_IMPORT_META) \
   CBC_OPCODE (CBC_EXT_STRING_CONCAT, CBC_NO_FLAG, -1, \
               VM_OC_STRING_CONCAT | VM_OC_GET_STACK_STACK | VM_OC_PUT_STACK) \
   CBC_OPCODE (CBC_EXT_STRING_CONCAT_RIGHT_LITERAL, CBC_HAS_LITERAL_ARG, 0, \
@@ -998,20 +1000,16 @@ typedef enum
  */
 typedef enum
 {
-  CBC_SCRIPT_GENERIC, /**< script without user specific data */
-  CBC_SCRIPT_USER_OBJECT, /**< script with a user object */
-  CBC_SCRIPT_USER_VALUE, /**< script with a non-object user value */
+  CBC_SCRIPT_HAS_USER_VALUE = (1 << 0), /**< script has user value */
+  CBC_SCRIPT_USER_VALUE_IS_OBJECT = (1 << 1), /**< user value is object */
+  CBC_SCRIPT_HAS_FUNCTION_ARGUMENTS = (1 << 2), /**< script is a function with arguments source code */
+  CBC_SCRIPT_HAS_IMPORT_META = (1 << 3), /**< script is a module with import.meta object */
 } cbc_script_type;
-
-/**
- * Script is a function with arguments source code.
- */
-#define CBC_SCRIPT_HAS_FUNCTION_ARGUMENTS 0x4
 
 /**
  * Value for increasing or decreasing the script reference counter.
  */
-#define CBC_SCRIPT_REF_ONE 0x8
+#define CBC_SCRIPT_REF_ONE 0x10
 
 /**
  * Maximum value of script reference counter.
@@ -1019,21 +1017,19 @@ typedef enum
 #define CBC_SCRIPT_REF_MAX (UINT32_MAX - CBC_SCRIPT_REF_ONE + 1)
 
 /**
- * Get the type of a script.
- */
-#define CBC_SCRIPT_GET_TYPE(script_p) ((script_p)->refs_and_type & 0x3)
-
-/**
  * Sets the type of a script using the user_value.
  */
 #define CBC_SCRIPT_SET_TYPE(script_p, user_value, ref_count) \
   do \
   { \
-    (script_p)->refs_and_type = ((ref_count) | CBC_SCRIPT_GENERIC); \
+    (script_p)->refs_and_type = (ref_count); \
     if ((user_value) != ECMA_VALUE_EMPTY) \
     { \
-      (script_p)->refs_and_type = (ecma_is_value_object (user_value) ? ((ref_count) | CBC_SCRIPT_USER_OBJECT) \
-                                                                     : ((ref_count) | CBC_SCRIPT_USER_VALUE)); \
+      (script_p)->refs_and_type |= CBC_SCRIPT_HAS_USER_VALUE; \
+      if (ecma_is_value_object (user_value)) \
+      { \
+        (script_p)->refs_and_type |= CBC_SCRIPT_USER_VALUE_IS_OBJECT; \
+      } \
     } \
   } \
   while (false)
@@ -1073,7 +1069,13 @@ typedef struct
  * Get function arguments.
  */
 #define CBC_SCRIPT_GET_FUNCTION_ARGUMENTS(script_p, type) \
-  (CBC_SCRIPT_GET_OPTIONAL_VALUES (script_p)[(type) != CBC_SCRIPT_GENERIC ? 1 : 0])
+  (CBC_SCRIPT_GET_OPTIONAL_VALUES (script_p)[((type) & CBC_SCRIPT_HAS_USER_VALUE) ? 1 : 0])
+
+/**
+ * Get import.meta object.
+ */
+#define CBC_SCRIPT_GET_IMPORT_META(script_p, type) \
+  (CBC_SCRIPT_GET_OPTIONAL_VALUES (script_p)[((type) & CBC_SCRIPT_HAS_USER_VALUE) ? 1 : 0])
 
 #define CBC_OPCODE(arg1, arg2, arg3, arg4) arg1,
 

@@ -437,6 +437,9 @@ void scanner_check_arrow_arg (parser_context_t *context_p, scanner_context_t *sc
 bool scanner_check_async_function (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 void scanner_check_function_after_if (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 #endif /* JERRY_ESNEXT */
+#if JERRY_MODULE_SYSTEM
+void scanner_check_import_meta (parser_context_t *context_p);
+#endif /* JERRY_MODULE_SYSTEM */
 void scanner_scan_bracket (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 void scanner_check_directives (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 

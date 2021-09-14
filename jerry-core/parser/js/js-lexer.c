@@ -491,6 +491,9 @@ static const keyword_string_t keywords_with_length_4[] =
   LEXER_KEYWORD ("else", LEXER_KEYW_ELSE),
   LEXER_KEYWORD ("enum", LEXER_KEYW_ENUM),
   LEXER_KEYWORD ("eval", LEXER_KEYW_EVAL),
+#if JERRY_MODULE_SYSTEM
+  LEXER_KEYWORD ("meta", LEXER_KEYW_META),
+#endif /* JERRY_MODULE_SYSTEM */
   LEXER_KEYWORD ("null", LEXER_LIT_NULL),
   LEXER_KEYWORD ("this", LEXER_KEYW_THIS),
   LEXER_KEYWORD ("true", LEXER_LIT_TRUE),

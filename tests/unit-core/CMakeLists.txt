@@ -59,6 +59,7 @@ set(SOURCE_UNIT_TEST_MAIN_MODULES
   test-literal-storage.c
   test-mem-stats.c
   test-module-dynamic.c
+  test-module-import-meta.c
   test-module.c
   test-native-callback-nested.c
   test-native-instanceof.c

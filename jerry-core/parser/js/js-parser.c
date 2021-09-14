@@ -1849,6 +1849,7 @@ parser_parse_source (void *source_p, /**< source code */
   context.stack_depth = 0;
   context.stack_limit = 0;
   context.options_p = options_p;
+  context.script_p = NULL;
   context.arguments_start_p = NULL;
   context.arguments_size = 0;
 #if JERRY_MODULE_SYSTEM
@@ -1946,7 +1947,7 @@ parser_parse_source (void *source_p, /**< source code */
       ecma_value_t parent_script_value = ((cbc_uint8_arguments_t *) bytecode_header_p)->script_value;;
       cbc_script_t *parent_script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, parent_script_value);
 
-      if (CBC_SCRIPT_GET_TYPE (parent_script_p) != CBC_SCRIPT_GENERIC)
+      if (parent_script_p->refs_and_type & CBC_SCRIPT_HAS_USER_VALUE)
       {
         context.user_value = CBC_SCRIPT_GET_USER_VALUE (parent_script_p);
       }
@@ -1959,36 +1960,6 @@ parser_parse_source (void *source_p, /**< source code */
   {
     context.user_value = context.options_p->user_value;
   }
-
-  size_t script_size = sizeof (cbc_script_t);
-
-  if (context.user_value != ECMA_VALUE_EMPTY)
-  {
-    script_size += sizeof (ecma_value_t);
-  }
-
-#if JERRY_FUNCTION_TO_STRING
-  if (context.argument_list != ECMA_VALUE_EMPTY)
-  {
-    script_size += sizeof (ecma_value_t);
-  }
-#endif /* JERRY_FUNCTION_TO_STRING */
-
-  context.script_p = jmem_heap_alloc_block_null_on_error (script_size);
-
-  if (JERRY_UNLIKELY (context.script_p == NULL))
-  {
-    /* It is unlikely that memory can be allocated in an out-of-memory
-     * situation. However, a simple value can still be thrown. */
-    jcontext_raise_exception (ECMA_VALUE_NULL);
-    return NULL;
-  }
-
-  CBC_SCRIPT_SET_TYPE (context.script_p, context.user_value, CBC_SCRIPT_REF_ONE);
-
-#if JERRY_BUILTIN_REALMS
-  context.script_p->realm_p = (ecma_object_t *) JERRY_CONTEXT (global_object_p);
-#endif /* JERRY_BUILTIN_REALMS */
 
 #if JERRY_RESOURCE_NAME
   ecma_value_t resource_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
@@ -2005,11 +1976,7 @@ parser_parse_source (void *source_p, /**< source code */
   {
     resource_name = ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_EVAL);
   }
-
-  context.script_p->resource_name = resource_name;
 #endif /* JERRY_RESOURCE_NAME */
-
-  ECMA_SET_INTERNAL_VALUE_POINTER (context.script_value, context.script_p);
 
   context.last_context_p = NULL;
   context.last_statement.current_p = NULL;
@@ -2085,6 +2052,27 @@ parser_parse_source (void *source_p, /**< source code */
     return NULL;
   }
 
+  size_t script_size = sizeof (cbc_script_t);
+
+  if (context.user_value != ECMA_VALUE_EMPTY)
+  {
+    script_size += sizeof (ecma_value_t);
+  }
+
+#if JERRY_FUNCTION_TO_STRING
+  if (context.argument_list != ECMA_VALUE_EMPTY)
+  {
+    script_size += sizeof (ecma_value_t);
+  }
+#endif /* JERRY_FUNCTION_TO_STRING */
+
+#if JERRY_MODULE_SYSTEM
+  if (context.global_status_flags & ECMA_PARSE_INTERNAL_HAS_IMPORT_META)
+  {
+    script_size += sizeof (ecma_value_t);
+  }
+#endif /* JERRY_MODULE_SYSTEM */
+
   if (context.arguments_start_p == NULL)
   {
     context.source_p = context.source_start_p;
@@ -2116,6 +2104,20 @@ parser_parse_source (void *source_p, /**< source code */
 
   PARSER_TRY (context.try_buffer)
   {
+    context.script_p = parser_malloc (&context, script_size);
+
+    CBC_SCRIPT_SET_TYPE (context.script_p, context.user_value, CBC_SCRIPT_REF_ONE);
+
+#if JERRY_BUILTIN_REALMS
+    context.script_p->realm_p = (ecma_object_t *) JERRY_CONTEXT (global_object_p);
+#endif /* JERRY_BUILTIN_REALMS */
+
+#if JERRY_RESOURCE_NAME
+    context.script_p->resource_name = resource_name;
+#endif /* JERRY_RESOURCE_NAME */
+
+    ECMA_SET_INTERNAL_VALUE_POINTER (context.script_value, context.script_p);
+
     /* Pushing a dummy value ensures the stack is never empty.
      * This simplifies the stack management routines. */
     parser_stack_push_uint8 (&context, CBC_MAXIMUM_BYTE_VALUE);
@@ -2203,6 +2205,17 @@ parser_parse_source (void *source_p, /**< source code */
       CBC_SCRIPT_GET_USER_VALUE (context.script_p) = ecma_copy_value_if_not_object (context.user_value);
     }
 
+#if JERRY_MODULE_SYSTEM
+    if (context.global_status_flags & ECMA_PARSE_INTERNAL_HAS_IMPORT_META)
+    {
+      int idx = (context.user_value != ECMA_VALUE_EMPTY) ? 1 : 0;
+      ecma_value_t module = ecma_make_object_value ((ecma_object_t *) JERRY_CONTEXT (module_current_p));
+
+      CBC_SCRIPT_GET_OPTIONAL_VALUES (context.script_p)[idx] = module;
+      context.script_p->refs_and_type |= CBC_SCRIPT_HAS_IMPORT_META;
+    }
+#endif /* JERRY_MODULE_SYSTEM */
+
 #if JERRY_FUNCTION_TO_STRING
     if (!(context.global_status_flags & ECMA_PARSE_HAS_SOURCE_VALUE))
     {
@@ -2274,8 +2287,11 @@ parser_parse_source (void *source_p, /**< source code */
     ecma_deref_ecma_string (ecma_get_string_from_value (context.script_p->resource_name));
 #endif /* JERRY_RESOURCE_NAME */
 
-    JERRY_ASSERT (context.script_p->refs_and_type >= CBC_SCRIPT_REF_ONE);
-    jmem_heap_free_block (context.script_p, script_size);
+    if (context.script_p != NULL)
+    {
+      JERRY_ASSERT (context.script_p->refs_and_type >= CBC_SCRIPT_REF_ONE);
+      jmem_heap_free_block (context.script_p, script_size);
+    }
   }
   PARSER_TRY_END
 

@@ -815,13 +815,12 @@ typedef enum
  */
 typedef enum
 {
-  /* Types between 0 - 12 are ecma_object_type_t which can have a built-in flag. */
-
-  ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE = 29, /**< declarative lexical environment */
+  /* Types between 0 - 12 are ecma_object_type_t. */
+  ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE = 13, /**< declarative lexical environment */
 #if JERRY_ESNEXT
-  ECMA_LEXICAL_ENVIRONMENT_CLASS = 30, /**< lexical environment with class */
+  ECMA_LEXICAL_ENVIRONMENT_CLASS = 14, /**< lexical environment with class */
 #endif /* JERRY_ESNEXT */
-  ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND = 31, /**< object-bound lexical environment */
+  ECMA_LEXICAL_ENVIRONMENT_THIS_OBJECT_BOUND = 15, /**< object-bound lexical environment */
 
   ECMA_LEXICAL_ENVIRONMENT_TYPE_START = ECMA_LEXICAL_ENVIRONMENT_DECLARATIVE, /**< first lexical
                                                                                *   environment type */
@@ -875,12 +874,12 @@ typedef enum
 /**
  * Ecma object type mask for getting the object type.
  */
-#define ECMA_OBJECT_TYPE_MASK 0x01fu
+#define ECMA_OBJECT_TYPE_MASK 0x00fu
 
 /**
  * Extensible object.
  */
-#define ECMA_OBJECT_FLAG_EXTENSIBLE 0x20
+#define ECMA_OBJECT_FLAG_EXTENSIBLE 0x10
 
 /**
  * Declarative lexical environments created for non-closure code blocks
@@ -895,7 +894,7 @@ typedef enum
 /**
  * Bitshift index for an ecma-object reference count field
  */
-#define ECMA_OBJECT_REF_SHIFT 6
+#define ECMA_OBJECT_REF_SHIFT 5
 
 /**
  * Value for increasing or decreasing the object reference counter.
@@ -905,11 +904,6 @@ typedef enum
 #if JERRY_CPOINTER_32_BIT
 
 /**
- * Bitmask for an ecma-object reference count field
- */
-#define ECMA_OBJECT_REF_MASK (((1u << 26) - 1) << ECMA_OBJECT_REF_SHIFT)
-
-/**
  * Type of the descriptor field of an object
  */
 typedef uint32_t ecma_object_descriptor_t;
@@ -917,16 +911,16 @@ typedef uint32_t ecma_object_descriptor_t;
 #else /* !JERRY_CPOINTER_32_BIT */
 
 /**
- * Bitmask for an ecma-object reference count field
- */
-#define ECMA_OBJECT_REF_MASK (((1u << 10) - 1) << ECMA_OBJECT_REF_SHIFT)
-
-/**
  * Type of the descriptor field of an object
  */
 typedef uint16_t ecma_object_descriptor_t;
 
 #endif /* JERRY_CPOINTER_32_BIT */
+
+/**
+ * Bitmask for an ecma-object reference count field
+ */
+#define ECMA_OBJECT_REF_MASK ((ecma_object_descriptor_t) (~0u << ECMA_OBJECT_REF_SHIFT))
 
 /**
  * Represents non-visited white object

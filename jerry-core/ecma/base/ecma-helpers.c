@@ -52,7 +52,10 @@ JERRY_STATIC_ASSERT (ECMA_OBJECT_REF_ONE == (ECMA_OBJECT_FLAG_EXTENSIBLE << 1),
                      ecma_object_ref_one_must_follow_the_extensible_flag);
 
 JERRY_STATIC_ASSERT ((ECMA_OBJECT_MAX_REF + ECMA_OBJECT_REF_ONE) == ECMA_OBJECT_REF_MASK,
-                      ecma_object_max_ref_does_not_fill_the_remaining_bits);
+                     ecma_object_max_ref_does_not_fill_the_remaining_bits);
+
+JERRY_STATIC_ASSERT ((ECMA_OBJECT_REF_MASK & (ECMA_OBJECT_TYPE_MASK | ECMA_OBJECT_FLAG_EXTENSIBLE)) == 0,
+                     ecma_object_ref_mask_overlaps_with_object_type_or_extensible);
 
 JERRY_STATIC_ASSERT (ECMA_PROPERTY_FLAGS_MASK == ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
                      ecma_property_flags_mask_must_use_the_configurable_enumerable_writable_flags);

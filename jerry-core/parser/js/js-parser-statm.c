@@ -2427,7 +2427,7 @@ parser_parse_import_statement (parser_context_t *context_p) /**< parser context 
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_IMPORT);
   JERRY_ASSERT (context_p->module_names_p == NULL);
 
-  if (lexer_check_next_character (context_p, LIT_CHAR_LEFT_PAREN))
+  if (lexer_check_next_characters (context_p, LIT_CHAR_LEFT_PAREN, LIT_CHAR_DOT))
   {
     if (context_p->status_flags & PARSER_IS_FUNCTION)
     {

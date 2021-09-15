@@ -741,6 +741,24 @@ jerry_module_set_state_changed_callback (jerry_module_state_changed_callback_t c
 } /* jerry_module_set_state_changed_callback */
 
 /**
+ * Sets a callback which is called when an import.meta expression of a module is evaluated the first time.
+ */
+void
+jerry_module_set_import_meta_callback (jerry_module_import_meta_callback_t callback, /**< callback */
+                                       void *user_p) /**< pointer passed to the callback */
+{
+  jerry_assert_api_available ();
+
+#if JERRY_MODULE_SYSTEM
+  JERRY_CONTEXT (module_import_meta_callback_p) = callback;
+  JERRY_CONTEXT (module_import_meta_callback_user_p) = user_p;
+#else /* !JERRY_MODULE_SYSTEM */
+  JERRY_UNUSED (callback);
+  JERRY_UNUSED (user_p);
+#endif /* JERRY_MODULE_SYSTEM */
+} /* jerry_module_set_import_meta_callback */
+
+/**
  * Returns the number of import/export requests of a module
  *
  * @return number of import/export requests of a module
@@ -5489,7 +5507,7 @@ jerry_get_user_value (const jerry_value_t value) /**< jerry api value */
   ecma_value_t script_value = ((cbc_uint8_arguments_t *) bytecode_p)->script_value;
   cbc_script_t *script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
 
-  if (CBC_SCRIPT_GET_TYPE (script_p) == CBC_SCRIPT_GENERIC)
+  if (!(script_p->refs_and_type & CBC_SCRIPT_HAS_USER_VALUE))
   {
     return ECMA_VALUE_UNDEFINED;
   }

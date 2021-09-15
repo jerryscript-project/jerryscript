@@ -1930,16 +1930,6 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
         break;
       }
 #endif /* JERRY_ESNEXT */
-#if JERRY_MODULE_SYSTEM
-      case LEXER_KEYW_IMPORT:
-      {
-        if (new_was_seen)
-        {
-          parser_raise_error (context_p, PARSER_ERR_IMPORT_AFTER_NEW);
-        }
-        break;
-      }
-#endif /* JERRY_MODULE_SYSTEM */
     }
 
     /* Bracketed expressions are primary expressions. At this
@@ -2330,9 +2320,37 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
     {
       lexer_next_token (context_p);
 
+      if (context_p->token.type == LEXER_DOT)
+      {
+        lexer_next_token (context_p);
+
+        if (context_p->token.type != LEXER_LITERAL
+            || context_p->token.lit_location.type != LEXER_IDENT_LITERAL
+            || context_p->token.keyword_type != LEXER_KEYW_META
+            || (context_p->token.lit_location.status_flags & LEXER_LIT_LOCATION_HAS_ESCAPE))
+        {
+          parser_raise_error (context_p, PARSER_ERR_META_EXPECTED);
+        }
+
+        if (!(context_p->global_status_flags & ECMA_PARSE_MODULE))
+        {
+          parser_raise_error (context_p, PARSER_ERR_IMPORT_META_REQUIRE_MODULE);
+        }
+
+        JERRY_ASSERT (context_p->global_status_flags & ECMA_PARSE_INTERNAL_HAS_IMPORT_META);
+
+        parser_emit_cbc_ext (context_p, CBC_EXT_MODULE_IMPORT_META);
+        break;
+      }
+
       if (context_p->token.type != LEXER_LEFT_PAREN)
       {
         parser_raise_error (context_p, PARSER_ERR_LEFT_PAREN_EXPECTED);
+      }
+
+      if (new_was_seen)
+      {
+        parser_raise_error (context_p, PARSER_ERR_IMPORT_AFTER_NEW);
       }
 
       lexer_next_token (context_p);

@@ -589,6 +589,12 @@ typedef void (*jerry_module_state_changed_callback_t) (jerry_module_state_t new_
                                                        const jerry_value_t value, void *user_p);
 
 /**
+ * Callback which is called when an import.meta expression of a module is evaluated the first time.
+ */
+typedef void (*jerry_module_import_meta_callback_t) (const jerry_value_t module,
+                                                     const jerry_value_t meta_object, void *user_p);
+
+/**
  * Callback which is called by jerry_module_evaluate to evaluate the native module.
  */
 typedef jerry_value_t (*jerry_native_module_evaluate_callback_t) (const jerry_value_t native_module);

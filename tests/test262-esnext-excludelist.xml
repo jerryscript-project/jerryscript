@@ -127,10 +127,6 @@
   <test id="language/expressions/function/eval-var-scope-syntax-err.js"><reason></reason></test>
   <test id="language/expressions/generators/eval-var-scope-syntax-err.js"><reason></reason></test>
   <test id="language/expressions/import.meta/distinct-for-each-module.js"><reason></reason></test>
-  <test id="language/expressions/import.meta/import-meta-is-an-ordinary-object.js"><reason></reason></test>
-  <test id="language/expressions/import.meta/same-object-returned.js"><reason></reason></test>
-  <test id="language/expressions/import.meta/syntax/goal-module-nested-function.js"><reason></reason></test>
-  <test id="language/expressions/import.meta/syntax/goal-module.js"><reason></reason></test>
   <test id="language/expressions/object/method-definition/early-errors-object-async-method-duplicate-parameters.js"><reason></reason></test>
   <test id="language/expressions/object/method-definition/early-errors-object-method-async-lineterminator.js"><reason></reason></test>
   <test id="language/expressions/object/method-definition/early-errors-object-method-duplicate-parameters.js"><reason></reason></test>

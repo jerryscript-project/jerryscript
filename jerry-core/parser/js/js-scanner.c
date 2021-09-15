@@ -316,7 +316,11 @@ scanner_scan_primary_expression (parser_context_t *context_p, /**< context */
     {
       lexer_next_token (context_p);
 
-      if (context_p->token.type != LEXER_LEFT_PAREN)
+      if (context_p->token.type == LEXER_DOT)
+      {
+        scanner_check_import_meta (context_p);
+      }
+      else if (context_p->token.type != LEXER_LEFT_PAREN)
       {
         scanner_raise_error (context_p);
       }
@@ -1696,6 +1700,13 @@ scanner_scan_statement (parser_context_t *context_p, /**< context */
     case LEXER_KEYW_IMPORT:
     {
       lexer_next_token (context_p);
+
+      if (context_p->token.type == LEXER_DOT)
+      {
+        scanner_check_import_meta (context_p);
+        scanner_context_p->mode = SCAN_MODE_POST_PRIMARY_EXPRESSION;
+        return SCAN_KEEP_TOKEN;
+      }
 
       if (context_p->token.type == LEXER_LEFT_PAREN)
       {

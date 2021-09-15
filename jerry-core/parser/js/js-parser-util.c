@@ -1401,6 +1401,14 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Module import call is not allowed after new";
     }
+    case PARSER_ERR_META_EXPECTED:
+    {
+      return "Expected 'meta' keyword";
+    }
+    case PARSER_ERR_IMPORT_META_REQUIRE_MODULE:
+    {
+      return "Cannot use 'import.meta' outside a module";
+    }
 #endif /* JERRY_MODULE_SYSTEM */
     default:
     {

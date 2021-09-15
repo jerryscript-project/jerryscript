@@ -182,6 +182,8 @@ typedef enum
   PARSER_ERR_DUPLICATED_IMPORT_BINDING,               /**< duplicated import binding name */
   PARSER_ERR_EXPORT_NOT_DEFINED,                      /**< export is not defined in module */
   PARSER_ERR_IMPORT_AFTER_NEW,                        /**< module import call is not allowed after new */
+  PARSER_ERR_META_EXPECTED,                           /**< meta keyword expected */
+  PARSER_ERR_IMPORT_META_REQUIRE_MODULE,              /**< cannot use 'import.meta' outside a module */
 #endif /* JERRY_MODULE_SYSTEM */
 
   PARSER_ERR_NON_STRICT_ARG_DEFINITION                /**< non-strict argument definition */

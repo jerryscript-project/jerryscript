@@ -4571,7 +4571,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 #endif /* JERRY_SNAPSHOT_EXEC */
             cbc_script_t *script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
 
-            if (CBC_SCRIPT_GET_TYPE (script_p) != CBC_SCRIPT_GENERIC)
+            if (script_p->refs_and_type & CBC_SCRIPT_HAS_USER_VALUE)
             {
               user_value = CBC_SCRIPT_GET_USER_VALUE (script_p);
             }
@@ -4588,6 +4588,40 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           }
 
           *stack_top_p++ = result;
+          continue;
+        }
+        case VM_OC_MODULE_IMPORT_META:
+        {
+          ecma_value_t script_value = ((cbc_uint8_arguments_t *) bytecode_header_p)->script_value;
+          cbc_script_t *script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
+
+          JERRY_ASSERT (script_p->refs_and_type & CBC_SCRIPT_HAS_IMPORT_META);
+
+          ecma_value_t import_meta = CBC_SCRIPT_GET_IMPORT_META (script_p, script_p->refs_and_type);
+          ecma_object_t *import_meta_object_p = ecma_get_object_from_value (import_meta);
+
+          if (ecma_get_object_type (import_meta_object_p) != ECMA_OBJECT_TYPE_GENERAL)
+          {
+            JERRY_ASSERT (ecma_object_class_is (import_meta_object_p, ECMA_OBJECT_CLASS_MODULE));
+
+            ecma_value_t module = import_meta;
+            import_meta_object_p = ecma_create_object (NULL, 0, ECMA_OBJECT_TYPE_GENERAL);
+            import_meta = ecma_make_object_value (import_meta_object_p);
+
+            if (JERRY_CONTEXT (module_import_meta_callback_p) != NULL)
+            {
+              void *user_p = JERRY_CONTEXT (module_import_meta_callback_user_p);
+              JERRY_CONTEXT (module_import_meta_callback_p) (module, import_meta, user_p);
+            }
+
+            CBC_SCRIPT_GET_IMPORT_META (script_p, script_p->refs_and_type) = import_meta;
+          }
+          else
+          {
+            ecma_ref_object (import_meta_object_p);
+          }
+
+          *stack_top_p++ = import_meta;
           continue;
         }
 #endif /* JERRY_MODULE_SYSTEM */

@@ -428,13 +428,23 @@ ecma_gc_mark_compiled_code (const ecma_compiled_code_t *compiled_code_p) /**< co
   ecma_value_t script_value = ((cbc_uint8_arguments_t *) compiled_code_p)->script_value;
   cbc_script_t *script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
 
-  if (CBC_SCRIPT_GET_TYPE (script_p) == CBC_SCRIPT_USER_OBJECT)
+  if (script_p->refs_and_type & CBC_SCRIPT_USER_VALUE_IS_OBJECT)
   {
     ecma_value_t user_value = CBC_SCRIPT_GET_USER_VALUE (script_p);
 
     JERRY_ASSERT (ecma_is_value_object (user_value));
     ecma_gc_set_object_visited (ecma_get_object_from_value (user_value));
   }
+
+#if JERRY_MODULE_SYSTEM
+  if (script_p->refs_and_type & CBC_SCRIPT_HAS_IMPORT_META)
+  {
+    ecma_value_t import_meta = CBC_SCRIPT_GET_IMPORT_META (script_p, script_p->refs_and_type);
+
+    JERRY_ASSERT (ecma_is_value_object (import_meta));
+    ecma_gc_set_object_visited (ecma_get_object_from_value (import_meta));
+  }
+#endif /* JERRY_MODULE_SYSTEM */
 
 #if JERRY_BUILTIN_REALMS
   ecma_gc_set_object_visited (script_p->realm_p);

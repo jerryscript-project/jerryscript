@@ -130,8 +130,11 @@ typedef enum
 #if JERRY_ESNEXT
   ECMA_PARSE_INTERNAL_PRE_SCANNING = (1u << 16), /**< the parser is in pre-scanning mode */
 #endif /* JERRY_ESNEXT */
+#if JERRY_MODULE_SYSTEM
+  ECMA_PARSE_INTERNAL_HAS_IMPORT_META = (1u << 17), /**< module has import.meta expression */
+#endif /* JERRY_MODULE_SYSTEM */
 #if JERRY_FUNCTION_TO_STRING
-  ECMA_PARSE_INTERNAL_HAS_4_BYTE_MARKER = (1u << 17), /**< source has 4 byte marker */
+  ECMA_PARSE_INTERNAL_HAS_4_BYTE_MARKER = (1u << 18), /**< source has 4 byte marker */
 #endif /* JERRY_FUNCTION_TO_STRING */
 #ifndef JERRY_NDEBUG
   /**

@@ -5468,15 +5468,14 @@ jerry_get_resource_name (const jerry_value_t value) /**< jerry api value */
     return ecma_copy_value (ecma_get_resource_name (JERRY_CONTEXT (vm_top_context_p)->shared_p->bytecode_header_p));
   }
 
-  const ecma_compiled_code_t *bytecode_p = ecma_bytecode_get_from_value (value);
+  ecma_value_t script_value = ecma_script_get_from_value (value);
 
-  if (bytecode_p == NULL)
+  if (script_value == JMEM_CP_NULL)
   {
     return ecma_make_magic_string_value (LIT_MAGIC_STRING_RESOURCE_ANON);
   }
 
-  ecma_value_t script_value = ((cbc_uint8_arguments_t *) bytecode_p)->script_value;
-  cbc_script_t *script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
+  const cbc_script_t *script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
 
   return ecma_copy_value (script_p->resource_name);
 #else /* !JERRY_RESOURCE_NAME */
@@ -5497,15 +5496,14 @@ jerry_get_resource_name (const jerry_value_t value) /**< jerry api value */
 jerry_value_t
 jerry_get_user_value (const jerry_value_t value) /**< jerry api value */
 {
-  const ecma_compiled_code_t *bytecode_p = ecma_bytecode_get_from_value (value);
+  ecma_value_t script_value = ecma_script_get_from_value (value);
 
-  if (bytecode_p == NULL)
+  if (script_value == JMEM_CP_NULL)
   {
     return ECMA_VALUE_UNDEFINED;
   }
 
-  ecma_value_t script_value = ((cbc_uint8_arguments_t *) bytecode_p)->script_value;
-  cbc_script_t *script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
+  const cbc_script_t *script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
 
   if (!(script_p->refs_and_type & CBC_SCRIPT_HAS_USER_VALUE))
   {

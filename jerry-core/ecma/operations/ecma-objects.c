@@ -2376,7 +2376,8 @@ ecma_object_list_lazy_property_names (ecma_object_t *obj_p, /**< object */
     }
     default:
     {
-      JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_GENERAL);
+      JERRY_ASSERT (ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_GENERAL
+                    || ecma_get_object_type (obj_p) == ECMA_OBJECT_TYPE_CONSTRUCTOR_FUNCTION);
       break;
     }
   }

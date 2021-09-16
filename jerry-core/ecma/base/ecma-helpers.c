@@ -1407,6 +1407,63 @@ ecma_raise_error_from_error_reference (ecma_value_t value) /**< error reference 
 } /* ecma_raise_error_from_error_reference */
 
 /**
+ * Decrease the reference counter of a script value.
+ */
+void
+ecma_script_deref (ecma_value_t script_value) /**< script value */
+{
+  cbc_script_t *script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
+  script_p->refs_and_type -= CBC_SCRIPT_REF_ONE;
+
+  if (script_p->refs_and_type >= CBC_SCRIPT_REF_ONE)
+  {
+    return;
+  }
+
+  size_t script_size = sizeof (cbc_script_t);
+  uint32_t type = script_p->refs_and_type;
+
+  if (type & CBC_SCRIPT_HAS_USER_VALUE)
+  {
+    script_size += sizeof (ecma_value_t);
+
+    if (!(type & CBC_SCRIPT_USER_VALUE_IS_OBJECT))
+    {
+      ecma_value_t user_value = CBC_SCRIPT_GET_USER_VALUE (script_p);
+
+      JERRY_ASSERT (!ecma_is_value_object (user_value));
+      ecma_free_value (user_value);
+    }
+  }
+
+#if JERRY_RESOURCE_NAME
+  ecma_deref_ecma_string (ecma_get_string_from_value (script_p->resource_name));
+#endif /* JERRY_RESOURCE_NAME */
+
+#if JERRY_MODULE_SYSTEM
+  if (type & CBC_SCRIPT_HAS_IMPORT_META)
+  {
+    JERRY_ASSERT (!(type & CBC_SCRIPT_HAS_FUNCTION_ARGUMENTS));
+    JERRY_ASSERT (ecma_is_value_object (CBC_SCRIPT_GET_IMPORT_META (script_p, type)));
+
+    script_size += sizeof (ecma_value_t);
+  }
+#endif /* JERRY_MODULE_SYSTEM */
+
+#if JERRY_FUNCTION_TO_STRING
+  ecma_deref_ecma_string (ecma_get_string_from_value (script_p->source_code));
+
+  if (type & CBC_SCRIPT_HAS_FUNCTION_ARGUMENTS)
+  {
+    ecma_deref_ecma_string (ecma_get_string_from_value (CBC_SCRIPT_GET_FUNCTION_ARGUMENTS (script_p, type)));
+    script_size += sizeof (ecma_value_t);
+  }
+#endif /* JERRY_FUNCTION_TO_STRING */
+
+  jmem_heap_free_block (script_p, script_size);
+} /* ecma_script_deref */
+
+/**
  * Increase reference counter of Compact
  * Byte Code or regexp byte code.
  */
@@ -1478,53 +1535,7 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
       }
     }
 
-    ecma_value_t script_value = ((cbc_uint8_arguments_t *) bytecode_p)->script_value;
-    cbc_script_t *script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
-    script_p->refs_and_type -= CBC_SCRIPT_REF_ONE;
-
-    if (script_p->refs_and_type < CBC_SCRIPT_REF_ONE)
-    {
-      size_t script_size = sizeof (cbc_script_t);
-      uint32_t type = script_p->refs_and_type;
-
-      if (type & CBC_SCRIPT_HAS_USER_VALUE)
-      {
-        script_size += sizeof (ecma_value_t);
-
-        if (!(type & CBC_SCRIPT_USER_VALUE_IS_OBJECT))
-        {
-          ecma_value_t user_value = CBC_SCRIPT_GET_USER_VALUE (script_p);
-
-          JERRY_ASSERT (!ecma_is_value_object (user_value));
-          ecma_free_value (user_value);
-        }
-      }
-
-#if JERRY_RESOURCE_NAME
-      ecma_deref_ecma_string (ecma_get_string_from_value (script_p->resource_name));
-#endif /* JERRY_RESOURCE_NAME */
-
-#if JERRY_MODULE_SYSTEM
-      if (type & CBC_SCRIPT_HAS_IMPORT_META)
-      {
-        JERRY_ASSERT (ecma_is_value_object (CBC_SCRIPT_GET_IMPORT_META (script_p, type)));
-
-        script_size += sizeof (ecma_value_t);
-      }
-#endif /* JERRY_MODULE_SYSTEM */
-
-#if JERRY_FUNCTION_TO_STRING
-      ecma_deref_ecma_string (ecma_get_string_from_value (script_p->source_code));
-
-      if (type & CBC_SCRIPT_HAS_FUNCTION_ARGUMENTS)
-      {
-        ecma_deref_ecma_string (ecma_get_string_from_value (CBC_SCRIPT_GET_FUNCTION_ARGUMENTS (script_p, type)));
-        script_size += sizeof (ecma_value_t);
-      }
-#endif /* JERRY_FUNCTION_TO_STRING */
-
-      jmem_heap_free_block (script_p, script_size);
-    }
+    ecma_script_deref (((cbc_uint8_arguments_t *) bytecode_p)->script_value);
 
 #if JERRY_ESNEXT
     if (bytecode_p->status_flags & CBC_CODE_FLAGS_HAS_TAGGED_LITERALS)
@@ -1597,19 +1608,20 @@ ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p) /**< byte code pointer */
 } /* ecma_bytecode_deref */
 
 /**
- * Gets the byte code asigned to a script / module / function
+ * Gets the script data asigned to a script / module / function
  *
- * @return byte code - if available, NULL - otherwise
+ * @return script data - if available, JMEM_CP_NULL - otherwise
  */
-const ecma_compiled_code_t *
-ecma_bytecode_get_from_value (ecma_value_t value) /**< compiled code */
+ecma_value_t
+ecma_script_get_from_value (ecma_value_t value) /**< compiled code */
 {
   if (!ecma_is_value_object (value))
   {
-    return NULL;
+    return JMEM_CP_NULL;
   }
 
   ecma_object_t *object_p = ecma_get_object_from_value (value);
+  const ecma_compiled_code_t *bytecode_p = NULL;
 
   while (true)
   {
@@ -1621,8 +1633,9 @@ ecma_bytecode_get_from_value (ecma_value_t value) /**< compiled code */
 
         if (ext_object_p->u.cls.type == ECMA_OBJECT_CLASS_SCRIPT)
         {
-          return ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
-                                                  ext_object_p->u.cls.u3.value);
+          bytecode_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
+                                                        ext_object_p->u.cls.u3.value);
+          break;
         }
 
 #if JERRY_MODULE_SYSTEM
@@ -1632,15 +1645,17 @@ ecma_bytecode_get_from_value (ecma_value_t value) /**< compiled code */
 
           if (!(module_p->header.u.cls.u2.module_flags & ECMA_MODULE_IS_NATIVE))
           {
-            return module_p->u.compiled_code_p;
+            bytecode_p = module_p->u.compiled_code_p;
+            break;
           }
         }
 #endif /* JERRY_MODULE_SYSTEM */
-        return NULL;
+        return JMEM_CP_NULL;
       }
       case ECMA_OBJECT_TYPE_FUNCTION:
       {
-        return ecma_op_function_get_compiled_code ((ecma_extended_object_t *) object_p);
+        bytecode_p = ecma_op_function_get_compiled_code ((ecma_extended_object_t *) object_p);
+        break;
       }
       case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
       {
@@ -1648,15 +1663,24 @@ ecma_bytecode_get_from_value (ecma_value_t value) /**< compiled code */
 
         object_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
                                                                ext_object_p->u.bound_function.target_function);
-        break;
+        continue;
       }
+#if JERRY_ESNEXT
+      case ECMA_OBJECT_TYPE_CONSTRUCTOR_FUNCTION:
+      {
+        return ((ecma_extended_object_t *) object_p)->u.constructor_function.script_value;
+      }
+#endif /* JERRY_ESNEXT */
       default:
       {
-        return NULL;
+        return JMEM_CP_NULL;
       }
     }
+
+    JERRY_ASSERT (bytecode_p != NULL);
+    return ((cbc_uint8_arguments_t *) bytecode_p)->script_value;
   }
-} /* ecma_bytecode_get_from_value */
+} /* ecma_script_get_from_value */
 
 /**
  * Resolve the position of the arguments list start of the compiled code

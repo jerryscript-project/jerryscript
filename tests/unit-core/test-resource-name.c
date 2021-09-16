@@ -214,6 +214,27 @@ main (void)
   jerry_release_value (parse_options.resource_name);
   jerry_release_value (program);
 
+  const char *source_6 = "(class {})";
+
+  parse_options.options = JERRY_PARSE_HAS_RESOURCE;
+  parse_options.resource_name = jerry_create_string ((jerry_char_t *) "demo6.js");
+
+  program = jerry_parse ((const jerry_char_t *) source_6,
+                         strlen (source_6),
+                         &parse_options);
+  if (!jerry_value_is_error (program))
+  {
+    resource_value = jerry_get_resource_name (program);
+    compare_result = jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL, resource_value, parse_options.resource_name);
+    TEST_ASSERT (jerry_value_is_true (compare_result));
+
+    jerry_release_value (resource_value);
+    jerry_release_value (compare_result);
+  }
+
+  jerry_release_value (parse_options.resource_name);
+  jerry_release_value (program);
+
   jerry_cleanup ();
 
   return 0;

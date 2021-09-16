@@ -715,9 +715,10 @@ typedef enum
   ECMA_OBJECT_TYPE_PROXY = 6, /**< Proxy object ECMAScript v6 26.2 */
   /* Note: these 4 types must be in this order. See IsCallable operation.  */
   ECMA_OBJECT_TYPE_FUNCTION = 7, /**< Function objects (15.3), created through 13.2 routine */
-  ECMA_OBJECT_TYPE_BOUND_FUNCTION = 8, /**< Function objects (15.3), created through 15.3.4.5 routine */
-  ECMA_OBJECT_TYPE_NATIVE_FUNCTION = 9, /**< Native function object */
-  ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION = 10, /**< Native built-in function object */
+  ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION = 8, /**< Native built-in function object */
+  ECMA_OBJECT_TYPE_BOUND_FUNCTION = 9, /**< Function objects (15.3), created through 15.3.4.5 routine */
+  ECMA_OBJECT_TYPE_CONSTRUCTOR_FUNCTION = 10, /**< implicit class constructor function */
+  ECMA_OBJECT_TYPE_NATIVE_FUNCTION = 11, /**< Native function object */
 
   ECMA_OBJECT_TYPE__MAX /**< maximum value */
 } ecma_object_type_t;
@@ -1161,6 +1162,17 @@ typedef struct
       jmem_cpointer_tag_t target_function; /**< target function */
       ecma_value_t args_len_or_this; /**< length of arguments or this value */
     } bound_function;
+
+#if JERRY_ESNEXT
+    /**
+     * Description of implicit class constructor function.
+     */
+    struct
+    {
+      ecma_value_t script_value; /**< script value */
+      uint8_t flags; /**< constructor flags */
+    } constructor_function;
+#endif /* JERRY_ESNEXT */
   } u;
 } ecma_extended_object_t;
 
@@ -2477,8 +2489,8 @@ typedef struct
  */
 typedef enum
 {
-  ECMA_DATE_TZA_NONE = 0,
-  ECMA_DATE_TZA_SET = 1 << 0,
+  ECMA_DATE_TZA_NONE = 0, /**< no time-zone adjustment is set */
+  ECMA_DATE_TZA_SET = (1 << 0), /**< time-zone adjustment is set */
 } ecma_date_object_flags_t;
 
 /**
@@ -2489,6 +2501,14 @@ typedef struct
   ecma_extended_object_t header; /**< object header */
   ecma_number_t date_value; /**< [[DateValue]] internal property */
 } ecma_date_object_t;
+
+/**
+ * Implicit class constructor flags
+ */
+typedef enum
+{
+  ECMA_CONSTRUCTOR_FUNCTION_HAS_HERITAGE = (1 << 0), /**< heritage object is present */
+} ecma_constructor_function_flags_t;
 
 #endif /* JERRY_ESNEXT */
 

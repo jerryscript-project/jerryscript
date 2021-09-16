@@ -384,13 +384,6 @@ ecma_instantiate_builtin (ecma_global_object_t *global_object_p, /**< global obj
 
   ecma_object_type_t obj_type = (ecma_object_type_t) (builtin_desc & ECMA_BUILTIN_OBJECT_TYPE_MASK);
 
-  JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_GENERAL
-                || obj_type == ECMA_OBJECT_TYPE_CLASS
-                || obj_type == ECMA_OBJECT_TYPE_ARRAY
-                || obj_type == ECMA_OBJECT_TYPE_NATIVE_FUNCTION);
-  /* TODO: Remove this increase by setting the correct values in the defines. */
-  obj_type = (ecma_object_type_t) ((int) obj_type + 1);
-
   JERRY_ASSERT (obj_type == ECMA_OBJECT_TYPE_BUILT_IN_GENERAL
                 || obj_type == ECMA_OBJECT_TYPE_BUILT_IN_CLASS
                 || obj_type == ECMA_OBJECT_TYPE_BUILT_IN_ARRAY

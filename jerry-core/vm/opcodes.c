@@ -914,14 +914,12 @@ opfunc_async_create_and_await (vm_frame_ctx_t *frame_ctx_p, /**< frame context *
  *         ECMA_VALUE_UNDEFINED - otherwise
  */
 ecma_value_t
-opfunc_init_class_fields (ecma_value_t class_object, /**< the function itself */
+opfunc_init_class_fields (ecma_object_t *class_object_p, /**< the function itself */
                           ecma_value_t this_val) /**< this_arg of the function */
 {
-  JERRY_ASSERT (ecma_is_value_object (class_object));
   JERRY_ASSERT (ecma_is_value_object (this_val));
 
   ecma_string_t *name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_INIT);
-  ecma_object_t *class_object_p = ecma_get_object_from_value (class_object);
   ecma_property_t *property_p = ecma_find_named_property (class_object_p, name_p);
 
   if (property_p == NULL)
@@ -1049,78 +1047,6 @@ opfunc_add_computed_field (ecma_value_t class_object, /**< class object */
 } /* opfunc_add_computed_field */
 
 /**
- * Implicit class constructor handler when the classHeritage is not present.
- *
- * See also: ECMAScript v6, 14.5.14.10.b.i
- *
- * @return ECMA_VALUE_ERROR - if the function was invoked without 'new'
- *         ECMA_VALUE_UNDEFINED - otherwise
- */
-static ecma_value_t
-ecma_op_implicit_constructor_handler_cb (const jerry_call_info_t *call_info_p, /**< call information */
-                                         const ecma_value_t args_p[], /**< argument list */
-                                         const uint32_t args_count) /**< argument number */
-{
-  JERRY_UNUSED_2 (args_p, args_count);
-
-  if (JERRY_CONTEXT (current_new_target_p) == NULL)
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_class_constructor_new));
-  }
-
-  return opfunc_init_class_fields (call_info_p->function, call_info_p->this_value);
-} /* ecma_op_implicit_constructor_handler_cb */
-
-/**
- * Implicit class constructor handler when the classHeritage is present.
- *
- * See also: ECMAScript v6, 14.5.14.10.a.i
- *
- * @return ECMA_VALUE_ERROR - if the operation fails
- *         result of the super call - otherwise
- */
-static ecma_value_t
-ecma_op_implicit_constructor_handler_heritage_cb (const jerry_call_info_t *call_info_p, /**< call information */
-                                                  const ecma_value_t args_p[], /**< argument list */
-                                                  const uint32_t args_count) /**< argument number */
-{
-  if (JERRY_CONTEXT (current_new_target_p) == NULL)
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_class_constructor_new));
-  }
-
-  ecma_object_t *func_obj_p = ecma_get_object_from_value (call_info_p->function);
-  ecma_value_t super_ctor = ecma_op_function_get_super_constructor (func_obj_p);
-
-  if (ECMA_IS_VALUE_ERROR (super_ctor))
-  {
-    return super_ctor;
-  }
-
-  ecma_object_t *super_ctor_p = ecma_get_object_from_value (super_ctor);
-
-  ecma_value_t result = ecma_op_function_construct (super_ctor_p,
-                                                    JERRY_CONTEXT (current_new_target_p),
-                                                    args_p,
-                                                    args_count);
-
-  if (ecma_is_value_object (result))
-  {
-    ecma_value_t fields_value = opfunc_init_class_fields (call_info_p->function, result);
-
-    if (ECMA_IS_VALUE_ERROR (fields_value))
-    {
-      ecma_free_value (result);
-      result = ECMA_VALUE_ERROR;
-    }
-  }
-
-  ecma_deref_object (super_ctor_p);
-
-  return result;
-} /* ecma_op_implicit_constructor_handler_heritage_cb */
-
-/**
  * Create implicit class constructor
  *
  * See also: ECMAScript v6, 14.5.14
@@ -1128,40 +1054,42 @@ ecma_op_implicit_constructor_handler_heritage_cb (const jerry_call_info_t *call_
  * @return - new external function ecma-object
  */
 ecma_value_t
-opfunc_create_implicit_class_constructor (uint8_t opcode) /**< current cbc opcode */
+opfunc_create_implicit_class_constructor (uint8_t opcode, /**< current cbc opcode */
+                                          const ecma_compiled_code_t *bytecode_p) /**< current byte code */
 {
   /* 8. */
-  ecma_object_t *function_obj_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE),
-                                                      sizeof (ecma_native_function_t),
-                                                      ECMA_OBJECT_TYPE_NATIVE_FUNCTION);
+  ecma_value_t script_value = ((cbc_uint8_arguments_t *) bytecode_p)->script_value;
+  cbc_script_t *script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
 
-  ecma_native_function_t *native_function_p = (ecma_native_function_t *) function_obj_p;
+  if (JERRY_UNLIKELY (script_p->refs_and_type >= CBC_SCRIPT_REF_MAX))
+  {
+    jerry_fatal (ERR_REF_COUNT_LIMIT);
+  }
 
-#if JERRY_BUILTIN_REALMS
-  ECMA_SET_INTERNAL_VALUE_POINTER (native_function_p->realm_value,
-                                   ecma_builtin_get_global ());
-#endif /* JERRY_BUILTIN_REALMS */
+  ecma_object_t *function_object_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_FUNCTION_PROTOTYPE),
+                                                         sizeof (ecma_extended_object_t),
+                                                         ECMA_OBJECT_TYPE_CONSTRUCTOR_FUNCTION);
+
+  ecma_extended_object_t *constructor_object_p = (ecma_extended_object_t *) function_object_p;
+
+  script_p->refs_and_type += CBC_SCRIPT_REF_ONE;
+  constructor_object_p->u.constructor_function.script_value = script_value;
+  constructor_object_p->u.constructor_function.flags = 0;
 
   /* 10.a.i */
   if (opcode == CBC_EXT_PUSH_IMPLICIT_CONSTRUCTOR_HERITAGE)
   {
-    native_function_p->native_handler_cb = ecma_op_implicit_constructor_handler_heritage_cb;
-  }
-  /* 10.b.i */
-  else
-  {
-    native_function_p->native_handler_cb = ecma_op_implicit_constructor_handler_cb;
+    constructor_object_p->u.constructor_function.flags |= ECMA_CONSTRUCTOR_FUNCTION_HAS_HERITAGE;
   }
 
   ecma_property_value_t *prop_value_p;
-  prop_value_p = ecma_create_named_data_property (function_obj_p,
+  prop_value_p = ecma_create_named_data_property (function_object_p,
                                                   ecma_get_magic_string (LIT_MAGIC_STRING_LENGTH),
                                                   ECMA_PROPERTY_FLAG_CONFIGURABLE,
                                                   NULL);
-
   prop_value_p->value = ecma_make_uint32_value (0);
 
-  return ecma_make_object_value (function_obj_p);
+  return ecma_make_object_value (function_object_p);
 } /* opfunc_create_implicit_class_constructor */
 
 /**

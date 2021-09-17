@@ -421,11 +421,8 @@ ecma_gc_mark_properties (ecma_object_t *object_p, /**< object */
  * Mark compiled code.
  */
 static void
-ecma_gc_mark_compiled_code (const ecma_compiled_code_t *compiled_code_p) /**< compiled code */
+ecma_gc_mark_compiled_code (ecma_value_t script_value) /**< script value */
 {
-  JERRY_ASSERT (!(compiled_code_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION));
-
-  ecma_value_t script_value = ((cbc_uint8_arguments_t *) compiled_code_p)->script_value;
   cbc_script_t *script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
 
   if (script_p->refs_and_type & CBC_SCRIPT_USER_VALUE_IS_OBJECT)
@@ -895,7 +892,9 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             const ecma_compiled_code_t *compiled_code_p;
             compiled_code_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
                                                                ext_object_p->u.cls.u3.value);
-            ecma_gc_mark_compiled_code (compiled_code_p);
+
+            JERRY_ASSERT (!(compiled_code_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION));
+            ecma_gc_mark_compiled_code (((cbc_uint8_arguments_t *) compiled_code_p)->script_value);
             break;
           }
 #endif /* JERRY_PARSER */
@@ -934,7 +933,10 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             if (!(module_p->header.u.cls.u2.module_flags & ECMA_MODULE_IS_NATIVE)
                 && module_p->u.compiled_code_p != NULL)
             {
-              ecma_gc_mark_compiled_code (module_p->u.compiled_code_p);
+              const ecma_compiled_code_t *compiled_code_p = module_p->u.compiled_code_p;
+
+              JERRY_ASSERT (!(compiled_code_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION));
+              ecma_gc_mark_compiled_code (((cbc_uint8_arguments_t *) compiled_code_p)->script_value);
             }
 
             ecma_module_node_t *node_p = module_p->imports_p;
@@ -1095,21 +1097,16 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
         break;
       }
 #endif /* JERRY_BUILTIN_PROXY */
-      case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
-      {
-        ecma_gc_mark_bound_function_object (object_p);
-        break;
-      }
       case ECMA_OBJECT_TYPE_FUNCTION:
       {
         ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
         ecma_gc_set_object_visited (ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
                                                                                 ext_func_p->u.function.scope_cp));
 
-        const ecma_compiled_code_t *byte_code_p = ecma_op_function_get_compiled_code (ext_func_p);
+        const ecma_compiled_code_t *compiled_code_p = ecma_op_function_get_compiled_code (ext_func_p);
 
 #if JERRY_ESNEXT
-        if (CBC_FUNCTION_IS_ARROW (byte_code_p->status_flags))
+        if (CBC_FUNCTION_IS_ARROW (compiled_code_p->status_flags))
         {
           ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) object_p;
 
@@ -1126,25 +1123,22 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 #endif /* JERRY_ESNEXT */
 
 #if JERRY_SNAPSHOT_EXEC
-        if (JERRY_UNLIKELY (byte_code_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))
+        if (JERRY_UNLIKELY (compiled_code_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))
         {
           /* Static snapshot functions have a global realm */
           break;
         }
 #endif /* JERRY_SNAPSHOT_EXEC */
 
-        ecma_gc_mark_compiled_code (byte_code_p);
+        JERRY_ASSERT (!(compiled_code_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION));
+        ecma_gc_mark_compiled_code (((cbc_uint8_arguments_t *) compiled_code_p)->script_value);
         break;
       }
-#if JERRY_BUILTIN_REALMS
-      case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:
+      case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
       {
-        ecma_native_function_t *native_function_p = (ecma_native_function_t *) object_p;
-        ecma_gc_set_object_visited (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
-                                                                     native_function_p->realm_value));
+        ecma_gc_mark_bound_function_object (object_p);
         break;
       }
-#endif /* JERRY_BUILTIN_REALMS */
 #if JERRY_ESNEXT || JERRY_BUILTIN_REALMS
       case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
       {
@@ -1226,6 +1220,22 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
         break;
       }
 #endif /* JERRY_ESNEXT || JERRY_BUILTIN_REALMS */
+#if JERRY_ESNEXT
+      case ECMA_OBJECT_TYPE_CONSTRUCTOR_FUNCTION:
+      {
+        ecma_gc_mark_compiled_code (((ecma_extended_object_t *) object_p)->u.constructor_function.script_value);
+        break;
+      }
+#endif /* JERRY_ESNEXT */
+#if JERRY_BUILTIN_REALMS
+      case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:
+      {
+        ecma_native_function_t *native_function_p = (ecma_native_function_t *) object_p;
+        ecma_gc_set_object_visited (ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t,
+                                                                     native_function_p->realm_value));
+        break;
+      }
+#endif /* JERRY_BUILTIN_REALMS */
       default:
       {
         break;
@@ -1974,40 +1984,6 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
 #endif /* JERRY_SNAPSHOT_EXEC */
       break;
     }
-    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
-    {
-      ext_object_size = sizeof (ecma_bound_function_t);
-      ecma_bound_function_t *bound_func_p = (ecma_bound_function_t *) object_p;
-
-      ecma_value_t args_len_or_this = bound_func_p->header.u.bound_function.args_len_or_this;
-
-#if JERRY_ESNEXT
-      ecma_free_value (bound_func_p->target_length);
-#endif /* JERRY_ESNEXT */
-
-      if (!ecma_is_value_integer_number (args_len_or_this))
-      {
-        ecma_free_value_if_not_object (args_len_or_this);
-        break;
-      }
-
-      ecma_integer_value_t args_length = ecma_get_integer_from_value (args_len_or_this);
-      ecma_value_t *args_p = (ecma_value_t *) (bound_func_p + 1);
-
-      for (ecma_integer_value_t i = 0; i < args_length; i++)
-      {
-        ecma_free_value_if_not_object (args_p[i]);
-      }
-
-      size_t args_size = ((size_t) args_length) * sizeof (ecma_value_t);
-      ext_object_size += args_size;
-      break;
-    }
-    case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:
-    {
-      ext_object_size = sizeof (ecma_native_function_t);
-      break;
-    }
     case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
     {
       ecma_extended_object_t *extended_func_p = (ecma_extended_object_t *) object_p;
@@ -2069,6 +2045,47 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
         }
       }
 #endif /* JERRY_ESNEXT */
+      break;
+    }
+    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+    {
+      ext_object_size = sizeof (ecma_bound_function_t);
+      ecma_bound_function_t *bound_func_p = (ecma_bound_function_t *) object_p;
+
+      ecma_value_t args_len_or_this = bound_func_p->header.u.bound_function.args_len_or_this;
+
+#if JERRY_ESNEXT
+      ecma_free_value (bound_func_p->target_length);
+#endif /* JERRY_ESNEXT */
+
+      if (!ecma_is_value_integer_number (args_len_or_this))
+      {
+        ecma_free_value_if_not_object (args_len_or_this);
+        break;
+      }
+
+      ecma_integer_value_t args_length = ecma_get_integer_from_value (args_len_or_this);
+      ecma_value_t *args_p = (ecma_value_t *) (bound_func_p + 1);
+
+      for (ecma_integer_value_t i = 0; i < args_length; i++)
+      {
+        ecma_free_value_if_not_object (args_p[i]);
+      }
+
+      size_t args_size = ((size_t) args_length) * sizeof (ecma_value_t);
+      ext_object_size += args_size;
+      break;
+    }
+#if JERRY_ESNEXT
+    case ECMA_OBJECT_TYPE_CONSTRUCTOR_FUNCTION:
+    {
+      ecma_script_deref (((ecma_extended_object_t *) object_p)->u.constructor_function.script_value);
+      break;
+    }
+#endif /* JERRY_ESNEXT */
+    case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:
+    {
+      ext_object_size = sizeof (ecma_native_function_t);
       break;
     }
     default:

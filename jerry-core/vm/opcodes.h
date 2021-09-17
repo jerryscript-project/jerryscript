@@ -142,7 +142,7 @@ ecma_value_t
 opfunc_async_create_and_await (vm_frame_ctx_t *frame_ctx_p, ecma_value_t value, uint16_t extra_flags);
 
 ecma_value_t
-opfunc_init_class_fields (ecma_value_t class_object, ecma_value_t this_val);
+opfunc_init_class_fields (ecma_object_t *class_object_p, ecma_value_t this_val);
 
 ecma_value_t
 opfunc_init_static_class_fields (ecma_value_t function_object, ecma_value_t this_val);
@@ -151,7 +151,7 @@ ecma_value_t
 opfunc_add_computed_field (ecma_value_t class_object, ecma_value_t name);
 
 ecma_value_t
-opfunc_create_implicit_class_constructor (uint8_t opcode);
+opfunc_create_implicit_class_constructor (uint8_t opcode, const ecma_compiled_code_t *bytecode_p);
 
 void
 opfunc_set_home_object (ecma_object_t *func_p, ecma_object_t *parent_env_p);

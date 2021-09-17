@@ -620,8 +620,7 @@ vm_super_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
   if (ecma_is_value_object (completion_value))
   {
-    ecma_value_t current_function = ecma_make_object_value (vm_get_class_function (frame_ctx_p));
-    ecma_value_t fields_value = opfunc_init_class_fields (current_function, completion_value);
+    ecma_value_t fields_value = opfunc_init_class_fields (vm_get_class_function (frame_ctx_p), completion_value);
 
     if (ECMA_IS_VALUE_ERROR (fields_value))
     {
@@ -2065,7 +2064,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_PUSH_IMPLICIT_CTOR:
         {
-          *stack_top_p++ = opfunc_create_implicit_class_constructor (opcode);
+          *stack_top_p++ = opfunc_create_implicit_class_constructor (opcode,
+                                                                     frame_ctx_p->shared_p->bytecode_header_p);
           continue;
         }
         case VM_OC_INIT_CLASS:
@@ -2120,8 +2120,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         case VM_OC_RUN_FIELD_INIT:
         {
           JERRY_ASSERT (frame_ctx_p->shared_p->status_flags & VM_FRAME_CTX_SHARED_NON_ARROW_FUNC);
-          result = opfunc_init_class_fields (ecma_make_object_value (frame_ctx_p->shared_p->function_object_p),
-                                             frame_ctx_p->this_binding);
+          result = opfunc_init_class_fields (frame_ctx_p->shared_p->function_object_p, frame_ctx_p->this_binding);
 
           if (ECMA_IS_VALUE_ERROR (result))
           {
@@ -2279,7 +2278,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
                                                      ECMA_PROPERTY_FLAG_CONFIGURABLE,
                                                      NULL);
 
-          if (ecma_get_object_type (func_obj_p) != ECMA_OBJECT_TYPE_NATIVE_FUNCTION)
+          if (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION)
           {
             ECMA_SET_SECOND_BIT_TO_POINTER_TAG (((ecma_extended_object_t *) func_obj_p)->u.function.scope_cp);
           }

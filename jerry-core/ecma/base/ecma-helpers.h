@@ -531,9 +531,10 @@ ecma_value_t ecma_create_error_reference_from_context (void);
 ecma_value_t ecma_create_error_object_reference (ecma_object_t *object_p);
 void ecma_raise_error_from_error_reference (ecma_value_t value);
 
+void ecma_script_deref (ecma_value_t script_value);
 void ecma_bytecode_ref (ecma_compiled_code_t *bytecode_p);
 void ecma_bytecode_deref (ecma_compiled_code_t *bytecode_p);
-const ecma_compiled_code_t *ecma_bytecode_get_from_value (ecma_value_t value);
+ecma_value_t ecma_script_get_from_value (ecma_value_t value);
 ecma_value_t *ecma_compiled_code_resolve_arguments_start (const ecma_compiled_code_t *bytecode_header_p);
 #if JERRY_ESNEXT
 ecma_value_t *ecma_compiled_code_resolve_function_name (const ecma_compiled_code_t *bytecode_header_p);

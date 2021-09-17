@@ -138,6 +138,14 @@ main (void)
   parse_options.options = JERRY_PARSE_HAS_USER_VALUE;
   test_parse_function (source_p, &parse_options, true);
 
+  /* There is no test for ESNEXT, using SYMBOL instead. */
+  if (jerry_is_feature_enabled (JERRY_FEATURE_SYMBOL))
+  {
+    source_p = TEST_STRING_LITERAL ("(class {})");
+    parse_options.options = JERRY_PARSE_HAS_USER_VALUE;
+    test_parse (source_p, &parse_options, true);
+  }
+
   source_p = TEST_STRING_LITERAL ("eval('function f() {}')\n"
                                   "f");
   parse_options.options = JERRY_PARSE_HAS_USER_VALUE;

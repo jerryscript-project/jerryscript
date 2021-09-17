@@ -2469,7 +2469,6 @@
   <test id="language/expressions/class/elements/class-name-static-initializer-default-export.js"><reason></reason></test>
   <test id="language/expressions/class/elements/derived-cls-direct-eval-contains-superproperty-1.js"><reason></reason></test>
   <test id="language/expressions/class/elements/derived-cls-direct-eval-contains-superproperty-2.js"><reason></reason></test>
-  <test id="language/expressions/class/elements/direct-eval-err-contains-newtarget.js"><reason></reason></test>
   <test id="language/expressions/class/elements/fields-anonymous-function-length.js"><reason></reason></test>
   <test id="language/expressions/class/elements/fields-multiple-definitions-static-private-methods-proxy.js"><reason></reason></test>
   <test id="language/expressions/class/elements/gen-private-method-static/yield-spread-arr-multiple.js"><reason></reason></test>
@@ -4047,7 +4046,6 @@
   <test id="language/statements/class/elements/async-gen-private-method/yield-star-sync-throw.js"><reason></reason></test>
   <test id="language/statements/class/elements/derived-cls-direct-eval-contains-superproperty-1.js"><reason></reason></test>
   <test id="language/statements/class/elements/derived-cls-direct-eval-contains-superproperty-2.js"><reason></reason></test>
-  <test id="language/statements/class/elements/direct-eval-err-contains-newtarget.js"><reason></reason></test>
   <test id="language/statements/class/elements/fields-anonymous-function-length.js"><reason></reason></test>
   <test id="language/statements/class/elements/gen-private-method-static/yield-spread-arr-multiple.js"><reason></reason></test>
   <test id="language/statements/class/elements/gen-private-method-static/yield-spread-arr-single.js"><reason></reason></test>
@@ -7952,7 +7950,6 @@
   <test id="built-ins/Atomics/waitAsync/was-woken-before-timeout.js"><reason></reason></test>
   <test id="built-ins/FinalizationRegistry/gc-has-one-chance-to-call-cleanupCallback.js"><reason></reason></test>
   <test id="built-ins/FinalizationRegistry/proto-from-ctor-realm.js"><reason></reason></test>
-  <test id="built-ins/Function/internals/Call/class-ctor-realm.js"><reason></reason></test>
   <test id="intl402/Collator/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="intl402/DateTimeFormat/proto-from-ctor-realm.js"><reason></reason></test>
   <test id="intl402/DisplayNames/proto-from-ctor-realm.js"><reason></reason></test>

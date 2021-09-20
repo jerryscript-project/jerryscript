@@ -1336,36 +1336,14 @@ ecma_op_object_get_own_property_keys (ecma_value_t this_arg, /**< this argument 
   }
 
   ecma_collection_t *props_p = ecma_op_object_own_property_keys (obj_p, filter);
+  ecma_deref_object (obj_p);
 
   if (props_p == NULL)
   {
-    ecma_deref_object (obj_p);
     return ECMA_VALUE_ERROR;
   }
 
-  /* 3. */
-  ecma_collection_t *name_list_p = ecma_new_collection ();
-
-  /* 4. */
-  for (uint32_t i = 0; i < props_p->item_count; i++)
-  {
-    ecma_value_t prop_name = props_p->buffer_p[i];
-    ecma_string_t *name_p = ecma_get_prop_name_from_value (prop_name);
-
-    if ((ecma_prop_name_is_symbol (name_p) && type == ECMA_OBJECT_ROUTINE_GET_OWN_PROPERTY_SYMBOLS)
-        || (ecma_is_value_string (prop_name) && type == ECMA_OBJECT_ROUTINE_GET_OWN_PROPERTY_NAMES))
-    {
-      ecma_ref_ecma_string (name_p);
-      ecma_collection_push_back (name_list_p, prop_name);
-    }
-  }
-
-  ecma_value_t result_array = ecma_op_new_array_object_from_collection (name_list_p, false);
-
-  ecma_deref_object (obj_p);
-  ecma_collection_free (props_p);
-
-  return result_array;
+  return ecma_op_new_array_object_from_collection (props_p, false);
 #else /* !JERRY_ESNEXT */
   JERRY_UNUSED (type);
   ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);

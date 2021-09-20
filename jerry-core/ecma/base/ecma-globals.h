@@ -2439,8 +2439,6 @@ typedef struct
   uint32_t array_index_named_props; /**< number of array index named properties */
   uint32_t string_named_props; /**< number of string named properties */
   uint32_t symbol_named_props; /**< number of symbol named properties */
-  uint32_t lazy_string_named_props; /**< number of lazy instantiated string properties */
-  uint32_t lazy_symbol_named_props; /**< number of lazy instantiated symbol properties */
 } ecma_property_counter_t;
 
 /**

@@ -670,7 +670,7 @@ ecma_module_heap_sort_shift_down (ecma_value_t *buffer_p, /**< array of items */
   while (true)
   {
     uint32_t highest_index = item_index;
-    uint32_t current_index = item_index * 2 + 2;
+    uint32_t current_index = (item_index << 1) + 2;
 
     if (current_index >= item_count)
     {

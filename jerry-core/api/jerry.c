@@ -4604,6 +4604,12 @@ jerry_object_get_property_names (const jerry_value_t obj_val, /**< object */
 
   ecma_ref_object (obj_iter_p);
 
+  if ((filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS)
+      && !(filter & JERRY_PROPERTY_FILTER_INTEGER_INDICES_AS_NUMBER))
+  {
+    filter |= JERRY_PROPERTY_FILTER_EXLCUDE_INTEGER_INDICES;
+  }
+
   while (true)
   {
     /* Step 1. Get Object.[[OwnKeys]] */
@@ -4623,34 +4629,7 @@ jerry_object_get_property_names (const jerry_value_t obj_val, /**< object */
       ecma_string_t *key_p = ecma_get_prop_name_from_value (key);
       uint32_t index = ecma_string_get_array_index (key_p);
 
-      /* Step 2. Filter by key type */
-      if (filter & (JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS
-                    | JERRY_PROPERTY_FILTER_EXLCUDE_SYMBOLS
-                    | JERRY_PROPERTY_FILTER_EXLCUDE_INTEGER_INDICES))
-      {
-        if (ecma_is_value_symbol (key))
-        {
-          if (filter & JERRY_PROPERTY_FILTER_EXLCUDE_SYMBOLS)
-          {
-            continue;
-          }
-        }
-        else if (index != ECMA_STRING_NOT_ARRAY_INDEX)
-        {
-          if ((filter & JERRY_PROPERTY_FILTER_EXLCUDE_INTEGER_INDICES)
-              || ((filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS)
-                  && !(filter & JERRY_PROPERTY_FILTER_INTEGER_INDICES_AS_NUMBER)))
-          {
-            continue;
-          }
-        }
-        else if (filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS)
-        {
-          continue;
-        }
-      }
-
-      /* Step 3. Filter property attributes */
+      /* Step 2. Filter property attributes */
       if (filter & (JERRY_PROPERTY_FILTER_EXLCUDE_NON_CONFIGURABLE
                     | JERRY_PROPERTY_FILTER_EXLCUDE_NON_ENUMERABLE
                     | JERRY_PROPERTY_FILTER_EXLCUDE_NON_WRITABLE))
@@ -4729,7 +4708,7 @@ jerry_object_get_property_names (const jerry_value_t obj_val, /**< object */
 
     ecma_collection_free (prop_names_p);
 
-    /* Step 4: Traverse prototype chain */
+    /* Step 3: Traverse prototype chain */
 
     if ((filter & JERRY_PROPERTY_FILTER_TRAVERSE_PROTOTYPE_CHAIN) != JERRY_PROPERTY_FILTER_TRAVERSE_PROTOTYPE_CHAIN)
     {

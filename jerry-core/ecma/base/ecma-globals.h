@@ -223,7 +223,7 @@ enum
   ECMA_VALUE_SPREAD_ELEMENT = ECMA_MAKE_VALUE (11), /**< a special value for spread elements in array initialization
                                                      *   or function call argument list */
   /* Other values */
-  ECMA_VALUE_INITIALIZED = ECMA_MAKE_VALUE (12), /**< represents initialized mapped arguments formal parameter */
+  ECMA_VALUE_ARGUMENT_NO_TRACK = ECMA_MAKE_VALUE (12), /**< represents not-tracked arguments formal parameter */
 #if JERRY_ESNEXT
   ECMA_VALUE_SYNC_ITERATOR = ECMA_MAKE_VALUE (13), /**< option for ecma_op_get_iterator: sync iterator is requested */
   ECMA_VALUE_ASYNC_ITERATOR = ECMA_MAKE_VALUE (14), /**< option for ecma_op_get_iterator: async iterator is requested */
@@ -2452,9 +2452,8 @@ typedef enum
   ECMA_ARGUMENTS_OBJECT_MAPPED = (1 << 0),               /* mapped arguments object */
   ECMA_ARGUMENTS_OBJECT_STATIC_BYTECODE = (1 << 1),      /* static mapped arguments object */
   ECMA_ARGUMENTS_OBJECT_CALLEE_INITIALIZED = (1 << 2),   /* 'callee' property has been lazy initialized */
-  ECMA_ARGUMENTS_OBJECT_CALLER_INITIALIZED = (1 << 3),   /* 'caller' property has been lazy initialized */
-  ECMA_ARGUMENTS_OBJECT_LENGTH_INITIALIZED = (1 << 4),   /* 'length' property has been lazy initialized */
-  ECMA_ARGUMENTS_OBJECT_ITERATOR_INITIALIZED = (1 << 5), /* 'Symbol.iterator' property has been lazy initialized */
+  ECMA_ARGUMENTS_OBJECT_LENGTH_INITIALIZED = (1 << 3),   /* 'length' property has been lazy initialized */
+  ECMA_ARGUMENTS_OBJECT_ITERATOR_INITIALIZED = (1 << 4), /* 'Symbol.iterator' property has been lazy initialized */
 } ecma_arguments_object_flags_t;
 
 /**

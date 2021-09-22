@@ -139,13 +139,14 @@ ecma_line_info_get (uint8_t *line_info_p, /**< line info buffer */
 
     uint8_t *size_p = line_info_p + *line_info_p + (ECMA_LINE_INFO_STREAM_SIZE_MIN + 1);
 
-    end_offset += ecma_line_info_decode_vlq (&size_p);
+    uint32_t next_end_offset = end_offset + ecma_line_info_decode_vlq (&size_p);
 
-    if (offset < end_offset)
+    if (offset < next_end_offset)
     {
       break;
     }
 
+    end_offset = next_end_offset;
     line_info_p = size_p;
   }
 

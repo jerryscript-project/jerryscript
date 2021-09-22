@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "ecma-arguments-object.h"
 #include "ecma-array-object.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
@@ -151,6 +152,12 @@ ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
         ecma_builtin_delete_built_in_property (obj_p, property_name_p);
         break;
       }
+      case ECMA_OBJECT_TYPE_CLASS:
+      {
+        JERRY_ASSERT (ecma_object_class_is (obj_p, ECMA_OBJECT_CLASS_ARGUMENTS));
+        ecma_op_arguments_delete_built_in_property (obj_p, property_name_p);
+        break;
+      }
       case ECMA_OBJECT_TYPE_FUNCTION:
       {
         ecma_op_function_delete_built_in_property (obj_p, property_name_p);
@@ -168,7 +175,15 @@ ecma_op_general_object_delete (ecma_object_t *obj_p, /**< the object */
       }
     }
 #else /* !JERRY_ESNEXT */
-    ecma_builtin_delete_built_in_property (obj_p, property_name_p);
+    if (type == ECMA_OBJECT_TYPE_CLASS)
+    {
+      JERRY_ASSERT (ecma_object_class_is (obj_p, ECMA_OBJECT_CLASS_ARGUMENTS));
+      ecma_op_arguments_delete_built_in_property (obj_p, property_name_p);
+    }
+    else
+    {
+      ecma_builtin_delete_built_in_property (obj_p, property_name_p);
+    }
 #endif /* JERRY_ESNEXT */
   }
 

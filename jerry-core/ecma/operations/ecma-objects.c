@@ -390,7 +390,7 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
 
       ecma_value_t *argv_p = (ecma_value_t *) (mapped_arguments_p + 1);
 
-      if (!ecma_is_value_empty (argv_p[index]))
+      if (!ecma_is_value_empty (argv_p[index]) && argv_p[index] != ECMA_VALUE_ARGUMENT_NO_TRACK)
       {
 #if JERRY_LCACHE
         /* Mapped arguments initialized properties MUST not be lcached */
@@ -585,7 +585,7 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
 
             ecma_value_t *argv_p = (ecma_value_t *) (mapped_arguments_p + 1);
 
-            if (!ecma_is_value_empty (argv_p[index]))
+            if (!ecma_is_value_empty (argv_p[index]) && argv_p[index] != ECMA_VALUE_ARGUMENT_NO_TRACK)
             {
               ecma_string_t *name_p = ecma_op_arguments_object_get_formal_parameter (mapped_arguments_p, index);
               ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, mapped_arguments_p->lex_env);
@@ -1428,7 +1428,7 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
 
             ecma_value_t *argv_p = (ecma_value_t *) (mapped_arguments_p + 1);
 
-            if (!ecma_is_value_empty (argv_p[index]))
+            if (!ecma_is_value_empty (argv_p[index]) && argv_p[index] != ECMA_VALUE_ARGUMENT_NO_TRACK)
             {
               ecma_string_t *name_p = ecma_op_arguments_object_get_formal_parameter (mapped_arguments_p, index);
               ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, mapped_arguments_p->lex_env);
@@ -1811,13 +1811,6 @@ ecma_op_object_delete (ecma_object_t *obj_p, /**< the object */
   JERRY_ASSERT (obj_p != NULL
                 && !ecma_is_lexical_environment (obj_p));
   JERRY_ASSERT (property_name_p != NULL);
-
-  if (ecma_object_class_is (obj_p, ECMA_OBJECT_CLASS_ARGUMENTS))
-  {
-    return ecma_op_arguments_object_delete (obj_p,
-                                            property_name_p,
-                                            is_strict);
-  }
 
 #if JERRY_BUILTIN_PROXY
   if (ECMA_OBJECT_IS_PROXY (obj_p))
@@ -2280,27 +2273,6 @@ ecma_op_object_get_enumerable_property_names (ecma_object_t *obj_p, /**< routine
 } /* ecma_op_object_get_enumerable_property_names */
 
 /**
- * Helper method to check if a given property is already in the collection or not
- *
- * @return true - if the property is already in the collection
- *         false - otherwise
- */
-static bool
-ecma_object_prop_name_is_duplicated (ecma_collection_t *prop_names_p, /**< prop name collection */
-                                     ecma_string_t *name_p) /**< property name */
-{
-  for (uint64_t i = 0; i < prop_names_p->item_count; i++)
-  {
-    if (ecma_compare_ecma_strings (ecma_get_prop_name_from_value (prop_names_p->buffer_p[i]), name_p))
-    {
-      return true;
-    }
-  }
-
-  return false;
-} /* ecma_object_prop_name_is_duplicated */
-
-/**
  * Helper method for getting lazy instantiated properties for [[OwnPropertyKeys]]
  */
 static void
@@ -2574,29 +2546,22 @@ ecma_op_object_own_property_keys (ecma_object_t *obj_p) /**< object */
         ecma_string_t *name_p = ecma_string_from_property_name (*property_p,
                                                                 prop_pair_p->names_cp[i]);
 
-        if (!ecma_object_prop_name_is_duplicated (prop_names_p, name_p))
+        if (ecma_string_get_array_index (name_p) != ECMA_STRING_NOT_ARRAY_INDEX)
         {
-          if (ecma_string_get_array_index (name_p) != ECMA_STRING_NOT_ARRAY_INDEX)
-          {
-            prop_counter.array_index_named_props++;
-          }
-      #if JERRY_ESNEXT
-          else if (ecma_prop_name_is_symbol (name_p))
-          {
-            prop_counter.symbol_named_props++;
-          }
-      #endif /* JERRY_ESNEXT */
-          else
-          {
-            prop_counter.string_named_props++;
-          }
-
-          ecma_collection_push_back (prop_names_p, ecma_make_prop_name_value (name_p));
+          prop_counter.array_index_named_props++;
         }
+#if JERRY_ESNEXT
+        else if (ecma_prop_name_is_symbol (name_p))
+        {
+          prop_counter.symbol_named_props++;
+        }
+#endif /* JERRY_ESNEXT */
         else
         {
-          ecma_deref_ecma_string (name_p);
+          prop_counter.string_named_props++;
         }
+
+        ecma_collection_push_back (prop_names_p, ecma_make_prop_name_value (name_p));
       }
     }
 

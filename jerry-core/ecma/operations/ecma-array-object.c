@@ -649,32 +649,40 @@ ecma_fast_array_set_length (ecma_object_t *object_p, /**< fast access mode array
  * @return collection of strings - property names
  */
 ecma_collection_t *
-ecma_fast_array_object_own_property_keys (ecma_object_t *object_p) /**< fast access mode array object */
+ecma_fast_array_object_own_property_keys (ecma_object_t *object_p, /**< fast access mode array object */
+                                          jerry_property_filter_t filter) /**< property name filter options */
 {
   JERRY_ASSERT (ecma_op_object_is_fast_array (object_p));
 
-  ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
   ecma_collection_t *ret_p = ecma_new_collection ();
-  uint32_t length = ext_obj_p->u.array.length;
 
-  if (length != 0)
+  if (!(filter & JERRY_PROPERTY_FILTER_EXLCUDE_INTEGER_INDICES))
   {
-    ecma_value_t *values_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, object_p->u1.property_list_cp);
+    ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
+    uint32_t length = ext_obj_p->u.array.length;
 
-    for (uint32_t i = 0; i < length; i++)
+    if (length != 0)
     {
-      if (ecma_is_value_array_hole (values_p[i]))
+      ecma_value_t *values_p = ECMA_GET_NON_NULL_POINTER (ecma_value_t, object_p->u1.property_list_cp);
+
+      for (uint32_t i = 0; i < length; i++)
       {
-        continue;
+        if (ecma_is_value_array_hole (values_p[i]))
+        {
+          continue;
+        }
+
+        ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (i);
+
+        ecma_collection_push_back (ret_p, ecma_make_string_value (index_str_p));
       }
-
-      ecma_string_t *index_str_p = ecma_new_ecma_string_from_uint32 (i);
-
-      ecma_collection_push_back (ret_p, ecma_make_string_value (index_str_p));
     }
   }
 
-  ecma_collection_push_back (ret_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
+  if (!(filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS))
+  {
+    ecma_collection_push_back (ret_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
+  }
 
   return ret_p;
 } /* ecma_fast_array_object_own_property_keys */

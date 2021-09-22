@@ -138,13 +138,13 @@ ecma_builtin_routine_delete_built_in_property (ecma_object_t *object_p, ecma_str
 void
 ecma_builtin_delete_built_in_property (ecma_object_t *object_p, ecma_string_t *property_name_p);
 void
-ecma_builtin_routine_list_lazy_property_names (ecma_object_t *object_p,
-                                               ecma_collection_t *prop_names_p,
-                                               ecma_property_counter_t *prop_counter_p);
+ecma_builtin_routine_list_lazy_property_names (ecma_object_t *object_p, ecma_collection_t *prop_names_p,
+                                               ecma_property_counter_t *prop_counter_p,
+                                               jerry_property_filter_t filter);
 void
-ecma_builtin_list_lazy_property_names (ecma_object_t *object_p,
-                                       ecma_collection_t *prop_names_p,
-                                       ecma_property_counter_t *prop_counter_p);
+ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, ecma_collection_t *prop_names_p,
+                                       ecma_property_counter_t *prop_counter_p,
+                                       jerry_property_filter_t filter);
 bool
 ecma_builtin_is_global (ecma_object_t *object_p);
 ecma_object_t *

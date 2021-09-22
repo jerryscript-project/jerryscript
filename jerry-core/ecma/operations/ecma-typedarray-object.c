@@ -1827,9 +1827,15 @@ ecma_is_typedarray (ecma_value_t value) /**< the target need to be checked */
 void
 ecma_op_typedarray_list_lazy_property_names (ecma_object_t *obj_p, /**< a TypedArray object */
                                              ecma_collection_t *prop_names_p, /**< prop name collection */
-                                             ecma_property_counter_t *prop_counter_p)  /**< prop counter */
+                                             ecma_property_counter_t *prop_counter_p,  /**< property counters */
+                                             jerry_property_filter_t filter) /**< property name filter options */
 {
   JERRY_ASSERT (ecma_object_is_typedarray (obj_p));
+
+  if (filter & JERRY_PROPERTY_FILTER_EXLCUDE_INTEGER_INDICES)
+  {
+    return;
+  }
 
   uint32_t array_length = ecma_typedarray_get_length (obj_p);
 

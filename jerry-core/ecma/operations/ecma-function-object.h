@@ -117,19 +117,19 @@ ecma_op_bound_function_delete_built_in_property (ecma_object_t *object_p, ecma_s
 #endif /* JERRY_ESNEXT */
 
 void
-ecma_op_function_list_lazy_property_names (ecma_object_t *object_p,
-                                           ecma_collection_t *prop_names_p,
-                                           ecma_property_counter_t *prop_counter_p);
+ecma_op_function_list_lazy_property_names (ecma_object_t *object_p, ecma_collection_t *prop_names_p,
+                                           ecma_property_counter_t *prop_counter_p,
+                                           jerry_property_filter_t filter);
 
 void
-ecma_op_external_function_list_lazy_property_names (ecma_object_t *object_p,
-                                                    ecma_collection_t *prop_names_p,
-                                                    ecma_property_counter_t *prop_counter_p);
+ecma_op_external_function_list_lazy_property_names (ecma_object_t *object_p, ecma_collection_t *prop_names_p,
+                                                    ecma_property_counter_t *prop_counter_p,
+                                                    jerry_property_filter_t filter);
 
 void
-ecma_op_bound_function_list_lazy_property_names (ecma_object_t *object_p,
-                                                 ecma_collection_t *prop_names_p,
-                                                 ecma_property_counter_t *prop_counter_p);
+ecma_op_bound_function_list_lazy_property_names (ecma_object_t *object_p, ecma_collection_t *prop_names_p,
+                                                 ecma_property_counter_t *prop_counter_p,
+                                                 jerry_property_filter_t filter);
 
 /**
  * @}

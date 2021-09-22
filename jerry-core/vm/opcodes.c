@@ -1558,7 +1558,7 @@ opfunc_copy_data_properties (ecma_value_t target_object, /**< target object */
   }
 
   ecma_object_t *source_object_p = ecma_get_object_from_value (source_object);
-  ecma_collection_t *names_p = ecma_op_object_own_property_keys (source_object_p);
+  ecma_collection_t *names_p = ecma_op_object_own_property_keys (source_object_p, JERRY_PROPERTY_FILTER_ALL);
 
 #if JERRY_BUILTIN_PROXY
   if (names_p == NULL)

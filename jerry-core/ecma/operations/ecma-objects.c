@@ -2360,119 +2360,52 @@ ecma_object_list_lazy_property_names (ecma_object_t *obj_p, /**< object */
 } /* ecma_object_list_lazy_property_names */
 
 /**
- * Helper method for sorting the given property names based on [[OwnPropertyKeys]]
+ * Helper routine for heapsort algorithm.
  */
 static void
-ecma_object_sort_property_names (ecma_collection_t *prop_names_p, /**< prop name collection */
-                                 ecma_property_counter_t *prop_counter) /**< prop counter */
+ecma_op_object_heap_sort_shift_down (ecma_value_t *buffer_p, /**< array of items */
+                                     uint32_t item_count, /**< number of items */
+                                     uint32_t item_index) /**< index of updated item */
 {
-  uint32_t lazy_string_prop_name_count = prop_counter->lazy_string_named_props;
-#if JERRY_ESNEXT
-  uint32_t lazy_symbol_prop_name_count = prop_counter->lazy_symbol_named_props;
-#endif /* JERRY_ESNEXT */
-
-  uint32_t string_name_pos = prop_counter->string_named_props;
-#if JERRY_ESNEXT
-  uint32_t symbol_name_pos = prop_counter->symbol_named_props;
-#endif /* JERRY_ESNEXT */
-
-  uint32_t all_prop_count = (prop_counter->array_index_named_props) + (string_name_pos);
-#if JERRY_ESNEXT
-  all_prop_count += symbol_name_pos;
-#endif /* JERRY_ESNEXT */
-
-  ecma_value_t *names_p = jmem_heap_alloc_block (all_prop_count * sizeof (ecma_value_t));
-
-  ecma_value_t *string_names_p = names_p + prop_counter->array_index_named_props;
-#if JERRY_ESNEXT
-  ecma_value_t *symbol_names_p = string_names_p + string_name_pos;
-#endif /* JERRY_ESNEXT */
-
-  uint32_t array_index_name_pos = 0;
-  uint32_t lazy_string_name_pos = 0;
-#if JERRY_ESNEXT
-  uint32_t lazy_symbol_name_pos = 0;
-#endif /* JERRY_ESNEXT */
-
-  for (uint32_t i = 0; i < prop_names_p->item_count; i++)
+  while (true)
   {
-    ecma_value_t prop_name = prop_names_p->buffer_p[i];
-    ecma_string_t *name_p = ecma_get_prop_name_from_value (prop_name);
-    uint32_t index = ecma_string_get_array_index (name_p);
+    uint32_t highest_index = item_index;
+    uint32_t current_index = (item_index << 1) + 1;
 
-    /* sort array index named properties in ascending order */
-    if (index != ECMA_STRING_NOT_ARRAY_INDEX)
+    if (current_index >= item_count)
     {
-      JERRY_ASSERT (array_index_name_pos < prop_counter->array_index_named_props);
-
-      uint32_t insert_pos = 0;
-      while (insert_pos < array_index_name_pos
-              && index > ecma_string_get_array_index (ecma_get_string_from_value (names_p[insert_pos])))
-      {
-        insert_pos++;
-      }
-
-      if (insert_pos == array_index_name_pos)
-      {
-        names_p[array_index_name_pos++] = prop_name;
-      }
-      else
-      {
-        JERRY_ASSERT (insert_pos < array_index_name_pos);
-        JERRY_ASSERT (index <= ecma_string_get_array_index (ecma_get_string_from_value (names_p[insert_pos])));
-
-        uint32_t move_pos = array_index_name_pos++;
-
-        while (move_pos > insert_pos)
-        {
-          names_p[move_pos] = names_p[move_pos - 1u];
-
-          move_pos--;
-        }
-
-        names_p[insert_pos] = prop_name;
-      }
+      return;
     }
-#if JERRY_ESNEXT
-    /* sort symbol named properites in creation order */
-    else if (ecma_prop_name_is_symbol (name_p))
+
+    uint32_t value = ecma_string_get_array_index (ecma_get_string_from_value (buffer_p[highest_index]));
+    uint32_t left_value = ecma_string_get_array_index (ecma_get_string_from_value (buffer_p[current_index]));
+
+    if (value < left_value)
     {
-      JERRY_ASSERT (symbol_name_pos > 0);
-      JERRY_ASSERT (symbol_name_pos <= prop_counter->symbol_named_props);
-
-      if (i < lazy_symbol_prop_name_count)
-      {
-        symbol_names_p[lazy_symbol_name_pos++] = prop_name;
-      }
-      else
-      {
-        symbol_names_p[--symbol_name_pos] = prop_name;
-      }
+      highest_index = current_index;
+      value = left_value;
     }
-#endif /* JERRY_ESNEXT */
-    /* sort string named properties in creation order */
-    else
+
+    current_index++;
+
+    if (current_index < item_count
+        && value < ecma_string_get_array_index (ecma_get_string_from_value (buffer_p[current_index])))
     {
-      JERRY_ASSERT (string_name_pos > 0);
-      JERRY_ASSERT (string_name_pos <= prop_counter->string_named_props);
-
-      if (i < lazy_string_prop_name_count)
-      {
-        string_names_p[lazy_string_name_pos++] = prop_name;
-      }
-      else
-      {
-        string_names_p[--string_name_pos] = prop_name;
-      }
+      highest_index = current_index;
     }
+
+    if (highest_index == item_index)
+    {
+      return;
+    }
+
+    ecma_value_t tmp = buffer_p[highest_index];
+    buffer_p[highest_index] = buffer_p[item_index];
+    buffer_p[item_index] = tmp;
+
+    item_index = highest_index;
   }
-
-  /* Free the unsorted buffer and copy the sorted one in its place */
-  jmem_heap_free_block (prop_names_p->buffer_p, ECMA_COLLECTION_ALLOCATED_SIZE (prop_names_p->capacity));
-  prop_names_p->buffer_p = names_p;
-  prop_names_p->item_count = all_prop_count;
-  prop_names_p->capacity = all_prop_count;
-} /* ecma_object_sort_property_names */
+} /* ecma_op_object_heap_sort_shift_down */
 
 /**
  * Object's [[OwnPropertyKeys]] internal method
@@ -2491,7 +2424,7 @@ ecma_object_sort_property_names (ecma_collection_t *prop_names_p, /**< prop name
  */
 ecma_collection_t *
 ecma_op_object_own_property_keys (ecma_object_t *obj_p, /**< object */
-                                  jerry_property_filter_t filter) /**< property name filter options */
+                                  jerry_property_filter_t filter) /**< name filters */
 {
 #if JERRY_BUILTIN_PROXY
   if (ECMA_OBJECT_IS_PROXY (obj_p))
@@ -2506,12 +2439,9 @@ ecma_op_object_own_property_keys (ecma_object_t *obj_p, /**< object */
   }
 
   ecma_collection_t *prop_names_p = ecma_new_collection ();
-  ecma_property_counter_t prop_counter = {0, 0, 0, 0, 0};
+  ecma_property_counter_t prop_counter = {0, 0, 0};
 
   ecma_object_list_lazy_property_names (obj_p, prop_names_p, &prop_counter, filter);
-
-  prop_counter.lazy_string_named_props = prop_names_p->item_count - prop_counter.symbol_named_props;
-  prop_counter.lazy_symbol_named_props = prop_counter.symbol_named_props;
 
   jmem_cpointer_t prop_iter_cp = obj_p->u1.property_list_cp;
 
@@ -2527,6 +2457,118 @@ ecma_op_object_own_property_keys (ecma_object_t *obj_p, /**< object */
   }
 #endif /* JERRY_PROPERTY_HASHMAP */
 
+  jmem_cpointer_t counter_prop_iter_cp = prop_iter_cp;
+
+  uint32_t array_index_named_props = 0;
+  uint32_t string_named_props = 0;
+#if JERRY_ESNEXT
+  uint32_t symbol_named_props = 0;
+#endif /* JERRY_ESNEXT */
+
+  while (counter_prop_iter_cp != JMEM_CP_NULL)
+  {
+    ecma_property_header_t *prop_iter_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t, counter_prop_iter_cp);
+    JERRY_ASSERT (ECMA_PROPERTY_IS_PROPERTY_PAIR (prop_iter_p));
+
+    for (int i = 0; i < ECMA_PROPERTY_PAIR_ITEM_COUNT; i++)
+    {
+      ecma_property_t *property_p = prop_iter_p->types + i;
+
+      if (!ECMA_PROPERTY_IS_RAW (*property_p)
+          || (*property_p & ECMA_PROPERTY_FLAG_BUILT_IN))
+      {
+        continue;
+      }
+
+      ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) prop_iter_p;
+
+      if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_DIRECT_STRING_MAGIC
+          && prop_pair_p->names_cp[i] >= LIT_NON_INTERNAL_MAGIC_STRING__COUNT
+          && prop_pair_p->names_cp[i] < LIT_MAGIC_STRING__COUNT)
+      {
+        continue;
+      }
+
+      ecma_string_t *name_p = ecma_string_from_property_name (*property_p,
+                                                              prop_pair_p->names_cp[i]);
+
+      if (ecma_string_get_array_index (name_p) != ECMA_STRING_NOT_ARRAY_INDEX)
+      {
+        array_index_named_props++;
+      }
+#if JERRY_ESNEXT
+      else if (ecma_prop_name_is_symbol (name_p))
+      {
+        symbol_named_props++;
+      }
+#endif /* JERRY_ESNEXT */
+      else
+      {
+        string_named_props++;
+      }
+
+      ecma_deref_ecma_string (name_p);
+    }
+
+    counter_prop_iter_cp = prop_iter_p->next_property_cp;
+  }
+
+  if (filter & JERRY_PROPERTY_FILTER_EXLCUDE_INTEGER_INDICES)
+  {
+    JERRY_ASSERT (prop_counter.array_index_named_props == 0);
+    array_index_named_props = 0;
+  }
+
+  if (filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS)
+  {
+    JERRY_ASSERT (prop_counter.string_named_props == 0);
+    string_named_props = 0;
+  }
+
+#if JERRY_ESNEXT
+  if (filter & JERRY_PROPERTY_FILTER_EXLCUDE_SYMBOLS)
+  {
+    JERRY_ASSERT (prop_counter.symbol_named_props == 0);
+    symbol_named_props = 0;
+  }
+
+  uint32_t total = array_index_named_props + string_named_props + symbol_named_props;
+#else /* !JERRY_ESNEXT */
+  uint32_t total = array_index_named_props + string_named_props;
+#endif /* JERRY_ESNEXT */
+
+  if (total == 0)
+  {
+    return prop_names_p;
+  }
+
+  ecma_collection_reserve (prop_names_p, total);
+  prop_names_p->item_count += total;
+
+  ecma_value_t *buffer_p = prop_names_p->buffer_p;
+  ecma_value_t *array_index_current_p = buffer_p + array_index_named_props + prop_counter.array_index_named_props;
+  ecma_value_t *string_current_p = array_index_current_p + string_named_props + prop_counter.string_named_props;
+
+#if JERRY_ESNEXT
+  ecma_value_t *symbol_current_p = string_current_p + symbol_named_props + prop_counter.symbol_named_props;
+
+  if (prop_counter.symbol_named_props > 0
+      && (array_index_named_props + string_named_props) > 0)
+  {
+    memmove ((void *) string_current_p,
+             (void *) (buffer_p + prop_counter.array_index_named_props + prop_counter.string_named_props),
+             prop_counter.symbol_named_props * sizeof (ecma_value_t));
+  }
+#endif /* JERRY_ESNEXT */
+
+  if (prop_counter.string_named_props > 0
+      && array_index_named_props > 0)
+  {
+    memmove ((void *) array_index_current_p,
+             (void *) (buffer_p + prop_counter.array_index_named_props),
+             prop_counter.string_named_props * sizeof (ecma_value_t));
+  }
+
   while (prop_iter_cp != JMEM_CP_NULL)
   {
     ecma_property_header_t *prop_iter_p = ECMA_GET_NON_NULL_POINTER (ecma_property_header_t, prop_iter_cp);
@@ -2536,46 +2578,102 @@ ecma_op_object_own_property_keys (ecma_object_t *obj_p, /**< object */
     {
       ecma_property_t *property_p = prop_iter_p->types + i;
 
-      if (ECMA_PROPERTY_IS_RAW (*property_p)
-          && !(*property_p & ECMA_PROPERTY_FLAG_BUILT_IN))
+      if (!ECMA_PROPERTY_IS_RAW (*property_p)
+          || (*property_p & ECMA_PROPERTY_FLAG_BUILT_IN))
       {
-        ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) prop_iter_p;
+        continue;
+      }
 
-        if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_DIRECT_STRING_MAGIC
-            && prop_pair_p->names_cp[i] >= LIT_NON_INTERNAL_MAGIC_STRING__COUNT
-            && prop_pair_p->names_cp[i] < LIT_MAGIC_STRING__COUNT)
+      ecma_property_pair_t *prop_pair_p = (ecma_property_pair_t *) prop_iter_p;
+
+      if (ECMA_PROPERTY_GET_NAME_TYPE (*property_p) == ECMA_DIRECT_STRING_MAGIC
+          && prop_pair_p->names_cp[i] >= LIT_NON_INTERNAL_MAGIC_STRING__COUNT
+          && prop_pair_p->names_cp[i] < LIT_MAGIC_STRING__COUNT)
+      {
+        continue;
+      }
+
+      ecma_string_t *name_p = ecma_string_from_property_name (*property_p,
+                                                              prop_pair_p->names_cp[i]);
+
+      if (ecma_string_get_array_index (name_p) != ECMA_STRING_NOT_ARRAY_INDEX)
+      {
+        if (!(filter & JERRY_PROPERTY_FILTER_EXLCUDE_INTEGER_INDICES))
         {
+          *(--array_index_current_p) = ecma_make_string_value (name_p);
           continue;
         }
-
-        ecma_string_t *name_p = ecma_string_from_property_name (*property_p,
-                                                                prop_pair_p->names_cp[i]);
-
-        if (ecma_string_get_array_index (name_p) != ECMA_STRING_NOT_ARRAY_INDEX)
-        {
-          prop_counter.array_index_named_props++;
-        }
-#if JERRY_ESNEXT
-        else if (ecma_prop_name_is_symbol (name_p))
-        {
-          prop_counter.symbol_named_props++;
-        }
-#endif /* JERRY_ESNEXT */
-        else
-        {
-          prop_counter.string_named_props++;
-        }
-
-        ecma_collection_push_back (prop_names_p, ecma_make_prop_name_value (name_p));
       }
+#if JERRY_ESNEXT
+      else if (ecma_prop_name_is_symbol (name_p))
+      {
+        if (!(filter & JERRY_PROPERTY_FILTER_EXLCUDE_SYMBOLS))
+        {
+          *(--symbol_current_p) = ecma_make_symbol_value (name_p);
+          continue;
+        }
+      }
+#endif /* JERRY_ESNEXT */
+      else
+      {
+        if (!(filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS))
+        {
+          *(--string_current_p) = ecma_make_string_value (name_p);
+          continue;
+        }
+      }
+
+      ecma_deref_ecma_string (name_p);
     }
 
     prop_iter_cp = prop_iter_p->next_property_cp;
   }
 
-  if (prop_names_p->item_count != 0)
+  if (array_index_named_props > 1
+      || (array_index_named_props == 1 && prop_counter.array_index_named_props > 0))
   {
-    ecma_object_sort_property_names (prop_names_p, &prop_counter);
+    uint32_t prev_value = 0;
+    ecma_value_t *array_index_p = buffer_p + prop_counter.array_index_named_props;
+    ecma_value_t *array_index_end_p = array_index_p + array_index_named_props;
+
+    if (prop_counter.array_index_named_props > 0)
+    {
+      prev_value = ecma_string_get_array_index (ecma_get_string_from_value (array_index_p[-1]));
+    }
+
+    do
+    {
+      uint32_t value = ecma_string_get_array_index (ecma_get_string_from_value (*array_index_p++));
+
+      if (value < prev_value)
+      {
+        uint32_t array_props = prop_counter.array_index_named_props + array_index_named_props;
+        uint32_t i = (array_props >> 1) - 1;
+
+        do
+        {
+          ecma_op_object_heap_sort_shift_down (buffer_p, array_props, i);
+        }
+        while (i-- > 0);
+
+        i = array_props - 1;
+
+        do
+        {
+          ecma_value_t tmp = buffer_p[i];
+          buffer_p[i] = buffer_p[0];
+          buffer_p[0] = tmp;
+
+          ecma_op_object_heap_sort_shift_down (buffer_p, i, 0);
+        }
+        while (--i > 0);
+
+        break;
+      }
+
+      prev_value = value;
+    }
+    while (array_index_p < array_index_end_p);
   }
 
   return prop_names_p;

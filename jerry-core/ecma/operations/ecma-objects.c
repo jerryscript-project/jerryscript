@@ -2180,7 +2180,7 @@ ecma_op_object_get_enumerable_property_names (ecma_object_t *obj_p, /**< routine
                                               ecma_enumerable_property_names_options_t option) /**< listing option */
 {
   /* 2. */
-  ecma_collection_t *prop_names_p = ecma_op_object_own_property_keys (obj_p);
+  ecma_collection_t *prop_names_p = ecma_op_object_own_property_keys (obj_p, JERRY_PROPERTY_FILTER_EXLCUDE_SYMBOLS);
 
 #if JERRY_BUILTIN_PROXY
   if (JERRY_UNLIKELY (prop_names_p == NULL))
@@ -2278,7 +2278,8 @@ ecma_op_object_get_enumerable_property_names (ecma_object_t *obj_p, /**< routine
 static void
 ecma_object_list_lazy_property_names (ecma_object_t *obj_p, /**< object */
                                       ecma_collection_t *prop_names_p, /**< prop name collection */
-                                      ecma_property_counter_t *prop_counter_p) /**< prop counter */
+                                      ecma_property_counter_t *prop_counter_p, /**< property counters */
+                                      jerry_property_filter_t filter) /**< property name filter options */
 {
   switch (ecma_get_object_type (obj_p))
   {
@@ -2286,7 +2287,7 @@ ecma_object_list_lazy_property_names (ecma_object_t *obj_p, /**< object */
     {
       if (ecma_builtin_function_is_routine (obj_p))
       {
-        ecma_builtin_routine_list_lazy_property_names (obj_p, prop_names_p, prop_counter_p);
+        ecma_builtin_routine_list_lazy_property_names (obj_p, prop_names_p, prop_counter_p, filter);
         break;
       }
       /* FALLTHRU */
@@ -2295,7 +2296,7 @@ ecma_object_list_lazy_property_names (ecma_object_t *obj_p, /**< object */
     case ECMA_OBJECT_TYPE_BUILT_IN_CLASS:
     case ECMA_OBJECT_TYPE_BUILT_IN_ARRAY:
     {
-      ecma_builtin_list_lazy_property_names (obj_p, prop_names_p, prop_counter_p);
+      ecma_builtin_list_lazy_property_names (obj_p, prop_names_p, prop_counter_p, filter);
       break;
     }
     case ECMA_OBJECT_TYPE_CLASS:
@@ -2306,19 +2307,19 @@ ecma_object_list_lazy_property_names (ecma_object_t *obj_p, /**< object */
       {
         case ECMA_OBJECT_CLASS_STRING:
         {
-          ecma_op_string_list_lazy_property_names (obj_p, prop_names_p, prop_counter_p);
+          ecma_op_string_list_lazy_property_names (obj_p, prop_names_p, prop_counter_p, filter);
           break;
         }
         case ECMA_OBJECT_CLASS_ARGUMENTS:
         {
-          ecma_op_arguments_object_list_lazy_property_names (obj_p, prop_names_p, prop_counter_p);
+          ecma_op_arguments_object_list_lazy_property_names (obj_p, prop_names_p, prop_counter_p, filter);
           break;
         }
 #if JERRY_BUILTIN_TYPEDARRAY
         /* ES2015 9.4.5.1 */
         case ECMA_OBJECT_CLASS_TYPEDARRAY:
         {
-          ecma_op_typedarray_list_lazy_property_names (obj_p, prop_names_p, prop_counter_p);
+          ecma_op_typedarray_list_lazy_property_names (obj_p, prop_names_p, prop_counter_p, filter);
           break;
         }
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
@@ -2327,23 +2328,26 @@ ecma_object_list_lazy_property_names (ecma_object_t *obj_p, /**< object */
     }
     case ECMA_OBJECT_TYPE_FUNCTION:
     {
-      ecma_op_function_list_lazy_property_names (obj_p, prop_names_p, prop_counter_p);
+      ecma_op_function_list_lazy_property_names (obj_p, prop_names_p, prop_counter_p, filter);
       break;
     }
     case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:
     {
-      ecma_op_external_function_list_lazy_property_names (obj_p, prop_names_p, prop_counter_p);
+      ecma_op_external_function_list_lazy_property_names (obj_p, prop_names_p, prop_counter_p, filter);
       break;
     }
     case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
     {
-      ecma_op_bound_function_list_lazy_property_names (obj_p, prop_names_p, prop_counter_p);
+      ecma_op_bound_function_list_lazy_property_names (obj_p, prop_names_p, prop_counter_p, filter);
       break;
     }
     case ECMA_OBJECT_TYPE_ARRAY:
     {
-      ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
-      prop_counter_p->string_named_props++;
+      if (!(filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS))
+      {
+        ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
+        prop_counter_p->string_named_props++;
+      }
       break;
     }
     default:
@@ -2486,7 +2490,8 @@ ecma_object_sort_property_names (ecma_collection_t *prop_names_p, /**< prop name
  *         collection of property names - otherwise
  */
 ecma_collection_t *
-ecma_op_object_own_property_keys (ecma_object_t *obj_p) /**< object */
+ecma_op_object_own_property_keys (ecma_object_t *obj_p, /**< object */
+                                  jerry_property_filter_t filter) /**< property name filter options */
 {
 #if JERRY_BUILTIN_PROXY
   if (ECMA_OBJECT_IS_PROXY (obj_p))
@@ -2497,13 +2502,13 @@ ecma_op_object_own_property_keys (ecma_object_t *obj_p) /**< object */
 
   if (ecma_op_object_is_fast_array (obj_p))
   {
-    return ecma_fast_array_object_own_property_keys (obj_p);
+    return ecma_fast_array_object_own_property_keys (obj_p, filter);
   }
 
   ecma_collection_t *prop_names_p = ecma_new_collection ();
   ecma_property_counter_t prop_counter = {0, 0, 0, 0, 0};
 
-  ecma_object_list_lazy_property_names (obj_p, prop_names_p, &prop_counter);
+  ecma_object_list_lazy_property_names (obj_p, prop_names_p, &prop_counter, filter);
 
   prop_counter.lazy_string_named_props = prop_names_p->item_count - prop_counter.symbol_named_props;
   prop_counter.lazy_symbol_named_props = prop_counter.symbol_named_props;
@@ -2595,7 +2600,7 @@ ecma_op_object_enumerate (ecma_object_t *obj_p) /**< object */
 
   while (true)
   {
-    ecma_collection_t *keys = ecma_op_object_own_property_keys (obj_p);
+    ecma_collection_t *keys = ecma_op_object_own_property_keys (obj_p, JERRY_PROPERTY_FILTER_EXLCUDE_SYMBOLS);
 
 #if JERRY_ESNEXT
     if (JERRY_UNLIKELY (keys == NULL))

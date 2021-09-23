@@ -163,7 +163,7 @@ ecma_builtin_reflect_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
     ecma_object_t *target_p = ecma_get_object_from_value (arguments_list[0]);
 
     /* 2. */
-    ecma_collection_t *prop_names = ecma_op_object_own_property_keys (target_p);
+    ecma_collection_t *prop_names = ecma_op_object_own_property_keys (target_p, JERRY_PROPERTY_FILTER_ALL);
 
 #if JERRY_BUILTIN_PROXY
     if (prop_names == NULL)

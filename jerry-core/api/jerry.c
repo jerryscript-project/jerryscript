@@ -4607,7 +4607,7 @@ jerry_object_get_property_names (const jerry_value_t obj_val, /**< object */
   while (true)
   {
     /* Step 1. Get Object.[[OwnKeys]] */
-    ecma_collection_t *prop_names_p = ecma_op_object_own_property_keys (obj_iter_p);
+    ecma_collection_t *prop_names_p = ecma_op_object_own_property_keys (obj_iter_p, filter);
 
 #if JERRY_BUILTIN_PROXY
     if (prop_names_p == NULL)

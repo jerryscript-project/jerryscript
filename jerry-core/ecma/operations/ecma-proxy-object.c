@@ -1628,7 +1628,7 @@ ecma_proxy_object_own_property_keys (ecma_object_t *obj_p) /**< proxy object */
   /* 6. */
   if (ecma_is_value_undefined (trap))
   {
-    ecma_collection_t *result = ecma_op_object_own_property_keys (target_obj_p);
+    ecma_collection_t *result = ecma_op_object_own_property_keys (target_obj_p, JERRY_PROPERTY_FILTER_ALL);
     JERRY_BLOCK_TAIL_CALL_OPTIMIZATION ();
     return result;
   }
@@ -1674,7 +1674,7 @@ ecma_proxy_object_own_property_keys (ecma_object_t *obj_p) /**< proxy object */
   }
 
   /* 11. */
-  ecma_collection_t *target_keys = ecma_op_object_own_property_keys (target_obj_p);
+  ecma_collection_t *target_keys = ecma_op_object_own_property_keys (target_obj_p, JERRY_PROPERTY_FILTER_ALL);
 
   if (target_keys == NULL)
   {

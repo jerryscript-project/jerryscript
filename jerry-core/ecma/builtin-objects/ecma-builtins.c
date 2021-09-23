@@ -1414,10 +1414,16 @@ ecma_builtin_native_handler_list_lazy_property_names (ecma_object_t *object_p, /
 void
 ecma_builtin_routine_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in object */
                                                ecma_collection_t *prop_names_p,  /**< prop name collection */
-                                               ecma_property_counter_t *prop_counter_p)  /**< prop counter */
+                                               ecma_property_counter_t *prop_counter_p, /**< property counters */
+                                               jerry_property_filter_t filter) /**< name filters */
 {
   JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
   JERRY_ASSERT (ecma_builtin_function_is_routine (object_p));
+
+  if (filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS)
+  {
+    return;
+  }
 
 #if JERRY_ESNEXT
   ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
@@ -1456,7 +1462,8 @@ ecma_builtin_routine_list_lazy_property_names (ecma_object_t *object_p, /**< a b
 void
 ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in object */
                                        ecma_collection_t *prop_names_p, /**< prop name collection */
-                                       ecma_property_counter_t *prop_counter_p)  /**< prop counter */
+                                       ecma_property_counter_t *prop_counter_p, /**< property counters */
+                                       jerry_property_filter_t filter) /**< name filters */
 {
   JERRY_ASSERT (ecma_get_object_type (object_p) != ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION
                 || !ecma_builtin_function_is_routine (object_p));
@@ -1477,57 +1484,91 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
 
   JERRY_ASSERT (builtin_id < ECMA_BUILTIN_ID__COUNT);
 
-  const ecma_builtin_property_descriptor_t *curr_property_p = ecma_builtin_property_list_references[builtin_id];
-
-  uint32_t index = 0;
-  uint8_t bitset = built_in_props_p->u2.instantiated_bitset[0];
-
 #if JERRY_BUILTIN_REALMS
   uint8_t *bitset_p = built_in_props_p->u2.instantiated_bitset + 1 + sizeof (ecma_value_t);
 #else /* !JERRY_BUILTIN_REALMS */
   uint8_t *bitset_p = built_in_props_p->u2.instantiated_bitset + 1;
 #endif /* JERRY_BUILTIN_REALMS */
 
-  while (curr_property_p->magic_string_id != LIT_MAGIC_STRING__COUNT)
-  {
-    if (index == 8)
-    {
-      bitset = *bitset_p++;
-      index = 0;
-    }
-
-    uint32_t bit_for_index = (uint32_t) 1u << index;
-
-    if (curr_property_p->magic_string_id > LIT_NON_INTERNAL_MAGIC_STRING__COUNT)
-    {
 #if JERRY_ESNEXT
-      if (LIT_IS_GLOBAL_SYMBOL (curr_property_p->magic_string_id))
-      {
-        ecma_string_t *name_p = ecma_op_get_global_symbol (curr_property_p->magic_string_id);
+  uint8_t *symbol_bitset_p = bitset_p;
+  bool has_symbol = true;
+#endif /* JERRY_BUILTIN_REALMS */
 
-        if (!(bitset & bit_for_index))
+  if (!(filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS))
+  {
+    const ecma_builtin_property_descriptor_t *curr_property_p = ecma_builtin_property_list_references[builtin_id];
+    uint8_t bitset = built_in_props_p->u2.instantiated_bitset[0];
+    uint32_t index = 0;
+
+#if JERRY_ESNEXT
+    has_symbol = false;
+#endif /* JERRY_BUILTIN_REALMS */
+
+    while (curr_property_p->magic_string_id != LIT_MAGIC_STRING__COUNT)
+    {
+      if (index == 8)
+      {
+        bitset = *bitset_p++;
+        index = 0;
+      }
+
+      uint32_t bit_for_index = (uint32_t) 1u << index;
+
+      if (!(bitset & bit_for_index))
+      {
+#if JERRY_ESNEXT
+        if (JERRY_LIKELY (curr_property_p->magic_string_id < LIT_NON_INTERNAL_MAGIC_STRING__COUNT))
         {
-          ecma_value_t name = ecma_make_symbol_value (name_p);
+#endif /* JERRY_ESNEXT */
+          ecma_value_t name = ecma_make_magic_string_value ((lit_magic_string_id_t) curr_property_p->magic_string_id);
           ecma_collection_push_back (prop_names_p, name);
-          prop_counter_p->symbol_named_props++;
+          prop_counter_p->string_named_props++;
+#if JERRY_ESNEXT
         }
         else
         {
-          ecma_deref_ecma_string (name_p);
+          JERRY_ASSERT (LIT_IS_GLOBAL_SYMBOL (curr_property_p->magic_string_id));
+          has_symbol = true;
         }
-      }
 #endif /* JERRY_ESNEXT */
-    }
-    else if (!(bitset & bit_for_index))
-    {
-      ecma_value_t name = ecma_make_magic_string_value ((lit_magic_string_id_t) curr_property_p->magic_string_id);
-      ecma_collection_push_back (prop_names_p, name);
-      prop_counter_p->string_named_props++;
-    }
+      }
 
-    curr_property_p++;
-    index++;
+      curr_property_p++;
+      index++;
+    }
   }
+
+#if JERRY_ESNEXT
+  if (has_symbol && !(filter & JERRY_PROPERTY_FILTER_EXLCUDE_SYMBOLS))
+  {
+    const ecma_builtin_property_descriptor_t *curr_property_p = ecma_builtin_property_list_references[builtin_id];
+    uint8_t bitset = built_in_props_p->u2.instantiated_bitset[0];
+    uint32_t index = 0;
+
+    while (curr_property_p->magic_string_id != LIT_MAGIC_STRING__COUNT)
+    {
+      if (index == 8)
+      {
+        bitset = *symbol_bitset_p++;
+        index = 0;
+      }
+
+      uint32_t bit_for_index = (uint32_t) 1u << index;
+
+      if (curr_property_p->magic_string_id > LIT_NON_INTERNAL_MAGIC_STRING__COUNT
+          && !(bitset & bit_for_index))
+      {
+        ecma_string_t *name_p = ecma_op_get_global_symbol (curr_property_p->magic_string_id);
+        ecma_collection_push_back (prop_names_p, ecma_make_symbol_value (name_p));
+        prop_counter_p->symbol_named_props++;
+      }
+
+      curr_property_p++;
+      index++;
+    }
+  }
+#endif /* JERRY_ESNEXT */
 } /* ecma_builtin_list_lazy_property_names */
 
 /**

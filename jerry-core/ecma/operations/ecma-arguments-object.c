@@ -401,7 +401,8 @@ ecma_op_arguments_delete_built_in_property (ecma_object_t *object_p, /**< the ob
 void
 ecma_op_arguments_object_list_lazy_property_names (ecma_object_t *obj_p, /**< arguments object */
                                                    ecma_collection_t *prop_names_p, /**< prop name collection */
-                                                   ecma_property_counter_t *prop_counter_p) /**< property counters */
+                                                   ecma_property_counter_t *prop_counter_p, /**< property counters */
+                                                   jerry_property_filter_t filter) /**< property name filter options */
 {
   JERRY_ASSERT (ecma_object_class_is (obj_p, ECMA_OBJECT_CLASS_ARGUMENTS));
 
@@ -410,45 +411,52 @@ ecma_op_arguments_object_list_lazy_property_names (ecma_object_t *obj_p, /**< ar
   uint32_t arguments_number = arguments_p->header.u.cls.u3.arguments_number;
   uint8_t flags = arguments_p->header.u.cls.u1.arguments_flags;
 
-  ecma_value_t *argv_p = (ecma_value_t *) (arguments_p + 1);
-
-  if (flags & ECMA_ARGUMENTS_OBJECT_MAPPED)
+  if (!(filter & JERRY_PROPERTY_FILTER_EXLCUDE_INTEGER_INDICES))
   {
-    argv_p = (ecma_value_t *) (((ecma_mapped_arguments_t *) obj_p) + 1);
-  }
+    ecma_value_t *argv_p = (ecma_value_t *) (arguments_p + 1);
 
-  for (uint32_t index = 0; index < arguments_number; index++)
-  {
-    if (!ecma_is_value_empty (argv_p[index]))
+    if (flags & ECMA_ARGUMENTS_OBJECT_MAPPED)
     {
-      ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
-      ecma_collection_push_back (prop_names_p, ecma_make_string_value (index_string_p));
-      prop_counter_p->array_index_named_props++;
+      argv_p = (ecma_value_t *) (((ecma_mapped_arguments_t *) obj_p) + 1);
+    }
+
+    for (uint32_t index = 0; index < arguments_number; index++)
+    {
+      if (!ecma_is_value_empty (argv_p[index]))
+      {
+        ecma_string_t *index_string_p = ecma_new_ecma_string_from_uint32 (index);
+        ecma_collection_push_back (prop_names_p, ecma_make_string_value (index_string_p));
+        prop_counter_p->array_index_named_props++;
+      }
     }
   }
 
-  if (!(flags & ECMA_ARGUMENTS_OBJECT_LENGTH_INITIALIZED))
+  if (!(filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS))
   {
-    ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
-    prop_counter_p->string_named_props++;
-  }
+    if (!(flags & ECMA_ARGUMENTS_OBJECT_LENGTH_INITIALIZED))
+    {
+      ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
+      prop_counter_p->string_named_props++;
+    }
 
-  if (!(flags & ECMA_ARGUMENTS_OBJECT_CALLEE_INITIALIZED))
-  {
-    ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_CALLEE));
-    prop_counter_p->string_named_props++;
-  }
+    if (!(flags & ECMA_ARGUMENTS_OBJECT_CALLEE_INITIALIZED))
+    {
+      ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_CALLEE));
+      prop_counter_p->string_named_props++;
+    }
 
 #if !JERRY_ESNEXT
-  if (!(flags & ECMA_ARGUMENTS_OBJECT_MAPPED))
-  {
-    ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_CALLER));
-    prop_counter_p->string_named_props++;
-  }
+    if (!(flags & ECMA_ARGUMENTS_OBJECT_MAPPED))
+    {
+      ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_CALLER));
+      prop_counter_p->string_named_props++;
+    }
 #endif /* !JERRY_ESNEXT */
+  }
 
 #if JERRY_ESNEXT
-  if (!(flags & ECMA_ARGUMENTS_OBJECT_ITERATOR_INITIALIZED))
+  if (!(filter & JERRY_PROPERTY_FILTER_EXLCUDE_SYMBOLS)
+      && !(flags & ECMA_ARGUMENTS_OBJECT_ITERATOR_INITIALIZED))
   {
     ecma_string_t *symbol_p = ecma_op_get_global_symbol (LIT_GLOBAL_SYMBOL_ITERATOR);
     ecma_collection_push_back (prop_names_p, ecma_make_symbol_value (symbol_p));

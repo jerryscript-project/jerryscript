@@ -1083,8 +1083,7 @@ ecma_op_to_index (ecma_value_t value, /**< ecma value */
  */
 ecma_collection_t *
 ecma_op_create_list_from_array_like (ecma_value_t arr,  /**< array value */
-                                     bool prop_names_only) /**< true - accept only property names
-                                                                false - otherwise */
+                                     uint32_t options) /**< from array like and property name filter flags */
 {
   /* 1. */
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (arr));
@@ -1095,10 +1094,12 @@ ecma_op_create_list_from_array_like (ecma_value_t arr,  /**< array value */
     ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_argument_is_not_an_object));
     return NULL;
   }
+
   ecma_object_t *obj_p = ecma_get_object_from_value (arr);
 
   /* 4. 5. */
   ecma_length_t len;
+
   if (ECMA_IS_VALUE_ERROR (ecma_op_object_get_length (obj_p, &len)))
   {
     return NULL;
@@ -1107,18 +1108,69 @@ ecma_op_create_list_from_array_like (ecma_value_t arr,  /**< array value */
   /* 6. */
   ecma_collection_t *list_ptr = ecma_new_collection ();
 
+  if (!(options & ECMA_FROM_ARRAY_LIKE_ONLY_PROP_NAMES))
+  {
+    /* 7. 8. */
+    for (ecma_length_t idx = 0; idx < len; idx++)
+    {
+      ecma_value_t next = ecma_op_object_get_by_index (obj_p, idx);
+
+      if (ECMA_IS_VALUE_ERROR (next))
+      {
+        ecma_collection_free (list_ptr);
+        return NULL;
+      }
+
+      ecma_collection_push_back (list_ptr, next);
+    }
+
+    /* 9. */
+    return list_ptr;
+  }
+
   /* 7. 8. */
   for (ecma_length_t idx = 0; idx < len; idx++)
   {
     ecma_value_t next = ecma_op_object_get_by_index (obj_p, idx);
+
     if (ECMA_IS_VALUE_ERROR (next))
     {
       ecma_collection_free (list_ptr);
       return NULL;
     }
 
-    if (prop_names_only
-        && !ecma_is_value_prop_name (next))
+    if (ecma_is_value_string (next))
+    {
+      jerry_property_filter_t non_symbol_mask = (JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS
+                                                 | JERRY_PROPERTY_FILTER_EXLCUDE_INTEGER_INDICES);
+
+      if (options & non_symbol_mask)
+      {
+        if ((options & non_symbol_mask) == non_symbol_mask)
+        {
+          ecma_free_value (next);
+          continue;
+        }
+
+        uint32_t index = ecma_string_get_array_index (ecma_get_string_from_value (next));
+
+        if ((index != ECMA_STRING_NOT_ARRAY_INDEX && (options & JERRY_PROPERTY_FILTER_EXLCUDE_INTEGER_INDICES))
+            || (index == ECMA_STRING_NOT_ARRAY_INDEX && (options & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS)))
+        {
+          ecma_free_value (next);
+          continue;
+        }
+      }
+    }
+    else if (ecma_is_value_symbol (next))
+    {
+      if (options & JERRY_PROPERTY_FILTER_EXLCUDE_SYMBOLS)
+      {
+        ecma_free_value (next);
+        continue;
+      }
+    }
+    else
     {
       ecma_free_value (next);
       ecma_collection_free (list_ptr);
@@ -1132,6 +1184,7 @@ ecma_op_create_list_from_array_like (ecma_value_t arr,  /**< array value */
   /* 9. */
   return list_ptr;
 } /* ecma_op_create_list_from_array_like */
+
 #endif /* JERRY_ESNEXT */
 
 /**

@@ -97,7 +97,7 @@ ecma_object_t *ecma_op_object_get_prototype_of (ecma_object_t *obj_p);
 ecma_value_t ecma_op_object_is_prototype_of (ecma_object_t *base_p, ecma_object_t *target_p);
 ecma_collection_t * ecma_op_object_get_enumerable_property_names (ecma_object_t *obj_p,
                                                                   ecma_enumerable_property_names_options_t option);
-ecma_collection_t *ecma_op_object_own_property_keys (ecma_object_t *obj_p);
+ecma_collection_t *ecma_op_object_own_property_keys (ecma_object_t *obj_p, jerry_property_filter_t filter);
 ecma_collection_t *ecma_op_object_enumerate (ecma_object_t *obj_p);
 
 lit_magic_string_id_t ecma_object_get_class_name (ecma_object_t *obj_p);

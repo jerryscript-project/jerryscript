@@ -47,6 +47,23 @@ typedef enum
   ECMA_TO_NUMERIC_ALLOW_BIGINT = (1 << 0), /**< allow BigInt values (ignored if BigInts are disabled) */
 } ecma_to_numeric_options_t;
 
+#if JERRY_ESNEXT
+
+/**
+ * Option bits for ecma_op_create_list_from_array_like.
+ */
+typedef enum
+{
+  ECMA_FROM_ARRAY_LIKE_ANY = 0, /**< copy all items of the array */
+  ECMA_FROM_ARRAY_LIKE_ONLY_PROP_NAMES = (1 << 0), /**< only property names allowed */
+  /* Further options: */
+  /* JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS */
+  /* JERRY_PROPERTY_FILTER_EXLCUDE_SYMBOLS */
+  /* JERRY_PROPERTY_FILTER_EXLCUDE_INTEGER_INDICES */
+} ecma_from_array_like_options_t;
+
+#endif /* JERRY_ESNEXT */
+
 bool ecma_op_require_object_coercible (ecma_value_t value);
 bool ecma_op_same_value (ecma_value_t x, ecma_value_t y);
 #if JERRY_BUILTIN_CONTAINER
@@ -64,7 +81,7 @@ ecma_value_t ecma_op_to_integer (ecma_value_t value, ecma_number_t *number_p);
 ecma_value_t ecma_op_to_length (ecma_value_t value, ecma_length_t *length);
 #if JERRY_ESNEXT
 ecma_value_t ecma_op_to_index (ecma_value_t value, ecma_number_t *index);
-ecma_collection_t *ecma_op_create_list_from_array_like (ecma_value_t arr, bool prop_names_only);
+ecma_collection_t *ecma_op_create_list_from_array_like (ecma_value_t arr, uint32_t options);
 #endif /* JERRY_ESNEXT */
 
 ecma_object_t *ecma_op_from_property_descriptor (const ecma_property_descriptor_t *src_prop_desc_p);

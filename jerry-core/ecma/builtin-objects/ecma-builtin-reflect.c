@@ -163,7 +163,7 @@ ecma_builtin_reflect_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
     ecma_object_t *target_p = ecma_get_object_from_value (arguments_list[0]);
 
     /* 2. */
-    ecma_collection_t *prop_names = ecma_op_object_own_property_keys (target_p);
+    ecma_collection_t *prop_names = ecma_op_object_own_property_keys (target_p, JERRY_PROPERTY_FILTER_ALL);
 
 #if JERRY_BUILTIN_PROXY
     if (prop_names == NULL)
@@ -206,7 +206,7 @@ ecma_builtin_reflect_dispatch_routine (uint8_t builtin_routine_id, /**< built-in
       return ecma_raise_type_error (ECMA_ERR_MSG ("Reflect.construct expects an object as second argument"));
     }
 
-    ecma_collection_t *coll_p = ecma_op_create_list_from_array_like (arguments_list[1], false);
+    ecma_collection_t *coll_p = ecma_op_create_list_from_array_like (arguments_list[1], ECMA_FROM_ARRAY_LIKE_ANY);
 
     if (coll_p == NULL)
     {

@@ -336,7 +336,7 @@ ecma_builtin_object_set_integrity_level (ecma_object_t *obj_p, /**< object */
   }
 
   /* 6. */
-  ecma_collection_t *props_p = ecma_op_object_own_property_keys (obj_p);
+  ecma_collection_t *props_p = ecma_op_object_own_property_keys (obj_p, JERRY_PROPERTY_FILTER_ALL);
 
 #if JERRY_BUILTIN_PROXY
   if (props_p == NULL)
@@ -596,7 +596,7 @@ ecma_builtin_object_test_integrity_level (ecma_object_t *obj_p, /**< routine's a
   ecma_value_t ret_value = ECMA_VALUE_TRUE;
 
   /* 2. */
-  ecma_collection_t *props_p = ecma_op_object_own_property_keys (obj_p);
+  ecma_collection_t *props_p = ecma_op_object_own_property_keys (obj_p, JERRY_PROPERTY_FILTER_ALL);
 
 #if JERRY_BUILTIN_PROXY
   if (props_p == NULL)
@@ -750,7 +750,7 @@ static ecma_value_t
 ecma_builtin_object_object_get_own_property_descriptors (ecma_object_t *obj_p) /**< routine's first argument */
 {
   /* 2 */
-  ecma_collection_t *prop_names_p = ecma_op_object_own_property_keys (obj_p);
+  ecma_collection_t *prop_names_p = ecma_op_object_own_property_keys (obj_p, JERRY_PROPERTY_FILTER_ALL);
 
 #if JERRY_BUILTIN_PROXY
   if (prop_names_p == NULL)
@@ -831,7 +831,7 @@ ecma_builtin_object_object_define_properties (ecma_object_t *obj_p, /**< routine
   ecma_object_t *props_p = ecma_get_object_from_value (props);
 
   /* 3. */
-  ecma_collection_t *prop_names_p = ecma_op_object_own_property_keys (props_p);
+  ecma_collection_t *prop_names_p = ecma_op_object_own_property_keys (props_p, JERRY_PROPERTY_FILTER_ALL);
   ecma_value_t ret_value = ECMA_VALUE_ERROR;
 
 #if JERRY_BUILTIN_PROXY
@@ -1073,7 +1073,7 @@ ecma_builtin_object_object_assign (ecma_object_t *target_p, /**< target object *
     ecma_object_t *from_obj_p = ecma_get_object_from_value (from_value);
 
     /* 5.b.iii */
-    ecma_collection_t *props_p = ecma_op_object_own_property_keys (from_obj_p);
+    ecma_collection_t *props_p = ecma_op_object_own_property_keys (from_obj_p, JERRY_PROPERTY_FILTER_ALL);
 
 #if JERRY_BUILTIN_PROXY
     if (props_p == NULL)
@@ -1327,41 +1327,27 @@ ecma_op_object_get_own_property_keys (ecma_value_t this_arg, /**< this argument 
   ecma_object_t *obj_p = ecma_get_object_from_value (object);
 
   /* 2. */
-  ecma_collection_t *props_p = ecma_op_object_own_property_keys (obj_p);
+  jerry_property_filter_t filter = JERRY_PROPERTY_FILTER_EXLCUDE_SYMBOLS;
+
+  if (type == ECMA_OBJECT_ROUTINE_GET_OWN_PROPERTY_SYMBOLS)
+  {
+    filter = (JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS
+              | JERRY_PROPERTY_FILTER_EXLCUDE_INTEGER_INDICES);
+  }
+
+  ecma_collection_t *props_p = ecma_op_object_own_property_keys (obj_p, filter);
+  ecma_deref_object (obj_p);
 
   if (props_p == NULL)
   {
-    ecma_deref_object (obj_p);
     return ECMA_VALUE_ERROR;
   }
 
-  /* 3. */
-  ecma_collection_t *name_list_p = ecma_new_collection ();
-
-  /* 4. */
-  for (uint32_t i = 0; i < props_p->item_count; i++)
-  {
-    ecma_value_t prop_name = props_p->buffer_p[i];
-    ecma_string_t *name_p = ecma_get_prop_name_from_value (prop_name);
-
-    if ((ecma_prop_name_is_symbol (name_p) && type == ECMA_OBJECT_ROUTINE_GET_OWN_PROPERTY_SYMBOLS)
-        || (ecma_is_value_string (prop_name) && type == ECMA_OBJECT_ROUTINE_GET_OWN_PROPERTY_NAMES))
-    {
-      ecma_ref_ecma_string (name_p);
-      ecma_collection_push_back (name_list_p, prop_name);
-    }
-  }
-
-  ecma_value_t result_array = ecma_op_new_array_object_from_collection (name_list_p, false);
-
-  ecma_deref_object (obj_p);
-  ecma_collection_free (props_p);
-
-  return result_array;
+  return ecma_op_new_array_object_from_collection (props_p, false);
 #else /* !JERRY_ESNEXT */
   JERRY_UNUSED (type);
   ecma_object_t *obj_p = ecma_get_object_from_value (this_arg);
-  ecma_collection_t *props_p = ecma_op_object_own_property_keys (obj_p);
+  ecma_collection_t *props_p = ecma_op_object_own_property_keys (obj_p, JERRY_PROPERTY_FILTER_ALL);
   return ecma_op_new_array_object_from_collection (props_p, false);
 #endif /* JERRY_ESNEXT */
 } /* ecma_op_object_get_own_property_keys */

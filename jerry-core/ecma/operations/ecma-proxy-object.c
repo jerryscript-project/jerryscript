@@ -1604,7 +1604,8 @@ ecma_proxy_check_invariants_for_own_prop_keys (ecma_collection_t *trap_result,
  *         pointer to a newly allocated list of property names - otherwise
  */
 ecma_collection_t *
-ecma_proxy_object_own_property_keys (ecma_object_t *obj_p) /**< proxy object */
+ecma_proxy_object_own_property_keys (ecma_object_t *obj_p, /**< proxy object */
+                                     jerry_property_filter_t filter) /**< name filters */
 {
   JERRY_ASSERT (ECMA_OBJECT_IS_PROXY (obj_p));
   ECMA_CHECK_STACK_USAGE_RETURN (NULL);
@@ -1628,7 +1629,7 @@ ecma_proxy_object_own_property_keys (ecma_object_t *obj_p) /**< proxy object */
   /* 6. */
   if (ecma_is_value_undefined (trap))
   {
-    ecma_collection_t *result = ecma_op_object_own_property_keys (target_obj_p);
+    ecma_collection_t *result = ecma_op_object_own_property_keys (target_obj_p, filter);
     JERRY_BLOCK_TAIL_CALL_OPTIMIZATION ();
     return result;
   }
@@ -1646,7 +1647,8 @@ ecma_proxy_object_own_property_keys (ecma_object_t *obj_p) /**< proxy object */
   }
 
   /* 8. */
-  ecma_collection_t *trap_result = ecma_op_create_list_from_array_like (trap_result_array, true);
+  uint32_t options = ECMA_FROM_ARRAY_LIKE_ONLY_PROP_NAMES;
+  ecma_collection_t *trap_result = ecma_op_create_list_from_array_like (trap_result_array, options | filter);
 
   ecma_free_value (trap_result_array);
 
@@ -1674,7 +1676,7 @@ ecma_proxy_object_own_property_keys (ecma_object_t *obj_p) /**< proxy object */
   }
 
   /* 11. */
-  ecma_collection_t *target_keys = ecma_op_object_own_property_keys (target_obj_p);
+  ecma_collection_t *target_keys = ecma_op_object_own_property_keys (target_obj_p, filter);
 
   if (target_keys == NULL)
   {

@@ -92,7 +92,7 @@ ecma_proxy_object_delete_property (ecma_object_t *obj_p,
                                    bool is_strict);
 
 ecma_collection_t *
-ecma_proxy_object_own_property_keys (ecma_object_t *obj_p);
+ecma_proxy_object_own_property_keys (ecma_object_t *obj_p, jerry_property_filter_t filter);
 
 ecma_value_t
 ecma_proxy_object_call (ecma_object_t *obj_p,

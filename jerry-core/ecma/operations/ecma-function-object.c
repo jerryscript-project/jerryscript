@@ -2162,8 +2162,14 @@ ecma_op_bound_function_delete_built_in_property (ecma_object_t *object_p, /**< o
 void
 ecma_op_function_list_lazy_property_names (ecma_object_t *object_p, /**< functionobject */
                                            ecma_collection_t *prop_names_p, /**< prop name collection */
-                                           ecma_property_counter_t *prop_counter_p)  /**< prop counter */
+                                           ecma_property_counter_t *prop_counter_p, /**< property counters */
+                                           jerry_property_filter_t filter) /**< property name filter options */
 {
+  if (filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS)
+  {
+    return;
+  }
+
   const ecma_compiled_code_t *bytecode_data_p;
   bytecode_data_p = ecma_op_function_get_compiled_code ((ecma_extended_object_t *) object_p);
 
@@ -2236,21 +2242,20 @@ ecma_op_function_list_lazy_property_names (ecma_object_t *object_p, /**< functio
 void
 ecma_op_external_function_list_lazy_property_names (ecma_object_t *object_p, /**< function object */
                                                     ecma_collection_t *prop_names_p, /**< prop name collection */
-                                                    ecma_property_counter_t *prop_counter_p)  /**< prop counter */
+                                                    ecma_property_counter_t *prop_counter_p, /**< property counters */
+                                                    jerry_property_filter_t filter) /**< property name
+                                                                                     *   filter options */
 {
-#if !JERRY_ESNEXT
   JERRY_UNUSED (object_p);
-#else /* JERRY_ESNEXT */
-  /* TODO: implicit class constructors need rework, and this code should be updated afterwards. */
-  ecma_property_t *property_p = ecma_find_named_property (object_p, ecma_get_magic_string (LIT_MAGIC_STRING_PROTOTYPE));
 
-  if (property_p == NULL || (*property_p & ECMA_PROPERTY_FLAG_BUILT_IN))
-#endif /* !JERRY_ESNEXT */
+  if (filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS)
   {
-    /* 'prototype' property is non-enumerable (ECMA-262 v5, 13.2.18) */
-    ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_PROTOTYPE));
-    prop_counter_p->string_named_props++;
+    return;
   }
+
+  /* 'prototype' property is non-enumerable (ECMA-262 v5, 13.2.18) */
+  ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_PROTOTYPE));
+  prop_counter_p->string_named_props++;
 } /* ecma_op_external_function_list_lazy_property_names */
 
 /**
@@ -2263,8 +2268,14 @@ ecma_op_external_function_list_lazy_property_names (ecma_object_t *object_p, /**
 void
 ecma_op_bound_function_list_lazy_property_names (ecma_object_t *object_p, /**< bound function object*/
                                                  ecma_collection_t *prop_names_p, /**< prop name collection */
-                                                 ecma_property_counter_t *prop_counter_p)  /**< prop counter */
+                                                 ecma_property_counter_t *prop_counter_p, /**< property counters */
+                                                 jerry_property_filter_t filter) /**< property name filter options */
 {
+  if (filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS)
+  {
+    return;
+  }
+
 #if JERRY_ESNEXT
   /* Unintialized 'length' property is non-enumerable (ECMA-262 v6, 19.2.4.1) */
   ecma_bound_function_t *bound_func_p = (ecma_bound_function_t *) object_p;

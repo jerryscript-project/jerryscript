@@ -96,7 +96,7 @@ uint32_t
 ecma_delete_fast_array_properties (ecma_object_t *object_p, uint32_t new_length);
 
 ecma_collection_t *
-ecma_fast_array_object_own_property_keys (ecma_object_t *object_p);
+ecma_fast_array_object_own_property_keys (ecma_object_t *object_p, jerry_property_filter_t filter);
 
 void
 ecma_fast_array_convert_to_normal (ecma_object_t *object_p);

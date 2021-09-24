@@ -26,8 +26,9 @@
 #include "ecma-comparison.h"
 #include "ecma-container-object.h"
 #include "ecma-dataview-object.h"
-#include "ecma-exceptions.h"
 #include "ecma-eval.h"
+#include "ecma-exceptions.h"
+#include "ecma-extended-info.h"
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-helpers.h"
@@ -5512,6 +5513,187 @@ jerry_get_user_value (const jerry_value_t value) /**< jerry api value */
 
   return ecma_copy_value (CBC_SCRIPT_GET_USER_VALUE (script_p));
 } /* jerry_get_user_value */
+
+/**
+ * Returns a newly created source info structure corresponding to the passed script/module/function.
+ *
+ * @return a newly created source info, if at least one field is available, NULL otherwise
+ */
+jerry_source_info_t *
+jerry_get_source_info (const jerry_value_t value) /**< jerry api value */
+{
+  jerry_assert_api_available ();
+
+#if JERRY_FUNCTION_TO_STRING
+  if (!ecma_is_value_object (value))
+  {
+    return NULL;
+  }
+
+  jerry_source_info_t source_info;
+
+  source_info.enabled_fields = 0;
+  source_info.source_code = ECMA_VALUE_UNDEFINED;
+  source_info.function_arguments = ECMA_VALUE_UNDEFINED;
+  source_info.source_range_start = 0;
+  source_info.source_range_length = 0;
+
+  ecma_object_t *object_p = ecma_get_object_from_value (value);
+  cbc_script_t *script_p = NULL;
+
+  while (true)
+  {
+    switch (ecma_get_object_type (object_p))
+    {
+      case ECMA_OBJECT_TYPE_CLASS:
+      {
+        ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+        const ecma_compiled_code_t *bytecode_p = NULL;
+
+        if (ext_object_p->u.cls.type == ECMA_OBJECT_CLASS_SCRIPT)
+        {
+          bytecode_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t,
+                                                        ext_object_p->u.cls.u3.value);
+        }
+#if JERRY_MODULE_SYSTEM
+        else if (ext_object_p->u.cls.type == ECMA_OBJECT_CLASS_MODULE)
+        {
+          ecma_module_t *module_p = (ecma_module_t *) object_p;
+
+          if (!(module_p->header.u.cls.u2.module_flags & ECMA_MODULE_IS_NATIVE))
+          {
+            bytecode_p = module_p->u.compiled_code_p;
+          }
+        }
+#endif /* JERRY_MODULE_SYSTEM */
+
+        if (bytecode_p == NULL)
+        {
+          return NULL;
+        }
+
+        ecma_value_t script_value = ((cbc_uint8_arguments_t *) bytecode_p)->script_value;
+        script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
+        break;
+      }
+      case ECMA_OBJECT_TYPE_FUNCTION:
+      {
+        const ecma_compiled_code_t *bytecode_p;
+        bytecode_p = ecma_op_function_get_compiled_code ((ecma_extended_object_t *) object_p);
+
+        ecma_value_t script_value = ((cbc_uint8_arguments_t *) bytecode_p)->script_value;
+        script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
+
+        if (bytecode_p->status_flags & CBC_CODE_FLAGS_HAS_EXTENDED_INFO)
+        {
+          uint8_t *extended_info_p = ecma_compiled_code_resolve_extended_info (bytecode_p);
+          uint8_t extended_info = *extended_info_p;
+
+#if JERRY_ESNEXT
+          if (extended_info & CBC_EXTENDED_CODE_FLAGS_HAS_ARGUMENT_LENGTH)
+          {
+            ecma_extended_info_decode_vlq (&extended_info_p);
+          }
+#endif /* JERRY_ESNEXT */
+
+          if (extended_info & CBC_EXTENDED_CODE_FLAGS_SOURCE_CODE_IN_ARGUMENTS)
+          {
+            ecma_value_t function_arguments = CBC_SCRIPT_GET_FUNCTION_ARGUMENTS (script_p, script_p->refs_and_type);
+
+            ecma_ref_ecma_string (ecma_get_string_from_value (function_arguments));
+
+            source_info.enabled_fields |= JERRY_SOURCE_INFO_HAS_SOURCE_CODE;
+            source_info.source_code = function_arguments;
+            script_p = NULL;
+          }
+
+          source_info.enabled_fields |= JERRY_SOURCE_INFO_HAS_SOURCE_RANGE;
+          source_info.source_range_start = ecma_extended_info_decode_vlq (&extended_info_p);
+          source_info.source_range_length = ecma_extended_info_decode_vlq (&extended_info_p);
+        }
+
+        JERRY_ASSERT (script_p != NULL || (source_info.enabled_fields & JERRY_SOURCE_INFO_HAS_SOURCE_CODE));
+
+        if (source_info.enabled_fields == 0 && (script_p->refs_and_type & CBC_SCRIPT_HAS_FUNCTION_ARGUMENTS))
+        {
+          ecma_value_t function_arguments = CBC_SCRIPT_GET_FUNCTION_ARGUMENTS (script_p, script_p->refs_and_type);
+
+          ecma_ref_ecma_string (ecma_get_string_from_value (function_arguments));
+
+          source_info.enabled_fields |= JERRY_SOURCE_INFO_HAS_FUNCTION_ARGUMENTS;
+          source_info.function_arguments = function_arguments;
+        }
+        break;
+      }
+      case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+      {
+        ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+
+        object_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t,
+                                                               ext_object_p->u.bound_function.target_function);
+        continue;
+      }
+#if JERRY_ESNEXT
+      case ECMA_OBJECT_TYPE_CONSTRUCTOR_FUNCTION:
+      {
+        ecma_value_t script_value = ((ecma_extended_object_t *) object_p)->u.constructor_function.script_value;
+        script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
+        break;
+      }
+#endif /* JERRY_ESNEXT */
+      default:
+      {
+        return NULL;
+      }
+    }
+
+    break;
+  }
+
+  jerry_source_info_t *source_info_p = jmem_heap_alloc_block_null_on_error (sizeof (jerry_source_info_t));
+
+  if (source_info_p == NULL)
+  {
+    return NULL;
+  }
+
+  if (script_p != NULL)
+  {
+    ecma_ref_ecma_string (ecma_get_string_from_value (script_p->source_code));
+
+    source_info.enabled_fields |= JERRY_SOURCE_INFO_HAS_SOURCE_CODE;
+    source_info.source_code = script_p->source_code;
+  }
+
+  JERRY_ASSERT (source_info.enabled_fields != 0);
+
+  *source_info_p = source_info;
+  return source_info_p;
+#else /* !JERRY_FUNCTION_TO_STRING */
+  JERRY_UNUSED (value);
+  return NULL;
+#endif /* JERRY_FUNCTION_TO_STRING */
+} /* jerry_get_source_info */
+
+/**
+ * Frees the the source info structure returned by jerry_get_source_info.
+ */
+void
+jerry_free_source_info (jerry_source_info_t *source_info_p) /**< source info block */
+{
+  jerry_assert_api_available ();
+
+#if JERRY_FUNCTION_TO_STRING
+  if (source_info_p != NULL)
+  {
+    ecma_free_value (source_info_p->source_code);
+    ecma_free_value (source_info_p->function_arguments);
+    jmem_heap_free_block (source_info_p, sizeof (jerry_source_info_t));
+  }
+#else /* !JERRY_FUNCTION_TO_STRING */
+  JERRY_UNUSED (source_info_p);
+#endif /* JERRY_FUNCTION_TO_STRING */
+} /* jerry_free_source_info */
 
 /**
  * Replaces the currently active realm with another realm.

@@ -790,6 +790,33 @@ typedef enum
 } jerry_container_operation_t;
 
 /**
+ * Miscellaneous types.
+ */
+
+/**
+ * Enabled fields of jerry_source_info_t.
+ */
+typedef enum
+{
+  JERRY_SOURCE_INFO_HAS_SOURCE_CODE = (1 << 0), /**< source_code field is valid */
+  JERRY_SOURCE_INFO_HAS_FUNCTION_ARGUMENTS = (1 << 1), /**< function_arguments field is valid */
+  JERRY_SOURCE_INFO_HAS_SOURCE_RANGE = (1 << 2), /**< both source_range_start and source_range_length
+                                                  *   fields are valid */
+} jerry_source_info_enabled_fields_t;
+
+/**
+ * Source related information of a script/module/function.
+ */
+typedef struct
+{
+  uint32_t enabled_fields; /**< combination of jerry_source_info_enabled_fields_t values */
+  jerry_value_t source_code; /**< script source code or function body */
+  jerry_value_t function_arguments; /**< function arguments */
+  uint32_t source_range_start; /**< start position of the function in the source code */
+  uint32_t source_range_length; /**< source length of the function in the source code */
+} jerry_source_info_t;
+
+/**
  * @}
  */
 

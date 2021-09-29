@@ -3743,8 +3743,15 @@ lexer_init_line_info (parser_context_t *context_p) /**< context */
 
   if (options_p != NULL && (options_p->options & JERRY_PARSE_HAS_START))
   {
-    context_p->line = (options_p->start_line > 0) ? options_p->start_line : 1;
-    context_p->column = (options_p->start_column > 0) ? options_p->start_column : 1;
+    if (options_p->start_line > 0)
+    {
+      context_p->line = options_p->start_line;
+    }
+
+    if (options_p->start_column > 0)
+    {
+      context_p->column = options_p->start_column;
+    }
   }
 } /* lexer_init_line_info */
 

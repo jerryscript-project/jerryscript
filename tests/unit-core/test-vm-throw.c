@@ -73,6 +73,7 @@ vm_throw_callback (const jerry_value_t error_value, /**< captured error */
       break;
     }
     case 5:
+    case 6:
     {
       TEST_ASSERT (counter >= 1 && counter <= 2);
       TEST_ASSERT (jerry_value_is_false (error_value));
@@ -80,7 +81,7 @@ vm_throw_callback (const jerry_value_t error_value, /**< captured error */
     }
     default:
     {
-      TEST_ASSERT (mode == 6 || mode == 7);
+      TEST_ASSERT (mode == 8 || mode == 9);
       TEST_ASSERT (counter == 1);
       TEST_ASSERT (jerry_value_is_true (error_value));
       break;
@@ -97,8 +98,27 @@ native_handler (const jerry_call_info_t *call_info_p, /**< call info */
   (void) args_p;
   TEST_ASSERT (args_count == 0);
 
+  if (mode == 7)
+  {
+    jerry_value_t result = jerry_create_error (JERRY_ERROR_COMMON, (const jerry_char_t *) "Error!");
+
+    TEST_ASSERT (!jerry_error_is_throw_captured (result));
+    jerry_error_set_throw_capture (result, false);
+    TEST_ASSERT (jerry_error_is_throw_captured (result));
+    return result;
+  }
+
   jerry_char_t source[] = TEST_STRING_LITERAL ("throw false");
-  return jerry_eval (source, sizeof (source) - 1, JERRY_PARSE_NO_OPTS);
+  jerry_value_t result = jerry_eval (source, sizeof (source) - 1, JERRY_PARSE_NO_OPTS);
+
+  TEST_ASSERT (jerry_error_is_throw_captured (result));
+
+  if (mode == 6)
+  {
+    jerry_error_set_throw_capture (result, true);
+    TEST_ASSERT (!jerry_error_is_throw_captured (result));
+  }
+  return result;
 } /* native_handler */
 
 static void
@@ -177,22 +197,40 @@ main (void)
   counter = 0;
   do_eval (TEST_STRING_LITERAL ("native()\n"),
            true);
+  TEST_ASSERT (counter == 1);
+
+  mode = 6;
+  counter = 0;
+  do_eval (TEST_STRING_LITERAL ("native()\n"),
+           true);
   TEST_ASSERT (counter == 2);
 
+  mode = 7;
+  counter = 0;
+  do_eval (TEST_STRING_LITERAL ("native()\n"),
+           true);
+  TEST_ASSERT (counter == 0);
+
   /* Built-in functions should not trigger the call twice: */
-  mode = 6;
+  mode = 8;
   counter = 0;
   do_eval (TEST_STRING_LITERAL ("function f() { eval('eval(\\'throw true\\')') }\n"
                                 "f()\n"),
            true);
   TEST_ASSERT (counter == 1);
 
-  mode = 7;
+  mode = 9;
   counter = 0;
   do_eval (TEST_STRING_LITERAL ("function f() { [1].map(function() { throw true }) }\n"
                                 "f()\n"),
            true);
   TEST_ASSERT (counter == 1);
+
+  jerry_value_t value = jerry_create_object ();
+  TEST_ASSERT (!jerry_error_is_throw_captured (value));
+  jerry_error_set_throw_capture (value, false);
+  TEST_ASSERT (!jerry_error_is_throw_captured (value));
+  jerry_release_value (value);
 
   jerry_cleanup ();
   return 0;

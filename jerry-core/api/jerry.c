@@ -1167,7 +1167,7 @@ jerry_value_is_abort (const jerry_value_t value) /**< api value */
 
   ecma_extended_primitive_t *error_ref_p = ecma_get_extended_primitive_from_value (value);
 
-  return ECMA_EXTENDED_PRIMITIVE_GET_TYPE (error_ref_p) == ECMA_EXTENDED_PRIMITIVE_ABORT;
+  return (error_ref_p->refs_and_type & ECMA_ERROR_API_ABORT) != 0;
 } /* jerry_value_is_abort */
 
 /**
@@ -1970,7 +1970,7 @@ jerry_create_abort_from_value (jerry_value_t value, /**< api value */
     value = ecma_copy_value (value);
   }
 
-  return ecma_create_error_reference (value, false);
+  return ecma_create_error_reference (value, ECMA_ERROR_API_ABORT);
 } /* jerry_create_abort_from_value */
 
 /**
@@ -2005,7 +2005,7 @@ jerry_create_error_from_value (jerry_value_t value, /**< api value */
     value = ecma_copy_value (value);
   }
 
-  return ecma_create_error_reference (value, true);
+  return ecma_create_error_reference (value, 0);
 } /* jerry_create_error_from_value */
 
 /**
@@ -2052,6 +2052,78 @@ jerry_set_error_object_created_callback (jerry_error_object_created_callback_t c
   JERRY_CONTEXT (error_object_created_callback_p) = callback;
   JERRY_CONTEXT (error_object_created_callback_user_p) = user_p;
 } /* jerry_set_error_object_created_callback */
+
+/**
+ * When JERRY_VM_THROW is enabled, the callback passed to this
+ * function is called when an error is thrown in ECMAScript code.
+ */
+void jerry_set_vm_throw_callback (jerry_vm_throw_callback_t throw_cb, /**< callback which is called on throws */
+                                  void *user_p) /**< pointer passed to the function */
+{
+#if JERRY_VM_THROW
+  JERRY_CONTEXT (vm_throw_callback_p) = throw_cb;
+  JERRY_CONTEXT (vm_throw_callback_user_p) = user_p;
+#else /* !JERRY_VM_THROW */
+  JERRY_UNUSED (throw_cb);
+  JERRY_UNUSED (user_p);
+#endif /* JERRY_VM_THROW */
+} /* jerry_set_vm_throw_callback */
+
+/**
+ * Checks whether the callback set by jerry_set_vm_throw_callback captured the error
+ *
+ * @return true, if the vm throw callback captured the error
+ *         false, otherwise
+ */
+bool
+jerry_error_is_throw_captured (jerry_value_t value) /**< api value */
+{
+  jerry_assert_api_available ();
+
+#if JERRY_VM_THROW
+  if (!ecma_is_value_error_reference (value))
+  {
+    return false;
+  }
+
+  ecma_extended_primitive_t *error_ref_p = ecma_get_extended_primitive_from_value (value);
+
+  return (error_ref_p->refs_and_type & ECMA_ERROR_API_THROW_CAPTURED) != 0;
+#else /* !JERRY_VM_THROW */
+  JERRY_UNUSED (value);
+  return false;
+#endif /* JERRY_VM_THROW */
+} /* jerry_error_is_throw_captured */
+
+/**
+ * Sets whether the callback set by jerry_set_vm_throw_callback should capture the error or not
+ */
+void
+jerry_error_set_throw_capture (jerry_value_t value, /**< api value */
+                               bool should_capture) /**< callback should capture this error */
+{
+  jerry_assert_api_available ();
+
+#if JERRY_VM_THROW
+  if (!ecma_is_value_error_reference (value))
+  {
+    return;
+  }
+
+  ecma_extended_primitive_t *error_ref_p = ecma_get_extended_primitive_from_value (value);
+
+  if (should_capture)
+  {
+    error_ref_p->refs_and_type &= ~(uint32_t) ECMA_ERROR_API_THROW_CAPTURED;
+    return;
+  }
+
+  error_ref_p->refs_and_type |= ECMA_ERROR_API_THROW_CAPTURED;
+#else /* !JERRY_VM_THROW */
+  JERRY_UNUSED (value);
+  JERRY_UNUSED (should_capture);
+#endif /* JERRY_VM_THROW */
+} /* jerry_error_set_throw_capture */
 
 /**
  * Return the type of the Error object if possible.
@@ -5291,22 +5363,6 @@ jerry_set_vm_exec_stop_callback (jerry_vm_exec_stop_callback_t stop_cb, /**< per
   JERRY_UNUSED (frequency);
 #endif /* JERRY_VM_EXEC_STOP */
 } /* jerry_set_vm_exec_stop_callback */
-
-/**
- * When JERRY_VM_THROW is enabled, the callback passed to this
- * function is called when an error is thrown in ECMAScript code.
- */
-void jerry_set_vm_throw_callback (jerry_vm_throw_callback_t throw_cb, /**< callback which is called on throws */
-                                  void *user_p) /**< pointer passed to the function */
-{
-#if JERRY_VM_THROW
-  JERRY_CONTEXT (vm_throw_callback_p) = throw_cb;
-  JERRY_CONTEXT (vm_throw_callback_user_p) = user_p;
-#else /* !JERRY_VM_THROW */
-  JERRY_UNUSED (throw_cb);
-  JERRY_UNUSED (user_p);
-#endif /* JERRY_VM_THROW */
-} /* jerry_set_vm_throw_callback */
 
 /**
  * Get backtrace. The backtrace is an array of strings where

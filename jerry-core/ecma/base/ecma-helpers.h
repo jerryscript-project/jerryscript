@@ -526,7 +526,7 @@ void ecma_deref_error_reference (ecma_extended_primitive_t *error_ref_p);
 void ecma_deref_bigint (ecma_extended_primitive_t *bigint_p);
 #endif /* JERRY_BUILTIN_BIGINT */
 
-ecma_value_t ecma_create_error_reference (ecma_value_t value, bool is_exception);
+ecma_value_t ecma_create_error_reference (ecma_value_t value, uint32_t options);
 ecma_value_t ecma_create_error_reference_from_context (void);
 ecma_value_t ecma_create_error_object_reference (ecma_object_t *object_p);
 void ecma_raise_error_from_error_reference (ecma_value_t value);

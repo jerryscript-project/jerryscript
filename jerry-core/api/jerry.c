@@ -5537,6 +5537,8 @@ jerry_get_source_info (const jerry_value_t value) /**< jerry api value */
   source_info.function_arguments = ECMA_VALUE_UNDEFINED;
   source_info.source_range_start = 0;
   source_info.source_range_length = 0;
+  source_info.line_start = 1;
+  source_info.column_start = 1;
 
   ecma_object_t *object_p = ecma_get_object_from_value (value);
   cbc_script_t *script_p = NULL;
@@ -5604,7 +5606,6 @@ jerry_get_source_info (const jerry_value_t value) /**< jerry api value */
 
             source_info.enabled_fields |= JERRY_SOURCE_INFO_HAS_SOURCE_CODE;
             source_info.source_code = function_arguments;
-            script_p = NULL;
           }
 
           source_info.enabled_fields |= JERRY_SOURCE_INFO_HAS_SOURCE_RANGE;
@@ -5659,10 +5660,36 @@ jerry_get_source_info (const jerry_value_t value) /**< jerry api value */
 
   if (script_p != NULL)
   {
-    ecma_ref_ecma_string (ecma_get_string_from_value (script_p->source_code));
+    if (!(source_info.enabled_fields & JERRY_SOURCE_INFO_HAS_SOURCE_CODE))
+    {
+      ecma_ref_ecma_string (ecma_get_string_from_value (script_p->source_code));
 
-    source_info.enabled_fields |= JERRY_SOURCE_INFO_HAS_SOURCE_CODE;
-    source_info.source_code = script_p->source_code;
+      source_info.enabled_fields |= JERRY_SOURCE_INFO_HAS_SOURCE_CODE;
+      source_info.source_code = script_p->source_code;
+    }
+
+    if (script_p->refs_and_type & CBC_SCRIPT_HAS_EXTENDED_INFO)
+    {
+      size_t script_size = sizeof (cbc_script_t);
+
+      if (script_p->refs_and_type & CBC_SCRIPT_HAS_USER_VALUE)
+      {
+        script_size += sizeof (ecma_value_t);
+      }
+
+      if (script_p->refs_and_type & (CBC_SCRIPT_HAS_FUNCTION_ARGUMENTS | CBC_SCRIPT_HAS_IMPORT_META))
+      {
+        script_size += sizeof (ecma_value_t);
+      }
+
+      uint8_t *extended_info_p = ((uint8_t *) script_p) + script_size;
+
+      extended_info_p += *extended_info_p;
+
+      source_info.enabled_fields |= JERRY_SOURCE_INFO_HAS_SOURCE_START;
+      source_info.line_start = ecma_extended_info_decode_vlq (&extended_info_p);
+      source_info.column_start = ecma_extended_info_decode_vlq (&extended_info_p);
+    }
   }
 
   JERRY_ASSERT (source_info.enabled_fields != 0);

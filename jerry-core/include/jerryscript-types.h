@@ -802,6 +802,7 @@ typedef enum
   JERRY_SOURCE_INFO_HAS_FUNCTION_ARGUMENTS = (1 << 1), /**< function_arguments field is valid */
   JERRY_SOURCE_INFO_HAS_SOURCE_RANGE = (1 << 2), /**< both source_range_start and source_range_length
                                                   *   fields are valid */
+  JERRY_SOURCE_INFO_HAS_SOURCE_START = (1 << 3), /**< both line_start and column_start fields are valid */
 } jerry_source_info_enabled_fields_t;
 
 /**
@@ -814,6 +815,8 @@ typedef struct
   jerry_value_t function_arguments; /**< function arguments */
   uint32_t source_range_start; /**< start position of the function in the source code */
   uint32_t source_range_length; /**< source length of the function in the source code */
+  uint32_t line_start; /**< source code start line */
+  uint32_t column_start; /**< source code start column */
 } jerry_source_info_t;
 
 /**

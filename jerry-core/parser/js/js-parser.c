@@ -2052,6 +2052,10 @@ parser_parse_source (void *source_p, /**< source code */
     return NULL;
   }
 
+  context.u.allocated_buffer_p = NULL;
+  context.token.flags = 0;
+  lexer_init_line_info (&context);
+
   size_t script_size = sizeof (cbc_script_t);
 
   if (context.user_value != ECMA_VALUE_EMPTY)
@@ -2063,6 +2067,16 @@ parser_parse_source (void *source_p, /**< source code */
   if (context.argument_list != ECMA_VALUE_EMPTY)
   {
     script_size += sizeof (ecma_value_t);
+  }
+
+  uint32_t extended_info = 0;
+
+  if (context.line > 1 || context.column > 1)
+  {
+    extended_info = 1 + ecma_extended_info_get_encoded_length (context.line);
+    extended_info += ecma_extended_info_get_encoded_length (context.column);
+
+    script_size += extended_info;
   }
 #endif /* JERRY_FUNCTION_TO_STRING */
 
@@ -2083,10 +2097,6 @@ parser_parse_source (void *source_p, /**< source code */
     context.source_p = context.arguments_start_p;
     context.source_end_p = context.arguments_start_p + context.arguments_size;
   }
-
-  context.u.allocated_buffer_p = NULL;
-  context.token.flags = 0;
-  lexer_init_line_info (&context);
 
   parser_stack_init (&context);
 
@@ -2115,6 +2125,19 @@ parser_parse_source (void *source_p, /**< source code */
 #if JERRY_RESOURCE_NAME
     context.script_p->resource_name = resource_name;
 #endif /* JERRY_RESOURCE_NAME */
+
+#if JERRY_FUNCTION_TO_STRING
+    if (extended_info > 0)
+    {
+      uint8_t *extended_info_p = ((uint8_t *) context.script_p) + script_size;
+
+      ecma_extended_info_encode_vlq (&extended_info_p, context.line);
+      ecma_extended_info_encode_vlq (&extended_info_p, context.column);
+      extended_info_p[-1] = (uint8_t) extended_info;
+
+      context.script_p->refs_and_type |= CBC_SCRIPT_HAS_EXTENDED_INFO;
+    }
+#endif /* JERRY_FUNCTION_TO_STRING */
 
     ECMA_SET_INTERNAL_VALUE_POINTER (context.script_value, context.script_p);
 

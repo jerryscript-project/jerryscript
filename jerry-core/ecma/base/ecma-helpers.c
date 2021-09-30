@@ -1458,6 +1458,12 @@ ecma_script_deref (ecma_value_t script_value) /**< script value */
     ecma_deref_ecma_string (ecma_get_string_from_value (CBC_SCRIPT_GET_FUNCTION_ARGUMENTS (script_p, type)));
     script_size += sizeof (ecma_value_t);
   }
+
+  if (type & CBC_SCRIPT_HAS_EXTENDED_INFO)
+  {
+    uint8_t *extended_info_p = ((uint8_t *) script_p) + script_size;
+    script_size += *extended_info_p;
+  }
 #endif /* JERRY_FUNCTION_TO_STRING */
 
   jmem_heap_free_block (script_p, script_size);

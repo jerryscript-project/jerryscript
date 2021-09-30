@@ -68,6 +68,8 @@ main (void)
   TEST_ASSERT (jerry_value_is_undefined (source_info_p->function_arguments));
   TEST_ASSERT (source_info_p->source_range_start == 0);
   TEST_ASSERT (source_info_p->source_range_length == 0);
+  TEST_ASSERT (source_info_p->line_start == 1);
+  TEST_ASSERT (source_info_p->column_start == 1);
   jerry_free_source_info (source_info_p);
   jerry_release_value (value);
 
@@ -88,6 +90,8 @@ main (void)
     TEST_ASSERT (jerry_value_is_undefined (source_info_p->function_arguments));
     TEST_ASSERT (source_info_p->source_range_start == 0);
     TEST_ASSERT (source_info_p->source_range_length == 0);
+    TEST_ASSERT (source_info_p->line_start == 1);
+    TEST_ASSERT (source_info_p->column_start == 1);
     jerry_free_source_info (source_info_p);
 
     result = jerry_module_evaluate (value);
@@ -112,6 +116,8 @@ main (void)
   TEST_ASSERT (jerry_value_is_undefined (source_info_p->function_arguments));
   TEST_ASSERT (source_info_p->source_range_start == 2);
   TEST_ASSERT (source_info_p->source_range_length == 15);
+  TEST_ASSERT (source_info_p->line_start == 1);
+  TEST_ASSERT (source_info_p->column_start == 1);
   jerry_free_source_info (source_info_p);
   jerry_release_value (value);
 
@@ -126,6 +132,8 @@ main (void)
   compare_string (source_info_p->function_arguments, "a,b");
   TEST_ASSERT (source_info_p->source_range_start == 0);
   TEST_ASSERT (source_info_p->source_range_length == 0);
+  TEST_ASSERT (source_info_p->line_start == 1);
+  TEST_ASSERT (source_info_p->column_start == 1);
   jerry_free_source_info (source_info_p);
   jerry_release_value (value);
 
@@ -140,6 +148,8 @@ main (void)
   TEST_ASSERT (jerry_value_is_undefined (source_info_p->function_arguments));
   TEST_ASSERT (source_info_p->source_range_start == 6);
   TEST_ASSERT (source_info_p->source_range_length == 14);
+  TEST_ASSERT (source_info_p->line_start == 1);
+  TEST_ASSERT (source_info_p->column_start == 1);
   jerry_free_source_info (source_info_p);
   jerry_release_value (value);
 
@@ -154,6 +164,44 @@ main (void)
   TEST_ASSERT (jerry_value_is_undefined (source_info_p->function_arguments));
   TEST_ASSERT (source_info_p->source_range_start == 1);
   TEST_ASSERT (source_info_p->source_range_length == 26);
+  TEST_ASSERT (source_info_p->line_start == 1);
+  TEST_ASSERT (source_info_p->column_start == 1);
+  jerry_free_source_info (source_info_p);
+  jerry_release_value (value);
+
+  source_p = TEST_STRING_LITERAL ("/* comment */");
+  parse_options.options = JERRY_PARSE_HAS_START;
+  parse_options.start_line = 1;
+  parse_options.start_column = 45;
+
+  value = jerry_parse ((jerry_char_t *) source_p, strlen (source_p), &parse_options);
+  source_info_p = jerry_get_source_info (value);
+  TEST_ASSERT (source_info_p != NULL);
+  TEST_ASSERT (source_info_p->enabled_fields == (JERRY_SOURCE_INFO_HAS_SOURCE_CODE
+                                                 | JERRY_SOURCE_INFO_HAS_SOURCE_START));
+  compare_string (source_info_p->source_code, source_p);
+  TEST_ASSERT (jerry_value_is_undefined (source_info_p->function_arguments));
+  TEST_ASSERT (source_info_p->source_range_start == 0);
+  TEST_ASSERT (source_info_p->source_range_length == 0);
+  TEST_ASSERT (source_info_p->line_start == 1);
+  TEST_ASSERT (source_info_p->column_start == 45);
+  jerry_free_source_info (source_info_p);
+  jerry_release_value (value);
+
+  parse_options.start_line = 0x12345678;
+  parse_options.start_column = 0x87654321;
+
+  value = jerry_parse ((jerry_char_t *) source_p, strlen (source_p), &parse_options);
+  source_info_p = jerry_get_source_info (value);
+  TEST_ASSERT (source_info_p != NULL);
+  TEST_ASSERT (source_info_p->enabled_fields == (JERRY_SOURCE_INFO_HAS_SOURCE_CODE
+                                                 | JERRY_SOURCE_INFO_HAS_SOURCE_START));
+  compare_string (source_info_p->source_code, source_p);
+  TEST_ASSERT (jerry_value_is_undefined (source_info_p->function_arguments));
+  TEST_ASSERT (source_info_p->source_range_start == 0);
+  TEST_ASSERT (source_info_p->source_range_length == 0);
+  TEST_ASSERT (source_info_p->line_start == 0x12345678);
+  TEST_ASSERT (source_info_p->column_start == 0x87654321);
   jerry_free_source_info (source_info_p);
   jerry_release_value (value);
 

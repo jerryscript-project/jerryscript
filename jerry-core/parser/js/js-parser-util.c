@@ -1174,9 +1174,9 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Expression expected";
     }
-    case PARSER_ERR_PRIMARY_EXP_EXPECTED:
+    case PARSER_ERR_UNEXPECTED_END:
     {
-      return "Primary expression expected";
+      return "Unexpected end of input";
     }
     case PARSER_ERR_LEFT_HAND_SIDE_EXP_EXPECTED:
     {

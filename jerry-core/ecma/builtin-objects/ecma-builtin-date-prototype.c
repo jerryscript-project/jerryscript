@@ -668,6 +668,9 @@ ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< b
     }
 
     *date_value_p = ecma_date_time_clip (time_num);
+#if JERRY_ESNEXT
+    date_object_p->header.u.cls.u1.date_flags &= (uint8_t) ~ECMA_DATE_TZA_SET;
+#endif /* JERRY_ESNEXT */
 
     return ecma_make_number_value (*date_value_p);
   }

@@ -5515,6 +5515,28 @@ jerry_get_user_value (const jerry_value_t value) /**< jerry api value */
 } /* jerry_get_user_value */
 
 /**
+ * Checks whether an ECMAScript code is compiled by eval
+ * like (eval, new Function, jerry_eval, etc.) command.
+ *
+ * @return true, if code is compiled by eval like command
+ *         false, otherwise
+ */
+bool
+jerry_is_eval_code (const jerry_value_t value) /**< jerry api value */
+{
+  ecma_value_t script_value = ecma_script_get_from_value (value);
+
+  if (script_value == JMEM_CP_NULL)
+  {
+    return false;
+  }
+
+  const cbc_script_t *script_p = ECMA_GET_INTERNAL_VALUE_POINTER (cbc_script_t, script_value);
+
+  return (script_p->refs_and_type & CBC_SCRIPT_IS_EVAL_CODE) != 0;
+} /* jerry_is_eval_code */
+
+/**
  * Returns a newly created source info structure corresponding to the passed script/module/function.
  *
  * @return a newly created source info, if at least one field is available, NULL otherwise

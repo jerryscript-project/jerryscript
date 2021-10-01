@@ -2108,6 +2108,11 @@ parser_parse_source (void *source_p, /**< source code */
 
     CBC_SCRIPT_SET_TYPE (context.script_p, context.user_value, CBC_SCRIPT_REF_ONE);
 
+    if (context.global_status_flags & (ECMA_PARSE_EVAL | ECMA_PARSE_HAS_ARGUMENT_LIST_VALUE))
+    {
+      context.script_p->refs_and_type |= CBC_SCRIPT_IS_EVAL_CODE;
+    }
+
 #if JERRY_BUILTIN_REALMS
     context.script_p->realm_p = (ecma_object_t *) JERRY_CONTEXT (global_object_p);
 #endif /* JERRY_BUILTIN_REALMS */

@@ -3496,7 +3496,7 @@ ecma_regexp_match_helper (ecma_value_t this_arg, /**< this argument */
       last_index = ecma_make_length_value (index);
       ecma_value_t next_set_status = ecma_op_object_put (obj_p,
                                                          ecma_get_magic_string (LIT_MAGIC_STRING_LASTINDEX_UL),
-                                                         ecma_make_length_value (index),
+                                                         last_index,
                                                          true);
 #else /* !JERRY_ESNEXT */
       ecma_number_t index = ecma_get_number_from_value (last_index);

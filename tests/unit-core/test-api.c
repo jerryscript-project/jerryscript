@@ -1065,7 +1065,7 @@ main (void)
 
     test_syntax_error ("b = 'hello';\nvar a = (;",
                        NULL,
-                       "SyntaxError: Primary expression expected [<anonymous>:2:10]",
+                       "SyntaxError: Unexpected end of input [<anonymous>:2:10]",
                        false);
 
     parse_options.options = JERRY_PARSE_HAS_RESOURCE;
@@ -1073,12 +1073,12 @@ main (void)
 
     test_syntax_error ("b = 'hello';\nvar a = (;",
                        &parse_options,
-                       "SyntaxError: Primary expression expected [filename.js:2:10]",
+                       "SyntaxError: Unexpected end of input [filename.js:2:10]",
                        false);
 
     test_syntax_error ("eval(\"var b;\\nfor (,); \");",
                        &parse_options,
-                       "SyntaxError: Primary expression expected [<eval>:2:6]",
+                       "SyntaxError: Unexpected end of input [<eval>:2:6]",
                        true);
 
     parse_options.options |= JERRY_PARSE_HAS_START;

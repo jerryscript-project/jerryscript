@@ -2369,7 +2369,7 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
     {
       bool is_left_hand_side = (*grouping_level_p == PARSE_EXPR_LEFT_HAND_SIDE);
       parser_raise_error (context_p, (is_left_hand_side ? PARSER_ERR_LEFT_HAND_SIDE_EXP_EXPECTED
-                                                        : PARSER_ERR_PRIMARY_EXP_EXPECTED));
+                                                        : PARSER_ERR_UNEXPECTED_END));
       break;
     }
   }

@@ -271,7 +271,8 @@ static const uint16_t vm_decode_table[] JERRY_ATTR_CONST_DATA =
  * @return ecma value
  */
 ecma_value_t
-vm_run_global (const ecma_compiled_code_t *bytecode_p) /**< pointer to bytecode to run */
+vm_run_global (const ecma_compiled_code_t *bytecode_p, /**< pointer to bytecode to run */
+               ecma_object_t *function_object_p) /**< function object if available */
 {
 #if JERRY_BUILTIN_REALMS
   ecma_object_t *global_obj_p = (ecma_object_t *) ecma_op_function_get_realm (bytecode_p);
@@ -290,7 +291,7 @@ vm_run_global (const ecma_compiled_code_t *bytecode_p) /**< pointer to bytecode 
 
   vm_frame_ctx_shared_t shared;
   shared.bytecode_header_p = bytecode_p;
-  shared.function_object_p = NULL;
+  shared.function_object_p = function_object_p;
   shared.status_flags = 0;
 
 #if JERRY_BUILTIN_REALMS

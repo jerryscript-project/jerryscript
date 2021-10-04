@@ -573,24 +573,19 @@ jerry_run (const jerry_value_t func_val) /**< function to run */
 
   ecma_object_t *object_p = ecma_get_object_from_value (func_val);
 
-  if (ecma_get_object_type (object_p) != ECMA_OBJECT_TYPE_CLASS)
+  if (!ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_SCRIPT))
   {
     return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
   }
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
 
-  if (ext_object_p->u.cls.type != ECMA_OBJECT_CLASS_SCRIPT)
-  {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
-  }
-
   const ecma_compiled_code_t *bytecode_data_p;
   bytecode_data_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_compiled_code_t, ext_object_p->u.cls.u3.value);
 
   JERRY_ASSERT (CBC_FUNCTION_GET_TYPE (bytecode_data_p->status_flags) == CBC_FUNCTION_SCRIPT);
 
-  return jerry_return (vm_run_global (bytecode_data_p));
+  return jerry_return (vm_run_global (bytecode_data_p, object_p));
 } /* jerry_run */
 
 /**

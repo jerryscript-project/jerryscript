@@ -176,6 +176,11 @@ def calculate_magic_string_guards(defs, uses, debug=False):
         for i, guard_i in enumerate(guards):
             if guard_i is None:
                 continue
+            for guard in guard_i.copy():
+                neg_guard = "!(" + guard[1:] + ")"
+                for guard_j in guards:
+                    if guard_j is not None and neg_guard in guard_j:
+                        guard_i.remove(guard)
             for j, guard_j in enumerate(guards):
                 if j == i or guard_j is None:
                     continue

@@ -176,8 +176,6 @@ capture_handler (const jerry_call_info_t *call_info_p, /**< call information */
                  const jerry_length_t args_count) /**< argument count */
 {
   JERRY_UNUSED (call_info_p);
-  JERRY_UNUSED (args_p);
-  JERRY_UNUSED (args_count);
 
   TEST_ASSERT (args_count == 0 || args_count == 2 || args_count == 4);
   TEST_ASSERT (args_count == 0 || frame_index == 0);
@@ -200,6 +198,38 @@ capture_handler (const jerry_call_info_t *call_info_p, /**< call information */
 
   return jerry_create_undefined ();
 } /* capture_handler */
+
+static bool
+global_backtrace_callback (jerry_backtrace_frame_t *frame_p, /* frame information */
+                           void *user_p) /* user data */
+{
+  TEST_ASSERT (user_p != NULL && frame_index == 0);
+  frame_index++;
+
+  const jerry_value_t *function_p = jerry_backtrace_get_function (frame_p);
+  jerry_value_t *result_p = ((jerry_value_t *) user_p);
+
+  TEST_ASSERT (function_p != NULL);
+  jerry_release_value (*result_p);
+  *result_p = jerry_acquire_value (*function_p);
+  return true;
+} /* global_backtrace_callback */
+
+static jerry_value_t
+global_capture_handler (const jerry_call_info_t *call_info_p, /**< call information */
+                        const jerry_value_t args_p[], /**< argument list */
+                        const jerry_length_t args_count) /**< argument count */
+{
+  JERRY_UNUSED (call_info_p);
+  JERRY_UNUSED (args_p);
+  JERRY_UNUSED (args_count);
+
+  jerry_value_t result = jerry_create_undefined ();
+  jerry_backtrace_capture (global_backtrace_callback, &result);
+
+  TEST_ASSERT (jerry_value_is_object (result));
+  return result;
+} /* global_capture_handler */
 
 static void
 register_callback (jerry_external_handler_t handler_p, /**< callback function */
@@ -420,6 +450,24 @@ test_get_backtrace_api_call (void)
   }
 
   jerry_release_value (result);
+
+  register_callback (global_capture_handler, "global_capture");
+
+  frame_index = 0;
+
+  source_p = "global_capture()";
+
+  jerry_value_t code = jerry_parse ((const jerry_char_t *) source_p, strlen (source_p), NULL);
+  TEST_ASSERT (!jerry_value_is_error (code));
+
+  result = jerry_run (code);
+
+  jerry_value_t compare_value = jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL, result, code);
+  TEST_ASSERT (jerry_value_is_true (compare_value));
+
+  jerry_release_value (compare_value);
+  jerry_release_value (result);
+  jerry_release_value (code);
 
   jerry_cleanup ();
 } /* test_get_backtrace_api_call */

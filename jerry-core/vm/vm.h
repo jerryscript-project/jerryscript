@@ -479,7 +479,7 @@ typedef enum
   VM_EXEC_CONSTRUCT,             /**< construct a new object */
 } vm_call_operation;
 
-ecma_value_t vm_run_global (const ecma_compiled_code_t *bytecode_p);
+ecma_value_t vm_run_global (const ecma_compiled_code_t *bytecode_p, ecma_object_t *function_object_p);
 ecma_value_t vm_run_eval (ecma_compiled_code_t *bytecode_data_p, uint32_t parse_opts);
 
 #if JERRY_MODULE_SYSTEM

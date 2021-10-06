@@ -1067,7 +1067,7 @@ jerry_exec_snapshot (const uint32_t *snapshot_p, /**< snapshot */
   }
   else
   {
-    ret_val = vm_run_global (bytecode_p);
+    ret_val = vm_run_global (bytecode_p, NULL);
     if (!(bytecode_p->status_flags & CBC_CODE_FLAGS_STATIC_FUNCTION))
     {
       ecma_bytecode_deref (bytecode_p);

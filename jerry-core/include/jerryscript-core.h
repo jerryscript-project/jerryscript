@@ -103,6 +103,9 @@ jerry_value_t jerry_create_abort_from_value (jerry_value_t value, bool release);
 jerry_value_t jerry_create_error_from_value (jerry_value_t value, bool release);
 jerry_value_t jerry_get_value_from_error (jerry_value_t value, bool release);
 void jerry_set_error_object_created_callback (jerry_error_object_created_callback_t callback, void *user_p);
+void jerry_set_vm_throw_callback (jerry_vm_throw_callback_t throw_cb, void *user_p);
+bool jerry_error_is_throw_captured (jerry_value_t value);
+void jerry_error_set_throw_capture (jerry_value_t value, bool should_capture);
 
 /**
  * Error object function(s).
@@ -359,7 +362,6 @@ bool jerry_backtrace_is_strict (jerry_backtrace_frame_t *frame_p);
  * Miscellaneous functions.
  */
 void jerry_set_vm_exec_stop_callback (jerry_vm_exec_stop_callback_t stop_cb, void *user_p, uint32_t frequency);
-void jerry_set_vm_throw_callback (jerry_vm_throw_callback_t throw_cb, void *user_p);
 jerry_value_t jerry_get_resource_name (const jerry_value_t value);
 jerry_value_t jerry_get_user_value (const jerry_value_t value);
 jerry_source_info_t *jerry_get_source_info (const jerry_value_t value);

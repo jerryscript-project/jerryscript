@@ -1333,13 +1333,12 @@ ecma_deref_bigint (ecma_extended_primitive_t *bigint_p) /**< bigint value */
  */
 ecma_value_t
 ecma_create_error_reference (ecma_value_t value, /**< referenced value */
-                             bool is_exception) /**< error reference is an exception */
+                             uint32_t options) /**< ECMA_ERROR_API_* options */
 {
   ecma_extended_primitive_t *error_ref_p;
   error_ref_p = (ecma_extended_primitive_t *) jmem_pools_alloc (sizeof (ecma_extended_primitive_t));
 
-  error_ref_p->refs_and_type = (ECMA_EXTENDED_PRIMITIVE_REF_ONE
-                                | (is_exception ? ECMA_EXTENDED_PRIMITIVE_ERROR : ECMA_EXTENDED_PRIMITIVE_ABORT));
+  error_ref_p->refs_and_type = ECMA_EXTENDED_PRIMITIVE_REF_ONE | options;
   error_ref_p->u.value = value;
   return ecma_make_extended_primitive_value (error_ref_p, ECMA_TYPE_ERROR);
 } /* ecma_create_error_reference */
@@ -1352,13 +1351,22 @@ ecma_create_error_reference (ecma_value_t value, /**< referenced value */
 ecma_value_t
 ecma_create_error_reference_from_context (void)
 {
-  bool is_abort = jcontext_has_pending_abort ();
+  uint32_t options = 0;
+  uint32_t status_flags = JERRY_CONTEXT (status_flags);
 
-  if (is_abort)
+  if (status_flags & ECMA_STATUS_ABORT)
   {
-    jcontext_set_abort_flag (false);
+    options |= ECMA_ERROR_API_ABORT;
   }
-  return ecma_create_error_reference (jcontext_take_exception (), !is_abort);
+
+#if JERRY_VM_THROW
+  if (status_flags & ECMA_STATUS_ERROR_THROWN)
+  {
+    options |= ECMA_ERROR_API_THROW_CAPTURED;
+  }
+#endif /* JERRY_VM_THROW */
+
+  return ecma_create_error_reference (jcontext_take_exception (), options);
 } /* ecma_create_error_reference_from_context */
 
 /**
@@ -1372,7 +1380,7 @@ ecma_create_error_reference_from_context (void)
 extern inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_create_error_object_reference (ecma_object_t *object_p) /**< referenced object */
 {
-  return ecma_create_error_reference (ecma_make_object_value (object_p), true);
+  return ecma_create_error_reference (ecma_make_object_value (object_p), 0);
 } /* ecma_create_error_object_reference */
 
 /**
@@ -1389,9 +1397,27 @@ ecma_raise_error_from_error_reference (ecma_value_t value) /**< error reference 
   JERRY_ASSERT (error_ref_p->refs_and_type >= ECMA_EXTENDED_PRIMITIVE_REF_ONE);
 
   ecma_value_t referenced_value = error_ref_p->u.value;
+  uint32_t status_flags = JERRY_CONTEXT (status_flags);
 
-  jcontext_set_exception_flag (true);
-  jcontext_set_abort_flag (ECMA_EXTENDED_PRIMITIVE_GET_TYPE (error_ref_p) == ECMA_EXTENDED_PRIMITIVE_ABORT);
+  status_flags |= (ECMA_STATUS_EXCEPTION
+#if JERRY_VM_THROW
+                   | ECMA_STATUS_ERROR_THROWN
+#endif /* JERRY_VM_THROW */
+                   | ECMA_STATUS_ABORT);
+
+  if (!(error_ref_p->refs_and_type & ECMA_ERROR_API_ABORT))
+  {
+    status_flags &= ~(uint32_t) ECMA_STATUS_ABORT;
+  }
+
+#if JERRY_VM_THROW
+  if (!(error_ref_p->refs_and_type & ECMA_ERROR_API_THROW_CAPTURED))
+  {
+    status_flags &= ~(uint32_t) ECMA_STATUS_ERROR_THROWN;
+  }
+#endif /* JERRY_VM_THROW */
+
+  JERRY_CONTEXT (status_flags) = status_flags;
 
   if (error_ref_p->refs_and_type >= 2 * ECMA_EXTENDED_PRIMITIVE_REF_ONE)
   {

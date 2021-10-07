@@ -1938,17 +1938,22 @@ typedef struct
   ecma_stringbuilder_header_t *header_p; /**< pointer to header */
 } ecma_stringbuilder_t;
 
-/**
- * Types for extended primitive values.
- */
-typedef enum
-{
 #ifndef JERRY_BUILTIN_BIGINT
-  ECMA_EXTENDED_PRIMITIVE_BIGINT, /**< BigInt value */
+/**
+ * BigInt type.
+ */
+#define ECMA_EXTENDED_PRIMITIVE_BIGINT 0
 #endif /* !defined (JERRY_BUILTIN_BIGINT) */
-  ECMA_EXTENDED_PRIMITIVE_ERROR, /**< external API error reference */
-  ECMA_EXTENDED_PRIMITIVE_ABORT, /**< external API abort reference */
-} ecma_extended_primitive_type_t;
+
+/**
+ * Abort flag for errors in C API.
+ */
+#define ECMA_ERROR_API_ABORT (1u << 0)
+
+/**
+ * Throw captured flag for errors in C API.
+ */
+#define ECMA_ERROR_API_THROW_CAPTURED (1u << 1)
 
 /**
  * Representation of a thrown value on API level.
@@ -1962,11 +1967,6 @@ typedef struct
     uint32_t bigint_sign_and_size; /**< BigInt properties */
   } u;
 } ecma_extended_primitive_t;
-
-/**
- * Get the type of an extended primitve value.
- */
-#define ECMA_EXTENDED_PRIMITIVE_GET_TYPE(primitve_p) ((primitve_p)->refs_and_type & 0x7)
 
 /**
  * Value for increasing or decreasing the reference counter.

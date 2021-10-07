@@ -134,7 +134,9 @@ main (void)
 
   jerry_init (JERRY_INIT_EMPTY);
 
-  jerry_promise_event_filter_t filters = (JERRY_PROMISE_EVENT_FILTER_MAIN
+  jerry_promise_event_filter_t filters = (JERRY_PROMISE_EVENT_FILTER_CREATE
+                                          | JERRY_PROMISE_EVENT_FILTER_RESOLVE
+                                          | JERRY_PROMISE_EVENT_FILTER_REJECT
                                           | JERRY_PROMISE_EVENT_FILTER_ERROR
                                           | JERRY_PROMISE_EVENT_FILTER_REACTION_JOB
                                           | JERRY_PROMISE_EVENT_FILTER_ASYNC_MAIN

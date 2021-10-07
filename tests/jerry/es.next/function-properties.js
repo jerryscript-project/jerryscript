@@ -46,7 +46,7 @@ Object.setPrototypeOf(print, prototype_obj);
 assert(getProperties(print) == "dummy length caller arguments");
 
 function f1() {}
-assert(Reflect.ownKeys(f1).toString() === "prototype,length,name,caller,arguments")
+assert(Reflect.ownKeys(f1).toString() === "length,name,arguments,caller,prototype")
 
 async function f2() {}
 assert(Reflect.ownKeys(f2).toString() === "length,name")

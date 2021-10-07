@@ -2174,19 +2174,6 @@ ecma_op_function_list_lazy_property_names (ecma_object_t *object_p, /**< functio
   bytecode_data_p = ecma_op_function_get_compiled_code ((ecma_extended_object_t *) object_p);
 
 #if JERRY_ESNEXT
-  bool append_prototype = CBC_FUNCTION_HAS_PROTOTYPE (bytecode_data_p->status_flags);
-#else /* !JERRY_ESNEXT */
-  bool append_prototype = true;
-#endif /* JERRY_ESNEXT */
-
-  if (append_prototype)
-  {
-    /* 'prototype' property is non-enumerable (ECMA-262 v5, 13.2.18) */
-    ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_PROTOTYPE));
-    prop_counter_p->string_named_props++;
-  }
-
-#if JERRY_ESNEXT
   ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) object_p;
 
   if (!ECMA_GET_FIRST_BIT_FROM_POINTER_TAG (ext_func_p->u.function.scope_cp))
@@ -2210,7 +2197,7 @@ ecma_op_function_list_lazy_property_names (ecma_object_t *object_p, /**< functio
 #endif /* JERRY_ESNEXT */
 
 #if JERRY_ESNEXT
-  if (!append_prototype)
+  if (!CBC_FUNCTION_HAS_PROTOTYPE (bytecode_data_p->status_flags))
   {
     return;
   }
@@ -2222,14 +2209,18 @@ ecma_op_function_list_lazy_property_names (ecma_object_t *object_p, /**< functio
 
   if (append_caller_and_arguments)
   {
-    /* 'caller' property is non-enumerable (ECMA-262 v5, 13.2.5) */
-    ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_CALLER));
-
     /* 'arguments' property is non-enumerable (ECMA-262 v5, 13.2.5) */
     ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_ARGUMENTS));
 
+    /* 'caller' property is non-enumerable (ECMA-262 v5, 13.2.5) */
+    ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_CALLER));
+
     prop_counter_p->string_named_props += 2;
   }
+
+  /* 'prototype' property is non-enumerable (ECMA-262 v5, 13.2.18) */
+  ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_PROTOTYPE));
+  prop_counter_p->string_named_props++;
 } /* ecma_op_function_list_lazy_property_names */
 
 /**

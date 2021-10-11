@@ -688,21 +688,23 @@ typedef enum
 typedef enum
 {
   JERRY_PROMISE_EVENT_FILTER_DISABLE = 0, /**< disable reporting of all events */
-  JERRY_PROMISE_EVENT_FILTER_MAIN = (1 << 0), /**< enables the following events:
-                                               *   JERRY_PROMISE_EVENT_CREATE
-                                               *   JERRY_PROMISE_EVENT_RESOLVE
-                                               *   JERRY_PROMISE_EVENT_REJECT */
-  JERRY_PROMISE_EVENT_FILTER_ERROR = (1 << 1), /**< enables the following events:
+  JERRY_PROMISE_EVENT_FILTER_CREATE = (1 << 0), /**< enables the following event:
+                                                 *   JERRY_PROMISE_EVENT_CREATE */
+  JERRY_PROMISE_EVENT_FILTER_RESOLVE = (1 << 1), /**< enables the following event:
+                                                  *   JERRY_PROMISE_EVENT_RESOLVE */
+  JERRY_PROMISE_EVENT_FILTER_REJECT = (1 << 2), /**< enables the following event:
+                                                 *   JERRY_PROMISE_EVENT_REJECT */
+  JERRY_PROMISE_EVENT_FILTER_ERROR = (1 << 3), /**< enables the following events:
                                                 *   JERRY_PROMISE_EVENT_RESOLVE_FULFILLED
                                                 *   JERRY_PROMISE_EVENT_REJECT_FULFILLED
                                                 *   JERRY_PROMISE_EVENT_REJECT_WITHOUT_HANDLER
                                                 *   JERRY_PROMISE_EVENT_CATCH_HANDLER_ADDED */
-  JERRY_PROMISE_EVENT_FILTER_REACTION_JOB = (1 << 2), /**< enables the following events:
+  JERRY_PROMISE_EVENT_FILTER_REACTION_JOB = (1 << 4), /**< enables the following events:
                                                        *   JERRY_PROMISE_EVENT_BEFORE_REACTION_JOB
                                                        *   JERRY_PROMISE_EVENT_AFTER_REACTION_JOB */
-  JERRY_PROMISE_EVENT_FILTER_ASYNC_MAIN = (1 << 3), /**< enables the following events:
+  JERRY_PROMISE_EVENT_FILTER_ASYNC_MAIN = (1 << 5), /**< enables the following event:
                                                      *   JERRY_PROMISE_EVENT_ASYNC_AWAIT */
-  JERRY_PROMISE_EVENT_FILTER_ASYNC_REACTION_JOB = (1 << 4), /**< enables the following events:
+  JERRY_PROMISE_EVENT_FILTER_ASYNC_REACTION_JOB = (1 << 6), /**< enables the following events:
                                                              *   JERRY_PROMISE_EVENT_ASYNC_BEFORE_RESOLVE
                                                              *   JERRY_PROMISE_EVENT_ASYNC_BEFORE_REJECT
                                                              *   JERRY_PROMISE_EVENT_ASYNC_AFTER_RESOLVE

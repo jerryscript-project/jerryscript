@@ -195,7 +195,7 @@ ecma_reject_promise (ecma_value_t promise, /**< promise */
   JERRY_ASSERT (ecma_promise_get_flags (obj_p) & ECMA_PROMISE_IS_PENDING);
 
 #if JERRY_PROMISE_CALLBACK
-  if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback_filters) & JERRY_PROMISE_EVENT_FILTER_MAIN))
+  if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback_filters) & JERRY_PROMISE_EVENT_FILTER_REJECT))
   {
     JERRY_ASSERT (JERRY_CONTEXT (promise_callback) != NULL);
     JERRY_CONTEXT (promise_callback) (JERRY_PROMISE_EVENT_REJECT,
@@ -282,7 +282,7 @@ ecma_fulfill_promise (ecma_value_t promise, /**< promise */
   }
 
 #if JERRY_PROMISE_CALLBACK
-  if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback_filters) & JERRY_PROMISE_EVENT_FILTER_MAIN))
+  if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback_filters) & JERRY_PROMISE_EVENT_FILTER_RESOLVE))
   {
     JERRY_ASSERT (JERRY_CONTEXT (promise_callback) != NULL);
     JERRY_CONTEXT (promise_callback) (JERRY_PROMISE_EVENT_RESOLVE,
@@ -514,7 +514,7 @@ ecma_op_create_promise_object (ecma_value_t executor, /**< the executor function
   promise_object_p->reactions = reactions;
 
 #if JERRY_PROMISE_CALLBACK
-  if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback_filters) & JERRY_PROMISE_EVENT_FILTER_MAIN))
+  if (JERRY_UNLIKELY (JERRY_CONTEXT (promise_callback_filters) & JERRY_PROMISE_EVENT_FILTER_CREATE))
   {
     JERRY_ASSERT (JERRY_CONTEXT (promise_callback) != NULL);
     JERRY_CONTEXT (promise_callback) (JERRY_PROMISE_EVENT_CREATE,

@@ -53,6 +53,7 @@ set(SOURCE_UNIT_TEST_MAIN_MODULES
   test-get-own-property.c
   test-has-property.c
   test-internal-properties.c
+  test-is-eval-code.c
   test-jmem.c
   test-json.c
   test-lit-char-helpers.c

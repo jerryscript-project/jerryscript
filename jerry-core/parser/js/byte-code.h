@@ -1004,12 +1004,13 @@ typedef enum
   CBC_SCRIPT_USER_VALUE_IS_OBJECT = (1 << 1), /**< user value is object */
   CBC_SCRIPT_HAS_FUNCTION_ARGUMENTS = (1 << 2), /**< script is a function with arguments source code */
   CBC_SCRIPT_HAS_IMPORT_META = (1 << 3), /**< script is a module with import.meta object */
+  CBC_SCRIPT_IS_EVAL_CODE = (1 << 4), /**< script is compiled by eval like (eval, new Function, etc.) expression */
 } cbc_script_type;
 
 /**
  * Value for increasing or decreasing the script reference counter.
  */
-#define CBC_SCRIPT_REF_ONE 0x10
+#define CBC_SCRIPT_REF_ONE 0x20
 
 /**
  * Maximum value of script reference counter.

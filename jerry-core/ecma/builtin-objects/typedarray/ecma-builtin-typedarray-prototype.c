@@ -1589,27 +1589,54 @@ ecma_builtin_typedarray_prototype_slice (ecma_value_t this_arg, /**< this argume
   ecma_value_t new_typedarray = ecma_typedarray_species_create (this_arg, &len, 1);
   ecma_free_value (len);
 
-  if (ECMA_IS_VALUE_ERROR (new_typedarray))
+  if (ECMA_IS_VALUE_ERROR (new_typedarray) || count == 0)
   {
     return new_typedarray;
   }
 
-  if (count > 0)
+  ecma_object_t *new_typedarray_p = ecma_get_object_from_value (new_typedarray);
+
+  if (ecma_arraybuffer_is_detached (info_p->array_buffer_p))
   {
-    ecma_object_t *new_typedarray_p = ecma_get_object_from_value (new_typedarray);
+    ecma_deref_object (new_typedarray_p);
+    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_arraybuffer_is_detached));
+  }
 
-    if (ecma_arraybuffer_is_detached (info_p->array_buffer_p))
-    {
-      ecma_deref_object (new_typedarray_p);
-      return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_arraybuffer_is_detached));
-    }
+  ecma_typedarray_info_t new_typedarray_info = ecma_typedarray_get_info (new_typedarray_p);
 
-    lit_utf8_byte_t *new_typedarray_buffer_p = ecma_typedarray_get_buffer (new_typedarray_p);
+  if (info_p->id == new_typedarray_info.id)
+  {
+    // 22.2.3.23. Step 22. h-i.
     uint32_t src_byte_index = (relative_start * info_p->element_size);
 
-    memcpy (new_typedarray_buffer_p,
+    memcpy (new_typedarray_info.buffer_p,
             info_p->buffer_p + src_byte_index,
             count * info_p->element_size);
+  }
+  else
+  {
+    // 22.2.3.23. Step 21. b.
+    ecma_typedarray_getter_fn_t src_typedarray_getter_cb = ecma_get_typedarray_getter_fn (info_p->id);
+    ecma_typedarray_setter_fn_t new_typedarray_setter_cb = ecma_get_typedarray_setter_fn (new_typedarray_info.id);
+
+    uint32_t src_byte_index = (relative_start * info_p->element_size);
+    uint32_t dst_byte_index = 0;
+
+    for (uint32_t idx = 0; idx < count; idx++)
+    {
+      ecma_value_t element = src_typedarray_getter_cb (info_p->buffer_p + src_byte_index);
+      ecma_value_t set_element = new_typedarray_setter_cb (new_typedarray_info.buffer_p + dst_byte_index, element);
+      ecma_free_value (element);
+
+      if (ECMA_IS_VALUE_ERROR (set_element))
+      {
+        ecma_deref_object (new_typedarray_p);
+        return set_element;
+      }
+
+      src_byte_index += info_p->element_size;
+      dst_byte_index += new_typedarray_info.element_size;
+    }
   }
 
   return new_typedarray;

@@ -52,7 +52,6 @@
   <test id="built-ins/String/prototype/toLocaleLowerCase/special_casing_conditional.js"><reason></reason></test>
   <test id="built-ins/String/prototype/toLowerCase/Final_Sigma_U180E.js"><reason></reason></test>
   <test id="built-ins/String/prototype/toLowerCase/special_casing_conditional.js"><reason></reason></test>
-  <test id="built-ins/TypedArray/prototype/slice/set-values-from-different-ctor-type.js"><reason></reason></test>
   <test id="language/block-scope/syntax/redeclaration/async-function-name-redeclaration-attempt-with-async-function.js"><reason></reason></test>
   <test id="language/block-scope/syntax/redeclaration/async-function-name-redeclaration-attempt-with-function.js"><reason></reason></test>
   <test id="language/block-scope/syntax/redeclaration/async-function-name-redeclaration-attempt-with-generator.js"><reason></reason></test>

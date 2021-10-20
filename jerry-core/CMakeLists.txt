@@ -166,6 +166,7 @@ set(SOURCE_CORE_FILES
   ecma/builtin-objects/ecma-builtin-async-generator-prototype.c
   ecma/builtin-objects/ecma-builtin-async-generator.c
   ecma/builtin-objects/ecma-builtin-async-iterator-prototype.c
+  ecma/builtin-objects/ecma-builtin-atomics.c
   ecma/builtin-objects/ecma-builtin-bigint-prototype.c
   ecma/builtin-objects/ecma-builtin-bigint.c
   ecma/builtin-objects/ecma-builtin-boolean-prototype.c
@@ -265,6 +266,7 @@ set(SOURCE_CORE_FILES
   ecma/operations/ecma-array-object.c
   ecma/operations/ecma-arraybuffer-object.c
   ecma/operations/ecma-async-generator-object.c
+  ecma/operations/ecma-atomics-object.c
   ecma/operations/ecma-big-uint.c
   ecma/operations/ecma-bigint-object.c
   ecma/operations/ecma-bigint.c
@@ -362,6 +364,7 @@ if(ENABLE_AMALGAM)
     ecma/builtin-objects/ecma-builtin-async-generator-prototype.inc.h
     ecma/builtin-objects/ecma-builtin-async-generator.inc.h
     ecma/builtin-objects/ecma-builtin-async-iterator-prototype.inc.h
+    ecma/builtin-objects/ecma-builtin-atomics.inc.h
     ecma/builtin-objects/ecma-builtin-bigint-prototype.inc.h
     ecma/builtin-objects/ecma-builtin-bigint.inc.h
     ecma/builtin-objects/ecma-builtin-boolean-prototype.inc.h
@@ -440,6 +443,7 @@ if(ENABLE_AMALGAM)
     ecma/operations/ecma-array-object.h
     ecma/operations/ecma-arraybuffer-object.h
     ecma/operations/ecma-async-generator-object.h
+    ecma/operations/ecma-atomics-object.h
     ecma/operations/ecma-big-uint.h
     ecma/operations/ecma-bigint-object.h
     ecma/operations/ecma-bigint.h

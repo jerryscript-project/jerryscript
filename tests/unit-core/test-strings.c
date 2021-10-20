@@ -215,6 +215,42 @@ main (void)
   TEST_ASSERT (res_buf[1] == 0x9F);
   TEST_ASSERT (res_buf[2] == 0xBF);
 
+  /* Ascii string */
+  lit_utf8_byte_t utf8_string_ascii[] = {'G','o','o','d','b','y','e'};
+  TEST_ASSERT (lit_is_valid_utf8_string (utf8_string_ascii, sizeof (utf8_string_ascii), true));
+
+  /* Control character */
+  lit_utf8_byte_t utf8_string_control[] = {0x00};
+  TEST_ASSERT (lit_is_valid_utf8_string (utf8_string_control, sizeof (utf8_string_control), true));
+
+  /* 3 byte characters */
+  lit_utf8_byte_t utf8_string_3byte[] = {0xe4, 0xbd, 0xa0, 0xe5, 0xa5, 0xbd, 0xe4, 0xb8, 0x96, 0xe7, 0x95, 0x8c};
+  TEST_ASSERT (lit_is_valid_utf8_string (utf8_string_3byte, sizeof (utf8_string_3byte), true));
+
+  /* 4 byte characters */
+  lit_utf8_byte_t utf8_string_4byte[] = {0xf0, 0x90, 0x80, 0x80, 0xf0, 0x9f, 0xa7, 0xbf};
+  TEST_ASSERT (lit_is_valid_utf8_string (utf8_string_4byte, sizeof (utf8_string_4byte), true));
+
+  /* Invalid continuation byte */
+  lit_utf8_byte_t utf8_string_invalid[] = {0xa0};
+  TEST_ASSERT (!lit_is_valid_utf8_string (utf8_string_invalid, sizeof (utf8_string_invalid), true));
+
+  /* Isolated high surrogate */
+  lit_utf8_byte_t utf8_string_high[] = {0xed, 0xa0, 0x80};
+  TEST_ASSERT (lit_is_valid_utf8_string (utf8_string_high, sizeof (utf8_string_high), true));
+
+  /* Isolated low surrogate */
+  lit_utf8_byte_t utf8_string_low[] = {0xed, 0xbf, 0xbf};
+  TEST_ASSERT (lit_is_valid_utf8_string (utf8_string_low, sizeof (utf8_string_low), true));
+
+  /* Correct pair of surrogates in strict*/
+  lit_utf8_byte_t utf8_string_surrogates_strict[] = {0xed, 0xa0, 0x80, 0xed, 0xbf, 0xbf};
+  TEST_ASSERT (!lit_is_valid_utf8_string (utf8_string_surrogates_strict, sizeof (utf8_string_surrogates_strict), true));
+
+  /* Correct pair of surrogates*/
+  lit_utf8_byte_t utf8_string_surrogates[] = {0xed, 0xa0, 0x80, 0xed, 0xbf, 0xbf};
+  TEST_ASSERT (lit_is_valid_utf8_string (utf8_string_surrogates, sizeof (utf8_string_surrogates), false));
+
   ecma_finalize ();
   jmem_finalize ();
 

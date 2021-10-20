@@ -872,6 +872,13 @@ ecma_builtin_array_prototype_object_slice (ecma_value_t arg1, /**< start */
         return ecma_make_object_value (new_array_p);
       }
 
+      /* Source array's length could be changed during the start/end normalization.
+       * If the "end" value is greater than the current length, clamp the value to avoid buffer-overflow. */
+      if (ext_from_obj_p->u.array.length < end)
+      {
+        end = ext_from_obj_p->u.array.length;
+      }
+
       ecma_extended_object_t *ext_to_obj_p = (ecma_extended_object_t *) new_array_p;
 
 #if JERRY_ESNEXT

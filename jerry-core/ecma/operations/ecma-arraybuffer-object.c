@@ -13,19 +13,18 @@
  * limitations under the License.
  */
 
-#include "ecma-builtin-helpers.h"
 #include "ecma-arraybuffer-object.h"
-#include "ecma-shared-arraybuffer-object.h"
-#include "ecma-typedarray-object.h"
-#include "ecma-objects.h"
 #include "ecma-builtins.h"
+#include "ecma-builtin-helpers.h"
 #include "ecma-exceptions.h"
+#include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
-#include "jmem.h"
+#include "ecma-objects.h"
+#include "ecma-shared-arraybuffer-object.h"
+#include "ecma-typedarray-object.h"
 #include "jcontext.h"
-#include "ecma-function-object.h"
 
 #if JERRY_BUILTIN_TYPEDARRAY
 
@@ -37,64 +36,187 @@
  */
 
 /**
- * Helper function: create arraybuffer object based on the array length
+ * Creating ArrayBuffer objects with a buffer after the arraybuffer header
  *
- * The struct of arraybuffer object:
- *   ecma_object_t
- *   extend_part
- *   data buffer
- *
- * @return ecma_object_t *
+ * @return new ArrayBuffer object
  */
 ecma_object_t *
-ecma_arraybuffer_new_object (uint32_t length) /**< length of the arraybuffer */
+ecma_arraybuffer_create_object (uint8_t type, /**< type of the arraybuffer */
+                                uint32_t length) /**< length of the arraybuffer */
 {
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAYBUFFER_PROTOTYPE);
-  ecma_object_t *object_p = ecma_create_object (prototype_obj_p,
+  ecma_builtin_id_t prototype_id;
+
+#if JERRY_BUILTIN_SHAREDARRAYBUFFER
+  JERRY_ASSERT (type == ECMA_OBJECT_CLASS_ARRAY_BUFFER
+                || type == ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER);
+
+  prototype_id = (type == ECMA_OBJECT_CLASS_ARRAY_BUFFER ? ECMA_BUILTIN_ID_ARRAYBUFFER_PROTOTYPE
+                                                         : ECMA_BUILTIN_ID_SHARED_ARRAYBUFFER_PROTOTYPE);
+#else /* !JERRY_BUILTIN_SHAREDARRAYBUFFER */
+  JERRY_ASSERT (type == ECMA_OBJECT_CLASS_ARRAY_BUFFER);
+
+  prototype_id = ECMA_BUILTIN_ID_ARRAYBUFFER_PROTOTYPE;
+#endif /* JERRY_BUILTIN_SHAREDARRAYBUFFER */
+
+  ecma_object_t *object_p = ecma_create_object (ecma_builtin_get (prototype_id),
                                                 sizeof (ecma_extended_object_t) + length,
                                                 ECMA_OBJECT_TYPE_CLASS);
 
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-  ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_ARRAY_BUFFER;
-  ext_object_p->u.cls.u1.array_buffer_flags = ECMA_ARRAYBUFFER_INTERNAL_MEMORY;
+  ext_object_p->u.cls.type = type;
+  ext_object_p->u.cls.u1.array_buffer_flags = ECMA_ARRAYBUFFER_ALLOCATED;
   ext_object_p->u.cls.u3.length = length;
 
-  lit_utf8_byte_t *buf = (lit_utf8_byte_t *) (ext_object_p + 1);
-  memset (buf, 0, length);
+  memset ((uint8_t *) (ext_object_p + 1), 0, length);
+  return object_p;
+} /* ecma_arraybuffer_create_object */
+
+/**
+ * Creating ArrayBuffer objects with a pointer to its buffer
+ *
+ * @return new ArrayBuffer object
+ */
+ecma_object_t *
+ecma_arraybuffer_create_object_with_buffer (uint8_t type, /**< type of the arraybuffer */
+                                            uint32_t length)
+{
+  ecma_builtin_id_t prototype_id;
+
+#if JERRY_BUILTIN_SHAREDARRAYBUFFER
+  JERRY_ASSERT (type == ECMA_OBJECT_CLASS_ARRAY_BUFFER
+                || type == ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER);
+
+  prototype_id = (type == ECMA_OBJECT_CLASS_ARRAY_BUFFER ? ECMA_BUILTIN_ID_ARRAYBUFFER_PROTOTYPE
+                                                         : ECMA_BUILTIN_ID_SHARED_ARRAYBUFFER_PROTOTYPE);
+#else /* !JERRY_BUILTIN_SHAREDARRAYBUFFER */
+  JERRY_ASSERT (type == ECMA_OBJECT_CLASS_ARRAY_BUFFER);
+
+  prototype_id = ECMA_BUILTIN_ID_ARRAYBUFFER_PROTOTYPE;
+#endif /* JERRY_BUILTIN_SHAREDARRAYBUFFER */
+
+  ecma_object_t *object_p = ecma_create_object (ecma_builtin_get (prototype_id),
+                                                sizeof (ecma_arraybuffer_pointer_t),
+                                                ECMA_OBJECT_TYPE_CLASS);
+
+  ecma_arraybuffer_pointer_t *arraybuffer_pointer_p = (ecma_arraybuffer_pointer_t *) object_p;
+  arraybuffer_pointer_p->extended_object.u.cls.type = type;
+  arraybuffer_pointer_p->extended_object.u.cls.u1.array_buffer_flags = ECMA_ARRAYBUFFER_HAS_POINTER;
+  arraybuffer_pointer_p->extended_object.u.cls.u3.length = length;
+
+  arraybuffer_pointer_p->buffer_p = NULL;
+  arraybuffer_pointer_p->arraybuffer_user_p = NULL;
 
   return object_p;
+} /* ecma_arraybuffer_create_object_with_buffer */
+
+/**
+ * Creating ArrayBuffer objects based on the array length
+ *
+ * @return new ArrayBuffer object
+ */
+ecma_object_t *
+ecma_arraybuffer_new_object (uint32_t length) /**< length of the arraybuffer */
+{
+  if (length > JERRY_CONTEXT (arraybuffer_compact_allocation_limit))
+  {
+    return ecma_arraybuffer_create_object_with_buffer (ECMA_OBJECT_CLASS_ARRAY_BUFFER, length);
+  }
+
+  return ecma_arraybuffer_create_object (ECMA_OBJECT_CLASS_ARRAY_BUFFER, length);
 } /* ecma_arraybuffer_new_object */
 
 /**
- * Helper function: create arraybuffer object with external buffer backing.
+ * Allocate a backing store for an array buffer.
  *
- * The struct of external arraybuffer object:
- *   ecma_object_t
- *   extend_part
- *   arraybuffer external info part
- *
- * @return ecma_object_t *, pointer to the created ArrayBuffer object
+ * @return ECMA_VALUE_UNDEFINED on success,
+ *         ECMA_VALUE_ERROR otherwise
  */
-ecma_object_t *
-ecma_arraybuffer_new_object_external (uint32_t length, /**< length of the buffer_p to use */
-                                      void *buffer_p, /**< pointer for ArrayBuffer's buffer backing */
-                                      jerry_value_free_callback_t free_cb) /**< buffer free callback */
+ecma_value_t
+ecma_arraybuffer_allocate_buffer (ecma_object_t *object_p) /**< ArrayBuffer object */
 {
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_ARRAYBUFFER_PROTOTYPE);
-  ecma_object_t *object_p = ecma_create_object (prototype_obj_p,
-                                                sizeof (ecma_arraybuffer_external_info),
-                                                ECMA_OBJECT_TYPE_CLASS);
+  JERRY_ASSERT (!(ECMA_ARRAYBUFFER_GET_FLAGS (object_p) & ECMA_ARRAYBUFFER_ALLOCATED));
 
-  ecma_arraybuffer_external_info *array_object_p = (ecma_arraybuffer_external_info *) object_p;
-  array_object_p->extended_object.u.cls.type = ECMA_OBJECT_CLASS_ARRAY_BUFFER;
-  array_object_p->extended_object.u.cls.u1.array_buffer_flags = ECMA_ARRAYBUFFER_EXTERNAL_MEMORY;
-  array_object_p->extended_object.u.cls.u3.length = length;
+  if (ECMA_ARRAYBUFFER_GET_FLAGS (object_p) & ECMA_ARRAYBUFFER_DETACHED)
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_arraybuffer_is_detached));
+  }
 
-  array_object_p->buffer_p = buffer_p;
-  array_object_p->free_cb = free_cb;
+  JERRY_ASSERT (ECMA_ARRAYBUFFER_GET_FLAGS (object_p) & ECMA_ARRAYBUFFER_HAS_POINTER);
 
-  return object_p;
-} /* ecma_arraybuffer_new_object_external */
+  ecma_extended_object_t *extended_object_p = (ecma_extended_object_t *) object_p;
+  uint32_t arraybuffer_length = extended_object_p->u.cls.u3.length;
+  ecma_arraybuffer_pointer_t *arraybuffer_pointer_p = (ecma_arraybuffer_pointer_t *) object_p;
+  jerry_arraybuffer_allocate_t arraybuffer_allocate_callback = JERRY_CONTEXT (arraybuffer_allocate_callback);
+  void *buffer_p;
+
+  if (arraybuffer_allocate_callback != NULL)
+  {
+    jerry_arraybuffer_type_t type = JERRY_ARRAYBUFFER_TYPE_ARRAYBUFFER;
+
+#if JERRY_BUILTIN_SHAREDARRAYBUFFER
+    if (extended_object_p->u.cls.type == ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER)
+    {
+      type = JERRY_ARRAYBUFFER_TYPE_SHARED_ARRAYBUFFER;
+    }
+#endif /* JERRY_BUILTIN_SHAREDARRAYBUFFER */
+
+    buffer_p = arraybuffer_allocate_callback (type,
+                                              arraybuffer_length,
+                                              &arraybuffer_pointer_p->arraybuffer_user_p,
+                                              JERRY_CONTEXT (arraybuffer_allocate_callback_user_p));
+  }
+  else
+  {
+    buffer_p = jmem_heap_alloc_block_null_on_error (arraybuffer_length);
+  }
+
+  if (buffer_p == NULL)
+  {
+    extended_object_p->u.cls.u1.array_buffer_flags |= ECMA_ARRAYBUFFER_DETACHED;
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Cannot allocate memory for ArrayBuffer"));
+  }
+
+  arraybuffer_pointer_p->buffer_p = buffer_p;
+  extended_object_p->u.cls.u1.array_buffer_flags |= ECMA_ARRAYBUFFER_ALLOCATED;
+
+  memset (buffer_p, 0, arraybuffer_length);
+  return ECMA_VALUE_UNDEFINED;
+} /* ecma_arraybuffer_allocate_buffer */
+
+/**
+ * Release the backing store allocated by an array buffer.
+ */
+void
+ecma_arraybuffer_release_buffer (ecma_object_t *object_p) /**< ArrayBuffer object */
+{
+  JERRY_ASSERT (ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_ARRAY_BUFFER)
+                || ecma_object_is_shared_arraybuffer (object_p));
+
+  jerry_arraybuffer_free_t free_callback = JERRY_CONTEXT (arraybuffer_free_callback);
+  ecma_arraybuffer_pointer_t *arraybuffer_pointer_p = (ecma_arraybuffer_pointer_t *) object_p;
+  uint32_t arraybuffer_length = arraybuffer_pointer_p->extended_object.u.cls.u3.length;
+
+  if (free_callback == NULL)
+  {
+    jmem_heap_free_block (arraybuffer_pointer_p->buffer_p, arraybuffer_length);
+    return;
+  }
+
+  jerry_arraybuffer_type_t type = JERRY_ARRAYBUFFER_TYPE_ARRAYBUFFER;
+
+#if JERRY_BUILTIN_SHAREDARRAYBUFFER
+  if (arraybuffer_pointer_p->extended_object.u.cls.type == ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER)
+  {
+    type = JERRY_ARRAYBUFFER_TYPE_SHARED_ARRAYBUFFER;
+  }
+#endif /* JERRY_BUILTIN_SHAREDARRAYBUFFER */
+
+  free_callback (type,
+                 arraybuffer_pointer_p->buffer_p,
+                 arraybuffer_length,
+                 arraybuffer_pointer_p->arraybuffer_user_p,
+                 JERRY_CONTEXT (arraybuffer_allocate_callback_user_p));
+} /* ecma_arraybuffer_release_buffer */
 
 /**
  * ArrayBuffer object creation operation.
@@ -198,26 +320,21 @@ ecma_arraybuffer_get_length (ecma_object_t *object_p) /**< pointer to the ArrayB
  *
  * @return pointer to the data buffer
  */
-extern inline lit_utf8_byte_t * JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
+extern inline uint8_t * JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_arraybuffer_get_buffer (ecma_object_t *object_p) /**< pointer to the ArrayBuffer object */
 {
   JERRY_ASSERT (ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_ARRAY_BUFFER)
                 || ecma_object_is_shared_arraybuffer (object_p));
 
-  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
+  JERRY_ASSERT (ECMA_ARRAYBUFFER_GET_FLAGS (object_p) & ECMA_ARRAYBUFFER_ALLOCATED);
 
-  if (ECMA_ARRAYBUFFER_HAS_EXTERNAL_MEMORY (ext_object_p))
+  if (!(ECMA_ARRAYBUFFER_GET_FLAGS (object_p) & ECMA_ARRAYBUFFER_HAS_POINTER))
   {
-    ecma_arraybuffer_external_info *array_p = (ecma_arraybuffer_external_info *) ext_object_p;
-    JERRY_ASSERT (!ecma_arraybuffer_is_detached (object_p) || array_p->buffer_p == NULL);
-    return (lit_utf8_byte_t *) array_p->buffer_p;
-  }
-  else if (ext_object_p->u.cls.u1.array_buffer_flags & ECMA_ARRAYBUFFER_DETACHED)
-  {
-    return NULL;
+    return (uint8_t *) object_p + sizeof (ecma_extended_object_t);
   }
 
-  return (lit_utf8_byte_t *) (ext_object_p + 1);
+  ecma_arraybuffer_pointer_t *arraybuffer_pointer_p = (ecma_arraybuffer_pointer_t *) object_p;
+  return (uint8_t *) arraybuffer_pointer_p->buffer_p;
 } /* ecma_arraybuffer_get_buffer */
 
 /**
@@ -232,7 +349,7 @@ ecma_arraybuffer_is_detached (ecma_object_t *object_p) /**< pointer to the Array
   JERRY_ASSERT (ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_ARRAY_BUFFER)
                 || ecma_object_is_shared_arraybuffer (object_p));
 
-  return (((ecma_extended_object_t *) object_p)->u.cls.u1.array_buffer_flags & ECMA_ARRAYBUFFER_DETACHED) != 0;
+  return (ECMA_ARRAYBUFFER_GET_FLAGS (object_p) & ECMA_ARRAYBUFFER_DETACHED) != 0;
 } /* ecma_arraybuffer_is_detached */
 
 /**
@@ -240,7 +357,7 @@ ecma_arraybuffer_is_detached (ecma_object_t *object_p) /**< pointer to the Array
  *
  * See also: ES2015 24.1.1.3
  *
- * @return true - if detach op succeeded
+ * @return true - if detach operation is succeeded
  *         false - otherwise
  */
 extern inline bool JERRY_ATTR_ALWAYS_INLINE
@@ -248,7 +365,7 @@ ecma_arraybuffer_detach (ecma_object_t *object_p) /**< pointer to the ArrayBuffe
 {
   JERRY_ASSERT (ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_ARRAY_BUFFER));
 
-  if (ecma_arraybuffer_is_detached (object_p))
+  if (ECMA_ARRAYBUFFER_GET_FLAGS (object_p) & ECMA_ARRAYBUFFER_DETACHED)
   {
     return false;
   }
@@ -256,23 +373,31 @@ ecma_arraybuffer_detach (ecma_object_t *object_p) /**< pointer to the ArrayBuffe
   ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
   ext_object_p->u.cls.u1.array_buffer_flags |= ECMA_ARRAYBUFFER_DETACHED;
 
-  if (ECMA_ARRAYBUFFER_HAS_EXTERNAL_MEMORY (ext_object_p))
+  if (!(ECMA_ARRAYBUFFER_GET_FLAGS (object_p) & ECMA_ARRAYBUFFER_ALLOCATED))
   {
-    ecma_arraybuffer_external_info *array_p = (ecma_arraybuffer_external_info *) ext_object_p;
-
-    if (array_p->free_cb != NULL)
-    {
-      array_p->free_cb (array_p->buffer_p);
-      array_p->free_cb = NULL;
-    }
-
-    ext_object_p->u.cls.u3.length = 0;
-    array_p->buffer_p = NULL;
+    return true;
   }
 
+  ext_object_p->u.cls.u1.array_buffer_flags &= (uint8_t) ~ECMA_ARRAYBUFFER_ALLOCATED;
+
+  if (!(ECMA_ARRAYBUFFER_GET_FLAGS (object_p) & ECMA_ARRAYBUFFER_HAS_POINTER))
+  {
+    return true;
+  }
+
+  ecma_arraybuffer_release_buffer (object_p);
   return true;
 } /* ecma_arraybuffer_detach */
 
+/**
+ * ArrayBuffer slice operation
+ *
+ * See also:
+ *          ECMA-262 v11, 24.1.4.3
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value.
+ */
 ecma_value_t
 ecma_builtin_arraybuffer_slice (ecma_value_t this_arg,
                                 const ecma_value_t *argument_list_p,
@@ -280,10 +405,10 @@ ecma_builtin_arraybuffer_slice (ecma_value_t this_arg,
 {
   ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
 
-  /* 4. */
-  if (ecma_arraybuffer_is_detached (object_p))
+  /* 3-4. */
+  if (ECMA_ARRAYBUFFER_CHECK_BUFFER_ERROR (object_p))
   {
-    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_arraybuffer_is_detached));
+    return ECMA_VALUE_ERROR;
   }
 
   /* 5. */
@@ -358,7 +483,7 @@ ecma_builtin_arraybuffer_slice (ecma_value_t this_arg,
   }
 
   /* 14-15. */
-  if (ecma_arraybuffer_is_detached (new_arraybuffer_p))
+  if (ECMA_ARRAYBUFFER_CHECK_BUFFER_ERROR (new_arraybuffer_p))
   {
     ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Returned ArrayBuffer has been detached"));
     goto free_new_arraybuffer;
@@ -381,7 +506,7 @@ ecma_builtin_arraybuffer_slice (ecma_value_t this_arg,
   /* 19. */
   if (ecma_arraybuffer_is_detached (object_p))
   {
-    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Original ArrayBuffer has been detached"));
+    ret_value = ECMA_VALUE_ERROR;
     goto free_new_arraybuffer;
   }
 

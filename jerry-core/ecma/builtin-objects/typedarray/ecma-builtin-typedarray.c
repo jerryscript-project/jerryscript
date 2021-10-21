@@ -131,10 +131,17 @@ ecma_builtin_typedarray_of (ecma_value_t this_arg, /**< 'this' argument */
   ecma_object_t *ret_obj_p = ecma_get_object_from_value (ret_val);
   ecma_typedarray_info_t info = ecma_typedarray_get_info (ret_obj_p);
   ecma_typedarray_setter_fn_t setter_cb = ecma_get_typedarray_setter_fn (info.id);
+  lit_utf8_byte_t *buffer_p = ecma_typedarray_get_buffer (&info);
+
+  if (JERRY_UNLIKELY (buffer_p == NULL))
+  {
+    ecma_deref_object (ret_obj_p);
+    return ECMA_VALUE_ERROR;
+  }
 
   while (k < arguments_list_len)
   {
-    ecma_value_t set_element = setter_cb (info.buffer_p, arguments_list_p[k]);
+    ecma_value_t set_element = setter_cb (buffer_p, arguments_list_p[k]);
 
     if (ECMA_IS_VALUE_ERROR (set_element))
     {
@@ -143,7 +150,7 @@ ecma_builtin_typedarray_of (ecma_value_t this_arg, /**< 'this' argument */
     }
 
     k++;
-    info.buffer_p += info.element_size;
+    buffer_p += info.element_size;
   }
 
   return ret_val;

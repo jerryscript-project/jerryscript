@@ -5922,7 +5922,8 @@ jerry_value_is_arraybuffer (const jerry_value_t value) /**< value to check if it
  * @return value of the constructed ArrayBuffer object
  */
 jerry_value_t
-jerry_create_arraybuffer (const jerry_length_t size) /**< size of the ArrayBuffer to create */
+jerry_create_arraybuffer (const jerry_length_t size) /**< size of the backing store allocated
+                                                      *   for the array buffer in bytes */
 {
   jerry_assert_api_available ();
 
@@ -5943,32 +5944,41 @@ jerry_create_arraybuffer (const jerry_length_t size) /**< size of the ArrayBuffe
  *     * if the typed arrays are disabled this will return a TypeError.
  *     * if the size is zero or buffer_p is a null pointer this will return an empty ArrayBuffer.
  *
- * @return value of the construced ArrayBuffer object
+ * @return value of the newly construced array buffer object
  */
 jerry_value_t
-jerry_create_arraybuffer_external (const jerry_length_t size, /**< size of the buffer to used */
-                                   uint8_t *buffer_p, /**< buffer to use as the ArrayBuffer's backing */
-                                   jerry_value_free_callback_t free_cb) /**< buffer free callback */
+jerry_create_arraybuffer_external (const jerry_length_t size, /**< size of the buffer in bytes */
+                                   uint8_t *buffer_p, /**< the backing store used by the array buffer object */
+                                   void *arraybuffer_user_p) /**< user pointer assigned to the array buffer object */
 {
   jerry_assert_api_available ();
 
 #if JERRY_BUILTIN_TYPEDARRAY
-  ecma_object_t *arraybuffer;
+  ecma_object_t *arraybuffer_p;
 
-  if (JERRY_UNLIKELY (size == 0 || buffer_p == NULL))
+  if (JERRY_UNLIKELY (size == 0))
   {
-    arraybuffer = ecma_arraybuffer_new_object (0);
+    arraybuffer_p = ecma_arraybuffer_new_object (0);
   }
   else
   {
-    arraybuffer = ecma_arraybuffer_new_object_external (size, buffer_p, free_cb);
+    arraybuffer_p = ecma_arraybuffer_create_object_with_buffer (ECMA_OBJECT_CLASS_ARRAY_BUFFER, size);
+
+    ecma_arraybuffer_pointer_t *arraybuffer_pointer_p = (ecma_arraybuffer_pointer_t *) arraybuffer_p;
+    arraybuffer_pointer_p->arraybuffer_user_p = arraybuffer_user_p;
+
+    if (buffer_p != NULL)
+    {
+      arraybuffer_pointer_p->extended_object.u.cls.u1.array_buffer_flags |= ECMA_ARRAYBUFFER_ALLOCATED;
+      arraybuffer_pointer_p->buffer_p = buffer_p;
+    }
   }
 
-  return jerry_return (ecma_make_object_value (arraybuffer));
+  return jerry_return (ecma_make_object_value (arraybuffer_p));
 #else /* !JERRY_BUILTIN_TYPEDARRAY */
   JERRY_UNUSED (size);
   JERRY_UNUSED (buffer_p);
-  JERRY_UNUSED (free_cb);
+  JERRY_UNUSED (arraybuffer_user_p);
   return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_typed_array_not_supported_p)));
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
 } /* jerry_create_arraybuffer_external */
@@ -5998,7 +6008,8 @@ jerry_value_is_shared_arraybuffer (const jerry_value_t value) /**< value to chec
  * @return value of the constructed SharedArrayBuffer object
  */
 jerry_value_t
-jerry_create_shared_arraybuffer (const jerry_length_t size) /**< size of the SharedArrayBuffer to create */
+jerry_create_shared_arraybuffer (const jerry_length_t size) /**< size of the backing store allocated
+                                                             *   for the shared array buffer in bytes */
 {
   jerry_assert_api_available ();
 
@@ -6019,32 +6030,43 @@ jerry_create_shared_arraybuffer (const jerry_length_t size) /**< size of the Sha
  *     * if the typed arrays are disabled this will return a TypeError.
  *     * if the size is zero or buffer_p is a null pointer this will return an empty SharedArrayBuffer.
  *
- * @return value of the construced SharedArrayBuffer object
+ * @return value of the newly construced shared array buffer object
  */
 jerry_value_t
-jerry_create_shared_arraybuffer_external (const jerry_length_t size, /**< size of the buffer to used */
-                                          uint8_t *buffer_p, /**< buffer to use as the SharedArrayBuffer's backing */
-                                          jerry_value_free_callback_t free_cb) /**< buffer free callback */
+jerry_create_shared_arraybuffer_external (const jerry_length_t size, /**< size of the buffer in bytes */
+                                          uint8_t *buffer_p, /**< the backing store used by the
+                                                              *   shared array buffer object */
+                                          void *arraybuffer_user_p) /**< user pointer assigned to the
+                                                                     *   shared array buffer object */
 {
   jerry_assert_api_available ();
 
 #if JERRY_BUILTIN_SHAREDARRAYBUFFER
-  ecma_object_t *shared_arraybuffer;
+  ecma_object_t *shared_arraybuffer_p;
 
-  if (JERRY_UNLIKELY (size == 0 || buffer_p == NULL))
+  if (JERRY_UNLIKELY (size == 0))
   {
-    shared_arraybuffer = ecma_shared_arraybuffer_new_object (0);
+    shared_arraybuffer_p = ecma_shared_arraybuffer_new_object (0);
   }
   else
   {
-    shared_arraybuffer = ecma_shared_arraybuffer_new_object_external (size, buffer_p, free_cb);
+    shared_arraybuffer_p = ecma_arraybuffer_create_object_with_buffer (ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER, size);
+
+    ecma_arraybuffer_pointer_t *shared_arraybuffer_pointer_p = (ecma_arraybuffer_pointer_t *) shared_arraybuffer_p;
+    shared_arraybuffer_pointer_p->arraybuffer_user_p = arraybuffer_user_p;
+
+    if (buffer_p != NULL)
+    {
+      shared_arraybuffer_pointer_p->extended_object.u.cls.u1.array_buffer_flags |= ECMA_ARRAYBUFFER_ALLOCATED;
+      shared_arraybuffer_pointer_p->buffer_p = buffer_p;
+    }
   }
 
-  return jerry_return (ecma_make_object_value (shared_arraybuffer));
+  return jerry_return (ecma_make_object_value (shared_arraybuffer_p));
 #else /* !JERRY_BUILTIN_SHAREDARRAYBUFFER */
   JERRY_UNUSED (size);
   JERRY_UNUSED (buffer_p);
-  JERRY_UNUSED (free_cb);
+  JERRY_UNUSED (arraybuffer_user_p);
   return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_shared_arraybuffer_not_supported_p)));
 #endif /* JERRY_BUILTIN_SHAREDARRAYBUFFER */
 } /* jerry_create_shared_arraybuffer_external */
@@ -6072,6 +6094,13 @@ jerry_arraybuffer_write (const jerry_value_t value, /**< target ArrayBuffer or S
   }
 
   ecma_object_t *buffer_p = ecma_get_object_from_value (value);
+
+  if (ECMA_ARRAYBUFFER_CHECK_BUFFER_ERROR (buffer_p))
+  {
+    jerry_release_value (jcontext_take_exception ());
+    return 0;
+  }
+
   jerry_length_t length = ecma_arraybuffer_get_length (buffer_p);
 
   if (offset >= length)
@@ -6121,6 +6150,13 @@ jerry_arraybuffer_read (const jerry_value_t value, /**< ArrayBuffer or SharedArr
   }
 
   ecma_object_t *buffer_p = ecma_get_object_from_value (value);
+
+  if (ECMA_ARRAYBUFFER_CHECK_BUFFER_ERROR (buffer_p))
+  {
+    jerry_release_value (jcontext_take_exception ());
+    return 0;
+  }
+
   jerry_length_t length = ecma_arraybuffer_get_length (buffer_p);
 
   if (offset >= length)
@@ -6190,15 +6226,19 @@ jerry_get_arraybuffer_pointer (const jerry_value_t array_buffer) /**< Array Buff
   jerry_assert_api_available ();
 
 #if JERRY_BUILTIN_TYPEDARRAY
-  if (ecma_is_value_error_reference (array_buffer)
-      || !(ecma_is_arraybuffer (array_buffer) || ecma_is_shared_arraybuffer (array_buffer)))
+  if (!(ecma_is_arraybuffer (array_buffer) || ecma_is_shared_arraybuffer (array_buffer)))
   {
     return NULL;
   }
 
   ecma_object_t *buffer_p = ecma_get_object_from_value (array_buffer);
-  lit_utf8_byte_t *mem_buffer_p = ecma_arraybuffer_get_buffer (buffer_p);
-  return (uint8_t *const) mem_buffer_p;
+
+  if (!(ECMA_ARRAYBUFFER_GET_FLAGS (buffer_p) & ECMA_ARRAYBUFFER_ALLOCATED))
+  {
+    return NULL;
+  }
+
+  return (uint8_t *) ecma_arraybuffer_get_buffer (buffer_p);
 #else /* !JERRY_BUILTIN_TYPEDARRAY */
   JERRY_UNUSED (array_buffer);
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
@@ -6221,7 +6261,7 @@ jerry_is_arraybuffer_detachable (const jerry_value_t value) /**< ArrayBuffer */
   if (ecma_is_arraybuffer (value))
   {
     ecma_object_t *buffer_p = ecma_get_object_from_value (value);
-    return ecma_arraybuffer_is_detached (buffer_p) ? ECMA_VALUE_FALSE : ECMA_VALUE_TRUE;
+    return ecma_make_boolean_value (!ecma_arraybuffer_is_detached (buffer_p));
   }
 #else /* !JERRY_BUILTIN_TYPEDARRAY */
   JERRY_UNUSED (value);
@@ -6232,8 +6272,8 @@ jerry_is_arraybuffer_detachable (const jerry_value_t value) /**< ArrayBuffer */
 /**
  * Detach the underlying data block from ArrayBuffer and set its bytelength to 0.
  *
- * Note: If the ArrayBuffer has been created with `jerry_create_arraybuffer_external`
- *       the optional free callback is called on a successful detach operation
+ * Note: if the ArrayBuffer has a separate data buffer, the free callback set by
+ *       jerry_arraybuffer_set_allocation_callbacks is called for this buffer
  *
  * @return null value - if success
  *         value marked with error flag - otherwise
@@ -6258,6 +6298,83 @@ jerry_detach_arraybuffer (const jerry_value_t value) /**< ArrayBuffer */
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
   return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG ("Expected an ArrayBuffer")));
 } /* jerry_detach_arraybuffer */
+
+/**
+ * Checks whether a buffer is currently allocated for an array buffer or typed array.
+ *
+ * @return true, if a buffer is allocated for an array buffer or typed array
+ *         false, otherwise
+ */
+bool
+jerry_arraybuffer_has_buffer (const jerry_value_t value) /**< array buffer or typed array value */
+{
+  jerry_assert_api_available ();
+
+#if JERRY_BUILTIN_TYPEDARRAY
+  if (!ecma_is_value_object (value))
+  {
+    return false;
+  }
+
+  ecma_object_t *object_p = ecma_get_object_from_value (value);
+
+  if (ecma_object_is_typedarray (object_p))
+  {
+    object_p = ecma_typedarray_get_arraybuffer (object_p);
+  }
+  else if (!(ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_ARRAY_BUFFER)
+             || ecma_object_is_shared_arraybuffer (object_p)))
+  {
+    return false;
+  }
+
+  return (ECMA_ARRAYBUFFER_GET_FLAGS (object_p) & ECMA_ARRAYBUFFER_ALLOCATED) != 0;
+#else /* !JERRY_BUILTIN_TYPEDARRAY */
+  JERRY_UNUSED (value);
+  return false;
+#endif /* JERRY_BUILTIN_TYPEDARRAY */
+} /* jerry_arraybuffer_has_buffer */
+
+/**
+ * Array buffers which size is less or equal than the limit passed to this function are allocated in
+ * a single memory block. The allocator callbacks set by jerry_arraybuffer_set_allocation_callbacks
+ * are not called for these array buffers. The default limit is 256 bytes.
+ */
+void
+jerry_arraybuffer_set_compact_allocation_limit (const jerry_length_t allocation_limit) /**< maximum size of
+                                                                                        *   compact allocation */
+{
+  jerry_assert_api_available ();
+
+#if JERRY_BUILTIN_TYPEDARRAY
+  JERRY_CONTEXT (arraybuffer_compact_allocation_limit) = allocation_limit;
+#else /* !JERRY_BUILTIN_TYPEDARRAY */
+  JERRY_UNUSED (allocation_limit);
+#endif /* JERRY_BUILTIN_TYPEDARRAY */
+} /* jerry_arraybuffer_set_compact_allocation_limit */
+
+/**
+ * Set callbacks for allocating and freeing backing stores for array buffer objects.
+ */
+void
+jerry_arraybuffer_set_allocator_callbacks (jerry_arraybuffer_allocate_t allocate_callback, /**< callback for allocating
+                                                                                            *   array buffer memory */
+                                           jerry_arraybuffer_free_t free_callback, /**< callback for freeing
+                                                                                    *   array buffer memory */
+                                           void *user_p) /**< user pointer passed to the callbacks */
+{
+  jerry_assert_api_available ();
+
+#if JERRY_BUILTIN_TYPEDARRAY
+  JERRY_CONTEXT (arraybuffer_allocate_callback) = allocate_callback;
+  JERRY_CONTEXT (arraybuffer_free_callback) = free_callback;
+  JERRY_CONTEXT (arraybuffer_allocate_callback_user_p) = user_p;
+#else /* !JERRY_BUILTIN_TYPEDARRAY */
+  JERRY_UNUSED (allocate_callback);
+  JERRY_UNUSED (free_callback);
+  JERRY_UNUSED (user_p);
+#endif /* JERRY_BUILTIN_TYPEDARRAY */
+} /* jerry_arraybuffer_set_allocator_callbacks */
 
 /**
  * DataView related functions

@@ -298,10 +298,9 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
   /* GetViewValue 4., SetViewValue 6. */
   bool is_little_endian = ecma_op_to_boolean (is_little_endian_value);
 
-  if (ecma_arraybuffer_is_detached (buffer_p))
+  if (ECMA_ARRAYBUFFER_CHECK_BUFFER_ERROR (buffer_p))
   {
-    ecma_free_value (value_to_set);
-    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_arraybuffer_is_detached));
+    return ECMA_VALUE_ERROR;
   }
 
   /* GetViewValue 7., SetViewValue 9. */
@@ -320,10 +319,12 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
     return ecma_raise_range_error (ECMA_ERR_MSG ("Start offset is outside the bounds of the buffer"));
   }
 
-  /* GetViewValue 11., SetViewValue 13. */
-  uint32_t buffer_index = (uint32_t) get_index + view_offset;
-  lit_utf8_byte_t *block_p = ecma_arraybuffer_get_buffer (buffer_p) + buffer_index;
+  if (ECMA_ARRAYBUFFER_CHECK_BUFFER_ERROR (buffer_p))
+  {
+    return ECMA_VALUE_ERROR;
+  }
 
+  /* GetViewValue 11., SetViewValue 13. */
   bool system_is_little_endian = ecma_dataview_check_little_endian ();
 
   ecma_typedarray_info_t info;
@@ -335,21 +336,27 @@ ecma_op_dataview_get_set_view_value (ecma_value_t view, /**< the operation's 'vi
   info.array_buffer_p = buffer_p;
 
   /* GetViewValue 12. */
+  uint8_t *block_p = ecma_arraybuffer_get_buffer (buffer_p) + (uint32_t) get_index + view_offset;
+
   if (ecma_is_value_empty (value_to_set))
   {
     JERRY_VLA (lit_utf8_byte_t, swap_block_p, element_size);
     memcpy (swap_block_p, block_p, element_size * sizeof (lit_utf8_byte_t));
     ecma_dataview_swap_order (system_is_little_endian, is_little_endian, element_size, swap_block_p);
-    info.buffer_p = swap_block_p;
-    return ecma_get_typedarray_element (&info, 0);
+
+    ecma_typedarray_getter_fn_t typedarray_getter_cb = ecma_get_typedarray_getter_fn (info.id);
+    return typedarray_getter_cb (swap_block_p);
   }
+
   if (!ecma_number_is_nan (get_index) && get_index <= 0)
   {
     get_index = 0;
   }
+
   /* SetViewValue 14. */
-  info.buffer_p = block_p;
-  ecma_value_t set_element = ecma_set_typedarray_element (&info, value_to_set, 0);
+  ecma_typedarray_setter_fn_t typedarray_setter_cb = ecma_get_typedarray_setter_fn (info.id);
+  ecma_value_t set_element = typedarray_setter_cb (block_p, value_to_set);
+
   ecma_free_value (value_to_set);
 
   if (ECMA_IS_VALUE_ERROR (set_element))

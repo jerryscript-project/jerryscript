@@ -819,6 +819,31 @@ typedef struct
 } jerry_source_info_t;
 
 /**
+ * Array buffer types.
+ */
+
+/**
+ * Type of an array buffer.
+ */
+typedef enum
+{
+  JERRY_ARRAYBUFFER_TYPE_ARRAYBUFFER, /**< the object is an array buffer object */
+  JERRY_ARRAYBUFFER_TYPE_SHARED_ARRAYBUFFER, /**< the object is a shared array buffer object */
+} jerry_arraybuffer_type_t;
+
+/**
+ * Callback for allocating the backing store of array buffer or shared array buffer objects.
+ */
+typedef uint8_t *(*jerry_arraybuffer_allocate_t) (jerry_arraybuffer_type_t buffer_type, uint32_t buffer_size,
+                                                  void **arraybuffer_user_p, void *user_p);
+
+/**
+ * Callback for freeing the backing store of array buffer or shared array buffer objects.
+ */
+typedef void (*jerry_arraybuffer_free_t) (jerry_arraybuffer_type_t buffer_type, uint8_t *buffer_p,
+                                          uint32_t buffer_size, void *arraybuffer_user_p, void *user_p);
+
+/**
  * @}
  */
 

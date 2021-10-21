@@ -13,17 +13,17 @@
  * limitations under the License.
  */
 
-#include "ecma-shared-arraybuffer-object.h"
-#include "ecma-typedarray-object.h"
-#include "ecma-objects.h"
+#include "ecma-arraybuffer-object.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
+#include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
-#include "jmem.h"
+#include "ecma-objects.h"
+#include "ecma-shared-arraybuffer-object.h"
+#include "ecma-typedarray-object.h"
 #include "jcontext.h"
-#include "ecma-function-object.h"
 
 /** \addtogroup ecma ECMA
  * @{
@@ -35,64 +35,20 @@
 #if JERRY_BUILTIN_SHAREDARRAYBUFFER
 
 /**
- * Helper function: create SharedArrayBuffer object based on the array length
+ * Creating SharedArrayBuffer objects based on the array length
  *
- * The struct of arraybuffer object:
- *   ecma_object_t
- *   extend_part
- *   data buffer
- *
- * @return ecma_object_t *
+ * @return new SharedArrayBuffer object
  */
 ecma_object_t *
 ecma_shared_arraybuffer_new_object (uint32_t length) /**< length of the SharedArrayBuffer */
 {
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_SHARED_ARRAYBUFFER_PROTOTYPE);
-  ecma_object_t *object_p = ecma_create_object (prototype_obj_p,
-                                                sizeof (ecma_extended_object_t) + length,
-                                                ECMA_OBJECT_TYPE_CLASS);
+  if (length > 0)
+  {
+    return ecma_arraybuffer_create_object_with_buffer (ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER, length);
+  }
 
-  ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) object_p;
-  ext_object_p->u.cls.type = ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER;
-  ext_object_p->u.cls.u1.array_buffer_flags = ECMA_ARRAYBUFFER_INTERNAL_MEMORY;
-  ext_object_p->u.cls.u3.length = length;
-
-  lit_utf8_byte_t *buf = (lit_utf8_byte_t *) (ext_object_p + 1);
-  memset (buf, 0, length);
-
-  return object_p;
+  return ecma_arraybuffer_create_object (ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER, length);
 } /* ecma_shared_arraybuffer_new_object */
-
-/**
- * Helper function: create SharedArrayBuffer object with external buffer backing.
- *
- * The struct of external arraybuffer object:
- *   ecma_object_t
- *   extend_part
- *   SharedArrayBuffer external info part
- *
- * @return ecma_object_t *, pointer to the created SharedArrayBuffer object
- */
-ecma_object_t *
-ecma_shared_arraybuffer_new_object_external (uint32_t length, /**< length of the buffer_p to use */
-                                             void *buffer_p, /**< pointer for SharedArrayBuffer's buffer backing */
-                                             jerry_value_free_callback_t free_cb) /**< buffer free callback */
-{
-  ecma_object_t *prototype_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_SHARED_ARRAYBUFFER_PROTOTYPE);
-  ecma_object_t *object_p = ecma_create_object (prototype_obj_p,
-                                                sizeof (ecma_arraybuffer_external_info),
-                                                ECMA_OBJECT_TYPE_CLASS);
-
-  ecma_arraybuffer_external_info *array_object_p = (ecma_arraybuffer_external_info *) object_p;
-  array_object_p->extended_object.u.cls.type = ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER;
-  array_object_p->extended_object.u.cls.u1.array_buffer_flags = ECMA_ARRAYBUFFER_EXTERNAL_MEMORY;
-  array_object_p->extended_object.u.cls.u3.length = length;
-
-  array_object_p->buffer_p = buffer_p;
-  array_object_p->free_cb = free_cb;
-
-  return object_p;
-} /* ecma_shared_arraybuffer_new_object_external */
 
 /**
  * SharedArrayBuffer object creation operation.

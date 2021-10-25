@@ -130,6 +130,11 @@ const char * const ecma_error_class_is_non_configurable = "Prototype property of
 const char * const ecma_error_argument_is_not_an_object = "Argument is not an object";
 
 /**
+ * Error message length of 'ecma_error_argument_is_not_an_object'
+ */
+const int ecma_error_argument_is_not_an_object_length = 25;
+
+/**
  * Error message, argument is not a Proxy object
  */
 const char * const ecma_error_argument_is_not_a_proxy = "Argument is not a Proxy object";

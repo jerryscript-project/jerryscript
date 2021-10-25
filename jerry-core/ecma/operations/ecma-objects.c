@@ -2937,6 +2937,7 @@ static const uint16_t ecma_class_object_magic_string_id[] =
 #if JERRY_ESNEXT
   LIT_MAGIC_STRING_PROMISE_UL, /**< magic string id of ECMA_OBJECT_CLASS_PROMISE */
   LIT_MAGIC_STRING_OBJECT_UL, /**< magic string id of ECMA_OBJECT_CLASS_PROMISE_CAPABILITY */
+  LIT_MAGIC_STRING_OBJECT_UL, /**< magic string id of ECMA_OBJECT_CLASS_ASYNC_FROM_SYNC_ITERATOR */
 #endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_DATAVIEW
   LIT_MAGIC_STRING_DATAVIEW_UL, /**< magic string id of ECMA_OBJECT_CLASS_DATAVIEW */

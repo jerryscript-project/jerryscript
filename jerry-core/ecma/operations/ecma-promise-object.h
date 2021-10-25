@@ -129,8 +129,14 @@ ecma_value_t ecma_promise_finally (ecma_value_t promise, ecma_value_t on_finally
 void ecma_promise_async_then (ecma_value_t promise, ecma_value_t executable_object);
 ecma_value_t ecma_promise_async_await (ecma_extended_object_t *async_generator_object_p, ecma_value_t value);
 ecma_value_t ecma_promise_run_executor (ecma_object_t *promise_p, ecma_value_t executor, ecma_value_t this_value);
+ecma_value_t ecma_op_if_abrupt_reject_promise (ecma_value_t *value_p, ecma_object_t *capability_obj_p);
 
 uint32_t ecma_promise_remaining_inc_or_dec (ecma_value_t remaining, bool is_inc);
+
+ecma_value_t ecma_promise_perform_then (ecma_value_t promise,
+                                        ecma_value_t on_fulfilled,
+                                        ecma_value_t on_rejected,
+                                        ecma_object_t *result_capability_obj_p);
 
 /**
  * @}

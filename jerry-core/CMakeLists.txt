@@ -160,6 +160,7 @@ set(SOURCE_CORE_FILES
   ecma/builtin-objects/ecma-builtin-array.c
   ecma/builtin-objects/ecma-builtin-arraybuffer-prototype.c
   ecma/builtin-objects/ecma-builtin-arraybuffer.c
+  ecma/builtin-objects/ecma-builtin-async-from-sync-iterator-prototype.c
   ecma/builtin-objects/ecma-builtin-async-function-prototype.c
   ecma/builtin-objects/ecma-builtin-async-function.c
   ecma/builtin-objects/ecma-builtin-async-generator-function.c
@@ -358,6 +359,7 @@ if(ENABLE_AMALGAM)
     ecma/builtin-objects/ecma-builtin-array.inc.h
     ecma/builtin-objects/ecma-builtin-arraybuffer-prototype.inc.h
     ecma/builtin-objects/ecma-builtin-arraybuffer.inc.h
+    ecma/builtin-objects/ecma-builtin-async-from-sync-iterator-prototype.inc.h
     ecma/builtin-objects/ecma-builtin-async-function-prototype.inc.h
     ecma/builtin-objects/ecma-builtin-async-function.inc.h
     ecma/builtin-objects/ecma-builtin-async-generator-function.inc.h

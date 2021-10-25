@@ -59,6 +59,9 @@ ecma_value_t
 ecma_op_get_iterator (ecma_value_t value, ecma_value_t method, ecma_value_t *next_method_p);
 
 ecma_value_t
+ecma_op_iterator_complete (ecma_value_t iter_result);
+
+ecma_value_t
 ecma_op_iterator_value (ecma_value_t iter_result);
 
 ecma_value_t
@@ -73,6 +76,15 @@ ecma_op_iterator_step (ecma_value_t iterator, ecma_value_t next_method);
 ecma_value_t
 ecma_op_iterator_do (ecma_iterator_command_type_t command, ecma_value_t iterator,
                      ecma_value_t next_method, ecma_value_t value, bool *done_p);
+
+ecma_value_t
+ecma_op_create_async_from_sync_iterator (ecma_value_t sync_iterator, ecma_value_t sync_next_method,
+                                         ecma_value_t *async_next_method_p);
+
+ecma_value_t
+ecma_async_from_sync_iterator_unwrap_cb (ecma_object_t *function_obj_p,
+                                         const ecma_value_t args_p[],
+                                         const uint32_t args_count);
 
 #endif /* JERRY_ESNEXT */
 

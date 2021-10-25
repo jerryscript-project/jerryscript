@@ -701,6 +701,13 @@ BUILTIN (ECMA_BUILTIN_ID_ASYNC_ITERATOR_PROTOTYPE,
          true,
          async_iterator_prototype)
 
+/* The %AsyncFromSyncIteratorPrototype% object (ECMA-262 v11, 25.1.4.2) */
+BUILTIN (ECMA_BUILTIN_ID_ASYNC_FROM_SYNC_ITERATOR_PROTOTYPE,
+         ECMA_OBJECT_TYPE_BUILT_IN_GENERAL,
+         ECMA_BUILTIN_ID_ASYNC_ITERATOR_PROTOTYPE,
+         true,
+         async_from_sync_iterator_prototype)
+
 /* The %(GeneratorFunction)% object */
 BUILTIN_ROUTINE (ECMA_BUILTIN_ID_GENERATOR_FUNCTION,
                  ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION,

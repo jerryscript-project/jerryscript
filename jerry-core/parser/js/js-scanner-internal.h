@@ -410,6 +410,7 @@ lexer_lit_location_t *scanner_add_custom_literal (parser_context_t *context_p,
 lexer_lit_location_t *scanner_add_literal (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 void scanner_add_reference (parser_context_t *context_p, scanner_context_t *scanner_context_p);
 lexer_lit_location_t *scanner_append_argument (parser_context_t *context_p, scanner_context_t *scanner_context_p);
+void scanner_add_private_identifier (parser_context_t *context_p, uint8_t opts);
 #if JERRY_ESNEXT
 void scanner_detect_invalid_var (parser_context_t *context_p,
                                  scanner_context_t *scanner_context_p,

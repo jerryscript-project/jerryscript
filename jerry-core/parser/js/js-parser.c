@@ -1421,6 +1421,45 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 #undef PARSER_NEXT_BYTE
 #undef PARSER_NEXT_BYTE_UPDATE
 
+#if JERRY_ESNEXT
+/**
+ * Save private field context
+ */
+void
+parser_save_private_context (parser_context_t *context_p, parser_private_fields_t *private_ctx_p)
+{
+  private_ctx_p->private_ident_pool_p = NULL;
+  private_ctx_p->prev_p = context_p->private_fields_p;
+  context_p->private_fields_p = private_ctx_p;
+} /* parser_save_private_context */
+
+/**
+ * Release contexts private fields
+ */
+static void
+parser_free_private_fields (parser_context_t *context_p)
+{
+  parser_private_fields_t *iter = context_p->private_fields_p;
+
+  while (iter != NULL)
+  {
+    parser_private_fields_t *prev_p = iter->prev_p;
+    scanner_release_private_fields (iter->private_ident_pool_p);
+    iter = prev_p;
+  }
+} /* parser_free_private_fields */
+
+/**
+ * Restore contexts private fields
+ */
+void
+parser_restore_private_context (parser_context_t *context_p, parser_private_fields_t *private_ctx_p)
+{
+  scanner_release_private_fields (context_p->private_fields_p->private_ident_pool_p);
+  context_p->private_fields_p = private_ctx_p->prev_p;
+} /* parser_restore_private_context */
+#endif /* JERRY_ESNEXT */
+
 /**
  * Free identifiers and literals.
  */
@@ -1990,6 +2029,7 @@ parser_parse_source (void *source_p, /**< source code */
 #if JERRY_ESNEXT
   context.scope_stack_global_end = 0;
   context.tagged_template_literal_cp = JMEM_CP_NULL;
+  context.private_fields_p = NULL;
 #endif /* JERRY_ESNEXT */
 
 #ifndef JERRY_NDEBUG
@@ -3062,6 +3102,8 @@ parser_raise_error (parser_context_t *context_p, /**< context */
   }
 
 #if JERRY_ESNEXT
+  parser_free_private_fields (context_p);
+
   if (context_p->tagged_template_literal_cp != JMEM_CP_NULL)
   {
     ecma_collection_t *collection =

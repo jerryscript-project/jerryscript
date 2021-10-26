@@ -88,6 +88,25 @@ typedef struct scanner_info_t
 } scanner_info_t;
 
 /**
+ * Scanner info for class private field
+ */
+typedef struct scanner_class_private_member_t
+{
+  lexer_lit_location_t loc; /**< loc */
+  uint8_t flags; /**< custom 8-bit value */
+  struct scanner_class_private_member_t *prev_p; /**< prev private field */
+} scanner_class_private_member_t;
+
+/**
+ * Scanner info extended with class private fields.
+ */
+typedef struct
+{
+  scanner_info_t info; /**< header */
+  scanner_class_private_member_t *members; /**< first private field */
+} scanner_class_info_t;
+
+/**
  * Scanner info extended with a location.
  */
 typedef struct
@@ -258,6 +277,30 @@ typedef enum
 #endif /* JERRY_ESNEXT */
   SCANNER_FUNCTION_IS_STRICT = (1 << 5), /**< function is strict */
 } scanner_function_flags_t;
+
+/**
+ * Constants for u8_arg flags in scanner_class_info_t.
+ */
+typedef enum
+{
+  SCANNER_CONSTRUCTOR_IMPLICIT = 0, /**< implicit constructor */
+  SCANNER_CONSTRUCTOR_EXPLICIT = (1 << 0), /**< explicit constructor */
+  SCANNER_SUCCESSFUL_CLASS_SCAN = (1 << 1), /**< class scan was successful */
+  SCANNER_PRIVATE_FIELD_ACTIVE = (1 << 2), /**< private field is active */
+} scanner_constuctor_flags_t;
+
+/**
+ * Constants for u8_arg flags in scanner_class_private_member_t.
+ */
+typedef enum
+{
+  SCANNER_PRIVATE_FIELD_PROPERTY = (1 << 0), /**< private field property */
+  SCANNER_PRIVATE_FIELD_GETTER = (1 << 1), /**< private field getter */
+  SCANNER_PRIVATE_FIELD_SETTER = (1 << 2), /**< private field setter */
+  SCANNER_PRIVATE_FIELD_SEEN = (1 << 3), /**< private field has already been seen */
+  SCANNER_PRIVATE_FIELD_PROPERTY_GETTER_SETTER =
+    (SCANNER_PRIVATE_FIELD_PROPERTY | SCANNER_PRIVATE_FIELD_GETTER | SCANNER_PRIVATE_FIELD_SETTER),
+} scanner_private_field_flags_t;
 
 #if JERRY_ESNEXT
 

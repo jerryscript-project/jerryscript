@@ -115,6 +115,7 @@ bool lit_code_point_is_identifier_part (lit_code_point_t code_point);
 #define LIT_CHAR_TILDE       ((ecma_char_t) '~') /* tilde */
 #define LIT_CHAR_QUESTION    ((ecma_char_t) '?') /* question mark */
 #define LIT_CHAR_COLON       ((ecma_char_t) ':') /* colon */
+#define LIT_CHAR_HASHMARK    ((ecma_char_t) '#') /* hashmark */
 
 /*
  * Special characters for String.prototype.replace.

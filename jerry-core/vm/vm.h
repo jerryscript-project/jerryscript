@@ -237,6 +237,11 @@ typedef enum
   VM_OC_BREAKPOINT_DISABLED, /**< disabled breakpoint for debugger */
 #endif /* JERRY_DEBUGGER */
 #if JERRY_ESNEXT
+  VM_OC_PRIVATE_PROP_GET, /**< get private field */
+  VM_OC_PRIVATE_PROP_IN, /**< handle in operator with private field */
+  VM_OC_SET_PRIVATE_PROP, /**< set private field */
+  VM_OC_PRIVATE_PROP_GETTER, /**< private field getter */
+  VM_OC_PRIVATE_PROP_SETTER, /**< private field setter */
   VM_OC_CHECK_VAR, /**< check redeclared vars in the global scope */
   VM_OC_CHECK_LET, /**< check redeclared lets in the global scope */
   VM_OC_ASSIGN_LET_CONST, /**< assign values to let/const declarations */
@@ -324,6 +329,11 @@ typedef enum
   VM_OC_BREAKPOINT_DISABLED = VM_OC_NONE, /**< disabled breakpoint for debugger is unused */
 #endif /* !JERRY_DEBUGGER */
 #if !JERRY_ESNEXT
+  VM_OC_PRIVATE_PROP_GET = VM_OC_NONE, /**< get private field */
+  VM_OC_PRIVATE_PROP_IN = VM_OC_NONE, /**< handle in operator with private field */
+  VM_OC_SET_PRIVATE_PROP = VM_OC_NONE, /**< set private field */
+  VM_OC_PRIVATE_PROP_GETTER = VM_OC_NONE, /**< private field getter */
+  VM_OC_PRIVATE_PROP_SETTER = VM_OC_NONE, /**< private field setter */
   VM_OC_EXT_VAR_EVAL = VM_OC_NONE, /**< variable and function evaluation for
                                     *   functions with separate argument context */
   VM_OC_CHECK_VAR = VM_OC_NONE, /**< check redeclared vars in the global scope */

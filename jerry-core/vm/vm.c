@@ -1997,6 +1997,22 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           *stack_top_p++ = opfunc_create_implicit_class_constructor (opcode, frame_ctx_p->shared_p->bytecode_header_p);
           continue;
         }
+        case VM_OC_PRIVATE_PROP_GET:
+        {
+          *stack_top_p++ = ECMA_VALUE_UNDEFINED;
+          goto free_both_values;
+        }
+        case VM_OC_PRIVATE_PROP_IN:
+        {
+          *stack_top_p++ = ECMA_VALUE_TRUE;
+          goto free_both_values;
+        }
+        case VM_OC_SET_PRIVATE_PROP:
+        case VM_OC_PRIVATE_PROP_GETTER:
+        case VM_OC_PRIVATE_PROP_SETTER:
+        {
+          goto free_both_values;
+        }
         case VM_OC_INIT_CLASS:
         {
           result = opfunc_init_class (frame_ctx_p, stack_top_p);

@@ -1567,6 +1567,9 @@ lexer_next_token (parser_context_t *context_p) /**< context */
     LEXER_TYPE_A_TOKEN (LIT_CHAR_RIGHT_SQUARE, LEXER_RIGHT_SQUARE);
     LEXER_TYPE_A_TOKEN (LIT_CHAR_SEMICOLON, LEXER_SEMICOLON);
     LEXER_TYPE_A_TOKEN (LIT_CHAR_COMMA, LEXER_COMMA);
+#if JERRY_ESNEXT
+    LEXER_TYPE_A_TOKEN (LIT_CHAR_HASHMARK, LEXER_HASHMARK);
+#endif /* JERRY_ESNEXT */
 
     case (uint8_t) LIT_CHAR_DOT:
     {
@@ -2114,6 +2117,21 @@ lexer_update_await_yield (parser_context_t *context_p, /**< context */
     }
   }
 } /* lexer_update_await_yield */
+
+/**
+ * Read next token without checking keywords
+ *
+ * @return true if the next literal is private identifier, false otherwise
+ */
+bool
+lexer_scan_private_identifier (parser_context_t *context_p) /**< context */
+{
+  context_p->token.keyword_type = LEXER_EOS;
+  context_p->token.line = context_p->line;
+  context_p->token.column = context_p->column;
+
+  return (context_p->source_p < context_p->source_end_p && lexer_parse_identifier (context_p, LEXER_PARSE_NO_OPTS));
+} /* lexer_scan_private_identifier */
 
 #endif /* JERRY_ESNEXT */
 
@@ -3142,6 +3160,12 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
 
     create_literal_object = true;
   }
+#if JERRY_ESNEXT
+  else if (ident_opts & LEXER_OBJ_IDENT_CLASS_PRIVATE)
+  {
+    parser_raise_error (context_p, PARSER_ERR_INVALID_CHARACTER);
+  }
+#endif /* JERRY_ESNEXT */
   else
   {
     switch (context_p->source_p[0])
@@ -3200,6 +3224,16 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
         PARSER_PLUS_EQUAL_LC (context_p->column, 3);
         context_p->source_p += 3;
         return;
+      }
+      case LIT_CHAR_HASHMARK:
+      {
+        if (ident_opts & LEXER_OBJ_IDENT_CLASS_IDENTIFIER)
+        {
+          context_p->token.type = LEXER_HASHMARK;
+          return;
+        }
+
+        break;
       }
 #endif /* JERRY_ESNEXT */
       case LIT_CHAR_RIGHT_BRACE:

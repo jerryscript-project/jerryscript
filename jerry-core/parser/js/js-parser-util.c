@@ -867,6 +867,37 @@ parser_reverse_class_fields (parser_context_t *context_p, /**< context */
   parser_free (data_p, fields_size);
 } /* parser_reverse_class_fields */
 
+/**
+ * Check if private field is declared
+ */
+bool
+parser_is_private_field_declared (parser_context_t *context_p)
+{
+  if (context_p->private_fields_p == NULL || !(context_p->private_fields_p->flags & SCANNER_PRIVATE_FIELD_ACTIVE))
+  {
+    return false;
+  }
+
+  if (!(context_p->private_fields_p->flags & SCANNER_SUCCESSFUL_CLASS_SCAN))
+  {
+    return true;
+  }
+
+  scanner_class_private_member_t *iter = context_p->private_fields_p->private_ident_pool_p;
+
+  while (iter != NULL)
+  {
+    if (lexer_compare_identifiers (context_p, &context_p->token.lit_location, &iter->loc))
+    {
+      return true;
+    }
+
+    iter = iter->prev_p;
+  }
+
+  return false;
+} /* parser_is_private_field_declared */
+
 #endif /* JERRY_ESNEXT */
 
 #if JERRY_ERROR_MESSAGES
@@ -1076,6 +1107,10 @@ parser_error_to_string (parser_error_t error) /**< error code */
     case PARSER_ERR_INVALID_LHS_FOR_LOOP:
     {
       return "Invalid left-hand-side in for-loop";
+    }
+    case PARSER_ERR_CLASS_PRIVATE_CONSTRUCTOR:
+    {
+      return "Class constructor may not be a private method";
     }
 #endif /* JERRY_ESNEXT */
     case PARSER_ERR_DELETE_IDENT_NOT_ALLOWED:
@@ -1334,6 +1369,26 @@ parser_error_to_string (parser_error_t error) /**< error code */
     case PARSER_ERR_NEW_TARGET_NOT_ALLOWED:
     {
       return "new.target expression is not allowed here";
+    }
+    case PARSER_ERR_DUPLICATED_PRIVATE_FIELD:
+    {
+      return "Private field has already been declared";
+    }
+    case PARSER_ERR_UNDECLARED_PRIVATE_FIELD:
+    {
+      return "Private field must be declared in an enclosing class";
+    }
+    case PARSER_ERR_DELETE_PRIVATE_FIELD:
+    {
+      return "Private fields can not be deleted";
+    }
+    case PARSER_ERR_UNEXPECTED_PRIVATE_FIELD:
+    {
+      return "Unexpected private field";
+    }
+    case PARSER_ERR_UNIMPLEMENTED_BYTECODE:
+    {
+      return "Unimplemented bytecode";
     }
 #endif /* JERRY_ESNEXT */
 #if JERRY_MODULE_SYSTEM

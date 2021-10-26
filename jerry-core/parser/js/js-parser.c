@@ -22,6 +22,7 @@
 #include "debugger.h"
 #include "jcontext.h"
 #include "js-parser-internal.h"
+#include "lit-char-helpers.h"
 
 #if JERRY_PARSER
 
@@ -1421,6 +1422,174 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 #undef PARSER_NEXT_BYTE
 #undef PARSER_NEXT_BYTE_UPDATE
 
+#if JERRY_ESNEXT
+/**
+ * Resolve private identifier in direct eval context
+ */
+static bool
+parser_resolve_private_identifier_eval (parser_context_t *context_p) /**< context */
+{
+  ecma_string_t *search_key_p;
+  uint8_t *destination_p = (uint8_t *) parser_malloc (context_p, context_p->token.lit_location.length);
+
+  lexer_convert_ident_to_cesu8 (destination_p,
+                                context_p->token.lit_location.char_p,
+                                context_p->token.lit_location.length);
+
+  search_key_p = ecma_new_ecma_string_from_utf8 (destination_p, context_p->token.lit_location.length);
+
+  parser_free (destination_p, context_p->token.lit_location.length);
+
+  ecma_object_t *lex_env_p = JERRY_CONTEXT (vm_top_context_p)->lex_env_p;
+
+  while (true)
+  {
+    JERRY_ASSERT (lex_env_p != NULL);
+
+    if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_CLASS
+        && (lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_LEXICAL_ENV_HAS_DATA) != 0
+        && !ECMA_LEX_ENV_CLASS_IS_MODULE (lex_env_p))
+    {
+      ecma_object_t *class_object_p = ((ecma_lexical_environment_class_t *) lex_env_p)->object_p;
+
+      ecma_string_t *internal_string_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_CLASS_PRIVATE_ELEMENTS);
+      ecma_property_t *prop_p = ecma_find_named_property (class_object_p, internal_string_p);
+
+      if (prop_p != NULL)
+      {
+        ecma_value_t *collection_p =
+          ECMA_GET_INTERNAL_VALUE_POINTER (ecma_value_t, ECMA_PROPERTY_VALUE_PTR (prop_p)->value);
+        ecma_value_t *current_p = collection_p + 1;
+        ecma_value_t *end_p = ecma_compact_collection_end (collection_p);
+
+        while (current_p < end_p)
+        {
+          current_p++; /* skip kind */
+          ecma_string_t *private_key_p = ecma_get_prop_name_from_value (*current_p++);
+          current_p++; /* skip value */
+
+          JERRY_ASSERT (ecma_prop_name_is_symbol (private_key_p));
+
+          ecma_string_t *private_key_desc_p =
+            ecma_get_string_from_value (((ecma_extended_string_t *) private_key_p)->u.symbol_descriptor);
+
+          if (ecma_compare_ecma_strings (private_key_desc_p, search_key_p))
+          {
+            ecma_deref_ecma_string (search_key_p);
+            lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_STRING_LITERAL);
+            return true;
+          }
+        }
+      }
+    }
+
+    if (lex_env_p->u2.outer_reference_cp == JMEM_CP_NULL)
+    {
+      break;
+    }
+
+    lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
+  }
+
+  ecma_deref_ecma_string (search_key_p);
+  return false;
+} /* parser_resolve_private_identifier_eval */
+
+/**
+ * Resolve private identifier
+ */
+void
+parser_resolve_private_identifier (parser_context_t *context_p) /**< context */
+{
+  if ((context_p->global_status_flags & ECMA_PARSE_DIRECT_EVAL) && parser_resolve_private_identifier_eval (context_p))
+  {
+    return;
+  }
+
+  parser_private_context_t *context_iter_p = context_p->private_context_p;
+
+  while (context_iter_p)
+  {
+    if (context_iter_p == NULL || !(context_iter_p->opts & SCANNER_PRIVATE_FIELD_ACTIVE))
+    {
+      parser_raise_error (context_p, PARSER_ERR_UNDECLARED_PRIVATE_FIELD);
+    }
+
+    if (!(context_iter_p->opts & SCANNER_SUCCESSFUL_CLASS_SCAN))
+    {
+      return;
+    }
+
+    parser_private_context_t *private_context_p = context_iter_p;
+
+    if (private_context_p == NULL)
+    {
+      parser_raise_error (context_p, PARSER_ERR_UNDECLARED_PRIVATE_FIELD);
+    }
+
+    scanner_class_private_member_t *ident_iter = private_context_p->members_p;
+
+    while (ident_iter)
+    {
+      if (lexer_compare_identifiers (context_p, &context_p->token.lit_location, &ident_iter->loc))
+      {
+        lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_STRING_LITERAL);
+        return;
+      }
+
+      ident_iter = ident_iter->prev_p;
+    }
+
+    context_iter_p = context_iter_p->prev_p;
+  }
+
+  parser_raise_error (context_p, PARSER_ERR_UNDECLARED_PRIVATE_FIELD);
+} /* parser_resolve_private_identifier */
+
+/**
+ * Save private field context
+ */
+void
+parser_save_private_context (parser_context_t *context_p, /**< context */
+                             parser_private_context_t *private_ctx_p, /**< private context */
+                             scanner_class_info_t *class_info_p) /**< class scanner info */
+{
+  private_ctx_p->prev_p = context_p->private_context_p;
+  context_p->private_context_p = private_ctx_p;
+
+  context_p->private_context_p->members_p = class_info_p->members;
+  context_p->private_context_p->opts = class_info_p->info.u8_arg;
+  class_info_p->members = NULL;
+} /* parser_save_private_context */
+
+/**
+ * Release contexts private fields
+ */
+static void
+parser_free_private_fields (parser_context_t *context_p) /**< context */
+{
+  parser_private_context_t *iter = context_p->private_context_p;
+
+  while (iter != NULL)
+  {
+    parser_private_context_t *prev_p = iter->prev_p;
+    scanner_release_private_fields (iter->members_p);
+    iter = prev_p;
+  }
+} /* parser_free_private_fields */
+
+/**
+ * Restore contexts private fields
+ */
+void
+parser_restore_private_context (parser_context_t *context_p, /**< context */
+                                parser_private_context_t *private_ctx_p) /**< private context */
+{
+  scanner_release_private_fields (context_p->private_context_p->members_p);
+  context_p->private_context_p = private_ctx_p->prev_p;
+} /* parser_restore_private_context */
+#endif /* JERRY_ESNEXT */
+
 /**
  * Free identifiers and literals.
  */
@@ -1990,6 +2159,7 @@ parser_parse_source (void *source_p, /**< source code */
 #if JERRY_ESNEXT
   context.scope_stack_global_end = 0;
   context.tagged_template_literal_cp = JMEM_CP_NULL;
+  context.private_context_p = NULL;
 #endif /* JERRY_ESNEXT */
 
 #ifndef JERRY_NDEBUG
@@ -2774,14 +2944,23 @@ parser_parse_class_fields (parser_context_t *context_p) /**< context */
     }
 
     uint16_t literal_index = 0;
+    bool is_private = false;
 
     if (class_field_type & PARSER_CLASS_FIELD_NORMAL)
     {
       scanner_set_location (context_p, &range.start_location);
+      uint32_t ident_opts = LEXER_OBJ_IDENT_ONLY_IDENTIFIERS;
+      is_private = context_p->source_p[-1] == LIT_CHAR_HASHMARK;
+
+      if (is_private)
+      {
+        ident_opts |= LEXER_OBJ_IDENT_CLASS_PRIVATE;
+      }
+
       context_p->source_end_p = source_end_p;
       scanner_seek (context_p);
 
-      lexer_expect_object_literal_id (context_p, LEXER_OBJ_IDENT_ONLY_IDENTIFIERS);
+      lexer_expect_object_literal_id (context_p, ident_opts);
 
       literal_index = context_p->lit_object.index;
 
@@ -2826,7 +3005,26 @@ parser_parse_class_fields (parser_context_t *context_p) /**< context */
 
     if (class_field_type & PARSER_CLASS_FIELD_NORMAL)
     {
-      parser_emit_cbc_literal (context_p, CBC_ASSIGN_PROP_THIS_LITERAL, literal_index);
+      uint16_t function_literal_index = parser_check_anonymous_function_declaration (context_p);
+
+      if (function_literal_index == PARSER_ANONYMOUS_CLASS)
+      {
+        parser_emit_cbc_ext_literal (context_p, CBC_EXT_SET_CLASS_NAME, literal_index);
+      }
+      else if (function_literal_index < PARSER_NAMED_FUNCTION)
+      {
+        uint32_t function_name_status_flags = is_private ? PARSER_PRIVATE_FUNCTION_NAME : 0;
+        parser_set_function_name (context_p, function_literal_index, literal_index, function_name_status_flags);
+      }
+
+      if (is_private)
+      {
+        parser_emit_cbc_ext_literal (context_p, CBC_EXT_PRIVATE_FIELD_ADD, literal_index);
+      }
+      else
+      {
+        parser_emit_cbc_ext_literal (context_p, CBC_EXT_DEFINE_FIELD, literal_index);
+      }
 
       /* Prepare stack slot for assignment property reference base. Needed by vm.c */
       if (context_p->stack_limit == context_p->stack_depth)
@@ -2837,6 +3035,14 @@ parser_parse_class_fields (parser_context_t *context_p) /**< context */
     }
     else
     {
+      uint16_t function_literal_index = parser_check_anonymous_function_declaration (context_p);
+      uint16_t opcode = CBC_EXT_SET_NEXT_COMPUTED_FIELD;
+
+      if (function_literal_index < PARSER_NAMED_FUNCTION || function_literal_index == PARSER_ANONYMOUS_CLASS)
+      {
+        opcode = CBC_EXT_SET_NEXT_COMPUTED_FIELD_ANONYMOUS_FUNC;
+      }
+
       parser_flush_cbc (context_p);
 
       /* The next opcode pushes two more temporary values onto the stack */
@@ -2849,7 +3055,7 @@ parser_parse_class_fields (parser_context_t *context_p) /**< context */
         }
       }
 
-      parser_emit_cbc_ext (context_p, CBC_EXT_SET_NEXT_COMPUTED_FIELD);
+      parser_emit_cbc_ext (context_p, opcode);
     }
   } while (!(context_p->stack_top_uint8 & PARSER_CLASS_FIELD_END));
 
@@ -2948,6 +3154,26 @@ parser_set_function_name (parser_context_t *context_p, /**< context */
 } /* parser_set_function_name */
 
 /**
+ * Prepend the given prefix into the current function name literal
+ *
+ * @return pointer to the newly allocated buffer
+ */
+static uint8_t *
+parser_add_function_name_prefix (parser_context_t *context_p, /**< context */
+                                 const char *prefix_p, /**< prefix */
+                                 uint32_t prefix_size, /**< prefix's length */
+                                 uint32_t *name_length_p, /**< [out] function name's size */
+                                 lexer_literal_t *name_lit_p) /**< function name literal */
+{
+  *name_length_p += prefix_size;
+  uint8_t *name_buffer_p = (uint8_t *) parser_malloc (context_p, *name_length_p * sizeof (uint8_t));
+  memcpy (name_buffer_p, prefix_p, prefix_size);
+  memcpy (name_buffer_p + prefix_size, name_lit_p->u.char_p, name_lit_p->prop.length);
+
+  return name_buffer_p;
+} /* parser_add_function_name_prefix */
+
+/**
  * Set the function name of the given compiled code
  * to the given character buffer of literal corresponds to the given name index.
  */
@@ -2989,13 +3215,17 @@ parser_compiled_code_set_function_name (parser_context_t *context_p, /**< contex
   uint8_t *name_buffer_p = (uint8_t *) name_lit_p->u.char_p;
   uint32_t name_length = name_lit_p->prop.length;
 
-  if (status_flags & (PARSER_IS_PROPERTY_GETTER | PARSER_IS_PROPERTY_SETTER))
+  if (status_flags & PARSER_PRIVATE_FUNCTION_NAME)
   {
-    name_length += 4;
-    name_buffer_p = (uint8_t *) parser_malloc (context_p, name_length * sizeof (uint8_t));
-    char *prefix_p = (status_flags & PARSER_IS_PROPERTY_GETTER) ? "get " : "set ";
-    memcpy (name_buffer_p, prefix_p, 4);
-    memcpy (name_buffer_p + 4, name_lit_p->u.char_p, name_lit_p->prop.length);
+    name_buffer_p = parser_add_function_name_prefix (context_p, "#", 1, &name_length, name_lit_p);
+  }
+  else if (status_flags & (PARSER_IS_PROPERTY_GETTER | PARSER_IS_PROPERTY_SETTER))
+  {
+    name_buffer_p = parser_add_function_name_prefix (context_p,
+                                                     (status_flags & PARSER_IS_PROPERTY_GETTER) ? "get " : "set ",
+                                                     4,
+                                                     &name_length,
+                                                     name_lit_p);
   }
 
   *func_name_start_p =
@@ -3061,6 +3291,8 @@ parser_raise_error (parser_context_t *context_p, /**< context */
   }
 
 #if JERRY_ESNEXT
+  parser_free_private_fields (context_p);
+
   if (context_p->tagged_template_literal_cp != JMEM_CP_NULL)
   {
     ecma_collection_t *collection =

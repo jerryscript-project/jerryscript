@@ -211,6 +211,8 @@
 #define PARSER_FINALLY_CONTEXT_EXTRA_STACK_ALLOCATION \
   (PARSER_FINALLY_CONTEXT_STACK_ALLOCATION - PARSER_TRY_CONTEXT_STACK_ALLOCATION)
 
+#define PARSER_STATIC_PRIVATE_TO_PRIVATE_OFFSET (CBC_EXT_COLLECT_PRIVATE_STATIC_FIELD - CBC_EXT_COLLECT_PRIVATE_FIELD)
+
 /**
  * Opcode definitions.
  */
@@ -578,9 +580,56 @@
               VM_OC_PUSH_STATIC_FIELD_FUNC | VM_OC_GET_LITERAL)                                                        \
   CBC_OPCODE (CBC_EXT_ADD_COMPUTED_FIELD, CBC_NO_FLAG, -1, VM_OC_ADD_COMPUTED_FIELD | VM_OC_GET_STACK)                 \
   CBC_OPCODE (CBC_EXT_ADD_STATIC_COMPUTED_FIELD, CBC_NO_FLAG, -1, VM_OC_ADD_COMPUTED_FIELD | VM_OC_GET_STACK)          \
-                                                                                                                       \
+  /* Class private property related opcodes */                                                                         \
+  CBC_OPCODE (CBC_EXT_PUSH_PRIVATE_PROP_LITERAL_REFERENCE,                                                             \
+              CBC_HAS_LITERAL_ARG,                                                                                     \
+              2,                                                                                                       \
+              VM_OC_PRIVATE_PROP_REFERENCE | VM_OC_GET_LITERAL | VM_OC_PUT_STACK)                                      \
+  CBC_OPCODE (CBC_EXT_PUSH_PRIVATE_PROP_LITERAL,                                                                       \
+              CBC_HAS_LITERAL_ARG,                                                                                     \
+              0,                                                                                                       \
+              VM_OC_PRIVATE_PROP_GET | VM_OC_GET_STACK_LITERAL | VM_OC_PUT_STACK)                                      \
+  CBC_OPCODE (CBC_EXT_PUSH_PRIVATE_PROP_LITERAL_IN,                                                                    \
+              CBC_HAS_LITERAL_ARG,                                                                                     \
+              0,                                                                                                       \
+              VM_OC_PRIVATE_IN | VM_OC_GET_STACK_LITERAL | VM_OC_PUT_STACK)                                            \
+  CBC_OPCODE (CBC_EXT_PRIVATE_FIELD_ADD, CBC_HAS_LITERAL_ARG, -1, VM_OC_PRIVATE_FIELD_ADD | VM_OC_GET_STACK_LITERAL)   \
+  /* These 8 opcodes must be in this order  */                                                                         \
+  CBC_OPCODE (CBC_EXT_COLLECT_PRIVATE_FIELD,                                                                           \
+              CBC_HAS_LITERAL_ARG,                                                                                     \
+              0,                                                                                                       \
+              VM_OC_COLLECT_PRIVATE_PROPERTY | VM_OC_GET_LITERAL)                                                      \
+  CBC_OPCODE (CBC_EXT_COLLECT_PRIVATE_METHOD,                                                                          \
+              CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2,                                                              \
+              0,                                                                                                       \
+              VM_OC_COLLECT_PRIVATE_PROPERTY | VM_OC_GET_LITERAL_LITERAL)                                              \
+  CBC_OPCODE (CBC_EXT_COLLECT_PRIVATE_GETTER,                                                                          \
+              CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2,                                                              \
+              0,                                                                                                       \
+              VM_OC_COLLECT_PRIVATE_PROPERTY | VM_OC_GET_LITERAL_LITERAL)                                              \
+  CBC_OPCODE (CBC_EXT_COLLECT_PRIVATE_SETTER,                                                                          \
+              CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2,                                                              \
+              0,                                                                                                       \
+              VM_OC_COLLECT_PRIVATE_PROPERTY | VM_OC_GET_LITERAL_LITERAL)                                              \
+  CBC_OPCODE (CBC_EXT_COLLECT_PRIVATE_STATIC_FIELD,                                                                    \
+              CBC_HAS_LITERAL_ARG,                                                                                     \
+              0,                                                                                                       \
+              VM_OC_COLLECT_PRIVATE_PROPERTY | VM_OC_GET_LITERAL)                                                      \
+  CBC_OPCODE (CBC_EXT_COLLECT_PRIVATE_STATIC_METHOD,                                                                   \
+              CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2,                                                              \
+              0,                                                                                                       \
+              VM_OC_COLLECT_PRIVATE_PROPERTY | VM_OC_GET_LITERAL_LITERAL)                                              \
+  CBC_OPCODE (CBC_EXT_COLLECT_PRIVATE_STATIC_GETTER,                                                                   \
+              CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2,                                                              \
+              0,                                                                                                       \
+              VM_OC_COLLECT_PRIVATE_PROPERTY | VM_OC_GET_LITERAL_LITERAL)                                              \
+  CBC_OPCODE (CBC_EXT_COLLECT_PRIVATE_STATIC_SETTER,                                                                   \
+              CBC_HAS_LITERAL_ARG | CBC_HAS_LITERAL_ARG2,                                                              \
+              0,                                                                                                       \
+              VM_OC_COLLECT_PRIVATE_PROPERTY | VM_OC_GET_LITERAL_LITERAL)                                              \
   /* Class related opcodes. */                                                                                         \
   CBC_OPCODE (CBC_EXT_PUSH_NAMED_CLASS_ENV, CBC_HAS_LITERAL_ARG, 1, VM_OC_PUSH_CLASS_ENVIRONMENT)                      \
+  CBC_OPCODE (CBC_EXT_DEFINE_FIELD, CBC_HAS_LITERAL_ARG, -1, VM_OC_DEFINE_FIELD | VM_OC_GET_STACK_LITERAL)             \
   CBC_OPCODE (CBC_EXT_PUSH_IMPLICIT_CONSTRUCTOR, CBC_NO_FLAG, 1, VM_OC_PUSH_IMPLICIT_CTOR | VM_OC_PUT_STACK)           \
   CBC_OPCODE (CBC_EXT_PUSH_IMPLICIT_CONSTRUCTOR_HERITAGE, CBC_NO_FLAG, 1, VM_OC_PUSH_IMPLICIT_CTOR | VM_OC_PUT_STACK)  \
   CBC_OPCODE (CBC_EXT_INIT_CLASS, CBC_NO_FLAG, 0, VM_OC_INIT_CLASS | VM_OC_PUT_STACK)                                  \
@@ -589,6 +638,10 @@
   CBC_OPCODE (CBC_EXT_SET_FIELD_INIT, CBC_HAS_LITERAL_ARG, 0, VM_OC_SET_FIELD_INIT | VM_OC_GET_LITERAL)                \
   CBC_OPCODE (CBC_EXT_RUN_FIELD_INIT, CBC_NO_FLAG, 0, VM_OC_RUN_FIELD_INIT)                                            \
   CBC_OPCODE (CBC_EXT_RUN_STATIC_FIELD_INIT, CBC_NO_FLAG, -1, VM_OC_RUN_STATIC_FIELD_INIT)                             \
+  CBC_OPCODE (CBC_EXT_SET_NEXT_COMPUTED_FIELD_ANONYMOUS_FUNC,                                                          \
+              CBC_NO_FLAG,                                                                                             \
+              -1,                                                                                                      \
+              VM_OC_SET_NEXT_COMPUTED_FIELD | VM_OC_PUT_REFERENCE)                                                     \
   CBC_OPCODE (CBC_EXT_SET_NEXT_COMPUTED_FIELD, CBC_NO_FLAG, -1, VM_OC_SET_NEXT_COMPUTED_FIELD | VM_OC_PUT_REFERENCE)   \
   CBC_OPCODE (CBC_EXT_PUSH_SUPER, CBC_NO_FLAG, 1, VM_OC_NONE)                                                          \
   CBC_OPCODE (CBC_EXT_PUSH_SUPER_CONSTRUCTOR, CBC_NO_FLAG, 1, VM_OC_PUSH_SUPER_CONSTRUCTOR)                            \
@@ -610,6 +663,9 @@
   CBC_OPCODE (CBC_EXT_ASSIGN_SUPER, CBC_NO_FLAG, -3, VM_OC_ASSIGN_SUPER)                                               \
   CBC_OPCODE (CBC_EXT_ASSIGN_SUPER_PUSH_RESULT, CBC_NO_FLAG, -2, VM_OC_ASSIGN_SUPER | VM_OC_PUT_STACK)                 \
   CBC_OPCODE (CBC_EXT_ASSIGN_SUPER_BLOCK, CBC_NO_FLAG, -3, VM_OC_ASSIGN_SUPER | VM_OC_PUT_BLOCK)                       \
+  CBC_OPCODE (CBC_EXT_ASSIGN_PRIVATE, CBC_NO_FLAG, -3, VM_OC_ASSIGN_PRIVATE)                                           \
+  CBC_OPCODE (CBC_EXT_ASSIGN_PRIVATE_PUSH_RESULT, CBC_NO_FLAG, -2, VM_OC_ASSIGN_PRIVATE | VM_OC_PUT_STACK)             \
+  CBC_OPCODE (CBC_EXT_ASSIGN_PRIVATE_BLOCK, CBC_NO_FLAG, -3, VM_OC_ASSIGN_PRIVATE | VM_OC_PUT_BLOCK)                   \
   CBC_OPCODE (CBC_EXT_SUPER_CALL, CBC_HAS_POP_STACK_BYTE_ARG, -1, VM_OC_SUPER_CALL)                                    \
   CBC_OPCODE (CBC_EXT_SUPER_CALL_PUSH_RESULT, CBC_HAS_POP_STACK_BYTE_ARG, 0, VM_OC_SUPER_CALL | VM_OC_PUT_STACK)       \
   CBC_OPCODE (CBC_EXT_SUPER_CALL_BLOCK, CBC_HAS_POP_STACK_BYTE_ARG, -1, VM_OC_SUPER_CALL | VM_OC_PUT_BLOCK)            \

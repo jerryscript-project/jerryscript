@@ -66,10 +66,17 @@ typedef enum
                                                              *   which contains references to other values */
   LIT_INTERNAL_MAGIC_STRING_ENVIRONMENT_RECORD, /**< dynamic environment record needed by class constructors */
   LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED, /**< computed class field name list */
+  LIT_INTERNAL_MAGIC_STRING_CLASS_PRIVATE_ELEMENTS, /**< internal collection for storing private elements */
   LIT_INTERNAL_MAGIC_STRING_CONTAINER_WEAK_REFS, /**< Weak references to the current container object */
   LIT_INTERNAL_MAGIC_STRING_WEAK_REFS, /**< Weak references to the current object */
   LIT_MAGIC_STRING__COUNT /**< number of magic strings */
 } lit_magic_string_id_t;
+
+/**
+ * Properties that are need to be ignored for opfunc_set_class_attributes
+ */
+#define LIT_INTERNAL_MAGIC_STRING_IGNORED(id) \
+  ((id) >= LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED && (id) <= LIT_INTERNAL_MAGIC_STRING_CLASS_PRIVATE_ELEMENTS)
 
 /**
  * Checks whether the given id corresponds to a global symbol

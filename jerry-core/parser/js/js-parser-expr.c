@@ -285,6 +285,11 @@ parser_emit_unary_lvalue_opcode (parser_context_t *context_p, /**< context */
     if (opcode == CBC_DELETE_PUSH_RESULT)
     {
 #if JERRY_ESNEXT
+      if (context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_PRIVATE_PROP_LITERAL))
+      {
+        parser_raise_error (context_p, PARSER_ERR_DELETE_PRIVATE_FIELD);
+      }
+
       if (context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_SUPER_PROP_LITERAL)
           || context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_SUPER_PROP))
       {
@@ -514,6 +519,40 @@ parser_is_constructor_literal (parser_context_t *context_p) /**< context */
 } /* parser_is_constructor_literal */
 
 /**
+ * Checks if current private field is already declared
+ */
+static void
+parser_check_duplicated_private_field (parser_context_t *context_p, /**< context */
+                                       uint8_t opts) /**< options */
+{
+  JERRY_ASSERT (context_p->token.type == LEXER_LITERAL);
+  JERRY_ASSERT (context_p->private_context_p);
+  scanner_class_private_member_t *iter = context_p->private_context_p->members_p;
+
+  bool search_for_property = (opts & SCANNER_PRIVATE_FIELD_PROPERTY);
+
+  while (iter != NULL)
+  {
+    if (lexer_compare_identifiers (context_p, &context_p->token.lit_location, &iter->loc) && (iter->u8_arg & opts))
+    {
+      if (iter->u8_arg & SCANNER_PRIVATE_FIELD_SEEN)
+      {
+        parser_raise_error (context_p, PARSER_ERR_DUPLICATED_PRIVATE_FIELD);
+      }
+
+      iter->u8_arg |= SCANNER_PRIVATE_FIELD_SEEN;
+
+      if (!search_for_property)
+      {
+        break;
+      }
+    }
+
+    iter = iter->prev_p;
+  }
+} /* parser_check_duplicated_private_field */
+
+/**
  * Parse class literal.
  *
  * @return true - if the class has static fields, false - otherwise
@@ -550,6 +589,7 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
   parser_emit_cbc_ext (context_p, CBC_EXT_INIT_CLASS);
 
   bool is_static = false;
+  bool is_private = false;
   size_t fields_size = 0;
   uint32_t computed_field_count = 0;
 
@@ -560,14 +600,32 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
       lexer_skip_empty_statements (context_p);
     }
 
-    lexer_expect_object_literal_id (context_p,
-                                    (LEXER_OBJ_IDENT_CLASS_IDENTIFIER | LEXER_OBJ_IDENT_SET_FUNCTION_START
-                                     | (is_static ? 0 : LEXER_OBJ_IDENT_CLASS_NO_STATIC)));
+    uint32_t flags = (LEXER_OBJ_IDENT_CLASS_IDENTIFIER | LEXER_OBJ_IDENT_SET_FUNCTION_START);
+
+    if (!is_static)
+    {
+      flags |= LEXER_OBJ_IDENT_CLASS_NO_STATIC;
+    }
+
+    if (is_private)
+    {
+      flags |= LEXER_OBJ_IDENT_CLASS_PRIVATE;
+    }
+
+    lexer_expect_object_literal_id (context_p, flags);
 
     if (context_p->token.type == LEXER_RIGHT_BRACE)
     {
       JERRY_ASSERT (!is_static);
       break;
+    }
+
+    if (context_p->token.type == LEXER_HASHMARK)
+    {
+      is_private = true;
+      lexer_next_token (context_p);
+      context_p->token.flags |= LEXER_NO_SKIP_SPACES;
+      continue;
     }
 
     if (context_p->token.type == LEXER_KEYW_STATIC)
@@ -577,7 +635,19 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
       continue;
     }
 
-    if (!is_static && context_p->token.type == LEXER_LITERAL && parser_is_constructor_literal (context_p))
+    if (is_private)
+    {
+      parser_check_duplicated_private_field (context_p, SCANNER_PRIVATE_FIELD_PROPERTY_GETTER_SETTER);
+    }
+
+    bool is_constructor_literal = context_p->token.type == LEXER_LITERAL && parser_is_constructor_literal (context_p);
+
+    if (is_private && is_constructor_literal && lexer_check_next_character (context_p, LIT_CHAR_LEFT_PAREN))
+    {
+      parser_raise_error (context_p, PARSER_ERR_CLASS_PRIVATE_CONSTRUCTOR);
+    }
+
+    if (!is_static && is_constructor_literal)
     {
       JERRY_ASSERT (!is_static);
       JERRY_ASSERT (opts & PARSER_CLASS_LITERAL_CTOR_PRESENT);
@@ -619,14 +689,31 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
       uint32_t accessor_status_flags = PARSER_FUNCTION_CLOSURE | PARSER_ALLOW_SUPER;
       accessor_status_flags |= (is_getter ? PARSER_IS_PROPERTY_GETTER : PARSER_IS_PROPERTY_SETTER);
 
-      lexer_expect_object_literal_id (context_p, LEXER_OBJ_IDENT_ONLY_IDENTIFIERS);
+      uint8_t ident_opts = LEXER_OBJ_IDENT_ONLY_IDENTIFIERS;
+
+      if (lexer_check_next_character (context_p, LIT_CHAR_HASHMARK))
+      {
+        lexer_next_token (context_p);
+        context_p->token.flags |= LEXER_NO_SKIP_SPACES;
+        ident_opts |= LEXER_OBJ_IDENT_CLASS_PRIVATE;
+        is_private = true;
+      }
+
+      lexer_expect_object_literal_id (context_p, ident_opts);
+
+      if (is_private)
+      {
+        parser_check_duplicated_private_field (context_p,
+                                               is_getter ? SCANNER_PRIVATE_FIELD_GETTER : SCANNER_PRIVATE_FIELD_SETTER);
+      }
+
       literal_index = context_p->lit_object.index;
 
       if (context_p->token.type == LEXER_RIGHT_SQUARE)
       {
         is_computed = true;
       }
-      else if (is_static)
+      else if (is_static && !is_private)
       {
         if (LEXER_IS_IDENT_OR_STRING (context_p->token.lit_location.type)
             && lexer_compare_identifier_to_string (&context_p->token.lit_location, (uint8_t *) "prototype", 9))
@@ -667,11 +754,13 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
 
         if (is_getter)
         {
-          opcode = is_static ? CBC_EXT_SET_STATIC_GETTER : CBC_EXT_SET_GETTER;
+          opcode = is_static ? (is_private ? CBC_EXT_COLLECT_PRIVATE_STATIC_GETTER : CBC_EXT_SET_STATIC_GETTER)
+                             : (is_private ? CBC_EXT_COLLECT_PRIVATE_GETTER : CBC_EXT_SET_GETTER);
         }
         else
         {
-          opcode = is_static ? CBC_EXT_SET_STATIC_SETTER : CBC_EXT_SET_SETTER;
+          opcode = is_static ? (is_private ? CBC_EXT_COLLECT_PRIVATE_STATIC_SETTER : CBC_EXT_SET_STATIC_SETTER)
+                             : (is_private ? CBC_EXT_COLLECT_PRIVATE_SETTER : CBC_EXT_SET_SETTER);
         }
       }
 
@@ -683,11 +772,16 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
       }
       else
       {
+        if (is_private)
+        {
+          accessor_status_flags |= PARSER_PRIVATE_FUNCTION_NAME;
+        }
         parser_set_function_name (context_p, function_literal_index, literal_index, accessor_status_flags);
         context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (opcode);
       }
 
       is_static = false;
+      is_private = false;
       continue;
     }
 
@@ -697,16 +791,57 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
     {
       status_flags |= PARSER_IS_ASYNC_FUNCTION | PARSER_DISALLOW_AWAIT_YIELD;
 
+      uint8_t ident_opts = LEXER_OBJ_IDENT_ONLY_IDENTIFIERS;
+
+      if (lexer_check_next_character (context_p, LIT_CHAR_HASHMARK))
+      {
+        lexer_next_token (context_p);
+        context_p->token.flags |= LEXER_NO_SKIP_SPACES;
+        ident_opts |= LEXER_OBJ_IDENT_CLASS_PRIVATE;
+        is_private = true;
+      }
+
       if (!lexer_consume_generator (context_p))
       {
-        lexer_expect_object_literal_id (context_p, LEXER_OBJ_IDENT_ONLY_IDENTIFIERS);
+        lexer_expect_object_literal_id (context_p, ident_opts);
+      }
+
+      if (is_private)
+      {
+        if (context_p->token.type == LEXER_LITERAL && parser_is_constructor_literal (context_p))
+        {
+          parser_raise_error (context_p, PARSER_ERR_CLASS_PRIVATE_CONSTRUCTOR);
+        }
+
+        parser_check_duplicated_private_field (context_p, SCANNER_PRIVATE_FIELD_PROPERTY_GETTER_SETTER);
       }
     }
 
     if (context_p->token.type == LEXER_MULTIPLY)
     {
-      lexer_expect_object_literal_id (context_p, LEXER_OBJ_IDENT_ONLY_IDENTIFIERS);
+      uint8_t ident_opts = LEXER_OBJ_IDENT_ONLY_IDENTIFIERS;
+
+      if (lexer_check_next_character (context_p, LIT_CHAR_HASHMARK))
+      {
+        lexer_next_token (context_p);
+        context_p->token.flags |= LEXER_NO_SKIP_SPACES;
+        ident_opts |= LEXER_OBJ_IDENT_CLASS_PRIVATE;
+        is_private = true;
+      }
+
+      lexer_expect_object_literal_id (context_p, ident_opts);
+
       status_flags |= PARSER_IS_GENERATOR_FUNCTION | PARSER_DISALLOW_AWAIT_YIELD;
+
+      if (is_private)
+      {
+        if (context_p->token.type == LEXER_LITERAL && parser_is_constructor_literal (context_p))
+        {
+          parser_raise_error (context_p, PARSER_ERR_CLASS_PRIVATE_CONSTRUCTOR);
+        }
+
+        parser_check_duplicated_private_field (context_p, SCANNER_PRIVATE_FIELD_PROPERTY_GETTER_SETTER);
+      }
     }
 
     if (context_p->token.type == LEXER_RIGHT_SQUARE)
@@ -715,7 +850,7 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
     }
     else if (LEXER_IS_IDENT_OR_STRING (context_p->token.lit_location.type))
     {
-      if (is_static)
+      if (is_static && !is_private)
       {
         if (lexer_compare_identifier_to_string (&context_p->token.lit_location, (uint8_t *) "prototype", 9))
         {
@@ -744,6 +879,13 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
 
         if (!is_computed)
         {
+          if (is_private)
+          {
+            lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_STRING_LITERAL);
+            uint8_t field_opcode = is_static ? CBC_EXT_COLLECT_PRIVATE_STATIC_FIELD : CBC_EXT_COLLECT_PRIVATE_FIELD;
+            parser_emit_cbc_ext_literal_from_token (context_p, field_opcode);
+          }
+
           if (is_static && parser_is_constructor_literal (context_p))
           {
             parser_raise_error (context_p, PARSER_ERR_ARGUMENT_LIST_EXPECTED);
@@ -825,6 +967,7 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
         parser_stack_push_uint8 (context_p, class_field_type);
         fields_size++;
         is_static = false;
+        is_private = false;
         continue;
       }
 
@@ -834,7 +977,14 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
         {
           JERRY_ASSERT (context_p->token.lit_location.type == LEXER_IDENT_LITERAL
                         || context_p->token.lit_location.type == LEXER_STRING_LITERAL);
-          lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_STRING_LITERAL);
+          if (is_private)
+          {
+            parser_resolve_private_identifier (context_p);
+          }
+          else
+          {
+            lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_STRING_LITERAL);
+          }
         }
         else
         {
@@ -856,7 +1006,14 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
       continue;
     }
 
-    parser_set_function_name (context_p, function_literal_index, literal_index, 0);
+    uint32_t function_name_status_flags = 0;
+
+    if (is_private)
+    {
+      function_name_status_flags = PARSER_PRIVATE_FUNCTION_NAME;
+    }
+
+    parser_set_function_name (context_p, function_literal_index, literal_index, function_name_status_flags);
 
     JERRY_ASSERT (context_p->last_cbc_opcode == CBC_PUSH_LITERAL);
 
@@ -864,13 +1021,20 @@ parser_parse_class_body (parser_context_t *context_p, /**< context */
 
     if (is_static)
     {
-      context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_SET_STATIC_PROPERTY_LITERAL);
+      context_p->last_cbc_opcode = (is_private ? PARSER_TO_EXT_OPCODE (CBC_EXT_COLLECT_PRIVATE_STATIC_METHOD)
+                                               : PARSER_TO_EXT_OPCODE (CBC_EXT_SET_STATIC_PROPERTY_LITERAL));
       is_static = false;
+    }
+    else if (is_private)
+    {
+      context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_COLLECT_PRIVATE_METHOD);
     }
     else
     {
       context_p->last_cbc_opcode = CBC_SET_LITERAL_PROPERTY;
     }
+
+    is_private = false;
   }
 
   if (fields_size == 0)
@@ -930,12 +1094,22 @@ parser_parse_class (parser_context_t *context_p, /**< context */
   uint16_t class_ident_index = PARSER_INVALID_LITERAL_INDEX;
   uint16_t class_name_index = PARSER_INVALID_LITERAL_INDEX;
   parser_class_literal_opts_t opts = PARSER_CLASS_LITERAL_NO_OPTS;
+  scanner_info_t *scanner_info_p = context_p->next_scanner_info_p;
 
-  if (context_p->next_scanner_info_p->source_p == context_p->source_p)
+  scanner_class_info_t *class_info_p = (scanner_class_info_t *) scanner_info_p;
+  parser_private_context_t private_ctx;
+
+  if (scanner_info_p->source_p == context_p->source_p)
   {
-    JERRY_ASSERT (context_p->next_scanner_info_p->type == SCANNER_TYPE_CLASS_CONSTRUCTOR);
-    scanner_release_next (context_p, sizeof (scanner_info_t));
-    opts |= PARSER_CLASS_LITERAL_CTOR_PRESENT;
+    JERRY_ASSERT (scanner_info_p->type == SCANNER_TYPE_CLASS_CONSTRUCTOR);
+    parser_save_private_context (context_p, &private_ctx, class_info_p);
+
+    if (scanner_info_p->u8_arg & SCANNER_CONSTRUCTOR_EXPLICIT)
+    {
+      opts |= PARSER_CLASS_LITERAL_CTOR_PRESENT;
+    }
+
+    scanner_release_next (context_p, sizeof (scanner_class_info_t));
   }
 
   if (is_statement)
@@ -1019,6 +1193,8 @@ parser_parse_class (parser_context_t *context_p, /**< context */
     parser_raise_error (context_p, PARSER_ERR_LEFT_BRACE_EXPECTED);
   }
 
+  context_p->private_context_p->opts |= SCANNER_PRIVATE_FIELD_ACTIVE;
+
   /* ClassDeclaration is parsed. Continue with class body. */
   bool has_static_field = parser_parse_class_body (context_p, opts, class_name_index);
 
@@ -1056,6 +1232,8 @@ parser_parse_class (parser_context_t *context_p, /**< context */
     context_p->status_flags &= (uint32_t) ~PARSER_IS_STRICT;
   }
   context_p->status_flags &= (uint32_t) ~PARSER_ALLOW_SUPER;
+
+  parser_restore_private_context (context_p, &private_ctx);
 
   lexer_next_token (context_p);
 } /* parser_parse_class */
@@ -1943,6 +2121,26 @@ parser_parse_unary_expression (parser_context_t *context_p, /**< context */
   switch (context_p->token.type)
   {
 #if JERRY_ESNEXT
+    case LEXER_HASHMARK:
+    {
+      if (!lexer_scan_private_identifier (context_p))
+      {
+        parser_raise_error (context_p, PARSER_ERR_INVALID_CHARACTER);
+      }
+
+      parser_resolve_private_identifier (context_p);
+
+      lexer_next_token (context_p);
+
+      if (context_p->token.type != LEXER_KEYW_IN)
+      {
+        parser_raise_error (context_p, PARSER_ERR_INVALID_CHARACTER);
+      }
+
+      parser_stack_push_uint16 (context_p, context_p->lit_object.index);
+      parser_stack_push_uint8 (context_p, LEXER_PRIVATE_PRIMARY_EXPR);
+      return false;
+    }
     case LEXER_TEMPLATE_LITERAL:
     {
       if (context_p->source_p[-1] != LIT_CHAR_GRAVE_ACCENT)
@@ -2345,7 +2543,30 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
       {
         parser_push_result (context_p);
 
+#if JERRY_ESNEXT
+        if (lexer_check_next_character (context_p, LIT_CHAR_HASHMARK))
+        {
+          lexer_next_token (context_p);
+
+          if (context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_SUPER))
+          {
+            parser_raise_error (context_p, PARSER_ERR_UNEXPECTED_PRIVATE_FIELD);
+          }
+
+          if (!lexer_scan_private_identifier (context_p))
+          {
+            parser_raise_error (context_p, PARSER_ERR_IDENTIFIER_EXPECTED);
+          }
+
+          parser_resolve_private_identifier (context_p);
+
+          parser_emit_cbc_ext_literal (context_p, CBC_EXT_PUSH_PRIVATE_PROP_LITERAL, context_p->lit_object.index);
+          lexer_next_token (context_p);
+          continue;
+        }
+#endif /* JERRY_ESNEXT */
         lexer_expect_identifier (context_p, LEXER_STRING_LITERAL);
+
         JERRY_ASSERT (context_p->token.type == LEXER_LITERAL
                       && context_p->lit_object.literal_p->type == LEXER_STRING_LITERAL);
         context_p->token.lit_location.type = LEXER_STRING_LITERAL;
@@ -2464,6 +2685,11 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
           else if (context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_SUPER_PROP))
           {
             context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_SUPER_PROP_REFERENCE);
+            opcode = CBC_CALL_PROP;
+          }
+          else if (context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_PRIVATE_PROP_LITERAL))
+          {
+            context_p->last_cbc_opcode = PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_PRIVATE_PROP_LITERAL_REFERENCE);
             opcode = CBC_CALL_PROP;
           }
 #endif /* JERRY_ESNEXT */
@@ -2649,7 +2875,6 @@ parser_process_unary_expression (parser_context_t *context_p, /**< context */
         parser_emit_cbc_call (context_p, opcode, call_arguments);
         continue;
       }
-
       default:
       {
         if (context_p->stack_top_uint8 == LEXER_KEYW_NEW)
@@ -2893,6 +3118,12 @@ parser_append_binary_single_assignment_token (parser_context_t *context_p, /**< 
     parser_stack_push_uint8 (context_p, CBC_EXT_ASSIGN_SUPER);
     assign_opcode = CBC_EXT_OPCODE;
   }
+  else if (context_p->last_cbc_opcode == PARSER_TO_EXT_OPCODE (CBC_EXT_PUSH_PRIVATE_PROP_LITERAL))
+  {
+    context_p->last_cbc_opcode = CBC_PUSH_LITERAL;
+    parser_stack_push_uint8 (context_p, CBC_EXT_ASSIGN_PRIVATE);
+    assign_opcode = CBC_EXT_OPCODE;
+  }
 #endif /* JERRY_ESNEXT */
   else
   {
@@ -3068,7 +3299,8 @@ parser_process_binary_opcodes (parser_context_t *context_p, /**< context */
       if (JERRY_UNLIKELY (opcode == CBC_EXT_OPCODE))
       {
         parser_stack_pop_uint8 (context_p);
-        JERRY_ASSERT (context_p->stack_top_uint8 == CBC_EXT_ASSIGN_SUPER);
+        JERRY_ASSERT (context_p->stack_top_uint8 == CBC_EXT_ASSIGN_SUPER
+                      || context_p->stack_top_uint8 == CBC_EXT_ASSIGN_PRIVATE);
         opcode = PARSER_TO_EXT_OPCODE (context_p->stack_top_uint8);
         parser_stack_pop_uint8 (context_p);
       }
@@ -3168,6 +3400,13 @@ parser_process_binary_opcodes (parser_context_t *context_p, /**< context */
       parser_branch_t branch;
       parser_stack_pop (context_p, &branch, sizeof (parser_branch_t));
       parser_set_branch_to_current_position (context_p, &branch);
+      continue;
+    }
+    else if (token == LEXER_KEYW_IN && context_p->stack_top_uint8 == LEXER_PRIVATE_PRIMARY_EXPR)
+    {
+      parser_stack_pop_uint8 (context_p);
+      uint16_t lit_id = parser_stack_pop_uint16 (context_p);
+      parser_emit_cbc_ext_literal (context_p, CBC_EXT_PUSH_PRIVATE_PROP_LITERAL_IN, lit_id);
       continue;
     }
 #endif /* JERRY_ESNEXT */

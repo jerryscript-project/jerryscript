@@ -895,6 +895,115 @@ opfunc_async_create_and_await (vm_frame_ctx_t *frame_ctx_p, /**< frame context *
 } /* opfunc_async_create_and_await */
 
 /**
+ * PrivateMethodOrAccessorAdd abstact operation.
+ *
+ * See also: ECMAScript v12, 7.3.29.
+ *
+ * @return ECMA_VALUE_ERROR - initialization fails
+ *         ECMA_VALUE_UNDEFINED - otherwise
+ */
+static ecma_value_t
+opfunc_private_method_or_accessor_add (ecma_object_t *class_object_p, /**< the function itself */
+                                       ecma_object_t *this_obj_p, /**< this object */
+                                       uint32_t static_flag)
+{
+  ecma_string_t *internal_string_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_CLASS_PRIVATE_ELEMENTS);
+  ecma_property_t *prop_p = ecma_find_named_property (class_object_p, internal_string_p);
+
+  if (prop_p == NULL)
+  {
+    return ECMA_VALUE_UNDEFINED;
+  }
+
+  ecma_value_t *collection_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_value_t, ECMA_PROPERTY_VALUE_PTR (prop_p)->value);
+  ecma_value_t *current_p = collection_p + 1;
+  ecma_value_t *end_p = ecma_compact_collection_end (collection_p);
+
+  while (current_p < end_p)
+  {
+    uint32_t prop_desc = *current_p++;
+    ecma_private_property_kind_t kind = ECMA_PRIVATE_PROPERTY_KIND (prop_desc);
+
+    if ((prop_desc & ECMA_PRIVATE_PROPERTY_STATIC_FLAG) != static_flag || kind == ECMA_PRIVATE_FIELD)
+    {
+      current_p += 2;
+      continue;
+    }
+
+    ecma_string_t *prop_name_p = ecma_get_symbol_from_value (*current_p++);
+    ecma_value_t method = *current_p++;
+
+    JERRY_ASSERT (prop_name_p->u.hash & ECMA_SYMBOL_FLAG_PRIVATE_INSTANCE_METHOD);
+
+    prop_p = ecma_find_named_property (this_obj_p, prop_name_p);
+    ecma_object_t *method_p = ecma_get_object_from_value (method);
+
+    if (kind == ECMA_PRIVATE_METHOD)
+    {
+      if (prop_p != NULL)
+      {
+        return ecma_raise_type_error (ECMA_ERR_CANNOT_DECLARE_SAME_PRIVATE_FIELD_TWICE);
+      }
+
+      ecma_property_value_t *prop_value_p =
+        ecma_create_named_data_property (this_obj_p, prop_name_p, ECMA_PROPERTY_FIXED, NULL);
+      prop_value_p->value = method;
+      continue;
+    }
+
+    if (prop_p == NULL)
+    {
+      ecma_object_t *getter_p = (kind == ECMA_PRIVATE_GETTER) ? method_p : NULL;
+      ecma_object_t *setter_p = (kind == ECMA_PRIVATE_SETTER) ? method_p : NULL;
+      ecma_create_named_accessor_property (this_obj_p, prop_name_p, getter_p, setter_p, ECMA_PROPERTY_FIXED, NULL);
+      continue;
+    }
+
+    ecma_property_value_t *accessor_objs_p = ECMA_PROPERTY_VALUE_PTR (prop_p);
+    ecma_getter_setter_pointers_t *get_set_pair_p = ecma_get_named_accessor_property (accessor_objs_p);
+
+    if (kind == ECMA_PRIVATE_GETTER)
+    {
+      ECMA_SET_POINTER (get_set_pair_p->getter_cp, method_p);
+    }
+    else
+    {
+      JERRY_ASSERT (kind == ECMA_PRIVATE_SETTER);
+      ECMA_SET_POINTER (get_set_pair_p->setter_cp, method_p);
+    }
+  }
+
+  return ECMA_VALUE_UNDEFINED;
+} /* opfunc_private_method_or_accessor_add */
+
+/**
+ * DefineField abstract operation.
+ *
+ * See also: ECMAScript v12, 7.3.32.
+ *
+ * @return ECMA_VALUE_ERROR - operation fails
+ *         ECMA_VALUE_{TRUE/FALSE} - otherwise
+ */
+ecma_value_t
+opfunc_define_field (ecma_value_t base, ecma_value_t property, ecma_value_t value)
+{
+  ecma_string_t *property_key_p = ecma_op_to_property_key (property);
+
+  JERRY_ASSERT (property_key_p != NULL);
+  ecma_object_t *obj_p = ecma_get_object_from_value (base);
+  ecma_property_descriptor_t desc = ecma_make_empty_property_descriptor ();
+  desc.value = value;
+  desc.flags = (JERRY_PROP_IS_WRITABLE | JERRY_PROP_IS_WRITABLE_DEFINED | JERRY_PROP_IS_ENUMERABLE
+                | JERRY_PROP_IS_ENUMERABLE_DEFINED | JERRY_PROP_IS_CONFIGURABLE | JERRY_PROP_IS_CONFIGURABLE_DEFINED
+                | JERRY_PROP_IS_VALUE_DEFINED | JERRY_PROP_SHOULD_THROW);
+
+  ecma_value_t result = ecma_op_object_define_own_property (obj_p, property_key_p, &desc);
+  ecma_deref_ecma_string (property_key_p);
+
+  return result;
+} /* opfunc_define_field */
+
+/**
  * Initialize class fields.
  *
  * @return ECMA_VALUE_ERROR - initialization fails
@@ -905,6 +1014,14 @@ opfunc_init_class_fields (ecma_object_t *class_object_p, /**< the function itsel
                           ecma_value_t this_val) /**< this_arg of the function */
 {
   JERRY_ASSERT (ecma_is_value_object (this_val));
+  ecma_object_t *this_obj_p = ecma_get_object_from_value (this_val);
+
+  ecma_value_t result = opfunc_private_method_or_accessor_add (class_object_p, this_obj_p, 0);
+
+  if (ECMA_IS_VALUE_ERROR (result))
+  {
+    return result;
+  }
 
   ecma_string_t *name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_INIT);
   ecma_property_t *property_p = ecma_find_named_property (class_object_p, name_p);
@@ -938,7 +1055,7 @@ opfunc_init_class_fields (ecma_object_t *class_object_p, /**< the function itsel
   ecma_object_t *scope_p =
     ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (ecma_object_t, ext_function_p->u.function.scope_cp);
 
-  ecma_value_t result = vm_run (&shared_class_fields.header, this_val, scope_p);
+  result = vm_run (&shared_class_fields.header, this_val, scope_p);
 
   JERRY_ASSERT (ECMA_IS_VALUE_ERROR (result) || result == ECMA_VALUE_UNDEFINED);
   return result;
@@ -1098,6 +1215,407 @@ opfunc_set_home_object (ecma_object_t *func_p, /**< function object */
 } /* opfunc_set_home_object */
 
 /**
+ * Make private key from descriptor
+ */
+ecma_string_t *
+opfunc_make_private_key (ecma_value_t descriptor) /**< descriptor */
+{
+  ecma_string_t *private_key_p = ecma_new_symbol_from_descriptor_string (descriptor);
+  private_key_p->u.hash |= ECMA_SYMBOL_FLAG_PRIVATE_KEY;
+
+  return (ecma_string_t *) private_key_p;
+} /* opfunc_make_private_key */
+
+/**
+ * Find a private property in the private elements internal property given the key
+ */
+static ecma_property_t *
+opfunc_find_private_key (ecma_object_t *class_object_p, /**< class environment */
+                         ecma_object_t *obj_p, /**< object */
+                         ecma_string_t *search_key_p, /**< key */
+                         ecma_string_t **out_private_key_p) /**< [out] private key */
+{
+  ecma_string_t *internal_string_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_CLASS_PRIVATE_ELEMENTS);
+  ecma_property_t *prop_p = ecma_find_named_property (class_object_p, internal_string_p);
+
+  if (prop_p == NULL)
+  {
+    return NULL;
+  }
+
+  ecma_value_t *collection_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_value_t, ECMA_PROPERTY_VALUE_PTR (prop_p)->value);
+  ecma_value_t *current_p = collection_p + 1;
+  ecma_value_t *end_p = ecma_compact_collection_end (collection_p);
+
+  while (current_p < end_p)
+  {
+    current_p++; /* skip kind */
+    ecma_string_t *private_key_p = ecma_get_prop_name_from_value (*current_p++);
+    current_p++; /* skip value */
+
+    JERRY_ASSERT (ecma_prop_name_is_symbol (private_key_p));
+
+    ecma_string_t *private_key_desc_p =
+      ecma_get_string_from_value (((ecma_extended_string_t *) private_key_p)->u.symbol_descriptor);
+
+    if (ecma_compare_ecma_strings (private_key_desc_p, search_key_p))
+    {
+      prop_p = ecma_find_named_property (obj_p, private_key_p);
+
+      if (out_private_key_p)
+      {
+        *out_private_key_p = private_key_p;
+      }
+
+      return prop_p;
+    }
+  }
+
+  return NULL;
+} /* opfunc_find_private_key */
+
+/**
+ * PrivateElementFind abstact operation
+ *
+ * See also: ECMAScript v12, 7.3.27
+ *
+ * @return - ECMA_VALUE_ERROR - if the operation fails
+ *           ECMA_VALUE_EMPTY - otherwise
+ */
+static ecma_property_t *
+opfunc_find_private_element (ecma_object_t *obj_p, /**< object */
+                             ecma_string_t *key_p, /**< key */
+                             ecma_string_t **private_key_p, /**< [out] private key */
+                             bool allow_heritage)
+{
+  JERRY_ASSERT (private_key_p != NULL);
+  JERRY_ASSERT (*private_key_p == NULL);
+  ecma_object_t *lex_env_p = JERRY_CONTEXT (vm_top_context_p)->lex_env_p;
+
+  while (true)
+  {
+    JERRY_ASSERT (lex_env_p != NULL);
+
+    if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_CLASS
+        && (lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_LEXICAL_ENV_HAS_DATA) != 0
+        && !ECMA_LEX_ENV_CLASS_IS_MODULE (lex_env_p))
+    {
+      ecma_object_t *class_object_p = ((ecma_lexical_environment_class_t *) lex_env_p)->object_p;
+
+      ecma_property_t *prop_p = opfunc_find_private_key (class_object_p, obj_p, key_p, private_key_p);
+
+      if (prop_p || *private_key_p != NULL)
+      {
+        /* Found non shadowed property */
+        return prop_p;
+      }
+
+      if (!allow_heritage)
+      {
+        return NULL;
+      }
+    }
+
+    if (lex_env_p->u2.outer_reference_cp == JMEM_CP_NULL)
+    {
+      break;
+    }
+
+    lex_env_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u2.outer_reference_cp);
+  }
+
+  return NULL;
+} /* opfunc_find_private_element */
+
+/**
+ * In expression runtime evaluation in case of private identifiers
+ *
+ * See also: ECMAScript v12, 13.10.1
+ *
+ * @return - ECMA_VALUE_ERROR - if the operation fails
+ *           ECMA_VALUE_TRUE - if the property was found in the base object
+ *           ECMA_VALUE_FALSE - otherwise
+ */
+ecma_value_t
+opfunc_private_in (ecma_value_t base, ecma_value_t property)
+{
+  if (!ecma_is_value_object (base))
+  {
+    return ecma_raise_type_error (ECMA_ERR_RIGHT_VALUE_OF_IN_MUST_BE_AN_OBJECT);
+  }
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (base);
+  ecma_string_t *prop_name_p = ecma_get_prop_name_from_value (property);
+  ecma_string_t *private_key_p = NULL;
+
+  ecma_property_t *prop_p = opfunc_find_private_element (obj_p, prop_name_p, &private_key_p, false);
+
+  return ecma_make_boolean_value (prop_p != NULL);
+} /* opfunc_private_in */
+
+/**
+ * PrivateFieldAdd abstact operation
+ *
+ * See also: ECMAScript v12, 7.3.28
+ *
+ * @return - ECMA_VALUE_ERROR - if the operation fails
+ *           ECMA_VALUE_EMPTY - otherwise
+ */
+ecma_value_t
+opfunc_private_field_add (ecma_value_t base, /**< base object */
+                          ecma_value_t property, /**< property name */
+                          ecma_value_t value) /**< ecma value */
+{
+  ecma_object_t *obj_p = ecma_get_object_from_value (base);
+  ecma_string_t *prop_name_p = ecma_get_string_from_value (property);
+  ecma_string_t *private_key_p = NULL;
+
+  ecma_property_t *prop_p = opfunc_find_private_element (obj_p, prop_name_p, &private_key_p, false);
+
+  if (prop_p != NULL)
+  {
+    return ecma_raise_type_error (ECMA_ERR_CANNOT_DECLARE_SAME_PRIVATE_FIELD_TWICE);
+  }
+
+  ecma_property_value_t *value_p =
+    ecma_create_named_data_property (obj_p, private_key_p, ECMA_PROPERTY_FLAG_WRITABLE, NULL);
+
+  value_p->value = ecma_copy_value_if_not_object (value);
+
+  return ECMA_VALUE_EMPTY;
+} /* opfunc_private_field_add */
+
+/**
+ * PrivateSet abstact operation
+ *
+ * See also: ECMAScript v12, 7.3.31
+ *
+ * @return - ECMA_VALUE_ERROR - if the operation fails
+ *           ECMA_VALUE_EMPTY - otherwise
+ */
+ecma_value_t
+opfunc_private_set (ecma_value_t base, /**< this object */
+                    ecma_value_t property, /**< property name */
+                    ecma_value_t value) /**< ecma value */
+{
+  ecma_object_t *obj_p = ecma_get_object_from_value (base);
+  ecma_string_t *prop_name_p = ecma_get_string_from_value (property);
+  ecma_string_t *private_key_p = NULL;
+
+  ecma_property_t *prop_p = opfunc_find_private_element (obj_p, prop_name_p, &private_key_p, true);
+
+  if (prop_p == NULL)
+  {
+    return ecma_raise_type_error (ECMA_ERR_CANNOT_WRITE_PRIVATE_MEMBER_TO_AN_OBJECT_WHOSE_CLASS_DID_NOT_DECLARE_IT);
+  }
+
+  if (*prop_p & ECMA_PROPERTY_FLAG_DATA)
+  {
+    JERRY_ASSERT (ecma_prop_name_is_symbol (private_key_p));
+
+    if (private_key_p->u.hash & ECMA_SYMBOL_FLAG_PRIVATE_INSTANCE_METHOD)
+    {
+      return ecma_raise_type_error (ECMA_ERR_PRIVATE_METHOD_IS_NOT_WRITABLE);
+    }
+
+    ecma_value_assign_value (&ECMA_PROPERTY_VALUE_PTR (prop_p)->value, value);
+    return ecma_copy_value (value);
+  }
+
+  ecma_getter_setter_pointers_t *get_set_pair_p = ecma_get_named_accessor_property (ECMA_PROPERTY_VALUE_PTR (prop_p));
+
+  if (get_set_pair_p->setter_cp == JMEM_CP_NULL)
+  {
+    return ecma_raise_type_error (ECMA_ERR_PRIVATE_FIELD_WAS_DEFINED_WITHOUT_A_SETTER);
+  }
+
+  ecma_object_t *setter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->setter_cp);
+
+  return ecma_op_function_call (setter_p, base, &value, 1);
+} /* opfunc_private_set */
+
+/**
+ * PrivateGet abstact operation
+ *
+ * See also: ECMAScript v12, 7.3.30
+ *
+ * @return - ECMA_VALUE_ERROR - if the operation fails
+ *           private property value - otherwise
+ */
+ecma_value_t
+opfunc_private_get (ecma_value_t base, /**< this object */
+                    ecma_value_t property) /**< property name */
+{
+  ecma_value_t base_obj = ecma_op_to_object (base);
+
+  if (ECMA_IS_VALUE_ERROR (base_obj))
+  {
+    return base_obj;
+  }
+
+  ecma_object_t *obj_p = ecma_get_object_from_value (base_obj);
+  ecma_string_t *prop_name_p = ecma_get_string_from_value (property);
+  ecma_string_t *private_key_p = NULL;
+
+  ecma_property_t *prop_p = opfunc_find_private_element (obj_p, prop_name_p, &private_key_p, true);
+
+  ecma_value_t result;
+
+  if (prop_p == NULL)
+  {
+    result = ecma_raise_type_error (ECMA_ERR_CANNOT_READ_PRIVATE_MEMBER_TO_AN_OBJECT_WHOSE_CLASS_DID_NOT_DECLARE_IT);
+  }
+  else if (*prop_p & ECMA_PROPERTY_FLAG_DATA)
+  {
+    result = ecma_copy_value (ECMA_PROPERTY_VALUE_PTR (prop_p)->value);
+  }
+  else
+  {
+    ecma_getter_setter_pointers_t *get_set_pair_p = ecma_get_named_accessor_property (ECMA_PROPERTY_VALUE_PTR (prop_p));
+
+    if (get_set_pair_p->getter_cp == JMEM_CP_NULL)
+    {
+      result = ecma_raise_type_error (ECMA_ERR_PRIVATE_FIELD_WAS_DEFINED_WITHOUT_A_GETTER);
+    }
+    else
+    {
+      ecma_object_t *getter_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, get_set_pair_p->getter_cp);
+      result = ecma_op_function_call (getter_p, base, NULL, 0);
+    }
+  }
+
+  ecma_deref_object (obj_p);
+
+  return result;
+} /* opfunc_private_get */
+
+/**
+ * Find the private property in the object who's private key descriptor matches the given key
+ */
+static ecma_string_t *
+opfunc_create_private_key (ecma_value_t *collection_p, /**< TODO */
+                           ecma_value_t search_key, /**< key */
+                           ecma_private_property_kind_t search_kind)
+{
+  if (search_kind < ECMA_PRIVATE_GETTER)
+  {
+    return opfunc_make_private_key (search_key);
+  }
+
+  ecma_string_t *search_key_p = ecma_get_string_from_value (search_key);
+
+  ecma_value_t *current_p = collection_p + 1;
+  ecma_value_t *end_p = ecma_compact_collection_end (collection_p);
+
+  while (current_p < end_p)
+  {
+    ecma_private_property_kind_t kind = ECMA_PRIVATE_PROPERTY_KIND (*current_p++);
+    ecma_string_t *private_key_p = ecma_get_prop_name_from_value (*current_p++);
+    current_p++; /* skip value */
+
+    if (kind < ECMA_PRIVATE_GETTER)
+    {
+      continue;
+    }
+
+    JERRY_ASSERT (ecma_prop_name_is_symbol (private_key_p));
+
+    ecma_string_t *private_key_desc_p =
+      ecma_get_string_from_value (((ecma_extended_string_t *) private_key_p)->u.symbol_descriptor);
+
+    if (ecma_compare_ecma_strings (private_key_desc_p, search_key_p))
+    {
+      ecma_deref_ecma_string (search_key_p);
+      ecma_ref_ecma_string (private_key_p);
+      return private_key_p;
+    }
+  }
+
+  return opfunc_make_private_key (search_key);
+} /* opfunc_create_private_key */
+
+/**
+ * Collect private members for PrivateMethodOrAccessorAdd and PrivateFieldAdd abstract operations
+ */
+void
+opfunc_collect_private_properties (ecma_value_t constructor, ecma_value_t prop_name, ecma_value_t value, uint8_t opcode)
+{
+  ecma_private_property_kind_t kind = ECMA_PRIVATE_FIELD;
+  bool is_static = false;
+
+  if (opcode >= CBC_EXT_COLLECT_PRIVATE_STATIC_FIELD)
+  {
+    opcode = (uint8_t) (opcode - PARSER_STATIC_PRIVATE_TO_PRIVATE_OFFSET);
+    is_static = true;
+  }
+
+  if (opcode == CBC_EXT_COLLECT_PRIVATE_METHOD)
+  {
+    prop_name ^= value;
+    value ^= prop_name;
+    prop_name ^= value;
+    kind = ECMA_PRIVATE_METHOD;
+  }
+  else if (opcode == CBC_EXT_COLLECT_PRIVATE_GETTER)
+  {
+    kind = ECMA_PRIVATE_GETTER;
+  }
+  else if (opcode == CBC_EXT_COLLECT_PRIVATE_SETTER)
+  {
+    kind = ECMA_PRIVATE_SETTER;
+  }
+
+  JERRY_ASSERT (ecma_is_value_object (constructor));
+  JERRY_ASSERT (ecma_is_value_string (prop_name));
+  JERRY_ASSERT (ecma_is_value_object (value) || ecma_is_value_undefined (value));
+
+  ecma_object_t *constructor_p = ecma_get_object_from_value (constructor);
+  ecma_string_t *internal_string_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_CLASS_PRIVATE_ELEMENTS);
+  ecma_property_t *prop_p = ecma_find_named_property (constructor_p, internal_string_p);
+  ecma_value_t *collection_p;
+  ecma_property_value_t *prop_value_p;
+
+  if (prop_p == NULL)
+  {
+    collection_p = ecma_new_compact_collection ();
+    ECMA_CREATE_INTERNAL_PROPERTY (constructor_p, internal_string_p, prop_p, prop_value_p);
+    ECMA_SET_INTERNAL_VALUE_POINTER (prop_value_p->value, collection_p);
+  }
+  else
+  {
+    prop_value_p = ECMA_PROPERTY_VALUE_PTR (prop_p);
+    collection_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_value_t, prop_value_p->value);
+  }
+
+  ecma_string_t *key_p = opfunc_create_private_key (collection_p, prop_name, kind);
+
+  if (kind != ECMA_PRIVATE_FIELD)
+  {
+    key_p->u.hash |= ECMA_SYMBOL_FLAG_PRIVATE_INSTANCE_METHOD;
+  }
+
+  if (is_static)
+  {
+    kind |= ECMA_PRIVATE_PROPERTY_STATIC_FLAG;
+  }
+
+  collection_p = ecma_compact_collection_push_back (collection_p, (ecma_value_t) kind);
+  collection_p = ecma_compact_collection_push_back (collection_p, ecma_make_symbol_value (key_p));
+  collection_p = ecma_compact_collection_push_back (collection_p, value);
+
+#ifndef JERRY_NDEBUG
+  ecma_value_t *end_p = ecma_compact_collection_end (collection_p);
+  ecma_value_t *current_p = collection_p + 1;
+
+  JERRY_ASSERT ((end_p - current_p) % ECMA_PRIVATE_ELEMENT_LIST_SIZE == 0);
+#endif /* !defined (JERRY_NDEBUG) */
+
+  ECMA_SET_INTERNAL_VALUE_POINTER (prop_value_p->value, collection_p);
+
+  ecma_free_value (value);
+} /* opfunc_collect_private_properties */
+
+/**
  * ClassDefinitionEvaluation environment initialization part
  *
  * See also: ECMAScript v6, 14.5.14
@@ -1222,18 +1740,13 @@ opfunc_init_class (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 
   if (ecma_get_object_type (ctor_p) == ECMA_OBJECT_TYPE_FUNCTION)
   {
-    ecma_object_t *proto_env_p = ecma_create_lex_env_class (frame_ctx_p->lex_env_p, 0);
-    ECMA_SET_NON_NULL_POINTER (proto_env_p->u1.bound_object_cp, proto_p);
-
-    ECMA_SET_NON_NULL_POINTER_TAG (((ecma_extended_object_t *) ctor_p)->u.function.scope_cp, proto_env_p, 0);
+    opfunc_bind_class_environment (frame_ctx_p->lex_env_p, proto_p, ctor_p, ctor_p);
 
     /* 15. set F’s [[ConstructorKind]] internal slot to "derived". */
     if (heritage_present)
     {
       ECMA_SET_THIRD_BIT_TO_POINTER_TAG (((ecma_extended_object_t *) ctor_p)->u.function.scope_cp);
     }
-
-    ecma_deref_object (proto_env_p);
   }
 
   stack_top_p[-2] = stack_top_p[-1];
@@ -1241,6 +1754,34 @@ opfunc_init_class (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 
   return ECMA_VALUE_EMPTY;
 } /* opfunc_init_class */
+
+/**
+ * Creates a new class lexical environment and binds the bound object and the class's object
+ *
+ * @return newly created class lexical environment - if func_obj_p is not present
+ *         NULL - otherwise, also the environment is set as the func_obj_p's scope
+ */
+ecma_object_t *
+opfunc_bind_class_environment (ecma_object_t *lex_env_p, /**< lexical environment */
+                               ecma_object_t *home_object_p, /**< bound object */
+                               ecma_object_t *ctor_p, /**< constructor object */
+                               ecma_object_t *func_obj_p) /**< function object */
+{
+  ecma_object_t *proto_env_p = ecma_create_lex_env_class (lex_env_p, sizeof (ecma_lexical_environment_class_t));
+  ECMA_SET_NON_NULL_POINTER (proto_env_p->u1.bound_object_cp, home_object_p);
+  ((ecma_lexical_environment_class_t *) proto_env_p)->object_p = ctor_p;
+  ((ecma_lexical_environment_class_t *) proto_env_p)->type = ECMA_LEX_ENV_CLASS_TYPE_CLASS_ENV;
+
+  if (func_obj_p)
+  {
+    JERRY_ASSERT (ecma_get_object_type (func_obj_p) == ECMA_OBJECT_TYPE_FUNCTION);
+    ECMA_SET_NON_NULL_POINTER_TAG (((ecma_extended_object_t *) func_obj_p)->u.function.scope_cp, proto_env_p, 0);
+    ecma_deref_object (proto_env_p);
+    return NULL;
+  }
+
+  return proto_env_p;
+} /* opfunc_bind_class_environment */
 
 /**
  * Set [[Enumerable]] and [[HomeObject]] attributes for all class method
@@ -1277,7 +1818,7 @@ opfunc_set_class_attributes (ecma_object_t *obj_p, /**< object */
       {
         JERRY_ASSERT (property == ECMA_PROPERTY_TYPE_DELETED
                       || (ECMA_PROPERTY_IS_INTERNAL (property)
-                          && property_pair_p->names_cp[index] == LIT_INTERNAL_MAGIC_STRING_CLASS_FIELD_COMPUTED));
+                          && LIT_INTERNAL_MAGIC_STRING_IGNORED (property_pair_p->names_cp[index])));
         continue;
       }
 
@@ -1310,6 +1851,37 @@ opfunc_set_class_attributes (ecma_object_t *obj_p, /**< object */
     prop_iter_cp = prop_iter_p->next_property_cp;
   }
 } /* opfunc_set_class_attributes */
+
+/**
+ * Set [[HomeObject]] attributes for all class private elements
+ */
+static void
+opfunc_set_private_instance_method_attributes (ecma_object_t *class_object_p, /**< class constructor  */
+                                               ecma_object_t *parent_env_p) /**< parent environment */
+{
+  ecma_string_t *internal_string_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_CLASS_PRIVATE_ELEMENTS);
+  ecma_property_t *prop_p = ecma_find_named_property (class_object_p, internal_string_p);
+
+  if (prop_p == NULL)
+  {
+    return;
+  }
+
+  ecma_value_t *collection_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_value_t, ECMA_PROPERTY_VALUE_PTR (prop_p)->value);
+  ecma_value_t *current_p = collection_p + 1;
+  ecma_value_t *end_p = ecma_compact_collection_end (collection_p);
+
+  while (current_p < end_p)
+  {
+    current_p += 2; /* skip kind, name */
+    ecma_value_t value = *current_p++;
+
+    if (!ecma_is_value_undefined (value))
+    {
+      opfunc_set_home_object (ecma_get_object_from_value (value), parent_env_p);
+    }
+  }
+} /* opfunc_set_private_instance_method_attributes */
 
 /**
  * Pop the current lexical environment referenced by the frame context
@@ -1346,13 +1918,12 @@ opfunc_finalize_class (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
     ecma_op_initialize_binding (class_env_p, ecma_get_string_from_value (class_name), stack_top_p[-2]);
   }
 
-  ecma_object_t *ctor_env_p = ecma_create_lex_env_class (class_env_p, 0);
-  ECMA_SET_NON_NULL_POINTER (ctor_env_p->u1.bound_object_cp, ctor_p);
-  ecma_object_t *proto_env_p = ecma_create_lex_env_class (class_env_p, 0);
-  ECMA_SET_NON_NULL_POINTER (proto_env_p->u1.bound_object_cp, proto_p);
+  ecma_object_t *ctor_env_p = opfunc_bind_class_environment (class_env_p, ctor_p, ctor_p, NULL);
+  ecma_object_t *proto_env_p = opfunc_bind_class_environment (class_env_p, proto_p, ctor_p, NULL);
 
   opfunc_set_class_attributes (ctor_p, ctor_env_p);
   opfunc_set_class_attributes (proto_p, proto_env_p);
+  opfunc_set_private_instance_method_attributes (ctor_p, proto_env_p);
 
   ecma_deref_object (proto_env_p);
   ecma_deref_object (ctor_env_p);
@@ -1366,6 +1937,9 @@ opfunc_finalize_class (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
   {
     opfunc_pop_lexical_environment (frame_ctx_p);
   }
+
+  ecma_value_t result = opfunc_private_method_or_accessor_add (ctor_p, ctor_p, ECMA_PRIVATE_PROPERTY_STATIC_FLAG);
+  JERRY_ASSERT (ecma_is_value_undefined (result));
 
   stack_top_p[-3] = stack_top_p[-2];
   *vm_stack_top_p -= 2;

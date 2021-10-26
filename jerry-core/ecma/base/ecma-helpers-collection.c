@@ -418,6 +418,31 @@ ecma_compact_collection_free (ecma_value_t *compact_collection_p) /**< compact c
 } /* ecma_compact_collection_free */
 
 /**
+ * Get the end of a compact collection
+ *
+ * @return pointer to the compact collection end
+ */
+ecma_value_t *
+ecma_compact_collection_end (ecma_value_t *compact_collection_p) /**< compact collection */
+{
+  ecma_value_t size = ECMA_COMPACT_COLLECTION_GET_SIZE (compact_collection_p);
+  ecma_value_t unused_items = ECMA_COMPACT_COLLECTION_GET_UNUSED_ITEM_COUNT (compact_collection_p);
+
+  return compact_collection_p + size - unused_items;
+} /* ecma_compact_collection_end */
+
+/**
+ * Destroy a compact collection
+ */
+void
+ecma_compact_collection_destroy (ecma_value_t *compact_collection_p) /**< compact collection */
+{
+  ecma_value_t size = ECMA_COMPACT_COLLECTION_GET_SIZE (compact_collection_p);
+
+  jmem_heap_free_block (compact_collection_p, size * sizeof (ecma_value_t));
+} /* ecma_compact_collection_destroy */
+
+/**
  * @}
  * @}
  */

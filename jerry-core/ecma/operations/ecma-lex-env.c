@@ -167,7 +167,7 @@ ecma_op_has_binding (ecma_object_t *lex_env_p, /**< lexical environment */
 #if JERRY_ESNEXT
     case ECMA_LEXICAL_ENVIRONMENT_CLASS:
     {
-      if ((lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_LEXICAL_ENV_HAS_DATA) == 0)
+      if (!ECMA_LEX_ENV_CLASS_IS_MODULE (lex_env_p))
       {
         return ECMA_VALUE_FALSE;
       }
@@ -297,7 +297,7 @@ ecma_op_set_mutable_binding (ecma_object_t *lex_env_p, /**< lexical environment 
 #if JERRY_ESNEXT
     case ECMA_LEXICAL_ENVIRONMENT_CLASS:
     {
-      if ((lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_LEXICAL_ENV_HAS_DATA) == 0)
+      if (!ECMA_LEX_ENV_CLASS_IS_MODULE (lex_env_p))
       {
         return ECMA_VALUE_EMPTY;
       }

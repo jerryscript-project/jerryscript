@@ -221,8 +221,7 @@ ecma_new_symbol_from_descriptor_string (ecma_value_t string_desc) /**< ecma-stri
   ecma_extended_string_t *symbol_p = ecma_alloc_extended_string ();
   symbol_p->header.refs_and_container = ECMA_STRING_REF_ONE | ECMA_STRING_CONTAINER_SYMBOL;
   symbol_p->u.symbol_descriptor = string_desc;
-  symbol_p->header.u.hash = (lit_string_hash_t) (((uintptr_t) symbol_p) >> ECMA_SYMBOL_HASH_SHIFT);
-  JERRY_ASSERT ((symbol_p->header.u.hash & ECMA_GLOBAL_SYMBOL_FLAG) == 0);
+  symbol_p->header.u.hash = (lit_string_hash_t) (((uintptr_t) symbol_p) & (uintptr_t) ~ECMA_SYMBOL_FLAGS_MASK);
 
   return (ecma_string_t *) symbol_p;
 } /* ecma_new_symbol_from_descriptor_string */

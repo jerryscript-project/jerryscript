@@ -132,9 +132,31 @@ ecma_value_t opfunc_create_implicit_class_constructor (uint8_t opcode, const ecm
 
 void opfunc_set_home_object (ecma_object_t *func_p, ecma_object_t *parent_env_p);
 
+ecma_value_t opfunc_define_field (ecma_value_t base, ecma_value_t property, ecma_value_t value);
+
+ecma_string_t *opfunc_make_private_key (ecma_value_t descriptor);
+
+ecma_value_t opfunc_private_in (ecma_value_t base, ecma_value_t property);
+
+ecma_value_t opfunc_private_field_add (ecma_value_t base, ecma_value_t property, ecma_value_t value);
+
+ecma_value_t opfunc_private_set (ecma_value_t base, ecma_value_t property, ecma_value_t value);
+
+ecma_value_t opfunc_private_get (ecma_value_t base, ecma_value_t property);
+
+void opfunc_collect_private_properties (ecma_value_t constructor,
+                                        ecma_value_t prop_name,
+                                        ecma_value_t method,
+                                        uint8_t opcode);
+
 void opfunc_push_class_environment (vm_frame_ctx_t *frame_ctx_p, ecma_value_t **vm_stack_top, ecma_value_t class_name);
 
 ecma_value_t opfunc_init_class (vm_frame_ctx_t *frame_context_p, ecma_value_t *stack_top_p);
+
+ecma_object_t *opfunc_bind_class_environment (ecma_object_t *lex_env_p,
+                                              ecma_object_t *home_object_p,
+                                              ecma_object_t *ctor_p,
+                                              ecma_object_t *func_obj_p);
 
 void opfunc_pop_lexical_environment (vm_frame_ctx_t *frame_ctx_p);
 

@@ -76,6 +76,8 @@ typedef enum
   PARSER_INSIDE_CLASS_FIELD = (1u << 23), /**< a class field is being parsed */
   PARSER_ALLOW_NEW_TARGET = (1u << 24), /**< allow new.target parsing in the current context */
   PARSER_IS_METHOD = (1u << 25), /**< method is parsed */
+  PARSER_PRIVATE_FUNCTION_NAME = PARSER_IS_FUNC_EXPRESSION, /**< represents private method for
+                                                             *   parser_set_function_name*/
 #endif /* JERRY_ESNEXT */
 #if JERRY_MODULE_SYSTEM
   PARSER_MODULE_DEFAULT_CLASS_OR_FUNC = (1u << 26), /**< parsing a function or class default export */
@@ -481,6 +483,18 @@ typedef struct
 
 #endif /* JERRY_LINE_INFO */
 
+#if JERRY_ESNEXT
+/**
+ * List of private field contexts
+ */
+typedef struct parser_private_context_t
+{
+  scanner_class_private_member_t *members_p; /**< current private field context members */
+  struct parser_private_context_t *prev_p; /**< previous private field context */
+  uint8_t opts; /**< options */
+} parser_private_context_t;
+#endif /* JERRY_ESNEXT */
+
 /**
  * Those members of a context which needs
  * to be saved when a sub-function is parsed.
@@ -605,6 +619,7 @@ typedef struct
 #if JERRY_ESNEXT
   uint16_t scope_stack_global_end; /**< end of global declarations of a function */
   ecma_value_t tagged_template_literal_cp; /**< compessed pointer to the tagged template literal collection */
+  parser_private_context_t *private_context_p; /**< private context */
 #endif /* JERRY_ESNEXT */
   uint8_t stack_top_uint8; /**< top byte stored on the stack */
 
@@ -763,10 +778,11 @@ bool lexer_check_yield_no_arg (parser_context_t *context_p);
 bool lexer_consume_generator (parser_context_t *context_p);
 bool lexer_consume_assign (parser_context_t *context_p);
 void lexer_update_await_yield (parser_context_t *context_p, uint32_t status_flags);
+bool lexer_scan_private_identifier (parser_context_t *context_p);
 #endif /* JERRY_ESNEXT */
 void lexer_parse_string (parser_context_t *context_p, lexer_string_options_t opts);
 void lexer_expect_identifier (parser_context_t *context_p, uint8_t literal_type);
-bool lexer_scan_identifier (parser_context_t *context_p);
+bool lexer_scan_identifier (parser_context_t *context_p, lexer_parse_options_t opts);
 void lexer_check_property_modifier (parser_context_t *context_p);
 void lexer_convert_ident_to_cesu8 (uint8_t *destination_p, const uint8_t *source_p, prop_length_t length);
 
@@ -812,6 +828,11 @@ void parser_parse_block_expression (parser_context_t *context_p, int options);
 void parser_parse_expression_statement (parser_context_t *context_p, int options);
 void parser_parse_expression (parser_context_t *context_p, int options);
 #if JERRY_ESNEXT
+void parser_resolve_private_identifier (parser_context_t *context_p);
+void parser_save_private_context (parser_context_t *context_p,
+                                  parser_private_context_t *private_ctx_p,
+                                  scanner_class_info_t *class_info_p);
+void parser_restore_private_context (parser_context_t *context_p, parser_private_context_t *private_ctx_p);
 void parser_parse_class (parser_context_t *context_p, bool is_statement);
 void parser_parse_initializer (parser_context_t *context_p, parser_pattern_flags_t flags);
 void parser_parse_initializer_by_next_char (parser_context_t *context_p, parser_pattern_flags_t flags);
@@ -829,6 +850,7 @@ void scanner_set_active (parser_context_t *context_p);
 void scanner_revert_active (parser_context_t *context_p);
 void scanner_release_active (parser_context_t *context_p, size_t size);
 void scanner_release_switch_cases (scanner_case_info_t *case_p);
+void scanner_release_private_fields (scanner_class_private_member_t *member_p);
 void scanner_seek (parser_context_t *context_p);
 void scanner_reverse_info_list (parser_context_t *context_p);
 void scanner_cleanup (parser_context_t *context_p);

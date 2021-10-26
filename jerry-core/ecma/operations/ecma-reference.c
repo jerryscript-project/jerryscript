@@ -113,7 +113,7 @@ ecma_op_resolve_super_base (ecma_object_t *lex_env_p) /**< starting lexical envi
     JERRY_ASSERT (lex_env_p != NULL);
 
     if (ecma_get_lex_env_type (lex_env_p) == ECMA_LEXICAL_ENVIRONMENT_CLASS
-        && (lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_LEXICAL_ENV_HAS_DATA) == 0)
+        && !ECMA_LEX_ENV_CLASS_IS_MODULE (lex_env_p))
     {
       ecma_object_t *home_p = ECMA_GET_NON_NULL_POINTER (ecma_object_t, lex_env_p->u1.home_object_cp);
 
@@ -318,7 +318,7 @@ ecma_op_resolve_reference_value (ecma_object_t *lex_env_p, /**< starting lexical
       case ECMA_LEXICAL_ENVIRONMENT_CLASS:
       {
 #if JERRY_MODULE_SYSTEM
-        if (lex_env_p->type_flags_refs & ECMA_OBJECT_FLAG_LEXICAL_ENV_HAS_DATA)
+        if (ECMA_LEX_ENV_CLASS_IS_MODULE (lex_env_p))
         {
           ecma_property_t *property_p = ecma_find_named_property (lex_env_p, name_p);
 

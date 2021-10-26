@@ -32,6 +32,7 @@ typedef enum
   /** @endcond */
   PARSER_ERR_OUT_OF_MEMORY,
   PARSER_ERR_INVALID_REGEXP,
+  PARSER_ERR_NO_ERROR
 } parser_error_msg_t;
 
 const lit_utf8_byte_t* parser_get_error_utf8 (uint32_t id);

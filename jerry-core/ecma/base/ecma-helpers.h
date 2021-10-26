@@ -434,6 +434,8 @@ ecma_value_t *ecma_new_compact_collection (void);
 ecma_value_t *ecma_compact_collection_push_back (ecma_value_t *compact_collection_p, ecma_value_t value);
 ecma_value_t *ecma_compact_collection_shrink (ecma_value_t *compact_collection_p);
 void ecma_compact_collection_free (ecma_value_t *compact_collection_p);
+ecma_value_t *ecma_compact_collection_end (ecma_value_t *compact_collection_p);
+void ecma_compact_collection_destroy (ecma_value_t *compact_collection_p);
 
 /* ecma-helpers.c */
 ecma_object_t *ecma_create_object (ecma_object_t *prototype_object_p, size_t ext_object_size, ecma_object_type_t type);

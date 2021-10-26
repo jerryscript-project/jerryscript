@@ -570,17 +570,6 @@ static const uint8_t keyword_lengths_list[] = {
 #undef LEXER_KEYWORD
 #undef LEXER_KEYWORD_LIST_LENGTH
 
-/**
- * Flags for lexer_parse_identifier.
- */
-typedef enum
-{
-  LEXER_PARSE_NO_OPTS = 0, /**< no options */
-  LEXER_PARSE_CHECK_KEYWORDS = (1 << 0), /**< check keywords */
-  LEXER_PARSE_CHECK_START_AND_RETURN = (1 << 1), /**< check identifier start and return */
-  LEXER_PARSE_CHECK_PART_AND_RETURN = (1 << 2), /**< check identifier part and return */
-} lexer_parse_options_t;
-
 JERRY_STATIC_ASSERT (LEXER_FIRST_NON_RESERVED_KEYWORD < LEXER_FIRST_FUTURE_STRICT_RESERVED_WORD,
                      lexer_first_non_reserved_keyword_must_be_before_lexer_first_future_strict_reserved_word);
 
@@ -855,8 +844,8 @@ lexer_parse_identifier (parser_context_t *context_p, /**< context */
           }
 #endif /* JERRY_ESNEXT */
 
-          if (keyword_p->type >= LEXER_FIRST_FUTURE_STRICT_RESERVED_WORD
-              && (context_p->status_flags & PARSER_IS_STRICT))
+          if (keyword_p->type >= LEXER_FIRST_FUTURE_STRICT_RESERVED_WORD && (context_p->status_flags & PARSER_IS_STRICT)
+              && !(options & LEXER_PARSE_NO_STRICT_IDENT_ERROR))
           {
             parser_raise_error (context_p, PARSER_ERR_STRICT_IDENT_NOT_ALLOWED);
           }
@@ -1567,6 +1556,9 @@ lexer_next_token (parser_context_t *context_p) /**< context */
     LEXER_TYPE_A_TOKEN (LIT_CHAR_RIGHT_SQUARE, LEXER_RIGHT_SQUARE);
     LEXER_TYPE_A_TOKEN (LIT_CHAR_SEMICOLON, LEXER_SEMICOLON);
     LEXER_TYPE_A_TOKEN (LIT_CHAR_COMMA, LEXER_COMMA);
+#if JERRY_ESNEXT
+    LEXER_TYPE_A_TOKEN (LIT_CHAR_HASHMARK, LEXER_HASHMARK);
+#endif /* JERRY_ESNEXT */
 
     case (uint8_t) LIT_CHAR_DOT:
     {
@@ -2114,6 +2106,21 @@ lexer_update_await_yield (parser_context_t *context_p, /**< context */
     }
   }
 } /* lexer_update_await_yield */
+
+/**
+ * Read next token without skipping whitespaces and checking keywords
+ *
+ * @return true if the next literal is private identifier, false otherwise
+ */
+bool
+lexer_scan_private_identifier (parser_context_t *context_p) /**< context */
+{
+  context_p->token.keyword_type = LEXER_EOS;
+  context_p->token.line = context_p->line;
+  context_p->token.column = context_p->column;
+
+  return (context_p->source_p < context_p->source_end_p && lexer_parse_identifier (context_p, LEXER_PARSE_NO_OPTS));
+} /* lexer_scan_private_identifier */
 
 #endif /* JERRY_ESNEXT */
 
@@ -3142,6 +3149,12 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
 
     create_literal_object = true;
   }
+#if JERRY_ESNEXT
+  else if (ident_opts & LEXER_OBJ_IDENT_CLASS_PRIVATE)
+  {
+    parser_raise_error (context_p, PARSER_ERR_INVALID_CHARACTER);
+  }
+#endif /* JERRY_ESNEXT */
   else
   {
     switch (context_p->source_p[0])
@@ -3185,6 +3198,16 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
         context_p->token.type = LEXER_MULTIPLY;
         lexer_consume_next_character (context_p);
         return;
+      }
+      case LIT_CHAR_HASHMARK:
+      {
+        if (ident_opts & LEXER_OBJ_IDENT_CLASS_IDENTIFIER)
+        {
+          context_p->token.type = LEXER_HASHMARK;
+          return;
+        }
+
+        break;
       }
 #endif /* JERRY_ESNEXT */
       case LIT_CHAR_RIGHT_BRACE:
@@ -3250,6 +3273,12 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
     {
       return;
     }
+
+    if (ident_opts & LEXER_OBJ_IDENT_CLASS_PRIVATE)
+    {
+      parser_resolve_private_identifier (context_p);
+      return;
+    }
 #endif /* JERRY_ESNEXT */
 
     lexer_construct_literal_object (context_p, &context_p->token.lit_location, LEXER_STRING_LITERAL);
@@ -3265,14 +3294,15 @@ lexer_expect_object_literal_id (parser_context_t *context_p, /**< context */
  * @return true if the next literal is identifier, false otherwise
  */
 bool
-lexer_scan_identifier (parser_context_t *context_p) /**< context */
+lexer_scan_identifier (parser_context_t *context_p, /**< context */
+                       lexer_parse_options_t opts) /**< identifier parse options */
 {
   lexer_skip_spaces (context_p);
   context_p->token.keyword_type = LEXER_EOS;
   context_p->token.line = context_p->line;
   context_p->token.column = context_p->column;
 
-  if (context_p->source_p < context_p->source_end_p && lexer_parse_identifier (context_p, LEXER_PARSE_NO_OPTS))
+  if (context_p->source_p < context_p->source_end_p && lexer_parse_identifier (context_p, opts))
   {
     return true;
   }

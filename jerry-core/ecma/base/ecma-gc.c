@@ -328,6 +328,27 @@ ecma_gc_mark_properties (ecma_object_t *object_p, /**< object */
           ecma_gc_set_object_visited (ecma_get_object_from_value (environment_record_p->function_object));
           break;
         }
+        case LIT_INTERNAL_MAGIC_STRING_CLASS_PRIVATE_ELEMENTS:
+        {
+          ecma_value_t *compact_collection_p;
+          compact_collection_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_value_t, property_pair_p->values[index].value);
+
+          ecma_value_t *end_p = ecma_compact_collection_end (compact_collection_p);
+          ecma_value_t *current_p = compact_collection_p + 1;
+
+          while (end_p - current_p >= ECMA_PRIVATE_ELEMENT_LIST_SIZE)
+          {
+            current_p++; /* skip the type */
+            current_p++; /* skip the name */
+            ecma_value_t value = *current_p++;
+
+            if (!ecma_is_value_undefined (value))
+            {
+              ecma_gc_set_object_visited (ecma_get_object_from_value (value));
+            }
+          }
+          break;
+        }
 #endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_CONTAINER
         case LIT_INTERNAL_MAGIC_STRING_WEAK_REFS:
@@ -816,8 +837,12 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
 #if JERRY_MODULE_SYSTEM
         if (object_p->type_flags_refs & ECMA_OBJECT_FLAG_LEXICAL_ENV_HAS_DATA)
         {
-          ecma_gc_mark_properties (object_p, true);
-          ecma_gc_set_object_visited (((ecma_lexical_environment_class_t *) object_p)->module_p);
+          if (ECMA_LEX_ENV_CLASS_IS_MODULE (object_p))
+          {
+            ecma_gc_mark_properties (object_p, true);
+          }
+
+          ecma_gc_set_object_visited (((ecma_lexical_environment_class_t *) object_p)->object_p);
           return;
         }
 #endif /* JERRY_MODULE_SYSTEM */
@@ -1591,6 +1616,26 @@ ecma_gc_free_property (ecma_object_t *object_p, /**< object */
       ecma_compact_collection_free (compact_collection_p);
       break;
     }
+    case LIT_INTERNAL_MAGIC_STRING_CLASS_PRIVATE_ELEMENTS:
+    {
+      ecma_value_t *compact_collection_p;
+      compact_collection_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_value_t, value);
+
+      ecma_value_t *end_p = ecma_compact_collection_end (compact_collection_p);
+      ecma_value_t *current_p = compact_collection_p + 1;
+
+      JERRY_ASSERT ((end_p - current_p) % ECMA_PRIVATE_ELEMENT_LIST_SIZE == 0);
+
+      while (current_p < end_p)
+      {
+        current_p++; /* skip the type */
+        ecma_deref_ecma_string (ecma_get_prop_name_from_value (*current_p++));
+        current_p++; /* skip the value */
+      }
+
+      ecma_compact_collection_destroy (compact_collection_p);
+      break;
+    }
 #endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_WEAKREF || JERRY_BUILTIN_CONTAINER
     case LIT_INTERNAL_MAGIC_STRING_WEAK_REFS:
@@ -1684,7 +1729,11 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
     if (ecma_get_lex_env_type (object_p) == ECMA_LEXICAL_ENVIRONMENT_CLASS
         && (object_p->type_flags_refs & ECMA_OBJECT_FLAG_LEXICAL_ENV_HAS_DATA))
     {
-      ecma_gc_free_properties (object_p, ECMA_GC_FREE_REFERENCES);
+      if (ECMA_LEX_ENV_CLASS_IS_MODULE (object_p))
+      {
+        ecma_gc_free_properties (object_p, ECMA_GC_FREE_REFERENCES);
+      }
+
       ecma_dealloc_extended_object (object_p, sizeof (ecma_lexical_environment_class_t));
       return;
     }

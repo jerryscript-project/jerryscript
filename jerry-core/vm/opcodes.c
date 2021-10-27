@@ -639,6 +639,7 @@ opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context
   executable_object_p->extended_object.u.cls.type = class_type;
   executable_object_p->extended_object.u.cls.u2.executable_obj_flags = 0;
   ECMA_SET_INTERNAL_VALUE_ANY_POINTER (executable_object_p->extended_object.u.cls.u3.head, NULL);
+  executable_object_p->iterator = ECMA_VALUE_UNDEFINED;
 
   JERRY_ASSERT (!(frame_ctx_p->status_flags & VM_FRAME_CTX_DIRECT_EVAL));
 
@@ -646,6 +647,7 @@ opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context
   vm_frame_ctx_shared_t *new_shared_p = &(executable_object_p->shared);
   *new_shared_p = *(frame_ctx_p->shared_p);
   new_shared_p->status_flags &= (uint32_t) ~VM_FRAME_CTX_SHARED_HAS_ARG_LIST;
+  new_shared_p->status_flags |= VM_FRAME_CTX_SHARED_EXECUTABLE;
 
   vm_frame_ctx_t *new_frame_ctx_p = &(executable_object_p->frame_ctx);
   *new_frame_ctx_p = *frame_ctx_p;
@@ -690,7 +692,7 @@ opfunc_create_executable_object (vm_frame_ctx_t *frame_ctx_p, /**< frame context
     ecma_deref_if_object (*new_registers_p++);
   }
 
-  JERRY_ASSERT (new_frame_ctx_p->block_result == ECMA_VALUE_UNDEFINED);
+  JERRY_ASSERT (*VM_GET_EXECUTABLE_ITERATOR (new_frame_ctx_p) == ECMA_VALUE_UNDEFINED);
 
   new_frame_ctx_p->this_binding = ecma_copy_value_if_not_object (new_frame_ctx_p->this_binding);
 
@@ -767,7 +769,7 @@ opfunc_resume_executable_object (vm_executable_object_t *executable_object_p, /*
     ecma_ref_if_object (*register_p++);
   }
 
-  ecma_ref_if_object (executable_object_p->frame_ctx.block_result);
+  ecma_ref_if_object (executable_object_p->iterator);
 
   JERRY_ASSERT (ECMA_EXECUTABLE_OBJECT_IS_SUSPENDED (executable_object_p));
 
@@ -828,7 +830,7 @@ opfunc_resume_executable_object (vm_executable_object_t *executable_object_p, /*
     ecma_deref_if_object (*register_p++);
   }
 
-  ecma_deref_if_object (executable_object_p->frame_ctx.block_result);
+  ecma_deref_if_object (executable_object_p->iterator);
 
   return result;
 } /* opfunc_resume_executable_object */
@@ -876,7 +878,6 @@ opfunc_async_create_and_await (vm_frame_ctx_t *frame_ctx_p, /**< frame context *
                                ecma_value_t value, /**< awaited value (takes reference) */
                                uint16_t extra_flags) /**< extra flags */
 {
-  JERRY_ASSERT (frame_ctx_p->block_result == ECMA_VALUE_UNDEFINED);
   JERRY_ASSERT (CBC_FUNCTION_GET_TYPE (frame_ctx_p->shared_p->bytecode_header_p->status_flags) == CBC_FUNCTION_ASYNC
                 || (CBC_FUNCTION_GET_TYPE (frame_ctx_p->shared_p->bytecode_header_p->status_flags)
                     == CBC_FUNCTION_ASYNC_ARROW));
@@ -902,7 +903,7 @@ opfunc_async_create_and_await (vm_frame_ctx_t *frame_ctx_p, /**< frame context *
   result = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_VALUE_UNDEFINED, promise_p);
 
   JERRY_ASSERT (ecma_is_value_object (result));
-  executable_object_p->frame_ctx.block_result = result;
+  executable_object_p->iterator = result;
 
   return result;
 } /* opfunc_async_create_and_await */
@@ -1523,8 +1524,8 @@ opfunc_assign_super_reference (ecma_value_t **vm_stack_top_p, /**< vm stack top 
   }
   else if (opcode_data & VM_OC_PUT_BLOCK)
   {
-    ecma_fast_free_value (frame_ctx_p->block_result);
-    frame_ctx_p->block_result = result;
+    ecma_fast_free_value (VM_GET_REGISTER (frame_ctx_p, 0));
+    VM_GET_REGISTERS (frame_ctx_p)[0] = result;
   }
 
   *vm_stack_top_p = stack_top_p;

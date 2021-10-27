@@ -1277,7 +1277,7 @@ parser_post_processing (parser_context_t *context_p) /**< context */
 
   if (!(context_p->status_flags & PARSER_NO_END_LABEL))
   {
-    *dst_p++ = CBC_RETURN_WITH_BLOCK;
+    *dst_p++ = CBC_RETURN_FUNCTION_END;
 
 #if JERRY_ESNEXT
     if (PARSER_IS_NORMAL_ASYNC_FUNCTION (context_p->status_flags))
@@ -2150,8 +2150,8 @@ parser_parse_source (void *source_p, /**< source code */
       parser_branch_t branch;
       parser_emit_cbc_forward_branch (&context, CBC_JUMP_FORWARD, &branch);
 
-      scanner_create_variables (&context, SCANNER_CREATE_VARS_NO_OPTS);
-      parser_emit_cbc (&context, CBC_RETURN_WITH_BLOCK);
+      scanner_create_variables (&context, SCANNER_CREATE_VARS_IS_MODULE);
+      parser_emit_cbc (&context, CBC_RETURN_FUNCTION_END);
 
       parser_set_branch_to_current_position (&context, &branch);
     }

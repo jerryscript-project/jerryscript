@@ -2001,7 +2001,7 @@ scanner_is_context_needed (parser_context_t *context_p, /**< context */
                                                           : info_p->type == SCANNER_TYPE_FUNCTION));
 
   uint32_t scope_stack_reg_top = (check_type != PARSER_CHECK_GLOBAL_CONTEXT ? context_p->scope_stack_reg_top
-                                                                            : 0);
+                                                                            : 1); /* block result */
 #else /* !JERRY_ESNEXT */
   JERRY_ASSERT (check_type == PARSER_CHECK_BLOCK_CONTEXT);
   JERRY_ASSERT (info_p->type == SCANNER_TYPE_BLOCK);
@@ -2333,6 +2333,8 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
   JERRY_ASSERT (info_type == SCANNER_TYPE_FUNCTION
                 || !(option_flags & (SCANNER_CREATE_VARS_IS_FUNCTION_ARGS | SCANNER_CREATE_VARS_IS_FUNCTION_BODY)));
 
+  uint32_t scope_stack_reg_top = context_p->scope_stack_reg_top;
+
   if (info_type == SCANNER_TYPE_FUNCTION && !(option_flags & SCANNER_CREATE_VARS_IS_FUNCTION_BODY))
   {
     JERRY_ASSERT (context_p->scope_stack_p == NULL);
@@ -2349,6 +2351,11 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
 
     context_p->scope_stack_p = scope_stack_p;
     scope_stack_end_p = scope_stack_p + context_p->scope_stack_size;
+
+    if (option_flags & (SCANNER_CREATE_VARS_IS_SCRIPT | SCANNER_CREATE_VARS_IS_MODULE))
+    {
+      scope_stack_reg_top++; /* block result */
+    }
   }
   else
   {
@@ -2358,8 +2365,6 @@ scanner_create_variables (parser_context_t *context_p, /**< context */
     scope_stack_end_p = scope_stack_p + context_p->scope_stack_size;
     scope_stack_p += context_p->scope_stack_top;
   }
-
-  uint32_t scope_stack_reg_top = context_p->scope_stack_reg_top;
 
   literal.char_p = info_p->source_p - 1;
 

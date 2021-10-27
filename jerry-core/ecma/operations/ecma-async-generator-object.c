@@ -107,7 +107,7 @@ ecma_async_yield_call (ecma_value_t function, /**< function (takes reference) */
   }
 
   ecma_object_t *return_obj_p = ecma_get_object_from_value (function);
-  ecma_value_t iterator = async_generator_object_p->frame_ctx.block_result;
+  ecma_value_t iterator = async_generator_object_p->iterator;
   ecma_value_t result;
 
   if (argument == ECMA_VALUE_EMPTY)
@@ -136,7 +136,7 @@ static ecma_value_t
 ecma_async_yield_throw (vm_executable_object_t *async_generator_object_p, /**< async generator */
                         ecma_value_t value) /**< thrown value */
 {
-  ecma_object_t *obj_p = ecma_get_object_from_value (async_generator_object_p->frame_ctx.block_result);
+  ecma_object_t *obj_p = ecma_get_object_from_value (async_generator_object_p->iterator);
   ecma_value_t result = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_THROW);
 
   if (ECMA_IS_VALUE_ERROR (result))
@@ -204,7 +204,7 @@ ecma_async_generator_run (vm_executable_object_t *async_generator_object_p) /**<
     {
       case ECMA_ASYNC_GENERATOR_DO_NEXT:
       {
-        result = ecma_op_iterator_next (async_generator_object_p->frame_ctx.block_result,
+        result = ecma_op_iterator_next (async_generator_object_p->iterator,
                                         async_generator_object_p->frame_ctx.stack_top_p[-1],
                                         task_p->operation_value);
 
@@ -256,7 +256,7 @@ ecma_async_generator_run (vm_executable_object_t *async_generator_object_p) /**<
     JERRY_ASSERT (ECMA_IS_VALUE_ERROR (result));
 
     async_generator_object_p->extended_object.u.cls.u2.executable_obj_flags &= ECMA_AWAIT_CLEAR_MASK;
-    async_generator_object_p->frame_ctx.block_result = ECMA_VALUE_UNDEFINED;
+    async_generator_object_p->iterator = ECMA_VALUE_UNDEFINED;
     async_generator_object_p->frame_ctx.byte_code_p = opfunc_resume_executable_object_with_throw;
 
     JERRY_ASSERT (async_generator_object_p->frame_ctx.stack_top_p[-1] == ECMA_VALUE_UNDEFINED
@@ -401,7 +401,7 @@ ecma_await_continue (vm_executable_object_t *executable_object_p, /**< executabl
     }
     case ECMA_AWAIT_YIELD_RETURN:
     {
-      ecma_object_t *obj_p = ecma_get_object_from_value (executable_object_p->frame_ctx.block_result);
+      ecma_object_t *obj_p = ecma_get_object_from_value (executable_object_p->iterator);
       ecma_value_t result = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_RETURN);
 
       if (ECMA_IS_VALUE_ERROR (result))

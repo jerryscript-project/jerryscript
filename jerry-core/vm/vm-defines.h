@@ -48,6 +48,8 @@ typedef enum
   VM_FRAME_CTX_SHARED_NON_ARROW_FUNC = (1 << 4),      /**< non-arrow function */
   VM_FRAME_CTX_SHARED_HERITAGE_PRESENT = (1 << 5),    /**< class heritage present */
   VM_FRAME_CTX_SHARED_HAS_CLASS_FIELDS = (1 << 6),    /**< has class fields */
+  VM_FRAME_CTX_SHARED_EXECUTABLE = (1 << 7),          /**< frame is an executable object constructed
+                                                       *   with opfunc_create_executable_object */
 #endif /* JERRY_ESNEXT */
 } vm_frame_ctx_shared_flags_t;
 
@@ -112,7 +114,6 @@ typedef struct vm_frame_ctx_t
   ecma_object_t *lex_env_p;                           /**< current lexical environment */
   struct vm_frame_ctx_t *prev_context_p;              /**< previous context */
   ecma_value_t this_binding;                          /**< this binding */
-  ecma_value_t block_result;                          /**< block result */
   uint16_t context_depth;                             /**< current context depth */
   uint8_t status_flags;                               /**< combination of vm_frame_ctx_flags_t bits */
   uint8_t call_operation;                             /**< perform a call or construct operation */
@@ -130,10 +131,18 @@ typedef struct vm_frame_ctx_t
 #define VM_GET_REGISTER(frame_ctx_p, i) (((ecma_value_t *) ((frame_ctx_p) + 1))[i])
 
 /**
- * Get the executable object.
+ * Calculate the executable object from a vm_executable_object frame context.
  */
 #define VM_GET_EXECUTABLE_OBJECT(frame_ctx_p) \
   ((ecma_extended_object_t *) ((uintptr_t) (frame_ctx_p) - (uintptr_t) offsetof (vm_executable_object_t, frame_ctx)))
+
+/**
+ * Calculate the shared_part from a vm_executable_object frame context.
+ */
+#define VM_GET_EXECUTABLE_ITERATOR(frame_ctx_p) \
+  ((ecma_value_t *) ((uintptr_t) (frame_ctx_p) \
+                                  - (uintptr_t) offsetof (vm_executable_object_t, frame_ctx) \
+                                  + (uintptr_t) offsetof (vm_executable_object_t, iterator)))
 
 /**
  * Generator frame context.
@@ -142,6 +151,7 @@ typedef struct
 {
   ecma_extended_object_t extended_object; /**< extended object part */
   vm_frame_ctx_shared_t shared; /**< shared part */
+  ecma_value_t iterator; /**< executable object's iterator */
   vm_frame_ctx_t frame_ctx; /**< frame context part */
 } vm_executable_object_t;
 

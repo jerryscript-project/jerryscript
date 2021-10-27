@@ -343,11 +343,8 @@
   <test id="language/statements/for-of/cptn-expr-abrupt-empty.js"><reason></reason></test>
   <test id="language/statements/for-of/cptn-expr-itr.js"><reason></reason></test>
   <test id="language/statements/for-of/cptn-expr-no-itr.js"><reason></reason></test>
-  <test id="language/statements/for-of/head-const-init.js"><reason></reason></test>
   <test id="language/statements/for-of/head-decl-no-expr.js"><reason></reason></test>
   <test id="language/statements/for-of/head-expr-no-expr.js"><reason></reason></test>
-  <test id="language/statements/for-of/head-let-init.js"><reason></reason></test>
-  <test id="language/statements/for-of/head-var-init.js"><reason></reason></test>
   <test id="language/statements/for-of/head-var-no-expr.js"><reason></reason></test>
   <test id="language/statements/for-of/let-block-with-newline.js"><reason></reason></test>
   <test id="language/statements/for-of/let-identifier-with-newline.js"><reason></reason></test>
@@ -7702,9 +7699,6 @@
   <test id="language/statements/for-await-of/async-gen-dstr-var-obj-ptrn-prop-id-get-value-err.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-dstr-var-obj-ptrn-prop-id-init-throws.js"><reason></reason></test>
   <test id="language/statements/for-await-of/async-gen-dstr-var-obj-ptrn-prop-id-init-unresolvable.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/head-const-init.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/head-let-init.js"><reason></reason></test>
-  <test id="language/statements/for-await-of/head-var-init.js"><reason></reason></test>
   <test id="language/statements/for-await-of/let-block-with-newline.js"><reason></reason></test>
   <test id="language/statements/for-await-of/let-identifier-with-newline.js"><reason></reason></test>
   <test id="language/statements/for-await-of/ticks-with-sync-iter-resolved-promise-and-constructor-lookup.js"><reason></reason></test>

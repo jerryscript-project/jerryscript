@@ -1414,7 +1414,7 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
         if (context_p->token.type == LEXER_ASSIGN)
         {
 #if JERRY_ESNEXT
-          if (context_p->status_flags & PARSER_IS_STRICT)
+          if ((context_p->status_flags & PARSER_IS_STRICT) || !is_for_in)
           {
             parser_raise_error (context_p, PARSER_ERR_FOR_IN_OF_DECLARATION);
           }

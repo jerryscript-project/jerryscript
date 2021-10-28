@@ -495,7 +495,7 @@ class TestCase(object):
         self.name = name
         self.full_path = full_path
         self.strict_mode = strict_mode
-        with open(self.full_path) as file_desc:
+        with open(self.full_path, "rb") as file_desc:
             self.contents = file_desc.read()
         test_record = parse_test_record(self.contents, name)
         self.test = test_record["test"]
@@ -645,7 +645,7 @@ class TestCase(object):
         return TestResult(code, out, err, self)
 
     def run(self):
-        tmp = TempFile(suffix=".js", prefix="test262-", text=True)
+        tmp = TempFile(suffix=".js", prefix="test262-")
         try:
             result = self.run_test_in(tmp)
         finally:

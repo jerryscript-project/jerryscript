@@ -81,7 +81,7 @@ def prepare_test262_test_suite(args):
     if os.path.isdir(os.path.join(args.test_dir, '.git')):
         return 0
 
-    return_code = subprocess.call(['git', 'clone', '--no-checkout',
+    return_code = subprocess.call(['git', 'clone', '--no-checkout', '--config', 'core.autocrlf=false',
                                    'https://github.com/tc39/test262.git', args.test_dir])
     if return_code:
         print('Cloning test262 repository failed.')

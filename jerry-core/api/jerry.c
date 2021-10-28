@@ -3309,7 +3309,11 @@ jerry_has_own_property (const jerry_value_t obj_val, /**< object value */
   }
 #endif /* JERRY_BUILTIN_PROXY */
 
-  return ecma_make_boolean_value (ecma_op_ordinary_object_has_own_property (obj_p, prop_name_p));
+#if JERRY_BUILTIN_TYPEDARRAY
+  return jerry_return (ecma_op_ordinary_object_has_own_property (obj_p, prop_name_p));
+#else /* !JERRY_BUILTIN_TYPEDARRAY */
+  return ecma_op_ordinary_object_has_own_property (obj_p, prop_name_p);
+#endif /* JERRY_BUILTIN_TYPEDARRAY */
 } /* jerry_has_own_property */
 
 /**

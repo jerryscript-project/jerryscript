@@ -139,49 +139,42 @@ ecma_op_object_get_own_property (ecma_object_t *object_p, /**< the object */
           {
             break;
           }
-          ecma_number_t num = ecma_string_to_number (property_name_p);
-          bool is_same;
-          if (num <= 0)
+
+          uint32_t index = ecma_string_get_array_index (property_name_p);
+
+          if (index == ECMA_STRING_NOT_ARRAY_INDEX)
           {
-            is_same = true;
+            JERRY_ASSERT (index == UINT32_MAX);
+
+            if (!ecma_typedarray_is_element_index (property_name_p))
+            {
+              break;
+            }
+          }
+
+          ecma_typedarray_info_t info = ecma_typedarray_get_info (object_p);
+          ecma_value_t value = ecma_get_typedarray_element (&info, index);
+
+          if (ECMA_IS_VALUE_ERROR (value))
+          {
+            return ECMA_PROPERTY_TYPE_NOT_FOUND_AND_THROW;
+          }
+
+          if (JERRY_UNLIKELY (ecma_is_value_undefined (value)))
+          {
+            return ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP;
+          }
+
+          if (options & ECMA_PROPERTY_GET_VALUE)
+          {
+            property_ref_p->virtual_value = value;
           }
           else
           {
-            ecma_string_t *num_to_str = ecma_new_ecma_string_from_number (num);
-            is_same = ecma_compare_ecma_strings (property_name_p, num_to_str);
-            ecma_deref_ecma_string (num_to_str);
+            ecma_fast_free_value (value);
           }
 
-          if (is_same)
-          {
-            ecma_typedarray_info_t info = ecma_typedarray_get_info (object_p);
-            ecma_value_t value = ecma_get_typedarray_element (&info, num);
-
-            if (ECMA_IS_VALUE_ERROR (value))
-            {
-              property_ref_p->virtual_value = value;
-              return ECMA_PROPERTY_TYPE_NOT_FOUND;
-            }
-
-            if (!ecma_is_value_undefined (value))
-            {
-              if (options & ECMA_PROPERTY_GET_VALUE)
-              {
-                property_ref_p->virtual_value = value;
-              }
-              else
-              {
-                ecma_fast_free_value (value);
-              }
-
-              return ECMA_PROPERTY_ENUMERABLE_WRITABLE | ECMA_PROPERTY_VIRTUAL;
-            }
-            else
-            {
-              return ECMA_PROPERTY_TYPE_NOT_FOUND;
-            }
-          }
-          break;
+          return ECMA_PROPERTY_ENUMERABLE_WRITABLE | ECMA_PROPERTY_VIRTUAL;
         }
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
 #if JERRY_MODULE_SYSTEM
@@ -457,48 +450,25 @@ ecma_op_object_has_property (ecma_object_t *object_p, /**< the object */
     }
 #endif /* JERRY_BUILTIN_PROXY */
 
-#if JERRY_BUILTIN_TYPEDARRAY
-    if (ecma_object_is_typedarray (object_p) && !ecma_prop_name_is_symbol (property_name_p))
+    /* 2 - 3. */
+    ecma_property_t property = ecma_op_object_get_own_property (object_p,
+                                                                property_name_p,
+                                                                NULL,
+                                                                ECMA_PROPERTY_GET_NO_OPTIONS);
+
+    if (property != ECMA_PROPERTY_TYPE_NOT_FOUND)
     {
-      ecma_number_t num = ecma_string_to_number (property_name_p);
-      bool is_same;
-      if (num <= 0)
+#if JERRY_BUILTIN_TYPEDARRAY
+      if (JERRY_UNLIKELY (property == ECMA_PROPERTY_TYPE_NOT_FOUND_AND_THROW))
       {
-        is_same = true;
+        return ECMA_VALUE_ERROR;
       }
-      else
-      {
-        ecma_string_t *num_to_str = ecma_new_ecma_string_from_number (num);
-        is_same = ecma_compare_ecma_strings (property_name_p, num_to_str);
-        ecma_deref_ecma_string (num_to_str);
-      }
-
-      if (is_same)
-      {
-        ecma_typedarray_info_t info = ecma_typedarray_get_info (object_p);
-
-        if (ecma_arraybuffer_is_detached (info.array_buffer_p))
-        {
-          return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_arraybuffer_is_detached));
-        }
-
-        if (!ecma_op_is_integer (num)
-            || num >= info.length
-            || num < 0
-            || (ecma_number_is_negative (num) && ecma_number_is_zero (num)))
-        {
-          return ECMA_VALUE_FALSE;
-        }
-
-        return ECMA_VALUE_TRUE;
-      }
-    }
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
 
-    /* 2 - 3. */
-    if (ecma_op_ordinary_object_has_own_property (object_p, property_name_p))
-    {
-      return ECMA_VALUE_TRUE;
+      JERRY_ASSERT (property == ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP
+                    || ECMA_PROPERTY_IS_FOUND (property));
+
+      return ecma_make_boolean_value (property != ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP);
     }
 
     jmem_cpointer_t proto_cp = ecma_op_ordinary_object_get_prototype_of (object_p);
@@ -604,26 +574,20 @@ ecma_op_object_find_own (ecma_value_t base_value, /**< base value */
             break;
           }
 
-          ecma_number_t num = ecma_string_to_number (property_name_p);
-          bool is_same;
-          if (num <= 0)
+          uint32_t index = ecma_string_get_array_index (property_name_p);
+
+          if (index == ECMA_STRING_NOT_ARRAY_INDEX)
           {
-            is_same = true;
-          }
-          else
-          {
-            ecma_string_t *num_to_str = ecma_new_ecma_string_from_number (num);
-            is_same = ecma_compare_ecma_strings (property_name_p, num_to_str);
-            ecma_deref_ecma_string (num_to_str);
+            JERRY_ASSERT (index == UINT32_MAX);
+
+            if (!ecma_typedarray_is_element_index (property_name_p))
+            {
+              break;
+            }
           }
 
-          if (is_same)
-          {
-            ecma_typedarray_info_t info = ecma_typedarray_get_info (object_p);
-            return ecma_get_typedarray_element (&info, num);
-          }
-
-          break;
+          ecma_typedarray_info_t info = ecma_typedarray_get_info (object_p);
+          return ecma_get_typedarray_element (&info, index);
         }
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
 #if JERRY_MODULE_SYSTEM
@@ -1447,25 +1411,20 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
             break;
           }
 
-          ecma_number_t num = ecma_string_to_number (property_name_p);
-          bool is_same;
-          if (num <= 0)
+          uint32_t index = ecma_string_get_array_index (property_name_p);
+
+          if (index == ECMA_STRING_NOT_ARRAY_INDEX)
           {
-            is_same = true;
-          }
-          else
-          {
-            ecma_string_t *num_to_str = ecma_new_ecma_string_from_number (num);
-            is_same = ecma_compare_ecma_strings (property_name_p, num_to_str);
-            ecma_deref_ecma_string (num_to_str);
+            JERRY_ASSERT (index == UINT32_MAX);
+
+            if (!ecma_typedarray_is_element_index (property_name_p))
+            {
+              break;
+            }
           }
 
-          if (is_same)
-          {
-            ecma_typedarray_info_t info = ecma_typedarray_get_info (object_p);
-            return ecma_set_typedarray_element (&info, value, num);
-          }
-          break;
+          ecma_typedarray_info_t info = ecma_typedarray_get_info (object_p);
+          return ecma_set_typedarray_element (&info, value, index);
         }
 #endif /* JERRY_BUILTIN_TYPEDARRAY */
 #if JERRY_MODULE_SYSTEM
@@ -1668,8 +1627,7 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
                                                                             &property_ref,
                                                                             ECMA_PROPERTY_GET_NO_OPTIONS);
 
-      if (inherited_property != ECMA_PROPERTY_TYPE_NOT_FOUND
-          && inherited_property != ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP)
+      if (ECMA_PROPERTY_IS_FOUND (inherited_property))
       {
         JERRY_ASSERT (ECMA_PROPERTY_IS_NAMED_PROPERTY (inherited_property));
 
@@ -1683,6 +1641,9 @@ ecma_op_object_put_with_receiver (ecma_object_t *object_p, /**< the object */
         create_new_property = ecma_is_property_writable (inherited_property);
         break;
       }
+
+      JERRY_ASSERT (inherited_property == ECMA_PROPERTY_TYPE_NOT_FOUND
+                    || inherited_property == ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP);
     }
 
 #if JERRY_BUILTIN_PROXY
@@ -1962,13 +1923,18 @@ ecma_op_object_get_own_property_descriptor (ecma_object_t *object_p, /**< the ob
                                                               &property_ref,
                                                               ECMA_PROPERTY_GET_VALUE);
 
-  if (ECMA_IS_VALUE_ERROR (property_ref.virtual_value))
+  if (!ECMA_PROPERTY_IS_FOUND (property))
   {
-    return property_ref.virtual_value;
-  }
+#if JERRY_BUILTIN_TYPEDARRAY
+    if (JERRY_UNLIKELY (property == ECMA_PROPERTY_TYPE_NOT_FOUND_AND_THROW))
+    {
+      return ECMA_VALUE_ERROR;
+    }
+#endif /* JERRY_BUILTIN_TYPEDARRAY */
 
-  if (property == ECMA_PROPERTY_TYPE_NOT_FOUND || property == ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP)
-  {
+    JERRY_ASSERT (property == ECMA_PROPERTY_TYPE_NOT_FOUND
+                  || property == ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP);
+
     return ECMA_VALUE_FALSE;
   }
 
@@ -3488,7 +3454,7 @@ ecma_op_ordinary_object_prevent_extensions (ecma_object_t *object_p) /**< object
  * @return true - if property is found
  *         false - otherwise
  */
-extern inline bool JERRY_ATTR_ALWAYS_INLINE
+extern inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_op_ordinary_object_has_own_property (ecma_object_t *object_p, /**< the object */
                                           ecma_string_t *property_name_p) /**< property name */
 {
@@ -3499,7 +3465,18 @@ ecma_op_ordinary_object_has_own_property (ecma_object_t *object_p, /**< the obje
                                                               NULL,
                                                               ECMA_PROPERTY_GET_NO_OPTIONS);
 
-  return property != ECMA_PROPERTY_TYPE_NOT_FOUND && property != ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP;
+#if JERRY_BUILTIN_TYPEDARRAY
+  if (JERRY_UNLIKELY (property == ECMA_PROPERTY_TYPE_NOT_FOUND_AND_THROW))
+  {
+    return ECMA_VALUE_ERROR;
+  }
+#endif /* JERRY_BUILTIN_TYPEDARRAY */
+
+  JERRY_ASSERT (ECMA_PROPERTY_IS_FOUND (property)
+                || property == ECMA_PROPERTY_TYPE_NOT_FOUND
+                || property == ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP);
+
+  return ecma_make_boolean_value (ECMA_PROPERTY_IS_FOUND (property));
 } /* ecma_op_ordinary_object_has_own_property */
 
 #if JERRY_BUILTIN_WEAKREF || JERRY_BUILTIN_CONTAINER

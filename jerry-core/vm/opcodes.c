@@ -1726,8 +1726,11 @@ opfunc_lexical_scope_has_restricted_binding (vm_frame_ctx_t *frame_ctx_p, /**< f
                                                               NULL,
                                                               ECMA_PROPERTY_GET_NO_OPTIONS);
 
-  return ecma_make_boolean_value ((property != ECMA_PROPERTY_TYPE_NOT_FOUND
-                                   && !ecma_is_property_configurable (property)));
+  JERRY_ASSERT (property == ECMA_PROPERTY_TYPE_NOT_FOUND
+                || ECMA_PROPERTY_IS_FOUND (property));
+
+  return ecma_make_boolean_value (property != ECMA_PROPERTY_TYPE_NOT_FOUND
+                                  && !ecma_is_property_configurable (property));
 } /* opfunc_lexical_scope_has_restricted_binding */
 
 #endif /* JERRY_ESNEXT */

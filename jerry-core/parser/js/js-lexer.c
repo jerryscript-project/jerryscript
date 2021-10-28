@@ -2553,44 +2553,19 @@ lexer_construct_number_object (parser_context_t *context_p, /**< context */
   {
 #endif /* JERRY_BUILTIN_BIGINT */
     ecma_number_t num;
+    uint32_t options = 0;
 
-    if (context_p->token.extra_value < LEXER_NUMBER_OCTAL)
-    {
 #if JERRY_ESNEXT
-      num = ecma_utf8_string_to_number (context_p->token.lit_location.char_p, length, ECMA_CONVERSION_ALLOW_UNDERSCORE);
-#else /* !JERRY_ESNEXT */
-    num = ecma_utf8_string_to_number (context_p->token.lit_location.char_p, length, 0);
+    options |= ECMA_CONVERSION_ALLOW_UNDERSCORE;
 #endif /* JERRY_ESNEXT */
+
+    if (context_p->token.extra_value == LEXER_NUMBER_OCTAL)
+    {
+      num = ecma_utf8_string_to_number_by_radix (context_p->token.lit_location.char_p, length, 8, options);
     }
     else
     {
-      const uint8_t *src_p = context_p->token.lit_location.char_p;
-      const uint8_t *src_end_p = src_p + length - 1;
-      ecma_number_t multiplier = 8.0;
-
-      JERRY_ASSERT (src_p[0] == LIT_CHAR_0);
-
-#if JERRY_ESNEXT
-      if (context_p->token.extra_value == LEXER_NUMBER_BINARY)
-      {
-        src_p++;
-        multiplier = 2.0;
-      }
-      else if (LEXER_TO_ASCII_LOWERCASE (src_p[1]) == LIT_CHAR_LOWERCASE_O)
-      {
-        src_p++;
-      }
-#endif /* JERRY_ESNEXT */
-
-      num = 0;
-      do
-      {
-        if (src_p[1] == LIT_CHAR_UNDERSCORE)
-        {
-          src_p++;
-        }
-        num = num * multiplier + (ecma_number_t) (*(++src_p) - LIT_CHAR_0);
-      } while (src_p < src_end_p);
+      num = ecma_utf8_string_to_number (context_p->token.lit_location.char_p, length, options);
     }
 
     if (is_expr)

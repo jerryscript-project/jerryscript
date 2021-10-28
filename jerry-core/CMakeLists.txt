@@ -283,7 +283,6 @@ set(SOURCE_CORE_FILES
   ecma/operations/ecma-iterator-object.c
   ecma/operations/ecma-jobqueue.c
   ecma/operations/ecma-lex-env.c
-  ecma/operations/ecma-number-arithmetic.c
   ecma/operations/ecma-number-object.c
   ecma/operations/ecma-objects-general.c
   ecma/operations/ecma-objects.c
@@ -460,7 +459,6 @@ if(ENABLE_AMALGAM)
     ecma/operations/ecma-iterator-object.h
     ecma/operations/ecma-jobqueue.h
     ecma/operations/ecma-lex-env.h
-    ecma/operations/ecma-number-arithmetic.h
     ecma/operations/ecma-number-object.h
     ecma/operations/ecma-objects-general.h
     ecma/operations/ecma-objects.h

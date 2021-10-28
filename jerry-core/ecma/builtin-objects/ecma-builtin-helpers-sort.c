@@ -15,6 +15,7 @@
 
 #include "ecma-builtin-helpers.h"
 #include "ecma-globals.h"
+#include "ecma-helpers-number.h"
 
 /**
  * Function used to merge two arrays for merge sort.

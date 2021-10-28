@@ -394,8 +394,6 @@ ecma_string_t *ecma_stringbuilder_finalize (ecma_stringbuilder_t *builder_p);
 void ecma_stringbuilder_destroy (ecma_stringbuilder_t *builder_p);
 
 /* ecma-helpers-number.c */
-ecma_number_t ecma_number_pack (bool sign, uint32_t biased_exp, uint64_t fraction);
-void ecma_number_unpack (ecma_number_t num, bool *sign_p, uint32_t *biased_exp_p, uint64_t *fraction_p);
 ecma_number_t ecma_number_make_nan (void);
 ecma_number_t ecma_number_make_infinity (bool sign);
 bool ecma_number_is_nan (ecma_number_t num);
@@ -403,11 +401,10 @@ bool ecma_number_is_negative (ecma_number_t num);
 bool ecma_number_is_zero (ecma_number_t num);
 bool ecma_number_is_infinity (ecma_number_t num);
 bool ecma_number_is_finite (ecma_number_t num);
-ecma_number_t ecma_number_make_from_sign_mantissa_and_exponent (bool sign, uint64_t mantissa, int32_t exponent);
 ecma_number_t ecma_number_get_prev (ecma_number_t num);
 ecma_number_t ecma_number_get_next (ecma_number_t num);
 ecma_number_t ecma_number_trunc (ecma_number_t num);
-ecma_number_t ecma_number_calc_remainder (ecma_number_t left_num, ecma_number_t right_num);
+ecma_number_t ecma_number_remainder (ecma_number_t left_num, ecma_number_t right_num);
 ecma_number_t ecma_number_pow (ecma_number_t x, ecma_number_t y);
 ecma_value_t
 ecma_number_parse_int (const lit_utf8_byte_t *string_buff, lit_utf8_size_t string_buff_size, ecma_value_t radix);
@@ -536,6 +533,10 @@ bool ecma_delete_native_pointer_property (ecma_object_t *obj_p, const jerry_obje
 
 /* ecma-helpers-conversion.c */
 ecma_number_t ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, lit_utf8_size_t str_size, uint32_t option);
+ecma_number_t ecma_utf8_string_to_number_by_radix (const lit_utf8_byte_t *str_p,
+                                                   lit_utf8_size_t str_size,
+                                                   uint32_t radix,
+                                                   uint32_t option);
 lit_utf8_size_t ecma_uint32_to_utf8_string (uint32_t value, lit_utf8_byte_t *out_buffer_p, lit_utf8_size_t buffer_size);
 uint32_t ecma_number_to_uint32 (ecma_number_t num);
 int32_t ecma_number_to_int32 (ecma_number_t num);

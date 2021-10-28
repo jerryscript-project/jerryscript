@@ -24,7 +24,6 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-iterator-object.h"
-#include "ecma-number-arithmetic.h"
 #include "ecma-objects-general.h"
 #include "ecma-objects.h"
 #include "ecma-property-hashmap.h"

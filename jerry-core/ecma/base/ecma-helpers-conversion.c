@@ -16,6 +16,7 @@
 #include <math.h>
 
 #include "ecma-globals.h"
+#include "ecma-helpers-number.h"
 #include "ecma-helpers.h"
 
 #include "jrt-libc-includes.h"
@@ -41,8 +42,8 @@
  */
 typedef struct
 {
-  uint64_t lo; /**< low 64 bits */
   uint64_t hi; /**< high 64 bits */
+  uint64_t lo; /**< low 64 bits */
 } ecma_uint128_t;
 
 /**
@@ -60,58 +61,58 @@ ecma_round_high_to_uint64 (ecma_uint128_t *num_p)
   {
     return (num_p->hi + 1);
   }
+
   return num_p->hi;
 } /* ecma_round_high_to_uint64 */
 
 /**
- * Check if 128-bit integer is zero
+ * Left shift 128-bit integer by max 63 bits.
  */
-#define ECMA_UINT128_IS_ZERO(name) (name.hi == 0 && name.lo == 0)
+static void JERRY_ATTR_ALWAYS_INLINE
+ecma_uint128_shift_left (ecma_uint128_t *num_p, int32_t shift)
+{
+  num_p->hi = (num_p->hi << shift) | (num_p->lo >> (64 - shift));
+  num_p->lo <<= shift;
+} /* ecma_uint128_shift_left */
 
 /**
- * Left shift 128-bit integer by max 63 bits
+ * Right shift 128-bit integer by max 63 bits.
  */
-#define ECMA_UINT128_LEFT_SHIFT_MAX63(name, shift)                \
-  {                                                               \
-    name.hi = (name.hi << (shift)) | (name.lo >> (64 - (shift))); \
-    name.lo <<= (shift);                                          \
-  }
+static void JERRY_ATTR_ALWAYS_INLINE
+ecma_uint128_shift_right (ecma_uint128_t *num_p, int32_t shift)
+{
+  num_p->lo = (num_p->lo >> shift) | (num_p->hi << (64 - shift));
+  num_p->hi >>= shift;
+} /* ecma_uint128_shift_right */
 
 /**
- * Right shift 128-bit integer by max 63 bits
+ * Add two 128-bit integer values and assign the result to the left one.
  */
-#define ECMA_UINT128_RIGHT_SHIFT_MAX63(name, shift)               \
-  {                                                               \
-    name.lo = (name.lo >> (shift)) | (name.hi << (64 - (shift))); \
-    name.hi >>= (shift);                                          \
-  }
+static void
+ecma_uint128_add (ecma_uint128_t *left_p, ecma_uint128_t *right_p)
+{
+  left_p->hi += right_p->hi;
+  left_p->lo += right_p->lo;
 
-/**
- * Add 128-bit integer
- */
-#define ECMA_UINT128_ADD(name_add_to, name_to_add) \
-  {                                                \
-    name_add_to.hi += name_to_add.hi;              \
-    name_add_to.lo += name_to_add.lo;              \
-    if (name_add_to.lo < name_to_add.lo)           \
-    {                                              \
-      name_add_to.hi++;                            \
-    }                                              \
+  if (left_p->lo < right_p->lo)
+  {
+    left_p->hi++;
   }
+} /* ecma_uint128_add */
 
 /**
  * Multiply 128-bit integer by 10
  */
-#define ECMA_UINT128_MUL10(name)                    \
-  {                                                 \
-    ECMA_UINT128_LEFT_SHIFT_MAX63 (name, 1u);       \
-                                                    \
-    ecma_uint128_t name##_tmp = name;               \
-                                                    \
-    ECMA_UINT128_LEFT_SHIFT_MAX63 (name##_tmp, 2u); \
-                                                    \
-    ECMA_UINT128_ADD (name, name##_tmp);            \
-  }
+static void
+ecma_uint128_mul10 (ecma_uint128_t *num_p)
+{
+  ecma_uint128_shift_left (num_p, 1u);
+
+  ecma_uint128_t tmp = { .hi = num_p->hi, .lo = num_p->lo };
+  ecma_uint128_shift_left (&tmp, 2u);
+
+  ecma_uint128_add (num_p, &tmp);
+} /* ecma_uint128_mul10 */
 
 /**
  * Divide 128-bit integer by 10
@@ -128,121 +129,122 @@ ecma_round_high_to_uint64 (ecma_uint128_t *num_p)
  *
  * Q = Q3 *2^96  + Q2 *2^64  + Q1 *2^32  + Q0 *2^0     // 128-bit quotient
  */
-#define ECMA_UINT128_DIV10(name)                                                        \
-  {                                                                                     \
-    /* estimation of reciprocal of 10, 128 bits right of the binary point (T1 == T2) */ \
-    const uint64_t tenth_l = 0x9999999aul;                                              \
-    const uint64_t tenth_m = 0x99999999ul;                                              \
-    const uint64_t tenth_h = 0x19999999ul;                                              \
-                                                                                        \
-    uint64_t l0 = ((uint32_t) name.lo) * tenth_l;                                       \
-    uint64_t l1 = (name.lo >> 32u) * tenth_l;                                           \
-    uint64_t l2 = ((uint32_t) name.hi) * tenth_l;                                       \
-    uint64_t l3 = (name.hi >> 32u) * tenth_l;                                           \
-    uint64_t m0 = ((uint32_t) name.lo) * tenth_m;                                       \
-    uint64_t m1 = (name.lo >> 32u) * tenth_m;                                           \
-    uint64_t m2 = ((uint32_t) name.hi) * tenth_m;                                       \
-    uint64_t m3 = (name.hi >> 32u) * tenth_m;                                           \
-    uint64_t h0 = ((uint32_t) name.lo) * tenth_h;                                       \
-    uint64_t h1 = (name.lo >> 32u) * tenth_h;                                           \
-    uint64_t h2 = ((uint32_t) name.hi) * tenth_h;                                       \
-    uint64_t h3 = (name.hi >> 32u) * tenth_h;                                           \
-                                                                                        \
-    uint64_t q0 = l0 >> 32u;                                                            \
-    q0 += (uint32_t) l1;                                                                \
-    q0 += (uint32_t) m0;                                                                \
-                                                                                        \
-    q0 >>= 32u;                                                                         \
-    q0 += l1 >> 32u;                                                                    \
-    q0 += m0 >> 32u;                                                                    \
-    q0 += (uint32_t) l2;                                                                \
-    q0 += (uint32_t) m1;                                                                \
-    q0 += (uint32_t) m0;                                                                \
-                                                                                        \
-    q0 >>= 32u;                                                                         \
-    q0 += l2 >> 32u;                                                                    \
-    q0 += m1 >> 32u;                                                                    \
-    q0 += m0 >> 32u;                                                                    \
-    q0 += (uint32_t) l3;                                                                \
-    q0 += (uint32_t) m2;                                                                \
-    q0 += (uint32_t) m1;                                                                \
-    q0 += (uint32_t) h0;                                                                \
-                                                                                        \
-    q0 >>= 32u;                                                                         \
-    q0 += l3 >> 32u;                                                                    \
-    q0 += m2 >> 32u;                                                                    \
-    q0 += m1 >> 32u;                                                                    \
-    q0 += h0 >> 32u;                                                                    \
-    q0 += (uint32_t) m3;                                                                \
-    q0 += (uint32_t) m2;                                                                \
-    q0 += (uint32_t) h1;                                                                \
-                                                                                        \
-    uint64_t q1 = q0 >> 32u;                                                            \
-    q1 += m3 >> 32u;                                                                    \
-    q1 += m2 >> 32u;                                                                    \
-    q1 += h1 >> 32u;                                                                    \
-    q1 += (uint32_t) m3;                                                                \
-    q1 += (uint32_t) h2;                                                                \
-                                                                                        \
-    uint64_t q32 = q1 >> 32u;                                                           \
-    q32 += m3 >> 32u;                                                                   \
-    q32 += h2 >> 32u;                                                                   \
-    q32 += h3;                                                                          \
-                                                                                        \
-    name.lo = (q1 << 32u) | ((uint32_t) q0);                                            \
-    name.hi = q32;                                                                      \
-  }
+static void
+ecma_uint128_div10 (ecma_uint128_t *num_p)
+{
+  /* estimation of reciprocal of 10, 128 bits right of the binary point (T1 == T2) */
+  const uint64_t tenth_l = 0x9999999aul;
+  const uint64_t tenth_m = 0x99999999ul;
+  const uint64_t tenth_h = 0x19999999ul;
 
-#if defined(__GNUC__) || defined(__clang__)
+  const uint64_t l0 = ((uint32_t) num_p->lo) * tenth_l;
+  const uint64_t l1 = (num_p->lo >> 32u) * tenth_l;
+  const uint64_t l2 = ((uint32_t) num_p->hi) * tenth_l;
+  const uint64_t l3 = (num_p->hi >> 32u) * tenth_l;
+  const uint64_t m0 = ((uint32_t) num_p->lo) * tenth_m;
+  const uint64_t m1 = (num_p->lo >> 32u) * tenth_m;
+  const uint64_t m2 = ((uint32_t) num_p->hi) * tenth_m;
+  const uint64_t m3 = (num_p->hi >> 32u) * tenth_m;
+  const uint64_t h0 = ((uint32_t) num_p->lo) * tenth_h;
+  const uint64_t h1 = (num_p->lo >> 32u) * tenth_h;
+  const uint64_t h2 = ((uint32_t) num_p->hi) * tenth_h;
+  const uint64_t h3 = (num_p->hi >> 32u) * tenth_h;
 
-/**
- * Count leading zeros in the topmost 64 bits of a 128-bit integer.
- */
-#define ECMA_UINT128_CLZ_MAX63(name) __builtin_clzll (name.hi)
+  uint64_t q0 = l0 >> 32u;
+  q0 += (uint32_t) l1;
+  q0 += (uint32_t) m0;
 
-/**
- * Count leading zeros in the topmost 4 bits of a 128-bit integer.
- */
-#define ECMA_UINT128_CLZ_MAX4(name) __builtin_clzll (name.hi)
+  q0 >>= 32u;
+  q0 += l1 >> 32u;
+  q0 += m0 >> 32u;
+  q0 += (uint32_t) l2;
+  q0 += (uint32_t) m1;
+  q0 += (uint32_t) m0;
 
-#else /* !__GNUC__ && !__clang__ */
+  q0 >>= 32u;
+  q0 += l2 >> 32u;
+  q0 += m1 >> 32u;
+  q0 += m0 >> 32u;
+  q0 += (uint32_t) l3;
+  q0 += (uint32_t) m2;
+  q0 += (uint32_t) m1;
+  q0 += (uint32_t) h0;
+
+  q0 >>= 32u;
+  q0 += l3 >> 32u;
+  q0 += m2 >> 32u;
+  q0 += m1 >> 32u;
+  q0 += h0 >> 32u;
+  q0 += (uint32_t) m3;
+  q0 += (uint32_t) m2;
+  q0 += (uint32_t) h1;
+
+  uint64_t q1 = q0 >> 32u;
+  q1 += m3 >> 32u;
+  q1 += m2 >> 32u;
+  q1 += h1 >> 32u;
+  q1 += (uint32_t) m3;
+  q1 += (uint32_t) h2;
+
+  uint64_t q32 = q1 >> 32u;
+  q32 += m3 >> 32u;
+  q32 += h2 >> 32u;
+  q32 += h3;
+
+  num_p->lo = (q1 << 32u) | ((uint32_t) q0);
+  num_p->hi = q32;
+} /* ecma_uint128_div10 */
 
 /**
  * Count leading zeros in a 64-bit integer. The behaviour is undefined for 0.
  *
  * @return number of leading zeros.
  */
-static inline int JERRY_ATTR_ALWAYS_INLINE
+inline static int JERRY_ATTR_CONST
 ecma_uint64_clz (uint64_t n) /**< integer to count leading zeros in */
 {
+#if defined(__GNUC__) || defined(__clang__)
+  return __builtin_clzll (n);
+#else /* !defined (__GNUC__) && !defined (__clang__) */
   JERRY_ASSERT (n != 0);
 
   int cnt = 0;
   uint64_t one = 0x8000000000000000ull;
+
   while ((n & one) == 0)
   {
     cnt++;
     one >>= 1;
   }
+
   return cnt;
+#endif /* !defined (__GNUC__) && !defined (__clang__) */
 } /* ecma_uint64_clz */
 
 /**
- * Number of leading zeros in 4-bit integers.
+ * Count leading zeros in the top 4 bits of a 64-bit integer.
+ *
+ * @return number of leading zeros in top 4 bits.
  */
-static const uint8_t ecma_uint4_clz[] = { 4, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 };
+inline static int JERRY_ATTR_ALWAYS_INLINE JERRY_ATTR_CONST
+ecma_uint64_clz_top4 (uint64_t n) /**< integer to count leading zeros in */
+{
+  static const uint8_t ecma_uint4_clz[] = { 4, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 };
+  return ecma_uint4_clz[n >> 60];
+} /* ecma_uint64_clz */
 
 /**
- * Count leading zeros in the topmost 64 bits of a 128-bit integer.
+ * Shift required to clear 4 bits of a 64-bit integer.
+ *
+ * @return 0-4
  */
-#define ECMA_UINT128_CLZ_MAX63(name) ecma_uint64_clz (name.hi)
+inline static int JERRY_ATTR_ALWAYS_INLINE JERRY_ATTR_CONST
+ecma_uint64_normalize_shift (uint64_t n) /**< integer to count leading zeros in */
+{
+  static const uint8_t ecma_uint4_shift[] = { 0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4 };
 
-/**
- * Count leading zeros in the topmost 4 bits of a 128-bit integer.
- */
-#define ECMA_UINT128_CLZ_MAX4(name)  ecma_uint4_clz[name.hi >> 60]
-
-#endif /* __GNUC__ || __clang__ */
+  return ecma_uint4_shift[n >> 60];
+} /* ecma_uint64_normalize_shift */
 
 /**
  * @}
@@ -285,72 +287,58 @@ static const uint8_t ecma_uint4_clz[] = { 4, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0,
  * @return NaN - if the conversion fails
  *         converted number - otherwise
  */
-static ecma_number_t
+ecma_number_t
 ecma_utf8_string_to_number_by_radix (const lit_utf8_byte_t *str_p, /**< utf-8 string */
-                                     const lit_utf8_byte_t *end_p, /**< end of utf-8 string  */
-                                     uint32_t radix) /**< radix */
+                                     const lit_utf8_size_t string_size, /**< end of utf-8 string  */
+                                     uint32_t radix, /**< radix */
+                                     uint32_t options) /**< option flags */
 {
 #if JERRY_ESNEXT
-  bool allow_underscore = (radix & ECMA_CONVERSION_ALLOW_UNDERSCORE);
-  radix &= (uint32_t) ~ECMA_CONVERSION_ALLOW_UNDERSCORE;
-#endif /* JERRY_ESNEXT */
+  bool allow_underscore = (options & ECMA_CONVERSION_ALLOW_UNDERSCORE);
+#else /* !JERRY_ESNEXT */
+  JERRY_UNUSED (options);
+#endif /* !JERRY_ESNEXT */
+
   JERRY_ASSERT (radix == 2 || radix == 8 || radix == 16);
+  JERRY_ASSERT (*str_p == LIT_CHAR_0);
+
+  const lit_utf8_byte_t *end_p = str_p + string_size;
+
+  /* Skip leading zero */
+  str_p++;
+
+  if (radix != 8 || LEXER_TO_ASCII_LOWERCASE (*str_p) == LIT_CHAR_LOWERCASE_O)
+  {
+    /* Skip radix specifier */
+    str_p++;
+  }
 
   ecma_number_t num = ECMA_NUMBER_ZERO;
 
-#if JERRY_ESNEXT
-  if (radix <= 8)
+  while (str_p < end_p)
   {
-    lit_code_point_t upper_limit = LIT_CHAR_0 + radix;
+    lit_utf8_byte_t digit = *str_p++;
 
-    for (const lit_utf8_byte_t *iter_p = str_p; iter_p <= end_p; iter_p++)
-    {
-      int32_t digit_value;
-
-      if (*iter_p >= LIT_CHAR_0 && *iter_p < upper_limit)
-      {
-        digit_value = (*iter_p - LIT_CHAR_0);
-      }
-      else
-      {
-        return ecma_number_make_nan ();
-      }
-
-      num = num * radix + (ecma_number_t) digit_value;
-    }
-
-    return num;
-  }
-#endif /* JERRY_ESNEXT */
-
-  for (const lit_utf8_byte_t *iter_p = str_p; iter_p <= end_p; iter_p++)
-  {
-    int32_t digit_value;
-
-    if (*iter_p >= LIT_CHAR_0 && *iter_p <= LIT_CHAR_9)
-    {
-      digit_value = (*iter_p - LIT_CHAR_0);
-    }
-    else if (*iter_p >= LIT_CHAR_LOWERCASE_A && *iter_p <= LIT_CHAR_LOWERCASE_F)
-    {
-      digit_value = 10 + (*iter_p - LIT_CHAR_LOWERCASE_A);
-    }
-    else if (*iter_p >= LIT_CHAR_UPPERCASE_A && *iter_p <= LIT_CHAR_UPPERCASE_F)
-    {
-      digit_value = 10 + (*iter_p - LIT_CHAR_UPPERCASE_A);
-    }
 #if JERRY_ESNEXT
-    else if (*iter_p == LIT_CHAR_UNDERSCORE && allow_underscore)
+    if (digit == LIT_CHAR_UNDERSCORE && allow_underscore)
     {
       continue;
     }
 #endif /* JERRY_ESNEXT */
-    else
+
+    if (!lit_char_is_hex_digit (digit))
     {
       return ecma_number_make_nan ();
     }
 
-    num = num * (ecma_number_t) radix + (ecma_number_t) digit_value;
+    uint32_t value = lit_char_hex_to_int (digit);
+
+    if (value >= radix)
+    {
+      return ecma_number_make_nan ();
+    }
+
+    num = num * radix + value;
   }
 
   return num;
@@ -370,45 +358,15 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
                             lit_utf8_size_t str_size, /**< string size */
                             uint32_t options) /**< allowing underscore option bit */
 {
-  /* TODO: Check license issues */
+  ecma_string_trim_helper (&str_p, &str_size);
+  const lit_utf8_byte_t *end_p = str_p + str_size;
 
   if (str_size == 0)
   {
     return ECMA_NUMBER_ZERO;
   }
 
-  ecma_string_trim_helper (&str_p, &str_size);
-  const lit_utf8_byte_t *end_p = str_p + (str_size - 1);
-
-  if (str_size < 1)
-  {
-    return ECMA_NUMBER_ZERO;
-  }
-
-  if (end_p >= str_p + 2 && str_p[0] == LIT_CHAR_0)
-  {
-    switch (LEXER_TO_ASCII_LOWERCASE (str_p[1]))
-    {
-      case LIT_CHAR_LOWERCASE_X:
-      {
-        return ecma_utf8_string_to_number_by_radix (str_p + 2, end_p, 16 | options);
-      }
-      case LIT_CHAR_LOWERCASE_O:
-      {
-        return ecma_utf8_string_to_number_by_radix (str_p + 2, end_p, 8 | options);
-      }
-      case LIT_CHAR_LOWERCASE_B:
-      {
-        return ecma_utf8_string_to_number_by_radix (str_p + 2, end_p, 2 | options);
-      }
-      default:
-      {
-        break;
-      }
-    }
-  }
-
-  bool sign = false; /* positive */
+  bool sign = false;
 
   if (*str_p == LIT_CHAR_PLUS)
   {
@@ -416,122 +374,117 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
   }
   else if (*str_p == LIT_CHAR_MINUS)
   {
-    sign = true; /* negative */
-
+    sign = true;
     str_p++;
   }
 
-  if (str_p > end_p)
+  if (str_p + 2 < end_p && str_p[0] == LIT_CHAR_0)
   {
-    return ecma_number_make_nan ();
+    uint8_t radix = lit_char_to_radix (str_p[1]);
+
+    if (radix != 10)
+    {
+      return ecma_utf8_string_to_number_by_radix (str_p, str_size, radix, options);
+    }
   }
 
-  /* Checking if significant part of parse string is equal to "Infinity" */
-  const lit_utf8_byte_t *infinity_zt_str_p = lit_get_magic_string_utf8 (LIT_MAGIC_STRING_INFINITY_UL);
+  /* Check if string is equal to "Infinity". */
+  const lit_utf8_byte_t *infinity_str_p = lit_get_magic_string_utf8 (LIT_MAGIC_STRING_INFINITY_UL);
+  const lit_utf8_size_t infinity_length = lit_get_magic_string_size (LIT_MAGIC_STRING_INFINITY_UL);
 
-  JERRY_ASSERT (strlen ((const char *) infinity_zt_str_p) == 8);
-
-  if ((end_p - str_p) == (8 - 1) && memcmp (infinity_zt_str_p, str_p, 8) == 0)
+  if ((lit_utf8_size_t) (end_p - str_p) == infinity_length && memcmp (infinity_str_p, str_p, infinity_length) == 0)
   {
     return ecma_number_make_infinity (sign);
   }
 
-  uint64_t fraction_uint64 = 0;
-  uint32_t digits = 0;
-  int32_t e = 0;
-  bool digit_seen = false;
+  uint64_t significand = 0;
+  uint32_t digit_count = 0;
+  int32_t decimal_exponent = 0;
+  bool has_significand = false;
 
-  /* Parsing digits before dot (or before end of digits part if there is no dot in number) */
-  while (str_p <= end_p)
+  /* Parsing integer part */
+  while (str_p < end_p)
   {
-    int32_t digit_value;
-
-    if (*str_p >= LIT_CHAR_0 && *str_p <= LIT_CHAR_9)
-    {
-      digit_seen = true;
-      digit_value = (*str_p - LIT_CHAR_0);
-    }
 #if JERRY_ESNEXT
-    else if (*str_p == LIT_CHAR_UNDERSCORE && (options & ECMA_CONVERSION_ALLOW_UNDERSCORE))
+    if (*str_p == LIT_CHAR_UNDERSCORE && (options & ECMA_CONVERSION_ALLOW_UNDERSCORE))
     {
       str_p++;
       continue;
     }
 #endif /* JERRY_ESNEXT */
-    else
+
+    if (!lit_char_is_decimal_digit (*str_p))
     {
       break;
     }
 
-    if (digits != 0 || digit_value != 0)
+    has_significand = true;
+    uint32_t digit_value = (uint32_t) (*str_p++ - LIT_CHAR_0);
+
+    if (digit_count == 0 && digit_value == 0)
     {
-      if (digits < ECMA_NUMBER_MAX_DIGITS)
-      {
-        fraction_uint64 = fraction_uint64 * 10 + (uint32_t) digit_value;
-        digits++;
-      }
-      else
-      {
-        e++;
-      }
+      /* Leading zeros are omitted. */
+      continue;
     }
 
-    str_p++;
+    if (digit_count >= ECMA_NUMBER_MAX_DIGITS)
+    {
+      decimal_exponent++;
+      continue;
+    }
+
+    significand = significand * 10 + digit_value;
+    digit_count++;
   }
 
-  if (str_p <= end_p && *str_p == LIT_CHAR_DOT)
+  /* Parse fraction part */
+  if (str_p < end_p && *str_p == LIT_CHAR_DOT)
   {
     str_p++;
 
-    if (!digit_seen && str_p > end_p)
+    while (str_p < end_p)
     {
-      return ecma_number_make_nan ();
-    }
-
-    /* Parsing number's part that is placed after dot */
-    while (str_p <= end_p)
-    {
-      int32_t digit_value;
-
-      if (*str_p >= LIT_CHAR_0 && *str_p <= LIT_CHAR_9)
-      {
-        digit_seen = true;
-        digit_value = (*str_p - LIT_CHAR_0);
-      }
-      else if (*str_p == LIT_CHAR_UNDERSCORE && (options & ECMA_CONVERSION_ALLOW_UNDERSCORE))
+#if JERRY_ESNEXT
+      if (*str_p == LIT_CHAR_UNDERSCORE && (options & ECMA_CONVERSION_ALLOW_UNDERSCORE))
       {
         str_p++;
         continue;
       }
-      else
+#endif /* JERRY_ESNEXT */
+
+      if (!lit_char_is_decimal_digit (*str_p))
       {
         break;
       }
 
-      if (digits < ECMA_NUMBER_MAX_DIGITS)
-      {
-        if (digits != 0 || digit_value != 0)
-        {
-          fraction_uint64 = fraction_uint64 * 10 + (uint32_t) digit_value;
-          digits++;
-        }
+      has_significand = true;
+      uint32_t digit_value = (uint32_t) (*str_p++ - LIT_CHAR_0);
 
-        e--;
+      if (digit_count == 0 && digit_value == 0)
+      {
+        /* Leading zeros are omitted. */
+        decimal_exponent--;
+        continue;
       }
 
-      str_p++;
+      if (digit_count < ECMA_NUMBER_MAX_DIGITS)
+      {
+        significand = significand * 10 + digit_value;
+        digit_count++;
+        decimal_exponent--;
+      }
     }
   }
 
-  /* Parsing exponent literal */
-  int32_t e_in_lit = 0;
-  bool e_in_lit_sign = false;
-
-  if (str_p <= end_p && (*str_p == LIT_CHAR_LOWERCASE_E || *str_p == LIT_CHAR_UPPERCASE_E))
+  /* Parsing exponent */
+  if (str_p < end_p && LEXER_TO_ASCII_LOWERCASE (*str_p) == LIT_CHAR_LOWERCASE_E)
   {
     str_p++;
 
-    if (!digit_seen || str_p > end_p)
+    int32_t exponent = 0;
+    int32_t exponent_sign = 1;
+
+    if (str_p >= end_p)
     {
       return ecma_number_make_nan ();
     }
@@ -542,81 +495,53 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
     }
     else if (*str_p == LIT_CHAR_MINUS)
     {
-      e_in_lit_sign = true;
+      exponent_sign = -1;
       str_p++;
     }
 
-    if (str_p > end_p)
+    if (str_p >= end_p || !lit_char_is_decimal_digit (*str_p))
     {
       return ecma_number_make_nan ();
     }
 
-    while (str_p <= end_p)
+    while (str_p < end_p)
     {
-      int32_t digit_value;
-
-      if (*str_p >= LIT_CHAR_0 && *str_p <= LIT_CHAR_9)
-      {
-        digit_value = (*str_p - LIT_CHAR_0);
-      }
 #if JERRY_ESNEXT
-      else if (*str_p == LIT_CHAR_UNDERSCORE && (options & ECMA_CONVERSION_ALLOW_UNDERSCORE))
+      if (*str_p == LIT_CHAR_UNDERSCORE && (options & ECMA_CONVERSION_ALLOW_UNDERSCORE))
       {
         str_p++;
         continue;
       }
 #endif /* JERRY_ESNEXT */
-      else
+
+      if (!lit_char_is_decimal_digit (*str_p))
       {
-        return ecma_number_make_nan ();
+        break;
       }
 
-      e_in_lit = e_in_lit * 10 + digit_value;
-      int32_t e_check = e + (int32_t) digits - 1 + (e_in_lit_sign ? -e_in_lit : e_in_lit);
+      int32_t digit_value = (*str_p++ - LIT_CHAR_0);
+      exponent = exponent * 10 + digit_value;
 
-      if (e_check > NUMBER_MAX_DECIMAL_EXPONENT)
+      if (exponent_sign * exponent > NUMBER_MAX_DECIMAL_EXPONENT)
       {
         return ecma_number_make_infinity (sign);
       }
-      else if (e_check < NUMBER_MIN_DECIMAL_EXPONENT)
+
+      if (exponent_sign * exponent < NUMBER_MIN_DECIMAL_EXPONENT)
       {
         return sign ? -ECMA_NUMBER_ZERO : ECMA_NUMBER_ZERO;
       }
-
-      str_p++;
     }
+
+    decimal_exponent += exponent_sign * exponent;
   }
 
-  /* Adding value of exponent literal to exponent value */
-  if (e_in_lit_sign)
-  {
-    e -= e_in_lit;
-  }
-  else
-  {
-    e += e_in_lit;
-  }
-
-  bool e_sign;
-
-  if (e < 0)
-  {
-    e_sign = true;
-    e = -e;
-  }
-  else
-  {
-    e_sign = false;
-  }
-
-  if (str_p <= end_p)
+  if (!has_significand || str_p < end_p)
   {
     return ecma_number_make_nan ();
   }
 
-  JERRY_ASSERT (str_p == end_p + 1);
-
-  if (fraction_uint64 == 0)
+  if (significand == 0)
   {
     return sign ? -ECMA_NUMBER_ZERO : ECMA_NUMBER_ZERO;
   }
@@ -627,85 +552,93 @@ ecma_utf8_string_to_number (const lit_utf8_byte_t *str_p, /**< utf-8 string */
    *
    * Normalized: |4 bits zero|124-bit mantissa with highest bit set to 1|
    */
-  ecma_uint128_t fraction_uint128 = { 0, fraction_uint64 };
+  ecma_uint128_t significand_uint128 = { .hi = significand, .lo = 0 };
 
   /* Normalizing mantissa */
-  int shift = 4 - ECMA_UINT128_CLZ_MAX63 (fraction_uint128);
+  int shift = 4 - ecma_uint64_clz (significand_uint128.hi);
+
   if (shift < 0)
   {
-    ECMA_UINT128_LEFT_SHIFT_MAX63 (fraction_uint128, -shift);
+    ecma_uint128_shift_left (&significand_uint128, -shift);
   }
   else
   {
-    ECMA_UINT128_RIGHT_SHIFT_MAX63 (fraction_uint128, shift);
+    ecma_uint128_shift_right (&significand_uint128, shift);
   }
-  int32_t binary_exponent = 1 + shift;
 
-  if (!e_sign)
+  int32_t binary_exponent = ECMA_NUMBER_FRACTION_WIDTH + shift;
+
+  while (decimal_exponent > 0)
   {
-    /* positive or zero decimal exponent */
-    JERRY_ASSERT (e >= 0);
+    JERRY_ASSERT (ecma_uint64_clz (significand_uint128.hi) == 4);
 
-    while (e > 0)
-    {
-      JERRY_ASSERT (ECMA_UINT128_CLZ_MAX63 (fraction_uint128) == 4);
+    ecma_uint128_mul10 (&significand_uint128);
+    decimal_exponent--;
 
-      ECMA_UINT128_MUL10 (fraction_uint128);
+    /* Re-normalizing mantissa */
+    shift = ecma_uint64_normalize_shift (significand_uint128.hi);
+    JERRY_ASSERT (shift >= 0 && shift <= 4);
 
-      e--;
-
-      /* Normalizing mantissa */
-      shift = 4 - ECMA_UINT128_CLZ_MAX4 (fraction_uint128);
-      JERRY_ASSERT (shift >= 0);
-      ECMA_UINT128_RIGHT_SHIFT_MAX63 (fraction_uint128, shift);
-      binary_exponent += shift;
-    }
-  }
-  else
-  {
-    /* negative decimal exponent */
-    JERRY_ASSERT (e != 0);
-
-    while (e > 0)
-    {
-      /* Denormalizing mantissa, moving highest 1 to bit 127 */
-      shift = ECMA_UINT128_CLZ_MAX4 (fraction_uint128);
-      JERRY_ASSERT (shift <= 4);
-      ECMA_UINT128_LEFT_SHIFT_MAX63 (fraction_uint128, shift);
-      binary_exponent -= shift;
-
-      JERRY_ASSERT (!ECMA_UINT128_IS_ZERO (fraction_uint128));
-
-      ECMA_UINT128_DIV10 (fraction_uint128);
-
-      e--;
-    }
-
-    /* Normalizing mantissa */
-    shift = 4 - ECMA_UINT128_CLZ_MAX4 (fraction_uint128);
-    JERRY_ASSERT (shift >= 0);
-    ECMA_UINT128_RIGHT_SHIFT_MAX63 (fraction_uint128, shift);
+    ecma_uint128_shift_right (&significand_uint128, shift);
     binary_exponent += shift;
-
-    JERRY_ASSERT (ECMA_UINT128_CLZ_MAX63 (fraction_uint128) == 4);
   }
 
-  JERRY_ASSERT (!ECMA_UINT128_IS_ZERO (fraction_uint128));
-  JERRY_ASSERT (ECMA_UINT128_CLZ_MAX63 (fraction_uint128) == 4);
+  while (decimal_exponent < 0)
+  {
+    /* Denormalizing mantissa, moving highest 1 to bit 127 */
+    JERRY_ASSERT (ecma_uint64_clz (significand_uint128.hi) <= 4);
+    shift = ecma_uint64_clz_top4 (significand_uint128.hi);
+    JERRY_ASSERT (shift >= 0 && shift <= 4);
+
+    ecma_uint128_shift_left (&significand_uint128, shift);
+    binary_exponent -= shift;
+
+    ecma_uint128_div10 (&significand_uint128);
+    decimal_exponent++;
+  }
 
   /*
    * Preparing mantissa for conversion to 52-bit representation, converting it to:
    *
    * |11 zero bits|1|116 mantissa bits|
    */
-  ECMA_UINT128_RIGHT_SHIFT_MAX63 (fraction_uint128, 7u);
-  binary_exponent += 7;
+  JERRY_ASSERT (ecma_uint64_clz (significand_uint128.hi) <= 4);
+  shift = 11 - ecma_uint64_clz_top4 (significand_uint128.hi);
+  ecma_uint128_shift_right (&significand_uint128, shift);
+  binary_exponent += shift;
 
-  JERRY_ASSERT (ECMA_UINT128_CLZ_MAX63 (fraction_uint128) == 11);
+  JERRY_ASSERT (ecma_uint64_clz (significand_uint128.hi) == 11);
 
-  fraction_uint64 = ecma_round_high_to_uint64 (&fraction_uint128);
+  binary_exponent += ECMA_NUMBER_EXPONENT_BIAS;
 
-  return ecma_number_make_from_sign_mantissa_and_exponent (sign, fraction_uint64, binary_exponent);
+  /* Handle denormal numbers */
+  if (binary_exponent < 1)
+  {
+    ecma_uint128_shift_right (&significand_uint128, -binary_exponent + 1);
+    binary_exponent = 0;
+  }
+
+  significand = ecma_round_high_to_uint64 (&significand_uint128);
+
+  if (significand >= 1ull << (ECMA_NUMBER_FRACTION_WIDTH + 1))
+  {
+    /* Rounding carried over to the most significant bit, re-normalize.
+     * No need to shift mantissa right, as the low 52 bits will be 0 regardless. */
+    binary_exponent++;
+  }
+
+  if (binary_exponent >= ((1 << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1))
+  {
+    return ecma_number_make_infinity (sign);
+  }
+
+  /* Mask low 52 bits. */
+  significand &= ((1ull << ECMA_NUMBER_FRACTION_WIDTH) - 1);
+
+  JERRY_ASSERT (binary_exponent < (1 << ECMA_NUMBER_BIASED_EXP_WIDTH) - 1);
+  JERRY_ASSERT (significand < (1ull << ECMA_NUMBER_FRACTION_WIDTH));
+
+  return ecma_number_create (sign, (uint32_t) binary_exponent, significand);
 #elif !JERRY_NUMBER_TYPE_FLOAT64
   /* Less precise conversion */
   ecma_number_t num = (ecma_number_t) (uint32_t) fraction_uint64;
@@ -791,7 +724,7 @@ ecma_number_to_uint32 (ecma_number_t num) /**< ecma-number */
 
   if (abs_num >= num_2_pow_32)
   {
-    num_in_uint32_range = ecma_number_calc_remainder (abs_num, num_2_pow_32);
+    num_in_uint32_range = ecma_number_remainder (abs_num, num_2_pow_32);
   }
   else
   {
@@ -939,8 +872,6 @@ ecma_number_to_utf8_string (ecma_number_t num, /**< ecma-number */
     JERRY_ASSERT (dst_p <= buffer_p + buffer_size);
     return (lit_utf8_size_t) (dst_p - buffer_p);
   }
-
-  JERRY_ASSERT (ecma_number_get_next (ecma_number_get_prev (num)) == num);
 
   /* 5. */
   uint32_t num_uint32 = ecma_number_to_uint32 (num);

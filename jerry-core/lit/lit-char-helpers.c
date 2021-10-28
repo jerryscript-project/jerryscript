@@ -336,6 +336,35 @@ lit_char_is_binary_digit (ecma_char_t c) /** code unit */
 #endif /* JERRY_ESNEXT */
 
 /**
+ * @return radix value
+ */
+uint8_t
+lit_char_to_radix (lit_utf8_byte_t c) /** code unit */
+{
+  switch (LEXER_TO_ASCII_LOWERCASE (c))
+  {
+    case LIT_CHAR_LOWERCASE_X:
+    {
+      return 16;
+    }
+#if JERRY_ESNEXT
+    case LIT_CHAR_LOWERCASE_O:
+    {
+      return 8;
+    }
+    case LIT_CHAR_LOWERCASE_B:
+    {
+      return 2;
+    }
+#endif /* JERRY_ESNEXT */
+    default:
+    {
+      return 10;
+    }
+  }
+} /* lit_char_to_radix */
+
+/**
  * UnicodeEscape abstract method
  *
  * See also: ECMA-262 v10, 24.5.2.3
@@ -370,14 +399,9 @@ lit_char_hex_to_int (ecma_char_t c) /**< code unit, corresponding to
   {
     return (uint32_t) (c - LIT_CHAR_ASCII_DIGITS_BEGIN);
   }
-  else if (c >= LIT_CHAR_ASCII_LOWERCASE_LETTERS_HEX_BEGIN && c <= LIT_CHAR_ASCII_LOWERCASE_LETTERS_HEX_END)
-  {
-    return (uint32_t) (c - LIT_CHAR_ASCII_LOWERCASE_LETTERS_HEX_BEGIN + 10);
-  }
-  else
-  {
-    return (uint32_t) (c - LIT_CHAR_ASCII_UPPERCASE_LETTERS_HEX_BEGIN + 10);
-  }
+
+  const uint32_t hex_offset = 10 - (LIT_CHAR_LOWERCASE_A % 32);
+  return (c % 32) + hex_offset;
 } /* lit_char_hex_to_int */
 
 /**

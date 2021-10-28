@@ -22,7 +22,6 @@
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
-#include "ecma-number-arithmetic.h"
 #include "ecma-objects-general.h"
 #include "ecma-objects.h"
 
@@ -438,30 +437,37 @@ ecma_builtin_math_dispatch_routine (uint8_t builtin_routine_id, /**< built-in wi
 #endif /* JERRY_ESNEXT */
       case ECMA_MATH_OBJECT_ROUND:
       {
-        if (ecma_number_is_nan (x) || ecma_number_is_zero (x) || ecma_number_is_infinity (x) || fmod (x, 1.0) == 0)
+        if (ecma_number_is_nan (x) || ecma_number_is_zero (x) || ecma_number_is_infinity (x))
         {
-          /* Do nothing. */
+          break;
         }
-        else if (ecma_number_is_negative (x) && x >= -ECMA_NUMBER_HALF)
-        {
-          x = -ECMA_NUMBER_ZERO;
-        }
-        else
-        {
-          const ecma_number_t up_half = x + ECMA_NUMBER_HALF;
-          const ecma_number_t down_half = x - ECMA_NUMBER_HALF;
-          const ecma_number_t up_rounded = up_half - ecma_op_number_remainder (up_half, ECMA_NUMBER_ONE);
-          const ecma_number_t down_rounded = down_half - ecma_op_number_remainder (down_half, ECMA_NUMBER_ONE);
 
-          if (up_rounded - x <= x - down_rounded)
+        ecma_number_t fraction = fmod (x, ECMA_NUMBER_ONE);
+
+        if (ecma_number_is_zero (fraction))
+        {
+          break;
+        }
+
+        if (ecma_number_is_negative (x))
+        {
+          if (x >= -ECMA_NUMBER_HALF)
           {
-            x = up_rounded;
+            x = -ECMA_NUMBER_ZERO;
+            break;
           }
-          else
+
+          if (fraction < -ECMA_NUMBER_HALF)
           {
-            x = down_rounded;
+            x -= ECMA_NUMBER_HALF;
           }
         }
+        else if (fraction >= ECMA_NUMBER_HALF)
+        {
+          x += ECMA_NUMBER_HALF;
+        }
+
+        x = ecma_number_trunc (x);
         break;
       }
       case ECMA_MATH_OBJECT_SIN:

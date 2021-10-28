@@ -39,7 +39,7 @@ If you just start with Zephyr, you may want to follow "Building a Sample
 Application" section in the doc above and check that you can flash your
 target board.
 
-Remember to source the Zephyr environment as explained in the zephyr documenation:
+Remember to source the Zephyr environment as explained in the zephyr documentation:
 
 ```
 cd zephyr-project
@@ -71,7 +71,7 @@ Below, we build for NXP FRDM-K64F board (`frdm_k64f` Zephyr board
 identifier). Building for other boards is similar. You are expected
 to read [Supported Boards](https://docs.zephyrproject.org/latest/boards/index.html)
 section in the Zephyr documentation for more information about
-Zephyr's support for a particilar board, means to flash binaries,
+Zephyr's support for a particular board, means to flash binaries,
 etc.
 
 ```

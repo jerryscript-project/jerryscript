@@ -72,7 +72,7 @@ typedef struct
  */
 typedef struct
 {
-  jerry_value_t result; /**< result of property registraion (undefined or error object) */
+  jerry_value_t result; /**< result of property registration (undefined or error object) */
   uint32_t registered; /**< number of successfully registered methods */
 } jerryx_register_result;
 

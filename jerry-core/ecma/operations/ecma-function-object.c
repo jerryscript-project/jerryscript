@@ -2165,7 +2165,7 @@ ecma_op_function_list_lazy_property_names (ecma_object_t *object_p, /**< functio
                                            ecma_property_counter_t *prop_counter_p, /**< property counters */
                                            jerry_property_filter_t filter) /**< property name filter options */
 {
-  if (filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS)
+  if (filter & JERRY_PROPERTY_FILTER_EXCLUDE_STRINGS)
   {
     return;
   }
@@ -2239,7 +2239,7 @@ ecma_op_external_function_list_lazy_property_names (ecma_object_t *object_p, /**
 {
   JERRY_UNUSED (object_p);
 
-  if (filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS)
+  if (filter & JERRY_PROPERTY_FILTER_EXCLUDE_STRINGS)
   {
     return;
   }
@@ -2262,7 +2262,7 @@ ecma_op_bound_function_list_lazy_property_names (ecma_object_t *object_p, /**< b
                                                  ecma_property_counter_t *prop_counter_p, /**< property counters */
                                                  jerry_property_filter_t filter) /**< property name filter options */
 {
-  if (filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS)
+  if (filter & JERRY_PROPERTY_FILTER_EXCLUDE_STRINGS)
   {
     return;
   }

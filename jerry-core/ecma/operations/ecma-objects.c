@@ -2180,7 +2180,7 @@ ecma_op_object_get_enumerable_property_names (ecma_object_t *obj_p, /**< routine
                                               ecma_enumerable_property_names_options_t option) /**< listing option */
 {
   /* 2. */
-  ecma_collection_t *prop_names_p = ecma_op_object_own_property_keys (obj_p, JERRY_PROPERTY_FILTER_EXLCUDE_SYMBOLS);
+  ecma_collection_t *prop_names_p = ecma_op_object_own_property_keys (obj_p, JERRY_PROPERTY_FILTER_EXCLUDE_SYMBOLS);
 
 #if JERRY_BUILTIN_PROXY
   if (JERRY_UNLIKELY (prop_names_p == NULL))
@@ -2343,7 +2343,7 @@ ecma_object_list_lazy_property_names (ecma_object_t *obj_p, /**< object */
     }
     case ECMA_OBJECT_TYPE_ARRAY:
     {
-      if (!(filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS))
+      if (!(filter & JERRY_PROPERTY_FILTER_EXCLUDE_STRINGS))
       {
         ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
         prop_counter_p->string_named_props++;
@@ -2513,20 +2513,20 @@ ecma_op_object_own_property_keys (ecma_object_t *obj_p, /**< object */
     counter_prop_iter_cp = prop_iter_p->next_property_cp;
   }
 
-  if (filter & JERRY_PROPERTY_FILTER_EXLCUDE_INTEGER_INDICES)
+  if (filter & JERRY_PROPERTY_FILTER_EXCLUDE_INTEGER_INDICES)
   {
     JERRY_ASSERT (prop_counter.array_index_named_props == 0);
     array_index_named_props = 0;
   }
 
-  if (filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS)
+  if (filter & JERRY_PROPERTY_FILTER_EXCLUDE_STRINGS)
   {
     JERRY_ASSERT (prop_counter.string_named_props == 0);
     string_named_props = 0;
   }
 
 #if JERRY_ESNEXT
-  if (filter & JERRY_PROPERTY_FILTER_EXLCUDE_SYMBOLS)
+  if (filter & JERRY_PROPERTY_FILTER_EXCLUDE_SYMBOLS)
   {
     JERRY_ASSERT (prop_counter.symbol_named_props == 0);
     symbol_named_props = 0;
@@ -2598,7 +2598,7 @@ ecma_op_object_own_property_keys (ecma_object_t *obj_p, /**< object */
 
       if (ecma_string_get_array_index (name_p) != ECMA_STRING_NOT_ARRAY_INDEX)
       {
-        if (!(filter & JERRY_PROPERTY_FILTER_EXLCUDE_INTEGER_INDICES))
+        if (!(filter & JERRY_PROPERTY_FILTER_EXCLUDE_INTEGER_INDICES))
         {
           *(--array_index_current_p) = ecma_make_string_value (name_p);
           continue;
@@ -2607,7 +2607,7 @@ ecma_op_object_own_property_keys (ecma_object_t *obj_p, /**< object */
 #if JERRY_ESNEXT
       else if (ecma_prop_name_is_symbol (name_p))
       {
-        if (!(filter & JERRY_PROPERTY_FILTER_EXLCUDE_SYMBOLS))
+        if (!(filter & JERRY_PROPERTY_FILTER_EXCLUDE_SYMBOLS))
         {
           *(--symbol_current_p) = ecma_make_symbol_value (name_p);
           continue;
@@ -2616,7 +2616,7 @@ ecma_op_object_own_property_keys (ecma_object_t *obj_p, /**< object */
 #endif /* JERRY_ESNEXT */
       else
       {
-        if (!(filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS))
+        if (!(filter & JERRY_PROPERTY_FILTER_EXCLUDE_STRINGS))
         {
           *(--string_current_p) = ecma_make_string_value (name_p);
           continue;
@@ -2698,7 +2698,7 @@ ecma_op_object_enumerate (ecma_object_t *obj_p) /**< object */
 
   while (true)
   {
-    ecma_collection_t *keys = ecma_op_object_own_property_keys (obj_p, JERRY_PROPERTY_FILTER_EXLCUDE_SYMBOLS);
+    ecma_collection_t *keys = ecma_op_object_own_property_keys (obj_p, JERRY_PROPERTY_FILTER_EXCLUDE_SYMBOLS);
 
 #if JERRY_ESNEXT
     if (JERRY_UNLIKELY (keys == NULL))

@@ -3536,7 +3536,7 @@ consume_last_statement:
 } /* parser_parse_statements */
 
 /**
- * Free jumps stored on the stack if a parse error is occured.
+ * Free jumps stored on the stack if a parse error is occurred.
  */
 void JERRY_ATTR_NOINLINE
 parser_free_jumps (parser_stack_iterator_t iterator) /**< iterator position */

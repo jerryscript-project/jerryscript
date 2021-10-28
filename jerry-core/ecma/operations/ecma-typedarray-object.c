@@ -1846,7 +1846,7 @@ ecma_op_typedarray_list_lazy_property_names (ecma_object_t *obj_p, /**< a TypedA
 {
   JERRY_ASSERT (ecma_object_is_typedarray (obj_p));
 
-  if (filter & JERRY_PROPERTY_FILTER_EXLCUDE_INTEGER_INDICES)
+  if (filter & JERRY_PROPERTY_FILTER_EXCLUDE_INTEGER_INDICES)
   {
     return;
   }

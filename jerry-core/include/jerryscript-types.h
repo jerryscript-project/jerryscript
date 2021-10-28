@@ -234,15 +234,15 @@ typedef enum
                                                                 *   (equivalent to Reflect.ownKeys call)  */
   JERRY_PROPERTY_FILTER_TRAVERSE_PROTOTYPE_CHAIN = (1 << 0),   /**< Include keys from the objects's
                                                                 *   prototype chain as well */
-  JERRY_PROPERTY_FILTER_EXLCUDE_NON_CONFIGURABLE = (1 << 1),   /**< Exclude property key if
+  JERRY_PROPERTY_FILTER_EXCLUDE_NON_CONFIGURABLE = (1 << 1),   /**< Exclude property key if
                                                                 *   the property is non-configurable */
-  JERRY_PROPERTY_FILTER_EXLCUDE_NON_ENUMERABLE = (1 << 2),     /**< Exclude property key if
+  JERRY_PROPERTY_FILTER_EXCLUDE_NON_ENUMERABLE = (1 << 2),     /**< Exclude property key if
                                                                 *   the property is non-enumerable */
-  JERRY_PROPERTY_FILTER_EXLCUDE_NON_WRITABLE = (1 << 3),       /**< Exclude property key if
+  JERRY_PROPERTY_FILTER_EXCLUDE_NON_WRITABLE = (1 << 3),       /**< Exclude property key if
                                                                 *   the property is non-writable */
-  JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS = (1 << 4),            /**< Exclude property key if it is a string */
-  JERRY_PROPERTY_FILTER_EXLCUDE_SYMBOLS = (1 << 5),            /**< Exclude property key if it is a symbol */
-  JERRY_PROPERTY_FILTER_EXLCUDE_INTEGER_INDICES = (1 << 6),    /**< Exclude property key if it is an integer index */
+  JERRY_PROPERTY_FILTER_EXCLUDE_STRINGS = (1 << 4),            /**< Exclude property key if it is a string */
+  JERRY_PROPERTY_FILTER_EXCLUDE_SYMBOLS = (1 << 5),            /**< Exclude property key if it is a symbol */
+  JERRY_PROPERTY_FILTER_EXCLUDE_INTEGER_INDICES = (1 << 6),    /**< Exclude property key if it is an integer index */
   JERRY_PROPERTY_FILTER_INTEGER_INDICES_AS_NUMBER = (1 << 7),  /**< By default integer index property keys are
                                                                 *   converted to string. Enabling this flags keeps
                                                                 *   integer index property keys as numbers. */
@@ -445,7 +445,7 @@ typedef enum
 } jerry_backtrace_frame_types_t;
 
 /**
- * Location info retreived by jerry_backtrace_get_location.
+ * Location info retrieved by jerry_backtrace_get_location.
  */
 typedef struct
 {
@@ -534,7 +534,7 @@ typedef enum
   JERRY_FUNCTION_TYPE_GENERIC,      /**< Generic JavaScript function */
   JERRY_FUNCTION_TYPE_ACCESSOR,     /**< Accessor function */
   JERRY_FUNCTION_TYPE_BOUND,        /**< Bound function */
-  JERRY_FUNCTION_TYPE_ARROW,        /**< Arrow fuction */
+  JERRY_FUNCTION_TYPE_ARROW,        /**< Arrow function */
   JERRY_FUNCTION_TYPE_GENERATOR,    /**< Generator function */
 } jerry_function_type_t;
 
@@ -562,7 +562,7 @@ typedef enum
   JERRY_MODULE_STATE_INVALID = 0,  /**< return value for jerry_module_get_state when its argument is not a module */
   JERRY_MODULE_STATE_UNLINKED = 1, /**< module is currently unlinked */
   JERRY_MODULE_STATE_LINKING = 2, /**< module is currently being linked */
-  JERRY_MODULE_STATE_LINKED = 3, /**< module has been linked (its depencencies has been resolved) */
+  JERRY_MODULE_STATE_LINKED = 3, /**< module has been linked (its dependencies has been resolved) */
   JERRY_MODULE_STATE_EVALUATING = 4, /**< module is currently being evaluated */
   JERRY_MODULE_STATE_EVALUATED = 5, /**< module has been evaluated (its source code has been executed) */
   JERRY_MODULE_STATE_ERROR = 6, /**< an error has been encountered before the evaluated state is reached */

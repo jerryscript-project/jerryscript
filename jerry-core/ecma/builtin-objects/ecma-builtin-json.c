@@ -550,7 +550,7 @@ ecma_builtin_json_parse_value (ecma_json_token_t *token_p) /**< token argument *
       }
 
       /*
-       * Parse error occured.
+       * Parse error occurred.
        */
       ecma_deref_object (object_p);
       return ECMA_VALUE_EMPTY;
@@ -752,7 +752,7 @@ ecma_builtin_json_internalize_property (ecma_object_t *reviver_p, /**< reviver f
  *         ECMA-262 v5, 15.12.2
  *         ECMA-262 v11, 24.5.1.1 in step 2
  *
- * @return ECMA_VALUE_TRUE - if no error occured.
+ * @return ECMA_VALUE_TRUE - if no error occurred.
  *         error if one of the operation failed.
  */
 static
@@ -1010,16 +1010,16 @@ ecma_builtin_json_serialize_object (ecma_json_stringify_context_t *context_p, /*
                                     ecma_object_t *obj_p) /**< the object*/
 {
   /* 1. */
-  if (ecma_json_has_object_in_stack (context_p->occurence_stack_last_p, obj_p))
+  if (ecma_json_has_object_in_stack (context_p->occurrence_stack_last_p, obj_p))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("The structure is cyclical"));
   }
 
   /* 2. */
-  ecma_json_occurence_stack_item_t stack_item;
-  stack_item.next_p = context_p->occurence_stack_last_p;
+  ecma_json_occurrence_stack_item_t stack_item;
+  stack_item.next_p = context_p->occurrence_stack_last_p;
   stack_item.object_p = obj_p;
-  context_p->occurence_stack_last_p = &stack_item;
+  context_p->occurrence_stack_last_p = &stack_item;
 
   /* 3. - 4.*/
   const lit_utf8_size_t stepback_size = ecma_stringbuilder_get_size (&context_p->indent_builder);
@@ -1115,7 +1115,7 @@ ecma_builtin_json_serialize_object (ecma_json_stringify_context_t *context_p, /*
   result = ECMA_VALUE_EMPTY;
 
   /* 11. */
-  context_p->occurence_stack_last_p = stack_item.next_p;
+  context_p->occurrence_stack_last_p = stack_item.next_p;
 
   /* 12. */
   ecma_stringbuilder_revert (&context_p->indent_builder, stepback_size);
@@ -1147,16 +1147,16 @@ ecma_builtin_json_serialize_array (ecma_json_stringify_context_t *context_p, /**
 #endif /* !JERRY_NDEBUG */
 
   /* 1. */
-  if (ecma_json_has_object_in_stack (context_p->occurence_stack_last_p, obj_p))
+  if (ecma_json_has_object_in_stack (context_p->occurrence_stack_last_p, obj_p))
   {
     return ecma_raise_type_error (ECMA_ERR_MSG ("The structure is cyclical"));
   }
 
   /* 2. */
-  ecma_json_occurence_stack_item_t stack_item;
-  stack_item.next_p = context_p->occurence_stack_last_p;
+  ecma_json_occurrence_stack_item_t stack_item;
+  stack_item.next_p = context_p->occurrence_stack_last_p;
   stack_item.object_p = obj_p;
-  context_p->occurence_stack_last_p = &stack_item;
+  context_p->occurrence_stack_last_p = &stack_item;
 
   /* 3. - 4.*/
   const lit_utf8_size_t stepback_size = ecma_stringbuilder_get_size (&context_p->indent_builder);
@@ -1232,7 +1232,7 @@ ecma_builtin_json_serialize_array (ecma_json_stringify_context_t *context_p, /**
   ecma_stringbuilder_append_byte (&context_p->result_builder, LIT_CHAR_RIGHT_SQUARE);
 
   /* 12. */
-  context_p->occurence_stack_last_p = stack_item.next_p;
+  context_p->occurrence_stack_last_p = stack_item.next_p;
 
   /* 13. */
   ecma_stringbuilder_revert (&context_p->indent_builder, stepback_size);
@@ -1532,7 +1532,7 @@ ecma_value_t
 ecma_builtin_json_stringify_no_opts (const ecma_value_t value) /**< value to stringify */
 {
   ecma_json_stringify_context_t context;
-  context.occurence_stack_last_p = NULL;
+  context.occurrence_stack_last_p = NULL;
   context.indent_builder = ecma_stringbuilder_create ();
   context.property_list_p = NULL;
   context.replacer_function_p = NULL;
@@ -1781,7 +1781,7 @@ ecma_builtin_json_stringify (ecma_value_t arg1,  /**< value */
   ecma_free_value (space);
 
   /* 1., 2., 3. */
-  context.occurence_stack_last_p = NULL;
+  context.occurrence_stack_last_p = NULL;
   context.indent_builder = ecma_stringbuilder_create ();
 
   /* 9. */

@@ -656,7 +656,7 @@ ecma_fast_array_object_own_property_keys (ecma_object_t *object_p, /**< fast acc
 
   ecma_collection_t *ret_p = ecma_new_collection ();
 
-  if (!(filter & JERRY_PROPERTY_FILTER_EXLCUDE_INTEGER_INDICES))
+  if (!(filter & JERRY_PROPERTY_FILTER_EXCLUDE_INTEGER_INDICES))
   {
     ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
     uint32_t length = ext_obj_p->u.array.length;
@@ -679,7 +679,7 @@ ecma_fast_array_object_own_property_keys (ecma_object_t *object_p, /**< fast acc
     }
   }
 
-  if (!(filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS))
+  if (!(filter & JERRY_PROPERTY_FILTER_EXCLUDE_STRINGS))
   {
     ecma_collection_push_back (ret_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
   }

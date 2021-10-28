@@ -411,7 +411,7 @@ ecma_op_arguments_object_list_lazy_property_names (ecma_object_t *obj_p, /**< ar
   uint32_t arguments_number = arguments_p->header.u.cls.u3.arguments_number;
   uint8_t flags = arguments_p->header.u.cls.u1.arguments_flags;
 
-  if (!(filter & JERRY_PROPERTY_FILTER_EXLCUDE_INTEGER_INDICES))
+  if (!(filter & JERRY_PROPERTY_FILTER_EXCLUDE_INTEGER_INDICES))
   {
     ecma_value_t *argv_p = (ecma_value_t *) (arguments_p + 1);
 
@@ -431,7 +431,7 @@ ecma_op_arguments_object_list_lazy_property_names (ecma_object_t *obj_p, /**< ar
     }
   }
 
-  if (!(filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS))
+  if (!(filter & JERRY_PROPERTY_FILTER_EXCLUDE_STRINGS))
   {
     if (!(flags & ECMA_ARGUMENTS_OBJECT_LENGTH_INITIALIZED))
     {
@@ -455,7 +455,7 @@ ecma_op_arguments_object_list_lazy_property_names (ecma_object_t *obj_p, /**< ar
   }
 
 #if JERRY_ESNEXT
-  if (!(filter & JERRY_PROPERTY_FILTER_EXLCUDE_SYMBOLS)
+  if (!(filter & JERRY_PROPERTY_FILTER_EXCLUDE_SYMBOLS)
       && !(flags & ECMA_ARGUMENTS_OBJECT_ITERATOR_INITIALIZED))
   {
     ecma_string_t *symbol_p = ecma_op_get_global_symbol (LIT_GLOBAL_SYMBOL_ITERATOR);

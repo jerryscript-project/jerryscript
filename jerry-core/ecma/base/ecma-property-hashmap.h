@@ -36,7 +36,7 @@ typedef struct
   ecma_property_header_t header; /**< header of the property */
   uint32_t max_property_count; /**< maximum property count (power of 2) */
   uint32_t null_count; /**< number of NULLs in the map */
-  uint32_t unused_count; /**< number of unused entires in the map */
+  uint32_t unused_count; /**< number of unused entries in the map */
 
   /*
    * The hash is followed by max_property_count ecma_cpointer_t

@@ -331,8 +331,8 @@
   <test id="language/statements/class/strict-mode/arguments-caller.js"><reason>ES11: arguments object no longer has caller property</reason></test>
   <test id="built-ins/Proxy/create-handler-is-revoked-proxy.js"><reason>ES11+: ProxyCreate does not check Proxy handler and target.</reason></test>
   <test id="built-ins/Proxy/create-target-is-revoked-proxy.js"><reason>ES11+: ProxyCreate does not check Proxy handler and target.</reason></test>
-  <test id="language/expressions/assignment/fn-name-lhs-cover.js"><reason>Outdated test, anonymous funtions should now have a name property</reason></test>
-  <test id="language/expressions/assignment/fn-name-lhs-member.js"><reason>Outdated test, anonymous funtions should now have a name property</reason></test>
-  <test id="language/expressions/function/name.js"><reason>Outdated test, anonymous funtions should now have a name property</reason></test>
-  <test id="language/expressions/generators/name.js"><reason>Outdated test, anonymous funtions should now have a name property</reason></test>
+  <test id="language/expressions/assignment/fn-name-lhs-cover.js"><reason>Outdated test, anonymous functions should now have a name property</reason></test>
+  <test id="language/expressions/assignment/fn-name-lhs-member.js"><reason>Outdated test, anonymous functions should now have a name property</reason></test>
+  <test id="language/expressions/function/name.js"><reason>Outdated test, anonymous functions should now have a name property</reason></test>
+  <test id="language/expressions/generators/name.js"><reason>Outdated test, anonymous functions should now have a name property</reason></test>
 </excludeList>

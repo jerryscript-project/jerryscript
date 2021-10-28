@@ -81,7 +81,7 @@ defined to `1`.
   Enables or disables the [String](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15.5) built-in.
 * `JERRY_BUILTINS`:
   Enables or disable all of the [Standard Built-in ECMAScript 5.1 Objects](http://www.ecma-international.org/ecma-262/5.1/index.html#sec-15)
-  This option is evaulated first, any other `JERRY_BUILTIN_<name>` defines will override that specific builtin config.
+  This option is evaluated first, any other `JERRY_BUILTIN_<name>` defines will override that specific builtin config.
   Equivalent with setting the following defines to the `JERRY_BUILTINS` value:
     * `JERRY_BUILTIN_ANNEXB`
     * `JERRY_BUILTIN_ARRAY`
@@ -113,7 +113,7 @@ defined to `1`.
 * `JERRY_BUILTIN_REALMS`:
   Enables or disables the [Realms](https://262.ecma-international.org/11.0/#sec-code-realms) support in the engine.
 * `JERRY_BUILTIN_REFLECT`:
-  Enables or disables the [Reflext](https://262.ecma-international.org/11.0/#sec-reflect-object) built-in.
+  Enables or disables the [Reflect](https://262.ecma-international.org/11.0/#sec-reflect-object) built-in.
 * `JERRY_BUILTIN_TYPEDARRAY`:
   Enables or disables the [ArrayBuffer](http://www.ecma-international.org/ecma-262/6.0/#sec-arraybuffer-objects) and [TypedArray](http://www.ecma-international.org/ecma-262/6.0/#sec-typedarray-objects) built-ins.
 * `JERRY_BUILTIN_WEAKREF`:
@@ -142,7 +142,7 @@ defined to `1`.
   * [template strings](http://www.ecma-international.org/ecma-262/6.0/#sec-static-semantics-templatestrings) language element.
 
   Furthermore all builtins follow the latest ECMAScript specification including those which behave differently in ES5.1.
-  This option is evaulated first, any other `JERRY_<name>` defines will override that specific entry.
+  This option is evaluated first, any other `JERRY_<name>` defines will override that specific entry.
   Equivalent with setting the following defines to the `JERRY_ESNEXT` value:
     * `JERRY_BUILTIN_BIGINT`
     * `JERRY_BUILTIN_CONTAINER`

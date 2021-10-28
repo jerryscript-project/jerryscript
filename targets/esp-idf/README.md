@@ -4,9 +4,9 @@ This is a port for espressif's esp-idf (esp32). The MATH, LTO and STRIP options 
 python tools\build.py --toolchain=cmake/toolchain-esp32.cmake --cmake-param "-GUnix Makefiles" --jerry-cmdline=OFF --jerry-port-default=OFF --lto=OFF --strip=OFF
 ```
 
-NB: the MATH, STRIP and LTO might be disabled by platform as well. I strongly suggest limiting heap memorry with '--mem-heap=128' but that really depends on the SRAM avaiulable on your esp32.
+NB: the MATH, STRIP and LTO might be disabled by platform as well. I strongly suggest limiting heap memory with '--mem-heap=128' but that really depends on the SRAM available on your esp32.
 
-Then copy the artefacts 'build/lib/\*.a' in an esp-idf component named 'jerryscript' (eg) and use a 'CMakeLists.txt' like this one
+Then copy the artifacts 'build/lib/\*.a' in an esp-idf component named 'jerryscript' (eg) and use a 'CMakeLists.txt' like this one
 
 ```
 # assumes there is a component with this the following

@@ -1208,7 +1208,7 @@ ecma_promise_async_then (ecma_value_t promise, /**< promise object */
 /**
  * Resolves the value and resume the execution of an async function after the resolve is completed
  *
- * @return ECMA_VALUE_UNDEFINED if not error is occured, an error otherwise
+ * @return ECMA_VALUE_UNDEFINED if not error is occurred, an error otherwise
  */
 ecma_value_t
 ecma_promise_async_await (ecma_extended_object_t *async_generator_object_p, /**< async generator function */

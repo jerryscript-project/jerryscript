@@ -197,6 +197,15 @@ struct jerry_context_t
 #endif /* JERRY_PROMISE_CALLBACK */
 #endif /* JERRY_ESNEXT */
 
+#if JERRY_BUILTIN_TYPEDARRAY
+  uint32_t arraybuffer_compact_allocation_limit; /**< maximum size of compact allocation */
+  jerry_arraybuffer_allocate_t arraybuffer_allocate_callback;  /**< callback for allocating
+                                                                *   arraybuffer memory */
+  jerry_arraybuffer_free_t arraybuffer_free_callback; /**< callback for freeing arraybuffer memory */
+  void *arraybuffer_allocate_callback_user_p;  /**< user pointer passed to arraybuffer_allocate_callback
+                                                *   and arraybuffer_free_callback functions */
+#endif /* JERRY_BUILTIN_TYPEDARRAY */
+
 #if JERRY_VM_EXEC_STOP
   uint32_t vm_exec_stop_frequency; /**< reset value for vm_exec_stop_counter */
   uint32_t vm_exec_stop_counter; /**< down counter for reducing the calls of vm_exec_stop_cb */

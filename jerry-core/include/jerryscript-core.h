@@ -374,8 +374,7 @@ void jerry_free_source_info (jerry_source_info_t *source_info_p);
 bool jerry_value_is_arraybuffer (const jerry_value_t value);
 jerry_value_t jerry_create_arraybuffer (const jerry_length_t size);
 jerry_value_t jerry_create_arraybuffer_external (const jerry_length_t size,
-                                                 uint8_t *buffer_p,
-                                                 jerry_value_free_callback_t free_cb);
+                                                 uint8_t *buffer_p, void *buffer_user_p);
 jerry_length_t jerry_arraybuffer_write (const jerry_value_t value,
                                         jerry_length_t offset,
                                         const uint8_t *buf_p,
@@ -388,6 +387,11 @@ jerry_length_t jerry_get_arraybuffer_byte_length (const jerry_value_t value);
 uint8_t *jerry_get_arraybuffer_pointer (const jerry_value_t value);
 jerry_value_t jerry_is_arraybuffer_detachable (const jerry_value_t value);
 jerry_value_t jerry_detach_arraybuffer (const jerry_value_t value);
+bool jerry_arraybuffer_has_buffer (const jerry_value_t value);
+void jerry_arraybuffer_set_compact_allocation_limit (const jerry_length_t allocation_limit);
+void jerry_arraybuffer_set_allocator_callbacks (jerry_arraybuffer_allocate_t allocate_callback,
+                                                jerry_arraybuffer_free_t free_callback,
+                                                void *user_p);
 
 /**
  * SharedArrayBuffer components.
@@ -396,8 +400,7 @@ jerry_value_t jerry_detach_arraybuffer (const jerry_value_t value);
 bool jerry_value_is_shared_arraybuffer (const jerry_value_t value);
 jerry_value_t jerry_create_shared_arraybuffer (const jerry_length_t size);
 jerry_value_t jerry_create_shared_arraybuffer_external (const jerry_length_t size,
-                                                        uint8_t *buffer_p,
-                                                        jerry_value_free_callback_t free_cb);
+                                                        uint8_t *buffer_p, void *buffer_user_p);
 
 /**
  * DataView functions.

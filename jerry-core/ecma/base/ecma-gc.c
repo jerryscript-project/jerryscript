@@ -19,6 +19,7 @@
 
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
+#include "ecma-arraybuffer-object.h"
 #include "ecma-builtin-handlers.h"
 #include "ecma-container-object.h"
 #include "ecma-function-object.h"
@@ -1854,25 +1855,18 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
         case ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER:
 #endif /* JERRY_BUILTIN_SHAREDARRAYBUFFER */
         {
-          uint32_t arraybuffer_length = ext_object_p->u.cls.u3.length;
-
-          if (ECMA_ARRAYBUFFER_HAS_EXTERNAL_MEMORY (ext_object_p))
+          if (!(ECMA_ARRAYBUFFER_GET_FLAGS (ext_object_p) & ECMA_ARRAYBUFFER_HAS_POINTER))
           {
-            ext_object_size = sizeof (ecma_arraybuffer_external_info);
-
-            /* Call external free callback if any. */
-            ecma_arraybuffer_external_info *array_p = (ecma_arraybuffer_external_info *) ext_object_p;
-
-            if (array_p->free_cb != NULL)
-            {
-              array_p->free_cb (array_p->buffer_p);
-            }
-          }
-          else
-          {
-            ext_object_size += arraybuffer_length;
+            ext_object_size += ext_object_p->u.cls.u3.length;
+            break;
           }
 
+          ext_object_size = sizeof (ecma_arraybuffer_pointer_t);
+
+          if (ECMA_ARRAYBUFFER_GET_FLAGS (ext_object_p) & ECMA_ARRAYBUFFER_ALLOCATED)
+          {
+            ecma_arraybuffer_release_buffer (object_p);
+          }
           break;
         }
 #endif /* JERRY_BUILTIN_TYPEDARRAY */

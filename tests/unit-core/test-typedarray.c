@@ -36,7 +36,7 @@ typedef struct
  */
 static void
 register_js_value (const char *name_p, /**< name of the function */
-                    jerry_value_t value) /**< function callback */
+                   jerry_value_t value) /**< function callback */
 {
   jerry_value_t global_obj_val = jerry_get_global_object ();
 
@@ -204,14 +204,12 @@ test_typedarray_complex_creation (test_entry_t test_entries[], /**< test cases *
 {
   const uint32_t arraybuffer_size = 256;
 
-  JERRY_VLA (uint8_t, buffer_ext, arraybuffer_size);
-  memset (buffer_ext, 0, arraybuffer_size);
-
   for (uint32_t i = 0; test_entries[i].constructor_name != NULL; i++)
   {
     const uint32_t offset = 8;
     uint32_t element_count = test_entries[i].element_count;
     uint32_t bytes_per_element = test_entries[i].bytes_per_element;
+    uint8_t *buffer_p = NULL;
 
     /* new %TypedArray% (buffer, offset, length); */
     jerry_value_t typedarray;
@@ -220,7 +218,8 @@ test_typedarray_complex_creation (test_entry_t test_entries[], /**< test cases *
 
       if (use_external_buffer)
       {
-        arraybuffer = jerry_create_arraybuffer_external (arraybuffer_size, buffer_ext, NULL);
+        buffer_p = (uint8_t *) jerry_heap_alloc (arraybuffer_size);
+        arraybuffer = jerry_create_arraybuffer_external (arraybuffer_size, buffer_p, NULL);
       }
       else
       {
@@ -290,8 +289,8 @@ test_typedarray_complex_creation (test_entry_t test_entries[], /**< test cases *
 
       if (use_external_buffer)
       {
-        test_buffer_value (0x11223344, buffer_ext, offset, type, bytes_per_element);
-        TEST_ASSERT (memcmp (buffer_ext, test_buffer, offset + byte_length) == 0);
+        test_buffer_value (0x11223344, buffer_p, offset, type, bytes_per_element);
+        TEST_ASSERT (memcmp (buffer_p, test_buffer, offset + byte_length) == 0);
       }
 
       jerry_release_value (buffer);
@@ -504,9 +503,9 @@ test_detached_arraybuffer (void)
 
   /* Creating an TypedArray for a detached array buffer with a given length/offset is invalid */
   {
-    uint8_t buf[1];
     const uint32_t length = 1;
-    jerry_value_t arraybuffer = jerry_create_arraybuffer_external (length, buf, NULL);
+    uint8_t *buffer_p = (uint8_t *) jerry_heap_alloc (length);
+    jerry_value_t arraybuffer = jerry_create_arraybuffer_external (length, buffer_p, NULL);
     TEST_ASSERT (!jerry_value_is_error (arraybuffer));
     TEST_ASSERT (jerry_value_is_arraybuffer (arraybuffer));
     TEST_ASSERT (jerry_get_arraybuffer_byte_length (arraybuffer) == length);
@@ -533,9 +532,9 @@ test_detached_arraybuffer (void)
 
   /* Creating an TypedArray for a detached array buffer without length/offset is valid */
   {
-    uint8_t buf[1];
     const uint32_t length = 1;
-    jerry_value_t arraybuffer = jerry_create_arraybuffer_external (length, buf, NULL);
+    uint8_t *buffer_p = (uint8_t *) jerry_heap_alloc (length);
+    jerry_value_t arraybuffer = jerry_create_arraybuffer_external (length, buffer_p, NULL);
     TEST_ASSERT (!jerry_value_is_error (arraybuffer));
     TEST_ASSERT (jerry_value_is_arraybuffer (arraybuffer));
     TEST_ASSERT (jerry_get_arraybuffer_byte_length (arraybuffer) == length);

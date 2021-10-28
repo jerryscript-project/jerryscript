@@ -2084,35 +2084,24 @@ typedef enum
 } ecma_typedarray_flag_t;
 
 /**
- * ArrayBuffers flags.
+ * Array buffer flags.
  */
 typedef enum
 {
-  ECMA_ARRAYBUFFER_INTERNAL_MEMORY = 0u, /* ArrayBuffer memory is handled internally. */
-  ECMA_ARRAYBUFFER_EXTERNAL_MEMORY = (1u << 0), /* ArrayBuffer created via jerry_create_arraybuffer_external. */
-  ECMA_ARRAYBUFFER_DETACHED = (1u << 1), /* ArrayBuffer has been detached */
+  ECMA_ARRAYBUFFER_HAS_POINTER = (1u << 0), /* ArrayBuffer has a buffer pointer. */
+  ECMA_ARRAYBUFFER_ALLOCATED = (1u << 1), /* ArrayBuffer memory is allocated */
+  ECMA_ARRAYBUFFER_DETACHED = (1u << 2), /* ArrayBuffer has been detached */
 } ecma_arraybuffer_flag_t;
 
 /**
- * Check whether the ArrayBuffer has external underlying buffer
- */
-#define ECMA_ARRAYBUFFER_HAS_EXTERNAL_MEMORY(object_p) \
-    ((((ecma_extended_object_t *) object_p)->u.cls.u1.array_buffer_flags & ECMA_ARRAYBUFFER_EXTERNAL_MEMORY) != 0)
-
-/**
- * Struct to store information for ArrayBuffers with external memory.
- *
- * The following elements are stored in Jerry memory.
- *
- *  buffer_p - pointer to the external memory.
- *  free_cb - pointer to a callback function which is called when the ArrayBuffer is freed.
+ * Structure for array buffers with a backing store pointer.
  */
 typedef struct
 {
   ecma_extended_object_t extended_object; /**< extended object part */
-  void *buffer_p; /**< external buffer pointer */
-  jerry_value_free_callback_t free_cb; /**<  the free callback for the above buffer pointer */
-} ecma_arraybuffer_external_info;
+  void *buffer_p; /**< pointer to the backing store of the array buffer object */
+  void *arraybuffer_user_p; /**< user pointer passed to the free callback */
+} ecma_arraybuffer_pointer_t;
 
 /**
  * Some internal properties of TypedArray object.
@@ -2132,10 +2121,6 @@ typedef struct
 typedef struct
 {
   ecma_object_t *array_buffer_p; /**< pointer to the typedArray's [[ViewedArrayBuffer]] internal slot */
-  lit_utf8_byte_t *buffer_p; /**< pointer to the underlying raw data buffer.
-                              *   Note:
-                              *    - This address is increased by the [ByteOffset]] internal property.
-                              *    - This address must be used during indexed read/write operation. */
   ecma_typedarray_type_t id; /**< [[TypedArrayName]] internal slot */
   uint32_t length; /**< [[ByteLength]] internal slot */
   uint32_t offset; /**< [[ByteOffset]] internal slot. */

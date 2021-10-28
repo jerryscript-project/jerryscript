@@ -27,6 +27,19 @@
  * @{
  */
 
+/**
+ * Get array buffer flags.
+ */
+#define ECMA_ARRAYBUFFER_GET_FLAGS(arraybuffer_p) \
+  (((ecma_extended_object_t *) (arraybuffer_p))->u.cls.u1.array_buffer_flags)
+
+/**
+ * Check whether the backing store is allocated for an array buffer.
+ */
+#define ECMA_ARRAYBUFFER_CHECK_BUFFER_ERROR(arraybuffer_p) \
+  (JERRY_UNLIKELY (!(ECMA_ARRAYBUFFER_GET_FLAGS (arraybuffer_p) & ECMA_ARRAYBUFFER_ALLOCATED)) \
+   && ecma_arraybuffer_allocate_buffer (arraybuffer_p) == ECMA_VALUE_ERROR)
+
 ecma_value_t
 ecma_op_create_arraybuffer_object (const ecma_value_t *, uint32_t);
 
@@ -34,12 +47,16 @@ ecma_op_create_arraybuffer_object (const ecma_value_t *, uint32_t);
  * Helper functions for arraybuffer.
  */
 ecma_object_t *
-ecma_arraybuffer_new_object (uint32_t lengh);
+ecma_arraybuffer_create_object (uint8_t type, uint32_t length);
 ecma_object_t *
-ecma_arraybuffer_new_object_external (uint32_t length,
-                                      void *buffer_p,
-                                      jerry_value_free_callback_t free_cb);
-lit_utf8_byte_t * JERRY_ATTR_PURE
+ecma_arraybuffer_create_object_with_buffer (uint8_t type, uint32_t length);
+ecma_object_t *
+ecma_arraybuffer_new_object (uint32_t length);
+ecma_value_t
+ecma_arraybuffer_allocate_buffer (ecma_object_t *object_p);
+void
+ecma_arraybuffer_release_buffer (ecma_object_t *object_p);
+uint8_t * JERRY_ATTR_PURE
 ecma_arraybuffer_get_buffer (ecma_object_t *obj_p);
 uint32_t JERRY_ATTR_PURE
 ecma_arraybuffer_get_length (ecma_object_t *obj_p);

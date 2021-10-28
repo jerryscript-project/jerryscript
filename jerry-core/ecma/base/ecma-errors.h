@@ -69,6 +69,7 @@ extern const char * const ecma_error_arraybuffer_is_detached;
 extern const char * const ecma_error_cannot_convert_to_object;
 extern const char * const ecma_error_class_is_non_configurable;
 extern const char * const ecma_error_argument_is_not_an_object;
+extern const int ecma_error_argument_is_not_an_object_length;
 extern const char * const ecma_error_argument_is_not_a_proxy;
 extern const char * const ecma_error_target_is_not_a_constructor;
 extern const char * const ecma_error_argument_is_not_an_regexp;

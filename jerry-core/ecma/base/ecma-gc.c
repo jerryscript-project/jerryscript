@@ -1013,6 +1013,19 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
             }
             break;
           }
+          case ECMA_OBJECT_CLASS_ASYNC_FROM_SYNC_ITERATOR:
+          {
+            ecma_async_from_sync_iterator_object_t *iter_p = (ecma_async_from_sync_iterator_object_t *) ext_object_p;
+
+            ecma_gc_set_object_visited (ecma_get_object_from_value (iter_p->header.u.cls.u3.sync_iterator));
+
+            if (!ecma_is_value_undefined (iter_p->sync_next_method))
+            {
+              ecma_gc_set_object_visited (ecma_get_object_from_value (iter_p->sync_next_method));
+            }
+
+            break;
+          }
           case ECMA_OBJECT_CLASS_ARRAY_ITERATOR:
           case ECMA_OBJECT_CLASS_SET_ITERATOR:
           case ECMA_OBJECT_CLASS_MAP_ITERATOR:
@@ -1206,6 +1219,10 @@ ecma_gc_mark (ecma_object_t *object_p) /**< object to mark from */
               {
                 ecma_gc_set_object_visited (ecma_get_object_from_value (thunk_obj_p->value));
               }
+              break;
+            }
+            case ECMA_NATIVE_HANDLER_ASYNC_FROM_SYNC_ITERATOR_UNWRAP:
+            {
               break;
             }
             default:
@@ -1911,6 +1928,11 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
           ext_object_size = sizeof (ecma_promise_capabality_t);
           break;
         }
+        case ECMA_OBJECT_CLASS_ASYNC_FROM_SYNC_ITERATOR:
+        {
+          ext_object_size = sizeof (ecma_async_from_sync_iterator_object_t);
+          break;
+        }
 #endif /* JERRY_ESNEXT */
 #if JERRY_MODULE_SYSTEM
         case ECMA_OBJECT_CLASS_MODULE:
@@ -2037,6 +2059,10 @@ ecma_gc_free_object (ecma_object_t *object_p) /**< object to free */
         {
           ecma_free_value_if_not_object (((ecma_promise_value_thunk_t *) object_p)->value);
           ext_object_size = sizeof (ecma_promise_value_thunk_t);
+          break;
+        }
+        case ECMA_NATIVE_HANDLER_ASYNC_FROM_SYNC_ITERATOR_UNWRAP:
+        {
           break;
         }
         default:

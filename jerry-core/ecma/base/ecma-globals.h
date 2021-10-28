@@ -772,6 +772,7 @@ typedef enum
 #if JERRY_ESNEXT
   ECMA_OBJECT_CLASS_PROMISE, /**< Promise (ECMAScript v6, 25.4) */
   ECMA_OBJECT_CLASS_PROMISE_CAPABILITY, /**< Promise capability (ECMAScript v6, 25.4.1.1) */
+  ECMA_OBJECT_CLASS_ASYNC_FROM_SYNC_ITERATOR, /**< AsyncFromSyncIterator (ECMAScript v11, 25.1.4) */
 #endif /* JERRY_ESNEXT */
 #if JERRY_BUILTIN_DATAVIEW
   ECMA_OBJECT_CLASS_DATAVIEW, /**< DataView (ECMAScript v6, 24.2) */
@@ -1124,6 +1125,7 @@ typedef struct
         ecma_value_t head; /**< points to the async generator task queue head item */
         ecma_value_t iterated_value; /**< for %Iterator%: [[IteratedObject]] property */
         ecma_value_t promise; /**< PromiseCapability[[Promise]] internal slot */
+        ecma_value_t sync_iterator; /**< IteratorRecord [[Iterator]] internal slot for AsyncFromSyncIterator */
         ecma_value_t spread_value; /**< for spread object: spreaded element */
         int32_t tza; /**< TimeZone adjustment for date objects */
 #endif /* JERRY_ESNEXT */
@@ -2507,6 +2509,14 @@ typedef enum
   ECMA_CONSTRUCTOR_FUNCTION_HAS_HERITAGE = (1 << 0), /**< heritage object is present */
 } ecma_constructor_function_flags_t;
 
+/**
+ * Description of AsyncFromSyncIterator objects.
+ */
+typedef struct
+{
+  ecma_extended_object_t header; /**< header part */
+  ecma_value_t sync_next_method; /**< IteratorRecord [[NextMethod]] internal slot */
+} ecma_async_from_sync_iterator_object_t;
 #endif /* JERRY_ESNEXT */
 
 /**

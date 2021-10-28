@@ -44,7 +44,7 @@ typedef enum
 /**
  * Shift for Promise helper handler function.
  */
-#define ECMA_NATIVE_HANDLER_FLAGS_PROMISE_HELPER_SHIFT 2
+#define ECMA_NATIVE_HANDLER_COMMON_FLAGS_SHIFT 2
 
 ecma_builtin_handler_t
 ecma_builtin_handler_get (ecma_native_handler_id_t id);

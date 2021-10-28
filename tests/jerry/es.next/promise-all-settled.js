@@ -100,7 +100,7 @@ rejects.then(result => {
 var closed = true;
 delete Promise.resolve;
 Promise.allSettled(createIterable([1,2,3], {'return': function () { closed = false; }}));
-assert (closed);
+assert (!closed);
 
 var arr = [];
 Object.defineProperty(arr, Symbol.species, { get: function () { assert(false) }});

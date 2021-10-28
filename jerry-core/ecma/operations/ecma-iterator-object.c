@@ -202,15 +202,48 @@ ecma_op_get_iterator (ecma_value_t value, /**< value to get iterator from */
       return method;
     }
   }
+  /* 3.a */
   else if (method == ECMA_VALUE_ASYNC_ITERATOR)
   {
-    /* TODO: CreateAsyncFromSyncIterator should be supported. */
     use_default_method = true;
+
+    /* 3.a.i */
     method = ecma_op_get_method_by_symbol_id (value, LIT_GLOBAL_SYMBOL_ASYNC_ITERATOR);
 
     if (ECMA_IS_VALUE_ERROR (method))
     {
       return method;
+    }
+
+    /* 3.a.ii */
+
+    if (ecma_is_value_undefined (method))
+    {
+      method = ecma_op_get_method_by_symbol_id (value, LIT_GLOBAL_SYMBOL_ITERATOR);
+
+      if (ECMA_IS_VALUE_ERROR (method))
+      {
+        return method;
+      }
+
+      ecma_value_t sync_next_method;
+      ecma_value_t sync_iterator = ecma_op_get_iterator (value, method, &sync_next_method);
+
+      if (ECMA_IS_VALUE_ERROR (sync_iterator))
+      {
+        ecma_free_value (method);
+        return sync_iterator;
+      }
+
+      ecma_value_t async_iterator = ecma_op_create_async_from_sync_iterator (sync_iterator,
+                                                                             sync_next_method,
+                                                                             next_method_p);
+
+      ecma_free_value (method);
+      ecma_free_value (sync_iterator);
+      ecma_free_value (sync_next_method);
+
+      return async_iterator;
     }
   }
 
@@ -395,6 +428,35 @@ ecma_op_iterator_throw (ecma_value_t iterator, /**< iterator value */
 
   return result;
 } /* ecma_op_iterator_throw */
+
+/**
+ * IteratorComplete operation
+ *
+ * See also: ECMA-262 v10, 7.4.3
+ *
+ * @return true/false - whether the iteration ended
+ */
+ecma_value_t
+ecma_op_iterator_complete (ecma_value_t iter_result) /**< iterator value */
+{
+  /* 1. */
+  JERRY_ASSERT (ecma_is_value_object (iter_result));
+
+  /* 2. */
+  ecma_object_t *obj_p = ecma_get_object_from_value (iter_result);
+
+  ecma_value_t done = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_DONE);
+
+  if (ECMA_IS_VALUE_ERROR (done))
+  {
+    return done;
+  }
+
+  ecma_value_t res = ecma_make_boolean_value (ecma_op_to_boolean (done));
+  ecma_free_value (done);
+
+  return res;
+} /* ecma_op_iterator_complete */
 
 /**
  * IteratorValue operation
@@ -622,6 +684,66 @@ ecma_op_iterator_do (ecma_iterator_command_type_t command, /**< command to be ex
 
   return result;
 } /* ecma_op_iterator_do */
+
+/**
+ * CreateAsyncFromSyncIterator operation
+ *
+ * See also: ECMA-262 v10, 25.1.4.1
+ *
+ * Note:
+ *      Returned value must be freed with ecma_free_value.
+ *
+ * @return async from sync iterator object
+ */
+ecma_value_t
+ecma_op_create_async_from_sync_iterator (ecma_value_t sync_iterator, /**< sync iterator */
+                                         ecma_value_t sync_next_method, /**< sync iterator next method */
+                                         ecma_value_t *async_next_method_p) /**< [out] async next method */
+{
+  JERRY_ASSERT (ecma_is_value_object (sync_iterator));
+  JERRY_ASSERT (ecma_is_value_object (sync_next_method) || ecma_is_value_undefined (sync_next_method));
+
+  /* 1. */
+  ecma_object_t *obj_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_ASYNC_FROM_SYNC_ITERATOR_PROTOTYPE),
+                                             sizeof (ecma_async_from_sync_iterator_object_t),
+                                             ECMA_OBJECT_TYPE_CLASS);
+
+  ecma_async_from_sync_iterator_object_t *ext_obj_p = (ecma_async_from_sync_iterator_object_t *) obj_p;
+
+  /* 2. */
+  ext_obj_p->sync_next_method = sync_next_method;
+  ext_obj_p->header.u.cls.u3.sync_iterator = sync_iterator;
+  ext_obj_p->header.u.cls.type = ECMA_OBJECT_CLASS_ASYNC_FROM_SYNC_ITERATOR;
+
+  /* 3. */
+  *async_next_method_p = ecma_op_object_get_by_magic_id (obj_p, LIT_MAGIC_STRING_NEXT);
+  JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (*async_next_method_p));
+
+  /* 4. */
+  return ecma_make_object_value (obj_p);
+} /* ecma_op_create_async_from_sync_iterator */
+
+/**
+ * Async-from-Sync Iterator Value Unwrap Functions
+ *
+ * See also: ES11 25.1.4.2.4
+ *
+ * @return iterator result object
+ */
+ecma_value_t
+ecma_async_from_sync_iterator_unwrap_cb (ecma_object_t *function_obj_p, /**< function object */
+                                         const ecma_value_t args_p[], /**< argument list */
+                                         const uint32_t args_count) /**< argument number */
+{
+  ecma_extended_object_t *unwrap_p = (ecma_extended_object_t *) function_obj_p;
+
+  /* 2. */
+  ecma_value_t arg = args_count > 0 ? args_p[0] : ECMA_VALUE_UNDEFINED;
+  ecma_value_t done = ecma_make_boolean_value (unwrap_p->u.built_in.u2.routine_flags
+                                               >> ECMA_NATIVE_HANDLER_COMMON_FLAGS_SHIFT);
+
+  return ecma_create_iter_result_object (arg, done);
+} /* ecma_async_from_sync_iterator_unwrap_cb */
 
 #endif /* JERRY_ESNEXT */
 

@@ -19,6 +19,7 @@
 
 #include "ecma-builtin-handlers.h"
 #include "ecma-promise-object.h"
+#include "ecma-iterator-object.h"
 
 static const ecma_builtin_handler_t ecma_native_handlers[] =
 {

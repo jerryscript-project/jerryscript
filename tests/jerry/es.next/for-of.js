@@ -56,7 +56,15 @@ var forOf =
   "for (var a \"of\" []) {}"
 parse (forOf)
 
-checkError(5)
+var forOf =
+  "for (let x of [], []) {}"
+parse (forOf)
+
+var forOf =
+  "for (var x of [], []) {}"
+parse (forOf)
+
+checkError(7)
 
 var obj = {}
 Object.defineProperty(obj, Symbol.iterator, { get : function () { throw TypeError ('foo');}});

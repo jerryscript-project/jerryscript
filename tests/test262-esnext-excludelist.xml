@@ -343,9 +343,6 @@
   <test id="language/statements/for-of/cptn-expr-abrupt-empty.js"><reason></reason></test>
   <test id="language/statements/for-of/cptn-expr-itr.js"><reason></reason></test>
   <test id="language/statements/for-of/cptn-expr-no-itr.js"><reason></reason></test>
-  <test id="language/statements/for-of/head-decl-no-expr.js"><reason></reason></test>
-  <test id="language/statements/for-of/head-expr-no-expr.js"><reason></reason></test>
-  <test id="language/statements/for-of/head-var-no-expr.js"><reason></reason></test>
   <test id="language/statements/for-of/let-block-with-newline.js"><reason></reason></test>
   <test id="language/statements/for-of/let-identifier-with-newline.js"><reason></reason></test>
   <test id="language/statements/for-of/scope-body-lex-open.js"><reason></reason></test>

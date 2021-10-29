@@ -111,7 +111,18 @@ ecma_builtin_async_generator_prototype_dispatch_routine (uint8_t builtin_routine
 
   if (executable_object_p == NULL)
   {
-    return ecma_raise_type_error (ECMA_ERR_ARGUMENT_THIS_NOT_ASYNC_GENERATOR);
+    const lit_utf8_byte_t *msg_p = ecma_get_error_utf8 (ECMA_ERR_ARGUMENT_THIS_NOT_ASYNC_GENERATOR);
+    lit_utf8_size_t msg_size = ecma_get_error_size (ECMA_ERR_ARGUMENT_THIS_NOT_ASYNC_GENERATOR);
+    ecma_string_t *error_msg_p = ecma_new_ecma_string_from_ascii (msg_p, msg_size);
+
+    ecma_object_t *type_error_obj_p = ecma_new_standard_error (JERRY_ERROR_TYPE, error_msg_p);
+    ecma_deref_ecma_string (error_msg_p);
+
+    ecma_value_t promise = ecma_op_create_promise_object (ECMA_VALUE_EMPTY, ECMA_VALUE_UNDEFINED, NULL);
+    ecma_reject_promise (promise, ecma_make_object_value (type_error_obj_p));
+    ecma_deref_object (type_error_obj_p);
+
+    return promise;
   }
 
   if (executable_object_p->extended_object.u.cls.u2.executable_obj_flags & ECMA_EXECUTABLE_OBJECT_COMPLETED)

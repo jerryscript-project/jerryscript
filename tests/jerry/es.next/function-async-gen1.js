@@ -39,6 +39,19 @@ function check_rejected(p, value)
   })
 }
 
+
+function check_type_error(p)
+{
+  assert(p instanceof Promise)
+
+  p.then(function(v) {
+    assert(false)
+  }, function(v) {
+    assert(v instanceof TypeError);
+    successCount++
+  })
+}
+
 // Test 1
 
 var gen, r, o
@@ -65,6 +78,9 @@ check_fulfilled(gen.next("Test2"), 1.5, false)
 check_fulfilled(gen.next(2.5), o, true)
 check_fulfilled(gen.next(), undefined, true)
 check_fulfilled(gen.next(), undefined, true)
+check_type_error(gen.next.call(undefined))
+check_type_error(gen.throw.call(undefined))
+check_type_error(gen.return.call(undefined))
 
 r(1)
 
@@ -220,7 +236,7 @@ check_fulfilled(gen.next(), undefined, true)
 // END
 
 function __checkAsync() {
-  assert(successCount === 29)
+  assert(successCount === 32)
   assert(state === 4)
   assert(state2 === 4)
 }

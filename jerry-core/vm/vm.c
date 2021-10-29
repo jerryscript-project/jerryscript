@@ -4144,6 +4144,7 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
             if (ECMA_IS_VALUE_ERROR (result))
             {
+              stack_top_p[-3] = index;
               goto error;
             }
 

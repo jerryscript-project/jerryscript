@@ -128,26 +128,21 @@ ecma_arraybuffer_new_object (uint32_t length) /**< length of the arraybuffer */
 /**
  * Allocate a backing store for an array buffer.
  *
- * @return ECMA_VALUE_UNDEFINED on success,
- *         ECMA_VALUE_ERROR otherwise
+ * @return buffer pointer on success,
+ *         NULL otherwise
  */
-ecma_value_t
-ecma_arraybuffer_allocate_buffer (ecma_object_t *object_p) /**< ArrayBuffer object */
+uint8_t *
+ecma_arraybuffer_allocate_buffer (ecma_object_t *arraybuffer_p) /**< ArrayBuffer object */
 {
-  JERRY_ASSERT (!(ECMA_ARRAYBUFFER_GET_FLAGS (object_p) & ECMA_ARRAYBUFFER_ALLOCATED));
+  JERRY_ASSERT (!(ECMA_ARRAYBUFFER_GET_FLAGS (arraybuffer_p) & ECMA_ARRAYBUFFER_ALLOCATED));
+  JERRY_ASSERT (!(ECMA_ARRAYBUFFER_GET_FLAGS (arraybuffer_p) & ECMA_ARRAYBUFFER_DETACHED));
+  JERRY_ASSERT (ECMA_ARRAYBUFFER_GET_FLAGS (arraybuffer_p) & ECMA_ARRAYBUFFER_HAS_POINTER);
 
-  if (ECMA_ARRAYBUFFER_GET_FLAGS (object_p) & ECMA_ARRAYBUFFER_DETACHED)
-  {
-    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_arraybuffer_is_detached));
-  }
-
-  JERRY_ASSERT (ECMA_ARRAYBUFFER_GET_FLAGS (object_p) & ECMA_ARRAYBUFFER_HAS_POINTER);
-
-  ecma_extended_object_t *extended_object_p = (ecma_extended_object_t *) object_p;
+  ecma_extended_object_t *extended_object_p = (ecma_extended_object_t *) arraybuffer_p;
   uint32_t arraybuffer_length = extended_object_p->u.cls.u3.length;
-  ecma_arraybuffer_pointer_t *arraybuffer_pointer_p = (ecma_arraybuffer_pointer_t *) object_p;
+  ecma_arraybuffer_pointer_t *arraybuffer_pointer_p = (ecma_arraybuffer_pointer_t *) arraybuffer_p;
   jerry_arraybuffer_allocate_t arraybuffer_allocate_callback = JERRY_CONTEXT (arraybuffer_allocate_callback);
-  void *buffer_p;
+  uint8_t *buffer_p;
 
   if (arraybuffer_allocate_callback != NULL)
   {
@@ -167,33 +162,59 @@ ecma_arraybuffer_allocate_buffer (ecma_object_t *object_p) /**< ArrayBuffer obje
   }
   else
   {
-    buffer_p = jmem_heap_alloc_block_null_on_error (arraybuffer_length);
+    buffer_p = (uint8_t *) jmem_heap_alloc_block_null_on_error (arraybuffer_length);
   }
 
   if (buffer_p == NULL)
   {
     extended_object_p->u.cls.u1.array_buffer_flags |= ECMA_ARRAYBUFFER_DETACHED;
-    return ecma_raise_range_error (ECMA_ERR_MSG ("Cannot allocate memory for ArrayBuffer"));
+    return NULL;
   }
 
   arraybuffer_pointer_p->buffer_p = buffer_p;
   extended_object_p->u.cls.u1.array_buffer_flags |= ECMA_ARRAYBUFFER_ALLOCATED;
 
   memset (buffer_p, 0, arraybuffer_length);
-  return ECMA_VALUE_UNDEFINED;
+  return buffer_p;
 } /* ecma_arraybuffer_allocate_buffer */
+
+/**
+ * Allocate a backing store for an array buffer, throws an error if the allocation fails.
+ *
+ * @return ECMA_VALUE_UNDEFINED on success,
+ *         ECMA_VALUE_ERROR otherwise
+ */
+ecma_value_t
+ecma_arraybuffer_allocate_buffer_throw (ecma_object_t *arraybuffer_p)
+{
+  JERRY_ASSERT (!(ECMA_ARRAYBUFFER_GET_FLAGS (arraybuffer_p) & ECMA_ARRAYBUFFER_ALLOCATED));
+
+  if (ECMA_ARRAYBUFFER_GET_FLAGS (arraybuffer_p) & ECMA_ARRAYBUFFER_DETACHED)
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_arraybuffer_is_detached));
+  }
+
+  uint8_t *buffer_p = ecma_arraybuffer_allocate_buffer (arraybuffer_p);
+
+  if (buffer_p == NULL)
+  {
+    return ecma_raise_range_error (ECMA_ERR_MSG ("Cannot allocate memory for ArrayBuffer"));
+  }
+
+  return ECMA_VALUE_UNDEFINED;
+} /* ecma_arraybuffer_allocate_buffer_throw */
 
 /**
  * Release the backing store allocated by an array buffer.
  */
 void
-ecma_arraybuffer_release_buffer (ecma_object_t *object_p) /**< ArrayBuffer object */
+ecma_arraybuffer_release_buffer (ecma_object_t *arraybuffer_p) /**< ArrayBuffer object */
 {
-  JERRY_ASSERT (ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_ARRAY_BUFFER)
-                || ecma_object_is_shared_arraybuffer (object_p));
+  JERRY_ASSERT (ecma_object_class_is (arraybuffer_p, ECMA_OBJECT_CLASS_ARRAY_BUFFER)
+                || ecma_object_is_shared_arraybuffer (arraybuffer_p));
 
   jerry_arraybuffer_free_t free_callback = JERRY_CONTEXT (arraybuffer_free_callback);
-  ecma_arraybuffer_pointer_t *arraybuffer_pointer_p = (ecma_arraybuffer_pointer_t *) object_p;
+  ecma_arraybuffer_pointer_t *arraybuffer_pointer_p = (ecma_arraybuffer_pointer_t *) arraybuffer_p;
   uint32_t arraybuffer_length = arraybuffer_pointer_p->extended_object.u.cls.u3.length;
 
   if (free_callback == NULL)

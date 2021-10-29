@@ -6072,6 +6072,29 @@ jerry_create_shared_arraybuffer_external (const jerry_length_t size, /**< size o
 #endif /* JERRY_BUILTIN_SHAREDARRAYBUFFER */
 } /* jerry_create_shared_arraybuffer_external */
 
+#if JERRY_BUILTIN_TYPEDARRAY
+
+/**
+ * Allocate a backing store for an array buffer, ignores allocation fails.
+ *
+ * @return true on success,
+ *         false otherwise
+ */
+static bool
+jerry_arraybuffer_allocate_buffer_no_throw (ecma_object_t *arraybuffer_p) /**< ArrayBuffer object */
+{
+  JERRY_ASSERT (!(ECMA_ARRAYBUFFER_GET_FLAGS (arraybuffer_p) & ECMA_ARRAYBUFFER_ALLOCATED));
+
+  if (ECMA_ARRAYBUFFER_GET_FLAGS (arraybuffer_p) & ECMA_ARRAYBUFFER_DETACHED)
+  {
+    return false;
+  }
+
+  return ecma_arraybuffer_allocate_buffer (arraybuffer_p) != NULL;
+} /* jerry_arraybuffer_allocate_buffer_no_throw */
+
+#endif /* JERRY_BUILTIN_TYPEDARRAY */
+
 /**
  * Copy bytes into the ArrayBuffer or SharedArrayBuffer from a buffer.
  *
@@ -6094,15 +6117,15 @@ jerry_arraybuffer_write (const jerry_value_t value, /**< target ArrayBuffer or S
     return 0;
   }
 
-  ecma_object_t *buffer_p = ecma_get_object_from_value (value);
+  ecma_object_t *arraybuffer_p = ecma_get_object_from_value (value);
 
-  if (ECMA_ARRAYBUFFER_CHECK_BUFFER_ERROR (buffer_p))
+  if (!(ECMA_ARRAYBUFFER_GET_FLAGS (arraybuffer_p) & ECMA_ARRAYBUFFER_ALLOCATED)
+      && !jerry_arraybuffer_allocate_buffer_no_throw (arraybuffer_p))
   {
-    jerry_release_value (jcontext_take_exception ());
     return 0;
   }
 
-  jerry_length_t length = ecma_arraybuffer_get_length (buffer_p);
+  jerry_length_t length = ecma_arraybuffer_get_length (arraybuffer_p);
 
   if (offset >= length)
   {
@@ -6113,9 +6136,9 @@ jerry_arraybuffer_write (const jerry_value_t value, /**< target ArrayBuffer or S
 
   if (copy_count > 0)
   {
-    lit_utf8_byte_t *mem_buffer_p = ecma_arraybuffer_get_buffer (buffer_p);
+    lit_utf8_byte_t *buffer_p = ecma_arraybuffer_get_buffer (arraybuffer_p);
 
-    memcpy ((void *) (mem_buffer_p + offset), (void *) buf_p, copy_count);
+    memcpy ((void *) (buffer_p + offset), (void *) buf_p, copy_count);
   }
 
   return copy_count;
@@ -6150,15 +6173,15 @@ jerry_arraybuffer_read (const jerry_value_t value, /**< ArrayBuffer or SharedArr
     return 0;
   }
 
-  ecma_object_t *buffer_p = ecma_get_object_from_value (value);
+  ecma_object_t *arraybuffer_p = ecma_get_object_from_value (value);
 
-  if (ECMA_ARRAYBUFFER_CHECK_BUFFER_ERROR (buffer_p))
+  if (!(ECMA_ARRAYBUFFER_GET_FLAGS (arraybuffer_p) & ECMA_ARRAYBUFFER_ALLOCATED)
+      && !jerry_arraybuffer_allocate_buffer_no_throw (arraybuffer_p))
   {
-    jerry_release_value (jcontext_take_exception ());
     return 0;
   }
 
-  jerry_length_t length = ecma_arraybuffer_get_length (buffer_p);
+  jerry_length_t length = ecma_arraybuffer_get_length (arraybuffer_p);
 
   if (offset >= length)
   {
@@ -6169,9 +6192,9 @@ jerry_arraybuffer_read (const jerry_value_t value, /**< ArrayBuffer or SharedArr
 
   if (copy_count > 0)
   {
-    lit_utf8_byte_t *mem_buffer_p = ecma_arraybuffer_get_buffer (buffer_p);
+    lit_utf8_byte_t *buffer_p = ecma_arraybuffer_get_buffer (arraybuffer_p);
 
-    memcpy ((void *) buf_p, (void *) (mem_buffer_p + offset), copy_count);
+    memcpy ((void *) buf_p, (void *) (buffer_p + offset), copy_count);
   }
 
   return copy_count;
@@ -6200,8 +6223,8 @@ jerry_get_arraybuffer_byte_length (const jerry_value_t value) /**< ArrayBuffer o
 #if JERRY_BUILTIN_TYPEDARRAY
   if (ecma_is_arraybuffer (value) || ecma_is_shared_arraybuffer (value))
   {
-    ecma_object_t *buffer_p = ecma_get_object_from_value (value);
-    return ecma_arraybuffer_get_length (buffer_p);
+    ecma_object_t *arraybuffer_p = ecma_get_object_from_value (value);
+    return ecma_arraybuffer_get_length (arraybuffer_p);
   }
 #else /* !JERRY_BUILTIN_TYPEDARRAY */
   JERRY_UNUSED (value);
@@ -6232,14 +6255,15 @@ jerry_get_arraybuffer_pointer (const jerry_value_t array_buffer) /**< Array Buff
     return NULL;
   }
 
-  ecma_object_t *buffer_p = ecma_get_object_from_value (array_buffer);
+  ecma_object_t *arraybuffer_p = ecma_get_object_from_value (array_buffer);
 
-  if (!(ECMA_ARRAYBUFFER_GET_FLAGS (buffer_p) & ECMA_ARRAYBUFFER_ALLOCATED))
+  if (!(ECMA_ARRAYBUFFER_GET_FLAGS (arraybuffer_p) & ECMA_ARRAYBUFFER_ALLOCATED)
+      && !jerry_arraybuffer_allocate_buffer_no_throw (arraybuffer_p))
   {
     return NULL;
   }
 
-  return (uint8_t *) ecma_arraybuffer_get_buffer (buffer_p);
+  return (uint8_t *) ecma_arraybuffer_get_buffer (arraybuffer_p);
 #else /* !JERRY_BUILTIN_TYPEDARRAY */
   JERRY_UNUSED (array_buffer);
 #endif /* JERRY_BUILTIN_TYPEDARRAY */

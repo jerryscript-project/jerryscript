@@ -376,6 +376,8 @@ main (void)
 
     uint8_t *const data = jerry_get_arraybuffer_pointer (buffer);
 
+    TEST_ASSERT (data != NULL);
+
     /* test memory read */
     for (int i = 0; i < 20; i++)
     {
@@ -472,6 +474,7 @@ main (void)
   }
 
   /* Test ArrayBuffer created in ECMAScript */
+  for (int i = 0; i < 3; i++)
   {
     const jerry_char_t source[] = TEST_STRING_LITERAL ("new ArrayBuffer(64)");
     jerry_value_t arraybuffer = jerry_eval (source, sizeof (source) - 1, JERRY_PARSE_NO_OPTS);
@@ -479,8 +482,23 @@ main (void)
     TEST_ASSERT (jerry_value_is_arraybuffer (arraybuffer));
     TEST_ASSERT (!jerry_arraybuffer_has_buffer (arraybuffer));
 
-    uint8_t buf[2] = { 2, 3 };
-    TEST_ASSERT (jerry_arraybuffer_write (arraybuffer, 63, buf, 2) == 1);
+    if (i == 0)
+    {
+      uint8_t buf[2] = { 2, 3 };
+      TEST_ASSERT (jerry_arraybuffer_write (arraybuffer, 63, buf, 2) == 1);
+    }
+    else if (i == 1)
+    {
+      uint8_t buf[2] = { 1, 1 };
+      TEST_ASSERT (jerry_arraybuffer_read (arraybuffer, 63, buf, 2) == 1);
+      TEST_ASSERT (buf[0] == 0 && buf[1] == 1);
+    }
+    else
+    {
+      uint8_t *buffer_p = jerry_get_arraybuffer_pointer (arraybuffer);
+      TEST_ASSERT (buffer_p != NULL);
+    }
+
     TEST_ASSERT (jerry_arraybuffer_has_buffer (arraybuffer));
 
     jerry_release_value (arraybuffer);

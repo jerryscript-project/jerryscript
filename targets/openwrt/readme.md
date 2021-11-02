@@ -8,7 +8,7 @@ modifications to this document could be required.
 IMPORTANT!
 
 As the TP-Link WR1043ND is a mips based device and mips is a big-endian
-architecture a JerryScipt snapshot which was built on an little-endian
+architecture a JerryScript snapshot which was built on an little-endian
 system will not work correctly. Thus it is advised that the
 snapshot functionally should be used with caution, that is
 DO NOT run snapshots generated on little-endian system(s) on

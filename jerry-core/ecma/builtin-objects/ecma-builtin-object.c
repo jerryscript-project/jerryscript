@@ -311,7 +311,7 @@ ecma_builtin_object_object_set_proto (ecma_value_t arg1, /**< routine's first ar
  *          ECMA-262 v6, 7.3.14
  *
  * @return ECMA_VALUE_ERROR - if the operation raised an error
- *         ECMA_VALUE_{TRUE/FALSE} - depends on whether the integrity level has been set sucessfully
+ *         ECMA_VALUE_{TRUE/FALSE} - depends on whether the integrity level has been set successfully
  */
 static ecma_value_t
 ecma_builtin_object_set_integrity_level (ecma_object_t *obj_p, /**< object */
@@ -1327,12 +1327,12 @@ ecma_op_object_get_own_property_keys (ecma_value_t this_arg, /**< this argument 
   ecma_object_t *obj_p = ecma_get_object_from_value (object);
 
   /* 2. */
-  jerry_property_filter_t filter = JERRY_PROPERTY_FILTER_EXLCUDE_SYMBOLS;
+  jerry_property_filter_t filter = JERRY_PROPERTY_FILTER_EXCLUDE_SYMBOLS;
 
   if (type == ECMA_OBJECT_ROUTINE_GET_OWN_PROPERTY_SYMBOLS)
   {
-    filter = (JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS
-              | JERRY_PROPERTY_FILTER_EXLCUDE_INTEGER_INDICES);
+    filter = (JERRY_PROPERTY_FILTER_EXCLUDE_STRINGS
+              | JERRY_PROPERTY_FILTER_EXCLUDE_INTEGER_INDICES);
   }
 
   ecma_collection_t *props_p = ecma_op_object_own_property_keys (obj_p, filter);

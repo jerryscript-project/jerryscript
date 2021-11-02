@@ -537,7 +537,7 @@ exit:
 /**
  * Evaluates an EcmaScript module.
  *
- * @return ECMA_VALUE_ERROR - if an error occured
+ * @return ECMA_VALUE_ERROR - if an error occurred
  *         ECMA_VALUE_EMPTY - otherwise
  */
 ecma_value_t
@@ -610,7 +610,7 @@ ecma_module_evaluate (ecma_module_t *module_p) /**< module */
  * Resolves an export and adds it to the modules namespace object, if the export name is not yet handled.
  * Note: See 15.2.1.16.2 and 15.2.1.18
  *
- * @return ECMA_VALUE_ERROR - if an error occured
+ * @return ECMA_VALUE_ERROR - if an error occurred
  *         ECMA_VALUE_EMPTY - otherwise
  */
 static ecma_value_t
@@ -713,7 +713,7 @@ ecma_module_heap_sort_shift_down (ecma_value_t *buffer_p, /**< array of items */
  * Creates a namespace object for a module.
  * Note: See 15.2.1.18
  *
- * @return ECMA_VALUE_ERROR - if an error occured
+ * @return ECMA_VALUE_ERROR - if an error occurred
  *         ECMA_VALUE_EMPTY - otherwise
  */
 static ecma_value_t
@@ -925,7 +925,7 @@ exit:
 /**
  * Connects imported values to the current module scope.
  *
- * @return ECMA_VALUE_ERROR - if an error occured
+ * @return ECMA_VALUE_ERROR - if an error occurred
  *         ECMA_VALUE_EMPTY - otherwise
  */
 static ecma_value_t
@@ -1043,7 +1043,7 @@ ecma_module_connect_imports (ecma_module_t *module_p)
  * Initialize the current module by creating the local binding for the imported variables
  * and verifying indirect exports.
  *
- * @return ECMA_VALUE_ERROR - if an error occured
+ * @return ECMA_VALUE_ERROR - if an error occurred
  *         ECMA_VALUE_EMPTY - otherwise
  */
 ecma_value_t
@@ -1108,7 +1108,7 @@ typedef struct ecma_module_stack_item_t
 /**
  * Link module dependencies
  *
- * @return ECMA_VALUE_ERROR - if an error occured
+ * @return ECMA_VALUE_ERROR - if an error occurred
  *         ECMA_VALUE_UNDEFINED - otherwise
  */
 ecma_value_t

@@ -1898,7 +1898,7 @@ scanner_reverse_info_list (parser_context_t *context_p) /**< context */
 
 /**
  * Release unused scanner info blocks.
- * This should happen only if an error is occured.
+ * This should happen only if an error is occurred.
  */
 void
 scanner_cleanup (parser_context_t *context_p) /**< context */

@@ -4697,36 +4697,36 @@ jerry_object_get_property_names (const jerry_value_t obj_val, /**< object */
       uint32_t index = ecma_string_get_array_index (key_p);
 
       /* Step 2. Filter by key type */
-      if (filter & (JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS
-                    | JERRY_PROPERTY_FILTER_EXLCUDE_SYMBOLS
-                    | JERRY_PROPERTY_FILTER_EXLCUDE_INTEGER_INDICES))
+      if (filter & (JERRY_PROPERTY_FILTER_EXCLUDE_STRINGS
+                    | JERRY_PROPERTY_FILTER_EXCLUDE_SYMBOLS
+                    | JERRY_PROPERTY_FILTER_EXCLUDE_INTEGER_INDICES))
       {
         if (ecma_is_value_symbol (key))
         {
-          if (filter & JERRY_PROPERTY_FILTER_EXLCUDE_SYMBOLS)
+          if (filter & JERRY_PROPERTY_FILTER_EXCLUDE_SYMBOLS)
           {
             continue;
           }
         }
         else if (index != ECMA_STRING_NOT_ARRAY_INDEX)
         {
-          if ((filter & JERRY_PROPERTY_FILTER_EXLCUDE_INTEGER_INDICES)
-              || ((filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS)
+          if ((filter & JERRY_PROPERTY_FILTER_EXCLUDE_INTEGER_INDICES)
+              || ((filter & JERRY_PROPERTY_FILTER_EXCLUDE_STRINGS)
                   && !(filter & JERRY_PROPERTY_FILTER_INTEGER_INDICES_AS_NUMBER)))
           {
             continue;
           }
         }
-        else if (filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS)
+        else if (filter & JERRY_PROPERTY_FILTER_EXCLUDE_STRINGS)
         {
           continue;
         }
       }
 
       /* Step 3. Filter property attributes */
-      if (filter & (JERRY_PROPERTY_FILTER_EXLCUDE_NON_CONFIGURABLE
-                    | JERRY_PROPERTY_FILTER_EXLCUDE_NON_ENUMERABLE
-                    | JERRY_PROPERTY_FILTER_EXLCUDE_NON_WRITABLE))
+      if (filter & (JERRY_PROPERTY_FILTER_EXCLUDE_NON_CONFIGURABLE
+                    | JERRY_PROPERTY_FILTER_EXCLUDE_NON_ENUMERABLE
+                    | JERRY_PROPERTY_FILTER_EXCLUDE_NON_WRITABLE))
       {
         ecma_property_descriptor_t prop_desc;
         ecma_value_t status = ecma_op_object_get_own_property_descriptor (obj_iter_p, key_p, &prop_desc);
@@ -4746,11 +4746,11 @@ jerry_object_get_property_names (const jerry_value_t obj_val, /**< object */
         ecma_free_property_descriptor (&prop_desc);
 
         if ((!(flags & JERRY_PROP_IS_CONFIGURABLE)
-             && (filter & JERRY_PROPERTY_FILTER_EXLCUDE_NON_CONFIGURABLE))
+             && (filter & JERRY_PROPERTY_FILTER_EXCLUDE_NON_CONFIGURABLE))
             || (!(flags & JERRY_PROP_IS_ENUMERABLE)
-                && (filter & JERRY_PROPERTY_FILTER_EXLCUDE_NON_ENUMERABLE))
+                && (filter & JERRY_PROPERTY_FILTER_EXCLUDE_NON_ENUMERABLE))
             || (!(flags & JERRY_PROP_IS_WRITABLE)
-                && (filter & JERRY_PROPERTY_FILTER_EXLCUDE_NON_WRITABLE)))
+                && (filter & JERRY_PROPERTY_FILTER_EXCLUDE_NON_WRITABLE)))
         {
           continue;
         }
@@ -5949,7 +5949,7 @@ jerry_create_arraybuffer (const jerry_length_t size) /**< size of the backing st
  *     * if the typed arrays are disabled this will return a TypeError.
  *     * if the size is zero or buffer_p is a null pointer this will return an empty ArrayBuffer.
  *
- * @return value of the newly construced array buffer object
+ * @return value of the newly constructed array buffer object
  */
 jerry_value_t
 jerry_create_arraybuffer_external (const jerry_length_t size, /**< size of the buffer in bytes */
@@ -6035,7 +6035,7 @@ jerry_create_shared_arraybuffer (const jerry_length_t size) /**< size of the bac
  *     * if the typed arrays are disabled this will return a TypeError.
  *     * if the size is zero or buffer_p is a null pointer this will return an empty SharedArrayBuffer.
  *
- * @return value of the newly construced shared array buffer object
+ * @return value of the newly constructed shared array buffer object
  */
 jerry_value_t
 jerry_create_shared_arraybuffer_external (const jerry_length_t size, /**< size of the buffer in bytes */

@@ -110,7 +110,7 @@ ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p, /**< a String obj
 {
   JERRY_ASSERT (ecma_get_object_base_type (obj_p) == ECMA_OBJECT_BASE_TYPE_CLASS);
 
-  if (!(filter & JERRY_PROPERTY_FILTER_EXLCUDE_INTEGER_INDICES))
+  if (!(filter & JERRY_PROPERTY_FILTER_EXCLUDE_INTEGER_INDICES))
   {
     ecma_extended_object_t *ext_object_p = (ecma_extended_object_t *) obj_p;
     JERRY_ASSERT (ext_object_p->u.cls.type == ECMA_OBJECT_CLASS_STRING);
@@ -130,7 +130,7 @@ ecma_op_string_list_lazy_property_names (ecma_object_t *obj_p, /**< a String obj
     prop_counter_p->array_index_named_props += length;
   }
 
-  if (!(filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS))
+  if (!(filter & JERRY_PROPERTY_FILTER_EXCLUDE_STRINGS))
   {
     ecma_collection_push_back (prop_names_p, ecma_make_magic_string_value (LIT_MAGIC_STRING_LENGTH));
     prop_counter_p->string_named_props++;

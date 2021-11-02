@@ -6,7 +6,7 @@ This folder contains necessary files to integrate JerryScript with Intel® Curie
 ### How to build
 #### 1. Preface
 
-Curie BSP only support Ubuntu GNU/Linux as host OS envirenment.
+Curie BSP only support Ubuntu GNU/Linux as host OS environment.
 
 Necessary hardwares
 * [FlySwatter2 JTAG debugger](https://www.tincantools.com/wiki/Flyswatter2)
@@ -117,4 +117,4 @@ undefined
 js e 1 OK
 ```
 
-`js e 1 ACK` and `js e 1 OK` are debug info of Curie BSP uart commands, which mean it receive and execute the command sucessfully. `Hello World!` is the printed content. `undefined` is the return value of the statement `print ('Hello World!')`.
+`js e 1 ACK` and `js e 1 OK` are debug info of Curie BSP uart commands, which mean it receive and execute the command successfully. `Hello World!` is the printed content. `undefined` is the return value of the statement `print ('Hello World!')`.

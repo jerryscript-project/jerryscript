@@ -1420,7 +1420,7 @@ ecma_builtin_routine_list_lazy_property_names (ecma_object_t *object_p, /**< a b
   JERRY_ASSERT (ecma_get_object_type (object_p) == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION);
   JERRY_ASSERT (ecma_builtin_function_is_routine (object_p));
 
-  if (filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS)
+  if (filter & JERRY_PROPERTY_FILTER_EXCLUDE_STRINGS)
   {
     return;
   }
@@ -1495,7 +1495,7 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
   bool has_symbol = true;
 #endif /* JERRY_BUILTIN_REALMS */
 
-  if (!(filter & JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS))
+  if (!(filter & JERRY_PROPERTY_FILTER_EXCLUDE_STRINGS))
   {
     const ecma_builtin_property_descriptor_t *curr_property_p = ecma_builtin_property_list_references[builtin_id];
     uint8_t bitset = built_in_props_p->u2.instantiated_bitset[0];
@@ -1540,7 +1540,7 @@ ecma_builtin_list_lazy_property_names (ecma_object_t *object_p, /**< a built-in 
   }
 
 #if JERRY_ESNEXT
-  if (has_symbol && !(filter & JERRY_PROPERTY_FILTER_EXLCUDE_SYMBOLS))
+  if (has_symbol && !(filter & JERRY_PROPERTY_FILTER_EXCLUDE_SYMBOLS))
   {
     const ecma_builtin_property_descriptor_t *curr_property_p = ecma_builtin_property_list_references[builtin_id];
     uint8_t bitset = built_in_props_p->u2.instantiated_bitset[0];

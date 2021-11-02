@@ -114,7 +114,7 @@ main (void)
   // Test enumerable - non-enumerable filter
   define_property (test_object, prop_names[2], &prop_desc, false);
   names = jerry_object_get_property_names (test_object,
-                                           JERRY_PROPERTY_FILTER_ALL | JERRY_PROPERTY_FILTER_EXLCUDE_NON_ENUMERABLE);
+                                           JERRY_PROPERTY_FILTER_ALL | JERRY_PROPERTY_FILTER_EXCLUDE_NON_ENUMERABLE);
   TEST_ASSERT (jerry_get_array_length (names) == (uint32_t) 2);
   jerry_release_value (names);
   names = jerry_object_get_property_names (test_object, JERRY_PROPERTY_FILTER_ALL);
@@ -127,7 +127,7 @@ main (void)
   prop_desc.flags &= (uint16_t) ~JERRY_PROP_IS_CONFIGURABLE;
   define_property (test_object, prop_names[3], &prop_desc, false);
   names = jerry_object_get_property_names (test_object,
-                                           JERRY_PROPERTY_FILTER_ALL | JERRY_PROPERTY_FILTER_EXLCUDE_NON_CONFIGURABLE);
+                                           JERRY_PROPERTY_FILTER_ALL | JERRY_PROPERTY_FILTER_EXCLUDE_NON_CONFIGURABLE);
   TEST_ASSERT (jerry_get_array_length (names) == (uint32_t) 3);
   jerry_release_value (names);
   names = jerry_object_get_property_names (test_object, JERRY_PROPERTY_FILTER_ALL);
@@ -140,7 +140,7 @@ main (void)
   prop_desc.flags &= (uint16_t) ~JERRY_PROP_IS_WRITABLE;
   define_property (test_object, prop_names[4], &prop_desc, false);
   names = jerry_object_get_property_names (test_object,
-                                           JERRY_PROPERTY_FILTER_ALL | JERRY_PROPERTY_FILTER_EXLCUDE_NON_WRITABLE);
+                                           JERRY_PROPERTY_FILTER_ALL | JERRY_PROPERTY_FILTER_EXCLUDE_NON_WRITABLE);
   TEST_ASSERT (jerry_get_array_length (names) == (uint32_t) 4);
   jerry_release_value (names);
   names = jerry_object_get_property_names (test_object, JERRY_PROPERTY_FILTER_ALL);
@@ -164,13 +164,13 @@ main (void)
   // Test number and string index exclusion
   define_property (test_object, prop_names[5], &prop_desc, false);
   names = jerry_object_get_property_names (test_object, JERRY_PROPERTY_FILTER_ALL
-                                           | JERRY_PROPERTY_FILTER_EXLCUDE_STRINGS
+                                           | JERRY_PROPERTY_FILTER_EXCLUDE_STRINGS
                                            | JERRY_PROPERTY_FILTER_INTEGER_INDICES_AS_NUMBER);
   TEST_ASSERT (jerry_get_array_length (names) == (uint32_t) 1);
   compare_prop_name (names, prop_names[5], 0);
   jerry_release_value (names);
   names = jerry_object_get_property_names (test_object,
-                                           JERRY_PROPERTY_FILTER_ALL | JERRY_PROPERTY_FILTER_EXLCUDE_INTEGER_INDICES);
+                                           JERRY_PROPERTY_FILTER_ALL | JERRY_PROPERTY_FILTER_EXCLUDE_INTEGER_INDICES);
   TEST_ASSERT (jerry_get_array_length (names) == (uint32_t) 5);
   jerry_release_value (names);
 
@@ -186,7 +186,7 @@ main (void)
   // Test symbol exclusion
   define_property (test_object, prop_names[6], &prop_desc, true);
   names = jerry_object_get_property_names (test_object,
-                                           JERRY_PROPERTY_FILTER_ALL | JERRY_PROPERTY_FILTER_EXLCUDE_SYMBOLS);
+                                           JERRY_PROPERTY_FILTER_ALL | JERRY_PROPERTY_FILTER_EXCLUDE_SYMBOLS);
   TEST_ASSERT (jerry_get_array_length (names) == (uint32_t) 6);
   jerry_release_value (names);
   names = jerry_object_get_property_names (test_object, JERRY_PROPERTY_FILTER_ALL);

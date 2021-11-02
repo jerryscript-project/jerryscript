@@ -285,9 +285,9 @@ void jerry_module_set_import_callback (jerry_module_import_callback_t callback_p
 
 jerry_value_t jerry_native_module_create (jerry_native_module_evaluate_callback_t callback,
                                           const jerry_value_t * const exports_p, size_t number_of_exports);
-jerry_value_t jerry_native_module_get_export (const jerry_value_t native_mmodule_val,
+jerry_value_t jerry_native_module_get_export (const jerry_value_t native_module_val,
                                               const jerry_value_t export_name_val);
-jerry_value_t jerry_native_module_set_export (const jerry_value_t native_mmodule_val,
+jerry_value_t jerry_native_module_set_export (const jerry_value_t native_module_val,
                                               const jerry_value_t export_name_val,
                                               const jerry_value_t value_to_set);
 

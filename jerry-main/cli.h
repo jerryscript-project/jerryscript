@@ -38,7 +38,7 @@ typedef struct
 
 /**
  * Returned by cli_consume_option () when no more options are available
- * or an error occured.
+ * or an error occurred.
  */
 #define CLI_OPT_END -2
 

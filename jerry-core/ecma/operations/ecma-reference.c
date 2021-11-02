@@ -36,7 +36,7 @@
  * Resolve syntactic reference.
  *
  * @return ECMA_OBJECT_POINTER_ERROR - if the operation fails
- *         pointer to lexical environment - if the reference's base is resolved sucessfully,
+ *         pointer to lexical environment - if the reference's base is resolved successfully,
  *         NULL - otherwise.
  */
 ecma_object_t *

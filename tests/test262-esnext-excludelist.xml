@@ -2,32 +2,6 @@
 <excludeList>
   <!-- Uncategorized failing tests -->
   <test id="built-ins/Array/prototype/splice/property-traps-order-with-species.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asIntN/arithmetic.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asIntN/asIntN.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asIntN/bigint-tobigint-errors.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asIntN/bigint-tobigint-toprimitive.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asIntN/bigint-tobigint-wrapped-values.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asIntN/bigint-tobigint.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asIntN/bits-toindex-errors.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asIntN/bits-toindex-toprimitive.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asIntN/bits-toindex-wrapped-values.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asIntN/bits-toindex.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asIntN/length.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asIntN/name.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asIntN/order-of-steps.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asUintN/arithmetic.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asUintN/asUintN.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asUintN/bigint-tobigint-errors.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asUintN/bigint-tobigint-toprimitive.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asUintN/bigint-tobigint-wrapped-values.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asUintN/bigint-tobigint.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asUintN/bits-toindex-errors.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asUintN/bits-toindex-toprimitive.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asUintN/bits-toindex-wrapped-values.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asUintN/bits-toindex.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asUintN/length.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asUintN/name.js"><reason></reason></test>
-  <test id="built-ins/BigInt/asUintN/order-of-steps.js"><reason></reason></test>
   <test id="built-ins/Function/prototype/toString/class-declaration-complex-heritage.js"><reason></reason></test>
   <test id="built-ins/Function/prototype/toString/class-declaration-explicit-ctor.js"><reason></reason></test>
   <test id="built-ins/Function/prototype/toString/class-expression-explicit-ctor.js"><reason></reason></test>

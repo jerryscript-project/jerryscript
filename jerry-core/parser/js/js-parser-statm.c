@@ -1289,7 +1289,7 @@ parser_parse_for_statement_start (parser_context_t *context_p) /**< context */
 #endif /* JERRY_ESNEXT */
 
     lexer_next_token (context_p);
-    int options = is_for_in ? PARSE_EXPR : PARSE_EXPR_LEFT_HAND_SIDE;
+    int options = is_for_in ? PARSE_EXPR : PARSE_EXPR_NO_COMMA;
     parser_parse_expression (context_p, options);
 
     if (context_p->token.type != LEXER_RIGHT_PAREN)

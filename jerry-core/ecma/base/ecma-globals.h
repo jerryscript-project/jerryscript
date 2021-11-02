@@ -515,6 +515,19 @@ typedef enum
 #define ECMA_PROPERTY_TYPE_NOT_FOUND_AND_STOP ECMA_PROPERTY_TYPE_DELETED
 
 /**
+ * Type of property not found and an exception is thrown.
+ */
+#define ECMA_PROPERTY_TYPE_NOT_FOUND_AND_THROW \
+  (ECMA_PROPERTY_FLAG_LCACHED | (ECMA_DIRECT_STRING_SPECIAL << ECMA_PROPERTY_NAME_TYPE_SHIFT))
+
+/**
+ * Checks whether a property is not found.
+ */
+#define ECMA_PROPERTY_IS_FOUND(property) \
+  (((property) & (ECMA_PROPERTY_FLAG_DATA | (ECMA_DIRECT_STRING_SPECIAL << ECMA_PROPERTY_NAME_TYPE_SHIFT))) \
+   != (ECMA_DIRECT_STRING_SPECIAL << ECMA_PROPERTY_NAME_TYPE_SHIFT))
+
+/**
  * Abstract property representation.
  *
  * A property is a type_and_flags byte and an ecma_value_t value pair.

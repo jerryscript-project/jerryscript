@@ -147,7 +147,7 @@ ecma_builtin_object_prototype_object_has_own_property (ecma_object_t *obj_p, /**
   }
 #endif /* JERRY_BUILTIN_PROXY */
 
-  return ecma_make_boolean_value (ecma_op_ordinary_object_has_own_property (obj_p, prop_name_p));
+  return ecma_op_ordinary_object_has_own_property (obj_p, prop_name_p);
 } /* ecma_builtin_object_prototype_object_has_own_property */
 
 /**

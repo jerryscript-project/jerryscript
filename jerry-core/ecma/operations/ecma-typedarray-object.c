@@ -634,7 +634,7 @@ ecma_get_typedarray_getter_fn (ecma_typedarray_type_t typedarray_id) /**< typeda
  */
 extern inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_get_typedarray_element (ecma_typedarray_info_t *info_p, /**< typedarray info */
-                             ecma_number_t num) /**< element index */
+                             uint32_t index) /**< element index */
 {
   uint8_t *buffer_p = ecma_typedarray_get_buffer (info_p);
 
@@ -643,14 +643,12 @@ ecma_get_typedarray_element (ecma_typedarray_info_t *info_p, /**< typedarray inf
     return ECMA_VALUE_ERROR;
   }
 
-  if (ecma_number_is_negative (num)
-      || num >= info_p->length
-      || ((ecma_number_t) (uint32_t) num) != num)
+  if (index >= info_p->length)
   {
     return ECMA_VALUE_UNDEFINED;
   }
 
-  return ecma_typedarray_getters[info_p->id](buffer_p + ((uint32_t) num << info_p->shift));
+  return ecma_typedarray_getters[info_p->id](buffer_p + (index << info_p->shift));
 } /* ecma_get_typedarray_element */
 
 /**
@@ -670,7 +668,7 @@ ecma_get_typedarray_setter_fn (ecma_typedarray_type_t typedarray_id) /**< typeda
 extern inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
 ecma_set_typedarray_element (ecma_typedarray_info_t *info_p, /**< typedarray info */
                              ecma_value_t value, /**< value to be set */
-                             ecma_number_t num) /**< element index */
+                             uint32_t index) /**< element index */
 {
   ecma_value_t to_num;
   if (ECMA_TYPEDARRAY_IS_BIGINT_TYPE (info_p->id))
@@ -701,9 +699,7 @@ ecma_set_typedarray_element (ecma_typedarray_info_t *info_p, /**< typedarray inf
     return ECMA_VALUE_ERROR;
   }
 
-  if (ecma_number_is_negative (num)
-      || num >= info_p->length
-      || ((ecma_number_t) (uint32_t) num) != num)
+  if (index >= info_p->length)
   {
     ecma_free_value (to_num);
     return ECMA_VALUE_FALSE;
@@ -711,7 +707,7 @@ ecma_set_typedarray_element (ecma_typedarray_info_t *info_p, /**< typedarray inf
 
   ecma_free_value (to_num);
 
-  return ecma_typedarray_setters[info_p->id](buffer_p + ((uint32_t) num << info_p->shift), value);
+  return ecma_typedarray_setters[info_p->id](buffer_p + (index << info_p->shift), value);
 } /* ecma_set_typedarray_element */
 
 /**
@@ -1834,9 +1830,29 @@ ecma_is_typedarray (ecma_value_t value) /**< the target need to be checked */
 } /* ecma_is_typedarray */
 
 /**
- * List names of a TypedArray object's integer indexed properties
+ * Checks whether the property name is a valid element index
  *
- * @return void
+ * @return true, if valid
+ *         false, otherwise
+ */
+bool
+ecma_typedarray_is_element_index (ecma_string_t *property_name_p) /**< property name */
+{
+  ecma_number_t num = ecma_string_to_number (property_name_p);
+
+  if (num == 0)
+  {
+    return true;
+  }
+
+  ecma_string_t *num_to_str = ecma_new_ecma_string_from_number (num);
+  bool is_same = ecma_compare_ecma_strings (property_name_p, num_to_str);
+  ecma_deref_ecma_string (num_to_str);
+  return is_same;
+} /* ecma_typedarray_is_element_index */
+
+/**
+ * List names of a TypedArray object's integer indexed properties
  */
 void
 ecma_op_typedarray_list_lazy_property_names (ecma_object_t *obj_p, /**< a TypedArray object */
@@ -1873,65 +1889,54 @@ ecma_op_typedarray_list_lazy_property_names (ecma_object_t *obj_p, /**< a TypedA
  */
 ecma_value_t
 ecma_op_typedarray_define_own_property (ecma_object_t *obj_p, /**< TypedArray object */
-                                        ecma_string_t *prop_name_p, /**< property name */
+                                        ecma_string_t *property_name_p, /**< property name */
                                         const ecma_property_descriptor_t *property_desc_p) /**< property descriptor */
 {
   JERRY_ASSERT (ecma_object_is_typedarray (obj_p));
 
-  if (!ecma_prop_name_is_symbol (prop_name_p))
+  if (JERRY_UNLIKELY (ecma_prop_name_is_symbol (property_name_p)))
   {
-    ecma_number_t num = ecma_string_to_number (prop_name_p);
-    bool is_same;
-    if (num <= 0)
+    return ecma_op_general_object_define_own_property (obj_p, property_name_p, property_desc_p);
+  }
+
+  uint32_t index = ecma_string_get_array_index (property_name_p);
+
+  if (index == ECMA_STRING_NOT_ARRAY_INDEX
+      && !ecma_typedarray_is_element_index (property_name_p))
+  {
+    return ecma_op_general_object_define_own_property (obj_p, property_name_p, property_desc_p);
+  }
+
+  if ((property_desc_p->flags & (JERRY_PROP_IS_GET_DEFINED | JERRY_PROP_IS_SET_DEFINED))
+      || ((property_desc_p->flags & (JERRY_PROP_IS_CONFIGURABLE_DEFINED | JERRY_PROP_IS_CONFIGURABLE))
+          == (JERRY_PROP_IS_CONFIGURABLE_DEFINED | JERRY_PROP_IS_CONFIGURABLE))
+      || ((property_desc_p->flags & JERRY_PROP_IS_ENUMERABLE_DEFINED)
+          && !(property_desc_p->flags & JERRY_PROP_IS_ENUMERABLE))
+      || ((property_desc_p->flags & JERRY_PROP_IS_WRITABLE_DEFINED)
+          && !(property_desc_p->flags & JERRY_PROP_IS_WRITABLE)))
+  {
+    return ecma_raise_property_redefinition (property_name_p, property_desc_p->flags);
+  }
+
+  ecma_typedarray_info_t info = ecma_typedarray_get_info (obj_p);
+
+  if (index == ECMA_STRING_NOT_ARRAY_INDEX
+      || index >= info.length)
+  {
+    return ECMA_VALUE_FALSE;
+  }
+
+  if (property_desc_p->flags & JERRY_PROP_IS_VALUE_DEFINED)
+  {
+    ecma_value_t set_element = ecma_set_typedarray_element (&info, property_desc_p->value, index);
+
+    if (ECMA_IS_VALUE_ERROR (set_element))
     {
-      is_same = true;
-    }
-    else
-    {
-      ecma_string_t *num_to_str = ecma_new_ecma_string_from_number (num);
-      is_same = ecma_compare_ecma_strings (prop_name_p, num_to_str);
-      ecma_deref_ecma_string (num_to_str);
-    }
-
-    if (is_same)
-    {
-      if ((property_desc_p->flags & (JERRY_PROP_IS_GET_DEFINED | JERRY_PROP_IS_SET_DEFINED))
-          || ((property_desc_p->flags & (JERRY_PROP_IS_CONFIGURABLE_DEFINED | JERRY_PROP_IS_CONFIGURABLE))
-              == (JERRY_PROP_IS_CONFIGURABLE_DEFINED | JERRY_PROP_IS_CONFIGURABLE))
-          || ((property_desc_p->flags & JERRY_PROP_IS_ENUMERABLE_DEFINED)
-              && !(property_desc_p->flags & JERRY_PROP_IS_ENUMERABLE))
-          || ((property_desc_p->flags & JERRY_PROP_IS_WRITABLE_DEFINED)
-              && !(property_desc_p->flags & JERRY_PROP_IS_WRITABLE)))
-      {
-        return ecma_raise_property_redefinition (prop_name_p, property_desc_p->flags);
-      }
-
-      ecma_typedarray_info_t info = ecma_typedarray_get_info (obj_p);
-
-      if (!ecma_op_is_integer (num)
-          || num >= info.length
-          || num < 0
-          || (ecma_number_is_negative (num) && ecma_number_is_zero (num)))
-      {
-        return ECMA_VALUE_FALSE;
-      }
-
-      if (property_desc_p->flags & JERRY_PROP_IS_VALUE_DEFINED)
-      {
-        ecma_value_t set_element = ecma_set_typedarray_element (&info, property_desc_p->value, num);
-
-        if (ECMA_IS_VALUE_ERROR (set_element))
-        {
-          return set_element;
-        }
-
-      }
-
-      return ECMA_VALUE_TRUE;
+      return set_element;
     }
   }
 
-  return ecma_op_general_object_define_own_property (obj_p, prop_name_p, property_desc_p);
+  return ECMA_VALUE_TRUE;
 } /* ecma_op_typedarray_define_own_property */
 
 /**

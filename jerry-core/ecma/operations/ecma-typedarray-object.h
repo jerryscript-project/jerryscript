@@ -33,10 +33,10 @@ lit_magic_string_id_t ecma_get_typedarray_magic_string_id (ecma_typedarray_type_
 ecma_typedarray_getter_fn_t ecma_get_typedarray_getter_fn (ecma_typedarray_type_t typedarray_id);
 ecma_typedarray_setter_fn_t ecma_get_typedarray_setter_fn (ecma_typedarray_type_t typedarray_id);
 ecma_value_t ecma_get_typedarray_element (ecma_typedarray_info_t *info_p,
-                                          ecma_number_t num);
+                                          uint32_t index);
 ecma_value_t ecma_set_typedarray_element (ecma_typedarray_info_t *info_p,
                                           ecma_value_t value,
-                                          ecma_number_t num);
+                                          uint32_t index);
 bool ecma_typedarray_helper_is_typedarray (ecma_builtin_id_t builtin_id);
 ecma_typedarray_type_t ecma_get_typedarray_id (ecma_object_t *obj_p);
 ecma_builtin_id_t ecma_typedarray_helper_get_prototype_id (ecma_typedarray_type_t typedarray_id);
@@ -62,11 +62,12 @@ ecma_typedarray_iterators_helper (ecma_value_t this_arg, ecma_iterator_kind_t ki
 
 bool ecma_object_is_typedarray (ecma_object_t *obj_p);
 bool ecma_is_typedarray (ecma_value_t target);
+bool ecma_typedarray_is_element_index (ecma_string_t *property_name_p);
 void ecma_op_typedarray_list_lazy_property_names (ecma_object_t *obj_p, ecma_collection_t *prop_names_p,
                                                   ecma_property_counter_t *prop_counter_p,
                                                   jerry_property_filter_t filter);
 ecma_value_t ecma_op_typedarray_define_own_property (ecma_object_t *obj_p,
-                                                     ecma_string_t *prop_name_p,
+                                                     ecma_string_t *property_name_p,
                                                      const ecma_property_descriptor_t *property_desc_p);
 ecma_value_t ecma_op_create_typedarray_with_type_and_length (ecma_typedarray_type_t typedarray_id,
                                                              uint32_t array_length);

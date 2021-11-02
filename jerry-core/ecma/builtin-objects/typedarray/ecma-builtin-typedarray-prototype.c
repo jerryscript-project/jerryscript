@@ -1352,7 +1352,7 @@ static ecma_value_t
 ecma_builtin_typedarray_prototype_at (ecma_typedarray_info_t *info_p, /**< object info */
                                       const ecma_value_t index) /**< index argument */
 {
-  ecma_length_t len = (ecma_length_t) info_p->length;
+  ecma_length_t len = info_p->length;
   ecma_length_t res_index;
   ecma_value_t return_value = ecma_builtin_helper_calculate_index (index, len, &res_index);
 
@@ -1361,7 +1361,12 @@ ecma_builtin_typedarray_prototype_at (ecma_typedarray_info_t *info_p, /**< objec
     return return_value;
   }
 
-  return ecma_get_typedarray_element (info_p, (ecma_number_t) res_index);
+  if (res_index >= UINT32_MAX)
+  {
+    return ECMA_VALUE_UNDEFINED;
+  }
+
+  return ecma_get_typedarray_element (info_p, (uint32_t) res_index);
 } /* ecma_builtin_typedarray_prototype_at */
 
 /**

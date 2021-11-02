@@ -304,83 +304,54 @@ main_print_unhandled_exception (jerry_value_t error_value) /**< error value */
 
   jerry_char_t err_str_buf[256];
 
-  jerry_value_t err_str_val = jerry_value_to_string (error_value);
-  jerry_size_t err_str_size = jerry_get_utf8_string_size (err_str_val);
+  jerry_syntax_error_location_t location = { 0 };
+  jerry_value_t resource_value = jerry_get_syntax_error_location (error_value, &location);
 
-  if (err_str_size >= 256)
-  {
-    const char msg[] = "[Error message too long]";
-    err_str_size = sizeof (msg) / sizeof (char) - 1;
-    memcpy (err_str_buf, msg, err_str_size + 1);
-  }
-  else
-  {
-    jerry_size_t string_end = jerry_string_to_utf8_char_buffer (err_str_val, err_str_buf, err_str_size);
-    assert (string_end == err_str_size);
-    err_str_buf[string_end] = 0;
+  /* Certain unicode newlines are not supported, and tabs does not update
+   * column position, so the error printing is not always precise. */
 
-    if (jerry_is_feature_enabled (JERRY_FEATURE_ERROR_MESSAGES)
-        && jerry_get_error_type (error_value) == JERRY_ERROR_SYNTAX)
+  if (jerry_value_is_string (resource_value))
+  {
+    jerry_size_t resource_str_size = jerry_get_utf8_string_size (resource_value);
+
+    if (resource_str_size < sizeof (err_str_buf))
     {
-      jerry_char_t *string_end_p = err_str_buf + string_end;
-      unsigned int err_line = 0;
-      unsigned int err_col = 0;
-      char *path_str_p = NULL;
-      char *path_str_end_p = NULL;
+      jerry_string_to_utf8_char_buffer (resource_value, err_str_buf, resource_str_size);
+      err_str_buf[resource_str_size] = 0;
 
-      /* 1. parse column and line information */
-      for (jerry_char_t *current_p = err_str_buf; current_p < string_end_p; current_p++)
+      uint32_t err_line = location.line;
+      uint32_t err_col = location.column_start;
+
+      jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Error at %s:%d:%d\n", err_str_buf, (int) err_line, (int) err_col);
+
+      if (err_col < SYNTAX_ERROR_MAX_LINE_LENGTH)
       {
-        if (*current_p == '[')
-        {
-          current_p++;
-
-          if (*current_p == '<')
-          {
-            break;
-          }
-
-          path_str_p = (char *) current_p;
-          while (current_p < string_end_p && *current_p != ':')
-          {
-            current_p++;
-          }
-
-          path_str_end_p = (char *) current_p++;
-
-          err_line = (unsigned int) strtol ((char *) current_p, (char **) &current_p, 10);
-
-          current_p++;
-
-          err_col = (unsigned int) strtol ((char *) current_p, NULL, 10);
-          break;
-        }
-      } /* for */
-
-      if (err_line != 0 && err_col > 0 && err_col < SYNTAX_ERROR_MAX_LINE_LENGTH)
-      {
-        /* Temporarily modify the error message, so we can use the path. */
-        *path_str_end_p = '\0';
-
         size_t source_size;
-        uint8_t *source_p = jerry_port_read_source (path_str_p, &source_size);
-
-        /* Revert the error message. */
-        *path_str_end_p = ':';
+        uint8_t *source_p = jerry_port_read_source ((char *) err_str_buf, &source_size);
 
         if (source_p != NULL)
         {
-          uint32_t curr_line = 1;
           uint32_t pos = 0;
 
           /* 2. seek and print */
-          while (pos < source_size && curr_line < err_line)
+          while (pos < source_size && err_line > 1)
           {
-            if (source_p[pos] == '\n')
+            switch (source_p[pos])
             {
-              curr_line++;
+              case '\r':
+              {
+                if (pos + 1 < source_size && source_p[pos + 1] == '\n')
+                {
+                  pos++;
+                }
+                /* FALLTHRU */
+              }
+              case '\n':
+              {
+                err_line--;
+                break;
+              }
             }
-
             pos++;
           }
 
@@ -389,11 +360,13 @@ main_print_unhandled_exception (jerry_value_t error_value) /**< error value */
            * - The current position is valid (it is not the end of the source).
            * - The current character is not a newline.
            **/
-          for (uint32_t char_count = 0;
-               (char_count < SYNTAX_ERROR_MAX_LINE_LENGTH) && (pos < source_size) && (source_p[pos] != '\n');
-               char_count++, pos++)
+          uint32_t char_count = 0;
+
+          while (char_count < SYNTAX_ERROR_MAX_LINE_LENGTH && pos < source_size && source_p[pos] != '\r'
+                 && source_p[pos] != '\n')
           {
-            jerry_port_log (JERRY_LOG_LEVEL_ERROR, "%c", source_p[pos]);
+            jerry_port_log (JERRY_LOG_LEVEL_ERROR, "%c", source_p[pos++]);
+            char_count++;
           }
           jerry_port_log (JERRY_LOG_LEVEL_ERROR, "\n");
 
@@ -401,16 +374,52 @@ main_print_unhandled_exception (jerry_value_t error_value) /**< error value */
 
           while (--err_col)
           {
-            jerry_port_log (JERRY_LOG_LEVEL_ERROR, "~");
+            jerry_port_log (JERRY_LOG_LEVEL_ERROR, " ");
           }
 
-          jerry_port_log (JERRY_LOG_LEVEL_ERROR, "^\n\n");
+          err_col = location.column_end;
+
+          if (err_col > char_count)
+          {
+            err_col = char_count + 1;
+          }
+
+          if (err_col <= location.column_start)
+          {
+            jerry_port_log (JERRY_LOG_LEVEL_ERROR, "^\n\n");
+          }
+          else
+          {
+            err_col -= location.column_start;
+
+            do
+            {
+              jerry_port_log (JERRY_LOG_LEVEL_ERROR, "^");
+            } while (--err_col);
+
+            jerry_port_log (JERRY_LOG_LEVEL_ERROR, "\n\n");
+          }
         }
       }
     }
   }
 
-  jerry_port_log (JERRY_LOG_LEVEL_ERROR, "%s\n", err_str_buf);
+  jerry_release_value (resource_value);
+
+  jerry_value_t err_str_val = jerry_value_to_string (error_value);
+  jerry_size_t err_str_size = jerry_get_utf8_string_size (err_str_val);
+
+  if (err_str_size >= sizeof (err_str_buf))
+  {
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "[Error message too long]\n");
+  }
+  else
+  {
+    jerry_string_to_utf8_char_buffer (err_str_val, err_str_buf, err_str_size);
+    err_str_buf[err_str_size] = 0;
+    jerry_port_log (JERRY_LOG_LEVEL_ERROR, "%s\n", err_str_buf);
+  }
+
   jerry_release_value (err_str_val);
 
   if (jerry_value_is_object (error_value))

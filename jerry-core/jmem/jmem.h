@@ -262,12 +262,12 @@ void *JERRY_ATTR_PURE jmem_decompress_pointer (uintptr_t compressed_pointer);
  * Set value of pointer-tag value so that it will correspond
  * to specified non_compressed_pointer along with tag
  */
-#define JMEM_CP_SET_NON_NULL_POINTER_TAG(cp_value, pointer, tag)                   \
-  do                                                                               \
-  {                                                                                \
-    JERRY_ASSERT ((uintptr_t) tag < (uintptr_t) (JMEM_ALIGNMENT));                 \
-    jmem_cpointer_tag_t compressed_ptr = jmem_compress_pointer (pointer);          \
-    (cp_value) = (jmem_cpointer_tag_t) ((compressed_ptr << JMEM_TAG_SHIFT) | tag); \
+#define JMEM_CP_SET_NON_NULL_POINTER_TAG(cp_value, pointer, tag)                     \
+  do                                                                                 \
+  {                                                                                  \
+    JERRY_ASSERT ((uintptr_t) tag < (uintptr_t) (JMEM_ALIGNMENT));                   \
+    jmem_cpointer_tag_t compressed_ptr = jmem_compress_pointer (pointer);            \
+    (cp_value) = (jmem_cpointer_tag_t) ((compressed_ptr << JMEM_TAG_SHIFT) | (tag)); \
   } while (false);
 
 /**

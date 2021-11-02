@@ -19,7 +19,7 @@
 
 #include "byte-code.h"
 
-#if JERRY_ESNEXT || JERRY_FUNCTION_TO_STRING
+#if JERRY_ESNEXT || JERRY_ERROR_MESSAGES || JERRY_FUNCTION_TO_STRING
 
 /** \addtogroup ecma ECMA
  * @{
@@ -104,6 +104,10 @@ ecma_extended_info_get_encoded_length (uint32_t value) /**< encoded value */
 
   return length;
 } /* ecma_extended_info_get_encoded_length */
+
+#endif /* JERRY_ESNEXT || JERRY_ERROR_MESSAGES || JERRY_FUNCTION_TO_STRING */
+
+#if JERRY_ESNEXT || JERRY_FUNCTION_TO_STRING
 
 /**
  * Get the extended info from a byte code

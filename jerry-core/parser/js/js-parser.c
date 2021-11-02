@@ -2321,38 +2321,64 @@ parser_parse_source (void *source_p, /**< source code */
   }
 
 #if JERRY_ERROR_MESSAGES
-  ecma_string_t *err_str_p;
-
-  if (context.error == PARSER_ERR_INVALID_REGEXP)
+  if (context.error != PARSER_ERR_INVALID_REGEXP)
   {
-    ecma_value_t error = jcontext_take_exception ();
-    ecma_property_t *prop_p =
-      ecma_find_named_property (ecma_get_object_from_value (error), ecma_get_magic_string (LIT_MAGIC_STRING_MESSAGE));
-    ecma_free_value (error);
-    JERRY_ASSERT (prop_p);
-    err_str_p = ecma_get_string_from_value (ECMA_PROPERTY_VALUE_PTR (prop_p)->value);
-    ecma_ref_ecma_string (err_str_p);
+    ecma_raise_syntax_error (parser_error_to_string (context.error));
+  }
+
+  const size_t allocation_unit_mask = (1 << ECMA_SYNTAX_ERROR_ALLOCATION_UNIT_SHIFT) - 1;
+  size_t total_size = sizeof (ecma_value_t) + allocation_unit_mask;
+  uint32_t difference = 0;
+
+  total_size += ecma_extended_info_get_encoded_length (context.token.line);
+  total_size += ecma_extended_info_get_encoded_length (context.token.column);
+
+  if (context.token.line == context.line)
+  {
+    JERRY_ASSERT (context.column >= context.token.column);
+
+    difference = context.column - context.token.column;
+
+    if (difference == 0 && context.source_p != context.source_end_p)
+    {
+      difference = 1;
+    }
   }
   else
   {
-    const lit_utf8_byte_t *err_bytes_p = (const lit_utf8_byte_t *) parser_error_to_string (context.error);
-    lit_utf8_size_t err_bytes_size = lit_zt_utf8_string_size (err_bytes_p);
-    err_str_p = ecma_new_ecma_string_from_utf8 (err_bytes_p, err_bytes_size);
+    JERRY_ASSERT (context.line > context.token.line);
+
+    difference = context.token_end_column - context.token.column;
   }
-  ecma_value_t err_str_val = ecma_make_string_value (err_str_p);
-  ecma_value_t line_str_val = ecma_make_uint32_value (context.token.line);
-  ecma_value_t col_str_val = ecma_make_uint32_value (context.token.column);
 
-  ecma_raise_standard_error_with_format (JERRY_ERROR_SYNTAX,
-                                         "% [%:%:%]",
-                                         err_str_val,
-                                         resource_name,
-                                         line_str_val,
-                                         col_str_val);
+  total_size += ecma_extended_info_get_encoded_length (difference);
+  total_size &= ~allocation_unit_mask;
 
-  ecma_free_value (col_str_val);
-  ecma_free_value (line_str_val);
-  ecma_deref_ecma_string (err_str_p);
+  uint8_t *location_p = jmem_heap_alloc_block (total_size);
+
+  *(ecma_value_t *) location_p = resource_name;
+  ecma_ref_ecma_string (ecma_get_string_from_value (resource_name));
+
+  ecma_value_t error_property_value;
+  ECMA_SET_NON_NULL_POINTER_TAG (error_property_value, location_p, 0);
+
+  location_p += total_size;
+
+  total_size = (total_size >> ECMA_SYNTAX_ERROR_ALLOCATION_UNIT_SHIFT) - 1;
+  JERRY_ASSERT (total_size <= ECMA_SYNTAX_ERROR_ALLOCATION_SIZE_MASK);
+  error_property_value |= (ecma_value_t) total_size;
+
+  ecma_extended_info_encode_vlq (&location_p, context.token.line);
+  ecma_extended_info_encode_vlq (&location_p, context.token.column);
+  ecma_extended_info_encode_vlq (&location_p, difference);
+
+  ecma_object_t *error_object_p = ecma_get_object_from_value (JERRY_CONTEXT (error_value));
+
+  ecma_string_t *name_p = ecma_get_internal_string (LIT_INTERNAL_MAGIC_STRING_SYNTAX_ERROR_LOCATION);
+  ecma_property_value_t *property_value_p;
+
+  property_value_p = ecma_create_named_data_property (error_object_p, name_p, 0, NULL);
+  property_value_p->value = error_property_value;
 #else /* !JERRY_ERROR_MESSAGES */
   if (context.error == PARSER_ERR_INVALID_REGEXP)
   {

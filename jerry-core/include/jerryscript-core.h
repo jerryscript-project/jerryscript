@@ -361,6 +361,7 @@ jerry_value_t jerry_get_user_value (const jerry_value_t value);
 bool jerry_is_eval_code (const jerry_value_t value);
 jerry_source_info_t *jerry_get_source_info (const jerry_value_t value);
 void jerry_free_source_info (jerry_source_info_t *source_info_p);
+jerry_value_t jerry_get_syntax_error_location (jerry_value_t value, jerry_syntax_error_location_t *error_location_p);
 
 /**
  * Array buffer components.

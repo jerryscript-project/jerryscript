@@ -88,6 +88,7 @@ set(SOURCE_UNIT_TEST_MAIN_MODULES
   test-stringbuilder.c
   test-strings.c
   test-symbol.c
+  test-syntax-error-location.c
   test-to-integer.c
   test-to-length.c
   test-to-property-descriptor.c

@@ -1618,6 +1618,18 @@ ecma_gc_free_property (ecma_object_t *object_p, /**< object */
       break;
     }
 #endif /* JERRY_BUILTIN_CONTAINER */
+#if JERRY_ERROR_MESSAGES
+    case LIT_INTERNAL_MAGIC_STRING_SYNTAX_ERROR_LOCATION:
+    {
+      uint8_t *location_p = ECMA_GET_NON_NULL_POINTER_FROM_POINTER_TAG (uint8_t, value);
+
+      ecma_deref_ecma_string (ecma_get_string_from_value (*(ecma_value_t *) location_p));
+
+      size_t size_data = value & ECMA_SYNTAX_ERROR_ALLOCATION_SIZE_MASK;
+      jmem_heap_free_block (location_p, (size_data + 1) << ECMA_SYNTAX_ERROR_ALLOCATION_UNIT_SHIFT);
+      break;
+    }
+#endif /* JERRY_ERROR_MESSAGES */
     default:
     {
       JERRY_ASSERT (name_cp == LIT_INTERNAL_MAGIC_STRING_NATIVE_POINTER

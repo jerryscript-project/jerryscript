@@ -788,22 +788,11 @@ opfunc_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
   ecma_value_t *stack_top_p = frame_ctx_p->stack_top_p - arguments_list_len;
   ecma_value_t this_value = is_call_prop ? stack_top_p[-3] : ECMA_VALUE_UNDEFINED;
   ecma_value_t func_value = stack_top_p[-1];
-  ecma_value_t completion_value;
 
-  if (!ecma_is_value_object (func_value)
-      || !ecma_op_object_is_callable (ecma_get_object_from_value (func_value)))
-  {
-    completion_value = ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_expected_a_function));
-  }
-  else
-  {
-    ecma_object_t *func_obj_p = ecma_get_object_from_value (func_value);
-
-    completion_value = ecma_op_function_call (func_obj_p,
-                                              this_value,
-                                              stack_top_p,
-                                              arguments_list_len);
-  }
+  ecma_value_t completion_value = ecma_op_function_validated_call (func_value,
+                                                                   this_value,
+                                                                   stack_top_p,
+                                                                   arguments_list_len);
 
   JERRY_CONTEXT (status_flags) &= (uint32_t) ~ECMA_STATUS_DIRECT_EVAL;
 

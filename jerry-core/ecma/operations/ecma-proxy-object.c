@@ -1771,6 +1771,12 @@ ecma_proxy_object_call (ecma_object_t *obj_p, /**< proxy object */
                         uint32_t argc) /**< number of arguments */
 {
   JERRY_ASSERT (ECMA_OBJECT_IS_PROXY (obj_p));
+
+  if (!ecma_op_proxy_object_is_callable (obj_p))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_expected_a_function));
+  }
+
   ECMA_CHECK_STACK_USAGE ();
 
   ecma_proxy_object_t *proxy_obj_p = (ecma_proxy_object_t *) obj_p;

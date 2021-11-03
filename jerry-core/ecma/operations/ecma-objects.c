@@ -3296,18 +3296,10 @@ ecma_op_invoke (ecma_value_t object, /**< Object value */
   }
 
   /* 4. */
-  if (!ecma_op_is_callable (func))
-  {
-    ecma_free_value (func);
-    ecma_deref_object (object_p);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Argument is not callable"));
-  }
-
-  ecma_object_t *func_obj_p = ecma_get_object_from_value (func);
-  ecma_value_t call_result = ecma_op_function_call (func_obj_p, this_arg, args_p, args_len);
+  ecma_value_t call_result = ecma_op_function_validated_call (func, this_arg, args_p, args_len);
+  ecma_free_value (func);
 
   ecma_deref_object (object_p);
-  ecma_deref_object (func_obj_p);
 
   return call_result;
 } /* ecma_op_invoke */

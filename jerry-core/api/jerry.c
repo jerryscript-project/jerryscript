@@ -4081,61 +4081,6 @@ jerry_property_descriptor_free (const jerry_property_descriptor_t *prop_desc_p) 
 } /* jerry_property_descriptor_free */
 
 /**
- * Invoke function specified by a function value
- *
- * Note:
- *      - returned value must be freed with jerry_release_value, when it is no longer needed.
- *      - If function is invoked as constructor, it should support [[Construct]] method,
- *        otherwise, if function is simply called - it should support [[Call]] method.
- *
- * @return returned jerry value of the invoked function
- */
-static jerry_value_t
-jerry_invoke_function (bool is_invoke_as_constructor, /**< true - invoke function as constructor
-                                                       *          (this_arg_p should be NULL, as it is ignored),
-                                                       *   false - perform function call */
-                       const jerry_value_t func_obj_val, /**< function object to call */
-                       const jerry_value_t this_val, /**< object value of 'this' binding */
-                       const jerry_value_t args_p[], /**< function's call arguments */
-                       const jerry_size_t args_count) /**< number of the arguments */
-{
-  JERRY_ASSERT (args_count == 0 || args_p != NULL);
-
-  if (ecma_is_value_error_reference (func_obj_val)
-      || ecma_is_value_error_reference (this_val))
-  {
-    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_value_msg_p)));
-  }
-
-  for (uint32_t i = 0; i < args_count; i++)
-  {
-    if (ecma_is_value_error_reference (args_p[i]))
-    {
-      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_value_msg_p)));
-    }
-  }
-
-  if (is_invoke_as_constructor)
-  {
-    JERRY_ASSERT (jerry_value_is_constructor (func_obj_val));
-
-    return jerry_return (ecma_op_function_construct (ecma_get_object_from_value (func_obj_val),
-                                                     ecma_get_object_from_value (func_obj_val),
-                                                     args_p,
-                                                     args_count));
-  }
-  else
-  {
-    JERRY_ASSERT (jerry_value_is_function (func_obj_val));
-
-    return jerry_return (ecma_op_function_call (ecma_get_object_from_value (func_obj_val),
-                                                this_val,
-                                                args_p,
-                                                args_count));
-  }
-} /* jerry_invoke_function */
-
-/**
  * Call function specified by a function value
  *
  * Note:
@@ -4152,20 +4097,23 @@ jerry_call_function (const jerry_value_t func_obj_val, /**< function object to c
 {
   jerry_assert_api_available ();
 
-  if (jerry_value_is_function (func_obj_val) && !ecma_is_value_error_reference (this_val))
+  if (ecma_is_value_error_reference (this_val))
   {
-    for (jerry_size_t i = 0; i < args_count; i++)
-    {
-      if (ecma_is_value_error_reference (args_p[i]))
-      {
-        return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_value_msg_p)));
-      }
-    }
-
-    return jerry_invoke_function (false, func_obj_val, this_val, args_p, args_count);
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
   }
 
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+  for (jerry_size_t i = 0; i < args_count; i++)
+  {
+    if (ecma_is_value_error_reference (args_p[i]))
+    {
+      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_value_msg_p)));
+    }
+  }
+
+  return jerry_return (ecma_op_function_validated_call (func_obj_val,
+                                                        this_val,
+                                                        args_p,
+                                                        args_count));
 } /* jerry_call_function */
 
 /**
@@ -4185,21 +4133,23 @@ jerry_construct_object (const jerry_value_t func_obj_val, /**< function object t
 {
   jerry_assert_api_available ();
 
-  if (jerry_value_is_constructor (func_obj_val))
+  if (!jerry_value_is_constructor (func_obj_val))
   {
-    for (jerry_size_t i = 0; i < args_count; i++)
-    {
-      if (ecma_is_value_error_reference (args_p[i]))
-      {
-        return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_value_msg_p)));
-      }
-    }
-
-    ecma_value_t this_val = ECMA_VALUE_UNDEFINED;
-    return jerry_invoke_function (true, func_obj_val, this_val, args_p, args_count);
+    return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
   }
 
-  return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_wrong_args_msg_p)));
+  for (jerry_size_t i = 0; i < args_count; i++)
+  {
+    if (ecma_is_value_error_reference (args_p[i]))
+    {
+      return jerry_throw (ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_value_msg_p)));
+    }
+  }
+
+  return jerry_return (ecma_op_function_construct (ecma_get_object_from_value (func_obj_val),
+                                                   ecma_get_object_from_value (func_obj_val),
+                                                   args_p,
+                                                   args_count));
 } /* jerry_construct_object */
 
 /**

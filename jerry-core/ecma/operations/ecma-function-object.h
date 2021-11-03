@@ -33,6 +33,9 @@ ecma_value_t ecma_op_function_form_name (ecma_string_t *prop_name_p, char *prefi
 #endif /* JERRY_ESNEXT */
 
 bool ecma_op_is_callable (ecma_value_t value);
+#if JERRY_BUILTIN_PROXY
+bool ecma_op_proxy_object_is_callable (ecma_object_t *obj_p);
+#endif /* JERRY_BUILTIN_PROXY */
 bool ecma_op_object_is_callable (ecma_object_t *obj_p);
 bool ecma_is_constructor (ecma_value_t value);
 bool ecma_object_is_constructor (ecma_object_t *obj_p);
@@ -90,6 +93,10 @@ ecma_op_get_prototype_from_constructor (ecma_object_t *ctor_obj_p, ecma_builtin_
 
 ecma_value_t
 ecma_op_function_has_instance (ecma_object_t *func_obj_p, ecma_value_t value);
+
+ecma_value_t
+ecma_op_function_validated_call (ecma_value_t callee,  ecma_value_t this_arg_value,
+                                 const ecma_value_t *arguments_list_p, uint32_t arguments_list_len);
 
 ecma_value_t
 ecma_op_function_call (ecma_object_t *func_obj_p, ecma_value_t this_arg_value,

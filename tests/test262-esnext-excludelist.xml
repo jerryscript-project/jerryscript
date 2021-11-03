@@ -365,13 +365,8 @@
   <test id="language/statements/if/cptn-no-else-false.js"><reason></reason></test>
   <test id="language/statements/if/cptn-no-else-true-abrupt-empty.js"><reason></reason></test>
   <test id="language/statements/if/cptn-no-else-true-nrml.js"><reason></reason></test>
-  <test id="language/statements/if/if-gen-else-gen.js"><reason></reason></test>
-  <test id="language/statements/if/if-gen-else-stmt.js"><reason></reason></test>
-  <test id="language/statements/if/if-gen-no-else.js"><reason></reason></test>
-  <test id="language/statements/if/if-stmt-else-gen.js"><reason></reason></test>
   <test id="language/statements/if/let-block-with-newline.js"><reason></reason></test>
   <test id="language/statements/if/let-identifier-with-newline.js"><reason></reason></test>
-  <test id="language/statements/labeled/decl-gen.js"><reason></reason></test>
   <test id="language/statements/labeled/let-block-with-newline.js"><reason></reason></test>
   <test id="language/statements/labeled/let-identifier-with-newline.js"><reason></reason></test>
   <test id="language/statements/let/syntax/let-newline-yield-in-generator-function.js"><reason></reason></test>

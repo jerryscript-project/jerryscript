@@ -141,6 +141,7 @@ typedef enum
 #if JERRY_ESNEXT
   PARSER_ERR_VARIABLE_REDECLARED, /**< a variable redeclared */
   PARSER_ERR_LEXICAL_SINGLE_STATEMENT, /**< lexical declaration in single statement context */
+  PARSER_ERR_GENERATOR_IN_SINGLE_STATEMENT_POS, /**< generator func not allowed in single statement position */
   PARSER_ERR_LABELLED_FUNC_NOT_IN_BLOCK, /**< labelled functions are only allowed inside blocks */
   PARSER_ERR_LEXICAL_LET_BINDING, /**< let binding cannot be declared in let/const */
   PARSER_ERR_MISSING_ASSIGN_AFTER_CONST, /**< an assignment is required after a const declaration */

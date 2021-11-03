@@ -600,7 +600,9 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
   JERRY_ASSERT (context_p->token.type == LEXER_KEYW_FUNCTION);
 
 #if JERRY_ESNEXT
-  if (JERRY_UNLIKELY (parser_statement_flags[context_p->stack_top_uint8] & PARSER_STATM_SINGLE_STATM))
+  bool is_single_statement = (parser_statement_flags[context_p->stack_top_uint8] & PARSER_STATM_SINGLE_STATM) != 0;
+
+  if (JERRY_UNLIKELY (is_single_statement))
   {
     if (context_p->status_flags & PARSER_IS_STRICT)
     {
@@ -667,6 +669,10 @@ parser_parse_function_statement (parser_context_t *context_p) /**< context */
 
   if (lexer_consume_generator (context_p))
   {
+    if (is_single_statement)
+    {
+      parser_raise_error (context_p, PARSER_ERR_GENERATOR_IN_SINGLE_STATEMENT_POS);
+    }
     is_generator_function = true;
   }
 #endif /* JERRY_ESNEXT */

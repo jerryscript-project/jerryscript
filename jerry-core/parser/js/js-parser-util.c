@@ -1243,6 +1243,10 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Lexical declaration cannot appear in a single-statement context";
     }
+    case PARSER_ERR_GENERATOR_IN_SINGLE_STATEMENT_POS:
+    {
+      return "Generator function cannot appear in a single-statement context";
+    }
     case PARSER_ERR_LABELLED_FUNC_NOT_IN_BLOCK:
     {
       return "Labelled functions are only allowed inside blocks";

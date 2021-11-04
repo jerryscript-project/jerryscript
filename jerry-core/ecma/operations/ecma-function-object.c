@@ -90,6 +90,23 @@ ecma_op_function_form_name (ecma_string_t *prop_name_p, /**< property name */
 } /* ecma_op_function_form_name */
 #endif /* JERRY_ESNEXT */
 
+#if JERRY_BUILTIN_PROXY
+/**
+ * IsCallable operation for proxy object.
+ *
+ * @return true - if the given proxy object is callable;
+ *         false - otherwise
+ */
+extern inline bool JERRY_ATTR_ALWAYS_INLINE
+ecma_op_proxy_object_is_callable (ecma_object_t *obj_p) /**< ecma object */
+{
+  JERRY_ASSERT (!ecma_is_lexical_environment (obj_p));
+  JERRY_ASSERT (ECMA_OBJECT_IS_PROXY (obj_p));
+
+  return (obj_p->u2.prototype_cp & ECMA_PROXY_IS_CALLABLE) != 0;
+} /* ecma_op_proxy_object_is_callable */
+#endif /* JERRY_BUILTIN_PROXY */
+
 /**
  * IsCallable operation.
  *
@@ -108,7 +125,7 @@ ecma_op_object_is_callable (ecma_object_t *obj_p) /**< ecma object */
 #if JERRY_BUILTIN_PROXY
   if (ECMA_OBJECT_TYPE_IS_PROXY (type))
   {
-    return (obj_p->u2.prototype_cp & ECMA_PROXY_IS_CALLABLE) != 0;
+    return ecma_op_proxy_object_is_callable (obj_p);
   }
 #endif /* JERRY_BUILTIN_PROXY */
 
@@ -1022,6 +1039,76 @@ ecma_op_get_prototype_from_constructor (ecma_object_t *ctor_obj_p, /**< construc
   return proto_obj_p;
 } /* ecma_op_get_prototype_from_constructor */
 
+#if JERRY_ESNEXT
+/**
+ * Perform a JavaScript class function object method call.
+ *
+ * The input function object should be a JavaScript class constructor
+ *
+ * @return the result of the function call.
+ */
+static ecma_value_t JERRY_ATTR_NOINLINE
+ecma_op_function_call_constructor (vm_frame_ctx_shared_args_t *shared_args_p, /**< shared data */
+                                   ecma_object_t *scope_p, /**< lexical environment to use */
+                                   ecma_value_t this_binding) /**< value of 'ThisBinding' */
+{
+  shared_args_p->header.status_flags |= VM_FRAME_CTX_SHARED_NON_ARROW_FUNC;
+
+  ecma_value_t ret_value;
+
+  if (JERRY_CONTEXT (current_new_target_p) == NULL)
+  {
+    ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor requires 'new'"));
+    goto exit;
+  }
+
+  ecma_extended_object_t *ext_func_p = (ecma_extended_object_t *) shared_args_p->header.function_object_p;
+  if (ECMA_GET_THIRD_BIT_FROM_POINTER_TAG (ext_func_p->u.function.scope_cp))
+  {
+    this_binding = ECMA_VALUE_UNINITIALIZED;
+  }
+
+  ecma_op_create_environment_record (scope_p, this_binding, shared_args_p->header.function_object_p);
+
+#if JERRY_BUILTIN_REALMS
+  ecma_global_object_t *saved_global_object_p = JERRY_CONTEXT (global_object_p);
+  JERRY_CONTEXT (global_object_p) = ecma_op_function_get_realm (shared_args_p->header.bytecode_header_p);
+#endif /* JERRY_BUILTIN_REALMS */
+
+  ret_value = vm_run (&shared_args_p->header, this_binding, scope_p);
+
+#if JERRY_BUILTIN_REALMS
+  JERRY_CONTEXT (global_object_p) = saved_global_object_p;
+#endif /* JERRY_BUILTIN_REALMS */
+
+  /* ECMAScript v6, 9.2.2.13 */
+  if (JERRY_UNLIKELY (this_binding == ECMA_VALUE_UNINITIALIZED))
+  {
+    if (!ECMA_IS_VALUE_ERROR (ret_value) && !ecma_is_value_object (ret_value))
+    {
+      if (!ecma_is_value_undefined (ret_value))
+      {
+        ecma_free_value (ret_value);
+        ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Derived constructors may only return object or undefined"));
+      }
+      else
+      {
+        ret_value = ecma_op_get_this_binding (scope_p);
+      }
+    }
+  }
+
+exit:
+  if (JERRY_UNLIKELY (shared_args_p->header.status_flags & VM_FRAME_CTX_SHARED_FREE_LOCAL_ENV))
+  {
+    ecma_deref_object (scope_p);
+  }
+
+  return ret_value;
+} /* ecma_op_function_call_constructor */
+
+#endif /* JERRY_ESNEXT */
+
 /**
  * Perform a JavaScript function object method call.
  *
@@ -1031,7 +1118,7 @@ ecma_op_get_prototype_from_constructor (ecma_object_t *ctor_obj_p, /**< construc
  */
 static ecma_value_t
 ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
-                              ecma_value_t this_arg_value, /**< 'this' argument's value */
+                              ecma_value_t this_binding, /**< 'this' argument's value */
                               const ecma_value_t *arguments_list_p, /**< arguments list */
                               uint32_t arguments_list_len) /**< length of arguments list */
 {
@@ -1050,8 +1137,6 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
                                                                        ext_func_p->u.function.scope_cp);
 
   /* 8. */
-  ecma_value_t this_binding = this_arg_value;
-
   const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
   uint16_t status_flags = bytecode_data_p->status_flags;
 
@@ -1061,29 +1146,50 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
   ecma_global_object_t *realm_p = ecma_op_function_get_realm (bytecode_data_p);
 #endif /* JERRY_BUILTIN_REALMS */
 
-  /* 1. */
-#if JERRY_ESNEXT
-  if (JERRY_UNLIKELY (CBC_FUNCTION_IS_ARROW (status_flags)))
+  /* 5. */
+  if (!(status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED))
   {
-    ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) func_obj_p;
-
-    if (ecma_is_value_undefined (arrow_func_p->new_target))
-    {
-      JERRY_CONTEXT (current_new_target_p) = NULL;
-    }
-    else
-    {
-      JERRY_CONTEXT (current_new_target_p) = ecma_get_object_from_value (arrow_func_p->new_target);
-    }
-    this_binding = arrow_func_p->this_binding;
+    shared_args.header.status_flags |= VM_FRAME_CTX_SHARED_FREE_LOCAL_ENV;
+    scope_p = ecma_create_decl_lex_env (scope_p);
   }
-  else
+
+  /* 1. */
+  switch (CBC_FUNCTION_GET_TYPE (status_flags))
   {
-    shared_args.header.status_flags |= VM_FRAME_CTX_SHARED_NON_ARROW_FUNC;
+#if JERRY_ESNEXT
+    case CBC_FUNCTION_CONSTRUCTOR:
+    {
+      return ecma_op_function_call_constructor (&shared_args, scope_p, this_binding);
+    }
+    case CBC_FUNCTION_ARROW:
+    {
+      ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) func_obj_p;
+
+      if (ecma_is_value_undefined (arrow_func_p->new_target))
+      {
+        JERRY_CONTEXT (current_new_target_p) = NULL;
+      }
+      else
+      {
+        JERRY_CONTEXT (current_new_target_p) = ecma_get_object_from_value (arrow_func_p->new_target);
+      }
+
+      this_binding = arrow_func_p->this_binding;
+      break;
+    }
+
+#endif /* JERRY_ESNEXT */
+    default:
+    {
+#if JERRY_ESNEXT
+      shared_args.header.status_flags |= VM_FRAME_CTX_SHARED_NON_ARROW_FUNC;
 #endif /* JERRY_ESNEXT */
 
-    if (!(status_flags & CBC_CODE_FLAGS_STRICT_MODE))
-    {
+      if (status_flags & CBC_CODE_FLAGS_STRICT_MODE)
+      {
+        break;
+      }
+
       if (ecma_is_value_undefined (this_binding)
           || ecma_is_value_null (this_binding))
       {
@@ -1102,72 +1208,20 @@ ecma_op_function_call_simple (ecma_object_t *func_obj_p, /**< Function object */
 
         JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (this_binding));
       }
+      break;
     }
-#if JERRY_ESNEXT
   }
-#endif /* JERRY_ESNEXT */
-
-  /* 5. */
-  if (!(status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED))
-  {
-    shared_args.header.status_flags |= VM_FRAME_CTX_SHARED_FREE_LOCAL_ENV;
-    scope_p = ecma_create_decl_lex_env (scope_p);
-  }
-
-  ecma_value_t ret_value;
-
-#if JERRY_ESNEXT
-  if (JERRY_UNLIKELY (CBC_FUNCTION_GET_TYPE (status_flags) == CBC_FUNCTION_CONSTRUCTOR))
-  {
-    if (JERRY_CONTEXT (current_new_target_p) == NULL)
-    {
-      ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Class constructor requires 'new'"));
-      goto exit;
-    }
-
-    ecma_value_t lexical_this = this_binding;
-
-    if (ECMA_GET_THIRD_BIT_FROM_POINTER_TAG (ext_func_p->u.function.scope_cp))
-    {
-      shared_args.header.status_flags |= VM_FRAME_CTX_SHARED_HERITAGE_PRESENT;
-      lexical_this = ECMA_VALUE_UNINITIALIZED;
-    }
-
-    ecma_op_create_environment_record (scope_p, lexical_this, func_obj_p);
-  }
-#endif /* JERRY_ESNEXT */
 
 #if JERRY_BUILTIN_REALMS
   ecma_global_object_t *saved_global_object_p = JERRY_CONTEXT (global_object_p);
   JERRY_CONTEXT (global_object_p) = realm_p;
 #endif /* JERRY_BUILTIN_REALMS */
 
-  ret_value = vm_run (&shared_args.header, this_binding, scope_p);
+  ecma_value_t ret_value = vm_run (&shared_args.header, this_binding, scope_p);
 
 #if JERRY_BUILTIN_REALMS
   JERRY_CONTEXT (global_object_p) = saved_global_object_p;
 #endif /* JERRY_BUILTIN_REALMS */
-
-#if JERRY_ESNEXT
-  /* ECMAScript v6, 9.2.2.13 */
-  if (JERRY_UNLIKELY (shared_args.header.status_flags & VM_FRAME_CTX_SHARED_HERITAGE_PRESENT))
-  {
-    if (!ECMA_IS_VALUE_ERROR (ret_value) && !ecma_is_value_object (ret_value))
-    {
-      if (!ecma_is_value_undefined (ret_value))
-      {
-        ecma_free_value (ret_value);
-        ret_value = ecma_raise_type_error (ECMA_ERR_MSG ("Derived constructors may only return object or undefined"));
-      }
-      else
-      {
-        ret_value = ecma_op_get_this_binding (scope_p);
-      }
-    }
-  }
-
-exit:
-#endif /* JERRY_ESNEXT */
 
   if (JERRY_UNLIKELY (shared_args.header.status_flags & VM_FRAME_CTX_SHARED_FREE_LOCAL_ENV))
   {
@@ -1350,11 +1404,30 @@ ecma_op_function_call_bound (ecma_object_t *func_obj_p, /**< Function object */
 } /* ecma_op_function_call_bound */
 
 /**
- * [[Call]] implementation for Function objects,
- * created through 13.2 (ECMA_OBJECT_TYPE_FUNCTION)
- * or 15.3.4.5 (ECMA_OBJECT_TYPE_BOUND_FUNCTION),
- * and for built-in Function objects
- * from section 15 (ECMA_OBJECT_TYPE_FUNCTION).
+ * General [[Call]] implementation
+ *
+ * @return ecma value
+ *         Returned value must be freed with ecma_free_value
+ */
+extern inline ecma_value_t JERRY_ATTR_ALWAYS_INLINE
+ecma_op_function_validated_call (ecma_value_t callee, /**< callee */
+                                 ecma_value_t this_arg_value, /**< 'this' argument's value */
+                                 const ecma_value_t *arguments_list_p, /**< arguments list */
+                                 uint32_t arguments_list_len) /**< length of arguments list */
+{
+  if (!ecma_is_value_object (callee))
+  {
+    return ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_expected_a_function));
+  }
+
+  return ecma_op_function_call (ecma_get_object_from_value (callee),
+                                this_arg_value,
+                                arguments_list_p,
+                                arguments_list_len);
+} /* ecma_op_function_validated_call */
+
+/**
+ * General [[Call]] implementation
  *
  * @return ecma value
  *         Returned value must be freed with ecma_free_value
@@ -1367,21 +1440,12 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
 {
   JERRY_ASSERT (func_obj_p != NULL
                 && !ecma_is_lexical_environment (func_obj_p));
-  JERRY_ASSERT (ecma_op_object_is_callable (func_obj_p));
 
   ECMA_CHECK_STACK_USAGE ();
 
-  const ecma_object_type_t type = ecma_get_object_type (func_obj_p);
-
-#if JERRY_BUILTIN_PROXY
-  if (ECMA_OBJECT_TYPE_IS_PROXY (type))
-  {
-    return ecma_proxy_object_call (func_obj_p, this_arg_value, arguments_list_p, arguments_list_len);
-  }
-#endif /* JERRY_BUILTIN_PROXY */
-
 #if JERRY_ESNEXT
   ecma_object_t *old_new_target_p = JERRY_CONTEXT (current_new_target_p);
+
   if (JERRY_UNLIKELY (!(JERRY_CONTEXT (status_flags) & ECMA_STATUS_DIRECT_EVAL)))
   {
     JERRY_CONTEXT (current_new_target_p) = NULL;
@@ -1390,27 +1454,47 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
 
   ecma_value_t result;
 
-  if (JERRY_LIKELY (type == ECMA_OBJECT_TYPE_FUNCTION))
+  switch (ecma_get_object_type (func_obj_p))
   {
-    result = ecma_op_function_call_simple (func_obj_p, this_arg_value, arguments_list_p, arguments_list_len);
-  }
-  else if (type == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
-  {
-    result = ecma_op_function_call_native_built_in (func_obj_p, this_arg_value, arguments_list_p, arguments_list_len);
-  }
-  else if (type == ECMA_OBJECT_TYPE_NATIVE_FUNCTION)
-  {
-    result = ecma_op_function_call_native (func_obj_p, this_arg_value, arguments_list_p, arguments_list_len);
-  }
+    case ECMA_OBJECT_TYPE_FUNCTION:
+    {
+      result = ecma_op_function_call_simple (func_obj_p, this_arg_value, arguments_list_p, arguments_list_len);
+      break;
+    }
+    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
+    {
+      result = ecma_op_function_call_native_built_in (func_obj_p, this_arg_value, arguments_list_p, arguments_list_len);
+      break;
+    }
+#if JERRY_BUILTIN_PROXY
+    case ECMA_OBJECT_TYPE_PROXY:
+    {
+      result = ecma_proxy_object_call (func_obj_p, this_arg_value, arguments_list_p, arguments_list_len);
+      break;
+    }
+#endif /* JERRY_BUILTIN_PROXY */
 #if JERRY_ESNEXT
-  else if (JERRY_UNLIKELY (type == ECMA_OBJECT_TYPE_CONSTRUCTOR_FUNCTION))
-  {
-    result = ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_class_constructor_new));
-  }
+    case ECMA_OBJECT_TYPE_CONSTRUCTOR_FUNCTION:
+    {
+      result = ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_class_constructor_new));
+      break;
+    }
 #endif /* JERRY_ESNEXT */
-  else
-  {
-    result = ecma_op_function_call_bound (func_obj_p, arguments_list_p, arguments_list_len);
+    case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:
+    {
+      result = ecma_op_function_call_native (func_obj_p, this_arg_value, arguments_list_p, arguments_list_len);
+      break;
+    }
+    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+    {
+      result = ecma_op_function_call_bound (func_obj_p, arguments_list_p, arguments_list_len);
+      break;
+    }
+    default:
+    {
+      result = ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_expected_a_function));
+      break;
+    }
   }
 
 #if JERRY_ESNEXT
@@ -1704,39 +1788,43 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
   JERRY_ASSERT (func_obj_p != NULL
                 && !ecma_is_lexical_environment (func_obj_p));
 
-  const ecma_object_type_t type = ecma_get_object_type (func_obj_p);
-
-  if (JERRY_LIKELY (type == ECMA_OBJECT_TYPE_FUNCTION))
+  switch (ecma_get_object_type (func_obj_p))
   {
-    return ecma_op_function_construct_simple (func_obj_p, new_target_p, arguments_list_p, arguments_list_len);
-  }
-
-  if (type == ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION)
-  {
-    return ecma_op_function_construct_built_in (func_obj_p, new_target_p, arguments_list_p, arguments_list_len);
-  }
-
+    case ECMA_OBJECT_TYPE_FUNCTION:
+    {
+      return ecma_op_function_construct_simple (func_obj_p, new_target_p, arguments_list_p, arguments_list_len);
+    }
+    case ECMA_OBJECT_TYPE_BUILT_IN_FUNCTION:
+    {
+      return ecma_op_function_construct_built_in (func_obj_p, new_target_p, arguments_list_p, arguments_list_len);
+    }
 #if JERRY_BUILTIN_PROXY
-  if (ECMA_OBJECT_TYPE_IS_PROXY (type))
-  {
-    return ecma_proxy_object_construct (func_obj_p, new_target_p, arguments_list_p, arguments_list_len);
-  }
+    case ECMA_OBJECT_TYPE_PROXY:
+    {
+      return ecma_proxy_object_construct (func_obj_p, new_target_p, arguments_list_p, arguments_list_len);
+    }
 #endif /* JERRY_BUILTIN_PROXY */
-
-  if (JERRY_UNLIKELY (type == ECMA_OBJECT_TYPE_BOUND_FUNCTION))
-  {
-    return ecma_op_function_construct_bound (func_obj_p, new_target_p, arguments_list_p, arguments_list_len);
-  }
-
 #if JERRY_ESNEXT
-  if (type == ECMA_OBJECT_TYPE_CONSTRUCTOR_FUNCTION)
-  {
-    return ecma_op_function_construct_constructor (func_obj_p, new_target_p, arguments_list_p, arguments_list_len);
-  }
+    case ECMA_OBJECT_TYPE_CONSTRUCTOR_FUNCTION:
+    {
+      return ecma_op_function_construct_constructor (func_obj_p, new_target_p, arguments_list_p, arguments_list_len);
+    }
 #endif /* JERRY_ESNEXT */
+    case ECMA_OBJECT_TYPE_BOUND_FUNCTION:
+    {
+      return ecma_op_function_construct_bound (func_obj_p, new_target_p, arguments_list_p, arguments_list_len);
+    }
+    case ECMA_OBJECT_TYPE_NATIVE_FUNCTION:
+    {
+      return ecma_op_function_construct_native (func_obj_p, new_target_p, arguments_list_p, arguments_list_len);
+    }
+    default:
+    {
+      JERRY_UNREACHABLE ();
+    }
+  }
 
-  JERRY_ASSERT (type == ECMA_OBJECT_TYPE_NATIVE_FUNCTION);
-  return ecma_op_function_construct_native (func_obj_p, new_target_p, arguments_list_p, arguments_list_len);
+  return ECMA_VALUE_UNDEFINED;
 } /* ecma_op_function_construct */
 
 /**

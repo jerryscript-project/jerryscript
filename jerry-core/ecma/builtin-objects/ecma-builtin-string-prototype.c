@@ -584,18 +584,10 @@ ecma_builtin_string_prototype_object_replace_helper (ecma_value_t this_value, /*
 
     if (!ecma_is_value_undefined (replace_symbol) && !ecma_is_value_null (replace_symbol))
     {
-      if (!ecma_op_is_callable (replace_symbol))
-      {
-        ecma_free_value (replace_symbol);
-        return ecma_raise_type_error (ECMA_ERR_MSG ("@@replace is not callable"));
-      }
-
-      ecma_object_t *replace_method = ecma_get_object_from_value (replace_symbol);
-
       ecma_value_t arguments[] = { this_value, replace_value };
-      ecma_value_t replace_result = ecma_op_function_call (replace_method, search_value, arguments, 2);
+      ecma_value_t replace_result = ecma_op_function_validated_call (replace_symbol, search_value, arguments, 2);
+      ecma_free_value (replace_symbol);
 
-      ecma_deref_object (replace_method);
       return replace_result;
     }
   }
@@ -800,16 +792,8 @@ ecma_builtin_string_prototype_object_search (ecma_value_t this_value, /**< this 
 
     if (!ecma_is_value_undefined (search_symbol) && !ecma_is_value_null (search_symbol))
     {
-      if (!ecma_op_is_callable (search_symbol))
-      {
-        ecma_free_value (search_symbol);
-        return ecma_raise_type_error (ECMA_ERR_MSG ("@@search is not callable"));
-      }
-
-      ecma_object_t *search_method = ecma_get_object_from_value (search_symbol);
-      ecma_value_t search_result = ecma_op_function_call (search_method, regexp_value, &this_value, 1);
-
-      ecma_deref_object (search_method);
+      ecma_value_t search_result = ecma_op_function_validated_call (search_symbol, regexp_value, &this_value, 1);
+      ecma_free_value (search_symbol);
       return search_result;
     }
   }
@@ -977,18 +961,10 @@ ecma_builtin_string_prototype_object_split (ecma_value_t this_value, /**< this a
 
     if (!ecma_is_value_undefined (split_symbol) && !ecma_is_value_null (split_symbol))
     {
-      if (!ecma_op_is_callable (split_symbol))
-      {
-        ecma_free_value (split_symbol);
-        return ecma_raise_type_error (ECMA_ERR_MSG ("@@split is not callable"));
-      }
-
-      ecma_object_t *split_method_p = ecma_get_object_from_value (split_symbol);
-
       ecma_value_t arguments[] = { this_value, limit_value };
-      ecma_value_t split_result = ecma_op_function_call (split_method_p, separator_value, arguments, 2);
+      ecma_value_t split_result = ecma_op_function_validated_call (split_symbol, separator_value, arguments, 2);
+      ecma_free_value (split_symbol);
 
-      ecma_deref_object (split_method_p);
       return split_result;
     }
   }

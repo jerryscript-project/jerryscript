@@ -241,19 +241,8 @@ ecma_builtin_async_from_sync_iterator_prototype_do (ecma_async_from_sync_iterato
   }
 
   /* 8. */
-  ecma_value_t call_result;
-
-  if (!ecma_op_is_callable (method))
-  {
-    ecma_free_value (method);
-    call_result = ecma_raise_type_error (ECMA_ERR_MSG (ecma_error_expected_a_function));
-  }
-  else
-  {
-    ecma_object_t *method_func_obj = ecma_get_object_from_value (method);
-    call_result = ecma_op_function_call (method_func_obj, sync_iterator, &call_arg, arg_size);
-    ecma_deref_object (method_func_obj);
-  }
+  ecma_value_t call_result = ecma_op_function_validated_call (method, sync_iterator, &call_arg, arg_size);
+  ecma_free_value (method);
 
   /* 9. */
   if (ECMA_IS_VALUE_ERROR (ecma_op_if_abrupt_reject_promise (&call_result, capability_obj_p)))

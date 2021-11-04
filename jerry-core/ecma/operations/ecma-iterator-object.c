@@ -248,18 +248,11 @@ ecma_op_get_iterator (ecma_value_t value, /**< value to get iterator from */
   }
 
   /* 3. */
-  if (!ecma_op_is_callable (method))
-  {
-    ecma_free_value (method);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator is not function"));
-  }
-
-  ecma_object_t *method_obj_p = ecma_get_object_from_value (method);
-  ecma_value_t iterator = ecma_op_function_call (method_obj_p, value, NULL, 0);
+  ecma_value_t iterator = ecma_op_function_validated_call (method, value, NULL, 0);
 
   if (use_default_method)
   {
-    ecma_deref_object (method_obj_p);
+    ecma_free_value (method);
   }
 
   /* 4. */
@@ -284,7 +277,7 @@ ecma_op_get_iterator (ecma_value_t value, /**< value to get iterator from */
     return next_method;
   }
 
-  if (ecma_is_value_object (next_method) && ecma_op_is_callable (next_method))
+  if (ecma_op_is_callable (next_method))
   {
     *next_method_p = next_method;
   }
@@ -363,15 +356,7 @@ ecma_op_iterator_return (ecma_value_t iterator, /**< iterator value */
     return ecma_create_iter_result_object (value, ECMA_VALUE_TRUE);
   }
 
-  if (!ecma_op_is_callable (func_return))
-  {
-    ecma_free_value (func_return);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator 'return' is not callable"));
-  }
-
-  ecma_object_t *return_obj_p = ecma_get_object_from_value (func_return);
-
-  ecma_value_t result = ecma_op_function_call (return_obj_p, iterator, &value, 1);
+  ecma_value_t result = ecma_op_function_validated_call (func_return, iterator, &value, 1);
   ecma_free_value (func_return);
 
   return result;
@@ -415,15 +400,7 @@ ecma_op_iterator_throw (ecma_value_t iterator, /**< iterator value */
     return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator 'throw' is not available"));
   }
 
-  if (!ecma_is_value_object (func_throw) || !ecma_op_is_callable (func_throw))
-  {
-    ecma_free_value (func_throw);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator 'throw' is not callable"));
-  }
-
-  ecma_object_t *return_obj_p = ecma_get_object_from_value (func_throw);
-
-  ecma_value_t result = ecma_op_function_call (return_obj_p, iterator, &value, 1);
+  ecma_value_t result = ecma_op_function_validated_call (func_throw, iterator, &value, 1);
   ecma_free_value (func_throw);
 
   return result;

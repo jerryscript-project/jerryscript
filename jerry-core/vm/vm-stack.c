@@ -380,58 +380,50 @@ vm_stack_find_finally (vm_frame_ctx_t *frame_ctx_p, /**< frame context */
 
         if (!ECMA_IS_VALUE_ERROR (result) && !ecma_is_value_undefined (result))
         {
-          if (!ecma_op_is_callable (result))
+          ecma_object_t *return_obj_p = ecma_get_object_from_value (result);
+          result = ecma_op_function_validated_call (result, iterator, NULL, 0);
+          ecma_deref_object (return_obj_p);
+
+          if (context_type == VM_CONTEXT_FOR_AWAIT_OF && !ECMA_IS_VALUE_ERROR (result))
           {
-            ecma_free_value (result);
-            result = ecma_raise_type_error (ECMA_ERR_MSG ("Iterator 'return' is not callable"));
-          }
-          else
-          {
-            ecma_object_t *return_obj_p = ecma_get_object_from_value (result);
-            result = ecma_op_function_call (return_obj_p, iterator, NULL, 0);
-            ecma_deref_object (return_obj_p);
+            ecma_extended_object_t *async_generator_object_p = VM_GET_EXECUTABLE_OBJECT (frame_ctx_p);
 
-            if (context_type == VM_CONTEXT_FOR_AWAIT_OF && !ECMA_IS_VALUE_ERROR (result))
-            {
-              ecma_extended_object_t *async_generator_object_p = VM_GET_EXECUTABLE_OBJECT (frame_ctx_p);
-
-              result = ecma_promise_async_await (async_generator_object_p, result);
-
-              if (!ECMA_IS_VALUE_ERROR (result))
-              {
-                uint16_t extra_flags = (ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD
-                                        | (ECMA_AWAIT_FOR_CLOSE << ECMA_AWAIT_STATE_SHIFT));
-                async_generator_object_p->u.cls.u2.executable_obj_flags |= extra_flags;
-
-                stack_top_p = vm_stack_context_abort (frame_ctx_p, stack_top_p);
-
-                VM_PLUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_FINALLY_CONTEXT_STACK_ALLOCATION);
-                stack_top_p += PARSER_FINALLY_CONTEXT_STACK_ALLOCATION;
-
-                stack_top_p[-1] = VM_CREATE_CONTEXT ((uint32_t) finally_type, context_end);
-                if (finally_type == VM_CONTEXT_FINALLY_THROW)
-                {
-                  stack_top_p[-2] = exception;
-                }
-
-                frame_ctx_p->call_operation = VM_EXEC_RETURN;
-                frame_ctx_p->byte_code_p = vm_stack_resume_executable_object_with_context_end;
-                frame_ctx_p->stack_top_p = stack_top_p;
-                return VM_CONTEXT_FOUND_AWAIT;
-              }
-            }
+            result = ecma_promise_async_await (async_generator_object_p, result);
 
             if (!ECMA_IS_VALUE_ERROR (result))
             {
-              bool is_object = ecma_is_value_object (result);
+              uint16_t extra_flags = (ECMA_EXECUTABLE_OBJECT_DO_AWAIT_OR_YIELD
+                                      | (ECMA_AWAIT_FOR_CLOSE << ECMA_AWAIT_STATE_SHIFT));
+              async_generator_object_p->u.cls.u2.executable_obj_flags |= extra_flags;
 
-              ecma_free_value (result);
-              result = ECMA_VALUE_UNDEFINED;
+              stack_top_p = vm_stack_context_abort (frame_ctx_p, stack_top_p);
 
-              if (!is_object)
+              VM_PLUS_EQUAL_U16 (frame_ctx_p->context_depth, PARSER_FINALLY_CONTEXT_STACK_ALLOCATION);
+              stack_top_p += PARSER_FINALLY_CONTEXT_STACK_ALLOCATION;
+
+              stack_top_p[-1] = VM_CREATE_CONTEXT ((uint32_t) finally_type, context_end);
+              if (finally_type == VM_CONTEXT_FINALLY_THROW)
               {
-                result = ecma_raise_type_error (ECMA_ERR_MSG ("Iterator 'return' result is not object"));
+                stack_top_p[-2] = exception;
               }
+
+              frame_ctx_p->call_operation = VM_EXEC_RETURN;
+              frame_ctx_p->byte_code_p = vm_stack_resume_executable_object_with_context_end;
+              frame_ctx_p->stack_top_p = stack_top_p;
+              return VM_CONTEXT_FOUND_AWAIT;
+            }
+          }
+
+          if (!ECMA_IS_VALUE_ERROR (result))
+          {
+            bool is_object = ecma_is_value_object (result);
+
+            ecma_free_value (result);
+            result = ECMA_VALUE_UNDEFINED;
+
+            if (!is_object)
+            {
+              result = ecma_raise_type_error (ECMA_ERR_MSG ("Iterator 'return' result is not object"));
             }
           }
         }

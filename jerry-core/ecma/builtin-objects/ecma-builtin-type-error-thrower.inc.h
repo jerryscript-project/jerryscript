@@ -24,12 +24,8 @@
 /* Number properties:
  *  (property name, number value, writable, enumerable, configurable) */
 
-NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH,
-              0,
-              ECMA_PROPERTY_FIXED)
+NUMBER_VALUE (LIT_MAGIC_STRING_LENGTH, 0, ECMA_PROPERTY_FIXED)
 
-STRING_VALUE (LIT_MAGIC_STRING_NAME,
-              LIT_MAGIC_STRING__EMPTY,
-              ECMA_PROPERTY_FIXED)
+STRING_VALUE (LIT_MAGIC_STRING_NAME, LIT_MAGIC_STRING__EMPTY, ECMA_PROPERTY_FIXED)
 
 #include "ecma-builtin-helpers-macro-undefs.inc.h"

@@ -23,4 +23,4 @@ ${SUDO} apt-get install -q -y \
     make cmake \
     gcc gcc-multilib \
     doxygen \
-    cppcheck vera++ python pylint python-serial
+    cppcheck clang-format-10 python pylint python-serial

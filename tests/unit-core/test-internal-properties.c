@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
-#include "jerryscript.h"
-#include "jerryscript-port.h"
 #include "jerryscript-port-default.h"
+#include "jerryscript-port.h"
+#include "jerryscript.h"
+
 #include "test-common.h"
 
 int
@@ -184,12 +185,9 @@ main (void)
   bool has_after_delete_result_5 = jerry_has_internal_property (object, internal_prop_name_2);
   bool has_after_delete_result_6 = jerry_has_internal_property (object, internal_prop_name_3);
 
-  TEST_ASSERT (jerry_value_is_boolean (has_after_delete_result_1)
-               && !jerry_value_is_true (has_after_delete_result_1));
-  TEST_ASSERT (jerry_value_is_boolean (has_after_delete_result_2)
-               && !jerry_value_is_true (has_after_delete_result_2));
-  TEST_ASSERT (jerry_value_is_boolean (has_after_delete_result_3)
-               && !jerry_value_is_true (has_after_delete_result_3));
+  TEST_ASSERT (jerry_value_is_boolean (has_after_delete_result_1) && !jerry_value_is_true (has_after_delete_result_1));
+  TEST_ASSERT (jerry_value_is_boolean (has_after_delete_result_2) && !jerry_value_is_true (has_after_delete_result_2));
+  TEST_ASSERT (jerry_value_is_boolean (has_after_delete_result_3) && !jerry_value_is_true (has_after_delete_result_3));
   TEST_ASSERT (has_after_delete_result_4);
   TEST_ASSERT (has_after_delete_result_5);
   TEST_ASSERT (has_after_delete_result_6);

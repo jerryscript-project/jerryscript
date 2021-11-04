@@ -21,6 +21,7 @@
  */
 
 #include "jerryscript.h"
+
 #include "jerryscript-ext/handle-scope.h"
 #include "test-common.h"
 
@@ -35,8 +36,7 @@ native_free_cb (void *native_p, /**< native pointer */
   ++native_free_cb_call_count;
 } /* native_free_cb */
 
-static const jerry_object_native_info_t native_info =
-{
+static const jerry_object_native_info_t native_info = {
   .free_cb = native_free_cb,
   .number_of_references = 0,
   .offset_of_references = 0,

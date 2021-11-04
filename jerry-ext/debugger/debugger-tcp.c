@@ -14,15 +14,17 @@
  */
 
 #include "jerryscript-debugger-transport.h"
+
 #include "jerryscript-ext/debugger.h"
 #include "jext-common.h"
 
-#if defined (JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1)
+#if defined(JERRY_DEBUGGER) && (JERRY_DEBUGGER == 1)
 
 #include <errno.h>
 
 #ifdef _WIN32
 #include <BaseTsd.h>
+
 #include <WS2tcpip.h>
 #include <winsock2.h>
 
@@ -43,13 +45,14 @@ typedef SOCKET jerryx_socket_t;
 typedef char jerryx_socket_void_t;
 typedef int jerryx_socket_size_t;
 #else /* !_WIN32 */
-#include <arpa/inet.h>
 #include <fcntl.h>
-#include <sys/socket.h>
 #include <unistd.h>
 
+#include <arpa/inet.h>
+#include <sys/socket.h>
+
 /* On *nix the EWOULDBLOCK errno value can be returned for non-blocking operations */
-#define JERRYX_EWOULDBLOCK EWOULDBLOCK
+#define JERRYX_EWOULDBLOCK    EWOULDBLOCK
 
 /* On *nix the invalid socket has a value of -1 */
 #define JERRYX_SOCKET_INVALID (-1)
@@ -181,10 +184,7 @@ jerryx_debugger_tcp_send (jerry_debugger_transport_header_t *header_p, /**< tcp 
     }
 #endif /* __linux__ */
 
-    jerryx_socket_ssize_t sent_bytes = send (tcp_p->tcp_socket,
-                                             (jerryx_socket_void_t *) message_p,
-                                             remaining_bytes,
-                                             0);
+    jerryx_socket_ssize_t sent_bytes = send (tcp_p->tcp_socket, (jerryx_socket_void_t *) message_p, remaining_bytes, 0);
 
     if (sent_bytes < 0)
     {
@@ -202,8 +202,7 @@ jerryx_debugger_tcp_send (jerry_debugger_transport_header_t *header_p, /**< tcp 
 
     message_p += sent_bytes;
     remaining_bytes -= (jerryx_socket_size_t) sent_bytes;
-  }
-  while (remaining_bytes > 0);
+  } while (remaining_bytes > 0);
 
   return true;
 } /* jerryx_debugger_tcp_send */
@@ -217,10 +216,10 @@ jerryx_debugger_tcp_receive (jerry_debugger_transport_header_t *header_p, /**< t
 {
   jerryx_debugger_transport_tcp_t *tcp_p = (jerryx_debugger_transport_tcp_t *) header_p;
 
-  jerryx_socket_void_t *buffer_p = (jerryx_socket_void_t *) (receive_context_p->buffer_p
-                                                             + receive_context_p->received_length);
-  jerryx_socket_size_t buffer_size = (jerryx_socket_size_t) (JERRY_DEBUGGER_TRANSPORT_MAX_BUFFER_SIZE
-                                                             - receive_context_p->received_length);
+  jerryx_socket_void_t *buffer_p =
+    (jerryx_socket_void_t *) (receive_context_p->buffer_p + receive_context_p->received_length);
+  jerryx_socket_size_t buffer_size =
+    (jerryx_socket_size_t) (JERRY_DEBUGGER_TRANSPORT_MAX_BUFFER_SIZE - receive_context_p->received_length);
 
   jerryx_socket_ssize_t length = recv (tcp_p->tcp_socket, buffer_p, buffer_size, 0);
 
@@ -271,10 +270,8 @@ jerryx_debugger_tcp_configure_socket (jerryx_socket_t server_socket, /** < socke
 
   const int opt_value = 1;
 
-  if (setsockopt (server_socket,
-                  SOL_SOCKET, SO_REUSEADDR,
-                  (const jerryx_socket_void_t *) &opt_value,
-                  sizeof (int)) != 0)
+  if (setsockopt (server_socket, SOL_SOCKET, SO_REUSEADDR, (const jerryx_socket_void_t *) &opt_value, sizeof (int))
+      != 0)
   {
     return false;
   }

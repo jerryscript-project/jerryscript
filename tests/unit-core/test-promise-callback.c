@@ -134,13 +134,10 @@ main (void)
 
   jerry_init (JERRY_INIT_EMPTY);
 
-  jerry_promise_event_filter_t filters = (JERRY_PROMISE_EVENT_FILTER_CREATE
-                                          | JERRY_PROMISE_EVENT_FILTER_RESOLVE
-                                          | JERRY_PROMISE_EVENT_FILTER_REJECT
-                                          | JERRY_PROMISE_EVENT_FILTER_ERROR
-                                          | JERRY_PROMISE_EVENT_FILTER_REACTION_JOB
-                                          | JERRY_PROMISE_EVENT_FILTER_ASYNC_MAIN
-                                          | JERRY_PROMISE_EVENT_FILTER_ASYNC_REACTION_JOB);
+  jerry_promise_event_filter_t filters =
+    (JERRY_PROMISE_EVENT_FILTER_CREATE | JERRY_PROMISE_EVENT_FILTER_RESOLVE | JERRY_PROMISE_EVENT_FILTER_REJECT
+     | JERRY_PROMISE_EVENT_FILTER_ERROR | JERRY_PROMISE_EVENT_FILTER_REACTION_JOB
+     | JERRY_PROMISE_EVENT_FILTER_ASYNC_MAIN | JERRY_PROMISE_EVENT_FILTER_ASYNC_REACTION_JOB);
 
   jerry_promise_set_callback (filters, promise_callback, (void *) &user);
 
@@ -203,14 +200,12 @@ main (void)
   /* Test Promise.resolve. */
   static uint8_t events7[] = { C, RS, CP, BR, RS, AR, E };
 
-  run_eval (events7,
-            "Promise.resolve(4).then(() => {})\n");
+  run_eval (events7, "Promise.resolve(4).then(() => {})\n");
 
   /* Test Promise.reject. */
   static uint8_t events8[] = { C, RJ, RWH, CP, CHA, BR, RJ, RWH, AR, E };
 
-  run_eval (events8,
-            "Promise.reject(4).catch(() => { throw 'Error' })\n");
+  run_eval (events8, "Promise.reject(4).catch(() => { throw 'Error' })\n");
 
   /* Test Promise.race without resolve */
   static uint8_t events9[] = { C, C, C, CP, CP, E };

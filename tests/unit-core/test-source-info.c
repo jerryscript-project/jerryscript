@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#include "config.h"
 #include "jerryscript.h"
 
+#include "config.h"
 #include "test-common.h"
 
 static void
@@ -106,8 +106,8 @@ main (void)
   value = jerry_eval ((const jerry_char_t *) source_p, strlen (source_p), 0);
   source_info_p = jerry_get_source_info (value);
   TEST_ASSERT (source_info_p != NULL);
-  TEST_ASSERT (source_info_p->enabled_fields == (JERRY_SOURCE_INFO_HAS_SOURCE_CODE
-                                                 | JERRY_SOURCE_INFO_HAS_SOURCE_RANGE));
+  TEST_ASSERT (source_info_p->enabled_fields
+               == (JERRY_SOURCE_INFO_HAS_SOURCE_CODE | JERRY_SOURCE_INFO_HAS_SOURCE_RANGE));
   compare_string (source_info_p->source_code, source_p);
   TEST_ASSERT (jerry_value_is_undefined (source_info_p->function_arguments));
   TEST_ASSERT (source_info_p->source_range_start == 2);
@@ -120,8 +120,8 @@ main (void)
   value = jerry_eval ((const jerry_char_t *) source_p, strlen (source_p), 0);
   source_info_p = jerry_get_source_info (value);
   TEST_ASSERT (source_info_p != NULL);
-  TEST_ASSERT (source_info_p->enabled_fields == (JERRY_SOURCE_INFO_HAS_SOURCE_CODE
-                                                 | JERRY_SOURCE_INFO_HAS_FUNCTION_ARGUMENTS));
+  TEST_ASSERT (source_info_p->enabled_fields
+               == (JERRY_SOURCE_INFO_HAS_SOURCE_CODE | JERRY_SOURCE_INFO_HAS_FUNCTION_ARGUMENTS));
   compare_string (source_info_p->source_code, "return 0;");
   compare_string (source_info_p->function_arguments, "a,b");
   TEST_ASSERT (source_info_p->source_range_start == 0);
@@ -134,8 +134,8 @@ main (void)
   value = jerry_eval ((const jerry_char_t *) source_p, strlen (source_p), 0);
   source_info_p = jerry_get_source_info (value);
   TEST_ASSERT (source_info_p != NULL);
-  TEST_ASSERT (source_info_p->enabled_fields == (JERRY_SOURCE_INFO_HAS_SOURCE_CODE
-                                                 | JERRY_SOURCE_INFO_HAS_SOURCE_RANGE));
+  TEST_ASSERT (source_info_p->enabled_fields
+               == (JERRY_SOURCE_INFO_HAS_SOURCE_CODE | JERRY_SOURCE_INFO_HAS_SOURCE_RANGE));
   compare_string (source_info_p->source_code, "a = ( function() { } )");
   TEST_ASSERT (jerry_value_is_undefined (source_info_p->function_arguments));
   TEST_ASSERT (source_info_p->source_range_start == 6);
@@ -148,8 +148,8 @@ main (void)
   value = jerry_eval ((const jerry_char_t *) source_p, strlen (source_p), 0);
   source_info_p = jerry_get_source_info (value);
   TEST_ASSERT (source_info_p != NULL);
-  TEST_ASSERT (source_info_p->enabled_fields == (JERRY_SOURCE_INFO_HAS_SOURCE_CODE
-                                                 | JERRY_SOURCE_INFO_HAS_SOURCE_RANGE));
+  TEST_ASSERT (source_info_p->enabled_fields
+               == (JERRY_SOURCE_INFO_HAS_SOURCE_CODE | JERRY_SOURCE_INFO_HAS_SOURCE_RANGE));
   compare_string (source_info_p->source_code, source_p);
   TEST_ASSERT (jerry_value_is_undefined (source_info_p->function_arguments));
   TEST_ASSERT (source_info_p->source_range_start == 1);

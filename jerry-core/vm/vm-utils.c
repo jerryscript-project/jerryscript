@@ -16,6 +16,7 @@
 #include "ecma-array-object.h"
 #include "ecma-helpers.h"
 #include "ecma-line-info.h"
+
 #include "jcontext.h"
 #include "lit-char-helpers.h"
 #include "vm.h"
@@ -83,7 +84,7 @@ vm_get_backtrace (uint32_t max_depth) /**< maximum backtrace depth, 0 = unlimite
 
     if (ecma_string_is_empty (str_p))
     {
-      ecma_stringbuilder_append_raw (&builder, (const lit_utf8_byte_t *)"<unknown>:", 10);
+      ecma_stringbuilder_append_raw (&builder, (const lit_utf8_byte_t *) "<unknown>:", 10);
     }
     else
     {
@@ -110,7 +111,7 @@ vm_get_backtrace (uint32_t max_depth) /**< maximum backtrace depth, 0 = unlimite
     }
     else
     {
-      ecma_stringbuilder_append_raw (&builder, (const lit_utf8_byte_t *)"1:1", 3);
+      ecma_stringbuilder_append_raw (&builder, (const lit_utf8_byte_t *) "1:1", 3);
     }
 
     ecma_string_t *builder_str_p = ecma_stringbuilder_finalize (&builder);

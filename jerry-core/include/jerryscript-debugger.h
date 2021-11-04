@@ -18,10 +18,7 @@
 
 #include "jerryscript-port.h"
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif /* __cplusplus */
+JERRY_C_API_BEGIN
 
 /** \addtogroup jerry-debugger Jerry engine interface - Debugger feature
  * @{
@@ -53,7 +50,8 @@ typedef enum
 typedef jerry_value_t (*jerry_debugger_wait_for_source_callback_t) (const jerry_char_t *resource_name_p,
                                                                     size_t resource_name_size,
                                                                     const jerry_char_t *source_p,
-                                                                    size_t source_size, void *user_p);
+                                                                    size_t source_size,
+                                                                    void *user_p);
 
 /**
  * Engine debugger functions.
@@ -64,7 +62,8 @@ void jerry_debugger_continue (void);
 void jerry_debugger_stop_at_breakpoint (bool enable_stop_at_breakpoint);
 jerry_debugger_wait_for_source_status_t
 jerry_debugger_wait_for_client_source (jerry_debugger_wait_for_source_callback_t callback_p,
-                                       void *user_p, jerry_value_t *return_value);
+                                       void *user_p,
+                                       jerry_value_t *return_value);
 void jerry_debugger_send_output (const jerry_char_t *buffer, jerry_size_t str_size);
 void jerry_debugger_send_log (jerry_log_level_t level, const jerry_char_t *buffer, jerry_size_t str_size);
 
@@ -72,7 +71,6 @@ void jerry_debugger_send_log (jerry_log_level_t level, const jerry_char_t *buffe
  * @}
  */
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+JERRY_C_API_END
+
 #endif /* !JERRYSCRIPT_DEBUGGER_H */

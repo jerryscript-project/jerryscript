@@ -15,8 +15,8 @@
 
 #include "ecma-alloc.h"
 #include "ecma-builtin-helpers.h"
-#include "ecma-builtins.h"
 #include "ecma-builtin-object.h"
+#include "ecma-builtins.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
@@ -26,6 +26,7 @@
 #include "ecma-objects.h"
 #include "ecma-proxy-object.h"
 #include "ecma-string-object.h"
+
 #include "jrt.h"
 
 #define ECMA_BUILTINS_INTERNAL
@@ -60,7 +61,7 @@ enum
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-object-prototype.inc.h"
-#define BUILTIN_UNDERSCORED_ID object_prototype
+#define BUILTIN_UNDERSCORED_ID  object_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
 
 /** \addtogroup ecma ECMA
@@ -247,11 +248,8 @@ ecma_builtin_object_prototype_define_getter_setter (ecma_value_t this_arg, /**< 
 
   /* 3. */
   ecma_property_descriptor_t desc = ecma_make_empty_property_descriptor ();
-  desc.flags |= (JERRY_PROP_IS_ENUMERABLE
-                 | JERRY_PROP_IS_CONFIGURABLE
-                 | JERRY_PROP_IS_ENUMERABLE_DEFINED
-                 | JERRY_PROP_IS_CONFIGURABLE_DEFINED
-                 | JERRY_PROP_SHOULD_THROW);
+  desc.flags |= (JERRY_PROP_IS_ENUMERABLE | JERRY_PROP_IS_CONFIGURABLE | JERRY_PROP_IS_ENUMERABLE_DEFINED
+                 | JERRY_PROP_IS_CONFIGURABLE_DEFINED | JERRY_PROP_SHOULD_THROW);
 
   if (define_getter)
   {

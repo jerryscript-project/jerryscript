@@ -18,18 +18,15 @@
 
 #include "jerryscript.h"
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif /* __cplusplus */
+JERRY_C_API_BEGIN
 
 #ifndef JERRYX_HANDLE_PRELIST_SIZE
 #define JERRYX_HANDLE_PRELIST_SIZE 20
-#endif
+#endif /* !defined(JERRYX_HANDLE_PRELIST_SIZE) */
 
 #ifndef JERRYX_SCOPE_PRELIST_SIZE
 #define JERRYX_SCOPE_PRELIST_SIZE 20
-#endif
+#endif /* !defined(JERRYX_SCOPE_PRELIST_SIZE) */
 
 typedef struct jerryx_handle_t jerryx_handle_t;
 /**
@@ -82,47 +79,34 @@ typedef enum
   jerryx_handle_scope_mismatch,
 } jerryx_handle_scope_status;
 
-jerryx_handle_scope_status
-jerryx_open_handle_scope (jerryx_handle_scope *result);
+jerryx_handle_scope_status jerryx_open_handle_scope (jerryx_handle_scope *result);
+
+jerryx_handle_scope_status jerryx_close_handle_scope (jerryx_handle_scope scope);
+
+jerryx_handle_scope_status jerryx_open_escapable_handle_scope (jerryx_handle_scope *result);
+
+jerryx_handle_scope_status jerryx_close_escapable_handle_scope (jerryx_handle_scope scope);
 
 jerryx_handle_scope_status
-jerryx_close_handle_scope (jerryx_handle_scope scope);
-
-jerryx_handle_scope_status
-jerryx_open_escapable_handle_scope (jerryx_handle_scope *result);
-
-jerryx_handle_scope_status
-jerryx_close_escapable_handle_scope (jerryx_handle_scope scope);
-
-jerryx_handle_scope_status
-jerryx_escape_handle (jerryx_escapable_handle_scope scope,
-                      jerry_value_t escapee,
-                      jerry_value_t *result);
+jerryx_escape_handle (jerryx_escapable_handle_scope scope, jerry_value_t escapee, jerry_value_t *result);
 
 /**
  * Completely escape a handle from handle scope,
  * leave life time management totally up to user.
  */
 jerryx_handle_scope_status
-jerryx_remove_handle (jerryx_escapable_handle_scope scope,
-                      jerry_value_t escapee,
-                      jerry_value_t *result);
+jerryx_remove_handle (jerryx_escapable_handle_scope scope, jerry_value_t escapee, jerry_value_t *result);
 
-jerry_value_t
-jerryx_create_handle (jerry_value_t jval);
+jerry_value_t jerryx_create_handle (jerry_value_t jval);
 
-jerry_value_t
-jerryx_create_handle_in_scope (jerry_value_t jval, jerryx_handle_scope scope);
+jerry_value_t jerryx_create_handle_in_scope (jerry_value_t jval, jerryx_handle_scope scope);
 
 /** MARK: - handle-scope-allocator.c */
-jerryx_handle_scope_t *
-jerryx_handle_scope_get_current (void);
+jerryx_handle_scope_t *jerryx_handle_scope_get_current (void);
 
-jerryx_handle_scope_t *
-jerryx_handle_scope_get_root (void);
+jerryx_handle_scope_t *jerryx_handle_scope_get_root (void);
 /** MARK: - END handle-scope-allocator.c */
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+JERRY_C_API_END
+
 #endif /* !JERRYX_HANDLE_SCOPE_H */

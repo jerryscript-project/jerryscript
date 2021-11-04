@@ -14,13 +14,14 @@
  */
 
 #include "ecma-builtins.h"
+#include "ecma-dataview-object.h"
 #include "ecma-exceptions.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-shared-arraybuffer-object.h"
-#include "ecma-dataview-object.h"
 #include "ecma-typedarray-object.h"
+
 #include "jrt.h"
 
 #if JERRY_BUILTIN_SHAREDARRAYBUFFER
@@ -29,7 +30,7 @@
 #include "ecma-builtins-internal.h"
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-shared-arraybuffer.inc.h"
-#define BUILTIN_UNDERSCORED_ID shared_arraybuffer
+#define BUILTIN_UNDERSCORED_ID  shared_arraybuffer
 #include "ecma-builtin-internal-routines-template.inc.h"
 
 /** \addtogroup ecma ECMA

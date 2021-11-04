@@ -19,12 +19,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+
 #include "jerryscript.h"
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif /* __cplusplus */
+JERRY_C_API_BEGIN
 
 /**
  * The forward declaration of jerryx_arg_t.
@@ -88,9 +86,8 @@ jerry_value_t jerryx_arg_transform_object_properties (const jerry_value_t obj_va
                                                       const jerry_length_t name_cnt,
                                                       const jerryx_arg_t *c_arg_p,
                                                       jerry_length_t c_arg_cnt);
-jerry_value_t jerryx_arg_transform_array (const jerry_value_t array_val,
-                                          const jerryx_arg_t *c_arg_p,
-                                          jerry_length_t c_arg_cnt);
+jerry_value_t
+jerryx_arg_transform_array (const jerry_value_t array_val, const jerryx_arg_t *c_arg_p, jerry_length_t c_arg_cnt);
 
 /**
  * Indicates whether an argument is allowed to be coerced into the expected JS type.
@@ -135,19 +132,18 @@ typedef enum
  */
 typedef enum
 {
-  JERRYX_ARG_CLAMP,/**< clamp the number when it is out of range */
+  JERRYX_ARG_CLAMP, /**< clamp the number when it is out of range */
   JERRYX_ARG_NO_CLAMP /**< throw a range error */
 } jerryx_arg_clamp_t;
 
 /* Inline functions for initializing jerryx_arg_t */
 
-#define JERRYX_ARG_INTEGER(type) \
-  static inline jerryx_arg_t \
-  jerryx_arg_ ## type (type ## _t *dest, \
-                       jerryx_arg_round_t round_flag, \
-                       jerryx_arg_clamp_t clamp_flag, \
-                       jerryx_arg_coerce_t coerce_flag, \
-                       jerryx_arg_optional_t opt_flag);
+#define JERRYX_ARG_INTEGER(type)                                                 \
+  static inline jerryx_arg_t jerryx_arg_##type (type##_t *dest,                  \
+                                                jerryx_arg_round_t round_flag,   \
+                                                jerryx_arg_clamp_t clamp_flag,   \
+                                                jerryx_arg_coerce_t coerce_flag, \
+                                                jerryx_arg_optional_t opt_flag);
 
 JERRYX_ARG_INTEGER (uint8)
 JERRYX_ARG_INTEGER (int8)
@@ -166,23 +162,19 @@ static inline jerryx_arg_t
 jerryx_arg_string (char *dest, uint32_t size, jerryx_arg_coerce_t coerce_flag, jerryx_arg_optional_t opt_flag);
 static inline jerryx_arg_t
 jerryx_arg_utf8_string (char *dest, uint32_t size, jerryx_arg_coerce_t coerce_flag, jerryx_arg_optional_t opt_flag);
-static inline jerryx_arg_t
-jerryx_arg_function (jerry_value_t *dest, jerryx_arg_optional_t opt_flag);
+static inline jerryx_arg_t jerryx_arg_function (jerry_value_t *dest, jerryx_arg_optional_t opt_flag);
 static inline jerryx_arg_t
 jerryx_arg_native_pointer (void **dest, const jerry_object_native_info_t *info_p, jerryx_arg_optional_t opt_flag);
-static inline jerryx_arg_t
-jerryx_arg_ignore (void);
-static inline jerryx_arg_t
-jerryx_arg_custom (void *dest, uintptr_t extra_info, jerryx_arg_transform_func_t func);
-static inline jerryx_arg_t
-jerryx_arg_object_properties (const jerryx_arg_object_props_t *object_props_p, jerryx_arg_optional_t opt_flag);
-static inline jerryx_arg_t
-jerryx_arg_array (const jerryx_arg_array_items_t *array_items_p, jerryx_arg_optional_t opt_flag);
+static inline jerryx_arg_t jerryx_arg_ignore (void);
+static inline jerryx_arg_t jerryx_arg_custom (void *dest, uintptr_t extra_info, jerryx_arg_transform_func_t func);
+static inline jerryx_arg_t jerryx_arg_object_properties (const jerryx_arg_object_props_t *object_props_p,
+                                                         jerryx_arg_optional_t opt_flag);
+static inline jerryx_arg_t jerryx_arg_array (const jerryx_arg_array_items_t *array_items_p,
+                                             jerryx_arg_optional_t opt_flag);
 
-jerry_value_t
-jerryx_arg_transform_optional (jerryx_arg_js_iterator_t *js_arg_iter_p,
-                               const jerryx_arg_t *c_arg_p,
-                               jerryx_arg_transform_func_t func);
+jerry_value_t jerryx_arg_transform_optional (jerryx_arg_js_iterator_t *js_arg_iter_p,
+                                             const jerryx_arg_t *c_arg_p,
+                                             jerryx_arg_transform_func_t func);
 
 /* Helper functions for transform functions. */
 jerry_value_t jerryx_arg_js_iterator_pop (jerryx_arg_js_iterator_t *js_arg_iter_p);
@@ -192,7 +184,6 @@ jerry_length_t jerryx_arg_js_iterator_index (jerryx_arg_js_iterator_t *js_arg_it
 
 #include "arg.impl.h"
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+JERRY_C_API_END
+
 #endif /* !JERRYX_ARG_H */

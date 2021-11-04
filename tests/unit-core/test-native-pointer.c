@@ -1,4 +1,4 @@
- /* Copyright JS Foundation and other contributors, http://js.foundation
+/* Copyright JS Foundation and other contributors, http://js.foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,22 +30,19 @@ native_free_callback (void *native_p, /**< native pointer */
   global_counter++;
 } /* native_free_callback */
 
-static const jerry_object_native_info_t native_info_1 =
-{
+static const jerry_object_native_info_t native_info_1 = {
   .free_cb = native_free_callback,
   .number_of_references = 0,
   .offset_of_references = 0,
 };
 
-static const jerry_object_native_info_t native_info_2 =
-{
+static const jerry_object_native_info_t native_info_2 = {
   .free_cb = NULL,
   .number_of_references = 0,
   .offset_of_references = 0,
 };
 
-static const jerry_object_native_info_t native_info_3 =
-{
+static const jerry_object_native_info_t native_info_3 = {
   .free_cb = NULL,
   .number_of_references = 0,
   .offset_of_references = 0,
@@ -90,8 +87,7 @@ native_references_free_callback (void *native_p, /**< native pointer */
   call_count++;
 } /* native_references_free_callback */
 
-static const jerry_object_native_info_t native_info_4 =
-{
+static const jerry_object_native_info_t native_info_4 = {
   .free_cb = native_references_free_callback,
   .number_of_references = 3,
   .offset_of_references = (uint16_t) offsetof (test_references_t, a),
@@ -127,12 +123,9 @@ set_references (test_references_t *refs_p, /**< native pointer */
   jerry_native_pointer_set_reference (&refs_p->b, value2);
   jerry_native_pointer_set_reference (&refs_p->c, value3);
 
-  TEST_ASSERT (jerry_value_is_object (value1) ? jerry_value_is_object (refs_p->a)
-                                              : jerry_value_is_string (refs_p->a));
-  TEST_ASSERT (jerry_value_is_object (value2) ? jerry_value_is_object (refs_p->b)
-                                              : jerry_value_is_string (refs_p->b));
-  TEST_ASSERT (jerry_value_is_object (value3) ? jerry_value_is_object (refs_p->c)
-                                              : jerry_value_is_string (refs_p->c));
+  TEST_ASSERT (jerry_value_is_object (value1) ? jerry_value_is_object (refs_p->a) : jerry_value_is_string (refs_p->a));
+  TEST_ASSERT (jerry_value_is_object (value2) ? jerry_value_is_object (refs_p->b) : jerry_value_is_string (refs_p->b));
+  TEST_ASSERT (jerry_value_is_object (value3) ? jerry_value_is_object (refs_p->c) : jerry_value_is_string (refs_p->c));
 } /* set_references */
 
 static void

@@ -18,10 +18,7 @@
 
 #include "jerryscript-types.h"
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif /* __cplusplus */
+JERRY_C_API_BEGIN
 
 /** \addtogroup jerry-snapshot Jerry engine interface - Snapshot feature
  * @{
@@ -70,22 +67,32 @@ typedef struct
 /**
  * Snapshot functions.
  */
-jerry_value_t jerry_generate_snapshot (jerry_value_t compiled_code, uint32_t generate_snapshot_opts,
-                                       uint32_t *buffer_p, size_t buffer_size);
+jerry_value_t jerry_generate_snapshot (jerry_value_t compiled_code,
+                                       uint32_t generate_snapshot_opts,
+                                       uint32_t *buffer_p,
+                                       size_t buffer_size);
 
-jerry_value_t jerry_exec_snapshot (const uint32_t *snapshot_p, size_t snapshot_size,
-                                   size_t func_index, uint32_t exec_snapshot_opts,
+jerry_value_t jerry_exec_snapshot (const uint32_t *snapshot_p,
+                                   size_t snapshot_size,
+                                   size_t func_index,
+                                   uint32_t exec_snapshot_opts,
                                    const jerry_exec_snapshot_option_values_t *options_values_p);
 
-size_t jerry_merge_snapshots (const uint32_t **inp_buffers_p, size_t *inp_buffer_sizes_p, size_t number_of_snapshots,
-                              uint32_t *out_buffer_p, size_t out_buffer_size, const char **error_p);
-size_t jerry_get_literals_from_snapshot (const uint32_t *snapshot_p, size_t snapshot_size,
-                                         jerry_char_t *lit_buf_p, size_t lit_buf_size, bool is_c_format);
+size_t jerry_merge_snapshots (const uint32_t **inp_buffers_p,
+                              size_t *inp_buffer_sizes_p,
+                              size_t number_of_snapshots,
+                              uint32_t *out_buffer_p,
+                              size_t out_buffer_size,
+                              const char **error_p);
+size_t jerry_get_literals_from_snapshot (const uint32_t *snapshot_p,
+                                         size_t snapshot_size,
+                                         jerry_char_t *lit_buf_p,
+                                         size_t lit_buf_size,
+                                         bool is_c_format);
 /**
  * @}
  */
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+JERRY_C_API_END
+
 #endif /* !JERRYSCRIPT_SNAPSHOT_H */

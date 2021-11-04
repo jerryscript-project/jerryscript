@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-#include "ecma-helpers.h"
 #include "ecma-line-info.h"
+
+#include "ecma-helpers.h"
 
 #if JERRY_LINE_INFO
 
@@ -45,8 +46,7 @@ ecma_line_info_decode_vlq (uint8_t **buffer_p) /**< [in/out] target buffer */
   do
   {
     value = (value << ECMA_LINE_INFO_VLQ_SHIFT) | (*source_p & ECMA_LINE_INFO_VLQ_MASK);
-  }
-  while (*source_p++ & ECMA_LINE_INFO_VLQ_CONTINUE);
+  } while (*source_p++ & ECMA_LINE_INFO_VLQ_CONTINUE);
 
   *buffer_p = source_p;
   return value;
@@ -169,8 +169,7 @@ ecma_line_info_get (uint8_t *line_info_p, /**< line info buffer */
     column = ecma_line_info_difference_update (column, value);
 
     end_offset += end_offset_increase;
-  }
-  while (end_offset_increase != 0 && end_offset <= offset);
+  } while (end_offset_increase != 0 && end_offset <= offset);
 
   location_p->line = line;
   location_p->column = column;

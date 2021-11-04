@@ -14,6 +14,7 @@
  */
 
 #include "jerryscript.h"
+
 #include "test-common.h"
 
 static int global_counter;
@@ -27,8 +28,7 @@ native_free_callback (void *native_p, /**< native pointer */
   global_counter++;
 } /* native_free_callback */
 
-static const jerry_object_native_info_t native_info =
-{
+static const jerry_object_native_info_t native_info = {
   .free_cb = native_free_callback,
   .number_of_references = 0,
   .offset_of_references = 0,
@@ -74,10 +74,8 @@ main (void)
 {
   jerry_init (JERRY_INIT_EMPTY);
 
-  if (!jerry_is_feature_enabled (JERRY_FEATURE_MAP)
-      || !jerry_is_feature_enabled (JERRY_FEATURE_SET)
-      || !jerry_is_feature_enabled (JERRY_FEATURE_WEAKMAP)
-      || !jerry_is_feature_enabled (JERRY_FEATURE_WEAKSET))
+  if (!jerry_is_feature_enabled (JERRY_FEATURE_MAP) || !jerry_is_feature_enabled (JERRY_FEATURE_SET)
+      || !jerry_is_feature_enabled (JERRY_FEATURE_WEAKMAP) || !jerry_is_feature_enabled (JERRY_FEATURE_WEAKSET))
   {
     jerry_port_log (JERRY_LOG_LEVEL_ERROR, "Containers are disabled!\n");
     jerry_cleanup ();
@@ -143,20 +141,16 @@ main (void)
   jerry_release_value (global_weakset);
   jerry_release_value (empty_weakset);
 
-  const jerry_char_t source[] = TEST_STRING_LITERAL (
-    "(function () {\n"
-    "  var o1 = {}\n"
-    "  var o2 = {}\n"
-    "  var o3 = {}\n"
-    "  var wm = new WeakMap()\n"
-    "  wm.set(o1, o2)\n"
-    "  wm.set(o2, o3)\n"
-    "  return o3\n"
-    "})()\n"
-  );
-  jerry_value_t result = jerry_eval (source,
-                                     sizeof (source) - 1,
-                                     JERRY_PARSE_NO_OPTS);
+  const jerry_char_t source[] = TEST_STRING_LITERAL ("(function () {\n"
+                                                     "  var o1 = {}\n"
+                                                     "  var o2 = {}\n"
+                                                     "  var o3 = {}\n"
+                                                     "  var wm = new WeakMap()\n"
+                                                     "  wm.set(o1, o2)\n"
+                                                     "  wm.set(o2, o3)\n"
+                                                     "  return o3\n"
+                                                     "})()\n");
+  jerry_value_t result = jerry_eval (source, sizeof (source) - 1, JERRY_PARSE_NO_OPTS);
   TEST_ASSERT (jerry_value_is_object (result));
 
   jerry_set_object_native_pointer (result, (void *) &global_counter, &native_info);

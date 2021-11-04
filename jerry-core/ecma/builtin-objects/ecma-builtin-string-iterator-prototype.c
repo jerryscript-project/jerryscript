@@ -37,7 +37,7 @@ enum
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-string-iterator-prototype.inc.h"
-#define BUILTIN_UNDERSCORED_ID string_iterator_prototype
+#define BUILTIN_UNDERSCORED_ID  string_iterator_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
 
 /** \addtogroup ecma ECMA
@@ -157,10 +157,8 @@ ecma_builtin_string_iterator_prototype_object_next (ecma_value_t this_val) /**< 
     ext_obj_p->u.cls.u2.iterator_index = ECMA_ITERATOR_INDEX_LIMIT;
 
     ecma_string_t *prop_name_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_ITERATOR_NEXT_INDEX);
-    ecma_value_t put_result = ecma_op_object_put (obj_p,
-                                                  prop_name_p,
-                                                  ecma_make_length_value (position + result_size),
-                                                  true);
+    ecma_value_t put_result =
+      ecma_op_object_put (obj_p, prop_name_p, ecma_make_length_value (position + result_size), true);
 
     JERRY_ASSERT (ecma_is_value_true (put_result));
   }

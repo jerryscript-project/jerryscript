@@ -15,6 +15,7 @@
 
 #include "ecma-helpers.h"
 #include "ecma-literal-storage.h"
+
 #include "test-common.h"
 
 /* Iterations count. */

@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-#include "jerryscript.h"
 #include "jerryscript-port.h"
+#include "jerryscript.h"
+
 #include "test-common.h"
 
 static int counter = 0;
@@ -69,8 +70,7 @@ test_syntax_error (const char *source_p, /**< source code */
                    const jerry_parse_options_t *options_p) /**< parse options */
 {
   jerry_value_t result_value = jerry_parse ((const jerry_char_t *) source_p, strlen (source_p), options_p);
-  TEST_ASSERT (jerry_value_is_error (result_value)
-               && jerry_get_error_type (result_value) == JERRY_ERROR_SYNTAX);
+  TEST_ASSERT (jerry_value_is_error (result_value) && jerry_get_error_type (result_value) == JERRY_ERROR_SYNTAX);
   jerry_release_value (result_value);
 } /* test_syntax_error */
 
@@ -120,11 +120,9 @@ main (void)
 
   counter = 0;
 
-  run_module (TEST_STRING_LITERAL ("assert(typeof import.meta === 'object')\n"),
-              &parse_options);
+  run_module (TEST_STRING_LITERAL ("assert(typeof import.meta === 'object')\n"), &parse_options);
 
-  run_module (TEST_STRING_LITERAL ("assert(Object.getPrototypeOf(import.meta) === null)\n"),
-              &parse_options);
+  run_module (TEST_STRING_LITERAL ("assert(Object.getPrototypeOf(import.meta) === null)\n"), &parse_options);
 
   run_module (TEST_STRING_LITERAL ("var meta = import.meta\n"
                                    "assert(import.meta === meta)\n"

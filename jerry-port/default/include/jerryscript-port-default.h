@@ -18,13 +18,10 @@
 
 #include <stdbool.h>
 
-#include "jerryscript.h"
 #include "jerryscript-port.h"
+#include "jerryscript.h"
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif /* __cplusplus */
+JERRY_C_API_BEGIN
 
 /** \addtogroup jerry_port_default Default Jerry engine port API
  * These functions are only available if the default port of Jerry is used.
@@ -40,7 +37,6 @@ void jerry_port_default_set_current_context (jerry_context_t *context_p);
  * @}
  */
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+JERRY_C_API_END
+
 #endif /* !JERRYSCRIPT_PORT_DEFAULT_H */

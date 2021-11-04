@@ -45,9 +45,8 @@ scanner_add_async_literal (parser_context_t *context_p, /**< context */
   parser_stack_pop_uint8 (context_p);
   parser_stack_pop (context_p, &async_literal, sizeof (lexer_lit_location_t));
 
-  lexer_lit_location_t *lit_location_p = scanner_add_custom_literal (context_p,
-                                                                     scanner_context_p->active_literal_pool_p,
-                                                                     &async_literal);
+  lexer_lit_location_t *lit_location_p =
+    scanner_add_custom_literal (context_p, scanner_context_p->active_literal_pool_p, &async_literal);
 
   lit_location_p->type |= SCANNER_LITERAL_IS_USED;
 
@@ -91,8 +90,7 @@ scanner_check_arrow (parser_context_t *context_p, /**< context */
 
   lexer_next_token (context_p);
 
-  if (context_p->token.type != LEXER_ARROW
-      || (context_p->token.flags & LEXER_WAS_NEWLINE))
+  if (context_p->token.type != LEXER_ARROW || (context_p->token.flags & LEXER_WAS_NEWLINE))
   {
     if (context_p->stack_top_uint8 == SCAN_STACK_USE_ASYNC)
     {
@@ -115,9 +113,8 @@ scanner_check_arrow (parser_context_t *context_p, /**< context */
   bool is_async_arrow = (status_flags & SCANNER_LITERAL_POOL_MAY_ASYNC_ARROW) != 0;
 
   status_flags |= SCANNER_LITERAL_POOL_ARROW_FLAGS;
-  status_flags &= (uint16_t) ~(SCANNER_LITERAL_POOL_IN_WITH
-                               | SCANNER_LITERAL_POOL_GENERATOR
-                               | SCANNER_LITERAL_POOL_ASYNC);
+  status_flags &=
+    (uint16_t) ~(SCANNER_LITERAL_POOL_IN_WITH | SCANNER_LITERAL_POOL_GENERATOR | SCANNER_LITERAL_POOL_ASYNC);
 
   context_p->status_flags &= (uint32_t) ~(PARSER_IS_GENERATOR_FUNCTION | PARSER_IS_ASYNC_FUNCTION);
 
@@ -301,8 +298,7 @@ scanner_check_async_function (parser_context_t *context_p, /**< context */
       return true;
     }
 
-    if (context_p->token.type == LEXER_LITERAL
-        && context_p->token.lit_location.type == LEXER_IDENT_LITERAL)
+    if (context_p->token.type == LEXER_LITERAL && context_p->token.lit_location.type == LEXER_IDENT_LITERAL)
     {
       if (!lexer_check_arrow (context_p))
       {
@@ -322,9 +318,8 @@ scanner_check_async_function (parser_context_t *context_p, /**< context */
     }
   }
 
-  lexer_lit_location_t *lit_location_p = scanner_add_custom_literal (context_p,
-                                                                     scanner_context_p->active_literal_pool_p,
-                                                                     &async_literal);
+  lexer_lit_location_t *lit_location_p =
+    scanner_add_custom_literal (context_p, scanner_context_p->active_literal_pool_p, &async_literal);
   lit_location_p->type |= SCANNER_LITERAL_IS_USED;
 
   if (scanner_context_p->active_literal_pool_p->status_flags & SCANNER_LITERAL_POOL_IN_WITH)
@@ -369,8 +364,7 @@ scanner_check_import_meta (parser_context_t *context_p) /**< context */
 {
   lexer_next_token (context_p);
 
-  if (context_p->token.type != LEXER_LITERAL
-      || context_p->token.lit_location.type != LEXER_IDENT_LITERAL
+  if (context_p->token.type != LEXER_LITERAL || context_p->token.lit_location.type != LEXER_IDENT_LITERAL
       || context_p->token.keyword_type != LEXER_KEYW_META
       || (context_p->token.lit_location.status_flags & LEXER_LIT_LOCATION_HAS_ESCAPE))
   {
@@ -421,8 +415,7 @@ scanner_scan_bracket (parser_context_t *context_p, /**< context */
 #endif /* JERRY_ESNEXT */
     depth++;
     lexer_next_token (context_p);
-  }
-  while (context_p->token.type == LEXER_LEFT_PAREN);
+  } while (context_p->token.type == LEXER_LEFT_PAREN);
 
   scanner_context_p->mode = SCAN_MODE_PRIMARY_EXPRESSION;
 
@@ -526,8 +519,7 @@ scanner_scan_bracket (parser_context_t *context_p, /**< context */
   }
 
 #if JERRY_ESNEXT
-  if (JERRY_UNLIKELY (scanner_context_p->async_source_p != NULL)
-      && (arrow_source_p == NULL || depth > 0))
+  if (JERRY_UNLIKELY (scanner_context_p->async_source_p != NULL) && (arrow_source_p == NULL || depth > 0))
   {
     scanner_context_p->async_source_p = NULL;
   }
@@ -599,13 +591,11 @@ scanner_check_directives (parser_context_t *context_p, /**< context */
 {
   scanner_context_p->mode = SCAN_MODE_STATEMENT_OR_TERMINATOR;
 
-  while (context_p->token.type == LEXER_LITERAL
-         && context_p->token.lit_location.type == LEXER_STRING_LITERAL)
+  while (context_p->token.type == LEXER_LITERAL && context_p->token.lit_location.type == LEXER_STRING_LITERAL)
   {
     bool is_use_strict = false;
 
-    if (lexer_string_is_use_strict (context_p)
-        && !(context_p->status_flags & PARSER_IS_STRICT))
+    if (lexer_string_is_use_strict (context_p) && !(context_p->status_flags & PARSER_IS_STRICT))
     {
       is_use_strict = true;
       context_p->status_flags |= PARSER_IS_STRICT;

@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
-#include "jerryscript.h"
-#include "jerryscript-port.h"
 #include "jerryscript-port-default.h"
+#include "jerryscript-port.h"
+#include "jerryscript.h"
+
 #include "test-common.h"
 
 static int mode = 0;
@@ -79,9 +80,7 @@ module_import_callback (const jerry_value_t specifier, /* string value */
 
   if (mode != 3)
   {
-    jerry_value_t compare_value = jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL,
-                                                          user_value,
-                                                          global_user_value);
+    jerry_value_t compare_value = jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL, user_value, global_user_value);
 
     TEST_ASSERT (jerry_value_is_true (compare_value));
     jerry_release_value (compare_value);

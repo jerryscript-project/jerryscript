@@ -90,8 +90,7 @@
 /**
  * Minimum size of a stream (except the last one).
  */
-#define ECMA_LINE_INFO_STREAM_SIZE_MIN \
-  ((2 * ECMA_LINE_INFO_STREAM_VALUE_COUNT_MAX) - 1)
+#define ECMA_LINE_INFO_STREAM_SIZE_MIN ((2 * ECMA_LINE_INFO_STREAM_VALUE_COUNT_MAX) - 1)
 
 /* Helper functions for parser/js/js-parser-line-info-create.c. */
 uint32_t ecma_line_info_decode_vlq (uint8_t **buffer_p);
@@ -99,8 +98,7 @@ uint32_t ecma_line_info_difference_update (uint32_t current_value, uint32_t diff
 
 /* General functions. */
 void ecma_line_info_free (uint8_t *line_info_p);
-void ecma_line_info_get (uint8_t *line_info_p, uint32_t offset,
-                         jerry_backtrace_location_t *location_p);
+void ecma_line_info_get (uint8_t *line_info_p, uint32_t offset, jerry_backtrace_location_t *location_p);
 
 #if JERRY_PARSER_DUMP_BYTE_CODE
 void ecma_line_info_dump (uint8_t *line_info_p);

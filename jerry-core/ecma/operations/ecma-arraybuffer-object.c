@@ -14,8 +14,9 @@
  */
 
 #include "ecma-arraybuffer-object.h"
-#include "ecma-builtins.h"
+
 #include "ecma-builtin-helpers.h"
+#include "ecma-builtins.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
 #include "ecma-gc.h"
@@ -24,6 +25,7 @@
 #include "ecma-objects.h"
 #include "ecma-shared-arraybuffer-object.h"
 #include "ecma-typedarray-object.h"
+
 #include "jcontext.h"
 
 #if JERRY_BUILTIN_TYPEDARRAY
@@ -47,8 +49,7 @@ ecma_arraybuffer_create_object (uint8_t type, /**< type of the arraybuffer */
   ecma_builtin_id_t prototype_id;
 
 #if JERRY_BUILTIN_SHAREDARRAYBUFFER
-  JERRY_ASSERT (type == ECMA_OBJECT_CLASS_ARRAY_BUFFER
-                || type == ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER);
+  JERRY_ASSERT (type == ECMA_OBJECT_CLASS_ARRAY_BUFFER || type == ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER);
 
   prototype_id = (type == ECMA_OBJECT_CLASS_ARRAY_BUFFER ? ECMA_BUILTIN_ID_ARRAYBUFFER_PROTOTYPE
                                                          : ECMA_BUILTIN_ID_SHARED_ARRAYBUFFER_PROTOTYPE);
@@ -83,8 +84,7 @@ ecma_arraybuffer_create_object_with_buffer (uint8_t type, /**< type of the array
   ecma_builtin_id_t prototype_id;
 
 #if JERRY_BUILTIN_SHAREDARRAYBUFFER
-  JERRY_ASSERT (type == ECMA_OBJECT_CLASS_ARRAY_BUFFER
-                || type == ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER);
+  JERRY_ASSERT (type == ECMA_OBJECT_CLASS_ARRAY_BUFFER || type == ECMA_OBJECT_CLASS_SHARED_ARRAY_BUFFER);
 
   prototype_id = (type == ECMA_OBJECT_CLASS_ARRAY_BUFFER ? ECMA_BUILTIN_ID_ARRAYBUFFER_PROTOTYPE
                                                          : ECMA_BUILTIN_ID_SHARED_ARRAYBUFFER_PROTOTYPE);
@@ -94,9 +94,8 @@ ecma_arraybuffer_create_object_with_buffer (uint8_t type, /**< type of the array
   prototype_id = ECMA_BUILTIN_ID_ARRAYBUFFER_PROTOTYPE;
 #endif /* JERRY_BUILTIN_SHAREDARRAYBUFFER */
 
-  ecma_object_t *object_p = ecma_create_object (ecma_builtin_get (prototype_id),
-                                                sizeof (ecma_arraybuffer_pointer_t),
-                                                ECMA_OBJECT_TYPE_CLASS);
+  ecma_object_t *object_p =
+    ecma_create_object (ecma_builtin_get (prototype_id), sizeof (ecma_arraybuffer_pointer_t), ECMA_OBJECT_TYPE_CLASS);
 
   ecma_arraybuffer_pointer_t *arraybuffer_pointer_p = (ecma_arraybuffer_pointer_t *) object_p;
   arraybuffer_pointer_p->extended_object.u.cls.type = type;
@@ -266,7 +265,6 @@ ecma_op_create_arraybuffer_object (const ecma_value_t *arguments_list_p, /**< li
 
   if (arguments_list_len > 0)
   {
-
     if (ecma_is_value_number (arguments_list_p[0]))
     {
       length_num = ecma_get_number_from_value (arguments_list_p[0]);
@@ -341,7 +339,7 @@ ecma_arraybuffer_get_length (ecma_object_t *object_p) /**< pointer to the ArrayB
  *
  * @return pointer to the data buffer
  */
-extern inline uint8_t * JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
+extern inline uint8_t *JERRY_ATTR_PURE JERRY_ATTR_ALWAYS_INLINE
 ecma_arraybuffer_get_buffer (ecma_object_t *object_p) /**< pointer to the ArrayBuffer object */
 {
   JERRY_ASSERT (ecma_object_class_is (object_p, ECMA_OBJECT_CLASS_ARRAY_BUFFER)
@@ -420,9 +418,7 @@ ecma_arraybuffer_detach (ecma_object_t *object_p) /**< pointer to the ArrayBuffe
  *         Returned value must be freed with ecma_free_value.
  */
 ecma_value_t
-ecma_builtin_arraybuffer_slice (ecma_value_t this_arg,
-                                const ecma_value_t *argument_list_p,
-                                uint32_t arguments_number)
+ecma_builtin_arraybuffer_slice (ecma_value_t this_arg, const ecma_value_t *argument_list_p, uint32_t arguments_number)
 {
   ecma_object_t *object_p = ecma_get_object_from_value (this_arg);
 
@@ -441,9 +437,7 @@ ecma_builtin_arraybuffer_slice (ecma_value_t this_arg,
   if (arguments_number > 0)
   {
     /* 6-7. */
-    if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_uint32_index_normalize (argument_list_p[0],
-                                                                         len,
-                                                                         &start)))
+    if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_uint32_index_normalize (argument_list_p[0], len, &start)))
     {
       return ECMA_VALUE_ERROR;
     }
@@ -451,9 +445,7 @@ ecma_builtin_arraybuffer_slice (ecma_value_t this_arg,
     if (arguments_number > 1 && !ecma_is_value_undefined (argument_list_p[1]))
     {
       /* 8-9. */
-      if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_uint32_index_normalize (argument_list_p[1],
-                                                                           len,
-                                                                           &end)))
+      if (ECMA_IS_VALUE_ERROR (ecma_builtin_helper_uint32_index_normalize (argument_list_p[1], len, &end)))
       {
         return ECMA_VALUE_ERROR;
       }
@@ -540,7 +532,7 @@ ecma_builtin_arraybuffer_slice (ecma_value_t this_arg,
   /* 22. */
   memcpy (new_buf, old_buf + start, new_len);
 
-  free_new_arraybuffer:
+free_new_arraybuffer:
   if (ret_value != ECMA_VALUE_EMPTY)
   {
     ecma_deref_object (new_arraybuffer_p);

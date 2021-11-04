@@ -17,9 +17,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "jerryscript.h"
-#include "jerryscript-port.h"
 #include "jerryscript-port-default.h"
+#include "jerryscript-port.h"
+#include "jerryscript.h"
 
 #include "cli.h"
 
@@ -46,13 +46,12 @@ static const char *output_file_name_p = "js.snapshot";
 static jerry_length_t magic_string_lengths[JERRY_LITERAL_LENGTH];
 static const jerry_char_t *magic_string_items[JERRY_LITERAL_LENGTH];
 
-#if defined (JERRY_EXTERNAL_CONTEXT) && (JERRY_EXTERNAL_CONTEXT == 1)
+#if defined(JERRY_EXTERNAL_CONTEXT) && (JERRY_EXTERNAL_CONTEXT == 1)
 /**
  * The alloc function passed to jerry_create_context
  */
 static void *
-context_alloc (size_t size,
-               void *cb_data_p)
+context_alloc (size_t size, void *cb_data_p)
 {
   (void) cb_data_p; /* unused */
   return malloc (size);
@@ -206,24 +205,24 @@ typedef enum
 /**
  * Generate command line options
  */
-static const cli_opt_t generate_opts[] =
-{
-  CLI_OPT_DEF (.id = OPT_GENERATE_HELP, .opt = "h", .longopt = "help",
-               .help = "print this help and exit"),
-  CLI_OPT_DEF (.id = OPT_GENERATE_STATIC, .opt = "s", .longopt = "static",
-               .help = "generate static snapshot"),
-  CLI_OPT_DEF (.id = OPT_GENERATE_FUNCTION, .opt = "f", .longopt = "generate-function-snapshot",
+static const cli_opt_t generate_opts[] = {
+  CLI_OPT_DEF (.id = OPT_GENERATE_HELP, .opt = "h", .longopt = "help", .help = "print this help and exit"),
+  CLI_OPT_DEF (.id = OPT_GENERATE_STATIC, .opt = "s", .longopt = "static", .help = "generate static snapshot"),
+  CLI_OPT_DEF (.id = OPT_GENERATE_FUNCTION,
+               .opt = "f",
+               .longopt = "generate-function-snapshot",
                .meta = "ARGUMENTS",
                .help = "generate function snapshot with given arguments"),
-  CLI_OPT_DEF (.id = OPT_IMPORT_LITERAL_LIST, .longopt = "load-literals-list-format",
+  CLI_OPT_DEF (.id = OPT_IMPORT_LITERAL_LIST,
+               .longopt = "load-literals-list-format",
                .meta = "FILE",
                .help = "import literals from list format (for static snapshots)"),
-  CLI_OPT_DEF (.id = OPT_GENERATE_SHOW_OP, .longopt = "show-opcodes",
-               .help = "print generated opcodes"),
-  CLI_OPT_DEF (.id = OPT_GENERATE_OUT, .opt = "o",  .meta="FILE",
+  CLI_OPT_DEF (.id = OPT_GENERATE_SHOW_OP, .longopt = "show-opcodes", .help = "print generated opcodes"),
+  CLI_OPT_DEF (.id = OPT_GENERATE_OUT,
+               .opt = "o",
+               .meta = "FILE",
                .help = "specify output file name (default: js.snapshot)"),
-  CLI_OPT_DEF (.id = CLI_OPT_DEFAULT, .meta = "FILE",
-               .help = "input source file")
+  CLI_OPT_DEF (.id = CLI_OPT_DEFAULT, .meta = "FILE", .help = "input source file")
 };
 
 /**
@@ -328,7 +327,7 @@ process_generate (cli_state_t *cli_state_p, /**< cli state */
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
 
-#if defined (JERRY_EXTERNAL_CONTEXT) && (JERRY_EXTERNAL_CONTEXT == 1)
+#if defined(JERRY_EXTERNAL_CONTEXT) && (JERRY_EXTERNAL_CONTEXT == 1)
   context_init ();
 #endif /* defined (JERRY_EXTERNAL_CONTEXT) && (JERRY_EXTERNAL_CONTEXT == 1) */
 
@@ -363,13 +362,11 @@ process_generate (cli_state_t *cli_state_p, /**< cli state */
           num_of_lit++;
         }
         sp_buffer_p = sp_buffer_end_p + mstr_size + 1;
-      }
-      while ((size_t) (sp_buffer_p - (char *) sp_buffer_start_p) < sp_buffer_size);
+      } while ((size_t) (sp_buffer_p - (char *) sp_buffer_start_p) < sp_buffer_size);
 
       if (num_of_lit > 0)
       {
-        jerry_register_magic_strings (magic_string_items, num_of_lit,
-                                      magic_string_lengths);
+        jerry_register_magic_strings (magic_string_items, num_of_lit, magic_string_lengths);
       }
     }
   }
@@ -378,8 +375,8 @@ process_generate (cli_state_t *cli_state_p, /**< cli state */
   parse_options.options = JERRY_PARSE_HAS_RESOURCE;
   /* To avoid cppcheck warning. */
   parse_options.argument_list = 0;
-  parse_options.resource_name = jerry_create_string_sz ((const jerry_char_t *) file_name_p,
-                                                        (jerry_size_t) strlen (file_name_p));
+  parse_options.resource_name =
+    jerry_create_string_sz ((const jerry_char_t *) file_name_p, (jerry_size_t) strlen (file_name_p));
 
   if (function_args_p != NULL)
   {
@@ -387,17 +384,13 @@ process_generate (cli_state_t *cli_state_p, /**< cli state */
     parse_options.argument_list = jerry_create_string_from_utf8 ((const jerry_char_t *) function_args_p);
   }
 
-  jerry_value_t snapshot_result = jerry_parse ((jerry_char_t *) source_p,
-                                               source_length,
-                                               &parse_options);
+  jerry_value_t snapshot_result = jerry_parse ((jerry_char_t *) source_p, source_length, &parse_options);
 
   if (!jerry_value_is_error (snapshot_result))
   {
     jerry_value_t parse_result = snapshot_result;
-    snapshot_result = jerry_generate_snapshot (parse_result,
-                                               snapshot_flags,
-                                               output_buffer,
-                                               sizeof (output_buffer) / sizeof (uint32_t));
+    snapshot_result =
+      jerry_generate_snapshot (parse_result, snapshot_flags, output_buffer, sizeof (output_buffer) / sizeof (uint32_t));
     jerry_release_value (parse_result);
   }
 
@@ -454,17 +447,14 @@ typedef enum
 /**
  * Literal dump command line options
  */
-static const cli_opt_t literal_dump_opts[] =
-{
-  CLI_OPT_DEF (.id = OPT_LITERAL_DUMP_HELP, .opt = "h", .longopt = "help",
-               .help = "print this help and exit"),
-  CLI_OPT_DEF (.id = OPT_LITERAL_DUMP_FORMAT, .longopt = "format",
+static const cli_opt_t literal_dump_opts[] = {
+  CLI_OPT_DEF (.id = OPT_LITERAL_DUMP_HELP, .opt = "h", .longopt = "help", .help = "print this help and exit"),
+  CLI_OPT_DEF (.id = OPT_LITERAL_DUMP_FORMAT,
+               .longopt = "format",
                .meta = "[c|list]",
                .help = "specify output format (default: list)"),
-  CLI_OPT_DEF (.id = OPT_LITERAL_DUMP_OUT, .opt = "o",
-               .help = "specify output file name (default: literals.[h|list])"),
-  CLI_OPT_DEF (.id = CLI_OPT_DEFAULT, .meta = "FILE(S)",
-               .help = "input snapshot files")
+  CLI_OPT_DEF (.id = OPT_LITERAL_DUMP_OUT, .opt = "o", .help = "specify output file name (default: literals.[h|list])"),
+  CLI_OPT_DEF (.id = CLI_OPT_DEFAULT, .meta = "FILE(S)", .help = "input snapshot files")
 };
 
 /**
@@ -560,7 +550,7 @@ process_literal_dump (cli_state_t *cli_state_p, /**< cli state */
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
 
-#if defined (JERRY_EXTERNAL_CONTEXT) && (JERRY_EXTERNAL_CONTEXT == 1)
+#if defined(JERRY_EXTERNAL_CONTEXT) && (JERRY_EXTERNAL_CONTEXT == 1)
   context_init ();
 #endif /* defined (JERRY_EXTERNAL_CONTEXT) && (JERRY_EXTERNAL_CONTEXT == 1) */
 
@@ -645,14 +635,10 @@ typedef enum
 /**
  * Merge command line options
  */
-static const cli_opt_t merge_opts[] =
-{
-  CLI_OPT_DEF (.id = OPT_MERGE_HELP, .opt = "h", .longopt = "help",
-               .help = "print this help and exit"),
-  CLI_OPT_DEF (.id = OPT_MERGE_OUT, .opt = "o",
-               .help = "specify output file name (default: js.snapshot)"),
-  CLI_OPT_DEF (.id = CLI_OPT_DEFAULT, .meta = "FILE",
-               .help = "input snapshot files, minimum two")
+static const cli_opt_t merge_opts[] = {
+  CLI_OPT_DEF (.id = OPT_MERGE_HELP, .opt = "h", .longopt = "help", .help = "print this help and exit"),
+  CLI_OPT_DEF (.id = OPT_MERGE_OUT, .opt = "o", .help = "specify output file name (default: js.snapshot)"),
+  CLI_OPT_DEF (.id = CLI_OPT_DEFAULT, .meta = "FILE", .help = "input snapshot files, minimum two")
 };
 
 /**
@@ -728,7 +714,7 @@ process_merge (cli_state_t *cli_state_p, /**< cli state */
     return JERRY_STANDALONE_EXIT_CODE_FAIL;
   }
 
-#if defined (JERRY_EXTERNAL_CONTEXT) && (JERRY_EXTERNAL_CONTEXT == 1)
+#if defined(JERRY_EXTERNAL_CONTEXT) && (JERRY_EXTERNAL_CONTEXT == 1)
   context_init ();
 #endif /* defined (JERRY_EXTERNAL_CONTEXT) && (JERRY_EXTERNAL_CONTEXT == 1) */
 
@@ -780,12 +766,9 @@ typedef enum
 /**
  * Command line options
  */
-static const cli_opt_t main_opts[] =
-{
-  CLI_OPT_DEF (.id = OPT_HELP, .opt = "h", .longopt = "help",
-               .help = "print this help and exit"),
-  CLI_OPT_DEF (.id = CLI_OPT_DEFAULT, .meta = "COMMAND",
-               .help = "specify the command")
+static const cli_opt_t main_opts[] = {
+  CLI_OPT_DEF (.id = OPT_HELP, .opt = "h", .longopt = "help", .help = "print this help and exit"),
+  CLI_OPT_DEF (.id = CLI_OPT_DEFAULT, .meta = "COMMAND", .help = "specify the command")
 };
 
 /**

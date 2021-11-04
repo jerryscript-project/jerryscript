@@ -16,10 +16,7 @@
 #ifndef JERRYX_AUTORELEASE_H
 #define JERRYX_AUTORELEASE_H
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif /* __cplusplus */
+JERRY_C_API_BEGIN
 
 #include "autorelease.impl.h"
 
@@ -48,7 +45,6 @@ extern "C"
  */
 #define JERRYX_AR_VALUE_T __JERRYX_AR_VALUE_T_IMPL
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+JERRY_C_API_END
+
 #endif /* !JERRYX_AUTORELEASE_H */

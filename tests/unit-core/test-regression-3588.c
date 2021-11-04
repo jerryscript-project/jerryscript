@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
-#include "jerryscript.h"
-#include "jerryscript-port.h"
 #include "jerryscript-port-default.h"
+#include "jerryscript-port.h"
+#include "jerryscript.h"
+
 #include "test-common.h"
 
 /**
@@ -61,14 +62,11 @@ main (void)
   }
 
   {
-    static const jerry_char_t test_source[] = TEST_STRING_LITERAL (
-        "class Sub1 extends Demo { constructor () { super (1); } };"
-        "new Sub1 ()"
-    );
+    static const jerry_char_t test_source[] =
+      TEST_STRING_LITERAL ("class Sub1 extends Demo { constructor () { super (1); } };"
+                           "new Sub1 ()");
 
-    jerry_value_t parsed_code_val = jerry_parse (test_source,
-                                                 sizeof (test_source) - 1,
-                                                 NULL);
+    jerry_value_t parsed_code_val = jerry_parse (test_source, sizeof (test_source) - 1, NULL);
     TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
 
     jerry_value_t result = jerry_run (parsed_code_val);
@@ -79,14 +77,10 @@ main (void)
   }
 
   {
-    static const jerry_char_t test_source[] = TEST_STRING_LITERAL (
-      "class Sub2 extends Demo { };"
-      "new Sub2 (1)"
-    );
+    static const jerry_char_t test_source[] = TEST_STRING_LITERAL ("class Sub2 extends Demo { };"
+                                                                   "new Sub2 (1)");
 
-    jerry_value_t parsed_code_val = jerry_parse (test_source,
-                                                 sizeof (test_source) - 1,
-                                                 NULL);
+    jerry_value_t parsed_code_val = jerry_parse (test_source, sizeof (test_source) - 1, NULL);
     TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
 
     jerry_value_t result = jerry_run (parsed_code_val);

@@ -25,11 +25,9 @@
  * @{
  */
 
-ecma_value_t
-ecma_op_eval (ecma_value_t source_code, uint32_t parse_opts);
+ecma_value_t ecma_op_eval (ecma_value_t source_code, uint32_t parse_opts);
 
-ecma_value_t
-ecma_op_eval_chars_buffer (void *source_p, uint32_t parse_opts);
+ecma_value_t ecma_op_eval_chars_buffer (void *source_p, uint32_t parse_opts);
 
 /**
  * @}

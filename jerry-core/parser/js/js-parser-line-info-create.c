@@ -14,6 +14,7 @@
  */
 
 #include "ecma-line-info.h"
+
 #include "js-parser-internal.h"
 
 #if JERRY_PARSER
@@ -100,20 +101,17 @@
 /**
  * Page size of line info pages excluding the first one.
  */
-#define PARSER_LINE_INFO_PAGE_SIZE \
-  (sizeof (parser_mem_page_t *) + PARSER_STACK_PAGE_SIZE)
+#define PARSER_LINE_INFO_PAGE_SIZE (sizeof (parser_mem_page_t *) + PARSER_STACK_PAGE_SIZE)
 
 /**
  * Page size of the first line info page.
  */
-#define PARSER_LINE_INFO_FIRST_PAGE_SIZE \
-  (sizeof (parser_line_info_data_t) + PARSER_LINE_INFO_PAGE_SIZE)
+#define PARSER_LINE_INFO_FIRST_PAGE_SIZE (sizeof (parser_line_info_data_t) + PARSER_LINE_INFO_PAGE_SIZE)
 
 /**
  * Get memory data of the first page.
  */
-#define PARSER_LINE_INFO_GET_FIRST_PAGE(line_info_p) \
-  (((parser_mem_page_t *) ((line_info_p) + 1)))
+#define PARSER_LINE_INFO_GET_FIRST_PAGE(line_info_p) (((parser_mem_page_t *) ((line_info_p) + 1)))
 
 /**
  * Free line info temporary data collected during parsing.
@@ -160,8 +158,7 @@ parser_line_info_encode_vlq (uint8_t *buffer_p, /**< target buffer */
   {
     current_value >>= ECMA_LINE_INFO_VLQ_SHIFT;
     length++;
-  }
-  while (current_value > 0);
+  } while (current_value > 0);
 
   buffer_p += length;
 
@@ -169,8 +166,7 @@ parser_line_info_encode_vlq (uint8_t *buffer_p, /**< target buffer */
   {
     *(--buffer_p) = (uint8_t) (value | ECMA_LINE_INFO_VLQ_CONTINUE);
     value >>= ECMA_LINE_INFO_VLQ_SHIFT;
-  }
-  while (value > 0);
+  } while (value > 0);
 
   buffer_p[length - 1] &= ECMA_LINE_INFO_VLQ_MASK;
   return length;
@@ -529,8 +525,7 @@ parser_line_info_generate (parser_context_t *context_p) /**< context */
       stream_prev_column = ECMA_LINE_INFO_COLUMN_DEFAULT;
       stream_size = 0;
       stream_value_count = 0;
-    }
-    while (iterator.current_page_p != NULL);
+    } while (iterator.current_page_p != NULL);
 
     value = (stream_prev_line != stream_current_line);
 

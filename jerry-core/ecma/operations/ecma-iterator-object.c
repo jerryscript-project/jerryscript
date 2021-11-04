@@ -13,19 +13,21 @@
  * limitations under the License.
  */
 
+#include "ecma-iterator-object.h"
+
 #include "ecma-alloc.h"
 #include "ecma-array-object.h"
-#include "ecma-iterator-object.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
+#include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-number-arithmetic.h"
-#include "ecma-objects.h"
 #include "ecma-objects-general.h"
-#include "ecma-function-object.h"
+#include "ecma-objects.h"
+
 #include "jcontext.h"
 
 /** \addtogroup ecma ECMA
@@ -57,18 +59,14 @@ ecma_create_array_from_iter_element (ecma_value_t value, /**< value */
 
   /* 3-4. */
   ecma_value_t completion;
-  completion = ecma_builtin_helper_def_prop_by_index (new_array_p,
-                                                      0,
-                                                      index_value,
-                                                      ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+  completion =
+    ecma_builtin_helper_def_prop_by_index (new_array_p, 0, index_value, ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
 
   /* 4.b */
   JERRY_ASSERT (ecma_is_value_true (completion));
 
-  completion = ecma_builtin_helper_def_prop_by_index (new_array_p,
-                                                      1,
-                                                      value,
-                                                      ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
+  completion =
+    ecma_builtin_helper_def_prop_by_index (new_array_p, 1, value, ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE);
   JERRY_ASSERT (ecma_is_value_true (completion));
 
   /* 5. */
@@ -95,9 +93,8 @@ ecma_create_iter_result_object (ecma_value_t value, /**< value */
   JERRY_ASSERT (ecma_is_value_boolean (done));
 
   /* 2. */
-  ecma_object_t *object_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE),
-                                                0,
-                                                ECMA_OBJECT_TYPE_GENERAL);
+  ecma_object_t *object_p =
+    ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE), 0, ECMA_OBJECT_TYPE_GENERAL);
 
   /* 3. */
   ecma_property_value_t *prop_value_p;
@@ -136,17 +133,15 @@ ecma_op_create_iterator_object (ecma_value_t iterated_value, /**< value from cre
                                 ecma_iterator_kind_t kind) /**< iterator kind*/
 {
   /* 1. */
-  JERRY_ASSERT (iterator_type == ECMA_OBJECT_CLASS_ARRAY_ITERATOR
-                || iterator_type == ECMA_OBJECT_CLASS_SET_ITERATOR
+  JERRY_ASSERT (iterator_type == ECMA_OBJECT_CLASS_ARRAY_ITERATOR || iterator_type == ECMA_OBJECT_CLASS_SET_ITERATOR
                 || iterator_type == ECMA_OBJECT_CLASS_MAP_ITERATOR
                 || iterator_type == ECMA_OBJECT_CLASS_REGEXP_STRING_ITERATOR
                 || iterator_type == ECMA_OBJECT_CLASS_STRING_ITERATOR);
   JERRY_ASSERT (kind < ECMA_ITERATOR__COUNT);
 
   /* 2. */
-  ecma_object_t *object_p = ecma_create_object (prototype_obj_p,
-                                                sizeof (ecma_extended_object_t),
-                                                ECMA_OBJECT_TYPE_CLASS);
+  ecma_object_t *object_p =
+    ecma_create_object (prototype_obj_p, sizeof (ecma_extended_object_t), ECMA_OBJECT_TYPE_CLASS);
 
   ecma_extended_object_t *ext_obj_p = (ecma_extended_object_t *) object_p;
   ext_obj_p->u.cls.type = (uint8_t) iterator_type;
@@ -235,9 +230,8 @@ ecma_op_get_iterator (ecma_value_t value, /**< value to get iterator from */
         return sync_iterator;
       }
 
-      ecma_value_t async_iterator = ecma_op_create_async_from_sync_iterator (sync_iterator,
-                                                                             sync_next_method,
-                                                                             next_method_p);
+      ecma_value_t async_iterator =
+        ecma_op_create_async_from_sync_iterator (sync_iterator, sync_next_method, next_method_p);
 
       ecma_free_value (method);
       ecma_free_value (sync_iterator);
@@ -716,8 +710,8 @@ ecma_async_from_sync_iterator_unwrap_cb (ecma_object_t *function_obj_p, /**< fun
 
   /* 2. */
   ecma_value_t arg = args_count > 0 ? args_p[0] : ECMA_VALUE_UNDEFINED;
-  ecma_value_t done = ecma_make_boolean_value (unwrap_p->u.built_in.u2.routine_flags
-                                               >> ECMA_NATIVE_HANDLER_COMMON_FLAGS_SHIFT);
+  ecma_value_t done =
+    ecma_make_boolean_value (unwrap_p->u.built_in.u2.routine_flags >> ECMA_NATIVE_HANDLER_COMMON_FLAGS_SHIFT);
 
   return ecma_create_iter_result_object (arg, done);
 } /* ecma_async_from_sync_iterator_unwrap_cb */

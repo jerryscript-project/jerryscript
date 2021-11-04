@@ -18,6 +18,7 @@
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+
 #include "jrt.h"
 
 /** \addtogroup ecma ECMA

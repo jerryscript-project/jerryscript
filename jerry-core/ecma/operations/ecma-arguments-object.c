@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include "ecma-arguments-object.h"
+
 #include "ecma-alloc.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
@@ -21,9 +23,9 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-lex-env.h"
-#include "ecma-objects.h"
-#include "ecma-arguments-object.h"
 #include "ecma-objects-general.h"
+#include "ecma-objects.h"
+
 #include "jrt.h"
 
 /** \addtogroup ecma ECMA
@@ -130,10 +132,8 @@ ecma_op_create_arguments_object (vm_frame_ctx_shared_args_t *shared_p, /**< shar
         ecma_property_value_t *prop_value_p;
         ecma_string_t *prop_name_p = ecma_new_ecma_string_from_uint32 (i);
 
-        prop_value_p = ecma_create_named_data_property (obj_p,
-                                                        prop_name_p,
-                                                        ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
-                                                        NULL);
+        prop_value_p =
+          ecma_create_named_data_property (obj_p, prop_name_p, ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE, NULL);
 
         ecma_deref_ecma_string (prop_name_p);
 
@@ -163,9 +163,7 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *object_p, /**< the 
                                                                                                   *   descriptor */
 {
   /* 3. */
-  ecma_value_t ret_value = ecma_op_general_object_define_own_property (object_p,
-                                                                       property_name_p,
-                                                                       property_desc_p);
+  ecma_value_t ret_value = ecma_op_general_object_define_own_property (object_p, property_name_p, property_desc_p);
 
   if (ECMA_IS_VALUE_ERROR (ret_value)
       || !(((ecma_extended_object_t *) object_p)->u.cls.u1.arguments_flags & ECMA_ARGUMENTS_OBJECT_MAPPED))
@@ -200,16 +198,12 @@ ecma_op_arguments_object_define_own_property (ecma_object_t *object_p, /**< the 
     ecma_string_t *name_p = ecma_op_arguments_object_get_formal_parameter (mapped_arguments_p, index);
     ecma_object_t *lex_env_p = ECMA_GET_INTERNAL_VALUE_POINTER (ecma_object_t, mapped_arguments_p->lex_env);
 
-    ecma_value_t completion = ecma_op_set_mutable_binding (lex_env_p,
-                                                           name_p,
-                                                           property_desc_p->value,
-                                                           true);
+    ecma_value_t completion = ecma_op_set_mutable_binding (lex_env_p, name_p, property_desc_p->value, true);
 
     JERRY_ASSERT (ecma_is_value_empty (completion));
   }
 
-  if ((property_desc_p->flags & JERRY_PROP_IS_WRITABLE_DEFINED)
-      && !(property_desc_p->flags & JERRY_PROP_IS_WRITABLE))
+  if ((property_desc_p->flags & JERRY_PROP_IS_WRITABLE_DEFINED) && !(property_desc_p->flags & JERRY_PROP_IS_WRITABLE))
   {
     ecma_free_value_if_not_object (argv_p[index]);
     argv_p[index] = ECMA_VALUE_ARGUMENT_NO_TRACK;
@@ -246,8 +240,7 @@ ecma_op_arguments_object_try_to_lazy_instantiate_property (ecma_object_t *object
 
   if (index != ECMA_STRING_NOT_ARRAY_INDEX)
   {
-    if (index >= arguments_number
-        || ecma_is_value_empty (argv_p[index]))
+    if (index >= arguments_number || ecma_is_value_empty (argv_p[index]))
     {
       return NULL;
     }
@@ -389,8 +382,7 @@ ecma_op_arguments_delete_built_in_property (ecma_object_t *object_p, /**< the ob
     argv_p = (ecma_value_t *) (((ecma_mapped_arguments_t *) object_p) + 1);
   }
 
-  JERRY_ASSERT (argv_p[index] == ECMA_VALUE_UNDEFINED
-                || argv_p[index] == ECMA_VALUE_ARGUMENT_NO_TRACK);
+  JERRY_ASSERT (argv_p[index] == ECMA_VALUE_UNDEFINED || argv_p[index] == ECMA_VALUE_ARGUMENT_NO_TRACK);
 
   argv_p[index] = ECMA_VALUE_EMPTY;
 } /* ecma_op_arguments_delete_built_in_property */
@@ -455,8 +447,7 @@ ecma_op_arguments_object_list_lazy_property_names (ecma_object_t *obj_p, /**< ar
   }
 
 #if JERRY_ESNEXT
-  if (!(filter & JERRY_PROPERTY_FILTER_EXCLUDE_SYMBOLS)
-      && !(flags & ECMA_ARGUMENTS_OBJECT_ITERATOR_INITIALIZED))
+  if (!(filter & JERRY_PROPERTY_FILTER_EXCLUDE_SYMBOLS) && !(flags & ECMA_ARGUMENTS_OBJECT_ITERATOR_INITIALIZED))
   {
     ecma_string_t *symbol_p = ecma_op_get_global_symbol (LIT_GLOBAL_SYMBOL_ITERATOR);
     ecma_collection_push_back (prop_names_p, ecma_make_symbol_value (symbol_p));

@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#include "config.h"
 #include "jerryscript.h"
 
+#include "config.h"
 #include "test-common.h"
 
 static jerry_value_t
@@ -50,9 +50,7 @@ main (void)
   jerry_set_vm_exec_stop_callback (vm_exec_stop_callback, &countdown, 16);
 
   const jerry_char_t inf_loop_code_src1[] = "while(true) {}";
-  jerry_value_t parsed_code_val = jerry_parse (inf_loop_code_src1,
-                                               sizeof (inf_loop_code_src1) - 1,
-                                               NULL);
+  jerry_value_t parsed_code_val = jerry_parse (inf_loop_code_src1, sizeof (inf_loop_code_src1) - 1, NULL);
 
   TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
   jerry_value_t res = jerry_run (parsed_code_val);
@@ -69,14 +67,10 @@ main (void)
   /* We keep the callback function, only the countdown is reset. */
   countdown = 6;
 
-  const jerry_char_t inf_loop_code_src2[] = TEST_STRING_LITERAL (
-    "function f() { while (true) ; }\n"
-    "try { f(); } catch(e) {}"
-  );
+  const jerry_char_t inf_loop_code_src2[] = TEST_STRING_LITERAL ("function f() { while (true) ; }\n"
+                                                                 "try { f(); } catch(e) {}");
 
-  parsed_code_val = jerry_parse (inf_loop_code_src2,
-                                 sizeof (inf_loop_code_src2) - 1,
-                                 NULL);
+  parsed_code_val = jerry_parse (inf_loop_code_src2, sizeof (inf_loop_code_src2) - 1, NULL);
 
   TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
   res = jerry_run (parsed_code_val);

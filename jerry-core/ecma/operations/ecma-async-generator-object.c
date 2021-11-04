@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-#include "ecma-alloc.h"
 #include "ecma-async-generator-object.h"
+
+#include "ecma-alloc.h"
 #include "ecma-builtins.h"
 #include "ecma-exceptions.h"
 #include "ecma-function-object.h"
@@ -24,10 +25,11 @@
 #include "ecma-iterator-object.h"
 #include "ecma-objects.h"
 #include "ecma-promise-object.h"
+
 #include "jcontext.h"
 #include "opcodes.h"
-#include "vm.h"
 #include "vm-stack.h"
+#include "vm.h"
 
 #if JERRY_ESNEXT
 
@@ -145,9 +147,7 @@ ecma_async_yield_throw (vm_executable_object_t *async_generator_object_p, /**< a
       return ecma_raise_type_error (ECMA_ERR_MSG ("Iterator 'throw' is not available"));
     }
 
-    result = ecma_async_yield_call (result,
-                                    async_generator_object_p,
-                                    ECMA_VALUE_EMPTY);
+    result = ecma_async_yield_call (result, async_generator_object_p, ECMA_VALUE_EMPTY);
 
     if (ECMA_IS_VALUE_ERROR (result))
     {
@@ -158,9 +158,7 @@ ecma_async_yield_throw (vm_executable_object_t *async_generator_object_p, /**< a
     return ECMA_VALUE_UNDEFINED;
   }
 
-  result = ecma_async_yield_call (result,
-                                  async_generator_object_p,
-                                  value);
+  result = ecma_async_yield_call (result, async_generator_object_p, value);
 
   if (ECMA_IS_VALUE_ERROR (result))
   {
@@ -407,9 +405,7 @@ ecma_await_continue (vm_executable_object_t *executable_object_p, /**< executabl
         return value;
       }
 
-      result = ecma_async_yield_call (result,
-                                      executable_object_p,
-                                      value);
+      result = ecma_async_yield_call (result, executable_object_p, value);
       ecma_free_value (value);
 
       if (ECMA_IS_VALUE_ERROR (result))
@@ -509,8 +505,7 @@ ecma_await_continue (vm_executable_object_t *executable_object_p, /**< executabl
       uint32_t context_end = VM_GET_CONTEXT_END (stack_top_p[-1]);
       executable_object_p->frame_ctx.byte_code_p = executable_object_p->frame_ctx.byte_code_start_p + context_end;
 
-      VM_MINUS_EQUAL_U16 (executable_object_p->frame_ctx.context_depth,
-                          PARSER_FOR_AWAIT_OF_CONTEXT_STACK_ALLOCATION);
+      VM_MINUS_EQUAL_U16 (executable_object_p->frame_ctx.context_depth, PARSER_FOR_AWAIT_OF_CONTEXT_STACK_ALLOCATION);
       stack_top_p -= PARSER_FOR_AWAIT_OF_CONTEXT_STACK_ALLOCATION;
       executable_object_p->frame_ctx.stack_top_p = stack_top_p;
 

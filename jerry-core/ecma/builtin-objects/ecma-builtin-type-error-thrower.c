@@ -21,13 +21,14 @@
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
+
 #include "jrt.h"
 
 #define ECMA_BUILTINS_INTERNAL
 #include "ecma-builtins-internal.h"
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-type-error-thrower.inc.h"
-#define BUILTIN_UNDERSCORED_ID type_error_thrower
+#define BUILTIN_UNDERSCORED_ID  type_error_thrower
 #include "ecma-builtin-internal-routines-template.inc.h"
 
 /** \addtogroup ecma ECMA

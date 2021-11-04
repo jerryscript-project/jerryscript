@@ -22,8 +22,8 @@
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
-#include "ecma-objects.h"
 #include "ecma-objects-general.h"
+#include "ecma-objects.h"
 
 #if JERRY_BUILTIN_DATE
 
@@ -39,7 +39,7 @@
  * Checks whether the function uses UTC time zone.
  */
 #define BUILTIN_DATE_FUNCTION_IS_UTC(builtin_routine_id) \
-  (((builtin_routine_id) - ECMA_DATE_PROTOTYPE_GET_FULL_YEAR) & 0x1)
+  (((builtin_routine_id) -ECMA_DATE_PROTOTYPE_GET_FULL_YEAR) & 0x1)
 
 /**
  * List of built-in routine identifiers.
@@ -108,7 +108,7 @@ enum
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-date-prototype.inc.h"
-#define BUILTIN_UNDERSCORED_ID date_prototype
+#define BUILTIN_UNDERSCORED_ID  date_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
 
 /** \addtogroup ecma ECMA
@@ -311,7 +311,7 @@ ecma_builtin_date_prototype_dispatch_get (uint16_t builtin_routine_id, /**< buil
  * Returns true, if the built-in id sets a year.
  */
 #define ECMA_DATE_PROTOTYPE_IS_SET_YEAR_ROUTINE(builtin_routine_id) \
-  ((builtin_routine_id) == ECMA_DATE_PROTOTYPE_SET_FULL_YEAR \
+  ((builtin_routine_id) == ECMA_DATE_PROTOTYPE_SET_FULL_YEAR        \
    || (builtin_routine_id) == ECMA_DATE_PROTOTYPE_SET_UTC_FULL_YEAR \
    || (builtin_routine_id) == ECMA_DATE_PROTOTYPE_SET_YEAR)
 
@@ -321,7 +321,7 @@ ecma_builtin_date_prototype_dispatch_get (uint16_t builtin_routine_id, /**< buil
  * Returns true, if the built-in id sets a year.
  */
 #define ECMA_DATE_PROTOTYPE_IS_SET_YEAR_ROUTINE(builtin_routine_id) \
-  ((builtin_routine_id) == ECMA_DATE_PROTOTYPE_SET_FULL_YEAR \
+  ((builtin_routine_id) == ECMA_DATE_PROTOTYPE_SET_FULL_YEAR        \
    || (builtin_routine_id) == ECMA_DATE_PROTOTYPE_SET_UTC_FULL_YEAR)
 
 #endif /* JERRY_BUILTIN_ANNEXB */
@@ -677,7 +677,6 @@ ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< b
 
   if (builtin_routine_id <= ECMA_DATE_PROTOTYPE_SET_UTC_MILLISECONDS)
   {
-
     if (builtin_routine_id <= ECMA_DATE_PROTOTYPE_GET_UTC_TIMEZONE_OFFSET)
     {
       if (!BUILTIN_DATE_FUNCTION_IS_UTC (builtin_routine_id))
@@ -706,10 +705,7 @@ ecma_builtin_date_prototype_dispatch_routine (uint8_t builtin_routine_id, /**< b
       return ecma_builtin_date_prototype_dispatch_get (builtin_routine_id, date_value);
     }
 
-    return ecma_builtin_date_prototype_dispatch_set (builtin_routine_id,
-                                                     this_obj_p,
-                                                     arguments_list,
-                                                     arguments_number);
+    return ecma_builtin_date_prototype_dispatch_set (builtin_routine_id, this_obj_p, arguments_list, arguments_number);
   }
 
   if (builtin_routine_id == ECMA_DATE_PROTOTYPE_TO_ISO_STRING)

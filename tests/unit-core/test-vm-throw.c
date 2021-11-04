@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#include "config.h"
 #include "jerryscript.h"
 
+#include "config.h"
 #include "test-common.h"
 
 static int mode = 0;
@@ -147,8 +147,7 @@ main (void)
 
   mode = 0;
   counter = 0;
-  do_eval (TEST_STRING_LITERAL ("throw -5.6"),
-           true);
+  do_eval (TEST_STRING_LITERAL ("throw -5.6"), true);
   TEST_ASSERT (counter == 1);
 
   mode = 1;
@@ -195,20 +194,17 @@ main (void)
 
   mode = 5;
   counter = 0;
-  do_eval (TEST_STRING_LITERAL ("native()\n"),
-           true);
+  do_eval (TEST_STRING_LITERAL ("native()\n"), true);
   TEST_ASSERT (counter == 1);
 
   mode = 6;
   counter = 0;
-  do_eval (TEST_STRING_LITERAL ("native()\n"),
-           true);
+  do_eval (TEST_STRING_LITERAL ("native()\n"), true);
   TEST_ASSERT (counter == 2);
 
   mode = 7;
   counter = 0;
-  do_eval (TEST_STRING_LITERAL ("native()\n"),
-           true);
+  do_eval (TEST_STRING_LITERAL ("native()\n"), true);
   TEST_ASSERT (counter == 0);
 
   /* Built-in functions should not trigger the call twice: */

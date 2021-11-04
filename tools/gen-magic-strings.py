@@ -23,16 +23,16 @@ except ImportError:
 
 import argparse
 import fileinput
+import subprocess
 import json
 import os
 import re
 
-from settings import PROJECT_DIR
+from settings import FORMAT_SCRIPT, PROJECT_DIR
 
 
 MAGIC_STRINGS_INI = os.path.join(PROJECT_DIR, 'jerry-core', 'lit', 'lit-magic-strings.ini')
 MAGIC_STRINGS_INC_H = os.path.join(PROJECT_DIR, 'jerry-core', 'lit', 'lit-magic-strings.inc.h')
-
 
 def debug_dump(obj):
     def deepcopy(obj):
@@ -172,7 +172,7 @@ def calculate_magic_string_guards(defs, uses, debug=False):
         # guard1 = A and B and C and D and E and F
         # guard2 = A and B and C
         # then guard1 or guard2 == guard2.
-        guards = [set(guard_tuple) for guard_tuple in uses[str_ref].keys()]
+        guards = [set(guard_tuple) for guard_tuple in sorted(uses[str_ref].keys())]
         for i, guard_i in enumerate(guards):
             if guard_i is None:
                 continue
@@ -230,7 +230,7 @@ def generate_magic_string_defs(gen_file, defs):
     for str_ref, str_value, guards in defs:
         if last_guards != guards:
             if () not in last_guards:
-                print('#endif', file=gen_file)
+                print('#endif /* {guards} */'.format(guards=guards_to_str(last_guards)), file=gen_file)
             if () not in guards:
                 print('#if {guards}'.format(guards=guards_to_str(guards)), file=gen_file)
 
@@ -240,7 +240,7 @@ def generate_magic_string_defs(gen_file, defs):
         last_guards = guards
 
     if () not in last_guards:
-        print('#endif', file=gen_file)
+        print('#endif /* {guards} */'.format(guards=guards_to_str(last_guards)), file=gen_file)
 
 
 def generate_first_magic_strings(gen_file, defs):
@@ -258,7 +258,7 @@ def generate_first_magic_strings(gen_file, defs):
                         continue
                     print('#elif {guards}'.format(guards=guards_to_str(guards)), file=gen_file)
                 elif () in guards and () not in last_guards:
-                    print('#else', file=gen_file)
+                    print('#else /* !({guards}) */'.format(guards=guards_to_str(last_guards)), file=gen_file)
 
                 print('LIT_MAGIC_STRING_FIRST_STRING_WITH_SIZE ({size}, {str_ref})'
                       .format(size=size, str_ref=str_ref), file=gen_file)
@@ -269,8 +269,7 @@ def generate_first_magic_strings(gen_file, defs):
                 last_guards = guards
 
         if () not in last_guards:
-            print('#endif', file=gen_file)
-
+            print('#endif /* {guards} */'.format(guards=guards_to_str(last_guards)), file=gen_file)
 
 def main():
     parser = argparse.ArgumentParser(description='lit-magic-strings.inc.h generator')
@@ -287,6 +286,7 @@ def main():
         generate_magic_string_defs(gen_file, extended_defs)
         generate_first_magic_strings(gen_file, extended_defs)
 
+    subprocess.call([FORMAT_SCRIPT, '--fix'])
 
 if __name__ == '__main__':
     main()

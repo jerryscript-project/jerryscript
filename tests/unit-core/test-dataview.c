@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
-#include "jerryscript.h"
-#include "jerryscript-port.h"
 #include "jerryscript-port-default.h"
+#include "jerryscript-port.h"
+#include "jerryscript.h"
+
 #include "test-common.h"
 
 int
@@ -39,7 +40,8 @@ main (void)
   TEST_ASSERT (jerry_value_is_dataview (view1));
 
   jerry_length_t byteOffset = 0;
-  jerry_length_t byteLength = 0;;
+  jerry_length_t byteLength = 0;
+  ;
   jerry_value_t internal_buffer = jerry_get_dataview_buffer (view1, &byteOffset, &byteLength);
   TEST_ASSERT (jerry_binary_operation (JERRY_BIN_OP_STRICT_EQUAL, internal_buffer, arraybuffer));
   TEST_ASSERT (byteOffset == 0);
@@ -88,9 +90,9 @@ main (void)
   TEST_ASSERT (jerry_get_number_value (jerry_eval (get_src, sizeof (get_src) - 1, JERRY_PARSE_NO_OPTS)) == 255);
 
   const jerry_char_t get_src_little_endian[] = "view2.getInt16 (0, true)";
-  TEST_ASSERT (jerry_get_number_value (jerry_eval (get_src_little_endian,
-                                                   sizeof (get_src_little_endian) - 1,
-                                                   JERRY_PARSE_NO_OPTS)) == -256);
+  TEST_ASSERT (
+    jerry_get_number_value (jerry_eval (get_src_little_endian, sizeof (get_src_little_endian) - 1, JERRY_PARSE_NO_OPTS))
+    == -256);
 
   /* Cleanup */
   jerry_release_value (view2);

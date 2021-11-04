@@ -15,15 +15,16 @@
 
 #include <math.h>
 
-#include "jcontext.h"
-#include "ecma-function-object.h"
 #include "ecma-alloc.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-conversion.h"
 #include "ecma-exceptions.h"
+#include "ecma-function-object.h"
 #include "ecma-gc.h"
 #include "ecma-globals.h"
 #include "ecma-helpers.h"
+
+#include "jcontext.h"
 #include "lit-char-helpers.h"
 
 #if JERRY_BUILTIN_DATE
@@ -48,7 +49,7 @@ enum
 };
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-date.inc.h"
-#define BUILTIN_UNDERSCORED_ID date
+#define BUILTIN_UNDERSCORED_ID  date
 #include "ecma-builtin-internal-routines-template.inc.h"
 
 /** \addtogroup ecma ECMA
@@ -148,8 +149,7 @@ ecma_date_check_two_chars (const lit_utf8_byte_t *str_p, /**< pointer to the ces
                            ecma_char_t expected_char1, /**< first expected character */
                            ecma_char_t expected_char2) /**< second expected character */
 {
-  return (str_p < str_end_p
-          && (*str_p == expected_char1 || *str_p == expected_char2));
+  return (str_p < str_end_p && (*str_p == expected_char1 || *str_p == expected_char2));
 } /* ecma_date_check_two_chars */
 
 /**
@@ -236,21 +236,20 @@ ecma_date_parse_month_name (const lit_utf8_byte_t **str_p, /**< pointer to the c
 } /* ecma_date_parse_month_name */
 
 /**
-  * Calculate MakeDate(MakeDay(yr, m, dt), MakeTime(h, min, s, milli)) for Date constructor and UTC
-  *
-  * See also:
-  *          ECMA-262 v11, 20.4.3.4
-  *
-  * @return false - if the operation fails
-  *         true - otherwise
-  */
+ * Calculate MakeDate(MakeDay(yr, m, dt), MakeTime(h, min, s, milli)) for Date constructor and UTC
+ *
+ * See also:
+ *          ECMA-262 v11, 20.4.3.4
+ *
+ * @return false - if the operation fails
+ *         true - otherwise
+ */
 static bool
 ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to the Date constructor */
                             uint32_t args_len, /**< number of arguments */
                             ecma_number_t *tv_p) /**< [out] time value */
 {
-  ecma_number_t date_nums[7] =
-  {
+  ecma_number_t date_nums[7] = {
     ECMA_NUMBER_ZERO, /* year */
     ECMA_NUMBER_ZERO, /* month */
     ECMA_NUMBER_ONE, /* date */
@@ -287,13 +286,8 @@ ecma_date_construct_helper (const ecma_value_t *args, /**< arguments passed to t
   }
 
   /* 10. */
-  *tv_p = ecma_date_make_date (ecma_date_make_day (date_nums[0],
-                                                   date_nums[1],
-                                                   date_nums[2]),
-                               ecma_date_make_time (date_nums[3],
-                                                    date_nums[4],
-                                                    date_nums[5],
-                                                    date_nums[6]));
+  *tv_p = ecma_date_make_date (ecma_date_make_day (date_nums[0], date_nums[1], date_nums[2]),
+                               ecma_date_make_time (date_nums[3], date_nums[4], date_nums[5], date_nums[6]));
   return true;
 } /* ecma_date_construct_helper */
 
@@ -324,10 +318,8 @@ ecma_builtin_date_parse_basic (const lit_utf8_byte_t *date_str_curr_p, /**< date
     year_limit = 999999;
   }
 
-  ecma_number_t year = ecma_date_parse_date_chars (&date_str_curr_p,
-                                                   date_str_end_p,
-                                                   year_digits,
-                                                   ECMA_DATE_LIMIT (0, year_limit));
+  ecma_number_t year =
+    ecma_date_parse_date_chars (&date_str_curr_p, date_str_end_p, year_digits, ECMA_DATE_LIMIT (0, year_limit));
   if (is_year_sign_negative)
   {
     year = -year;
@@ -466,8 +458,7 @@ ecma_builtin_date_parse_basic (const lit_utf8_byte_t *date_str_curr_p, /**< date
  * @return the parsed date as ecma_number_t or NaN otherwise
  */
 static ecma_number_t
-ecma_builtin_date_parse_toString_formats (const lit_utf8_byte_t *date_str_curr_p,
-                                          const lit_utf8_byte_t *date_str_end_p)
+ecma_builtin_date_parse_toString_formats (const lit_utf8_byte_t *date_str_curr_p, const lit_utf8_byte_t *date_str_end_p)
 {
   const ecma_number_t nan = ecma_number_make_nan ();
 
@@ -582,8 +573,7 @@ ecma_builtin_date_parse_toString_formats (const lit_utf8_byte_t *date_str_curr_p
   }
 
   const char gmt_p[] = " GMT";
-  if (date_str_end_p - date_str_curr_p < 4
-      || memcmp (date_str_curr_p, gmt_p, 4) != 0)
+  if (date_str_end_p - date_str_curr_p < 4 || memcmp (date_str_curr_p, gmt_p, 4) != 0)
   {
     return nan;
   }
@@ -725,8 +715,8 @@ ecma_builtin_date_create (ecma_number_t tv)
 #if JERRY_ESNEXT
   JERRY_ASSERT (JERRY_CONTEXT (current_new_target_p) != NULL);
 
-  ecma_object_t *prototype_obj_p = ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_new_target_p),
-                                                                           ECMA_BUILTIN_ID_DATE_PROTOTYPE);
+  ecma_object_t *prototype_obj_p =
+    ecma_op_get_prototype_from_constructor (JERRY_CONTEXT (current_new_target_p), ECMA_BUILTIN_ID_DATE_PROTOTYPE);
 
   if (JERRY_UNLIKELY (prototype_obj_p == NULL))
   {
@@ -787,7 +777,6 @@ ecma_value_t
 ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**< arguments list */
                                       uint32_t arguments_list_len) /**< number of arguments */
 {
-
   /* 20.4.2.3 */
   if (arguments_list_len == 0)
   {
@@ -804,7 +793,6 @@ ecma_builtin_date_dispatch_construct (const ecma_value_t *arguments_list_p, /**<
     if (ecma_is_value_object (argument)
         && ecma_object_class_is (ecma_get_object_from_value (argument), ECMA_OBJECT_CLASS_DATE))
     {
-
 #if JERRY_ESNEXT
       tv = ((ecma_date_object_t *) ecma_get_object_from_value (argument))->date_value;
 #else /* !JERRY_ESNEXT */

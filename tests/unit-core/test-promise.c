@@ -13,21 +13,20 @@
  * limitations under the License.
  */
 
-#include "jerryscript.h"
-#include "jerryscript-port.h"
 #include "jerryscript-port-default.h"
+#include "jerryscript-port.h"
+#include "jerryscript.h"
+
 #include "test-common.h"
 
-static const jerry_char_t test_source[] = TEST_STRING_LITERAL (
-  "var p1 = create_promise1();"
-  "var p2 = create_promise2();"
-  "p1.then(function(x) { "
-  "  assert(x==='resolved'); "
-  "}); "
-  "p2.catch(function(x) { "
-  "  assert(x==='rejected'); "
-  "}); "
-);
+static const jerry_char_t test_source[] = TEST_STRING_LITERAL ("var p1 = create_promise1();"
+                                                               "var p2 = create_promise2();"
+                                                               "p1.then(function(x) { "
+                                                               "  assert(x==='resolved'); "
+                                                               "}); "
+                                                               "p2.catch(function(x) { "
+                                                               "  assert(x==='rejected'); "
+                                                               "}); ");
 
 static int count_in_assert = 0;
 static jerry_value_t my_promise1;
@@ -44,7 +43,7 @@ create_promise1_handler (const jerry_call_info_t *call_info_p, /**< call informa
   JERRY_UNUSED (args_p);
   JERRY_UNUSED (args_cnt);
 
-  jerry_value_t ret =  jerry_create_promise ();
+  jerry_value_t ret = jerry_create_promise ();
   my_promise1 = jerry_acquire_value (ret);
 
   return ret;
@@ -59,7 +58,7 @@ create_promise2_handler (const jerry_call_info_t *call_info_p, /**< call informa
   JERRY_UNUSED (args_p);
   JERRY_UNUSED (args_cnt);
 
-  jerry_value_t ret =  jerry_create_promise ();
+  jerry_value_t ret = jerry_create_promise ();
   my_promise2 = jerry_acquire_value (ret);
 
   return ret;
@@ -74,8 +73,7 @@ assert_handler (const jerry_call_info_t *call_info_p, /**< call information */
 
   count_in_assert++;
 
-  if (args_cnt == 1
-      && jerry_value_is_true (args_p[0]))
+  if (args_cnt == 1 && jerry_value_is_true (args_p[0]))
   {
     return jerry_create_boolean (true);
   }
@@ -121,9 +119,7 @@ main (void)
   register_js_function ("create_promise2", create_promise2_handler);
   register_js_function ("assert", assert_handler);
 
-  jerry_value_t parsed_code_val = jerry_parse (test_source,
-                                               sizeof (test_source) - 1,
-                                               NULL);
+  jerry_value_t parsed_code_val = jerry_parse (test_source, sizeof (test_source) - 1, NULL);
   TEST_ASSERT (!jerry_value_is_error (parsed_code_val));
 
   jerry_value_t res = jerry_run (parsed_code_val);

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "ecma-arraybuffer-object.h"
 #include "ecma-builtin-helpers.h"
 #include "ecma-builtins.h"
 #include "ecma-conversion.h"
@@ -23,9 +24,9 @@
 #include "ecma-helpers.h"
 #include "ecma-objects.h"
 #include "ecma-shared-arraybuffer-object.h"
-#include "ecma-arraybuffer-object.h"
-#include "jrt.h"
+
 #include "jrt-libc-includes.h"
+#include "jrt.h"
 
 #if JERRY_BUILTIN_SHAREDARRAYBUFFER
 
@@ -33,7 +34,7 @@
 #include "ecma-builtins-internal.h"
 
 #define BUILTIN_INC_HEADER_NAME "ecma-builtin-shared-arraybuffer-prototype.inc.h"
-#define BUILTIN_UNDERSCORED_ID shared_arraybuffer_prototype
+#define BUILTIN_UNDERSCORED_ID  shared_arraybuffer_prototype
 #include "ecma-builtin-internal-routines-template.inc.h"
 
 /** \addtogroup ecma ECMA

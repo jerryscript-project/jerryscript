@@ -16,13 +16,10 @@
 #ifndef JERRYX_DEBUGGER_H
 #define JERRYX_DEBUGGER_H
 
-#include "jerryscript.h"
 #include "jerryscript-debugger-transport.h"
+#include "jerryscript.h"
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif /* __cplusplus */
+JERRY_C_API_BEGIN
 
 void jerryx_debugger_after_connect (bool success);
 
@@ -38,7 +35,6 @@ bool jerryx_debugger_serial_create (const char *config);
 bool jerryx_debugger_ws_create (void);
 bool jerryx_debugger_rp_create (void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+JERRY_C_API_END
+
 #endif /* !JERRYX_HANDLER_H */

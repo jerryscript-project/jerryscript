@@ -16,8 +16,9 @@
 #ifndef ECMA_MODULE_H
 #define ECMA_MODULE_H
 
-#include "common.h"
 #include "ecma-globals.h"
+
+#include "common.h"
 
 #if JERRY_MODULE_SYSTEM
 
@@ -40,8 +41,8 @@ typedef enum
 typedef struct ecma_module_names
 {
   struct ecma_module_names *next_p; /**< next linked list node */
-  ecma_string_t *imex_name_p;       /**< Import/export name of the item */
-  ecma_string_t *local_name_p;      /**< Local name of the item */
+  ecma_string_t *imex_name_p; /**< Import/export name of the item */
+  ecma_string_t *local_name_p; /**< Local name of the item */
 } ecma_module_names_t;
 
 /**
@@ -54,19 +55,19 @@ typedef struct ecma_module_names
 typedef struct ecma_module
 {
   /* Note: state is stored in header.u.class_prop.extra_info */
-  ecma_extended_object_t header;                   /**< header part */
+  ecma_extended_object_t header; /**< header part */
   /* TODO(dbatyai): These could be compressed pointers */
-  ecma_object_t *scope_p;                          /**< lexical lenvironment of the module */
-  ecma_object_t *namespace_object_p;               /**< namespace object of the module */
-  struct ecma_module_node *imports_p;              /**< import requests of the module */
-  ecma_module_names_t *local_exports_p;            /**< local exports of the module */
-  struct ecma_module_node *indirect_exports_p;     /**< indirect exports of the module */
-  struct ecma_module_node *star_exports_p;         /**< star exports of the module */
+  ecma_object_t *scope_p; /**< lexical lenvironment of the module */
+  ecma_object_t *namespace_object_p; /**< namespace object of the module */
+  struct ecma_module_node *imports_p; /**< import requests of the module */
+  ecma_module_names_t *local_exports_p; /**< local exports of the module */
+  struct ecma_module_node *indirect_exports_p; /**< indirect exports of the module */
+  struct ecma_module_node *star_exports_p; /**< star exports of the module */
 
   /* Code used for evaluating a module */
   union
   {
-    ecma_compiled_code_t *compiled_code_p;         /**< compiled code for the module */
+    ecma_compiled_code_t *compiled_code_p; /**< compiled code for the module */
     jerry_native_module_evaluate_callback_t callback; /**< callback for evaluating native modules */
   } u;
 } ecma_module_t;
@@ -98,8 +99,8 @@ typedef struct ecma_module_node
 typedef struct ecma_module_resolve_set
 {
   struct ecma_module_resolve_set *next_p; /**< next in linked list */
-  ecma_module_t *module_p;  /**< module */
-  ecma_string_t *name_p;    /**< identifier name */
+  ecma_module_t *module_p; /**< module */
+  ecma_string_t *name_p; /**< identifier name */
 } ecma_module_resolve_set_t;
 
 /**
@@ -108,17 +109,15 @@ typedef struct ecma_module_resolve_set
 typedef struct ecma_module_resolve_stack
 {
   struct ecma_module_resolve_stack *next_p; /**< next in linked list */
-  ecma_module_t *module_p;                  /**< module request */
-  ecma_string_t *export_name_p;             /**< export identifier name */
-  bool resolving;                           /**< flag storing wether the current frame started resolving */
+  ecma_module_t *module_p; /**< module request */
+  ecma_string_t *export_name_p; /**< export identifier name */
+  bool resolving; /**< flag storing wether the current frame started resolving */
 } ecma_module_resolve_stack_t;
 
 ecma_value_t ecma_module_initialize (ecma_module_t *module_p);
 ecma_module_t *ecma_module_get_resolved_module (ecma_value_t module_val);
 
-ecma_value_t ecma_module_link (ecma_module_t *module_p,
-                               jerry_module_resolve_callback_t callback_p,
-                               void *user_p);
+ecma_value_t ecma_module_link (ecma_module_t *module_p, jerry_module_resolve_callback_t callback_p, void *user_p);
 ecma_value_t ecma_module_evaluate (ecma_module_t *module_p);
 ecma_value_t ecma_module_import (ecma_value_t specifier, ecma_value_t user_value);
 

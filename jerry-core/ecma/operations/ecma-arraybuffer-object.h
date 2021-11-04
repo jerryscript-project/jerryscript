@@ -36,42 +36,28 @@
 /**
  * Check whether the backing store is allocated for an array buffer.
  */
-#define ECMA_ARRAYBUFFER_CHECK_BUFFER_ERROR(arraybuffer_p) \
+#define ECMA_ARRAYBUFFER_CHECK_BUFFER_ERROR(arraybuffer_p)                                     \
   (JERRY_UNLIKELY (!(ECMA_ARRAYBUFFER_GET_FLAGS (arraybuffer_p) & ECMA_ARRAYBUFFER_ALLOCATED)) \
    && ecma_arraybuffer_allocate_buffer_throw (arraybuffer_p) == ECMA_VALUE_ERROR)
 
-ecma_value_t
-ecma_op_create_arraybuffer_object (const ecma_value_t *, uint32_t);
+ecma_value_t ecma_op_create_arraybuffer_object (const ecma_value_t *, uint32_t);
 
 /**
  * Helper functions for arraybuffer.
  */
-ecma_object_t *
-ecma_arraybuffer_create_object (uint8_t type, uint32_t length);
-ecma_object_t *
-ecma_arraybuffer_create_object_with_buffer (uint8_t type, uint32_t length);
-ecma_object_t *
-ecma_arraybuffer_new_object (uint32_t length);
-uint8_t *
-ecma_arraybuffer_allocate_buffer (ecma_object_t *arraybuffer_p);
+ecma_object_t *ecma_arraybuffer_create_object (uint8_t type, uint32_t length);
+ecma_object_t *ecma_arraybuffer_create_object_with_buffer (uint8_t type, uint32_t length);
+ecma_object_t *ecma_arraybuffer_new_object (uint32_t length);
+uint8_t *ecma_arraybuffer_allocate_buffer (ecma_object_t *arraybuffer_p);
+ecma_value_t ecma_arraybuffer_allocate_buffer_throw (ecma_object_t *arraybuffer_p);
+void ecma_arraybuffer_release_buffer (ecma_object_t *arraybuffer_p);
+uint8_t *JERRY_ATTR_PURE ecma_arraybuffer_get_buffer (ecma_object_t *obj_p);
+uint32_t JERRY_ATTR_PURE ecma_arraybuffer_get_length (ecma_object_t *obj_p);
+bool JERRY_ATTR_PURE ecma_arraybuffer_is_detached (ecma_object_t *obj_p);
+bool ecma_arraybuffer_detach (ecma_object_t *obj_p);
+bool ecma_is_arraybuffer (ecma_value_t val);
 ecma_value_t
-ecma_arraybuffer_allocate_buffer_throw (ecma_object_t *arraybuffer_p);
-void
-ecma_arraybuffer_release_buffer (ecma_object_t *arraybuffer_p);
-uint8_t * JERRY_ATTR_PURE
-ecma_arraybuffer_get_buffer (ecma_object_t *obj_p);
-uint32_t JERRY_ATTR_PURE
-ecma_arraybuffer_get_length (ecma_object_t *obj_p);
-bool JERRY_ATTR_PURE
-ecma_arraybuffer_is_detached (ecma_object_t *obj_p);
-bool
-ecma_arraybuffer_detach (ecma_object_t *obj_p);
-bool
-ecma_is_arraybuffer (ecma_value_t val);
-ecma_value_t
-ecma_builtin_arraybuffer_slice (ecma_value_t this_arg,
-                                const ecma_value_t *argument_list_p,
-                                uint32_t arguments_number);
+ecma_builtin_arraybuffer_slice (ecma_value_t this_arg, const ecma_value_t *argument_list_p, uint32_t arguments_number);
 
 /**
  * @}
